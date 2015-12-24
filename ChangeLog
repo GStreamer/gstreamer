@@ -1,9 +1,467 @@
-=== release 1.6.0 ===
+=== release 1.7.1 ===
 
-2015-09-25  Thibault Saunier <tsaunier@gnome.org>
+2015-12-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.0
+	  releasing 1.7.1
+
+2015-12-22 09:58:06 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-validate.c:
+	  ges-validate: Fix compiler warning caused by usage of wrong enum type
+	  ges-validate.c:237:22: error: implicit conversion from enumeration type
+	  'GESEdge' to different enumeration type 'GESEditMode'
+	  [-Werror,-Wenum-conversion]
+	  GESEditMode edge = GES_EDGE_NONE;
+	  ~~~~   ^~~~~~~~~~~~~
+	  ges-validate.c:277:41: error: implicit conversion from enumeration type
+	  'GESEditMode' to different enumeration type 'GESEdge'
+	  [-Werror,-Wenum-conversion]
+	  new_layer_priority, mode, edge, position))) {
+	  ^~~~
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759758
+
+2015-12-18 13:32:22 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline-element.c:
+	  timeline-element: Do not consider not serializable elements when getting top element
+	  Those are temporary elements that should not be considered when dealing
+	  with the hierarchy of objects.
+	  Fixes T3455
+
+2015-12-17 13:36:42 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-uri-clip.c:
+	  uri-clip: Copy sources child properties when resetting asset
+
+2015-03-12 13:57:28 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* Makefile.am:
+	* bindings/python/Makefile.am:
+	* bindings/python/examples/Makefile.am:
+	* configure.ac:
+	* examples/.gitignore:
+	* examples/Makefile.am:
+	* examples/c/Makefile.am:
+	* examples/c/assets.c:
+	* examples/c/concatenate.c:
+	* examples/c/ges-ui.c:
+	* examples/c/ges-ui.glade:
+	* examples/c/multifilesrc.c:
+	* examples/c/overlays.c:
+	* examples/c/play_timeline_with_one_clip.c:
+	* examples/c/simple1.c:
+	* examples/c/test1.c:
+	* examples/c/test2.c:
+	* examples/c/test3.c:
+	* examples/c/test4.c:
+	* examples/c/text_properties.c:
+	* examples/c/thumbnails.c:
+	* examples/c/transition.c:
+	* examples/python/simple.py:
+	* tests/Makefile.am:
+	* tests/examples/.gitignore:
+	* tests/examples/Makefile.am:
+	* tests/examples/assets.c:
+	* tests/examples/concatenate.c:
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	* tests/examples/multifilesrc.c:
+	* tests/examples/overlays.c:
+	* tests/examples/simple1.c:
+	* tests/examples/test1.c:
+	* tests/examples/test2.c:
+	* tests/examples/test3.c:
+	* tests/examples/test4.c:
+	* tests/examples/text_properties.c:
+	* tests/examples/thumbnails.c:
+	* tests/examples/transition.c:
+	  examples: Move all examples to the root dir and create foldersdir per language
+	  + Add some markdown files to link between languages
+	  + Add a simple 'play timeline with one clip" example in C and python
+
+2015-12-21 12:34:56 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Use -Bsymbolic-functions if available
+	  While this is more useful for libraries, some of our plugins with multiple
+	  files and some internal API can also benefit from this.
+
+2015-12-11 15:20:53 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-project.c:
+	  Revert "project: Call asset_added in the first signal emition stage"
+	  This reverts commit 08f927ca68f71530a32846b6da19eac9dc439a2c.
+	  That commit was breaking the API and could break other people's code.
+
+2015-12-08 12:37:29 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-asset.c:
+	* ges/ges-asset.h:
+	  asset: Add a way to set asset as "needing reload"
+	  Allowing application to force the asset system to recheck if an
+	  asset has been "fixed" and can be used again
+	  API:
+	  + ges_asset_needs_reload
+	  Differential Revision: https://phabricator.freedesktop.org/D584
+
+2015-12-02 11:04:10 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-project.c:
+	  project: Call asset_added in the first signal emition stage
+	  Differential Revision: https://phabricator.freedesktop.org/D520
+
+2015-11-20 23:33:12 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-asset.c:
+	* ges/ges-asset.h:
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-internal.h:
+	* ges/ges-project.c:
+	* ges/ges-uri-clip.c:
+	* ges/ges-xml-formatter.c:
+	* tests/check/Makefile.am:
+	* tests/check/ges/asset.c:
+	  Implement asset proxying support
+	  API:
+	  ges_asset_set_proxy
+	  ges_asset_get_proxy
+	  ges_asset_list_proxies
+	  ges_asset_get_proxy_target
+	  Differential Revision: https://phabricator.freedesktop.org/D504
+
+2015-12-07 09:11:38 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From b319909 to 86e4663
+
+2015-11-26 23:11:36 +0530  Sebastian Dröge <sebastian@centricular.com>
+
+	* Makefile.am:
+	  bash-completion: Disable during "make distcheck" as this requires installing files outside the prefix
+	  automake requires all files to be installed inside the prefix. bash-completion
+	  requires the files to be in a specific directory given by a pkg-config file.
+	  As such those two are having incompatible requirements and we just disable
+	  bash-completion installation for the time being when running "make distcheck".
+	  Nonetheless things like "make install" with e.g. a DESTDIR or a private
+	  installation into a user's directory will fail as in both cases the
+	  bash-completion data would be tried to be installed system-wide.
+
+2015-11-26 22:42:45 +0530  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Revert "build: fix make distcheck."
+	  This reverts commit 462727d6d825b6e67119e6b8ea47d9e18cc22bdf.
+	  This "fix" broke the build on Windows, where both prefix and datadir are
+	  absolute paths and as such we would concatenate two absolute paths and fail.
+
+2015-11-21 00:23:02 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* configure.ac:
+	* tests/check/Makefile.am:
+	  tests: Properly setup GST_PLUGIN_PATH in test environement
+
+2015-11-15 00:31:21 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* Makefile.am:
+	  Dist gst-editing-services.doap
+
+2015-11-08 22:49:43 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-asset.c:
+	* ges/ges-asset.h:
+	  asset: Add a method to retrieve the GError of an asset loaded with error
+	  API:
+	  ges_asset_get_error
+
+2015-11-07 18:21:53 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-project.c:
+	* ges/ges-project.h:
+	  project: Add a 'asset-loading' signal
+
+2015-11-05 11:16:31 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* .arcconfig:
+	* ges/ges-audio-source.c:
+	* ges/ges-smart-adder.c:
+	  ges: Set restriction caps in the audio source caps filter
+	  Otherwise we could have not negotiated errors in audiomixer when
+	  the channel/channel-mask do not match
+	  Differential Revision: https://phabricator.freedesktop.org/D493
+	  Reviewed-by: Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+2015-11-04 20:20:10 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-xml-formatter.c:
+	  formatter: Do not serialize top effect priorities
+	  We just need to make sure they are always serialized in the right
+	  order (which is the case) and de serializing them will lead to the
+	  right behaviour.
+	  We should not serialize the priority as the priority of the source
+	  itself depends on the action having been done on the parent clip,
+	  and we do not serialize the source priorities (and should not, GES
+	  should just do the right thing).
+	  Differential Revision: https://phabricator.freedesktop.org/D491
+
+2015-11-04 18:37:34 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launcher.c:
+	  launcher: Make sure to not activate validate twice when simply loading a scenario
+
+2015-10-30 10:52:12 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-uri-clip.c:
+	  uri-clip: Make sure to instantiate an asset to back GESUriClip-s
+
+2015-10-21 14:37:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b99800a to b319909
+
+2015-10-20 17:29:42 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Use new GST_ENABLE_EXTRA_CHECKS #define
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756870
+
+2015-10-21 14:28:54 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 9aed1d7 to b99800a
+
+2015-10-02 22:27:37 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Update GLib dependency to 2.40.0
+
+2015-10-02 16:51:56 +0200  Justin Kim <justin.kim@collabora.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: free closure actions when disposing
+	  Summary:
+	  After invoking GClosure, the item of action list becomes
+	  orphan so it lost a chance to be freed. In addition, even
+	  when disposing, the list of actions has few items so we
+	  have to check the list.
+	  Reviewers: thiblahute
+	  Projects: #gstreamer_editing_services
+	  Reviewed By: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D324
+
+2015-10-02 16:49:31 +0200  Justin Kim <justin.kim@collabora.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: fix wrong argument order of GClosureNotify
+	  Summary:
+	  _free_action should follow GClosureNotify type.
+	  ```
+	  void
+	  (*GClosureNotify) (gpointer data,
+	  GClosure *closure);
+	  ```
+	  Reviewers: thiblahute
+	  Projects: #gstreamer_editing_services
+	  Reviewed By: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D323
+
+2015-10-02 16:39:31 +0200  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-track.c:
+	  track: mixing_operation is handled by its parent
+	  Summary:
+	  Normally, mixing_operation is created and added to nlecomposition
+	  as a child element so it will be freed when nlecomposition is removed
+	  from a track.
+	  Reviewers: thiblahute
+	  Projects: #gstreamer_editing_services
+	  Differential Revision: https://phabricator.freedesktop.org/D319
+
+2015-10-02 16:11:33 +0200  Justin Kim <justin.kim@collabora.com>
+
+	* plugins/nle/nleoperation.c:
+	  nleoperation: don't leak iterator
+	  Summary: Once an iterator is created, it should be freed after usage.
+	  Reviewers: thiblahute
+	  Projects: #gstreamer_editing_services
+	  Reviewed By: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D318
+
+2015-10-02 16:10:59 +0200  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-asset.c:
+	  asset: simplify if-statement in cache_set_loaded
+	  Summary:
+	  Manual iteration can be replaced with foreach function.
+	  In addition, this patch fixes mismatched GFunc type for
+	  g_list_foreach and adds debug cateory for gst-asset for
+	  convenient debugging.
+	  Reviewers: thiblahute
+	  Reviewed By: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D312
+
+2015-10-02 16:08:03 +0200  Justin Kim <justin.kim@collabora.com>
+
+	* .arcconfig:
+	* ges/ges-uri-asset.c:
+	  uri-asset: do not reuse a passed GError pointer
+	  Summary: A passed GError is re-allocated when discoverer has no information.
+	  Reviewers: thiblahute
+	  Projects: #gstreamer_editing_services
+	  Reviewed By: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D302
+
+2015-10-01 16:26:05 +0200  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: handle dispose properly
+	  Summary:
+	  To dispose properly, a child object should call same function
+	  of parent class.
+	  Reviewers: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D311
+
+2015-10-01 16:06:33 +0200  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-base-xml-formatter.c:
+	  base-xml-formatter: properly handle GFile from wrong uri
+	  Summary:
+	  g_file_new_for_uri never fails so GFile always has valid pointer.
+	  And fix a bug of double unref from D303.
+	  Reviewers: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D310
+
+2015-10-01 11:28:38 +0200  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-audio-track.c:
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-extractable.c:
+	* ges/ges-multi-file-source.c:
+	* ges/ges-video-track.c:
+	* ges/ges-xml-formatter.c:
+	  don't leaks caps and converted strings
+	  Summary:
+	  Valgrind reports trivial leakages related to handling
+	  objects and their converted strings.
+	  Reviewers: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D303
+
+2015-09-30 14:50:46 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* ges/ges-track.c:
+	  track: add gaps when going from READY to PAUSED.
+	  Summary:
+	  The backend commits itself automatically in these cases, so track
+	  needs to do so too.
+	  Reviewers: thiblahute
+	  Reviewed By: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D94
+
+2015-08-20 17:16:50 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* tests/examples/multifilesrc.c:
+	* tests/examples/overlays.c:
+	* tests/examples/simple1.c:
+	* tests/examples/test4.c:
+	* tests/examples/text_properties.c:
+	* tests/examples/thumbnails.c:
+	* tests/examples/transition.c:
+	* tools/ges-launcher.c:
+	  editing-services: Fix memory leaks when context parse fails
+	  When g_option_context_parse fails, context and error variables are not getting free'd
+	  which results in memory leaks. Free'ing the same.
+	  And replacing g_error_free with g_clear_error, which checks if the error being passed
+	  is not NULL and sets the variable to NULL on free'ing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753864
+
+2015-09-30 17:11:20 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* plugins/nle/nleoperation.c:
+	  nleoperation: don't leak srcpad
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755860
+
+2015-09-30 17:27:26 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-project.c:
+	  project: fix a pointer for error message
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755862
+
+2015-09-30 17:26:31 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-project.c:
+	  project: don't leak GFileInfo
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755862
+
+2015-09-22 01:06:00 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-track.c:
+	* ges/gstframepositionner.c:
+	  timeline-element,track,framepositionner: don't leak internal object
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755247
+
+2015-09-24 01:30:09 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-structured-interface.c:
+	  structured-interface: introduce TRY_GET_STRING
+	  TRY_GET uses gst_structure_get. However, if boxed or
+	  string pointer is retrieved by gst_structure_get,
+	  it should be freed properly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755480
+
+2015-09-24 13:41:30 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-uri-asset.c:
+	  uri-asset: don't leak uri string
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755505
+
+2015-09-28 15:59:58 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-title-source.c:
+	  Revert "title-source: Force format with alpha channels out of videotestsrc"
+	  This reverts commit 7d1e1010728a5348674bb9053de6b095cb824984.
+	  This commit was never meant to be committed (at least *not* on master).
+
+2015-09-28 13:21:11 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-structure-parser.c:
+	* ges/ges-structure-parser.h:
+	  structure-parser: define GES_STRUCTURE_PARSER macro
+	  And fix trivial leakages of internal list structure.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755716
+
+2015-09-27 15:15:10 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-title-source.c:
+	  title-source: Force format with alpha channels out of videotestsrc
+	  Making sure the user can set a background of the title with an alpha
+	  channel.
+	  Working around https://bugzilla.gnome.org/show_bug.cgi?id=755482 for
+	  the 1.6 branch.
+
+2015-09-25 12:30:29 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.6.0 ===
+
+2015-09-25 12:29:40 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.6.0
 
 2015-09-24 13:21:15 +0200  Thibault Saunier <tsaunier@gnome.org>
 

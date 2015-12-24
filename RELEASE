@@ -1,26 +1,26 @@
 
-Release notes for GStreamer Editing Services 1.6.0
+Release notes for GStreamer Editing Services 1.7.1
 
 
-The GStreamer team is pleased to announce the first release of the GStreamer
-Editing Services stable 1.6 release series. The 1.6 release series is adding
-new features on top of the 1.2 and 1.4 series and is part of the API and
-ABI-stable 1.x release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release of the unstable
+1.7 release series. The 1.7 release series is adding new features on top of
+the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.7 release series
+will lead to the stable 1.8 release series in the next weeks. Any newly added
+API can still change until that point.
 
 
-
-Binaries for Android, iOS, Mac OS X and Windows are provided together
-with this release.
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately
+during the unstable 1.7 release series.
 
 
   
 
-Features of this release
-    
-
 Bugs fixed in this release
      
-      * 755417 : nlecomposition allocates unused UpdateCompositionData
+      * 753864 : editing-services: Fix memory leaks when context parse fails.
+      * 755247 : {track,videotrack,smart-video-mixer}: leaks their internal objects
+      * 759758 : build failure with clang, converting one enum type to another
 
 ==== Download ====
 
@@ -55,10 +55,13 @@ Interested developers of the core library, plugins, and applications should
 subscribe to the gstreamer-devel list.
 
         
-Applications
-  
 Contributors to this release
     
       * Justin Kim
+      * Mathieu Duponchelle
+      * Nicolas Dufresne
+      * Sebastian Dröge
       * Thibault Saunier
+      * Tim-Philipp Müller
+      * Vineeth TM
  
