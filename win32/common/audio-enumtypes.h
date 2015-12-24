@@ -20,11 +20,27 @@ GType gst_audio_pack_flags_get_type (void);
 GType gst_audio_channel_position_get_type (void);
 #define GST_TYPE_AUDIO_CHANNEL_POSITION (gst_audio_channel_position_get_type())
 
+/* enumerations from "audio-channel-mix.h" */
+GType gst_audio_channel_mix_flags_get_type (void);
+#define GST_TYPE_AUDIO_CHANNEL_MIX_FLAGS (gst_audio_channel_mix_flags_get_type())
+
+/* enumerations from "audio-converter.h" */
+GType gst_audio_converter_flags_get_type (void);
+#define GST_TYPE_AUDIO_CONVERTER_FLAGS (gst_audio_converter_flags_get_type())
+
 /* enumerations from "audio-info.h" */
 GType gst_audio_flags_get_type (void);
 #define GST_TYPE_AUDIO_FLAGS (gst_audio_flags_get_type())
 GType gst_audio_layout_get_type (void);
 #define GST_TYPE_AUDIO_LAYOUT (gst_audio_layout_get_type())
+
+/* enumerations from "audio-quantize.h" */
+GType gst_audio_dither_method_get_type (void);
+#define GST_TYPE_AUDIO_DITHER_METHOD (gst_audio_dither_method_get_type())
+GType gst_audio_noise_shaping_method_get_type (void);
+#define GST_TYPE_AUDIO_NOISE_SHAPING_METHOD (gst_audio_noise_shaping_method_get_type())
+GType gst_audio_quantize_flags_get_type (void);
+#define GST_TYPE_AUDIO_QUANTIZE_FLAGS (gst_audio_quantize_flags_get_type())
 
 /* enumerations from "gstaudioringbuffer.h" */
 GType gst_audio_ring_buffer_state_get_type (void);

@@ -6,7 +6,10 @@
 #include "audio.h"
 #include "audio-format.h"
 #include "audio-channels.h"
+#include "audio-channel-mix.h"
+#include "audio-converter.h"
 #include "audio-info.h"
+#include "audio-quantize.h"
 #include "gstaudioringbuffer.h"
 
 /* enumerations from "audio-format.h" */
@@ -97,12 +100,14 @@ gst_audio_pack_flags_get_type (void)
 {
   static volatile gsize g_define_type_id__volatile = 0;
   if (g_once_init_enter (&g_define_type_id__volatile)) {
-    static const GEnumValue values[] = {
+    static const GFlagsValue values[] = {
       {GST_AUDIO_PACK_FLAG_NONE, "GST_AUDIO_PACK_FLAG_NONE", "none"},
+      {GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE, "GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE",
+          "truncate-range"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
-        g_enum_register_static ("GstAudioPackFlags", values);
+        g_flags_register_static ("GstAudioPackFlags", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;
@@ -191,6 +196,49 @@ gst_audio_channel_position_get_type (void)
   return g_define_type_id__volatile;
 }
 
+/* enumerations from "audio-channel-mix.h" */
+GType
+gst_audio_channel_mix_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_AUDIO_CHANNEL_MIX_FLAGS_NONE, "GST_AUDIO_CHANNEL_MIX_FLAGS_NONE",
+          "none"},
+      {GST_AUDIO_CHANNEL_MIX_FLAGS_NON_INTERLEAVED,
+          "GST_AUDIO_CHANNEL_MIX_FLAGS_NON_INTERLEAVED", "non-interleaved"},
+      {GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN,
+          "GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN", "unpositioned-in"},
+      {GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT,
+          "GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT", "unpositioned-out"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstAudioChannelMixFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "audio-converter.h" */
+GType
+gst_audio_converter_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_AUDIO_CONVERTER_FLAG_NONE, "GST_AUDIO_CONVERTER_FLAG_NONE", "none"},
+      {GST_AUDIO_CONVERTER_FLAG_SOURCE_WRITABLE,
+          "GST_AUDIO_CONVERTER_FLAG_SOURCE_WRITABLE", "source-writable"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstAudioConverterFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
 /* enumerations from "audio-info.h" */
 GType
 gst_audio_flags_get_type (void)
@@ -222,6 +270,67 @@ gst_audio_layout_get_type (void)
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_enum_register_static ("GstAudioLayout", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "audio-quantize.h" */
+GType
+gst_audio_dither_method_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_AUDIO_DITHER_NONE, "GST_AUDIO_DITHER_NONE", "none"},
+      {GST_AUDIO_DITHER_RPDF, "GST_AUDIO_DITHER_RPDF", "rpdf"},
+      {GST_AUDIO_DITHER_TPDF, "GST_AUDIO_DITHER_TPDF", "tpdf"},
+      {GST_AUDIO_DITHER_TPDF_HF, "GST_AUDIO_DITHER_TPDF_HF", "tpdf-hf"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstAudioDitherMethod", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_audio_noise_shaping_method_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_AUDIO_NOISE_SHAPING_NONE, "GST_AUDIO_NOISE_SHAPING_NONE", "none"},
+      {GST_AUDIO_NOISE_SHAPING_ERROR_FEEDBACK,
+          "GST_AUDIO_NOISE_SHAPING_ERROR_FEEDBACK", "error-feedback"},
+      {GST_AUDIO_NOISE_SHAPING_SIMPLE, "GST_AUDIO_NOISE_SHAPING_SIMPLE",
+          "simple"},
+      {GST_AUDIO_NOISE_SHAPING_MEDIUM, "GST_AUDIO_NOISE_SHAPING_MEDIUM",
+          "medium"},
+      {GST_AUDIO_NOISE_SHAPING_HIGH, "GST_AUDIO_NOISE_SHAPING_HIGH", "high"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstAudioNoiseShapingMethod", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_audio_quantize_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_AUDIO_QUANTIZE_FLAG_NONE, "GST_AUDIO_QUANTIZE_FLAG_NONE", "none"},
+      {GST_AUDIO_QUANTIZE_FLAG_NON_INTERLEAVED,
+          "GST_AUDIO_QUANTIZE_FLAG_NON_INTERLEAVED", "non-interleaved"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstAudioQuantizeFlags", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;
