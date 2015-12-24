@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:59+0200\n"
+"POT-Creation-Date: 2015-12-24 13:55+0100\n"
 "PO-Revision-Date: 2015-10-15 20:44+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -16,257 +16,242 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Lokalize 1.5\n"
 
-#: ext/gl/gstgltestsrc.c:673
 msgid "format wasn't negotiated before get function"
 msgstr "формат не було узгоджено до виклику функції get"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:5
 msgid "default GStreamer sound events audiosink"
 msgstr "типовий приймач звукових подій GStreamer"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:6
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:19
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:32
-msgid "GStreamer can play audio using any number of output elements. Some possible choices are osssink, pulsesink and alsasink. The audiosink can be a partial pipeline instead of just one element."
-msgstr "У GStreamer передбачено можливість відтворення звукових даних за допомогою довільної кількості елементів виведення. Серед можливих варіантів osssink, pulsesink та alsasink. Звуковий приймач може бути окремим каналом, а не одним елементом."
+msgid ""
+"GStreamer can play audio using any number of output elements. Some possible "
+"choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+"У GStreamer передбачено можливість відтворення звукових даних за допомогою "
+"довільної кількості елементів виведення. Серед можливих варіантів osssink, "
+"pulsesink та alsasink. Звуковий приймач може бути окремим каналом, а не "
+"одним елементом."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:13
 msgid "description for default GStreamer sound events audiosink"
 msgstr "опис типового приймача звукових подій GStreamer"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:14
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:27
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:40
 msgid "Describes the selected audiosink element."
 msgstr "Описує вибраний елемент audiosink."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:18
 msgid "default GStreamer audiosink for Audio/Video Conferencing"
 msgstr "типовий звуковий приймач GStreamer для звукових та відеоконференцій"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:26
-msgid "description for default GStreamer audiosink for Audio/Video Conferencing"
-msgstr "опис типового звукового приймача GStreamer для звукових та відеоконференцій"
+msgid ""
+"description for default GStreamer audiosink for Audio/Video Conferencing"
+msgstr ""
+"опис типового звукового приймача GStreamer для звукових та відеоконференцій"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:31
 msgid "default GStreamer audiosink for Music and Movies"
 msgstr "типовий звуковий приймач GStreamer для музики і фільмів"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:39
 msgid "description for default GStreamer audiosink for Music and Movies"
 msgstr "опис типового звукового приймача GStreamer для музики і фільмів"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:44
 msgid "default GStreamer videosink"
 msgstr "типовий відеоприймач GStreamer"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:45
-msgid "GStreamer can play video using any number of output elements. Some possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink can be a partial pipeline instead of just one element."
-msgstr "У GStreamer передбачено відтворення відео за допомогою довільної кількості елементів виведення. Серед можливих варіантів xvimagesink, ximagesink, sdlvideosink та aasink. Приймач відеоданих може бути окремим каналом з декількох обробників, а не просто одним елементом."
+msgid ""
+"GStreamer can play video using any number of output elements. Some possible "
+"choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
+"can be a partial pipeline instead of just one element."
+msgstr ""
+"У GStreamer передбачено відтворення відео за допомогою довільної кількості "
+"елементів виведення. Серед можливих варіантів xvimagesink, ximagesink, "
+"sdlvideosink та aasink. Приймач відеоданих може бути окремим каналом з "
+"декількох обробників, а не просто одним елементом."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:52
 msgid "description for default GStreamer videosink"
 msgstr "опис типового відеоприймача GStreamer"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:53
 msgid "Describes the selected videosink element."
 msgstr "Описує вибраний елемент videosink."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:57
 msgid "default GStreamer audiosrc"
 msgstr "типове джерело звуку GStreamer"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:58
-msgid "GStreamer can record audio using any number of input elements. Some possible choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial pipeline instead of just one element."
-msgstr "У GStreamer передбачено можливість запису звукових даних за допомогою довільної кількості елементів вхідних даних. Серед можливих варіантів osssrc, pulsesrc та alsasrc. Джерелом звукових даних може бути окремий канал з декількох елементів, а не просто один елемент."
+msgid ""
+"GStreamer can record audio using any number of input elements. Some possible "
+"choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+"У GStreamer передбачено можливість запису звукових даних за допомогою "
+"довільної кількості елементів вхідних даних. Серед можливих варіантів "
+"osssrc, pulsesrc та alsasrc. Джерелом звукових даних може бути окремий канал "
+"з декількох елементів, а не просто один елемент."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:65
 msgid "description for default GStreamer audiosrc"
 msgstr "опис типового джерела звуку GStreamer"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:66
 msgid "Describes the selected audiosrc element."
 msgstr "Описує вибраний елемент audiosrc."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:70
 msgid "default GStreamer videosrc"
 msgstr "типове джерело відео GStreamer"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:71
-msgid "GStreamer can record video from any number of input elements. Some possible choices are v4lsrc, v4l2src and videotestsrc. The video source can be a partial pipeline instead of just one element."
-msgstr "У GStreamer передбачено можливість запису відеоданих за допомогою довільної кількості елементів вхідних даних. Серед можливих варіантів v4lsrc, v4l2src та videotestsrc. Джерелом відеоданих може бути окремий канал з декількох елементів, а не просто один елемент."
+msgid ""
+"GStreamer can record video from any number of input elements. Some possible "
+"choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
+"partial pipeline instead of just one element."
+msgstr ""
+"У GStreamer передбачено можливість запису відеоданих за допомогою довільної "
+"кількості елементів вхідних даних. Серед можливих варіантів v4lsrc, v4l2src "
+"та videotestsrc. Джерелом відеоданих може бути окремий канал з декількох "
+"елементів, а не просто один елемент."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:77
 msgid "description for default GStreamer videosrc"
 msgstr "опис типового джерела відео GStreamer"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:78
 msgid "Describes the selected videosrc element."
 msgstr "Описує вибраний елемент videosrc."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:82
 msgid "default GStreamer visualization"
 msgstr "типова візуалізація GStreamer"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:83
-msgid "GStreamer can put visualization plugins in a pipeline to transform audio streams in video frames. Some possible choices are goom, goom2k1 and synaesthesia. The visualization plugin can be a partial pipeline instead of just one element."
-msgstr "У GStreamer передбачено додавання до каналу обробки додатків візуалізації для обробки потоків звукових даних у кадрах відео. Серед можливих варіантів goom, goom2k1 та synaesthesia. Додаток візуалізації може бути окремим каналом, а не просто одним елементом."
+msgid ""
+"GStreamer can put visualization plugins in a pipeline to transform audio "
+"streams in video frames. Some possible choices are goom, goom2k1 and "
+"synaesthesia. The visualization plugin can be a partial pipeline instead of "
+"just one element."
+msgstr ""
+"У GStreamer передбачено додавання до каналу обробки додатків візуалізації "
+"для обробки потоків звукових даних у кадрах відео. Серед можливих варіантів "
+"goom, goom2k1 та synaesthesia. Додаток візуалізації може бути окремим "
+"каналом, а не просто одним елементом."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:90
 msgid "description for default GStreamer visualization"
 msgstr "опис типової візуалізації GStreamer"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:91
 msgid "Describes the selected visualization element."
 msgstr "Описує вибраний елемент візуалізації."
 
-#: ext/opencv/gsttemplatematch.c:442
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV не вдалося завантажити зображення шаблону"
 
-#: ext/resindvd/resindvdsrc.c:362
 msgid "Could not read title information for DVD."
 msgstr "Не вдалося прочитати дані щодо записів на DVD."
 
-#: ext/resindvd/resindvdsrc.c:368
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Не вдалося відкрити пристрій DVD «%s»."
 
-#: ext/resindvd/resindvdsrc.c:374
 msgid "Failed to set PGC based seeking."
 msgstr "Не вдалося позиціювання на основі програмної послідовності."
 
-#: ext/resindvd/resindvdsrc.c:1166
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Не вдалося прочитати DVD. Причиною може бути те, що DVD зашифровано, а бібліотеку розшифрування DVD не встановлено."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Не вдалося прочитати DVD. Причиною може бути те, що DVD зашифровано, а "
+"бібліотеку розшифрування DVD не встановлено."
 
-#: ext/resindvd/resindvdsrc.c:1171 ext/resindvd/resindvdsrc.c:1180
 msgid "Could not read DVD."
 msgstr "Не вдалося прочитати DVD."
 
-#: ext/smoothstreaming/gstmssdemux.c:380
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:525
 msgid "This file contains no playable streams."
 msgstr "Файл не містить потоків, які можна відтворити."
 
-#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "Не вдалося відкрити потік sndfile для читання."
 
-#: ext/sndio/sndiosink.c:324 ext/sndio/sndiosrc.c:321
 msgid "Could not establish connection to sndio"
 msgstr "Не вдалося встановити з’єднання з sndio"
 
-#: ext/sndio/sndiosink.c:331 ext/sndio/sndiosrc.c:328
 msgid "Failed to query sndio capabilities"
 msgstr "Не вдалося виконати опитування щодо можливостей sndio"
 
-#: ext/sndio/sndiosink.c:424 ext/sndio/sndiosrc.c:422
 msgid "Could not configure sndio"
 msgstr "Не вдалося налаштувати sndio"
 
-#: ext/sndio/sndiosink.c:430 ext/sndio/sndiosrc.c:428
 msgid "Could not start sndio"
 msgstr "Не вдалося задіяти sndio"
 
-#: gst/aiff/aiffparse.c:1458
 msgid "Internal data flow error."
 msgstr "Помилка внутрішнього перенесення даних."
 
-#: gst/asfmux/gstasfmux.c:1832
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr "Створений файл має більше значення випереджувального просування даних ніж тривалість відтворення збережених у ньому потоків даних"
+msgstr ""
+"Створений файл має більше значення випереджувального просування даних ніж "
+"тривалість відтворення збережених у ньому потоків даних"
 
-#: gst/camerabin2/camerabingeneral.c:166 gst/camerabin2/gstcamerabin2.c:1876
-#: gst/camerabin2/gstdigitalzoom.c:282 gst/camerabin2/gstviewfinderbin.c:271
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Відсутній елемент «%s». Перевірте, чи встановлено GStreamer належним чином."
+msgstr ""
+"Відсутній елемент «%s». Перевірте, чи встановлено GStreamer належним чином."
 
-#: gst/camerabin2/gstcamerabin2.c:364
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr "Значенням розташування файла є NULL. Будь ласка, встановіть чинне значення назви файла."
+msgstr ""
+"Значенням розташування файла є NULL. Будь ласка, встановіть чинне значення "
+"назви файла."
 
-#: gst/camerabin2/gstwrappercamerabinsrc.c:584
 msgid "Digitalzoom element couldn't be created"
 msgstr "Не вдалося створити елемент цифрового масштабування"
 
-#: gst/dvdspu/gstdvdspu.c:1040
 msgid "Subpicture format was not configured before data flow"
 msgstr "Формат підзображення не було налаштовано до створення потоку даних"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:2081
 msgid "Failed to get fragment URL."
 msgstr "Не вдалося отримати адреси фрагмента."
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:2282
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:2446
-#: gst/mpegtsdemux/mpegtsbase.c:1342 gst/mpegtsdemux/mpegtsbase.c:1346
-#: gst/nuvdemux/gstnuvdemux.c:736
 msgid "Internal data stream error."
 msgstr "Помилка внутрішнього потоку даних."
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:2383
 msgid "Couldn't download fragments"
 msgstr "Не вдалося отримати фрагменти"
 
-#: gst/videomeasure/gstvideomeasure_collector.c:294
 msgid "No file name specified for writing."
 msgstr "Не вказано назви файла для запису."
 
-#: gst/videomeasure/gstvideomeasure_collector.c:300
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr "Вказану назву файла, «%s», не можна перетворити у локальне кодування назв файлів."
+msgstr ""
+"Вказану назву файла, «%s», не можна перетворити у локальне кодування назв "
+"файлів."
 
-#: gst/videomeasure/gstvideomeasure_collector.c:307
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Не вдалося відкрити файл «%s» для запису."
 
-#: sys/dvb/gstdvbsrc.c:1565 sys/dvb/gstdvbsrc.c:1754
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Пристрою «%s» не існує."
 
-#: sys/dvb/gstdvbsrc.c:1569
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Не вдалося відкрити пристрій відтворення «%s»."
 
-#: sys/dvb/gstdvbsrc.c:1583
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Не вдалося отримати параметри пристрою відтворення «%s»."
 
-#: sys/dvb/gstdvbsrc.c:1600
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Не вдалося виконати нумерування систем надання даних для інтерфейсного пристрою «%s»."
+msgstr ""
+"Не вдалося виконати нумерування систем надання даних для інтерфейсного "
+"пристрою «%s»."
 
-#: sys/dvb/gstdvbsrc.c:1758
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не вдалося відкрити файл «%s» для читання."
 
-#: sys/dvb/parsechannels.c:168
 msgid "Couldn't find DVB channel configuration file"
 msgstr "Не вдалося знайти файла налаштувань каналів DVB"
 
-#: sys/dvb/parsechannels.c:171
 #, c-format
 msgid "Couldn't load DVB channel configuration file: %s"
 msgstr "Не вдалося завантажити файл налаштувань каналів DVB: %s"
 
-#: sys/dvb/parsechannels.c:180
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "У файлі налаштувань каналів DVB не міститься даних щодо жодного каналу"
 
-#: sys/dvb/parsechannels.c:456
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Не вдалося знайти параметрів каналу DVB %s"

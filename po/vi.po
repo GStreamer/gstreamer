@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:59+0200\n"
+"POT-Creation-Date: 2015-12-24 13:55+0100\n"
 "PO-Revision-Date: 2015-10-16 08:27+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -20,254 +20,229 @@ msgstr ""
 "X-Language-Team-Website: <http://translationproject.org/team/vi.html>\n"
 "X-Generator: Gtranslator 2.91.7\n"
 
-#: ext/gl/gstgltestsrc.c:673
 msgid "format wasn't negotiated before get function"
 msgstr "định dạng không được dàn xếp trước hàm"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:5
 msgid "default GStreamer sound events audiosink"
 msgstr "các sự kiện âm thanh GStreamer mặc định cho “audiosink”"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:6
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:19
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:32
-msgid "GStreamer can play audio using any number of output elements. Some possible choices are osssink, pulsesink and alsasink. The audiosink can be a partial pipeline instead of just one element."
-msgstr "GStreamer có thể phát nhạc với bất kỳ số lượng phần tử đầu ra nào. Một số có thể chọn lựa là osssink, pulsesink và alsasink. “audiosink” có thể là đường ống đặc biệt thay vì chỉ một phần tử."
+msgid ""
+"GStreamer can play audio using any number of output elements. Some possible "
+"choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+"GStreamer có thể phát nhạc với bất kỳ số lượng phần tử đầu ra nào. Một số có "
+"thể chọn lựa là osssink, pulsesink và alsasink. “audiosink” có thể là đường "
+"ống đặc biệt thay vì chỉ một phần tử."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:13
 msgid "description for default GStreamer sound events audiosink"
 msgstr "mô tả cho các sự kiện âm thanh GStreamer mặc định dành cho “audiosink”"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:14
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:27
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:40
 msgid "Describes the selected audiosink element."
 msgstr "Mô tả về phần tử “audiosink” đã chọn."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:18
 msgid "default GStreamer audiosink for Audio/Video Conferencing"
 msgstr "“GStreamer audiosink” mặc định dành cho Hội nghị Nhạc/Phim"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:26
-msgid "description for default GStreamer audiosink for Audio/Video Conferencing"
+msgid ""
+"description for default GStreamer audiosink for Audio/Video Conferencing"
 msgstr "mô tả cho GStreamer audiosink mặc định dành cho Hội nghị Nhạc/Phim"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:31
 msgid "default GStreamer audiosink for Music and Movies"
 msgstr "GStreamer audiosink mặc định dành cho Âm nhạc và Phim"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:39
 msgid "description for default GStreamer audiosink for Music and Movies"
 msgstr "mô tả cho GStreamer audiosink mặc định dành cho Âm nhạc và Phim"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:44
 msgid "default GStreamer videosink"
 msgstr "GStreamer videosink mặc định"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:45
-msgid "GStreamer can play video using any number of output elements. Some possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink can be a partial pipeline instead of just one element."
-msgstr "GStreamer có thể chạy phim với bất kỳ số lượng phần tử đầu ra nào. Một số có thể chọn lựa là xvimagesink, ximagesink, sdlvideosink và aasink. “videosink” có thể là đường ống đặc biệt thay vì chỉ một phần tử."
+msgid ""
+"GStreamer can play video using any number of output elements. Some possible "
+"choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
+"can be a partial pipeline instead of just one element."
+msgstr ""
+"GStreamer có thể chạy phim với bất kỳ số lượng phần tử đầu ra nào. Một số có "
+"thể chọn lựa là xvimagesink, ximagesink, sdlvideosink và aasink. “videosink” "
+"có thể là đường ống đặc biệt thay vì chỉ một phần tử."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:52
 msgid "description for default GStreamer videosink"
 msgstr "mô tả phần tử nguồn hình ảnh GStreamer mặc định"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:53
 msgid "Describes the selected videosink element."
 msgstr "Mô tả phần tử videosink đã chọn."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:57
 msgid "default GStreamer audiosrc"
 msgstr "nguồn âm thanh GStreamer mặc định"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:58
-msgid "GStreamer can record audio using any number of input elements. Some possible choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial pipeline instead of just one element."
-msgstr "GStreamer có thể ghi âm thanh dùng bao nhiêu phần tử đầu vào cũng được. Một số lựa chọn là osssrc, plusesrc và alsasrc. Nguồn âm thanh có thể là các đường ống cục bộ nào đó thay vì chỉ một phần tử nguồn."
+msgid ""
+"GStreamer can record audio using any number of input elements. Some possible "
+"choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
+"pipeline instead of just one element."
+msgstr ""
+"GStreamer có thể ghi âm thanh dùng bao nhiêu phần tử đầu vào cũng được. Một "
+"số lựa chọn là osssrc, plusesrc và alsasrc. Nguồn âm thanh có thể là các "
+"đường ống cục bộ nào đó thay vì chỉ một phần tử nguồn."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:65
 msgid "description for default GStreamer audiosrc"
 msgstr "mô tả phần tử nguồn âm thanh GStreamer mặc định"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:66
 msgid "Describes the selected audiosrc element."
 msgstr "Mô tả phần tử nguồn âm thanh đã chọn."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:70
 msgid "default GStreamer videosrc"
 msgstr "nguồn hình ảnh GStreamer mặc định"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:71
-msgid "GStreamer can record video from any number of input elements. Some possible choices are v4lsrc, v4l2src and videotestsrc. The video source can be a partial pipeline instead of just one element."
-msgstr "GStreamer có thể chạy phim với bất kỳ số lượng phần tử đầu vào nào. Một số có thể chọn lựa là v4lsrc, v4l2src và videotestsrc. Nguồn hình có thể là đường ống đặc biệt thay vì chỉ một phần tử."
+msgid ""
+"GStreamer can record video from any number of input elements. Some possible "
+"choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
+"partial pipeline instead of just one element."
+msgstr ""
+"GStreamer có thể chạy phim với bất kỳ số lượng phần tử đầu vào nào. Một số "
+"có thể chọn lựa là v4lsrc, v4l2src và videotestsrc. Nguồn hình có thể là "
+"đường ống đặc biệt thay vì chỉ một phần tử."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:77
 msgid "description for default GStreamer videosrc"
 msgstr "mô tả cho nguồn hình GStreamer mặc định"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:78
 msgid "Describes the selected videosrc element."
 msgstr "Mô tả phần tử nguồn hình ảnh đã chọn."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:82
 msgid "default GStreamer visualization"
 msgstr "hiện hình GStreamer mặc định"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:83
-msgid "GStreamer can put visualization plugins in a pipeline to transform audio streams in video frames. Some possible choices are goom, goom2k1 and synaesthesia. The visualization plugin can be a partial pipeline instead of just one element."
-msgstr "GStreamer có thể đặt phần bổ xung hiện hình trong một đường ống để mà chuyển dạng luồng dữ liệu âm thanh trong khung hình phim. Một số có thể chọn lựa là goom, goom2k1 và synaesthesia. Phần bổ xung hiện hình có thể là đường ống đặc biệt thay vì chỉ một phần tử."
+msgid ""
+"GStreamer can put visualization plugins in a pipeline to transform audio "
+"streams in video frames. Some possible choices are goom, goom2k1 and "
+"synaesthesia. The visualization plugin can be a partial pipeline instead of "
+"just one element."
+msgstr ""
+"GStreamer có thể đặt phần bổ xung hiện hình trong một đường ống để mà chuyển "
+"dạng luồng dữ liệu âm thanh trong khung hình phim. Một số có thể chọn lựa là "
+"goom, goom2k1 và synaesthesia. Phần bổ xung hiện hình có thể là đường ống "
+"đặc biệt thay vì chỉ một phần tử."
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:90
 msgid "description for default GStreamer visualization"
 msgstr "mô tả về hiện hình GStreamer mặc định"
 
-#: ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in:91
 msgid "Describes the selected visualization element."
 msgstr "Mô tả về phần tử hiện hình đã chọn."
 
-#: ext/opencv/gsttemplatematch.c:442
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV gặp lỗi khi tải ảnh tạm thời"
 
-#: ext/resindvd/resindvdsrc.c:362
 msgid "Could not read title information for DVD."
 msgstr "Không thể đọc thông tin tựa đề của đĩa DVD."
 
-#: ext/resindvd/resindvdsrc.c:368
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Gặp lỗi khi mở thiết bị đĩa DVD “%s”."
 
-#: ext/resindvd/resindvdsrc.c:374
 msgid "Failed to set PGC based seeking."
 msgstr "Gặp lỗi khi đặt chức năng di chuyển vị trí đọc dựa vào PGC."
 
-#: ext/resindvd/resindvdsrc.c:1166
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Không thể đọc DVD. Nguyên nhân có thể là DVD đã bị mã hõa mà thư viện giải mã DVD lại chưa được cài đặt."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Không thể đọc DVD. Nguyên nhân có thể là DVD đã bị mã hõa mà thư viện giải "
+"mã DVD lại chưa được cài đặt."
 
-#: ext/resindvd/resindvdsrc.c:1171 ext/resindvd/resindvdsrc.c:1180
 msgid "Could not read DVD."
 msgstr "Không thể đọc DVD."
 
-#: ext/smoothstreaming/gstmssdemux.c:380
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:525
 msgid "This file contains no playable streams."
 msgstr "Tập tin này không chứa luồng dữ liệu có thể phát."
 
-#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "Không thể mở luồng dữ liệu tập tin snd để đọc."
 
-#: ext/sndio/sndiosink.c:324 ext/sndio/sndiosrc.c:321
 msgid "Could not establish connection to sndio"
 msgstr "Không thể thiết lập kết nối tới sndio"
 
-#: ext/sndio/sndiosink.c:331 ext/sndio/sndiosrc.c:328
 msgid "Failed to query sndio capabilities"
 msgstr "Gặp lỗi khi truy vấn khả năng của sndio"
 
-#: ext/sndio/sndiosink.c:424 ext/sndio/sndiosrc.c:422
 msgid "Could not configure sndio"
 msgstr "Không thể cấu hình sndio"
 
-#: ext/sndio/sndiosink.c:430 ext/sndio/sndiosrc.c:428
 msgid "Could not start sndio"
 msgstr "Không thể khởi chạy sndio"
 
-#: gst/aiff/aiffparse.c:1458
 msgid "Internal data flow error."
 msgstr "Lỗi tràn luồng dữ liệu nội bộ."
 
-#: gst/asfmux/gstasfmux.c:1832
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr "Tập tin đã tạo có thời gian cuộn trước lớn hơn thời lượng của dòng dữ liệu"
+msgstr ""
+"Tập tin đã tạo có thời gian cuộn trước lớn hơn thời lượng của dòng dữ liệu"
 
-#: gst/camerabin2/camerabingeneral.c:166 gst/camerabin2/gstcamerabin2.c:1876
-#: gst/camerabin2/gstdigitalzoom.c:282 gst/camerabin2/gstviewfinderbin.c:271
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Thiếu phần tử “%s” — hãy kiểm tra lại phần cài đặt GStreamer."
 
-#: gst/camerabin2/gstcamerabin2.c:364
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr "Vị trí tập tin được đặt thành “NULL”. xin hãy đặt một tên tập tin hợp lệ"
+msgstr ""
+"Vị trí tập tin được đặt thành “NULL”. xin hãy đặt một tên tập tin hợp lệ"
 
-#: gst/camerabin2/gstwrappercamerabinsrc.c:584
 msgid "Digitalzoom element couldn't be created"
 msgstr "Không thể tạo phần tử thu phóng số"
 
-#: gst/dvdspu/gstdvdspu.c:1040
 msgid "Subpicture format was not configured before data flow"
 msgstr "Định dạng ảnh phụ chưa được cấu hình trước khi dữ liệu truyền đến"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:2081
 msgid "Failed to get fragment URL."
 msgstr "Gặp lỗi khi lấy URL phân mảnh."
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:2282
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:2446
-#: gst/mpegtsdemux/mpegtsbase.c:1342 gst/mpegtsdemux/mpegtsbase.c:1346
-#: gst/nuvdemux/gstnuvdemux.c:736
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:2383
 msgid "Couldn't download fragments"
 msgstr "Không thể tải về các phân mảnh"
 
-#: gst/videomeasure/gstvideomeasure_collector.c:294
 msgid "No file name specified for writing."
 msgstr "Chưa chỉ định tên tập tin để ghi vào."
 
-#: gst/videomeasure/gstvideomeasure_collector.c:300
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr "Tên tập tin đã cho “%s” không thể chuyển đổi bảng mã tên tập tin nội bộ."
+msgstr ""
+"Tên tập tin đã cho “%s” không thể chuyển đổi bảng mã tên tập tin nội bộ."
 
-#: gst/videomeasure/gstvideomeasure_collector.c:307
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Không thể mở tập tin “%s” để ghi."
 
-#: sys/dvb/gstdvbsrc.c:1565 sys/dvb/gstdvbsrc.c:1754
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Thiết bị “%s” không tồn tại."
 
-#: sys/dvb/gstdvbsrc.c:1569
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Không thể mở thiết bị mặt tiền “%s”."
 
-#: sys/dvb/gstdvbsrc.c:1583
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Không thể lấy các cài đặt từ thiết bị giao diện (mặt tiền) “%s”."
 
-#: sys/dvb/gstdvbsrc.c:1600
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Không thể liệt kê các hệ thống phân phối từ thiết bị giao diện (mặt tiền) “%s”."
+msgstr ""
+"Không thể liệt kê các hệ thống phân phối từ thiết bị giao diện (mặt tiền) "
+"“%s”."
 
-#: sys/dvb/gstdvbsrc.c:1758
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Không thể mở tập tin “%s” để đọc."
 
-#: sys/dvb/parsechannels.c:168
 msgid "Couldn't find DVB channel configuration file"
 msgstr "Không thể tìm thấy tập tin cấu hình kênh DVB"
 
-#: sys/dvb/parsechannels.c:171
 #, c-format
 msgid "Couldn't load DVB channel configuration file: %s"
 msgstr "Không thể tải tập tin cấu hình kênh DVB: %s"
 
-#: sys/dvb/parsechannels.c:180
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "Tập tin cấu hình kênh DVB chẳng chứa kênh nào cả"
 
-#: sys/dvb/parsechannels.c:456
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Không thể tìm thấy chi tiết cho kênh DVB %s"
@@ -281,8 +256,12 @@ msgstr "Không thể tìm thấy chi tiết cho kênh DVB %s"
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hòa tiếng."
 
-#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-#~ msgstr "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hòa tiếng. Phiên bản Hệ thống Âm thanh Mở này không được yếu tố này hỗ trợ."
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hòa tiếng. Phiên "
+#~ "bản Hệ thống Âm thanh Mở này không được yếu tố này hỗ trợ."
 
 #~ msgid "Volume"
 #~ msgstr "Âm"
@@ -587,17 +566,29 @@ msgstr "Không thể tìm thấy chi tiết cho kênh DVB %s"
 #~ msgid "%s %d"
 #~ msgstr "%s %d"
 
-#~ msgid "Could not open audio device for playback. Device is being used by another application."
-#~ msgstr "Không thể mở thiết bị âm thanh để phát lại. Thiết bị này đang được ứng dụng khác sử dụng."
+#~ msgid ""
+#~ "Could not open audio device for playback. Device is being used by another "
+#~ "application."
+#~ msgstr ""
+#~ "Không thể mở thiết bị âm thanh để phát lại. Thiết bị này đang được ứng "
+#~ "dụng khác sử dụng."
 
-#~ msgid "Could not open audio device for playback. You don't have permission to open the device."
-#~ msgstr "Không thể mở thiết bị âm thanh để phát lại. Bạn không có quyền mở thiết bị này."
+#~ msgid ""
+#~ "Could not open audio device for playback. You don't have permission to "
+#~ "open the device."
+#~ msgstr ""
+#~ "Không thể mở thiết bị âm thanh để phát lại. Bạn không có quyền mở thiết "
+#~ "bị này."
 
 #~ msgid "Could not open audio device for playback."
 #~ msgstr "Không thể mở thiết bị âm thanh để phát lại."
 
-#~ msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-#~ msgstr "Không thể mở thiết bị âm thanh để phát lại. Phiên bản Hệ thống Âm thanh Mở này không được yếu tố này hỗ trợ."
+#~ msgid ""
+#~ "Could not open audio device for playback. This version of the Open Sound "
+#~ "System is not supported by this element."
+#~ msgstr ""
+#~ "Không thể mở thiết bị âm thanh để phát lại. Phiên bản Hệ thống Âm thanh "
+#~ "Mở này không được yếu tố này hỗ trợ."
 
 #~ msgid "Playback is not supported by this audio device."
 #~ msgstr "Thiết bị âm thanh này không hỗ trợ chức năng phát lại."
