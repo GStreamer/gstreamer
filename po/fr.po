@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:48+0200\n"
+"POT-Creation-Date: 2015-12-24 12:56+0100\n"
 "PO-Revision-Date: 2015-04-26 19:42+0200\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -618,6 +618,9 @@ msgstr ""
 #, fuzzy
 msgid "change subtitle track"
 msgstr "Format de sous-titres Kate"
+
+msgid "seek to beginning"
+msgstr ""
 
 msgid "show keyboard shortcuts"
 msgstr ""

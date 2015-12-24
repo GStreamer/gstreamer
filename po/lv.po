@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:48+0200\n"
+"POT-Creation-Date: 2015-12-24 12:56+0100\n"
 "PO-Revision-Date: 2014-04-20 16:15+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -600,6 +600,9 @@ msgstr ""
 #, fuzzy
 msgid "change subtitle track"
 msgstr "Kate subtitru formāts"
+
+msgid "seek to beginning"
+msgstr ""
 
 msgid "show keyboard shortcuts"
 msgstr ""

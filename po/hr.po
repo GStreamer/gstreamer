@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-09-25 22:48+0200\n"
+"POT-Creation-Date: 2015-12-24 12:56+0100\n"
 "PO-Revision-Date: 2012-04-16 04:19+0200\n"
 "Last-Translator: Tomislav Krznar <tomislav.krznar@gmail.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -602,6 +602,9 @@ msgstr ""
 #, fuzzy
 msgid "change subtitle track"
 msgstr "Kate oblik titlova"
+
+msgid "seek to beginning"
+msgstr ""
 
 msgid "show keyboard shortcuts"
 msgstr ""
