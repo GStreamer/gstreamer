@@ -1,18 +1,17 @@
 
-Release notes for GStreamer libav Plugins 1.6.0
+Release notes for GStreamer libav Plugins 1.7.1
 
 
-The GStreamer team is proud to announce a new major feature release in the
-stable 1.x API series of your favourite cross-platform multimedia framework!
+The GStreamer team is pleased to announce the first release of the unstable
+1.7 release series. The 1.7 release series is adding new features on top of
+the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.7 release series
+will lead to the stable 1.8 release series in the next weeks. Any newly added
+API can still change until that point.
 
 
-This release has been in the works for more than a year and is packed with new
-features, bug fixes and other improvements.
-
-
-See
-http://gstreamer.freedesktop.org/releases/1.6/
-for the full list of changes.
+Binaries for Android, iOS, Mac OS X and Windows will be provided separately
+during the unstable 1.7 release series.
 
 
 
@@ -39,8 +38,13 @@ contains a set of less supported plugins that haven't passed the
 
   
 
-There were no bugs fixed in this release
-    
+Bugs fixed in this release
+     
+      * 759752 : [gst-libav] link error with clang or gcc on FreeBSD
+      * 754242 : avviddec: fix memory leak
+      * 754690 : libtool versions earlier than 2.4.4 fail with autoreconf
+      * 758726 : avviddec: slice offset handling of real video leads to memory mishandling.
+      * 759846 : incorrectly maps ffmpeg mono to GStreamer front-center
 
 ==== Download ====
 
@@ -77,8 +81,13 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Jan Schmidt
+      * Luis de Bethencourt
+      * Mark Nauwelaerts
       * Nicolas Dufresne
+      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
+      * Thiago Santos
       * Tim-Philipp Müller
+      * Vineeth T M
+      * Vineeth TM
  

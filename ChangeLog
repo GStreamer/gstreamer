@@ -1,9 +1,242 @@
-=== release 1.6.0 ===
+=== release 1.7.1 ===
 
-2015-09-25  Sebastian Dröge <slomo@coaxion.net>
+2015-12-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.0
+	  releasing 1.7.1
+
+2015-12-24 13:06:13 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Add special mapping for mono channel layouts
+	  In ffmpeg this is the same as FRONT_CENTER, but we distinguish between
+	  FRONT_CENTER and MONO in GStreamer. Add an explicit mapping for this special
+	  case in the translations functions.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759846
+
+2015-11-27 11:16:07 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  avviddec: remove realvideo slice_offset handling
+	  Handling slice_offset in avviddec is resulting in invalid memory read.
+	  Since rv decoders anyways handle slice_offset, removing the same to fix
+	  memory mishandlings
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758726
+
+2015-12-21 12:41:02 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n2.8.4
+
+2015-12-21 12:34:11 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Use -Bsymbolic-functions if available
+	  While this is more useful for libraries, some of our plugins with multiple
+	  files and some internal API can also benefit from this.
+
+2015-12-16 09:36:25 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-libav.xml:
+	  docs: update to git
+
+2015-12-07 09:11:30 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From b319909 to 86e4663
+
+2015-12-02 12:27:08 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* ext/libav/gstav.c:
+	  Require libav provided by FFmpeg at run-time
+	  Error out if system's libav* libraries are not
+	  provided by FFmpeg. Libav-incompatible changes
+	  were introduced to support the latter so we
+	  can no longer support both.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758183
+
+2015-11-23 23:45:38 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* configure.ac:
+	  Require libav provided by FFmpeg at build-time
+	  Libav-incompatible changes were introduced to support
+	  FFmpeg and we can no longer properly support Libav.
+	  FFmpeg micro versions for libav* start at 100 (this was
+	  done to differentiate from Libav builds). We use this
+	  to bail at configure time if the system libav* libraries
+	  are not provided by FFmpeg.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758183
+
+2015-12-01 15:12:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to n2.8.3
+
+2015-11-30 19:01:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Make sure to use a buffer pool with the correct width/height configured on it for pushing buffers downstream
+	  If downstream does not provide a (usable) pool, we would use our internal
+	  pool. But the internal pool might be configured with a different width/height
+	  because of padding, which then will cause problems if we push buffers from it
+	  directly downstream.
+	  Instead create a new pool if the width/height is different.
+	  This prevents crashes with vaapisink and d3dvideosink for example.
+	  Based on the debugging results and discussions with
+	  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758344
+
+2015-11-23 10:31:39 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Fix structure memory leak
+	  gst_structure_copy already takes a reference for config_copy.
+	  No need to take another reference while setting it to buffer pool
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758512
+
+2015-11-20 10:48:47 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* ext/libav/gstavvidenc.c:
+	  Remove unnecessary NULL checks before g_free()
+	  g_free() is NULL-safe
+	  (Includes unrelated formatting change to go through
+	  indent checker commit hook)
+
+2015-11-12 10:44:25 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to n2.8.2
+
+2015-11-07 12:11:57 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Don't fallback on allocation failure
+	  Allocation should keep working, falling back causes the stride to
+	  change which is not supported in direct rendering.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756028
+
+2015-11-02 10:00:55 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Fix frame memory leak
+	  The frame being passed to handle_frame should be unref'ed in all cases
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757453
+
+2015-11-02 10:20:02 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: Fix string memory leaks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757454
+
+2015-10-26 19:54:10 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: _drain and _finish need slightly different handling
+	  ... since they handle separate cases in video decoder with different requirements.
+	  Consider e.g. x264enc ! rtph264pay ! identity drop-probability=0.1 ! rtph264depay
+	  to illustrate a need for such separation.
+
+2015-10-21 14:37:05 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b99800a to b319909
+
+2015-10-20 17:29:42 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Use new GST_ENABLE_EXTRA_CHECKS #define
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756870
+
+2015-10-21 14:28:34 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 9aed1d7 to b99800a
+
+2015-10-16 18:52:57 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Fix bufferpool config double free by taking a copy as needed
+	  Also free the config in two code paths where we leaked it before.
+
+2015-10-14 10:18:01 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to n2.8.1
+
+2015-10-09 21:22:12 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: add jpeg2000 decoder mapping
+	  Map the 3 possible jpeg2000 caps to JPEG2000 codec id
+
+2015-10-03 18:25:35 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Don't allocate dummy codec data anymore, it causes crashes nowadays
+	  Multithreaded encoders are going to free this dummy codec data twice, e.g.
+	  with this pipeline
+	  gst-launch-1.0 videotestsrc num-buffers=40 ! \
+	  videoconvert ! avenc_mjpeg ! fakesink
+
+2015-10-03 18:14:05 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Pass the correct user_data to gst_buffer_new_wrapped_full()
+	  Fixes crash with e.g.
+	  gst-launch-1.0 videotestsrc num-buffers=40 ! \
+	  videoconvert ! avenc_huffyuv ! fakesink
+
+2015-10-02 23:02:01 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavutils.c:
+	* ext/libav/gstavutils.h:
+	  libav: G_CONST_RETURN is deprecated since GLib 2.30
+
+2015-10-02 22:26:36 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Add configure check for GLib for consistency with other modules
+
+2015-10-02 11:49:35 +0100  Luis de Bethencourt <luisbg@osg.samsung.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: only free config when pool doesn't take ownership
+	  Since gst_buffer_pool_set_config() takes ownership of the config structure,
+	  it is only necessary to free the structure before using it when the true
+	  branch of if (gst_buffer_pool_config_validate_params) hasn't run.
+	  gst_buffer_pool_set_config() always takes ownership of the structure
+	  regardless of success or failure. Which means the return, checked with
+	  if (!working_pool), has no relation to the state of the structure.
+
+2015-08-28 15:15:39 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: fix memory leak
+	  Free config before overwriting.
+	  CID #1320708
+
+2015-09-25 23:51:15 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.6.0 ===
+
+2015-09-25 23:32:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.6.0
 
 === release 1.5.91 ===
 
