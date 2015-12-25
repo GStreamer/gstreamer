@@ -3253,6 +3253,8 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       /* try to reactivate the chain */
       if ((playsink->video_sink
               && playsink->video_sink != playsink->videochain->sink)
+          || (playsink->video_filter
+              && playsink->video_filter != playsink->videochain->filter)
           || !setup_video_chain (playsink, raw, async)) {
         if (playsink->video_sinkpad_stream_synchronizer) {
           gst_element_release_request_pad (GST_ELEMENT_CAST
@@ -3273,6 +3275,16 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
             gst_element_set_state (playsink->videochain->sink, GST_STATE_NULL);
           gst_bin_remove (GST_BIN_CAST (playsink->videochain->chain.bin),
               playsink->videochain->sink);
+        }
+
+        /* Remove the filter from the bin to keep its state
+         * and unparent it to allow reuse */
+        if (playsink->videochain->filter) {
+          if (playsink->videochain->filter != playsink->video_filter)
+            gst_element_set_state (playsink->videochain->filter,
+                GST_STATE_NULL);
+          gst_bin_remove (GST_BIN_CAST (playsink->videochain->chain.bin),
+              playsink->videochain->filter);
         }
 
         activate_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
@@ -3430,6 +3442,8 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
 
     if (playsink->video_sink)
       gst_element_set_state (playsink->video_sink, GST_STATE_NULL);
+    if (playsink->video_filter)
+      gst_element_set_state (playsink->video_filter, GST_STATE_NULL);
   }
 
   if (need_audio) {
@@ -3444,6 +3458,8 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       /* try to reactivate the chain */
       if ((playsink->audio_sink
               && playsink->audio_sink != playsink->audiochain->sink)
+          || (playsink->audio_filter
+              && playsink->audio_filter != playsink->audiochain->filter)
           || !setup_audio_chain (playsink, raw)) {
         GST_DEBUG_OBJECT (playsink, "removing current audio chain");
         if (playsink->audio_tee_asrc) {
@@ -3474,6 +3490,16 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
             gst_element_set_state (playsink->audiochain->sink, GST_STATE_NULL);
           gst_bin_remove (GST_BIN_CAST (playsink->audiochain->chain.bin),
               playsink->audiochain->sink);
+        }
+
+        /* Remove the filter from the bin to keep its state
+         * and unparent it to allow reuse */
+        if (playsink->audiochain->filter) {
+          if (playsink->audiochain->filter != playsink->audio_filter)
+            gst_element_set_state (playsink->audiochain->filter,
+                GST_STATE_NULL);
+          gst_bin_remove (GST_BIN_CAST (playsink->audiochain->chain.bin),
+              playsink->audiochain->filter);
         }
 
         activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
@@ -3601,6 +3627,8 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
 
     if (playsink->audio_sink)
       gst_element_set_state (playsink->audio_sink, GST_STATE_NULL);
+    if (playsink->audio_filter)
+      gst_element_set_state (playsink->audio_filter, GST_STATE_NULL);
   }
 
   if (need_vis) {
@@ -4946,6 +4974,19 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
           gst_element_set_state (playsink->visualisation, GST_STATE_NULL);
         if (playsink->text_sink != NULL)
           gst_element_set_state (playsink->text_sink, GST_STATE_NULL);
+
+        /* Unparent the filters to allow reuse */
+        if (playsink->videochain && playsink->videochain->filter)
+          gst_bin_remove (GST_BIN_CAST (playsink->videochain->chain.bin),
+              playsink->videochain->filter);
+        if (playsink->audiochain && playsink->audiochain->filter)
+          gst_bin_remove (GST_BIN_CAST (playsink->audiochain->chain.bin),
+              playsink->audiochain->filter);
+        if (playsink->audio_filter != NULL)
+          gst_element_set_state (playsink->audio_filter, GST_STATE_NULL);
+        if (playsink->video_filter != NULL)
+          gst_element_set_state (playsink->video_filter, GST_STATE_NULL);
+
         free_chain ((GstPlayChain *) playsink->videodeinterlacechain);
         playsink->videodeinterlacechain = NULL;
         free_chain ((GstPlayChain *) playsink->videochain);
