@@ -1818,6 +1818,9 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
       GST_PLAY_SINK_TYPE_VIDEO_RAW);
   if (chain->filter) {
     if (!raw) {
+      gst_object_unref (chain->filter);
+      chain->filter = NULL;
+
       if (playsink->flags & GST_PLAY_FLAG_FORCE_FILTERS) {
         goto filter_with_nonraw;
       } else {
@@ -2693,6 +2696,9 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
       GST_PLAY_SINK_TYPE_AUDIO_RAW);
   if (chain->filter) {
     if (!raw) {
+      gst_object_unref (chain->filter);
+      chain->filter = NULL;
+
       if (playsink->flags & GST_PLAY_FLAG_FORCE_FILTERS) {
         goto filter_with_nonraw;
       } else {
