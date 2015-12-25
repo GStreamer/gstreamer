@@ -658,6 +658,25 @@ gst_scaletempo_start (GstBaseTransform * trans)
 }
 
 static gboolean
+gst_scaletempo_stop (GstBaseTransform * trans)
+{
+  GstScaletempo *scaletempo = GST_SCALETEMPO (trans);
+
+  g_free (scaletempo->buf_queue);
+  scaletempo->buf_queue = NULL;
+  g_free (scaletempo->buf_overlap);
+  scaletempo->buf_overlap = NULL;
+  g_free (scaletempo->table_blend);
+  scaletempo->table_blend = NULL;
+  g_free (scaletempo->buf_pre_corr);
+  scaletempo->buf_pre_corr = NULL;
+  g_free (scaletempo->table_window);
+  scaletempo->table_window = NULL;
+
+  return TRUE;
+}
+
+static gboolean
 gst_scaletempo_query (GstBaseTransform * trans, GstPadDirection direction,
     GstQuery * query)
 {
@@ -816,6 +835,7 @@ gst_scaletempo_class_init (GstScaletempoClass * klass)
   basetransform_class->transform = GST_DEBUG_FUNCPTR (gst_scaletempo_transform);
   basetransform_class->query = GST_DEBUG_FUNCPTR (gst_scaletempo_query);
   basetransform_class->start = GST_DEBUG_FUNCPTR (gst_scaletempo_start);
+  basetransform_class->stop = GST_DEBUG_FUNCPTR (gst_scaletempo_stop);
   basetransform_class->submit_input_buffer =
       GST_DEBUG_FUNCPTR (gst_scaletempo_submit_input_buffer);
 }
