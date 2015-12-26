@@ -408,7 +408,7 @@ count_power (guint v)
 }
 
 /**
- * gst_audio_quantize_new:
+ * gst_audio_quantize_new: (skip):
  * @dither: a #GstAudioDitherMethod
  * @ns: a #GstAudioNoiseShapingMethod
  * @flags: #GstAudioQuantizeFlags

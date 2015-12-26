@@ -665,8 +665,8 @@ setup_allocators (GstAudioConverter * convert)
 
 /**
  * gst_audio_converter_new: (skip)
- * @in: a source #GstAudioInfo
- * @out: a destination #GstAudioInfo
+ * @in_info: a source #GstAudioInfo
+ * @out_info: a destination #GstAudioInfo
  * @config: (transfer full): a #GstStructure with configuration options
  *
  * Create a new #GstAudioConverter that is able to convert between @in and @out
@@ -678,34 +678,34 @@ setup_allocators (GstAudioConverter * convert)
  * Returns: a #GstAudioConverter or %NULL if conversion is not possible.
  */
 GstAudioConverter *
-gst_audio_converter_new (GstAudioInfo * in, GstAudioInfo * out,
+gst_audio_converter_new (GstAudioInfo * in_info, GstAudioInfo * out_info,
     GstStructure * config)
 {
   GstAudioConverter *convert;
   AudioChain *prev;
 
-  g_return_val_if_fail (in != NULL, FALSE);
-  g_return_val_if_fail (out != NULL, FALSE);
-  g_return_val_if_fail (in->rate == out->rate, FALSE);
-  g_return_val_if_fail (in->layout == GST_AUDIO_LAYOUT_INTERLEAVED, FALSE);
-  g_return_val_if_fail (in->layout == out->layout, FALSE);
+  g_return_val_if_fail (in_info != NULL, FALSE);
+  g_return_val_if_fail (out_info != NULL, FALSE);
+  g_return_val_if_fail (in_info->rate == out_info->rate, FALSE);
+  g_return_val_if_fail (in_info->layout == GST_AUDIO_LAYOUT_INTERLEAVED, FALSE);
+  g_return_val_if_fail (in_info->layout == out_info->layout, FALSE);
 
-  if ((GST_AUDIO_INFO_CHANNELS (in) != GST_AUDIO_INFO_CHANNELS (out)) &&
-      (GST_AUDIO_INFO_IS_UNPOSITIONED (in)
-          || GST_AUDIO_INFO_IS_UNPOSITIONED (out)))
+  if ((GST_AUDIO_INFO_CHANNELS (in_info) != GST_AUDIO_INFO_CHANNELS (out_info))
+      && (GST_AUDIO_INFO_IS_UNPOSITIONED (in_info)
+          || GST_AUDIO_INFO_IS_UNPOSITIONED (out_info)))
     goto unpositioned;
 
   convert = g_slice_new0 (GstAudioConverter);
 
-  convert->in = *in;
-  convert->out = *out;
+  convert->in = *in_info;
+  convert->out = *out_info;
 
   /* default config */
   convert->config = gst_structure_new_empty ("GstAudioConverter");
   if (config)
     gst_audio_converter_set_config (convert, config);
 
-  GST_INFO ("unitsizes: %d -> %d", in->bpf, out->bpf);
+  GST_INFO ("unitsizes: %d -> %d", in_info->bpf, out_info->bpf);
 
   /* step 1, unpack */
   prev = chain_unpack (convert);
@@ -721,7 +721,8 @@ gst_audio_converter_new (GstAudioInfo * in, GstAudioInfo * out,
   convert->pack_chain = chain_pack (convert, prev);
 
   /* optimize */
-  if (out->finfo->format == in->finfo->format && convert->mix_passthrough) {
+  if (out_info->finfo->format == in_info->finfo->format
+      && convert->mix_passthrough) {
     GST_INFO ("same formats and passthrough mixing -> passthrough");
     convert->passthrough = TRUE;
   }

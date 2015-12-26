@@ -792,7 +792,7 @@ gst_audio_channel_mix_mix_double (GstAudioChannelMix * mix,
 }
 
 /**
- * gst_audio_channel_mix_new:
+ * gst_audio_channel_mix_new: (skip):
  * @flags:
  * @in_channels:
  * @in_position:
@@ -880,8 +880,6 @@ gst_audio_channel_mix_is_passthrough (GstAudioChannelMix * mix)
 /**
  * gst_audio_channel_mix_samples:
  * @mix: a #GstAudioChannelMix
- * @format: a #GstAudioFormat
- * @layout: a #GstAudioLayout
  * @in: input samples
  * @out: output samples
  * @samples: number of samples
