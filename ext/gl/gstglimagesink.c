@@ -409,8 +409,8 @@ gst_glimage_sink_navigation_send_event (GstNavigation * navigation, GstStructure
     * structure)
 {
   GstGLImageSink *sink = GST_GLIMAGE_SINK (navigation);
+  gboolean handled = FALSE;
   GstEvent *event = NULL;
-  GstPad *pad = NULL;
   GstGLWindow *window;
   guint width, height;
   gdouble x, y;
@@ -427,9 +427,6 @@ gst_glimage_sink_navigation_send_event (GstNavigation * navigation, GstStructure
   height = GST_VIDEO_SINK_HEIGHT (sink);
   gst_gl_window_get_surface_dimensions (window, &width, &height);
 
-  event = gst_event_new_navigation (structure);
-
-  pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (sink));
   /* Converting pointer coordinates to the non scaled geometry */
   if (width != 0 && gst_structure_get_double (structure, "pointer_x", &x)
       && height != 0 && gst_structure_get_double (structure, "pointer_y", &y)) {
@@ -441,10 +438,17 @@ gst_glimage_sink_navigation_send_event (GstNavigation * navigation, GstStructure
         stream_x, "pointer_y", G_TYPE_DOUBLE, stream_y, NULL);
   }
 
-  if (GST_IS_PAD (pad) && GST_IS_EVENT (event))
-    gst_pad_send_event (pad, event);
+  event = gst_event_new_navigation (structure);
+  if (event) {
+    gst_event_ref (event);
+    handled = gst_pad_push_event (GST_VIDEO_SINK_PAD (sink), event);
 
-  gst_object_unref (pad);
+    if (!handled)
+      gst_element_post_message ((GstElement *) sink,
+          gst_navigation_message_new_event ((GstObject *) sink, event));
+
+    gst_event_unref (event);
+  }
   gst_object_unref (window);
 }
 
