@@ -3579,7 +3579,7 @@ ges_timeline_is_empty (GESTimeline * timeline)
  *
  * Retrieve the layer with @priority as a priority
  *
- * Returns: A #GESLayer or %NULL if no layer with @priority was found
+ * Returns: (transfer full): A #GESLayer or %NULL if no layer with @priority was found
  *
  * Since 1.6
  */

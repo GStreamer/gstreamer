@@ -136,7 +136,7 @@ ges_extractable_set_asset (GESExtractable * self, GESAsset * asset)
  * ges_extractable_get_id:
  * @self: The #GESExtractable
  *
- * Returns: (transfer full) The #id of the associated #GESAsset, free with #g_free
+ * Returns: (transfer full): The #id of the associated #GESAsset, free with #g_free
  */
 gchar *
 ges_extractable_get_id (GESExtractable * self)

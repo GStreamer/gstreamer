@@ -264,7 +264,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
       G_TYPE_NONE, 1, GST_TYPE_CONTROL_BINDING);
 
   /**
-   * GESTrackElement::control-binding-added:
+   * GESTrackElement::control-binding-removed:
    * @track_element: a #GESTrackElement
    * @control_binding: the #GstControlBinding that has been added
    *
@@ -272,7 +272,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
    * is added for a child property of @track_element
    */
   ges_track_element_signals[CONTROL_BINDING_REMOVED] =
-      g_signal_new ("control-binding-removed", G_TYPE_FROM_CLASS (klass),
+      g_signal_new ("control-binding-reomved", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GST_TYPE_CONTROL_BINDING);
 
@@ -1477,7 +1477,6 @@ ges_track_element_edit (GESTrackElement * object,
  * ges_track_element_remove_control_binding:
  * @object: the #GESTrackElement on which to set a control binding
  * @property_name: The name of the property to control.
- * @binding_type: The type of binding to create. Only "direct" is available for now.
  *
  * Removes a #GstControlBinding from @object.
  *
@@ -1523,7 +1522,7 @@ ges_track_element_remove_control_binding (GESTrackElement * object,
 /**
  * ges_track_element_set_control_source:
  * @object: the #GESTrackElement on which to set a control binding
- * @source: (element-type GstControlSource): the #GstControlSource to set on the binding.
+ * @source: the #GstControlSource to set on the binding.
  * @property_name: The name of the property to control.
  * @binding_type: The type of binding to create. Only "direct" is available for now.
  *

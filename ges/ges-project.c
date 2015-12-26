@@ -732,7 +732,7 @@ ges_project_create_asset (GESProject * project, const gchar * id,
  * "asset-added" signal to get the asset when it finally gets added to
  * @project
  *
- * Returns: The newly created #GESAsset
+ * Returns: (transfer full): The newly created #GESAsset
  */
 GESAsset *
 ges_project_create_asset_sync (GESProject * project, const gchar * id,

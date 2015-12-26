@@ -1263,7 +1263,7 @@ ges_timeline_element_add_child_property (GESTimelineElement * self,
 }
 
 /**
- * ges_track_element_get_child_property_by_pspec:
+ * ges_timeline_element_get_child_property_by_pspec:
  * @self: a #GESTrackElement
  * @pspec: The #GParamSpec that specifies the property you want to get
  * @value: (out): return location for the value
@@ -1366,7 +1366,7 @@ not_found:
 
 /**
 * ges_timeline_element_get_child_property:
-* @object: The origin #GESTimelineElement
+* @self: The origin #GESTimelineElement
 * @property_name: The name of the property
 * @value: (out): return location for the property value, it will
 * be initialized if it is initialized with 0
@@ -1421,7 +1421,7 @@ not_found:
  *     proper GParamSpec in case various GstElement-s contain the same property
  *     name. If you don't do so, you will get the first element found, having
  *     this property and the and the corresponding GParamSpec.
- * @element: (out) (allow-none) (transfer full): pointer to a #GstElement that
+ * @child: (out) (allow-none) (transfer full): pointer to a #GstElement that
  *     takes the real object to set property on
  * @pspec: (out) (allow-none) (transfer full): pointer to take the #GParamSpec
  *     describing the property

@@ -756,7 +756,7 @@ ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
  * ges_asset_list_proxies:
  * @asset: The #GESAsset to get proxies from
  *
- * Returns: The list of proxies @asset has. Note that the default asset to be
+ * Returns: (element-type GESAsset) (transfer none): The list of proxies @asset has. Note that the default asset to be
  * used is always the first in that list.
  */
 GList *
