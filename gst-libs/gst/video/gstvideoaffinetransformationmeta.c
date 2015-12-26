@@ -104,7 +104,7 @@ gst_video_affine_transformation_meta_get_info (void)
  * Attaches GstVideoAffineTransformationMeta metadata to @buffer with
  * the given parameters.
  *
- * Returns: the #GstVideoAffineTransformationMeta on @buffer.
+ * Returns: (transfer none): the #GstVideoAffineTransformationMeta on @buffer.
  *
  * Since: 1.8
  */
