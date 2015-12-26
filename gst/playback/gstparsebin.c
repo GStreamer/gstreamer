@@ -3750,7 +3750,10 @@ build_fallback_collection (GstParseChain * chain,
 
   if (!group)
     return;
-  for (l = group->children; l; l = l->next) {
+
+  /* we used g_list_prepend when adding children, so iterate from last
+   * to first to maintain the original order they were added in */
+  for (l = g_list_last (group->children); l != NULL; l = l->prev) {
     GstParseChain *childchain = l->data;
 
     build_fallback_collection (childchain, collection);
