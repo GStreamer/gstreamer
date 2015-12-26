@@ -46,9 +46,17 @@ static gboolean
 print_structure_field (GQuark field_id, const GValue * value,
     gpointer user_data)
 {
-  if (G_VALUE_HOLDS_STRING (value))
-    g_print ("\n\t\t%s = %s", g_quark_to_string (field_id),
-        g_value_get_string (value));
+  gchar *val;
+
+  val = gst_value_serialize (value);
+
+  if (val != NULL)
+    g_print ("\n\t\t%s = %s", g_quark_to_string (field_id), val);
+  else
+    g_print ("\n\t\t%s - could not serialise field of type %s",
+        g_quark_to_string (field_id), G_VALUE_TYPE_NAME (value));
+
+  g_free (val);
 
   return TRUE;
 }
