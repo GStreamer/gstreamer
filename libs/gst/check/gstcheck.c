@@ -421,7 +421,7 @@ gst_check_setup_sink_pad (GstElement * element, GstStaticPadTemplate * tmpl)
  * @tmpl: pad template
  * @name: Name of the @element src pad that will be linked to the sink pad that will be setup
  *
- * Creates a new sink pad (based on the given @tmpl) and links it to the given @element src pad 
+ * Creates a new sink pad (based on the given @tmpl) and links it to the given @element src pad
  * (the pad that matches the given @name).
  * You can set event/chain/query functions on this pad to check the output of the @element.
  *
@@ -559,9 +559,8 @@ gst_check_buffer_data (GstBuffer * buffer, gconstpointer data, gsize size)
     gst_util_dump_mem (info.data, info.size);
     g_print ("\nExpected data:\n");
     gst_util_dump_mem (data, size);
+    fail ("buffer contents not equal");
   }
-  fail_unless (memcmp (info.data, data, size) == 0,
-      "buffer contents not equal");
   gst_buffer_unmap (buffer, &info);
 }
 
