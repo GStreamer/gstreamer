@@ -438,18 +438,6 @@ verify_convert (const gchar * which, void *in, int inlength,
   fail_unless_equals_int (gst_buffer_get_size (outbuffer), outlength);
 
   gst_check_buffer_data (outbuffer, out, outlength);
-#if 0
-  if (memcmp (GST_BUFFER_DATA (outbuffer), out, outlength) != 0) {
-    g_print ("\nInput data:\n");
-    gst_util_dump_mem (in, inlength);
-    g_print ("\nConverted data:\n");
-    gst_util_dump_mem (GST_BUFFER_DATA (outbuffer), outlength);
-    g_print ("\nExpected data:\n");
-    gst_util_dump_mem (out, outlength);
-  }
-  fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, outlength) == 0,
-      "failed converting %s", which);
-#endif
 
   /* make sure that the channel positions are not lost */
   {
