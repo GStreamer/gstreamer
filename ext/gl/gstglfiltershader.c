@@ -22,14 +22,14 @@
 /**
  * SECTION:element-glshader
  *
- * Filter loading OpenGL fragment shader from file
+ * OpenGL fragment shader filter
  *
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch-1.0 videotestsrc ! glupload ! glshader location=myshader.fs ! glimagesink
+ * gst-launch-1.0 videotestsrc ! glupload ! glshader fragment="\"`cat myshader.frag`\"" ! glimagesink
  * ]|
- * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required.
+ * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required. A #version header is required
  * </refsect2>
  */
 #ifdef HAVE_CONFIG_H
