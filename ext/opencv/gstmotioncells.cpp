@@ -331,9 +331,9 @@ gst_motion_cells_init (GstMotioncells * filter)
   filter->postnomotion = POST_NO_MOTION_DEF;
   filter->minimum_motion_frames = MINIMUM_MOTION_FRAMES_DEF;
 
-  filter->prev_datafile = g_strdup (NULL);
-  filter->cur_datafile = g_strdup (NULL);
-  filter->basename_datafile = g_strdup (NULL);
+  filter->prev_datafile = NULL;
+  filter->cur_datafile = NULL;
+  filter->basename_datafile = NULL;
   filter->datafile_extension = g_strdup (DEF_DATAFILEEXT);
   filter->sensitivity = SENSITIVITY_DEFAULT;
   filter->threshold = THRESHOLD_DEFAULT;
@@ -451,7 +451,7 @@ gst_motion_cells_set_property (GObject * object, guint prop_id,
       filter->basename_datafile = g_value_dup_string (value);
 
       if (strlen (filter->basename_datafile) == 0) {
-        filter->cur_datafile = g_strdup (NULL);
+        filter->cur_datafile = NULL;
         break;
       }
       filter->cur_datafile =
