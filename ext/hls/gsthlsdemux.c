@@ -247,7 +247,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   gint64 current_sequence;
   GstM3U8MediaFile *file;
   guint64 bitrate;
-  gboolean snap_before, snap_after, snap_nearest;
+  gboolean snap_before, snap_after, snap_nearest, keyunit;
 
   gst_event_parse_seek (seek, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
@@ -308,6 +308,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
 
   /* Snap to segment boundary. Improves seek performance on slow machines. */
   snap_before = snap_after = snap_nearest = FALSE;
+  keyunit = flags & GST_SEEK_FLAG_KEY_UNIT;
   if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST)
     snap_nearest = TRUE;
   else if (flags & GST_SEEK_FLAG_SNAP_BEFORE)
@@ -346,7 +347,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   hlsdemux->client->sequence_position = current_pos;
   GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
 
-  if (snap_before || snap_after || snap_nearest)
+  if (keyunit || snap_before || snap_after || snap_nearest)
     gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
         current_pos, stop_type, stop, NULL);
 
