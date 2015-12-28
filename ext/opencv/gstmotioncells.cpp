@@ -1,5 +1,5 @@
 /*
- * GStreamer MotioCells detect areas of motion
+ * GStreamer MotionCells detect areas of motion
  * Copyright (C) 2011 Robert Jobbagy <jobbagy.robert@gmail.com>
  * Copyright (C) 2011 Nicola Murino <nicola.murino@gmail.com>
  *
