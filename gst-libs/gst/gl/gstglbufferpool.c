@@ -271,10 +271,7 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstGLMemoryAllocator *alloc;
   GstGLBufferPool *glpool = GST_GL_BUFFER_POOL_CAST (pool);
   GstGLBufferPoolPrivate *priv = glpool->priv;
-  GstVideoInfo *info;
   GstBuffer *buf;
-
-  info = priv->gl_params->v_info;
 
   if (!(buf = gst_buffer_new ())) {
     goto no_buffer;
@@ -283,7 +280,8 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   if (priv->want_eglimage) {
     /* alloc and append memories, also add video_meta and
      * texture_upload_meta */
-    if (!gst_egl_image_memory_setup_buffer (glpool->context, info, buf))
+    if (!gst_egl_image_memory_setup_buffer (glpool->context,
+            priv->gl_params->v_info, buf))
       goto egl_image_mem_create_failed;
 
     *buffer = buf;
