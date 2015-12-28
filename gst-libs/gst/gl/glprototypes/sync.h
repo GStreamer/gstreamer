@@ -22,8 +22,8 @@ GST_GL_EXT_BEGIN (sync,
                   GST_GL_API_OPENGL3,
                   3, 2,
                   3, 0,
-                  "APPLE",
-                  "sync")
+                  "APPLE\0",
+                  "sync\0")
 GST_GL_EXT_FUNCTION (GLsync, FenceSync,
                      (GLenum condition,
                       GLbitfield flags))
