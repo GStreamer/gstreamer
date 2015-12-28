@@ -1050,7 +1050,7 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
       len = ((c.data[3] & 0x03) << 11) |
           (c.data[4] << 3) | ((c.data[5] & 0xe0) >> 5);
 
-      if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, len + 2)) {
+      if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, len + 6)) {
         GST_DEBUG ("Wrong sync or next frame not within reach, len=%u", len);
         goto next;
       }
@@ -1110,7 +1110,7 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
         len = ((c.data[offset + 3] & 0x03) << 11) |
             (c.data[offset + 4] << 3) | ((c.data[offset + 5] & 0xe0) >> 5);
 
-        if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, len + 2)) {
+        if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, offset + len + 6)) {
           GST_DEBUG ("Wrong sync or next frame not within reach, len=%u", len);
           gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
         } else {
@@ -1120,7 +1120,8 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
           for (i = 3; i <= 6; i++) {
             len = ((c.data[offset + 3] & 0x03) << 11) |
                 (c.data[offset + 4] << 3) | ((c.data[offset + 5] & 0xe0) >> 5);
-            if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, len + 2)) {
+            if (len == 0
+                || !data_scan_ctx_ensure_data (tf, &c, offset + len + 6)) {
               GST_DEBUG ("Wrong sync or next frame not within reach, len=%u",
                   len);
               break;
