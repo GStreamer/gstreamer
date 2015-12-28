@@ -1082,7 +1082,7 @@ gst_motion_cells_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     GFREE (motionmaskcellsidx);
     GFREE (motioncellsidx);
   } else {
-    GST_WARNING_OBJECT (filter, "error mapping input buffer");
+    GST_WARNING_OBJECT (filter, "Motion detection disabled");
     GST_OBJECT_UNLOCK (filter);
   }
   return GST_FLOW_OK;
