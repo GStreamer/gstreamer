@@ -1033,6 +1033,7 @@ static void
 _unlock_create_thread (GstGLContext * context)
 {
   context->priv->created = TRUE;
+  GST_INFO_OBJECT (context, "gl thread running");
   g_cond_signal (&context->priv->create_cond);
   g_mutex_unlock (&context->priv->render_lock);
 }
