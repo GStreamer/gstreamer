@@ -541,10 +541,13 @@ gst_motion_cells_set_property (GObject * object, guint prop_id,
       tmply = -1;
       break;
     case PROP_CELLSCOLOR:
-      colorstr = g_strsplit (g_value_get_string (value), ",", 255);
+      colorstr = g_strsplit (g_value_get_string (value), ",", 4);
       for (cellscolorscnt = 0; colorstr[cellscolorscnt] != NULL;
           ++cellscolorscnt);
-      if (cellscolorscnt == 3) {
+      if (cellscolorscnt != 3) {
+        GST_WARNING_OBJECT (filter, "Ignoring badly-formatted cellscolor RGB "
+            "string");
+      } else {
         sscanf (colorstr[0], "%d", &r);
         sscanf (colorstr[1], "%d", &g);
         sscanf (colorstr[2], "%d", &b);
