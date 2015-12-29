@@ -401,7 +401,7 @@ gst_vpx_dec_get_buffer_cb (gpointer priv, gsize min_size,
     vpx_codec_frame_buffer_t * fb)
 {
   GstVPXDec *dec = priv;
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
   struct Frame *frame;
   GstFlowReturn ret;
 
