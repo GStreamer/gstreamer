@@ -550,7 +550,8 @@ gst_gl_effects_get_fragment_shader (GstGLEffects * effects,
     if (!(shader = gst_gl_shader_new_link_with_stages (context, &error,
                 gst_glsl_stage_new_default_vertex (context),
                 gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
-                    GST_GLSL_VERSION_NONE, GST_GLSL_PROFILE_ES,
+                    GST_GLSL_VERSION_NONE,
+                    GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
                     shader_source_gles2), NULL))) {
       GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
           ("Failed to initialize %s shader", shader_name), (NULL));
