@@ -2268,7 +2268,9 @@ enum
 {
   PROP_0,
   PROP_DOMAIN,
-  PROP_INTERNAL_CLOCK
+  PROP_INTERNAL_CLOCK,
+  PROP_MASTER_CLOCK_ID,
+  PROP_GRANDMASTER_CLOCK_ID
 };
 
 #define GST_PTP_CLOCK_GET_PRIVATE(obj)  \
@@ -2316,6 +2318,16 @@ gst_ptp_clock_class_init (GstPtpClockClass * klass)
   g_object_class_install_property (gobject_class, PROP_INTERNAL_CLOCK,
       g_param_spec_object ("internal-clock", "Internal Clock",
           "Internal clock", GST_TYPE_CLOCK,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MASTER_CLOCK_ID,
+      g_param_spec_uint64 ("master-clock-id", "Master Clock ID",
+          "Master Clock ID", 0, G_MAXUINT64, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_GRANDMASTER_CLOCK_ID,
+      g_param_spec_uint64 ("grandmaster-clock-id", "Grand Master Clock ID",
+          "Grand Master Clock ID", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   clock_class->get_internal_time = gst_ptp_clock_get_internal_time;
@@ -2421,6 +2433,28 @@ gst_ptp_clock_get_property (GObject * object, guint prop_id,
       gst_ptp_clock_ensure_domain_clock (self);
       g_value_set_object (value, self->priv->domain_clock);
       break;
+    case PROP_MASTER_CLOCK_ID:
+    case PROP_GRANDMASTER_CLOCK_ID:{
+      GList *l;
+
+      g_mutex_lock (&domain_clocks_lock);
+      g_value_set_uint64 (value, 0);
+
+      for (l = domain_clocks; l; l = l->next) {
+        PtpDomainData *clock_data = l->data;
+
+        if (clock_data->domain == self->priv->domain) {
+          if (prop_id == PROP_MASTER_CLOCK_ID)
+            g_value_set_uint64 (value,
+                clock_data->master_clock_identity.clock_identity);
+          else
+            g_value_set_uint64 (value, clock_data->grandmaster_identity);
+          break;
+        }
+      }
+      g_mutex_unlock (&domain_clocks_lock);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
