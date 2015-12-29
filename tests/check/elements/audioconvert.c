@@ -1575,6 +1575,51 @@ GST_START_TEST (test_preserve_width)
 
 GST_END_TEST;
 
+GST_START_TEST (test_gap_buffers)
+{
+  GstBuffer *inbuffer, *outbuffer;
+  GstElement *audioconvert;
+  GstCaps *caps = get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE);
+  gint16 data[] = { 0, 0, 0, 0 };
+  gsize data_len = sizeof (data);
+  gint i;
+
+  audioconvert = setup_audioconvert (caps);
+
+  fail_unless (gst_element_set_state (audioconvert,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  gst_check_setup_events (mysrcpad, audioconvert, caps, GST_FORMAT_TIME);
+
+  inbuffer = gst_buffer_new_and_alloc (data_len);
+  gst_buffer_fill (inbuffer, 0, data, data_len);
+  GST_BUFFER_FLAG_SET (inbuffer, GST_BUFFER_FLAG_GAP);
+
+  for (i = 0; i < 2; i++) {
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (audioconvert),
+        (i == 0));
+
+    gst_pad_push (mysrcpad, inbuffer);
+
+    fail_unless (g_list_length (buffers) == 1);
+    fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+
+    fail_unless (GST_BUFFER_FLAG_IS_SET (outbuffer, GST_BUFFER_FLAG_GAP));
+
+    buffers = g_list_remove (buffers, outbuffer);
+  }
+
+  GST_DEBUG ("cleanup, unref buffers");
+  gst_buffer_unref (outbuffer);
+  cleanup_audioconvert (audioconvert);
+  GST_DEBUG ("cleanup, unref caps");
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 audioconvert_suite (void)
 {
@@ -1592,7 +1637,7 @@ audioconvert_suite (void)
   tcase_add_test (tc_chain, test_caps_negotiation);
   tcase_add_test (tc_chain, test_convert_undefined_multichannel);
   tcase_add_test (tc_chain, test_preserve_width);
-
+  tcase_add_test (tc_chain, test_gap_buffers);
 
   return s;
 }
