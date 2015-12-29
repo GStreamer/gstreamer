@@ -1578,7 +1578,7 @@ gst_caps_intersect_zig_zag (GstCaps * caps1, GstCaps * caps2)
  * Unlike @gst_caps_intersect, the returned caps will be ordered in a similar
  * fashion as @caps1.
  *
- * Returns: the new #GstCaps
+ * Returns: (transfer full): the new #GstCaps
  */
 static GstCaps *
 gst_caps_intersect_first (GstCaps * caps1, GstCaps * caps2)
@@ -1649,7 +1649,7 @@ gst_caps_intersect_first (GstCaps * caps1, GstCaps * caps2)
  * to both @caps1 and @caps2, the order is defined by the #GstCapsIntersectMode
  * used.
  *
- * Returns: the new #GstCaps
+ * Returns: (transfer full): the new #GstCaps
  */
 GstCaps *
 gst_caps_intersect_full (GstCaps * caps1, GstCaps * caps2,
@@ -1677,7 +1677,7 @@ gst_caps_intersect_full (GstCaps * caps1, GstCaps * caps2,
  * Creates a new #GstCaps that contains all the formats that are common
  * to both @caps1 and @caps2. Defaults to %GST_CAPS_INTERSECT_ZIG_ZAG mode.
  *
- * Returns: the new #GstCaps
+ * Returns: (transfer full): the new #GstCaps
  */
 GstCaps *
 gst_caps_intersect (GstCaps * caps1, GstCaps * caps2)
