@@ -43,21 +43,21 @@ GType gst_vulkan_memory_allocator_get_type(void);
 
 struct _GstVulkanMemory
 {
-  GstMemory             mem;
+  GstMemory                 mem;
 
-  GstVulkanDevice      *device;
+  GstVulkanDevice          *device;
 
-  VkDeviceMemory        mem_ptr;
+  VkDeviceMemory            mem_ptr;
 
   /* <protected> */
-  GMutex                lock;
+  GMutex                    lock;
 
   /* <private> */
-  GDestroyNotify        notify;
-  gpointer              user_data;
+  GDestroyNotify            notify;
+  gpointer                  user_data;
 
-  VkMemoryAllocInfo     alloc_info;
-  VkMemoryPropertyFlags properties;
+  VkMemoryAllocateInfo    alloc_info;
+  VkMemoryPropertyFlags     properties;
 };
 
 /**

@@ -69,8 +69,6 @@ enum
 static void gst_vulkan_display_finalize (GObject * object);
 static gpointer gst_vulkan_display_default_get_handle (GstVulkanDisplay *
     display);
-static gpointer gst_vulkan_display_default_get_platform_handle (GstVulkanDisplay
-    * display);
 static GstVulkanWindow
     * gst_vulkan_display_default_create_window (GstVulkanDisplay * display);
 
@@ -115,7 +113,6 @@ gst_vulkan_display_class_init (GstVulkanDisplayClass * klass)
   g_type_class_add_private (klass, sizeof (GstVulkanDisplayPrivate));
 
   klass->get_handle = gst_vulkan_display_default_get_handle;
-  klass->get_platform_handle = gst_vulkan_display_default_get_platform_handle;
   klass->create_window = gst_vulkan_display_default_create_window;
 
   G_OBJECT_CLASS (klass)->finalize = gst_vulkan_display_finalize;
@@ -165,6 +162,26 @@ gst_vulkan_display_finalize (GObject * object)
   G_OBJECT_CLASS (gst_vulkan_display_parent_class)->finalize (object);
 }
 
+GstVulkanDisplay *
+gst_vulkan_display_new_with_type (GstVulkanInstance * instance,
+    GstVulkanDisplayType type)
+{
+  GstVulkanDisplay *display = NULL;
+
+  _init_debug ();
+
+#if GST_VULKAN_HAVE_WINDOW_XCB
+  if (!display && type & GST_VULKAN_DISPLAY_TYPE_XCB) {
+    display = GST_VULKAN_DISPLAY (gst_vulkan_display_xcb_new (NULL));
+  }
+#endif
+
+  if (display)
+    display->instance = gst_object_ref (instance);
+
+  return display;
+}
+
 /**
  * gst_vulkan_display_new:
  *
@@ -173,33 +190,20 @@ gst_vulkan_display_finalize (GObject * object)
  * Since: 1.10
  */
 GstVulkanDisplay *
-gst_vulkan_display_new (void)
+gst_vulkan_display_new (GstVulkanInstance * instance)
 {
+  GstVulkanDisplayType type;
   GstVulkanDisplay *display = NULL;
-  const gchar *user_choice, *platform_choice;
 
-  _init_debug ();
+  type = gst_vulkan_display_choose_type (instance);
+  display = gst_vulkan_display_new_with_type (instance, type);
 
-  user_choice = g_getenv ("GST_GL_WINDOW");
-  platform_choice = g_getenv ("GST_GL_PLATFORM");
-  GST_INFO ("creating a display, user choice:%s (platform: %s)",
-      GST_STR_NULL (user_choice), GST_STR_NULL (platform_choice));
-
-#if GST_VULKAN_HAVE_WINDOW_XCB
-  if (!display && (!user_choice || g_strstr_len (user_choice, 3, "xcb")))
-    display = GST_VULKAN_DISPLAY (gst_vulkan_display_xcb_new (NULL));
-#endif
-#if GST_VULKAN_HAVE_WINDOW_X11
-  if (!display && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
-    display = GST_VULKAN_DISPLAY (gst_vulkan_display_x11_new (NULL));
-#endif
   if (!display) {
-    /* subclass returned a NULL window */
-    GST_WARNING ("Could not create display. user specified %s "
-        "(platform: %s), creating dummy",
-        GST_STR_NULL (user_choice), GST_STR_NULL (platform_choice));
+    /* subclass returned a NULL display */
+    GST_FIXME ("creating dummy display");
 
     display = g_object_new (GST_TYPE_VULKAN_DISPLAY, NULL);
+    display->instance = gst_object_ref (instance);
   }
 
   return display;
@@ -229,33 +233,6 @@ static gpointer
 gst_vulkan_display_default_get_handle (GstVulkanDisplay * display)
 {
   return 0;
-}
-
-/**
- * gst_vulkan_display_get_platform_handle:
- * @display: a #GstVulkanDisplay
- *
- * Returns: the winsys specific handle of @display for use with the
- * VK_EXT_KHR_swapchain extension.
- *
- * Since: 1.10
- */
-gpointer
-gst_vulkan_display_get_platform_handle (GstVulkanDisplay * display)
-{
-  GstVulkanDisplayClass *klass;
-
-  g_return_val_if_fail (GST_IS_VULKAN_DISPLAY (display), NULL);
-  klass = GST_VULKAN_DISPLAY_GET_CLASS (display);
-  g_return_val_if_fail (klass->get_handle != NULL, NULL);
-
-  return klass->get_platform_handle (display);
-}
-
-static gpointer
-gst_vulkan_display_default_get_platform_handle (GstVulkanDisplay * display)
-{
-  return (gpointer) gst_vulkan_display_get_handle (display);
 }
 
 /**
@@ -381,4 +358,51 @@ gst_context_get_vulkan_display (GstContext * context,
       ") from context(%" GST_PTR_FORMAT ")", *display, context);
 
   return ret;
+}
+
+GstVulkanDisplayType
+gst_vulkan_display_choose_type (GstVulkanInstance * instance)
+{
+  const gchar *window_str;
+  GstVulkanDisplayType type = GST_VULKAN_DISPLAY_TYPE_NONE;
+  GstVulkanDisplayType first_supported = GST_VULKAN_DISPLAY_TYPE_NONE;
+
+  window_str = g_getenv ("GST_VULKAN_WINDOW");
+
+  /* FIXME: enumerate instance extensions for the supported winsys' */
+
+#define CHOOSE_WINSYS(lname,uname) \
+  G_STMT_START { \
+    if (!type && g_strcmp0 (window_str, G_STRINGIFY (lname)) == 0) { \
+      type = G_PASTE(GST_VULKAN_DISPLAY_TYPE_,uname); \
+    } \
+    if (!first_supported) \
+      first_supported = G_PASTE(GST_VULKAN_DISPLAY_TYPE_,uname); \
+  } G_STMT_END
+
+#if GST_VULKAN_HAVE_WINDOW_XCB
+  CHOOSE_WINSYS (xcb, XCB);
+#endif
+
+#undef CHOOSE_WINSYS
+
+  if (type)
+    return type;
+
+  if (first_supported)
+    return first_supported;
+
+  return GST_VULKAN_DISPLAY_TYPE_NONE;
+}
+
+const gchar *
+gst_vulkan_display_type_to_extension_string (GstVulkanDisplayType type)
+{
+  if (type == GST_VULKAN_DISPLAY_TYPE_NONE)
+    return NULL;
+
+  if (type & GST_VULKAN_DISPLAY_TYPE_XCB)
+    return VK_KHR_XCB_SURFACE_EXTENSION_NAME;
+
+  return NULL;
 }

@@ -194,23 +194,6 @@ gst_vulkan_ensure_element_data (gpointer element,
   /*  1) Check if the element already has a context of the specific
    *     type.
    */
-  if (!*display_ptr) {
-    _vk_display_context_query (element, display_ptr);
-
-    /* Neighbour found and it updated the display */
-    if (!*display_ptr) {
-      GstContext *context;
-
-      /* If no neighboor, or application not interested, use system default */
-      *display_ptr = gst_vulkan_display_new ();
-
-      context = gst_context_new (GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR, TRUE);
-      gst_context_set_vulkan_display (context, *display_ptr);
-
-      _vk_context_propagate (element, context);
-    }
-  }
-
   if (!*instance_ptr) {
     _vk_gst_context_query (element, GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR);
 
@@ -223,6 +206,26 @@ gst_vulkan_ensure_element_data (gpointer element,
 
       context = gst_context_new (GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR, TRUE);
       gst_context_set_vulkan_instance (context, *instance_ptr);
+
+      _vk_context_propagate (element, context);
+    }
+  }
+
+  if (!*display_ptr) {
+    _vk_display_context_query (element, display_ptr);
+
+    /* Neighbour found and it updated the display */
+    if (!*display_ptr) {
+      GstContext *context;
+
+      /* instance is required before the display */
+      g_return_val_if_fail (*instance_ptr != NULL, FALSE);
+
+      /* If no neighboor, or application not interested, use system default */
+      *display_ptr = gst_vulkan_display_new (*instance_ptr);
+
+      context = gst_context_new (GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR, TRUE);
+      gst_context_set_vulkan_display (context, *display_ptr);
 
       _vk_context_propagate (element, context);
     }

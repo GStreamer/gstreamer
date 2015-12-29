@@ -78,25 +78,37 @@ struct _GstVulkanWindow {
 struct _GstVulkanWindowClass {
   GstObjectClass parent_class;
 
-  gboolean (*open)               (GstVulkanWindow *window, GError **error);
-  void     (*close)              (GstVulkanWindow *window);
+  gboolean      (*open)                         (GstVulkanWindow *window,
+                                                 GError **error);
+  void          (*close)                        (GstVulkanWindow *window);
 
-  gpointer (*get_platform_handle) (GstVulkanWindow *window);
+  VkSurfaceKHR  (*get_surface)                  (GstVulkanWindow *window,
+                                                 GError **error);
+  gboolean      (*get_presentation_support)     (GstVulkanWindow *window,
+                                                 GstVulkanDevice *device,
+                                                 guint32 queue_family_idx);
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
 };
 
-GstVulkanWindow *  gst_vulkan_window_new                    (GstVulkanDisplay *display);
+GstVulkanWindow *  gst_vulkan_window_new                            (GstVulkanDisplay *display);
 
-GstVulkanDisplay * gst_vulkan_window_get_display            (GstVulkanWindow *window);
-gpointer           gst_vulkan_window_get_platform_handle    (GstVulkanWindow *window);
+GstVulkanDisplay * gst_vulkan_window_get_display                    (GstVulkanWindow *window);
+VkSurfaceKHR       gst_vulkan_window_get_surface                    (GstVulkanWindow *window,
+                                                                     GError **error);
+gboolean           gst_vulkan_window_get_presentation_support       (GstVulkanWindow *window,
+                                                                     GstVulkanDevice *device,
+                                                                     guint32 queue_family_idx);
 
-gboolean           gst_vulkan_window_open                   (GstVulkanWindow * window, GError ** error);
-void               gst_vulkan_window_close                  (GstVulkanWindow * window);
+gboolean           gst_vulkan_window_open                           (GstVulkanWindow *window,
+                                                                     GError ** error);
+void               gst_vulkan_window_close                          (GstVulkanWindow *window);
 
-void               gst_vulkan_window_resize                 (GstVulkanWindow * window, gint width, gint height);
-void               gst_vulkan_window_redraw                 (GstVulkanWindow * window);
+void               gst_vulkan_window_resize                         (GstVulkanWindow *window,
+                                                                     gint width,
+                                                                     gint height);
+void               gst_vulkan_window_redraw                         (GstVulkanWindow *window);
 
 G_END_DECLS
 

@@ -68,10 +68,13 @@ struct _GstVulkanWindowXCBPrivate
   xcb_intern_atom_reply_t *atom_wm_delete_window;
 };
 
-static gpointer gst_vulkan_window_xcb_get_platform_window (GstVulkanWindow *
-    window);
-gboolean gst_vulkan_window_xcb_open (GstVulkanWindow * window, GError ** error);
-void gst_vulkan_window_xcb_close (GstVulkanWindow * window);
+static VkSurfaceKHR gst_vulkan_window_xcb_get_surface (GstVulkanWindow * window,
+    GError ** error);
+static gboolean gst_vulkan_window_xcb_get_presentation_support (GstVulkanWindow
+    * window, GstVulkanDevice * device, guint32 queue_family_idx);
+static gboolean gst_vulkan_window_xcb_open (GstVulkanWindow * window,
+    GError ** error);
+static void gst_vulkan_window_xcb_close (GstVulkanWindow * window);
 
 static void
 gst_vulkan_window_xcb_finalize (GObject * object)
@@ -91,7 +94,9 @@ gst_vulkan_window_xcb_class_init (GstVulkanWindowXCBClass * klass)
 
   window_class->open = GST_DEBUG_FUNCPTR (gst_vulkan_window_xcb_open);
   window_class->close = GST_DEBUG_FUNCPTR (gst_vulkan_window_xcb_close);
-  window_class->get_platform_handle = gst_vulkan_window_xcb_get_platform_window;
+  window_class->get_surface = gst_vulkan_window_xcb_get_surface;
+  window_class->get_presentation_support =
+      gst_vulkan_window_xcb_get_presentation_support;
 }
 
 static void
@@ -122,7 +127,8 @@ gst_vulkan_window_xcb_show (GstVulkanWindow * window)
 {
   GstVulkanWindowXCB *window_xcb = GST_VULKAN_WINDOW_XCB (window);
   GstVulkanDisplayXCB *display_xcb = GST_VULKAN_DISPLAY_XCB (window->display);
-  xcb_connection_t *connection = display_xcb->platform_handle.connection;
+  xcb_connection_t *connection =
+      GST_VULKAN_DISPLAY_XCB_CONNECTION (display_xcb);
 
   if (!window_xcb->visible) {
     xcb_map_window (connection, window_xcb->win_id);
@@ -135,7 +141,8 @@ gst_vulkan_window_xcb_hide (GstVulkanWindow * window)
 {
   GstVulkanWindowXCB *window_xcb = GST_VULKAN_WINDOW_XCB (window);
   GstVulkanDisplayXCB *display_xcb = GST_VULKAN_DISPLAY_XCB (window->display);
-  xcb_connection_t *connection = display_xcb->platform_handle.connection;
+  xcb_connection_t *connection =
+      GST_VULKAN_DISPLAY_XCB_CONNECTION (display_xcb);
 
   if (window_xcb->visible) {
     xcb_unmap_window (connection, window_xcb->win_id);
@@ -195,20 +202,46 @@ gst_vulkan_window_xcb_create_window (GstVulkanWindowXCB * window_xcb)
   return TRUE;
 }
 
-static gpointer
-gst_vulkan_window_xcb_get_platform_window (GstVulkanWindow * window)
+static VkSurfaceKHR
+gst_vulkan_window_xcb_get_surface (GstVulkanWindow * window, GError ** error)
 {
-  return &GST_VULKAN_WINDOW_XCB (window)->win_id;
+  VkSurfaceKHR ret;
+  VkResult err;
+
+  err = vkCreateXcbSurfaceKHR (window->display->instance->instance,
+      GST_VULKAN_DISPLAY_XCB_CONNECTION (window->display),
+      GST_VULKAN_WINDOW_XCB (window)->win_id, NULL, &ret);
+  if (gst_vulkan_error_to_g_error (err, error, "vkCreateXcbSurfaceKHR") < 0)
+    return NULL;
+
+  return ret;
 }
 
-gboolean
+static gboolean
+gst_vulkan_window_xcb_get_presentation_support (GstVulkanWindow * window,
+    GstVulkanDevice * device, guint32 queue_family_idx)
+{
+  VkPhysicalDevice gpu;
+  xcb_screen_t *screen;
+
+  screen = GST_VULKAN_DISPLAY_XCB_SCREEN (window->display);
+
+  gpu = gst_vulkan_device_get_physical_device (device);
+  if (vkGetPhysicalDeviceXcbPresentationSupportKHR (gpu, queue_family_idx,
+          GST_VULKAN_DISPLAY_XCB_CONNECTION (window->display),
+          screen->root_visual))
+    return TRUE;
+  return FALSE;
+}
+
+static gboolean
 gst_vulkan_window_xcb_open (GstVulkanWindow * window, GError ** error)
 {
   GstVulkanWindowXCB *window_xcb = GST_VULKAN_WINDOW_XCB (window);
   GstVulkanDisplayXCB *display_xcb = (GstVulkanDisplayXCB *) window->display;
   xcb_connection_t *connection;
 
-  connection = display_xcb->platform_handle.connection;
+  connection = GST_VULKAN_DISPLAY_XCB_CONNECTION (display_xcb);
   if (connection == NULL) {
     g_set_error (error, GST_VULKAN_WINDOW_ERROR,
         GST_VULKAN_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
@@ -225,7 +258,7 @@ failure:
   return FALSE;
 }
 
-void
+static void
 gst_vulkan_window_xcb_close (GstVulkanWindow * window)
 {
   GstVulkanWindowXCB *window_xcb = GST_VULKAN_WINDOW_XCB (window);

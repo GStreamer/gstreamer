@@ -55,25 +55,21 @@ _memory_properties_to_string (VkMemoryPropertyFlags prop_bits)
   } G_STMT_END
 
   s = g_string_new (NULL);
+  if (prop_bits & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {
+    STR_APPEND (s, "device-local");
+  }
   if (prop_bits & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
     STR_APPEND (s, "host-visible");
-    if (prop_bits & VK_MEMORY_PROPERTY_HOST_NON_COHERENT_BIT) {
-      STR_APPEND (s, "host-incoherent");
-    } else {
+    if (prop_bits & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) {
       STR_APPEND (s, "host-coherent");
-    }
-    if (prop_bits & VK_MEMORY_PROPERTY_HOST_UNCACHED_BIT) {
-      STR_APPEND (s, "host-uncached");
     } else {
+      STR_APPEND (s, "host-incoherent");
+    }
+    if (prop_bits & VK_MEMORY_PROPERTY_HOST_CACHED_BIT) {
       STR_APPEND (s, "host-cached");
-    }
-    if (prop_bits & VK_MEMORY_PROPERTY_HOST_WRITE_COMBINED_BIT) {
-      STR_APPEND (s, "host-write-combined");
     } else {
-      STR_APPEND (s, "host-write-uncombined");
+      STR_APPEND (s, "host-uncached");
     }
-  } else {
-    STR_APPEND (s, "device-only");
   }
 
   if (prop_bits & VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT) {
@@ -107,7 +103,7 @@ _vk_mem_init (GstVulkanMemory * mem, GstAllocator * allocator,
       align, offset, size);
 
   mem->device = gst_object_ref (device);
-  mem->alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOC_INFO;
+  mem->alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   mem->alloc_info.pNext = NULL;
   mem->alloc_info.allocationSize = (VkDeviceSize) mem->mem.maxsize;
   mem->alloc_info.memoryTypeIndex = memory_type_index;
@@ -139,7 +135,8 @@ _vk_mem_new (GstAllocator * allocator, GstMemory * parent,
   _vk_mem_init (mem, allocator, parent, device, memory_type_index, params,
       size, mem_props_flags, user_data, notify);
 
-  err = vkAllocMemory (device->device, &mem->alloc_info, &mem->mem_ptr);
+  err =
+      vkAllocateMemory (device->device, &mem->alloc_info, NULL, &mem->mem_ptr);
   if (gst_vulkan_error_to_g_error (err, &error, "vkAllocMemory") < 0) {
     GST_CAT_ERROR (GST_CAT_VULKAN_MEMORY, "Failed to allocate device memory %s",
         error->message);
@@ -213,14 +210,14 @@ _vk_mem_free (GstAllocator * allocator, GstMemory * memory)
   GstVulkanMemory *mem = (GstVulkanMemory *) memory;
 
   GST_CAT_TRACE (GST_CAT_VULKAN_MEMORY, "freeing buffer memory:%p "
-      "id:%" G_GUINT64_FORMAT, mem, mem->mem_ptr.handle);
+      "id:%" G_GUINT64_FORMAT, mem, (guint64) mem->mem_ptr);
 
   g_mutex_clear (&mem->lock);
 
   if (mem->notify)
     mem->notify (mem->user_data);
 
-  vkFreeMemory (mem->device->device, mem->mem_ptr);
+  vkFreeMemory (mem->device->device, mem->mem_ptr, NULL);
 
   gst_object_unref (mem->device);
 }

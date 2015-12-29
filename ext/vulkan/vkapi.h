@@ -18,12 +18,24 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _VK_H_
-#define _VK_H_
+#ifndef _VK_API_H_
+#define _VK_API_H_
 
-#include <gst/gst.h>
+#define VK_PROTOTYPES
 
-#include "vkapi.h"
+#include "vkconfig.h"
+#include "vk_fwd.h"
+#include "vkmacros.h"
+
+/* Need these defined to have access to winsys functions before including vulkan.h */
+#if GST_VULKAN_HAVE_WINDOW_XCB
+#ifndef VK_USE_PLATFORM_XCB_KHR
+#define VK_USE_PLATFORM_XCB_KHR
+#endif
+#endif
+
+#include <vulkan/vulkan.h>
+#include <vulkan/vk_lunarg_debug_report.h>
 
 #include "vkerror.h"
 #include "vkinstance.h"

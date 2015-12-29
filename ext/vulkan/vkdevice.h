@@ -52,7 +52,7 @@ struct _GstVulkanDevice
   guint32 queue_family_id;
   guint32 n_queues;
 
-  VkCmdPool cmd_pool;
+  VkCommandPool cmd_pool;
 
   GstVulkanDevicePrivate *priv;
 };
@@ -75,7 +75,7 @@ GstVulkanQueue *    gst_vulkan_device_get_queue             (GstVulkanDevice * d
                                                              GError ** error);
 VkPhysicalDevice    gst_vulkan_device_get_physical_device   (GstVulkanDevice * device);
 gboolean            gst_vulkan_device_create_cmd_buffer     (GstVulkanDevice * device,
-                                                             VkCmdBuffer * cmd,
+                                                             VkCommandBuffer * cmd,
                                                              GError ** error);
 
 G_END_DECLS

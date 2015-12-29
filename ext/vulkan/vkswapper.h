@@ -24,8 +24,6 @@
 #include <gst/video/video.h>
 
 #include <vk.h>
-#include <vulkan/vk_ext_khr_swapchain.h>
-#include <vulkan/vk_ext_khr_device_swapchain.h>
 
 G_BEGIN_DECLS
 
@@ -45,7 +43,9 @@ struct _GstVulkanSwapper
   GstVulkanWindow *window;
   GstVulkanQueue *queue;
 
-  VkSurfacePropertiesKHR surf_props;
+  VkSurfaceKHR    surface;
+
+  VkSurfaceCapabilitiesKHR surf_props;
   VkSurfaceFormatKHR *surf_formats;
   guint32 n_surf_formats;
   VkPresentModeKHR *surf_present_modes;
@@ -59,9 +59,9 @@ struct _GstVulkanSwapper
   GstVideoInfo v_info;
 
   PFN_vkGetPhysicalDeviceSurfaceSupportKHR GetPhysicalDeviceSurfaceSupportKHR;
-  PFN_vkGetSurfacePropertiesKHR GetSurfacePropertiesKHR;
-  PFN_vkGetSurfaceFormatsKHR GetSurfaceFormatsKHR;
-  PFN_vkGetSurfacePresentModesKHR GetSurfacePresentModesKHR;
+  PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR GetPhysicalDeviceSurfaceCapabilitiesKHR;
+  PFN_vkGetPhysicalDeviceSurfaceFormatsKHR GetPhysicalDeviceSurfaceFormatsKHR;
+  PFN_vkGetPhysicalDeviceSurfacePresentModesKHR GetPhysicalDeviceSurfacePresentModesKHR;
   PFN_vkCreateSwapchainKHR CreateSwapchainKHR;
   PFN_vkDestroySwapchainKHR DestroySwapchainKHR;
   PFN_vkGetSwapchainImagesKHR GetSwapchainImagesKHR;

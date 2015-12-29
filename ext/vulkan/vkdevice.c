@@ -28,15 +28,14 @@
 #include <string.h>
 
 static const char *device_validation_layers[] = {
-  "Threading",
-  "MemTracker",
-  "ObjectTracker",
-  "DrawState",
-  "ParamChecker",
-  "ShaderChecker",
-  "Swapchain",
-  "DeviceLimits",
-  "Image",
+  "VK_LAYER_LUNARG_Threading",
+  "VK_LAYER_LUNARG_MemTracker",
+  "VK_LAYER_LUNARG_ObjectTracker",
+  "VK_LAYER_LUNARG_DrawState",
+  "VK_LAYER_LUNARG_ParamChecker",
+  "VK_LAYER_LUNARG_Swapchain",
+  "VK_LAYER_LUNARG_DeviceLimits",
+  "VK_LAYER_LUNARG_Image",
 };
 
 #define GST_CAT_DEFAULT gst_vulkan_device_debug
@@ -90,17 +89,17 @@ gst_vulkan_device_finalize (GObject * object)
   g_free (device->queue_family_props);
   device->queue_family_props = NULL;
 
-  if (device->cmd_pool.handle)
-    vkDestroyCommandPool (device->device, device->cmd_pool);
-  device->cmd_pool.handle = 0;
+  if (device->cmd_pool)
+    vkDestroyCommandPool (device->device, device->cmd_pool, NULL);
+  device->cmd_pool = VK_NULL_HANDLE;
 
   if (device->device)
-    vkDestroyDevice (device->device);
-  device->device = NULL;
+    vkDestroyDevice (device->device, NULL);
+  device->device = VK_NULL_HANDLE;
 
   if (device->instance)
     gst_object_unref (device->instance);
-  device->instance = NULL;
+  device->instance = VK_NULL_HANDLE;
 }
 
 static const gchar *
@@ -127,7 +126,6 @@ _physical_device_info (GstVulkanDevice * device, GError ** error)
 {
   VkPhysicalDeviceProperties props;
   VkPhysicalDevice gpu;
-  VkResult err;
 
   gpu = gst_vulkan_device_get_physical_device (device);
   if (!gpu) {
@@ -137,15 +135,12 @@ _physical_device_info (GstVulkanDevice * device, GError ** error)
     return FALSE;
   }
 
-  err = vkGetPhysicalDeviceProperties (gpu, &props);
-  if (gst_vulkan_error_to_g_error (err, error,
-          "vkGetPhysicalDeviceProperties") < 0)
-    return FALSE;
+  vkGetPhysicalDeviceProperties (gpu, &props);
 
   GST_INFO_OBJECT (device, "device name %s type %s api version %u, "
       "driver version %u vendor ID 0x%x, device ID 0x%x", props.deviceName,
       _device_type_to_string (props.deviceType), props.apiVersion,
-      props.driverVersion, props.vendorId, props.deviceId);
+      props.driverVersion, props.vendorID, props.deviceID);
 
   return TRUE;
 }
@@ -230,54 +225,36 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
   }
 
   for (uint32_t i = 0; i < device_extension_count; i++) {
-    if (!strcmp ("VK_EXT_KHR_device_swapchain", device_extensions[i].extName)) {
+    if (!strcmp (VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+            device_extensions[i].extensionName)) {
       have_swapchain_ext = TRUE;
       extension_names[enabled_extension_count++] =
-          "VK_EXT_KHR_device_swapchain";
+          (gchar *) VK_KHR_SWAPCHAIN_EXTENSION_NAME;
     }
     g_assert (enabled_extension_count < 64);
   }
   if (!have_swapchain_ext) {
-    g_error ("vkEnumerateDeviceExtensionProperties failed to find the "
-        "\"VK_EXT_KHR_device_swapchain\" extension.\n\nDo you have a compatible "
+    g_error ("vkEnumerateDeviceExtensionProperties failed to find the \""
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        "\" extension.\n\nDo you have a compatible "
         "Vulkan installable client driver (ICD) installed?\nPlease "
         "look at the Getting Started guide for additional "
         "information.\nvkCreateInstance Failure");
   }
   g_free (device_extensions);
 
-  err = vkGetPhysicalDeviceProperties (gpu, &device->gpu_props);
-  if (gst_vulkan_error_to_g_error (err, error,
-          "vkGetPhysicalDeviceProperties") < 0)
-    goto error;
+  vkGetPhysicalDeviceProperties (gpu, &device->gpu_props);
+  vkGetPhysicalDeviceMemoryProperties (gpu, &device->memory_properties);
+  vkGetPhysicalDeviceFeatures (gpu, &device->gpu_features);
 
-  err = vkGetPhysicalDeviceMemoryProperties (gpu, &device->memory_properties);
-  if (gst_vulkan_error_to_g_error (err, error,
-          "vkGetPhysicalDeviceProperties") < 0)
-    goto error;
-
-  err = vkGetPhysicalDeviceFeatures (gpu, &device->gpu_features);
-  if (gst_vulkan_error_to_g_error (err, error,
-          "vkGetPhysicalDeviceFeatures") < 0)
-    goto error;
-
-  /* Call with NULL data to get count */
-  err =
-      vkGetPhysicalDeviceQueueFamilyProperties (gpu, &device->n_queue_families,
+  vkGetPhysicalDeviceQueueFamilyProperties (gpu, &device->n_queue_families,
       NULL);
-  if (gst_vulkan_error_to_g_error (err, error,
-          "vkGetPhysicalDeviceQueueFamilyProperties") < 0)
-    goto error;
   g_assert (device->n_queue_families >= 1);
 
   device->queue_family_props =
       g_new0 (VkQueueFamilyProperties, device->n_queue_families);
-  err =
-      vkGetPhysicalDeviceQueueFamilyProperties (gpu, &device->n_queue_families,
+  vkGetPhysicalDeviceQueueFamilyProperties (gpu, &device->n_queue_families,
       device->queue_family_props);
-  if (gst_vulkan_error_to_g_error (err, error,
-          "vkGetPhysicalDeviceQueueFamilyProperties") < 0)
-    goto error;
 
   /* FIXME: allow overriding/selecting */
   for (i = 0; i < device->n_queue_families; i++) {
@@ -304,29 +281,30 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
 
     device_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     device_info.pNext = NULL;
-    device_info.queueRecordCount = 1;
-    device_info.pRequestedQueues = &queue_info;
-    device_info.layerCount = enabled_layer_count;
+    device_info.queueCreateInfoCount = 1;
+    device_info.pQueueCreateInfos = &queue_info;
+    device_info.enabledLayerNameCount = enabled_layer_count;
     device_info.ppEnabledLayerNames =
         (const char *const *) device_validation_layers;
-    device_info.extensionCount = enabled_extension_count;
+    device_info.enabledExtensionNameCount = enabled_extension_count;
     device_info.ppEnabledExtensionNames = (const char *const *) extension_names;
     device_info.pEnabledFeatures = NULL;
 
-    err = vkCreateDevice (gpu, &device_info, &device->device);
+    err = vkCreateDevice (gpu, &device_info, NULL, &device->device);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateDevice") < 0)
       goto error;
   }
   {
-    VkCmdPoolCreateInfo cmd_pool_info = { 0, };
+    VkCommandPoolCreateInfo cmd_pool_info = { 0, };
 
-    cmd_pool_info.sType = VK_STRUCTURE_TYPE_CMD_POOL_CREATE_INFO;
+    cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     cmd_pool_info.pNext = NULL;
     cmd_pool_info.queueFamilyIndex = device->queue_family_id;
     cmd_pool_info.flags = 0;
 
     err =
-        vkCreateCommandPool (device->device, &cmd_pool_info, &device->cmd_pool);
+        vkCreateCommandPool (device->device, &cmd_pool_info, NULL,
+        &device->cmd_pool);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateCommandPool") < 0)
       goto error;
   }
@@ -346,7 +324,6 @@ gst_vulkan_device_get_queue (GstVulkanDevice * device, guint32 queue_family,
     guint32 queue_i, GError ** error)
 {
   GstVulkanQueue *ret;
-  VkResult err;
 
   g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), NULL);
   g_return_val_if_fail (device->device != NULL, NULL);
@@ -359,11 +336,7 @@ gst_vulkan_device_get_queue (GstVulkanDevice * device, guint32 queue_family,
   ret->family = queue_family;
   ret->index = queue_i;
 
-  err = vkGetDeviceQueue (device->device, queue_family, queue_i, &ret->queue);
-  if (gst_vulkan_error_to_g_error (err, error, "vkGetDeviceQueue") < 0) {
-    gst_object_unref (ret);
-    return NULL;
-  }
+  vkGetDeviceQueue (device->device, queue_family, queue_i, &ret->queue);
 
   return ret;
 }
@@ -404,18 +377,18 @@ gst_vulkan_device_get_physical_device (GstVulkanDevice * device)
 
 gboolean
 gst_vulkan_device_create_cmd_buffer (GstVulkanDevice * device,
-    VkCmdBuffer * cmd, GError ** error)
+    VkCommandBuffer * cmd, GError ** error)
 {
   VkResult err;
-  VkCmdBufferCreateInfo cmd_info = { 0, };
+  VkCommandBufferAllocateInfo cmd_info = { 0, };
 
-  cmd_info.sType = VK_STRUCTURE_TYPE_CMD_BUFFER_CREATE_INFO;
+  cmd_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   cmd_info.pNext = NULL;
-  cmd_info.cmdPool = device->cmd_pool;
-  cmd_info.level = VK_CMD_BUFFER_LEVEL_PRIMARY;
-  cmd_info.flags = 0;
+  cmd_info.commandPool = device->cmd_pool;
+  cmd_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+  cmd_info.bufferCount = 1;
 
-  err = vkCreateCommandBuffer (device->device, &cmd_info, cmd);
+  err = vkAllocateCommandBuffers (device->device, &cmd_info, cmd);
   if (gst_vulkan_error_to_g_error (err, error, "vkCreateCommandBuffer") < 0)
     return FALSE;
 

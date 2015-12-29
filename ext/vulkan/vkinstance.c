@@ -30,15 +30,14 @@
 #define APP_SHORT_NAME "GStreamer"
 
 static const char *instance_validation_layers[] = {
-  "Threading",
-  "MemTracker",
-  "ObjectTracker",
-  "DrawState",
-  "ParamChecker",
-  "ShaderChecker",
-  "Swapchain",
-  "DeviceLimits",
-  "Image",
+  "VK_LAYER_LUNARG_Threading",
+  "VK_LAYER_LUNARG_MemTracker",
+  "VK_LAYER_LUNARG_ObjectTracker",
+  "VK_LAYER_LUNARG_DrawState",
+  "VK_LAYER_LUNARG_ParamChecker",
+  "VK_LAYER_LUNARG_Swapchain",
+  "VK_LAYER_LUNARG_DeviceLimits",
+  "VK_LAYER_LUNARG_Image",
 };
 
 #define GST_CAT_DEFAULT gst_vulkan_instance_debug
@@ -100,7 +99,7 @@ gst_vulkan_instance_finalize (GObject * object)
   instance->priv->opened = FALSE;
 
   if (instance->instance)
-    vkDestroyInstance (instance->instance);
+    vkDestroyInstance (instance->instance, NULL);
   instance->instance = NULL;
 }
 
@@ -210,21 +209,23 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
 
   /* TODO: allow outside selection */
   for (uint32_t i = 0; i < instance_extension_count; i++) {
-    if (!g_strcmp0 ("VK_EXT_KHR_swapchain", instance_extensions[i].extName)) {
+    if (!g_strcmp0 (VK_KHR_SURFACE_EXTENSION_NAME,
+            instance_extensions[i].extensionName)) {
       have_swapchain_ext = TRUE;
       extension_names[enabled_extension_count++] =
-          (gchar *) "VK_EXT_KHR_swapchain";
+          (gchar *) VK_KHR_SURFACE_EXTENSION_NAME;
     }
     if (!g_strcmp0 (VK_DEBUG_REPORT_EXTENSION_NAME,
-            instance_extensions[i].extName)) {
+            instance_extensions[i].extensionName)) {
       extension_names[enabled_extension_count++] =
           (gchar *) VK_DEBUG_REPORT_EXTENSION_NAME;
     }
     g_assert (enabled_extension_count < 64);
   }
   if (!have_swapchain_ext) {
-    g_error ("vkEnumerateInstanceExtensionProperties failed to find the "
-        "\"VK_EXT_KHR_swapchain\" extension.\n\nDo you have a compatible "
+    g_error ("vkEnumerateInstanceExtensionProperties failed to find the \""
+        VK_KHR_SURFACE_EXTENSION_NAME
+        "\" extension.\n\nDo you have a compatible "
         "Vulkan installable client driver (ICD) installed?\nPlease "
         "look at the Getting Started guide for additional "
         "information.\nvkCreateInstance Failure");
@@ -236,23 +237,22 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
 
     app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     app.pNext = NULL;
-    app.pAppName = APP_SHORT_NAME;
-    app.appVersion = 0;
+    app.pApplicationName = APP_SHORT_NAME;
+    app.applicationVersion = 0;
     app.pEngineName = APP_SHORT_NAME;
     app.engineVersion = 0;
     app.apiVersion = VK_API_VERSION;
 
     inst_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     inst_info.pNext = NULL;
-    inst_info.pAppInfo = &app;
-    inst_info.pAllocCb = NULL;
-    inst_info.layerCount = enabled_layer_count;
+    inst_info.pApplicationInfo = &app;
+    inst_info.enabledLayerNameCount = enabled_layer_count;
     inst_info.ppEnabledLayerNames =
         (const char *const *) instance_validation_layers;
-    inst_info.extensionCount = enabled_extension_count;
+    inst_info.enabledExtensionNameCount = enabled_extension_count;
     inst_info.ppEnabledExtensionNames = (const char *const *) extension_names;
 
-    err = vkCreateInstance (&inst_info, &instance->instance);
+    err = vkCreateInstance (&inst_info, NULL, &instance->instance);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateInstance") < 0) {
       g_free (instance_layers);
       g_free (instance_extensions);

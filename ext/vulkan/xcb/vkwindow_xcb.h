@@ -76,9 +76,6 @@ GType gst_vulkan_window_xcb_get_type     (void);
 
 GstVulkanWindowXCB * gst_vulkan_window_xcb_new (GstVulkanDisplay * display);
 
-void gst_vulkan_window_xcb_trap_x_errors (void);
-gint gst_vulkan_window_xcb_untrap_x_errors (void);
-
 gboolean gst_vulkan_window_xcb_create_window (GstVulkanWindowXCB * window_xcb);
 
 G_END_DECLS

@@ -26,6 +26,11 @@
 #include <xcb/xcb.h>
 
 #include <vk.h>
+#ifndef VK_USE_PLATFORM_XCB_KHR
+#error "VK_USE_PLATFORM_XCB_KHR not defined before including this header"
+#error "Either include vkapi.h or define VK_USE_PLATFORM_XCB_KHR before including this header"
+#endif
+#include <vulkan/vulkan.h>
 
 G_BEGIN_DECLS
 
@@ -41,15 +46,9 @@ GType gst_vulkan_display_xcb_get_type (void);
 typedef struct _GstVulkanDisplayXCB GstVulkanDisplayXCB;
 typedef struct _GstVulkanDisplayXCBClass GstVulkanDisplayXCBClass;
 
-#define GST_VULKAN_DISPLAY_XCB_CONNECTION(d) (GST_VULKAN_DISPLAY_XCB(d)->platform_handle.connection)
-#define GST_VULKAN_DISPLAY_XCB_ROOT_WINDOW(d) (GST_VULKAN_DISPLAY_XCB(d)->platform_handle.root)
+#define GST_VULKAN_DISPLAY_XCB_CONNECTION(d) (GST_VULKAN_DISPLAY_XCB(d)->connection)
+#define GST_VULKAN_DISPLAY_XCB_ROOT_WINDOW(d) (GST_VULKAN_DISPLAY_XCB(d)->root_window)
 #define GST_VULKAN_DISPLAY_XCB_SCREEN(d) (GST_VULKAN_DISPLAY_XCB(d)->screen)
-
-struct _GstVkPlatformHandleXCBKHR
-{
-  xcb_connection_t* connection;
-  xcb_window_t      root;
-};
 
 /**
  * GstVulkanDisplayXCB:
@@ -61,11 +60,12 @@ struct _GstVulkanDisplayXCB
 {
   GstVulkanDisplay          parent;
 
+  xcb_connection_t *connection;
+  xcb_window_t      root_window;
+  xcb_screen_t     *screen;
+
   /* <private> */
   gboolean foreign_display;
-
-  struct _GstVkPlatformHandleXCBKHR platform_handle;
-  xcb_screen_t *screen;
 
   GSource *event_source;
 };

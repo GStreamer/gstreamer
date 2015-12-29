@@ -108,17 +108,13 @@ _view_create_info (VkImage image, VkFormat format, VkImageViewCreateInfo * info)
   info->pNext = NULL;
   info->image = image;
   info->format = format;
-  info->channels.r = VK_CHANNEL_SWIZZLE_R;
-  info->channels.g = VK_CHANNEL_SWIZZLE_G;
-  info->channels.b = VK_CHANNEL_SWIZZLE_B;
-  info->channels.a = VK_CHANNEL_SWIZZLE_A;
-  info->subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-  info->subresourceRange.baseMipLevel = 0;
-  info->subresourceRange.mipLevels = 1;
-  info->subresourceRange.baseArrayLayer = 0;
-  info->subresourceRange.arraySize = 1;
   info->viewType = VK_IMAGE_VIEW_TYPE_2D;
   info->flags = 0;
+
+  GST_VK_COMPONENT_MAPPING (info->components, VK_COMPONENT_SWIZZLE_R,
+      VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A);
+  GST_VK_IMAGE_SUBRESOURCE_RANGE (info->subresourceRange,
+      VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
 }
 
 static gboolean
@@ -131,8 +127,8 @@ _find_memory_type_index_with_type_properties (GstVulkanDevice * device,
   for (i = 0; i < 32; i++) {
     if ((typeBits & 1) == 1) {
       /* Type is available, does it match user properties? */
-      if ((device->memory_properties.
-              memoryTypes[i].propertyFlags & properties) == properties) {
+      if ((device->memory_properties.memoryTypes[i].
+              propertyFlags & properties) == properties) {
         *typeIndex = i;
         return TRUE;
       }
@@ -153,16 +149,14 @@ _create_info_from_args (VkImageCreateInfo * info, VkFormat format, gsize width,
   info->pNext = NULL;
   info->imageType = VK_IMAGE_TYPE_2D;
   info->format = format;
-  info->extent.width = (gint32) width;
-  info->extent.height = (gint32) height;
-  info->extent.depth = 1;
+  GST_VK_EXTENT3D (info->extent, width, height, 1);
   info->mipLevels = 1;
-  info->arraySize = 1;
+  info->arrayLayers = 1;
   info->samples = 1;
   info->tiling = tiling;
   info->usage = usage;
   info->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  info->queueFamilyCount = 0;
+  info->queueFamilyIndexCount = 0;
   info->pQueueFamilyIndices = NULL;
   info->initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
@@ -223,17 +217,11 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
     goto error;
   }
 
-  err = vkCreateImage (device->device, &image_info, &image);
+  err = vkCreateImage (device->device, &image_info, NULL, &image);
   if (gst_vulkan_error_to_g_error (err, &error, "vkCreateImage") < 0)
     goto vk_error;
 
-  err =
-      vkGetImageMemoryRequirements (device->device, image, &mem->requirements);
-  if (gst_vulkan_error_to_g_error (err, &error,
-          "vkGetImageMemoryRequirements") < 0) {
-    vkDestroyImage (device->device, image);
-    goto vk_error;
-  }
+  vkGetImageMemoryRequirements (device->device, image, &mem->requirements);
 
   params.align = mem->requirements.alignment;
   _vk_image_mem_init (mem, allocator, parent, device, &params,
@@ -241,11 +229,8 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   mem->create_info = image_info;
   mem->image = image;
 
-  err = vkGetPhysicalDeviceImageFormatProperties (gpu, format, VK_IMAGE_TYPE_2D,
+  vkGetPhysicalDeviceImageFormatProperties (gpu, format, VK_IMAGE_TYPE_2D,
       tiling, usage, 0, &mem->format_properties);
-  if (gst_vulkan_error_to_g_error (err, &error,
-          "vkGetPhysicalDeviceImageFormatProperties") < 0)
-    goto vk_error;
 
   if (!_find_memory_type_index_with_type_properties (device,
           mem->requirements.memoryTypeBits, mem_prop_flags,
@@ -273,7 +258,7 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   if (usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT |
           VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)) {
     _view_create_info (mem->image, format, &view_info);
-    err = vkCreateImageView (device->device, &view_info, &mem->view);
+    err = vkCreateImageView (device->device, &view_info, NULL, &mem->view);
     if (gst_vulkan_error_to_g_error (err, &error, "vkCreateImageView") < 0)
       goto vk_error;
   }
@@ -311,14 +296,7 @@ _vk_image_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
   gpu = gst_vulkan_device_get_physical_device (device);
   mem->image = image;
 
-  err =
-      vkGetImageMemoryRequirements (device->device, mem->image,
-      &mem->requirements);
-  if (gst_vulkan_error_to_g_error (err, &error,
-          "vkGetImageMemoryRequirements") < 0) {
-    vkDestroyImage (device->device, image);
-    goto vk_error;
-  }
+  vkGetImageMemoryRequirements (device->device, mem->image, &mem->requirements);
 
   params.flags = GST_MEMORY_FLAG_NOT_MAPPABLE | GST_MEMORY_FLAG_READONLY;
   _vk_image_mem_init (mem, allocator, parent, device, &params,
@@ -340,7 +318,7 @@ _vk_image_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
   if (usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT |
           VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)) {
     _view_create_info (mem->image, format, &view_info);
-    err = vkCreateImageView (device->device, &view_info, &mem->view);
+    err = vkCreateImageView (device->device, &view_info, NULL, &mem->view);
     if (gst_vulkan_error_to_g_error (err, &error, "vkCreateImageView") < 0)
       goto vk_error;
   }
@@ -425,13 +403,13 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
   GstVulkanImageMemory *mem = (GstVulkanImageMemory *) memory;
 
   GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "freeing image memory:%p "
-      "id:%" G_GUINT64_FORMAT, mem, mem->image.handle);
+      "id:%" G_GUINT64_FORMAT, mem, (guint64) mem->image);
 
-  if (mem->image.handle && !mem->wrapped)
-    vkDestroyImage (mem->device->device, mem->image);
+  if (mem->image && !mem->wrapped)
+    vkDestroyImage (mem->device->device, mem->image, NULL);
 
-  if (mem->view.handle)
-    vkDestroyImageView (mem->device->device, mem->view);
+  if (mem->view)
+    vkDestroyImageView (mem->device->device, mem->view, NULL);
 
   if (mem->vk_mem)
     gst_memory_unref ((GstMemory *) mem->vk_mem);
@@ -450,26 +428,29 @@ gst_vulkan_image_memory_set_layout (GstVulkanImageMemory * vk_mem,
 
   barrier->sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
   barrier->pNext = NULL;
-  barrier->outputMask = 0;
-  barrier->inputMask = 0;
+  barrier->dstAccessMask = 0;
+  barrier->srcAccessMask = 0;
   barrier->oldLayout = vk_mem->image_layout;
   barrier->newLayout = image_layout;
   barrier->image = vk_mem->image;
-  barrier->subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR;
-  barrier->subresourceRange.baseMipLevel = 0;
-  barrier->subresourceRange.mipLevels = 1;
-  barrier->subresourceRange.baseArrayLayer = 0;
-  barrier->subresourceRange.arraySize = 0;
+  GST_VK_IMAGE_SUBRESOURCE_RANGE (barrier->subresourceRange,
+      VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
 
-  if (image_layout == VK_IMAGE_LAYOUT_TRANSFER_DESTINATION_OPTIMAL) {
-    /* Make sure anything that was copying from this image has completed */
-    barrier->inputMask = VK_MEMORY_INPUT_TRANSFER_BIT;
+  if (image_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+    barrier->dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+  }
+
+  if (image_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+    barrier->dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+  }
+
+  if (image_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+    barrier->dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
   }
 
   if (image_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-    /* Make sure any Copy or CPU writes to image are flushed */
-    barrier->outputMask =
-        VK_MEMORY_OUTPUT_HOST_WRITE_BIT | VK_MEMORY_OUTPUT_TRANSFER_BIT;
+    barrier->dstAccessMask =
+        VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
   }
 
   /* FIXME: what if the barrier is never submitted or is submitted out of order? */

@@ -214,16 +214,29 @@ gst_vulkan_window_get_display (GstVulkanWindow * window)
   return gst_object_ref (window->display);
 }
 
-gpointer
-gst_vulkan_window_get_platform_handle (GstVulkanWindow * window)
+VkSurfaceKHR
+gst_vulkan_window_get_surface (GstVulkanWindow * window, GError ** error)
 {
   GstVulkanWindowClass *klass;
 
   g_return_val_if_fail (GST_IS_VULKAN_WINDOW (window), NULL);
   klass = GST_VULKAN_WINDOW_GET_CLASS (window);
-  g_return_val_if_fail (klass->get_platform_handle != NULL, NULL);
+  g_return_val_if_fail (klass->get_surface != NULL, NULL);
 
-  return klass->get_platform_handle (window);
+  return klass->get_surface (window, error);
+}
+
+gboolean
+gst_vulkan_window_get_presentation_support (GstVulkanWindow * window,
+    GstVulkanDevice * device, guint32 queue_family_idx)
+{
+  GstVulkanWindowClass *klass;
+
+  g_return_val_if_fail (GST_IS_VULKAN_WINDOW (window), FALSE);
+  klass = GST_VULKAN_WINDOW_GET_CLASS (window);
+  g_return_val_if_fail (klass->get_presentation_support != NULL, FALSE);
+
+  return klass->get_presentation_support (window, device, queue_family_idx);
 }
 
 gboolean

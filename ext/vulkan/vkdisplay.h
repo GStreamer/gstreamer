@@ -66,6 +66,8 @@ struct _GstVulkanDisplay
 
   GstVulkanDisplayType      type;
 
+  GstVulkanInstance        *instance;
+
   /* <protected> */
   GList                    *windows;        /* OBJECT lock */
   GMainContext             *main_context;
@@ -81,15 +83,18 @@ struct _GstVulkanDisplayClass
   GstObjectClass object_class;
 
   gpointer          (*get_handle)           (GstVulkanDisplay * display);
-  gpointer          (*get_platform_handle)  (GstVulkanDisplay * display); /* default chains up to @get_handle */
   GstVulkanWindow * (*create_window)        (GstVulkanDisplay * display);
 };
 
-GstVulkanDisplay *      gst_vulkan_display_new (void);
+GstVulkanDisplay *      gst_vulkan_display_new                      (GstVulkanInstance *instance);
+GstVulkanDisplay *      gst_vulkan_display_new_with_type            (GstVulkanInstance *instance,
+                                                                     GstVulkanDisplayType type);
+GstVulkanDisplayType    gst_vulkan_display_choose_type              (GstVulkanInstance *instance);
+const gchar *           gst_vulkan_display_type_to_extension_string (GstVulkanDisplayType type);
+
 
 gpointer                gst_vulkan_display_get_handle               (GstVulkanDisplay * display);
 GstVulkanDisplayType    gst_vulkan_display_get_handle_type          (GstVulkanDisplay * display);
-gpointer                gst_vulkan_display_get_platform_handle      (GstVulkanDisplay * display);
 GstVulkanWindow *       gst_vulkan_display_create_window            (GstVulkanDisplay * display);
 
 gboolean                gst_context_get_vulkan_display              (GstContext * context,

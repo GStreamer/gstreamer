@@ -33,16 +33,12 @@ G_DEFINE_TYPE (GstVulkanDisplayXCB, gst_vulkan_display_xcb,
 
 static void gst_vulkan_display_xcb_finalize (GObject * object);
 static gpointer gst_vulkan_display_xcb_get_handle (GstVulkanDisplay * display);
-static gpointer gst_vulkan_display_xcb_get_platform_handle (GstVulkanDisplay *
-    display);
 
 static void
 gst_vulkan_display_xcb_class_init (GstVulkanDisplayXCBClass * klass)
 {
   GST_VULKAN_DISPLAY_CLASS (klass)->get_handle =
       GST_DEBUG_FUNCPTR (gst_vulkan_display_xcb_get_handle);
-  GST_VULKAN_DISPLAY_CLASS (klass)->get_platform_handle =
-      GST_DEBUG_FUNCPTR (gst_vulkan_display_xcb_get_platform_handle);
 
   G_OBJECT_CLASS (klass)->finalize = gst_vulkan_display_xcb_finalize;
 }
@@ -63,9 +59,9 @@ gst_vulkan_display_xcb_finalize (GObject * object)
 
   G_OBJECT_CLASS (gst_vulkan_display_xcb_parent_class)->finalize (object);
 
-  if (!display_xcb->foreign_display && display_xcb->platform_handle.connection)
-    xcb_disconnect (display_xcb->platform_handle.connection);
-  display_xcb->platform_handle.connection = NULL;
+  if (!display_xcb->foreign_display && display_xcb->connection)
+    xcb_disconnect (display_xcb->connection);
+  display_xcb->connection = NULL;
 }
 
 static xcb_screen_t *
@@ -135,9 +131,9 @@ gst_vulkan_display_xcb_new_with_connection (xcb_connection_t * connection,
 
   ret = g_object_new (GST_TYPE_VULKAN_DISPLAY_XCB, NULL);
 
-  ret->platform_handle.connection = connection;
+  ret->connection = connection;
   ret->screen = _get_screen_from_connection (connection, screen_no);
-  ret->platform_handle.root = ret->screen->root;
+  ret->root_window = ret->screen->root;
   ret->foreign_display = TRUE;
 
   return ret;
@@ -146,12 +142,5 @@ gst_vulkan_display_xcb_new_with_connection (xcb_connection_t * connection,
 static gpointer
 gst_vulkan_display_xcb_get_handle (GstVulkanDisplay * display)
 {
-  return (gpointer) GST_VULKAN_DISPLAY_XCB (display)->platform_handle.
-      connection;
-}
-
-static gpointer
-gst_vulkan_display_xcb_get_platform_handle (GstVulkanDisplay * display)
-{
-  return &GST_VULKAN_DISPLAY_XCB (display)->platform_handle;
+  return (gpointer) GST_VULKAN_DISPLAY_XCB_CONNECTION (display);
 }
