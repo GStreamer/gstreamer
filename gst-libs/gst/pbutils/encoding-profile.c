@@ -1448,8 +1448,8 @@ parse_encoding_profile (const gchar * value)
     }
 
     if (res) {
-      if (gst_encoding_container_profile_add_profile
-          (GST_ENCODING_CONTAINER_PROFILE (res), profile) == FALSE) {
+      if (!gst_encoding_container_profile_add_profile
+          (GST_ENCODING_CONTAINER_PROFILE (res), profile)) {
         g_warning ("Can not create a preset for caps: %s", strcaps_v[i]);
 
         return NULL;
