@@ -1074,17 +1074,19 @@ ges_asset_request_async (GType extractable_type,
           ges_asset_cache_append_task (extractable_type, real_id, task);
 
           goto done;
-        case ASSET_PROXIED:
-          asset = ges_asset_get_proxy (asset);
+        case ASSET_PROXIED:{
+          GESAsset *target = ges_asset_get_proxy (asset);
 
-          if (asset == NULL) {
+          if (target == NULL) {
             GST_ERROR ("Asset %s proxied against an asset (%s) we do not"
                 " have in cache, something massively screwed",
                 asset->priv->id, asset->priv->proxied_asset_id);
 
             goto done;
           }
+          asset = target;
           break;
+        }
         case ASSET_NEEDS_RELOAD:
           GST_DEBUG_OBJECT (asset, "Asset in cache and needs reload");
           ges_asset_cache_append_task (extractable_type, real_id, task);
