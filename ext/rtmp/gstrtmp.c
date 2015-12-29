@@ -50,11 +50,17 @@ gst_rtmp_log_callback (int level, const gchar * fmt, va_list vl)
     case RTMP_LOGWARNING:
       gst_level = GST_LEVEL_WARNING;
       break;
+    case RTMP_LOGINFO:
+      gst_level = GST_LEVEL_INFO;
+      break;
     case RTMP_LOGDEBUG:
       gst_level = GST_LEVEL_DEBUG;
       break;
+    case RTMP_LOGDEBUG2:
+      gst_level = GST_LEVEL_LOG;
+      break;
     default:
-      gst_level = GST_LEVEL_INFO;
+      gst_level = GST_LEVEL_TRACE;
       break;
   }
 
@@ -68,14 +74,27 @@ _set_debug_level (void)
 
   RTMP_LogSetCallback (gst_rtmp_log_callback);
   gst_level = gst_debug_category_get_threshold (rtmp_debug);
-  if (gst_level >= GST_LEVEL_LOG)
-    RTMP_LogSetLevel (RTMP_LOGALL);
-  else if (gst_level >= GST_LEVEL_DEBUG)
-    RTMP_LogSetLevel (RTMP_LOGDEBUG);
-  else if (gst_level >= GST_LEVEL_INFO)
-    RTMP_LogSetLevel (RTMP_LOGINFO);
-  else if (gst_level >= GST_LEVEL_WARNING)
-    RTMP_LogSetLevel (RTMP_LOGWARNING);
+
+  switch (gst_level) {
+    case GST_LEVEL_ERROR:
+      RTMP_LogSetLevel (RTMP_LOGERROR);
+      break;
+    case GST_LEVEL_WARNING:
+    case GST_LEVEL_FIXME:
+      RTMP_LogSetLevel (RTMP_LOGWARNING);
+      break;
+    case GST_LEVEL_INFO:
+      RTMP_LogSetLevel (RTMP_LOGINFO);
+      break;
+    case GST_LEVEL_DEBUG:
+      RTMP_LogSetLevel (RTMP_LOGDEBUG);
+      break;
+    case GST_LEVEL_LOG:
+      RTMP_LogSetLevel (RTMP_LOGDEBUG2);
+      break;
+    default:                   /* _TRACE and beyond */
+      RTMP_LogSetLevel (RTMP_LOGALL);
+  }
 }
 #endif
 
