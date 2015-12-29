@@ -5260,8 +5260,8 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     const gchar *variant, *variant_descr = "";
 
     /* Expect a fourcc in the codec private data */
-    if (size < 4) {
-      GST_WARNING ("Too small PRORESS fourcc (%d bytes)", size);
+    if (!data || size < 4) {
+      GST_WARNING ("No or too small PRORESS fourcc (%d bytes)", size);
       return NULL;
     }
 
