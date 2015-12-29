@@ -1342,17 +1342,12 @@ combo_search (const gchar * pname)
 static GstEncodingProfile *
 parse_encoding_profile (const gchar * value)
 {
-  GstCaps *caps;
   GstEncodingProfile *res;
-  char *preset_name = NULL;
-  gchar **restriction_format, **preset_v;
-
-  guint i, presence = 0;
-  GstCaps *restrictioncaps = NULL;
   gchar **strpresence_v, **strcaps_v = g_strsplit (value, ":", 0);
+  guint i;
 
   if (strcaps_v[0] && *strcaps_v[0]) {
-    caps = gst_caps_from_string (strcaps_v[0]);
+    GstCaps *caps = gst_caps_from_string (strcaps_v[0]);
     if (caps == NULL) {
       GST_ERROR ("Could not parse caps %s", strcaps_v[0]);
       return NULL;
@@ -1368,6 +1363,11 @@ parse_encoding_profile (const gchar * value)
   for (i = 1; strcaps_v[i] && *strcaps_v[i]; i++) {
     GstEncodingProfile *profile = NULL;
     gchar *strcaps, *strpresence;
+    gchar *preset_name = NULL;
+    GstCaps *caps;
+    gchar **restriction_format, **preset_v;
+    guint presence = 0;
+    GstCaps *restrictioncaps = NULL;
 
     restriction_format = g_strsplit (strcaps_v[i], "->", 0);
     if (restriction_format[1]) {
@@ -1449,8 +1449,7 @@ parse_encoding_profile (const gchar * value)
 
     if (res) {
       if (gst_encoding_container_profile_add_profile
-          (GST_ENCODING_CONTAINER_PROFILE (res),
-              profile) == FALSE) {
+          (GST_ENCODING_CONTAINER_PROFILE (res), profile) == FALSE) {
         g_warning ("Can not create a preset for caps: %s", strcaps_v[i]);
 
         return NULL;
