@@ -869,6 +869,7 @@ gst_audio_converter_samples (GstAudioConverter * convert,
   in_samples = MIN (in_samples, out_samples);
 
   if (in_samples == 0) {
+    GST_LOG ("skipping empty buffer");
     *in_consumed = 0;
     *out_produced = 0;
     return TRUE;
@@ -877,8 +878,13 @@ gst_audio_converter_samples (GstAudioConverter * convert,
   chain = convert->pack_chain;
 
   if (convert->passthrough) {
+    gsize bytes = in_samples * chain->inc *
+        (convert->in.bpf / convert->in.channels);
+
+    GST_LOG ("passthrough: %" G_GSIZE_FORMAT " / %" G_GSIZE_FORMAT " bytes",
+        in_samples, bytes);
     for (i = 0; i < chain->blocks; i++)
-      memcpy (out[i], in[i], in_samples * chain->inc);
+      memcpy (out[i], in[i], bytes);
     *out_produced = in_samples;
     *in_consumed = in_samples;
     return TRUE;

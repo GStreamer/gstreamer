@@ -106,7 +106,7 @@ get_int_caps (guint channels, gint endianness, guint width,
   fmt = gst_audio_format_build_integer (signedness, endianness, width, depth);
 
   gst_audio_info_init (&info);
-  gst_audio_info_set_format (&info, fmt, 48000, channels, NULL);
+  gst_audio_info_set_format (&info, fmt, GST_AUDIO_DEF_RATE, channels, NULL);
 
   caps = gst_audio_info_to_caps (&info);
   fail_unless (caps != NULL);
@@ -141,8 +141,8 @@ get_float_caps (guint channels, gint endianness, guint width)
   g_assert (channels <= 2);
 
   gst_audio_info_init (&info);
-  gst_audio_info_set_format (&info, get_float_format (endianness, width), 48000,
-      channels, NULL);
+  gst_audio_info_set_format (&info, get_float_format (endianness, width),
+      GST_AUDIO_DEF_RATE, channels, NULL);
 
   caps = gst_audio_info_to_caps (&info);
   fail_unless (caps != NULL);
@@ -338,10 +338,10 @@ get_float_mc_caps (guint channels, gint endianness, guint width,
 
   if (position) {
     gst_audio_info_set_format (&info, get_float_format (endianness, width),
-        48000, channels, position);
+        GST_AUDIO_DEF_RATE, channels, position);
   } else if (channels <= 6) {
     gst_audio_info_set_format (&info, get_float_format (endianness, width),
-        48000, channels, channelpositions[channels - 1]);
+        GST_AUDIO_DEF_RATE, channels, channelpositions[channels - 1]);
   } else {
     GstAudioChannelPosition pos[64];
     gint i;
@@ -349,7 +349,7 @@ get_float_mc_caps (guint channels, gint endianness, guint width,
     for (i = 0; i < 64; i++)
       pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
     gst_audio_info_set_format (&info, get_float_format (endianness, width),
-        48000, channels, pos);
+        GST_AUDIO_DEF_RATE, channels, pos);
   }
 
   caps = gst_audio_info_to_caps (&info);
@@ -373,9 +373,10 @@ get_int_mc_caps (guint channels, gint endianness, guint width,
   gst_audio_info_init (&info);
 
   if (position) {
-    gst_audio_info_set_format (&info, fmt, 48000, channels, position);
+    gst_audio_info_set_format (&info, fmt, GST_AUDIO_DEF_RATE, channels,
+        position);
   } else if (channels <= 6) {
-    gst_audio_info_set_format (&info, fmt, 48000, channels,
+    gst_audio_info_set_format (&info, fmt, GST_AUDIO_DEF_RATE, channels,
         channelpositions[channels - 1]);
   } else {
     GstAudioChannelPosition pos[64];
@@ -383,7 +384,7 @@ get_int_mc_caps (guint channels, gint endianness, guint width,
 
     for (i = 0; i < 64; i++)
       pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
-    gst_audio_info_set_format (&info, fmt, 48000, channels, pos);
+    gst_audio_info_set_format (&info, fmt, GST_AUDIO_DEF_RATE, channels, pos);
   }
 
   caps = gst_audio_info_to_caps (&info);
@@ -398,7 +399,7 @@ get_int_mc_caps (guint channels, gint endianness, guint width,
 static void
 verify_convert (const gchar * which, void *in, int inlength,
     GstCaps * incaps, void *out, int outlength, GstCaps * outcaps,
-    GstFlowReturn expected_flow)
+    GstFlowReturn expected_flow, gboolean in_place_allowed)
 {
   GstBuffer *inbuffer, *outbuffer;
   GstElement *audioconvert;
@@ -422,6 +423,13 @@ verify_convert (const gchar * which, void *in, int inlength,
   gst_buffer_fill (inbuffer, 0, in, inlength);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
+  if (!in_place_allowed) {
+    /* take extra ref to force processing */
+    gst_buffer_ref (inbuffer);
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (audioconvert),
+        FALSE);
+  }
+
   /* pushing gives away my reference ... */
   GST_DEBUG ("push it");
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), expected_flow);
@@ -433,6 +441,11 @@ verify_convert (const gchar * which, void *in, int inlength,
   /* ... and puts a new buffer on the global list */
   fail_unless (g_list_length (buffers) == 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+
+  if (!in_place_allowed) {
+    /* release extra ref */
+    gst_buffer_unref (inbuffer);
+  }
 
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
   fail_unless_equals_int (gst_buffer_get_size (outbuffer), outlength);
@@ -477,11 +490,18 @@ done:
 
 #define RUN_CONVERSION(which, inarray, in_get_caps, outarray, out_get_caps)    \
   verify_convert (which, inarray, sizeof (inarray),                            \
-        in_get_caps, outarray, sizeof (outarray), out_get_caps, GST_FLOW_OK)
+        in_get_caps, outarray, sizeof (outarray), out_get_caps, GST_FLOW_OK,   \
+        TRUE)
 
 #define RUN_CONVERSION_TO_FAIL(which, inarray, in_caps, outarray, out_caps)    \
   verify_convert (which, inarray, sizeof (inarray),                            \
-        in_caps, outarray, sizeof (outarray), out_caps, GST_FLOW_NOT_NEGOTIATED)
+        in_caps, outarray, sizeof (outarray), out_caps,                        \
+        GST_FLOW_NOT_NEGOTIATED, TRUE)
+
+#define RUN_CONVERSION_NOT_INPLACE(which, inarray, in_get_caps, outarray, out_get_caps)    \
+  verify_convert (which, inarray, sizeof (inarray),                            \
+        in_get_caps, outarray, sizeof (outarray), out_get_caps, GST_FLOW_OK,   \
+        FALSE)
 
 
 GST_START_TEST (test_int16)
@@ -672,6 +692,63 @@ GST_END_TEST;
 
 GST_START_TEST (test_float_conversion)
 {
+  /* 64-bit float <-> 32-bit float */
+  {
+    gdouble in[] = { 0.0, 1.0, -1.0, 0.5, -0.5 };
+    gfloat out[] = { 0.0, 1.0, -1.0, 0.5, -0.5 };
+
+    RUN_CONVERSION ("64 float to 32 float",
+        in, get_float_caps (1, G_BYTE_ORDER, 64),
+        out, get_float_caps (1, G_BYTE_ORDER, 32));
+
+    RUN_CONVERSION ("32 float to 64 float",
+        out, get_float_caps (1, G_BYTE_ORDER, 32),
+        in, get_float_caps (1, G_BYTE_ORDER, 64));
+  }
+
+  /* 32-bit float little endian <-> big endian */
+  {
+    gfloat le[] = { GFLOAT_TO_LE (0.0), GFLOAT_TO_LE (1.0), GFLOAT_TO_LE (-1.0),
+      GFLOAT_TO_LE (0.5), GFLOAT_TO_LE (-0.5)
+    };
+    gfloat be[] = { GFLOAT_TO_BE (0.0), GFLOAT_TO_BE (1.0), GFLOAT_TO_BE (-1.0),
+      GFLOAT_TO_BE (0.5), GFLOAT_TO_BE (-0.5)
+    };
+
+    RUN_CONVERSION ("32 float LE to BE",
+        le, get_float_caps (1, G_LITTLE_ENDIAN, 32),
+        be, get_float_caps (1, G_BIG_ENDIAN, 32));
+
+    RUN_CONVERSION ("32 float BE to LE",
+        be, get_float_caps (1, G_BIG_ENDIAN, 32),
+        le, get_float_caps (1, G_LITTLE_ENDIAN, 32));
+  }
+
+  /* 64-bit float little endian <-> big endian */
+  {
+    gdouble le[] =
+        { GDOUBLE_TO_LE (0.0), GDOUBLE_TO_LE (1.0), GDOUBLE_TO_LE (-1.0),
+      GDOUBLE_TO_LE (0.5), GDOUBLE_TO_LE (-0.5)
+    };
+    gdouble be[] =
+        { GDOUBLE_TO_BE (0.0), GDOUBLE_TO_BE (1.0), GDOUBLE_TO_BE (-1.0),
+      GDOUBLE_TO_BE (0.5), GDOUBLE_TO_BE (-0.5)
+    };
+
+    RUN_CONVERSION ("64 float LE to BE",
+        le, get_float_caps (1, G_LITTLE_ENDIAN, 64),
+        be, get_float_caps (1, G_BIG_ENDIAN, 64));
+
+    RUN_CONVERSION ("64 float BE to LE",
+        be, get_float_caps (1, G_BIG_ENDIAN, 64),
+        le, get_float_caps (1, G_LITTLE_ENDIAN, 64));
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_int_float_conversion)
+{
   /* 32 float <-> 16 signed */
   /* NOTE: if audioconvert was doing dithering we'd have a problem */
   {
@@ -756,62 +833,9 @@ GST_START_TEST (test_float_conversion)
         in, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE),
         out, get_float_caps (1, G_BYTE_ORDER, 64));
   }
-
-  /* 64-bit float <-> 32-bit float */
-  {
-    gdouble in[] = { 0.0, 1.0, -1.0, 0.5, -0.5 };
-    gfloat out[] = { 0.0, 1.0, -1.0, 0.5, -0.5 };
-
-    RUN_CONVERSION ("64 float to 32 float",
-        in, get_float_caps (1, G_BYTE_ORDER, 64),
-        out, get_float_caps (1, G_BYTE_ORDER, 32));
-
-    RUN_CONVERSION ("32 float to 64 float",
-        out, get_float_caps (1, G_BYTE_ORDER, 32),
-        in, get_float_caps (1, G_BYTE_ORDER, 64));
-  }
-
-  /* 32-bit float little endian <-> big endian */
-  {
-    gfloat le[] = { GFLOAT_TO_LE (0.0), GFLOAT_TO_LE (1.0), GFLOAT_TO_LE (-1.0),
-      GFLOAT_TO_LE (0.5), GFLOAT_TO_LE (-0.5)
-    };
-    gfloat be[] = { GFLOAT_TO_BE (0.0), GFLOAT_TO_BE (1.0), GFLOAT_TO_BE (-1.0),
-      GFLOAT_TO_BE (0.5), GFLOAT_TO_BE (-0.5)
-    };
-
-    RUN_CONVERSION ("32 float LE to BE",
-        le, get_float_caps (1, G_LITTLE_ENDIAN, 32),
-        be, get_float_caps (1, G_BIG_ENDIAN, 32));
-
-    RUN_CONVERSION ("32 float BE to LE",
-        be, get_float_caps (1, G_BIG_ENDIAN, 32),
-        le, get_float_caps (1, G_LITTLE_ENDIAN, 32));
-  }
-
-  /* 64-bit float little endian <-> big endian */
-  {
-    gdouble le[] =
-        { GDOUBLE_TO_LE (0.0), GDOUBLE_TO_LE (1.0), GDOUBLE_TO_LE (-1.0),
-      GDOUBLE_TO_LE (0.5), GDOUBLE_TO_LE (-0.5)
-    };
-    gdouble be[] =
-        { GDOUBLE_TO_BE (0.0), GDOUBLE_TO_BE (1.0), GDOUBLE_TO_BE (-1.0),
-      GDOUBLE_TO_BE (0.5), GDOUBLE_TO_BE (-0.5)
-    };
-
-    RUN_CONVERSION ("64 float LE to BE",
-        le, get_float_caps (1, G_LITTLE_ENDIAN, 64),
-        be, get_float_caps (1, G_BIG_ENDIAN, 64));
-
-    RUN_CONVERSION ("64 float BE to LE",
-        be, get_float_caps (1, G_BIG_ENDIAN, 64),
-        le, get_float_caps (1, G_LITTLE_ENDIAN, 64));
-  }
 }
 
 GST_END_TEST;
-
 
 GST_START_TEST (test_multichannel_conversion)
 {
@@ -1006,6 +1030,68 @@ GST_START_TEST (test_multichannel_conversion)
     RUN_CONVERSION ("2 channels to 11", in, in_caps, out, out_caps);
   }
 
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_passthrough)
+{
+  /* int 8 bit */
+  {
+    gint8 data[] = { 0, 1, 2, 127, -127 };
+
+    RUN_CONVERSION ("int 8 bit passthrough",
+        data, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE),
+        data, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE)
+        );
+    RUN_CONVERSION_NOT_INPLACE ("int 8 bit passthrough",
+        data, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE),
+        data, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE)
+        );
+  }
+  /* int 16 bit signed */
+  {
+    gint16 data[] = { 0, 256, 512, 32512, -32512 };
+
+    RUN_CONVERSION ("int 16 bit signed passthrough",
+        data, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE),
+        data, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE)
+        );
+    RUN_CONVERSION_NOT_INPLACE ("int 16 bit signed passthrough",
+        data, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE),
+        data, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE)
+        );
+  }
+  /* int 32 bit signed */
+  {
+    gint32 data[] = { 0, G_MININT32, G_MAXINT32,
+      (32 << 16), (32 << 16) + (1 << 15), (32 << 16) - (1 << 15),
+      (32 << 16) + (2 << 15), (32 << 16) - (2 << 15),
+      (-32 << 16) + (1 << 15), (-32 << 16) - (1 << 15),
+      (-32 << 16) + (2 << 15), (-32 << 16) - (2 << 15),
+      (-32 << 16)
+    };
+    RUN_CONVERSION ("int 32 bit signed passthrough",
+        data, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE),
+        data, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE)
+        );
+    RUN_CONVERSION_NOT_INPLACE ("int 32 bit signed passthrough",
+        data, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE),
+        data, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE)
+        );
+  }
+
+  /* int 16 bit signed stereo */
+  {
+    gint16 data[] = { 0, 0, 1, 1, 2, 2, 3, 3 };
+
+    RUN_CONVERSION ("int 16 bit signed 2 channel passthrough",
+        data, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE),
+        data, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE));
+    RUN_CONVERSION_NOT_INPLACE ("int 16 bit signed 2 channel passthrough",
+        data, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE),
+        data, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE));
+  }
 }
 
 GST_END_TEST;
@@ -1500,10 +1586,13 @@ audioconvert_suite (void)
   tcase_add_test (tc_chain, test_float32);
   tcase_add_test (tc_chain, test_int_conversion);
   tcase_add_test (tc_chain, test_float_conversion);
+  tcase_add_test (tc_chain, test_int_float_conversion);
   tcase_add_test (tc_chain, test_multichannel_conversion);
+  tcase_add_test (tc_chain, test_passthrough);
   tcase_add_test (tc_chain, test_caps_negotiation);
   tcase_add_test (tc_chain, test_convert_undefined_multichannel);
   tcase_add_test (tc_chain, test_preserve_width);
+
 
   return s;
 }
