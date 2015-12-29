@@ -1757,7 +1757,7 @@ gst_caps_structure_subtract (GSList ** into, const GstStructure * minuend,
  * <note>This function does not work reliably if optional properties for caps
  * are included on one caps and omitted on the other.</note>
  *
- * Returns: the resulting caps
+ * Returns: (transfer full): the resulting caps
  */
 GstCaps *
 gst_caps_subtract (GstCaps * minuend, GstCaps * subtrahend)
@@ -2055,7 +2055,7 @@ gst_caps_switch_structures (GstCaps * caps, GstStructure * old,
  *
  * This method does not preserve the original order of @caps.
  *
- * Returns: The simplified caps.
+ * Returns: (transfer full): The simplified caps.
  */
 GstCaps *
 gst_caps_simplify (GstCaps * caps)
