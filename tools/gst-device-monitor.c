@@ -48,7 +48,12 @@ print_structure_field (GQuark field_id, const GValue * value,
 {
   gchar *val;
 
-  val = gst_value_serialize (value);
+  if (G_VALUE_HOLDS_UINT (value)) {
+    val = g_strdup_printf ("%u (0x%08x)", g_value_get_uint (value),
+        g_value_get_uint (value));
+  } else {
+    val = gst_value_serialize (value);
+  }
 
   if (val != NULL)
     g_print ("\n\t\t%s = %s", g_quark_to_string (field_id), val);
