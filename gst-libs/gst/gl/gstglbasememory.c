@@ -527,11 +527,6 @@ gst_gl_base_memory_memcpy (GstGLBaseMemory * src, GstGLBaseMemory * dest,
   if (!gst_gl_base_memory_alloc_data (GST_GL_BASE_MEMORY_CAST (dest)))
     return FALSE;
 
-  if (dest == NULL) {
-    GST_CAT_WARNING (GST_CAT_GL_BASE_MEMORY, "Could not copy GL Buffer");
-    return FALSE;
-  }
-
   if (!gst_memory_map ((GstMemory *) src, &sinfo, GST_MAP_READ)) {
     GST_CAT_WARNING (GST_CAT_GL_BASE_MEMORY,
         "could not read map source memory %p", src);
