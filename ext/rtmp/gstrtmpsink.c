@@ -162,15 +162,17 @@ gst_rtmp_sink_start (GstBaseSink * basesink)
 
   sink->rtmp_uri = g_strdup (sink->uri);
   sink->rtmp = RTMP_Alloc ();
+
+  if (!sink->rtmp) {
+    GST_ERROR_OBJECT (sink, "Could not allocate librtmp's RTMP context");
+    goto error;
+  }
+
   RTMP_Init (sink->rtmp);
   if (!RTMP_SetupURL (sink->rtmp, sink->rtmp_uri)) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
         ("Failed to setup URL '%s'", sink->uri));
-    RTMP_Free (sink->rtmp);
-    sink->rtmp = NULL;
-    g_free (sink->rtmp_uri);
-    sink->rtmp_uri = NULL;
-    return FALSE;
+    goto error;
   }
 
   GST_DEBUG_OBJECT (sink, "Created RTMP object");
@@ -182,6 +184,15 @@ gst_rtmp_sink_start (GstBaseSink * basesink)
   sink->have_write_error = FALSE;
 
   return TRUE;
+
+error:
+  if (sink->rtmp) {
+    RTMP_Free (sink->rtmp);
+    sink->rtmp = NULL;
+  }
+  g_free (sink->rtmp_uri);
+  sink->rtmp_uri = NULL;
+  return FALSE;
 }
 
 static gboolean
