@@ -898,14 +898,28 @@ gst_net_client_clock_start (GstNetClientClock * self)
   GError *error = NULL;
   GSocketFamily family;
   GPollFD dummy_pollfd;
+  GResolver *resolver = NULL;
+  GError *err = NULL;
 
   g_return_val_if_fail (self->priv->address != NULL, FALSE);
   g_return_val_if_fail (self->priv->servaddr == NULL, FALSE);
 
   /* create target address */
   inetaddr = g_inet_address_new_from_string (self->priv->address);
-  if (inetaddr == NULL)
-    goto bad_address;
+  if (inetaddr == NULL) {
+    GList *results;
+
+    resolver = g_resolver_get_default ();
+
+    results =
+        g_resolver_lookup_by_name (resolver, self->priv->address, NULL, &err);
+    if (!results)
+      goto failed_to_resolve;
+
+    inetaddr = G_INET_ADDRESS (g_object_ref (results->data));
+    g_resolver_free_addresses (results);
+    g_object_unref (resolver);
+  }
 
   family = g_inet_address_get_family (inetaddr);
 
@@ -980,10 +994,12 @@ getsockname_error:
     g_object_unref (socket);
     return FALSE;
   }
-bad_address:
+failed_to_resolve:
   {
-    GST_ERROR_OBJECT (self, "inet_address_new_from_string('%s') failed",
-        self->priv->address);
+    GST_ERROR_OBJECT (self, "resolving '%s' failed: %s",
+        self->priv->address, err->message);
+    g_clear_error (&err);
+    g_object_unref (resolver);
     return FALSE;
   }
 no_thread:
@@ -1028,7 +1044,7 @@ gst_net_client_clock_stop (GstNetClientClock * self)
 /**
  * gst_net_client_clock_new:
  * @name: a name for the clock
- * @remote_address: the address of the remote clock provider
+ * @remote_address: the address or hostname of the remote clock provider
  * @remote_port: the port of the remote clock provider
  * @base_time: initial time of the clock
  *
@@ -1072,7 +1088,7 @@ gst_ntp_clock_init (GstNtpClock * self)
 /**
  * gst_ntp_clock_new:
  * @name: a name for the clock
- * @remote_address: the address of the remote clock provider
+ * @remote_address: the address or hostname of the remote clock provider
  * @remote_port: the port of the remote clock provider
  * @base_time: initial time of the clock
  *
