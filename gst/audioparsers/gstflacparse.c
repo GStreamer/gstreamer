@@ -186,6 +186,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstBuffer *gst_flac_parse_generate_vorbiscomment (GstFlacParse *
     flacparse);
 
+static void gst_flac_parse_reset (GstFlacParse * parser);
 static void gst_flac_parse_finalize (GObject * object);
 static void gst_flac_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -294,27 +295,32 @@ gst_flac_parse_get_property (GObject * object, guint prop_id,
 }
 
 static void
+gst_flac_parse_reset (GstFlacParse * parser)
+{
+  if (parser->tags) {
+    gst_tag_list_unref (parser->tags);
+    parser->tags = NULL;
+  }
+  if (parser->toc) {
+    gst_toc_unref (parser->toc);
+    parser->toc = NULL;
+  }
+  if (parser->seektable) {
+    gst_buffer_unref (parser->seektable);
+    parser->seektable = NULL;
+  }
+
+  g_list_foreach (parser->headers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (parser->headers);
+  parser->headers = NULL;
+}
+
+static void
 gst_flac_parse_finalize (GObject * object)
 {
   GstFlacParse *flacparse = GST_FLAC_PARSE (object);
 
-  if (flacparse->tags) {
-    gst_tag_list_unref (flacparse->tags);
-    flacparse->tags = NULL;
-  }
-  if (flacparse->toc) {
-    gst_toc_unref (flacparse->toc);
-    flacparse->toc = NULL;
-  }
-  if (flacparse->seektable) {
-    gst_buffer_unref (flacparse->seektable);
-    flacparse->seektable = NULL;
-  }
-
-  g_list_foreach (flacparse->headers, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (flacparse->headers);
-  flacparse->headers = NULL;
-
+  gst_flac_parse_reset (flacparse);
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -359,23 +365,7 @@ gst_flac_parse_stop (GstBaseParse * parse)
 {
   GstFlacParse *flacparse = GST_FLAC_PARSE (parse);
 
-  if (flacparse->tags) {
-    gst_tag_list_unref (flacparse->tags);
-    flacparse->tags = NULL;
-  }
-  if (flacparse->toc) {
-    gst_toc_unref (flacparse->toc);
-    flacparse->toc = NULL;
-  }
-  if (flacparse->seektable) {
-    gst_buffer_unref (flacparse->seektable);
-    flacparse->seektable = NULL;
-  }
-
-  g_list_foreach (flacparse->headers, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (flacparse->headers);
-  flacparse->headers = NULL;
-
+  gst_flac_parse_reset (flacparse);
   return TRUE;
 }
 
