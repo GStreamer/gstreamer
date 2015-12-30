@@ -44,7 +44,7 @@ G_BEGIN_DECLS
 #define GST_VP9_REF_FRAMES_LOG2    3
 #define GST_VP9_REF_FRAMES         (1 << GST_VP9_REF_FRAMES_LOG2)
 
-#define GST_FRAME_CONTEXTS_LOG2    2
+#define GST_VP9_FRAME_CONTEXTS_LOG2 2
 
 #define GST_VP9_MAX_LOOP_FILTER    63
 #define GST_VP9_MAX_SHARPNESS      7
@@ -176,24 +176,24 @@ typedef enum {
 } GstVp9ColorRange;
 
 /**
- * GstVp9InterpFilter:
- * @GST_VP9_INTERP_FILTER_EIGHTTAP: EightTap interpolation filter
- * @GST_VP9_INTERP_FILTER_EIGHTTAP_SMOOTH: Smooth interpolation filter
- * @GST_VP9_INTERP_FILTER_EIGHTTAP_SHARP: Shart interpolation filter
- * @GST_VP9_INTERP_FILTER_BILINEAR: Bilinear interpolation filter
- * @GST_VP9_INTERP_FILTER_SWITCHABLE: Selectable interpolation filter
+ * GstVp9InterpolationFilter:
+ * @GST_VP9_INTERPOLATION_FILTER_EIGHTTAP: EightTap interpolation filter
+ * @GST_VP9_INTERPOLATION_FILTER_EIGHTTAP_SMOOTH: Smooth interpolation filter
+ * @GST_VP9_INTERPOLATION_FILTER_EIGHTTAP_SHARP: Shart interpolation filter
+ * @GST_VP9_INTERPOLATION_FILTER_BILINEAR: Bilinear interpolation filter
+ * @GST_VP9_INTERPOLATION_FILTER_SWITCHABLE: Selectable interpolation filter
  *
  * Interpolation Filters Types
  *
  * Since: 1.8
  */
 typedef enum {
-  GST_VP9_INTERP_FILTER_EIGHTTAP        = 0,
-  GST_VP9_INTERP_FILTER_EIGHTTAP_SMOOTH = 1,
-  GST_VP9_INTERP_FILTER_EIGHTTAP_SHARP  = 2,
-  GST_VP9_INTERP_FILTER_BILINEAR        = 3,
-  GST_VP9_INTERP_FILTER_SWITCHABLE      = 4
-} GstVp9InterpFilter;
+  GST_VP9_INTERPOLATION_FILTER_EIGHTTAP        = 0,
+  GST_VP9_INTERPOLATION_FILTER_EIGHTTAP_SMOOTH = 1,
+  GST_VP9_INTERPOLATION_FILTER_EIGHTTAP_SHARP  = 2,
+  GST_VP9_INTERPOLATION_FILTER_BILINEAR        = 3,
+  GST_VP9_INTERPOLATION_FILTER_SWITCHABLE      = 4
+} GstVp9InterpolationFilter;
 
 /**
  * GstVp9RefFrameType:

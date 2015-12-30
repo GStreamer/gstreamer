@@ -206,17 +206,17 @@ parse_frame_size_from_refs (const GstVp9Parser * parser,
     parse_frame_size (br, &frame_hdr->width, &frame_hdr->height);
 }
 
-static GstVp9InterpFilter
+static GstVp9InterpolationFilter
 parse_interp_filter (GstBitReader * br)
 {
-  const GstVp9InterpFilter filter_map[] = {
-    GST_VP9_INTERP_FILTER_EIGHTTAP_SMOOTH,
-    GST_VP9_INTERP_FILTER_EIGHTTAP,
-    GST_VP9_INTERP_FILTER_EIGHTTAP_SHARP,
-    GST_VP9_INTERP_FILTER_BILINEAR
+  static const GstVp9InterpolationFilter filter_map[] = {
+    GST_VP9_INTERPOLATION_FILTER_EIGHTTAP_SMOOTH,
+    GST_VP9_INTERPOLATION_FILTER_EIGHTTAP,
+    GST_VP9_INTERPOLATION_FILTER_EIGHTTAP_SHARP,
+    GST_VP9_INTERPOLATION_FILTER_BILINEAR
   };
 
-  return gst_vp9_read_bit (br) ? GST_VP9_INTERP_FILTER_SWITCHABLE :
+  return gst_vp9_read_bit (br) ? GST_VP9_INTERPOLATION_FILTER_SWITCHABLE :
       filter_map[gst_vp9_read_bits (br, 2)];
 }
 
@@ -781,7 +781,7 @@ gst_vp9_parser_parse_frame_header (GstVp9Parser * parser,
   frame_hdr->frame_parallel_decoding_mode =
       frame_hdr->error_resilient_mode ? 1 : gst_vp9_read_bit (br);
   frame_hdr->frame_context_idx =
-      gst_vp9_read_bits (br, GST_FRAME_CONTEXTS_LOG2);
+      gst_vp9_read_bits (br, GST_VP9_FRAME_CONTEXTS_LOG2);
 
   /* loopfilter header  */
   parse_loopfilter (&frame_hdr->loopfilter, br);
