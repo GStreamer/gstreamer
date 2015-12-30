@@ -2493,7 +2493,7 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
         /* removing them should also nicely release the request
          * pads when they finalize */
         gst_bin_remove (bin, priv->udpsrc_v4[i]);
-      } else  {
+      } else {
         /* we need to set the state to NULL before unref */
         gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_NULL);
         gst_object_unref (priv->udpsrc_v4[i]);
