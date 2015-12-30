@@ -1330,6 +1330,11 @@ default_create_pipeline (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   GstElement *pipeline;
 
   pipeline = gst_pipeline_new ("media-pipeline");
+
+  /* FIXME 2.0: This should be done by the caller, not the vfunc. Every
+   * implementation of the vfunc has to call it otherwise at the end.
+   * Also it does not allow use to add further behaviour here that could
+   * be reused by subclasses that chain up */
   gst_rtsp_media_take_pipeline (media, GST_PIPELINE_CAST (pipeline));
 
   return pipeline;
