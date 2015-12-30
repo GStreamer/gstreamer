@@ -161,6 +161,10 @@ void                  gst_rtsp_media_factory_set_media_gtype  (GstRTSPMediaFacto
                                                                GType media_gtype);
 GType                 gst_rtsp_media_factory_get_media_gtype  (GstRTSPMediaFactory * factory);
 
+void                  gst_rtsp_media_factory_set_clock        (GstRTSPMediaFactory *factory,
+                                                               GstClock * clock);
+GstClock *            gst_rtsp_media_factory_get_clock        (GstRTSPMediaFactory *factory);
+
 /* creating the media from the factory and a url */
 GstRTSPMedia *        gst_rtsp_media_factory_construct        (GstRTSPMediaFactory *factory,
                                                                const GstRTSPUrl *url);

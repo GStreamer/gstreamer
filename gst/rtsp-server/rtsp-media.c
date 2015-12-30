@@ -139,6 +139,7 @@ struct _GstRTSPMediaPrivate
   GList *payloads;              /* protected by lock */
   GstClockTime rtx_time;        /* protected by lock */
   guint latency;                /* protected by lock */
+  GstClock *clock;              /* protected by lock */
 };
 
 #define DEFAULT_SHARED          FALSE
@@ -172,6 +173,7 @@ enum
   PROP_LATENCY,
   PROP_TRANSPORT_MODE,
   PROP_STOP_ON_DISCONNECT,
+  PROP_CLOCK,
   PROP_LAST
 };
 
@@ -339,6 +341,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           DEFAULT_STOP_ON_DISCONNECT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_CLOCK,
+      g_param_spec_object ("clock", "Clock",
+          "Clock to be used by the media pipeline",
+          GST_TYPE_CLOCK, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_signals[SIGNAL_NEW_STREAM] =
       g_signal_new ("new-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, new_stream), NULL, NULL,
@@ -486,6 +493,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_STOP_ON_DISCONNECT:
       g_value_set_boolean (value, gst_rtsp_media_is_stop_on_disconnect (media));
       break;
+    case PROP_CLOCK:
+      g_value_take_object (value, gst_rtsp_media_get_clock (media));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -535,6 +545,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
     case PROP_STOP_ON_DISCONNECT:
       gst_rtsp_media_set_stop_on_disconnect (media,
           g_value_get_boolean (value));
+      break;
+    case PROP_CLOCK:
+      gst_rtsp_media_set_clock (media, g_value_get_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -1388,6 +1401,39 @@ gst_rtsp_media_is_time_provider (GstRTSPMedia * media)
   g_mutex_unlock (&priv->lock);
 
   return res;
+}
+
+/**
+ * gst_rtsp_media_set_clock:
+ * @media: a #GstRTSPMedia
+ * @clock: #GstClock to be used
+ *
+ * Configure the clock used for the media.
+ */
+void
+gst_rtsp_media_set_clock (GstRTSPMedia * media, GstClock * clock)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+  g_return_if_fail (GST_IS_CLOCK (clock) || clock == NULL);
+
+  GST_LOG_OBJECT (media, "setting clock %" GST_PTR_FORMAT, clock);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  if (priv->clock)
+    gst_object_unref (priv->clock);
+  priv->clock = clock ? gst_object_ref (clock) : NULL;
+  if (priv->pipeline) {
+    if (clock)
+      gst_pipeline_use_clock (GST_PIPELINE_CAST (priv->pipeline), clock);
+    else
+      gst_pipeline_auto_clock (GST_PIPELINE_CAST (priv->pipeline));
+  }
+
+  g_mutex_unlock (&priv->lock);
 }
 
 /**

@@ -69,6 +69,8 @@ struct _GstRTSPMediaFactoryPrivate
   GHashTable *medias;           /* protected by medias_lock */
 
   GType media_gtype;
+
+  GstClock *clock;
 };
 
 #define DEFAULT_LAUNCH          NULL
@@ -96,6 +98,7 @@ enum
   PROP_LATENCY,
   PROP_TRANSPORT_MODE,
   PROP_STOP_ON_DISCONNECT,
+  PROP_CLOCK,
   PROP_LAST
 };
 
@@ -212,6 +215,12 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           DEFAULT_STOP_ON_DISCONNECT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_CLOCK,
+      g_param_spec_object ("clock", "Clock",
+          "Clock to be used by the pipelines created for all "
+          "medias of this factory", GST_TYPE_CLOCK,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONSTRUCTED] =
       g_signal_new ("media-constructed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaFactoryClass,
@@ -319,6 +328,9 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
       g_value_set_boolean (value,
           gst_rtsp_media_factory_is_stop_on_disonnect (factory));
       break;
+    case PROP_CLOCK:
+      g_value_take_object (value, gst_rtsp_media_factory_get_clock (factory));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -366,6 +378,8 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
       gst_rtsp_media_factory_set_stop_on_disconnect (factory,
           g_value_get_boolean (value));
       break;
+    case PROP_CLOCK:
+      gst_rtsp_media_factory_set_clock (factory, g_value_get_object (value));
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -1211,6 +1225,55 @@ gst_rtsp_media_factory_get_media_gtype (GstRTSPMediaFactory * factory)
   return ret;
 }
 
+/**
+ * gst_rtsp_media_factory_set_clock:
+ * @factory: a #GstRTSPMediaFactory
+ * @clockd: the clock to be used by the media factory
+ *
+ * Configures a specific clock to be used by the pipelines
+ * of all medias created from this factory.
+ *
+ * Since: 1.8
+ */
+void
+gst_rtsp_media_factory_set_clock (GstRTSPMediaFactory * factory,
+    GstClock * clock)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+
+  g_return_if_fail (GST_IS_CLOCK (clock) || clock == NULL);
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv = factory->priv;
+  priv->clock = clock ? gst_object_ref (clock) : NULL;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_get_clock:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Returns the clock that is going to be used by the pipelines
+ * of all medias created from this factory.
+ *
+ * Returns: (transfer full): The GstClock
+ *
+ * Since: 1.8
+ */
+GstClock *
+gst_rtsp_media_factory_get_clock (GstRTSPMediaFactory * factory)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  GstClock *ret;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv = factory->priv;
+  ret = priv->clock ? gst_object_ref (priv->clock) : NULL;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return ret;
+}
+
 static gchar *
 default_gen_key (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
 {
@@ -1354,6 +1417,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   GstClockTime rtx_time;
   guint latency;
   GstRTSPTransportMode transport_mode;
+  GstClock *clock;
 
   /* configure the sharedness */
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
@@ -1367,6 +1431,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   latency = priv->latency;
   transport_mode = priv->transport_mode;
   stop_on_disconnect = priv->stop_on_disconnect;
+  clock = priv->clock ? gst_object_ref (priv->clock) : NULL;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   gst_rtsp_media_set_suspend_mode (media, suspend_mode);
@@ -1379,6 +1444,11 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gst_rtsp_media_set_latency (media, latency);
   gst_rtsp_media_set_transport_mode (media, transport_mode);
   gst_rtsp_media_set_stop_on_disconnect (media, stop_on_disconnect);
+
+  if (clock) {
+    gst_rtsp_media_set_clock (media, clock);
+    gst_object_unref (clock);
+  }
 
   if ((pool = gst_rtsp_media_factory_get_address_pool (factory))) {
     gst_rtsp_media_set_address_pool (media, pool);

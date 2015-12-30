@@ -221,6 +221,8 @@ gboolean              gst_rtsp_media_is_time_provider  (GstRTSPMedia *media);
 GstNetTimeProvider *  gst_rtsp_media_get_time_provider (GstRTSPMedia *media,
                                                         const gchar *address, guint16 port);
 
+void                  gst_rtsp_media_set_clock         (GstRTSPMedia *media, GstClock * clock);
+
 /* prepare the media for playback */
 gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media, GstRTSPThread *thread);
 gboolean              gst_rtsp_media_unprepare        (GstRTSPMedia *media);
