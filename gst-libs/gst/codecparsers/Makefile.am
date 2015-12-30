@@ -38,5 +38,4 @@ libgstcodecparsers_@GST_API_VERSION@_la_LDFLAGS = \
 	$(GST_ALL_LDFLAGS) \
 	$(GST_LT_LDFLAGS)
 
-EXTRA_DIST = dboolhuff.LICENSE dboolhuff.PATENTS dboolhuff.AUTHORS \
-             vp9utils.LICENSE vp9utils.PATENTS vp9utils.AUTHORS
+EXTRA_DIST = dboolhuff.LICENSE dboolhuff.PATENTS dboolhuff.AUTHORS
