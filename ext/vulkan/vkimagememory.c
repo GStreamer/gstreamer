@@ -423,6 +423,27 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
   gst_object_unref (mem->device);
 }
 
+static VkAccessFlags
+_access_flags_from_layout (VkImageLayout image_layout)
+{
+  if (image_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+    return VK_ACCESS_TRANSFER_WRITE_BIT;
+
+  if (image_layout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
+    return VK_ACCESS_TRANSFER_READ_BIT;
+
+  if (image_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+    return VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+  if (image_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+    return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+  if (image_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+    return VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
+
+  return 0;
+}
+
 gboolean
 gst_vulkan_image_memory_set_layout (GstVulkanImageMemory * vk_mem,
     VkImageLayout image_layout, VkImageMemoryBarrier * barrier)
@@ -431,30 +452,13 @@ gst_vulkan_image_memory_set_layout (GstVulkanImageMemory * vk_mem,
 
   barrier->sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
   barrier->pNext = NULL;
-  barrier->dstAccessMask = 0;
-  barrier->srcAccessMask = 0;
+  barrier->dstAccessMask = _access_flags_from_layout (image_layout);
+  barrier->srcAccessMask = _access_flags_from_layout (vk_mem->image_layout);
   barrier->oldLayout = vk_mem->image_layout;
   barrier->newLayout = image_layout;
   barrier->image = vk_mem->image;
   GST_VK_IMAGE_SUBRESOURCE_RANGE (barrier->subresourceRange,
       VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
-
-  if (image_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
-    barrier->dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-  }
-
-  if (image_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
-    barrier->dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-  }
-
-  if (image_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
-    barrier->dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-  }
-
-  if (image_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-    barrier->dstAccessMask =
-        VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
-  }
 
   /* FIXME: what if the barrier is never submitted or is submitted out of order? */
   vk_mem->image_layout = image_layout;
