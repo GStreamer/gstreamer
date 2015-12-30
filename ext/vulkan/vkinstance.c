@@ -282,7 +282,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   instance->dbgCreateMsgCallback = (PFN_vkDbgCreateMsgCallback)
       gst_vulkan_instance_get_proc_address (instance, "vkDbgCreateMsgCallback");
   if (!instance->dbgCreateMsgCallback) {
-    g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_ERROR_FAILED,
+    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "Failed to retreive vkDbgCreateMsgCallback");
     goto error;
   }
@@ -290,7 +290,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
       gst_vulkan_instance_get_proc_address (instance,
       "vkDbgDestroyMsgCallback");
   if (!instance->dbgDestroyMsgCallback) {
-    g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_ERROR_FAILED,
+    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "Failed to retreive vkDbgDestroyMsgCallback");
     goto error;
   }
@@ -298,7 +298,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
       (PFN_vkDbgMsgCallback) gst_vulkan_instance_get_proc_address (instance,
       "vkDbgBreakCallback");
   if (!instance->dbgBreakCallback) {
-    g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_ERROR_FAILED,
+    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "Failed to retreive vkDbgBreakCallback");
     goto error;
   }

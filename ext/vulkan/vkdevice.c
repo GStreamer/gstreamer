@@ -129,8 +129,7 @@ _physical_device_info (GstVulkanDevice * device, GError ** error)
 
   gpu = gst_vulkan_device_get_physical_device (device);
   if (!gpu) {
-    g_set_error (error, GST_VULKAN_ERROR,
-        GST_VULKAN_ERROR_INITIALIZATION_FAILED,
+    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "Failed to retrieve physical device");
     return FALSE;
   }
@@ -262,8 +261,7 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
       break;
   }
   if (i >= device->n_queue_families) {
-    g_set_error (error, GST_VULKAN_ERROR,
-        GST_VULKAN_ERROR_INITIALIZATION_FAILED,
+    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "Failed to find a compatible queue family");
     goto error;
   }

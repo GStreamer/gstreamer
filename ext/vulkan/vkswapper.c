@@ -199,7 +199,7 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
   if (graphics_queue != present_queue) {
     /* FIXME: add support for separate graphics/present queues */
     g_set_error (error, GST_VULKAN_ERROR,
-        GST_VULKAN_ERROR_INITIALIZATION_FAILED,
+        VK_ERROR_INITIALIZATION_FAILED,
         "Failed to find a compatible present/graphics queue");
     return FALSE;
   }
@@ -588,7 +588,7 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     alpha_flags = VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR;
   } else {
     g_set_error (error, GST_VULKAN_ERROR,
-        GST_VULKAN_ERROR_INITIALIZATION_FAILED,
+        VK_ERROR_INITIALIZATION_FAILED,
         "Incorrect alpha flags available for the swap images");
     return FALSE;
   }
@@ -601,7 +601,7 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
   } else {
     g_set_error (error, GST_VULKAN_ERROR,
-        GST_VULKAN_ERROR_INITIALIZATION_FAILED,
+        VK_ERROR_INITIALIZATION_FAILED,
         "Incorrect usage flags available for the swap images");
     return FALSE;
   }
@@ -611,7 +611,7 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   } else {
     g_set_error (error, GST_VULKAN_ERROR,
-        GST_VULKAN_ERROR_INITIALIZATION_FAILED,
+        VK_ERROR_INITIALIZATION_FAILED,
         "Incorrect usage flags available for the swap images");
     return FALSE;
   }
@@ -714,7 +714,7 @@ gst_vulkan_swapper_set_caps (GstVulkanSwapper * swapper, GstCaps * caps,
 {
   if (!gst_video_info_from_caps (&swapper->v_info, caps)) {
     g_set_error (error, GST_VULKAN_ERROR,
-        GST_VULKAN_ERROR_INITIALIZATION_FAILED,
+        VK_ERROR_INITIALIZATION_FAILED,
         "Failed to geto GstVideoInfo from caps");
     return FALSE;
   }
@@ -756,7 +756,7 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     return FALSE;
 
   if (!gst_video_frame_map (&vframe, &swapper->v_info, buffer, GST_MAP_READ)) {
-    g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_ERROR_MEMORY_MAP_FAILED,
+    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_MEMORY_MAP_FAILED,
         "Failed to map buffer");
     return FALSE;
   }
@@ -768,14 +768,14 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
       VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
   if (!staging) {
-    g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_ERROR_MEMORY_MAP_FAILED,
+    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_MEMORY_MAP_FAILED,
         "Failed to create staging memory");
     gst_video_frame_unmap (&vframe);
     return FALSE;
   }
 
   if (!gst_memory_map ((GstMemory *) staging, &staging_map_info, GST_MAP_WRITE)) {
-    g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_ERROR_MEMORY_MAP_FAILED,
+    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_MEMORY_MAP_FAILED,
         "Failed to map swap image");
     gst_video_frame_unmap (&vframe);
     gst_memory_unref ((GstMemory *) staging);
@@ -912,12 +912,12 @@ _render_buffer_unlocked (GstVulkanSwapper * swapper,
 
   if (!buffer) {
     g_set_error (error, GST_VULKAN_ERROR,
-        GST_VULKAN_ERROR_INITIALIZATION_FAILED, "Invalid buffer");
+        VK_ERROR_INITIALIZATION_FAILED, "Invalid buffer");
     goto error;
   }
 
   if (g_atomic_int_get (&swapper->to_quit)) {
-    g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_ERROR_DEVICE_LOST,
+    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_SURFACE_LOST_KHR,
         "Output window was closed");
     goto error;
   }

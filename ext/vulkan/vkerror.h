@@ -29,19 +29,6 @@ G_BEGIN_DECLS
 #define GST_VULKAN_ERROR (gst_vulkan_error_quark ())
 GQuark gst_vulkan_error_quark (void);
 
-typedef enum
-{
-  GST_VULKAN_ERROR_FAILED = 0,
-  GST_VULKAN_ERROR_OUT_OF_HOST_MEMORY = -1,
-  GST_VULKAN_ERROR_OUT_OF_DEVICE_MEMORY = -2,
-  GST_VULKAN_ERROR_INITIALIZATION_FAILED = -3,
-  GST_VULKAN_ERROR_DEVICE_LOST = -4,
-  GST_VULKAN_ERROR_MEMORY_MAP_FAILED = -5,
-  GST_VULKAN_ERROR_LAYER_NOT_PRESENT = -6,
-  GST_VULKAN_ERROR_EXTENSION_NOT_PRESENT = -7,
-  GST_VULKAN_ERROR_INCOMPATIBLE_DRIVER = -8,
-} GstVulkanError;
-
 /* only fills error iff error != NULL and result < 0 */
 VkResult gst_vulkan_error_to_g_error (VkResult result, GError ** error, const char * format, ...) G_GNUC_PRINTF (3, 4);
 

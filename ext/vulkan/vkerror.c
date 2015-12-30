@@ -32,29 +32,21 @@ static const struct
   VkResult result;
   const char *str;
 } vk_result_string_map[] = {
-  {VK_ERROR_OUT_OF_HOST_MEMORY, "Out Of Host Memory"},
-  {VK_ERROR_OUT_OF_DEVICE_MEMORY, "Out of Device Memory"},
-  {VK_ERROR_INITIALIZATION_FAILED, "Initialization Failed"},
-  {VK_ERROR_DEVICE_LOST, "Device Lost"},
-  {VK_ERROR_MEMORY_MAP_FAILED, "Map Failed"},
-  {VK_ERROR_LAYER_NOT_PRESENT, "Layer Not Present"},
-  {VK_ERROR_EXTENSION_NOT_PRESENT, "Extension Not Present"},
-  {VK_ERROR_INCOMPATIBLE_DRIVER, "Incompatible Driver"},
-};
-
-static const struct
-{
-  VkResult result;
-  GstVulkanError gst_enum;
-} vk_result_gst_error_map[] = {
-  {VK_ERROR_OUT_OF_HOST_MEMORY, GST_VULKAN_ERROR_OUT_OF_HOST_MEMORY},
-  {VK_ERROR_OUT_OF_DEVICE_MEMORY, VK_ERROR_OUT_OF_DEVICE_MEMORY},
-  {VK_ERROR_INITIALIZATION_FAILED, GST_VULKAN_ERROR_INITIALIZATION_FAILED},
-  {VK_ERROR_DEVICE_LOST, GST_VULKAN_ERROR_DEVICE_LOST},
-  {VK_ERROR_MEMORY_MAP_FAILED, GST_VULKAN_ERROR_MEMORY_MAP_FAILED},
-  {VK_ERROR_LAYER_NOT_PRESENT, GST_VULKAN_ERROR_LAYER_NOT_PRESENT},
-  {VK_ERROR_EXTENSION_NOT_PRESENT, GST_VULKAN_ERROR_EXTENSION_NOT_PRESENT},
-  {VK_ERROR_INCOMPATIBLE_DRIVER, GST_VULKAN_ERROR_INCOMPATIBLE_DRIVER},
+  {VK_ERROR_OUT_OF_HOST_MEMORY, "Out Of host memory"},
+  {VK_ERROR_OUT_OF_DEVICE_MEMORY, "Out of device memory"},
+  {VK_ERROR_INITIALIZATION_FAILED, "Initialization failed"},
+  {VK_ERROR_DEVICE_LOST, "Device lost"},
+  {VK_ERROR_MEMORY_MAP_FAILED, "Map failed"},
+  {VK_ERROR_LAYER_NOT_PRESENT, "Layer not present"},
+  {VK_ERROR_EXTENSION_NOT_PRESENT, "Extension not present"},
+  {VK_ERROR_FEATURE_NOT_PRESENT, "Feature not present"},
+  {VK_ERROR_INCOMPATIBLE_DRIVER, "Incompatible driver"},
+  {VK_ERROR_TOO_MANY_OBJECTS, "Too many objects"},
+  {VK_ERROR_FORMAT_NOT_SUPPORTED, "format not supported"},
+  {VK_ERROR_SURFACE_LOST_KHR, "Surface lost"},
+  {VK_ERROR_OUT_OF_DATE_KHR, "out of date"},
+  {VK_ERROR_INCOMPATIBLE_DISPLAY_KHR, "Incompatible display"},
+  {VK_ERROR_NATIVE_WINDOW_IN_USE_KHR, "Native window in use"},
 };
 /* *INDENT-ON* */
 
@@ -82,29 +74,10 @@ _vk_result_to_string (VkResult result)
   return "Unknown Error";
 }
 
-static GstVulkanError
-_vk_result_to_g_error_enum (VkResult result)
-{
-  int i;
-
-  if (result >= 0)
-    return 0;
-  if (result < VK_RESULT_BEGIN_RANGE)
-    return 0;
-
-  for (i = 0; i < G_N_ELEMENTS (vk_result_gst_error_map); i++) {
-    if (result == vk_result_gst_error_map[i].result)
-      return vk_result_gst_error_map[i].gst_enum;
-  }
-
-  return GST_VULKAN_ERROR_FAILED;
-}
-
 VkResult
 gst_vulkan_error_to_g_error (VkResult result, GError ** error,
     const char *format, ...)
 {
-  GstVulkanError gst_enum;
   const char *result_str;
   gchar *string;
   va_list args;
@@ -117,13 +90,11 @@ gst_vulkan_error_to_g_error (VkResult result, GError ** error,
   if (result_str == NULL)
     return result;
 
-  gst_enum = _vk_result_to_g_error_enum (result);
-
   va_start (args, format);
   g_vasprintf (&string, format, args);
   va_end (args);
 
-  g_set_error (error, GST_VULKAN_ERROR, gst_enum, "%s: %s", result_str, string);
+  g_set_error (error, GST_VULKAN_ERROR, result, "%s: %s", result_str, string);
 
   return result;
 }
