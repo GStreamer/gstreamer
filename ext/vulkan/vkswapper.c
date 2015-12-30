@@ -954,8 +954,8 @@ reacquire:
 
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.pNext = NULL;
-    submit_info.waitSemaphoreCount = 1;
-    submit_info.pWaitSemaphores = &semaphore;
+    submit_info.waitSemaphoreCount = 0;
+    submit_info.pWaitSemaphores = NULL;
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &cmd_data.cmd;
     submit_info.signalSemaphoreCount = 0;
