@@ -676,32 +676,34 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
   remaining = map.size;
 
   for (i = search_start; i < search_end; i++, remaining--) {
-    if ((GST_READ_UINT16_BE (map.data + i) & 0xfffe) == 0xfff8) {
-      GST_LOG_OBJECT (flacparse, "possible frame end at offset %d", i);
-      suspect_end = FALSE;
-      header_ret =
-          gst_flac_parse_frame_header_is_valid (flacparse, map.data + i,
-          remaining, FALSE, NULL, &suspect_end);
-      if (header_ret == FRAME_HEADER_VALID) {
-        if (flacparse->check_frame_checksums || suspect_start || suspect_end) {
-          guint16 actual_crc = gst_flac_calculate_crc16 (map.data, i - 2);
-          guint16 expected_crc = GST_READ_UINT16_BE (map.data + i - 2);
 
-          GST_LOG_OBJECT (flacparse,
-              "checking checksum, frame suspect (%d, %d)",
-              suspect_start, suspect_end);
-          if (actual_crc != expected_crc) {
-            GST_DEBUG_OBJECT (flacparse, "checksum did not match");
-            continue;
-          }
+    if ((GST_READ_UINT16_BE (map.data + i) & 0xfffe) != 0xfff8)
+      continue;
+
+    GST_LOG_OBJECT (flacparse, "possible frame end at offset %d", i);
+    suspect_end = FALSE;
+    header_ret =
+        gst_flac_parse_frame_header_is_valid (flacparse, map.data + i,
+        remaining, FALSE, NULL, &suspect_end);
+    if (header_ret == FRAME_HEADER_VALID) {
+      if (flacparse->check_frame_checksums || suspect_start || suspect_end) {
+        guint16 actual_crc = gst_flac_calculate_crc16 (map.data, i - 2);
+        guint16 expected_crc = GST_READ_UINT16_BE (map.data + i - 2);
+
+        GST_LOG_OBJECT (flacparse,
+            "checking checksum, frame suspect (%d, %d)",
+            suspect_start, suspect_end);
+        if (actual_crc != expected_crc) {
+          GST_DEBUG_OBJECT (flacparse, "checksum did not match");
+          continue;
         }
-        *ret = i;
-        flacparse->block_size = block_size;
-        result = TRUE;
-        goto cleanup;
-      } else if (header_ret == FRAME_HEADER_MORE_DATA) {
-        goto need_more;
       }
+      *ret = i;
+      flacparse->block_size = block_size;
+      result = TRUE;
+      goto cleanup;
+    } else if (header_ret == FRAME_HEADER_MORE_DATA) {
+      goto need_more;
     }
   }
 
