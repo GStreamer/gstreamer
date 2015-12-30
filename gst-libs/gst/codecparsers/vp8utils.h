@@ -25,19 +25,19 @@
 
 #include <gst/codecparsers/gstvp8parser.h>
 
-void
+G_GNUC_INTERNAL void
 gst_vp8_token_update_probs_init (GstVp8TokenProbs * probs);
 
-void
+G_GNUC_INTERNAL void
 gst_vp8_token_probs_init_defaults (GstVp8TokenProbs * probs);
 
-void
+G_GNUC_INTERNAL void
 gst_vp8_mv_update_probs_init (GstVp8MvProbs * probs);
 
-void
+G_GNUC_INTERNAL void
 gst_vp8_mv_probs_init_defaults (GstVp8MvProbs * probs);
 
-void
+G_GNUC_INTERNAL void
 gst_vp8_mode_probs_init_defaults (GstVp8ModeProbs * probs, gboolean key_frame);
 
 #endif /* GST_VP8_UTILS_H */

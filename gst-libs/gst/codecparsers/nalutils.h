@@ -53,19 +53,35 @@ typedef struct
   guint64 cache;                /* cached bytes */
 } NalReader;
 
+G_GNUC_INTERNAL
 void nal_reader_init (NalReader * nr, const guint8 * data, guint size);
 
+G_GNUC_INTERNAL
 gboolean nal_reader_read (NalReader * nr, guint nbits);
+
+G_GNUC_INTERNAL
 gboolean nal_reader_skip (NalReader * nr, guint nbits);
+
+G_GNUC_INTERNAL
 gboolean nal_reader_skip_long (NalReader * nr, guint nbits);
+
+G_GNUC_INTERNAL
 guint nal_reader_get_pos (const NalReader * nr);
+
+G_GNUC_INTERNAL
 guint nal_reader_get_remaining (const NalReader * nr);
+
+G_GNUC_INTERNAL
 guint nal_reader_get_epb_count (const NalReader * nr);
 
+G_GNUC_INTERNAL
 gboolean nal_reader_is_byte_aligned (NalReader * nr);
+
+G_GNUC_INTERNAL
 gboolean nal_reader_has_more_data (NalReader * nr);
 
 #define NAL_READER_READ_BITS_H(bits) \
+G_GNUC_INTERNAL \
 gboolean nal_reader_get_bits_uint##bits (NalReader *nr, guint##bits *val, guint nbits)
 
 NAL_READER_READ_BITS_H (8);
@@ -73,11 +89,15 @@ NAL_READER_READ_BITS_H (16);
 NAL_READER_READ_BITS_H (32);
 
 #define NAL_READER_PEEK_BITS_H(bits) \
+G_GNUC_INTERNAL \
 gboolean nal_reader_peek_bits_uint##bits (const NalReader *nr, guint##bits *val, guint nbits)
 
 NAL_READER_PEEK_BITS_H (8);
 
+G_GNUC_INTERNAL
 gboolean nal_reader_get_ue (NalReader * nr, guint32 * val);
+
+G_GNUC_INTERNAL
 gboolean nal_reader_get_se (NalReader * nr, gint32 * val);
 
 #define CHECK_ALLOWED_MAX(val, max) { \
@@ -159,4 +179,5 @@ gboolean nal_reader_get_se (NalReader * nr, gint32 * val);
   val = tmp; \
 }
 
+G_GNUC_INTERNAL
 gint scan_for_start_codes (const guint8 * data, guint size);

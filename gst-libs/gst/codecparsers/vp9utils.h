@@ -11,13 +11,16 @@
 #define __VP9_QUANT_H__
 
 #include <stdint.h>
+#include <glib.h>
 
 #define MAXQ 255
 #define QINDEX_RANGE 256
 #define QINDEX_BITS 8
 
+G_GNUC_INTERNAL
 int16_t gst_vp9_dc_quant(int qindex, int delta, int bit_depth);
 
+G_GNUC_INTERNAL
 int16_t gst_vp9_ac_quant(int qindex, int delta, int bit_depth);
 
 

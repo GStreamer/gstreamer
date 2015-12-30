@@ -101,7 +101,7 @@ struct _VLCTable
   guint cbits;
 };
 
-gboolean
+G_GNUC_INTERNAL gboolean
 decode_vlc (GstBitReader * br, guint * res, const VLCTable * table,
     guint length);
 
