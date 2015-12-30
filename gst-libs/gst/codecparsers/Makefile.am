@@ -5,7 +5,8 @@ libgstcodecparsers_@GST_API_VERSION@_la_SOURCES = \
 	gsth265parser.c gstvp8parser.c gstvp8rangedecoder.c \
 	parserutils.c nalutils.c dboolhuff.c vp8utils.c \
 	gstjpegparser.c \
-	gstmpegvideometa.c
+	gstmpegvideometa.c \
+	gstvp9parser.c vp9utils.c
 
 libgstcodecparsers_@GST_API_VERSION@includedir = \
 	$(includedir)/gstreamer-@GST_API_VERSION@/gst/codecparsers
@@ -16,7 +17,8 @@ libgstcodecparsers_@GST_API_VERSION@include_HEADERS = \
 	gstmpegvideoparser.h gsth264parser.h gstvc1parser.h gstmpeg4parser.h \
 	gsth265parser.h gstvp8parser.h gstvp8rangedecoder.h \
 	gstjpegparser.h \
-	gstmpegvideometa.h
+	gstmpegvideometa.h \
+	gstvp9parser.h vp9utils.h
 
 libgstcodecparsers_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
@@ -36,4 +38,5 @@ libgstcodecparsers_@GST_API_VERSION@_la_LDFLAGS = \
 	$(GST_ALL_LDFLAGS) \
 	$(GST_LT_LDFLAGS)
 
-EXTRA_DIST = dboolhuff.LICENSE dboolhuff.PATENTS dboolhuff.AUTHORS
+EXTRA_DIST = dboolhuff.LICENSE dboolhuff.PATENTS dboolhuff.AUTHORS \
+             vp9utils.LICENSE vp9utils.PATENTS vp9utils.AUTHORS
