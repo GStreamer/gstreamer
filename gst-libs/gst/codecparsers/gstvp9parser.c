@@ -415,7 +415,7 @@ seg_get_base_qindex (const GstVp9Parser * parser,
     else
       seg_base += seg->alternate_quantizer;
   }
-  return clamp (seg_base, 0, MAXQ);
+  return CLAMP (seg_base, 0, MAXQ);
 }
 
 static guint8
@@ -432,7 +432,7 @@ seg_get_filter_level (const GstVp9Parser * parser,
     else
       seg_filter += seg->alternate_loop_filter;
   }
-  return clamp (seg_filter, 0, GST_VP9_MAX_LOOP_FILTER);
+  return CLAMP (seg_filter, 0, GST_VP9_MAX_LOOP_FILTER);
 }
 
 /*save segmentation info from frame header to parser*/
@@ -481,12 +481,12 @@ segmentation_update (GstVp9Parser * parser, const GstVp9FrameHdr * frame_hdr)
     const GstVp9SegmentationInfoData *info = priv->segmentation + i;
 
     seg->luma_dc_quant_scale =
-        vp9_dc_quant (q, quant_indices->y_dc_delta, frame_hdr->bit_depth);
-    seg->luma_ac_quant_scale = vp9_ac_quant (q, 0, frame_hdr->bit_depth);
+        gst_vp9_dc_quant (q, quant_indices->y_dc_delta, frame_hdr->bit_depth);
+    seg->luma_ac_quant_scale = gst_vp9_ac_quant (q, 0, frame_hdr->bit_depth);
     seg->chroma_dc_quant_scale =
-        vp9_dc_quant (q, quant_indices->uv_dc_delta, frame_hdr->bit_depth);
+        gst_vp9_dc_quant (q, quant_indices->uv_dc_delta, frame_hdr->bit_depth);
     seg->chroma_ac_quant_scale =
-        vp9_ac_quant (q, quant_indices->uv_ac_delta, frame_hdr->bit_depth);
+        gst_vp9_ac_quant (q, quant_indices->uv_ac_delta, frame_hdr->bit_depth);
 
     if (lf->filter_level) {
       guint8 filter = seg_get_filter_level (parser, frame_hdr, i);
@@ -498,13 +498,13 @@ segmentation_update (GstVp9Parser * parser, const GstVp9FrameHdr * frame_hdr)
         const int intra_filter =
             filter + priv->ref_deltas[GST_VP9_REF_FRAME_INTRA] * scale;
         seg->filter_level[GST_VP9_REF_FRAME_INTRA][0] =
-            clamp (intra_filter, 0, GST_VP9_MAX_LOOP_FILTER);
+            CLAMP (intra_filter, 0, GST_VP9_MAX_LOOP_FILTER);
         for (ref = GST_VP9_REF_FRAME_LAST; ref < GST_VP9_REF_FRAME_MAX; ++ref) {
           for (mode = 0; mode < GST_VP9_MAX_MODE_LF_DELTAS; ++mode) {
             const int inter_filter = filter + priv->ref_deltas[ref] * scale
                 + priv->mode_deltas[mode] * scale;
             seg->filter_level[ref][mode] =
-                clamp (inter_filter, 0, GST_VP9_MAX_LOOP_FILTER);
+                CLAMP (inter_filter, 0, GST_VP9_MAX_LOOP_FILTER);
           }
         }
       }

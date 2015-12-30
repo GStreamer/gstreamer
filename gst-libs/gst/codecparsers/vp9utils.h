@@ -16,11 +16,9 @@
 #define QINDEX_RANGE 256
 #define QINDEX_BITS 8
 
-int clamp(int value, int low, int high);
+int16_t gst_vp9_dc_quant(int qindex, int delta, int bit_depth);
 
-int16_t vp9_dc_quant(int qindex, int delta, int bit_depth);
-
-int16_t vp9_ac_quant(int qindex, int delta, int bit_depth);
+int16_t gst_vp9_ac_quant(int qindex, int delta, int bit_depth);
 
 
 #endif //__VP9_QUANT_H__

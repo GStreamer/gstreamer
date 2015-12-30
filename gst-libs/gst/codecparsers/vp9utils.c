@@ -223,12 +223,12 @@ static const int16_t ac_qlookup_12[QINDEX_RANGE] = {
   25551, 26047, 26559, 27071, 27599, 28143, 28687, 29247,
 };
 
-int clamp(int value, int low, int high)
+static int clamp(int value, int low, int high)
 {
   return value < low ? low : (value > high ? high : value);
 }
 
-int16_t vp9_dc_quant(int qindex, int delta, int bit_depth)
+int16_t gst_vp9_dc_quant(int qindex, int delta, int bit_depth)
 {
   const uint8_t q_table_idx = clamp(qindex + delta, 0, MAXQ);
 
@@ -245,7 +245,7 @@ int16_t vp9_dc_quant(int qindex, int delta, int bit_depth)
   return -1;
 }
 
-int16_t vp9_ac_quant(int qindex, int delta, int bit_depth)
+int16_t gst_vp9_ac_quant(int qindex, int delta, int bit_depth)
 {
   const uint8_t q_table_idx = clamp(qindex + delta, 0, MAXQ);
 

@@ -11,14 +11,14 @@ libgstcodecparsers_@GST_API_VERSION@_la_SOURCES = \
 libgstcodecparsers_@GST_API_VERSION@includedir = \
 	$(includedir)/gstreamer-@GST_API_VERSION@/gst/codecparsers
 
-noinst_HEADERS = parserutils.h nalutils.h dboolhuff.h vp8utils.h
+noinst_HEADERS = parserutils.h nalutils.h dboolhuff.h vp8utils.h vp9utils.h
 
 libgstcodecparsers_@GST_API_VERSION@include_HEADERS = \
 	gstmpegvideoparser.h gsth264parser.h gstvc1parser.h gstmpeg4parser.h \
 	gsth265parser.h gstvp8parser.h gstvp8rangedecoder.h \
 	gstjpegparser.h \
 	gstmpegvideometa.h \
-	gstvp9parser.h vp9utils.h
+	gstvp9parser.h
 
 libgstcodecparsers_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
