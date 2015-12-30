@@ -43,6 +43,7 @@ typedef struct
     void                *decrypt_state;
 } BOOL_DECODER;
 
+G_GNUC_INTERNAL
 extern const unsigned char vp8_norm[256];
 
 G_GNUC_INTERNAL
