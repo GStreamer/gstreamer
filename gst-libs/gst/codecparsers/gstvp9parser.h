@@ -72,9 +72,11 @@ typedef struct _GstVp9SegmentationInfoData GstVp9SegmentationInfoData;
  * GstVp9ParseResult:
  * @GST_VP9_PARSER_OK: The parsing went well
  * @GST_VP9_PARSER_BROKEN_DATA: The data to parse is broken
- * @GST_VP9_PARSER_NO_PACKET_ERROR: An error accured durint the parsing
+ * @GST_VP9_PARSER_NO_PACKET_ERROR: An error occured during the parsing
  *
  * Result type of any parsing function.
+ *
+ * Since: 1.8
  */
 typedef enum
 {
@@ -92,6 +94,8 @@ typedef enum
  * @GST_VP9_PROFILE_UNDEFINED: Undefined profile
  *
  * VP9 Profiles
+ *
+ * Since: 1.8
  */
 typedef enum {
   GST_VP9_PROFILE_0,
@@ -107,6 +111,8 @@ typedef enum {
  * @GST_VP9_INTER_FRAME: Inter frame, both intra and inter blocks
  *
  * VP9 frame types
+ *
+ * Since: 1.8
  */
 typedef enum {
   GST_VP9_KEY_FRAME   = 0,
@@ -120,6 +126,8 @@ typedef enum {
  * @GST_VP9_BIT_DEPTH_12:Bit depth is 12
  *
  * Bit depths of encoded frames
+ *
+ * Since: 1.8
  */
 typedef enum {
   GST_VP9_BIT_DEPTH_8  = 8,
@@ -139,6 +147,8 @@ typedef enum {
  * @GST_VP9_CS_SRGB: sRGB
  *
  * Supported ColorSpace standards
+ *
+ * Since: 1.8
  */
 typedef enum {
   GST_VP9_CS_UNKNOWN               = 0,
@@ -157,6 +167,8 @@ typedef enum {
  * @GST_VP9_CR_FULL: Full range for Y,U and V [0-255]
  *
  * Possible color value ranges
+ *
+ * Since: 1.8
  */
 typedef enum {
   GST_VP9_CR_LIMITED,
@@ -172,6 +184,8 @@ typedef enum {
  * @GST_VP9_INTERP_FILTER_SWITCHABLE: Selectable interpolation filter
  *
  * Interpolation Filters Types
+ *
+ * Since: 1.8
  */
 typedef enum {
   GST_VP9_INTERP_FILTER_EIGHTTAP        = 0,
@@ -190,6 +204,8 @@ typedef enum {
  * @GST_VP9_REF_FRAME_MAX:
  *
  * Reference Frame types
+ *
+ * Since: 1.8
  */
 typedef enum {
   GST_VP9_REF_FRAME_INTRA  = 0,
@@ -214,6 +230,8 @@ typedef enum {
  *   index
  *
  * Dequantization indices.
+ *
+ * Since: 1.8
  */
 struct _GstVp9QuantIndices
 {
@@ -224,7 +242,7 @@ struct _GstVp9QuantIndices
 };
 
 /**
- * GstVp9MbLoofFilter:
+ * GstVp9LoopFilter:
  * @filter_level: indicates loop filter level for the current frame
  * @sharpness_level: indicates sharpness level for thecurrent frame
  * @mode_ref_delta_enabled: indicate if filter adjust is on
@@ -237,7 +255,9 @@ struct _GstVp9QuantIndices
  * @mode_deltas: Loop filter strength adjustments based on
  *   mode (zero, new mv)
  *
- *  Loop filter values
+ * Loop filter values
+ *
+ * Since: 1.8
  */
 struct _GstVp9LoopFilter {
   gint filter_level;
@@ -252,19 +272,20 @@ struct _GstVp9LoopFilter {
 };
 
 /**
-* GstVp9SegmentationInfoData:
-* @alternate_quantizer_enabled: indicate alternate quantizer enabled at segment level
-* @alternate_quantizer: alternate quantizer value
-* @alternate_loop_filter_enabled: indicate alternate loop filter enabled at segment level
-* @alternate_loop_filter: alternate loop filter
-* @reference_frame_enabled: indicate alternate reference frame at segment level
-* @reference_frame: alternate reference frame
-* @reference_skip: a block skip mode that implies both the use of a (0,0)
-*   motion vector and that no residual will be coded.
-*
-* Segemtnation info for each segment
-*
-*/
+ * GstVp9SegmentationInfoData:
+ * @alternate_quantizer_enabled: indicate alternate quantizer enabled at segment level
+ * @alternate_quantizer: alternate quantizer value
+ * @alternate_loop_filter_enabled: indicate alternate loop filter enabled at segment level
+ * @alternate_loop_filter: alternate loop filter
+ * @reference_frame_enabled: indicate alternate reference frame at segment level
+ * @reference_frame: alternate reference frame
+ * @reference_skip: a block skip mode that implies both the use of a (0,0)
+ *   motion vector and that no residual will be coded.
+ *
+ * Segmentation info for each segment
+ *
+ * Since: 1.8
+ */
 struct _GstVp9SegmentationInfoData {
   /* SEG_LVL_ALT_Q */
   guint8 alternate_quantizer_enabled;
@@ -283,7 +304,7 @@ struct _GstVp9SegmentationInfoData {
 
 /**
  * GstVp9SegmentationInfo:
- * @enabled:  enables the segmentation feature for the current frame
+ * @enabled: enables the segmentation feature for the current frame
  * @update_map: determines if segmentation is updated in the current frame
  * @update_tree_probs: determines if tree probabilities updated or not
  * @tree_probs: segment tree probabilities
@@ -296,6 +317,8 @@ struct _GstVp9SegmentationInfoData {
  * @data: segment feature data
  *
  * Segmentation info
+ *
+ * Since: 1.8
  */
 struct _GstVp9SegmentationInfo {
   /* enable in setup_segmentation*/
@@ -325,8 +348,8 @@ struct _GstVp9SegmentationInfo {
  * @show_existing_frame: display already decoded frame instead of doing the decoding
  * @frame_to_show: which frame to show if show_existing_frame is true
  * @frame_type: frame type
- * @show_frame: indicate whether is it displayable frame or not
- * @error_resilient_mode: error  resilent mode
+ * @show_frame: indicate whether it is a displayable frame or not
+ * @error_resilient_mode: error resilent mode
  * @subsampling_x: horizontal subsampling
  * @subsampling_y: vertical subsampling
  * @width: frame width
@@ -357,6 +380,8 @@ struct _GstVp9SegmentationInfo {
  * @frame_header_length_in_bytes: length of uncompressed header
  *
  * Frame header
+ *
+ * Since: 1.8
  */
 struct _GstVp9FrameHdr
 {
@@ -419,6 +444,8 @@ struct _GstVp9FrameHdr
  *   motion vector and that no residual will be coded
  *
  * Segmentation info kept across multipe frames
+ *
+ * Since: 1.8
  */
 struct _GstVp9Segmentation
 {
@@ -438,10 +465,12 @@ struct _GstVp9Segmentation
  * GstVp9Parser:
  * @priv: GstVp9ParserPrivate struct to keep track of state variables
  * @mb_segment_tree_probs: decoding tree probabilities
- * @segment_pred_probs: segement prediction probabiilties
- * @segmentation: Segemenation info
+ * @segment_pred_probs: segment prediction probabiilties
+ * @segmentation: Segmentation info
  *
  * Parser context that needs to be live across frames
+ *
+ * Since: 1.8
  */
 struct _GstVp9Parser
 {

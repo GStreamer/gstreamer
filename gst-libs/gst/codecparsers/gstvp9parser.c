@@ -611,9 +611,11 @@ gst_vp9_parser_update (GstVp9Parser * parser, GstVp9FrameHdr * const frame_hdr)
  * gst_vp9_parser_new:
  *
  * Creates a new #GstVp9Parser. It should be freed with
- * gst_vp9_parser_free after use.
+ * gst_vp9_parser_free() after use.
  *
  * Returns: a new #GstVp9Parser
+ *
+ * Since: 1.8
  */
 GstVp9Parser *
 gst_vp9_parser_new (void)
@@ -643,6 +645,8 @@ gst_vp9_parser_new (void)
  * @parser: the #GstVp9Parser to free
  *
  * Frees @parser and sets it to %NULL
+ *
+ * Since: 1.8
  */
 void
 gst_vp9_parser_free (GstVp9Parser * parser)
@@ -669,6 +673,7 @@ gst_vp9_parser_free (GstVp9Parser * parser)
  *
  * Returns: a #GstVp9ParserResult
  *
+ * Since: 1.8
  */
 GstVp9ParserResult
 gst_vp9_parser_parse_frame_header (GstVp9Parser * parser,
