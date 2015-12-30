@@ -1293,7 +1293,7 @@ gst_rtsp_media_get_retransmission_time (GstRTSPMedia * media)
 }
 
 /**
- * gst_rtsp_media_set_latncy:
+ * gst_rtsp_media_set_latency:
  * @media: a #GstRTSPMedia
  * @latency: latency in milliseconds
  *
