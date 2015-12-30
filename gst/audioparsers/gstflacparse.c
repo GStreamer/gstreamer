@@ -627,8 +627,8 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
   return FRAME_HEADER_VALID;
 
 need_streaminfo:
-  GST_ERROR_OBJECT (flacparse, "Need STREAMINFO");
-  return FRAME_HEADER_INVALID;
+  GST_ERROR_OBJECT (flacparse, "Need STREAMINFO metadata. Bits per sample "
+      "or sample rate not in frame header");
 error:
   return FRAME_HEADER_INVALID;
 
