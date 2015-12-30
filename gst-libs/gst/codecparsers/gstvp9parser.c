@@ -644,7 +644,7 @@ gst_vp9_parser_new (void)
  * gst_vp9_parser_free:
  * @parser: the #GstVp9Parser to free
  *
- * Frees @parser and sets it to %NULL
+ * Frees @parser.
  *
  * Since: 1.8
  */
@@ -657,7 +657,6 @@ gst_vp9_parser_free (GstVp9Parser * parser)
       parser->priv = NULL;
     }
     g_slice_free (GstVp9Parser, parser);
-    parser = NULL;
   }
 }
 
