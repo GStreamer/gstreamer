@@ -743,8 +743,12 @@ _gl_mem_pbo_alloc (GstGLBaseMemoryAllocator * allocator,
   }
   if (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM) {
     GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD);
-    GST_MINI_OBJECT_FLAG_SET (mem->pbo,
-        GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD);
+    if (mem->pbo) {
+      GST_MINI_OBJECT_FLAG_SET (mem->pbo,
+          GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD);
+      mem->pbo->mem.data = params->parent.wrapped_data;
+    }
+    mem->mem.mem.data = params->parent.wrapped_data;
   }
 
   return mem;
