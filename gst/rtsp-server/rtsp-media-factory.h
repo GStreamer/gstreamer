@@ -168,6 +168,9 @@ void                  gst_rtsp_media_factory_set_clock        (GstRTSPMediaFacto
                                                                GstClock * clock);
 GstClock *            gst_rtsp_media_factory_get_clock        (GstRTSPMediaFactory *factory);
 
+void                    gst_rtsp_media_factory_set_publish_clock_mode (GstRTSPMediaFactory * factory, GstRTSPPublishClockMode mode);
+GstRTSPPublishClockMode gst_rtsp_media_factory_get_publish_clock_mode (GstRTSPMediaFactory * factory);
+
 /* creating the media from the factory and a url */
 GstRTSPMedia *        gst_rtsp_media_factory_construct        (GstRTSPMediaFactory *factory,
                                                                const GstRTSPUrl *url);

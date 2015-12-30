@@ -88,11 +88,28 @@ typedef enum {
   GST_RTSP_TRANSPORT_MODE_RECORD  = 2,
 } GstRTSPTransportMode;
 
+/**
+ * GstRTSPPublishClockMode:
+ * @GST_RTSP_PUBLISH_CLOCK_MODE_NONE: Publish nothing
+ * @GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK: Publish the clock but not the offset
+ * @GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET: Publish the clock and offset
+ *
+ * Whether the clock and possibly RTP/clock offset should be published according to RFC7273.
+ */
+typedef enum {
+  GST_RTSP_PUBLISH_CLOCK_MODE_NONE,
+  GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK,
+  GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET
+} GstRTSPPublishClockMode;
+
 #define GST_TYPE_RTSP_TRANSPORT_MODE (gst_rtsp_transport_mode_get_type())
 GType gst_rtsp_transport_mode_get_type (void);
 
 #define GST_TYPE_RTSP_SUSPEND_MODE (gst_rtsp_suspend_mode_get_type())
 GType gst_rtsp_suspend_mode_get_type (void);
+
+#define GST_TYPE_RTSP_PUBLISH_CLOCK_MODE (gst_rtsp_publish_clock_mode_get_type())
+GType gst_rtsp_publish_clock_mode_get_type (void);
 
 #include "rtsp-stream.h"
 #include "rtsp-thread-pool.h"
@@ -225,6 +242,10 @@ GstNetTimeProvider *  gst_rtsp_media_get_time_provider (GstRTSPMedia *media,
                                                         const gchar *address, guint16 port);
 
 void                  gst_rtsp_media_set_clock         (GstRTSPMedia *media, GstClock * clock);
+
+
+void                    gst_rtsp_media_set_publish_clock_mode (GstRTSPMedia * media, GstRTSPPublishClockMode mode);
+GstRTSPPublishClockMode gst_rtsp_media_get_publish_clock_mode (GstRTSPMedia * media);
 
 /* prepare the media for playback */
 gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media, GstRTSPThread *thread);

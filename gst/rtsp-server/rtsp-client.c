@@ -1042,10 +1042,12 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPSession *session;
   GstRTSPClientClass *klass;
   GstRTSPSessionMedia *sessmedia;
+  GstRTSPMedia *media;
   GstRTSPStatusCode code;
   GstRTSPState rtspstate;
   gchar *path;
   gint matched;
+  guint i, n;
 
   if (!(session = ctx->session))
     goto no_session;
@@ -1065,6 +1067,16 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
     goto no_aggregate;
 
   g_free (path);
+
+  media = gst_rtsp_session_media_get_media (sessmedia);
+  n = gst_rtsp_media_n_streams (media);
+  for (i = 0; i < n; i++) {
+    GstRTSPStream *stream = gst_rtsp_media_get_stream (media, i);
+
+    if (gst_rtsp_stream_get_publish_clock_mode (stream) ==
+        GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET)
+      goto not_supported;
+  }
 
   ctx->sessmedia = sessmedia;
 
@@ -1124,6 +1136,12 @@ invalid_state:
     GST_ERROR ("client %p: not PLAYING or RECORDING", client);
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
         ctx);
+    return FALSE;
+  }
+not_supported:
+  {
+    GST_ERROR ("client %p: pausing not supported", client);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
 }

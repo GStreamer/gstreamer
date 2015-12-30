@@ -26,6 +26,7 @@
 
 #include <string.h>
 
+#include <gst/net/net.h>
 #include <gst/sdp/gstmikey.h>
 
 #include "rtsp-sdp.h"
@@ -167,6 +168,100 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info,
     }
 
     gst_mikey_message_unref (mikey_msg);
+  }
+
+  /* RFC 7273 clock signalling */
+  {
+    GstBin *joined_bin = gst_rtsp_stream_get_joined_bin (stream);
+    GstClock *clock = gst_element_get_clock (GST_ELEMENT_CAST (joined_bin));
+    gchar *ts_refclk = NULL;
+    gchar *mediaclk = NULL;
+    guint rtptime, clock_rate;
+    GstClockTime running_time, base_time, clock_time;
+    GstRTSPPublishClockMode publish_clock_mode =
+        gst_rtsp_stream_get_publish_clock_mode (stream);
+
+    gst_rtsp_stream_get_rtpinfo (stream, &rtptime, NULL, &clock_rate,
+        &running_time);
+    base_time = gst_element_get_base_time (GST_ELEMENT_CAST (joined_bin));
+    g_assert (base_time != GST_CLOCK_TIME_NONE);
+    clock_time = running_time + base_time;
+
+    if (publish_clock_mode != GST_RTSP_PUBLISH_CLOCK_MODE_NONE && clock) {
+      if (GST_IS_NTP_CLOCK (clock) || GST_IS_PTP_CLOCK (clock)) {
+        if (publish_clock_mode == GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET) {
+          guint32 mediaclk_offset;
+
+          /* Calculate RTP time at the clock's epoch. That's the direct offset */
+          clock_time =
+              gst_util_uint64_scale (clock_time, clock_rate, GST_SECOND);
+
+          clock_time &= 0xffffffff;
+          mediaclk_offset =
+              G_GUINT64_CONSTANT (0xffffffff) + rtptime - clock_time;
+          mediaclk = g_strdup_printf ("direct=%u", (guint32) mediaclk_offset);
+        }
+
+        if (GST_IS_NTP_CLOCK (clock)) {
+          gchar *ntp_address;
+          guint ntp_port;
+
+          g_object_get (clock, "address", &ntp_address, "port", &ntp_port,
+              NULL);
+
+          if (ntp_port == 123)
+            ts_refclk = g_strdup_printf ("ntp=%s", ntp_address);
+          else
+            ts_refclk = g_strdup_printf ("ntp=%s:%u", ntp_address, ntp_port);
+
+          g_free (ntp_address);
+        } else {
+          guint64 ptp_clock_id;
+          guint ptp_domain;
+
+          g_object_get (clock, "grandmaster-clock-id", &ptp_clock_id, "domain",
+              &ptp_domain, NULL);
+
+          if (ptp_domain != 0)
+            ts_refclk =
+                g_strdup_printf
+                ("ptp=IEEE1588-2008:%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X:%u",
+                (guint) (ptp_clock_id >> 56) & 0xff,
+                (guint) (ptp_clock_id >> 48) & 0xff,
+                (guint) (ptp_clock_id >> 40) & 0xff,
+                (guint) (ptp_clock_id >> 32) & 0xff,
+                (guint) (ptp_clock_id >> 24) & 0xff,
+                (guint) (ptp_clock_id >> 16) & 0xff,
+                (guint) (ptp_clock_id >> 8) & 0xff,
+                (guint) (ptp_clock_id >> 0) & 0xff, ptp_domain);
+          else
+            ts_refclk =
+                g_strdup_printf
+                ("ptp=IEEE1588-2008:%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X",
+                (guint) (ptp_clock_id >> 56) & 0xff,
+                (guint) (ptp_clock_id >> 48) & 0xff,
+                (guint) (ptp_clock_id >> 40) & 0xff,
+                (guint) (ptp_clock_id >> 32) & 0xff,
+                (guint) (ptp_clock_id >> 24) & 0xff,
+                (guint) (ptp_clock_id >> 16) & 0xff,
+                (guint) (ptp_clock_id >> 8) & 0xff,
+                (guint) (ptp_clock_id >> 0) & 0xff);
+        }
+      }
+    }
+    if (clock)
+      gst_object_unref (clock);
+
+    if (!ts_refclk)
+      ts_refclk = g_strdup ("local");
+    if (!mediaclk)
+      mediaclk = g_strdup ("sender");
+
+    gst_sdp_media_add_attribute (smedia, "ts-refclk", ts_refclk);
+    gst_sdp_media_add_attribute (smedia, "mediaclk", mediaclk);
+    g_free (ts_refclk);
+    g_free (mediaclk);
+    gst_object_unref (joined_bin);
   }
 
   update_sdp_from_tags (stream, smedia);

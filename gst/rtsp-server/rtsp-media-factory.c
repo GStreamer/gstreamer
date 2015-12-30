@@ -72,6 +72,8 @@ struct _GstRTSPMediaFactoryPrivate
   GType media_gtype;
 
   GstClock *clock;
+
+  GstRTSPPublishClockMode publish_clock_mode;
 };
 
 #define DEFAULT_LAUNCH          NULL
@@ -261,6 +263,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   priv->latency = DEFAULT_LATENCY;
   priv->transport_mode = DEFAULT_TRANSPORT_MODE;
   priv->stop_on_disconnect = DEFAULT_STOP_ON_DISCONNECT;
+  priv->publish_clock_mode = GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK;
 
   g_mutex_init (&priv->lock);
   g_mutex_init (&priv->medias_lock);
@@ -1335,6 +1338,51 @@ gst_rtsp_media_factory_get_clock (GstRTSPMediaFactory * factory)
   return ret;
 }
 
+/**
+ * gst_rtsp_media_factory_set_publish_clock_mode:
+ * @factory: a #GstRTSPMediaFactory
+ * @mode: the clock publish mode
+ *
+ * Sets if and how the media clock should be published according to RFC7273.
+ *
+ * Since: 1.8
+ */
+void
+gst_rtsp_media_factory_set_publish_clock_mode (GstRTSPMediaFactory * factory,
+    GstRTSPPublishClockMode mode)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv = factory->priv;
+  priv->publish_clock_mode = mode;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_get_publish_clock_mode:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Gets if and how the media clock should be published according to RFC7273.
+ *
+ * Returns: The GstRTSPPublishClockMode
+ *
+ * Since: 1.8
+ */
+GstRTSPPublishClockMode
+gst_rtsp_media_factory_get_publish_clock_mode (GstRTSPMediaFactory * factory)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  GstRTSPPublishClockMode ret;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv = factory->priv;
+  ret = priv->publish_clock_mode;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return ret;
+}
+
 static gchar *
 default_gen_key (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
 {
@@ -1480,6 +1528,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   GstRTSPTransportMode transport_mode;
   GstClock *clock;
   gchar *multicast_iface;
+  GstRTSPPublishClockMode publish_clock_mode;
 
   /* configure the sharedness */
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
@@ -1494,6 +1543,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   transport_mode = priv->transport_mode;
   stop_on_disconnect = priv->stop_on_disconnect;
   clock = priv->clock ? gst_object_ref (priv->clock) : NULL;
+  publish_clock_mode = priv->publish_clock_mode;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   gst_rtsp_media_set_suspend_mode (media, suspend_mode);
@@ -1506,6 +1556,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gst_rtsp_media_set_latency (media, latency);
   gst_rtsp_media_set_transport_mode (media, transport_mode);
   gst_rtsp_media_set_stop_on_disconnect (media, stop_on_disconnect);
+  gst_rtsp_media_set_publish_clock_mode (media, publish_clock_mode);
 
   if (clock) {
     gst_rtsp_media_set_clock (media, clock);

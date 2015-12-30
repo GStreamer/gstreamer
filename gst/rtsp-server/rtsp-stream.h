@@ -43,6 +43,7 @@ typedef struct _GstRTSPStreamPrivate GstRTSPStreamPrivate;
 #include "rtsp-stream-transport.h"
 #include "rtsp-address-pool.h"
 #include "rtsp-session.h"
+#include "rtsp-media.h"
 
 /**
  * GstRTSPStream:
@@ -110,6 +111,7 @@ gboolean          gst_rtsp_stream_join_bin         (GstRTSPStream *stream,
                                                     GstState state);
 gboolean          gst_rtsp_stream_leave_bin        (GstRTSPStream *stream,
                                                     GstBin *bin, GstElement *rtpbin);
+GstBin *          gst_rtsp_stream_get_joined_bin   (GstRTSPStream *stream);
 
 gboolean          gst_rtsp_stream_set_blocked      (GstRTSPStream * stream,
                                                     gboolean blocked);
@@ -174,6 +176,10 @@ GstElement *      gst_rtsp_stream_request_aux_sender         (GstRTSPStream * st
 
 gboolean          gst_rtsp_stream_allocate_udp_sockets       (GstRTSPStream * stream, GSocketFamily family,
                                                               GstRTSPTransport *transport, gboolean use_client_setttings);
+
+void                    gst_rtsp_stream_set_publish_clock_mode (GstRTSPStream * stream, GstRTSPPublishClockMode mode);
+GstRTSPPublishClockMode gst_rtsp_stream_get_publish_clock_mode (GstRTSPStream * stream);
+
 /**
  * GstRTSPStreamTransportFilterFunc:
  * @stream: a #GstRTSPStream object

@@ -71,6 +71,7 @@ struct _GstRTSPStreamPrivate
   GstElement *payloader;
   guint buffer_size;
   gboolean is_joined;
+  GstBin *joined_bin;
 
   /* TRUE if this stream is running on
    * the client side of an RTSP link (for RECORD) */
@@ -164,6 +165,8 @@ struct _GstRTSPStreamPrivate
 
   /* pt->caps map for RECORD streams */
   GHashTable *ptmap;
+
+  GstRTSPPublishClockMode publish_clock_mode;
 };
 
 #define DEFAULT_CONTROL         NULL
@@ -259,6 +262,7 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
   priv->control = g_strdup (DEFAULT_CONTROL);
   priv->profiles = DEFAULT_PROFILES;
   priv->protocols = DEFAULT_PROTOCOLS;
+  priv->publish_clock_mode = GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK;
 
   g_mutex_init (&priv->lock);
 
@@ -2281,6 +2285,51 @@ gst_rtsp_stream_set_pt_map (GstRTSPStream * stream, guint pt, GstCaps * caps)
   g_mutex_unlock (&priv->lock);
 }
 
+/**
+ * gst_rtsp_stream_set_publish_clock_mode:
+ * @stream: a #GstRTSPStream
+ * @mode: the clock publish mode
+ *
+ * Sets if and how the stream clock should be published according to RFC7273.
+ *
+ * Since: 1.8
+ */
+void
+gst_rtsp_stream_set_publish_clock_mode (GstRTSPStream * stream,
+    GstRTSPPublishClockMode mode)
+{
+  GstRTSPStreamPrivate *priv;
+
+  priv = stream->priv;
+  g_mutex_lock (&priv->lock);
+  priv->publish_clock_mode = mode;
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_stream_get_publish_clock_mode:
+ * @factory: a #GstRTSPStream
+ *
+ * Gets if and how the stream clock should be published according to RFC7273.
+ *
+ * Returns: The GstRTSPPublishClockMode
+ *
+ * Since: 1.8
+ */
+GstRTSPPublishClockMode
+gst_rtsp_stream_get_publish_clock_mode (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  GstRTSPPublishClockMode ret;
+
+  priv = stream->priv;
+  g_mutex_lock (&priv->lock);
+  ret = priv->publish_clock_mode;
+  g_mutex_unlock (&priv->lock);
+
+  return ret;
+}
+
 static GstCaps *
 request_pt_map (GstElement * rtpbin, guint session, guint pt,
     GstRTSPStream * stream)
@@ -2730,6 +2779,7 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
         (GCallback) caps_notify, stream);
   }
 
+  priv->joined_bin = bin;
   priv->is_joined = TRUE;
   g_mutex_unlock (&priv->lock);
 
@@ -2838,6 +2888,8 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
   g_mutex_lock (&priv->lock);
   if (!priv->is_joined)
     goto was_not_joined;
+
+  priv->joined_bin = NULL;
 
   /* all transports must be removed by now */
   if (priv->transports != NULL)
@@ -3011,6 +3063,31 @@ transports_not_removed:
     g_mutex_unlock (&priv->lock);
     return FALSE;
   }
+}
+
+/**
+ * gst_rtsp_stream_get_joined_bin:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the previous joined bin with gst_rtsp_stream_join_bin() or NULL.
+ *
+ * Return: (transfer full): the joined bin or NULL.
+ */
+GstBin *
+gst_rtsp_stream_get_joined_bin (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  GstBin *bin = NULL;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  bin = priv->joined_bin ? gst_object_ref (priv->joined_bin) : NULL;
+  g_mutex_unlock (&priv->lock);
+
+  return bin;
 }
 
 /**

@@ -141,6 +141,7 @@ struct _GstRTSPMediaPrivate
   GstClockTime rtx_time;        /* protected by lock */
   guint latency;                /* protected by lock */
   GstClock *clock;              /* protected by lock */
+  GstRTSPPublishClockMode publish_clock_mode;
 };
 
 #define DEFAULT_SHARED          FALSE
@@ -259,6 +260,29 @@ gst_rtsp_transport_mode_get_type (void)
 
   if (g_once_init_enter (&id)) {
     GType tmp = g_flags_register_static ("GstRTSPTransportMode", values);
+    g_once_init_leave (&id, tmp);
+  }
+  return (GType) id;
+}
+
+GType
+gst_rtsp_publish_clock_mode_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_RTSP_PUBLISH_CLOCK_MODE_NONE),
+        "GST_RTSP_PUBLISH_CLOCK_MODE_NONE", "none"},
+    {C_ENUM (GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK),
+          "GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK",
+        "clock"},
+    {C_ENUM (GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET),
+          "GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET",
+        "clock-and-offset"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstRTSPPublishClockMode", values);
     g_once_init_leave (&id, tmp);
   }
   return (GType) id;
@@ -415,6 +439,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   priv->time_provider = DEFAULT_TIME_PROVIDER;
   priv->transport_mode = DEFAULT_TRANSPORT_MODE;
   priv->stop_on_disconnect = DEFAULT_STOP_ON_DISCONNECT;
+  priv->publish_clock_mode = GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK;
 }
 
 static void
@@ -1439,6 +1464,59 @@ gst_rtsp_media_set_clock (GstRTSPMedia * media, GstClock * clock)
 }
 
 /**
+ * gst_rtsp_media_set_publish_clock_mode:
+ * @media: a #GstRTSPMedia
+ * @mode: the clock publish mode
+ *
+ * Sets if and how the media clock should be published according to RFC7273.
+ *
+ * Since: 1.8
+ */
+void
+gst_rtsp_media_set_publish_clock_mode (GstRTSPMedia * media,
+    GstRTSPPublishClockMode mode)
+{
+  GstRTSPMediaPrivate *priv;
+  guint i, n;
+
+  priv = media->priv;
+  g_mutex_lock (&priv->lock);
+  priv->publish_clock_mode = mode;
+
+  n = priv->streams->len;
+  for (i = 0; i < n; i++) {
+    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+
+    gst_rtsp_stream_set_publish_clock_mode (stream, mode);
+  }
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_get_publish_clock_mode:
+ * @factory: a #GstRTSPMedia
+ *
+ * Gets if and how the media clock should be published according to RFC7273.
+ *
+ * Returns: The GstRTSPPublishClockMode
+ *
+ * Since: 1.8
+ */
+GstRTSPPublishClockMode
+gst_rtsp_media_get_publish_clock_mode (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  GstRTSPPublishClockMode ret;
+
+  priv = media->priv;
+  g_mutex_lock (&priv->lock);
+  ret = priv->publish_clock_mode;
+  g_mutex_unlock (&priv->lock);
+
+  return ret;
+}
+
+/**
  * gst_rtsp_media_set_address_pool:
  * @media: a #GstRTSPMedia
  * @pool: (transfer none): a #GstRTSPAddressPool
@@ -1744,6 +1822,7 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
   gst_rtsp_stream_set_protocols (stream, priv->protocols);
   gst_rtsp_stream_set_retransmission_time (stream, priv->rtx_time);
   gst_rtsp_stream_set_buffer_size (stream, priv->buffer_size);
+  gst_rtsp_stream_set_publish_clock_mode (stream, priv->publish_clock_mode);
 
   g_ptr_array_add (priv->streams, stream);
 
@@ -2072,6 +2151,18 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
     /* TODO: Seeking for RECORD? */
     priv->seekable = FALSE;
   } else {
+    guint i, n = priv->streams->len;
+
+    for (i = 0; i < n; i++) {
+      GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+
+      if (gst_rtsp_stream_get_publish_clock_mode (stream) ==
+          GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET) {
+        priv->seekable = FALSE;
+        goto not_seekable;
+      }
+    }
+
     query = gst_query_new_seeking (GST_FORMAT_TIME);
     if (gst_element_query (priv->pipeline, query)) {
       GstFormat format;
@@ -2081,6 +2172,7 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
       gst_query_parse_seeking (query, &format, &seekable, &start, &end);
       priv->seekable = seekable;
     }
+
     gst_query_unref (query);
   }
 
