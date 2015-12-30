@@ -28,25 +28,7 @@ GstClock *global_clock;
 #define TEST_TYPE_RTSP_MEDIA_FACTORY      (test_rtsp_media_factory_get_type ())
 #define TEST_TYPE_RTSP_MEDIA              (test_rtsp_media_get_type ())
 
-GType test_rtsp_media_factory_get_type (void);
 GType test_rtsp_media_get_type (void);
-
-static GstRTSPMediaFactory *test_rtsp_media_factory_new (void);
-static GstElement *create_pipeline (GstRTSPMediaFactory * factory,
-    GstRTSPMedia * media);
-
-typedef struct TestRTSPMediaFactoryClass TestRTSPMediaFactoryClass;
-typedef struct TestRTSPMediaFactory TestRTSPMediaFactory;
-
-struct TestRTSPMediaFactoryClass
-{
-  GstRTSPMediaFactoryClass parent;
-};
-
-struct TestRTSPMediaFactory
-{
-  GstRTSPMediaFactory parent;
-};
 
 typedef struct TestRTSPMediaClass TestRTSPMediaClass;
 typedef struct TestRTSPMedia TestRTSPMedia;
@@ -61,45 +43,7 @@ struct TestRTSPMedia
   GstRTSPMedia parent;
 };
 
-GstRTSPMediaFactory *
-test_rtsp_media_factory_new (void)
-{
-  GstRTSPMediaFactory *result;
-
-  result = g_object_new (TEST_TYPE_RTSP_MEDIA_FACTORY, NULL);
-
-  return result;
-}
-
-G_DEFINE_TYPE (TestRTSPMediaFactory, test_rtsp_media_factory,
-    GST_TYPE_RTSP_MEDIA_FACTORY);
-
 static gboolean custom_setup_rtpbin (GstRTSPMedia * media, GstElement * rtpbin);
-
-static void
-test_rtsp_media_factory_class_init (TestRTSPMediaFactoryClass * test_klass)
-{
-  GstRTSPMediaFactoryClass *mf_klass =
-      (GstRTSPMediaFactoryClass *) (test_klass);
-  mf_klass->create_pipeline = create_pipeline;
-}
-
-static void
-test_rtsp_media_factory_init (TestRTSPMediaFactory * factory)
-{
-}
-
-static GstElement *
-create_pipeline (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
-{
-  GstElement *pipeline;
-
-  pipeline = gst_pipeline_new ("media-pipeline");
-  gst_pipeline_use_clock (GST_PIPELINE (pipeline), global_clock);
-  gst_rtsp_media_take_pipeline (media, GST_PIPELINE_CAST (pipeline));
-
-  return pipeline;
-}
 
 G_DEFINE_TYPE (TestRTSPMedia, test_rtsp_media, GST_TYPE_RTSP_MEDIA);
 
@@ -156,11 +100,11 @@ main (int argc, char *argv[])
    * gst-launch syntax to create pipelines.
    * any launch line works as long as it contains elements named pay%d. Each
    * element with pay%d names will be a stream */
-  factory = test_rtsp_media_factory_new ();
+  factory = gst_rtsp_media_factory_new ();
   gst_rtsp_media_factory_set_launch (factory, argv[1]);
-  gst_rtsp_media_factory_set_shared (GST_RTSP_MEDIA_FACTORY (factory), TRUE);
-  gst_rtsp_media_factory_set_media_gtype (GST_RTSP_MEDIA_FACTORY (factory),
-      TEST_TYPE_RTSP_MEDIA);
+  gst_rtsp_media_factory_set_shared (factory, TRUE);
+  gst_rtsp_media_factory_set_media_gtype (factory, TEST_TYPE_RTSP_MEDIA);
+  gst_rtsp_media_factory_set_clock (factory, global_clock);
 
   /* attach the test factory to the /test url */
   gst_rtsp_mount_points_add_factory (mounts, "/test", factory);
