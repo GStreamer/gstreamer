@@ -147,12 +147,13 @@ _create_info_from_args (VkImageCreateInfo * info, VkFormat format, gsize width,
 
   info->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   info->pNext = NULL;
+  info->flags = 0;
   info->imageType = VK_IMAGE_TYPE_2D;
   info->format = format;
   GST_VK_EXTENT3D (info->extent, width, height, 1);
   info->mipLevels = 1;
   info->arrayLayers = 1;
-  info->samples = 1;
+  info->samples = VK_SAMPLE_COUNT_1_BIT;
   info->tiling = tiling;
   info->usage = usage;
   info->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -200,7 +201,7 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
     VkMemoryPropertyFlags mem_prop_flags, gpointer user_data,
     GDestroyNotify notify)
 {
-  GstVulkanImageMemory *mem = g_new0 (GstVulkanImageMemory, 1);
+  GstVulkanImageMemory *mem = NULL;
   GstAllocationParams params = { 0, };
   VkImageViewCreateInfo view_info;
   VkImageCreateInfo image_info;
@@ -221,6 +222,7 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   if (gst_vulkan_error_to_g_error (err, &error, "vkCreateImage") < 0)
     goto vk_error;
 
+  mem = g_new0 (GstVulkanImageMemory, 1);
   vkGetImageMemoryRequirements (device->device, image, &mem->requirements);
 
   params.align = mem->requirements.alignment;
@@ -275,7 +277,8 @@ vk_error:
 
 error:
   {
-    gst_memory_unref ((GstMemory *) mem);
+    if (mem)
+      gst_memory_unref ((GstMemory *) mem);
     return NULL;
   }
 }
