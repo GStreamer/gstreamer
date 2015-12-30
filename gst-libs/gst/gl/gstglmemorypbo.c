@@ -719,15 +719,16 @@ _gl_mem_pbo_alloc (GstGLBaseMemoryAllocator * allocator,
     GstGLVideoAllocationParams * params)
 {
   GstGLMemoryPBO *mem;
+  guint alloc_flags;
 
-  g_return_val_if_fail (params->
-      parent.alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO, NULL);
+  alloc_flags = params->parent.alloc_flags;
+
+  g_return_val_if_fail (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO,
+      NULL);
 
   mem = g_new0 (GstGLMemoryPBO, 1);
 
-  if (params->
-      parent.alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE)
-  {
+  if (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) {
     mem->mem.tex_id = params->parent.gl_handle;
     mem->mem.texture_wrapped = TRUE;
   }
@@ -737,15 +738,10 @@ _gl_mem_pbo_alloc (GstGLBaseMemoryAllocator * allocator,
       params->v_info, params->plane, params->valign, params->parent.user_data,
       params->parent.notify);
 
-  if (params->
-      parent.alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE)
-  {
+  if (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) {
     GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD);
   }
-  if (params->
-      parent.alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM) {
-    mem->pbo->mem.data = params->parent.wrapped_data;
-
+  if (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM) {
     GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD);
     GST_MINI_OBJECT_FLAG_SET (mem->pbo,
         GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD);

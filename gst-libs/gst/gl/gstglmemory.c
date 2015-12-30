@@ -735,15 +735,15 @@ static GstGLMemory *
 _default_gl_tex_alloc (GstGLMemoryAllocator * allocator,
     GstGLVideoAllocationParams * params)
 {
+  guint alloc_flags = params->parent.alloc_flags;
   GstGLMemory *mem;
 
-  g_return_val_if_fail (params->parent.
-      alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO, NULL);
+  g_return_val_if_fail (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO,
+      NULL);
 
   mem = g_new0 (GstGLMemory, 1);
 
-  if (params->parent.
-      alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) {
+  if (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) {
     mem->tex_id = params->parent.gl_handle;
     mem->texture_wrapped = TRUE;
   }
@@ -753,12 +753,10 @@ _default_gl_tex_alloc (GstGLMemoryAllocator * allocator,
       params->v_info, params->plane, params->valign, params->parent.user_data,
       params->parent.notify);
 
-  if (params->parent.
-      alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) {
+  if (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) {
     GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD);
   }
-  if (params->parent.
-      alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM) {
+  if (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM) {
     mem->mem.data = params->parent.wrapped_data;
     GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD);
   }
@@ -1134,13 +1132,13 @@ gst_gl_memory_setup_buffer (GstGLMemoryAllocator * allocator,
   guint n_mem, i, v, views;
 
   g_return_val_if_fail (params != NULL, FALSE);
-  g_return_val_if_fail ((params->parent.
-          alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM)
+  g_return_val_if_fail ((params->
+          parent.alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM)
       == 0, FALSE);
   g_return_val_if_fail ((params->parent.alloc_flags &
           GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) == 0, FALSE);
-  g_return_val_if_fail (params->parent.
-      alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO, FALSE);
+  g_return_val_if_fail (params->
+      parent.alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO, FALSE);
 
   base_allocator = GST_GL_BASE_MEMORY_ALLOCATOR (allocator);
   n_mem = GST_VIDEO_INFO_N_PLANES (params->v_info);
@@ -1181,8 +1179,9 @@ gst_gl_memory_allocator_get_default (GstGLContext * context)
 
   g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
 
-  if (USING_OPENGL (context) || USING_OPENGL3 (context)
-      || USING_GLES3 (context)) {
+  /* we can only use the pbo allocator with GL > 3.0 contexts */
+  if (gst_gl_context_check_gl_version (context,
+          GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2, 3, 0)) {
     allocator = (GstGLMemoryAllocator *)
         gst_allocator_find (GST_GL_MEMORY_PBO_ALLOCATOR_NAME);
   } else {
