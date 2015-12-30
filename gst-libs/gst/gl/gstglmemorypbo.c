@@ -239,8 +239,8 @@ _gl_mem_create (GstGLMemoryPBO * gl_mem, GError ** error)
   if (!alloc_class->create ((GstGLBaseMemory *) gl_mem, error))
     return FALSE;
 
-  if (USING_OPENGL (context) || USING_OPENGL3 (context)
-      || USING_GLES3 (context)) {
+  if (CONTEXT_SUPPORTS_PBO_DOWNLOAD (context)
+      || CONTEXT_SUPPORTS_PBO_UPLOAD (context)) {
     GstAllocationParams alloc_params =
         { 0, GST_MEMORY_CAST (gl_mem)->align, 0, 0 };
     GstGLBaseMemoryAllocator *buf_allocator;
