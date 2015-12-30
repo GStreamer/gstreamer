@@ -183,10 +183,12 @@ test_transfer_allocator (const gchar * allocator_name)
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem2,
           GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
-  fail_unless (((gchar *) map_info.data)[0] == rgba_pixel[0]);
-  fail_unless (((gchar *) map_info.data)[1] == rgba_pixel[1]);
-  fail_unless (((gchar *) map_info.data)[2] == rgba_pixel[2]);
-  fail_unless (((gchar *) map_info.data)[3] == rgba_pixel[3]);
+  fail_unless (memcmp (map_info.data, rgba_pixel,
+          G_N_ELEMENTS (rgba_pixel)) == 0,
+      "0x%02x%02x%02x%02x != 0x%02x%02x%02x%02x", map_info.data[0],
+      map_info.data[1], map_info.data[2], map_info.data[3],
+      (guint8) rgba_pixel[0], (guint8) rgba_pixel[1], (guint8) rgba_pixel[2],
+      (guint8) rgba_pixel[3]);
 
   gst_memory_unmap (mem2, &map_info);
 
@@ -222,10 +224,12 @@ test_transfer_allocator (const gchar * allocator_name)
   /* test download of copied texture */
   fail_unless (gst_memory_map (mem, &map_info, GST_MAP_READ));
 
-  fail_unless (((gchar *) map_info.data)[0] == rgba_pixel[0]);
-  fail_unless (((gchar *) map_info.data)[1] == rgba_pixel[1]);
-  fail_unless (((gchar *) map_info.data)[2] == rgba_pixel[2]);
-  fail_unless (((gchar *) map_info.data)[3] == rgba_pixel[3]);
+  fail_unless (memcmp (map_info.data, rgba_pixel,
+          G_N_ELEMENTS (rgba_pixel)) == 0,
+      "0x%02x%02x%02x%02x != 0x%02x%02x%02x%02x", (guint8) map_info.data[0],
+      (guint8) map_info.data[1], (guint8) map_info.data[2],
+      (guint8) map_info.data[3], (guint8) rgba_pixel[0], (guint8) rgba_pixel[1],
+      (guint8) rgba_pixel[2], (guint8) rgba_pixel[3]);
 
   gst_memory_unmap (mem, &map_info);
 
@@ -237,10 +241,12 @@ test_transfer_allocator (const gchar * allocator_name)
   fail_unless (!GST_MEMORY_FLAG_IS_SET (mem,
           GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
-  fail_unless (((gchar *) map_info.data)[0] == rgba_pixel[0]);
-  fail_unless (((gchar *) map_info.data)[1] == rgba_pixel[1]);
-  fail_unless (((gchar *) map_info.data)[2] == rgba_pixel[2]);
-  fail_unless (((gchar *) map_info.data)[3] == rgba_pixel[3]);
+  fail_unless (memcmp (map_info.data, rgba_pixel,
+          G_N_ELEMENTS (rgba_pixel)) == 0,
+      "0x%02x%02x%02x%02x != 0x%02x%02x%02x%02x", (guint8) map_info.data[0],
+      (guint8) map_info.data[1], (guint8) map_info.data[2],
+      (guint8) map_info.data[3], (guint8) rgba_pixel[0], (guint8) rgba_pixel[1],
+      (guint8) rgba_pixel[2], (guint8) rgba_pixel[3]);
 
   gst_memory_unmap (mem3, &map_info);
 
@@ -313,10 +319,11 @@ GST_START_TEST (test_separate_transfer)
 
   fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
 
-  fail_unless (((gchar *) info.data)[0] == rgba_pixel[0]);
-  fail_unless (((gchar *) info.data)[1] == rgba_pixel[1]);
-  fail_unless (((gchar *) info.data)[2] == rgba_pixel[2]);
-  fail_unless (((gchar *) info.data)[3] == rgba_pixel[3]);
+  fail_unless (memcmp (info.data, rgba_pixel, G_N_ELEMENTS (rgba_pixel)) == 0,
+      "0x%02x%02x%02x%02x != 0x%02x%02x%02x%02x", (guint8) info.data[0],
+      (guint8) info.data[1], (guint8) info.data[2],
+      (guint8) info.data[3], (guint8) rgba_pixel[0], (guint8) rgba_pixel[1],
+      (guint8) rgba_pixel[2], (guint8) rgba_pixel[3]);
 
   gst_memory_unmap (mem, &info);
 
