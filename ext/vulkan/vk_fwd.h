@@ -36,6 +36,8 @@ typedef struct _GstVulkanDevicePrivate GstVulkanDevicePrivate;
 typedef struct _GstVulkanQueue GstVulkanQueue;
 typedef struct _GstVulkanQueueClass GstVulkanQueueClass;
 
+typedef enum _GstVulkanDisplayType GstVulkanDisplayType;
+
 typedef struct _GstVulkanDisplay GstVulkanDisplay;
 typedef struct _GstVulkanDisplayClass GstVulkanDisplayClass;
 typedef struct _GstVulkanDisplayPrivate GstVulkanDisplayPrivate;

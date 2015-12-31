@@ -41,7 +41,7 @@ GType gst_vulkan_display_get_type (void);
 
 #define GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR "gst.vulkan.display"
 
-typedef enum
+enum _GstVulkanDisplayType
 {
   GST_VULKAN_DISPLAY_TYPE_NONE = 0,
   GST_VULKAN_DISPLAY_TYPE_X11 = (1 << 0),
@@ -51,7 +51,7 @@ typedef enum
   GST_VULKAN_DISPLAY_TYPE_WIN32 = (1 << 4),
 
   GST_VULKAN_DISPLAY_TYPE_ANY = G_MAXUINT32
-} GstVulkanDisplayType;
+};
 
 /**
  * GstVulkanDisplay:
