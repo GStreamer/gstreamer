@@ -695,10 +695,12 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
         guint16 expected_crc = GST_READ_UINT16_BE (map.data + i - 2);
 
         GST_LOG_OBJECT (flacparse,
-            "checking checksum, frame suspect (%d, %d)",
+            "Found possible frame (%d, %d). Checking for CRC match",
             suspect_start, suspect_end);
         if (actual_crc != expected_crc) {
-          GST_DEBUG_OBJECT (flacparse, "checksum did not match");
+          GST_DEBUG_OBJECT (flacparse,
+              "Checksum mismatch. Header CRC was '%d' but frame has '%d'",
+              expected_crc, actual_crc);
           continue;
         }
       }
