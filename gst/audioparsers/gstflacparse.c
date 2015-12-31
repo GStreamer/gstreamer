@@ -548,8 +548,12 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
   actual_crc =
       gst_flac_calculate_crc8 (data,
       (gst_bit_reader_get_pos (&reader) / 8) - 1);
-  if (actual_crc != expected_crc)
+  if (actual_crc != expected_crc) {
+    GST_DEBUG_OBJECT (flacparse,
+        "Checksum mismatch. Header CRC was '%d' but frame has '%d'",
+        expected_crc, actual_crc);
     goto error;
+  }
 
   /* Sanity check sample number against blocking strategy, as it seems
      some files claim fixed block size but supply sample numbers,
