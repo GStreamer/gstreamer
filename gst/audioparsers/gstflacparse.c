@@ -1490,6 +1490,8 @@ gst_flac_parse_reset_buffer_time_and_offset (GstBuffer * buffer)
   GST_BUFFER_OFFSET_END (buffer) = 0;
 }
 
+/* Type 127 is invalid for a metadata block header & should
+ * be discarded _before_ calling this function */
 static gboolean
 gst_flac_parse_handle_block_type (GstFlacParse * flacparse, guint type,
     GstBuffer * sbuffer)
@@ -1524,7 +1526,9 @@ gst_flac_parse_handle_block_type (GstFlacParse * flacparse, guint type,
       GST_INFO_OBJECT (flacparse, "APPLICATION header");
       break;
     default:                   /* RESERVED */
-      GST_INFO_OBJECT (flacparse, "unhandled header of type %u", type);
+      GST_INFO_OBJECT (flacparse, "Unhandled metadata header type '%u'", type);
+      GST_WARNING_OBJECT (flacparse,
+          "FLAC version might not be fully supported");
       break;
   }
 
