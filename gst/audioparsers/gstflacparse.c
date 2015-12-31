@@ -1558,7 +1558,7 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
 
     res = GST_BASE_PARSE_FLOW_DROPPED;
   } else if (flacparse->state == GST_FLAC_PARSE_STATE_HEADERS) {
-    gboolean is_last = ((map.data[0] & 0x80) == 0x80);
+    gboolean is_last = map.data[0] >> 7;
     guint type = (map.data[0] & 0x7F);
 
     if (type == 127) {
