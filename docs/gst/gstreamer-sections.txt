@@ -1855,6 +1855,8 @@ gst_pad_probe_info_get_query
 GST_PAD_PROBE_INFO_OFFSET
 GST_PAD_PROBE_INFO_SIZE
 
+GST_PAD_PROBE_INFO_FLOW_RETURN
+
 GstPadProbeCallback
 gst_pad_add_probe
 gst_pad_remove_probe

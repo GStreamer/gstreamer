@@ -27,6 +27,8 @@
  * gst_tracer_register(). Modules can attach to various hook-types - see
  * #GstTracerHook. When invoked they receive hook specific contextual data, 
  * which they must not modify.
+ *
+ * Since: 1.8
  */
 
 #define GST_USE_UNSTABLE_API

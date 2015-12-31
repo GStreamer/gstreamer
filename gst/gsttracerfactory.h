@@ -40,6 +40,8 @@ G_BEGIN_DECLS
  * GstTracerFactory:
  *
  * Opaque object that stores information about a tracer function.
+ *
+ * Since: 1.8
  */
 typedef struct _GstTracerFactory GstTracerFactory;
 typedef struct _GstTracerFactoryClass GstTracerFactoryClass;

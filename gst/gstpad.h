@@ -378,6 +378,8 @@ typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstObject *parent,
  *
  * Returns: %GST_FLOW_OK if the event was handled properly, or any other
  * #GstFlowReturn dependent on downstream state.
+ *
+ * Since: 1.8
  */
 typedef GstFlowReturn		(*GstPadEventFullFunction)	(GstPad *pad, GstObject *parent,
                                                                  GstEvent *event);
@@ -910,6 +912,8 @@ struct _GstPadClass {
  * use this to set your own event handling function on a pad
  * after you create it.  If your element derives from a base
  * class, use the base class's virtual functions instead.
+ *
+ * Since: 1.8
  */
 #define GST_PAD_EVENTFULLFUNC(pad)	(GST_PAD_CAST(pad)->ABI.abi.eventfullfunc)
 /**

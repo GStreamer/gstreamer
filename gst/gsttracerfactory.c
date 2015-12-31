@@ -67,6 +67,8 @@ gst_tracer_factory_init (GstTracerFactory * factory)
  *
  * Returns: (transfer full) (element-type Gst.TracerFactory): the list of all
  *     registered #GstTracerFactory.
+ *
+ * Since: 1.8
  */
 GList *
 gst_tracer_factory_get_list (void)
