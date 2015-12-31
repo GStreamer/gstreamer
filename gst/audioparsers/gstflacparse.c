@@ -1562,7 +1562,7 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     guint type = (map.data[0] & 0x7F);
 
     if (type == 127) {
-      GST_WARNING_OBJECT (flacparse, "Invalid metadata block type");
+      GST_WARNING_OBJECT (flacparse, "Invalid metadata block type 127");
       res = GST_BASE_PARSE_FLOW_DROPPED;
       goto cleanup;
     }
