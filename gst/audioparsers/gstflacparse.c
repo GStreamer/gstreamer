@@ -813,27 +813,26 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
     if (ret) {
       framesize = next;
       goto cleanup;
-    } else {
-      /* If we're at EOS and the frame was not valid, drop it! */
-      if (G_UNLIKELY (GST_BASE_PARSE_DRAINING (flacparse))) {
-        GST_WARNING_OBJECT (flacparse, "EOS");
-        result = FALSE;
-        goto cleanup;
-      }
+    }
+    /* If we're at EOS and the frame was not valid, drop it! */
+    if (G_UNLIKELY (GST_BASE_PARSE_DRAINING (flacparse))) {
+      GST_WARNING_OBJECT (flacparse, "EOS");
+      result = FALSE;
+      goto cleanup;
+    }
 
-      if (next == 0) {
-      } else if (next > map.size) {
-        GST_DEBUG_OBJECT (flacparse, "Requesting %u bytes", next);
-        *skipsize = 0;
-        gst_base_parse_set_min_frame_size (parse, next);
-        result = FALSE;
-        goto cleanup;
-      } else {
-        GST_ERROR_OBJECT (flacparse,
-            "Giving up on invalid frame (%" G_GSIZE_FORMAT " bytes)", map.size);
-        result = FALSE;
-        goto cleanup;
-      }
+    if (next == 0) {
+    } else if (next > map.size) {
+      GST_DEBUG_OBJECT (flacparse, "Requesting %u bytes", next);
+      *skipsize = 0;
+      gst_base_parse_set_min_frame_size (parse, next);
+      result = FALSE;
+      goto cleanup;
+    } else {
+      GST_ERROR_OBJECT (flacparse,
+          "Giving up on invalid frame (%" G_GSIZE_FORMAT " bytes)", map.size);
+      result = FALSE;
+      goto cleanup;
     }
   } else {
     GstByteReader reader;
@@ -849,12 +848,12 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
       *skipsize = off;
       result = FALSE;
       goto cleanup;
-    } else {
-      GST_DEBUG_OBJECT (flacparse, "Sync code not found");
-      *skipsize = map.size - 3;
-      result = FALSE;
-      goto cleanup;
     }
+
+    GST_DEBUG_OBJECT (flacparse, "Sync code not found");
+    *skipsize = map.size - 3;
+    result = FALSE;
+    goto cleanup;
   }
 
   result = FALSE;
@@ -1708,10 +1707,9 @@ gst_flac_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       if (GST_PAD_IS_FLUSHING (GST_BASE_PARSE_SRC_PAD (parse))) {
         GST_INFO_OBJECT (parse, "Src pad is flushing");
         return GST_FLOW_FLUSHING;
-      } else {
-        GST_INFO_OBJECT (parse, "Src pad is not negotiated!");
-        return GST_FLOW_NOT_NEGOTIATED;
       }
+      GST_INFO_OBJECT (parse, "Src pad is not negotiated!");
+      return GST_FLOW_NOT_NEGOTIATED;
     }
     gst_pb_utils_add_codec_description_to_tag_list (flacparse->tags,
         GST_TAG_AUDIO_CODEC, caps);
