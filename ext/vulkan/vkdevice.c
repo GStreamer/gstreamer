@@ -210,6 +210,7 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateDeviceExtensionProperties") < 0)
     goto error;
+  GST_DEBUG_OBJECT (device, "Found %u extensions", device_extension_count);
 
   have_swapchain_ext = 0;
   enabled_extension_count = 0;
@@ -224,6 +225,8 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
   }
 
   for (uint32_t i = 0; i < device_extension_count; i++) {
+    GST_TRACE_OBJECT (device, "checking device extension %s",
+        device_extensions[i].extensionName);
     if (!strcmp (VK_KHR_SWAPCHAIN_EXTENSION_NAME,
             device_extensions[i].extensionName)) {
       have_swapchain_ext = TRUE;

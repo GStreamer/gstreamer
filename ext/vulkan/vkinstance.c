@@ -192,6 +192,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     g_free (instance_layers);
     goto error;
   }
+  GST_DEBUG_OBJECT (instance, "Found %u extensions", instance_extension_count);
 
   memset (extension_names, 0, sizeof (extension_names));
   instance_extensions =
@@ -223,6 +224,9 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
 
     /* TODO: allow outside selection */
     for (uint32_t i = 0; i < instance_extension_count; i++) {
+      GST_TRACE_OBJECT (instance, "checking instance extension %s",
+          instance_extensions[i].extensionName);
+
       if (!g_strcmp0 (VK_KHR_SURFACE_EXTENSION_NAME,
               instance_extensions[i].extensionName)) {
         swapchain_ext_found = TRUE;
