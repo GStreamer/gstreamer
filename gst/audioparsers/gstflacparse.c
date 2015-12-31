@@ -186,6 +186,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstBuffer *gst_flac_parse_generate_vorbiscomment (GstFlacParse *
     flacparse);
 
+static inline void gst_flac_parse_reset_buffer_time_and_offset (GstBuffer *
+    buffer);
 static void gst_flac_parse_reset (GstFlacParse * parser);
 static gboolean gst_flac_parse_handle_block_type (GstFlacParse * flacparse,
     guint type, GstBuffer * sbuffer);
@@ -1401,11 +1403,7 @@ gst_flac_parse_generate_vorbiscomment (GstFlacParse * flacparse)
   map.data[2] = ((size & 0x00FF00) >> 8);
   map.data[3] = (size & 0x0000FF);
   gst_buffer_unmap (vorbiscomment, &map);
-
-  GST_BUFFER_TIMESTAMP (vorbiscomment) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_DURATION (vorbiscomment) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET (vorbiscomment) = 0;
-  GST_BUFFER_OFFSET_END (vorbiscomment) = 0;
+  gst_flac_parse_reset_buffer_time_and_offset (vorbiscomment);
 
   return vorbiscomment;
 }
@@ -1420,10 +1418,7 @@ gst_flac_parse_generate_headers (GstFlacParse * flacparse)
   gst_buffer_map (marker, &map, GST_MAP_WRITE);
   memcpy (map.data, "fLaC", 4);
   gst_buffer_unmap (marker, &map);
-  GST_BUFFER_TIMESTAMP (marker) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_DURATION (marker) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET (marker) = 0;
-  GST_BUFFER_OFFSET_END (marker) = 0;
+  gst_flac_parse_reset_buffer_time_and_offset (marker);
   flacparse->headers = g_list_append (flacparse->headers, marker);
 
   streaminfo = gst_buffer_new_and_alloc (4 + 34);
@@ -1476,16 +1471,22 @@ gst_flac_parse_generate_headers (GstFlacParse * flacparse)
   /* MD5 = 0; */
 
   gst_buffer_unmap (streaminfo, &map);
-  GST_BUFFER_TIMESTAMP (streaminfo) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_DURATION (streaminfo) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET (streaminfo) = 0;
-  GST_BUFFER_OFFSET_END (streaminfo) = 0;
+  gst_flac_parse_reset_buffer_time_and_offset (streaminfo);
   flacparse->headers = g_list_append (flacparse->headers, streaminfo);
 
   flacparse->headers = g_list_append (flacparse->headers,
       gst_flac_parse_generate_vorbiscomment (flacparse));
 
   return TRUE;
+}
+
+static inline void
+gst_flac_parse_reset_buffer_time_and_offset (GstBuffer * buffer)
+{
+  GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET (buffer) = 0;
+  GST_BUFFER_OFFSET_END (buffer) = 0;
 }
 
 static gboolean
@@ -1542,10 +1543,7 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
 
   if (flacparse->state == GST_FLAC_PARSE_STATE_INIT) {
     sbuffer = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0, size);
-    GST_BUFFER_TIMESTAMP (sbuffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_DURATION (sbuffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_OFFSET (sbuffer) = 0;
-    GST_BUFFER_OFFSET_END (sbuffer) = 0;
+    gst_flac_parse_reset_buffer_time_and_offset (sbuffer);
 
     /* 32 bits metadata block */
     gst_base_parse_set_min_frame_size (GST_BASE_PARSE (flacparse), 4);
@@ -1569,11 +1567,7 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     sbuffer = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0, size);
 
     if (gst_flac_parse_handle_block_type (flacparse, type, sbuffer)) {
-      GST_BUFFER_TIMESTAMP (sbuffer) = GST_CLOCK_TIME_NONE;
-      GST_BUFFER_DURATION (sbuffer) = GST_CLOCK_TIME_NONE;
-      GST_BUFFER_OFFSET (sbuffer) = 0;
-      GST_BUFFER_OFFSET_END (sbuffer) = 0;
-
+      gst_flac_parse_reset_buffer_time_and_offset (sbuffer);
       flacparse->headers = g_list_append (flacparse->headers, sbuffer);
     } else {
       GST_WARNING_OBJECT (parse, "failed to parse header of type %u", type);
