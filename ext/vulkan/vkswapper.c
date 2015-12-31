@@ -68,11 +68,11 @@ _get_function_table (GstVulkanSwapper * swapper)
 
   GET_PROC_ADDRESS_REQUIRED (swapper, instance,
       GetPhysicalDeviceSurfaceSupportKHR);
-  GET_PROC_ADDRESS_REQUIRED (swapper, device,
+  GET_PROC_ADDRESS_REQUIRED (swapper, instance,
       GetPhysicalDeviceSurfaceCapabilitiesKHR);
-  GET_PROC_ADDRESS_REQUIRED (swapper, device,
+  GET_PROC_ADDRESS_REQUIRED (swapper, instance,
       GetPhysicalDeviceSurfaceFormatsKHR);
-  GET_PROC_ADDRESS_REQUIRED (swapper, device,
+  GET_PROC_ADDRESS_REQUIRED (swapper, instance,
       GetPhysicalDeviceSurfacePresentModesKHR);
   GET_PROC_ADDRESS_REQUIRED (swapper, device, CreateSwapchainKHR);
   GET_PROC_ADDRESS_REQUIRED (swapper, device, DestroySwapchainKHR);
