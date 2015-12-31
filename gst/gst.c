@@ -128,7 +128,7 @@ HMODULE _priv_gst_dll_handle = NULL;
 #endif
 
 #ifndef GST_DISABLE_REGISTRY
-GList *_priv_gst_plugin_paths = NULL;   /* for delayed processing in post_init */
+GList *_priv_gst_plugin_paths = NULL;   /* for delayed processing in init_post */
 
 extern gboolean _priv_gst_disable_registry_update;
 #endif
