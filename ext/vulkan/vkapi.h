@@ -37,15 +37,4 @@
 #include <vulkan/vulkan.h>
 #include <vulkan/vk_lunarg_debug_report.h>
 
-#include "vkerror.h"
-#include "vkinstance.h"
-#include "vkdevice.h"
-#include "vkqueue.h"
-#include "vkdisplay.h"
-#include "vkwindow.h"
-#include "vkswapper.h"
-#include "vkmemory.h"
-#include "vkimagememory.h"
-#include "vkutils.h"
-
 #endif /* _VK_H_ */
