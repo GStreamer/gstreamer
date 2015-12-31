@@ -1649,7 +1649,6 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
       GST_BUFFER_PTS (buffer) =
           gst_util_uint64_scale (flacparse->sample_number,
           flacparse->block_size * GST_SECOND, flacparse->samplerate);
-      GST_BUFFER_DTS (buffer) = GST_BUFFER_PTS (buffer);
       GST_BUFFER_OFFSET_END (buffer) =
           flacparse->sample_number * flacparse->block_size +
           flacparse->block_size;
@@ -1657,10 +1656,11 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
       GST_BUFFER_PTS (buffer) =
           gst_util_uint64_scale (flacparse->sample_number, GST_SECOND,
           flacparse->samplerate);
-      GST_BUFFER_DTS (buffer) = GST_BUFFER_PTS (buffer);
       GST_BUFFER_OFFSET_END (buffer) =
           flacparse->sample_number + flacparse->block_size;
     }
+
+    GST_BUFFER_DTS (buffer) = GST_BUFFER_PTS (buffer);
     GST_BUFFER_OFFSET (buffer) =
         gst_util_uint64_scale (GST_BUFFER_OFFSET_END (buffer), GST_SECOND,
         flacparse->samplerate);
