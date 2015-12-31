@@ -1015,12 +1015,12 @@ gst_flac_parse_handle_cuesheet (GstFlacParse * flacparse, GstBuffer * buffer)
   toc = gst_toc_new (GST_TOC_SCOPE_GLOBAL);
 
   /* skip 4 bytes METADATA_BLOCK_HEADER */
-  /* http://flac.sourceforge.net/format.html#metadata_block_header */
+  /* https://xiph.org/flac/format.html#metadata_block_header */
   if (!gst_byte_reader_skip (&reader, 4))
     goto error;
 
   /* skip 395 bytes from METADATA_BLOCK_CUESHEET */
-  /* http://flac.sourceforge.net/format.html#metadata_block_cuesheet */
+  /* https://xiph.org/flac/format.html#metadata_block_cuesheet */
   if (!gst_byte_reader_skip (&reader, 395))
     goto error;
 
@@ -1028,7 +1028,7 @@ gst_flac_parse_handle_cuesheet (GstFlacParse * flacparse, GstBuffer * buffer)
     goto error;
 
   /* CUESHEET_TRACK */
-  /* http://flac.sourceforge.net/format.html#cuesheet_track */
+  /* https://xiph.org/flac/format.html#cuesheet_track */
   for (i = 0; i < n_tracks; i++) {
     if (!gst_byte_reader_get_uint64_be (&reader, &offset))
       goto error;
@@ -1075,7 +1075,7 @@ gst_flac_parse_handle_cuesheet (GstFlacParse * flacparse, GstBuffer * buffer)
       }
       gst_toc_append_entry (toc, cur_entry);
       /* CUESHEET_TRACK_INDEX */
-      /* http://flac.sourceforge.net/format.html#cuesheet_track_index */
+      /* https://xiph.org/flac/format.html#cuesheet_track_index */
       for (j = 0; j < index; j++) {
         if (!gst_byte_reader_skip (&reader, 12))
           goto error;
