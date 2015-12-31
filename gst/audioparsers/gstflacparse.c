@@ -187,6 +187,8 @@ static GstBuffer *gst_flac_parse_generate_vorbiscomment (GstFlacParse *
     flacparse);
 
 static void gst_flac_parse_reset (GstFlacParse * parser);
+static gboolean gst_flac_parse_handle_block_type (GstFlacParse * flacparse,
+    guint type, GstBuffer * sbuffer);
 static void gst_flac_parse_finalize (GObject * object);
 static void gst_flac_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -1486,6 +1488,47 @@ gst_flac_parse_generate_headers (GstFlacParse * flacparse)
   return TRUE;
 }
 
+static gboolean
+gst_flac_parse_handle_block_type (GstFlacParse * flacparse, guint type,
+    GstBuffer * sbuffer)
+{
+  gboolean ret = TRUE;
+
+  switch (type) {
+    case 0:                    /* STREAMINFO */
+      GST_INFO_OBJECT (flacparse, "STREAMINFO header");
+      ret = gst_flac_parse_handle_streaminfo (flacparse, sbuffer);
+      break;
+    case 3:                    /* SEEKTABLE */
+      GST_INFO_OBJECT (flacparse, "SEEKTABLE header");
+      ret = gst_flac_parse_handle_seektable (flacparse, sbuffer);
+      break;
+    case 4:                    /* VORBIS_COMMENT */
+      GST_INFO_OBJECT (flacparse, "VORBISCOMMENT header");
+      ret = gst_flac_parse_handle_vorbiscomment (flacparse, sbuffer);
+      break;
+    case 5:                    /* CUESHEET */
+      GST_INFO_OBJECT (flacparse, "CUESHEET header");
+      ret = gst_flac_parse_handle_cuesheet (flacparse, sbuffer);
+      break;
+    case 6:                    /* PICTURE */
+      GST_INFO_OBJECT (flacparse, "PICTURE header");
+      ret = gst_flac_parse_handle_picture (flacparse, sbuffer);
+      break;
+    case 1:                    /* PADDING */
+      GST_INFO_OBJECT (flacparse, "PADDING header");
+      break;
+    case 2:                    /* APPLICATION */
+      GST_INFO_OBJECT (flacparse, "APPLICATION header");
+      break;
+    default:                   /* RESERVED */
+      GST_INFO_OBJECT (flacparse, "unhandled header of type %u", type);
+      break;
+  }
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     gint size)
@@ -1514,7 +1557,6 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
   } else if (flacparse->state == GST_FLAC_PARSE_STATE_HEADERS) {
     gboolean is_last = ((map.data[0] & 0x80) == 0x80);
     guint type = (map.data[0] & 0x7F);
-    gboolean hdr_ok = TRUE;
 
     if (type == 127) {
       GST_WARNING_OBJECT (flacparse, "Invalid metadata block type");
@@ -1526,39 +1568,7 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
 
     sbuffer = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0, size);
 
-    switch (type) {
-      case 0:                  /* STREAMINFO */
-        GST_INFO_OBJECT (flacparse, "STREAMINFO header");
-        hdr_ok = gst_flac_parse_handle_streaminfo (flacparse, sbuffer);
-        break;
-      case 3:                  /* SEEKTABLE */
-        GST_INFO_OBJECT (flacparse, "SEEKTABLE header");
-        hdr_ok = gst_flac_parse_handle_seektable (flacparse, sbuffer);
-        break;
-      case 4:                  /* VORBIS_COMMENT */
-        GST_INFO_OBJECT (flacparse, "VORBISCOMMENT header");
-        hdr_ok = gst_flac_parse_handle_vorbiscomment (flacparse, sbuffer);
-        break;
-      case 5:                  /* CUESHEET */
-        GST_INFO_OBJECT (flacparse, "CUESHEET header");
-        hdr_ok = gst_flac_parse_handle_cuesheet (flacparse, sbuffer);
-        break;
-      case 6:                  /* PICTURE */
-        GST_INFO_OBJECT (flacparse, "PICTURE header");
-        hdr_ok = gst_flac_parse_handle_picture (flacparse, sbuffer);
-        break;
-      case 1:                  /* PADDING */
-        GST_INFO_OBJECT (flacparse, "PADDING header");
-        break;
-      case 2:                  /* APPLICATION */
-        GST_INFO_OBJECT (flacparse, "APPLICATION header");
-        break;
-      default:                 /* RESERVED */
-        GST_INFO_OBJECT (flacparse, "unhandled header of type %u", type);
-        break;
-    }
-
-    if (hdr_ok) {
+    if (gst_flac_parse_handle_block_type (flacparse, type, sbuffer)) {
       GST_BUFFER_TIMESTAMP (sbuffer) = GST_CLOCK_TIME_NONE;
       GST_BUFFER_DURATION (sbuffer) = GST_CLOCK_TIME_NONE;
       GST_BUFFER_OFFSET (sbuffer) = 0;
