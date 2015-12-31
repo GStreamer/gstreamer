@@ -1668,7 +1668,7 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
         GST_BUFFER_OFFSET (buffer) - GST_BUFFER_PTS (buffer);
 
     /* To simplify, we just assume that it's a fixed size header and ignore
-     * subframe headers. The first could lead us to being off by 88 bits and
+     * subframe headers. The first could lead us to be off by 88 bits and
      * the second even less, so the total inaccuracy is negligible. */
     frame->overhead = 7;
 
