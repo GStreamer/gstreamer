@@ -21,7 +21,7 @@
 #ifndef _VK_INSTANCE_H_
 #define _VK_INSTANCE_H_
 
-#include "vk.h"
+#include <vk.h>
 
 G_BEGIN_DECLS
 

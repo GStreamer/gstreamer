@@ -148,7 +148,6 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   uint32_t instance_layer_count = 0;
   uint32_t enabled_layer_count = 0;
   gboolean validation_found;
-  gboolean have_swapchain_ext = FALSE;
   VkResult err;
 
   GST_OBJECT_LOCK (instance);
@@ -207,28 +206,56 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     goto error;
   }
 
-  /* TODO: allow outside selection */
-  for (uint32_t i = 0; i < instance_extension_count; i++) {
-    if (!g_strcmp0 (VK_KHR_SURFACE_EXTENSION_NAME,
-            instance_extensions[i].extensionName)) {
-      have_swapchain_ext = TRUE;
-      extension_names[enabled_extension_count++] =
-          (gchar *) VK_KHR_SURFACE_EXTENSION_NAME;
+  {
+    GstVulkanDisplayType display_type;
+    gboolean swapchain_ext_found = FALSE;
+    gboolean winsys_ext_found = FALSE;
+    const gchar *winsys_ext_name;
+
+    display_type = gst_vulkan_display_choose_type (instance);
+
+    winsys_ext_name =
+        gst_vulkan_display_type_to_extension_string (display_type);
+    if (!winsys_ext_name) {
+      GST_WARNING_OBJECT (instance, "No window system extension enabled");
+      winsys_ext_found = TRUE;  /* Don't error out completely */
     }
-    if (!g_strcmp0 (VK_DEBUG_REPORT_EXTENSION_NAME,
-            instance_extensions[i].extensionName)) {
-      extension_names[enabled_extension_count++] =
-          (gchar *) VK_DEBUG_REPORT_EXTENSION_NAME;
+
+    /* TODO: allow outside selection */
+    for (uint32_t i = 0; i < instance_extension_count; i++) {
+      if (!g_strcmp0 (VK_KHR_SURFACE_EXTENSION_NAME,
+              instance_extensions[i].extensionName)) {
+        swapchain_ext_found = TRUE;
+        extension_names[enabled_extension_count++] =
+            (gchar *) VK_KHR_SURFACE_EXTENSION_NAME;
+      }
+      if (!g_strcmp0 (VK_DEBUG_REPORT_EXTENSION_NAME,
+              instance_extensions[i].extensionName)) {
+        extension_names[enabled_extension_count++] =
+            (gchar *) VK_DEBUG_REPORT_EXTENSION_NAME;
+      }
+      if (!g_strcmp0 (winsys_ext_name, instance_extensions[i].extensionName)) {
+        winsys_ext_found = TRUE;
+        extension_names[enabled_extension_count++] = (gchar *) winsys_ext_name;
+      }
+      g_assert (enabled_extension_count < 64);
     }
-    g_assert (enabled_extension_count < 64);
-  }
-  if (!have_swapchain_ext) {
-    g_error ("vkEnumerateInstanceExtensionProperties failed to find the \""
-        VK_KHR_SURFACE_EXTENSION_NAME
-        "\" extension.\n\nDo you have a compatible "
-        "Vulkan installable client driver (ICD) installed?\nPlease "
-        "look at the Getting Started guide for additional "
-        "information.\nvkCreateInstance Failure");
+    if (!swapchain_ext_found) {
+      g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
+          "vkEnumerateInstanceExtensionProperties failed to find the required "
+          "\"" VK_KHR_SURFACE_EXTENSION_NAME "\" extension");
+      g_free (instance_layers);
+      g_free (instance_extensions);
+      goto error;
+    }
+    if (!winsys_ext_found) {
+      g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
+          "vkEnumerateInstanceExtensionProperties failed to find the required "
+          "\"%s\" window system extension", winsys_ext_name);
+      g_free (instance_layers);
+      g_free (instance_extensions);
+      goto error;
+    }
   }
 
   {
