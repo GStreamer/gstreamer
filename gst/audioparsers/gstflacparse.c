@@ -1684,16 +1684,12 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
 
 cleanup:
   gst_buffer_unmap (buffer, &map);
-
   return res;
 
-/* ERRORS */
 header_parsing_error:
-  {
-    GST_ELEMENT_ERROR (flacparse, STREAM, DECODE, (NULL),
-        ("Failed to parse headers"));
-    goto cleanup;
-  }
+  GST_ELEMENT_ERROR (flacparse, STREAM, DECODE, (NULL),
+      ("Failed to parse headers"));
+  goto cleanup;
 }
 
 static GstFlowReturn
