@@ -50,14 +50,17 @@ ges_video_uri_source_create_source (GESTrackElement * trksrc)
   GESVideoUriSource *self;
   GESTrack *track;
   GstElement *decodebin;
+  const GstCaps *caps = NULL;
 
   self = (GESVideoUriSource *) trksrc;
 
   track = ges_track_element_get_track (trksrc);
+  if (track)
+    caps = ges_track_get_caps (track);
 
   decodebin = gst_element_factory_make ("uridecodebin", NULL);
 
-  g_object_set (decodebin, "caps", ges_track_get_caps (track),
+  g_object_set (decodebin, "caps", caps,
       "expose-all-streams", FALSE, "uri", self->uri, NULL);
 
   return decodebin;

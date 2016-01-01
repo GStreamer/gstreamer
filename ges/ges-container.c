@@ -81,6 +81,8 @@ struct _GESContainerPrivate
   /* List of GESTimelineElement being in the "child-added" signal
    * emission stage */
   GList *adding_children;
+
+  GList *copied_children;
 };
 
 enum
@@ -101,9 +103,12 @@ _free_mapping (ChildMapping * mapping)
   GESTimelineElement *child = mapping->child;
 
   /* Disconnect all notify listeners */
-  g_signal_handler_disconnect (child, mapping->start_notifyid);
-  g_signal_handler_disconnect (child, mapping->duration_notifyid);
-  g_signal_handler_disconnect (child, mapping->inpoint_notifyid);
+  if (mapping->start_notifyid)
+    g_signal_handler_disconnect (child, mapping->start_notifyid);
+  if (mapping->duration_notifyid)
+    g_signal_handler_disconnect (child, mapping->duration_notifyid);
+  if (mapping->inpoint_notifyid)
+    g_signal_handler_disconnect (child, mapping->inpoint_notifyid);
 
   ges_timeline_element_set_parent (child, NULL);
   g_slice_free (ChildMapping, mapping);
@@ -287,28 +292,51 @@ _get_track_types (GESTimelineElement * object)
   return types ^ GES_TRACK_TYPE_UNKNOWN;
 }
 
-static gboolean
+static void
+_deep_copy (GESTimelineElement * element, GESTimelineElement * copy)
+{
+  GList *tmp;
+  GESContainer *self = GES_CONTAINER (element), *ccopy = GES_CONTAINER (copy);
+
+  for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
+    ChildMapping *map;
+
+    map =
+        g_slice_dup (ChildMapping, g_hash_table_lookup (self->priv->mappings,
+            tmp->data));
+    map->child = ges_timeline_element_copy (tmp->data, TRUE);
+    map->start_notifyid = 0;
+    map->inpoint_notifyid = 0;
+    map->duration_notifyid = 0;
+
+    ccopy->priv->copied_children = g_list_prepend (ccopy->priv->copied_children,
+        map);
+  }
+}
+
+static GESTimelineElement *
 _paste (GESTimelineElement * element, GESTimelineElement * ref,
     GstClockTime paste_position)
 {
   GList *tmp;
+  ChildMapping *map;
+  GESContainer *ncontainer =
+      GES_CONTAINER (ges_timeline_element_copy (element, FALSE));
   GESContainer *self = GES_CONTAINER (element);
-  GESContainer *refcontainer = GES_CONTAINER (ref);
 
-  for (tmp = GES_CONTAINER_CHILDREN (refcontainer); tmp; tmp = tmp->next) {
-    ChildMapping *map;
-    GESTimelineElement *child, *refchild = GES_TIMELINE_ELEMENT (tmp->data);
+  for (tmp = self->priv->copied_children; tmp; tmp = tmp->next) {
+    GESTimelineElement *nchild;
 
-    map = g_hash_table_lookup (refcontainer->priv->mappings, refchild);
-    child = ges_timeline_element_copy (GES_TIMELINE_ELEMENT (refchild), TRUE);
-
-    ges_timeline_element_paste (child, paste_position + map->start_offset);
-    ges_timeline_element_set_timeline (element,
+    map = tmp->data;
+    nchild =
+        ges_timeline_element_paste (map->child,
+        paste_position - map->start_offset);
+    ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (ncontainer),
         GES_TIMELINE_ELEMENT_TIMELINE (ref));
-    ges_container_add (self, child);
+    ges_container_add (ncontainer, nchild);
   }
 
-  return TRUE;
+  return GES_TIMELINE_ELEMENT (ncontainer);
 }
 
 
@@ -323,6 +351,17 @@ _dispose (GObject * object)
   GESContainer *self = GES_CONTAINER (object);
 
   g_hash_table_unref (self->priv->mappings);
+
+  G_OBJECT_CLASS (ges_container_parent_class)->dispose (object);
+}
+
+static void
+_finalize (GObject * object)
+{
+  GESContainer *self = GES_CONTAINER (object);
+
+  g_list_free_full (self->priv->copied_children,
+      (GDestroyNotify) _free_mapping);
 
   G_OBJECT_CLASS (ges_container_parent_class)->dispose (object);
 }
@@ -366,6 +405,7 @@ ges_container_class_init (GESContainerClass * klass)
   object_class->get_property = _get_property;
   object_class->set_property = _set_property;
   object_class->dispose = _dispose;
+  object_class->finalize = _finalize;
 
   /**
    * GESContainer:height:
@@ -415,6 +455,7 @@ ges_container_class_init (GESContainerClass * klass)
   element_class->lookup_child = _lookup_child;
   element_class->get_track_types = _get_track_types;
   element_class->paste = _paste;
+  element_class->deep_copy = _deep_copy;
 
   /* No default implementations */
   klass->remove_child = NULL;

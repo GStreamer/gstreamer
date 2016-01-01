@@ -48,6 +48,7 @@ ges_audio_uri_source_create_source (GESTrackElement * trksrc)
   GESAudioUriSource *self;
   GESTrack *track;
   GstElement *decodebin;
+  const GstCaps *caps = NULL;
 
   self = (GESAudioUriSource *) trksrc;
 
@@ -55,7 +56,10 @@ ges_audio_uri_source_create_source (GESTrackElement * trksrc)
 
   decodebin = gst_element_factory_make ("uridecodebin", NULL);
 
-  g_object_set (decodebin, "caps", ges_track_get_caps (track),
+  if (track)
+    caps = ges_track_get_caps (track);
+
+  g_object_set (decodebin, "caps", caps,
       "expose-all-streams", FALSE, "uri", self->uri, NULL);
 
   return decodebin;

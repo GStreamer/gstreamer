@@ -61,3 +61,63 @@ class TestCopyPaste(unittest.TestCase):
         clips[1].edit([], 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 10)
         clips = self.layer.get_clips()
         self.assertEqual(len(clips), 1)
+
+    def testPasteChangedGroup(self):
+        clip1 = GES.TestClip.new()
+        clip1.props.duration = 10
+
+        clip2 = GES.TestClip.new()
+        clip2.props.start = 20
+        clip2.props.duration = 10
+
+        self.layer.add_clip(clip1)
+        self.layer.add_clip(clip2)
+
+        self.assertEqual(len(clip1.get_children(False)), 2)
+
+        group = GES.Group.new()
+        self.assertTrue(group.add(clip1))
+
+        self.assertEqual(len(group.get_children(False)), 1)
+
+        group_copy = group.copy(True)
+        self.assertEqual(len(group_copy.get_children(False)), 0)
+
+        self.assertTrue(group.add(clip2))
+        self.assertEqual(len(group.get_children(False)), 2)
+        self.assertEqual(len(group_copy.get_children(False)), 0)
+
+        self.assertTrue(group_copy.paste(10))
+        clips = self.layer.get_clips()
+        self.assertEqual(len(clips), 3)
+        self.assertEqual(clips[1].props.start, 10)
+
+    def testPasteChangedGroup(self):
+        clip1 = GES.TestClip.new()
+        clip1.props.duration = 10
+
+        clip2 = GES.TestClip.new()
+        clip2.props.start = 20
+        clip2.props.duration = 10
+
+        self.layer.add_clip(clip1)
+        self.layer.add_clip(clip2)
+
+        self.assertEqual(len(clip1.get_children(False)), 2)
+
+        group = GES.Group.new()
+        self.assertTrue(group.add(clip1))
+
+        self.assertEqual(len(group.get_children(False)), 1)
+
+        group_copy = group.copy(True)
+        self.assertEqual(len(group_copy.get_children(False)), 0)
+
+        self.assertTrue(group.add(clip2))
+        self.assertEqual(len(group.get_children(False)), 2)
+        self.assertEqual(len(group_copy.get_children(False)), 0)
+
+        self.assertTrue(group_copy.paste(10))
+        clips = self.layer.get_clips()
+        self.assertEqual(len(clips), 3)
+        self.assertEqual(clips[1].props.start, 10)

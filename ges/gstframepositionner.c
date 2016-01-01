@@ -198,6 +198,12 @@ ges_frame_positionner_set_source_and_filter (GstFramePositionner * pos,
   pos->capsfilter = capsfilter;
   pos->current_track = ges_track_element_get_track (trksrc);
 
+  if (!pos->current_track) {
+    GST_INFO_OBJECT (pos, "No track set, won't be usable");
+
+    return;
+  }
+
   g_object_add_weak_pointer (G_OBJECT (pos->track_source),
       ((gpointer *) & pos->track_source));
   g_object_weak_ref (G_OBJECT (pos->current_track),

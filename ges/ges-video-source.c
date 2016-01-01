@@ -124,7 +124,6 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   GstElement *positionner, *videoscale, *videorate, *capsfilter, *videoconvert,
       *deinterlace;
   const gchar *props[] = { "alpha", "posx", "posy", "width", "height", NULL };
-  GESTimelineElement *parent;
 
   if (!source_class->create_source)
     return NULL;
@@ -172,14 +171,7 @@ ges_video_source_create_element (GESTrackElement * trksrc)
         capsfilter, NULL);
   }
 
-  parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
-  if (parent) {
-    self->priv->positionner = GST_FRAME_POSITIONNER (positionner);
-    gst_object_unref (parent);
-  } else {
-    GST_ERROR ("No parent timeline element, SHOULD NOT HAPPEN");
-  }
-
+  self->priv->positionner = GST_FRAME_POSITIONNER (positionner);
   self->priv->capsfilter = capsfilter;
 
   return topbin;

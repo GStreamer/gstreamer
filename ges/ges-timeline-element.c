@@ -1697,25 +1697,27 @@ ges_timeline_element_get_track_types (GESTimelineElement * self)
  * using ges_timeline_element_copy with recurse=TRUE set,
  * otherwise it will fail.
  *
+ * Returns: (transfer none): Paste @self copying the element
+ *
  * Since: 1.6.0
  */
-gboolean
+GESTimelineElement *
 ges_timeline_element_paste (GESTimelineElement * self,
     GstClockTime paste_position)
 {
-  gboolean res;
+  GESTimelineElement *res;
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
   if (!self->priv->copied_from) {
     GST_ERROR_OBJECT (self, "Is not being 'deeply' copied!");
 
-    return FALSE;
+    return NULL;
   }
 
   if (!GES_TIMELINE_ELEMENT_GET_CLASS (self)->paste) {
     GST_ERROR_OBJECT (self, "No paste vmethod implemented");
 
-    return FALSE;
+    return NULL;
   }
 
   res = GES_TIMELINE_ELEMENT_GET_CLASS (self)->paste (self,
@@ -1723,5 +1725,5 @@ ges_timeline_element_paste (GESTimelineElement * self,
 
   g_clear_object (&self->priv->copied_from);
 
-  return res;
+  return g_object_ref (res);
 }

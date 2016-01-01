@@ -598,21 +598,21 @@ _group (GList * containers)
   return ret;
 }
 
-static gboolean
+static GESTimelineElement *
 _paste (GESTimelineElement * element, GESTimelineElement * ref,
     GstClockTime paste_position)
 {
-  if (GES_TIMELINE_ELEMENT_CLASS (parent_class)->paste (element,
-          ref, paste_position)) {
+  GESTimelineElement *ngroup =
+      GES_TIMELINE_ELEMENT_CLASS (parent_class)->paste (element, ref,
+      paste_position);
 
-    if (GES_CONTAINER_CHILDREN (element))
+  if (ngroup) {
+    if (GES_CONTAINER_CHILDREN (ngroup))
       timeline_add_group (GES_TIMELINE_ELEMENT_TIMELINE (GES_CONTAINER_CHILDREN
-              (element)->data), GES_GROUP (element));
-
-    return TRUE;
+              (ngroup)->data), GES_GROUP (element));
   }
 
-  return FALSE;
+  return ngroup;
 }
 
 

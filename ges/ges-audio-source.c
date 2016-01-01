@@ -71,6 +71,12 @@ _sync_element_to_layer_property_float (GESTrackElement * trksrc,
   gfloat value;
 
   parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
+  if (!parent) {
+      GST_DEBUG_OBJECT (trksrc, "Not in a clip... doing nothing");
+
+      return;
+  }
+
   layer = ges_clip_get_layer (GES_CLIP (parent));
 
   gst_object_unref (parent);
@@ -81,12 +87,12 @@ _sync_element_to_layer_property_float (GESTrackElement * trksrc,
     g_object_set (element, propname, value, NULL);
     GST_DEBUG_OBJECT (trksrc, "Setting %s to %f", propname, value);
 
+
+    gst_object_unref (layer);
   } else {
 
     GST_DEBUG_OBJECT (trksrc, "NOT setting the %s", propname);
   }
-
-  gst_object_unref (layer);
 }
 
 static void

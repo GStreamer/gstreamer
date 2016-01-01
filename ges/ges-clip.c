@@ -61,6 +61,9 @@ struct _GESClipPrivate
 
   guint nb_effects;
 
+  GList *copied_track_elements;
+  GESLayer *copied_layer;
+
   /* The formats supported by this Clip */
   GESTrackType supportedformats;
 };
@@ -625,21 +628,43 @@ _edit (GESContainer * container, GList * layers,
   return ret;
 }
 
-static gboolean
+static void
+_deep_copy (GESTimelineElement * element, GESTimelineElement * copy)
+{
+  GList *tmp;
+  GESClip *self = GES_CLIP (element), *ccopy = GES_CLIP (copy);
+
+  for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
+    ccopy->priv->copied_track_elements =
+        g_list_append (ccopy->priv->copied_track_elements,
+        ges_timeline_element_copy (tmp->data, TRUE));
+  }
+
+  if (self->priv->copied_layer)
+    ccopy->priv->copied_layer = g_object_ref (self->priv->copied_layer);
+  else if (self->priv->layer)
+    ccopy->priv->copied_layer = g_object_ref (self->priv->layer);
+}
+
+static GESTimelineElement *
 _paste (GESTimelineElement * element, GESTimelineElement * ref,
     GstClockTime paste_position)
 {
   GList *tmp;
   GESClip *self = GES_CLIP (element);
-  GESClip *refclip = GES_CLIP (ref);
+  GESClip *nclip = GES_CLIP (ges_timeline_element_copy (element, FALSE));
 
-  ges_clip_set_moving_from_layer (self, TRUE);
-  ges_layer_add_clip (refclip->priv->layer, self);
-  ges_clip_set_moving_from_layer (self, FALSE);
+  if (self->priv->copied_layer)
+    nclip->priv->copied_layer = g_object_ref (self->priv->copied_layer);
 
-  ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (self), paste_position);
+  ges_clip_set_moving_from_layer (nclip, TRUE);
+  if (self->priv->copied_layer)
+    ges_layer_add_clip (self->priv->copied_layer, nclip);
+  ges_clip_set_moving_from_layer (nclip, FALSE);
 
-  for (tmp = GES_CONTAINER_CHILDREN (refclip); tmp; tmp = tmp->next) {
+  ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (nclip), paste_position);
+
+  for (tmp = self->priv->copied_track_elements; tmp; tmp = tmp->next) {
     GESTrackElement *new_trackelement, *trackelement =
         GES_TRACK_ELEMENT (tmp->data);
 
@@ -651,7 +676,7 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
       continue;
     }
 
-    ges_container_add (GES_CONTAINER (self),
+    ges_container_add (GES_CONTAINER (nclip),
         GES_TIMELINE_ELEMENT (new_trackelement));
 
     ges_track_element_copy_properties (GES_TIMELINE_ELEMENT (trackelement),
@@ -661,7 +686,7 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
         GST_CLOCK_TIME_NONE);
   }
 
-  return TRUE;
+  return GES_TIMELINE_ELEMENT (nclip);
 }
 
 
@@ -704,6 +729,16 @@ ges_clip_set_property (GObject * object, guint property_id,
 }
 
 static void
+ges_clip_finalize (GObject * object)
+{
+  GESClip *self = GES_CLIP (object);
+
+  g_list_free_full (self->priv->copied_track_elements, g_object_unref);
+
+  G_OBJECT_CLASS (ges_clip_parent_class)->finalize (object);
+}
+
+static void
 ges_clip_class_init (GESClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -714,6 +749,7 @@ ges_clip_class_init (GESClipClass * klass)
 
   object_class->get_property = ges_clip_get_property;
   object_class->set_property = ges_clip_set_property;
+  object_class->finalize = ges_clip_finalize;
   klass->create_track_elements = ges_clip_create_track_elements_func;
   klass->create_track_element = NULL;
 
@@ -754,6 +790,7 @@ ges_clip_class_init (GESClipClass * klass)
   element_class->set_priority = _set_priority;
   element_class->set_max_duration = _set_max_duration;
   element_class->paste = _paste;
+  element_class->deep_copy = _deep_copy;
 
   container_class->add_child = _add_child;
   container_class->remove_child = _remove_child;
