@@ -1118,7 +1118,6 @@ gst_rpi_cam_src_event (GstBaseSrc * parent, GstEvent * event)
         } else {
           ret = FALSE;
         }
-        gst_event_unref (event);
       } else {
         ret = GST_BASE_SRC_CLASS (parent_class)->event (parent, event);
       }
