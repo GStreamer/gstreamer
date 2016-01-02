@@ -232,7 +232,7 @@ typedef struct {
   gchar *sink_pad;
   GstElement *sink;
   GstCaps *caps;
-  gulong signal_id;
+  gulong pad_added_signal_id, no_more_pads_signal_id;
 } DelayedLink;
 
 typedef struct {
@@ -490,6 +490,19 @@ static void gst_parse_free_delayed_link (DelayedLink *link)
   g_slice_free (DelayedLink, link);
 }
 
+static void gst_parse_no_more_pads (GstElement *src, gpointer data)
+{
+  DelayedLink *link = data;
+
+  GST_ELEMENT_WARNING(src, PARSE, DELAYED_LINK,
+    (_("Delayed linking failed.")),
+    ("failed delayed linking %s:%s to %s:%s",
+                   GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (link->src_pad),
+                   GST_STR_NULL (GST_ELEMENT_NAME (link->sink)), GST_STR_NULL (link->sink_pad)));
+  /* we keep the handlers connected, so that in case an element still adds a pad
+   * despite no-more-pads, we will consider it for pending delayed links */
+}
+
 static void gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
 {
   DelayedLink *link = data;
@@ -505,7 +518,9 @@ static void gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
     GST_CAT_DEBUG (GST_CAT_PIPELINE, "delayed linking %s:%s to %s:%s worked",
                	   GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (link->src_pad),
                	   GST_STR_NULL (GST_ELEMENT_NAME (link->sink)), GST_STR_NULL (link->sink_pad));
-    g_signal_handler_disconnect (src, link->signal_id);
+    g_signal_handler_disconnect (src, link->no_more_pads_signal_id);
+    /* releases 'link' */
+    g_signal_handler_disconnect (src, link->pad_added_signal_id);
   }
 }
 
@@ -539,9 +554,11 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
       } else {
       	data->caps = NULL;
       }
-      data->signal_id = g_signal_connect_data (src, "pad-added",
+      data->pad_added_signal_id = g_signal_connect_data (src, "pad-added",
           G_CALLBACK (gst_parse_found_pad), data,
           (GClosureNotify) gst_parse_free_delayed_link, (GConnectFlags) 0);
+      data->no_more_pads_signal_id = g_signal_connect (src, "no-more-pads",
+          G_CALLBACK (gst_parse_no_more_pads), data);
       return TRUE;
     }
   }
