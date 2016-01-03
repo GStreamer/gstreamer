@@ -259,6 +259,13 @@ opengl (not yet implemented)
 - there is not hardware agnostic way to get e.g. memory usage info
   (gl extensions)
 
+memory (not yet implemented)
+------
+- trace live instance (and pointer to the memory)
+- use an atexit handler to dump leaked instance
+https://bugzilla.gnome.org/show_bug.cgi?id=756760#c6
+
+
 User interfaces
 ===============
 
