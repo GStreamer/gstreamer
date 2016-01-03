@@ -63,6 +63,7 @@ struct _GstGLViewConvert
 
   GstGLTextureTarget from_texture_target;
   GstGLTextureTarget to_texture_target;
+  gboolean caps_passthrough;
 
   gboolean initted;
   gboolean reconfigure;
