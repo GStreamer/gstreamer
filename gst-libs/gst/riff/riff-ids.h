@@ -326,7 +326,7 @@ typedef struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
 #define GST_RIFF_WAVE_FORMAT_DOLBY_AC2      (0x0030)
 #define GST_RIFF_WAVE_FORMAT_GSM610         (0x0031)
 #define GST_RIFF_WAVE_FORMAT_MSN            (0x0032)
-#define GST_RIFF_WAVE_FORMAT_ANTEX_ADPCME   (0x0033
+#define GST_RIFF_WAVE_FORMAT_ANTEX_ADPCME   (0x0033)
 #define GST_RIFF_WAVE_FORMAT_CONTROL_RES_VQLPC (0x0034)
 #define GST_RIFF_WAVE_FORMAT_DIGIREAL       (0x0035)
 #define GST_RIFF_WAVE_FORMAT_DIGIADPCM      (0x0036)
