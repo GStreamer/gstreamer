@@ -251,7 +251,7 @@ static int  gst_resolve_reference(reference_t *rr, GstElement *pipeline){
     bin = GST_BIN (pipeline);
     rr->element = gst_bin_get_by_name_recurse_up (bin, rr->name);
   } else {
-    rr->element = strcmp (GST_ELEMENT_NAME (pipeline), rr->name) == 0 ? 
+    rr->element = strcmp (GST_ELEMENT_NAME (pipeline), rr->name) == 0 ?
 		gst_object_ref(pipeline) : NULL;
   }
   if(rr->element) return 0; /* resolved */
@@ -638,7 +638,7 @@ static int yyerror (void *scanner, graph_t *graph, const char *s);
 
 %token <ss> PARSE_URL
 %token <ss> IDENTIFIER
-%left  <ss> REF PADREF BINREF 
+%left  <ss> REF PADREF BINREF
 %token <ss> ASSIGNMENT
 %token <ss> LINK
 
@@ -746,7 +746,7 @@ elementary:
 *   that are syntactically closed (handled later in this file).
 *	(e.g. fakesrc ! sinkreferencename.padname)
 **************************************************************/
-chain:	openchain			      { $$=$1; 
+chain:	openchain			      { $$=$1;
 						if($$->last.name){
 							SET_ERROR (graph->error, GST_PARSE_ERROR_SYNTAX,
 							_("unexpected reference \"%s\" - ignoring"), $$->last.name);
@@ -790,7 +790,7 @@ link:	LINK				      { $$ = gst_parse_link_new ();
 						$$->sink.name = NULL;
 						$$->src.pads = NULL;
 						$$->sink.pads = NULL;
-						$$->caps = NULL; 
+						$$->caps = NULL;
 						if ($1) {
 						  $$->caps = gst_caps_from_string ($1);
 						  if ($$->caps == NULL)
@@ -913,7 +913,7 @@ reference:	REF morepads		      {
 *   _reference_ on each side. That
 *   works already after the explanations above.
 *	someSourceName.Pad ! someSinkName.
-*	someSourceName.Pad,anotherPad ! someSinkName.Apad,Bpad	
+*	someSourceName.Pad,anotherPad ! someSinkName.Apad,Bpad
 *
 *   If a syntax error occurs, the already finished _chain_s
 *   and _links_ are kept intact.
@@ -948,7 +948,7 @@ assignments:	/* NOP */		      { $$ = NULL; }
 binopener:	'('			      { $$ = gst_parse_strdup(_("bin")); }
 	|	BINREF			      { $$ = $1; }
 	;
-bin:	binopener assignments chainlist ')'   { 
+bin:	binopener assignments chainlist ')'   {
 						chain_t *chain = $3;
 						GSList *walk;
 						GstBin *bin = (GstBin *) gst_element_factory_make ($1, NULL);
@@ -1074,12 +1074,12 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
     g.chain->last.name=NULL;
     g.chain->last.pads=NULL;
   };
-  
+
   /* ensure elements is not empty */
   if(!g.chain->elements){
     g.chain->elements= g_slist_prepend (NULL, NULL);
   };
-  
+
   /* put all elements in our bin if necessary */
   if(g.chain->elements->next){
     bin = GST_BIN (gst_element_factory_make ("pipeline", NULL));
@@ -1091,7 +1091,7 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
     }
     g_slist_free (g.chain->elements);
     g.chain->elements = g_slist_prepend (NULL, bin);
-  } 
+  }
 
   ret = (GstElement *) g.chain->elements->data;
   g_slist_free (g.chain->elements);
