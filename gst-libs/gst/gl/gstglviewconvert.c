@@ -352,12 +352,16 @@ gst_gl_view_convert_set_context (GstGLViewConvert * viewconvert,
 
 static gboolean
 _view_convert_set_format (GstGLViewConvert * viewconvert,
-    GstVideoInfo * in_info, GstVideoInfo * out_info)
+    GstVideoInfo * in_info, GstGLTextureTarget from_target,
+    GstVideoInfo * out_info, GstGLTextureTarget to_target)
 {
+  gboolean passthrough;
   g_return_val_if_fail (GST_IS_GL_VIEW_CONVERT (viewconvert), FALSE);
 
   if (gst_video_info_is_equal (in_info, &viewconvert->in_info) &&
-      gst_video_info_is_equal (out_info, &viewconvert->out_info))
+      gst_video_info_is_equal (out_info, &viewconvert->out_info) &&
+      viewconvert->from_texture_target == from_target &&
+      viewconvert->to_texture_target == to_target)
     return TRUE;
 
   if (GST_VIDEO_INFO_FORMAT (in_info) != GST_VIDEO_FORMAT_RGBA ||
@@ -367,12 +371,22 @@ _view_convert_set_format (GstGLViewConvert * viewconvert,
     return FALSE;
   }
 
+  passthrough = gst_video_info_is_equal (in_info, out_info) &&
+      from_target == to_target;
+
+  if (!passthrough && to_target != GST_GL_TEXTURE_TARGET_2D
+      && to_target != GST_GL_TEXTURE_TARGET_RECTANGLE)
+    return FALSE;
+
   /* FIXME: Compare what changed and decide if we need a full reset or not */
   GST_OBJECT_LOCK (viewconvert);
   gst_gl_view_convert_reset (viewconvert);
 
   viewconvert->in_info = *in_info;
   viewconvert->out_info = *out_info;
+  viewconvert->from_texture_target = from_target;
+  viewconvert->to_texture_target = to_target;
+  viewconvert->caps_passthrough = passthrough;
 
   gst_buffer_replace (&viewconvert->priv->primary_in, NULL);
   gst_buffer_replace (&viewconvert->priv->auxilliary_in, NULL);
@@ -397,6 +411,8 @@ gst_gl_view_convert_set_caps (GstGLViewConvert * viewconvert,
 {
   GstVideoInfo in_info, out_info;
   GstCapsFeatures *in_features, *out_features;
+  GstGLTextureTarget from_target = GST_GL_TEXTURE_TARGET_2D;
+  GstGLTextureTarget to_target = GST_GL_TEXTURE_TARGET_2D;
 
   g_return_val_if_fail (GST_IS_GL_VIEW_CONVERT (viewconvert), FALSE);
   g_return_val_if_fail (GST_IS_CAPS (in_caps), FALSE);
@@ -421,7 +437,30 @@ gst_gl_view_convert_set_caps (GstGLViewConvert * viewconvert,
   if (!gst_video_info_from_caps (&out_info, out_caps))
     return FALSE;
 
-  return _view_convert_set_format (viewconvert, &in_info, &out_info);
+  {
+    GstStructure *in_s = gst_caps_get_structure (in_caps, 0);
+    GstStructure *out_s = gst_caps_get_structure (out_caps, 0);
+
+    if (gst_structure_has_field_typed (in_s, "texture-target", G_TYPE_STRING)) {
+      from_target =
+          gst_gl_texture_target_from_string (gst_structure_get_string (in_s,
+              "texture-target"));
+    }
+
+    if (gst_structure_has_field_typed (out_s, "texture-target", G_TYPE_STRING)) {
+      to_target =
+          gst_gl_texture_target_from_string (gst_structure_get_string (out_s,
+              "texture-target"));
+    }
+
+    if (to_target == GST_GL_TEXTURE_TARGET_NONE
+        || from_target == GST_GL_TEXTURE_TARGET_NONE)
+      /* invalid caps */
+      return FALSE;
+  }
+
+  return _view_convert_set_format (viewconvert, &in_info, from_target,
+      &out_info, to_target);
 }
 
 /* Function that can halve the value
@@ -2218,11 +2257,18 @@ gst_gl_view_convert_get_output (GstGLViewConvert * viewconvert,
   if (priv->input_mode == priv->output_mode &&
       priv->input_flags == priv->output_flags &&
       viewconvert->in_info.width == viewconvert->out_info.width &&
-      viewconvert->in_info.height == viewconvert->out_info.height) {
+      viewconvert->in_info.height == viewconvert->out_info.height &&
+      viewconvert->from_texture_target == viewconvert->to_texture_target) {
     /* passthrough - just pass input buffers */
     outbuf = gst_buffer_ref (priv->primary_in);
     if (in_mode == GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME)
       priv->auxilliary_out = gst_buffer_ref (priv->auxilliary_in);
+    goto done_clear_input;
+  }
+
+  /* We can't output to OES textures, they're only supported for passthrough */
+  if (viewconvert->to_texture_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES) {
+    ret = GST_FLOW_ERROR;
     goto done_clear_input;
   }
 
