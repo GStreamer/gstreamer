@@ -58,11 +58,6 @@ typedef struct _GstVideoOverlayRectangle      GstVideoOverlayRectangle;
  *
  * Returns: (transfer full): @comp
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstVideoOverlayRectangle *
-gst_video_overlay_rectangle_ref (GstVideoOverlayRectangle * comp);
-#endif
-
 static inline GstVideoOverlayRectangle *
 gst_video_overlay_rectangle_ref (GstVideoOverlayRectangle * comp)
 {
@@ -76,11 +71,6 @@ gst_video_overlay_rectangle_ref (GstVideoOverlayRectangle * comp)
  * Decreases the refcount of the rectangle. If the refcount reaches 0, the
  * rectangle will be freed.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void
-gst_video_overlay_rectangle_unref (GstVideoOverlayRectangle * comp);
-#endif
-
 static inline void
 gst_video_overlay_rectangle_unref (GstVideoOverlayRectangle * comp)
 {
@@ -210,11 +200,6 @@ typedef struct _GstVideoOverlayComposition      GstVideoOverlayComposition;
  *
  * Returns: (transfer full): @comp
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstVideoOverlayComposition *
-gst_video_overlay_composition_ref (GstVideoOverlayComposition * comp);
-#endif
-
 static inline GstVideoOverlayComposition *
 gst_video_overlay_composition_ref (GstVideoOverlayComposition * comp)
 {
@@ -228,11 +213,6 @@ gst_video_overlay_composition_ref (GstVideoOverlayComposition * comp)
  * Decreases the refcount of the composition. If the refcount reaches 0, the
  * composition will be freed.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void
-gst_video_overlay_composition_unref (GstVideoOverlayComposition * comp);
-#endif
-
 static inline void
 gst_video_overlay_composition_unref (GstVideoOverlayComposition * comp)
 {
