@@ -90,10 +90,6 @@ void              gst_rtsp_thread_stop     (GstRTSPThread * thread);
  *
  * Returns: (transfer full): @thread (for convenience when doing assignments)
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstRTSPThread * gst_rtsp_thread_ref (GstRTSPThread * thread);
-#endif
-
 static inline GstRTSPThread *
 gst_rtsp_thread_ref (GstRTSPThread * thread)
 {
@@ -106,11 +102,6 @@ gst_rtsp_thread_ref (GstRTSPThread * thread)
  *
  * Decrease the refcount of an thread, freeing it if the refcount reaches 0.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void gst_rtsp_thread_unref (GstRTSPPermissions * thread);
-#endif
-
-
 static inline void
 gst_rtsp_thread_unref (GstRTSPThread * thread)
 {

@@ -54,10 +54,6 @@ struct _GstRTSPToken {
  *
  * Returns: (transfer full): @token (for convenience when doing assignments)
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstRTSPToken * gst_rtsp_token_ref (GstRTSPToken * token);
-#endif
-
 static inline GstRTSPToken *
 gst_rtsp_token_ref (GstRTSPToken * token)
 {
@@ -70,10 +66,6 @@ gst_rtsp_token_ref (GstRTSPToken * token)
  *
  * Decrease the refcount of an token, freeing it if the refcount reaches 0.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void gst_rtsp_token_unref (GstRTSPToken * token);
-#endif
-
 static inline void
 gst_rtsp_token_unref (GstRTSPToken * token)
 {

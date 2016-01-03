@@ -52,10 +52,6 @@ struct _GstRTSPPermissions {
  *
  * Returns: (transfer full): @permissions (for convenience when doing assignments)
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstRTSPPermissions * gst_rtsp_permissions_ref (GstRTSPPermissions * permissions);
-#endif
-
 static inline GstRTSPPermissions *
 gst_rtsp_permissions_ref (GstRTSPPermissions * permissions)
 {
@@ -68,10 +64,6 @@ gst_rtsp_permissions_ref (GstRTSPPermissions * permissions)
  *
  * Decrease the refcount of an permissions, freeing it if the refcount reaches 0.
  */
-#ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void gst_rtsp_permissions_unref (GstRTSPPermissions * permissions);
-#endif
-
 static inline void
 gst_rtsp_permissions_unref (GstRTSPPermissions * permissions)
 {
