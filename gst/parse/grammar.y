@@ -490,15 +490,20 @@ static void gst_parse_free_delayed_link (DelayedLink *link)
   g_slice_free (DelayedLink, link);
 }
 
+#define PRETTY_PAD_NAME_FMT "%s %s of %s named %s"
+#define PRETTY_PAD_NAME_ARGS(elem, pad_name) \
+  (pad_name ? "pad " : "some"), (pad_name ? pad_name : "pad"), \
+  G_OBJECT_TYPE_NAME(elem), GST_STR_NULL (GST_ELEMENT_NAME (elem))
+
 static void gst_parse_no_more_pads (GstElement *src, gpointer data)
 {
   DelayedLink *link = data;
 
   GST_ELEMENT_WARNING(src, PARSE, DELAYED_LINK,
     (_("Delayed linking failed.")),
-    ("failed delayed linking %s:%s to %s:%s",
-                   GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (link->src_pad),
-                   GST_STR_NULL (GST_ELEMENT_NAME (link->sink)), GST_STR_NULL (link->sink_pad)));
+    ("failed delayed linking " PRETTY_PAD_NAME_FMT " to " PRETTY_PAD_NAME_FMT,
+        PRETTY_PAD_NAME_ARGS (src, link->src_pad),
+        PRETTY_PAD_NAME_ARGS (link->sink, link->sink_pad)));
   /* we keep the handlers connected, so that in case an element still adds a pad
    * despite no-more-pads, we will consider it for pending delayed links */
 }
@@ -507,17 +512,19 @@ static void gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
 {
   DelayedLink *link = data;
 
-  GST_CAT_INFO (GST_CAT_PIPELINE, "trying delayed linking %s:%s to %s:%s",
-                GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (link->src_pad),
-                GST_STR_NULL (GST_ELEMENT_NAME (link->sink)), GST_STR_NULL (link->sink_pad));
+  GST_CAT_INFO (GST_CAT_PIPELINE,
+                "trying delayed linking " PRETTY_PAD_NAME_FMT " to " PRETTY_PAD_NAME_FMT,
+                PRETTY_PAD_NAME_ARGS (src, link->src_pad),
+                PRETTY_PAD_NAME_ARGS (link->sink, link->sink_pad));
 
   if (gst_element_link_pads_filtered (src, link->src_pad, link->sink,
       link->sink_pad, link->caps)) {
     /* do this here, we don't want to get any problems later on when
      * unlocking states */
-    GST_CAT_DEBUG (GST_CAT_PIPELINE, "delayed linking %s:%s to %s:%s worked",
-               	   GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (link->src_pad),
-               	   GST_STR_NULL (GST_ELEMENT_NAME (link->sink)), GST_STR_NULL (link->sink_pad));
+    GST_CAT_DEBUG (GST_CAT_PIPELINE,
+                   "delayed linking " PRETTY_PAD_NAME_FMT " to " PRETTY_PAD_NAME_FMT " worked",
+               	   PRETTY_PAD_NAME_ARGS (src, link->src_pad),
+                   PRETTY_PAD_NAME_ARGS (link->sink, link->sink_pad));
     g_signal_handler_disconnect (src, link->no_more_pads_signal_id);
     /* releases 'link' */
     g_signal_handler_disconnect (src, link->pad_added_signal_id);
@@ -542,9 +549,10 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
 
       /* TODO: maybe we should check if src_pad matches this template's names */
 
-      GST_CAT_DEBUG (GST_CAT_PIPELINE, "trying delayed link %s:%s to %s:%s",
-                     GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (src_pad),
-                     GST_STR_NULL (GST_ELEMENT_NAME (sink)), GST_STR_NULL (sink_pad));
+      GST_CAT_DEBUG (GST_CAT_PIPELINE,
+                     "trying delayed link " PRETTY_PAD_NAME_FMT " to " PRETTY_PAD_NAME_FMT,
+                     PRETTY_PAD_NAME_ARGS (src, src_pad),
+                     PRETTY_PAD_NAME_ARGS (sink, sink_pad));
 
       data->src_pad = g_strdup (src_pad);
       data->sink = sink;
@@ -582,9 +590,9 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
   g_assert (GST_IS_ELEMENT (sink));
 
   GST_CAT_INFO (GST_CAT_PIPELINE,
-      "linking %s:%s to %s:%s (%u/%u) with caps \"%" GST_PTR_FORMAT "\"",
-      GST_ELEMENT_NAME (src), link->src.name ? link->src.name : "(any)",
-      GST_ELEMENT_NAME (sink), link->sink.name ? link->sink.name : "(any)",
+      "linking " PRETTY_PAD_NAME_FMT " to " PRETTY_PAD_NAME_FMT " (%u/%u) with caps \"%" GST_PTR_FORMAT "\"",
+      PRETTY_PAD_NAME_ARGS (src, link->src.name),
+      PRETTY_PAD_NAME_ARGS (sink, link->sink.name),
       g_slist_length (srcs), g_slist_length (sinks), link->caps);
 
   if (!srcs || !sinks) {
