@@ -142,6 +142,22 @@ _set_caps_features_with_passthrough (const GstCaps * caps,
   return tmp;
 }
 
+static GstCaps *
+_caps_intersect_texture_target (GstCaps * caps, GstGLTextureTarget target_mask)
+{
+  GValue targets = G_VALUE_INIT;
+  GstCaps *ret, *target;
+
+  target = gst_caps_copy (caps);
+  gst_gl_value_set_texture_target_from_mask (&targets, target_mask);
+  gst_caps_set_value (target, "texture-target", &targets);
+
+  ret = gst_caps_intersect_full (caps, target, GST_CAPS_INTERSECT_FIRST);
+
+  gst_caps_unref (target);
+  return ret;
+}
+
 typedef enum
 {
   METHOD_FLAG_CAN_SHARE_CONTEXT = 1,
@@ -195,6 +211,27 @@ _gl_memory_upload_transform_caps (GstGLContext * context,
       GST_CAPS_FEATURE_MEMORY_GL_MEMORY, passthrough);
 
   gst_caps_features_free (passthrough);
+
+  if (direction == GST_PAD_SINK) {
+    GstGLTextureTarget target_mask = 0;
+    GstCaps *tmp;
+
+    target_mask |= 1 << GST_GL_TEXTURE_TARGET_2D;
+    target_mask |= 1 << GST_GL_TEXTURE_TARGET_RECTANGLE;
+    target_mask |= 1 << GST_GL_TEXTURE_TARGET_EXTERNAL_OES;
+    tmp = _caps_intersect_texture_target (ret, target_mask);
+    gst_caps_unref (ret);
+    ret = tmp;
+  } else {
+    gint i, n;
+
+    n = gst_caps_get_size (ret);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (ret, i);
+
+      gst_structure_remove_fields (s, "texture-target", NULL);
+    }
+  }
 
   return ret;
 }
@@ -407,9 +444,15 @@ _egl_image_upload_transform_caps (GstGLContext * context,
   GstCaps *ret;
 
   if (direction == GST_PAD_SINK) {
+    GstCaps *tmp;
+
     ret =
         _set_caps_features_with_passthrough (caps,
         GST_CAPS_FEATURE_MEMORY_GL_MEMORY, passthrough);
+
+    tmp = _caps_intersect_texture_target (ret, 1 << GST_GL_TEXTURE_TARGET_2D);
+    gst_caps_unref (ret);
+    ret = tmp;
   } else {
     gint i, n;
 
@@ -622,9 +665,15 @@ _dma_buf_upload_transform_caps (GstGLContext * context,
   GstCaps *ret;
 
   if (direction == GST_PAD_SINK) {
+    GstCaps *tmp;
+
     ret =
         _set_caps_features_with_passthrough (caps,
         GST_CAPS_FEATURE_MEMORY_GL_MEMORY, passthrough);
+
+    tmp = _caps_intersect_texture_target (ret, 1 << GST_GL_TEXTURE_TARGET_2D);
+    gst_caps_unref (ret);
+    ret = tmp;
   } else {
     gint i, n;
 
@@ -888,9 +937,15 @@ _upload_meta_upload_transform_caps (GstGLContext * context,
   GstCaps *ret;
 
   if (direction == GST_PAD_SINK) {
+    GstCaps *tmp;
+
     ret =
         _set_caps_features_with_passthrough (caps,
         GST_CAPS_FEATURE_MEMORY_GL_MEMORY, passthrough);
+
+    tmp = _caps_intersect_texture_target (ret, 1 << GST_GL_TEXTURE_TARGET_2D);
+    gst_caps_unref (ret);
+    ret = tmp;
   } else {
     gint i, n;
 
@@ -1176,9 +1231,18 @@ _raw_data_upload_transform_caps (GstGLContext * context,
   GstCaps *ret;
 
   if (direction == GST_PAD_SINK) {
+    GstGLTextureTarget target_mask = 0;
+    GstCaps *tmp;
+
     ret =
         _set_caps_features_with_passthrough (caps,
         GST_CAPS_FEATURE_MEMORY_GL_MEMORY, passthrough);
+
+    target_mask |= 1 << GST_GL_TEXTURE_TARGET_2D;
+    target_mask |= 1 << GST_GL_TEXTURE_TARGET_RECTANGLE;
+    tmp = _caps_intersect_texture_target (ret, target_mask);
+    gst_caps_unref (ret);
+    ret = tmp;
   } else {
     gint i, n;
 

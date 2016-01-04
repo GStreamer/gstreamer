@@ -701,41 +701,6 @@ gst_gl_color_convert_set_caps (GstGLColorConvert * convert,
   return ret;
 }
 
-static guint
-_get_target_bitmask_from_g_value (const GValue * targets)
-{
-  guint new_targets = 0;
-
-  if (targets == NULL) {
-    new_targets = 1 << GST_GL_TEXTURE_TARGET_2D;
-  } else if (G_TYPE_CHECK_VALUE_TYPE (targets, G_TYPE_STRING)) {
-    GstGLTextureTarget target;
-    const gchar *str;
-
-    str = g_value_get_string (targets);
-    target = gst_gl_texture_target_from_string (str);
-
-    if (target)
-      new_targets |= 1 << target;
-  } else if (G_TYPE_CHECK_VALUE_TYPE (targets, GST_TYPE_LIST)) {
-    gint j, m;
-
-    m = gst_value_list_get_size (targets);
-    for (j = 0; j < m; j++) {
-      const GValue *val = gst_value_list_get_value (targets, j);
-      GstGLTextureTarget target;
-      const gchar *str;
-
-      str = g_value_get_string (val);
-      target = gst_gl_texture_target_from_string (str);
-      if (target)
-        new_targets |= 1 << target;
-    }
-  }
-
-  return new_targets;
-}
-
 /* copies the given caps */
 static GstCaps *
 gst_gl_color_convert_caps_remove_format_info (GstCaps * caps)
@@ -809,8 +774,8 @@ gst_gl_color_convert_fixate_caps (GstGLContext * convert,
   targets = gst_structure_get_value (s, "texture-target");
   other_targets = gst_structure_get_value (s_other, "texture-target");
 
-  targets_mask = _get_target_bitmask_from_g_value (targets);
-  other_targets_mask = _get_target_bitmask_from_g_value (other_targets);
+  targets_mask = gst_gl_value_get_texture_target_mask (targets);
+  other_targets_mask = gst_gl_value_get_texture_target_mask (other_targets);
 
   /* XXX: attempt to fixate the format/colorimetry/etc */
   other = gst_caps_fixate (other);

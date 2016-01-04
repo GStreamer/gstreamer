@@ -947,3 +947,132 @@ gst_gl_caps_replace_all_caps_features (const GstCaps * caps,
 
   return tmp;
 }
+
+/**
+ * gst_gl_value_get_texture_target_mask:
+ * @value: an initialized #GValue of type G_TYPE_STRING
+ *
+ * See gst_gl_value_set_texture_target_mask() for what entails a mask
+ *
+ * Returns: the mask of #GstGLTextureTarget's in @value
+ */
+GstGLTextureTarget
+gst_gl_value_get_texture_target_mask (const GValue * targets)
+{
+  guint new_targets = 0;
+
+  g_return_val_if_fail (targets != NULL, GST_GL_TEXTURE_TARGET_NONE);
+
+  if (G_TYPE_CHECK_VALUE_TYPE (targets, G_TYPE_STRING)) {
+    GstGLTextureTarget target;
+    const gchar *str;
+
+    str = g_value_get_string (targets);
+    target = gst_gl_texture_target_from_string (str);
+
+    if (target)
+      new_targets |= 1 << target;
+  } else if (G_TYPE_CHECK_VALUE_TYPE (targets, GST_TYPE_LIST)) {
+    gint j, m;
+
+    m = gst_value_list_get_size (targets);
+    for (j = 0; j < m; j++) {
+      const GValue *val = gst_value_list_get_value (targets, j);
+      GstGLTextureTarget target;
+      const gchar *str;
+
+      str = g_value_get_string (val);
+      target = gst_gl_texture_target_from_string (str);
+      if (target)
+        new_targets |= 1 << target;
+    }
+  }
+
+  return new_targets;
+}
+
+/**
+ * gst_gl_value_set_texture_target:
+ * @value: an initialized #GValue of type G_TYPE_STRING
+ * @target: a #GstGLTextureTarget's
+ *
+ * Returns: whether the @target could be set on @value
+ */
+gboolean
+gst_gl_value_set_texture_target (GValue * value, GstGLTextureTarget target)
+{
+  g_return_val_if_fail (value != NULL, FALSE);
+  g_return_val_if_fail (target != GST_GL_TEXTURE_TARGET_NONE, FALSE);
+
+  if (target == GST_GL_TEXTURE_TARGET_2D) {
+    g_value_set_static_string (value, GST_GL_TEXTURE_TARGET_2D_STR);
+  } else if (target == GST_GL_TEXTURE_TARGET_RECTANGLE) {
+    g_value_set_static_string (value, GST_GL_TEXTURE_TARGET_RECTANGLE_STR);
+  } else if (target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES) {
+    g_value_set_static_string (value, GST_GL_TEXTURE_TARGET_EXTERNAL_OES_STR);
+  } else {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static guint64
+_gst_gl_log2_int64 (guint64 value)
+{
+  guint64 ret = 0;
+
+  while (value >>= 1)
+    ret++;
+
+  return ret;
+}
+
+/**
+ * gst_gl_value_set_texture_target_from_mask:
+ * @value: an uninitialized #GValue
+ * @target_mask: a bitwise mask of #GstGLTextureTarget's
+ *
+ * A mask is a bitwise OR of (1 << target) where target is a valid
+ * #GstGLTextureTarget
+ *
+ * Returns: whether the @target_mask could be set on @value
+ */
+gboolean
+gst_gl_value_set_texture_target_from_mask (GValue * value,
+    GstGLTextureTarget target_mask)
+{
+  g_return_val_if_fail (value != NULL, FALSE);
+  g_return_val_if_fail (target_mask != GST_GL_TEXTURE_TARGET_NONE, FALSE);
+
+  if ((target_mask & (target_mask - 1)) == 0) {
+    /* only one texture target set */
+    g_value_init (value, G_TYPE_STRING);
+    return gst_gl_value_set_texture_target (value,
+        _gst_gl_log2_int64 (target_mask));
+  } else {
+    GValue item = G_VALUE_INIT;
+    gboolean ret = FALSE;
+
+    g_value_init (value, GST_TYPE_LIST);
+    g_value_init (&item, G_TYPE_STRING);
+    if (target_mask & (1 << GST_GL_TEXTURE_TARGET_2D)) {
+      gst_gl_value_set_texture_target (&item, GST_GL_TEXTURE_TARGET_2D);
+      gst_value_list_append_value (value, &item);
+      ret = TRUE;
+    }
+    if (target_mask & (1 << GST_GL_TEXTURE_TARGET_RECTANGLE)) {
+      gst_gl_value_set_texture_target (&item, GST_GL_TEXTURE_TARGET_RECTANGLE);
+      gst_value_list_append_value (value, &item);
+      ret = TRUE;
+    }
+    if (target_mask & (1 << GST_GL_TEXTURE_TARGET_EXTERNAL_OES)) {
+      gst_gl_value_set_texture_target (&item,
+          GST_GL_TEXTURE_TARGET_EXTERNAL_OES);
+      gst_value_list_append_value (value, &item);
+      ret = TRUE;
+    }
+
+    return ret;
+  }
+}
