@@ -1427,17 +1427,23 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
     if (period_id) {
       if (!gst_mpd_client_set_period_id (new_client, period_id)) {
         GST_DEBUG_OBJECT (demux, "Error setting up the updated manifest file");
+        gst_mpd_client_free (new_client);
+        gst_buffer_unmap (buffer, &mapinfo);
         return GST_FLOW_EOS;
       }
     } else {
       if (!gst_mpd_client_set_period_index (new_client, period_idx)) {
         GST_DEBUG_OBJECT (demux, "Error setting up the updated manifest file");
+        gst_mpd_client_free (new_client);
+        gst_buffer_unmap (buffer, &mapinfo);
         return GST_FLOW_EOS;
       }
     }
 
     if (!gst_dash_demux_setup_mpdparser_streams (dashdemux, new_client)) {
       GST_ERROR_OBJECT (demux, "Failed to setup streams on manifest " "update");
+      gst_mpd_client_free (new_client);
+      gst_buffer_unmap (buffer, &mapinfo);
       return GST_FLOW_ERROR;
     }
 
@@ -1453,6 +1459,8 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
         GST_DEBUG_OBJECT (demux,
             "Stream of index %d is missing from manifest update",
             demux_stream->index);
+        gst_mpd_client_free (new_client);
+        gst_buffer_unmap (buffer, &mapinfo);
         return GST_FLOW_EOS;
       }
 
