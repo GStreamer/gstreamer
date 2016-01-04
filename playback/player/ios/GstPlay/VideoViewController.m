@@ -1,5 +1,5 @@
 #import "VideoViewController.h"
-#import <gst/player/gstplayer.h>
+#import <gst/player/player.h>
 #import <UIKit/UIKit.h>
 
 @interface VideoViewController () {

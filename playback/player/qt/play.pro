@@ -6,8 +6,6 @@ CONFIG += c++11
 
 DEFINES += GST_USE_UNSTABLE_API
 
-INCLUDEPATH += ../lib
-
 RESOURCES += qml.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
@@ -22,11 +20,8 @@ QT_CONFIG -= no-pkg-config
 CONFIG += link_pkgconfig
 PKGCONFIG = \
     gstreamer-1.0 \
-    gstreamer-audio-1.0 \
-    gstreamer-tag-1.0 \
-    gstreamer-pbutils-1.0 \
-    gstreamer-video-1.0 \
-    gstreamer-gl-1.0
+    gstreamer-player-1.0 \
+    gstreamer-tag-1.0
 }
 
 macx {
@@ -46,8 +41,6 @@ HEADERS += \
 
 SOURCES += main.cpp \
     qgstplayer.cpp \
-    ../lib/gst/player/gstplayer.c \
-    ../lib/gst/player/gstplayer-media-info.c \
     player.cpp \
     quickrenderer.cpp \
     imagesample.cpp

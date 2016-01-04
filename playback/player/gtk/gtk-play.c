@@ -24,7 +24,6 @@
 
 #include <gst/gst.h>
 #include <gst/tag/tag.h>
-#include <gst/video/videooverlay.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <gdk/gdk.h>
