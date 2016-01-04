@@ -73,6 +73,8 @@ typedef struct
   GstClock *clock;              /* GstNetClientInternalClock */
 
   GList *clocks;                /* GstNetClientClocks */
+
+  GstClockID remove_id;
 } ClockCache;
 
 G_LOCK_DEFINE_STATIC (clocks_lock);
@@ -1102,6 +1104,24 @@ update_clock_cache (ClockCache * cache)
   GST_OBJECT_UNLOCK (cache->clock);
 }
 
+static gboolean
+remove_clock_cache (GstClock * clock, GstClockTime time, GstClockID id,
+    gpointer user_data)
+{
+  ClockCache *cache = user_data;
+
+  G_LOCK (clocks_lock);
+  if (!cache->clocks) {
+    gst_clock_id_unref (cache->remove_id);
+    gst_object_unref (cache->clock);
+    g_free (cache);
+    clocks = g_list_remove (clocks, cache);
+  }
+  G_UNLOCK (clocks_lock);
+
+  return TRUE;
+}
+
 static void
 gst_net_client_clock_finalize (GObject * object)
 {
@@ -1122,9 +1142,13 @@ gst_net_client_clock_finalize (GObject * object)
       if (cache->clocks) {
         update_clock_cache (cache);
       } else {
-        gst_object_unref (cache->clock);
-        g_free (cache);
-        clocks = g_list_remove (clocks, cache);
+        GstClock *sysclock = gst_system_clock_obtain ();
+        GstClockTime time = gst_clock_get_time (sysclock) + 60 * GST_SECOND;
+
+        cache->remove_id = gst_clock_new_single_shot_id (sysclock, time);
+        gst_clock_id_wait_async (cache->remove_id, remove_clock_cache, cache,
+            NULL);
+        gst_object_unref (sysclock);
       }
       break;
     }
@@ -1275,6 +1299,11 @@ gst_net_client_clock_constructed (GObject * object)
     if (strcmp (internal_clock->address, self->priv->address) == 0 &&
         internal_clock->port == self->priv->port) {
       cache = tmp;
+
+      if (cache->remove_id) {
+        gst_clock_id_unschedule (cache->remove_id);
+        cache->remove_id = NULL;
+      }
       break;
     }
   }
