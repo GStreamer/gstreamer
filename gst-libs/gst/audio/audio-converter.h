@@ -103,6 +103,11 @@ gsize                gst_audio_converter_get_in_frames   (GstAudioConverter *con
 
 gsize                gst_audio_converter_get_max_latency (GstAudioConverter *convert);
 
+gboolean             gst_audio_converter_update_rates    (GstAudioConverter *convert,
+                                                          gint in_rate, gint out_rate,
+                                                          GstStructure *options);
+void                 gst_audio_converter_get_rates       (GstAudioConverter *convert,
+                                                          gint *in_rate, gint *out_rate);
 
 gboolean             gst_audio_converter_samples         (GstAudioConverter * convert,
                                                           GstAudioConverterFlags flags,

@@ -140,14 +140,12 @@ typedef enum {
  * @GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED: samples are non-interleaved. an array
  *    of blocks of samples, one for each channel, should be passed to the resample
  *    function.
- * @GST_AUDIO_RESAMPLER_FLAG_VARIABLE_RATE: allow arbitrary sample rate changes.
  *
  * Different resampler flags.
  */
 typedef enum {
   GST_AUDIO_RESAMPLER_FLAG_NONE                 = (0),
   GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED      = (1 << 0),
-  GST_AUDIO_RESAMPLER_FLAG_VARIABLE_RATE        = (1 << 1),
 } GstAudioResamplerFlags;
 
 #define GST_AUDIO_RESAMPLER_QUALITY_MIN 0
@@ -181,7 +179,7 @@ gsize               gst_audio_resampler_get_max_latency  (GstAudioResampler *res
 void                gst_audio_resampler_resample         (GstAudioResampler * resampler,
                                                           gpointer in[], gsize in_frames,
                                                           gpointer out[], gsize out_frames,
-                                                          gsize *produced, gsize *consumed);
+                                                          gsize *in_consumed, gsize *out_produced);
 
 G_END_DECLS
 

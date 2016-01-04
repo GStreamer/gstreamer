@@ -71,7 +71,7 @@ struct _GstAudioResample {
   /* state */
   GstAudioInfo in;
   GstAudioInfo out;
-  GstAudioResampler *resamp;
+  GstAudioConverter *converter;
 };
 
 struct _GstAudioResampleClass {

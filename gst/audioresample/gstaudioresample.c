@@ -85,24 +85,9 @@ enum
   PROP_SINC_FILTER_AUTO_THRESHOLD
 };
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define SUPPORTED_CAPS \
-  GST_AUDIO_CAPS_MAKE ("{ F32LE, F64LE, S32LE, S16LE }") \
+  GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL) \
   ", layout = (string) { interleaved, non-interleaved }"
-#else
-#define SUPPORTED_CAPS \
-  GST_AUDIO_CAPS_MAKE ("{ F32BE, F64BE, S32BE, S16BE }") \
-  ", layout = (string) { interleaved, non-interleaved }"
-#endif
-
-/* If TRUE integer arithmetic resampling is faster and will be used if appropriate */
-#if defined AUDIORESAMPLE_FORMAT_INT
-static gboolean gst_audio_resample_use_int = TRUE;
-#elif defined AUDIORESAMPLE_FORMAT_FLOAT
-static gboolean gst_audio_resample_use_int = FALSE;
-#else
-static gboolean gst_audio_resample_use_int = FALSE;
-#endif
 
 static GstStaticPadTemplate gst_audio_resample_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -253,9 +238,9 @@ gst_audio_resample_stop (GstBaseTransform * base)
 {
   GstAudioResample *resample = GST_AUDIO_RESAMPLE (base);
 
-  if (resample->resamp) {
-    gst_audio_resampler_free (resample->resamp);
-    resample->resamp = NULL;
+  if (resample->converter) {
+    gst_audio_converter_free (resample->converter);
+    resample->converter = NULL;
   }
   return TRUE;
 }
@@ -363,10 +348,13 @@ make_options (GstAudioResample * resample, GstAudioInfo * in,
   GstStructure *options;
 
   options = gst_structure_new_empty ("resampler-options");
-  gst_audio_resampler_options_set_quality (resample->method,
-      resample->quality, in->rate, out->rate, options);
+  if (in != NULL && out != NULL)
+    gst_audio_resampler_options_set_quality (resample->method,
+        resample->quality, in->rate, out->rate, options);
 
   gst_structure_set (options,
+      GST_AUDIO_CONVERTER_OPT_RESAMPLER_METHOD, GST_TYPE_AUDIO_RESAMPLER_METHOD,
+      resample->method,
       GST_AUDIO_RESAMPLER_OPT_FILTER_MODE, GST_TYPE_AUDIO_RESAMPLER_FILTER_MODE,
       resample->sinc_filter_mode, GST_AUDIO_RESAMPLER_OPT_FILTER_MODE_THRESHOLD,
       G_TYPE_UINT, resample->sinc_filter_auto_threshold, NULL);
@@ -382,43 +370,40 @@ gst_audio_resample_update_state (GstAudioResample * resample, GstAudioInfo * in,
   gsize old_latency = -1;
   GstStructure *options;
 
-  if (resample->resamp == NULL && in == NULL && out == NULL)
+  if (resample->converter == NULL && in == NULL && out == NULL)
     return TRUE;
 
   options = make_options (resample, in, out);
 
-  if (resample->resamp)
-    old_latency = gst_audio_resampler_get_max_latency (resample->resamp);
+  if (resample->converter)
+    old_latency = gst_audio_converter_get_max_latency (resample->converter);
 
   /* if channels and layout changed, destroy existing resampler */
-  if ((in->finfo != resample->in.finfo ||
+  if (in != NULL && (in->finfo != resample->in.finfo ||
           in->channels != resample->in.channels ||
-          in->layout != resample->in.layout) && resample->resamp) {
-    gst_audio_resampler_free (resample->resamp);
-    resample->resamp = NULL;
+          in->layout != resample->in.layout) && resample->converter) {
+    gst_audio_converter_free (resample->converter);
+    resample->converter = NULL;
   }
-  if (resample->resamp == NULL) {
-    GstAudioResamplerFlags flags = 0;
-
-    if (in->layout == GST_AUDIO_LAYOUT_NON_INTERLEAVED)
-      flags |= GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED;
-
-    resample->resamp = gst_audio_resampler_new (resample->method,
-        flags, in->finfo->format, in->channels, in->rate, out->rate, options);
-    if (resample->resamp == NULL)
+  if (resample->converter == NULL) {
+    resample->converter = gst_audio_converter_new (0, in, out, options);
+    if (resample->converter == NULL)
       goto resampler_failed;
-  } else {
+  } else if (in && out) {
     gboolean ret;
 
     ret =
-        gst_audio_resampler_update (resample->resamp, in->rate, out->rate,
-        options);
+        gst_audio_converter_update_rates (resample->converter, in->rate,
+        out->rate, options);
     if (!ret)
       goto update_failed;
+  } else {
+    gst_structure_free (options);
   }
   if (old_latency != -1)
     updated_latency =
-        old_latency != gst_audio_resampler_get_max_latency (resample->resamp);
+        old_latency !=
+        gst_audio_converter_get_max_latency (resample->converter);
 
   if (updated_latency)
     gst_element_post_message (GST_ELEMENT (resample),
@@ -556,7 +541,7 @@ gst_audio_resample_dump_drain (GstAudioResample * resample, guint history_len)
   guint num, den;
   gpointer buf;
 
-  g_assert (resample->resamp != NULL);
+  g_assert (resample->converter != NULL);
 
   resample->funcs->get_ratio (resample->state, &num, &den);
 
@@ -588,13 +573,14 @@ gst_audio_resample_push_drain (GstAudioResample * resample, guint history_len)
   GstMapInfo map;
   gpointer out[1];
 
-  g_assert (resample->resamp != NULL);
+  g_assert (resample->converter != NULL);
 
   /* Don't drain samples if we were reset. */
   if (!GST_CLOCK_TIME_IS_VALID (resample->t0))
     return;
 
-  out_len = gst_audio_resampler_get_out_frames (resample->resamp, history_len);
+  out_len =
+      gst_audio_converter_get_out_frames (resample->converter, history_len);
   if (out_len == 0)
     return;
 
@@ -604,7 +590,7 @@ gst_audio_resample_push_drain (GstAudioResample * resample, guint history_len)
   gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
 
   out[0] = map.data;
-  gst_audio_resampler_resample (resample->resamp, NULL, history_len,
+  gst_audio_converter_samples (resample->converter, 0, NULL, history_len,
       out, out_len, &in_processed, &out_processed);
 
   /* If we wrote more than allocated something is really wrong now
@@ -662,8 +648,8 @@ gst_audio_resample_sink_event (GstBaseTransform * base, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       gst_audio_resample_reset_state (resample);
 #if 0
-      if (resample->resamp)
-        resample->funcs->skip_zeros (resample->resamp);
+      if (resample->converter)
+        resample->funcs->skip_zeros (resample->converter);
 #endif
       resample->num_gap_samples = 0;
       resample->num_nongap_samples = 0;
@@ -676,15 +662,16 @@ gst_audio_resample_sink_event (GstBaseTransform * base, GstEvent * event)
       break;
     case GST_EVENT_SEGMENT:
 #if 0
-      if (resample->resamp) {
-        guint latency = resample->funcs->get_input_latency (resample->resamp);
+      if (resample->converter) {
+        guint latency =
+            resample->funcs->get_input_latency (resample->converter);
         gst_audio_resample_push_drain (resample, latency);
       }
 #endif
       gst_audio_resample_reset_state (resample);
 #if 0
-      if (resample->resamp)
-        resample->funcs->skip_zeros (resample->resamp);
+      if (resample->converter)
+        resample->funcs->skip_zeros (resample->converter);
 #endif
       resample->num_gap_samples = 0;
       resample->num_nongap_samples = 0;
@@ -697,8 +684,9 @@ gst_audio_resample_sink_event (GstBaseTransform * base, GstEvent * event)
       break;
     case GST_EVENT_EOS:
 #if 0
-      if (resample->resamp) {
-        guint latency = resample->funcs->get_input_latency (resample->resamp);
+      if (resample->converter) {
+        guint latency =
+            resample->funcs->get_input_latency (resample->converter);
         gst_audio_resample_push_drain (resample, latency);
       }
 #endif
@@ -756,7 +744,8 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
   gsize outsize;
   guint32 in_len, in_processed;
   guint32 out_len, out_processed;
-  guint filt_len = gst_audio_resampler_get_max_latency (resample->resamp) * 2;
+  guint filt_len =
+      gst_audio_converter_get_max_latency (resample->converter) * 2;
 
   gst_buffer_map (inbuf, &in_map, GST_MAP_READ);
   gst_buffer_map (outbuf, &out_map, GST_MAP_WRITE);
@@ -822,12 +811,12 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
         gpointer in[1], out[1];
 
         out_test =
-            gst_audio_resampler_get_out_frames (resample->resamp, in_len);
+            gst_audio_converter_get_out_frames (resample->converter, in_len);
         out_test = MIN (out_test, out_len);
 
         in[0] = in_map.data;
         out[0] = out_map.data;
-        gst_audio_resampler_resample (resample->resamp, in, in_len,
+        gst_audio_converter_samples (resample->converter, 0, in, in_len,
             out, out_len, &in_proc, &out_proc);
 
         in_processed = in_proc;
@@ -1124,149 +1113,11 @@ gst_audio_resample_get_property (GObject * object, guint prop_id,
   }
 }
 
-/* FIXME: should have a benchmark fallback for the case where orc is disabled */
-#if defined(AUDIORESAMPLE_FORMAT_AUTO) && !defined(DISABLE_ORC)
-
-#define BENCHMARK_SIZE 512
-
-static gboolean
-_benchmark_int_float (GstAudioResampler * st)
-{
-  gint16 in[BENCHMARK_SIZE] = { 0, }, G_GNUC_UNUSED out[BENCHMARK_SIZE / 2];
-  gfloat in_tmp[BENCHMARK_SIZE], out_tmp[BENCHMARK_SIZE / 2];
-  gint i;
-  guint32 inlen = BENCHMARK_SIZE, outlen = BENCHMARK_SIZE / 2;
-  gpointer inp[1], outp[1];
-  gsize produced, consumed;
-
-  for (i = 0; i < BENCHMARK_SIZE; i++) {
-    gfloat tmp = in[i];
-    in_tmp[i] = tmp / G_MAXINT16;
-  }
-
-  inp[0] = in_tmp;
-  outp[0] = out_tmp;
-
-  gst_audio_resampler_resample (st,
-      inp, inlen, outp, outlen, &produced, &consumed);
-
-  if (outlen == 0) {
-    GST_ERROR ("Failed to use float resampler");
-    return FALSE;
-  }
-
-  for (i = 0; i < outlen; i++) {
-    gfloat tmp = out_tmp[i];
-    out[i] = CLAMP (tmp * G_MAXINT16 + 0.5, G_MININT16, G_MAXINT16);
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_benchmark_int_int (GstAudioResampler * st)
-{
-  gint16 in[BENCHMARK_SIZE] = { 0, }, out[BENCHMARK_SIZE / 2];
-  guint32 inlen = BENCHMARK_SIZE, outlen = BENCHMARK_SIZE / 2;
-  gpointer inp[1], outp[1];
-  gsize produced, consumed;
-
-  inp[0] = in;
-  outp[0] = out;
-
-  gst_audio_resampler_resample (st, inp, inlen, outp, outlen, &produced,
-      &consumed);
-
-  if (outlen == 0) {
-    GST_ERROR ("Failed to use int resampler");
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_benchmark_integer_resampling (void)
-{
-  OrcProfile a, b;
-  gdouble av, bv;
-  GstAudioResampler *sta, *stb;
-  int i;
-
-  orc_profile_init (&a);
-  orc_profile_init (&b);
-
-  sta = gst_audio_resampler_new (GST_AUDIO_RESAMPLER_METHOD_KAISER,
-      0, GST_AUDIO_FORMAT_F32LE, 1, 48000, 24000, NULL);
-  if (sta == NULL) {
-    GST_ERROR ("Failed to create float resampler state");
-    return FALSE;
-  }
-
-  stb = gst_audio_resampler_new (GST_AUDIO_RESAMPLER_METHOD_KAISER,
-      0, GST_AUDIO_FORMAT_S32LE, 1, 48000, 24000, NULL);
-  if (stb == NULL) {
-    gst_audio_resampler_free (sta);
-    GST_ERROR ("Failed to create int resampler state");
-    return FALSE;
-  }
-
-  /* Benchmark */
-  for (i = 0; i < 10; i++) {
-    orc_profile_start (&a);
-    if (!_benchmark_int_float (sta))
-      goto error;
-    orc_profile_stop (&a);
-  }
-
-  /* Benchmark */
-  for (i = 0; i < 10; i++) {
-    orc_profile_start (&b);
-    if (!_benchmark_int_int (stb))
-      goto error;
-    orc_profile_stop (&b);
-  }
-
-  /* Handle results */
-  orc_profile_get_ave_std (&a, &av, NULL);
-  orc_profile_get_ave_std (&b, &bv, NULL);
-
-  /* Remember benchmark result in global variable */
-  gst_audio_resample_use_int = (av > bv);
-  gst_audio_resampler_free (sta);
-  gst_audio_resampler_free (stb);
-
-  if (av > bv)
-    GST_INFO ("Using integer resampler if appropriate: %lf < %lf", bv, av);
-  else
-    GST_INFO ("Using float resampler for everything: %lf <= %lf", av, bv);
-
-  return TRUE;
-
-error:
-  gst_audio_resampler_free (sta);
-  gst_audio_resampler_free (stb);
-
-  return FALSE;
-}
-#endif /* defined(AUDIORESAMPLE_FORMAT_AUTO) && !defined(DISABLE_ORC) */
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (audio_resample_debug, "audioresample", 0,
       "audio resampling element");
-
-#if defined(AUDIORESAMPLE_FORMAT_AUTO) && !defined(DISABLE_ORC)
-  if (!_benchmark_integer_resampling ())
-    return FALSE;
-#else
-  GST_WARNING ("Orc disabled, can't benchmark int vs. float resampler");
-  {
-    GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
-    GST_CAT_WARNING (GST_CAT_PERFORMANCE, "orc disabled, no benchmarking done");
-  }
-#endif
 
   if (!gst_element_register (plugin, "audioresample", GST_RANK_PRIMARY,
           GST_TYPE_AUDIO_RESAMPLE)) {

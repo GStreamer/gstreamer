@@ -924,8 +924,14 @@ gst_audio_resampler_free (GstAudioResampler * resampler)
 static inline gsize
 calc_out (GstAudioResampler * resampler, gsize in)
 {
-  return ((in * resampler->out_rate -
+  gsize out;
+
+  out = ((in * resampler->out_rate -
           resampler->samp_phase) / resampler->in_rate) + 1;
+  GST_LOG ("out %d = ((%d * %d - %d) / %d) + 1", (gint) out,
+      (gint) in, resampler->out_rate, resampler->samp_phase,
+      resampler->in_rate);
+  return out;
 }
 
 /**
@@ -949,6 +955,9 @@ gst_audio_resampler_get_out_frames (GstAudioResampler * resampler,
 
   need = resampler->n_taps + resampler->samp_index + resampler->skip;
   avail = resampler->samples_avail + in_frames;
+  GST_LOG ("need %d = %d + %d + %d, avail %d = %d + %d", (gint) need,
+      resampler->n_taps, resampler->samp_index, resampler->skip,
+      (gint) avail, (gint) resampler->samples_avail, (gint) in_frames);
   if (avail < need)
     return 0;
 
@@ -1026,8 +1035,8 @@ get_sample_bufs (GstAudioResampler * resampler, gsize need)
  * @in_frames: number of input frames
  * @out: output samples
  * @out_frames: maximum output frames
- * @consumed: number of frames consumed
- * @produced: number of frames produced
+ * @in_consumed: number of frames consumed
+ * @out_produced: number of frames produced
  *
  * Perform resampling on @in_frames frames in @in and write at most
  * @out_frames of frames to @out.
@@ -1050,7 +1059,7 @@ get_sample_bufs (GstAudioResampler * resampler, gsize need)
 void
 gst_audio_resampler_resample (GstAudioResampler * resampler,
     gpointer in[], gsize in_frames, gpointer out[], gsize out_frames,
-    gsize * consumed, gsize * produced)
+    gsize * in_consumed, gsize * out_produced)
 {
   gsize samples_avail;
   gsize out2, need;
@@ -1060,8 +1069,8 @@ gst_audio_resampler_resample (GstAudioResampler * resampler,
   if (resampler->skip >= in_frames) {
     /* we need tp skip all input */
     resampler->skip -= in_frames;
-    *consumed = in_frames;
-    *produced = 0;
+    *in_consumed = in_frames;
+    *out_produced = 0;
     return;
   }
   /* skip the last samples by advancing the sample index */
@@ -1081,8 +1090,8 @@ gst_audio_resampler_resample (GstAudioResampler * resampler,
   need = resampler->n_taps + resampler->samp_index;
   if (samples_avail < need) {
     /* not enough samples to start */
-    *consumed = in_frames;
-    *produced = 0;
+    *in_consumed = in_frames;
+    *out_produced = 0;
     return;
   }
 
@@ -1098,15 +1107,15 @@ gst_audio_resampler_resample (GstAudioResampler * resampler,
 
   /* resample all channels */
   resampler->resample (resampler, sbuf, samples_avail, out, out_frames,
-      consumed, produced, TRUE);
+      in_consumed, out_produced, TRUE);
 
   GST_LOG ("in %" G_GSIZE_FORMAT ", used %" G_GSIZE_FORMAT ", consumed %"
       G_GSIZE_FORMAT ", produced %" G_GSIZE_FORMAT, in_frames, samples_avail,
-      *consumed, *produced);
+      *in_consumed, *out_produced);
 
   /* update pointers */
-  if (*consumed > 0) {
-    gssize left = samples_avail - *consumed;
+  if (*in_consumed > 0) {
+    gssize left = samples_avail - *in_consumed;
     if (left > 0) {
       /* we consumed part of our samples */
       resampler->samples_avail = left;
@@ -1116,6 +1125,6 @@ gst_audio_resampler_resample (GstAudioResampler * resampler,
       resampler->skip = -left;
     }
     /* we always consume everything */
-    *consumed = in_frames;
+    *in_consumed = in_frames;
   }
 }
