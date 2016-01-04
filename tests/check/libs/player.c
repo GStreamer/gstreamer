@@ -69,7 +69,7 @@ START_TEST (test_create_and_free)
 {
   GstPlayer *player;
 
-  player = gst_player_new ();
+  player = gst_player_new (NULL, NULL);
   fail_unless (player != NULL);
   g_object_unref (player);
 }
@@ -81,7 +81,7 @@ START_TEST (test_set_and_get_uri)
   GstPlayer *player;
   gchar *uri;
 
-  player = gst_player_new ();
+  player = gst_player_new (NULL, NULL);
 
   fail_unless (player != NULL);
 
@@ -101,7 +101,7 @@ START_TEST (test_set_and_get_position_update_interval)
   GstPlayer *player;
   guint interval = 0;
 
-  player = gst_player_new ();
+  player = gst_player_new (NULL, NULL);
 
   fail_unless (player != NULL);
 
@@ -355,7 +355,7 @@ test_player_new (TestPlayerState * state)
   GstElement *playbin, *fakesink;
 
   player =
-      gst_player_new_full (NULL,
+      gst_player_new (NULL,
       gst_player_g_main_context_signal_dispatcher_new (NULL));
   fail_unless (player != NULL);
 

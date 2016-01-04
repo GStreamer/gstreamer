@@ -2491,17 +2491,6 @@ gst_player_init_once (G_GNUC_UNUSED gpointer user_data)
 
 /**
  * gst_player_new:
- *
- * Returns: a new #GstPlayer instance
- */
-GstPlayer *
-gst_player_new (void)
-{
-  return gst_player_new_full (NULL, NULL);
-}
-
-/**
- * gst_player_new_full:
  * @video_renderer: (transfer full) (allow-none): GstPlayerVideoRenderer to use
  * @signal_dispatcher: (transfer full) (allow-none): GstPlayerSignalDispatcher to use
  *
@@ -2516,7 +2505,7 @@ gst_player_new (void)
  * Returns: a new #GstPlayer instance
  */
 GstPlayer *
-gst_player_new_full (GstPlayerVideoRenderer * video_renderer,
+gst_player_new (GstPlayerVideoRenderer * video_renderer,
     GstPlayerSignalDispatcher * signal_dispatcher)
 {
   static GOnce once = G_ONCE_INIT;

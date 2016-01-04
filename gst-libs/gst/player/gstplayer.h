@@ -97,8 +97,7 @@ const gchar *gst_player_color_balance_type_get_name   (GstPlayerColorBalanceType
 
 GType        gst_player_get_type                      (void);
 
-GstPlayer *  gst_player_new                           (void);
-GstPlayer *  gst_player_new_full                      (GstPlayerVideoRenderer * video_renderer, GstPlayerSignalDispatcher * signal_dispatcher);
+GstPlayer *  gst_player_new                           (GstPlayerVideoRenderer * video_renderer, GstPlayerSignalDispatcher * signal_dispatcher);
 
 void         gst_player_play                          (GstPlayer    * player);
 void         gst_player_pause                         (GstPlayer    * player);
