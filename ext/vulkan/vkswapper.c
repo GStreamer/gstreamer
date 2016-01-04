@@ -908,7 +908,7 @@ _render_buffer_unlocked (GstVulkanSwapper * swapper,
 
   semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   semaphore_info.pNext = NULL;
-  semaphore_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+  semaphore_info.flags = 0;
 
   if (!buffer) {
     g_set_error (error, GST_VULKAN_ERROR,
@@ -954,8 +954,8 @@ reacquire:
 
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.pNext = NULL;
-    submit_info.waitSemaphoreCount = 0;
-    submit_info.pWaitSemaphores = NULL;
+    submit_info.waitSemaphoreCount = 1;
+    submit_info.pWaitSemaphores = &semaphore;
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &cmd_data.cmd;
     submit_info.signalSemaphoreCount = 0;
@@ -970,8 +970,8 @@ reacquire:
 
   present.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
   present.pNext = NULL;
-  present.waitSemaphoreCount = 1;
-  present.pWaitSemaphores = &semaphore;
+  present.waitSemaphoreCount = 0;
+  present.pWaitSemaphores = NULL;
   present.swapchainCount = 1;
   present.pSwapchains = &swapper->swap_chain;
   present.pImageIndices = &swap_idx;
@@ -983,20 +983,6 @@ reacquire:
 
     if (!_swapchain_resize (swapper, error))
       goto error;
-
-    vkDestroySemaphore (swapper->device->device, semaphore, NULL);
-    if (cmd_data.cmd)
-      vkFreeCommandBuffers (swapper->device->device, swapper->device->cmd_pool,
-          1, &cmd_data.cmd);
-    cmd_data.cmd = VK_NULL_HANDLE;
-    if (cmd_data.fence)
-      vkDestroyFence (swapper->device->device, cmd_data.fence, NULL);
-    cmd_data.fence = VK_NULL_HANDLE;
-    if (cmd_data.notify)
-      cmd_data.notify (cmd_data.data);
-    cmd_data.notify = VK_NULL_HANDLE;
-
-    goto reacquire;
   } else if (gst_vulkan_error_to_g_error (err, error, "vkQueuePresentKHR") < 0)
     goto error;
 
