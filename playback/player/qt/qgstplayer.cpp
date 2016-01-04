@@ -397,7 +397,7 @@ Player::Player(QObject *parent, VideoRenderer *renderer)
     , autoPlay_(false)
 {
 
-    player_ = gst_player_new_full(renderer ? renderer->renderer() : 0,
+    player_ = gst_player_new(renderer ? renderer->renderer() : 0,
         gst_player_qt_signal_dispatcher_new(this));
 
     g_object_connect(player_,

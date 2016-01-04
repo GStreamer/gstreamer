@@ -1732,7 +1732,7 @@ gtk_play_constructor (GType type, guint n_construct_params,
   create_ui (self);
 
   self->player =
-      gst_player_new_full (self->renderer,
+      gst_player_new (self->renderer,
       gst_player_g_main_context_signal_dispatcher_new (NULL));
 
   g_signal_connect (self->player, "position-updated",

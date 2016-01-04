@@ -199,7 +199,7 @@ native_new (JNIEnv * env, jobject thiz)
   Player *player = g_new0 (Player, 1);
 
   player->renderer = gst_player_video_overlay_video_renderer_new (NULL);
-  player->player = gst_player_new_full (player->renderer, NULL);
+  player->player = gst_player_new (player->renderer, NULL);
   SET_CUSTOM_DATA (env, thiz, native_player_field_id, player);
   player->java_player = (*env)->NewGlobalRef (env, thiz);
 
