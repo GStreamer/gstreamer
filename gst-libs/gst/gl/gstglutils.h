@@ -111,6 +111,11 @@ gsize gst_gl_get_plane_start (GstVideoInfo * info, GstVideoAlignment * valign,
 GstCaps * gst_gl_caps_replace_all_caps_features (const GstCaps * caps,
     const gchar * feature_name);
 
+gboolean gst_gl_value_set_texture_target_from_mask (GValue * value,
+    GstGLTextureTarget target_mask);
+gboolean gst_gl_value_set_texture_target (GValue * value, GstGLTextureTarget target);
+GstGLTextureTarget gst_gl_value_get_texture_target_mask (const GValue * value);
+
 G_END_DECLS
 
 #endif /* __GST_GL_UTILS_H__ */
