@@ -1395,7 +1395,7 @@ gst_net_client_clock_new (const gchar * name, const gchar * remote_address,
   return ret;
 }
 
-G_DEFINE_TYPE (GstNtpClock, gst_ntp_clock, GST_TYPE_SYSTEM_CLOCK);
+G_DEFINE_TYPE (GstNtpClock, gst_ntp_clock, GST_TYPE_NET_CLIENT_CLOCK);
 
 static void
 gst_ntp_clock_class_init (GstNtpClockClass * klass)
