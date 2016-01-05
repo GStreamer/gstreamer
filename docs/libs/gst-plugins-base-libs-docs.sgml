@@ -65,6 +65,8 @@
       <xi:include href="xml/gstaudiobasesink.xml" />
       <xi:include href="xml/gstaudiobasesrc.xml" />
       <xi:include href="xml/gstaudiochannels.xml" />
+      <xi:include href="xml/gstaudioconverter.xml" />
+      <xi:include href="xml/gstaudioquantize.xml" />
       <xi:include href="xml/gstaudioringbuffer.xml" />
       <xi:include href="xml/gstaudioiec61937.xml" />
       <xi:include href="xml/gststreamvolume.xml" />
