@@ -2118,7 +2118,7 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
     }
   } else {
     if (GST_CLOCK_TIME_IS_VALID (demux->segment.start)
-        && stream->segment.position < stream->segment.start) {
+        && stream->segment.position <= stream->segment.start) {
       ret = GST_FLOW_EOS;
       gst_task_stop (stream->download_task);
       goto end_of_manifest;
