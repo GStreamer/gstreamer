@@ -89,6 +89,7 @@ struct _RTPJitterBuffer {
   gboolean       need_resync;
   GstClockTime   base_time;
   GstClockTime   base_rtptime;
+  GstClockTime   media_clock_base_time;
   guint32        clock_rate;
   GstClockTime   base_extrtp;
   GstClockTime   prev_out_time;
@@ -102,6 +103,14 @@ struct _RTPJitterBuffer {
   gint64         skew;
   gint64         prev_send_diff;
   gboolean       buffering_disabled;
+
+  GMutex         clock_lock;
+  GstClock      *pipeline_clock;
+  GstClock      *media_clock;
+  gulong         media_clock_synced_id;
+  guint64        media_clock_offset;
+
+  gboolean       rfc7273_sync;
 };
 
 struct _RTPJitterBufferClass {
@@ -150,11 +159,18 @@ void                  rtp_jitter_buffer_set_delay        (RTPJitterBuffer *jbuf,
 void                  rtp_jitter_buffer_set_clock_rate   (RTPJitterBuffer *jbuf, guint32 clock_rate);
 guint32               rtp_jitter_buffer_get_clock_rate   (RTPJitterBuffer *jbuf);
 
+void                  rtp_jitter_buffer_set_media_clock  (RTPJitterBuffer *jbuf, GstClock * clock, guint64 clock_offset);
+void                  rtp_jitter_buffer_set_pipeline_clock (RTPJitterBuffer *jbuf, GstClock * clock);
+
+gboolean              rtp_jitter_buffer_get_rfc7273_sync (RTPJitterBuffer *jbuf);
+void                  rtp_jitter_buffer_set_rfc7273_sync (RTPJitterBuffer *jbuf, gboolean rfc7273_sync);
+
 void                  rtp_jitter_buffer_reset_skew       (RTPJitterBuffer *jbuf);
 
 gboolean              rtp_jitter_buffer_insert           (RTPJitterBuffer *jbuf,
                                                           RTPJitterBufferItem *item,
-                                                          gboolean *head, gint *percent);
+                                                          gboolean *head, gint *percent,
+                                                          GstClockTime base_time);
 
 void                  rtp_jitter_buffer_disable_buffering (RTPJitterBuffer *jbuf, gboolean disabled);
 

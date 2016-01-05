@@ -239,6 +239,7 @@ struct _GstRTSPSrc {
   gint              ntp_time_source;
   gchar            *user_agent;
   GstClockTime      max_rtcp_rtp_time_diff;
+  gboolean          rfc7273_sync;
 
   /* state */
   GstRTSPState       state;

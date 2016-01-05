@@ -227,6 +227,7 @@ gst_rtsp_src_ntp_time_source_get_type (void)
 #define DEFAULT_NTP_TIME_SOURCE  NTP_TIME_SOURCE_NTP
 #define DEFAULT_USER_AGENT       "GStreamer/" PACKAGE_VERSION
 #define DEFAULT_MAX_RTCP_RTP_TIME_DIFF 1000
+#define DEFAULT_RFC7273_SYNC         FALSE
 
 enum
 {
@@ -265,7 +266,8 @@ enum
   PROP_DO_RETRANSMISSION,
   PROP_NTP_TIME_SOURCE,
   PROP_USER_AGENT,
-  PROP_MAX_RTCP_RTP_TIME_DIFF
+  PROP_MAX_RTCP_RTP_TIME_DIFF,
+  PROP_RFC7273_SYNC
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -732,6 +734,12 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           DEFAULT_MAX_RTCP_RTP_TIME_DIFF,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_RFC7273_SYNC,
+      g_param_spec_boolean ("rfc7273-sync", "Sync on RFC7273 clock",
+          "Synchronize received streams to the RFC7273 clock "
+          "(requires clock and offset to be provided)", DEFAULT_RFC7273_SYNC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
@@ -879,6 +887,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->ntp_time_source = DEFAULT_NTP_TIME_SOURCE;
   src->user_agent = g_strdup (DEFAULT_USER_AGENT);
   src->max_rtcp_rtp_time_diff = DEFAULT_MAX_RTCP_RTP_TIME_DIFF;
+  src->rfc7273_sync = DEFAULT_RFC7273_SYNC;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -1158,6 +1167,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_MAX_RTCP_RTP_TIME_DIFF:
       rtspsrc->max_rtcp_rtp_time_diff = g_value_get_int (value);
       break;
+    case PROP_RFC7273_SYNC:
+      rtspsrc->rfc7273_sync = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1303,6 +1315,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MAX_RTCP_RTP_TIME_DIFF:
       g_value_set_int (value, rtspsrc->max_rtcp_rtp_time_diff);
+      break;
+    case PROP_RFC7273_SYNC:
+      g_value_set_boolean (value, rtspsrc->rfc7273_sync);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2986,6 +3001,10 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
 
       if (g_object_class_find_property (klass, "ntp-sync")) {
         g_object_set (src->manager, "ntp-sync", src->ntp_sync, NULL);
+      }
+
+      if (g_object_class_find_property (klass, "rfc7273-sync")) {
+        g_object_set (src->manager, "rfc7273-sync", src->rfc7273_sync, NULL);
       }
 
       if (src->use_pipeline_clock) {

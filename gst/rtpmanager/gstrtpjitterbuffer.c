@@ -100,8 +100,10 @@
 #endif
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/net/net.h>
 
 #include "gstrtpjitterbuffer.h"
 #include "rtpjitterbuffer.h"
@@ -141,6 +143,7 @@ enum
 #define DEFAULT_MAX_RTCP_RTP_TIME_DIFF 1000
 #define DEFAULT_MAX_DROPOUT_TIME    60000
 #define DEFAULT_MAX_MISORDER_TIME   2000
+#define DEFAULT_RFC7273_SYNC        FALSE
 
 #define DEFAULT_AUTO_RTX_DELAY (20 * GST_MSECOND)
 #define DEFAULT_AUTO_RTX_TIMEOUT (40 * GST_MSECOND)
@@ -166,7 +169,8 @@ enum
   PROP_STATS,
   PROP_MAX_RTCP_RTP_TIME_DIFF,
   PROP_MAX_DROPOUT_TIME,
-  PROP_MAX_MISORDER_TIME
+  PROP_MAX_MISORDER_TIME,
+  PROP_RFC7273_SYNC
 };
 
 #define JBUF_LOCK(priv)   (g_mutex_lock (&(priv)->jbuf_lock))
@@ -413,6 +417,8 @@ static GstPad *gst_rtp_jitter_buffer_request_new_pad (GstElement * element,
 static void gst_rtp_jitter_buffer_release_pad (GstElement * element,
     GstPad * pad);
 static GstClock *gst_rtp_jitter_buffer_provide_clock (GstElement * element);
+static gboolean gst_rtp_jitter_buffer_set_clock (GstElement * element,
+    GstClock * clock);
 
 /* pad overrides */
 static GstCaps *gst_rtp_jitter_buffer_getcaps (GstPad * pad, GstCaps * filter);
@@ -745,6 +751,12 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           DEFAULT_MAX_RTCP_RTP_TIME_DIFF,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_RFC7273_SYNC,
+      g_param_spec_boolean ("rfc7273-sync", "Sync on RFC7273 clock",
+          "Synchronize received streams to the RFC7273 clock "
+          "(requires clock and offset to be provided)", DEFAULT_RFC7273_SYNC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstRtpJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
@@ -820,6 +832,8 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_release_pad);
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_provide_clock);
+  gstelement_class->set_clock =
+      GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_set_clock);
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_rtp_jitter_buffer_src_template);
@@ -1129,6 +1143,16 @@ gst_rtp_jitter_buffer_provide_clock (GstElement * element)
   return gst_system_clock_obtain ();
 }
 
+static gboolean
+gst_rtp_jitter_buffer_set_clock (GstElement * element, GstClock * clock)
+{
+  GstRtpJitterBuffer *jitterbuffer = GST_RTP_JITTER_BUFFER (element);
+
+  rtp_jitter_buffer_set_pipeline_clock (jitterbuffer->priv->jbuf, clock);
+
+  return GST_ELEMENT_CLASS (parent_class)->set_clock (element, clock);
+}
+
 static void
 gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer)
 {
@@ -1233,6 +1257,7 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
   GstStructure *caps_struct;
   guint val;
   GstClockTime tval;
+  const gchar *ts_refclk, *mediaclk;
 
   priv = jitterbuffer->priv;
 
@@ -1296,6 +1321,75 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
   GST_DEBUG_OBJECT (jitterbuffer,
       "npt start/stop: %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
       GST_TIME_ARGS (priv->npt_start), GST_TIME_ARGS (priv->npt_stop));
+
+  if ((ts_refclk = gst_structure_get_string (caps_struct, "a-ts-refclk"))) {
+    GstClock *clock = NULL;
+    guint64 clock_offset = -1;
+
+    GST_DEBUG_OBJECT (jitterbuffer, "Have timestamp reference clock %s",
+        ts_refclk);
+
+    if (g_str_has_prefix (ts_refclk, "ntp=")) {
+      if (g_str_has_prefix (ts_refclk, "ntp=/traceable/")) {
+        GST_FIXME_OBJECT (jitterbuffer, "Can't handle traceable NTP clocks");
+      } else {
+        const gchar *host, *portstr;
+        gchar *hostname;
+        guint port;
+
+        host = ts_refclk + sizeof ("ntp=") - 1;
+        if (host[0] == '[') {
+          /* IPv6 */
+          portstr = strchr (host, ']');
+          if (portstr && portstr[1] == ':')
+            portstr = portstr + 1;
+          else
+            portstr = NULL;
+        } else {
+          portstr = strrchr (host, ':');
+        }
+
+
+        if (!portstr || sscanf (portstr, ":%u", &port) != 1)
+          port = 123;
+
+        if (portstr)
+          hostname = g_strndup (host, (portstr - host));
+        else
+          hostname = g_strdup (host);
+
+        clock = gst_ntp_clock_new (NULL, hostname, port, 0);
+        g_free (hostname);
+      }
+    } else if (g_str_has_prefix (ts_refclk, "ptp=IEEE1588-2008:")) {
+      const gchar *domainstr =
+          ts_refclk + sizeof ("ptp=IEEE1588-2008:XX-XX-XX-XX-XX-XX-XX-XX") - 1;
+      guint domain;
+
+      if (domainstr[0] != ':' || sscanf (domainstr, ":%u", &domain) != 1)
+        domain = 0;
+
+      clock = gst_ptp_clock_new (NULL, domain);
+    } else {
+      GST_FIXME_OBJECT (jitterbuffer, "Unsupported timestamp reference clock");
+    }
+
+    if ((mediaclk = gst_structure_get_string (caps_struct, "a-mediaclk"))) {
+      GST_DEBUG_OBJECT (jitterbuffer, "Got media clock %s", mediaclk);
+
+      if (!g_str_has_prefix (mediaclk, "direct=")
+          || sscanf (mediaclk, "direct=%" G_GUINT64_FORMAT, &clock_offset) != 1)
+        GST_FIXME_OBJECT (jitterbuffer, "Unsupported media clock");
+      if (strstr (mediaclk, "rate=") != NULL) {
+        GST_FIXME_OBJECT (jitterbuffer, "Rate property not supported");
+        clock_offset = -1;
+      }
+    }
+
+    rtp_jitter_buffer_set_media_clock (priv->jbuf, clock, clock_offset);
+  } else {
+    rtp_jitter_buffer_set_media_clock (priv->jbuf, NULL, -1);
+  }
 
   return TRUE;
 
@@ -1566,7 +1660,7 @@ queue_event (GstRtpJitterBuffer * jitterbuffer, GstEvent * event)
 
   GST_DEBUG_OBJECT (jitterbuffer, "adding event");
   item = alloc_item (event, ITEM_TYPE_EVENT, -1, -1, -1, 0, -1);
-  rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL);
+  rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL, -1);
   if (head)
     JBUF_SIGNAL_EVENT (priv);
 
@@ -2625,7 +2719,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
           RTPJitterBufferItem *item;
 
           item = alloc_item (l->data, ITEM_TYPE_EVENT, -1, -1, -1, 0, -1);
-          rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL);
+          rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL, -1);
         }
         g_list_free (events);
 
@@ -2741,7 +2835,8 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
    * FALSE if a packet with the same seqnum was already in the queue, meaning we
    * have a duplicate. */
   if (G_UNLIKELY (!rtp_jitter_buffer_insert (priv->jbuf, item,
-              &head, &percent)))
+              &head, &percent,
+              gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer)))))
     goto duplicate;
 
   /* update timers */
@@ -3311,7 +3406,7 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
           "retry", G_TYPE_UINT, num_rtx_retry, NULL));
 
   item = alloc_item (event, ITEM_TYPE_LOST, -1, -1, seqnum, lost_packets, -1);
-  rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL);
+  rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL, -1);
 
   /* remove timer now */
   remove_timer (jitterbuffer, timer);
@@ -3780,7 +3875,7 @@ gst_rtp_jitter_buffer_sink_query (GstPad * pad, GstObject * parent,
             RTP_JITTER_BUFFER_MODE_BUFFER) {
           GST_DEBUG_OBJECT (jitterbuffer, "adding serialized query");
           item = alloc_item (query, ITEM_TYPE_QUERY, -1, -1, -1, 0, -1);
-          rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL);
+          rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL, -1);
           if (head)
             JBUF_SIGNAL_EVENT (priv);
           JBUF_WAIT_QUERY (priv, out_flushing);
@@ -4018,6 +4113,12 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       priv->max_misorder_time = g_value_get_uint (value);
       JBUF_UNLOCK (priv);
       break;
+    case PROP_RFC7273_SYNC:
+      JBUF_LOCK (priv);
+      rtp_jitter_buffer_set_rfc7273_sync (priv->jbuf,
+          g_value_get_boolean (value));
+      JBUF_UNLOCK (priv);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -4136,6 +4237,12 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
     case PROP_MAX_MISORDER_TIME:
       JBUF_LOCK (priv);
       g_value_set_uint (value, priv->max_misorder_time);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RFC7273_SYNC:
+      JBUF_LOCK (priv);
+      g_value_set_boolean (value,
+          rtp_jitter_buffer_get_rfc7273_sync (priv->jbuf));
       JBUF_UNLOCK (priv);
       break;
     default:

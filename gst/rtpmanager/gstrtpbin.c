@@ -298,6 +298,7 @@ enum
 #define DEFAULT_MAX_RTCP_RTP_TIME_DIFF 1000
 #define DEFAULT_MAX_DROPOUT_TIME     60000
 #define DEFAULT_MAX_MISORDER_TIME    2000
+#define DEFAULT_RFC7273_SYNC         FALSE
 
 enum
 {
@@ -320,7 +321,8 @@ enum
   PROP_RTCP_SYNC_SEND_TIME,
   PROP_MAX_RTCP_RTP_TIME_DIFF,
   PROP_MAX_DROPOUT_TIME,
-  PROP_MAX_MISORDER_TIME
+  PROP_MAX_MISORDER_TIME,
+  PROP_RFC7273_SYNC
 };
 
 #define GST_RTP_BIN_RTCP_SYNC_TYPE (gst_rtp_bin_rtcp_sync_get_type())
@@ -1621,6 +1623,7 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
       rtpbin->max_rtcp_rtp_time_diff, NULL);
   g_object_set (buffer, "max-dropout-time", rtpbin->max_dropout_time,
       "max-misorder-time", rtpbin->max_misorder_time, NULL);
+  g_object_set (buffer, "rfc7273-sync", rtpbin->rfc7273_sync, NULL);
 
   g_signal_emit (rtpbin, gst_rtp_bin_signals[SIGNAL_NEW_JITTERBUFFER], 0,
       buffer, session->id, ssrc);
@@ -2314,6 +2317,12 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           0, G_MAXUINT, DEFAULT_MAX_MISORDER_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_RFC7273_SYNC,
+      g_param_spec_boolean ("rfc7273-sync", "Sync on RFC7273 clock",
+          "Synchronize received streams to the RFC7273 clock "
+          "(requires clock and offset to be provided)", DEFAULT_RFC7273_SYNC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -2383,6 +2392,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   rtpbin->max_rtcp_rtp_time_diff = DEFAULT_MAX_RTCP_RTP_TIME_DIFF;
   rtpbin->max_dropout_time = DEFAULT_MAX_DROPOUT_TIME;
   rtpbin->max_misorder_time = DEFAULT_MAX_MISORDER_TIME;
+  rtpbin->rfc7273_sync = DEFAULT_RFC7273_SYNC;
 
   /* some default SDES entries */
   cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
@@ -2599,6 +2609,11 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       gst_rtp_bin_propagate_property_to_session (rtpbin, "max-dropout-time",
           value);
       break;
+    case PROP_RFC7273_SYNC:
+      rtpbin->rfc7273_sync = g_value_get_boolean (value);
+      gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin,
+          "rfc7273-sync", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2681,6 +2696,8 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
     case PROP_MAX_MISORDER_TIME:
       g_value_set_uint (value, rtpbin->max_misorder_time);
       break;
+    case PROP_RFC7273_SYNC:
+      g_value_set_boolean (value, rtpbin->rfc7273_sync);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
