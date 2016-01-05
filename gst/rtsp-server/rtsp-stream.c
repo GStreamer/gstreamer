@@ -2840,7 +2840,7 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
       GstRTSPMulticastTransportSource *source;
       GstBin *bin;
 
-      bin = GST_BIN (gst_object_get_parent (GST_OBJECT (priv->funnel[0])));
+      bin = GST_BIN (gst_object_get_parent (GST_OBJECT (priv->funnel[1])));
 
       if (add) {
         gchar *host;
@@ -2869,12 +2869,14 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
           gst_bin_add (bin, source->udpsrc[i]);
 
           /* and link to the funnel v4 */
-          source->selpad[i] = selpad =
-              gst_element_get_request_pad (priv->funnel[i], "sink_%u");
-          pad = gst_element_get_static_pad (source->udpsrc[i], "src");
-          gst_pad_link (pad, selpad);
-          gst_object_unref (pad);
-          gst_object_unref (selpad);
+          if (priv->sinkpad || i == 1) {
+            source->selpad[i] = selpad =
+                gst_element_get_request_pad (priv->funnel[i], "sink_%u");
+            pad = gst_element_get_static_pad (source->udpsrc[i], "src");
+            gst_pad_link (pad, selpad);
+            gst_object_unref (pad);
+            gst_object_unref (selpad);
+          }
         }
 
         priv->transport_sources =
@@ -2903,8 +2905,10 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
             gst_element_set_state (source->udpsrc[i], GST_STATE_NULL);
             gst_object_unref (source->udpsrc[i]);
 
-            gst_element_release_request_pad (priv->funnel[i],
-                source->selpad[i]);
+            if (priv->sinkpad || i == 1) {
+              gst_element_release_request_pad (priv->funnel[i],
+                  source->selpad[i]);
+            }
           }
 
           g_slice_free (GstRTSPMulticastTransportSource, source);
