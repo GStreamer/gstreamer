@@ -55,6 +55,7 @@ struct _GstDX9ScreenCapSrc
   gint capture_w;
   gint capture_h;
   guint monitor;
+  gboolean show_cursor;
 
   /* Source pad frame rate */
   gint rate_numerator;
@@ -69,6 +70,7 @@ struct _GstDX9ScreenCapSrc
   D3DDISPLAYMODE disp_mode;
   IDirect3DSurface9 *surface;
   IDirect3DDevice9 *d3d9_device;
+  MONITORINFO monitor_info;
 };
 
 struct _GstDX9ScreenCapSrcClass

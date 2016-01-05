@@ -61,6 +61,7 @@ enum
 {
   PROP_0,
   PROP_MONITOR,
+  PROP_SHOW_CURSOR,
   PROP_X_POS,
   PROP_Y_POS,
   PROP_WIDTH,
@@ -121,6 +122,11 @@ gst_dx9screencapsrc_class_init (GstDX9ScreenCapSrcClass * klass)
           "Which monitor to use (0 = 1st monitor and default)",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
 
+  g_object_class_install_property (go_class, PROP_SHOW_CURSOR,
+      g_param_spec_boolean ("cursor", "Show mouse cursor",
+          "Whether to show mouse cursor (default off)",
+          FALSE, G_PARAM_READWRITE));
+
   g_object_class_install_property (go_class, PROP_X_POS,
       g_param_spec_int ("x", "X",
           "Horizontal coordinate of top left corner for the screen capture "
@@ -161,6 +167,8 @@ gst_dx9screencapsrc_init (GstDX9ScreenCapSrc * src)
   src->capture_h = 0;
 
   src->monitor = 0;
+  src->show_cursor = FALSE;
+  src->monitor_info.cbSize = sizeof(MONITORINFO);
 
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
@@ -204,6 +212,9 @@ gst_dx9screencapsrc_set_property (GObject * object,
     case PROP_MONITOR:
       src->monitor = g_value_get_int (value);
       break;
+    case PROP_SHOW_CURSOR:
+      src->show_cursor = g_value_get_boolean (value);
+      break;
     case PROP_X_POS:
       src->capture_x = g_value_get_int (value);
       break;
@@ -231,6 +242,9 @@ gst_dx9screencapsrc_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_MONITOR:
       g_value_set_int (value, src->monitor);
+      break;
+    case PROP_SHOW_CURSOR:
+      g_value_set_boolean (value, src->show_cursor);
       break;
     case PROP_X_POS:
       g_value_set_int (value, src->capture_x);
@@ -366,6 +380,7 @@ gst_dx9screencapsrc_start (GstBaseSrc * bsrc)
 {
   GstDX9ScreenCapSrc *src = GST_DX9SCREENCAPSRC (bsrc);
   D3DPRESENT_PARAMETERS d3dpp;
+  HMONITOR monitor;
   HRESULT res;
 
   src->frame_number = -1;
@@ -394,6 +409,9 @@ gst_dx9screencapsrc_start (GstBaseSrc * bsrc)
       &d3dpp, &src->d3d9_device);
   if (FAILED (res))
     return FALSE;
+
+  monitor = IDirect3D9_GetAdapterMonitor (g_d3d9, src->monitor);
+  GetMonitorInfo (monitor, &src->monitor_info);
 
   return
       SUCCEEDED (IDirect3DDevice9_CreateOffscreenPlainSurface (src->d3d9_device,
@@ -537,6 +555,35 @@ gst_dx9screencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
   if (FAILED (hres)) {
     GST_DEBUG_OBJECT (src, "DirectX::GetBackBuffer failed.");
     return GST_FLOW_ERROR;
+  }
+
+  if (src->show_cursor) {
+    CURSORINFO ci;
+
+    ci.cbSize = sizeof (CURSORINFO);
+    GetCursorInfo (&ci);
+    if (ci.flags & CURSOR_SHOWING) {
+      ICONINFO ii;
+      HDC memDC;
+
+      GetIconInfo (ci.hCursor, &ii);
+
+      if (SUCCEEDED (IDirect3DSurface9_GetDC (src->surface, &memDC))) {
+        HCURSOR cursor = CopyImage (ci.hCursor, IMAGE_CURSOR, 0, 0,
+            LR_MONOCHROME | LR_DEFAULTSIZE);
+
+        DrawIcon (memDC,
+            ci.ptScreenPos.x - ii.xHotspot - src->monitor_info.rcMonitor.left,
+            ci.ptScreenPos.y - ii.yHotspot - src->monitor_info.rcMonitor.top,
+            cursor);
+
+        DestroyCursor (cursor);
+        IDirect3DSurface9_ReleaseDC (src->surface, memDC);
+      }
+
+      DeleteObject (ii.hbmColor);
+      DeleteObject (ii.hbmMask);
+    }
   }
 
   hres =
