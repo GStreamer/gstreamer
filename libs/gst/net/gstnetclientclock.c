@@ -1274,7 +1274,7 @@ gst_net_client_clock_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_net_client_clocked_synced_cb (GstClock * internal_clock, gboolean synced,
+gst_net_client_clock_synced_cb (GstClock * internal_clock, gboolean synced,
     GstClock * self)
 {
   gst_clock_set_synced (self, synced);
@@ -1326,7 +1326,7 @@ gst_net_client_clock_constructed (GObject * object)
     gst_clock_set_synced (GST_CLOCK (self), TRUE);
   self->priv->synced_id =
       g_signal_connect (cache->clock, "synced",
-      G_CALLBACK (gst_net_client_clocked_synced_cb), self);
+      G_CALLBACK (gst_net_client_clock_synced_cb), self);
   GST_OBJECT_UNLOCK (cache->clock);
 
   G_UNLOCK (clocks_lock);

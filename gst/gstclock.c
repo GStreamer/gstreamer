@@ -1006,7 +1006,7 @@ gst_clock_get_internal_time (GstClock * clock)
   if (G_UNLIKELY (GST_OBJECT_FLAG_IS_SET (clock,
               GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC) && !clock->priv->synced))
     GST_CAT_WARNING_OBJECT (GST_CAT_CLOCK, clock,
-        "clocked is not synchronized yet");
+        "clock is not synchronized yet");
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
