@@ -1230,6 +1230,9 @@ gst_clock_set_master (GstClock * clock, GstClock * master)
   /* we always allow setting the master to NULL */
   if (master && !GST_OBJECT_FLAG_IS_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER))
     goto not_supported;
+  if (master && !gst_clock_is_synced (master))
+    goto master_not_synced;
+
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
       "slaving %p to master clock %p", clock, master);
   GST_OBJECT_UNLOCK (clock);
@@ -1267,6 +1270,14 @@ not_supported:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
         "cannot be slaved to a master clock");
+    GST_OBJECT_UNLOCK (clock);
+    return FALSE;
+  }
+
+master_not_synced:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, master,
+        "master clock is not synced yet");
     GST_OBJECT_UNLOCK (clock);
     return FALSE;
   }
