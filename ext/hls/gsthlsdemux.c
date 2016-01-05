@@ -309,12 +309,10 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   /* Snap to segment boundary. Improves seek performance on slow machines. */
   snap_before = snap_after = snap_nearest = FALSE;
   keyunit = flags & GST_SEEK_FLAG_KEY_UNIT;
-  if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST)
-    snap_nearest = TRUE;
-  else if (flags & GST_SEEK_FLAG_SNAP_BEFORE)
-    snap_before = TRUE;
-  else if (flags & GST_SEEK_FLAG_SNAP_AFTER)
-    snap_after = TRUE;
+  snap_nearest =
+      (flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST;
+  snap_before = flags & GST_SEEK_FLAG_SNAP_BEFORE;
+  snap_after = flags & GST_SEEK_FLAG_SNAP_AFTER;
 
   /* FIXME: Here we need proper discont handling */
   for (walk = hlsdemux->client->current->files; walk; walk = walk->next) {
