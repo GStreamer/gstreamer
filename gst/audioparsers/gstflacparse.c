@@ -646,29 +646,23 @@ need_more_data:
 
 static gboolean
 gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
-    GstBaseParseFrame * frame, guint * ret)
+    const guint8 * data, gsize size, guint * ret)
 {
-  GstBuffer *buffer;
-  GstMapInfo map;
   guint max, remaining;
   guint i, search_start, search_end;
   FrameHeaderCheckReturn header_ret;
   guint16 block_size;
   gboolean suspect_start = FALSE, suspect_end = FALSE;
-  gboolean result = FALSE;
 
-  buffer = frame->buffer;
-  gst_buffer_map (buffer, &map, GST_MAP_READ);
-
-  if (map.size < flacparse->min_framesize)
+  if (size < flacparse->min_framesize)
     goto need_more;
 
   header_ret =
-      gst_flac_parse_frame_header_is_valid (flacparse, map.data, map.size, TRUE,
+      gst_flac_parse_frame_header_is_valid (flacparse, data, size, TRUE,
       &block_size, &suspect_start);
   if (header_ret == FRAME_HEADER_INVALID) {
     *ret = 0;
-    goto cleanup;
+    return FALSE;
   }
   if (header_ret == FRAME_HEADER_MORE_DATA)
     goto need_more;
@@ -676,27 +670,27 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
   /* mind unknown framesize */
   search_start = MAX (2, flacparse->min_framesize);
   if (flacparse->max_framesize)
-    search_end = MIN (map.size, flacparse->max_framesize + 9 + 2);
+    search_end = MIN (size, flacparse->max_framesize + 9 + 2);
   else
-    search_end = map.size;
+    search_end = size;
   search_end -= 2;
 
-  remaining = map.size;
+  remaining = size;
 
   for (i = search_start; i < search_end; i++, remaining--) {
 
-    if ((GST_READ_UINT16_BE (map.data + i) & 0xfffe) != 0xfff8)
+    if ((GST_READ_UINT16_BE (data + i) & 0xfffe) != 0xfff8)
       continue;
 
     GST_LOG_OBJECT (flacparse, "possible frame end at offset %d", i);
     suspect_end = FALSE;
     header_ret =
-        gst_flac_parse_frame_header_is_valid (flacparse, map.data + i,
+        gst_flac_parse_frame_header_is_valid (flacparse, data + i,
         remaining, FALSE, NULL, &suspect_end);
     if (header_ret == FRAME_HEADER_VALID) {
       if (flacparse->check_frame_checksums || suspect_start || suspect_end) {
-        guint16 actual_crc = gst_flac_calculate_crc16 (map.data, i - 2);
-        guint16 expected_crc = GST_READ_UINT16_BE (map.data + i - 2);
+        guint16 actual_crc = gst_flac_calculate_crc16 (data, i - 2);
+        guint16 expected_crc = GST_READ_UINT16_BE (data + i - 2);
 
         GST_LOG_OBJECT (flacparse,
             "Found possible frame (%d, %d). Checking for CRC match",
@@ -710,8 +704,7 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
       }
       *ret = i;
       flacparse->block_size = block_size;
-      result = TRUE;
-      goto cleanup;
+      return TRUE;
     } else if (header_ret == FRAME_HEADER_MORE_DATA) {
       goto need_more;
     }
@@ -720,20 +713,18 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
   /* For the last frame output everything to the end */
   if (G_UNLIKELY (GST_BASE_PARSE_DRAINING (flacparse))) {
     if (flacparse->check_frame_checksums) {
-      guint16 actual_crc = gst_flac_calculate_crc16 (map.data, map.size - 2);
-      guint16 expected_crc = GST_READ_UINT16_BE (map.data + map.size - 2);
+      guint16 actual_crc = gst_flac_calculate_crc16 (data, size - 2);
+      guint16 expected_crc = GST_READ_UINT16_BE (data + size - 2);
 
       if (actual_crc == expected_crc) {
-        *ret = map.size;
+        *ret = size;
         flacparse->block_size = block_size;
-        result = TRUE;
-        goto cleanup;
+        return TRUE;
       }
     } else {
-      *ret = map.size;
+      *ret = size;
       flacparse->block_size = block_size;
-      result = TRUE;
-      goto cleanup;
+      return TRUE;
     }
   }
 
@@ -750,12 +741,8 @@ need_more:
   max = flacparse->max_framesize + 16;
   if (max == 16)
     max = 1 << 24;
-  *ret = MIN (map.size + 4096, max);
-  result = TRUE;
-
-cleanup:
-  gst_buffer_unmap (buffer, &map);
-  return result;
+  *ret = MIN (size + 4096, max);
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -815,7 +802,7 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
     flacparse->sample_number = 0;
 
     GST_DEBUG_OBJECT (flacparse, "Found sync code");
-    ret = gst_flac_parse_frame_is_valid (flacparse, frame, &next);
+    ret = gst_flac_parse_frame_is_valid (flacparse, map.data, map.size, &next);
     if (ret) {
       framesize = next;
       goto cleanup;
