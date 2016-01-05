@@ -1174,6 +1174,12 @@ gst_clock_slave_callback (GstClock * master, GstClockTime time,
   GstClockTime stime, mtime;
   gdouble r_squared;
 
+  if (!gst_clock_is_synced (clock)) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+        "Slave clock is not synced yet");
+    return TRUE;
+  }
+
   stime = gst_clock_get_internal_time (clock);
   mtime = gst_clock_get_time (master);
 
