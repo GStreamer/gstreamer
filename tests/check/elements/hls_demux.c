@@ -495,6 +495,26 @@ GST_START_TEST (testSeekSnapAfterPosition)
 
 GST_END_TEST;
 
+
+GST_START_TEST (testReverseSeekSnapBeforePosition)
+{
+  run_seek_position_test (-1.0, 1000 * GST_MSECOND, GST_SEEK_TYPE_SET,
+      2500 * GST_MSECOND, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_BEFORE,
+      1000 * GST_MSECOND, 3000 * GST_MSECOND, 2);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (testReverseSeekSnapAfterPosition)
+{
+  run_seek_position_test (-1.0, 1000 * GST_MSECOND, GST_SEEK_TYPE_SET,
+      2500 * GST_MSECOND, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_AFTER,
+      1000 * GST_MSECOND, 2000 * GST_MSECOND, 1);
+}
+
+GST_END_TEST;
+
 static void
 testDownloadErrorMessageCallback (GstAdaptiveDemuxTestEngine * engine,
     GstMessage * msg, gpointer user_data)
@@ -696,6 +716,8 @@ hls_demux_suite (void)
   tcase_add_test (tc_basicTest, testSeekPosition);
   tcase_add_test (tc_basicTest, testSeekSnapBeforePosition);
   tcase_add_test (tc_basicTest, testSeekSnapAfterPosition);
+  tcase_add_test (tc_basicTest, testReverseSeekSnapBeforePosition);
+  tcase_add_test (tc_basicTest, testReverseSeekSnapAfterPosition);
 
   tcase_add_unchecked_fixture (tc_basicTest, gst_adaptive_demux_test_setup,
       gst_adaptive_demux_test_teardown);
