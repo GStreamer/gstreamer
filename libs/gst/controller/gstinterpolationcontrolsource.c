@@ -437,7 +437,7 @@ interpolate_cubic_get_value_array (GstTimedValueControlSource * self,
  */
 
 static void
-_interpolate_cubic_mono_update_cache (GstTimedValueControlSource * self)
+_interpolate_cubic_monotonic_update_cache (GstTimedValueControlSource * self)
 {
   gint i, n = self->nvalues;
   gdouble *dxs = g_new0 (gdouble, n);
@@ -498,9 +498,9 @@ _interpolate_cubic_mono_update_cache (GstTimedValueControlSource * self)
     inv_dx = 1.0 / dxs[i];
     common = c1 + c1s[i + 1] - m - m;
 
-    cp->cache.cubic_mono.c1s = c1;
-    cp->cache.cubic_mono.c2s = (m - c1 - common) * inv_dx;
-    cp->cache.cubic_mono.c3s = common * inv_dx * inv_dx;
+    cp->cache.cubic_monotonic.c1s = c1;
+    cp->cache.cubic_monotonic.c2s = (m - c1 - common) * inv_dx;
+    cp->cache.cubic_monotonic.c3s = common * inv_dx * inv_dx;
 
     iter = g_sequence_iter_next (iter);
   }
@@ -513,12 +513,12 @@ _interpolate_cubic_mono_update_cache (GstTimedValueControlSource * self)
 }
 
 static inline gdouble
-_interpolate_cubic_mono (GstTimedValueControlSource * self,
+_interpolate_cubic_monotonic (GstTimedValueControlSource * self,
     GstControlPoint * cp1, gdouble value1, GstControlPoint * cp2,
     gdouble value2, GstClockTime timestamp)
 {
   if (!self->valid_cache) {
-    _interpolate_cubic_mono_update_cache (self);
+    _interpolate_cubic_monotonic_update_cache (self);
     self->valid_cache = TRUE;
   }
 
@@ -527,9 +527,9 @@ _interpolate_cubic_mono (GstTimedValueControlSource * self,
     gdouble diff2 = diff * diff;
     gdouble out;
 
-    out = value1 + cp1->cache.cubic_mono.c1s * diff;
-    out += cp1->cache.cubic_mono.c2s * diff2;
-    out += cp1->cache.cubic_mono.c3s * diff * diff2;
+    out = value1 + cp1->cache.cubic_monotonic.c1s * diff;
+    out += cp1->cache.cubic_monotonic.c2s * diff2;
+    out += cp1->cache.cubic_monotonic.c3s * diff * diff2;
     return out;
   } else {
     return value1;
@@ -537,7 +537,7 @@ _interpolate_cubic_mono (GstTimedValueControlSource * self,
 }
 
 static gboolean
-interpolate_cubic_mono_get (GstTimedValueControlSource * self,
+interpolate_cubic_monotonic_get (GstTimedValueControlSource * self,
     GstClockTime timestamp, gdouble * value)
 {
   gboolean ret = FALSE;
@@ -549,7 +549,7 @@ interpolate_cubic_mono_get (GstTimedValueControlSource * self,
   g_mutex_lock (&self->lock);
 
   if (_get_nearest_control_points (self, timestamp, &cp1, &cp2)) {
-    *value = _interpolate_cubic_mono (self, cp1, cp1->value, cp2,
+    *value = _interpolate_cubic_monotonic (self, cp1, cp1->value, cp2,
         (cp2 ? cp2->value : 0.0), timestamp);
     ret = TRUE;
   }
@@ -558,7 +558,7 @@ interpolate_cubic_mono_get (GstTimedValueControlSource * self,
 }
 
 static gboolean
-interpolate_cubic_mono_get_value_array (GstTimedValueControlSource * self,
+interpolate_cubic_monotonic_get_value_array (GstTimedValueControlSource * self,
     GstClockTime timestamp, GstClockTime interval, guint n_values,
     gdouble * values)
 {
@@ -581,7 +581,7 @@ interpolate_cubic_mono_get_value_array (GstTimedValueControlSource * self,
       _get_nearest_control_points2 (self, ts, &cp1, &cp2, &next_ts);
     }
     if (cp1) {
-      *values = _interpolate_cubic_mono (self, cp1, cp1->value, cp2,
+      *values = _interpolate_cubic_monotonic (self, cp1, cp1->value, cp2,
           (cp2 ? cp2->value : 0.0), ts);
       ret = TRUE;
       GST_LOG ("values[%3d]=%lf", i, *values);
@@ -609,9 +609,9 @@ static struct
         (GstControlSourceGetValueArray) interpolate_linear_get_value_array}, {
   (GstControlSourceGetValue) interpolate_cubic_get,
         (GstControlSourceGetValueArray) interpolate_cubic_get_value_array}, {
-    (GstControlSourceGetValue) interpolate_cubic_mono_get,
+    (GstControlSourceGetValue) interpolate_cubic_monotonic_get,
         (GstControlSourceGetValueArray)
-interpolate_cubic_mono_get_value_array}};
+interpolate_cubic_monotonic_get_value_array}};
 
 static const guint num_interpolation_modes = G_N_ELEMENTS (interpolation_modes);
 
@@ -628,8 +628,8 @@ gst_interpolation_mode_get_type (void)
     {GST_INTERPOLATION_MODE_NONE, "GST_INTERPOLATION_MODE_NONE", "none"},
     {GST_INTERPOLATION_MODE_LINEAR, "GST_INTERPOLATION_MODE_LINEAR", "linear"},
     {GST_INTERPOLATION_MODE_CUBIC, "GST_INTERPOLATION_MODE_CUBIC", "cubic"},
-    {GST_INTERPOLATION_MODE_CUBIC_MONO, "GST_INTERPOLATION_MODE_CUBIC_MONO",
-        "cubic-mono"},
+    {GST_INTERPOLATION_MODE_CUBIC_MONOTONIC,
+        "GST_INTERPOLATION_MODE_CUBIC_MONOTONIC", "cubic-monotonic"},
     {0, NULL, NULL}
   };
 
