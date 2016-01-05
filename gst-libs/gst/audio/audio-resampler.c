@@ -39,7 +39,7 @@ typedef struct _Tap
 typedef void (*MakeTapsFunc) (GstAudioResampler * resampler, Tap * t, gint j);
 typedef void (*ResampleFunc) (GstAudioResampler * resampler, gpointer in[],
     gsize in_len, gpointer out[], gsize out_len, gsize * consumed,
-    gsize * produced, gboolean move);
+    gboolean move);
 typedef void (*DeinterleaveFunc) (GstAudioResampler * resampler,
     gpointer * sbuf, gpointer in[], gsize in_frames);
 typedef void (*MirrorFunc) (GstAudioResampler * resampler, gpointer * sbuf);
@@ -377,8 +377,7 @@ make_taps (GstAudioResampler * resampler, Tap * t, gint j)
 #define MAKE_RESAMPLE_FUNC(type)                                                \
 static void                                                                     \
 resample_ ##type (GstAudioResampler * resampler, gpointer in[], gsize in_len,   \
-    gpointer out[], gsize out_len, gsize * consumed, gsize * produced,          \
-    gboolean move)                                                              \
+    gpointer out[], gsize out_len, gsize * consumed, gboolean move)             \
 {                                                                               \
   gint c, di = 0;                                                               \
   gint n_taps = resampler->n_taps;                                              \
@@ -411,7 +410,6 @@ resample_ ##type (GstAudioResampler * resampler, gpointer in[], gsize in_len,   
       memmove (ip, &ip[samp_index], (in_len - samp_index) * sizeof(type));      \
   }                                                                             \
   *consumed = samp_index - resampler->samp_index;                               \
-  *produced = di;                                                               \
                                                                                 \
   resampler->samp_index = move ? 0 : samp_index;                                \
   resampler->samp_phase = samp_phase;                                           \
@@ -425,8 +423,7 @@ MAKE_RESAMPLE_FUNC (gint16);
 #define MAKE_RESAMPLE_INTERLEAVED_FUNC(type,channels)                                   \
 static void                                                                             \
 resample_interleaved_ ##type##_##channels (GstAudioResampler * resampler, gpointer in[],\
-    gsize in_len, gpointer out[], gsize out_len, gsize * consumed, gsize * produced,    \
-    gboolean move)                                                                      \
+    gsize in_len, gpointer out[], gsize out_len, gsize * consumed, gboolean move)       \
 {                                                                                       \
   gint di = 0;                                                                          \
   gint n_taps = resampler->n_taps;                                                      \
@@ -459,7 +456,6 @@ resample_interleaved_ ##type##_##channels (GstAudioResampler * resampler, gpoint
           (in_len - samp_index) * sizeof(type) * channels);                             \
   }                                                                                     \
   *consumed = samp_index - resampler->samp_index;                                       \
-  *produced = di;                                                                       \
                                                                                         \
   resampler->samp_index = move ? 0 : samp_index;                                        \
   resampler->samp_phase = samp_phase;                                                   \
@@ -861,6 +857,8 @@ gst_audio_resampler_new (GstAudioResamplerMethod method,
  * Update the resampler parameters for @resampler. This function should
  * not be called concurrently with any other function on @resampler.
  *
+ * When @in_rate or @out_rate is 0, its value is unchanged.
+ *
  * Returns: %TRUE if the new parameters could be set
  */
 gboolean
@@ -870,8 +868,11 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
   gint gcd;
 
   g_return_val_if_fail (resampler != NULL, FALSE);
-  g_return_val_if_fail (in_rate != 0, FALSE);
-  g_return_val_if_fail (out_rate != 0, FALSE);
+
+  if (in_rate == 0)
+    in_rate = resampler->in_rate;
+  if (out_rate == 0)
+    out_rate = resampler->out_rate;
 
   gcd = gst_util_greatest_common_divisor (in_rate, out_rate);
   in_rate /= gcd;
@@ -1034,12 +1035,9 @@ get_sample_bufs (GstAudioResampler * resampler, gsize need)
  * @in: input samples
  * @in_frames: number of input frames
  * @out: output samples
- * @out_frames: maximum output frames
- * @in_consumed: number of frames consumed
- * @out_produced: number of frames produced
+ * @out_frames: number of output frames
  *
- * Perform resampling on @in_frames frames in @in and write at most
- * @out_frames of frames to @out.
+ * Perform resampling on @in_frames frames in @in and write @out_frames to @out.
  *
  * In case the samples are interleaved, @in and @out must point to an
  * array with a single element pointing to a block of interleaved samples.
@@ -1047,30 +1045,26 @@ get_sample_bufs (GstAudioResampler * resampler, gsize need)
  * If non-interleaved samples are used, @in and @out must point to an
  * array with pointers to memory blocks, one for each channel.
  *
- * @in may be %NULL, in which case @in_frames of 0 samples are pushed
+ * @in may be %NULL, in which case @in_frames of silence samples are pushed
  * into the resampler.
  *
- * The number of frames consumed is returned in @consumed and can be
- * less than @in_frames due to latency of the resampler or because
- * the number of samples produced equals @out_frames.
- *
- * The number of frames produced is returned in @produced.
+ * This function always produces @out_frames of output and consumes @in_frames of
+ * input. Use gst_audio_resampler_get_out_frames() and
+ * gst_audio_resampler_get_in_frames() to make sure @in_frames and @out_frames
+ * are matching and @in and @out point to enough memory.
  */
 void
 gst_audio_resampler_resample (GstAudioResampler * resampler,
-    gpointer in[], gsize in_frames, gpointer out[], gsize out_frames,
-    gsize * in_consumed, gsize * out_produced)
+    gpointer in[], gsize in_frames, gpointer out[], gsize out_frames)
 {
   gsize samples_avail;
-  gsize out2, need;
+  gsize need, consumed;
   gpointer *sbuf;
 
   /* do sample skipping */
   if (resampler->skip >= in_frames) {
     /* we need tp skip all input */
     resampler->skip -= in_frames;
-    *in_consumed = in_frames;
-    *out_produced = 0;
     return;
   }
   /* skip the last samples by advancing the sample index */
@@ -1090,8 +1084,6 @@ gst_audio_resampler_resample (GstAudioResampler * resampler,
   need = resampler->n_taps + resampler->samp_index;
   if (samples_avail < need) {
     /* not enough samples to start */
-    *in_consumed = in_frames;
-    *out_produced = 0;
     return;
   }
 
@@ -1101,21 +1093,16 @@ gst_audio_resampler_resample (GstAudioResampler * resampler,
     resampler->filling = FALSE;
   }
 
-  /* calculate maximum number of available output samples */
-  out2 = calc_out (resampler, samples_avail - need);
-  out_frames = MIN (out2, out_frames);
-
   /* resample all channels */
   resampler->resample (resampler, sbuf, samples_avail, out, out_frames,
-      in_consumed, out_produced, TRUE);
+      &consumed, TRUE);
 
   GST_LOG ("in %" G_GSIZE_FORMAT ", used %" G_GSIZE_FORMAT ", consumed %"
-      G_GSIZE_FORMAT ", produced %" G_GSIZE_FORMAT, in_frames, samples_avail,
-      *in_consumed, *out_produced);
+      G_GSIZE_FORMAT, in_frames, samples_avail, consumed);
 
   /* update pointers */
-  if (*in_consumed > 0) {
-    gssize left = samples_avail - *in_consumed;
+  if (consumed > 0) {
+    gssize left = samples_avail - consumed;
     if (left > 0) {
       /* we consumed part of our samples */
       resampler->samples_avail = left;
@@ -1124,7 +1111,5 @@ gst_audio_resampler_resample (GstAudioResampler * resampler,
       resampler->samples_avail = 0;
       resampler->skip = -left;
     }
-    /* we always consume everything */
-    *in_consumed = in_frames;
   }
 }

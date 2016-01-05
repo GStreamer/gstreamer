@@ -178,8 +178,7 @@ gsize               gst_audio_resampler_get_max_latency  (GstAudioResampler *res
 
 void                gst_audio_resampler_resample         (GstAudioResampler * resampler,
                                                           gpointer in[], gsize in_frames,
-                                                          gpointer out[], gsize out_frames,
-                                                          gsize *in_consumed, gsize *out_produced);
+                                                          gpointer out[], gsize out_frames);
 
 G_END_DECLS
 

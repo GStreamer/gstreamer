@@ -217,19 +217,16 @@ audio_chain_free (AudioChain * chain)
 }
 
 static gpointer *
-audio_chain_alloc_samples (AudioChain * chain, gsize num_samples, gsize * avail)
+audio_chain_alloc_samples (AudioChain * chain, gsize num_samples)
 {
-  return chain->alloc_func (chain, num_samples, avail, chain->alloc_data);
+  return chain->alloc_func (chain, num_samples, chain->alloc_data);
 }
 
 static void
 audio_chain_set_samples (AudioChain * chain, gpointer * samples,
     gsize num_samples)
 {
-  if (num_samples == 0)
-    return;
-
-  GST_LOG ("set samples %" G_GSIZE_FORMAT, num_samples);
+  GST_LOG ("set samples %p %" G_GSIZE_FORMAT, samples, num_samples);
 
   chain->samples = samples;
   chain->num_samples = num_samples;
@@ -307,7 +304,7 @@ copy_config (GQuark field_id, const GValue * value, gpointer user_data)
  *
  * Set @in_rate, @out_rate and @config as extra configuration for @convert.
  *
- * in_rate and @out_rate specify the new sample rates of input and output
+ * @in_rate and @out_rate specify the new sample rates of input and output
  * formats. A value of 0 leaves the sample rate unchanged.
  *
  * @config can be %NULL, in which case, the current configuration is not
@@ -344,6 +341,10 @@ gst_audio_converter_update_config (GstAudioConverter * convert,
     gst_structure_foreach (config, copy_config, convert);
     gst_structure_free (config);
   }
+
+  if (convert->resampler)
+    gst_audio_resampler_update (convert->resampler, in_rate, out_rate,
+        convert->config);
 
   return TRUE;
 }
@@ -459,7 +460,6 @@ do_unpack (AudioChain * chain, gpointer user_data)
     }
   } else {
     tmp = convert->in_data;
-    num_samples = convert->in_samples;
     GST_LOG ("get in samples %p", tmp);
   }
   audio_chain_set_samples (chain, tmp, num_samples);
@@ -470,8 +470,8 @@ do_unpack (AudioChain * chain, gpointer user_data)
 static gboolean
 do_convert_in (AudioChain * chain, gpointer user_data)
 {
-  GstAudioConverter *convert = user_data;
   gsize num_samples;
+  GstAudioConverter *convert = user_data;
   gpointer *in, *out;
   gint i;
 
@@ -490,8 +490,8 @@ do_convert_in (AudioChain * chain, gpointer user_data)
 static gboolean
 do_mix (AudioChain * chain, gpointer user_data)
 {
-  GstAudioConverter *convert = user_data;
   gsize num_samples;
+  GstAudioConverter *convert = user_data;
   gpointer *in, *out;
 
   in = audio_chain_get_samples (chain->prev, &num_samples);
@@ -510,23 +510,19 @@ do_resample (AudioChain * chain, gpointer user_data)
 {
   GstAudioConverter *convert = user_data;
   gpointer *in, *out;
-  gsize in_frames, out_frames, produced, consumed;
+  gsize in_frames, out_frames;
 
   in = audio_chain_get_samples (chain->prev, &in_frames);
+  out_frames = convert->out_samples;
+  out = (chain->allow_ip ? in : audio_chain_alloc_samples (chain, out_frames));
 
-  out_frames =
-      gst_audio_resampler_get_out_frames (convert->resampler, in_frames);
-  out =
-      (chain->allow_ip ? in : audio_chain_alloc_samples (chain, out_frames,
-          &out_frames));
-
-  GST_LOG ("resample %p %p,%" G_GSIZE_FORMAT " %" G_GSIZE_FORMAT " %"
-      G_GSIZE_FORMAT, in, out, in_frames, out_frames, num_samples);
+  GST_LOG ("resample %p %p,%" G_GSIZE_FORMAT " %" G_GSIZE_FORMAT, in,
+      out, in_frames, out_frames);
 
   gst_audio_resampler_resample (convert->resampler, in, in_frames, out,
-      out_frames, &consumed, &produced);
+      out_frames);
 
-  audio_chain_set_samples (chain, out, produced);
+  audio_chain_set_samples (chain, out, out_frames);
 
   return TRUE;
 }
@@ -541,7 +537,7 @@ do_convert_out (AudioChain * chain, gpointer user_data)
 
   in = audio_chain_get_samples (chain->prev, &num_samples);
   out = (chain->allow_ip ? in : audio_chain_alloc_samples (chain, num_samples));
-  GST_LOG ("convert out %p, %p, %" G_GSIZE_FORMAT, in, out, num_samples);
+  GST_LOG ("convert out %p, %p %" G_GSIZE_FORMAT, in, out, num_samples);
 
   for (i = 0; i < chain->blocks; i++)
     convert->convert_out (out[i], in[i], num_samples * chain->inc);
@@ -560,7 +556,7 @@ do_quantize (AudioChain * chain, gpointer user_data)
 
   in = audio_chain_get_samples (chain->prev, &num_samples);
   out = (chain->allow_ip ? in : audio_chain_alloc_samples (chain, num_samples));
-  GST_LOG ("quantize %p, %p, %" G_GSIZE_FORMAT, in, out, num_samples);
+  GST_LOG ("quantize %p, %p %" G_GSIZE_FORMAT, in, out, num_samples);
 
   gst_audio_quantize_samples (convert->quant, in, out, num_samples);
 
@@ -679,7 +675,8 @@ chain_resample (GstAudioConverter * convert, AudioChain * prev)
   GstAudioFormat format = convert->current_format;
   gint channels = convert->current_channels;
 
-  if (in->rate != out->rate) {
+  if (in->rate != out->rate
+      || convert->flags & GST_AUDIO_CONVERTER_FLAG_VARIABLE_RATE) {
     method = GET_OPT_RESAMPLER_METHOD (convert);
 
     flags = 0;
@@ -885,7 +882,7 @@ converter_generic (GstAudioConverter * convert,
 
 /**
  * gst_audio_converter_new: (skip)
- * @flags: #GstAudioConverterFlags
+ * @flags: extra #GstAudioConverterFlags
  * @in_info: a source #GstAudioInfo
  * @out_info: a destination #GstAudioInfo
  * @config: (transfer full): a #GstStructure with configuration options
@@ -1063,52 +1060,6 @@ gst_audio_converter_get_max_latency (GstAudioConverter * convert)
 }
 
 /**
- * gst_audio_converter_update_rates:
- * @convert: a #GstAudioConverter
- * @in_rate: input rate
- * @out_rate: output rate
- * @options: resampler options
- *
- * Update the input and output rates, passing @options to the resampler.
- *
- * Returns: %TRUE on success.
- */
-gboolean
-gst_audio_converter_update_rates (GstAudioConverter * convert,
-    gint in_rate, gint out_rate, GstStructure * options)
-{
-  g_return_val_if_fail (convert != NULL, FALSE);
-  g_return_val_if_fail (in_rate > 0, FALSE);
-  g_return_val_if_fail (out_rate > 0, FALSE);
-
-  convert->in.rate = in_rate;
-  convert->out.rate = out_rate;
-
-  if (options)
-    gst_structure_free (options);
-
-  return TRUE;
-}
-
-/**
- * gst_audio_converter_get_rates:
- * @convert: a #GstAudioConverter
- * @in_rate: input rate
- * @out_rate: output rate
- *
- * Get the current input and output rates.
- */
-void
-gst_audio_converter_get_rates (GstAudioConverter * convert,
-    gint * in_rate, gint * out_rate)
-{
-  if (in_rate)
-    *in_rate = convert->in.rate;
-  if (out_rate)
-    *out_rate = convert->out.rate;
-}
-
-/**
  * gst_audio_converter_reset:
  * @convert: a #GstAudioConverter
  *
@@ -1157,8 +1108,6 @@ gst_audio_converter_samples (GstAudioConverter * convert,
 {
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (out != NULL, FALSE);
-
-  in_frames = MIN (in_frames, out_frames);
 
   if (in_frames == 0) {
     GST_LOG ("skipping empty buffer");
