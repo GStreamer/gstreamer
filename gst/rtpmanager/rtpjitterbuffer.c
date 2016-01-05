@@ -98,6 +98,15 @@ rtp_jitter_buffer_finalize (GObject * object)
 
   jbuf = RTP_JITTER_BUFFER_CAST (object);
 
+  if (jbuf->media_clock_synced_id)
+    g_signal_handler_disconnect (jbuf->media_clock,
+        jbuf->media_clock_synced_id);
+  if (jbuf->media_clock)
+    gst_object_unref (jbuf->media_clock);
+
+  if (jbuf->pipeline_clock)
+    gst_object_unref (jbuf->pipeline_clock);
+
   g_queue_free (jbuf->packets);
 
   G_OBJECT_CLASS (rtp_jitter_buffer_parent_class)->finalize (object);
@@ -197,6 +206,94 @@ guint32
 rtp_jitter_buffer_get_clock_rate (RTPJitterBuffer * jbuf)
 {
   return jbuf->clock_rate;
+}
+
+/* FIXME: This is called from another thread than anything else
+ * and will need some locking */
+static void
+media_clock_synced_cb (GstClock * clock, gboolean synced,
+    RTPJitterBuffer * jbuf)
+{
+  GstClockTime internal, external;
+
+  if (!jbuf->pipeline_clock)
+    return;
+
+  internal = gst_clock_get_internal_time (jbuf->media_clock);
+  external = gst_clock_get_time (jbuf->pipeline_clock);
+
+  gst_clock_set_calibration (jbuf->media_clock, internal, external, 1, 1);
+}
+
+/**
+ * rtp_jitter_buffer_set_media_clock:
+ * @jbuf: an #RTPJitterBuffer
+ * @clock: (transfer full): media #GstClock
+ * @clock_offset: RTP time at clock epoch or -1
+ *
+ * Sets the media clock for the media and the clock offset
+ *
+ */
+void
+rtp_jitter_buffer_set_media_clock (RTPJitterBuffer * jbuf, GstClock * clock,
+    guint64 clock_offset)
+{
+  if (jbuf->media_clock) {
+    if (jbuf->media_clock_synced_id)
+      g_signal_handler_disconnect (jbuf->media_clock,
+          jbuf->media_clock_synced_id);
+    jbuf->media_clock_synced_id = 0;
+    gst_object_unref (jbuf->media_clock);
+  }
+  jbuf->media_clock = clock;
+  jbuf->media_clock_offset = clock_offset;
+
+  if (jbuf->pipeline_clock && jbuf->media_clock &&
+      jbuf->pipeline_clock != jbuf->media_clock) {
+    jbuf->media_clock_synced_id =
+        g_signal_connect (jbuf->media_clock, "synced",
+        G_CALLBACK (media_clock_synced_cb), jbuf);
+    if (gst_clock_is_synced (jbuf->media_clock)) {
+      GstClockTime internal, external;
+
+      internal = gst_clock_get_internal_time (jbuf->media_clock);
+      external = gst_clock_get_time (jbuf->pipeline_clock);
+
+      gst_clock_set_calibration (jbuf->media_clock, internal, external, 1, 1);
+    }
+
+    gst_clock_set_master (jbuf->media_clock, jbuf->pipeline_clock);
+  }
+}
+
+/**
+ * rtp_jitter_buffer_set_pipeline_clock:
+ * @jbuf: an #RTPJitterBuffer
+ * @clock: (transfer full): pipeline #GstClock
+ *
+ * Sets the pipeline clock
+ *
+ */
+void
+rtp_jitter_buffer_set_pipeline_clock (RTPJitterBuffer * jbuf, GstClock * clock)
+{
+  if (jbuf->pipeline_clock)
+    gst_object_unref (jbuf->pipeline_clock);
+  jbuf->pipeline_clock = clock;
+
+  if (jbuf->pipeline_clock && jbuf->media_clock &&
+      jbuf->pipeline_clock != jbuf->media_clock) {
+    if (gst_clock_is_synced (jbuf->media_clock)) {
+      GstClockTime internal, external;
+
+      internal = gst_clock_get_internal_time (jbuf->media_clock);
+      external = gst_clock_get_time (jbuf->pipeline_clock);
+
+      gst_clock_set_calibration (jbuf->media_clock, internal, external, 1, 1);
+    }
+
+    gst_clock_set_master (jbuf->media_clock, jbuf->pipeline_clock);
+  }
 }
 
 /**
@@ -759,6 +856,37 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
     default:
       break;
   }
+
+  if (gst_clock_is_synced (jbuf->media_clock)) {
+    GstClockTime ntptime, systime;
+    GstClockTime ntprtptime, rtpsystime;
+
+    ntptime = gst_clock_get_internal_time (jbuf->media_clock);
+    systime = gst_clock_get_time (jbuf->pipeline_clock);
+    g_print ("ntp %" GST_TIME_FORMAT " sys %" GST_TIME_FORMAT "\n",
+        GST_TIME_ARGS (ntptime), GST_TIME_ARGS (systime));
+
+    ntprtptime = gst_util_uint64_scale (ntptime, jbuf->clock_rate, GST_SECOND);
+    ntprtptime += jbuf->media_clock_offset;
+    ntprtptime &= 0xffffffff;
+    g_print ("rtptime now %lu then %u\n", ntprtptime, rtptime);
+
+    if (ntprtptime > rtptime)
+      ntptime -=
+          gst_util_uint64_scale (ntprtptime - rtptime, jbuf->clock_rate,
+          GST_SECOND);
+    else
+      ntptime +=
+          gst_util_uint64_scale (rtptime - ntprtptime, jbuf->clock_rate,
+          GST_SECOND);
+
+    rtpsystime = gst_clock_adjust_unlocked (jbuf->media_clock, ntptime);
+    g_print ("rtp %" GST_TIME_FORMAT " sys %" GST_TIME_FORMAT "\n",
+        GST_TIME_ARGS (rtpsystime), GST_TIME_ARGS (systime));
+  } else {
+    g_print ("not synced yet\n");
+  }
+
   /* do skew calculation by measuring the difference between rtptime and the
    * receive dts, this function will return the skew corrected rtptime. */
   item->pts = calculate_skew (jbuf, rtptime, dts);

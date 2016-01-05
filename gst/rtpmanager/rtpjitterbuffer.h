@@ -102,6 +102,11 @@ struct _RTPJitterBuffer {
   gint64         skew;
   gint64         prev_send_diff;
   gboolean       buffering_disabled;
+
+  GstClock      *pipeline_clock;
+  GstClock      *media_clock;
+  gulong         media_clock_synced_id;
+  guint64        media_clock_offset;
 };
 
 struct _RTPJitterBufferClass {
@@ -149,6 +154,9 @@ void                  rtp_jitter_buffer_set_delay        (RTPJitterBuffer *jbuf,
 
 void                  rtp_jitter_buffer_set_clock_rate   (RTPJitterBuffer *jbuf, guint32 clock_rate);
 guint32               rtp_jitter_buffer_get_clock_rate   (RTPJitterBuffer *jbuf);
+
+void                  rtp_jitter_buffer_set_media_clock  (RTPJitterBuffer *jbuf, GstClock * clock, guint64 clock_offset);
+void                  rtp_jitter_buffer_set_pipeline_clock (RTPJitterBuffer *jbuf, GstClock * clock);
 
 void                  rtp_jitter_buffer_reset_skew       (RTPJitterBuffer *jbuf);
 
