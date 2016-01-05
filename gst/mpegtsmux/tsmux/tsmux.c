@@ -692,7 +692,7 @@ tsmux_write_adaptation_field (guint8 * buf,
       buf[pos++] = (pcr_base >> 17) & 0xff;
       buf[pos++] = (pcr_base >> 9) & 0xff;
       buf[pos++] = (pcr_base >> 1) & 0xff;
-      buf[pos++] = ((pcr_base << 7) & 0x80) | ((pcr_ext >> 8) & 0x01);
+      buf[pos++] = ((pcr_base << 7) & 0x80) | 0x7e | ((pcr_ext >> 8) & 0x01);   /* set 6 reserve bits to 1 */
       buf[pos++] = (pcr_ext) & 0xff;
     }
     if (pi->flags & TSMUX_PACKET_FLAG_WRITE_OPCR) {
@@ -708,7 +708,7 @@ tsmux_write_adaptation_field (guint8 * buf,
       buf[pos++] = (opcr_base >> 17) & 0xff;
       buf[pos++] = (opcr_base >> 9) & 0xff;
       buf[pos++] = (opcr_base >> 1) & 0xff;
-      buf[pos++] = ((opcr_base << 7) & 0x80) | ((opcr_ext >> 8) & 0x01);
+      buf[pos++] = ((opcr_base << 7) & 0x80) | 0x7e | ((opcr_ext >> 8) & 0x01); /* set 6 reserve bits to 1 */
       buf[pos++] = (opcr_ext) & 0xff;
     }
     if (pi->flags & TSMUX_PACKET_FLAG_WRITE_SPLICE) {
@@ -730,7 +730,7 @@ tsmux_write_adaptation_field (guint8 * buf,
       TS_DEBUG ("FIXME: write Adaptation extension");
       /* Write an empty extension for now */
       buf[pos++] = 1;
-      buf[pos++] = 0;
+      buf[pos++] = 0x1f;        /* lower 5 bits are reserved, and should be all 1 */
     }
   }
   /* Write the flags at the start */
