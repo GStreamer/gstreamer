@@ -248,6 +248,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   GstM3U8MediaFile *file;
   guint64 bitrate;
   gboolean snap_before, snap_after, snap_nearest, keyunit;
+  gboolean reverse;
 
   gst_event_parse_seek (seek, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
@@ -304,7 +305,8 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   file = GST_M3U8_MEDIA_FILE (hlsdemux->client->current->files->data);
   current_sequence = file->sequence;
   current_pos = 0;
-  target_pos = rate > 0 ? start : stop;
+  reverse = rate < 0;
+  target_pos = reverse ? stop : start;
 
   /* Snap to segment boundary. Improves seek performance on slow machines. */
   snap_before = snap_after = snap_nearest = FALSE;
@@ -320,11 +322,19 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
 
     current_sequence = file->sequence;
     current_file = walk;
-    if (snap_after || snap_nearest) {
+    if ((!reverse && snap_after) || snap_nearest) {
       if (current_pos >= target_pos)
         break;
       if (snap_nearest && target_pos - current_pos < file->duration / 2)
         break;
+    } else if (reverse && snap_after) {
+      /* check if the next fragment is our target, in this case we want to
+       * start from the previous fragment */
+      GstClockTime next_pos = current_pos + file->duration;
+
+      if (next_pos <= target_pos && target_pos < next_pos + file->duration) {
+        break;
+      }
     } else if (current_pos <= target_pos
         && target_pos < current_pos + file->duration) {
       break;
@@ -345,9 +355,18 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   hlsdemux->client->sequence_position = current_pos;
   GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
 
-  if (keyunit || snap_before || snap_after || snap_nearest)
-    gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
-        current_pos, stop_type, stop, NULL);
+  /* Play from the end of the current selected segment */
+  if (reverse && (snap_before || snap_after || snap_nearest))
+    current_pos += file->duration;
+
+  if (keyunit || snap_before || snap_after || snap_nearest) {
+    if (!reverse)
+      gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
+          current_pos, stop_type, stop, NULL);
+    else
+      gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
+          start, stop_type, current_pos, NULL);
+  }
 
   return TRUE;
 }
