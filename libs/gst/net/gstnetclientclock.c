@@ -1129,7 +1129,8 @@ gst_net_client_clock_finalize (GObject * object)
   GList *l;
 
   if (self->priv->synced_id)
-    g_signal_handler_disconnect (self, self->priv->synced_id);
+    g_signal_handler_disconnect (self->priv->internal_clock,
+        self->priv->synced_id);
   self->priv->synced_id = 0;
 
   G_LOCK (clocks_lock);
