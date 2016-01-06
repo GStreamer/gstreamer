@@ -231,8 +231,10 @@ main (int argc, char **argv)
 
   timer = g_timer_new ();
 
-  if (!gst_device_monitor_start (app.monitor))
-    g_error ("Failed to start device monitor!");
+  if (!gst_device_monitor_start (app.monitor)) {
+    g_printerr ("Failed to start device monitor!\n");
+    return -1;
+  }
 
   GST_INFO ("Took %.2f seconds", g_timer_elapsed (timer, NULL));
 
