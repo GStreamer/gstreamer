@@ -1298,9 +1298,9 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
           offset =
               gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
           stream->segment.start += offset - period_start;
-          if (demux->segment.rate > 1)
+          if (demux->segment.rate > 0 && start_type != GST_SEEK_TYPE_NONE)
             stream->segment.position = stream->segment.start;
-          else
+          else if (demux->segment.rate < 0 && stop_type != GST_SEEK_TYPE_NONE)
             stream->segment.position = stream->segment.stop;
           seg_evt = gst_event_new_segment (&stream->segment);
           gst_event_set_seqnum (seg_evt, demux->priv->segment_seqnum);
@@ -3084,7 +3084,7 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
               stream->download_total_time * GST_USECOND, NULL)));
 
   /* Don't update to the end of the segment if in reverse playback */
-  if (GST_CLOCK_TIME_IS_VALID (duration) && demux->segment.rate > 1) {
+  if (GST_CLOCK_TIME_IS_VALID (duration) && demux->segment.rate > 0) {
     GstClockTime offset =
         gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
     GstClockTime period_start =
