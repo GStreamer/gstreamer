@@ -123,6 +123,8 @@ GstCaps *   gst_gl_color_convert_fixate_caps    (GstGLContext * convert,
 gboolean    gst_gl_color_convert_set_caps    (GstGLColorConvert * convert,
                                               GstCaps           * in_caps,
                                               GstCaps           * out_caps);
+gboolean    gst_gl_color_convert_decide_allocation (GstGLColorConvert   * convert,
+                                                    GstQuery            * query);
 
 GstBuffer * gst_gl_color_convert_perform    (GstGLColorConvert * convert, GstBuffer * inbuf);
 
