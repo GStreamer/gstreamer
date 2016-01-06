@@ -46,7 +46,8 @@ IGNORE_HFILES = \
 	gstlfocontrolsourceprivate.h \
 	gstgetbits_inl.h \
 	gstindex.h \
-	dp-private.h
+	dp-private.h \
+	gstntppacket.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES = gdp-header.png

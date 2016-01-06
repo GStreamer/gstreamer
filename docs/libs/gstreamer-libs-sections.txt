@@ -987,6 +987,11 @@ gst_ptp_clock_new
 GstPtpStatisticsCallback
 gst_ptp_statistics_callback_add
 gst_ptp_statistics_callback_remove
+
+GST_PTP_STATISTICS_BEST_MASTER_CLOCK_SELECTED
+GST_PTP_STATISTICS_NEW_DOMAIN_FOUND
+GST_PTP_STATISTICS_PATH_DELAY_MEASURED
+GST_PTP_STATISTICS_TIME_UPDATED
 <SUBSECTION Standard>
 GstPtpClockClass
 GstPtpClockPrivate
