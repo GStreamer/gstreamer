@@ -53,7 +53,7 @@ struct _GstRTMPSink {
   RTMP *rtmp;
   gchar *rtmp_uri; /* copy of url for librtmp */
 
-  GstBuffer *cache; /* Cached buffer */
+  GstBuffer *header;
   gboolean first;
   gboolean have_write_error;
 };
