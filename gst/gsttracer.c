@@ -24,9 +24,9 @@
  * @short_description: Tracing base class
  *
  * Tracing modules will subclass #GstTracer and register through
- * gst_tracer_register(). Modules can attach to various hook-types - see
- * #GstTracerHook. When invoked they receive hook specific contextual data, 
- * which they must not modify.
+ * gst_tracing_register(). Modules can attach to various hook-types - see
+ * gst_tracing_register_hook(). When invoked they receive hook specific
+ * contextual data, which they must not modify.
  *
  * Since: 1.8
  */
@@ -130,6 +130,17 @@ gst_tracer_get_property (GObject * object, guint prop_id,
 
 /* tracing modules */
 
+/**
+ * gst_tracer_register:
+ * @plugin: (allow-none): A #GstPlugin, or %NULL for a static typefind function
+ * @name: The name for registering
+ * @type: GType of tracer to register
+ *
+ * Create a new tracer-factory  capable of instantiating objects of the
+ * @type and add the factory to @plugin.
+ *
+ * Returns: %TRUE, if the registering succeeded, %FALSE on error
+ */
 gboolean
 gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type)
 {
@@ -186,6 +197,17 @@ gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type)
 
 /* tracing module helpers */
 
+/**
+ * gst_tracer_log_trace:
+ *
+ * Default log hander for traces. Serialzed the trace event into the log.
+ *
+ * Right now this is using the gstreamer debug log with the level TRACE (7) and
+ * the category "GST_TRACER".
+ * <note><para>
+ *   Please note that this is still under discussion and subject to change.
+ * </para></note>
+ */
 void
 gst_tracer_log_trace (GstStructure * s)
 {

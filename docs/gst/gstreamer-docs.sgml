@@ -32,7 +32,7 @@ GStreamer is cross-platform and works on most UNIX-like platforms as well as
 Windows.  It is released under the GNU Library General Public License
 (GNU LGPL).
     </para>
-    
+
     <mediaobject>
       <imageobject>
         <imagedata fileref="gst-universe.svg" format="SVG"/>
@@ -133,6 +133,8 @@ Windows.  It is released under the GNU Library General Public License
     </para>
 
     <xi:include href="xml/gstinfo.xml" />
+    <xi:include href="xml/gsttracer.xml" />
+    <xi:include href="xml/gsttracerfactory.xml" />
 
   </chapter>
 
@@ -173,7 +175,7 @@ Windows.  It is released under the GNU Library General Public License
     <title>Index of new API in 1.0.5</title>
     <xi:include href="xml/api-index-1.0.5.xml"><xi:fallback /></xi:include>
   </index>
-  
+
   <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
 
 </book>

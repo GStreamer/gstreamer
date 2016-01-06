@@ -3032,6 +3032,44 @@ gst_toc_scope_get_type
 
 
 <SECTION>
+<FILE>gsttracer</FILE>
+<TITLE>GstTracer</TITLE>
+GstTracer
+gst_tracer_register
+gst_tracing_register_hook
+gst_tracing_register_hook_id
+gst_tracer_log_trace
+<SUBSECTION Standard>
+GST_TRACER
+GST_IS_TRACER
+GST_TYPE_TRACER
+GST_TRACER_CLASS
+GST_IS_TRACER_CLASS
+GST_TRACER_GET_CLASS
+<SUBSECTION Private>
+gst_tracer_get_type
+</SECTION>
+
+
+<SECTION>
+<FILE>gsttracerfactory</FILE>
+<TITLE>GstTracerFactory</TITLE>
+GstTracerFactory
+gst_tracer_factory_get_list
+<SUBSECTION Standard>
+GstTracerFactoryClass
+GST_TRACER_FACTORY
+GST_IS_TYPE_TRACER
+GST_TYPE_TRACER_CLASS
+GST_IS_TRACER_FACTORY_CLASS
+GST_TYPE_TRACER_GET_CLASS
+GST_TYPE_TRACER_FACTORY
+<SUBSECTION Private>
+gst_tracer_factory_get_type
+</SECTION>
+
+
+<SECTION>
 <FILE>gsttocsetter</FILE>
 <TITLE>GstTocSetter</TITLE>
 GstTocSetter
