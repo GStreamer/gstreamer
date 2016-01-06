@@ -43,7 +43,6 @@ typedef struct _GstPtpClockPrivate GstPtpClockPrivate;
 
 /**
  * GstPtpClock:
- * @clock: parented to #GstSystemClock
  *
  * Opaque #GstPtpClock structure.
  */
