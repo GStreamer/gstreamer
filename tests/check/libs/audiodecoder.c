@@ -202,8 +202,8 @@ static GstHarness *
 setup_audiodecodertester (GstStaticPadTemplate * sinktemplate,
     GstStaticPadTemplate * srctemplate)
 {
-  GstHarness * h;
-  GstElement * dec;
+  GstHarness *h;
+  GstElement *dec;
 
   if (sinktemplate == NULL)
     sinktemplate = &sinktemplate_default;
@@ -215,9 +215,7 @@ setup_audiodecodertester (GstStaticPadTemplate * sinktemplate,
 
   gst_harness_set_src_caps (h,
       gst_caps_new_simple ("audio/x-test-custom",
-          "channels", G_TYPE_INT, 2,
-          "rate", G_TYPE_INT, 44100,
-          NULL));
+          "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 44100, NULL));
 
   gst_object_unref (dec);
   return h;
@@ -337,8 +335,7 @@ GST_START_TEST (audiodecoder_negotiation_with_gap_event)
   GstHarness *h = setup_audiodecodertester (NULL, NULL);
 
   /* push a gap event to force audiodecoder to push a caps event */
-  fail_unless (gst_harness_push_event (h, gst_event_new_gap (0,
-              GST_SECOND)));
+  fail_unless (gst_harness_push_event (h, gst_event_new_gap (0, GST_SECOND)));
   fail_unless_equals_int (0, gst_harness_buffers_in_queue (h));
 
   check_audiodecoder_negotiation (h);
@@ -355,8 +352,7 @@ GST_START_TEST (audiodecoder_delayed_negotiation_with_gap_event)
   ((GstAudioDecoderTester *) h->element)->setoutputformat_on_decoding = TRUE;
 
   /* push a gap event to force audiodecoder to push a caps event */
-  fail_unless (gst_harness_push_event (h, gst_event_new_gap (0,
-              GST_SECOND)));
+  fail_unless (gst_harness_push_event (h, gst_event_new_gap (0, GST_SECOND)));
   fail_unless_equals_int (0, gst_harness_buffers_in_queue (h));
 
   check_audiodecoder_negotiation (h);
@@ -372,8 +368,7 @@ GST_START_TEST (audiodecoder_first_data_is_gap)
   GstHarness *h = setup_audiodecodertester (NULL, NULL);
 
   /* push a gap */
-  fail_unless (gst_harness_push_event (h, gst_event_new_gap (0,
-              GST_SECOND)));
+  fail_unless (gst_harness_push_event (h, gst_event_new_gap (0, GST_SECOND)));
 
   /* make sure the usual events have been received */
   {
@@ -426,7 +421,8 @@ _audiodecoder_flush_events (gboolean send_buffers)
         tags = gst_tag_list_new (GST_TAG_TRACK_NUMBER, i, NULL);
         fail_unless (gst_harness_push_event (h, gst_event_new_tag (tags)));
       } else {
-        fail_unless (gst_harness_push (h, create_test_buffer (i)) == GST_FLOW_OK);
+        fail_unless (gst_harness_push (h,
+                create_test_buffer (i)) == GST_FLOW_OK);
       }
     }
   } else {

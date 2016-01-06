@@ -138,8 +138,8 @@ gst_audio_encoder_tester_init (GstAudioEncoderTester * tester)
 static GstHarness *
 setup_audioencodertester (void)
 {
-  GstHarness * h;
-  GstElement * enc;
+  GstHarness *h;
+  GstElement *enc;
 
   static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK,
@@ -157,11 +157,10 @@ setup_audioencodertester (void)
 
   gst_harness_set_src_caps (h,
       gst_caps_new_simple ("audio/x-raw",
-      "rate", G_TYPE_INT, TEST_AUDIO_RATE,
-      "channels", G_TYPE_INT, TEST_AUDIO_CHANNELS,
-      "format", G_TYPE_STRING, TEST_AUDIO_FORMAT,
-      "layout", G_TYPE_STRING, "interleaved",
-      NULL));
+          "rate", G_TYPE_INT, TEST_AUDIO_RATE,
+          "channels", G_TYPE_INT, TEST_AUDIO_CHANNELS,
+          "format", G_TYPE_STRING, TEST_AUDIO_FORMAT,
+          "layout", G_TYPE_STRING, "interleaved", NULL));
 
   gst_object_unref (enc);
   return h;
@@ -196,7 +195,7 @@ GST_START_TEST (audioencoder_playback)
   guint64 i;
   guint buffers_available;
 
-  GstHarness * h = setup_audioencodertester ();
+  GstHarness *h = setup_audioencodertester ();
 
   /* push buffers, the data is actually a number so we can track them */
   for (i = 0; i < NUM_BUFFERS; i++) {

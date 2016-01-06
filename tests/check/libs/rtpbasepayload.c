@@ -1783,30 +1783,23 @@ GST_START_TEST (rtp_base_payload_framerate_attribute)
   State *state;
 
   state = create_payloader ("video/x-raw,framerate=(fraction)1/4", &sinktmpl,
-      "perfect-rtptime", FALSE,
-      NULL);
+      "perfect-rtptime", FALSE, NULL);
 
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (1);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
 
   validate_events_received (3);
 
   validate_normal_start_events (0);
 
-  validate_event (1, "caps",
-      "a-framerate", "0.25",
-      NULL);
+  validate_event (1, "caps", "a-framerate", "0.25", NULL);
 
   destroy_payloader (state);
 }
@@ -1823,33 +1816,26 @@ GST_START_TEST (rtp_base_payload_max_framerate_attribute)
 {
   State *state;
 
-  state = create_payloader (
-      "video/x-raw,framerate=(fraction)0/1,max-framerate=(fraction)1/8",
-      &sinktmpl,
-      "perfect-rtptime", FALSE,
-      NULL);
+  state =
+      create_payloader
+      ("video/x-raw,framerate=(fraction)0/1,max-framerate=(fraction)1/8",
+      &sinktmpl, "perfect-rtptime", FALSE, NULL);
 
   set_state (state, GST_STATE_PLAYING);
 
-  push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (1);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
 
   validate_events_received (3);
 
   validate_normal_start_events (0);
 
-  validate_event (1, "caps",
-      "a-framerate", "0.125",
-      NULL);
+  validate_event (1, "caps", "a-framerate", "0.125", NULL);
 
   destroy_payloader (state);
 }
