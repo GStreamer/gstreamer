@@ -1006,6 +1006,13 @@ caps_filter_out_gl_memory (GstCapsFeatures * features, GstStructure * structure,
   else
     gst_object_unref (context);
 
+  /* this can happen if video/x-raw(memory:GLMemory) is forced but a context is
+   * not available */
+  if (gst_caps_is_empty (new_caps)) {
+    GST_WARNING_OBJECT (element, "GLMemory requested but no context available");
+    return new_caps;
+  }
+
   new_caps = gst_caps_truncate (new_caps);
   structure = gst_caps_get_structure (new_caps, 0);
   /* crank up to 11. This is what the presets do, but we don't use the presets
