@@ -197,8 +197,8 @@ video_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       gst_buffer_pool_config_set_allocator (config, allocator, &priv->params);
     }
   }
-  priv->info = info;
   info.size = MAX (size, info.size);
+  priv->info = info;
 
   gst_buffer_pool_config_set_params (config, caps, info.size, min_buffers,
       max_buffers);
