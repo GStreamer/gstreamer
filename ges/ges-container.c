@@ -134,6 +134,13 @@ compare_grouping_prio (GType * a, GType * b)
   return ret;
 }
 
+static void
+_resync_start_offsets (GESTimelineElement * child,
+    ChildMapping * map, GESContainer * container)
+{
+  map->start_offset = _START (container) - _START (child);
+}
+
 /*****************************************************
  *                                                   *
  * GESTimelineElement virtual methods implementation *
@@ -677,6 +684,7 @@ gboolean
 ges_container_add (GESContainer * container, GESTimelineElement * child)
 {
   ChildMapping *mapping;
+  gboolean notify_start = FALSE;
   GESContainerClass *class;
   GESContainerPrivate *priv;
 
@@ -699,6 +707,14 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
     }
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
+
+  if (_START (container) > _START (child)) {
+    _START (container) = _START (child);
+
+    g_hash_table_foreach (priv->mappings, (GHFunc) _resync_start_offsets,
+        container);
+    notify_start = TRUE;
+  }
 
   mapping = g_slice_new0 (ChildMapping);
   mapping->child = gst_object_ref (child);
@@ -739,6 +755,9 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   g_signal_emit (container, ges_container_signals[CHILD_ADDED_SIGNAL], 0,
       child);
   priv->adding_children = g_list_remove (priv->adding_children, child);
+
+  if (notify_start)
+    g_object_notify (G_OBJECT (container), "start");
 
   return TRUE;
 }
