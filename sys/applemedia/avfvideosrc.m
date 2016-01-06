@@ -490,7 +490,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
   result_gl_caps = gst_caps_simplify (gst_caps_merge (result_gl_caps, result_caps));
 
-  GST_INFO_OBJECT (element, "Device returned the following caps %" GST_PTR_FORMAT, result_gl_caps);
+  GST_DEBUG_OBJECT (element, "Device returned the following caps %" GST_PTR_FORMAT, result_gl_caps);
 
   return result_gl_caps;
 }
@@ -683,8 +683,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   dispatch_sync (mainQueue, ^{
     int newformat;
 
-    g_assert (![session isRunning]);
-
     if (captureScreen) {
 #if !HAVE_IOS
       AVCaptureScreenInput *screenInput = (AVCaptureScreenInput *)input;
@@ -764,7 +762,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     GST_INFO_OBJECT (element, "configured caps %"GST_PTR_FORMAT
         ", pushing textures %d", caps, textureCache != NULL);
 
-    [session startRunning];
+    if (![session isRunning])
+      [session startRunning];
 
     /* Unlock device configuration only after session is started so the session
      * won't reset the capture formats */
@@ -1151,10 +1150,8 @@ static gboolean gst_avf_video_src_unlock (GstBaseSrc * basesrc);
 static gboolean gst_avf_video_src_unlock_stop (GstBaseSrc * basesrc);
 static GstFlowReturn gst_avf_video_src_create (GstPushSrc * pushsrc,
     GstBuffer ** buf);
-static gboolean gst_avf_video_src_negotiate (GstBaseSrc * basesrc);
 static GstCaps * gst_avf_video_src_fixate (GstBaseSrc * bsrc,
     GstCaps * caps);
-
 
 static void
 gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
@@ -1178,7 +1175,6 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
   gstbasesrc_class->unlock = gst_avf_video_src_unlock;
   gstbasesrc_class->unlock_stop = gst_avf_video_src_unlock_stop;
   gstbasesrc_class->fixate = gst_avf_video_src_fixate;
-  gstbasesrc_class->negotiate = gst_avf_video_src_negotiate;
 
   gstpushsrc_class->create = gst_avf_video_src_create;
 
@@ -1419,16 +1415,6 @@ gst_avf_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
   OBJC_CALLOUT_END ();
 
   return ret;
-}
-
-static gboolean
-gst_avf_video_src_negotiate (GstBaseSrc * basesrc)
-{
-  /* FIXME: We don't support reconfiguration yet */
-  if (gst_pad_has_current_caps (GST_BASE_SRC_PAD (basesrc)))
-    return TRUE;
-
-  return GST_BASE_SRC_CLASS (parent_class)->negotiate (basesrc);
 }
 
 
