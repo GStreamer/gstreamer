@@ -830,6 +830,22 @@ apply_buffer_list (GstQueue2 * queue, GstBufferList * buffer_list,
   update_time_level (queue);
 }
 
+static inline gint
+get_percent (guint64 cur_level, guint64 max_level, guint64 alt_max)
+{
+  guint64 p;
+
+  if (max_level == 0)
+    return 0;
+
+  if (alt_max > 0)
+    p = gst_util_uint64_scale (cur_level, 100, MIN (max_level, alt_max));
+  else
+    p = gst_util_uint64_scale (cur_level, 100, max_level);
+
+  return MIN (p, 100);
+}
+
 static gboolean
 get_buffering_percent (GstQueue2 * queue, gboolean * is_buffering,
     gint * percent)
@@ -843,7 +859,8 @@ get_buffering_percent (GstQueue2 * queue, gboolean * is_buffering,
       *is_buffering = FALSE;
     return FALSE;
   }
-#define GET_PERCENT(format,alt_max) ((queue->max_level.format) > 0 ? (queue->cur_level.format) * 100 / ((alt_max) > 0 ? MIN ((alt_max), (queue->max_level.format)) : (queue->max_level.format)) : 0)
+#define GET_PERCENT(format,alt_max) \
+    get_percent(queue->cur_level.format,queue->max_level.format,(alt_max))
 
   if (queue->is_eos) {
     /* on EOS we are always 100% full, we set the var here so that it we can
