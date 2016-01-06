@@ -151,15 +151,7 @@ _priv_gst_tracing_deinit (void)
   _priv_tracers = NULL;
 }
 
-/**
- * gst_tracing_register_hook_id:
- * @tracer: the tracer
- * @detail: the detailed hook
- * @func: (scope async): the callback
- *
- * Register @func to be called when the trace hook @detail is getting invoked.
- */
-void
+static void
 gst_tracing_register_hook_id (GstTracer * tracer, GQuark detail, GCallback func)
 {
   gpointer key = GINT_TO_POINTER (detail);
@@ -182,6 +174,7 @@ gst_tracing_register_hook_id (GstTracer * tracer, GQuark detail, GCallback func)
  * @func: (scope async): the callback
  *
  * Register @func to be called when the trace hook @detail is getting invoked.
+ * Use %NULL for @detail to register to all hooks.
  */
 void
 gst_tracing_register_hook (GstTracer * tracer, const gchar * detail,

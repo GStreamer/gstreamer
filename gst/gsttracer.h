@@ -55,16 +55,14 @@ struct _GstTracer {
 
 struct _GstTracerClass {
   GstObjectClass parent_class;
-    
+
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_tracer_get_type          (void);
 
-void gst_tracing_register_hook (GstTracer *tracer, const gchar *detail, 
-  GCallback func);
-void gst_tracing_register_hook_id (GstTracer *tracer, GQuark detail, 
+void gst_tracing_register_hook (GstTracer *tracer, const gchar *detail,
   GCallback func);
 
 /* tracing modules */

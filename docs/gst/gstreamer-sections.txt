@@ -3044,7 +3044,6 @@ gst_toc_scope_get_type
 GstTracer
 gst_tracer_register
 gst_tracing_register_hook
-gst_tracing_register_hook_id
 gst_tracer_log_trace
 <SUBSECTION Standard>
 GST_TRACER
