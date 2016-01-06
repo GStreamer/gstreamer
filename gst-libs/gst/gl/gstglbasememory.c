@@ -654,11 +654,9 @@ gst_gl_allocation_params_copy_data (GstGLAllocationParams * src,
     GstGLAllocationParams * dest)
 {
   gst_gl_allocation_params_init (dest, src->struct_size, src->alloc_flags,
-      src->copy, src->free, NULL, src->alloc_size, NULL, src->wrapped_data,
-      src->gl_handle, src->user_data, src->notify);
+      src->copy, src->free, src->context, src->alloc_size, NULL,
+      src->wrapped_data, src->gl_handle, src->user_data, src->notify);
 
-  if (src->context)
-    dest->context = gst_object_ref (src->context);
   if (src->alloc_params)
     dest->alloc_params = gst_allocation_params_copy (src->alloc_params);
 }
