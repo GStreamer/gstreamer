@@ -331,11 +331,11 @@ Problems / Open items
   - something like gst_object_get_path_string() won't work as objects are 
     initially without parent
 
-- right now the tracer is enabled/disabled from configure with 
-  --{enable,disable}-debug, we should probably add --{enable,disable}-tracer
-  although it is confusing with "--disable-trace disable tracing subsystem"
-  where we could at least change the doc-string to say "disable memory tracing
-  subsystem"
+- right now the tracing-hooks are enabled/disabled from configure with 
+  --{enable,disable}-gst-tracer-hooks
+  The tracer code and the plugins are still built though. We should add a
+  --{enable,disable}-gst-tracer to disabled the whole system, allthough this
+  is a bit confusing with the --{enable,disable}-trace option we have already.
 
 Try it
 ======
