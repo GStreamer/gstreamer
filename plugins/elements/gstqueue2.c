@@ -882,7 +882,7 @@ static gboolean
 get_buffering_percent (GstQueue2 * queue, gboolean * is_buffering,
     gint * percent)
 {
-  gint perc;
+  gint perc, perc2;
 
   if (queue->high_percent <= 0) {
     if (percent)
@@ -912,12 +912,18 @@ get_buffering_percent (GstQueue2 * queue, gboolean * is_buffering,
       guint64 rb_size = queue->ring_buffer_max_size;
       perc = GET_PERCENT (bytes, rb_size);
     }
-    perc = MAX (perc, GET_PERCENT (time, 0));
-    perc = MAX (perc, GET_PERCENT (buffers, 0));
+
+    perc2 = GET_PERCENT (time, 0);
+    perc = MAX (perc, perc2);
+
+    perc2 = GET_PERCENT (buffers, 0);
+    perc = MAX (perc, perc2);
 
     /* also apply the rate estimate when we need to */
-    if (queue->use_rate_estimate)
-      perc = MAX (perc, GET_PERCENT (rate_time, 0));
+    if (queue->use_rate_estimate) {
+      perc2 = GET_PERCENT (rate_time, 0);
+      perc = MAX (perc, perc2);
+    }
 
     /* Don't get to 0% unless we're really empty */
     if (queue->cur_level.bytes > 0)
