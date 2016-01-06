@@ -414,6 +414,12 @@ struct _GstGLColorConvertPrivate
   GLuint vbo_indices;
   GLuint attr_position;
   GLuint attr_texture;
+
+  GstCaps *in_caps;
+  GstCaps *out_caps;
+
+  GstBufferPool *pool;
+  gboolean pool_started;
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_color_convert_debug);
@@ -543,6 +549,15 @@ gst_gl_color_convert_reset (GstGLColorConvert * convert)
     convert->shader = NULL;
   }
 
+  if (convert->priv->pool) {
+    convert->priv->pool_started = FALSE;
+
+    gst_object_unref (convert->priv->pool);
+    convert->priv->pool = NULL;
+  }
+  gst_caps_replace (&convert->priv->in_caps, NULL);
+  gst_caps_replace (&convert->priv->out_caps, NULL);
+
   if (convert->context) {
     gst_gl_context_thread_add (convert->context,
         (GstGLContextThreadFunc) _reset_gl, convert);
@@ -662,6 +677,8 @@ _gst_gl_color_convert_set_caps_unlocked (GstGLColorConvert * convert,
   gst_gl_color_convert_reset (convert);
   convert->in_info = in_info;
   convert->out_info = out_info;
+  gst_caps_replace (&convert->priv->in_caps, in_caps);
+  gst_caps_replace (&convert->priv->out_caps, out_caps);
   convert->priv->from_texture_target = from_target;
   convert->priv->to_texture_target = to_target;
   convert->initted = FALSE;
@@ -699,6 +716,81 @@ gst_gl_color_convert_set_caps (GstGLColorConvert * convert,
   GST_OBJECT_UNLOCK (convert);
 
   return ret;
+}
+
+gboolean
+gst_gl_color_convert_decide_allocation (GstGLColorConvert * convert,
+    GstQuery * query)
+{
+  GstBufferPool *pool = NULL;
+  GstStructure *config;
+  GstCaps *caps;
+  guint min, max, size, n, i;
+  gboolean update_pool;
+  GstGLVideoAllocationParams *params;
+  GstVideoInfo vinfo;
+
+  gst_query_parse_allocation (query, &caps, NULL);
+  if (!caps)
+    return FALSE;
+
+  gst_video_info_from_caps (&vinfo, caps);
+
+  n = gst_query_get_n_allocation_pools (query);
+  if (n > 0) {
+    update_pool = TRUE;
+    for (i = 0; i < n; i++) {
+      gst_query_parse_nth_allocation_pool (query, i, &pool, &size, &min, &max);
+
+      if (!pool || !GST_IS_GL_BUFFER_POOL (pool)) {
+        if (pool)
+          gst_object_unref (pool);
+        pool = NULL;
+      }
+    }
+  }
+
+  if (!pool) {
+    GstVideoInfo vinfo;
+
+    gst_video_info_init (&vinfo);
+    size = vinfo.size;
+    min = max = 0;
+    update_pool = FALSE;
+  }
+
+  if (!pool)
+    pool = gst_gl_buffer_pool_new (convert->context);
+
+  config = gst_buffer_pool_get_config (pool);
+
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  if (gst_query_find_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, NULL))
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_GL_SYNC_META);
+
+  params = gst_gl_video_allocation_params_new (convert->context, NULL, &vinfo,
+      0, NULL, convert->priv->to_texture_target);
+  gst_buffer_pool_config_set_gl_allocation_params (config,
+      (GstGLAllocationParams *) params);
+  gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
+
+  if (!gst_buffer_pool_set_config (pool, config))
+    GST_WARNING_OBJECT (convert, "Failed to set buffer pool config");
+
+  if (update_pool)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  if (convert->priv->pool) {
+    gst_object_unref (convert->priv->pool);
+    convert->priv->pool_started = FALSE;
+  }
+  convert->priv->pool = pool;
+
+  return TRUE;
 }
 
 /* copies the given caps */
@@ -2083,9 +2175,7 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
   gint views, v;
   GstVideoOverlayCompositionMeta *composition_meta;
   GstGLSyncMeta *sync_meta;
-  GstGLVideoAllocationParams *params;
-  GstGLMemoryAllocator *mem_allocator;
-  GstAllocator *allocator;
+  GstFlowReturn ret;
 
   convert->outbuf = NULL;
 
@@ -2098,22 +2188,44 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
   if (sync_meta)
     gst_gl_sync_meta_wait (sync_meta, convert->context);
 
-  convert->outbuf = gst_buffer_new ();
+  if (!convert->priv->pool) {
+    gboolean ret;
+    /* No pool! */
+    GstQuery *query = gst_query_new_allocation (convert->priv->out_caps, TRUE);
+    ret = gst_gl_color_convert_decide_allocation (convert, query);
+    gst_query_unref (query);
 
-  allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR_NAME);
-  mem_allocator = GST_GL_MEMORY_ALLOCATOR (allocator);
-  params =
-      gst_gl_video_allocation_params_new (context, NULL, &convert->out_info, 0,
-      NULL, convert->priv->to_texture_target);
+    if (!ret) {
+      GST_ERROR_OBJECT (convert, "Failed to choose allocation parameters");
+      convert->priv->result = FALSE;
+      return;
+    }
 
-  if (!gst_gl_memory_setup_buffer (mem_allocator, convert->outbuf, params)) {
-    gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
-    gst_object_unref (allocator);
+    if (!convert->priv->pool) {
+      GST_ERROR_OBJECT (convert, "Failed to create a buffer pool");
+      convert->priv->result = FALSE;
+      return;
+    }
+  }
+
+  if (!convert->priv->pool_started) {
+    if (!gst_buffer_pool_set_active (convert->priv->pool, TRUE)) {
+      GST_ERROR_OBJECT (convert, "Failed to start buffer pool");
+      convert->priv->result = FALSE;
+      return;
+    }
+    convert->priv->pool_started = TRUE;
+  }
+
+  ret =
+      gst_buffer_pool_acquire_buffer (convert->priv->pool, &convert->outbuf,
+      NULL);
+  if (ret != GST_FLOW_OK) {
+    GST_ERROR_OBJECT (convert, "Failed to acquire buffer from pool: %s",
+        gst_flow_get_name (ret));
     convert->priv->result = FALSE;
     return;
   }
-  gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
-  gst_object_unref (allocator);
 
   if (GST_VIDEO_INFO_MULTIVIEW_MODE (in_info) ==
       GST_VIDEO_MULTIVIEW_MODE_SEPARATED)

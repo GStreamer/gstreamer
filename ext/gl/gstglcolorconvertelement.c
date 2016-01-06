@@ -191,6 +191,9 @@ gst_gl_color_convert_element_decide_allocation (GstBaseTransform * trans,
           convert->out_caps))
     return FALSE;
 
+  if (!gst_gl_color_convert_decide_allocation (convert->convert, query))
+    return FALSE;
+
   return TRUE;
 }
 
