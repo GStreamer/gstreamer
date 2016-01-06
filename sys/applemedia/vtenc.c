@@ -136,8 +136,13 @@ static void gst_pixel_buffer_release_cb (void *releaseRefCon,
     const void *planeAddresses[]);
 #endif
 
+#ifdef HAVE_IOS
 static GstStaticCaps sink_caps =
 GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ NV12, I420 }"));
+#else
+static GstStaticCaps sink_caps =
+GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ UYVY, NV12, I420 }"));
+#endif
 
 static void
 gst_vtenc_base_init (GstVTEncClass * klass)
@@ -1163,6 +1168,9 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
           break;
         case GST_VIDEO_FORMAT_NV12:
           pixel_format_type = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+          break;
+        case GST_VIDEO_FORMAT_UYVY:
+          pixel_format_type = kCVPixelFormatType_422YpCbCr8;
           break;
         default:
           gst_vtenc_frame_free (vframe);
