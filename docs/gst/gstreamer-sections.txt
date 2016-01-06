@@ -1890,6 +1890,10 @@ gst_pad_set_event_function
 gst_pad_set_event_function_full
 GstPadEventFunction
 
+gst_pad_set_event_full_function
+gst_pad_set_event_full_function_full
+GstPadEventFullFunction
+
 gst_pad_set_link_function
 gst_pad_set_link_function_full
 GstPadLinkFunction
@@ -1986,6 +1990,7 @@ GST_PAD_ACTIVATEMODEFUNC
 GST_PAD_CHAINFUNC
 GST_PAD_CHAINLISTFUNC
 GST_PAD_EVENTFUNC
+GST_PAD_EVENTFULLFUNC
 GST_PAD_GETRANGEFUNC
 GST_PAD_QUERYFUNC
 GST_PAD_ITERINTLINKFUNC
