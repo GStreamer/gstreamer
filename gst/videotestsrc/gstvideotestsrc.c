@@ -563,6 +563,7 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
       break;
     case PROP_HORIZONTAL_SPEED:
       src->horizontal_speed = g_value_get_int (value);
+      break;
     default:
       break;
   }
