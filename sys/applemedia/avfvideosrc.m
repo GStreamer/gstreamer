@@ -55,7 +55,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #else
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-            "BGRA") ", "
+            "NV12") ", "
         "texture-target = " GST_GL_TEXTURE_TARGET_2D_STR "; "
 #endif
         "video/x-raw, "
@@ -421,7 +421,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 #if !HAVE_IOS
   GstVideoFormat gl_format = GST_VIDEO_FORMAT_UYVY;
 #else
-  GstVideoFormat gl_format = GST_VIDEO_FORMAT_BGRA;
+  GstVideoFormat gl_format = GST_VIDEO_FORMAT_NV12;
 #endif
 
   GST_DEBUG_OBJECT (element, "Getting device caps");
