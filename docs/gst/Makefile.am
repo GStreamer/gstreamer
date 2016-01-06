@@ -47,12 +47,20 @@ IGNORE_HFILES= \
 	gst_private.h \
 	gstelementdetails.h \
 	gstmacros.h \
+	gstmarshal.h \
 	gsttracerutils.h \
+	math-compat.h \
 	\
 	grammar.tab.h \
 	grammar.tab.pre.h \
-	math-compat.h \
-	types.h
+  parse_lex.h \
+	types.h \
+	\
+	gst-printf.h \
+	printf-args.h \
+	printf-extension.h \
+	printf-parse.h \
+	vasnprintf.h
 
 gst-universe.svg: gst-universe.dot
 	-dot -Tsvg $< | sed 's/\(font-size:[0-9]*\.[0-9]*\);/\1px;/g' >$@
