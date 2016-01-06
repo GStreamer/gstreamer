@@ -1391,7 +1391,6 @@ EXPORTS
 	gst_tracer_log_trace
 	gst_tracer_register
 	gst_tracing_register_hook
-	gst_tracing_register_hook_id
 	gst_type_find_factory_call_function
 	gst_type_find_factory_get_caps
 	gst_type_find_factory_get_extensions
