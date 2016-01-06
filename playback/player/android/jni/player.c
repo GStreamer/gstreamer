@@ -450,6 +450,7 @@ static JNINativeMethod native_methods[] = {
   {"nativeNew", "()V", (void *) native_new},
   {"nativePlay", "()V", (void *) native_play},
   {"nativePause", "()V", (void *) native_pause},
+  {"nativeStop", "()V", (void *) native_stop},
   {"nativeSeek", "(J)V", (void *) native_seek},
   {"nativeFree", "()V", (void *) native_free},
   {"nativeGetUri", "()Ljava/lang/String;", (void *) native_get_uri},
