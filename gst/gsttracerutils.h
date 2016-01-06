@@ -30,7 +30,7 @@
 
 G_BEGIN_DECLS
 
-#ifndef GST_DISABLE_GST_DEBUG
+#ifndef GST_DISABLE_GST_TRACER_HOOKS
 
 /* tracing hooks */
 
@@ -86,7 +86,7 @@ typedef struct {
 
 extern gboolean _priv_tracer_enabled;
 /* key are hook-id quarks, values are GstTracerHook */
-extern GHashTable *_priv_tracers; 
+extern GHashTable *_priv_tracers;
 
 #define GST_TRACER_IS_ENABLED (_priv_tracer_enabled)
 
@@ -114,35 +114,35 @@ extern GHashTable *_priv_tracers;
   }                                                                    \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPushPre) (GObject *, GstClockTime, GstPad *, 
+typedef void (*GstTracerHookPadPushPre) (GObject *, GstClockTime, GstPad *,
     GstBuffer *);
 #define GST_TRACER_PAD_PUSH_PRE(pad, buffer) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PUSH_PRE), \
     GstTracerHookPadPushPre, (GST_TRACER_ARGS, pad, buffer)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPushPost) (GObject *, GstClockTime, GstPad *, 
+typedef void (*GstTracerHookPadPushPost) (GObject *, GstClockTime, GstPad *,
     GstFlowReturn);
 #define GST_TRACER_PAD_PUSH_POST(pad, res) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PUSH_POST), \
     GstTracerHookPadPushPost, (GST_TRACER_ARGS, pad, res)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPushListPre) (GObject *, GstClockTime, GstPad *, 
+typedef void (*GstTracerHookPadPushListPre) (GObject *, GstClockTime, GstPad *,
     GstBufferList *);
 #define GST_TRACER_PAD_PUSH_LIST_PRE(pad, list) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PUSH_LIST_PRE), \
     GstTracerHookPadPushListPre, (GST_TRACER_ARGS, pad, list)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPushListPost) (GObject *, GstClockTime, GstPad *, 
+typedef void (*GstTracerHookPadPushListPost) (GObject *, GstClockTime, GstPad *,
     GstFlowReturn);
 #define GST_TRACER_PAD_PUSH_LIST_POST(pad, res) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PUSH_LIST_POST), \
     GstTracerHookPadPushListPost, (GST_TRACER_ARGS, pad, res)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPullRangePre) (GObject *, GstClockTime, GstPad *, 
+typedef void (*GstTracerHookPadPullRangePre) (GObject *, GstClockTime, GstPad *,
     guint64, guint);
 #define GST_TRACER_PAD_PULL_RANGE_PRE(pad, offset, size) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PULL_RANGE_PRE), \
@@ -156,14 +156,14 @@ typedef void (*GstTracerHookPadPullRangePost) (GObject *, GstClockTime,
     GstTracerHookPadPullRangePost, (GST_TRACER_ARGS, pad, buffer, res)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPushEventPre) (GObject *, GstClockTime, GstPad *, 
+typedef void (*GstTracerHookPadPushEventPre) (GObject *, GstClockTime, GstPad *,
     GstEvent *);
 #define GST_TRACER_PAD_PUSH_EVENT_PRE(pad, event) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PUSH_EVENT_PRE), \
     GstTracerHookPadPushEventPre, (GST_TRACER_ARGS, pad, event)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPushEventPost) (GObject *, GstClockTime, 
+typedef void (*GstTracerHookPadPushEventPost) (GObject *, GstClockTime,
     GstPad *, gboolean);
 #define GST_TRACER_PAD_PUSH_EVENT_POST(pad, res) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PUSH_EVENT_POST), \
@@ -303,7 +303,7 @@ typedef void (*GstTracerHookPadUnlinkPost) (GObject *, GstClockTime,
     GstTracerHookPadUnlinkPost, (GST_TRACER_ARGS, srcpad, sinkpad, result)); \
 }G_STMT_END
 
-#else /* !GST_DISABLE_GST_DEBUG */
+#else /* !GST_DISABLE_GST_TRACER_HOOKS */
 
 #define GST_TRACER_PAD_PUSH_PRE(pad, buffer)
 #define GST_TRACER_PAD_PUSH_POST(pad, res)
@@ -333,7 +333,7 @@ typedef void (*GstTracerHookPadUnlinkPost) (GObject *, GstClockTime,
 #define GST_TRACER_PAD_UNLINK_PRE(srcpad, sinkpad)
 #define GST_TRACER_PAD_UNLINK_POST(srcpad, sinkpad, res)
 
-#endif /* GST_DISABLE_GST_DEBUG */
+#endif /* GST_DISABLE_GST_TRACER_HOOKS */
 
 G_END_DECLS
 

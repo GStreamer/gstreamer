@@ -87,6 +87,8 @@ dnl subsystems - can influence other decisions so needs to be high up
 dnl we need to AM_CONDITIONAL them here for automake 1.6.x compatibility
 AG_GST_CHECK_SUBSYSTEM_DISABLE(GST_DEBUG,[debugging subsystem])
 AM_CONDITIONAL(GST_DISABLE_GST_DEBUG, test "x$GST_DISABLE_GST_DEBUG" = "xyes")
+AG_GST_CHECK_SUBSYSTEM_DISABLE(GST_TRACER_HOOKS,[tracing subsystem hooks])
+AM_CONDITIONAL(GST_DISABLE_GST_TRACER_HOOKS, test "x$GST_DISABLE_GST_TRACER_HOOKS" = "xyes")
 AG_GST_CHECK_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
 AM_CONDITIONAL(GST_DISABLE_PARSE, test "x$GST_DISABLE_PARSE" = "xyes")
 if test "x$GST_DISABLE_PARSE" = xyes; then
@@ -99,7 +101,7 @@ if test "x$GST_DISABLE_OPTION_PARSING" = xyes; then
   AC_DEFINE(GST_DISABLE_OPTION_PARSING, 1,
     [Define if option parsing is disabled])
 fi
-AG_GST_CHECK_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
+AG_GST_CHECK_SUBSYSTEM_DISABLE(TRACE,[historic tracing subsystem])
 AM_CONDITIONAL(GST_DISABLE_TRACE, test "x$GST_DISABLE_TRACE" = "xyes")
 AG_GST_CHECK_SUBSYSTEM_DISABLE(ALLOC_TRACE,[allocation tracing])
 AM_CONDITIONAL(GST_DISABLE_ALLOC_TRACE, test "x$GST_DISABLE_ALLOC_TRACE" = "xyes")
@@ -824,7 +826,7 @@ AC_ARG_WITH([memory-alignment],
       esac
     fi
   ], [
-    AC_DEFINE(MEMORY_ALIGNMENT_MALLOC, 1, [Memory alignment by malloc default]) 
+    AC_DEFINE(MEMORY_ALIGNMENT_MALLOC, 1, [Memory alignment by malloc default])
   ]
 )
 
@@ -1084,6 +1086,7 @@ AC_OUTPUT
 
 dnl negate for output
 if test "x${GST_DISABLE_GST_DEBUG}" = "xno"; then enable_gst_debug="yes"; fi
+if test "x${GST_DISABLE_GST_TRACER_HOOKS}" = "xno"; then enable_gst_tracer_hooks="yes"; fi
 if test "x${GST_DISABLE_PARSE}" = "xno"; then enable_parse="yes"; fi
 if test "x${GST_DISABLE_OPTION_PARSING}" = "xno"; then enable_option_parsing="yes"; fi
 if test "x${GST_DISABLE_TRACE}" = "xno"; then enable_trace="yes"; fi
@@ -1104,10 +1107,11 @@ Configuration
 	Documentation (manuals)    : ${enable_docbook}
 	Documentation (API)        : ${enable_gtk_doc}
 
-	Debug Logging              : ${enable_gst_debug}
+	Debug logging              : ${enable_gst_debug}
+	Tracing subsystem hooks    : ${enable_gst_tracer_hooks}
 	Command-line parser        : ${enable_parse}
 	Option parsing in gst_init : ${enable_option_parsing}
-	Tracing subsystem          : ${enable_trace}
+	Historic tracing subsystem : ${enable_trace}
 	Allocation tracing         : ${enable_alloc_trace}
 	Plugin registry            : ${enable_registry}
 	Plugin support	           : ${enable_plugin}
