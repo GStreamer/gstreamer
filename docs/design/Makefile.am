@@ -4,7 +4,6 @@ EXTRA_DIST = \
 	draft-metadata.txt \
 	draft-push-pull.txt \
 	draft-tagreading.txt \
-	draft-tracing.txt \
 	part-activation.txt \
 	part-buffering.txt \
 	part-bufferpool.txt \
@@ -55,6 +54,7 @@ EXTRA_DIST = \
 	part-synchronisation.txt \
 	part-toc.txt \
 	part-TODO.txt \
+	part-tracing.txt \
 	part-trickmodes.txt
 
 CLEANFILES = index.html index.txt
