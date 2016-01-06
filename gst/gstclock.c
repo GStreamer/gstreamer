@@ -938,6 +938,53 @@ gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
 }
 
 /**
+ * gst_clock_unadjust_with_calibration:
+ * @clock: a #GstClock to use
+ * @external_target: a clock time
+ * @cinternal: a reference internal time
+ * @cexternal: a reference external time
+ * @cnum: the numerator of the rate of the clock relative to its
+ *        internal time
+ * @cdenom: the denominator of the rate of the clock
+ *
+ * Converts the given @external_target clock time to the internal time,
+ * using the passed calibration parameters. This function performs the
+ * same calculation as gst_clock_unadjust_unlocked() when called using the
+ * current calibration parameters.
+ *
+ * Returns: the converted time of the clock.
+ *
+ * Since: 1.8
+ */
+GstClockTime
+gst_clock_unadjust_with_calibration (GstClock * clock,
+    GstClockTime external_target, GstClockTime cinternal,
+    GstClockTime cexternal, GstClockTime cnum, GstClockTime cdenom)
+{
+  GstClockTime ret;
+
+  /* avoid divide by 0 */
+  if (G_UNLIKELY (cnum == 0))
+    cnum = cdenom = 1;
+
+  /* The formula is (external - cexternal) * cdenom / cnum + cinternal */
+  if (G_LIKELY (external_target >= cexternal)) {
+    ret = external_target - cexternal;
+    ret = gst_util_uint64_scale (ret, cdenom, cnum);
+    ret += cinternal;
+  } else {
+    ret = cexternal - external_target;
+    ret = gst_util_uint64_scale (ret, cdenom, cnum);
+    if (G_LIKELY (cinternal > ret))
+      ret = cinternal - ret;
+    else
+      ret = 0;
+  }
+
+  return ret;
+}
+
+/**
  * gst_clock_unadjust_unlocked:
  * @clock: a #GstClock to use
  * @external: an external clock time
@@ -954,7 +1001,7 @@ gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
 GstClockTime
 gst_clock_unadjust_unlocked (GstClock * clock, GstClockTime external)
 {
-  GstClockTime ret, cinternal, cexternal, cnum, cdenom;
+  GstClockTime cinternal, cexternal, cnum, cdenom;
   GstClockPrivate *priv = clock->priv;
 
   /* get calibration values for readability */
@@ -963,24 +1010,8 @@ gst_clock_unadjust_unlocked (GstClock * clock, GstClockTime external)
   cnum = priv->rate_numerator;
   cdenom = priv->rate_denominator;
 
-  /* avoid divide by 0 */
-  if (G_UNLIKELY (cnum == 0))
-    cnum = cdenom = 1;
-
-  /* The formula is (external - cexternal) * cdenom / cnum + cinternal */
-  if (G_LIKELY (external >= cexternal)) {
-    ret = external - cexternal;
-    ret = gst_util_uint64_scale (ret, cdenom, cnum);
-    ret += cinternal;
-  } else {
-    ret = cexternal - external;
-    ret = gst_util_uint64_scale (ret, cdenom, cnum);
-    if (G_LIKELY (cinternal > ret))
-      ret = cinternal - ret;
-    else
-      ret = 0;
-  }
-  return ret;
+  return gst_clock_unadjust_with_calibration (clock, external, cinternal,
+      cexternal, cnum, cdenom);
 }
 
 /**

@@ -630,6 +630,7 @@ gst_clock_get_internal_time
 gst_clock_adjust_unlocked
 gst_clock_unadjust_unlocked
 gst_clock_adjust_with_calibration
+gst_clock_unadjust_with_calibration
 gst_clock_get_calibration
 gst_clock_set_calibration
 gst_clock_get_timeout

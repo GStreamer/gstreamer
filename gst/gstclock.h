@@ -535,6 +535,12 @@ GstClockTime            gst_clock_adjust_with_calibration (GstClock *clock,
                                                          GstClockTime cexternal,
                                                          GstClockTime cnum,
                                                          GstClockTime cdenom);
+GstClockTime            gst_clock_unadjust_with_calibration (GstClock *clock,
+                                                         GstClockTime external_target,
+                                                         GstClockTime cinternal,
+                                                         GstClockTime cexternal,
+                                                         GstClockTime cnum,
+                                                         GstClockTime cdenom);
 GstClockTime            gst_clock_unadjust_unlocked     (GstClock * clock, GstClockTime external);
 
 /* waiting for, signalling and checking for synchronization */
