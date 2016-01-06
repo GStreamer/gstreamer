@@ -1149,8 +1149,7 @@ ges_timeline_element_get_toplevel_parent (GESTimelineElement * self)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
 
-  while (GES_TIMELINE_ELEMENT_PARENT (toplevel) &&
-      GES_TIMELINE_ELEMENT_PARENT (toplevel)->priv->serialize)
+  while (GES_TIMELINE_ELEMENT_PARENT (toplevel))
     toplevel = GES_TIMELINE_ELEMENT_PARENT (toplevel);
 
   return gst_object_ref (toplevel);
