@@ -56,11 +56,6 @@
 #define USING_GLES2(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 2, 0))
 #define USING_GLES3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
 
-/* FIXME: Unused, see https://bugzilla.gnome.org/show_bug.cgi?id=759679 */
-#if 0
-#define GL_MEM_WIDTH(gl_mem) _get_plane_width (&gl_mem->mem.info, gl_mem->mem.plane)
-#endif
-
 #define GL_MEM_HEIGHT(gl_mem) _get_plane_height (&gl_mem->mem.info, gl_mem->mem.plane)
 #define GL_MEM_STRIDE(gl_mem) GST_VIDEO_INFO_PLANE_STRIDE (&gl_mem->mem.info, gl_mem->mem.plane)
 
@@ -122,21 +117,6 @@ typedef struct
   /* out */
   gboolean result;
 } GstGLMemoryPBOCopyParams;
-
-/* FIXME: Unused, see https://bugzilla.gnome.org/show_bug.cgi?id=759679 */
-#if 0
-static inline guint
-_get_plane_width (GstVideoInfo * info, guint plane)
-{
-  if (GST_VIDEO_INFO_IS_YUV (info))
-    /* For now component width and plane width are the same and the
-     * plane-component mapping matches
-     */
-    return GST_VIDEO_INFO_COMP_WIDTH (info, plane);
-  else                          /* RGB, GRAY */
-    return GST_VIDEO_INFO_WIDTH (info);
-}
-#endif
 
 static inline guint
 _get_plane_height (GstVideoInfo * info, guint plane)
