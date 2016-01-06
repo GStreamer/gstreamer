@@ -223,7 +223,6 @@ gst_headers =			\
 	gsttocsetter.h		\
 	gsttracer.h		\
 	gsttracerfactory.h	\
-	gsttracerutils.h		\
 	gsttypefind.h		\
 	gsttypefindfactory.h	\
 	gsturi.h		\
@@ -251,6 +250,7 @@ noinst_HEADERS = 		\
 	gstregistrybinary.h     \
 	gstregistrychunks.h     \
 	gsttrace.h		\
+	gsttracerutils.h		\
 	gst_private.h
 
 gstenumtypes.h: $(gst_headers)
