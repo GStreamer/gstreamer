@@ -847,9 +847,10 @@ gst_clock_get_resolution (GstClock * clock)
   return 1;
 }
 
+/* FIXME 2.0: Remove clock parameter below */
 /**
  * gst_clock_adjust_with_calibration:
- * @clock: a #GstClock to use
+ * @clock: (allow-none): a #GstClock to use
  * @internal_target: a clock time
  * @cinternal: a reference internal time
  * @cexternal: a reference external time
@@ -862,6 +863,8 @@ gst_clock_get_resolution (GstClock * clock)
  * same calculation as gst_clock_adjust_unlocked() when called using the
  * current calibration parameters, but doesn't ensure a monotonically
  * increasing result as gst_clock_adjust_unlocked() does.
+ *
+ * Note: The @clock parameter is unused and can be NULL
  *
  * Returns: the converted time of the clock.
  *
@@ -937,9 +940,10 @@ gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
   return priv->last_time;
 }
 
+/* FIXME 2.0: Remove clock parameter below */
 /**
  * gst_clock_unadjust_with_calibration:
- * @clock: a #GstClock to use
+ * @clock: (allow-none): a #GstClock to use
  * @external_target: a clock time
  * @cinternal: a reference internal time
  * @cexternal: a reference external time
@@ -951,6 +955,8 @@ gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
  * using the passed calibration parameters. This function performs the
  * same calculation as gst_clock_unadjust_unlocked() when called using the
  * current calibration parameters.
+ *
+ * Note: The @clock parameter is unused and can be NULL
  *
  * Returns: the converted time of the clock.
  *
