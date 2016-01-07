@@ -183,4 +183,4 @@ gst_tracing_register_hook (GstTracer * tracer, const gchar * detail,
   gst_tracing_register_hook_id (tracer, g_quark_try_string (detail), func);
 }
 
-#endif /* GST_DISABLE_GST_DEBUG */
+#endif /* GST_DISABLE_GST_TRACER_HOOKS */
