@@ -40,7 +40,7 @@ static GstCaps *gst_video_parse_get_caps (GstRawParse * rp);
 static void gst_video_parse_set_buffer_flags (GstRawParse * rp,
     GstBuffer * buffer);
 
-static void gst_video_parse_update_frame_size (GstVideoParse * vp);
+static void gst_video_parse_update_info (GstVideoParse * vp);
 
 GST_DEBUG_CATEGORY_STATIC (gst_video_parse_debug);
 #define GST_CAT_DEFAULT gst_video_parse_debug
@@ -126,8 +126,8 @@ gst_video_parse_init (GstVideoParse * vp)
   vp->par_n = 1;
   vp->par_d = 1;
 
-  gst_video_parse_update_frame_size (vp);
   gst_raw_parse_set_fps (GST_RAW_PARSE (vp), 25, 1);
+  gst_video_parse_update_info (vp);
 }
 
 static void
@@ -168,7 +168,7 @@ gst_video_parse_set_property (GObject * object, guint prop_id,
       break;
   }
 
-  gst_video_parse_update_frame_size (vp);
+  gst_video_parse_update_info (vp);
 }
 
 static void
@@ -209,16 +209,27 @@ gst_video_parse_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-void
-gst_video_parse_update_frame_size (GstVideoParse * vp)
+static void
+gst_video_parse_update_info (GstVideoParse * vp)
 {
+  GstVideoInfo *info = &vp->info;
+  gint fps_n, fps_d;
   gint framesize;
-  GstVideoInfo info;
 
-  gst_video_info_init (&info);
-  gst_video_info_set_format (&info, vp->format, vp->width, vp->height);
-  framesize = GST_VIDEO_INFO_SIZE (&info);
+  gst_raw_parse_get_fps (GST_RAW_PARSE (vp), &fps_n, &fps_d);
 
+  gst_video_info_init (info);
+  gst_video_info_set_format (info, vp->format, vp->width, vp->height);
+  info->fps_n = fps_n;
+  info->fps_d = fps_d;
+  info->par_n = vp->par_n;
+  info->par_d = vp->par_d;
+  info->interlace_mode = vp->interlaced ?
+      GST_VIDEO_INTERLACE_MODE_INTERLEAVED :
+      GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+
+  /* update base class framesize */
+  framesize = GST_VIDEO_INFO_SIZE (info);
   gst_raw_parse_set_framesize (GST_RAW_PARSE (vp), framesize);
 }
 
@@ -226,25 +237,8 @@ static GstCaps *
 gst_video_parse_get_caps (GstRawParse * rp)
 {
   GstVideoParse *vp = GST_VIDEO_PARSE (rp);
-  GstVideoInfo info;
-  GstCaps *caps;
-  gint fps_n, fps_d;
 
-  gst_raw_parse_get_fps (rp, &fps_n, &fps_d);
-
-  gst_video_info_init (&info);
-  gst_video_info_set_format (&info, vp->format, vp->width, vp->height);
-  info.fps_n = fps_n;
-  info.fps_d = fps_d;
-  info.par_n = vp->par_n;
-  info.par_d = vp->par_d;
-  info.interlace_mode = vp->interlaced ?
-      GST_VIDEO_INTERLACE_MODE_INTERLEAVED :
-      GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
-
-  caps = gst_video_info_to_caps (&info);
-
-  return caps;
+  return gst_video_info_to_caps (&vp->info);
 }
 
 static void

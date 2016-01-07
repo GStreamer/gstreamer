@@ -48,6 +48,8 @@ struct _GstVideoParse
 {
   GstRawParse parent;
 
+  GstVideoInfo info;
+
   /* properties */
   GstVideoFormat format;
   gint width;
