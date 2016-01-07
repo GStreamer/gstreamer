@@ -444,6 +444,12 @@ _gl_tex_map_cpu_access (GstGLMemory * gl_mem, GstMapInfo * info, gsize size)
 static void
 _upload_cpu_write (GstGLMemory * gl_mem, GstMapInfo * info, gsize maxsize)
 {
+  gst_gl_memory_texsubimage (gl_mem, gl_mem->mem.data);
+}
+
+void
+gst_gl_memory_texsubimage (GstGLMemory * gl_mem, gpointer read_pointer)
+{
   GstGLContext *context = gl_mem->mem.context;
   const GstGLFuncs *gl;
   GLenum gl_format, gl_type, gl_target;
@@ -477,7 +483,7 @@ _upload_cpu_write (GstGLMemory * gl_mem, GstMapInfo * info, gsize maxsize)
       gst_gl_get_plane_start (&gl_mem->info, &gl_mem->valign,
       gl_mem->plane) + gl_mem->mem.mem.offset;
 
-  data = (gpointer) ((gintptr) plane_start + (gintptr) gl_mem->mem.data);
+  data = (gpointer) ((gintptr) plane_start + (gintptr) read_pointer);
 
   gl->BindTexture (gl_target, gl_mem->tex_id);
   gl->TexSubImage2D (gl_target, 0, 0, 0, gl_mem->tex_width,

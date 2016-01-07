@@ -204,6 +204,8 @@ gboolean        gst_gl_memory_copy_teximage     (GstGLMemory * src,
 
 gboolean        gst_gl_memory_read_pixels       (GstGLMemory * gl_mem,
                                                  gpointer read_pointer);
+void            gst_gl_memory_texsubimage       (GstGLMemory * gl_mem,
+                                                 gpointer read_pointer);
 
 /* accessors */
 gint                    gst_gl_memory_get_texture_width     (GstGLMemory * gl_mem);
