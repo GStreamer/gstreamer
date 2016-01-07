@@ -48,7 +48,6 @@ IGNORE_HFILES= \
 	gstelementdetails.h \
 	gstmacros.h \
 	gstmarshal.h \
-	gsttracerutils.h \
 	math-compat.h \
 	\
 	grammar.tab.h \

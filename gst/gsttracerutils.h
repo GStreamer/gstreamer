@@ -114,190 +114,441 @@ extern GHashTable *_priv_tracers;
   }                                                                    \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPushPre) (GObject *, GstClockTime, GstPad *,
-    GstBuffer *);
+/**
+ * GstTracerHookPadPushPre:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @pad: the pad
+ * @buffer: the buffer
+ *
+ * Pre-hook for gst_pad_push() named "pad-push-pre".
+ */
+typedef void (*GstTracerHookPadPushPre) (GObject *self, GstClockTime ts,
+    GstPad *pad, GstBuffer *buffer);
 #define GST_TRACER_PAD_PUSH_PRE(pad, buffer) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PUSH_PRE), \
     GstTracerHookPadPushPre, (GST_TRACER_ARGS, pad, buffer)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPushPost) (GObject *, GstClockTime, GstPad *,
-    GstFlowReturn);
+/**
+ * GstTracerHookPadPushPost:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @pad: the pad
+ * @res: the result of gst_pad_push()
+ *
+ * Post-hook for gst_pad_push() named "pad-push-post".
+ */
+typedef void (*GstTracerHookPadPushPost) (GObject * self, GstClockTime ts,
+    GstPad *pad, GstFlowReturn res);
 #define GST_TRACER_PAD_PUSH_POST(pad, res) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PUSH_POST), \
     GstTracerHookPadPushPost, (GST_TRACER_ARGS, pad, res)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPushListPre) (GObject *, GstClockTime, GstPad *,
-    GstBufferList *);
+/**
+ * GstTracerHookPadPushListPre:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @pad: the pad
+ * @list: the buffer-list
+ *
+ * Pre-hook for gst_pad_push_list() named "pad-push-list-pre".
+ */
+typedef void (*GstTracerHookPadPushListPre) (GObject *self, GstClockTime ts,
+    GstPad *pad, GstBufferList *list);
 #define GST_TRACER_PAD_PUSH_LIST_PRE(pad, list) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PUSH_LIST_PRE), \
     GstTracerHookPadPushListPre, (GST_TRACER_ARGS, pad, list)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPushListPost) (GObject *, GstClockTime, GstPad *,
-    GstFlowReturn);
+/**
+ * GstTracerHookPadPushListPost:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @pad: the pad
+ * @res: the result of gst_pad_push_list()
+ *
+ * Post-hook for gst_pad_push_list() named "pad-push-list-post".
+ */
+typedef void (*GstTracerHookPadPushListPost) (GObject *self, GstClockTime ts,
+    GstPad *pad,
+    GstFlowReturn res);
 #define GST_TRACER_PAD_PUSH_LIST_POST(pad, res) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PUSH_LIST_POST), \
     GstTracerHookPadPushListPost, (GST_TRACER_ARGS, pad, res)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPullRangePre) (GObject *, GstClockTime, GstPad *,
-    guint64, guint);
+/**
+ * GstTracerHookPadPullRangePre:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @pad: the pad
+ * @offset: the stream offset
+ * @size: the requested size
+ *
+ * Pre-hook for gst_pad_pull_range() named "pad-pull-range-pre".
+ */
+typedef void (*GstTracerHookPadPullRangePre) (GObject *self, GstClockTime ts,
+    GstPad *pad, guint64 offset, guint size);
 #define GST_TRACER_PAD_PULL_RANGE_PRE(pad, offset, size) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PULL_RANGE_PRE), \
     GstTracerHookPadPullRangePre, (GST_TRACER_ARGS, pad, offset, size)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPullRangePost) (GObject *, GstClockTime,
-    GstPad *, GstBuffer *, GstFlowReturn);
+/**
+ * GstTracerHookPadPullRangePost:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @pad: the pad
+ * @buffer: the buffer
+ * @res: the result of gst_pad_pull_range()
+ *
+ * Post-hook for gst_pad_pull_range() named "pad-pull-range-post".
+ */
+typedef void (*GstTracerHookPadPullRangePost) (GObject *self, GstClockTime ts,
+    GstPad *pad, GstBuffer *buffer, GstFlowReturn res);
 #define GST_TRACER_PAD_PULL_RANGE_POST(pad, buffer, res) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PULL_RANGE_POST), \
     GstTracerHookPadPullRangePost, (GST_TRACER_ARGS, pad, buffer, res)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPushEventPre) (GObject *, GstClockTime, GstPad *,
-    GstEvent *);
+/**
+ * GstTracerHookPadPushEventPre:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @pad: the pad
+ * @event: the event
+ *
+ * Pre-hook for gst_pad_push_event() named "pad-push-event-pre".
+ */
+typedef void (*GstTracerHookPadPushEventPre) (GObject *self, GstClockTime ts,
+    GstPad *pad, GstEvent *event);
 #define GST_TRACER_PAD_PUSH_EVENT_PRE(pad, event) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PUSH_EVENT_PRE), \
     GstTracerHookPadPushEventPre, (GST_TRACER_ARGS, pad, event)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadPushEventPost) (GObject *, GstClockTime,
-    GstPad *, gboolean);
+/**
+ * GstTracerHookPadPushEventPost:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @pad: the pad
+ * @res: the result of gst_pad_push_event()
+ *
+ * Post-hook for gst_pad_push_event() named "pad-push-event-post".
+ */
+typedef void (*GstTracerHookPadPushEventPost) (GObject *self, GstClockTime ts,
+    GstPad *pad, gboolean res);
 #define GST_TRACER_PAD_PUSH_EVENT_POST(pad, res) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PUSH_EVENT_POST), \
     GstTracerHookPadPushEventPost, (GST_TRACER_ARGS, pad, res)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadQueryPre) (GObject *, GstClockTime, GstPad *,
-    GstQuery *);
+/**
+ * GstTracerHookPadQueryPre:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @pad: the pad
+ * @query: the query
+ *
+ * Pre-hook for gst_pad_query() named "pad-query-pre".
+ */
+typedef void (*GstTracerHookPadQueryPre) (GObject *self, GstClockTime ts,
+    GstPad *pad, GstQuery *query);
 #define GST_TRACER_PAD_QUERY_PRE(pad, query) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_QUERY_PRE), \
     GstTracerHookPadQueryPre, (GST_TRACER_ARGS, pad, query)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadQueryPost) (GObject *, GstClockTime,
-    GstPad *, gboolean, GstQuery *);
+/**
+ * GstTracerHookPadQueryPost:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @pad: the pad
+ * @res: the result of gst_pad_query()
+ * @query: the query
+ *
+ * Post-hook for gst_pad_query() named "pad-query-post".
+ */
+typedef void (*GstTracerHookPadQueryPost) (GObject *self, GstClockTime ts,
+    GstPad *pad, gboolean res, GstQuery *query);
 #define GST_TRACER_PAD_QUERY_POST(pad, res, query) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_QUERY_POST), \
     GstTracerHookPadQueryPost, (GST_TRACER_ARGS, pad, res, query)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookElementPostMessagePre) (GObject *, GstClockTime,
-    GstElement *, GstMessage *);
+/**
+ * GstTracerHookElementPostMessagePre:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @element: the element
+ * @message: the message
+ *
+ * Pre-hook for gst_element_post_message() named "element-post-message-pre".
+ */
+typedef void (*GstTracerHookElementPostMessagePre) (GObject *self,
+    GstClockTime ts, GstElement *element, GstMessage *message);
 #define GST_TRACER_ELEMENT_POST_MESSAGE_PRE(element, message) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_ELEMENT_POST_MESSAGE_PRE), \
     GstTracerHookElementPostMessagePre, (GST_TRACER_ARGS, element, message)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookElementPostMessagePost) (GObject *, GstClockTime,
-    GstElement *, gboolean);
+/**
+ * GstTracerHookElementPostMessagePost:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @element: the element
+ * @res: the result of gst_element_post_message()
+ *
+ * Pre-hook for gst_element_post_message() named "element-post-message-post".
+ */
+typedef void (*GstTracerHookElementPostMessagePost) (GObject *self,
+    GstClockTime ts, GstElement *element, gboolean res);
 #define GST_TRACER_ELEMENT_POST_MESSAGE_POST(element, res) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_ELEMENT_POST_MESSAGE_POST), \
     GstTracerHookElementPostMessagePost, (GST_TRACER_ARGS, element, res)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookElementQueryPre) (GObject *, GstClockTime,
-    GstElement *, GstQuery *);
+/**
+ * GstTracerHookElementQueryPre:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @element: the element
+ * @query: the query
+ *
+ * Pre-hook for gst_element_query() named "element-query-pre".
+ */
+typedef void (*GstTracerHookElementQueryPre) (GObject *self, GstClockTime ts,
+    GstElement *element, GstQuery *query);
 #define GST_TRACER_ELEMENT_QUERY_PRE(element, query) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_ELEMENT_QUERY_PRE), \
     GstTracerHookElementQueryPre, (GST_TRACER_ARGS, element, query)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookElementQueryPost) (GObject *, GstClockTime,
-    GstElement *, gboolean);
+/**
+ * GstTracerHookElementQueryPost:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @element: the element
+ * @res: the result of gst_element_query()
+ *
+ * Post-hook for gst_element_query() named "element-query-post".
+ */
+typedef void (*GstTracerHookElementQueryPost) (GObject *self, GstClockTime ts,
+    GstElement *element, gboolean res);
 #define GST_TRACER_ELEMENT_QUERY_POST(element, res) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_ELEMENT_QUERY_POST), \
     GstTracerHookElementQueryPost, (GST_TRACER_ARGS, element, res)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookElementNew) (GObject *, GstClockTime,
-    GstElement *);
+/**
+ * GstTracerHookElementNew:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @element: the element
+ *
+ * Hook for gst_element_new() named "element-new".
+ */
+typedef void (*GstTracerHookElementNew) (GObject *self, GstClockTime ts,
+    GstElement *element);
 #define GST_TRACER_ELEMENT_NEW(element) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_ELEMENT_NEW), \
     GstTracerHookElementNew, (GST_TRACER_ARGS, element)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookElementAddPad) (GObject *, GstClockTime,
-    GstElement *, GstPad *);
+/**
+ * GstTracerHookElementAddPad:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @element: the element
+ * @pad: the pad
+ *
+ * Hook for gst_element_add_pad() named "element-add-pad".
+ */
+typedef void (*GstTracerHookElementAddPad) (GObject *self, GstClockTime ts,
+    GstElement *element, GstPad *pad);
 #define GST_TRACER_ELEMENT_ADD_PAD(element, pad) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_ELEMENT_ADD_PAD), \
     GstTracerHookElementAddPad, (GST_TRACER_ARGS, element, pad)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookElementRemovePad) (GObject *, GstClockTime,
-    GstElement *, GstPad *);
+/**
+ * GstTracerHookElementRemovePad:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @element: the element
+ * @pad: the pad
+ *
+ * Hook for gst_element_remove_pad() named "element-remove-pad".
+ */
+typedef void (*GstTracerHookElementRemovePad) (GObject *self, GstClockTime ts,
+    GstElement *element, GstPad *pad);
 #define GST_TRACER_ELEMENT_REMOVE_PAD(element, pad) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_ELEMENT_REMOVE_PAD), \
     GstTracerHookElementRemovePad, (GST_TRACER_ARGS, element, pad)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookElementChangeStatePre) (GObject *, GstClockTime,
-    GstElement *, GstStateChange);
+/**
+ * GstTracerHookElementChangeStatePre:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @element: the element
+ * @transition: the transition
+ *
+ * Pre-hook for gst_element_change_state() named "element-change-state-pre".
+ */
+typedef void (*GstTracerHookElementChangeStatePre) (GObject *self,
+    GstClockTime ts, GstElement *element, GstStateChange transition);
 #define GST_TRACER_ELEMENT_CHANGE_STATE_PRE(element, transition) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_ELEMENT_CHANGE_STATE_PRE), \
     GstTracerHookElementChangeStatePre, (GST_TRACER_ARGS, element, transition)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookElementChangeStatePost) (GObject *, GstClockTime,
-    GstElement *, GstStateChange, GstStateChangeReturn);
+/**
+ * GstTracerHookElementChangeStatePost:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @element: the element
+ * @transition: the transition
+ * @result: the result of gst_pad_push()
+ *
+ * Post-hook for gst_element_change_state() named "element-change-state-post".
+ */
+typedef void (*GstTracerHookElementChangeStatePost) (GObject *self,
+    GstClockTime ts, GstElement *element, GstStateChange transition,
+    GstStateChangeReturn result);
 #define GST_TRACER_ELEMENT_CHANGE_STATE_POST(element, transition, result) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_ELEMENT_CHANGE_STATE_POST), \
     GstTracerHookElementChangeStatePost, (GST_TRACER_ARGS, element, transition, result)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookBinAddPre) (GObject *, GstClockTime,
-    GstBin *, GstElement *);
+/**
+ * GstTracerHookBinAddPre:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @bin: the bin
+ * @element: the element
+ *
+ * Pre-hook for gst_bin_add() named "bin-add-pre".
+ */
+typedef void (*GstTracerHookBinAddPre) (GObject *self, GstClockTime ts,
+    GstBin *bin, GstElement *element);
 #define GST_TRACER_BIN_ADD_PRE(bin, element) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_BIN_ADD_PRE), \
     GstTracerHookBinAddPre, (GST_TRACER_ARGS, bin, element)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookBinAddPost) (GObject *, GstClockTime,
-    GstBin *, GstElement *, gboolean);
+/**
+ * GstTracerHookBinAddPost:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @bin: the bin
+ * @element: the element
+ * @result: the result of gst_bin_add()
+ *
+ * Post-hook for gst_bin_add() named "bin-add-post".
+ */
+typedef void (*GstTracerHookBinAddPost) (GObject *self, GstClockTime ts,
+    GstBin *bin, GstElement *element, gboolean result);
 #define GST_TRACER_BIN_ADD_POST(bin, element, result) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_BIN_ADD_POST), \
     GstTracerHookBinAddPost, (GST_TRACER_ARGS, bin, element, result)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookBinRemovePre) (GObject *, GstClockTime,
-    GstBin *, GstElement *);
+/**
+ * GstTracerHookBinRemovePre:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @bin: the bin
+ * @element: the element
+ *
+ * Pre-hook for gst_bin_remove() named "bin-remove-pre".
+ */
+typedef void (*GstTracerHookBinRemovePre) (GObject *self, GstClockTime ts,
+    GstBin *bin, GstElement *element);
 #define GST_TRACER_BIN_REMOVE_PRE(bin, element) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_BIN_REMOVE_PRE), \
     GstTracerHookBinRemovePre, (GST_TRACER_ARGS, bin, element)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookBinRemovePost) (GObject *, GstClockTime,
-    GstBin *, gboolean);
+/**
+ * GstTracerHookBinRemovePost:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @bin: the bin
+ * @result: the result of gst_bin_remove()
+ *
+ * Post-hook for gst_bin_remove() named "bin-remove-post".
+ */
+typedef void (*GstTracerHookBinRemovePost) (GObject *self, GstClockTime ts,
+    GstBin *bin, gboolean result);
 #define GST_TRACER_BIN_REMOVE_POST(bin, result) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_BIN_REMOVE_POST), \
     GstTracerHookBinRemovePost, (GST_TRACER_ARGS, bin, result)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadLinkPre) (GObject *, GstClockTime,
-    GstPad *, GstPad *);
+/**
+ * GstTracerHookPadLinkPre:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @srcpad: the srcpad
+ * @sinkpad: the sinkpad
+ *
+ * Pre-hook for gst_pad_link() named "pad-link-pre".
+ */
+typedef void (*GstTracerHookPadLinkPre) (GObject *self, GstClockTime ts,
+    GstPad *srcpad, GstPad *sinkpad);
 #define GST_TRACER_PAD_LINK_PRE(srcpad, sinkpad) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_LINK_PRE), \
     GstTracerHookPadLinkPre, (GST_TRACER_ARGS, srcpad, sinkpad)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadLinkPost) (GObject *, GstClockTime,
-    GstPad *, GstPad *, GstPadLinkReturn);
+/**
+ * GstTracerHookPadLinkPost:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @srcpad: the srcpad
+ * @sinkpad: the sinkpad
+ * @result: the result of gst_pad_link()
+ *
+ * Post-hook for gst_pad_link() named "pad-link-post".
+ */
+typedef void (*GstTracerHookPadLinkPost) (GObject *self, GstClockTime ts,
+    GstPad *srcpad, GstPad *sinkpad, GstPadLinkReturn result);
 #define GST_TRACER_PAD_LINK_POST(srcpad, sinkpad, result) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_LINK_POST), \
     GstTracerHookPadLinkPost, (GST_TRACER_ARGS, srcpad, sinkpad, result)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadUnlinkPre) (GObject *, GstClockTime,
-    GstPad *, GstPad *);
+/**
+ * GstTracerHookPadUnlinkPre:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @srcpad: the srcpad
+ * @sinkpad: the sinkpad
+ *
+ * Pre-hook for gst_pad_unlink() named "pad-unlink-pre".
+ */
+typedef void (*GstTracerHookPadUnlinkPre) (GObject *self, GstClockTime ts,
+    GstPad *srcpad, GstPad *sinkpad);
 #define GST_TRACER_PAD_UNLINK_PRE(srcpad, sinkpad) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_UNLINK_PRE), \
     GstTracerHookPadUnlinkPre, (GST_TRACER_ARGS, srcpad, sinkpad)); \
 }G_STMT_END
 
-typedef void (*GstTracerHookPadUnlinkPost) (GObject *, GstClockTime,
-    GstPad *, GstPad *, gboolean);
+/**
+ * GstTracerHookPadUnlinkPost:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @srcpad: the srcpad
+ * @sinkpad: the sinkpad
+ * @result: the result of gst_pad_push()
+ *
+ * Post-hook for gst_pad_unlink() named "pad-unlink-post".
+ */
+typedef void (*GstTracerHookPadUnlinkPost) (GObject *self, GstClockTime ts,
+    GstPad *srcpad, GstPad *sinkpad, gboolean result);
 #define GST_TRACER_PAD_UNLINK_POST(srcpad, sinkpad, result) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_UNLINK_POST), \
     GstTracerHookPadUnlinkPost, (GST_TRACER_ARGS, srcpad, sinkpad, result)); \
