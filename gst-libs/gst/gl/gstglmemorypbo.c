@@ -136,9 +136,7 @@ _upload_pbo_memory (GstGLMemoryPBO * gl_mem, GstMapInfo * info,
 {
   GstGLContext *context = gl_mem->mem.mem.context;
   const GstGLFuncs *gl;
-  guint gl_format, gl_type, gl_target;
   guint pbo_id;
-  gsize plane_start;
 
   if (!GST_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD))
     return;
@@ -148,42 +146,13 @@ _upload_pbo_memory (GstGLMemoryPBO * gl_mem, GstMapInfo * info,
   gl = context->gl_vtable;
   pbo_id = *(guint *) pbo_info->data;
 
-  gl_type = GL_UNSIGNED_BYTE;
-  if (gl_mem->mem.tex_type == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
-    gl_type = GL_UNSIGNED_SHORT_5_6_5;
-
-  gl_format = gst_gl_format_from_gl_texture_type (gl_mem->mem.tex_type);
-  gl_target = gst_gl_texture_target_to_gl (gl_mem->mem.tex_target);
-
-  if (USING_OPENGL (context) || USING_GLES3 (context)
-      || USING_OPENGL3 (context)) {
-    gl->PixelStorei (GL_UNPACK_ROW_LENGTH, gl_mem->mem.unpack_length);
-  } else if (USING_GLES2 (context)) {
-    gl->PixelStorei (GL_UNPACK_ALIGNMENT, gl_mem->mem.unpack_length);
-  }
-
   GST_CAT_LOG (GST_CAT_GL_MEMORY, "upload for texture id:%u, with pbo %u %ux%u",
       gl_mem->mem.tex_id, pbo_id, gl_mem->mem.tex_width,
       GL_MEM_HEIGHT (gl_mem));
 
-  /* find the start of the plane data including padding */
-  plane_start =
-      gst_gl_get_plane_start (&gl_mem->mem.info, &gl_mem->mem.valign,
-      gl_mem->mem.plane) + GST_MEMORY_CAST (gl_mem)->offset;
-
   gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, pbo_id);
-  gl->BindTexture (gl_target, gl_mem->mem.tex_id);
-  gl->TexSubImage2D (gl_target, 0, 0, 0, gl_mem->mem.tex_width,
-      GL_MEM_HEIGHT (gl_mem), gl_format, gl_type, (void *) plane_start);
+  gst_gl_memory_texsubimage (GST_GL_MEMORY_CAST (gl_mem), NULL);
   gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
-  gl->BindTexture (gl_target, 0);
-
-  /* Reset to default values */
-  if (USING_OPENGL (context) || USING_GLES3 (context)) {
-    gl->PixelStorei (GL_UNPACK_ROW_LENGTH, 0);
-  } else if (USING_GLES2 (context)) {
-    gl->PixelStorei (GL_UNPACK_ALIGNMENT, 4);
-  }
 }
 
 static guint
