@@ -792,6 +792,7 @@ _download_transfer (GstGLContext * context, GstGLMemoryPBO * gl_mem)
   if (_read_pixels_to_pbo (gl_mem))
     GST_CAT_TRACE (GST_CAT_GL_MEMORY, "optimistic download of texture %u "
         "using pbo %u", gl_mem->mem.tex_id, gl_mem->pbo->id);
+  GST_MEMORY_FLAG_UNSET (gl_mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD);
   g_mutex_unlock (&mem->lock);
 }
 
