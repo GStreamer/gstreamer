@@ -297,7 +297,6 @@ static GstBuffer *
 gst_rtp_dv_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
 {
   GstBuffer *out = NULL;
-  GstBuffer *payload_buf;
   guint8 *payload;
   guint32 rtp_ts;
   guint payload_len, location;
@@ -326,7 +325,6 @@ gst_rtp_dv_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
   /* Extract the payload */
   payload_len = gst_rtp_buffer_get_payload_len (rtp);
   payload = gst_rtp_buffer_get_payload (rtp);
-  payload_buf = gst_rtp_buffer_get_payload_buffer (rtp);
 
   /* copy all DIF chunks in their place. */
   gst_buffer_map (dvdepay->acc, &map, GST_MAP_READWRITE);
@@ -353,7 +351,7 @@ gst_rtp_dv_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
       if (offset <= dvdepay->frame_size - 80) {
         memcpy (map.data + offset, payload, 80);
         gst_rtp_copy_meta (GST_ELEMENT_CAST (dvdepay), dvdepay->acc,
-            payload_buf, 0);
+            rtp->buffer, 0);
       }
     }
 
@@ -361,7 +359,6 @@ gst_rtp_dv_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
     payload_len -= 80;
   }
   gst_buffer_unmap (dvdepay->acc, &map);
-  gst_buffer_unref (payload_buf);
 
   if (marker) {
     GST_DEBUG_OBJECT (dvdepay, "marker bit complete frame %u", rtp_ts);
