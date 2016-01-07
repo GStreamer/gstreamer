@@ -194,7 +194,7 @@ gst_ffmpegmux_base_init (gpointer g_class)
   AVOutputFormat *in_plugin;
   GstCaps *srccaps, *audiosinkcaps, *videosinkcaps;
   enum AVCodecID *video_ids = NULL, *audio_ids = NULL;
-  gchar *longname, *description;
+  gchar *longname, *description, *name;
   const char *replacement;
   gboolean is_formatter;
 
@@ -202,6 +202,9 @@ gst_ffmpegmux_base_init (gpointer g_class)
       (AVOutputFormat *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
       GST_FFMUX_PARAMS_QDATA);
   g_assert (in_plugin != NULL);
+
+  name = g_strdup (in_plugin->name);
+  g_strdelimit (name, ".,|-<> ", '_');
 
   /* construct the element details struct */
   replacement = gst_ffmpegmux_get_replacement (in_plugin->name);
@@ -229,19 +232,17 @@ gst_ffmpegmux_base_init (gpointer g_class)
   g_free (description);
 
   /* Try to find the caps that belongs here */
-  srccaps = gst_ffmpeg_formatid_to_caps (in_plugin->name);
+  srccaps = gst_ffmpeg_formatid_to_caps (name);
   if (!srccaps) {
-    GST_DEBUG ("Couldn't get source caps for muxer '%s', skipping format",
-        in_plugin->name);
+    GST_DEBUG ("Couldn't get source caps for muxer '%s', skipping", name);
     goto beach;
   }
 
   if (!gst_ffmpeg_formatid_get_codecids (in_plugin->name,
           &video_ids, &audio_ids, in_plugin)) {
     gst_caps_unref (srccaps);
-    GST_DEBUG
-        ("Couldn't get sink caps for muxer '%s'. Most likely because no input format mapping exists.",
-        in_plugin->name);
+    GST_DEBUG ("Couldn't get sink caps for muxer '%s'. Most likely because "
+        "no input format mapping exists.", name);
     goto beach;
   }
 
@@ -283,6 +284,8 @@ gst_ffmpegmux_base_init (gpointer g_class)
 
 beach:
   klass->in_plugin = in_plugin;
+
+  g_free (name);
 }
 
 static void
@@ -909,7 +912,6 @@ gst_ffmpegmux_register (GstPlugin * plugin)
 
   while (in_plugin) {
     gchar *type_name;
-    gchar *p;
     GstRank rank = GST_RANK_MARGINAL;
 
     if ((!strncmp (in_plugin->name, "u16", 3)) ||
@@ -961,16 +963,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
 
     /* construct the type */
     type_name = g_strdup_printf ("avmux_%s", in_plugin->name);
-
-    p = type_name;
-
-    while (*p) {
-      if (*p == '.')
-        *p = '_';
-      if (*p == ',')
-        *p = '_';
-      p++;
-    }
+    g_strdelimit (type_name, ".,|-<> ", '_');
 
     type = g_type_from_name (type_name);
 
