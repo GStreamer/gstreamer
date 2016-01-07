@@ -389,7 +389,8 @@ do_push_buffer_pre (GstStatsTracer * self, guint64 ts, GstPad * this_pad,
 }
 
 static void
-do_push_buffer_post (GstStatsTracer * self, guint64 ts, GstPad * pad)
+do_push_buffer_post (GstStatsTracer * self, guint64 ts, GstPad * pad,
+    GstFlowReturn res)
 {
   GstPadStats *stats = get_pad_stats (self, pad);
 
@@ -431,7 +432,8 @@ do_push_buffer_list_pre (GstStatsTracer * self, guint64 ts, GstPad * this_pad,
 }
 
 static void
-do_push_buffer_list_post (GstStatsTracer * self, guint64 ts, GstPad * pad)
+do_push_buffer_list_post (GstStatsTracer * self, guint64 ts, GstPad * pad,
+    GstFlowReturn res)
 {
   GstPadStats *stats = get_pad_stats (self, pad);
 
