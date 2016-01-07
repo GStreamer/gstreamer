@@ -2194,7 +2194,7 @@ gst_matroska_read_common_count_streams (GstMatroskaReadCommon * common,
   }
   *v = video_streams;
   *a = audio_streams;
-  *v = subtitle_streams;
+  *s = subtitle_streams;
 }
 
 
