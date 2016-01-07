@@ -37,7 +37,7 @@
 #include "gsttracerfactory.h"
 #include "gsttracerutils.h"
 
-#ifndef GST_DISABLE_GST_DEBUG
+#ifndef GST_DISABLE_GST_TRACER_HOOKS
 
 /* tracer quarks */
 
