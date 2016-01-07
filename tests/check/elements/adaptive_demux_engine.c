@@ -155,9 +155,13 @@ on_appsink_event (GstPad * pad, GstPadProbeInfo * info, gpointer data)
       event, pad);
 
   if (priv->callbacks->appsink_event) {
+    GstPad *stream_pad = gst_pad_get_peer (pad);
+    fail_unless (stream_pad != NULL);
+
     GST_TEST_LOCK (priv);
-    stream = getTestOutputDataByPad (priv, pad, TRUE);
+    stream = getTestOutputDataByPad (priv, stream_pad, TRUE);
     GST_TEST_UNLOCK (priv);
+    gst_object_unref (stream_pad);
     priv->callbacks->appsink_event (&priv->engine, stream, event,
         priv->user_data);
   }
@@ -297,7 +301,7 @@ on_demuxNewPad (GstElement * demux, GstPad * pad, gpointer user_data)
   gst_app_sink_set_callbacks (GST_APP_SINK (sink), &appSinkCallbacks, priv,
       NULL);
   appsink_pad = gst_element_get_static_pad (sink, "sink");
-  gst_pad_add_probe (pad,
+  gst_pad_add_probe (appsink_pad,
       GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH,
       (GstPadProbeCallback) on_appsink_event, priv, NULL);
   gst_object_unref (appsink_pad);
