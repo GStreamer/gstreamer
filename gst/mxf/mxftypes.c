@@ -1474,15 +1474,14 @@ mxf_primer_pack_to_buffer (const MXFPrimerPack * pack)
   data += 8;
 
   if (pack->mappings) {
-    guint local_tag;
+    gpointer local_tag;
     MXFUL *ul;
     GHashTableIter iter;
 
     g_hash_table_iter_init (&iter, pack->mappings);
 
-    while (g_hash_table_iter_next (&iter, (gpointer) & local_tag,
-            (gpointer) & ul)) {
-      GST_WRITE_UINT16_BE (data, local_tag);
+    while (g_hash_table_iter_next (&iter, &local_tag, (gpointer) & ul)) {
+      GST_WRITE_UINT16_BE (data, GPOINTER_TO_UINT (local_tag));
       memcpy (data + 2, ul, 16);
       data += 18;
     }
