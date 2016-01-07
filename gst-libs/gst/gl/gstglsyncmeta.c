@@ -50,7 +50,10 @@ _default_set_sync_gl (GstGLSyncMeta * sync_meta, GstGLContext * context)
     }
     sync_meta->data =
         (gpointer) gl->FenceSync (GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-    gl->Flush ();
+
+    if (gst_gl_context_is_shared (context))
+      /* if we only have a single context, the wait will flush for us */
+      gl->Flush ();
     GST_LOG ("setting sync object %p", sync_meta->data);
   } else {
     gl->Finish ();
