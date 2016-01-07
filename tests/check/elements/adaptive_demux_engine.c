@@ -344,33 +344,29 @@ on_demuxPadRemoved (GstElement * demux, GstPad * pad, gpointer user_data)
   GstAdaptiveDemuxTestEnginePrivate *priv =
       (GstAdaptiveDemuxTestEnginePrivate *) user_data;
   GstAdaptiveDemuxTestOutputStream *stream = NULL;
+  GstStateChangeReturn ret;
+  GstState currentState, pending;
+  GstElement *appSink;
 
   fail_unless (priv != NULL);
 
   GST_DEBUG ("Pad removed: %" GST_PTR_FORMAT, pad);
 
   GST_TEST_LOCK (priv);
-  stream = getTestOutputDataByPad (priv, pad, FALSE);
-  if (stream) {
-    GstStateChangeReturn ret;
-    GstState currentState, pending;
-    GstElement *appSink;
-
-    if (priv->callbacks->demux_pad_removed) {
-      priv->callbacks->demux_pad_removed (&priv->engine, stream,
-          priv->user_data);
-    }
-    fail_unless (stream->appsink != NULL);
-    fail_unless (stream->internal_pad != NULL);
-    gst_object_unref (stream->internal_pad);
-    stream->internal_pad = NULL;
-    appSink = GST_ELEMENT (stream->appsink);
-    ret = gst_element_get_state (appSink, &currentState, &pending, 0);
-    if ((ret == GST_STATE_CHANGE_SUCCESS && currentState == GST_STATE_PLAYING)
-        || (ret == GST_STATE_CHANGE_ASYNC && pending == GST_STATE_PLAYING)) {
-      GST_DEBUG ("Changing AppSink element to PAUSED");
-      gst_element_set_state (appSink, GST_STATE_PAUSED);
-    }
+  stream = getTestOutputDataByPad (priv, pad, TRUE);
+  if (priv->callbacks->demux_pad_removed) {
+    priv->callbacks->demux_pad_removed (&priv->engine, stream, priv->user_data);
+  }
+  fail_unless (stream->appsink != NULL);
+  fail_unless (stream->internal_pad != NULL);
+  gst_object_unref (stream->internal_pad);
+  stream->internal_pad = NULL;
+  appSink = GST_ELEMENT (stream->appsink);
+  ret = gst_element_get_state (appSink, &currentState, &pending, 0);
+  if ((ret == GST_STATE_CHANGE_SUCCESS && currentState == GST_STATE_PLAYING)
+      || (ret == GST_STATE_CHANGE_ASYNC && pending == GST_STATE_PLAYING)) {
+    GST_DEBUG ("Changing AppSink element to PAUSED");
+    gst_element_set_state (appSink, GST_STATE_PAUSED);
   }
   GST_TEST_UNLOCK (priv);
 }
