@@ -4985,7 +4985,7 @@ gboolean
   gint fps_n, fps_d;
   MXFMetadataFileDescriptor *f = (MXFMetadataFileDescriptor *) self;
   GstStructure *s;
-  gboolean interlaced;
+  gboolean interlaced = FALSE;
 
   g_return_val_if_fail (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR
       (self), FALSE);
