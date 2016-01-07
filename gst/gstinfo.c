@@ -186,12 +186,6 @@ GstDebugCategory *_priv_GST_CAT_PROTECTION = NULL;
 /* underscore is to prevent conflict with GST_CAT_DEBUG define */
 GST_DEBUG_CATEGORY_STATIC (_GST_CAT_DEBUG);
 
-/* time of initialization, so we get useful debugging output times
- * FIXME: we use this in gstdebugutils.c, what about a function + macro to
- * get the running time: GST_DEBUG_RUNNING_TIME
- */
-GstClockTime _priv_gst_info_start_time;
-
 #if 0
 #if defined __sgi__
 #include <rld_interface.h>
@@ -317,9 +311,6 @@ _priv_gst_debug_init (void)
   } else {
     log_file = stderr;
   }
-
-  /* get time we started for debugging messages */
-  _priv_gst_info_start_time = gst_util_get_timestamp ();
 
   __gst_printf_pointer_extension_set_func
       (gst_info_printf_pointer_extension_func);
@@ -1013,8 +1004,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     obj = (gchar *) "";
   }
 
-  elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time,
-      gst_util_get_timestamp ());
+  elapsed = GST_CLOCK_DIFF (_priv_gst_start_time, gst_util_get_timestamp ());
 
   if (color_mode != GST_DEBUG_COLOR_MODE_OFF) {
 #ifdef G_OS_WIN32

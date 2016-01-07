@@ -91,7 +91,7 @@ extern GHashTable *_priv_tracers;
 #define GST_TRACER_IS_ENABLED (_priv_tracer_enabled)
 
 #define GST_TRACER_TS \
-  GST_CLOCK_DIFF (_priv_gst_info_start_time, gst_util_get_timestamp ())
+  GST_CLOCK_DIFF (_priv_gst_start_time, gst_util_get_timestamp ())
 
 /* tracing hooks */
 

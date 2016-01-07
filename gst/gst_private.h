@@ -263,7 +263,7 @@ extern GstDebugCategory *_priv_GST_CAT_POLL;
 #define GST_CAT_PROTECTION _priv_GST_CAT_PROTECTION
 extern GstDebugCategory *_priv_GST_CAT_PROTECTION;
 
-extern GstClockTime _priv_gst_info_start_time;
+extern GstClockTime _priv_gst_start_time;
 
 #else
 

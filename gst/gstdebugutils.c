@@ -840,8 +840,7 @@ gst_debug_bin_to_dot_file_with_ts (GstBin * bin,
   }
 
   /* add timestamp */
-  elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time,
-      gst_util_get_timestamp ());
+  elapsed = GST_CLOCK_DIFF (_priv_gst_start_time, gst_util_get_timestamp ());
 
   /* we don't use GST_TIME_FORMAT as such filenames would fail on some
    * filesystems like fat */
