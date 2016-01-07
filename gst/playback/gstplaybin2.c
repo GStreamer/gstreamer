@@ -4451,7 +4451,7 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
 
       sinkcaps = gst_pad_query_caps (sinkpad, NULL);
       if (!gst_caps_is_any (sinkcaps))
-        ret = !gst_pad_query_accept_caps (sinkpad, caps);
+        ret = !gst_caps_can_intersect (sinkcaps, caps);
       gst_caps_unref (sinkcaps);
       gst_object_unref (sinkpad);
     }
@@ -4482,7 +4482,7 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
 
       sinkcaps = gst_pad_query_caps (sinkpad, NULL);
       if (!gst_caps_is_any (sinkcaps))
-        ret = !gst_pad_query_accept_caps (sinkpad, caps);
+        ret = !gst_caps_can_intersect (sinkcaps, caps);
       gst_caps_unref (sinkcaps);
       gst_object_unref (sinkpad);
     }
@@ -4500,7 +4500,7 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
 
       sinkcaps = gst_pad_query_caps (sinkpad, NULL);
       if (!gst_caps_is_any (sinkcaps))
-        ret = !gst_pad_query_accept_caps (sinkpad, caps);
+        ret = !gst_caps_can_intersect (sinkcaps, caps);
       gst_caps_unref (sinkcaps);
       gst_object_unref (sinkpad);
     }
@@ -4522,18 +4522,20 @@ static gboolean
 sink_accepts_caps (GstPlayBin * playbin, GstElement * sink, GstCaps * caps)
 {
   GstPad *sinkpad;
+  gboolean ret = TRUE;
 
   if ((sinkpad = gst_element_get_static_pad (sink, "sink"))) {
+    GstCaps *sinkcaps;
+
+    sinkcaps = gst_pad_query_caps (sinkpad, NULL);
     /* Got the sink pad, now let's see if the element actually does accept the
      * caps that we have */
-    if (!gst_pad_query_accept_caps (sinkpad, caps)) {
-      gst_object_unref (sinkpad);
-      return FALSE;
-    }
+    ret = gst_caps_can_intersect (sinkcaps, caps);
+    gst_caps_unref (sinkcaps);
     gst_object_unref (sinkpad);
   }
 
-  return TRUE;
+  return ret;
 }
 
 /* We are asked to select an element. See if the next element to check
