@@ -236,7 +236,7 @@ _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
     GDestroyNotify notify)
 {
   GstGLMemoryPBO *mem;
-  mem = g_slice_new0 (GstGLMemoryPBO);
+  mem = g_new0 (GstGLMemoryPBO, 1);
   mem->mem.texture_wrapped = FALSE;
 
   _gl_mem_init (mem, allocator, parent, context, target, params, info, plane,
@@ -657,12 +657,6 @@ _gl_mem_destroy (GstGLMemoryPBO * gl_mem)
           *) gl_mem);
 }
 
-static void
-_gl_mem_free (GstAllocator * allocator, GstMemory * mem)
-{
-  GST_ALLOCATOR_CLASS (parent_class)->free (allocator, mem);
-}
-
 static GstGLMemoryPBO *
 _gl_mem_pbo_alloc (GstGLBaseMemoryAllocator * allocator,
     GstGLVideoAllocationParams * params)
@@ -722,7 +716,6 @@ gst_gl_memory_pbo_allocator_class_init (GstGLMemoryPBOAllocatorClass * klass)
   gl_base->destroy = (GstGLBaseMemoryAllocatorDestroyFunction) _gl_mem_destroy;
 
   allocator_class->alloc = _gl_mem_alloc;
-  allocator_class->free = _gl_mem_free;
 }
 
 static void

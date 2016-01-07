@@ -442,6 +442,8 @@ _mem_free (GstAllocator * allocator, GstMemory * memory)
     mem->notify (mem->user_data);
 
   gst_object_unref (mem->context);
+
+  g_free (memory);
 }
 
 /**
