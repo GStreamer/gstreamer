@@ -3903,7 +3903,7 @@ gst_pad_query (GstPad * pad, GstQuery * query)
 
   GST_DEBUG_OBJECT (pad, "sent query %p (%s), result %d", query,
       GST_QUERY_TYPE_NAME (query), res);
-  GST_TRACER_PAD_QUERY_POST (pad, res, query);
+  GST_TRACER_PAD_QUERY_POST (pad, query, res);
 
   if (res != TRUE)
     goto query_failed;

@@ -22,7 +22,7 @@
  * SECTION:gstlog
  * @short_description: log hook event
  *
- * A tracing module that logs all data from all hooks. 
+ * A tracing module that logs all data from all hooks.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -143,6 +143,22 @@ do_push_event_post (GstTracer * self, guint64 ts, GstPad * pad, gboolean res)
 }
 
 static void
+do_pad_query_pre (GstTracer * self, guint64 ts, GstPad * pad, GstQuery * query)
+{
+  do_log (GST_CAT_QUERY,
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", query=%"
+      GST_PTR_FORMAT, GST_TIME_ARGS (ts), pad, query);
+}
+
+static void
+do_pad_query_post (GstTracer * self, guint64 ts, GstPad * pad, gboolean res)
+{
+  do_log (GST_CAT_QUERY,
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%d",
+      GST_TIME_ARGS (ts), pad, res);
+}
+
+static void
 do_post_message_pre (GstTracer * self, guint64 ts, GstElement * elem,
     GstMessage * msg)
 {
@@ -161,7 +177,8 @@ do_post_message_post (GstTracer * self, guint64 ts, GstElement * elem,
 }
 
 static void
-do_query_pre (GstTracer * self, guint64 ts, GstElement * elem, GstQuery * query)
+do_element_query_pre (GstTracer * self, guint64 ts, GstElement * elem,
+    GstQuery * query)
 {
   do_log (GST_CAT_QUERY,
       "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", query=%"
@@ -169,7 +186,8 @@ do_query_pre (GstTracer * self, guint64 ts, GstElement * elem, GstQuery * query)
 }
 
 static void
-do_query_post (GstTracer * self, guint64 ts, GstElement * elem, gboolean res)
+do_element_query_post (GstTracer * self, guint64 ts, GstElement * elem,
+    gboolean res)
 {
   do_log (GST_CAT_QUERY,
       "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", res=%d",
@@ -318,17 +336,17 @@ gst_log_tracer_init (GstLogTracer * self)
   gst_tracing_register_hook (tracer, "pad-push-event-post",
       G_CALLBACK (do_push_event_post));
   gst_tracing_register_hook (tracer, "pad-query-pre",
-      G_CALLBACK (do_query_pre));
+      G_CALLBACK (do_pad_query_pre));
   gst_tracing_register_hook (tracer, "pad-query-post",
-      G_CALLBACK (do_query_post));
+      G_CALLBACK (do_pad_query_post));
   gst_tracing_register_hook (tracer, "element-post-message-pre",
       G_CALLBACK (do_post_message_pre));
   gst_tracing_register_hook (tracer, "element-post-message-post",
       G_CALLBACK (do_post_message_post));
   gst_tracing_register_hook (tracer, "element-query-pre",
-      G_CALLBACK (do_query_pre));
+      G_CALLBACK (do_element_query_pre));
   gst_tracing_register_hook (tracer, "element-query-post",
-      G_CALLBACK (do_query_post));
+      G_CALLBACK (do_element_query_post));
   gst_tracing_register_hook (tracer, "element-new",
       G_CALLBACK (do_element_new));
   gst_tracing_register_hook (tracer, "element-add-pad",

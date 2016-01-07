@@ -266,16 +266,16 @@ typedef void (*GstTracerHookPadQueryPre) (GObject *self, GstClockTime ts,
  * @self: the tracer instance
  * @ts: the current timestamp
  * @pad: the pad
- * @res: the result of gst_pad_query()
  * @query: the query
+ * @res: the result of gst_pad_query()
  *
  * Post-hook for gst_pad_query() named "pad-query-post".
  */
 typedef void (*GstTracerHookPadQueryPost) (GObject *self, GstClockTime ts,
-    GstPad *pad, gboolean res, GstQuery *query);
-#define GST_TRACER_PAD_QUERY_POST(pad, res, query) G_STMT_START{ \
+    GstPad *pad, GstQuery *query, gboolean res);
+#define GST_TRACER_PAD_QUERY_POST(pad, query, res) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_QUERY_POST), \
-    GstTracerHookPadQueryPost, (GST_TRACER_ARGS, pad, res, query)); \
+    GstTracerHookPadQueryPost, (GST_TRACER_ARGS, pad, query, res)); \
 }G_STMT_END
 
 /**
@@ -331,15 +331,16 @@ typedef void (*GstTracerHookElementQueryPre) (GObject *self, GstClockTime ts,
  * @self: the tracer instance
  * @ts: the current timestamp
  * @element: the element
+ * @query: the query
  * @res: the result of gst_element_query()
  *
  * Post-hook for gst_element_query() named "element-query-post".
  */
 typedef void (*GstTracerHookElementQueryPost) (GObject *self, GstClockTime ts,
-    GstElement *element, gboolean res);
-#define GST_TRACER_ELEMENT_QUERY_POST(element, res) G_STMT_START{ \
+    GstElement *element, GstQuery *query, gboolean res);
+#define GST_TRACER_ELEMENT_QUERY_POST(element, query, res) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_ELEMENT_QUERY_POST), \
-    GstTracerHookElementQueryPost, (GST_TRACER_ARGS, element, res)); \
+    GstTracerHookElementQueryPost, (GST_TRACER_ARGS, element, query, res)); \
 }G_STMT_END
 
 /**
@@ -565,11 +566,11 @@ typedef void (*GstTracerHookPadUnlinkPost) (GObject *self, GstClockTime ts,
 #define GST_TRACER_PAD_PUSH_EVENT_PRE(pad, event)
 #define GST_TRACER_PAD_PUSH_EVENT_POST(pad, res)
 #define GST_TRACER_PAD_QUERY_PRE(pad, query)
-#define GST_TRACER_PAD_QUERY_POST(pad, res, query)
+#define GST_TRACER_PAD_QUERY_POST(pad, query, res)
 #define GST_TRACER_ELEMENT_POST_MESSAGE_PRE(element, message)
 #define GST_TRACER_ELEMENT_POST_MESSAGE_POST(element, res)
 #define GST_TRACER_ELEMENT_QUERY_PRE(element, query)
-#define GST_TRACER_ELEMENT_QUERY_POST(element, res)
+#define GST_TRACER_ELEMENT_QUERY_POST(element, query, res)
 #define GST_TRACER_ELEMENT_NEW(element)
 #define GST_TRACER_ELEMENT_ADD_PAD(element, pad)
 #define GST_TRACER_ELEMENT_REMOVE_PAD(element, pad)

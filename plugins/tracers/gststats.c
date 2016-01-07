@@ -539,7 +539,7 @@ do_query_pre (GstStatsTracer * self, guint64 ts, GstPad * this_pad,
 
 static void
 do_query_post (GstStatsTracer * self, guint64 ts, GstPad * this_pad,
-    gboolean res, GstQuery * qry)
+    GstQuery * qry, gboolean res)
 {
   GstPadStats *this_pad_stats = get_pad_stats (self, this_pad);
   GstPad *that_pad = GST_PAD_PEER (this_pad);

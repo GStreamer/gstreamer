@@ -1677,7 +1677,7 @@ gst_element_query (GstElement * element, GstQuery * query)
     res = klass->query (element, query);
   }
 
-  GST_TRACER_ELEMENT_QUERY_POST (element, res);
+  GST_TRACER_ELEMENT_QUERY_POST (element, query, res);
   return res;
 }
 
