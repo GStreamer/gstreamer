@@ -1788,6 +1788,7 @@ parse_transport (const char *transport, GstRTSPStream * stream,
 
   /* loop through the transports, try to parse */
   for (i = 0; transports[i]; i++) {
+    g_strstrip (transports[i]);
     res = gst_rtsp_transport_parse (transports[i], tr);
     if (res != GST_RTSP_OK) {
       /* no valid transport, search some more */
