@@ -4994,7 +4994,35 @@ done:
 
     if (target) {
       GstCaps *target_caps = gst_pad_get_pad_template_caps (target);
+
       GST_PLAY_BIN_FILTER_CAPS (filter, target_caps);
+      if (!gst_caps_is_any (target_caps)) {
+        GstCaps *tmp;
+        GstCapsFeatures *features;
+        GstStructure *s;
+        guint i, n;
+
+        n = gst_caps_get_size (target_caps);
+        tmp = gst_caps_new_empty ();
+        for (i = 0; i < n; i++) {
+          features = gst_caps_get_features (target_caps, i);
+          s = gst_caps_get_structure (target_caps, i);
+
+          if (!gst_structure_has_name (s, "video/x-raw") &&
+              !gst_structure_has_name (s, "audio/x-raw")) {
+            gst_caps_append_structure_full (tmp,
+                gst_structure_copy (s), gst_caps_features_copy (features));
+          } else if (gst_caps_features_is_any (features)
+              || gst_caps_features_is_equal (features,
+                  GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
+            gst_caps_append_structure (tmp, gst_structure_copy (s));
+          }
+        }
+        gst_caps_unref (target_caps);
+        target_caps = tmp;
+      }
+
+
       result = gst_caps_merge (result, target_caps);
       gst_object_unref (target);
     }
