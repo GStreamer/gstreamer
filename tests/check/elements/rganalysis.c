@@ -916,7 +916,7 @@ GST_START_TEST (test_peak_int16_16)
   send_flush_events (element);
   send_caps_event (GST_AUDIO_NE (S16), 8000, 2);
   send_segment_event (element);
-  push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, -1 << 14, 0));
+  push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, -(1 << 14), 0));
   send_eos_event (element);
   tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.5);
@@ -926,7 +926,7 @@ GST_START_TEST (test_peak_int16_16)
   send_flush_events (element);
   send_caps_event (GST_AUDIO_NE (S16), 8000, 2);
   send_segment_event (element);
-  push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, 0, -1 << 14));
+  push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, 0, -(1 << 14)));
   send_eos_event (element);
   tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.5);
@@ -936,7 +936,7 @@ GST_START_TEST (test_peak_int16_16)
   send_flush_events (element);
   send_caps_event (GST_AUDIO_NE (S16), 8000, 1);
   send_segment_event (element);
-  push_buffer (test_buffer_const_int16_mono (8000, 16, 512, -1 << 14));
+  push_buffer (test_buffer_const_int16_mono (8000, 16, 512, -(1 << 14)));
   send_eos_event (element);
   tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.5);
