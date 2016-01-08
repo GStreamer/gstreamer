@@ -108,8 +108,8 @@ static void gst_pyramid_segment_set_property (GObject * object, guint prop_id,
 static void gst_pyramid_segment_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_pyramid_segment_transform (GstOpencvVideoFilter * base,
-    GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
+static GstFlowReturn gst_pyramid_segment_transform_ip (GstOpencvVideoFilter *
+    base, GstBuffer * buf, IplImage * img);
 
 /* Clean up */
 static void
@@ -137,7 +137,8 @@ gst_pyramid_segment_class_init (GstPyramidSegmentClass * klass)
   gobject_class->set_property = gst_pyramid_segment_set_property;
   gobject_class->get_property = gst_pyramid_segment_get_property;
 
-  gstopencvbasefilter_class->cv_trans_func = gst_pyramid_segment_transform;
+  gstopencvbasefilter_class->cv_trans_ip_func =
+      gst_pyramid_segment_transform_ip;
 
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
@@ -187,7 +188,7 @@ gst_pyramid_segment_init (GstPyramidSegment * filter)
   filter->level = 4;
 
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
-      FALSE);
+      TRUE);
 }
 
 static void
@@ -244,26 +245,13 @@ gst_pyramid_segment_get_property (GObject * object, guint prop_id,
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_pyramid_segment_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
-    IplImage * img, GstBuffer * outbuf, IplImage * outimg)
+gst_pyramid_segment_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
+    IplImage * img)
 {
   GstPyramidSegment *filter = GST_PYRAMID_SEGMENT (base);
-  GstMapInfo outinfo;
 
-  filter->cvSegmentedImage = cvCloneImage (img);
-
-  cvPyrSegmentation (img, filter->cvSegmentedImage, filter->storage,
+  cvPyrSegmentation (img, img, filter->storage,
       &(filter->comp), filter->level, filter->threshold1, filter->threshold2);
-
-  /* TODO look if there is a way in opencv to reuse the image data and
-   * delete only the struct headers. Would avoid a memcpy here */
-
-  gst_buffer_map (outbuf, &outinfo, GST_MAP_WRITE);
-  memcpy (outinfo.data, filter->cvSegmentedImage->imageData,
-      gst_buffer_get_size (outbuf));
-
-  cvReleaseImage (&filter->cvSegmentedImage);
-  g_assert (filter->cvSegmentedImage == NULL);
 
   return GST_FLOW_OK;
 }

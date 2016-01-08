@@ -77,8 +77,6 @@ struct _GstPyramidSegment
 
   gboolean silent;
 
-  IplImage *cvSegmentedImage;
-
   CvMemStorage *storage;
 
   CvSeq *comp;
