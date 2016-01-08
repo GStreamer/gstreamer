@@ -52,5 +52,6 @@
 #include <gst/gl/gstglfilter.h>
 #include <gst/gl/gstglsyncmeta.h>
 #include <gst/gl/gstgloverlaycompositor.h>
+#include <gst/gl/gstglquery.h>
 
 #endif /* __GST_GL_H__ */

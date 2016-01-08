@@ -15,5 +15,6 @@ prototype_HEADERS = \
 	debug.h \
 	vao.h \
 	sync.h \
-	buffers.h
+	buffers.h \
+	query.h
 

@@ -89,6 +89,8 @@ typedef struct _GstGLViewConvertPrivate GstGLViewConvertPrivate;
 typedef struct _GstGLOverlayCompositor GstGLOverlayCompositor;
 typedef struct _GstGLOverlayCompositorClass GstGLOverlayCompositorClass;
 
+typedef struct _GstGLQuery GstGLQuery;
+
 #include <gst/gl/gstgl_enums.h>
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
