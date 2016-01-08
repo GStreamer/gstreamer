@@ -660,7 +660,7 @@ gst_audio_convert_set_caps (GstBaseTransform * base, GstCaps * incaps,
   if (!gst_audio_info_from_caps (&out_info, outcaps))
     goto invalid_out;
 
-  this->convert = gst_audio_converter_new (&in_info, &out_info,
+  this->convert = gst_audio_converter_new (0, &in_info, &out_info,
       gst_structure_new ("GstAudioConverterConfig",
           GST_AUDIO_CONVERTER_OPT_DITHER_METHOD, GST_TYPE_AUDIO_DITHER_METHOD,
           this->dither,
@@ -734,7 +734,7 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
   /* and convert the samples */
   flags = 0;
   if (inbuf_writable)
-    flags |= GST_AUDIO_CONVERTER_FLAG_SOURCE_WRITABLE;
+    flags |= GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE;
 
   if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
     gpointer in[1] = { srcmap.data };

@@ -59,17 +59,21 @@ typedef struct _GstAudioConverter GstAudioConverter;
 /**
  * GstAudioConverterFlags:
  * @GST_AUDIO_CONVERTER_FLAG_NONE: no flag
- * @GST_AUDIO_CONVERTER_FLAG_SOURCE_WRITABLE: the source is writable and can be
+ * @GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE: the input sample arrays are writable and can be
  *    used as temporary storage during conversion.
+ * @GST_AUDIO_CONVERTER_FLAG_VARIABLE_RATE: allow arbitrary rate updates with
+ *    gst_audio_converter_update_config().
  *
- * Extra flags passed to gst_audio_converter_samples().
+ * Extra flags passed to gst_audio_converter_new() and gst_audio_converter_samples().
  */
 typedef enum {
   GST_AUDIO_CONVERTER_FLAG_NONE            = 0,
-  GST_AUDIO_CONVERTER_FLAG_SOURCE_WRITABLE = (1 << 0)
+  GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE     = (1 << 0),
+  GST_AUDIO_CONVERTER_FLAG_VARIABLE_RATE   = (1 << 1)
 } GstAudioConverterFlags;
 
-GstAudioConverter *  gst_audio_converter_new             (GstAudioInfo *in_info,
+GstAudioConverter *  gst_audio_converter_new             (GstAudioConverterFlags flags,
+                                                          GstAudioInfo *in_info,
                                                           GstAudioInfo *out_info,
                                                           GstStructure *config);
 

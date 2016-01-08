@@ -338,7 +338,7 @@ do_unpack (AudioChain * chain, gsize num_samples, gpointer user_data)
   gpointer *tmp;
   gboolean src_writable;
 
-  src_writable = (convert->flags & GST_AUDIO_CONVERTER_FLAG_SOURCE_WRITABLE);
+  src_writable = (convert->flags & GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE);
 
   if (!chain->allow_ip || !src_writable || !convert->in_default) {
     gint i;
@@ -679,6 +679,7 @@ setup_allocators (GstAudioConverter * convert)
 
 /**
  * gst_audio_converter_new: (skip)
+ * @flags: #GstAudioConverterFlags
  * @in_info: a source #GstAudioInfo
  * @out_info: a destination #GstAudioInfo
  * @config: (transfer full): a #GstStructure with configuration options
@@ -692,8 +693,8 @@ setup_allocators (GstAudioConverter * convert)
  * Returns: a #GstAudioConverter or %NULL if conversion is not possible.
  */
 GstAudioConverter *
-gst_audio_converter_new (GstAudioInfo * in_info, GstAudioInfo * out_info,
-    GstStructure * config)
+gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
+    GstAudioInfo * out_info, GstStructure * config)
 {
   GstAudioConverter *convert;
   AudioChain *prev;
