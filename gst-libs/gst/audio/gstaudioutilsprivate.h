@@ -31,6 +31,7 @@
 G_BEGIN_DECLS
 
 /* Element utility functions */
+G_GNUC_INTERNAL
 GstCaps *__gst_audio_element_proxy_getcaps (GstElement * element, GstPad * sinkpad,
                                             GstPad * srcpad, GstCaps * initial_caps,
                                             GstCaps * filter);
