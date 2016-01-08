@@ -75,8 +75,11 @@ GstAudioConverter *  gst_audio_converter_new             (GstAudioInfo *in_info,
 
 void                 gst_audio_converter_free            (GstAudioConverter * convert);
 
-gboolean             gst_audio_converter_set_config      (GstAudioConverter * convert, GstStructure *config);
-const GstStructure * gst_audio_converter_get_config      (GstAudioConverter * convert);
+gboolean             gst_audio_converter_update_config   (GstAudioConverter * convert,
+                                                          gint in_rate, gint out_rate,
+                                                          GstStructure *config);
+const GstStructure * gst_audio_converter_get_config      (GstAudioConverter * convert,
+                                                          gint *in_rate, gint *out_rate);
 
 gsize                gst_audio_converter_get_out_frames  (GstAudioConverter *convert,
                                                           gsize in_frames);

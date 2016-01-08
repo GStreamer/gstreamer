@@ -273,11 +273,16 @@ copy_config (GQuark field_id, const GValue * value, gpointer user_data)
 }
 
 /**
- * gst_audio_converter_set_config:
+ * gst_audio_converter_update_config:
  * @convert: a #GstAudioConverter
+ * @in_rate: input rate
+ * @out_rate: output rate
  * @config: (transfer full): a #GstStructure
  *
- * Set @config as extra configuraion for @convert.
+ * Set @config as extra configuration for @convert.
+ *
+ * in_rate and @out_rate specify the new sample rates of input and output
+ * formats. A value of 0 leaves the sample rate unchanged.
  *
  * If the parameters in @config can not be set exactly, this function returns
  * %FALSE and will try to update as much state as possible. The new state can
@@ -289,8 +294,8 @@ copy_config (GQuark field_id, const GValue * value, gpointer user_data)
  * Returns: %TRUE when @config could be set.
  */
 gboolean
-gst_audio_converter_set_config (GstAudioConverter * convert,
-    GstStructure * config)
+gst_audio_converter_update_config (GstAudioConverter * convert,
+    gint in_rate, gint out_rate, GstStructure * config)
 {
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (config != NULL, FALSE);
@@ -304,16 +309,24 @@ gst_audio_converter_set_config (GstAudioConverter * convert,
 /**
  * gst_audio_converter_get_config:
  * @convert: a #GstAudioConverter
+ * @in_rate: result input rate
+ * @out_rate: result output rate
  *
  * Get the current configuration of @convert.
  *
  * Returns: a #GstStructure that remains valid for as long as @convert is valid
- *   or until gst_audio_converter_set_config() is called.
+ *   or until gst_audio_converter_update_config() is called.
  */
 const GstStructure *
-gst_audio_converter_get_config (GstAudioConverter * convert)
+gst_audio_converter_get_config (GstAudioConverter * convert,
+    gint * in_rate, gint * out_rate)
 {
   g_return_val_if_fail (convert != NULL, NULL);
+
+  if (in_rate)
+    *in_rate = convert->in.rate;
+  if (out_rate)
+    *out_rate = convert->out.rate;
 
   return convert->config;
 }
@@ -704,7 +717,7 @@ gst_audio_converter_new (GstAudioInfo * in_info, GstAudioInfo * out_info,
   /* default config */
   convert->config = gst_structure_new_empty ("GstAudioConverter");
   if (config)
-    gst_audio_converter_set_config (convert, config);
+    gst_audio_converter_update_config (convert, 0, 0, config);
 
   GST_INFO ("unitsizes: %d -> %d", in_info->bpf, out_info->bpf);
 
