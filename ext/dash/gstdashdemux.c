@@ -684,6 +684,11 @@ gst_dash_demux_setup_streams (GstAdaptiveDemux * demux)
   period_idx = 0;
   if (gst_mpd_client_is_live (dashdemux->client)) {
     GDateTime *g_now;
+    if (dashdemux->client->mpd_node->availabilityStartTime == NULL) {
+      ret = FALSE;
+      GST_ERROR_OBJECT (demux, "MPD does not have availabilityStartTime");
+      goto done;
+    }
     if (dashdemux->clock_drift == NULL) {
       gchar **urls;
       urls =
