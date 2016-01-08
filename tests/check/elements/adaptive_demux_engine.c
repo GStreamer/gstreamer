@@ -215,13 +215,6 @@ on_demuxReceivesEvent (GstPad * pad, GstPadProbeInfo * info, gpointer data)
     stream->segment_received_size = 0;
     stream->segment_start = segment->start;
     GST_TEST_UNLOCK (priv);
-  } else if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-    GST_TEST_LOCK (priv);
-    stream = getTestOutputDataByPad (priv, pad, TRUE);
-    if (priv->callbacks->demux_sent_eos) {
-      priv->callbacks->demux_sent_eos (&priv->engine, stream, priv->user_data);
-    }
-    GST_TEST_UNLOCK (priv);
   }
 
   return GST_PAD_PROBE_OK;

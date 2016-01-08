@@ -136,17 +136,6 @@ typedef struct _GstAdaptiveDemuxTestCallbacks
       GstBuffer * buffer, gpointer user_data);
 
   /**
-   * demux_sent_eos: called each time demux send an EOS event
-   * @engine: #GstAdaptiveDemuxTestEngine
-   * @stream: #GstAdaptiveDemuxTestOutputStream
-   * @user_data: the user_data passed to gst_adaptive_demux_test_run()
-   * Can be used by a test to perform additional operations (eg validate
-   * output data)
-   */
-  void (*demux_sent_eos) (GstAdaptiveDemuxTestEngine *engine,
-      GstAdaptiveDemuxTestOutputStream * stream, gpointer user_data);
-  
-  /**
    * bus_error_message: called if an error is posted to the bus
    * @engine: #GstAdaptiveDemuxTestEngine
    * @msg: the #GstMessage that contains the error
