@@ -608,6 +608,31 @@ gst_info_describe_buffer (GstBuffer * buffer)
 }
 
 static inline gchar *
+gst_info_describe_buffer_list (GstBufferList * list)
+{
+  GstClockTime pts = GST_CLOCK_TIME_NONE;
+  GstClockTime dts = GST_CLOCK_TIME_NONE;
+  gsize total_size = 0;
+  guint n, i;
+
+  n = gst_buffer_list_length (list);
+  for (i = 0; i < n; ++i) {
+    GstBuffer *buf = gst_buffer_list_get (list, i);
+
+    if (i == 0) {
+      pts = GST_BUFFER_PTS (buf);
+      dts = GST_BUFFER_DTS (buf);
+    }
+
+    total_size += gst_buffer_get_size (buf);
+  }
+
+  return g_strdup_printf ("bufferlist: %p, %u buffers, pts %" GST_TIME_FORMAT
+      ", dts %" GST_TIME_FORMAT ", size %" G_GSIZE_FORMAT, list, n,
+      GST_TIME_ARGS (pts), GST_TIME_ARGS (dts), total_size);
+}
+
+static inline gchar *
 gst_info_describe_event (GstEvent * event)
 {
   gchar *s, *ret;
@@ -692,6 +717,9 @@ gst_debug_print_object (gpointer ptr)
   }
   if (GST_IS_BUFFER (ptr)) {
     return gst_info_describe_buffer (GST_BUFFER_CAST (ptr));
+  }
+  if (GST_IS_BUFFER_LIST (ptr)) {
+    return gst_info_describe_buffer_list (GST_BUFFER_LIST_CAST (ptr));
   }
 #ifdef USE_POISONING
   if (*(guint32 *) ptr == 0xffffffff) {

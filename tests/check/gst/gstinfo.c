@@ -89,6 +89,24 @@ GST_START_TEST (info_ptr_format_printf_extension)
     gst_message_unref (msg);
   }
 
+  /* buffer and buffer list */
+  {
+    GstBufferList *list;
+    GstBuffer *buf;
+
+    buf = gst_buffer_new_allocate (NULL, 42, NULL);
+    GST_BUFFER_PTS (buf) = 5 * GST_SECOND;
+    GST_BUFFER_DURATION (buf) = GST_SECOND;
+    GST_LOG ("BUFFER: %" GST_PTR_FORMAT, buf);
+
+    list = gst_buffer_list_new ();
+    gst_buffer_list_add (list, buf);
+    buf = gst_buffer_new_allocate (NULL, 58, NULL);
+    gst_buffer_list_add (list, buf);
+    GST_LOG ("BUFFERLIST: %" GST_PTR_FORMAT, list);
+    gst_buffer_list_unref (list);
+  }
+
 #if 0
   /* TODO: GObject */
   {
