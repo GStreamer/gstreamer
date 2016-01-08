@@ -1011,7 +1011,7 @@ gst_video_rate_check_variable_rate (GstVideoRate * videorate,
 {
   GstStructure *st;
   gint fps_d, fps_n;
-  GstCaps *srcpadcaps, *tmpcaps;
+  GstCaps *srcpadcaps, *tmpcaps, *downstream_caps;
   GstPad *pad = NULL;
 
   srcpadcaps =
@@ -1026,13 +1026,16 @@ gst_video_rate_check_variable_rate (GstVideoRate * videorate,
   gst_caps_unref (srcpadcaps);
 
   pad = gst_pad_get_peer (GST_BASE_TRANSFORM_SRC_PAD (videorate));
-  if (pad && !gst_pad_query_accept_caps (pad, tmpcaps)) {
+  downstream_caps = gst_pad_query_caps (pad, NULL);
+  if (pad && !gst_caps_can_intersect (tmpcaps, downstream_caps)) {
     videorate->force_variable_rate = TRUE;
+    gst_caps_unref (downstream_caps);
     GST_DEBUG_OBJECT (videorate, "Downstream forces variable framerate"
         " respecting it");
 
     goto done;
   }
+  gst_caps_unref (downstream_caps);
 
   videorate->to_rate_numerator = fps_n;
   videorate->to_rate_denominator = fps_d;
