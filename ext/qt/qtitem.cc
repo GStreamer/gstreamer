@@ -211,6 +211,7 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
   tex = static_cast<GstQSGTexture *> (texNode->texture());
   tex->setCaps (this->priv->caps);
   tex->setBuffer (this->priv->buffer);
+  texNode->markDirty(QSGNode::DirtyMaterial);
 
   if (this->priv->force_aspect_ratio) {
     src.w = this->priv->display_width;
