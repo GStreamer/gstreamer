@@ -204,8 +204,8 @@ gst_image_freeze_sink_setcaps (GstImageFreeze * self, GstCaps * caps)
   caps = othercaps;
   othercaps = NULL;
 
-  /* 4. For every candidate check if it's accepted downstream
-   * and fixate framerate to nearest 25/1 */
+  /* 4. For every candidate try to use it downstream with framerate as
+   * near as possible to 25/1 */
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
     GstCaps *candidate = gst_caps_new_empty ();
@@ -214,28 +214,26 @@ gst_image_freeze_sink_setcaps (GstImageFreeze * self, GstCaps * caps)
     gst_caps_append_structure (candidate, s);
     if (gst_structure_has_field_typed (s, "framerate", GST_TYPE_FRACTION) ||
         gst_structure_fixate_field_nearest_fraction (s, "framerate", 25, 1)) {
-      if (gst_pad_peer_query_accept_caps (self->srcpad, candidate)) {
-        gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d);
-        if (fps_d != 0) {
+      gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d);
+      if (fps_d != 0) {
+        if (gst_pad_set_caps (self->srcpad, candidate)) {
           g_mutex_lock (&self->lock);
           self->fps_n = fps_n;
           self->fps_d = fps_d;
           g_mutex_unlock (&self->lock);
           GST_DEBUG_OBJECT (pad, "Setting caps %" GST_PTR_FORMAT, candidate);
-          gst_pad_set_caps (self->srcpad, candidate);
-          gst_caps_unref (candidate);
           ret = TRUE;
-          goto done;
-        } else {
-          GST_WARNING_OBJECT (pad, "Invalid caps with framerate %d/%d", fps_n,
-              fps_d);
+          gst_caps_unref (candidate);
+          break;
         }
+      } else {
+        GST_WARNING_OBJECT (pad, "Invalid caps with framerate %d/%d", fps_n,
+            fps_d);
       }
     }
     gst_caps_unref (candidate);
   }
 
-done:
   if (!ret)
     GST_ERROR_OBJECT (pad, "No usable caps found");
 
