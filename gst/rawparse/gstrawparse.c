@@ -257,8 +257,8 @@ gst_raw_parse_push_buffer (GstRawParse * rp, GstBuffer * buffer)
     GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   }
 
-  if (rpclass->set_buffer_flags) {
-    rpclass->set_buffer_flags (rp, buffer);
+  if (rpclass->pre_push_buffer) {
+    rpclass->pre_push_buffer (rp, buffer);
   }
 
   if (rp->discont) {

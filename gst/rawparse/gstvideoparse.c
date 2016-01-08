@@ -37,7 +37,7 @@ static void gst_video_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstCaps *gst_video_parse_get_caps (GstRawParse * rp);
-static void gst_video_parse_set_buffer_flags (GstRawParse * rp,
+static void gst_video_parse_pre_push_buffer (GstRawParse * rp,
     GstBuffer * buffer);
 
 static void gst_video_parse_update_info (GstVideoParse * vp);
@@ -72,7 +72,7 @@ gst_video_parse_class_init (GstVideoParseClass * klass)
   gobject_class->get_property = gst_video_parse_get_property;
 
   rp_class->get_caps = gst_video_parse_get_caps;
-  rp_class->set_buffer_flags = gst_video_parse_set_buffer_flags;
+  rp_class->pre_push_buffer = gst_video_parse_pre_push_buffer;
 
   g_object_class_install_property (gobject_class, PROP_FORMAT,
       g_param_spec_enum ("format", "Format", "Format of images in raw stream",
@@ -242,7 +242,7 @@ gst_video_parse_get_caps (GstRawParse * rp)
 }
 
 static void
-gst_video_parse_set_buffer_flags (GstRawParse * rp, GstBuffer * buffer)
+gst_video_parse_pre_push_buffer (GstRawParse * rp, GstBuffer * buffer)
 {
   GstVideoParse *vp = GST_VIDEO_PARSE (rp);
 
