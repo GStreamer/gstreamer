@@ -233,10 +233,12 @@ gst_raw_parse_push_buffer (GstRawParse * rp, GstBuffer * buffer)
   GstFlowReturn ret;
   gint nframes;
   GstRawParseClass *rpclass;
+  gsize size;
 
   rpclass = GST_RAW_PARSE_GET_CLASS (rp);
 
-  nframes = gst_buffer_get_size (buffer) / rp->framesize;
+  size = gst_buffer_get_size (buffer);
+  nframes = size / rp->framesize;
 
   if (rp->segment.rate < 0) {
     rp->n_frames -= nframes;
@@ -267,7 +269,7 @@ gst_raw_parse_push_buffer (GstRawParse * rp, GstBuffer * buffer)
   }
 
   if (rp->segment.rate >= 0) {
-    rp->offset += gst_buffer_get_size (buffer);
+    rp->offset += size;
     rp->n_frames += nframes;
   }
 
