@@ -4989,7 +4989,7 @@ done:
    * if a parser asks us but a decoder is required after it
    * because no sink can handle the format directly.
    */
-  if (gst_caps_is_empty (result)) {
+  {
     GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
 
     if (target) {
