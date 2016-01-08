@@ -34,6 +34,7 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
 	gstglsyncmeta.c \
 	gstglviewconvert.c \
 	gstgloverlaycompositor.c \
+	gstglquery.c \
 	gstglsl_private.h \
 	utils/opengl_versions.h
 
@@ -64,6 +65,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglsyncmeta.h \
 	gstglviewconvert.h \
 	gstgloverlaycompositor.h \
+	gstglquery.h \
 	gstgl_fwd.h \
 	gstgl_enums.h \
 	gl.h
