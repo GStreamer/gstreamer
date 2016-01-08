@@ -128,8 +128,6 @@ static void gst_cv_smooth_get_property (GObject * object, guint prop_id,
 
 static GstFlowReturn gst_cv_smooth_transform_ip (GstOpencvVideoFilter *
     filter, GstBuffer * buf, IplImage * img);
-static GstFlowReturn gst_cv_smooth_transform (GstOpencvVideoFilter * filter,
-    GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
 /* initialize the cvsmooth's class */
 static void
@@ -148,7 +146,6 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
   gobject_class->get_property = gst_cv_smooth_get_property;
 
   gstopencvbasefilter_class->cv_trans_ip_func = gst_cv_smooth_transform_ip;
-  gstopencvbasefilter_class->cv_trans_func = gst_cv_smooth_transform;
 
   g_object_class_install_property (gobject_class, PROP_SMOOTH_TYPE,
       g_param_spec_enum ("type",
@@ -216,7 +213,7 @@ gst_cv_smooth_init (GstCvSmooth * filter)
   filter->spatialsigma = DEFAULT_SPATIALSIGMA;
 
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
-      FALSE);
+      TRUE);
 }
 
 static void
@@ -310,34 +307,6 @@ gst_cv_smooth_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static GstFlowReturn
-gst_cv_smooth_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
-    IplImage * img, GstBuffer * outbuf, IplImage * outimg)
-{
-  GstCvSmooth *filter = GST_CV_SMOOTH (base);
-
-  switch (filter->type) {
-    case CV_BLUR:
-      blur (Mat (img), Mat (outimg), Size (filter->width, filter->height),
-          Point (-1, -1));
-      break;
-    case CV_GAUSSIAN:
-      GaussianBlur (Mat (img), Mat (outimg), Size (filter->width,
-              filter->height), filter->colorsigma, filter->colorsigma);
-      break;
-    case CV_MEDIAN:
-      medianBlur (Mat (img), Mat (outimg), filter->width);
-      break;
-    case CV_BILATERAL:
-      bilateralFilter (Mat (img), Mat (outimg), -1, filter->colorsigma, 0.0);
-      break;
-    default:
-      break;
-  }
-
-  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
