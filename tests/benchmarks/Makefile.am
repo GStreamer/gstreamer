@@ -8,7 +8,8 @@ noinst_PROGRAMS = \
         gstpollstress \
         gstpoolstress \
         gstclockstress	\
-	gstbufferstress
+        gstbufferstress \
+        tracerserialize
 
 LDADD = $(GST_OBJ_LIBS)
 AM_CFLAGS = $(GST_OBJ_CFLAGS)

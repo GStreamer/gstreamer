@@ -9,4 +9,5 @@ gstclockstress
 gstpollstress
 gstpoolstress
 mass-elements
+tracerserialize
 *.gcno
