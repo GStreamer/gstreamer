@@ -26,7 +26,7 @@
 #include <gst/audio/audio-enumtypes.h>
 #include <gst/audio/audio-format.h>
 #include <gst/audio/audio-channels.h>
-#include <gst/audio/audio-channel-mix.h>
+#include <gst/audio/audio-channel-mixer.h>
 #include <gst/audio/audio-info.h>
 #include <gst/audio/audio-quantize.h>
 #include <gst/audio/audio-converter.h>

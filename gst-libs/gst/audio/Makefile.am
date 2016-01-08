@@ -6,7 +6,7 @@ glib_enum_headers= 		\
 	audio.h			\
 	audio-format.h			\
 	audio-channels.h			\
-	audio-channel-mix.h			\
+	audio-channel-mixer.h			\
 	audio-converter.h 	\
 	audio-info.h			\
 	audio-quantize.h			\
@@ -29,7 +29,7 @@ libgstaudio_@GST_API_VERSION@_la_SOURCES = \
 	audio.c \
 	audio-format.c \
 	audio-channels.c \
-	audio-channel-mix.c \
+	audio-channel-mixer.c \
 	audio-converter.c \
 	audio-info.c \
 	audio-quantize.c \
@@ -55,7 +55,7 @@ libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	audio.h \
 	audio-format.h \
 	audio-channels.h \
-	audio-channel-mix.h \
+	audio-channel-mixer.h \
 	audio-converter.h \
 	audio-info.h \
 	audio-quantize.h \

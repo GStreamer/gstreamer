@@ -2,7 +2,7 @@
  * Copyright (C) 2004 Ronald Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2008 Sebastian Dröge <slomo@circular-chaos.org>
  *
- * audio-channel-mix.c: setup of channel conversion matrices
+ * audio-channel-mixer.c: setup of channel conversion matrices
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -27,7 +27,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "audio-channel-mix.h"
+#include "audio-channel-mixer.h"
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
@@ -39,8 +39,8 @@ ensure_debug_category (void)
   if (g_once_init_enter (&cat_gonce)) {
     gsize cat_done;
 
-    cat_done = (gsize) _gst_debug_category_new ("audio-channel-mix", 0,
-        "audio-channel-mix object");
+    cat_done = (gsize) _gst_debug_category_new ("audio-channel-mixer", 0,
+        "audio-channel-mixer object");
 
     g_once_init_leave (&cat_gonce, cat_done);
   }
@@ -54,12 +54,12 @@ ensure_debug_category (void)
 
 #define INT_MATRIX_FACTOR_EXPONENT 10
 
-typedef void (*MixFunc) (GstAudioChannelMix * mix, const gpointer src,
+typedef void (*MixerFunc) (GstAudioChannelMixer * mix, const gpointer src,
     gpointer dst, gint samples);
 
-struct _GstAudioChannelMix
+struct _GstAudioChannelMixer
 {
-  GstAudioChannelMixFlags flags;
+  GstAudioChannelMixerFlags flags;
   GstAudioFormat format;
 
   gint in_channels;
@@ -76,19 +76,19 @@ struct _GstAudioChannelMix
    * this is matrix * (2^10) as integers */
   gint **matrix_int;
 
-  MixFunc func;
+  MixerFunc func;
 
   gpointer tmp;
 };
 
 /**
- * gst_audio_channel_mix_free:
- * @mix: a #GstAudioChannelMix
+ * gst_audio_channel_mixer_free:
+ * @mix: a #GstAudioChannelMixer
  *
  * Free memory allocated by @mix.
  */
 void
-gst_audio_channel_mix_free (GstAudioChannelMix * mix)
+gst_audio_channel_mixer_free (GstAudioChannelMixer * mix)
 {
   gint i;
 
@@ -106,7 +106,7 @@ gst_audio_channel_mix_free (GstAudioChannelMix * mix)
   g_free (mix->tmp);
   mix->tmp = NULL;
 
-  g_slice_free (GstAudioChannelMix, mix);
+  g_slice_free (GstAudioChannelMixer, mix);
 }
 
 /*
@@ -116,7 +116,7 @@ gst_audio_channel_mix_free (GstAudioChannelMix * mix)
  */
 
 static void
-gst_audio_channel_mix_fill_identical (GstAudioChannelMix * mix)
+gst_audio_channel_mixer_fill_identical (GstAudioChannelMixer * mix)
 {
   gint ci, co;
 
@@ -140,7 +140,7 @@ gst_audio_channel_mix_fill_identical (GstAudioChannelMix * mix)
  */
 
 static void
-gst_audio_channel_mix_fill_compatible (GstAudioChannelMix * mix)
+gst_audio_channel_mixer_fill_compatible (GstAudioChannelMixer * mix)
 {
   /* Conversions from one-channel to compatible two-channel configs */
   struct
@@ -238,7 +238,7 @@ gst_audio_channel_mix_fill_compatible (GstAudioChannelMix * mix)
  */
 
 static void
-gst_audio_channel_mix_detect_pos (gint channels,
+gst_audio_channel_mixer_detect_pos (gint channels,
     GstAudioChannelPosition position[64], gint * f, gboolean * has_f, gint * c,
     gboolean * has_c, gint * r, gboolean * has_r, gint * s, gboolean * has_s,
     gint * b, gboolean * has_b)
@@ -302,7 +302,7 @@ gst_audio_channel_mix_detect_pos (gint channels,
 }
 
 static void
-gst_audio_channel_mix_fill_one_other (gfloat ** matrix,
+gst_audio_channel_mixer_fill_one_other (gfloat ** matrix,
     gint * from_idx, gint * to_idx, gfloat ratio)
 {
 
@@ -368,7 +368,7 @@ gst_audio_channel_mix_fill_one_other (gfloat ** matrix,
 #define RATIO_REAR_BASS (1.0 / sqrt (2.0))
 
 static void
-gst_audio_channel_mix_fill_others (GstAudioChannelMix * mix)
+gst_audio_channel_mixer_fill_others (GstAudioChannelMixer * mix)
 {
   gboolean in_has_front = FALSE, out_has_front = FALSE,
       in_has_center = FALSE, out_has_center = FALSE,
@@ -393,11 +393,11 @@ gst_audio_channel_mix_fill_others (GstAudioChannelMix * mix)
 
   /* First see where (if at all) the various channels from/to
    * which we want to convert are located in our matrix/array. */
-  gst_audio_channel_mix_detect_pos (mix->in_channels, mix->in_position,
+  gst_audio_channel_mixer_detect_pos (mix->in_channels, mix->in_position,
       in_f, &in_has_front,
       in_c, &in_has_center, in_r, &in_has_rear,
       in_s, &in_has_side, in_b, &in_has_bass);
-  gst_audio_channel_mix_detect_pos (mix->out_channels, mix->out_position,
+  gst_audio_channel_mixer_detect_pos (mix->out_channels, mix->out_position,
       out_f, &out_has_front,
       out_c, &out_has_center, out_r, &out_has_rear,
       out_s, &out_has_side, out_b, &out_has_bass);
@@ -414,149 +414,149 @@ gst_audio_channel_mix_fill_others (GstAudioChannelMix * mix)
 
   /* center <-> front/side/rear */
   if (!in_has_center && in_has_front && out_has_center) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_f, out_c,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_f, out_c,
         RATIO_CENTER_FRONT);
   } else if (!in_has_center && !in_has_front && in_has_side && out_has_center) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_s, out_c,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_s, out_c,
         RATIO_CENTER_SIDE);
   } else if (!in_has_center && !in_has_front && !in_has_side && in_has_rear
       && out_has_center) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_r, out_c,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_r, out_c,
         RATIO_CENTER_REAR);
   } else if (in_has_center && !out_has_center && out_has_front) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_c, out_f,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_c, out_f,
         RATIO_CENTER_FRONT);
   } else if (in_has_center && !out_has_center && !out_has_front && out_has_side) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_c, out_s,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_c, out_s,
         RATIO_CENTER_SIDE);
   } else if (in_has_center && !out_has_center && !out_has_front && !out_has_side
       && out_has_rear) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_c, out_r,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_c, out_r,
         RATIO_CENTER_REAR);
   }
 
   /* front <-> center/side/rear */
   if (!in_has_front && in_has_center && !in_has_side && out_has_front) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_c, out_f,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_c, out_f,
         RATIO_CENTER_FRONT);
   } else if (!in_has_front && !in_has_center && in_has_side && out_has_front) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_s, out_f,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_s, out_f,
         RATIO_FRONT_SIDE);
   } else if (!in_has_front && in_has_center && in_has_side && out_has_front) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_c, out_f,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_c, out_f,
         0.5 * RATIO_CENTER_FRONT);
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_s, out_f,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_s, out_f,
         0.5 * RATIO_FRONT_SIDE);
   } else if (!in_has_front && !in_has_center && !in_has_side && in_has_rear
       && out_has_front) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_r, out_f,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_r, out_f,
         RATIO_FRONT_REAR);
   } else if (in_has_front && out_has_center && !out_has_side && !out_has_front) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix,
         in_f, out_c, RATIO_CENTER_FRONT);
   } else if (in_has_front && !out_has_center && out_has_side && !out_has_front) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_f, out_s,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_f, out_s,
         RATIO_FRONT_SIDE);
   } else if (in_has_front && out_has_center && out_has_side && !out_has_front) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_f, out_c,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_f, out_c,
         0.5 * RATIO_CENTER_FRONT);
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_f, out_s,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_f, out_s,
         0.5 * RATIO_FRONT_SIDE);
   } else if (in_has_front && !out_has_center && !out_has_side && !out_has_front
       && out_has_rear) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_f, out_r,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_f, out_r,
         RATIO_FRONT_REAR);
   }
 
   /* side <-> center/front/rear */
   if (!in_has_side && in_has_front && !in_has_rear && out_has_side) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_f, out_s,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_f, out_s,
         RATIO_FRONT_SIDE);
   } else if (!in_has_side && !in_has_front && in_has_rear && out_has_side) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_r, out_s,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_r, out_s,
         RATIO_SIDE_REAR);
   } else if (!in_has_side && in_has_front && in_has_rear && out_has_side) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_f, out_s,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_f, out_s,
         0.5 * RATIO_FRONT_SIDE);
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_r, out_s,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_r, out_s,
         0.5 * RATIO_SIDE_REAR);
   } else if (!in_has_side && !in_has_front && !in_has_rear && in_has_center
       && out_has_side) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_c, out_s,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_c, out_s,
         RATIO_CENTER_SIDE);
   } else if (in_has_side && out_has_front && !out_has_rear && !out_has_side) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_s, out_f,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_s, out_f,
         RATIO_FRONT_SIDE);
   } else if (in_has_side && !out_has_front && out_has_rear && !out_has_side) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_s, out_r,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_s, out_r,
         RATIO_SIDE_REAR);
   } else if (in_has_side && out_has_front && out_has_rear && !out_has_side) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_s, out_f,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_s, out_f,
         0.5 * RATIO_FRONT_SIDE);
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_s, out_r,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_s, out_r,
         0.5 * RATIO_SIDE_REAR);
   } else if (in_has_side && !out_has_front && !out_has_rear && out_has_center
       && !out_has_side) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_s, out_c,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_s, out_c,
         RATIO_CENTER_SIDE);
   }
 
   /* rear <-> center/front/side */
   if (!in_has_rear && in_has_side && out_has_rear) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_s, out_r,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_s, out_r,
         RATIO_SIDE_REAR);
   } else if (!in_has_rear && !in_has_side && in_has_front && out_has_rear) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_f, out_r,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_f, out_r,
         RATIO_FRONT_REAR);
   } else if (!in_has_rear && !in_has_side && !in_has_front && in_has_center
       && out_has_rear) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_c, out_r,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_c, out_r,
         RATIO_CENTER_REAR);
   } else if (in_has_rear && !out_has_rear && out_has_side) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_r, out_s,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_r, out_s,
         RATIO_SIDE_REAR);
   } else if (in_has_rear && !out_has_rear && !out_has_side && out_has_front) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_r, out_f,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_r, out_f,
         RATIO_FRONT_REAR);
   } else if (in_has_rear && !out_has_rear && !out_has_side && !out_has_front
       && out_has_center) {
-    gst_audio_channel_mix_fill_one_other (mix->matrix, in_r, out_c,
+    gst_audio_channel_mixer_fill_one_other (mix->matrix, in_r, out_c,
         RATIO_CENTER_REAR);
   }
 
   /* bass <-> any */
   if (in_has_bass && !out_has_bass) {
     if (out_has_center) {
-      gst_audio_channel_mix_fill_one_other (mix->matrix, in_b, out_c,
+      gst_audio_channel_mixer_fill_one_other (mix->matrix, in_b, out_c,
           RATIO_CENTER_BASS);
     }
     if (out_has_front) {
-      gst_audio_channel_mix_fill_one_other (mix->matrix, in_b, out_f,
+      gst_audio_channel_mixer_fill_one_other (mix->matrix, in_b, out_f,
           RATIO_FRONT_BASS);
     }
     if (out_has_side) {
-      gst_audio_channel_mix_fill_one_other (mix->matrix, in_b, out_s,
+      gst_audio_channel_mixer_fill_one_other (mix->matrix, in_b, out_s,
           RATIO_SIDE_BASS);
     }
     if (out_has_rear) {
-      gst_audio_channel_mix_fill_one_other (mix->matrix, in_b, out_r,
+      gst_audio_channel_mixer_fill_one_other (mix->matrix, in_b, out_r,
           RATIO_REAR_BASS);
     }
   } else if (!in_has_bass && out_has_bass) {
     if (in_has_center) {
-      gst_audio_channel_mix_fill_one_other (mix->matrix, in_c, out_b,
+      gst_audio_channel_mixer_fill_one_other (mix->matrix, in_c, out_b,
           RATIO_CENTER_BASS);
     }
     if (in_has_front) {
-      gst_audio_channel_mix_fill_one_other (mix->matrix, in_f, out_b,
+      gst_audio_channel_mixer_fill_one_other (mix->matrix, in_f, out_b,
           RATIO_FRONT_BASS);
     }
     if (in_has_side) {
-      gst_audio_channel_mix_fill_one_other (mix->matrix, in_s, out_b,
+      gst_audio_channel_mixer_fill_one_other (mix->matrix, in_s, out_b,
           RATIO_REAR_BASS);
     }
     if (in_has_rear) {
-      gst_audio_channel_mix_fill_one_other (mix->matrix, in_r, out_b,
+      gst_audio_channel_mixer_fill_one_other (mix->matrix, in_r, out_b,
           RATIO_REAR_BASS);
     }
   }
@@ -567,7 +567,7 @@ gst_audio_channel_mix_fill_others (GstAudioChannelMix * mix)
  */
 
 static void
-gst_audio_channel_mix_fill_normalize (GstAudioChannelMix * mix)
+gst_audio_channel_mixer_fill_normalize (GstAudioChannelMixer * mix)
 {
   gfloat sum, top = 0;
   gint i, j;
@@ -595,7 +595,7 @@ gst_audio_channel_mix_fill_normalize (GstAudioChannelMix * mix)
 }
 
 static gboolean
-gst_audio_channel_mix_fill_special (GstAudioChannelMix * mix)
+gst_audio_channel_mixer_fill_special (GstAudioChannelMixer * mix)
 {
   /* Special, standard conversions here */
 
@@ -630,23 +630,23 @@ gst_audio_channel_mix_fill_special (GstAudioChannelMix * mix)
  */
 
 static void
-gst_audio_channel_mix_fill_matrix (GstAudioChannelMix * mix)
+gst_audio_channel_mixer_fill_matrix (GstAudioChannelMixer * mix)
 {
-  if (gst_audio_channel_mix_fill_special (mix))
+  if (gst_audio_channel_mixer_fill_special (mix))
     return;
 
-  gst_audio_channel_mix_fill_identical (mix);
+  gst_audio_channel_mixer_fill_identical (mix);
 
-  if (!(mix->flags & GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN)) {
-    gst_audio_channel_mix_fill_compatible (mix);
-    gst_audio_channel_mix_fill_others (mix);
-    gst_audio_channel_mix_fill_normalize (mix);
+  if (!(mix->flags & GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_IN)) {
+    gst_audio_channel_mixer_fill_compatible (mix);
+    gst_audio_channel_mixer_fill_others (mix);
+    gst_audio_channel_mixer_fill_normalize (mix);
   }
 }
 
 /* only call mix after mix->matrix is fully set up and normalized */
 static void
-gst_audio_channel_mix_setup_matrix_int (GstAudioChannelMix * mix)
+gst_audio_channel_mixer_setup_matrix_int (GstAudioChannelMixer * mix)
 {
   gint i, j;
   gfloat tmp;
@@ -665,7 +665,7 @@ gst_audio_channel_mix_setup_matrix_int (GstAudioChannelMix * mix)
 }
 
 static void
-gst_audio_channel_mix_setup_matrix (GstAudioChannelMix * mix)
+gst_audio_channel_mixer_setup_matrix (GstAudioChannelMixer * mix)
 {
   gint i, j;
 
@@ -680,9 +680,9 @@ gst_audio_channel_mix_setup_matrix (GstAudioChannelMix * mix)
   }
 
   /* setup the matrix' internal values */
-  gst_audio_channel_mix_fill_matrix (mix);
+  gst_audio_channel_mixer_fill_matrix (mix);
 
-  gst_audio_channel_mix_setup_matrix_int (mix);
+  gst_audio_channel_mixer_setup_matrix_int (mix);
 
 #ifndef GST_DISABLE_GST_DEBUG
   /* debug */
@@ -713,7 +713,7 @@ gst_audio_channel_mix_setup_matrix (GstAudioChannelMix * mix)
 /* IMPORTANT: out_data == in_data is possible, make sure to not overwrite data
  * you might need later on! */
 static void
-gst_audio_channel_mix_mix_int (GstAudioChannelMix * mix,
+gst_audio_channel_mixer_mix_int (GstAudioChannelMixer * mix,
     const gint32 * in_data, gint32 * out_data, gint samples)
 {
   gint in, out, n;
@@ -754,7 +754,7 @@ gst_audio_channel_mix_mix_int (GstAudioChannelMix * mix,
 }
 
 static void
-gst_audio_channel_mix_mix_double (GstAudioChannelMix * mix,
+gst_audio_channel_mixer_mix_double (GstAudioChannelMixer * mix,
     const gdouble * in_data, gdouble * out_data, gint samples)
 {
   gint in, out, n;
@@ -792,26 +792,26 @@ gst_audio_channel_mix_mix_double (GstAudioChannelMix * mix,
 }
 
 /**
- * gst_audio_channel_mix_new: (skip):
- * @flags:
- * @in_channels:
- * @in_position:
- * @out_channels:
- * @out_position:
+ * gst_audio_channel_mixer_new: (skip):
+ * @flags: #GstAudioChannelMixerFlags
+ * @in_channels: number of input channels
+ * @in_position: positions of input channels
+ * @out_channels: number of output channels
+ * @out_position: positions of output channels
  *
- * Create a new channel mixer object.
+ * Create a new channel mixer object for the given parameters.
  *
- * Returns: a new #GstAudioChannelMix object. Free with gst_audio_channel_mix_free()
+ * Returns: a new #GstAudioChannelMixer object. Free with gst_audio_channel_mixer_free()
  * after usage.
  */
-GstAudioChannelMix *
-gst_audio_channel_mix_new (GstAudioChannelMixFlags flags,
+GstAudioChannelMixer *
+gst_audio_channel_mixer_new (GstAudioChannelMixerFlags flags,
     GstAudioFormat format,
     gint in_channels,
     GstAudioChannelPosition * in_position,
     gint out_channels, GstAudioChannelPosition * out_position)
 {
-  GstAudioChannelMix *mix;
+  GstAudioChannelMixer *mix;
   gint i;
 
   g_return_val_if_fail (format == GST_AUDIO_FORMAT_S32
@@ -819,7 +819,7 @@ gst_audio_channel_mix_new (GstAudioChannelMixFlags flags,
   g_return_val_if_fail (in_channels > 0 && in_channels < 64, NULL);
   g_return_val_if_fail (out_channels > 0 && out_channels < 64, NULL);
 
-  mix = g_slice_new0 (GstAudioChannelMix);
+  mix = g_slice_new0 (GstAudioChannelMixer);
   mix->flags = flags;
   mix->format = format;
   mix->in_channels = in_channels;
@@ -830,14 +830,14 @@ gst_audio_channel_mix_new (GstAudioChannelMixFlags flags,
   for (i = 0; i < out_channels; i++)
     mix->out_position[i] = out_position[i];
 
-  gst_audio_channel_mix_setup_matrix (mix);
+  gst_audio_channel_mixer_setup_matrix (mix);
 
   switch (mix->format) {
     case GST_AUDIO_FORMAT_S32:
-      mix->func = (MixFunc) gst_audio_channel_mix_mix_int;
+      mix->func = (MixerFunc) gst_audio_channel_mixer_mix_int;
       break;
     case GST_AUDIO_FORMAT_F64:
-      mix->func = (MixFunc) gst_audio_channel_mix_mix_double;
+      mix->func = (MixerFunc) gst_audio_channel_mixer_mix_double;
       break;
     default:
       g_assert_not_reached ();
@@ -847,15 +847,15 @@ gst_audio_channel_mix_new (GstAudioChannelMixFlags flags,
 }
 
 /**
- * gst_audio_channel_mix_is_passthrough:
- * @mix: a #GstAudioChannelMix
+ * gst_audio_channel_mixer_is_passthrough:
+ * @mix: a #GstAudioChannelMixer
  *
  * Check if @mix is in passthrough.
  *
  * Returns: %TRUE is @mix is passthrough.
  */
 gboolean
-gst_audio_channel_mix_is_passthrough (GstAudioChannelMix * mix)
+gst_audio_channel_mixer_is_passthrough (GstAudioChannelMixer * mix)
 {
   gint i;
   guint64 in_mask, out_mask;
@@ -878,8 +878,8 @@ gst_audio_channel_mix_is_passthrough (GstAudioChannelMix * mix)
 }
 
 /**
- * gst_audio_channel_mix_samples:
- * @mix: a #GstAudioChannelMix
+ * gst_audio_channel_mixer_samples:
+ * @mix: a #GstAudioChannelMixer
  * @in: input samples
  * @out: output samples
  * @samples: number of samples
@@ -894,7 +894,7 @@ gst_audio_channel_mix_is_passthrough (GstAudioChannelMix * mix)
  * @in_data and @out_data need to be in @format and @layout.
  */
 void
-gst_audio_channel_mix_samples (GstAudioChannelMix * mix,
+gst_audio_channel_mixer_samples (GstAudioChannelMixer * mix,
     const gpointer in[], gpointer out[], gint samples)
 {
   g_return_if_fail (mix != NULL);

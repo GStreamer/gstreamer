@@ -117,7 +117,7 @@ struct _GstAudioConverter
 
   /* channel mix */
   gboolean mix_passthrough;
-  GstAudioChannelMix *mix;
+  GstAudioChannelMixer *mix;
   AudioChain *mix_chain;
 
   /* convert out */
@@ -380,7 +380,7 @@ do_mix (AudioChain * chain, gsize num_samples, gpointer user_data)
   out = (chain->allow_ip ? in : audio_chain_alloc_samples (chain, num_samples));
   GST_LOG ("mix %p, %p, %" G_GSIZE_FORMAT, in, out, num_samples);
 
-  gst_audio_channel_mix_samples (convert->mix, in, out, num_samples);
+  gst_audio_channel_mixer_samples (convert->mix, in, out, num_samples);
 
   chain->samples = out;
 
@@ -475,25 +475,25 @@ chain_convert_in (GstAudioConverter * convert, AudioChain * prev)
 static AudioChain *
 chain_mix (GstAudioConverter * convert, AudioChain * prev)
 {
-  GstAudioChannelMixFlags flags;
+  GstAudioChannelMixerFlags flags;
   GstAudioInfo *in = &convert->in;
   GstAudioInfo *out = &convert->out;
   GstAudioFormat format = convert->current_format;
 
   flags =
       GST_AUDIO_INFO_IS_UNPOSITIONED (in) ?
-      GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN : 0;
+      GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_IN : 0;
   flags |=
       GST_AUDIO_INFO_IS_UNPOSITIONED (out) ?
-      GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT : 0;
+      GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_OUT : 0;
 
   convert->current_channels = out->channels;
 
   convert->mix =
-      gst_audio_channel_mix_new (flags, format, in->channels, in->position,
+      gst_audio_channel_mixer_new (flags, format, in->channels, in->position,
       out->channels, out->position);
   convert->mix_passthrough =
-      gst_audio_channel_mix_is_passthrough (convert->mix);
+      gst_audio_channel_mixer_is_passthrough (convert->mix);
   GST_INFO ("mix format %s, passthrough %d, in_channels %d, out_channels %d",
       gst_audio_format_to_string (format), convert->mix_passthrough,
       in->channels, out->channels);
@@ -765,7 +765,7 @@ gst_audio_converter_free (GstAudioConverter * convert)
   if (convert->quant)
     gst_audio_quantize_free (convert->quant);
   if (convert->mix)
-    gst_audio_channel_mix_free (convert->mix);
+    gst_audio_channel_mixer_free (convert->mix);
   gst_audio_info_init (&convert->in);
   gst_audio_info_init (&convert->out);
 

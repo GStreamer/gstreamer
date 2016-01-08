@@ -28,11 +28,11 @@ EXPORTS
 	gst_audio_cd_src_get_type
 	gst_audio_cd_src_mode_get_type
 	gst_audio_channel_get_fallback_mask
-	gst_audio_channel_mix_flags_get_type
-	gst_audio_channel_mix_free
-	gst_audio_channel_mix_is_passthrough
-	gst_audio_channel_mix_new
-	gst_audio_channel_mix_samples
+	gst_audio_channel_mixer_flags_get_type
+	gst_audio_channel_mixer_free
+	gst_audio_channel_mixer_is_passthrough
+	gst_audio_channel_mixer_new
+	gst_audio_channel_mixer_samples
 	gst_audio_channel_position_get_type
 	gst_audio_channel_positions_from_mask
 	gst_audio_channel_positions_to_mask
