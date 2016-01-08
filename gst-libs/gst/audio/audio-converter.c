@@ -832,8 +832,6 @@ gst_audio_converter_get_max_latency (GstAudioConverter * convert)
  * @in_samples: number of input samples
  * @out: output samples
  * @out_samples: number of output samples
- * @in_consumed: number of input samples consumed
- * @out_produced: number of output samples produced
  *
  * Perform the conversion with @in_samples in @in to @out_samples in @out
  * using @convert.
@@ -844,17 +842,17 @@ gst_audio_converter_get_max_latency (GstAudioConverter * convert)
  * If non-interleaved samples are used, @in and @out must point to an
  * array with pointers to memory blocks, one for each channel.
  *
- * The actual number of samples used from @in is returned in @in_consumed and
- * can be less than @in_samples. The actual number of samples produced is
- * returned in @out_produced and can be less than @out_samples.
+ * This function always produces @out_frames of output and consumes @in_frames of
+ * input. Use gst_audio_converter_get_out_frames() and
+ * gst_audio_converter_get_in_frames() to make sure @in_frames and @out_frames
+ * are matching and @in and @out point to enough memory.
  *
  * Returns: %TRUE is the conversion could be performed.
  */
 gboolean
 gst_audio_converter_samples (GstAudioConverter * convert,
     GstAudioConverterFlags flags, gpointer in[], gsize in_samples,
-    gpointer out[], gsize out_samples, gsize * in_consumed,
-    gsize * out_produced)
+    gpointer out[], gsize out_samples)
 {
   AudioChain *chain;
   gpointer *tmp;
@@ -863,15 +861,11 @@ gst_audio_converter_samples (GstAudioConverter * convert,
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (in != NULL, FALSE);
   g_return_val_if_fail (out != NULL, FALSE);
-  g_return_val_if_fail (in_consumed != NULL, FALSE);
-  g_return_val_if_fail (out_produced != NULL, FALSE);
 
   in_samples = MIN (in_samples, out_samples);
 
   if (in_samples == 0) {
     GST_LOG ("skipping empty buffer");
-    *in_consumed = 0;
-    *out_produced = 0;
     return TRUE;
   }
 
@@ -885,8 +879,6 @@ gst_audio_converter_samples (GstAudioConverter * convert,
         in_samples, bytes);
     for (i = 0; i < chain->blocks; i++)
       memcpy (out[i], in[i], bytes);
-    *out_produced = in_samples;
-    *in_consumed = in_samples;
     return TRUE;
   }
 
@@ -906,9 +898,5 @@ gst_audio_converter_samples (GstAudioConverter * convert,
       convert->out.finfo->pack_func (convert->out.finfo, 0, tmp[i], out[i],
           in_samples * chain->inc);
   }
-
-  *out_produced = in_samples;
-  *in_consumed = in_samples;
-
   return TRUE;
 }

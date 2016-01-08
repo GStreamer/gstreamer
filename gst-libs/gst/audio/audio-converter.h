@@ -89,7 +89,6 @@ gsize                gst_audio_converter_get_max_latency (GstAudioConverter *con
 gboolean             gst_audio_converter_samples         (GstAudioConverter * convert,
                                                           GstAudioConverterFlags flags,
                                                           gpointer in[], gsize in_samples,
-                                                          gpointer out[], gsize out_samples,
-                                                          gsize *in_consumed, gsize *out_produced);
+                                                          gpointer out[], gsize out_samples);
 
 #endif /* __GST_AUDIO_CONVERTER_H__ */
