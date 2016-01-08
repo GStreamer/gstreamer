@@ -173,7 +173,7 @@ gst_rgb2bayer_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
     name = gst_structure_get_name (structure);
     /* Our name must be either video/x-bayer video/x-raw */
     if (g_str_equal (name, "video/x-bayer")) {
-      *size = width * height;
+      *size = GST_ROUND_UP_4 (width) * height;
       return TRUE;
     } else {
       /* For output, calculate according to format */
@@ -249,7 +249,7 @@ gst_rgb2bayer_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   src = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
 
   for (j = 0; j < height; j++) {
-    guint8 *dest_line = dest + width * j;
+    guint8 *dest_line = dest + GST_ROUND_UP_4 (width) * j;
     guint8 *src_line = src + frame.info.stride[0] * j;
 
     for (i = 0; i < width; i++) {
