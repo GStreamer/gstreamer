@@ -2492,15 +2492,14 @@ gst_ahc_src_query (GstBaseSrc * bsrc, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:{
-      GstClockTime min, max;
+      GstClockTime min;
 
-      gst_query_parse_latency (query, NULL, &min, &max);
-      min = gst_util_uint64_scale (GST_SECOND, 1000, self->fps_max);
-      max = gst_util_uint64_scale (GST_SECOND, 1000, self->fps_min);
+      /* Allow of 1 frame latency base on the longer frame duration */
+      gst_query_parse_latency (query, NULL, &min, NULL);
+      min = gst_util_uint64_scale (GST_SECOND, 1000, self->fps_min);
       GST_DEBUG_OBJECT (self,
-          "Reporting latency min: %" GST_TIME_FORMAT " max: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (min), GST_TIME_ARGS (max));
-      gst_query_set_latency (query, TRUE, min, max);
+          "Reporting latency min: %" GST_TIME_FORMAT, GST_TIME_ARGS (min));
+      gst_query_set_latency (query, TRUE, min, min);
 
       return TRUE;
       break;
