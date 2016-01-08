@@ -82,6 +82,8 @@
 
 #if !defined(GST_DISABLE_GST_DEBUG)
 GST_DEBUG_CATEGORY_STATIC (gst_performance);
+#define GST_CAT_DEFAULT gst_gl_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static void
 _init_debug (void)
@@ -90,6 +92,7 @@ _init_debug (void)
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_GET (gst_performance, "GST_PERFORMANCE");
+    GST_DEBUG_CATEGORY_INIT (gst_gl_debug, "gldebug", 0, "OpenGL Debugging");
     g_once_init_leave (&_init, 1);
   }
 }
