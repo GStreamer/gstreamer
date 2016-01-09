@@ -222,10 +222,7 @@ translate_outgoing_segment (NleObject * object, GstEvent * event)
   /* only modify the streamtime */
   gst_event_parse_segment (event, &orig);
 
-  GST_DEBUG_OBJECT (object,
-      "Got SEGMENT %" GST_TIME_FORMAT " -- %" GST_TIME_FORMAT " // %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (orig->start), GST_TIME_ARGS (orig->stop),
-      GST_TIME_ARGS (orig->time));
+  GST_DEBUG_OBJECT (object, "Got SEGMENT %" GST_SEGMENT_FORMAT, orig);
 
   if (G_UNLIKELY (orig->format != GST_FORMAT_TIME)) {
     GST_WARNING_OBJECT (object,
@@ -240,10 +237,7 @@ translate_outgoing_segment (NleObject * object, GstEvent * event)
   if (G_UNLIKELY (segment.time > G_MAXINT64))
     GST_WARNING_OBJECT (object, "Return value too big...");
 
-  GST_DEBUG_OBJECT (object,
-      "Sending SEGMENT %" GST_TIME_FORMAT " -- %" GST_TIME_FORMAT " // %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (segment.start),
-      GST_TIME_ARGS (segment.stop), GST_TIME_ARGS (segment.time));
+  GST_DEBUG_OBJECT (object, "Sending SEGMENT %" GST_SEGMENT_FORMAT, &segment);
 
   event2 = gst_event_new_segment (&segment);
   GST_EVENT_SEQNUM (event2) = seqnum;
