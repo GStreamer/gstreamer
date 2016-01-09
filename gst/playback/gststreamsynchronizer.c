@@ -493,7 +493,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         GstSyncStream *ostream = l->data;
         GstClockTime start_running_time;
 
-        if (ostream == stream)
+        if (ostream == stream || ostream->flushing)
           continue;
 
         if (ostream->segment.format == GST_FORMAT_TIME) {
