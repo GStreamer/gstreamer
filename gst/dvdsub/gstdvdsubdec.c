@@ -891,6 +891,7 @@ gst_dvd_sub_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
       GstStructure *s = gst_caps_get_structure (peer_caps, i);
       /* Check if the peer pad support ARGB format, if yes change caps */
       if (gst_structure_has_name (s, "video/x-raw")) {
+        GstCaps *downstream_caps;
         gst_caps_unref (out_caps);
         GST_DEBUG_OBJECT (dec, "trying with ARGB");
 
@@ -900,12 +901,15 @@ gst_dvd_sub_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
             "height", G_TYPE_INT, dec->in_height,
             "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
 
-        if (gst_pad_peer_query_accept_caps (dec->srcpad, out_caps)) {
+        downstream_caps = gst_pad_peer_query_caps (dec->srcpad, NULL);
+        if (gst_caps_can_intersect (downstream_caps, out_caps)) {
+          gst_caps_unref (downstream_caps);
           GST_DEBUG_OBJECT (dec, "peer accepted ARGB");
           /* If ARGB format then set the flag */
           dec->use_ARGB = TRUE;
           break;
         }
+        gst_caps_unref (downstream_caps);
       }
     }
     gst_caps_unref (peer_caps);
