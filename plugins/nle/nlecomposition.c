@@ -170,7 +170,7 @@ struct _NleCompositionPrivate
   gboolean seeking_itself;
   gint real_eos_seqnum;
   gint next_eos_seqnum;
-  gint flush_seqnum;
+  guint32 flush_seqnum;
 
   /* 0 means that we already received the right caps or segment */
   gint seqnum_to_restart_task;
