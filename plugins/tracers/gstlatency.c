@@ -23,7 +23,7 @@
  * @short_description: log processing latency stats
  *
  * A tracing module that determines src-to-sink latencies by injecting custom
- * events at sources and process them at sinks. 
+ * events at sources and process them at sinks.
  */
 /* TODO(ensonic): if there are two sources feeding into a mixer/muxer and later
  * we fan-out with tee and have two sinks, each sink would get all two events,
@@ -55,7 +55,7 @@ static GQuark latency_probe_ts;
 /* data helpers */
 
 /*
- * Get the element/bin owning the pad. 
+ * Get the element/bin owning the pad.
  *
  * in: a normal pad
  * out: the element
@@ -215,7 +215,7 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING,
               "time it took for the buffer to go from src to sink ns",
-          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */ 
+          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
