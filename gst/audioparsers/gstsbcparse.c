@@ -423,13 +423,13 @@ gst_sbc_calc_framelen (guint subbands, GstSbcChannelMode ch_mode,
 {
   switch (ch_mode) {
     case GST_SBC_CHANNEL_MODE_MONO:
-      return 4 + (subbands * 1) / 2 + (blocks * 1 * bitpool) / 8;
+      return 4 + (subbands * 1) / 2 + ((blocks * 1 * bitpool) + 7) / 8;
     case GST_SBC_CHANNEL_MODE_DUAL:
-      return 4 + (subbands * 2) / 2 + (blocks * 2 * bitpool) / 8;
+      return 4 + (subbands * 2) / 2 + ((blocks * 2 * bitpool) + 7) / 8;
     case GST_SBC_CHANNEL_MODE_STEREO:
-      return 4 + (subbands * 2) / 2 + (blocks * bitpool) / 8;
+      return 4 + (subbands * 2) / 2 + ((blocks * bitpool) + 7) / 8;
     case GST_SBC_CHANNEL_MODE_JOINT_STEREO:
-      return 4 + (subbands * 2) / 2 + (subbands + blocks * bitpool) / 8;
+      return 4 + (subbands * 2) / 2 + ((subbands + blocks * bitpool) + 7) / 8;
     default:
       break;
   }
