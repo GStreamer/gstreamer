@@ -204,8 +204,14 @@ gst_gl_insert_debug_marker (GstGLContext * context, const gchar * format, ...)
   va_list args;
 
   va_start (args, format);
-  len = g_vasprintf (&string, format, args);
+  len = gst_info_vasprintf (&string, format, args);
   va_end (args);
+
+  /* gst_info_vasprintf() returns -1 on error, the various debug marker
+   * functions take len=-1 to mean null terminated */
+  if (len < 0 || string == NULL)
+    /* no debug output */
+    return;
 
   if (gl->DebugMessageInsert)
     gl->DebugMessageInsert (GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_MARKER,
