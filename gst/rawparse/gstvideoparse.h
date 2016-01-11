@@ -49,6 +49,7 @@ struct _GstVideoParse
   GstRawParse parent;
 
   GstVideoInfo info;
+  gboolean do_copy;
   gboolean need_videometa;
   gboolean stride_set;
   gboolean offset_set;

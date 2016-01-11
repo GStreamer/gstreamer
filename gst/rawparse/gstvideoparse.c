@@ -39,6 +39,8 @@ static void gst_video_parse_get_property (GObject * object, guint prop_id,
 static GstCaps *gst_video_parse_get_caps (GstRawParse * rp);
 static void gst_video_parse_pre_push_buffer (GstRawParse * rp,
     GstBuffer * buffer);
+static void gst_video_parse_decide_allocation (GstRawParse * rp,
+    GstQuery * query);
 
 static void gst_video_parse_update_info (GstVideoParse * vp);
 static gboolean gst_video_parse_deserialize_int_array (const gchar * str,
@@ -78,6 +80,7 @@ gst_video_parse_class_init (GstVideoParseClass * klass)
 
   rp_class->get_caps = gst_video_parse_get_caps;
   rp_class->pre_push_buffer = gst_video_parse_pre_push_buffer;
+  rp_class->decide_allocation = gst_video_parse_decide_allocation;
 
   g_object_class_install_property (gobject_class, PROP_FORMAT,
       g_param_spec_enum ("format", "Format", "Format of images in raw stream",
@@ -536,9 +539,7 @@ gst_video_parse_pre_push_buffer (GstRawParse * rp, GstBuffer * buffer)
 {
   GstVideoParse *vp = GST_VIDEO_PARSE (rp);
 
-  /* for now, we don't add video meta to buffer, so if we have non standard
-   * stride and offset, just copy frame to new buffer */
-  if (vp->need_videometa) {
+  if (vp->do_copy) {
     GstVideoInfo info;
     GstBuffer *outbuf;
 
@@ -554,6 +555,16 @@ gst_video_parse_pre_push_buffer (GstRawParse * rp, GstBuffer * buffer)
 
     gst_buffer_replace_all_memory (buffer, gst_buffer_get_all_memory (outbuf));
     gst_buffer_unref (outbuf);
+  } else {
+    GstVideoInfo *info = &vp->info;
+    GstVideoFrameFlags flags = GST_VIDEO_FRAME_FLAG_NONE;
+
+    if (vp->interlaced && vp->top_field_first)
+      flags = GST_VIDEO_FRAME_FLAG_TFF;
+
+    gst_buffer_add_video_meta_full (buffer, flags, GST_VIDEO_INFO_FORMAT (info),
+        GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info),
+        GST_VIDEO_INFO_N_PLANES (info), info->offset, info->stride);
   }
 
   if (vp->interlaced) {
@@ -563,4 +574,21 @@ gst_video_parse_pre_push_buffer (GstRawParse * rp, GstBuffer * buffer)
       GST_BUFFER_FLAG_UNSET (buffer, GST_VIDEO_BUFFER_FLAG_TFF);
     }
   }
+}
+
+static void
+gst_video_parse_decide_allocation (GstRawParse * rp, GstQuery * query)
+{
+  GstVideoParse *vp = GST_VIDEO_PARSE (rp);
+  gboolean has_videometa;
+
+  has_videometa = gst_query_find_allocation_meta (query,
+      GST_VIDEO_META_API_TYPE, NULL);
+
+  /* no need to copy if downstream supports videometa or if we don't need
+   * them */
+  if (has_videometa || !vp->need_videometa)
+    return;
+
+  vp->do_copy = TRUE;
 }
