@@ -216,8 +216,12 @@ gst_frei0r_mixer_set_caps (GstFrei0rMixer * self, GstPad * pad, GstCaps * caps)
       }
     }
   } else if (!gst_caps_is_equal (caps, self->caps)) {
-    if (gst_pad_peer_query_accept_caps (pad, self->caps))
+    GstCaps *upstream_caps;
+
+    upstream_caps = gst_pad_peer_query_caps (pad, NULL);
+    if (gst_caps_can_intersect (self->caps, upstream_caps))
       gst_pad_push_event (pad, gst_event_new_reconfigure ());
+    gst_caps_unref (upstream_caps);
     ret = FALSE;
   }
 
