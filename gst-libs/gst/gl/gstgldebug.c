@@ -25,7 +25,12 @@
 #include "gl.h"
 #include "gstgldebug.h"
 #include <glib/gprintf.h>
+#include <string.h>
 
+#define ASYNC_DEBUG_FILLED (1 << 0)
+#define ASYNC_DEBUG_FROZEN (1 << 1)
+
+/* compatibility defines */
 #ifndef GL_DEBUG_TYPE_ERROR
 #define GL_DEBUG_TYPE_ERROR 0x824C
 #endif
@@ -80,10 +85,10 @@
 #define GL_DEBUG_SOURCE_OTHER 0x824B
 #endif
 
-#if !defined(GST_DISABLE_GST_DEBUG)
 GST_DEBUG_CATEGORY_STATIC (gst_performance);
 #define GST_CAT_DEFAULT gst_gl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+GST_DEBUG_CATEGORY_STATIC (default_debug);
 
 static void
 _init_debug (void)
@@ -93,9 +98,84 @@ _init_debug (void)
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_GET (gst_performance, "GST_PERFORMANCE");
     GST_DEBUG_CATEGORY_INIT (gst_gl_debug, "gldebug", 0, "OpenGL Debugging");
+    GST_DEBUG_CATEGORY_GET (default_debug, "default");
     g_once_init_leave (&_init, 1);
   }
 }
+
+static void
+_free_async_debug_data (GstGLAsyncDebug * ad)
+{
+  if (ad->debug_msg) {
+    g_free (ad->debug_msg);
+    ad->debug_msg = NULL;
+    if (ad->object)
+      g_object_unref (ad->object);
+    ad->object = NULL;
+    ad->state_flags &= ~ASYNC_DEBUG_FILLED;
+  }
+}
+
+void
+gst_gl_async_debug_init (GstGLAsyncDebug * ad)
+{
+  _init_debug ();
+
+  memset (ad, 0, sizeof (*ad));
+}
+
+void
+gst_gl_async_debug_unset (GstGLAsyncDebug * ad)
+{
+  gst_gl_async_debug_output_log_msg (ad);
+
+  _free_async_debug_data (ad);
+
+  if (ad->notify)
+    ad->notify (ad->user_data);
+}
+
+GstGLAsyncDebug *
+gst_gl_async_debug_new (void)
+{
+  return g_new0 (GstGLAsyncDebug, 1);
+}
+
+void
+gst_gl_async_debug_free (GstGLAsyncDebug * ad)
+{
+  gst_gl_async_debug_unset (ad);
+  g_free (ad);
+}
+
+/**
+ * gst_gl_async_debug_freeze:
+ * @ad: a #GstGLAsyncDebug
+ *
+ * freeze the debug output.  While frozen, any call to
+ * gst_gl_async_debug_output_log_msg() will not output any messages but
+ * subsequent calls to gst_gl_async_debug_store_log_msg() will overwrite previous
+ * messages.
+ */
+void
+gst_gl_async_debug_freeze (GstGLAsyncDebug * ad)
+{
+  ad->state_flags |= ASYNC_DEBUG_FROZEN;
+}
+
+/**
+ * gst_gl_async_debug_thaw:
+ * @ad: a #GstGLAsyncDebug
+ *
+ * unfreeze the debug output.  See gst_gl_async_debug_freeze() for what freezing means
+ */
+void
+gst_gl_async_debug_thaw (GstGLAsyncDebug * ad)
+{
+  ad->state_flags &= ~ASYNC_DEBUG_FROZEN;
+}
+
+#if !defined(GST_DISABLE_GST_DEBUG)
 
 static inline const gchar *
 _debug_severity_to_string (GLenum severity)
@@ -222,5 +302,99 @@ gst_gl_insert_debug_marker (GstGLContext * context, const gchar * format, ...)
     gl->StringMarker (len, string);
 
   g_free (string);
+}
+
+/**
+ * gst_gl_async_debug_store_log_msg_valist:
+ * @ad: the #GstGLAsyncDebug to store the message in
+ * @cat: the #GstDebugCategory to output the message in
+ * @level: the #GstLevel
+ * @file: the file where the debug message originates from
+ * @function: the function where the debug message originates from
+ * @line: the line in @file where the debug message originates from
+ * @object: (allow-none): a #GObject to associate with the debug message
+ * @format: a printf style format string
+ * @varargs: the list of arguments for @format
+ *
+ * Stores a debug message for later output by gst_gl_async_debug_output_log_msg()
+ */
+void
+gst_gl_async_debug_store_log_msg_valist (GstGLAsyncDebug * ad,
+    GstDebugCategory * cat, GstDebugLevel level, const gchar * file,
+    const gchar * function, gint line, GObject * object, const gchar * format,
+    va_list varargs)
+{
+  gst_gl_async_debug_output_log_msg (ad);
+  _free_async_debug_data (ad);
+
+  if (G_UNLIKELY (level <= GST_LEVEL_MAX && level <= _gst_debug_min)) {
+    if (!cat)
+      cat = default_debug;
+
+    ad->cat = cat;
+    ad->level = level;
+    ad->file = file;
+    ad->function = function;
+    ad->line = line;
+    if (object)
+      ad->object = g_object_ref (object);
+    else
+      ad->object = NULL;
+
+    ad->debug_msg = gst_info_strdup_vprintf (format, varargs);
+    ad->state_flags |= ASYNC_DEBUG_FILLED;
+  }
+}
+
+/**
+ * gst_gl_async_debug_output_log_msg:
+ * @ad: the #GstGLAsyncDebug to store the message in
+ *
+ * Outputs a previously stored debug message.
+ */
+void
+gst_gl_async_debug_output_log_msg (GstGLAsyncDebug * ad)
+{
+  if ((ad->state_flags & ASYNC_DEBUG_FILLED) != 0
+      && (ad->state_flags & ASYNC_DEBUG_FROZEN) == 0) {
+    gchar *msg = NULL;
+
+    if (ad->callback)
+      msg = ad->callback (ad->user_data);
+
+    gst_debug_log (ad->cat, ad->level, ad->file, ad->function, ad->line,
+        ad->object, "%s %s", GST_STR_NULL (ad->debug_msg), msg ? msg : "");
+    g_free (msg);
+    _free_async_debug_data (ad);
+  }
+}
+
+/**
+ * gst_gl_async_debug_store_log_msg:
+ * @ad: the #GstGLAsyncDebug to store the message in
+ * @cat: the #GstDebugCategory to output the message in
+ * @level: the #GstLevel
+ * @file: the file where the debug message originates from
+ * @function: the function where the debug message originates from
+ * @line: the line in @file where the debug message originates from
+ * @object: (allow-none): a #GObject to associate with the debug message
+ * @format: a printf style format string
+ * @...: the list of arguments for @format
+ *
+ * Stores a debug message for later output by gst_gl_async_debug_output_log_msg()
+ */
+void
+gst_gl_async_debug_store_log_msg (GstGLAsyncDebug * ad, GstDebugCategory * cat,
+    GstDebugLevel level, const gchar * file, const gchar * function, gint line,
+    GObject * object, const gchar * format, ...)
+{
+  va_list varargs;
+
+  if (G_UNLIKELY (level <= GST_LEVEL_MAX && level <= _gst_debug_min)) {
+    va_start (varargs, format);
+    gst_gl_async_debug_store_log_msg_valist (ad, cat, level, file, function,
+        line, object, format, varargs);
+    va_end (varargs);
+  }
 }
 #endif

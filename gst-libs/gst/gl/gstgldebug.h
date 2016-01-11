@@ -25,20 +25,150 @@
 
 G_BEGIN_DECLS
 
-#if !defined(GST_DISABLE_GST_DEBUG)
-void gst_gl_insert_debug_marker (GstGLContext * context,
-                                 const gchar * format, ...) G_GNUC_PRINTF (2, 3);
-#else /* GST_DISABLE_GST_DEBUG */
+typedef struct _GstGLAsyncDebug GstGLAsyncDebug;
+
+typedef gchar * (*GstGLAsyncDebugLogGetMessage) (gpointer user_data);
+
+/**
+ * GstGLAsyncDebug:
+ *
+ * #GstGLAsyncDebug an opaque structure and should only be accessed through the
+ * provided API.
+ */
+struct _GstGLAsyncDebug
+{
+  /* <private> */
+  guint             state_flags;
+  GstDebugCategory *cat;
+  GstDebugLevel     level;
+  const gchar      *file;
+  const gchar      *function;
+  gint              line;
+  GObject          *object;
+  gchar            *debug_msg;
+
+  /* <protected> */
+  GstGLAsyncDebugLogGetMessage callback;
+  gpointer          user_data;
+  GDestroyNotify    notify;
+};
+
+GstGLAsyncDebug *   gst_gl_async_debug_new                      (void);
+void                gst_gl_async_debug_free                     (GstGLAsyncDebug * ad);
+void                gst_gl_async_debug_init                     (GstGLAsyncDebug * ad);
+void                gst_gl_async_debug_unset                    (GstGLAsyncDebug * ad);
+void                gst_gl_async_debug_freeze                   (GstGLAsyncDebug * ad);
+void                gst_gl_async_debug_thaw                     (GstGLAsyncDebug * ad);
+
+/**
+ * GST_GL_ASYNC_CAT_LEVEL_LOG_valist:
+ * @ad: the #GstGLAsyncDebug to store the message in
+ * @cat: the #GstDebugCategory to output the message in
+ * @level: the #GstLevel
+ * @file: the file where the debug message originates from
+ * @function: the function where the debug message originates from
+ * @line: the line in @file where the debug message originates from
+ * @object: (allow-none): a #GObject to associate with the debug message
+ * @format: a printf style format string
+ * @varargs: the list of arguments for @format
+ *
+ * Stores a debug message in @ad for later output
+ */
+#define GST_GL_ASYNC_CAT_LEVEL_LOG_valist(ad,cat,level,object,format,varargs)   \
+    gst_gl_async_debug_store_log_msg_valist (ad, cat, level, __FILE__,          \
+        GST_FUNCTION, __LINE__, object, format, varargs)
+
+/**
+ * GST_GL_ASYNC_CAT_LEVEL_LOG:
+ * @ad: the #GstGLAsyncDebug to store the message in
+ * @cat: the #GstDebugCategory to output the message in
+ * @level: the #GstLevel
+ * @file: the file where the debug message originates from
+ * @function: the function where the debug message originates from
+ * @line: the line in @file where the debug message originates from
+ * @object: (allow-none): a #GObject to associate with the debug message
+ * @format: a printf style format string
+ * @...: the list of arguments for @format
+ *
+ * Stores a debug message in @ad for later output
+ */
 #if G_HAVE_ISO_VARARGS
-#define gst_gl_insert_debug_marker(...) G_STMT_START{ }G_STMT_END
+#define GST_GL_ASYNC_CAT_LEVEL_LOG(ad,cat,level,object,format,...)              \
+    gst_gl_async_debug_store_log_msg (ad, cat, level, __FILE__, GST_FUNCTION,   \
+        __LINE__, object, format, __VA_ARGS__)
 #else /* G_HAVE_ISO_VARARGS */
 #if G_HAVE_GNUC_VARARGS
-#define gst_gl_insert_debug_marker(args...) G_STMT_START{ }G_STMT_END
+#define GST_GL_ASYNC_CAT_LEVEL_LOG(ad,cat,level,object,format,args...)          \
+    gst_gl_async_debug_store_log_msg (ad, cat, level, __FILE__, GST_FUNCTION,   \
+        __LINE__, object, format, ##args)
 #else /* G_HAVE_GNUC_VARARGS */
+static inline void
+GST_GL_ASYNC_CAT_LEVEL_LOG(GstGLAsyncDebug * ad, GstDebugCategory * cat,
+    GstDebugLevel level, GObject * object, const gchar * format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_GL_ASYNC_CAT_LEVEL_LOG_valist (ad, cat, level, object, format, varargs);
+  va_end (varargs);
+}
+#endif /* G_HAVE_GNUC_VARARGS */
+#endif /* G_HAVE_ISO_VARARGS */
+
+#if !defined(GST_DISABLE_GST_DEBUG)
+
+void        gst_gl_insert_debug_marker              (GstGLContext * context,
+                                                     const gchar * format, ...) G_GNUC_PRINTF (2, 3);
+void        gst_gl_async_debug_output_log_msg       (GstGLAsyncDebug * ad);
+void        gst_gl_async_debug_store_log_msg        (GstGLAsyncDebug * ad,
+                                                     GstDebugCategory * cat,
+                                                     GstDebugLevel level,
+                                                     const gchar * file,
+                                                     const gchar * function,
+                                                     gint line,
+                                                     GObject * object,
+                                                     const gchar * format, ...) G_GNUC_PRINTF (8, 9);
+void        gst_gl_async_debug_store_log_msg_valist (GstGLAsyncDebug * ad,
+                                                     GstDebugCategory * cat,
+                                                     GstDebugLevel level,
+                                                     const gchar * file,
+                                                     const gchar * function,
+                                                     gint line,
+                                                     GObject * object,
+                                                     const gchar * format,
+                                                     va_list varargs) G_GNUC_PRINTF (8, 0);
+
+#else /* GST_DISABLE_GST_DEBUG */
+
+#define gst_gl_async_debug_output_log_msg(ad) G_STMT_START{ }G_STMT_END
+#define gst_gl_async_debug_store_log_msg_valist(ad,cat,level,file,function,line,object,format,args) G_STMT_START{ }G_STMT_END
+
+#if G_HAVE_ISO_VARARGS
+
+#define gst_gl_insert_debug_marker(...) G_STMT_START{ }G_STMT_END
+#define gst_gl_async_debug_store_log_msg(...) G_STMT_START{ }G_STMT_END
+
+#else /* G_HAVE_ISO_VARARGS */
+#if G_HAVE_GNUC_VARARGS
+
+#define gst_gl_insert_debug_marker(args...) G_STMT_START{ }G_STMT_END
+#define gst_gl_async_debug_store_log_msg(args...) G_STMT_START{ }G_STMT_END
+
+#else /* G_HAVE_GNUC_VARARGS */
+
 static inline void
 gst_gl_insert_debug_marker (GstGLContext * context, const gchar * format, ...)
 {
 }
+
+static inline void
+gst_gl_async_debug_store_log_msg (GstGLAsyncDebug * ad,
+    GstDebugCategory * cat, GstDebugLevel level, const gchar * file,
+    const gchar * function, gint line, GstObject * object,
+    const gchar * format, ...)
+{
+}
+
 #endif /* G_HAVE_GNUC_VARARGS */
 #endif /* G_HAVE_ISO_VARARGS */
 #endif /* GST_DISABLE_GST_DEBUG */
