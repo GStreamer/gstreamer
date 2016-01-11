@@ -1518,8 +1518,7 @@ gst_flac_parse_handle_block_type (GstFlacParse * flacparse, guint type,
       break;
     default:                   /* RESERVED */
       GST_INFO_OBJECT (flacparse, "Unhandled metadata header type '%u'", type);
-      GST_WARNING_OBJECT (flacparse,
-          "FLAC version might not be fully supported");
+      GST_FIXME_OBJECT (flacparse, "FLAC version might not be fully supported");
       break;
   }
 
