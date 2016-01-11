@@ -90,6 +90,8 @@ struct _GstGLBaseMemory
 
   gpointer              data;
 
+  GstGLQuery           *query;
+
   /* <private> */
   gsize                 alloc_size;     /* because maxsize is used for mapping */
   gpointer              alloc_data;

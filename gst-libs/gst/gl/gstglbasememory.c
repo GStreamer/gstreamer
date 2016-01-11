@@ -76,10 +76,14 @@ _mem_create_gl (GstGLContext * context, struct create_data *transfer)
   GstGLBaseMemoryAllocatorClass *alloc_class;
   GError *error = NULL;
 
+  GST_CAT_TRACE (GST_CAT_GL_BASE_MEMORY, "Create memory %p", transfer->mem);
+
   alloc_class =
       GST_GL_BASE_MEMORY_ALLOCATOR_GET_CLASS (transfer->mem->mem.allocator);
 
   g_return_if_fail (alloc_class->create != NULL);
+
+  transfer->mem->query = gst_gl_query_new (context, GST_GL_QUERY_TIME_ELAPSED);
 
   if ((transfer->result = alloc_class->create (transfer->mem, &error)))
     return;
@@ -418,6 +422,9 @@ _destroy_gl_objects (GstGLContext * context, GstGLBaseMemory * mem)
   g_return_if_fail (alloc_class->destroy != NULL);
 
   alloc_class->destroy (mem);
+
+  if (mem->query)
+    gst_gl_query_free (mem->query);
 }
 
 static void
