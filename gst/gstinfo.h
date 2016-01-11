@@ -396,6 +396,11 @@ GSList *        gst_debug_get_all_categories	(void);
 gchar * gst_debug_construct_term_color (guint colorinfo);
 gint    gst_debug_construct_win_color  (guint colorinfo);
 
+gint    gst_info_vasprintf              (gchar ** result,
+                                         const gchar * format,
+                                         va_list args) G_GNUC_PRINTF (2, 0);
+gchar * gst_info_strdup_vprintf         (const gchar *format, va_list args) G_GNUC_PRINTF (1, 0);
+gchar * gst_info_strdup_printf          (const gchar *format, ...) G_GNUC_PRINTF (1, 2);
 
 #ifndef GST_DISABLE_GST_DEBUG
 

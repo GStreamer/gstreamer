@@ -1359,6 +1359,9 @@ GST_SEGMENT_FORMAT
 gst_debug_bin_to_dot_data
 gst_debug_bin_to_dot_file
 gst_debug_bin_to_dot_file_with_ts
+gst_info_vasprintf
+gst_info_strdup_vprintf
+gst_info_strdup_printf
 <SUBSECTION Standard>
 GST_TYPE_DEBUG_COLOR_FLAGS
 GST_TYPE_DEBUG_COLOR_MODE

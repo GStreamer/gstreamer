@@ -2243,6 +2243,91 @@ __gst_info_fallback_vasprintf (char **result, char const *format, va_list args)
 }
 #endif
 
+/**
+ * gst_info_vasprintf:
+ * @result: (out): the resulting string
+ * @format: a printf style format string
+ * @args: the va_list of printf arguments for @format
+ *
+ * Allocates and fills a string large enough (including the terminating null
+ * byte) to hold the specified printf style @format and @args.
+ *
+ * This function deals with the GStreamer specific printf specifiers
+ * #GST_PTR_FORMAT and #GST_SEGMENT_FORMAT.  If you do not have these specifiers
+ * in your @format string, you do not need to use this function and can use
+ * alternatives such as g_vasprintf().
+ *
+ * Free @result with g_free().
+ *
+ * Returns: the length of the string allocated into @result or -1 on any error
+ *
+ * Since: 1.8
+ */
+gint
+gst_info_vasprintf (gchar ** result, const gchar * format, va_list args)
+{
+  /* This will fallback to __gst_info_fallback_vasprintf() via a #define in
+   * gst_private.h if the debug system is disabled which will remove the gst
+   * specific printf format specifiers */
+  return __gst_vasprintf (result, format, args);
+}
+
+/**
+ * gst_info_strdup_vprintf:
+ * @format: a printf style format string
+ * @args: the va_list of printf arguments for @format
+ *
+ * Allocates, fills and returns a null terminated string from the printf style
+ * @format string and @args.
+ *
+ * See gst_info_vasprintf() for when this function is required.
+ *
+ * Free with g_free().
+ *
+ * Returns: a newly allocated null terminated string or %NULL on any error
+ *
+ * Since: 1.8
+ */
+gchar *
+gst_info_strdup_vprintf (const gchar * format, va_list args)
+{
+  gchar *ret;
+
+  if (gst_info_vasprintf (&ret, format, args) < 0)
+    ret = NULL;
+
+  return ret;
+}
+
+/**
+ * gst_info_strdup_printf:
+ * @format: a printf style format string
+ * @...: the printf arguments for @format
+ *
+ * Allocates, fills and returns a null terminated string from the printf style
+ * @format string and corresponding arguments.
+ *
+ * See gst_info_vasprintf() for when this function is required.
+ *
+ * Free with g_free().
+ *
+ * Returns: a newly allocated null terminated string or %NULL on any error
+ *
+ * Since: 1.8
+ */
+gchar *
+gst_info_strdup_printf (const gchar * format, ...)
+{
+  gchar *ret;
+  va_list args;
+
+  va_start (args, format);
+  ret = gst_info_strdup_vprintf (format, args);
+  va_end (args);
+
+  return ret;
+}
+
 #ifdef GST_ENABLE_FUNC_INSTRUMENTATION
 /* FIXME make this thread specific */
 static GSList *stack_trace = NULL;
