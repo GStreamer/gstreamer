@@ -78,6 +78,7 @@ struct _GstRawParseClass
 
   GstCaps * (*get_caps) (GstRawParse *rp);
   void (*pre_push_buffer) (GstRawParse *rp, GstBuffer *buffer);
+  void (*decide_allocation) (GstRawParse *rp, GstQuery *query);
 
   gboolean multiple_frames_per_buffer;
 };

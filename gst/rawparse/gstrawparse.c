@@ -222,6 +222,22 @@ gst_raw_parse_set_src_caps (GstRawParse * rp)
   }
 
   rp->negotiated = gst_pad_set_caps (rp->srcpad, caps);
+
+  /* if subclass inplement decide_allocation, send an allocation
+   * query, pass result to subclass and let it handle allocation if needed. */
+  if (rp_class->decide_allocation) {
+    GstQuery *query;
+
+    query = gst_query_new_allocation (caps, TRUE);
+    if (!gst_pad_peer_query (rp->srcpad, query)) {
+      /* not a problem, just debug a little */
+      GST_DEBUG_OBJECT (rp, "peer ALLOCATION query failed");
+    }
+
+    rp_class->decide_allocation (rp, query);
+    gst_query_unref (query);
+  }
+
   gst_caps_unref (caps);
 
   return rp->negotiated;
