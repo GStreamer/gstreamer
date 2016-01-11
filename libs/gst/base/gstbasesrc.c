@@ -1038,7 +1038,9 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
           } else
             res = TRUE;
 
-          gst_query_set_position (query, format, position);
+          if (res)
+            gst_query_set_position (query, format, position);
+
           break;
         }
       }
@@ -1091,7 +1093,10 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
              * means that we cannot report the duration at all. */
             res = TRUE;
           }
-          gst_query_set_duration (query, format, duration);
+
+          if (res)
+            gst_query_set_duration (query, format, duration);
+
           break;
         }
       }
