@@ -157,6 +157,20 @@ unblock_subtitle (GstSubtitleOverlay * self)
   }
 }
 
+static gboolean
+pad_supports_caps (GstPad * pad, GstCaps * caps)
+{
+  GstCaps *pad_caps;
+  gboolean ret = FALSE;
+
+  pad_caps = gst_pad_query_caps (pad, NULL);
+  if (gst_caps_can_intersect (caps, pad_caps))
+    ret = TRUE;
+  gst_caps_unref (pad_caps);
+
+  return ret;
+}
+
 static void
 gst_subtitle_overlay_finalize (GObject * object)
 {
@@ -1063,7 +1077,7 @@ _pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     GstPad *target =
         gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (self->subtitle_sinkpad));
 
-    if (target && gst_pad_query_accept_caps (target, subcaps)) {
+    if (target && pad_supports_caps (target, subcaps)) {
       GST_DEBUG_OBJECT (pad, "Target accepts caps");
 
       gst_object_unref (target);
@@ -1673,7 +1687,7 @@ gst_subtitle_overlay_video_sink_setcaps (GstSubtitleOverlay * self,
 
   GST_SUBTITLE_OVERLAY_LOCK (self);
 
-  if (!target || !gst_pad_query_accept_caps (target, caps)) {
+  if (!target || !pad_supports_caps (target, caps)) {
     GST_DEBUG_OBJECT (target, "Target did not accept caps -- reconfiguring");
 
     block_subtitle (self);
@@ -1809,7 +1823,7 @@ gst_subtitle_overlay_subtitle_sink_setcaps (GstSubtitleOverlay * self,
   GST_SUBTITLE_OVERLAY_LOCK (self);
   gst_caps_replace (&self->subcaps, caps);
 
-  if (target && gst_pad_query_accept_caps (target, caps)) {
+  if (target && pad_supports_caps (target, caps)) {
     GST_DEBUG_OBJECT (self, "Target accepts caps");
     GST_SUBTITLE_OVERLAY_UNLOCK (self);
     goto out;
