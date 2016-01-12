@@ -460,7 +460,7 @@ class LogFile (Producer):
         self.have_load_started ()
 
     def handle_load_finished (self):
-
+        self.logger.debug ("finish loading")
         self.lines = LogLines (self.fileobj, self.line_cache)
 
         # Chain up to our consumers:

@@ -908,6 +908,7 @@ class Window (object):
                              _("It is not a GStreamer log file."))
 
         def idle_set ():
+            self.logger.debug ("idle trigger after load finished")
             self.log_view.set_model (self.log_filter)
 
             self.line_view.handle_attach_log_file (self)

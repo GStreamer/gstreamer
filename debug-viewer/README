@@ -21,6 +21,16 @@ NEW: column.pack_start (cell, True)
 OLD: view_column.get_cell_renderers ()
 NEW: column.get_cells ()
 
-= porting ressources =
+# porting ressources #
 https://www.xpra.org/trac/ticket/90?cversion=0&cnum_hist=3
 https://mail.gnome.org/archives/commits-list/2013-October/msg05205.html
+
+#  profiling #
+python -m profile -o output.pstats path/to/your/script arg1 arg2
+gprof2dot.py -f pstats output.pstats | dot -Tpng -o output.png
+~/projects/tools/gprof2dot/gprof2dot.py -f pstats output.pstats | dot -Tpng -o output.png
+eog output.png
+
+python -m cProfile -o output.pstats2 ./gst-debug-viewer debug.noansi.log
+~/projects/tools/gprof2dot/gprof2dot.py -f pstats output.pstats2 | dot -Tpng -o output2.png
+eog output2.png
