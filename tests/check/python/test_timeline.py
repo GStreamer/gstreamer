@@ -27,7 +27,9 @@ from gi.repository import GES  # noqa
 import unittest  # noqa
 from unittest import mock
 
-from . import common
+from .common import create_main_loop
+from .common import create_project
+from .common import GESSimpleTimelineTest  # noqa
 
 Gst.init(None)
 GES.init()
@@ -36,8 +38,8 @@ GES.init()
 class TestTimeline(unittest.TestCase):
 
     def test_signals_not_emitted_when_loading(self):
-        mainloop = common.create_main_loop()
-        timeline = common.create_project(with_group=True, saved=True)
+        mainloop = create_main_loop()
+        timeline = create_project(with_group=True, saved=True)
 
         # Reload the project, check the group.
         project = GES.Project.new(uri=timeline.get_asset().props.uri)
@@ -52,7 +54,6 @@ class TestTimeline(unittest.TestCase):
         timeline = project.extract()
 
         signals = ["layer-added", "group-added", "track-added"]
-        called = []
         handle = mock.Mock()
         for signal in signals:
             timeline.connect(signal, handle)
@@ -62,7 +63,7 @@ class TestTimeline(unittest.TestCase):
         handle.assert_not_called()
 
 
-class TestEditing(common.GESSimpleTimelineTest):
+class TestEditing(GESSimpleTimelineTest):
 
     def test_transition_disappears_when_moving_to_another_layer(self):
         self.timeline.props.auto_transition = True
@@ -112,3 +113,23 @@ class TestEditing(common.GESSimpleTimelineTest):
         self.assertEquals(len(self.layer.get_clips()), 4)
         clip1.edit([], self.layer.get_priority(), GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 35 * Gst.SECOND)
         self.assertEquals(len(self.layer.get_clips()), 4)
+
+
+class TestSnapping(GESSimpleTimelineTest):
+
+    def test_snapping(self):
+        self.timeline.props.auto_transition = True
+        self.timeline.set_snapping_distance(1)
+        clip1 = self.add_clip(0, 0, 100)
+
+        # Split clip1.
+        split_position = 50
+        clip2 = clip1.split(split_position)
+        self.assertEquals(len(self.layer.get_clips()), 2)
+        self.assertEqual(clip1.props.duration, split_position)
+        self.assertEqual(clip2.props.start, split_position)
+
+        # Make sure snapping prevents clip2 to be moved to the left.
+        clip2.edit([], self.layer.get_priority(), GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE,
+                   clip2.props.start - 1)
+        self.assertEqual(clip2.props.start, split_position)
