@@ -173,7 +173,6 @@ _io_surface_memory_new (GstGLContext * context,
       target, NULL, info, plane, valign, user_data, notify);
 
   GST_MINI_OBJECT_FLAG_SET (mem, GST_MEMORY_FLAG_READONLY);
-  GST_MINI_OBJECT_FLAG_SET (mem, GST_MEMORY_FLAG_NO_SHARE);
 
   mem->surface = NULL;
   _io_surface_memory_set_surface (mem, surface);
