@@ -117,6 +117,7 @@ libgstreamer_@GST_API_VERSION@_la_SOURCES = \
 	$(GST_TRACE_SRC)	\
 	gsttracer.c		\
 	gsttracerfactory.c	\
+	gsttracerrecord.c		\
 	gsttracerutils.c		\
 	gsttypefind.c		\
 	gsttypefindfactory.c	\
@@ -223,6 +224,7 @@ gst_headers =			\
 	gsttocsetter.h		\
 	gsttracer.h		\
 	gsttracerfactory.h	\
+	gsttracerrecord.h		\
 	gsttypefind.h		\
 	gsttypefindfactory.h	\
 	gsturi.h		\

@@ -135,6 +135,7 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/gstinfo.xml" />
     <xi:include href="xml/gsttracer.xml" />
     <xi:include href="xml/gsttracerfactory.xml" />
+    <xi:include href="xml/gsttracerrecord.xml" />
 
   </chapter>
 

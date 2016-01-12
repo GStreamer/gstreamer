@@ -38,6 +38,7 @@
 #endif
 
 #include "gstlatency.h"
+#include <gst/gsttracerrecord.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_latency_debug);
 #define GST_CAT_DEFAULT gst_latency_debug
@@ -51,6 +52,8 @@ G_DEFINE_TYPE_WITH_CODE (GstLatencyTracer, gst_latency_tracer, GST_TYPE_TRACER,
 static GQuark latency_probe_id;
 static GQuark latency_probe_pad;
 static GQuark latency_probe_ts;
+
+static GstTracerRecord *tr_latency;
 
 /* data helpers */
 
@@ -103,11 +106,8 @@ log_latency (const GstStructure * data, GstPad * sink_pad, guint64 sink_ts)
   src = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (src_pad));
   sink = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (sink_pad));
 
-  /* TODO(ensonic): report format is still unstable */
-  gst_tracer_log_trace (gst_structure_new ("latency",
-          "src", G_TYPE_STRING, src,
-          "sink", G_TYPE_STRING, sink,
-          "time", G_TYPE_UINT64, GST_CLOCK_DIFF (src_ts, sink_ts), NULL));
+  gst_tracer_record_log (tr_latency, src, sink,
+      GST_CLOCK_DIFF (src_ts, sink_ts));
   g_free (src);
   g_free (sink);
 }
@@ -204,11 +204,13 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
 
   /* announce trace formats */
   /* *INDENT-OFF* */
-  gst_tracer_log_trace (gst_structure_new ("latency.class",
+  tr_latency = gst_tracer_record_new (gst_structure_new ("latency.class",
       "src", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
           NULL),
       "sink", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
           NULL),
       "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",

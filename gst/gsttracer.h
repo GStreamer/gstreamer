@@ -68,9 +68,6 @@ void gst_tracing_register_hook (GstTracer *tracer, const gchar *detail,
 /* tracing modules */
 gboolean gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type);
 
-/* tracing module helpers */
-void gst_tracer_log_trace (GstStructure * s);
-
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTracer, gst_object_unref)
 #endif

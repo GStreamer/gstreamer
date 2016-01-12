@@ -22,7 +22,7 @@
  * SECTION:gstrusage
  * @short_description: log resource usage stats
  *
- * A tracing module that take rusage() snapshots and logs them. 
+ * A tracing module that take rusage() snapshots and logs them.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -31,6 +31,7 @@
 
 #include <unistd.h>
 #include "gstrusage.h"
+#include <gst/gsttracerrecord.h>
 
 #ifdef HAVE_SYS_RESOURCE_H
 #ifndef __USE_GNU
@@ -55,6 +56,8 @@ G_DEFINE_TYPE_WITH_CODE (GstRUsageTracer, gst_rusage_tracer, GST_TYPE_TRACER,
 
 /* number of cpus to scale cpu-usage in threads */
 static glong num_cpus = 1;
+
+static GstTracerRecord *tr_proc, *tr_thread;
 
 typedef struct
 {
@@ -236,13 +239,8 @@ do_stats (GstTracer * obj, guint64 ts)
   update_trace_value (stats->tvs_thread, ts, stats->tthread, &dts, &dtproc);
   cur_cpuload = (guint) gst_util_uint64_scale (dtproc,
       G_GINT64_CONSTANT (1000), dts);
-  gst_tracer_log_trace (gst_structure_new ("thread-rusage", 
-      "ts", G_TYPE_UINT64, ts, 
-      "thread-id", G_TYPE_UINT, GPOINTER_TO_UINT (thread_id), 
-      "average-cpuload", G_TYPE_UINT, MIN (avg_cpuload, 1000),
-      "current-cpuload", G_TYPE_UINT, MIN (cur_cpuload, 1000),
-      "time", G_TYPE_UINT64, stats->tthread,
-      NULL));
+  gst_tracer_record_log (tr_thread, (guint64)thread_id, ts,
+      MIN (avg_cpuload, 1000), MIN (cur_cpuload, 1000), stats->tthread);
 
   avg_cpuload = (guint) gst_util_uint64_scale (tproc / num_cpus,
       G_GINT64_CONSTANT (1000), ts);
@@ -251,12 +249,8 @@ do_stats (GstTracer * obj, guint64 ts)
   G_UNLOCK (_proc);
   cur_cpuload = (guint) gst_util_uint64_scale (dtproc / num_cpus,
       G_GINT64_CONSTANT (1000), dts);
-  gst_tracer_log_trace (gst_structure_new ("proc-rusage", 
-      "ts", G_TYPE_UINT64, ts, 
-      "average-cpuload", G_TYPE_UINT, MIN (avg_cpuload, 1000),
-      "current-cpuload", G_TYPE_UINT, MIN (cur_cpuload, 1000),
-      "time", G_TYPE_UINT64, tproc,
-      NULL));
+  gst_tracer_record_log (tr_proc, ts, MIN (avg_cpuload, 1000),
+      MIN (cur_cpuload, 1000), tproc);
   /* *INDENT-ON* */
 }
 
@@ -291,54 +285,64 @@ gst_rusage_tracer_class_init (GstRUsageTracerClass * klass)
 
   /* announce trace formats */
   /* *INDENT-OFF* */
-  gst_tracer_log_trace (gst_structure_new ("thread-rusage.class",
+  tr_thread = gst_tracer_record_new (gst_structure_new ("thread-rusage.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "related-to", G_TYPE_STRING, "thread",  /* TODO: use genum */
+          NULL),
+      "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+          "description", G_TYPE_STRING, "event ts",
           NULL),
       "average-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
           "description", G_TYPE_STRING, "average cpu usage per thread in ‰",
-          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */ 
-          "min", G_TYPE_UINT, 0, 
+          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */
+          "min", G_TYPE_UINT, 0,
           "max", G_TYPE_UINT, 1000,
           NULL),
       "current-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
           "description", G_TYPE_STRING, "current cpu usage per thread in ‰",
-          "flags", G_TYPE_STRING, "windowed",  /* TODO: use gflags */ 
-          "min", G_TYPE_UINT, 0, 
+          "flags", G_TYPE_STRING, "windowed",  /* TODO: use gflags */
+          "min", G_TYPE_UINT, 0,
           "max", G_TYPE_UINT, 1000,
           NULL),
       "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING, "time spent in thread in ns",
-          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */ 
+          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
       NULL));
-  gst_tracer_log_trace (gst_structure_new ("proc-rusage.class",
+  tr_proc = gst_tracer_record_new (gst_structure_new ("proc-rusage.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "related-to", G_TYPE_STRING, "process",  /* TODO: use genum */
+          NULL),
+      "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+          "description", G_TYPE_STRING, "event ts",
           NULL),
       "average-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
           "description", G_TYPE_STRING, "average cpu usage per process in ‰",
-          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */ 
-          "min", G_TYPE_UINT, 0, 
+          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */
+          "min", G_TYPE_UINT, 0,
           "max", G_TYPE_UINT, 1000,
           NULL),
       "current-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
           "description", G_TYPE_STRING, "current cpu usage per process in ‰",
-          "flags", G_TYPE_STRING, "windowed",  /* TODO: use gflags */ 
-          "min", G_TYPE_UINT, 0, 
+          "flags", G_TYPE_STRING, "windowed",  /* TODO: use gflags */
+          "min", G_TYPE_UINT, 0,
           "max", G_TYPE_UINT, 1000,
           NULL),
       "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING, "time spent in process in ns",
-          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */ 
+          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),

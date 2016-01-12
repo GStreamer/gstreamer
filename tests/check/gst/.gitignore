@@ -44,6 +44,7 @@ gsttag
 gsttagsetter
 gsttoc
 gsttocsetter
+gsttracerrecord
 gsturi
 gstutils
 gstvalue

@@ -194,38 +194,3 @@ gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type)
 
   return TRUE;
 }
-
-/* tracing module helpers */
-
-/**
- * gst_tracer_log_trace:
- *
- * Default log hander for traces. Serialzed the trace event into the log.
- *
- * Right now this is using the gstreamer debug log with the level TRACE (7) and
- * the category "GST_TRACER".
- * <note><para>
- *   Please note that this is still under discussion and subject to change.
- * </para></note>
- */
-void
-gst_tracer_log_trace (GstStructure * s)
-{
-  GST_TRACE ("%" GST_PTR_FORMAT, s);
-  /* expands to:
-     gst_debug_log_valist (
-     GST_CAT_DEFAULT, GST_LEVEL_TRACE,
-     file, func, line, object
-     "%" GST_PTR_FORMAT, s);
-     // does it make sense to use the {file, line, func} from the tracer hook?
-     // a)
-     // - we'd need to pass them in the macros to gst_tracer_dispatch()
-     // - and each tracer needs to grab them from the va_list and pass them here
-     // b)
-     // - we create a content in dispatch, pass that to the tracer
-     // - and the tracer will pass that here
-     // ideally we also use *our* ts instead of the one that
-     // gst_debug_log_default() will pick
-   */
-  gst_structure_free (s);
-}

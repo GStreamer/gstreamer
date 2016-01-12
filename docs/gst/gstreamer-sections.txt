@@ -3047,7 +3047,6 @@ gst_toc_scope_get_type
 GstTracer
 gst_tracer_register
 gst_tracing_register_hook
-gst_tracer_log_trace
 
 GstTracerHookBinAddPost
 GstTracerHookBinAddPre
@@ -3140,6 +3139,26 @@ GST_TRACER_FACTORY_CAST
 GST_TYPE_TRACER_FACTORY
 <SUBSECTION Private>
 gst_tracer_factory_get_type
+</SECTION>
+
+
+<SECTION>
+<FILE>gsttracerrecord</FILE>
+<TITLE>GstTracerRecord</TITLE>
+GstTracerRecord
+gst_tracer_record_new
+gst_tracer_record_log
+<SUBSECTION Standard>
+GstTracerRecordClass
+GST_TRACER_RECORD
+GST_IS_TRACER_RECORD
+GST_TRACER_RECORD_CLASS
+GST_IS_TRACER_RECORD_CLASS
+GST_TRACER_RECORD_GET_CLASS
+GST_TRACER_RECORD_CAST
+GST_TYPE_TRACER_RECORD
+<SUBSECTION Private>
+gst_tracer_record_get_type
 </SECTION>
 
 
