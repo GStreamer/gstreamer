@@ -25,6 +25,10 @@
 #include <stdio.h>
 #include <math.h>
 
+#ifdef HAVE_ORC
+#include <orc/orc.h>
+#endif
+
 #include "audio-resampler.h"
 
 typedef struct _Tap
@@ -84,27 +88,8 @@ struct _GstAudioResampler
   gpointer *sbuf;
 };
 
-#ifndef GST_DISABLE_GST_DEBUG
-#define GST_CAT_DEFAULT ensure_debug_category()
-static GstDebugCategory *
-ensure_debug_category (void)
-{
-  static gsize cat_gonce = 0;
-
-  if (g_once_init_enter (&cat_gonce)) {
-    gsize cat_done;
-
-    cat_done = (gsize) _gst_debug_category_new ("audio-resampler", 0,
-        "audio-resampler object");
-
-    g_once_init_leave (&cat_gonce, cat_done);
-  }
-
-  return (GstDebugCategory *) cat_gonce;
-}
-#else
-#define ensure_debug_category() /* NOOP */
-#endif /* GST_DISABLE_GST_DEBUG */
+GST_DEBUG_CATEGORY_STATIC (audio_resampler_debug);
+#define GST_CAT_DEFAULT audio_resampler_debug
 
 /**
  * SECTION:gstaudioresampler
@@ -305,7 +290,8 @@ G_STMT_START {                                                          \
     GST_WARNING ("can't find exact taps");                              \
 } G_STMT_END
 
-#include "audio-resampler-core.h"
+#define PRECISION_S16 15
+#define PRECISION_S32 30
 
 static void
 make_taps (GstAudioResampler * resampler, Tap * t, gint j)
@@ -375,10 +361,98 @@ make_taps (GstAudioResampler * resampler, Tap * t, gint j)
   }
 }
 
-#define MAKE_RESAMPLE_FUNC(type,channels)                                       \
+static inline void
+inner_product_gint16_1_c (gint16 * o, const gint16 * a, const gint16 * b,
+    gint len)
+{
+  gint i;
+  gint32 res = 0;
+
+  for (i = 0; i < len; i++)
+    res += (gint32) a[i] * (gint32) b[i];
+
+  res = (res + (1 << (PRECISION_S16 - 1))) >> PRECISION_S16;
+  *o = CLAMP (res, -(1L << 15), (1L << 15) - 1);
+}
+
+static inline void
+inner_product_gint16_2_c (gint16 * o, const gint16 * a, const gint16 * b,
+    gint len)
+{
+  gint i;
+  gint32 r[2] = { 0, 0 };
+
+  for (i = 0; i < len; i++) {
+    r[0] += (gint32) a[2 * i] * (gint32) b[i];
+    r[1] += (gint32) a[2 * i + 1] * (gint32) b[i];
+  }
+  r[0] = (r[0] + (1 << (PRECISION_S16 - 1))) >> PRECISION_S16;
+  r[1] = (r[1] + (1 << (PRECISION_S16 - 1))) >> PRECISION_S16;
+  o[0] = CLAMP (r[0], -(1L << 15), (1L << 15) - 1);
+  o[1] = CLAMP (r[1], -(1L << 15), (1L << 15) - 1);
+}
+
+
+static inline void
+inner_product_gint32_1_c (gint32 * o, const gint32 * a, const gint32 * b,
+    gint len)
+{
+  gint i;
+  gint64 res = 0;
+
+  for (i = 0; i < len; i++)
+    res += (gint64) a[i] * (gint64) b[i];
+
+  res = (res + (1 << (PRECISION_S32 - 1))) >> PRECISION_S32;
+  *o = CLAMP (res, -(1L << 31), (1L << 31) - 1);
+}
+
+static inline void
+inner_product_gfloat_1_c (gfloat * o, const gfloat * a, const gfloat * b,
+    gint len)
+{
+  gint i;
+  gfloat res = 0.0;
+
+  for (i = 0; i < len; i++)
+    res += a[i] * b[i];
+
+  *o = res;
+}
+
+static inline void
+inner_product_gdouble_1_c (gdouble * o, const gdouble * a, const gdouble * b,
+    gint len)
+{
+  gint i;
+  gdouble res = 0.0;
+
+  for (i = 0; i < len; i++)
+    res += a[i] * b[i];
+
+  *o = res;
+}
+
+static inline void
+inner_product_gdouble_2_c (gdouble * o, const gdouble * a, const gdouble * b,
+    gint len)
+{
+  gint i;
+  gdouble r[2] = { 0.0, 0.0 };
+
+  for (i = 0; i < len; i++) {
+    r[0] += a[2 * i] * b[i];
+    r[1] += a[2 * i + 1] * b[i];
+  }
+  o[0] = r[0];
+  o[1] = r[1];
+}
+
+#define MAKE_RESAMPLE_FUNC(type,channels,arch)                                  \
 static void                                                                     \
-resample_ ##type## _ ##channels (GstAudioResampler * resampler, gpointer in[], gsize in_len,   \
-    gpointer out[], gsize out_len, gsize * consumed, gboolean move)             \
+resample_ ##type## _ ##channels## _ ##arch (GstAudioResampler * resampler,      \
+    gpointer in[], gsize in_len,  gpointer out[], gsize out_len,                \
+    gsize * consumed, gboolean move)                                            \
 {                                                                               \
   gint c, di = 0;                                                               \
   gint n_taps = resampler->n_taps;                                              \
@@ -401,7 +475,7 @@ resample_ ##type## _ ##channels (GstAudioResampler * resampler, gpointer in[], g
       if (t->taps == NULL)                                                      \
         make_taps (resampler, t, samp_phase);                                   \
                                                                                 \
-      inner_product_ ##type## _##channels (op, ipp, t->taps, n_taps);           \
+      inner_product_ ##type## _##channels##_##arch (op, ipp, t->taps, n_taps);  \
       op += ostride;                                                            \
                                                                                 \
       samp_phase = t->next_phase;                                               \
@@ -417,12 +491,78 @@ resample_ ##type## _ ##channels (GstAudioResampler * resampler, gpointer in[], g
   resampler->samp_phase = samp_phase;                                           \
 }
 
-MAKE_RESAMPLE_FUNC (gdouble, 1);
-MAKE_RESAMPLE_FUNC (gfloat, 1);
-MAKE_RESAMPLE_FUNC (gint32, 1);
-MAKE_RESAMPLE_FUNC (gint16, 1);
-MAKE_RESAMPLE_FUNC (gdouble, 2);
-MAKE_RESAMPLE_FUNC (gint16, 2);
+MAKE_RESAMPLE_FUNC (gint16, 1, c);
+MAKE_RESAMPLE_FUNC (gint32, 1, c);
+MAKE_RESAMPLE_FUNC (gfloat, 1, c);
+MAKE_RESAMPLE_FUNC (gdouble, 1, c);
+MAKE_RESAMPLE_FUNC (gint16, 2, c);
+MAKE_RESAMPLE_FUNC (gdouble, 2, c);
+
+typedef void (*ResampleFunc) (GstAudioResampler * resampler,
+    gpointer in[], gsize in_len, gpointer out[], gsize out_len,
+    gsize * consumed, gboolean move);
+
+static ResampleFunc resample_funcs[] = {
+  resample_gint16_1_c,
+  resample_gint32_1_c,
+  resample_gfloat_1_c,
+  resample_gdouble_1_c,
+  resample_gint16_2_c,
+  resample_gdouble_2_c,
+};
+
+#define resample_gint16_1 resample_funcs[0]
+#define resample_gint32_1 resample_funcs[1]
+#define resample_gfloat_1 resample_funcs[2]
+#define resample_gdouble_1 resample_funcs[3]
+#define resample_gint16_2 resample_funcs[4]
+#define resample_gdouble_2 resample_funcs[5]
+
+#if defined HAVE_ORC && !defined DISABLE_ORC
+# if defined (__i386__) || defined (__x86_64__)
+#  define CHECK_X86
+#  include "audio-resampler-x86.h"
+# endif
+#endif
+
+static void
+audio_resampler_init (void)
+{
+  static gsize init_gonce = 0;
+
+  if (g_once_init_enter (&init_gonce)) {
+
+    GST_DEBUG_CATEGORY_INIT (audio_resampler_debug, "audio-resampler", 0,
+        "audio-resampler object");
+
+#if defined HAVE_ORC && !defined DISABLE_ORC
+    orc_init ();
+    {
+      OrcTarget *target = orc_target_get_default ();
+      gint i;
+
+      if (target) {
+        unsigned int flags = orc_target_get_default_flags (target);
+        const gchar *name;
+
+        name = orc_target_get_name (target);
+        GST_DEBUG ("target %s, default flags %08x", name, flags);
+
+        for (i = 0; i < 32; ++i) {
+          if (flags & (1U << i)) {
+            name = orc_target_get_flag_name (target, i);
+            GST_DEBUG ("target flag %s", name);
+#ifdef CHECK_X86
+            audio_resampler_check_x86 (name);
+#endif
+          }
+        }
+      }
+    }
+#endif
+    g_once_init_leave (&init_gonce, 1);
+  }
+}
 
 #define MAKE_DEINTERLEAVE_FUNC(type)                                    \
 static void                                                             \
@@ -789,6 +929,8 @@ gst_audio_resampler_new (GstAudioResamplerMethod method,
 
   g_return_val_if_fail (in_rate != 0, FALSE);
   g_return_val_if_fail (out_rate != 0, FALSE);
+
+  audio_resampler_init ();
 
   resampler = g_slice_new0 (GstAudioResampler);
   resampler->method = method;
