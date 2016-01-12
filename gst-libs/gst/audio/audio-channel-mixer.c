@@ -52,7 +52,7 @@ ensure_debug_category (void)
 #endif /* GST_DISABLE_GST_DEBUG */
 
 
-#define INT_MATRIX_FACTOR_EXPONENT 10
+#define PRECISION_INT 10
 
 typedef void (*MixerFunc) (GstAudioChannelMixer * mix, const gpointer src,
     gpointer dst, gint samples);
@@ -650,7 +650,7 @@ gst_audio_channel_mixer_setup_matrix_int (GstAudioChannelMixer * mix)
 {
   gint i, j;
   gfloat tmp;
-  gfloat factor = (1 << INT_MATRIX_FACTOR_EXPONENT);
+  gfloat factor = (1 << PRECISION_INT);
 
   mix->matrix_int = g_new0 (gint *, mix->in_channels);
 
@@ -729,7 +729,7 @@ gst_audio_channel_mixer_mix_int16 (GstAudioChannelMixer * mix,
         res += in_data[n * inchannels + in] * mix->matrix_int[in][out];
 
       /* remove factor from int matrix */
-      res = res >> INT_MATRIX_FACTOR_EXPONENT;
+      res = (res + (1 << (PRECISION_INT - 1))) >> PRECISION_INT;
       out_data[n * outchannels + out] = CLAMP (res, G_MININT16, G_MAXINT16);
     }
   }
@@ -754,7 +754,7 @@ gst_audio_channel_mixer_mix_int32 (GstAudioChannelMixer * mix,
         res += in_data[n * inchannels + in] * (gint64) mix->matrix_int[in][out];
 
       /* remove factor from int matrix */
-      res = res >> INT_MATRIX_FACTOR_EXPONENT;
+      res = (res + (1 << (PRECISION_INT - 1))) >> PRECISION_INT;
       out_data[n * outchannels + out] = CLAMP (res, G_MININT32, G_MAXINT32);
     }
   }
