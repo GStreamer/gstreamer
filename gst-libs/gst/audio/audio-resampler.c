@@ -70,6 +70,7 @@ struct _GstAudioResampler
   MirrorFunc mirror;
   ResampleFunc resample;
 
+  guint blocks;
   gboolean filling;
   gint samp_inc;
   gint samp_frac;
@@ -374,19 +375,19 @@ make_taps (GstAudioResampler * resampler, Tap * t, gint j)
   }
 }
 
-#define MAKE_RESAMPLE_FUNC(type)                                                \
+#define MAKE_RESAMPLE_FUNC(type,channels)                                       \
 static void                                                                     \
-resample_ ##type (GstAudioResampler * resampler, gpointer in[], gsize in_len,   \
+resample_ ##type## _ ##channels (GstAudioResampler * resampler, gpointer in[], gsize in_len,   \
     gpointer out[], gsize out_len, gsize * consumed, gboolean move)             \
 {                                                                               \
   gint c, di = 0;                                                               \
   gint n_taps = resampler->n_taps;                                              \
-  gint channels = resampler->channels;                                          \
+  gint blocks = resampler->blocks;                                              \
   gint ostride = resampler->ostride;                                            \
   gint samp_index = 0;                                                          \
   gint samp_phase = 0;                                                          \
                                                                                 \
-  for (c = 0; c < channels; c++) {                                              \
+  for (c = 0; c < blocks; c++) {                                                \
     type *ip = in[c];                                                           \
     type *op = ostride == 1 ? out[c] : (type *)out[0] + c;                      \
                                                                                 \
@@ -395,19 +396,20 @@ resample_ ##type (GstAudioResampler * resampler, gpointer in[], gsize in_len,   
                                                                                 \
     for (di = 0; di < out_len; di++) {                                          \
       Tap *t = &resampler->taps[samp_phase];                                    \
-      type *ipp = &ip[samp_index];                                              \
+      type *ipp = &ip[samp_index * channels];                                   \
                                                                                 \
       if (t->taps == NULL)                                                      \
         make_taps (resampler, t, samp_phase);                                   \
                                                                                 \
-      inner_product_ ##type (op, ipp, t->taps, n_taps);                         \
+      inner_product_ ##type## _##channels (op, ipp, t->taps, n_taps);           \
       op += ostride;                                                            \
                                                                                 \
       samp_phase = t->next_phase;                                               \
       samp_index += t->sample_inc;                                              \
     }                                                                           \
     if (move)                                                                   \
-      memmove (ip, &ip[samp_index], (in_len - samp_index) * sizeof(type));      \
+      memmove (ip, &ip[samp_index * channels],                                  \
+          (in_len - samp_index) * sizeof(type) * channels);                     \
   }                                                                             \
   *consumed = samp_index - resampler->samp_index;                               \
                                                                                 \
@@ -415,55 +417,12 @@ resample_ ##type (GstAudioResampler * resampler, gpointer in[], gsize in_len,   
   resampler->samp_phase = samp_phase;                                           \
 }
 
-MAKE_RESAMPLE_FUNC (gdouble);
-MAKE_RESAMPLE_FUNC (gfloat);
-MAKE_RESAMPLE_FUNC (gint32);
-MAKE_RESAMPLE_FUNC (gint16);
-
-#define MAKE_RESAMPLE_INTERLEAVED_FUNC(type,channels)                                   \
-static void                                                                             \
-resample_interleaved_ ##type##_##channels (GstAudioResampler * resampler, gpointer in[],\
-    gsize in_len, gpointer out[], gsize out_len, gsize * consumed, gboolean move)       \
-{                                                                                       \
-  gint di = 0;                                                                          \
-  gint n_taps = resampler->n_taps;                                                      \
-  gint ostride = resampler->ostride;                                                    \
-  gint samp_index = 0;                                                                  \
-  gint samp_phase = 0;                                                                  \
-                                                                                        \
-  {                                                                                     \
-    type *ip = in[0];                                                                   \
-    type *op = out[0];                                                                  \
-                                                                                        \
-    samp_index = resampler->samp_index;                                                 \
-    samp_phase = resampler->samp_phase;                                                 \
-                                                                                        \
-    for (di = 0; di < out_len; di++) {                                                  \
-      Tap *t = &resampler->taps[samp_phase];                                            \
-      type *ipp = &ip[samp_index * channels];                                           \
-                                                                                        \
-      if (t->taps == NULL)                                                              \
-        make_taps (resampler, t, samp_phase);                                           \
-                                                                                        \
-      inner_product_ ##type## _##channels (op, ipp, t->taps, n_taps);                   \
-                                                                                        \
-      op += ostride;                                                                    \
-      samp_phase = t->next_phase;                                                       \
-      samp_index += t->sample_inc;                                                      \
-    }                                                                                   \
-    if (move)                                                                           \
-      memmove (ip, &ip[samp_index * channels],                                          \
-          (in_len - samp_index) * sizeof(type) * channels);                             \
-  }                                                                                     \
-  *consumed = samp_index - resampler->samp_index;                                       \
-                                                                                        \
-  resampler->samp_index = move ? 0 : samp_index;                                        \
-  resampler->samp_phase = samp_phase;                                                   \
-}
-
-MAKE_RESAMPLE_INTERLEAVED_FUNC (gdouble, 2);
-MAKE_RESAMPLE_INTERLEAVED_FUNC (gint16, 2);
-
+MAKE_RESAMPLE_FUNC (gdouble, 1);
+MAKE_RESAMPLE_FUNC (gfloat, 1);
+MAKE_RESAMPLE_FUNC (gint32, 1);
+MAKE_RESAMPLE_FUNC (gint16, 1);
+MAKE_RESAMPLE_FUNC (gdouble, 2);
+MAKE_RESAMPLE_FUNC (gint16, 2);
 
 #define MAKE_DEINTERLEAVE_FUNC(type)                                    \
 static void                                                             \
@@ -644,33 +603,36 @@ resampler_calculate_taps (GstAudioResampler * resampler)
     t->next_phase = (j + in_rate) % out_rate;
   }
 
+  resampler->blocks = resampler->channels;
   switch (resampler->format) {
     case GST_AUDIO_FORMAT_F64:
       if (resampler->channels == 2 && n_taps >= 4) {
-        resampler->resample = resample_interleaved_gdouble_2;
+        resampler->resample = resample_gdouble_2;
         resampler->deinterleave = deinterleave_copy;
+        resampler->blocks = 1;
       } else {
-        resampler->resample = resample_gdouble;
+        resampler->resample = resample_gdouble_1;
         resampler->deinterleave = deinterleave_gdouble;
       }
       resampler->mirror = mirror_gdouble;
       break;
     case GST_AUDIO_FORMAT_F32:
-      resampler->resample = resample_gfloat;
+      resampler->resample = resample_gfloat_1;
       resampler->deinterleave = deinterleave_gfloat;
       resampler->mirror = mirror_gfloat;
       break;
     case GST_AUDIO_FORMAT_S32:
-      resampler->resample = resample_gint32;
+      resampler->resample = resample_gint32_1;
       resampler->deinterleave = deinterleave_gint32;
       resampler->mirror = mirror_gint32;
       break;
     case GST_AUDIO_FORMAT_S16:
       if (resampler->channels == 2 && n_taps >= 4) {
-        resampler->resample = resample_interleaved_gint16_2;
+        resampler->resample = resample_gint16_2;
         resampler->deinterleave = deinterleave_copy;
+        resampler->blocks = 1;
       } else {
-        resampler->resample = resample_gint16;
+        resampler->resample = resample_gint16_1;
         resampler->deinterleave = deinterleave_gint16;
       }
       resampler->mirror = mirror_gint16;

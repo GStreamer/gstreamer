@@ -26,7 +26,7 @@
 #endif
 
 static inline void
-inner_product_gdouble (gdouble * o, const gdouble * a, const gdouble * b,
+inner_product_gdouble_1 (gdouble * o, const gdouble * a, const gdouble * b,
     gint len)
 {
   gint i = 0;
@@ -61,7 +61,7 @@ inner_product_gdouble (gdouble * o, const gdouble * a, const gdouble * b,
 }
 
 static inline void
-inner_product_gfloat (gfloat * o, const gfloat * a, const gfloat * b, gint len)
+inner_product_gfloat_1 (gfloat * o, const gfloat * a, const gfloat * b, gint len)
 {
   gint i = 0;
   gfloat res;
@@ -90,7 +90,7 @@ inner_product_gfloat (gfloat * o, const gfloat * a, const gfloat * b, gint len)
 }
 
 static inline void
-inner_product_gint32 (gint32 * o, const gint32 * a, const gint32 * b, gint len)
+inner_product_gint32_1 (gint32 * o, const gint32 * a, const gint32 * b, gint len)
 {
   gint i = 0;
   gint64 res = 0;
@@ -103,7 +103,7 @@ inner_product_gint32 (gint32 * o, const gint32 * a, const gint32 * b, gint len)
 }
 
 static inline void
-inner_product_gint16 (gint16 * o, const gint16 * a, const gint16 * b, gint len)
+inner_product_gint16_1 (gint16 * o, const gint16 * a, const gint16 * b, gint len)
 {
   gint i = 0;
   gint32 res = 0;
