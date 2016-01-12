@@ -103,8 +103,11 @@ struct _GstAudioConverter
   GstAudioLayout current_layout;
   gint current_channels;
 
+  gboolean in_writable;
   gpointer *in_data;
+  gsize in_samples;
   gpointer *out_data;
+  gsize out_samples;
 
   /* unpack */
   gboolean in_default;
@@ -135,12 +138,8 @@ struct _GstAudioConverter
   gboolean passthrough;
 };
 
-typedef gboolean (*AudioChainFunc) (AudioChain * chain, gsize num_samples,
-    gpointer user_data);
+typedef gboolean (*AudioChainFunc) (AudioChain * chain, gpointer user_data);
 typedef gpointer *(*AudioChainAllocFunc) (AudioChain * chain, gsize num_samples,
-    gpointer user_data);
-
-static gpointer *get_output_samples (AudioChain * chain, gsize num_samples,
     gpointer user_data);
 
 struct _AudioChain
@@ -165,6 +164,7 @@ struct _AudioChain
   gsize tmpsize;
 
   gpointer *samples;
+  gsize num_samples;
 };
 
 static AudioChain *
@@ -214,15 +214,26 @@ audio_chain_alloc_samples (AudioChain * chain, gsize num_samples)
   return chain->alloc_func (chain, num_samples, chain->alloc_data);
 }
 
+static void
+audio_chain_set_samples (AudioChain * chain, gpointer * samples,
+    gsize num_samples)
+{
+  GST_LOG ("set samples %p %" G_GSIZE_FORMAT, samples, num_samples);
+
+  chain->samples = samples;
+  chain->num_samples = num_samples;
+}
+
 static gpointer *
-audio_chain_get_samples (AudioChain * chain, gsize num_samples)
+audio_chain_get_samples (AudioChain * chain, gsize * avail)
 {
   gpointer *res;
 
   while (!chain->samples)
-    chain->make_func (chain, num_samples, chain->make_func_data);
+    chain->make_func (chain, chain->make_func_data);
 
   res = chain->samples;
+  *avail = chain->num_samples;
   chain->samples = NULL;
 
   return res;
@@ -299,6 +310,18 @@ gst_audio_converter_update_config (GstAudioConverter * convert,
 {
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (config != NULL, FALSE);
+  g_return_val_if_fail ((in_rate == 0 && out_rate == 0) ||
+      convert->flags & GST_AUDIO_CONVERTER_FLAG_VARIABLE_RATE, FALSE);
+
+  GST_LOG ("new rate %d -> %d", in_rate, out_rate);
+
+  if (in_rate <= 0)
+    in_rate = convert->in.rate;
+  if (out_rate <= 0)
+    out_rate = convert->out.rate;
+
+  convert->in.rate = in_rate;
+  convert->out.rate = out_rate;
 
   gst_structure_foreach (config, copy_config, convert);
   gst_structure_free (config);
@@ -331,22 +354,64 @@ gst_audio_converter_get_config (GstAudioConverter * convert,
   return convert->config;
 }
 
-static gboolean
-do_unpack (AudioChain * chain, gsize num_samples, gpointer user_data)
+static gpointer *
+get_output_samples (AudioChain * chain, gsize num_samples, gpointer user_data)
 {
   GstAudioConverter *convert = user_data;
+
+  GST_LOG ("output samples %p %" G_GSIZE_FORMAT, convert->out_data,
+      num_samples);
+
+  return convert->out_data;
+}
+
+static gpointer *
+get_temp_samples (AudioChain * chain, gsize num_samples, gpointer user_data)
+{
+  gsize needed;
+
+  /* first part contains the pointers, second part the data */
+  needed = (num_samples * chain->stride + sizeof (gpointer)) * chain->blocks;
+
+  if (needed > chain->tmpsize) {
+    gint i;
+    guint8 *s;
+
+    GST_DEBUG ("alloc samples %" G_GSIZE_FORMAT, needed);
+    chain->tmp = g_realloc (chain->tmp, needed);
+    chain->tmpsize = needed;
+
+    /* jump to the data */
+    s = (guint8 *) & chain->tmp[chain->blocks];
+
+    /* set up the pointers */
+    for (i = 0; i < chain->blocks; i++)
+      chain->tmp[i] = s + (i * num_samples * chain->stride);
+  }
+  GST_LOG ("temp samples %p %" G_GSIZE_FORMAT, chain->tmp, num_samples);
+
+  return chain->tmp;
+}
+
+static gboolean
+do_unpack (AudioChain * chain, gpointer user_data)
+{
+  GstAudioConverter *convert = user_data;
+  gsize num_samples;
   gpointer *tmp;
-  gboolean src_writable;
+  gboolean in_writable;
 
-  src_writable = (convert->flags & GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE);
+  in_writable = convert->in_writable;
+  num_samples = convert->in_samples;
 
-  if (!chain->allow_ip || !src_writable || !convert->in_default) {
+  if (!chain->allow_ip || !in_writable || !convert->in_default) {
     gint i;
 
-    if (src_writable && chain->allow_ip)
+    if (in_writable && chain->allow_ip)
       tmp = convert->in_data;
     else
       tmp = audio_chain_alloc_samples (chain, num_samples);
+
     GST_LOG ("unpack %p, %p, %" G_GSIZE_FORMAT, tmp, convert->in_data,
         num_samples);
 
@@ -359,79 +424,83 @@ do_unpack (AudioChain * chain, gsize num_samples, gpointer user_data)
     tmp = convert->in_data;
     GST_LOG ("get in samples %p", tmp);
   }
-  chain->samples = tmp;
+  audio_chain_set_samples (chain, tmp, num_samples);
 
   return TRUE;
 }
 
 static gboolean
-do_convert_in (AudioChain * chain, gsize num_samples, gpointer user_data)
+do_convert_in (AudioChain * chain, gpointer user_data)
 {
   GstAudioConverter *convert = user_data;
+  gsize num_samples;
   gpointer *in, *out;
   gint i;
 
-  in = audio_chain_get_samples (chain->prev, num_samples);
+  in = audio_chain_get_samples (chain->prev, &num_samples);
   out = (chain->allow_ip ? in : audio_chain_alloc_samples (chain, num_samples));
   GST_LOG ("convert in %p, %p, %" G_GSIZE_FORMAT, in, out, num_samples);
 
   for (i = 0; i < chain->blocks; i++)
     convert->convert_in (out[i], in[i], num_samples * chain->inc);
 
-  chain->samples = out;
+  audio_chain_set_samples (chain, out, num_samples);
 
   return TRUE;
 }
 
 static gboolean
-do_mix (AudioChain * chain, gsize num_samples, gpointer user_data)
+do_mix (AudioChain * chain, gpointer user_data)
 {
   GstAudioConverter *convert = user_data;
+  gsize num_samples;
   gpointer *in, *out;
 
-  in = audio_chain_get_samples (chain->prev, num_samples);
+  in = audio_chain_get_samples (chain->prev, &num_samples);
   out = (chain->allow_ip ? in : audio_chain_alloc_samples (chain, num_samples));
   GST_LOG ("mix %p, %p, %" G_GSIZE_FORMAT, in, out, num_samples);
 
   gst_audio_channel_mixer_samples (convert->mix, in, out, num_samples);
 
-  chain->samples = out;
+  audio_chain_set_samples (chain, out, num_samples);
 
   return TRUE;
 }
 
 static gboolean
-do_convert_out (AudioChain * chain, gsize num_samples, gpointer user_data)
+do_convert_out (AudioChain * chain, gpointer user_data)
 {
   GstAudioConverter *convert = user_data;
+  gsize num_samples;
   gpointer *in, *out;
   gint i;
 
-  in = audio_chain_get_samples (chain->prev, num_samples);
+  in = audio_chain_get_samples (chain->prev, &num_samples);
   out = (chain->allow_ip ? in : audio_chain_alloc_samples (chain, num_samples));
   GST_LOG ("convert out %p, %p, %" G_GSIZE_FORMAT, in, out, num_samples);
 
   for (i = 0; i < chain->blocks; i++)
     convert->convert_out (out[i], in[i], num_samples * chain->inc);
 
-  chain->samples = out;
+  audio_chain_set_samples (chain, out, num_samples);
 
   return TRUE;
 }
 
 static gboolean
-do_quantize (AudioChain * chain, gsize num_samples, gpointer user_data)
+do_quantize (AudioChain * chain, gpointer user_data)
 {
   GstAudioConverter *convert = user_data;
+  gsize num_samples;
   gpointer *in, *out;
 
-  in = audio_chain_get_samples (chain->prev, num_samples);
+  in = audio_chain_get_samples (chain->prev, &num_samples);
   out = (chain->allow_ip ? in : audio_chain_alloc_samples (chain, num_samples));
   GST_LOG ("quantize %p, %p, %" G_GSIZE_FORMAT, in, out, num_samples);
 
   gst_audio_quantize_samples (convert->quant, in, out, num_samples);
 
-  chain->samples = out;
+  audio_chain_set_samples (chain, out, num_samples);
 
   return TRUE;
 }
@@ -612,41 +681,6 @@ chain_pack (GstAudioConverter * convert, AudioChain * prev)
   return prev;
 }
 
-static gpointer *
-get_output_samples (AudioChain * chain, gsize samples, gpointer user_data)
-{
-  GstAudioConverter *convert = user_data;
-
-  GST_LOG ("output samples %" G_GSIZE_FORMAT, samples);
-  return convert->out_data;
-}
-
-static gpointer *
-get_temp_samples (AudioChain * chain, gsize num_samples, gpointer user_data)
-{
-  gsize needed;
-
-  /* first part contains the pointers, second part the data */
-  needed = (num_samples * chain->stride + sizeof (gpointer)) * chain->blocks;
-
-  if (needed > chain->tmpsize) {
-    gint i;
-    guint8 *s;
-
-    GST_DEBUG ("alloc samples %" G_GSIZE_FORMAT, needed);
-    chain->tmp = g_realloc (chain->tmp, needed);
-    chain->tmpsize = needed;
-
-    /* jump to the data */
-    s = (guint8 *) & chain->tmp[chain->blocks];
-
-    /* set up the pointers */
-    for (i = 0; i < chain->blocks; i++)
-      chain->tmp[i] = s + (i * num_samples * chain->stride);
-  }
-  return chain->tmp;
-}
-
 static void
 setup_allocators (GstAudioConverter * convert)
 {
@@ -668,6 +702,7 @@ setup_allocators (GstAudioConverter * convert)
     chain->alloc_func = alloc_func;
     chain->alloc_data = convert;
     chain->allow_ip = allow_ip && chain->allow_ip;
+    GST_LOG ("chain %p: %d %d", chain, allow_ip, chain->allow_ip);
 
     if (!chain->pass_alloc) {
       /* can't pass allocator, make new temp line allocator */
@@ -712,6 +747,7 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
 
   convert = g_slice_new0 (GstAudioConverter);
 
+  convert->flags = flags;
   convert->in = *in_info;
   convert->out = *out_info;
 
@@ -871,6 +907,7 @@ gst_audio_converter_samples (GstAudioConverter * convert,
   AudioChain *chain;
   gpointer *tmp;
   gint i;
+  gsize produced;
 
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (in != NULL, FALSE);
@@ -898,19 +935,21 @@ gst_audio_converter_samples (GstAudioConverter * convert,
 
   GST_LOG ("converting %" G_GSIZE_FORMAT, in_samples);
 
-  convert->flags = flags;
+  convert->in_writable = flags & GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE;
   convert->in_data = in;
+  convert->in_samples = in_samples;
   convert->out_data = out;
+  convert->out_samples = out_samples;
 
   /* get samples to pack */
-  tmp = audio_chain_get_samples (chain, in_samples);
+  tmp = audio_chain_get_samples (chain, &produced);
 
   if (!convert->out_default) {
-    GST_LOG ("pack %p, %p %" G_GSIZE_FORMAT, tmp, out, in_samples);
+    GST_LOG ("pack %p, %p %" G_GSIZE_FORMAT, tmp, out, produced);
     /* and pack if needed */
     for (i = 0; i < chain->blocks; i++)
       convert->out.finfo->pack_func (convert->out.finfo, 0, tmp[i], out[i],
-          in_samples * chain->inc);
+          produced * chain->inc);
   }
   return TRUE;
 }
