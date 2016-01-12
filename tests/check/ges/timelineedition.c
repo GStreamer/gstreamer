@@ -393,9 +393,8 @@ GST_START_TEST (test_snapping)
    * time               26-------- 62 --------122
    */
   ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (clip1), 26);
-  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip1), 37);
   CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
-  CHECK_OBJECT_PROPS (trackelement1, 26, 5, 36);
+  CHECK_OBJECT_PROPS (trackelement1, 26, 5, 37);
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
    /**
@@ -409,7 +408,7 @@ GST_START_TEST (test_snapping)
   fail_unless (ges_timeline_element_ripple (GES_TIMELINE_ELEMENT (clip1),
           58) == TRUE);
   CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
-  CHECK_OBJECT_PROPS (trackelement1, 62, 5, 36);
+  CHECK_OBJECT_PROPS (trackelement1, 62, 5, 37);
   CHECK_OBJECT_PROPS (trackelement2, 98, 0, 60);
 
   /**
@@ -419,7 +418,7 @@ GST_START_TEST (test_snapping)
    */
   ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (clip2), 110);
   CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
-  CHECK_OBJECT_PROPS (trackelement1, 62, 5, 36);
+  CHECK_OBJECT_PROPS (trackelement1, 62, 5, 37);
   CHECK_OBJECT_PROPS (trackelement2, 110, 0, 60);
 
   /**
@@ -430,7 +429,7 @@ GST_START_TEST (test_snapping)
   fail_unless (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_NORMAL,
           GES_EDGE_NONE, 72) == TRUE);
   CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
-  CHECK_OBJECT_PROPS (trackelement1, 73, 5, 36);
+  CHECK_OBJECT_PROPS (trackelement1, 73, 5, 37);
   CHECK_OBJECT_PROPS (trackelement2, 110, 0, 60);
 
   /**
@@ -441,7 +440,7 @@ GST_START_TEST (test_snapping)
   fail_unless (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_NORMAL,
           GES_EDGE_NONE, 58) == TRUE);
   CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
-  CHECK_OBJECT_PROPS (trackelement1, 62, 5, 36);
+  CHECK_OBJECT_PROPS (trackelement1, 62, 5, 37);
   CHECK_OBJECT_PROPS (trackelement2, 110, 0, 60);
 
 

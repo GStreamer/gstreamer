@@ -1271,85 +1271,46 @@ ges_timeline_emit_snappig (GESTimeline * timeline, GESTrackElement * obj1,
   }
 }
 
-static guint64 *
+static GstClockTime *
 ges_timeline_snap_position (GESTimeline * timeline,
-    GESTrackElement * trackelement, guint64 * current, guint64 timecode,
-    gboolean emit)
+    GESTrackElement * trackelement, GstClockTime * current,
+    GstClockTime timecode, gboolean emit)
 {
   GESTimelinePrivate *priv = timeline->priv;
-  GSequenceIter *iter, *prev_iter, *nxt_iter;
-  GESTrackElement *tmp_trackelement;
-  GESContainer *tmp_container, *container;
+  GSequenceIter *iter, *end_iter;
+  GESContainer *container = get_toplevel_container (trackelement);
+  GstClockTime *ret = NULL;
+  GstClockTime smallest_offset = G_MAXUINT64;
+  GstClockTime tmp_pos;
 
-  GstClockTime *last_snap_ts = priv->movecontext.last_snap_ts;
-  guint64 snap_distance = timeline->priv->snapping_distance;
-  guint64 *prev_tc, *next_tc, *ret = NULL, off = G_MAXUINT64, off1 =
-      G_MAXUINT64;
-
-  /* Avoid useless calculations */
-  if (snap_distance == 0)
-    return NULL;
-
-  /* If we can just resnap as last snap... do it */
-  if (last_snap_ts) {
-    off = timecode > *last_snap_ts ?
-        timecode - *last_snap_ts : *last_snap_ts - timecode;
-    if (off <= snap_distance) {
-      ret = last_snap_ts;
-      goto done;
-    }
-  }
-
-  container = get_toplevel_container (trackelement);
-
-  iter = g_sequence_search (priv->starts_ends, &timecode,
+  tmp_pos = timecode - priv->snapping_distance;
+  /* Rippling, not snapping with previous elements */
+  if (priv->movecontext.moving_trackelements)
+    tmp_pos = timecode;
+  iter = g_sequence_search (priv->starts_ends, &tmp_pos,
       (GCompareDataFunc) compare_uint64, NULL);
 
-  /* Getting the next/previous  values, and use the closest one if any "respects"
-   * the snap_distance value */
-  nxt_iter = iter;
-  while (!g_sequence_iter_is_end (nxt_iter)) {
-    next_tc = g_sequence_get (iter);
-    tmp_trackelement = g_hash_table_lookup (timeline->priv->by_object, next_tc);
-    tmp_container = get_toplevel_container (tmp_trackelement);
+  tmp_pos = timecode + priv->snapping_distance;
+  end_iter = g_sequence_search (priv->starts_ends, &tmp_pos,
+      (GCompareDataFunc) compare_uint64, NULL);
 
-    off = timecode > *next_tc ? timecode - *next_tc : *next_tc - timecode;
-    if (next_tc != current && off <= snap_distance
-        && container != tmp_container) {
+  for (; iter != end_iter && !g_sequence_iter_is_end (iter);
+      iter = g_sequence_iter_next (iter)) {
+    GstClockTime *iter_tc = g_sequence_get (iter);
+    GESTrackElement *tmp_trackelement =
+        g_hash_table_lookup (priv->by_object, iter_tc);
+    GESContainer *tmp_container = get_toplevel_container (tmp_trackelement);
 
-      ret = next_tc;
+    if (tmp_container == container)
+      continue;
+
+    if (ABS (timecode - *iter_tc) > smallest_offset)
       break;
-    }
 
-    nxt_iter = g_sequence_iter_next (nxt_iter);
+    smallest_offset = ABS (timecode - *iter_tc);
+    ret = iter_tc;
   }
 
-  if (ret == NULL)
-    off = G_MAXUINT64;
-
-  if (priv->movecontext.moving_trackelements) {
-    GST_INFO_OBJECT (timeline, "Rippling, no way we snap end");
-    goto done;
-  }
-
-  prev_iter = g_sequence_iter_prev (iter);
-  while (!g_sequence_iter_is_begin (prev_iter)) {
-    prev_tc = g_sequence_get (prev_iter);
-    tmp_trackelement = g_hash_table_lookup (timeline->priv->by_object, prev_tc);
-    tmp_container = get_toplevel_container (tmp_trackelement);
-
-    off1 = timecode > *prev_tc ? timecode - *prev_tc : *prev_tc - timecode;
-    if (prev_tc != current && off1 < off && off1 <= snap_distance &&
-        container != tmp_container) {
-      ret = prev_tc;
-
-      break;
-    }
-
-    prev_iter = g_sequence_iter_prev (prev_iter);
-  }
-
-done:
   /* We emit the snapping signal only if we snapped with a different value
    * than the current one */
   if (emit) {
@@ -1413,7 +1374,6 @@ ges_move_context_set_objects (GESTimeline * timeline, GESTrackElement * obj,
   GSequenceIter *iter, *trackelement_iter;
 
   MoveContext *mv_ctx = &timeline->priv->movecontext;
-
   iters = g_hash_table_lookup (timeline->priv->obj_iters, obj);
   trackelement_iter = iters->iter_obj;
   switch (edge) {
