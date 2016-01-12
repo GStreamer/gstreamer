@@ -4842,7 +4842,11 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
                   gst_event_new_caps (caps));
           }
 
-          caps = gst_caps_new_empty_simple ("application/x-rtcp");
+          if (ostream->profile == GST_RTSP_PROFILE_SAVP ||
+              ostream->profile == GST_RTSP_PROFILE_SAVPF)
+            caps = gst_caps_new_empty_simple ("application/x-srtcp");
+          else
+            caps = gst_caps_new_empty_simple ("application/x-rtcp");
 
           if (ostream->udpsrc[1]) {
             gst_element_send_event (ostream->udpsrc[1],
