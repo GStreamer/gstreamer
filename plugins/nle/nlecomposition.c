@@ -140,16 +140,25 @@ struct _NleCompositionPrivate
   /* List of NleObject whose start/duration will be the same as the composition */
   GList *expandables;
 
-  /*
-     current segment seek start/stop time.
-     Reconstruct pipeline ONLY if seeking outside of those values
-     FIXME : segment_start isn't always the earliest time before which the
-     timeline doesn't need to be modified
+  /* current configured stack seek start/stop time.
+   * Reconstruct pipeline ONLY if seeking outside of those values
+   * FIXME : segment_start isn't always the earliest time before which the
+   * timeline doesn't need to be modified
    */
   GstClockTime segment_start;
   GstClockTime segment_stop;
 
   /* Seek segment handler */
+  /* Represents the current segment that is being played,
+   * In forwards playback (logic is the same but swapping start and
+   * stop in backward playback):
+   *  - segment->start: start of the current segment being played,
+   *    at each stack change it will advance to the newly configured
+   *    stack start.
+   *  - segment->stop is the final stop of the segment being played.
+   *    if a seek with a stop time happened, it will be the stop time
+   *    otherwise, it will be the composition duration.
+   */
   GstSegment *segment;
   GstSegment *outside_segment;
 
@@ -2314,9 +2323,23 @@ _commit_func (NleComposition * comp, UpdateCompositionData * ucompo)
     g_signal_emit (comp, _signals[COMMITED_SIGNAL], 0, TRUE);
 
   } else {
-    /* And update the pipeline at current position if needed */
+    gboolean reverse;
 
+    /* And update the pipeline at current position if needed */
     update_start_stop_duration (comp);
+
+    reverse = (priv->segment->rate < 0.0);
+    if (!reverse) {
+      GST_DEBUG_OBJECT (comp,
+          "Setting segment->start to curpos:%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (curpos));
+      priv->segment->start = curpos;
+    } else {
+      GST_DEBUG_OBJECT (comp,
+          "Setting segment->stop to curpos:%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (curpos));
+      priv->segment->stop = curpos;
+    }
     update_pipeline (comp, curpos, ucompo->seqnum, COMP_UPDATE_STACK_ON_COMMIT);
 
     if (!priv->current) {
