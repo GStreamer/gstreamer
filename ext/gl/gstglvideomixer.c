@@ -71,6 +71,72 @@ gst_gl_video_mixer_background_get_type (void)
   return mixer_background_type;
 }
 
+#define GST_TYPE_GL_VIDEO_MIXER_BLEND_EQUATION (gst_gl_video_mixer_blend_equation_get_type())
+static GType
+gst_gl_video_mixer_blend_equation_get_type (void)
+{
+  static GType mixer_blend_equation_type = 0;
+
+  static const GEnumValue mixer_blend_equations[] = {
+    {GST_GL_VIDEO_MIXER_BLEND_EQUATION_ADD, "Add", "add"},
+    {GST_GL_VIDEO_MIXER_BLEND_EQUATION_SUBTRACT, "Subtract", "subtract"},
+    {GST_GL_VIDEO_MIXER_BLEND_EQUATION_REVERSE_SUBTRACT, "Reverse Subtract",
+        "reverse-subtract"},
+    {0, NULL, NULL},
+  };
+
+  if (!mixer_blend_equation_type) {
+    mixer_blend_equation_type =
+        g_enum_register_static ("GstGLVideoMixerBlendEquation",
+        mixer_blend_equations);
+  }
+  return mixer_blend_equation_type;
+}
+
+#define GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION (gst_gl_video_mixer_blend_function_get_type())
+static GType
+gst_gl_video_mixer_blend_function_get_type (void)
+{
+  static GType mixer_blend_function_type = 0;
+
+  static const GEnumValue mixer_blend_funcs[] = {
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ZERO, "Zero", "zero"},
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE, "One", "one"},
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_COLOR, "Source Color", "src-color"},
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_COLOR,
+        "One Minus Source Color", "one-minus-src-color"},
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_DST_COLOR, "Destination Color",
+        "dst-color"},
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_DST_COLOR,
+        "One Minus Destination Color", "one-minus-dst-color"},
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA, "Source Alpha", "src-alpha"},
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_ALPHA,
+        "One Minus Source Alpha", "one-minus-src-alpha"},
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_DST_ALPHA, "Destination Alpha",
+        "dst-alpha"},
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_DST_ALPHA,
+        "One Minus Destination Alpha", "one-minus-dst-alpha"},
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_CONSTANT_COLOR, "Constant Color",
+        "constant-color"},
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_CONSTANT_COLOR,
+        "One Minus Constant Color", "one-minus-contant-color"},
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_CONSTANT_ALPHA, "Constant Alpha",
+        "constant-alpha"},
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_CONSTANT_COLOR,
+        "One Minus Constant Alpha", "one-minus-contant-alpha"},
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA_SATURATE,
+        "Source Alpha Saturate", "src-alpha-saturate"},
+    {0, NULL, NULL},
+  };
+
+  if (!mixer_blend_function_type) {
+    mixer_blend_function_type =
+        g_enum_register_static ("GstGLVideoMixerBlendFunction",
+        mixer_blend_funcs);
+  }
+  return mixer_blend_function_type;
+}
+
 typedef struct _GstGLMixerControlBindingProxy GstGLMixerControlBindingProxy;
 typedef struct _GstGLMixerControlBindingProxyClass
     GstGLMixerControlBindingProxyClass;
@@ -223,6 +289,12 @@ gst_gl_mixer_control_binding_proxy_new (GstObject * object,
 #define DEFAULT_PAD_ALPHA  1.0
 #define DEFAULT_PAD_ZORDER 0
 #define DEFAULT_PAD_IGNORE_EOS FALSE
+#define DEFAULT_PAD_BLEND_EQUATION_RGB GST_GL_VIDEO_MIXER_BLEND_EQUATION_ADD
+#define DEFAULT_PAD_BLEND_EQUATION_ALPHA GST_GL_VIDEO_MIXER_BLEND_EQUATION_ADD
+#define DEFAULT_PAD_BLEND_FUNCTION_SRC_RGB GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA
+#define DEFAULT_PAD_BLEND_FUNCTION_SRC_ALPHA GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA
+#define DEFAULT_PAD_BLEND_FUNCTION_DST_RGB GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_ALPHA
+#define DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_ALPHA
 
 enum
 {
@@ -232,6 +304,16 @@ enum
   PROP_INPUT_WIDTH,
   PROP_INPUT_HEIGHT,
   PROP_INPUT_ALPHA,
+  PROP_INPUT_BLEND_EQUATION_RGB,
+  PROP_INPUT_BLEND_EQUATION_ALPHA,
+  PROP_INPUT_BLEND_FUNCTION_SRC_RGB,
+  PROP_INPUT_BLEND_FUNCTION_SRC_ALPHA,
+  PROP_INPUT_BLEND_FUNCTION_DST_RGB,
+  PROP_INPUT_BLEND_FUNCTION_DST_ALPHA,
+  PROP_INPUT_BLEND_FUNCTION_CONSTANT_COLOR_RED,
+  PROP_INPUT_BLEND_FUNCTION_CONSTANT_COLOR_GREEN,
+  PROP_INPUT_BLEND_FUNCTION_CONSTANT_COLOR_BLUE,
+  PROP_INPUT_BLEND_FUNCTION_CONSTANT_COLOR_ALPHA,
   PROP_INPUT_ZORDER,
   PROP_INPUT_IGNORE_EOS,
 };
@@ -299,6 +381,71 @@ gst_gl_video_mixer_input_class_init (GstGLVideoMixerInputClass * klass)
       g_param_spec_double ("alpha", "Alpha", "Alpha of the picture", 0.0, 1.0,
           DEFAULT_PAD_ALPHA,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_INPUT_BLEND_EQUATION_RGB,
+      g_param_spec_enum ("blend-equation-rgb", "Blend Equation RGB",
+          "Blend Equation for RGB",
+          GST_TYPE_GL_VIDEO_MIXER_BLEND_EQUATION,
+          DEFAULT_PAD_BLEND_EQUATION_RGB,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_INPUT_BLEND_EQUATION_ALPHA,
+      g_param_spec_enum ("blend-equation-alpha", "Blend Equation Alpha",
+          "Blend Equation for Alpha", GST_TYPE_GL_VIDEO_MIXER_BLEND_EQUATION,
+          DEFAULT_PAD_BLEND_EQUATION_ALPHA,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_INPUT_BLEND_FUNCTION_SRC_RGB,
+      g_param_spec_enum ("blend-function-src-rgb", "Blend Function Source RGB",
+          "Blend Function for Source RGB",
+          GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION,
+          DEFAULT_PAD_BLEND_FUNCTION_SRC_RGB,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_INPUT_BLEND_FUNCTION_SRC_ALPHA,
+      g_param_spec_enum ("blend-function-src-alpha",
+          "Blend Function Source Alpha", "Blend Function for Source Alpha",
+          GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION,
+          DEFAULT_PAD_BLEND_FUNCTION_SRC_ALPHA,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_INPUT_BLEND_FUNCTION_DST_RGB,
+      g_param_spec_enum ("blend-function-dst-rgb",
+          "Blend Function Destination RGB",
+          "Blend Function for Destination RGB",
+          GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION,
+          DEFAULT_PAD_BLEND_FUNCTION_DST_RGB,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_INPUT_BLEND_FUNCTION_DST_ALPHA,
+      g_param_spec_enum ("blend-function-dst-alpha",
+          "Blend Function Destination Alpha",
+          "Blend Function for Destiniation Alpha",
+          GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION,
+          DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_INPUT_BLEND_FUNCTION_CONSTANT_COLOR_RED,
+      g_param_spec_double ("blend-constant-color-red",
+          "Blend Constant Color Red", "Blend Constant Color Red", 0.0, 1.0, 0.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_INPUT_BLEND_FUNCTION_CONSTANT_COLOR_GREEN,
+      g_param_spec_double ("blend-constant-color-green",
+          "Blend Constant Color Green", "Blend Constant Color Green", 0.0, 1.0,
+          0.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_INPUT_BLEND_FUNCTION_CONSTANT_COLOR_BLUE,
+      g_param_spec_double ("blend-constant-color-blue",
+          "Blend Constant Color Green", "Blend Constant Color Green", 0.0, 1.0,
+          0.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_INPUT_BLEND_FUNCTION_CONSTANT_COLOR_ALPHA,
+      g_param_spec_double ("blend-constant-color-alpha",
+          "Blend Constant Color Alpha", "Blend Constant Color Alpha", 0.0, 1.0,
+          0.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -336,15 +483,25 @@ _create_video_mixer_input (GstGLMixerBin * self, GstPad * mixer_pad)
   }
 #define ADD_PROXY_CONTROL_BINDING(prop)                                \
   cb = gst_gl_mixer_control_binding_proxy_new (GST_OBJECT (mixer_pad), \
-      G_STRINGIFY (prop), GST_OBJECT (input), G_STRINGIFY (prop));     \
+      prop, GST_OBJECT (input), prop);     \
   gst_object_add_control_binding (GST_OBJECT (mixer_pad), cb)
 
-  ADD_PROXY_CONTROL_BINDING (zorder);
-  ADD_PROXY_CONTROL_BINDING (xpos);
-  ADD_PROXY_CONTROL_BINDING (ypos);
-  ADD_PROXY_CONTROL_BINDING (width);
-  ADD_PROXY_CONTROL_BINDING (height);
-  ADD_PROXY_CONTROL_BINDING (alpha);
+  ADD_PROXY_CONTROL_BINDING ("zorder");
+  ADD_PROXY_CONTROL_BINDING ("xpos");
+  ADD_PROXY_CONTROL_BINDING ("ypos");
+  ADD_PROXY_CONTROL_BINDING ("width");
+  ADD_PROXY_CONTROL_BINDING ("height");
+  ADD_PROXY_CONTROL_BINDING ("alpha");
+  ADD_PROXY_CONTROL_BINDING ("blend-equation-rgb");
+  ADD_PROXY_CONTROL_BINDING ("blend-equation-alpha");
+  ADD_PROXY_CONTROL_BINDING ("blend-function-src-rgb");
+  ADD_PROXY_CONTROL_BINDING ("blend-function-src-alpha");
+  ADD_PROXY_CONTROL_BINDING ("blend-function-dst-rgb");
+  ADD_PROXY_CONTROL_BINDING ("blend-function-dst-alpha");
+  ADD_PROXY_CONTROL_BINDING ("blend-constant-color-red");
+  ADD_PROXY_CONTROL_BINDING ("blend-constant-color-green");
+  ADD_PROXY_CONTROL_BINDING ("blend-constant-color-blue");
+  ADD_PROXY_CONTROL_BINDING ("blend-constant-color-alpha");
 
 #undef ADD_PROXY_CONTROL_BINDING
 
@@ -534,6 +691,17 @@ struct _GstGLVideoMixerPad
   gint width, height;
   gdouble alpha;
 
+  GstGLVideoMixerBlendEquation blend_equation_rgb;
+  GstGLVideoMixerBlendEquation blend_equation_alpha;
+  GstGLVideoMixerBlendFunction blend_function_src_rgb;
+  GstGLVideoMixerBlendFunction blend_function_src_alpha;
+  GstGLVideoMixerBlendFunction blend_function_dst_rgb;
+  GstGLVideoMixerBlendFunction blend_function_dst_alpha;
+  gdouble blend_constant_color_red;
+  gdouble blend_constant_color_green;
+  gdouble blend_constant_color_blue;
+  gdouble blend_constant_color_alpha;
+
   gboolean geometry_change;
   GLuint vertex_buffer;
 };
@@ -559,13 +727,29 @@ enum
   PROP_PAD_YPOS,
   PROP_PAD_WIDTH,
   PROP_PAD_HEIGHT,
-  PROP_PAD_ALPHA
+  PROP_PAD_ALPHA,
+  PROP_PAD_BLEND_EQUATION_RGB,
+  PROP_PAD_BLEND_EQUATION_ALPHA,
+  PROP_PAD_BLEND_FUNCTION_SRC_RGB,
+  PROP_PAD_BLEND_FUNCTION_SRC_ALPHA,
+  PROP_PAD_BLEND_FUNCTION_DST_RGB,
+  PROP_PAD_BLEND_FUNCTION_DST_ALPHA,
+  PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_RED,
+  PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_GREEN,
+  PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_BLUE,
+  PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_ALPHA,
 };
 
 static void
 gst_gl_video_mixer_pad_init (GstGLVideoMixerPad * pad)
 {
-  pad->alpha = 1.0;
+  pad->alpha = DEFAULT_PAD_ALPHA;
+  pad->blend_equation_rgb = DEFAULT_PAD_BLEND_EQUATION_RGB;
+  pad->blend_equation_alpha = DEFAULT_PAD_BLEND_EQUATION_ALPHA;
+  pad->blend_function_src_rgb = DEFAULT_PAD_BLEND_FUNCTION_SRC_RGB;
+  pad->blend_function_src_alpha = DEFAULT_PAD_BLEND_FUNCTION_SRC_ALPHA;
+  pad->blend_function_dst_rgb = DEFAULT_PAD_BLEND_FUNCTION_DST_RGB;
+  pad->blend_function_dst_alpha = DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA;
 }
 
 static void
@@ -596,6 +780,71 @@ gst_gl_video_mixer_pad_class_init (GstGLVideoMixerPadClass * klass)
       g_param_spec_double ("alpha", "Alpha", "Alpha of the picture", 0.0, 1.0,
           DEFAULT_PAD_ALPHA,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_INPUT_BLEND_EQUATION_RGB,
+      g_param_spec_enum ("blend-equation-rgb", "Blend Equation RGB",
+          "Blend Equation for RGB",
+          GST_TYPE_GL_VIDEO_MIXER_BLEND_EQUATION,
+          DEFAULT_PAD_BLEND_EQUATION_RGB,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_INPUT_BLEND_EQUATION_ALPHA,
+      g_param_spec_enum ("blend-equation-alpha", "Blend Equation Alpha",
+          "Blend Equation for Alpha", GST_TYPE_GL_VIDEO_MIXER_BLEND_EQUATION,
+          DEFAULT_PAD_BLEND_EQUATION_ALPHA,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_INPUT_BLEND_FUNCTION_SRC_RGB,
+      g_param_spec_enum ("blend-function-src-rgb", "Blend Function Source RGB",
+          "Blend Function for Source RGB",
+          GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION,
+          DEFAULT_PAD_BLEND_FUNCTION_SRC_RGB,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_INPUT_BLEND_FUNCTION_SRC_ALPHA,
+      g_param_spec_enum ("blend-function-src-alpha",
+          "Blend Function Source Alpha", "Blend Function for Source Alpha",
+          GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION,
+          DEFAULT_PAD_BLEND_FUNCTION_SRC_ALPHA,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_INPUT_BLEND_FUNCTION_DST_RGB,
+      g_param_spec_enum ("blend-function-dst-rgb",
+          "Blend Function Destination RGB",
+          "Blend Function for Destination RGB",
+          GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION,
+          DEFAULT_PAD_BLEND_FUNCTION_DST_RGB,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_INPUT_BLEND_FUNCTION_DST_ALPHA,
+      g_param_spec_enum ("blend-function-dst-alpha",
+          "Blend Function Destination Alpha",
+          "Blend Function for Destiniation Alpha",
+          GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION,
+          DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_RED,
+      g_param_spec_double ("blend-constant-color-red",
+          "Blend Constant Color Red", "Blend Constant Color Red", 0.0, 1.0, 0.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_GREEN,
+      g_param_spec_double ("blend-constant-color-green",
+          "Blend Constant Color Green", "Blend Constant Color Green", 0.0, 1.0,
+          0.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_BLUE,
+      g_param_spec_double ("blend-constant-color-blue",
+          "Blend Constant Color Green", "Blend Constant Color Green", 0.0, 1.0,
+          0.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_ALPHA,
+      g_param_spec_double ("blend-constant-color-alpha",
+          "Blend Constant Color Alpha", "Blend Constant Color Alpha", 0.0, 1.0,
+          0.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -619,6 +868,36 @@ gst_gl_video_mixer_pad_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_ALPHA:
       g_value_set_double (value, pad->alpha);
+      break;
+    case PROP_PAD_BLEND_EQUATION_RGB:
+      g_value_set_enum (value, pad->blend_equation_rgb);
+      break;
+    case PROP_PAD_BLEND_EQUATION_ALPHA:
+      g_value_set_enum (value, pad->blend_equation_alpha);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_SRC_RGB:
+      g_value_set_enum (value, pad->blend_function_src_rgb);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_SRC_ALPHA:
+      g_value_set_enum (value, pad->blend_function_src_alpha);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_DST_RGB:
+      g_value_set_enum (value, pad->blend_function_dst_rgb);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_DST_ALPHA:
+      g_value_set_enum (value, pad->blend_function_dst_alpha);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_RED:
+      g_value_set_double (value, pad->blend_constant_color_red);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_GREEN:
+      g_value_set_double (value, pad->blend_constant_color_green);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_BLUE:
+      g_value_set_double (value, pad->blend_constant_color_blue);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_ALPHA:
+      g_value_set_double (value, pad->blend_constant_color_alpha);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -652,6 +931,36 @@ gst_gl_video_mixer_pad_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_ALPHA:
       pad->alpha = g_value_get_double (value);
+      break;
+    case PROP_PAD_BLEND_EQUATION_RGB:
+      pad->blend_equation_rgb = g_value_get_enum (value);
+      break;
+    case PROP_PAD_BLEND_EQUATION_ALPHA:
+      pad->blend_equation_alpha = g_value_get_enum (value);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_SRC_RGB:
+      pad->blend_function_src_rgb = g_value_get_enum (value);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_SRC_ALPHA:
+      pad->blend_function_src_alpha = g_value_get_enum (value);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_DST_RGB:
+      pad->blend_function_dst_rgb = g_value_get_enum (value);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_DST_ALPHA:
+      pad->blend_function_dst_alpha = g_value_get_enum (value);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_RED:
+      pad->blend_constant_color_red = g_value_get_double (value);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_GREEN:
+      pad->blend_constant_color_green = g_value_get_double (value);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_BLUE:
+      pad->blend_constant_color_blue = g_value_get_double (value);
+      break;
+    case PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_ALPHA:
+      pad->blend_constant_color_alpha = g_value_get_double (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1017,6 +1326,123 @@ _draw_background (GstGLVideoMixer * video_mixer)
   return TRUE;
 }
 
+static guint
+_blend_equation_to_gl (GstGLVideoMixerBlendEquation equation)
+{
+  switch (equation) {
+    case GST_GL_VIDEO_MIXER_BLEND_EQUATION_ADD:
+      return GL_FUNC_ADD;
+    case GST_GL_VIDEO_MIXER_BLEND_EQUATION_SUBTRACT:
+      return GL_FUNC_SUBTRACT;
+    case GST_GL_VIDEO_MIXER_BLEND_EQUATION_REVERSE_SUBTRACT:
+      return GL_FUNC_REVERSE_SUBTRACT;
+    default:
+      g_assert_not_reached ();
+      return 0;
+  }
+}
+
+static guint
+_blend_function_to_gl (GstGLVideoMixerBlendFunction equation)
+{
+  switch (equation) {
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ZERO:
+      return GL_ZERO;
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE:
+      return GL_ONE;
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_COLOR:
+      return GL_SRC_COLOR;
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_COLOR:
+      return GL_ONE_MINUS_SRC_COLOR;
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_DST_COLOR:
+      return GL_DST_COLOR;
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_DST_COLOR:
+      return GL_ONE_MINUS_DST_COLOR;
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA:
+      return GL_SRC_ALPHA;
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_ALPHA:
+      return GL_ONE_MINUS_SRC_ALPHA;
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_DST_ALPHA:
+      return GL_DST_ALPHA;
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_DST_ALPHA:
+      return GL_ONE_MINUS_DST_ALPHA;
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_CONSTANT_COLOR:
+      return GL_CONSTANT_COLOR;
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_CONSTANT_COLOR:
+      return GL_ONE_MINUS_CONSTANT_COLOR;
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_CONSTANT_ALPHA:
+      return GL_CONSTANT_ALPHA;
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_CONSTANT_ALPHA:
+      return GL_ONE_MINUS_CONSTANT_ALPHA;
+    case GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA_SATURATE:
+      return GL_SRC_ALPHA_SATURATE;
+    default:
+      g_assert_not_reached ();
+      return 0;
+  }
+}
+
+static gboolean
+_set_blend_state (GstGLVideoMixer * video_mixer, GstGLVideoMixerPad * mix_pad)
+{
+  const GstGLFuncs *gl = GST_GL_BASE_MIXER (video_mixer)->context->gl_vtable;
+  gboolean require_separate = FALSE;
+  guint gl_func_src_rgb, gl_func_src_alpha, gl_func_dst_rgb, gl_func_dst_alpha;
+  guint gl_equation_rgb, gl_equation_alpha;
+
+  require_separate =
+      mix_pad->blend_equation_rgb != mix_pad->blend_equation_alpha
+      || mix_pad->blend_function_src_rgb != mix_pad->blend_function_src_alpha
+      || mix_pad->blend_function_dst_rgb != mix_pad->blend_function_dst_alpha;
+
+  if (require_separate && (!gl->BlendFuncSeparate
+          || !gl->BlendEquationSeparate)) {
+    GST_ERROR_OBJECT (mix_pad,
+        "separated blend equations/functions requested however "
+        "glBlendFuncSeparate or glBlendEquationSeparate not available");
+    return FALSE;
+  }
+
+  if (mix_pad->blend_function_dst_rgb ==
+      GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA_SATURATE) {
+    GST_ERROR_OBJECT (mix_pad,
+        "Destination RGB blend function cannot be \'SRC_ALPHA_SATURATE\'");
+    return FALSE;
+  }
+
+  if (mix_pad->blend_function_dst_alpha ==
+      GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA_SATURATE) {
+    GST_ERROR_OBJECT (mix_pad,
+        "Destination alpha blend function cannot be \'SRC_ALPHA_SATURATE\'");
+    return FALSE;
+  }
+
+  gl_equation_rgb = _blend_equation_to_gl (mix_pad->blend_equation_rgb);
+  gl_equation_alpha = _blend_equation_to_gl (mix_pad->blend_equation_alpha);
+
+  gl_func_src_rgb = _blend_function_to_gl (mix_pad->blend_function_src_rgb);
+  gl_func_src_alpha = _blend_function_to_gl (mix_pad->blend_function_src_alpha);
+  gl_func_dst_rgb = _blend_function_to_gl (mix_pad->blend_function_dst_rgb);
+  gl_func_dst_alpha = _blend_function_to_gl (mix_pad->blend_function_dst_alpha);
+
+  if (gl->BlendEquationSeparate)
+    gl->BlendEquationSeparate (gl_equation_rgb, gl_equation_alpha);
+  else
+    gl->BlendEquation (gl_equation_rgb);
+
+  if (gl->BlendFuncSeparate)
+    gl->BlendFuncSeparate (gl_func_src_rgb, gl_func_dst_rgb, gl_func_src_alpha,
+        gl_func_dst_alpha);
+  else
+    gl->BlendFunc (gl_func_src_rgb, gl_func_dst_rgb);
+
+  gl->BlendColor (mix_pad->blend_constant_color_red,
+      mix_pad->blend_constant_color_green, mix_pad->blend_constant_color_blue,
+      mix_pad->blend_constant_color_alpha);
+
+  return TRUE;
+}
+
 /* opengl scene, params: input texture (not the output mixer->texture) */
 static void
 gst_gl_video_mixer_callback (gpointer stuff)
@@ -1094,6 +1520,11 @@ gst_gl_video_mixer_callback (gpointer stuff)
       continue;
     }
 
+    if (!_set_blend_state (video_mixer, pad)) {
+      GST_FIXME_OBJECT (pad, "skipping due to incorrect blend parameters");
+      continue;
+    }
+
     in_tex = frame->texture;
 
     _init_vbo_indices (video_mixer);
@@ -1134,9 +1565,6 @@ gst_gl_video_mixer_callback (gpointer stuff)
       gl->BindBuffer (GL_ARRAY_BUFFER, pad->vertex_buffer);
     }
     gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, video_mixer->vbo_indices);
-
-    gl->BlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    gl->BlendEquation (GL_FUNC_ADD);
 
     gl->ActiveTexture (GL_TEXTURE0);
     gl->BindTexture (GL_TEXTURE_2D, in_tex);
