@@ -47,6 +47,7 @@
 #include "gstgluploadelement.h"
 #include "gstgldownloadelement.h"
 #include "gstglcolorconvertelement.h"
+#include "gstglcolorbalance.h"
 #include "gstglfilterbin.h"
 #include "gstglsinkbin.h"
 #include "gstglsrcbin.h"
@@ -137,6 +138,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glcolorconvert",
           GST_RANK_NONE, GST_TYPE_GL_COLOR_CONVERT_ELEMENT)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glcolorbalance",
+          GST_RANK_NONE, GST_TYPE_GL_COLOR_BALANCE)) {
     return FALSE;
   }
 

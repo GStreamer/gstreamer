@@ -32,6 +32,7 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectsobel.c \
 	effects/gstgleffectlaplacian.c \
 	gstglcolorscale.c \
+	gstglcolorbalance.c \
 	gstglmixer.c \
 	gstglvideomixer.c \
 	gstglfiltershader.c \
@@ -54,6 +55,7 @@ noinst_HEADERS = \
 	gstgleffects.h \
 	effects/gstgleffectssources.h \
 	gstglcolorscale.h \
+	gstglcolorbalance.h \
 	gstglmixer.h \
 	gstglvideomixer.h \
 	gstglfiltershader.h \
