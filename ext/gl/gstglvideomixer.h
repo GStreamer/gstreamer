@@ -53,6 +53,66 @@ typedef enum
 }
 GstGLVideoMixerBackground;
 
+/**
+ * GstGLVideoMixerBlendEquation:
+ * @GST_GL_VIDEO_MIXER_BLEND_EQUATION_ADD: Add the two results.
+ * @GST_GL_VIDEO_MIXER_BLEND_EQUATION_SUBTRACT: Subtract component-wise the destination from the source (S - D).
+ * @GST_GL_VIDEO_MIXER_BLEND_EQUATION_REVERSE_SUBTRACT: Subtract component-wise the source from the destination (D - S).
+ *
+ * The blending equation to use.  See the opengl specificition for
+ * glBlendEquationSeparate
+ */
+typedef enum
+{
+  GST_GL_VIDEO_MIXER_BLEND_EQUATION_ADD,
+  GST_GL_VIDEO_MIXER_BLEND_EQUATION_SUBTRACT,
+  GST_GL_VIDEO_MIXER_BLEND_EQUATION_REVERSE_SUBTRACT,
+}
+GstGLVideoMixerBlendEquation;
+
+/**
+ * GstGLVideoMixerBlendFunction:
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ZERO: All components are zero
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE: All components are one
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_COLOR: Use the source color/alpha
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_COLOR: One minus the source color/alpha
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_DST_COLOR: Use the destination color/alpha
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_DST_COLOR: One minus the destination color/alpha
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA: All components are the source alpha
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_ALPHA: All components are one minus the source alpha
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_DST_ALPHA: All components are the destination alpha
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_DST_ALPHA: All components are one minus the destination alpha
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_CONSTANT_COLOR: Use the constant color/alpha
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_CONSTANT_COLOR: Use one minus the constant color/alpha
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_CONSTANT_ALPHA: All components are the constant alpha
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_CONSTANT_COLOR: All components are one minus the constant alpha
+ * @GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA_SATURATE: All color components
+ *     are the minimum of source alpha and one minus the destination alpha.
+ *     Alpha is equal to one.
+ *
+ * The blending function to use.  See the opengl specificition for
+ * glBlendFuncSeparate
+ */
+typedef enum
+{
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ZERO,
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE,
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_COLOR,
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_COLOR,
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_DST_COLOR,
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_DST_COLOR,
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA,
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_ALPHA,
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_DST_ALPHA,
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_DST_ALPHA,
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_CONSTANT_COLOR,
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_CONSTANT_COLOR,
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_CONSTANT_ALPHA,
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_CONSTANT_ALPHA,
+  GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA_SATURATE,
+}
+GstGLVideoMixerBlendFunction;
+
 struct _GstGLVideoMixer
 {
     GstGLMixer mixer;
