@@ -159,13 +159,13 @@ gst_sbc_dec_set_format (GstAudioDecoder * audio_dec, GstCaps * caps)
     return FALSE;
 
   if (strcmp (channel_mode, "mono") == 0) {
-    dec->frame_len = 4 + (subbands * 1) / 2 + (blocks * 1 * bitpool) / 8;
+    dec->frame_len = 4 + (subbands * 1) / 2 + ((blocks * 1 * bitpool) + 7) / 8;
   } else if (strcmp (channel_mode, "dual") == 0) {
-    dec->frame_len = 4 + (subbands * 2) / 2 + (blocks * 2 * bitpool) / 8;
+    dec->frame_len = 4 + (subbands * 2) / 2 + ((blocks * 2 * bitpool) + 7) / 8;
   } else if (strcmp (channel_mode, "stereo") == 0) {
-    dec->frame_len = 4 + (subbands * 2) / 2 + (blocks * bitpool) / 8;
+    dec->frame_len = 4 + (subbands * 2) / 2 + ((blocks * bitpool) + 7) / 8;
   } else if (strcmp (channel_mode, "joint") == 0) {
-    dec->frame_len = 4 + (subbands * 2) / 2 + (subbands + blocks * bitpool) / 8;
+    dec->frame_len = 4 + (subbands * 2) / 2 + ((subbands + blocks * bitpool) + 7) / 8;
   } else {
     return FALSE;
   }
