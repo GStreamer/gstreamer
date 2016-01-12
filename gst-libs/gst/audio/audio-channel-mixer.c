@@ -710,46 +710,76 @@ gst_audio_channel_mixer_setup_matrix (GstAudioChannelMixer * mix)
 #endif
 }
 
-/* IMPORTANT: out_data == in_data is possible, make sure to not overwrite data
- * you might need later on! */
 static void
-gst_audio_channel_mixer_mix_int (GstAudioChannelMixer * mix,
+gst_audio_channel_mixer_mix_int16 (GstAudioChannelMixer * mix,
+    const gint16 * in_data, gint16 * out_data, gint samples)
+{
+  gint in, out, n;
+  gint32 res;
+  gint inchannels, outchannels;
+
+  inchannels = mix->in_channels;
+  outchannels = mix->out_channels;
+
+  for (n = 0; n < samples; n++) {
+    for (out = 0; out < outchannels; out++) {
+      /* convert */
+      res = 0;
+      for (in = 0; in < inchannels; in++)
+        res += in_data[n * inchannels + in] * mix->matrix_int[in][out];
+
+      /* remove factor from int matrix */
+      res = res >> INT_MATRIX_FACTOR_EXPONENT;
+      out_data[n * outchannels + out] = CLAMP (res, G_MININT16, G_MAXINT16);
+    }
+  }
+}
+
+static void
+gst_audio_channel_mixer_mix_int32 (GstAudioChannelMixer * mix,
     const gint32 * in_data, gint32 * out_data, gint samples)
 {
   gint in, out, n;
   gint64 res;
-  gboolean backwards;
   gint inchannels, outchannels;
-  gint32 *tmp = (gint32 *) mix->tmp;
-
-  g_return_if_fail (mix->tmp != NULL);
 
   inchannels = mix->in_channels;
   outchannels = mix->out_channels;
-  backwards = outchannels > inchannels;
 
-  /* FIXME: use orc here? */
-  for (n = (backwards ? samples - 1 : 0); n < samples && n >= 0;
-      backwards ? n-- : n++) {
+  for (n = 0; n < samples; n++) {
     for (out = 0; out < outchannels; out++) {
       /* convert */
       res = 0;
-      for (in = 0; in < inchannels; in++) {
+      for (in = 0; in < inchannels; in++)
         res += in_data[n * inchannels + in] * (gint64) mix->matrix_int[in][out];
-      }
 
       /* remove factor from int matrix */
       res = res >> INT_MATRIX_FACTOR_EXPONENT;
-
-      /* clip (shouldn't we use doubles instead as intermediate format?) */
-      if (res < G_MININT32)
-        res = G_MININT32;
-      else if (res > G_MAXINT32)
-        res = G_MAXINT32;
-      tmp[out] = res;
+      out_data[n * outchannels + out] = CLAMP (res, G_MININT32, G_MAXINT32);
     }
-    memcpy (&out_data[n * outchannels], mix->tmp,
-        sizeof (gint32) * outchannels);
+  }
+}
+
+static void
+gst_audio_channel_mixer_mix_float (GstAudioChannelMixer * mix,
+    const gfloat * in_data, gfloat * out_data, gint samples)
+{
+  gint in, out, n;
+  gfloat res;
+  gint inchannels, outchannels;
+
+  inchannels = mix->in_channels;
+  outchannels = mix->out_channels;
+
+  for (n = 0; n < samples; n++) {
+    for (out = 0; out < outchannels; out++) {
+      /* convert */
+      res = 0.0;
+      for (in = 0; in < inchannels; in++)
+        res += in_data[n * inchannels + in] * mix->matrix[in][out];
+
+      out_data[n * outchannels + out] = res;
+    }
   }
 }
 
@@ -759,35 +789,20 @@ gst_audio_channel_mixer_mix_double (GstAudioChannelMixer * mix,
 {
   gint in, out, n;
   gdouble res;
-  gboolean backwards;
   gint inchannels, outchannels;
-  gdouble *tmp = (gdouble *) mix->tmp;
-
-  g_return_if_fail (mix->tmp != NULL);
 
   inchannels = mix->in_channels;
   outchannels = mix->out_channels;
-  backwards = outchannels > inchannels;
 
-  /* FIXME: use orc here? */
-  for (n = (backwards ? samples - 1 : 0); n < samples && n >= 0;
-      backwards ? n-- : n++) {
+  for (n = 0; n < samples; n++) {
     for (out = 0; out < outchannels; out++) {
       /* convert */
       res = 0.0;
-      for (in = 0; in < inchannels; in++) {
+      for (in = 0; in < inchannels; in++)
         res += in_data[n * inchannels + in] * mix->matrix[in][out];
-      }
 
-      /* clip (shouldn't we use doubles instead as intermediate format?) */
-      if (res < -1.0)
-        res = -1.0;
-      else if (res > 1.0)
-        res = 1.0;
-      tmp[out] = res;
+      out_data[n * outchannels + out] = res;
     }
-    memcpy (&out_data[n * outchannels], mix->tmp,
-        sizeof (gdouble) * outchannels);
   }
 }
 
@@ -814,7 +829,9 @@ gst_audio_channel_mixer_new (GstAudioChannelMixerFlags flags,
   GstAudioChannelMixer *mix;
   gint i;
 
-  g_return_val_if_fail (format == GST_AUDIO_FORMAT_S32
+  g_return_val_if_fail (format == GST_AUDIO_FORMAT_S16
+      || format == GST_AUDIO_FORMAT_S32
+      || format == GST_AUDIO_FORMAT_F32
       || format == GST_AUDIO_FORMAT_F64, NULL);
   g_return_val_if_fail (in_channels > 0 && in_channels < 64, NULL);
   g_return_val_if_fail (out_channels > 0 && out_channels < 64, NULL);
@@ -833,8 +850,14 @@ gst_audio_channel_mixer_new (GstAudioChannelMixerFlags flags,
   gst_audio_channel_mixer_setup_matrix (mix);
 
   switch (mix->format) {
+    case GST_AUDIO_FORMAT_S16:
+      mix->func = (MixerFunc) gst_audio_channel_mixer_mix_int16;
+      break;
     case GST_AUDIO_FORMAT_S32:
-      mix->func = (MixerFunc) gst_audio_channel_mixer_mix_int;
+      mix->func = (MixerFunc) gst_audio_channel_mixer_mix_int32;
+      break;
+    case GST_AUDIO_FORMAT_F32:
+      mix->func = (MixerFunc) gst_audio_channel_mixer_mix_float;
       break;
     case GST_AUDIO_FORMAT_F64:
       mix->func = (MixerFunc) gst_audio_channel_mixer_mix_double;
