@@ -407,15 +407,17 @@ do_unpack (AudioChain * chain, gpointer user_data)
   if (!chain->allow_ip || !in_writable || !convert->in_default) {
     gint i;
 
-    if (in_writable && chain->allow_ip)
+    if (in_writable && chain->allow_ip) {
       tmp = convert->in_data;
-    else
+      GST_LOG ("unpack in-place %p, %" G_GSIZE_FORMAT, tmp, num_samples);
+    } else {
       tmp = audio_chain_alloc_samples (chain, num_samples);
-
-    GST_LOG ("unpack %p, %p, %" G_GSIZE_FORMAT, tmp, convert->in_data,
-        num_samples);
+      GST_LOG ("unpack to tmp %p, %" G_GSIZE_FORMAT, tmp, num_samples);
+    }
 
     for (i = 0; i < chain->blocks; i++) {
+      GST_LOG ("unpack %p, %p, %" G_GSIZE_FORMAT, tmp[i], convert->in_data[i],
+          num_samples);
       convert->in.finfo->unpack_func (convert->in.finfo,
           GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE, tmp[i], convert->in_data[i],
           num_samples * chain->inc);
@@ -505,23 +507,42 @@ do_quantize (AudioChain * chain, gpointer user_data)
   return TRUE;
 }
 
+static gboolean
+is_intermediate_format (GstAudioFormat format)
+{
+  return (format == GST_AUDIO_FORMAT_S16 ||
+      format == GST_AUDIO_FORMAT_S32 ||
+      format == GST_AUDIO_FORMAT_F32 || format == GST_AUDIO_FORMAT_F64);
+}
+
 static AudioChain *
 chain_unpack (GstAudioConverter * convert)
 {
   AudioChain *prev;
   GstAudioInfo *in = &convert->in;
+  GstAudioInfo *out = &convert->out;
   const GstAudioFormatInfo *fup;
+  gboolean same_format;
 
-  convert->current_format = in->finfo->unpack_format;
+  same_format = in->finfo->format == out->finfo->format;
+
+  /* do not unpack if we have the same input format as the output format
+   * and it is a possible intermediate format */
+  if (same_format && is_intermediate_format (in->finfo->format)) {
+    convert->current_format = in->finfo->format;
+  } else {
+    convert->current_format = in->finfo->unpack_format;
+  }
   convert->current_layout = in->layout;
   convert->current_channels = in->channels;
-  convert->in_default = in->finfo->unpack_format == in->finfo->format;
+
+  convert->in_default = convert->current_format == in->finfo->format;
 
   GST_INFO ("unpack format %s to %s",
       gst_audio_format_to_string (in->finfo->format),
       gst_audio_format_to_string (convert->current_format));
 
-  fup = gst_audio_format_get_info (in->finfo->unpack_format);
+  fup = gst_audio_format_get_info (convert->current_format);
 
   prev = convert->unpack_chain = audio_chain_new (NULL, convert);
   prev->allow_ip = fup->width <= in->finfo->width;
@@ -582,10 +603,8 @@ chain_mix (GstAudioConverter * convert, AudioChain * prev)
 
   if (!convert->mix_passthrough) {
     prev = convert->mix_chain = audio_chain_new (prev, convert);
-    /* we can only do in-place when in >= out, else we don't have enough
-     * memory. */
-    prev->allow_ip = in->channels >= out->channels;
-    prev->pass_alloc = in->channels <= out->channels;
+    prev->allow_ip = FALSE;
+    prev->pass_alloc = FALSE;
     audio_chain_set_make_func (prev, do_mix, convert, NULL);
   }
   return prev;
@@ -651,7 +670,8 @@ chain_quantize (GstAudioConverter * convert, AudioChain * prev)
   }
   /* we still want to run the quantization step when reducing bits to get
    * the rounding correct */
-  if (out_int && out_depth < 32) {
+  if (out_int && out_depth < 32
+      && convert->current_format == GST_AUDIO_FORMAT_S32) {
     GST_INFO ("quantize to %d bits, dither %d, ns %d", out_depth, dither, ns);
     convert->quant =
         gst_audio_quantize_new (dither, ns, 0, convert->current_format,
@@ -673,7 +693,6 @@ chain_pack (GstAudioConverter * convert, AudioChain * prev)
 
   convert->current_format = out->finfo->format;
 
-  g_assert (out->finfo->unpack_format == format);
   convert->out_default = format == out->finfo->format;
   GST_INFO ("pack format %s to %s", gst_audio_format_to_string (format),
       gst_audio_format_to_string (out->finfo->format));
@@ -933,7 +952,7 @@ gst_audio_converter_samples (GstAudioConverter * convert,
     return TRUE;
   }
 
-  GST_LOG ("converting %" G_GSIZE_FORMAT, in_samples);
+  GST_LOG ("converting %p %p %" G_GSIZE_FORMAT, in, out, in_samples);
 
   convert->in_writable = flags & GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE;
   convert->in_data = in;
