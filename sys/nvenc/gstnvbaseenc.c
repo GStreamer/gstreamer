@@ -1140,31 +1140,33 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
   data_pointer = data->in_gl_resource->cuda_pointer;
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (data->info); i++) {
     guint plane_n_components;
-    GstGLBaseBuffer *gl_buf_obj;
-    GstGLMemory *gl_mem;
+    GstGLBuffer *gl_buf_obj;
+    GstGLMemoryPBO *gl_mem;
     guint src_stride, dest_stride;
 
     gl_mem =
-        (GstGLMemory *) gst_buffer_peek_memory (data->frame->input_buffer, i);
-    g_assert (gst_is_gl_memory ((GstMemory *) gl_mem));
-    data->in_gl_resource->gl_mem[i] = gl_mem;
+        (GstGLMemoryPBO *) gst_buffer_peek_memory (data->frame->input_buffer,
+        i);
+    g_return_if_fail (gst_is_gl_memory_pbo ((GstMemory *) gl_mem));
+    data->in_gl_resource->gl_mem[i] = GST_GL_MEMORY_CAST (gl_mem);
     plane_n_components = _plane_get_n_components (data->info, i);
 
-    gl_buf_obj = (GstGLBaseBuffer *) gl_mem;
+    gl_buf_obj = (GstGLBuffer *) gl_mem->pbo;
+    g_return_if_fail (gl_buf_obj != NULL);
 
     /* get the texture into the PBO */
-    gst_gl_memory_upload_transfer (gl_mem);
-    gst_gl_memory_download_transfer (gl_mem);
+    gst_gl_memory_pbo_upload_transfer (gl_mem);
+    gst_gl_memory_pbo_download_transfer (gl_mem);
 
     GST_LOG_OBJECT (data->nvenc, "attempting to copy texture %u into cuda",
-        gl_mem->tex_id);
+        gl_mem->mem.tex_id);
 
     cuda_ret =
         cudaGraphicsGLRegisterBuffer (&data->in_gl_resource->cuda_texture,
         gl_buf_obj->id, cudaGraphicsRegisterFlagsReadOnly);
     if (cuda_ret != cudaSuccess) {
       GST_ERROR_OBJECT (data->nvenc, "failed to register GL texture %u to cuda "
-          "ret :%d", gl_mem->tex_id, cuda_ret);
+          "ret :%d", gl_mem->mem.tex_id, cuda_ret);
       g_assert_not_reached ();
     }
 
@@ -1172,17 +1174,18 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
         cudaGraphicsMapResources (1, &data->in_gl_resource->cuda_texture, 0);
     if (cuda_ret != cudaSuccess) {
       GST_ERROR_OBJECT (data->nvenc, "failed to map GL texture %u into cuda "
-          "ret :%d", gl_mem->tex_id, cuda_ret);
+          "ret :%d", gl_mem->mem.tex_id, cuda_ret);
       g_assert_not_reached ();
     }
 
     cuda_ret =
-        cudaGraphicsResourceGetMappedPointer (&data->in_gl_resource->
-        cuda_plane_pointers[i], &data->in_gl_resource->cuda_num_bytes,
+        cudaGraphicsResourceGetMappedPointer (&data->
+        in_gl_resource->cuda_plane_pointers[i],
+        &data->in_gl_resource->cuda_num_bytes,
         data->in_gl_resource->cuda_texture);
     if (cuda_ret != cudaSuccess) {
       GST_ERROR_OBJECT (data->nvenc, "failed to get mapped pointer of map GL "
-          "texture %u in cuda ret :%d", gl_mem->tex_id, cuda_ret);
+          "texture %u in cuda ret :%d", gl_mem->mem.tex_id, cuda_ret);
       g_assert_not_reached ();
     }
 
@@ -1197,7 +1200,7 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
         _get_plane_height (data->info, i), cudaMemcpyDeviceToDevice);
     if (cuda_ret != cudaSuccess) {
       GST_ERROR_OBJECT (data->nvenc, "failed to copy GL texture %u into cuda "
-          "ret :%d", gl_mem->tex_id, cuda_ret);
+          "ret :%d", gl_mem->mem.tex_id, cuda_ret);
       g_assert_not_reached ();
     }
 
@@ -1205,7 +1208,7 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
         cudaGraphicsUnmapResources (1, &data->in_gl_resource->cuda_texture, 0);
     if (cuda_ret != cudaSuccess) {
       GST_ERROR_OBJECT (data->nvenc, "failed to unmap GL texture %u from cuda "
-          "ret :%d", gl_mem->tex_id, cuda_ret);
+          "ret :%d", gl_mem->mem.tex_id, cuda_ret);
       g_assert_not_reached ();
     }
 
@@ -1213,7 +1216,7 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
         cudaGraphicsUnregisterResource (data->in_gl_resource->cuda_texture);
     if (cuda_ret != cudaSuccess) {
       GST_ERROR_OBJECT (data->nvenc, "failed to unregister GL texture %u from "
-          "cuda ret :%d", gl_mem->tex_id, cuda_ret);
+          "cuda ret :%d", gl_mem->mem.tex_id, cuda_ret);
       g_assert_not_reached ();
     }
 
