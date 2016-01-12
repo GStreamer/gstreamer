@@ -753,7 +753,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
     GstCapsFeatures *features = gst_caps_get_features (caps, 0);
     if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
-      GstGLContext *context = query_gl_context (GST_BASE_SRC_PAD (baseSrc));
+      GstGLContext *context = find_gl_context (element);
       textureCache = gst_video_texture_cache_new (context);
       gst_video_texture_cache_set_format (textureCache, format, caps);
       gst_object_unref (context);
@@ -964,7 +964,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 }
 
 static GstGLContext *
-query_gl_context (GstPad *srcpad)
+query_gl_local_context (GstPad *srcpad)
 {
   GstGLContext *gl_context = NULL;
   GstContext *context = NULL;
@@ -979,6 +979,32 @@ query_gl_context (GstPad *srcpad)
     }
   }
   gst_query_unref (query);
+
+  return gl_context;
+}
+
+static GstGLContext *
+find_gl_app_context (GstElement *element)
+{
+  GstGLContext *gl_context = NULL;
+  GstContext *context = gst_element_get_context (element, "gst.gl.app_context");
+  if (context) {
+    const GstStructure *s = gst_context_get_structure (context);
+    gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &gl_context, NULL);
+    gst_context_unref (context);
+  }
+
+  return gl_context;
+}
+
+static GstGLContext *
+find_gl_context (GstElement *element)
+{
+  GstGLContext *gl_context = NULL;
+
+  gl_context = query_gl_local_context (GST_BASE_SRC_PAD (element));
+  if (!gl_context)
+    gl_context = find_gl_app_context (element);
 
   return gl_context;
 }
@@ -999,7 +1025,7 @@ caps_filter_out_gl_memory (GstCapsFeatures * features, GstStructure * structure,
 
   new_caps = gst_caps_make_writable (new_caps);
 
-  context = query_gl_context (GST_BASE_SRC_PAD (baseSrc));
+  context = find_gl_context (element);
   if (!context)
     gst_caps_filter_and_map_in_place (new_caps, caps_filter_out_gl_memory, NULL);
   else
