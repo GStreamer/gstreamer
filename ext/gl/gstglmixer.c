@@ -599,16 +599,67 @@ context_error:
   }
 }
 
+static gboolean
+_upload_frames (GstAggregator * agg, GstAggregatorPad * agg_pad,
+    gpointer user_data)
+{
+  GstVideoAggregatorPad *vaggpad = GST_VIDEO_AGGREGATOR_PAD (agg_pad);
+  GstGLMixerPad *pad = GST_GL_MIXER_PAD (agg_pad);
+  GstElement *element = GST_ELEMENT (agg);
+  GstGLMixer *mix = GST_GL_MIXER (agg);
+  GstGLMixerFrameData *frame;
+  guint *array_index, i;
+
+  array_index = (guint *) user_data;
+
+  GST_OBJECT_LOCK (agg);
+  /* make sure the frames array is big enough */
+  i = mix->frames->len;
+  g_ptr_array_set_size (mix->frames, element->numsinkpads);
+  for (; i < element->numsinkpads; i++)
+    mix->frames->pdata[i] = g_new0 (GstGLMixerFrameData, 1);
+
+  frame = g_ptr_array_index (mix->frames, *array_index);
+  frame->pad = pad;
+  frame->texture = 0;
+  GST_OBJECT_UNLOCK (agg);
+
+  if (vaggpad->buffer != NULL) {
+    GstVideoInfo gl_info;
+    GstVideoFrame gl_frame;
+    GstGLSyncMeta *sync_meta;
+
+    gst_video_info_set_format (&gl_info,
+        GST_VIDEO_FORMAT_RGBA,
+        GST_VIDEO_INFO_WIDTH (&vaggpad->info),
+        GST_VIDEO_INFO_HEIGHT (&vaggpad->info));
+
+    sync_meta = gst_buffer_get_gl_sync_meta (vaggpad->buffer);
+    if (sync_meta)
+      gst_gl_sync_meta_wait (sync_meta, GST_GL_BASE_MIXER (mix)->context);
+
+    if (!gst_video_frame_map (&gl_frame, &gl_info, vaggpad->buffer,
+            GST_MAP_READ | GST_MAP_GL)) {
+      GST_ERROR_OBJECT (agg_pad, "Failed to map input frame");
+      return FALSE;
+    }
+
+    frame->texture = *(guint *) gl_frame.data[0];
+    gst_video_frame_unmap (&gl_frame);
+  }
+
+  (*array_index)++;
+
+  return TRUE;
+}
+
 gboolean
 gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 {
-  guint i;
-  GList *walk;
   guint out_tex;
   gboolean res = TRUE;
   guint array_index = 0;
   GstVideoFrame out_frame;
-  GstElement *element = GST_ELEMENT (mix);
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (mix);
   GstGLMixerClass *mix_class = GST_GL_MIXER_GET_CLASS (mix);
   GstGLMixerPrivate *priv = mix->priv;
@@ -622,47 +673,9 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 
   out_tex = *(guint *) out_frame.data[0];
 
-  GST_OBJECT_LOCK (mix);
-  walk = element->sinkpads;
-
-  i = mix->frames->len;
-  g_ptr_array_set_size (mix->frames, element->numsinkpads);
-  for (; i < element->numsinkpads; i++)
-    mix->frames->pdata[i] = g_slice_new0 (GstGLMixerFrameData);
-  while (walk) {
-    GstGLMixerPad *pad = GST_GL_MIXER_PAD (walk->data);
-    GstVideoAggregatorPad *vaggpad = walk->data;
-    GstGLMixerFrameData *frame;
-
-    frame = g_ptr_array_index (mix->frames, array_index);
-    frame->pad = pad;
-    frame->texture = 0;
-
-    walk = g_list_next (walk);
-
-    if (vaggpad->buffer != NULL) {
-      GstVideoInfo gl_info;
-      GstVideoFrame gl_frame;
-      GstGLSyncMeta *sync_meta;
-
-      gst_video_info_set_format (&gl_info,
-          GST_VIDEO_FORMAT_RGBA,
-          GST_VIDEO_INFO_WIDTH (&vaggpad->info),
-          GST_VIDEO_INFO_HEIGHT (&vaggpad->info));
-
-      sync_meta = gst_buffer_get_gl_sync_meta (vaggpad->buffer);
-      if (sync_meta)
-        gst_gl_sync_meta_wait (sync_meta, GST_GL_BASE_MIXER (mix)->context);
-
-      if (gst_video_frame_map (&gl_frame, &gl_info, vaggpad->buffer,
-              GST_MAP_READ | GST_MAP_GL)) {
-        frame->texture = *(guint *) gl_frame.data[0];
-        gst_video_frame_unmap (&gl_frame);
-      }
-    }
-
-    ++array_index;
-  }
+  if (!gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (mix),
+          (GstAggregatorPadForeachFunc) _upload_frames, &array_index))
+    return FALSE;
 
   g_mutex_lock (&priv->gl_resource_lock);
   if (!priv->gl_resource_ready)
@@ -681,8 +694,6 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
   g_mutex_unlock (&priv->gl_resource_lock);
 
 out:
-  GST_OBJECT_UNLOCK (mix);
-
   gst_video_frame_unmap (&out_frame);
 
   return res;
@@ -701,7 +712,7 @@ gst_gl_mixer_process_buffers (GstGLMixer * mix, GstBuffer * outbuf)
   i = mix->frames->len;
   g_ptr_array_set_size (mix->frames, element->numsinkpads);
   for (; i < element->numsinkpads; i++)
-    mix->frames->pdata[i] = g_slice_new0 (GstGLMixerFrameData);
+    mix->frames->pdata[i] = g_new0 (GstGLMixerFrameData, 1);
   while (walk) {                /* We walk with this list because it's ordered */
     GstVideoAggregatorPad *vaggpad = walk->data;
 
@@ -761,12 +772,6 @@ gst_gl_mixer_set_property (GObject * object,
   }
 }
 
-static void
-_free_glmixer_frame_data (GstGLMixerFrameData * frame)
-{
-  g_slice_free1 (sizeof (GstGLMixerFrameData), frame);
-}
-
 static gboolean
 gst_gl_mixer_start (GstAggregator * agg)
 {
@@ -777,13 +782,13 @@ gst_gl_mixer_start (GstAggregator * agg)
   GST_OBJECT_LOCK (mix);
   mix->array_buffers = g_ptr_array_new_full (element->numsinkpads, NULL);
   mix->frames = g_ptr_array_new_full (element->numsinkpads,
-      (GDestroyNotify) _free_glmixer_frame_data);
+      (GDestroyNotify) g_free);
 
   g_ptr_array_set_size (mix->array_buffers, element->numsinkpads);
   g_ptr_array_set_size (mix->frames, element->numsinkpads);
 
   for (i = 0; i < element->numsinkpads; i++)
-    mix->frames->pdata[i] = g_slice_new0 (GstGLMixerFrameData);
+    mix->frames->pdata[i] = g_new0 (GstGLMixerFrameData, 1);
 
   GST_OBJECT_UNLOCK (mix);
 
