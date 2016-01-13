@@ -164,7 +164,7 @@ pad_supports_caps (GstPad * pad, GstCaps * caps)
   gboolean ret = FALSE;
 
   pad_caps = gst_pad_query_caps (pad, NULL);
-  if (gst_caps_can_intersect (caps, pad_caps))
+  if (gst_caps_is_subset (caps, pad_caps))
     ret = TRUE;
   gst_caps_unref (pad_caps);
 
