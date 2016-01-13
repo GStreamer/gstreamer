@@ -1105,6 +1105,58 @@ no_udp_protocol:
 }
 
 /* must be called with lock */
+static void
+play_udpsources_one_family (GstRTSPStream * stream, GSocketFamily family)
+{
+  GstRTSPStreamPrivate *priv;
+  GstPad *pad, *selpad;
+  guint i;
+  GstBin *bin;
+
+  priv = stream->priv;
+  bin = GST_BIN (gst_object_get_parent (GST_OBJECT (priv->funnel[1])));
+
+  for (i = 0; i < 2; i++) {
+    if (priv->sinkpad || i == 1) {
+      if (family == G_SOCKET_FAMILY_IPV4 && priv->udpsrc_v4[i]) {
+        if (priv->srcpad) {
+          /* we set and keep these to playing so that they don't cause NO_PREROLL return
+           * values. This is only relevant for PLAY pipelines */
+          gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_PLAYING);
+          gst_element_set_locked_state (priv->udpsrc_v4[i], TRUE);
+        }
+        /* add udpsrc */
+        gst_bin_add (bin, priv->udpsrc_v4[i]);
+
+        /* and link to the funnel v4 */
+        selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
+        pad = gst_element_get_static_pad (priv->udpsrc_v4[i], "src");
+        gst_pad_link (pad, selpad);
+        gst_object_unref (pad);
+        gst_object_unref (selpad);
+      }
+
+      if (family == G_SOCKET_FAMILY_IPV6 && priv->udpsrc_v6[i]) {
+        if (priv->srcpad) {
+          gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_PLAYING);
+          gst_element_set_locked_state (priv->udpsrc_v6[i], TRUE);
+        }
+        gst_bin_add (bin, priv->udpsrc_v6[i]);
+
+        /* and link to the funnel v6 */
+        selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
+        pad = gst_element_get_static_pad (priv->udpsrc_v6[i], "src");
+        gst_pad_link (pad, selpad);
+        gst_object_unref (pad);
+        gst_object_unref (selpad);
+      }
+    }
+  }
+
+  gst_object_unref (bin);
+}
+
+/* must be called with lock */
 static gboolean
 create_and_configure_udpsources_one_family (GstElement * udpsrc_out[2],
     GSocket * rtp_socket, GSocket * rtcp_socket, GSocketFamily family)
@@ -2513,6 +2565,8 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
   create_sender_part (stream, bin, state);
 
   create_receiver_part (stream, bin, state);
+  play_udpsources_one_family (stream, G_SOCKET_FAMILY_IPV4);
+  play_udpsources_one_family (stream, G_SOCKET_FAMILY_IPV6);
 
   if (priv->srcpad) {
     /* be notified of caps changes */
