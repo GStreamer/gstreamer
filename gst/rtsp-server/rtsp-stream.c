@@ -1311,6 +1311,7 @@ again:
   if (!create_and_configure_udpsources_one_family (udpsrc_out, rtp_socket,
         rtcp_socket, family))
     goto no_udp_protocol;
+  play_udpsources_one_family (stream, family);
 
   g_object_get (G_OBJECT (udpsrc_out[0]), "port", &rtpport, NULL);
   g_object_get (G_OBJECT (udpsrc_out[1]), "port", &rtcpport, NULL);
@@ -1319,8 +1320,6 @@ again:
   if (rtpport != tmp_rtp || rtcpport != tmp_rtcp)
     goto port_error;
 
-  if (!create_and_configure_udpsinks (stream))
-    goto no_udp_protocol;
 
   /* set RTP and RTCP sockets */
   set_sockets_for_udpsinks (stream, rtp_socket, rtcp_socket, family);
@@ -2207,7 +2206,7 @@ on_npt_stop (GstElement * rtpbin, guint session, guint ssrc,
 }
 
 /* must be called with lock */
-static void
+static gboolean
 create_sender_part (GstRTSPStream * stream, GstBin * bin,
     GstState state)
 {
@@ -2221,6 +2220,9 @@ create_sender_part (GstRTSPStream * stream, GstBin * bin,
   is_tcp = priv->protocols & GST_RTSP_LOWER_TRANS_TCP;
   is_udp = ((priv->protocols & GST_RTSP_LOWER_TRANS_UDP) ||
       (priv->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST));
+
+  if (is_udp && !create_and_configure_udpsinks (stream))
+    goto no_udp_protocol;
 
   for (i = 0; i < 2; i++) {
     GstPad *teepad, *queuepad;
@@ -2342,6 +2344,14 @@ create_sender_part (GstRTSPStream * stream, GstBin * bin,
       if (priv->tee[i] && (priv->srcpad || i == 1))
         gst_element_set_state (priv->tee[i], state);
     }
+  }
+
+  return TRUE;
+
+  /* ERRORS */
+no_udp_protocol:
+  {
+    return FALSE;
   }
 }
 
@@ -2481,12 +2491,6 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
 
   GST_INFO ("stream %p joining bin as session %u", stream, idx);
 
-  is_udp = ((priv->protocols & GST_RTSP_LOWER_TRANS_UDP) ||
-      (priv->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST));
-
-  if (is_udp && !alloc_ports (stream))
-    goto no_ports;
-
   if (priv->profiles & GST_RTSP_PROFILE_SAVP
       || priv->profiles & GST_RTSP_PROFILE_SAVPF) {
     /* For SRTP */
@@ -2562,11 +2566,16 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
   g_signal_connect (priv->session, "on-sender-ssrc-active",
       (GCallback) on_sender_ssrc_active, stream);
 
-  create_sender_part (stream, bin, state);
+  if (!create_sender_part (stream, bin, state))
+    goto no_udp_protocol;
 
   create_receiver_part (stream, bin, state);
-  play_udpsources_one_family (stream, G_SOCKET_FAMILY_IPV4);
-  play_udpsources_one_family (stream, G_SOCKET_FAMILY_IPV6);
+
+  is_udp = ((priv->protocols & GST_RTSP_LOWER_TRANS_UDP) ||
+      (priv->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST));
+
+  if (is_udp && !alloc_ports (stream))
+    goto no_udp_protocol;
 
   if (priv->srcpad) {
     /* be notified of caps changes */
@@ -2585,17 +2594,51 @@ was_joined:
     g_mutex_unlock (&priv->lock);
     return TRUE;
   }
-no_ports:
-  {
-    g_mutex_unlock (&priv->lock);
-    GST_WARNING ("failed to allocate ports %u", idx);
-    return FALSE;
-  }
 link_failed:
   {
     GST_WARNING ("failed to link stream %u", idx);
     gst_object_unref (priv->send_rtp_sink);
     priv->send_rtp_sink = NULL;
+    g_mutex_unlock (&priv->lock);
+    return FALSE;
+  }
+no_udp_protocol:
+  {
+    GST_WARNING ("failed to allocate ports %u", idx);
+    gst_object_unref (priv->send_rtp_sink);
+    priv->send_rtp_sink = NULL;
+    gst_object_unref (priv->send_src[0]);
+    priv->send_src[0] = NULL;
+    gst_object_unref (priv->send_src[1]);
+    priv->send_src[1] = NULL;
+    gst_object_unref (priv->recv_sink[0]);
+    priv->recv_sink[0] = NULL;
+    gst_object_unref (priv->recv_sink[1]);
+    priv->recv_sink[1] = NULL;
+    if (priv->udpsink[0])
+      gst_element_set_state (priv->udpsink[0], GST_STATE_NULL);
+    if (priv->udpsink[1])
+      gst_element_set_state (priv->udpsink[1], GST_STATE_NULL);
+    if (priv->udpsrc_v4[0]) {
+      gst_element_set_state (priv->udpsrc_v4[0], GST_STATE_NULL);
+      gst_object_unref (priv->udpsrc_v4[0]);
+      priv->udpsrc_v4[0] = NULL;
+    }
+    if (priv->udpsrc_v4[1]) {
+      gst_element_set_state (priv->udpsrc_v4[1], GST_STATE_NULL);
+      gst_object_unref (priv->udpsrc_v4[1]);
+      priv->udpsrc_v4[1] = NULL;
+    }
+    if (priv->udpsrc_v6[0]) {
+      gst_element_set_state (priv->udpsrc_v6[0], GST_STATE_NULL);
+      gst_object_unref (priv->udpsrc_v6[0]);
+      priv->udpsrc_v6[0] = NULL;
+    }
+    if (priv->udpsrc_v6[1]) {
+      gst_element_set_state (priv->udpsrc_v6[1], GST_STATE_NULL);
+      gst_object_unref (priv->udpsrc_v6[1]);
+      priv->udpsrc_v6[1] = NULL;
+    }
     g_mutex_unlock (&priv->lock);
     return FALSE;
   }
