@@ -835,6 +835,7 @@ gst_net_client_clock_thread (gpointer data)
           if (g_error_matches (err, GST_NTP_ERROR, GST_NTP_ERROR_WRONG_VERSION)
               || g_error_matches (err, GST_NTP_ERROR, GST_NTP_ERROR_KOD_DENY)) {
             GST_ERROR_OBJECT (self, "fatal receive error: %s", err->message);
+            g_clear_error (&err);
             break;
           } else if (g_error_matches (err, GST_NTP_ERROR,
                   GST_NTP_ERROR_KOD_RATE)) {
