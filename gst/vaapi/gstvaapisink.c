@@ -1333,7 +1333,9 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
 
   ret = gst_vaapi_plugin_base_get_input_buffer (GST_VAAPI_PLUGIN_BASE (sink),
       src_buffer, &buffer);
-  if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_SUPPORTED)
+  if (ret == GST_FLOW_NOT_SUPPORTED)
+    return GST_FLOW_OK; /* let's ignore the frame if it couldn't be uploaded */
+  if (ret != GST_FLOW_OK)
     return ret;
 
   meta = gst_buffer_get_vaapi_video_meta (buffer);
