@@ -48,6 +48,8 @@ typedef void (*DeinterleaveFunc) (GstAudioResampler * resampler,
     gpointer * sbuf, gpointer in[], gsize in_frames);
 typedef void (*MirrorFunc) (GstAudioResampler * resampler, gpointer * sbuf);
 
+#define MEM_ALIGN(m,a) ((gint8 *)((guintptr)((gint8 *)(m) + ((a)-1)) & ~((a)-1)))
+
 struct _GstAudioResampler
 {
   GstAudioResamplerMethod method;
@@ -68,6 +70,8 @@ struct _GstAudioResampler
   guint n_taps;
   Tap *taps;
   gpointer coeff;
+  gpointer coeffmem;
+  gsize cstride;
   gpointer tmpcoeff;
 
   DeinterleaveFunc deinterleave;
@@ -75,6 +79,7 @@ struct _GstAudioResampler
   ResampleFunc resample;
 
   guint blocks;
+  guint inc;
   gboolean filling;
   gint samp_inc;
   gint samp_frac;
@@ -256,7 +261,7 @@ get_kaiser_tap (GstAudioResampler * resampler, gdouble x)
 
 #define CONVERT_TAPS(type, precision)                                   \
 G_STMT_START {                                                          \
-  type *taps = t->taps = (type *) resampler->coeff + j * n_taps;        \
+  type *taps = t->taps = (type *) ((gint8*)resampler->coeff + j * resampler->cstride);        \
   gdouble multiplier = (1 << precision);                                \
   gint i, j;                                                            \
   gdouble offset, l_offset, h_offset;                                   \
@@ -338,14 +343,16 @@ make_taps (GstAudioResampler * resampler, Tap * t, gint j)
   switch (resampler->format) {
     case GST_AUDIO_FORMAT_F64:
     {
-      gdouble *taps = t->taps = (gdouble *) resampler->coeff + j * n_taps;
+      gdouble *taps = t->taps =
+          (gdouble *) ((gint8 *) resampler->coeff + j * resampler->cstride);
       for (l = 0; l < n_taps; l++)
         taps[l] = tmpcoeff[l] / weight;
       break;
     }
     case GST_AUDIO_FORMAT_F32:
     {
-      gfloat *taps = t->taps = (gfloat *) resampler->coeff + j * n_taps;
+      gfloat *taps = t->taps =
+          (gfloat *) ((gint8 *) resampler->coeff + j * resampler->cstride);
       for (l = 0; l < n_taps; l++)
         taps[l] = tmpcoeff[l] / weight;
       break;
@@ -593,28 +600,18 @@ static void
 deinterleave_copy (GstAudioResampler * resampler, gpointer sbuf[],
     gpointer in[], gsize in_frames)
 {
-  gsize samples_avail = resampler->samples_avail;
-  gint bpf = resampler->bpf;
+  guint c, blocks = resampler->blocks;
+  gsize bytes_avail, in_bytes, bpf;
 
-  if (in == NULL)
-    memset ((guint8 *) sbuf[0] + samples_avail * bpf, 0, in_frames * bpf);
-  else
-    memcpy ((guint8 *) sbuf[0] + samples_avail * bpf, in[0], in_frames * bpf);
-}
+  bpf = resampler->bps * resampler->inc;
+  bytes_avail = resampler->samples_avail * bpf;
+  in_bytes = in_frames * bpf;
 
-static void
-deinterleave_copy_n (GstAudioResampler * resampler, gpointer sbuf[],
-    gpointer in[], gsize in_frames)
-{
-  guint c, channels = resampler->channels;
-  gsize samples_avail = resampler->samples_avail;
-  gint bps = resampler->bps;
-
-  for (c = 0; c < channels; c++) {
+  for (c = 0; c < blocks; c++) {
     if (in == NULL)
-      memset ((guint8 *) sbuf[c] + samples_avail * bps, 0, in_frames * bps);
+      memset ((guint8 *) sbuf[c] + bytes_avail, 0, in_bytes);
     else
-      memcpy ((guint8 *) sbuf[c] + samples_avail * bps, in[c], in_frames * bps);
+      memcpy ((guint8 *) sbuf[c] + bytes_avail, in[c], in_bytes);
   }
 }
 
@@ -623,10 +620,10 @@ deinterleave_copy_n (GstAudioResampler * resampler, gpointer sbuf[],
 static void                                                             \
 mirror_ ##type (GstAudioResampler * resampler, gpointer sbuf[])         \
 {                                                                       \
-  guint i, c, channels = resampler->channels;                           \
+  guint i, c, blocks = resampler->blocks;                               \
   gint si = resampler->n_taps / 2;                                      \
   gint n_taps = resampler->n_taps;                                      \
-  for (c = 0; c < channels; c++) {                                      \
+  for (c = 0; c < blocks; c++) {                                        \
     type *s = sbuf[c];                                                  \
     for (i = 0; i < si; i++)                                            \
       s[i] = -s[n_taps - i];                                            \
@@ -686,6 +683,7 @@ resampler_calculate_taps (GstAudioResampler * resampler)
   gint n_taps;
   gint out_rate;
   gint in_rate;
+  gboolean non_interleaved;
 
   switch (resampler->method) {
     case GST_AUDIO_RESAMPLER_METHOD_NEAREST:
@@ -729,7 +727,12 @@ resampler_calculate_taps (GstAudioResampler * resampler)
   GST_LOG ("using n_taps %d cutoff %f", n_taps, resampler->cutoff);
 
   resampler->taps = g_realloc_n (resampler->taps, out_rate, sizeof (Tap));
-  resampler->coeff = g_realloc_n (resampler->coeff, out_rate, bps * n_taps);
+
+  resampler->cstride = GST_ROUND_UP_32 (bps * (n_taps + 16));
+  g_free (resampler->coeffmem);
+  resampler->coeffmem = g_malloc0 (out_rate * resampler->cstride + 31);
+  resampler->coeff = MEM_ALIGN (resampler->coeffmem, 32);
+
   resampler->tmpcoeff =
       g_realloc_n (resampler->tmpcoeff, n_taps, sizeof (gdouble));
 
@@ -743,13 +746,22 @@ resampler_calculate_taps (GstAudioResampler * resampler)
     t->next_phase = (j + in_rate) % out_rate;
   }
 
+  non_interleaved =
+      (resampler->flags & GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED);
+
+  resampler->ostride = non_interleaved ? 1 : resampler->channels;
+
+  /* we resample each channel separately */
   resampler->blocks = resampler->channels;
+  resampler->inc = 1;
+
   switch (resampler->format) {
     case GST_AUDIO_FORMAT_F64:
-      if (resampler->channels == 2 && n_taps >= 4) {
+      if (!non_interleaved && resampler->channels == 2 && n_taps >= 4) {
         resampler->resample = resample_gdouble_2;
         resampler->deinterleave = deinterleave_copy;
         resampler->blocks = 1;
+        resampler->inc = resampler->channels;;
       } else {
         resampler->resample = resample_gdouble_1;
         resampler->deinterleave = deinterleave_gdouble;
@@ -767,10 +779,11 @@ resampler_calculate_taps (GstAudioResampler * resampler)
       resampler->mirror = mirror_gint32;
       break;
     case GST_AUDIO_FORMAT_S16:
-      if (resampler->channels == 2 && n_taps >= 4) {
+      if (!non_interleaved && resampler->channels == 2 && n_taps >= 4) {
         resampler->resample = resample_gint16_2;
         resampler->deinterleave = deinterleave_copy;
         resampler->blocks = 1;
+        resampler->inc = resampler->channels;;
       } else {
         resampler->resample = resample_gint16_1;
         resampler->deinterleave = deinterleave_gint16;
@@ -779,12 +792,6 @@ resampler_calculate_taps (GstAudioResampler * resampler)
       break;
     default:
       break;
-  }
-  if (resampler->flags & GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED) {
-    resampler->deinterleave = deinterleave_copy_n;
-    resampler->ostride = 1;
-  } else {
-    resampler->ostride = resampler->channels;
   }
 }
 
@@ -1017,7 +1024,7 @@ gst_audio_resampler_free (GstAudioResampler * resampler)
   g_return_if_fail (resampler != NULL);
 
   g_free (resampler->taps);
-  g_free (resampler->coeff);
+  g_free (resampler->coeffmem);
   g_free (resampler->tmpcoeff);
   g_free (resampler->samples);
   g_free (resampler->sbuf);
@@ -1119,16 +1126,28 @@ static inline gpointer *
 get_sample_bufs (GstAudioResampler * resampler, gsize need)
 {
   if (resampler->samples_len < need) {
-    guint c, channels = resampler->channels;
+    guint c, blocks = resampler->blocks;
+    gsize bytes, bpf;
+    gint8 *ptr;
+
     GST_LOG ("realloc %d -> %d", (gint) resampler->samples_len, (gint) need);
+
+    bpf = resampler->bps * resampler->inc;
+
+    bytes = (need + 8) * bpf;
+    bytes = GST_ROUND_UP_32 (bytes);
+
     /* FIXME, move history */
-    resampler->samples = g_realloc (resampler->samples, need * resampler->bpf);
-    resampler->samples_len = need;
+    resampler->samples =
+        g_realloc (resampler->samples, resampler->blocks * bytes + 31);
+    resampler->samples_len = bytes / bpf;
+
+    ptr = MEM_ALIGN (resampler->samples, 32);
+
     /* set up new pointers */
-    for (c = 0; c < channels; c++)
-      resampler->sbuf[c] =
-          (gint8 *) resampler->samples +
-          (c * resampler->samples_len * resampler->bps);
+    for (c = 0; c < blocks; c++) {
+      resampler->sbuf[c] = ptr + (c * bytes);
+    }
   }
   return resampler->sbuf;
 }
