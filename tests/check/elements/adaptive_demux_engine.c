@@ -1,4 +1,4 @@
-/* A generic test engine for elements based upon GstAdaptiveDemux 
+/* A generic test engine for elements based upon GstAdaptiveDemux
  *
  * Copyright (c) <2015> YouView TV Ltd
  *
@@ -227,6 +227,43 @@ on_demuxReceivesEvent (GstPad * pad, GstPadProbeInfo * info, gpointer data)
   return GST_PAD_PROBE_OK;
 }
 
+
+static void
+on_demuxElementAdded (GstBin * demux, GstElement * element, gpointer user_data)
+{
+  GstAdaptiveDemuxTestEnginePrivate *priv =
+      (GstAdaptiveDemuxTestEnginePrivate *) user_data;
+  GstAdaptiveDemuxTestOutputStream *stream = NULL;
+  GstPad *internal_pad;
+  gchar *srcbin_name;
+  gint i;
+
+  srcbin_name = GST_ELEMENT_NAME (element);
+  GST_TEST_LOCK (priv);
+  for (i = 0; i < priv->engine.output_streams->len; i++) {
+    stream = g_ptr_array_index (priv->engine.output_streams, i);
+    if (strstr (srcbin_name, GST_PAD_NAME (stream->pad)) != NULL)
+      break;
+  }
+  fail_unless (stream != NULL);
+
+  /* keep the reference to the internal_pad.
+   * We will need it to identify the stream in the on_demuxReceivesEvent callback
+   */
+  if (stream->internal_pad) {
+    gst_pad_remove_probe (stream->internal_pad, stream->internal_pad_probe);
+    gst_object_unref (stream->internal_pad);
+  }
+  internal_pad = gst_element_get_static_pad (element, "src");
+  stream->internal_pad_probe =
+      gst_pad_add_probe (internal_pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      (GstPadProbeCallback) on_demuxReceivesEvent, priv, NULL);
+  stream->internal_pad = internal_pad;
+  GST_TEST_UNLOCK (priv);
+
+}
+
+
 /* callback called when demux creates a src pad.
  * We will create an AppSink to get the data
  */
@@ -239,7 +276,7 @@ on_demuxNewPad (GstElement * demux, GstPad * pad, gpointer user_data)
   GstElement *sink;
   gboolean ret;
   gchar *name;
-  GstPad *internal_pad, *appsink_pad;
+  GstPad *appsink_pad;
   GstAppSinkCallbacks appSinkCallbacks;
   GstAdaptiveDemuxTestOutputStream *stream;
   GObjectClass *gobject_class;
@@ -272,7 +309,6 @@ on_demuxNewPad (GstElement * demux, GstPad * pad, gpointer user_data)
       (GstPadProbeCallback) on_appsink_event, priv, NULL);
   gst_object_unref (appsink_pad);
 
-
   gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) on_demux_sent_data, priv, NULL);
   gobject_class = G_OBJECT_GET_CLASS (sink);
@@ -281,16 +317,7 @@ on_demuxNewPad (GstElement * demux, GstPad * pad, gpointer user_data)
     g_object_set (G_OBJECT (sink), "sync", FALSE, NULL);
   }
   stream->pad = gst_object_ref (pad);
-  internal_pad =
-      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (pad)));
 
-  gst_pad_add_probe (internal_pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-      (GstPadProbeCallback) on_demuxReceivesEvent, priv, NULL);
-
-  /* keep the reference to the internal_pad.
-   * We will need it to identify the stream in the on_demuxReceivesEvent callback
-   */
-  stream->internal_pad = internal_pad;
 
   g_ptr_array_add (priv->engine.output_streams, stream);
   GST_TEST_UNLOCK (priv);
@@ -439,6 +466,8 @@ gst_adaptive_demux_test_run (const gchar * element_name,
   priv->engine.demux = demux;
   GST_DEBUG ("created demux %" GST_PTR_FORMAT, demux);
 
+  g_signal_connect (demux, "element-added", G_CALLBACK (on_demuxElementAdded),
+      priv);
   g_signal_connect (demux, "pad-added", G_CALLBACK (on_demuxNewPad), priv);
   g_signal_connect (demux, "pad-removed",
       G_CALLBACK (on_demuxPadRemoved), priv);

@@ -1860,11 +1860,14 @@ gst_adaptive_demux_stream_data_received_default (GstAdaptiveDemux * demux,
 static GstFlowReturn
 _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstPad *srcpad = (GstPad *) parent;
-  GstAdaptiveDemuxStream *stream = gst_pad_get_element_private (srcpad);
-  GstAdaptiveDemux *demux = stream->demux;
-  GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
+  GstAdaptiveDemuxStream *stream;
+  GstAdaptiveDemux *demux;
+  GstAdaptiveDemuxClass *klass;
   GstFlowReturn ret = GST_FLOW_OK;
+
+  demux = GST_ADAPTIVE_DEMUX_CAST (parent);
+  stream = gst_pad_get_element_private (pad);
+  klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
 
   GST_MANIFEST_LOCK (demux);
 
@@ -2019,8 +2022,7 @@ gst_adaptive_demux_stream_fragment_download_finish (GstAdaptiveDemuxStream *
 static gboolean
 _src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstPad *srcpad = GST_PAD_CAST (parent);
-  GstAdaptiveDemuxStream *stream = gst_pad_get_element_private (srcpad);
+  GstAdaptiveDemuxStream *stream = gst_pad_get_element_private (pad);
   GstAdaptiveDemux *demux = stream->demux;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -2049,6 +2051,8 @@ _src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 static gboolean
 _src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
+  GstAdaptiveDemuxStream *stream = gst_pad_get_element_private (pad);
+
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:
       return FALSE;
@@ -2057,7 +2061,7 @@ _src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
   }
 
-  return gst_pad_query_default (pad, parent, query);
+  return gst_pad_peer_query (stream->pad, query);
 }
 
 /* must be called with manifest_lock taken.
@@ -2118,37 +2122,6 @@ gst_adaptive_demux_stream_wait_manifest_update (GstAdaptiveDemux * demux,
   }
   GST_DEBUG_OBJECT (demux, "Retrying now");
   return ret;
-}
-
-static gboolean
-_adaptive_demux_pad_remove_eos_sticky (GstPad * pad, GstEvent ** event,
-    gpointer udata)
-{
-  if (GST_EVENT_TYPE (*event) == GST_EVENT_EOS) {
-    gst_event_replace (event, NULL);
-    return FALSE;
-  }
-  return TRUE;
-}
-
-/* must be called with manifest_lock taken */
-static void
-gst_adaptive_demux_stream_clear_eos_and_flush_state (GstAdaptiveDemuxStream *
-    stream)
-{
-  GstPad *internal_pad;
-
-  internal_pad =
-      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (stream->pad)));
-  gst_pad_sticky_events_foreach (internal_pad,
-      _adaptive_demux_pad_remove_eos_sticky, NULL);
-  GST_OBJECT_FLAG_UNSET (internal_pad, GST_PAD_FLAG_EOS);
-  /* In case the stream is recovering from a flushing seek it is also needed
-   * to remove the flushing state from this pad. The flushing state is set
-   * because of the flow return propagating until the source element */
-  GST_PAD_UNSET_FLUSHING (internal_pad);
-
-  gst_object_unref (internal_pad);
 }
 
 static void
@@ -2216,7 +2189,7 @@ gst_adaptive_demux_stream_update_source (GstAdaptiveDemuxStream * stream,
     GstElement *queue;
     GstPadLinkReturn pad_link_ret;
     GObjectClass *gobject_class;
-    GstPad *internal_pad;
+    gchar *internal_name, *bin_name;
 
     /* Our src consists of a bin containing uri_handler -> queue2 . The
      * purpose of the queue2 is to allow the uri_handler to download an
@@ -2271,7 +2244,9 @@ gst_adaptive_demux_stream_update_source (GstAdaptiveDemuxStream * stream,
     }
 
     /* Source bin creation */
-    stream->src = gst_bin_new (NULL);
+    bin_name = g_strdup_printf ("srcbin-%s", GST_PAD_NAME (stream->pad));
+    stream->src = gst_bin_new (bin_name);
+    g_free (bin_name);
     if (stream->src == NULL) {
       gst_object_unref (queue);
       gst_object_unref (uri_handler);
@@ -2310,20 +2285,26 @@ gst_adaptive_demux_stream_update_source (GstAdaptiveDemuxStream * stream,
     gst_bin_add (GST_BIN_CAST (demux), stream->src);
     stream->src_srcpad = gst_element_get_static_pad (stream->src, "src");
 
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (stream->pad),
-        stream->src_srcpad);
-
-    /* set up our internal pad to drop all events from
+    /* set up our internal floating pad to drop all events from
      * the http src we don't care about. On the chain function
-     * we just push the buffer forward, but this way dash can get
-     * the flow return from downstream */
-    internal_pad =
-        GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (stream->pad)));
-    gst_pad_set_chain_function (GST_PAD_CAST (internal_pad), _src_chain);
-    gst_pad_set_event_function (GST_PAD_CAST (internal_pad), _src_event);
-    /* need to set query otherwise deadlocks happen with allocation queries */
-    gst_pad_set_query_function (GST_PAD_CAST (internal_pad), _src_query);
-    gst_object_unref (internal_pad);
+     * we just push the buffer forward */
+    internal_name = g_strdup_printf ("internal-%s", GST_PAD_NAME (stream->pad));
+    stream->internal_pad = gst_pad_new (internal_name, GST_PAD_SINK);
+    g_free (internal_name);
+    gst_object_set_parent (GST_OBJECT_CAST (stream->internal_pad),
+        GST_OBJECT_CAST (demux));
+    gst_pad_set_element_private (stream->internal_pad, stream);
+    gst_pad_set_active (stream->internal_pad, TRUE);
+    gst_pad_set_chain_function (stream->internal_pad, _src_chain);
+    gst_pad_set_event_function (stream->internal_pad, _src_event);
+    gst_pad_set_query_function (stream->internal_pad, _src_query);
+
+    if (gst_pad_link_full (stream->src_srcpad, stream->internal_pad,
+            GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK) {
+      GST_ERROR_OBJECT (stream->pad, "Failed to link internal pad");
+      return FALSE;
+    }
+
     stream->uri_handler = uri_handler;
     stream->queue = queue;
   }
@@ -2443,7 +2424,10 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
   }
   g_mutex_unlock (&stream->fragment_download_lock);
 
-  gst_adaptive_demux_stream_clear_eos_and_flush_state (stream);
+  /* deactivate and reactivate our ghostpad to make it fresh for a new
+   * stream */
+  gst_pad_set_active (stream->internal_pad, FALSE);
+  gst_pad_set_active (stream->internal_pad, TRUE);
 
   return ret;
 }

@@ -35,6 +35,7 @@ typedef struct _GstAdaptiveDemuxTestOutputStream {
   GstPad *pad;
   /* the internal pad of adaptivedemux element used to send data to the GstAppSink element */
   GstPad *internal_pad;
+  gulong internal_pad_probe;
   /* current segment start offset */
   guint64 segment_start;
   /* the size received so far on this segment */

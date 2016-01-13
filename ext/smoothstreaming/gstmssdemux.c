@@ -354,8 +354,7 @@ _create_pad (GstMssDemux * mssdemux, GstMssStream * manifeststream)
   }
 
   if (tmpl != NULL) {
-    srcpad =
-        GST_PAD_CAST (gst_ghost_pad_new_no_target_from_template (name, tmpl));
+    srcpad = GST_PAD_CAST (gst_pad_new_from_template (tmpl, name));
     g_free (name);
     gst_object_unref (tmpl);
   }

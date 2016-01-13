@@ -207,13 +207,10 @@ static GstPad *
 gst_hls_demux_create_pad (GstHLSDemux * hlsdemux)
 {
   gchar *name;
-  GstPadTemplate *tmpl;
   GstPad *pad;
 
   name = g_strdup_printf ("src_%u", hlsdemux->srcpad_counter++);
-  tmpl = gst_static_pad_template_get (&srctemplate);
-  pad = gst_ghost_pad_new_no_target_from_template (name, tmpl);
-  gst_object_unref (tmpl);
+  pad = gst_pad_new_from_static_template (&srctemplate, name);
   g_free (name);
 
   return pad;

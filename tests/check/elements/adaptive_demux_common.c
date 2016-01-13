@@ -403,7 +403,7 @@ testSeekOnStateChanged (GstBus * bus, GstMessage * msg, gpointer user_data)
       gst_element_state_get_name (old_state),
       gst_element_state_get_name (new_state));
 
-  if (strstr (srcName, "bin") == srcName &&
+  if (strstr (srcName, "srcbin") == srcName &&
       old_state == GST_STATE_PLAYING && new_state == GST_STATE_PAUSED) {
     g_mutex_lock (&testData->test_task_state_lock);
     if (testData->test_task_state ==

@@ -827,7 +827,7 @@ gst_dash_demux_create_pad (GstDashDemux * demux, GstActiveStream * stream)
   }
 
   /* Create and activate new pads */
-  pad = gst_ghost_pad_new_no_target_from_template (name, tmpl);
+  pad = gst_pad_new_from_template (tmpl, name);
   g_free (name);
   gst_object_unref (tmpl);
 

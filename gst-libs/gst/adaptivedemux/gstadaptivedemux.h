@@ -114,6 +114,7 @@ struct _GstAdaptiveDemuxStreamFragment
 struct _GstAdaptiveDemuxStream
 {
   GstPad *pad;
+  GstPad *internal_pad;
 
   GstAdaptiveDemux *demux;
 
