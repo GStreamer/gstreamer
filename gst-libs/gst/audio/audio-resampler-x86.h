@@ -166,6 +166,7 @@ audio_resampler_check_x86 (const gchar *option)
   } else if (!strcmp (option, "sse2")) {
     GST_DEBUG ("enable SSE2 optimisations");
     resample_gint16_1 = resample_gint16_1_sse2;
+    resample_gfloat_1 = resample_gfloat_1_sse;
     resample_gdouble_1 = resample_gdouble_1_sse2;
     resample_gint16_2 = resample_gint16_2_sse2;
     resample_gdouble_2 = resample_gdouble_2_sse2;
