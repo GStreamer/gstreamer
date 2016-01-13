@@ -644,6 +644,9 @@ EXPORTS
 	gst_ghost_pad_new_no_target
 	gst_ghost_pad_new_no_target_from_template
 	gst_ghost_pad_set_target
+	gst_info_strdup_printf
+	gst_info_strdup_vprintf
+	gst_info_vasprintf
 	gst_init
 	gst_init_check
 	gst_init_get_option_group
