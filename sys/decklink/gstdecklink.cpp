@@ -316,28 +316,53 @@ gst_decklink_get_connection (GstDecklinkConnectionEnum e)
 }
 
 static GstStructure *
-gst_decklink_mode_get_structure (GstDecklinkModeEnum e)
+gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f)
 {
   const GstDecklinkMode *mode = &modes[e];
-
-  return gst_structure_new ("video/x-raw",
-      "format", G_TYPE_STRING, "UYVY",
+  GstStructure *s = gst_structure_new ("video/x-raw",
       "width", G_TYPE_INT, mode->width,
       "height", G_TYPE_INT, mode->height,
-      "framerate", GST_TYPE_FRACTION, mode->fps_n, mode->fps_d,
-      "interlace-mode", G_TYPE_STRING,
-      mode->interlaced ? "interleaved" : "progressive", "pixel-aspect-ratio",
-      GST_TYPE_FRACTION, mode->par_n, mode->par_d, "colorimetry", G_TYPE_STRING,
-      mode->colorimetry, "chroma-site", G_TYPE_STRING, "mpeg2", NULL);
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, mode->par_n, mode->par_d,
+      "interlace-mode", G_TYPE_STRING, mode->interlaced ? "interleaved" : "progressive",
+      "framerate", GST_TYPE_FRACTION, mode->fps_n, mode->fps_d, NULL);
+
+  switch (f) {
+    case bmdFormat8BitYUV: /* '2vuy' */
+      gst_structure_set (s, "format", G_TYPE_STRING, "UYVY",
+          "colorimetry", G_TYPE_STRING, mode->colorimetry,
+          "chroma-site", G_TYPE_STRING, "mpeg2", NULL);
+      break;
+    case bmdFormat10BitYUV: /* 'v210' */
+      gst_structure_set (s, "format", G_TYPE_STRING, "v210", NULL);
+      break;
+    case bmdFormat8BitARGB: /* 'ARGB' */
+      gst_structure_set (s, "format", G_TYPE_STRING, "ARGB", NULL);
+      break;
+    case bmdFormat8BitBGRA: /* 'BGRA' */
+      gst_structure_set (s, "format", G_TYPE_STRING, "BGRA", NULL);
+      break;
+    case bmdFormat10BitRGB: /* 'r210' Big-endian RGB 10-bit per component with SMPTE video levels (64-960). Packed as 2:10:10:10 */
+    case bmdFormat12BitRGB: /* 'R12B' Big-endian RGB 12-bit per component with full range (0-4095). Packed as 12-bit per component */
+    case bmdFormat12BitRGBLE: /* 'R12L' Little-endian RGB 12-bit per component with full range (0-4095). Packed as 12-bit per component */
+    case bmdFormat10BitRGBXLE: /* 'R10l' Little-endian 10-bit RGB with SMPTE video levels (64-940) */
+    case bmdFormat10BitRGBX: /* 'R10b' Big-endian 10-bit RGB with SMPTE video levels (64-940) */
+    default:
+      GST_WARNING ("format not supported %d", f);
+      gst_structure_free (s);
+      s = NULL;
+      break;
+  }
+
+  return s;
 }
 
 GstCaps *
-gst_decklink_mode_get_caps (GstDecklinkModeEnum e)
+gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDPixelFormat f)
 {
   GstCaps *caps;
 
   caps = gst_caps_new_empty ();
-  gst_caps_append_structure (caps, gst_decklink_mode_get_structure (e));
+  gst_caps_append_structure (caps, gst_decklink_mode_get_structure (e, f));
 
   return caps;
 }
@@ -351,7 +376,9 @@ gst_decklink_mode_get_template_caps (void)
 
   caps = gst_caps_new_empty ();
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
-    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i);
+    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i, bmdFormat8BitYUV);
+    gst_caps_append_structure (caps, s);
+    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i, bmdFormat8BitARGB);
     gst_caps_append_structure (caps, s);
   }
 
@@ -365,7 +392,7 @@ gst_decklink_find_mode_for_caps (GstCaps * caps)
   GstCaps *mode_caps;
 
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
-    mode_caps = gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i);
+    mode_caps = gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, bmdFormat8BitYUV);
     if (gst_caps_can_intersect (caps, mode_caps)) {
       gst_caps_unref (mode_caps);
       return gst_decklink_get_mode ((GstDecklinkModeEnum) i);
@@ -470,19 +497,25 @@ public:
 
   virtual HRESULT STDMETHODCALLTYPE
       VideoInputFormatChanged (BMDVideoInputFormatChangedEvents,
-      IDeckLinkDisplayMode * mode, BMDDetectedVideoInputFormatFlags)
+      IDeckLinkDisplayMode * mode, BMDDetectedVideoInputFormatFlags formatFlags)
   {
+    BMDPixelFormat pixelFormat = bmdFormat8BitYUV;
+
     GST_INFO ("Video input format changed");
+
+    if (formatFlags & bmdDetectedVideoInputRGB444)
+      pixelFormat = bmdFormat8BitARGB;
 
     g_mutex_lock (&m_input->lock);
     m_input->input->PauseStreams ();
     m_input->input->EnableVideoInput (mode->GetDisplayMode (),
-        bmdFormat8BitYUV, bmdVideoInputEnableFormatDetection);
+        pixelFormat, bmdVideoInputEnableFormatDetection);
     m_input->input->FlushStreams ();
     m_input->input->StartStreams ();
     m_input->mode =
         gst_decklink_get_mode (gst_decklink_get_mode_enum_from_bmd
         (mode->GetDisplayMode ()));
+    m_input->format = pixelFormat;
     g_mutex_unlock (&m_input->lock);
 
     return S_OK;

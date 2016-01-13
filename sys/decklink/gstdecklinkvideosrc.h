@@ -52,6 +52,7 @@ struct _GstDecklinkVideoSrc
 
   GstDecklinkModeEnum mode;
   GstDecklinkModeEnum caps_mode;
+  BMDPixelFormat caps_format;
   GstDecklinkConnectionEnum connection;
   gint device_number;
 

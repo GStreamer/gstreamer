@@ -330,7 +330,7 @@ gst_decklink_video_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   if (self->mode == GST_DECKLINK_MODE_AUTO)
     mode_caps = gst_decklink_mode_get_template_caps ();
   else
-    mode_caps = gst_decklink_mode_get_caps (self->mode);
+    mode_caps = gst_decklink_mode_get_caps (self->mode, bmdFormat8BitYUV);
   mode_caps = gst_caps_make_writable (mode_caps);
   /* For output we support any framerate and only really care about timestamps */
   gst_caps_map_in_place (mode_caps, reset_framerate, NULL);

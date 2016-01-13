@@ -47,6 +47,7 @@ typedef struct
   IDeckLinkVideoInputFrame *frame;
   GstClockTime capture_time, capture_duration;
   GstDecklinkModeEnum mode;
+  BMDPixelFormat format;
 } CaptureFrame;
 
 static void
@@ -178,6 +179,7 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
 {
   self->mode = DEFAULT_MODE;
   self->caps_mode = GST_DECKLINK_MODE_AUTO;
+  self->caps_format = bmdFormat8BitYUV;
   self->connection = DEFAULT_CONNECTION;
   self->device_number = 0;
   self->buffer_size = DEFAULT_BUFFER_SIZE;
@@ -352,9 +354,9 @@ gst_decklink_video_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 
   g_mutex_lock (&self->lock);
   if (self->caps_mode != GST_DECKLINK_MODE_AUTO)
-    mode_caps = gst_decklink_mode_get_caps (self->caps_mode);
+    mode_caps = gst_decklink_mode_get_caps (self->caps_mode, self->caps_format);
   else
-    mode_caps = gst_decklink_mode_get_caps (self->mode);
+    mode_caps = gst_decklink_mode_get_caps (self->mode, self->caps_format);
   g_mutex_unlock (&self->lock);
 
   if (filter) {
@@ -481,6 +483,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
     f->capture_time = capture_time;
     f->capture_duration = capture_duration;
     f->mode = mode;
+    f->format = frame->GetPixelFormat ();
     frame->AddRef ();
     g_queue_push_tail (&self->current_frames, f);
     g_cond_signal (&self->cond);
@@ -515,12 +518,14 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   }
 
   g_mutex_lock (&self->lock);
-  if (self->mode == GST_DECKLINK_MODE_AUTO && self->caps_mode != f->mode) {
-    GST_DEBUG_OBJECT (self, "Mode changed from %d to %d", self->caps_mode,
-        f->mode);
+  if (self->mode == GST_DECKLINK_MODE_AUTO &&
+      (self->caps_mode != f->mode || self->caps_format != f->format)) {
+    GST_DEBUG_OBJECT (self, "Mode/Format changed from %d/%d to %d/%d",
+        self->caps_mode, self->caps_format, f->mode, f->format);
     self->caps_mode = f->mode;
+    self->caps_format = f->format;
     g_mutex_unlock (&self->lock);
-    caps = gst_decklink_mode_get_caps (f->mode);
+    caps = gst_decklink_mode_get_caps (f->mode, f->format);
     gst_video_info_from_caps (&self->info, caps);
     gst_base_src_set_caps (GST_BASE_SRC_CAST (bsrc), caps);
     gst_element_post_message (GST_ELEMENT_CAST (self),

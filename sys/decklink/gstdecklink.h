@@ -126,7 +126,7 @@ struct _GstDecklinkMode {
 const GstDecklinkMode * gst_decklink_get_mode (GstDecklinkModeEnum e);
 const GstDecklinkModeEnum gst_decklink_get_mode_enum_from_bmd (BMDDisplayMode mode);
 const BMDVideoConnection gst_decklink_get_connection (GstDecklinkConnectionEnum e);
-GstCaps * gst_decklink_mode_get_caps (GstDecklinkModeEnum e);
+GstCaps * gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDPixelFormat f);
 GstCaps * gst_decklink_mode_get_template_caps (void);
 
 typedef struct _GstDecklinkOutput GstDecklinkOutput;
@@ -172,6 +172,7 @@ struct _GstDecklinkInput {
   void (*got_video_frame) (GstElement *videosrc, IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode, GstClockTime capture_time, GstClockTime capture_duration);
   /* Configured mode or NULL */
   const GstDecklinkMode *mode;
+  BMDPixelFormat format;
 
   /* Set by the audio source */
   void (*got_audio_packet) (GstElement *videosrc, IDeckLinkAudioInputPacket * packet, GstClockTime capture_time);
