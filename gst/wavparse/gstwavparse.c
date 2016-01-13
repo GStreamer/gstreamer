@@ -2322,8 +2322,6 @@ gst_wavparse_flush_data (GstWavParse * wav)
   guint av;
 
   if ((av = gst_adapter_available (wav->adapter)) > 0) {
-    wav->dataleft = av;
-    wav->end_offset = wav->offset + av;
     ret = gst_wavparse_stream_data (wav);
   }
 
