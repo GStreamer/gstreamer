@@ -70,7 +70,8 @@ enum
 #define gst_gl_filter_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLFilter, gst_gl_filter, GST_TYPE_GL_BASE_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_gl_filter_debug, "glfilter", 0,
-        "glfilter element"););
+        "glfilter element");
+    );
 
 static void gst_gl_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -97,6 +98,8 @@ static gboolean gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     GstCaps * outcaps);
 static gboolean gst_gl_filter_gl_start (GstGLBaseFilter * filter);
 static void gst_gl_filter_gl_stop (GstGLBaseFilter * filter);
+static gboolean gst_gl_filter_gl_set_caps (GstGLBaseFilter * bt,
+    GstCaps * incaps, GstCaps * outcaps);
 
 static void
 gst_gl_filter_class_init (GstGLFilterClass * klass)
@@ -124,6 +127,7 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
 
   GST_GL_BASE_FILTER_CLASS (klass)->gl_start = gst_gl_filter_gl_start;
   GST_GL_BASE_FILTER_CLASS (klass)->gl_stop = gst_gl_filter_gl_stop;
+  GST_GL_BASE_FILTER_CLASS (klass)->gl_set_caps = gst_gl_filter_gl_set_caps;
 
   klass->transform_internal_caps = default_transform_internal_caps;
 
@@ -183,44 +187,11 @@ gst_gl_filter_gl_start (GstGLBaseFilter * base_filter)
 {
   GstGLFilter *filter = GST_GL_FILTER (base_filter);
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
-  gint out_width, out_height;
-
-  out_width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
-
-  if (filter->fbo) {
-    gst_gl_context_del_fbo (context, filter->fbo, filter->depthbuffer);
-    filter->fbo = 0;
-    filter->depthbuffer = 0;
-  }
-  //blocking call, generate a FBO
-  if (!gst_gl_context_gen_fbo (context, out_width, out_height,
-          &filter->fbo, &filter->depthbuffer))
-    goto context_error;
 
   if (filter_class->display_init_cb)
     filter_class->display_init_cb (filter);
 
-  if (filter_class->init_fbo) {
-    if (!filter_class->init_fbo (filter))
-      goto error;
-  }
-
   return TRUE;
-
-context_error:
-  {
-    GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND, ("Could not generate FBO"),
-        (NULL));
-    return FALSE;
-  }
-error:
-  {
-    GST_ELEMENT_ERROR (filter, LIBRARY, INIT,
-        ("Subclass failed to initialize."), (NULL));
-    return FALSE;
-  }
 }
 
 static void
@@ -684,6 +655,49 @@ gst_gl_filter_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
 }
 
 static gboolean
+gst_gl_filter_gl_set_caps (GstGLBaseFilter * bt, GstCaps * incaps,
+    GstCaps * outcaps)
+{
+  GstGLFilter *filter = GST_GL_FILTER (bt);
+  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
+  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
+  gint out_width, out_height;
+
+  out_width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
+
+  if (filter->fbo) {
+    gst_gl_context_del_fbo (context, filter->fbo, filter->depthbuffer);
+    filter->fbo = 0;
+    filter->depthbuffer = 0;
+  }
+  //blocking call, generate a FBO
+  if (!gst_gl_context_gen_fbo (context, out_width, out_height,
+          &filter->fbo, &filter->depthbuffer))
+    goto context_error;
+
+  if (filter_class->init_fbo) {
+    if (!filter_class->init_fbo (filter))
+      goto error;
+  }
+
+  return TRUE;
+
+context_error:
+  {
+    GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND, ("Could not generate FBO"),
+        (NULL));
+    return FALSE;
+  }
+error:
+  {
+    GST_ELEMENT_ERROR (filter, LIBRARY, INIT,
+        ("Subclass failed to initialize."), (NULL));
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     GstCaps * outcaps)
 {
@@ -710,7 +724,8 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info), incaps, outcaps);
 
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->set_caps (bt, incaps,
+      outcaps);
 
 /* ERRORS */
 wrong_caps:
