@@ -327,6 +327,20 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
       &transformation->view_matrix, &modelview_matrix);
   graphene_matrix_multiply (&modelview_matrix,
       &transformation->projection_matrix, &transformation->mvp_matrix);
+
+  if (filter->in_info.finfo) {
+    gboolean passthrough = transformation->xtranslation == 0.
+        && transformation->ytranslation == 0.
+        && transformation->ztranslation == 0.
+        && transformation->xrotation == 0.
+        && transformation->yrotation == 0.
+        && transformation->zrotation == 0.
+        && transformation->xscale == 1.
+        && transformation->yscale == 1.
+        && gst_video_info_is_equal (&filter->in_info, &filter->out_info);
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (transformation),
+        passthrough);
+  }
 }
 
 static void
