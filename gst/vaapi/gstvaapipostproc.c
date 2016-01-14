@@ -1100,7 +1100,7 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
     peer_caps =
         gst_pad_peer_query_caps (GST_BASE_TRANSFORM_SRC_PAD (trans),
         postproc->allowed_srcpad_caps);
-    if (gst_caps_is_empty (peer_caps))
+    if (gst_caps_is_any (peer_caps) || gst_caps_is_empty (peer_caps))
       return peer_caps;
     if (!gst_caps_is_fixed (peer_caps))
       peer_caps = gst_caps_fixate (peer_caps);
