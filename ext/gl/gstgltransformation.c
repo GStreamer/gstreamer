@@ -265,73 +265,75 @@ gst_gl_transformation_init (GstGLTransformation * filter)
 static void
 gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
 {
-  graphene_point3d_t translation_vector =
-      GRAPHENE_POINT3D_INIT (transformation->xtranslation * 2.0 *
-      transformation->aspect,
-      transformation->ytranslation * 2.0,
-      transformation->ztranslation * 2.0);
-
-  graphene_point3d_t pivot_vector =
-      GRAPHENE_POINT3D_INIT (-transformation->xpivot * transformation->aspect,
-      transformation->ypivot,
-      -transformation->zpivot);
-
-  graphene_point3d_t negative_pivot_vector;
-
+  GstGLFilter *filter = GST_GL_FILTER (transformation);
   graphene_matrix_t modelview_matrix;
 
-  graphene_vec3_t eye;
-  graphene_vec3_t center;
-  graphene_vec3_t up;
+  if (!filter->out_info.finfo) {
+    graphene_matrix_init_identity (&transformation->model_matrix);
+    graphene_matrix_init_identity (&transformation->view_matrix);
+    graphene_matrix_init_identity (&transformation->projection_matrix);
+  } else {
+    graphene_point3d_t translation_vector =
+        GRAPHENE_POINT3D_INIT (transformation->xtranslation * 2.0 *
+        transformation->aspect,
+        transformation->ytranslation * 2.0,
+        transformation->ztranslation * 2.0);
 
-  graphene_vec3_init (&eye, 0.f, 0.f, 1.f);
-  graphene_vec3_init (&center, 0.f, 0.f, 0.f);
-  graphene_vec3_init (&up, 0.f, 1.f, 0.f);
+    graphene_point3d_t pivot_vector =
+        GRAPHENE_POINT3D_INIT (-transformation->xpivot * transformation->aspect,
+        transformation->ypivot,
+        -transformation->zpivot);
 
-  /* Translate into pivot origin */
-  graphene_matrix_init_translate (&transformation->model_matrix, &pivot_vector);
+    graphene_point3d_t negative_pivot_vector;
 
-  /* Scale */
-  graphene_matrix_scale (&transformation->model_matrix,
-      transformation->xscale, transformation->yscale, 1.0f);
+    graphene_vec3_t eye;
+    graphene_vec3_t center;
+    graphene_vec3_t up;
+
+    gboolean passthrough;
+
+    graphene_vec3_init (&eye, 0.f, 0.f, 1.f);
+    graphene_vec3_init (&center, 0.f, 0.f, 0.f);
+    graphene_vec3_init (&up, 0.f, 1.f, 0.f);
+
+    /* Translate into pivot origin */
+    graphene_matrix_init_translate (&transformation->model_matrix, &pivot_vector);
+
+    /* Scale */
+    graphene_matrix_scale (&transformation->model_matrix,
+        transformation->xscale, transformation->yscale, 1.0f);
 
   /* Rotation */
-  graphene_matrix_rotate (&transformation->model_matrix,
-      transformation->xrotation, graphene_vec3_x_axis ());
-  graphene_matrix_rotate (&transformation->model_matrix,
-      transformation->yrotation, graphene_vec3_y_axis ());
-  graphene_matrix_rotate (&transformation->model_matrix,
-      transformation->zrotation, graphene_vec3_z_axis ());
+    graphene_matrix_rotate (&transformation->model_matrix,
+        transformation->xrotation, graphene_vec3_x_axis ());
+    graphene_matrix_rotate (&transformation->model_matrix,
+        transformation->yrotation, graphene_vec3_y_axis ());
+    graphene_matrix_rotate (&transformation->model_matrix,
+        transformation->zrotation, graphene_vec3_z_axis ());
 
   /* Translate back from pivot origin */
-  graphene_point3d_scale (&pivot_vector, -1.0, &negative_pivot_vector);
-  graphene_matrix_translate (&transformation->model_matrix,
-      &negative_pivot_vector);
+    graphene_point3d_scale (&pivot_vector, -1.0, &negative_pivot_vector);
+    graphene_matrix_translate (&transformation->model_matrix,
+        &negative_pivot_vector);
 
-  /* Translation */
-  graphene_matrix_translate (&transformation->model_matrix,
-      &translation_vector);
+    /* Translation */
+    graphene_matrix_translate (&transformation->model_matrix,
+        &translation_vector);
 
-  if (transformation->ortho) {
-    graphene_matrix_init_ortho (&transformation->projection_matrix,
-        -transformation->aspect, transformation->aspect,
-        -1, 1, transformation->znear, transformation->zfar);
-  } else {
-    graphene_matrix_init_perspective (&transformation->projection_matrix,
-        transformation->fov,
-        transformation->aspect, transformation->znear, transformation->zfar);
-  }
+    if (transformation->ortho) {
+      graphene_matrix_init_ortho (&transformation->projection_matrix,
+          -transformation->aspect, transformation->aspect,
+          -1, 1, transformation->znear, transformation->zfar);
+    } else {
+      graphene_matrix_init_perspective (&transformation->projection_matrix,
+          transformation->fov,
+          transformation->aspect, transformation->znear, transformation->zfar);
+    }
 
-  graphene_matrix_init_look_at (&transformation->view_matrix, &eye, &center,
-      &up);
+    graphene_matrix_init_look_at (&transformation->view_matrix, &eye, &center,
+        &up);
 
-  graphene_matrix_multiply (&transformation->model_matrix,
-      &transformation->view_matrix, &modelview_matrix);
-  graphene_matrix_multiply (&modelview_matrix,
-      &transformation->projection_matrix, &transformation->mvp_matrix);
-
-  if (filter->in_info.finfo) {
-    gboolean passthrough = transformation->xtranslation == 0.
+    passthrough = transformation->xtranslation == 0.
         && transformation->ytranslation == 0.
         && transformation->ztranslation == 0.
         && transformation->xrotation == 0.
@@ -343,6 +345,11 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (transformation),
         passthrough);
   }
+
+  graphene_matrix_multiply (&transformation->model_matrix,
+      &transformation->view_matrix, &modelview_matrix);
+  graphene_matrix_multiply (&modelview_matrix,
+      &transformation->projection_matrix, &transformation->mvp_matrix);
 }
 
 static void
