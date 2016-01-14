@@ -695,12 +695,9 @@ gst_device_monitor_add_filter (GstDeviceMonitor * monitor,
   /* Ensure there is no leak here */
   g_assert (factories == NULL);
 
-  if (matched) {
+  if (matched)
     id = filter->id;
-    g_ptr_array_add (monitor->priv->filters, filter);
-  } else {
-    device_filter_free (filter);
-  }
+  g_ptr_array_add (monitor->priv->filters, filter);
 
   GST_OBJECT_UNLOCK (monitor);
 
