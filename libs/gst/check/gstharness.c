@@ -1363,26 +1363,7 @@ gst_harness_wait_for_clock_id_waits (GstHarness * h, guint waits, guint timeout)
 gboolean
 gst_harness_crank_single_clock_wait (GstHarness * h)
 {
-  GstTestClock *testclock = h->priv->testclock;
-  GstClockID res, pending;
-  gboolean ret = FALSE;
-
-  gst_test_clock_wait_for_next_pending_id (testclock, &pending);
-  gst_test_clock_set_time (testclock, gst_clock_id_get_time (pending));
-  res = gst_test_clock_process_next_clock_id (testclock);
-  if (res == pending) {
-    GST_DEBUG ("cranked time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (gst_clock_get_time (GST_CLOCK (testclock))));
-    ret = TRUE;
-  } else {
-    GST_WARNING ("testclock next id != pending (%p != %p)", res, pending);
-  }
-
-  if (G_LIKELY (res != NULL))
-    gst_clock_id_unref (res);
-  gst_clock_id_unref (pending);
-
-  return ret;
+  return gst_test_clock_crank (h->priv->testclock);
 }
 
 /**
