@@ -55,6 +55,9 @@ struct _GstGLBaseFilter
   GstGLDisplay      *display;
   GstGLContext      *context;
 
+  GstCaps           *in_caps;
+  GstCaps           *out_caps;
+
   /* <private> */
   gpointer _padding[GST_PADDING];
 
@@ -66,6 +69,7 @@ struct _GstGLBaseFilter
  * @base_transform_class: parent class
  * @gl_start: called in the GL thread to setup the element GL state.
  * @gl_stop: called in the GL thread to setup the element GL state.
+ * @gl_set_caps: called in the GL thread when caps are set on @filter.
  */
 struct _GstGLBaseFilterClass
 {
@@ -74,6 +78,7 @@ struct _GstGLBaseFilterClass
 
   gboolean (*gl_start)          (GstGLBaseFilter *filter);
   void     (*gl_stop)           (GstGLBaseFilter *filter);
+  gboolean (*gl_set_caps)       (GstGLBaseFilter *filter, GstCaps * incaps, GstCaps * outcaps);
 
   gpointer _padding[GST_PADDING];
 };
