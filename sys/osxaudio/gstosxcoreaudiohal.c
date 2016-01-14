@@ -1238,7 +1238,7 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
       device_id = default_device_id;
       res = TRUE;
     } else {
-      /* No device of required type available */
+      GST_ERROR ("No device of required type available");
       res = FALSE;
     }
   } else {

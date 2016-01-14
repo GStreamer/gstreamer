@@ -48,6 +48,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/gst-i18n-plugin.h>
 #include <gst/audio/audio-channels.h>
 #include "gstosxaudioringbuffer.h"
 #include "gstosxaudiosink.h"
@@ -140,12 +141,22 @@ gst_osx_audio_ring_buffer_dispose (GObject * object)
 static gboolean
 gst_osx_audio_ring_buffer_open_device (GstAudioRingBuffer * buf)
 {
+  GstObject *osxel = GST_OBJECT_PARENT (buf);
   GstOsxAudioRingBuffer *osxbuf = GST_OSX_AUDIO_RING_BUFFER (buf);
 
-  if (!gst_core_audio_select_device (osxbuf->core_audio))
+  if (!gst_core_audio_select_device (osxbuf->core_audio)) {
+    GST_ELEMENT_ERROR (osxel, RESOURCE, NOT_FOUND,
+        (_("CoreAudio device not found")), (NULL));
     return FALSE;
+  }
 
-  return gst_core_audio_open (osxbuf->core_audio);
+  if (!gst_core_audio_open (osxbuf->core_audio)) {
+    GST_ELEMENT_ERROR (osxel, RESOURCE, OPEN_READ,
+        (_("CoreAudio device could not be opened")), (NULL));
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 static gboolean
