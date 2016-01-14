@@ -614,7 +614,14 @@ provider_unhidden (GstDeviceProvider * provider, const gchar * hidden,
  * @caps: (allow-none): the #GstCaps to filter or %NULL for ANY
  *
  * Adds a filter for which #GstDevice will be monitored, any device that matches
- * all classes and the #GstCaps will be returned.
+ * all these classes and the #GstCaps will be returned.
+ *
+ * If this function is called multiple times to add more filters, each will be
+ * matched independently. That is, adding more filters will not further restrict
+ * what devices are matched.
+ *
+ * The #GstCaps supported by the device as returned by gst_device_get_caps() are
+ * not intersected with caps filters added using this function.
  *
  * Filters must be added before the #GstDeviceMonitor is started.
  *
