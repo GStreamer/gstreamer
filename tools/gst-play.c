@@ -138,7 +138,8 @@ gst_play_printf (const gchar * format, ...)
 
 static GstPlay *
 play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
-    gboolean gapless, gdouble initial_volume, gboolean verbose, int flags)
+    gboolean gapless, gdouble initial_volume, gboolean verbose,
+    const gchar * flags_string)
 {
   GstElement *sink, *playbin;
   GstPlay *play;
@@ -178,8 +179,19 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
       g_warning ("Couldn't create specified video sink '%s'", video_sink);
   }
 
-  if (flags)
-    g_object_set (play->playbin, "flags", flags, NULL);
+  if (flags_string != NULL) {
+    GParamSpec *pspec;
+    GValue val = { 0, };
+
+    pspec =
+        g_object_class_find_property (G_OBJECT_GET_CLASS (playbin), "flags");
+    g_value_init (&val, pspec->value_type);
+    if (gst_value_deserialize (&val, flags_string))
+      g_object_set_property (G_OBJECT (play->playbin), "flags", &val);
+    else
+      g_printerr ("Couldn't convert '%s' to playbin flags!\n", flags_string);
+    g_value_unset (&val);
+  }
 
   if (verbose) {
     play->deep_notify_id = g_signal_connect (play->playbin, "deep-notify",
@@ -1107,7 +1119,6 @@ main (int argc, char **argv)
   GstPlay *play;
   GPtrArray *playlist;
   gboolean verbose = FALSE;
-  int flags = 0;
   gboolean print_version = FALSE;
   gboolean interactive = TRUE;
   gboolean gapless = FALSE;
@@ -1117,6 +1128,7 @@ main (int argc, char **argv)
   gchar *audio_sink = NULL;
   gchar *video_sink = NULL;
   gchar **uris;
+  gchar *flags = NULL;
   guint num, i;
   GError *err = NULL;
   GOptionContext *ctx;
@@ -1124,7 +1136,7 @@ main (int argc, char **argv)
   GOptionEntry options[] = {
     {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
         N_("Output status information and property notifications"), NULL},
-    {"flags", 0, 0, G_OPTION_ARG_INT, &flags,
+    {"flags", 0, 0, G_OPTION_ARG_STRING, &flags,
           N_("Control playback behaviour setting playbin 'flags' property"),
         NULL},
     {"version", 0, 0, G_OPTION_ARG_NONE, &print_version,
