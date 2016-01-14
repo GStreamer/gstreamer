@@ -28,10 +28,10 @@ import os.path
 from bisect import bisect_right, bisect_left
 import logging
 
-import glib
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Gdk
+from gi.repository import GLib
 
 from GstDebugViewer import Common, Data, Main
 from GstDebugViewer.GUI.columns import LineViewColumnManager, ViewColumnManager
@@ -850,8 +850,8 @@ class Window (object):
         bar.props.message_type = Gtk.MessageType.ERROR
         box = bar.get_content_area ()
 
-        markup = "<b>%s</b> %s" % (glib.markup_escape_text (message1),
-                                   glib.markup_escape_text (message2),)
+        markup = "<b>%s</b> %s" % (GLib.markup_escape_text (message1),
+                                   GLib.markup_escape_text (message2),)
         label = Gtk.Label ()
         label.props.use_markup = True
         label.props.label = markup

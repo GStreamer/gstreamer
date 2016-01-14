@@ -24,8 +24,7 @@ def _ (s):
 
 import logging
 
-import glib
-from gi.repository import Gtk
+from gi.repository import Gtk, GLib
 
 from GstDebugViewer import Common, Data
 from GstDebugViewer.GUI.colors import LevelColorThemeTango
@@ -347,13 +346,13 @@ class MessageColumn (TextColumn):
                 end = None
                 for start, end in ranges:
                     if prev_end < start:
-                        tags.append (glib.markup_escape_text (msg[prev_end:start]))
-                    msg_escape = glib.markup_escape_text (msg[start:end])
+                        tags.append (GLib.markup_escape_text (msg[prev_end:start]))
+                    msg_escape = GLib.markup_escape_text (msg[start:end])
                     tags.append ("<span foreground=\'#FFFFFF\'"
                                  " background=\'#0000FF\'>%s</span>" % (msg_escape,))
                     prev_end = end
                 if end is not None:
-                    tags.append (glib.markup_escape_text (msg[end:]))
+                    tags.append (GLib.markup_escape_text (msg[end:]))
                 cell.props.markup = "".join (tags)
 
         return message_data_func

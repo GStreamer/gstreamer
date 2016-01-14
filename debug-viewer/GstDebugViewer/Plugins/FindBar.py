@@ -24,8 +24,7 @@ import logging
 from GstDebugViewer import Common, Data, GUI
 from GstDebugViewer.Plugins import *
 
-import glib
-from gi.repository import GObject
+from gi.repository import GObject, GLib
 from gi.repository import Gtk
 
 class SearchOperation (object):
@@ -183,7 +182,7 @@ class FindBarWidget (Gtk.HBox):
 
     def __set_status (self, text):
 
-        markup = "<b>%s</b>" % (glib.markup_escape_text (text),)
+        markup = "<b>%s</b>" % (GLib.markup_escape_text (text),)
 
         self.status_label.props.label = markup
 
