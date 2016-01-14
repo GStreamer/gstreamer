@@ -247,6 +247,10 @@ gst_test_http_src_reset_input (GstTestHTTPSrc * src)
     gst_structure_free (src->extra_headers);
     src->extra_headers = NULL;
   }
+  g_free (src->http_method_name);
+  src->http_method_name = NULL;
+  g_free (src->user_agent);
+  src->user_agent = NULL;
   src->duration_changed = FALSE;
 }
 
