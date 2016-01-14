@@ -828,25 +828,38 @@ GstCaps *
 gst_gl_color_convert_transform_caps (GstGLContext * convert,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  GstCaps *templ, *result;
-
-  templ = gst_caps_from_string (GST_GL_COLOR_CONVERT_VIDEO_CAPS);
-
   caps = gst_gl_color_convert_caps_remove_format_info (caps);
-
-  result = gst_caps_intersect (caps, templ);
-  gst_caps_unref (caps);
-  gst_caps_unref (templ);
 
   if (filter) {
     GstCaps *tmp;
 
-    tmp = gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (result);
-    result = tmp;
+    tmp = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = tmp;
   }
 
-  return result;
+  return caps;
+}
+
+static void
+gst_gl_color_convert_fixate_format (GstStructure * ins, GstStructure * outs)
+{
+  const gchar *in_format = gst_structure_get_string (ins, "format");
+  const GValue *out_formats = gst_structure_get_value (outs, "format");
+  guint i;
+
+  if (in_format == NULL || !GST_VALUE_HOLDS_LIST (out_formats))
+    /* we don't need to or don't know how to fixate */
+    return;
+
+  for (i = 0; i < gst_value_list_get_size (out_formats); i++) {
+    const gchar *format =
+        g_value_get_string (gst_value_list_get_value (out_formats, i));
+    if (!strcmp (format, in_format)) {
+      gst_structure_set (outs, "format", G_TYPE_STRING, format, NULL);
+      break;
+    }
+  }
 }
 
 GstCaps *
@@ -869,7 +882,9 @@ gst_gl_color_convert_fixate_caps (GstGLContext * convert,
   targets_mask = gst_gl_value_get_texture_target_mask (targets);
   other_targets_mask = gst_gl_value_get_texture_target_mask (other_targets);
 
-  /* XXX: attempt to fixate the format/colorimetry/etc */
+  gst_gl_color_convert_fixate_format (s, s_other);
+
+  /* XXX: attempt to fixate the colorimetry/etc */
   other = gst_caps_fixate (other);
 
   result_mask = targets_mask & other_targets_mask;
@@ -878,7 +893,6 @@ gst_gl_color_convert_fixate_caps (GstGLContext * convert,
     return other;
   }
 
-  caps = gst_caps_copy (caps);
   caps = gst_caps_fixate (caps);
 
   gst_video_info_from_caps (&info, caps);
