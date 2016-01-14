@@ -71,6 +71,9 @@ struct _GstGLTransformation
     gfloat zfar;
     gboolean ortho;
 
+    graphene_matrix_t model_matrix;
+    graphene_matrix_t view_matrix;
+    graphene_matrix_t projection_matrix;
     graphene_matrix_t mvp_matrix;
 
     gboolean caps_change;

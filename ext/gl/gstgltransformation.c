@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2014 Lubosz Sarnecki <lubosz@gmail.com>
+ * Copyright (C) 2016 Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -86,6 +87,8 @@ static void gst_gl_transformation_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_gl_transformation_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
+static gboolean gst_gl_transformation_src_event (GstBaseTransform * trans,
+    GstEvent * event);
 
 static void gst_gl_transformation_reset_gl (GstGLFilter * filter);
 static gboolean gst_gl_transformation_stop (GstBaseTransform * trans);
@@ -126,12 +129,16 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
+  GstBaseTransformClass *base_transform_class;
 
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
+  base_transform_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->set_property = gst_gl_transformation_set_property;
   gobject_class->get_property = gst_gl_transformation_get_property;
+
+  base_transform_class->src_event = gst_gl_transformation_src_event;
 
   GST_GL_FILTER_CLASS (klass)->init_fbo = gst_gl_transformation_init_shader;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
@@ -218,18 +225,19 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
       g_param_spec_float ("pivot-z", "Z Pivot",
           "Relevant for rotation in 3D space. You look into the negative Z axis direction",
           -G_MAXFLOAT, G_MAXFLOAT, 0.0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /* MVP */
   g_object_class_install_property (gobject_class, PROP_MVP,
       g_param_spec_boxed ("mvp-matrix",
           "Modelview Projection Matrix",
           "The final Graphene 4x4 Matrix for transformation",
-          GRAPHENE_TYPE_MATRIX, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          GRAPHENE_TYPE_MATRIX, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (element_class, "OpenGL transformation filter",
       "Filter/Effect/Video", "Transform video on the GPU",
-      "Lubosz Sarnecki <lubosz@gmail.com>");
+      "Lubosz Sarnecki <lubosz@gmail.com>\n"
+      "Matthew Waters <matthew@centricular.com>");
 
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;
@@ -268,10 +276,7 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
 
   graphene_point3d_t negative_pivot_vector;
 
-  graphene_matrix_t model_matrix;
-  graphene_matrix_t projection_matrix;
-  graphene_matrix_t view_matrix;
-  graphene_matrix_t vp_matrix;
+  graphene_matrix_t modelview_matrix;
 
   graphene_vec3_t eye;
   graphene_vec3_t center;
@@ -282,42 +287,46 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
   graphene_vec3_init (&up, 0.f, 1.f, 0.f);
 
   /* Translate into pivot origin */
-  graphene_matrix_init_translate (&model_matrix, &pivot_vector);
+  graphene_matrix_init_translate (&transformation->model_matrix, &pivot_vector);
 
   /* Scale */
-  graphene_matrix_scale (&model_matrix,
+  graphene_matrix_scale (&transformation->model_matrix,
       transformation->xscale, transformation->yscale, 1.0f);
 
   /* Rotation */
-  graphene_matrix_rotate (&model_matrix,
+  graphene_matrix_rotate (&transformation->model_matrix,
       transformation->xrotation, graphene_vec3_x_axis ());
-  graphene_matrix_rotate (&model_matrix,
+  graphene_matrix_rotate (&transformation->model_matrix,
       transformation->yrotation, graphene_vec3_y_axis ());
-  graphene_matrix_rotate (&model_matrix,
+  graphene_matrix_rotate (&transformation->model_matrix,
       transformation->zrotation, graphene_vec3_z_axis ());
 
   /* Translate back from pivot origin */
   graphene_point3d_scale (&pivot_vector, -1.0, &negative_pivot_vector);
-  graphene_matrix_translate (&model_matrix, &negative_pivot_vector);
+  graphene_matrix_translate (&transformation->model_matrix,
+      &negative_pivot_vector);
 
   /* Translation */
-  graphene_matrix_translate (&model_matrix, &translation_vector);
+  graphene_matrix_translate (&transformation->model_matrix,
+      &translation_vector);
 
   if (transformation->ortho) {
-    graphene_matrix_init_ortho (&projection_matrix,
+    graphene_matrix_init_ortho (&transformation->projection_matrix,
         -transformation->aspect, transformation->aspect,
         -1, 1, transformation->znear, transformation->zfar);
   } else {
-    graphene_matrix_init_perspective (&projection_matrix,
+    graphene_matrix_init_perspective (&transformation->projection_matrix,
         transformation->fov,
         transformation->aspect, transformation->znear, transformation->zfar);
   }
 
-  graphene_matrix_init_look_at (&view_matrix, &eye, &center, &up);
+  graphene_matrix_init_look_at (&transformation->view_matrix, &eye, &center,
+      &up);
 
-  graphene_matrix_multiply (&view_matrix, &projection_matrix, &vp_matrix);
-  graphene_matrix_multiply (&model_matrix, &vp_matrix,
-      &transformation->mvp_matrix);
+  graphene_matrix_multiply (&transformation->model_matrix,
+      &transformation->view_matrix, &modelview_matrix);
+  graphene_matrix_multiply (&modelview_matrix,
+      &transformation->projection_matrix, &transformation->mvp_matrix);
 }
 
 static void
@@ -365,11 +374,6 @@ gst_gl_transformation_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PIVOT_Z:
       filter->zpivot = g_value_get_float (value);
-      break;
-    case PROP_MVP:
-      if (g_value_get_boxed (value) != NULL)
-        filter->mvp_matrix = *((graphene_matrix_t *) g_value_get_boxed (value));
-      return;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -448,6 +452,152 @@ gst_gl_transformation_set_caps (GstGLFilter * filter, GstCaps * incaps,
   gst_gl_transformation_build_mvp (transformation);
 
   return TRUE;
+}
+
+static void
+_find_plane_normal (const graphene_point3d_t * A, const graphene_point3d_t * B,
+    const graphene_point3d_t * C, graphene_vec3_t * plane_normal)
+{
+  graphene_vec3_t U, V, A_v, B_v, C_v;
+
+  graphene_point3d_to_vec3 (A, &A_v);
+  graphene_point3d_to_vec3 (B, &B_v);
+  graphene_point3d_to_vec3 (C, &C_v);
+
+  graphene_vec3_subtract (&B_v, &A_v, &U);
+  graphene_vec3_subtract (&C_v, &A_v, &V);
+
+  graphene_vec3_cross (&U, &V, plane_normal);
+  graphene_vec3_normalize (plane_normal, plane_normal);
+}
+
+static void
+_find_model_coords (GstGLTransformation * transformation,
+    const graphene_point3d_t * screen_coords, graphene_point3d_t * res)
+{
+  graphene_matrix_t modelview, inverse_proj, inverse_modelview;
+  graphene_vec4_t v1, v2;
+  graphene_point3d_t p1;
+  gfloat w;
+
+  graphene_vec4_init (&v1, screen_coords->x, screen_coords->y, screen_coords->z,
+      1.);
+  graphene_matrix_inverse (&transformation->projection_matrix, &inverse_proj);
+  graphene_matrix_transform_vec4 (&inverse_proj, &v1, &v2);
+
+  /* perspective division */
+  w = graphene_vec4_get_w (&v2);
+  p1.x = graphene_vec4_get_x (&v2) / w;
+  p1.y = graphene_vec4_get_y (&v2) / w;
+  p1.z = graphene_vec4_get_z (&v2) / w;
+
+  graphene_matrix_multiply (&transformation->model_matrix,
+      &transformation->view_matrix, &modelview);
+  graphene_matrix_inverse (&modelview, &inverse_modelview);
+  graphene_matrix_transform_point3d (&inverse_modelview, &p1, res);
+}
+
+static gboolean
+gst_gl_transformation_src_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstGLTransformation *transformation = GST_GL_TRANSFORMATION (trans);
+  GstGLFilter *filter = GST_GL_FILTER (trans);
+  gdouble new_x, new_y, x, y;
+  GstStructure *structure;
+  gboolean ret;
+
+  GST_DEBUG_OBJECT (trans, "handling %s event", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NAVIGATION:
+      event =
+          GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
+
+      structure = (GstStructure *) gst_event_get_structure (event);
+      if (gst_structure_get_double (structure, "pointer_x", &x) &&
+          gst_structure_get_double (structure, "pointer_y", &y)) {
+        gfloat w = (gfloat) GST_VIDEO_INFO_WIDTH (&filter->in_info);
+        gfloat h = (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->in_info);
+        graphene_point3d_t screen_point_near, screen_point_far;
+        graphene_point3d_t model_coord_near, model_coord_far;
+        graphene_point3d_t bottom_left, bottom_right, top_left, top_right;
+        graphene_point3d_t result;
+        graphene_vec3_t plane_normal;
+        graphene_plane_t video_plane;
+        gfloat d;
+
+        GST_DEBUG_OBJECT (trans, "converting %f,%f", x, y);
+
+        graphene_point3d_init (&top_left, -1., 1., 0.);
+        graphene_point3d_init (&top_right, 1., 1., 0.);
+        graphene_point3d_init (&bottom_left, -1., -1., 0.);
+        graphene_point3d_init (&bottom_right, 1., -1., 0.);
+        /* to NDC */
+        graphene_point3d_init (&screen_point_near, 2. * x / w - 1.,
+            2. * y / h - 1., -1.);
+        graphene_point3d_init (&screen_point_far, 2. * x / w - 1.,
+            2. * y / h - 1., 1.);
+
+        _find_plane_normal (&bottom_left, &top_left, &top_right, &plane_normal);
+        graphene_plane_init_from_point (&video_plane, &plane_normal, &top_left);
+        d = graphene_plane_get_constant (&video_plane);
+
+        /* get the closest and furthest points in the viewing area for the
+         * specified screen coordinate in order to construct a ray */
+        _find_model_coords (transformation, &screen_point_near,
+            &model_coord_near);
+        _find_model_coords (transformation, &screen_point_far,
+            &model_coord_far);
+
+        {
+          graphene_vec3_t model_coord_near_vec3, model_coord_far_vec3;
+          graphene_vec3_t tmp, intersection, coord_dir;
+          gfloat num, denom, t;
+
+          /* get the direction of the ray */
+          graphene_point3d_to_vec3 (&model_coord_near, &model_coord_near_vec3);
+          graphene_point3d_to_vec3 (&model_coord_far, &model_coord_far_vec3);
+          graphene_vec3_subtract (&model_coord_near_vec3, &model_coord_far_vec3,
+              &coord_dir);
+
+          /* Intersect the ray with the video plane to find the distance, t:
+           * Ray: P = P0 + t Pdir
+           * Plane: P dot N + d = 0
+           *
+           * Substituting for P and rearranging gives:
+           *
+           * t = (P0 dot N + d) / (Pdir dot N) */
+          denom = graphene_vec3_dot (&coord_dir, &plane_normal);
+          num = graphene_vec3_dot (&model_coord_near_vec3, &plane_normal);
+          t = -(num + d) / denom;
+
+          /* video coord = P0 + t Pdir */
+          graphene_vec3_scale (&coord_dir, t, &tmp);
+          graphene_vec3_add (&tmp, &model_coord_near_vec3, &intersection);
+          graphene_point3d_init_from_vec3 (&result, &intersection);
+        }
+
+        new_x = (result.x / transformation->aspect + 1.) * w / 2;
+        new_y = (result.y + 1.) * h / 2;
+
+        if (new_x < 0. || new_x > w || new_y < 0 || new_y > h) {
+          /* coords off video surface */
+          gst_event_unref (event);
+          return TRUE;
+        }
+
+        GST_DEBUG_OBJECT (trans, "to %fx%f", new_x, new_y);
+        gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, new_x,
+            "pointer_y", G_TYPE_DOUBLE, new_y, NULL);
+      }
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans, event);
+
+  return ret;
 }
 
 static void
