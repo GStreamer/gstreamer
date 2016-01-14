@@ -199,12 +199,14 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
   g_object_class_install_property (gobject_class, PROP_SCALE_X,
       g_param_spec_float ("scale-x", "X Scale",
           "Scale multiplier for the X-Axis.",
-          0.0, G_MAXFLOAT, 1.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          -G_MAXFLOAT, G_MAXFLOAT, 1.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SCALE_Y,
       g_param_spec_float ("scale-y", "Y Scale",
           "Scale multiplier for the Y-Axis.",
-          0.0, G_MAXFLOAT, 1.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          -G_MAXFLOAT, G_MAXFLOAT, 1.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Pivot */
   g_object_class_install_property (gobject_class, PROP_PIVOT_X,
