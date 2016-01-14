@@ -500,7 +500,8 @@ gst_gl_window_x11_handle_events (GstGLWindow * window, gboolean handle_events)
     if (handle_events) {
       XSelectInput (window_x11->device, window_x11->internal_win_id,
           StructureNotifyMask | ExposureMask | VisibilityChangeMask |
-          PointerMotionMask | KeyPressMask | KeyReleaseMask);
+          PointerMotionMask | KeyPressMask | KeyReleaseMask | ButtonPressMask |
+          ButtonReleaseMask);
     } else {
       XSelectInput (window_x11->device, window_x11->internal_win_id,
           StructureNotifyMask | ExposureMask | VisibilityChangeMask);
