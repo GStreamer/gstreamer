@@ -1245,6 +1245,7 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
     for (i = 0; i < ndevices; i++) {
       if (device_id == devices[i]) {
         res = TRUE;
+        break;
       }
     }
 
