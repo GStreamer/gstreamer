@@ -242,7 +242,8 @@ gst_net_client_internal_clock_finalize (GObject * object)
   }
 
   if (self->socket != NULL) {
-    g_socket_close (self->socket, NULL);
+    if (!g_socket_close (self->socket, NULL))
+      GST_ERROR_OBJECT (self, "Failed to close socket");
     g_object_unref (self->socket);
     self->socket = NULL;
   }
