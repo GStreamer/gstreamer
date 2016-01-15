@@ -42,6 +42,9 @@ typedef gpointer GLsync;
 #if !GST_GL_HAVE_GLUINT64
 typedef guint64 GLuint64;
 #endif
+#if !GST_GL_HAVE_GLINT64
+typedef gint64 GLint64;
+#endif
 
 #if !defined(GST_GL_DEBUG_PROC)
 #if defined(GLDEBUGPROC)
