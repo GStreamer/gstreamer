@@ -174,7 +174,7 @@ AC_HEADER_STDC
 
 dnl check for GCC specific SSE headers
 dnl these are used by the speex resampler code
-AC_CHECK_HEADERS([xmmintrin.h emmintrin.h])
+AC_CHECK_HEADERS([xmmintrin.h emmintrin.h smmintrin.h])
 
 dnl used in gst/tcp
 AC_CHECK_HEADERS([sys/socket.h],

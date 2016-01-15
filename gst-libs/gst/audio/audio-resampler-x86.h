@@ -17,7 +17,32 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_EMMINTRIN_H
+#if defined (HAVE_XMMINTRIN_H) && defined(__SSE__)
+#include <xmmintrin.h>
+
+static inline void
+inner_product_gfloat_1_sse (gfloat * o, const gfloat * a, const gfloat * b, gint len)
+{
+  gint i = 0;
+  __m128 sum = _mm_setzero_ps ();
+
+  for (; i < len; i += 8) {
+    sum =
+        _mm_add_ps (sum, _mm_mul_ps (_mm_loadu_ps (a + i + 0),
+            _mm_load_ps (b + i + 0)));
+    sum =
+        _mm_add_ps (sum, _mm_mul_ps (_mm_loadu_ps (a + i + 4),
+            _mm_load_ps (b + i + 4)));
+  }
+  sum = _mm_add_ps (sum, _mm_movehl_ps (sum, sum));
+  sum = _mm_add_ss (sum, _mm_shuffle_ps (sum, sum, 0x55));
+  _mm_store_ss (o, sum);
+}
+
+MAKE_RESAMPLE_FUNC (gfloat, 1, sse);
+#endif
+
+#if defined (HAVE_EMMINTRIN_H) && defined(__SSE2__)
 #include <emmintrin.h>
 
 static inline void
@@ -45,25 +70,6 @@ inner_product_gint16_1_sse2 (gint16 * o, const gint16 * a, const gint16 * b, gin
   sum = _mm_srai_epi32 (sum, PRECISION_S16);
   sum = _mm_packs_epi32 (sum, sum);
   *o = _mm_extract_epi16 (sum, 0);
-}
-
-static inline void
-inner_product_gfloat_1_sse (gfloat * o, const gfloat * a, const gfloat * b, gint len)
-{
-  gint i = 0;
-  __m128 sum = _mm_setzero_ps ();
-
-  for (; i < len; i += 8) {
-    sum =
-        _mm_add_ps (sum, _mm_mul_ps (_mm_loadu_ps (a + i + 0),
-            _mm_load_ps (b + i + 0)));
-    sum =
-        _mm_add_ps (sum, _mm_mul_ps (_mm_loadu_ps (a + i + 4),
-            _mm_load_ps (b + i + 4)));
-  }
-  sum = _mm_add_ps (sum, _mm_movehl_ps (sum, sum));
-  sum = _mm_add_ss (sum, _mm_shuffle_ps (sum, sum, 0x55));
-  _mm_store_ss (o, sum);
 }
 
 static inline void
@@ -150,26 +156,76 @@ inner_product_gdouble_2_sse2 (gdouble * o, const gdouble * a, const gdouble * b,
 }
 
 MAKE_RESAMPLE_FUNC (gint16, 1, sse2);
-MAKE_RESAMPLE_FUNC (gfloat, 1, sse);
 MAKE_RESAMPLE_FUNC (gdouble, 1, sse2);
 MAKE_RESAMPLE_FUNC (gint16, 2, sse2);
 MAKE_RESAMPLE_FUNC (gdouble, 2, sse2);
 #endif
 
+#if defined (HAVE_SMMINTRIN_H) && defined(__SSE4_1__)
+#include <smmintrin.h>
+
+static inline void
+inner_product_gint32_1_sse41 (gint32 * o, const gint32 * a, const gint32 * b,
+    gint len)
+{
+  gint i = 0;
+  __m128i sum, ta, tb;
+  gint64 res;
+
+  sum = _mm_setzero_si128 ();
+
+  for (; i < len; i += 8) {
+    ta = _mm_loadu_si128 ((__m128i *) (a + i));
+    tb = _mm_load_si128 ((__m128i *) (b + i));
+
+    sum =
+        _mm_add_epi64 (sum, _mm_mul_epi32 (_mm_unpacklo_epi32 (ta, ta),
+            _mm_unpacklo_epi32 (tb, tb)));
+    sum =
+        _mm_add_epi64 (sum, _mm_mul_epi32 (_mm_unpackhi_epi32 (ta, ta),
+            _mm_unpackhi_epi32 (tb, tb)));
+
+    ta = _mm_loadu_si128 ((__m128i *) (a + i + 4));
+    tb = _mm_load_si128 ((__m128i *) (b + i + 4));
+
+    sum =
+        _mm_add_epi64 (sum, _mm_mul_epi32 (_mm_unpacklo_epi32 (ta, ta),
+            _mm_unpacklo_epi32 (tb, tb)));
+    sum =
+        _mm_add_epi64 (sum, _mm_mul_epi32 (_mm_unpackhi_epi32 (ta, ta),
+            _mm_unpackhi_epi32 (tb, tb)));
+  }
+  sum = _mm_add_epi64 (sum, _mm_unpackhi_epi64 (sum, sum));
+  res = _mm_cvtsi128_si64 (sum);
+
+  res = (res + (1 << (PRECISION_S32 - 1))) >> PRECISION_S32;
+  *o = CLAMP (res, -(1L << 31), (1L << 31) - 1);
+}
+
+MAKE_RESAMPLE_FUNC (gint32, 1, sse41);
+#endif
+
 static void
 audio_resampler_check_x86 (const gchar *option)
 {
-#ifdef HAVE_EMMINTRIN_H
   if (!strcmp (option, "sse")) {
+#if defined (HAVE_XMMINTRIN_H) && defined(__SSE__)
     GST_DEBUG ("enable SSE optimisations");
     resample_gfloat_1 = resample_gfloat_1_sse;
+#endif
   } else if (!strcmp (option, "sse2")) {
+#if defined (HAVE_EMMINTRIN_H) && defined(__SSE2__)
     GST_DEBUG ("enable SSE2 optimisations");
     resample_gint16_1 = resample_gint16_1_sse2;
     resample_gfloat_1 = resample_gfloat_1_sse;
     resample_gdouble_1 = resample_gdouble_1_sse2;
     resample_gint16_2 = resample_gint16_2_sse2;
     resample_gdouble_2 = resample_gdouble_2_sse2;
-  }
 #endif
+  } else if (!strcmp (option, "sse41")) {
+#if defined (HAVE_SMMINTRIN_H) && defined(__SSE4_1__)
+    GST_DEBUG ("enable SSE41 optimisations");
+    resample_gint32_1 = resample_gint32_1_sse41;
+#endif
+  }
 }
