@@ -1115,8 +1115,8 @@ remove_clock_cache (GstClock * clock, GstClockTime time, GstClockID id,
   if (!cache->clocks) {
     gst_clock_id_unref (cache->remove_id);
     gst_object_unref (cache->clock);
-    g_free (cache);
     clocks = g_list_remove (clocks, cache);
+    g_free (cache);
   }
   G_UNLOCK (clocks_lock);
 
