@@ -715,8 +715,8 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     while (self->wait_for_connection && !self->clients) {
       g_cond_wait (&self->cond, GST_OBJECT_GET_LOCK (self));
       if (self->unlock) {
-        gst_memory_unref (memory);
         GST_OBJECT_UNLOCK (self);
+        gst_memory_unref (memory);
         return GST_FLOW_FLUSHING;
       }
     }
