@@ -4155,7 +4155,7 @@ video_set_blocked (GstPlaySink * playsink, gboolean blocked)
         gst_pad_remove_probe (((GstPlayVisChain *) playsink->vischain)->
             blockpad, playsink->vis_pad_block_id);
       playsink->vis_pad_block_id = 0;
-
+      PENDING_FLAG_SET (playsink, GST_PLAY_SINK_TYPE_VIDEO);
       playsink->video_block_id =
           gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
           sinkpad_blocked_cb, playsink, NULL);
@@ -4183,6 +4183,7 @@ audio_set_blocked (GstPlaySink * playsink, gboolean blocked)
             blockpad, playsink->vis_pad_block_id);
       playsink->vis_pad_block_id = 0;
 
+      PENDING_FLAG_SET (playsink, GST_PLAY_SINK_TYPE_AUDIO);
       playsink->audio_block_id =
           gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
           sinkpad_blocked_cb, playsink, NULL);
@@ -4215,6 +4216,7 @@ text_set_blocked (GstPlaySink * playsink, gboolean blocked)
             blockpad, playsink->vis_pad_block_id);
       playsink->vis_pad_block_id = 0;
 
+      PENDING_FLAG_SET (playsink, GST_PLAY_SINK_TYPE_TEXT);
       playsink->text_block_id =
           gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
           sinkpad_blocked_cb, playsink, NULL);
