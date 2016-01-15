@@ -64,7 +64,7 @@ struct _GstRtpH265Pay
 
   GstAdapter *adapter;
 
-  guint vps_sps_pps_interval;
+  gint vps_sps_pps_interval;
   gboolean send_vps_sps_pps;
   GstClockTime last_vps_sps_pps;
 };
