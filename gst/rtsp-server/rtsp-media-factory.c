@@ -380,6 +380,7 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
       break;
     case PROP_CLOCK:
       gst_rtsp_media_factory_set_clock (factory, g_value_get_object (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
