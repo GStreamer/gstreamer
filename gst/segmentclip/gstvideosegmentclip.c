@@ -167,8 +167,8 @@ gst_video_segment_clip_set_caps (GstSegmentClip * base, GstCaps * caps)
 
   s = gst_caps_get_structure (caps, 0);
 
-  ret = gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d);
-  ret = (fps_d != 0);
+  ret = gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d)
+      && (fps_d != 0);
 
   if (ret) {
     GST_DEBUG_OBJECT (self, "Configured framerate %d/%d", fps_n, fps_d);
