@@ -1168,7 +1168,6 @@ static GstBuffer *
 gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpH265Depay *rtph265depay;
-  GstBuffer *buf;
   GstBuffer *outbuf = NULL;
   guint8 nal_unit_type;
 
@@ -1200,7 +1199,6 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
     payload_len = gst_rtp_buffer_get_payload_len (rtp);
     payload = gst_rtp_buffer_get_payload (rtp);
-    buf = gst_rtp_buffer_get_payload_buffer (rtp);
     marker = gst_rtp_buffer_get_marker (rtp);
 
     GST_DEBUG_OBJECT (rtph265depay, "receiving %d bytes", payload_len);
@@ -1308,8 +1306,8 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           memcpy (map.data + sizeof (sync_bytes), payload, nalu_size);
           gst_buffer_unmap (outbuf, &map);
 
-          gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph265depay), outbuf, buf,
-              g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+          gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph265depay), outbuf,
+              rtp->buffer, g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
 
           outbuf =
               gst_rtp_h265_depay_handle_nal (rtph265depay, outbuf, timestamp,
@@ -1409,8 +1407,8 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           map.data[sizeof (sync_bytes) + 1] = nal_header & 0xff;
           gst_buffer_unmap (outbuf, &map);
 
-          gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph265depay), outbuf, buf,
-              g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+          gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph265depay), outbuf,
+              rtp->buffer, g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
 
           GST_DEBUG_OBJECT (rtph265depay, "queueing %d bytes", outsize);
 
@@ -1429,8 +1427,8 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           outbuf = gst_buffer_new_and_alloc (outsize);
           gst_buffer_fill (outbuf, 0, payload, outsize);
 
-          gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph265depay), outbuf, buf,
-              g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+          gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph265depay), outbuf,
+              rtp->buffer, g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
 
           GST_DEBUG_OBJECT (rtph265depay, "queueing %d bytes", outsize);
 
@@ -1475,8 +1473,8 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
         memcpy (map.data + sizeof (sync_bytes), payload, nalu_size);
         gst_buffer_unmap (outbuf, &map);
 
-        gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph265depay), outbuf, buf,
-            g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+        gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph265depay), outbuf,
+            rtp->buffer, g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
 
         outbuf = gst_rtp_h265_depay_handle_nal (rtph265depay, outbuf, timestamp,
             marker);
@@ -1485,21 +1483,17 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     }
   }
 
-  gst_buffer_unref (buf);
-
   return outbuf;
 
   /* ERRORS */
 empty_packet:
   {
     GST_DEBUG_OBJECT (rtph265depay, "empty packet");
-    gst_buffer_unref (buf);
     return NULL;
   }
 waiting_start:
   {
     GST_DEBUG_OBJECT (rtph265depay, "waiting for start");
-    gst_buffer_unref (buf);
     return NULL;
   }
 #if 0
@@ -1507,7 +1501,6 @@ not_implemented_donl_present:
   {
     GST_ELEMENT_ERROR (rtph265depay, STREAM, FORMAT,
         (NULL), ("DONL field present not supported yet"));
-    gst_buffer_unref (buf);
     return NULL;
   }
 #endif
@@ -1515,7 +1508,6 @@ not_implemented:
   {
     GST_ELEMENT_ERROR (rtph265depay, STREAM, FORMAT,
         (NULL), ("NAL unit type %d not supported yet", nal_unit_type));
-    gst_buffer_unref (buf);
     return NULL;
   }
 }
