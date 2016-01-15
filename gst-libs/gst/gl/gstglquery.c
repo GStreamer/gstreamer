@@ -36,6 +36,10 @@
 #define GL_TIMESTAMP 0x8E28
 #endif
 
+#ifndef GL_QUERY_RESULT
+#define GL_QUERY_RESULT 0x8866
+#endif
+
 #define GST_CAT_DEFAULT gst_gl_query_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -203,10 +207,10 @@ gst_gl_query_end (GstGLQuery * query)
 
   g_return_if_fail (query != NULL);
   g_return_if_fail (_query_type_supports_begin_end (query->query_type));
-  g_return_if_fail (query->start_called);
 
   if (!query->supported)
     return;
+  g_return_if_fail (query->start_called);
 
   GST_TRACE ("%p end query type \'%s\' id %u", query,
       _query_type_to_string (query->query_type), query->query_id);
