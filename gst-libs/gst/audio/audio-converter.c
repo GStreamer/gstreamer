@@ -950,6 +950,8 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
   /* step 7, pack */
   convert->pack_chain = chain_pack (convert, prev);
 
+  convert->convert = converter_generic;
+
   /* optimize */
   if (out_info->finfo->format == in_info->finfo->format
       && convert->mix_passthrough) {
@@ -958,12 +960,14 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
           ("same formats, no resampler and passthrough mixing -> passthrough");
       convert->convert = converter_passthrough;
     } else {
-      GST_INFO ("same formats, and passthrough mixing -> only resampling");
-      convert->convert = converter_resample;
+      if (in_info->finfo->format == GST_AUDIO_FORMAT_S16 ||
+          in_info->finfo->format == GST_AUDIO_FORMAT_S32 ||
+          in_info->finfo->format == GST_AUDIO_FORMAT_F32 ||
+          in_info->finfo->format == GST_AUDIO_FORMAT_F64) {
+        GST_INFO ("same formats, and passthrough mixing -> only resampling");
+        convert->convert = converter_resample;
+      }
     }
-  } else {
-    GST_INFO ("do full conversion");
-    convert->convert = converter_generic;
   }
 
   setup_allocators (convert);
