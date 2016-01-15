@@ -94,7 +94,11 @@ endif
 if HAVE_GRAPHENE
 libgstopengl_la_SOURCES += \
 	gstgltransformation.c \
-	gstgltransformation.h
+	gstglvideoflip.c
+
+noinst_HEADERS += \
+	gstgltransformation.h \
+	gstglvideoflip.h
 endif
 
 if HAVE_JPEG

@@ -65,6 +65,7 @@
 
 #if HAVE_GRAPHENE
 #include "gstgltransformation.h"
+#include "gstglvideoflip.h"
 #endif
 #if HAVE_JPEG
 #if HAVE_PNG
@@ -173,6 +174,11 @@ plugin_init (GstPlugin * plugin)
 #if HAVE_GRAPHENE
   if (!gst_element_register (plugin, "gltransformation",
           GST_RANK_NONE, GST_TYPE_GL_TRANSFORMATION)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glvideoflip",
+          GST_RANK_NONE, GST_TYPE_GL_VIDEO_FLIP)) {
     return FALSE;
   }
 #endif
