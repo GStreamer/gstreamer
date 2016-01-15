@@ -162,7 +162,8 @@ gst_rtp_h265_pay_class_init (GstRtpH265PayClass * klass)
       g_param_spec_int ("config-interval",
           "VPS SPS PPS Send Interval",
           "Send VPS, SPS and PPS Insertion Interval in seconds (sprop parameter sets "
-          "will be multiplexed in the data stream when detected.) (0 = disabled)",
+          "will be multiplexed in the data stream when detected.) "
+          "(0 = disabled, -1 = send with every IDR frame)",
           -1, 3600, DEFAULT_CONFIG_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
@@ -946,47 +947,52 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
   send_vps_sps_pps = FALSE;
 
   /* check if we need to emit an VPS/SPS/PPS now */
-  if (((nalType == GST_H265_NAL_SLICE_TRAIL_N)
-          || (nalType == GST_H265_NAL_SLICE_TRAIL_R)
-          || (nalType == GST_H265_NAL_SLICE_TSA_N)
-          || (nalType == GST_H265_NAL_SLICE_TSA_R)
-          || (nalType == GST_H265_NAL_SLICE_STSA_N)
-          || (nalType == GST_H265_NAL_SLICE_STSA_R)
-          || (nalType == GST_H265_NAL_SLICE_RASL_N)
-          || (nalType == GST_H265_NAL_SLICE_RASL_R)
-          || (nalType == GST_H265_NAL_SLICE_BLA_W_LP)
-          || (nalType == GST_H265_NAL_SLICE_BLA_W_RADL)
-          || (nalType == GST_H265_NAL_SLICE_BLA_N_LP)
-          || (nalType == GST_H265_NAL_SLICE_IDR_W_RADL)
-          || (nalType == GST_H265_NAL_SLICE_IDR_N_LP)
-          || (nalType == GST_H265_NAL_SLICE_CRA_NUT))
-      && rtph265pay->vps_sps_pps_interval > 0) {
+  if ((nalType == GST_H265_NAL_SLICE_TRAIL_N)
+      || (nalType == GST_H265_NAL_SLICE_TRAIL_R)
+      || (nalType == GST_H265_NAL_SLICE_TSA_N)
+      || (nalType == GST_H265_NAL_SLICE_TSA_R)
+      || (nalType == GST_H265_NAL_SLICE_STSA_N)
+      || (nalType == GST_H265_NAL_SLICE_STSA_R)
+      || (nalType == GST_H265_NAL_SLICE_RASL_N)
+      || (nalType == GST_H265_NAL_SLICE_RASL_R)
+      || (nalType == GST_H265_NAL_SLICE_BLA_W_LP)
+      || (nalType == GST_H265_NAL_SLICE_BLA_W_RADL)
+      || (nalType == GST_H265_NAL_SLICE_BLA_N_LP)
+      || (nalType == GST_H265_NAL_SLICE_IDR_W_RADL)
+      || (nalType == GST_H265_NAL_SLICE_IDR_N_LP)
+      || (nalType == GST_H265_NAL_SLICE_CRA_NUT)) {
+    if (rtph265pay->vps_sps_pps_interval > 0) {
+      if (rtph265pay->last_vps_sps_pps != -1) {
+        guint64 diff;
 
-    if (rtph265pay->last_vps_sps_pps != -1) {
-      guint64 diff;
+        GST_LOG_OBJECT (rtph265pay,
+            "now %" GST_TIME_FORMAT ", last VPS/SPS/PPS %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (pts), GST_TIME_ARGS (rtph265pay->last_vps_sps_pps));
 
-      GST_LOG_OBJECT (rtph265pay,
-          "now %" GST_TIME_FORMAT ", last VPS/SPS/PPS %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (pts), GST_TIME_ARGS (rtph265pay->last_vps_sps_pps));
+        /* calculate diff between last SPS/PPS in milliseconds */
+        if (pts > rtph265pay->last_vps_sps_pps)
+          diff = pts - rtph265pay->last_vps_sps_pps;
+        else
+          diff = 0;
 
-      /* calculate diff between last SPS/PPS in milliseconds */
-      if (pts > rtph265pay->last_vps_sps_pps)
-        diff = pts - rtph265pay->last_vps_sps_pps;
-      else
-        diff = 0;
+        GST_DEBUG_OBJECT (rtph265pay,
+            "interval since last VPS/SPS/PPS %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (diff));
 
-      GST_DEBUG_OBJECT (rtph265pay,
-          "interval since last VPS/SPS/PPS %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (diff));
-
-      /* bigger than interval, queue SPS/PPS */
-      if (GST_TIME_AS_SECONDS (diff) >= rtph265pay->vps_sps_pps_interval) {
-        GST_DEBUG_OBJECT (rtph265pay, "time to send VPS/SPS/PPS");
+        /* bigger than interval, queue SPS/PPS */
+        if (GST_TIME_AS_SECONDS (diff) >= rtph265pay->vps_sps_pps_interval) {
+          GST_DEBUG_OBJECT (rtph265pay, "time to send VPS/SPS/PPS");
+          send_vps_sps_pps = TRUE;
+        }
+      } else {
+        /* no known previous SPS/PPS time, send now */
+        GST_DEBUG_OBJECT (rtph265pay, "no previous VPS/SPS/PPS time, send now");
         send_vps_sps_pps = TRUE;
       }
-    } else {
-      /* no known previous SPS/PPS time, send now */
-      GST_DEBUG_OBJECT (rtph265pay, "no previous VPS/SPS/PPS time, send now");
+    } else if (rtph265pay->vps_sps_pps_interval == -1) {
+      GST_DEBUG_OBJECT (rtph265pay,
+          "sending VPS/SPS/PPS before current IDR frame");
+      /* send VPS/SPS/PPS before every IDR frame */
       send_vps_sps_pps = TRUE;
     }
   }
