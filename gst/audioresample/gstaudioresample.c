@@ -431,61 +431,32 @@ gst_audio_resample_reset_state (GstAudioResample * resample)
 {
 }
 
-static gint
-_gcd (gint a, gint b)
-{
-  while (b != 0) {
-    int temp = a;
-
-    a = b;
-    b = temp % b;
-  }
-
-  return ABS (a);
-}
-
 static gboolean
 gst_audio_resample_transform_size (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, gsize size, GstCaps * othercaps,
     gsize * othersize)
 {
+  GstAudioResample *resample = GST_AUDIO_RESAMPLE (base);
   gboolean ret = TRUE;
-  GstAudioInfo in, out;
-  guint32 ratio_den, ratio_num;
-  gint inrate, outrate, gcd;
   gint bpf;
 
   GST_LOG_OBJECT (base, "asked to transform size %" G_GSIZE_FORMAT
       " in direction %s", size, direction == GST_PAD_SINK ? "SINK" : "SRC");
 
-  /* Get sample width -> bytes_per_samp, channels, inrate, outrate */
-  ret = gst_audio_info_from_caps (&in, caps);
-  ret &= gst_audio_info_from_caps (&out, othercaps);
-  if (G_UNLIKELY (!ret)) {
-    GST_ERROR_OBJECT (base, "Wrong caps");
-    return FALSE;
-  }
   /* Number of samples in either buffer is size / (width*channels) ->
    * calculate the factor */
-  bpf = GST_AUDIO_INFO_BPF (&in);
-  inrate = GST_AUDIO_INFO_RATE (&in);
-  outrate = GST_AUDIO_INFO_RATE (&out);
+  bpf = GST_AUDIO_INFO_BPF (&resample->in);
 
   /* Convert source buffer size to samples */
   size /= bpf;
 
-  /* Simplify the conversion ratio factors */
-  gcd = _gcd (inrate, outrate);
-  ratio_num = inrate / gcd;
-  ratio_den = outrate / gcd;
-
   if (direction == GST_PAD_SINK) {
-    /* asked to convert size of an incoming buffer. Round up the output size */
-    *othersize = gst_util_uint64_scale_int_ceil (size, ratio_den, ratio_num);
+    /* asked to convert size of an incoming buffer */
+    *othersize = gst_audio_converter_get_out_frames (resample->converter, size);
     *othersize *= bpf;
   } else {
-    /* asked to convert size of an outgoing buffer. Round down the input size */
-    *othersize = gst_util_uint64_scale_int (size, ratio_num, ratio_den);
+    /* asked to convert size of an outgoing buffer */
+    *othersize = gst_audio_converter_get_in_frames (resample->converter, size);
     *othersize *= bpf;
   }
 
@@ -810,9 +781,6 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
         gpointer in[1], out[1];
         GstAudioConverterFlags flags;
 
-        out_len =
-            gst_audio_converter_get_out_frames (resample->converter, in_len);
-
         flags = 0;
         if (inbuf_writable)
           flags |= GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE;
@@ -853,7 +821,6 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
   gst_buffer_unmap (outbuf, &out_map);
 
   outsize = out_len * resample->in.bpf;
-  gst_buffer_resize (outbuf, 0, outsize);
 
   GST_LOG_OBJECT (resample,
       "Converted to buffer of %" G_GUINT32_FORMAT

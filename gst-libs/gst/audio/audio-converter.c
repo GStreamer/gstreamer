@@ -513,7 +513,7 @@ do_resample (AudioChain * chain, gpointer user_data)
   gsize in_frames, out_frames;
 
   in = audio_chain_get_samples (chain->prev, &in_frames);
-  out_frames = convert->out_samples;
+  out_frames = convert->out_frames;
   out = (chain->allow_ip ? in : audio_chain_alloc_samples (chain, out_frames));
 
   GST_LOG ("resample %p %p,%" G_GSIZE_FORMAT " %" G_GSIZE_FORMAT, in,
@@ -845,7 +845,6 @@ converter_passthrough (GstAudioConverter * convert,
     for (i = 0; i < chain->blocks; i++)
       gst_audio_format_fill_silence (convert->in.finfo, out[i], samples);
   }
-
   return TRUE;
 }
 
@@ -877,6 +876,17 @@ converter_generic (GstAudioConverter * convert,
       convert->out.finfo->pack_func (convert->out.finfo, 0, tmp[i], out[i],
           produced * chain->inc);
   }
+  return TRUE;
+}
+
+static gboolean
+converter_resample (GstAudioConverter * convert,
+    GstAudioConverterFlags flags, gpointer in[], gsize in_frames,
+    gpointer out[], gsize out_frames)
+{
+  gst_audio_resampler_resample (convert->resampler, in, in_frames, out,
+      out_frames);
+
   return TRUE;
 }
 
@@ -942,10 +952,15 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
 
   /* optimize */
   if (out_info->finfo->format == in_info->finfo->format
-      && convert->mix_passthrough && convert->resampler == NULL) {
-    GST_INFO
-        ("same formats, no resampler and passthrough mixing -> passthrough");
-    convert->convert = converter_passthrough;
+      && convert->mix_passthrough) {
+    if (convert->resampler == NULL) {
+      GST_INFO
+          ("same formats, no resampler and passthrough mixing -> passthrough");
+      convert->convert = converter_passthrough;
+    } else {
+      GST_INFO ("same formats, and passthrough mixing -> only resampling");
+      convert->convert = converter_resample;
+    }
   } else {
     GST_INFO ("do full conversion");
     convert->convert = converter_generic;

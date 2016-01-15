@@ -77,7 +77,6 @@ struct _GstAudioResampler
 
   guint blocks;
   guint inc;
-  gboolean filling;
   gint samp_inc;
   gint samp_frac;
   gint samp_index;
@@ -970,7 +969,6 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
   resampler_calculate_taps (resampler);
   resampler_dump (resampler);
 
-  resampler->filling = TRUE;
   resampler->samp_index = 0;
   resampler->samp_phase = 0;
   resampler->samples_avail = resampler->n_taps / 2 - 1;
