@@ -52,6 +52,27 @@ void gst_tracer_record_log (GstTracerRecord *self, ...);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTracerRecord, gst_object_unref)
 #endif
 
+/**
+ * GstTracerValueScope:
+ * @GST_TRACER_VALUE_SCOPE_PROCESS: the value is related to the process
+ * @GST_TRACER_VALUE_SCOPE_THREAD: the value is related to a thread
+ * @GST_TRACER_VALUE_SCOPE_ELEMENT: the value is related to an #GstElement
+ * @GST_TRACER_VALUE_SCOPE_PAD: the value is related to a #GstPad
+ *
+ * Tracing record will contain fields that contain a meassured value or extra
+ * meta-data. One such meta data are values that tell where a measurement was
+ * taken. This enumerating declares to which scope such a meta data field
+ * relates to. If it is e.g. %GST_TRACER_VALUE_SCOPE_PAD, then each of the log
+ * events may contain values for different #GstPads.
+ */
+typedef enum
+{
+  GST_TRACER_VALUE_SCOPE_PROCESS,
+  GST_TRACER_VALUE_SCOPE_THREAD,
+  GST_TRACER_VALUE_SCOPE_ELEMENT,
+  GST_TRACER_VALUE_SCOPE_PAD
+} GstTracerValueScope;
+
 G_END_DECLS
 
 #endif /* __GST_TRACER_RECORD_H__ */

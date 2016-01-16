@@ -38,7 +38,6 @@
 #endif
 
 #include "gstlatency.h"
-#include <gst/gsttracerrecord.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_latency_debug);
 #define GST_CAT_DEFAULT gst_latency_debug
@@ -207,11 +206,11 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
   tr_latency = gst_tracer_record_new (gst_structure_new ("latency.class",
       "src", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
           NULL),
       "sink", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
           NULL),
       "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,

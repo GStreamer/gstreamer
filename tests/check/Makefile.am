@@ -207,7 +207,7 @@ gst_gstcpp_SOURCES = gst/gstcpp.cc
 
 libs_gstlibscpp_SOURCES = libs/gstlibscpp.cc
 
-gst_gsttracerrecord_CFLAGS = $(GST_OBJ_CFLAGS) $(AM_CFLAGS) -DGST_USE_UNSTABLE_API
+gst_gsttracerrecord_CFLAGS = $(GST_OBJ_CFLAGS) $(AM_CFLAGS)
 
 gst_gstutils_LDADD = $(LDADD) $(GSL_LIBS) $(GMP_LIBS)
 

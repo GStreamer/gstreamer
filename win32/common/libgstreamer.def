@@ -1395,6 +1395,7 @@ EXPORTS
 	gst_tracer_record_log
 	gst_tracer_record_new
 	gst_tracer_register
+	gst_tracer_value_scope_get_type
 	gst_tracing_register_hook
 	gst_type_find_factory_call_function
 	gst_type_find_factory_get_caps

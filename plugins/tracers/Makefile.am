@@ -23,8 +23,7 @@ libgstcoretracers_la_SOURCES = \
   gststats.c \
 	gsttracers.c
 
-libgstcoretracers_la_CFLAGS = $(GST_OBJ_CFLAGS) \
-  -DGST_USE_UNSTABLE_API
+libgstcoretracers_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstcoretracers_la_LIBADD = \
 	$(GST_PRINTF_LA) \
 	$(GST_OBJ_LIBS)

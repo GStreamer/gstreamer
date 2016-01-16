@@ -78,6 +78,7 @@
 #include <gst/gsttoc.h>
 #include <gst/gsttocsetter.h>
 #include <gst/gsttracerfactory.h>
+#include <gst/gsttracerrecord.h>
 #include <gst/gsttypefind.h>
 #include <gst/gsttypefindfactory.h>
 #include <gst/gsturi.h>

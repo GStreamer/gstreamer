@@ -31,7 +31,6 @@
 
 #include <unistd.h>
 #include "gstrusage.h"
-#include <gst/gsttracerrecord.h>
 
 #ifdef HAVE_SYS_RESOURCE_H
 #ifndef __USE_GNU
@@ -288,7 +287,7 @@ gst_rusage_tracer_class_init (GstRUsageTracerClass * klass)
   tr_thread = gst_tracer_record_new (gst_structure_new ("thread-rusage.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "related-to", G_TYPE_STRING, "thread",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
           NULL),
       "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
@@ -319,7 +318,7 @@ gst_rusage_tracer_class_init (GstRUsageTracerClass * klass)
   tr_proc = gst_tracer_record_new (gst_structure_new ("proc-rusage.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "related-to", G_TYPE_STRING, "process",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PROCESS,
           NULL),
       "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,

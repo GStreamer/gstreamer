@@ -30,7 +30,6 @@
 #endif
 
 #include "gststats.h"
-#include <gst/gsttracerrecord.h>
 
 #include <stdio.h>
 
@@ -520,7 +519,7 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
   tr_buffer = gst_tracer_record_new (gst_structure_new ("buffer.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "related-to", G_TYPE_STRING, "thread", /* TODO use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
           NULL),
       "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
@@ -528,19 +527,19 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           NULL),
       "pad-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
           NULL),
       "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
       "peer-pad-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
           NULL),
       "peer-element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
       "buffer-size", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
@@ -568,7 +567,7 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
   tr_event = gst_tracer_record_new (gst_structure_new ("event.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "related-to", G_TYPE_STRING, "thread", /* TODO use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
           NULL),
       "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
@@ -576,11 +575,11 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           NULL),
       "pad-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
           NULL),
       "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
       "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
@@ -591,7 +590,7 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
   tr_message = gst_tracer_record_new (gst_structure_new ("message.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "related-to", G_TYPE_STRING, "thread", /* TODO use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
           NULL),
       "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
@@ -599,7 +598,7 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           NULL),
       "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
       "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
@@ -615,7 +614,7 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
       "element-query.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "related-to", G_TYPE_STRING, "thread", /* TODO use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
           NULL),
       "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
@@ -623,18 +622,17 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           NULL),
       "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
       "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "description", G_TYPE_STRING, "name of the query",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */
           NULL),
       NULL));
   tr_query = gst_tracer_record_new (gst_structure_new ("query.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "related-to", G_TYPE_STRING, "thread", /* TODO use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
           NULL),
       "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
@@ -642,29 +640,27 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           NULL),
       "pad-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
           NULL),
       "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
       "peer-pad-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
           NULL),
       "peer-element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
       "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "description", G_TYPE_STRING, "name of the query",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */
           NULL),
       "structure", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, GST_TYPE_STRUCTURE,
           "description", G_TYPE_STRING, "query structure",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */
           NULL),
       "have-res", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_BOOLEAN,
@@ -680,7 +676,7 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
       "new-element.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "related-to", G_TYPE_STRING, "thread", /* TODO use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
           NULL),
       "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
@@ -688,21 +684,19 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           NULL),
       "ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
       "parent-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
       "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "description", G_TYPE_STRING, "name of the element",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */
           NULL),
       "type", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "description", G_TYPE_STRING, "type name of the element",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */
           NULL),
       "is-bin", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_BOOLEAN,
@@ -712,25 +706,23 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
   tr_new_pad = gst_tracer_record_new (gst_structure_new ("new-pad.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "related-to", G_TYPE_STRING, "thread", /* TODO use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
           NULL),
       "ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
           NULL),
       "parent-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
       "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "description", G_TYPE_STRING, "name of the pad",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */
           NULL),
       "type", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "description", G_TYPE_STRING, "type name of the pad",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */
           NULL),
       "is-ghostpad", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_BOOLEAN,
