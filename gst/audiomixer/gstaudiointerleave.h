@@ -27,7 +27,7 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 
-#include "gstaudioaggregator.h"
+#include <gst/audio/gstaudioaggregator.h>
 
 G_BEGIN_DECLS
 
