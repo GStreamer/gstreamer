@@ -1060,6 +1060,7 @@ void
 gst_message_set_buffering_stats (GstMessage * message, GstBufferingMode mode,
     gint avg_in, gint avg_out, gint64 buffering_left)
 {
+  g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_BUFFERING);
 
   gst_structure_id_set (GST_MESSAGE_STRUCTURE (message),
