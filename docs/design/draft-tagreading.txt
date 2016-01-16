@@ -2,8 +2,8 @@ Tagreading
 ----------
 
 The tagreading (metadata reading) use case for mediacenter applications is not
-to well supported by the current GStreamer architecture. It uses demuxers on the
-files, which generelly said takes too long (building seek-index, prerolling).
+too well supported by the current GStreamer architecture. It uses demuxers on the
+files, which generally said takes too long (building seek-index, prerolling).
 What we want is specialized elements / parsing modes that just do the
 tag-reading.
 
