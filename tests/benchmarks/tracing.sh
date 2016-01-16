@@ -20,12 +20,14 @@ fi
 echo "testing $tracer on $file"
 cat $file >/dev/null
 
+log=`mktemp`
+
 function test() {
-  GST_DEBUG_FILE=trace.log /usr/bin/gst-launch-1.0 playbin uri=file://$file audio-sink="fakesink sync=false" video-sink="fakesink sync=false" | grep "Execution ended after" | sed 's/Execution ended after//'
+  GST_DEBUG_FILE="$log" /usr/bin/gst-launch-1.0 playbin uri=file://$file audio-sink="fakesink sync=false" video-sink="fakesink sync=false" | grep "Execution ended after" | sed 's/Execution ended after//'
 }
 
 echo "$tracer"
-GST_DEBUG="GST_TRACER:7" GST_TRACE="$tracer" test
+GST_DEBUG="GST_TRACER:7" GST_TRACER_PLUGINS="$tracer" test
 GST_DEBUG=
 
 echo "no-log"
@@ -35,3 +37,4 @@ GST_TRACER_PLUGINS=
 echo "reference"
 test
 
+rm "$log"
