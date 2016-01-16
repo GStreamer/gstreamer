@@ -160,7 +160,7 @@ gst_structure_new ("thread-rusage.class",
         "description", G_TYPE_STRING, "average cpu usage per thread",
         // flags that help to use the right graph type
         // flags { aggregated, windowed, cumulative, ... }
-        "flags", G_TYPE_STRING, "aggregated",
+        "flags", GST_TYPE_TRACER_VALUE_FLAGS, GST_TRACER_VALUE_FLAGS_AGGREGATED,
         // value range
         "min", G_TYPE_UINT, 0,
         "max", G_TYPE_UINT, 100,

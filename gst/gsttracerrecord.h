@@ -67,6 +67,23 @@ typedef enum
   GST_TRACER_VALUE_SCOPE_PAD
 } GstTracerValueScope;
 
+/**
+ * GstTracerValueFlags:
+ * @GST_TRACER_VALUE_FLAGS_NONE: no flags
+ * @GST_TRACER_VALUE_FLAGS_OPTIONAL: the value is optional
+ * @GST_TRACER_VALUE_FLAGS_AGGREGATED: the value is combined since the start of
+ *   tracing
+ *
+ * Flag that describe the value. These flags help applications processing the
+ * logs to understand the values.
+ */
+typedef enum
+{
+  GST_TRACER_VALUE_FLAGS_NONE = 0,
+  GST_TRACER_VALUE_FLAGS_OPTIONAL = (1 << 0),
+  GST_TRACER_VALUE_FLAGS_AGGREGATED = (1 << 1),
+} GstTracerValueFlags;
+
 #ifdef GST_USE_UNSTABLE_API
 
 GstTracerRecord * gst_tracer_record_new (GstStructure *spec);

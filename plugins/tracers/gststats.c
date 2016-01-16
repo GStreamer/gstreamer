@@ -544,21 +544,18 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
       "buffer-size", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
           "description", G_TYPE_STRING, "size of buffer in bytes",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */
           "min", G_TYPE_UINT, 0,
           "max", G_TYPE_UINT, G_MAXUINT,
           NULL),
       "buffer-ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING, "timestamp of the buffer in ns",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
       "buffer-duration", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING, "duration of the buffer in ns",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
@@ -584,7 +581,6 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
       "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "description", G_TYPE_STRING, "name of the event",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */
           NULL),
       NULL));
   tr_message = gst_tracer_record_new (gst_structure_new ("message.class",
@@ -603,7 +599,6 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
       "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "description", G_TYPE_STRING, "name of the message",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */
           NULL),
       "structure", GST_TYPE_STRUCTURE, gst_structure_new ("structure",
           "type", G_TYPE_GTYPE, GST_TYPE_STRUCTURE,
