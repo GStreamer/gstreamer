@@ -59,7 +59,7 @@ typedef struct
   /* first and last activity on the pad, expected next_ts */
   GstClockTime first_ts, last_ts, next_ts;
   /* in which thread does it operate */
-  guint thread_id;
+  gpointer thread_id;
   /* hierarchy */
   guint parent_ix;
 } GstPadStats;
@@ -99,13 +99,15 @@ free_element_stats (gpointer data)
 static inline GstElementStats *
 get_element_stats (guint ix)
 {
-  return (ix != G_MAXUINT) ? g_ptr_array_index (elements, ix) : NULL;
+  return (ix != G_MAXUINT && ix < elements->len) ?
+      g_ptr_array_index (elements, ix) : NULL;
 }
 
 static inline GstPadStats *
 get_pad_stats (guint ix)
 {
-  return (ix != G_MAXUINT) ? g_ptr_array_index (pads, ix) : NULL;
+  return (ix != G_MAXUINT && ix < pads->len) ?
+      g_ptr_array_index (pads, ix) : NULL;
 }
 
 static void
@@ -115,14 +117,14 @@ free_pad_stats (gpointer data)
 }
 
 static inline GstThreadStats *
-get_thread_stats (guint id)
+get_thread_stats (gpointer id)
 {
-  GstThreadStats *stats = g_hash_table_lookup (threads, GUINT_TO_POINTER (id));
+  GstThreadStats *stats = g_hash_table_lookup (threads, id);
 
   if (G_UNLIKELY (!stats)) {
     stats = g_slice_new0 (GstThreadStats);
     stats->tthread = GST_CLOCK_TIME_NONE;
-    g_hash_table_insert (threads, GUINT_TO_POINTER (id), stats);
+    g_hash_table_insert (threads, id, stats);
   }
   return stats;
 }
@@ -135,7 +137,7 @@ new_pad_stats (GstStructure * s)
   gchar *type, *name;
   gboolean is_ghost_pad;
   GstPadDirection dir;
-  guint thread_id;
+  guint64 thread_id;
 
   gst_structure_get (s,
       "ix", G_TYPE_UINT, &ix,
@@ -144,7 +146,7 @@ new_pad_stats (GstStructure * s)
       "type", G_TYPE_STRING, &type,
       "is-ghostpad", G_TYPE_BOOLEAN, &is_ghost_pad,
       "pad-direction", GST_TYPE_PAD_DIRECTION, &dir,
-      "thread-id", G_TYPE_UINT, &thread_id, NULL);
+      "thread-id", G_TYPE_UINT64, &thread_id, NULL);
 
   stats = g_slice_new0 (GstPadStats);
   if (is_ghost_pad)
@@ -157,7 +159,7 @@ new_pad_stats (GstStructure * s)
   stats->dir = dir;
   stats->min_size = G_MAXUINT;
   stats->first_ts = stats->last_ts = stats->next_ts = GST_CLOCK_TIME_NONE;
-  stats->thread_id = thread_id;
+  stats->thread_id = (gpointer) thread_id;
   stats->parent_ix = parent_ix;
 
   if (pads->len <= ix)
@@ -288,7 +290,7 @@ do_buffer_stats (GstStructure * s)
   num_buffers++;
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
       "pad-ix", G_TYPE_UINT, &pad_ix,
-      "elem-ix", G_TYPE_UINT, &elem_ix,
+      "element-ix", G_TYPE_UINT, &elem_ix,
       "peer-elem-ix", G_TYPE_UINT, &peer_elem_ix,
       "buffer-size", G_TYPE_UINT, &size,
       "buffer-pts", G_TYPE_UINT64, &buffer_pts,
@@ -328,7 +330,8 @@ do_event_stats (GstStructure * s)
 
   num_events++;
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
-      "pad-ix", G_TYPE_UINT, &pad_ix, "elem-ix", G_TYPE_UINT, &elem_ix, NULL);
+      "pad-ix", G_TYPE_UINT, &pad_ix, "element-ix", G_TYPE_UINT, &elem_ix,
+      NULL);
   last_ts = MAX (last_ts, ts);
   if (!(pad_stats = get_pad_stats (pad_ix))) {
     GST_WARNING ("no pad stats found for ix=%u", pad_ix);
@@ -351,7 +354,7 @@ do_message_stats (GstStructure * s)
 
   num_messages++;
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
-      "elem-ix", G_TYPE_UINT, &elem_ix, NULL);
+      "element-ix", G_TYPE_UINT, &elem_ix, NULL);
   last_ts = MAX (last_ts, ts);
   if (!(elem_stats = get_element_stats (elem_ix))) {
     GST_WARNING ("no element stats found for ix=%u", elem_ix);
@@ -369,7 +372,7 @@ do_query_stats (GstStructure * s)
 
   num_queries++;
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
-      "elem-ix", G_TYPE_UINT, &elem_ix, NULL);
+      "element-ix", G_TYPE_UINT, &elem_ix, NULL);
   last_ts = MAX (last_ts, ts);
   if (!(elem_stats = get_element_stats (elem_ix))) {
     GST_WARNING ("no element stats found for ix=%u", elem_ix);
@@ -381,15 +384,15 @@ do_query_stats (GstStructure * s)
 static void
 do_thread_rusage_stats (GstStructure * s)
 {
-  guint64 ts, tthread;
-  guint thread_id, cpuload;
+  guint64 ts, tthread, thread_id;
+  guint cpuload;
   GstThreadStats *thread_stats;
 
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
-      "thread-id", G_TYPE_UINT, &thread_id,
+      "thread-id", G_TYPE_UINT64, &thread_id,
       "average-cpuload", G_TYPE_UINT, &cpuload, "time", G_TYPE_UINT64, &tthread,
       NULL);
-  thread_stats = get_thread_stats (thread_id);
+  thread_stats = get_thread_stats ((gpointer) thread_id);
   thread_stats->cpuload = cpuload;
   thread_stats->tthread = tthread;
   last_ts = MAX (last_ts, ts);
@@ -413,8 +416,7 @@ find_pad_stats_for_thread (gconstpointer value, gconstpointer user_data)
 {
   const GstPadStats *stats = (const GstPadStats *) value;
 
-  if ((stats->thread_id == GPOINTER_TO_UINT (user_data)) &&
-      (stats->num_buffers)) {
+  if ((stats->thread_id == user_data) && (stats->num_buffers)) {
     return 0;
   }
   return 1;
@@ -425,7 +427,7 @@ print_pad_stats (gpointer value, gpointer user_data)
 {
   GstPadStats *stats = (GstPadStats *) value;
 
-  if (stats->thread_id == GPOINTER_TO_UINT (user_data)) {
+  if (stats->thread_id == user_data) {
     /* there seem to be some temporary pads */
     if (stats->num_buffers) {
       GstClockTimeDiff running =
@@ -634,7 +636,7 @@ init (void)
       /* 5: category */
       "([a-zA-Z_-]+) +"
       /* 6: file:line:func: */
-      "([^:]+:[0-9]+:[^:]+:)"
+      "([^:]*:[0-9]+:[^:]*:) +"
       /* 7: (obj)? log-text */
       "(.*)$", 0, 0, NULL);
   if (!raw_log) {
@@ -654,7 +656,7 @@ init (void)
       /* 5: category */
       "\\\e\\\[[0-9;]+m +([a-zA-Z_-]+) +"
       /* 6: file:line:func: */
-      "([^:]+:[0-9]+:[^:]+:)(?:\\\e\\\[00m)?"
+      "([^:]*:[0-9]+:[^:]*:)(?:\\\e\\\[00m)? +"
       /* 7: (obj)? log-text */
       "(.*)$", 0, 0, NULL);
   if (!raw_log) {
