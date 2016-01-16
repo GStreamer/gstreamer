@@ -1417,6 +1417,8 @@ gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc, GstCaps * caps)
   gst_audio_encoder_drain (enc);
 
   /* context defaults */
+  /* FIXME 2.0: This is quite unexpected behaviour. We should never
+   * just reset *settings* of a subclass inside the base class */
   enc->priv->ctx.frame_samples_min = 0;
   enc->priv->ctx.frame_samples_max = 0;
   enc->priv->ctx.frame_max = 0;
@@ -2180,6 +2182,9 @@ gst_audio_encoder_get_audio_info (GstAudioEncoder * enc)
  *
  * If an exact number of samples is required, gst_audio_encoder_set_frame_samples_max()
  * must be called with the same number.
+ *
+ * Note: This value will be reset to 0 every time before
+ * GstAudioEncoder::set_format() is called.
  */
 void
 gst_audio_encoder_set_frame_samples_min (GstAudioEncoder * enc, gint num)
@@ -2214,6 +2219,9 @@ gst_audio_encoder_get_frame_samples_min (GstAudioEncoder * enc)
  *
  * If an exact number of samples is required, gst_audio_encoder_set_frame_samples_min()
  * must be called with the same number.
+ *
+ * Note: This value will be reset to 0 every time before
+ * GstAudioEncoder::set_format() is called.
  */
 void
 gst_audio_encoder_set_frame_samples_max (GstAudioEncoder * enc, gint num)
@@ -2245,6 +2253,9 @@ gst_audio_encoder_get_frame_samples_max (GstAudioEncoder * enc)
  *
  * Sets max number of frames accepted at once (assumed minimally 1).
  * Requires @frame_samples_min and @frame_samples_max to be the equal.
+ *
+ * Note: This value will be reset to 0 every time before
+ * GstAudioEncoder::set_format() is called.
  */
 void
 gst_audio_encoder_set_frame_max (GstAudioEncoder * enc, gint num)
@@ -2275,6 +2286,9 @@ gst_audio_encoder_get_frame_max (GstAudioEncoder * enc)
  * @num: lookahead
  *
  * Sets encoder lookahead (in units of input rate samples)
+ *
+ * Note: This value will be reset to 0 every time before
+ * GstAudioEncoder::set_format() is called.
  */
 void
 gst_audio_encoder_set_lookahead (GstAudioEncoder * enc, gint num)
