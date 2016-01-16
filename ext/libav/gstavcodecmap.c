@@ -2357,6 +2357,7 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
   GstStructure *structure;
   const gchar *fmt;
   GstAudioFormat format = GST_AUDIO_FORMAT_UNKNOWN;
+  gint bitrate;
 
   g_return_if_fail (gst_caps_get_size (caps) == 1);
 
@@ -2365,7 +2366,8 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
   gst_structure_get_int (structure, "channels", &context->channels);
   gst_structure_get_int (structure, "rate", &context->sample_rate);
   gst_structure_get_int (structure, "block_align", &context->block_align);
-  gst_structure_get_int (structure, "bitrate", &context->bit_rate);
+  gst_structure_get_int (structure, "bitrate", &bitrate);
+  context->bit_rate = bitrate;
 
   if (!raw)
     return;

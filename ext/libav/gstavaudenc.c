@@ -269,8 +269,9 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
     ffmpegaudenc->context->bit_rate = ffmpegaudenc->bitrate;
     ffmpegaudenc->context->bit_rate_tolerance = ffmpegaudenc->bitrate;
   } else {
-    GST_INFO_OBJECT (ffmpegaudenc, "Using avcontext default bitrate %d",
-        ffmpegaudenc->context->bit_rate);
+    GST_INFO_OBJECT (ffmpegaudenc,
+        "Using avcontext default bitrate %" G_GINT64_FORMAT,
+        (gint64) ffmpegaudenc->context->bit_rate);
   }
 
   /* RTP payload used for GOB production (for Asterisk) */
