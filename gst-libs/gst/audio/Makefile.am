@@ -1,0 +1,26 @@
+# variables used for enum generation
+lib_LTLIBRARIES = libgstbadaudio-@GST_API_VERSION@.la
+
+CLEANFILES =
+
+libgstbadaudio_@GST_API_VERSION@_la_SOURCES = \
+	gstaudioaggregator.c
+
+nodist_libgstbadaudio_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
+
+libgstbadaudio_@GST_API_VERSION@_la_CFLAGS = \
+	-DGST_USE_UNSTABLE_API \
+	-I$(top_srcdir)/gst-libs \
+	-I$(top_builddir)/gst-libs \
+	$(GST_CFLAGS) $(ORC_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS)
+
+libgstbadaudio_@GST_API_VERSION@_la_LIBADD = \
+	$(top_builddir)/gst-libs/gst/base/libgstbadbase-$(GST_API_VERSION).la \
+	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) \
+	$(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS) $(LIBM)
+
+libgstbadaudio_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+
+noinst_HEADERS = gstaudioaggregator.h

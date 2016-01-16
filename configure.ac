@@ -3570,6 +3570,7 @@ gst-libs/gst/wayland/Makefile
 gst-libs/gst/base/Makefile
 gst-libs/gst/player/Makefile
 gst-libs/gst/video/Makefile
+gst-libs/gst/audio/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile
 sys/acmenc/Makefile
@@ -3723,6 +3724,8 @@ pkgconfig/gstreamer-bad-base.pc
 pkgconfig/gstreamer-bad-base-uninstalled.pc
 pkgconfig/gstreamer-bad-video.pc
 pkgconfig/gstreamer-bad-video-uninstalled.pc
+pkgconfig/gstreamer-bad-audio.pc
+pkgconfig/gstreamer-bad-audio-uninstalled.pc
 tools/Makefile
 m4/Makefile
 )
