@@ -657,13 +657,10 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           "type", G_TYPE_GTYPE, GST_TYPE_STRUCTURE,
           "description", G_TYPE_STRING, "query structure",
           NULL),
-      "have-res", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_BOOLEAN,
-          "description", G_TYPE_STRING, "have query result",
-          NULL),
       "res", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_BOOLEAN,
           "description", G_TYPE_STRING, "query result",
+          "flags", GST_TYPE_TRACER_VALUE_FLAGS, GST_TRACER_VALUE_FLAGS_OPTIONAL,
           NULL),
       /* TODO(ensonic): "buffer-flags" */
       NULL));

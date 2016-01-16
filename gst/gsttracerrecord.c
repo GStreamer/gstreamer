@@ -32,6 +32,7 @@
 #define GST_USE_UNSTABLE_API
 
 #include "gst_private.h"
+#include "gstenumtypes.h"
 #include "gstinfo.h"
 #include "gststructure.h"
 #include "gsttracerrecord.h"
@@ -73,14 +74,28 @@ build_field_template (GQuark field_id, const GValue * value, gpointer user_data)
   const GstStructure *sub;
   GValue template_value = { 0, };
   GType type;
+  GstTracerValueFlags flags;
   gboolean res;
 
   g_return_val_if_fail (G_VALUE_TYPE (value) == GST_TYPE_STRUCTURE, FALSE);
 
   sub = gst_value_get_structure (value);
-  type = g_value_get_gtype (gst_structure_get_value (sub, "type"));
-  g_value_init (&template_value, type);
+  gst_structure_get (sub, "type", G_TYPE_GTYPE, &type, "flags",
+      GST_TYPE_TRACER_VALUE_FLAGS, &flags, NULL);
 
+  if (flags & GST_TRACER_VALUE_FLAGS_OPTIONAL) {
+    gchar *opt_name = g_strconcat ("have-", g_quark_to_string (field_id), NULL);
+
+    /* add a boolean field, that indicates the presence of the next field */
+    g_value_init (&template_value, G_TYPE_BOOLEAN);
+    res =
+        priv__gst_structure_append_template_to_gstring (g_quark_from_string
+        (opt_name), &template_value, s);
+    g_value_unset (&template_value);
+    g_free (opt_name);
+  }
+
+  g_value_init (&template_value, type);
   res = priv__gst_structure_append_template_to_gstring (field_id,
       &template_value, s);
   g_value_unset (&template_value);
