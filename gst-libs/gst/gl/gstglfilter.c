@@ -240,8 +240,8 @@ gst_gl_filter_fixate_caps (GstBaseTransform * bt,
   GValue fpar = { 0, }, tpar = {
   0,};
 
-  othercaps = gst_caps_truncate (othercaps);
   othercaps = gst_caps_make_writable (othercaps);
+  othercaps = gst_caps_truncate (othercaps);
 
   GST_DEBUG_OBJECT (bt, "trying to fixate othercaps %" GST_PTR_FORMAT
       " based on caps %" GST_PTR_FORMAT, othercaps, caps);
