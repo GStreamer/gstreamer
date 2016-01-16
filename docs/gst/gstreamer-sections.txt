@@ -3146,6 +3146,8 @@ gst_tracer_factory_get_type
 <FILE>gsttracerrecord</FILE>
 <TITLE>GstTracerRecord</TITLE>
 GstTracerRecord
+GstTracerValueFlags
+GstTracerValueScope
 gst_tracer_record_new
 gst_tracer_record_log
 <SUBSECTION Standard>
@@ -3157,8 +3159,12 @@ GST_IS_TRACER_RECORD_CLASS
 GST_TRACER_RECORD_GET_CLASS
 GST_TRACER_RECORD_CAST
 GST_TYPE_TRACER_RECORD
+GST_TYPE_TRACER_VALUE_FLAGS
+GST_TYPE_TRACER_VALUE_SCOPE
 <SUBSECTION Private>
 gst_tracer_record_get_type
+gst_tracer_value_flags_get_type
+gst_tracer_value_scope_get_type
 </SECTION>
 
 
