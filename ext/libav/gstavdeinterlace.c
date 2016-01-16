@@ -310,7 +310,10 @@ static void
 gst_ffmpegdeinterlace_dispose (GObject * obj)
 {
   GstFFMpegDeinterlace *deinterlace = GST_FFMPEGDEINTERLACE (obj);
+
   delete_filter_graph (deinterlace);
+
+  G_OBJECT_CLASS (gst_ffmpegdeinterlace_parent_class)->dispose (obj);
 }
 
 static int
