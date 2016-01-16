@@ -37,6 +37,7 @@
 #include "gstenumtypes.h"
 #include "gsttracer.h"
 #include "gsttracerfactory.h"
+#include "gsttracerutils.h"
 
 GST_DEBUG_CATEGORY_EXTERN (tracer_debug);
 #define GST_CAT_DEFAULT tracer_debug

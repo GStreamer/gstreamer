@@ -25,7 +25,6 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gst/gstconfig.h>
-#include <gst/gsttracerutils.h>
 
 G_BEGIN_DECLS
 
