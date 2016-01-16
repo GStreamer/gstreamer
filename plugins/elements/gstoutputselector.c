@@ -337,6 +337,7 @@ gst_output_selector_request_new_pad (GstElement * element,
   /* Set the first requested src pad as active by default */
   if (osel->active_srcpad == NULL) {
     osel->active_srcpad = srcpad;
+    g_object_notify (G_OBJECT (osel), "active-pad");
   }
   g_free (padname);
 
@@ -351,6 +352,12 @@ gst_output_selector_release_pad (GstElement * element, GstPad * pad)
   osel = GST_OUTPUT_SELECTOR (element);
 
   GST_DEBUG_OBJECT (osel, "releasing pad");
+
+  /* Disable active pad if it's the to be removed pad */
+  if (osel->active_srcpad == pad) {
+    osel->active_srcpad = NULL;
+    g_object_notify (G_OBJECT (osel), "active-pad");
+  }
 
   gst_pad_set_active (pad, FALSE);
 
@@ -379,6 +386,7 @@ gst_output_selector_switch (GstOutputSelector * osel)
   /* Send SEGMENT event and latest buffer if switching succeeded
    * and we already have a valid segment configured */
   if (res) {
+    g_object_notify (G_OBJECT (osel), "active-pad");
     gst_pad_sticky_events_foreach (osel->sinkpad, forward_sticky_events,
         osel->active_srcpad);
 
