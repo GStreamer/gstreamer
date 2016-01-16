@@ -197,7 +197,7 @@ fill_pad_stats (GstStatsTracer * self, GstPad * pad)
 static void
 log_new_pad_stats (GstPadStats * stats, GstPad * pad)
 {
-  gst_tracer_record_log (tr_new_element, (guint64) g_thread_self (),
+  gst_tracer_record_log (tr_new_pad, (guint64) g_thread_self (),
       stats->index, stats->parent_ix, GST_OBJECT_NAME (pad),
       G_OBJECT_TYPE_NAME (pad), GST_IS_GHOST_PAD (pad),
       GST_PAD_DIRECTION (pad));
