@@ -893,8 +893,6 @@ gst_gl_color_convert_fixate_caps (GstGLContext * convert,
     return other;
   }
 
-  caps = gst_caps_fixate (caps);
-
   gst_video_info_from_caps (&info, caps);
   gst_video_info_from_caps (&other_info, other);
 
@@ -927,7 +925,6 @@ gst_gl_color_convert_fixate_caps (GstGLContext * convert,
   gst_structure_set_value (s_other, "texture-target", &item);
 
   g_value_unset (&item);
-  gst_caps_unref (caps);
 
   return other;
 }
