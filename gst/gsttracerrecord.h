@@ -22,11 +22,6 @@
 #ifndef __GST_TRACER_RECORD_H__
 #define __GST_TRACER_RECORD_H__
 
-#ifndef GST_USE_UNSTABLE_API
-#warning "The tracer subsystem is unstable API and may change in future."
-#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
-#endif
-
 #include <gst/gstobject.h>
 
 G_BEGIN_DECLS
@@ -45,9 +40,6 @@ typedef struct _GstTracerRecordClass GstTracerRecordClass;
 
 GType gst_tracer_record_get_type          (void);
 
-GstTracerRecord * gst_tracer_record_new (GstStructure *spec);
-void gst_tracer_record_log (GstTracerRecord *self, ...);
-
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTracerRecord, gst_object_unref)
 #endif
@@ -64,6 +56,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTracerRecord, gst_object_unref)
  * taken. This enumerating declares to which scope such a meta data field
  * relates to. If it is e.g. %GST_TRACER_VALUE_SCOPE_PAD, then each of the log
  * events may contain values for different #GstPads.
+ *
+ * Since: 1.8
  */
 typedef enum
 {
@@ -72,6 +66,14 @@ typedef enum
   GST_TRACER_VALUE_SCOPE_ELEMENT,
   GST_TRACER_VALUE_SCOPE_PAD
 } GstTracerValueScope;
+
+#ifdef GST_USE_UNSTABLE_API
+
+GstTracerRecord * gst_tracer_record_new (GstStructure *spec);
+
+void              gst_tracer_record_log (GstTracerRecord *self, ...);
+
+#endif
 
 G_END_DECLS
 
