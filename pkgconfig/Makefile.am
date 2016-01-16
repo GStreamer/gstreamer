@@ -41,7 +41,10 @@ pcinfiles = \
            gstreamer-gl.pc.in gstreamer-gl-uninstalled.pc.in \
            gstreamer-insertbin.pc.in gstreamer-insertbin-uninstalled.pc.in \
            gstreamer-mpegts.pc.in gstreamer-mpegts-uninstalled.pc.in \
-           gstreamer-player.pc.in gstreamer-player-uninstalled.pc.in
+           gstreamer-player.pc.in gstreamer-player-uninstalled.pc.in \
+           gstreamer-audio.pc.in gstreamer-audio-uninstalled.pc.in \
+           gstreamer-video.pc.in gstreamer-video-uninstalled.pc.in \
+           gstreamer-base.pc.in gstreamer-base-uninstalled.pc.in
 
 DISTCLEANFILES = $(pcinfiles:.in=)
 EXTRA_DIST = $(pcinfiles)
