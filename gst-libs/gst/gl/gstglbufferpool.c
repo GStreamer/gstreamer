@@ -114,7 +114,7 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (!gst_buffer_pool_config_get_allocator (config, &allocator, &alloc_params))
     goto wrong_config;
 
-  gst_caps_replace (&priv->caps, gst_caps_ref (caps));
+  gst_caps_replace (&priv->caps, caps);
 
   if (priv->allocator)
     gst_object_unref (priv->allocator);
