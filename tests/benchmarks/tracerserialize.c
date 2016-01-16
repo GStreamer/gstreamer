@@ -49,6 +49,19 @@ log_gst_structure (const gchar * name, const gchar * first, ...)
 }
 
 static void
+log_gst_structure_tmpl (const gchar * format, ...)
+{
+  va_list var_args;
+
+  va_start (var_args, format);
+  if (G_LIKELY (GST_LEVEL_TRACE <= _gst_debug_min)) {
+    gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_TRACE, __FILE__,
+        GST_FUNCTION, __LINE__, NULL, format, var_args);
+  }
+  va_end (var_args);
+}
+
+static void
 log_g_variant (const gchar * format, ...)
 {
   va_list var_args;
@@ -78,6 +91,7 @@ main (gint argc, gchar * argv[])
         "ts", G_TYPE_UINT64, (guint64) 0,
         "index", G_TYPE_UINT, 10,
         "test", G_TYPE_STRING, "hallo",
+        "bool", G_TYPE_BOOLEAN, TRUE,
         "flag", GST_TYPE_PAD_DIRECTION, GST_PAD_SRC, NULL);
   }
   end = gst_util_get_timestamp ();
@@ -85,7 +99,18 @@ main (gint argc, gchar * argv[])
 
   start = gst_util_get_timestamp ();
   for (i = 0; i < NUM_LOOPS; i++) {
-    log_g_variant ("(stusu)", "name", (guint64) 0, 10, "hallo", GST_PAD_SRC);
+    log_gst_structure_tmpl ("name, ts=(guint64)%" G_GUINT64_FORMAT
+        ", index=(uint)%u, test=(string)%s, bool=(boolean)%s, flag=(GstPadDirection)%d;",
+        (guint64) 0, 10, "hallo", (TRUE ? "true" : "false"), GST_PAD_SRC);
+  }
+  end = gst_util_get_timestamp ();
+  g_print ("%" GST_TIME_FORMAT ": GstStructure template\n",
+      GST_TIME_ARGS (end - start));
+
+  start = gst_util_get_timestamp ();
+  for (i = 0; i < NUM_LOOPS; i++) {
+    log_g_variant ("(stusbu)", "name", (guint64) 0, 10, "hallo", TRUE,
+        GST_PAD_SRC);
   }
   end = gst_util_get_timestamp ();
   g_print ("%" GST_TIME_FORMAT ": GVariant\n", GST_TIME_ARGS (end - start));
