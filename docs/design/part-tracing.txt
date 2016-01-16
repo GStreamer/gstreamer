@@ -41,7 +41,7 @@ plugins:  GST_TRACER_PLUGINS="log(events,buffers);stats(all)".
 When then plugins are loaded, we'll add them to certain hooks according to which
 they are interested in.
 
-Right now tracing info is logged as GstStructures to the TRACE level. 
+Right now tracing info is logged as GstStructures to the TRACE level.
 Idea: Another env var GST_TRACE_CHANNEL could be used to send the tracing to a
 file or a socket. See https://bugzilla.gnome.org/show_bug.cgi?id=733188 for
 discussion on these environment variables.
@@ -147,8 +147,8 @@ gst_structure_new ("thread-rusage.class",
     // 'thread-id' is a 'key' to related the record to something as indicated
     // by 'scope' substructure
     "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-        // enum { process, thread, element, pad, context?, ... }
-        "related-to", G_TYPE_STRING, "thread",
+        "type", G_TYPE_GTYPE, G_TYPE_GUINT64,
+        "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
         NULL),
     // next value in the record
     // 'average-cpuload' is a measurement as indicated by the 'value'
@@ -162,7 +162,7 @@ gst_structure_new ("thread-rusage.class",
         // flags { aggregated, windowed, cumulative, ... }
         "flags", G_TYPE_STRING, "aggregated",
         // value range
-        "min", G_TYPE_UINT, 0, 
+        "min", G_TYPE_UINT, 0,
         "max", G_TYPE_UINT, 100,
         NULL),
     ...
@@ -193,11 +193,11 @@ G_TYPE_UINT64 to specify the time of the event.
 We could also consider to add each value as a READABLE gobject property. The
 property has name/description. We could use qdata for scope and flags (or have
 some new property flags).
-We would also need a new "notify" signal, so that value-change notifications 
+We would also need a new "notify" signal, so that value-change notifications
 would include a time-stamp. This way the tracers would not needs to be aware of
 the logging. The core tracer would register the notify handlers and emit the
 log.
-Or we just add a gst_tracer_class_install_event() and that mimics the 
+Or we just add a gst_tracer_class_install_event() and that mimics the
 g_object_class_install_property().
 
 Frontends can:
@@ -321,17 +321,17 @@ Problems / Open items
     right now the tracer hooks are defined as an enum though.
 
 - when connecting to a running app, we can't easily get the 'current' state if
-  logging is using a socket, as past events are not explicitly stored, we could 
-  determine the current topology and emit events with GST_CLOCK_TIME_NONE as ts                                      
+  logging is using a socket, as past events are not explicitly stored, we could
+  determine the current topology and emit events with GST_CLOCK_TIME_NONE as ts
   to indicate that the events are synthetic.
 
-- we need stable ids for scopes (elements, pads)
+- we need stable ids for scopes (threads, elements, pads)
   - the address can be reused
   - we can use gst_util_seqnum_next()
-  - something like gst_object_get_path_string() won't work as objects are 
+  - something like gst_object_get_path_string() won't work as objects are
     initially without parent
 
-- right now the tracing-hooks are enabled/disabled from configure with 
+- right now the tracing-hooks are enabled/disabled from configure with
   --{enable,disable}-gst-tracer-hooks
   The tracer code and the plugins are still built though. We should add a
   --{enable,disable}-gst-tracer to disabled the whole system, allthough this
@@ -358,7 +358,7 @@ Performance
 ===========
 run ./tests/benchmarks/tracing.sh <tracer(s)> <media>
 
-egrep -c "(proc|thread)-rusage" trace.log 
+egrep -c "(proc|thread)-rusage" trace.log
 658618
 grep -c "gst_tracer_log_trace" trace.log
 823351
