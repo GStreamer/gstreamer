@@ -159,7 +159,7 @@ new_pad_stats (GstStructure * s)
   stats->dir = dir;
   stats->min_size = G_MAXUINT;
   stats->first_ts = stats->last_ts = stats->next_ts = GST_CLOCK_TIME_NONE;
-  stats->thread_id = (gpointer) thread_id;
+  stats->thread_id = (gpointer) (guintptr) thread_id;
   stats->parent_ix = parent_ix;
 
   if (pads->len <= ix)
@@ -392,7 +392,7 @@ do_thread_rusage_stats (GstStructure * s)
       "thread-id", G_TYPE_UINT64, &thread_id,
       "average-cpuload", G_TYPE_UINT, &cpuload, "time", G_TYPE_UINT64, &tthread,
       NULL);
-  thread_stats = get_thread_stats ((gpointer) thread_id);
+  thread_stats = get_thread_stats ((gpointer) (guintptr) thread_id);
   thread_stats->cpuload = cpuload;
   thread_stats->tthread = tthread;
   last_ts = MAX (last_ts, ts);

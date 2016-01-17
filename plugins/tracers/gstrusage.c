@@ -238,7 +238,7 @@ do_stats (GstTracer * obj, guint64 ts)
   update_trace_value (stats->tvs_thread, ts, stats->tthread, &dts, &dtproc);
   cur_cpuload = (guint) gst_util_uint64_scale (dtproc,
       G_GINT64_CONSTANT (1000), dts);
-  gst_tracer_record_log (tr_thread, (guint64)thread_id, ts,
+  gst_tracer_record_log (tr_thread, (guint64) (guintptr) thread_id, ts,
       MIN (avg_cpuload, 1000), MIN (cur_cpuload, 1000), stats->tthread);
 
   avg_cpuload = (guint) gst_util_uint64_scale (tproc / num_cpus,

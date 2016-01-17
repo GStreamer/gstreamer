@@ -95,7 +95,7 @@ static void
 log_new_element_stats (GstElementStats * stats, GstElement * element,
     GstClockTime elapsed)
 {
-  gst_tracer_record_log (tr_new_element, (guint64) g_thread_self (),
+  gst_tracer_record_log (tr_new_element, (guint64) (guintptr) g_thread_self (),
       elapsed, stats->index, stats->parent_ix, GST_OBJECT_NAME (element),
       G_OBJECT_TYPE_NAME (element), GST_IS_BIN (element));
 }
@@ -197,7 +197,7 @@ fill_pad_stats (GstStatsTracer * self, GstPad * pad)
 static void
 log_new_pad_stats (GstPadStats * stats, GstPad * pad)
 {
-  gst_tracer_record_log (tr_new_pad, (guint64) g_thread_self (),
+  gst_tracer_record_log (tr_new_pad, (guint64) (guintptr) g_thread_self (),
       stats->index, stats->parent_ix, GST_OBJECT_NAME (pad),
       G_OBJECT_TYPE_NAME (pad), GST_IS_GHOST_PAD (pad),
       GST_PAD_DIRECTION (pad));
@@ -252,10 +252,11 @@ do_buffer_stats (GstStatsTracer * self, GstPad * this_pad,
   GstElement *that_elem = get_real_pad_parent (that_pad);
   GstElementStats *that_elem_stats = get_element_stats (self, that_elem);
 
-  gst_tracer_record_log (tr_buffer, (guint64) g_thread_self (), elapsed,
-      this_pad_stats->index, this_elem_stats->index, that_pad_stats->index,
-      that_elem_stats->index, gst_buffer_get_size (buf), GST_BUFFER_PTS (buf),
-      GST_BUFFER_DTS (buf), GST_BUFFER_DURATION (buf), GST_BUFFER_FLAGS (buf));
+  gst_tracer_record_log (tr_buffer, (guint64) (guintptr) g_thread_self (),
+      elapsed, this_pad_stats->index, this_elem_stats->index,
+      that_pad_stats->index, that_elem_stats->index, gst_buffer_get_size (buf),
+      GST_BUFFER_PTS (buf), GST_BUFFER_DTS (buf), GST_BUFFER_DURATION (buf),
+      GST_BUFFER_FLAGS (buf));
 }
 
 static void
@@ -269,9 +270,9 @@ do_query_stats (GstStatsTracer * self, GstPad * this_pad,
   GstElement *that_elem = get_real_pad_parent (that_pad);
   GstElementStats *that_elem_stats = get_element_stats (self, that_elem);
 
-  gst_tracer_record_log (tr_query, (guint64) g_thread_self (), elapsed,
-      this_pad_stats->index, this_elem_stats->index, that_pad_stats->index,
-      that_elem_stats->index, GST_QUERY_TYPE_NAME (qry),
+  gst_tracer_record_log (tr_query, (guint64) (guintptr) g_thread_self (),
+      elapsed, this_pad_stats->index, this_elem_stats->index,
+      that_pad_stats->index, that_elem_stats->index, GST_QUERY_TYPE_NAME (qry),
       gst_query_get_structure (qry), have_res, res);
 }
 
@@ -448,7 +449,7 @@ do_push_event_pre (GstStatsTracer * self, guint64 ts, GstPad * pad,
   GstPadStats *pad_stats = get_pad_stats (self, pad);
 
   elem_stats->last_ts = ts;
-  gst_tracer_record_log (tr_event, (guint64) g_thread_self (), ts,
+  gst_tracer_record_log (tr_event, (guint64) (guintptr) g_thread_self (), ts,
       pad_stats->index, elem_stats->index, GST_EVENT_TYPE_NAME (ev));
 }
 
@@ -460,7 +461,7 @@ do_post_message_pre (GstStatsTracer * self, guint64 ts, GstElement * elem,
   const GstStructure *msg_s = gst_message_get_structure (msg);
 
   stats->last_ts = ts;
-  gst_tracer_record_log (tr_message, (guint64) g_thread_self (), ts,
+  gst_tracer_record_log (tr_message, (guint64) (guintptr) g_thread_self (), ts,
       stats->index, GST_MESSAGE_TYPE_NAME (msg),
       (msg_s ? msg_s : gst_structure_new_empty ("dummy")));
 }
@@ -481,8 +482,9 @@ do_element_query_pre (GstStatsTracer * self, guint64 ts, GstElement * elem,
   GstElementStats *stats = get_element_stats (self, elem);
 
   stats->last_ts = ts;
-  gst_tracer_record_log (tr_element_query, (guint64) g_thread_self (), ts,
-      stats->index, GST_QUERY_TYPE_NAME (qry));
+  gst_tracer_record_log (tr_element_query,
+      (guint64) (guintptr) g_thread_self (), ts, stats->index,
+      GST_QUERY_TYPE_NAME (qry));
 }
 
 static void
