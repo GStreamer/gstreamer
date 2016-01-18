@@ -163,6 +163,13 @@ gboolean priv_gst_structure_parse_name (gchar * str, gchar **start, gchar ** end
 G_GNUC_INTERNAL
 gboolean priv_gst_structure_parse_fields (gchar *str, gchar ** end, GstStructure *structure);
 
+/* used in gstvalue.c and gststructure.c */
+
+#define GST_WRAPPED_PTR_FORMAT     "p\aa"
+
+G_GNUC_INTERNAL
+gchar *priv_gst_string_take_and_wrap (gchar * s);
+
 /* registry cache backends */
 G_GNUC_INTERNAL
 gboolean		priv_gst_registry_binary_read_cache	(GstRegistry * registry, const char *location);

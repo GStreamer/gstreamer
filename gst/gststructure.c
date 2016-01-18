@@ -1974,12 +1974,13 @@ priv__gst_structure_append_template_to_gstring (GQuark field_id,
   } else if (type == G_TYPE_UINT64) {
     g_string_append (s, "%" G_GUINT64_FORMAT);
   } else if (type == GST_TYPE_STRUCTURE) {
-    g_string_append (s, "%" GST_PTR_FORMAT);
-  } else if (g_type_is_a (type, G_TYPE_ENUM)) {
+    g_string_append (s, "%" GST_WRAPPED_PTR_FORMAT);
+  } else if (g_type_is_a (type, G_TYPE_ENUM)
+      || g_type_is_a (type, G_TYPE_FLAGS)) {
     g_string_append (s, "%i");
   } else {
     GST_WARNING ("unhandled type: %s", g_type_name (type));
-    g_string_append (s, "%" GST_PTR_FORMAT);
+    g_string_append (s, "%" GST_WRAPPED_PTR_FORMAT);
   }
 
   return TRUE;

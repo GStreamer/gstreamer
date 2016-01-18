@@ -819,6 +819,9 @@ gst_info_printf_pointer_extension_func (const char *format, void *ptr)
       case 'B':                /* GST_SEGMENT_FORMAT */
         s = gst_debug_print_segment (ptr);
         break;
+      case 'a':                /* GST_WRAPPED_PTR_FORMAT */
+        s = priv_gst_string_take_and_wrap (gst_debug_print_object (ptr));
+        break;
       default:
         /* must have been compiled against a newer version with an extension
          * we don't known about yet - just ignore and fallback to %p below */

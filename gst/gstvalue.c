@@ -148,7 +148,6 @@ static gint gst_value_compare_with_func (const GValue * value1,
     const GValue * value2, GstValueCompareFunc compare);
 
 static gchar *gst_string_wrap (const gchar * s);
-static gchar *gst_string_take_and_wrap (gchar * s);
 static gchar *gst_string_unwrap (const gchar * s);
 
 static void gst_value_move (GValue * dest, GValue * src);
@@ -1925,7 +1924,7 @@ static gchar *
 gst_value_serialize_caps (const GValue * value)
 {
   GstCaps *caps = g_value_get_boxed (value);
-  return gst_string_take_and_wrap (gst_caps_to_string (caps));
+  return priv_gst_string_take_and_wrap (gst_caps_to_string (caps));
 }
 
 static gboolean
@@ -2067,7 +2066,7 @@ gst_value_serialize_structure (const GValue * value)
 {
   GstStructure *structure = g_value_get_boxed (value);
 
-  return gst_string_take_and_wrap (gst_structure_to_string (structure));
+  return priv_gst_string_take_and_wrap (gst_structure_to_string (structure));
 }
 
 static gboolean
@@ -2149,7 +2148,7 @@ gst_value_serialize_caps_features (const GValue * value)
 {
   GstCapsFeatures *features = g_value_get_boxed (value);
 
-  return gst_string_take_and_wrap (gst_caps_features_to_string (features));
+  return priv_gst_string_take_and_wrap (gst_caps_features_to_string (features));
 }
 
 static gboolean
@@ -2219,7 +2218,7 @@ gst_value_serialize_tag_list (const GValue * value)
 {
   GstTagList *taglist = g_value_get_boxed (value);
 
-  return gst_string_take_and_wrap (gst_tag_list_to_string (taglist));
+  return priv_gst_string_take_and_wrap (gst_tag_list_to_string (taglist));
 }
 
 
@@ -2916,8 +2915,8 @@ gst_string_wrap (const gchar * s)
 }
 
 /* Same as above, but take ownership of the string */
-static gchar *
-gst_string_take_and_wrap (gchar * s)
+gchar *
+priv_gst_string_take_and_wrap (gchar * s)
 {
   gchar *out;
   gint len = gst_string_measure_wrapping (s);
