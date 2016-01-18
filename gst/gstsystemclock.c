@@ -435,6 +435,7 @@ gst_system_clock_async_thread (GstClock * clock)
 {
   GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
   GstSystemClockPrivate *priv = sysclock->priv;
+  GstClockReturn status;
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "enter system clock thread");
   GST_OBJECT_LOCK (clock);
@@ -467,11 +468,32 @@ gst_system_clock_async_thread (GstClock * clock)
 
     /* pick the next entry */
     entry = priv->entries->data;
+
+    /* set entry status to busy before we release the clock lock */
+    do {
+      status = GET_ENTRY_STATUS (entry);
+
+      /* check for unscheduled */
+      if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED)) {
+        /* entry was unscheduled, move to the next one */
+        GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry %p unscheduled", entry);
+        goto next_entry;
+      }
+
+      /* for periodic timers, status can be EARLY from a previous run */
+      if (G_UNLIKELY (status != GST_CLOCK_OK && status != GST_CLOCK_EARLY))
+        GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
+            status, entry);
+
+      /* mark the entry as busy but watch out for intermediate unscheduled
+       * statuses */
+    } while (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, status, GST_CLOCK_BUSY)));
+
     GST_OBJECT_UNLOCK (clock);
 
     requested = entry->time;
 
-    /* now wait for the entry, we already hold the lock */
+    /* now wait for the entry */
     res =
         gst_system_clock_id_wait_jitter_unlocked (clock, (GstClockID) entry,
         NULL, FALSE);
@@ -692,19 +714,8 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
     while (TRUE) {
       gint pollret;
 
-      do {
-        status = GET_ENTRY_STATUS (entry);
-
-        /* stop when we are unscheduled */
-        if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED))
-          goto done;
-
-        /* mark the entry as busy but watch out for intermediate unscheduled
-         * statuses */
-      } while (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, status, GST_CLOCK_BUSY)));
-
       /* now wait on the entry, it either times out or the fd is written. The
-       * status of the entry is only BUSY around the poll. */
+       * status of the entry is BUSY only around the poll. */
       pollret = gst_poll_wait (sysclock->priv->timer, diff);
 
       /* get the new status, mark as DONE. We do this so that the unschedule
@@ -715,6 +726,9 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
         /* we were unscheduled, exit immediately */
         if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED))
           break;
+        if (G_UNLIKELY (status != GST_CLOCK_BUSY))
+          GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
+              status, entry);
       } while (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, status, GST_CLOCK_DONE)));
 
       GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p unlocked, status %d, ret %d",
@@ -764,9 +778,10 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
           /* timeout, this is fine, we can report success now */
           if (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, GST_CLOCK_DONE,
                       GST_CLOCK_OK))) {
-            GST_CAT_DEBUG (GST_CAT_CLOCK, "unexpected status for entry %p",
-                entry);
             status = GET_ENTRY_STATUS (entry);
+            if (status != GST_CLOCK_UNSCHEDULED)
+              GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
+                  status, entry);
             goto done;
           } else {
             status = GST_CLOCK_OK;
@@ -789,6 +804,17 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
         } else {
           GST_CAT_DEBUG (GST_CAT_CLOCK,
               "entry %p restart, diff %" G_GINT64_FORMAT, entry, diff);
+          /* we are going to poll again, set status back to busy */
+          do {
+            status = GET_ENTRY_STATUS (entry);
+            /* we were unscheduled, exit immediately */
+            if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED))
+              goto done;
+            if (G_UNLIKELY (status != GST_CLOCK_DONE))
+              GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
+                  status, entry);
+          } while (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, status,
+                      GST_CLOCK_BUSY)));
         }
       }
     }
@@ -796,15 +822,19 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
     /* we are right on time or too late */
     if (G_UNLIKELY (diff == 0)) {
       if (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, status, GST_CLOCK_OK))) {
-        GST_CAT_DEBUG (GST_CAT_CLOCK, "unexpected status for entry %p", entry);
         status = GET_ENTRY_STATUS (entry);
+        if (G_UNLIKELY (status != GST_CLOCK_UNSCHEDULED))
+          GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
+              status, entry);
       } else {
         status = GST_CLOCK_OK;
       }
     } else {
       if (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, status, GST_CLOCK_EARLY))) {
-        GST_CAT_DEBUG (GST_CAT_CLOCK, "unexpected status for entry %p", entry);
         status = GET_ENTRY_STATUS (entry);
+        if (G_UNLIKELY (status != GST_CLOCK_UNSCHEDULED))
+          GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
+              status, entry);
       } else {
         status = GST_CLOCK_EARLY;
       }
@@ -818,6 +848,22 @@ static GstClockReturn
 gst_system_clock_id_wait_jitter (GstClock * clock, GstClockEntry * entry,
     GstClockTimeDiff * jitter)
 {
+  GstClockReturn status;
+  do {
+    status = GET_ENTRY_STATUS (entry);
+
+    /* stop when we are unscheduled */
+    if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED))
+      return status;
+
+    if (G_UNLIKELY (status != GST_CLOCK_OK))
+      GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
+          status, entry);
+
+    /* mark the entry as busy but watch out for intermediate unscheduled
+     * statuses */
+  } while (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, status, GST_CLOCK_BUSY)));
+
   return gst_system_clock_id_wait_jitter_unlocked (clock, entry, jitter, TRUE);
 }
 
