@@ -209,7 +209,7 @@ gboolean gst_validate_print_action_types (const gchar ** wanted_types, gint num_
  *                      action, we will accept to take 'duration'
  *                      which will be replace by the total duration
  *                      of the stream on which the action is executed.
- * @def: The default value of a parametter as a string, should be %NULL
+ * @def: The default value of a parameter as a string, should be %NULL
  *       for mandatory streams.
  */
 struct _GstValidateActionParameter
