@@ -39,7 +39,35 @@ inner_product_gfloat_1_sse (gfloat * o, const gfloat * a, const gfloat * b, gint
   _mm_store_ss (o, sum);
 }
 
+static inline void
+inner_product_gfloat_2_sse (gfloat * o, const gfloat * a, const gfloat * b, gint len)
+{
+  gint i = 0;
+  __m128 sum = _mm_setzero_ps (), t;
+
+  for (; i < len; i += 8) {
+    t = _mm_load_ps (b + i);
+    sum =
+        _mm_add_ps (sum, _mm_mul_ps (_mm_loadu_ps (a + 2 * i + 0),
+            _mm_unpacklo_ps (t, t)));
+    sum =
+        _mm_add_ps (sum, _mm_mul_ps (_mm_loadu_ps (a + 2 * i + 4),
+            _mm_unpackhi_ps (t, t)));
+
+    t = _mm_load_ps (b + i + 4);
+    sum =
+        _mm_add_ps (sum, _mm_mul_ps (_mm_loadu_ps (a + 2 * i + 8),
+            _mm_unpacklo_ps (t, t)));
+    sum =
+        _mm_add_ps (sum, _mm_mul_ps (_mm_loadu_ps (a + 2 * i + 12),
+            _mm_unpackhi_ps (t, t)));
+  }
+  sum = _mm_add_ps (sum, _mm_movehl_ps (sum, sum));
+  *(gint64*)o = _mm_cvtsi128_si64 ((__m128i)sum);
+}
+
 MAKE_RESAMPLE_FUNC (gfloat, 1, sse);
+MAKE_RESAMPLE_FUNC (gfloat, 2, sse);
 #endif
 
 #if defined (HAVE_EMMINTRIN_H) && defined(__SSE2__)
@@ -212,12 +240,14 @@ audio_resampler_check_x86 (const gchar *option)
 #if defined (HAVE_XMMINTRIN_H) && defined(__SSE__)
     GST_DEBUG ("enable SSE optimisations");
     resample_gfloat_1 = resample_gfloat_1_sse;
+    resample_gfloat_2 = resample_gfloat_2_sse;
 #endif
   } else if (!strcmp (option, "sse2")) {
 #if defined (HAVE_EMMINTRIN_H) && defined(__SSE2__)
     GST_DEBUG ("enable SSE2 optimisations");
     resample_gint16_1 = resample_gint16_1_sse2;
     resample_gfloat_1 = resample_gfloat_1_sse;
+    resample_gfloat_2 = resample_gfloat_2_sse;
     resample_gdouble_1 = resample_gdouble_1_sse2;
     resample_gint16_2 = resample_gint16_2_sse2;
     resample_gdouble_2 = resample_gdouble_2_sse2;

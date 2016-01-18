@@ -424,6 +424,21 @@ inner_product_gfloat_1_c (gfloat * o, const gfloat * a, const gfloat * b,
 }
 
 static inline void
+inner_product_gfloat_2_c (gfloat * o, const gfloat * a, const gfloat * b,
+    gint len)
+{
+  gint i;
+  gfloat r[2] = { 0.0, 0.0 };
+
+  for (i = 0; i < len; i++) {
+    r[0] += a[2 * i] * b[i];
+    r[1] += a[2 * i + 1] * b[i];
+  }
+  o[0] = r[0];
+  o[1] = r[1];
+}
+
+static inline void
 inner_product_gdouble_1_c (gdouble * o, const gdouble * a, const gdouble * b,
     gint len)
 {
@@ -498,6 +513,7 @@ MAKE_RESAMPLE_FUNC (gint32, 1, c);
 MAKE_RESAMPLE_FUNC (gfloat, 1, c);
 MAKE_RESAMPLE_FUNC (gdouble, 1, c);
 MAKE_RESAMPLE_FUNC (gint16, 2, c);
+MAKE_RESAMPLE_FUNC (gfloat, 2, c);
 MAKE_RESAMPLE_FUNC (gdouble, 2, c);
 
 static ResampleFunc resample_funcs[] = {
@@ -506,6 +522,7 @@ static ResampleFunc resample_funcs[] = {
   resample_gfloat_1_c,
   resample_gdouble_1_c,
   resample_gint16_2_c,
+  resample_gfloat_2_c,
   resample_gdouble_2_c,
 };
 
@@ -514,7 +531,8 @@ static ResampleFunc resample_funcs[] = {
 #define resample_gfloat_1 resample_funcs[2]
 #define resample_gdouble_1 resample_funcs[3]
 #define resample_gint16_2 resample_funcs[4]
-#define resample_gdouble_2 resample_funcs[5]
+#define resample_gfloat_2 resample_funcs[5]
+#define resample_gdouble_2 resample_funcs[6]
 
 #if defined HAVE_ORC && !defined DISABLE_ORC
 # if defined (__i386__) || defined (__x86_64__)
@@ -739,8 +757,15 @@ resampler_calculate_taps (GstAudioResampler * resampler)
       }
       break;
     case GST_AUDIO_FORMAT_F32:
-      resampler->resample = resample_gfloat_1;
-      resampler->deinterleave = deinterleave_gfloat;
+      if (!non_interleaved && resampler->channels == 2 && n_taps >= 4) {
+        resampler->resample = resample_gfloat_2;
+        resampler->deinterleave = deinterleave_copy;
+        resampler->blocks = 1;
+        resampler->inc = resampler->channels;;
+      } else {
+        resampler->resample = resample_gfloat_1;
+        resampler->deinterleave = deinterleave_gfloat;
+      }
       break;
     case GST_AUDIO_FORMAT_S32:
       resampler->resample = resample_gint32_1;
