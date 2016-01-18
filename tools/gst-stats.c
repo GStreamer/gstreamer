@@ -291,7 +291,7 @@ do_buffer_stats (GstStructure * s)
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
       "pad-ix", G_TYPE_UINT, &pad_ix,
       "element-ix", G_TYPE_UINT, &elem_ix,
-      "peer-elem-ix", G_TYPE_UINT, &peer_elem_ix,
+      "peer-element-ix", G_TYPE_UINT, &peer_elem_ix,
       "buffer-size", G_TYPE_UINT, &size,
       "buffer-pts", G_TYPE_UINT64, &buffer_pts,
       "buffer-duration", G_TYPE_UINT64, &buffer_dur,
