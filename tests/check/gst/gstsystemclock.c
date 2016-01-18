@@ -338,6 +338,58 @@ GST_START_TEST (test_async_order)
 
 GST_END_TEST;
 
+GST_START_TEST (test_async_order_stress_test)
+{
+#define ALARM_COUNT 20
+  GstClock *clock;
+  GstClockID id[ALARM_COUNT];
+  GList *cb_list = NULL, *cb_list_it;
+  GstClockTime base;
+  GstClockReturn result;
+
+  clock = gst_system_clock_obtain ();
+  fail_unless (clock != NULL, "Could not create instance of GstSystemClock");
+
+  gst_clock_debug (clock);
+  base = gst_clock_get_time (clock);
+
+  /* keep inserting at the beginning of the list.
+   * We expect the alarm thread to keep detecting the new entries and to
+   * switch to wait on the first entry on the list
+   */
+  for (unsigned int i = ALARM_COUNT; i > 0; --i) {
+    id[i - 1] = gst_clock_new_single_shot_id (clock, base + i * TIME_UNIT);
+    result =
+        gst_clock_id_wait_async (id[i - 1], store_callback, &cb_list, NULL);
+    fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
+  }
+
+  g_usleep (TIME_UNIT * (ALARM_COUNT + 1) / 1000);
+  /* at this point all the timers should have timed out */
+  g_mutex_lock (&store_lock);
+  fail_unless (cb_list != NULL, "expected notification");
+  cb_list_it = cb_list;
+  /* alarms must trigger in order.
+   * Will fail if alarm thread did not properly switch to wait on first entry
+   * from the list
+   */
+  for (unsigned int i = 0; i < ALARM_COUNT; ++i) {
+    fail_unless (cb_list_it != NULL, "No notification received for id[%d]", i);
+    fail_unless (cb_list_it->data == id[i],
+        "Expected notification for id[%d]", i);
+    cb_list_it = g_list_next (cb_list_it);
+  }
+  g_mutex_unlock (&store_lock);
+
+  for (unsigned int i = 0; i < ALARM_COUNT; ++i)
+    gst_clock_id_unref (id[i]);
+  g_list_free (cb_list);
+
+  gst_object_unref (clock);
+}
+
+GST_END_TEST;
+
 struct test_async_sync_interaction_data
 {
   GMutex lock;
@@ -713,6 +765,7 @@ gst_systemclock_suite (void)
   tcase_add_test (tc_chain, test_periodic_shot);
   tcase_add_test (tc_chain, test_periodic_multi);
   tcase_add_test (tc_chain, test_async_order);
+  tcase_add_test (tc_chain, test_async_order_stress_test);
   tcase_add_test (tc_chain, test_async_sync_interaction);
   tcase_add_test (tc_chain, test_diff);
   tcase_add_test (tc_chain, test_mixed);
