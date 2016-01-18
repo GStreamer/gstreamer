@@ -289,7 +289,7 @@ GST_START_TEST (test_complete_structure)
   GstStructure *structure;
   const gchar *s;
 
-  s = "GstEventSeek, rate=(double)1, format=(GstFormat)GST_FORMAT_TIME, flags=(GstSeekFlags)GST_SEEK_FLAGS_NONE, start_type=(GstSeekType)GST_SEEK_TYPE_SET, start=(gint64)1000000000, stop_type=(GstSeekType)GST_SEEK_TYPE_NONE, stop=(gint64)0";
+  s = "GstEventSeek, rate=(double)1, format=(GstFormat)GST_FORMAT_TIME, flags=(GstSeekFlags)GST_SEEK_FLAG_NONE, start_type=(GstSeekType)GST_SEEK_TYPE_SET, start=(gint64)1000000000, stop_type=(GstSeekType)GST_SEEK_TYPE_NONE, stop=(gint64)0";
   structure = gst_structure_from_string (s, NULL);
   fail_if (structure == NULL, "Could not get structure from string %s", s);
   /* FIXME: TODO: add checks for correct serialization of members ? */
