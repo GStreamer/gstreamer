@@ -100,10 +100,8 @@
 #endif
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
-#include <gst/net/net.h>
 
 #include "gstrtpjitterbuffer.h"
 #include "rtpjitterbuffer.h"
@@ -415,8 +413,6 @@ static GstPad *gst_rtp_jitter_buffer_request_new_pad (GstElement * element,
 static void gst_rtp_jitter_buffer_release_pad (GstElement * element,
     GstPad * pad);
 static GstClock *gst_rtp_jitter_buffer_provide_clock (GstElement * element);
-static gboolean gst_rtp_jitter_buffer_set_clock (GstElement * element,
-    GstClock * clock);
 
 /* pad overrides */
 static GstCaps *gst_rtp_jitter_buffer_getcaps (GstPad * pad, GstCaps * filter);
@@ -824,8 +820,6 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_release_pad);
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_provide_clock);
-  gstelement_class->set_clock =
-      GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_set_clock);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_jitter_buffer_src_template));
@@ -1135,16 +1129,6 @@ gst_rtp_jitter_buffer_provide_clock (GstElement * element)
   return gst_system_clock_obtain ();
 }
 
-static gboolean
-gst_rtp_jitter_buffer_set_clock (GstElement * element, GstClock * clock)
-{
-  GstRtpJitterBuffer *jitterbuffer = GST_RTP_JITTER_BUFFER (element);
-
-  rtp_jitter_buffer_set_pipeline_clock (jitterbuffer->priv->jbuf, clock);
-
-  return TRUE;
-}
-
 static void
 gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer)
 {
@@ -1249,7 +1233,6 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
   GstStructure *caps_struct;
   guint val;
   GstClockTime tval;
-  const gchar *ts_refclk, *mediaclk;
 
   priv = jitterbuffer->priv;
 
@@ -1313,75 +1296,6 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
   GST_DEBUG_OBJECT (jitterbuffer,
       "npt start/stop: %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
       GST_TIME_ARGS (priv->npt_start), GST_TIME_ARGS (priv->npt_stop));
-
-  if ((ts_refclk = gst_structure_get_string (caps_struct, "a-ts-refclk"))) {
-    GstClock *clock = NULL;
-    guint64 clock_offset = -1;
-
-    GST_DEBUG_OBJECT (jitterbuffer, "Have timestamp reference clock %s",
-        ts_refclk);
-
-    if (g_str_has_prefix (ts_refclk, "ntp=")) {
-      if (g_str_has_prefix (ts_refclk, "ntp=/traceable/")) {
-        GST_FIXME_OBJECT (jitterbuffer, "Can't handle traceable NTP clocks");
-      } else {
-        const gchar *host, *portstr;
-        gchar *hostname;
-        guint port;
-
-        host = ts_refclk + sizeof ("ntp=") - 1;
-        if (host[0] == '[') {
-          /* IPv6 */
-          portstr = strchr (host, ']');
-          if (portstr && portstr[1] == ':')
-            portstr = portstr + 1;
-          else
-            portstr = NULL;
-        } else {
-          portstr = strrchr (host, ':');
-        }
-
-
-        if (!portstr || sscanf (portstr, ":%u", &port) != 1)
-          port = 123;
-
-        if (portstr)
-          hostname = g_strndup (host, (portstr - host));
-        else
-          hostname = g_strdup (host);
-
-        clock = gst_ntp_clock_new (NULL, hostname, port, 0);
-        g_free (hostname);
-      }
-    } else if (g_str_has_prefix (ts_refclk, "ptp=IEEE1588-2008:")) {
-      const gchar *domainstr =
-          ts_refclk + sizeof ("ptp=IEEE1588-2008:XX-XX-XX-XX-XX-XX-XX-XX") - 1;
-      guint domain;
-
-      if (domainstr[0] != ':' || sscanf (domainstr, ":%u", &domain) != 1)
-        domain = 0;
-
-      clock = gst_ptp_clock_new (NULL, domain);
-    } else {
-      GST_FIXME_OBJECT (jitterbuffer, "Unsupported timestamp reference clock");
-    }
-
-    if ((mediaclk = gst_structure_get_string (caps_struct, "a-mediaclk"))) {
-      GST_DEBUG_OBJECT (jitterbuffer, "Got media clock %s", mediaclk);
-
-      if (!g_str_has_prefix (mediaclk, "direct=")
-          || sscanf (mediaclk, "direct=%" G_GUINT64_FORMAT, &clock_offset) != 1)
-        GST_FIXME_OBJECT (jitterbuffer, "Unsupported media clock");
-      if (strstr (mediaclk, "rate=") != NULL) {
-        GST_FIXME_OBJECT (jitterbuffer, "Rate property not supported");
-        clock_offset = -1;
-      }
-    }
-
-    rtp_jitter_buffer_set_media_clock (priv->jbuf, clock, clock_offset);
-  } else {
-    rtp_jitter_buffer_set_media_clock (priv->jbuf, NULL, -1);
-  }
 
   return TRUE;
 
