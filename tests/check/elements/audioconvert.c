@@ -812,7 +812,7 @@ GST_START_TEST (test_int_float_conversion)
   {
     gint16 in[] = { 0, -32768, 16384, -16384 };
     gdouble out[] = { 0.0,
-      (gdouble) (-(32768L << 16)) / 2147483648.0,       /* ~ -1.0 */
+      (gdouble) (-(G_GINT64_CONSTANT (32768) << 16)) / 2147483648.0,    /* ~ -1.0 */
       (gdouble) (16384L << 16) / 2147483648.0,  /* ~  0.5 */
       (gdouble) (-(16384L << 16)) / 2147483648.0,       /* ~ -0.5 */
     };
@@ -822,9 +822,10 @@ GST_START_TEST (test_int_float_conversion)
         out, get_float_caps (1, G_BYTE_ORDER, 64));
   }
   {
-    gint32 in[] = { 0, (-(1L << 31)), (1L << 30), (-(1L << 30)) };
+    gint32 in[] =
+        { 0, (-(G_GINT64_CONSTANT (1) << 31)), (1L << 30), (-(1L << 30)) };
     gdouble out[] = { 0.0,
-      (gdouble) (-(1L << 31)) / 2147483648.0,   /* ~ -1.0 */
+      (gdouble) (-(G_GINT64_CONSTANT (1) << 31)) / 2147483648.0,        /* ~ -1.0 */
       (gdouble) (1L << 30) / 2147483648.0,      /* ~  0.5 */
       (gdouble) (-(1L << 30)) / 2147483648.0,   /* ~ -0.5 */
     };
