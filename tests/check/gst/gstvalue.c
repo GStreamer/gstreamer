@@ -453,6 +453,8 @@ GST_START_TEST (test_deserialize_flags)
     "0",
     "GST_SEEK_FLAG_NONE",
     "GST_SEEK_FLAG_FLUSH",
+    "0xf",
+    "15",
     "GST_SEEK_FLAG_FLUSH+GST_SEEK_FLAG_ACCURATE",
   };
   GstSeekFlags results[] = {
@@ -460,6 +462,8 @@ GST_START_TEST (test_deserialize_flags)
     GST_SEEK_FLAG_NONE,
     GST_SEEK_FLAG_NONE,
     GST_SEEK_FLAG_FLUSH,
+    0xf,
+    15,
     GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
   };
   int i;
@@ -473,6 +477,14 @@ GST_START_TEST (test_deserialize_flags)
         "resulting value is %d, not %d, for string %s (%d)",
         g_value_get_flags (&value), results[i], strings[i], i);
   }
+
+  fail_if (gst_value_deserialize (&value, "foo"),
+      "flag deserializing for bogus value should have failed!");
+  fail_if (gst_value_deserialize (&value, "GST_SEEK_FLAG_FLUSH+foo"),
+      "flag deserializing for bogus value should have failed!");
+  fail_if (gst_value_deserialize (&value,
+          "GST_SEEK_FLAG_FLUSH+foo+GST_SEEK_FLAG_ACCURATE"),
+      "flag deserializing for bogus value should have failed!");
 }
 
 GST_END_TEST;

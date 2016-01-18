@@ -3235,7 +3235,6 @@ gst_value_gflags_str_to_flags (GFlagsClass * klass, const gchar * s,
   const gchar *pos = NULL;
   const gchar *next;
   gchar *cur_str, *endptr;
-
   guint flags = 0;
   guint mask = 0;
   guint val;
@@ -3273,8 +3272,10 @@ gst_value_gflags_str_to_flags (GFlagsClass * klass, const gchar * s,
     else {
       val = strtoul (cur_str, &endptr, 0);
       /* direct numeric value */
-      if (endptr == NULL || *endptr != '\0')
-        val = 0;                /* Invalid numeric, ignore it */
+      if (endptr == NULL || *endptr != '\0') {
+        g_free (cur_str);
+        return FALSE;           /* Invalid numeric or string we can't convert */
+      }
     }
     g_free (cur_str);
 
