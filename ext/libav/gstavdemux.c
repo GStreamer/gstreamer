@@ -1526,7 +1526,7 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
 
 done:
   /* can destroy the packet now */
-  av_free_packet (&pkt);
+  av_packet_unref (&pkt);
 
   return;
 
@@ -1603,7 +1603,7 @@ drop:
     GST_DEBUG_OBJECT (demux, "dropping buffer out of segment, stream eos");
     stream->eos = TRUE;
     if (gst_ffmpegdemux_is_eos (demux)) {
-      av_free_packet (&pkt);
+      av_packet_unref (&pkt);
       GST_DEBUG_OBJECT (demux, "we are eos");
       ret = GST_FLOW_EOS;
       goto pause;
