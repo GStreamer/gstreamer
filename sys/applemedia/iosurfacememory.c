@@ -168,7 +168,7 @@ _io_surface_memory_new (GstGLContext * context,
 
   g_return_val_if_fail (target == GST_GL_TEXTURE_TARGET_RECTANGLE, NULL);
 
-  mem = g_slice_new0 (GstIOSurfaceMemory);
+  mem = g_new0 (GstIOSurfaceMemory, 1);
   gst_gl_memory_init (&mem->gl_mem, _io_surface_memory_allocator, NULL, context,
       target, NULL, info, plane, valign, user_data, notify);
 
