@@ -85,22 +85,19 @@ gst_core_video_meta_get_info (void)
 
 void
 gst_core_video_wrap_pixel_buffer (GstBuffer * buf, GstVideoInfo * info,
-    CVPixelBufferRef pixel_buf, gboolean * has_padding, gboolean map)
+    CVPixelBufferRef pixel_buf, gboolean * has_padding)
 {
   guint n_planes;
   gsize offset[GST_VIDEO_MAX_PLANES] = { 0 };
   gint stride[GST_VIDEO_MAX_PLANES] = { 0 };
   UInt32 size;
+  GstAppleCoreVideoPixelBuffer *gpixbuf;
 
+  gpixbuf = gst_apple_core_video_pixel_buffer_new (pixel_buf);
   *has_padding = FALSE;
 
   if (CVPixelBufferIsPlanar (pixel_buf)) {
     gint i, size = 0, plane_offset = 0;
-    GstAppleCoreVideoPixelBuffer *gpixbuf;
-
-    if (map) {
-      gpixbuf = gst_apple_core_video_pixel_buffer_new (pixel_buf);
-    }
 
     n_planes = CVPixelBufferGetPlaneCount (pixel_buf);
     for (i = 0; i < n_planes; i++) {
@@ -114,32 +111,21 @@ gst_core_video_wrap_pixel_buffer (GstBuffer * buf, GstVideoInfo * info,
       offset[i] = plane_offset;
       plane_offset += size;
 
-      if (map) {
-        gst_buffer_append_memory (buf,
-            gst_apple_core_video_memory_new_wrapped (gpixbuf, i, size));
-      }
-    }
-
-    if (map) {
-      gst_apple_core_video_pixel_buffer_unref (gpixbuf);
+      gst_buffer_append_memory (buf,
+          gst_apple_core_video_memory_new_wrapped (gpixbuf, i, size));
     }
   } else {
-
     n_planes = 1;
     stride[0] = CVPixelBufferGetBytesPerRow (pixel_buf);
     offset[0] = 0;
     size = stride[0] * CVPixelBufferGetHeight (pixel_buf);
 
-    if (map) {
-      GstAppleCoreVideoPixelBuffer *gpixbuf;
-
-      gpixbuf = gst_apple_core_video_pixel_buffer_new (pixel_buf);
-      gst_buffer_append_memory (buf,
-          gst_apple_core_video_memory_new_wrapped (gpixbuf,
-              GST_APPLE_CORE_VIDEO_NO_PLANE, size));
-      gst_apple_core_video_pixel_buffer_unref (gpixbuf);
-    }
+    gst_buffer_append_memory (buf,
+        gst_apple_core_video_memory_new_wrapped (gpixbuf,
+            GST_APPLE_CORE_VIDEO_NO_PLANE, size));
   }
+
+  gst_apple_core_video_pixel_buffer_unref (gpixbuf);
 
   if (info) {
     GstVideoMeta *video_meta;
@@ -152,8 +138,7 @@ gst_core_video_wrap_pixel_buffer (GstBuffer * buf, GstVideoInfo * info,
 }
 
 GstBuffer *
-gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo,
-    gboolean map)
+gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo)
 {
   CVPixelBufferRef pixbuf = NULL;
   GstBuffer *buf;
@@ -174,7 +159,7 @@ gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo,
   meta->cvbuf = CVBufferRetain (cvbuf);
   meta->pixbuf = pixbuf;
 
-  gst_core_video_wrap_pixel_buffer (buf, vinfo, pixbuf, &has_padding, map);
+  gst_core_video_wrap_pixel_buffer (buf, vinfo, pixbuf, &has_padding);
 
   return buf;
 }

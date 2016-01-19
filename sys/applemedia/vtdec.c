@@ -767,9 +767,7 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
       GST_WARNING_OBJECT (vtdec, "Output state not configured, release buffer");
       frame->flags &= VTDEC_FRAME_FLAG_SKIP;
     } else {
-      buf =
-          gst_core_video_buffer_new (image_buffer, &state->info,
-          vtdec->texture_cache == NULL);
+      buf = gst_core_video_buffer_new (image_buffer, &state->info);
       gst_video_codec_state_unref (state);
       GST_BUFFER_PTS (buf) = pts.value;
       GST_BUFFER_DURATION (buf) = duration.value;

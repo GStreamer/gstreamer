@@ -228,7 +228,7 @@ gst_video_info_init_from_pixel_buffer (GstVideoInfo * info,
 
 GstBuffer *
 gst_core_media_buffer_new (CMSampleBufferRef sample_buf,
-    gboolean use_video_meta, gboolean map)
+    gboolean use_video_meta)
 {
   CVImageBufferRef image_buf;
   CMBlockBufferRef block_buf;
@@ -250,11 +250,11 @@ gst_core_media_buffer_new (CMSampleBufferRef sample_buf,
       goto error;
     }
 
-    gst_core_video_wrap_pixel_buffer (buf, &info, pixel_buf, &has_padding, map);
+    gst_core_video_wrap_pixel_buffer (buf, &info, pixel_buf, &has_padding);
 
     /* If the video meta API is not supported, remove padding by
      * copying the core media buffer to a system memory buffer */
-    if (map && has_padding && !use_video_meta) {
+    if (has_padding && !use_video_meta) {
       GstBuffer *copy_buf;
       copy_buf = gst_core_media_buffer_new_from_buffer (buf, &info);
       if (!copy_buf) {
@@ -266,7 +266,7 @@ gst_core_media_buffer_new (CMSampleBufferRef sample_buf,
     }
 
   } else if (block_buf != NULL) {
-    if (map && !gst_core_media_buffer_wrap_block_buffer (buf, block_buf)) {
+    if (!gst_core_media_buffer_wrap_block_buffer (buf, block_buf)) {
       goto error;
     }
   } else {

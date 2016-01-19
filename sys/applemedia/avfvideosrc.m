@@ -939,7 +939,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     }
   }
 
-  *buf = gst_core_media_buffer_new (sbuf, useVideoMeta, textureCache == NULL);
+  *buf = gst_core_media_buffer_new (sbuf, useVideoMeta);
   if (*buf == NULL) {
     CFRelease (sbuf);
     return GST_FLOW_ERROR;
