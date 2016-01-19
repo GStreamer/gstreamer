@@ -134,7 +134,6 @@ gst_tracer_record_dispose (GObject * object)
 {
   GstTracerRecord *self = GST_TRACER_RECORD (object);
 
-  gst_structure_free (self->spec);
   g_free (self->format);
 }
 
