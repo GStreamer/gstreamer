@@ -2163,8 +2163,6 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
       gst_structure_take_value (s, "colorimetry", &colorimetry);
     }
   }
-
-  return;
 }
 
 /* The frame interval enumeration code first appeared in Linux 2.6.19. */
