@@ -338,7 +338,7 @@ ges_timeline_dispose (GObject * object)
 {
   GESTimeline *tl = GES_TIMELINE (object);
   GESTimelinePrivate *priv = tl->priv;
-  GList *tmp;
+  GList *tmp, *groups;
 
   while (tl->layers) {
     GESLayer *layer = (GESLayer *) tl->layers->data;
@@ -353,11 +353,14 @@ ges_timeline_dispose (GObject * object)
   while (tl->tracks)
     ges_timeline_remove_track (GES_TIMELINE (object), tl->tracks->data);
 
-  for (tmp = priv->groups; tmp; tmp = tmp->next)
-    g_list_free_full (ges_container_ungroup (tmp->data, FALSE),
-        gst_object_unref);
+  groups = g_list_copy (priv->groups);
+  for (tmp = groups; tmp; tmp = tmp->next) {
+    GList *elems = ges_container_ungroup (tmp->data, FALSE);
 
+    g_list_free_full (elems, gst_object_unref);
+  }
   g_list_free (priv->groups);
+  g_list_free (groups);
 
   g_hash_table_unref (priv->by_start);
   g_hash_table_unref (priv->by_end);
