@@ -212,9 +212,7 @@ static void gst_video_encoder_init (GstVideoEncoder * enc,
     GstVideoEncoderClass * klass);
 
 static void gst_video_encoder_finalize (GObject * object);
-static void
-gst_video_encoder_release_frame (GstVideoEncoder * enc,
-    GstVideoCodecFrame * frame);
+
 static gboolean gst_video_encoder_setcaps (GstVideoEncoder * enc,
     GstCaps * caps);
 static GstCaps *gst_video_encoder_sink_getcaps (GstVideoEncoder * encoder,
@@ -1480,11 +1478,6 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       frame->presentation_frame_number);
 
   ret = klass->handle_frame (encoder, frame);
-
-  if (ret == GST_VIDEO_ENCODER_FLOW_DROPPED || ret == GST_FLOW_ERROR) {
-    GST_INFO_OBJECT (encoder, "Dropping frame %p", frame);
-    gst_video_encoder_release_frame (encoder, frame);
-  }
 
 done:
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
