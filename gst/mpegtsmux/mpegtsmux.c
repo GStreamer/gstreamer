@@ -127,6 +127,8 @@ static GstStaticPadTemplate mpegtsmux_sink_factory =
         "video/x-dirac;"
         "video/x-h264,stream-format=(string)byte-stream,"
         "alignment=(string){au, nal}; "
+        "video/x-h265,stream-format=(string)byte-stream,"
+        "alignment=(string){au, nal}; "
         "audio/mpeg, "
         "parsed = (boolean) TRUE, "
         "mpegversion = (int) { 1, 2 };"
@@ -612,6 +614,8 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
     st = TSMUX_ST_PS_AUDIO_LPCM;
   } else if (strcmp (mt, "video/x-h264") == 0) {
     st = TSMUX_ST_VIDEO_H264;
+  } else if (strcmp (mt, "video/x-h265") == 0) {
+    st = TSMUX_ST_VIDEO_HEVC;
   } else if (strcmp (mt, "audio/mpeg") == 0) {
     gint mpegversion;
 

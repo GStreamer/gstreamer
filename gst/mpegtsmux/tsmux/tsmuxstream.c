@@ -138,6 +138,7 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
     case TSMUX_ST_VIDEO_MPEG2:
     case TSMUX_ST_VIDEO_MPEG4:
     case TSMUX_ST_VIDEO_H264:
+    case TSMUX_ST_VIDEO_HEVC:
       /* FIXME: Assign sequential IDs? */
       stream->id = 0xE0;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
