@@ -206,8 +206,8 @@ GES-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libges-@GST_API_VERSION@.la
 		--pkg gstreamer-controller-@GST_API_VERSION@ \
 		--pkg gio-2.0 \
 		--pkg-export ges-@GST_API_VERSION@ \
-		--add-init-section="gst_init(NULL, NULL);" \
-		--add-init-section="ges_init(NULL, NULL);" \
+		--add-init-section="$(INTROSPECTION_INIT)" \
+		--add-init-section="extern gboolean ges_init(void); ges_init();" \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
