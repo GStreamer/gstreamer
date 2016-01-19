@@ -2413,7 +2413,7 @@ gst_wavparse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* and set up streaming thread for next one */
       wav->offset = offset;
       wav->end_offset = end_offset;
-      if (wav->end_offset > 0) {
+      if (wav->end_offset != -1) {
         wav->dataleft = wav->end_offset - wav->offset;
       } else {
         /* infinity; upstream will EOS when done */
