@@ -83,8 +83,13 @@ G_BEGIN_DECLS
  * GST_VIDEO_ENCODER_FLOW_DROPPED:
  *
  * Returned when the event/buffer should be dropped.
+ *
+ * Deprecated: since 1.8. use gst_video_encoder_finish_frame with
+ * a %NULL frame->output_buffer to drop the frame instead.
  */
+#ifndef GST_DISABLE_DEPRECATED
 #define GST_VIDEO_ENCODER_FLOW_DROPPED GST_FLOW_CUSTOM_SUCCESS_1
+#endif
 
 /**
  * GST_VIDEO_ENCODER_INPUT_SEGMENT:
