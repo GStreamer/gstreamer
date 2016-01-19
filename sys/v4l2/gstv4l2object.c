@@ -1202,6 +1202,41 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
   return format;
 }
 
+static gboolean
+gst_v4l2_object_v4l2fourcc_is_yuv (guint32 fourcc)
+{
+  gboolean ret = FALSE;
+
+  switch (fourcc) {
+    case V4L2_PIX_FMT_NV12:
+    case V4L2_PIX_FMT_NV12M:
+    case V4L2_PIX_FMT_NV12MT:
+    case V4L2_PIX_FMT_NV21:
+    case V4L2_PIX_FMT_NV21M:
+    case V4L2_PIX_FMT_YVU410:
+    case V4L2_PIX_FMT_YUV410:
+    case V4L2_PIX_FMT_YUV420:
+    case V4L2_PIX_FMT_YUV420M:
+    case V4L2_PIX_FMT_YUYV:
+    case V4L2_PIX_FMT_YVU420:
+    case V4L2_PIX_FMT_UYVY:
+    case V4L2_PIX_FMT_YUV411P:
+    case V4L2_PIX_FMT_YUV422P:
+    case V4L2_PIX_FMT_YVYU:
+    case V4L2_PIX_FMT_NV16:
+    case V4L2_PIX_FMT_NV16M:
+    case V4L2_PIX_FMT_NV61:
+    case V4L2_PIX_FMT_NV61M:
+    case V4L2_PIX_FMT_NV24:
+      ret = TRUE;
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+}
+
 static GstStructure *
 gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
 {
@@ -1928,6 +1963,10 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
   struct v4l2_format fmt;
   GValue colorimetry = G_VALUE_INIT;
   GstVideoColorimetry cinfo;
+
+  /* Don't expose colorimetry unless this is a YUV format */
+  if (!gst_v4l2_object_v4l2fourcc_is_yuv (pixelformat))
+    return;
 
   memset (&fmt, 0, sizeof (fmt));
   fmt.type = v4l2object->type;
