@@ -82,7 +82,7 @@ GstMpegts-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstmpegts-@GST_API_
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-video-@GST_API_VERSION@ \
 		--pkg-export gstreamer-mpegts-@GST_API_VERSION@ \
-		--add-init-section="gst_init(NULL,NULL);" \
+		--add-init-section="$(INTROSPECTION_INIT)" \
 		-DGST_USE_UNSTABLE_API \
 		--output $@ \
 		$(gir_headers) \
