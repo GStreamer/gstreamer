@@ -13,6 +13,7 @@ libgstopengl_la_SOURCES = \
 	gstglimagesink.c \
 	gstglfiltercube.c \
 	gstgleffects.c \
+	effects/gstgleffectscurves.c \
 	effects/gstgleffectssources.c \
 	effects/gstgleffectidentity.c \
 	effects/gstgleffectmirror.c \
