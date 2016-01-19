@@ -719,13 +719,7 @@ init_textures (APP_STATE_T * state, GstBuffer * buffer)
 {
   GstCapsFeatures *feature = gst_caps_get_features (state->caps, 0);
 
-  if (gst_caps_features_contains (feature, "memory:EGLImage")) {
-    /* nothing special to do */
-    g_print ("Prepare texture for EGLImage\n");
-    state->can_avoid_upload = FALSE;
-    glGenTextures (1, &state->tex);
-    glBindTexture (GL_TEXTURE_2D, state->tex);
-  } else if (gst_caps_features_contains (feature, "memory:GLMemory")) {
+  if (gst_caps_features_contains (feature, "memory:GLMemory")) {
     g_print ("Prepare texture for GLMemory\n");
     state->can_avoid_upload = TRUE;
     state->tex = 0;
@@ -1141,10 +1135,6 @@ init_parse_launch_player (APP_STATE_T * state, const gchar * spipeline)
 
      ./testegl "filesrc location=big_buck_bunny_720p_h264.mov ! qtdemux ! \
      h264parse !  omxh264dec ! glcolorscale ! fakesink name=vsink"
-
-     ./testegl "filesrc location=big_buck_bunny_720p_h264.mov ! qtdemux ! \
-     h264parse ! omxh264dec ! glcolorscale ! \
-     video/x-raw(memory:EGLImage) ! fakesink name=vsink"
 
      ./testegl "filesrc location=big_buck_bunny_720p_h264.mov ! qtdemux ! \
      h264parse ! omxh264dec ! glcolorscale ! \
