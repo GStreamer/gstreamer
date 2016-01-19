@@ -61,7 +61,7 @@ cleanup (void)
   gst_debug_set_threshold_for_name ("GST_TRACER", GST_LEVEL_NONE);
   gst_debug_add_log_function (gst_debug_log_default, NULL, NULL);
   gst_debug_remove_log_function (tracer_log_func);
-  g_list_foreach (messages, (GFunc) g_free, NULL);
+  g_list_free_full (messages, (GDestroyNotify) g_free);
   messages = NULL;
 }
 
