@@ -266,11 +266,17 @@ gst_validate_init (void)
 void
 gst_validate_deinit (void)
 {
+  g_mutex_lock (&_gst_validate_registry_mutex);
   _free_plugin_config (core_config);
   gst_object_unref (_gst_validate_registry_default);
+  _gst_validate_registry_default = NULL;
+
   _priv_validate_override_registry_deinit ();
   core_config = NULL;
   validate_initialized = FALSE;
+
+  g_mutex_unlock (&_gst_validate_registry_mutex);
+  g_mutex_clear (&_gst_validate_registry_mutex);
 }
 
 gboolean
