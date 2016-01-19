@@ -1742,13 +1742,13 @@ gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
 /**
  * gst_app_src_push_sample:
  * @appsrc: a #GstAppSrc
- * @sample: (transfer none): a #GstSample from wich extract buffer to 
- * push and caps to set
+ * @sample: (transfer none): a #GstSample from which buffer and caps may be
+ * extracted
  *
  * Extract a buffer from the provided sample and adds it to the queue of 
  * buffers that the appsrc element will push to its source pad. Any 
- * previous caps setted on appsrc will be replaced by the caps associated 
- * with the sample if not equal.
+ * previous caps that were set on appsrc will be replaced by the caps
+ * associated with the sample if not equal.
  *
  * When the block property is TRUE, this function can block until free
  * space becomes available in the queue.
