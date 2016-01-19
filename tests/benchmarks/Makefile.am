@@ -1,3 +1,9 @@
+if !GST_DISABLE_GST_DEBUG
+TRACER_BENCH = tracerserialize
+else
+TRACER_BENCH =
+endif
+
 noinst_PROGRAMS = \
         caps \
         capsnego \
@@ -9,7 +15,7 @@ noinst_PROGRAMS = \
         gstpoolstress \
         gstclockstress	\
         gstbufferstress \
-        tracerserialize
+        $(TRACER_BENCH)
 
 LDADD = $(GST_OBJ_LIBS)
 AM_CFLAGS = $(GST_OBJ_CFLAGS)
