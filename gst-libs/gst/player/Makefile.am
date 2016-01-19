@@ -76,7 +76,7 @@ GstPlayer-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstplayer-@GST_API_
 		--pkg gstreamer-tag-@GST_API_VERSION@ \
 		--pkg gstreamer-pbutils-@GST_API_VERSION@ \
 		--pkg-export gstreamer-player-@GST_API_VERSION@ \
-		--add-init-section="gst_init(NULL,NULL);" \
+		--add-init-section="$(INTROSPECTION_INIT)" \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
