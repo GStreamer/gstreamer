@@ -143,14 +143,6 @@ AC_ARG_WITH([glapi],
         [build with the specified OpenGL APIs @<:@default=default_glapi@:>@]),
     [GLAPI="$with_glapi"], [GLAPI=default_glapi])
 
-dnl Check for PATCH
-AC_ARG_VAR([PATCH], [Path to patch program, if any])
-AC_PATH_PROG([PATCH], [patch])
-if test -z "$PATCH" -a "$enable_builtin_videoparsers" = "yes"; then
-    AC_MSG_ERROR([patch is needed to apply patches for built videoparsers
-sources])
-fi
-
 dnl Check for basic libraries
 AC_CHECK_LIB(m, tan)
 
@@ -1106,8 +1098,6 @@ debian.upstream/libgstvaapi-x11.install.in
     gst-libs/gst/vaapi/Makefile
     gst/Makefile
     gst/vaapi/Makefile
-    patches/Makefile
-    patches/videoparsers/Makefile
     tests/Makefile
 ])
 AC_OUTPUT
