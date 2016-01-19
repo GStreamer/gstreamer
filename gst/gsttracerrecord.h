@@ -89,7 +89,11 @@ typedef enum
 
 GstTracerRecord * gst_tracer_record_new (GstStructure *spec);
 
+#ifndef GST_DISABLE_GST_DEBUG
 void              gst_tracer_record_log (GstTracerRecord *self, ...);
+#else
+#define gst_tracer_record_log(...) G_STMT_START {} G_STMT_END
+#endif
 
 #endif
 

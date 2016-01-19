@@ -227,6 +227,7 @@ gst_tracer_record_new (GstStructure * spec)
   return g_object_new (GST_TYPE_TRACER_RECORD, "spec", spec, NULL);
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
 /**
  * gst_tracer_record_log:
  * @self: the tracer-record
@@ -264,3 +265,4 @@ gst_tracer_record_log (GstTracerRecord * self, ...)
   }
   va_end (var_args);
 }
+#endif
