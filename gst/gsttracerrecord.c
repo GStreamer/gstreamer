@@ -88,8 +88,7 @@ build_field_template (GQuark field_id, const GValue * value, gpointer user_data)
 
     /* add a boolean field, that indicates the presence of the next field */
     g_value_init (&template_value, G_TYPE_BOOLEAN);
-    res =
-        priv__gst_structure_append_template_to_gstring (g_quark_from_string
+    priv__gst_structure_append_template_to_gstring (g_quark_from_string
         (opt_name), &template_value, s);
     g_value_unset (&template_value);
     g_free (opt_name);
