@@ -1988,6 +1988,7 @@ gst_vp9_enc_handle_frame (GstVideoEncoder * video_encoder,
   if (status != 0) {
     GST_ELEMENT_ERROR (encoder, LIBRARY, ENCODE,
         ("Failed to encode frame"), ("%s", gst_vpx_error_name (status)));
+    gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
   gst_video_codec_frame_unref (frame);
