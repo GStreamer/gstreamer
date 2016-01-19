@@ -276,7 +276,9 @@ gst_ffmpegscale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
     return FALSE;
   }
 
-  *size = (guint) avpicture_get_size (ctx->pix_fmt, ctx->width, ctx->height);
+  *size =
+      (guint) av_image_get_buffer_size (pix->pix_fmt, ctx->width, ctx->height,
+      1);
 
   av_free (ctx);
 

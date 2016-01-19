@@ -25,6 +25,7 @@
 #endif
 
 #include <libavcodec/avcodec.h>
+#include <libavutil/imgutils.h>
 #include <libavfilter/avfilter.h>
 #include <libavfilter/buffersrc.h>
 #include <libavfilter/buffersink.h>
@@ -234,8 +235,8 @@ gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
   av_free (ctx);
 
   deinterlace->to_size =
-      avpicture_get_size (deinterlace->pixfmt, deinterlace->width,
-      deinterlace->height);
+      av_image_get_buffer_size (deinterlace->pixfmt, deinterlace->width,
+      deinterlace->height, 1);
 
   src_caps = gst_caps_copy (caps);
   gst_caps_set_simple (src_caps, "interlace-mode", G_TYPE_STRING,
