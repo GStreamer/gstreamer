@@ -1,0 +1,956 @@
+/* GStreamer
+ *
+ * Copyright (C) 2016 Igalia
+ *
+ * Authors:
+ *  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+ *  Javier Martin <javiermartin@by.com.es>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ *
+ */
+
+/**
+ * SECTION:element-kmssink
+ * @short_description: A KMS/DRM based video sink
+ *
+ * kmssink is a simple video sink that renders video frames directly
+ * in a plane of a DRM device.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 videotestsrc ! kmssink
+ * ]|
+ * </refsect2>
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <gst/video/video.h>
+
+#include <drm.h>
+#include <xf86drm.h>
+#include <xf86drmMode.h>
+
+#include <string.h>
+
+#include "gstkmssink.h"
+#include "gstkmsutils.h"
+#include "gstkmsbufferpool.h"
+#include "gstkmsallocator.h"
+
+#define GST_PLUGIN_NAME "kmssink"
+#define GST_PLUGIN_DESC "Video sink using the Linux kernel mode setting API"
+
+GST_DEBUG_CATEGORY_STATIC (gst_kms_sink_debug);
+#define GST_CAT_DEFAULT gst_kms_sink_debug
+
+G_DEFINE_TYPE_WITH_CODE (GstKMSSink, gst_kms_sink, GST_TYPE_VIDEO_SINK,
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, GST_PLUGIN_NAME, 0,
+        GST_PLUGIN_DESC));
+
+enum
+{
+  PROP_DRIVER_NAME = 1,
+  PROP_CONNECTOR_ID,
+  PROP_N
+};
+
+static GParamSpec *g_properties[PROP_N] = { NULL, };
+
+static int
+kms_open (gchar ** driver)
+{
+  static const char *drivers[] = { "i915", "radeon", "nouveau", "vmwgfx",
+    "exynos", "amdgpu", "imx-drm", "rockchip", "atmel-hlcdc"
+  };
+  int i, fd = -1;
+
+  for (i = 0; i < G_N_ELEMENTS (drivers); i++) {
+    fd = drmOpen (drivers[i], NULL);
+    if (fd >= 0) {
+      if (driver)
+        *driver = g_strdup (drivers[i]);
+      break;
+    }
+  }
+
+  return fd;
+}
+
+static drmModePlane *
+find_plane_for_crtc (int fd, drmModeRes * res, drmModePlaneRes * pres,
+    int crtc_id)
+{
+  drmModePlane *plane;
+  int i, pipe;
+
+  plane = NULL;
+  pipe = -1;
+  for (i = 0; i < res->count_crtcs; i++) {
+    if (crtc_id == res->crtcs[i]) {
+      pipe = i;
+      break;
+    }
+  }
+
+  if (pipe == -1)
+    return NULL;
+
+  for (i = 0; i < pres->count_planes; i++) {
+    plane = drmModeGetPlane (fd, pres->planes[i]);
+    if (plane->possible_crtcs & (1 << pipe))
+      return plane;
+    drmModeFreePlane (plane);
+  }
+
+  return NULL;
+}
+
+static drmModeCrtc *
+find_crtc_for_connector (int fd, drmModeRes * res, drmModeConnector * conn)
+{
+  int i;
+  int crtc_id;
+  drmModeEncoder *enc;
+  drmModeCrtc *crtc;
+
+  crtc_id = -1;
+  for (i = 0; i < res->count_encoders; i++) {
+    enc = drmModeGetEncoder (fd, res->encoders[i]);
+    if (enc) {
+      if (enc->encoder_id == conn->encoder_id) {
+        crtc_id = enc->crtc_id;
+        drmModeFreeEncoder (enc);
+        break;
+      }
+      drmModeFreeEncoder (enc);
+    }
+  }
+
+  if (crtc_id == -1)
+    return NULL;
+
+  for (i = 0; i < res->count_crtcs; i++) {
+    crtc = drmModeGetCrtc (fd, res->crtcs[i]);
+    if (crtc) {
+      if (crtc_id == crtc->crtc_id)
+        return crtc;
+      drmModeFreeCrtc (crtc);
+    }
+  }
+
+  return NULL;
+}
+
+static gboolean
+connector_is_used (int fd, drmModeRes * res, drmModeConnector * conn)
+{
+  gboolean result;
+  drmModeCrtc *crtc;
+
+  result = FALSE;
+  crtc = find_crtc_for_connector (fd, res, conn);
+  if (crtc) {
+    result = crtc->buffer_id != 0;
+    drmModeFreeCrtc (crtc);
+  }
+
+  return result;
+}
+
+static drmModeConnector *
+find_used_connector_by_type (int fd, drmModeRes * res, int type)
+{
+  int i;
+  drmModeConnector *conn;
+
+  conn = NULL;
+  for (i = 0; i < res->count_connectors; i++) {
+    conn = drmModeGetConnector (fd, res->connectors[i]);
+    if (conn) {
+      if ((conn->connector_type == type) && connector_is_used (fd, res, conn))
+        return conn;
+      drmModeFreeConnector (conn);
+    }
+  }
+
+  return NULL;
+}
+
+static drmModeConnector *
+find_first_used_connector (int fd, drmModeRes * res)
+{
+  int i;
+  drmModeConnector *conn;
+
+  conn = NULL;
+  for (i = 0; i < res->count_connectors; i++) {
+    conn = drmModeGetConnector (fd, res->connectors[i]);
+    if (conn) {
+      if (connector_is_used (fd, res, conn))
+        return conn;
+      drmModeFreeConnector (conn);
+    }
+  }
+
+  return NULL;
+}
+
+static drmModeConnector *
+find_main_monitor (int fd, drmModeRes * res)
+{
+  /* Find the LVDS and eDP connectors: those are the main screens. */
+  static const int priority[] = { DRM_MODE_CONNECTOR_LVDS,
+    DRM_MODE_CONNECTOR_eDP
+  };
+  int i;
+  drmModeConnector *conn;
+
+  conn = NULL;
+  for (i = 0; !conn && i < G_N_ELEMENTS (priority); i++)
+    conn = find_used_connector_by_type (fd, res, priority[i]);
+
+  /* if we didn't find a connector, grab the first one in use */
+  if (!conn)
+    conn = find_first_used_connector (fd, res);
+
+  return conn;
+}
+
+static void
+log_drm_version (GstKMSSink * self)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  drmVersion *v;
+
+  v = drmGetVersion (self->fd);
+  if (v) {
+    GST_INFO_OBJECT (self, "DRM v%d.%d.%d [%s — %s — %s]", v->version_major,
+        v->version_minor, v->version_patchlevel, GST_STR_NULL (v->name),
+        GST_STR_NULL (v->desc), GST_STR_NULL (v->date));
+    drmFreeVersion (v);
+  } else {
+    GST_WARNING_OBJECT (self, "could not get driver information: %s",
+        GST_STR_NULL (self->devname));
+  }
+#endif
+  return;
+}
+
+static gboolean
+get_drm_caps (GstKMSSink * self)
+{
+  gint ret;
+  guint64 has_dumb_buffer;
+
+  has_dumb_buffer = 0;
+  ret = drmGetCap (self->fd, DRM_CAP_DUMB_BUFFER, &has_dumb_buffer);
+  if (ret)
+    GST_WARNING_OBJECT (self, "could not get dumb buffer capability");
+  if (has_dumb_buffer == 0) {
+    GST_ERROR_OBJECT (self, "driver cannot handle dumb buffers");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+ensure_allowed_caps (GstKMSSink * self, drmModePlane * plane, drmModeRes * res)
+{
+  GstCaps *out_caps, *caps;
+  int i;
+  GstVideoFormat fmt;
+  const gchar *format;
+
+  if (self->allowed_caps)
+    return TRUE;
+
+  out_caps = gst_caps_new_empty ();
+  if (!out_caps)
+    return FALSE;
+
+  for (i = 0; i < plane->count_formats; i++) {
+    fmt = gst_video_format_from_drm (plane->formats[i]);
+    if (fmt == GST_VIDEO_FORMAT_UNKNOWN) {
+      GST_INFO_OBJECT (self, "ignoring format %" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (plane->formats[i]));
+      continue;
+    }
+
+    format = gst_video_format_to_string (fmt);
+    caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, format,
+        "width", GST_TYPE_INT_RANGE, res->min_width, res->max_width,
+        "height", GST_TYPE_INT_RANGE, res->min_height, res->max_height,
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+    if (!caps)
+      continue;
+
+    out_caps = gst_caps_merge (out_caps, caps);
+  }
+
+  self->allowed_caps = gst_caps_simplify (out_caps);
+
+  GST_DEBUG_OBJECT (self, "allowed caps = %" GST_PTR_FORMAT,
+      self->allowed_caps);
+
+  return TRUE;
+}
+
+static gboolean
+gst_kms_sink_start (GstBaseSink * bsink)
+{
+  GstKMSSink *self;
+  drmModeRes *res;
+  drmModeConnector *conn;
+  drmModeCrtc *crtc;
+  drmModePlaneRes *pres;
+  drmModePlane *plane;
+  gboolean ret;
+
+  self = GST_KMS_SINK (bsink);
+  ret = FALSE;
+  res = NULL;
+  conn = NULL;
+  crtc = NULL;
+  pres = NULL;
+  plane = NULL;
+
+  if (self->devname)
+    self->fd = drmOpen (self->devname, NULL);
+  else
+    self->fd = kms_open (&self->devname);
+  if (self->fd < 0)
+    goto open_failed;
+
+  log_drm_version (self);
+  if (!get_drm_caps (self))
+    goto bail;
+
+  res = drmModeGetResources (self->fd);
+  if (!res)
+    goto resources_failed;
+
+  if (self->conn_id == -1)
+    conn = find_main_monitor (self->fd, res);
+  else
+    conn = drmModeGetConnector (self->fd, self->conn_id);
+  if (!conn)
+    goto connector_failed;
+
+  crtc = find_crtc_for_connector (self->fd, res, conn);
+  if (!crtc)
+    goto crtc_failed;
+
+  pres = drmModeGetPlaneResources (self->fd);
+  if (!pres)
+    goto plane_resources_failed;
+
+  plane = find_plane_for_crtc (self->fd, res, pres, crtc->crtc_id);
+  if (!plane)
+    goto plane_failed;
+
+  /* let's get the available color formats in plane */
+  if (!ensure_allowed_caps (self, plane, res))
+    goto bail;
+
+  self->conn_id = conn->connector_id;
+  self->crtc_id = crtc->crtc_id;
+  self->plane_id = plane->plane_id;
+
+  GST_INFO_OBJECT (self, "connector id = %d / crtc id = %d / plane id = %d",
+      self->conn_id, self->crtc_id, self->plane_id);
+
+  self->hdisplay = crtc->mode.hdisplay;
+  self->vdisplay = crtc->mode.vdisplay;
+
+  ret = TRUE;
+
+bail:
+  if (plane)
+    drmModeFreePlane (plane);
+  if (pres)
+    drmModeFreePlaneResources (pres);
+  if (crtc)
+    drmModeFreeCrtc (crtc);
+  if (conn)
+    drmModeFreeConnector (conn);
+  if (res)
+    drmModeFreeResources (res);
+
+  if (!ret && self->fd >= 0) {
+    drmClose (self->fd);
+    self->fd = -1;
+  }
+
+  return ret;
+
+  /* ERRORS */
+open_failed:
+  {
+    GST_ERROR_OBJECT (self, "Could not open DRM module %s: %s",
+        GST_STR_NULL (self->devname), strerror (errno));
+    return FALSE;
+  }
+
+resources_failed:
+  {
+    GST_ERROR_OBJECT (self, "drmModeGetResources failed: %s (%d)",
+        strerror (errno), errno);
+    goto bail;
+  }
+
+connector_failed:
+  {
+    GST_ERROR_OBJECT (self, "Could not find a valid monitor connector");
+    goto bail;
+  }
+
+crtc_failed:
+  {
+    GST_ERROR_OBJECT (self, "Could not find a crtc for connector");
+    goto bail;
+  }
+
+plane_resources_failed:
+  {
+    GST_ERROR_OBJECT (self, "drmModeGetPlaneResources failed: %s (%d)",
+        strerror (errno), errno);
+    goto bail;
+  }
+
+plane_failed:
+  {
+    GST_ERROR_OBJECT (self, "Could not find a plane for crtc");
+    goto bail;
+  }
+}
+
+static gboolean
+gst_kms_sink_stop (GstBaseSink * bsink)
+{
+  GstKMSSink *self;
+
+  self = GST_KMS_SINK (bsink);
+
+  gst_caps_replace (&self->allowed_caps, NULL);
+  gst_object_replace ((GstObject **) & self->pool, NULL);
+  gst_object_replace ((GstObject **) & self->allocator, NULL);
+
+  if (self->fd >= 0) {
+    drmClose (self->fd);
+    self->fd = -1;
+  }
+
+  return TRUE;
+}
+
+static GstCaps *
+gst_kms_sink_get_allowed_caps (GstKMSSink * self)
+{
+  if (!self->allowed_caps)
+    return NULL;                /* base class will return the template caps */
+  return gst_caps_ref (self->allowed_caps);
+}
+
+static GstCaps *
+gst_kms_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
+{
+  GstKMSSink *self;
+  GstCaps *caps, *out_caps;
+
+  self = GST_KMS_SINK (bsink);
+
+  caps = gst_kms_sink_get_allowed_caps (self);
+  if (caps && filter) {
+    out_caps = gst_caps_intersect_full (caps, filter, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+  } else {
+    out_caps = caps;
+  }
+
+  return out_caps;
+}
+
+static void
+ensure_kms_allocator (GstKMSSink * self)
+{
+  if (self->allocator)
+    return;
+  self->allocator = gst_kms_allocator_new (self->fd);
+}
+
+static GstBufferPool *
+gst_kms_sink_create_pool (GstKMSSink * self, GstCaps * caps, gsize size,
+    gint min)
+{
+  GstBufferPool *pool;
+  GstStructure *config;
+
+  pool = gst_kms_buffer_pool_new ();
+  if (!pool)
+    goto pool_failed;
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, size, min, 0);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  ensure_kms_allocator (self);
+  gst_buffer_pool_config_set_allocator (config, self->allocator, NULL);
+
+  if (!gst_buffer_pool_set_config (pool, config))
+    goto config_failed;
+
+  return pool;
+
+  /* ERRORS */
+pool_failed:
+  {
+    GST_ERROR_OBJECT (self, "failed to create buffer pool");
+    return NULL;
+  }
+config_failed:
+  {
+    GST_ERROR_OBJECT (self, "failed to set config");
+    gst_object_unref (pool);
+    return NULL;
+  }
+}
+
+static gboolean
+gst_kms_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
+{
+  GstKMSSink *self;
+  GstVideoInfo vinfo;
+  GstBufferPool *newpool, *oldpool;
+
+  self = GST_KMS_SINK (bsink);
+
+  if (!gst_video_info_from_caps (&vinfo, caps))
+    goto invalid_format;
+
+  GST_VIDEO_SINK_WIDTH (self) = GST_VIDEO_INFO_WIDTH (&vinfo);
+  GST_VIDEO_SINK_HEIGHT (self) = GST_VIDEO_INFO_HEIGHT (&vinfo);
+
+  if (GST_VIDEO_SINK_WIDTH (self) <= 0 || GST_VIDEO_SINK_HEIGHT (self) <= 0)
+    goto invalid_size;
+
+  /* create a new pool for the new configuration */
+  newpool = gst_kms_sink_create_pool (self, caps, GST_VIDEO_INFO_SIZE (&vinfo),
+      2);
+  if (!newpool)
+    goto no_pool;
+
+  /* we don't activate the internal pool yet as it may not be needed */
+  oldpool = self->pool;
+  self->pool = newpool;
+
+  if (oldpool) {
+    gst_buffer_pool_set_active (oldpool, FALSE);
+    gst_object_unref (oldpool);
+  }
+
+  self->vinfo = vinfo;
+
+  GST_DEBUG_OBJECT (self, "negotiated caps = %" GST_PTR_FORMAT, caps);
+
+  return TRUE;
+
+  /* ERRORS */
+invalid_format:
+  {
+    GST_ERROR_OBJECT (self, "caps invalid");
+    return FALSE;
+  }
+
+invalid_size:
+  {
+    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION, (NULL),
+        ("Invalid image size."));
+    return FALSE;
+  }
+no_pool:
+  {
+    /* Already warned in create_pool */
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_kms_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+{
+  GstKMSSink *self;
+  GstCaps *caps;
+  gboolean need_pool;
+  GstVideoInfo vinfo;
+  GstBufferPool *pool;
+  gsize size;
+
+  self = GST_KMS_SINK (bsink);
+
+  gst_query_parse_allocation (query, &caps, &need_pool);
+  if (!caps)
+    goto no_caps;
+  if (!gst_video_info_from_caps (&vinfo, caps))
+    goto invalid_caps;
+
+  size = GST_VIDEO_INFO_SIZE (&vinfo);
+
+  pool = NULL;
+  if (need_pool) {
+    pool = gst_kms_sink_create_pool (self, caps, size, 0);
+    if (!pool)
+      goto no_pool;
+  }
+
+  if (pool) {
+    /* we need at least 2 buffer because we hold on to the last one */
+    gst_query_add_allocation_pool (query, pool, size, 2, 0);
+    gst_object_unref (pool);
+  }
+
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
+
+  return TRUE;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_DEBUG_OBJECT (bsink, "no caps specified");
+    return FALSE;
+  }
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (bsink, "invalid caps specified");
+    return FALSE;
+  }
+no_pool:
+  {
+    /* Already warned in create_pool */
+    return FALSE;
+  }
+}
+
+static void
+gst_kms_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
+    GstClockTime * start, GstClockTime * end)
+{
+  GstKMSSink *self;
+
+  self = GST_KMS_SINK (bsink);
+
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    *start = GST_BUFFER_TIMESTAMP (buf);
+    if (GST_BUFFER_DURATION_IS_VALID (buf))
+      *end = *start + GST_BUFFER_DURATION (buf);
+    else {
+      if (GST_VIDEO_INFO_FPS_N (&self->vinfo) > 0) {
+        *end = *start +
+            gst_util_uint64_scale_int (GST_SECOND,
+            GST_VIDEO_INFO_FPS_D (&self->vinfo),
+            GST_VIDEO_INFO_FPS_N (&self->vinfo));
+      }
+    }
+  }
+}
+
+static GstBuffer *
+gst_kms_sink_get_input_buffer (GstKMSSink * self, GstBuffer * inbuf)
+{
+  GstMemory *mem;
+  GstBuffer *buf;
+  GstFlowReturn ret;
+  GstVideoFrame inframe, outframe;
+  gboolean success;
+
+  mem = gst_buffer_peek_memory (inbuf, 0);
+  if (!mem)
+    return NULL;
+
+  if (gst_is_kms_memory (mem))
+    return gst_buffer_ref (inbuf);
+
+  if (!gst_buffer_pool_set_active (self->pool, TRUE))
+    goto activate_pool_failed;
+
+  buf = NULL;
+  ret = gst_buffer_pool_acquire_buffer (self->pool, &buf, NULL);
+  if (ret != GST_FLOW_OK)
+    goto create_buffer_failed;
+
+  if (!gst_video_frame_map (&inframe, &self->vinfo, inbuf, GST_MAP_READ))
+    goto error_map_src_buffer;
+
+  if (!gst_video_frame_map (&outframe, &self->vinfo, buf, GST_MAP_WRITE))
+    goto error_map_dst_buffer;
+
+  success = gst_video_frame_copy (&outframe, &inframe);
+  gst_video_frame_unmap (&outframe);
+  gst_video_frame_unmap (&inframe);
+  if (!success)
+    goto error_copy_buffer;
+
+  return buf;
+
+bail:
+  {
+    if (buf)
+      gst_buffer_unref (buf);
+    return NULL;
+  }
+
+  /* ERRORS */
+activate_pool_failed:
+  {
+    GST_ELEMENT_ERROR (self, STREAM, FAILED, ("failed to activate buffer pool"),
+        ("failed to activate buffer pool"));
+    goto bail;
+  }
+create_buffer_failed:
+  {
+    GST_ELEMENT_ERROR (self, STREAM, FAILED, ("allocation failed"),
+        ("failed to create buffer"));
+    goto bail;
+  }
+error_copy_buffer:
+  {
+    GST_WARNING_OBJECT (self, "failed to upload buffer");
+    goto bail;
+  }
+error_map_dst_buffer:
+  {
+    gst_video_frame_unmap (&inframe);
+    /* fall-through */
+  }
+error_map_src_buffer:
+  {
+    GST_WARNING_OBJECT (self, "failed to map buffer");
+    goto bail;
+  }
+}
+
+static GstFlowReturn
+gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
+{
+  gint ret;
+  GstBuffer *buffer;
+  guint32 fb_id;
+  GstKMSSink *self;
+  GstVideoCropMeta *crop;
+  GstVideoRectangle src = { 0, };
+  GstVideoRectangle dst = { 0, };
+  GstVideoRectangle result;
+
+  self = GST_KMS_SINK (vsink);
+
+  buffer = gst_kms_sink_get_input_buffer (self, buf);
+  if (!buffer)
+    return GST_FLOW_ERROR;
+  fb_id = gst_kms_memory_get_fb_id (gst_buffer_peek_memory (buffer, 0));
+  if (fb_id == 0)
+    goto buffer_invalid;
+
+  GST_DEBUG_OBJECT (self, "displaying fb %d", fb_id);
+
+  {
+    if ((crop = gst_buffer_get_video_crop_meta (buffer))) {
+      src.x = crop->x;
+      src.y = crop->y;
+      src.w = crop->width;
+      src.h = crop->height;
+    } else {
+      src.w = GST_VIDEO_SINK_WIDTH (self);
+      src.h = GST_VIDEO_SINK_HEIGHT (self);
+    }
+  }
+
+  dst.w = self->hdisplay;
+  dst.h = self->vdisplay;
+
+  gst_video_sink_center_rect (src, dst, &result, FALSE);
+
+  /* if the frame size is bigger than the display size, the source
+   * must be the display size */
+  src.w = MIN (src.w, self->hdisplay);
+  src.h = MIN (src.h, self->vdisplay);
+
+  ret = drmModeSetPlane (self->fd, self->plane_id, self->crtc_id, fb_id, 0,
+      result.x, result.y, result.w, result.h,
+      /* source/cropping coordinates are given in Q16 */
+      src.x << 16, src.y << 16, src.w << 16, src.h << 16);
+
+  gst_buffer_unref (buffer);
+
+  if (ret)
+    goto set_plane_failed;
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+buffer_invalid:
+  {
+    GST_ERROR_OBJECT (self, "invalid buffer: it doesn't have a fb id");
+    return GST_FLOW_ERROR;
+  }
+set_plane_failed:
+  {
+    GST_DEBUG_OBJECT (self, "result = { %d, %d, %d, %d} / "
+        "src = { %d, %d, %d %d } / dst = { %d, %d, %d %d }", result.x, result.y,
+        result.w, result.h, src.x, src.y, src.w, src.h, dst.x, dst.y, dst.w,
+        dst.h);
+    GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
+        (NULL), ("drmModeSetPlane failed: %s (%d)", strerror (-ret), ret));
+    return GST_FLOW_ERROR;
+  }
+}
+
+static void
+gst_kms_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstKMSSink *sink;
+
+  sink = GST_KMS_SINK (object);
+
+  switch (prop_id) {
+    case PROP_DRIVER_NAME:
+      sink->devname = g_value_dup_string (value);
+      break;
+    case PROP_CONNECTOR_ID:
+      sink->conn_id = g_value_get_int (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_kms_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstKMSSink *sink;
+
+  sink = GST_KMS_SINK (object);
+
+  switch (prop_id) {
+    case PROP_DRIVER_NAME:
+      g_value_take_string (value, sink->devname);
+      break;
+    case PROP_CONNECTOR_ID:
+      g_value_set_int (value, sink->conn_id);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_kms_sink_finalize (GObject * object)
+{
+  GstKMSSink *sink;
+
+  sink = GST_KMS_SINK (object);
+  g_clear_pointer (&sink->devname, g_free);
+}
+
+static void
+gst_kms_sink_init (GstKMSSink * sink)
+{
+  sink->fd = -1;
+  sink->conn_id = -1;
+  gst_video_info_init (&sink->vinfo);
+}
+
+static void
+gst_kms_sink_class_init (GstKMSSinkClass * klass)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+  GstBaseSinkClass *basesink_class;
+  GstVideoSinkClass *videosink_class;
+  GstCaps *caps;
+
+  gobject_class = G_OBJECT_CLASS (klass);
+  element_class = GST_ELEMENT_CLASS (klass);
+  basesink_class = GST_BASE_SINK_CLASS (klass);
+  videosink_class = GST_VIDEO_SINK_CLASS (klass);
+
+  gst_element_class_set_static_metadata (element_class, "KMS video sink",
+      "Sink/Video", GST_PLUGIN_DESC, "Víctor Jáquez <vjaquez@igalia.com>");
+
+  caps = gst_kms_sink_caps_template_fill ();
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps));
+  gst_caps_unref (caps);
+
+  basesink_class->start = GST_DEBUG_FUNCPTR (gst_kms_sink_start);
+  basesink_class->stop = GST_DEBUG_FUNCPTR (gst_kms_sink_stop);
+  basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_kms_sink_set_caps);
+  basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_kms_sink_get_caps);
+  basesink_class->propose_allocation = gst_kms_sink_propose_allocation;
+  basesink_class->get_times = gst_kms_sink_get_times;
+
+  videosink_class->show_frame = gst_kms_sink_show_frame;
+
+  gobject_class->finalize = gst_kms_sink_finalize;
+  gobject_class->set_property = gst_kms_sink_set_property;
+  gobject_class->get_property = gst_kms_sink_get_property;
+
+  /**
+   * kmssink:driver-name:
+   *
+   * If you have a system with multiple GPUs, you can choose which GPU
+   * to use setting the DRM device driver name. Otherwise, the first
+   * one from an internal list is used.
+   */
+  g_properties[PROP_DRIVER_NAME] = g_param_spec_string ("driver-name",
+      "device name", "DRM device driver name", NULL,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
+  /**
+   * kmssink:connector-id:
+   *
+   * A GPU has several output connectors, for example: LVDS, VGA,
+   * HDMI, etc. By default the first LVDS is tried, then the first
+   * eDP, and at the end, the first connected one.
+   */
+  g_properties[PROP_CONNECTOR_ID] = g_param_spec_int ("connector-id",
+      "Connector ID", "DRM connector id", -1, G_MAXINT32, -1,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
+  g_object_class_install_properties (gobject_class, PROP_N, g_properties);
+}
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  if (!gst_element_register (plugin, GST_PLUGIN_NAME, GST_RANK_SECONDARY,
+          GST_TYPE_KMS_SINK))
+    return FALSE;
+
+  return TRUE;
+}
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, kms,
+    GST_PLUGIN_DESC, plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME,
+    GST_PACKAGE_ORIGIN)

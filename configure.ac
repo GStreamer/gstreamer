@@ -2322,6 +2322,13 @@ AG_GST_CHECK_FEATURE(KATE, [Kate], kate, [
   AC_SUBST(TIGER_LIBS)
 ],,,[AM_CONDITIONAL(USE_TIGER, false)])
 
+dnl *** kms ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_KMS, true)
+AG_GST_CHECK_FEATURE(KMS, [drm/kms libraries], kms, [
+  AG_GST_PKG_CHECK_MODULES(GST_VIDEO, gstreamer-video-1.0)
+  PKG_CHECK_MODULES([DRM], [libdrm libkms], HAVE_KMS=yes, HAVE_KMS=no)
+])
+
 dnl *** ladspa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
 AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
@@ -3370,6 +3377,7 @@ AM_CONDITIONAL(USE_GTK3, false)
 AM_CONDITIONAL(USE_GTK3_GL, false)
 AM_CONDITIONAL(USE_HLS, false)
 AM_CONDITIONAL(USE_KATE, false)
+AM_CONDITIONAL(USE_KMS, false)
 AM_CONDITIONAL(USE_TIGER, false)
 AM_CONDITIONAL(USE_LADSPA, false)
 AM_CONDITIONAL(USE_LV2, false)
@@ -3616,6 +3624,7 @@ sys/dshowsrcwrapper/Makefile
 sys/dshowvideosink/Makefile
 sys/dvb/Makefile
 sys/fbdev/Makefile
+sys/kms/Makefile
 sys/linsys/Makefile
 sys/nvenc/Makefile
 sys/opensles/Makefile
