@@ -289,7 +289,14 @@ gst_vp8_enc_process_frame_user_data (GstVPXEnc * enc,
     GstVideoCodecFrame * frame)
 {
   GstVP8EncUserData *user_data;
+
   user_data = gst_video_codec_frame_get_user_data (frame);
+
+  if (!user_data) {
+    GST_ERROR_OBJECT (enc, "Have no frame user data");
+    return NULL;
+  }
+
   if (user_data->image)
     g_slice_free (vpx_image_t, user_data->image);
   user_data->image = NULL;
@@ -301,7 +308,14 @@ gst_vp8_enc_handle_invisible_frame_buffer (GstVPXEnc * enc, void *user_data,
     GstBuffer * buffer)
 {
   GstVP8EncUserData *vp8_user_data = (GstVP8EncUserData *) user_data;
+
+  if (!vp8_user_data) {
+    GST_ERROR_OBJECT (enc, "Have no frame user data");
+    return GST_FLOW_ERROR;
+  }
+
   vp8_user_data->invisible = g_list_append (vp8_user_data->invisible, buffer);
+
   return GST_FLOW_OK;
 }
 
