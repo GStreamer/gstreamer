@@ -73,8 +73,8 @@ build_field_template (GQuark field_id, const GValue * value, gpointer user_data)
   GString *s = (GString *) user_data;
   const GstStructure *sub;
   GValue template_value = { 0, };
-  GType type;
-  GstTracerValueFlags flags;
+  GType type = G_TYPE_INVALID;
+  GstTracerValueFlags flags = GST_TRACER_VALUE_FLAGS_NONE;
   gboolean res;
 
   g_return_val_if_fail (G_VALUE_TYPE (value) == GST_TYPE_STRUCTURE, FALSE);
@@ -111,6 +111,7 @@ gst_tracer_record_build_format (GstTracerRecord * self)
 
   g_return_if_fail (g_str_has_suffix (name, ".class"));
 
+  /* announce the format */
   GST_TRACE ("%" GST_PTR_FORMAT, structure);
 
   /* cut off '.class' suffix */
