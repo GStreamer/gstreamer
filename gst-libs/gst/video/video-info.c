@@ -390,6 +390,14 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
     } else if (!validate_colorimetry (info)) {
       GST_WARNING ("invalid colorimetry, using default");
       set_default_colorimetry (info);
+    } else {
+      /* force RGB matrix for RGB formats */
+      if (GST_VIDEO_FORMAT_INFO_IS_RGB (info->finfo) &&
+          info->colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_RGB) {
+        GST_WARNING ("invalid matrix %d for RGB format, using RGB",
+            info->colorimetry.matrix);
+        info->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+      }
     }
   } else {
     GST_DEBUG ("no colorimetry, using default");
@@ -503,6 +511,7 @@ gst_video_info_to_caps (GstVideoInfo * info)
   const gchar *format;
   gchar *color;
   gint par_n, par_d;
+  GstVideoColorimetry colorimetry;
 
   g_return_val_if_fail (info != NULL, NULL);
   g_return_val_if_fail (info->finfo != NULL, NULL);
@@ -565,7 +574,15 @@ gst_video_info_to_caps (GstVideoInfo * info)
     gst_caps_set_simple (caps, "chroma-site", G_TYPE_STRING,
         gst_video_chroma_to_string (info->chroma_site), NULL);
 
-  if ((color = gst_video_colorimetry_to_string (&info->colorimetry))) {
+  /* make sure we set the RGB matrix for RGB formats */
+  colorimetry = info->colorimetry;
+  if (GST_VIDEO_FORMAT_INFO_IS_RGB (info->finfo) &&
+      colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_RGB) {
+    GST_WARNING ("invalid matrix %d for RGB format, using RGB",
+        colorimetry.matrix);
+    colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+  }
+  if ((color = gst_video_colorimetry_to_string (&colorimetry))) {
     gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, color, NULL);
     g_free (color);
   }
