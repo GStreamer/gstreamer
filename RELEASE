@@ -1,13 +1,12 @@
 
-Release notes for GStreamer Good Plugins 1.6.2
+Release notes for GStreamer Good Plugins 1.6.3
 
-
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.6 release series of your favourite cross-platform multimedia framework!
 
 
 
-This release only contains bugfixes and it is safe to update from 1.6.0 and 1.6.1. For a
+This release only contains bugfixes and it is safe to update from 1.6.x. For a
 full list of bugfixes see Bugzilla.
 
 
@@ -60,14 +59,12 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 757961 : baseparse: do not overwrite header buffer timestamps
-      * 734098 : directsoundsink: gst_element_set_state blocked when plugout a usb audio device
-      * 755106 : directsoundsink: mute property doesn't work
-      * 755614 : qtdemux: support for cenc auxiliary info parsing outside of moof box
-      * 757924 : splitmuxpartreader: Fix GCond leak
-      * 758151 : rtpgstdepay does not deserialize custom events
-      * 758861 : wavparse: deadlock under some conditions
-      * 758912 : avimux: don't crash if we never got audio caps before  stopping
+      * 759624 : v4l2: Exposes colorimetry for RGB format which confuses videoconvert
+      * 742446 : sbcparse: Frame coalescing broken for joint stereo
+      * 758943 : SEGV using rtpj2kdepay & openjpegdec
+      * 760289 : rtpvrawdepay : memory leak
+      * 760556 : rtspsrc: interleaved data and srtp don't play well together
+      * 760666 : vp8enc: Do not mix up Booleans with FlowReturn
 
 ==== Download ====
 
@@ -104,16 +101,12 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arun Raghavan
-      * Havard Graff
-      * Josep Torra
-      * Michael Olbrich
+      * Aleix Conchillo Flaqué
+      * Nicolas Dufresne
       * Nirbheek Chauhan
-      * Philippe Normand
       * Sebastian Dröge
-      * Thiago Santos
-      * Thomas Roos
+      * Thibault Saunier
+      * Tim Sheridan
       * Tim-Philipp Müller
-      * Vineeth TM
-      * Wim Taymans
+      * Vincent Dehors
  
