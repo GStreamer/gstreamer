@@ -704,6 +704,7 @@ gst_multi_queue_request_new_pad (GstElement * element, GstPadTemplate * temp,
 {
   GstMultiQueue *mqueue = GST_MULTI_QUEUE (element);
   GstSingleQueue *squeue;
+  GstPad *new_pad;
   guint temp_id = -1;
 
   if (name) {
@@ -714,10 +715,11 @@ gst_multi_queue_request_new_pad (GstElement * element, GstPadTemplate * temp,
   /* Create a new single queue, add the sink and source pad and return the sink pad */
   squeue = gst_single_queue_new (mqueue, temp_id);
 
-  GST_DEBUG_OBJECT (mqueue, "Returning pad %s:%s",
-      GST_DEBUG_PAD_NAME (squeue->sinkpad));
+  new_pad = squeue ? squeue->sinkpad : NULL;
 
-  return squeue ? squeue->sinkpad : NULL;
+  GST_DEBUG_OBJECT (mqueue, "Returning pad %" GST_PTR_FORMAT, new_pad);
+
+  return new_pad;
 }
 
 static void
@@ -2367,10 +2369,12 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
     if (sq2->id == temp_id) {
       /* If this ID was requested by the caller return NULL,
        * otherwise just get us the next one */
-      if (id == -1)
+      if (id == -1) {
         temp_id = sq2->id + 1;
-      else
+      } else {
+        GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
         return NULL;
+      }
     } else if (sq2->id > temp_id) {
       break;
     }
