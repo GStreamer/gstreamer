@@ -2128,6 +2128,13 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   finfo = gst_video_format_get_info (convert->unpack_format);
   convert->unpack_bits = GST_VIDEO_FORMAT_INFO_DEPTH (finfo, 0);
   convert->unpack_rgb = GST_VIDEO_FORMAT_INFO_IS_RGB (finfo);
+  if (convert->unpack_rgb
+      && in_info->colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_RGB) {
+    /* force identity matrix for RGB input */
+    GST_WARNING ("invalid matrix %d for input RGB format, using RGB",
+        in_info->colorimetry.matrix);
+    convert->in_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+  }
 
   convert->pack_format = out_info->finfo->unpack_format;
   finfo = gst_video_format_get_info (convert->pack_format);
@@ -2136,6 +2143,13 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   convert->pack_pal =
       gst_video_format_get_palette (GST_VIDEO_INFO_FORMAT (out_info),
       &convert->pack_palsize);
+  if (convert->pack_rgb
+      && out_info->colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_RGB) {
+    /* force identity matrix for RGB output */
+    GST_WARNING ("invalid matrix %d for output RGB format, using RGB",
+        out_info->colorimetry.matrix);
+    convert->out_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+  }
 
   if (video_converter_lookup_fastpath (convert))
     goto done;
