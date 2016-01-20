@@ -3637,8 +3637,6 @@ gst_util_fraction_add (gint a_n, gint a_d, gint b_n, gint b_d, gint * res_n,
     return FALSE;
   if (G_MAXINT / ABS (a_d) < ABS (b_d))
     return FALSE;
-  if (G_MAXINT / ABS (a_d) < ABS (b_d))
-    return FALSE;
 
   *res_n = (a_n * b_d) + (a_d * b_n);
   *res_d = a_d * b_d;
