@@ -396,8 +396,8 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_XPOS,
       g_param_spec_double ("xpos", "horizontal position",
-          "Horizontal position when using position alignment", 0, 1.0,
-          DEFAULT_PROP_XPOS,
+          "Horizontal position when using position alignment", -G_MAXDOUBLE,
+          G_MAXDOUBLE, DEFAULT_PROP_XPOS,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstBaseTextOverlay:ypos:
@@ -406,8 +406,8 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_YPOS,
       g_param_spec_double ("ypos", "vertical position",
-          "Vertical position when using position alignment", 0, 1.0,
-          DEFAULT_PROP_YPOS,
+          "Vertical position when using position alignment", -G_MAXDOUBLE,
+          G_MAXDOUBLE, DEFAULT_PROP_YPOS,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WRAP_MODE,
       g_param_spec_enum ("wrap-mode", "wrap mode",
@@ -1428,9 +1428,6 @@ gst_base_text_overlay_get_pos (GstBaseTextOverlay * overlay,
       break;
     case GST_BASE_TEXT_OVERLAY_HALIGN_POS:
       *xpos += (gint) (overlay->width * overlay->xpos) - width / 2;
-      *xpos = CLAMP (*xpos, 0, overlay->width - overlay->ink_rect.width);
-      if (*xpos < 0)
-        *xpos = 0;
       break;
     default:
       *xpos = 0;
@@ -1455,7 +1452,6 @@ gst_base_text_overlay_get_pos (GstBaseTextOverlay * overlay,
       break;
     case GST_BASE_TEXT_OVERLAY_VALIGN_POS:
       *ypos = (gint) (overlay->height * overlay->ypos) - height / 2;
-      *ypos = CLAMP (*ypos, 0, overlay->height - overlay->ink_rect.height);
       break;
     case GST_BASE_TEXT_OVERLAY_VALIGN_CENTER:
       *ypos = (overlay->height - height) / 2;
