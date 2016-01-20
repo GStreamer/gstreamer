@@ -2197,14 +2197,6 @@ gst_adaptive_demux_stream_wait_manifest_update (GstAdaptiveDemux * demux,
   return ret;
 }
 
-static void
-gst_adaptive_demux_stream_queue_overrun (GstElement * queue, gpointer user_data)
-{
-  GstAdaptiveDemuxStream *stream = (GstAdaptiveDemuxStream *) user_data;
-  GST_WARNING_OBJECT (stream->pad,
-      "Queue overrun! The fragment to download is too big according to the current queue size limit");
-}
-
 /* must be called with manifest_lock taken */
 static gboolean
 gst_adaptive_demux_stream_update_source (GstAdaptiveDemuxStream * stream,
@@ -2276,8 +2268,6 @@ gst_adaptive_demux_stream_update_source (GstAdaptiveDemuxStream * stream,
     g_object_set (queue, "max-size-bytes", (guint) SRC_QUEUE_MAX_BYTES, NULL);
     g_object_set (queue, "max-size-buffers", (guint) 0, NULL);
     g_object_set (queue, "max-size-time", (guint64) 0, NULL);
-    g_signal_connect (queue, "overrun",
-        G_CALLBACK (gst_adaptive_demux_stream_queue_overrun), stream);
 
     uri_handler = gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
     if (uri_handler == NULL) {
