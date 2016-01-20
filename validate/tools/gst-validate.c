@@ -321,9 +321,7 @@ _execute_switch_track (GstValidateScenario * scenario,
   }
 
   if (relative) {               /* We are changing track relatively to current track */
-    index = current + index;
-    if (current >= n)
-      index = -2;
+    index = (current + index) % n;
   }
 
   if (!disabling) {
