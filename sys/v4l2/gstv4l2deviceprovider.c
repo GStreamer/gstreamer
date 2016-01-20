@@ -198,7 +198,6 @@ gst_v4l2_device_provider_probe (GstDeviceProvider * provider)
         it->device_path, "udev-probed", G_TYPE_BOOLEAN, FALSE, NULL);
     device = gst_v4l2_device_provider_probe_device (self, it->device_path, NULL,
         props);
-    gst_structure_free (props);
 
     if (device) {
       gst_object_ref_sink (device);
