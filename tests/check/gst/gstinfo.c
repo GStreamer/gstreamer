@@ -327,7 +327,7 @@ GST_START_TEST (info_old_printf_extensions)
   gst_debug_add_log_function (gst_debug_log_default, NULL, NULL);
   gst_debug_remove_log_function (printf_extension_log_func);
   save_messages = FALSE;
-  g_list_foreach (messages, (GFunc) g_free, NULL);
+  g_list_free_full (messages, (GDestroyNotify) g_free);
   messages = NULL;
 }
 
