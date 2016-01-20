@@ -1,9 +1,113 @@
-=== release 1.6.2 ===
+=== release 1.6.3 ===
 
-2015-12-14  Sebastian Dröge <slomo@coaxion.net>
+2016-01-20  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.2
+	  releasing 1.6.3
+
+2016-01-16 16:01:38 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstmessage.c:
+	  message: add function guard to gst_message_set_buffering_stats()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=760704
+
+2016-01-15 00:25:05 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/gstdevicemonitor.c:
+	  GstDeviceMonitor: Don't remove unmatched class filters
+	  If no providers for a particular class could be found, then removing unmatched
+	  filters would cause all devices to be returned instead which is not at all what
+	  the user intended. We still return 0 for unmatched filters.
+
+2016-01-13 21:32:20 +0000  Florin Apostol <florin.apostol@oregan.net>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclientclock: Fix GError memory leak in handling NTP response
+	  Error was not released if gst_ntp_packet_receive failed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=760598
+
+2015-09-26 18:16:07 +0800  Ting-Wei Lan <lantw@src.gnome.org>
+
+	* gst/gstutils.h:
+	  gstutils: Fix build with clang -Werror=cast-align
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755657
+
+2016-01-06 19:50:21 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: fix fill level arithmetic overflow with large values
+	  Based on patch by: Aleksander Wabik <awabik@opera.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755971
+
+2015-12-29 14:32:47 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstcaps.c:
+	  caps: Add (transfer full) annotation to simplify() and subtract() return value
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759948
+
+2015-12-29 11:06:39 +0100  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* gst/gstcaps.c:
+	  caps: add 'transfer full' annotation to caps returned by interserction functions
+	  To make clear caller is responsible to unref them.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759948
+
+=== release 1.6.2 ===
+
+2015-12-14 19:46:52 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.6.2
+
+2015-12-14 19:04:36 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2015-12-14 18:59:00 +0100  Sebastian Dröge <sebastian@centricular.com>
 
