@@ -1,9 +1,50 @@
-=== release 1.6.2 ===
+=== release 1.6.3 ===
 
-2015-12-14  Sebastian Dröge <slomo@coaxion.net>
+2016-01-20  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.2
+	  releasing 1.6.3
+
+2015-11-27 11:16:07 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  avviddec: remove realvideo slice_offset handling
+	  Handling slice_offset in avviddec is resulting in invalid memory read.
+	  Since rv decoders anyways handle slice_offset, removing the same to fix
+	  memory mishandlings
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758726
+
+2015-12-24 13:06:13 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Add special mapping for mono channel layouts
+	  In ffmpeg this is the same as FRONT_CENTER, but we distinguish between
+	  FRONT_CENTER and MONO in GStreamer. Add an explicit mapping for this special
+	  case in the translations functions.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759846
+
+2016-01-16 11:09:31 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n2.8.5
+
+2015-12-21 12:41:02 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n2.8.4
+
+=== release 1.6.2 ===
+
+2015-12-14 19:53:48 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.6.2
 
 2015-12-01 15:12:22 +0200  Sebastian Dröge <sebastian@centricular.com>
 

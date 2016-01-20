@@ -1,12 +1,12 @@
 
-Release notes for GStreamer libav Plugins 1.6.2
+Release notes for GStreamer libav Plugins 1.6.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.6 release series of your favourite cross-platform multimedia framework!
 
 
 
-This release only contains bugfixes and it is safe to update from 1.6.0 and 1.6.1. For a
+This release only contains bugfixes and it is safe to update from 1.6.x. For a
 full list of bugfixes see Bugzilla.
 
 
@@ -41,11 +41,7 @@ contains a set of less supported plugins that haven't passed the
 
 Bugs fixed in this release
      
-      * 756028 : avviddec: On OpenBSD H.264 playback crashes with an assertion error
-      * 757453 : avvidenc: Fix frame memory leak
-      * 757454 : avdemux: fix string memory leak
-      * 758344 : avviddec: May set padded width/height in pool caps
-      * 758512 : avviddec: Fix structure memory leak
+      * 758726 : avviddec: slice offset handling of real video leads to memory mishandling.
 
 ==== Download ====
 
@@ -82,8 +78,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Nicolas Dufresne
       * Sebastian Dröge
-      * Vineeth T M
       * Vineeth TM
  
