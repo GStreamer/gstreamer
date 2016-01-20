@@ -434,12 +434,10 @@ open_codec (GstVP9Dec * dec, GstVideoCodecFrame * frame)
   if (status != VPX_CODEC_OK) {
     GST_WARNING_OBJECT (dec, "VPX preprocessing error: %s",
         gst_vpx_error_name (status));
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (dec), frame);
     return GST_FLOW_CUSTOM_SUCCESS_1;
   }
   if (!stream_info.is_kf) {
     GST_WARNING_OBJECT (dec, "No keyframe, skipping");
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (dec), frame);
     return GST_FLOW_CUSTOM_SUCCESS_1;
   }
 
@@ -507,10 +505,13 @@ gst_vp9_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   if (!dec->decoder_inited) {
     ret = open_codec (dec, frame);
-    if (ret == GST_FLOW_CUSTOM_SUCCESS_1)
+    if (ret == GST_FLOW_CUSTOM_SUCCESS_1) {
+      gst_video_decoder_drop_frame (decoder, frame);
       return GST_FLOW_OK;
-    else if (ret != GST_FLOW_OK)
+    } else if (ret != GST_FLOW_OK) {
+      gst_video_codec_frame_unref (frame);
       return ret;
+    }
   }
 
   deadline = gst_video_decoder_get_max_decode_time (decoder, frame);
@@ -524,6 +525,7 @@ gst_vp9_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   if (!gst_buffer_map (frame->input_buffer, &minfo, GST_MAP_READ)) {
     GST_ERROR_OBJECT (dec, "Failed to map input buffer");
+    gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
 
@@ -535,6 +537,7 @@ gst_vp9_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   if (status) {
     GST_VIDEO_DECODER_ERROR (decoder, 1, LIBRARY, ENCODE,
         ("Failed to decode frame"), ("%s", gst_vpx_error_name (status)), ret);
+    gst_video_codec_frame_unref (frame);
     return ret;
   }
 
@@ -560,6 +563,7 @@ gst_vp9_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
         GST_ELEMENT_ERROR (decoder, LIBRARY, ENCODE,
             ("Failed to decode frame"), ("Unsupported color format %d",
                 img->fmt));
+        gst_video_codec_frame_unref (frame);
         return GST_FLOW_ERROR;
         break;
     }
