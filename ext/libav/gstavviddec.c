@@ -1179,7 +1179,7 @@ static GstFlowReturn
 get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  AVPicture pic, *outpic;
+  AVFrame pic, *outpic;
   GstVideoFrame vframe;
   GstVideoInfo *info;
   gint c;
@@ -1203,6 +1203,10 @@ get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
           GST_MAP_READ | GST_MAP_WRITE))
     goto map_failed;
 
+  memset (&pic, 0, sizeof (pic));
+  pic.format = ffmpegdec->pic_pix_fmt;
+  pic.width = GST_VIDEO_FRAME_WIDTH (&vframe);
+  pic.height = GST_VIDEO_FRAME_HEIGHT (&vframe);
   for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
     if (c < GST_VIDEO_INFO_N_PLANES (info)) {
       pic.data[c] = GST_VIDEO_FRAME_PLANE_DATA (&vframe, c);
@@ -1215,10 +1219,12 @@ get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
     }
   }
 
-  outpic = (AVPicture *) ffmpegdec->picture;
+  outpic = ffmpegdec->picture;
 
-  av_picture_copy (&pic, outpic, ffmpegdec->context->pix_fmt,
-      GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
+  if (av_frame_copy (&pic, outpic) != 0) {
+    GST_ERROR_OBJECT (ffmpegdec, "Failed to copy output frame");
+    ret = GST_FLOW_ERROR;
+  }
 
   gst_video_frame_unmap (&vframe);
 
