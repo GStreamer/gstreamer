@@ -44,6 +44,14 @@ duration_to_ms (guint year, guint month, guint day, guint hour, guint minute,
   return ms;
 }
 
+static GstClockTime
+duration_to_clocktime (guint year, guint month, guint day, guint hour,
+    guint minute, guint second, guint millisecond)
+{
+  return (GST_MSECOND * duration_to_ms (year, month, day, hour, minute, second,
+          millisecond));
+}
+
 /*
  * Test to ensure a simple mpd file successfully parses.
  *
@@ -5445,6 +5453,74 @@ GST_START_TEST (dash_mpdparser_duration)
 GST_END_TEST;
 
 /*
+ * Test that the maximum_segment_duration correctly implements the
+ * rules in the DASH specification
+ */
+GST_START_TEST (dash_mpdparser_maximum_segment_duration)
+{
+  const gchar *xml_template =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      "     availabilityStartTime=\"2015-03-24T0:0:0\""
+      "     %s "
+      "     mediaPresentationDuration=\"P100Y\">"
+      "  <Period id=\"Period0\" start=\"PT0S\">"
+      "    <AdaptationSet mimeType=\"video/mp4\" >"
+      "      <SegmentTemplate timescale=\"90000\" initialization=\"$RepresentationID$/Header.m4s\" media=\"$RepresentationID$/$Number$.m4s\" duration=\"360000\" />"
+      "      <Representation id=\"video1\" width=\"576\" height=\"324\" frameRate=\"25\" sar=\"1:1\" bandwidth=\"900000\" codecs=\"avc1.4D401E\"/>"
+      "    </AdaptationSet>"
+      "      <AdaptationSet mimeType=\"audio/mp4\" >"
+      "        <SegmentTemplate timescale=\"90000\" initialization=\"$RepresentationID$/Header.m4s\" media=\"$RepresentationID$/$Number$.m4s\" duration=\"340000\" />"
+      "        <Representation id=\"audio1\" audioSamplingRate=\"22050\" bandwidth=\"29600\" codecs=\"mp4a.40.2\">"
+      "        <AudioChannelConfiguration schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\" value=\"2\"/>"
+      "      </Representation>" "    </AdaptationSet>" "  </Period></MPD>";
+  gboolean ret;
+  GstMpdClient *mpdclient;
+  gchar *xml;
+  GstClockTime dur;
+  GList *adapt_sets, *iter;
+
+  xml = g_strdup_printf (xml_template, "maxSegmentDuration=\"PT4.5S\"");
+  mpdclient = gst_mpd_client_new ();
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  g_free (xml);
+  assert_equals_int (ret, TRUE);
+
+  assert_equals_uint64 (mpdclient->mpd_node->maxSegmentDuration,
+      duration_to_ms (0, 0, 0, 0, 0, 4, 500));
+  dur = gst_mpd_client_get_maximum_segment_duration (mpdclient);
+  assert_equals_uint64 (dur, duration_to_clocktime (0, 0, 0, 0, 0, 4, 500));
+  gst_mpd_client_free (mpdclient);
+
+  /* now parse without the maxSegmentDuration attribute, to check that
+     gst_mpd_client_get_maximum_segment_duration uses the maximum
+     duration of any segment
+   */
+  xml = g_strdup_printf (xml_template, "");
+  mpdclient = gst_mpd_client_new ();
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  g_free (xml);
+  assert_equals_int (ret, TRUE);
+  ret =
+      gst_mpd_client_setup_media_presentation (mpdclient, GST_CLOCK_TIME_NONE,
+      -1, NULL);
+  assert_equals_int (ret, TRUE);
+  adapt_sets = gst_mpd_client_get_adaptation_sets (mpdclient);
+  for (iter = adapt_sets; iter; iter = g_list_next (iter)) {
+    GstAdaptationSetNode *adapt_set_node = iter->data;
+
+    ret = gst_mpd_client_setup_streaming (mpdclient, adapt_set_node);
+    assert_equals_int (ret, TRUE);
+  }
+  dur = gst_mpd_client_get_maximum_segment_duration (mpdclient);
+  assert_equals_uint64 (dur, duration_to_clocktime (0, 0, 0, 0, 0, 4, 0));
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * create a test suite containing all dash testcases
  */
 static Suite *
@@ -5625,6 +5701,7 @@ dash_suite (void)
   tcase_add_test (tc_stringTests, dash_mpdparser_rfc1738_strings);
 
   tcase_add_test (tc_duration, dash_mpdparser_duration);
+  tcase_add_test (tc_duration, dash_mpdparser_maximum_segment_duration);
 
   suite_add_tcase (s, tc_simpleMPD);
   suite_add_tcase (s, tc_complexMPD);
