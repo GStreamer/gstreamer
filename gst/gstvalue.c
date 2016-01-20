@@ -2032,7 +2032,7 @@ gst_value_deserialize_segment (GValue * dest, const gchar * s)
  * @value: a GValue initialized to GST_TYPE_STRUCTURE
  * @structure: the structure to set the value to
  *
- * Sets the contents of @value to @structure.  The actual
+ * Sets the contents of @value to @structure.
  */
 void
 gst_value_set_structure (GValue * value, const GstStructure * structure)
