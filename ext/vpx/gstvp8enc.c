@@ -1868,6 +1868,12 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
       GST_VIDEO_CODEC_FRAME_UNSET_SYNC_POINT (frame);
 
     user_data = gst_video_codec_frame_get_user_data (frame);
+    if (!user_data) {
+      GST_ERROR_OBJECT (encoder, "Have no frame user data");
+      gst_video_codec_frame_unref (frame);
+      ret = GST_FLOW_ERROR;
+      break;
+    }
 
     /* FIXME : It would be nice to avoid the memory copy ... */
     buffer =
@@ -2097,7 +2103,10 @@ gst_vp8_enc_pre_push (GstVideoEncoder * video_encoder,
 
   info = &encoder->input_state->info;
 
-  g_assert (user_data != NULL);
+  if (!user_data) {
+    GST_ERROR_OBJECT (encoder, "Have no frame user data");
+    return GST_FLOW_ERROR;
+  }
 
   for (inv_count = 0, l = user_data->invisible; l; inv_count++, l = l->next) {
     buf = l->data;
