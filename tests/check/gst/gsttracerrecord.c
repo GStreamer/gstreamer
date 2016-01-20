@@ -86,6 +86,8 @@ GST_START_TEST (serialize_message_logging)
   fail_unless_equals_int (g_list_length (messages), 1);
   str = (gchar *) messages->data;
   fail_unless (str != NULL);
+
+  g_object_unref (tr);
 }
 
 GST_END_TEST;
@@ -139,8 +141,10 @@ GST_START_TEST (serialize_static_record)
   fail_unless_equals_string (str_val, "test");
   fail_unless_equals_int (bool_val, TRUE);
   fail_unless_equals_int (enum_val, GST_PAD_SRC);
+  g_free (str_val);
 
   gst_structure_free (s);
+  g_object_unref (tr);
 }
 
 GST_END_TEST;
