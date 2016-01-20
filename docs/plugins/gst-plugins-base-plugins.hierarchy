@@ -124,6 +124,7 @@ GObject
     PangoFcFontMap
       PangoCairoFcFontMap
 GInterface
+  GDatagramBased
   GFile
   GInitable
   GTypePlugin

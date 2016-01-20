@@ -1,9 +1,211 @@
-=== release 1.6.2 ===
+=== release 1.6.3 ===
 
-2015-12-14  Sebastian Dröge <slomo@coaxion.net>
+2016-01-20  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.2
+	  releasing 1.6.3
+
+2016-01-20 10:19:34 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst-libs/gst/video/video-info.c:
+	  video-info: enfore RGB matrix for RGB formats
+	  In gst_video_info_to_caps(), make sure we end up with an RGB matrix for
+	  RGB formats and warn when the GstVideoInfo colorimetry is wrong.
+	  In gst_video_info_from_caps(), fix the GstVideoInfo with an RGB matrix
+	  for RGB formats and warn about inconsistent caps.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=759624
+
+2016-01-20 10:02:20 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst-libs/gst/video/video-converter.c:
+	  video-converter: ignore matrix for RGB formats
+	  For RGB formats, the matrix in the colorimetry (conversion from YUV to
+	  RGB) is irrelevant and we should ignore it and assume the identity
+	  transform for everything we do.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=759624
+
+2016-01-19 23:26:57 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst-libs/gst/video/gstvideoencoder.h:
+	  videoencoder: Deprecate GST_VIDEO_ENCODER_FLOW_DROPPED
+	  It was never actually supported or used
+	  https://bugzilla.gnome.org/show_bug.cgi?id=760666
+
+2016-01-19 23:22:35 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  Revert "videoencoder: Release video frame when ->handle return ERROR or DROPPED"
+	  This reverts commit 63517d0ed348784cce4ab4b295c2c0f1b78baa81.
+	  It was wrong ref counting wise and we decided to deprecated DROPPED
+	  return value
+	  https://bugzilla.gnome.org/show_bug.cgi?id=760666
+
+2016-01-09 04:35:23 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* gst/playback/gststreamsynchronizer.c:
+	  streamsynchronizer: Ignore flushing streams [..]
+	  [..] when resetting group start time. In GES, we are usually connected
+	  to the streamsynchronizer on one audio and one video pad.
+	  When seeking the timeline, both nlecompositions often output their flush_start
+	  before any of them has output its flush_stop.
+	  The current code, when receiving the first flush stop was using the
+	  running time of the start of the second composition, which could
+	  be pretty much anything, and means nothing at that point.
+	  This patch is thread-safe, as STREAM_SYNCHRONIZER_LOCK is taken
+	  both when setting flushing and when checking it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750013
+
+2016-01-15 13:35:22 +0000  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  videoencoder: Release video frame when ->handle return ERROR or DROPPED
+	  https://bugzilla.gnome.org/show_bug.cgi?id=760666
+
+2016-01-15 09:50:29 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Properly mark pending blocked pads
+	  When blocking input pads, we also need to properly set the appropriate
+	  pending flag.
+	  Without this, when switching stream types after initial configuration
+	  (like going from Audio+Video to Audio+Video+Sub) playsink would never
+	  wait for *all* input streams to be blocked (it would just wait for the
+	  new input pad (text in this case) to be blocked).
+	  Since the reconfiguration might introduce unlinking/relinking of elements,
+	  we need to ensure that *ALL* input streams are blocked.
+	  Failure to do so would result in having some input streams pushing data
+	  to inactive elements (returning GST_FLOW_FLUSHING) or unlinked pads
+	  (returning GST_FLOW_NOT_LINKED).
+	  A later optimization could involve only blocking the input pads that
+	  might be involved in reconfiguration. But better be safe than sorry for
+	  now :)
+
+2016-01-06 15:49:59 +0100  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* gst-libs/gst/video/gstvideopool.c:
+	  videopool: store videoinfo after choosing the biggest buffer size
+	  Otherwise, pool could be negotiated with a size which will be different
+	  from the one used in allocation which is the GstVideoInfo.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=760222
+
+2015-12-28 12:28:26 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefindfunctions: Make sure that enough data is available in AAC/ADTS typefinder
+	  We would otherwise read beyond the array bounds and crash every now and then.
+	  This was introduced with 5640ba17c8db80976b7718904e4024dcfe9ee1a0.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759910
+
+2015-12-25 11:34:10 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Don't leak audio/video filters due to floating references weirdness
+	  The filters' floating references are sinked during set_property() already,
+	  which means that GstBin takes a new reference when adding the filter to it.
+	  Get rid of the additional reference after adding the filter to the bin.
+
+2015-12-25 10:36:44 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Allow reuse of audio/video filters by unparenting them from their bins
+	  And also recreate the chains if the filter is changing.
+
+2015-12-25 10:28:02 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Don't leak audio/video filters when using non-raw media
+
+2015-12-03 11:53:05 +0900  Kazunori Kobayashi <kkobayas@igel.co.jp>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: Clear is_eos flag when receiving the flush-stop event
+	  The EOS event can be propagated to the downstream elements when
+	  is_eos flag remains set even after leaving the flushing state.
+	  This fix allows this element to normally restart the streaming
+	  after receiving the flush event by clearing the is_eos flag.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759110
+
+=== release 1.6.2 ===
+
+2015-12-14 19:48:03 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.signals:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.6.2
+
+2015-12-14 19:11:46 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2015-12-14 19:05:35 +0100  Sebastian Dröge <sebastian@centricular.com>
 
