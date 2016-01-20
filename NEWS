@@ -1,37 +1,43 @@
-This is GStreamer 1.6.2
+This is GStreamer 1.6.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.6 release series of your favourite cross-platform multimedia framework!
 
-This release only contains bugfixes and it is safe to update from 1.6.0 and
-1.6.1. For a full list of bugfixes see Bugzilla:
-  https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&limit=0&list_id=83309&order=bug_id&product=GStreamer&resolution=FIXED&target_milestone=1.6.2
+This release only contains bugfixes and it is safe to update from 1.6.x. For a
+full list of bugfixes see Bugzilla:
+  https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&limit=0&list_id=91562&order=bug_id&product=GStreamer&resolution=FIXED&target_milestone=1.6.3
 
 See http://gstreamer.freedesktop.org/releases/1.6/ for the latest version of this document.
 
 Major bugfixes
 
-- Crashes in gst-libav with sinks that did not provide a buffer pool
-  but supported video metadata were fixed. This affected d3dvideosink
-  and some 3rd party sinks. Also related fixes for crashes when a downstream
-  buffer pool failed allocation.
-- Big GL performance improvement on iOS by a factor of 2 by using Apple's sync
-  extension.
-- Deadlocks in the DirectSound elements on Windows, and the behaviour of its
-  mute property were fixed.
-- The Direct3D video sink does not crash anymore when minimizing the window
-- The library soname generation on Android >= 6.0 was fixed, which previously
-  caused GStreamer to fail to load there.
-- File related elements have large-file (>2GB) support on Android now.
-- gst-libav was updated to ffmpeg 2.8.3.
-- Deserialization of custom events in the GDP depayloader was fixed.
-- Missing OpenGL context initialization in the Qt/QML video sink was fixed in
-  certain situations.
-- Interoperability with some broken RTSP servers using HTTP tunnel was
-  improved.
-- Various compilation fixes for Windows.
-- Various smaller memory leak and other fixes in different places.
+- Fix regression in GL library that made glimagesink unsable on Android
+- Integer arithmetic overflow in queue2 element that could break buffering or
+  cause crashes due to NULL pointer dereference
+- Fix crash in AAC/ADTS typefinder caused by reading more memory than is
+  available
+- Stop ignoring encoder errors in the VP8/VP9 encoders
+- Deprecate GstVideoEncoder GST_VIDEO_ENCODER_FLOW_DROPPED. It's redudant and
+  was never actually implemented
+- Ensure to store the correct video info in GstVideoBufferPool
+- Fix caps in rtspsrc when doing SRTP over interleaved TCP
+- Fix crash in pcap parser on 0-sized packets
+- Clear EOS flag in appsrc to allow reuse after EOS and flushing
+- Ignore flushing streams in streamsynchronizer during stream switches to fix
+  problems caused by this in gst-editing-services
+- Ignore tags and other metadata in WAV files after the "data" chunk in PUSH
+  mode to prevent them from being interpreted as audio
+- Correctly use colorimetry in v4l2 only for YUV color formats
+- Set reserved bits in MPEG TS muxer to 1s
+- Fix calculation of SBC frame lengths
+- Fix output of the RTP JPEG2000 depayloader to have one frame per buffer
+  and crash in the OpenJPEG decoder on incomplete frames
+- Update ffmpeg snapshot in gst-libav to 2.8.5
+- Memory leak fixes in scaletempo, the raw video RTP depayloader,
+  and in playsink related to audio/video filters
+- Fixes for error handling in the OSX audio plugin
+- Various gobject-introspection annotation fixes and additions
+- Compiler warning fixes for latest clang compiler
 - and many, many more:
-  https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&limit=0&list_id=83309&order=bug_id&product=GStreamer&resolution=FIXED&target_milestone=1.6.2
-
+  https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&limit=0&list_id=91562&order=bug_id&product=GStreamer&resolution=FIXED&target_milestone=1.6.3
 
