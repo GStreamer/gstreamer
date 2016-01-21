@@ -135,6 +135,7 @@ GST_DEBUG_CATEGORY (adaptivedemux_debug);
 #define DEFAULT_CONNECTION_SPEED 0
 #define DEFAULT_BITRATE_LIMIT 0.8
 #define SRC_QUEUE_MAX_BYTES 20 * 1024 * 1024    /* For safety. Large enough to hold a segment. */
+#define NUM_LOOKBACK_FRAGMENTS 3
 
 #define GST_MANIFEST_GET_LOCK(d) (&(GST_ADAPTIVE_DEMUX_CAST(d)->priv->manifest_lock))
 #define GST_MANIFEST_LOCK(d) g_rec_mutex_lock (GST_MANIFEST_GET_LOCK (d));
@@ -1061,6 +1062,8 @@ gst_adaptive_demux_stream_new (GstAdaptiveDemux * demux, GstPad * pad)
 
   stream->pad = pad;
   stream->demux = demux;
+  stream->fragment_bitrates =
+      g_malloc0 (sizeof (guint64) * NUM_LOOKBACK_FRAGMENTS);
   gst_pad_set_element_private (pad, stream);
 
   gst_pad_set_query_function (pad,
@@ -1165,6 +1168,7 @@ gst_adaptive_demux_stream_free (GstAdaptiveDemuxStream * stream)
 
   g_cond_clear (&stream->fragment_download_cond);
   g_mutex_clear (&stream->fragment_download_lock);
+  g_free (stream->fragment_bitrates);
 
   if (stream->pad) {
     gst_object_unref (stream->pad);
@@ -1712,10 +1716,29 @@ gst_adaptive_demux_stream_queue_event (GstAdaptiveDemuxStream * stream,
 
 /* must be called with manifest_lock taken */
 static guint64
+_update_average_bitrate (GstAdaptiveDemux * demux,
+    GstAdaptiveDemuxStream * stream, guint64 new_bitrate)
+{
+  gint index = stream->moving_index % NUM_LOOKBACK_FRAGMENTS;
+
+  stream->moving_bitrate -= stream->fragment_bitrates[index];
+  stream->fragment_bitrates[index] = new_bitrate;
+  stream->moving_bitrate += new_bitrate;
+
+  stream->moving_index += 1;
+
+  if (stream->moving_index > NUM_LOOKBACK_FRAGMENTS)
+    return stream->moving_bitrate / NUM_LOOKBACK_FRAGMENTS;
+  return stream->moving_bitrate / stream->moving_index;
+}
+
+/* must be called with manifest_lock taken */
+static guint64
 gst_adaptive_demux_stream_update_current_bitrate (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream)
 {
-  guint64 bitrate;
+  guint64 average_bitrate;
+  guint64 fragment_bitrate;
 
   if (demux->connection_speed) {
     GST_LOG_OBJECT (demux, "Connection-speed is set to %u kbps, using it",
@@ -1723,12 +1746,27 @@ gst_adaptive_demux_stream_update_current_bitrate (GstAdaptiveDemux * demux,
     return demux->connection_speed;
   }
 
-  g_object_get (stream->queue, "avg-in-rate", &bitrate, NULL);
-  bitrate *= 8;
+  g_object_get (stream->queue, "avg-in-rate", &fragment_bitrate, NULL);
+  fragment_bitrate *= 8;
   GST_DEBUG_OBJECT (demux, "Download bitrate is : %" G_GUINT64_FORMAT " bps",
-      bitrate);
-  stream->current_download_rate = bitrate;
-  return bitrate;
+      fragment_bitrate);
+
+  average_bitrate = _update_average_bitrate (demux, stream, fragment_bitrate);
+
+  GST_INFO_OBJECT (stream, "last fragment bitrate was %" G_GUINT64_FORMAT,
+      fragment_bitrate);
+  GST_INFO_OBJECT (stream,
+      "Last %u fragments average bitrate is %" G_GUINT64_FORMAT,
+      NUM_LOOKBACK_FRAGMENTS, average_bitrate);
+
+  /* Conservative approach, make sure we don't upgrade too fast */
+  stream->current_download_rate = MIN (average_bitrate, fragment_bitrate);
+
+  stream->current_download_rate *= demux->bitrate_limit;
+  GST_DEBUG_OBJECT (demux, "Bitrate after bitrate limit (%0.2f): %"
+      G_GUINT64_FORMAT, demux->bitrate_limit,
+      stream->current_download_rate * 8);
+  return stream->current_download_rate;
 }
 
 /* must be called with manifest_lock taken */

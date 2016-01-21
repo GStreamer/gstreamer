@@ -160,6 +160,11 @@ struct _GstAdaptiveDemuxStream
   gint64 download_total_bytes;
   guint64 current_download_rate;
 
+  /* Average for the last fragments */
+  guint64 moving_bitrate;
+  guint moving_index;
+  guint64 *fragment_bitrates;
+
   GstAdaptiveDemuxStreamFragment fragment;
 
   guint download_error_count;
