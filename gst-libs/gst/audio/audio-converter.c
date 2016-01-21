@@ -161,7 +161,7 @@ struct _AudioChain
   gpointer alloc_data;
 
   gpointer *tmp;
-  gsize tmpsize;
+  gsize allocated_samples;
 
   gpointer *samples;
   gsize num_samples;
@@ -365,28 +365,30 @@ get_output_samples (AudioChain * chain, gsize num_samples, gpointer user_data)
   return convert->out_data;
 }
 
+#define MEM_ALIGN(m,a) ((gint8 *)((guintptr)((gint8 *)(m) + ((a)-1)) & ~((a)-1)))
+#define ALIGN 16
+
 static gpointer *
 get_temp_samples (AudioChain * chain, gsize num_samples, gpointer user_data)
 {
-  gsize needed;
-
-  /* first part contains the pointers, second part the data */
-  needed = (num_samples * chain->stride + sizeof (gpointer)) * chain->blocks;
-
-  if (needed > chain->tmpsize) {
+  if (num_samples > chain->allocated_samples) {
     gint i;
-    guint8 *s;
+    gint8 *s;
+    gsize stride = GST_ROUND_UP_N (num_samples * chain->stride, ALIGN);
+    /* first part contains the pointers, second part the data, add some extra bytes
+     * for alignement */
+    gsize needed = (stride + sizeof (gpointer)) * chain->blocks + ALIGN;
 
     GST_DEBUG ("alloc samples %" G_GSIZE_FORMAT, needed);
     chain->tmp = g_realloc (chain->tmp, needed);
-    chain->tmpsize = needed;
+    chain->allocated_samples = num_samples;
 
-    /* jump to the data */
-    s = (guint8 *) & chain->tmp[chain->blocks];
+    /* pointer to the data, make sure it's 16 bytes aligned */
+    s = MEM_ALIGN (&chain->tmp[chain->blocks], ALIGN);
 
     /* set up the pointers */
     for (i = 0; i < chain->blocks; i++)
-      chain->tmp[i] = s + (i * num_samples * chain->stride);
+      chain->tmp[i] = s + i * stride;
   }
   GST_LOG ("temp samples %p %" G_GSIZE_FORMAT, chain->tmp, num_samples);
 
