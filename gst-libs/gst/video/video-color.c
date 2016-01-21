@@ -282,7 +282,9 @@ static const GstVideoColorPrimariesInfo color_primaries[] = {
   {GST_VIDEO_COLOR_PRIMARIES_FILM, WP_C, 0.681, 0.319, 0.243, 0.692, 0.145,
       0.049},
   {GST_VIDEO_COLOR_PRIMARIES_BT2020, WP_D65, 0.708, 0.292, 0.170, 0.797, 0.131,
-      0.046}
+      0.046},
+  {GST_VIDEO_COLOR_PRIMARIES_ADOBERGB, WP_D65, 0.64, 0.33, 0.21, 0.71, 0.15,
+      0.06}
 };
 
 /**
@@ -459,6 +461,9 @@ gst_video_color_transfer_encode (GstVideoTransferFunction func, gdouble val)
       else
         res = 1.0993 * pow (val, 0.45) - 0.0993;
       break;
+    case GST_VIDEO_TRANSFER_ADOBERGB:
+      res = pow (val, 1.0 / 2.19921875);
+      break;
   }
   return res;
 }
@@ -543,6 +548,9 @@ gst_video_color_transfer_decode (GstVideoTransferFunction func, gdouble val)
         res = val / 4.5;
       else
         res = pow ((val + 0.0993) / 1.0993, 1.0 / 0.45);
+      break;
+    case GST_VIDEO_TRANSFER_ADOBERGB:
+      res = pow (val, 2.19921875);
       break;
   }
   return res;

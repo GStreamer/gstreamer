@@ -88,6 +88,7 @@ gboolean gst_video_color_matrix_get_Kr_Kb (GstVideoColorMatrix matrix, gdouble *
  * @GST_VIDEO_TRANSFER_BT2020_12: Gamma 2.2 curve with a linear segment in the lower
  *                                range. Used for BT.2020 with 12 bits per
  *                                component. Since: 1.6.
+ * @GST_VIDEO_TRANSFER_ADOBERGB: Gamma 2.19921875. Since: 1.8
  *
  * The video transfer function defines the formula for converting between
  * non-linear RGB (R'G'B') and linear RGB
@@ -104,7 +105,8 @@ typedef enum {
   GST_VIDEO_TRANSFER_GAMMA28,
   GST_VIDEO_TRANSFER_LOG100,
   GST_VIDEO_TRANSFER_LOG316,
-  GST_VIDEO_TRANSFER_BT2020_12
+  GST_VIDEO_TRANSFER_BT2020_12,
+  GST_VIDEO_TRANSFER_ADOBERGB
 } GstVideoTransferFunction;
 
 gdouble      gst_video_color_transfer_encode (GstVideoTransferFunction func, gdouble val);
@@ -120,6 +122,7 @@ gdouble      gst_video_color_transfer_decode (GstVideoTransferFunction func, gdo
  * @GST_VIDEO_COLOR_PRIMARIES_SMPTE240M: SMPTE240M primaries
  * @GST_VIDEO_COLOR_PRIMARIES_FILM: Generic film
  * @GST_VIDEO_COLOR_PRIMARIES_BT2020: BT2020 primaries. Since: 1.6.
+ * @GST_VIDEO_COLOR_PRIMARIES_ADOBERGB: Adobe RGB primaries. Since: 1.8
  *
  * The color primaries define the how to transform linear RGB values to and from
  * the CIE XYZ colorspace.
@@ -132,7 +135,8 @@ typedef enum {
   GST_VIDEO_COLOR_PRIMARIES_SMPTE170M,
   GST_VIDEO_COLOR_PRIMARIES_SMPTE240M,
   GST_VIDEO_COLOR_PRIMARIES_FILM,
-  GST_VIDEO_COLOR_PRIMARIES_BT2020
+  GST_VIDEO_COLOR_PRIMARIES_BT2020,
+  GST_VIDEO_COLOR_PRIMARIES_ADOBERGB
 } GstVideoColorPrimaries;
 
 /**
