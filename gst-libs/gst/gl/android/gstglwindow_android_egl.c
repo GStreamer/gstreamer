@@ -106,7 +106,7 @@ draw_cb (gpointer data)
 
   if (context_egl->egl_surface) {
     gint width, height;
-    gint window_width, window_height;
+    guint window_width, window_height;
 
     gst_gl_window_get_surface_dimensions (window, &window_width,
         &window_height);
