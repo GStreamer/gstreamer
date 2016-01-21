@@ -212,6 +212,9 @@ free_element_monitor (GstElement * element)
   g_object_unref (G_OBJECT (monitor));
 }
 
+/******************************************
+ *          Fake decoder                  *
+ ******************************************/
 static GstStaticPadTemplate fake_decoder_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -298,4 +301,227 @@ GstElement *
 fake_decoder_new (void)
 {
   return GST_ELEMENT (g_object_new (FAKE_DECODER_TYPE, NULL));
+}
+
+/******************************************
+ *          Fake mixer                    *
+ ******************************************/
+static GstElementClass *fake_mixer_parent_class = NULL;
+
+static GstStaticPadTemplate fake_mixer_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS ("something")
+    );
+
+static GstStaticPadTemplate fake_mixer_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink_%u",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS ("something")
+    );
+
+static gboolean
+_mixer_event (GstPad * pad, GstObject * obj, GstEvent * event)
+{
+  FakeMixer *self = FAKE_MIXER (obj);
+
+  switch (event->type) {
+    case GST_EVENT_STREAM_START:
+      if (g_atomic_int_compare_and_exchange (&self->sent_stream_start, FALSE,
+              TRUE)) {
+        return gst_pad_event_default (pad, obj, event);
+      } else {
+        gst_event_unref (event);
+        return TRUE;
+      }
+    case GST_EVENT_SEGMENT:
+      if (g_atomic_int_compare_and_exchange (&self->sent_segment, FALSE, TRUE)) {
+        return gst_pad_event_default (pad, obj, event);
+      } else {
+        gst_event_unref (event);
+        return TRUE;
+      }
+    default:
+      return gst_pad_event_default (pad, obj, event);
+  }
+}
+
+static GstFlowReturn
+_mixer_chain (GstPad * pad, GstObject * self, GstBuffer * buffer)
+{
+  gst_buffer_unref (buffer);
+
+  return FAKE_MIXER (self)->return_value;
+}
+
+static GstPad *
+_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps)
+{
+  GstPad *pad;
+  GstPadTemplate *pad_template;
+
+  pad_template =
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS
+          (element)), "sink_%u");
+  pad = gst_pad_new_from_template (pad_template, req_name);
+
+  gst_pad_set_chain_function (pad, _mixer_chain);
+  gst_pad_set_event_function (pad, _mixer_event);
+
+  gst_element_add_pad (element, pad);
+
+  return pad;
+}
+
+static void
+fake_mixer_init (FakeMixer * self, FakeMixerClass * g_class)
+{
+  GstPad *pad;
+  GstElement *element = GST_ELEMENT (self);
+  GstPadTemplate *pad_template;
+
+  pad_template =
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
+  pad = gst_pad_new_from_template (pad_template, "src");
+  gst_element_add_pad (element, pad);
+
+  pad_template =
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "sink");
+
+  self->return_value = GST_FLOW_OK;
+}
+
+static void
+fake_mixer_class_init (FakeMixerClass * self_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (self_class);
+
+  fake_mixer_parent_class = g_type_class_peek_parent (self_class);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&fake_mixer_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&fake_mixer_sink_template));
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Fake mixer", "Mixer", "Some mixer", "Thibault Saunier");
+
+  gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR (_request_new_pad);
+}
+
+GType
+fake_mixer_get_type (void)
+{
+  static volatile gsize type = 0;
+
+  if (g_once_init_enter (&type)) {
+    GType _type;
+    static const GTypeInfo info = {
+      sizeof (FakeMixerClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) fake_mixer_class_init,
+      NULL,
+      NULL,
+      sizeof (FakeMixer),
+      0,
+      (GInstanceInitFunc) fake_mixer_init,
+    };
+
+    _type = g_type_register_static (GST_TYPE_ELEMENT, "FakeMixer", &info, 0);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
+GstElement *
+fake_mixer_new (void)
+{
+  return GST_ELEMENT (g_object_new (FAKE_MIXER_TYPE, NULL));
+}
+
+/******************************************
+ *              Fake Source               *
+ *******************************************/
+static GstElementClass *fake_src_parent_class = NULL;
+
+static GstStaticPadTemplate fake_src_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS ("something")
+    );
+
+static void
+fake_src_init (FakeSrc * self, FakeSrcClass * g_class)
+{
+  GstPad *pad;
+  GstElement *element = GST_ELEMENT (self);
+  GstPadTemplate *pad_template;
+
+  pad_template =
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
+  pad = gst_pad_new_from_template (pad_template, "src");
+  gst_element_add_pad (element, pad);
+
+  pad_template =
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "sink");
+
+  self->return_value = GST_FLOW_OK;
+}
+
+static void
+fake_src_class_init (FakeSrcClass * self_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (self_class);
+
+  fake_src_parent_class = g_type_class_peek_parent (self_class);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&fake_src_src_template));
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Fake src", "Source", "Some src", "Thibault Saunier");
+}
+
+GType
+fake_src_get_type (void)
+{
+  static volatile gsize type = 0;
+
+  if (g_once_init_enter (&type)) {
+    GType _type;
+    static const GTypeInfo info = {
+      sizeof (FakeSrcClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) fake_src_class_init,
+      NULL,
+      NULL,
+      sizeof (FakeSrc),
+      0,
+      (GInstanceInitFunc) fake_src_init,
+    };
+
+    _type = g_type_register_static (GST_TYPE_ELEMENT, "FakeSrc", &info, 0);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
+GstElement *
+fake_src_new (void)
+{
+  return GST_ELEMENT (g_object_new (FAKE_SRC_TYPE, NULL));
+}
+
+
+void
+fake_elements_register (void)
+{
+  gst_element_register (NULL, "fakemixer", 0, FAKE_MIXER_TYPE);
+  gst_element_register (NULL, "fakedecoder", 0, FAKE_DECODER_TYPE);
+  gst_element_register (NULL, "fakedemuxer", 0, FAKE_DEMUXER_TYPE);
+  gst_element_register (NULL, "fakesrc2", 0, FAKE_SRC_TYPE);
 }

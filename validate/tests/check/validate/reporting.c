@@ -120,42 +120,27 @@ GST_START_TEST (test_report_levels)
 
 GST_END_TEST;
 
-static GstPadProbeReturn
-drop_buffers (GstPad * pad, GstPadProbeInfo * info, gpointer unused)
-{
-  return GST_PAD_PROBE_DROP;
-}
-
 static void
 _create_issues (GstValidateRunner * runner)
 {
   GstPad *srcpad1, *srcpad2, *sinkpad, *funnel_sink1, *funnel_sink2;
-  GstElement *src1, *src2, *sink, *funnel;
+  GstElement *src1, *src2, *sink, *fakemixer;
   GstSegment segment;
-  gulong probe_id1, probe_id2;
 
-  src1 = create_and_monitor_element ("fakesrc", "fakesrc1", runner);
-  src2 = create_and_monitor_element ("fakesrc", "fakesrc2", runner);
-  funnel = create_and_monitor_element ("funnel", "funnel", runner);
+  src1 = create_and_monitor_element ("fakesrc2", "fakesrc1", runner);
+  src2 = create_and_monitor_element ("fakesrc2", "fakesrc2", runner);
+  fakemixer = create_and_monitor_element ("fakemixer", "fakemixer", runner);
   sink = create_and_monitor_element ("fakesink", "fakesink", runner);
 
   srcpad1 = gst_element_get_static_pad (src1, "src");
   srcpad2 = gst_element_get_static_pad (src2, "src");
-  funnel_sink1 = gst_element_get_request_pad (funnel, "sink_%u");
-  funnel_sink2 = gst_element_get_request_pad (funnel, "sink_%u");
+  funnel_sink1 = gst_element_get_request_pad (fakemixer, "sink_%u");
+  funnel_sink2 = gst_element_get_request_pad (fakemixer, "sink_%u");
   sinkpad = gst_element_get_static_pad (sink, "sink");
 
-  fail_unless (gst_element_link (funnel, sink));
+  fail_unless (gst_element_link (fakemixer, sink));
   fail_unless (gst_pad_link (srcpad1, funnel_sink1) == GST_PAD_LINK_OK);
   fail_unless (gst_pad_link (srcpad2, funnel_sink2) == GST_PAD_LINK_OK);
-
-  /* There's gonna be some clunkiness in here because of funnel */
-  probe_id1 = gst_pad_add_probe (srcpad1,
-      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-      (GstPadProbeCallback) drop_buffers, NULL, NULL);
-  probe_id2 = gst_pad_add_probe (srcpad2,
-      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-      (GstPadProbeCallback) drop_buffers, NULL, NULL);
 
   /* We want to handle the src behaviour ourselves */
   fail_unless (gst_pad_activate_mode (srcpad1, GST_PAD_MODE_PUSH, TRUE));
@@ -174,7 +159,7 @@ _create_issues (GstValidateRunner * runner)
           gst_event_new_stream_start ("the-stream")));
   fail_unless (gst_pad_push_event (srcpad2, gst_event_new_segment (&segment)));
 
-  fail_unless_equals_int (gst_element_set_state (funnel, GST_STATE_PLAYING),
+  fail_unless_equals_int (gst_element_set_state (fakemixer, GST_STATE_PLAYING),
       GST_STATE_CHANGE_SUCCESS);
   fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_PLAYING),
       GST_STATE_CHANGE_ASYNC);
@@ -183,26 +168,23 @@ _create_issues (GstValidateRunner * runner)
   _gst_check_expecting_log = TRUE;
   fail_unless (gst_pad_push_event (srcpad1, gst_event_new_flush_stop (TRUE)));
 
-  /* Once again but on the other funnel sink */
+  /* Once again but on the other fakemixer sink */
   fail_unless (gst_pad_push_event (srcpad2, gst_event_new_flush_stop (TRUE)));
 
   /* clean up */
   fail_unless (gst_pad_activate_mode (srcpad1, GST_PAD_MODE_PUSH, FALSE));
   fail_unless (gst_pad_activate_mode (srcpad2, GST_PAD_MODE_PUSH, FALSE));
-  fail_unless_equals_int (gst_element_set_state (funnel, GST_STATE_NULL),
+  fail_unless_equals_int (gst_element_set_state (fakemixer, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
   fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
-
-  gst_pad_remove_probe (srcpad1, probe_id1);
-  gst_pad_remove_probe (srcpad2, probe_id2);
 
   gst_object_unref (srcpad1);
   gst_object_unref (srcpad2);
   gst_object_unref (sinkpad);
   gst_object_unref (funnel_sink1);
   gst_object_unref (funnel_sink2);
-  check_destroyed (funnel, funnel_sink1, funnel_sink2, NULL);
+  check_destroyed (fakemixer, funnel_sink1, funnel_sink2, NULL);
   check_destroyed (src1, srcpad1, NULL);
   check_destroyed (src2, srcpad2, NULL);
   check_destroyed (sink, sinkpad, NULL);
@@ -236,7 +218,7 @@ GST_START_TEST (test_global_levels)
   fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
   runner = gst_validate_runner_new ();
   _create_issues (runner);
-  /* One report for each pad monitor, plus one for funnel src and fakesink sink */
+  /* One report for each pad monitor, plus one for fakemixer src and fakesink sink */
   fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 8);
   g_object_unref (runner);
 }
@@ -247,8 +229,8 @@ GST_START_TEST (test_specific_levels)
 {
   GstValidateRunner *runner;
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "none,fakesrc1:synthetic",
-          TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS",
+          "none,fakesrc1:synthetic", TRUE));
   runner = gst_validate_runner_new ();
   _create_issues (runner);
   /* One issue should go through the none filter */
@@ -264,8 +246,8 @@ GST_START_TEST (test_specific_levels)
   fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 5);
   g_object_unref (runner);
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "subchain,sink:monitor",
-          TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS",
+          "subchain,sink:monitor", TRUE));
   runner = gst_validate_runner_new ();
   _create_issues (runner);
   /* 3 issues because both fake sources will have subsequent subchains of
@@ -274,12 +256,12 @@ GST_START_TEST (test_specific_levels)
   g_object_unref (runner);
 
   fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS",
-          "synthetic,fakesrc1:subchain,fakesrc2:subchain,funnel*::src*:monitor",
+          "synthetic,fakesrc1:subchain,fakesrc2:subchain,fakemixer*::src*:monitor",
           TRUE));
   runner = gst_validate_runner_new ();
   _create_issues (runner);
-  /* 4 issues because the funnel sink issues will be concatenated with the
-   * fakesrc issues, the funnel src will report its issue separately, and the
+  /* 4 issues because the fakemixer sink issues will be concatenated with the
+   * fakesrc issues, the fakemixer src will report its issue separately, and the
    * sink will not find a report immediately upstream */
   fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 4);
   g_object_unref (runner);
@@ -303,6 +285,7 @@ gst_validate_suite (void)
   suite_add_tcase (s, tc_chain);
 
   gst_validate_init ();
+  fake_elements_register ();
 
   tcase_add_test (tc_chain, test_report_levels);
   tcase_add_test (tc_chain, test_global_levels);

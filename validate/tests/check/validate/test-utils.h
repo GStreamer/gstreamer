@@ -74,6 +74,53 @@ typedef struct {
 GType fake_decoder_get_type  (void);
 GstElement * fake_decoder_new (void);
 
+typedef struct {
+  GstElement parent;
+
+  GstFlowReturn return_value;
+
+  /* <private> */
+  gboolean sent_stream_start;
+  gboolean sent_segment;
+} FakeMixer;
+
+typedef struct {
+  GstElementClass parent;
+} FakeMixerClass;
+
+#define FAKE_MIXER_TYPE (fake_mixer_get_type ())
+#define FAKE_MIXER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), FAKE_MIXER_TYPE, FakeMixer))
+#define FAKE_MIXER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), FAKE_MIXER_TYPE, FakeMixerClass))
+#define IS_FAKE_MIXER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), FAKE_MIXER_TYPE))
+#define IS_FAKE_MIXER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), FAKE_MIXER_TYPE))
+#define FAKE_MIXER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), FAKE_MIXER_TYPE, FakeMixerClass))
+
+GType fake_mixer_get_type  (void);
+GstElement * fake_mixer_new (void);
+
+typedef struct {
+  GstElement parent;
+
+  GstFlowReturn return_value;
+
+} FakeSrc;
+
+typedef struct {
+  GstElementClass parent;
+} FakeSrcClass;
+
+#define FAKE_SRC_TYPE (fake_src_get_type ())
+#define FAKE_SRC(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), FAKE_SRC_TYPE, FakeSrc))
+#define FAKE_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), FAKE_SRC_TYPE, FakeSrcClass))
+#define IS_FAKE_SRC(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), FAKE_SRC_TYPE))
+#define IS_FAKE_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), FAKE_SRC_TYPE))
+#define FAKE_SRC_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), FAKE_SRC_TYPE, FakeSrcClass))
+
+GType fake_src_get_type  (void);
+GstElement * fake_src_new (void);
+
+void fake_elements_register (void);
+
 G_END_DECLS
 
 #endif /* _GST_VALIDATE_TEST_UTILS */
