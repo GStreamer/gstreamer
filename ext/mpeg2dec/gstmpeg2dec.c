@@ -1185,7 +1185,7 @@ done:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "mpeg2dec", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "mpeg2dec", GST_RANK_SECONDARY,
           GST_TYPE_MPEG2DEC))
     return FALSE;
 
