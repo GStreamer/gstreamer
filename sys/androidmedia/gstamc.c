@@ -29,6 +29,8 @@
 #define orc_memcpy memcpy
 #endif
 
+#include "gstahcsrc.h"
+
 #include "gstamc.h"
 #include "gstamc-constants.h"
 
@@ -3315,6 +3317,28 @@ plugin_init (GstPlugin * plugin)
 
   if (!register_codecs (plugin))
     return FALSE;
+
+  if (!gst_android_graphics_surfacetexture_init ()) {
+    GST_ERROR ("Failed to init android surface texture");
+    return FALSE;
+  }
+
+  if (!gst_android_graphics_imageformat_init ()) {
+    GST_ERROR ("Failed to init android image format");
+    gst_android_graphics_surfacetexture_deinit ();
+    return FALSE;
+  }
+
+  if (!gst_android_hardware_camera_init ()) {
+    gst_android_graphics_surfacetexture_deinit ();
+    gst_android_graphics_imageformat_deinit ();
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "ahcsrc", GST_RANK_NONE, GST_TYPE_AHC_SRC)) {
+    GST_ERROR ("Failed to register android camera source");
+    return FALSE;
+  }
 
   return TRUE;
 }
