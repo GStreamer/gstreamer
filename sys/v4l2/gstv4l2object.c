@@ -1892,14 +1892,23 @@ gst_v4l2_object_get_colorspace (enum v4l2_colorspace colorspace,
   /* First step, set the defaults for each primaries */
   switch (colorspace) {
     case V4L2_COLORSPACE_SMPTE170M:
-      ret = gst_video_colorimetry_from_string (cinfo,
-          GST_VIDEO_COLORIMETRY_BT601);
+      cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+      cinfo->transfer = GST_VIDEO_TRANSFER_BT709;
+      cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
       break;
     case V4L2_COLORSPACE_REC709:
-      ret = gst_video_colorimetry_from_string (cinfo,
-          GST_VIDEO_COLORIMETRY_BT709);
+      cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+      cinfo->transfer = GST_VIDEO_TRANSFER_BT709;
+      cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
       break;
     case V4L2_COLORSPACE_SRGB:
+      cinfo->range = GST_VIDEO_COLOR_RANGE_0_255;
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+      cinfo->transfer = GST_VIDEO_TRANSFER_SRGB;
+      cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+      break;
     case V4L2_COLORSPACE_JPEG:
       /* This is in fact sYCC */
       cinfo->range = GST_VIDEO_COLOR_RANGE_0_255;
@@ -1908,17 +1917,22 @@ gst_v4l2_object_get_colorspace (enum v4l2_colorspace colorspace,
       cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
       break;
     case V4L2_COLORSPACE_ADOBERGB:
-      GST_FIXME ("AdobeRGB is not yet supported by GStreamer");
-      /* We are missing the primaries and the transfer function */
-      ret = FALSE;
+      cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+      cinfo->transfer = GST_VIDEO_TRANSFER_ADOBERGB;
+      cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_ADOBERGB;
       break;
     case V4L2_COLORSPACE_BT2020:
-      ret = gst_video_colorimetry_from_string (cinfo,
-          GST_VIDEO_COLORIMETRY_BT2020);
+      cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+      cinfo->transfer = GST_VIDEO_TRANSFER_BT709;
+      cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
       break;
     case V4L2_COLORSPACE_SMPTE240M:
-      ret = gst_video_colorimetry_from_string (cinfo,
-          GST_VIDEO_COLORIMETRY_SMPTE240M);
+      cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_SMPTE240M;
+      cinfo->transfer = GST_VIDEO_TRANSFER_SMPTE240M;
+      cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE240M;
       break;
     case V4L2_COLORSPACE_470_SYSTEM_M:
       cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
@@ -2005,8 +2019,7 @@ gst_v4l2_object_get_colorspace (enum v4l2_colorspace colorspace,
       cinfo->transfer = GST_VIDEO_TRANSFER_SRGB;
       break;
     case V4L2_XFER_FUNC_ADOBERGB:
-      GST_FIXME ("AdobeRGB is not yet supported by GStreamer");
-      cinfo->transfer = GST_VIDEO_TRANSFER_UNKNOWN;
+      cinfo->transfer = GST_VIDEO_TRANSFER_ADOBERGB;
       break;
     case V4L2_XFER_FUNC_SMPTE240M:
       cinfo->transfer = GST_VIDEO_TRANSFER_SMPTE240M;
