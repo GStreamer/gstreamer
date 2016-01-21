@@ -72,11 +72,11 @@ GST_START_TEST (serialize_message_logging)
   gchar *str;
 
   /* *INDENT-OFF* */
-  tr = gst_tracer_record_new (gst_structure_new ("test.class",
+  tr = gst_tracer_record_new ("test.class",
       "string", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           NULL),
-      NULL));
+      NULL);
   /* *INDENT-ON* */
 
   save_messages = TRUE;
@@ -104,7 +104,7 @@ GST_START_TEST (serialize_static_record)
   GstPadDirection enum_val;
 
   /* *INDENT-OFF* */
-  tr = gst_tracer_record_new (gst_structure_new ("test.class",
+  tr = gst_tracer_record_new ("test.class",
       "string", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           NULL),
@@ -117,7 +117,7 @@ GST_START_TEST (serialize_static_record)
       "enum", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, GST_TYPE_PAD_DIRECTION,
           NULL),
-      NULL));
+      NULL);
   /* *INDENT-ON* */
 
   save_messages = TRUE;

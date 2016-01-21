@@ -203,7 +203,7 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
 
   /* announce trace formats */
   /* *INDENT-OFF* */
-  tr_latency = gst_tracer_record_new (gst_structure_new ("latency.class",
+  tr_latency = gst_tracer_record_new ("latency.class",
       "src", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
@@ -220,7 +220,7 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
-      NULL));
+      NULL);
   /* *INDENT-ON* */
 }
 

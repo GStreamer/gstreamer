@@ -37,19 +37,10 @@
 #include "gststructure.h"
 #include "gsttracerrecord.h"
 #include "gstvalue.h"
+#include <gobject/gvaluecollector.h>
 
 GST_DEBUG_CATEGORY_EXTERN (tracer_debug);
 #define GST_CAT_DEFAULT tracer_debug
-
-
-enum
-{
-  PROP_0,
-  PROP_SPEC,
-  PROP_LAST
-};
-
-static GParamSpec *properties[PROP_LAST];
 
 struct _GstTracerRecord
 {
@@ -77,7 +68,11 @@ build_field_template (GQuark field_id, const GValue * value, gpointer user_data)
   GstTracerValueFlags flags = GST_TRACER_VALUE_FLAGS_NONE;
   gboolean res;
 
-  g_return_val_if_fail (G_VALUE_TYPE (value) == GST_TYPE_STRUCTURE, FALSE);
+  if (G_VALUE_TYPE (value) != GST_TYPE_STRUCTURE) {
+    GST_WARNING ("expected field of type GstStructure, but %s is %s",
+        g_quark_to_string (field_id), G_VALUE_TYPE_NAME (value));
+    return FALSE;
+  }
 
   sub = gst_value_get_structure (value);
   gst_structure_get (sub, "type", G_TYPE_GTYPE, &type, "flags",
@@ -125,7 +120,7 @@ gst_tracer_record_build_format (GstTracerRecord * self)
   g_string_append_c (s, ';');
 
   self->format = g_string_free (s, FALSE);
-  GST_INFO ("new format string: %s", self->format);
+  GST_DEBUG ("new format string: %s", self->format);
   g_free (name);
 }
 
@@ -134,41 +129,12 @@ gst_tracer_record_dispose (GObject * object)
 {
   GstTracerRecord *self = GST_TRACER_RECORD (object);
 
+  if (self->spec) {
+    gst_structure_free (self->spec);
+    self->spec = NULL;
+  }
   g_free (self->format);
-}
-
-static void
-gst_tracer_record_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstTracerRecord *self = GST_TRACER_RECORD_CAST (object);
-
-  switch (prop_id) {
-    case PROP_SPEC:
-      self->spec = g_value_get_boxed (value);
-      gst_tracer_record_build_format (self);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_tracer_record_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstTracerRecord *self = GST_TRACER_RECORD_CAST (object);
-
-  switch (prop_id) {
-    case PROP_SPEC:
-      // TODO(ensonic): copy?
-      g_value_set_boxed (value, self->spec);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+  self->format = NULL;
 }
 
 static void
@@ -176,16 +142,7 @@ gst_tracer_record_class_init (GstTracerRecordClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class->set_property = gst_tracer_record_set_property;
-  gobject_class->get_property = gst_tracer_record_get_property;
   gobject_class->dispose = gst_tracer_record_dispose;
-
-  properties[PROP_SPEC] =
-      g_param_spec_boxed ("spec", "Spec", "Log record specification",
-      GST_TYPE_STRUCTURE,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
-
-  g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 }
 
 static void
@@ -195,17 +152,20 @@ gst_tracer_record_init (GstTracerRecord * self)
 
 /**
  * gst_tracer_record_new:
- * @spec: the record specification
+ * @name: name of new record, must end on ".class".
+ * @firstfield: name of first field to set
+ * @...: additional arguments
+
  *
  * Create a new tracer record. The record instance can be used to efficiently
  * log entries using gst_tracer_record_log().
  *
- * The name of the @spec #GstStructure must end on '.class'. This name without
- * the suffix will be used for the log records. The @spec must have a field for
- * each value that gets logged where the field name is the value name. The field
- * must be a nested structure describing the value. The sub structure must
- * contain a field called 'type' of %G_TYPE_GTYPE that contains the GType of the
- * value.
+ * The @name without the ".class" suffix will be used for the log records.
+ * There must be fields for each value that gets logged where the field name is
+ * the value name. The field must be a #GstStructure describing the value. The
+ * sub structure must contain a field called 'type' of %G_TYPE_GTYPE that
+ * contains the GType of the value. The resulting #GstTracerRecord will take
+ * ownership of the field structures.
  *
  * The way to deal with optional values is to log an additional boolean before
  * the optional field, that if %TRUE signals that the optional field is valid
@@ -221,9 +181,50 @@ gst_tracer_record_init (GstTracerRecord * self)
  * Returns: a new #GstTracerRecord
  */
 GstTracerRecord *
-gst_tracer_record_new (GstStructure * spec)
+gst_tracer_record_new (const gchar * name, const gchar * firstfield, ...)
 {
-  return g_object_new (GST_TYPE_TRACER_RECORD, "spec", spec, NULL);
+  GstTracerRecord *self;
+  GstStructure *structure;
+  va_list varargs;
+
+  va_start (varargs, firstfield);
+  structure = gst_structure_new_empty (name);
+  if (structure) {
+    gchar *err = NULL;
+    GType type;
+    GQuark id;
+
+    while (firstfield) {
+      GValue val = { 0, };
+
+      id = g_quark_from_string (firstfield);
+      type = va_arg (varargs, GType);
+
+      /* all fields passed here must be GstStructures which we take over */
+      if (type != GST_TYPE_STRUCTURE) {
+        GST_WARNING ("expected field of type GstStructure, but %s is %s",
+            firstfield, g_type_name (type));
+      }
+
+      G_VALUE_COLLECT_INIT (&val, type, varargs, G_VALUE_NOCOPY_CONTENTS, &err);
+      if (G_UNLIKELY (err)) {
+        g_critical ("%s", err);
+        break;
+      }
+      /* see boxed_proxy_collect_value */
+      val.data[1].v_uint &= ~G_VALUE_NOCOPY_CONTENTS;
+      gst_structure_id_take_value (structure, id, &val);
+
+      firstfield = va_arg (varargs, gchar *);
+    }
+  }
+  va_end (varargs);
+
+  self = g_object_newv (GST_TYPE_TRACER_RECORD, 0, NULL);
+  self->spec = structure;
+  gst_tracer_record_build_format (self);
+
+  return self;
 }
 
 #ifndef GST_DISABLE_GST_DEBUG

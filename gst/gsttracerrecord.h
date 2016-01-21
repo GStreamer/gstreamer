@@ -87,7 +87,7 @@ typedef enum
 
 #ifdef GST_USE_UNSTABLE_API
 
-GstTracerRecord * gst_tracer_record_new (GstStructure *spec);
+GstTracerRecord * gst_tracer_record_new (const gchar * name, const gchar * firstfield, ...);
 
 #ifndef GST_DISABLE_GST_DEBUG
 void              gst_tracer_record_log (GstTracerRecord *self, ...);

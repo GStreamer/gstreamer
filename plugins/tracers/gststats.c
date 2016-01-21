@@ -518,7 +518,7 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
 {
   /* announce trace formats */
   /* *INDENT-OFF* */
-  tr_buffer = gst_tracer_record_new (gst_structure_new ("buffer.class",
+  tr_buffer = gst_tracer_record_new ("buffer.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
@@ -571,8 +571,8 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           "type", G_TYPE_GTYPE, GST_TYPE_BUFFER_FLAGS,
           "description", G_TYPE_STRING, "flags of the buffer",
           NULL),
-      NULL));
-  tr_event = gst_tracer_record_new (gst_structure_new ("event.class",
+      NULL);
+  tr_event = gst_tracer_record_new ("event.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
@@ -593,8 +593,8 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "description", G_TYPE_STRING, "name of the event",
           NULL),
-      NULL));
-  tr_message = gst_tracer_record_new (gst_structure_new ("message.class",
+      NULL);
+  tr_message = gst_tracer_record_new ("message.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
@@ -615,9 +615,8 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           "type", G_TYPE_GTYPE, GST_TYPE_STRUCTURE,
           "description", G_TYPE_STRING, "message structure",
           NULL),
-      NULL));
-  tr_element_query = gst_tracer_record_new (gst_structure_new (
-      "element-query.class",
+      NULL);
+  tr_element_query = gst_tracer_record_new ("element-query.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
@@ -634,8 +633,8 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "description", G_TYPE_STRING, "name of the query",
           NULL),
-      NULL));
-  tr_query = gst_tracer_record_new (gst_structure_new ("query.class",
+      NULL);
+  tr_query = gst_tracer_record_new ("query.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
@@ -673,10 +672,8 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           "description", G_TYPE_STRING, "query result",
           "flags", GST_TYPE_TRACER_VALUE_FLAGS, GST_TRACER_VALUE_FLAGS_OPTIONAL,
           NULL),
-      /* TODO(ensonic): "buffer-flags" */
-      NULL));
-  tr_new_element = gst_tracer_record_new (gst_structure_new (
-      "new-element.class",
+      NULL);
+  tr_new_element = gst_tracer_record_new ("new-element.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
@@ -705,8 +702,8 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           "type", G_TYPE_GTYPE, G_TYPE_BOOLEAN,
           "description", G_TYPE_STRING, "is element a bin",
           NULL),
-      NULL));
-  tr_new_pad = gst_tracer_record_new (gst_structure_new ("new-pad.class",
+      NULL);
+  tr_new_pad = gst_tracer_record_new ("new-pad.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
@@ -735,7 +732,7 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           "type", G_TYPE_GTYPE, GST_TYPE_PAD_DIRECTION,
           "description", G_TYPE_STRING, "ipad direction",
           NULL),
-      NULL));
+      NULL);
   /* *INDENT-ON* */
 }
 

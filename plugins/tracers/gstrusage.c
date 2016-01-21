@@ -284,7 +284,7 @@ gst_rusage_tracer_class_init (GstRUsageTracerClass * klass)
 
   /* announce trace formats */
   /* *INDENT-OFF* */
-  tr_thread = gst_tracer_record_new (gst_structure_new ("thread-rusage.class",
+  tr_thread = gst_tracer_record_new ("thread-rusage.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
@@ -313,8 +313,8 @@ gst_rusage_tracer_class_init (GstRUsageTracerClass * klass)
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
-      NULL));
-  tr_proc = gst_tracer_record_new (gst_structure_new ("proc-rusage.class",
+      NULL);
+  tr_proc = gst_tracer_record_new ("proc-rusage.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PROCESS,
@@ -343,7 +343,7 @@ gst_rusage_tracer_class_init (GstRUsageTracerClass * klass)
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
-      NULL));
+      NULL);
   /* *INDENT-ON* */
 }
 
