@@ -2543,7 +2543,9 @@ typedef struct
 {
   GstHarnessThread t;
 
-  GstEvent *event;
+  GstHarnessPrepareEventFunc func;
+  gpointer data;
+  GDestroyNotify notify;
 } GstHarnessPushEventThread;
 
 typedef struct
@@ -2604,7 +2606,8 @@ static void
 gst_harness_push_event_thread_free (GstHarnessPushEventThread * t)
 {
   if (t != NULL) {
-    gst_event_replace (&t->event, NULL);
+    if (t->notify != NULL)
+      t->notify (t->data);
     g_slice_free (GstHarnessPushEventThread, t);
   }
 }
@@ -2775,7 +2778,7 @@ gst_harness_stress_event_func (GstHarnessThread * t)
   guint count = 0;
 
   while (t->running) {
-    gst_harness_push_event (t->h, gst_event_ref (pet->event));
+    gst_harness_push_event (t->h, pet->func (t->h, pet->data));
 
     count++;
     g_usleep (t->sleep);
@@ -2790,7 +2793,7 @@ gst_harness_stress_upstream_event_func (GstHarnessThread * t)
   guint count = 0;
 
   while (t->running) {
-    gst_harness_push_upstream_event (t->h, gst_event_ref (pet->event));
+    gst_harness_push_upstream_event (t->h, pet->func (t->h, pet->data));
 
     count++;
     g_usleep (t->sleep);
@@ -2934,6 +2937,13 @@ gst_harness_ref_buffer (GstHarness * h, gpointer data)
   return gst_buffer_ref (GST_BUFFER_CAST (data));
 }
 
+static GstEvent *
+gst_harness_ref_event (GstHarness * h, gpointer data)
+{
+  (void) h;
+  return gst_event_ref (GST_EVENT_CAST (data));
+}
+
 /**
  * gst_harness_stress_push_buffer_start_full: (skip)
  * @h: a #GstHarness
@@ -3020,11 +3030,43 @@ GstHarnessThread *
 gst_harness_stress_push_event_start_full (GstHarness * h,
     GstEvent * event, gulong sleep)
 {
+  return gst_harness_stress_push_event_with_cb_start_full (h,
+      gst_harness_ref_event, gst_event_ref (event),
+      (GDestroyNotify) gst_event_unref, sleep);
+}
+
+/**
+ * gst_harness_stress_push_event_with_cb_start_full: (skip)
+ * @h: a #GstHarness
+ * @func: a #GstHarnessPrepareEventFunc function called before every iteration
+ * to prepare / create a #GstEvent for pushing
+ * @data: a #gpointer with data to the #GstHarnessPrepareEventFunc function
+ * @notify: a #GDestroyNotify that is called when thread is stopped
+ * @sleep: a #gulong specifying how long to sleep in (microseconds) for
+ * each call to gst_pad_push
+ *
+ * Push a #GstEvent returned by @func onto the harnessed #GstElement sinkpad
+ * in intervals of @sleep microseconds.
+ *
+ * MT safe.
+ *
+ * Returns: a #GstHarnessThread
+ *
+ * Since: 1.8
+ */
+GstHarnessThread *
+gst_harness_stress_push_event_with_cb_start_full (GstHarness * h,
+      GstHarnessPrepareEventFunc func, gpointer data, GDestroyNotify notify,
+      gulong sleep)
+{
   GstHarnessPushEventThread *t = g_slice_new0 (GstHarnessPushEventThread);
   gst_harness_thread_init (&t->t,
       (GDestroyNotify) gst_harness_push_event_thread_free, h, sleep);
 
-  t->event = gst_event_ref (event);
+  t->func = func;
+  t->data = data;
+  t->notify = notify;
+
   GST_HARNESS_THREAD_START (event, t);
   return &t->t;
 }
@@ -3049,11 +3091,43 @@ GstHarnessThread *
 gst_harness_stress_push_upstream_event_start_full (GstHarness * h,
     GstEvent * event, gulong sleep)
 {
+  return gst_harness_stress_push_upstream_event_with_cb_start_full (h,
+      gst_harness_ref_event, gst_event_ref (event),
+      (GDestroyNotify) gst_event_unref, sleep);
+}
+
+/**
+ * gst_harness_stress_push_upstream_event_with_cb_start_full: (skip)
+ * @h: a #GstHarness
+ * @func: a #GstHarnessPrepareEventFunc function called before every iteration
+ * to prepare / create a #GstEvent for pushing
+ * @data: a #gpointer with data to the #GstHarnessPrepareEventFunc function
+ * @notify: a #GDestroyNotify that is called when thread is stopped
+ * @sleep: a #gulong specifying how long to sleep in (microseconds) for
+ * each call to gst_pad_push
+ *
+ * Push a #GstEvent returned by @func onto the harnessed #GstElement srcpad
+ * in intervals of @sleep microseconds.
+ *
+ * MT safe.
+ *
+ * Returns: a #GstHarnessThread
+ *
+ * Since: 1.8
+ */
+GstHarnessThread *
+gst_harness_stress_push_upstream_event_with_cb_start_full (GstHarness * h,
+    GstHarnessPrepareEventFunc func, gpointer data, GDestroyNotify notify,
+    gulong sleep)
+{
   GstHarnessPushEventThread *t = g_slice_new0 (GstHarnessPushEventThread);
   gst_harness_thread_init (&t->t,
       (GDestroyNotify) gst_harness_push_event_thread_free, h, sleep);
 
-  t->event = gst_event_ref (event);
+  t->func = func;
+  t->data = data;
+  t->notify = notify;
+
   GST_HARNESS_THREAD_START (upstream_event, t);
   return &t->t;
 }
