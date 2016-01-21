@@ -206,7 +206,7 @@ gst_ahc_src_getcaps (GstBaseSrc * src)
       sizes = g_list_sort (sizes, (GCompareFunc) _compare_sizes);
       ranges = gst_ahc_parameters_get_supported_preview_fps_range (params);
       ranges = g_list_sort (ranges, (GCompareFunc) _compare_ranges);
-      GST_WARNING_OBJECT (self, "Supported preview formats:");
+      GST_DEBUG_OBJECT (self, "Supported preview formats:");
 
       for (i = formats; i; i = i->next) {
         int f = GPOINTER_TO_INT (i->data);
@@ -218,17 +218,17 @@ gst_ahc_src_getcaps (GstBaseSrc * src)
 
         /* Can't use switch/case because the values are not constants */
         if (f == ImageFormat_NV16) {
-          GST_WARNING_OBJECT (self, "    NV16 (%d)", f);
+          GST_DEBUG_OBJECT (self, "    NV16 (%d)", f);
           format = gst_structure_new ("video/x-raw-yuv",
               "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('N', 'V', '1', '6'),
               NULL);
         } else if (f == ImageFormat_NV21) {
-          GST_WARNING_OBJECT (self, "    NV21 (%d)", f);
+          GST_DEBUG_OBJECT (self, "    NV21 (%d)", f);
           format = gst_structure_new ("video/x-raw-yuv",
               "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('N', 'V', '2', '1'),
               NULL);
         } else if (f == ImageFormat_RGB_565) {
-          GST_WARNING_OBJECT (self, "    RGB565 (%d)", f);
+          GST_DEBUG_OBJECT (self, "    RGB565 (%d)", f);
           format = gst_structure_new ("video/x-raw-rgb",
               "bpp", G_TYPE_INT, 16,
               "depth", G_TYPE_INT, 16,
@@ -237,12 +237,12 @@ gst_ahc_src_getcaps (GstBaseSrc * src)
               "blue_mask", G_TYPE_INT, 0x001f,
               "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, NULL);
         } else if (f == ImageFormat_YUY2) {
-          GST_WARNING_OBJECT (self, "    YUY2 (%d)", f);
+          GST_DEBUG_OBJECT (self, "    YUY2 (%d)", f);
           format = gst_structure_new ("video/x-raw-yuv",
               "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'),
               NULL);
         } else if (f == ImageFormat_YV12) {
-          GST_WARNING_OBJECT (self, "    YV12 (%d)", f);
+          GST_DEBUG_OBJECT (self, "    YV12 (%d)", f);
           format = gst_structure_new ("video/x-raw-yuv",
               "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('Y', 'V', '1', '2'),
               NULL);
@@ -279,17 +279,17 @@ gst_ahc_src_getcaps (GstBaseSrc * src)
           gst_structure_free (format);
         }
       }
-      GST_WARNING_OBJECT (self, "Supported preview sizes:");
+      GST_DEBUG_OBJECT (self, "Supported preview sizes:");
       for (i = sizes; i; i = i->next) {
         GstAHCSize *s = i->data;
 
-        GST_WARNING_OBJECT (self, "    %dx%d", s->width, s->height);
+        GST_DEBUG_OBJECT (self, "    %dx%d", s->width, s->height);
       }
-      GST_WARNING_OBJECT (self, "Supported preview fps range:");
+      GST_DEBUG_OBJECT (self, "Supported preview fps range:");
       for (i = ranges; i; i = i->next) {
         int *range = i->data;
 
-        GST_WARNING_OBJECT (self, "    [%d, %d]", range[0], range[1]);
+        GST_DEBUG_OBJECT (self, "    [%d, %d]", range[0], range[1]);
       }
 
       gst_ahc_parameters_supported_preview_formats_free (formats);
@@ -407,7 +407,7 @@ gst_ahc_src_setcaps (GstBaseSrc * src, GstCaps * caps)
     gst_ahc_parameters_set_preview_fps_range (params, self->fps_min,
         self->fps_max);
 
-    GST_WARNING_OBJECT (self, "Setting camera parameters : %d %dx%d @ [%f, %f]",
+    GST_DEBUG_OBJECT (self, "Setting camera parameters : %d %dx%d @ [%f, %f]",
         fmt, width, height, self->fps_min / 1000.0, self->fps_max / 1000.0);
 
     if (!gst_ah_camera_set_parameters (self->camera, params)) {
@@ -571,12 +571,12 @@ gst_ahc_src_on_error (int error, gpointer user_data)
 static gboolean
 gst_ahc_src_open (GstAHCSrc * self)
 {
-  GST_WARNING_OBJECT (self, "Openning camera");
+  GST_DEBUG_OBJECT (self, "Openning camera");
 
   self->camera = gst_ah_camera_open (0);
 
   if (self->camera) {
-    GST_WARNING_OBJECT (self, "Opened camera");
+    GST_DEBUG_OBJECT (self, "Opened camera");
 
     self->texture = gst_ag_surfacetexture_new (0);
     gst_ah_camera_set_preview_texture (self->camera, self->texture);
@@ -612,19 +612,19 @@ gst_ahc_src_change_state (GstElement * element, GstStateChange transition)
       gint num_cams = gst_ah_camera_get_number_of_cameras ();
       gint i;
 
-      GST_WARNING_OBJECT (self, "Found %d cameras on the system", num_cams);
+      GST_DEBUG_OBJECT (self, "Found %d cameras on the system", num_cams);
 
       for (i = 0; i < num_cams; i++) {
         GstAHCCameraInfo info;
         if (gst_ah_camera_get_camera_info (i, &info)) {
-          GST_WARNING_OBJECT (self, "Camera info for %d", i);
-          GST_WARNING_OBJECT (self, "    Facing: %s (%d)",
+          GST_DEBUG_OBJECT (self, "Camera info for %d", i);
+          GST_DEBUG_OBJECT (self, "    Facing: %s (%d)",
               info.facing == CameraInfo_CAMERA_FACING_BACK ? "Back" : "Front",
               info.facing);
-          GST_WARNING_OBJECT (self, "    Orientation: %d degrees",
+          GST_DEBUG_OBJECT (self, "    Orientation: %d degrees",
               info.orientation);
         } else {
-          GST_WARNING_OBJECT (self, "Error getting camera info for %d", i);
+          GST_DEBUG_OBJECT (self, "Error getting camera info for %d", i);
         }
       }
 
@@ -661,7 +661,7 @@ gst_ahc_src_start (GstBaseSrc * bsrc)
 {
   GstAHCSrc *self = GST_AHC_SRC (bsrc);
 
-  GST_WARNING_OBJECT (self, "Starting preview");
+  GST_DEBUG_OBJECT (self, "Starting preview");
   if (self->camera) {
     self->previous_ts = GST_CLOCK_TIME_NONE;
     self->fps_min = self->fps_max = self->width = self->height = 0;
@@ -679,7 +679,7 @@ gst_ahc_src_stop (GstBaseSrc * bsrc)
 {
   GstAHCSrc *self = GST_AHC_SRC (bsrc);
 
-  GST_WARNING_OBJECT (self, "Stopping preview");
+  GST_DEBUG_OBJECT (self, "Stopping preview");
   if (self->camera) {
     gst_data_queue_flush (self->queue);
     self->start = FALSE;
@@ -695,7 +695,7 @@ gst_ahc_src_unlock (GstBaseSrc * bsrc)
 {
   GstAHCSrc *self = GST_AHC_SRC (bsrc);
 
-  GST_WARNING_OBJECT (self, "Unlocking create");
+  GST_DEBUG_OBJECT (self, "Unlocking create");
   gst_data_queue_set_flushing (self->queue, TRUE);
 
   return TRUE;
@@ -706,7 +706,7 @@ gst_ahc_src_unlock_stop (GstBaseSrc * bsrc)
 {
   GstAHCSrc *self = GST_AHC_SRC (bsrc);
 
-  GST_WARNING_OBJECT (self, "Stopping unlock");
+  GST_DEBUG_OBJECT (self, "Stopping unlock");
   gst_data_queue_set_flushing (self->queue, FALSE);
 
   return TRUE;
