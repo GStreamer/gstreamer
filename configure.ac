@@ -320,7 +320,7 @@ else
       dnl with static linking we can't use the .a archive directly as they would
       dnl be included in the final libgstlibav.a as a file and won't be usable.
       dnl libav*.a must be copied to the final destination too
-      LIBAV_LIBS="-lavformat -lavcodec -lswresample -lavutil"
+      LIBAV_LIBS="-lavformat -lavcodec -lswresample -lavutil -lavfilter"
   else
       dnl libgstlibav.la: libs to statically link to
       LIBAV_LIBS="$LIBAV_DEPS"
