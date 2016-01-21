@@ -1203,31 +1203,24 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
 }
 
 static gboolean
-gst_v4l2_object_v4l2fourcc_is_yuv (guint32 fourcc)
+gst_v4l2_object_v4l2fourcc_is_rgb (guint32 fourcc)
 {
   gboolean ret = FALSE;
 
   switch (fourcc) {
-    case V4L2_PIX_FMT_NV12:
-    case V4L2_PIX_FMT_NV12M:
-    case V4L2_PIX_FMT_NV12MT:
-    case V4L2_PIX_FMT_NV21:
-    case V4L2_PIX_FMT_NV21M:
-    case V4L2_PIX_FMT_YVU410:
-    case V4L2_PIX_FMT_YUV410:
-    case V4L2_PIX_FMT_YUV420:
-    case V4L2_PIX_FMT_YUV420M:
-    case V4L2_PIX_FMT_YUYV:
-    case V4L2_PIX_FMT_YVU420:
-    case V4L2_PIX_FMT_UYVY:
-    case V4L2_PIX_FMT_YUV411P:
-    case V4L2_PIX_FMT_YUV422P:
-    case V4L2_PIX_FMT_YVYU:
-    case V4L2_PIX_FMT_NV16:
-    case V4L2_PIX_FMT_NV16M:
-    case V4L2_PIX_FMT_NV61:
-    case V4L2_PIX_FMT_NV61M:
-    case V4L2_PIX_FMT_NV24:
+    case V4L2_PIX_FMT_XRGB555:
+    case V4L2_PIX_FMT_RGB555:
+    case V4L2_PIX_FMT_XRGB555X:
+    case V4L2_PIX_FMT_RGB555X:
+    case V4L2_PIX_FMT_RGB565:
+    case V4L2_PIX_FMT_RGB24:
+    case V4L2_PIX_FMT_BGR24:
+    case V4L2_PIX_FMT_XRGB32:
+    case V4L2_PIX_FMT_RGB32:
+    case V4L2_PIX_FMT_XBGR32:
+    case V4L2_PIX_FMT_BGR32:
+    case V4L2_PIX_FMT_ABGR32:
+    case V4L2_PIX_FMT_ARGB32:
       ret = TRUE;
       break;
     default:
@@ -1963,10 +1956,6 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
   GValue colorimetry = G_VALUE_INIT;
   GstVideoColorimetry cinfo;
 
-  /* Don't expose colorimetry unless this is a YUV format */
-  if (!gst_v4l2_object_v4l2fourcc_is_yuv (pixelformat))
-    return;
-
   memset (&fmt, 0, sizeof (fmt));
   fmt.type = v4l2object->type;
   fmt.fmt.pix.width = width;
@@ -1993,6 +1982,12 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
 
     if (gst_v4l2_object_get_colorspace (colorspace, range, matrix, transfer,
             &cinfo)) {
+      /* Set identity matrix for R'G'B' formats to avoid creating
+       * confusion. This though is cosmetic as it's now properly ignored by
+       * the video info API and videoconvert. */
+      if (gst_v4l2_object_v4l2fourcc_is_rgb (pixelformat))
+        cinfo.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+
       g_value_init (&colorimetry, G_TYPE_STRING);
       g_value_take_string (&colorimetry,
           gst_video_colorimetry_to_string (&cinfo));
