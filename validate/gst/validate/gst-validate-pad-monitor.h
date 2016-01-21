@@ -63,6 +63,7 @@ struct _GstValidatePadMonitor {
 
   GstPadChainFunction chain_func;
   GstPadEventFunction event_func;
+  GstPadEventFullFunction event_full_func;
   GstPadGetRangeFunction getrange_func;
   GstPadQueryFunction query_func;
   GstPadActivateModeFunction activatemode_func;

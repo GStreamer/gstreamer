@@ -1675,12 +1675,12 @@ gst_validate_monitor_find_next_buffer (GstValidatePadMonitor * pad_monitor)
     pad_monitor->current_buf = tmp;
 }
 
-static gboolean
+static GstFlowReturn
 gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
     pad_monitor, GstObject * parent, GstEvent * event,
     GstPadEventFunction handler)
 {
-  gboolean ret = TRUE;
+  GstFlowReturn ret = GST_FLOW_OK;
   const GstSegment *segment;
   guint32 seqnum = gst_event_get_seqnum (event);
   GstPad *pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor);
@@ -1785,7 +1785,12 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
   gst_validate_pad_monitor_event_overrides (pad_monitor, event);
   if (handler) {
     gst_event_ref (event);
-    ret = pad_monitor->event_func (pad, parent, event);
+    if (pad_monitor->event_full_func)
+      ret = pad_monitor->event_full_func (pad, parent, event);
+    else if (pad_monitor->event_func (pad, parent, event))
+      ret = GST_FLOW_OK;
+    else
+      ret = GST_FLOW_ERROR;
   }
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
@@ -1793,7 +1798,7 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
   /* post checks */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
-      if (ret) {
+      if (ret == GST_FLOW_OK) {
         if (!pad_monitor->has_segment
             && pad_monitor->segment.format != segment->format) {
           gst_segment_init (&pad_monitor->segment, segment->format);
@@ -2078,12 +2083,14 @@ gst_validate_pad_monitor_event_is_tracked (GstValidatePadMonitor * monitor,
 }
 
 static gboolean
-gst_validate_pad_monitor_sink_event_func (GstPad * pad, GstObject * parent,
+gst_validate_pad_monitor_sink_event_full_func (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
   GstValidatePadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "validate-monitor");
   gboolean ret;
+
+  GST_ERROR_OBJECT (pad, "event %s", GST_EVENT_TYPE_NAME (event));
 
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
@@ -2107,6 +2114,18 @@ gst_validate_pad_monitor_sink_event_func (GstPad * pad, GstObject * parent,
   GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
   GST_VALIDATE_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);
   return ret;
+}
+
+static gboolean
+gst_validate_pad_monitor_sink_event_func (GstPad * pad, GstObject * parent,
+    GstEvent * event)
+{
+  GST_ERROR_OBJECT (pad, "event %s", GST_EVENT_TYPE_NAME (event));
+
+  if (gst_validate_pad_monitor_sink_event_full_func (pad, parent,
+          event) == GST_FLOW_OK)
+    return TRUE;
+  return FALSE;
 }
 
 static gboolean
@@ -2526,6 +2545,7 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
   pad_monitor->pad = pad;
 
   pad_monitor->event_func = GST_PAD_EVENTFUNC (pad);
+  pad_monitor->event_full_func = GST_PAD_EVENTFULLFUNC (pad);
   pad_monitor->query_func = GST_PAD_QUERYFUNC (pad);
   pad_monitor->activatemode_func = GST_PAD_ACTIVATEMODEFUNC (pad);
   if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
@@ -2534,7 +2554,12 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
     if (pad_monitor->chain_func)
       gst_pad_set_chain_function (pad, gst_validate_pad_monitor_chain_func);
 
-    gst_pad_set_event_function (pad, gst_validate_pad_monitor_sink_event_func);
+    if (pad_monitor->event_full_func)
+      gst_pad_set_event_full_function (pad,
+          gst_validate_pad_monitor_sink_event_full_func);
+    else
+      gst_pad_set_event_function (pad,
+          gst_validate_pad_monitor_sink_event_func);
   } else {
     pad_monitor->getrange_func = GST_PAD_GETRANGEFUNC (pad);
     if (pad_monitor->getrange_func)
