@@ -68,6 +68,10 @@ GST_DEBUG_CATEGORY (pango_debug);
 #define DEFAULT_PROP_COLOR      0xffffffff
 #define DEFAULT_PROP_OUTLINE_COLOR 0xff000000
 #define DEFAULT_PROP_SHADING_VALUE    80
+#define DEFAULT_PROP_TEXT_X 0
+#define DEFAULT_PROP_TEXT_Y 0
+#define DEFAULT_PROP_TEXT_WIDTH 1
+#define DEFAULT_PROP_TEXT_HEIGHT 1
 
 #define MINIMUM_OUTLINE_OFFSET 1.0
 #define DEFAULT_SCALE_BASIS    640
@@ -97,6 +101,10 @@ enum
   PROP_DRAW_SHADOW,
   PROP_DRAW_OUTLINE,
   PROP_OUTLINE_COLOR,
+  PROP_TEXT_X,
+  PROP_TEXT_Y,
+  PROP_TEXT_WIDTH,
+  PROP_TEXT_HEIGHT,
   PROP_LAST
 };
 
@@ -386,9 +394,50 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DELTAY,
       g_param_spec_int ("deltay", "Y position modifier",
-          "Shift Y position up or down. Unit is pixels.", G_MININT, G_MAXINT,
-          GST_PARAM_CONTROLLABLE | DEFAULT_PROP_DELTAY,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Shift Y position up or down. Unit is pixels.",
+          G_MININT, G_MAXINT, DEFAULT_PROP_DELTAY,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstBaseTextOverlay:text-x:
+   *
+   * Resulting X position of font rendering.
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TEXT_X,
+      g_param_spec_int ("text-x", "horizontal position.",
+          "Resulting X position of font rendering.", -G_MAXINT,
+          G_MAXINT, DEFAULT_PROP_TEXT_X, G_PARAM_READABLE));
+
+  /**
+   * GstBaseTextOverlay:text-y:
+   *
+   * Resulting Y position of font rendering.
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TEXT_Y,
+      g_param_spec_int ("text-y", "vertical position",
+          "Resulting X position of font rendering.", -G_MAXINT,
+          G_MAXINT, DEFAULT_PROP_TEXT_Y, G_PARAM_READABLE));
+
+  /**
+   * GstBaseTextOverlay:text-width:
+   *
+   * Resulting width of font rendering.
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TEXT_WIDTH,
+      g_param_spec_uint ("text-width", "width",
+          "Resulting width of font rendering",
+          0, G_MAXINT, DEFAULT_PROP_TEXT_WIDTH, G_PARAM_READABLE));
+
+  /**
+   * GstBaseTextOverlay:text-height:
+   *
+   * Resulting height of font rendering.
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TEXT_HEIGHT,
+      g_param_spec_uint ("text-height", "height",
+          "Resulting height of font rendering", 0,
+          G_MAXINT, DEFAULT_PROP_TEXT_HEIGHT, G_PARAM_READABLE));
+
   /**
    * GstBaseTextOverlay:xpos:
    *
@@ -643,8 +692,11 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
   overlay->window_width = 1;
   overlay->window_height = 1;
 
-  overlay->image_width = 1;
-  overlay->image_height = 1;
+  overlay->text_width = DEFAULT_PROP_TEXT_WIDTH;
+  overlay->text_height = DEFAULT_PROP_TEXT_HEIGHT;
+
+  overlay->text_x = DEFAULT_PROP_TEXT_X;
+  overlay->text_y = DEFAULT_PROP_TEXT_Y;
 
   overlay->render_width = 1;
   overlay->render_height = 1;
@@ -1092,6 +1144,18 @@ gst_base_text_overlay_get_property (GObject * object, guint prop_id,
       g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       break;
     }
+    case PROP_TEXT_X:
+      g_value_set_int (value, overlay->text_x);
+      break;
+    case PROP_TEXT_Y:
+      g_value_set_int (value, overlay->text_y);
+      break;
+    case PROP_TEXT_WIDTH:
+      g_value_set_uint (value, overlay->text_width);
+      break;
+    case PROP_TEXT_HEIGHT:
+      g_value_set_uint (value, overlay->text_height);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1462,6 +1526,9 @@ gst_base_text_overlay_get_pos (GstBaseTextOverlay * overlay,
   }
   *ypos += overlay->deltay;
 
+  overlay->text_x = *xpos;
+  overlay->text_y = *ypos;
+
   GST_DEBUG_OBJECT (overlay, "Placing overlay at (%d, %d)", *xpos, *ypos);
 }
 
@@ -1471,7 +1538,7 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
   gint xpos, ypos;
   GstVideoOverlayRectangle *rectangle;
 
-  if (overlay->text_image && overlay->image_width != 1) {
+  if (overlay->text_image && overlay->text_width != 1) {
     gint render_width, render_height;
 
     gst_base_text_overlay_get_pos (overlay, &xpos, &ypos);
@@ -1482,12 +1549,12 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
     GST_DEBUG ("updating composition for '%s' with window size %dx%d, "
         "buffer size %dx%d, render size %dx%d and position (%d, %d)",
         overlay->default_text, overlay->window_width, overlay->window_height,
-        overlay->image_width, overlay->image_height, render_width,
+        overlay->text_width, overlay->text_height, render_width,
         render_height, xpos, ypos);
 
     gst_buffer_add_video_meta (overlay->text_image, GST_VIDEO_FRAME_FLAG_NONE,
         GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB,
-        overlay->image_width, overlay->image_height);
+        overlay->text_width, overlay->text_height);
 
     rectangle = gst_video_overlay_rectangle_new_raw (overlay->text_image,
         xpos, ypos, render_width, render_height,
@@ -1796,9 +1863,9 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   cairo_surface_destroy (surface);
   gst_buffer_unmap (buffer, &map);
   if (width != 0)
-    overlay->image_width = width;
+    overlay->text_width = width;
   if (height != 0)
-    overlay->image_height = height;
+    overlay->text_height = height;
   g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
 
   gst_base_text_overlay_set_composition (overlay);
@@ -2102,7 +2169,7 @@ gst_base_text_overlay_push_frame (GstBaseTextOverlay * overlay,
     gst_base_text_overlay_get_pos (overlay, &xpos, &ypos);
 
     gst_base_text_overlay_shade_background (overlay, &frame,
-        xpos, xpos + overlay->image_width, ypos, ypos + overlay->image_height);
+        xpos, xpos + overlay->text_width, ypos, ypos + overlay->text_height);
   }
 
   gst_video_overlay_composition_blend (overlay->composition, &frame);

@@ -184,8 +184,12 @@ struct _GstBaseTextOverlay {
     gdouble                  render_scale;
 
     /* dimension of text_image, the physical dimension */
-    gint                     image_width;
-    gint                     image_height;
+    guint                    text_width;
+    guint                    text_height;
+
+    /* position of rendering in image coordinates */
+    gint                     text_x;
+    gint                     text_y;
 
     /* window dimension, reported in the composition meta params. This is set
      * to stream width, height if missing */
