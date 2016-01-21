@@ -5,6 +5,7 @@ noinst_LTLIBRARIES = libgstgl-egl.la
 libgstgl_egl_la_SOURCES = \
 	gstgldisplay_egl.c \
 	gstglcontext_egl.c \
+	gstglmemoryegl.c \
 	gsteglimagememory.c
 
 noinst_HEADERS =
@@ -13,6 +14,7 @@ libgstgl_eglincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl/egl
 libgstgl_eglinclude_HEADERS = \
 	gstgldisplay_egl.h \
 	gstglcontext_egl.h \
+	gstglmemoryegl.h \
 	gsteglimagememory.h \
 	gstegl.h
 
