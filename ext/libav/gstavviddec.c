@@ -2098,6 +2098,8 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
      * msmpeg4v3 same, as it outperforms divxdec for divx3 playback.
      * VC1/WMV3 are not working and thus unpreferred for now. */
     switch (in_plugin->id) {
+      case AV_CODEC_ID_MPEG1VIDEO:
+      case AV_CODEC_ID_MPEG2VIDEO:
       case AV_CODEC_ID_MPEG4:
       case AV_CODEC_ID_MSMPEG4V3:
       case AV_CODEC_ID_H264:
