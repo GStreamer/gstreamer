@@ -2936,12 +2936,11 @@ gst_harness_stress_push_buffer_start_full (GstHarness * h,
  * @func: a #GstHarnessPrepareBufferFunc function called before every iteration
  * to prepare / create a #GstBuffer for pushing
  * @data: a #gpointer with data to the #GstHarnessPrepareBufferFunc function
- * @notify: a #GDestroyNotify that is called for every push to allow cleaning
- * up the #GstBuffer. (like gst_buffer_unref)
+ * @notify: a #GDestroyNotify that is called when thread is stopped
  * @sleep: a #gulong specifying how long to sleep in (microseconds) for
  * each call to gst_pad_push
  *
- * Push a #GstBuffer in intervals of @sleep microseconds.
+ * Push a #GstBuffer returned by @func in intervals of @sleep microseconds.
  *
  * MT safe.
  *
@@ -3007,9 +3006,6 @@ gst_harness_stress_push_event_start_full (GstHarness * h,
  *
  * Push the @event onto the harnessed #GstElement srcpad in intervals of
  * @sleep microseconds.
- * Pushing events should generally be OOB events.
- * If you need serialized events, you may use a custom stress thread which
- * both pushes buffers and events.
  *
  * MT safe.
  *
