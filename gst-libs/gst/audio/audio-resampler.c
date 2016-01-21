@@ -379,24 +379,6 @@ inner_product_gint16_1_c (gint16 * o, const gint16 * a, const gint16 * b,
 }
 
 static inline void
-inner_product_gint16_2_c (gint16 * o, const gint16 * a, const gint16 * b,
-    gint len)
-{
-  gint i;
-  gint32 r[2] = { 0, 0 };
-
-  for (i = 0; i < len; i++) {
-    r[0] += (gint32) a[2 * i] * (gint32) b[i];
-    r[1] += (gint32) a[2 * i + 1] * (gint32) b[i];
-  }
-  r[0] = (r[0] + (1 << (PRECISION_S16 - 1))) >> PRECISION_S16;
-  r[1] = (r[1] + (1 << (PRECISION_S16 - 1))) >> PRECISION_S16;
-  o[0] = CLAMP (r[0], -(1L << 15), (1L << 15) - 1);
-  o[1] = CLAMP (r[1], -(1L << 15), (1L << 15) - 1);
-}
-
-
-static inline void
 inner_product_gint32_1_c (gint32 * o, const gint32 * a, const gint32 * b,
     gint len)
 {
@@ -424,21 +406,6 @@ inner_product_gfloat_1_c (gfloat * o, const gfloat * a, const gfloat * b,
 }
 
 static inline void
-inner_product_gfloat_2_c (gfloat * o, const gfloat * a, const gfloat * b,
-    gint len)
-{
-  gint i;
-  gfloat r[2] = { 0.0, 0.0 };
-
-  for (i = 0; i < len; i++) {
-    r[0] += a[2 * i] * b[i];
-    r[1] += a[2 * i + 1] * b[i];
-  }
-  o[0] = r[0];
-  o[1] = r[1];
-}
-
-static inline void
 inner_product_gdouble_1_c (gdouble * o, const gdouble * a, const gdouble * b,
     gint len)
 {
@@ -449,21 +416,6 @@ inner_product_gdouble_1_c (gdouble * o, const gdouble * a, const gdouble * b,
     res += a[i] * b[i];
 
   *o = res;
-}
-
-static inline void
-inner_product_gdouble_2_c (gdouble * o, const gdouble * a, const gdouble * b,
-    gint len)
-{
-  gint i;
-  gdouble r[2] = { 0.0, 0.0 };
-
-  for (i = 0; i < len; i++) {
-    r[0] += a[2 * i] * b[i];
-    r[1] += a[2 * i + 1] * b[i];
-  }
-  o[0] = r[0];
-  o[1] = r[1];
 }
 
 #define MAKE_RESAMPLE_FUNC(type,channels,arch)                                  \
@@ -512,18 +464,16 @@ MAKE_RESAMPLE_FUNC (gint16, 1, c);
 MAKE_RESAMPLE_FUNC (gint32, 1, c);
 MAKE_RESAMPLE_FUNC (gfloat, 1, c);
 MAKE_RESAMPLE_FUNC (gdouble, 1, c);
-MAKE_RESAMPLE_FUNC (gint16, 2, c);
-MAKE_RESAMPLE_FUNC (gfloat, 2, c);
-MAKE_RESAMPLE_FUNC (gdouble, 2, c);
 
 static ResampleFunc resample_funcs[] = {
   resample_gint16_1_c,
   resample_gint32_1_c,
   resample_gfloat_1_c,
   resample_gdouble_1_c,
-  resample_gint16_2_c,
-  resample_gfloat_2_c,
-  resample_gdouble_2_c,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
 };
 
 #define resample_gint16_1 resample_funcs[0]
@@ -531,8 +481,9 @@ static ResampleFunc resample_funcs[] = {
 #define resample_gfloat_1 resample_funcs[2]
 #define resample_gdouble_1 resample_funcs[3]
 #define resample_gint16_2 resample_funcs[4]
-#define resample_gfloat_2 resample_funcs[5]
-#define resample_gdouble_2 resample_funcs[6]
+#define resample_gint32_2 resample_funcs[5]
+#define resample_gfloat_2 resample_funcs[6]
+#define resample_gdouble_2 resample_funcs[7]
 
 #if defined HAVE_ORC && !defined DISABLE_ORC
 # if defined (__i386__) || defined (__x86_64__)
@@ -673,6 +624,9 @@ resampler_calculate_taps (GstAudioResampler * resampler)
   gint out_rate;
   gint in_rate;
   gboolean non_interleaved;
+  DeinterleaveFunc deinterleave;
+  ResampleFunc resample, resample_2;
+
 
   switch (resampler->method) {
     case GST_AUDIO_RESAMPLER_METHOD_NEAREST:
@@ -745,45 +699,38 @@ resampler_calculate_taps (GstAudioResampler * resampler)
   resampler->inc = 1;
 
   switch (resampler->format) {
-    case GST_AUDIO_FORMAT_F64:
-      if (!non_interleaved && resampler->channels == 2 && n_taps >= 4) {
-        resampler->resample = resample_gdouble_2;
-        resampler->deinterleave = deinterleave_copy;
-        resampler->blocks = 1;
-        resampler->inc = resampler->channels;;
-      } else {
-        resampler->resample = resample_gdouble_1;
-        resampler->deinterleave = deinterleave_gdouble;
-      }
-      break;
-    case GST_AUDIO_FORMAT_F32:
-      if (!non_interleaved && resampler->channels == 2 && n_taps >= 4) {
-        resampler->resample = resample_gfloat_2;
-        resampler->deinterleave = deinterleave_copy;
-        resampler->blocks = 1;
-        resampler->inc = resampler->channels;;
-      } else {
-        resampler->resample = resample_gfloat_1;
-        resampler->deinterleave = deinterleave_gfloat;
-      }
+    case GST_AUDIO_FORMAT_S16:
+      resample = resample_gint16_1;
+      resample_2 = resample_gint16_2;
+      deinterleave = deinterleave_gint16;
       break;
     case GST_AUDIO_FORMAT_S32:
-      resampler->resample = resample_gint32_1;
-      resampler->deinterleave = deinterleave_gint32;
+      resample = resample_gint32_1;
+      resample_2 = resample_gint32_2;
+      deinterleave = deinterleave_gint32;
       break;
-    case GST_AUDIO_FORMAT_S16:
-      if (!non_interleaved && resampler->channels == 2 && n_taps >= 4) {
-        resampler->resample = resample_gint16_2;
-        resampler->deinterleave = deinterleave_copy;
-        resampler->blocks = 1;
-        resampler->inc = resampler->channels;;
-      } else {
-        resampler->resample = resample_gint16_1;
-        resampler->deinterleave = deinterleave_gint16;
-      }
+    case GST_AUDIO_FORMAT_F32:
+      resample = resample_gfloat_1;
+      resample_2 = resample_gfloat_2;
+      deinterleave = deinterleave_gfloat;
+      break;
+    case GST_AUDIO_FORMAT_F64:
+      resample = resample_gdouble_1;
+      resample_2 = resample_gdouble_2;
+      deinterleave = deinterleave_gdouble;
       break;
     default:
+      g_assert_not_reached ();
       break;
+  }
+  if (!non_interleaved && resampler->channels == 2 && n_taps >= 4 && resample_2) {
+    resampler->resample = resample_2;
+    resampler->deinterleave = deinterleave_copy;
+    resampler->blocks = 1;
+    resampler->inc = resampler->channels;;
+  } else {
+    resampler->resample = resample;
+    resampler->deinterleave = deinterleave;
   }
 }
 
