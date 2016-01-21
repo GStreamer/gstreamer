@@ -117,6 +117,51 @@ GST_START_TEST(test_add_sink_harness_without_sinkpad)
 }
 GST_END_TEST;
 
+static GstEvent *
+create_new_stream_start_event (GstHarness *h, gpointer data)
+{
+  guint *counter = data;
+  gchar *stream_id = g_strdup_printf ("streamid/%d", *counter);
+  GstEvent *event = gst_event_new_stream_start (stream_id);
+  g_free (stream_id);
+  (*counter)++;
+  return event;
+}
+
+static void
+push_query (gpointer data, gpointer user_data)
+{
+  GstHarness *h = user_data;
+  GstCaps *caps = gst_caps_new_empty_simple ("mycaps");
+  GstQuery *query = gst_query_new_allocation (caps, FALSE);
+  gst_caps_unref (caps);
+  gst_pad_peer_query (h->srcpad, query);
+  gst_query_unref (query);
+}
+
+GST_START_TEST (test_forward_event_and_query_to_sink_harness_while_teardown)
+{
+  GstHarness *h = gst_harness_new ("identity");
+  guint counter = 0;
+  GstHarnessThread *e_thread = gst_harness_stress_push_event_with_cb_start (h,
+      create_new_stream_start_event, &counter, NULL);
+  GstHarnessThread *q_thread = gst_harness_stress_custom_start (h, NULL,
+      push_query, h, 0);
+  gdouble duration = 1.0;
+  GTimer * timer = g_timer_new ();
+
+  while (g_timer_elapsed (timer, NULL) < duration) {
+    gst_harness_add_sink (h, "fakesink");
+    g_thread_yield ();
+  }
+
+  g_timer_destroy (timer);
+  gst_harness_stress_thread_stop (q_thread);
+  gst_harness_stress_thread_stop (e_thread);
+  gst_harness_teardown (h);
+}
+GST_END_TEST;
+
 static Suite *
 gst_harness_suite (void)
 {
@@ -129,6 +174,8 @@ gst_harness_suite (void)
   tcase_add_test (tc_chain, test_src_harness);
   tcase_add_test (tc_chain, test_src_harness_no_forwarding);
   tcase_add_test (tc_chain, test_add_sink_harness_without_sinkpad);
+
+  tcase_add_test (tc_chain, test_forward_event_and_query_to_sink_harness_while_teardown);
 
   return s;
 }
