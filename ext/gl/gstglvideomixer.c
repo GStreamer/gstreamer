@@ -837,6 +837,26 @@ gst_gl_video_mixer_pad_set_property (GObject * object, guint prop_id,
 }
 
 static void
+_del_buffer (GstGLContext * context, GLuint * pBuffer)
+{
+  context->gl_vtable->DeleteBuffers (1, pBuffer);
+}
+
+static void
+gst_gl_video_mixer_release_pad (GstElement * element, GstPad * p)
+{
+  GstGLVideoMixerPad *pad = GST_GL_VIDEO_MIXER_PAD (p);
+  if (pad->vertex_buffer) {
+    GstGLBaseMixer *mix = GST_GL_BASE_MIXER (element);
+    gst_gl_context_thread_add (mix->context, (GstGLContextThreadFunc)
+        _del_buffer, &pad->vertex_buffer);
+    pad->vertex_buffer = 0;
+  }
+  GST_ELEMENT_CLASS (g_type_class_peek_parent (G_OBJECT_GET_CLASS (element)))
+      ->release_pad (element, p);
+}
+
+static void
 gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
 {
   GObjectClass *gobject_class;
@@ -846,6 +866,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
+  element_class->release_pad = gst_gl_video_mixer_release_pad;
 
   gobject_class->set_property = gst_gl_video_mixer_set_property;
   gobject_class->get_property = gst_gl_video_mixer_get_property;
