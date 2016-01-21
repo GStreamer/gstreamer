@@ -334,8 +334,8 @@ gst_device_reconfigure_element (GstDevice * device, GstElement * element)
 /**
  * gst_device_has_classesv:
  * @device: a #GstDevice
- * @classes: (array zero-terminated=1): a %NULL terminated array of classes to match, only match if all
- *   classes are matched
+ * @classes: (array zero-terminated=1): a %NULL terminated array of classes
+ *   to match, only match if all classes are matched
  *
  * Check if @factory matches all of the given classes
  *
@@ -352,20 +352,21 @@ gst_device_has_classesv (GstDevice * device, gchar ** classes)
     return TRUE;
 
   for (; classes[0]; classes++) {
+    const gchar *klass = classes[0];
     const gchar *found;
     guint len;
 
-    if (classes[0] == '\0')
+    if (*klass == '\0')
       continue;
 
-    found = strstr (device->priv->device_class, classes[0]);
+    found = strstr (device->priv->device_class, klass);
 
     if (!found)
       return FALSE;
     if (found != device->priv->device_class && *(found - 1) != '/')
       return FALSE;
 
-    len = strlen (classes[0]);
+    len = strlen (klass);
     if (found[len] != 0 && found[len] != '/')
       return FALSE;
   }
@@ -376,7 +377,7 @@ gst_device_has_classesv (GstDevice * device, gchar ** classes)
 /**
  * gst_device_has_classes:
  * @device: a #GstDevice
- * @classes: a "/" separate list of device classes to match, only match if
+ * @classes: a "/"-separated list of device classes to match, only match if
  *  all classes are matched
  *
  * Check if @device matches all of the given classes
