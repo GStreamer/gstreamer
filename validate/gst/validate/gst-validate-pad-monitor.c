@@ -1812,7 +1812,8 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      gst_validate_pad_monitor_setcaps_post (pad_monitor, caps, ret);
+      gst_validate_pad_monitor_setcaps_post (pad_monitor, caps,
+          ret == GST_FLOW_OK);
       break;
     }
     case GST_EVENT_FLUSH_START:
@@ -2082,13 +2083,13 @@ gst_validate_pad_monitor_event_is_tracked (GstValidatePadMonitor * monitor,
   return TRUE;
 }
 
-static gboolean
+static GstFlowReturn
 gst_validate_pad_monitor_sink_event_full_func (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
   GstValidatePadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "validate-monitor");
-  gboolean ret;
+  GstFlowReturn ret;
 
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
@@ -2270,12 +2271,11 @@ gst_validate_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
   return TRUE;
 }
 
-static gboolean
+static void
 gst_validate_pad_monitor_event_probe (GstPad * pad, GstEvent * event,
     gpointer udata)
 {
   GstValidatePadMonitor *monitor = GST_VALIDATE_PAD_MONITOR_CAST (udata);
-  gboolean ret;
 
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (monitor);
   GST_VALIDATE_MONITOR_LOCK (monitor);
@@ -2364,13 +2364,9 @@ gst_validate_pad_monitor_event_probe (GstPad * pad, GstEvent * event,
 
   /* This so far is just like an event that is flowing downstream,
    * so we do the same checks as a sinkpad event handler */
-  ret =
-      gst_validate_pad_monitor_downstream_event_check (monitor, NULL, event,
-      NULL);
+  gst_validate_pad_monitor_downstream_event_check (monitor, NULL, event, NULL);
   GST_VALIDATE_MONITOR_UNLOCK (monitor);
   GST_VALIDATE_PAD_MONITOR_PARENT_UNLOCK (monitor);
-
-  return ret;
 }
 
 static GstPadProbeReturn
