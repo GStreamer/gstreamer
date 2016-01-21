@@ -55,6 +55,10 @@ typedef struct _GstGLMemoryPBO GstGLMemoryPBO;
 typedef struct _GstGLMemoryPBOAllocator GstGLMemoryPBOAllocator;
 typedef struct _GstGLMemoryPBOAllocatorClass GstGLMemoryPBOAllocatorClass;
 
+typedef struct _GstGLMemoryEGL GstGLMemoryEGL;
+typedef struct _GstGLMemoryEGLAllocator GstGLMemoryEGLAllocator;
+typedef struct _GstGLMemoryEGLAllocatorClass GstGLMemoryEGLAllocatorClass;
+
 typedef struct _GstGLSLStage        GstGLSLStage;
 typedef struct _GstGLSLStagePrivate GstGLSLStagePrivate;
 typedef struct _GstGLSLStageClass   GstGLSLStageClass;

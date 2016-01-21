@@ -68,6 +68,7 @@
 #if GST_GL_HAVE_PLATFORM_EGL
 #include <gst/gl/egl/gstgldisplay_egl.h>
 #include <gst/gl/egl/gsteglimagememory.h>
+#include <gst/gl/egl/gstglmemoryegl.h>
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_context);
@@ -144,6 +145,7 @@ gst_gl_display_init (GstGLDisplay * display)
 
 #if GST_GL_HAVE_PLATFORM_EGL
   gst_egl_image_memory_init ();
+  gst_gl_memory_egl_init_once ();
 #endif
 }
 

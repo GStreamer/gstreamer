@@ -29,6 +29,7 @@
 
 #if GST_GL_HAVE_PLATFORM_EGL
 #include "egl/gsteglimagememory.h"
+#include "egl/gstglmemoryegl.h"
 #endif
 
 #if GST_GL_HAVE_DMABUF
@@ -319,6 +320,17 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
             context));
     gst_query_add_allocation_param (query, allocator, &params);
     gst_object_unref (allocator);
+
+#if GST_GL_HAVE_PLATFORM_EGL
+    if (upload->upload->context
+        && gst_gl_context_get_gl_platform (upload->upload->context) ==
+        GST_GL_PLATFORM_EGL) {
+      allocator =
+          GST_ALLOCATOR (gst_allocator_find (GST_GL_MEMORY_EGL_ALLOCATOR_NAME));
+      gst_query_add_allocation_param (query, allocator, &params);
+      gst_object_unref (allocator);
+    }
+#endif
   }
 
   n_pools = gst_query_get_n_allocation_pools (query);
