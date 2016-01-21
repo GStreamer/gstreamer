@@ -2090,8 +2090,6 @@ gst_validate_pad_monitor_sink_event_full_func (GstPad * pad, GstObject * parent,
       g_object_get_data ((GObject *) pad, "validate-monitor");
   gboolean ret;
 
-  GST_ERROR_OBJECT (pad, "event %s", GST_EVENT_TYPE_NAME (event));
-
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
 
@@ -2120,8 +2118,6 @@ static gboolean
 gst_validate_pad_monitor_sink_event_func (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
-  GST_ERROR_OBJECT (pad, "event %s", GST_EVENT_TYPE_NAME (event));
-
   if (gst_validate_pad_monitor_sink_event_full_func (pad, parent,
           event) == GST_FLOW_OK)
     return TRUE;
