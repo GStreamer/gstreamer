@@ -5284,7 +5284,7 @@ gst_mpd_client_get_next_header_index (GstMpdClient * client, gchar ** uri,
   if (stream->cur_segment_base && stream->cur_segment_base->indexRange) {
     *uri =
         g_strdup (gst_mpdparser_get_initializationURL (stream,
-            stream->cur_segment_base->Initialization));
+            stream->cur_segment_base->RepresentationIndex));
     *range_start = stream->cur_segment_base->indexRange->first_byte_pos;
     *range_end = stream->cur_segment_base->indexRange->last_byte_pos;
   } else if (stream->cur_seg_template && stream->cur_seg_template->index) {
