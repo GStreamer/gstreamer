@@ -864,6 +864,11 @@ _reset_gl (GstGLContext * context, GstGLVideoMixer * video_mixer)
     video_mixer->vbo_indices = 0;
   }
 
+  if (video_mixer->checker_vbo) {
+    gl->DeleteBuffers (1, &video_mixer->checker_vbo);
+    video_mixer->checker_vbo = 0;
+  }
+
   gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (video_mixer), _reset_pad_gl,
       NULL);
 }
