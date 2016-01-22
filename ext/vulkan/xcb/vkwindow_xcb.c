@@ -132,6 +132,7 @@ gst_vulkan_window_xcb_show (GstVulkanWindow * window)
 
   if (!window_xcb->visible) {
     xcb_map_window (connection, window_xcb->win_id);
+    xcb_flush (connection);
     window_xcb->visible = TRUE;
   }
 }
