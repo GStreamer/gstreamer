@@ -1132,6 +1132,10 @@ gst_adaptive_demux_stream_free (GstAdaptiveDemuxStream * stream)
     stream->pending_events = NULL;
   }
 
+  if (stream->internal_pad) {
+    gst_object_unparent (GST_OBJECT_CAST (stream->internal_pad));
+  }
+
   if (stream->src_srcpad) {
     gst_object_unref (stream->src_srcpad);
     stream->src_srcpad = NULL;
@@ -2293,6 +2297,7 @@ gst_adaptive_demux_stream_update_source (GstAdaptiveDemuxStream * stream,
     g_free (internal_name);
     gst_object_set_parent (GST_OBJECT_CAST (stream->internal_pad),
         GST_OBJECT_CAST (demux));
+    GST_OBJECT_FLAG_SET (stream->internal_pad, GST_PAD_FLAG_NEED_PARENT);
     gst_pad_set_element_private (stream->internal_pad, stream);
     gst_pad_set_active (stream->internal_pad, TRUE);
     gst_pad_set_chain_function (stream->internal_pad, _src_chain);
