@@ -1660,13 +1660,16 @@ _init_classes (void)
 
   if (!org_freedesktop_gstreamer_androidmedia_gstahccallback.klass) {
     org_freedesktop_gstreamer_androidmedia_gstahccallback.klass =
-        gst_amc_jni_get_class (env, &err, "org/freedesktop/gstreamer/androidmedia/GstAhcCallback");
+        gst_amc_jni_get_class (env, &err,
+        "org/freedesktop/gstreamer/androidmedia/GstAhcCallback");
   }
   org_freedesktop_gstreamer_androidmedia_gstahccallback.constructor =
-      gst_amc_jni_get_method_id (env, &err, org_freedesktop_gstreamer_androidmedia_gstahccallback.klass,
-      "<init>", "(JJ)V");
+      gst_amc_jni_get_method_id (env, &err,
+      org_freedesktop_gstreamer_androidmedia_gstahccallback.klass, "<init>",
+      "(JJ)V");
 
-  if ((*env)->RegisterNatives (env, org_freedesktop_gstreamer_androidmedia_gstahccallback.klass,
+  if ((*env)->RegisterNatives (env,
+          org_freedesktop_gstreamer_androidmedia_gstahccallback.klass,
           native_methods, G_N_ELEMENTS (native_methods))) {
     GST_ERROR ("Failed to register native methods for GstAhcCallback");
     return FALSE;
@@ -1688,7 +1691,8 @@ failed:
 gboolean
 gst_android_hardware_camera_init (void)
 {
-  GST_DEBUG_CATEGORY_INIT (ahc_debug, "ahc", 0, "Android Gstreamer Hardware Camera");
+  GST_DEBUG_CATEGORY_INIT (ahc_debug, "ahc", 0,
+      "Android Gstreamer Hardware Camera");
   if (!_init_classes ()) {
     gst_android_hardware_camera_deinit ();
     return FALSE;
@@ -2173,8 +2177,10 @@ gst_android_hardware_camera_deinit (void)
   java_lang_integer.klass = NULL;
 
   if (org_freedesktop_gstreamer_androidmedia_gstahccallback.klass) {
-    (*env)->UnregisterNatives (env, org_freedesktop_gstreamer_androidmedia_gstahccallback.klass);
-    (*env)->DeleteGlobalRef (env, org_freedesktop_gstreamer_androidmedia_gstahccallback.klass);
+    (*env)->UnregisterNatives (env,
+        org_freedesktop_gstreamer_androidmedia_gstahccallback.klass);
+    (*env)->DeleteGlobalRef (env,
+        org_freedesktop_gstreamer_androidmedia_gstahccallback.klass);
   }
   org_freedesktop_gstreamer_androidmedia_gstahccallback.klass = NULL;
 }

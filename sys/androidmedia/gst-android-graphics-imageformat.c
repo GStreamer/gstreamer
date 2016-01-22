@@ -182,7 +182,8 @@ gst_ag_imageformat_get_bits_per_pixel (gint format)
   env = gst_amc_jni_get_env ();
 
   if (!gst_amc_jni_call_static_int_method (env, &err,
-          klass, android_graphics_imageformat.get_bits_per_pixel, &bpp, format)) {
+          klass, android_graphics_imageformat.get_bits_per_pixel, &bpp,
+          format)) {
     GST_ERROR ("Failed to get android.graphics.ImageFormat class: %s",
         err->message);
     g_clear_error (&err);
