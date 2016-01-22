@@ -219,7 +219,7 @@ gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor)
 
 /**
  * gst_validate_pipeline_monitor_new:
- * @pipeline: (transfer-none): a #GstPipeline to run Validate on
+ * @pipeline: (transfer none): a #GstPipeline to run Validate on
  */
 GstValidatePipelineMonitor *
 gst_validate_pipeline_monitor_new (GstPipeline * pipeline,

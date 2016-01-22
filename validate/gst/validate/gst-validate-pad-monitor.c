@@ -897,7 +897,7 @@ gst_validate_pad_monitor_init (GstValidatePadMonitor * pad_monitor)
 
 /**
  * gst_validate_pad_monitor_new:
- * @pad: (transfer-none): a #GstPad to run Validate on
+ * @pad: (transfer none): a #GstPad to run Validate on
  */
 GstValidatePadMonitor *
 gst_validate_pad_monitor_new (GstPad * pad, GstValidateRunner * runner,

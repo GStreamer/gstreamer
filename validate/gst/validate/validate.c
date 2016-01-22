@@ -27,7 +27,7 @@
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 /* For g_stat () */
 #include <glib/gstdio.h>
@@ -42,9 +42,8 @@
 #ifdef G_OS_WIN32
 #define WIN32_LEAN_AND_MEAN     /* prevents from including too many things */
 #include <windows.h>            /* GetStdHandle, windows console */
-
 HMODULE _priv_gstvalidate_dll_handle = NULL;
-#endif
+#endif /* G_OS_WIN32 */
 
 GST_DEBUG_CATEGORY (gstvalidate_debug);
 
@@ -64,8 +63,7 @@ DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
   return TRUE;
 }
-
-#endif
+#endif /* G_OS_WIN32 */
 
 static GstRegistry *
 gst_validate_registry_get (void)

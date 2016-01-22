@@ -175,29 +175,6 @@ gst_validate_monitor_init (GstValidateMonitor * monitor)
   g_queue_init (&monitor->overrides);
 }
 
-#if 0
-/* This shouldn't be used. it's a base class */
-/**
- * gst_validate_monitor_new:
- * @element: (transfer-none): a #GObject to run Validate on
- */
-GstValidateMonitor *
-gst_validate_monitor_new (GObject * object)
-{
-  GstValidateMonitor *monitor =
-      g_object_new (GST_TYPE_VALIDATE_MONITOR, "object",
-      G_TYPE_OBJECT, object, NULL);
-
-  if (GST_VALIDATE_MONITOR_GET_OBJECT (monitor) == NULL) {
-    /* setup failed, no use on returning this monitor */
-    g_object_unref (monitor);
-    return NULL;
-  }
-
-  return monitor;
-}
-#endif
-
 static gboolean
 gst_validate_monitor_do_setup (GstValidateMonitor * monitor)
 {

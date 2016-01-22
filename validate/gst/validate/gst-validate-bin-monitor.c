@@ -165,7 +165,7 @@ gst_validate_bin_monitor_init (GstValidateBinMonitor * bin_monitor)
 
 /**
  * gst_validate_bin_monitor_new:
- * @bin: (transfer-none): a #GstBin to run Validate on
+ * @bin: (transfer none): a #GstBin to run Validate on
  */
 GstValidateBinMonitor *
 gst_validate_bin_monitor_new (GstBin * bin, GstValidateRunner * runner,

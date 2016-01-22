@@ -158,9 +158,10 @@ typedef enum
 } GstValidateActionTypeFlags;
 
 /**
+ * GstValidateActionType:
  * @name: The name of the new action type to add
  * @implementer_namespace: The namespace of the implementer of the action type
- * @execute: (virtual do_execute): The function to be called to execute the action
+ * @execute: The function to be called to execute the action
  * @parameters: (allow-none) (array zero-terminated=1) (element-type GstValidate.ActionParameter): The #GstValidateActionParameter usable as parameter of the type
  * @description: A description of the new type
  * @flags: The flags of the action type

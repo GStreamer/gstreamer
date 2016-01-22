@@ -1,5 +1,4 @@
-/**
- * GstValidate
+/* GstValidate
  *
  * Copyright (c) 2012, Collabora Ltd.
  * Author: Thibault Saunier <thibault.saunier@collabora.com>

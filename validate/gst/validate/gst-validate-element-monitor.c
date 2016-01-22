@@ -139,7 +139,7 @@ gst_validate_element_monitor_init (GstValidateElementMonitor * element_monitor)
 
 /**
  * gst_validate_element_monitor_new:
- * @element: (transfer-none): a #GstElement to run Validate on
+ * @element: (transfer none): a #GstElement to run Validate on
  */
 GstValidateElementMonitor *
 gst_validate_element_monitor_new (GstElement * element,
