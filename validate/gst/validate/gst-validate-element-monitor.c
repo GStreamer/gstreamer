@@ -58,7 +58,7 @@ _validate_element_pad_added (GstElement * element, GstPad * pad,
 
 static void
 gst_validate_element_set_media_descriptor (GstValidateMonitor * monitor,
-    GstMediaDescriptor * media_descriptor)
+    GstValidateMediaDescriptor * media_descriptor)
 {
   gboolean done;
   GstPad *pad;

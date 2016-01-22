@@ -47,9 +47,9 @@ main (int argc, gchar ** argv)
   gchar *output_file = NULL;
   gchar *expected_file = NULL;
   gchar *output = NULL;
-  GstMediaDescriptorWriter *writer = NULL;
+  GstValidateMediaDescriptorWriter *writer = NULL;
   GstValidateRunner *runner = NULL;
-  GstMediaDescriptorParser *reference = NULL;
+  GstValidateMediaDescriptorParser *reference = NULL;
 
   GOptionEntry options[] = {
     {"output-file", 'o', 0, G_OPTION_ARG_FILENAME,
@@ -99,7 +99,8 @@ main (int argc, gchar ** argv)
   runner = gst_validate_runner_new ();
 
   if (expected_file) {
-    reference = gst_media_descriptor_parser_new (runner, expected_file, NULL);
+    reference =
+        gst_validate_media_descriptor_parser_new (runner, expected_file, NULL);
 
     if (reference == NULL) {
       g_print ("Could not parse file: %s\n", expected_file);
@@ -107,14 +108,17 @@ main (int argc, gchar ** argv)
       goto out;
     }
 
-    if (!full && gst_media_descriptor_has_frame_info ((GstMediaDescriptor *)
+    if (!full
+        &&
+        gst_validate_media_descriptor_has_frame_info (
+            (GstValidateMediaDescriptor *)
             reference))
       full = TRUE;              /* Reference has frame info, activate to do comparison */
   }
 
   writer =
-      gst_media_descriptor_writer_new_discover (runner, argv[1], full, TRUE,
-      NULL);
+      gst_validate_media_descriptor_writer_new_discover (runner, argv[1], full,
+      TRUE, NULL);
   if (writer == NULL) {
     g_print ("Could not discover file: %s\n", argv[1]);
     ret = 1;
@@ -122,27 +126,27 @@ main (int argc, gchar ** argv)
   }
 
   if (output_file) {
-    if (!gst_media_descriptor_writer_write (writer, output_file)) {
+    if (!gst_validate_media_descriptor_writer_write (writer, output_file)) {
       ret = 1;
       goto out;
     }
   }
 
   if (reference) {
-    if (!gst_media_descriptors_compare (GST_MEDIA_DESCRIPTOR (reference),
-            GST_MEDIA_DESCRIPTOR (writer))) {
+    if (!gst_validate_media_descriptors_compare (GST_VALIDATE_MEDIA_DESCRIPTOR
+            (reference), GST_VALIDATE_MEDIA_DESCRIPTOR (writer))) {
       ret = 1;
       goto out;
     }
   } else {
-    output = gst_media_descriptor_writer_serialize (writer);
+    output = gst_validate_media_descriptor_writer_serialize (writer);
     g_print ("Media info:\n%s\n", output);
     g_free (output);
   }
 
   ret = gst_validate_runner_exit (runner, TRUE);
   if (ret && expected_file) {
-    output = gst_media_descriptor_writer_serialize (writer);
+    output = gst_validate_media_descriptor_writer_serialize (writer);
     g_print ("Media info:\n%s\n", output);
     g_free (output);
   }

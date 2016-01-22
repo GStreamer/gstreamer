@@ -1616,13 +1616,15 @@ _should_check_buffers (GstValidatePadMonitor * pad_monitor,
       GST_DEBUG_OBJECT (pad, "No media_descriptor set => no buffer checking");
 
       pad_monitor->check_buffers = FALSE;
-    } else if (!gst_media_descriptor_detects_frames (monitor->media_descriptor)) {
-      GST_DEBUG_OBJECT (pad, "No frame detection media descriptor "
-          "=> not buffer checking");
+    } else
+        if (!gst_validate_media_descriptor_detects_frames
+        (monitor->media_descriptor)) {
+      GST_DEBUG_OBJECT (pad,
+          "No frame detection media descriptor " "=> not buffer checking");
       pad_monitor->check_buffers = FALSE;
     } else if (pad_monitor->all_bufs == NULL &&
-        !gst_media_descriptor_get_buffers (monitor->media_descriptor, pad, NULL,
-            &pad_monitor->all_bufs)) {
+        !gst_validate_media_descriptor_get_buffers (monitor->media_descriptor,
+            pad, NULL, &pad_monitor->all_bufs)) {
 
       GST_INFO_OBJECT (monitor,
           "The MediaInfo is marked as detecting frame, but getting frames"

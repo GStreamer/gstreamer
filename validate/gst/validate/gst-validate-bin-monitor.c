@@ -66,7 +66,7 @@ _validate_bin_element_added (GstBin * bin, GstElement * pad,
 
 static void
 gst_validate_bin_set_media_descriptor (GstValidateMonitor * monitor,
-    GstMediaDescriptor * media_descriptor)
+    GstValidateMediaDescriptor * media_descriptor)
 {
   GList *tmp;
 

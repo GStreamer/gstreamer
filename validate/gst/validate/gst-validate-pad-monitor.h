@@ -113,7 +113,7 @@ struct _GstValidatePadMonitor {
   GstClockTime timestamp_range_start;
   GstClockTime timestamp_range_end;
 
-  /* GstMediaCheck related fields */
+  /* GstValidateMediaCheck related fields */
   GList *all_bufs;
   /* The GstBuffer that should arrive next in a GList */
   GList *current_buf;

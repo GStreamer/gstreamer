@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef GST_MEDIA_DESCRIPTOR_PARSER_h
-#define GST_MEDIA_DESCRIPTOR_PARSER_h
+#ifndef GST_VALIDATE_MEDIA_DESCRIPTOR_PARSER_h
+#define GST_VALIDATE_MEDIA_DESCRIPTOR_PARSER_h
 
 #include <glib.h>
 #include <glib-object.h>
@@ -29,46 +29,46 @@
 
 G_BEGIN_DECLS
 
-GType gst_media_descriptor_parser_get_type (void);
+GType gst_validate_media_descriptor_parser_get_type (void);
 
-#define GST_TYPE_MEDIA_DESCRIPTOR_PARSER            (gst_media_descriptor_parser_get_type ())
-#define GST_MEDIA_DESCRIPTOR_PARSER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MEDIA_DESCRIPTOR_PARSER, GstMediaDescriptorParser))
-#define GST_MEDIA_DESCRIPTOR_PARSER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MEDIA_DESCRIPTOR_PARSER, GstMediaDescriptorParserClass))
-#define GST_IS_MEDIA_DESCRIPTOR_PARSER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MEDIA_DESCRIPTOR_PARSER))
-#define GST_IS_MEDIA_DESCRIPTOR_PARSER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MEDIA_DESCRIPTOR_PARSER))
-#define GST_MEDIA_DESCRIPTOR_PARSER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MEDIA_DESCRIPTOR_PARSER, GstMediaDescriptorParserClass))
+#define GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_PARSER            (gst_validate_media_descriptor_parser_get_type ())
+#define GST_VALIDATE_MEDIA_DESCRIPTOR_PARSER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_PARSER, GstValidateMediaDescriptorParser))
+#define GST_VALIDATE_MEDIA_DESCRIPTOR_PARSER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_PARSER, GstValidateMediaDescriptorParserClass))
+#define GST_IS_VALIDATE_MEDIA_DESCRIPTOR_PARSER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_PARSER))
+#define GST_IS_VALIDATE_MEDIA_DESCRIPTOR_PARSER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_PARSER))
+#define GST_VALIDATE_MEDIA_DESCRIPTOR_PARSER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_PARSER, GstValidateMediaDescriptorParserClass))
 
-typedef struct _GstMediaDescriptorParserPrivate GstMediaDescriptorParserPrivate;
+typedef struct _GstValidateMediaDescriptorParserPrivate GstValidateMediaDescriptorParserPrivate;
 
-
-typedef struct {
-  GstMediaDescriptor parent;
-
-  GstMediaDescriptorParserPrivate *priv;
-
-} GstMediaDescriptorParser;
 
 typedef struct {
+  GstValidateMediaDescriptor parent;
 
-  GstMediaDescriptorClass parent;
+  GstValidateMediaDescriptorParserPrivate *priv;
 
-} GstMediaDescriptorParserClass;
+} GstValidateMediaDescriptorParser;
 
-GstMediaDescriptorParser * gst_media_descriptor_parser_new (GstValidateRunner *runner,
+typedef struct {
+
+  GstValidateMediaDescriptorClass parent;
+
+} GstValidateMediaDescriptorParserClass;
+
+GstValidateMediaDescriptorParser * gst_validate_media_descriptor_parser_new (GstValidateRunner *runner,
                                                             const gchar * xmlpath,
                                                             GError **error);
-GstMediaDescriptorParser *
-gst_media_descriptor_parser_new_from_xml                   (GstValidateRunner * runner,
+GstValidateMediaDescriptorParser *
+gst_validate_media_descriptor_parser_new_from_xml                   (GstValidateRunner * runner,
                                                             const gchar * xml,
                                                             GError ** error);
-gchar * gst_media_descriptor_parser_get_xml_path        (GstMediaDescriptorParser *parser);
-gboolean gst_media_descriptor_parser_add_stream         (GstMediaDescriptorParser *parser,
+gchar * gst_validate_media_descriptor_parser_get_xml_path        (GstValidateMediaDescriptorParser *parser);
+gboolean gst_validate_media_descriptor_parser_add_stream         (GstValidateMediaDescriptorParser *parser,
                                                                   GstPad *pad);
-gboolean gst_media_descriptor_parser_add_taglist        (GstMediaDescriptorParser *parser,
+gboolean gst_validate_media_descriptor_parser_add_taglist        (GstValidateMediaDescriptorParser *parser,
                                                                   GstTagList *taglist);
-gboolean gst_media_descriptor_parser_all_stream_found   (GstMediaDescriptorParser *parser);
-gboolean gst_media_descriptor_parser_all_tags_found     (GstMediaDescriptorParser *parser);
+gboolean gst_validate_media_descriptor_parser_all_stream_found   (GstValidateMediaDescriptorParser *parser);
+gboolean gst_validate_media_descriptor_parser_all_tags_found     (GstValidateMediaDescriptorParser *parser);
 
 G_END_DECLS
 
-#endif /* GST_MEDIA_DESCRIPTOR_PARSER_h */
+#endif /* GST_VALIDATE_MEDIA_DESCRIPTOR_PARSER_h */

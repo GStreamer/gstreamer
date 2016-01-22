@@ -19,34 +19,32 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_MEDIA_DESCRIPTOR_H__
-#define __GST_MEDIA_DESCRIPTOR_H__
+#ifndef __GST_VALIDATE_MEDIA_DESCRIPTOR_H__
+#define __GST_VALIDATE_MEDIA_DESCRIPTOR_H__
 
 #include <glib.h>
 #include <glib-object.h>
 #include <gst/gst.h>
 #include "gst-validate-report.h"
 
-G_BEGIN_DECLS
-
-typedef struct
+G_BEGIN_DECLS typedef struct
 {
   /* Children */
-  /* TagNode */
+  /* GstValidateMediaGstValidateMediaGstValidateMediaTagNode */
   GList *tags;
 
   gchar *str_open;
   gchar *str_close;
-} TagsNode;
+} GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaTagsNode;
 
 /* Parsing structures */
 typedef struct
 {
   /* Children */
-  /* StreamNode */
+  /* GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode */
   GList *streams;
-  /* TagsNode */
-  TagsNode *tags;
+  /* GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaTagsNode */
+  GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaTagsNode *tags;
 
   /* attributes */
   guint64 id;
@@ -59,7 +57,7 @@ typedef struct
 
   gchar *str_open;
   gchar *str_close;
-} FileNode;
+} GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaFileNode;
 
 typedef struct
 {
@@ -71,16 +69,16 @@ typedef struct
 
   gchar *str_open;
   gchar *str_close;
-} TagNode;
+} GstValidateMediaGstValidateMediaGstValidateMediaTagNode;
 
 typedef struct
 {
   /* Children */
-  /* FrameNode */
+  /* GstValidateMediaGstValidateMediaGstValidateMediaFrameNode */
   GList *frames;
 
-  /* TagsNode */
-  TagsNode *tags;
+  /* GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaTagsNode */
+  GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaTagsNode *tags;
 
   /* Attributes */
   GstCaps *caps;
@@ -94,7 +92,7 @@ typedef struct
 
   gchar *str_open;
   gchar *str_close;
-} StreamNode;
+} GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode;
 
 typedef struct
 {
@@ -112,50 +110,61 @@ typedef struct
   gchar *checksum;
   gchar *str_open;
   gchar *str_close;
-} FrameNode;
+} GstValidateMediaGstValidateMediaGstValidateMediaFrameNode;
 
-void free_filenode (FileNode * filenode);
-gboolean tag_node_compare (TagNode * tnode, const GstTagList * tlist);
+void gst_validate_filenode_free (GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaFileNode *
+    filenode);
+gboolean gst_validate_gst_validate_gst_validate_gst_validate_tag_node_compare (GstValidateMediaGstValidateMediaGstValidateMediaTagNode *
+    tnode, const GstTagList * tlist);
 
-GType gst_media_descriptor_get_type (void);
+GType gst_validate_media_descriptor_get_type (void);
 
-#define GST_TYPE_MEDIA_DESCRIPTOR (gst_media_descriptor_get_type ())
-#define GST_MEDIA_DESCRIPTOR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MEDIA_DESCRIPTOR, GstMediaDescriptor))
-#define GST_MEDIA_DESCRIPTOR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MEDIA_DESCRIPTOR, GstMediaDescriptorClass))
-#define GST_IS_MEDIA_DESCRIPTOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MEDIA_DESCRIPTOR))
-#define GST_IS_MEDIA_DESCRIPTOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MEDIA_DESCRIPTOR))
-#define GST_MEDIA_DESCRIPTOR_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MEDIA_DESCRIPTOR, GstMediaDescriptorClass))
+#define GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR (gst_validate_media_descriptor_get_type ())
+#define GST_VALIDATE_MEDIA_DESCRIPTOR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR, GstValidateMediaDescriptor))
+#define GST_VALIDATE_MEDIA_DESCRIPTOR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR, GstValidateMediaDescriptorClass))
+#define GST_IS_VALIDATE_MEDIA_DESCRIPTOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR))
+#define GST_IS_VALIDATE_MEDIA_DESCRIPTOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR))
+#define GST_VALIDATE_MEDIA_DESCRIPTOR_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR, GstValidateMediaDescriptorClass))
 
-#define GST_MEDIA_DESCRIPTOR_GET_LOCK(obj)               (&GST_MEDIA_DESCRIPTOR(obj)->lock)
-#define GST_MEDIA_DESCRIPTOR_LOCK(obj)                   g_mutex_lock(GST_MEDIA_DESCRIPTOR_GET_LOCK(obj))
-#define GST_MEDIA_DESCRIPTOR_UNLOCK(obj)                 g_mutex_unlock(GST_MEDIA_DESCRIPTOR_GET_LOCK(obj))
+#define GST_VALIDATE_MEDIA_DESCRIPTOR_GET_LOCK(obj)               (&GST_VALIDATE_MEDIA_DESCRIPTOR(obj)->lock)
+#define GST_VALIDATE_MEDIA_DESCRIPTOR_LOCK(obj)                   g_mutex_lock(GST_VALIDATE_MEDIA_DESCRIPTOR_GET_LOCK(obj))
+#define GST_VALIDATE_MEDIA_DESCRIPTOR_UNLOCK(obj)                 g_mutex_unlock(GST_VALIDATE_MEDIA_DESCRIPTOR_GET_LOCK(obj))
 
-typedef struct _GstMediaDescriptorPrivate GstMediaDescriptorPrivate;
+typedef struct _GstValidateMediaDescriptorPrivate
+    GstValidateMediaDescriptorPrivate;
 
-typedef struct {
+typedef struct
+{
   GObject parent;
 
-  FileNode *filenode;
+  GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaFileNode *filenode;
 
-  GMutex         lock;
+  GMutex lock;
 
-  GstMediaDescriptorPrivate *priv;
-} GstMediaDescriptor;
+  GstValidateMediaDescriptorPrivate *priv;
+} GstValidateMediaDescriptor;
 
-typedef struct {
+typedef struct
+{
   GObjectClass parent;
 
-} GstMediaDescriptorClass;
+} GstValidateMediaDescriptorClass;
 
-gboolean gst_media_descriptors_compare (GstMediaDescriptor *ref,
-                                        GstMediaDescriptor *compared);
-gboolean gst_media_descriptor_detects_frames (GstMediaDescriptor * self);
-gboolean gst_media_descriptor_get_buffers (GstMediaDescriptor * self,
-    GstPad * pad, GCompareFunc compare_func, GList ** bufs);
-gboolean gst_media_descriptor_has_frame_info (GstMediaDescriptor * self);
-GstClockTime gst_media_descriptor_get_duration (GstMediaDescriptor * self);
-gboolean gst_media_descriptor_get_seekable (GstMediaDescriptor * self);
-GList * gst_media_descriptor_get_pads (GstMediaDescriptor * self);
+gboolean gst_validate_media_descriptors_compare (GstValidateMediaDescriptor *
+    ref, GstValidateMediaDescriptor * compared);
+gboolean
+gst_validate_media_descriptor_detects_frames (GstValidateMediaDescriptor *
+    self);
+gboolean gst_validate_media_descriptor_get_buffers (GstValidateMediaDescriptor *
+    self, GstPad * pad, GCompareFunc compare_func, GList ** bufs);
+gboolean
+gst_validate_media_descriptor_has_frame_info (GstValidateMediaDescriptor *
+    self);
+GstClockTime
+gst_validate_media_descriptor_get_duration (GstValidateMediaDescriptor * self);
+gboolean gst_validate_media_descriptor_get_seekable (GstValidateMediaDescriptor
+    * self);
+GList *gst_validate_media_descriptor_get_pads (GstValidateMediaDescriptor *
+    self);
 G_END_DECLS
-
 #endif

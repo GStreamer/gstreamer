@@ -366,7 +366,8 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
           "Could not query duration. Trying to get duration from media-info");
       if (monitor && monitor->media_descriptor)
         duration =
-            gst_media_descriptor_get_duration (monitor->media_descriptor);
+            gst_validate_media_descriptor_get_duration
+            (monitor->media_descriptor);
       else {
         GST_ERROR_OBJECT (scenario, "Media-info not set");
         return FALSE;
@@ -2784,7 +2785,7 @@ _parse_scenario (GFile * f, GKeyFile * kf)
     GstStructure *desc = NULL;
 
     gchar **name = g_strsplit (fname, GST_VALIDATE_SCENARIO_SUFFIX, 0);
-    GList *tmp, *structures = structs_parse_from_gfile (f);
+    GList *tmp, *structures = gst_validate_structs_parse_from_gfile (f);
 
     for (tmp = structures; tmp; tmp = tmp->next) {
       GstValidateActionType *type =

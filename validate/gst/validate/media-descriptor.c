@@ -23,34 +23,41 @@
 #include <string.h>
 #include "media-descriptor.h"
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstMediaDescriptor, gst_media_descriptor,
-    G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, NULL));
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstValidateMediaDescriptor,
+    gst_validate_media_descriptor, G_TYPE_OBJECT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, NULL));
 
-#define GST_MEDIA_DESCRIPTOR_GET_PRIVATE(o)\
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_MEDIA_DESCRIPTOR, GstMediaDescriptorPrivate))
+#define GST_VALIDATE_MEDIA_DESCRIPTOR_GET_PRIVATE(o)\
+  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR, GstValidateMediaDescriptorPrivate))
 
 static inline void
-free_tagnode (TagNode * tagnode)
+free_tagnode (GstValidateMediaGstValidateMediaGstValidateMediaTagNode * tagnode)
 {
   g_free (tagnode->str_open);
   g_free (tagnode->str_close);
   if (tagnode->taglist)
     gst_tag_list_unref (tagnode->taglist);
 
-  g_slice_free (TagNode, tagnode);
+  g_slice_free (GstValidateMediaGstValidateMediaGstValidateMediaTagNode,
+      tagnode);
 }
 
 static inline void
-free_tagsnode (TagsNode * tagsnode)
+    free_tagsnode
+    (GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaTagsNode *
+    tagsnode)
 {
   g_free (tagsnode->str_open);
   g_free (tagsnode->str_close);
   g_list_free_full (tagsnode->tags, (GDestroyNotify) free_tagnode);
-  g_slice_free (TagsNode, tagsnode);
+  g_slice_free
+      (GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaTagsNode,
+      tagsnode);
 }
 
 static inline void
-free_framenode (FrameNode * framenode)
+free_framenode (GstValidateMediaGstValidateMediaGstValidateMediaFrameNode *
+    framenode)
 {
   g_free (framenode->str_open);
   g_free (framenode->str_close);
@@ -58,11 +65,14 @@ free_framenode (FrameNode * framenode)
   if (framenode->buf)
     gst_buffer_unref (framenode->buf);
 
-  g_slice_free (FrameNode, framenode);
+  g_slice_free (GstValidateMediaGstValidateMediaGstValidateMediaFrameNode,
+      framenode);
 }
 
 static inline void
-free_streamnode (StreamNode * streamnode)
+    free_streamnode
+    (GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode
+    * streamnode)
 {
   if (streamnode->caps)
     gst_caps_unref (streamnode->caps);
@@ -83,11 +93,14 @@ free_streamnode (StreamNode * streamnode)
 
   g_free (streamnode->str_open);
   g_free (streamnode->str_close);
-  g_slice_free (StreamNode, streamnode);
+  g_slice_free
+      (GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode,
+      streamnode);
 }
 
-void
-free_filenode (FileNode * filenode)
+void gst_validate_filenode_free
+    (GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaFileNode *
+    filenode)
 {
   g_list_free_full (filenode->streams, (GDestroyNotify) free_streamnode);
   if (filenode->tags)
@@ -102,11 +115,15 @@ free_filenode (FileNode * filenode)
   g_free (filenode->str_open);
   g_free (filenode->str_close);
 
-  g_slice_free (FileNode, filenode);
+  g_slice_free
+      (GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaFileNode,
+      filenode);
 }
 
 gboolean
-tag_node_compare (TagNode * tnode, const GstTagList * tlist)
+    gst_validate_gst_validate_gst_validate_gst_validate_tag_node_compare
+    (GstValidateMediaGstValidateMediaGstValidateMediaTagNode * tnode,
+    const GstTagList * tlist)
 {
   if (gst_structure_is_equal (GST_STRUCTURE (tlist),
           GST_STRUCTURE (tnode->taglist)) == FALSE) {
@@ -118,7 +135,7 @@ tag_node_compare (TagNode * tnode, const GstTagList * tlist)
   return TRUE;
 }
 
-struct _GstMediaDescriptorPrivate
+struct _GstValidateMediaDescriptorPrivate
 {
   gpointer dummy;
 };
@@ -132,25 +149,28 @@ enum
 
 
 static void
-gst_media_descriptor_dispose (GstMediaDescriptor * self)
+gst_validate_media_descriptor_dispose (GstValidateMediaDescriptor * self)
 {
-  G_OBJECT_CLASS (gst_media_descriptor_parent_class)->dispose (G_OBJECT (self));
-}
-
-static void
-gst_media_descriptor_finalize (GstMediaDescriptor * self)
-{
-  if (self->filenode)
-    free_filenode (self->filenode);
-
-  G_OBJECT_CLASS (gst_media_descriptor_parent_class)->finalize (G_OBJECT
+  G_OBJECT_CLASS (gst_validate_media_descriptor_parent_class)->dispose (G_OBJECT
       (self));
 }
 
 static void
-gst_media_descriptor_init (GstMediaDescriptor * self)
+gst_validate_media_descriptor_finalize (GstValidateMediaDescriptor * self)
 {
-  self->filenode = g_slice_new0 (FileNode);
+  if (self->filenode)
+    gst_validate_filenode_free (self->filenode);
+
+  G_OBJECT_CLASS (gst_validate_media_descriptor_parent_class)->finalize
+      (G_OBJECT (self));
+}
+
+static void
+gst_validate_media_descriptor_init (GstValidateMediaDescriptor * self)
+{
+  self->filenode =
+      g_slice_new0
+      (GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaFileNode);
 }
 
 static void
@@ -186,15 +206,17 @@ _get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_media_descriptor_class_init (GstMediaDescriptorClass * self_class)
+gst_validate_media_descriptor_class_init (GstValidateMediaDescriptorClass *
+    self_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (self_class);
 
-  g_type_class_add_private (self_class, sizeof (GstMediaDescriptorPrivate));
+  g_type_class_add_private (self_class,
+      sizeof (GstValidateMediaDescriptorPrivate));
   object_class->dispose =
-      (void (*)(GObject * object)) gst_media_descriptor_dispose;
+      (void (*)(GObject * object)) gst_validate_media_descriptor_dispose;
   object_class->finalize =
-      (void (*)(GObject * object)) gst_media_descriptor_finalize;
+      (void (*)(GObject * object)) gst_validate_media_descriptor_finalize;
 
   object_class->get_property = _get_property;
   object_class->set_property = _set_property;
@@ -207,13 +229,17 @@ gst_media_descriptor_class_init (GstMediaDescriptorClass * self_class)
 }
 
 static gint
-compare_tags (GstMediaDescriptor * ref, StreamNode * rstream,
-    StreamNode * cstream)
+compare_tags (GstValidateMediaDescriptor * ref,
+    GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode *
+    rstream,
+    GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode *
+    cstream)
 {
   gboolean found;
-  TagNode *rtag, *ctag;
+  GstValidateMediaGstValidateMediaGstValidateMediaTagNode *rtag, *ctag;
   GList *rtag_list, *ctag_list;
-  TagsNode *rtags, *ctags;
+  GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaTagsNode
+      * rtags, *ctags;
 
   rtags = rstream->tags;
   ctags = cstream->tags;
@@ -225,7 +251,9 @@ compare_tags (GstMediaDescriptor * ref, StreamNode * rstream,
 
     for (taglist = ctags->tags; taglist; taglist = taglist->next) {
       gchar *stags =
-          gst_tag_list_to_string (((TagNode *) taglist->data)->taglist);
+          gst_tag_list_to_string ((
+              (GstValidateMediaGstValidateMediaGstValidateMediaTagNode *)
+              taglist->data)->taglist);
 
       g_string_append_printf (all_tags, "%s\n", stags);
       g_free (stags);
@@ -244,7 +272,9 @@ compare_tags (GstMediaDescriptor * ref, StreamNode * rstream,
 
     for (taglist = rtags->tags; taglist; taglist = taglist->next) {
       gchar *stags =
-          gst_tag_list_to_string (((TagNode *) taglist->data)->taglist);
+          gst_tag_list_to_string ((
+              (GstValidateMediaGstValidateMediaGstValidateMediaTagNode *)
+              taglist->data)->taglist);
 
       g_string_append_printf (all_tags, "%s\n", stags);
       g_free (stags);
@@ -338,8 +368,10 @@ stream_id_is_equal (const gchar * uri, const gchar * rid, const gchar * cid)
 }
 
 static gboolean
-compare_frames (GstMediaDescriptor * ref, StreamNode * rstream,
-    FrameNode * rframe, FrameNode * cframe)
+compare_frames (GstValidateMediaDescriptor * ref,
+    GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode *
+    rstream, GstValidateMediaGstValidateMediaGstValidateMediaFrameNode * rframe,
+    GstValidateMediaGstValidateMediaGstValidateMediaFrameNode * cframe)
 {
   if (rframe->id != cframe->id) {
     GST_VALIDATE_REPORT (ref, FILE_FRAMES_INCORRECT,
@@ -368,8 +400,11 @@ compare_frames (GstMediaDescriptor * ref, StreamNode * rstream,
 }
 
 static gboolean
-compare_frames_list (GstMediaDescriptor * ref, StreamNode * rstream,
-    StreamNode * cstream)
+compare_frames_list (GstValidateMediaDescriptor * ref,
+    GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode *
+    rstream,
+    GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode *
+    cstream)
 {
   GList *rframes, *cframes;
 
@@ -382,7 +417,7 @@ compare_frames_list (GstMediaDescriptor * ref, StreamNode * rstream,
 
   for (rframes = rstream->frames, cframes = cstream->frames; rframes;
       rframes = g_list_next (rframes), cframes = g_list_next (cframes)) {
-    FrameNode *rframe, *cframe;
+    GstValidateMediaGstValidateMediaGstValidateMediaFrameNode *rframe, *cframe;
 
     if (cframes == NULL) {
       /* The list was checked to be of the same size */
@@ -403,8 +438,11 @@ compare_frames_list (GstMediaDescriptor * ref, StreamNode * rstream,
 
 /*  Return -1 if not found 1 if OK 0 if an error occured */
 static gint
-compare_streams (GstMediaDescriptor * ref, StreamNode * rstream,
-    StreamNode * cstream)
+compare_streams (GstValidateMediaDescriptor * ref,
+    GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode *
+    rstream,
+    GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode *
+    cstream)
 {
   if (stream_id_is_equal (ref->filenode->uri, rstream->id, cstream->id)) {
     if (!gst_caps_is_equal (rstream->caps, cstream->caps)) {
@@ -431,11 +469,12 @@ compare_streams (GstMediaDescriptor * ref, StreamNode * rstream,
 }
 
 gboolean
-gst_media_descriptors_compare (GstMediaDescriptor * ref,
-    GstMediaDescriptor * compared)
+gst_validate_media_descriptors_compare (GstValidateMediaDescriptor * ref,
+    GstValidateMediaDescriptor * compared)
 {
   GList *rstream_list;
-  FileNode *rfilenode = ref->filenode, *cfilenode = compared->filenode;
+  GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaFileNode
+      * rfilenode = ref->filenode, *cfilenode = compared->filenode;
 
   if (rfilenode->duration != cfilenode->duration) {
     GST_VALIDATE_REPORT (ref, FILE_DURATION_INCORRECT,
@@ -479,7 +518,7 @@ gst_media_descriptors_compare (GstMediaDescriptor * ref,
     if (sfound == -1) {
       GST_VALIDATE_REPORT (ref, FILE_PROFILE_INCORRECT,
           "Could not find stream %s in the compared descriptor",
-          ((StreamNode *) rstream_list->data)->id);
+          ((GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode *) rstream_list->data)->id);
 
       return FALSE;
     }
@@ -489,28 +528,31 @@ gst_media_descriptors_compare (GstMediaDescriptor * ref,
 }
 
 gboolean
-gst_media_descriptor_detects_frames (GstMediaDescriptor * self)
+gst_validate_media_descriptor_detects_frames (GstValidateMediaDescriptor * self)
 {
-  g_return_val_if_fail (GST_IS_MEDIA_DESCRIPTOR (self), FALSE);
+  g_return_val_if_fail (GST_IS_VALIDATE_MEDIA_DESCRIPTOR (self), FALSE);
   g_return_val_if_fail (self->filenode, FALSE);
 
   return self->filenode->frame_detection;
 }
 
 gboolean
-gst_media_descriptor_get_buffers (GstMediaDescriptor * self,
+gst_validate_media_descriptor_get_buffers (GstValidateMediaDescriptor * self,
     GstPad * pad, GCompareFunc compare_func, GList ** bufs)
 {
   GList *tmpstream, *tmpframe;
   gboolean check = (pad == NULL), ret = FALSE;
   GstCaps *pad_caps = gst_pad_get_current_caps (pad);
 
-  g_return_val_if_fail (GST_IS_MEDIA_DESCRIPTOR (self), FALSE);
+  g_return_val_if_fail (GST_IS_VALIDATE_MEDIA_DESCRIPTOR (self), FALSE);
   g_return_val_if_fail (self->filenode, FALSE);
 
   for (tmpstream = self->filenode->streams;
       tmpstream; tmpstream = tmpstream->next) {
-    StreamNode *streamnode = (StreamNode *) tmpstream->data;
+    GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode
+        * streamnode =
+        (GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode
+        *) tmpstream->data;
 
     if (pad && streamnode->pad == pad)
       check = TRUE;
@@ -525,12 +567,15 @@ gst_media_descriptor_get_buffers (GstMediaDescriptor * self,
         if (compare_func)
           *bufs =
               g_list_insert_sorted (*bufs,
-              gst_buffer_ref (((FrameNode *) tmpframe->data)->buf),
-              compare_func);
+              gst_buffer_ref ((
+                      (GstValidateMediaGstValidateMediaGstValidateMediaFrameNode
+                          *) tmpframe->data)->buf), compare_func);
         else
           *bufs =
               g_list_prepend (*bufs,
-              gst_buffer_ref (((FrameNode *) tmpframe->data)->buf));
+              gst_buffer_ref ((
+                      (GstValidateMediaGstValidateMediaGstValidateMediaFrameNode
+                          *) tmpframe->data)->buf));
       }
 
       if (pad != NULL)
@@ -549,13 +594,16 @@ done:
 }
 
 gboolean
-gst_media_descriptor_has_frame_info (GstMediaDescriptor * self)
+gst_validate_media_descriptor_has_frame_info (GstValidateMediaDescriptor * self)
 {
   GList *tmpstream;
 
   for (tmpstream = self->filenode->streams;
       tmpstream; tmpstream = tmpstream->next) {
-    StreamNode *streamnode = (StreamNode *) tmpstream->data;
+    GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode
+        * streamnode =
+        (GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode
+        *) tmpstream->data;
 
     if (g_list_length (streamnode->frames))
       return TRUE;
@@ -565,30 +613,33 @@ gst_media_descriptor_has_frame_info (GstMediaDescriptor * self)
 }
 
 GstClockTime
-gst_media_descriptor_get_duration (GstMediaDescriptor * self)
+gst_validate_media_descriptor_get_duration (GstValidateMediaDescriptor * self)
 {
-  g_return_val_if_fail (GST_IS_MEDIA_DESCRIPTOR (self), FALSE);
+  g_return_val_if_fail (GST_IS_VALIDATE_MEDIA_DESCRIPTOR (self), FALSE);
   g_return_val_if_fail (self->filenode, FALSE);
 
   return self->filenode->duration;
 }
 
 gboolean
-gst_media_descriptor_get_seekable (GstMediaDescriptor * self)
+gst_validate_media_descriptor_get_seekable (GstValidateMediaDescriptor * self)
 {
-  g_return_val_if_fail (GST_IS_MEDIA_DESCRIPTOR (self), FALSE);
+  g_return_val_if_fail (GST_IS_VALIDATE_MEDIA_DESCRIPTOR (self), FALSE);
   g_return_val_if_fail (self->filenode, FALSE);
 
   return self->filenode->seekable;
 }
 
 GList *
-gst_media_descriptor_get_pads (GstMediaDescriptor * self)
+gst_validate_media_descriptor_get_pads (GstValidateMediaDescriptor * self)
 {
   GList *ret = NULL, *tmp;
 
   for (tmp = self->filenode->streams; tmp; tmp = tmp->next) {
-    StreamNode *snode = (StreamNode *) tmp->data;
+    GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode
+        * snode =
+        (GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode
+        *) tmp->data;
     ret = g_list_append (ret, gst_pad_new (snode->padname, GST_PAD_UNKNOWN));
   }
 

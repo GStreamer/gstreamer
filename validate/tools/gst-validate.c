@@ -579,7 +579,8 @@ main (int argc, gchar ** argv)
 
   if (media_info) {
     GError *err = NULL;
-    GstMediaDescriptorParser *parser = gst_media_descriptor_parser_new (runner,
+    GstValidateMediaDescriptorParser *parser =
+        gst_validate_media_descriptor_parser_new (runner,
         media_info, &err);
 
     if (parser == NULL) {
@@ -591,7 +592,7 @@ main (int argc, gchar ** argv)
     }
 
     gst_validate_monitor_set_media_descriptor (monitor,
-        GST_MEDIA_DESCRIPTOR (parser));
+        GST_VALIDATE_MEDIA_DESCRIPTOR (parser));
     gst_object_unref (parser);
     g_free (media_info);
   }

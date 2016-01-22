@@ -372,7 +372,7 @@ gst_validate_monitor_get_property (GObject * object, guint prop_id,
 
 void
 gst_validate_monitor_set_media_descriptor (GstValidateMonitor * monitor,
-    GstMediaDescriptor * media_descriptor)
+    GstValidateMediaDescriptor * media_descriptor)
 {
   GstValidateMonitorClass *klass = GST_VALIDATE_MONITOR_GET_CLASS (monitor);
 

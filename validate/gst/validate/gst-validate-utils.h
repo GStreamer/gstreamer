@@ -29,11 +29,11 @@
 #include<gio/gio.h>
 #include <gst/gst.h>
 
-typedef int (*ParseVariableFunc) (const gchar *name,
+typedef int (*GstValidateGstValidateParseVariableFunc) (const gchar *name,
     double *value, gpointer user_data);
 
 gdouble gst_validate_utils_parse_expression (const gchar *expr,
-                                             ParseVariableFunc variable_func,
+                                             GstValidateGstValidateParseVariableFunc variable_func,
                                              gpointer user_data,
                                              gchar **error);
 guint gst_validate_utils_flags_from_str     (GType type, const gchar * str_flags);
@@ -42,7 +42,7 @@ gboolean gst_validate_utils_enum_from_str   (GType type,
                                              guint * enum_value);
 
 GList * gst_validate_utils_structs_parse_from_filename         (const gchar * scenario_file);
-GList * structs_parse_from_gfile            (GFile * scenario_file);
+GList * gst_validate_structs_parse_from_gfile            (GFile * scenario_file);
 
 gboolean gst_validate_element_has_klass (GstElement * element, const gchar * klass);
 gboolean gst_validate_utils_get_clocktime (GstStructure *structure, const gchar * name,

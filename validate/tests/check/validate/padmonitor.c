@@ -557,7 +557,7 @@ _check_media_info (GstSegment * segment, BufferDesc * bufs)
   GstValidateReport *report;
   GstValidateMonitor *monitor;
   GstValidateRunner *runner;
-  GstMediaDescriptor *mdesc;
+  GstValidateMediaDescriptor *mdesc;
 
   GError *err = NULL;
   gint i, num_issues = 0;
@@ -565,8 +565,9 @@ _check_media_info (GstSegment * segment, BufferDesc * bufs)
   fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
   runner = gst_validate_runner_new ();
 
-  mdesc = (GstMediaDescriptor *)
-      gst_media_descriptor_parser_new_from_xml (runner, media_info, &err);
+  mdesc = (GstValidateMediaDescriptor *)
+      gst_validate_media_descriptor_parser_new_from_xml (runner, media_info,
+      &err);
 
   decoder = fake_decoder_new ();
   monitor = _start_monitoring_element (decoder, runner);
