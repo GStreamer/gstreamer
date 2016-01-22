@@ -889,14 +889,15 @@ gst_audio_resampler_new (GstAudioResamplerMethod method,
   resampler->bps = GST_AUDIO_FORMAT_INFO_WIDTH (info) / 8;
   resampler->bpf = resampler->bps * channels;
   resampler->sbuf = g_malloc0 (sizeof (gpointer) * channels);
-  /* half of the filter is filled with 0 */
-  resampler->samp_index = 0;
-  resampler->samples_avail = resampler->n_taps / 2;
 
   GST_DEBUG ("method %d, bps %d, bpf %d", method, resampler->bps,
       resampler->bpf);
 
   gst_audio_resampler_update (resampler, in_rate, out_rate, options);
+
+  /* half of the filter is filled with 0 */
+  resampler->samp_index = 0;
+  resampler->samples_avail = resampler->n_taps / 2;
 
   return resampler;
 }
