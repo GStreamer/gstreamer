@@ -1448,8 +1448,6 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
         priv->profile = profile;
     }
 
-#if GST_CHECK_VERSION(1,5,0)
-    /* Multiview flags only available in >= 1.5 */
     if (reset_context) {
         switch (num_views) {
           case 1:
@@ -1476,7 +1474,6 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
             break;
         }
     }
-#endif
 
     chroma_type = gst_vaapi_utils_h264_get_chroma_type(sps->chroma_format_idc);
     if (!chroma_type) {

@@ -58,7 +58,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapisink);
 /* *INDENT-OFF* */
 static const char gst_vaapisink_sink_caps_str[] =
     GST_VAAPI_MAKE_ENC_SURFACE_CAPS ";"
-#if GST_CHECK_VERSION(1,3,1)
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES (
         GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE ","
             GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
@@ -66,7 +65,6 @@ static const char gst_vaapisink_sink_caps_str[] =
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES (
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
         GST_VIDEO_FORMATS_ALL) ";"
-#endif
     GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL);
 /* *INDENT-ON* */
 

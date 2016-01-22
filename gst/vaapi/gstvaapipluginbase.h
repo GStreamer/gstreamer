@@ -130,11 +130,6 @@ struct _GstVaapiPluginBase
   GstVideoInfo srcpad_info;
   GstBufferPool *srcpad_buffer_pool;
 
-#if !GST_CHECK_VERSION(1,4,0)
-  GstPadQueryFunction srcpad_query;
-  GstPadQueryFunction sinkpad_query;
-#endif
-
   GstVaapiDisplay *display;
   GstVaapiDisplayType display_type;
   GstVaapiDisplayType display_type_req;

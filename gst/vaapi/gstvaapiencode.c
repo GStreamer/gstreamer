@@ -57,7 +57,6 @@ ensure_display (GstVaapiEncode * encode)
   return gst_vaapi_plugin_base_ensure_display (GST_VAAPI_PLUGIN_BASE (encode));
 }
 
-#if GST_CHECK_VERSION(1,4,0)
 static gboolean
 gst_vaapiencode_sink_query (GstVideoEncoder * encoder, GstQuery * query)
 {
@@ -95,27 +94,6 @@ gst_vaapiencode_src_query (GstVideoEncoder * encoder, GstQuery * query)
 
   return ret;
 }
-#else
-static gboolean
-gst_vaapiencode_query (GstPad * pad, GstObject * parent, GstQuery * query)
-{
-  GstVaapiPluginBase *const plugin =
-      GST_VAAPI_PLUGIN_BASE (gst_pad_get_parent_element (pad));
-  gboolean success;
-
-  GST_INFO_OBJECT (plugin, "query type %s", GST_QUERY_TYPE_NAME (query));
-
-  if (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT)
-    success = gst_vaapi_handle_context_query (query, plugin->display);
-  else if (GST_PAD_IS_SINK (pad))
-    success = plugin->sinkpad_query (plugin->sinkpad, parent, query);
-  else
-    success = plugin->srcpad_query (plugin->srcpad, parent, query);
-
-  gst_object_unref (plugin);
-  return success;
-}
-#endif
 
 typedef struct
 {
@@ -649,11 +627,6 @@ gst_vaapiencode_init (GstVaapiEncode * encode)
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (encode);
 
   gst_vaapi_plugin_base_init (GST_VAAPI_PLUGIN_BASE (encode), GST_CAT_DEFAULT);
-
-#if !GST_CHECK_VERSION(1,4,0)
-  gst_pad_set_query_function (plugin->sinkpad, gst_vaapiencode_query);
-  gst_pad_set_query_function (plugin->srcpad, gst_vaapiencode_query);
-#endif
   gst_pad_use_fixed_caps (plugin->srcpad);
 }
 
@@ -687,13 +660,8 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
   klass->set_property = gst_vaapiencode_default_set_property;
   klass->alloc_buffer = gst_vaapiencode_default_alloc_buffer;
 
-#if GST_CHECK_VERSION(1,4,0)
   venc_class->src_query = GST_DEBUG_FUNCPTR (gst_vaapiencode_src_query);
   venc_class->sink_query = GST_DEBUG_FUNCPTR (gst_vaapiencode_sink_query);
-#else
-  /* Registering debug symbols for function pointers */
-  GST_DEBUG_REGISTER_FUNCPTR (gst_vaapiencode_query);
-#endif
 }
 
 static inline GPtrArray *

@@ -924,7 +924,6 @@ gst_vaapi_decoder_set_interlaced (GstVaapiDecoder * decoder,
           GST_VIDEO_INTERLACE_MODE_PROGRESSIVE));
 }
 
-#if GST_CHECK_VERSION(1,5,0)
 void
 gst_vaapi_decoder_set_multiview_mode (GstVaapiDecoder * decoder,
     gint views, GstVideoMultiviewMode mv_mode, GstVideoMultiviewFlags mv_flags)
@@ -951,7 +950,6 @@ gst_vaapi_decoder_set_multiview_mode (GstVaapiDecoder * decoder,
     notify_codec_state_changed (decoder);
   }
 }
-#endif
 
 gboolean
 gst_vaapi_decoder_ensure_context (GstVaapiDecoder * decoder,

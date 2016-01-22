@@ -2793,12 +2793,10 @@ gst_vaapi_encoder_h264_reconfigure (GstVaapiEncoder * base_encoder)
     encoder->config_changed = TRUE;
   }
 
-#if GST_CHECK_VERSION(1,5,0)
   /* Take number of MVC views from input caps if provided */
   if (GST_VIDEO_INFO_MULTIVIEW_MODE (vip) == GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME ||
       GST_VIDEO_INFO_MULTIVIEW_MODE (vip) == GST_VIDEO_MULTIVIEW_MODE_MULTIVIEW_FRAME_BY_FRAME)
     encoder->num_views = GST_VIDEO_INFO_VIEWS (vip);
-#endif
 
   encoder->is_mvc = encoder->num_views > 1;
 
