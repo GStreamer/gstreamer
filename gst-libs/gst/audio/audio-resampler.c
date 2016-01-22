@@ -629,7 +629,6 @@ resampler_calculate_taps (GstAudioResampler * resampler)
   DeinterleaveFunc deinterleave;
   ResampleFunc resample, resample_2;
 
-
   switch (resampler->method) {
     case GST_AUDIO_RESAMPLER_METHOD_NEAREST:
       resampler->n_taps = 2;
@@ -890,6 +889,9 @@ gst_audio_resampler_new (GstAudioResamplerMethod method,
   resampler->bps = GST_AUDIO_FORMAT_INFO_WIDTH (info) / 8;
   resampler->bpf = resampler->bps * channels;
   resampler->sbuf = g_malloc0 (sizeof (gpointer) * channels);
+  /* half of the filter is filled with 0 */
+  resampler->samp_index = 0;
+  resampler->samples_avail = resampler->n_taps / 2;
 
   GST_DEBUG ("method %d, bps %d, bpf %d", method, resampler->bps,
       resampler->bpf);
@@ -911,6 +913,8 @@ gst_audio_resampler_new (GstAudioResamplerMethod method,
  *
  * When @in_rate or @out_rate is 0, its value is unchanged.
  *
+ * When @options is %NULL, the previously configured options are reused.
+ *
  * Returns: %TRUE if the new parameters could be set
  */
 gboolean
@@ -930,6 +934,12 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
   in_rate /= gcd;
   out_rate /= gcd;
 
+  if (resampler->out_rate > 0)
+    resampler->samp_phase =
+        (resampler->samp_phase * out_rate) / resampler->out_rate;
+  else
+    resampler->samp_phase = 0;
+
   resampler->in_rate = in_rate;
   resampler->out_rate = out_rate;
   if (options) {
@@ -943,9 +953,6 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
   resampler_calculate_taps (resampler);
   resampler_dump (resampler);
 
-  resampler->samp_index = 0;
-  resampler->samp_phase = 0;
-  resampler->samples_avail = resampler->n_taps / 2 - 1;
 
   return TRUE;
 }
@@ -978,11 +985,15 @@ calc_out (GstAudioResampler * resampler, gsize in)
 {
   gsize out;
 
-  out = ((in * resampler->out_rate -
-          resampler->samp_phase) / resampler->in_rate) + 1;
+  out = in * resampler->out_rate;
+  if (out < resampler->samp_phase)
+    return 0;
+
+  out = ((out - resampler->samp_phase) / resampler->in_rate) + 1;
   GST_LOG ("out %d = ((%d * %d - %d) / %d) + 1", (gint) out,
       (gint) in, resampler->out_rate, resampler->samp_phase,
       resampler->in_rate);
+
   return out;
 }
 
