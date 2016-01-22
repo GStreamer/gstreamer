@@ -446,6 +446,9 @@ _read_power (MathParser * parser)
   return v0;
 }
 
+/**
+ * gst_validate_utils_parse_expression: (skip):
+ */
 gdouble
 gst_validate_utils_parse_expression (const gchar * expr,
     GstValidateGstValidateParseVariableFunc variable_func, gpointer user_data,
@@ -614,6 +617,9 @@ failed:
   goto done;
 }
 
+/**
+ * gst_validate_utils_structs_parse_from_filename: (skip):
+ */
 GList *
 gst_validate_utils_structs_parse_from_filename (const gchar * scenario_file)
 {
@@ -629,6 +635,9 @@ gst_validate_utils_structs_parse_from_filename (const gchar * scenario_file)
   return _lines_get_strutures (lines);
 }
 
+/**
+ * gst_validate_structs_parse_from_gfile: (skip):
+ */
 GList *
 gst_validate_structs_parse_from_gfile (GFile * scenario_file)
 {

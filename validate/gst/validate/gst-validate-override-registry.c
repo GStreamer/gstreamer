@@ -109,6 +109,9 @@ gst_validate_overide_registery_free (GstValidateOverrideRegistry * reg)
   g_slice_free (GstValidateOverrideRegistry, reg);
 }
 
+/**
+ * gst_validate_override_registry_get: (skip):
+ */
 GstValidateOverrideRegistry *
 gst_validate_override_registry_get (void)
 {
@@ -417,6 +420,9 @@ gst_validate_override_registry_preload (void)
   return nloaded;
 }
 
+/**
+ * gst_validate_override_registry_get_override_for_names: (skip):
+ */
 GList *gst_validate_override_registry_get_override_for_names
     (GstValidateOverrideRegistry * reg, const gchar * name, ...)
 {

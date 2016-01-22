@@ -259,7 +259,7 @@ gst_validate_reporter_g_log_func (const gchar * log_domain,
 
 /**
  * gst_validate_report:
- * @report: The source of the new report
+ * @reporter: The source of the new report
  * @issue_id: The #GstValidateIssueId of the issue
  * @format: The format of the message describing the issue in a printf
  *       format followed by the parametters.
@@ -313,6 +313,12 @@ gst_validate_reporter_get_name (GstValidateReporter * reporter)
   return priv->name;
 }
 
+/**
+ * gst_validate_reporter_get_runner:
+ * @reporter: The reporter to get the runner from
+ *
+ * Returns: (transfer none): The runner
+ */
 GstValidateRunner *
 gst_validate_reporter_get_runner (GstValidateReporter * reporter)
 {

@@ -536,6 +536,9 @@ gst_validate_media_descriptor_detects_frames (GstValidateMediaDescriptor * self)
   return self->filenode->frame_detection;
 }
 
+/**
+ * gst_validate_media_descriptor_get_buffers: (skip):
+ */
 gboolean
 gst_validate_media_descriptor_get_buffers (GstValidateMediaDescriptor * self,
     GstPad * pad, GCompareFunc compare_func, GList ** bufs)
@@ -630,6 +633,9 @@ gst_validate_media_descriptor_get_seekable (GstValidateMediaDescriptor * self)
   return self->filenode->seekable;
 }
 
+/**
+ * gst_validate_media_descriptor_get_pads: (skip):
+ */
 GList *
 gst_validate_media_descriptor_get_pads (GstValidateMediaDescriptor * self)
 {

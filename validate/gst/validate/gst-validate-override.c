@@ -162,6 +162,9 @@ gst_validate_override_get_severity (GstValidateOverride * override,
   return default_level;
 }
 
+/**
+ * gst_validate_override_set_event_handler: (skip):
+ */
 void
 gst_validate_override_set_event_handler (GstValidateOverride * override,
     GstValidateOverrideEventHandler handler)
@@ -169,6 +172,9 @@ gst_validate_override_set_event_handler (GstValidateOverride * override,
   override->event_handler = handler;
 }
 
+/**
+ * gst_validate_override_set_buffer_handler : (skip):
+ */
 void
 gst_validate_override_set_buffer_handler (GstValidateOverride * override,
     GstValidateOverrideBufferHandler handler)
@@ -176,6 +182,9 @@ gst_validate_override_set_buffer_handler (GstValidateOverride * override,
   override->buffer_handler = handler;
 }
 
+/**
+ * gst_validate_override_set_query_handler: (skip):
+ */
 void
 gst_validate_override_set_query_handler (GstValidateOverride * override,
     GstValidateOverrideQueryHandler handler)
@@ -183,6 +192,9 @@ gst_validate_override_set_query_handler (GstValidateOverride * override,
   override->query_handler = handler;
 }
 
+/**
+ * gst_validate_override_set_buffer_probe_handler: (skip):
+ */
 void
 gst_validate_override_set_buffer_probe_handler (GstValidateOverride * override,
     GstValidateOverrideBufferHandler handler)
@@ -190,6 +202,9 @@ gst_validate_override_set_buffer_probe_handler (GstValidateOverride * override,
   override->buffer_probe_handler = handler;
 }
 
+/**
+ * gst_validate_override_set_getcaps_handler: (skip):
+ */
 void
 gst_validate_override_set_getcaps_handler (GstValidateOverride * override,
     GstValidateOverrideGetCapsHandler handler)
@@ -197,6 +212,9 @@ gst_validate_override_set_getcaps_handler (GstValidateOverride * override,
   override->getcaps_handler = handler;
 }
 
+/**
+ * gst_validate_override_set_setcaps_handler: (skip):
+ */
 void
 gst_validate_override_set_setcaps_handler (GstValidateOverride * override,
     GstValidateOverrideSetCapsHandler handler)
@@ -204,6 +222,9 @@ gst_validate_override_set_setcaps_handler (GstValidateOverride * override,
   override->setcaps_handler = handler;
 }
 
+/**
+ * gst_validate_override_event_handler: (skip):
+ */
 void
 gst_validate_override_event_handler (GstValidateOverride * override,
     GstValidateMonitor * monitor, GstEvent * event)
@@ -212,6 +233,9 @@ gst_validate_override_event_handler (GstValidateOverride * override,
     override->event_handler (override, monitor, event);
 }
 
+/**
+ * gst_validate_override_buffer_handler: (skip):
+ */
 void
 gst_validate_override_buffer_handler (GstValidateOverride * override,
     GstValidateMonitor * monitor, GstBuffer * buffer)
@@ -220,6 +244,9 @@ gst_validate_override_buffer_handler (GstValidateOverride * override,
     override->buffer_handler (override, monitor, buffer);
 }
 
+/**
+ * gst_validate_override_query_handler: (skip):
+ */
 void
 gst_validate_override_query_handler (GstValidateOverride * override,
     GstValidateMonitor * monitor, GstQuery * query)
@@ -228,6 +255,9 @@ gst_validate_override_query_handler (GstValidateOverride * override,
     override->query_handler (override, monitor, query);
 }
 
+/**
+ * gst_validate_override_buffer_probe_handler: (skip):
+ */
 void
 gst_validate_override_buffer_probe_handler (GstValidateOverride * override,
     GstValidateMonitor * monitor, GstBuffer * buffer)
@@ -236,6 +266,9 @@ gst_validate_override_buffer_probe_handler (GstValidateOverride * override,
     override->buffer_probe_handler (override, monitor, buffer);
 }
 
+/**
+ * gst_validate_override_getcaps_handler: (skip):
+ */
 void
 gst_validate_override_getcaps_handler (GstValidateOverride * override,
     GstValidateMonitor * monitor, GstCaps * caps)
@@ -244,6 +277,9 @@ gst_validate_override_getcaps_handler (GstValidateOverride * override,
     override->getcaps_handler (override, monitor, caps);
 }
 
+/**
+ * gst_validate_override_setcaps_handler: (skip):
+ */
 void
 gst_validate_override_setcaps_handler (GstValidateOverride * override,
     GstValidateMonitor * monitor, GstCaps * caps)
@@ -252,6 +288,9 @@ gst_validate_override_setcaps_handler (GstValidateOverride * override,
     override->setcaps_handler (override, monitor, caps);
 }
 
+/**
+ * gst_validate_override_can_attach: (skip):
+ */
 gboolean
 gst_validate_override_can_attach (GstValidateOverride * override,
     GstValidateMonitor * monitor)

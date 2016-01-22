@@ -2987,13 +2987,13 @@ gst_validate_action_set_done (GstValidateAction * action)
       (GDestroyNotify) gst_validate_action_unref);
 }
 
-/* gst_validate_action_get_scenario:
+/**
+ * gst_validate_action_get_scenario:
  * @action: The action from which to retrieve the scenario
  *
  * Retrieve the scenario from which @action is executed.
  *
- * Returns: (transfer full): The scenario from which the action
- * is being executed.
+ * Returns: (transfer full): The scenario from which the action is being executed.
  */
 GstValidateScenario *
 gst_validate_action_get_scenario (GstValidateAction * action)
@@ -3011,8 +3011,7 @@ gst_validate_action_get_scenario (GstValidateAction * action)
  * @function: (scope notified): The function to be called to execute the action
  * @parameters: (allow-none) (array zero-terminated=1) (element-type GstValidate.ActionParameter): The #GstValidateActionParameter usable as parameter of the type
  * @description: A description of the new type
- * @is_config: Whether the action is a config action or not. A config action will
- * be executed even before the pipeline starts processing
+ * @flags: The #GstValidateActionTypeFlags to set on the new action type
  *
  * Register a new action type to the action type system. If the action type already
  * exists, it will be overriden by that new definition

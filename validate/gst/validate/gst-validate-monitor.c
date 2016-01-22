@@ -246,6 +246,12 @@ gst_validate_monitor_setup (GstValidateMonitor * monitor)
   return GST_VALIDATE_MONITOR_GET_CLASS (monitor)->setup (monitor);
 }
 
+/**
+ * gst_validate_monitor_get_element
+ * @monitor: The monitor
+ *
+ * Returns: (transfer none): The GstElement associated with @monitor
+ */
 GstElement *
 gst_validate_monitor_get_element (GstValidateMonitor * monitor)
 {

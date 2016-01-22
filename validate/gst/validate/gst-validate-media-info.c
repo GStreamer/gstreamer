@@ -164,6 +164,9 @@ gst_validate_media_info_save (GstValidateMediaInfo * mi, const gchar * path,
   return TRUE;
 }
 
+/**
+ * gst_validate_media_info_load: (skip):
+ */
 GstValidateMediaInfo *
 gst_validate_media_info_load (const gchar * path, GError ** err)
 {
