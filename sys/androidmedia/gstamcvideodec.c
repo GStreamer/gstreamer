@@ -1445,8 +1445,10 @@ retry:
     flow_ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
   }
 
-  gst_amc_buffer_free (buf);
-  buf = NULL;
+  if (buf) {
+    gst_amc_buffer_free (buf);
+    buf = NULL;
+  }
 
   if (release_buffer) {
     if (!gst_amc_codec_release_output_buffer (self->codec, idx, FALSE, &err)) {
@@ -1608,6 +1610,10 @@ invalid_buffer:
   }
 gl_output_error:
   {
+    if (buf) {
+      gst_amc_buffer_free (buf);
+      buf = NULL;
+    }
     gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (self), gst_event_new_eos ());
     gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_NOT_NEGOTIATED;
