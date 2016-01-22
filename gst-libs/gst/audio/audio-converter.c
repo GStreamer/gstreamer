@@ -397,7 +397,7 @@ get_temp_samples (AudioChain * chain, gsize num_samples, gpointer user_data)
     gsize stride = GST_ROUND_UP_N (num_samples * chain->stride, ALIGN);
     /* first part contains the pointers, second part the data, add some extra bytes
      * for alignement */
-    gsize needed = (stride + sizeof (gpointer)) * chain->blocks + ALIGN;
+    gsize needed = (stride + sizeof (gpointer)) * chain->blocks + ALIGN - 1;
 
     GST_DEBUG ("alloc samples %d %" G_GSIZE_FORMAT " %" G_GSIZE_FORMAT,
         chain->stride, num_samples, needed);

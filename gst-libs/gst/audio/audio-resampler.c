@@ -47,6 +47,8 @@ typedef void (*DeinterleaveFunc) (GstAudioResampler * resampler,
     gpointer * sbuf, gpointer in[], gsize in_frames);
 
 #define MEM_ALIGN(m,a) ((gint8 *)((guintptr)((gint8 *)(m) + ((a)-1)) & ~((a)-1)))
+#define ALIGN 16
+#define TAPS_OVERREAD 16
 
 struct _GstAudioResampler
 {
@@ -671,10 +673,10 @@ resampler_calculate_taps (GstAudioResampler * resampler)
 
   resampler->taps = g_realloc_n (resampler->taps, out_rate, sizeof (Tap));
 
-  resampler->cstride = GST_ROUND_UP_32 (bps * (n_taps + 16));
+  resampler->cstride = GST_ROUND_UP_32 (bps * (n_taps + TAPS_OVERREAD));
   g_free (resampler->coeffmem);
-  resampler->coeffmem = g_malloc0 (out_rate * resampler->cstride + 31);
-  resampler->coeff = MEM_ALIGN (resampler->coeffmem, 32);
+  resampler->coeffmem = g_malloc0 (out_rate * resampler->cstride + ALIGN - 1);
+  resampler->coeff = MEM_ALIGN (resampler->coeffmem, ALIGN);
 
   resampler->tmpcoeff =
       g_realloc_n (resampler->tmpcoeff, n_taps, sizeof (gdouble));
@@ -1065,22 +1067,19 @@ get_sample_bufs (GstAudioResampler * resampler, gsize need)
 {
   if (G_LIKELY (resampler->samples_len < need)) {
     guint c, blocks = resampler->blocks;
-    gsize bytes, bpf;
+    gsize bytes;
     gint8 *ptr;
 
     GST_LOG ("realloc %d -> %d", (gint) resampler->samples_len, (gint) need);
 
-    bpf = resampler->bps * resampler->inc;
-
-    bytes = (need + 8) * bpf;
-    bytes = GST_ROUND_UP_32 (bytes);
+    bytes = GST_ROUND_UP_N (need * resampler->bps * resampler->inc, ALIGN);
 
     /* FIXME, move history */
     resampler->samples =
-        g_realloc (resampler->samples, resampler->blocks * bytes + 31);
+        g_realloc (resampler->samples, resampler->blocks * bytes + ALIGN - 1);
     resampler->samples_len = need;
 
-    ptr = MEM_ALIGN (resampler->samples, 32);
+    ptr = MEM_ALIGN (resampler->samples, ALIGN);
 
     /* set up new pointers */
     for (c = 0; c < blocks; c++) {
