@@ -27,12 +27,12 @@ function test() {
 }
 
 echo "$tracer"
-GST_DEBUG="GST_TRACER:7" GST_TRACER_PLUGINS="$tracer" test
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="$tracer" test
 GST_DEBUG=
 
 echo "no-log"
-GST_TRACER_PLUGINS="$tracer" test
-GST_TRACER_PLUGINS=
+GST_TRACERS="$tracer" test
+GST_TRACERS=
 
 echo "reference"
 test

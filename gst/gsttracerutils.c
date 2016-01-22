@@ -66,7 +66,7 @@ GHashTable *_priv_tracers = NULL;
 void
 _priv_gst_tracing_init (void)
 {
-  const gchar *env = g_getenv ("GST_TRACER_PLUGINS");
+  const gchar *env = g_getenv ("GST_TRACERS");
 
   if (env != NULL && *env != '\0') {
     GstRegistry *registry = gst_registry_get ();
