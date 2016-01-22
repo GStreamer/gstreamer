@@ -1663,6 +1663,9 @@ _init_classes (void)
         gst_amc_jni_get_class (env, &err,
         "org/freedesktop/gstreamer/androidmedia/GstAhcCallback");
   }
+  if (!org_freedesktop_gstreamer_androidmedia_gstahccallback.klass)
+    goto failed;
+
   org_freedesktop_gstreamer_androidmedia_gstahccallback.constructor =
       gst_amc_jni_get_method_id (env, &err,
       org_freedesktop_gstreamer_androidmedia_gstahccallback.klass, "<init>",
