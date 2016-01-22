@@ -1738,7 +1738,6 @@ gst_v4l2_object_get_colorspace (enum v4l2_colorspace colorspace,
       break;
     case V4L2_COLORSPACE_SRGB:
     case V4L2_COLORSPACE_JPEG:
-      /* This is in fact sYCC */
       cinfo->range = GST_VIDEO_COLOR_RANGE_0_255;
       cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT601;
       cinfo->transfer = GST_VIDEO_TRANSFER_SRGB;
