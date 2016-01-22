@@ -1023,8 +1023,10 @@ process_buffer:
   is_eos = ! !(buffer_info.flags & BUFFER_FLAG_END_OF_STREAM);
 
   buf = gst_amc_codec_get_output_buffer (self->codec, idx, &err);
-  if (!buf)
+  if (err)
     goto failed_to_get_output_buffer;
+  else if (!buf)
+    goto got_null_output_buffer;
 
   flow_ret =
       gst_amc_video_enc_handle_output_frame (self, buf, &buffer_info, frame);
@@ -1147,7 +1149,22 @@ failed_to_get_output_buffer:
     GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     gst_pad_push_event (GST_VIDEO_ENCODER_SRC_PAD (self), gst_event_new_eos ());
     gst_pad_pause_task (GST_VIDEO_ENCODER_SRC_PAD (self));
-    self->downstream_flow_ret = GST_FLOW_NOT_NEGOTIATED;
+    self->downstream_flow_ret = GST_FLOW_ERROR;
+    GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
+    g_mutex_lock (&self->drain_lock);
+    self->draining = FALSE;
+    g_cond_broadcast (&self->drain_cond);
+    g_mutex_unlock (&self->drain_lock);
+    return;
+  }
+
+got_null_output_buffer:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
+        ("Got no output buffer"));
+    gst_pad_push_event (GST_VIDEO_ENCODER_SRC_PAD (self), gst_event_new_eos ());
+    gst_pad_pause_task (GST_VIDEO_ENCODER_SRC_PAD (self));
+    self->downstream_flow_ret = GST_FLOW_ERROR;
     GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
     g_mutex_lock (&self->drain_lock);
     self->draining = FALSE;

@@ -369,21 +369,23 @@ gst_amc_codec_get_output_buffer (GstAmcCodec * codec, gint index, GError ** err)
           media_codec.get_output_buffer, &buffer, index))
     goto done;
 
-  ret = g_new0 (GstAmcBuffer, 1);
-  ret->object = gst_amc_jni_object_make_global (env, buffer);
-  if (!ret->object) {
-    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
-        GST_LIBRARY_ERROR_FAILED, "Failed to create global buffer reference");
-    goto error;
-  }
+  if (buffer != NULL) {
+    ret = g_new0 (GstAmcBuffer, 1);
+    ret->object = gst_amc_jni_object_make_global (env, buffer);
+    if (!ret->object) {
+      gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+          GST_LIBRARY_ERROR_FAILED, "Failed to create global buffer reference");
+      goto error;
+    }
 
-  ret->data = (*env)->GetDirectBufferAddress (env, ret->object);
-  if (!ret->data) {
-    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
-        GST_LIBRARY_ERROR_FAILED, "Failed to get buffer address");
-    goto error;
+    ret->data = (*env)->GetDirectBufferAddress (env, ret->object);
+    if (!ret->data) {
+      gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+          GST_LIBRARY_ERROR_FAILED, "Failed to get buffer address");
+      goto error;
+    }
+    ret->size = (*env)->GetDirectBufferCapacity (env, ret->object);
   }
-  ret->size = (*env)->GetDirectBufferCapacity (env, ret->object);
 
 done:
 
