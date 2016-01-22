@@ -28,6 +28,9 @@
  *
  * The user can activate tracers by setting the environment variable GST_TRACE
  * to a ';' separated list of tracers.
+ *
+ * Note that instanciating tracers at runtime is possible but is not thread safe
+ * and needs to be done before any pipeline state is set to PAUSED.
  */
 
 #define GST_USE_UNSTABLE_API
@@ -66,29 +69,32 @@ GHashTable *_priv_tracers = NULL;
 void
 _priv_gst_tracing_init (void)
 {
+  gint i = 0;
   const gchar *env = g_getenv ("GST_TRACERS");
+
+  /* We initialize the tracer sub system even if the end
+   * user did not activate it through the env variable
+   * so that external tools can use it anyway */
+  GST_DEBUG ("Initializing GstTracer");
+  _priv_tracers = g_hash_table_new (NULL, NULL);
+
+  if (G_N_ELEMENTS (_quark_strings) != GST_TRACER_QUARK_MAX)
+    g_warning ("the quark table is not consistent! %d != %d",
+        (gint) G_N_ELEMENTS (_quark_strings), GST_TRACER_QUARK_MAX);
+
+  for (i = 0; i < GST_TRACER_QUARK_MAX; i++) {
+    _priv_gst_tracer_quark_table[i] =
+        g_quark_from_static_string (_quark_strings[i]);
+  }
 
   if (env != NULL && *env != '\0') {
     GstRegistry *registry = gst_registry_get ();
     GstPluginFeature *feature;
     GstTracerFactory *factory;
     gchar **t = g_strsplit_set (env, ";", 0);
-    gint i = 0;
     gchar *params;
 
     GST_INFO ("enabling tracers: '%s'", env);
-
-    if (G_N_ELEMENTS (_quark_strings) != GST_TRACER_QUARK_MAX)
-      g_warning ("the quark table is not consistent! %d != %d",
-          (gint) G_N_ELEMENTS (_quark_strings), GST_TRACER_QUARK_MAX);
-
-    for (i = 0; i < GST_TRACER_QUARK_MAX; i++) {
-      _priv_gst_tracer_quark_table[i] =
-          g_quark_from_static_string (_quark_strings[i]);
-    }
-
-    _priv_tracers = g_hash_table_new (NULL, NULL);
-
     i = 0;
     while (t[i]) {
       // check t[i] for params
