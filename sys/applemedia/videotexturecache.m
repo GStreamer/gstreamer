@@ -158,7 +158,7 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
 
   base_mem_alloc = GST_GL_BASE_MEMORY_ALLOCATOR (gst_gl_memory_allocator_get_default (cache->ctx));
   output_buffer = gst_buffer_new ();
-  gst_buffer_copy_into (output_buffer, data->input_buffer, GST_BUFFER_COPY_METADATA, 0, -1);
+  gst_buffer_copy_into (output_buffer, data->input_buffer, GST_BUFFER_COPY_ALL, 0, -1);
 
   CVOpenGLESTextureCacheFlush (cache->cache, 0);
 
@@ -178,7 +178,7 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
             CVOpenGLESTextureGetName (texture), texture,
             (GDestroyNotify) CFRelease);
 
-        gst_buffer_append_memory (output_buffer,
+        gst_buffer_replace_memory (output_buffer, 0,
                 (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
                     (GstGLAllocationParams *) params));
         gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
@@ -205,7 +205,7 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
             CVOpenGLESTextureGetName (texture), texture,
             (GDestroyNotify) CFRelease);
 
-        gst_buffer_append_memory (output_buffer,
+        gst_buffer_replace_memory (output_buffer, 0,
                 (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
                     (GstGLAllocationParams *) params));
         gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
@@ -227,7 +227,7 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
             CVOpenGLESTextureGetName (texture), texture,
             (GDestroyNotify) CFRelease);
 
-        gst_buffer_append_memory (output_buffer,
+        gst_buffer_replace_memory (output_buffer, 1,
                 (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
                     (GstGLAllocationParams *) params));
         gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
@@ -256,7 +256,7 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
   IOSurfaceRef surface = CVPixelBufferGetIOSurface (pixel_buf);
 
   data->output_buffer = gst_buffer_new ();
-  gst_buffer_copy_into (data->output_buffer, data->input_buffer, GST_BUFFER_COPY_METADATA, 0, -1);
+  gst_buffer_copy_into (data->output_buffer, data->input_buffer, GST_BUFFER_COPY_ALL, 0, -1);
   for (int i = 0; i < GST_VIDEO_INFO_N_PLANES (&cache->input_info); i++) {
     GstIOSurfaceMemory *mem;
 
@@ -265,7 +265,7 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
             surface, GST_GL_TEXTURE_TARGET_RECTANGLE, &cache->input_info,
             i, NULL, pixel_buf, (GDestroyNotify) CFRelease);
 
-    gst_buffer_append_memory (data->output_buffer, (GstMemory *) mem);
+    gst_buffer_replace_memory (data->output_buffer, i, (GstMemory *) mem);
   }
 }
 #endif
