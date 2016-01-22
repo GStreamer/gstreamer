@@ -234,6 +234,17 @@ done:
 }
 
 static void
+gst_validate_reporter_destroyed (gpointer udata, GObject * freed_reporter)
+{
+  g_log_set_handler ("GStreamer",
+      G_LOG_LEVEL_MASK, (GLogFunc) g_log_default_handler, NULL);
+  g_log_set_handler ("GLib",
+      G_LOG_LEVEL_MASK, (GLogFunc) g_log_default_handler, NULL);
+  g_log_set_handler ("GLib-GObject",
+      G_LOG_LEVEL_MASK, (GLogFunc) g_log_default_handler, NULL);
+}
+
+static void
 gst_validate_reporter_g_log_func (const gchar * log_domain,
     GLogLevelFlags log_level, const gchar * message,
     GstValidateReporter * reporter)
@@ -350,6 +361,9 @@ gst_validate_reporter_set_handle_g_logs (GstValidateReporter * reporter)
       G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_reporter_g_log_func, reporter);
 
   g_log_handler = gst_validate_reporter_get_priv (reporter);
+  g_object_weak_ref (G_OBJECT (reporter), gst_validate_reporter_destroyed,
+      NULL);
+
 }
 
 /**
