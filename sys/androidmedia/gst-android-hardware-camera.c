@@ -334,7 +334,7 @@ static gboolean
 _init_classes (void)
 {
   JNIEnv *env;
-  GError *err;
+  GError *err = NULL;
 
   jclass klass;
   jfieldID fieldID;
