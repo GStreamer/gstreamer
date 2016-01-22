@@ -57,6 +57,14 @@ gst_validate_monitor_factory_create (GstObject * target,
   GstValidateMonitor *monitor = NULL;
   g_return_val_if_fail (target != NULL, NULL);
 
+  monitor = g_object_get_data ((GObject *) target, "validate-monitor");
+  if (monitor) {
+    GST_INFO_OBJECT (target, "Is already monitored by %" GST_PTR_FORMAT,
+        monitor);
+
+    return g_object_ref (monitor);
+  }
+
   if (GST_IS_PAD (target)) {
     monitor =
         GST_VALIDATE_MONITOR_CAST (gst_validate_pad_monitor_new (GST_PAD_CAST
@@ -73,8 +81,11 @@ gst_validate_monitor_factory_create (GstObject * target,
     monitor =
         GST_VALIDATE_MONITOR_CAST (gst_validate_element_monitor_new
         (GST_ELEMENT_CAST (target), runner, parent));
+  } else {
+    g_assert_not_reached ();
   }
 
+  g_object_set_data ((GObject *) target, "validate-monitor", monitor);
   gst_validate_override_registry_attach_overrides (monitor);
   return monitor;
 }

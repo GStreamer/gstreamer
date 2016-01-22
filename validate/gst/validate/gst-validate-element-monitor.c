@@ -248,8 +248,6 @@ gst_validate_element_monitor_do_setup (GstValidateMonitor * monitor)
     return FALSE;
   }
 
-  g_object_set_data ((GObject *) element, "validate-monitor", elem_monitor);
-
   gst_validate_element_monitor_inspect (elem_monitor);
 
   elem_monitor->pad_added_id = g_signal_connect (element, "pad-added",

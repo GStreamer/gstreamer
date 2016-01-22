@@ -207,8 +207,6 @@ gst_validate_bin_monitor_setup (GstValidateMonitor * monitor)
     return FALSE;
   }
 
-  g_object_set_data ((GObject *) bin, "validate-monitor", bin_monitor);
-
   bin_monitor->element_added_id =
       g_signal_connect (bin, "element-added",
       G_CALLBACK (_validate_bin_element_added), monitor);
