@@ -274,10 +274,6 @@ gst_validate_register_action_type      (const gchar *type_name,
                                         const gchar *description,
                                         GstValidateActionTypeFlags flags);
 
-void
-gst_validate_action_type_set_prepare_function (GstValidateActionType *type,
-                                               GstValidatePrepareAction prepare_action);
-
 GstValidateActionType *
 gst_validate_register_action_type_dynamic (GstPlugin *plugin,
                                            const gchar * type_name,

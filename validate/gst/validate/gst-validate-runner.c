@@ -586,6 +586,12 @@ gst_validate_runner_get_reports_count (GstValidateRunner * runner)
   return l;
 }
 
+/**
+ * gst_validate_runner_get_reports:
+ * @runner: The #GstValidateRunner
+ *
+ * Return: (element-type GstValidate.Report)(transfer full): all the reports
+ */
 GList *
 gst_validate_runner_get_reports (GstValidateRunner * runner)
 {
