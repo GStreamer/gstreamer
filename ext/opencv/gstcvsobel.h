@@ -70,6 +70,10 @@ struct _GstCvSobel
   gint x_order;
   gint y_order;
   gint aperture_size;
+
+  IplImage *cvCSobel;
+  IplImage *cvGray;
+  IplImage *cvSobel;
 };
 
 struct _GstCvSobelClass
