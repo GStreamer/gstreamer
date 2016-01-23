@@ -240,7 +240,7 @@ GST_START_TEST (info_dump_mem)
     0x00, 0x00, 0x00, 0x00, 0x00, 0x01, '%', 's', '%', 's'
   };
 
-  e = gst_element_factory_make ("fakesink", NULL);
+  e = gst_pipeline_new ("pipeline");
   GST_DEBUG_CATEGORY_INIT (cat, "dumpcat", 0, "data dump debug category");
   GST_MEMDUMP ("quicktime header", data, sizeof (data));
   GST_MEMDUMP (NULL, data, sizeof (data));
@@ -257,7 +257,7 @@ GST_START_TEST (info_fixme)
   GstDebugCategory *cat = NULL;
   GstElement *e;
 
-  e = gst_element_factory_make ("fakesink", NULL);
+  e = gst_pipeline_new ("pipeline");
   GST_DEBUG_CATEGORY_INIT (cat, "fixcat", 0, "FIXME debug category");
   GST_FIXME ("fix %s thing", "this");
   GST_FIXME_OBJECT (e, "fix %s object", "this");
