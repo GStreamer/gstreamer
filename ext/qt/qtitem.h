@@ -31,6 +31,8 @@
 
 typedef struct _QtGLVideoItemPrivate QtGLVideoItemPrivate;
 
+class InitializeSceneGraph;
+
 class QtGLVideoItem : public QQuickItem, protected QOpenGLFunctions
 {
     Q_OBJECT
@@ -55,10 +57,12 @@ protected:
     QSGNode * updatePaintNode (QSGNode * oldNode, UpdatePaintNodeData * updatePaintNodeData);
 
 private:
+    friend class InitializeSceneGraph;
     void setViewportSize(const QSize &size);
     void shareContext();
 
     QSize m_viewportSize;
+    bool m_openGlContextInitialized;
 };
 
 extern "C"
