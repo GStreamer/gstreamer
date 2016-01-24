@@ -33,8 +33,8 @@ ApplicationWindow {
             anchors.bottom: video.bottom
             anchors.bottomMargin: 15
             anchors.horizontalCenter: parent.horizontalCenter
-            width : childrenRect.width + 20
-            height: childrenRect.height + 20
+            width : parent.width - 30
+            height: parent.height - 30
             radius: 8
 
             MouseArea {
