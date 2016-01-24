@@ -2811,7 +2811,7 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
             # manually for the library one is using
             PKG_CHECK_MODULES(GNUSTL, gnustl, [
               QT_CFLAGS="$QT_CFLAGS $GNUSTL_CFLAGS"
-              QT_LIBS="$QT_CFLAGS $GNUSTL_LIBS"
+              QT_LIBS="$QT_LIBS $GNUSTL_LIBS"
               ], [
               AC_MSG_NOTICE([Could not find Standard C++ library])])
 
