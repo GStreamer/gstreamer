@@ -314,15 +314,13 @@ gst_skin_detect_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
 {
   GstSkinDetect *filter = GST_SKIN_DETECT (base);
 
-
-
   filter->cvRGB->imageData = (char *) img->imageData;
   filter->cvSkin->imageData = (char *) outimg->imageData;
 
   /* SKIN COLOUR BLOB DETECTION */
   if (HSV == filter->method) {
     cvCvtColor (filter->cvRGB, filter->cvHSV, CV_RGB2HSV);
-    cvCvtPixToPlane (filter->cvHSV, filter->cvH, filter->cvS, filter->cvV, 0);  /*  Extract the 3 color components. */
+    cvSplit (filter->cvHSV, filter->cvH, filter->cvS, filter->cvV, 0);  /*  Extract the 3 color components. */
 
     /*  Detect which pixels in each of the H, S and V channels are probably skin pixels.
        Assume that skin has a Hue between 0 to 18 (out of 180), and Saturation above 50, and Brightness above 80. */
