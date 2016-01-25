@@ -52,3 +52,23 @@ class TestCopyPaste(unittest.TestCase):
 
         copy.paste(10)
         self.assertEqual(len(self.layer.get_clips()), 1)
+
+    def testCopyPasteTitleClip(self):
+        clip1 = GES.TitleClip.new()
+        clip1.props.duration = 10
+
+        self.layer.add_clip(clip1)
+        self.assertEqual(len(clip1.get_children(False)), 1)
+
+        copy = clip1.copy(True)
+        self.assertEqual(len(self.layer.get_clips()), 1)
+
+        copy.paste(10)
+        self.assertEqual(len(self.layer.get_clips()), 2)
+
+
+class TestTitleClip(unittest.TestCase):
+    def testGetPropertyNotInTrack(self):
+        title_clip = GES.TitleClip.new()
+        self.assertEqual(title_clip.props.text, "")
+        self.assertEqual(title_clip.props.font_desc, "Serif 36")

@@ -93,6 +93,9 @@
 #include "ges-title-source.h"
 #include "ges-video-test-source.h"
 
+#define DEFAULT_TEXT ""
+#define DEFAULT_FONT_DESC "Serif 36"
+
 G_DEFINE_TYPE (GESTitleSource, ges_title_source, GES_TYPE_VIDEO_SOURCE);
 
 struct _GESTitleSourcePrivate
@@ -171,8 +174,8 @@ ges_title_source_init (GESTitleSource * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TITLE_SOURCE, GESTitleSourcePrivate);
 
-  self->priv->text = NULL;
-  self->priv->font_desc = NULL;
+  self->priv->text = g_strdup (DEFAULT_TEXT);
+  self->priv->font_desc = g_strdup (DEFAULT_FONT_DESC);
   self->priv->text_el = NULL;
   self->priv->halign = DEFAULT_HALIGNMENT;
   self->priv->valign = DEFAULT_VALIGNMENT;

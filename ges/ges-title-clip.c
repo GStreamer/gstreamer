@@ -70,44 +70,32 @@ static void
 ges_title_clip_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
+  GESTimelineElement *child, *tmpsrc = NULL;
   GESTitleClipPrivate *priv = GES_TITLE_CLIP (object)->priv;
 
+  if (!priv->track_titles)
+    child = tmpsrc = GES_TIMELINE_ELEMENT (ges_title_source_new ());
+  else
+    child = priv->track_titles->data;
+
   switch (property_id) {
+      /* Falltrough all over */
     case PROP_TEXT:
-      ges_track_element_get_child_property (priv->track_titles->data, "text",
-          value);
-      break;
     case PROP_FONT_DESC:
-      ges_track_element_get_child_property (priv->track_titles->data,
-          "font-desc", value);
-      break;
     case PROP_HALIGNMENT:
-      ges_track_element_get_child_property (priv->track_titles->data,
-          "halignment", value);
-      break;
     case PROP_VALIGNMENT:
-      ges_track_element_get_child_property (priv->track_titles->data,
-          "valignment", value);
-      break;
     case PROP_COLOR:
-      ges_track_element_get_child_property (priv->track_titles->data, "color",
-          value);
-      break;
     case PROP_BACKGROUND:
-      ges_track_element_get_child_property (priv->track_titles->data,
-          "foreground-color", value);
-      break;
     case PROP_XPOS:
-      ges_track_element_get_child_property (priv->track_titles->data, "xpos",
-          value);
-      break;
     case PROP_YPOS:
-      ges_track_element_get_child_property (priv->track_titles->data, "ypos",
-          value);
+      ges_timeline_element_get_child_property (child, pspec->name, value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
+
+  if (tmpsrc)
+    g_object_unref (tmpsrc);
 }
 
 static void
