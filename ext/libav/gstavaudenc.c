@@ -488,12 +488,12 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
       if (info->channels > AV_NUM_DATA_POINTERS) {
         buffer_info->ext_data_array = frame->extended_data =
-            g_new (uint8_t *, info->channels);
+            av_malloc_array (info->channels, sizeof (uint8_t *));
       } else {
         frame->extended_data = frame->data;
       }
 
-      buffer_info->ext_data = frame->extended_data[0] = g_malloc (in_size);
+      buffer_info->ext_data = frame->extended_data[0] = av_malloc (in_size);
       frame->linesize[0] = in_size / channels;
       for (i = 1; i < channels; i++)
         frame->extended_data[i] =
