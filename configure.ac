@@ -1067,13 +1067,6 @@ AC_SUBST(pkgconfigdir)
 
 AC_CONFIG_FILES([
     Makefile
-    debian.upstream/Makefile
-    debian.upstream/changelog
-    debian.upstream/control
-    debian.upstream/gstreamer$GST_API_VERSION-vaapi-doc.install:\
-debian.upstream/gstreamer-vaapi-doc.install.in
-    debian.upstream/gstreamer$GST_API_VERSION-vaapi.install:\
-debian.upstream/gstreamer-vaapi.install.in
     docs/Makefile
     docs/reference/Makefile
     docs/reference/libs/Makefile
