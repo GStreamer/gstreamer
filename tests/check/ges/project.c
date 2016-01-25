@@ -184,7 +184,7 @@ asset_added_cb (GESProject * project, GESAsset * asset)
   GstDiscovererInfo *info;
 
   if (ges_asset_get_extractable_type (asset) == GES_TYPE_EFFECT) {
-    assert_equals_string (ges_asset_get_id (asset), "agingtv");
+    assert_equals_string (ges_asset_get_id (asset), "video agingtv");
   } else {
     info = ges_uri_clip_asset_get_info (GES_URI_CLIP_ASSET (asset));
     fail_unless (GST_IS_DISCOVERER_INFO (info));

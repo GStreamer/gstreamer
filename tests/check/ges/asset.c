@@ -158,7 +158,7 @@ GST_START_TEST (test_proxy_asset)
 
   fail_unless (ges_init ());
 
-  identity = ges_asset_request (GES_TYPE_EFFECT, "identity", NULL);
+  identity = ges_asset_request (GES_TYPE_EFFECT, "video identity", NULL);
   fail_unless (identity != NULL);
 
   nothing = ges_asset_request (GES_TYPE_EFFECT, "nothing", NULL);
@@ -167,7 +167,7 @@ GST_START_TEST (test_proxy_asset)
   nothing = ges_asset_cache_lookup (GES_TYPE_EFFECT, "nothing");
   fail_unless (nothing != NULL);
 
-  fail_unless (ges_asset_try_proxy (nothing, "identity"));
+  fail_unless (ges_asset_try_proxy (nothing, "video identity"));
   fail_unless (ges_asset_set_proxy (NULL, identity));
 
   nothing_at_all = ges_asset_request (GES_TYPE_EFFECT, "nothing_at_all", NULL);

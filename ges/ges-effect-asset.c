@@ -33,48 +33,34 @@ G_DEFINE_TYPE (GESEffectAsset, ges_effect_asset, GES_TYPE_TRACK_ELEMENT_ASSET);
 
 struct _GESEffectAssetPrivate
 {
-  GESTrackType track_type;
+  gpointer nothing;
 };
 
-/* GESAsset virtual methods implementation */
+
+
 static void
 _fill_track_type (GESAsset * asset)
 {
-  GList *tmp;
-  GstElement *effect = gst_parse_bin_from_description (ges_asset_get_id (asset),
-      TRUE, NULL);
+  GESTrackType ttype;
+  gchar *bin_desc;
+  const gchar *id = ges_asset_get_id (asset);
 
-  if (effect == NULL)
-    return;
+  bin_desc = ges_effect_assect_id_get_type_and_bindesc (id, &ttype, NULL);
 
-  for (tmp = GST_BIN_CHILDREN (effect); tmp; tmp = tmp->next) {
-    GstElementFactory *factory =
-        gst_element_get_factory (GST_ELEMENT (tmp->data));
-    const gchar *klass =
-        gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
-
-    if (g_strrstr (klass, "Effect")) {
-      if (g_strrstr (klass, "Audio")) {
-        GES_EFFECT_ASSET (asset)->priv->track_type = GES_TRACK_TYPE_AUDIO;
-        break;
-      } else if (g_strrstr (klass, "Video")) {
-        GES_EFFECT_ASSET (asset)->priv->track_type = GES_TRACK_TYPE_VIDEO;
-        break;
-      }
-    }
+  if (bin_desc) {
+    ges_track_element_asset_set_track_type (GES_TRACK_ELEMENT_ASSET (asset),
+        ttype);
+  } else {
+    GST_WARNING_OBJECT (asset, "No track type set, you should"
+        " specify one in [audio, video] as first component" " in the asset id");
   }
-
-  gst_object_unref (effect);
-  return;
 }
 
+/* GESAsset virtual methods implementation */
 static GESExtractable *
 _extract (GESAsset * asset, GError ** error)
 {
   GESExtractable *effect;
-
-  if (GES_EFFECT_ASSET (asset)->priv->track_type == GES_TRACK_TYPE_UNKNOWN)
-    _fill_track_type (asset);
 
   effect = GES_ASSET_CLASS (ges_effect_asset_parent_class)->extract (asset,
       error);
@@ -85,9 +71,6 @@ _extract (GESAsset * asset, GError ** error)
     return NULL;
   }
 
-  ges_track_element_set_track_type (GES_TRACK_ELEMENT (effect),
-      GES_EFFECT_ASSET (asset)->priv->track_type);
-
   return effect;
 }
 
@@ -96,8 +79,12 @@ ges_effect_asset_init (GESEffectAsset * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_EFFECT_ASSET, GESEffectAssetPrivate);
+}
 
-  self->priv->track_type = GES_TRACK_TYPE_UNKNOWN;
+static void
+ges_effect_asset_constructed (GObject * object)
+{
+  _fill_track_type (GES_ASSET (object));
 }
 
 static void
@@ -117,5 +104,72 @@ ges_effect_asset_class_init (GESEffectAssetClass * klass)
   g_type_class_add_private (klass, sizeof (GESEffectAssetPrivate));
 
   object_class->finalize = ges_effect_asset_finalize;
+  object_class->constructed = ges_effect_asset_constructed;
   asset_class->extract = _extract;
+}
+
+gchar *
+ges_effect_assect_id_get_type_and_bindesc (const char *id,
+    GESTrackType * track_type, GError ** error)
+{
+  GList *tmp;
+  GstElement *effect;
+  gchar **typebin_desc = NULL;
+  gchar *bindesc = NULL;
+
+  *track_type = GES_TRACK_TYPE_UNKNOWN;
+  typebin_desc = g_strsplit (id, " ", 2);
+  if (!g_strcmp0 (typebin_desc[0], "audio")) {
+    *track_type = GES_TRACK_TYPE_AUDIO;
+    bindesc = g_strdup (typebin_desc[1]);
+  } else if (!g_strcmp0 (typebin_desc[0], "video")) {
+    *track_type = GES_TRACK_TYPE_VIDEO;
+    bindesc = g_strdup (typebin_desc[1]);
+  } else {
+    bindesc = g_strdup (id);
+  }
+
+  g_strfreev (typebin_desc);
+
+  effect = gst_parse_bin_from_description (bindesc, TRUE, error);
+  if (effect == NULL) {
+    g_free (bindesc);
+
+    GST_ERROR ("Could not create element from: %s", id);
+
+    return NULL;
+  }
+
+  if (*track_type != GES_TRACK_TYPE_UNKNOWN) {
+    gst_object_unref (effect);
+
+    return bindesc;
+  }
+
+  for (tmp = GST_BIN_CHILDREN (effect); tmp; tmp = tmp->next) {
+    GstElementFactory *factory =
+        gst_element_get_factory (GST_ELEMENT (tmp->data));
+    const gchar *klass =
+        gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
+
+    if (g_strrstr (klass, "Effect")) {
+      if (g_strrstr (klass, "Audio")) {
+        *track_type = GES_TRACK_TYPE_AUDIO;
+        break;
+      } else if (g_strrstr (klass, "Video")) {
+        *track_type = GES_TRACK_TYPE_VIDEO;
+        break;
+      }
+    }
+  }
+
+  gst_object_unref (effect);
+
+  if (*track_type == GES_TRACK_TYPE_UNKNOWN) {
+    *track_type = GES_TRACK_TYPE_VIDEO;
+    GST_ERROR ("Could not determine track type for %s, defaulting to video",
+        id);
+  }
+
+  return bindesc;
 }

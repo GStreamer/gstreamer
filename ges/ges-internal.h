@@ -148,6 +148,10 @@ ges_asset_try_proxy (GESAsset *asset, const gchar *new_id);
 G_GNUC_INTERNAL gboolean
 ges_asset_request_id_update (GESAsset *asset, gchar **proposed_id,
     GError *error);
+G_GNUC_INTERNAL gchar *
+ges_effect_assect_id_get_type_and_bindesc (const char    *id,
+                                           GESTrackType  *track_type,
+                                           GError       **error);
 
 /* GESExtractable internall methods
  *

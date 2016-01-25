@@ -55,26 +55,44 @@ enum
 static gchar *
 extractable_check_id (GType type, const gchar * id, GError ** error)
 {
-  GstElement *effect = gst_parse_bin_from_description (id, TRUE, error);
+  gchar *bin_desc, *real_id;
+  GESTrackType ttype;
 
-  if (effect == NULL)
+  bin_desc = ges_effect_assect_id_get_type_and_bindesc (id, &ttype, error);
+
+  if (bin_desc == NULL)
     return NULL;
 
-  gst_object_unref (effect);
-  return g_strdup (id);
+  if (ttype == GES_TRACK_TYPE_AUDIO)
+    real_id = g_strdup_printf ("audio %s", bin_desc);
+  else if (ttype == GES_TRACK_TYPE_VIDEO)
+    real_id = g_strdup_printf ("video %s", bin_desc);
+  else
+    g_assert_not_reached ();
+
+  return real_id;
 }
 
 static GParameter *
 extractable_get_parameters_from_id (const gchar * id, guint * n_params)
 {
-  GParameter *params = g_new0 (GParameter, 2);
+  GParameter *params = g_new0 (GParameter, 3);
+  gchar *bin_desc;
+  GESTrackType ttype;
+
+  bin_desc = ges_effect_assect_id_get_type_and_bindesc (id, &ttype, NULL);
 
   params[0].name = "bin-description";
   g_value_init (&params[0].value, G_TYPE_STRING);
-  g_value_set_string (&params[0].value, id);
+  g_value_set_string (&params[0].value, bin_desc);
 
-  *n_params = 1;
+  params[1].name = "track-type";
+  g_value_init (&params[1].value, GES_TYPE_TRACK_TYPE);
+  g_value_set_flags (&params[1].value, ttype);
 
+  *n_params = 2;
+
+  g_free (bin_desc);
   return params;
 }
 
@@ -188,27 +206,20 @@ ges_effect_create_element (GESTrackElement * object)
 
   GError *error = NULL;
   GESEffect *self = GES_EFFECT (object);
-  GESTrack *track = ges_track_element_get_track (object);
   const gchar *wanted_categories[] = { "Effect", NULL };
 
-  if (!track) {
-    GST_WARNING
-        ("The object %p should be in a Track for the element to be created",
-        object);
-    return NULL;
-  }
+  GESTrackType type = ges_track_element_get_track_type (object);
 
-  if (track->type == GES_TRACK_TYPE_VIDEO) {
+  if (type == GES_TRACK_TYPE_VIDEO) {
     bin_desc = g_strconcat ("videoconvert name=pre_video_convert ! ",
         self->priv->bin_description, " ! videoconvert name=post_video_convert",
         NULL);
-  } else if (track->type == GES_TRACK_TYPE_AUDIO) {
+  } else if (type == GES_TRACK_TYPE_AUDIO) {
     bin_desc =
         g_strconcat ("audioconvert ! audioresample !",
         self->priv->bin_description, NULL);
   } else {
-    GST_DEBUG ("Track type not supported");
-    return NULL;
+    g_assert_not_reached ();
   }
 
   effect = gst_parse_bin_from_description (bin_desc, TRUE, &error);
@@ -234,7 +245,12 @@ ges_effect_create_element (GESTrackElement * object)
  * ges_effect_new:
  * @bin_description: The gst-launch like bin description of the effect
  *
- * Creates a new #GESEffect from the description of the bin.
+ * Creates a new #GESEffect from the description of the bin. It should be
+ * possible to determine the type of the effect through the element
+ * 'klass' metadata of the GstElements that will be created.
+ * In that corner case, you should use:
+ * #ges_asset_request (GES_TYPE_EFFECT, "audio your ! bin ! description", NULL);
+ * and extract that asset to be in full control.
  *
  * Returns: a newly created #GESEffect, or %NULL if something went
  * wrong.
