@@ -20,12 +20,15 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #include <gst/check/gstcheck.h>
 #include <gst/check/gsttestclock.h>
+#include <gst/check/gstharness.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/rtp/gstrtcpbuffer.h>
+#include <gst/net/gstnetaddressmeta.h>
 
 static const guint payload_size = 160;
 static const guint clock_rate = 8000;
@@ -576,6 +579,109 @@ GST_START_TEST (test_internal_sources_timeout)
 
 GST_END_TEST;
 
+static void
+suspicious_bye_cb (GObject * object, GParamSpec * spec, gpointer data)
+{
+  GValueArray *stats_arr;
+  GstStructure *stats, *internal_stats;
+  gboolean *cb_called = data;
+  gboolean internal = FALSE, sent_bye = TRUE;
+  guint ssrc = 0;
+  guint i;
+
+  g_assert (*cb_called == FALSE);
+  *cb_called = TRUE;
+
+  g_object_get (object, "stats", &stats, NULL);
+  stats_arr =
+      g_value_get_boxed (gst_structure_get_value (stats, "source-stats"));
+  g_assert (stats_arr != NULL);
+  fail_unless (stats_arr->n_values >= 1);
+
+  for (i = 0; i < stats_arr->n_values; i++) {
+    internal_stats = g_value_get_boxed (g_value_array_get_nth (stats_arr, i));
+    g_assert (internal_stats != NULL);
+
+    gst_structure_get (internal_stats,
+        "ssrc", G_TYPE_UINT, &ssrc,
+        "internal", G_TYPE_BOOLEAN, &internal,
+        "received-bye", G_TYPE_BOOLEAN, &sent_bye, NULL);
+
+    if (ssrc == 0xDEADBEEF) {
+      fail_unless (internal);
+      fail_unless (!sent_bye);
+      break;
+    }
+  }
+  fail_unless_equals_int (ssrc, 0xDEADBEEF);
+
+  gst_structure_free (stats);
+}
+
+static GstBuffer *
+create_bye_rtcp (guint32 ssrc)
+{
+  GstRTCPPacket packet;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  GSocketAddress *saddr;
+  GstBuffer *buffer = gst_rtcp_buffer_new (1000);
+
+  fail_unless (gst_rtcp_buffer_map (buffer, GST_MAP_READWRITE, &rtcp));
+  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_BYE, &packet));
+  gst_rtcp_packet_bye_add_ssrc (&packet, ssrc);
+  gst_rtcp_buffer_unmap (&rtcp);
+
+  /* Need to add meta to trigger collision detection */
+  saddr = g_inet_socket_address_new_from_string ("127.0.0.1", 3490);
+  gst_buffer_add_net_address_meta (buffer, saddr);
+  g_object_unref (saddr);
+  return buffer;
+}
+
+GST_START_TEST (test_ignore_suspicious_bye)
+{
+  GstHarness *h_rtcp = NULL;
+  GstHarness *h_send = NULL;
+  gboolean cb_called = FALSE;
+  GstTestClock *testclock = GST_TEST_CLOCK (gst_test_clock_new ());
+
+  /* use testclock as the systemclock to capture the rtcp thread waits */
+  gst_system_clock_set_default (GST_CLOCK (testclock));
+
+  h_rtcp =
+      gst_harness_new_with_padnames ("rtpsession", "recv_rtcp_sink",
+      "send_rtcp_src");
+  h_send =
+      gst_harness_new_with_element (h_rtcp->element, "send_rtp_sink",
+      "send_rtp_src");
+
+  /* connect to the stats-reporting */
+  g_signal_connect (h_rtcp->element, "notify::stats",
+      G_CALLBACK (suspicious_bye_cb), &cb_called);
+
+  /* Push RTP buffer making our internal SSRC=0xDEADBEEF */
+  gst_harness_set_src_caps_str (h_send,
+      "application/x-rtp,ssrc=(uint)0xDEADBEEF,"
+      "clock-rate=90000,seqnum-offset=(uint)12345");
+  gst_harness_push (h_send,
+      generate_test_buffer (0, FALSE, 12345, 0, 0xDEADBEEF));
+
+  /* Push BYE RTCP with internal SSRC (0xDEADBEEF) */
+  gst_harness_set_src_caps_str (h_rtcp, "application/x-rtcp");
+  gst_harness_push (h_rtcp, create_bye_rtcp (0xDEADBEEF));
+
+  /* "crank" and check the stats */
+  g_assert (gst_test_clock_crank (testclock));
+  gst_buffer_unref (gst_harness_pull (h_rtcp));
+  fail_unless (cb_called);
+
+  gst_harness_teardown (h_send);
+  gst_harness_teardown (h_rtcp);
+  gst_object_unref (testclock);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpsession_suite (void)
 {
@@ -586,6 +692,7 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_multiple_ssrc_rr);
   tcase_add_test (tc_chain, test_multiple_senders_roundrobin_rbs);
   tcase_add_test (tc_chain, test_internal_sources_timeout);
+  tcase_add_test (tc_chain, test_ignore_suspicious_bye);
 
   return s;
 }
