@@ -417,6 +417,7 @@ GST_START_TEST (info_fourcc)
   cmp = ".bcd";
   res = g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (0x646362a9));
   fail_unless_equals_string (res, cmp);
+  g_free (res);
 }
 
 GST_END_TEST;
