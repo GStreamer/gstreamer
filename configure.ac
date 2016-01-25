@@ -1069,8 +1069,6 @@ AC_CONFIG_FILES([
     Makefile
     docs/Makefile
     docs/reference/Makefile
-    docs/reference/libs/Makefile
-    docs/reference/libs/libs-docs.xml
     docs/reference/plugins/Makefile
     docs/reference/plugins/plugins-docs.xml
     gst-libs/Makefile
