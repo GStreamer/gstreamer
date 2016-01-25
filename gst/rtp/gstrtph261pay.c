@@ -867,7 +867,7 @@ gst_rtp_h261_packetize_and_push (GstRtpH261Pay * pay, GstBuffer * buffer,
       gst_rtp_buffer_calc_payload_len (GST_RTP_BASE_PAYLOAD_MTU (pay) -
       GST_RTP_H261_PAYLOAD_HEADER_LEN, 0, 0);
   guint startpos;
-  gint num_gobs;
+  gint num_gobs = 0;
   Gob gobs[MAX_NUM_GOB];
   Gob *gob;
   Macroblock last_mb_in_previous_packet = { 0 };
