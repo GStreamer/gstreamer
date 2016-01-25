@@ -2023,7 +2023,7 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
         off = nalu.offset + nalu.size;
       }
     }
-
+    gst_buffer_unmap (codec_data, &map);
   } else {
     GST_DEBUG_OBJECT (h265parse, "have bytestream h265");
     /* nothing to pre-process */
