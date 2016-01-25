@@ -87,12 +87,14 @@ enum
   PROP_0,
   PROP_APERTURE_SIZE,
   PROP_SCALE,
-  PROP_SHIFT
+  PROP_SHIFT,
+  PROP_MASK
 };
 
 #define DEFAULT_APERTURE_SIZE 3
 #define DEFAULT_SCALE_FACTOR 1.0
 #define DEFAULT_SHIFT 0.0
+#define DEFAULT_MASK TRUE
 
 G_DEFINE_TYPE (GstCvLaplace, gst_cv_laplace, GST_TYPE_OPENCV_VIDEO_FILTER);
 
@@ -157,6 +159,10 @@ gst_cv_laplace_class_init (GstCvLaplaceClass * klass)
       g_param_spec_double ("shift", "Shift",
           "Value added to the scaled source array elements", 0.0, G_MAXDOUBLE,
           DEFAULT_SHIFT, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (gobject_class, PROP_MASK,
+      g_param_spec_boolean ("mask", "Mask",
+          "Sets whether the detected edges should be used as a mask on the original input or not",
+          DEFAULT_MASK, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -179,6 +185,7 @@ gst_cv_laplace_init (GstCvLaplace * filter)
   filter->aperture_size = DEFAULT_APERTURE_SIZE;
   filter->scale = DEFAULT_SCALE_FACTOR;
   filter->shift = DEFAULT_SHIFT;
+  filter->mask = DEFAULT_MASK;
 
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
       FALSE);
@@ -223,6 +230,9 @@ gst_cv_laplace_set_property (GObject * object, guint prop_id,
     case PROP_SHIFT:
       filter->shift = g_value_get_double (value);
       break;
+    case PROP_MASK:
+      filter->mask = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -244,6 +254,9 @@ gst_cv_laplace_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SHIFT:
       g_value_set_double (value, filter->shift);
+      break;
+    case PROP_MASK:
+      g_value_set_boolean (value, filter->mask);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -309,8 +322,13 @@ gst_cv_laplace_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
   cvLaplace (filter->cvGray, filter->intermediary_img, filter->aperture_size);
   cvConvertScale (filter->intermediary_img, filter->Laplace, filter->scale,
       filter->shift);
+
   cvZero (filter->CLaplace);
-  cvCvtColor (filter->Laplace, filter->CLaplace, CV_GRAY2RGB);
+  if (filter->mask) {
+    cvCopy (img, filter->CLaplace, filter->Laplace);
+  } else {
+    cvCvtColor (filter->Laplace, filter->CLaplace, CV_GRAY2RGB);
+  }
 
   gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE);
   memcpy (out_info.data, filter->CLaplace->imageData,

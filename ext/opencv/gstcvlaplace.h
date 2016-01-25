@@ -70,6 +70,7 @@ struct _GstCvLaplace
   gint aperture_size;
   gdouble scale;
   gdouble shift;
+  gboolean mask;
 
   IplImage *intermediary_img;
   IplImage *cvGray;
