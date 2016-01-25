@@ -24,7 +24,7 @@
  * SECTION:element-alsasink
  * @see_also: alsasrc
  *
- * This element renders raw audio samples using the ALSA audio API.
+ * This element renders audio samples using the ALSA audio API.
  *
  * <refsect2>
  * <title>Example pipelines</title>
