@@ -1053,6 +1053,83 @@ gst_base_parse_convert (GstBaseParse * parse,
   return ret;
 }
 
+static gboolean
+update_upstream_provided (GQuark field_id, const GValue * value,
+    gpointer user_data)
+{
+  GstCaps *default_caps = user_data;
+  gint i;
+  gint caps_size;
+
+  caps_size = gst_caps_get_size (default_caps);
+  for (i = 0; i < caps_size; i++) {
+    GstStructure *structure = gst_caps_get_structure (default_caps, i);
+    if (gst_structure_id_has_field (structure, field_id))
+      gst_structure_id_set_value (structure, field_id, value);
+  }
+
+  return TRUE;
+}
+
+static GstCaps *
+gst_base_parse_negotiate_default_caps (GstBaseParse * parse)
+{
+  GstCaps *caps, *templcaps;
+  GstCaps *sinkcaps = NULL;
+  GstCaps *default_caps = NULL;
+  GstStructure *structure;
+
+  templcaps = gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD (parse));
+  caps = gst_pad_peer_query_caps (GST_BASE_PARSE_SRC_PAD (parse), templcaps);
+  if (caps)
+    gst_caps_unref (templcaps);
+  else
+    caps = templcaps;
+  templcaps = NULL;
+
+  if (!caps || gst_caps_is_empty (caps) || gst_caps_is_any (caps)) {
+    goto caps_error;
+  }
+
+  GST_LOG_OBJECT (parse, "peer caps  %" GST_PTR_FORMAT, caps);
+
+  /* before fixating, try to use whatever upstream provided */
+  default_caps = gst_caps_copy (caps);
+  sinkcaps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (parse));
+
+  GST_LOG_OBJECT (parse, "current caps %" GST_PTR_FORMAT " for sinkpad",
+      sinkcaps);
+
+  if (sinkcaps) {
+    structure = gst_caps_get_structure (sinkcaps, 0);
+    gst_structure_foreach (structure, update_upstream_provided, default_caps);
+  }
+
+  default_caps = gst_caps_fixate (default_caps);
+
+  if (!default_caps) {
+    GST_WARNING_OBJECT (parse, "Failed to create default caps !");
+    goto caps_error;
+  }
+
+  GST_INFO_OBJECT (parse,
+      "Chose default caps %" GST_PTR_FORMAT " for initial gap", default_caps);
+
+  gst_caps_unref (sinkcaps);
+  gst_caps_unref (caps);
+
+  return default_caps;
+
+caps_error:
+  {
+    if (caps)
+      gst_caps_unref (caps);
+    if (sinkcaps)
+      gst_caps_unref (sinkcaps);
+    return NULL;
+  }
+}
+
 /* gst_base_parse_sink_event:
  * @pad: #GstPad that received the event.
  * @event: #GstEvent to be handled.
@@ -1072,7 +1149,6 @@ gst_base_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   return ret;
 }
-
 
 /* gst_base_parse_sink_event_default:
  * @parse: #GstBaseParse.
@@ -1320,6 +1396,26 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
     case GST_EVENT_GAP:
     {
       GST_DEBUG_OBJECT (parse, "draining current data due to gap event");
+
+      /* Ensure we have caps before forwarding the event */
+      if (!gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (parse))) {
+        GstCaps *default_caps = NULL;
+        if ((default_caps = gst_base_parse_negotiate_default_caps (parse))) {
+          GST_DEBUG_OBJECT (parse,
+              "Store caps event to pending list for initial pre-rolling");
+          parse->priv->pending_events =
+              g_list_prepend (parse->priv->pending_events,
+              gst_event_new_caps (default_caps));
+          gst_caps_unref (default_caps);
+        } else {
+          gst_event_unref (event);
+          event = NULL;
+          ret = FALSE;
+          GST_ELEMENT_ERROR (parse, STREAM, FORMAT, (NULL),
+              ("Parser output not negotiated before GAP event."));
+          break;
+        }
+      }
 
       gst_base_parse_push_pending_events (parse);
 
