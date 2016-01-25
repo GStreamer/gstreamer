@@ -1073,6 +1073,10 @@ gst_h265_parse_make_codec_data (GstH265Parse * h265parse)
   if (!found)
     return NULL;
 
+  sps = h265parse->nalparser->last_sps;
+  if (!sps)
+    return NULL;
+
   buf =
       gst_buffer_new_allocate (NULL,
       23 + num_arrays + (3 * num_arrays) + vps_size + sps_size + pps_size,
@@ -1082,9 +1086,6 @@ gst_h265_parse_make_codec_data (GstH265Parse * h265parse)
   memset (data, 0, map.size);
   nl = h265parse->nal_length_size;
 
-  sps = h265parse->nalparser->last_sps;
-  if (!sps)
-    return NULL;
   pft = &sps->profile_tier_level;
   if (sps->vui_parameters_present_flag)
     min_spatial_segmentation_idc = sps->vui_params.min_spatial_segmentation_idc;
