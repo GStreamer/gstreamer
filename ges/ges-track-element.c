@@ -105,6 +105,7 @@ GESTrackType _get_track_types (GESTimelineElement * object);
 
 static GParamSpec **default_list_children_properties (GESTrackElement * object,
     guint * n_properties);
+static gboolean ensure_nle_object (GESTrackElement * object);
 
 static void
 _update_control_bindings (GESTimelineElement * element, GstClockTime inpoint,
@@ -208,9 +209,11 @@ ges_track_element_dispose (GObject * object)
 }
 
 static void
-ges_track_element_finalize (GObject * object)
+ges_track_element_constructed (GObject * object)
 {
-  G_OBJECT_CLASS (ges_track_element_parent_class)->finalize (object);
+  ensure_nle_object (GES_TRACK_ELEMENT (object));
+
+  G_OBJECT_CLASS (ges_track_element_parent_class)->constructed (object);
 }
 
 static void
@@ -224,7 +227,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   object_class->get_property = ges_track_element_get_property;
   object_class->set_property = ges_track_element_set_property;
   object_class->dispose = ges_track_element_dispose;
-  object_class->finalize = ges_track_element_finalize;
+  object_class->constructed = ges_track_element_constructed;
 
 
   /**

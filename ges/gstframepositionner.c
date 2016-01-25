@@ -165,8 +165,7 @@ _track_restriction_changed_cb (GESTrack * track, GParamSpec * arg G_GNUC_UNUSED,
 }
 
 static void
-_track_changed_cb (GESTrackElement * trksrc, GParamSpec * arg G_GNUC_UNUSED,
-    GstFramePositionner * pos)
+set_track (GstFramePositionner * pos)
 {
   GESTrack *new_track;
 
@@ -177,17 +176,26 @@ _track_changed_cb (GESTrackElement * trksrc, GParamSpec * arg G_GNUC_UNUSED,
         (GWeakNotify) _weak_notify_cb, pos);
   }
 
-  new_track = ges_track_element_get_track (trksrc);
+  new_track = ges_track_element_get_track (pos->track_source);
   if (new_track) {
     pos->current_track = new_track;
     g_object_weak_ref (G_OBJECT (new_track), (GWeakNotify) _weak_notify_cb,
         pos);
     GST_DEBUG_OBJECT (pos, "connecting to track : %p", pos->current_track);
+
     g_signal_connect (pos->current_track, "notify::restriction-caps",
         (GCallback) _track_restriction_changed_cb, pos);
     sync_properties_with_track (pos, pos->current_track);
-  } else
+  } else {
     pos->current_track = NULL;
+  }
+}
+
+static void
+_track_changed_cb (GESTrackElement * trksrc, GParamSpec * arg G_GNUC_UNUSED,
+    GstFramePositionner * pos)
+{
+  set_track (pos);
 }
 
 void
@@ -198,24 +206,9 @@ ges_frame_positionner_set_source_and_filter (GstFramePositionner * pos,
   pos->capsfilter = capsfilter;
   pos->current_track = ges_track_element_get_track (trksrc);
 
-  if (!pos->current_track) {
-    GST_INFO_OBJECT (pos, "No track set, won't be usable");
-
-    return;
-  }
-
-  g_object_add_weak_pointer (G_OBJECT (pos->track_source),
-      ((gpointer *) & pos->track_source));
-  g_object_weak_ref (G_OBJECT (pos->current_track),
-      (GWeakNotify) _weak_notify_cb, pos);
-
-  GST_DEBUG_OBJECT (pos, "connecting to track : %p", pos->current_track);
-
-  g_signal_connect (pos->current_track, "notify::restriction-caps",
-      (GCallback) _track_restriction_changed_cb, pos);
   g_signal_connect (trksrc, "notify::track", (GCallback) _track_changed_cb,
       pos);
-  sync_properties_with_track (pos, pos->current_track);
+  set_track (pos);
 }
 
 static void
