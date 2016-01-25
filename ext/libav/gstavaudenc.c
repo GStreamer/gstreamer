@@ -434,8 +434,8 @@ buffer_info_free (void *opaque, guint8 * data)
     gst_buffer_unmap (info->buffer, &info->map);
     gst_buffer_unref (info->buffer);
   } else {
-    g_free (info->ext_data);
-    g_free (info->ext_data_array);
+    av_free (info->ext_data);
+    av_free (info->ext_data_array);
   }
   g_slice_free (BufferInfo, info);
 }
