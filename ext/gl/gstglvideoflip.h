@@ -79,6 +79,8 @@ struct _GstGLVideoFlip
   GstGLVideoFlipMethod method;
   GstGLVideoFlipMethod tag_method;
   GstGLVideoFlipMethod active_method;
+
+  gfloat aspect;
 };
 
 struct _GstGLVideoFlipClass
