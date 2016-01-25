@@ -72,6 +72,9 @@ struct _GstCvLaplace
   gdouble shift;
 
   IplImage *intermediary_img;
+  IplImage *cvGray;
+  IplImage *Laplace;
+  IplImage *CLaplace;
 };
 
 struct _GstCvLaplaceClass

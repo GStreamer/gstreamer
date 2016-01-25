@@ -67,22 +67,14 @@ GST_DEBUG_CATEGORY_STATIC (gst_cv_laplace_debug);
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("GRAY8"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
-#if G_BYTE_ORDER == G_BIG_ENDIAN
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("GRAY16_BE"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
-#else
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("GRAY16_LE"))
-    );
-#endif
 
 /* Filter signals and args */
 enum
@@ -109,8 +101,8 @@ static void gst_cv_laplace_set_property (GObject * object, guint prop_id,
 static void gst_cv_laplace_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_cv_laplace_transform_caps (GstBaseTransform * trans,
-    GstPadDirection dir, GstCaps * caps, GstCaps * filter);
+static gboolean gst_cv_laplace_handle_sink_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
 
 static GstFlowReturn gst_cv_laplace_transform (GstOpencvVideoFilter * filter,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
@@ -125,8 +117,12 @@ gst_cv_laplace_finalize (GObject * obj)
 {
   GstCvLaplace *filter = GST_CV_LAPLACE (obj);
 
-  if (filter->intermediary_img)
+  if (filter->intermediary_img) {
     cvReleaseImage (&filter->intermediary_img);
+    cvReleaseImage (&filter->cvGray);
+    cvReleaseImage (&filter->Laplace);
+    cvReleaseImage (&filter->CLaplace);
+  }
 
   G_OBJECT_CLASS (gst_cv_laplace_parent_class)->finalize (obj);
 }
@@ -136,19 +132,15 @@ static void
 gst_cv_laplace_class_init (GstCvLaplaceClass * klass)
 {
   GObjectClass *gobject_class;
-  GstBaseTransformClass *gstbasetransform_class;
   GstOpencvVideoFilterClass *gstopencvbasefilter_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class = (GObjectClass *) klass;
-  gstbasetransform_class = (GstBaseTransformClass *) klass;
   gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_cv_laplace_finalize);
   gobject_class->set_property = gst_cv_laplace_set_property;
   gobject_class->get_property = gst_cv_laplace_get_property;
-
-  gstbasetransform_class->transform_caps = gst_cv_laplace_transform_caps;
 
   gstopencvbasefilter_class->cv_trans_func = gst_cv_laplace_transform;
   gstopencvbasefilter_class->cv_set_caps = gst_cv_laplace_cv_set_caps;
@@ -181,6 +173,9 @@ gst_cv_laplace_class_init (GstCvLaplaceClass * klass)
 static void
 gst_cv_laplace_init (GstCvLaplace * filter)
 {
+  gst_pad_set_event_function (GST_BASE_TRANSFORM_SINK_PAD (filter),
+      GST_DEBUG_FUNCPTR (gst_cv_laplace_handle_sink_event));
+
   filter->aperture_size = DEFAULT_APERTURE_SIZE;
   filter->scale = DEFAULT_SCALE_FACTOR;
   filter->shift = DEFAULT_SHIFT;
@@ -195,95 +190,15 @@ gst_cv_laplace_cv_set_caps (GstOpencvVideoFilter * trans, gint in_width,
     gint out_height, gint out_depth, gint out_channels)
 {
   GstCvLaplace *filter = GST_CV_LAPLACE (trans);
-  gint intermediary_depth;
 
-  /* cvLaplace needs an signed output, so we create our intermediary step
-   * image here */
-  switch (out_depth) {
-    case IPL_DEPTH_16U:
-      intermediary_depth = IPL_DEPTH_16S;
-      break;
-    default:
-      GST_WARNING_OBJECT (filter, "Unsupported output depth %d", out_depth);
-      return FALSE;
-  }
   if (filter->intermediary_img) {
     cvReleaseImage (&filter->intermediary_img);
   }
 
-  filter->intermediary_img = cvCreateImage (cvSize (out_width, out_height),
-      intermediary_depth, out_channels);
+  filter->intermediary_img =
+      cvCreateImage (cvSize (out_width, out_height), IPL_DEPTH_16S, 1);
 
   return TRUE;
-}
-
-static GstCaps *
-gst_cv_laplace_transform_caps (GstBaseTransform * trans, GstPadDirection dir,
-    GstCaps * caps, GstCaps * filter)
-{
-  GstCaps *to, *ret;
-  GstCaps *templ;
-  GstStructure *structure;
-  GstPad *other;
-  guint i;
-
-  to = gst_caps_new_empty ();
-
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    const GValue *v;
-    GValue list = { 0, };
-    GValue val = { 0, };
-
-    structure = gst_structure_copy (gst_caps_get_structure (caps, i));
-
-    g_value_init (&list, GST_TYPE_LIST);
-
-    g_value_init (&val, G_TYPE_STRING);
-    g_value_set_string (&val, "GRAY8");
-    gst_value_list_append_value (&list, &val);
-    g_value_unset (&val);
-
-    g_value_init (&val, G_TYPE_STRING);
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-    g_value_set_string (&val, "GRAY16_BE");
-#else
-    g_value_set_string (&val, "GRAY16_LE");
-#endif
-    gst_value_list_append_value (&list, &val);
-    g_value_unset (&val);
-
-    v = gst_structure_get_value (structure, "format");
-
-    gst_value_list_merge (&val, v, &list);
-    gst_structure_set_value (structure, "format", &val);
-    g_value_unset (&val);
-    g_value_unset (&list);
-
-    gst_structure_remove_field (structure, "colorimetry");
-    gst_structure_remove_field (structure, "chroma-site");
-
-    gst_caps_append_structure (to, structure);
-
-  }
-
-  /* filter against set allowed caps on the pad */
-  other = (dir == GST_PAD_SINK) ? trans->srcpad : trans->sinkpad;
-  templ = gst_pad_get_pad_template_caps (other);
-  ret = gst_caps_intersect (to, templ);
-  gst_caps_unref (to);
-  gst_caps_unref (templ);
-
-  if (ret && filter) {
-    GstCaps *intersection;
-
-    intersection =
-        gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (ret);
-    ret = intersection;
-  }
-
-  return ret;
-
 }
 
 static void
@@ -336,17 +251,70 @@ gst_cv_laplace_get_property (GObject * object, guint prop_id,
   }
 }
 
+static gboolean
+gst_cv_laplace_handle_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
+{
+  GstCvLaplace *filter;
+  gint width, height;
+  GstStructure *structure;
+  gboolean res = TRUE;
+
+  filter = GST_CV_LAPLACE (parent);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      gst_event_parse_caps (event, &caps);
+
+      structure = gst_caps_get_structure (caps, 0);
+      gst_structure_get_int (structure, "width", &width);
+      gst_structure_get_int (structure, "height", &height);
+
+      if (filter->intermediary_img != NULL) {
+        cvReleaseImage (&filter->intermediary_img);
+        cvReleaseImage (&filter->CLaplace);
+        cvReleaseImage (&filter->cvGray);
+        cvReleaseImage (&filter->Laplace);
+      }
+
+      filter->CLaplace =
+          cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
+      filter->intermediary_img =
+          cvCreateImage (cvSize (width, height), IPL_DEPTH_16S, 1);
+      filter->cvGray = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
+      filter->Laplace = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
+      break;
+    }
+    default:
+      break;
+  }
+
+  res = gst_pad_event_default (pad, parent, event);
+
+  return res;
+}
+
 static GstFlowReturn
 gst_cv_laplace_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
     IplImage * img, GstBuffer * outbuf, IplImage * outimg)
 {
   GstCvLaplace *filter = GST_CV_LAPLACE (base);
+  GstMapInfo out_info;
 
   g_assert (filter->intermediary_img);
 
-  cvLaplace (img, filter->intermediary_img, filter->aperture_size);
-  cvConvertScale (filter->intermediary_img, outimg, filter->scale,
+  cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
+  cvLaplace (filter->cvGray, filter->intermediary_img, filter->aperture_size);
+  cvConvertScale (filter->intermediary_img, filter->Laplace, filter->scale,
       filter->shift);
+  cvZero (filter->CLaplace);
+  cvCvtColor (filter->Laplace, filter->CLaplace, CV_GRAY2RGB);
+
+  gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE);
+  memcpy (out_info.data, filter->CLaplace->imageData,
+      gst_buffer_get_size (outbuf));
 
   return GST_FLOW_OK;
 }
