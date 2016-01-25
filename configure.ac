@@ -737,15 +737,6 @@ AM_CONDITIONAL(USE_VORBIS, false)
 
 fi dnl of EXT plugins
 
-dnl seeking needs freetype, so check for it here
-PKG_CHECK_MODULES(FT2, freetype2 >= 2.0.9, HAVE_FT2="yes", [
-  AC_CHECK_FT2(2.0.9, HAVE_FT2="yes", HAVE_FT2="no")
-])
-dnl make the HAVE_FT2 variable available to automake and Makefile.am
-AM_CONDITIONAL(HAVE_FT2, test "x$HAVE_FT2" = "xyes")
-AC_SUBST(FT2_CFLAGS)
-AC_SUBST(FT2_LIBS)
-
 dnl *** gio-unix-2.0 for tests/check/pipelines/tcp.c ***
 PKG_CHECK_MODULES(GIO_UNIX_2_0, gio-unix-2.0 >= 2.24,
     HAVE_GIO_UNIX_2_0="yes",

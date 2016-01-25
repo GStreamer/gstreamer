@@ -1,7 +1,6 @@
 EXTRA_DIST = \
 	check-libheader.m4 \
 	codeset.m4 \
-	freetype2.m4 \
 	gettext.m4 \
 	glibc21.m4 \
 	gst-alsa.m4 \
