@@ -87,12 +87,14 @@ enum
   PROP_0,
   PROP_X_ORDER,
   PROP_Y_ORDER,
-  PROP_APERTURE_SIZE
+  PROP_APERTURE_SIZE,
+  PROP_MASK
 };
 
 #define DEFAULT_X_ORDER 1
 #define DEFAULT_Y_ORDER 0
 #define DEFAULT_APERTURE_SIZE 3
+#define DEFAULT_MASK TRUE
 
 G_DEFINE_TYPE (GstCvSobel, gst_cv_sobel, GST_TYPE_OPENCV_VIDEO_FILTER);
 
@@ -156,6 +158,10 @@ gst_cv_sobel_class_init (GstCvSobelClass * klass)
           "Size of the extended Sobel Kernel (1, 3, 5 or 7)", 1, 7,
           DEFAULT_APERTURE_SIZE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (gobject_class, PROP_MASK,
+      g_param_spec_boolean ("mask", "Mask",
+          "Sets whether the detected derivative edges should be used as a mask on the original input or not",
+          DEFAULT_MASK, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -178,6 +184,7 @@ gst_cv_sobel_init (GstCvSobel * filter)
   filter->x_order = DEFAULT_X_ORDER;
   filter->y_order = DEFAULT_Y_ORDER;
   filter->aperture_size = DEFAULT_APERTURE_SIZE;
+  filter->mask = DEFAULT_MASK;
 
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
       FALSE);
@@ -263,6 +270,9 @@ gst_cv_sobel_set_property (GObject * object, guint prop_id,
         filter->aperture_size = g_value_get_int (value);
     }
       break;
+    case PROP_MASK:
+      filter->mask = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -285,6 +295,9 @@ gst_cv_sobel_get_property (GObject * object, guint prop_id,
     case PROP_APERTURE_SIZE:
       g_value_set_int (value, filter->aperture_size);
       break;
+    case PROP_MASK:
+      g_value_set_boolean (value, filter->mask);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -303,7 +316,11 @@ gst_cv_sobel_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
       filter->aperture_size);
 
   cvZero (filter->cvCSobel);
-  cvCvtColor (filter->cvSobel, filter->cvCSobel, CV_GRAY2RGB);
+  if (filter->mask) {
+    cvCopy (img, filter->cvCSobel, filter->cvSobel);
+  } else {
+    cvCvtColor (filter->cvSobel, filter->cvCSobel, CV_GRAY2RGB);
+  }
 
   gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE);
   memcpy (out_info.data, filter->cvCSobel->imageData,
