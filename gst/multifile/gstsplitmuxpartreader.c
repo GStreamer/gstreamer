@@ -163,11 +163,11 @@ handle_buffer_measuring (GstSplitMuxPartReader * reader,
 
   GST_DEBUG_OBJECT (reader, "Pad %" GST_PTR_FORMAT
       " incoming PTS %" GST_TIME_FORMAT
-      " DTS %" GST_TIME_FORMAT " offset by %" GST_TIME_FORMAT
+      " DTS %" GST_TIME_FORMAT " offset by %" GST_STIME_FORMAT
       " to %" GST_TIME_FORMAT, part_pad,
       GST_TIME_ARGS (GST_BUFFER_DTS (buf)),
       GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
-      GST_TIME_ARGS (offset), GST_TIME_ARGS (ts));
+      GST_STIME_ARGS (offset), GST_TIME_ARGS (ts));
 
   if (GST_CLOCK_TIME_IS_VALID (ts)) {
     if (GST_BUFFER_DURATION_IS_VALID (buf))
