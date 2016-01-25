@@ -23,13 +23,8 @@
 #include <gst/gst.h>
 #include <gst/audio/gstaudiodecoder.h>
 
-#ifdef HAVE_OPENCORE_AMRWB_0_1_3_OR_LATER
 #include <opencore-amrwb/dec_if.h>
 #include <opencore-amrwb/if_rom.h>
-#else
-#include <dec_if.h>
-#include <if_rom.h>
-#endif
 
 G_BEGIN_DECLS
 

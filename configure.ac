@@ -277,31 +277,13 @@ AG_GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
 dnl *** amr-nb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRNB, true)
 AG_GST_CHECK_FEATURE(AMRNB, [amrnb library], amrnb, [
-  PKG_CHECK_MODULES(AMRNB, opencore-amrnb, [
-    if $PKG_CONFIG --atleast-version=0.1.3 opencore-amrnb; then
-      AC_DEFINE(HAVE_OPENCORE_AMRNB_0_1_3_OR_LATER, 1, [Defined for newer opencore-amrnb])
-    fi
-    HAVE_AMRNB="yes"
-  ], [
-    HAVE_AMRNB="no"
-  ])
-  AC_SUBST(AMRNB_CFLAGS)
-  AC_SUBST(AMRNB_LIBS)
+  AG_GST_PKG_CHECK_MODULES(AMRNB, opencore-amrnb >= 0.1.3)
 ])
 
 dnl *** amr-wb dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRWB, true)
 AG_GST_CHECK_FEATURE(AMRWB, [amrwb library], amrwbdec, [
-  PKG_CHECK_MODULES(AMRWB, opencore-amrwb, [
-    if $PKG_CONFIG --atleast-version=0.1.3 opencore-amrwb; then
-      AC_DEFINE(HAVE_OPENCORE_AMRWB_0_1_3_OR_LATER, 1, [Defined for newer opencore-amrwb])
-    fi
-    HAVE_AMRWB="yes"
-  ], [
-    HAVE_AMRWB="no"
-  ])
-  AC_SUBST(AMRWB_CFLAGS)
-  AC_SUBST(AMRWB_LIBS)
+  AG_GST_PKG_CHECK_MODULES(AMRWB, opencore-amrwb >= 0.1.3)
 ])
 
 dnl *** cdio ***

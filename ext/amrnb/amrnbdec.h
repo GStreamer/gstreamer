@@ -23,11 +23,7 @@
 #include <gst/gst.h>
 #include <gst/audio/gstaudiodecoder.h>
 
-#ifdef HAVE_OPENCORE_AMRNB_0_1_3_OR_LATER
 #include <opencore-amrnb/interf_dec.h>
-#else
-#include <interf_dec.h>
-#endif
 
 G_BEGIN_DECLS
 
