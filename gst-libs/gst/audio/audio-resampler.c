@@ -259,7 +259,7 @@ get_kaiser_tap (GstAudioResampler * resampler, gdouble x)
 
 #define CONVERT_TAPS(type, precision)                                   \
 G_STMT_START {                                                          \
-  type *taps = t->taps = (type *) ((gint8*)resampler->coeff + j * resampler->cstride);        \
+  type *taps = res = t->taps = (type *) ((gint8*)resampler->coeff + j * resampler->cstride);        \
   gdouble multiplier = (1 << precision);                                \
   gint i, j;                                                            \
   gdouble offset, l_offset, h_offset;                                   \
@@ -296,9 +296,10 @@ G_STMT_START {                                                          \
 #define PRECISION_S16 15
 #define PRECISION_S32 30
 
-static void
+static gpointer
 make_taps (GstAudioResampler * resampler, Tap * t, gint j)
 {
+  gpointer res;
   gint n_taps = resampler->n_taps;
   gdouble x, weight = 0.0;
   gdouble *tmpcoeff = resampler->tmpcoeff;
@@ -341,7 +342,7 @@ make_taps (GstAudioResampler * resampler, Tap * t, gint j)
   switch (resampler->format) {
     case GST_AUDIO_FORMAT_F64:
     {
-      gdouble *taps = t->taps =
+      gdouble *taps = res = t->taps =
           (gdouble *) ((gint8 *) resampler->coeff + j * resampler->cstride);
       for (l = 0; l < n_taps; l++)
         taps[l] = tmpcoeff[l] / weight;
@@ -349,7 +350,7 @@ make_taps (GstAudioResampler * resampler, Tap * t, gint j)
     }
     case GST_AUDIO_FORMAT_F32:
     {
-      gfloat *taps = t->taps =
+      gfloat *taps = res = t->taps =
           (gfloat *) ((gint8 *) resampler->coeff + j * resampler->cstride);
       for (l = 0; l < n_taps; l++)
         taps[l] = tmpcoeff[l] / weight;
@@ -362,8 +363,10 @@ make_taps (GstAudioResampler * resampler, Tap * t, gint j)
       CONVERT_TAPS (gint16, PRECISION_S16);
       break;
     default:
+      g_assert_not_reached ();
       break;
   }
+  return res;
 }
 
 static inline void
@@ -443,11 +446,12 @@ resample_ ##type## _ ##channels## _ ##arch (GstAudioResampler * resampler,      
     for (di = 0; di < out_len; di++) {                                          \
       Tap *t = &resampler->taps[samp_phase];                                    \
       type *ipp = &ip[samp_index * channels];                                   \
+      gpointer taps;                                                            \
                                                                                 \
-      if (G_UNLIKELY (t->taps == NULL))                                         \
-        make_taps (resampler, t, samp_phase);                                   \
+      if (G_UNLIKELY ((taps = t->taps) == NULL))                                \
+        taps = make_taps (resampler, t, samp_phase);                            \
                                                                                 \
-      inner_product_ ##type## _##channels##_##arch (op, ipp, t->taps, n_taps);  \
+      inner_product_ ##type## _##channels##_##arch (op, ipp, taps, n_taps);     \
       op += ostride;                                                            \
                                                                                 \
       samp_phase = t->next_phase;                                               \
@@ -739,10 +743,9 @@ resampler_calculate_taps (GstAudioResampler * resampler)
 G_STMT_START {                                  \
   type sum = 0.0, *taps;                        \
                                                 \
-  if (t->taps == NULL)                          \
-    make_taps (resampler, t, i);                \
+  if ((taps = t->taps) == NULL)                 \
+    taps = make_taps (resampler, t, i);         \
                                                 \
-  taps = t->taps;                               \
   for (j = 0; j < n_taps; j++) {                \
     type tap = taps[j];                         \
     fprintf (stderr, "\t%" print " ", tap);     \
