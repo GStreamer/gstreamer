@@ -79,6 +79,8 @@ GstAudioConverter *  gst_audio_converter_new             (GstAudioConverterFlags
 
 void                 gst_audio_converter_free            (GstAudioConverter * convert);
 
+void                 gst_audio_converter_reset           (GstAudioConverter * convert);
+
 gboolean             gst_audio_converter_update_config   (GstAudioConverter * convert,
                                                           gint in_rate, gint out_rate,
                                                           GstStructure *config);

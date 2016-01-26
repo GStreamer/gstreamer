@@ -973,6 +973,20 @@ gst_audio_converter_get_max_latency (GstAudioConverter * convert)
 }
 
 /**
+ * gst_audio_converter_reset:
+ * @convert: a #GstAudioConverter
+ *
+ * Reset @convert to the state it was when it was first created, clearing
+ * any history it might currently have.
+ */
+void
+gst_audio_converter_reset (GstAudioConverter * convert)
+{
+  if (convert->quant)
+    gst_audio_quantize_reset (convert->quant);
+}
+
+/**
  * gst_audio_converter_samples:
  * @convert: a #GstAudioConverter
  * @flags: extra #GstAudioConverterFlags
