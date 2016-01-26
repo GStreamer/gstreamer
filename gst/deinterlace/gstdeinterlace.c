@@ -237,9 +237,11 @@ gst_deinterlace_modes_get_type (void)
   static GType deinterlace_modes_type = 0;
 
   static const GEnumValue modes_types[] = {
-    {GST_DEINTERLACE_MODE_AUTO, "Auto detection", "auto"},
+    {GST_DEINTERLACE_MODE_AUTO, "Auto detection (best effort)", "auto"},
     {GST_DEINTERLACE_MODE_INTERLACED, "Force deinterlacing", "interlaced"},
     {GST_DEINTERLACE_MODE_DISABLED, "Run in passthrough mode", "disabled"},
+    {GST_DEINTERLACE_MODE_AUTO_STRICT, "Auto detection (strict)",
+        "auto-strict"},
     {0, NULL, NULL},
   };
 
@@ -2079,7 +2081,9 @@ gst_deinterlace_acceptcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
 
   /* In AUTO/DISABLED mode we accept everything that is compatible with
    * our template caps. In INTERLACED mode we force deinterlacing, meaning
-   * we can only possibly support the deinterlace caps */
+   * we can only possibly support the deinterlace caps.
+   * In AUTO_STRICT mode we accept all progressive formats, but only those
+   * interlaced format that we can actually deinterlace */
   if (self->mode == GST_DEINTERLACE_MODE_DISABLED
       || self->mode == GST_DEINTERLACE_MODE_AUTO) {
     ourcaps = gst_pad_get_pad_template_caps (pad);
@@ -2089,6 +2093,16 @@ gst_deinterlace_acceptcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
     ourcaps = gst_static_caps_get (&deinterlace_caps);
     ret = gst_caps_can_intersect (caps, ourcaps);
     gst_caps_unref (ourcaps);
+  } else if (self->mode == GST_DEINTERLACE_MODE_AUTO_STRICT) {
+    ourcaps = gst_static_caps_get (&progressive_caps);
+    ret = gst_caps_can_intersect (caps, ourcaps);
+    gst_caps_unref (ourcaps);
+
+    if (!ret) {
+      ourcaps = gst_static_caps_get (&deinterlace_caps);
+      ret = gst_caps_can_intersect (caps, ourcaps);
+      gst_caps_unref (ourcaps);
+    }
   } else {
     g_assert_not_reached ();
   }
@@ -2299,7 +2313,8 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
     goto done;
   }
 
-  g_assert (self->mode == GST_DEINTERLACE_MODE_AUTO);
+  g_assert (self->mode == GST_DEINTERLACE_MODE_AUTO
+      || self->mode == GST_DEINTERLACE_MODE_AUTO_STRICT);
 
   /* For the auto mode we have to do a bit more than that */
   ret = gst_caps_new_empty ();
@@ -2349,10 +2364,11 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
   tmp2 = NULL;
 
   /* or
-   * - anything else in which case we would just passthrough again. Remember
-   *   we're here only in AUTO mode, which is best-effort deinterlacing
+   * - anything else in which case we would just passthrough again if we're
+   *   only in AUTO and not AUTO_STRICT mode
    */
-  ret = gst_caps_merge (ret, gst_caps_copy (caps));
+  if (self->mode == GST_DEINTERLACE_MODE_AUTO)
+    ret = gst_caps_merge (ret, gst_caps_copy (caps));
 
   gst_caps_unref (caps);
   caps = NULL;
@@ -2529,7 +2545,8 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
 
     self->passthrough = FALSE;
     GST_DEBUG_OBJECT (self, "Not passthrough because mode=interlaced");
-  } else if (self->mode == GST_DEINTERLACE_MODE_AUTO) {
+  } else if (self->mode == GST_DEINTERLACE_MODE_AUTO
+      || self->mode == GST_DEINTERLACE_MODE_AUTO_STRICT) {
     GstCaps *tmp = gst_static_caps_get (&deinterlace_caps);
 
     /* Already progressive? Passthrough */
@@ -2542,9 +2559,16 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
           "Not passthrough because mode=auto and interlaced caps");
       self->passthrough = FALSE;
     } else {
-      GST_WARNING_OBJECT (self,
-          "Passthrough because mode=auto and unsupported interlaced caps");
-      self->passthrough = TRUE;
+      if (self->mode == GST_DEINTERLACE_MODE_AUTO) {
+        GST_WARNING_OBJECT (self,
+            "Passthrough because mode=auto and unsupported interlaced caps");
+        self->passthrough = TRUE;
+      } else {
+        gst_caps_unref (tmp);
+        GST_ERROR_OBJECT (self,
+            "Unsupported interlaced caps in mode=auto-strict");
+        goto invalid_caps;
+      }
     }
 
     gst_caps_unref (tmp);
