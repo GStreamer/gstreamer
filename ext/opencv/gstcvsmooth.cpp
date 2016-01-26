@@ -317,18 +317,18 @@ gst_cv_smooth_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
 
   switch (filter->type) {
     case CV_BLUR:
-      blur (Mat (img), Mat (img), Size (filter->width, filter->height),
+      blur (cvarrToMat(img), cvarrToMat(img), Size (filter->width, filter->height),
           Point (-1, -1));
       break;
     case CV_GAUSSIAN:
-      GaussianBlur (Mat (img), Mat (img), Size (filter->width, filter->height),
+      GaussianBlur (cvarrToMat(img), cvarrToMat(img), Size (filter->width, filter->height),
           filter->colorsigma, filter->colorsigma);
       break;
     case CV_MEDIAN:
-      medianBlur (Mat (img), Mat (img), filter->width);
+      medianBlur (cvarrToMat(img), cvarrToMat(img), filter->width);
       break;
     case CV_BILATERAL:
-      bilateralFilter (Mat (img), Mat (img), -1, filter->colorsigma, 0.0);
+      bilateralFilter (cvarrToMat(img), cvarrToMat(img), -1, filter->colorsigma, 0.0);
       break;
     default:
       break;
