@@ -35,9 +35,7 @@
  */
 
 /* FIXME PORTING 0.11:
- *  - getcaps/setcaps stuff needs revisiting
  *  - reconfiguration needs to be done differently
- *  - bufferalloc -> buffer pool/alloc query
  */
 
 #ifdef HAVE_CONFIG_H
@@ -278,6 +276,10 @@ gst_deinterlace_locking_get_type (void)
 
 #define DEINTERLACE_ALL_CAPS DEINTERLACE_CAPS ";" \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS_ALL)
+
+static GstStaticCaps progressive_caps =
+GST_STATIC_CAPS ("video/x-raw(ANY),interlace-mode=(string)progressive");
+static GstStaticCaps deinterlace_caps = GST_STATIC_CAPS (DEINTERLACE_CAPS);
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -799,20 +801,6 @@ gst_deinterlace_reset_history (GstDeinterlace * self, gboolean drop_all)
 }
 
 static void
-gst_deinterlace_update_passthrough (GstDeinterlace * self)
-{
-  if (self->mode == GST_DEINTERLACE_MODE_DISABLED)
-    self->passthrough = TRUE;
-  else if (!GST_VIDEO_INFO_IS_INTERLACED (&self->vinfo)
-      && self->mode != GST_DEINTERLACE_MODE_INTERLACED)
-    self->passthrough = TRUE;
-  else
-    self->passthrough = FALSE;
-
-  GST_DEBUG_OBJECT (self, "Passthrough: %d", self->passthrough);
-}
-
-static void
 gst_deinterlace_reset (GstDeinterlace * self)
 {
   GST_DEBUG_OBJECT (self, "Resetting internal state");
@@ -865,7 +853,6 @@ gst_deinterlace_set_property (GObject * object, guint prop_id,
         self->new_mode = new_mode;
       } else {
         self->mode = new_mode;
-        gst_deinterlace_update_passthrough (self);
       }
       GST_OBJECT_UNLOCK (self);
       break;
@@ -2082,7 +2069,35 @@ gst_deinterlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 }
 
 static gboolean
-gst_fraction_double (gint * n_out, gint * d_out, gboolean half)
+gst_deinterlace_acceptcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
+{
+  gboolean ret;
+  GstCaps *ourcaps;
+
+  /* In AUTO/DISABLED mode we accept everything that is compatible with
+   * our template caps. In INTERLACED mode we force deinterlacing, meaning
+   * we can only possibly support the deinterlace caps */
+  if (self->mode == GST_DEINTERLACE_MODE_DISABLED
+      || self->mode == GST_DEINTERLACE_MODE_AUTO) {
+    ourcaps = gst_pad_get_pad_template_caps (pad);
+    ret = gst_caps_can_intersect (caps, ourcaps);
+    gst_caps_unref (ourcaps);
+  } else if (self->mode == GST_DEINTERLACE_MODE_INTERLACED) {
+    ourcaps = gst_static_caps_get (&deinterlace_caps);
+    ret = gst_caps_can_intersect (caps, ourcaps);
+    gst_caps_unref (ourcaps);
+  } else {
+    g_assert_not_reached ();
+  }
+
+  GST_DEBUG_OBJECT (pad, "accept-caps result:%d for caps %" GST_PTR_FORMAT,
+      ret, caps);
+
+  return ret;
+}
+
+static gboolean
+gst_deinterlace_fraction_double (gint * n_out, gint * d_out, gboolean half)
 {
   gint n, d, gcd;
 
@@ -2123,209 +2138,236 @@ gst_fraction_double (gint * n_out, gint * d_out, gboolean half)
   return TRUE;
 }
 
-static gboolean
-gst_deinterlace_acceptcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
+static GstCaps *
+gst_deinterlace_caps_double_framerate (GstCaps * caps, gboolean half)
 {
-  gboolean ret;
-  GstCaps *ourcaps;
-  GstVideoInterlaceMode interlacing_mode;
+  guint len;
 
-  interlacing_mode = GST_VIDEO_INFO_INTERLACE_MODE (&self->vinfo);
+  for (len = gst_caps_get_size (caps); len > 0; len--) {
+    GstStructure *s = gst_caps_get_structure (caps, len - 1);
+    const GValue *val;
 
-  if (self->mode == GST_DEINTERLACE_MODE_INTERLACED ||
-      (self->mode == GST_DEINTERLACE_MODE_AUTO &&
-          interlacing_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)) {
-    ourcaps = gst_caps_from_string (DEINTERLACE_CAPS);
-  } else {
-    ourcaps = gst_pad_get_pad_template_caps (pad);
+    val = gst_structure_get_value (s, "framerate");
+    if (!val)
+      continue;
+
+    if (G_VALUE_TYPE (val) == GST_TYPE_FRACTION) {
+      gint n, d;
+
+      n = gst_value_get_fraction_numerator (val);
+      d = gst_value_get_fraction_denominator (val);
+
+      if (!gst_deinterlace_fraction_double (&n, &d, half)) {
+        gst_caps_remove_structure (caps, len - 1);
+        continue;
+      }
+
+      gst_structure_set (s, "framerate", GST_TYPE_FRACTION, n, d, NULL);
+    } else if (G_VALUE_TYPE (val) == GST_TYPE_FRACTION_RANGE) {
+      const GValue *min, *max;
+      GValue nrange = { 0, }, nmin = {
+      0,}, nmax = {
+      0,};
+      gint n, d;
+
+      g_value_init (&nrange, GST_TYPE_FRACTION_RANGE);
+      g_value_init (&nmin, GST_TYPE_FRACTION);
+      g_value_init (&nmax, GST_TYPE_FRACTION);
+
+      min = gst_value_get_fraction_range_min (val);
+      max = gst_value_get_fraction_range_max (val);
+
+      n = gst_value_get_fraction_numerator (min);
+      d = gst_value_get_fraction_denominator (min);
+
+      if (!gst_deinterlace_fraction_double (&n, &d, half)) {
+        g_value_unset (&nrange);
+        g_value_unset (&nmax);
+        g_value_unset (&nmin);
+        gst_caps_remove_structure (caps, len - 1);
+        continue;
+      }
+
+      gst_value_set_fraction (&nmin, n, d);
+
+      n = gst_value_get_fraction_numerator (max);
+      d = gst_value_get_fraction_denominator (max);
+
+      if (!gst_deinterlace_fraction_double (&n, &d, half)) {
+        g_value_unset (&nrange);
+        g_value_unset (&nmax);
+        g_value_unset (&nmin);
+        gst_caps_remove_structure (caps, len - 1);
+        continue;
+      }
+
+      gst_value_set_fraction (&nmax, n, d);
+      gst_value_set_fraction_range (&nrange, &nmin, &nmax);
+
+      gst_structure_take_value (s, "framerate", &nrange);
+
+      g_value_unset (&nmin);
+      g_value_unset (&nmax);
+    } else if (G_VALUE_TYPE (val) == GST_TYPE_LIST) {
+      const GValue *lval;
+      GValue nlist = { 0, };
+      GValue nval = { 0, };
+      gint i;
+
+      g_value_init (&nlist, GST_TYPE_LIST);
+      for (i = gst_value_list_get_size (val); i > 0; i--) {
+        gint n, d;
+
+        lval = gst_value_list_get_value (val, i - 1);
+
+        if (G_VALUE_TYPE (lval) != GST_TYPE_FRACTION)
+          continue;
+
+        n = gst_value_get_fraction_numerator (lval);
+        d = gst_value_get_fraction_denominator (lval);
+
+        /* Double/Half the framerate but if this fails simply
+         * skip this value from the list */
+        if (!gst_deinterlace_fraction_double (&n, &d, half)) {
+          continue;
+        }
+
+        g_value_init (&nval, GST_TYPE_FRACTION);
+
+        gst_value_set_fraction (&nval, n, d);
+        gst_value_list_append_and_take_value (&nlist, &nval);
+      }
+      gst_structure_take_value (s, "framerate", &nlist);
+    }
   }
 
-  ret = gst_caps_can_intersect (caps, ourcaps);
-  gst_caps_unref (ourcaps);
-
-  GST_DEBUG_OBJECT (pad, "accept-caps result:%d for caps %" GST_PTR_FORMAT,
-      ret, caps);
-
-  return ret;
+  return caps;
 }
 
 static GstCaps *
 gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
 {
-  GstCaps *ret;
+  GstCaps *ret, *caps;
   GstPad *otherpad;
   gint len;
   GstCaps *ourcaps;
   GstCaps *peercaps;
-  gboolean half;
-  GstVideoInterlaceMode interlacing_mode;
-
-  gboolean filter_interlaced = FALSE;
+  GstCaps *tmp, *tmp2;
 
   otherpad = (pad == self->srcpad) ? self->sinkpad : self->srcpad;
-  half = pad != self->srcpad;
 
   ourcaps = gst_pad_get_pad_template_caps (pad);
   peercaps = gst_pad_peer_query_caps (otherpad, NULL);
 
-  interlacing_mode = GST_VIDEO_INFO_INTERLACE_MODE (&self->vinfo);
-  if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE && filter) {
-    guint i, caps_size;
-
-    filter_interlaced = TRUE;
-    caps_size = gst_caps_get_size (filter);
-    for (i = 0; i < caps_size; i++) {
-      const gchar *interlace_mode;
-      GstStructure *structure = gst_caps_get_structure (filter, i);
-
-      interlace_mode = gst_structure_get_string (structure, "interlace-mode");
-
-      if (!interlace_mode || g_strcmp0 (interlace_mode, "progressive") == 0) {
-        filter_interlaced = FALSE;
-        break;
-      }
-    }
-  }
-
-  if (self->mode == GST_DEINTERLACE_MODE_INTERLACED ||
-      (self->mode == GST_DEINTERLACE_MODE_AUTO &&
-          (interlacing_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE ||
-              filter_interlaced))) {
-    gst_caps_unref (ourcaps);
-    ourcaps = gst_caps_from_string (DEINTERLACE_CAPS);
-  }
-
+  /* Filter any peercaps that are available with our template
+   * to get started with the subset of caps we actually support */
   if (peercaps) {
     GST_DEBUG_OBJECT (pad, "Peer has caps %" GST_PTR_FORMAT, peercaps);
-    ret = gst_caps_make_writable (gst_caps_intersect (ourcaps, peercaps));
+    caps = gst_caps_make_writable (gst_caps_intersect (ourcaps, peercaps));
     gst_caps_unref (peercaps);
     gst_caps_unref (ourcaps);
+    peercaps = ourcaps = NULL;
   } else {
-    ret = gst_caps_make_writable (ourcaps);
+    caps = gst_caps_make_writable (ourcaps);
+    ourcaps = NULL;
   }
 
-  for (len = gst_caps_get_size (ret); len > 0; len--) {
-    GstStructure *s = gst_caps_get_structure (ret, len - 1);
+  GST_DEBUG_OBJECT (pad,
+      "Transforming caps %" GST_PTR_FORMAT " with filter %" GST_PTR_FORMAT,
+      caps, filter);
 
-    if (pad == self->sinkpad || self->passthrough)
+  /* If deinterlacing is disabled, we just passthrough the
+   * caps and everything */
+  if (self->mode == GST_DEINTERLACE_MODE_DISABLED) {
+    ret = caps;
+    caps = NULL;
+    goto done;
+  }
+
+  /* If deinterlacing is enforced, we can only accept the
+   * caps for which we can actually do deinterlacing */
+  if (self->mode == GST_DEINTERLACE_MODE_INTERLACED) {
+    tmp = gst_static_caps_get (&deinterlace_caps);
+    ret = gst_caps_intersect_full (caps, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+    tmp = NULL;
+    gst_caps_unref (caps);
+    caps = NULL;
+    goto done;
+  }
+
+  g_assert (self->mode == GST_DEINTERLACE_MODE_AUTO);
+
+  /* For the auto mode we have to do a bit more than that */
+  ret = gst_caps_new_empty ();
+
+  /* We can accept any structure if
+   * - they are progressive already
+   *
+   */
+  tmp = gst_static_caps_get (&progressive_caps);
+  tmp2 = gst_caps_intersect_full (caps, tmp, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (tmp);
+  tmp = NULL;
+  ret = gst_caps_merge (ret, tmp2);
+  tmp2 = NULL;
+
+  /* or
+   * - they have sysmem caps features and a format for which we support
+   *   deinterlacing
+   * or
+   * - they have ANY caps features, in which case we support it for
+   *   sysmem caps features for formats we support
+   *
+   * NOTE: These are the caps where we actually would do deinterlacing
+   * ourselves. If fields == ALL we would double the framerate so would
+   * have to half the framerate constraints from downstream here
+   */
+  tmp = gst_static_caps_get (&deinterlace_caps);
+  tmp2 = gst_caps_intersect_full (caps, tmp, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (tmp);
+  tmp = NULL;
+
+  for (len = gst_caps_get_size (caps); len > 0; len--) {
+    GstStructure *s = gst_caps_get_structure (caps, len - 1);
+
+    if (pad == self->sinkpad)
       gst_structure_remove_field (s, "interlace-mode");
     else
       gst_structure_set (s, "interlace-mode", G_TYPE_STRING, "progressive",
           NULL);
-
-    if (!self->passthrough && self->fields == GST_DEINTERLACE_ALL) {
-      const GValue *val;
-
-      val = gst_structure_get_value (s, "framerate");
-      if (!val)
-        continue;
-
-      if (G_VALUE_TYPE (val) == GST_TYPE_FRACTION) {
-        gint n, d;
-
-        n = gst_value_get_fraction_numerator (val);
-        d = gst_value_get_fraction_denominator (val);
-
-        if (!gst_fraction_double (&n, &d, half)) {
-          goto error;
-        }
-
-        gst_structure_set (s, "framerate", GST_TYPE_FRACTION, n, d, NULL);
-      } else if (G_VALUE_TYPE (val) == GST_TYPE_FRACTION_RANGE) {
-        const GValue *min, *max;
-        GValue nrange = { 0, }, nmin = {
-        0,}, nmax = {
-        0,};
-        gint n, d;
-
-        g_value_init (&nrange, GST_TYPE_FRACTION_RANGE);
-        g_value_init (&nmin, GST_TYPE_FRACTION);
-        g_value_init (&nmax, GST_TYPE_FRACTION);
-
-        min = gst_value_get_fraction_range_min (val);
-        max = gst_value_get_fraction_range_max (val);
-
-        n = gst_value_get_fraction_numerator (min);
-        d = gst_value_get_fraction_denominator (min);
-
-        if (!gst_fraction_double (&n, &d, half)) {
-          g_value_unset (&nrange);
-          g_value_unset (&nmax);
-          g_value_unset (&nmin);
-          goto error;
-        }
-
-        gst_value_set_fraction (&nmin, n, d);
-
-        n = gst_value_get_fraction_numerator (max);
-        d = gst_value_get_fraction_denominator (max);
-
-        if (!gst_fraction_double (&n, &d, half)) {
-          g_value_unset (&nrange);
-          g_value_unset (&nmax);
-          g_value_unset (&nmin);
-          goto error;
-        }
-
-        gst_value_set_fraction (&nmax, n, d);
-        gst_value_set_fraction_range (&nrange, &nmin, &nmax);
-
-        gst_structure_take_value (s, "framerate", &nrange);
-
-        g_value_unset (&nmin);
-        g_value_unset (&nmax);
-      } else if (G_VALUE_TYPE (val) == GST_TYPE_LIST) {
-        const GValue *lval;
-        GValue nlist = { 0, };
-        GValue nval = { 0, };
-        gint i;
-
-        g_value_init (&nlist, GST_TYPE_LIST);
-        for (i = gst_value_list_get_size (val); i > 0; i--) {
-          gint n, d;
-
-          lval = gst_value_list_get_value (val, i - 1);
-
-          if (G_VALUE_TYPE (lval) != GST_TYPE_FRACTION)
-            continue;
-
-          n = gst_value_get_fraction_numerator (lval);
-          d = gst_value_get_fraction_denominator (lval);
-
-          /* Double/Half the framerate but if this fails simply
-           * skip this value from the list */
-          if (!gst_fraction_double (&n, &d, half)) {
-            continue;
-          }
-
-          g_value_init (&nval, GST_TYPE_FRACTION);
-
-          gst_value_set_fraction (&nval, n, d);
-          gst_value_list_append_and_take_value (&nlist, &nval);
-        }
-        gst_structure_take_value (s, "framerate", &nlist);
-      }
-    }
   }
 
+  if (self->fields == GST_DEINTERLACE_ALL) {
+    tmp2 = gst_deinterlace_caps_double_framerate (tmp2, (pad == self->sinkpad));
+  }
+
+  ret = gst_caps_merge (ret, tmp2);
+  tmp2 = NULL;
+
+  /* or
+   * - anything else in which case we would just passthrough again. Remember
+   *   we're here only in AUTO mode, which is best-effort deinterlacing
+   */
+  ret = gst_caps_merge (ret, gst_caps_copy (caps));
+
+  gst_caps_unref (caps);
+  caps = NULL;
+
+done:
+
   if (filter) {
-    GstCaps *filter_caps;
+    GstCaps *tmp;
 
     GST_LOG_OBJECT (pad, "intersecting with %" GST_PTR_FORMAT, filter);
-    filter_caps = gst_caps_intersect_full (filter, ret,
-        GST_CAPS_INTERSECT_FIRST);
+    tmp = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (ret);
-    ret = filter_caps;
+    ret = tmp;
   }
 
   GST_DEBUG_OBJECT (pad, "Returning caps %" GST_PTR_FORMAT, ret);
 
   return ret;
-
-error:
-  GST_ERROR_OBJECT (pad, "Unable to transform peer caps");
-  gst_caps_unref (ret);
-  return NULL;
 }
 
 /* takes ownership of the pool, allocator and query */
@@ -2469,52 +2511,92 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
   fps_n = GST_VIDEO_INFO_FPS_N (&self->vinfo);
   fps_d = GST_VIDEO_INFO_FPS_D (&self->vinfo);
 
-  gst_deinterlace_update_passthrough (self);
+  /* Update passthrough information */
+  if (self->mode == GST_DEINTERLACE_MODE_DISABLED) {
+    self->passthrough = TRUE;
+    GST_DEBUG_OBJECT (self, "Passthrough because mode=disabled");
+  } else if (self->mode == GST_DEINTERLACE_MODE_INTERLACED) {
+    GstCaps *tmp = gst_static_caps_get (&deinterlace_caps);
+
+    if (!gst_caps_can_intersect (caps, tmp)) {
+      gst_caps_unref (tmp);
+      GST_ERROR_OBJECT (self, "Unsupported caps for mode=interlaced");
+      goto invalid_caps;
+    }
+
+    self->passthrough = FALSE;
+    GST_DEBUG_OBJECT (self, "Not passthrough because mode=interlaced");
+  } else if (self->mode == GST_DEINTERLACE_MODE_AUTO) {
+    GstCaps *tmp = gst_static_caps_get (&deinterlace_caps);
+
+    /* Already progressive? Passthrough */
+    if (!GST_VIDEO_INFO_IS_INTERLACED (&self->vinfo)) {
+      GST_DEBUG_OBJECT (self,
+          "Passthrough because mode=auto and progressive caps");
+      self->passthrough = TRUE;
+    } else if (gst_caps_can_intersect (caps, tmp)) {
+      GST_DEBUG_OBJECT (self,
+          "Not passthrough because mode=auto and interlaced caps");
+      self->passthrough = FALSE;
+    } else {
+      GST_WARNING_OBJECT (self,
+          "Passthrough because mode=auto and unsupported interlaced caps");
+      self->passthrough = TRUE;
+    }
+
+    gst_caps_unref (tmp);
+  } else {
+    g_assert_not_reached ();
+  }
 
   interlacing_mode = GST_VIDEO_INFO_INTERLACE_MODE (&self->vinfo);
 
-  if (self->pattern_lock) {
-    srccaps = gst_caps_copy (caps);
-    if (self->pattern != -1
-        && G_UNLIKELY (!gst_util_fraction_multiply (fps_n, fps_d,
-                telecine_patterns[self->pattern].ratio_n,
-                telecine_patterns[self->pattern].ratio_d, &fps_n, &fps_d)))
-      GST_ERROR_OBJECT (self,
-          "Multiplying the framerate by the telecine pattern ratio overflowed!");
-    gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, fps_n,
-        fps_d, NULL);
-  } else if (self->locking == GST_DEINTERLACE_LOCKING_ACTIVE
-      || self->low_latency == 0) {
-    /* in high latency pattern locking mode if we don't have a pattern lock,
-     * the sink pad caps are the best we know */
-    srccaps = gst_caps_ref (caps);
-  } else if (self->low_latency > 0
-      && interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED
-      && self->pattern == -1) {
-    /* for initial buffers of a telecine pattern, until there is a lock we
-     * we output naïvely adjusted timestamps in low-latency pattern locking
-     * mode */
-    srccaps = gst_caps_copy (caps);
-    gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
-  } else if (!self->passthrough && self->fields == GST_DEINTERLACE_ALL) {
-    if (!gst_fraction_double (&fps_n, &fps_d, FALSE))
-      goto invalid_caps;
+  if (!self->passthrough) {
+    if (self->pattern_lock) {
+      srccaps = gst_caps_copy (caps);
+      if (self->pattern != -1
+          && G_UNLIKELY (!gst_util_fraction_multiply (fps_n, fps_d,
+                  telecine_patterns[self->pattern].ratio_n,
+                  telecine_patterns[self->pattern].ratio_d, &fps_n, &fps_d)))
+        GST_ERROR_OBJECT (self,
+            "Multiplying the framerate by the telecine pattern ratio overflowed!");
+      gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, fps_n,
+          fps_d, NULL);
+    } else if (self->locking == GST_DEINTERLACE_LOCKING_ACTIVE
+        || self->low_latency == 0) {
+      /* in high latency pattern locking mode if we don't have a pattern lock,
+       * the sink pad caps are the best we know */
+      srccaps = gst_caps_copy (caps);
+    } else if (self->low_latency > 0
+        && interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED
+        && self->pattern == -1) {
+      /* for initial buffers of a telecine pattern, until there is a lock we
+       * we output naïvely adjusted timestamps in low-latency pattern locking
+       * mode */
+      srccaps = gst_caps_copy (caps);
+      gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
+    } else if (self->fields == GST_DEINTERLACE_ALL) {
+      if (!gst_deinterlace_fraction_double (&fps_n, &fps_d, FALSE))
+        goto invalid_caps;
 
-    srccaps = gst_caps_copy (caps);
+      srccaps = gst_caps_copy (caps);
 
-    gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, fps_n,
-        fps_d, NULL);
-  } else {
-    srccaps = gst_caps_ref (caps);
-  }
+      gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, fps_n,
+          fps_d, NULL);
+    } else {
+      srccaps = gst_caps_copy (caps);
+    }
 
-  if (self->mode != GST_DEINTERLACE_MODE_DISABLED) {
+    /* If not passthrough, we are going to output progressive content */
     srccaps = gst_caps_make_writable (srccaps);
     gst_caps_set_simple (srccaps, "interlace-mode", G_TYPE_STRING,
         "progressive", NULL);
-  }
 
-  gst_pad_set_caps (self->srcpad, srccaps);
+    gst_deinterlace_set_method (self, self->method_id);
+    gst_deinterlace_method_setup (self->method, &self->vinfo);
+  } else {
+    srccaps = gst_caps_ref (caps);
+  }
 
   if (fps_n != 0) {
     self->field_duration = gst_util_uint64_scale (GST_SECOND, fps_d, fps_n);
@@ -2522,13 +2604,11 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
     self->field_duration = 0;
   }
 
-  if (!self->passthrough) {
-    gst_deinterlace_set_method (self, self->method_id);
-    gst_deinterlace_method_setup (self->method, &self->vinfo);
-  }
-
   GST_DEBUG_OBJECT (pad, "Sink caps: %" GST_PTR_FORMAT, caps);
   GST_DEBUG_OBJECT (pad, "Src  caps: %" GST_PTR_FORMAT, srccaps);
+
+  if (!gst_pad_set_caps (self->srcpad, srccaps))
+    goto set_caps_failed;
 
   if (!gst_deinterlace_do_bufferpool (self, srccaps))
     goto no_bufferpool;
@@ -2540,6 +2620,12 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
 invalid_caps:
   {
     GST_ERROR_OBJECT (pad, "Invalid caps: %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+set_caps_failed:
+  {
+    GST_ERROR_OBJECT (pad, "Failed to set caps: %" GST_PTR_FORMAT, srccaps);
+    gst_caps_unref (srccaps);
     return FALSE;
   }
 no_bufferpool:
