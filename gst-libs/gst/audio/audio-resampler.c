@@ -899,7 +899,7 @@ gst_audio_resampler_new (GstAudioResamplerMethod method,
 
   /* half of the filter is filled with 0 */
   resampler->samp_index = 0;
-  resampler->samples_avail = resampler->n_taps / 2;
+  resampler->samples_avail = resampler->n_taps / 2 - 1;
 
   return resampler;
 }
@@ -917,9 +917,13 @@ get_sample_bufs (GstAudioResampler * resampler, gsize need)
 
     bytes = GST_ROUND_UP_N (need * resampler->bps * resampler->inc, ALIGN);
 
-    /* FIXME, move history */
     resampler->samples =
-        g_realloc (resampler->samples, resampler->blocks * bytes + ALIGN - 1);
+        g_realloc (resampler->samples, blocks * bytes + ALIGN - 1);
+    if (resampler->samples_len == 0) {
+      memset (resampler->samples, 0, blocks * bytes + ALIGN - 1);
+    } else {
+      /* FIXME, move history */
+    }
     resampler->samples_len = need;
 
     ptr = MEM_ALIGN (resampler->samples, ALIGN);
@@ -953,7 +957,7 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
     guint in_rate, guint out_rate, GstStructure * options)
 {
   gint gcd;
-  gint old_n_taps, diff;
+  gint old_n_taps;
 
   g_return_val_if_fail (resampler != NULL, FALSE);
 
@@ -988,27 +992,33 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
   GST_DEBUG ("rate %u->%u, taps %d->%d", in_rate, out_rate, old_n_taps,
       resampler->n_taps);
 
-  if (old_n_taps == 0)
-    return TRUE;
-
-  if (old_n_taps > resampler->n_taps) {
-    resampler->samp_index += (old_n_taps - resampler->n_taps) / 2;
-  } else if (old_n_taps < resampler->n_taps) {
+  if (old_n_taps > 0) {
     gpointer *sbuf;
-    gint i, bpf, bytes, start, off;
+    gint i, bpf, bytes, soff, doff, diff;
 
     sbuf = get_sample_bufs (resampler, resampler->n_taps);
 
     bpf = resampler->bps * resampler->inc;
     bytes = resampler->samples_avail * bpf;
-    start = resampler->samp_index * bpf;
-    diff = (resampler->n_taps - old_n_taps) / 2;
-    off = diff * bpf;
+    soff = doff = resampler->samp_index * bpf;
 
-    for (i = 0; i < resampler->blocks; i++) {
-      gint8 *s = (gint8 *) sbuf[i] + start;
-      memmove (s + off, s, bytes);
+    diff = ((gint) resampler->n_taps - old_n_taps) / 2;
+
+    if (diff < 0) {
+      /* diff < 0, decrease taps, adjust source */
+      soff += -diff * bpf;
+      bytes -= -diff * bpf;
+    } else {
+      /* diff > 0, increase taps, adjust dest */
+      doff += diff * bpf;
     }
+
+    /* now shrink or enlarge the history buffer, when we enlarge we
+     * just leave the old samples in there. FIXME, probably do something better
+     * like mirror or fill with zeroes. */
+    for (i = 0; i < resampler->blocks; i++)
+      memmove ((gint8 *) sbuf[i] + doff, (gint8 *) sbuf[i] + soff, bytes);
+
     resampler->samples_avail += diff;
   }
   return TRUE;
