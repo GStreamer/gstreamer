@@ -1687,42 +1687,6 @@ wrong_content_type:
   }
 }
 
-static const gchar *
-aac_codec_data_to_codec_id (GstBuffer * buf)
-{
-  const gchar *result;
-  guint8 profile;
-
-  /* default to MAIN */
-  profile = 1;
-
-  if (gst_buffer_get_size (buf) >= 2) {
-    gst_buffer_extract (buf, 0, &profile, 1);
-    profile >>= 3;
-  }
-
-  switch (profile) {
-    case 1:
-      result = "MAIN";
-      break;
-    case 2:
-      result = "LC";
-      break;
-    case 3:
-      result = "SSR";
-      break;
-    case 4:
-      result = "LTP";
-      break;
-    default:
-      GST_WARNING ("unknown AAC profile, defaulting to MAIN");
-      result = "MAIN";
-      break;
-  }
-
-  return result;
-}
-
 /**
  * gst_matroska_mux_audio_pad_setcaps:
  * @pad: Pad which got the caps.
@@ -1840,16 +1804,11 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
         }
 
         if (buf) {
-          if (mpegversion == 2)
-            context->codec_id =
-                g_strdup_printf (GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG2 "%s",
-                aac_codec_data_to_codec_id (buf));
-          else if (mpegversion == 4)
-            context->codec_id =
-                g_strdup_printf (GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG4 "%s",
-                aac_codec_data_to_codec_id (buf));
-          else
-            g_assert_not_reached ();
+          context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_AAC);
+          context->codec_priv_size = gst_buffer_get_size (buf);
+          context->codec_priv = g_malloc (context->codec_priv_size);
+          gst_buffer_extract (buf, 0, context->codec_priv,
+              context->codec_priv_size);
         } else {
           GST_DEBUG_OBJECT (mux, "no AAC codec_data; not packetized");
           goto refuse_caps;
