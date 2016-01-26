@@ -344,8 +344,8 @@ typedef void (*GstVideoFormatPack)           (const GstVideoFormatInfo *info,
  * @pack_lines: the amount of lines that will be packed
  * @pack_func: an pack function for this format
  * @tile_mode: The tiling mode
- * @tile_ws The width of a tile, in bytes, represented as a shift
- * @tile_hs The height of a tile, in bytes, represented as a shift
+ * @tile_ws: The width of a tile, in bytes, represented as a shift
+ * @tile_hs: The height of a tile, in bytes, represented as a shift
  *
  * Information for a video format.
  */
@@ -374,6 +374,7 @@ struct _GstVideoFormatInfo {
   guint tile_ws;
   guint tile_hs;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -396,6 +397,8 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_DEPTH(info,c)      ((info)->depth[c])
 /**
  * GST_VIDEO_FORMAT_INFO_PSTRIDE:
+ * @info: a #GstVideoInfo
+ * @c: the component index
  *
  * pixel stride for the given component. This is the amount of bytes to the
  * pixel immediately to the right, so basically bytes from one pixel to the
@@ -409,6 +412,7 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_PSTRIDE(info,c)    ((info)->pixel_stride[c])
 /**
  * GST_VIDEO_FORMAT_INFO_N_PLANES:
+ * @info: a #GstVideoInfo
  *
  * Number of planes. This is the number of planes the pixel layout is
  * organized in in memory. The number of planes can be less than the
@@ -421,6 +425,8 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_N_PLANES(info)     ((info)->n_planes)
 /**
  * GST_VIDEO_FORMAT_INFO_PLANE:
+ * @info: a #GstVideoInfo
+ * @c: the component index
  *
  * Plane number where the given component can be found. A plane may
  * contain data for multiple components.
@@ -440,6 +446,9 @@ struct _GstVideoFormatInfo {
   (((guint8*)(planes)[(info)->plane[comp]]) + (info)->poffset[comp])
 /**
  * GST_VIDEO_FORMAT_INFO_STRIDE:
+ * @info: a #GstVideoInfo
+ * @strides: an array of strides
+ * @comp: the component index
  *
  * Row stride in bytes, that is number of bytes from the first pixel component
  * of a row to the first pixel component in the next row. This might include
