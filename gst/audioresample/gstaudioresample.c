@@ -429,6 +429,8 @@ update_failed:
 static void
 gst_audio_resample_reset_state (GstAudioResample * resample)
 {
+  if (resample->converter)
+    gst_audio_converter_reset (resample->converter);
 }
 
 static gboolean
@@ -507,32 +509,20 @@ invalid_outcaps:
 static void
 gst_audio_resample_dump_drain (GstAudioResample * resample, guint history_len)
 {
-#if 0
-  gint outsize;
-  guint in_len G_GNUC_UNUSED, in_processed;
-  guint out_len, out_processed;
-  guint num, den;
-  gpointer buf;
+  gsize out_len, outsize;
+  gpointer out[1];
 
-  g_assert (resample->converter != NULL);
-
-  resample->funcs->get_ratio (resample->state, &num, &den);
-
-  in_len = in_processed = history_len;
-  out_processed = out_len =
-      gst_util_uint64_scale_int_ceil (history_len, den, num);
-  outsize = out_len * resample->channels * (resample->funcs->width / 8);
-
+  out_len =
+      gst_audio_converter_get_out_frames (resample->converter, history_len);
   if (out_len == 0)
     return;
 
-  buf = g_malloc (outsize);
-  resample->funcs->process (resample->state, NULL, &in_processed, buf,
-      &out_processed);
-  g_free (buf);
+  outsize = out_len * resample->out.bpf;
 
-  g_assert (in_len == in_processed);
-#endif
+  out[0] = g_malloc (outsize);
+  gst_audio_converter_samples (resample->converter, 0, NULL, history_len,
+      out, out_len);
+  g_free (out[0]);
 }
 
 static void
@@ -616,10 +606,6 @@ gst_audio_resample_sink_event (GstBaseTransform * base, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       gst_audio_resample_reset_state (resample);
-#if 0
-      if (resample->converter)
-        resample->funcs->skip_zeros (resample->converter);
-#endif
       resample->num_gap_samples = 0;
       resample->num_nongap_samples = 0;
       resample->t0 = GST_CLOCK_TIME_NONE;
@@ -630,18 +616,12 @@ gst_audio_resample_sink_event (GstBaseTransform * base, GstEvent * event)
       resample->need_discont = TRUE;
       break;
     case GST_EVENT_SEGMENT:
-#if 0
       if (resample->converter) {
-        guint latency =
-            resample->funcs->get_input_latency (resample->converter);
+        gsize latency =
+            gst_audio_converter_get_max_latency (resample->converter);
         gst_audio_resample_push_drain (resample, latency);
       }
-#endif
       gst_audio_resample_reset_state (resample);
-#if 0
-      if (resample->converter)
-        resample->funcs->skip_zeros (resample->converter);
-#endif
       resample->num_gap_samples = 0;
       resample->num_nongap_samples = 0;
       resample->t0 = GST_CLOCK_TIME_NONE;
@@ -652,13 +632,11 @@ gst_audio_resample_sink_event (GstBaseTransform * base, GstEvent * event)
       resample->need_discont = TRUE;
       break;
     case GST_EVENT_EOS:
-#if 0
       if (resample->converter) {
-        guint latency =
-            resample->funcs->get_input_latency (resample->converter);
+        gsize latency =
+            gst_audio_converter_get_max_latency (resample->converter);
         gst_audio_resample_push_drain (resample, latency);
       }
-#endif
       gst_audio_resample_reset_state (resample);
       break;
     default:
@@ -859,9 +837,6 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
 
   /* handle discontinuity */
   if (G_UNLIKELY (resample->need_discont)) {
-#if 0
-    resample->funcs->skip_zeros (resample->state);
-#endif
     resample->num_gap_samples = 0;
     resample->num_nongap_samples = 0;
     /* reset */
@@ -962,12 +937,10 @@ gst_audio_resample_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gint rate = resample->in.rate;
       gint resampler_latency;
 
-#if 0
-      if (resample->state)
+      if (resample->converter)
         resampler_latency =
-            resample->funcs->get_input_latency (resample->state);
+            gst_audio_converter_get_max_latency (resample->converter);
       else
-#endif
         resampler_latency = 0;
 
       if (gst_base_transform_is_passthrough (trans))

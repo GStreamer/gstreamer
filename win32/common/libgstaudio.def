@@ -164,6 +164,7 @@ EXPORTS
 	gst_audio_resampler_new
 	gst_audio_resampler_options_set_quality
 	gst_audio_resampler_resample
+	gst_audio_resampler_reset
 	gst_audio_resampler_update
 	gst_audio_ring_buffer_acquire
 	gst_audio_ring_buffer_activate

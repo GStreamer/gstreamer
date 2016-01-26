@@ -164,6 +164,7 @@ GstAudioResampler * gst_audio_resampler_new              (GstAudioResamplerMetho
                                                           GstStructure *options);
 void                gst_audio_resampler_free             (GstAudioResampler *resampler);
 
+void                gst_audio_resampler_reset            (GstAudioResampler *resampler);
 
 gboolean            gst_audio_resampler_update           (GstAudioResampler *resampler,
                                                           guint in_rate, guint out_rate,

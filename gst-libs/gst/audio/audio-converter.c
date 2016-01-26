@@ -1088,6 +1088,8 @@ gst_audio_converter_get_max_latency (GstAudioConverter * convert)
 void
 gst_audio_converter_reset (GstAudioConverter * convert)
 {
+  if (convert->resampler)
+    gst_audio_resampler_reset (convert->resampler);
   if (convert->quant)
     gst_audio_quantize_reset (convert->quant);
 }

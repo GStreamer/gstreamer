@@ -937,6 +937,34 @@ get_sample_bufs (GstAudioResampler * resampler, gsize need)
 }
 
 /**
+ * gst_audio_resampler_reset:
+ * @resampler: a #GstAudioResampler
+ *
+ * Reset @resampler to the state it was when it was first created, discarding
+ * all sample history.
+ */
+void
+gst_audio_resampler_reset (GstAudioResampler * resampler)
+{
+  g_return_if_fail (resampler != NULL);
+
+  if (resampler->samples) {
+    gsize bytes;
+    gint c, blocks, bpf;
+
+    bpf = resampler->bps * resampler->inc;
+    bytes = (resampler->n_taps / 2) * bpf;
+    blocks = resampler->blocks;
+
+    for (c = 0; c < blocks; c++)
+      memset (resampler->sbuf[c], 0, bytes);
+  }
+  /* half of the filter is filled with 0 */
+  resampler->samp_index = 0;
+  resampler->samples_avail = resampler->n_taps / 2 - 1;
+}
+
+/**
  * gst_audio_resampler_update:
  * @resampler: a #GstAudioResampler
  * @in_rate: new input rate
