@@ -59,7 +59,7 @@ struct _GstAudioResampler
   guint channels;
   gint in_rate;
   gint out_rate;
-  gint bps, bpf;
+  gint bps;
   gint ostride;
 
   gdouble cutoff;
@@ -887,11 +887,10 @@ gst_audio_resampler_new (GstAudioResamplerMethod method,
 
   info = gst_audio_format_get_info (format);
   resampler->bps = GST_AUDIO_FORMAT_INFO_WIDTH (info) / 8;
-  resampler->bpf = resampler->bps * channels;
   resampler->sbuf = g_malloc0 (sizeof (gpointer) * channels);
 
-  GST_DEBUG ("method %d, bps %d, bpf %d", method, resampler->bps,
-      resampler->bpf);
+  GST_DEBUG ("method %d, bps %d, channels %d", method, resampler->bps,
+      resampler->channels);
 
   gst_audio_resampler_update (resampler, in_rate, out_rate, options);
 
@@ -900,6 +899,34 @@ gst_audio_resampler_new (GstAudioResamplerMethod method,
   resampler->samples_avail = resampler->n_taps / 2;
 
   return resampler;
+}
+
+/* make the buffers to hold the (deinterleaved) samples */
+static inline gpointer *
+get_sample_bufs (GstAudioResampler * resampler, gsize need)
+{
+  if (G_LIKELY (resampler->samples_len < need)) {
+    guint c, blocks = resampler->blocks;
+    gsize bytes;
+    gint8 *ptr;
+
+    GST_LOG ("realloc %d -> %d", (gint) resampler->samples_len, (gint) need);
+
+    bytes = GST_ROUND_UP_N (need * resampler->bps * resampler->inc, ALIGN);
+
+    /* FIXME, move history */
+    resampler->samples =
+        g_realloc (resampler->samples, resampler->blocks * bytes + ALIGN - 1);
+    resampler->samples_len = need;
+
+    ptr = MEM_ALIGN (resampler->samples, ALIGN);
+
+    /* set up new pointers */
+    for (c = 0; c < blocks; c++) {
+      resampler->sbuf[c] = ptr + (c * bytes);
+    }
+  }
+  return resampler->sbuf;
 }
 
 /**
@@ -923,6 +950,7 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
     guint in_rate, guint out_rate, GstStructure * options)
 {
   gint gcd;
+  gint old_n_taps, diff;
 
   g_return_val_if_fail (resampler != NULL, FALSE);
 
@@ -949,12 +977,37 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
     resampler->options = gst_structure_copy (options);
   }
 
-  GST_DEBUG ("%u->%u", in_rate, out_rate);
+  old_n_taps = resampler->n_taps;
 
   resampler_calculate_taps (resampler);
   resampler_dump (resampler);
 
+  GST_DEBUG ("rate %u->%u, taps %d->%d", in_rate, out_rate, old_n_taps,
+      resampler->n_taps);
 
+  if (old_n_taps == 0)
+    return TRUE;
+
+  if (old_n_taps > resampler->n_taps) {
+    resampler->samp_index += (old_n_taps - resampler->n_taps) / 2;
+  } else if (old_n_taps < resampler->n_taps) {
+    gpointer *sbuf;
+    gint i, bpf, bytes, start, off;
+
+    sbuf = get_sample_bufs (resampler, resampler->n_taps);
+
+    bpf = resampler->bps * resampler->inc;
+    bytes = resampler->samples_avail * bpf;
+    start = resampler->samp_index * bpf;
+    diff = (resampler->n_taps - old_n_taps) / 2;
+    off = diff * bpf;
+
+    for (i = 0; i < resampler->blocks; i++) {
+      gint8 *s = (gint8 *) sbuf[i] + start;
+      memmove (s + off, s, bytes);
+    }
+    resampler->samples_avail += diff;
+  }
   return TRUE;
 }
 
@@ -1071,34 +1124,6 @@ gst_audio_resampler_get_max_latency (GstAudioResampler * resampler)
   g_return_val_if_fail (resampler != NULL, 0);
 
   return resampler->n_taps / 2;
-}
-
-/* make the buffers to hold the (deinterleaved) samples */
-static inline gpointer *
-get_sample_bufs (GstAudioResampler * resampler, gsize need)
-{
-  if (G_LIKELY (resampler->samples_len < need)) {
-    guint c, blocks = resampler->blocks;
-    gsize bytes;
-    gint8 *ptr;
-
-    GST_LOG ("realloc %d -> %d", (gint) resampler->samples_len, (gint) need);
-
-    bytes = GST_ROUND_UP_N (need * resampler->bps * resampler->inc, ALIGN);
-
-    /* FIXME, move history */
-    resampler->samples =
-        g_realloc (resampler->samples, resampler->blocks * bytes + ALIGN - 1);
-    resampler->samples_len = need;
-
-    ptr = MEM_ALIGN (resampler->samples, ALIGN);
-
-    /* set up new pointers */
-    for (c = 0; c < blocks; c++) {
-      resampler->sbuf[c] = ptr + (c * bytes);
-    }
-  }
-  return resampler->sbuf;
 }
 
 /**

@@ -777,19 +777,17 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
     }
     {
       /* process */
-      {
-        gpointer in[1], out[1];
-        GstAudioConverterFlags flags;
+      gpointer in[1], out[1];
+      GstAudioConverterFlags flags;
 
-        flags = 0;
-        if (inbuf_writable)
-          flags |= GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE;
+      flags = 0;
+      if (inbuf_writable)
+        flags |= GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE;
 
-        in[0] = in_map.data;
-        out[0] = out_map.data;
-        gst_audio_converter_samples (resample->converter, flags, in, in_len,
-            out, out_len);
-      }
+      in[0] = in_map.data;
+      out[0] = out_map.data;
+      gst_audio_converter_samples (resample->converter, flags, in, in_len,
+          out, out_len);
     }
   }
 
