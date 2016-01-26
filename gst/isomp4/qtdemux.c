@@ -253,6 +253,9 @@ struct _QtDemuxStream
   gboolean all_keyframe;        /* TRUE when all samples are keyframes (no stss) */
   guint32 first_duration;       /* duration in timescale of first sample, used for figuring out
                                    the framerate, in timescale units */
+  guint32 n_samples_moof;       /* sample count in a moof */
+  guint64 duration_moof;        /* duration in timescale of a moof, used for figure out
+                                 * the framerate of fragmented format stream */
   guint32 offset_in_sample;
   guint32 max_buffer_size;
 
@@ -1817,6 +1820,8 @@ _create_stream (void)
   stream->protection_scheme_type = 0;
   stream->protection_scheme_version = 0;
   stream->protection_scheme_info = NULL;
+  stream->n_samples_moof = 0;
+  stream->duration_moof = 0;
   g_queue_init (&stream->protection_scheme_event_queue);
   return stream;
 }
@@ -2293,6 +2298,9 @@ gst_qtdemux_stream_flush_samples_data (GstQTDemux * qtdemux,
   stream->stbl_index = -1;
   stream->n_samples = 0;
   stream->time_position = 0;
+
+  stream->n_samples_moof = 0;
+  stream->duration_moof = 0;
 }
 
 static void
@@ -2898,6 +2906,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     sample->keyframe = ismv ? ((sflags & 0xff) == 0x40) : !(sflags & 0x10000);
     *running_offset += size;
     timestamp += dur;
+    stream->duration_moof += dur;
     sample++;
   }
 
@@ -2905,6 +2914,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   check_update_duration (qtdemux, QTSTREAMTIME_TO_GSTTIME (stream, timestamp));
 
   stream->n_samples += samples_count;
+  stream->n_samples_moof += samples_count;
 
   if (stream->pending_seek != NULL)
     stream->pending_seek = NULL;
@@ -3498,6 +3508,10 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     if (qtdemux->upstream_format_is_time)
       gst_qtdemux_stream_flush_samples_data (qtdemux, stream);
 
+    /* initialise moof sample data */
+    stream->n_samples_moof = 0;
+    stream->duration_moof = 0;
+
     /* Track Run node */
     trun_node =
         qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_trun,
@@ -3514,6 +3528,10 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
      * base is end of current traf */
     base_offset = running_offset;
     running_offset = -1;
+
+    if (stream->n_samples_moof && stream->duration_moof)
+      stream->new_caps = TRUE;
+
   next:
     /* iterate all siblings */
     traf_node = qtdemux_tree_get_sibling_by_type (traf_node, FOURCC_traf);
@@ -6940,19 +6958,34 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
         stream->fps_n = stream->timescale;
         stream->fps_d = 1;
       } else {
+        GstClockTime avg_duration;
+        guint64 duration;
+        guint32 n_samples;
+
+        /* duration and n_samples can be updated for fragmented format
+         * so, framerate of fragmented format is calculated using data in a moof */
+        if (qtdemux->fragmented && stream->n_samples_moof > 0
+            && stream->duration_moof > 0) {
+          n_samples = stream->n_samples_moof;
+          duration = stream->duration_moof;
+        } else {
+          n_samples = stream->n_samples;
+          duration = stream->duration;
+        }
+
         /* Calculate a framerate, ignoring the first sample which is sometimes truncated */
         /* stream->duration is guint64, timescale, n_samples are guint32 */
-        GstClockTime avg_duration =
-            gst_util_uint64_scale_round (stream->duration -
+        avg_duration =
+            gst_util_uint64_scale_round (duration -
             stream->first_duration, GST_SECOND,
-            (guint64) (stream->timescale) * (stream->n_samples - 1));
+            (guint64) (stream->timescale) * (n_samples - 1));
 
         GST_LOG_OBJECT (qtdemux,
-            "Calculating avg sample duration based on stream duration %"
+            "Calculating avg sample duration based on stream (or moof) duration %"
             G_GUINT64_FORMAT
             " minus first sample %u, leaving %d samples gives %"
-            GST_TIME_FORMAT, stream->duration, stream->first_duration,
-            stream->n_samples - 1, GST_TIME_ARGS (avg_duration));
+            GST_TIME_FORMAT, duration, stream->first_duration,
+            n_samples - 1, GST_TIME_ARGS (avg_duration));
 
         gst_video_guess_framerate (avg_duration, &stream->fps_n,
             &stream->fps_d);
