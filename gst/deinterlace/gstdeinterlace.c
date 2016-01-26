@@ -34,10 +34,6 @@
  * </refsect2>
  */
 
-/* FIXME PORTING 0.11:
- *  - reconfiguration needs to be done differently
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -847,7 +843,6 @@ gst_deinterlace_set_property (GObject * object, guint prop_id,
 
       GST_OBJECT_LOCK (self);
       new_mode = g_value_get_enum (value);
-      /* FIXME: reconfiguration should probably be done differently */
       if (self->mode != new_mode && gst_pad_has_current_caps (self->srcpad)) {
         self->reconfigure = TRUE;
         self->new_mode = new_mode;
@@ -866,7 +861,6 @@ gst_deinterlace_set_property (GObject * object, guint prop_id,
 
       GST_OBJECT_LOCK (self);
       new_fields = g_value_get_enum (value);
-      /* FIXME: reconfiguration should probably be done differently */
       if (self->fields != new_fields && gst_pad_has_current_caps (self->srcpad)) {
         self->reconfigure = TRUE;
         self->new_fields = new_fields;
@@ -1550,7 +1544,11 @@ restart:
 
       /* setcaps on sink and src pads */
       sinkcaps = gst_pad_get_current_caps (self->sinkpad);
-      gst_deinterlace_setcaps (self, self->sinkpad, sinkcaps);  // FIXME
+      if (!gst_deinterlace_setcaps (self, self->sinkpad, sinkcaps)) {
+        gst_caps_unref (sinkcaps);
+        return GST_FLOW_NOT_NEGOTIATED;
+      }
+
       gst_caps_unref (sinkcaps);
 
       if (flush_one && self->drop_orphans) {
@@ -2014,7 +2012,7 @@ gst_deinterlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_OBJECT_LOCK (self);
-  if (self->reconfigure) {      /* FIXME: reconfigure should probably work differently */
+  if (self->reconfigure || gst_pad_check_reconfigure (self->srcpad)) {
     GstCaps *caps;
 
     if ((gint) self->new_fields != -1)
@@ -2028,8 +2026,13 @@ gst_deinterlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     GST_OBJECT_UNLOCK (self);
     caps = gst_pad_get_current_caps (self->sinkpad);
     if (caps != NULL) {
-      gst_deinterlace_setcaps (self, self->sinkpad, caps);      // FIXME
+      if (!gst_deinterlace_setcaps (self, self->sinkpad, caps)) {
+        gst_caps_unref (caps);
+        return GST_FLOW_NOT_NEGOTIATED;
+      }
       gst_caps_unref (caps);
+    } else {
+      return GST_FLOW_FLUSHING;
     }
   } else {
     GST_OBJECT_UNLOCK (self);
