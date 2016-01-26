@@ -2504,7 +2504,7 @@ gst_deinterlace_do_bufferpool (GstDeinterlace * self, GstCaps * outcaps)
 static gboolean
 gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
 {
-  GstCaps *srccaps;
+  GstCaps *srccaps = NULL;
   GstVideoInterlaceMode interlacing_mode;
   gint fps_n, fps_d;
 
@@ -2555,9 +2555,52 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
           "Passthrough because mode=auto and progressive caps");
       self->passthrough = TRUE;
     } else if (gst_caps_can_intersect (caps, tmp)) {
-      GST_DEBUG_OBJECT (self,
-          "Not passthrough because mode=auto and interlaced caps");
-      self->passthrough = FALSE;
+      GstCaps *peercaps;
+
+      peercaps = gst_pad_peer_query_caps (self->srcpad, NULL);
+      if (peercaps) {
+        GstCaps *templcaps = gst_pad_get_pad_template_caps (self->srcpad);
+        GstCaps *allowed_caps;
+        GstCaps *tmp2;
+        GstStructure *s;
+
+        allowed_caps = gst_caps_intersect (templcaps, peercaps);
+        gst_caps_unref (templcaps);
+        gst_caps_unref (peercaps);
+        peercaps = allowed_caps;
+        allowed_caps = gst_caps_intersect (peercaps, tmp);
+        gst_caps_unref (peercaps);
+
+        tmp2 = gst_caps_copy (caps);
+        s = gst_caps_get_structure (tmp2, 0);
+        gst_structure_set (s, "interlace-mode", G_TYPE_STRING, "progressive",
+            NULL);
+        gst_structure_remove_field (s, "framerate");
+
+        /* Downstream does not support progressive caps but supports
+         * the upstream caps, go passthrough.
+         * TODO: We might want to check the framerate compatibility
+         * of the caps too here
+         */
+        if (gst_caps_can_intersect (allowed_caps, caps)
+            && !gst_caps_can_intersect (allowed_caps, tmp2)) {
+          GST_DEBUG_OBJECT (self,
+              "Passthrough because mode=auto, "
+              "downstream does not support progressive caps and interlaced caps");
+          self->passthrough = TRUE;
+        } else {
+          GST_DEBUG_OBJECT (self, "Not passthrough because mode=auto, "
+              "downstream supports progressive caps and interlaced caps");
+          self->passthrough = FALSE;
+        }
+
+        gst_caps_unref (allowed_caps);
+        gst_caps_unref (tmp2);
+      } else {
+        GST_DEBUG_OBJECT (self,
+            "Not passthrough because mode=auto and interlaced caps");
+        self->passthrough = FALSE;
+      }
     } else {
       if (self->mode == GST_DEINTERLACE_MODE_AUTO) {
         GST_WARNING_OBJECT (self,
@@ -2647,18 +2690,22 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
 invalid_caps:
   {
     GST_ERROR_OBJECT (pad, "Invalid caps: %" GST_PTR_FORMAT, caps);
+    if (srccaps)
+      gst_caps_unref (srccaps);
     return FALSE;
   }
 set_caps_failed:
   {
     GST_ERROR_OBJECT (pad, "Failed to set caps: %" GST_PTR_FORMAT, srccaps);
-    gst_caps_unref (srccaps);
+    if (srccaps)
+      gst_caps_unref (srccaps);
     return FALSE;
   }
 no_bufferpool:
   {
     GST_ERROR_OBJECT (pad, "could not negotiate bufferpool");
-    gst_caps_unref (srccaps);
+    if (srccaps)
+      gst_caps_unref (srccaps);
     return FALSE;
   }
 }
