@@ -484,6 +484,21 @@ gst_audio_quantize_free (GstAudioQuantize * quant)
 }
 
 /**
+ * gst_audio_quantize_reset:
+ * @quant: a #GstAudioQuantize
+ *
+ * Reset @quant to the state is was when created, clearing any
+ * history it might have.
+ */
+void
+gst_audio_quantize_reset (GstAudioQuantize * quant)
+{
+  g_free (quant->error_buf);
+  quant->error_buf = NULL;
+  quant->error_size = 0;
+}
+
+/**
  * gst_audio_quantize_samples:
  * @quant: a #GstAudioQuantize
  * @in: input samples

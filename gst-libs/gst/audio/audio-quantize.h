@@ -90,6 +90,8 @@ GstAudioQuantize *  gst_audio_quantize_new      (GstAudioDitherMethod dither,
 
 void                gst_audio_quantize_free     (GstAudioQuantize * quant);
 
+void                gst_audio_quantize_reset    (GstAudioQuantize * quant);
+
 void                gst_audio_quantize_samples  (GstAudioQuantize * quant,
                                                  const gpointer in[],
                                                  gpointer out[], guint samples);
