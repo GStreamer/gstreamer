@@ -2530,15 +2530,19 @@ _relink_children_recursively (NleComposition * comp,
     _relink_single_node (comp, child, toplevel_seek);
 
   if (G_UNLIKELY (nbchildren < oper->num_sinks))
-    GST_ERROR_OBJECT (comp,
-        "%" GST_PTR_FORMAT
-        " Not enough sinkpads to link all objects to the operation ! "
-        "%d / %d", oper, oper->num_sinks, nbchildren);
+    GST_ELEMENT_ERROR (comp, STREAM, FAILED,
+        ("The NleComposition structure is not valid"),
+        ("%" GST_PTR_FORMAT
+            " Not enough sinkpads to link all objects to the operation ! "
+            "%d / %d, current toplevel seek %" GST_PTR_FORMAT,
+            oper, oper->num_sinks, nbchildren, toplevel_seek));
 
   if (G_UNLIKELY (nbchildren == 0)) {
-    GST_ERROR_OBJECT (comp,
-        "Operation %" GST_PTR_FORMAT
-        " has no child objects to be connected to !!!", oper);
+    GST_ELEMENT_ERROR (comp, STREAM, FAILED,
+        ("The NleComposition structure is not valid"),
+        ("Operation %" GST_PTR_FORMAT
+            " has no child objects to be connected to"
+            "current toplevel seek: %" GST_PTR_FORMAT, oper, toplevel_seek));
   }
   /* Make sure we have enough sinkpads */
 }
