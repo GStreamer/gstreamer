@@ -292,12 +292,15 @@ copy_config (GQuark field_id, const GValue * value, gpointer user_data)
  * @convert: a #GstAudioConverter
  * @in_rate: input rate
  * @out_rate: output rate
- * @config: (transfer full): a #GstStructure
+ * @config: (transfer full) (allow-none): a #GstStructure or %NULL
  *
- * Set @config as extra configuration for @convert.
+ * Set @in_rate, @out_rate and @config as extra configuration for @convert.
  *
  * in_rate and @out_rate specify the new sample rates of input and output
  * formats. A value of 0 leaves the sample rate unchanged.
+ *
+ * @config can be %NULL, in which case, the current configuration is not
+ * changed.
  *
  * If the parameters in @config can not be set exactly, this function returns
  * %FALSE and will try to update as much state as possible. The new state can
@@ -306,14 +309,13 @@ copy_config (GQuark field_id, const GValue * value, gpointer user_data)
  * Look at the #GST_AUDIO_CONVERTER_OPT_* fields to check valid configuration
  * option and values.
  *
- * Returns: %TRUE when @config could be set.
+ * Returns: %TRUE when the new parameters could be set
  */
 gboolean
 gst_audio_converter_update_config (GstAudioConverter * convert,
     gint in_rate, gint out_rate, GstStructure * config)
 {
   g_return_val_if_fail (convert != NULL, FALSE);
-  g_return_val_if_fail (config != NULL, FALSE);
   g_return_val_if_fail ((in_rate == 0 && out_rate == 0) ||
       convert->flags & GST_AUDIO_CONVERTER_FLAG_VARIABLE_RATE, FALSE);
 
@@ -327,8 +329,10 @@ gst_audio_converter_update_config (GstAudioConverter * convert,
   convert->in.rate = in_rate;
   convert->out.rate = out_rate;
 
-  gst_structure_foreach (config, copy_config, convert);
-  gst_structure_free (config);
+  if (config) {
+    gst_structure_foreach (config, copy_config, convert);
+    gst_structure_free (config);
+  }
 
   return TRUE;
 }
