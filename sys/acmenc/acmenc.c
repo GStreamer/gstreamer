@@ -407,7 +407,6 @@ acmenc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps;
       gst_event_parse_caps (event, &caps);
       return acmenc_sink_setcaps (pad, caps);
-      break;
     }
     case GST_EVENT_EOS:
       acmenc_finish_stream (enc);

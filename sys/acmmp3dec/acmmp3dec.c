@@ -365,7 +365,6 @@ acmmp3dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps;
       gst_event_parse_caps (event, &caps);
       return acmmp3dec_sink_setcaps (pad, caps);
-      break;
     }
     case GST_EVENT_EOS:
       acmmp3dec_finish_stream (dec);
