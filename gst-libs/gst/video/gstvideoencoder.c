@@ -2183,7 +2183,8 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
 
   /* Get an additional ref to the buffer, which is going to be pushed
    * downstream, the original ref is owned by the frame */
-  buffer = gst_buffer_ref (frame->output_buffer);
+  if (ret == GST_FLOW_OK)
+    buffer = gst_buffer_ref (frame->output_buffer);
 
   /* Release frame so the buffer is writable when we push it downstream
    * if possible, i.e. if the subclass does not hold additional references
