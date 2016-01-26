@@ -3042,8 +3042,8 @@ gst_uvc_h264_src_getcaps (GstPad * pad, GstObject * parent, GstQuery * query)
   if (self->v4l2_src) {
     GstCaps *filter;
     GstPad *v4l_pad = gst_element_get_static_pad (self->v4l2_src, "src");
-    GstCaps *v4l_caps = gst_pad_query_caps (v4l_pad, NULL);
-    GstCaps *new_caps = gst_uvc_h264_src_transform_caps (self, v4l_caps);
+    GstCaps *v4l_caps = NULL;
+    GstCaps *new_caps = NULL;
 
     gst_query_parse_caps (query, &filter);
     v4l_caps = gst_pad_query_caps (v4l_pad, filter);
