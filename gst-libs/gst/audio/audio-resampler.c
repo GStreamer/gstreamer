@@ -910,28 +910,28 @@ get_sample_bufs (GstAudioResampler * resampler, gsize need)
 {
   if (G_LIKELY (resampler->samples_len < need)) {
     guint c, blocks = resampler->blocks;
-    gsize bytes;
-    gint8 *ptr;
+    gsize bytes, to_move = 0;
+    gint8 *ptr, *samples;
 
     GST_LOG ("realloc %d -> %d", (gint) resampler->samples_len, (gint) need);
 
     bytes = GST_ROUND_UP_N (need * resampler->bps * resampler->inc, ALIGN);
 
-    resampler->samples =
-        g_realloc (resampler->samples, blocks * bytes + ALIGN - 1);
-    if (resampler->samples_len == 0) {
-      memset (resampler->samples, 0, blocks * bytes + ALIGN - 1);
-    } else {
-      /* FIXME, move history */
-    }
-    resampler->samples_len = need;
+    samples = g_malloc0 (blocks * bytes + ALIGN - 1);
+    ptr = MEM_ALIGN (samples, ALIGN);
 
-    ptr = MEM_ALIGN (resampler->samples, ALIGN);
+    /* if we had some data, move history */
+    if (resampler->samples_len > 0)
+      to_move = resampler->samples_avail * resampler->bps * resampler->inc;
 
     /* set up new pointers */
     for (c = 0; c < blocks; c++) {
+      memcpy (ptr + (c * bytes), resampler->sbuf[c], to_move);
       resampler->sbuf[c] = ptr + (c * bytes);
     }
+    g_free (resampler->samples);
+    resampler->samples = samples;
+    resampler->samples_len = need;
   }
   return resampler->sbuf;
 }
