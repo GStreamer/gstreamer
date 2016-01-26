@@ -154,6 +154,7 @@ struct _AudioChain
   gpointer make_func_data;
   GDestroyNotify make_func_notify;
 
+  const GstAudioFormatInfo *finfo;
   gint stride;
   gint inc;
   gint blocks;
@@ -175,7 +176,6 @@ static AudioChain *
 audio_chain_new (AudioChain * prev, GstAudioConverter * convert)
 {
   AudioChain *chain;
-  const GstAudioFormatInfo *finfo;
 
   chain = g_slice_new0 (AudioChain);
   chain->prev = prev;
@@ -187,8 +187,8 @@ audio_chain_new (AudioChain * prev, GstAudioConverter * convert)
     chain->inc = convert->current_channels;
     chain->blocks = 1;
   }
-  finfo = gst_audio_format_get_info (convert->current_format);
-  chain->stride = (finfo->width * chain->inc) / 8;
+  chain->finfo = gst_audio_format_get_info (convert->current_format);
+  chain->stride = (chain->finfo->width * chain->inc) / 8;
 
   return chain;
 }
@@ -425,12 +425,19 @@ do_unpack (AudioChain * chain, gpointer user_data)
       GST_LOG ("unpack to tmp %p, %" G_GSIZE_FORMAT, tmp, num_samples);
     }
 
-    for (i = 0; i < chain->blocks; i++) {
-      GST_LOG ("unpack %p, %p, %" G_GSIZE_FORMAT, tmp[i], convert->in_data[i],
-          num_samples);
-      convert->in.finfo->unpack_func (convert->in.finfo,
-          GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE, tmp[i], convert->in_data[i],
-          num_samples * chain->inc);
+    if (convert->in_data) {
+      for (i = 0; i < chain->blocks; i++) {
+        GST_LOG ("unpack %p, %p, %" G_GSIZE_FORMAT, tmp[i], convert->in_data[i],
+            num_samples);
+        convert->in.finfo->unpack_func (convert->in.finfo,
+            GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE, tmp[i], convert->in_data[i],
+            num_samples * chain->inc);
+      }
+    } else {
+      for (i = 0; i < chain->blocks; i++) {
+        gst_audio_format_fill_silence (chain->finfo, tmp[i],
+            num_samples * chain->inc);
+      }
     }
   } else {
     tmp = convert->in_data;
@@ -531,7 +538,6 @@ chain_unpack (GstAudioConverter * convert)
   AudioChain *prev;
   GstAudioInfo *in = &convert->in;
   GstAudioInfo *out = &convert->out;
-  const GstAudioFormatInfo *fup;
   gboolean same_format;
 
   same_format = in->finfo->format == out->finfo->format;
@@ -552,10 +558,8 @@ chain_unpack (GstAudioConverter * convert)
       gst_audio_format_to_string (in->finfo->format),
       gst_audio_format_to_string (convert->current_format));
 
-  fup = gst_audio_format_get_info (convert->current_format);
-
   prev = convert->unpack_chain = audio_chain_new (NULL, convert);
-  prev->allow_ip = fup->width <= in->finfo->width;
+  prev->allow_ip = prev->finfo->width <= in->finfo->width;
   prev->pass_alloc = FALSE;
   audio_chain_set_make_func (prev, do_unpack, convert, NULL);
 
@@ -747,18 +751,27 @@ converter_passthrough (GstAudioConverter * convert,
     gpointer out[], gsize out_frames)
 {
   gint i;
-  gsize bytes;
   AudioChain *chain;
+  gsize samples;
 
   chain = convert->pack_chain;
 
-  bytes = in_frames * chain->inc * (convert->in.bpf / convert->in.channels);
+  samples = in_frames * chain->inc;
 
-  GST_LOG ("passthrough: %" G_GSIZE_FORMAT " / %" G_GSIZE_FORMAT " bytes",
-      in_frames, bytes);
+  GST_LOG ("passthrough: %" G_GSIZE_FORMAT " / %" G_GSIZE_FORMAT " samples",
+      in_frames, samples);
 
-  for (i = 0; i < chain->blocks; i++)
-    memcpy (out[i], in[i], bytes);
+  if (in) {
+    gsize bytes;
+
+    bytes = samples * (convert->in.bpf / convert->in.channels);
+
+    for (i = 0; i < chain->blocks; i++)
+      memcpy (out[i], in[i], bytes);
+  } else {
+    for (i = 0; i < chain->blocks; i++)
+      gst_audio_format_fill_silence (convert->in.finfo, out[i], samples);
+  }
 
   return TRUE;
 }
@@ -977,6 +990,9 @@ gst_audio_converter_get_max_latency (GstAudioConverter * convert)
  * If non-interleaved samples are used, @in and @out must point to an
  * array with pointers to memory blocks, one for each channel.
  *
+ * @in may be %NULL, in which case @in_frames of silence samples are processed
+ * by the converter.
+ *
  * This function always produces @out_frames of output and consumes @in_frames of
  * input. Use gst_audio_converter_get_out_frames() and
  * gst_audio_converter_get_in_frames() to make sure @in_frames and @out_frames
@@ -990,7 +1006,6 @@ gst_audio_converter_samples (GstAudioConverter * convert,
     gpointer out[], gsize out_frames)
 {
   g_return_val_if_fail (convert != NULL, FALSE);
-  g_return_val_if_fail (in != NULL, FALSE);
   g_return_val_if_fail (out != NULL, FALSE);
 
   in_frames = MIN (in_frames, out_frames);
