@@ -691,11 +691,13 @@ gst_harness_add_element_full (GstHarness * h, GstElement * element,
     GstStaticPadTemplate * hsrc, const gchar * element_sinkpad_name,
     GstStaticPadTemplate * hsink, const gchar * element_srcpad_name)
 {
+  GstClock * element_clock;
   gboolean has_sinkpad, has_srcpad;
 
   g_return_if_fail (element != NULL);
   g_return_if_fail (h->element == NULL);
 
+  element_clock = GST_ELEMENT_CLOCK (element);
   h->element = gst_object_ref (element);
   check_element_type (element, &has_sinkpad, &has_srcpad);
 
@@ -721,16 +723,20 @@ gst_harness_add_element_full (GstHarness * h, GstElement * element,
     g_free (stream_id);
   }
 
+  /* if the element already has a testclock attached,
+     we replace our own with it, if no clock we attach the testclock */
+  if (element_clock) {
+    if (GST_IS_TEST_CLOCK (element_clock)) {
+      gst_object_replace ((GstObject **) & h->priv->testclock,
+          (GstObject *) GST_ELEMENT_CLOCK (element));
+    }
+  } else {
+    gst_harness_use_testclock (h);
+  }
+
   /* don't start sources, they start producing data! */
   if (has_sinkpad)
     gst_harness_play (h);
-
-  /* if the element already has a testclock attached, we replace our own with it */
-  if (GST_ELEMENT_CLOCK (element)
-      && GST_IS_TEST_CLOCK (GST_ELEMENT_CLOCK (element))) {
-    gst_object_replace ((GstObject **) & h->priv->testclock,
-        (GstObject *) GST_ELEMENT_CLOCK (element));
-  }
 
   gst_harness_element_ref (h);
 
@@ -2101,9 +2107,7 @@ gst_harness_add_src_harness (GstHarness * h,
   if (h->src_harness)
     gst_harness_teardown (h->src_harness);
   h->src_harness = src_harness;
-
   gst_harness_set_forward_pad (h->src_harness, h->srcpad);
-  gst_harness_use_testclock (h->src_harness);
   h->src_harness->priv->has_clock_wait = has_clock_wait;
   gst_harness_set_forwarding (h->src_harness, h->priv->forwarding);
 }
@@ -2296,7 +2300,6 @@ gst_harness_add_sink_harness (GstHarness * h, GstHarness * sink_harness)
   }
   h->sink_harness = sink_harness;
   gst_harness_set_forward_pad (h, h->sink_harness->srcpad);
-  gst_harness_use_testclock (h->sink_harness);
   if (priv->forwarding && h->sinkpad)
     gst_pad_sticky_events_foreach (h->sinkpad, forward_sticky_events, h);
   gst_harness_set_forwarding (h->sink_harness, priv->forwarding);
