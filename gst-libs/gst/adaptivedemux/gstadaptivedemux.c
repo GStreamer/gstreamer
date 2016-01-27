@@ -1077,6 +1077,21 @@ gst_adaptive_demux_stream_new (GstAdaptiveDemux * demux, GstPad * pad)
   return stream;
 }
 
+GstAdaptiveDemuxStream *
+gst_adaptive_demux_find_stream_for_pad (GstAdaptiveDemux * demux, GstPad * pad)
+{
+  GList *iter;
+
+  for (iter = demux->streams; iter; iter = g_list_next (iter)) {
+    GstAdaptiveDemuxStream *stream = iter->data;
+    if (stream->pad == pad) {
+      return stream;
+    }
+  }
+  g_assert_not_reached ();
+  return NULL;
+}
+
 /* must be called with manifest_lock taken.
  * It will temporarily drop the manifest_lock in order to join the task.
  * It will join only the old_streams (the demux->streams are joined by
@@ -1354,26 +1369,23 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
       return ret;
     }
     case GST_EVENT_RECONFIGURE:{
-      GList *iter;
+      GstAdaptiveDemuxStream *stream;
 
       GST_MANIFEST_LOCK (demux);
+      stream = gst_adaptive_demux_find_stream_for_pad (demux, pad);
 
-      for (iter = demux->streams; iter; iter = g_list_next (iter)) {
-        GstAdaptiveDemuxStream *stream = iter->data;
-
-        if (stream->pad == pad) {
-          if (stream->last_ret == GST_FLOW_NOT_LINKED) {
-            stream->last_ret = GST_FLOW_OK;
-            stream->restart_download = TRUE;
-            stream->need_header = TRUE;
-            stream->discont = TRUE;
-            GST_DEBUG_OBJECT (stream->pad, "Restarting download loop");
-            gst_task_start (stream->download_task);
-          }
-          gst_event_unref (event);
-          GST_MANIFEST_UNLOCK (demux);
-          return TRUE;
+      if (stream) {
+        if (stream->last_ret == GST_FLOW_NOT_LINKED) {
+          stream->last_ret = GST_FLOW_OK;
+          stream->restart_download = TRUE;
+          stream->need_header = TRUE;
+          stream->discont = TRUE;
+          GST_DEBUG_OBJECT (stream->pad, "Restarting download loop");
+          gst_task_start (stream->download_task);
         }
+        gst_event_unref (event);
+        GST_MANIFEST_UNLOCK (demux);
+        return TRUE;
       }
       GST_MANIFEST_UNLOCK (demux);
     }

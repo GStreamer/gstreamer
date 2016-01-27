@@ -430,6 +430,8 @@ void     gst_adaptive_demux_set_stream_struct_size (GstAdaptiveDemux * demux,
 
 GstAdaptiveDemuxStream *gst_adaptive_demux_stream_new (GstAdaptiveDemux * demux,
                                                        GstPad * pad);
+GstAdaptiveDemuxStream *gst_adaptive_demux_find_stream_for_pad (GstAdaptiveDemux * demux,
+                                                                GstPad * pad);
 void gst_adaptive_demux_stream_set_caps (GstAdaptiveDemuxStream * stream,
                                          GstCaps * caps);
 void gst_adaptive_demux_stream_set_tags (GstAdaptiveDemuxStream * stream,
