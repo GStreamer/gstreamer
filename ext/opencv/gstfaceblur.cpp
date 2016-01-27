@@ -80,6 +80,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_face_blur_debug);
 #define DEFAULT_MIN_SIZE_HEIGHT 30
 
 using namespace cv;
+using namespace std;
 enum
 {
   PROP_0,
@@ -355,9 +356,7 @@ gst_face_blur_transform_ip (GstOpencvVideoFilter * transform,
 
   cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
 
-  Mat image (filter->cvGray, Rect (filter->cvGray->origin,
-          filter->cvGray->origin, filter->cvGray->width,
-          filter->cvGray->height));
+  Mat image = cvarrToMat(filter->cvGray);
   filter->cvCascade->detectMultiScale (image, faces, filter->scale_factor,
       filter->min_neighbors, filter->flags,
       cvSize (filter->min_size_width, filter->min_size_height), cvSize (0, 0));
@@ -366,7 +365,8 @@ gst_face_blur_transform_ip (GstOpencvVideoFilter * transform,
 
     for (i = 0; i < faces.size (); ++i) {
       Rect *r = &faces[i];
-      Mat roi (img, Rect (r->x, r->y, r->width, r->height));
+      Mat imag = cvarrToMat(img);
+      Mat roi (imag, Rect (r->x, r->y, r->width, r->height));
       blur (roi, roi, Size (11, 11));
       GaussianBlur (roi, roi, Size (11, 11), 0, 0);
     }
