@@ -2508,6 +2508,8 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
   GstVideoInterlaceMode interlacing_mode;
   gint fps_n, fps_d;
 
+  gst_pad_check_reconfigure (self->srcpad);
+
   if (self->locking != GST_DEINTERLACE_LOCKING_NONE) {
     if (self->low_latency == -1)
       self->low_latency = gst_deinterlace_get_latency (self);
