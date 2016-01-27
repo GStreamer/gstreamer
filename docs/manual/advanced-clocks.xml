@@ -196,7 +196,7 @@
     <para>
       A clock provider is an element in the pipeline that can provide
       a <classname>GstClock</classname> object. The clock object needs to
-      report an absoulute-time that is monotonocally increasing when the
+      report an absoulute-time that is monotonically increasing when the
       element is in the PLAYING state. It is allowed to pause the clock
       while the element is PAUSED.
     </para>
