@@ -14,10 +14,7 @@ m4_define([default_glapi],              [any])
 
 # gstreamer-vaapi library (libtool) version number
 m4_define([gst_vaapi_lt_current],       [7])
-m4_define([gst2_vaapi_lt_current_bias], [4])
-m4_define([gst4_vaapi_lt_current_bias], [5])
-m4_define([gst6_vaapi_lt_current_bias], [6])
-m4_define([gst8_vaapi_lt_current_bias], [7])
+m4_define([gst_vaapi_lt_current_bias],  [7])
 m4_define([gst_vaapi_lt_revision],      [0])
 m4_define([gst_vaapi_lt_age],           [0])
 
@@ -28,19 +25,9 @@ m4_define([glib_version], [2.32])
 m4_define([gmodule_version], [2.32])
 
 # gstreamer version number
-m4_define([gst_api_version],            [autodetect])
-m4_define([gst12_version],              [1.1.90])
-m4_define([gst12_plugins_base_version], [1.1.0])
-m4_define([gst12_plugins_bad_version],  [1.1.0])
-m4_define([gst14_version],              [1.2.90])
-m4_define([gst14_plugins_base_version], [1.3.0])
-m4_define([gst14_plugins_bad_version],  [1.3.0])
-m4_define([gst16_version],              [1.5.0])
-m4_define([gst16_plugins_base_version], [1.5.0])
-m4_define([gst16_plugins_bad_version],  [1.5.0])
-m4_define([gst18_version],              [1.7.0])
-m4_define([gst18_plugins_base_version], [1.7.0])
-m4_define([gst18_plugins_bad_version],  [1.7.0])
+m4_define([gst_version],                [1.6.3])
+m4_define([gst_plugins_base_version],   [1.6.3])
+m4_define([gst_plugins_bad_version],    [1.6.3])
 
 # Wayland minimum version number
 m4_define([wayland_api_version], [1.0.2])
@@ -163,84 +150,38 @@ AC_SUBST([DLOPEN_LIBS])
 dnl ---------------------------------------------------------------------------
 dnl -- GStreamer                                                             --
 dnl ---------------------------------------------------------------------------
-AC_MSG_CHECKING([for GStreamer API version])
-if $PKG_CONFIG --exists "gstreamer-1.0"; then
-    gst_version=`$PKG_CONFIG --modversion "gstreamer-1.0"`
-    gst_major_version=`echo "$gst_version" | cut -d'.' -f1`
-    gst_minor_version=`echo "$gst_version" | cut -d'.' -f2`
-    GST_API_VERSION="${gst_major_version}.${gst_minor_version}"
-    GST_PKG_VERSION="1.0"
-fi
-if test -z "$GST_PKG_VERSION"; then
-    AC_MSG_ERROR([gstreamer-1.0 was not found])
-fi
-AC_MSG_RESULT([$GST_API_VERSION])
-
-AC_DEFINE_UNQUOTED([GST_API_VERSION_S], ["$GST_API_VERSION"],
-    [Defined to the string representation of GStreamer version])
+GST_PKG_VERSION="1.0"
+AC_SUBST([GST_PKG_VERSION])
+AC_DEFINE_UNQUOTED([GST_PKG_VERSION_S], ["$GST_PKG_VERSION"],
+    [Defined to the string representation of GStreamer API version])
 
 dnl Versions for GStreamer and plugins-base
-case $GST_API_VERSION in
-1.2)
-    GST_VERSION_REQUIRED=gst12_version
-    GST_PLUGINS_BASE_VERSION_REQUIRED=gst12_plugins_base_version
-    GST_PLUGINS_BAD_VERSION_REQUIRED=gst12_plugins_bad_version
-    ;;
-1.4)
-    GST_VERSION_REQUIRED=gst14_version
-    GST_PLUGINS_BASE_VERSION_REQUIRED=gst14_plugins_base_version
-    GST_PLUGINS_BAD_VERSION_REQUIRED=gst14_plugins_bad_version
-    ;;
-1.[[5-6]])
-    GST_VERSION_REQUIRED=gst16_version
-    GST_PLUGINS_BASE_VERSION_REQUIRED=gst16_plugins_base_version
-    GST_PLUGINS_BAD_VERSION_REQUIRED=gst16_plugins_bad_version
-    ;;
-1.[[7-8]])
-    GST_VERSION_REQUIRED=gst18_version
-    GST_PLUGINS_BASE_VERSION_REQUIRED=gst18_plugins_base_version
-    GST_PLUGINS_BAD_VERSION_REQUIRED=gst18_plugins_bad_version
-    ;;
-*)
-    AC_MSG_ERROR([unsupported GStreamer API version $GST_API_VERSION])
-    ;;
-esac
-AC_SUBST(GST_API_VERSION)
+GST_VERSION_REQUIRED=gst_version
+GST_PLUGINS_BASE_VERSION_REQUIRED=gst_plugins_base_version
+GST_PLUGINS_BAD_VERSION_REQUIRED=gst_plugins_bad_version
 AC_SUBST(GST_VERSION_REQUIRED)
 AC_SUBST(GST_PLUGINS_BASE_VERSION_REQUIRED)
 AC_SUBST(GST_PLUGINS_BAD_VERSION_REQUIRED)
 
-USE_GST_API_1_2p="no"
-USE_GST_API_1_4p="no"
-AS_VERSION_COMPARE([$GST_API_VERSION], [1.2],
-    [], [USE_GST_API_1_2p="yes"], [USE_GST_API_1_2p="yes"])
-AS_VERSION_COMPARE([$GST_API_VERSION], [1.4],
-    [], [USE_GST_API_1_4p="yes"], [USE_GST_API_1_4p="yes"])
-AM_CONDITIONAL([USE_GST_API_1_2p], [test "$USE_GST_API_1_2p" = "yes"])
-AM_CONDITIONAL([USE_GST_API_1_4p], [test "$USE_GST_API_1_4p" = "yes"])
-
-AC_SUBST([GST_PKG_VERSION])
-
-AC_DEFINE_UNQUOTED([GST_PKG_VERSION_S], ["$GST_PKG_VERSION"],
-    [Defined to the string representation of GStreamer API version])
-
-if test "$GST_API_VERSION" = "1.2"; then
-    AC_MSG_WARN([support for GStreamer 1.2 is obsolete, and will be removed])
-fi
-
 dnl GStreamer Core
 PKG_CHECK_MODULES([GST],
     [gstreamer-$GST_PKG_VERSION >= $GST_VERSION_REQUIRED])
+
+AC_MSG_CHECKING([for GStreamer API version])
+gst_api_version=`$PKG_CONFIG --modversion "gstreamer-$GST_PKG_VERSION"`
+gst_major_version=`echo "$gst_api_version" | cut -d'.' -f1`
+gst_minor_version=`echo "$gst_api_version" | cut -d'.' -f2`
+GST_API_VERSION="${gst_major_version}.${gst_minor_version}"
+AC_MSG_RESULT([$GST_API_VERSION])
+AC_DEFINE_UNQUOTED([GST_API_VERSION_S], ["$GST_API_VERSION"],
+    [Defined to the string representation of GStreamer version])
+
 PKG_CHECK_MODULES([GST_BASE],
     [gstreamer-base-$GST_PKG_VERSION >= $GST_VERSION_REQUIRED])
 
 dnl GStreamer -base plugins
 PKG_CHECK_MODULES([GST_PLUGINS_BASE],
     [gstreamer-plugins-base-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
-if test "$GST_API_VERSION" = "0.10"; then
-PKG_CHECK_MODULES([GST_INTERFACES],
-    [gstreamer-interfaces-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
-fi
 
 dnl ... gst_dmabuf_memory_get_fd (gstreamer-allocators)
 PKG_CHECK_MODULES([GST_ALLOCATORS],
@@ -253,12 +194,6 @@ PKG_CHECK_MODULES([GST_VIDEO],
 dnl ... GStreamer base utils (gstreamer-pbutils)
 PKG_CHECK_MODULES([GST_PBUTILS],
     [gstreamer-pbutils-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
-
-dnl GStreamer -bad plugins (deprecated in GStreamer v1.2)
-if test "$USE_GST_API_1_2p" != "yes" && test "$USE_GST_API_1_4p" != "yes"; then
-PKG_CHECK_MODULES([GST_BASEVIDEO],
-    [gstreamer-basevideo-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
-fi
 
 dnl ... bitstream parsers
 PKG_CHECK_MODULES([GST_CODEC_PARSERS],
@@ -320,13 +255,7 @@ if test "$enable_egl" = "yes" -a $HAVE_GSTGL -ne 1; then
     enable_egl="no"
 fi
 
-case $GST_API_VERSION in
-1.2)    lt_bias=gst2_vaapi_lt_current_bias;;
-1.4)    lt_bias=gst4_vaapi_lt_current_bias;;
-1.[[5-6]])    lt_bias=gst6_vaapi_lt_current_bias;;
-1.[[7-8]])    lt_bias=gst8_vaapi_lt_current_bias;;
-esac
-GST_VAAPI_MAJOR_VERSION=`expr gst_vaapi_lt_current - "$lt_bias"`
+GST_VAAPI_MAJOR_VERSION=`expr gst_vaapi_lt_current - gst_vaapi_lt_current_bias`
 AC_SUBST(GST_VAAPI_MAJOR_VERSION)
 
 AC_DEFINE_UNQUOTED([GST_VAAPI_MAJOR_VERSION_S], ["$GST_VAAPI_MAJOR_VERSION"],
