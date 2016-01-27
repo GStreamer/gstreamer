@@ -2905,8 +2905,8 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_VULKAN, true)
 AG_GST_CHECK_FEATURE(VULKAN, [Vulkan elements], vulkan, [
   HAVE_VULKAN=no
   AC_CHECK_HEADER(vulkan/vulkan.h, [
-    AC_CHECK_LIB(vulkan, vkCreateDevice, [
-      VULKAN_LIBS="-lvulkan"
+    AC_CHECK_LIB(vulkan-1, vkCreateDevice, [
+      VULKAN_LIBS="-lvulkan-1"
       AC_SUBST(VULKAN_LIBS)
       dnl TODO check platform support (x11, win32, wayland, android, etc)
       if test "x$HAVE_XCB" = "xyes"; then

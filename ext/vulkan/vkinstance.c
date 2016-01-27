@@ -30,14 +30,14 @@
 #define APP_SHORT_NAME "GStreamer"
 
 static const char *instance_validation_layers[] = {
-  "VK_LAYER_LUNARG_Threading",
-  "VK_LAYER_LUNARG_MemTracker",
-  "VK_LAYER_LUNARG_ObjectTracker",
-  "VK_LAYER_LUNARG_DrawState",
-  "VK_LAYER_LUNARG_ParamChecker",
-  "VK_LAYER_LUNARG_Swapchain",
-  "VK_LAYER_LUNARG_DeviceLimits",
-  "VK_LAYER_LUNARG_Image",
+  "VK_LAYER_LUNARG_threading",
+  "VK_LAYER_LUNARG_mem_tracker",
+  "VK_LAYER_LUNARG_object_tracker",
+  "VK_LAYER_LUNARG_draw_state",
+  "VK_LAYER_LUNARG_param_checker",
+  "VK_LAYER_LUNARG_swapchain",
+  "VK_LAYER_LUNARG_device_limits",
+  "VK_LAYER_LUNARG_image",
 };
 
 #define GST_CAT_DEFAULT gst_vulkan_instance_debug
@@ -90,9 +90,9 @@ gst_vulkan_instance_finalize (GObject * object)
   GstVulkanInstance *instance = GST_VULKAN_INSTANCE (object);
 
   if (instance->priv->opened) {
-    if (instance->dbgDestroyMsgCallback)
-      instance->dbgDestroyMsgCallback (instance->instance,
-          instance->msg_callback);
+    if (instance->dbgDestroyDebugReportCallback)
+      instance->dbgDestroyDebugReportCallback (instance->instance,
+          instance->msg_callback, NULL);
 
     g_free (instance->physical_devices);
   }
@@ -104,23 +104,24 @@ gst_vulkan_instance_finalize (GObject * object)
 }
 
 static VkBool32
-_gst_vk_debug_callback (VkFlags msgFlags, VkDbgObjectType objType,
-    uint64_t srcObject, size_t location, int32_t msgCode,
-    const char *pLayerPrefix, const char *pMsg, void *pUserData)
+_gst_vk_debug_callback (VkDebugReportFlagsEXT msgFlags,
+    VkDebugReportObjectTypeEXT objType, uint64_t srcObject, size_t location,
+    int32_t msgCode, const char *pLayerPrefix, const char *pMsg,
+    void *pUserData)
 {
-  if (msgFlags & VK_DBG_REPORT_ERROR_BIT) {
+  if (msgFlags & VK_DEBUG_REPORT_ERROR_BIT_EXT) {
     GST_CAT_ERROR (GST_VULKAN_DEBUG_CAT, "[%s] Code %d : %s", pLayerPrefix,
         msgCode, pMsg);
-  } else if (msgFlags & VK_DBG_REPORT_WARN_BIT) {
+  } else if (msgFlags & VK_DEBUG_REPORT_WARN_BIT_EXT) {
     GST_CAT_WARNING (GST_VULKAN_DEBUG_CAT, "[%s] Code %d : %s", pLayerPrefix,
         msgCode, pMsg);
-  } else if (msgFlags & VK_DBG_REPORT_INFO_BIT) {
+  } else if (msgFlags & VK_DEBUG_REPORT_INFO_BIT_EXT) {
     GST_CAT_LOG (GST_VULKAN_DEBUG_CAT, "[%s] Code %d : %s", pLayerPrefix,
         msgCode, pMsg);
-  } else if (msgFlags & VK_DBG_REPORT_PERF_WARN_BIT) {
+  } else if (msgFlags & VK_DEBUG_REPORT_PERF_WARN_BIT_EXT) {
     GST_CAT_FIXME (GST_VULKAN_DEBUG_CAT, "[%s] Code %d : %s", pLayerPrefix,
         msgCode, pMsg);
-  } else if (msgFlags & VK_DBG_REPORT_DEBUG_BIT) {
+  } else if (msgFlags & VK_DEBUG_REPORT_DEBUG_BIT_EXT) {
     GST_CAT_TRACE (GST_VULKAN_DEBUG_CAT, "[%s] Code %d : %s", pLayerPrefix,
         msgCode, pMsg);
   } else {
@@ -233,10 +234,10 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
         extension_names[enabled_extension_count++] =
             (gchar *) VK_KHR_SURFACE_EXTENSION_NAME;
       }
-      if (!g_strcmp0 (VK_DEBUG_REPORT_EXTENSION_NAME,
+      if (!g_strcmp0 (VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
               instance_extensions[i].extensionName)) {
         extension_names[enabled_extension_count++] =
-            (gchar *) VK_DEBUG_REPORT_EXTENSION_NAME;
+            (gchar *) VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
       }
       if (!g_strcmp0 (winsys_ext_name, instance_extensions[i].extensionName)) {
         winsys_ext_found = TRUE;
@@ -277,10 +278,10 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     inst_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     inst_info.pNext = NULL;
     inst_info.pApplicationInfo = &app;
-    inst_info.enabledLayerNameCount = enabled_layer_count;
+    inst_info.enabledLayerCount = enabled_layer_count;
     inst_info.ppEnabledLayerNames =
         (const char *const *) instance_validation_layers;
-    inst_info.enabledExtensionNameCount = enabled_extension_count;
+    inst_info.enabledExtensionCount = enabled_extension_count;
     inst_info.ppEnabledExtensionNames = (const char *const *) extension_names;
 
     err = vkCreateInstance (&inst_info, NULL, &instance->instance);
@@ -310,36 +311,51 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
           "vkEnumeratePhysicalDevices") < 0)
     goto error;
 
-  instance->dbgCreateMsgCallback = (PFN_vkDbgCreateMsgCallback)
-      gst_vulkan_instance_get_proc_address (instance, "vkDbgCreateMsgCallback");
-  if (!instance->dbgCreateMsgCallback) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "Failed to retreive vkDbgCreateMsgCallback");
-    goto error;
-  }
-  instance->dbgDestroyMsgCallback = (PFN_vkDbgDestroyMsgCallback)
+  instance->dbgCreateDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)
       gst_vulkan_instance_get_proc_address (instance,
-      "vkDbgDestroyMsgCallback");
-  if (!instance->dbgDestroyMsgCallback) {
+      "vkCreateDebugReportCallbackEXT");
+  if (!instance->dbgCreateDebugReportCallback) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "Failed to retreive vkDbgDestroyMsgCallback");
+        "Failed to retreive vkCreateDebugReportCallback");
     goto error;
   }
-  instance->dbgBreakCallback =
-      (PFN_vkDbgMsgCallback) gst_vulkan_instance_get_proc_address (instance,
-      "vkDbgBreakCallback");
-  if (!instance->dbgBreakCallback) {
+  instance->dbgDestroyDebugReportCallback =
+      (PFN_vkDestroyDebugReportCallbackEXT)
+      gst_vulkan_instance_get_proc_address (instance,
+      "vkDestroyDebugReportCallbackEXT");
+  if (!instance->dbgDestroyDebugReportCallback) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "Failed to retreive vkDbgBreakCallback");
+        "Failed to retreive vkDestroyDebugReportCallback");
+    goto error;
+  }
+  instance->dbgReportMessage = (PFN_vkDebugReportMessageEXT)
+      gst_vulkan_instance_get_proc_address (instance,
+      "vkDebugReportMessageEXT");
+  if (!instance->dbgReportMessage) {
+    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
+        "Failed to retreive vkDebugReportMessage");
     goto error;
   }
 
-  err = instance->dbgCreateMsgCallback (instance->instance,
-      VK_DBG_REPORT_ERROR_BIT | VK_DBG_REPORT_WARN_BIT | VK_DBG_REPORT_INFO_BIT
-      | VK_DBG_REPORT_DEBUG_BIT | VK_DBG_REPORT_PERF_WARN_BIT,
-      _gst_vk_debug_callback, NULL, &instance->msg_callback);
-  if (gst_vulkan_error_to_g_error (err, error, "vkDbgCreateMsgCallback") < 0)
-    goto error;
+  {
+    VkDebugReportCallbackCreateInfoEXT info = { 0, };
+
+    info.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
+    info.pNext = NULL;
+    info.flags =
+        VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARN_BIT_EXT |
+        VK_DEBUG_REPORT_INFO_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT |
+        VK_DEBUG_REPORT_PERF_WARN_BIT_EXT;
+    info.pfnCallback = (PFN_vkDebugReportCallbackEXT) _gst_vk_debug_callback;
+    info.pUserData = NULL;
+
+    err =
+        instance->dbgCreateDebugReportCallback (instance->instance, &info, NULL,
+        &instance->msg_callback);
+    if (gst_vulkan_error_to_g_error (err, error,
+            "vkCreateDebugReportCallback") < 0)
+      goto error;
+  }
 
   instance->priv->opened = TRUE;
   GST_OBJECT_UNLOCK (instance);

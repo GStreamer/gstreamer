@@ -43,10 +43,10 @@ struct _GstVulkanInstance
   VkPhysicalDevice *physical_devices; /* hides a pointer */
   guint32 n_physical_devices;
 
-  VkDbgMsgCallback msg_callback;
-  PFN_vkDbgCreateMsgCallback dbgCreateMsgCallback;
-  PFN_vkDbgDestroyMsgCallback dbgDestroyMsgCallback;
-  PFN_vkDbgMsgCallback dbgBreakCallback;
+  VkDebugReportCallbackEXT msg_callback;
+  PFN_vkCreateDebugReportCallbackEXT dbgCreateDebugReportCallback;
+  PFN_vkDestroyDebugReportCallbackEXT dbgDestroyDebugReportCallback;
+  PFN_vkDebugReportMessageEXT dbgReportMessage;
 
   GstVulkanInstancePrivate *priv;
 };

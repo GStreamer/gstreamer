@@ -28,14 +28,14 @@
 #include <string.h>
 
 static const char *device_validation_layers[] = {
-  "VK_LAYER_LUNARG_Threading",
-  "VK_LAYER_LUNARG_MemTracker",
-  "VK_LAYER_LUNARG_ObjectTracker",
-  "VK_LAYER_LUNARG_DrawState",
-  "VK_LAYER_LUNARG_ParamChecker",
-  "VK_LAYER_LUNARG_Swapchain",
-  "VK_LAYER_LUNARG_DeviceLimits",
-  "VK_LAYER_LUNARG_Image",
+  "VK_LAYER_LUNARG_threading",
+  "VK_LAYER_LUNARG_mem_tracker",
+  "VK_LAYER_LUNARG_object_tracker",
+  "VK_LAYER_LUNARG_draw_state",
+  "VK_LAYER_LUNARG_param_checker",
+  "VK_LAYER_LUNARG_swapchain",
+  "VK_LAYER_LUNARG_device_limits",
+  "VK_LAYER_LUNARG_image",
 };
 
 #define GST_CAT_DEFAULT gst_vulkan_device_debug
@@ -284,10 +284,10 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
     device_info.pNext = NULL;
     device_info.queueCreateInfoCount = 1;
     device_info.pQueueCreateInfos = &queue_info;
-    device_info.enabledLayerNameCount = enabled_layer_count;
+    device_info.enabledLayerCount = enabled_layer_count;
     device_info.ppEnabledLayerNames =
         (const char *const *) device_validation_layers;
-    device_info.enabledExtensionNameCount = enabled_extension_count;
+    device_info.enabledExtensionCount = enabled_extension_count;
     device_info.ppEnabledExtensionNames = (const char *const *) extension_names;
     device_info.pEnabledFeatures = NULL;
 
@@ -387,7 +387,7 @@ gst_vulkan_device_create_cmd_buffer (GstVulkanDevice * device,
   cmd_info.pNext = NULL;
   cmd_info.commandPool = device->cmd_pool;
   cmd_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  cmd_info.bufferCount = 1;
+  cmd_info.commandBufferCount = 1;
 
   err = vkAllocateCommandBuffers (device->device, &cmd_info, cmd);
   if (gst_vulkan_error_to_g_error (err, error, "vkCreateCommandBuffer") < 0)

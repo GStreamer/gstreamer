@@ -181,8 +181,8 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
     supports_present =
         gst_vulkan_window_get_presentation_support (swapper->window,
         swapper->device, i);
-    if ((swapper->device->
-            queue_family_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
+    if ((swapper->device->queue_family_props[i].
+            queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
       if (supports_present) {
         /* found one that supports both */
         graphics_queue = present_queue = i;
@@ -402,13 +402,12 @@ _swapper_set_image_layout_with_cmd (GstVulkanSwapper * swapper,
   VkPipelineStageFlags src_stages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
   VkPipelineStageFlags dest_stages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
   VkImageMemoryBarrier image_memory_barrier;
-  VkImageMemoryBarrier *pmemory_barrier = &image_memory_barrier;
 
   gst_vulkan_image_memory_set_layout (image, new_image_layout,
       &image_memory_barrier);
 
-  vkCmdPipelineBarrier (cmd, src_stages, dest_stages, FALSE, 1,
-      (const void *const *) &pmemory_barrier);
+  vkCmdPipelineBarrier (cmd, src_stages, dest_stages, 0, 0, NULL, 0, NULL, 1,
+      &image_memory_barrier);
 
   return TRUE;
 }
@@ -446,17 +445,22 @@ _swapper_set_image_layout (GstVulkanSwapper * swapper,
     return FALSE;
 
   {
+    VkCommandBufferInheritanceInfo buf_inh = { 0, };
     VkCommandBufferBeginInfo cmd_buf_info = { 0, };
+
+    buf_inh.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+    buf_inh.pNext = NULL;
+    buf_inh.renderPass = VK_NULL_HANDLE;
+    buf_inh.subpass = 0;
+    buf_inh.framebuffer = VK_NULL_HANDLE;
+    buf_inh.occlusionQueryEnable = FALSE;
+    buf_inh.queryFlags = 0;
+    buf_inh.pipelineStatistics = 0;
 
     cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cmd_buf_info.pNext = NULL;
     cmd_buf_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    cmd_buf_info.renderPass = VK_NULL_HANDLE;
-    cmd_buf_info.subpass = 0;
-    cmd_buf_info.framebuffer = VK_NULL_HANDLE;
-    cmd_buf_info.occlusionQueryEnable = FALSE;
-    cmd_buf_info.queryFlags = 0;
-    cmd_buf_info.pipelineStatistics = 0;
+    cmd_buf_info.pInheritanceInfo = &buf_inh;
 
     err = vkBeginCommandBuffer (cmd, &cmd_buf_info);
     if (gst_vulkan_error_to_g_error (err, error, "vkBeginCommandBuffer") < 0)
@@ -564,9 +568,9 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     n_images_wanted = swapper->surf_props.maxImageCount;
   }
 
-  if (swapper->surf_props.
-      supportedTransforms & VK_SURFACE_TRANSFORM_NONE_BIT_KHR) {
-    preTransform = VK_SURFACE_TRANSFORM_NONE_BIT_KHR;
+  if (swapper->
+      surf_props.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
+    preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
   } else {
     preTransform = swapper->surf_props.currentTransform;
   }
@@ -575,7 +579,7 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
       _vk_format_from_video_format (GST_VIDEO_INFO_FORMAT (&swapper->v_info));
   color_space = _vk_color_space_from_video_info (&swapper->v_info);
 
-#if 0
+#if 1
   /* FIXME: unsupported by LunarG's driver */
   g_print ("alpha flags 0x%x\n",
       (guint) swapper->surf_props.supportedCompositeAlpha);
@@ -605,8 +609,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
         "Incorrect usage flags available for the swap images");
     return FALSE;
   }
-  if ((swapper->
-          surf_props.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+  if ((swapper->surf_props.
+          supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
       != 0) {
     usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   } else {
@@ -800,17 +804,22 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   gst_memory_unmap ((GstMemory *) staging, &staging_map_info);
 
   {
+    VkCommandBufferInheritanceInfo buf_inh = { 0, };
     VkCommandBufferBeginInfo cmd_buf_info = { 0, };
+
+    buf_inh.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+    buf_inh.pNext = NULL;
+    buf_inh.renderPass = VK_NULL_HANDLE;
+    buf_inh.subpass = 0;
+    buf_inh.framebuffer = VK_NULL_HANDLE;
+    buf_inh.occlusionQueryEnable = FALSE;
+    buf_inh.queryFlags = 0;
+    buf_inh.pipelineStatistics = 0;
 
     cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cmd_buf_info.pNext = NULL;
     cmd_buf_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    cmd_buf_info.renderPass = VK_NULL_HANDLE;
-    cmd_buf_info.subpass = 0;
-    cmd_buf_info.framebuffer = VK_NULL_HANDLE;
-    cmd_buf_info.occlusionQueryEnable = FALSE;
-    cmd_buf_info.queryFlags = 0;
-    cmd_buf_info.pipelineStatistics = 0;
+    cmd_buf_info.pInheritanceInfo = &buf_inh;
 
     err = vkBeginCommandBuffer (cmd, &cmd_buf_info);
     if (gst_vulkan_error_to_g_error (err, error, "vkBeginCommandBuffer") < 0)

@@ -206,12 +206,19 @@ gst_vulkan_window_xcb_create_window (GstVulkanWindowXCB * window_xcb)
 static VkSurfaceKHR
 gst_vulkan_window_xcb_get_surface (GstVulkanWindow * window, GError ** error)
 {
+  VkXcbSurfaceCreateInfoKHR info = { 0, };
   VkSurfaceKHR ret;
   VkResult err;
 
-  err = vkCreateXcbSurfaceKHR (window->display->instance->instance,
-      GST_VULKAN_DISPLAY_XCB_CONNECTION (window->display),
-      GST_VULKAN_WINDOW_XCB (window)->win_id, NULL, &ret);
+  info.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+  info.pNext = NULL;
+  info.flags = 0;
+  info.connection = GST_VULKAN_DISPLAY_XCB_CONNECTION (window->display);
+  info.window = GST_VULKAN_WINDOW_XCB (window)->win_id;
+
+  err =
+      vkCreateXcbSurfaceKHR (window->display->instance->instance, &info, NULL,
+      &ret);
   if (gst_vulkan_error_to_g_error (err, error, "vkCreateXcbSurfaceKHR") < 0)
     return NULL;
 
