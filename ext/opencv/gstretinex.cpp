@@ -292,7 +292,7 @@ gst_retinex_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   int gain = 128;
   int offset = 128;
   int filter_size;
-  Mat icvD (retinex->cvD, false);
+  Mat icvD = cvarrToMat(retinex->cvD, false);
 
   if (!gst_buffer_map (buf, &info, (GstMapFlags) GST_MAP_READWRITE)) {
     return GST_FLOW_ERROR;
