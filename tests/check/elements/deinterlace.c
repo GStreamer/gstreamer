@@ -435,6 +435,558 @@ GST_START_TEST (test_mode_auto_deinterlaced_passthrough)
 
 GST_END_TEST;
 
+static GstPadProbeReturn
+catch_caps_event (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstCaps **outcaps = user_data;
+
+  if (GST_EVENT_TYPE (info->data) == GST_EVENT_CAPS) {
+    g_assert (*outcaps == NULL);
+
+    gst_event_parse_caps (GST_EVENT (info->data), outcaps);
+    gst_caps_ref (*outcaps);
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
+static void
+deinterlace_set_caps_with_filter_and_check_result (gint mode, gint fields,
+    const gchar * input_caps, const gchar * filter_caps,
+    const gchar * output_caps)
+{
+  GstElement *deinterlace, *capsfilter;
+  GstPad *sinkpad, *srcpad;
+  GstCaps *caps, *outcaps_actual = NULL;
+  GstCaps *outcaps_expected = NULL;
+
+  deinterlace = gst_element_factory_make ("deinterlace", NULL);
+  fail_unless (deinterlace != NULL);
+  g_object_set (deinterlace, "mode", mode, "fields", fields, NULL);
+
+  caps = gst_caps_from_string (filter_caps);
+  fail_unless (caps != NULL);
+  capsfilter = gst_element_factory_make ("capsfilter", NULL);
+  g_object_set (capsfilter, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  fail_unless (gst_element_link (deinterlace, capsfilter));
+
+  sinkpad = gst_element_get_static_pad (deinterlace, "sink");
+  fail_unless (sinkpad);
+
+  srcpad = gst_element_get_static_pad (capsfilter, "src");
+  fail_unless (srcpad);
+
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      catch_caps_event, &outcaps_actual, NULL);
+
+  if (output_caps) {
+    outcaps_expected = gst_caps_from_string (output_caps);
+    fail_unless (outcaps_expected != NULL);
+  }
+
+  fail_unless (gst_element_set_state (deinterlace,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (gst_element_set_state (capsfilter,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+
+  caps = gst_caps_from_string (input_caps);
+  fail_unless (caps != NULL);
+  gst_pad_send_event (sinkpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+
+  if (output_caps) {
+    gchar *actual;
+
+    fail_if (outcaps_actual == NULL, "Expected %s, got no caps", output_caps);
+    actual = gst_caps_to_string (outcaps_actual);
+    fail_unless (gst_caps_is_equal (outcaps_actual, outcaps_expected),
+        "Expected %s, got %s", output_caps, actual);
+    g_free (actual);
+  } else {
+    gchar *actual;
+
+    actual = gst_caps_to_string (outcaps_actual);
+    fail_if (outcaps_actual != NULL, "Expected negotiation failure, got %s",
+        actual);
+    g_free (actual);
+  }
+
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+
+  fail_unless (gst_element_set_state (deinterlace,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (gst_element_set_state (capsfilter,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (deinterlace);
+  gst_object_unref (capsfilter);
+
+  if (outcaps_expected)
+    gst_caps_unref (outcaps_expected);
+  if (outcaps_actual)
+    gst_caps_unref (outcaps_actual);
+}
+
+GST_START_TEST (test_mode_disabled_expected_caps)
+{
+  deinterlace_set_caps_with_filter_and_check_result (2, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 0,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw(ANY)",
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 0,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw(ANY)",
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 1,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw(ANY)",
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 1,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw(ANY)",
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 0,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 0,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 1,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 1,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (2, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_mode_interlaced_expected_caps)
+{
+  deinterlace_set_caps_with_filter_and_check_result (1, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=40/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=40/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 0,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1", "video/x-raw(ANY)", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 0,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1", "video/x-raw(ANY)", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 1,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1", "video/x-raw(ANY)", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 1,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1", "video/x-raw(ANY)", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 0,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1", "video/x-raw", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 0,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1", "video/x-raw", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 1,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1", "video/x-raw", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 1,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1", "video/x-raw", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (1, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_mode_auto_expected_caps)
+{
+  deinterlace_set_caps_with_filter_and_check_result (0, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=40/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 0,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw(ANY)",
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 0,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw(ANY)",
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 1,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw(ANY)",
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 1,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw(ANY)",
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 0,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 0,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 1,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 1,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 0,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 0,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved",
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 1,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 1,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved",
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_mode_auto_strict_expected_caps)
+{
+  deinterlace_set_caps_with_filter_and_check_result (3, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=40/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 0,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw(ANY)",
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 0,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1", "video/x-raw(ANY)", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 1,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw(ANY)",
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 1,
+      "video/x-raw(memory:SomeMemory), format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1", "video/x-raw(ANY)", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 0,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 0,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1", "video/x-raw", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 1,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw",
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 1,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1", "video/x-raw", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 0,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 1,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 0,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 0,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 1,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+
+  deinterlace_set_caps_with_filter_and_check_result (3, 1,
+      "video/x-raw, format=v210, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=interleaved", NULL);
+}
+
+GST_END_TEST;
+
+
+
 static Suite *
 deinterlace_suite (void)
 {
@@ -456,6 +1008,11 @@ deinterlace_suite (void)
   tcase_add_test (tc_chain, test_mode_disabled_accept_caps);
   tcase_add_test (tc_chain, test_mode_disabled_passthrough);
   tcase_add_test (tc_chain, test_mode_auto_deinterlaced_passthrough);
+
+  tcase_add_test (tc_chain, test_mode_disabled_expected_caps);
+  tcase_add_test (tc_chain, test_mode_interlaced_expected_caps);
+  tcase_add_test (tc_chain, test_mode_auto_expected_caps);
+  tcase_add_test (tc_chain, test_mode_auto_strict_expected_caps);
 
   return s;
 }
