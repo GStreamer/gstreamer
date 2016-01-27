@@ -973,7 +973,7 @@ if test "$enable_encoders" = "yes"; then
                     ]],
                     [[VAEncSequenceParameterBufferHEVC seq_param;
                       VAEncPictureParameterBufferHEVC pic_param;
-                      VAEncSliceParameterBufferHEVC;
+                      VAEncSliceParameterBufferHEVC buf_param;
                       VAQMatrixBufferHEVC q_matrix;]])],
                 [ac_cv_have_hevc_encoding_api="yes" USE_H265_ENCODER=1],
                 [ac_cv_have_hevc_encoding_api="no" USE_H265_ENCODER=0]
