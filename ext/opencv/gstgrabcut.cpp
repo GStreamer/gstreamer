@@ -93,6 +93,7 @@ extern "C"
 GST_DEBUG_CATEGORY_STATIC (gst_grabcut_debug);
 #define GST_CAT_DEFAULT gst_grabcut_debug
 
+using namespace cv;
 /* Filter signals and args */
 enum
 {
@@ -392,8 +393,8 @@ compose_matrix_from_image (CvMat * output, IplImage * input)
   for (x = 0; x < output->cols; x++) {
     for (y = 0; y < output->rows; y++) {
       CV_MAT_ELEM (*output, uchar, y, x) =
-          (cvGetReal2D (input, y, x) <= cv::GC_PR_FGD) ? cvGetReal2D (input, y,
-          x) : cv::GC_PR_FGD;
+          (cvGetReal2D (input, y, x) <= GC_PR_FGD) ? cvGetReal2D (input, y,
+          x) : GC_PR_FGD;
     }
   }
 }
@@ -403,10 +404,10 @@ int
 initialise_grabcut (struct grabcut_params *GC, IplImage * image_c,
     CvMat * mask_c)
 {
-  GC->image = (void *) new cv::Mat (image_c, false);    /*  "true" refers to copydata */
-  GC->mask = (void *) new cv::Mat (mask_c, false);
-  GC->bgdModel = (void *) new cv::Mat ();       /*  "true" refers to copydata */
-  GC->fgdModel = (void *) new cv::Mat ();
+  GC->image = (void *) new Mat (cvarrToMat (image_c, false));    /*  "true" refers to copydata */
+  GC->mask = (void *) new Mat (cvarrToMat (mask_c, false));
+  GC->bgdModel = (void *) new Mat ();       /*  "true" refers to copydata */
+  GC->fgdModel = (void *) new Mat ();
 
   return (0);
 }
@@ -415,13 +416,13 @@ int
 run_grabcut_iteration (struct grabcut_params *GC, IplImage * image_c,
     CvMat * mask_c, CvRect * bbox)
 {
-  ((cv::Mat *) GC->image)->data = (uchar *) image_c->imageData;
-  ((cv::Mat *) GC->mask)->data = mask_c->data.ptr;
+  ((Mat *) GC->image)->data = (uchar *) image_c->imageData;
+  ((Mat *) GC->mask)->data = mask_c->data.ptr;
 
   if (cvCountNonZero (mask_c))
-    grabCut (*((cv::Mat *) GC->image), *((cv::Mat *) GC->mask), cv::Rect (),
-        *((cv::Mat *) GC->bgdModel), *((cv::Mat *) GC->fgdModel), 1,
-        cv::GC_INIT_WITH_MASK);
+    grabCut (*((Mat *) GC->image), *((Mat *) GC->mask), Rect (),
+        *((Mat *) GC->bgdModel), *((Mat *) GC->fgdModel), 1,
+        GC_INIT_WITH_MASK);
 
   return (0);
 }
@@ -430,12 +431,11 @@ int
 run_grabcut_iteration2 (struct grabcut_params *GC, IplImage * image_c,
     CvMat * mask_c, CvRect * bbox)
 {
-  ((cv::Mat *) GC->image)->data = (uchar *) image_c->imageData;
-  ((cv::Mat *) GC->mask)->data = mask_c->data.ptr;
-
-  grabCut (*((cv::Mat *) GC->image), *((cv::Mat *) GC->mask), *(bbox),
-      *((cv::Mat *) GC->bgdModel), *((cv::Mat *) GC->fgdModel), 1,
-      cv::GC_INIT_WITH_RECT);
+  ((Mat *) GC->image)->data = (uchar *) image_c->imageData;
+  ((Mat *) GC->mask)->data = mask_c->data.ptr;
+  grabCut (*((Mat *) GC->image), *((Mat *) GC->mask), *(bbox),
+      *((Mat *) GC->bgdModel), *((Mat *) GC->fgdModel), 1,
+      GC_INIT_WITH_RECT);
 
   return (0);
 }
@@ -443,10 +443,10 @@ run_grabcut_iteration2 (struct grabcut_params *GC, IplImage * image_c,
 int
 finalise_grabcut (struct grabcut_params *GC)
 {
-  delete ((cv::Mat *) GC->image);
-  delete ((cv::Mat *) GC->mask);
-  delete ((cv::Mat *) GC->bgdModel);
-  delete ((cv::Mat *) GC->fgdModel);
+  delete ((Mat *) GC->image);
+  delete ((Mat *) GC->mask);
+  delete ((Mat *) GC->bgdModel);
+  delete ((Mat *) GC->fgdModel);
 
   return (0);
 }
