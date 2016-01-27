@@ -122,9 +122,10 @@ static gboolean gst_mss_demux_process_manifest (GstAdaptiveDemux * demux,
 static GstClockTime gst_mss_demux_get_duration (GstAdaptiveDemux * demux);
 static void gst_mss_demux_reset (GstAdaptiveDemux * demux);
 static GstFlowReturn gst_mss_demux_stream_seek (GstAdaptiveDemuxStream * stream,
-    GstClockTime ts);
-static gboolean
-gst_mss_demux_stream_has_next_fragment (GstAdaptiveDemuxStream * stream);
+    gboolean forward, GstSeekFlags flags, GstClockTime ts,
+    GstClockTime * final_ts);
+static gboolean gst_mss_demux_stream_has_next_fragment (GstAdaptiveDemuxStream *
+    stream);
 static GstFlowReturn
 gst_mss_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream);
 static gboolean gst_mss_demux_stream_select_bitrate (GstAdaptiveDemuxStream *
@@ -304,11 +305,12 @@ gst_mss_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
 }
 
 static GstFlowReturn
-gst_mss_demux_stream_seek (GstAdaptiveDemuxStream * stream, GstClockTime ts)
+gst_mss_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
+    GstSeekFlags flags, GstClockTime ts, GstClockTime * final_ts)
 {
   GstMssDemuxStream *mssstream = (GstMssDemuxStream *) stream;
 
-  gst_mss_stream_seek (mssstream->manifest_stream, ts);
+  gst_mss_stream_seek (mssstream->manifest_stream, flags, ts, final_ts);
   return GST_FLOW_OK;
 }
 

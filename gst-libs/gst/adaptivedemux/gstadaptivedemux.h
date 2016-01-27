@@ -310,7 +310,7 @@ struct _GstAdaptiveDemuxClass
   void          (*advance_period)  (GstAdaptiveDemux * demux);
 
   void          (*stream_free)     (GstAdaptiveDemuxStream * stream);
-  GstFlowReturn (*stream_seek)     (GstAdaptiveDemuxStream * stream, GstClockTime ts);
+  GstFlowReturn (*stream_seek)     (GstAdaptiveDemuxStream * stream, gboolean forward, GstSeekFlags flags, GstClockTime target_ts, GstClockTime * final_ts);
   gboolean      (*stream_has_next_fragment)  (GstAdaptiveDemuxStream * stream);
   GstFlowReturn (*stream_advance_fragment) (GstAdaptiveDemuxStream * stream);
   /**

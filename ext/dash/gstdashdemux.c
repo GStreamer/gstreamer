@@ -233,19 +233,20 @@ static gboolean gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek);
 static GstFlowReturn
 gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream);
 static GstFlowReturn gst_dash_demux_stream_seek (GstAdaptiveDemuxStream *
-    stream, GstClockTime ts);
-static gboolean
-gst_dash_demux_stream_has_next_fragment (GstAdaptiveDemuxStream * stream);
+    stream, gboolean forward, GstSeekFlags flags, GstClockTime ts,
+    GstClockTime * final_ts);
+static gboolean gst_dash_demux_stream_has_next_fragment (GstAdaptiveDemuxStream
+    * stream);
 static GstFlowReturn
 gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream);
 static gboolean
 gst_dash_demux_stream_advance_subfragment (GstAdaptiveDemuxStream * stream);
 static gboolean gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream *
     stream, guint64 bitrate);
-static gint64
-gst_dash_demux_get_manifest_update_interval (GstAdaptiveDemux * demux);
-static GstFlowReturn
-gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux, GstBuffer * buf);
+static gint64 gst_dash_demux_get_manifest_update_interval (GstAdaptiveDemux *
+    demux);
+static GstFlowReturn gst_dash_demux_update_manifest_data (GstAdaptiveDemux *
+    demux, GstBuffer * buf);
 static gint64
 gst_dash_demux_stream_get_fragment_waiting_time (GstAdaptiveDemuxStream *
     stream);
@@ -1066,7 +1067,7 @@ gst_dash_demux_index_entry_search (GstSidxBoxEntry * entry, GstClockTime * ts,
 
 static void
 gst_dash_demux_stream_sidx_seek (GstDashDemuxStream * dashstream,
-    GstClockTime ts)
+    GstSeekFlags flags, GstClockTime ts, GstClockTime * final_ts)
 {
   GstSidxBox *sidx = SIDX (dashstream);
   GstSidxBoxEntry *entry;
@@ -1088,24 +1089,34 @@ gst_dash_demux_stream_sidx_seek (GstDashDemuxStream * dashstream,
 
   sidx->entry_index = idx;
   dashstream->sidx_index = idx;
+
+  if (final_ts) {
+    if (idx == sidx->entries_count)
+      *final_ts = sidx->entries[idx].pts + sidx->entries[idx].duration;
+    else
+      *final_ts = sidx->entries[idx].pts;
+  }
 }
 
 static GstFlowReturn
-gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, GstClockTime ts)
+gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
+    GstSeekFlags flags, GstClockTime ts, GstClockTime * final_ts)
 {
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
 
   if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
     if (dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
-      gst_dash_demux_stream_sidx_seek (dashstream, ts);
+      gst_dash_demux_stream_sidx_seek (dashstream, flags, ts, final_ts);
     } else {
       /* no index yet, seek when we have it */
+      /* FIXME - the final_ts won't be correct here */
       dashstream->pending_seek_ts = ts;
     }
   }
 
-  gst_mpd_client_stream_seek (dashdemux->client, dashstream->active_stream, ts);
+  gst_mpd_client_stream_seek (dashdemux->client, dashstream->active_stream,
+      forward, flags, ts, final_ts);
   return GST_FLOW_OK;
 }
 
@@ -1340,7 +1351,7 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
       gst_isoff_sidx_parser_clear (&dashstream->sidx_parser);
       gst_isoff_sidx_parser_init (&dashstream->sidx_parser);
     }
-    gst_dash_demux_stream_seek (iter->data, target_pos);
+    gst_dash_demux_stream_seek (iter->data, rate >= 0, 0, target_pos, NULL);
   }
   return TRUE;
 }
@@ -1438,7 +1449,8 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
             GST_TIME_FORMAT, GST_TIME_ARGS (ts),
             GST_TIME_ARGS (ts + (10 * GST_USECOND)));
         ts += 10 * GST_USECOND;
-        gst_mpd_client_stream_seek (new_client, new_stream, ts);
+        gst_mpd_client_stream_seek (new_client, new_stream,
+            demux->segment.rate >= 0, 0, ts, NULL);
       }
 
       demux_stream->active_stream = new_stream;
@@ -1598,8 +1610,9 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
         /* when finished, prepare for real data streaming */
         if (dash_stream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
           if (GST_CLOCK_TIME_IS_VALID (dash_stream->pending_seek_ts)) {
-            gst_dash_demux_stream_sidx_seek (dash_stream,
-                dash_stream->pending_seek_ts);
+            /* FIXME, preserve seek flags */
+            gst_dash_demux_stream_sidx_seek (dash_stream, 0,
+                dash_stream->pending_seek_ts, NULL);
             dash_stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
           } else {
             SIDX (dash_stream)->entry_index = dash_stream->sidx_index;

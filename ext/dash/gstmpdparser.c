@@ -4652,7 +4652,8 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
 
 gboolean
 gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
-    GstClockTime ts)
+    gboolean forward, GstSeekFlags flags, GstClockTime ts,
+    GstClockTime * final_ts)
 {
   gint index = 0;
   gint repeat_index = 0;
@@ -4692,6 +4693,9 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
       GST_DEBUG ("Seek to after last segment");
       return FALSE;
     }
+
+    if (final_ts)
+      *final_ts = selectedChunk->start + selectedChunk->duration * repeat_index;
   } else {
     GstClockTime duration =
         gst_mpd_client_get_segment_duration (client, stream, NULL);
@@ -4716,6 +4720,8 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
       GST_DEBUG ("Seek to after last segment");
       return FALSE;
     }
+    if (final_ts)
+      *final_ts = index * duration;
   }
 
   stream->segment_repeat_index = repeat_index;
@@ -5816,7 +5822,9 @@ gst_mpd_client_seek_to_time (GstMpdClient * client, GDateTime * time)
 
   ts = ts_microseconds * GST_USECOND;
   for (stream = client->active_streams; stream; stream = g_list_next (stream)) {
-    ret = ret & gst_mpd_client_stream_seek (client, stream->data, ts);
+    ret =
+        ret & gst_mpd_client_stream_seek (client, stream->data, TRUE, 0, ts,
+        NULL);
   }
   return ret;
 }

@@ -1097,7 +1097,7 @@ gst_mss_manifest_seek (GstMssManifest * manifest, guint64 time)
   GSList *iter;
 
   for (iter = manifest->streams; iter; iter = g_slist_next (iter)) {
-    gst_mss_stream_seek (iter->data, time);
+    gst_mss_stream_seek (iter->data, 0, time, NULL);
   }
 }
 
@@ -1107,7 +1107,8 @@ gst_mss_manifest_seek (GstMssManifest * manifest, guint64 time)
  * @time: time in nanoseconds
  */
 void
-gst_mss_stream_seek (GstMssStream * stream, guint64 time)
+gst_mss_stream_seek (GstMssStream * stream, GstSeekFlags flags, guint64 time,
+    guint64 * final_time)
 {
   GList *iter;
   guint64 timescale;
@@ -1148,6 +1149,19 @@ gst_mss_stream_seek (GstMssStream * stream, guint64 time)
   GST_DEBUG ("Stream %s seeked to fragment time %" G_GUINT64_FORMAT
       " repetition %u", stream->url, fragment->time,
       stream->fragment_repetition_index);
+  if (final_time) {
+    if (fragment)
+      *final_time =
+          fragment->time +
+          stream->fragment_repetition_index * fragment->duration;
+    else {
+      /* always stops on the last one */
+      GstMssStreamFragment *last_fragment = iter->data;
+      *final_time =
+          last_fragment->time +
+          last_fragment->repetitions * last_fragment->duration;
+    }
+  }
 }
 
 guint64
@@ -1200,7 +1214,7 @@ gst_mss_stream_reload_fragments (GstMssStream * stream, xmlNodePtr streamIndex)
     g_list_free_full (stream->fragments, g_free);
     stream->fragments = g_list_reverse (builder.fragments);
     stream->current_fragment = stream->fragments;
-    gst_mss_stream_seek (stream, current_gst_time);
+    gst_mss_stream_seek (stream, 0, current_gst_time, NULL);
   }
 }
 
