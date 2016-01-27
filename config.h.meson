@@ -1,0 +1,16 @@
+#mesondefine ENABLE_NLS
+#mesondefine GETTEXT_PACKAGE
+#mesondefine GST_API_VERSION
+#mesondefine GST_LICENSE
+#mesondefine GST_PACKAGE_NAME
+#mesondefine GST_PACKAGE_ORIGIN
+#mesondefine GST_PACKAGE_RELEASE_DATETIME
+#mesondefine LOCALEDIR
+#mesondefine PACKAGE
+#mesondefine PACKAGE_BUGREPORT
+#mesondefine PACKAGE_NAME
+#mesondefine PACKAGE_STRING
+#mesondefine PACKAGE_TARNAME
+#mesondefine PACKAGE_URL
+#mesondefine PACKAGE_VERSION
+#mesondefine VERSION
