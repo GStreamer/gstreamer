@@ -521,16 +521,24 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
           [[rate valueForKey:@"maxFrameRate"] getValue:&max_frame_rate];
           if ((framerate >= min_frame_rate - 0.00001) &&
               (framerate <= max_frame_rate + 0.00001)) {
-            NSValue *min_frame_duration, *max_frame_duration;
-
+            NSValue *frame_duration_value;
             found_framerate = TRUE;
-            min_frame_duration = [rate valueForKey:@"minFrameDuration"];
-            max_frame_duration = [rate valueForKey:@"maxFrameDuration"];
-            [device setValue:min_frame_duration forKey:@"activeVideoMinFrameDuration"];
+            if (min_frame_rate == max_frame_rate) {
+              /* on mac we get tight ranges and an exception is raised if the
+               * frame duration doesn't match the one reported in the range to
+               * the last decimal point
+               */
+              frame_duration_value = [rate valueForKey:@"minFrameDuration"];
+            } else {
+              double frame_duration;
+
+              gst_util_fraction_to_double (info->fps_d, info->fps_n, &frame_duration);
+              frame_duration_value = [NSNumber numberWithDouble:frame_duration];
+            }
+            [device setValue:frame_duration_value forKey:@"activeVideoMinFrameDuration"];
             @try {
               /* Only available on OSX >= 10.8 and iOS >= 7.0 */
-              // Restrict activeVideoMaxFrameDuration to the minimum value so we get a better capture frame rate
-              [device setValue:min_frame_duration forKey:@"activeVideoMaxFrameDuration"];
+              [device setValue:frame_duration_value forKey:@"activeVideoMaxFrameDuration"];
             } @catch (NSException *exception) {
               if (![[exception name] isEqualToString:NSUndefinedKeyException]) {
                 GST_WARNING ("An unexcepted error occured: %s",
