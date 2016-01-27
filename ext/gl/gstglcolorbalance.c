@@ -161,10 +161,10 @@ gst_gl_color_balance_update_properties (GstGLColorBalance * glcolorbalance)
 }
 
 static gboolean
-gst_gl_color_balance_gl_start (GstGLBaseFilter * base_filter)
+_create_shader (GstGLColorBalance * balance)
 {
-  GstGLColorBalance *balance = GST_GL_COLOR_BALANCE (base_filter);
-  GstGLFilter *filter = GST_GL_FILTER (base_filter);
+  GstGLBaseFilter *base_filter = GST_GL_BASE_FILTER (balance);
+  GstGLFilter *filter = GST_GL_FILTER (balance);
   GError *error = NULL;
 
   if (balance->shader)
@@ -187,6 +187,17 @@ gst_gl_color_balance_gl_start (GstGLBaseFilter * base_filter)
       gst_gl_shader_get_attribute_location (balance->shader, "a_position");
   filter->draw_attr_texture_loc =
       gst_gl_shader_get_attribute_location (balance->shader, "a_texcoord");
+
+  return TRUE;
+}
+
+static gboolean
+gst_gl_color_balance_gl_start (GstGLBaseFilter * base_filter)
+{
+  GstGLColorBalance *balance = GST_GL_COLOR_BALANCE (base_filter);
+
+  if (!_create_shader (balance))
+    return FALSE;
 
   return GST_GL_BASE_FILTER_CLASS (parent_class)->gl_start (base_filter);
 }
@@ -227,6 +238,9 @@ gst_gl_color_balance_callback (gint width, gint height, guint tex_id,
   GstGLColorBalance *balance = GST_GL_COLOR_BALANCE (data);
   GstGLFilter *filter = GST_GL_FILTER (data);
   const GstGLFuncs *gl = GST_GL_BASE_FILTER (data)->context->gl_vtable;
+
+  if (!balance->shader)
+    _create_shader (balance);
 
   gst_gl_shader_use (balance->shader);
   GST_OBJECT_LOCK (balance);
