@@ -619,6 +619,49 @@ GST_START_TEST (testSeekPosition)
 
 GST_END_TEST;
 
+GST_START_TEST (testSeekSnapBeforePosition)
+{
+  /* Seek to 1.5s, snap before, it go to 1s */
+  run_seek_position_test (1.0, GST_SEEK_TYPE_SET, 1500 * GST_MSECOND,
+      GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_BEFORE,
+      1000 * GST_MSECOND, -1, 3);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (testSeekSnapAfterPosition)
+{
+  /* Seek to 1.5s with snap after, it should move to 2s */
+  run_seek_position_test (1.0, GST_SEEK_TYPE_SET, 1500 * GST_MSECOND,
+      GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_AFTER,
+      2000 * GST_MSECOND, -1, 2);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (testReverseSeekSnapBeforePosition)
+{
+  run_seek_position_test (-1.0, GST_SEEK_TYPE_SET, 1000 * GST_MSECOND,
+      GST_SEEK_TYPE_SET, 2500 * GST_MSECOND,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_BEFORE, 1000 * GST_MSECOND,
+      3000 * GST_MSECOND, 2);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (testReverseSeekSnapAfterPosition)
+{
+  run_seek_position_test (-1.0, GST_SEEK_TYPE_SET, 1000 * GST_MSECOND,
+      GST_SEEK_TYPE_SET, 2500 * GST_MSECOND,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_AFTER, 1000 * GST_MSECOND,
+      2000 * GST_MSECOND, 1);
+}
+
+GST_END_TEST;
+
 static void
 testDownloadErrorMessageCallback (GstAdaptiveDemuxTestEngine * engine,
     GstMessage * msg, gpointer user_data)
@@ -945,6 +988,10 @@ dash_demux_suite (void)
   tcase_add_test (tc_basicTest, testSeekKeyUnitPosition);
   tcase_add_test (tc_basicTest, testSeekPosition);
   tcase_add_test (tc_basicTest, testSeekUpdateStopPosition);
+  tcase_add_test (tc_basicTest, testSeekSnapBeforePosition);
+  tcase_add_test (tc_basicTest, testSeekSnapAfterPosition);
+  tcase_add_test (tc_basicTest, testReverseSeekSnapBeforePosition);
+  tcase_add_test (tc_basicTest, testReverseSeekSnapAfterPosition);
   tcase_add_test (tc_basicTest, testDownloadError);
   tcase_add_test (tc_basicTest, testFragmentDownloadError);
   tcase_add_test (tc_basicTest, testQuery);
