@@ -2087,20 +2087,20 @@ gst_deinterlace_acceptcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
   if (self->mode == GST_DEINTERLACE_MODE_DISABLED
       || self->mode == GST_DEINTERLACE_MODE_AUTO) {
     ourcaps = gst_pad_get_pad_template_caps (pad);
-    ret = gst_caps_can_intersect (caps, ourcaps);
+    ret = gst_caps_is_subset (caps, ourcaps);
     gst_caps_unref (ourcaps);
   } else if (self->mode == GST_DEINTERLACE_MODE_INTERLACED) {
     ourcaps = gst_static_caps_get (&deinterlace_caps);
-    ret = gst_caps_can_intersect (caps, ourcaps);
+    ret = gst_caps_is_subset (caps, ourcaps);
     gst_caps_unref (ourcaps);
   } else if (self->mode == GST_DEINTERLACE_MODE_AUTO_STRICT) {
     ourcaps = gst_static_caps_get (&progressive_caps);
-    ret = gst_caps_can_intersect (caps, ourcaps);
+    ret = gst_caps_is_subset (caps, ourcaps);
     gst_caps_unref (ourcaps);
 
     if (!ret) {
       ourcaps = gst_static_caps_get (&deinterlace_caps);
-      ret = gst_caps_can_intersect (caps, ourcaps);
+      ret = gst_caps_is_subset (caps, ourcaps);
       gst_caps_unref (ourcaps);
     }
   } else {
