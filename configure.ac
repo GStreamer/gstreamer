@@ -103,11 +103,6 @@ dnl Initialize libtool
 LT_PREREQ([2.2])
 LT_INIT
 
-AC_ARG_ENABLE(builtin_videoparsers,
-    AS_HELP_STRING([--enable-builtin-videoparsers],
-                   [enable built-in videoparsers @<:@default=yes@:>@]),
-    [], [enable_builtin_videoparsers="yes"])
-
 AC_ARG_ENABLE([encoders],
     AS_HELP_STRING([--enable-encoders],
                    [enable video encoders @<:@default=yes@:>@]),
@@ -269,99 +264,6 @@ dnl ... bitstream parsers
 PKG_CHECK_MODULES([GST_CODEC_PARSERS],
     [gstreamer-codecparsers-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
 
-dnl ... MPEG-2 parser, with the required extensions
-HAVE_GST_MPEG2_PARSER=0
-AC_CACHE_CHECK([for MPEG-2 parser],
-    ac_cv_have_gst_mpeg2_parser, [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_CODEC_PARSERS_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $GST_LIBS $GST_CODEC_PARSERS_LIBS"
-    AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <gst/codecparsers/gstmpegvideoparser.h>]],
-            [[GstMpegVideoSequenceHdr seq_hdr;
-              GstMpegVideoSequenceExt seq_ext;
-              GstMpegVideoSequenceDisplayExt seq_dpy;
-              GstMpegVideoSliceHdr slice_hdr;
-              GstMpegVideoPacket packet;
-              gst_mpeg_video_packet_parse_slice_header(&packet, &slice_hdr,
-                  &seq_hdr, NULL);
-              gst_mpeg_video_finalise_mpeg2_sequence_header(&seq_hdr,
-                  &seq_ext, &seq_dpy);]])],
-        [ac_cv_have_gst_mpeg2_parser="yes" HAVE_GST_MPEG2_PARSER=1],
-        [ac_cv_have_gst_mpeg2_parser="no"]
-    )
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-])
-
-dnl ... H.264 parser, with the required extensions
-HAVE_GST_H264_PARSER=0
-AC_CACHE_CHECK([for H.264 parser],
-    ac_cv_have_gst_h264_parser, [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_CODEC_PARSERS_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $GST_LIBS $GST_CODEC_PARSERS_LIBS"
-    AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <gst/codecparsers/gsth264parser.h>]],
-            [[GstH264SliceHdr slice_hdr;
-              GstH264VUIParams vui_params;
-              GstH264Profile profile = GST_H264_PROFILE_HIGH;
-              slice_hdr.n_emulation_prevention_bytes = 0;
-              vui_params.par_n = 0;
-              vui_params.par_d = 0;
-              GstH264SPS sps;
-              sps.extension.mvc.num_views_minus1 = 1;
-              GstH264NalUnit nalu;
-              nalu.extension_type = GST_H264_NAL_EXTENSION_MVC;]])],
-        [ac_cv_have_gst_h264_parser="yes" HAVE_GST_H264_PARSER=1],
-        [ac_cv_have_gst_h264_parser="no"]
-    )
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-])
-
-dnl ... JPEG parser
-HAVE_GST_JPEG_PARSER=0
-AC_CACHE_CHECK([for JPEG parser],
-    ac_cv_have_gst_jpeg_parser, [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_CODEC_PARSERS_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $GST_LIBS $GST_CODEC_PARSERS_LIBS"
-    AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <gst/codecparsers/gstjpegparser.h>]],
-            [[GstJpegFrameHdr frame_hdr;]])],
-        [ac_cv_have_gst_jpeg_parser="yes" HAVE_GST_JPEG_PARSER=1],
-        [ac_cv_have_gst_jpeg_parser="no"]
-    )
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-])
-
-dnl ... VP8 parser
-HAVE_GST_VP8_PARSER=0
-AC_CACHE_CHECK([for VP8 parser],
-    ac_cv_have_gst_vp8_parser, [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_CODEC_PARSERS_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $GST_LIBS $GST_CODEC_PARSERS_LIBS"
-    AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <gst/codecparsers/gstvp8parser.h>]],
-            [[GstVp8FrameHdr frame_hdr;]])],
-        [ac_cv_have_gst_vp8_parser="yes" HAVE_GST_VP8_PARSER=1],
-        [ac_cv_have_gst_vp8_parser="no"]
-    )
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-])
-
 dnl ... VP9 parser, with required extensions
 HAVE_GST_VP9_PARSER=0
 AC_CACHE_CHECK([for VP9 parser],
@@ -376,33 +278,6 @@ AC_CACHE_CHECK([for VP9 parser],
             [[GstVp9FrameHdr frame_hdr;]])],
         [ac_cv_have_gst_vp9_parser="yes" HAVE_GST_VP9_PARSER=1],
         [ac_cv_have_gst_vp9_parser="no"]
-    )
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-])
-
-dnl ... H.265 parser, with the required extensions
-HAVE_GST_H265_PARSER=0
-AC_CACHE_CHECK([for H.265 parser],
-    ac_cv_have_gst_h265_parser, [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_CODEC_PARSERS_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $GST_LIBS $GST_CODEC_PARSERS_LIBS"
-    AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <gst/codecparsers/gsth265parser.h>]],
-            [[GstH265SliceHdr slice_hdr;
-              GstH265VUIParams vui_params;
-              GstH265Profile profile = GST_H265_PROFILE_MAIN_STILL_PICTURE;
-              slice_hdr.n_emulation_prevention_bytes = 0;
-              vui_params.par_n = 0;
-              vui_params.par_d = 0;
-              GstH265SPS sps;
-              sps.crop_rect_x = 0;
-              sps.crop_rect_width = 0;]])],
-        [ac_cv_have_gst_h265_parser="yes" HAVE_GST_H265_PARSER=1],
-        [ac_cv_have_gst_h265_parser="no"]
     )
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
@@ -751,7 +626,7 @@ AC_CACHE_CHECK([for JPEG decoding API],
               VASliceParameterBufferJPEGBaseline slice_param;
               VAHuffmanTableBufferJPEGBaseline huffman_table;
               VAIQMatrixBufferJPEGBaseline iq_matrix;]])],
-        [ac_cv_have_jpeg_decoding_api="yes" USE_JPEG_DECODER=$HAVE_GST_JPEG_PARSER],
+        [ac_cv_have_jpeg_decoding_api="yes" USE_JPEG_DECODER=1],
         [ac_cv_have_jpeg_decoding_api="no"]
     )
     CPPFLAGS="$saved_CPPFLAGS"
@@ -785,7 +660,7 @@ AC_CACHE_CHECK([for VP8 decoding API],
               VAIQMatrixBufferVP8 iq_matrix;
               slice_param.slice_data_offset = 0;
               slice_param.slice_data_flag = 0;]])],
-        [ac_cv_have_vp8_decoding_api="yes" USE_VP8_DECODER=$HAVE_GST_VP8_PARSER],
+        [ac_cv_have_vp8_decoding_api="yes" USE_VP8_DECODER=1],
         [ac_cv_have_vp8_decoding_api="no"]
     )
     CPPFLAGS="$saved_CPPFLAGS"
@@ -851,7 +726,7 @@ AC_CACHE_CHECK([for HEVC decoding API],
               VAIQMatrixBufferHEVC iq_matrix;
               slice_param.slice_data_offset = 0;
               slice_param.slice_data_flag = 0;]])],
-        [ac_cv_have_hevc_decoding_api="yes" USE_HEVC_DECODER=$HAVE_GST_H265_PARSER],
+        [ac_cv_have_hevc_decoding_api="yes" USE_HEVC_DECODER=1],
         [ac_cv_have_hevc_decoding_api="no"]
     )
     CPPFLAGS="$saved_CPPFLAGS"
