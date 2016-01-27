@@ -111,16 +111,6 @@ libgstvaapi_source_c += $(libgstvaapi_h265enc_source_c)
 libgstvaapi_source_h += $(libgstvaapi_h265enc_source_h)
 endif
 
-
-
-libgstvaapi_egl_source_c =
-libgstvaapi_egl_source_h =
-
-if USE_EGL
-libgstvaapi_source_c += $(libgstvaapi_egl_source_c)
-libgstvaapi_source_h += $(libgstvaapi_egl_source_h)
-endif
-
 libgstvaapi_la_SOURCES		= $(libgstvaapi_source_c)
 noinst_HEADERS			= $(libgstvaapi_source_h)
 
