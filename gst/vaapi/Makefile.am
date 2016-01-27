@@ -53,6 +53,7 @@ libgstvaapi_source_c = \
 	gstvaapidecodebin.c	\
 	gstvaapivideobufferpool.c \
 	gstvaapivideomemory.c	\
+	gstvaapivideometa_texture.c \
 	$(NULL)
 
 libgstvaapi_source_h = \
@@ -68,6 +69,7 @@ libgstvaapi_source_h = \
 	gstvaapidecodebin.h	\
 	gstvaapivideobufferpool.h \
 	gstvaapivideomemory.h	\
+	gstvaapivideometa_texture.h \
 	$(NULL)
 
 libgstvaapi_enc_source_c =	\
@@ -117,19 +119,6 @@ libgstvaapi_egl_source_h =
 if USE_EGL
 libgstvaapi_source_c += $(libgstvaapi_egl_source_c)
 libgstvaapi_source_h += $(libgstvaapi_egl_source_h)
-endif
-
-libgstvaapi_1_2p_source_c = \
-	gstvaapivideometa_texture.c \
-	$(NULL)
-
-libgstvaapi_1_2p_source_h = \
-	gstvaapivideometa_texture.h \
-	$(NULL)
-
-if USE_GST_API_1_2p
-libgstvaapi_source_c += $(libgstvaapi_1_2p_source_c)
-libgstvaapi_source_h += $(libgstvaapi_1_2p_source_h)
 endif
 
 libgstvaapi_la_SOURCES		= $(libgstvaapi_source_c)
