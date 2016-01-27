@@ -505,9 +505,10 @@ GST_END_TEST;
 
 
 static void
-run_seek_position_test (gdouble rate, guint64 seek_start, GstSeekType stop_type,
-    guint64 seek_stop, GstSeekFlags flags, guint64 segment_start,
-    guint64 segment_stop, gint segments)
+run_seek_position_test (gdouble rate, GstSeekType start_type,
+    guint64 seek_start, GstSeekType stop_type, guint64 seek_stop,
+    GstSeekFlags flags, guint64 segment_start, guint64 segment_stop,
+    gint segments)
 {
   const gchar *mpd =
       "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
@@ -578,7 +579,7 @@ run_seek_position_test (gdouble rate, guint64 seek_start, GstSeekType stop_type,
    * downloaded again
    */
   testData->seek_event =
-      gst_event_new_seek (rate, GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET,
+      gst_event_new_seek (rate, GST_FORMAT_TIME, flags, start_type,
       seek_start, stop_type, seek_stop);
 
   gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
@@ -591,8 +592,18 @@ GST_START_TEST (testSeekKeyUnitPosition)
 {
   /* Seek to 1.5s with key unit, it should go back to 1.0s. 3 segments will be
    * pushed */
-  run_seek_position_test (1.0, 1500 * GST_MSECOND, GST_SEEK_TYPE_NONE, 0,
-      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, 1000 * GST_MSECOND, -1, 3);
+  run_seek_position_test (1.0, GST_SEEK_TYPE_SET, 1500 * GST_MSECOND,
+      GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT,
+      1000 * GST_MSECOND, -1, 3);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (testSeekUpdateStopPosition)
+{
+  run_seek_position_test (1.0, GST_SEEK_TYPE_NONE, 1500 * GST_MSECOND,
+      GST_SEEK_TYPE_SET, 3000 * GST_MSECOND, 0, 0, 3000 * GST_MSECOND, 3);
 }
 
 GST_END_TEST;
@@ -602,8 +613,8 @@ GST_START_TEST (testSeekPosition)
   /* Seek to 1.5s without key unit, it should keep the 1.5s, but still push
    * from the 1st segment, so 3 segments will be
    * pushed */
-  run_seek_position_test (1.0, 1500 * GST_MSECOND, GST_SEEK_TYPE_NONE, 0,
-      GST_SEEK_FLAG_FLUSH, 1500 * GST_MSECOND, -1, 3);
+  run_seek_position_test (1.0, GST_SEEK_TYPE_SET, 1500 * GST_MSECOND,
+      GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH, 1500 * GST_MSECOND, -1, 3);
 }
 
 GST_END_TEST;
@@ -933,6 +944,7 @@ dash_demux_suite (void)
   tcase_add_test (tc_basicTest, testSeek);
   tcase_add_test (tc_basicTest, testSeekKeyUnitPosition);
   tcase_add_test (tc_basicTest, testSeekPosition);
+  tcase_add_test (tc_basicTest, testSeekUpdateStopPosition);
   tcase_add_test (tc_basicTest, testDownloadError);
   tcase_add_test (tc_basicTest, testFragmentDownloadError);
   tcase_add_test (tc_basicTest, testQuery);
