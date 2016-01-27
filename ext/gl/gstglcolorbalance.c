@@ -446,7 +446,7 @@ gst_gl_color_balance_colorbalance_get_value (GstColorBalance * balance,
 static GstColorBalanceType
 gst_gl_color_balance_colorbalance_get_balance_type (GstColorBalance * balance)
 {
-  return GST_COLOR_BALANCE_SOFTWARE;
+  return GST_COLOR_BALANCE_HARDWARE;
 }
 
 static void
