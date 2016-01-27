@@ -56,6 +56,7 @@ struct _GstGLSinkBin
 
   GstElement *upload;
   GstElement *convert;
+  GstElement *balance;
   GstElement *sink;
 };
 
