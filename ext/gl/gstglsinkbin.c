@@ -42,6 +42,8 @@ static void gst_gl_sink_bin_video_overlay_init (gpointer g_iface,
     gpointer g_iface_data);
 static void gst_gl_sink_bin_navigation_interface_init (gpointer g_iface,
     gpointer g_iface_data);
+static void gst_gl_sink_bin_color_balance_init (gpointer g_iface,
+    gpointer g_iface_data);
 
 #define DEFAULT_SYNC                TRUE
 #define DEFAULT_MAX_LATENESS        -1
@@ -53,6 +55,12 @@ static void gst_gl_sink_bin_navigation_interface_init (gpointer g_iface,
 #define DEFAULT_ENABLE_LAST_SAMPLE  TRUE
 #define DEFAULT_THROTTLE_TIME       0
 #define DEFAULT_MAX_BITRATE         0
+
+/* GstGLColorBalance properties */
+#define DEFAULT_PROP_CONTRAST       1.0
+#define DEFAULT_PROP_BRIGHTNESS	    0.0
+#define DEFAULT_PROP_HUE            0.0
+#define DEFAULT_PROP_SATURATION	    1.0
 
 enum
 {
@@ -70,6 +78,10 @@ enum
   PROP_RENDER_DELAY,
   PROP_THROTTLE_TIME,
   PROP_MAX_BITRATE,
+  PROP_CONTRAST,
+  PROP_BRIGHTNESS,
+  PROP_HUE,
+  PROP_SATURATION,
 };
 
 enum
@@ -87,6 +99,8 @@ G_DEFINE_TYPE_WITH_CODE (GstGLSinkBin, gst_gl_sink_bin,
         gst_gl_sink_bin_video_overlay_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
         gst_gl_sink_bin_navigation_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
+        gst_gl_sink_bin_color_balance_init)
     GST_DEBUG_CATEGORY_INIT (gst_debug_gl_sink_bin, "glimagesink", 0,
         "OpenGL Video Sink Bin"));
 
@@ -166,6 +180,23 @@ gst_gl_sink_bin_class_init (GstGLSinkBinClass * klass)
           G_MAXUINT64, DEFAULT_MAX_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /* colorbalance */
+  g_object_class_install_property (gobject_class, PROP_CONTRAST,
+      g_param_spec_double ("contrast", "Contrast", "contrast",
+          0.0, 2.0, DEFAULT_PROP_CONTRAST,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_BRIGHTNESS,
+      g_param_spec_double ("brightness", "Brightness", "brightness", -1.0, 1.0,
+          DEFAULT_PROP_BRIGHTNESS,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_HUE,
+      g_param_spec_double ("hue", "Hue", "hue", -1.0, 1.0, DEFAULT_PROP_HUE,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_SATURATION,
+      g_param_spec_double ("saturation", "Saturation", "saturation", 0.0, 2.0,
+          DEFAULT_PROP_SATURATION,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstGLSinkBin::create-element:
    * @object: the #GstGLSinkBin
@@ -198,11 +229,14 @@ gst_gl_sink_bin_init (GstGLSinkBin * self)
 
   self->upload = gst_element_factory_make ("glupload", NULL);
   self->convert = gst_element_factory_make ("glcolorconvert", NULL);
+  self->balance = gst_element_factory_make ("glcolorbalance", NULL);
 
   res &= gst_bin_add (GST_BIN (self), self->upload);
   res &= gst_bin_add (GST_BIN (self), self->convert);
+  res &= gst_bin_add (GST_BIN (self), self->balance);
 
   res &= gst_element_link_pads (self->upload, "src", self->convert, "sink");
+  res &= gst_element_link_pads (self->convert, "src", self->balance, "sink");
 
   pad = gst_element_get_static_pad (self->upload, "sink");
   if (!pad) {
@@ -213,6 +247,15 @@ gst_gl_sink_bin_init (GstGLSinkBin * self)
     gst_element_add_pad (GST_ELEMENT_CAST (self), self->sinkpad);
     gst_object_unref (pad);
   }
+
+  gst_gl_object_add_control_binding_proxy (GST_OBJECT (self->balance),
+      GST_OBJECT (self), "contrast");
+  gst_gl_object_add_control_binding_proxy (GST_OBJECT (self->balance),
+      GST_OBJECT (self), "brightness");
+  gst_gl_object_add_control_binding_proxy (GST_OBJECT (self->balance),
+      GST_OBJECT (self), "hue");
+  gst_gl_object_add_control_binding_proxy (GST_OBJECT (self->balance),
+      GST_OBJECT (self), "saturation");
 
   if (!res) {
     GST_WARNING_OBJECT (self, "Failed to add/connect the necessary machinery");
@@ -227,7 +270,7 @@ _connect_sink_element (GstGLSinkBin * self)
   gst_object_set_name (GST_OBJECT (self->sink), "sink");
   res &= gst_bin_add (GST_BIN (self), self->sink);
 
-  res &= gst_element_link_pads (self->convert, "src", self->sink, "sink");
+  res &= gst_element_link_pads (self->balance, "src", self->sink, "sink");
 
   if (!res)
     GST_ERROR_OBJECT (self, "Failed to link sink element into the pipeline");
@@ -281,6 +324,13 @@ gst_gl_sink_bin_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_CONTRAST:
+    case PROP_BRIGHTNESS:
+    case PROP_HUE:
+    case PROP_SATURATION:
+      if (self->balance)
+        g_object_set_property (G_OBJECT (self->balance), pspec->name, value);
+      break;
     default:
       if (self->sink)
         g_object_set_property (G_OBJECT (self->sink), pspec->name, value);
@@ -297,6 +347,13 @@ gst_gl_sink_bin_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_SINK:
       g_value_set_object (value, self->sink);
+      break;
+    case PROP_CONTRAST:
+    case PROP_BRIGHTNESS:
+    case PROP_HUE:
+    case PROP_SATURATION:
+      if (self->balance)
+        g_object_get_property (G_OBJECT (self->balance), pspec->name, value);
       break;
     default:
       if (self->sink)
@@ -453,4 +510,90 @@ gst_gl_sink_bin_video_overlay_init (gpointer g_iface, gpointer g_iface_data)
   iface->handle_events = gst_gl_sink_bin_overlay_handle_events;
   iface->set_render_rectangle = gst_gl_sink_bin_overlay_set_render_rectangle;
   iface->set_window_handle = gst_gl_sink_bin_overlay_set_window_handle;
+}
+
+static const GList *
+gst_gl_sink_bin_color_balance_list_channels (GstColorBalance * balance)
+{
+  GstGLSinkBin *self = GST_GL_SINK_BIN (balance);
+  GstColorBalance *balance_element = NULL;
+  const GList *list = NULL;
+
+  balance_element =
+      GST_COLOR_BALANCE (gst_bin_get_by_interface (GST_BIN (self),
+          GST_TYPE_COLOR_BALANCE));
+
+  if (balance_element) {
+    list = gst_color_balance_list_channels (balance_element);
+    gst_object_unref (balance_element);
+  }
+
+  return list;
+}
+
+static void
+gst_gl_sink_bin_color_balance_set_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel, gint value)
+{
+  GstGLSinkBin *self = GST_GL_SINK_BIN (balance);
+  GstColorBalance *balance_element = NULL;
+
+  balance_element =
+      GST_COLOR_BALANCE (gst_bin_get_by_interface (GST_BIN (self),
+          GST_TYPE_COLOR_BALANCE));
+
+  if (balance_element) {
+    gst_color_balance_set_value (balance_element, channel, value);
+    gst_object_unref (balance_element);
+  }
+}
+
+static gint
+gst_gl_sink_bin_color_balance_get_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel)
+{
+  GstGLSinkBin *self = GST_GL_SINK_BIN (balance);
+  GstColorBalance *balance_element = NULL;
+  gint val = 0;
+
+  balance_element =
+      GST_COLOR_BALANCE (gst_bin_get_by_interface (GST_BIN (self),
+          GST_TYPE_COLOR_BALANCE));
+
+  if (balance_element) {
+    val = gst_color_balance_get_value (balance_element, channel);
+    gst_object_unref (balance_element);
+  }
+
+  return val;
+}
+
+static GstColorBalanceType
+gst_gl_sink_bin_color_balance_get_balance_type (GstColorBalance * balance)
+{
+  GstGLSinkBin *self = GST_GL_SINK_BIN (balance);
+  GstColorBalance *balance_element = NULL;
+  GstColorBalanceType type = 0;
+
+  balance_element =
+      GST_COLOR_BALANCE (gst_bin_get_by_interface (GST_BIN (self),
+          GST_TYPE_COLOR_BALANCE));
+
+  if (balance_element) {
+    type = gst_color_balance_get_balance_type (balance_element);
+    gst_object_unref (balance_element);
+  }
+
+  return type;
+}
+
+static void
+gst_gl_sink_bin_color_balance_init (gpointer g_iface, gpointer g_iface_data)
+{
+  GstColorBalanceInterface *iface = (GstColorBalanceInterface *) g_iface;
+
+  iface->list_channels = gst_gl_sink_bin_color_balance_list_channels;
+  iface->set_value = gst_gl_sink_bin_color_balance_set_value;
+  iface->get_value = gst_gl_sink_bin_color_balance_get_value;
+  iface->get_balance_type = gst_gl_sink_bin_color_balance_get_balance_type;
 }
