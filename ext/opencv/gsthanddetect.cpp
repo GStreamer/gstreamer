@@ -72,6 +72,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_handdetect_debug);
 #define HAAR_FILE_PALM GST_HAAR_CASCADES_DIR G_DIR_SEPARATOR_S "palm.xml"
 
 using namespace cv;
+using namespace std;
 /* Filter signals and args */
 enum
 {
@@ -405,7 +406,8 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
     cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
 
     /* detect FIST gesture fist */
-    Mat roi (filter->cvGray, Rect (filter->cvGray->origin,
+    Mat image = cvarrToMat(filter->cvGray);
+    Mat roi (image, Rect (filter->cvGray->origin,
             filter->cvGray->origin, filter->cvGray->width,
             filter->cvGray->height));
     filter->cvCascade_fist->detectMultiScale (roi, hands, 1.1, 2,
