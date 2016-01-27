@@ -186,6 +186,9 @@ static GstFlowReturn gst_pad_send_event_unchecked (GstPad * pad,
 static GstFlowReturn gst_pad_push_event_unchecked (GstPad * pad,
     GstEvent * event, GstPadProbeType type);
 
+static gboolean activate_mode_internal (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active);
+
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *pspec_caps = NULL;
@@ -924,7 +927,9 @@ gst_pad_get_direction (GstPad * pad)
 static gboolean
 gst_pad_activate_default (GstPad * pad, GstObject * parent)
 {
-  return gst_pad_activate_mode (pad, GST_PAD_MODE_PUSH, TRUE);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  return activate_mode_internal (pad, parent, GST_PAD_MODE_PUSH, TRUE);
 }
 
 /**
@@ -1069,7 +1074,7 @@ gst_pad_set_active (GstPad * pad, gboolean active)
     } else {
       GST_DEBUG_OBJECT (pad, "deactivating pad from %s mode",
           gst_pad_mode_get_name (old));
-      ret = gst_pad_activate_mode (pad, old, FALSE);
+      ret = activate_mode_internal (pad, parent, old, FALSE);
       if (ret)
         pad->ABI.abi.last_flowret = GST_FLOW_FLUSHING;
     }
@@ -1103,36 +1108,18 @@ failed:
   }
 }
 
-/**
- * gst_pad_activate_mode:
- * @pad: the #GstPad to activate or deactivate.
- * @mode: the requested activation mode
- * @active: whether or not the pad should be active.
- *
- * Activates or deactivates the given pad in @mode via dispatching to the
- * pad's activatemodefunc. For use from within pad activation functions only.
- *
- * If you don't know what this is, you probably don't want to call it.
- *
- * Returns: %TRUE if the operation was successful.
- *
- * MT safe.
- */
-gboolean
-gst_pad_activate_mode (GstPad * pad, GstPadMode mode, gboolean active)
+static gboolean
+activate_mode_internal (GstPad * pad, GstObject * parent, GstPadMode mode,
+    gboolean active)
 {
   gboolean res = FALSE;
-  GstObject *parent;
   GstPadMode old, new;
   GstPadDirection dir;
   GstPad *peer;
 
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-
   GST_OBJECT_LOCK (pad);
   old = GST_PAD_MODE (pad);
   dir = GST_PAD_DIRECTION (pad);
-  ACQUIRE_PARENT (pad, parent, no_parent);
   GST_OBJECT_UNLOCK (pad);
 
   new = active ? mode : GST_PAD_MODE_NONE;
@@ -1146,7 +1133,7 @@ gst_pad_activate_mode (GstPad * pad, GstPadMode mode, gboolean active)
     GST_DEBUG_OBJECT (pad, "deactivating pad from %s mode",
         gst_pad_mode_get_name (old));
 
-    if (G_UNLIKELY (!gst_pad_activate_mode (pad, old, FALSE)))
+    if (G_UNLIKELY (!activate_mode_internal (pad, parent, old, FALSE)))
       goto deactivate_failed;
   }
 
@@ -1209,16 +1196,8 @@ exit_success:
   }
 
 exit:
-  RELEASE_PARENT (parent);
-
   return res;
 
-no_parent:
-  {
-    GST_DEBUG_OBJECT (pad, "no parent");
-    GST_OBJECT_UNLOCK (pad);
-    return FALSE;
-  }
 was_ok:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "already %s in %s mode",
@@ -1257,6 +1236,47 @@ failure:
     GST_PAD_MODE (pad) = old;
     GST_OBJECT_UNLOCK (pad);
     goto exit;
+  }
+}
+
+/**
+ * gst_pad_activate_mode:
+ * @pad: the #GstPad to activate or deactivate.
+ * @mode: the requested activation mode
+ * @active: whether or not the pad should be active.
+ *
+ * Activates or deactivates the given pad in @mode via dispatching to the
+ * pad's activatemodefunc. For use from within pad activation functions only.
+ *
+ * If you don't know what this is, you probably don't want to call it.
+ *
+ * Returns: %TRUE if the operation was successful.
+ *
+ * MT safe.
+ */
+gboolean
+gst_pad_activate_mode (GstPad * pad, GstPadMode mode, gboolean active)
+{
+  GstObject *parent;
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  GST_OBJECT_LOCK (pad);
+  ACQUIRE_PARENT (pad, parent, no_parent);
+  GST_OBJECT_UNLOCK (pad);
+
+  res = activate_mode_internal (pad, parent, mode, active);
+
+  RELEASE_PARENT (parent);
+
+  return res;
+
+no_parent:
+  {
+    GST_WARNING_OBJECT (pad, "no parent");
+    GST_OBJECT_UNLOCK (pad);
+    return FALSE;
   }
 }
 
