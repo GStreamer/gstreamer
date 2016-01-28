@@ -49,12 +49,18 @@ static void
 colors_init (guint32 * colors)
 {
   int i;
+  int hq = (scope_height / 4);
+  int hq1 = hq - 1;
+  int hh1 = (scope_height / 2) - 1;
+  double scl = (256.0 / (double) hq);
 
-  for (i = 0; i < 32; i++) {
-    colors[i] = (i * 8 << 16) + (255 << 8);
-    colors[i + 31] = (255 << 16) + (((31 - i) * 8) << 8);
+  for (i = 0; i < hq; i++) {
+    /* green to yellow */
+    colors[i] = ((int) (i * scl) << 16) + (255 << 8);
+    /* yellow to red */
+    colors[i + hq1] = (255 << 16) + ((int) ((hq1 - i) * scl) << 8);
   }
-  colors[63] = (40 << 16) + (75 << 8);
+  colors[hh1] = (40 << 16) + (75 << 8);
 }
 
 struct monoscope_state *
@@ -86,76 +92,72 @@ monoscope_update (struct monoscope_state *stateptr, gint16 data[convolver_big])
   /* Really, we want samples evenly spread over the available data.
    * Just taking a continuous chunk will do for now, though. */
   int i;
-  int foo;
-  int bar;
+  int foo, bar;
+  int avg;
   int h;
+  int hh = (scope_height / 2);
+  int hh1 = hh - 1;
   guint32 *loc;
 
   int factor;
-  int val;
   int max = 1;
-  gint16 *thisEq = stateptr->copyEq;
+  short *thisEq = stateptr->copyEq;
 
   memcpy (thisEq, data, sizeof (short) * convolver_big);
-  val = convolve_match (stateptr->avgEq, thisEq, stateptr->cstate);
-  thisEq += val;
+  thisEq += convolve_match (stateptr->avgEq, thisEq, stateptr->cstate);
 
   memset (stateptr->display, 0, scope_width * scope_height * sizeof (guint32));
   for (i = 0; i < convolver_small; i++) {
-    foo = thisEq[i] + (stateptr->avgEq[i] >> 1);
-    stateptr->avgEq[i] = foo;
-    if (foo < 0)
-      foo = -foo;
-    if (foo > max)
-      max = foo;
+    avg = thisEq[i] + (stateptr->avgEq[i] >> 1);
+    stateptr->avgEq[i] = avg;
+    avg = abs (avg);
+    max = MAX (max, avg);
   }
   stateptr->avgMax += max - (stateptr->avgMax >> 8);
   if (stateptr->avgMax < max)
     stateptr->avgMax = max;     /* Avoid overflow */
   factor = 0x7fffffff / stateptr->avgMax;
   /* Keep the scaling sensible. */
-  if (factor > (1 << 18))
-    factor = 1 << 18;
-  if (factor < (1 << 8))
-    factor = 1 << 8;
-  for (i = 0; i < 256; i++) {
+  factor = CLAMP (factor, (1 << 8), (1 << 18));
+
+  for (i = 0; i < scope_width; i++) {
     foo = stateptr->avgEq[i] * factor;
     foo >>= 18;
-    if (foo > 63)
-      foo = 63;
-    if (foo < -63)
-      foo = -63;
-    val = (i + ((foo + 64) << 8));
-    bar = val;
-    if ((bar > 0) && (bar < (256 * 128))) {
+    foo = CLAMP (foo, -hh1, hh1);
+    bar = (i + ((foo + hh) * scope_width));
+    if ((bar > 0) && (bar < (scope_width * scope_height))) {
       loc = stateptr->display + bar;
+      /* draw up / down bars */
       if (foo < 0) {
         for (h = 0; h <= (-foo); h++) {
           *loc = stateptr->colors[h];
-          loc += 256;
+          loc += scope_width;
         }
       } else {
         for (h = 0; h <= foo; h++) {
           *loc = stateptr->colors[h];
-          loc -= 256;
+          loc -= scope_width;
         }
       }
     }
   }
 
   /* Draw grid. */
-  for (i = 16; i < 128; i += 16) {
-    for (h = 0; h < 256; h += 2) {
-      stateptr->display[(i << 8) + h] = stateptr->colors[63];
-      if (i == 64)
-        stateptr->display[(i << 8) + h + 1] = stateptr->colors[63];
-    }
-  }
-  for (i = 16; i < 256; i += 16) {
-    for (h = 0; h < 128; h += 2) {
-      stateptr->display[i + (h << 8)] = stateptr->colors[63];
-    }
-  }
+  {
+    guint32 gray = stateptr->colors[hh1];
 
+    for (i = 16; i < scope_height; i += 16) {
+      for (h = 0; h < scope_width; h += 2) {
+        stateptr->display[(i * scope_width) + h] = gray;
+        if (i == hh)
+          stateptr->display[(i * scope_width) + h + 1] = gray;
+      }
+    }
+    for (i = 16; i < scope_width; i += 16) {
+      for (h = 0; h < scope_height; h += 2) {
+        stateptr->display[i + (h * scope_width)] = gray;
+      }
+    }
+  }
   return stateptr->display;
 }

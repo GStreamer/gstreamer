@@ -17,7 +17,7 @@ struct monoscope_state {
   guint32 display[scope_width * scope_height];
 
   convolve_state *cstate;
-  guint32 colors[64];
+  guint32 colors[scope_height / 2];
 };
 
 struct monoscope_state * monoscope_init (guint32 resx, guint32 resy);

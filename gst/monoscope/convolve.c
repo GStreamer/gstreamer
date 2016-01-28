@@ -265,7 +265,7 @@ convolve_run (stack_entry * top, unsigned size, double *scratch)
 /*
  * convolve_match:
  * @lastchoice: an array of size SMALL.
- * @input: an array of siue BIG (2*SMALL)
+ * @input: an array of size BIG (2*SMALL)
  * @state: a (non-NULL) pointer returned by convolve_init.
  *
  * We find the contiguous SMALL-size sub-array of input that best matches
