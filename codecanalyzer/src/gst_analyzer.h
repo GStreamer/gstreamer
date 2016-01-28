@@ -97,7 +97,7 @@ gboolean gst_analyzer_start (GstAnalyzer *analyzer);
 
 gboolean gst_analyzer_stop (GstAnalyzer *analyzer);
 
-void gst_analyzer_destory (GstAnalyzer *analyzer);
+void gst_analyzer_destroy (GstAnalyzer *analyzer);
 
 GstAnalyzerVideoInfo *gst_analyzer_video_info_new ();
 
