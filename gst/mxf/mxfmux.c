@@ -633,18 +633,18 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
       memcpy (&p->parent.package_modified_date,
           &mux->preface->last_modified_date, sizeof (MXFTimestamp));
 
-      p->parent.n_tracks = GST_ELEMENT_CAST (mux)->numsinkpads;
+      p->parent.n_tracks = GST_ELEMENT_CAST (mux)->numsinkpads + 1;
       p->parent.tracks = g_new0 (MXFMetadataTrack *, p->parent.n_tracks);
 
-      if (p->parent.n_tracks > 1) {
+      if (p->parent.n_tracks > 2) {
         MXFMetadataMultipleDescriptor *d;
 
         p->descriptor = (MXFMetadataGenericDescriptor *)
             g_object_new (MXF_TYPE_METADATA_MULTIPLE_DESCRIPTOR, NULL);
         d = (MXFMetadataMultipleDescriptor *) p->descriptor;
-        d->n_sub_descriptors = p->parent.n_tracks;
+        d->n_sub_descriptors = p->parent.n_tracks - 1;
         d->sub_descriptors =
-            g_new0 (MXFMetadataGenericDescriptor *, p->parent.n_tracks);
+            g_new0 (MXFMetadataGenericDescriptor *, p->parent.n_tracks - 1);
 
         mxf_uuid_init (&MXF_METADATA_BASE (d)->instance_uid, mux->metadata);
         g_hash_table_insert (mux->metadata,
@@ -654,7 +654,9 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
 
       /* Tracks */
       {
-        guint n = 0;
+        guint n;
+
+        n = 1;
 
         /* Essence tracks */
         for (l = GST_ELEMENT_CAST (mux)->sinkpads; l; l = l->next) {
@@ -723,11 +725,11 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
           pad->source_package = p;
           pad->source_track = track;
           pad->descriptor->linked_track_id = n + 1;
-          if (p->parent.n_tracks == 1) {
+          if (p->parent.n_tracks == 2) {
             p->descriptor = (MXFMetadataGenericDescriptor *) pad->descriptor;
           } else {
             MXF_METADATA_MULTIPLE_DESCRIPTOR (p->
-                descriptor)->sub_descriptors[n] =
+                descriptor)->sub_descriptors[n - 1] =
                 (MXFMetadataGenericDescriptor *) pad->descriptor;
           }
 
@@ -780,8 +782,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
 
           source_package = MXF_METADATA_SOURCE_PACKAGE (cstorage->packages[1]);
           source_track =
-              MXF_METADATA_TIMELINE_TRACK (source_package->parent.tracks[n -
-                  1]);
+              MXF_METADATA_TIMELINE_TRACK (source_package->parent.tracks[n]);
 
           p->tracks[n] = (MXFMetadataTrack *)
               g_object_new (MXF_TYPE_METADATA_TIMELINE_TRACK, NULL);
@@ -853,7 +854,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
 
           memcpy (&clip->source_package_id, &cstorage->packages[1]->package_uid,
               32);
-          clip->source_track_id = n;
+          clip->source_track_id = n + 1;
 
           n++;
         }
@@ -923,7 +924,71 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
       }
     }
 
-    for (i = 0; i < cstorage->packages[1]->n_tracks; i++) {
+    /* Timecode track */
+    {
+      MXFMetadataSourcePackage *p;
+      MXFMetadataTimelineTrack *track;
+      MXFMetadataSequence *sequence;
+      MXFMetadataTimecodeComponent *component;
+      guint n = 0;
+
+      p = (MXFMetadataSourcePackage *) cstorage->packages[1];
+
+      p->parent.tracks[n] = (MXFMetadataTrack *)
+          g_object_new (MXF_TYPE_METADATA_TIMELINE_TRACK, NULL);
+      track = (MXFMetadataTimelineTrack *) p->parent.tracks[n];
+      mxf_uuid_init (&MXF_METADATA_BASE (track)->instance_uid, mux->metadata);
+      g_hash_table_insert (mux->metadata,
+          &MXF_METADATA_BASE (track)->instance_uid, track);
+      mux->metadata_list = g_list_prepend (mux->metadata_list, track);
+
+      track->parent.track_id = n + 1;
+      track->parent.track_number = 0;
+      track->parent.track_name = g_strdup ("Timecode track");
+      /* FIXME: Is this correct? */
+      memcpy (&track->edit_rate, &mux->min_edit_rate, sizeof (MXFFraction));
+
+      sequence = track->parent.sequence = (MXFMetadataSequence *)
+          g_object_new (MXF_TYPE_METADATA_SEQUENCE, NULL);
+      mxf_uuid_init (&MXF_METADATA_BASE (sequence)->instance_uid,
+          mux->metadata);
+      g_hash_table_insert (mux->metadata,
+          &MXF_METADATA_BASE (sequence)->instance_uid, sequence);
+      mux->metadata_list = g_list_prepend (mux->metadata_list, sequence);
+
+      memcpy (&sequence->data_definition,
+          mxf_metadata_track_identifier_get
+          (MXF_METADATA_TRACK_TIMECODE_12M_INACTIVE), 16);
+
+      sequence->n_structural_components = 1;
+      sequence->structural_components =
+          g_new0 (MXFMetadataStructuralComponent *, 1);
+
+      component = (MXFMetadataTimecodeComponent *)
+          g_object_new (MXF_TYPE_METADATA_TIMECODE_COMPONENT, NULL);
+      sequence->structural_components[0] =
+          (MXFMetadataStructuralComponent *) component;
+      mxf_uuid_init (&MXF_METADATA_BASE (component)->instance_uid,
+          mux->metadata);
+      g_hash_table_insert (mux->metadata,
+          &MXF_METADATA_BASE (component)->instance_uid, component);
+      mux->metadata_list = g_list_prepend (mux->metadata_list, component);
+
+      memcpy (&component->parent.data_definition,
+          &sequence->data_definition, 16);
+
+      component->start_timecode = 0;
+      if (track->edit_rate.d == 0)
+        component->rounded_timecode_base = 1;
+      else
+        component->rounded_timecode_base =
+            (((gdouble) track->edit_rate.n) /
+            ((gdouble) track->edit_rate.d) + 0.5);
+      /* TODO: drop frame */
+    }
+
+
+    for (i = 1; i < cstorage->packages[1]->n_tracks; i++) {
       MXFMetadataTrack *track = cstorage->packages[1]->tracks[i];
       guint j;
       guint32 templ;
@@ -935,7 +1000,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
       templ = track->track_number;
       n_type = 0;
 
-      for (j = 0; j < cstorage->packages[1]->n_tracks; j++) {
+      for (j = 1; j < cstorage->packages[1]->n_tracks; j++) {
         MXFMetadataTrack *tmp = cstorage->packages[1]->tracks[j];
 
         if (tmp->track_number == templ) {
@@ -944,7 +1009,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
       }
 
       n = 0;
-      for (j = 0; j < cstorage->packages[1]->n_tracks; j++) {
+      for (j = 1; j < cstorage->packages[1]->n_tracks; j++) {
         MXFMetadataTrack *tmp = cstorage->packages[1]->tracks[j];
 
         if (tmp->track_number == templ) {
@@ -1370,6 +1435,18 @@ gst_mxf_mux_handle_eos (GstMXFMux * mux)
     MXFMetadataTimelineTrack *track =
         MXF_METADATA_TIMELINE_TRACK (mux->preface->
         content_storage->packages[0]->tracks[0]);
+    MXFMetadataSequence *sequence = track->parent.sequence;
+    MXFMetadataTimecodeComponent *component =
+        MXF_METADATA_TIMECODE_COMPONENT (sequence->structural_components[0]);
+
+    sequence->duration = mux->last_gc_position;
+    component->parent.duration = mux->last_gc_position;
+  }
+
+  {
+    MXFMetadataTimelineTrack *track =
+        MXF_METADATA_TIMELINE_TRACK (mux->preface->
+        content_storage->packages[1]->tracks[0]);
     MXFMetadataSequence *sequence = track->parent.sequence;
     MXFMetadataTimecodeComponent *component =
         MXF_METADATA_TIMECODE_COMPONENT (sequence->structural_components[0]);
