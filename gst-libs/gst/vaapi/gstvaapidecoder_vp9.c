@@ -442,12 +442,15 @@ decode_picture (GstVaapiDecoderVp9 * decoder, const guchar * buf,
   if (is_clone_pic)
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
-  if (frame_hdr->display_size_enabled) {
-    crop_width = frame_hdr->display_width;
-    crop_height = frame_hdr->display_height;
-  } else if (priv->width > frame_hdr->width || priv->height > frame_hdr->height) {
+  if (priv->width > frame_hdr->width || priv->height > frame_hdr->height) {
     crop_width = frame_hdr->width;
     crop_height = frame_hdr->height;
+  }
+  if (frame_hdr->display_size_enabled &&
+      (frame_hdr->width > frame_hdr->display_width
+          || frame_hdr->height > frame_hdr->display_height)) {
+    crop_width = frame_hdr->display_width;
+    crop_height = frame_hdr->display_height;
   }
   if (crop_width || crop_height) {
     GstVaapiRectangle crop_rect;
