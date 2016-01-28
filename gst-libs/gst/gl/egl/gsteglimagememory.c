@@ -450,7 +450,7 @@ gst_egl_image_memory_from_dmabuf (GstGLContext * context,
 
   if (!img) {
     GST_WARNING_OBJECT (allocator, "eglCreateImage failed: %s",
-        gst_gl_context_egl_get_error_string ());
+        gst_gl_context_egl_get_error_string (eglGetError ()));
     return NULL;
   }
 

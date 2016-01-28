@@ -108,11 +108,9 @@ gst_gl_context_egl_new (GstGLDisplay * display)
 }
 
 const gchar *
-gst_gl_context_egl_get_error_string (void)
+gst_gl_context_egl_get_error_string (EGLint err)
 {
-  EGLint nErr = eglGetError ();
-
-  switch (nErr) {
+  switch (err) {
     case EGL_SUCCESS:
       return "EGL_SUCCESS";
     case EGL_BAD_DISPLAY:
@@ -210,7 +208,7 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl,
   } else {
     g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
         "Failed to set window configuration: %s",
-        gst_gl_context_egl_get_error_string ());
+        gst_gl_context_egl_get_error_string (eglGetError ()));
     goto failure;
   }
 
@@ -288,7 +286,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   } else {
     g_set_error (error, GST_GL_CONTEXT_ERROR,
         GST_GL_CONTEXT_ERROR_RESOURCE_UNAVAILABLE,
-        "Failed to initialize egl: %s", gst_gl_context_egl_get_error_string ());
+        "Failed to initialize egl: %s",
+        gst_gl_context_egl_get_error_string (eglGetError ()));
     goto failure;
   }
 
@@ -318,7 +317,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     if (!eglBindAPI (EGL_OPENGL_API)) {
       g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
           "Failed to bind OpenGL API: %s",
-          gst_gl_context_egl_get_error_string ());
+          gst_gl_context_egl_get_error_string (eglGetError ()));
       goto failure;
     }
 
@@ -329,7 +328,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     if (!eglBindAPI (EGL_OPENGL_ES_API)) {
       g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
           "Failed to bind OpenGL|ES API: %s",
-          gst_gl_context_egl_get_error_string ());
+          gst_gl_context_egl_get_error_string (eglGetError ()));
       goto failure;
     }
 
@@ -386,7 +385,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     g_set_error (error, GST_GL_CONTEXT_ERROR,
         GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
         "Failed to create a OpenGL context: %s",
-        gst_gl_context_egl_get_error_string ());
+        gst_gl_context_egl_get_error_string (eglGetError ()));
     goto failure;
   }
   /* FIXME do we want a window vfunc ? */
@@ -458,7 +457,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     } else {
       g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
           "Failed to create window surface: %s",
-          gst_gl_context_egl_get_error_string ());
+          gst_gl_context_egl_get_error_string (eglGetError ()));
       goto failure;
     }
   }
@@ -540,7 +539,7 @@ gst_gl_context_egl_activate (GstGLContext * context, gboolean activate)
         egl->egl_surface = EGL_NO_SURFACE;
         if (!result) {
           GST_ERROR_OBJECT (context, "Failed to destroy old window surface: %s",
-              gst_gl_context_egl_get_error_string ());
+              gst_gl_context_egl_get_error_string (eglGetError ()));
           goto done;
         }
       }
@@ -551,21 +550,22 @@ gst_gl_context_egl_activate (GstGLContext * context, gboolean activate)
 
       if (egl->egl_surface == EGL_NO_SURFACE) {
         GST_ERROR_OBJECT (context, "Failed to create window surface: %s",
-            gst_gl_context_egl_get_error_string ());
+            gst_gl_context_egl_get_error_string (eglGetError ()));
         result = FALSE;
         goto done;
       }
     }
     result = eglMakeCurrent (egl->egl_display, egl->egl_surface,
         egl->egl_surface, egl->egl_context);
-  } else
+  } else {
     result = eglMakeCurrent (egl->egl_display, EGL_NO_SURFACE,
         EGL_NO_SURFACE, EGL_NO_CONTEXT);
+  }
 
   if (!result) {
     GST_ERROR_OBJECT (context,
         "Failed to bind context to the current rendering thread: %s",
-        gst_gl_context_egl_get_error_string ());
+        gst_gl_context_egl_get_error_string (eglGetError ()));
   }
 
 done:
