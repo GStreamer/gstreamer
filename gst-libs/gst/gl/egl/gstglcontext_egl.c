@@ -30,6 +30,7 @@
 
 #include "gstglcontext_egl.h"
 #include <gst/gl/egl/gstegl.h>
+#include "../utils/opengl_versions.h"
 
 #if GST_GL_HAVE_WINDOW_X11
 #include "../x11/gstglwindow_x11.h"
@@ -171,19 +172,36 @@ gst_gl_context_egl_choose_format (GstGLContext * context, GError ** error)
 }
 
 static gboolean
-gst_gl_context_egl_choose_config (GstGLContextEGL * egl,
-    GstGLContext * other_context, GError ** error)
+gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
+    gint major, GError ** error)
 {
+  gboolean create_context;
   EGLint numConfigs;
   gint i = 0;
   EGLint config_attrib[20];
 
+  create_context =
+      gst_gl_check_extension ("EGL_KHR_create_context", egl->egl_exts);
+  /* silence unused warnings */
+  (void) create_context;
+
   config_attrib[i++] = EGL_SURFACE_TYPE;
   config_attrib[i++] = EGL_WINDOW_BIT;
   config_attrib[i++] = EGL_RENDERABLE_TYPE;
-  if (egl->gl_api & GST_GL_API_GLES2)
-    config_attrib[i++] = EGL_OPENGL_ES2_BIT;
-  else
+  if (gl_api & GST_GL_API_GLES2) {
+    if (major == 3) {
+#if defined(EGL_KHR_create_context)
+      if (create_context) {
+        config_attrib[i++] = EGL_OPENGL_ES3_BIT_KHR;
+      } else
+#endif
+      {
+        return FALSE;
+      }
+    } else {
+      config_attrib[i++] = EGL_OPENGL_ES2_BIT;
+    }
+  } else
     config_attrib[i++] = EGL_OPENGL_BIT;
 #if defined(USE_EGL_RPI) && GST_GL_HAVE_WINDOW_WAYLAND
   /* The configurations with a=0 seems to be buggy whereas
@@ -218,6 +236,71 @@ failure:
   return FALSE;
 }
 
+static EGLContext
+_create_context_with_flags (GstGLContextEGL * egl, EGLContext share_context,
+    GstGLAPI gl_api, gint major, gint minor, gint contextFlags,
+    gint profileMask)
+{
+  gboolean create_context;
+#define N_ATTRIBS 20
+  gint attribs[N_ATTRIBS];
+  gint n = 0;
+
+  /* fail creation of apis/versions/flags that require EGL_KHR_create_context
+   * if the extension doesn't exist, namely:0
+   *
+   * - profile mask
+   * - context flags
+   * - GL3 > 3.1
+   * - GLES2 && minor > 0
+   */
+  create_context =
+      gst_gl_check_extension ("EGL_KHR_create_context", egl->egl_exts);
+  (void) create_context;
+  if (!create_context && (profileMask || contextFlags
+          || ((gl_api & GST_GL_API_OPENGL3)
+              && GST_GL_CHECK_GL_VERSION (major, minor, 3, 2))
+          || ((gl_api & GST_GL_API_GLES2) && minor > 0))) {
+    return 0;
+  }
+
+  GST_DEBUG_OBJECT (egl, "attempting to create OpenGL%s context version %d.%d "
+      "flags %x profile %x", gl_api & GST_GL_API_GLES2 ? " ES" : "", major,
+      minor, contextFlags, profileMask);
+
+#if defined(EGL_KHR_create_context)
+  if (create_context) {
+    if (major) {
+      attribs[n++] = EGL_CONTEXT_MAJOR_VERSION_KHR;
+      attribs[n++] = major;
+    }
+    if (minor) {
+      attribs[n++] = EGL_CONTEXT_MINOR_VERSION_KHR;
+      attribs[n++] = minor;
+    }
+    if (contextFlags) {
+      attribs[n++] = EGL_CONTEXT_FLAGS_KHR;
+      attribs[n++] = contextFlags;
+    }
+    if (profileMask) {
+      attribs[n++] = EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR;
+      attribs[n++] = profileMask;
+    }
+  } else
+#endif
+  {
+    attribs[n++] = EGL_CONTEXT_CLIENT_VERSION;
+    attribs[n++] = major;
+  }
+  attribs[n++] = EGL_NONE;
+
+  g_assert (n < N_ATTRIBS);
+#undef N_ATTRIBS
+
+  return eglCreateContext (egl->egl_display, egl->egl_config, share_context,
+      attribs);
+}
+
 static gboolean
 gst_gl_context_egl_create_context (GstGLContext * context,
     GstGLAPI gl_api, GstGLContext * other_context, GError ** error)
@@ -225,11 +308,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   GstGLContextEGL *egl;
   GstGLWindow *window = NULL;
   EGLNativeWindowType window_handle = (EGLNativeWindowType) 0;
-  gint i = 0;
-  EGLint context_attrib[5];
   EGLint majorVersion;
   EGLint minorVersion;
-  const gchar *egl_exts;
   gboolean need_surface = TRUE;
   guintptr external_gl_context = 0;
   GstGLDisplay *display;
@@ -249,7 +329,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     external_gl_context = gst_gl_context_get_gl_context (other_context);
   }
 
-  if ((gl_api & (GST_GL_API_OPENGL | GST_GL_API_GLES2)) == GST_GL_API_NONE) {
+  if ((gl_api & (GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2)) ==
+      GST_GL_API_NONE) {
     g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_WRONG_API,
         "EGL supports opengl or gles2");
     goto failure;
@@ -291,7 +372,12 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     goto failure;
   }
 
-  if (gl_api & GST_GL_API_OPENGL) {
+  egl->egl_exts = eglQueryString (egl->egl_display, EGL_EXTENSIONS);
+
+  if (gl_api & (GST_GL_API_OPENGL | GST_GL_API_OPENGL3)) {
+    GstGLAPI chosen_gl_api = 0;
+    gint i;
+
     /* egl + opengl only available with EGL 1.4+ */
     if (majorVersion == 1 && minorVersion <= 3) {
       if ((gl_api & ~GST_GL_API_OPENGL) == GST_GL_API_NONE) {
@@ -321,9 +407,66 @@ gst_gl_context_egl_create_context (GstGLContext * context,
       goto failure;
     }
 
-    GST_INFO ("Using OpenGL");
-    egl->gl_api = GST_GL_API_OPENGL;
+    GST_INFO ("Bound OpenGL");
+
+    /* api, version only matters for gles */
+    if (!gst_gl_context_egl_choose_config (egl, GST_GL_API_OPENGL, 0, error)) {
+      g_assert (error == NULL || *error != NULL);
+      goto failure;
+    }
+
+    for (i = 0; i < G_N_ELEMENTS (opengl_versions); i++) {
+      gint profileMask = 0;
+      gint contextFlags = 0;
+
+      if (GST_GL_CHECK_GL_VERSION (opengl_versions[i].major,
+              opengl_versions[i].minor, 3, 2)) {
+        /* skip gl3 contexts if requested */
+        if ((gl_api & GST_GL_API_OPENGL3) == 0)
+          continue;
+
+        chosen_gl_api = GST_GL_API_OPENGL3;
+#if defined(EGL_KHR_create_context)
+        profileMask |= EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR;
+        contextFlags |= EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
+#endif
+      } else if (opengl_versions[i].major == 3 && opengl_versions[i].minor == 1) {
+        /* skip 3.1, the implementation is free to give us either a core or a
+         * compatibility context (we have no say) */
+        continue;
+      } else {
+        /* skip legacy contexts if requested */
+        if ((gl_api & GST_GL_API_OPENGL) == 0)
+          continue;
+
+        chosen_gl_api = GST_GL_API_OPENGL;
+      }
+
+      egl->egl_context =
+          _create_context_with_flags (egl, (EGLContext) external_gl_context,
+          chosen_gl_api, opengl_versions[i].major,
+          opengl_versions[i].minor, contextFlags, profileMask);
+
+      if (egl->egl_context)
+        break;
+
+#if defined(EGL_KHR_create_context)
+      profileMask &= ~EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
+
+      egl->egl_context =
+          _create_context_with_flags (egl, (EGLContext) external_gl_context,
+          chosen_gl_api, opengl_versions[i].major,
+          opengl_versions[i].minor, contextFlags, profileMask);
+
+      if (egl->egl_context)
+        break;
+#endif
+    }
+
+    egl->gl_api = chosen_gl_api;
   } else if (gl_api & GST_GL_API_GLES2) {
+    gint i;
+
   try_gles2:
     if (!eglBindAPI (EGL_OPENGL_ES_API)) {
       g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
@@ -332,51 +475,42 @@ gst_gl_context_egl_create_context (GstGLContext * context,
       goto failure;
     }
 
-    GST_INFO ("Using OpenGL|ES 2.0");
+    GST_INFO ("Bound OpenGL|ES");
+
+    for (i = 0; i < G_N_ELEMENTS (gles2_versions); i++) {
+      gint profileMask = 0;
+      gint contextFlags = 0;
+
+      if (!gst_gl_context_egl_choose_config (egl, GST_GL_API_GLES2,
+              gles2_versions[i].major, error)) {
+        continue;
+      }
+#if defined(EGL_KHR_create_context)
+      /* try a debug context */
+      contextFlags |= EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
+
+      egl->egl_context =
+          _create_context_with_flags (egl, (EGLContext) external_gl_context,
+          GST_GL_API_GLES2, gles2_versions[i].major,
+          gles2_versions[i].minor, contextFlags, profileMask);
+
+      if (egl->egl_context)
+        break;
+
+      /* try without a debug context */
+      contextFlags &= ~EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
+#endif
+
+      egl->egl_context =
+          _create_context_with_flags (egl, (EGLContext) external_gl_context,
+          GST_GL_API_GLES2, gles2_versions[i].major,
+          gles2_versions[i].minor, contextFlags, profileMask);
+
+      if (egl->egl_context)
+        break;
+    }
     egl->gl_api = GST_GL_API_GLES2;
   }
-
-  if (!gst_gl_context_egl_choose_config (egl, other_context, error)) {
-    g_assert (error == NULL || *error != NULL);
-    goto failure;
-  }
-
-  egl_exts = eglQueryString (egl->egl_display, EGL_EXTENSIONS);
-
-  GST_DEBUG ("about to create gl context");
-
-  if (egl->gl_api & GST_GL_API_GLES2) {
-    context_attrib[i++] = EGL_CONTEXT_CLIENT_VERSION;
-    context_attrib[i++] = 2;
-  }
-#if !defined(GST_DISABLE_GST_DEBUG) && defined(EGL_KHR_create_context)
-  if (gst_gl_check_extension ("EGL_KHR_create_context", egl_exts)) {
-    context_attrib[i++] = EGL_CONTEXT_FLAGS_KHR;
-    context_attrib[i++] = EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
-  }
-#endif
-  context_attrib[i++] = EGL_NONE;
-
-  egl->egl_context =
-      eglCreateContext (egl->egl_display, egl->egl_config,
-      (EGLContext) external_gl_context, context_attrib);
-
-#ifdef EGL_KHR_create_context
-  if (egl->egl_context == EGL_NO_CONTEXT && egl->gl_api & GST_GL_API_GLES2
-      && eglGetError () != EGL_SUCCESS) {
-    /* try without EGL_CONTEXT_FLAGS flags as it was added to
-     * EGL_KHR_create_context for gles contexts */
-    int i;
-    for (i = 0; i < G_N_ELEMENTS (context_attrib); i++) {
-      if (context_attrib[i] == EGL_CONTEXT_FLAGS_KHR ||
-          context_attrib[i] == EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR)
-        context_attrib[i] = EGL_NONE;
-    }
-    egl->egl_context =
-        eglCreateContext (egl->egl_display, egl->egl_config,
-        (EGLContext) external_gl_context, context_attrib);
-  }
-#endif
 
   if (egl->egl_context != EGL_NO_CONTEXT) {
     GST_INFO ("gl context created: %" G_GUINTPTR_FORMAT,
@@ -427,7 +561,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
         window_handle, NULL);
     /* Store window handle for later comparision */
     egl->window_handle = window_handle;
-  } else if (!gst_gl_check_extension ("EGL_KHR_surfaceless_context", egl_exts)) {
+  } else if (!gst_gl_check_extension ("EGL_KHR_surfaceless_context",
+          egl->egl_exts)) {
     EGLint surface_attrib[7];
     gint j = 0;
 
@@ -468,7 +603,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
         "eglCreateImage");
     egl->eglDestroyImage = gst_gl_context_get_proc_address (context,
         "eglDestroyImage");
-  } else if (gst_gl_check_extension ("EGL_KHR_image_base", egl_exts)) {
+  } else if (gst_gl_check_extension ("EGL_KHR_image_base", egl->egl_exts)) {
     egl->eglCreateImage = gst_gl_context_get_proc_address (context,
         "eglCreateImageKHR");
     egl->eglDestroyImage = gst_gl_context_get_proc_address (context,
@@ -585,7 +720,13 @@ gst_gl_context_egl_swap_buffers (GstGLContext * context)
 
   egl = GST_GL_CONTEXT_EGL (context);
 
-  eglSwapBuffers (egl->egl_display, egl->egl_surface);
+  if (!eglSwapBuffers (egl->egl_display, egl->egl_surface)) {
+    EGLint err = eglGetError ();
+
+    if (err == EGL_CONTEXT_LOST) {
+      gst_gl_context_lost_context (context);
+    }
+  }
 }
 
 static GstGLAPI

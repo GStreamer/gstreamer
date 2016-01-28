@@ -1388,6 +1388,12 @@ failure:
   return FALSE;
 }
 
+void
+gst_gl_context_lost_context (GstGLContext * context)
+{
+  /* do stuff */
+}
+
 /**
  * gst_gl_context_get_gl_context:
  * @context: a #GstGLContext:
