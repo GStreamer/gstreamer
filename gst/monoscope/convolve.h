@@ -31,16 +31,10 @@
 extern "C" {
 #endif
 
-/* convolve_match takes two blocks, one twice the size of the other.  The
- * sizes of these are CONVOLVE_BIG and CONVOLVE_SMALL respectively. */
-#define CONVOLVE_DEPTH 8
-#define CONVOLVE_SMALL (1 << CONVOLVE_DEPTH)
-#define CONVOLVE_BIG (CONVOLVE_SMALL * 2)
-
-/* Convolution stuff */
+/* Convolution state */
 typedef struct _struct_convolve_state convolve_state;
 
-convolve_state *convolve_init (void);
+convolve_state *convolve_init (int depth);
 void convolve_close (convolve_state * state);
 
 int convolve_match (const int * lastchoice,

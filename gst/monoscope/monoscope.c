@@ -63,12 +63,12 @@ monoscope_init (guint32 resx, guint32 resy)
   struct monoscope_state *stateptr;
 
   /* I didn't program monoscope to only do 256*128, but it works that way */
-  g_return_val_if_fail (resx == 256, 0);
-  g_return_val_if_fail (resy == 128, 0);
+  g_return_val_if_fail (resx == scope_width, 0);
+  g_return_val_if_fail (resy == scope_height, 0);
   stateptr = calloc (1, sizeof (struct monoscope_state));
   if (stateptr == 0)
     return 0;
-  stateptr->cstate = convolve_init ();
+  stateptr->cstate = convolve_init (convolver_depth);
   colors_init (stateptr->colors);
   return stateptr;
 }
@@ -81,9 +81,8 @@ monoscope_close (struct monoscope_state *stateptr)
 }
 
 guint32 *
-monoscope_update (struct monoscope_state *stateptr, gint16 data[512])
+monoscope_update (struct monoscope_state *stateptr, gint16 data[convolver_big])
 {
-  /* Note that CONVOLVE_BIG must == data size here, ie 512. */
   /* Really, we want samples evenly spread over the available data.
    * Just taking a continuous chunk will do for now, though. */
   int i;
@@ -95,14 +94,14 @@ monoscope_update (struct monoscope_state *stateptr, gint16 data[512])
   int factor;
   int val;
   int max = 1;
-  short *thisEq = stateptr->copyEq;
+  gint16 *thisEq = stateptr->copyEq;
 
-  memcpy (thisEq, data, sizeof (short) * CONVOLVE_BIG);
-  val = convolve_match (stateptr->avgEq, stateptr->copyEq, stateptr->cstate);
+  memcpy (thisEq, data, sizeof (short) * convolver_big);
+  val = convolve_match (stateptr->avgEq, thisEq, stateptr->cstate);
   thisEq += val;
 
-  memset (stateptr->display, 0, 256 * 128 * sizeof (guint32));
-  for (i = 0; i < 256; i++) {
+  memset (stateptr->display, 0, scope_width * scope_height * sizeof (guint32));
+  for (i = 0; i < convolver_small; i++) {
     foo = thisEq[i] + (stateptr->avgEq[i] >> 1);
     stateptr->avgEq[i] = foo;
     if (foo < 0)
