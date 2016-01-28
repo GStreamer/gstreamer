@@ -575,7 +575,7 @@ gst_multi_socket_sink_handle_client_read (GstMultiSocketSink * sink,
     GST_DEBUG_OBJECT (sink, "%s client wants us to read", mhclient->debug);
 
     navail = g_socket_get_available_bytes (mhclient->handle.socket);
-    if (navail <= 0)
+    if (navail < 0)
       break;
 
     nread =
@@ -588,6 +588,9 @@ gst_multi_socket_sink_handle_client_read (GstMultiSocketSink * sink,
       mhclient->status = GST_CLIENT_STATUS_CLOSED;
       ret = FALSE;
     } else if (nread < 0) {
+      if (err->code == G_IO_ERROR_WOULD_BLOCK)
+        break;
+
       GST_WARNING_OBJECT (sink, "%s could not read: %s",
           mhclient->debug, err->message);
       mhclient->status = GST_CLIENT_STATUS_ERROR;
