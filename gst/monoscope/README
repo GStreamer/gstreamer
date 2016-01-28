@@ -3,11 +3,7 @@ alsaplayer.
 
 The monoscope convolution matching code was written by Ralph Loader.
 
-The monoscope.c and monoscope.h files are under the BSD license (without advertising clause). 
+The monoscope.c and monoscope.h files are under the BSD license (without advertising clause).
 
 This implementation is taken from alsaplayer version 0.99.54, at
 http://www.alsaplayer.org/
-
-Note: only one instance of this plugin may be created at a time: it has a
-lot of static data.  This should be fixed (and it shouldn't be hard to do
-so, either).
