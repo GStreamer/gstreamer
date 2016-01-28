@@ -39,12 +39,6 @@ m4_define([va_api_drm_version], [0.33.0])
 m4_define([va_api_x11_version], [0.31.0])
 m4_define([va_api_wld_version], [0.33.0])
 
-# libva package version number
-m4_define([libva_enc_package_version], [1.2.0])
-m4_define([libva_drm_package_version], [1.1.0])
-m4_define([libva_x11_package_version], [1.0.3])
-m4_define([libva_wld_package_version], [1.1.0])
-
 # gtk-doc version number
 # XXX: introspection annotations require gtk-doc >= 1.12
 m4_define([gtkdoc_version], [1.9])
@@ -62,15 +56,6 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CANONICAL_TARGET
 
 AM_INIT_AUTOMAKE([1.11 tar-ustar no-dist-gzip dist-bzip2])
-
-TODAY="`LC_ALL=C date +'%a, %d %b %Y %X %z'`"
-AC_SUBST(TODAY)
-
-LIBVA_PACKAGE_VERSION=libva_x11_package_version
-AC_SUBST(LIBVA_PACKAGE_VERSION)
-
-WAYLAND_API_VERSION=wayland_api_version
-AC_SUBST(WAYLAND_API_VERSION)
 
 dnl Use pretty build output with automake >= 1.11
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])], [
@@ -134,12 +119,10 @@ GTKDOC_VERSION=gtkdoc_version
 m4_ifdef([GTK_DOC_CHECK], [
 GTK_DOC_CHECK([$GTKDOC_VERSION], [--flavour no-tmpl])], [
 AM_CONDITIONAL([ENABLE_GTK_DOC], [false])])
-AC_SUBST(GTKDOC_VERSION)
 
 dnl Check for GLib
 GLIB_VERSION_REQUIRED=glib_version
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= $GLIB_VERSION_REQUIRED])
-AC_SUBST(GLIB_VERSION_REQUIRED)
 
 dnl Check to see if dlopen is in default libraries (like Solaris, which
 dnl has it in libc), or if libdl is needed to get it.
@@ -159,9 +142,6 @@ dnl Versions for GStreamer and plugins-base
 GST_VERSION_REQUIRED=gst_version
 GST_PLUGINS_BASE_VERSION_REQUIRED=gst_plugins_base_version
 GST_PLUGINS_BAD_VERSION_REQUIRED=gst_plugins_bad_version
-AC_SUBST(GST_VERSION_REQUIRED)
-AC_SUBST(GST_PLUGINS_BASE_VERSION_REQUIRED)
-AC_SUBST(GST_PLUGINS_BAD_VERSION_REQUIRED)
 
 dnl GStreamer Core
 PKG_CHECK_MODULES([GST],
@@ -256,19 +236,8 @@ if test "$enable_egl" = "yes" -a $HAVE_GSTGL -ne 1; then
 fi
 
 GST_VAAPI_MAJOR_VERSION=`expr gst_vaapi_lt_current - gst_vaapi_lt_current_bias`
-AC_SUBST(GST_VAAPI_MAJOR_VERSION)
-
 AC_DEFINE_UNQUOTED([GST_VAAPI_MAJOR_VERSION_S], ["$GST_VAAPI_MAJOR_VERSION"],
     [Defined to the string representation of gstreamer-vaapi major version])
-
-dnl GST_VAAPI_LT_LDFLAGS:
-GST_VAAPI_LT_CURRENT="$GST_VAAPI_MAJOR_VERSION"
-GST_VAAPI_LT_REV=gst_vaapi_lt_revision
-GST_VAAPI_LT_AGE=gst_vaapi_lt_age
-GST_VAAPI_LT_VERSION="$GST_VAAPI_LT_CURRENT:$GST_VAAPI_LT_REV:$GST_VAAPI_LT_AGE"
-GST_VAAPI_LT_LDFLAGS="-version-info $GST_VAAPI_LT_VERSION"
-AC_SUBST(GST_VAAPI_LT_VERSION)
-AC_SUBST(GST_VAAPI_LT_LDFLAGS)
 
 dnl GST_ALL_LDFLAGS:
 dnl LDFLAGS really should only contain flags, not libs - they get added before
@@ -475,7 +444,6 @@ if test "$enable_egl" = "yes" -a $GLES_VERSION_MASK -ne 0; then
     dnl Check for GMODULE
     GMODULE_VERSION_REQUIRED=gmodule_version
     PKG_CHECK_MODULES([GMODULE], [gmodule-2.0 >= $GMODULE_VERSION_REQUIRED])
-    AC_SUBST(GMODULE_VERSION_REQUIRED)
 fi
 
 dnl Check for Wayland
@@ -497,15 +465,8 @@ dnl -- VA-API                                                                --
 dnl ---------------------------------------------------------------------------
 
 dnl Core API
-LIBVA_PKGNAME="libva"
-PKG_CHECK_MODULES(LIBVA, [$LIBVA_PKGNAME >= va_api_version])
-AC_SUBST(LIBVA_PKGNAME)
-
-VA_VERSION=`$PKG_CONFIG --modversion libva`
-VA_MAJOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f1`
-VA_MINOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f2`
-VA_MICRO_VERSION=`echo "$VA_VERSION" | cut -d'.' -f3`
-VA_VERSION_STR="$VA_VERSION"
+PKG_CHECK_MODULES([LIBVA], [libva >= va_api_version])
+VA_VERSION_STR=`$PKG_CONFIG --modversion libva`
 
 dnl VA/DRM API
 HAVE_VA_DRM=0
@@ -522,13 +483,10 @@ if test $USE_DRM -eq 1; then
 fi
 
 dnl VA/X11 API
-HAVE_VA_X11=0
-LIBVA_X11_PKGNAME="libva-x11"
 if test $USE_X11 -eq 1; then
-    PKG_CHECK_MODULES(LIBVA_X11, [$LIBVA_X11_PKGNAME >= va_api_x11_version],
-        [HAVE_VA_X11=1], [USE_X11=0])
+    PKG_CHECK_MODULES(LIBVA_X11, [libva-x11 >= va_api_x11_version],
+        [], [USE_X11=0])
 fi
-AC_SUBST(LIBVA_X11_PKGNAME)
 
 dnl Check for va_dec_jpeg.h header
 saved_CPPFLAGS="$CPPFLAGS"
@@ -869,9 +827,6 @@ AC_DEFINE_UNQUOTED([USE_GLES_VERSION_MASK], [$GLES_VERSION_MASK],
 AC_DEFINE_UNQUOTED(USE_WAYLAND, $USE_WAYLAND,
     [Defined to 1 if WAYLAND is enabled])
 AM_CONDITIONAL(USE_WAYLAND, test $USE_WAYLAND -eq 1)
-
-pkgconfigdir=${libdir}/pkgconfig
-AC_SUBST(pkgconfigdir)
 
 AC_CONFIG_FILES([
     Makefile
