@@ -616,11 +616,11 @@ gst_multi_socket_sink_handle_client_read (GstMultiSocketSink * sink,
   ret = TRUE;
 
   navail = g_socket_get_available_bytes (mhclient->handle.socket);
-  if (navail <= 0)
+  if (navail < 0)
     return TRUE;
 
   /* only collect the data in a buffer when we need to send it with an event */
-  do_event = sink->send_messages;
+  do_event = sink->send_messages && navail > 0;
   if (do_event) {
     omem = mem = g_malloc (navail);
     maxmem = navail;
@@ -632,7 +632,7 @@ gst_multi_socket_sink_handle_client_read (GstMultiSocketSink * sink,
   /* just Read 'n' Drop, could also just drop the client as it's not supposed
    * to write to us except for closing the socket, I guess it's because we
    * like to listen to our customers. */
-  while (navail > 0) {
+  do {
     GST_DEBUG_OBJECT (sink, "%s client wants us to read", mhclient->debug);
 
     nread =
@@ -647,6 +647,9 @@ gst_multi_socket_sink_handle_client_read (GstMultiSocketSink * sink,
       ret = FALSE;
       break;
     } else if (nread < 0) {
+      if (err->code == G_IO_ERROR_WOULD_BLOCK)
+        break;
+
       GST_WARNING_OBJECT (sink, "%s could not read: %s",
           mhclient->debug, err->message);
       mhclient->status = GST_CLIENT_STATUS_ERROR;
@@ -657,7 +660,7 @@ gst_multi_socket_sink_handle_client_read (GstMultiSocketSink * sink,
     if (do_event)
       mem += nread;
     first = FALSE;
-  }
+  } while (navail > 0);
   g_clear_error (&err);
 
   if (do_event) {
