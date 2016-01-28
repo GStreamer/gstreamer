@@ -179,21 +179,27 @@ PKG_CHECK_MODULES([GST_CODEC_PARSERS],
 dnl ... VP9 parser, with required extensions
 HAVE_GST_VP9_PARSER=0
 AC_CACHE_CHECK([for VP9 parser],
-    ac_cv_have_gst_vp9_parser, [
+  [ac_cv_have_gst_vp9_parser],
+  [
     saved_CPPFLAGS="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_CODEC_PARSERS_CFLAGS"
     saved_LIBS="$LIBS"
     LIBS="$LIBS $GST_LIBS $GST_CODEC_PARSERS_LIBS"
     AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <gst/codecparsers/gstvp9parser.h>]],
-            [[GstVp9FrameHdr frame_hdr;]])],
-        [ac_cv_have_gst_vp9_parser="yes" HAVE_GST_VP9_PARSER=1],
-        [ac_cv_have_gst_vp9_parser="no"]
-    )
+      [
+        AC_LANG_PROGRAM(
+          [[
+#include <gst/codecparsers/gstvp9parser.h>
+          ]],
+          [[
+GstVp9FrameHdr frame_hdr;
+          ]])
+      ],
+      [ac_cv_have_gst_vp9_parser="yes" HAVE_GST_VP9_PARSER=1],
+      [ac_cv_have_gst_vp9_parser="no"])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
-])
+  ])
 
 AS_IF([test "x$enable_glx" = "xyes" -o "x$enable_egl" = "xyes"],
   [enable_opengl="yes"], [enable_opengl="no"])
@@ -201,29 +207,34 @@ AS_IF([test "x$enable_glx" = "xyes" -o "x$enable_egl" = "xyes"],
 dnl ... opengl helper libraries
 HAVE_GSTGL=0
 if test "x$enable_opengl" = "xyes"; then
-    PKG_CHECK_MODULES([GST_GL],
-        [gstreamer-gl-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED],
-        [HAVE_GSTGL=1], [HAVE_GSTGL=0])
-fi
-
-if test $HAVE_GSTGL -eq 1; then
-    AC_CACHE_CHECK([for GStreamer OpenGL helper libraries],
-        [ac_cv_have_gst_gl_helpers], [
-        saved_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$CPPFLAGS $GST_GL_CFLAGS $GST_VIDEO_CFLAGS"
-        saved_LIBS="$LIBS"
-        LIBS="$saved_LIBS"
-        AC_CHECK_HEADERS([gst/gl/gl.h], [:], [HAVE_GSTGL=0])
-        AC_COMPILE_IFELSE(
-            [AC_LANG_PROGRAM(
-                [[#include <gst/gl/gl.h>]],
-                [[GstGLContext gl_context;]])],
+  PKG_CHECK_MODULES([GST_GL],
+    [gstreamer-gl-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED],
+    [
+      HAVE_GSTGL=1
+      AC_CACHE_CHECK([for GStreamer OpenGL helper libraries],
+        [ac_cv_have_gst_gl_helpers],
+        [
+          saved_CPPFLAGS="$CPPFLAGS"
+          CPPFLAGS="$CPPFLAGS $GST_GL_CFLAGS $GST_VIDEO_CFLAGS"
+          saved_LIBS="$LIBS"
+          LIBS="$saved_LIBS"
+          AC_CHECK_HEADERS([gst/gl/gl.h], [], [HAVE_GSTGL=0])
+          AC_COMPILE_IFELSE(
+            [
+              AC_LANG_PROGRAM(
+                [[
+#include <gst/gl/gl.h>
+                ]],
+                [[
+GstGLContext gl_context;
+                ]])
+            ],
             [ac_cv_have_gst_gl_helpers="yes"],
-            [ac_cv_have_gst_gl_helpers="no" HAVE_GSTGL=0]
-        )
-        CPPFLAGS="$saved_CPPFLAGS"
-        LIBS="$saved_LIBS"
-    ])
+            [ac_cv_have_gst_gl_helpers="no" HAVE_GSTGL=0])
+          CPPFLAGS="$saved_CPPFLAGS"
+          LIBS="$saved_LIBS"
+        ])
+    ], [])
 fi
 AM_CONDITIONAL([USE_GST_GL_HELPERS], [test $HAVE_GSTGL -eq 1])
 AC_DEFINE_UNQUOTED([USE_GST_GL_HELPERS], [$HAVE_GSTGL],
@@ -273,184 +284,186 @@ dnl ---------------------------------------------------------------------------
 dnl Check for DRM/libudev
 USE_DRM=0
 if test "x$enable_drm" = "xyes"; then
-    PKG_CHECK_MODULES(DRM, [libdrm], [USE_DRM=1], [USE_DRM=0])
-    PKG_CHECK_MODULES(UDEV, [libudev], [:], [USE_DRM=0])
-
-    if test $USE_DRM -eq 1; then
-        saved_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$CPPFLAGS $DRM_CFLAGS"
-        AC_CHECK_HEADERS([drm_fourcc.h], [:], [USE_DRM=0])
-        CPPFLAGS="$saved_CPPFLAGS"
-    fi
+  PKG_CHECK_MODULES([DRM], [libdrm libudev],
+    [
+      USE_DRM=1
+      saved_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS $DRM_CFLAGS"
+      AC_CHECK_HEADERS([drm_fourcc.h], [], [USE_DRM=0])
+      CPPFLAGS="$saved_CPPFLAGS"
+    ], [])
 fi
 
 dnl Check for X11
 USE_X11=0
 if test "x$enable_x11" = "xyes"; then
-    PKG_CHECK_MODULES(X11, [x11], [USE_X11=1], [USE_X11=0])
-    if test $USE_X11 -eq 1; then
-        saved_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$CPPFLAGS $X11_CFLAGS"
-        AC_CHECK_HEADERS([X11/Xlib.h X11/Xutil.h X11/Xatom.h], [:], [USE_X11=0])
-        CPPFLAGS="$saved_CPPFLAGS"
-    fi
+  PKG_CHECK_MODULES([X11], [x11],
+    [
+      USE_X11=1
+      saved_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS $X11_CFLAGS"
+      AC_CHECK_HEADERS([X11/Xlib.h X11/Xutil.h X11/Xatom.h], [], [USE_X11=0])
+      CPPFLAGS="$saved_CPPFLAGS"
+    ], [])
 fi
 
-dnl Check for XKB library
 HAVE_XKBLIB=0
-if test $USE_X11 -eq 1; then
-    AC_CHECK_HEADERS([X11/XKBlib.h], [HAVE_XKBLIB=1], [:])
-fi
-if test $HAVE_XKBLIB -eq 1; then
-    AC_DEFINE_UNQUOTED([HAVE_XKBLIB], 1,
-        [Defined to 1 if the XKB extension exists.])
-fi
-
-dnl Check for XRandR
 HAVE_XRANDR=0
-if test $USE_X11 -eq 1; then
-    HAVE_XRANDR=1
-    PKG_CHECK_MODULES([XRANDR], [xrandr], [:], [HAVE_XRANDR=0])
-    if test $HAVE_XRANDR -eq 1; then
-        saved_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$CPPFLAGS $XRANDR_CFLAGS"
-        AC_CHECK_HEADERS([X11/extensions/Xrandr.h], [:], [HAVE_XRANDR=0])
-        CPPFLAGS="$saved_CPPFLAGS"
-    fi
-fi
-if test $HAVE_XRANDR -eq 1; then
-    AC_DEFINE_UNQUOTED(HAVE_XRANDR, 1,
-        [Defined to 1 if the XRandR extension exists.])
-fi
-
-dnl Check for XRender
 HAVE_XRENDER=0
 if test $USE_X11 -eq 1; then
-    HAVE_XRENDER=1
-    PKG_CHECK_MODULES([XRENDER], [xrender], [:], [HAVE_XRENDER=0])
-    if test $HAVE_XRENDER -eq 1; then
-        saved_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$CPPFLAGS $XRENDER_CFLAGS"
-        AC_CHECK_HEADERS([X11/extensions/Xrender.h], [:], [HAVE_XRENDER=0])
-        CPPFLAGS="$saved_CPPFLAGS"
-    fi
+  dnl Check for XKB library
+  HAVE_XKBLIB=1
+  AC_CHECK_HEADERS([X11/XKBlib.h], [], [HAVE_XKBLIB=0])
+
+  dnl Check for XRandR
+  PKG_CHECK_MODULES([XRANDR], [xrandr],
+    [
+      HAVE_XRANDR=1
+      saved_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS $XRANDR_CFLAGS"
+      AC_CHECK_HEADERS([X11/extensions/Xrandr.h], [], [HAVE_XRANDR=0])
+      CPPFLAGS="$saved_CPPFLAGS"
+    ], [])
+
+  dnl Check for XRender
+  PKG_CHECK_MODULES([XRENDER], [xrender],
+    [
+      HAVE_XRENDER=1
+      saved_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS $XRENDER_CFLAGS"
+      AC_CHECK_HEADERS([X11/extensions/Xrender.h], [], [HAVE_XRENDER=0])
+      CPPFLAGS="$saved_CPPFLAGS"
+    ], [])
 fi
-if test $HAVE_XRENDER -eq 1; then
-    AC_DEFINE_UNQUOTED([HAVE_XRENDER], [1],
-        [Defined to 1 if the XRender extension exists.])
-fi
+
+AC_DEFINE_UNQUOTED([HAVE_XKBLIB], [$HAVE_XKBLIB],
+  [Defined to 1 if the XKB extension exists.])
+AC_DEFINE_UNQUOTED([HAVE_XRANDR], [$HAVE_XRANDR],
+  [Defined to 1 if the XRandR extension exists.])
+AC_DEFINE_UNQUOTED([HAVE_XRENDER], [$HAVE_XRENDER],
+  [Defined to 1 if the XRender extension exists.])
 
 dnl OpenGL
 GLES_VERSION_MASK=0
 
 HAVE_GL=0
+HAVE_GLESv2=0
+HAVE_GLESv3=0
 if test "x$enable_opengl" = "xyes"; then
-case ",$GLAPI," in
-(*,any,*|*,gl,*)
-    HAVE_GL=1
-    PKG_CHECK_MODULES([GL], [gl], [:], [HAVE_GL=0])
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $GL_CFLAGS"
-    AC_CHECK_HEADERS([GL/gl.h GL/glext.h], [:], [HAVE_GL=0], [
+  dnl OpenGL
+  case ",$GLAPI," in
+    (*,any,*|*,gl,*)
+      HAVE_GL=1
+      PKG_CHECK_MODULES([GL], [gl],
+        [
+          saved_CPPFLAGS="$CPPFLAGS"
+          CPPFLAGS="$CPPFLAGS $GL_CFLAGS"
+          AC_CHECK_HEADERS([GL/gl.h GL/glext.h], [], [HAVE_GL=0],
+            [
 #ifdef HAVE_GL_GL_H
 # include <GL/gl.h>
 #endif
-    ])
-    CPPFLAGS="$saved_CPPFLAGS"
+            ])
+          CPPFLAGS="$saved_CPPFLAGS"
+        ], [HAVE_GL=0])
+      GLES_VERSION_MASK=`expr $GLES_VERSION_MASK "+" $HAVE_GL "*" 1`
     ;;
-esac
-fi
-GLES_VERSION_MASK=`expr $GLES_VERSION_MASK "+" $HAVE_GL "*" 1`
+  esac
 
-dnl OpenGL|ESv2
-HAVE_GLESv2=0
-if test "x$enable_opengl" = "xyes"; then
-case ",$GLAPI," in
-(*,any,*|*,gles2,*)
-    HAVE_GLESv2=1
-    PKG_CHECK_MODULES([GLES2], [glesv2], [:], [HAVE_GLESv2=0])
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $GLES2_CFLAGS"
-    AC_CHECK_HEADERS([GLES2/gl2.h GLES2/gl2ext.h], [:],
-        [HAVE_GLESv2=0], [
+  dnl OpenGL|ESv2
+  case ",$GLAPI," in
+    (*,any,*|*,gles2,*)
+      HAVE_GLESv2=1
+      PKG_CHECK_MODULES([GLES2], [glesv2],
+        [
+          saved_CPPFLAGS="$CPPFLAGS"
+          CPPFLAGS="$CPPFLAGS $GLES2_CFLAGS"
+          AC_CHECK_HEADERS([GLES2/gl2.h GLES2/gl2ext.h], [], [HAVE_GLESv2=0],
+            [
 #ifdef HAVE_GLES2_GL2_H
 # include <GLES2/gl2.h>
 #endif
-    ])
-    CPPFLAGS="$saved_CPPFLAGS"
+            ])
+          CPPFLAGS="$saved_CPPFLAGS"
+        ], [HAVE_GLESv2=0])
+      GLES_VERSION_MASK=`expr $GLES_VERSION_MASK "+" $HAVE_GLESv2 "*" 4`
     ;;
-esac
-fi
-GLES_VERSION_MASK=`expr $GLES_VERSION_MASK "+" $HAVE_GLESv2 "*" 4`
+  esac
 
-dnl OpenGL|ESv3
-HAVE_GLESv3=0
-if test "x$enable_opengl" = "xyes"; then
-case ",$GLAPI," in
-(*,any,*|*,gles3,*)
-    HAVE_GLESv3=1
-    PKG_CHECK_MODULES([GLES3], [glesv2], [:], [HAVE_GLESv3=0])
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $GLES3_CFLAGS"
-    AC_CHECK_HEADERS([GLES3/gl3.h GLES3/gl3ext.h GLES2/gl2ext.h], [:],
-        [HAVE_GLESv3=0], [
+  dnl OpenGL|ESv3
+  case ",$GLAPI," in
+    (*,any,*|*,gles3,*)
+      HAVE_GLESv3=1
+      PKG_CHECK_MODULES([GLES3], [glesv2],
+        [
+          saved_CPPFLAGS="$CPPFLAGS"
+          CPPFLAGS="$CPPFLAGS $GLES3_CFLAGS"
+          AC_CHECK_HEADERS([GLES3/gl3.h GLES3/gl3ext.h GLES2/gl2ext.h], [],
+            [HAVE_GLESv3=0],
+            [
 #ifdef HAVE_GLES3_GL3_H
 # include <GLES3/gl3.h>
 #endif
-    ])
-    CPPFLAGS="$saved_CPPFLAGS"
+            ])
+          CPPFLAGS="$saved_CPPFLAGS"
+        ], [HAVE_GLESv3=0])
+      GLES_VERSION_MASK=`expr $GLES_VERSION_MASK "+" $HAVE_GLESv3 "*" 8`
     ;;
-esac
+  esac
 fi
-GLES_VERSION_MASK=`expr $GLES_VERSION_MASK "+" $HAVE_GLESv3 "*" 8`
 
 dnl ... GLX
 USE_GLX=0
 if test "x$enable_glx" = "xyes" -a $HAVE_GL -eq 1 -a $USE_X11 -eq 1; then
-    USE_GLX=1
-    saved_CPPFLAGS="$CPPFLAGS"
-    saved_LIBS="$LIBS"
-    CPPFLAGS="$CPPFLAGS $GL_CFLAGS"
-    LIBS="$LIBS $GL_LIBS"
-    AC_CHECK_HEADERS([GL/glx.h], [:], [USE_GLX=0], [
+  USE_GLX=1
+
+  saved_CPPFLAGS="$CPPFLAGS"
+  saved_LIBS="$LIBS"
+  CPPFLAGS="$CPPFLAGS $GL_CFLAGS"
+  LIBS="$LIBS $GL_LIBS"
+  AC_CHECK_HEADERS([GL/glx.h], [], [USE_GLX=0],
+    [
 #ifdef HAVE_GL_GL_H
 # include <GL/gl.h>
 #endif
     ])
-    AC_CHECK_LIB([GL], [glXCreateContext], [:], [USE_GLX=0])
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
+  AC_CHECK_LIB([GL], [glXCreateContext], [], [USE_GLX=0])
+  CPPFLAGS="$saved_CPPFLAGS"
+  LIBS="$saved_LIBS"
 fi
 
 dnl ... EGL
 USE_EGL=0
 if test "x$enable_egl" = "xyes" -a $GLES_VERSION_MASK -ne 0; then
-    USE_EGL=1
-    PKG_CHECK_MODULES([EGL], [egl], [:], [USE_EGL=0])
-    saved_CPPFLAGS="$CPPFLAGS"
-    saved_LIBS="$LIBS"
-    AC_CHECK_HEADERS([EGL/egl.h], [:], [USE_EGL=0])
-    AC_CHECK_LIB([EGL], [eglGetDisplay], [:], [USE_EGL=0])
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
+  PKG_CHECK_MODULES([EGL], [egl],
+    [
+      USE_EGL=1
 
-    dnl Check for GMODULE
-    GMODULE_VERSION_REQUIRED=gmodule_version
-    PKG_CHECK_MODULES([GMODULE], [gmodule-2.0 >= $GMODULE_VERSION_REQUIRED])
+      saved_CPPFLAGS="$CPPFLAGS"
+      saved_LIBS="$LIBS"
+      AC_CHECK_HEADERS([EGL/egl.h], [], [USE_EGL=0])
+      AC_CHECK_LIB([EGL], [eglGetDisplay], [], [USE_EGL=0])
+
+      dnl Check for GMODULE
+      GMODULE_VERSION_REQUIRED=gmodule_version
+      PKG_CHECK_MODULES([GMODULE],
+        [gmodule-2.0 >= $GMODULE_VERSION_REQUIRED])
+      CPPFLAGS="$saved_CPPFLAGS"
+      LIBS="$saved_LIBS"
+    ], [])
 fi
 
 dnl Check for Wayland
 USE_WAYLAND=0
 if test "x$enable_wayland" = "xyes"; then
-    PKG_CHECK_MODULES(WAYLAND, [wayland-client >= wayland_api_version],
-        [USE_WAYLAND=1], [USE_WAYLAND=0])
-
-    if test $USE_WAYLAND -eq 1; then
-        saved_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$CPPFLAGS $WAYLAND_CFLAGS"
-        AC_CHECK_HEADERS([wayland-client.h], [:], [USE_WAYLAND=0])
-        CPPFLAGS="$saved_CPPFLAGS"
-    fi
+  PKG_CHECK_MODULES([WAYLAND], [wayland-client >= wayland_api_version],
+    [
+      USE_WAYLAND=1
+      saved_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS $WAYLAND_CFLAGS"
+      AC_CHECK_HEADERS([wayland-client.h], [], [USE_WAYLAND=0])
+      CPPFLAGS="$saved_CPPFLAGS"
+    ], [])
 fi
 
 dnl ---------------------------------------------------------------------------
@@ -462,17 +475,14 @@ PKG_CHECK_MODULES([LIBVA], [libva >= va_api_version])
 VA_VERSION_STR=`$PKG_CONFIG --modversion libva`
 
 dnl VA/DRM API
-HAVE_VA_DRM=0
 if test $USE_DRM -eq 1; then
-    PKG_CHECK_MODULES([LIBVA_DRM], [libva-drm >= va_api_drm_version],
-        [HAVE_VA_DRM=1], [USE_DRM=0])
-
-    if test $HAVE_VA_DRM -eq 1; then
-        saved_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$LIBVA_DRM_CFLAGS"
-        AC_CHECK_HEADERS([va/va_drm.h], [:], [HAVE_VA_DRM=0 USE_DRM=0])
-        CPPFLAGS="$saved_CPPFLAGS"
-    fi
+  PKG_CHECK_MODULES([LIBVA_DRM], [libva-drm >= va_api_drm_version],
+    [
+      saved_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$LIBVA_DRM_CFLAGS"
+      AC_CHECK_HEADERS([va/va_drm.h], [], [USE_DRM=0])
+      CPPFLAGS="$saved_CPPFLAGS"
+    ], [USE_DRM=0])
 fi
 
 dnl VA/X11 API
@@ -484,268 +494,321 @@ fi
 dnl Check for va_dec_jpeg.h header
 saved_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-AC_CHECK_HEADERS([va/va_dec_jpeg.h], [], [], [#include <va/va.h>])
+AC_CHECK_HEADERS([va/va_dec_jpeg.h], [], [],
+  [
+#include <va/va.h>
+  ])
 CPPFLAGS="$saved_CPPFLAGS"
 
 dnl Check for JPEG decoding API (0.32.1+)
 USE_JPEG_DECODER=0
 AC_CACHE_CHECK([for JPEG decoding API],
-    ac_cv_have_jpeg_decoding_api, [
+  [ac_cv_have_jpeg_decoding_api],
+  [
     saved_CPPFLAGS="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
     saved_LIBS="$LIBS"
     LIBS="$LIBS $LIBVA_LIBS"
     AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <va/va.h>
-              #ifdef HAVE_VA_VA_DEC_JPEG_H
-              #include <va/va_dec_jpeg.h>
-              #endif
-            ]],
-            [[VAPictureParameterBufferJPEGBaseline pic_param;
-              VASliceParameterBufferJPEGBaseline slice_param;
-              VAHuffmanTableBufferJPEGBaseline huffman_table;
-              VAIQMatrixBufferJPEGBaseline iq_matrix;]])],
-        [ac_cv_have_jpeg_decoding_api="yes" USE_JPEG_DECODER=1],
-        [ac_cv_have_jpeg_decoding_api="no"]
-    )
+      [
+        AC_LANG_PROGRAM(
+          [[
+#include <va/va.h>
+#ifdef HAVE_VA_VA_DEC_JPEG_H
+# include <va/va_dec_jpeg.h>
+#endif
+          ]],
+          [[
+VAPictureParameterBufferJPEGBaseline pic_param;
+VASliceParameterBufferJPEGBaseline slice_param;
+VAHuffmanTableBufferJPEGBaseline huffman_table;
+VAIQMatrixBufferJPEGBaseline iq_matrix;
+          ]])
+      ],
+      [ac_cv_have_jpeg_decoding_api="yes" USE_JPEG_DECODER=1],
+      [ac_cv_have_jpeg_decoding_api="no"])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
-])
+  ])
 
 dnl Check for va_dec_vp8.h header
 saved_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-AC_CHECK_HEADERS([va/va_dec_vp8.h], [], [], [#include <va/va.h>])
+AC_CHECK_HEADERS([va/va_dec_vp8.h], [], [],
+  [
+#include <va/va.h>
+  ])
 CPPFLAGS="$saved_CPPFLAGS"
 
 dnl Check for VP8 decoding API (0.34+)
 USE_VP8_DECODER=0
 AC_CACHE_CHECK([for VP8 decoding API],
-    ac_cv_have_vp8_decoding_api, [
+  [ac_cv_have_vp8_decoding_api],
+  [
     saved_CPPFLAGS="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
     saved_LIBS="$LIBS"
     LIBS="$LIBS $LIBVA_LIBS"
     AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <va/va.h>
-              #ifdef HAVE_VA_VA_DEC_VP8_H
-              #include <va/va_dec_vp8.h>
-              #endif
-            ]],
-            [[VAPictureParameterBufferVP8 pic_param;
-              VASliceParameterBufferVP8 slice_param;
-              VAProbabilityDataBufferVP8 prob_data;
-              VAIQMatrixBufferVP8 iq_matrix;
-              slice_param.slice_data_offset = 0;
-              slice_param.slice_data_flag = 0;]])],
-        [ac_cv_have_vp8_decoding_api="yes" USE_VP8_DECODER=1],
-        [ac_cv_have_vp8_decoding_api="no"]
-    )
+      [
+        AC_LANG_PROGRAM(
+          [[
+#include <va/va.h>
+#ifdef HAVE_VA_VA_DEC_VP8_H
+# include <va/va_dec_vp8.h>
+#endif
+          ]],
+          [[
+VAPictureParameterBufferVP8 pic_param;
+VASliceParameterBufferVP8 slice_param;
+VAProbabilityDataBufferVP8 prob_data;
+VAIQMatrixBufferVP8 iq_matrix;
+slice_param.slice_data_offset = 0;
+slice_param.slice_data_flag = 0;
+          ]])
+      ],
+      [ac_cv_have_vp8_decoding_api="yes" USE_VP8_DECODER=1],
+      [ac_cv_have_vp8_decoding_api="no"])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
-])
+  ])
 
 dnl Check for va_dec_vp9.h header
 saved_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-AC_CHECK_HEADERS([va/va_dec_vp9.h], [], [], [#include <va/va.h>])
+AC_CHECK_HEADERS([va/va_dec_vp9.h], [], [],
+  [
+#include <va/va.h>
+  ])
 CPPFLAGS="$saved_CPPFLAGS"
 
 dnl Check for VP9 decoding API (0.37+)
 USE_VP9_DECODER=0
 AC_CACHE_CHECK([for VP9 decoding API],
-    ac_cv_have_vp9_decoding_api, [
+  [ac_cv_have_vp9_decoding_api],
+  [
     saved_CPPFLAGS="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
     saved_LIBS="$LIBS"
     LIBS="$LIBS $LIBVA_LIBS"
     AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <va/va.h>
-              #ifdef HAVE_VA_VA_DEC_VP9_H
-              #include <va/va_dec_vp9.h>
-              #endif
-            ]],
-            [[VADecPictureParameterBufferVP9 pic_param;
-              VASliceParameterBufferVP9 slice_param;
-              VASegmentParameterVP9 seg_param;
-              slice_param.slice_data_offset = 0;
-              slice_param.slice_data_flag = 0;]])],
-        [ac_cv_have_vp9_decoding_api="yes" USE_VP9_DECODER=$HAVE_GST_VP9_PARSER],
-        [ac_cv_have_vp9_decoding_api="no"]
-    )
+      [
+        AC_LANG_PROGRAM(
+          [[
+#include <va/va.h>
+#ifdef HAVE_VA_VA_DEC_VP9_H
+# include <va/va_dec_vp9.h>
+#endif
+          ]],
+          [[
+VADecPictureParameterBufferVP9 pic_param;
+VASliceParameterBufferVP9 slice_param;
+VASegmentParameterVP9 seg_param;
+slice_param.slice_data_offset = 0;
+slice_param.slice_data_flag = 0;
+          ]])
+      ],
+      [ac_cv_have_vp9_decoding_api="yes" USE_VP9_DECODER=$HAVE_GST_VP9_PARSER],
+      [ac_cv_have_vp9_decoding_api="no"])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
-])
+  ])
 
 dnl Check for va_dec_hevc.h header
 saved_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-AC_CHECK_HEADERS([va/va_dec_hevc.h], [], [], [#include <va/va.h>])
+AC_CHECK_HEADERS([va/va_dec_hevc.h], [], [],
+  [
+#include <va/va.h>
+  ])
 CPPFLAGS="$saved_CPPFLAGS"
 
 dnl Check for HEVC decoding API (0.38+)
 USE_HEVC_DECODER=0
 AC_CACHE_CHECK([for HEVC decoding API],
-    ac_cv_have_hevc_decoding_api, [
+  [ac_cv_have_hevc_decoding_api],
+  [
     saved_CPPFLAGS="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
     saved_LIBS="$LIBS"
     LIBS="$LIBS $LIBVA_LIBS"
     AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <va/va.h>
-              #ifdef HAVE_VA_VA_DEC_HEVC_H
-              #include <va/va_dec_hevc.h>
-              #endif
-            ]],
-            [[VAPictureParameterBufferHEVC pic_param;
-              VASliceParameterBufferHEVC slice_param;
-              VAIQMatrixBufferHEVC iq_matrix;
-              slice_param.slice_data_offset = 0;
-              slice_param.slice_data_flag = 0;]])],
-        [ac_cv_have_hevc_decoding_api="yes" USE_HEVC_DECODER=1],
-        [ac_cv_have_hevc_decoding_api="no"]
-    )
+      [
+        AC_LANG_PROGRAM(
+          [[
+#include <va/va.h>
+#ifdef HAVE_VA_VA_DEC_HEVC_H
+# include <va/va_dec_hevc.h>
+#endif
+          ]],
+          [[
+VAPictureParameterBufferHEVC pic_param;
+VASliceParameterBufferHEVC slice_param;
+VAIQMatrixBufferHEVC iq_matrix;
+slice_param.slice_data_offset = 0;
+slice_param.slice_data_flag = 0;
+          ]])
+      ],
+      [ac_cv_have_hevc_decoding_api="yes" USE_HEVC_DECODER=1],
+      [ac_cv_have_hevc_decoding_api="no"])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
-])
+  ])
 
 dnl Check for vpp (video post-processing) support
 USE_VA_VPP=0
 AC_CACHE_CHECK([for video post-postprocessing API],
-    ac_cv_have_va_vpp_api, [
+  [ac_cv_have_va_vpp_api],
+  [
     saved_CPPFLAGS="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
     saved_LIBS="$LIBS"
     LIBS="$LIBS $LIBVA_LIBS"
     AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <va/va.h>
-              #include <va/va_vpp.h>]],
-            [[VADisplay va_dpy;
-              VAContextID vpp_ctx;
-              VAProcFilterType filters[VAProcFilterCount];
-              unsigned int num_filters = VAProcFilterCount;
-              vaQueryVideoProcFilters(va_dpy, vpp_ctx, filters, &num_filters);
-              ]])],
-        [ac_cv_have_va_vpp_api="yes" USE_VA_VPP=1],
-        [ac_cv_have_va_vpp_api="no"]
-    )
+      [
+        AC_LANG_PROGRAM(
+          [[
+#include <va/va.h>
+#include <va/va_vpp.h>
+          ]],
+          [[
+VADisplay va_dpy;
+VAContextID vpp_ctx;
+VAProcFilterType filters[VAProcFilterCount];
+unsigned int num_filters = VAProcFilterCount;
+vaQueryVideoProcFilters(va_dpy, vpp_ctx, filters, &num_filters);
+          ]])
+      ],
+      [ac_cv_have_va_vpp_api="yes" USE_VA_VPP=1],
+      [ac_cv_have_va_vpp_api="no"])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
-])
+  ])
 
 dnl Check for encoding support
 USE_ENCODERS=0
+if test "x$enable_encoders" = "xyes"; then
+  PKG_CHECK_MODULES([LIBVA], [libva >= va_api_enc_version],
+    [
+      USE_ENCODERS=1
+      saved_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$LIBVA_CFLAGS"
+      AC_CHECK_HEADERS([va/va_enc_mpeg2.h va/va_enc_h264.h], [],
+        [USE_ENCODERS=0],
+        [
+#include <va/va.h>
+        ])
+      CPPFLAGS="$saved_CPPFLAGS"
+    ], [])
+fi
+
 USE_JPEG_ENCODER=0
 USE_VP8_ENCODER=0
 USE_H265_ENCODER=0
-if test "x$enable_encoders" = "xyes"; then
-    PKG_CHECK_MODULES([LIBVA], [libva >= va_api_enc_version],
-        [HAVE_VA_ENC=1], [HAVE_VA_ENC=0])
+if test $USE_ENCODERS -eq 1; then
+  dnl Check for JPEG Encoding API (0.37.0+)
+  AC_CHECK_HEADERS([va/va_enc_jpeg.h], [], [],
+    [
+#include <va/va.h>
+    ])
+  AC_CACHE_CHECK([for JPEG encoding API],
+    [ac_cv_have_jpeg_encoding_api],
+    [
+      saved_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+      saved_LIBS="$LIBS"
+      LIBS="$LIBS $LIBVA_LIBS"
+      AC_COMPILE_IFELSE(
+        [
+          AC_LANG_PROGRAM(
+            [[
+#include <va/va.h>
+#ifdef HAVE_VA_VA_ENC_JPEG_H
+# include <va/va_enc_jpeg.h>
+#endif
+            ]],
+            [[
+VAEncPictureParameterBufferJPEG pic_param;
+VAEncSliceParameterBufferJPEG slice_param;
+VAQMatrixBufferJPEG q_matrix;
+            ]])
+        ],
+        [ac_cv_have_jpeg_encoding_api="yes" USE_JPEG_ENCODER=1],
+        [ac_cv_have_jpeg_encoding_api="no"])
+      CPPFLAGS="$saved_CPPFLAGS"
+      LIBS="$saved_LIBS"
+    ])
 
-    if test $HAVE_VA_ENC -eq 1; then
-        saved_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$LIBVA_CFLAGS"
-        AC_CHECK_HEADERS([va/va_enc_mpeg2.h va/va_enc_h264.h],
-            [USE_ENCODERS=1], [HAVE_VA_ENC=0 USE_ENCODERS=0],
-            [#include <va/va.h>
-            ])
+  dnl Check for VP8 Encoding API
+  AC_CHECK_HEADERS([va/va_enc_vp8.h], [], [],
+    [
+#include <va/va.h>
+    ])
+  AC_CACHE_CHECK([for VP8 encoding API],
+    [ac_cv_have_vp8_encoding_api],
+    [
+      saved_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+      saved_LIBS="$LIBS"
+      LIBS="$LIBS $LIBVA_LIBS"
+      AC_COMPILE_IFELSE(
+        [
+          AC_LANG_PROGRAM(
+            [[
+#include <va/va.h>
+#ifdef HAVE_VA_VA_ENC_VP8_H
+# include <va/va_enc_vp8.h>
+#endif
+            ]],
+            [[
+VAEncSequenceParameterBufferVP8 seq_param;
+VAEncPictureParameterBufferVP8 pic_param;
+VAQMatrixBufferVP8 q_matrix;
+            ]])
+        ],
+        [ac_cv_have_vp8_encoding_api="yes" USE_VP8_ENCODER=1],
+        [ac_cv_have_vp8_encoding_api="no"])
+      CPPFLAGS="$saved_CPPFLAGS"
+      LIBS="$saved_LIBS"
+    ])
 
-        dnl Check for JPEG Encoding API (0.37.0+)
-        AC_CHECK_HEADERS([va/va_enc_jpeg.h],
-            [USE_JPEG_ENCODER=1], [],
-            [#include <va/va.h>
-            ])
-        AC_CACHE_CHECK([for JPEG encoding API],
-            ac_cv_have_jpeg_encoding_api, [
-            saved_CPPFLAGS="$CPPFLAGS"
-            CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-            saved_LIBS="$LIBS"
-            LIBS="$LIBS $LIBVA_LIBS"
-            AC_COMPILE_IFELSE(
-                [AC_LANG_PROGRAM(
-                    [[#include <va/va.h>
-                      #ifdef HAVE_VA_VA_ENC_JPEG_H
-                      #include <va/va_enc_jpeg.h>
-                      #endif
-                    ]],
-                    [[VAEncPictureParameterBufferJPEG pic_param;
-                      VAEncSliceParameterBufferJPEG slice_param;
-                      VAQMatrixBufferJPEG q_matrix;]])],
-                [ac_cv_have_jpeg_encoding_api="yes" USE_JPEG_ENCODER=1],
-                [ac_cv_have_jpeg_encoding_api="no"]
-            )
-            CPPFLAGS="$saved_CPPFLAGS"
-            LIBS="$saved_LIBS"
-        ])
-
-        dnl Check for VP8 Encoding API
-        AC_CHECK_HEADERS([va/va_enc_vp8.h],
-            [USE_VP8_ENCODER=1], [],
-            [#include <va/va.h>
-            ])
-        AC_CACHE_CHECK([for VP8 encoding API],
-            ac_cv_have_vp8_encoding_api, [
-            saved_CPPFLAGS="$CPPFLAGS"
-            CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-            saved_LIBS="$LIBS"
-            LIBS="$LIBS $LIBVA_LIBS"
-            AC_COMPILE_IFELSE(
-                [AC_LANG_PROGRAM(
-                    [[#include <va/va.h>
-                      #ifdef HAVE_VA_VA_ENC_VP8_H
-                      #include <va/va_enc_vp8.h>
-                      #endif
-                    ]],
-                    [[VAEncSequenceParameterBufferVP8 seq_param;
-                      VAEncPictureParameterBufferVP8 pic_param;
-                      VAQMatrixBufferVP8 q_matrix;]])],
-                [ac_cv_have_vp8_encoding_api="yes" USE_VP8_ENCODER=1],
-                [ac_cv_have_vp8_encoding_api="no" USE_VP8_ENCODER=0]
-            )
-            CPPFLAGS="$saved_CPPFLAGS"
-            LIBS="$saved_LIBS"
-        ])
-        CPPFLAGS="$saved_CPPFLAGS"
-
-        dnl Check for H265/HEVC Encoding API
-        AC_CHECK_HEADERS([va/va_enc_hevc.h],
-            [USE_H265_ENCODER=1], [],
-            [#include <va/va.h>
-            ])
-        AC_CACHE_CHECK([for HEVC encoding API],
-            ac_cv_have_hevc_encoding_api, [
-            saved_CPPFLAGS="$CPPFLAGS"
-            CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-            saved_LIBS="$LIBS"
-            LIBS="$LIBS $LIBVA_LIBS"
-            AC_COMPILE_IFELSE(
-                [AC_LANG_PROGRAM(
-                    [[#include <va/va.h>
-                      #ifdef HAVE_VA_VA_ENC_HEVC_H
-                      #include <va/va_enc_hevc.h>
-                      #endif
-                    ]],
-                    [[VAEncSequenceParameterBufferHEVC seq_param;
-                      VAEncPictureParameterBufferHEVC pic_param;
-                      VAEncSliceParameterBufferHEVC buf_param;
-                      VAQMatrixBufferHEVC q_matrix;]])],
-                [ac_cv_have_hevc_encoding_api="yes" USE_H265_ENCODER=1],
-                [ac_cv_have_hevc_encoding_api="no" USE_H265_ENCODER=0]
-            )
-            CPPFLAGS="$saved_CPPFLAGS"
-            LIBS="$saved_LIBS"
-        ])
-        CPPFLAGS="$saved_CPPFLAGS"
-    fi
+  dnl Check for H265/HEVC Encoding API
+  AC_CHECK_HEADERS([va/va_enc_hevc.h], [], [],
+    [
+#include <va/va.h>
+    ])
+  AC_CACHE_CHECK([for HEVC encoding API],
+    [ac_cv_have_hevc_encoding_api],
+    [
+      saved_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+      saved_LIBS="$LIBS"
+      LIBS="$LIBS $LIBVA_LIBS"
+      AC_COMPILE_IFELSE(
+        [
+          AC_LANG_PROGRAM(
+            [[
+#include <va/va.h>
+#ifdef HAVE_VA_VA_ENC_HEVC_H
+# include <va/va_enc_hevc.h>
+#endif
+            ]],
+            [[
+VAEncSequenceParameterBufferHEVC seq_param;
+VAEncPictureParameterBufferHEVC pic_param;
+VAEncSliceParameterBufferHEVC buf_param;
+VAQMatrixBufferHEVC q_matrix;
+            ]])
+        ],
+        [ac_cv_have_hevc_encoding_api="yes" USE_H265_ENCODER=1],
+        [ac_cv_have_hevc_encoding_api="no"])
+      CPPFLAGS="$saved_CPPFLAGS"
+      LIBS="$saved_LIBS"
+    ])
 fi
 
 dnl VA/Wayland API
-if test "x$enable_wayland" = "xyes"; then
+if test $USE_WAYLAND -eq 1; then
   PKG_CHECK_MODULES([LIBVA_WAYLAND], [libva-wayland >= va_api_wld_version],
     [], [USE_WAYLAND=0])
 fi
