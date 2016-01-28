@@ -24,7 +24,7 @@
 #endif
 
 #include "gstopencvutils.h"
-#include <opencv2/core/types_c.h>
+#include <opencv2/core/core_c.h>
 
 
 gboolean

@@ -2655,21 +2655,17 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
   dnl a new version and the no-backward-compatibility define. (There doesn't
   dnl seem to be a switch to suppress the warnings the cvcompat.h header
   dnl causes.)
-  PKG_CHECK_MODULES(OPENCV, opencv >= 2.3.0 opencv < 2.5.0 , [
+  PKG_CHECK_MODULES(OPENCV, opencv >= 2.3.0 opencv <= 3.1.0 , [
     AC_PROG_CXX
     AC_LANG([C++])
     OLD_CPPFLAGS=$CPPFLAGS
     CPPFLAGS=$OPENCV_CFLAGS
     something_not_found=no
-    AC_CHECK_HEADERS([opencv2/contrib/contrib.hpp \
-                      opencv2/core/core_c.h \
-                      opencv2/core/types_c.h \
+    AC_CHECK_HEADERS([opencv2/core/core_c.h \
                       opencv2/core/version.hpp \
                       opencv2/highgui/highgui_c.h \
                       opencv2/imgproc/imgproc.hpp \
                       opencv2/imgproc/imgproc_c.h \
-                      opencv2/legacy/compat.hpp \
-                      opencv2/legacy/legacy.hpp \
                       opencv2/objdetect/objdetect.hpp \
                       opencv2/video/background_segm.hpp], [], [something_not_found=yes])
     CPPFLAGS=$OLD_CPPFLAGS
