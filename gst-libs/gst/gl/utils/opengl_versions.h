@@ -48,6 +48,16 @@ static const struct { int major, minor; } opengl_versions[] = {
 
    {0, 0} /* end of list */
 };
+
+static const struct { int major, minor; } gles2_versions[] = {
+   {3, 2},
+   {3, 1},
+   {3, 0},
+
+   {2, 0},
+
+   {0, 0} /* end of list */
+};
 /* *INDENT-ON* */
 
 #endif /* _OPENGL_VERSIONS_H_ */
