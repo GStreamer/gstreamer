@@ -434,7 +434,7 @@ gst_video_parse_update_info (GstVideoParse * vp)
   gint fps_n, fps_d;
   gint framesize;
   guint i;
-  gboolean update_size;
+  gboolean update_size = FALSE;
 
   gst_raw_parse_get_fps (GST_RAW_PARSE (vp), &fps_n, &fps_d);
 
