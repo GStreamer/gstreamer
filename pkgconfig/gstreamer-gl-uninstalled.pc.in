@@ -1,15 +1,14 @@
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../gst-libs/gst/gl
-includedir=${pcfiledir}/../gst-libs
-pluginsdir=${pcfiledir}/..
+libdir=
+includedir=@abs_top_builddir@/gst-libs
+girdir=@abs_top_builddir@/gst-libs/gst/base
+typelibdir=@abs_top_builddir@/gst-libs/gst/base
 
 Name: GStreamer OpenGL Plugins Libraries, Uninstalled
 Description: Streaming media framework, OpenGL plugins libraries, uninstalled
 Version: @VERSION@
-Requires: gstreamer-@GST_API_VERSION@
+Requires: gstreamer-base-@GST_API_VERSION@ gstreamer-@GST_API_VERSION@
 
-Libs: -L${libdir} ${libdir}/libgstgl-@GST_API_VERSION@.la @GL_LIBS@
-Cflags: -I${includedir} -I@srcdir@/.. @GL_CFLAGS@
-
-libraries=gl
+Libs: @abs_top_builddir@/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la
+Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
