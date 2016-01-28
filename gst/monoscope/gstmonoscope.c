@@ -53,11 +53,15 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #if G_BYTE_ORDER == G_BIG_ENDIAN
     GST_STATIC_CAPS ("video/x-raw, "
         "format = (string) xRGB, "
-        "width = 256, " "height = 128, " "framerate = " GST_VIDEO_FPS_RANGE)
+        "width = " G_STRINGIFY (scope_width) ", "
+        "height = " G_STRINGIFY (scope_height) ", "
+        "framerate = " GST_VIDEO_FPS_RANGE)
 #else
     GST_STATIC_CAPS ("video/x-raw, "
         "format = (string) BGRx, "
-        "width = 256, " "height = 128, " "framerate = " GST_VIDEO_FPS_RANGE)
+        "width = " G_STRINGIFY (scope_width) ", "
+        "height = " G_STRINGIFY (scope_height) ", "
+        "framerate = " GST_VIDEO_FPS_RANGE)
 #endif
     );
 
@@ -133,8 +137,8 @@ gst_monoscope_init (GstMonoscope * monoscope)
   monoscope->bps = sizeof (gint16);
 
   /* reset the initial video state */
-  monoscope->width = 256;
-  monoscope->height = 128;
+  monoscope->width = scope_width;
+  monoscope->height = scope_height;
   monoscope->fps_num = 25;      /* desired frame rate */
   monoscope->fps_denom = 1;
   monoscope->visstate = NULL;
@@ -398,13 +402,12 @@ gst_monoscope_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 
     samples = (gint16 *) gst_adapter_map (monoscope->adapter, bytesperframe);
 
-    if (monoscope->spf < 512) {
-      gint16 in_data[512], i;
+    if (monoscope->spf < convolver_big) {
+      gint16 in_data[convolver_big], i;
+      gdouble scale = (gdouble) monoscope->spf / (gdouble) convolver_big;
 
-      for (i = 0; i < 512; ++i) {
-        gdouble off;
-
-        off = ((gdouble) i * (gdouble) monoscope->spf) / 512.0;
+      for (i = 0; i < convolver_big; ++i) {
+        gdouble off = (gdouble) i * scale;
         in_data[i] = samples[MIN ((guint) off, monoscope->spf)];
       }
       pixels = monoscope_update (monoscope->visstate, in_data);
