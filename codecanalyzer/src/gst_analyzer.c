@@ -29,6 +29,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <glib/gprintf.h>
+
 #include "gst_analyzer.h"
 #include <analyzer_utils.h>
 

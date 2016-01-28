@@ -29,6 +29,8 @@
 #include <libxml/parser.h>
 #include <gtk/gtk.h>
 
+#include <glib/gprintf.h>
+
 #include "gst_analyzer.h"
 #include "xml_parse.h"
 #ifdef HAVE_CONFIG_H
