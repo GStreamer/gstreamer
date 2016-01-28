@@ -1236,6 +1236,17 @@ mxf_metadata_identification_write_tags (MXFMetadataBase * m,
     ret = g_list_prepend (ret, t);
   }
 
+  if (!mxf_uuid_is_zero (&self->this_generation_uid)) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->ul, MXF_UL (THIS_GENERATION_UID), 16);
+    t->size = 16;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    memcpy (t->data, &self->this_generation_uid, 16);
+    mxf_primer_pack_add_mapping (primer, 0x3c09, &t->ul);
+    ret = g_list_prepend (ret, t);
+  }
+
   return ret;
 }
 
