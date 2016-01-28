@@ -1,0 +1,39 @@
+<Project
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns="http://usefulinc.com/ns/doap#"
+    xmlns:foaf="http://xmlns.com/foaf/0.1/"
+    xmlns:admin="http://webns.net/mvcb/">
+
+  <name>GStreamer VA-API</name>
+  <shortname>gstreamer-vaapi</shortname>
+  <shortdesc xml:lang="en">a set of VA-API based elements for GStreamer</shortdesc>
+  <description xml:lang="en">
+    GStreamer VA-API is a collection of VA-API based plugin with video
+    processing elements for GStreamer.
+  </description>
+  <homepage rdf:resource="http://gstreamer.freedesktop.org/modules/gstreamer-vaapi.html"/>
+  <download-page rdf:resource="http://gstreamer.freedesktop.org/download/"/>
+  <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gstreamer-vaapi"/>
+  <programming-language>C</programming-language>
+  <license rdf:resource="http://usefulinc.com/doap/licenses/lgpl"/>
+
+  <repository>
+    <GitRepository>
+      <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gstreamer-vaapi"/>
+      <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gstreamer-vaapi"/>
+    </GitRepository>
+  </repository>
+
+  <maintainer>
+    <foaf:Person>
+      <foaf:name>Sreerenj Balachandran</foaf:name>
+    </foaf:Person>
+  </maintainer>
+  <maintainer>
+    <foaf:Person>
+      <foaf:name>Victor Jaquez</foaf:name>
+    </foaf:Person>
+  </maintainer>>
+
+</Project>
