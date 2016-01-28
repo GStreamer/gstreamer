@@ -45,6 +45,7 @@
 enum
 {
   PROP_0,
+  PROP_TS_OFFSET
 };
 
 static GstStaticPadTemplate gdp_depay_sink_template =
@@ -81,6 +82,10 @@ static GstStateChangeReturn gst_gdp_depay_change_state (GstElement *
     element, GstStateChange transition);
 
 static void gst_gdp_depay_finalize (GObject * object);
+static void gst_gdp_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_gdp_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static void
 gst_gdp_depay_class_init (GstGDPDepayClass * klass)
@@ -90,6 +95,15 @@ gst_gdp_depay_class_init (GstGDPDepayClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+
+  gobject_class->set_property = gst_gdp_depay_set_property;
+  gobject_class->get_property = gst_gdp_depay_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_TS_OFFSET,
+      g_param_spec_int64 ("ts-offset", "Timestamp Offset",
+          "Timestamp Offset",
+          G_MININT64, G_MAXINT64, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "GDP Depayloader", "GDP/Depayloader",
@@ -141,6 +155,42 @@ gst_gdp_depay_finalize (GObject * gobject)
   g_object_unref (this->adapter);
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (gobject));
+}
+
+static void
+gst_gdp_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstGDPDepay *this;
+
+  this = GST_GDP_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_TS_OFFSET:
+      this->ts_offset = g_value_get_int64 (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_gdp_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstGDPDepay *this;
+
+  this = GST_GDP_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_TS_OFFSET:
+      g_value_set_int64 (value, this->ts_offset);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static gboolean
@@ -316,6 +366,16 @@ gst_gdp_depay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
           gst_adapter_flush (this->adapter, this->payload_length);
         }
+
+        if (GST_BUFFER_TIMESTAMP (buf) > -this->ts_offset)
+          GST_BUFFER_TIMESTAMP (buf) += this->ts_offset;
+        else
+          GST_BUFFER_TIMESTAMP (buf) = 0;
+
+        if (GST_BUFFER_DTS (buf) > -this->ts_offset)
+          GST_BUFFER_DTS (buf) += this->ts_offset;
+        else
+          GST_BUFFER_DTS (buf) = 0;
 
         /* set caps and push */
         GST_LOG_OBJECT (this, "deserialized buffer %p, pushing, timestamp %"
