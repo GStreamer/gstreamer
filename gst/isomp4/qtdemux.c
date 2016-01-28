@@ -583,6 +583,7 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->state = QTDEMUX_STATE_INITIAL;
   qtdemux->pullbased = FALSE;
   qtdemux->posted_redirect = FALSE;
+  qtdemux->pending_configure = FALSE;
   qtdemux->neededbytes = 16;
   qtdemux->todrop = 0;
   qtdemux->adapter = gst_adapter_new ();
@@ -1983,6 +1984,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     gst_caps_replace (&qtdemux->media_caps, NULL);
     qtdemux->timescale = 0;
     qtdemux->got_moov = FALSE;
+    qtdemux->pending_configure = FALSE;
   } else if (qtdemux->mss_mode) {
     gst_flow_combiner_reset (qtdemux->flowcombiner);
     for (n = 0; n < qtdemux->n_streams; n++)
@@ -5778,6 +5780,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             &fourcc);
         if (fourcc == FOURCC_moov) {
           gint n;
+          gboolean got_samples = FALSE;
 
           /* in usual fragmented setup we could try to scan for more
            * and end up at the the moov (after mdat) again */
@@ -5809,19 +5812,27 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             qtdemux_node_dump (demux, demux->moov_node);
             qtdemux_parse_tree (demux);
             qtdemux_prepare_streams (demux);
-            if (!demux->got_moov)
-              qtdemux_expose_streams (demux);
-            else {
 
-              for (n = 0; n < demux->n_streams; n++) {
-                QtDemuxStream *stream = demux->streams[n];
-
-                gst_qtdemux_configure_stream (demux, stream);
+            for (n = 0; n < demux->n_streams; n++) {
+              QtDemuxStream *stream = demux->streams[n];
+              got_samples |= stream->stbl_index >= 0;
+            }
+            if (!demux->fragmented || got_samples) {
+              if (!demux->got_moov) {
+                qtdemux_expose_streams (demux);
+              } else {
+                for (n = 0; n < demux->n_streams; n++) {
+                  QtDemuxStream *stream = demux->streams[n];
+                  gst_qtdemux_configure_stream (demux, stream);
+                }
               }
+              gst_qtdemux_check_send_pending_segment (demux);
+              demux->pending_configure = FALSE;
+            } else {
+              demux->pending_configure = TRUE;
             }
 
             demux->got_moov = TRUE;
-            gst_qtdemux_check_send_pending_segment (demux);
 
             /* fragmented streams headers shouldn't contain edts atoms */
             if (!demux->fragmented) {
@@ -5840,6 +5851,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             guint64 dist = 0;
             GstClockTime prev_pts;
             guint64 prev_offset;
+            gint n;
 
             GST_DEBUG_OBJECT (demux, "Parsing [moof]");
 
@@ -5873,15 +5885,25 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
               ret = GST_FLOW_ERROR;
               goto done;
             }
-            /* in MSS we need to expose the pads after the first moof as we won't get a moov */
-            if (demux->mss_mode && !demux->exposed) {
-              if (!demux->pending_newsegment) {
-                GstSegment segment;
-                gst_segment_init (&segment, GST_FORMAT_TIME);
-                GST_DEBUG_OBJECT (demux, "new pending_newsegment");
-                demux->pending_newsegment = gst_event_new_segment (&segment);
+            /* in MSS we need to expose the pads after the first moof as we won't get a moov 
+             * Also, fragmented format need to be exposed if a moov have no valid sample data */
+            if (demux->mss_mode || demux->pending_configure) {
+              if (!demux->exposed) {
+                if (!demux->pending_newsegment) {
+                  GstSegment segment;
+                  gst_segment_init (&segment, GST_FORMAT_TIME);
+                  GST_DEBUG_OBJECT (demux, "new pending_newsegment");
+                  demux->pending_newsegment = gst_event_new_segment (&segment);
+                }
+                qtdemux_expose_streams (demux);
+              } else {
+                for (n = 0; n < demux->n_streams; n++) {
+                  QtDemuxStream *stream = demux->streams[n];
+                  gst_qtdemux_configure_stream (demux, stream);
+                }
               }
-              qtdemux_expose_streams (demux);
+              gst_qtdemux_check_send_pending_segment (demux);
+              demux->pending_configure = FALSE;
             }
           } else {
             GST_DEBUG_OBJECT (demux, "Discarding [moof]");
