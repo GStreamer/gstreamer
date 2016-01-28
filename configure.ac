@@ -41,9 +41,9 @@ m4_define([va_api_wld_version], [0.33.0])
 
 # gtk-doc version number
 # XXX: introspection annotations require gtk-doc >= 1.12
-m4_define([gtkdoc_version], [1.9])
+m4_define([gtkdoc_version], [1.12])
 
-AC_PREREQ([2.66])
+AC_PREREQ([2.69])
 AC_INIT([gst_vaapi], [gst_vaapi_version],
     [gwenole.beauchesne@intel.com, sreerenj.balachandran@intel.com],
     [gstreamer-vaapi])
@@ -55,13 +55,10 @@ AC_CONFIG_AUX_DIR([build-aux])
 
 AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE([1.11 tar-ustar no-dist-gzip dist-bzip2])
+AM_INIT_AUTOMAKE([-Wno-portability 1.14 no-dist-gzip dist-xz tar-ustar subdir-objects])
 
-dnl Use pretty build output with automake >= 1.11
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])], [
-  AM_DEFAULT_VERBOSITY=1
-  AC_SUBST(AM_DEFAULT_VERBOSITY)
-])
+dnl Use pretty build output
+AM_SILENT_RULES([yes])
 
 dnl Check for tools
 AC_PROG_CC
@@ -72,7 +69,7 @@ AC_PATH_PROG([GIT], [git])
 AM_CONDITIONAL([HAVE_GIT], [test -n "$GIT"])
 
 dnl Initialize libtool
-LT_PREREQ([2.2])
+LT_PREREQ([2.2.6])
 LT_INIT
 
 AC_ARG_ENABLE([encoders],
