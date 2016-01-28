@@ -44,9 +44,9 @@ m4_define([va_api_wld_version], [0.33.0])
 m4_define([gtkdoc_version], [1.12])
 
 AC_PREREQ([2.69])
-AC_INIT([gst_vaapi], [gst_vaapi_version],
-    [gwenole.beauchesne@intel.com, sreerenj.balachandran@intel.com],
-    [gstreamer-vaapi])
+AC_INIT([GStreamer VA-API Plug-ins], [gst_vaapi_version],
+  [http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],
+  [gstreamer-vaapi])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -73,42 +73,42 @@ LT_PREREQ([2.2.6])
 LT_INIT
 
 AC_ARG_ENABLE([encoders],
-    AS_HELP_STRING([--enable-encoders],
-                   [enable video encoders @<:@default=yes@:>@]),
-    [], [enable_encoders="yes"])
+  AS_HELP_STRING([--enable-encoders],
+    [enable video encoders @<:@default=yes@:>@]),
+  [], [enable_encoders="yes"])
 
-AC_ARG_ENABLE(drm,
-    AS_HELP_STRING([--enable-drm],
-                   [enable DRM backend @<:@default=yes@:>@]),
-    [], [enable_drm="yes"])
+AC_ARG_ENABLE([drm],
+  AS_HELP_STRING([--enable-drm],
+    [enable DRM backend @<:@default=yes@:>@]),
+  [], [enable_drm="yes"])
 
-AC_ARG_ENABLE(x11,
-    AS_HELP_STRING([--enable-x11],
-                   [enable X11 output @<:@default=yes@:>@]),
-    [], [enable_x11="yes"])
+AC_ARG_ENABLE([x11],
+  AS_HELP_STRING([--enable-x11],
+    [enable X11 output @<:@default=yes@:>@]),
+  [], [enable_x11="yes"])
 
-AC_ARG_ENABLE(glx,
-    AS_HELP_STRING([--enable-glx],
-                   [enable OpenGL/X11 output @<:@default=yes@:>@]),
-    [], [enable_glx="yes"])
+AC_ARG_ENABLE([glx],
+  AS_HELP_STRING([--enable-glx],
+    [enable OpenGL/X11 output @<:@default=yes@:>@]),
+  [], [enable_glx="yes"])
 
-AC_ARG_ENABLE(wayland,
-    AC_HELP_STRING([--enable-wayland],
-                   [enable Wayland output @<:@default=yes@:>@]),
-    [], [enable_wayland="yes"])
+AC_ARG_ENABLE([wayland],
+  AC_HELP_STRING([--enable-wayland],
+    [enable Wayland output @<:@default=yes@:>@]),
+  [], [enable_wayland="yes"])
 
 AC_ARG_ENABLE([egl],
-    AS_HELP_STRING([--enable-egl],
-        [enable EGL output @<:@default=yes@:>@]),
-    [], [enable_egl="yes"])
+  AS_HELP_STRING([--enable-egl],
+    [enable EGL output @<:@default=yes@:>@]),
+  [], [enable_egl="yes"])
 
 AC_ARG_WITH([glapi],
-    AS_HELP_STRING([--with-glapi=APIs],
-        [build with the specified OpenGL APIs @<:@default=default_glapi@:>@]),
-    [GLAPI="$with_glapi"], [GLAPI=default_glapi])
+  AS_HELP_STRING([--with-glapi=APIs],
+    [build with the specified OpenGL APIs @<:@default=default_glapi@:>@]),
+  [GLAPI="$with_glapi"], [GLAPI=default_glapi])
 
 dnl Check for basic libraries
-AC_CHECK_LIB(m, tan)
+AC_CHECK_LIB([m], [tan])
 
 dnl Check for Gtk doc
 GTKDOC_VERSION=gtkdoc_version
@@ -124,7 +124,7 @@ PKG_CHECK_MODULES([GLIB], [glib-2.0 >= $GLIB_VERSION_REQUIRED])
 dnl Check to see if dlopen is in default libraries (like Solaris, which
 dnl has it in libc), or if libdl is needed to get it.
 AC_CHECK_FUNC([dlopen], [], [
-    AC_CHECK_LIB([dl], [dlopen], [DLOPEN_LIBS="-ldl"])])
+  AC_CHECK_LIB([dl], [dlopen], [DLOPEN_LIBS="-ldl"])])
 AC_SUBST([DLOPEN_LIBS])
 
 dnl ---------------------------------------------------------------------------
@@ -133,7 +133,7 @@ dnl ---------------------------------------------------------------------------
 GST_PKG_VERSION="1.0"
 AC_SUBST([GST_PKG_VERSION])
 AC_DEFINE_UNQUOTED([GST_PKG_VERSION_S], ["$GST_PKG_VERSION"],
-    [Defined to the string representation of GStreamer API version])
+  [Defined to the string representation of GStreamer API version])
 
 dnl Versions for GStreamer and plugins-base
 GST_VERSION_REQUIRED=gst_version
@@ -142,7 +142,7 @@ GST_PLUGINS_BAD_VERSION_REQUIRED=gst_plugins_bad_version
 
 dnl GStreamer Core
 PKG_CHECK_MODULES([GST],
-    [gstreamer-$GST_PKG_VERSION >= $GST_VERSION_REQUIRED])
+  [gstreamer-$GST_PKG_VERSION >= $GST_VERSION_REQUIRED])
 
 AC_MSG_CHECKING([for GStreamer API version])
 gst_api_version=`$PKG_CONFIG --modversion "gstreamer-$GST_PKG_VERSION"`
@@ -151,30 +151,30 @@ gst_minor_version=`echo "$gst_api_version" | cut -d'.' -f2`
 GST_API_VERSION="${gst_major_version}.${gst_minor_version}"
 AC_MSG_RESULT([$GST_API_VERSION])
 AC_DEFINE_UNQUOTED([GST_API_VERSION_S], ["$GST_API_VERSION"],
-    [Defined to the string representation of GStreamer version])
+  [Defined to the string representation of GStreamer version])
 
 PKG_CHECK_MODULES([GST_BASE],
-    [gstreamer-base-$GST_PKG_VERSION >= $GST_VERSION_REQUIRED])
+  [gstreamer-base-$GST_PKG_VERSION >= $GST_VERSION_REQUIRED])
 
 dnl GStreamer -base plugins
 PKG_CHECK_MODULES([GST_PLUGINS_BASE],
-    [gstreamer-plugins-base-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+  [gstreamer-plugins-base-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
 
 dnl ... gst_dmabuf_memory_get_fd (gstreamer-allocators)
 PKG_CHECK_MODULES([GST_ALLOCATORS],
-    [gstreamer-allocators-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+  [gstreamer-allocators-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
 
 dnl ... GstVideoOverlayComposition (gstreamer-video)
 PKG_CHECK_MODULES([GST_VIDEO],
-    [gstreamer-video-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+  [gstreamer-video-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
 
 dnl ... GStreamer base utils (gstreamer-pbutils)
 PKG_CHECK_MODULES([GST_PBUTILS],
-    [gstreamer-pbutils-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+  [gstreamer-pbutils-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
 
 dnl ... bitstream parsers
 PKG_CHECK_MODULES([GST_CODEC_PARSERS],
-    [gstreamer-codecparsers-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
+  [gstreamer-codecparsers-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
 
 dnl ... VP9 parser, with required extensions
 HAVE_GST_VP9_PARSER=0
@@ -223,33 +223,33 @@ if test $HAVE_GSTGL -eq 1; then
     ])
 fi
 AM_CONDITIONAL([USE_GST_GL_HELPERS], [test $HAVE_GSTGL -eq 1])
-
 AC_DEFINE_UNQUOTED([USE_GST_GL_HELPERS], [$HAVE_GSTGL],
-    [Defined to 1 if GStreamer OpenGL helper libraries are available])
+  [Defined to 1 if GStreamer OpenGL helper libraries are available])
 
 if test "x$enable_egl" = "xyes" -a $HAVE_GSTGL -ne 1; then
-    AC_MSG_WARN([GStreamer/GL helper libraries not found, disabling EGL support])
-    enable_egl="no"
+  AC_MSG_WARN([GStreamer/GL helper libraries not found, disabling EGL support])
+  enable_egl="no"
 fi
 
 GST_VAAPI_MAJOR_VERSION=`expr gst_vaapi_lt_current - gst_vaapi_lt_current_bias`
 AC_DEFINE_UNQUOTED([GST_VAAPI_MAJOR_VERSION_S], ["$GST_VAAPI_MAJOR_VERSION"],
-    [Defined to the string representation of gstreamer-vaapi major version])
+  [Defined to the string representation of gstreamer-vaapi major version])
 
 dnl GST_ALL_LDFLAGS:
 dnl LDFLAGS really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_ALL_LDFLAGS="-no-undefined"
-AC_SUBST(GST_ALL_LDFLAGS)
+AC_SUBST([GST_ALL_LDFLAGS])
 
 dnl GST_PLUGIN_LDFLAGS:
 dnl this really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^([_]*gst_plugin_desc|gst_.*_get_type)\$\$' $GST_ALL_LDFLAGS"
-AC_SUBST(GST_PLUGIN_LDFLAGS)
+AC_SUBST([GST_PLUGIN_LDFLAGS])
 
 dnl Check for the GStreamer plugins directory
-AC_ARG_VAR([GST_PLUGIN_PATH_1_0], [installation path for gstreamer-vaapi plugin elements for GStreamer 1.0])
+AC_ARG_VAR([GST_PLUGIN_PATH_1_0],
+  [installation path for gstreamer-vaapi plugin elements for GStreamer 1.0])
 AC_MSG_CHECKING([for GStreamer plugins directory])
 if test -n "$GST_PLUGIN_PATH_1_0"; then
     GST_PLUGINS_DIR="$GST_PLUGIN_PATH_1_0"
@@ -261,7 +261,7 @@ else
 fi
 AC_MSG_RESULT([$GST_PLUGINS_DIR])
 plugindir="$GST_PLUGINS_DIR"
-AC_SUBST(plugindir)
+AC_SUBST([plugindir])
 
 dnl ---------------------------------------------------------------------------
 dnl -- Renderers                                                             --
@@ -481,8 +481,8 @@ fi
 
 dnl VA/X11 API
 if test $USE_X11 -eq 1; then
-    PKG_CHECK_MODULES(LIBVA_X11, [libva-x11 >= va_api_x11_version],
-        [], [USE_X11=0])
+  PKG_CHECK_MODULES(LIBVA_X11, [libva-x11 >= va_api_x11_version],
+    [], [USE_X11=0])
 fi
 
 dnl Check for va_dec_jpeg.h header
@@ -750,8 +750,8 @@ fi
 
 dnl VA/Wayland API
 if test "x$enable_wayland" = "xyes"; then
-    PKG_CHECK_MODULES([LIBVA_WAYLAND], [libva-wayland >= va_api_wld_version],
-        [:], [USE_WAYLAND=0])
+  PKG_CHECK_MODULES([LIBVA_WAYLAND], [libva-wayland >= va_api_wld_version],
+    [], [USE_WAYLAND=0])
 fi
 
 dnl ---------------------------------------------------------------------------
@@ -759,71 +759,68 @@ dnl -- Generate files and summary                                            --
 dnl ---------------------------------------------------------------------------
 
 case ":$USE_X11:$USE_GLX:$USE_EGL:$USE_WAYLAND:$USE_DRM:" in
-*:1:*)
-    ;;
-*)
-    AC_MSG_ERROR([No renderer is enabled])
-    ;;
+*:1:*) ;;
+*) AC_MSG_ERROR([No renderer is enabled]) ;;
 esac
 
-AC_DEFINE_UNQUOTED([USE_ENCODERS], $USE_ENCODERS,
-    [Defined to 1 if video encoders are used])
+AC_DEFINE_UNQUOTED([USE_ENCODERS], [$USE_ENCODERS],
+  [Defined to 1 if video encoders are used])
 AM_CONDITIONAL([USE_ENCODERS], [test $USE_ENCODERS -eq 1])
 
-AC_DEFINE_UNQUOTED(USE_JPEG_ENCODER, $USE_JPEG_ENCODER,
-    [Defined to 1 if JPEG encoder is used])
-AM_CONDITIONAL(USE_JPEG_ENCODER, test $USE_JPEG_ENCODER -eq 1)
+AC_DEFINE_UNQUOTED([USE_JPEG_ENCODER], [$USE_JPEG_ENCODER],
+  [Defined to 1 if JPEG encoder is used])
+AM_CONDITIONAL([USE_JPEG_ENCODER], [test $USE_JPEG_ENCODER -eq 1])
 
-AC_DEFINE_UNQUOTED(USE_VP8_ENCODER, $USE_VP8_ENCODER,
-    [Defined to 1 if VP8 encoder is used])
-AM_CONDITIONAL(USE_VP8_ENCODER, test $USE_VP8_ENCODER -eq 1)
+AC_DEFINE_UNQUOTED([USE_VP8_ENCODER], [$USE_VP8_ENCODER],
+  [Defined to 1 if VP8 encoder is used])
+AM_CONDITIONAL([USE_VP8_ENCODER], [test $USE_VP8_ENCODER -eq 1])
 
-AC_DEFINE_UNQUOTED(USE_H265_ENCODER, $USE_H265_ENCODER,
-    [Defined to 1 if H265 encoder is used])
-AM_CONDITIONAL(USE_H265_ENCODER, test $USE_H265_ENCODER -eq 1)
+AC_DEFINE_UNQUOTED([USE_H265_ENCODER], [$USE_H265_ENCODER],
+  [Defined to 1 if H265 encoder is used])
+AM_CONDITIONAL([USE_H265_ENCODER], [test $USE_H265_ENCODER -eq 1])
 
-AC_DEFINE_UNQUOTED(USE_VA_VPP, $USE_VA_VPP,
-    [Defined to 1 if video post-processing is used])
-AM_CONDITIONAL(USE_VA_VPP, test $USE_VA_VPP -eq 1)
+AC_DEFINE_UNQUOTED([USE_VA_VPP], [$USE_VA_VPP],
+  [Defined to 1 if video post-processing is used])
+AM_CONDITIONAL([USE_VA_VPP], [test $USE_VA_VPP -eq 1])
 
-AC_DEFINE_UNQUOTED(USE_JPEG_DECODER, $USE_JPEG_DECODER,
-    [Defined to 1 if JPEG decoder is used])
-AM_CONDITIONAL(USE_JPEG_DECODER, test $USE_JPEG_DECODER -eq 1)
+AC_DEFINE_UNQUOTED([USE_JPEG_DECODER], [$USE_JPEG_DECODER],
+  [Defined to 1 if JPEG decoder is used])
+AM_CONDITIONAL([USE_JPEG_DECODER], [test $USE_JPEG_DECODER -eq 1])
 
-AC_DEFINE_UNQUOTED(USE_VP8_DECODER, $USE_VP8_DECODER,
-    [Defined to 1 if VP8 decoder is used])
-AM_CONDITIONAL(USE_VP8_DECODER, test $USE_VP8_DECODER -eq 1)
+AC_DEFINE_UNQUOTED([USE_VP8_DECODER], [$USE_VP8_DECODER],
+  [Defined to 1 if VP8 decoder is used])
+AM_CONDITIONAL([USE_VP8_DECODER], [test $USE_VP8_DECODER -eq 1])
 
-AC_DEFINE_UNQUOTED(USE_VP9_DECODER, $USE_VP9_DECODER,
-    [Defined to 1 if VP9 decoder is used])
-AM_CONDITIONAL(USE_VP9_DECODER, test $USE_VP9_DECODER -eq 1)
+AC_DEFINE_UNQUOTED([USE_VP9_DECODER], [$USE_VP9_DECODER],
+  [Defined to 1 if VP9 decoder is used])
+AM_CONDITIONAL([USE_VP9_DECODER], [test $USE_VP9_DECODER -eq 1])
 
-AC_DEFINE_UNQUOTED(USE_HEVC_DECODER, $USE_HEVC_DECODER,
-    [Defined to 1 if HEVC decoder is used])
-AM_CONDITIONAL(USE_HEVC_DECODER, test $USE_HEVC_DECODER -eq 1)
+AC_DEFINE_UNQUOTED([USE_HEVC_DECODER], [$USE_HEVC_DECODER],
+  [Defined to 1 if HEVC decoder is used])
+AM_CONDITIONAL([USE_HEVC_DECODER], [test $USE_HEVC_DECODER -eq 1])
 
-AC_DEFINE_UNQUOTED(USE_DRM, $USE_DRM,
-    [Defined to 1 if DRM is enabled])
-AM_CONDITIONAL(USE_DRM, test $USE_DRM -eq 1)
+AC_DEFINE_UNQUOTED([USE_DRM], [$USE_DRM],
+  [Defined to 1 if DRM is enabled])
+AM_CONDITIONAL([USE_DRM], [test $USE_DRM -eq 1])
 
-AC_DEFINE_UNQUOTED(USE_X11, $USE_X11,
-    [Defined to 1 if X11 is enabled])
-AM_CONDITIONAL(USE_X11, test $USE_X11 -eq 1)
+AC_DEFINE_UNQUOTED([USE_X11], [$USE_X11],
+  [Defined to 1 if X11 is enabled])
+AM_CONDITIONAL([USE_X11], [test $USE_X11 -eq 1])
 
-AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX,
-    [Defined to 1 if GLX is enabled])
-AM_CONDITIONAL(USE_GLX, test $USE_GLX -eq 1)
+AC_DEFINE_UNQUOTED([USE_GLX], [$USE_GLX],
+  [Defined to 1 if GLX is enabled])
+AM_CONDITIONAL([USE_GLX], [test $USE_GLX -eq 1])
 
 AC_DEFINE_UNQUOTED([USE_EGL], [$USE_EGL],
-    [Defined to 1 if EGL is enabled])
+  [Defined to 1 if EGL is enabled])
 AM_CONDITIONAL([USE_EGL], [test $USE_EGL -eq 1])
 
 AC_DEFINE_UNQUOTED([USE_GLES_VERSION_MASK], [$GLES_VERSION_MASK],
-    [Defined to the set of enabled OpenGL ES APIs])
+  [Defined to the set of enabled OpenGL ES APIs])
 
-AC_DEFINE_UNQUOTED(USE_WAYLAND, $USE_WAYLAND,
-    [Defined to 1 if WAYLAND is enabled])
-AM_CONDITIONAL(USE_WAYLAND, test $USE_WAYLAND -eq 1)
+AC_DEFINE_UNQUOTED([USE_WAYLAND], [$USE_WAYLAND],
+  [Defined to 1 if WAYLAND is enabled])
+AM_CONDITIONAL([USE_WAYLAND], [test $USE_WAYLAND -eq 1])
 
 AC_CONFIG_FILES([
     Makefile
@@ -843,7 +840,7 @@ AC_OUTPUT
 
 dnl Print summary
 yesno() {
-    test $1 -eq 1 && echo yes || echo no
+  test $1 -eq 1 && echo yes || echo no
 }
 
 VIDEO_OUTPUTS=""
