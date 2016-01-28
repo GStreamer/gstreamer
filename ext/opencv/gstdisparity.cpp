@@ -119,12 +119,16 @@ gst-launch-1.0    multifilesrc  location=~/im3.png ! pngdec ! videoconvert  ! di
 #include <config.h>
 #endif
 
-#include <opencv2/contrib/contrib.hpp>
 #include "gstdisparity.h"
+#include <opencv2/imgproc/imgproc_c.h>
+#if (CV_MAJOR_VERSION >= 3)
+#include <opencv2/imgproc.hpp>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_disparity_debug);
 #define GST_CAT_DEFAULT gst_disparity_debug
 
+using namespace cv;
 /* Filter signals and args */
 enum
 {
@@ -141,9 +145,7 @@ enum
 typedef enum
 {
   METHOD_SBM,
-  METHOD_SGBM,
-  METHOD_VAR,
-  METHOD_GC
+  METHOD_SGBM
 } GstDisparityMethod;
 
 #define DEFAULT_METHOD METHOD_SGBM
@@ -157,8 +159,6 @@ gst_disparity_method_get_type (void)
     static const GEnumValue values[] = {
       {METHOD_SBM, "Global block matching algorithm", "sbm"},
       {METHOD_SGBM, "Semi-global block matching algorithm", "sgbm"},
-      {METHOD_VAR, "Variational matching algorithm", "svar"},
-      {METHOD_GC, "Graph-cut based matching algorithm", "sgc"},
       {0, NULL, NULL},
     };
     etype = g_enum_register_static ("GstDisparityMethod", values);
@@ -205,8 +205,6 @@ static void initialise_disparity (GstDisparity * fs, int width, int height,
 static int initialise_sbm (GstDisparity * filter);
 static int run_sbm_iteration (GstDisparity * filter);
 static int run_sgbm_iteration (GstDisparity * filter);
-static int run_svar_iteration (GstDisparity * filter);
-static int run_sgc_iteration (GstDisparity * filter);
 static int finalise_sbm (GstDisparity * filter);
 
 /* initialize the disparity's class */
@@ -580,27 +578,6 @@ gst_disparity_chain_right (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         CV_MINMAX, NULL);
     cvCvtColor (fs->cvGray_depth_map2, fs->cvRGB_right, CV_GRAY2RGB);
   }
-  /* The class implements the modified S. G. Kosov algorithm
-     See the comments on top of the file.
-   */
-  else if (METHOD_VAR == fs->method) {
-    cvCvtColor (fs->cvRGB_left, fs->cvGray_left, CV_RGB2GRAY);
-    cvCvtColor (fs->cvRGB_right, fs->cvGray_right, CV_RGB2GRAY);
-    run_svar_iteration (fs);
-    cvCvtColor (fs->cvGray_depth_map2, fs->cvRGB_right, CV_GRAY2RGB);
-  }
-  /* The Graph Cut stereo vision algorithm (GC) introduced in [D] is a global
-     stereo vision method. It calculates depth discontinuities by minimizing an
-     energy function combingin a point-wise matching cost and a smoothness term.
-     See the comments on top of the file.
-   */
-  else if (METHOD_GC == fs->method) {
-    cvCvtColor (fs->cvRGB_left, fs->cvGray_left, CV_RGB2GRAY);
-    cvCvtColor (fs->cvRGB_right, fs->cvGray_right, CV_RGB2GRAY);
-    run_sgc_iteration (fs);
-    cvConvertScale (fs->cvGray_depth_map1, fs->cvGray_depth_map2, -16.0, 0.0);
-    cvCvtColor (fs->cvGray_depth_map2, fs->cvRGB_right, CV_GRAY2RGB);
-  }
 
 
   GST_DEBUG_OBJECT (pad, " right has finished");
@@ -663,72 +640,65 @@ initialise_disparity (GstDisparity * fs, int width, int height, int nchannels)
 int
 initialise_sbm (GstDisparity * filter)
 {
-  filter->img_right_as_cvMat_rgb =
-      (void *) new cv::Mat (filter->cvRGB_right, false);
-  filter->img_left_as_cvMat_rgb =
-      (void *) new cv::Mat (filter->cvRGB_left, false);
   filter->img_right_as_cvMat_gray =
-      (void *) new cv::Mat (filter->cvGray_right, false);
+      (void *) new Mat (cvarrToMat (filter->cvGray_right, false));
   filter->img_left_as_cvMat_gray =
-      (void *) new cv::Mat (filter->cvGray_left, false);
+      (void *) new Mat (cvarrToMat (filter->cvGray_left, false));
   filter->depth_map_as_cvMat =
-      (void *) new cv::Mat (filter->cvGray_depth_map1, false);
-  filter->depth_map_as_cvMat2 =
-      (void *) new cv::Mat (filter->cvGray_depth_map2, false);
+      (void *) new Mat (cvarrToMat (filter->cvGray_depth_map1, false));
+#if (CV_MAJOR_VERSION >= 3)
+  filter->sbm = StereoBM::create();
+  filter->sgbm = StereoSGBM::create(1,64,3);
 
-  filter->sbm = (void *) new cv::StereoBM ();
-  filter->sgbm = (void *) new cv::StereoSGBM ();
-  filter->svar = (void *) new cv::StereoVar ();
-  /* SGC has only two parameters on creation: NumerOfDisparities and MaxIters */
-  filter->sgc = cvCreateStereoGCState (16, 2);
+  filter->sbm->setBlockSize (9);
+  filter->sbm->setNumDisparities (32);
+  filter->sbm->setPreFilterSize (9);
+  filter->sbm->setPreFilterCap (32);
+  filter->sbm->setMinDisparity (0);
+  filter->sbm->setTextureThreshold (0);
+  filter->sbm->setUniquenessRatio (0);
+  filter->sbm->setSpeckleWindowSize (0);
+  filter->sbm->setSpeckleRange (0);
+  filter->sbm->setDisp12MaxDiff (0);
 
-  ((cv::StereoBM *) filter->sbm)->state->SADWindowSize = 9;
-  ((cv::StereoBM *) filter->sbm)->state->numberOfDisparities = 32;
-  ((cv::StereoBM *) filter->sbm)->state->preFilterSize = 9;
-  ((cv::StereoBM *) filter->sbm)->state->preFilterCap = 32;
-  ((cv::StereoBM *) filter->sbm)->state->minDisparity = 0;
-  ((cv::StereoBM *) filter->sbm)->state->textureThreshold = 0;
-  ((cv::StereoBM *) filter->sbm)->state->uniquenessRatio = 0;
-  ((cv::StereoBM *) filter->sbm)->state->speckleWindowSize = 0;
-  ((cv::StereoBM *) filter->sbm)->state->speckleRange = 0;
-  ((cv::StereoBM *) filter->sbm)->state->disp12MaxDiff = 0;
+  filter->sgbm->setMinDisparity (1);
+  filter->sgbm->setNumDisparities (64);
+  filter->sgbm->setBlockSize (3);
+  filter->sgbm->setP1 (200);
+  filter->sgbm->setP2 (255);
+  filter->sgbm->setDisp12MaxDiff (0);
+  filter->sgbm->setPreFilterCap (0);
+  filter->sgbm->setUniquenessRatio (0);
+  filter->sgbm->setSpeckleWindowSize (0);
+  filter->sgbm->setSpeckleRange (0);
+  filter->sgbm->setMode (StereoSGBM::MODE_HH);
+#else
+  filter->sbm = (void *) new StereoBM ();
+  filter->sgbm = (void *) new StereoSGBM ();
 
-  ((cv::StereoSGBM *) filter->sgbm)->minDisparity = 1;
-  ((cv::StereoSGBM *) filter->sgbm)->numberOfDisparities = 64;
-  ((cv::StereoSGBM *) filter->sgbm)->SADWindowSize = 3;
-  ((cv::StereoSGBM *) filter->sgbm)->P1 = 200;;
-  ((cv::StereoSGBM *) filter->sgbm)->P2 = 255;
-  ((cv::StereoSGBM *) filter->sgbm)->disp12MaxDiff = 0;
-  ((cv::StereoSGBM *) filter->sgbm)->preFilterCap = 0;
-  ((cv::StereoSGBM *) filter->sgbm)->uniquenessRatio = 0;
-  ((cv::StereoSGBM *) filter->sgbm)->speckleWindowSize = 0;
-  ((cv::StereoSGBM *) filter->sgbm)->speckleRange = 0;
-  ((cv::StereoSGBM *) filter->sgbm)->fullDP = true;
+  ((StereoBM *) filter->sbm)->state->SADWindowSize = 9;
+  ((StereoBM *) filter->sbm)->state->numberOfDisparities = 32;
+  ((StereoBM *) filter->sbm)->state->preFilterSize = 9;
+  ((StereoBM *) filter->sbm)->state->preFilterCap = 32;
+  ((StereoBM *) filter->sbm)->state->minDisparity = 0;
+  ((StereoBM *) filter->sbm)->state->textureThreshold = 0;
+  ((StereoBM *) filter->sbm)->state->uniquenessRatio = 0;
+  ((StereoBM *) filter->sbm)->state->speckleWindowSize = 0;
+  ((StereoBM *) filter->sbm)->state->speckleRange = 0;
+  ((StereoBM *) filter->sbm)->state->disp12MaxDiff = 0;
 
-  /* From Opencv samples/cpp/stereo_match.cpp */
-  ((cv::StereoVar *) filter->svar)->levels = 3;
-  ((cv::StereoVar *) filter->svar)->pyrScale = 0.5;
-  ((cv::StereoVar *) filter->svar)->nIt = 25;
-  ((cv::StereoVar *) filter->svar)->minDisp = -64;
-  ((cv::StereoVar *) filter->svar)->maxDisp = 0;
-  ((cv::StereoVar *) filter->svar)->poly_n = 3;
-  ((cv::StereoVar *) filter->svar)->poly_sigma = 0.0;
-  ((cv::StereoVar *) filter->svar)->fi = 15.0f;
-  ((cv::StereoVar *) filter->svar)->lambda = 0.03f;
-  ((cv::StereoVar *) filter->svar)->penalization =
-      cv::StereoVar::PENALIZATION_TICHONOV;
-  ((cv::StereoVar *) filter->svar)->cycle = cv::StereoVar::CYCLE_V;
-  ((cv::StereoVar *) filter->svar)->flags = cv::StereoVar::USE_SMART_ID |
-      cv::StereoVar::USE_AUTO_PARAMS |
-      cv::StereoVar::USE_INITIAL_DISPARITY |
-      cv::StereoVar::USE_MEDIAN_FILTERING;
-
-  filter->sgc->Ithreshold = 5;
-  filter->sgc->interactionRadius = 1;
-  filter->sgc->occlusionCost = 10000;
-  filter->sgc->minDisparity = 0;
-  filter->sgc->numberOfDisparities = 16;        /* Coming from constructor too */
-  filter->sgc->maxIters = 1;    /* Coming from constructor too */
+  ((StereoSGBM *) filter->sgbm)->minDisparity = 1;
+  ((StereoSGBM *) filter->sgbm)->numberOfDisparities = 64;
+  ((StereoSGBM *) filter->sgbm)->SADWindowSize = 3;
+  ((StereoSGBM *) filter->sgbm)->P1 = 200;;
+  ((StereoSGBM *) filter->sgbm)->P2 = 255;
+  ((StereoSGBM *) filter->sgbm)->disp12MaxDiff = 0;
+  ((StereoSGBM *) filter->sgbm)->preFilterCap = 0;
+  ((StereoSGBM *) filter->sgbm)->uniquenessRatio = 0;
+  ((StereoSGBM *) filter->sgbm)->speckleWindowSize = 0;
+  ((StereoSGBM *) filter->sgbm)->speckleRange = 0;
+  ((StereoSGBM *) filter->sgbm)->fullDP = true;
+#endif
 
   return (0);
 }
@@ -736,53 +706,49 @@ initialise_sbm (GstDisparity * filter)
 int
 run_sbm_iteration (GstDisparity * filter)
 {
-  (*((cv::StereoBM *) filter->
-          sbm)) (*((cv::Mat *) filter->img_left_as_cvMat_gray),
-      *((cv::Mat *) filter->img_right_as_cvMat_gray),
-      *((cv::Mat *) filter->depth_map_as_cvMat));
+#if (CV_MAJOR_VERSION >= 3)
+  ((StereoBM *) filter->
+          sbm)->compute (*((Mat *) filter->img_left_as_cvMat_gray),
+      *((Mat *) filter->img_right_as_cvMat_gray),
+      *((Mat *) filter->depth_map_as_cvMat));
+#else
+  (*((StereoBM *) filter->
+          sbm)) (*((Mat *) filter->img_left_as_cvMat_gray),
+      *((Mat *) filter->img_right_as_cvMat_gray),
+      *((Mat *) filter->depth_map_as_cvMat));
+#endif
   return (0);
 }
 
 int
 run_sgbm_iteration (GstDisparity * filter)
 {
-  (*((cv::StereoSGBM *) filter->
-          sgbm)) (*((cv::Mat *) filter->img_left_as_cvMat_gray),
-      *((cv::Mat *) filter->img_right_as_cvMat_gray),
-      *((cv::Mat *) filter->depth_map_as_cvMat));
-  return (0);
-}
-
-int
-run_svar_iteration (GstDisparity * filter)
-{
-  (*((cv::StereoVar *) filter->
-          svar)) (*((cv::Mat *) filter->img_left_as_cvMat_gray),
-      *((cv::Mat *) filter->img_right_as_cvMat_gray),
-      *((cv::Mat *) filter->depth_map_as_cvMat2));
-  return (0);
-}
-
-int
-run_sgc_iteration (GstDisparity * filter)
-{
-  cvFindStereoCorrespondenceGC (filter->cvGray_left,
-      filter->cvGray_right, filter->cvGray_depth_map1,
-      filter->cvGray_depth_map1_2, filter->sgc, 0);
+#if (CV_MAJOR_VERSION >= 3)
+  ((StereoSGBM *) filter->
+          sgbm)->compute (*((Mat *) filter->img_left_as_cvMat_gray),
+      *((Mat *) filter->img_right_as_cvMat_gray),
+      *((Mat *) filter->depth_map_as_cvMat));
+#else
+  (*((StereoSGBM *) filter->
+          sgbm)) (*((Mat *) filter->img_left_as_cvMat_gray),
+      *((Mat *) filter->img_right_as_cvMat_gray),
+      *((Mat *) filter->depth_map_as_cvMat));
+#endif
   return (0);
 }
 
 int
 finalise_sbm (GstDisparity * filter)
 {
-  delete (cv::Mat *) filter->img_left_as_cvMat_rgb;
-  delete (cv::Mat *) filter->img_right_as_cvMat_rgb;
-  delete (cv::Mat *) filter->depth_map_as_cvMat;
-  delete (cv::Mat *) filter->depth_map_as_cvMat2;
-  delete (cv::Mat *) filter->img_left_as_cvMat_gray;
-  delete (cv::Mat *) filter->img_right_as_cvMat_gray;
-  delete (cv::StereoBM *) filter->sbm;
-  delete (cv::StereoSGBM *) filter->sgbm;
-  delete (cv::StereoVar *) filter->svar;
+  delete (Mat *) filter->depth_map_as_cvMat;
+  delete (Mat *) filter->img_left_as_cvMat_gray;
+  delete (Mat *) filter->img_right_as_cvMat_gray;
+#if (CV_MAJOR_VERSION >= 3)
+  filter->sbm.release();
+  filter->sgbm.release();
+#else
+  delete (StereoBM *) filter->sbm;
+  delete (StereoSGBM *) filter->sgbm;
+#endif
   return (0);
 }

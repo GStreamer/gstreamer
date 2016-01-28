@@ -47,7 +47,9 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#include <opencv2/legacy/legacy.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/core/version.hpp>
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
@@ -92,16 +94,16 @@ struct _GstDisparity
   IplImage *cvGray_depth_map2;  /*IPL_DEPTH_8U */
   IplImage *cvGray_depth_map1_2;        /*IPL_DEPTH_16S */
 
-  void *sbm;                    /* cv::StereoBM */
-  void *sgbm;                   /* cv::StereoSGBM */
-  void *svar;                   /* cv::StereoVar */
-  CvStereoGCState *sgc;         /* This is a C implementation */
-  void *img_right_as_cvMat_rgb; /* cv::Mat */
-  void *img_left_as_cvMat_rgb;  /* cv::Mat */
-  void *depth_map_as_cvMat;     /* cv::Mat */
-  void *depth_map_as_cvMat2;    /* cv::Mat */
   void *img_right_as_cvMat_gray;        /* cv::Mat */
   void *img_left_as_cvMat_gray; /* cv::Mat */
+  void *depth_map_as_cvMat;     /* cv::Mat */
+#if (CV_MAJOR_VERSION >= 3)
+  cv::Ptr<cv::StereoBM> sbm;                    /* cv::StereoBM */
+  cv::Ptr<cv::StereoSGBM> sgbm;                /* cv::StereoSGBM */
+#else
+ void *sbm;                    /* cv::StereoBM */
+ void *sgbm;                   /* cv::StereoSGBM */
+#endif
 };
 
 struct _GstDisparityClass
