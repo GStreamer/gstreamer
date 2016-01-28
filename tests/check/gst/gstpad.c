@@ -1459,6 +1459,76 @@ GST_START_TEST (test_pad_blocking_with_probe_type_idle)
 
 GST_END_TEST;
 
+static GstFlowReturn
+test_probe_pull_getrange (GstPad * pad, GstObject * parent, guint64 offset,
+    guint length, GstBuffer ** buf)
+{
+  *buf = gst_buffer_new ();
+  return GST_FLOW_OK;
+}
+
+static gboolean
+test_probe_pull_activate_pull (GstPad * pad, GstObject * object)
+{
+  return gst_pad_activate_mode (pad, GST_PAD_MODE_PULL, TRUE);
+}
+
+static gpointer
+pull_range_async (GstPad * pad)
+{
+  GstBuffer *buf = NULL;
+  GstFlowReturn res = gst_pad_pull_range (pad, 0, 100, &buf);
+  if (buf)
+    gst_buffer_unref (buf);
+  return GINT_TO_POINTER (res);
+}
+
+GST_START_TEST (test_pad_probe_pull)
+{
+  GstPad *srcpad, *sinkpad;
+  GThread *thread;
+  GstFlowReturn ret;
+
+  srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+  sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_unless (sinkpad != NULL);
+
+  gst_pad_set_getrange_function (srcpad, test_probe_pull_getrange);
+  gst_pad_set_activate_function (sinkpad, test_probe_pull_activate_pull);
+  gst_pad_link (srcpad, sinkpad);
+
+  gst_pad_set_active (sinkpad, TRUE);
+  gst_pad_set_active (srcpad, TRUE);
+
+  id = gst_pad_add_probe (sinkpad,
+      GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_PULL,
+      block_async_cb_return_ok, NULL, NULL);
+
+  thread = g_thread_try_new ("gst-check", (GThreadFunc) pull_range_async,
+      sinkpad, NULL);
+
+  /* wait for the block */
+  while (!gst_pad_is_blocking (sinkpad)) {
+    g_usleep (10000);
+  }
+
+  /* stop with flushing */
+  gst_pad_push_event (srcpad, gst_event_new_flush_start ());
+
+  /* get return value from push */
+  ret = GPOINTER_TO_INT (g_thread_join (thread));
+  /* unflush now */
+  gst_pad_push_event (srcpad, gst_event_new_flush_stop (FALSE));
+  /* must be wrong state */
+  fail_unless (ret == GST_FLOW_FLUSHING);
+
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+}
+
+GST_END_TEST;
+
 static gboolean pad_probe_remove_notifiy_called = FALSE;
 
 static GstPadProbeReturn
@@ -2769,6 +2839,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_pad_blocking_with_probe_type_block);
   tcase_add_test (tc_chain, test_pad_blocking_with_probe_type_blocking);
   tcase_add_test (tc_chain, test_pad_blocking_with_probe_type_idle);
+  tcase_add_test (tc_chain, test_pad_probe_pull);
   tcase_add_test (tc_chain, test_pad_probe_remove);
   tcase_add_test (tc_chain, test_pad_probe_block_add_remove);
   tcase_add_test (tc_chain, test_pad_probe_block_and_drop_buffer);
