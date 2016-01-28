@@ -8019,24 +8019,40 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
       guint64 media_time;
       QtDemuxSegment *segment;
       guint32 rate_int;
+      GstClockTime media_start = GST_CLOCK_TIME_NONE;
 
       media_time = QT_UINT32 (buffer + 20 + i * 12);
       duration = QT_UINT32 (buffer + 16 + i * 12);
+
+      if (media_time != G_MAXUINT32)
+        media_start = QTSTREAMTIME_TO_GSTTIME (stream, media_time);
 
       segment = &stream->segments[count++];
 
       /* time and duration expressed in global timescale */
       segment->time = stime;
       /* add non scaled values so we don't cause roundoff errors */
-      time += duration;
-      stime = QTTIME_TO_GSTTIME (qtdemux, time);
+      if (duration) {
+        time += duration;
+        stime = QTTIME_TO_GSTTIME (qtdemux, time);
+        segment->duration = stime - segment->time;
+      } else {
+        /* zero duration does not imply media_start == media_stop
+         * but, only specify media_start.*/
+        stime = QTTIME_TO_GSTTIME (qtdemux, qtdemux->duration);
+        if (GST_CLOCK_TIME_IS_VALID (stime) && media_time != G_MAXUINT32
+            && stime >= media_start) {
+          segment->duration = stime - media_start;
+        } else {
+          segment->duration = GST_CLOCK_TIME_NONE;
+        }
+      }
       segment->stop_time = stime;
-      segment->duration = stime - segment->time;
 
       segment->trak_media_start = media_time;
       /* media_time expressed in stream timescale */
       if (media_time != G_MAXUINT32) {
-        segment->media_start = QTSTREAMTIME_TO_GSTTIME (stream, media_time);
+        segment->media_start = media_start;
         segment->media_stop = segment->media_start + segment->duration;
         media_segments_count++;
       } else {
