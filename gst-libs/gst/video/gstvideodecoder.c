@@ -1089,16 +1089,27 @@ _flush_events (GstPad * pad, GList * events)
 static gboolean
 gst_video_decoder_negotiate_default_caps (GstVideoDecoder * decoder)
 {
-  GstCaps *caps;
+  GstCaps *caps, *templcaps;
   GstVideoCodecState *state;
   GstVideoInfo info;
   gint i;
   gint caps_size;
   GstStructure *structure;
 
-  caps = gst_pad_get_allowed_caps (decoder->srcpad);
+  templcaps = gst_pad_get_pad_template_caps (decoder->srcpad);
+  caps = gst_pad_peer_query_caps (decoder->srcpad, templcaps);
+  if (caps) {
+    gst_caps_unref (templcaps);
+    templcaps = NULL;
+  } else {
+    caps = templcaps;
+    templcaps = NULL;
+  }
+
   if (!caps || gst_caps_is_empty (caps) || gst_caps_is_any (caps))
     goto caps_error;
+
+  GST_LOG_OBJECT (decoder, "peer caps %" GST_PTR_FORMAT, caps);
 
   /* before fixating, try to use whatever upstream provided */
   caps = gst_caps_make_writable (caps);

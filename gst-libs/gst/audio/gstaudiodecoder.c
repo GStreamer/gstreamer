@@ -1950,7 +1950,7 @@ gst_audio_decoder_do_byte (GstAudioDecoder * dec)
 static gboolean
 gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
 {
-  GstCaps *caps;
+  GstCaps *caps, *templcaps;
   gint i;
   gint channels = 0;
   gint rate;
@@ -1958,9 +1958,20 @@ gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
   gint caps_size;
   GstStructure *structure;
 
-  caps = gst_pad_get_allowed_caps (dec->srcpad);
+  templcaps = gst_pad_get_pad_template_caps (dec->srcpad);
+  caps = gst_pad_peer_query_caps (dec->srcpad, templcaps);
+  if (caps) {
+    gst_caps_unref (templcaps);
+    templcaps = NULL;
+  } else {
+    caps = templcaps;
+    templcaps = NULL;
+  }
+
   if (!caps || gst_caps_is_empty (caps) || gst_caps_is_any (caps))
     goto caps_error;
+
+  GST_LOG_OBJECT (dec, "peer caps  %" GST_PTR_FORMAT, caps);
 
   /* before fixating, try to use whatever upstream provided */
   caps = gst_caps_make_writable (caps);
