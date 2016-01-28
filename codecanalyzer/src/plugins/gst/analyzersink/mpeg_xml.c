@@ -21,6 +21,7 @@
 #include "mpeg_xml.h"
 #include "xml_utils.h"
 
+#include <glib.h>
 
 static gboolean
 create_seq_hdr_xml (xmlTextWriterPtr writer, GstMpegVideoSequenceHdr * seq_hdr)
@@ -423,7 +424,7 @@ analyzer_create_mpeg2video_frame_xml (GstMpegVideoMeta * mpeg_meta,
 
   if (xmlTextWriterWriteComment (writer,
           (xmlChar *) "Data parssed from the mpeg2 stream") < 0) {
-    g_error ("Error: Failed to write the comment \n");
+    g_printerr ("Error: Failed to write the comment\n");
     return FALSE;
   }
 
@@ -532,12 +533,12 @@ analyzer_create_mpeg2video_frame_xml (GstMpegVideoMeta * mpeg_meta,
   }
 #endif
   if (xmlTextWriterEndElement (writer) < 0) {
-    g_error ("Error: Failed to end mpeg2 root element \n");
+    g_printerr ("Error: Failed to end mpeg2 root element\n");
     return FALSE;
   }
 
   if (xmlTextWriterEndDocument (writer) < 0) {
-    g_error ("Error: Ending document \n");
+    g_printerr ("Error: Ending document\n");
     return FALSE;
   }
 

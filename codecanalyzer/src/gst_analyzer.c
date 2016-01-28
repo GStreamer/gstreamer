@@ -187,7 +187,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
   } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
     GError *error = NULL;
     gst_message_parse_error (message, &error, NULL);
-    g_error ("gstreamer error : %s", error->message);
+    g_printerr ("gstreamer error : %s\n", error->message);
     g_error_free (error);
     return FALSE;
   }
@@ -264,7 +264,7 @@ gst_analyzer_init (GstAnalyzer * analyzer, char *uri)
     gst_init (NULL, NULL);
 
   if (!analyzer_sink_register_static ()) {
-    g_error ("Failed to register static plugins.... \n");
+    g_printerr ("Failed to register static plugins....\n");
     status = GST_ANALYZER_STATUS_CODEC_PARSER_MISSING;
     goto error;
   }
@@ -303,7 +303,7 @@ gst_analyzer_init (GstAnalyzer * analyzer, char *uri)
   analyzer->pipeline = gst_pipeline_new ("pipeline");
 
   if (!analyzer->src || !analyzer->parser || !analyzer->sink) {
-    g_error ("Failed to create the necessary gstreamer elements..");
+    g_printerr ("Failed to create the necessary gstreamer elements..\n");
     status = GST_ANALYZER_STATUS_ERROR_UNKNOWN;
     goto error;
   }

@@ -29,6 +29,7 @@
 #include <libxml/parser.h>
 #include <gtk/gtk.h>
 
+#include <glib.h>
 #include <glib/gprintf.h>
 
 #include "gst_analyzer.h"
@@ -1034,13 +1035,13 @@ main (int argc, char *argv[])
 
   ret = analyzer_ui_init ();
   if (!ret) {
-    g_error ("Failed to activate the gtk+-3.x backend \n");
+    g_printerr ("Failed to activate the gtk+-3.x backend\n");
     goto done;
   }
 
   ret = analyzer_create_dirs ();
   if (!ret) {
-    g_error ("Failed to create the necessary dir names \n");
+    g_printerr ("Failed to create the necessary dir names\n");
     goto done;
   }
 

@@ -19,6 +19,8 @@
  */
 #include "xml_parse.h"
 
+#include <glib.h>
+
 void
 analyzer_node_list_free (GList * list)
 {
@@ -62,13 +64,13 @@ analyzer_get_list_header_strings (char *file_name)
 
   doc = xmlParseFile (file_name);
   if (!doc) {
-    g_error ("Failed to do xmlParseFile for the file.. %s\n", file_name);
+    g_printerr ("Failed to do xmlParseFile for the file.. %s\n", file_name);
     goto error;
   }
 
   cur = xmlDocGetRootElement (doc);
   if (cur == NULL) {
-    g_error ("empty document\n");
+    g_printerr ("empty document\n");
     xmlFreeDoc (doc);
     goto error;
   }
@@ -76,7 +78,7 @@ analyzer_get_list_header_strings (char *file_name)
   if (xmlStrcmp (cur->name, (const xmlChar *) "mpeg2") &&
       xmlStrcmp (cur->name, (const xmlChar *) "h264") &&
       xmlStrcmp (cur->name, (const xmlChar *) "h265")) {
-    g_error ("document of the wrong type !!");
+    g_printerr ("document of the wrong type !!\n");
     xmlFreeDoc (doc);
     goto error;
   }
@@ -105,22 +107,23 @@ analyzer_get_list_analyzer_node_from_xml (char *file_name, char *node_name)
 
   doc = xmlParseFile (file_name);
   if (!doc) {
-    g_error ("Failed to do xmlParseFile for the file.. %s\n", file_name);
+    g_printerr ("Failed to do xmlParseFile for the file.. %s\n", file_name);
+    goto error;
   }
 
   cur = xmlDocGetRootElement (doc);
   if (cur == NULL) {
-    g_error ("empty document\n");
     xmlFreeDoc (doc);
-    return;
+    g_printerr ("empty document\n");
+    goto error;
   }
 
   if (xmlStrcmp (cur->name, (const xmlChar *) "mpeg2") &&
       xmlStrcmp (cur->name, (const xmlChar *) "h264") &&
       xmlStrcmp (cur->name, (const xmlChar *) "h265")) {
-    g_error ("document of the wrong type !!");
     xmlFreeDoc (doc);
-    return;
+    g_printerr ("document of the wrong type !!\n");
+    goto error;
   }
 
   tmp = cur->xmlChildrenNode;
@@ -179,4 +182,7 @@ analyzer_get_list_analyzer_node_from_xml (char *file_name, char *node_name)
     list = g_list_reverse (list);
 
   return list;
+
+error:
+  return NULL;
 }
