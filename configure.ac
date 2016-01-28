@@ -14,7 +14,6 @@ m4_define([default_glapi],              [any])
 
 # gstreamer-vaapi library (libtool) version number
 m4_define([gst_vaapi_lt_current],       [7])
-m4_define([gst_vaapi_lt_current_bias],  [7])
 m4_define([gst_vaapi_lt_revision],      [0])
 m4_define([gst_vaapi_lt_age],           [0])
 
@@ -244,10 +243,6 @@ if test "x$enable_egl" = "xyes" -a $HAVE_GSTGL -ne 1; then
   AC_MSG_WARN([GStreamer/GL helper libraries not found, disabling EGL support])
   enable_egl="no"
 fi
-
-GST_VAAPI_MAJOR_VERSION=`expr gst_vaapi_lt_current - gst_vaapi_lt_current_bias`
-AC_DEFINE_UNQUOTED([GST_VAAPI_MAJOR_VERSION_S], ["$GST_VAAPI_MAJOR_VERSION"],
-  [Defined to the string representation of gstreamer-vaapi major version])
 
 dnl GST_ALL_LDFLAGS:
 dnl LDFLAGS really should only contain flags, not libs - they get added before
@@ -880,6 +875,10 @@ AC_DEFINE_UNQUOTED([USE_GLES_VERSION_MASK], [$GLES_VERSION_MASK],
 AC_DEFINE_UNQUOTED([USE_WAYLAND], [$USE_WAYLAND],
   [Defined to 1 if WAYLAND is enabled])
 AM_CONDITIONAL([USE_WAYLAND], [test $USE_WAYLAND -eq 1])
+
+dnl @TODO hack for egl's dynamic module loading. remove it!
+AC_DEFINE_UNQUOTED([GST_VAAPI_MAJOR_VERSION_S], ["0"],
+  [Defined to the string representation of gstreamer-vaapi major version])
 
 AC_CONFIG_FILES([
     Makefile
