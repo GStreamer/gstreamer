@@ -853,7 +853,7 @@ menu_help_callback (void)
   dialog = gtk_message_dialog_new (GTK_WINDOW (ui->main_window),
       GTK_DIALOG_DESTROY_WITH_PARENT,
       GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
-      "See https://github.com/Codecanalyzer/codecanalyzer/blob/master/README");
+      "See http://cgit.freedesktop.org/gstreamer/gst-devtools/plain/codecanalyzer/README.md");
   gtk_window_set_title (GTK_WINDOW (dialog), "Help");
   gtk_dialog_run (GTK_DIALOG (dialog));
   gtk_widget_destroy (dialog);
