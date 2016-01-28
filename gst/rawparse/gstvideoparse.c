@@ -467,10 +467,13 @@ gst_video_parse_update_info (GstVideoParse * vp)
   if (update_size) {
     framesize = 0;
 
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++)
-      framesize += info->offset[i];
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+      gint planesize = info->offset[i];
+      planesize += gst_video_parse_get_plane_size (info, i);
 
-    framesize += gst_video_parse_get_plane_size (info, i - 1);
+      if (planesize > framesize)
+        framesize = planesize;
+    }
 
     info->size = framesize;
   }
