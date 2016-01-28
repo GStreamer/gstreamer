@@ -2,16 +2,19 @@
 m4_define([gst_vaapi_major_version], [0])
 m4_define([gst_vaapi_minor_version], [7])
 m4_define([gst_vaapi_micro_version], [1])
-m4_define([gst_vaapi_pre_version],   [1])
+m4_define([gst_vaapi_nano_version],  [1])
 m4_define([gst_vaapi_version],
           [gst_vaapi_major_version.gst_vaapi_minor_version.gst_vaapi_micro_version])
-m4_if(gst_vaapi_pre_version, [0], [], [
-m4_append([gst_vaapi_version], gst_vaapi_pre_version, [.pre])
-])
+m4_if(gst_vaapi_nano_version, [0], [],
+  [m4_append([gst_vaapi_version], gst_vaapi_nano_version, [.])])
 
 # Configure defaults
 m4_define([default_glapi],              [any])
 
+dnl - library source changed -> increment REVISION
+dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
+dnl - interfaces added -> increment AGE
+dnl - interfaces removed -> AGE = 0
 # gstreamer-vaapi library (libtool) version number
 m4_define([gst_vaapi_lt_current],       [7])
 m4_define([gst_vaapi_lt_revision],      [0])
@@ -44,25 +47,41 @@ AC_INIT([GStreamer VA-API Plug-ins], [gst_vaapi_version],
   [http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],
   [gstreamer-vaapi])
 
+dnl define the output header for config
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 
-AC_CANONICAL_TARGET
+AG_GST_INIT
 
+dnl initialize automake
 AM_INIT_AUTOMAKE([-Wno-portability 1.14 no-dist-gzip dist-xz tar-ustar subdir-objects])
 
-dnl Use pretty build output
+dnl define PACKAGE_VERSION_* variables
+AS_VERSION
+
+dnl check if this is a release version
+AS_NANO(GST_GIT="no", GST_GIT="yes")
+
+dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
+AM_MAINTAINER_MODE([enable])
+
+dnl use pretty build output by default
 AM_SILENT_RULES([yes])
 
-dnl Check for tools
-AC_PROG_CC
-AM_PROG_CC_C_O
+dnl our libraries and install dirs use GST_API_VERSION in the filename
+dnl to allow side-by-side installation of different API versions
+GST_API_VERSION=1.0
+AC_SUBST([GST_API_VERSION])
+AC_DEFINE_UNQUOTED([GST_API_VERSION], ["$GST_API_VERSION"],
+  [GStreamer API Version])
 
-AC_ARG_VAR([GIT], [Path to git program, if any])
-AC_PATH_PROG([GIT], [git])
-AM_CONDITIONAL([HAVE_GIT], [test -n "$GIT"])
+AG_GST_LIBTOOL_PREPARE
+
+dnl CURRENT, REVISION, AGE
+dnl sets GST_LT_LDFLAGS
+AS_LIBTOOL(GST, gst_vaapi_lt_current, gst_vaapi_lt_revision, gst_vaapi_lt_age)
 
 dnl *** required versions of GStreamer stuff ***
 GLIB_REQ=glib_version
@@ -79,9 +98,20 @@ VAAPI_DRM_REQ=va_api_drm_version
 VAAPI_X11_REQ=va_api_x11_version
 VAAPI_WLD_REQ=va_api_wld_version
 
-dnl Initialize libtool
-LT_PREREQ([2.2.6])
-LT_INIT
+dnl *** autotools stuff ****
+
+dnl allow for different autotools
+AS_AUTOTOOLS_ALTERNATE
+
+dnl Add parameters for aclocal
+AC_SUBST([ACLOCAL_AMFLAGS], ["-I m4 -I common/m4"])
+
+dnl *** check for arguments to configure ***
+
+AG_GST_ARG_DISABLE_FATAL_WARNINGS
+AG_GST_ARG_DEBUG
+
+AG_GST_ARG_WITH_PKG_CONFIG_PATH
 
 AC_ARG_ENABLE([encoders],
   AS_HELP_STRING([--enable-encoders],
@@ -118,17 +148,33 @@ AC_ARG_WITH([glapi],
     [build with the specified OpenGL APIs @<:@default=default_glapi@:>@]),
   [GLAPI="$with_glapi"], [GLAPI=default_glapi])
 
-dnl Check for basic libraries
+dnl *** checks for platform ***
+
+dnl * hardware/architecture *
+
+dnl check CPU type
+AG_GST_ARCH
+
+dnl *** checks for programs ***
+
+dnl find a compiler
+AC_PROG_CC
+AC_PROG_CC_STDC
+
+dnl check if the compiler supports '-c' and '-o' options
+AM_PROG_CC_C_O
+
+dnl check for git command for version generation in libgstvaapi
+AC_PATH_PROG([GIT], [git])
+AM_CONDITIONAL([HAVE_GIT], [test -n "$GIT"])
+
+dnl check for documentation tools
+GTK_DOC_CHECK([$GTKDOC_REQ])
+AG_GST_PLUGIN_DOCS([$GTKDOC_REQ])
+
+dnl *** checks for libraries ***
+dnl check for libm, for sin() etc.
 AC_CHECK_LIB([m], [tan])
-
-dnl Check for Gtk doc
-# gtkdocize greps for '^GTK_DOC_CHECK', so it needs to be on its own line
-m4_ifdef([GTK_DOC_CHECK], [
-GTK_DOC_CHECK([$GTKDOC_REQ], [--flavour no-tmpl])], [
-AM_CONDITIONAL([ENABLE_GTK_DOC], [false])])
-
-dnl Check for GLib
-PKG_CHECK_MODULES([GLIB], [glib-2.0 >= $GLIB_REQ])
 
 dnl Check to see if dlopen is in default libraries (like Solaris, which
 dnl has it in libc), or if libdl is needed to get it.
@@ -136,47 +182,65 @@ AC_CHECK_FUNC([dlopen], [], [
   AC_CHECK_LIB([dl], [dlopen], [DLOPEN_LIBS="-ldl"])])
 AC_SUBST([DLOPEN_LIBS])
 
+dnl define LIBDIR so we can inform people where we live
+AS_AC_EXPAND([LIBDIR], [$libdir])
+AC_DEFINE_UNQUOTED([LIBDIR], ["$LIBDIR"], [library dir])
+
+dnl set location of plugin directory
+AG_GST_SET_PLUGINDIR
+
+dnl *** checks for header files ***
+
+dnl *** checks for types/defines ***
+
+dnl *** checks for structures ***
+
+dnl *** checks for compiler characteristics ***
+
+dnl *** checks for library functions ***
+
+dnl *** checks for headers ***
+
+dnl *** checks for dependency libraries ***
+
 dnl ---------------------------------------------------------------------------
 dnl -- GStreamer                                                             --
 dnl ---------------------------------------------------------------------------
-GST_PKG_VERSION="1.0"
-AC_SUBST([GST_PKG_VERSION])
-AC_DEFINE_UNQUOTED([GST_PKG_VERSION_S], ["$GST_PKG_VERSION"],
-  [Defined to the string representation of GStreamer API version])
+dnl GLib is required
+AG_GST_GLIB_CHECK([$GLIB_REQ])
 
-dnl GStreamer Core
-PKG_CHECK_MODULES([GST], [gstreamer-$GST_PKG_VERSION >= $GST_REQ])
+dnl checks for gstreamer
+dnl uninstalled is selected preferentially -- see pkg-config(1)
+AG_GST_CHECK_GST([$GST_API_VERSION], [$GST_REQ], [yes])
 
+dnl back compatibility
 AC_MSG_CHECKING([for GStreamer API version])
-gst_api_version=`$PKG_CONFIG --modversion "gstreamer-$GST_PKG_VERSION"`
+gst_api_version=`$PKG_CONFIG --modversion "gstreamer-$GST_API_VERSION"`
 gst_major_version=`echo "$gst_api_version" | cut -d'.' -f1`
 gst_minor_version=`echo "$gst_api_version" | cut -d'.' -f2`
-GST_API_VERSION="${gst_major_version}.${gst_minor_version}"
-AC_MSG_RESULT([$GST_API_VERSION])
-AC_DEFINE_UNQUOTED([GST_API_VERSION_S], ["$GST_API_VERSION"],
+GST_VERSION="${gst_major_version}.${gst_minor_version}"
+AC_MSG_RESULT([$GST_VERSION])
+AC_DEFINE_UNQUOTED([GST_API_VERSION_S], ["$GST_VERSION"],
   [Defined to the string representation of GStreamer version])
 
-PKG_CHECK_MODULES([GST_BASE], [gstreamer-base-$GST_PKG_VERSION >= $GST_REQ])
+AG_GST_CHECK_GST_BASE([$GST_API_VERSION], [$GST_REQ], [yes])
+AG_GST_CHECK_GST_PLUGINS_BASE([$GST_API_VERSION], [$GST_PBREQ], [yes])
 
-dnl GStreamer -base plugins
-PKG_CHECK_MODULES([GST_PLUGINS_BASE],
-  [gstreamer-plugins-base-$GST_PKG_VERSION >= $GST_PBREQ])
+dnl gst_dmabuf_memory_get_fd (gstreamer-allocators)
+AG_GST_CHECK_MODULES([GST_ALLOCATORS],
+  [gstreamer-allocators-$GST_API_VERSION], [$GST_PBREQ], [yes])
 
-dnl ... gst_dmabuf_memory_get_fd (gstreamer-allocators)
-PKG_CHECK_MODULES([GST_ALLOCATORS],
-  [gstreamer-allocators-$GST_PKG_VERSION >= $GST_PBREQ])
-
-dnl ... GstVideoOverlayComposition (gstreamer-video)
-PKG_CHECK_MODULES([GST_VIDEO],
-  [gstreamer-video-$GST_PKG_VERSION >= $GST_PBREQ])
+dnl GstVideoOverlayComposition (gstreamer-video)
+AG_GST_CHECK_MODULES([GST_VIDEO],
+  [gstreamer-video-$GST_API_VERSION], [$GST_PBREQ], [yes])
 
 dnl ... GStreamer base utils (gstreamer-pbutils)
-PKG_CHECK_MODULES([GST_PBUTILS],
-  [gstreamer-pbutils-$GST_PKG_VERSION >= $GST_PBREQ])
+AG_GST_CHECK_MODULES([GST_PBUTILS],
+  [gstreamer-pbutils-$GST_API_VERSION], [$GST_PBREQ], [yes])
 
-dnl ... bitstream parsers
-PKG_CHECK_MODULES([GST_CODEC_PARSERS],
-  [gstreamer-codecparsers-$GST_PKG_VERSION >= $GST_PBADREQ])
+dnl bitstream parsers (gstreamer-codecparsers)
+AG_GST_CHECK_MODULES([GST_CODEC_PARSERS],
+  [gstreamer-codecparsers-$GST_API_VERSION], [$GST_PBADREQ], [yes])
 
 dnl ... VP9 parser, with required extensions
 HAVE_GST_VP9_PARSER=0
@@ -211,7 +275,7 @@ dnl ... opengl helper libraries
 HAVE_GSTGL=0
 if test "x$enable_opengl" = "xyes"; then
   PKG_CHECK_MODULES([GST_GL],
-    [gstreamer-gl-$GST_PKG_VERSION >= $GST_PBADREQ],
+    [gstreamer-gl-$GST_API_VERSION >= $GST_PBADREQ],
     [
       HAVE_GSTGL=1
       AC_CACHE_CHECK([for GStreamer OpenGL helper libraries],
@@ -248,34 +312,6 @@ if test "x$enable_egl" = "xyes" -a $HAVE_GSTGL -ne 1; then
   AC_MSG_WARN([GStreamer/GL helper libraries not found, disabling EGL support])
   enable_egl="no"
 fi
-
-dnl GST_ALL_LDFLAGS:
-dnl LDFLAGS really should only contain flags, not libs - they get added before
-dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
-GST_ALL_LDFLAGS="-no-undefined"
-AC_SUBST([GST_ALL_LDFLAGS])
-
-dnl GST_PLUGIN_LDFLAGS:
-dnl this really should only contain flags, not libs - they get added before
-dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
-GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^([_]*gst_plugin_desc|gst_.*_get_type)\$\$' $GST_ALL_LDFLAGS"
-AC_SUBST([GST_PLUGIN_LDFLAGS])
-
-dnl Check for the GStreamer plugins directory
-AC_ARG_VAR([GST_PLUGIN_PATH_1_0],
-  [installation path for gstreamer-vaapi plugin elements for GStreamer 1.0])
-AC_MSG_CHECKING([for GStreamer plugins directory])
-if test -n "$GST_PLUGIN_PATH_1_0"; then
-    GST_PLUGINS_DIR="$GST_PLUGIN_PATH_1_0"
-else
-    GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_PKG_VERSION --variable pluginsdir`
-    if test -z "$GST_PLUGINS_DIR"; then
-        GST_PLUGINS_DIR="\$(libdir)/gstreamer-$GST_PKG_VERSION"
-    fi
-fi
-AC_MSG_RESULT([$GST_PLUGINS_DIR])
-plugindir="$GST_PLUGINS_DIR"
-AC_SUBST([plugindir])
 
 dnl ---------------------------------------------------------------------------
 dnl -- Renderers                                                             --
@@ -820,6 +856,77 @@ if test $USE_WAYLAND -eq 1; then
     [], [USE_WAYLAND=0])
 fi
 
+dnl *** finalize CFLAGS, LDFLAGS, LIBS
+
+# set by AG_GST_PARSE_SUBSYSTEM_DISABLES above
+dnl make sure it doesn't complain about unused variables if debugging is disabled
+NO_WARNINGS=""
+AG_GST_CHECK_GST_DEBUG_DISABLED([NO_WARNINGS="-Wno-unused"], [
+    -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
+    -Wwrite-strings -Wformat-security -Wold-style-definition
+    -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
+    -Wnested-externs $NO_WARNINGS])
+
+dnl define an ERROR_CFLAGS Makefile variable
+AG_GST_SET_ERROR_CFLAGS([$FATAL_WARNINGS], [$NO_WARNINGS])
+
+dnl define correct level for debugging messages
+AG_GST_SET_LEVEL_DEFAULT([$GST_GIT])
+
+dnl Overview:
+dnl GST_OPTION_CFLAGS:  common flags for profiling, debugging, errors, ...
+dnl GST_*:              flags shared by built objects to link against GStreamer
+dnl GST_ALL_LDFLAGS:    linker flags shared by all
+dnl GST_LIB_LDFLAGS:    additional linker flags for all libaries
+dnl GST_LT_LDFLAGS:     library versioning of our libraries
+dnl GST_PLUGIN_LDFLAGS: flags to be used for all plugins
+
+dnl GST_OPTION_CFLAGS
+if test "x$USE_DEBUG" = xyes; then
+   PROFILE_CFLAGS="-g"
+fi
+AC_SUBST([PROFILE_CFLAGS])
+
+if test "x$GST_GIT" = "xyes"; then
+  DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
+else
+  DEPRECATED_CFLAGS=""
+fi
+AC_SUBST([DEPRECATED_CFLAGS])
+
+dnl every flag in GST_OPTION_CFLAGS and GST_OPTION_CXXFLAGS can be overridden
+dnl at make time with e.g. make ERROR_CFLAGS=""
+GST_OPTION_CFLAGS="\$(WARNING_CFLAGS) \$(ERROR_CFLAGS) \$(DEBUG_CFLAGS) \$(PROFILE_CFLAGS) \$(DEPRECATED_CFLAGS)"
+AC_SUBST([GST_OPTION_CFLAGS])
+
+dnl FIXME: do we want to rename to GST_ALL_* ?
+dnl prefer internal headers to already installed ones
+dnl also add builddir include for enumtypes and marshal
+dnl add GST_OPTION_CFLAGS, but overridable
+GST_CFLAGS="$GST_CFLAGS -DGST_USE_UNSTABLE_API"
+GST_CFLAGS="$GST_CFLAGS $GLIB_EXTRA_CFLAGS \$(GST_OPTION_CFLAGS)"
+AC_SUBST([GST_CFLAGS])
+
+dnl LDFLAGS really should only contain flags, not libs - they get added before
+dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
+GST_ALL_LDFLAGS="-no-undefined"
+if test "x${enable_Bsymbolic}" = "xyes"; then
+  GST_ALL_LDFLAGS="$GST_ALL_LDFLAGS -Wl,-Bsymbolic-functions"
+fi
+AC_SUBST([GST_ALL_LDFLAGS])
+
+dnl GST_LIB_LDFLAGS
+dnl linker flags shared by all libraries
+dnl LDFLAGS modifier defining exported symbols from built libraries
+dnl (export _gst_foo but not __gst_foo)
+GST_LIB_LDFLAGS="-export-symbols-regex ^_?\(gst_\|Gst\|GST_\).*"
+AC_SUBST([GST_LIB_LDFLAGS])
+
+dnl this really should only contain flags, not libs - they get added before
+dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
+GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_.*' $GST_ALL_LDFLAGS"
+AC_SUBST([GST_PLUGIN_LDFLAGS])
+
 dnl ---------------------------------------------------------------------------
 dnl -- Generate files and summary                                            --
 dnl ---------------------------------------------------------------------------
@@ -894,9 +1001,10 @@ AC_DEFINE_UNQUOTED([GST_VAAPI_MAJOR_VERSION_S], ["0"],
 
 AC_CONFIG_FILES([
     Makefile
+    common/Makefile
+    common/m4/Makefile
     docs/Makefile
     docs/reference/Makefile
-    docs/reference/plugins/Makefile
     docs/reference/plugins/plugins-docs.xml
     gst-libs/Makefile
     gst-libs/gst/Makefile
@@ -924,7 +1032,7 @@ echo
 echo $PACKAGE configuration summary:
 echo
 echo Installation Prefix .............. : ${prefix}
-echo GStreamer API version ............ : $GST_API_VERSION
+echo GStreamer API version ............ : $GST_VERSION
 echo VA-API version ................... : $VA_VERSION_STR
 echo Video encoding ................... : $(yesno $USE_ENCODERS)
 echo Video outputs .................... : $VIDEO_OUTPUTS
