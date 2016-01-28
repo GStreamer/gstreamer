@@ -7,9 +7,9 @@
  *  the BSD license without a advertisig clause. Andy Lo A Foe then relicensed the
  *  code when he used it for Alsaplayer to GPL with Tinic's permission. Richard Boulton
  *  then took this code and made a GPL plugin out of it.
- * 
+ *
  *  7th December 2004 Christian Schaller: Richard Boulton and Andy Lo A Foe gave
- *  permission to relicense their changes under BSD license so we where able to restore the 
+ *  permission to relicense their changes under BSD license so we where able to restore the
  *  code to Tinic's original BSD license.
  *
  * This file is under what is known as the BSD license:
@@ -17,21 +17,21 @@
  * Redistribution and use in source and binary forms, with or without modification, i
  * are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of 
+ * 1. Redistributions of source code must retain the above copyright notice, this list of
  * conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list 
- * of conditions and the following disclaimer in the documentation and/or other materials 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list
+ * of conditions and the following disclaimer in the documentation and/or other materials
  * provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products derived from 
+ * 3. The name of the author may not be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, 
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
@@ -95,14 +95,12 @@ monoscope_update (struct monoscope_state *stateptr, gint16 data[512])
   int factor;
   int val;
   int max = 1;
-  short *thisEq;
+  short *thisEq = stateptr->copyEq;
 
-  memcpy (stateptr->copyEq, data, sizeof (short) * CONVOLVE_BIG);
-  thisEq = stateptr->copyEq;
-#if 1
+  memcpy (thisEq, data, sizeof (short) * CONVOLVE_BIG);
   val = convolve_match (stateptr->avgEq, stateptr->copyEq, stateptr->cstate);
   thisEq += val;
-#endif
+
   memset (stateptr->display, 0, 256 * 128 * sizeof (guint32));
   for (i = 0; i < 256; i++) {
     foo = thisEq[i] + (stateptr->avgEq[i] >> 1);
