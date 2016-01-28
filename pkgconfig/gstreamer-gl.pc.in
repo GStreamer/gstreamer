@@ -6,8 +6,8 @@ pluginsdir=@libdir@/gstreamer-@GST_API_VERSION@
 
 Name: GStreamer OpenGL Plugins Libraries
 Description: Streaming media framework, OpenGL plugins libraries
-Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@
 Version: @VERSION@
-Libs: -L${libdir} -lgstgl-@GST_API_VERSION@ @GL_LIBS@
-Cflags: -I${includedir} -I${libdir}/gstreamer-@GST_API_VERSION@/include @GL_CFLAGS@
+Requires: gstreamer-base-@GST_API_VERSION@ gstreamer-@GST_API_VERSION@
 
+Libs: -L${libdir} -lgstgl-@GST_API_VERSION@ @GL_LIBS@
+Cflags: -I${includedir} @GL_CFLAGS@

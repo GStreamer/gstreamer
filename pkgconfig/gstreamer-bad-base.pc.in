@@ -2,14 +2,15 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@/gstreamer-@GST_API_VERSION@
-pluginsdir=@libdir@/gstreamer-@GST_API_VERSION@
+datarootdir=${prefix}/share
+datadir=${datarootdir}
+girdir=${datadir}/gir-1.0
+typelibdir=${libdir}/girepository-1.0
 
-Name: GStreamer bad base classes, uninstalled
-Description: Bad base classes for GStreamer elements, Not Installed
+Name: GStreamer bad base classes
+Description: Bad base classes for GStreamer elements
 Version: @VERSION@
 Requires: gstreamer-@GST_API_VERSION@
 
-Libs: -L${libdir} ${libdir}/libgstbadbase-@GST_API_VERSION@.la @BADBASE_LIBS@
-Cflags: -I${includedir} -I@srcdir@/.. @BADBASE_CFLAGS@
-
-libraries=badbase
+Libs: -L${libdir} ${libdir}/libgstbadbase-@GST_API_VERSION@.la
+Cflags: -I${includedir}
