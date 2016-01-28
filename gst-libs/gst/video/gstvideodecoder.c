@@ -1098,13 +1098,11 @@ gst_video_decoder_negotiate_default_caps (GstVideoDecoder * decoder)
 
   templcaps = gst_pad_get_pad_template_caps (decoder->srcpad);
   caps = gst_pad_peer_query_caps (decoder->srcpad, templcaps);
-  if (caps) {
+  if (caps)
     gst_caps_unref (templcaps);
-    templcaps = NULL;
-  } else {
+  else
     caps = templcaps;
-    templcaps = NULL;
-  }
+  templcaps = NULL;
 
   if (!caps || gst_caps_is_empty (caps) || gst_caps_is_any (caps))
     goto caps_error;
