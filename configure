@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# TODO be marter about per component flags if needed.
+# TODO be smarter about per component flags if needed.
 
 HELP="Helper configure script to build gst-devtools
 
@@ -44,7 +44,7 @@ done
 
 if [ -z "$VALIDATE"  ] && [ -z "$CODECANALYZER" ] && [ -z $MEDIAINFO ]
 then
-  echo "No compoonent specified, building everything"
+  echo "No component specified, building everything"
   VALIDATE=validate
   CODECANALYZER=codecanalyzer
   MEDIAINFO=mediainfo
