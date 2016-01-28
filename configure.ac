@@ -20,9 +20,6 @@ m4_define([gst_vaapi_lt_age],           [0])
 # glib version number
 m4_define([glib_version], [2.32])
 
-# gmodule version number
-m4_define([gmodule_version], [2.32])
-
 # gstreamer version number
 m4_define([gst_version],                [1.6.3])
 m4_define([gst_plugins_base_version],   [1.6.3])
@@ -67,6 +64,21 @@ AC_ARG_VAR([GIT], [Path to git program, if any])
 AC_PATH_PROG([GIT], [git])
 AM_CONDITIONAL([HAVE_GIT], [test -n "$GIT"])
 
+dnl *** required versions of GStreamer stuff ***
+GLIB_REQ=glib_version
+GST_REQ=gst_version
+GST_PBREQ=gst_plugins_base_version
+GST_PBADREQ=gst_plugins_bad_version
+WAYLAND_REQ=wayland_api_version
+GTKDOC_REQ=gtkdoc_version
+
+dnl *** required versions of VA-API stuff ***
+VAAPI_REQ=va_api_version
+VAAPI_ENC_REQ=va_api_enc_version
+VAAPI_DRM_REQ=va_api_drm_version
+VAAPI_X11_REQ=va_api_x11_version
+VAAPI_WLD_REQ=va_api_wld_version
+
 dnl Initialize libtool
 LT_PREREQ([2.2.6])
 LT_INIT
@@ -110,15 +122,13 @@ dnl Check for basic libraries
 AC_CHECK_LIB([m], [tan])
 
 dnl Check for Gtk doc
-GTKDOC_VERSION=gtkdoc_version
 # gtkdocize greps for '^GTK_DOC_CHECK', so it needs to be on its own line
 m4_ifdef([GTK_DOC_CHECK], [
-GTK_DOC_CHECK([$GTKDOC_VERSION], [--flavour no-tmpl])], [
+GTK_DOC_CHECK([$GTKDOC_REQ], [--flavour no-tmpl])], [
 AM_CONDITIONAL([ENABLE_GTK_DOC], [false])])
 
 dnl Check for GLib
-GLIB_VERSION_REQUIRED=glib_version
-PKG_CHECK_MODULES([GLIB], [glib-2.0 >= $GLIB_VERSION_REQUIRED])
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= $GLIB_REQ])
 
 dnl Check to see if dlopen is in default libraries (like Solaris, which
 dnl has it in libc), or if libdl is needed to get it.
@@ -134,14 +144,8 @@ AC_SUBST([GST_PKG_VERSION])
 AC_DEFINE_UNQUOTED([GST_PKG_VERSION_S], ["$GST_PKG_VERSION"],
   [Defined to the string representation of GStreamer API version])
 
-dnl Versions for GStreamer and plugins-base
-GST_VERSION_REQUIRED=gst_version
-GST_PLUGINS_BASE_VERSION_REQUIRED=gst_plugins_base_version
-GST_PLUGINS_BAD_VERSION_REQUIRED=gst_plugins_bad_version
-
 dnl GStreamer Core
-PKG_CHECK_MODULES([GST],
-  [gstreamer-$GST_PKG_VERSION >= $GST_VERSION_REQUIRED])
+PKG_CHECK_MODULES([GST], [gstreamer-$GST_PKG_VERSION >= $GST_REQ])
 
 AC_MSG_CHECKING([for GStreamer API version])
 gst_api_version=`$PKG_CONFIG --modversion "gstreamer-$GST_PKG_VERSION"`
@@ -152,28 +156,27 @@ AC_MSG_RESULT([$GST_API_VERSION])
 AC_DEFINE_UNQUOTED([GST_API_VERSION_S], ["$GST_API_VERSION"],
   [Defined to the string representation of GStreamer version])
 
-PKG_CHECK_MODULES([GST_BASE],
-  [gstreamer-base-$GST_PKG_VERSION >= $GST_VERSION_REQUIRED])
+PKG_CHECK_MODULES([GST_BASE], [gstreamer-base-$GST_PKG_VERSION >= $GST_REQ])
 
 dnl GStreamer -base plugins
 PKG_CHECK_MODULES([GST_PLUGINS_BASE],
-  [gstreamer-plugins-base-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+  [gstreamer-plugins-base-$GST_PKG_VERSION >= $GST_PBREQ])
 
 dnl ... gst_dmabuf_memory_get_fd (gstreamer-allocators)
 PKG_CHECK_MODULES([GST_ALLOCATORS],
-  [gstreamer-allocators-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+  [gstreamer-allocators-$GST_PKG_VERSION >= $GST_PBREQ])
 
 dnl ... GstVideoOverlayComposition (gstreamer-video)
 PKG_CHECK_MODULES([GST_VIDEO],
-  [gstreamer-video-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+  [gstreamer-video-$GST_PKG_VERSION >= $GST_PBREQ])
 
 dnl ... GStreamer base utils (gstreamer-pbutils)
 PKG_CHECK_MODULES([GST_PBUTILS],
-  [gstreamer-pbutils-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+  [gstreamer-pbutils-$GST_PKG_VERSION >= $GST_PBREQ])
 
 dnl ... bitstream parsers
 PKG_CHECK_MODULES([GST_CODEC_PARSERS],
-  [gstreamer-codecparsers-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
+  [gstreamer-codecparsers-$GST_PKG_VERSION >= $GST_PBADREQ])
 
 dnl ... VP9 parser, with required extensions
 HAVE_GST_VP9_PARSER=0
@@ -207,7 +210,7 @@ dnl ... opengl helper libraries
 HAVE_GSTGL=0
 if test "x$enable_opengl" = "xyes"; then
   PKG_CHECK_MODULES([GST_GL],
-    [gstreamer-gl-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED],
+    [gstreamer-gl-$GST_PKG_VERSION >= $GST_PBADREQ],
     [
       HAVE_GSTGL=1
       AC_CACHE_CHECK([for GStreamer OpenGL helper libraries],
@@ -438,20 +441,18 @@ if test "x$enable_egl" = "xyes" -a $GLES_VERSION_MASK -ne 0; then
       saved_LIBS="$LIBS"
       AC_CHECK_HEADERS([EGL/egl.h], [], [USE_EGL=0])
       AC_CHECK_LIB([EGL], [eglGetDisplay], [], [USE_EGL=0])
-
-      dnl Check for GMODULE
-      GMODULE_VERSION_REQUIRED=gmodule_version
-      PKG_CHECK_MODULES([GMODULE],
-        [gmodule-2.0 >= $GMODULE_VERSION_REQUIRED])
       CPPFLAGS="$saved_CPPFLAGS"
       LIBS="$saved_LIBS"
+
+      dnl Check for GMODULE
+      PKG_CHECK_MODULES([GMODULE], [gmodule-2.0 >= $GLIB_REQ])
     ], [])
 fi
 
 dnl Check for Wayland
 USE_WAYLAND=0
 if test "x$enable_wayland" = "xyes"; then
-  PKG_CHECK_MODULES([WAYLAND], [wayland-client >= wayland_api_version],
+  PKG_CHECK_MODULES([WAYLAND], [wayland-client >= $WAYLAND_REQ],
     [
       USE_WAYLAND=1
       saved_CPPFLAGS="$CPPFLAGS"
@@ -466,12 +467,12 @@ dnl -- VA-API                                                                --
 dnl ---------------------------------------------------------------------------
 
 dnl Core API
-PKG_CHECK_MODULES([LIBVA], [libva >= va_api_version])
+PKG_CHECK_MODULES([LIBVA], [libva >= $VAAPI_REQ])
 VA_VERSION_STR=`$PKG_CONFIG --modversion libva`
 
 dnl VA/DRM API
 if test $USE_DRM -eq 1; then
-  PKG_CHECK_MODULES([LIBVA_DRM], [libva-drm >= va_api_drm_version],
+  PKG_CHECK_MODULES([LIBVA_DRM], [libva-drm >= $VAAPI_DRM_REQ],
     [
       saved_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="$LIBVA_DRM_CFLAGS"
@@ -482,7 +483,7 @@ fi
 
 dnl VA/X11 API
 if test $USE_X11 -eq 1; then
-  PKG_CHECK_MODULES(LIBVA_X11, [libva-x11 >= va_api_x11_version],
+  PKG_CHECK_MODULES(LIBVA_X11, [libva-x11 >= $VAAPI_X11_REQ],
     [], [USE_X11=0])
 fi
 
@@ -683,7 +684,7 @@ vaQueryVideoProcFilters(va_dpy, vpp_ctx, filters, &num_filters);
 dnl Check for encoding support
 USE_ENCODERS=0
 if test "x$enable_encoders" = "xyes"; then
-  PKG_CHECK_MODULES([LIBVA], [libva >= va_api_enc_version],
+  PKG_CHECK_MODULES([LIBVA], [libva >= $VAAPI_ENC_REQ],
     [
       USE_ENCODERS=1
       saved_CPPFLAGS="$CPPFLAGS"
@@ -804,7 +805,7 @@ fi
 
 dnl VA/Wayland API
 if test $USE_WAYLAND -eq 1; then
-  PKG_CHECK_MODULES([LIBVA_WAYLAND], [libva-wayland >= va_api_wld_version],
+  PKG_CHECK_MODULES([LIBVA_WAYLAND], [libva-wayland >= $VAAPI_WLD_REQ],
     [], [USE_WAYLAND=0])
 fi
 
