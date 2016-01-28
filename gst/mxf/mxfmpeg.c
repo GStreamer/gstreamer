@@ -1273,12 +1273,14 @@ mxf_mpeg_video_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
 
       *mapping_data = g_new0 (MXFMPEGEssenceType, 1);
       memcpy (*mapping_data, &type, sizeof (MXFMPEGEssenceType));
+      ret->parent.parent.picture_essence_coding.u[7] = 0x03;
       ret->parent.parent.picture_essence_coding.u[13] = 0x10;
     } else if (mpegversion == 2) {
       MXFMPEGEssenceType type = MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2;
 
       *mapping_data = g_new0 (MXFMPEGEssenceType, 1);
       memcpy (*mapping_data, &type, sizeof (MXFMPEGEssenceType));
+      ret->parent.parent.picture_essence_coding.u[7] = 0x01;
       ret->parent.parent.picture_essence_coding.u[13] = 0x01;
     } else {
       const GValue *v;
@@ -1288,6 +1290,7 @@ mxf_mpeg_video_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
       *mapping_data = g_new0 (MXFMPEGEssenceType, 1);
       memcpy (*mapping_data, &type, sizeof (MXFMPEGEssenceType));
 
+      ret->parent.parent.picture_essence_coding.u[7] = 0x03;
       ret->parent.parent.picture_essence_coding.u[13] = 0x20;
       if ((v = gst_structure_get_value (s, "codec_data"))) {
         MXFLocalTag *t = g_slice_new0 (MXFLocalTag);
@@ -1307,6 +1310,7 @@ mxf_mpeg_video_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
 
     *mapping_data = g_new0 (MXFMPEGEssenceType, 1);
     memcpy (*mapping_data, &type, sizeof (MXFMPEGEssenceType));
+    ret->parent.parent.picture_essence_coding.u[7] = 0x0a;
     ret->parent.parent.picture_essence_coding.u[13] = 0x30;
     ret->parent.parent.parent.essence_container.u[13] = 0x10;
   } else {
