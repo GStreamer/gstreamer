@@ -1298,7 +1298,7 @@ gst_rtsp_media_get_retransmission_time (GstRTSPMedia * media)
 
   priv = media->priv;
 
-  g_mutex_unlock (&priv->lock);
+  g_mutex_lock (&priv->lock);
   res = priv->rtx_time;
   g_mutex_unlock (&priv->lock);
 
@@ -1348,7 +1348,7 @@ gst_rtsp_media_get_latency (GstRTSPMedia * media)
 
   priv = media->priv;
 
-  g_mutex_unlock (&priv->lock);
+  g_mutex_lock (&priv->lock);
   res = priv->latency;
   g_mutex_unlock (&priv->lock);
 
@@ -1396,7 +1396,7 @@ gst_rtsp_media_is_time_provider (GstRTSPMedia * media)
 
   priv = media->priv;
 
-  g_mutex_unlock (&priv->lock);
+  g_mutex_lock (&priv->lock);
   res = priv->time_provider;
   g_mutex_unlock (&priv->lock);
 
