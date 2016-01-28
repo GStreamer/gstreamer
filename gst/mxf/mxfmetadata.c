@@ -4424,15 +4424,25 @@ mxf_metadata_generic_picture_essence_descriptor_handle_tag (MXFMetadataBase *
       if (GST_READ_UINT32_BE (tag_data) == 0)
         return TRUE;
 
-      if (GST_READ_UINT32_BE (tag_data) != 2 &&
-          GST_READ_UINT32_BE (tag_data + 4) != 4)
+      if (GST_READ_UINT32_BE (tag_data + 4) != 4)
         goto error;
 
-      if (tag_size != 16)
+      if (GST_READ_UINT32_BE (tag_data) != 1 &&
+          GST_READ_UINT32_BE (tag_data) != 2)
+        goto error;
+
+      if ((GST_READ_UINT32_BE (tag_data) == 1 && tag_size != 12) ||
+          (GST_READ_UINT32_BE (tag_data) == 2 && tag_size != 16))
         goto error;
 
       self->video_line_map[0] = GST_READ_UINT32_BE (tag_data + 8);
-      self->video_line_map[1] = GST_READ_UINT32_BE (tag_data + 12);
+
+      /* Workaround for files created by ffmpeg */
+      if (GST_READ_UINT32_BE (tag_data) == 1)
+        self->video_line_map[0] = 0;
+      else
+        self->video_line_map[1] = GST_READ_UINT32_BE (tag_data + 12);
+
       GST_DEBUG ("  video line map = {%i, %i}", self->video_line_map[0],
           self->video_line_map[1]);
       break;
