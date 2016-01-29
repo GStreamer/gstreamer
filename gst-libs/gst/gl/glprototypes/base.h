@@ -255,7 +255,7 @@ GST_GL_EXT_BEGIN (vbos,
                   "ARB\0",
                   "vertex_buffer_object\0")
 GST_GL_EXT_FUNCTION (void, GenBuffers,
-                     (GLuint		 n,
+                     (GLsizei		 n,
                       GLuint		*buffers))
 GST_GL_EXT_FUNCTION (void, BindBuffer,
                      (GLenum		 target,
