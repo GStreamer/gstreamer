@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4 -I common/m4 ${ACLOCAL_FLAGS}
 
-SUBDIRS = gst-libs gst tests common
+SUBDIRS = gst-libs gst tests common docs
 
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 

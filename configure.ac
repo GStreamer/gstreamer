@@ -1004,8 +1004,9 @@ AC_CONFIG_FILES([
     common/Makefile
     common/m4/Makefile
     docs/Makefile
-    docs/reference/Makefile
-    docs/reference/plugins/plugins-docs.xml
+    docs/version.entities
+    docs/plugins/Makefile
+    docs/plugins/gstreamer-vaapi-plugins-docs.xml
     gst-libs/Makefile
     gst-libs/gst/Makefile
     gst-libs/gst/base/Makefile

@@ -1,9 +1,0 @@
-#include <gst/gst.h>
-
-#include <gst/vaapi/gstvaapidecode.h>
-#include <gst/vaapi/gstvaapipostproc.h>
-#include <gst/vaapi/gstvaapisink.h>
-
-gst_vaapidecode_get_type
-gst_vaapipostproc_get_type
-gst_vaapisink_get_type

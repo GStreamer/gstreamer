@@ -10,7 +10,7 @@
   </bookinfo>
 
   <chapter>
-    <title>gst-plugins-vaapi Plugins</title>
+    <title>gstreamer-vaapi Plugins</title>
     <xi:include href="xml/gstvaapidecode.xml"/>
     <xi:include href="xml/gstvaapipostproc.xml"/>
     <xi:include href="xml/gstvaapisink.xml"/>
