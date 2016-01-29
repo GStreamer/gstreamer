@@ -255,6 +255,10 @@ dnl ... GstVideoOverlayComposition (gstreamer-video)
 PKG_CHECK_MODULES([GST_VIDEO],
     [gstreamer-video-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
 
+dnl ... GStreamer base utils (gstreamer-pbutils)
+PKG_CHECK_MODULES([GST_PBUTILS],
+    [gstreamer-pbutils-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+
 dnl GStreamer -bad plugins (deprecated in GStreamer v1.2)
 if test "$USE_GST_API_1_2p" != "yes" && test "$USE_GST_API_1_4p" != "yes"; then
 PKG_CHECK_MODULES([GST_BASEVIDEO],
