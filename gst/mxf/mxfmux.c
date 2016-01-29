@@ -1328,6 +1328,8 @@ gst_mxf_mux_write_body_partition (GstMXFMux * mux)
   GstBuffer *buf;
 
   mux->partition.type = MXF_PARTITION_PACK_BODY;
+  mux->partition.closed = TRUE;
+  mux->partition.complete = TRUE;
   mux->partition.this_partition = mux->offset;
   mux->partition.prev_partition = 0;
   mux->partition.footer_partition = 0;
