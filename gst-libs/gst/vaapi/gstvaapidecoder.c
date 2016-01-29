@@ -332,8 +332,7 @@ decode_step (GstVaapiDecoder * decoder)
       input_size -= got_unit_size;
 
       if (gst_adapter_available (ps->output_adapter) == 0) {
-        ps->current_frame->pts =
-            gst_adapter_prev_timestamp (ps->input_adapter, NULL);
+        ps->current_frame->pts = gst_adapter_prev_pts (ps->input_adapter, NULL);
       }
       gst_adapter_push (ps->output_adapter, buffer);
     }
