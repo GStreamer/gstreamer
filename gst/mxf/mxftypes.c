@@ -216,7 +216,8 @@ mxf_uuid_init (MXFUUID * uuid, GHashTable * hashtable)
   do {
     for (i = 0; i < 4; i++)
       GST_WRITE_UINT32_BE (&uuid->u[i * 4], g_random_int ());
-
+    uuid->u[6] = 0x40 | (uuid->u[6] & 0x0f);
+    uuid->u[8] = (uuid->u[8] & 0xbf) | 0x80;
   } while (hashtable && (mxf_uuid_is_zero (uuid) ||
           g_hash_table_lookup_extended (hashtable, uuid, NULL, NULL)));
 }
