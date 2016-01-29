@@ -993,12 +993,11 @@ _fixate_caps (GstVideoAggregator * vagg, GstCaps * caps)
 
   /* we need this to calculate how large to make the output frame */
   s = gst_caps_get_structure (ret, 0);
-  if (gst_structure_has_field (s, "pixel-aspect-ratio")) {
-    gst_structure_fixate_field_nearest_fraction (s, "pixel-aspect-ratio", 1, 1);
-    gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_n, &par_d);
-  } else {
-    par_n = par_d = 1;
+  if (!gst_structure_has_field (s, "pixel-aspect-ratio")) {
+    gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
   }
+  gst_structure_fixate_field_nearest_fraction (s, "pixel-aspect-ratio", 1, 1);
+  gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_n, &par_d);
 
   GST_OBJECT_LOCK (vagg);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
@@ -1048,7 +1047,6 @@ _fixate_caps (GstVideoAggregator * vagg, GstCaps * caps)
   gst_structure_fixate_field_nearest_int (s, "height", best_height);
   gst_structure_fixate_field_nearest_fraction (s, "framerate", best_fps_n,
       best_fps_d);
-  gst_structure_fixate_field_nearest_fraction (s, "pixel-aspect-ratio", 1, 1);
   ret = gst_caps_fixate (ret);
 
   return ret;
