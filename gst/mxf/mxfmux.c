@@ -1466,6 +1466,7 @@ gst_mxf_mux_handle_eos (GstMXFMux * mux)
     GList *index_entries = NULL, *l;
     guint index_byte_count = 0;
     guint i;
+    GstBuffer *buf;
 
     for (i = 0; i < mux->index_table->len; i++) {
       MXFIndexTableSegment *segment =
@@ -1536,6 +1537,28 @@ gst_mxf_mux_handle_eos (GstMXFMux * mux)
       ret = gst_mxf_mux_write_header_metadata (mux);
       if (ret != GST_FLOW_OK) {
         GST_ERROR_OBJECT (mux, "Rewriting header partition failed");
+        return ret;
+      }
+
+      g_assert (mux->offset == body_partition);
+
+      mux->partition.type = MXF_PARTITION_PACK_BODY;
+      mux->partition.closed = TRUE;
+      mux->partition.complete = TRUE;
+      mux->partition.this_partition = mux->offset;
+      mux->partition.prev_partition = 0;
+      mux->partition.footer_partition = footer_partition;
+      mux->partition.header_byte_count = 0;
+      mux->partition.index_byte_count = 0;
+      mux->partition.index_sid = 0;
+      mux->partition.body_offset = 0;
+      mux->partition.body_sid =
+          mux->preface->content_storage->essence_container_data[0]->body_sid;
+
+      buf = mxf_partition_pack_to_buffer (&mux->partition);
+      ret = gst_mxf_mux_push (mux, buf);
+      if (ret != GST_FLOW_OK) {
+        GST_ERROR_OBJECT (mux, "Rewriting body partition failed");
         return ret;
       }
     } else {
