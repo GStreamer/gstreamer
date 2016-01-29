@@ -390,6 +390,12 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
       }                         /* END H263_OPTION_RPS_MODE */
     }
 
+    GST_DEBUG (" Unrestricted Motion Vector mode (Annex D) : %s",
+        (params->features & H263_OPTION_UMV_MODE) ? "on" : "off");
+    GST_DEBUG (" Syntax-basex Arithmetic Coding mode (Annex E) : %s",
+        (params->features & H263_OPTION_SAC_MODE) ? "on" : "off");
+    GST_DEBUG (" Advanced Prediction mode (Annex F) : %s",
+        (params->features & H263_OPTION_AP_MODE) ? "on" : "off");
     GST_DEBUG (" Advanced INTRA Coding mode (Annex I) : %s",
         (params->features & H263_OPTION_AIC_MODE ? "on" : "off"));
     GST_DEBUG (" Deblocking Filter mode (Annex J) : %s",
