@@ -195,9 +195,12 @@ AC_CACHE_CHECK([for VP9 parser],
     LIBS="$saved_LIBS"
 ])
 
+AS_IF([test "x$enable_glx" = "xyes" -o "x$enable_egl" = "xyes"],
+  [enable_opengl="yes"], [enable_opengl="no"])
+
 dnl ... opengl helper libraries
 HAVE_GSTGL=0
-if test "x$enable_glx" = "xyes" -o "x$enable_egl" = "xyes"; then
+if test "x$enable_opengl" = "xyes"; then
     PKG_CHECK_MODULES([GST_GL],
         [gstreamer-gl-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED],
         [HAVE_GSTGL=1], [HAVE_GSTGL=0])
@@ -338,13 +341,6 @@ if test $HAVE_XRENDER -eq 1; then
 fi
 
 dnl OpenGL
-enable_opengl="no"
-if test "x$enable_glx" = "xyes"; then
-    enable_opengl="yes"
-fi
-if test "x$enable_egl" = "xyes"; then
-    enable_opengl="yes"
-fi
 GLES_VERSION_MASK=0
 
 HAVE_GL=0
