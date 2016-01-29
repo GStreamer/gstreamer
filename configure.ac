@@ -197,11 +197,12 @@ AC_CACHE_CHECK([for VP9 parser],
 GstVp9FrameHdr frame_hdr;
           ]])
       ],
-      [ac_cv_have_gst_vp9_parser="yes" HAVE_GST_VP9_PARSER=1],
+      [ac_cv_have_gst_vp9_parser="yes"],
       [ac_cv_have_gst_vp9_parser="no"])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
   ])
+AS_IF([test "x$ac_cv_have_gst_vp9_parser" = "xyes"], [HAVE_GST_VP9_PARSER=1])
 
 AS_IF([test "x$enable_glx" = "xyes" -o "x$enable_egl" = "xyes"],
   [enable_opengl="yes"], [enable_opengl="no"])
@@ -232,12 +233,13 @@ GstGLContext gl_context;
                 ]])
             ],
             [ac_cv_have_gst_gl_helpers="yes"],
-            [ac_cv_have_gst_gl_helpers="no" HAVE_GSTGL=0])
+            [ac_cv_have_gst_gl_helpers="no"])
           CPPFLAGS="$saved_CPPFLAGS"
           LIBS="$saved_LIBS"
         ])
     ], [])
 fi
+AS_IF([test "x$ac_cv_have_gst_gl_helpers" = "xno"], [HAVE_GSTGL=0])
 AM_CONDITIONAL([USE_GST_GL_HELPERS], [test $HAVE_GSTGL -eq 1])
 AC_DEFINE_UNQUOTED([USE_GST_GL_HELPERS], [$HAVE_GSTGL],
   [Defined to 1 if GStreamer OpenGL helper libraries are available])
@@ -521,11 +523,12 @@ VAHuffmanTableBufferJPEGBaseline huffman_table;
 VAIQMatrixBufferJPEGBaseline iq_matrix;
           ]])
       ],
-      [ac_cv_have_jpeg_decoding_api="yes" USE_JPEG_DECODER=1],
+      [ac_cv_have_jpeg_decoding_api="yes"],
       [ac_cv_have_jpeg_decoding_api="no"])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
   ])
+AS_IF([test "x$ac_cv_have_jpeg_decoding_api" = "xyes"], [USE_JPEG_DECODER=1])
 
 dnl Check for va_dec_vp8.h header
 saved_CPPFLAGS="$CPPFLAGS"
@@ -563,11 +566,12 @@ slice_param.slice_data_offset = 0;
 slice_param.slice_data_flag = 0;
           ]])
       ],
-      [ac_cv_have_vp8_decoding_api="yes" USE_VP8_DECODER=1],
+      [ac_cv_have_vp8_decoding_api="yes"],
       [ac_cv_have_vp8_decoding_api="no"])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
   ])
+AS_IF([test "x$ac_cv_have_vp8_decoding_api" = "xyes"], [USE_VP8_DECODER=1])
 
 dnl Check for va_dec_vp9.h header
 saved_CPPFLAGS="$CPPFLAGS"
@@ -604,11 +608,13 @@ slice_param.slice_data_offset = 0;
 slice_param.slice_data_flag = 0;
           ]])
       ],
-      [ac_cv_have_vp9_decoding_api="yes" USE_VP9_DECODER=$HAVE_GST_VP9_PARSER],
+      [ac_cv_have_vp9_decoding_api="yes"],
       [ac_cv_have_vp9_decoding_api="no"])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
   ])
+AS_IF([test "x$ac_cv_have_vp9_decoding_api" = "xyes"],
+  [USE_VP9_DECODER=$HAVE_GST_VP9_PARSER])
 
 dnl Check for va_dec_hevc.h header
 saved_CPPFLAGS="$CPPFLAGS"
@@ -645,11 +651,12 @@ slice_param.slice_data_offset = 0;
 slice_param.slice_data_flag = 0;
           ]])
       ],
-      [ac_cv_have_hevc_decoding_api="yes" USE_HEVC_DECODER=1],
+      [ac_cv_have_hevc_decoding_api="yes"],
       [ac_cv_have_hevc_decoding_api="no"])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
   ])
+AS_IF([test "x$ac_cv_have_hevc_decoding_api" = "xyes"], [USE_HEVC_DECODER=1])
 
 dnl Check for vpp (video post-processing) support
 USE_VA_VPP=0
@@ -675,11 +682,12 @@ unsigned int num_filters = VAProcFilterCount;
 vaQueryVideoProcFilters(va_dpy, vpp_ctx, filters, &num_filters);
           ]])
       ],
-      [ac_cv_have_va_vpp_api="yes" USE_VA_VPP=1],
+      [ac_cv_have_va_vpp_api="yes"],
       [ac_cv_have_va_vpp_api="no"])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
   ])
+AS_IF([test "x$ac_cv_have_va_vpp_api" = "xyes"], [USE_VA_VPP=1])
 
 dnl Check for encoding support
 USE_ENCODERS=0
@@ -729,11 +737,12 @@ VAEncSliceParameterBufferJPEG slice_param;
 VAQMatrixBufferJPEG q_matrix;
             ]])
         ],
-        [ac_cv_have_jpeg_encoding_api="yes" USE_JPEG_ENCODER=1],
+        [ac_cv_have_jpeg_encoding_api="yes"],
         [ac_cv_have_jpeg_encoding_api="no"])
       CPPFLAGS="$saved_CPPFLAGS"
       LIBS="$saved_LIBS"
     ])
+  AS_IF([test "x$ac_cv_have_jpeg_encoding_api" = "xyes"], [USE_JPEG_ENCODER=1])
 
   dnl Check for VP8 Encoding API
   AC_CHECK_HEADERS([va/va_enc_vp8.h], [], [],
@@ -762,11 +771,12 @@ VAEncPictureParameterBufferVP8 pic_param;
 VAQMatrixBufferVP8 q_matrix;
             ]])
         ],
-        [ac_cv_have_vp8_encoding_api="yes" USE_VP8_ENCODER=1],
+        [ac_cv_have_vp8_encoding_api="yes"],
         [ac_cv_have_vp8_encoding_api="no"])
       CPPFLAGS="$saved_CPPFLAGS"
       LIBS="$saved_LIBS"
     ])
+  AS_IF([test "x$ac_cv_have_vp8_encoding_api" = "xyes"], [USE_VP8_ENCODER=1])
 
   dnl Check for H265/HEVC Encoding API
   AC_CHECK_HEADERS([va/va_enc_hevc.h], [], [],
@@ -796,11 +806,12 @@ VAEncSliceParameterBufferHEVC buf_param;
 VAQMatrixBufferHEVC q_matrix;
             ]])
         ],
-        [ac_cv_have_hevc_encoding_api="yes" USE_H265_ENCODER=1],
+        [ac_cv_have_hevc_encoding_api="yes"],
         [ac_cv_have_hevc_encoding_api="no"])
       CPPFLAGS="$saved_CPPFLAGS"
       LIBS="$saved_LIBS"
     ])
+  AS_IF([test "x$ac_cv_have_hevc_encoding_api" = "xyes"], [USE_H265_ENCODER=1])
 fi
 
 dnl VA/Wayland API
