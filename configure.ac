@@ -200,7 +200,7 @@ AC_CACHE_CHECK([for VP9 parser],
 
 dnl ... opengl helper libraries
 HAVE_GSTGL=0
-if test "$enable_glx" = "yes" -o "$enable_egl" = "yes"; then
+if test "x$enable_glx" = "xyes" -o "x$enable_egl" = "xyes"; then
     PKG_CHECK_MODULES([GST_GL],
         [gstreamer-gl-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED],
         [HAVE_GSTGL=1], [HAVE_GSTGL=0])
@@ -230,7 +230,7 @@ AM_CONDITIONAL([USE_GST_GL_HELPERS], [test $HAVE_GSTGL -eq 1])
 AC_DEFINE_UNQUOTED([USE_GST_GL_HELPERS], [$HAVE_GSTGL],
     [Defined to 1 if GStreamer OpenGL helper libraries are available])
 
-if test "$enable_egl" = "yes" -a $HAVE_GSTGL -ne 1; then
+if test "x$enable_egl" = "xyes" -a $HAVE_GSTGL -ne 1; then
     AC_MSG_WARN([GStreamer/GL helper libraries not found, disabling EGL support])
     enable_egl="no"
 fi
@@ -272,7 +272,7 @@ dnl ---------------------------------------------------------------------------
 
 dnl Check for DRM/libudev
 USE_DRM=0
-if test "$enable_drm" = "yes"; then
+if test "x$enable_drm" = "xyes"; then
     PKG_CHECK_MODULES(DRM, [libdrm], [USE_DRM=1], [USE_DRM=0])
     PKG_CHECK_MODULES(UDEV, [libudev], [:], [USE_DRM=0])
 
@@ -286,7 +286,7 @@ fi
 
 dnl Check for X11
 USE_X11=0
-if test "$enable_x11" = "yes"; then
+if test "x$enable_x11" = "xyes"; then
     PKG_CHECK_MODULES(X11, [x11], [USE_X11=1], [USE_X11=0])
     if test $USE_X11 -eq 1; then
         saved_CPPFLAGS="$CPPFLAGS"
@@ -342,16 +342,16 @@ fi
 
 dnl OpenGL
 enable_opengl="no"
-if test "$enable_glx" = "yes"; then
+if test "x$enable_glx" = "xyes"; then
     enable_opengl="yes"
 fi
-if test "$enable_egl" = "yes"; then
+if test "x$enable_egl" = "xyes"; then
     enable_opengl="yes"
 fi
 GLES_VERSION_MASK=0
 
 HAVE_GL=0
-if test "$enable_opengl" = "yes"; then
+if test "x$enable_opengl" = "xyes"; then
 case ",$GLAPI," in
 (*,any,*|*,gl,*)
     HAVE_GL=1
@@ -371,7 +371,7 @@ GLES_VERSION_MASK=`expr $GLES_VERSION_MASK "+" $HAVE_GL "*" 1`
 
 dnl OpenGL|ESv2
 HAVE_GLESv2=0
-if test "$enable_opengl" = "yes"; then
+if test "x$enable_opengl" = "xyes"; then
 case ",$GLAPI," in
 (*,any,*|*,gles2,*)
     HAVE_GLESv2=1
@@ -392,7 +392,7 @@ GLES_VERSION_MASK=`expr $GLES_VERSION_MASK "+" $HAVE_GLESv2 "*" 4`
 
 dnl OpenGL|ESv3
 HAVE_GLESv3=0
-if test "$enable_opengl" = "yes"; then
+if test "x$enable_opengl" = "xyes"; then
 case ",$GLAPI," in
 (*,any,*|*,gles3,*)
     HAVE_GLESv3=1
@@ -413,7 +413,7 @@ GLES_VERSION_MASK=`expr $GLES_VERSION_MASK "+" $HAVE_GLESv3 "*" 8`
 
 dnl ... GLX
 USE_GLX=0
-if test "$enable_glx" = "yes" -a $HAVE_GL -eq 1 -a $USE_X11 -eq 1; then
+if test "x$enable_glx" = "xyes" -a $HAVE_GL -eq 1 -a $USE_X11 -eq 1; then
     USE_GLX=1
     saved_CPPFLAGS="$CPPFLAGS"
     saved_LIBS="$LIBS"
@@ -431,7 +431,7 @@ fi
 
 dnl ... EGL
 USE_EGL=0
-if test "$enable_egl" = "yes" -a $GLES_VERSION_MASK -ne 0; then
+if test "x$enable_egl" = "xyes" -a $GLES_VERSION_MASK -ne 0; then
     USE_EGL=1
     PKG_CHECK_MODULES([EGL], [egl], [:], [USE_EGL=0])
     saved_CPPFLAGS="$CPPFLAGS"
@@ -448,7 +448,7 @@ fi
 
 dnl Check for Wayland
 USE_WAYLAND=0
-if test "$enable_wayland" = "yes"; then
+if test "x$enable_wayland" = "xyes"; then
     PKG_CHECK_MODULES(WAYLAND, [wayland-client >= wayland_api_version],
         [USE_WAYLAND=1], [USE_WAYLAND=0])
 
@@ -650,7 +650,7 @@ USE_ENCODERS=0
 USE_JPEG_ENCODER=0
 USE_VP8_ENCODER=0
 USE_H265_ENCODER=0
-if test "$enable_encoders" = "yes"; then
+if test "x$enable_encoders" = "xyes"; then
     PKG_CHECK_MODULES([LIBVA], [libva >= va_api_enc_version],
         [HAVE_VA_ENC=1], [HAVE_VA_ENC=0])
 
@@ -752,7 +752,7 @@ if test "$enable_encoders" = "yes"; then
 fi
 
 dnl VA/Wayland API
-if test "$enable_wayland" = "yes"; then
+if test "x$enable_wayland" = "xyes"; then
     PKG_CHECK_MODULES([LIBVA_WAYLAND], [libva-wayland >= va_api_wld_version],
         [:], [USE_WAYLAND=0])
 fi
