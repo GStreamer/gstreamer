@@ -26,6 +26,7 @@
 #include <CoreMedia/CoreMedia.h>
 #include <VideoToolbox/VideoToolbox.h>
 #include "videotexturecache.h"
+#include "glcontexthelper.h"
 
 G_BEGIN_DECLS
 
@@ -48,6 +49,7 @@ struct _GstVtdec
   GAsyncQueue *reorder_queue;
   gint reorder_queue_length;
   GstVideoTextureCache *texture_cache;
+  GstGLContextHelper *ctxh;
 
   gboolean require_hardware;
 };

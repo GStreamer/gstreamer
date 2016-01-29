@@ -6,8 +6,9 @@ libgstapplemedia_la_SOURCES =			\
 	corevideomemory.c			\
 	corevideobuffer.c			\
 	coremediabuffer.c			\
-	videotexturecache.m 		\
-	atdec.c
+	videotexturecache.m 			\
+	atdec.c 				\
+	glcontexthelper.c
 
 libgstapplemedia_la_CPPFLAGS =			\
 	-Dgst_core_media_buffer_new=gst_core_media_buffer_priv_new		\
@@ -74,7 +75,8 @@ noinst_HEADERS =				\
 	videotexturecache.h			\
 	atdec.h 				\
 	iosassetsrc.h				\
-	avfassetsrc.h
+	avfassetsrc.h  				\
+	glcontexthelper.h
 
 if HAVE_IOS
 
