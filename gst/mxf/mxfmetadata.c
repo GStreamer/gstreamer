@@ -4807,8 +4807,10 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
   t->size = 16;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
-  GST_WRITE_UINT64_BE (t->data, self->video_line_map[0]);
-  GST_WRITE_UINT64_BE (t->data + 8, self->video_line_map[1]);
+  GST_WRITE_UINT32_BE (t->data, 2);
+  GST_WRITE_UINT32_BE (t->data + 4, 4);
+  GST_WRITE_UINT32_BE (t->data + 8, self->video_line_map[0]);
+  GST_WRITE_UINT32_BE (t->data + 12, self->video_line_map[1]);
   mxf_primer_pack_add_mapping (primer, 0x320d, &t->ul);
   ret = g_list_prepend (ret, t);
 
