@@ -100,6 +100,9 @@ struct _GstAmcVideoDec
   gboolean downstream_supports_gl;
   GstFlowReturn downstream_flow_ret;
 
+  jobject listener;
+  jmethodID set_context_id;
+
   gboolean gl_mem_attached;
   GstGLMemory *oes_mem;
   GError *gl_error;

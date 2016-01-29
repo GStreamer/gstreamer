@@ -31,11 +31,11 @@ public class GstAmcOnFrameAvailableListener implements OnFrameAvailableListener
         native_onFrameAvailable(context, surfaceTexture);
     }
 
-    public long getContext () {
+    public synchronized long getContext () {
         return context;
     }
 
-    public void setContext (long c) {
+    public synchronized void setContext (long c) {
         context = c;
     }
 

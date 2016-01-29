@@ -485,6 +485,21 @@ gst_amc_video_dec_close (GstVideoDecoder * decoder)
     self->surface = NULL;
   }
 
+  if (self->listener) {
+    JNIEnv *env = gst_amc_jni_get_env ();
+    GError *err = NULL;
+
+    if (!gst_amc_jni_call_void_method (env, &err, self->listener,
+          self->set_context_id, GST_AMC_VIDEO_DEC_TO_JLONG (NULL))) {
+      GST_ERROR_OBJECT (self, "Failed to unset back pointer on the listener. "
+          "crashes/hangs may ensue: %s", err ? err->message : "Unknown");
+      GST_ELEMENT_ERROR_FROM_ERROR (self, err);
+    }
+
+    gst_amc_jni_object_unref (env, self->listener);
+  }
+  self->listener = NULL;
+
   if (self->codec) {
     GError *err = NULL;
 
@@ -1683,7 +1698,6 @@ gst_amc_video_dec_new_on_frame_available_listener (GstAmcVideoDec * decoder,
   jobject listener = NULL;
   jclass listener_cls = NULL;
   jmethodID constructor_id = 0;
-  jmethodID set_context_id = 0;
 
   JNINativeMethod amcOnFrameAvailableListener = {
     "native_onFrameAvailable",
@@ -1711,9 +1725,9 @@ gst_amc_video_dec_new_on_frame_available_listener (GstAmcVideoDec * decoder,
     goto done;
   }
 
-  set_context_id =
+  decoder->set_context_id =
       gst_amc_jni_get_method_id (env, err, listener_cls, "setContext", "(J)V");
-  if (!set_context_id) {
+  if (!decoder->set_context_id) {
     goto done;
   }
 
@@ -1724,7 +1738,7 @@ gst_amc_video_dec_new_on_frame_available_listener (GstAmcVideoDec * decoder,
   }
 
   if (!gst_amc_jni_call_void_method (env, err, listener,
-          set_context_id, GST_AMC_VIDEO_DEC_TO_JLONG (decoder))) {
+          decoder->set_context_id, GST_AMC_VIDEO_DEC_TO_JLONG (decoder))) {
     gst_amc_jni_object_unref (env, listener);
     listener = NULL;
   }
@@ -1943,7 +1957,6 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
   } else if (self->downstream_supports_gl && !self->surface) {
     int ret = TRUE;
     JNIEnv *env = NULL;
-    jobject listener = NULL;
     GstAmcSurfaceTexture *surface_texture = NULL;
 
     env = gst_amc_jni_get_env ();
@@ -1953,15 +1966,24 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
       return FALSE;
     }
 
-    listener =
+    if (self->listener) {
+      if (!gst_amc_jni_call_void_method (env, &err, self->listener,
+            self->set_context_id, GST_AMC_VIDEO_DEC_TO_JLONG (NULL))) {
+        ret = FALSE;
+        goto done;
+      }
+
+      gst_amc_jni_object_unref (env, self->listener);
+    }
+    self->listener =
         gst_amc_video_dec_new_on_frame_available_listener (self, env, &err);
-    if (!listener) {
+    if (!self->listener) {
       ret = FALSE;
       goto done;
     }
 
     if (!gst_amc_surface_texture_set_on_frame_available_listener
-        (surface_texture, listener, &err)) {
+        (surface_texture, self->listener, &err)) {
       ret = FALSE;
       goto done;
     }
@@ -1971,7 +1993,6 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
 
   done:
     g_object_unref (surface_texture);
-    gst_amc_jni_object_unref (env, listener);
     if (!ret) {
       GST_ELEMENT_ERROR_FROM_ERROR (self, err);
       return FALSE;
@@ -2510,6 +2531,10 @@ gst_amc_video_dec_on_frame_available (JNIEnv * env, jobject thiz,
     long long context, jobject surfaceTexture)
 {
   GstAmcVideoDec *self = JLONG_TO_GST_AMC_VIDEO_DEC (context);
+
+  /* apparently we can be called after the decoder has been closed */
+  if (!self)
+    return;
 
   g_mutex_lock (&self->gl_lock);
   self->gl_ready_frame_count++;
