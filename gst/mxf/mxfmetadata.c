@@ -4535,14 +4535,12 @@ mxf_metadata_generic_picture_essence_descriptor_to_structure (MXFMetadataBase *
   gst_structure_id_set (ret, MXF_QUARK (SIGNAL_STANDARD), G_TYPE_UCHAR,
       self->signal_standard, NULL);
 
-  if (self->frame_layout != 255)
-    gst_structure_id_set (ret, MXF_QUARK (FRAME_LAYOUT), G_TYPE_UCHAR,
-        self->frame_layout, NULL);
+  gst_structure_id_set (ret, MXF_QUARK (FRAME_LAYOUT), G_TYPE_UCHAR,
+      self->frame_layout, NULL);
 
-  if (self->stored_width != 0 && self->stored_height != 0)
-    gst_structure_id_set (ret, MXF_QUARK (STORED_WIDTH), G_TYPE_UINT,
-        self->stored_width, MXF_QUARK (STORED_HEIGHT), G_TYPE_UINT,
-        self->stored_height, NULL);
+  gst_structure_id_set (ret, MXF_QUARK (STORED_WIDTH), G_TYPE_UINT,
+      self->stored_width, MXF_QUARK (STORED_HEIGHT), G_TYPE_UINT,
+      self->stored_height, NULL);
 
   if (self->stored_f2_offset != 0)
     gst_structure_id_set (ret, MXF_QUARK (STORED_F2_OFFSET), G_TYPE_INT,
@@ -4586,10 +4584,9 @@ mxf_metadata_generic_picture_essence_descriptor_to_structure (MXFMetadataBase *
     gst_structure_id_set (ret, MXF_QUARK (ACTIVE_FORMAT_DESCRIPTOR),
         G_TYPE_UCHAR, self->active_format_descriptor, NULL);
 
-  if (self->video_line_map[0] != 0 && self->video_line_map[1] != 0)
-    gst_structure_id_set (ret, MXF_QUARK (VIDEO_LINE_MAP_0), G_TYPE_UINT,
-        self->video_line_map[0], MXF_QUARK (VIDEO_LINE_MAP_1), G_TYPE_UINT,
-        self->video_line_map[1], NULL);
+  gst_structure_id_set (ret, MXF_QUARK (VIDEO_LINE_MAP_0), G_TYPE_UINT,
+      self->video_line_map[0], MXF_QUARK (VIDEO_LINE_MAP_1), G_TYPE_UINT,
+      self->video_line_map[1], NULL);
 
   if (self->alpha_transparency != 0)
     gst_structure_id_set (ret, MXF_QUARK (ALPHA_TRANSPARENCY), G_TYPE_UCHAR,
@@ -4649,38 +4646,32 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
     ret = g_list_prepend (ret, t);
   }
 
-  if (self->frame_layout != 255) {
-    t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, MXF_UL (FRAME_LAYOUT), 16);
-    t->size = 1;
-    t->data = g_slice_alloc (t->size);
-    t->g_slice = TRUE;
-    GST_WRITE_UINT8 (t->data, self->frame_layout);
-    mxf_primer_pack_add_mapping (primer, 0x320c, &t->ul);
-    ret = g_list_prepend (ret, t);
-  }
+  t = g_slice_new0 (MXFLocalTag);
+  memcpy (&t->ul, MXF_UL (FRAME_LAYOUT), 16);
+  t->size = 1;
+  t->data = g_slice_alloc (t->size);
+  t->g_slice = TRUE;
+  GST_WRITE_UINT8 (t->data, self->frame_layout);
+  mxf_primer_pack_add_mapping (primer, 0x320c, &t->ul);
+  ret = g_list_prepend (ret, t);
 
-  if (self->stored_width != 0) {
-    t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, MXF_UL (STORED_WIDTH), 16);
-    t->size = 4;
-    t->data = g_slice_alloc (t->size);
-    t->g_slice = TRUE;
-    GST_WRITE_UINT32_BE (t->data, self->stored_width);
-    mxf_primer_pack_add_mapping (primer, 0x3203, &t->ul);
-    ret = g_list_prepend (ret, t);
-  }
+  t = g_slice_new0 (MXFLocalTag);
+  memcpy (&t->ul, MXF_UL (STORED_WIDTH), 16);
+  t->size = 4;
+  t->data = g_slice_alloc (t->size);
+  t->g_slice = TRUE;
+  GST_WRITE_UINT32_BE (t->data, self->stored_width);
+  mxf_primer_pack_add_mapping (primer, 0x3203, &t->ul);
+  ret = g_list_prepend (ret, t);
 
-  if (self->stored_height != 0) {
-    t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, MXF_UL (STORED_HEIGHT), 16);
-    t->size = 4;
-    t->data = g_slice_alloc (t->size);
-    t->g_slice = TRUE;
-    GST_WRITE_UINT32_BE (t->data, self->stored_height);
-    mxf_primer_pack_add_mapping (primer, 0x3202, &t->ul);
-    ret = g_list_prepend (ret, t);
-  }
+  t = g_slice_new0 (MXFLocalTag);
+  memcpy (&t->ul, MXF_UL (STORED_HEIGHT), 16);
+  t->size = 4;
+  t->data = g_slice_alloc (t->size);
+  t->g_slice = TRUE;
+  GST_WRITE_UINT32_BE (t->data, self->stored_height);
+  mxf_primer_pack_add_mapping (primer, 0x3202, &t->ul);
+  ret = g_list_prepend (ret, t);
 
   if (self->stored_f2_offset != 0) {
     t = g_slice_new0 (MXFLocalTag);
@@ -4792,17 +4783,15 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
     ret = g_list_prepend (ret, t);
   }
 
-  if (self->aspect_ratio.n != 0 && self->aspect_ratio.d != 0) {
-    t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, MXF_UL (ASPECT_RATIO), 16);
-    t->size = 8;
-    t->data = g_slice_alloc (t->size);
-    t->g_slice = TRUE;
-    GST_WRITE_UINT32_BE (t->data, self->aspect_ratio.n);
-    GST_WRITE_UINT32_BE (t->data + 4, self->aspect_ratio.d);
-    mxf_primer_pack_add_mapping (primer, 0x320e, &t->ul);
-    ret = g_list_prepend (ret, t);
-  }
+  t = g_slice_new0 (MXFLocalTag);
+  memcpy (&t->ul, MXF_UL (ASPECT_RATIO), 16);
+  t->size = 8;
+  t->data = g_slice_alloc (t->size);
+  t->g_slice = TRUE;
+  GST_WRITE_UINT32_BE (t->data, self->aspect_ratio.n);
+  GST_WRITE_UINT32_BE (t->data + 4, self->aspect_ratio.d);
+  mxf_primer_pack_add_mapping (primer, 0x320e, &t->ul);
+  ret = g_list_prepend (ret, t);
 
   if (self->active_format_descriptor != 0) {
     t = g_slice_new0 (MXFLocalTag);
@@ -4815,17 +4804,15 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
     ret = g_list_prepend (ret, t);
   }
 
-  if (self->video_line_map[0] != 0 || self->video_line_map[1] != 0) {
-    t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, MXF_UL (VIDEO_LINE_MAP), 16);
-    t->size = 16;
-    t->data = g_slice_alloc (t->size);
-    t->g_slice = TRUE;
-    GST_WRITE_UINT64_BE (t->data, self->video_line_map[0]);
-    GST_WRITE_UINT64_BE (t->data + 8, self->video_line_map[1]);
-    mxf_primer_pack_add_mapping (primer, 0x320d, &t->ul);
-    ret = g_list_prepend (ret, t);
-  }
+  t = g_slice_new0 (MXFLocalTag);
+  memcpy (&t->ul, MXF_UL (VIDEO_LINE_MAP), 16);
+  t->size = 16;
+  t->data = g_slice_alloc (t->size);
+  t->g_slice = TRUE;
+  GST_WRITE_UINT64_BE (t->data, self->video_line_map[0]);
+  GST_WRITE_UINT64_BE (t->data + 8, self->video_line_map[1]);
+  mxf_primer_pack_add_mapping (primer, 0x320d, &t->ul);
+  ret = g_list_prepend (ret, t);
 
   if (self->alpha_transparency != 0) {
     t = g_slice_new0 (MXFLocalTag);
@@ -4973,16 +4960,18 @@ void mxf_metadata_generic_picture_essence_descriptor_set_caps
   gst_caps_set_simple (caps, "width", G_TYPE_INT, width, "height", G_TYPE_INT,
       height, NULL);
 
-  if (self->aspect_ratio.n == 0 || self->aspect_ratio.d == 0) {
+  if (self->aspect_ratio.n == 0 && self->aspect_ratio.d == 0) {
+    gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        1, 1, NULL);
+  } else if (self->aspect_ratio.n == 0 || self->aspect_ratio.d == 0) {
     GST_ERROR ("Invalid aspect ratio");
-    return;
+  } else {
+    par_n = height * self->aspect_ratio.n;
+    par_d = width * self->aspect_ratio.d;
+
+    gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        par_n, par_d, NULL);
   }
-
-  par_n = height * self->aspect_ratio.n;
-  par_d = width * self->aspect_ratio.d;
-
-  gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-      par_n, par_d, NULL);
 }
 
 static gint
@@ -5157,13 +5146,11 @@ mxf_metadata_generic_sound_essence_descriptor_to_structure (MXFMetadataBase * m)
     gst_structure_id_set (ret, MXF_QUARK (ELECTRO_SPATIAL_FORMULATION),
         G_TYPE_UCHAR, self->electro_spatial_formulation, NULL);
 
-  if (self->channel_count != 0)
-    gst_structure_id_set (ret, MXF_QUARK (CHANNEL_COUNT), G_TYPE_UINT,
-        self->channel_count, NULL);
+  gst_structure_id_set (ret, MXF_QUARK (CHANNEL_COUNT), G_TYPE_UINT,
+      self->channel_count, NULL);
 
-  if (self->quantization_bits != 0)
-    gst_structure_id_set (ret, MXF_QUARK (QUANTIZATION_BITS), G_TYPE_UINT,
-        self->quantization_bits, NULL);
+  gst_structure_id_set (ret, MXF_QUARK (QUANTIZATION_BITS), G_TYPE_UINT,
+      self->quantization_bits, NULL);
 
   if (self->dial_norm != 0)
     gst_structure_id_set (ret, MXF_QUARK (DIAL_NORM), G_TYPE_CHAR,
@@ -5192,17 +5179,15 @@ mxf_metadata_generic_sound_essence_descriptor_write_tags (MXFMetadataBase * m,
       (m, primer);
   MXFLocalTag *t;
 
-  if (self->audio_sampling_rate.d && self->audio_sampling_rate.n) {
-    t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, MXF_UL (AUDIO_SAMPLING_RATE), 16);
-    t->size = 8;
-    t->data = g_slice_alloc (t->size);
-    t->g_slice = TRUE;
-    GST_WRITE_UINT32_BE (t->data, self->audio_sampling_rate.n);
-    GST_WRITE_UINT32_BE (t->data + 4, self->audio_sampling_rate.d);
-    mxf_primer_pack_add_mapping (primer, 0x3d03, &t->ul);
-    ret = g_list_prepend (ret, t);
-  }
+  t = g_slice_new0 (MXFLocalTag);
+  memcpy (&t->ul, MXF_UL (AUDIO_SAMPLING_RATE), 16);
+  t->size = 8;
+  t->data = g_slice_alloc (t->size);
+  t->g_slice = TRUE;
+  GST_WRITE_UINT32_BE (t->data, self->audio_sampling_rate.n);
+  GST_WRITE_UINT32_BE (t->data + 4, self->audio_sampling_rate.d);
+  mxf_primer_pack_add_mapping (primer, 0x3d03, &t->ul);
+  ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
   memcpy (&t->ul, MXF_UL (LOCKED), 16);
@@ -5235,27 +5220,23 @@ mxf_metadata_generic_sound_essence_descriptor_write_tags (MXFMetadataBase * m,
     ret = g_list_prepend (ret, t);
   }
 
-  if (self->channel_count) {
-    t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, MXF_UL (CHANNEL_COUNT), 16);
-    t->size = 4;
-    t->data = g_slice_alloc (t->size);
-    t->g_slice = TRUE;
-    GST_WRITE_UINT32_BE (t->data, self->channel_count);
-    mxf_primer_pack_add_mapping (primer, 0x3d07, &t->ul);
-    ret = g_list_prepend (ret, t);
-  }
+  t = g_slice_new0 (MXFLocalTag);
+  memcpy (&t->ul, MXF_UL (CHANNEL_COUNT), 16);
+  t->size = 4;
+  t->data = g_slice_alloc (t->size);
+  t->g_slice = TRUE;
+  GST_WRITE_UINT32_BE (t->data, self->channel_count);
+  mxf_primer_pack_add_mapping (primer, 0x3d07, &t->ul);
+  ret = g_list_prepend (ret, t);
 
-  if (self->quantization_bits) {
-    t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, MXF_UL (QUANTIZATION_BITS), 16);
-    t->size = 4;
-    t->data = g_slice_alloc (t->size);
-    t->g_slice = TRUE;
-    GST_WRITE_UINT32_BE (t->data, self->quantization_bits);
-    mxf_primer_pack_add_mapping (primer, 0x3d01, &t->ul);
-    ret = g_list_prepend (ret, t);
-  }
+  t = g_slice_new0 (MXFLocalTag);
+  memcpy (&t->ul, MXF_UL (QUANTIZATION_BITS), 16);
+  t->size = 4;
+  t->data = g_slice_alloc (t->size);
+  t->g_slice = TRUE;
+  GST_WRITE_UINT32_BE (t->data, self->quantization_bits);
+  mxf_primer_pack_add_mapping (primer, 0x3d01, &t->ul);
+  ret = g_list_prepend (ret, t);
 
   if (self->dial_norm != 0) {
     t = g_slice_new0 (MXFLocalTag);
@@ -5286,7 +5267,7 @@ static void
     mxf_metadata_generic_sound_essence_descriptor_init
     (MXFMetadataGenericSoundEssenceDescriptor * self)
 {
-  self->audio_sampling_rate.n = 48000;
+  self->audio_sampling_rate.n = 0;
   self->audio_sampling_rate.d = 1;
   self->electro_spatial_formulation = 255;
 }
@@ -5497,13 +5478,11 @@ mxf_metadata_cdci_picture_essence_descriptor_to_structure (MXFMetadataBase * m)
   MXFMetadataCDCIPictureEssenceDescriptor *self =
       MXF_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR (m);
 
-  if (self->component_depth != 0)
-    gst_structure_id_set (ret, MXF_QUARK (COMPONENT_DEPTH), G_TYPE_UINT,
-        self->component_depth, NULL);
+  gst_structure_id_set (ret, MXF_QUARK (COMPONENT_DEPTH), G_TYPE_UINT,
+      self->component_depth, NULL);
 
-  if (self->horizontal_subsampling != 0)
-    gst_structure_id_set (ret, MXF_QUARK (HORIZONTAL_SUBSAMPLING), G_TYPE_UINT,
-        self->horizontal_subsampling, NULL);
+  gst_structure_id_set (ret, MXF_QUARK (HORIZONTAL_SUBSAMPLING), G_TYPE_UINT,
+      self->horizontal_subsampling, NULL);
 
   if (self->vertical_subsampling != 0)
     gst_structure_id_set (ret, MXF_QUARK (VERTICAL_SUBSAMPLING), G_TYPE_UINT,
@@ -5551,27 +5530,23 @@ mxf_metadata_cdci_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
       (m, primer);
   MXFLocalTag *t;
 
-  if (self->component_depth) {
-    t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, MXF_UL (COMPONENT_DEPTH), 16);
-    t->size = 4;
-    t->data = g_slice_alloc (t->size);
-    t->g_slice = TRUE;
-    GST_WRITE_UINT32_BE (t->data, self->component_depth);
-    mxf_primer_pack_add_mapping (primer, 0x3301, &t->ul);
-    ret = g_list_prepend (ret, t);
-  }
+  t = g_slice_new0 (MXFLocalTag);
+  memcpy (&t->ul, MXF_UL (COMPONENT_DEPTH), 16);
+  t->size = 4;
+  t->data = g_slice_alloc (t->size);
+  t->g_slice = TRUE;
+  GST_WRITE_UINT32_BE (t->data, self->component_depth);
+  mxf_primer_pack_add_mapping (primer, 0x3301, &t->ul);
+  ret = g_list_prepend (ret, t);
 
-  if (self->horizontal_subsampling) {
-    t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, MXF_UL (HORIZONTAL_SUBSAMPLING), 16);
-    t->size = 4;
-    t->data = g_slice_alloc (t->size);
-    t->g_slice = TRUE;
-    GST_WRITE_UINT32_BE (t->data, self->horizontal_subsampling);
-    mxf_primer_pack_add_mapping (primer, 0x3302, &t->ul);
-    ret = g_list_prepend (ret, t);
-  }
+  t = g_slice_new0 (MXFLocalTag);
+  memcpy (&t->ul, MXF_UL (HORIZONTAL_SUBSAMPLING), 16);
+  t->size = 4;
+  t->data = g_slice_alloc (t->size);
+  t->g_slice = TRUE;
+  GST_WRITE_UINT32_BE (t->data, self->horizontal_subsampling);
+  mxf_primer_pack_add_mapping (primer, 0x3302, &t->ul);
+  ret = g_list_prepend (ret, t);
 
   if (self->vertical_subsampling) {
     t = g_slice_new0 (MXFLocalTag);
@@ -5749,7 +5724,7 @@ mxf_metadata_rgba_picture_essence_descriptor_handle_tag (MXFMetadataBase *
     case 0x3401:{
       guint i, len;
 
-      if (tag_size % 2 != 0)
+      if (tag_size % 2 != 0 || tag_size > 16)
         goto error;
 
       i = 0;
@@ -5762,7 +5737,7 @@ mxf_metadata_rgba_picture_essence_descriptor_handle_tag (MXFMetadataBase *
       if (len == 0)
         return TRUE;
 
-      self->pixel_layout = g_malloc0 (2 * len);
+      self->pixel_layout = g_malloc0 (16);
 
       for (i = 0; i < len; i++) {
         self->pixel_layout[2 * i] = tag_data[2 * i];
@@ -5908,17 +5883,15 @@ mxf_metadata_rgba_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
     ret = g_list_prepend (ret, t);
   }
 
-  if (self->pixel_layout) {
-    t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, MXF_UL (PIXEL_LAYOUT), 16);
-    t->size = 2 * self->n_pixel_layout + 2;
-    t->data = g_slice_alloc0 (t->size);
-    t->g_slice = TRUE;
+  t = g_slice_new0 (MXFLocalTag);
+  memcpy (&t->ul, MXF_UL (PIXEL_LAYOUT), 16);
+  t->size = 16;
+  t->data = g_slice_alloc0 (t->size);
+  t->g_slice = TRUE;
+  if (self->pixel_layout)
     memcpy (t->data, self->pixel_layout, self->n_pixel_layout * 2);
-    mxf_primer_pack_add_mapping (primer, 0x3401, &t->ul);
-    ret = g_list_prepend (ret, t);
-
-  }
+  mxf_primer_pack_add_mapping (primer, 0x3401, &t->ul);
+  ret = g_list_prepend (ret, t);
 
   return ret;
 }
