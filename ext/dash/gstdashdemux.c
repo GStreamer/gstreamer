@@ -1280,9 +1280,9 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
 
   /* TODO check if start-type/stop-type is SET */
   if (demux->segment.rate > 0.0)
-    target_pos = (GstClockTime) demux->segment.start;
+    target_pos = (GstClockTime) start;
   else
-    target_pos = (GstClockTime) demux->segment.stop;
+    target_pos = (GstClockTime) stop;
 
   /* select the requested Period in the Media Presentation */
   if (!gst_mpd_client_setup_media_presentation (dashdemux->client, target_pos,
