@@ -1035,7 +1035,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
 
     cstorage->essence_container_data[0]->linked_package =
         MXF_METADATA_SOURCE_PACKAGE (cstorage->packages[1]);
-    cstorage->essence_container_data[0]->index_sid = 1;
+    cstorage->essence_container_data[0]->index_sid = 2;
     cstorage->essence_container_data[0]->body_sid = 1;
   }
 
