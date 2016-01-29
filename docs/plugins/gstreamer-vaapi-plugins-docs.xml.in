@@ -10,10 +10,21 @@
   </bookinfo>
 
   <chapter>
+    <title>gstreamer-vaapi Elements</title>
+    <xi:include href="xml/element-vaapidecode.xml"/>
+    <xi:include href="xml/element-vaapidecodebin.xml"/>
+    <xi:include href="xml/element-vaapipostproc.xml"/>
+    <xi:include href="xml/element-vaapisink.xml"/>
+    <xi:include href="xml/element-vaapiencode_h264.xml"/>
+    <xi:include href="xml/element-vaapiencode_h265.xml"/>
+    <xi:include href="xml/element-vaapiencode_jpeg.xml"/>
+    <xi:include href="xml/element-vaapiencode_mpeg2.xml"/>
+    <xi:include href="xml/element-vaapiencode_vp8.xml"/>
+  </chapter>
+
+  <chapter>
     <title>gstreamer-vaapi Plugins</title>
-    <xi:include href="xml/gstvaapidecode.xml"/>
-    <xi:include href="xml/gstvaapipostproc.xml"/>
-    <xi:include href="xml/gstvaapisink.xml"/>
+    <xi:include href="xml/plugin-vaapi.xml"/>
   </chapter>
 
   <chapter id="object-tree">

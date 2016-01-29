@@ -21,6 +21,20 @@
  *  Boston, MA 02110-1301 USA
  */
 
+/**
+ * SECTION:element-vaapiencode_h264
+ * @short_description: A VA-API based H.264 video encoder
+ *
+ * Encodes raw video streams into H.264 bitstreams.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ *  gst-launch-1.0 -ev videotestsrc num-buffers=60 ! timeoverlay ! vaapiencode_h264 ! mp4mux ! filesink location=test.mp4
+ * ]|
+ * </refsect2>
+ */
+
 #include "gstcompat.h"
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiencoder_h264.h>

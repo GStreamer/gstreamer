@@ -21,12 +21,18 @@
  */
 
 /**
- * SECTION:gstvaapipostproc
- * @short_description: A video postprocessing filter
+ * SECTION:element-vaapipostproc
+ * @short_description: A VA-API base video postprocessing filter
  *
  * vaapipostproc consists in various postprocessing algorithms to be
- * applied to VA surfaces. So far, only basic bob deinterlacing is
- * implemented.
+ * applied to VA surfaces.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 videotestsrc ! vaapipostproc ! video/x-raw width=1920, height=1080 ! vaapisink
+ * ]|
+ * </refsect2>
  */
 
 #include "gstcompat.h"
@@ -39,7 +45,7 @@
 #include "gstvaapivideomemory.h"
 
 #define GST_PLUGIN_NAME "vaapipostproc"
-#define GST_PLUGIN_DESC "A video postprocessing filter"
+#define GST_PLUGIN_DESC "A VA-API video postprocessing filter"
 
 GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapipostproc);
 #define GST_CAT_DEFAULT gst_debug_vaapipostproc

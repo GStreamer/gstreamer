@@ -20,6 +20,20 @@
  *  Boston, MA 02110-1301 USA
  */
 
+/**
+ * SECTION:element-vaapiencode_jpeg
+ * @short_description: A VA-API based JPEG image encoder
+ *
+ * Encodes raw images into JPEG images.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ *  gst-launch-1.0 -ev videotestsrc num-buffers=1 ! timeoverlay ! vaapiencode_jpeg ! filesink location=test.jpg
+ * ]|
+ * </refsect2>
+ */
+
 #include "gstcompat.h"
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiencoder_jpeg.h>

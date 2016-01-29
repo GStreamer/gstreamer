@@ -20,6 +20,20 @@
  *  Boston, MA 02110-1301 USA
  */
 
+/**
+ * SECTION:element-vaapiencode_h265
+ * @short_description: A VA-API based HEVC video encoder
+ *
+ * Encodes raw video streams into HEVC bitstreams.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ *  gst-launch-1.0 -ev videotestsrc num-buffers=60 ! timeoverlay ! vaapiencode_h265 ! matroskamux ! filesink location=test.mkv
+ * ]|
+ * </refsect2>
+ */
+
 #include "gstcompat.h"
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiencoder_h265.h>

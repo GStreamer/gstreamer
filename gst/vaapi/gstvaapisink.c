@@ -23,12 +23,19 @@
  */
 
 /**
- * SECTION:gstvaapisink
- * @short_description: A VA-API based videosink
+ * SECTION:element-vaapisink
+ * @short_description: A VA-API based video sink
  *
  * vaapisink renders video frames to a drawable (X #Window) on a local
  * display using the Video Acceleration (VA) API. The element will
  * create its own internal window and render into it.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 videotestsrc ! vaapisink
+ * ]|
+ * </refsect2>
  */
 
 #include "gstcompat.h"

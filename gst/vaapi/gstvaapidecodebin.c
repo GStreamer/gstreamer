@@ -21,6 +21,26 @@
  *  Boston, MA 02110-1301 USA
  */
 
+/**
+ * SECTION:element-vaapidecodebin
+ * @short_description: A VA-API based video decoder with a
+ * post-processor
+ *
+ * vaapidecodebin is similar #GstVaapiDecode, but it is composed by
+ * the vaapidecode, a #GstQueue, and the #GstVaapiPostproc, if it is
+ * available and functional in the setup.
+ *
+ * It offers the functionality of #GstVaapiDecode and the many options
+ * of #GstVaapiPostproc.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 filesrc location=~/big_buck_bunny.mov ! qtdemux ! h264parse ! vaapidecodebin ! vaapisink
+ * ]|
+ * </refsect2>
+ */
+
 #include "gstcompat.h"
 #include <stdio.h>
 #include <string.h>
@@ -32,7 +52,7 @@
 #include "gstvaapipluginbase.h"
 
 #define GST_PLUGIN_NAME "vaapidecodebin"
-#define GST_PLUGIN_DESC "A Bin of VA-API elements: vaapidecode ! queue ! vaapipostproc"
+#define GST_PLUGIN_DESC "A VA-API based bin with a decoder and a postprocessor"
 
 GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapi_decode_bin);
 #define GST_CAT_DEFAULT gst_debug_vaapi_decode_bin

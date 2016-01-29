@@ -23,11 +23,28 @@
 */
 
 /**
- * SECTION:gstvaapidecode
+ * SECTION:element-vaapidecode
  * @short_description: A VA-API based video decoder
  *
  * vaapidecode decodes from raw bitstreams to surfaces suitable for
- * the vaapisink element.
+ * the vaapisink or vaapipostproc elements using the installed <ulink
+ * url="https://wiki.freedesktop.org/www/Software/vaapi/">VA-API</ulink>
+ * back-end.
+ *
+ * In the case of OpenGL based elements, the buffers have the
+ * #GstVideoGLTextureUploadMeta meta, which efficiently copies the
+ * content of the VA-API surface into a GL texture.
+ *
+ * Also it can deliver normal video buffers that can be rendered or
+ * processed by other elements, but the performance would be rather
+ * bad.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 filesrc location=~/big_buck_bunny.mov ! qtdemux ! h264parse ! vaapidecode ! vaapisink
+ * ]|
+ * </refsect2>
  */
 
 #include "gstcompat.h"
