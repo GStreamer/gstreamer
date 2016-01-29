@@ -932,20 +932,18 @@ mxf_metadata_preface_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
   }
   ret = g_list_prepend (ret, t);
 
-  if (self->dm_schemes) {
-    t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, MXF_UL (DM_SCHEMES), 16);
-    t->size = 8 + 16 * self->n_dm_schemes;
-    t->data = g_slice_alloc0 (t->size);
-    t->g_slice = TRUE;
-    mxf_primer_pack_add_mapping (primer, 0x3b0b, &t->ul);
-    GST_WRITE_UINT32_BE (t->data, self->n_dm_schemes);
-    GST_WRITE_UINT32_BE (t->data + 4, 16);
-    for (i = 0; i < self->n_dm_schemes; i++) {
-      memcpy (t->data + 8 + 16 * i, &self->dm_schemes[i], 16);
-    }
-    ret = g_list_prepend (ret, t);
+  t = g_slice_new0 (MXFLocalTag);
+  memcpy (&t->ul, MXF_UL (DM_SCHEMES), 16);
+  t->size = 8 + 16 * self->n_dm_schemes;
+  t->data = g_slice_alloc0 (t->size);
+  t->g_slice = TRUE;
+  mxf_primer_pack_add_mapping (primer, 0x3b0b, &t->ul);
+  GST_WRITE_UINT32_BE (t->data, self->n_dm_schemes);
+  GST_WRITE_UINT32_BE (t->data + 4, 16);
+  for (i = 0; i < self->n_dm_schemes; i++) {
+    memcpy (t->data + 8 + 16 * i, &self->dm_schemes[i], 16);
   }
+  ret = g_list_prepend (ret, t);
 
   return ret;
 }
