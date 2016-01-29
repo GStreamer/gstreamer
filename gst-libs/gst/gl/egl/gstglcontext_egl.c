@@ -720,13 +720,7 @@ gst_gl_context_egl_swap_buffers (GstGLContext * context)
 
   egl = GST_GL_CONTEXT_EGL (context);
 
-  if (!eglSwapBuffers (egl->egl_display, egl->egl_surface)) {
-    EGLint err = eglGetError ();
-
-    if (err == EGL_CONTEXT_LOST) {
-      gst_gl_context_lost_context (context);
-    }
-  }
+  eglSwapBuffers (egl->egl_display, egl->egl_surface);
 }
 
 static GstGLAPI
