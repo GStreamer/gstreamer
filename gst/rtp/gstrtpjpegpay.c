@@ -107,10 +107,15 @@ enum _RtpJpegMarker
   JPEG_MARKER_DQT = 0xDB,
   JPEG_MARKER_SOF = 0xC0,
   JPEG_MARKER_DHT = 0xC4,
+  JPEG_MARKER_JPG = 0xC8,
   JPEG_MARKER_SOS = 0xDA,
   JPEG_MARKER_EOI = 0xD9,
   JPEG_MARKER_DRI = 0xDD,
-  JPEG_MARKER_H264 = 0xE4
+  JPEG_MARKER_APP0 = 0xE0,
+  JPEG_MARKER_H264 = 0xE4,      /* APP4 */
+  JPEG_MARKER_APP15 = 0xEF,
+  JPEG_MARKER_JPG0 = 0xF0,
+  JPEG_MARKER_JPG13 = 0xFD
 };
 
 #define DEFAULT_JPEG_QUANT    255
@@ -712,8 +717,10 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
   dri_found = FALSE;
 
   while (!sos_found && (offset < size)) {
+    gint marker;
+
     GST_LOG_OBJECT (pay, "checking from offset %u", offset);
-    switch (gst_rtp_jpeg_pay_scan_marker (data, size, &offset)) {
+    switch ((marker = gst_rtp_jpeg_pay_scan_marker (data, size, &offset))) {
       case JPEG_MARKER_JFIF:
       case JPEG_MARKER_CMT:
       case JPEG_MARKER_DHT:
@@ -750,6 +757,14 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
           dri_found = TRUE;
         break;
       default:
+        if (marker == JPEG_MARKER_JPG ||
+            (marker >= JPEG_MARKER_JPG0 && marker <= JPEG_MARKER_JPG13) ||
+            (marker >= JPEG_MARKER_APP0 && marker <= JPEG_MARKER_APP15)) {
+          GST_LOG_OBJECT (pay, "skipping marker");
+          offset += gst_rtp_jpeg_pay_header_size (data, offset);
+        } else {
+          GST_FIXME_OBJECT (pay, "unhandled marker 0x%02x", marker);
+        }
         break;
     }
   }
