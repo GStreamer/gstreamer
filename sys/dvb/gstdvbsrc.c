@@ -99,7 +99,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "_stdint.h"
 
 #include <unistd.h>
 
@@ -2056,8 +2055,8 @@ static void
 gst_dvbsrc_output_frontend_stats (GstDvbSrc * src)
 {
   fe_status_t status;
-  uint16_t snr, _signal;
-  uint32_t ber, bad_blks;
+  guint16 snr, _signal;
+  guint32 ber, bad_blks;
   GstMessage *message;
   GstStructure *structure;
   int fe_fd = src->fd_frontend;
@@ -2099,7 +2098,7 @@ error_out:
 struct diseqc_cmd
 {
   struct dvb_diseqc_master_cmd cmd;
-  uint32_t wait;
+  guint32 wait;
 };
 
 static void
