@@ -558,21 +558,6 @@ gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
   if (!(info[2].samp == 0x11))
     goto invalid_comp;
 
-  /* the other components are free to use any quant table but they have to
-   * have the same table id */
-  if (info[1].qt != info[2].qt) {
-    /* Some MJPG (like the one from the Logitech C-920 camera) uses different
-     * quant tables for component 1 and 2 but both tables contain the exact
-     * same data, so we could consider them as being the same tables */
-    if (!(info[1].qt < tables_elements &&
-            info[2].qt < tables_elements &&
-            tables[info[1].qt].size > 0 &&
-            tables[info[1].qt].size == tables[info[2].qt].size &&
-            memcmp (tables[info[1].qt].data, tables[info[2].qt].data,
-                tables[info[1].qt].size) == 0))
-      goto invalid_comp;
-  }
-
   return TRUE;
 
   /* ERRORS */
