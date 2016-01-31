@@ -16,12 +16,6 @@ else
 APEXSINK_DIR =
 endif
 
-# if USE_AUDIOFILE
-# AUDIOFILE_DIR=audiofile
-# else
-AUDIOFILE_DIR=
-# endif
-
 if USE_BS2B
 BS2B_DIR=bs2b
 else
