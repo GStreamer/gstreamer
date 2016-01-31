@@ -42,48 +42,7 @@
 #include <string.h>
 #include <gst/audio/audio.h>
 
-/* These are the correct types for these functions, as defined in the source,
- * with types changed to match glib types, since those are defined for us.
- * However, upstream FAAD is distributed with a broken header file that defined
- * these wrongly (in a way which was broken on 64 bit systems).
- *
- * Upstream CVS still has the bug, but has also renamed all the public symbols
- * for Better Corporate Branding (or whatever), so we need to take that
- * (FAAD_IS_NEAAC) into account as well.
- *
- * We must call them using these definitions. Most distributions now have the
- * corrected header file (they distribute a patch along with the source), 
- * but not all, hence this Truly Evil Hack.
- *
- * Note: The prototypes don't need to be defined conditionaly, as the cpp will
- * do that for us.
- */
-#if FAAD2_MINOR_VERSION < 7
-#ifdef FAAD_IS_NEAAC
-#define NeAACDecInit NeAACDecInit_no_definition
-#define NeAACDecInit2 NeAACDecInit2_no_definition
-#else
-#define faacDecInit faacDecInit_no_definition
-#define faacDecInit2 faacDecInit2_no_definition
-#endif
-#endif /* FAAD2_MINOR_VERSION < 7 */
-
 #include "gstfaad.h"
-
-#if FAAD2_MINOR_VERSION < 7
-#ifdef FAAD_IS_NEAAC
-#undef NeAACDecInit
-#undef NeAACDecInit2
-#else
-#undef faacDecInit
-#undef faacDecInit2
-#endif
-
-extern long faacDecInit (faacDecHandle, guint8 *, guint32, guint32 *, guint8 *);
-extern gint8 faacDecInit2 (faacDecHandle, guint8 *, guint32,
-    guint32 *, guint8 *);
-
-#endif /* FAAD2_MINOR_VERSION < 7 */
 
 GST_DEBUG_CATEGORY_STATIC (faad_debug);
 #define GST_CAT_DEFAULT faad_debug
@@ -277,11 +236,7 @@ gst_faad_set_format (GstAudioDecoder * dec, GstCaps * caps)
   faad->packetised = FALSE;
 
   if ((value = gst_structure_get_value (str, "codec_data"))) {
-#if FAAD2_MINOR_VERSION >= 7
     unsigned long samplerate;
-#else
-    guint32 samplerate;
-#endif
     guint8 channels;
 
     /* We have codec data, means packetised stream */
@@ -691,11 +646,7 @@ gst_faad_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 init:
   /* init if not already done during capsnego */
   if (!faad->init) {
-#if FAAD2_MINOR_VERSION >= 7
     unsigned long rate;
-#else
-    guint32 rate;
-#endif
     guint8 ch;
 
     GST_DEBUG_OBJECT (faad, "initialising ...");
