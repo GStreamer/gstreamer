@@ -381,6 +381,12 @@ gst_kms_sink_start (GstBaseSink * bsink)
   self->hdisplay = crtc->mode.hdisplay;
   self->vdisplay = crtc->mode.vdisplay;
 
+  self->mm_width = conn->mmWidth;
+  self->mm_height = conn->mmHeight;
+
+  GST_INFO_OBJECT (self, "display size: pixels = %dx%d / millimeters = %dx%d",
+      self->hdisplay, self->vdisplay, self->mm_width, self->mm_height);
+
   ret = TRUE;
 
 bail:
@@ -535,6 +541,57 @@ config_failed:
 }
 
 static gboolean
+gst_kms_sink_calculate_display_ratio (GstKMSSink * self, GstVideoInfo * vinfo)
+{
+  guint dar_n, dar_d;
+  guint video_width, video_height;
+  guint video_par_n, video_par_d;
+  guint dpy_par_n, dpy_par_d;
+
+  video_width = GST_VIDEO_INFO_WIDTH (vinfo);
+  video_height = GST_VIDEO_INFO_HEIGHT (vinfo);
+  video_par_n = GST_VIDEO_INFO_PAR_N (vinfo);
+  video_par_d = GST_VIDEO_INFO_PAR_D (vinfo);
+
+  gst_video_calculate_device_ratio (self->hdisplay, self->vdisplay,
+      self->mm_width, self->mm_height, &dpy_par_n, &dpy_par_d);
+
+  if (!gst_video_calculate_display_ratio (&dar_n, &dar_d, video_width,
+          video_height, video_par_n, video_par_d, dpy_par_n, dpy_par_d))
+    return FALSE;
+
+  GST_DEBUG_OBJECT (self, "video calculated display ratio: %d/%d", dar_n,
+      dar_d);
+
+  /* now find a width x height that respects this display ratio.
+   * prefer those that have one of w/h the same as the incoming video
+   * using wd / hd = dar_n / dar_d */
+
+  /* start with same height, because of interlaced video */
+  /* check hd / dar_d is an integer scale factor, and scale wd with the PAR */
+  if (video_height % dar_d == 0) {
+    GST_DEBUG_OBJECT (self, "keeping video height");
+    GST_VIDEO_SINK_WIDTH (self) = (guint)
+        gst_util_uint64_scale_int (video_height, dar_n, dar_d);
+    GST_VIDEO_SINK_HEIGHT (self) = video_height;
+  } else if (video_width % dar_n == 0) {
+    GST_DEBUG_OBJECT (self, "keeping video width");
+    GST_VIDEO_SINK_WIDTH (self) = video_width;
+    GST_VIDEO_SINK_HEIGHT (self) = (guint)
+        gst_util_uint64_scale_int (video_width, dar_d, dar_n);
+  } else {
+    GST_DEBUG_OBJECT (self, "approximating while keeping video height");
+    GST_VIDEO_SINK_WIDTH (self) = (guint)
+        gst_util_uint64_scale_int (video_height, dar_n, dar_d);
+    GST_VIDEO_SINK_HEIGHT (self) = video_height;
+  }
+  GST_DEBUG_OBJECT (self, "scaling to %dx%d", GST_VIDEO_SINK_WIDTH (self),
+      GST_VIDEO_SINK_HEIGHT (self));
+
+  return TRUE;
+}
+
+static gboolean
 gst_kms_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstKMSSink *self;
@@ -546,8 +603,8 @@ gst_kms_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_video_info_from_caps (&vinfo, caps))
     goto invalid_format;
 
-  GST_VIDEO_SINK_WIDTH (self) = GST_VIDEO_INFO_WIDTH (&vinfo);
-  GST_VIDEO_SINK_HEIGHT (self) = GST_VIDEO_INFO_HEIGHT (&vinfo);
+  if (!gst_kms_sink_calculate_display_ratio (self, &vinfo))
+    goto no_disp_ratio;
 
   if (GST_VIDEO_SINK_WIDTH (self) <= 0 || GST_VIDEO_SINK_HEIGHT (self) <= 0)
     goto invalid_size;
@@ -584,6 +641,13 @@ invalid_size:
   {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION, (NULL),
         ("Invalid image size."));
+    return FALSE;
+  }
+
+no_disp_ratio:
+  {
+    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION, (NULL),
+        ("Error calculating the output display ratio of the video."));
     return FALSE;
   }
 no_pool:

@@ -33,6 +33,12 @@ G_BEGIN_DECLS
 GstVideoFormat gst_video_format_from_drm (guint32 drmfmt);
 guint32        gst_drm_format_from_video (GstVideoFormat fmt);
 GstCaps *      gst_kms_sink_caps_template_fill (void);
+void           gst_video_calculate_device_ratio (guint dev_width,
+						 guint dev_height,
+						 guint dev_width_mm,
+						 guint dev_height_mm,
+						 guint * dpy_par_n,
+						 guint * dpy_par_d);
 
 G_END_DECLS
 
