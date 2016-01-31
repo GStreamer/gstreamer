@@ -451,7 +451,6 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  videomeasure \
  linsys \
  apexsink dc1394 \
- gsettings \
  musepack nas sdl timidity \
  wininet \
  xvid lv2 sndio libvisual"
@@ -3185,15 +3184,6 @@ AG_GST_CHECK_FEATURE(SPANDSP, [Spandsp], spandsp, [
 AC_SUBST(SPANDSP_CFLAGS)
 AC_SUBST(SPANDSP_LIBS)
 
-dnl *** GSettings ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_GSETTINGS, true)
-AG_GST_CHECK_FEATURE(GSETTINGS, [GSettings plugin], gsettings, [
-  AG_GST_PKG_CHECK_MODULES(GSETTINGS, gio-2.0 >= 2.25.0)
-  if test "x$HAVE_GSETTINGS" = "xyes"; then
-    GLIB_GSETTINGS
-  fi
-])
-
 dnl *** sndio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SNDIO, true)
 AG_GST_CHECK_FEATURE(SNDIO, [sndio audio], sndio, [
@@ -3340,7 +3330,6 @@ AM_CONDITIONAL(USE_SPANDSP, false)
 AM_CONDITIONAL(USE_SPC, false)
 AM_CONDITIONAL(USE_SRTP, false)
 AM_CONDITIONAL(USE_GME, false)
-AM_CONDITIONAL(USE_GSETTINGS, false)
 AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_DVB, false)
 AM_CONDITIONAL(USE_WININET, false)
@@ -3658,8 +3647,6 @@ ext/sndio/Makefile
 ext/srtp/Makefile
 ext/teletextdec/Makefile
 ext/gme/Makefile
-ext/gsettings/Makefile
-ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml
 ext/spc/Makefile
 ext/timidity/Makefile
 ext/webp/Makefile

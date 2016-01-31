@@ -382,12 +382,6 @@ else
 TELETEXTDEC_DIR=
 endif
 
-if USE_GSETTINGS
-GSETTINGS_DIR=gsettings
-else
-GSETTINGS_DIR=
-endif
-
 if USE_XVID
 XVID_DIR=xvid
 else
@@ -454,7 +448,6 @@ SUBDIRS=\
 	$(FAAD_DIR) \
 	$(FLITE_DIR) \
 	$(FLUIDSYNTH_DIR) \
-	$(GSETTINGS_DIR) \
 	$(GSM_DIR) \
 	$(G729_DIR) \
 	$(KATE_DIR) \
@@ -518,7 +511,6 @@ DIST_SUBDIRS = \
 	faad \
 	flite \
 	fluidsynth \
-	gsettings \
 	gsm \
 	hls \
 	ladspa \

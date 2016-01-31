@@ -46,12 +46,6 @@ GstGLStereoMix GstChildProxy
 GstGLVideoMixer GstChildProxy
 GstGLVideoMixerBin GstChildProxy
 GstGSMEnc GstPreset
-GstGSettingsAudioSink GstChildProxy
-GstGSettingsAudioSrc GstChildProxy
-GstGSettingsSwitchSink GstChildProxy
-GstGSettingsSwitchSrc GstChildProxy
-GstGSettingsVideoSink GstChildProxy
-GstGSettingsVideoSrc GstChildProxy
 GstGtkBaseSink GstNavigation
 GstGtkGLSink GstNavigation
 GstGtkSink GstNavigation

@@ -1,6 +1,5 @@
 ext/dash/gstdashdemux.c
 ext/gl/gstgltestsrc.c
-ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in
 ext/opencv/gsttemplatematch.cpp
 ext/resindvd/resindvdsrc.c
 ext/smoothstreaming/gstmssdemux.c

@@ -46389,16 +46389,6 @@
 </ARG>
 
 <ARG>
-<NAME>GstGSettingsAudioSink::profile</NAME>
-<TYPE>GstGSettingsAudioSinkProfile</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Profile</NICK>
-<BLURB>Profile.</BLURB>
-<DEFAULT>Sound Events</DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>Gstsolarize::silent</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>

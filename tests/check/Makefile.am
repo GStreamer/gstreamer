@@ -16,8 +16,8 @@ AM_TESTS_ENVIRONMENT = \
 	GST_PLUGIN_LOADING_WHITELIST="gstreamer@$(GST_PLUGINS_DIR):gst-plugins-base@$(GSTPB_PLUGINS_DIR):gst-plugins-good:gst-plugins-ugly:gst-libav:gst-plugins-bad@$(top_builddir)" \
 	GST_STATE_IGNORE_ELEMENTS="apexsink avdtpsrc camerabin dc1394src \
 	    dccpclientsrc dccpclientsink dccpserversrc dccpserversink decklinksrc \
-	    decklinksink dtlssrtpdec dtlssrtpenc dvbsrc dvbbasebin dfbvideosink festival fluidsynth gsettingsvideosrc \
-	    gsettingsvideosink gsettingsaudiosrc gsettingsaudiosink linsyssdisrc linsyssdisink nassink \
+	    decklinksink dtlssrtpdec dtlssrtpenc dvbsrc dvbbasebin dfbvideosink festival fluidsynth \
+	    linsyssdisrc linsyssdisink nassink \
 	    rsndvdbin sdlaudiosink sdlvideosink vcdsrc rfbsrc vdpauyuvvideo vdpauvideoyuv \
 	    vdpaumpegdec vdpaumpeg4dec vdpauh264dec vdpauvideopostprocess vdpausink neonhttpsrc"
 
