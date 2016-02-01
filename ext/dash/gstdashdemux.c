@@ -1259,6 +1259,10 @@ end:
   return ret;
 }
 
+#define SEEK_UPDATES_PLAY_POSITION(r, start_type, stop_type) \
+  ((r >= 0 && start_type != GST_SEEK_TYPE_NONE) || \
+   (r < 0 && stop_type != GST_SEEK_TYPE_NONE))
+
 static gboolean
 gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
 {
@@ -1278,11 +1282,16 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   gst_event_parse_seek (seek, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
 
-  /* TODO check if start-type/stop-type is SET */
-  if (demux->segment.rate > 0.0)
+  if (!SEEK_UPDATES_PLAY_POSITION (rate, start_type, stop_type)) {
+    /* nothing to do if we don't have to update the current position */
+    return TRUE;
+  }
+
+  if (demux->segment.rate > 0.0) {
     target_pos = (GstClockTime) start;
-  else
+  } else {
     target_pos = (GstClockTime) stop;
+  }
 
   /* select the requested Period in the Media Presentation */
   if (!gst_mpd_client_setup_media_presentation (dashdemux->client, target_pos,
