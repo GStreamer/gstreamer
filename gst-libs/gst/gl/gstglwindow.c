@@ -199,6 +199,7 @@ gst_gl_window_init (GstGLWindow * window)
 
   priv->main_context = g_main_context_new ();
   priv->loop = g_main_loop_new (priv->main_context, FALSE);
+  priv->navigation_loop = NULL;
 }
 
 static void
@@ -329,10 +330,12 @@ gst_gl_window_finalize (GObject * object)
   GstGLWindowPrivate *priv = window->priv;
 
   GST_INFO ("quit navigation loop");
-  g_main_loop_quit (window->priv->navigation_loop);
-  /* wait until navigation thread finished */
-  g_thread_join (window->priv->navigation_thread);
-  window->priv->navigation_thread = NULL;
+  if (window->priv->navigation_loop) {
+    g_main_loop_quit (window->priv->navigation_loop);
+    /* wait until navigation thread finished */
+    g_thread_join (window->priv->navigation_thread);
+    window->priv->navigation_thread = NULL;
+  }
 
   if (priv->loop)
     g_main_loop_unref (priv->loop);
