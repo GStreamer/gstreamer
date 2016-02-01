@@ -1511,7 +1511,7 @@ add_packed_sei_header (GstVaapiEncoderH264 * encoder,
   VAEncPackedHeaderParameterBuffer packed_sei_param = { 0 };
   guint32 data_bit_size;
   guint8 buf_period_payload_size = 0, pic_timing_payload_size = 0;
-  guint8 *data, *buf_period_payload, *pic_timing_payload;
+  guint8 *data, *buf_period_payload = NULL, *pic_timing_payload = NULL;
   gboolean need_buf_period, need_pic_timing;
 
   gst_bit_writer_init (&bs_buf_period, 128 * 8);

@@ -603,7 +603,7 @@ get_vps (GstVaapiDecoderH265 * decoder)
 static guint
 get_max_dec_frame_buffering (GstH265SPS * sps)
 {
-  guint max_dec_frame_buffering;
+  G_GNUC_UNUSED guint max_dec_frame_buffering;  /* FIXME */
   GstVaapiLevelH265 level;
   const GstVaapiH265LevelLimits *level_limits;
 
