@@ -4043,6 +4043,8 @@ GST_START_TEST (dash_mpdparser_headers)
       "          <Initialization sourceURL=\"TestSourceUrl\""
       "                          range=\"100-200\">"
       "          </Initialization>"
+      "          <RepresentationIndex sourceURL=\"TestSourceIndex\">"
+      "          </RepresentationIndex>"
       "        </SegmentBase>"
       "      </Representation></AdaptationSet></Period></MPD>";
 
@@ -4083,7 +4085,7 @@ GST_START_TEST (dash_mpdparser_headers)
       gst_mpd_client_get_next_header_index (mpdclient, &uri, 0, &range_start,
       &range_end);
   assert_equals_int (ret, TRUE);
-  assert_equals_string (uri, "TestSourceUrl");
+  assert_equals_string (uri, "TestSourceIndex");
   assert_equals_int64 (range_start, 10);
   assert_equals_int64 (range_end, 20);
   g_free (uri);
