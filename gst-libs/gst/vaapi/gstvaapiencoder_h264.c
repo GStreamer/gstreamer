@@ -591,11 +591,12 @@ bs_write_subset_sps (GstBitWriter * bs,
 
     for (i = 1; i <= num_views_minus1; i++) {
       guint32 num_anchor_refs_l0 = 0;
+      guint32 num_anchor_refs_l1 = 0;
+
       WRITE_UE (bs, num_anchor_refs_l0);
       for (j = 0; j < num_anchor_refs_l0; j++)
         WRITE_UE (bs, 0);
 
-      guint32 num_anchor_refs_l1 = 0;
       WRITE_UE (bs, num_anchor_refs_l1);
       for (j = 0; j < num_anchor_refs_l1; j++)
         WRITE_UE (bs, 0);
@@ -603,11 +604,12 @@ bs_write_subset_sps (GstBitWriter * bs,
 
     for (i = 1; i <= num_views_minus1; i++) {
       guint32 num_non_anchor_refs_l0 = 0;
+      guint32 num_non_anchor_refs_l1 = 0;
+
       WRITE_UE (bs, num_non_anchor_refs_l0);
       for (j = 0; j < num_non_anchor_refs_l0; j++)
         WRITE_UE (bs, 0);
 
-      guint32 num_non_anchor_refs_l1 = 0;
       WRITE_UE (bs, num_non_anchor_refs_l1);
       for (j = 0; j < num_non_anchor_refs_l1; j++)
         WRITE_UE (bs, 0);
@@ -2452,13 +2454,14 @@ reset_properties (GstVaapiEncoderH264 * encoder)
 
   for (i = 0; i < encoder->num_views; i++) {
     GstVaapiH264ViewRefPool *const ref_pool = &encoder->ref_pools[i];
+    GstVaapiH264ViewReorderPool *const reorder_pool =
+        &encoder->reorder_pools[i];
+
     ref_pool->max_reflist0_count = 1;
     ref_pool->max_reflist1_count = encoder->num_bframes > 0;
     ref_pool->max_ref_frames = ref_pool->max_reflist0_count
         + ref_pool->max_reflist1_count;
 
-    GstVaapiH264ViewReorderPool *const reorder_pool =
-        &encoder->reorder_pools[i];
     reorder_pool->frame_index = 0;
   }
 }

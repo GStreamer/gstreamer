@@ -3626,8 +3626,6 @@ exec_ref_pic_marking_adaptive(
 {
     guint i;
 
-    GST_DEBUG("reference picture marking process (adaptive memory control)");
-
     typedef void (*exec_ref_pic_marking_adaptive_mmco_func)(
         GstVaapiDecoderH264  *decoder,
         GstVaapiPictureH264  *picture,
@@ -3643,6 +3641,8 @@ exec_ref_pic_marking_adaptive(
         exec_ref_pic_marking_adaptive_mmco_5,
         exec_ref_pic_marking_adaptive_mmco_6,
     };
+
+    GST_DEBUG("reference picture marking process (adaptive memory control)");
 
     for (i = 0; i < dec_ref_pic_marking->n_ref_pic_marking; i++) {
         GstH264RefPicMarking * const ref_pic_marking =

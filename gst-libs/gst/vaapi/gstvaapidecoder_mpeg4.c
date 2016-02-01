@@ -610,10 +610,12 @@ decode_picture(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
 
     if (priv->is_svh) {
         guint temp_ref = priv->svh_hdr.temporal_reference;
+        guint delta_ref;
+
         if (temp_ref < priv->prev_t_ref) {
             temp_ref += 256;
         }
-        guint delta_ref = temp_ref - priv->prev_t_ref;
+        delta_ref = temp_ref - priv->prev_t_ref;
 
         pts = priv->sync_time;
         // see temporal_reference definition in spec, 30000/1001Hz
@@ -707,6 +709,8 @@ fill_picture(GstVaapiDecoderMpeg4 *decoder, GstVaapiPicture *picture)
         pic_param->num_macroblocks_in_gob                       = priv->svh_hdr.num_macroblocks_in_gob;
     }
     else {
+        int i;
+
         // VOL parameters
         pic_param->vol_fields.bits.short_video_header           = 0; 
         pic_param->vol_fields.bits.chroma_format                = priv->vol_hdr.chroma_format;
@@ -720,7 +724,7 @@ fill_picture(GstVaapiDecoderMpeg4 *decoder, GstVaapiPicture *picture)
         pic_param->vol_fields.bits.reversible_vlc               = priv->vol_hdr.reversible_vlc;
         pic_param->vol_fields.bits.resync_marker_disable        = priv->vol_hdr.resync_marker_disable;
         pic_param->no_of_sprite_warping_points                  = priv->vol_hdr.no_of_sprite_warping_points;
-        int i =0;
+
         for (i=0; i<3 && i<priv->vol_hdr.no_of_sprite_warping_points ; i++) {
             pic_param->sprite_trajectory_du[i]                  = priv->sprite_trajectory.vop_ref_points[i];
             pic_param->sprite_trajectory_dv[i]                  = priv->sprite_trajectory.sprite_ref_points[i];
@@ -839,6 +843,10 @@ decode_packet(GstVaapiDecoderMpeg4 *decoder, GstMpeg4Packet packet)
         status = decode_gop(decoder, packet.data + packet.offset, packet.size);
     }
     else if (tos->type == GST_MPEG4_VIDEO_OBJ_PLANE) {
+        GstMpeg4Packet video_packet;
+        const guint8 *_data;
+        gint  _data_size;
+
         status = decode_picture(decoder, packet.data + packet.offset, packet.size);
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             return status;
@@ -852,9 +860,8 @@ decode_packet(GstVaapiDecoderMpeg4 *decoder, GstMpeg4Packet packet)
          * while MB doesn't start from byte boundary -- it is what 'macroblock_offset' 
          * in slice refer to
          */
-        const guint8 *_data = packet.data + packet.offset + priv->vop_hdr.size/8; 
-        gint  _data_size = packet.size - (priv->vop_hdr.size/8); 
-        GstMpeg4Packet video_packet;
+        _data = packet.data + packet.offset + priv->vop_hdr.size/8;
+        _data_size = packet.size - (priv->vop_hdr.size/8);
         
         if (priv->vol_hdr.resync_marker_disable) {
             status = decode_slice(decoder, _data, _data_size, FALSE);
@@ -862,11 +869,12 @@ decode_packet(GstVaapiDecoderMpeg4 *decoder, GstMpeg4Packet packet)
                 return status;
         }
         else {
+            GstMpeg4ParseResult ret = GST_MPEG4_PARSER_OK;
+            gboolean first_slice = TRUE;
+
             // next start_code is required to determine the end of last slice
             _data_size += 4;
-            GstMpeg4ParseResult ret = GST_MPEG4_PARSER_OK;
 
-            gboolean first_slice = TRUE;
             while (_data_size > 0) {
                 // we can skip user data here
                 ret = gst_mpeg4_parse(&video_packet, TRUE, &priv->vop_hdr, _data, 0,  _data_size);
@@ -955,6 +963,8 @@ gst_vaapi_decoder_mpeg4_decode_codec_data(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderMpeg4 * const decoder =
         GST_VAAPI_DECODER_MPEG4_CAST(base_decoder);
     GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+    GstMpeg4ParseResult result = GST_MPEG4_PARSER_OK;
+    GstMpeg4Packet packet;
     guchar *buf;
     guint pos, buf_size;
 
@@ -968,8 +978,6 @@ gst_vaapi_decoder_mpeg4_decode_codec_data(GstVaapiDecoder *base_decoder,
     buf[buf_size-1] = 0xb2;
 
     pos = 0;
-    GstMpeg4Packet packet;
-    GstMpeg4ParseResult result = GST_MPEG4_PARSER_OK;
 
     while (result == GST_MPEG4_PARSER_OK && pos < buf_size) {
         result = gst_mpeg4_parse(&packet, FALSE, NULL, buf, pos, buf_size);

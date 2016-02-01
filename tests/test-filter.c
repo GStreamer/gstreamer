@@ -246,12 +246,13 @@ parse_enum(const gchar *str, GType type, gint default_value,
     g_return_val_if_fail(out_value_ptr != NULL, FALSE);
 
     if (str) {
+        const GEnumValue *enum_value;
         GEnumClass * const enum_class = g_type_class_ref(type);
+
         if (!enum_class)
             return FALSE;
 
-        const GEnumValue * const enum_value =
-            g_enum_get_value_by_nick(enum_class, str);
+        enum_value = g_enum_get_value_by_nick(enum_class, str);
         if (enum_value)
             out_value = enum_value->value;
         g_type_class_unref(enum_class);

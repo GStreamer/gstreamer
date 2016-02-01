@@ -596,11 +596,12 @@ get_operations_default (void)
   ensure_properties ();
 
   for (i = 0; i < N_PROPERTIES; i++) {
+    GstVaapiFilterOpData *op_data;
     GParamSpec *const pspec = g_properties[i];
     if (!pspec)
       continue;
 
-    GstVaapiFilterOpData *const op_data = op_data_new (i, pspec);
+    op_data = op_data_new (i, pspec);
     if (!op_data)
       goto error;
     g_ptr_array_add (ops, op_data);

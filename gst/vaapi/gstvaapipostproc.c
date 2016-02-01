@@ -479,6 +479,7 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
   GstVaapiDeinterlaceMethod deint_method;
   guint flags, deint_flags;
   gboolean tff, deint, deint_refs, deint_changed;
+  const GstVideoCropMeta *crop_meta;
   GstVaapiRectangle *crop_rect = NULL;
   GstVaapiRectangle tmp_rect;
 
@@ -527,7 +528,7 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
     goto error_invalid_buffer;
   inbuf_surface = gst_vaapi_video_meta_get_surface (inbuf_meta);
 
-  GstVideoCropMeta *const crop_meta = gst_buffer_get_video_crop_meta (inbuf);
+  crop_meta = gst_buffer_get_video_crop_meta (inbuf);
   if (crop_meta) {
     crop_rect = &tmp_rect;
     crop_rect->x = crop_meta->x;
@@ -974,11 +975,13 @@ expand_allowed_srcpad_caps (GstVaapiPostproc * postproc, GstCaps * caps)
   num_structures = gst_caps_get_size (caps);
   for (i = 0; i < num_structures; i++) {
     GstCapsFeatures *const features = gst_caps_get_features (caps, i);
+    GstStructure *structure;
+
     if (gst_caps_features_contains (features,
             GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META))
       continue;
 
-    GstStructure *const structure = gst_caps_get_structure (caps, i);
+    structure = gst_caps_get_structure (caps, i);
     if (!structure)
       continue;
     gst_structure_set_value (structure, "format", &value);

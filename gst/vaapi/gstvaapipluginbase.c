@@ -180,12 +180,13 @@ error_create_proxy:
 void
 gst_vaapi_plugin_base_class_init (GstVaapiPluginBaseClass * klass)
 {
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
   klass->has_interface = default_has_interface;
   klass->display_changed = default_display_changed;
 
   plugin_parent_class = g_type_class_peek_parent (klass);
 
-  GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   element_class->set_context = GST_DEBUG_FUNCPTR (plugin_set_context);
 }
 

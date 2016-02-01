@@ -412,14 +412,14 @@ GstCaps *
 gst_vaapi_video_format_new_template_caps_with_features (GstVideoFormat format,
     const gchar * features_string)
 {
+  GstCapsFeatures *features;
   GstCaps *caps;
 
   caps = gst_vaapi_video_format_new_template_caps (format);
   if (!caps)
     return NULL;
 
-  GstCapsFeatures *const features =
-      gst_caps_features_new (features_string, NULL);
+  features = gst_caps_features_new (features_string, NULL);
   if (!features) {
     gst_caps_unref (caps);
     return NULL;

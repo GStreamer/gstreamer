@@ -409,19 +409,22 @@ app_run (App * app)
   buffer_thread = g_thread_new ("get buffer thread", get_buffer_thread, app);
 
   while (1) {
+    GstVaapiSurfaceProxy *proxy;
+    GstVaapiSurface *surface;
+
     if (!load_frame (app, image))
       break;
 
     if (!gst_vaapi_image_unmap (image))
       break;
 
-    GstVaapiSurfaceProxy *proxy =
+    proxy =
         gst_vaapi_surface_proxy_new_from_pool (GST_VAAPI_SURFACE_POOL (pool));
     if (!proxy) {
       g_warning ("Could not get surface proxy from pool.");
       break;
     }
-    GstVaapiSurface *surface = gst_vaapi_surface_proxy_get_surface (proxy);
+    surface = gst_vaapi_surface_proxy_get_surface (proxy);
     if (!surface) {
       g_warning ("Could not get surface from proxy.");
       break;

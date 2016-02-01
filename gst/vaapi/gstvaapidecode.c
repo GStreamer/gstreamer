@@ -198,16 +198,17 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
 {
   GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
   GstVideoCodecState *state, *ref_state;
+  GstVaapiCapsFeature feature;
+  GstCapsFeatures *features = NULL;
   GstVideoInfo *vi;
   GstVideoFormat format = GST_VIDEO_FORMAT_I420;
+  GstClockTime latency;
+  gint fps_d, fps_n;
 
   if (!decode->input_state)
     return FALSE;
 
   ref_state = decode->input_state;
-
-  GstCapsFeatures *features = NULL;
-  GstVaapiCapsFeature feature;
 
   feature =
       gst_vaapi_find_preferred_caps_feature (GST_VIDEO_DECODER_SRC_PAD (vdec),
@@ -246,8 +247,8 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   gst_caps_replace (&decode->srcpad_caps, state->caps);
   gst_video_codec_state_unref (state);
 
-  gint fps_n = GST_VIDEO_INFO_FPS_N (vi);
-  gint fps_d = GST_VIDEO_INFO_FPS_D (vi);
+  fps_n = GST_VIDEO_INFO_FPS_N (vi);
+  fps_d = GST_VIDEO_INFO_FPS_D (vi);
   if (fps_n <= 0 || fps_d <= 0) {
     GST_DEBUG_OBJECT (decode, "forcing 25/1 framerate for latency calculation");
     fps_n = 25;
@@ -258,7 +259,7 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
    * latency in general, with perfectly known unit boundaries (NALU,
    * AU), and up to 2 frames when we need to wait for the second frame
    * start to determine the first frame is complete */
-  GstClockTime latency = gst_util_uint64_scale (2 * GST_SECOND, fps_d, fps_n);
+  latency = gst_util_uint64_scale (2 * GST_SECOND, fps_d, fps_n);
   gst_video_decoder_set_latency (vdec, latency, latency);
 
   return TRUE;
@@ -464,6 +465,7 @@ gst_vaapidecode_handle_frame (GstVideoDecoder * vdec,
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
   GstVaapiDecoderStatus status;
+  GstVaapiPluginBase *plugin;
   GstFlowReturn ret;
 
   if (!decode->input_state)
@@ -478,7 +480,7 @@ gst_vaapidecode_handle_frame (GstVideoDecoder * vdec,
     if (!gst_video_decoder_negotiate (vdec))
       goto not_negotiated;
 
-    GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (vdec);
+    plugin = GST_VAAPI_PLUGIN_BASE (vdec);
     if (!gst_vaapi_plugin_base_set_caps (plugin, NULL, decode->srcpad_caps))
       goto not_negotiated;
 
