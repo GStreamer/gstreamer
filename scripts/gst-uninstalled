@@ -166,6 +166,7 @@ $GST/gstreamer/plugins\
 :$GST/farsight2/transmitters\
 :$GST/libnice/gst\
 :$GST/gst-rpicamsrc/src/.libs\
+:$GST/gst-rtsp-server/gst/rtsp-sink/.libs\
 :$GST/gst-editing-services/plugins/nle/.libs\
 ${GST_PLUGIN_PATH:+:$GST_PLUGIN_PATH}"
 
