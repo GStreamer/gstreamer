@@ -234,7 +234,8 @@ gst_gl_context_eagl_create_context (GstGLContext * context, GstGLAPI gl_api,
     priv->eagl_context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2 sharegroup:share_group];
   }
   if (!priv->eagl_context) {
-    g_set_error (GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
+    g_set_error_literal (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
         "Failed to create OpenGL ES context");
     return FALSE;
   }
