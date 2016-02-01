@@ -53,10 +53,10 @@ static GstStaticPadTemplate gst_gl_download_element_src_pad_template =
     GST_STATIC_CAPS ("video/x-raw; video/x-raw(memory:GLMemory)"));
 
 static GstStaticPadTemplate gst_gl_download_element_sink_pad_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw(memory:GLMemory)"));
+    GST_STATIC_CAPS ("video/x-raw(memory:GLMemory); video/x-raw"));
 
 static void
 gst_gl_download_element_class_init (GstGLDownloadElementClass * klass)
