@@ -18,7 +18,6 @@ EXTRA_DIST = \
 	inttypes_h.m4 \
 	inttypes-pri.m4 \
 	lcmessage.m4 \
-	libfame.m4 \
 	lib-ld.m4 \
 	lib-link.m4 \
 	libmikmod.m4 \

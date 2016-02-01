@@ -160,12 +160,6 @@ else
 LIBDE265_DIR =
 endif
 
-# if USE_LIBFAME
-# LIBFAME_DIR=libfame
-# else
-LIBFAME_DIR=
-# endif
-
 if USE_LIBMMS
 LIBMMS_DIR=libmms
 else
@@ -448,7 +442,6 @@ SUBDIRS=\
 	$(LADSPA_DIR) \
 	$(LV2_DIR) \
 	$(LIBDE265_DIR) \
-	$(LIBFAME_DIR) \
 	$(LIBMMS_DIR) \
 	$(LIBVISUAL_DIR) \
 	$(MODPLUG_DIR) \
