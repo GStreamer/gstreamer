@@ -4670,18 +4670,48 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
           stream->segments->len);
       in_segment = FALSE;
       if (segment->start <= ts) {
+        GstClockTime end_time;
+
         if (segment->repeat >= 0) {
-          in_segment =
-              ts < segment->start + (segment->repeat + 1) * segment->duration;
+          end_time = segment->start + (segment->repeat + 1) * segment->duration;
         } else {
-          GstClockTime end =
+          end_time =
               gst_mpdparser_get_segment_end_time (client, stream->segments,
               segment, index);
-          in_segment = ts < end;
         }
+
+        /* avoid downloading another fragment just for 1ns in reverse mode */
+        if (forward)
+          in_segment = ts < end_time;
+        else
+          in_segment = ts <= end_time;
+
         if (in_segment) {
           selectedChunk = segment;
           repeat_index = (ts - segment->start) / segment->duration;
+
+          /* At the end of a segment in reverse mode, start from the previous fragment */
+          if (!forward && repeat_index > 0
+              && ((ts - segment->start) % segment->duration == 0))
+            repeat_index--;
+
+          if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) ==
+              GST_SEEK_FLAG_SNAP_NEAREST) {
+            /* FIXME implement this */
+          } else if ((forward && flags & GST_SEEK_FLAG_SNAP_AFTER) ||
+              (!forward && flags & GST_SEEK_FLAG_SNAP_BEFORE)) {
+
+            if (repeat_index + 1 < segment->repeat) {
+              repeat_index++;
+            } else {
+              repeat_index = 0;
+              if (index + 1 >= stream->segments->len) {
+                selectedChunk = NULL;
+              } else {
+                selectedChunk = g_ptr_array_index (stream->segments, index + 1);
+              }
+            }
+          }
           break;
         }
       }
@@ -4714,6 +4744,14 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
       ts = 0;
 
     index = ts / duration;
+
+    if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
+      /* FIXME implement this */
+    } else if ((forward && flags & GST_SEEK_FLAG_SNAP_AFTER) ||
+        (!forward && flags & GST_SEEK_FLAG_SNAP_BEFORE)) {
+      index++;
+    }
+
     if (segments_count > 0 && index >= segments_count) {
       stream->segment_index = segments_count;
       stream->segment_repeat_index = 0;
