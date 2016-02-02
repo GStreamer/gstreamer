@@ -93,8 +93,10 @@ coded_buffer_unmap (GstVaapiCodedBuffer * buf)
   GST_VAAPI_OBJECT_UNLOCK_DISPLAY (buf);
 }
 
+/* *INDENT-OFF* */
 #define gst_vaapi_coded_buffer_finalize coded_buffer_destroy
 GST_VAAPI_OBJECT_DEFINE_CLASS (GstVaapiCodedBuffer, gst_vaapi_coded_buffer)
+/* *INDENT-ON* */
 
 /*
  * gst_vaapi_coded_buffer_new:

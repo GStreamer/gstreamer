@@ -96,34 +96,32 @@ typedef struct
   gboolean success;             /* result */
 } UploadSurfaceArgs;
 
+/* *IDENT-OFF* */
 static const gchar *vert_shader_text =
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
-    "\n"
-    "uniform mat4 proj;\n"
-    "\n"
-    "attribute vec2 position;\n"
-    "attribute vec2 texcoord;\n"
-    "varying vec2 v_texcoord;\n"
-    "\n"
-    "void main () {\n"
-    "  gl_Position = proj * vec4 (position, 0.0, 1.0);\n"
-    "  v_texcoord  = texcoord;\n"
-    "}\n";
+    "#ifdef GL_ES                                      \n"
+    "precision mediump float;                          \n"
+    "#endif                                            \n"
+    "uniform mat4 proj;                                \n"
+    "attribute vec2 position;                          \n"
+    "attribute vec2 texcoord;                          \n"
+    "varying vec2 v_texcoord;                          \n"
+    "void main ()                                      \n"
+    "{                                                 \n"
+    "  gl_Position = proj * vec4 (position, 0.0, 1.0); \n"
+    "  v_texcoord  = texcoord;                         \n"
+    "}                                                 \n";
 
 static const gchar *frag_shader_text_rgba =
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
-    "\n"
-    "uniform sampler2D tex0;\n"
-    "\n"
-    "varying vec2 v_texcoord;\n"
-    "\n"
-    "void main () {\n"
-    "  gl_FragColor = texture2D (tex0, v_texcoord);\n"
-    "}\n";
+    "#ifdef GL_ES                                      \n"
+    "precision mediump float;                          \n"
+    "#endif                                            \n"
+    "uniform sampler2D tex0;                           \n"
+    "varying vec2 v_texcoord;                          \n"
+    "void main ()                                      \n"
+    "{                                                 \n"
+    "  gl_FragColor = texture2D (tex0, v_texcoord);    \n"
+    "}                                                 \n";
+/* *IDENT-ON* */
 
 static gboolean
 ensure_texture (GstVaapiWindowEGL * window, guint width, guint height)
