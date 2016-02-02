@@ -36,7 +36,7 @@
  */
 struct _GstVaapiCodedBufferPool
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiVideoPool parent_instance;
 
   GstVaapiContext *context;

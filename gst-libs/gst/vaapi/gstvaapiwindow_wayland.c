@@ -120,7 +120,7 @@ struct _GstVaapiWindowWaylandPrivate
  */
 struct _GstVaapiWindowWayland
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiWindow parent_instance;
 
   GstVaapiWindowWaylandPrivate priv;
@@ -133,7 +133,7 @@ struct _GstVaapiWindowWayland
  */
 struct _GstVaapiWindowWaylandClass
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiWindowClass parent_class;
 };
 

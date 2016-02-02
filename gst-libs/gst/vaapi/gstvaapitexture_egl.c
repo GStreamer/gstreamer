@@ -50,7 +50,7 @@ typedef struct _GstVaapiTextureEGLClass GstVaapiTextureEGLClass;
  */
 struct _GstVaapiTextureEGL
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiTexture parent_instance;
 
   EglContext *egl_context;
@@ -66,7 +66,7 @@ struct _GstVaapiTextureEGL
  */
 struct _GstVaapiTextureEGLClass
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiTextureClass parent_class;
 };
 

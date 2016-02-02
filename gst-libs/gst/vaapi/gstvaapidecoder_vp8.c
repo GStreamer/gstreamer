@@ -69,7 +69,7 @@ struct _GstVaapiDecoderVp8Private
  */
 struct _GstVaapiDecoderVp8
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiDecoder parent_instance;
 
   GstVaapiDecoderVp8Private priv;
@@ -82,7 +82,7 @@ struct _GstVaapiDecoderVp8
  */
 struct _GstVaapiDecoderVp8Class
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiDecoderClass parent_class;
 };
 

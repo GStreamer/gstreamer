@@ -64,7 +64,7 @@ struct _GstVaapiWindowGLXPrivate
  */
 struct _GstVaapiWindowGLX
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiWindowX11 parent_instance;
 
   GstVaapiWindowGLXPrivate priv;
@@ -77,7 +77,7 @@ struct _GstVaapiWindowGLX
  */
 struct _GstVaapiWindowGLXClass
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiWindowX11Class parent_class;
 
   GstVaapiObjectFinalizeFunc parent_finalize;

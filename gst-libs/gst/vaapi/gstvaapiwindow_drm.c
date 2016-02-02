@@ -42,7 +42,7 @@ typedef struct _GstVaapiWindowDRMClass GstVaapiWindowDRMClass;
  */
 struct _GstVaapiWindowDRM
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiWindow parent_instance;
 };
 
@@ -53,7 +53,7 @@ struct _GstVaapiWindowDRM
  */
 struct _GstVaapiWindowDRMClass
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiWindowClass parent_instance;
 };
 

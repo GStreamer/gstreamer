@@ -54,7 +54,7 @@ typedef struct _GstVaapiTextureGLXClass GstVaapiTextureGLXClass;
  */
 struct _GstVaapiTextureGLX
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiTexture parent_instance;
 
   GLContextState *gl_context;
@@ -69,7 +69,7 @@ struct _GstVaapiTextureGLX
  */
 struct _GstVaapiTextureGLXClass
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiTextureClass parent_class;
 };
 

@@ -41,7 +41,7 @@
  */
 struct _GstVaapiSurfacePool
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiVideoPool parent_instance;
 
   GstVaapiChromaType chroma_type;

@@ -41,7 +41,7 @@
  */
 struct _GstVaapiImagePool
 {
-  /*< private >*/
+  /*< private > */
   GstVaapiVideoPool parent_instance;
 
   GstVideoFormat format;
