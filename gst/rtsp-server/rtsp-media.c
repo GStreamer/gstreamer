@@ -3465,6 +3465,7 @@ static gboolean
 default_unsuspend (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
+  gboolean preroll_ok;
 
   switch (priv->suspend_mode) {
     case GST_RTSP_SUSPEND_MODE_NONE:
@@ -3478,12 +3479,13 @@ default_unsuspend (GstRTSPMedia * media)
       gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
       if (!start_preroll (media))
         goto start_failed;
+
       g_rec_mutex_unlock (&priv->state_lock);
-
-      if (!wait_preroll (media))
-        goto preroll_failed;
-
+      preroll_ok = wait_preroll (media);
       g_rec_mutex_lock (&priv->state_lock);
+
+      if (!preroll_ok)
+        goto preroll_failed;
     }
     default:
       break;
