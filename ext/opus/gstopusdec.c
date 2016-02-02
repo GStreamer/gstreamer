@@ -446,10 +446,10 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     size = 0;
   }
 
-  if (gst_buffer_get_size (buffer) == 0) {
+  if (gst_buffer_get_size (buf) == 0) {
     GstClockTime const opus_plc_alignment = 2500 * GST_USECOND;
     GstClockTime aligned_missing_duration;
-    GstClockTime missing_duration = GST_BUFFER_DURATION (buffer);
+    GstClockTime missing_duration = GST_BUFFER_DURATION (buf);
 
     GST_DEBUG_OBJECT (dec,
         "missing buffer, doing PLC duration %" GST_TIME_FORMAT
