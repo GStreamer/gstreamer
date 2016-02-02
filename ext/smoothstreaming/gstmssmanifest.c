@@ -1244,8 +1244,6 @@ gst_mss_manifest_reload_fragments (GstMssManifest * manifest, GstBuffer * data)
   xmlNodePtr root;
   GstMapInfo info;
 
-  g_return_if_fail (manifest->is_live);
-
   gst_buffer_map (data, &info, GST_MAP_READ);
 
   xml = xmlReadMemory ((const gchar *) info.data,
