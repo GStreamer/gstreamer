@@ -154,20 +154,20 @@ typedef enum {
 
 void           gst_audio_resampler_options_set_quality   (GstAudioResamplerMethod method,
                                                           guint quality,
-                                                          guint in_rate, guint out_rate,
+                                                          gint in_rate, gint out_rate,
                                                           GstStructure *options);
 
 GstAudioResampler * gst_audio_resampler_new              (GstAudioResamplerMethod method,
                                                           GstAudioResamplerFlags flags,
-                                                          GstAudioFormat format, guint channels,
-                                                          guint in_rate, guint out_rate,
+                                                          GstAudioFormat format, gint channels,
+                                                          gint in_rate, gint out_rate,
                                                           GstStructure *options);
 void                gst_audio_resampler_free             (GstAudioResampler *resampler);
 
 void                gst_audio_resampler_reset            (GstAudioResampler *resampler);
 
 gboolean            gst_audio_resampler_update           (GstAudioResampler *resampler,
-                                                          guint in_rate, guint out_rate,
+                                                          gint in_rate, gint out_rate,
                                                           GstStructure *options);
 
 gsize               gst_audio_resampler_get_out_frames   (GstAudioResampler *resampler,

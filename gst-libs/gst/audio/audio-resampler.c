@@ -56,7 +56,7 @@ struct _GstAudioResampler
   GstAudioResamplerFlags flags;
   GstAudioFormat format;
   GstStructure *options;
-  guint channels;
+  gint channels;
   gint in_rate;
   gint out_rate;
   gint bps;
@@ -807,11 +807,11 @@ resampler_dump (GstAudioResampler * resampler)
  */
 void
 gst_audio_resampler_options_set_quality (GstAudioResamplerMethod method,
-    guint quality, guint in_rate, guint out_rate, GstStructure * options)
+    guint quality, gint in_rate, gint out_rate, GstStructure * options)
 {
   g_return_if_fail (options != NULL);
-  g_return_if_fail (quality < 11);
-  g_return_if_fail (in_rate != 0 && out_rate != 0);
+  g_return_if_fail (quality <= GST_AUDIO_RESAMPLER_QUALITY_MAX);
+  g_return_if_fail (in_rate > 0 && out_rate > 0);
 
   switch (method) {
     case GST_AUDIO_RESAMPLER_METHOD_NEAREST:
@@ -871,14 +871,15 @@ gst_audio_resampler_options_set_quality (GstAudioResamplerMethod method,
 GstAudioResampler *
 gst_audio_resampler_new (GstAudioResamplerMethod method,
     GstAudioResamplerFlags flags,
-    GstAudioFormat format, guint channels,
-    guint in_rate, guint out_rate, GstStructure * options)
+    GstAudioFormat format, gint channels,
+    gint in_rate, gint out_rate, GstStructure * options)
 {
   GstAudioResampler *resampler;
   const GstAudioFormatInfo *info;
 
-  g_return_val_if_fail (in_rate != 0, FALSE);
-  g_return_val_if_fail (out_rate != 0, FALSE);
+  g_return_val_if_fail (channels > 0, FALSE);
+  g_return_val_if_fail (in_rate > 0, FALSE);
+  g_return_val_if_fail (out_rate > 0, FALSE);
 
   audio_resampler_init ();
 
@@ -982,15 +983,15 @@ gst_audio_resampler_reset (GstAudioResampler * resampler)
  */
 gboolean
 gst_audio_resampler_update (GstAudioResampler * resampler,
-    guint in_rate, guint out_rate, GstStructure * options)
+    gint in_rate, gint out_rate, GstStructure * options)
 {
   gint gcd, samp_phase, old_n_taps;
 
   g_return_val_if_fail (resampler != NULL, FALSE);
 
-  if (in_rate == 0)
+  if (in_rate <= 0)
     in_rate = resampler->in_rate;
-  if (out_rate == 0)
+  if (out_rate <= 0)
     out_rate = resampler->out_rate;
 
   if (resampler->out_rate > 0)
@@ -1016,6 +1017,9 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
       while (gcd % factor != 0)
         factor++;
       gcd /= factor;
+
+      GST_INFO ("divide by factor %d, gcd %d", factor, gcd);
+
     } while (gcd > 1);
   }
 
