@@ -984,8 +984,7 @@ gboolean
 gst_audio_resampler_update (GstAudioResampler * resampler,
     guint in_rate, guint out_rate, GstStructure * options)
 {
-  gint gcd, samp_phase;
-  gint old_n_taps;
+  gint gcd, samp_phase, old_n_taps;
 
   g_return_val_if_fail (resampler != NULL, FALSE);
 
@@ -1002,10 +1001,23 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
     samp_phase = 0;
 
   gcd = gst_util_greatest_common_divisor (in_rate, out_rate);
-  /* make sure we have exactly the same phase in the new sample rate.
-   * FIXME we might want to relax this and get a phase that is within
-   * a certain error */
-  gcd = gst_util_greatest_common_divisor (samp_phase, gcd);
+
+  if (gcd > 1) {
+    gdouble ph1 = (gdouble) samp_phase / out_rate;
+    gint factor = 2;
+
+    /* reduce the factor until we have a phase error of less than 10% */
+    do {
+      gdouble ph2 = (gdouble) (samp_phase / gcd) / (out_rate / gcd);
+
+      if (fabs (ph1 - ph2) < 0.1)
+        break;
+
+      while (gcd % factor != 0)
+        factor++;
+      gcd /= factor;
+    } while (gcd > 1);
+  }
 
   GST_INFO ("phase %d, out_rate %d, in_rate %d, gcd %d", samp_phase, out_rate,
       in_rate, gcd);
@@ -1013,6 +1025,7 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
   resampler->samp_phase = samp_phase / gcd;
   resampler->in_rate = in_rate / gcd;
   resampler->out_rate = out_rate / gcd;
+
   if (options) {
     if (resampler->options)
       gst_structure_free (resampler->options);
