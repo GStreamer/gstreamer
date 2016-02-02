@@ -994,6 +994,9 @@ static GstUri *
 _gst_uri_new (void)
 {
   GstUri *uri;
+
+  g_return_val_if_fail (gst_is_initialized (), NULL);
+
   uri = GST_URI_CAST (g_slice_new0 (GstUri));
 
   if (uri)
