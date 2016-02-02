@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch-1.0 -v uridecodebin uri=file:///path/to/audio.ogg ! audioconvert ! audioresample ! alsasink
+ * gst-launch-1.0 -v uridecodebin uri=file:///path/to/audio.ogg ! audioconvert ! audioresample ! tinyalsasink
  * ]| Play an Ogg/Vorbis file and output audio via ALSA using the tinalsa
  * library.
  * </refsect2>
