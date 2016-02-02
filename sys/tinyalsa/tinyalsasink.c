@@ -127,6 +127,7 @@ gst_tinyalsa_sink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   GValue format = { 0, };
   struct pcm_params *params = NULL;
   struct pcm_mask *mask;
+  int rate_min, rate_max, channels_min, channels_max;
   guint16 m;
 
   GST_DEBUG_OBJECT (sink, "Querying caps");
@@ -190,13 +191,23 @@ gst_tinyalsa_sink_getcaps (GstBaseSink * bsink, GstCaps * filter)
    * standard rates in this range. We should probably filter the range to
    * those, standard audio rates but even that isn't guaranteed to be accurate.
    */
-  gst_caps_set_simple (caps, "rate", GST_TYPE_INT_RANGE,
-      pcm_params_get_min (params, PCM_PARAM_RATE),
-      pcm_params_get_max (params, PCM_PARAM_RATE), NULL);
+  rate_min = pcm_params_get_min (params, PCM_PARAM_RATE);
+  rate_max = pcm_params_get_max (params, PCM_PARAM_RATE);
 
-  gst_caps_set_simple (caps, "channels", GST_TYPE_INT_RANGE,
-      pcm_params_get_min (params, PCM_PARAM_CHANNELS),
-      pcm_params_get_max (params, PCM_PARAM_CHANNELS), NULL);
+  if (rate_min == rate_max)
+    gst_caps_set_simple (caps, "rate", G_TYPE_INT, rate_min, NULL);
+  else
+    gst_caps_set_simple (caps, "rate", GST_TYPE_INT_RANGE, rate_min, rate_max,
+        NULL);
+
+  channels_min = pcm_params_get_min (params, PCM_PARAM_CHANNELS);
+  channels_max = pcm_params_get_max (params, PCM_PARAM_CHANNELS);
+
+  if (channels_min == channels_max)
+    gst_caps_set_simple (caps, "channels", G_TYPE_INT, channels_min, NULL);
+  else
+    gst_caps_set_simple (caps, "channels", GST_TYPE_INT_RANGE, channels_min,
+        channels_max, NULL);
 
   gst_caps_replace (&sink->cached_caps, caps);
 
