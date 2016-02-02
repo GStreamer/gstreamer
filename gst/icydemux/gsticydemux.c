@@ -653,7 +653,6 @@ gst_icydemux_send_tag_event (GstICYDemux * icydemux, GstTagList * tags)
   GstEvent *event;
 
   event = gst_event_new_tag (tags);
-  GST_EVENT_TIMESTAMP (event) = 0;
 
   GST_DEBUG_OBJECT (icydemux, "Sending tag event on src pad");
   return gst_pad_push_event (icydemux->srcpad, event);
