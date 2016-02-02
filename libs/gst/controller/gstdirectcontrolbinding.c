@@ -343,7 +343,8 @@ gst_direct_control_binding_finalize (GObject * object)
 {
   GstDirectControlBinding *self = GST_DIRECT_CONTROL_BINDING (object);
 
-  g_value_unset (&self->cur_value);
+  if (G_IS_VALUE (&self->cur_value))
+    g_value_unset (&self->cur_value);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
