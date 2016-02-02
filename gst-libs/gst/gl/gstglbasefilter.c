@@ -382,7 +382,7 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
     GST_OBJECT_UNLOCK (filter->display);
   }
 
-  if (new_context) {
+  if (new_context || !filter->priv->gl_started) {
     if (filter->priv->gl_started)
       gst_gl_context_thread_add (filter->context, gst_gl_base_filter_gl_stop,
           filter);
