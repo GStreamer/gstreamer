@@ -248,10 +248,14 @@ static const struct shader_templ templ_RGB_to_PLANAR_YUV =
      * @chroma_sampling.  The result is the average of all the values in the
      * block computed with a rolling average.
      */
-    "vec2 size = vec2(width, height);\n"
-    "vec2 pos = texcoord * size;\n"
+    "vec2 unnormalization;\n"
+    "if (texcoord.x == v_texcoord.x) {\n"
+    "  unnormalization = vec2(width, height);\n"
+    "} else {\n"
+    "  unnormalization = vec2 (1.0);\n"
+    "}\n"
      /* scale for chroma size */
-    "vec2 chroma_pos = texcoord * chroma_sampling * size;\n"
+    "vec2 chroma_pos = texcoord * chroma_sampling * unnormalization;\n"
      /* offset chroma to the center of the first texel in the block */
     "chroma_pos -= clamp(chroma_sampling * 0.5 - 0.5, vec2(0.0), chroma_sampling);\n"
     "if (chroma_pos.x < width && chroma_pos.y < height) {\n"
@@ -260,13 +264,12 @@ static const struct shader_templ templ_RGB_to_PLANAR_YUV =
     "    for (int j = 0; j < int(chroma_sampling.y); j++) {\n"
     "      int n = (i+1)*(j+1);\n"
     "      delta.y = float(j);\n"
-    "      vec4 sample = texture2D(tex, (chroma_pos + delta) / size).%c%c%c%c;\n"
+    "      vec4 sample = texture2D(tex, (chroma_pos + delta) / unnormalization).%c%c%c%c;\n"
            /* rolling average */
     "      uv_texel = (float(n-1) * uv_texel + sample) / float(n);\n"
     "    }\n"
     "  }\n"
     "}\n"
-
     "yuv.x = rgb_to_yuv (texel.rgb, offset, coeff1, coeff2, coeff3).x;\n"
     "yuv.yz = rgb_to_yuv (uv_texel.rgb, offset, coeff1, coeff2, coeff3).yz;\n"
     "gl_FragData[0] = vec4(yuv.x, 0.0, 0.0, 1.0);\n"
