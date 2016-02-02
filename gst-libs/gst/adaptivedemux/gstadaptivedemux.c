@@ -2686,7 +2686,6 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
   }
 
   if (G_UNLIKELY (stream->restart_download)) {
-    GstSegment segment;
     GstEvent *seg_event;
     GstClockTime cur, ts = 0;
     gint64 pos;
@@ -2729,8 +2728,6 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
     GST_DEBUG_OBJECT (stream->pad, "Restarting stream at "
         "position %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
 
-    gst_segment_copy_into (&demux->segment, &segment);
-
     if (GST_CLOCK_TIME_IS_VALID (ts)) {
       GstClockTime offset, period_start;
 
@@ -2742,7 +2739,7 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
       gst_adaptive_demux_stream_seek (demux, stream, demux->segment.rate >= 0,
           0, ts, &ts);
 
-      segment.position = ts - period_start + offset;
+      stream->segment.position = ts - period_start + offset;
     }
 
     /* The stream's segment is still correct except for
