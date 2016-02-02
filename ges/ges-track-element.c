@@ -703,7 +703,7 @@ ges_track_element_add_children_props (GESTrackElement * self,
         continue;
       }
 
-      if (pspec->flags & G_PARAM_WRITABLE) {
+      if (pspec->flags) {
         ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT (self),
             pspec, G_OBJECT (element));
         GST_LOG_OBJECT (self,
