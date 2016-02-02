@@ -96,6 +96,12 @@ else
 check_mplex =
 endif
 
+if USE_SMOOTHSTREAMING
+check_mssdemux = elements/mssdemux
+else
+check_mssdemux =
+endif
+
 if USE_NEON
 check_neon = elements/neonhttpsrc
 else
@@ -248,6 +254,7 @@ check_PROGRAMS = \
 	$(check_voamrwbenc) \
 	$(check_mpeg2enc)  \
 	$(check_mplex)     \
+	$(check_mssdemux) \
 	$(check_ofa)        \
 	$(check_timidity)  \
 	$(check_kate)  \
@@ -468,6 +475,15 @@ elements_dash_demux_LDADD = \
 	$(top_builddir)/gst-libs/gst/adaptivedemux/libgstadaptivedemux-@GST_API_VERSION@.la
 
 elements_dash_demux_SOURCES = elements/test_http_src.c elements/test_http_src.h elements/adaptive_demux_engine.c elements/adaptive_demux_engine.h elements/adaptive_demux_common.c elements/adaptive_demux_common.h elements/dash_demux.c
+
+elements_mssdemux_CFLAGS = $(AM_CFLAGS) $(LIBXML2_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_PLUGINS_BAD_CFLAGS)
+elements_mssdemux_LDADD = \
+	$(LDADD) $(LIBXML2_LIBS) $(GST_BASE_LIBS) \
+	-lgsttag-$(GST_API_VERSION) \
+	-lgstapp-$(GST_API_VERSION) \
+	$(top_builddir)/gst-libs/gst/adaptivedemux/libgstadaptivedemux-@GST_API_VERSION@.la
+
+elements_mssdemux_SOURCES = elements/test_http_src.c elements/test_http_src.h elements/adaptive_demux_engine.c elements/adaptive_demux_engine.h elements/adaptive_demux_common.c elements/adaptive_demux_common.h elements/mssdemux.c
 
 pipelines_streamheader_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
 pipelines_streamheader_LDADD = $(GIO_LIBS) $(LDADD)

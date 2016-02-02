@@ -40,6 +40,7 @@ mpeg4videoparse
 mpegtsmux
 mpg123audiodec
 mplex
+mssdemux
 mxfdemux
 mxfmux
 neonhttpsrc
