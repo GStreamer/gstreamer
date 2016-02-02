@@ -290,6 +290,7 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
     graphene_vec3_t center;
     graphene_vec3_t up;
 
+    gboolean current_passthrough;
     gboolean passthrough;
 
     graphene_vec3_init (&eye, 0.f, 0.f, 1.f);
@@ -297,13 +298,14 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
     graphene_vec3_init (&up, 0.f, 1.f, 0.f);
 
     /* Translate into pivot origin */
-    graphene_matrix_init_translate (&transformation->model_matrix, &pivot_vector);
+    graphene_matrix_init_translate (&transformation->model_matrix,
+        &pivot_vector);
 
     /* Scale */
     graphene_matrix_scale (&transformation->model_matrix,
         transformation->xscale, transformation->yscale, 1.0f);
 
-  /* Rotation */
+    /* Rotation */
     graphene_matrix_rotate (&transformation->model_matrix,
         transformation->xrotation, graphene_vec3_x_axis ());
     graphene_matrix_rotate (&transformation->model_matrix,
@@ -311,7 +313,7 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
     graphene_matrix_rotate (&transformation->model_matrix,
         transformation->zrotation, graphene_vec3_z_axis ());
 
-  /* Translate back from pivot origin */
+    /* Translate back from pivot origin */
     graphene_point3d_scale (&pivot_vector, -1.0, &negative_pivot_vector);
     graphene_matrix_translate (&transformation->model_matrix,
         &negative_pivot_vector);
@@ -333,17 +335,19 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
     graphene_matrix_init_look_at (&transformation->view_matrix, &eye, &center,
         &up);
 
+    current_passthrough =
+        gst_base_transform_is_passthrough (GST_BASE_TRANSFORM (transformation));
     passthrough = transformation->xtranslation == 0.
         && transformation->ytranslation == 0.
-        && transformation->ztranslation == 0.
-        && transformation->xrotation == 0.
-        && transformation->yrotation == 0.
-        && transformation->zrotation == 0.
-        && transformation->xscale == 1.
-        && transformation->yscale == 1.
+        && transformation->ztranslation == 0. && transformation->xrotation == 0.
+        && transformation->yrotation == 0. && transformation->zrotation == 0.
+        && transformation->xscale == 1. && transformation->yscale == 1.
         && gst_video_info_is_equal (&filter->in_info, &filter->out_info);
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (transformation),
         passthrough);
+    if (current_passthrough != passthrough) {
+      gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (transformation));
+    }
   }
 
   graphene_matrix_multiply (&transformation->model_matrix,
