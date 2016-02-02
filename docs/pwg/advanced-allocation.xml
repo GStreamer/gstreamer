@@ -449,7 +449,7 @@ my_example_meta_free (GstMeta * meta, GstBuffer * buffer)
 {
   MyExampleMeta *emeta = (MyExampleMeta *) meta;
 
-  g_free (emeta->name)
+  g_free (emeta->name);
   emeta->name = NULL;
 }
 
