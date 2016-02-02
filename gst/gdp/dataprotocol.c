@@ -307,7 +307,8 @@ gst_dp_payload_event (const GstEvent * event, GstDPHeaderFlag flags)
   /* length */
   GST_WRITE_UINT32_BE (h + 6, pl_length);
   /* timestamp */
-  GST_WRITE_UINT64_BE (h + 10, GST_EVENT_TIMESTAMP (event));
+  /* NOTE: timestamp field will be removed from GstEvent in 2.0 API */
+  GST_WRITE_UINT64_BE (h + 10, GST_CLOCK_TIME_NONE);
 
   GST_DP_SET_CRC (h, flags, string, pl_length);
 
@@ -570,7 +571,6 @@ gst_dp_event_from_packet_0_2 (guint header_length, const guint8 * header,
     case GST_EVENT_FLUSH_STOP:
     case GST_EVENT_SEGMENT:
       event = gst_event_new_custom (type, NULL);
-      GST_EVENT_TIMESTAMP (event) = GST_DP_HEADER_TIMESTAMP (header);
       break;
     case GST_EVENT_SEEK:
     {

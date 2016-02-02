@@ -524,7 +524,7 @@ gst_gdp_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   if (!outbuffer)
     goto no_outbuffer;
 
-  GST_BUFFER_TIMESTAMP (outbuffer) = GST_EVENT_TIMESTAMP (event);
+  GST_BUFFER_TIMESTAMP (outbuffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (outbuffer) = 0;
 
   /* if we got a new segment or tag event, we should put it on our streamheader,
