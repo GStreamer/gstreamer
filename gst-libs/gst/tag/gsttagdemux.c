@@ -1796,7 +1796,6 @@ gst_tag_demux_send_tag_event (GstTagDemux * demux)
   if (merged) {
     GstEvent *event = gst_event_new_tag (merged);
 
-    GST_EVENT_TIMESTAMP (event) = 0;
     GST_DEBUG_OBJECT (demux, "Sending tag event on src pad");
     gst_pad_push_event (demux->priv->srcpad, event);
   }
