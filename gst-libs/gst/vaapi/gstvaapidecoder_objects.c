@@ -211,8 +211,7 @@ gst_vaapi_picture_new_clone (GstVaapiPicture * picture)
 
   object = gst_vaapi_codec_object_new (gst_vaapi_codec_object_get_class
       (&picture->parent_instance), GST_VAAPI_CODEC_BASE (decoder), NULL,
-      picture->param_size, picture, 0,
-      GST_VAAPI_CREATE_PICTURE_FLAG_CLONE);
+      picture->param_size, picture, 0, GST_VAAPI_CREATE_PICTURE_FLAG_CLONE);
   if (!object)
     return NULL;
   return GST_VAAPI_PICTURE_CAST (object);

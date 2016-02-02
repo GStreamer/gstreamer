@@ -648,7 +648,7 @@ get_operations_ordered (GstVaapiFilter * filter, GPtrArray * default_ops)
       if (op_data->va_type != va_type)
         continue;
 
-      if (op_data->va_cap_size == 0) { /* no caps, like skintone */
+      if (op_data->va_cap_size == 0) {  /* no caps, like skintone */
         g_ptr_array_add (ops, op_data_ref (op_data));
         continue;
       }
@@ -907,7 +907,7 @@ op_set_deinterlace (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data,
 #if USE_VA_VPP
 gboolean
 op_set_skintone_unlocked (GstVaapiFilter * filter,
-   GstVaapiFilterOpData * op_data, gboolean value)
+    GstVaapiFilterOpData * op_data, gboolean value)
 {
   VAProcFilterParameterBuffer *buf;
 
@@ -930,7 +930,7 @@ op_set_skintone_unlocked (GstVaapiFilter * filter,
 
 static inline gboolean
 op_set_skintone (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data,
-   gboolean enhance)
+    gboolean enhance)
 {
   gboolean success = FALSE;
 
@@ -1870,8 +1870,7 @@ gst_vaapi_filter_set_scaling (GstVaapiFilter * filter,
  * otherwise.
   **/
 gboolean
-gst_vaapi_filter_set_skintone (GstVaapiFilter * filter,
-    gboolean enhance)
+gst_vaapi_filter_set_skintone (GstVaapiFilter * filter, gboolean enhance)
 {
   g_return_val_if_fail (filter != NULL, FALSE);
 

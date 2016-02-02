@@ -126,7 +126,8 @@ gst_vaapi_window_new (GstVaapiDisplay * display, guint width, guint height)
   dpy_class = GST_VAAPI_DISPLAY_GET_CLASS (display);
   if (G_UNLIKELY (!dpy_class->create_window))
     return NULL;
-  return dpy_class->create_window (display, GST_VAAPI_ID_INVALID, width, height);
+  return dpy_class->create_window (display, GST_VAAPI_ID_INVALID, width,
+      height);
 }
 
 /**

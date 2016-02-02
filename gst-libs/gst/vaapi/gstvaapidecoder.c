@@ -38,8 +38,7 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-static void
-drop_frame (GstVaapiDecoder * decoder, GstVideoCodecFrame * frame);
+static void drop_frame (GstVaapiDecoder * decoder, GstVideoCodecFrame * frame);
 
 static void
 parser_state_finalize (GstVaapiParserState * ps)
@@ -933,7 +932,8 @@ gst_vaapi_decoder_set_multiview_mode (GstVaapiDecoder * decoder,
   if (GST_VIDEO_INFO_VIEWS (info) != views ||
       GST_VIDEO_INFO_MULTIVIEW_MODE (info) != mv_mode ||
       GST_VIDEO_INFO_MULTIVIEW_FLAGS (info) != mv_flags) {
-    const gchar *mv_mode_str = gst_video_multiview_mode_to_caps_string (mv_mode);
+    const gchar *mv_mode_str =
+        gst_video_multiview_mode_to_caps_string (mv_mode);
 
     GST_DEBUG ("Multiview mode changed to %s flags 0x%x views %d",
         mv_mode_str, mv_flags, views);

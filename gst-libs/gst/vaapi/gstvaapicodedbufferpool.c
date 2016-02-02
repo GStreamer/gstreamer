@@ -69,9 +69,9 @@ static inline const GstVaapiMiniObjectClass *
 gst_vaapi_coded_buffer_pool_class (void)
 {
   static const GstVaapiVideoPoolClass GstVaapiCodedBufferPoolClass = {
-    { sizeof (GstVaapiCodedBufferPool),
-      (GDestroyNotify)coded_buffer_pool_finalize },
-
+    {sizeof (GstVaapiCodedBufferPool),
+        (GDestroyNotify) coded_buffer_pool_finalize}
+    ,
     .alloc_object = coded_buffer_pool_alloc_object
   };
   return GST_VAAPI_MINI_OBJECT_CLASS (&GstVaapiCodedBufferPoolClass);

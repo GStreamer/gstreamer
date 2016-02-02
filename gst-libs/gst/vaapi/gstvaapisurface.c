@@ -159,7 +159,7 @@ gst_vaapi_surface_create_full (GstVaapiSurface * surface,
   extbuf.pixel_format = va_format->fourcc;
   extbuf.width = GST_VIDEO_INFO_WIDTH (vip);
   extbuf.height = GST_VIDEO_INFO_HEIGHT (vip);
-  extbuf_needed = !!(flags & GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE);
+  extbuf_needed = ! !(flags & GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE);
 
   extbuf.num_planes = GST_VIDEO_INFO_N_PLANES (vip);
   if (flags & GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_STRIDES) {

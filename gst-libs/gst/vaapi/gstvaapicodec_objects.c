@@ -76,8 +76,7 @@ gst_vaapi_codec_object_new (const GstVaapiCodecObjectClass * object_class,
   GstVaapiCodecObject *obj;
   GstVaapiCodecObjectConstructorArgs args;
 
-  obj =
-      (GstVaapiCodecObject *)
+  obj = (GstVaapiCodecObject *)
       gst_vaapi_mini_object_new0 (GST_VAAPI_MINI_OBJECT_CLASS (object_class));
   if (!obj)
     return NULL;

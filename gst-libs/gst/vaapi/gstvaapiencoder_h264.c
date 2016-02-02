@@ -124,7 +124,7 @@ typedef struct _GstVaapiH264ViewReorderPool
   GQueue reorder_frame_list;
   guint reorder_state;
   guint frame_index;
-  guint frame_count; /* monotonically increasing with in every idr period */
+  guint frame_count;            /* monotonically increasing with in every idr period */
   guint cur_frame_num;
   guint cur_present_index;
 } GstVaapiH264ViewReorderPool;
@@ -567,7 +567,8 @@ bs_write_sps (GstBitWriter * bs,
 static gboolean
 bs_write_subset_sps (GstBitWriter * bs,
     const VAEncSequenceParameterBufferH264 * seq_param, GstVaapiProfile profile,
-    guint num_views, guint16 *view_ids, const VAEncMiscParameterHRD * hrd_params)
+    guint num_views, guint16 * view_ids,
+    const VAEncMiscParameterHRD * hrd_params)
 {
   guint32 i, j, k;
 
@@ -779,7 +780,7 @@ struct _GstVaapiEncoderH264
 
   /* MVC */
   gboolean is_mvc;
-  guint32 view_idx; /* View Order Index (VOIdx) */
+  guint32 view_idx;             /* View Order Index (VOIdx) */
   guint32 num_views;
   guint16 view_ids[MAX_NUM_VIEWS];
   GstVaapiH264ViewRefPool ref_pools[MAX_NUM_VIEWS];
@@ -805,11 +806,12 @@ bs_write_sei_buf_period (GstBitWriter * bs,
   initial_cpb_removal_delay = encoder->cpb_length * 45;
 
   /* initial_cpb_remvoal_dealy */
-  WRITE_UINT32 (bs, initial_cpb_removal_delay, initial_cpb_removal_delay_length);
+  WRITE_UINT32 (bs, initial_cpb_removal_delay,
+      initial_cpb_removal_delay_length);
 
   /* initial_cpb_removal_delay_offset */
   WRITE_UINT32 (bs, initial_cpb_removal_delay_offset,
-    initial_cpb_removal_delay_length);
+      initial_cpb_removal_delay_length);
 
   /* VclHrdBpPresentFlag == FALSE */
   return TRUE;
@@ -1421,8 +1423,8 @@ add_packed_sequence_header_mvc (GstVaapiEncoderH264 * encoder,
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
   bs_write_nal_header (&bs, GST_H264_NAL_REF_IDC_HIGH, GST_H264_NAL_SUBSET_SPS);
 
-  bs_write_subset_sps (&bs, seq_param, encoder->profile, encoder->num_views, encoder->view_ids,
-      &hrd_params);
+  bs_write_subset_sps (&bs, seq_param, encoder->profile, encoder->num_views,
+      encoder->view_ids, &hrd_params);
 
   g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
@@ -1503,8 +1505,7 @@ bs_error:
 
 static gboolean
 add_packed_sei_header (GstVaapiEncoderH264 * encoder,
-    GstVaapiEncPicture * picture,
-    GstVaapiH264SeiPayloadType payloadtype)
+    GstVaapiEncPicture * picture, GstVaapiH264SeiPayloadType payloadtype)
 {
   GstVaapiEncPackedHeader *packed_sei;
   GstBitWriter bs, bs_buf_period, bs_pic_timing;
@@ -1526,9 +1527,8 @@ add_packed_sei_header (GstVaapiEncoderH264 * encoder,
     bs_write_sei_buf_period (&bs_buf_period, encoder, picture);
     /* Write byte alignment bits */
     if (GST_BIT_WRITER_BIT_SIZE (&bs_buf_period) % 8 != 0)
-      bs_write_trailing_bits(&bs_buf_period);
-    buf_period_payload_size =
-      (GST_BIT_WRITER_BIT_SIZE (&bs_buf_period)) / 8;
+      bs_write_trailing_bits (&bs_buf_period);
+    buf_period_payload_size = (GST_BIT_WRITER_BIT_SIZE (&bs_buf_period)) / 8;
     buf_period_payload = GST_BIT_WRITER_DATA (&bs_buf_period);
   }
 
@@ -1538,9 +1538,8 @@ add_packed_sei_header (GstVaapiEncoderH264 * encoder,
       bs_write_sei_pic_timing (&bs_pic_timing, encoder, picture);
     /* Write byte alignment bits */
     if (GST_BIT_WRITER_BIT_SIZE (&bs_pic_timing) % 8 != 0)
-      bs_write_trailing_bits(&bs_pic_timing);
-    pic_timing_payload_size =
-      (GST_BIT_WRITER_BIT_SIZE (&bs_pic_timing)) / 8;
+      bs_write_trailing_bits (&bs_pic_timing);
+    pic_timing_payload_size = (GST_BIT_WRITER_BIT_SIZE (&bs_pic_timing)) / 8;
     pic_timing_payload = GST_BIT_WRITER_DATA (&bs_pic_timing);
   }
 
@@ -1697,7 +1696,8 @@ add_packed_slice_header (GstVaapiEncoderH264 * encoder,
   /* pack nal_unit_header_mvc_extension() for the non base view */
   if (encoder->is_mvc && encoder->view_idx) {
     bs_write_nal_header (&bs, nal_ref_idc, GST_H264_NAL_SLICE_EXT);
-    bs_write_nal_header_mvc_extension (&bs, picture, encoder->view_ids[encoder->view_idx]);
+    bs_write_nal_header_mvc_extension (&bs, picture,
+        encoder->view_ids[encoder->view_idx]);
   } else
     bs_write_nal_header (&bs, nal_ref_idc, nal_unit_type);
 
@@ -2165,11 +2165,13 @@ ensure_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 
   /* add subset sps for non-base view and sps for base view */
   if (encoder->is_mvc && encoder->view_idx) {
-    if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VA_ENC_PACKED_HEADER_SEQUENCE)
+    if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+            VA_ENC_PACKED_HEADER_SEQUENCE)
         && !add_packed_sequence_header_mvc (encoder, picture, sequence))
       goto error_create_packed_seq_hdr;
   } else {
-    if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VA_ENC_PACKED_HEADER_SEQUENCE)
+    if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+            VA_ENC_PACKED_HEADER_SEQUENCE)
         && !add_packed_sequence_header (encoder, picture, sequence))
       goto error_create_packed_seq_hdr;
   }
@@ -2236,15 +2238,15 @@ ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
       if ((GST_VAAPI_ENC_PICTURE_IS_IDR (picture)) &&
           (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
               VA_ENC_PACKED_HEADER_MISC) &&
-           !add_packed_sei_header (encoder, picture,
+          !add_packed_sei_header (encoder, picture,
               GST_VAAPI_H264_SEI_BUF_PERIOD | GST_VAAPI_H264_SEI_PIC_TIMING))
         goto error_create_packed_sei_hdr;
 
       else if (!GST_VAAPI_ENC_PICTURE_IS_IDR (picture) &&
-               (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
-                  VA_ENC_PACKED_HEADER_MISC) &&
-               !add_packed_sei_header (encoder, picture,
-                  GST_VAAPI_H264_SEI_PIC_TIMING))
+          (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+              VA_ENC_PACKED_HEADER_MISC) &&
+          !add_packed_sei_header (encoder, picture,
+              GST_VAAPI_H264_SEI_PIC_TIMING))
         goto error_create_packed_sei_hdr;
     }
 
@@ -2273,7 +2275,8 @@ ensure_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
     return FALSE;
 
   if (picture->type == GST_VAAPI_PICTURE_TYPE_I &&
-      (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VA_ENC_PACKED_HEADER_PICTURE)
+      (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+          VA_ENC_PACKED_HEADER_PICTURE)
       && !add_packed_picture_header (encoder, picture)) {
     GST_ERROR ("set picture packed header failed");
     return FALSE;
@@ -2797,8 +2800,10 @@ gst_vaapi_encoder_h264_reconfigure (GstVaapiEncoder * base_encoder)
   }
 
   /* Take number of MVC views from input caps if provided */
-  if (GST_VIDEO_INFO_MULTIVIEW_MODE (vip) == GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME ||
-      GST_VIDEO_INFO_MULTIVIEW_MODE (vip) == GST_VIDEO_MULTIVIEW_MODE_MULTIVIEW_FRAME_BY_FRAME)
+  if (GST_VIDEO_INFO_MULTIVIEW_MODE (vip) ==
+      GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME
+      || GST_VIDEO_INFO_MULTIVIEW_MODE (vip) ==
+      GST_VIDEO_MULTIVIEW_MODE_MULTIVIEW_FRAME_BY_FRAME)
     encoder->num_views = GST_VIDEO_INFO_VIEWS (vip);
 
   encoder->is_mvc = encoder->num_views > 1;
@@ -2916,23 +2921,21 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H264_PROP_NUM_VIEWS:
       encoder->num_views = g_value_get_uint (value);
       break;
-    case GST_VAAPI_ENCODER_H264_PROP_VIEW_IDS:
-      {
-        guint i;
-        GValueArray *view_ids = g_value_get_boxed (value);
+    case GST_VAAPI_ENCODER_H264_PROP_VIEW_IDS:{
+      guint i;
+      GValueArray *view_ids = g_value_get_boxed (value);
 
-        if (view_ids == NULL) {
-          for (i = 0; i < encoder->num_views; i++)
-            encoder->view_ids[i] = i;
-        }
-        else {
-          g_assert (view_ids->n_values <= encoder->num_views);
+      if (view_ids == NULL) {
+        for (i = 0; i < encoder->num_views; i++)
+          encoder->view_ids[i] = i;
+      } else {
+        g_assert (view_ids->n_values <= encoder->num_views);
 
-          for (i = 0; i < encoder->num_views; i++) {
-            GValue *val = g_value_array_get_nth (view_ids, i);
-            encoder->view_ids[i] = g_value_get_uint (val);
-          }
+        for (i = 0; i < encoder->num_views; i++) {
+          GValue *val = g_value_array_get_nth (view_ids, i);
+          encoder->view_ids[i] = g_value_get_uint (val);
         }
+      }
       break;
     }
     default:

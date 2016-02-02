@@ -1102,7 +1102,9 @@ ensure_context (GstVaapiDecoderH265 * decoder, GstH265SPS * sps)
     priv->profile = profile;
   }
 
-  chroma_type = gst_vaapi_utils_h265_get_chroma_type (sps->chroma_format_idc, sps->bit_depth_luma_minus8 + 8);
+  chroma_type =
+      gst_vaapi_utils_h265_get_chroma_type (sps->chroma_format_idc,
+      sps->bit_depth_luma_minus8 + 8);
   if (!chroma_type) {
     GST_ERROR ("unsupported chroma_format_idc %u", sps->chroma_format_idc);
     return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT;
@@ -1885,8 +1887,8 @@ fill_picture (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture)
   COPY_BFM (slice_parsing_fields, pps, cabac_init_present_flag);
   COPY_BFM (slice_parsing_fields, pps, output_flag_present_flag);
   COPY_BFM (slice_parsing_fields, pps, dependent_slice_segments_enabled_flag);
-  pic_param->slice_parsing_fields.
-      bits.pps_slice_chroma_qp_offsets_present_flag =
+  pic_param->slice_parsing_fields.bits.
+      pps_slice_chroma_qp_offsets_present_flag =
       pps->slice_chroma_qp_offsets_present_flag;
   COPY_BFM (slice_parsing_fields, sps, sample_adaptive_offset_enabled_flag);
   COPY_BFM (slice_parsing_fields, pps, deblocking_filter_override_enabled_flag);
@@ -2472,8 +2474,8 @@ fill_slice (GstVaapiDecoderH265 * decoder,
       slice_hdr->temporal_mvp_enabled_flag;
   slice_param->LongSliceFlags.fields.slice_deblocking_filter_disabled_flag =
       slice_hdr->deblocking_filter_disabled_flag;
-  slice_param->LongSliceFlags.
-      fields.slice_loop_filter_across_slices_enabled_flag =
+  slice_param->LongSliceFlags.fields.
+      slice_loop_filter_across_slices_enabled_flag =
       slice_hdr->loop_filter_across_slices_enabled_flag;
 
   if (!slice_hdr->temporal_mvp_enabled_flag)

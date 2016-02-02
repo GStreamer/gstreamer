@@ -53,15 +53,9 @@ x11_untrap_errors (void)
 }
 
 // X window management
-static const int x11_event_mask =
-  (KeyPressMask         |
-   KeyReleaseMask       |
-   ButtonPressMask      |
-   ButtonReleaseMask    |
-   PointerMotionMask    |
-   EnterWindowMask      |
-   ExposureMask         |
-   StructureNotifyMask);
+static const int x11_event_mask = (KeyPressMask | KeyReleaseMask
+    | ButtonPressMask | ButtonReleaseMask | PointerMotionMask
+    | EnterWindowMask | ExposureMask | StructureNotifyMask);
 
 /**
  * x11_create_window:

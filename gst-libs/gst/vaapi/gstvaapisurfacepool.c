@@ -95,7 +95,8 @@ gst_vaapi_surface_pool_class (void)
 {
   static const GstVaapiVideoPoolClass GstVaapiSurfacePoolClass = {
     {sizeof (GstVaapiSurfacePool),
-     (GDestroyNotify) gst_vaapi_video_pool_finalize},
+        (GDestroyNotify) gst_vaapi_video_pool_finalize}
+    ,
     .alloc_object = gst_vaapi_surface_pool_alloc_object
   };
   return GST_VAAPI_MINI_OBJECT_CLASS (&GstVaapiSurfacePoolClass);

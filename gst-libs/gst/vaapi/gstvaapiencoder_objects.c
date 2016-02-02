@@ -290,7 +290,8 @@ gst_vaapi_enc_q_matrix_new (GstVaapiEncoder * encoder,
 /* ------------------------------------------------------------------------- */
 
 #if USE_JPEG_ENCODER
-GST_VAAPI_CODEC_DEFINE_TYPE (GstVaapiEncHuffmanTable, gst_vaapi_enc_huffman_table);
+GST_VAAPI_CODEC_DEFINE_TYPE (GstVaapiEncHuffmanTable,
+    gst_vaapi_enc_huffman_table);
 
 void
 gst_vaapi_enc_huffman_table_destroy (GstVaapiEncHuffmanTable * huf_table)

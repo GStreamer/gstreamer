@@ -262,7 +262,7 @@ init_picture (GstVaapiDecoderVp8 * decoder, GstVaapiPicture * picture)
   picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
   picture->type = frame_hdr->key_frame ? GST_VAAPI_PICTURE_TYPE_I :
       GST_VAAPI_PICTURE_TYPE_P;
-  picture->pts = GST_VAAPI_DECODER_CODEC_FRAME(decoder)->pts;
+  picture->pts = GST_VAAPI_DECODER_CODEC_FRAME (decoder)->pts;
 
   if (!frame_hdr->show_frame)
     GST_VAAPI_PICTURE_FLAG_SET (picture, GST_VAAPI_PICTURE_FLAG_SKIPPED);

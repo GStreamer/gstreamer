@@ -281,7 +281,8 @@ gst_vaapi_utils_h265_get_level_limits_table (guint * out_length_ptr)
 
 /** Returns GstVaapiChromaType from H.265 chroma_format_idc value */
 GstVaapiChromaType
-gst_vaapi_utils_h265_get_chroma_type (guint chroma_format_idc, guint luma_bit_depth)
+gst_vaapi_utils_h265_get_chroma_type (guint chroma_format_idc,
+    guint luma_bit_depth)
 {
   GstVaapiChromaType chroma_type = (GstVaapiChromaType) 0;
 
@@ -350,8 +351,7 @@ gst_vaapi_utils_h265_get_tier_from_string (const gchar * str)
 const gchar *
 gst_vaapi_utils_h265_get_tier_string (GstVaapiTierH265 tier)
 {
-  const struct map *const m =
-      map_lookup_value (gst_vaapi_h265_tier_map, tier);
+  const struct map *const m = map_lookup_value (gst_vaapi_h265_tier_map, tier);
 
   return m ? m->name : NULL;
 }

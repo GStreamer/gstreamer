@@ -397,9 +397,9 @@ do_render_texture (GstVaapiWindowEGL * window, const GstVaapiRectangle * rect)
   texcoords[3][1] = y0;
 
   // Target coords in EGL surface
-  x0 =  2.0f * ((GLfloat) rect->x / tex_width) - 1.0f;
+  x0 = 2.0f * ((GLfloat) rect->x / tex_width) - 1.0f;
   y1 = -2.0f * ((GLfloat) rect->y / tex_height) + 1.0f;
-  x1 =  2.0f * ((GLfloat) (rect->x + rect->width) / tex_width) - 1.0f;
+  x1 = 2.0f * ((GLfloat) (rect->x + rect->width) / tex_width) - 1.0f;
   y0 = -2.0f * ((GLfloat) (rect->y + rect->height) / tex_height) + 1.0f;
   positions[0][0] = x0;
   positions[0][1] = y0;

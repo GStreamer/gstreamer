@@ -35,7 +35,7 @@
 
 /** Lookup for substring NAME in string EXT using SEP as separators */
 static gboolean
-find_string (const gchar *name, const gchar *ext, const gchar *sep)
+find_string (const gchar * name, const gchar * ext, const gchar * sep)
 {
   const gchar *end;
   int name_len, n;
@@ -635,7 +635,7 @@ typedef void (*GLFuncPtr) (void);
 typedef GLFuncPtr (*GLXGetProcAddressProc) (const gchar *);
 
 static GLFuncPtr
-get_proc_address_default (const gchar *name)
+get_proc_address_default (const gchar * name)
 {
   return NULL;
 }
@@ -658,7 +658,7 @@ get_proc_address_func (void)
 }
 
 static inline GLFuncPtr
-get_proc_address (const gchar *name)
+get_proc_address (const gchar * name)
 {
   static GLXGetProcAddressProc get_proc_func = NULL;
   if (!get_proc_func)

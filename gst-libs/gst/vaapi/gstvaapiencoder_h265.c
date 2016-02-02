@@ -805,9 +805,8 @@ bs_write_slice (GstBitWriter * bs,
         (slice_param->slice_fields.bits.slice_sao_luma_flag
             || slice_param->slice_fields.bits.slice_sao_chroma_flag
             || !slice_deblocking_filter_disabled_flag))
-      WRITE_UINT32 (bs,
-          slice_param->slice_fields.
-          bits.slice_loop_filter_across_slices_enabled_flag, 1);
+      WRITE_UINT32 (bs, slice_param->slice_fields.bits.
+          slice_loop_filter_across_slices_enabled_flag, 1);
 
   }
 
@@ -1677,8 +1676,8 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
 
     slice_param->slice_fields.value = 0;
 
-    slice_param->slice_fields.
-        bits.slice_loop_filter_across_slices_enabled_flag = TRUE;
+    slice_param->slice_fields.bits.
+        slice_loop_filter_across_slices_enabled_flag = TRUE;
 
     /* set calculation for next slice */
     last_ctu_index += cur_slice_ctus;
@@ -1725,7 +1724,8 @@ ensure_sequence (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture)
     goto error_create_seq_param;
 
   /* add packed vps and sps headers */
-  if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VA_ENC_PACKED_HEADER_SEQUENCE)
+  if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+          VA_ENC_PACKED_HEADER_SEQUENCE)
       && !(add_packed_vps_header (encoder, picture, sequence)
           && add_packed_sequence_header (encoder, picture, sequence))) {
     goto error_create_packed_seq_hdr;
@@ -1769,7 +1769,8 @@ ensure_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
     return FALSE;
 
   if (picture->type == GST_VAAPI_PICTURE_TYPE_I &&
-      (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) & VA_ENC_PACKED_HEADER_PICTURE)
+      (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+          VA_ENC_PACKED_HEADER_PICTURE)
       && !add_packed_picture_header (encoder, picture)) {
     GST_ERROR ("set picture packed header failed");
     return FALSE;
@@ -2276,7 +2277,7 @@ set_context_info (GstVaapiEncoder * base_encoder)
 
   /* Only YUV 4:2:0 formats are supported for now. */
   base_encoder->codedbuf_size += GST_ROUND_UP_32 (vip->width) *
-          GST_ROUND_UP_32 (vip->height) * 3 / 2;
+      GST_ROUND_UP_32 (vip->height) * 3 / 2;
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }

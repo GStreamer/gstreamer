@@ -840,8 +840,7 @@ egl_surface_new_wrapped (EglDisplay * display, EGLSurface gl_surface)
 /* ------------------------------------------------------------------------- */
 // EGL Context
 
-static void
-egl_context_state_get_current (EglContextState * cs);
+static void egl_context_state_get_current (EglContextState * cs);
 
 static gboolean
 egl_context_state_set_current (EglContextState * new_cs,
@@ -1329,10 +1328,22 @@ void
 egl_matrix_set_identity (gfloat m[16])
 {
 #define MAT(m,r,c) (m)[(c) * 4 + (r)]
-  MAT(m,0,0) = 1.0; MAT(m,0,1) = 0.0; MAT(m,0,2) = 0.0; MAT(m,0,3) = 0.0;
-  MAT(m,1,0) = 0.0; MAT(m,1,1) = 1.0; MAT(m,1,2) = 0.0; MAT(m,1,3) = 0.0;
-  MAT(m,2,0) = 0.0; MAT(m,2,1) = 0.0; MAT(m,2,2) = 1.0; MAT(m,2,3) = 0.0;
-  MAT(m,3,0) = 0.0; MAT(m,3,1) = 0.0; MAT(m,3,2) = 0.0; MAT(m,3,3) = 1.0;
+  MAT (m, 0, 0) = 1.0;
+  MAT (m, 0, 1) = 0.0;
+  MAT (m, 0, 2) = 0.0;
+  MAT (m, 0, 3) = 0.0;
+  MAT (m, 1, 0) = 0.0;
+  MAT (m, 1, 1) = 1.0;
+  MAT (m, 1, 2) = 0.0;
+  MAT (m, 1, 3) = 0.0;
+  MAT (m, 2, 0) = 0.0;
+  MAT (m, 2, 1) = 0.0;
+  MAT (m, 2, 2) = 1.0;
+  MAT (m, 2, 3) = 0.0;
+  MAT (m, 3, 0) = 0.0;
+  MAT (m, 3, 1) = 0.0;
+  MAT (m, 3, 2) = 0.0;
+  MAT (m, 3, 3) = 1.0;
 #undef MAT
 }
 

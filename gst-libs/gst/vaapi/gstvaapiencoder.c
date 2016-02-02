@@ -551,8 +551,9 @@ get_packed_headers (GstVaapiEncoder * encoder)
   if (cdata->codec == GST_VAAPI_CODEC_JPEG) {
 #if !VA_CHECK_VERSION(0,37,1)
     encoder->packed_headers = VA_ENC_PACKED_HEADER_RAW_DATA;
-    GST_DEBUG ("Hard coding the packed header flag value to VA_ENC_PACKED_HEADER_RAW_DATA,"
-        "This is a work around for the driver bug");
+    GST_DEBUG ("Hard coding the packed header flag value to "
+        "VA_ENC_PACKED_HEADER_RAW_DATA. This is a work around for the driver "
+        "bug");
 #endif
   }
 
@@ -564,7 +565,7 @@ is_chroma_type_supported (GstVaapiEncoder * encoder)
 {
   GstVaapiContextInfo *const cip = &encoder->context_info;
   const GstVideoFormat fmt =
-    GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
+      GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
   guint format = 0;
 
   if (fmt == GST_VIDEO_FORMAT_ENCODED)
@@ -597,7 +598,7 @@ set_context_info (GstVaapiEncoder * encoder)
   GstVaapiContextInfo *const cip = &encoder->context_info;
   GstVaapiConfigInfoEncoder *const config = &cip->config.encoder;
   const GstVideoFormat format =
-    GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
+      GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
   const GstVaapiEncoderClassData *const cdata =
       GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
 

@@ -1627,8 +1627,8 @@ gst_vaapi_display_get_subpicture_formats (GstVaapiDisplay * display)
 
   if (!ensure_subpicture_formats (display))
     return NULL;
-  return get_formats (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->
-      subpicture_formats);
+  return
+      get_formats (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->subpicture_formats);
 }
 
 /**
@@ -2146,5 +2146,5 @@ gst_vaapi_display_has_opengl (GstVaapiDisplay * display)
 
   klass = GST_VAAPI_DISPLAY_GET_CLASS (display);
   return (klass->display_type == GST_VAAPI_DISPLAY_TYPE_GLX ||
-          klass->display_type == GST_VAAPI_DISPLAY_TYPE_EGL);
+      klass->display_type == GST_VAAPI_DISPLAY_TYPE_EGL);
 }

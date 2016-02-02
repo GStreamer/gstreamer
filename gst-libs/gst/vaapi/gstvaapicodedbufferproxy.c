@@ -61,7 +61,7 @@ gst_vaapi_coded_buffer_proxy_class (void)
 {
   static const GstVaapiMiniObjectClass GstVaapiCodedBufferProxyClass = {
     sizeof (GstVaapiCodedBufferProxy),
-    (GDestroyNotify)coded_buffer_proxy_finalize
+    (GDestroyNotify) coded_buffer_proxy_finalize
   };
   return &GstVaapiCodedBufferProxyClass;
 }
