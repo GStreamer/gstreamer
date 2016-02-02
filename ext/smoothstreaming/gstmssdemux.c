@@ -586,6 +586,10 @@ gst_mss_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
   return ret;
 }
 
+#define SEEK_UPDATES_PLAY_POSITION(r, start_type, stop_type) \
+  ((r >= 0 && start_type != GST_SEEK_TYPE_NONE) || \
+   (r < 0 && stop_type != GST_SEEK_TYPE_NONE))
+
 static gboolean
 gst_mss_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
 {
@@ -603,7 +607,8 @@ gst_mss_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
       "seek event, rate: %f start: %" GST_TIME_FORMAT " stop: %"
       GST_TIME_FORMAT, rate, GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
-  gst_mss_manifest_seek (mssdemux->manifest, start);
+  if (SEEK_UPDATES_PLAY_POSITION (rate, start_type, stop_type))
+    gst_mss_manifest_seek (mssdemux->manifest, start);
 
   return TRUE;
 }
