@@ -75,6 +75,8 @@ struct _GstGLVideoFlip
   gulong        sink_probe;
   gulong        src_probe;
 
+  GstCaps      *input_caps;
+
   /* properties */
   GstGLVideoFlipMethod method;
   GstGLVideoFlipMethod tag_method;

@@ -103,6 +103,7 @@ G_DEFINE_TYPE_WITH_CODE (GstGLVideoFlip, gst_gl_video_flip,
     GST_TYPE_BIN, GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
         "glvideoflip", 0, "glvideoflip element"););
 
+static void gst_gl_video_flip_finalize (GObject * object);
 static void gst_gl_video_flip_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_video_flip_get_property (GObject * object, guint prop_id,
@@ -122,6 +123,7 @@ gst_gl_video_flip_class_init (GstGLVideoFlipClass * klass)
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
 
+  gobject_class->finalize = gst_gl_video_flip_finalize;
   gobject_class->set_property = gst_gl_video_flip_set_property;
   gobject_class->get_property = gst_gl_video_flip_get_property;
 
@@ -201,107 +203,14 @@ gst_gl_video_flip_init (GstGLVideoFlip * flip)
   }
 }
 
-/* with object lock */
 static void
-_set_active_method (GstGLVideoFlip * vf, GstGLVideoFlipMethod method)
+gst_gl_video_flip_finalize (GObject * object)
 {
-  gfloat rot_z = 0., scale_x = 1.0, scale_y = 1.0;
+  GstGLVideoFlip *flip = GST_GL_VIDEO_FLIP (object);
 
-  switch (method) {
-    case GST_GL_VIDEO_FLIP_METHOD_IDENTITY:
-      break;
-    case GST_GL_VIDEO_FLIP_METHOD_90R:
-      scale_x *= vf->aspect;
-      scale_y *= 1. / vf->aspect;
-      rot_z = 90.;
-      break;
-    case GST_GL_VIDEO_FLIP_METHOD_180:
-      rot_z = 180.;
-      break;
-    case GST_GL_VIDEO_FLIP_METHOD_90L:
-      scale_x *= vf->aspect;
-      scale_y *= 1. / vf->aspect;
-      rot_z = 270.;
-      break;
-    case GST_GL_VIDEO_FLIP_METHOD_FLIP_HORIZ:
-      scale_x *= -1.;
-      break;
-    case GST_GL_VIDEO_FLIP_METHOD_FLIP_UR_LL:
-      scale_x *= -vf->aspect;
-      scale_y *= 1. / vf->aspect;
-      rot_z = 90.;
-      break;
-    case GST_GL_VIDEO_FLIP_METHOD_FLIP_VERT:
-      scale_x *= -1.;
-      rot_z = 180.;
-      break;
-    case GST_GL_VIDEO_FLIP_METHOD_FLIP_UL_LR:
-      scale_x *= -vf->aspect;
-      scale_y *= 1. / vf->aspect;
-      rot_z = 270.;
-      break;
-    default:
-      break;
-  }
-  vf->active_method = method;
-  GST_OBJECT_UNLOCK (vf);
-  g_object_set (vf->transformation, "rotation-z", rot_z, "scale-x", scale_x,
-      "scale-y", scale_y, NULL);
-  GST_OBJECT_LOCK (vf);
-}
+  gst_caps_replace (&flip->input_caps, NULL);
 
-static void
-gst_gl_video_flip_set_method (GstGLVideoFlip * vf, GstGLVideoFlipMethod method,
-    gboolean from_tag)
-{
-  GST_OBJECT_LOCK (vf);
-  /* Store updated method */
-  if (from_tag)
-    vf->tag_method = method;
-  else
-    vf->method = method;
-
-  /* Get the new method */
-  if (vf->method == GST_GL_VIDEO_FLIP_METHOD_AUTO)
-    method = vf->tag_method;
-  else
-    method = vf->method;
-
-  _set_active_method (vf, method);
-
-  GST_OBJECT_UNLOCK (vf);
-}
-
-static void
-gst_gl_video_flip_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstGLVideoFlip *vf = GST_GL_VIDEO_FLIP (object);
-
-  switch (prop_id) {
-    case PROP_METHOD:
-      gst_gl_video_flip_set_method (vf, g_value_get_enum (value), FALSE);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_gl_video_flip_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstGLVideoFlip *vf = GST_GL_VIDEO_FLIP (object);
-
-  switch (prop_id) {
-    case PROP_METHOD:
-      g_value_set_enum (value, vf->method);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /* Caps negotiation happens like this:
@@ -359,6 +268,125 @@ _transform_caps (GstGLVideoFlip * vf, GstPadDirection direction, GstCaps * caps)
   return output;
 }
 
+/* with object lock */
+static void
+_set_active_method (GstGLVideoFlip * vf, GstGLVideoFlipMethod method,
+    GstCaps * caps)
+{
+  gfloat rot_z = 0., scale_x = 1.0, scale_y = 1.0;
+  GstCaps *output_caps, *templ;
+  GstPad *srcpad;
+
+  switch (method) {
+    case GST_GL_VIDEO_FLIP_METHOD_IDENTITY:
+      break;
+    case GST_GL_VIDEO_FLIP_METHOD_90R:
+      scale_x *= vf->aspect;
+      scale_y *= 1. / vf->aspect;
+      rot_z = 90.;
+      break;
+    case GST_GL_VIDEO_FLIP_METHOD_180:
+      rot_z = 180.;
+      break;
+    case GST_GL_VIDEO_FLIP_METHOD_90L:
+      scale_x *= vf->aspect;
+      scale_y *= 1. / vf->aspect;
+      rot_z = 270.;
+      break;
+    case GST_GL_VIDEO_FLIP_METHOD_FLIP_HORIZ:
+      scale_x *= -1.;
+      break;
+    case GST_GL_VIDEO_FLIP_METHOD_FLIP_UR_LL:
+      scale_x *= -vf->aspect;
+      scale_y *= 1. / vf->aspect;
+      rot_z = 90.;
+      break;
+    case GST_GL_VIDEO_FLIP_METHOD_FLIP_VERT:
+      scale_x *= -1.;
+      rot_z = 180.;
+      break;
+    case GST_GL_VIDEO_FLIP_METHOD_FLIP_UL_LR:
+      scale_x *= -vf->aspect;
+      scale_y *= 1. / vf->aspect;
+      rot_z = 270.;
+      break;
+    default:
+      break;
+  }
+  vf->active_method = method;
+
+  output_caps = _transform_caps (vf, GST_PAD_SINK, caps);
+  gst_caps_replace (&vf->input_caps, caps);
+
+  srcpad = gst_element_get_static_pad (vf->transformation, "src");
+  templ = gst_pad_get_pad_template_caps (srcpad);
+  gst_object_unref (srcpad);
+
+  gst_caps_append (output_caps, gst_caps_ref (templ));
+  GST_OBJECT_UNLOCK (vf);
+
+  g_object_set (vf->input_capsfilter, "caps", gst_caps_ref (caps), NULL);
+  g_object_set (vf->output_capsfilter, "caps", output_caps, NULL);
+  g_object_set (vf->transformation, "rotation-z", rot_z, "scale-x", scale_x,
+      "scale-y", scale_y, NULL);
+  GST_OBJECT_LOCK (vf);
+}
+
+static void
+gst_gl_video_flip_set_method (GstGLVideoFlip * vf, GstGLVideoFlipMethod method,
+    gboolean from_tag)
+{
+  GST_OBJECT_LOCK (vf);
+  /* Store updated method */
+  if (from_tag)
+    vf->tag_method = method;
+  else
+    vf->method = method;
+
+  /* Get the new method */
+  if (vf->method == GST_GL_VIDEO_FLIP_METHOD_AUTO)
+    method = vf->tag_method;
+  else
+    method = vf->method;
+
+  if (vf->input_caps)
+    _set_active_method (vf, method, vf->input_caps);
+
+  GST_OBJECT_UNLOCK (vf);
+}
+
+static void
+gst_gl_video_flip_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstGLVideoFlip *vf = GST_GL_VIDEO_FLIP (object);
+
+  switch (prop_id) {
+    case PROP_METHOD:
+      gst_gl_video_flip_set_method (vf, g_value_get_enum (value), FALSE);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_gl_video_flip_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstGLVideoFlip *vf = GST_GL_VIDEO_FLIP (object);
+
+  switch (prop_id) {
+    case PROP_METHOD:
+      g_value_set_enum (value, vf->method);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 static GstPadProbeReturn
 _input_sink_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
@@ -406,8 +434,7 @@ _input_sink_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
         break;
       }
       case GST_EVENT_CAPS:{
-        GstCaps *caps, *output, *templ;
-        GstPad *srcpad;
+        GstCaps *caps;
         GstVideoInfo v_info;
 
         gst_event_parse_caps (event, &caps);
@@ -418,19 +445,8 @@ _input_sink_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
               (gfloat) GST_VIDEO_INFO_HEIGHT (&v_info);
         else
           vf->aspect = 1.0;
-        _set_active_method (vf, vf->active_method);
+        _set_active_method (vf, vf->active_method, caps);
         GST_OBJECT_UNLOCK (vf);
-
-        output = _transform_caps (vf, GST_PAD_SINK, caps);
-
-        /* allow overriding the output caps */
-        srcpad = gst_element_get_static_pad (vf->transformation, "src");
-        templ = gst_pad_get_pad_template_caps (srcpad);
-        gst_caps_append (output, gst_caps_ref (templ));
-        gst_object_unref (srcpad);
-
-        g_object_set (vf->input_capsfilter, "caps", gst_caps_copy (caps), NULL);
-        g_object_set (vf->output_capsfilter, "caps", output, NULL);
         break;
       }
       default:
