@@ -607,8 +607,12 @@ gst_mss_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
       "seek event, rate: %f start: %" GST_TIME_FORMAT " stop: %"
       GST_TIME_FORMAT, rate, GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
-  if (SEEK_UPDATES_PLAY_POSITION (rate, start_type, stop_type))
-    gst_mss_manifest_seek (mssdemux->manifest, start);
+  if (SEEK_UPDATES_PLAY_POSITION (rate, start_type, stop_type)) {
+    if (rate >= 0)
+      gst_mss_manifest_seek (mssdemux->manifest, rate >= 0, start);
+    else
+      gst_mss_manifest_seek (mssdemux->manifest, rate >= 0, stop);
+  }
 
   return TRUE;
 }
