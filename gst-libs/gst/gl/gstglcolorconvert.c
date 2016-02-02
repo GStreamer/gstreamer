@@ -674,6 +674,19 @@ _gst_gl_color_convert_set_caps_unlocked (GstGLColorConvert * convert,
       && to_target != GST_GL_TEXTURE_TARGET_RECTANGLE)
     return FALSE;
 
+  {
+    guint yuv_gray_flags, in_flags, out_flags;
+
+    in_flags = GST_VIDEO_FORMAT_INFO_FLAGS (in_info.finfo);
+    out_flags = GST_VIDEO_FORMAT_INFO_FLAGS (out_info.finfo);
+    yuv_gray_flags = GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_GRAY;
+
+    /* GRAY/YUV -> GRAY/YUV is not supported for non-passthrough */
+    if (!passthrough && (in_flags & yuv_gray_flags) != 0
+        && (out_flags & yuv_gray_flags) != 0)
+      return FALSE;
+  }
+
   gst_gl_color_convert_reset (convert);
   convert->in_info = in_info;
   convert->out_info = out_info;
@@ -793,19 +806,45 @@ gst_gl_color_convert_decide_allocation (GstGLColorConvert * convert,
   return TRUE;
 }
 
+static void
+_init_value_string_list (GValue * list, ...)
+{
+  GValue item = G_VALUE_INIT;
+  gchar *str;
+  va_list args;
+
+  g_value_init (list, GST_TYPE_LIST);
+
+  va_start (args, list);
+  while ((str = va_arg (args, gchar *))) {
+    g_value_init (&item, G_TYPE_STRING);
+    g_value_set_string (&item, str);
+
+    gst_value_list_append_value (list, &item);
+    g_value_unset (&item);
+  }
+  va_end (args);
+}
+
 /* copies the given caps */
 static GstCaps *
-gst_gl_color_convert_caps_remove_format_info (GstCaps * caps)
+gst_gl_color_convert_caps_transform_format_info (GstCaps * caps)
 {
   GstStructure *st;
   GstCapsFeatures *f;
   gint i, n;
   GstCaps *res;
+  GValue rgb_formats = G_VALUE_INIT;
+
+  _init_value_string_list (&rgb_formats, "RGBA", "ARGB", "BGRA", "ABGR", "RGBx",
+      "xRGB", "BGRx", "xBGR", "RGB", "BGR", NULL);
 
   res = gst_caps_new_empty ();
 
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
+    const GValue *format;
+
     st = gst_caps_get_structure (caps, i);
     f = gst_caps_get_features (caps, i);
 
@@ -814,12 +853,66 @@ gst_gl_color_convert_caps_remove_format_info (GstCaps * caps)
     if (i > 0 && gst_caps_is_subset_structure_full (res, st, f))
       continue;
 
+    format = gst_structure_get_value (st, "format");
     st = gst_structure_copy (st);
-    gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
+    if (GST_VALUE_HOLDS_LIST (format)) {
+      gboolean have_rgb_formats = FALSE;
+      GValue passthrough_formats = G_VALUE_INIT;
+      gint j, len;
+
+      g_value_init (&passthrough_formats, GST_TYPE_LIST);
+      len = gst_value_list_get_size (format);
+      for (j = 0; j < len; j++) {
+        const GValue *val;
+
+        val = gst_value_list_get_value (format, j);
+        if (G_VALUE_HOLDS_STRING (val)) {
+          const gchar *format_str = g_value_get_string (val);
+          GstVideoFormat v_format = gst_video_format_from_string (format_str);
+          const GstVideoFormatInfo *t_info =
+              gst_video_format_get_info (v_format);
+          if (GST_VIDEO_FORMAT_INFO_FLAGS (t_info) & (GST_VIDEO_FORMAT_FLAG_YUV
+                  | GST_VIDEO_FORMAT_FLAG_GRAY)) {
+            gst_value_list_append_value (&passthrough_formats, val);
+          } else if (GST_VIDEO_FORMAT_INFO_FLAGS (t_info) &
+              GST_VIDEO_FORMAT_FLAG_RGB) {
+            have_rgb_formats = TRUE;
+            break;
+          }
+        }
+      }
+      if (have_rgb_formats) {
+        gst_structure_remove_fields (st, "format", NULL);
+      } else {
+        /* add passthrough structure, then the rgb conversion structure */
+        gst_structure_set_value (st, "format", &passthrough_formats);
+        gst_caps_append_structure_full (res, gst_structure_copy (st),
+            gst_caps_features_copy (f));
+        gst_structure_set_value (st, "format", &rgb_formats);
+      }
+      g_value_unset (&passthrough_formats);
+    } else if (G_VALUE_HOLDS_STRING (format)) {
+      const gchar *format_str = g_value_get_string (format);
+      GstVideoFormat v_format = gst_video_format_from_string (format_str);
+      const GstVideoFormatInfo *t_info = gst_video_format_get_info (v_format);
+      if (GST_VIDEO_FORMAT_INFO_FLAGS (t_info) & (GST_VIDEO_FORMAT_FLAG_YUV |
+              GST_VIDEO_FORMAT_FLAG_GRAY)) {
+        /* add passthrough structure, then the rgb conversion structure */
+        gst_structure_set_value (st, "format", format);
+        gst_caps_append_structure_full (res, gst_structure_copy (st),
+            gst_caps_features_copy (f));
+        gst_structure_set_value (st, "format", &rgb_formats);
+      } else {                  /* RGB */
+        gst_structure_remove_fields (st, "format", NULL);
+      }
+    }
+    gst_structure_remove_fields (st, "colorimetry", "chroma-site",
         "texture-target", NULL);
 
     gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
   }
+
+  g_value_unset (&rgb_formats);
 
   return res;
 }
@@ -828,7 +921,7 @@ GstCaps *
 gst_gl_color_convert_transform_caps (GstGLContext * convert,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  caps = gst_gl_color_convert_caps_remove_format_info (caps);
+  caps = gst_gl_color_convert_caps_transform_format_info (caps);
 
   if (filter) {
     GstCaps *tmp;
@@ -841,92 +934,240 @@ gst_gl_color_convert_transform_caps (GstGLContext * convert,
   return caps;
 }
 
-static void
-gst_gl_color_convert_fixate_format (GstStructure * ins, GstStructure * outs)
-{
-  const gchar *in_format = gst_structure_get_string (ins, "format");
-  const GValue *out_formats = gst_structure_get_value (outs, "format");
-  guint i;
+/* fixation from videoconvert */
+#define SCORE_FORMAT_CHANGE             1
+#define SCORE_DEPTH_CHANGE              1
+#define SCORE_ALPHA_CHANGE              1
+#define SCORE_CHROMA_W_CHANGE           1
+#define SCORE_CHROMA_H_CHANGE           1
+#define SCORE_PALETTE_CHANGE            1
 
-  if (in_format == NULL || !GST_VALUE_HOLDS_LIST (out_formats))
-    /* we don't need to or don't know how to fixate */
+#define SCORE_COLORSPACE_LOSS           2       /* RGB <-> YUV */
+#define SCORE_DEPTH_LOSS                4       /* change bit depth */
+#define SCORE_ALPHA_LOSS                8       /* lose the alpha channel */
+#define SCORE_CHROMA_W_LOSS             16      /* vertical subsample */
+#define SCORE_CHROMA_H_LOSS             32      /* horizontal subsample */
+#define SCORE_PALETTE_LOSS              64      /* convert to palette format */
+#define SCORE_COLOR_LOSS                128     /* convert to GRAY */
+
+#define COLORSPACE_MASK (GST_VIDEO_FORMAT_FLAG_YUV | \
+                         GST_VIDEO_FORMAT_FLAG_RGB | GST_VIDEO_FORMAT_FLAG_GRAY)
+#define ALPHA_MASK      (GST_VIDEO_FORMAT_FLAG_ALPHA)
+#define PALETTE_MASK    (GST_VIDEO_FORMAT_FLAG_PALETTE)
+
+static GstGLTextureTarget
+_texture_target_demask (guint target_mask)
+{
+  if (target_mask & (1 << GST_GL_TEXTURE_TARGET_2D)) {
+    return GST_GL_TEXTURE_TARGET_2D;
+  }
+  if (target_mask & (1 << GST_GL_TEXTURE_TARGET_RECTANGLE)) {
+    return GST_GL_TEXTURE_TARGET_RECTANGLE;
+  }
+  if (target_mask & (1 << GST_GL_TEXTURE_TARGET_EXTERNAL_OES)) {
+    return GST_GL_TEXTURE_TARGET_EXTERNAL_OES;
+  }
+
+  return 0;
+}
+
+/* calculate how much loss a conversion would be */
+static void
+score_format_target (const GstVideoFormatInfo * in_info, guint targets_mask,
+    GstVideoFormat v_format, guint other_targets_mask, gint * min_loss,
+    const GstVideoFormatInfo ** out_info, GstGLTextureTarget * result)
+{
+  const GstVideoFormatInfo *t_info;
+  GstVideoFormatFlags in_flags, t_flags;
+  gint loss;
+
+  t_info = gst_video_format_get_info (v_format);
+  if (!t_info)
     return;
 
-  for (i = 0; i < gst_value_list_get_size (out_formats); i++) {
-    const gchar *format =
-        g_value_get_string (gst_value_list_get_value (out_formats, i));
-    if (!strcmp (format, in_format)) {
-      gst_structure_set (outs, "format", G_TYPE_STRING, format, NULL);
-      break;
+  /* accept input format immediately without loss */
+  if (in_info == t_info && (targets_mask & other_targets_mask) != 0) {
+    *min_loss = 0;
+    *out_info = t_info;
+    *result = _texture_target_demask (targets_mask & other_targets_mask);
+    return;
+  }
+
+  /* can only passthrough external-oes textures */
+  other_targets_mask &= ~(1 << GST_GL_TEXTURE_TARGET_EXTERNAL_OES);
+  if (other_targets_mask == 0)
+    return;
+  /* try to keep the same target */
+  if (targets_mask & other_targets_mask)
+    other_targets_mask = targets_mask & other_targets_mask;
+
+  loss = SCORE_FORMAT_CHANGE;
+
+  in_flags = GST_VIDEO_FORMAT_INFO_FLAGS (in_info);
+  in_flags &= ~GST_VIDEO_FORMAT_FLAG_LE;
+  in_flags &= ~GST_VIDEO_FORMAT_FLAG_COMPLEX;
+  in_flags &= ~GST_VIDEO_FORMAT_FLAG_UNPACK;
+
+  t_flags = GST_VIDEO_FORMAT_INFO_FLAGS (t_info);
+  t_flags &= ~GST_VIDEO_FORMAT_FLAG_LE;
+  t_flags &= ~GST_VIDEO_FORMAT_FLAG_COMPLEX;
+  t_flags &= ~GST_VIDEO_FORMAT_FLAG_UNPACK;
+
+  /* GRAY/YUV -> GRAY/YUV is not supported */
+  if ((in_flags & (GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_GRAY)) != 0
+      && (t_flags & (GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_GRAY)) !=
+      0)
+    return;
+
+  if ((t_flags & PALETTE_MASK) != (in_flags & PALETTE_MASK)) {
+    loss += SCORE_PALETTE_CHANGE;
+    if (t_flags & PALETTE_MASK)
+      loss += SCORE_PALETTE_LOSS;
+  }
+
+  if ((t_flags & COLORSPACE_MASK) != (in_flags & COLORSPACE_MASK)) {
+    loss += SCORE_COLORSPACE_LOSS;
+    if (t_flags & GST_VIDEO_FORMAT_FLAG_GRAY)
+      loss += SCORE_COLOR_LOSS;
+  }
+
+  if ((t_flags & ALPHA_MASK) != (in_flags & ALPHA_MASK)) {
+    loss += SCORE_ALPHA_CHANGE;
+    if (in_flags & ALPHA_MASK)
+      loss += SCORE_ALPHA_LOSS;
+  }
+
+  if ((in_info->h_sub[1]) != (t_info->h_sub[1])) {
+    loss += SCORE_CHROMA_H_CHANGE;
+    if ((in_info->h_sub[1]) < (t_info->h_sub[1]))
+      loss += SCORE_CHROMA_H_LOSS;
+  }
+  if ((in_info->w_sub[1]) != (t_info->w_sub[1])) {
+    loss += SCORE_CHROMA_W_CHANGE;
+    if ((in_info->w_sub[1]) < (t_info->w_sub[1]))
+      loss += SCORE_CHROMA_W_LOSS;
+  }
+
+  if ((in_info->bits) != (t_info->bits)) {
+    loss += SCORE_DEPTH_CHANGE;
+    if ((in_info->bits) > (t_info->bits))
+      loss += SCORE_DEPTH_LOSS;
+  }
+
+  if (loss < *min_loss) {
+    GstGLTextureTarget target = _texture_target_demask (other_targets_mask);
+
+    if (target != 0) {
+      *out_info = t_info;
+      *min_loss = loss;
+      *result = target;
     }
   }
+}
+
+static void
+gst_gl_color_convert_fixate_format_target (GstCaps * caps, GstCaps * result)
+{
+  GstStructure *ins, *outs;
+  const gchar *in_format;
+  const GstVideoFormatInfo *in_info, *out_info = NULL;
+  const GValue *targets;
+  guint targets_mask = 0;
+  GstGLTextureTarget target;
+  gint min_loss = G_MAXINT;
+  guint i, capslen;
+
+  ins = gst_caps_get_structure (caps, 0);
+  in_format = gst_structure_get_string (ins, "format");
+  if (!in_format)
+    return;
+  targets = gst_structure_get_value (ins, "texture-target");
+  targets_mask = gst_gl_value_get_texture_target_mask (targets);
+  if (!targets_mask)
+    return;
+
+  in_info =
+      gst_video_format_get_info (gst_video_format_from_string (in_format));
+  if (!in_info)
+    return;
+
+  outs = gst_caps_get_structure (result, 0);
+
+  capslen = gst_caps_get_size (result);
+  for (i = 0; i < capslen; i++) {
+    GstStructure *tests;
+    const GValue *format;
+    const GValue *other_targets;
+    guint other_targets_mask = 0;
+
+    tests = gst_caps_get_structure (result, i);
+
+    format = gst_structure_get_value (tests, "format");
+    other_targets = gst_structure_get_value (tests, "texture-target");
+    /* should not happen */
+    if (format == NULL || other_targets == NULL)
+      continue;
+
+    other_targets_mask = gst_gl_value_get_texture_target_mask (other_targets);
+
+    if (GST_VALUE_HOLDS_LIST (format)) {
+      gint j, len;
+
+      len = gst_value_list_get_size (format);
+      for (j = 0; j < len; j++) {
+        const GValue *val;
+
+        val = gst_value_list_get_value (format, j);
+        if (G_VALUE_HOLDS_STRING (val)) {
+          const gchar *format_str = g_value_get_string (val);
+          GstVideoFormat v_format = gst_video_format_from_string (format_str);
+          score_format_target (in_info, targets_mask, v_format,
+              other_targets_mask, &min_loss, &out_info, &target);
+          if (min_loss == 0)
+            break;
+        }
+      }
+    } else if (G_VALUE_HOLDS_STRING (format)) {
+      const gchar *format_str = g_value_get_string (format);
+      GstVideoFormat v_format = gst_video_format_from_string (format_str);
+      score_format_target (in_info, targets_mask, v_format, other_targets_mask,
+          &min_loss, &out_info, &target);
+    }
+  }
+  if (out_info)
+    gst_structure_set (outs, "format", G_TYPE_STRING,
+        GST_VIDEO_FORMAT_INFO_NAME (out_info), NULL);
+  if (target)
+    gst_structure_set (outs, "texture-target", G_TYPE_STRING,
+        gst_gl_texture_target_to_string (target), NULL);
 }
 
 GstCaps *
 gst_gl_color_convert_fixate_caps (GstGLContext * convert,
     GstPadDirection direction, GstCaps * caps, GstCaps * other)
 {
-  GValue item = G_VALUE_INIT;
-  const GValue *targets, *other_targets;
-  guint targets_mask = 0, other_targets_mask = 0, result_mask;
-  GstVideoInfo info, other_info;
-  GstStructure *s, *s_other;
+  GstCaps *result;
 
-  other = gst_caps_make_writable (other);
-  s = gst_caps_get_structure (caps, 0);
-  s_other = gst_caps_get_structure (other, 0);
-
-  targets = gst_structure_get_value (s, "texture-target");
-  other_targets = gst_structure_get_value (s_other, "texture-target");
-
-  targets_mask = gst_gl_value_get_texture_target_mask (targets);
-  other_targets_mask = gst_gl_value_get_texture_target_mask (other_targets);
-
-  gst_gl_color_convert_fixate_format (s, s_other);
-
-  /* XXX: attempt to fixate the colorimetry/etc */
-  other = gst_caps_fixate (other);
-
-  result_mask = targets_mask & other_targets_mask;
-  if (result_mask == 0) {
-    /* nothing we can do here */
-    return other;
+  result = gst_caps_intersect (other, caps);
+  if (gst_caps_is_empty (result)) {
+    gst_caps_unref (result);
+    result = other;
+  } else {
+    gst_caps_unref (other);
   }
 
-  gst_video_info_from_caps (&info, caps);
-  gst_video_info_from_caps (&other_info, other);
+  result = gst_caps_make_writable (result);
+  gst_gl_color_convert_fixate_format_target (caps, result);
 
-  if (!_gst_gl_color_convert_can_passthrough_info (&info, &other_info)) {
-    if (direction == GST_PAD_SINK) {
-      /* this effectively limits us to 2D | RECTANGLE for case where we
-       * have to convert */
-      result_mask &=
-          (1 << GST_GL_TEXTURE_TARGET_2D | 1 <<
-          GST_GL_TEXTURE_TARGET_RECTANGLE);
-    } else {
-      /* if the src caps has 2D support we can 'convert' to anything */
-      if (targets_mask & (1 << GST_GL_TEXTURE_TARGET_2D | 1 <<
-              GST_GL_TEXTURE_TARGET_RECTANGLE))
-        result_mask = -1;
-      else
-        result_mask = other_targets_mask;
+  result = gst_caps_fixate (result);
+
+  if (direction == GST_PAD_SINK) {
+    if (gst_caps_is_subset (caps, result)) {
+      gst_caps_replace (&result, caps);
     }
   }
 
-  g_value_init (&item, G_TYPE_STRING);
-  if (result_mask & (1 << GST_GL_TEXTURE_TARGET_2D)) {
-    g_value_set_static_string (&item, GST_GL_TEXTURE_TARGET_2D_STR);
-  } else if (result_mask & (1 << GST_GL_TEXTURE_TARGET_RECTANGLE)) {
-    g_value_set_static_string (&item, GST_GL_TEXTURE_TARGET_RECTANGLE_STR);
-  } else if (result_mask & (1 << GST_GL_TEXTURE_TARGET_EXTERNAL_OES)) {
-    g_value_set_static_string (&item, GST_GL_TEXTURE_TARGET_EXTERNAL_OES_STR);
-  }
-
-  gst_structure_set_value (s_other, "texture-target", &item);
-
-  g_value_unset (&item);
-
-  return other;
+  return result;
 }
 
 /**
