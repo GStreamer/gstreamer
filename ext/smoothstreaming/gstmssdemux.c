@@ -310,7 +310,8 @@ gst_mss_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
 {
   GstMssDemuxStream *mssstream = (GstMssDemuxStream *) stream;
 
-  gst_mss_stream_seek (mssstream->manifest_stream, flags, ts, final_ts);
+  gst_mss_stream_seek (mssstream->manifest_stream, forward, flags, ts,
+      final_ts);
   return GST_FLOW_OK;
 }
 
