@@ -127,7 +127,9 @@ static const gfloat from_rgb_bt709_vcoeff[] = { 0.440654, -0.400285, -0.040370 }
     "uniform vec2 tex_scale1;\n" \
     "uniform vec2 tex_scale2;\n" \
     "uniform float width;\n"     \
-    "uniform float height;\n"
+    "uniform float height;\n"    \
+    "uniform float poffset_x;\n" \
+    "uniform float poffset_y;\n"
 
 #define MAX_FUNCTIONS 4
 
@@ -316,10 +318,11 @@ static const struct shader_templ templ_YUY2_UYVY_to_RGB =
     "vec4 rgba, uv_texel;\n"
     "vec3 yuv;\n"
     /* FIXME: should get the sampling right... */
-    "float dx1 = -1.0 / width;\n"
+    "float dx1 = -poffset_x;\n"
     "float dx2 = 0.0;\n"
     "yuv.x = texture2D(Ytex, texcoord * tex_scale0).%c;\n"
-    "float inorder = mod (texcoord.x * width, 2.0);\n"
+    /* v_texcoord are normalized, texcoord may not be e.g. rectangle textures */
+    "float inorder = mod (v_texcoord.x * width, 2.0);\n"
     "if (inorder < 1.0) {\n"
     "  dx2 = -dx1;\n"
     "  dx1 = 0.0;\n"
@@ -340,9 +343,10 @@ static const struct shader_templ templ_RGB_to_YUY2_UYVY =
     "vec4 texel1, texel2;\n"
     "vec3 yuv, yuv1, yuv2;\n"
     "float fx, dx, fy;\n"
-    "float inorder = mod (texcoord.x * width, 2.0);\n"
+    /* v_texcoord are normalized, texcoord may not be e.g. rectangle textures */
+    "float inorder = mod (v_texcoord.x * width, 2.0);\n"
     "fx = texcoord.x;\n"
-    "dx = 1.0 / width;\n"
+    "dx = poffset_x;\n"
     "if (inorder > 1.0) {\n"
     "  dx = -dx;\n"
     "}\n"
@@ -2112,6 +2116,16 @@ _init_convert (GstGLColorConvert * convert)
       GST_VIDEO_INFO_WIDTH (&convert->in_info));
   gst_gl_shader_set_uniform_1f (convert->shader, "height",
       GST_VIDEO_INFO_HEIGHT (&convert->in_info));
+
+  if (convert->priv->from_texture_target == GST_GL_TEXTURE_TARGET_RECTANGLE) {
+    gst_gl_shader_set_uniform_1f (convert->shader, "poffset_x", 1.);
+    gst_gl_shader_set_uniform_1f (convert->shader, "poffset_y", 1.);
+  } else {
+    gst_gl_shader_set_uniform_1f (convert->shader, "poffset_x",
+        1. / (gfloat) GST_VIDEO_INFO_WIDTH (&convert->in_info));
+    gst_gl_shader_set_uniform_1f (convert->shader, "poffset_y",
+        1. / (gfloat) GST_VIDEO_INFO_HEIGHT (&convert->in_info));
+  }
 
   if (info->chroma_sampling[0] > 0.0f && info->chroma_sampling[1] > 0.0f) {
     gst_gl_shader_set_uniform_2fv (convert->shader, "chroma_sampling", 1,
