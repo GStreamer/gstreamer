@@ -28,12 +28,6 @@ else
 BLUEZ_DIR=
 endif
 
-# if USE_CDROM
-#  CDROM_DIR=cdrom
-# else
-# CDROM_DIR=
-# endif
-
 if USE_WASAPI
 WASAPI_DIR=wasapi
 else
