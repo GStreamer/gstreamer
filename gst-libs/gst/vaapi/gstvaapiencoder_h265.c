@@ -835,7 +835,7 @@ _check_vps_sps_pps_status (GstVaapiEncoderH265 * encoder,
     const guint8 * nal, guint32 size)
 {
   guint8 nal_type;
-  gsize ret;
+  G_GNUC_UNUSED gsize ret;      /* FIXME */
   g_assert (size);
 
   if (encoder->vps_data && encoder->sps_data && encoder->pps_data)

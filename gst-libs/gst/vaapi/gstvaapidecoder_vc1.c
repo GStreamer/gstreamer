@@ -323,6 +323,8 @@ decode_sequence (GstVaapiDecoderVC1 * decoder, GstVC1BDU * rbdu,
   if (par_n > 0 && par_d > 0)
     gst_vaapi_decoder_set_pixel_aspect_ratio (base_decoder, par_n, par_d);
 
+  width = 0;
+  height = 0;
   switch (seq_hdr->profile) {
     case GST_VC1_PROFILE_SIMPLE:
     case GST_VC1_PROFILE_MAIN:
@@ -348,6 +350,7 @@ decode_sequence (GstVaapiDecoderVC1 * decoder, GstVC1BDU * rbdu,
     priv->size_changed = TRUE;
   }
 
+  profile = GST_VAAPI_PROFILE_UNKNOWN;
   switch (seq_hdr->profile) {
     case GST_VC1_PROFILE_SIMPLE:
       profile = GST_VAAPI_PROFILE_VC1_SIMPLE;

@@ -1000,7 +1000,7 @@ _check_sps_pps_status (GstVaapiEncoderH264 * encoder,
     const guint8 * nal, guint32 size)
 {
   guint8 nal_type;
-  gsize ret;
+  G_GNUC_UNUSED gsize ret;      /* FIXME */
   gboolean has_subset_sps;
 
   g_assert (size);
