@@ -242,32 +242,6 @@ dnl bitstream parsers (gstreamer-codecparsers)
 AG_GST_CHECK_MODULES([GST_CODEC_PARSERS],
   [gstreamer-codecparsers-$GST_API_VERSION], [$GST_PBADREQ], [yes])
 
-dnl ... VP9 parser, with required extensions
-HAVE_GST_VP9_PARSER=0
-AC_CACHE_CHECK([for VP9 parser],
-  [ac_cv_have_gst_vp9_parser],
-  [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_CODEC_PARSERS_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $GST_LIBS $GST_CODEC_PARSERS_LIBS"
-    AC_COMPILE_IFELSE(
-      [
-        AC_LANG_PROGRAM(
-          [[
-#include <gst/codecparsers/gstvp9parser.h>
-          ]],
-          [[
-GstVp9FrameHdr frame_hdr;
-          ]])
-      ],
-      [ac_cv_have_gst_vp9_parser="yes"],
-      [ac_cv_have_gst_vp9_parser="no"])
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-  ])
-AS_IF([test "x$ac_cv_have_gst_vp9_parser" = "xyes"], [HAVE_GST_VP9_PARSER=1])
-
 AS_IF([test "x$enable_glx" = "xyes" -o "x$enable_egl" = "xyes"],
   [enable_opengl="yes"], [enable_opengl="no"])
 
@@ -649,8 +623,7 @@ slice_param.slice_data_flag = 0;
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
   ])
-AS_IF([test "x$ac_cv_have_vp9_decoding_api" = "xyes"],
-  [USE_VP9_DECODER=$HAVE_GST_VP9_PARSER])
+AS_IF([test "x$ac_cv_have_vp9_decoding_api" = "xyes"], [USE_VP9_DECODER=1])
 
 dnl Check for va_dec_hevc.h header
 saved_CPPFLAGS="$CPPFLAGS"
