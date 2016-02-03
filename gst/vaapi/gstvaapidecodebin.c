@@ -211,7 +211,7 @@ ensure_vpp (GstVaapiDecodeBin * vaapidecbin)
     return FALSE;
 
   vaapidecbin->has_vpp = gst_vaapi_display_has_video_processing (display) ?
-    HAS_VPP_YES : HAS_VPP_NO;
+      HAS_VPP_YES : HAS_VPP_NO;
 
   gst_vaapi_display_unref (display);
 
@@ -219,7 +219,7 @@ ensure_vpp (GstVaapiDecodeBin * vaapidecbin)
 }
 
 static gboolean
-gst_vaapi_decode_bin_reconfigure (GstVaapiDecodeBin* vaapidecbin)
+gst_vaapi_decode_bin_reconfigure (GstVaapiDecodeBin * vaapidecbin)
 {
   if (!ensure_vpp (vaapidecbin))
     return FALSE;
@@ -325,7 +325,7 @@ gst_vaapi_decode_bin_handle_message (GstBin * bin, GstMessage * message)
     goto bail;
 
   vaapidecbin->has_vpp = gst_vaapi_display_has_video_processing (display) ?
-    HAS_VPP_YES : HAS_VPP_NO;
+      HAS_VPP_YES : HAS_VPP_NO;
 
   /* the underlying VA driver implementation doesn't support video
    * post-processing, hence we have to disable it */
@@ -362,7 +362,7 @@ gst_vaapi_decode_bin_change_state (GstElement * element,
   }
 
   ret = GST_ELEMENT_CLASS (gst_vaapi_decode_bin_parent_class)->change_state
-    (element, transition);
+      (element, transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
 

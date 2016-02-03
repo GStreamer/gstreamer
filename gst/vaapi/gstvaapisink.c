@@ -1205,7 +1205,9 @@ gst_vaapisink_get_caps_impl (GstBaseSink * base_sink)
     return NULL;
 
   if (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink)) {
-    raw_caps = gst_vaapi_plugin_base_get_allowed_raw_caps (GST_VAAPI_PLUGIN_BASE (sink));
+    raw_caps =
+        gst_vaapi_plugin_base_get_allowed_raw_caps (GST_VAAPI_PLUGIN_BASE
+        (sink));
     if (raw_caps) {
       out_caps = gst_caps_make_writable (out_caps);
       gst_caps_append (out_caps, gst_caps_copy (raw_caps));
@@ -1332,7 +1334,7 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
   ret = gst_vaapi_plugin_base_get_input_buffer (GST_VAAPI_PLUGIN_BASE (sink),
       src_buffer, &buffer);
   if (ret == GST_FLOW_NOT_SUPPORTED)
-    return GST_FLOW_OK; /* let's ignore the frame if it couldn't be uploaded */
+    return GST_FLOW_OK;         /* let's ignore the frame if it couldn't be uploaded */
   if (ret != GST_FLOW_OK)
     return ret;
 

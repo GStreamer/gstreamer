@@ -123,8 +123,7 @@ static gboolean
 gst_vaapidecode_sink_query (GstVideoDecoder * vdec, GstQuery * query);
 static gboolean
 gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query);
-static gboolean
-gst_vaapidecode_negotiate (GstVaapiDecode * decode);
+static gboolean gst_vaapidecode_negotiate (GstVaapiDecode * decode);
 
 static void
 gst_vaapi_decoder_state_changed (GstVaapiDecoder * decoder,
@@ -275,14 +274,15 @@ gst_vaapidecode_release (GstVaapiDecode * decode)
 }
 
 static gboolean
-is_surface_resolution_changed (GstVideoDecoder *vdec, GstVaapiSurface *surface)
+is_surface_resolution_changed (GstVideoDecoder * vdec,
+    GstVaapiSurface * surface)
 {
   guint surface_width, surface_height;
   guint configured_width, configured_height;
   GstVideoCodecState *state;
   gboolean ret = FALSE;
 
-  gst_vaapi_surface_get_size(surface, &surface_width, &surface_height);
+  gst_vaapi_surface_get_size (surface, &surface_width, &surface_height);
 
   state = gst_video_decoder_get_output_state (vdec);
   configured_width = GST_VIDEO_INFO_WIDTH (&state->info);
@@ -310,7 +310,8 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
     proxy = gst_video_codec_frame_get_user_data (out_frame);
 
     /* reconfigure if un-cropped surface resolution changed */
-    if (is_surface_resolution_changed (vdec, GST_VAAPI_SURFACE_PROXY_SURFACE (proxy)))
+    if (is_surface_resolution_changed (vdec,
+            GST_VAAPI_SURFACE_PROXY_SURFACE (proxy)))
       gst_vaapidecode_negotiate (decode);
 
     gst_vaapi_surface_proxy_set_destroy_notify (proxy,

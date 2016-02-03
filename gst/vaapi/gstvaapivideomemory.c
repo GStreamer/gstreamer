@@ -717,7 +717,7 @@ allocator_configure_image_info (GstVaapiDisplay * display,
     gst_video_info_set_format (&allocator->image_info, GST_VIDEO_FORMAT_I420,
         GST_VIDEO_INFO_WIDTH (vinfo), GST_VIDEO_INFO_HEIGHT (vinfo));
   else
-      allocator->image_info = *vinfo;
+    allocator->image_info = *vinfo;
 
   image = new_image (display, &allocator->image_info);
   if (!image)

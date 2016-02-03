@@ -609,7 +609,8 @@ _gst_caps_has_feature (const GstCaps * caps, const gchar * feature)
 }
 
 gboolean
-gst_vaapi_caps_feature_contains (const GstCaps * caps, GstVaapiCapsFeature feature)
+gst_vaapi_caps_feature_contains (const GstCaps * caps,
+    GstVaapiCapsFeature feature)
 {
   const gchar *feature_str;
 
@@ -647,10 +648,8 @@ gst_video_info_change_format (GstVideoInfo * vip, GstVideoFormat format,
   vip->fps_n = vi.fps_n;
   vip->fps_d = vi.fps_d;
 
-  GST_VIDEO_INFO_MULTIVIEW_MODE (vip) =
-      GST_VIDEO_INFO_MULTIVIEW_MODE (&vi);
-  GST_VIDEO_INFO_MULTIVIEW_FLAGS (vip) =
-      GST_VIDEO_INFO_MULTIVIEW_FLAGS (&vi);
+  GST_VIDEO_INFO_MULTIVIEW_MODE (vip) = GST_VIDEO_INFO_MULTIVIEW_MODE (&vi);
+  GST_VIDEO_INFO_MULTIVIEW_FLAGS (vip) = GST_VIDEO_INFO_MULTIVIEW_FLAGS (&vi);
 }
 
 /**
