@@ -330,9 +330,9 @@ static GstVaapiWindow *
 gst_vaapi_display_wayland_create_window (GstVaapiDisplay * display,
     GstVaapiID id, guint width, guint height)
 {
-  return id != GST_VAAPI_ID_INVALID ?
-      NULL :
-      gst_vaapi_window_wayland_new (display, width, height);
+  if (id != GST_VAAPI_ID_INVALID)
+    return NULL;
+  return gst_vaapi_window_wayland_new (display, width, height);
 }
 
 static void

@@ -134,6 +134,7 @@ static gboolean
 context_create_surfaces (GstVaapiContext * context)
 {
   const GstVaapiContextInfo *const cip = &context->info;
+  GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
   guint num_surfaces;
 
   if (!gst_vaapi_context_overlay_reset (context))
@@ -149,8 +150,8 @@ context_create_surfaces (GstVaapiContext * context)
 
   if (!context->surfaces_pool) {
     context->surfaces_pool =
-        gst_vaapi_surface_pool_new_with_chroma_type (GST_VAAPI_OBJECT_DISPLAY (context),
-        cip->chroma_type, cip->width, cip->height);
+        gst_vaapi_surface_pool_new_with_chroma_type (display, cip->chroma_type,
+        cip->width, cip->height);
 
     if (!context->surfaces_pool)
       return FALSE;

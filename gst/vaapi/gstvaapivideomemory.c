@@ -188,12 +188,13 @@ gboolean
 gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
     GstMapInfo * info, gpointer * data, gint * stride, GstMapFlags flags)
 {
+  GstAllocator *allocator;
   GstVaapiVideoMemory *const mem =
       GST_VAAPI_VIDEO_MEMORY_CAST (gst_buffer_peek_memory (meta->buffer, 0));
-
   g_return_val_if_fail (mem, FALSE);
-  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_ALLOCATOR (mem->parent_instance.
-          allocator), FALSE);
+
+  allocator = GST_MEMORY_CAST (mem)->allocator;
+  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_ALLOCATOR (allocator), FALSE);
   g_return_val_if_fail (mem->meta, FALSE);
 
   if (mem->map_type && mem->map_type != GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_PLANAR)
@@ -264,12 +265,13 @@ gboolean
 gst_video_meta_unmap_vaapi_memory (GstVideoMeta * meta, guint plane,
     GstMapInfo * info)
 {
+  GstAllocator *allocator;
   GstVaapiVideoMemory *const mem =
       GST_VAAPI_VIDEO_MEMORY_CAST (gst_buffer_peek_memory (meta->buffer, 0));
-
   g_return_val_if_fail (mem, FALSE);
-  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_ALLOCATOR (mem->parent_instance.
-          allocator), FALSE);
+
+  allocator = GST_MEMORY_CAST (mem)->allocator;
+  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_ALLOCATOR (allocator), FALSE);
   g_return_val_if_fail (mem->meta, FALSE);
   g_return_val_if_fail (mem->surface, FALSE);
   g_return_val_if_fail (mem->image, FALSE);

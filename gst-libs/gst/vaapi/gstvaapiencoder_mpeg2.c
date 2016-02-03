@@ -880,17 +880,18 @@ static struct
 static int
 find_frame_rate_code (const VAEncSequenceParameterBufferMPEG2 * seq_param)
 {
-  unsigned int delta = -1;
+  unsigned int ndelta, delta = -1;
   int code = 1, i;
   float frame_rate_value = seq_param->frame_rate *
       (seq_param->sequence_extension.bits.frame_rate_extension_d + 1) /
       (seq_param->sequence_extension.bits.frame_rate_extension_n + 1);
 
-  for (i = 0; i < sizeof (frame_rate_tab) / sizeof (frame_rate_tab[0]); i++) {
+  for (i = 0; i < G_N_ELEMENTS (frame_rate_tab); i++) {
 
-    if (fabsf (1000 * frame_rate_tab[i].value - 1000 * frame_rate_value) < delta) {
+    ndelta = fabsf (1000 * frame_rate_tab[i].value - 1000 * frame_rate_value);
+    if (ndelta < delta) {
       code = frame_rate_tab[i].code;
-      delta = fabsf (1000 * frame_rate_tab[i].value - 1000 * frame_rate_value);
+      delta = ndelta;
     }
   }
   return code;

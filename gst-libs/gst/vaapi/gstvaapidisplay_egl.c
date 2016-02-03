@@ -464,10 +464,10 @@ static GstVaapiTexture *
 gst_vaapi_display_egl_create_texture (GstVaapiDisplay * display, GstVaapiID id,
     guint target, guint format, guint width, guint height)
 {
-  return id != GST_VAAPI_ID_INVALID ?
-      gst_vaapi_texture_egl_new_wrapped (display, id, target, format,
-          width, height) :
-      gst_vaapi_texture_egl_new (display, target, format, width, height);
+  if (id != GST_VAAPI_ID_INVALID)
+    return gst_vaapi_texture_egl_new_wrapped (display, id, target, format,
+        width, height);
+  return gst_vaapi_texture_egl_new (display, target, format, width, height);
 }
 
 static void
