@@ -45,7 +45,7 @@ typedef struct _GstColorEffectsClass GstColorEffectsClass;
  * @GST_CLUT_PRESET_SEPIA: Sepia toning filter
  * @GST_CLUT_PRESET_XRAY: Invert colors and slightly shade to cyan
  * @GST_CLUT_PRESET_XPRO: Cross Processing filter
- * @GST_CLUT_PRESET_YELLOWBLUE: Visual magnifier high-contrast color filter. Since: 0.10.24
+ * @GST_CLUT_PRESET_YELLOWBLUE: Visual magnifier high-contrast color filter
  *
  * The lookup table to use to convert input colors
  */

@@ -197,8 +197,6 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
    * @avgfps: The average fps
    *
    * Signals the application about the measured fps
-   *
-   * Since: 0.10.20
    */
   fpsdisplaysink_signals[SIGNAL_FPS_MEASUREMENTS] =
       g_signal_new ("fps-measurements", G_TYPE_FROM_CLASS (klass),

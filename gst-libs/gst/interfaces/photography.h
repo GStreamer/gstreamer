@@ -159,8 +159,6 @@ typedef struct _GstPhotography GstPhotography;
  * remaining noise.
  *
  * Noise Reduction features of a photography capture or filter element.
- *
- * Since: 0.10.21
  */
 typedef enum
 {

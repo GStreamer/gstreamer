@@ -299,8 +299,6 @@ GST_PHOTOGRAPHY_FUNC_TEMPLATE (flash_mode, GstPhotographyFlashMode);
  * Set the noise reduction mode for the #GstElement
  *
  * Returns: %TRUE if setting the value succeeded, %FALSE otherwise
- *
- * Since: 0.10.21
  */
 /**
  * gst_photography_get_noise_reduction:
@@ -310,8 +308,6 @@ GST_PHOTOGRAPHY_FUNC_TEMPLATE (flash_mode, GstPhotographyFlashMode);
  * Get the noise reduction mode for the #GstElement
  *
  * Returns: %TRUE if getting the value succeeded, %FALSE otherwise
- *
- * Since: 0.10.21
  */
 GST_PHOTOGRAPHY_FUNC_TEMPLATE (noise_reduction, GstPhotographyNoiseReduction);
 
