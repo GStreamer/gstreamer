@@ -15,11 +15,11 @@
     <xi:include href="xml/element-vaapidecodebin.xml"/>
     <xi:include href="xml/element-vaapipostproc.xml"/>
     <xi:include href="xml/element-vaapisink.xml"/>
-    <xi:include href="xml/element-vaapiencode_h264.xml"/>
-    <xi:include href="xml/element-vaapiencode_h265.xml"/>
-    <xi:include href="xml/element-vaapiencode_jpeg.xml"/>
-    <xi:include href="xml/element-vaapiencode_mpeg2.xml"/>
-    <xi:include href="xml/element-vaapiencode_vp8.xml"/>
+    <xi:include href="xml/element-vaapih264enc.xml"/>
+    <xi:include href="xml/element-vaapih265enc.xml"/>
+    <xi:include href="xml/element-vaapijpegenc.xml"/>
+    <xi:include href="xml/element-vaapimpeg2enc.xml"/>
+    <xi:include href="xml/element-vaapivp8enc.xml"/>
   </chapter>
 
   <chapter>

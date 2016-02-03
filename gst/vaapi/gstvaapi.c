@@ -60,22 +60,22 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin, "vaapisink",
       GST_RANK_PRIMARY, GST_TYPE_VAAPISINK);
 #if USE_ENCODERS
-  gst_element_register (plugin, "vaapiencode_h264",
+  gst_element_register (plugin, "vaapih264enc",
       GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_H264);
-  gst_element_register (plugin, "vaapiencode_mpeg2",
+  gst_element_register (plugin, "vaapimpeg2enc",
       GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_MPEG2);
 #endif
 #if USE_JPEG_ENCODER
-  gst_element_register (plugin, "vaapiencode_jpeg",
+  gst_element_register (plugin, "vaapijpegenc",
       GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_JPEG);
 #endif
 #if USE_VP8_ENCODER
-  gst_element_register (plugin, "vaapiencode_vp8",
+  gst_element_register (plugin, "vaapivp8enc",
       GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_VP8);
 #endif
 
 #if USE_H265_ENCODER
-  gst_element_register (plugin, "vaapiencode_h265",
+  gst_element_register (plugin, "vaapih265enc",
       GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_H265);
 #endif
 

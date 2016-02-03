@@ -60,8 +60,8 @@ gst_vaapisink_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-vaapiencode_h264</FILE>
-<TITLE>vaapiencode_h264</TITLE>
+<FILE>element-vaapih264enc</FILE>
+<TITLE>vaapih264enc</TITLE>
 <SUBSECTION Standard>
 GST_IS_VAAPIENCODE_H264
 GST_IS_VAAPIENCODE_H264_CLASS
@@ -75,8 +75,8 @@ gst_vaapiencode_h264_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-vaapiencode_h265</FILE>
-<TITLE>vaapiencode_h265</TITLE>
+<FILE>element-vaapih265enc</FILE>
+<TITLE>vaapih265enc</TITLE>
 <SUBSECTION Standard>
 GST_IS_VAAPIENCODE_H265
 GST_IS_VAAPIENCODE_H265_CLASS
@@ -90,8 +90,8 @@ gst_vaapiencode_h265_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-vaapiencode_jpeg</FILE>
-<TITLE>vaapiencode_jpeg</TITLE>
+<FILE>element-vaapijpegenc</FILE>
+<TITLE>vaapijpegenc</TITLE>
 <SUBSECTION Standard>
 GST_IS_VAAPIENCODE_JPEG
 GST_IS_VAAPIENCODE_JPEG_CLASS
@@ -105,8 +105,8 @@ gst_vaapiencode_jpeg_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-vaapiencode_mpeg2</FILE>
-<TITLE>vaapiencode_mpeg2</TITLE>
+<FILE>element-vaapimpeg2enc</FILE>
+<TITLE>vaapimpeg2enc</TITLE>
 <SUBSECTION Standard>
 GST_IS_VAAPIENCODE_MPEG2
 GST_IS_VAAPIENCODE_MPEG2_CLASS
@@ -120,8 +120,8 @@ gst_vaapiencode_mpeg2_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-vaapiencode_vp8</FILE>
-<TITLE>vaapiencode_vp8</TITLE>
+<FILE>element-vaapivp8enc</FILE>
+<TITLE>vaapivp8enc</TITLE>
 <SUBSECTION Standard>
 GST_IS_VAAPIENCODE_VP8
 GST_IS_VAAPIENCODE_VP8_CLASS

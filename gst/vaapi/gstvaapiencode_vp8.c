@@ -21,7 +21,7 @@
  */
 
 /**
- * SECTION:element-vaapiencode_vp8
+ * SECTION:element-vaapivp8enc
  * @short_description: A VA-API based VP8 video encoder
  *
  * Encodes raw video streams into VP8 bitstreams.
@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- *  gst-launch-1.0 -ev videotestsrc num-buffers=60 ! timeoverlay ! vaapiencode_vp8 ! matroskamux ! filesink location=test.mkv
+ *  gst-launch-1.0 -ev videotestsrc num-buffers=60 ! timeoverlay ! vaapivp8enc ! matroskamux ! filesink location=test.mkv
  * ]|
  * </refsect2>
  */
@@ -41,7 +41,7 @@
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideomemory.h"
 
-#define GST_PLUGIN_NAME "vaapiencode_vp8"
+#define GST_PLUGIN_NAME "vaapivp8enc"
 #define GST_PLUGIN_DESC "A VA-API based VP8 video encoder"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vaapi_vp8_encode_debug);

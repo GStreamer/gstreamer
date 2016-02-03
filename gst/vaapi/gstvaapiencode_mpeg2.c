@@ -22,7 +22,7 @@
  */
 
 /**
- * SECTION:element-vaapiencode_mpeg2
+ * SECTION:element-vaapimpeg2enc
  * @short_description: A VA-API based MPEG2 video encoder
  *
  * Encodes raw video streams into MPEG2 bitstreams.
@@ -30,7 +30,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- *  gst-launch-1.0 -ev videotestsrc num-buffers=60 ! timeoverlay ! vaapiencode_mpeg2 ! matroskamux ! filesink location=test.mkv
+ *  gst-launch-1.0 -ev videotestsrc num-buffers=60 ! timeoverlay ! vaapimpeg2enc ! matroskamux ! filesink location=test.mkv
  * ]|
  * </refsect2>
  */
@@ -42,7 +42,7 @@
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideomemory.h"
 
-#define GST_PLUGIN_NAME "vaapiencode_mpeg2"
+#define GST_PLUGIN_NAME "vaapimpeg2enc"
 #define GST_PLUGIN_DESC "A VA-API based MPEG-2 video encoder"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vaapi_mpeg2_encode_debug);

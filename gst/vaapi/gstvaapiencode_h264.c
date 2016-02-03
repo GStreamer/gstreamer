@@ -22,7 +22,7 @@
  */
 
 /**
- * SECTION:element-vaapiencode_h264
+ * SECTION:element-vaapih264enc
  * @short_description: A VA-API based H.264 video encoder
  *
  * Encodes raw video streams into H.264 bitstreams.
@@ -30,7 +30,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- *  gst-launch-1.0 -ev videotestsrc num-buffers=60 ! timeoverlay ! vaapiencode_h264 ! mp4mux ! filesink location=test.mp4
+ *  gst-launch-1.0 -ev videotestsrc num-buffers=60 ! timeoverlay ! vaapih264enc ! mp4mux ! filesink location=test.mp4
  * ]|
  * </refsect2>
  */
@@ -43,7 +43,7 @@
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideomemory.h"
 
-#define GST_PLUGIN_NAME "vaapiencode_h264"
+#define GST_PLUGIN_NAME "vaapih264enc"
 #define GST_PLUGIN_DESC "A VA-API based H.264 video encoder"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vaapi_h264_encode_debug);

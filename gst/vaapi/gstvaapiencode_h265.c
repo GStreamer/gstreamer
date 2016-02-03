@@ -21,7 +21,7 @@
  */
 
 /**
- * SECTION:element-vaapiencode_h265
+ * SECTION:element-vaapih265enc
  * @short_description: A VA-API based HEVC video encoder
  *
  * Encodes raw video streams into HEVC bitstreams.
@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- *  gst-launch-1.0 -ev videotestsrc num-buffers=60 ! timeoverlay ! vaapiencode_h265 ! matroskamux ! filesink location=test.mkv
+ *  gst-launch-1.0 -ev videotestsrc num-buffers=60 ! timeoverlay ! vaapih265enc ! matroskamux ! filesink location=test.mkv
  * ]|
  * </refsect2>
  */
@@ -42,7 +42,7 @@
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideomemory.h"
 
-#define GST_PLUGIN_NAME "vaapiencode_h265"
+#define GST_PLUGIN_NAME "vaapih265enc"
 #define GST_PLUGIN_DESC "A VA-API based H.265 video encoder"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vaapi_h265_encode_debug);

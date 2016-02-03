@@ -21,7 +21,7 @@
  */
 
 /**
- * SECTION:element-vaapiencode_jpeg
+ * SECTION:element-vaapijpegenc
  * @short_description: A VA-API based JPEG image encoder
  *
  * Encodes raw images into JPEG images.
@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- *  gst-launch-1.0 -ev videotestsrc num-buffers=1 ! timeoverlay ! vaapiencode_jpeg ! filesink location=test.jpg
+ *  gst-launch-1.0 -ev videotestsrc num-buffers=1 ! timeoverlay ! vaapijpegenc ! filesink location=test.jpg
  * ]|
  * </refsect2>
  */
@@ -41,7 +41,7 @@
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideomemory.h"
 
-#define GST_PLUGIN_NAME "vaapiencode_jpeg"
+#define GST_PLUGIN_NAME "vaapijpegenc"
 #define GST_PLUGIN_DESC "A VA-API based JPEG video encoder"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vaapi_jpeg_encode_debug);
