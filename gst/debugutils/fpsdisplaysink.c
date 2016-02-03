@@ -47,7 +47,6 @@
 #include "config.h"
 #endif
 
-#include "debugutils-marshal.h"
 #include "fpsdisplaysink.h"
 
 #define DEFAULT_SIGNAL_FPS_MEASUREMENTS FALSE
@@ -203,8 +202,7 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
    */
   fpsdisplaysink_signals[SIGNAL_FPS_MEASUREMENTS] =
       g_signal_new ("fps-measurements", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      __gst_debugutils_marshal_VOID__DOUBLE_DOUBLE_DOUBLE,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 3, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
 
   gstelement_klass->change_state = fps_display_sink_change_state;
