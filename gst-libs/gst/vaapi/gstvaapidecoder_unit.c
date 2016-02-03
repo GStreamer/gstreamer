@@ -38,14 +38,14 @@
  * sub-classes.
  */
 void
-gst_vaapi_decoder_unit_init(GstVaapiDecoderUnit *unit)
+gst_vaapi_decoder_unit_init (GstVaapiDecoderUnit * unit)
 {
-    unit->flags = 0;
-    unit->size = 0;
-    unit->offset = 0;
+  unit->flags = 0;
+  unit->size = 0;
+  unit->offset = 0;
 
-    unit->parsed_info = NULL;
-    unit->parsed_info_destroy_notify = NULL;
+  unit->parsed_info = NULL;
+  unit->parsed_info_destroy_notify = NULL;
 }
 
 /**
@@ -59,9 +59,9 @@ gst_vaapi_decoder_unit_init(GstVaapiDecoderUnit *unit)
  * sub-classes.
  */
 void
-gst_vaapi_decoder_unit_clear(GstVaapiDecoderUnit *unit)
+gst_vaapi_decoder_unit_clear (GstVaapiDecoderUnit * unit)
 {
-    gst_vaapi_decoder_unit_set_parsed_info(unit, NULL, NULL);
+  gst_vaapi_decoder_unit_set_parsed_info (unit, NULL, NULL);
 }
 
 /**
@@ -77,13 +77,13 @@ gst_vaapi_decoder_unit_clear(GstVaapiDecoderUnit *unit)
  * function will be called before the @parsed_info is replaced.
  */
 void
-gst_vaapi_decoder_unit_set_parsed_info(GstVaapiDecoderUnit *unit,
+gst_vaapi_decoder_unit_set_parsed_info (GstVaapiDecoderUnit * unit,
     gpointer parsed_info, GDestroyNotify destroy_notify)
 {
-    g_return_if_fail(GST_VAAPI_IS_DECODER_UNIT(unit));
+  g_return_if_fail (GST_VAAPI_IS_DECODER_UNIT (unit));
 
-    if (unit->parsed_info && unit->parsed_info_destroy_notify)
-        unit->parsed_info_destroy_notify(unit->parsed_info);
-    unit->parsed_info = parsed_info;
-    unit->parsed_info_destroy_notify = destroy_notify;
+  if (unit->parsed_info && unit->parsed_info_destroy_notify)
+    unit->parsed_info_destroy_notify (unit->parsed_info);
+  unit->parsed_info = parsed_info;
+  unit->parsed_info_destroy_notify = destroy_notify;
 }

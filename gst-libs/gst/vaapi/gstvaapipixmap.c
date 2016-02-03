@@ -39,61 +39,61 @@
 #undef gst_vaapi_pixmap_replace
 
 static inline GstVaapiPixmap *
-gst_vaapi_pixmap_new_internal(const GstVaapiPixmapClass *pixmap_class,
-    GstVaapiDisplay *display)
+gst_vaapi_pixmap_new_internal (const GstVaapiPixmapClass * pixmap_class,
+    GstVaapiDisplay * display)
 {
-    g_assert(pixmap_class->create != NULL);
-    g_assert(pixmap_class->render != NULL);
+  g_assert (pixmap_class->create != NULL);
+  g_assert (pixmap_class->render != NULL);
 
-    return gst_vaapi_object_new(GST_VAAPI_OBJECT_CLASS(pixmap_class), display);
+  return gst_vaapi_object_new (GST_VAAPI_OBJECT_CLASS (pixmap_class), display);
 }
 
 GstVaapiPixmap *
-gst_vaapi_pixmap_new(const GstVaapiPixmapClass *pixmap_class,
-    GstVaapiDisplay *display, GstVideoFormat format, guint width, guint height)
+gst_vaapi_pixmap_new (const GstVaapiPixmapClass * pixmap_class,
+    GstVaapiDisplay * display, GstVideoFormat format, guint width, guint height)
 {
-    GstVaapiPixmap *pixmap;
+  GstVaapiPixmap *pixmap;
 
-    g_return_val_if_fail(format != GST_VIDEO_FORMAT_UNKNOWN &&
-                         format != GST_VIDEO_FORMAT_ENCODED, NULL);
-    g_return_val_if_fail(width  > 0, NULL);
-    g_return_val_if_fail(height > 0, NULL);
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN &&
+      format != GST_VIDEO_FORMAT_ENCODED, NULL);
+  g_return_val_if_fail (width > 0, NULL);
+  g_return_val_if_fail (height > 0, NULL);
 
-    pixmap = gst_vaapi_pixmap_new_internal(pixmap_class, display);
-    if (!pixmap)
-        return NULL;
+  pixmap = gst_vaapi_pixmap_new_internal (pixmap_class, display);
+  if (!pixmap)
+    return NULL;
 
-    pixmap->format = format;
-    pixmap->width  = width;
-    pixmap->height = height;
-    if (!pixmap_class->create(pixmap))
-        goto error;
-    return pixmap;
+  pixmap->format = format;
+  pixmap->width = width;
+  pixmap->height = height;
+  if (!pixmap_class->create (pixmap))
+    goto error;
+  return pixmap;
 
 error:
-    gst_vaapi_pixmap_unref_internal(pixmap);
-    return NULL;
+  gst_vaapi_pixmap_unref_internal (pixmap);
+  return NULL;
 }
 
 GstVaapiPixmap *
-gst_vaapi_pixmap_new_from_native(const GstVaapiPixmapClass *pixmap_class,
-    GstVaapiDisplay *display, gpointer native_pixmap)
+gst_vaapi_pixmap_new_from_native (const GstVaapiPixmapClass * pixmap_class,
+    GstVaapiDisplay * display, gpointer native_pixmap)
 {
-    GstVaapiPixmap *pixmap;
+  GstVaapiPixmap *pixmap;
 
-    pixmap = gst_vaapi_pixmap_new_internal(pixmap_class, display);
-    if (!pixmap)
-        return NULL;
+  pixmap = gst_vaapi_pixmap_new_internal (pixmap_class, display);
+  if (!pixmap)
+    return NULL;
 
-    GST_VAAPI_OBJECT_ID(pixmap) = GPOINTER_TO_SIZE(native_pixmap);
-    pixmap->use_foreign_pixmap = TRUE;
-    if (!pixmap_class->create(pixmap))
-        goto error;
-    return pixmap;
+  GST_VAAPI_OBJECT_ID (pixmap) = GPOINTER_TO_SIZE (native_pixmap);
+  pixmap->use_foreign_pixmap = TRUE;
+  if (!pixmap_class->create (pixmap))
+    goto error;
+  return pixmap;
 
 error:
-    gst_vaapi_pixmap_unref_internal(pixmap);
-    return NULL;
+  gst_vaapi_pixmap_unref_internal (pixmap);
+  return NULL;
 }
 
 /**
@@ -105,9 +105,9 @@ error:
  * Returns: The same @pixmap argument
  */
 GstVaapiPixmap *
-gst_vaapi_pixmap_ref(GstVaapiPixmap *pixmap)
+gst_vaapi_pixmap_ref (GstVaapiPixmap * pixmap)
 {
-    return gst_vaapi_pixmap_ref_internal(pixmap);
+  return gst_vaapi_pixmap_ref_internal (pixmap);
 }
 
 /**
@@ -118,9 +118,9 @@ gst_vaapi_pixmap_ref(GstVaapiPixmap *pixmap)
  * the reference count reaches zero, the pixmap will be free'd.
  */
 void
-gst_vaapi_pixmap_unref(GstVaapiPixmap *pixmap)
+gst_vaapi_pixmap_unref (GstVaapiPixmap * pixmap)
 {
-    gst_vaapi_pixmap_unref_internal(pixmap);
+  gst_vaapi_pixmap_unref_internal (pixmap);
 }
 
 /**
@@ -133,10 +133,10 @@ gst_vaapi_pixmap_unref(GstVaapiPixmap *pixmap)
  * valid pixmap. However, @new_pixmap can be NULL.
  */
 void
-gst_vaapi_pixmap_replace(GstVaapiPixmap **old_pixmap_ptr,
-    GstVaapiPixmap *new_pixmap)
+gst_vaapi_pixmap_replace (GstVaapiPixmap ** old_pixmap_ptr,
+    GstVaapiPixmap * new_pixmap)
 {
-    gst_vaapi_pixmap_replace_internal(old_pixmap_ptr, new_pixmap);
+  gst_vaapi_pixmap_replace_internal (old_pixmap_ptr, new_pixmap);
 }
 
 /**
@@ -148,11 +148,11 @@ gst_vaapi_pixmap_replace(GstVaapiPixmap **old_pixmap_ptr,
  * Return value: the parent #GstVaapiDisplay object
  */
 GstVaapiDisplay *
-gst_vaapi_pixmap_get_display(GstVaapiPixmap *pixmap)
+gst_vaapi_pixmap_get_display (GstVaapiPixmap * pixmap)
 {
-    g_return_val_if_fail(pixmap != NULL, NULL);
+  g_return_val_if_fail (pixmap != NULL, NULL);
 
-    return GST_VAAPI_OBJECT_DISPLAY(pixmap);
+  return GST_VAAPI_OBJECT_DISPLAY (pixmap);
 }
 
 /**
@@ -164,11 +164,11 @@ gst_vaapi_pixmap_get_display(GstVaapiPixmap *pixmap)
  * Return value: the format of the @pixmap
  */
 GstVideoFormat
-gst_vaapi_pixmap_get_format(GstVaapiPixmap *pixmap)
+gst_vaapi_pixmap_get_format (GstVaapiPixmap * pixmap)
 {
-    g_return_val_if_fail(pixmap != NULL, GST_VIDEO_FORMAT_UNKNOWN);
+  g_return_val_if_fail (pixmap != NULL, GST_VIDEO_FORMAT_UNKNOWN);
 
-    return GST_VAAPI_PIXMAP_FORMAT(pixmap);
+  return GST_VAAPI_PIXMAP_FORMAT (pixmap);
 }
 
 /**
@@ -180,11 +180,11 @@ gst_vaapi_pixmap_get_format(GstVaapiPixmap *pixmap)
  * Return value: the width of the @pixmap, in pixels
  */
 guint
-gst_vaapi_pixmap_get_width(GstVaapiPixmap *pixmap)
+gst_vaapi_pixmap_get_width (GstVaapiPixmap * pixmap)
 {
-    g_return_val_if_fail(pixmap != NULL, 0);
+  g_return_val_if_fail (pixmap != NULL, 0);
 
-    return GST_VAAPI_PIXMAP_WIDTH(pixmap);
+  return GST_VAAPI_PIXMAP_WIDTH (pixmap);
 }
 
 /**
@@ -196,11 +196,11 @@ gst_vaapi_pixmap_get_width(GstVaapiPixmap *pixmap)
  * Return value: the height of the @pixmap, in pixels
  */
 guint
-gst_vaapi_pixmap_get_height(GstVaapiPixmap *pixmap)
+gst_vaapi_pixmap_get_height (GstVaapiPixmap * pixmap)
 {
-    g_return_val_if_fail(pixmap != NULL, 0);
+  g_return_val_if_fail (pixmap != NULL, 0);
 
-    return GST_VAAPI_PIXMAP_HEIGHT(pixmap);
+  return GST_VAAPI_PIXMAP_HEIGHT (pixmap);
 }
 
 /**
@@ -212,15 +212,16 @@ gst_vaapi_pixmap_get_height(GstVaapiPixmap *pixmap)
  * Retrieves the dimensions of a #GstVaapiPixmap.
  */
 void
-gst_vaapi_pixmap_get_size(GstVaapiPixmap *pixmap, guint *width, guint *height)
+gst_vaapi_pixmap_get_size (GstVaapiPixmap * pixmap, guint * width,
+    guint * height)
 {
-    g_return_if_fail(pixmap != NULL);
+  g_return_if_fail (pixmap != NULL);
 
-    if (width)
-        *width = GST_VAAPI_PIXMAP_WIDTH(pixmap);
+  if (width)
+    *width = GST_VAAPI_PIXMAP_WIDTH (pixmap);
 
-    if (height)
-        *height = GST_VAAPI_PIXMAP_HEIGHT(pixmap);
+  if (height)
+    *height = GST_VAAPI_PIXMAP_HEIGHT (pixmap);
 }
 
 /**
@@ -240,21 +241,21 @@ gst_vaapi_pixmap_get_size(GstVaapiPixmap *pixmap, guint *width, guint *height)
  * Return value: %TRUE on success
  */
 gboolean
-gst_vaapi_pixmap_put_surface(GstVaapiPixmap *pixmap, GstVaapiSurface *surface,
-    const GstVaapiRectangle *crop_rect, guint flags)
+gst_vaapi_pixmap_put_surface (GstVaapiPixmap * pixmap,
+    GstVaapiSurface * surface, const GstVaapiRectangle * crop_rect, guint flags)
 {
-    GstVaapiRectangle src_rect;
+  GstVaapiRectangle src_rect;
 
-    g_return_val_if_fail(pixmap != NULL, FALSE);
-    g_return_val_if_fail(surface != NULL, FALSE);
+  g_return_val_if_fail (pixmap != NULL, FALSE);
+  g_return_val_if_fail (surface != NULL, FALSE);
 
-    if (!crop_rect) {
-        src_rect.x = 0;
-        src_rect.y = 0;
-        src_rect.width = GST_VAAPI_SURFACE_WIDTH(surface);
-        src_rect.height = GST_VAAPI_SURFACE_HEIGHT(surface);
-        crop_rect = &src_rect;
-    }
-    return GST_VAAPI_PIXMAP_GET_CLASS(pixmap)->render(pixmap, surface,
-        crop_rect, flags);
+  if (!crop_rect) {
+    src_rect.x = 0;
+    src_rect.y = 0;
+    src_rect.width = GST_VAAPI_SURFACE_WIDTH (surface);
+    src_rect.height = GST_VAAPI_SURFACE_HEIGHT (surface);
+    crop_rect = &src_rect;
+  }
+  return GST_VAAPI_PIXMAP_GET_CLASS (pixmap)->render (pixmap, surface,
+      crop_rect, flags);
 }

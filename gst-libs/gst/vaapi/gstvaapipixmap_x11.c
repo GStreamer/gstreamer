@@ -38,134 +38,131 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-typedef struct _GstVaapiPixmapX11Class          GstVaapiPixmapX11Class;
+typedef struct _GstVaapiPixmapX11Class GstVaapiPixmapX11Class;
 
-struct _GstVaapiPixmapX11 {
-    GstVaapiPixmap      parent_instance;
+struct _GstVaapiPixmapX11
+{
+  GstVaapiPixmap parent_instance;
 };
 
-struct _GstVaapiPixmapX11Class {
-    GstVaapiPixmapClass parent_class;
+struct _GstVaapiPixmapX11Class
+{
+  GstVaapiPixmapClass parent_class;
 };
 
 static gboolean
-gst_vaapi_pixmap_x11_create_from_xid(GstVaapiPixmap *pixmap, Pixmap xid)
+gst_vaapi_pixmap_x11_create_from_xid (GstVaapiPixmap * pixmap, Pixmap xid)
 {
-    guint depth;
-    gboolean success;
+  guint depth;
+  gboolean success;
 
-    if (!xid)
-        return FALSE;
+  if (!xid)
+    return FALSE;
 
-    GST_VAAPI_OBJECT_LOCK_DISPLAY(pixmap);
-    success = x11_get_geometry(GST_VAAPI_OBJECT_NATIVE_DISPLAY(pixmap), xid,
-        NULL, NULL, &pixmap->width, &pixmap->height, &depth);
-    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(pixmap);
-    if (!success)
-        return FALSE;
+  GST_VAAPI_OBJECT_LOCK_DISPLAY (pixmap);
+  success = x11_get_geometry (GST_VAAPI_OBJECT_NATIVE_DISPLAY (pixmap), xid,
+      NULL, NULL, &pixmap->width, &pixmap->height, &depth);
+  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (pixmap);
+  if (!success)
+    return FALSE;
 
-    pixmap->format = gst_vaapi_display_x11_get_pixmap_format(
-        GST_VAAPI_OBJECT_DISPLAY_X11(pixmap), depth);
-    if (pixmap->format == GST_VIDEO_FORMAT_UNKNOWN)
-        return FALSE;
-    return TRUE;
+  pixmap->format =
+      gst_vaapi_display_x11_get_pixmap_format (GST_VAAPI_OBJECT_DISPLAY_X11
+      (pixmap), depth);
+  if (pixmap->format == GST_VIDEO_FORMAT_UNKNOWN)
+    return FALSE;
+  return TRUE;
 }
 
 static gboolean
-gst_vaapi_pixmap_x11_create(GstVaapiPixmap *pixmap)
+gst_vaapi_pixmap_x11_create (GstVaapiPixmap * pixmap)
 {
-    GstVaapiDisplayX11 * const display =
-        GST_VAAPI_DISPLAY_X11(GST_VAAPI_OBJECT_DISPLAY(pixmap));
-    Display * const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY(display);
-    Window rootwin;
-    Pixmap xid;
-    guint depth;
+  GstVaapiDisplayX11 *const display =
+      GST_VAAPI_DISPLAY_X11 (GST_VAAPI_OBJECT_DISPLAY (pixmap));
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (display);
+  Window rootwin;
+  Pixmap xid;
+  guint depth;
 
-    if (pixmap->use_foreign_pixmap)
-        return gst_vaapi_pixmap_x11_create_from_xid(pixmap,
-            GST_VAAPI_OBJECT_ID(pixmap));
+  if (pixmap->use_foreign_pixmap)
+    return gst_vaapi_pixmap_x11_create_from_xid (pixmap,
+        GST_VAAPI_OBJECT_ID (pixmap));
 
-    depth = gst_vaapi_display_x11_get_pixmap_depth(display, pixmap->format);
-    if (!depth)
-        return FALSE;
+  depth = gst_vaapi_display_x11_get_pixmap_depth (display, pixmap->format);
+  if (!depth)
+    return FALSE;
 
-    GST_VAAPI_OBJECT_LOCK_DISPLAY(pixmap);
-    rootwin = RootWindow(dpy, DefaultScreen(dpy));
-    xid = XCreatePixmap(dpy, rootwin, pixmap->width, pixmap->height, depth);
-    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(pixmap);
+  GST_VAAPI_OBJECT_LOCK_DISPLAY (pixmap);
+  rootwin = RootWindow (dpy, DefaultScreen (dpy));
+  xid = XCreatePixmap (dpy, rootwin, pixmap->width, pixmap->height, depth);
+  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (pixmap);
 
-    GST_DEBUG("xid %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(xid));
-    GST_VAAPI_OBJECT_ID(pixmap) = xid;
-    return xid != None;
+  GST_DEBUG ("xid %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS (xid));
+  GST_VAAPI_OBJECT_ID (pixmap) = xid;
+  return xid != None;
 }
 
 static void
-gst_vaapi_pixmap_x11_destroy(GstVaapiPixmap *pixmap)
+gst_vaapi_pixmap_x11_destroy (GstVaapiPixmap * pixmap)
 {
-    const Pixmap xid = GST_VAAPI_OBJECT_ID(pixmap);
+  const Pixmap xid = GST_VAAPI_OBJECT_ID (pixmap);
 
-    if (xid) {
-        if (!pixmap->use_foreign_pixmap) {
-            GST_VAAPI_OBJECT_LOCK_DISPLAY(pixmap);
-            XFreePixmap(GST_VAAPI_OBJECT_NATIVE_DISPLAY(pixmap), xid);
-            GST_VAAPI_OBJECT_UNLOCK_DISPLAY(pixmap);
-        }
-        GST_VAAPI_OBJECT_ID(pixmap) = None;
+  if (xid) {
+    if (!pixmap->use_foreign_pixmap) {
+      GST_VAAPI_OBJECT_LOCK_DISPLAY (pixmap);
+      XFreePixmap (GST_VAAPI_OBJECT_NATIVE_DISPLAY (pixmap), xid);
+      GST_VAAPI_OBJECT_UNLOCK_DISPLAY (pixmap);
     }
+    GST_VAAPI_OBJECT_ID (pixmap) = None;
+  }
 }
 
 static gboolean
-gst_vaapi_pixmap_x11_render(GstVaapiPixmap *pixmap, GstVaapiSurface *surface,
-    const GstVaapiRectangle *crop_rect, guint flags)
+gst_vaapi_pixmap_x11_render (GstVaapiPixmap * pixmap, GstVaapiSurface * surface,
+    const GstVaapiRectangle * crop_rect, guint flags)
 {
-    VASurfaceID surface_id;
-    VAStatus status;
+  VASurfaceID surface_id;
+  VAStatus status;
 
-    surface_id = GST_VAAPI_OBJECT_ID(surface);
-    if (surface_id == VA_INVALID_ID)
-        return FALSE;
+  surface_id = GST_VAAPI_OBJECT_ID (surface);
+  if (surface_id == VA_INVALID_ID)
+    return FALSE;
 
-    GST_VAAPI_OBJECT_LOCK_DISPLAY(pixmap);
-    status = vaPutSurface(
-        GST_VAAPI_OBJECT_VADISPLAY(pixmap),
-        surface_id,
-        GST_VAAPI_OBJECT_ID(pixmap),
-        crop_rect->x, crop_rect->y,
-        crop_rect->width, crop_rect->height,
-        0, 0,
-        GST_VAAPI_PIXMAP_WIDTH(pixmap),
-        GST_VAAPI_PIXMAP_HEIGHT(pixmap),
-        NULL, 0,
-        from_GstVaapiSurfaceRenderFlags(flags)
-    );
-    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(pixmap);
-    if (!vaapi_check_status(status, "vaPutSurface() [pixmap]"))
-        return FALSE;
-    return TRUE;
+  GST_VAAPI_OBJECT_LOCK_DISPLAY (pixmap);
+  status = vaPutSurface (GST_VAAPI_OBJECT_VADISPLAY (pixmap),
+      surface_id,
+      GST_VAAPI_OBJECT_ID (pixmap),
+      crop_rect->x, crop_rect->y,
+      crop_rect->width, crop_rect->height,
+      0, 0,
+      GST_VAAPI_PIXMAP_WIDTH (pixmap),
+      GST_VAAPI_PIXMAP_HEIGHT (pixmap),
+      NULL, 0, from_GstVaapiSurfaceRenderFlags (flags)
+      );
+  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (pixmap);
+  if (!vaapi_check_status (status, "vaPutSurface() [pixmap]"))
+    return FALSE;
+  return TRUE;
 }
 
 void
-gst_vaapi_pixmap_x11_class_init(GstVaapiPixmapX11Class *klass)
+gst_vaapi_pixmap_x11_class_init (GstVaapiPixmapX11Class * klass)
 {
-    GstVaapiObjectClass * const object_class =
-        GST_VAAPI_OBJECT_CLASS(klass);
-    GstVaapiPixmapClass * const pixmap_class =
-        GST_VAAPI_PIXMAP_CLASS(klass);
+  GstVaapiObjectClass *const object_class = GST_VAAPI_OBJECT_CLASS (klass);
+  GstVaapiPixmapClass *const pixmap_class = GST_VAAPI_PIXMAP_CLASS (klass);
 
-    object_class->finalize = (GstVaapiObjectFinalizeFunc)
-        gst_vaapi_pixmap_x11_destroy;
+  object_class->finalize = (GstVaapiObjectFinalizeFunc)
+      gst_vaapi_pixmap_x11_destroy;
 
-    pixmap_class->create        = gst_vaapi_pixmap_x11_create;
-    pixmap_class->render        = gst_vaapi_pixmap_x11_render;
+  pixmap_class->create = gst_vaapi_pixmap_x11_create;
+  pixmap_class->render = gst_vaapi_pixmap_x11_render;
 }
 
 #define gst_vaapi_pixmap_x11_finalize \
     gst_vaapi_pixmap_x11_destroy
 
-GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE(
-    GstVaapiPixmapX11,
-    gst_vaapi_pixmap_x11,
-    gst_vaapi_pixmap_x11_class_init(&g_class))
+GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (GstVaapiPixmapX11,
+    gst_vaapi_pixmap_x11, gst_vaapi_pixmap_x11_class_init (&g_class))
 
 /**
  * gst_vaapi_pixmap_x11_new:
@@ -179,17 +176,17 @@ GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE(
  *
  * Return value: the newly allocated #GstVaapiPixmap object
  */
-GstVaapiPixmap *
-gst_vaapi_pixmap_x11_new(GstVaapiDisplay *display, GstVideoFormat format,
-    guint width, guint height)
+     GstVaapiPixmap *gst_vaapi_pixmap_x11_new (GstVaapiDisplay * display,
+    GstVideoFormat format, guint width, guint height)
 {
-    GST_DEBUG("new pixmap, format %s, size %ux%u",
-              gst_vaapi_video_format_to_string(format), width, height);
+  GST_DEBUG ("new pixmap, format %s, size %ux%u",
+      gst_vaapi_video_format_to_string (format), width, height);
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_X11(display), NULL);
+  g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_X11 (display), NULL);
 
-    return gst_vaapi_pixmap_new(GST_VAAPI_PIXMAP_CLASS(
-            gst_vaapi_pixmap_x11_class()), display, format, width, height);
+  return
+      gst_vaapi_pixmap_new (GST_VAAPI_PIXMAP_CLASS (gst_vaapi_pixmap_x11_class
+          ()), display, format, width, height);
 }
 
 /**
@@ -205,15 +202,16 @@ gst_vaapi_pixmap_x11_new(GstVaapiDisplay *display, GstVideoFormat format,
  * Return value: the newly allocated #GstVaapiPixmap object
  */
 GstVaapiPixmap *
-gst_vaapi_pixmap_x11_new_with_xid(GstVaapiDisplay *display, Pixmap xid)
+gst_vaapi_pixmap_x11_new_with_xid (GstVaapiDisplay * display, Pixmap xid)
 {
-    GST_DEBUG("new pixmap from xid 0x%08x", (guint)xid);
+  GST_DEBUG ("new pixmap from xid 0x%08x", (guint) xid);
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_X11(display), NULL);
-    g_return_val_if_fail(xid != None, NULL);
+  g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_X11 (display), NULL);
+  g_return_val_if_fail (xid != None, NULL);
 
-    return gst_vaapi_pixmap_new_from_native(GST_VAAPI_PIXMAP_CLASS(
-            gst_vaapi_pixmap_x11_class()), display, GSIZE_TO_POINTER(xid));
+  return
+      gst_vaapi_pixmap_new_from_native (GST_VAAPI_PIXMAP_CLASS
+      (gst_vaapi_pixmap_x11_class ()), display, GSIZE_TO_POINTER (xid));
 }
 
 /**
@@ -227,11 +225,11 @@ gst_vaapi_pixmap_x11_new_with_xid(GstVaapiDisplay *display, Pixmap xid)
  * Return value: the underlying X11 Pixmap bound to @pixmap.
  */
 Pixmap
-gst_vaapi_pixmap_x11_get_xid(GstVaapiPixmapX11 *pixmap)
+gst_vaapi_pixmap_x11_get_xid (GstVaapiPixmapX11 * pixmap)
 {
-    g_return_val_if_fail(pixmap != NULL, None);
+  g_return_val_if_fail (pixmap != NULL, None);
 
-    return GST_VAAPI_OBJECT_ID(pixmap);
+  return GST_VAAPI_OBJECT_ID (pixmap);
 }
 
 /**
@@ -245,9 +243,9 @@ gst_vaapi_pixmap_x11_get_xid(GstVaapiPixmapX11 *pixmap)
  *   caller (foreign pixmap)
  */
 gboolean
-gst_vaapi_pixmap_x11_is_foreign_xid(GstVaapiPixmapX11 *pixmap)
+gst_vaapi_pixmap_x11_is_foreign_xid (GstVaapiPixmapX11 * pixmap)
 {
-    g_return_val_if_fail(pixmap != NULL, FALSE);
+  g_return_val_if_fail (pixmap != NULL, FALSE);
 
-    return GST_VAAPI_PIXMAP(pixmap)->use_foreign_pixmap;
+  return GST_VAAPI_PIXMAP (pixmap)->use_foreign_pixmap;
 }

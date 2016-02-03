@@ -34,172 +34,153 @@
 #include "gstvaapiprofile.h"
 #include "gstvaapiworkarounds.h"
 
-typedef struct _GstVaapiCodecMap                GstVaapiCodecMap;
-typedef struct _GstVaapiProfileMap              GstVaapiProfileMap;
-typedef struct _GstVaapiEntrypointMap           GstVaapiEntrypointMap;
+typedef struct _GstVaapiCodecMap GstVaapiCodecMap;
+typedef struct _GstVaapiProfileMap GstVaapiProfileMap;
+typedef struct _GstVaapiEntrypointMap GstVaapiEntrypointMap;
 
-struct _GstVaapiCodecMap {
-    GstVaapiCodec               codec;
-    const gchar                *name;
+struct _GstVaapiCodecMap
+{
+  GstVaapiCodec codec;
+  const gchar *name;
 };
 
-struct _GstVaapiProfileMap {
-    GstVaapiProfile             profile;
-    VAProfile                   va_profile;
-    const char                 *media_str;
-    const gchar                *profile_str;
+struct _GstVaapiProfileMap
+{
+  GstVaapiProfile profile;
+  VAProfile va_profile;
+  const char *media_str;
+  const gchar *profile_str;
 };
 
-struct _GstVaapiEntrypointMap {
-    GstVaapiEntrypoint          entrypoint;
-    VAEntrypoint                va_entrypoint;
+struct _GstVaapiEntrypointMap
+{
+  GstVaapiEntrypoint entrypoint;
+  VAEntrypoint va_entrypoint;
 };
 
 /* Codecs */
 static const GstVaapiCodecMap gst_vaapi_codecs[] = {
-    { GST_VAAPI_CODEC_MPEG1,    "mpeg1" },
-    { GST_VAAPI_CODEC_MPEG2,    "mpeg2" },
-    { GST_VAAPI_CODEC_MPEG4,    "mpeg4" },
-    { GST_VAAPI_CODEC_H263,     "h263"  },
-    { GST_VAAPI_CODEC_H264,     "h264"  },
-    { GST_VAAPI_CODEC_WMV3,     "wmv3"  },
-    { GST_VAAPI_CODEC_VC1,      "vc1"   },
-    { GST_VAAPI_CODEC_JPEG,     "jpeg"  },
-    { GST_VAAPI_CODEC_VP8,      "vp8"   },
-    { GST_VAAPI_CODEC_H265,     "h265"  },
-    { GST_VAAPI_CODEC_VP9,      "vp9"   },
-    { 0, }
+  {GST_VAAPI_CODEC_MPEG1, "mpeg1"},
+  {GST_VAAPI_CODEC_MPEG2, "mpeg2"},
+  {GST_VAAPI_CODEC_MPEG4, "mpeg4"},
+  {GST_VAAPI_CODEC_H263, "h263"},
+  {GST_VAAPI_CODEC_H264, "h264"},
+  {GST_VAAPI_CODEC_WMV3, "wmv3"},
+  {GST_VAAPI_CODEC_VC1, "vc1"},
+  {GST_VAAPI_CODEC_JPEG, "jpeg"},
+  {GST_VAAPI_CODEC_VP8, "vp8"},
+  {GST_VAAPI_CODEC_H265, "h265"},
+  {GST_VAAPI_CODEC_VP9, "vp9"},
+  {0,}
 };
 
 /* Profiles */
 static const GstVaapiProfileMap gst_vaapi_profiles[] = {
-    { GST_VAAPI_PROFILE_MPEG2_SIMPLE, VAProfileMPEG2Simple,
-      "video/mpeg, mpegversion=2", "simple"
-    },
-    { GST_VAAPI_PROFILE_MPEG2_MAIN, VAProfileMPEG2Main,
-      "video/mpeg, mpegversion=2", "main"
-    },
-    { GST_VAAPI_PROFILE_MPEG4_SIMPLE, VAProfileMPEG4Simple,
-      "video/mpeg, mpegversion=4", "simple"
-    },
-    { GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE, VAProfileMPEG4AdvancedSimple,
-      "video/mpeg, mpegversion=4", "advanced-simple"
-    },
-    { GST_VAAPI_PROFILE_MPEG4_MAIN, VAProfileMPEG4Main,
-      "video/mpeg, mpegversion=4", "main"
-    },
-    { GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE, VAProfileMPEG4AdvancedSimple,
-      "video/x-divx, divxversion=5", "advanced-simple"
-    },
-    { GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE, VAProfileMPEG4AdvancedSimple,
-      "video/x-xvid", "advanced-simple"
-    },
+  {GST_VAAPI_PROFILE_MPEG2_SIMPLE, VAProfileMPEG2Simple,
+      "video/mpeg, mpegversion=2", "simple"},
+  {GST_VAAPI_PROFILE_MPEG2_MAIN, VAProfileMPEG2Main,
+      "video/mpeg, mpegversion=2", "main"},
+  {GST_VAAPI_PROFILE_MPEG4_SIMPLE, VAProfileMPEG4Simple,
+      "video/mpeg, mpegversion=4", "simple"},
+  {GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE, VAProfileMPEG4AdvancedSimple,
+      "video/mpeg, mpegversion=4", "advanced-simple"},
+  {GST_VAAPI_PROFILE_MPEG4_MAIN, VAProfileMPEG4Main,
+      "video/mpeg, mpegversion=4", "main"},
+  {GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE, VAProfileMPEG4AdvancedSimple,
+      "video/x-divx, divxversion=5", "advanced-simple"},
+  {GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE, VAProfileMPEG4AdvancedSimple,
+      "video/x-xvid", "advanced-simple"},
 #if VA_CHECK_VERSION(0,30,0)
-    { GST_VAAPI_PROFILE_H263_BASELINE, VAProfileH263Baseline,
-      "video/x-h263, variant=itu, h263version=h263", "baseline"
-    },
+  {GST_VAAPI_PROFILE_H263_BASELINE, VAProfileH263Baseline,
+      "video/x-h263, variant=itu, h263version=h263", "baseline"},
 #endif
-    { GST_VAAPI_PROFILE_H264_BASELINE, VAProfileH264Baseline,
-      "video/x-h264", "baseline"
-    },
+  {GST_VAAPI_PROFILE_H264_BASELINE, VAProfileH264Baseline,
+      "video/x-h264", "baseline"},
 #if VA_CHECK_VERSION(0,31,1)
-    { GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE,
-      VAProfileH264ConstrainedBaseline,
-      "video/x-h264", "constrained-baseline"
-    },
+  {GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE,
+        VAProfileH264ConstrainedBaseline,
+      "video/x-h264", "constrained-baseline"},
 #endif
-    { GST_VAAPI_PROFILE_H264_MAIN, VAProfileH264Main,
-      "video/x-h264", "main"
-    },
-    { GST_VAAPI_PROFILE_H264_HIGH, VAProfileH264High,
-      "video/x-h264", "high"
-    },
+  {GST_VAAPI_PROFILE_H264_MAIN, VAProfileH264Main,
+      "video/x-h264", "main"},
+  {GST_VAAPI_PROFILE_H264_HIGH, VAProfileH264High,
+      "video/x-h264", "high"},
 #if VA_CHECK_VERSION(0,35,2)
-    { GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH, VAProfileH264MultiviewHigh,
-      "video/x-h264", "multiview-high"
-    },
-    { GST_VAAPI_PROFILE_H264_STEREO_HIGH, VAProfileH264StereoHigh,
-      "video/x-h264", "stereo-high"
-    },
+  {GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH, VAProfileH264MultiviewHigh,
+      "video/x-h264", "multiview-high"},
+  {GST_VAAPI_PROFILE_H264_STEREO_HIGH, VAProfileH264StereoHigh,
+      "video/x-h264", "stereo-high"},
 #endif
-    { GST_VAAPI_PROFILE_VC1_SIMPLE, VAProfileVC1Simple,
-      "video/x-wmv, wmvversion=3", "simple"
-    },
-    { GST_VAAPI_PROFILE_VC1_MAIN, VAProfileVC1Main,
-      "video/x-wmv, wmvversion=3", "main"
-    },
-    { GST_VAAPI_PROFILE_VC1_ADVANCED, VAProfileVC1Advanced,
-      "video/x-wmv, wmvversion=3, format=(string)WVC1", "advanced"
-    },
+  {GST_VAAPI_PROFILE_VC1_SIMPLE, VAProfileVC1Simple,
+      "video/x-wmv, wmvversion=3", "simple"},
+  {GST_VAAPI_PROFILE_VC1_MAIN, VAProfileVC1Main,
+      "video/x-wmv, wmvversion=3", "main"},
+  {GST_VAAPI_PROFILE_VC1_ADVANCED, VAProfileVC1Advanced,
+      "video/x-wmv, wmvversion=3, format=(string)WVC1", "advanced"},
 #if VA_CHECK_VERSION(0,32,0)
-    { GST_VAAPI_PROFILE_JPEG_BASELINE, VAProfileJPEGBaseline,
-      "image/jpeg", NULL
-    },
+  {GST_VAAPI_PROFILE_JPEG_BASELINE, VAProfileJPEGBaseline,
+      "image/jpeg", NULL},
 #endif
 #if VA_CHECK_VERSION(0,35,0)
-    { GST_VAAPI_PROFILE_VP8, VAProfileVP8Version0_3,
-      "video/x-vp8", NULL
-    },
+  {GST_VAAPI_PROFILE_VP8, VAProfileVP8Version0_3,
+      "video/x-vp8", NULL},
 #endif
 #if VA_CHECK_VERSION(0,37,0)
-    { GST_VAAPI_PROFILE_H265_MAIN, VAProfileHEVCMain,
-      "video/x-h265", "main"
-    },
-    { GST_VAAPI_PROFILE_H265_MAIN10, VAProfileHEVCMain10,
-      "video/x-h265", "main-10"
-    },
+  {GST_VAAPI_PROFILE_H265_MAIN, VAProfileHEVCMain,
+      "video/x-h265", "main"},
+  {GST_VAAPI_PROFILE_H265_MAIN10, VAProfileHEVCMain10,
+      "video/x-h265", "main-10"},
 #endif
 #if VA_CHECK_VERSION(0,38,0)
-    { GST_VAAPI_PROFILE_VP9, VAProfileVP9Profile0,
-      "video/x-vp9", NULL
-    },
+  {GST_VAAPI_PROFILE_VP9, VAProfileVP9Profile0,
+      "video/x-vp9", NULL},
 #endif
-    { 0, }
+  {0,}
 };
 
 /* Entry-points */
 static const GstVaapiEntrypointMap gst_vaapi_entrypoints[] = {
-    { GST_VAAPI_ENTRYPOINT_VLD,            VAEntrypointVLD          },
-    { GST_VAAPI_ENTRYPOINT_IDCT,           VAEntrypointIDCT         },
-    { GST_VAAPI_ENTRYPOINT_MOCO,           VAEntrypointMoComp       },
+  {GST_VAAPI_ENTRYPOINT_VLD, VAEntrypointVLD},
+  {GST_VAAPI_ENTRYPOINT_IDCT, VAEntrypointIDCT},
+  {GST_VAAPI_ENTRYPOINT_MOCO, VAEntrypointMoComp},
 #if VA_CHECK_VERSION(0,30,0)
-    { GST_VAAPI_ENTRYPOINT_SLICE_ENCODE,   VAEntrypointEncSlice     },
-    { GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE, VAEntrypointEncPicture   },
+  {GST_VAAPI_ENTRYPOINT_SLICE_ENCODE, VAEntrypointEncSlice},
+  {GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE, VAEntrypointEncPicture},
 #endif
-    { 0, }
+  {0,}
 };
 
 static const GstVaapiCodecMap *
-get_codecs_map(GstVaapiCodec codec)
+get_codecs_map (GstVaapiCodec codec)
 {
-    const GstVaapiCodecMap *m;
+  const GstVaapiCodecMap *m;
 
-    for (m = gst_vaapi_codecs; m->codec; m++)
-        if (m->codec == codec)
-            return m;
-    return NULL;
+  for (m = gst_vaapi_codecs; m->codec; m++)
+    if (m->codec == codec)
+      return m;
+  return NULL;
 }
 
 static const GstVaapiProfileMap *
-get_profiles_map(GstVaapiProfile profile)
+get_profiles_map (GstVaapiProfile profile)
 {
-    const GstVaapiProfileMap *m;
+  const GstVaapiProfileMap *m;
 
-    for (m = gst_vaapi_profiles; m->profile; m++)
-        if (m->profile == profile)
-            return m;
-    return NULL;
+  for (m = gst_vaapi_profiles; m->profile; m++)
+    if (m->profile == profile)
+      return m;
+  return NULL;
 }
 
 static const GstVaapiEntrypointMap *
-get_entrypoints_map(GstVaapiEntrypoint entrypoint)
+get_entrypoints_map (GstVaapiEntrypoint entrypoint)
 {
-    const GstVaapiEntrypointMap *m;
+  const GstVaapiEntrypointMap *m;
 
-    for (m = gst_vaapi_entrypoints; m->entrypoint; m++)
-        if (m->entrypoint == entrypoint)
-            return m;
-    return NULL;
+  for (m = gst_vaapi_entrypoints; m->entrypoint; m++)
+    if (m->entrypoint == entrypoint)
+      return m;
+  return NULL;
 }
 
 /**
@@ -211,11 +192,11 @@ get_entrypoints_map(GstVaapiEntrypoint entrypoint)
  * Return value: the statically allocated string representation of @codec
  */
 const gchar *
-gst_vaapi_codec_get_name(GstVaapiCodec codec)
+gst_vaapi_codec_get_name (GstVaapiCodec codec)
 {
-    const GstVaapiCodecMap * const m = get_codecs_map(codec);
+  const GstVaapiCodecMap *const m = get_codecs_map (codec);
 
-    return m ? m->name : NULL;
+  return m ? m->name : NULL;
 }
 
 /**
@@ -229,14 +210,14 @@ gst_vaapi_codec_get_name(GstVaapiCodec codec)
  * Return value: the #GstVaapiProfile describing the @profile
  */
 GstVaapiProfile
-gst_vaapi_profile(VAProfile profile)
+gst_vaapi_profile (VAProfile profile)
 {
-    const GstVaapiProfileMap *m;
+  const GstVaapiProfileMap *m;
 
-    for (m = gst_vaapi_profiles; m->profile; m++)
-        if (m->va_profile == profile)
-            return m->profile;
-    return 0;
+  for (m = gst_vaapi_profiles; m->profile; m++)
+    if (m->va_profile == profile)
+      return m->profile;
+  return 0;
 }
 
 /**
@@ -248,11 +229,11 @@ gst_vaapi_profile(VAProfile profile)
  * Return value: the statically allocated string representation of @profile
  */
 const gchar *
-gst_vaapi_profile_get_name(GstVaapiProfile profile)
+gst_vaapi_profile_get_name (GstVaapiProfile profile)
 {
-    const GstVaapiProfileMap * const m = get_profiles_map(profile);
+  const GstVaapiProfileMap *const m = get_profiles_map (profile);
 
-    return m ? m->profile_str : NULL;
+  return m ? m->profile_str : NULL;
 }
 
 /**
@@ -266,11 +247,11 @@ gst_vaapi_profile_get_name(GstVaapiProfile profile)
  *   @profile media type
  */
 const gchar *
-gst_vaapi_profile_get_media_type_name(GstVaapiProfile profile)
+gst_vaapi_profile_get_media_type_name (GstVaapiProfile profile)
 {
-    const GstVaapiProfileMap * const m = get_profiles_map(profile);
+  const GstVaapiProfileMap *const m = get_profiles_map (profile);
 
-    return m ? m->media_str : NULL;
+  return m ? m->media_str : NULL;
 }
 
 /**
@@ -283,73 +264,81 @@ gst_vaapi_profile_get_media_type_name(GstVaapiProfile profile)
  * Return value: the #GstVaapiProfile described in @buffer
  */
 static GstVaapiProfile
-gst_vaapi_profile_from_codec_data_h264(GstBuffer *buffer)
+gst_vaapi_profile_from_codec_data_h264 (GstBuffer * buffer)
 {
-    /* MPEG-4 Part 15: Advanced Video Coding (AVC) file format */
-    guchar buf[3];
+  /* MPEG-4 Part 15: Advanced Video Coding (AVC) file format */
+  guchar buf[3];
 
-    if (gst_buffer_extract(buffer, 0, buf, sizeof(buf)) != sizeof(buf))
-        return 0;
-
-    if (buf[0] != 1)    /* configurationVersion = 1 */
-        return 0;
-
-    switch (buf[1]) {   /* AVCProfileIndication */
-    case 66:    return ((buf[2] & 0x40) ?
-                        GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE :
-                        GST_VAAPI_PROFILE_H264_BASELINE);
-    case 77:    return GST_VAAPI_PROFILE_H264_MAIN;
-    case 100:   return GST_VAAPI_PROFILE_H264_HIGH;
-    case 118:   return GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH;
-    case 128:   return GST_VAAPI_PROFILE_H264_STEREO_HIGH;
-
-    }
+  if (gst_buffer_extract (buffer, 0, buf, sizeof (buf)) != sizeof (buf))
     return 0;
+
+  if (buf[0] != 1)              /* configurationVersion = 1 */
+    return 0;
+
+  switch (buf[1]) {             /* AVCProfileIndication */
+    case 66:
+      return ((buf[2] & 0x40) ?
+          GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE :
+          GST_VAAPI_PROFILE_H264_BASELINE);
+    case 77:
+      return GST_VAAPI_PROFILE_H264_MAIN;
+    case 100:
+      return GST_VAAPI_PROFILE_H264_HIGH;
+    case 118:
+      return GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH;
+    case 128:
+      return GST_VAAPI_PROFILE_H264_STEREO_HIGH;
+
+  }
+  return 0;
 }
 
 static GstVaapiProfile
-gst_vaapi_profile_from_codec_data_h265(GstBuffer *buffer)
+gst_vaapi_profile_from_codec_data_h265 (GstBuffer * buffer)
 {
-   /* ISO/IEC 14496-15:  HEVC file format */
-    guchar buf[3];
+  /* ISO/IEC 14496-15:  HEVC file format */
+  guchar buf[3];
 
-    if (gst_buffer_extract(buffer, 0, buf, sizeof(buf)) != sizeof(buf))
-        return 0;
-
-    if (buf[0] != 1)    /* configurationVersion = 1 */
-        return 0;
-
-    if (buf[1] & 0xc0)  /* general_profile_space = 0 */
-        return 0;
-
-    switch (buf[1] & 0x1f) {   /* HEVCProfileIndication */
-    case 1:   return GST_VAAPI_PROFILE_H265_MAIN;
-    case 2:   return GST_VAAPI_PROFILE_H265_MAIN10;
-    case 3:   return GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE;
-    }
+  if (gst_buffer_extract (buffer, 0, buf, sizeof (buf)) != sizeof (buf))
     return 0;
+
+  if (buf[0] != 1)              /* configurationVersion = 1 */
+    return 0;
+
+  if (buf[1] & 0xc0)            /* general_profile_space = 0 */
+    return 0;
+
+  switch (buf[1] & 0x1f) {      /* HEVCProfileIndication */
+    case 1:
+      return GST_VAAPI_PROFILE_H265_MAIN;
+    case 2:
+      return GST_VAAPI_PROFILE_H265_MAIN10;
+    case 3:
+      return GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE;
+  }
+  return 0;
 }
 
 static GstVaapiProfile
-gst_vaapi_profile_from_codec_data(GstVaapiCodec codec, GstBuffer *buffer)
+gst_vaapi_profile_from_codec_data (GstVaapiCodec codec, GstBuffer * buffer)
 {
-    GstVaapiProfile profile;
+  GstVaapiProfile profile;
 
-    if (!codec || !buffer)
-        return 0;
+  if (!codec || !buffer)
+    return 0;
 
-    switch (codec) {
+  switch (codec) {
     case GST_VAAPI_CODEC_H264:
-        profile = gst_vaapi_profile_from_codec_data_h264(buffer);
-        break;
+      profile = gst_vaapi_profile_from_codec_data_h264 (buffer);
+      break;
     case GST_VAAPI_CODEC_H265:
-        profile = gst_vaapi_profile_from_codec_data_h265(buffer);
-        break;
+      profile = gst_vaapi_profile_from_codec_data_h265 (buffer);
+      break;
     default:
-        profile = 0;
-        break;
-    }
-    return profile;
+      profile = 0;
+      break;
+  }
+  return profile;
 }
 
 /**
@@ -363,62 +352,60 @@ gst_vaapi_profile_from_codec_data(GstVaapiCodec codec, GstBuffer *buffer)
  * Return value: the #GstVaapiProfile describing the @caps
  */
 GstVaapiProfile
-gst_vaapi_profile_from_caps(const GstCaps *caps)
+gst_vaapi_profile_from_caps (const GstCaps * caps)
 {
-    const GstVaapiProfileMap *m;
-    GstCaps *caps_test;
-    GstStructure *structure;
-    const gchar *profile_str;
-    GstVaapiProfile profile, best_profile;
-    GstBuffer *codec_data = NULL;
-    const gchar *name;
-    gsize namelen;
+  const GstVaapiProfileMap *m;
+  GstCaps *caps_test;
+  GstStructure *structure;
+  const gchar *profile_str;
+  GstVaapiProfile profile, best_profile;
+  GstBuffer *codec_data = NULL;
+  const gchar *name;
+  gsize namelen;
 
-    if (!caps)
-        return 0;
+  if (!caps)
+    return 0;
 
-    structure = gst_caps_get_structure(caps, 0);
-    if (!structure)
-        return 0;
+  structure = gst_caps_get_structure (caps, 0);
+  if (!structure)
+    return 0;
 
-    name    = gst_structure_get_name(structure);
-    namelen = strlen(name);
+  name = gst_structure_get_name (structure);
+  namelen = strlen (name);
 
-    profile_str = gst_structure_get_string(structure, "profile");
-    if (!profile_str) {
-        const GValue *v_codec_data;
-        v_codec_data = gst_structure_get_value(structure, "codec_data");
-        if (v_codec_data)
-            codec_data = gst_value_get_buffer(v_codec_data);
+  profile_str = gst_structure_get_string (structure, "profile");
+  if (!profile_str) {
+    const GValue *v_codec_data;
+    v_codec_data = gst_structure_get_value (structure, "codec_data");
+    if (v_codec_data)
+      codec_data = gst_value_get_buffer (v_codec_data);
+  }
+
+  profile = 0;
+  best_profile = 0;
+  for (m = gst_vaapi_profiles; !profile && m->profile; m++) {
+    if (strncmp (name, m->media_str, namelen) != 0)
+      continue;
+    caps_test = gst_caps_from_string (m->media_str);
+    if (gst_caps_is_always_compatible (caps, caps_test)) {
+      best_profile = m->profile;
+      if (profile_str && m->profile_str &&
+          strcmp (profile_str, m->profile_str) == 0)
+        profile = best_profile;
     }
-
-    profile = 0;
-    best_profile = 0;
-    for (m = gst_vaapi_profiles; !profile && m->profile; m++) {
-        if (strncmp(name, m->media_str, namelen) != 0)
-            continue;
-        caps_test = gst_caps_from_string(m->media_str);
-        if (gst_caps_is_always_compatible(caps, caps_test)) {
-            best_profile = m->profile;
-            if (profile_str && m->profile_str &&
-                strcmp(profile_str, m->profile_str) == 0)
-                profile = best_profile;
-        }
-        if (!profile) {
-            profile = gst_vaapi_profile_from_codec_data(
-                gst_vaapi_profile_get_codec(m->profile),
-                codec_data
-            );
-            if (!profile &&
-                WORKAROUND_QTDEMUX_NO_H263_PROFILES &&
-                strncmp(name, "video/x-h263", namelen) == 0) {
-                /* HACK: qtdemux does not report profiles for h263 */
-                profile = m->profile;
-            }
-        }
-        gst_caps_unref(caps_test);
+    if (!profile) {
+      profile =
+          gst_vaapi_profile_from_codec_data (gst_vaapi_profile_get_codec
+          (m->profile), codec_data);
+      if (!profile && WORKAROUND_QTDEMUX_NO_H263_PROFILES
+          && strncmp (name, "video/x-h263", namelen) == 0) {
+        /* HACK: qtdemux does not report profiles for h263 */
+        profile = m->profile;
+      }
     }
-    return profile ? profile : best_profile;
+    gst_caps_unref (caps_test);
+  }
+  return profile ? profile : best_profile;
 }
 
 /**
@@ -432,11 +419,11 @@ gst_vaapi_profile_from_caps(const GstCaps *caps)
  * Return value: the VA profile, or -1 if none was found
  */
 VAProfile
-gst_vaapi_profile_get_va_profile(GstVaapiProfile profile)
+gst_vaapi_profile_get_va_profile (GstVaapiProfile profile)
 {
-    const GstVaapiProfileMap * const m = get_profiles_map(profile);
+  const GstVaapiProfileMap *const m = get_profiles_map (profile);
 
-    return m ? m->va_profile : (VAProfile)-1;
+  return m ? m->va_profile : (VAProfile) - 1;
 }
 
 /**
@@ -449,29 +436,25 @@ gst_vaapi_profile_get_va_profile(GstVaapiProfile profile)
  * Return value: the newly allocated #GstCaps, or %NULL if none was found
  */
 GstCaps *
-gst_vaapi_profile_get_caps(GstVaapiProfile profile)
+gst_vaapi_profile_get_caps (GstVaapiProfile profile)
 {
-    const GstVaapiProfileMap *m;
-    GstCaps *out_caps, *caps;
+  const GstVaapiProfileMap *m;
+  GstCaps *out_caps, *caps;
 
-    out_caps = gst_caps_new_empty();
-    if (!out_caps)
-        return NULL;
+  out_caps = gst_caps_new_empty ();
+  if (!out_caps)
+    return NULL;
 
-    for (m = gst_vaapi_profiles; m->profile; m++) {
-        if (m->profile != profile)
-            continue;
-        caps = gst_caps_from_string(m->media_str);
-        if (!caps)
-            continue;
-        gst_caps_set_simple(
-            caps,
-            "profile", G_TYPE_STRING, m->profile_str,
-            NULL
-        );
-        out_caps = gst_caps_merge(out_caps, caps);
-    }
-    return out_caps;
+  for (m = gst_vaapi_profiles; m->profile; m++) {
+    if (m->profile != profile)
+      continue;
+    caps = gst_caps_from_string (m->media_str);
+    if (!caps)
+      continue;
+    gst_caps_set_simple (caps, "profile", G_TYPE_STRING, m->profile_str, NULL);
+    out_caps = gst_caps_merge (out_caps, caps);
+  }
+  return out_caps;
 }
 
 /**
@@ -483,26 +466,26 @@ gst_vaapi_profile_get_caps(GstVaapiProfile profile)
  * Return value: the #GstVaapiCodec from @profile
  */
 GstVaapiCodec
-gst_vaapi_profile_get_codec(GstVaapiProfile profile)
+gst_vaapi_profile_get_codec (GstVaapiProfile profile)
 {
-    GstVaapiCodec codec;
+  GstVaapiCodec codec;
 
-    switch (profile) {
+  switch (profile) {
     case GST_VAAPI_PROFILE_VC1_SIMPLE:
     case GST_VAAPI_PROFILE_VC1_MAIN:
-        codec = GST_VAAPI_CODEC_WMV3;
-        break;
+      codec = GST_VAAPI_CODEC_WMV3;
+      break;
     case GST_VAAPI_PROFILE_VC1_ADVANCED:
-        codec = GST_VAAPI_CODEC_VC1;
-        break;
+      codec = GST_VAAPI_CODEC_VC1;
+      break;
     case GST_VAAPI_PROFILE_JPEG_BASELINE:
-        codec = GST_VAAPI_CODEC_JPEG;
-        break;
+      codec = GST_VAAPI_CODEC_JPEG;
+      break;
     default:
-        codec = (guint32)profile & GST_MAKE_FOURCC(0xff,0xff,0xff,0);
-        break;
-    }
-    return codec;
+      codec = (guint32) profile & GST_MAKE_FOURCC (0xff, 0xff, 0xff, 0);
+      break;
+  }
+  return codec;
 }
 
 /**
@@ -516,14 +499,14 @@ gst_vaapi_profile_get_codec(GstVaapiProfile profile)
  * Return value: the #GstVaapiEntrypoint describing the @entrypoint
  */
 GstVaapiEntrypoint
-gst_vaapi_entrypoint(VAEntrypoint entrypoint)
+gst_vaapi_entrypoint (VAEntrypoint entrypoint)
 {
-    const GstVaapiEntrypointMap *m;
+  const GstVaapiEntrypointMap *m;
 
-    for (m = gst_vaapi_entrypoints; m->entrypoint; m++)
-        if (m->va_entrypoint == entrypoint)
-            return m->entrypoint;
-    return 0;
+  for (m = gst_vaapi_entrypoints; m->entrypoint; m++)
+    if (m->va_entrypoint == entrypoint)
+      return m->entrypoint;
+  return 0;
 }
 
 /**
@@ -537,9 +520,9 @@ gst_vaapi_entrypoint(VAEntrypoint entrypoint)
  * Return value: the VA entry-point, or -1 if none was found
  */
 VAEntrypoint
-gst_vaapi_entrypoint_get_va_entrypoint(GstVaapiEntrypoint entrypoint)
+gst_vaapi_entrypoint_get_va_entrypoint (GstVaapiEntrypoint entrypoint)
 {
-    const GstVaapiEntrypointMap * const m = get_entrypoints_map(entrypoint);
+  const GstVaapiEntrypointMap *const m = get_entrypoints_map (entrypoint);
 
-    return m ? m->va_entrypoint : (VAEntrypoint)-1;
+  return m ? m->va_entrypoint : (VAEntrypoint) - 1;
 }

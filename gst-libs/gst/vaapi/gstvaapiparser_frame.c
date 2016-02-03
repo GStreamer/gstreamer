@@ -29,40 +29,40 @@
 #include "gstvaapiparser_frame.h"
 
 static inline const GstVaapiMiniObjectClass *
-gst_vaapi_parser_frame_class(void)
+gst_vaapi_parser_frame_class (void)
 {
-    static const GstVaapiMiniObjectClass GstVaapiParserFrameClass = {
-        sizeof(GstVaapiParserFrame),
-        (GDestroyNotify)gst_vaapi_parser_frame_free
-    };
-    return &GstVaapiParserFrameClass;
+  static const GstVaapiMiniObjectClass GstVaapiParserFrameClass = {
+    sizeof (GstVaapiParserFrame),
+    (GDestroyNotify) gst_vaapi_parser_frame_free
+  };
+  return &GstVaapiParserFrameClass;
 }
 
 static inline gboolean
-alloc_units(GArray **units_ptr, guint size)
+alloc_units (GArray ** units_ptr, guint size)
 {
-    GArray *units;
+  GArray *units;
 
-    units = g_array_sized_new(FALSE, FALSE, sizeof(GstVaapiDecoderUnit), size);
-    *units_ptr = units;
-    return units != NULL;
+  units = g_array_sized_new (FALSE, FALSE, sizeof (GstVaapiDecoderUnit), size);
+  *units_ptr = units;
+  return units != NULL;
 }
 
 static inline void
-free_units(GArray **units_ptr)
+free_units (GArray ** units_ptr)
 {
-    GArray * const units = *units_ptr;
-    guint i;
+  GArray *const units = *units_ptr;
+  guint i;
 
-    if (units) {
-        for (i = 0; i < units->len; i++) {
-            GstVaapiDecoderUnit * const unit =
-                &g_array_index(units, GstVaapiDecoderUnit, i);
-            gst_vaapi_decoder_unit_clear(unit);
-        }
-        g_array_free(units, TRUE);
-        *units_ptr = NULL;
+  if (units) {
+    for (i = 0; i < units->len; i++) {
+      GstVaapiDecoderUnit *const unit =
+          &g_array_index (units, GstVaapiDecoderUnit, i);
+      gst_vaapi_decoder_unit_clear (unit);
     }
+    g_array_free (units, TRUE);
+    *units_ptr = NULL;
+  }
 }
 
 /**
@@ -75,32 +75,32 @@ free_units(GArray **units_ptr)
  * Returns: The newly allocated #GstVaapiParserFrame
  */
 GstVaapiParserFrame *
-gst_vaapi_parser_frame_new(guint width, guint height)
+gst_vaapi_parser_frame_new (guint width, guint height)
 {
-    GstVaapiParserFrame *frame;
-    guint num_slices;
+  GstVaapiParserFrame *frame;
+  guint num_slices;
 
-    frame = (GstVaapiParserFrame *)
-        gst_vaapi_mini_object_new(gst_vaapi_parser_frame_class());
-    if (!frame)
-        return NULL;
+  frame = (GstVaapiParserFrame *)
+      gst_vaapi_mini_object_new (gst_vaapi_parser_frame_class ());
+  if (!frame)
+    return NULL;
 
-    if (!height)
-        height = 1088;
-    num_slices = (height + 15) / 16;
+  if (!height)
+    height = 1088;
+  num_slices = (height + 15) / 16;
 
-    if (!alloc_units(&frame->pre_units, 16))
-        goto error;
-    if (!alloc_units(&frame->units, num_slices))
-        goto error;
-    if (!alloc_units(&frame->post_units, 1))
-        goto error;
-    frame->output_offset = 0;
-    return frame;
+  if (!alloc_units (&frame->pre_units, 16))
+    goto error;
+  if (!alloc_units (&frame->units, num_slices))
+    goto error;
+  if (!alloc_units (&frame->post_units, 1))
+    goto error;
+  frame->output_offset = 0;
+  return frame;
 
 error:
-    gst_vaapi_parser_frame_unref(frame);
-    return NULL;
+  gst_vaapi_parser_frame_unref (frame);
+  return NULL;
 }
 
 /**
@@ -114,11 +114,11 @@ error:
  * sub-classes.
  */
 void
-gst_vaapi_parser_frame_free(GstVaapiParserFrame *frame)
+gst_vaapi_parser_frame_free (GstVaapiParserFrame * frame)
 {
-    free_units(&frame->units);
-    free_units(&frame->pre_units);
-    free_units(&frame->post_units);
+  free_units (&frame->units);
+  free_units (&frame->pre_units);
+  free_units (&frame->post_units);
 }
 
 /**
@@ -129,19 +129,19 @@ gst_vaapi_parser_frame_free(GstVaapiParserFrame *frame)
  * Appends unit to the @frame.
  */
 void
-gst_vaapi_parser_frame_append_unit(GstVaapiParserFrame *frame,
-    GstVaapiDecoderUnit *unit)
+gst_vaapi_parser_frame_append_unit (GstVaapiParserFrame * frame,
+    GstVaapiDecoderUnit * unit)
 {
-    GArray **unit_array_ptr;
+  GArray **unit_array_ptr;
 
-    unit->offset = frame->output_offset;
-    frame->output_offset += unit->size;
+  unit->offset = frame->output_offset;
+  frame->output_offset += unit->size;
 
-    if (GST_VAAPI_DECODER_UNIT_IS_SLICE(unit))
-        unit_array_ptr = &frame->units;
-    else if (GST_VAAPI_DECODER_UNIT_IS_FRAME_END(unit))
-        unit_array_ptr = &frame->post_units;
-    else
-        unit_array_ptr = &frame->pre_units;
-    g_array_append_val(*unit_array_ptr, *unit);
+  if (GST_VAAPI_DECODER_UNIT_IS_SLICE (unit))
+    unit_array_ptr = &frame->units;
+  else if (GST_VAAPI_DECODER_UNIT_IS_FRAME_END (unit))
+    unit_array_ptr = &frame->post_units;
+  else
+    unit_array_ptr = &frame->pre_units;
+  g_array_append_val (*unit_array_ptr, *unit);
 }
