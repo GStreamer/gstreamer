@@ -133,8 +133,8 @@ gst_opus_dec_class_init (GstOpusDecClass * klass)
       "Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>");
   g_object_class_install_property (gobject_class, PROP_USE_INBAND_FEC,
       g_param_spec_boolean ("use-inband-fec", "Use in-band FEC",
-          "Use forward error correction if available", DEFAULT_USE_INBAND_FEC,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Use forward error correction if available (needs PLC enabled)",
+          DEFAULT_USE_INBAND_FEC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_APPLY_GAIN,
       g_param_spec_boolean ("apply-gain", "Apply gain",
@@ -367,7 +367,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   GstFlowReturn res = GST_FLOW_OK;
   gsize size;
   guint8 *data;
-  GstBuffer *outbuf;
+  GstBuffer *outbuf, *bufd;
   gint16 *out_data;
   int n, err;
   int samples;
@@ -429,6 +429,9 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
       && gst_buffer_get_size (dec->last_buffer) >
       0) ? dec->last_buffer : buffer;
 
+  /* That's the buffer we get duration from */
+  bufd = dec->use_inband_fec ? dec->last_buffer : buffer;
+
   if (buf && gst_buffer_get_size (buf) > 0) {
     gst_buffer_map (buf, &map, GST_MAP_READ);
     data = map.data;
@@ -441,10 +444,10 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     size = 0;
   }
 
-  if (gst_buffer_get_size (buf) == 0) {
+  if (gst_buffer_get_size (bufd) == 0) {
     GstClockTime const opus_plc_alignment = 2500 * GST_USECOND;
     GstClockTime aligned_missing_duration;
-    GstClockTime missing_duration = GST_BUFFER_DURATION (buf);
+    GstClockTime missing_duration = GST_BUFFER_DURATION (bufd);
 
     GST_DEBUG_OBJECT (dec,
         "missing buffer, doing PLC duration %" GST_TIME_FORMAT
@@ -455,9 +458,10 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     missing_duration += dec->leftover_plc_duration;
 
     /* align the combined buffer and leftover PLC duration to multiples
-     * of 2.5ms, always rounding down, and store excess duration for later */
+     * of 2.5ms, rounding to nearest, and store excess duration for later */
     aligned_missing_duration =
-        (missing_duration / opus_plc_alignment) * opus_plc_alignment;
+        ((missing_duration +
+            opus_plc_alignment / 2) / opus_plc_alignment) * opus_plc_alignment;
     dec->leftover_plc_duration = missing_duration - aligned_missing_duration;
 
     /* Opus' PLC cannot operate with less than 2.5ms; skip PLC
