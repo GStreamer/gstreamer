@@ -44,6 +44,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
 #include "gstopusheader.h"
 #include "gstopuscommon.h"
 #include "gstopusdec.h"
@@ -102,6 +103,7 @@ static void gst_opus_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_opus_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
+static GstCaps *gst_opus_dec_getcaps (GstAudioDecoder * dec, GstCaps * filter);
 
 
 static void
@@ -122,6 +124,7 @@ gst_opus_dec_class_init (GstOpusDecClass * klass)
   adclass->stop = GST_DEBUG_FUNCPTR (gst_opus_dec_stop);
   adclass->handle_frame = GST_DEBUG_FUNCPTR (gst_opus_dec_handle_frame);
   adclass->set_format = GST_DEBUG_FUNCPTR (gst_opus_dec_set_format);
+  adclass->getcaps = GST_DEBUG_FUNCPTR (gst_opus_dec_getcaps);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&opus_dec_src_factory));
@@ -223,7 +226,7 @@ gst_opus_dec_get_r128_volume (gint16 r128_gain)
   return DB_TO_LINEAR (gst_opus_dec_get_r128_gain (r128_gain));
 }
 
-static void
+static gboolean
 gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
 {
   GstCaps *caps = gst_pad_get_allowed_caps (GST_AUDIO_DECODER_SRC_PAD (dec));
@@ -231,27 +234,56 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
   GstAudioInfo info;
 
   if (caps) {
-    gint rate, channels;
+    gint rate = dec->sample_rate, channels = dec->n_channels;
+    GstCaps *constraint, *inter;
 
-    caps = gst_caps_truncate (caps);
-    caps = gst_caps_make_writable (caps);
-    s = gst_caps_get_structure (caps, 0);
+    constraint = gst_caps_from_string ("audio/x-raw");
+    if (dec->sample_rate == 0 || dec->sample_rate == 48000) {
+      gst_caps_set_simple (constraint, "rate", G_TYPE_INT, 48000, NULL);
+    } else {
+      GValue v = { 0 }
+      , l = {
+      0};
+      g_value_init (&l, GST_TYPE_LIST);
+      g_value_init (&v, G_TYPE_INT);
+      g_value_set_int (&v, dec->sample_rate);
+      gst_value_list_append_value (&l, &v);
+      g_value_set_int (&v, 48000);
+      gst_value_list_append_value (&l, &v);
+      gst_caps_set_value (constraint, "rate", &l);
+      g_value_unset (&v);
+      g_value_unset (&l);
+    }
+    if (dec->n_channels <= 2) { /* including 0 */
+      gst_caps_set_simple (constraint, "channels", GST_TYPE_INT_RANGE, 1, 2,
+          NULL);
+    } else {
+      gst_caps_set_simple (constraint, "channels", G_TYPE_INT, dec->n_channels,
+          NULL);
+    }
 
-    if (gst_structure_has_field (s, "rate"))
-      gst_structure_fixate_field_nearest_int (s, "rate", dec->sample_rate);
-    else
-      gst_structure_set (s, "rate", G_TYPE_INT, dec->sample_rate, NULL);
+    inter = gst_caps_intersect (caps, constraint);
+    gst_caps_unref (constraint);
+
+    if (gst_caps_is_empty (inter)) {
+      GST_DEBUG_OBJECT (dec, "Empty intersection, failed to negotiate");
+      gst_caps_unref (inter);
+      return FALSE;
+    }
+
+    inter = gst_caps_truncate (inter);
+    s = gst_caps_get_structure (inter, 0);
+    rate = dec->sample_rate > 0 ? dec->sample_rate : 48000;
+    gst_structure_fixate_field_nearest_int (s, "rate", dec->sample_rate);
     gst_structure_get_int (s, "rate", &rate);
-    dec->sample_rate = rate;
-
-    if (gst_structure_has_field (s, "channels"))
-      gst_structure_fixate_field_nearest_int (s, "channels", dec->n_channels);
-    else
-      gst_structure_set (s, "channels", G_TYPE_INT, dec->n_channels, NULL);
+    channels = dec->n_channels > 0 ? dec->n_channels : 2;
+    gst_structure_fixate_field_nearest_int (s, "channels", dec->n_channels);
     gst_structure_get_int (s, "channels", &channels);
-    dec->n_channels = channels;
 
-    gst_caps_unref (caps);
+    gst_caps_unref (inter);
+
+    dec->sample_rate = rate;
+    dec->n_channels = channels;
   }
 
   if (dec->n_channels == 0) {
@@ -288,6 +320,8 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
   }
 
   dec->info = info;
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -349,7 +383,8 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
         dec->channel_mapping_family);
   }
 
-  gst_opus_dec_negotiate (dec, posn);
+  if (!gst_opus_dec_negotiate (dec, posn))
+    return GST_FLOW_NOT_NEGOTIATED;
 
   return GST_FLOW_OK;
 }
@@ -389,7 +424,15 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
       dec->n_streams = 1;
       dec->n_stereo_streams = 1;
 
-      gst_opus_dec_negotiate (dec, NULL);
+      if (!gst_opus_dec_negotiate (dec, NULL))
+        return GST_FLOW_NOT_NEGOTIATED;
+    }
+
+    if (dec->n_channels == 2 && dec->n_streams == 1
+        && dec->n_stereo_streams == 0) {
+      /* if we are automatically decoding 2 channels, but only have
+         a single encoded one, direct both channels to it */
+      dec->channel_mapping[1] = 0;
     }
 
     GST_DEBUG_OBJECT (dec, "Creating decoder with %d channels, %d Hz",
@@ -688,7 +731,8 @@ gst_opus_dec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
     if (dec->channel_mapping_family == 1 && dec->n_channels <= 8)
       posn = gst_opus_channel_positions[dec->n_channels - 1];
 
-    gst_opus_dec_negotiate (dec, posn);
+    if (!gst_opus_dec_negotiate (dec, posn))
+      return FALSE;
   }
 
 done:
@@ -816,4 +860,47 @@ gst_opus_dec_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+GstCaps *
+gst_opus_dec_getcaps (GstAudioDecoder * dec, GstCaps * filter)
+{
+  GstCaps *caps;
+  unsigned n;
+  int channels;
+
+  if (filter) {
+    filter = gst_caps_copy (filter);
+    for (n = 0; n < gst_caps_get_size (filter); ++n) {
+      GstStructure *s = gst_caps_get_structure (filter, n);
+      if (gst_structure_get_int (s, "channels", &channels)) {
+        if (channels == 1 || channels == 2) {
+          GValue v = { 0 };
+          g_value_init (&v, GST_TYPE_INT_RANGE);
+          gst_value_set_int_range (&v, 1, 2);
+          gst_structure_set_value (s, "channels", &v);
+          g_value_unset (&v);
+        }
+      }
+    }
+  }
+  caps = gst_audio_decoder_proxy_getcaps (dec, NULL, filter);
+  if (filter)
+    gst_caps_unref (filter);
+  if (caps) {
+    caps = gst_caps_copy (caps);
+    for (n = 0; n < gst_caps_get_size (caps); ++n) {
+      GstStructure *s = gst_caps_get_structure (caps, n);
+      if (gst_structure_get_int (s, "channels", &channels)) {
+        if (channels == 1 || channels == 2) {
+          GValue v = { 0 };
+          g_value_init (&v, GST_TYPE_INT_RANGE);
+          gst_value_set_int_range (&v, 1, 2);
+          gst_structure_set_value (s, "channels", &v);
+          g_value_unset (&v);
+        }
+      }
+    }
+  }
+  return caps;
 }
