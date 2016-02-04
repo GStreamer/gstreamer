@@ -621,6 +621,9 @@ G_STMT_START {                                                  \
   } \
 } G_STMT_END
 
+#define tcase_skip_broken_loop_test(chain,test_func,a,b)        \
+  tcase_skip_broken_test (chain, test_func)
+
 G_END_DECLS
 
 #endif /* __GST_CHECK_H__ */
