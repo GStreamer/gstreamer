@@ -1341,11 +1341,20 @@ get_compatible_profile_caps (GstH265SPS * sps)
 static void
 ensure_caps_profile (GstH265Parse * h265parse, GstCaps * caps, GstH265SPS * sps)
 {
-  GstCaps *filter_caps, *peer_caps, *compat_caps;
+  GstCaps *peer_caps, *compat_caps;
 
-  filter_caps = gst_caps_new_empty_simple ("video/x-h265");
-  peer_caps =
-      gst_pad_peer_query_caps (GST_BASE_PARSE_SRC_PAD (h265parse), filter_caps);
+  peer_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h265parse));
+  if (!peer_caps || !gst_caps_can_intersect (caps, peer_caps)) {
+    GstCaps *filter_caps = gst_caps_new_empty_simple ("video/x-h265");
+
+    if (peer_caps)
+      gst_caps_unref (peer_caps);
+    peer_caps =
+        gst_pad_peer_query_caps (GST_BASE_PARSE_SRC_PAD (h265parse),
+        filter_caps);
+
+    gst_caps_unref (filter_caps);
+  }
 
   if (peer_caps && !gst_caps_can_intersect (caps, peer_caps)) {
     GstStructure *structure;
@@ -1376,7 +1385,6 @@ ensure_caps_profile (GstH265Parse * h265parse, GstCaps * caps, GstH265SPS * sps)
   }
   if (peer_caps)
     gst_caps_unref (peer_caps);
-  gst_caps_unref (filter_caps);
 }
 
 static void
@@ -1558,15 +1566,22 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
 
     src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h265parse));
 
-    if (src_caps
-        && gst_structure_has_field (gst_caps_get_structure (src_caps, 0),
-            "codec_data")) {
+    if (src_caps) {
       /* use codec data from old caps for comparison; we don't want to resend caps
          if everything is same except codec data; */
-      gst_caps_set_value (caps, "codec_data",
-          gst_structure_get_value (gst_caps_get_structure (src_caps, 0),
-              "codec_data"));
+      if (gst_structure_has_field (gst_caps_get_structure (src_caps, 0),
+              "codec_data")) {
+        gst_caps_set_value (caps, "codec_data",
+            gst_structure_get_value (gst_caps_get_structure (src_caps, 0),
+                "codec_data"));
+      } else if (!buf) {
+        GstStructure *s;
+        /* remove any left-over codec-data hanging around */
+        s = gst_caps_get_structure (caps, 0);
+        gst_structure_remove_field (s, "codec_data");
+      }
     }
+
     if (!(src_caps && gst_caps_is_strictly_equal (src_caps, caps))) {
       /* update codec data to new value */
       if (buf) {
