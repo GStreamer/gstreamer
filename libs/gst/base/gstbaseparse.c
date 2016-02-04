@@ -788,6 +788,8 @@ gst_base_parse_update_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   if (G_UNLIKELY (parse->priv->discont)) {
     GST_DEBUG_OBJECT (parse, "marking DISCONT");
     GST_BUFFER_FLAG_SET (frame->buffer, GST_BUFFER_FLAG_DISCONT);
+  } else {
+    GST_BUFFER_FLAG_UNSET (frame->buffer, GST_BUFFER_FLAG_DISCONT);
   }
 
   if (parse->priv->prev_offset != parse->priv->offset || parse->priv->new_frame) {
