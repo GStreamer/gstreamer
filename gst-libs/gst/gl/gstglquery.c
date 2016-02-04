@@ -156,8 +156,7 @@ gst_gl_query_unset (GstGLQuery * query)
   if (query->query_id)
     gl->DeleteQueries (1, &query->query_id);
 
-  if (query->context)
-    gst_object_unref (query->context);
+  gst_object_unref (query->context);
 }
 
 GstGLQuery *
