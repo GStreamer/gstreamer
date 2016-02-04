@@ -239,8 +239,9 @@ _debug_type_to_string (GLenum type)
 }
 
 /* silence the compiler... */
-void GSTGLAPI _gst_gl_debug_callback (GLenum source, GLenum type, GLuint id,
-    GLenum severity, GLsizei length, const gchar * message, gpointer user_data);
+G_GNUC_INTERNAL void GSTGLAPI _gst_gl_debug_callback (GLenum source,
+    GLenum type, GLuint id, GLenum severity, GLsizei length,
+    const gchar * message, gpointer user_data);
 
 void GSTGLAPI
 _gst_gl_debug_callback (GLenum source, GLenum type, GLuint id, GLenum severity,

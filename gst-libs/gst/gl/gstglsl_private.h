@@ -55,8 +55,8 @@ typedef struct _GstGLSLFuncs
       GLsizei * length, char *log);
 } GstGLSLFuncs;
 
-gboolean _gst_glsl_funcs_fill (GstGLSLFuncs * vtable, GstGLContext * context);
-const gchar * _gst_glsl_shader_string_find_version (const gchar * str);
+G_GNUC_INTERNAL gboolean _gst_glsl_funcs_fill (GstGLSLFuncs * vtable, GstGLContext * context);
+G_GNUC_INTERNAL const gchar * _gst_glsl_shader_string_find_version (const gchar * str);
 
 G_END_DECLS
 

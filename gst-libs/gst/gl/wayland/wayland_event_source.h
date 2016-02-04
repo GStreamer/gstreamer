@@ -36,7 +36,7 @@
 GSource * wayland_event_source_new (struct wl_display *display,
                                     struct wl_event_queue *queue);
 
-gint      gst_gl_wl_display_roundtrip_queue (struct wl_display *display,
+G_GNUC_INTERNAL gint      gst_gl_wl_display_roundtrip_queue (struct wl_display *display,
                                              struct wl_event_queue *queue);
 
 #endif /* __WAYLAND_EVENT_SOURCE_H__ */
