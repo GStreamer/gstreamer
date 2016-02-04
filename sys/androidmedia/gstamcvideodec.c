@@ -914,11 +914,17 @@ _gl_sync_release_buffer (struct gl_sync *sync, gboolean render)
           "frames for frame %u", sync, diff, sync->gl_frame_no);
     }
 
-    GST_TRACE ("gl_sync %p release_output_buffer idx %u frame %u", sync,
-        sync->buffer_idx, sync->gl_frame_no);
+    GST_TRACE ("gl_sync %p release_output_buffer idx %u frame %u render %s",
+        sync, sync->buffer_idx, sync->gl_frame_no, render ? "TRUE" : "FALSE");
 
     /* Release the frame into the surface */
     sync->sink->gl_released_frame_count++;
+    if (!render) {
+      /* Advance the ready counter ourselves if we aren't going to render
+       * and therefore receive a listener callback */
+      sync->sink->gl_ready_frame_count++;
+    }
+
     if (!gst_amc_codec_release_output_buffer (sync->sink->codec,
             sync->buffer_idx, render, &error)) {
       GST_ERROR_OBJECT (sync->sink,
