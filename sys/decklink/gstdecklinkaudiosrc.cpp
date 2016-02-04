@@ -556,9 +556,10 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
           self->next_offset, start_offset);
     GST_BUFFER_FLAG_SET (*buffer, GST_BUFFER_FLAG_DISCONT);
     self->next_offset = end_offset;
+    // Got a discont and adjusted, reset the discont_time marker.
+    self->discont_time = GST_CLOCK_TIME_NONE;
   } else {
     // No discont, just keep counting
-    self->discont_time = GST_CLOCK_TIME_NONE;
     timestamp =
         gst_util_uint64_scale (self->next_offset, GST_SECOND, self->info.rate);
     self->next_offset += sample_count;
