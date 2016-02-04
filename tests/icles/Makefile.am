@@ -88,6 +88,10 @@ test_scale_SOURCES = test-scale.c
 test_scale_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 test_scale_LDADD = $(GST_LIBS) $(LIBM)
 
+test_resample_SOURCES = test-resample.c
+test_resample_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+test_resample_LDADD = $(GST_LIBS) $(LIBM)
+
 test_box_SOURCES = test-box.c
 test_box_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 test_box_LDADD = $(GST_LIBS) $(LIBM)
@@ -98,4 +102,5 @@ test_reverseplay_LDADD = $(GST_LIBS) $(LIBM)
 
 noinst_PROGRAMS = $(X_TESTS) $(PANGO_TESTS) \
 	audio-trickplay playbin-text position-formats stress-playbin \
-	test-scale test-box test-effect-switch test-overlay-blending test-reverseplay
+	test-scale test-box test-effect-switch test-overlay-blending test-reverseplay \
+	test-resample
