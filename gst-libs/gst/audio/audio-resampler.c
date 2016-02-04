@@ -148,6 +148,7 @@ static const BlackmanQualityMap blackman_qualities[] = {
 #define DEFAULT_QUALITY GST_AUDIO_RESAMPLER_QUALITY_DEFAULT
 #define DEFAULT_OPT_CUBIC_B 1.0
 #define DEFAULT_OPT_CUBIC_C 0.0
+#define DEFAULT_OPT_MAX_PHASE_ERROR 0.05
 
 static gdouble
 get_opt_double (GstStructure * options, const gchar * name, gdouble def)
@@ -181,6 +182,8 @@ get_opt_int (GstStructure * options, const gchar * name, gint def)
     GST_AUDIO_RESAMPLER_OPT_CUBIC_C, DEFAULT_OPT_CUBIC_C)
 #define GET_OPT_N_TAPS(options,def) get_opt_int(options, \
     GST_AUDIO_RESAMPLER_OPT_N_TAPS, def)
+#define GET_OPT_MAX_PHASE_ERROR(options) get_opt_double(options, \
+    GST_AUDIO_RESAMPLER_OPT_MAX_PHASE_ERROR, DEFAULT_OPT_MAX_PHASE_ERROR)
 
 #include "dbesi0.c"
 #define bessel dbesi0
@@ -991,6 +994,7 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
     gint in_rate, gint out_rate, GstStructure * options)
 {
   gint gcd, samp_phase, old_n_taps;
+  gdouble max_error;
 
   g_return_val_if_fail (resampler != NULL, FALSE);
 
@@ -1008,15 +1012,19 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
 
   gcd = gst_util_greatest_common_divisor (in_rate, out_rate);
 
-  if (gcd > 1) {
-    gdouble ph1 = (gdouble) samp_phase / out_rate;
-    gint factor = 2;
+  max_error = GET_OPT_MAX_PHASE_ERROR (resampler->options);
 
-    /* reduce the factor until we have a phase error of less than 10% */
-    do {
+  if (max_error < 1.0e-8) {
+    gcd = gst_util_greatest_common_divisor (gcd, samp_phase);
+  } else {
+    while (gcd > 1) {
+      gdouble ph1 = (gdouble) samp_phase / out_rate;
+      gint factor = 2;
+
+      /* reduce the factor until we have a phase error of less than 10% */
       gdouble ph2 = (gdouble) (samp_phase / gcd) / (out_rate / gcd);
 
-      if (fabs (ph1 - ph2) < 0.1)
+      if (fabs (ph1 - ph2) < max_error)
         break;
 
       while (gcd % factor != 0)
@@ -1024,8 +1032,7 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
       gcd /= factor;
 
       GST_INFO ("divide by factor %d, gcd %d", factor, gcd);
-
-    } while (gcd > 1);
+    }
   }
 
   GST_INFO ("phase %d, out_rate %d, in_rate %d, gcd %d", samp_phase, out_rate,

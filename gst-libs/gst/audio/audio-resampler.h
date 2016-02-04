@@ -113,6 +113,15 @@ typedef enum {
 #define GST_AUDIO_RESAMPLER_OPT_FILTER_MODE_THRESHOLD "GstAudioResampler.filter-mode-threshold"
 
 /**
+ * GST_AUDIO_RESAMPLER_OPT_MAX_PHASE_ERROR:
+ *
+ * G_TYPE_DOUBLE: The maximum allowed phase error when switching sample
+ * rates.
+ * 0.02 is the default.
+ */
+#define GST_AUDIO_RESAMPLER_OPT_MAX_PHASE_ERROR "GstAudioResampler.max-phase-error"
+
+/**
  * GstAudioResamplerMethod:
  * @GST_AUDIO_RESAMPLER_METHOD_NEAREST: Duplicates the samples when
  *    upsampling and drops when downsampling
