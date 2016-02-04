@@ -53,6 +53,7 @@
 #include <gst/audio/audio.h>
 #include <gst/riff/riff-media.h>
 #include <gst/tag/tag.h>
+#include <gst/pbutils/codec-utils.h>
 
 #include "matroska-mux.h"
 #include "matroska-ids.h"
@@ -1687,6 +1688,48 @@ wrong_content_type:
   }
 }
 
+static gboolean
+opus_make_codecdata (GstMatroskaTrackContext * context, GstCaps * caps)
+{
+  guint32 rate;
+  guint8 channels;
+  guint8 channel_mapping_family;
+  guint8 stream_count, coupled_count, channel_mapping[256];
+  GstBuffer *buffer;
+  GstMapInfo map;
+
+  /* Opus headers are not in-band */
+  context->xiph_headers_to_skip = 0;
+
+  context->codec_delay = 0;
+  context->seek_preroll = 80 * GST_MSECOND;
+
+  if (!gst_codec_utils_opus_parse_caps (caps, &rate, &channels,
+          &channel_mapping_family, &stream_count, &coupled_count,
+          channel_mapping)) {
+    GST_WARNING ("Failed to parse caps for Opus");
+    return FALSE;
+  }
+
+  buffer =
+      gst_codec_utils_opus_create_header (rate, channels,
+      channel_mapping_family, stream_count, coupled_count, channel_mapping, 0,
+      0);
+  if (!buffer) {
+    GST_WARNING ("Failed to create Opus header from caps");
+    return FALSE;
+  }
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  context->codec_priv_size = map.size;
+  context->codec_priv = g_malloc (context->codec_priv_size);
+  memcpy (context->codec_priv, map.data, map.size);
+  gst_buffer_unmap (buffer, &map);
+  gst_buffer_unref (buffer);
+
+  return TRUE;
+}
+
 /**
  * gst_matroska_mux_audio_pad_setcaps:
  * @pad: Pad which got the caps.
@@ -1905,6 +1948,15 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     if (streamheader) {
       gst_matroska_mux_free_codec_priv (context);
       if (!opus_streamheader_to_codecdata (streamheader, context)) {
+        GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
+            ("opus stream headers missing or malformed"));
+        goto refuse_caps;
+      }
+    } else {
+      /* no streamheader, but we need to have one, so we make one up
+         based on caps */
+      gst_matroska_mux_free_codec_priv (context);
+      if (!opus_make_codecdata (context, caps)) {
         GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
             ("opus stream headers missing or malformed"));
         goto refuse_caps;
