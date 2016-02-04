@@ -113,6 +113,8 @@ gst_gl_base_filter_class_init (GstGLBaseFilterClass * klass)
 static void
 gst_gl_base_filter_init (GstGLBaseFilter * filter)
 {
+  gst_base_transform_set_qos_enabled (GST_BASE_TRANSFORM (filter), TRUE);
+
   filter->priv = GST_GL_BASE_FILTER_GET_PRIVATE (filter);
 }
 
