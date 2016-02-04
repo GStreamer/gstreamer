@@ -259,7 +259,7 @@ get_kaiser_tap (GstAudioResampler * resampler, gdouble x)
 
 #define CONVERT_TAPS(type, precision)                                   \
 G_STMT_START {                                                          \
-  type *taps = res = t->taps = (type *) ((gint8*)resampler->coeff + j * resampler->cstride);        \
+  type *taps = res = (type *) ((gint8*)resampler->coeff + j * resampler->cstride);        \
   gdouble multiplier = (1 << precision);                                \
   gint i, j;                                                            \
   gdouble offset, l_offset, h_offset;                                   \
@@ -304,6 +304,7 @@ make_taps (GstAudioResampler * resampler, Tap * t, gint j)
   gdouble x, weight = 0.0;
   gdouble *tmpcoeff = resampler->tmpcoeff;
   gint tap_offs = n_taps / 2;
+  gint in_rate = resampler->in_rate;
   gint out_rate = resampler->out_rate;
   gint l;
 
@@ -342,7 +343,7 @@ make_taps (GstAudioResampler * resampler, Tap * t, gint j)
   switch (resampler->format) {
     case GST_AUDIO_FORMAT_F64:
     {
-      gdouble *taps = res = t->taps =
+      gdouble *taps = res =
           (gdouble *) ((gint8 *) resampler->coeff + j * resampler->cstride);
       for (l = 0; l < n_taps; l++)
         taps[l] = tmpcoeff[l] / weight;
@@ -350,7 +351,7 @@ make_taps (GstAudioResampler * resampler, Tap * t, gint j)
     }
     case GST_AUDIO_FORMAT_F32:
     {
-      gfloat *taps = res = t->taps =
+      gfloat *taps = res =
           (gfloat *) ((gint8 *) resampler->coeff + j * resampler->cstride);
       for (l = 0; l < n_taps; l++)
         taps[l] = tmpcoeff[l] / weight;
@@ -365,6 +366,11 @@ make_taps (GstAudioResampler * resampler, Tap * t, gint j)
     default:
       g_assert_not_reached ();
       break;
+  }
+  if (t) {
+    t->taps = res;
+    t->sample_inc = (j + in_rate) / out_rate;
+    t->next_phase = (j + in_rate) % out_rate;
   }
   return res;
 }
@@ -662,7 +668,8 @@ resampler_calculate_taps (GstAudioResampler * resampler)
 
   if (out_rate < in_rate) {
     resampler->cutoff = resampler->cutoff * out_rate / in_rate;
-    resampler->n_taps = resampler->n_taps * in_rate / out_rate;
+    resampler->n_taps =
+        gst_util_uint64_scale_int (resampler->n_taps, in_rate, out_rate);
   }
   /* only round up for bigger taps, the small taps are used for nearest,
    * linear and cubic and we want to use less taps for those. */
@@ -690,8 +697,6 @@ resampler_calculate_taps (GstAudioResampler * resampler)
   for (j = 0; j < out_rate; j++) {
     Tap *t = &resampler->taps[j];
     t->taps = NULL;
-    t->sample_inc = (j + in_rate) / out_rate;
-    t->next_phase = (j + in_rate) % out_rate;
   }
 
   non_interleaved =
@@ -1253,7 +1258,7 @@ gst_audio_resampler_resample (GstAudioResampler * resampler,
   resampler->resample (resampler, sbuf, samples_avail, out, out_frames,
       &consumed);
 
-  GST_LOG ("in %" G_GSIZE_FORMAT ", used %" G_GSIZE_FORMAT ", consumed %"
+  GST_LOG ("in %" G_GSIZE_FORMAT ", avail %" G_GSIZE_FORMAT ", consumed %"
       G_GSIZE_FORMAT, in_frames, samples_avail, consumed);
 
   /* update pointers */
