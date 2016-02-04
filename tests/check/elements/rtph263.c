@@ -142,6 +142,106 @@ GST_START_TEST (test_h263pay_mode_b_snow)
 }
 GST_END_TEST;
 
+/* gst_rtp_buffer_get_payload() may return a copy of the payload. This test
+ * makes sure that the rtph263pdepay also produces the correct output in this
+ * case. */
+GST_START_TEST (test_h263pdepay_fragmented_memory_non_writable_buffer)
+{
+  GstHarness *h;
+  GstBuffer *header_buf, *payload_buf, *buf;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  guint8 header[] = {
+    0x04, 0x00 };
+  guint8 payload[] = {
+    0x80, 0x02, 0x1c, 0xb8, 0x01, 0x00, 0x11, 0xe0, 0x44, 0xc4 };
+  guint8 frame[] = {
+    0x00, 0x00, 0x80, 0x02, 0x1c, 0xb8, 0x01, 0x00, 0x11, 0xe0, 0x44, 0xc4 };
+
+  h = gst_harness_new ("rtph263pdepay");
+  gst_harness_set_src_caps_str (h, "application/x-rtp, media=video, "
+      "clock-rate=90000, encoding-name=H263-1998");
+
+  /* Packet with M=1, P=1 */
+  header_buf = gst_rtp_buffer_new_allocate (sizeof (header), 0, 0);
+  gst_rtp_buffer_map (header_buf, GST_MAP_WRITE, &rtp);
+  gst_rtp_buffer_set_marker (&rtp, TRUE);
+  memcpy (gst_rtp_buffer_get_payload (&rtp), header, sizeof (header));
+  gst_rtp_buffer_unmap (&rtp);
+
+  payload_buf = gst_buffer_new_allocate (NULL, sizeof (payload), NULL);
+  gst_buffer_fill (payload_buf, 0, payload, sizeof (payload));
+  buf = gst_buffer_append (header_buf, payload_buf);
+
+  gst_harness_push (h, gst_buffer_ref (buf));
+  gst_buffer_unref (buf);
+
+  buf = gst_harness_pull (h);
+  fail_unless (gst_buffer_memcmp (buf, 0, frame, sizeof (frame)) == 0);
+  gst_buffer_unref (buf);
+
+  gst_harness_teardown (h);
+}
+GST_END_TEST;
+
+/* gst_rtp_buffer_get_payload() may return a copy of the payload. This test
+ * makes sure that the rtph263pdepay also produces the correct output in this
+ * case. */
+GST_START_TEST (test_h263pdepay_fragmented_memory_non_writable_buffer_split_frame)
+{
+  GstHarness *h;
+  GstBuffer *header_buf, *payload_buf, *buf;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  guint8 header[] = {
+    0x04, 0x00 };
+  guint8 payload[] = {
+    0x80, 0x02, 0x1c, 0xb8, 0x01, 0x00, 0x11, 0xe0, 0x44, 0xc4 };
+  guint8 frame[] = {
+    0x00, 0x00, 0x80, 0x02, 0x1c, 0xb8, 0x01, 0x00, 0x11, 0xe0, 0x44, 0xc4 };
+
+  h = gst_harness_new ("rtph263pdepay");
+  gst_harness_set_src_caps_str (h, "application/x-rtp, media=video, "
+      "clock-rate=90000, encoding-name=H263-1998");
+
+  /* First packet, M=0, P=1 */
+  header_buf = gst_rtp_buffer_new_allocate (sizeof (header), 0, 0);
+  gst_rtp_buffer_map (header_buf, GST_MAP_WRITE, &rtp);
+  gst_rtp_buffer_set_marker (&rtp, FALSE);
+  gst_rtp_buffer_set_seq (&rtp, 0);
+  memcpy (gst_rtp_buffer_get_payload (&rtp), header, sizeof (header));
+  gst_rtp_buffer_unmap (&rtp);
+
+  payload_buf = gst_buffer_new_allocate (NULL, sizeof (payload), NULL);
+  gst_buffer_fill (payload_buf, 0, payload, sizeof (payload));
+  buf = gst_buffer_append (header_buf, payload_buf);
+
+  gst_harness_push (h, gst_buffer_ref (buf));
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (gst_harness_buffers_received (h), 0);
+
+  /* Second packet, M=1, P=1 */
+  header_buf = gst_rtp_buffer_new_allocate (sizeof (header), 0, 0);
+  gst_rtp_buffer_map (header_buf, GST_MAP_WRITE, &rtp);
+  gst_rtp_buffer_set_marker (&rtp, TRUE);
+  gst_rtp_buffer_set_seq (&rtp, 1);
+  memcpy (gst_rtp_buffer_get_payload (&rtp), header, sizeof (header));
+  gst_rtp_buffer_unmap (&rtp);
+
+  payload_buf = gst_buffer_new_allocate (NULL, sizeof (payload), NULL);
+  gst_buffer_memset (payload_buf, 0, 0, 10);
+  buf = gst_buffer_append (header_buf, payload_buf);
+
+  gst_harness_push (h, gst_buffer_ref (buf));
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (gst_harness_buffers_received (h), 1);
+
+  buf = gst_harness_pull (h);
+  fail_unless (gst_buffer_memcmp (buf, 0, frame, sizeof (frame)) == 0);
+  gst_buffer_unref (buf);
+
+  gst_harness_teardown (h);
+}
+GST_END_TEST;
+
 static Suite *
 rtph263_suite (void)
 {
@@ -155,6 +255,10 @@ rtph263_suite (void)
 
   suite_add_tcase (s, (tc_chain = tcase_create ("h263pay")));
   tcase_add_test (tc_chain, test_h263pay_mode_b_snow);
+
+  suite_add_tcase (s, (tc_chain = tcase_create ("h263pdepay")));
+  tcase_add_test (tc_chain, test_h263pdepay_fragmented_memory_non_writable_buffer);
+  tcase_add_test (tc_chain, test_h263pdepay_fragmented_memory_non_writable_buffer_split_frame);
 
   return s;
 }

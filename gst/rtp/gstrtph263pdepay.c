@@ -287,12 +287,8 @@ gst_rtp_h263p_depay_process (GstRTPBaseDepayload * depayload,
     goto too_small;
 
   if (P) {
-    /* FIXME, have to make the packet writable hear. Better to reset these
-     * bytes when we copy the packet below */
     rtph263pdepay->wait_start = FALSE;
     header_len -= 2;
-    payload[header_len] = 0;
-    payload[header_len + 1] = 0;
   }
 
   if (rtph263pdepay->wait_start)
@@ -304,7 +300,6 @@ gst_rtp_h263p_depay_process (GstRTPBaseDepayload * depayload,
   /* FIXME do not ignore the VRC header (See RFC 2429 section 4.2) */
   /* FIXME actually use the RTP picture header when it is lost in the network */
   /* for now strip off header */
-  payload += header_len;
   payload_len -= header_len;
 
   if (M) {
@@ -317,6 +312,8 @@ gst_rtp_h263p_depay_process (GstRTPBaseDepayload * depayload,
 
     outbuf =
         gst_rtp_buffer_get_payload_subbuffer (rtp, header_len, payload_len);
+    if (P)
+      gst_buffer_memset (outbuf, 0, 0, 2);
     gst_adapter_push (rtph263pdepay->adapter, outbuf);
     outbuf = NULL;
 
@@ -341,6 +338,8 @@ gst_rtp_h263p_depay_process (GstRTPBaseDepayload * depayload,
 
     outbuf =
         gst_rtp_buffer_get_payload_subbuffer (rtp, header_len, payload_len);
+    if (P)
+      gst_buffer_memset (outbuf, 0, 0, 2);
     gst_adapter_push (rtph263pdepay->adapter, outbuf);
   }
   return NULL;
