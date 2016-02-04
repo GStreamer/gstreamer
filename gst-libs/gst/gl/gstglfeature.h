@@ -97,7 +97,7 @@ struct _GstGLFeatureData
 gboolean
 gst_gl_check_extension (const char *name, const gchar * ext);
 
-gboolean
+G_GNUC_INTERNAL gboolean
 _gst_gl_feature_check (GstGLContext *context,
                      const char *driver_prefix,
                      const GstGLFeatureData *data,
@@ -105,7 +105,7 @@ _gst_gl_feature_check (GstGLContext *context,
                      int gl_minor,
                      const char *extensions_string);
 
-void
+G_GNUC_INTERNAL void
 _gst_gl_feature_check_ext_functions (GstGLContext *context,
                                    int gl_major,
                                    int gl_minor,
