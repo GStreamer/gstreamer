@@ -1101,7 +1101,7 @@ _amc_gl_iterate_queue_unlocked (GstGLSyncMeta * sync_meta, gboolean wait)
     /* Frames are currently pushed in order and waits need to be performed
      * in the same order */
 
-    end_time = 30 * G_TIME_SPAN_MILLISECOND + tmp->released_ts;
+    end_time = wait ? 30 * G_TIME_SPAN_MILLISECOND + tmp->released_ts : -1;
     if (!_amc_gl_possibly_wait_for_gl_sync (tmp, end_time))
       ret = FALSE;
 
