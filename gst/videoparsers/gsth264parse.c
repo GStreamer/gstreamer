@@ -1499,11 +1499,20 @@ get_compatible_profile_caps (GstH264SPS * sps)
 static void
 ensure_caps_profile (GstH264Parse * h264parse, GstCaps * caps, GstH264SPS * sps)
 {
-  GstCaps *filter_caps, *peer_caps, *compat_caps;
+  GstCaps *peer_caps, *compat_caps;
 
-  filter_caps = gst_caps_new_empty_simple ("video/x-h264");
-  peer_caps =
-      gst_pad_peer_query_caps (GST_BASE_PARSE_SRC_PAD (h264parse), filter_caps);
+  peer_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h264parse));
+  if (!peer_caps || !gst_caps_can_intersect (caps, peer_caps)) {
+    GstCaps *filter_caps = gst_caps_new_empty_simple ("video/x-h264");
+
+    if (peer_caps)
+      gst_caps_unref (peer_caps);
+    peer_caps =
+        gst_pad_peer_query_caps (GST_BASE_PARSE_SRC_PAD (h264parse),
+        filter_caps);
+
+    gst_caps_unref (filter_caps);
+  }
 
   if (peer_caps && !gst_caps_can_intersect (caps, peer_caps)) {
     GstStructure *structure;
@@ -1534,7 +1543,6 @@ ensure_caps_profile (GstH264Parse * h264parse, GstCaps * caps, GstH264SPS * sps)
   }
   if (peer_caps)
     gst_caps_unref (peer_caps);
-  gst_caps_unref (filter_caps);
 }
 
 static const gchar *
