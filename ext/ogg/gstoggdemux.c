@@ -1204,7 +1204,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
           segment.position = chain->segment_start;
           segment.stop = chain->segment_stop;
           segment.time = chain->begin_time;
-          segment.base = ogg->segment.base;
+          segment.base = ogg->segment.base + segment.time;
           event = gst_event_new_segment (&segment);
         }
       }
