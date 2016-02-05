@@ -108,6 +108,9 @@ gboolean        gst_vulkan_image_memory_set_layout      (GstVulkanImageMemory * 
                                                          VkImageLayout,
                                                          VkImageMemoryBarrier * barrier);
 
+guint32         gst_vulkan_image_memory_get_width       (GstVulkanImageMemory * image);
+guint32         gst_vulkan_image_memory_get_height      (GstVulkanImageMemory * image);
+
 VkFormat gst_vulkan_format_from_video_format (GstVideoFormat v_format,
                                               guint plane);
 

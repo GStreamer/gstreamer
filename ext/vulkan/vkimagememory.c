@@ -127,8 +127,8 @@ _find_memory_type_index_with_type_properties (GstVulkanDevice * device,
   for (i = 0; i < 32; i++) {
     if ((typeBits & 1) == 1) {
       /* Type is available, does it match user properties? */
-      if ((device->memory_properties.memoryTypes[i].
-              propertyFlags & properties) == properties) {
+      if ((device->memory_properties.
+              memoryTypes[i].propertyFlags & properties) == properties) {
         *typeIndex = i;
         return TRUE;
       }
@@ -501,6 +501,24 @@ gst_vulkan_image_memory_wrapped (GstVulkanDevice * device, VkImage image,
       image, format, width, height, tiling, usage, user_data, notify);
 
   return (GstMemory *) mem;
+}
+
+guint32
+gst_vulkan_image_memory_get_width (GstVulkanImageMemory * image)
+{
+  g_return_val_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)),
+      0);
+
+  return image->create_info.extent.width;
+}
+
+guint32
+gst_vulkan_image_memory_get_height (GstVulkanImageMemory * image)
+{
+  g_return_val_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)),
+      0);
+
+  return image->create_info.extent.height;
 }
 
 G_DEFINE_TYPE (GstVulkanImageMemoryAllocator, gst_vulkan_image_memory_allocator,
