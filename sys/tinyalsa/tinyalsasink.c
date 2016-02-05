@@ -277,16 +277,40 @@ pcm_config_from_spec (struct pcm_config *config,
   config->period_count = spec->buffer_time / spec->latency_time;
 }
 
+#define LIMIT(i, min, max)      \
+  if ((i) < (min))              \
+    (i) = (min);                \
+  else if ((i) > (max))         \
+    (i) = (max);
+
 static gboolean
 gst_tinyalsa_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 {
   GstTinyalsaSink *sink = GST_TINYALSA_SINK (asink);
   struct pcm_config config = { 0, };
+  struct pcm_params *params = NULL;
+  int period_size_min, period_size_max;
+  int periods_min, periods_max;
 
   pcm_config_from_spec (&config, spec);
 
   GST_DEBUG_OBJECT (sink, "Requesting %u periods of %u frames",
       config.period_count, config.period_size);
+
+  params = pcm_params_get (sink->card, sink->device, PCM_OUT);
+  if (!params)
+    GST_ERROR_OBJECT (sink, "Could not get PCM params");
+
+  period_size_min = pcm_params_get_min (params, PCM_PARAM_PERIOD_SIZE);
+  period_size_max = pcm_params_get_max (params, PCM_PARAM_PERIOD_SIZE);
+  periods_min = pcm_params_get_min (params, PCM_PARAM_PERIODS);
+  periods_max = pcm_params_get_max (params, PCM_PARAM_PERIODS);
+
+  pcm_params_free (params);
+
+  /* Snap period size/count to the permitted range */
+  LIMIT (config.period_size, period_size_min, period_size_max);
+  LIMIT (config.period_count, periods_min, periods_max);
 
   /* mutex with getcaps */
   GST_OBJECT_LOCK (sink);
