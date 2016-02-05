@@ -4086,7 +4086,7 @@ done:
     empty_buffer = gst_buffer_get_size (buffer) == 0;
 
     if (empty_buffer)
-      g_warning ("rtpsession: Trying to send an empty RTCP packet");
+      GST_ERROR ("rtpsession: Trying to send an empty RTCP packet");
 
     if (sess->callbacks.send_rtcp &&
         !empty_buffer && (do_not_suppress || !data.may_suppress)) {
