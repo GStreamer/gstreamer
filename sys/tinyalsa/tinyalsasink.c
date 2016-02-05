@@ -277,12 +277,6 @@ pcm_config_from_spec (struct pcm_config *config,
   config->period_count = spec->buffer_time / spec->latency_time;
 }
 
-#define LIMIT(i, min, max)      \
-  if ((i) < (min))              \
-    (i) = (min);                \
-  else if ((i) > (max))         \
-    (i) = (max);
-
 static gboolean
 gst_tinyalsa_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 {
@@ -309,8 +303,9 @@ gst_tinyalsa_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   pcm_params_free (params);
 
   /* Snap period size/count to the permitted range */
-  LIMIT (config.period_size, period_size_min, period_size_max);
-  LIMIT (config.period_count, periods_min, periods_max);
+  config.period_size =
+      CLAMP (config.period_size, period_size_min, period_size_max);
+  config.period_count = CLAMP (config.period_count, periods_min, periods_max);
 
   /* mutex with getcaps */
   GST_OBJECT_LOCK (sink);
