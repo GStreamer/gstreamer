@@ -1,11 +1,11 @@
 SUBDIRS = \
 	tag \
 	fft \
+	audio \
 	rtp \
 	sdp \
 	rtsp \
 	video \
-	audio \
 	pbutils \
 	riff \
 	app \
