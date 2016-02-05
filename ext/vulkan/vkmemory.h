@@ -56,7 +56,7 @@ struct _GstVulkanMemory
   GDestroyNotify            notify;
   gpointer                  user_data;
 
-  VkMemoryAllocateInfo    alloc_info;
+  VkMemoryAllocateInfo      alloc_info;
   VkMemoryPropertyFlags     properties;
 };
 
