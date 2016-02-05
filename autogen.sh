@@ -54,6 +54,8 @@ CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-gtk-doc'
 
 if test "x$package" = "xgstreamer"; then
   CONFIGURE_DEF_OPT="$CONFIGURE_DEF_OPT --enable-docbook --enable-failing-tests --enable-poisoning"
+elif test "x$package" = "xgst-plugins-bad"; then
+  CONFIGURE_DEF_OPT="$CONFIGURE_DEF_OPT --with-player-tests"
 fi
 
 autogen_options $@
