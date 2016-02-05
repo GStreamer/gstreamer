@@ -33,6 +33,7 @@
 #include "vkwindow.h"
 #include "vkswapper.h"
 #include "vkmemory.h"
+#include "vkbuffermemory.h"
 #include "vkimagememory.h"
 #include "vkutils.h"
 

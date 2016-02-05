@@ -54,6 +54,10 @@ typedef struct _GstVulkanMemory GstVulkanMemory;
 typedef struct _GstVulkanMemoryAllocator GstVulkanMemoryAllocator;
 typedef struct _GstVulkanMemoryAllocatorClass GstVulkanMemoryAllocatorClass;
 
+typedef struct _GstVulkanBufferMemory GstVulkanBufferMemory;
+typedef struct _GstVulkanBufferMemoryAllocator GstVulkanBufferMemoryAllocator;
+typedef struct _GstVulkanBufferMemoryAllocatorClass GstVulkanBufferMemoryAllocatorClass;
+
 typedef struct _GstVulkanImageMemory GstVulkanImageMemory;
 typedef struct _GstVulkanImageMemoryAllocator GstVulkanImageMemoryAllocator;
 typedef struct _GstVulkanImageMemoryAllocatorClass GstVulkanImageMemoryAllocatorClass;

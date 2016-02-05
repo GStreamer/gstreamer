@@ -78,6 +78,7 @@ gst_vulkan_instance_class_init (GstVulkanInstanceClass * instance_class)
 {
   gst_vulkan_memory_init_once ();
   gst_vulkan_image_memory_init_once ();
+  gst_vulkan_buffer_memory_init_once ();
 
   g_type_class_add_private (instance_class, sizeof (GstVulkanInstancePrivate));
 
