@@ -179,8 +179,8 @@ COMPILING FROM SOURCE TARBALLS
   make install
 
 - try out a simple test:
-  gst-launch-1.0 -v fakesrc num_buffers=5 ! fakesink
-  (If you didn't install GStreamer, prefix gst-launch-1.0 with tools/)
+  gst-launch -v fakesrc num_buffers=5 ! fakesink
+  (If you didn't install GStreamer, prefix gst-launch with tools/)
 
   If it outputs a bunch of messages from fakesrc and fakesink, everything is
   ok.
