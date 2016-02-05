@@ -9,7 +9,7 @@ REGISTRY_ENVIRONMENT = \
 	GST_REGISTRY_1_0=$(CHECK_REGISTRY)
 
 # GST_PLUGINS_XYZ_DIR is only set in an uninstalled setup
-AM_TESTS_ENVIRONMENT = \
+AM_TESTS_ENVIRONMENT += \
 	$(REGISTRY_ENVIRONMENT)                                 \
 	GST_PLUGIN_SYSTEM_PATH_1_0=				\
 	GST_PLUGIN_PATH_1_0=$(top_builddir)/gst:$(top_builddir)/sys:$(top_builddir)/ext:$(GST_PLUGINS_LIBAV_DIR):$(GST_PLUGINS_UGLY_DIR):$(GST_PLUGINS_GOOD_DIR):$(GST_PLUGINS_BASE_DIR):$(GST_PLUGINS_DIR) \
