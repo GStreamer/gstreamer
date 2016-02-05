@@ -94,6 +94,12 @@ typedef struct
   GQuark copy_tag;
 } CopyMetaData;
 
+typedef struct
+{
+  GstElement *element;
+  GQuark keep_tag;
+} DropMetaData;
+
 void gst_rtp_copy_meta (GstElement * element, GstBuffer *outbuf, GstBuffer *inbuf, GQuark copy_tag);
 
 GType gst_rtp_h265_depay_get_type (void);
