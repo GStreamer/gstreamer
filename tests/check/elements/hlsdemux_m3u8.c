@@ -838,13 +838,6 @@ GST_START_TEST (test_get_duration)
 
   assert_equals_uint64 (gst_m3u8_get_duration (pl), 40 * GST_SECOND);
   gst_hls_master_playlist_unref (master);
-
-  /* Test duration for live playlists */
-  master = load_playlist (LIVE_PLAYLIST);
-  pl = master->default_variant->m3u8;
-  assert_equals_uint64 (gst_m3u8_get_duration (pl), GST_CLOCK_TIME_NONE);
-
-  gst_hls_master_playlist_unref (master);
 }
 
 GST_END_TEST;

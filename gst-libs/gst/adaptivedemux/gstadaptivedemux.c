@@ -1748,12 +1748,12 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
       GST_MANIFEST_LOCK (demux);
 
       if (fmt == GST_FORMAT_TIME && demux->priv->have_manifest) {
-        duration = demux_class->get_duration (demux);
-
-        if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0) {
-          gst_query_set_duration (query, GST_FORMAT_TIME, duration);
-          ret = TRUE;
-        }
+        if (gst_adaptive_demux_is_live (demux))
+          duration = GST_CLOCK_TIME_NONE;
+        else
+          duration = demux_class->get_duration (demux);
+        gst_query_set_duration (query, GST_FORMAT_TIME, duration);
+        ret = TRUE;
       }
 
       GST_MANIFEST_UNLOCK (demux);

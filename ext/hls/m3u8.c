@@ -1015,9 +1015,7 @@ gst_m3u8_get_duration (GstM3U8 * m3u8)
 
   GST_M3U8_LOCK (m3u8);
 
-  /* We can only get the duration for on-demand streams */
-  if (!m3u8->endlist)
-    goto out;
+  /* Note: adaptivedemux makes sure we only get duration queries for on-demand streams */
 
   if (!GST_CLOCK_TIME_IS_VALID (m3u8->duration) && m3u8->files != NULL) {
     GList *f;
@@ -1027,8 +1025,6 @@ gst_m3u8_get_duration (GstM3U8 * m3u8)
       m3u8->duration += GST_M3U8_MEDIA_FILE (f)->duration;
   }
   duration = m3u8->duration;
-
-out:
 
   GST_M3U8_UNLOCK (m3u8);
 

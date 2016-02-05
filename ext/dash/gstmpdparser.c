@@ -5483,18 +5483,12 @@ gst_mpd_client_get_next_fragment_duration (GstMpdClient * client,
 GstClockTime
 gst_mpd_client_get_media_presentation_duration (GstMpdClient * client)
 {
-  GstClockTime duration;
-
   g_return_val_if_fail (client != NULL, GST_CLOCK_TIME_NONE);
 
-  if (client->mpd_node->mediaPresentationDuration != -1) {
-    duration = client->mpd_node->mediaPresentationDuration * GST_MSECOND;
-  } else {
-    /* We can only get the duration for on-demand streams */
-    duration = GST_CLOCK_TIME_NONE;
-  }
-
-  return duration;
+  /* Note: adaptivedemux makes sure we only get duration queries for on-demand streams */
+  g_return_val_if_fail (client->mpd_node->mediaPresentationDuration != -1,
+      GST_CLOCK_TIME_NONE);
+  return client->mpd_node->mediaPresentationDuration * GST_MSECOND;
 }
 
 gboolean
