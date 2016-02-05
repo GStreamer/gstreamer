@@ -1049,14 +1049,12 @@ gst_rtp_h265_depay_handle_nal (GstRtpH265Depay * rtph265depay, GstBuffer * nal,
     /* marker bit isn't mandatory so in the following code we try to detect
      * an AU boundary (see H.265 spec section 7.4.2.4.4) */
     if (!marker) {
-
       if (NAL_TYPE_IS_CODED_SLICE_SEGMENT (nal_type)) {
         /* A NAL unit (X) ends an access unit if the next-occurring VCL NAL unit (Y) has the high-order bit of the first byte after its NAL unit header equal to 1 */
         start = TRUE;
         if (((map.data[6] >> 7) & 0x01) == 1) {
           complete = TRUE;
         }
-        complete = TRUE;
       } else if ((nal_type >= 32 && nal_type <= 35)
           || nal_type == 39 || (nal_type >= 41 && nal_type <= 44)
           || (nal_type >= 48 && nal_type <= 55)) {
