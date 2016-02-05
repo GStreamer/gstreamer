@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include <gst/rtp/gstrtpbasepayload.h>
-#include <gst/codecparsers/gsth265parser.h>
+#include "gstrtph265types.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_RTP_H265_PAY \
