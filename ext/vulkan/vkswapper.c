@@ -181,8 +181,8 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
     supports_present =
         gst_vulkan_window_get_presentation_support (swapper->window,
         swapper->device, i);
-    if ((swapper->device->queue_family_props[i].
-            queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
+    if ((swapper->device->
+            queue_family_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
       if (supports_present) {
         /* found one that supports both */
         graphics_queue = present_queue = i;
@@ -568,8 +568,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     n_images_wanted = swapper->surf_props.maxImageCount;
   }
 
-  if (swapper->
-      surf_props.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
+  if (swapper->surf_props.
+      supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
     preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
   } else {
     preTransform = swapper->surf_props.currentTransform;
@@ -609,8 +609,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
         "Incorrect usage flags available for the swap images");
     return FALSE;
   }
-  if ((swapper->surf_props.
-          supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+  if ((swapper->
+          surf_props.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
       != 0) {
     usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   } else {
@@ -740,21 +740,18 @@ static gboolean
 _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     GstBuffer * buffer, struct cmd_data *cmd_data, GError ** error)
 {
-  VkImageSubresource subres = { 0, };
-  GstVulkanImageMemory *swap_mem, *staging;
-  GstMapInfo staging_map_info;
-  VkSubresourceLayout layout;
+  GstVulkanBufferMemory *buf_mem;
+  GstVulkanImageMemory *swap_mem;
+  GstMapInfo buf_map_info;
   GstVideoFrame vframe;
-  guint8 *src, *dest;
   VkCommandBuffer cmd;
-  guint32 wt, ht;
   VkResult err;
-  gsize h;
-
-  GST_VK_IMAGE_SUBRESOURCE (subres, VK_IMAGE_ASPECT_COLOR_BIT, 0, 0);
+  gsize size;
 
   g_return_val_if_fail (swap_idx < swapper->n_swap_chain_images, FALSE);
   swap_mem = swapper->swap_chain_images[swap_idx];
+
+  cmd_data->notify = NULL;
 
   if (!gst_vulkan_device_create_cmd_buffer (swapper->device, &cmd, error))
     return FALSE;
@@ -765,43 +762,27 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     return FALSE;
   }
 
-  staging =
-      (GstVulkanImageMemory *) gst_vulkan_image_memory_alloc (swapper->device,
-      swap_mem->create_info.format, GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 0),
-      GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0), VK_IMAGE_TILING_LINEAR,
-      VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  buf_mem =
+      (GstVulkanBufferMemory *) gst_vulkan_buffer_memory_alloc (swapper->device,
+      swap_mem->create_info.format, GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0) *
+      GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0),
+      VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
-  if (!staging) {
+  if (!buf_mem) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_MEMORY_MAP_FAILED,
         "Failed to create staging memory");
     gst_video_frame_unmap (&vframe);
     return FALSE;
   }
 
-  if (!gst_memory_map ((GstMemory *) staging, &staging_map_info, GST_MAP_WRITE)) {
+  if (!gst_memory_map ((GstMemory *) buf_mem, &buf_map_info, GST_MAP_WRITE)) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_MEMORY_MAP_FAILED,
         "Failed to map swap image");
     gst_video_frame_unmap (&vframe);
-    gst_memory_unref ((GstMemory *) staging);
+    gst_memory_unref ((GstMemory *) buf_mem);
     return FALSE;
   }
-
-  vkGetImageSubresourceLayout (swapper->device->device, staging->image, &subres,
-      &layout);
-
-  /* FIXME: multi-planar formats */
-  dest = staging_map_info.data;
-  dest += layout.offset;
-  src = vframe.data[0];
-  for (h = 0; h < GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0); h++) {
-    /* FIXME: memcpy */
-    memcpy (dest, src, GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0));
-    dest += layout.rowPitch;
-    src += GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
-    g_assert (dest - staging_map_info.data - layout.offset <= layout.size);
-  }
-  gst_video_frame_unmap (&vframe);
-  gst_memory_unmap ((GstMemory *) staging, &staging_map_info);
 
   {
     VkCommandBufferInheritanceInfo buf_inh = { 0, };
@@ -826,65 +807,46 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
       return FALSE;
   }
 
+  size =
+      GST_VIDEO_FRAME_PLANE_STRIDE (&vframe,
+      0) * GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0);
+  g_assert (buf_map_info.size >= size);
+  memcpy (buf_map_info.data, vframe.data[0], size);
+  gst_memory_unmap ((GstMemory *) buf_mem, &buf_map_info);
+  gst_video_frame_unmap (&vframe);
+
   if (!_swapper_set_image_layout_with_cmd (swapper, cmd, swap_mem,
           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, error)) {
     return FALSE;
   }
 
-  if (!_swapper_set_image_layout_with_cmd (swapper, cmd, staging,
-          VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, error)) {
-    return FALSE;
-  }
-
-  /* FIXME: center rect */
-#if 0
-  /* XXX: doesn't work with LunarG's example driver. According to LunarG,
-   * it's not implemented */
   {
-    VkImageBlit blit_image = { 0, };
+    VkBufferImageCopy region = { 0, };
+    guint32 dst_width = gst_vulkan_image_memory_get_width (swap_mem);
+    guint32 dst_height = gst_vulkan_image_memory_get_height (swap_mem);
+    guint src_width = GST_VIDEO_FRAME_WIDTH (&vframe);
+    guint src_height = GST_VIDEO_FRAME_HEIGHT (&vframe);
+    guint x, y;
 
-    GST_VK_IMAGE_SUBRESOURCE_LAYERS (blit_image.srcSubresource,
-        VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1);
-    GST_VK_OFFSET3D (blit_image.srcOffset, 0, 0, 0);
-    GST_VK_EXTENT3D (blit_image.srcExtent,
-        GST_VIDEO_INFO_WIDTH (&swapper->v_info),
-        GST_VIDEO_INFO_HEIGHT (&swapper->v_info), 1);
-    GST_VK_IMAGE_SUBRESOURCE_LAYERS (blit_image.dstSubresource,
-        VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1);
-    GST_VK_OFFSET3D (blit_image.dstOffset, 0, 0, 0);
-    GST_VK_EXTENT3D (blit_image.dstExtent, swap_mem->create_info.extent.width,
-        swap_mem->create_info.extent.height, 1);
+    if (src_width != dst_width || src_height != dst_height) {
+/* FIXME: broken with LunarG's driver
+      x = (src_width - dst_width) / 2;
+      y = (src_height - dst_height) / 2;*/
+      x = y = 0;
+    } else {
+      x = y = 0;
+    }
+    /* FIXME: scale rect */
+    GST_VK_BUFFER_IMAGE_COPY (region, 0, src_width, src_height,
+        GST_VK_IMAGE_SUBRESOURCE_LAYERS_INIT (VK_IMAGE_ASPECT_COLOR_BIT, 0, 0,
+            1), GST_VK_OFFSET3D_INIT (x, y, 0), GST_VK_EXTENT3D_INIT (src_width,
+            src_height, 1));
 
-    /* FIXME: copy */
-    vkCmdBlitImage (cmd, staging->image,
-        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, swap_mem->image,
-        VK_IMAGE_LAYOUT_GENERAL, 1, &blit_image, VK_TEX_FILTER_LINEAR);
+    vkCmdCopyBufferToImage (cmd, buf_mem->buffer, swap_mem->image,
+        swap_mem->image_layout, 1, &region);
   }
-#else
-  wt = MIN (swap_mem->create_info.extent.width,
-      GST_VIDEO_INFO_WIDTH (&swapper->v_info));
-  ht = MIN (swap_mem->create_info.extent.height,
-      GST_VIDEO_INFO_HEIGHT (&swapper->v_info));
 
-  {
-    VkImageCopy copy_image = { 0, };
-
-    GST_VK_IMAGE_SUBRESOURCE_LAYERS (copy_image.srcSubresource,
-        VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1);
-    GST_VK_OFFSET3D (copy_image.srcOffset, 0, 0, 0);
-    GST_VK_IMAGE_SUBRESOURCE_LAYERS (copy_image.dstSubresource,
-        VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1);
-    GST_VK_OFFSET3D (copy_image.dstOffset, 0, 0, 0);
-    GST_VK_EXTENT3D (copy_image.extent, wt, ht, 1);
-
-    /* FIXME: copy */
-    vkCmdCopyImage (cmd, staging->image,
-        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, swap_mem->image,
-        VK_IMAGE_LAYOUT_GENERAL, 1, &copy_image);
-  }
-#endif
-
-  if (!_swapper_set_image_layout_with_cmd (swapper, cmd, staging,
+  if (!_swapper_set_image_layout_with_cmd (swapper, cmd, swap_mem,
           VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, error)) {
     return FALSE;
   }
@@ -895,7 +857,7 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
 
   cmd_data->cmd = cmd;
   cmd_data->notify = (GDestroyNotify) gst_memory_unref;
-  cmd_data->data = staging;
+  cmd_data->data = buf_mem;
 
   if (!_new_fence (swapper->device, &cmd_data->fence, error)) {
     return FALSE;
