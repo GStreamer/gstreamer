@@ -660,6 +660,24 @@ gst_system_clock_get_resolution (GstClock * clock)
 #endif /* __APPLE__ */
 }
 
+static inline void
+gst_system_clock_cleanup_unscheduled (GstSystemClock * sysclock,
+    GstClockEntry * entry)
+{
+  /* try to clean up.
+   * The unschedule function managed to set the status to
+   * unscheduled. We now take the lock and mark the entry as unscheduled.
+   * This makes sure that the unschedule function doesn't perform a
+   * wakeup anymore. If the unschedule function has a change to perform
+   * the wakeup before us, we clean up here */
+  GST_OBJECT_LOCK (sysclock);
+  entry->unscheduled = TRUE;
+  if (entry->woken_up) {
+    gst_system_clock_remove_wakeup (sysclock);
+  }
+  GST_OBJECT_UNLOCK (sysclock);
+}
+
 /* synchronously wait on the given GstClockEntry.
  *
  * We do this by blocking on the global GstPoll timer with
@@ -735,17 +753,7 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
           entry, status, pollret);
 
       if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED)) {
-        /* try to clean up The unschedule function managed to set the status to
-         * unscheduled. We now take the lock and mark the entry as unscheduled.
-         * This makes sure that the unschedule function doesn't perform a
-         * wakeup anymore. If the unschedule function has a change to perform
-         * the wakeup before us, we clean up here */
-        GST_OBJECT_LOCK (sysclock);
-        entry->unscheduled = TRUE;
-        if (entry->woken_up) {
-          gst_system_clock_remove_wakeup (sysclock);
-        }
-        GST_OBJECT_UNLOCK (sysclock);
+        gst_system_clock_cleanup_unscheduled (sysclock, entry);
         goto done;
       } else {
         if (G_UNLIKELY (pollret != 0)) {
@@ -823,7 +831,9 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
     if (G_UNLIKELY (diff == 0)) {
       if (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, status, GST_CLOCK_OK))) {
         status = GET_ENTRY_STATUS (entry);
-        if (G_UNLIKELY (status != GST_CLOCK_UNSCHEDULED))
+        if (G_LIKELY (status == GST_CLOCK_UNSCHEDULED))
+          gst_system_clock_cleanup_unscheduled (sysclock, entry);
+        else
           GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
               status, entry);
       } else {
@@ -832,7 +842,9 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
     } else {
       if (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, status, GST_CLOCK_EARLY))) {
         status = GET_ENTRY_STATUS (entry);
-        if (G_UNLIKELY (status != GST_CLOCK_UNSCHEDULED))
+        if (G_LIKELY (status == GST_CLOCK_UNSCHEDULED))
+          gst_system_clock_cleanup_unscheduled (sysclock, entry);
+        else
           GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
               status, entry);
       } else {
