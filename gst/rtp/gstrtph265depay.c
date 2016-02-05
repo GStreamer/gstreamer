@@ -945,12 +945,12 @@ foreach_metadata_copy (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
   CopyMetaData *data = user_data;
   GstElement *element = data->element;
   GstBuffer *outbuf = data->outbuf;
+  GQuark copy_tag = data->copy_tag;
   const GstMetaInfo *info = (*meta)->info;
   const gchar *const *tags = gst_meta_api_type_get_tags (info->api);
 
-  if (!tags || (g_strv_length ((gchar **) tags) == 1
-          && gst_meta_api_type_has_tag (info->api,
-              g_quark_from_string (GST_META_TAG_VIDEO_STR)))) {
+  if (!tags || (copy_tag != 0 && g_strv_length ((gchar **) tags) == 1
+          && gst_meta_api_type_has_tag (info->api, copy_tag))) {
     GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
     GST_DEBUG_OBJECT (element, "copy metadata %s", g_type_name (info->api));
     /* simply copy then */
@@ -977,20 +977,30 @@ gst_rtp_copy_meta (GstElement * element, GstBuffer * outbuf, GstBuffer * inbuf,
 static gboolean
 foreach_metadata_drop (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
 {
-  GstRtpH265Depay *depay = user_data;
+  DropMetaData *data = user_data;
+  GstElement *element = data->element;
+  GQuark keep_tag = data->keep_tag;
   const GstMetaInfo *info = (*meta)->info;
   const gchar *const *tags = gst_meta_api_type_get_tags (info->api);
 
-  if (!tags || (g_strv_length ((gchar **) tags) == 1
-          && gst_meta_api_type_has_tag (info->api,
-              g_quark_from_string (GST_META_TAG_VIDEO_STR)))) {
-    GST_DEBUG_OBJECT (depay, "keeping metadata %s", g_type_name (info->api));
+  if (!tags || (keep_tag != 0 && g_strv_length ((gchar **) tags) == 1
+          && gst_meta_api_type_has_tag (info->api, keep_tag))) {
+    GST_DEBUG_OBJECT (element, "keeping metadata %s", g_type_name (info->api));
   } else {
-    GST_DEBUG_OBJECT (depay, "dropping metadata %s", g_type_name (info->api));
+    GST_DEBUG_OBJECT (element, "dropping metadata %s", g_type_name (info->api));
     *meta = NULL;
   }
 
   return TRUE;
+}
+
+/* TODO: Should probably make keep_tag an array at some point */
+static void
+gst_rtp_drop_meta (GstElement * element, GstBuffer * buf, GQuark keep_tag)
+{
+  DropMetaData data = { element, keep_tag };
+
+  gst_buffer_foreach_meta (buf, foreach_metadata_drop, &data);
 }
 
 static GstBuffer *
@@ -1099,7 +1109,8 @@ gst_rtp_h265_depay_handle_nal (GstRtpH265Depay * rtph265depay, GstBuffer * nal,
     }
     outbuf = gst_buffer_make_writable (outbuf);
 
-    gst_buffer_foreach_meta (outbuf, foreach_metadata_drop, depayload);
+    gst_rtp_drop_meta (GST_ELEMENT_CAST (rtph265depay), outbuf,
+        g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
 
     GST_BUFFER_PTS (outbuf) = out_timestamp;
 
