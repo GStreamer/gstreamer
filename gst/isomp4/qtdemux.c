@@ -8917,6 +8917,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     stream->bits_per_sample = QT_UINT16 (stsd_data + offset + 82);
     stream->color_table_id = QT_UINT16 (stsd_data + offset + 84);
 
+    /* if color_table_id is 0, ctab atom must follow; however some files
+     * produced by TMPEGEnc have color_table_id = 0 and no ctab atom, so
+     * if color table is not present we'll correct the value */
+    if (stream->color_table_id == 0 &&
+        (len < 90 || QT_FOURCC (stsd_data + offset + 86) != FOURCC_ctab)) {
+      stream->color_table_id = -1;
+    }
+
     GST_LOG_OBJECT (qtdemux, "width %d, height %d, bps %d, color table id %d",
         stream->width, stream->height, stream->bits_per_sample,
         stream->color_table_id);
