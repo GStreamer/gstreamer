@@ -183,17 +183,9 @@ gst_jpeg_dec_class_init (GstJpegDecClass * klass)
 static boolean
 gst_jpeg_dec_fill_input_buffer (j_decompress_ptr cinfo)
 {
-  GstJpegDec *dec;
-
-  dec = CINFO_GET_JPEGDEC (cinfo);
-  g_return_val_if_fail (dec != NULL, FALSE);
-  g_return_val_if_fail (dec->current_frame != NULL, FALSE);
-  g_return_val_if_fail (dec->current_frame_map.data != NULL, FALSE);
-
-  cinfo->src->next_input_byte = dec->current_frame_map.data;
-  cinfo->src->bytes_in_buffer = dec->current_frame_map.size;
-
-  return TRUE;
+  /* We pass in full frame initially, if this get called, the frame is most likely
+   * corrupted */
+  return FALSE;
 }
 
 static void
@@ -1002,7 +994,9 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
 
   dec->current_frame = frame;
   gst_buffer_map (frame->input_buffer, &dec->current_frame_map, GST_MAP_READ);
-  gst_jpeg_dec_fill_input_buffer (&dec->cinfo);
+
+  dec->cinfo.src->next_input_byte = dec->current_frame_map.data;
+  dec->cinfo.src->bytes_in_buffer = dec->current_frame_map.size;
 
   if (setjmp (dec->jerr.setjmp_buffer)) {
     code = dec->jerr.pub.msg_code;
