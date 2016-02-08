@@ -38,28 +38,6 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFUALT);
 
 static GstAllocator *_vulkan_buffer_memory_allocator;
 
-static gboolean
-_find_memory_type_index_with_type_properties (GstVulkanDevice * device,
-    guint32 typeBits, VkFlags properties, guint32 * typeIndex)
-{
-  guint32 i;
-
-  /* Search memtypes to find first index with those properties */
-  for (i = 0; i < 32; i++) {
-    if ((typeBits & 1) == 1) {
-      /* Type is available, does it match user properties? */
-      if ((device->memory_properties.memoryTypes[i].
-              propertyFlags & properties) == properties) {
-        *typeIndex = i;
-        return TRUE;
-      }
-    }
-    typeBits >>= 1;
-  }
-
-  return FALSE;
-}
-
 #define GST_VK_BUFFER_CREATE_INFO_INIT GST_VK_STRUCT_8
 #define GST_VK_BUFFER_CREATE_INFO(info, pNext, flags, size, usage, sharingMode, queueFamilyIndexCount, pQueueFamilyIndices ) \
   G_STMT_START { \
@@ -100,8 +78,9 @@ _create_view_from_args (VkBufferViewCreateInfo * info, VkBuffer buffer,
 
 static void
 _vk_buffer_mem_init (GstVulkanBufferMemory * mem, GstAllocator * allocator,
-    GstMemory * parent, GstVulkanDevice * device, GstAllocationParams * params,
-    gsize size, gpointer user_data, GDestroyNotify notify)
+    GstMemory * parent, GstVulkanDevice * device, VkBufferUsageFlags usage,
+    GstAllocationParams * params, gsize size, gpointer user_data,
+    GDestroyNotify notify)
 {
   gsize align = gst_memory_alignment, offset = 0, maxsize = size;
   GstMemoryFlags flags = 0;
@@ -136,7 +115,6 @@ _vk_buffer_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   GstVulkanBufferMemory *mem = NULL;
   GstAllocationParams params = { 0, };
   VkBufferCreateInfo buffer_info;
-  guint32 memory_type_index;
   GError *error = NULL;
   VkBuffer buffer;
   VkResult err;
@@ -154,32 +132,9 @@ _vk_buffer_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   vkGetBufferMemoryRequirements (device->device, buffer, &mem->requirements);
 
   params.align = mem->requirements.alignment;
-  _vk_buffer_mem_init (mem, allocator, parent, device, &params,
+  _vk_buffer_mem_init (mem, allocator, parent, device, usage, &params,
       mem->requirements.size, user_data, notify);
   mem->buffer = buffer;
-
-  if (!_find_memory_type_index_with_type_properties (device,
-          mem->requirements.memoryTypeBits, mem_prop_flags,
-          &memory_type_index)) {
-    GST_CAT_ERROR (GST_CAT_VULKAN_BUFFER_MEMORY,
-        "Could not find suitable memory type");
-    goto error;
-  }
-
-  mem->vk_mem = (GstVulkanMemory *)
-      gst_vulkan_memory_alloc (device, memory_type_index, &params,
-      mem->requirements.size, mem_prop_flags);
-  if (!mem->vk_mem) {
-    GST_CAT_ERROR (GST_CAT_VULKAN_BUFFER_MEMORY,
-        "Failed to allocate device memory");
-    goto error;
-  }
-
-  err =
-      vkBindBufferMemory (device->device, mem->buffer, mem->vk_mem->mem_ptr,
-      0 /* offset */ );
-  if (gst_vulkan_error_to_g_error (err, &error, "vkBindBufferMemory") < 0)
-    goto vk_error;
 
   if (usage & (VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT |
           VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT |
@@ -232,7 +187,7 @@ _vk_buffer_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
 
   /* no device memory so no mapping */
   params.flags = GST_MEMORY_FLAG_NOT_MAPPABLE | GST_MEMORY_FLAG_READONLY;
-  _vk_buffer_mem_init (mem, allocator, parent, device, &params,
+  _vk_buffer_mem_init (mem, allocator, parent, device, usage, &params,
       mem->requirements.size, user_data, notify);
   mem->wrapped = TRUE;
 
@@ -276,16 +231,21 @@ _vk_buffer_mem_map_full (GstVulkanBufferMemory * mem, GstMapInfo * info,
   GstMapInfo *vk_map_info;
 
   /* FIXME: possible barrier needed */
+  g_mutex_lock (&mem->lock);
 
-  if (!mem->vk_mem)
+  if (!mem->vk_mem) {
+    g_mutex_unlock (&mem->lock);
     return NULL;
+  }
 
   vk_map_info = g_new0 (GstMapInfo, 1);
   info->user_data[0] = vk_map_info;
   if (!gst_memory_map ((GstMemory *) mem->vk_mem, vk_map_info, info->flags)) {
     g_free (vk_map_info);
+    g_mutex_unlock (&mem->lock);
     return NULL;
   }
+  g_mutex_unlock (&mem->lock);
 
   return vk_map_info->data;
 }
@@ -293,7 +253,9 @@ _vk_buffer_mem_map_full (GstVulkanBufferMemory * mem, GstMapInfo * info,
 static void
 _vk_buffer_mem_unmap_full (GstVulkanBufferMemory * mem, GstMapInfo * info)
 {
+  g_mutex_lock (&mem->lock);
   gst_memory_unmap ((GstMemory *) mem->vk_mem, info->user_data[0]);
+  g_mutex_unlock (&mem->lock);
 
   g_free (info->user_data[0]);
 }
@@ -373,6 +335,46 @@ gst_vulkan_buffer_memory_alloc (GstVulkanDevice * device, VkFormat format,
 }
 
 GstMemory *
+gst_vulkan_buffer_memory_alloc_bind (GstVulkanDevice * device, VkFormat format,
+    gsize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags mem_prop_flags)
+{
+  GstAllocationParams params = { 0, };
+  GstVulkanBufferMemory *mem;
+  GstVulkanMemory *dev_mem;
+  guint32 type_idx;
+
+  mem =
+      (GstVulkanBufferMemory *) gst_vulkan_buffer_memory_alloc (device, format,
+      size, usage, mem_prop_flags);
+  if (!mem)
+    return NULL;
+
+  if (!gst_vulkan_memory_find_memory_type_index_with_type_properties (device,
+          mem->requirements.memoryTypeBits, mem_prop_flags, &type_idx)) {
+    gst_memory_unref (GST_MEMORY_CAST (mem));
+    return NULL;
+  }
+
+  /* XXX: assumes alignment is a power of 2 */
+  params.align = mem->requirements.alignment - 1;
+  dev_mem = (GstVulkanMemory *) gst_vulkan_memory_alloc (device, type_idx,
+      &params, mem->requirements.size, mem_prop_flags);
+  if (!dev_mem) {
+    gst_memory_unref (GST_MEMORY_CAST (mem));
+    return NULL;
+  }
+
+  if (!gst_vulkan_buffer_memory_bind (mem, dev_mem)) {
+    gst_memory_unref (GST_MEMORY_CAST (dev_mem));
+    gst_memory_unref (GST_MEMORY_CAST (mem));
+    return NULL;
+  }
+  gst_memory_unref (GST_MEMORY_CAST (dev_mem));
+
+  return (GstMemory *) mem;
+}
+
+GstMemory *
 gst_vulkan_buffer_memory_wrapped (GstVulkanDevice * device, VkBuffer buffer,
     VkFormat format, VkBufferUsageFlags usage, gpointer user_data,
     GDestroyNotify notify)
@@ -384,6 +386,42 @@ gst_vulkan_buffer_memory_wrapped (GstVulkanDevice * device, VkBuffer buffer,
       buffer, format, usage, user_data, notify);
 
   return (GstMemory *) mem;
+}
+
+gboolean
+gst_vulkan_buffer_memory_bind (GstVulkanBufferMemory * buf_mem,
+    GstVulkanMemory * memory)
+{
+  gsize maxsize;
+
+  g_return_val_if_fail (gst_is_vulkan_buffer_memory (GST_MEMORY_CAST (buf_mem)),
+      FALSE);
+  g_return_val_if_fail (gst_is_vulkan_memory (GST_MEMORY_CAST (memory)), FALSE);
+
+  /* will we overrun the allocated data */
+  gst_memory_get_sizes (GST_MEMORY_CAST (memory), NULL, &maxsize);
+  g_return_val_if_fail (memory->vk_offset + buf_mem->requirements.size <=
+      maxsize, FALSE);
+
+  g_mutex_lock (&buf_mem->lock);
+
+  if (buf_mem->vk_mem) {
+    guint vk_mem_map_count = buf_mem->vk_mem->map_count;
+    if (vk_mem_map_count > 0) {
+      g_mutex_unlock (&buf_mem->lock);
+      g_return_val_if_fail (vk_mem_map_count > 0, FALSE);
+    }
+    gst_memory_unref (GST_MEMORY_CAST (buf_mem->vk_mem));
+  }
+
+  vkBindBufferMemory (buf_mem->device->device, buf_mem->buffer, memory->mem_ptr,
+      memory->vk_offset);
+
+  buf_mem->vk_mem =
+      (GstVulkanMemory *) gst_memory_ref (GST_MEMORY_CAST (memory));
+  g_mutex_unlock (&buf_mem->lock);
+
+  return TRUE;
 }
 
 G_DEFINE_TYPE (GstVulkanBufferMemoryAllocator,

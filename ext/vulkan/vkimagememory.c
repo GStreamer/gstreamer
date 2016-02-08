@@ -118,28 +118,6 @@ _view_create_info (VkImage image, VkFormat format, VkImageViewCreateInfo * info)
 }
 
 static gboolean
-_find_memory_type_index_with_type_properties (GstVulkanDevice * device,
-    guint32 typeBits, VkFlags properties, guint32 * typeIndex)
-{
-  guint32 i;
-
-  /* Search memtypes to find first index with those properties */
-  for (i = 0; i < 32; i++) {
-    if ((typeBits & 1) == 1) {
-      /* Type is available, does it match user properties? */
-      if ((device->memory_properties.
-              memoryTypes[i].propertyFlags & properties) == properties) {
-        *typeIndex = i;
-        return TRUE;
-      }
-    }
-    typeBits >>= 1;
-  }
-
-  return FALSE;
-}
-
-static gboolean
 _create_info_from_args (VkImageCreateInfo * info, VkFormat format, gsize width,
     gsize height, VkImageTiling tiling, VkImageUsageFlags usage)
 {
@@ -166,8 +144,9 @@ _create_info_from_args (VkImageCreateInfo * info, VkFormat format, gsize width,
 
 static void
 _vk_image_mem_init (GstVulkanImageMemory * mem, GstAllocator * allocator,
-    GstMemory * parent, GstVulkanDevice * device, GstAllocationParams * params,
-    gsize size, gpointer user_data, GDestroyNotify notify)
+    GstMemory * parent, GstVulkanDevice * device, VkImageUsageFlags usage,
+    GstAllocationParams * params, gsize size, gpointer user_data,
+    GDestroyNotify notify)
 {
   gsize align = gst_memory_alignment, offset = 0, maxsize = size;
   GstMemoryFlags flags = 0;
@@ -184,6 +163,7 @@ _vk_image_mem_init (GstVulkanImageMemory * mem, GstAllocator * allocator,
 
   mem->device = gst_object_ref (device);
   mem->image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+  mem->usage = usage;
   mem->wrapped = FALSE;
   mem->notify = notify;
   mem->user_data = user_data;
@@ -205,7 +185,6 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   GstAllocationParams params = { 0, };
   VkImageViewCreateInfo view_info;
   VkImageCreateInfo image_info;
-  guint32 memory_type_index;
   VkPhysicalDevice gpu;
   GError *error = NULL;
   VkImage image;
@@ -226,36 +205,13 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   vkGetImageMemoryRequirements (device->device, image, &mem->requirements);
 
   params.align = mem->requirements.alignment;
-  _vk_image_mem_init (mem, allocator, parent, device, &params,
+  _vk_image_mem_init (mem, allocator, parent, device, usage, &params,
       mem->requirements.size, user_data, notify);
   mem->create_info = image_info;
   mem->image = image;
 
   vkGetPhysicalDeviceImageFormatProperties (gpu, format, VK_IMAGE_TYPE_2D,
       tiling, usage, 0, &mem->format_properties);
-
-  if (!_find_memory_type_index_with_type_properties (device,
-          mem->requirements.memoryTypeBits, mem_prop_flags,
-          &memory_type_index)) {
-    GST_CAT_ERROR (GST_CAT_VULKAN_IMAGE_MEMORY,
-        "Could not find suitable memory type");
-    goto error;
-  }
-
-  mem->vk_mem = (GstVulkanMemory *)
-      gst_vulkan_memory_alloc (device, memory_type_index, &params,
-      mem->requirements.size, mem_prop_flags);
-  if (!mem->vk_mem) {
-    GST_CAT_ERROR (GST_CAT_VULKAN_IMAGE_MEMORY,
-        "Failed to allocate device memory");
-    goto error;
-  }
-
-  err =
-      vkBindImageMemory (device->device, mem->image, mem->vk_mem->mem_ptr,
-      0 /* offset */ );
-  if (gst_vulkan_error_to_g_error (err, &error, "vkBindImageMemory") < 0)
-    goto vk_error;
 
   if (usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT |
           VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)) {
@@ -302,7 +258,7 @@ _vk_image_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
   vkGetImageMemoryRequirements (device->device, mem->image, &mem->requirements);
 
   params.flags = GST_MEMORY_FLAG_NOT_MAPPABLE | GST_MEMORY_FLAG_READONLY;
-  _vk_image_mem_init (mem, allocator, parent, device, &params,
+  _vk_image_mem_init (mem, allocator, parent, device, usage, &params,
       mem->requirements.size, user_data, notify);
   mem->wrapped = TRUE;
 
@@ -350,16 +306,21 @@ _vk_image_mem_map_full (GstVulkanImageMemory * mem, GstMapInfo * info,
   GstMapInfo *vk_map_info;
 
   /* FIXME: possible layout transformation needed */
+  g_mutex_lock (&mem->lock);
 
-  if (!mem->vk_mem)
+  if (!mem->vk_mem) {
+    g_mutex_unlock (&mem->lock);
     return NULL;
+  }
 
   vk_map_info = g_new0 (GstMapInfo, 1);
   info->user_data[0] = vk_map_info;
   if (!gst_memory_map ((GstMemory *) mem->vk_mem, vk_map_info, info->flags)) {
     g_free (vk_map_info);
+    g_mutex_unlock (&mem->lock);
     return NULL;
   }
+  g_mutex_unlock (&mem->lock);
 
   return vk_map_info->data;
 }
@@ -367,7 +328,9 @@ _vk_image_mem_map_full (GstVulkanImageMemory * mem, GstMapInfo * info,
 static void
 _vk_image_mem_unmap_full (GstVulkanImageMemory * mem, GstMapInfo * info)
 {
+  g_mutex_lock (&mem->lock);
   gst_memory_unmap ((GstMemory *) mem->vk_mem, info->user_data[0]);
+  g_mutex_unlock (&mem->lock);
 
   g_free (info->user_data[0]);
 }
@@ -468,10 +431,6 @@ gst_vulkan_image_memory_set_layout (GstVulkanImageMemory * vk_mem,
 
 /**
  * gst_vulkan_image_memory_alloc:
- * @device:a #GstVulkanDevice
- * @memory_type_index: the Vulkan memory type index
- * @params: a #GstAllocationParams
- * @size: the size to allocate
  *
  * Allocated a new #GstVulkanImageMemory.
  *
@@ -486,6 +445,47 @@ gst_vulkan_image_memory_alloc (GstVulkanDevice * device, VkFormat format,
 
   mem = _vk_image_mem_new_alloc (_vulkan_image_memory_allocator, NULL, device,
       format, width, height, tiling, usage, mem_prop_flags, NULL, NULL);
+
+  return (GstMemory *) mem;
+}
+
+GstMemory *
+gst_vulkan_image_memory_alloc_bind (GstVulkanDevice * device, VkFormat format,
+    gsize width, gsize height, VkImageTiling tiling, VkImageUsageFlags usage,
+    VkMemoryPropertyFlags mem_prop_flags)
+{
+  GstAllocationParams params = { 0, };
+  GstVulkanImageMemory *mem;
+  GstVulkanMemory *dev_mem;
+  guint32 type_idx;
+
+  mem =
+      (GstVulkanImageMemory *) gst_vulkan_image_memory_alloc (device, format,
+      width, height, tiling, usage, mem_prop_flags);
+  if (!mem)
+    return NULL;
+
+  if (!gst_vulkan_memory_find_memory_type_index_with_type_properties (device,
+          mem->requirements.memoryTypeBits, mem_prop_flags, &type_idx)) {
+    gst_memory_unref (GST_MEMORY_CAST (mem));
+    return NULL;
+  }
+
+  /* XXX: assumes alignment is a power of 2 */
+  params.align = mem->requirements.alignment - 1;
+  dev_mem = (GstVulkanMemory *) gst_vulkan_memory_alloc (device, type_idx,
+      &params, mem->requirements.size, mem_prop_flags);
+  if (!dev_mem) {
+    gst_memory_unref (GST_MEMORY_CAST (mem));
+    return NULL;
+  }
+
+  if (!gst_vulkan_image_memory_bind (mem, dev_mem)) {
+    gst_memory_unref (GST_MEMORY_CAST (dev_mem));
+    gst_memory_unref (GST_MEMORY_CAST (mem));
+    return NULL;
+  }
+  gst_memory_unref (GST_MEMORY_CAST (dev_mem));
 
   return (GstMemory *) mem;
 }
@@ -519,6 +519,41 @@ gst_vulkan_image_memory_get_height (GstVulkanImageMemory * image)
       0);
 
   return image->create_info.extent.height;
+}
+
+gboolean
+gst_vulkan_image_memory_bind (GstVulkanImageMemory * img_mem,
+    GstVulkanMemory * memory)
+{
+  gsize maxsize;
+
+  g_return_val_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (img_mem)),
+      FALSE);
+  g_return_val_if_fail (gst_is_vulkan_memory (GST_MEMORY_CAST (memory)), FALSE);
+
+  /* will we overrun the allocated data? */
+  gst_memory_get_sizes (GST_MEMORY_CAST (memory), NULL, &maxsize);
+  g_return_val_if_fail (memory->vk_offset + img_mem->requirements.size <=
+      maxsize, FALSE);
+
+  g_mutex_lock (&img_mem->lock);
+
+  if (img_mem->vk_mem) {
+    guint vk_mem_map_count = img_mem->vk_mem->map_count;
+    if (vk_mem_map_count > 0) {
+      g_mutex_unlock (&img_mem->lock);
+      g_return_val_if_fail (vk_mem_map_count > 0, FALSE);
+    }
+    gst_memory_unref (GST_MEMORY_CAST (img_mem->vk_mem));
+  }
+
+  vkBindImageMemory (img_mem->device->device, img_mem->image, memory->mem_ptr,
+      memory->vk_offset);
+  img_mem->vk_mem =
+      (GstVulkanMemory *) gst_memory_ref (GST_MEMORY_CAST (memory));
+  g_mutex_unlock (&img_mem->lock);
+
+  return TRUE;
 }
 
 G_DEFINE_TYPE (GstVulkanImageMemoryAllocator, gst_vulkan_image_memory_allocator,

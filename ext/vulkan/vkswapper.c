@@ -181,8 +181,8 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
     supports_present =
         gst_vulkan_window_get_presentation_support (swapper->window,
         swapper->device, i);
-    if ((swapper->device->
-            queue_family_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
+    if ((swapper->device->queue_family_props[i].
+            queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
       if (supports_present) {
         /* found one that supports both */
         graphics_queue = present_queue = i;
@@ -568,8 +568,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     n_images_wanted = swapper->surf_props.maxImageCount;
   }
 
-  if (swapper->surf_props.
-      supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
+  if (swapper->
+      surf_props.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
     preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
   } else {
     preTransform = swapper->surf_props.currentTransform;
@@ -609,8 +609,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
         "Incorrect usage flags available for the swap images");
     return FALSE;
   }
-  if ((swapper->
-          surf_props.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+  if ((swapper->surf_props.
+          supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
       != 0) {
     usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   } else {
@@ -762,10 +762,12 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     return FALSE;
   }
 
-  buf_mem =
-      (GstVulkanBufferMemory *) gst_vulkan_buffer_memory_alloc (swapper->device,
-      swap_mem->create_info.format, GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0) *
-      GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0),
+  size =
+      GST_VIDEO_FRAME_PLANE_STRIDE (&vframe,
+      0) * GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0);
+  buf_mem = (GstVulkanBufferMemory *)
+      gst_vulkan_buffer_memory_alloc_bind (swapper->device,
+      swap_mem->create_info.format, size,
       VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
@@ -807,9 +809,6 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
       return FALSE;
   }
 
-  size =
-      GST_VIDEO_FRAME_PLANE_STRIDE (&vframe,
-      0) * GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0);
   g_assert (buf_map_info.size >= size);
   memcpy (buf_map_info.data, vframe.data[0], size);
   gst_memory_unmap ((GstMemory *) buf_mem, &buf_map_info);

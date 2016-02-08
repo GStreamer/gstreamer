@@ -39,6 +39,8 @@ G_BEGIN_DECLS
   { a, b, c, d, e, f }
 #define GST_VK_STRUCT_7(a, b, c, d, e, f, g) \
   { a, b, c, d, e, f, g }
+#define GST_VK_STRUCT_8(a, b, c, d, e, f, g, h) \
+  { a, b, c, d, e, f, g, h }
 
 #define GST_VK_BUFFER_IMAGE_COPY_INIT GST_VK_STRUCT_6
 #define GST_VK_BUFFER_IMAGE_COPY(info,bufferOffset_,bufferRowLength_,bufferImageHeight_,imageSubresourceLayers_,imageOffset_,imageExtent_) \

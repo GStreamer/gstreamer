@@ -35,6 +35,9 @@
  * Vulkan device memory.  
  */
 
+/* WARNING: while suballocation is allowed, nothing prevents aliasing which
+ * requires external synchronisation */
+
 #define GST_CAT_DEFUALT GST_CAT_VULKAN_MEMORY
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFUALT);
 
@@ -110,6 +113,7 @@ _vk_mem_init (GstVulkanMemory * mem, GstAllocator * allocator,
   mem->properties = mem_prop_flags;
   mem->notify = notify;
   mem->user_data = user_data;
+  mem->vk_offset = 0;
 
   g_mutex_init (&mem->lock);
 
@@ -128,7 +132,7 @@ _vk_mem_new (GstAllocator * allocator, GstMemory * parent,
     VkMemoryPropertyFlags mem_props_flags, gpointer user_data,
     GDestroyNotify notify)
 {
-  GstVulkanMemory *mem = g_slice_new0 (GstVulkanMemory);
+  GstVulkanMemory *mem = g_new0 (GstVulkanMemory, 1);
   GError *error = NULL;
   VkResult err;
 
@@ -160,7 +164,8 @@ _vk_mem_map_full (GstVulkanMemory * mem, GstMapInfo * info, gsize size)
     return NULL;
   }
 
-  err = vkMapMemory (mem->device->device, mem->mem_ptr, 0, size, 0, &data);
+  err = vkMapMemory (mem->device->device, mem->mem_ptr, mem->vk_offset,
+      size, 0, &data);
   if (gst_vulkan_error_to_g_error (err, &error, "vkMapMemory") < 0) {
     GST_CAT_ERROR (GST_CAT_VULKAN_MEMORY, "Failed to map device memory %s",
         error->message);
@@ -184,9 +189,30 @@ _vk_mem_copy (GstVulkanMemory * src, gssize offset, gssize size)
 }
 
 static GstMemory *
-_vk_mem_share (GstVulkanMemory * mem, gssize offset, gssize size)
+_vk_mem_share (GstVulkanMemory * mem, gssize offset, gsize size)
 {
-  return NULL;
+  GstVulkanMemory *shared = g_new0 (GstVulkanMemory, 1);
+  GstVulkanMemory *parent = mem;
+  GstAllocationParams params = { 0, };
+
+  if (size == -1)
+    size = mem->mem.size - offset;
+
+  g_return_val_if_fail (size > 0, NULL);
+
+  while ((parent = (GstVulkanMemory *) (GST_MEMORY_CAST (parent)->parent)));
+
+  params.flags = GST_MEMORY_FLAGS (mem);
+  params.align = GST_MEMORY_CAST (parent)->align;
+
+  _vk_mem_init (shared, _vulkan_memory_allocator, GST_MEMORY_CAST (mem),
+      parent->device, parent->alloc_info.memoryTypeIndex, &params, size,
+      parent->properties, NULL, NULL);
+  shared->mem_ptr = parent->mem_ptr;
+  shared->wrapped = TRUE;
+  shared->vk_offset = offset + mem->vk_offset;
+
+  return GST_MEMORY_CAST (shared);
 }
 
 static gboolean
@@ -217,9 +243,33 @@ _vk_mem_free (GstAllocator * allocator, GstMemory * memory)
   if (mem->notify)
     mem->notify (mem->user_data);
 
-  vkFreeMemory (mem->device->device, mem->mem_ptr, NULL);
+  if (mem->mem_ptr && !mem->wrapped)
+    vkFreeMemory (mem->device->device, mem->mem_ptr, NULL);
 
   gst_object_unref (mem->device);
+}
+
+gboolean
+gst_vulkan_memory_find_memory_type_index_with_type_properties (GstVulkanDevice *
+    device, guint32 typeBits, VkMemoryPropertyFlags properties,
+    guint32 * typeIndex)
+{
+  guint32 i;
+
+  /* Search memtypes to find first index with those properties */
+  for (i = 0; i < 32; i++) {
+    if ((typeBits & 1) == 1) {
+      /* Type is available, does it match user properties? */
+      if ((device->memory_properties.memoryTypes[i].
+              propertyFlags & properties) == properties) {
+        *typeIndex = i;
+        return TRUE;
+      }
+    }
+    typeBits >>= 1;
+  }
+
+  return FALSE;
 }
 
 /**

@@ -51,6 +51,7 @@ struct _GstVulkanMemory
 
   /* <protected> */
   GMutex                    lock;
+  guint                     map_count;
 
   /* <private> */
   GDestroyNotify            notify;
@@ -58,6 +59,12 @@ struct _GstVulkanMemory
 
   VkMemoryAllocateInfo      alloc_info;
   VkMemoryPropertyFlags     properties;
+
+  /* we need our own offset because GstMemory's is used to offset into the
+   * mapped pointer which when suballocating, we need to avoid.  This in
+   * relation to the root memory */
+  guint64                   vk_offset;
+  gboolean                  wrapped;
 };
 
 /**
@@ -88,6 +95,11 @@ GstMemory *     gst_vulkan_memory_alloc         (GstVulkanDevice * device,
                                                  GstAllocationParams * params,
                                                  gsize size,
                                                  VkMemoryPropertyFlags mem_prop_flags);
+
+gboolean        gst_vulkan_memory_find_memory_type_index_with_type_properties   (GstVulkanDevice * device,
+                                                                                 guint32 typeBits,
+                                                                                 VkMemoryPropertyFlags properties,
+                                                                                 guint32 * typeIndex);
 
 G_END_DECLS
 
