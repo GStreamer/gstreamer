@@ -27,10 +27,14 @@
 from ..overrides import override as override_
 from ..importer import modules
 
-from gi.repository import Gst
+import gi
+gi.require_version('Gst', '1.0')
+
+from gi.repository import Gst  # noqa
 
 GstPbutils = modules['GstPbutils']._introspection_module
 __all__ = []
+
 
 def override(cls):
     name = cls.__name__
@@ -38,6 +42,7 @@ def override(cls):
     __all__.append(name)
 
     return cls
+
 
 @override
 class EncodingVideoProfile(GstPbutils.EncodingVideoProfile):
@@ -51,6 +56,7 @@ class EncodingVideoProfile(GstPbutils.EncodingVideoProfile):
         self.set_restriction(restriction)
         self.set_presence(presence)
 
+
 @override
 class EncodingAudioProfile(GstPbutils.EncodingAudioProfile):
     def __init__(self, format, preset=None, restriction=None, presence=0):
@@ -62,6 +68,7 @@ class EncodingAudioProfile(GstPbutils.EncodingAudioProfile):
             restriction = Gst.Caps('ANY')
         self.set_restriction(restriction)
         self.set_presence(presence)
+
 
 @override
 class EncodingContainerProfile(GstPbutils.EncodingContainerProfile):

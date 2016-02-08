@@ -211,7 +211,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   PyGILState_STATE state;
-  PyObject *gst, *dict, *pyplugin;
+  PyObject *gi, *require_version, *args, *gst, *dict, *pyplugin;
   gboolean we_initialized = FALSE;
   GModule *libpython;
   gpointer has_python = NULL;
@@ -259,6 +259,21 @@ plugin_init (GstPlugin * plugin)
     g_critical ("pygobject initialization failed");
     return FALSE;
   }
+
+  gi = PyImport_ImportModule ("gi");
+  if (!gi) {
+    g_critical ("can't find gi");
+    return FALSE;
+  }
+
+
+  require_version = PyObject_GetAttrString (gi, (char *) "require_version");
+  args = PyTuple_Pack (2, PyUnicode_FromString ("Gst"),
+      PyUnicode_FromString ("1.0"));
+  PyObject_CallObject (require_version, args);
+  Py_DECREF (require_version);
+  Py_DECREF (args);
+  Py_DECREF (gi);
 
   gst = PyImport_ImportModule ("gi.repository.Gst");
   if (!gst) {
