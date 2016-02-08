@@ -23,8 +23,6 @@
 
 #include <gst/base/gstbasesrc.h>
 
-#include "_stdint.h"
-
 #include <dvdnav/dvdnav.h>
 #include <dvdread/ifo_read.h>
 #include <dvdread/nav_read.h>

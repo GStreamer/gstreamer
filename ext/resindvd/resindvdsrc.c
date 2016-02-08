@@ -1923,7 +1923,7 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
   audio_attr_t *a_attrs;
   subp_attr_t *s_attrs;
   gint n_audio, n_subp;
-  int8_t cur_audio;
+  gint8 cur_audio;
   GstStructure *s;
   GstEvent *e;
   gint i;
@@ -2264,7 +2264,7 @@ rsn_dvdsrc_enqueue_nav_block (resinDvdSrc * src, GstBuffer * nav_buf,
 static void
 rsn_dvdsrc_activate_nav_block (resinDvdSrc * src, GstBuffer * nav_buf)
 {
-  int32_t forced_button;
+  gint32 forced_button;
 
   {
     GstMapInfo mmap;
@@ -2461,7 +2461,7 @@ rsn_dvdsrc_post_title_info (GstElement * element)
   resinDvdSrc *src = RESINDVDSRC (element);
   GstMessage *message;
   GstStructure *s;
-  int32_t n, ntitles;
+  gint32 n, ntitles;
   int res;
   GValue array = { 0 };
 
@@ -2477,8 +2477,8 @@ rsn_dvdsrc_post_title_info (GstElement * element)
       G_TYPE_STRING, "dvd-title-info", NULL);
 
   for (n = 0; n < ntitles; ++n) {
-    uint64_t *times, duration;
-    uint32_t nchapters;
+    guint64 *times, duration;
+    guint32 nchapters;
     GValue item = { 0 };
 
     g_value_init (&item, G_TYPE_UINT64);
