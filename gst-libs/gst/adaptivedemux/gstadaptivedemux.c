@@ -1343,8 +1343,7 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
           ts = stop;
         }
 
-        ret =
-            demux_class->stream_seek (stream, rate >= 0, stream_seek_flags, ts,
+        demux_class->stream_seek (stream, rate >= 0, stream_seek_flags, ts,
             &ts);
 
         /* replace event with a new one without snaping to seek on all streams */
