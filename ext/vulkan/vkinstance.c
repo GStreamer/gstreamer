@@ -45,6 +45,15 @@ GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 GST_DEBUG_CATEGORY (GST_VULKAN_DEBUG_CAT);
 GST_DEBUG_CATEGORY (GST_CAT_CONTEXT);
 
+enum
+{
+  SIGNAL_0,
+  SIGNAL_CREATE_DEVICE,
+  LAST_SIGNAL
+};
+
+static guint gst_vulkan_instance_signals[LAST_SIGNAL] = { 0 };
+
 #define gst_vulkan_instance_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanInstance, gst_vulkan_instance,
     GST_TYPE_OBJECT, GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
@@ -74,15 +83,29 @@ gst_vulkan_instance_init (GstVulkanInstance * instance)
 }
 
 static void
-gst_vulkan_instance_class_init (GstVulkanInstanceClass * instance_class)
+gst_vulkan_instance_class_init (GstVulkanInstanceClass * klass)
 {
   gst_vulkan_memory_init_once ();
   gst_vulkan_image_memory_init_once ();
   gst_vulkan_buffer_memory_init_once ();
 
-  g_type_class_add_private (instance_class, sizeof (GstVulkanInstancePrivate));
+  g_type_class_add_private (klass, sizeof (GstVulkanInstancePrivate));
 
-  G_OBJECT_CLASS (instance_class)->finalize = gst_vulkan_instance_finalize;
+  /**
+   * GstVulkanInstance::create-device:
+   * @object: the #GstVulkanDisplay
+   *
+   * Overrides the #GstVulkanDevice creation mechanism.
+   * It can be called from any thread.
+   *
+   * Returns: the newly created #GstVulkanDevice.
+   */
+  gst_vulkan_instance_signals[SIGNAL_CREATE_DEVICE] =
+      g_signal_new ("create-device", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      GST_TYPE_VULKAN_DEVICE, 0);
+
+  G_OBJECT_CLASS (klass)->finalize = gst_vulkan_instance_finalize;
 }
 
 static void
@@ -381,6 +404,28 @@ gst_vulkan_instance_get_proc_address (GstVulkanInstance * instance,
   GST_TRACE_OBJECT (instance, "%s", name);
 
   return vkGetInstanceProcAddr (instance->instance, name);
+}
+
+GstVulkanDevice *
+gst_vulkan_instance_create_device (GstVulkanInstance * instance,
+    GError ** error)
+{
+  GstVulkanDevice *device;
+
+  g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), NULL);
+
+  g_signal_emit (instance, gst_vulkan_instance_signals[SIGNAL_CREATE_DEVICE], 0,
+      &device);
+
+  if (!device)
+    device = gst_vulkan_device_new (instance);
+
+  if (!gst_vulkan_device_open (device, error)) {
+    gst_object_unref (device);
+    device = NULL;
+  }
+
+  return device;
 }
 
 /**

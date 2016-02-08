@@ -63,6 +63,9 @@ gboolean            gst_vulkan_instance_open                (GstVulkanInstance *
 gpointer            gst_vulkan_instance_get_proc_address    (GstVulkanInstance * instance,
                                                              const gchar * name);
 
+GstVulkanDevice *   gst_vulkan_instance_create_device       (GstVulkanInstance * instance,
+                                                             GError ** error);
+
 void                gst_context_set_vulkan_instance         (GstContext * context,
                                                              GstVulkanInstance * instance);
 gboolean            gst_context_get_vulkan_instance         (GstContext * context,
