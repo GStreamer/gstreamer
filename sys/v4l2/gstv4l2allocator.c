@@ -1371,7 +1371,7 @@ error:
           " returning an error, or even stop capturing.");
       /* have we de-queued a buffer ? */
       if (!IS_QUEUED (buffer)) {
-        GST_DEBUG_OBJECT (allocator, "reenqueing buffer");
+        GST_DEBUG_OBJECT (allocator, "reenqueueing buffer");
         /* FIXME ... should we do something here? */
       }
       break;
