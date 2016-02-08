@@ -40,6 +40,7 @@ GType gst_vulkan_buffer_memory_allocator_get_type(void);
 #define GST_VULKAN_BUFFER_MEMORY_ALLOCATOR_CAST(obj)            ((GstVulkanBufferMemoryAllocator *)(obj))
 
 #define GST_VULKAN_BUFFER_MEMORY_ALLOCATOR_NAME "VulkanBuffer"
+#define GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER "memory:" GST_VULKAN_BUFFER_MEMORY_ALLOCATOR_NAME
 
 struct _GstVulkanBufferMemory
 {

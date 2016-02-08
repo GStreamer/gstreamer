@@ -42,6 +42,7 @@ GType gst_vulkan_image_memory_allocator_get_type(void);
 #define GST_VULKAN_IMAGE_MEMORY_ALLOCATOR_CAST(obj)            ((GstVulkanImageMemoryAllocator *)(obj))
 
 #define GST_VULKAN_IMAGE_MEMORY_ALLOCATOR_NAME "VulkanImage"
+#define GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE "memory:" GST_VULKAN_IMAGE_MEMORY_ALLOCATOR_NAME
 
 struct _GstVulkanImageMemory
 {
