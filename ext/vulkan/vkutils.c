@@ -292,7 +292,8 @@ gst_vulkan_handle_set_context (GstElement * element, GstContext * context,
 
 gboolean
 gst_vulkan_handle_context_query (GstElement * element, GstQuery * query,
-    GstVulkanDisplay ** display, GstVulkanInstance ** instance)
+    GstVulkanDisplay ** display, GstVulkanInstance ** instance,
+    GstVulkanDevice ** device)
 {
   gboolean res = FALSE;
   const gchar *context_type;
@@ -303,6 +304,7 @@ gst_vulkan_handle_context_query (GstElement * element, GstQuery * query,
   g_return_val_if_fail (GST_QUERY_TYPE (query) != GST_QUERY_CONTEXT, FALSE);
   g_return_val_if_fail (display != NULL, FALSE);
   g_return_val_if_fail (instance != NULL, FALSE);
+  g_return_val_if_fail (device != NULL, FALSE);
 
   gst_query_parse_context_type (query, &context_type);
 
@@ -329,6 +331,22 @@ gst_vulkan_handle_context_query (GstElement * element, GstQuery * query,
       context = gst_context_new (GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR, TRUE);
 
     gst_context_set_vulkan_instance (context, *instance);
+    gst_query_set_context (query, context);
+    gst_context_unref (context);
+
+    res = *instance != NULL;
+  } else if (g_strcmp0 (context_type, "gst.vulkan.device") == 0) {
+    GstStructure *s;
+
+    gst_query_parse_context (query, &old_context);
+
+    if (old_context)
+      context = gst_context_copy (old_context);
+    else
+      context = gst_context_new ("gst.vulkan.device", TRUE);
+
+    s = gst_context_writable_structure (context);
+    gst_structure_set (s, "device", GST_TYPE_VULKAN_DEVICE, *device, NULL);
     gst_query_set_context (query, context);
     gst_context_unref (context);
 

@@ -30,7 +30,7 @@ gboolean gst_vulkan_ensure_element_data (gpointer element,
 gboolean gst_vulkan_handle_set_context (GstElement * element, GstContext * context,
     GstVulkanDisplay ** display, GstVulkanInstance ** instance);
 gboolean gst_vulkan_handle_context_query (GstElement * element, GstQuery * query,
-    GstVulkanDisplay ** display, GstVulkanInstance ** instance);
+    GstVulkanDisplay ** display, GstVulkanInstance ** instance, GstVulkanDevice ** device);
 
 gboolean gst_vulkan_run_query (GstElement * element,
     GstQuery * query, GstPadDirection direction);

@@ -208,7 +208,7 @@ gst_vulkan_sink_query (GstBaseSink * bsink, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:{
       res = gst_vulkan_handle_context_query (GST_ELEMENT (vk_sink), query,
-          &vk_sink->display, &vk_sink->instance);
+          &vk_sink->display, &vk_sink->instance, &vk_sink->device);
 
       if (res)
         return res;
