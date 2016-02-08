@@ -54,6 +54,8 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
         gst_gl_shader_get_attribute_location (shader, "a_position");
     filter->draw_attr_texture_loc =
         gst_gl_shader_get_attribute_location (shader, "a_texcoord");
+
+    g_hash_table_insert (effects->shaderstable, (gchar *) "identity0", shader);
   }
   gst_gl_shader_use (shader);
 
