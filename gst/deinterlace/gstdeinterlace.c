@@ -2692,8 +2692,6 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
 invalid_caps:
   {
     GST_ERROR_OBJECT (pad, "Invalid caps: %" GST_PTR_FORMAT, caps);
-    if (srccaps)
-      gst_caps_unref (srccaps);
     return FALSE;
   }
 set_caps_failed:
