@@ -17,6 +17,7 @@ sys/oss4/oss4-sink.c
 sys/oss4/oss4-source.c
 sys/oss/gstosssink.c
 sys/oss/gstosssrc.c
+sys/osxaudio/gstosxaudioringbuffer.c
 sys/sunaudio/gstsunaudiomixeroptions.c
 sys/sunaudio/gstsunaudiomixertrack.c
 sys/v4l2/gstv4l2bufferpool.c
