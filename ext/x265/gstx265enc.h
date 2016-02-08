@@ -25,7 +25,6 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideoencoder.h>
-#include "_stdint.h"
 #include <x265.h>
 
 G_BEGIN_DECLS
