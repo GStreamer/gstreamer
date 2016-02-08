@@ -1949,6 +1949,7 @@ gst_rtsp_client_sink_loop_rx (GstRTSPClientSink * sink)
           goto server_eof;
         }
         continue;
+        break;
       case GST_RTSP_ENET:
         GST_DEBUG_OBJECT (sink, "An ethernet problem occured.");
       default:
@@ -4414,6 +4415,7 @@ gst_rtsp_client_sink_handle_message (GstBin * bin, GstMessage * message)
             gst_element_state_get_name (newstate),
             gst_element_state_get_name (pending), rtsp_client_sink->prerolled);
       }
+      /* fallthrough */
     }
     default:
     {
