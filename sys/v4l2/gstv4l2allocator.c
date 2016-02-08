@@ -1241,7 +1241,7 @@ gst_v4l2_allocator_qbuf (GstV4l2Allocator * allocator,
   }
 
   if (v4l2_ioctl (allocator->video_fd, VIDIOC_QBUF, &group->buffer) < 0) {
-    GST_ERROR_OBJECT (allocator, "failed queing buffer %i: %s",
+    GST_ERROR_OBJECT (allocator, "failed queueing buffer %i: %s",
         group->buffer.index, g_strerror (errno));
     ret = FALSE;
     if (IS_QUEUED (group->buffer)) {
