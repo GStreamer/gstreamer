@@ -35,6 +35,7 @@
 #include "vkmemory.h"
 #include "vkbuffermemory.h"
 #include "vkimagememory.h"
+#include "vkbufferpool.h"
 #include "vkutils.h"
 
 #endif /* _VK_H_ */

@@ -62,6 +62,10 @@ typedef struct _GstVulkanImageMemory GstVulkanImageMemory;
 typedef struct _GstVulkanImageMemoryAllocator GstVulkanImageMemoryAllocator;
 typedef struct _GstVulkanImageMemoryAllocatorClass GstVulkanImageMemoryAllocatorClass;
 
+typedef struct _GstVulkanBufferPool GstVulkanBufferPool;
+typedef struct _GstVulkanBufferPoolClass GstVulkanBufferPoolClass;
+typedef struct _GstVulkanBufferPoolPrivate GstVulkanBufferPoolPrivate;
+
 G_END_DECLS
 
 #endif /* _VK_FWD_H_ */

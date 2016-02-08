@@ -52,6 +52,10 @@ static gboolean gst_vulkan_upload_set_caps (GstBaseTransform * bt,
     GstCaps * in_caps, GstCaps * out_caps);
 static GstCaps *gst_vulkan_upload_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
+static gboolean gst_vulkan_upload_propose_allocation (GstBaseTransform * bt,
+    GstQuery * decide_query, GstQuery * query);
+static gboolean gst_vulkan_upload_decide_allocation (GstBaseTransform * bt,
+    GstQuery * query);
 static GstFlowReturn gst_vulkan_upload_transform (GstBaseTransform * bt,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static GstFlowReturn gst_vulkan_upload_prepare_output_buffer (GstBaseTransform *
@@ -116,6 +120,10 @@ gst_vulkan_upload_class_init (GstVulkanUploadClass * klass)
   gstbasetransform_class->query = GST_DEBUG_FUNCPTR (gst_vulkan_upload_query);
   gstbasetransform_class->set_caps = gst_vulkan_upload_set_caps;
   gstbasetransform_class->transform_caps = gst_vulkan_upload_transform_caps;
+  gstbasetransform_class->propose_allocation =
+      gst_vulkan_upload_propose_allocation;
+  gstbasetransform_class->decide_allocation =
+      gst_vulkan_upload_decide_allocation;
   gstbasetransform_class->transform = gst_vulkan_upload_transform;
   gstbasetransform_class->prepare_output_buffer =
       gst_vulkan_upload_prepare_output_buffer;
@@ -369,16 +377,98 @@ gst_vulkan_upload_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
   return TRUE;
 }
 
+static gboolean
+gst_vulkan_upload_propose_allocation (GstBaseTransform * bt,
+    GstQuery * decide_query, GstQuery * query)
+{
+  GstVulkanUpload *vk_upload = GST_VULKAN_UPLOAD (bt);
+  gboolean need_pool;
+  GstCaps *caps;
+  gboolean ret;
+  guint size;
+
+  gst_query_parse_allocation (query, &caps, &need_pool);
+
+  if (caps == NULL)
+    goto no_caps;
+
+  if (need_pool) {
+    GstBufferPool *pool;
+    GstStructure *config;
+    GstVideoInfo info;
+
+    if (!gst_video_info_from_caps (&info, caps))
+      goto invalid_caps;
+
+    /* the normal size of a frame */
+    size = info.size;
+
+    GST_DEBUG_OBJECT (bt, "create new pool");
+    pool = gst_vulkan_buffer_pool_new (vk_upload->device);
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+
+    if (!gst_buffer_pool_set_config (pool, config)) {
+      g_object_unref (pool);
+      goto config_failed;
+    }
+
+    gst_query_add_allocation_pool (query, pool, size, 1, 0);
+    g_object_unref (pool);
+  }
+
+  return TRUE;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_DEBUG_OBJECT (bt, "no caps specified");
+    return FALSE;
+  }
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (bt, "invalid caps specified");
+    return FALSE;
+  }
+config_failed:
+  {
+    GST_DEBUG_OBJECT (bt, "failed setting config");
+    return FALSE;
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
+{
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_vulkan_upload_prepare_output_buffer (GstBaseTransform * bt,
     GstBuffer * inbuf, GstBuffer ** outbuf)
 {
+  if (gst_is_vulkan_buffer_memory (gst_buffer_peek_memory (inbuf, 0))) {
+    *outbuf = inbuf;
+    return GST_FLOW_OK;
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->prepare_output_buffer (bt,
+      inbuf, outbuf);
+}
+
+static GstFlowReturn
+gst_vulkan_upload_transform (GstBaseTransform * bt, GstBuffer * inbuf,
+    GstBuffer * outbuf)
+{
   GstVulkanUpload *vk_upload = GST_VULKAN_UPLOAD (bt);
-  GstBaseTransformClass *bclass;
   GstVideoFrame v_frame;
   guint i;
 
-  bclass = GST_BASE_TRANSFORM_GET_CLASS (bt);
+  if (inbuf == outbuf)
+    return GST_FLOW_OK;
 
   if (!gst_video_frame_map (&v_frame, &vk_upload->in_info, inbuf, GST_MAP_READ)) {
     GST_ELEMENT_ERROR (bt, RESOURCE, NOT_FOUND,
@@ -386,27 +476,15 @@ gst_vulkan_upload_prepare_output_buffer (GstBaseTransform * bt,
     return GST_FLOW_ERROR;
   }
 
-  *outbuf = gst_buffer_new ();
-
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vk_upload->out_info); i++) {
-    GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (&vk_upload->out_info);
     GstMapInfo map_info;
-    VkFormat vk_format;
     gsize plane_size;
     GstMemory *mem;
 
-    vk_format = gst_vulkan_format_from_video_format (v_format, i);
-
-    mem = gst_vulkan_buffer_memory_alloc_bind (vk_upload->device,
-        vk_format, vk_upload->alloc_sizes[i],
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-
+    mem = gst_buffer_peek_memory (outbuf, i);
     if (!gst_memory_map (GST_MEMORY_CAST (mem), &map_info, GST_MAP_WRITE)) {
       GST_ELEMENT_ERROR (bt, RESOURCE, NOT_FOUND,
           ("%s", "Failed to map output memory"), NULL);
-      gst_buffer_unref (*outbuf);
-      *outbuf = NULL;
       return GST_FLOW_ERROR;
     }
 
@@ -418,19 +496,10 @@ gst_vulkan_upload_prepare_output_buffer (GstBaseTransform * bt,
 
     gst_memory_unmap (GST_MEMORY_CAST (mem), &map_info);
 
-    gst_buffer_append_memory (*outbuf, mem);
+    gst_buffer_append_memory (outbuf, mem);
   }
 
   gst_video_frame_unmap (&v_frame);
 
-  bclass->copy_metadata (bt, inbuf, *outbuf);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_vulkan_upload_transform (GstBaseTransform * bt, GstBuffer * inbuf,
-    GstBuffer * outbuf)
-{
   return GST_FLOW_OK;
 }
