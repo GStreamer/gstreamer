@@ -35,6 +35,8 @@ G_BEGIN_DECLS
 #define GST_VULKAN_SWAPPER_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_VULKAN_SWAPPER, GstVulkanSwapperClass))
 GType gst_vulkan_swapper_get_type       (void);
 
+#define GST_VULKAN_SWAPPER_VIDEO_FORMATS " { RGBA, BGRA, RGB, BGR } "
+
 struct _GstVulkanSwapper
 {
   GstObject parent;

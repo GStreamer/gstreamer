@@ -16,6 +16,7 @@ libgstvulkan_la_SOURCES = \
 	vkqueue.c \
 	vksink.c \
 	vkswapper.c \
+	vkupload.c \
 	vkutils.c \
 	vkwindow.c
 
@@ -32,6 +33,7 @@ noinst_HEADERS = \
 	vkqueue.h \
 	vksink.h \
 	vkswapper.h \
+	vkupload.h \
 	vkutils.h \
 	vkutils_private.h \
 	vkwindow.h
