@@ -25,7 +25,6 @@
 #include <gst/gst.h>
 #include <stdlib.h>
 #include <string.h>
-#include "_stdint.h"
 #include "lzo.h"
 
 /*! define if we may write up to 12 bytes beyond the output buffer */
@@ -34,8 +33,8 @@
 /* #define INBUF_PADDED 1 */
 typedef struct LZOContext
 {
-  const uint8_t *in, *in_end;
-  uint8_t *out_start, *out, *out_end;
+  const guint8 *in, *in_end;
+  guint8 *out_start, *out, *out_end;
   int error;
 } LZOContext;
 
@@ -79,8 +78,8 @@ get_len (LZOContext * c, int x, int mask)
 /*#define UNALIGNED_LOADSTORE */
 #define BUILTIN_MEMCPY
 #ifdef UNALIGNED_LOADSTORE
-#define COPY2(d, s) *(uint16_t *)(d) = *(uint16_t *)(s);
-#define COPY4(d, s) *(uint32_t *)(d) = *(uint32_t *)(s);
+#define COPY2(d, s) *(guint16 *)(d) = *(guint16 *)(s);
+#define COPY4(d, s) *(guint32 *)(d) = *(guint32 *)(s);
 #elif defined(BUILTIN_MEMCPY)
 #define COPY2(d, s) memcpy(d, s, 2);
 #define COPY4(d, s) memcpy(d, s, 4);
@@ -96,8 +95,8 @@ get_len (LZOContext * c, int x, int mask)
 static inline void
 copy (LZOContext * c, int cnt)
 {
-  register const uint8_t *src = c->in;
-  register uint8_t *dst = c->out;
+  register const guint8 *src = c->in;
+  register guint8 *dst = c->out;
   if (cnt > c->in_end - src) {
     cnt = MAX (c->in_end - src, 0);
     c->error |= LZO_INPUT_DEPLETED;
@@ -129,8 +128,8 @@ copy (LZOContext * c, int cnt)
 static inline void
 copy_backptr (LZOContext * c, int back, int cnt)
 {
-  register const uint8_t *src = &c->out[-back];
-  register uint8_t *dst = c->out;
+  register const guint8 *src = &c->out[-back];
+  register guint8 *dst = c->out;
   if (src < c->out_start || src > dst) {
     c->error |= LZO_INVALID_BACKPTR;
     return;
@@ -192,9 +191,9 @@ lzo1x_decode (void *out, int *outlen, const void *in, int *inlen)
   int x;
   LZOContext c;
   c.in = in;
-  c.in_end = (const uint8_t *) in + *inlen;
+  c.in_end = (const guint8 *) in + *inlen;
   c.out = c.out_start = out;
-  c.out_end = (uint8_t *) out + *outlen;
+  c.out_end = (guint8 *) out + *outlen;
   c.error = 0;
   x = GETB (c);
   if (x > 17) {
@@ -259,10 +258,10 @@ int
 main (int argc, char *argv[])
 {
   FILE *in = fopen (argv[1], "rb");
-  uint8_t *orig = av_malloc (MAXSZ + 16);
-  uint8_t *comp = av_malloc (2 * MAXSZ + 16);
-  uint8_t *decomp = av_malloc (MAXSZ + 16);
-  size_t s = fread (orig, 1, MAXSZ, in);
+  guint8 *orig = av_malloc (MAXSZ + 16);
+  guint8 *comp = av_malloc (2 * MAXSZ + 16);
+  guint8 *decomp = av_malloc (MAXSZ + 16);
+  gsize s = fread (orig, 1, MAXSZ, in);
   lzo_uint clen = 0;
   long tmp[LZO1X_MEM_COMPRESS];
   int inlen, outlen;
