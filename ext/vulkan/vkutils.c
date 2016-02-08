@@ -195,6 +195,8 @@ gst_vulkan_ensure_element_data (gpointer element,
    *     type.
    */
   if (!*instance_ptr) {
+    GError *error = NULL;
+
     _vk_gst_context_query (element, GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR);
 
     /* Neighbour found and it updated the display */
@@ -208,6 +210,12 @@ gst_vulkan_ensure_element_data (gpointer element,
       gst_context_set_vulkan_instance (context, *instance_ptr);
 
       _vk_context_propagate (element, context);
+    }
+
+    if (!gst_vulkan_instance_open (*instance_ptr, &error)) {
+      GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+          ("Failed to create vulkan instance"), ("%s", error->message));
+      return FALSE;
     }
   }
 

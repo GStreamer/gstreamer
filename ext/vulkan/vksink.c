@@ -252,12 +252,6 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
       }
 
-      if (!gst_vulkan_instance_open (vk_sink->instance, &error)) {
-        GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
-            ("Failed to create vulkan instance"), ("%s", error->message));
-        return GST_STATE_CHANGE_FAILURE;
-      }
-
       if (!(vk_sink->device =
               gst_vulkan_instance_create_device (vk_sink->instance, &error))) {
         GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
