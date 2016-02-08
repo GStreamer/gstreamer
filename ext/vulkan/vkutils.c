@@ -301,7 +301,7 @@ gst_vulkan_handle_context_query (GstElement * element, GstQuery * query,
 
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (query != NULL, FALSE);
-  g_return_val_if_fail (GST_QUERY_TYPE (query) != GST_QUERY_CONTEXT, FALSE);
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT, FALSE);
   g_return_val_if_fail (display != NULL, FALSE);
   g_return_val_if_fail (instance != NULL, FALSE);
   g_return_val_if_fail (device != NULL, FALSE);
