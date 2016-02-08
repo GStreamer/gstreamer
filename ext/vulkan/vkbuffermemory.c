@@ -60,16 +60,11 @@ _find_memory_type_index_with_type_properties (GstVulkanDevice * device,
   return FALSE;
 }
 
-#define GST_VK_CREATE_BUFFER_INFO(info,pNext_,flags_,size_,usage_,sharingMode_,queueFamilyIndexCount_,pQueueFamilyIndices_) \
+#define GST_VK_BUFFER_CREATE_INFO_INIT GST_VK_STRUCT_8
+#define GST_VK_BUFFER_CREATE_INFO(info, pNext, flags, size, usage, sharingMode, queueFamilyIndexCount, pQueueFamilyIndices ) \
   G_STMT_START { \
-    (info).sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO; \
-    (info).pNext = pNext_; \
-    (info).flags = flags_; \
-    (info).size = size_; \
-    (info).usage = usage_; \
-    (info).sharingMode = sharingMode_; \
-    (info).queueFamilyIndexCount = queueFamilyIndexCount_; \
-    (info).pQueueFamilyIndices = pQueueFamilyIndices_; \
+    VkBufferCreateInfo tmp = GST_VK_BUFFER_CREATE_INFO_INIT (VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, pNext, flags, size, usage, sharingMode, queueFamilyIndexCount, pQueueFamilyIndices); \
+    (info) = tmp; \
   } G_STMT_END
 
 static gboolean
@@ -77,20 +72,17 @@ _create_info_from_args (VkBufferCreateInfo * info, gsize size,
     VkBufferUsageFlags usage)
 {
   /* FIXME: validate these */
-  GST_VK_CREATE_BUFFER_INFO (*info, NULL, 0, size, usage,
+  GST_VK_BUFFER_CREATE_INFO (*info, NULL, 0, size, usage,
       VK_SHARING_MODE_EXCLUSIVE, 0, NULL);
 
   return TRUE;
 }
 
-#define GST_VK_CREATE_BUFFER_VIEW_INFO(info,pNext_,flags_,buffer_,format_,offset_,range_) \
+#define GST_VK_BUFFER_VIEW_CREATE_INFO_INIT GST_VK_STRUCT_7
+#define GST_VK_BUFFER_VIEW_CREATE_INFO(info, pNext, flags, buffer, format, offset, range) \
   G_STMT_START { \
-    (info).sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO; \
-    (info).pNext = pNext_; \
-    (info).buffer = buffer_; \
-    (info).format = format_; \
-    (info).offset = offset_; \
-    (info).range = range_; \
+    VkBufferViewCreateInfo tmp = GST_VK_BUFFER_VIEW_CREATE_INFO_INIT (VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO, pNext, flags, buffer, format, offset, range); \
+    (info) = tmp; \
   } G_STMT_END
 
 static gboolean
@@ -100,7 +92,7 @@ _create_view_from_args (VkBufferViewCreateInfo * info, VkBuffer buffer,
   /* FIXME: validate these */
   g_assert (format != VK_FORMAT_UNDEFINED);
 
-  GST_VK_CREATE_BUFFER_VIEW_INFO (*info, NULL, 0, buffer, format, offset,
+  GST_VK_BUFFER_VIEW_CREATE_INFO (*info, NULL, 0, buffer, format, offset,
       range);
 
   return TRUE;
