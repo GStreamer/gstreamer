@@ -1964,10 +1964,6 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->have_group_id = FALSE;
     qtdemux->group_id = G_MAXUINT;
 
-    if (qtdemux->protection_system_ids) {
-      g_ptr_array_free (qtdemux->protection_system_ids, TRUE);
-      qtdemux->protection_system_ids = NULL;
-    }
     g_queue_foreach (&qtdemux->protection_event_queue, (GFunc) gst_event_unref,
         NULL);
     g_queue_clear (&qtdemux->protection_event_queue);
@@ -1991,6 +1987,10 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     gst_caps_replace (&qtdemux->media_caps, NULL);
     qtdemux->timescale = 0;
     qtdemux->got_moov = FALSE;
+    if (qtdemux->protection_system_ids) {
+      g_ptr_array_free (qtdemux->protection_system_ids, TRUE);
+      qtdemux->protection_system_ids = NULL;
+    }
   } else if (qtdemux->mss_mode) {
     gst_flow_combiner_reset (qtdemux->flowcombiner);
     for (n = 0; n < qtdemux->n_streams; n++)
