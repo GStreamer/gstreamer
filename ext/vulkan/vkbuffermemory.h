@@ -49,6 +49,7 @@ struct _GstVulkanBufferMemory
   GstVulkanDevice * device;
 
   VkBuffer buffer;
+  VkBufferView view;
   GstVulkanMemory *vk_mem;
 
   VkMemoryRequirements requirements;
