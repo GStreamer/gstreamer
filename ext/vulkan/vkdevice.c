@@ -93,8 +93,10 @@ gst_vulkan_device_finalize (GObject * object)
     vkDestroyCommandPool (device->device, device->cmd_pool, NULL);
   device->cmd_pool = VK_NULL_HANDLE;
 
-  if (device->device)
+  if (device->device) {
+    vkDeviceWaitIdle (device->device);
     vkDestroyDevice (device->device, NULL);
+  }
   device->device = VK_NULL_HANDLE;
 
   if (device->instance)
