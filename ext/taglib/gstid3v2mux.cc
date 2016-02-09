@@ -463,7 +463,7 @@ add_image_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
 
           if (info_struct) {
             if (gst_structure_get (info_struct, "image-type",
-                    GST_TYPE_TAG_IMAGE_TYPE, &image_type, NULL)) {
+                    GST_TYPE_TAG_IMAGE_TYPE, &image_type, (void *) NULL)) {
               if (image_type > 0 && image_type <= 18) {
                 image_type += 2;
               } else {
