@@ -88,6 +88,7 @@ static gboolean compute_h264_decode_picture_buffer_length (GstVtdec * vtdec,
 static gboolean gst_vtdec_compute_reorder_queue_length (GstVtdec * vtdec,
     CMVideoCodecType cm_format, GstBuffer * codec_data);
 static void gst_vtdec_set_latency (GstVtdec * vtdec);
+static void gst_vtdec_set_context (GstElement * element, GstContext * context);
 
 static GstStaticPadTemplate gst_vtdec_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -120,17 +121,18 @@ static void
 gst_vtdec_class_init (GstVtdecClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
 
   /* Setting up pads and setting metadata should be moved to
      base_class_init if you intend to subclass this class. */
-  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
+  gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_vtdec_sink_template));
-  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
+  gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
           gst_caps_from_string (VIDEO_SRC_CAPS)));
 
-  gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
+  gst_element_class_set_static_metadata (element_class,
       "Apple VideoToolbox decoder",
       "Codec/Decoder/Video",
       "Apple VideoToolbox Decoder",
@@ -138,6 +140,7 @@ gst_vtdec_class_init (GstVtdecClass * klass)
       "Alessandro Decina <alessandro.d@gmail.com>");
 
   gobject_class->finalize = gst_vtdec_finalize;
+  element_class->set_context = gst_vtdec_set_context;
   video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_vtdec_start);
   video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vtdec_stop);
   video_decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_vtdec_negotiate);
@@ -973,6 +976,18 @@ gst_vtdec_set_latency (GstVtdec * vtdec)
   GST_INFO_OBJECT (vtdec, "setting latency frames:%d time:%" GST_TIME_FORMAT,
       vtdec->reorder_queue_length, GST_TIME_ARGS (latency));
   gst_video_decoder_set_latency (GST_VIDEO_DECODER (vtdec), latency, latency);
+}
+
+static void
+gst_vtdec_set_context (GstElement * element, GstContext * context)
+{
+  GstVtdec *vtdec = GST_VTDEC (element);
+
+  GST_INFO_OBJECT (element, "setting context %s",
+      gst_context_get_context_type (context));
+  gst_gl_handle_set_context (element, context,
+      &vtdec->ctxh->display, &vtdec->ctxh->other_context);
+  GST_ELEMENT_CLASS (gst_vtdec_parent_class)->set_context (element, context);
 }
 
 #ifndef HAVE_IOS
