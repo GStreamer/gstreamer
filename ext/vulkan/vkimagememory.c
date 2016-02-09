@@ -101,22 +101,6 @@ gst_vulkan_format_from_video_format (GstVideoFormat v_format, guint plane)
   }
 }
 
-static void
-_view_create_info (VkImage image, VkFormat format, VkImageViewCreateInfo * info)
-{
-  info->sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-  info->pNext = NULL;
-  info->image = image;
-  info->format = format;
-  info->viewType = VK_IMAGE_VIEW_TYPE_2D;
-  info->flags = 0;
-
-  GST_VK_COMPONENT_MAPPING (info->components, VK_COMPONENT_SWIZZLE_R,
-      VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A);
-  GST_VK_IMAGE_SUBRESOURCE_RANGE (info->subresourceRange,
-      VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
-}
-
 static gboolean
 _create_info_from_args (VkImageCreateInfo * info, VkFormat format, gsize width,
     gsize height, VkImageTiling tiling, VkImageUsageFlags usage)
@@ -183,7 +167,6 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
 {
   GstVulkanImageMemory *mem = NULL;
   GstAllocationParams params = { 0, };
-  VkImageViewCreateInfo view_info;
   VkImageCreateInfo image_info;
   VkPhysicalDevice gpu;
   GError *error = NULL;
@@ -213,14 +196,6 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   vkGetPhysicalDeviceImageFormatProperties (gpu, format, VK_IMAGE_TYPE_2D,
       tiling, usage, 0, &mem->format_properties);
 
-  if (usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT |
-          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)) {
-    _view_create_info (mem->image, format, &view_info);
-    err = vkCreateImageView (device->device, &view_info, NULL, &mem->view);
-    if (gst_vulkan_error_to_g_error (err, &error, "vkCreateImageView") < 0)
-      goto vk_error;
-  }
-
   return mem;
 
 vk_error:
@@ -247,7 +222,6 @@ _vk_image_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
 {
   GstVulkanImageMemory *mem = g_new0 (GstVulkanImageMemory, 1);
   GstAllocationParams params = { 0, };
-  VkImageViewCreateInfo view_info;
   VkPhysicalDevice gpu;
   GError *error = NULL;
   VkResult err;
@@ -273,14 +247,6 @@ _vk_image_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
   if (gst_vulkan_error_to_g_error (err, &error,
           "vkGetPhysicalDeviceImageFormatProperties") < 0)
     goto vk_error;
-
-  if (usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT |
-          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)) {
-    _view_create_info (mem->image, format, &view_info);
-    err = vkCreateImageView (device->device, &view_info, NULL, &mem->view);
-    if (gst_vulkan_error_to_g_error (err, &error, "vkCreateImageView") < 0)
-      goto vk_error;
-  }
 
   return mem;
 
@@ -373,9 +339,6 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
 
   if (mem->image && !mem->wrapped)
     vkDestroyImage (mem->device->device, mem->image, NULL);
-
-  if (mem->view)
-    vkDestroyImageView (mem->device->device, mem->view, NULL);
 
   if (mem->vk_mem)
     gst_memory_unref ((GstMemory *) mem->vk_mem);
@@ -538,13 +501,16 @@ gst_vulkan_image_memory_bind (GstVulkanImageMemory * img_mem,
 
   g_mutex_lock (&img_mem->lock);
 
+  /* "Once a buffer or image is bound to a region of a memory object, it must
+   * not be rebound or unbound." */
+  if (img_mem->vk_mem == memory) {
+    g_mutex_unlock (&img_mem->lock);
+    return TRUE;
+  }
+
   if (img_mem->vk_mem) {
-    guint vk_mem_map_count = img_mem->vk_mem->map_count;
-    if (vk_mem_map_count > 0) {
-      g_mutex_unlock (&img_mem->lock);
-      g_return_val_if_fail (vk_mem_map_count > 0, FALSE);
-    }
-    gst_memory_unref (GST_MEMORY_CAST (img_mem->vk_mem));
+    g_mutex_unlock (&img_mem->lock);
+    return FALSE;
   }
 
   vkBindImageMemory (img_mem->device->device, img_mem->image, memory->mem_ptr,

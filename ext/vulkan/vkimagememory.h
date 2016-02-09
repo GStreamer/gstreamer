@@ -52,7 +52,6 @@ struct _GstVulkanImageMemory
 
   VkImage image;
   VkImageLayout image_layout;
-  VkImageView view;
   GstVulkanMemory *vk_mem;
 
   VkImageCreateInfo create_info;
