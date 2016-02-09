@@ -37,6 +37,9 @@ GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 #ifndef GL_TIMEOUT_EXPIRED
 #define GL_TIMEOUT_EXPIRED 0x911B
 #endif
+#ifndef GL_TIMEOUT_IGNORED
+#define GL_TIMEOUT_IGNORED 0xFFFFFFFFFFFFFFFFull
+#endif
 
 static void
 _default_set_sync_gl (GstGLSyncMeta * sync_meta, GstGLContext * context)
