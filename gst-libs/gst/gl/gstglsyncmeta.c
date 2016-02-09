@@ -56,12 +56,25 @@ _default_set_sync_gl (GstGLSyncMeta * sync_meta, GstGLContext * context)
       gl->Flush ();
     GST_LOG ("setting sync object %p", sync_meta->data);
   } else {
+    /* XXX: this a little over the top if the CPU is never going to
+     * access the data, however this is the legacy path, so... */
     gl->Finish ();
   }
 }
 
 static void
 _default_wait_gl (GstGLSyncMeta * sync_meta, GstGLContext * context)
+{
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  if (sync_meta->data && gl->WaitSync) {
+    GST_LOG ("waiting on sync object %p", sync_meta->data);
+    gl->WaitSync ((GLsync) sync_meta->data, 0, GL_TIMEOUT_IGNORED);
+  }
+}
+
+static void
+_default_wait_cpu_gl (GstGLSyncMeta * sync_meta, GstGLContext * context)
 {
   const GstGLFuncs *gl = context->gl_vtable;
   GLenum res;
@@ -129,6 +142,7 @@ gst_buffer_add_gl_sync_meta (GstGLContext * context, GstBuffer * buffer)
 
   ret->set_sync_gl = _default_set_sync_gl;
   ret->wait_gl = _default_wait_gl;
+  ret->wait_cpu_gl = _default_wait_cpu_gl;
   ret->copy = _default_copy;
   ret->free_gl = _default_free_gl;
 
@@ -174,6 +188,25 @@ gst_gl_sync_meta_wait (GstGLSyncMeta * sync_meta, GstGLContext * context)
         (GstGLContextThreadFunc) _wait, sync_meta);
 }
 
+static void
+_wait_cpu (GstGLContext * context, GstGLSyncMeta * sync_meta)
+{
+  g_assert (sync_meta->wait_cpu_gl != NULL);
+
+  GST_LOG ("waiting %p", sync_meta);
+  sync_meta->wait_cpu_gl (sync_meta, context);
+}
+
+void
+gst_gl_sync_meta_wait_cpu (GstGLSyncMeta * sync_meta, GstGLContext * context)
+{
+  if (sync_meta->wait_cpu)
+    sync_meta->wait_cpu (sync_meta, context);
+  else
+    gst_gl_context_thread_add (context,
+        (GstGLContextThreadFunc) _wait_cpu, sync_meta);
+}
+
 static gboolean
 _gst_gl_sync_meta_transform (GstBuffer * dest, GstMeta * meta,
     GstBuffer * buffer, GQuark type, gpointer data)
@@ -197,6 +230,8 @@ _gst_gl_sync_meta_transform (GstBuffer * dest, GstMeta * meta,
       dmeta->set_sync_gl = smeta->set_sync_gl;
       dmeta->wait = smeta->wait;
       dmeta->wait_gl = smeta->wait_gl;
+      dmeta->wait_cpu = smeta->wait_cpu;
+      dmeta->wait_cpu_gl = smeta->wait_cpu_gl;
       dmeta->copy = smeta->copy;
       dmeta->free = smeta->free;
       dmeta->free_gl = smeta->free_gl;
@@ -251,6 +286,8 @@ _gst_gl_sync_meta_init (GstGLSyncMeta * sync_meta, gpointer params,
   sync_meta->set_sync_gl = NULL;
   sync_meta->wait = NULL;
   sync_meta->wait_gl = NULL;
+  sync_meta->wait_cpu = NULL;
+  sync_meta->wait_cpu_gl = NULL;
   sync_meta->copy = NULL;
   sync_meta->free = NULL;
   sync_meta->free_gl = NULL;
