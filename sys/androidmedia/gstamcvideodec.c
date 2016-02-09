@@ -490,7 +490,7 @@ gst_amc_video_dec_close (GstVideoDecoder * decoder)
     GError *err = NULL;
 
     if (!gst_amc_jni_call_void_method (env, &err, self->listener,
-          self->set_context_id, GST_AMC_VIDEO_DEC_TO_JLONG (NULL))) {
+            self->set_context_id, GST_AMC_VIDEO_DEC_TO_JLONG (NULL))) {
       GST_ERROR_OBJECT (self, "Failed to unset back pointer on the listener. "
           "crashes/hangs may ensue: %s", err ? err->message : "Unknown");
       GST_ELEMENT_ERROR_FROM_ERROR (self, err);
@@ -1010,8 +1010,8 @@ _gl_sync_render_unlocked (struct gl_sync *sync)
   if (!af_meta) {
     GST_WARNING ("Failed to retreive the transformation meta from the "
         "gl_sync %p buffer %p", sync, sync->buffer);
-  } else if (gst_amc_surface_texture_get_transform_matrix (sync->surface->
-          texture, matrix, &error)) {
+  } else if (gst_amc_surface_texture_get_transform_matrix (sync->
+          surface->texture, matrix, &error)) {
 
     gst_video_affine_transformation_meta_apply_matrix (af_meta, matrix);
     gst_video_affine_transformation_meta_apply_matrix (af_meta, yflip_matrix);
@@ -1370,6 +1370,7 @@ retry:
         sync);
     sync_meta->set_sync = _amc_gl_set_sync;
     sync_meta->wait = _amc_gl_wait;
+    sync_meta->wait_cpu = _amc_gl_wait;
     sync_meta->copy = _amc_gl_copy;
     sync_meta->free = _amc_gl_free;
 
@@ -1974,7 +1975,7 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
 
     if (self->listener) {
       if (!gst_amc_jni_call_void_method (env, &err, self->listener,
-            self->set_context_id, GST_AMC_VIDEO_DEC_TO_JLONG (NULL))) {
+              self->set_context_id, GST_AMC_VIDEO_DEC_TO_JLONG (NULL))) {
         ret = FALSE;
         goto done;
       }

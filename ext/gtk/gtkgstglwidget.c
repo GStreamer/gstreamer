@@ -260,6 +260,7 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
 
     sync_meta = gst_buffer_get_gl_sync_meta (buffer);
     if (sync_meta) {
+      /* XXX: the set_sync() seems to be needed for resizing */
       gst_gl_sync_meta_set_sync_point (sync_meta, priv->context);
       gst_gl_sync_meta_wait (sync_meta, priv->other_context);
     }

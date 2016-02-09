@@ -42,6 +42,8 @@ struct _GstGLSyncMeta {
   void (*set_sync_gl) (GstGLSyncMeta * sync, GstGLContext * context);
   void (*wait) (GstGLSyncMeta * sync, GstGLContext * context);
   void (*wait_gl) (GstGLSyncMeta * sync, GstGLContext * context);
+  void (*wait_cpu) (GstGLSyncMeta * sync, GstGLContext * context);
+  void (*wait_cpu_gl) (GstGLSyncMeta * sync, GstGLContext * context);
   void (*copy) (GstGLSyncMeta * src, GstBuffer * sbuffer, GstGLSyncMeta * dest, GstBuffer * dbuffer);
   void (*free) (GstGLSyncMeta * sync, GstGLContext * context);
   void (*free_gl) (GstGLSyncMeta * sync, GstGLContext * context);
@@ -57,6 +59,7 @@ GstGLSyncMeta *     gst_buffer_add_gl_sync_meta_full    (GstGLContext * context,
                                                          gpointer data);
 void                gst_gl_sync_meta_set_sync_point     (GstGLSyncMeta * sync, GstGLContext * context);
 void                gst_gl_sync_meta_wait               (GstGLSyncMeta * sync, GstGLContext * context);
+void                gst_gl_sync_meta_wait_cpu           (GstGLSyncMeta * sync, GstGLContext * context);
 
 G_END_DECLS
 
