@@ -1499,6 +1499,7 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
      * source element and we have received the 404 HTML response instead of
      * the manifest */
     GST_WARNING_OBJECT (demux, "Error parsing the manifest.");
+    gst_mpd_client_free (new_client);
     gst_buffer_unmap (buffer, &mapinfo);
     return GST_FLOW_ERROR;
   }
