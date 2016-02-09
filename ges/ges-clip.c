@@ -355,6 +355,8 @@ _child_added (GESContainer * container, GESTimelineElement * element)
 {
   g_signal_connect (G_OBJECT (element), "notify::priority",
       G_CALLBACK (_child_priority_changed_cb), container);
+
+  _child_priority_changed_cb (element, NULL, container);
   _compute_height (container);
 }
 

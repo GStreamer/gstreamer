@@ -491,6 +491,62 @@ GST_START_TEST (test_clip_signals)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_split_clip_effect_priorities)
+{
+  GESLayer *layer;
+  GESTimeline *timeline;
+  GESTrack *track_video;
+  GESClip *clip, *nclip;
+  GESEffect *effect;
+  GESTrackElement *source, *nsource, *neffect;
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+  layer = ges_layer_new ();
+  track_video = GES_TRACK (ges_video_track_new ());
+
+  g_object_set (timeline, "auto-transition", TRUE, NULL);
+  ges_timeline_add_track (timeline, track_video);
+  ges_timeline_add_layer (timeline, layer);
+
+  GST_DEBUG ("Create effect");
+  effect = ges_effect_new ("agingtv");
+  clip = GES_CLIP (ges_test_clip_new ());
+  g_object_set (clip, "duration", GST_SECOND * 2, NULL);
+
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect)));
+  ges_layer_add_clip (layer, clip);
+
+  source = ges_clip_find_track_element (clip, NULL, GES_TYPE_VIDEO_SOURCE);
+  assert_equals_uint64 (GES_TIMELINE_ELEMENT_PRIORITY (effect), 2);
+  assert_equals_uint64 (GES_TIMELINE_ELEMENT_PRIORITY (source), 3);
+
+  nclip = ges_clip_split (clip, GST_SECOND);
+  neffect = ges_clip_find_track_element (nclip, NULL, GES_TYPE_EFFECT);
+  nsource = ges_clip_find_track_element (nclip, NULL, GES_TYPE_VIDEO_SOURCE);
+
+  assert_equals_uint64 (GES_TIMELINE_ELEMENT_PRIORITY (effect), 2);
+  assert_equals_uint64 (GES_TIMELINE_ELEMENT_PRIORITY (source), 3);
+  assert_equals_uint64 (GES_TIMELINE_ELEMENT_PRIORITY (neffect), 2);
+  assert_equals_uint64 (GES_TIMELINE_ELEMENT_PRIORITY (nsource), 3);
+
+  /* Create a transition ... */
+  ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (clip), GST_SECOND / 2);
+
+  assert_equals_uint64 (GES_TIMELINE_ELEMENT_PRIORITY (effect), 2);
+  assert_equals_uint64 (GES_TIMELINE_ELEMENT_PRIORITY (source), 3);
+  assert_equals_uint64 (GES_TIMELINE_ELEMENT_PRIORITY (neffect), 4);
+  assert_equals_uint64 (GES_TIMELINE_ELEMENT_PRIORITY (nsource), 5);
+
+  gst_object_unref (timeline);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 ges_suite (void)
 {
@@ -506,6 +562,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_priorities_clip);
   tcase_add_test (tc_chain, test_effect_set_properties);
   tcase_add_test (tc_chain, test_clip_signals);
+  tcase_add_test (tc_chain, test_split_clip_effect_priorities);
 
   return s;
 }
