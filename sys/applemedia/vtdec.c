@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 2010, 2013 Ole André Vadla Ravnås <oleavr@soundrop.com>
- * Copyright (C) 2012, 2013 Alessandro Decina <alessandro.d@gmail.com>
+ * Copyright (C) 2012-2016 Alessandro Decina <alessandro.d@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
