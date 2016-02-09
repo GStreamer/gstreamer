@@ -581,11 +581,6 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
       _vk_format_from_video_format (GST_VIDEO_INFO_FORMAT (&swapper->v_info));
   color_space = _vk_color_space_from_video_info (&swapper->v_info);
 
-#if 1
-  /* FIXME: unsupported by LunarG's driver */
-  g_print ("alpha flags 0x%x\n",
-      (guint) swapper->surf_props.supportedCompositeAlpha);
-
   if ((swapper->surf_props.supportedCompositeAlpha &
           VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR) != 0) {
     alpha_flags = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
@@ -598,9 +593,6 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
         "Incorrect alpha flags available for the swap images");
     return FALSE;
   }
-#else
-  alpha_flags = 0;
-#endif
 
   if ((swapper->surf_props.supportedUsageFlags &
           VK_IMAGE_USAGE_TRANSFER_DST_BIT) != 0) {
