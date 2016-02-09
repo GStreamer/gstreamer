@@ -1149,8 +1149,8 @@ gst_mss_stream_seek (GstMssStream * stream, gboolean forward,
       } else if (stream->fragment_repetition_index == -1) {
         if (g_list_previous (iter)) {
           stream->current_fragment = g_list_previous (iter);
-          fragment =
-              stream->current_fragment ? stream->current_fragment->data : NULL;
+          fragment = stream->current_fragment->data;
+          g_assert (fragment);
           stream->fragment_repetition_index = fragment->repetitions - 1;
         } else {
           stream->fragment_repetition_index = 0;
