@@ -937,8 +937,6 @@ no_free_pt:
   GST_ELEMENT_ERROR (sink, RESOURCE, NO_SPACE_LEFT, (NULL),
       ("Ran out of dynamic payload types."));
 
-  if (stream)
-    g_object_unref (stream);
   return NULL;
 }
 
