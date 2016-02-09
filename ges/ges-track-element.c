@@ -194,6 +194,7 @@ ges_track_element_constructed (GObject * gobject)
 {
   GESTrackElementClass *class;
   GstElement *nleobject;
+  gchar *tmp;
   GESTrackElement *object = GES_TRACK_ELEMENT (gobject);
 
   GST_DEBUG_OBJECT (object, "Creating NleObject");
@@ -207,6 +208,11 @@ ges_track_element_constructed (GObject * gobject)
 
     return;
   }
+
+  tmp = g_strdup_printf ("%s:%s", G_OBJECT_TYPE_NAME (object),
+      GST_OBJECT_NAME (nleobject));
+  gst_object_set_name (GST_OBJECT (nleobject), tmp);
+  g_free (tmp);
 
   GST_DEBUG_OBJECT (object, "Got a valid NleObject, now filling it in");
 
@@ -511,7 +517,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
     priority = MIN_NLE_PRIO;
   }
 
-  GST_DEBUG ("object:%p, priority:%" G_GUINT32_FORMAT, object, priority);
+  GST_DEBUG_OBJECT (object, "priority:%" G_GUINT32_FORMAT, priority);
 
   if (G_UNLIKELY (priority == _PRIORITY (object)))
     return FALSE;
