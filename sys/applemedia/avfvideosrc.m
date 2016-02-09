@@ -150,6 +150,7 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
 - (BOOL)unlock;
 - (BOOL)unlockStop;
 - (BOOL)query:(GstQuery *)query;
+- (void)setContext:(GstContext *)context;
 - (GstStateChangeReturn)changeState:(GstStateChange)transition;
 - (GstFlowReturn)create:(GstBuffer **)buf;
 - (GstCaps *)fixate:(GstCaps *)caps;
@@ -1005,6 +1006,15 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   return TRUE;
 }
 
+- (void)setContext:(GstContext *)context
+{
+  GST_INFO_OBJECT (element, "setting context %s",
+          gst_context_get_context_type (context));
+  gst_gl_handle_set_context (element, context,
+          &ctxh->display, &ctxh->other_context);
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
+}
+
 - (void)getSampleBuffer:(CMSampleBufferRef)sbuf
               timestamp:(GstClockTime *)outTimestamp
                duration:(GstClockTime *)outDuration
@@ -1137,6 +1147,8 @@ static GstCaps * gst_avf_video_src_fixate (GstBaseSrc * bsrc,
     GstCaps * caps);
 static gboolean gst_avf_video_src_decide_allocation (GstBaseSrc * bsrc,
     GstQuery * query);
+static void gst_avf_video_src_set_context (GstElement * element,
+        GstContext * context);
 
 static void
 gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
@@ -1151,6 +1163,7 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
   gobject_class->set_property = gst_avf_video_src_set_property;
 
   gstelement_class->change_state = gst_avf_video_src_change_state;
+  gstelement_class->set_context = gst_avf_video_src_set_context;
 
   gstbasesrc_class->get_caps = gst_avf_video_src_get_caps;
   gstbasesrc_class->set_caps = gst_avf_video_src_set_caps;
@@ -1427,4 +1440,12 @@ gst_avf_video_src_decide_allocation (GstBaseSrc * bsrc,
   OBJC_CALLOUT_END ();
 
   return ret;
+}
+
+static void
+gst_avf_video_src_set_context (GstElement * element, GstContext * context)
+{
+  OBJC_CALLOUT_BEGIN ();
+  [GST_AVF_VIDEO_SRC_IMPL (element) setContext:context];
+  OBJC_CALLOUT_END ();
 }
