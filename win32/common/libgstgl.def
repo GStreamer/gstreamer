@@ -236,6 +236,7 @@ EXPORTS
 	gst_gl_sync_meta_get_info
 	gst_gl_sync_meta_set_sync_point
 	gst_gl_sync_meta_wait
+	gst_gl_sync_meta_wait_cpu
 	gst_gl_texture_target_from_gl
 	gst_gl_texture_target_from_string
 	gst_gl_texture_target_to_buffer_pool_option
