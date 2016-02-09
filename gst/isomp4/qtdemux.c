@@ -6935,11 +6935,13 @@ gst_qtdemux_configure_protected_caps (GstQTDemux * qtdemux,
   }
 
   s = gst_caps_get_structure (stream->caps, 0);
-  gst_structure_set (s,
-      "original-media-type", G_TYPE_STRING, gst_structure_get_name (s),
-      GST_PROTECTION_SYSTEM_ID_CAPS_FIELD, G_TYPE_STRING, selected_system,
-      NULL);
-  gst_structure_set_name (s, "application/x-cenc");
+  if (!gst_structure_has_name (s, "application/x-cenc")) {
+    gst_structure_set (s,
+        "original-media-type", G_TYPE_STRING, gst_structure_get_name (s),
+        GST_PROTECTION_SYSTEM_ID_CAPS_FIELD, G_TYPE_STRING, selected_system,
+        NULL);
+    gst_structure_set_name (s, "application/x-cenc");
+  }
   return TRUE;
 }
 
