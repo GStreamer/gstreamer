@@ -89,21 +89,12 @@ GstMemory *     gst_vulkan_buffer_memory_alloc           (GstVulkanDevice * devi
                                                          VkBufferUsageFlags usage,
                                                          VkMemoryPropertyFlags mem_prop_flags);
 
-GstMemory *     gst_vulkan_buffer_memory_alloc_bind      (GstVulkanDevice * device,
-                                                         VkFormat format,
-                                                         gsize size,
-                                                         VkBufferUsageFlags usage,
-                                                         VkMemoryPropertyFlags mem_prop_flags);
-
 GstMemory *     gst_vulkan_buffer_memory_wrapped         (GstVulkanDevice * device,
                                                          VkBuffer buffer,
                                                          VkFormat format,
                                                          VkBufferUsageFlags usage,
                                                          gpointer user_data,
                                                          GDestroyNotify notify);
-
-gboolean        gst_vulkan_buffer_memory_bind           (GstVulkanBufferMemory * buf_mem,
-                                                         GstVulkanMemory * memory);
 
 G_END_DECLS
 

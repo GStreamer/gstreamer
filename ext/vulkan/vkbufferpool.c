@@ -165,7 +165,7 @@ gst_vulkan_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 
     vk_format = gst_vulkan_format_from_video_format (v_format, i);
 
-    mem = gst_vulkan_buffer_memory_alloc_bind (vk_pool->device,
+    mem = gst_vulkan_buffer_memory_alloc (vk_pool->device,
         vk_format, priv->alloc_sizes[i],
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);

@@ -96,14 +96,6 @@ GstMemory *     gst_vulkan_image_memory_alloc           (GstVulkanDevice * devic
                                                          VkImageUsageFlags usage,
                                                          VkMemoryPropertyFlags mem_prop_flags);
 
-GstMemory * gst_vulkan_image_memory_alloc_bind          (GstVulkanDevice * device,
-                                                         VkFormat format,
-                                                         gsize width,
-                                                         gsize height,
-                                                         VkImageTiling tiling,
-                                                         VkImageUsageFlags usage,
-                                                         VkMemoryPropertyFlags mem_prop_flags);
-
 GstMemory *     gst_vulkan_image_memory_wrapped         (GstVulkanDevice * device,
                                                          VkImage image,
                                                          VkFormat format,
@@ -113,9 +105,6 @@ GstMemory *     gst_vulkan_image_memory_wrapped         (GstVulkanDevice * devic
                                                          VkImageUsageFlags usage,
                                                          gpointer user_data,
                                                          GDestroyNotify notify);
-
-gboolean        gst_vulkan_image_memory_bind            (GstVulkanImageMemory * img_mem,
-                                                         GstVulkanMemory * memory);
 
 gboolean        gst_vulkan_image_memory_set_layout      (GstVulkanImageMemory * vk_mem,
                                                          VkImageLayout,

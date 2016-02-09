@@ -170,6 +170,7 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   VkImageCreateInfo image_info;
   VkPhysicalDevice gpu;
   GError *error = NULL;
+  guint32 type_idx;
   VkImage image;
   VkResult err;
 
@@ -185,16 +186,32 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
     goto vk_error;
 
   mem = g_new0 (GstVulkanImageMemory, 1);
-  vkGetImageMemoryRequirements (device->device, image, &mem->requirements);
-
-  params.align = mem->requirements.alignment;
   _vk_image_mem_init (mem, allocator, parent, device, usage, &params,
       mem->requirements.size, user_data, notify);
   mem->create_info = image_info;
   mem->image = image;
 
-  vkGetPhysicalDeviceImageFormatProperties (gpu, format, VK_IMAGE_TYPE_2D,
+  vkGetImageMemoryRequirements (device->device, image, &mem->requirements);
+  err = vkGetPhysicalDeviceImageFormatProperties (gpu, format, VK_IMAGE_TYPE_2D,
       tiling, usage, 0, &mem->format_properties);
+  if (gst_vulkan_error_to_g_error (err, &error,
+          "vkGetPhysicalDeviceImageFormatProperties") < 0)
+    goto vk_error;
+
+  if (!gst_vulkan_memory_find_memory_type_index_with_type_properties (device,
+          mem->requirements.memoryTypeBits, mem_prop_flags, &type_idx))
+    goto error;
+
+  /* XXX: assumes alignment is a power of 2 */
+  params.align = mem->requirements.alignment - 1;
+  mem->vk_mem = (GstVulkanMemory *) gst_vulkan_memory_alloc (device, type_idx,
+      &params, mem->requirements.size, mem_prop_flags);
+  if (!mem->vk_mem)
+    goto error;
+
+  err = vkBindImageMemory (device->device, image, mem->vk_mem->mem_ptr, 0);
+  if (gst_vulkan_error_to_g_error (err, &error, "vkBindImageMemory") < 0)
+    goto vk_error;
 
   return mem;
 
@@ -231,7 +248,9 @@ _vk_image_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
 
   vkGetImageMemoryRequirements (device->device, mem->image, &mem->requirements);
 
-  params.flags = GST_MEMORY_FLAG_NOT_MAPPABLE | GST_MEMORY_FLAG_READONLY;
+  /* XXX: assumes alignment is a power of 2 */
+  params.align = mem->requirements.alignment - 1;
+  params.flags = GST_MEMORY_FLAG_NOT_MAPPABLE;
   _vk_image_mem_init (mem, allocator, parent, device, usage, &params,
       mem->requirements.size, user_data, notify);
   mem->wrapped = TRUE;
@@ -413,47 +432,6 @@ gst_vulkan_image_memory_alloc (GstVulkanDevice * device, VkFormat format,
 }
 
 GstMemory *
-gst_vulkan_image_memory_alloc_bind (GstVulkanDevice * device, VkFormat format,
-    gsize width, gsize height, VkImageTiling tiling, VkImageUsageFlags usage,
-    VkMemoryPropertyFlags mem_prop_flags)
-{
-  GstAllocationParams params = { 0, };
-  GstVulkanImageMemory *mem;
-  GstVulkanMemory *dev_mem;
-  guint32 type_idx;
-
-  mem =
-      (GstVulkanImageMemory *) gst_vulkan_image_memory_alloc (device, format,
-      width, height, tiling, usage, mem_prop_flags);
-  if (!mem)
-    return NULL;
-
-  if (!gst_vulkan_memory_find_memory_type_index_with_type_properties (device,
-          mem->requirements.memoryTypeBits, mem_prop_flags, &type_idx)) {
-    gst_memory_unref (GST_MEMORY_CAST (mem));
-    return NULL;
-  }
-
-  /* XXX: assumes alignment is a power of 2 */
-  params.align = mem->requirements.alignment - 1;
-  dev_mem = (GstVulkanMemory *) gst_vulkan_memory_alloc (device, type_idx,
-      &params, mem->requirements.size, mem_prop_flags);
-  if (!dev_mem) {
-    gst_memory_unref (GST_MEMORY_CAST (mem));
-    return NULL;
-  }
-
-  if (!gst_vulkan_image_memory_bind (mem, dev_mem)) {
-    gst_memory_unref (GST_MEMORY_CAST (dev_mem));
-    gst_memory_unref (GST_MEMORY_CAST (mem));
-    return NULL;
-  }
-  gst_memory_unref (GST_MEMORY_CAST (dev_mem));
-
-  return (GstMemory *) mem;
-}
-
-GstMemory *
 gst_vulkan_image_memory_wrapped (GstVulkanDevice * device, VkImage image,
     VkFormat format, gsize width, gsize height, VkImageTiling tiling,
     VkImageUsageFlags usage, gpointer user_data, GDestroyNotify notify)
@@ -482,44 +460,6 @@ gst_vulkan_image_memory_get_height (GstVulkanImageMemory * image)
       0);
 
   return image->create_info.extent.height;
-}
-
-gboolean
-gst_vulkan_image_memory_bind (GstVulkanImageMemory * img_mem,
-    GstVulkanMemory * memory)
-{
-  gsize maxsize;
-
-  g_return_val_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (img_mem)),
-      FALSE);
-  g_return_val_if_fail (gst_is_vulkan_memory (GST_MEMORY_CAST (memory)), FALSE);
-
-  /* will we overrun the allocated data? */
-  gst_memory_get_sizes (GST_MEMORY_CAST (memory), NULL, &maxsize);
-  g_return_val_if_fail (memory->vk_offset + img_mem->requirements.size <=
-      maxsize, FALSE);
-
-  g_mutex_lock (&img_mem->lock);
-
-  /* "Once a buffer or image is bound to a region of a memory object, it must
-   * not be rebound or unbound." */
-  if (img_mem->vk_mem == memory) {
-    g_mutex_unlock (&img_mem->lock);
-    return TRUE;
-  }
-
-  if (img_mem->vk_mem) {
-    g_mutex_unlock (&img_mem->lock);
-    return FALSE;
-  }
-
-  vkBindImageMemory (img_mem->device->device, img_mem->image, memory->mem_ptr,
-      memory->vk_offset);
-  img_mem->vk_mem =
-      (GstVulkanMemory *) gst_memory_ref (GST_MEMORY_CAST (memory));
-  g_mutex_unlock (&img_mem->lock);
-
-  return TRUE;
 }
 
 G_DEFINE_TYPE (GstVulkanImageMemoryAllocator, gst_vulkan_image_memory_allocator,
