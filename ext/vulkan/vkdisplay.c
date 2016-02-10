@@ -159,6 +159,10 @@ gst_vulkan_display_finalize (GObject * object)
   display->priv->event_thread = NULL;
   g_mutex_unlock (&display->priv->thread_lock);
 
+  if (display->instance) {
+    gst_object_unref (display->instance);
+  }
+
   G_OBJECT_CLASS (gst_vulkan_display_parent_class)->finalize (object);
 }
 
