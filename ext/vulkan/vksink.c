@@ -299,16 +299,22 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_object_unref (vk_sink->swapper);
+      if (vk_sink->swapper)
+        gst_object_unref (vk_sink->swapper);
       vk_sink->swapper = NULL;
-      gst_object_unref (vk_sink->display);
+      if (vk_sink->display)
+        gst_object_unref (vk_sink->display);
       vk_sink->display = NULL;
-      gst_vulkan_window_close (vk_sink->window);
-      gst_object_unref (vk_sink->window);
+      if (vk_sink->window) {
+        gst_vulkan_window_close (vk_sink->window);
+        gst_object_unref (vk_sink->window);
+      }
       vk_sink->window = NULL;
-      gst_object_unref (vk_sink->device);
+      if (vk_sink->device)
+        gst_object_unref (vk_sink->device);
       vk_sink->device = NULL;
-      gst_object_unref (vk_sink->instance);
+      if (vk_sink->instance)
+        gst_object_unref (vk_sink->instance);
       vk_sink->instance = NULL;
       break;
     default:
