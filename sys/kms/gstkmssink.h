@@ -55,6 +55,9 @@ struct _GstKMSSink {
 
   guint16 hdisplay, vdisplay;
 
+  /* capabilities */
+  gboolean has_prime_import;
+
   GstVideoInfo vinfo;
   GstCaps *allowed_caps;
   GstBufferPool *pool;

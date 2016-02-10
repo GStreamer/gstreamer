@@ -43,6 +43,7 @@
 #endif
 
 #include <gst/video/video.h>
+#include <gst/allocators/gstdmabuf.h>
 
 #include <drm.h>
 #include <xf86drm.h>
@@ -259,6 +260,7 @@ get_drm_caps (GstKMSSink * self)
 {
   gint ret;
   guint64 has_dumb_buffer;
+  guint64 has_prime;
 
   has_dumb_buffer = 0;
   ret = drmGetCap (self->fd, DRM_CAP_DUMB_BUFFER, &has_dumb_buffer);
@@ -268,6 +270,16 @@ get_drm_caps (GstKMSSink * self)
     GST_ERROR_OBJECT (self, "driver cannot handle dumb buffers");
     return FALSE;
   }
+
+  has_prime = 0;
+  ret = drmGetCap (self->fd, DRM_CAP_PRIME, &has_prime);
+  if (ret)
+    GST_WARNING_OBJECT (self, "could not get prime capability");
+  else
+    self->has_prime_import = (gboolean) (has_prime & DRM_PRIME_CAP_IMPORT);
+
+  GST_INFO_OBJECT (self, "prime import (%s)",
+      self->has_prime_import ? "✓" : "✗");
 
   return TRUE;
 }
@@ -736,6 +748,128 @@ gst_kms_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
   }
 }
 
+static GstMemory *
+get_cached_kmsmem (GstMemory * mem)
+{
+  return gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+      g_quark_from_static_string ("kmsmem"));
+}
+
+static void
+set_cached_kmsmem (GstMemory * mem, GstMemory * kmsmem)
+{
+  return gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
+      g_quark_from_static_string ("kmsmem"), kmsmem,
+      (GDestroyNotify) gst_memory_unref);
+}
+
+static gsize
+get_plane_data_size (GstVideoInfo * info, guint plane)
+{
+  gint padded_height;
+  gsize plane_size;
+
+  padded_height = info->height;
+  padded_height =
+      GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo, plane, padded_height);
+
+  plane_size = GST_VIDEO_INFO_PLANE_STRIDE (info, plane) * padded_height;
+
+  return plane_size;
+}
+
+static gboolean
+gst_kms_sink_import_dmabuf (GstKMSSink * self, GstBuffer * inbuf,
+    GstBuffer ** outbuf)
+{
+  gint prime_fds[GST_VIDEO_MAX_PLANES] = { 0, };
+  GstVideoMeta *meta;
+  guint i, n_mem, n_planes;
+  GstKMSMemory *kmsmem;
+  guint mems_idx[GST_VIDEO_MAX_PLANES];
+  gsize mems_skip[GST_VIDEO_MAX_PLANES];
+  GstMemory *mems[GST_VIDEO_MAX_PLANES];
+
+  if (!self->has_prime_import)
+    return FALSE;
+
+  /* This will eliminate most non-dmabuf out there */
+  if (!gst_is_dmabuf_memory (gst_buffer_peek_memory (inbuf, 0)))
+    return FALSE;
+
+  n_planes = GST_VIDEO_INFO_N_PLANES (&self->vinfo);
+  n_mem = gst_buffer_n_memory (inbuf);
+  meta = gst_buffer_get_video_meta (inbuf);
+
+  /* We cannot have multiple dmabuf per plane */
+  if (n_mem > n_planes)
+    return FALSE;
+
+  /* Update video info based on video meta */
+  if (meta) {
+    GST_VIDEO_INFO_WIDTH (&self->vinfo) = meta->width;
+    GST_VIDEO_INFO_HEIGHT (&self->vinfo) = meta->height;
+
+    for (i = 0; i < meta->n_planes; i++) {
+      GST_VIDEO_INFO_PLANE_OFFSET (&self->vinfo, i) = meta->offset[i];
+      GST_VIDEO_INFO_PLANE_STRIDE (&self->vinfo, i) = meta->stride[i];
+    }
+  }
+
+  /* Find and validate all memories */
+  for (i = 0; i < n_planes; i++) {
+    guint plane_size;
+    guint length;
+
+    plane_size = get_plane_data_size (&self->vinfo, i);
+    if (!gst_buffer_find_memory (inbuf,
+            GST_VIDEO_INFO_PLANE_OFFSET (&self->vinfo, i), plane_size,
+            &mems_idx[i], &length, &mems_skip[i]))
+      return FALSE;
+
+    /* We can't have more then one dmabuf per plane */
+    if (length != 1)
+      return FALSE;
+
+    mems[i] = gst_buffer_peek_memory (inbuf, mems_idx[i]);
+
+    /* And all memory found must be dmabuf */
+    if (!gst_is_dmabuf_memory (mems[i]))
+      return FALSE;
+  }
+
+  kmsmem = (GstKMSMemory *) get_cached_kmsmem (mems[0]);
+  if (kmsmem) {
+    GST_LOG_OBJECT (self, "found KMS mem %p in DMABuf mem %p with fb id = %d",
+        kmsmem, mems[0], kmsmem->fb_id);
+    goto wrap_mem;
+  }
+
+  for (i = 0; i < n_planes; i++)
+    prime_fds[i] = gst_dmabuf_memory_get_fd (mems[i]);
+
+  GST_LOG_OBJECT (self, "found these prime ids: %d, %d, %d, %d", prime_fds[0],
+      prime_fds[1], prime_fds[2], prime_fds[3]);
+
+  kmsmem = gst_kms_allocator_dmabuf_import (self->allocator, prime_fds,
+      n_planes, &self->vinfo);
+  if (!kmsmem)
+    return FALSE;
+
+  GST_LOG_OBJECT (self, "setting KMS mem %p to DMABuf mem %p with fb id = %d",
+      kmsmem, mems[0], kmsmem->fb_id);
+  set_cached_kmsmem (mems[0], GST_MEMORY_CAST (kmsmem));
+
+wrap_mem:
+  *outbuf = gst_buffer_new ();
+  if (!*outbuf)
+    return FALSE;
+  gst_buffer_append_memory (*outbuf, gst_memory_ref (GST_MEMORY_CAST (kmsmem)));
+  gst_buffer_add_parent_buffer_meta (*outbuf, inbuf);
+
+  return TRUE;
+}
+
 static GstBuffer *
 gst_kms_sink_get_input_buffer (GstKMSSink * self, GstBuffer * inbuf)
 {
@@ -752,10 +886,15 @@ gst_kms_sink_get_input_buffer (GstKMSSink * self, GstBuffer * inbuf)
   if (gst_is_kms_memory (mem))
     return gst_buffer_ref (inbuf);
 
+  buf = NULL;
+  if (gst_kms_sink_import_dmabuf (self, inbuf, &buf))
+    return buf;
+
+  GST_LOG_OBJECT (self, "frame copy");
+
   if (!gst_buffer_pool_set_active (self->pool, TRUE))
     goto activate_pool_failed;
 
-  buf = NULL;
   ret = gst_buffer_pool_acquire_buffer (self->pool, &buf, NULL);
   if (ret != GST_FLOW_OK)
     goto create_buffer_failed;
