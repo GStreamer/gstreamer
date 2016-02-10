@@ -42,6 +42,9 @@ G_BEGIN_DECLS
 typedef struct _GstMultiQueue GstMultiQueue;
 typedef struct _GstMultiQueueClass GstMultiQueueClass;
 
+typedef struct _GstMultiQueuePad GstMultiQueuePad;
+typedef struct _GstMultiQueuePadClass GstMultiQueuePadClass;
+
 /**
  * GstMultiQueue:
  *
