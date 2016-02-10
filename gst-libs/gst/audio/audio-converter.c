@@ -387,7 +387,8 @@ get_temp_samples (AudioChain * chain, gsize num_samples, gpointer user_data)
      * for alignement */
     gsize needed = (stride + sizeof (gpointer)) * chain->blocks + ALIGN;
 
-    GST_DEBUG ("alloc samples %" G_GSIZE_FORMAT, needed);
+    GST_DEBUG ("alloc samples %d %" G_GSIZE_FORMAT " %" G_GSIZE_FORMAT,
+        chain->stride, num_samples, needed);
     chain->tmp = g_realloc (chain->tmp, needed);
     chain->allocated_samples = num_samples;
 
@@ -427,11 +428,17 @@ do_unpack (AudioChain * chain, gpointer user_data)
 
     if (convert->in_data) {
       for (i = 0; i < chain->blocks; i++) {
-        GST_LOG ("unpack %p, %p, %" G_GSIZE_FORMAT, tmp[i], convert->in_data[i],
-            num_samples);
-        convert->in.finfo->unpack_func (convert->in.finfo,
-            GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE, tmp[i], convert->in_data[i],
-            num_samples * chain->inc);
+        if (convert->in_default) {
+          GST_LOG ("copy %p, %p, %" G_GSIZE_FORMAT, tmp[i], convert->in_data[i],
+              num_samples);
+          memcpy (tmp[i], convert->in_data[i], num_samples * chain->stride);
+        } else {
+          GST_LOG ("unpack %p, %p, %" G_GSIZE_FORMAT, tmp[i],
+              convert->in_data[i], num_samples);
+          convert->in.finfo->unpack_func (convert->in.finfo,
+              GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE, tmp[i], convert->in_data[i],
+              num_samples * chain->inc);
+        }
       }
     } else {
       for (i = 0; i < chain->blocks; i++) {
