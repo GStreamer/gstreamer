@@ -71,8 +71,7 @@ gpointer            gst_vulkan_device_get_proc_address      (GstVulkanDevice * d
                                                              const gchar * name);
 GstVulkanQueue *    gst_vulkan_device_get_queue             (GstVulkanDevice * device,
                                                              guint32 queue_family,
-                                                             guint32 queue_i,
-                                                             GError ** error);
+                                                             guint32 queue_i);
 VkPhysicalDevice    gst_vulkan_device_get_physical_device   (GstVulkanDevice * device);
 gboolean            gst_vulkan_device_create_cmd_buffer     (GstVulkanDevice * device,
                                                              VkCommandBuffer * cmd,

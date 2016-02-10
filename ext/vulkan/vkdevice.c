@@ -327,7 +327,7 @@ error:
 
 GstVulkanQueue *
 gst_vulkan_device_get_queue (GstVulkanDevice * device, guint32 queue_family,
-    guint32 queue_i, GError ** error)
+    guint32 queue_i)
 {
   GstVulkanQueue *ret;
 
