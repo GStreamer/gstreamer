@@ -154,6 +154,7 @@ EXPORTS
 	gst_audio_quantize_reset
 	gst_audio_quantize_samples
 	gst_audio_reorder_channels
+	gst_audio_resampler_filter_interpolation_get_type
 	gst_audio_resampler_filter_mode_get_type
 	gst_audio_resampler_flags_get_type
 	gst_audio_resampler_free

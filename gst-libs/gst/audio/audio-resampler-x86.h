@@ -21,7 +21,8 @@
 #include <xmmintrin.h>
 
 static inline void
-inner_product_gfloat_none_1_sse (gfloat * o, const gfloat * a, const gfloat * b, gint len, gpointer icoeff, gint oversample)
+inner_product_gfloat_none_1_sse (gfloat * o, const gfloat * a,
+    const gfloat * b, gint len, const gfloat * icoeff, gint oversample)
 {
   gint i = 0;
   __m128 sum = _mm_setzero_ps ();
@@ -40,7 +41,8 @@ inner_product_gfloat_none_1_sse (gfloat * o, const gfloat * a, const gfloat * b,
 }
 
 static inline void
-inner_product_gfloat_linear_1_sse (gfloat * o, const gfloat * a, const gfloat * b, gint len, gpointer icoeff, gint oversample)
+inner_product_gfloat_linear_1_sse (gfloat * o, const gfloat * a,
+    const gfloat * b, gint len, const gfloat * icoeff, gint oversample)
 {
   gint i = 0;
   __m128 sum = _mm_setzero_ps (), t, b0;
@@ -68,7 +70,8 @@ inner_product_gfloat_linear_1_sse (gfloat * o, const gfloat * a, const gfloat * 
 }
 
 static inline void
-inner_product_gfloat_none_2_sse (gfloat * o, const gfloat * a, const gfloat * b, gint len, gpointer icoeff, gint oversample)
+inner_product_gfloat_none_2_sse (gfloat * o, const gfloat * a,
+    const gfloat * b, gint len, const gfloat * icoeff, gint oversample)
 {
   gint i = 0;
   __m128 sum = _mm_setzero_ps (), t;
@@ -103,7 +106,8 @@ MAKE_RESAMPLE_FUNC (gfloat, linear, 1, sse);
 #include <emmintrin.h>
 
 static inline void
-inner_product_gint16_none_1_sse2 (gint16 * o, const gint16 * a, const gint16 * b, gint len, gpointer icoeff, gint oversample)
+inner_product_gint16_none_1_sse2 (gint16 * o, const gint16 * a,
+    const gint16 * b, gint len, const gint16 * icoeff, gint oversample)
 {
   gint i = 0;
   __m128i sum, ta, tb;
@@ -130,8 +134,8 @@ inner_product_gint16_none_1_sse2 (gint16 * o, const gint16 * a, const gint16 * b
 }
 
 static inline void
-inner_product_gdouble_none_1_sse2 (gdouble * o, const gdouble * a, const gdouble * b,
-    gint len, gpointer icoeff, gint oversample)
+inner_product_gdouble_none_1_sse2 (gdouble * o, const gdouble * a,
+    const gdouble * b, gint len, const gdouble * icoeff, gint oversample)
 {
   gint i = 0;
   __m128d sum = _mm_setzero_pd ();
@@ -155,7 +159,8 @@ inner_product_gdouble_none_1_sse2 (gdouble * o, const gdouble * a, const gdouble
 }
 
 static inline void
-inner_product_gint16_none_2_sse2 (gint16 * o, const gint16 * a, const gint16 * b, gint len, gpointer icoeff, gint oversample)
+inner_product_gint16_none_2_sse2 (gint16 * o, const gint16 * a,
+    const gint16 * b, gint len, const gint16 * icoeff, gint oversample)
 {
   gint i = 0;
   __m128i sum, ta, tb, t1;
@@ -186,8 +191,8 @@ inner_product_gint16_none_2_sse2 (gint16 * o, const gint16 * a, const gint16 * b
 }
 
 static inline void
-inner_product_gdouble_none_2_sse2 (gdouble * o, const gdouble * a, const gdouble * b,
-    gint len, gpointer icoeff, gint oversample)
+inner_product_gdouble_none_2_sse2 (gdouble * o, const gdouble * a,
+    const gdouble * b, gint len, const gdouble * icoeff, gint oversample)
 {
   gint i = 0;
   __m128d sum = _mm_setzero_pd (), t;
@@ -222,8 +227,8 @@ MAKE_RESAMPLE_FUNC (gdouble, none, 2, sse2);
 #include <smmintrin.h>
 
 static inline void
-inner_product_gint32_none_1_sse41 (gint32 * o, const gint32 * a, const gint32 * b,
-    gint len, gpointer icoeff, gint oversample)
+inner_product_gint32_none_1_sse41 (gint32 * o, const gint32 * a,
+    const gint32 * b, gint len, const gint32 * icoeff, gint oversample)
 {
   gint i = 0;
   __m128i sum, ta, tb;
@@ -277,11 +282,11 @@ audio_resampler_check_x86 (const gchar *option)
     GST_DEBUG ("enable SSE2 optimisations");
     resample_gint16_none_1 = resample_gint16_none_1_sse2;
     resample_gfloat_none_1 = resample_gfloat_none_1_sse;
-    resample_gfloat_linear_1 = resample_gfloat_linear_1_sse;
     resample_gfloat_none_2 = resample_gfloat_none_2_sse;
     resample_gdouble_none_1 = resample_gdouble_none_1_sse2;
     resample_gint16_none_2 = resample_gint16_none_2_sse2;
     resample_gdouble_none_2 = resample_gdouble_none_2_sse2;
+    resample_gfloat_linear_1 = resample_gfloat_linear_1_sse;
 #endif
   } else if (!strcmp (option, "sse41")) {
 #if defined (HAVE_SMMINTRIN_H) && defined(__SSE4_1__)

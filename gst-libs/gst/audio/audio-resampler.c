@@ -479,109 +479,77 @@ GET_TAPS_LINEAR_FUNC (gint32);
 GET_TAPS_LINEAR_FUNC (gfloat);
 GET_TAPS_LINEAR_FUNC (gdouble);
 
-static inline void
-inner_product_gint16_none_1_c (gint16 * o, const gint16 * a,
-    const gint16 * b, gint len, gpointer icoeff, gint oversample)
-{
-  gint i;
-  gint32 res = 0;
-
-  for (i = 0; i < len; i++)
-    res += (gint32) a[i] * (gint32) b[i];
-
-  res = (res + (1 << (PRECISION_S16 - 1))) >> PRECISION_S16;
-  *o = CLAMP (res, -(1L << 15), (1L << 15) - 1);
+#define INNER_PRODUCT_INT_NONE_FUNC(type,type2,prec,limit)      \
+static inline void                                              \
+inner_product_##type##_none_1_c (type * o, const type * a,      \
+    const type * b, gint len, const type *ic, gint oversample)  \
+{                                                               \
+  gint i;                                                       \
+  type2 res = 0;                                                \
+                                                                \
+  for (i = 0; i < len; i++)                                     \
+    res += (type2) a[i] * (type2) b[i];                         \
+                                                                \
+  res = (res + (1 << ((prec) - 1))) >> (prec);                  \
+  *o = CLAMP (res, -(limit), (limit) - 1);                      \
 }
 
-static inline void
-inner_product_gint16_linear_1_c (gint16 * o, const gint16 * a, const gint16 * b,
-    gint len, gpointer icoeff, gint oversample)
-{
-  gint i;
-  gint32 res, res1 = 0, res2 = 0;
-  gint16 *ic = icoeff;
+INNER_PRODUCT_INT_NONE_FUNC (gint16, gint32, PRECISION_S16, 1L << 15);
+INNER_PRODUCT_INT_NONE_FUNC (gint32, gint64, PRECISION_S32, 1L << 31);
 
-  for (i = 0; i < len; i++) {
-    res1 += (gint32) a[i] * (gint32) b[i * oversample];
-    res2 += (gint32) a[i] * (gint32) b[i * oversample + 1];
-  }
-  res = (res1 >> PRECISION_S16) * ic[0] + (res2 >> PRECISION_S16) * ic[1];
-  res = (res + (1 << (PRECISION_S16 - 1))) >> PRECISION_S16;
-  *o = CLAMP (res, -(1L << 15), (1L << 15) - 1);
+#define INNER_PRODUCT_INT_LINEAR_FUNC(type,type2,prec,limit)    \
+static inline void                                              \
+inner_product_##type##_linear_1_c (type * o, const type * a,    \
+    const type * b, gint len, const type *ic, gint oversample)  \
+{                                                               \
+  gint i;                                                       \
+  type2 res, res1 = 0, res2 = 0;                                \
+                                                                \
+  for (i = 0; i < len; i++) {                                   \
+    res1 += (type2) a[i] * (type2) b[i * oversample];           \
+    res2 += (type2) a[i] * (type2) b[i * oversample + 1];       \
+  }                                                             \
+  res = (res1 >> (prec)) * ic[0] + (res2 >> (prec)) * ic[1];    \
+  res = (res + (1 << ((prec) - 1))) >> (prec);                  \
+  *o = CLAMP (res, -(limit), (limit) - 1);                      \
 }
 
-static inline void
-inner_product_gint32_none_1_c (gint32 * o, const gint32 * a, const gint32 * b,
-    gint len, gpointer icoeff, gint oversample)
-{
-  gint i;
-  gint64 res = 0;
+INNER_PRODUCT_INT_LINEAR_FUNC (gint16, gint32, PRECISION_S16, 1L << 15);
+INNER_PRODUCT_INT_LINEAR_FUNC (gint32, gint64, PRECISION_S32, 1L << 31);
 
-  for (i = 0; i < len; i++)
-    res += (gint64) a[i] * (gint64) b[i];
-
-  res = (res + (1 << (PRECISION_S32 - 1))) >> PRECISION_S32;
-  *o = CLAMP (res, -(1L << 31), (1L << 31) - 1);
+#define INNER_PRODUCT_FLOAT_NONE_FUNC(type)                     \
+static inline void                                              \
+inner_product_##type##_none_1_c (type * o, const type * a,      \
+    const type * b, gint len, const type *ic, gint oversample)  \
+{                                                               \
+  gint i;                                                       \
+  type res = 0.0;                                               \
+                                                                \
+  for (i = 0; i < len; i++)                                     \
+    res += a[i] * b[i];                                         \
+                                                                \
+  *o = res;                                                     \
 }
 
-static inline void
-inner_product_gfloat_none_1_c (gfloat * o, const gfloat * a, const gfloat * b,
-    gint len, gpointer icoeff, gint oversample)
-{
-  gint i;
-  gfloat res = 0.0;
+INNER_PRODUCT_FLOAT_NONE_FUNC (gfloat);
+INNER_PRODUCT_FLOAT_NONE_FUNC (gdouble);
 
-  for (i = 0; i < len; i++)
-    res += a[i] * b[i];
-
-  *o = res;
+#define INNER_PRODUCT_FLOAT_LINEAR_FUNC(type)                   \
+static inline void                                              \
+inner_product_##type##_linear_1_c (type * o, const type * a,    \
+    const type * b, gint len, const type *ic, gint oversample)  \
+{                                                               \
+  gint i;                                                       \
+  type res1 = 0.0, res2 = 0.0;                                  \
+                                                                \
+  for (i = 0; i < len; i++) {                                   \
+    res1 += a[i] * b[i * oversample];                           \
+    res2 += a[i] * b[i * oversample + 1];                       \
+  }                                                             \
+  *o = res1 * ic[0] + res2 * ic[1];                             \
 }
-
-static inline void
-inner_product_gfloat_linear_1_c (gfloat * o, const gfloat * a, const gfloat * b,
-    gint len, gpointer icoeff, gint oversample)
-{
-  gint i;
-  gfloat res, res1 = 0.0, res2 = 0.0, *ic = icoeff;
-
-  for (i = 0; i < len; i++) {
-    res1 += a[i] * b[i * oversample];
-    res2 += a[i] * b[i * oversample + 1];
-  }
-  res = res1 * ic[0] + res2 * ic[1];
-
-  *o = res;
-}
-
-static inline void
-inner_product_gdouble_none_1_c (gdouble * o, const gdouble * a,
-    const gdouble * b, gint len, gpointer icoeff, gint oversample)
-{
-  gint i;
-  gdouble res = 0.0;
-
-  for (i = 0; i < len; i++)
-    res += a[i] * b[i];
-
-  *o = res;
-}
-
-static inline void
-inner_product_gdouble_linear_1_c (gdouble * o, const gdouble * a,
-    const gdouble * b, gint len, gpointer icoeff, gint oversample)
-{
-  gint i;
-  gdouble res, res1 = 0.0, res2 = 0.0, *ic = icoeff;
-
-  for (i = 0; i < len; i++) {
-    res1 += a[i] * b[i * oversample];
-    res2 += a[i] * b[i * oversample + 1];
-  }
-  res = res1 * ic[0] + res2 * ic[1];
-
-  *o = res;
-}
-
+INNER_PRODUCT_FLOAT_LINEAR_FUNC (gfloat);
+INNER_PRODUCT_FLOAT_LINEAR_FUNC (gdouble);
 
 #define MAKE_RESAMPLE_FUNC(type,inter,channels,arch)                            \
 static void                                                                     \
@@ -611,7 +579,7 @@ resample_ ##type## _ ##inter## _ ##channels## _ ##arch (GstAudioResampler * resa
                                                                                 \
       taps = get_taps_ ##type##_##inter (resampler, &samp_index, &samp_phase, icoeff);                   \
                                                                                 \
-      inner_product_ ##type##_##inter##_##channels##_##arch (op, ipp, taps, n_taps, &icoeff,oversample);     \
+      inner_product_ ##type##_##inter##_##channels##_##arch (op, ipp, taps, n_taps, icoeff, oversample);     \
       op += ostride;                                                            \
     }                                                                           \
     memmove (ip, &ip[samp_index * channels],                                    \
@@ -629,7 +597,9 @@ MAKE_RESAMPLE_FUNC (gfloat, none, 1, c);
 MAKE_RESAMPLE_FUNC (gdouble, none, 1, c);
 
 MAKE_RESAMPLE_FUNC (gint16, linear, 1, c);
+MAKE_RESAMPLE_FUNC (gint32, linear, 1, c);
 MAKE_RESAMPLE_FUNC (gfloat, linear, 1, c);
+MAKE_RESAMPLE_FUNC (gdouble, linear, 1, c);
 
 static ResampleFunc resample_funcs[] = {
   resample_gint16_none_1_c,
@@ -642,9 +612,9 @@ static ResampleFunc resample_funcs[] = {
   NULL,
 
   resample_gint16_linear_1_c,
-  NULL,
+  resample_gint32_linear_1_c,
   resample_gfloat_linear_1_c,
-  NULL,
+  resample_gdouble_linear_1_c,
   NULL,
   NULL,
   NULL,
