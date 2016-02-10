@@ -405,6 +405,8 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
     mem->notify (mem->user_data);
 
   gst_object_unref (mem->device);
+
+  g_free (mem);
 }
 
 static VkAccessFlags
