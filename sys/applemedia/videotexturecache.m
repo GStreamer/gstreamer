@@ -53,8 +53,6 @@ gst_video_texture_cache_new (GstGLContext * ctx)
   CFMutableDictionaryRef cache_attrs =
       CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
-  gst_vtutil_dict_set_i32 (cache_attrs,
-      kCVOpenGLESTextureCacheMaximumTextureAgeKey, 0);
   CVOpenGLESTextureCacheCreate (kCFAllocatorDefault, (CFDictionaryRef) cache_attrs,
       (CVEAGLContext) gst_gl_context_get_gl_context (ctx), NULL, &cache->cache);
 #else
@@ -159,8 +157,6 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
   base_mem_alloc = GST_GL_BASE_MEMORY_ALLOCATOR (gst_gl_memory_allocator_get_default (cache->ctx));
   output_buffer = gst_buffer_new ();
   gst_buffer_copy_into (output_buffer, data->input_buffer, GST_BUFFER_COPY_ALL, 0, -1);
-
-  CVOpenGLESTextureCacheFlush (cache->cache, 0);
 
   switch (GST_VIDEO_INFO_FORMAT (&cache->input_info)) {
       case GST_VIDEO_FORMAT_BGRA:
