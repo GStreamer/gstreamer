@@ -157,7 +157,7 @@ static const BlackmanQualityMap blackman_qualities[] = {
 #define DEFAULT_OPT_CUBIC_C 0.0
 #define DEFAULT_OPT_FILTER_MODE GST_AUDIO_RESAMPLER_FILTER_MODE_AUTO
 #define DEFAULT_OPT_FILTER_MODE_THRESHOLD 1048576
-#define DEFAULT_OPT_FILTER_INTERPOLATION GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR
+#define DEFAULT_OPT_FILTER_INTERPOLATION GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC
 #define DEFAULT_OPT_FILTER_OVERSAMPLE 8
 #define DEFAULT_OPT_MAX_PHASE_ERROR 0.1
 
@@ -432,16 +432,16 @@ static inline void                                                      \
 make_coeff_##type##_linear (gint frac, gint out_rate, type *icoeff)     \
 {                                                                       \
   type x = (type)frac / out_rate;                                       \
-  icoeff[0] = icoeff[2] = 1.0 - x;                                      \
-  icoeff[1] = icoeff[3] = x;                                            \
+  icoeff[0] = icoeff[2] = x;                                            \
+  icoeff[1] = icoeff[3] = 1.0 - x;                                      \
 }
 #define MAKE_COEFF_LINEAR_INT_FUNC(type,type2,prec)                     \
 static inline void                                                      \
 make_coeff_##type##_linear (gint frac, gint out_rate, type *icoeff)     \
 {                                                                       \
   type x = ((type2)frac << prec) / out_rate;                            \
-  icoeff[0] = icoeff[2] = (1 << prec) - x;                              \
-  icoeff[1] = icoeff[3] = x;                                            \
+  icoeff[0] = icoeff[2] = x;                                            \
+  icoeff[1] = icoeff[3] = (1 << prec) - x;                              \
 }
 
 MAKE_COEFF_LINEAR_INT_FUNC (gint16, gint32, PRECISION_S16);
@@ -449,21 +449,52 @@ MAKE_COEFF_LINEAR_INT_FUNC (gint32, gint64, PRECISION_S32);
 MAKE_COEFF_LINEAR_FLOAT_FUNC (gfloat);
 MAKE_COEFF_LINEAR_FLOAT_FUNC (gdouble);
 
-#define GET_TAPS_LINEAR_FUNC(type)                              \
+#define MAKE_COEFF_CUBIC_FLOAT_FUNC(type)                               \
+static inline void                                                      \
+make_coeff_##type##_cubic (gint frac, gint out_rate, type *icoeff)      \
+{                                                                       \
+  type x = (type) frac / out_rate, x2 = x * x, x3 = x2 * x;             \
+  icoeff[0] = 0.16667f * (x3 - x);                                      \
+  icoeff[1] = x + 0.5f * (x2 - x3);                                     \
+  icoeff[3] = -0.33333f * x + 0.5f * x2 - 0.16667f * x3;                \
+  icoeff[2] = 1. - icoeff[0] - icoeff[1] - icoeff[3];                   \
+}
+#define MAKE_COEFF_CUBIC_INT_FUNC(type,type2,prec)                      \
+static inline void                                                      \
+make_coeff_##type##_cubic (gint frac, gint out_rate, type *icoeff)      \
+{                                                                       \
+  type x = ((type2) frac << prec) / out_rate;                           \
+  type one = 1 << prec;                                                 \
+  type x2 = ((type2) x * (type2) x) >> prec;                            \
+  type x3 = ((type2) x2 * (type2) x) >> prec;                           \
+  icoeff[0] = (((type2) (x3 - x) << prec) / 6) >> prec;                 \
+  icoeff[1] = x + ((x2 - x3) >> 1);                                     \
+  icoeff[3] = -((((type2) x << prec) / 3) >> prec) +                    \
+            (x2 >> 1) - ((((type2) x3 << prec) / 6) >> prec);           \
+  icoeff[2] = one - icoeff[0] - icoeff[1] - icoeff[3];                  \
+}
+
+MAKE_COEFF_CUBIC_INT_FUNC (gint16, gint32, PRECISION_S16);
+MAKE_COEFF_CUBIC_INT_FUNC (gint32, gint64, PRECISION_S32);
+MAKE_COEFF_CUBIC_FLOAT_FUNC (gfloat);
+MAKE_COEFF_CUBIC_FLOAT_FUNC (gdouble);
+
+#define GET_TAPS_INTERPOLATE_FUNC(type,inter)                   \
 static inline gpointer                                          \
-get_taps_##type##_linear (GstAudioResampler * resampler,        \
+get_taps_##type##_##inter (GstAudioResampler * resampler,       \
     gint *samp_index, gint *samp_phase, type icoeff[4])         \
 {                                                               \
   gpointer res;                                                 \
   gint out_rate = resampler->out_rate;                          \
   gint offset, frac, pos;                                       \
+  gint oversample = resampler->oversample;                      \
                                                                 \
-  pos = ((out_rate - 1) - *samp_phase) * resampler->oversample; \
-  offset = pos / out_rate;                                      \
+  pos = *samp_phase * oversample;                               \
+  offset = (oversample - 1) - (pos / out_rate);                 \
   frac = pos % out_rate;                                        \
                                                                 \
   res = (type *)resampler->coeff + offset;                      \
-  make_coeff_##type##_linear (frac, out_rate, icoeff);          \
+  make_coeff_##type##_##inter (frac, out_rate, icoeff);         \
                                                                 \
   *samp_index += resampler->samp_inc;                           \
   *samp_phase += resampler->samp_frac;                          \
@@ -474,10 +505,15 @@ get_taps_##type##_linear (GstAudioResampler * resampler,        \
   return res;                                                   \
 }
 
-GET_TAPS_LINEAR_FUNC (gint16);
-GET_TAPS_LINEAR_FUNC (gint32);
-GET_TAPS_LINEAR_FUNC (gfloat);
-GET_TAPS_LINEAR_FUNC (gdouble);
+GET_TAPS_INTERPOLATE_FUNC (gint16, linear);
+GET_TAPS_INTERPOLATE_FUNC (gint32, linear);
+GET_TAPS_INTERPOLATE_FUNC (gfloat, linear);
+GET_TAPS_INTERPOLATE_FUNC (gdouble, linear);
+
+GET_TAPS_INTERPOLATE_FUNC (gint16, cubic);
+GET_TAPS_INTERPOLATE_FUNC (gint32, cubic);
+GET_TAPS_INTERPOLATE_FUNC (gfloat, cubic);
+GET_TAPS_INTERPOLATE_FUNC (gdouble, cubic);
 
 #define INNER_PRODUCT_INT_NONE_FUNC(type,type2,prec,limit)      \
 static inline void                                              \
@@ -503,19 +539,45 @@ inner_product_##type##_linear_1_c (type * o, const type * a,    \
     const type * b, gint len, const type *ic, gint oversample)  \
 {                                                               \
   gint i;                                                       \
-  type2 res, res1 = 0, res2 = 0;                                \
+  type2 res[2] = { 0, 0 };                                      \
                                                                 \
   for (i = 0; i < len; i++) {                                   \
-    res1 += (type2) a[i] * (type2) b[i * oversample];           \
-    res2 += (type2) a[i] * (type2) b[i * oversample + 1];       \
+    res[0] += (type2) a[i] * (type2) b[i * oversample + 0];     \
+    res[1] += (type2) a[i] * (type2) b[i * oversample + 1];     \
   }                                                             \
-  res = (res1 >> (prec)) * ic[0] + (res2 >> (prec)) * ic[1];    \
-  res = (res + (1 << ((prec) - 1))) >> (prec);                  \
-  *o = CLAMP (res, -(limit), (limit) - 1);                      \
+  res[0] = (res[0] >> (prec)) * ic[0] +                         \
+           (res[1] >> (prec)) * ic[1];                          \
+  res[0] = (res[0] + (1 << ((prec) - 1))) >> (prec);            \
+  *o = CLAMP (res[0], -(limit), (limit) - 1);                   \
 }
 
 INNER_PRODUCT_INT_LINEAR_FUNC (gint16, gint32, PRECISION_S16, 1L << 15);
 INNER_PRODUCT_INT_LINEAR_FUNC (gint32, gint64, PRECISION_S32, 1L << 31);
+
+#define INNER_PRODUCT_INT_CUBIC_FUNC(type,type2,prec,limit)    \
+static inline void                                              \
+inner_product_##type##_cubic_1_c (type * o, const type * a,    \
+    const type * b, gint len, const type *ic, gint oversample)  \
+{                                                               \
+  gint i;                                                       \
+  type2 res[4] = { 0, 0, 0, 0 };                                \
+                                                                \
+  for (i = 0; i < len; i++) {                                   \
+    res[0] += (type2) a[i] * (type2) b[i * oversample + 0];     \
+    res[1] += (type2) a[i] * (type2) b[i * oversample + 1];     \
+    res[2] += (type2) a[i] * (type2) b[i * oversample + 2];     \
+    res[3] += (type2) a[i] * (type2) b[i * oversample + 3];     \
+  }                                                             \
+  res[0] = (res[0] >> (prec)) * ic[0] +                         \
+           (res[1] >> (prec)) * ic[1] +                         \
+           (res[2] >> (prec)) * ic[2] +                         \
+           (res[3] >> (prec)) * ic[3];                          \
+  res[0] = (res[0] + (1 << ((prec) - 1))) >> (prec);            \
+  *o = CLAMP (res[0], -(limit), (limit) - 1);                   \
+}
+
+INNER_PRODUCT_INT_CUBIC_FUNC (gint16, gint32, PRECISION_S16, 1L << 15);
+INNER_PRODUCT_INT_CUBIC_FUNC (gint32, gint64, PRECISION_S32, 1L << 31);
 
 #define INNER_PRODUCT_FLOAT_NONE_FUNC(type)                     \
 static inline void                                              \
@@ -540,16 +602,36 @@ inner_product_##type##_linear_1_c (type * o, const type * a,    \
     const type * b, gint len, const type *ic, gint oversample)  \
 {                                                               \
   gint i;                                                       \
-  type res1 = 0.0, res2 = 0.0;                                  \
+  type res[2] = { 0.0, 0.0 };                                   \
                                                                 \
   for (i = 0; i < len; i++) {                                   \
-    res1 += a[i] * b[i * oversample];                           \
-    res2 += a[i] * b[i * oversample + 1];                       \
+    res[0] += a[i] * b[i * oversample + 0];                     \
+    res[1] += a[i] * b[i * oversample + 1];                     \
   }                                                             \
-  *o = res1 * ic[0] + res2 * ic[1];                             \
+  *o = res[0] * ic[0] + res[1] * ic[1];                         \
 }
 INNER_PRODUCT_FLOAT_LINEAR_FUNC (gfloat);
 INNER_PRODUCT_FLOAT_LINEAR_FUNC (gdouble);
+
+#define INNER_PRODUCT_FLOAT_CUBIC_FUNC(type)                    \
+static inline void                                              \
+inner_product_##type##_cubic_1_c (type * o, const type * a,     \
+    const type * b, gint len, const type *ic, gint oversample)  \
+{                                                               \
+  gint i;                                                       \
+  type res[4] = { 0.0, 0.0, 0.0, 0.0 };                         \
+                                                                \
+  for (i = 0; i < len; i++) {                                   \
+    res[0] += a[i] * b[i * oversample + 0];                     \
+    res[1] += a[i] * b[i * oversample + 1];                     \
+    res[2] += a[i] * b[i * oversample + 2];                     \
+    res[3] += a[i] * b[i * oversample + 3];                     \
+  }                                                             \
+  *o = res[0] * ic[0] + res[1] * ic[1] +                        \
+       res[2] * ic[2] + res[3] * ic[3];                         \
+}
+INNER_PRODUCT_FLOAT_CUBIC_FUNC (gfloat);
+INNER_PRODUCT_FLOAT_CUBIC_FUNC (gdouble);
 
 #define MAKE_RESAMPLE_FUNC(type,inter,channels,arch)                            \
 static void                                                                     \
@@ -601,6 +683,11 @@ MAKE_RESAMPLE_FUNC (gint32, linear, 1, c);
 MAKE_RESAMPLE_FUNC (gfloat, linear, 1, c);
 MAKE_RESAMPLE_FUNC (gdouble, linear, 1, c);
 
+MAKE_RESAMPLE_FUNC (gint16, cubic, 1, c);
+MAKE_RESAMPLE_FUNC (gint32, cubic, 1, c);
+MAKE_RESAMPLE_FUNC (gfloat, cubic, 1, c);
+MAKE_RESAMPLE_FUNC (gdouble, cubic, 1, c);
+
 static ResampleFunc resample_funcs[] = {
   resample_gint16_none_1_c,
   resample_gint32_none_1_c,
@@ -615,6 +702,15 @@ static ResampleFunc resample_funcs[] = {
   resample_gint32_linear_1_c,
   resample_gfloat_linear_1_c,
   resample_gdouble_linear_1_c,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+
+  resample_gint16_cubic_1_c,
+  resample_gint32_cubic_1_c,
+  resample_gfloat_cubic_1_c,
+  resample_gdouble_cubic_1_c,
   NULL,
   NULL,
   NULL,
@@ -634,6 +730,11 @@ static ResampleFunc resample_funcs[] = {
 #define resample_gint32_linear_1 resample_funcs[9]
 #define resample_gfloat_linear_1 resample_funcs[10]
 #define resample_gdouble_linear_1 resample_funcs[11]
+
+#define resample_gint16_cubic_1 resample_funcs[16]
+#define resample_gint32_cubic_1 resample_funcs[17]
+#define resample_gfloat_cubic_1 resample_funcs[18]
+#define resample_gdouble_cubic_1 resample_funcs[19]
 
 #if defined HAVE_ORC && !defined DISABLE_ORC
 # if defined (__i386__) || defined (__x86_64__)
@@ -772,12 +873,12 @@ calculate_kaiser_params (GstAudioResampler * resampler)
       resampler->n_taps, resampler->cutoff);
 }
 
-static gboolean
+static void
 alloc_coeff_mem (GstAudioResampler * resampler, gint bps, gint n_taps,
     gint n_phases)
 {
   if (resampler->alloc_taps >= n_taps && resampler->alloc_phases >= n_phases)
-    return FALSE;
+    return;
 
   resampler->tmpcoeff =
       g_realloc_n (resampler->tmpcoeff, n_taps, sizeof (gdouble));
@@ -788,8 +889,6 @@ alloc_coeff_mem (GstAudioResampler * resampler, gint bps, gint n_taps,
   resampler->coeff = MEM_ALIGN (resampler->coeffmem, ALIGN);
   resampler->alloc_taps = n_taps;
   resampler->alloc_phases = n_phases;
-
-  return TRUE;
 }
 
 static void
@@ -884,7 +983,9 @@ resampler_calculate_taps (GstAudioResampler * resampler)
   }
 
   if (interpolate) {
-    gint otaps = oversample * n_taps + 1;
+    gint otaps;
+    gpointer coeff;
+    gdouble x, weight, *tmpcoeff;
     GstAudioResamplerFilterInterpolation filter_interpolation =
         GET_OPT_FILTER_INTERPOLATION (resampler->options);
 
@@ -894,29 +995,38 @@ resampler_calculate_taps (GstAudioResampler * resampler)
     else
       resampler->filter_interpolation = filter_interpolation;
 
-    if (alloc_coeff_mem (resampler, bps, otaps, 1)) {
-      gpointer coeff = (gint8 *) resampler->coeff;
-      gdouble *tmpcoeff = resampler->tmpcoeff;
-      gdouble x, weight;
+    otaps = oversample * n_taps;
+    switch (resampler->filter_interpolation) {
+      default:
+      case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR:
+        otaps += 1;
+        break;
+      case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC:
+        otaps += 3;
+        break;
+    }
 
-      x = 1.0 - n_taps / 2;
-      weight = fill_taps (resampler, tmpcoeff, x, otaps, oversample);
+    alloc_coeff_mem (resampler, bps, otaps, 1);
 
-      switch (resampler->format) {
-        case GST_AUDIO_FORMAT_S16:
-          convert_taps_gint16 (tmpcoeff, coeff, weight / oversample, otaps);
-          break;
-        case GST_AUDIO_FORMAT_S32:
-          convert_taps_gint32 (tmpcoeff, coeff, weight / oversample, otaps);
-          break;
-        case GST_AUDIO_FORMAT_F32:
-          convert_taps_gfloat (tmpcoeff, coeff, weight / oversample, otaps);
-          break;
-        default:
-        case GST_AUDIO_FORMAT_F64:
-          convert_taps_gdouble (tmpcoeff, coeff, weight / oversample, otaps);
-          break;
-      }
+    coeff = resampler->coeff;
+    tmpcoeff = resampler->tmpcoeff;
+    x = 1.0 - n_taps / 2;
+    weight = fill_taps (resampler, tmpcoeff, x, otaps, oversample);
+
+    switch (resampler->format) {
+      case GST_AUDIO_FORMAT_S16:
+        convert_taps_gint16 (tmpcoeff, coeff, weight / oversample, otaps);
+        break;
+      case GST_AUDIO_FORMAT_S32:
+        convert_taps_gint32 (tmpcoeff, coeff, weight / oversample, otaps);
+        break;
+      case GST_AUDIO_FORMAT_F32:
+        convert_taps_gfloat (tmpcoeff, coeff, weight / oversample, otaps);
+        break;
+      default:
+      case GST_AUDIO_FORMAT_F64:
+        convert_taps_gdouble (tmpcoeff, coeff, weight / oversample, otaps);
+        break;
     }
   } else {
     resampler->filter_interpolation =

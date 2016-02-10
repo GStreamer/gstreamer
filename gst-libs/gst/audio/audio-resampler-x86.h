@@ -70,6 +70,26 @@ inner_product_gfloat_linear_1_sse (gfloat * o, const gfloat * a,
 }
 
 static inline void
+inner_product_gfloat_cubic_1_sse (gfloat * o, const gfloat * a,
+    const gfloat * b, gint len, const gfloat * icoeff, gint oversample)
+{
+  gint i = 0;
+  __m128 sum = _mm_setzero_ps ();
+  __m128 f = _mm_loadu_ps(icoeff);
+
+  for (; i < len; i += 2) {
+    sum = _mm_add_ps (sum, _mm_mul_ps (_mm_load1_ps (a + i + 0),
+          _mm_loadu_ps (b + (i + 0) * oversample)));
+    sum = _mm_add_ps (sum, _mm_mul_ps (_mm_load1_ps (a + i + 1),
+          _mm_loadu_ps (b + (i + 1) * oversample)));
+  }
+  sum = _mm_mul_ps (sum, f);
+  sum = _mm_add_ps (sum, _mm_movehl_ps (sum, sum));
+  sum = _mm_add_ss (sum, _mm_shuffle_ps (sum, sum, 0x55));
+  _mm_store_ss (o, sum);
+}
+
+static inline void
 inner_product_gfloat_none_2_sse (gfloat * o, const gfloat * a,
     const gfloat * b, gint len, const gfloat * icoeff, gint oversample)
 {
@@ -100,6 +120,7 @@ inner_product_gfloat_none_2_sse (gfloat * o, const gfloat * a,
 MAKE_RESAMPLE_FUNC (gfloat, none, 1, sse);
 MAKE_RESAMPLE_FUNC (gfloat, none, 2, sse);
 MAKE_RESAMPLE_FUNC (gfloat, linear, 1, sse);
+MAKE_RESAMPLE_FUNC (gfloat, cubic, 1, sse);
 #endif
 
 #if defined (HAVE_EMMINTRIN_H) && defined(__SSE2__)
@@ -276,6 +297,7 @@ audio_resampler_check_x86 (const gchar *option)
     resample_gfloat_none_1 = resample_gfloat_none_1_sse;
     resample_gfloat_none_2 = resample_gfloat_none_2_sse;
     resample_gfloat_linear_1 = resample_gfloat_linear_1_sse;
+    resample_gfloat_cubic_1 = resample_gfloat_cubic_1_sse;
 #endif
   } else if (!strcmp (option, "sse2")) {
 #if defined (HAVE_EMMINTRIN_H) && defined(__SSE2__)
@@ -287,6 +309,7 @@ audio_resampler_check_x86 (const gchar *option)
     resample_gint16_none_2 = resample_gint16_none_2_sse2;
     resample_gdouble_none_2 = resample_gdouble_none_2_sse2;
     resample_gfloat_linear_1 = resample_gfloat_linear_1_sse;
+    resample_gfloat_cubic_1 = resample_gfloat_cubic_1_sse;
 #endif
   } else if (!strcmp (option, "sse41")) {
 #if defined (HAVE_SMMINTRIN_H) && defined(__SSE4_1__)
