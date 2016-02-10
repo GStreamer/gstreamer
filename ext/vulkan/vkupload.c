@@ -35,6 +35,374 @@
 GST_DEBUG_CATEGORY (gst_debug_vulkan_upload);
 #define GST_CAT_DEFAULT gst_debug_vulkan_upload
 
+static GstCaps *
+_set_caps_features_with_passthrough (const GstCaps * caps,
+    const gchar * feature_name, GstCapsFeatures * passthrough)
+{
+  guint i, j, m, n;
+  GstCaps *tmp;
+
+  tmp = gst_caps_copy (caps);
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    GstCapsFeatures *features, *orig_features;
+
+    orig_features = gst_caps_get_features (caps, i);
+    features = gst_caps_features_new (feature_name, NULL);
+
+    m = gst_caps_features_get_size (orig_features);
+    for (j = 0; j < m; j++) {
+      const gchar *feature = gst_caps_features_get_nth (orig_features, j);
+
+      /* if we already have the features */
+      if (gst_caps_features_contains (features, feature))
+        continue;
+
+      if (g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY) == 0)
+        continue;
+
+      if (passthrough && gst_caps_features_contains (passthrough, feature)) {
+        gst_caps_features_add (features, feature);
+      }
+    }
+
+    gst_caps_set_features (tmp, i, features);
+  }
+
+  return tmp;
+}
+
+struct BufferUpload
+{
+  GstVulkanUpload *upload;
+};
+
+static gpointer
+_buffer_new_impl (GstVulkanUpload * upload)
+{
+  struct BufferUpload *raw = g_new0 (struct BufferUpload, 1);
+
+  raw->upload = upload;
+
+  return raw;
+}
+
+static GstCaps *
+_buffer_transform_caps (gpointer impl, GstPadDirection direction,
+    GstCaps * caps)
+{
+  return gst_caps_ref (caps);
+}
+
+static gboolean
+_buffer_set_caps (gpointer impl, GstCaps * in_caps, GstCaps * out_caps)
+{
+  return TRUE;
+}
+
+static void
+_buffer_propose_allocation (gpointer impl, GstQuery * decide_query,
+    GstQuery * query)
+{
+  struct BufferUpload *raw = impl;
+  gboolean need_pool;
+  GstCaps *caps;
+  guint size;
+
+  gst_query_parse_allocation (query, &caps, &need_pool);
+
+  if (caps == NULL)
+    return;
+
+  if (need_pool) {
+    GstBufferPool *pool;
+    GstStructure *config;
+    GstVideoInfo info;
+
+    if (!gst_video_info_from_caps (&info, caps))
+      return;
+
+    /* the normal size of a frame */
+    size = info.size;
+
+    pool = gst_vulkan_buffer_pool_new (raw->upload->device);
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+
+    if (!gst_buffer_pool_set_config (pool, config)) {
+      g_object_unref (pool);
+      return;
+    }
+
+    gst_query_add_allocation_pool (query, pool, size, 1, 0);
+    g_object_unref (pool);
+  }
+
+  return;
+}
+
+static GstFlowReturn
+_buffer_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
+{
+  if (!gst_is_vulkan_buffer_memory (gst_buffer_peek_memory (inbuf, 0)))
+    return GST_FLOW_ERROR;
+
+  *outbuf = inbuf;
+
+  return GST_FLOW_OK;
+}
+
+static void
+_buffer_free (gpointer impl)
+{
+  g_free (impl);
+}
+
+static GstStaticCaps _buffer_in_templ =
+GST_STATIC_CAPS ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER ")");
+static GstStaticCaps _buffer_out_templ =
+GST_STATIC_CAPS ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER ")");
+
+static const struct UploadMethod buffer_upload = {
+  "VulkanBuffer",
+  &_buffer_in_templ,
+  &_buffer_out_templ,
+  _buffer_new_impl,
+  _buffer_transform_caps,
+  _buffer_set_caps,
+  _buffer_propose_allocation,
+  _buffer_perform,
+  _buffer_free,
+};
+
+struct RawToBufferUpload
+{
+  GstVulkanUpload *upload;
+
+  GstVideoInfo in_info;
+  GstVideoInfo out_info;
+
+  GstBufferPool *pool;
+  gboolean pool_active;
+
+  gsize alloc_sizes[GST_VIDEO_MAX_PLANES];
+};
+
+static gpointer
+_raw_to_buffer_new_impl (GstVulkanUpload * upload)
+{
+  struct RawToBufferUpload *raw = g_new0 (struct RawToBufferUpload, 1);
+
+  raw->upload = upload;
+
+  return raw;
+}
+
+static GstCaps *
+_raw_to_buffer_transform_caps (gpointer impl, GstPadDirection direction,
+    GstCaps * caps)
+{
+  GstCaps *ret;
+
+  if (direction == GST_PAD_SINK) {
+    ret =
+        _set_caps_features_with_passthrough (caps,
+        GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER, NULL);
+  } else {
+    ret =
+        _set_caps_features_with_passthrough (caps,
+        GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, NULL);
+  }
+
+  return ret;
+}
+
+static gboolean
+_raw_to_buffer_set_caps (gpointer impl, GstCaps * in_caps, GstCaps * out_caps)
+{
+  struct RawToBufferUpload *raw = impl;
+  guint out_width, out_height;
+  guint i;
+
+  if (!gst_video_info_from_caps (&raw->in_info, in_caps))
+    return FALSE;
+
+  if (!gst_video_info_from_caps (&raw->out_info, out_caps))
+    return FALSE;
+
+  out_width = GST_VIDEO_INFO_WIDTH (&raw->out_info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&raw->out_info);
+
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->out_info); i++) {
+    GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (&raw->out_info);
+    GstVulkanImageMemory *img_mem;
+    VkFormat vk_format;
+
+    vk_format = gst_vulkan_format_from_video_format (v_format, i);
+
+    img_mem = (GstVulkanImageMemory *)
+        gst_vulkan_image_memory_alloc (raw->upload->device, vk_format,
+        out_width, out_height, VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    raw->alloc_sizes[i] = img_mem->requirements.size;
+
+    gst_memory_unref (GST_MEMORY_CAST (img_mem));
+  }
+
+  return TRUE;
+}
+
+static void
+_raw_to_buffer_propose_allocation (gpointer impl, GstQuery * decide_query,
+    GstQuery * query)
+{
+  /* a little trickery with the impl pointer */
+  _buffer_propose_allocation (impl, decide_query, query);
+}
+
+static GstFlowReturn
+_raw_to_buffer_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
+{
+  struct RawToBufferUpload *raw = impl;
+  GstVideoFrame v_frame;
+  GstFlowReturn ret;
+  guint i;
+
+  if (!raw->pool) {
+    GstStructure *config;
+    guint min = 0, max = 0;
+    gsize size = 1;
+
+    raw->pool = gst_vulkan_buffer_pool_new (raw->upload->device);
+    config = gst_buffer_pool_get_config (raw->pool);
+    gst_buffer_pool_config_set_params (config, raw->upload->out_caps, size, min,
+        max);
+    gst_buffer_pool_set_config (raw->pool, config);
+  }
+  if (!raw->pool_active) {
+    gst_buffer_pool_set_active (raw->pool, TRUE);
+    raw->pool_active = TRUE;
+  }
+
+  if ((ret =
+          gst_buffer_pool_acquire_buffer (raw->pool, outbuf,
+              NULL)) != GST_FLOW_OK)
+    goto out;
+
+  if (!gst_video_frame_map (&v_frame, &raw->in_info, inbuf, GST_MAP_READ)) {
+    GST_ELEMENT_ERROR (raw->upload, RESOURCE, NOT_FOUND,
+        ("%s", "Failed to map input buffer"), NULL);
+    return GST_FLOW_ERROR;
+  }
+
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->out_info); i++) {
+    GstMapInfo map_info;
+    gsize plane_size;
+    GstMemory *mem;
+
+    mem = gst_buffer_peek_memory (*outbuf, i);
+    if (!gst_memory_map (GST_MEMORY_CAST (mem), &map_info, GST_MAP_WRITE)) {
+      GST_ELEMENT_ERROR (raw->upload, RESOURCE, NOT_FOUND,
+          ("%s", "Failed to map output memory"), NULL);
+      gst_buffer_unref (*outbuf);
+      *outbuf = NULL;
+      ret = GST_FLOW_ERROR;
+      goto out;
+    }
+
+    plane_size =
+        GST_VIDEO_INFO_PLANE_STRIDE (&raw->out_info,
+        i) * GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i);
+    g_assert (plane_size < map_info.size);
+    memcpy (map_info.data, v_frame.data[i], plane_size);
+
+    gst_memory_unmap (GST_MEMORY_CAST (mem), &map_info);
+  }
+
+  gst_video_frame_unmap (&v_frame);
+
+  ret = GST_FLOW_OK;
+
+out:
+  return ret;
+}
+
+static void
+_raw_to_buffer_free (gpointer impl)
+{
+  struct RawToBufferUpload *raw = impl;
+
+  if (raw->pool) {
+    if (raw->pool_active) {
+      gst_buffer_pool_set_active (raw->pool, FALSE);
+    }
+    raw->pool_active = FALSE;
+    gst_object_unref (raw->pool);
+    raw->pool = NULL;
+  }
+
+  g_free (impl);
+}
+
+static GstStaticCaps _raw_to_buffer_in_templ = GST_STATIC_CAPS ("video/x-raw");
+static GstStaticCaps _raw_to_buffer_out_templ =
+GST_STATIC_CAPS ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER ")");
+
+static const struct UploadMethod raw_to_buffer_upload = {
+  "RawToVulkanBuffer",
+  &_raw_to_buffer_in_templ,
+  &_raw_to_buffer_out_templ,
+  _raw_to_buffer_new_impl,
+  _raw_to_buffer_transform_caps,
+  _raw_to_buffer_set_caps,
+  _raw_to_buffer_propose_allocation,
+  _raw_to_buffer_perform,
+  _raw_to_buffer_free,
+};
+
+static const struct UploadMethod *upload_methods[] = {
+  &buffer_upload,
+  &raw_to_buffer_upload,
+};
+
+static GstCaps *
+_get_input_template_caps (void)
+{
+  GstCaps *ret = NULL;
+  gint i;
+
+  /* FIXME: cache this and invalidate on changes to upload_methods */
+  for (i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
+    GstCaps *template = gst_static_caps_get (upload_methods[i]->in_template);
+    ret = ret == NULL ? template : gst_caps_merge (ret, template);
+  }
+
+  ret = gst_caps_simplify (ret);
+
+  return ret;
+}
+
+static GstCaps *
+_get_output_template_caps (void)
+{
+  GstCaps *ret = NULL;
+  gint i;
+
+  /* FIXME: cache this and invalidate on changes to upload_methods */
+  for (i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
+    GstCaps *template = gst_static_caps_get (upload_methods[i]->out_template);
+    ret = ret == NULL ? template : gst_caps_merge (ret, template);
+  }
+
+  ret = gst_caps_simplify (ret);
+
+  return ret;
+}
+
 static void gst_vulkan_upload_finalize (GObject * object);
 static void gst_vulkan_upload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * param_spec);
@@ -60,17 +428,6 @@ static GstFlowReturn gst_vulkan_upload_transform (GstBaseTransform * bt,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static GstFlowReturn gst_vulkan_upload_prepare_output_buffer (GstBaseTransform *
     bt, GstBuffer * inbuf, GstBuffer ** outbuf);
-
-static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw"));
-
-static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw(memory:"
-        GST_VULKAN_BUFFER_MEMORY_ALLOCATOR_NAME ") ; " "video/x-raw"));
 
 enum
 {
@@ -108,10 +465,19 @@ gst_vulkan_upload_class_init (GstVulkanUploadClass * klass)
       "Filter/Video", "A Vulkan data uploader",
       "Matthew Waters <matthew@centricular.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
+  {
+    GstCaps *caps;
+
+    caps = _get_input_template_caps ();
+    gst_element_class_add_pad_template (gstelement_class,
+        gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps));
+    gst_caps_unref (caps);
+
+    caps = _get_output_template_caps ();
+    gst_element_class_add_pad_template (gstelement_class,
+        gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps));
+    gst_caps_unref (caps);
+  }
 
   gobject_class->finalize = gst_vulkan_upload_finalize;
 
@@ -132,12 +498,27 @@ gst_vulkan_upload_class_init (GstVulkanUploadClass * klass)
 static void
 gst_vulkan_upload_init (GstVulkanUpload * vk_upload)
 {
+  guint i, n;
+
+  n = G_N_ELEMENTS (upload_methods);
+  vk_upload->upload_impls = g_malloc (sizeof (gpointer) * n);
+  for (i = 0; i < n; i++) {
+    vk_upload->upload_impls[i] = upload_methods[i]->new_impl (vk_upload);
+  }
 }
 
 static void
 gst_vulkan_upload_finalize (GObject * object)
 {
-//  GstVulkanUpload *vk_upload = GST_VULKAN_UPLOAD (object);
+  GstVulkanUpload *vk_upload = GST_VULKAN_UPLOAD (object);
+  guint i;
+
+  gst_caps_replace (&vk_upload->in_caps, NULL);
+  gst_caps_replace (&vk_upload->out_caps, NULL);
+
+  for (i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
+    upload_methods[i]->free (vk_upload->upload_impls[i]);
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -306,31 +687,40 @@ static GstCaps *
 gst_vulkan_upload_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-//  GstVulkanUpload *vk_upload = GST_VULKAN_UPLOAD (bt);
-  GstCaps *tmp = NULL;
-  GstCaps *result = NULL;
+  GstVulkanUpload *vk_upload = GST_VULKAN_UPLOAD (bt);
+  GstCaps *result, *tmp;
+  gint i;
 
-  tmp = gst_caps_copy (caps);
+  tmp = gst_caps_new_empty ();
 
-  if (direction == GST_PAD_SINK) {
-    gst_caps_set_features (tmp, 0,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER));
-  } else {
-    gst_caps_set_features (tmp, 0,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY));
+  for (i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
+    GstCaps *tmp2;
+    GstCaps *templ;
+
+    if (direction == GST_PAD_SINK) {
+      templ = gst_static_caps_get (upload_methods[i]->in_template);
+    } else {
+      templ = gst_static_caps_get (upload_methods[i]->out_template);
+    }
+    if (!gst_caps_can_intersect (caps, templ)) {
+      gst_caps_unref (templ);
+      continue;
+    }
+    gst_caps_unref (templ);
+
+    tmp2 = upload_methods[i]->transform_caps (vk_upload->upload_impls[i],
+        direction, caps);
+
+    if (tmp2)
+      tmp = gst_caps_merge (tmp, tmp2);
   }
 
   if (filter) {
-    GST_DEBUG_OBJECT (bt, "intersecting with filter caps %" GST_PTR_FORMAT,
-        filter);
-
     result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (tmp);
   } else {
     result = tmp;
   }
-
-  GST_DEBUG_OBJECT (bt, "returning caps: %" GST_PTR_FORMAT, result);
 
   return result;
 }
@@ -340,41 +730,46 @@ gst_vulkan_upload_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
     GstCaps * out_caps)
 {
   GstVulkanUpload *vk_upload = GST_VULKAN_UPLOAD (bt);
-  guint out_width, out_height;
+  gboolean found_method = FALSE;
   guint i;
 
-  if (!gst_video_info_from_caps (&vk_upload->in_info, in_caps))
-    return FALSE;
+  gst_caps_replace (&vk_upload->in_caps, in_caps);
+  gst_caps_replace (&vk_upload->out_caps, out_caps);
 
-  if (!gst_video_info_from_caps (&vk_upload->out_info, out_caps))
-    return FALSE;
+  for (i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
+    GstCaps *templ;
 
-  out_width = GST_VIDEO_INFO_WIDTH (&vk_upload->out_info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&vk_upload->out_info);
+    templ = gst_static_caps_get (upload_methods[i]->in_template);
+    if (!gst_caps_can_intersect (in_caps, templ)) {
+      gst_caps_unref (templ);
+      continue;
+    }
+    gst_caps_unref (templ);
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vk_upload->out_info); i++) {
-    GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (&vk_upload->out_info);
-    GstVulkanImageMemory *img_mem;
-    VkFormat vk_format;
+    templ = gst_static_caps_get (upload_methods[i]->out_template);
+    if (!gst_caps_can_intersect (out_caps, templ)) {
+      gst_caps_unref (templ);
+      continue;
+    }
+    gst_caps_unref (templ);
 
-    vk_format = gst_vulkan_format_from_video_format (v_format, i);
+    if (!upload_methods[i]->set_caps (vk_upload->upload_impls[i], in_caps,
+            out_caps))
+      continue;
 
-    img_mem = (GstVulkanImageMemory *)
-        gst_vulkan_image_memory_alloc (vk_upload->device, vk_format, out_width,
-        out_height, VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    GST_LOG_OBJECT (bt, "uploader %s accepted caps in: %" GST_PTR_FORMAT
+        " out: %" GST_PTR_FORMAT, upload_methods[i]->name, in_caps, out_caps);
 
-    vk_upload->alloc_sizes[i] = img_mem->requirements.size;
-
-    gst_memory_unref (GST_MEMORY_CAST (img_mem));
+    vk_upload->current_impl = i;
+    found_method = TRUE;
+    break;
   }
 
   GST_DEBUG_OBJECT (bt,
       "set caps in: %" GST_PTR_FORMAT " out: %" GST_PTR_FORMAT, in_caps,
       out_caps);
 
-  return TRUE;
+  return found_method;
 }
 
 static gboolean
@@ -382,62 +777,30 @@ gst_vulkan_upload_propose_allocation (GstBaseTransform * bt,
     GstQuery * decide_query, GstQuery * query)
 {
   GstVulkanUpload *vk_upload = GST_VULKAN_UPLOAD (bt);
-  gboolean need_pool;
-  GstCaps *caps;
-  gboolean ret;
-  guint size;
+  guint i;
 
-  gst_query_parse_allocation (query, &caps, &need_pool);
+  for (i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
+    GstCaps *templ;
 
-  if (caps == NULL)
-    goto no_caps;
-
-  if (need_pool) {
-    GstBufferPool *pool;
-    GstStructure *config;
-    GstVideoInfo info;
-
-    if (!gst_video_info_from_caps (&info, caps))
-      goto invalid_caps;
-
-    /* the normal size of a frame */
-    size = info.size;
-
-    GST_DEBUG_OBJECT (bt, "create new pool");
-    pool = gst_vulkan_buffer_pool_new (vk_upload->device);
-
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-
-    if (!gst_buffer_pool_set_config (pool, config)) {
-      g_object_unref (pool);
-      goto config_failed;
+    templ = gst_static_caps_get (upload_methods[i]->in_template);
+    if (!gst_caps_can_intersect (vk_upload->in_caps, templ)) {
+      gst_caps_unref (templ);
+      continue;
     }
+    gst_caps_unref (templ);
 
-    gst_query_add_allocation_pool (query, pool, size, 1, 0);
-    g_object_unref (pool);
+    templ = gst_static_caps_get (upload_methods[i]->out_template);
+    if (!gst_caps_can_intersect (vk_upload->out_caps, templ)) {
+      gst_caps_unref (templ);
+      continue;
+    }
+    gst_caps_unref (templ);
+
+    upload_methods[i]->propose_allocation (vk_upload->upload_impls[i],
+        decide_query, query);
   }
 
   return TRUE;
-
-  /* ERRORS */
-no_caps:
-  {
-    GST_DEBUG_OBJECT (bt, "no caps specified");
-    return FALSE;
-  }
-invalid_caps:
-  {
-    GST_DEBUG_OBJECT (bt, "invalid caps specified");
-    return FALSE;
-  }
-config_failed:
-  {
-    GST_DEBUG_OBJECT (bt, "failed setting config");
-    return FALSE;
-  }
-
-  return ret;
 }
 
 static gboolean
@@ -446,60 +809,61 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
   return TRUE;
 }
 
+static gboolean
+_upload_find_method (GstVulkanUpload * vk_upload)
+{
+  vk_upload->current_impl++;
+
+  if (vk_upload->current_impl > G_N_ELEMENTS (upload_methods))
+    return FALSE;
+
+  GST_DEBUG_OBJECT (vk_upload, "attempting upload with uploader %s",
+      upload_methods[vk_upload->current_impl]->name);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_vulkan_upload_prepare_output_buffer (GstBaseTransform * bt,
     GstBuffer * inbuf, GstBuffer ** outbuf)
 {
-  if (gst_is_vulkan_buffer_memory (gst_buffer_peek_memory (inbuf, 0))) {
-    *outbuf = inbuf;
-    return GST_FLOW_OK;
-  }
+  GstVulkanUpload *vk_upload = GST_VULKAN_UPLOAD (bt);
+  GstFlowReturn ret;
 
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->prepare_output_buffer (bt,
-      inbuf, outbuf);
+  do {
+    gpointer method_impl;
+    const struct UploadMethod *method;
+
+    method = upload_methods[vk_upload->current_impl];
+    method_impl = vk_upload->upload_impls[vk_upload->current_impl];
+
+    ret = method->perform (method_impl, inbuf, outbuf);
+    if (ret != GST_FLOW_OK) {
+      do {
+        if (!_upload_find_method (vk_upload)) {
+          GST_ELEMENT_ERROR (bt, RESOURCE, NOT_FOUND,
+              ("Could not find suitable uploader"), (NULL));
+          return GST_FLOW_ERROR;
+        }
+
+        method = upload_methods[vk_upload->current_impl];
+        method_impl = vk_upload->upload_impls[vk_upload->current_impl];
+        if (!method->set_caps (method_impl, vk_upload->in_caps,
+                vk_upload->out_caps))
+          /* try the next method */
+          continue;
+      } while (FALSE);
+      /* try the uploading with the next method */
+      continue;
+    }
+  } while (FALSE);
+
+  return ret;
 }
 
 static GstFlowReturn
 gst_vulkan_upload_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
-  GstVulkanUpload *vk_upload = GST_VULKAN_UPLOAD (bt);
-  GstVideoFrame v_frame;
-  guint i;
-
-  if (inbuf == outbuf)
-    return GST_FLOW_OK;
-
-  if (!gst_video_frame_map (&v_frame, &vk_upload->in_info, inbuf, GST_MAP_READ)) {
-    GST_ELEMENT_ERROR (bt, RESOURCE, NOT_FOUND,
-        ("%s", "Failed to map input buffer"), NULL);
-    return GST_FLOW_ERROR;
-  }
-
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vk_upload->out_info); i++) {
-    GstMapInfo map_info;
-    gsize plane_size;
-    GstMemory *mem;
-
-    mem = gst_buffer_peek_memory (outbuf, i);
-    if (!gst_memory_map (GST_MEMORY_CAST (mem), &map_info, GST_MAP_WRITE)) {
-      GST_ELEMENT_ERROR (bt, RESOURCE, NOT_FOUND,
-          ("%s", "Failed to map output memory"), NULL);
-      return GST_FLOW_ERROR;
-    }
-
-    plane_size =
-        GST_VIDEO_INFO_PLANE_STRIDE (&vk_upload->out_info,
-        i) * GST_VIDEO_INFO_COMP_HEIGHT (&vk_upload->out_info, i);
-    g_assert (plane_size < map_info.size);
-    memcpy (map_info.data, v_frame.data[i], plane_size);
-
-    gst_memory_unmap (GST_MEMORY_CAST (mem), &map_info);
-
-    gst_buffer_append_memory (outbuf, mem);
-  }
-
-  gst_video_frame_unmap (&v_frame);
-
   return GST_FLOW_OK;
 }

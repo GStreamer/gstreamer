@@ -36,6 +36,29 @@ G_BEGIN_DECLS
 typedef struct _GstVulkanUpload GstVulkanUpload;
 typedef struct _GstVulkanUploadClass GstVulkanUploadClass;
 
+struct UploadMethod
+{
+  const gchar       *name;
+
+  GstStaticCaps     *in_template;
+  GstStaticCaps     *out_template;
+
+  gpointer          (*new_impl)                 (GstVulkanUpload * upload);
+  GstCaps *         (*transform_caps)           (gpointer impl,
+                                                 GstPadDirection direction,
+                                                 GstCaps * caps);
+  gboolean          (*set_caps)                 (gpointer impl,
+                                                 GstCaps * in_caps,
+                                                 GstCaps * out_caps);
+  void              (*propose_allocation)       (gpointer impl,
+                                                 GstQuery * decide_query,
+                                                 GstQuery * query);
+  GstFlowReturn     (*perform)                  (gpointer impl,
+                                                 GstBuffer * buffer,
+                                                 GstBuffer ** outbuf);
+  void              (*free)                     (gpointer impl);
+};
+
 struct _GstVulkanUpload
 {
   GstBaseTransform      parent;
@@ -45,10 +68,12 @@ struct _GstVulkanUpload
 
   GstVulkanDisplay      *display;
 
-  GstVideoInfo          in_info;
-  GstVideoInfo          out_info;
+  GstCaps               *in_caps;
+  GstCaps               *out_caps;
 
-  gsize                 alloc_sizes[GST_VIDEO_MAX_PLANES];
+  /* all impl pointers */
+  gpointer              *upload_impls;
+  guint                 current_impl;
 };
 
 struct _GstVulkanUploadClass
