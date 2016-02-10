@@ -21,7 +21,7 @@
 #include <xmmintrin.h>
 
 static inline void
-inner_product_gfloat_1_sse (gfloat * o, const gfloat * a, const gfloat * b, gint len)
+inner_product_gfloat_none_1_sse (gfloat * o, const gfloat * a, const gfloat * b, gint len, gpointer icoeff, gint oversample)
 {
   gint i = 0;
   __m128 sum = _mm_setzero_ps ();
@@ -40,7 +40,35 @@ inner_product_gfloat_1_sse (gfloat * o, const gfloat * a, const gfloat * b, gint
 }
 
 static inline void
-inner_product_gfloat_2_sse (gfloat * o, const gfloat * a, const gfloat * b, gint len)
+inner_product_gfloat_linear_1_sse (gfloat * o, const gfloat * a, const gfloat * b, gint len, gpointer icoeff, gint oversample)
+{
+  gint i = 0;
+  __m128 sum = _mm_setzero_ps (), t, b0;
+  __m128 f = _mm_loadu_ps(icoeff);
+
+  for (; i < len; i += 4) {
+    t = _mm_loadu_ps (a + i);
+
+    b0 = _mm_loadh_pi (b0, (__m64 *) (b + (i+0)*oversample));
+    b0 = _mm_loadl_pi (b0, (__m64 *) (b + (i+1)*oversample));
+
+    sum =
+        _mm_add_ps (sum, _mm_mul_ps (_mm_unpacklo_ps (t, t), b0));
+
+    b0 = _mm_loadh_pi (b0, (__m64 *) (b + (i+2)*oversample));
+    b0 = _mm_loadl_pi (b0, (__m64 *) (b + (i+3)*oversample));
+
+    sum =
+        _mm_add_ps (sum, _mm_mul_ps (_mm_unpackhi_ps (t, t), b0));
+  }
+  sum = _mm_mul_ps (sum, f);
+  sum = _mm_add_ps (sum, _mm_movehl_ps (sum, sum));
+  sum = _mm_add_ss (sum, _mm_shuffle_ps (sum, sum, 0x55));
+  _mm_store_ss (o, sum);
+}
+
+static inline void
+inner_product_gfloat_none_2_sse (gfloat * o, const gfloat * a, const gfloat * b, gint len, gpointer icoeff, gint oversample)
 {
   gint i = 0;
   __m128 sum = _mm_setzero_ps (), t;
@@ -66,15 +94,16 @@ inner_product_gfloat_2_sse (gfloat * o, const gfloat * a, const gfloat * b, gint
   *(gint64*)o = _mm_cvtsi128_si64 ((__m128i)sum);
 }
 
-MAKE_RESAMPLE_FUNC (gfloat, 1, sse);
-MAKE_RESAMPLE_FUNC (gfloat, 2, sse);
+MAKE_RESAMPLE_FUNC (gfloat, none, 1, sse);
+MAKE_RESAMPLE_FUNC (gfloat, none, 2, sse);
+MAKE_RESAMPLE_FUNC (gfloat, linear, 1, sse);
 #endif
 
 #if defined (HAVE_EMMINTRIN_H) && defined(__SSE2__)
 #include <emmintrin.h>
 
 static inline void
-inner_product_gint16_1_sse2 (gint16 * o, const gint16 * a, const gint16 * b, gint len)
+inner_product_gint16_none_1_sse2 (gint16 * o, const gint16 * a, const gint16 * b, gint len, gpointer icoeff, gint oversample)
 {
   gint i = 0;
   __m128i sum, ta, tb;
@@ -101,8 +130,8 @@ inner_product_gint16_1_sse2 (gint16 * o, const gint16 * a, const gint16 * b, gin
 }
 
 static inline void
-inner_product_gdouble_1_sse2 (gdouble * o, const gdouble * a, const gdouble * b,
-    gint len)
+inner_product_gdouble_none_1_sse2 (gdouble * o, const gdouble * a, const gdouble * b,
+    gint len, gpointer icoeff, gint oversample)
 {
   gint i = 0;
   __m128d sum = _mm_setzero_pd ();
@@ -126,7 +155,7 @@ inner_product_gdouble_1_sse2 (gdouble * o, const gdouble * a, const gdouble * b,
 }
 
 static inline void
-inner_product_gint16_2_sse2 (gint16 * o, const gint16 * a, const gint16 * b, gint len)
+inner_product_gint16_none_2_sse2 (gint16 * o, const gint16 * a, const gint16 * b, gint len, gpointer icoeff, gint oversample)
 {
   gint i = 0;
   __m128i sum, ta, tb, t1;
@@ -157,8 +186,8 @@ inner_product_gint16_2_sse2 (gint16 * o, const gint16 * a, const gint16 * b, gin
 }
 
 static inline void
-inner_product_gdouble_2_sse2 (gdouble * o, const gdouble * a, const gdouble * b,
-    gint len)
+inner_product_gdouble_none_2_sse2 (gdouble * o, const gdouble * a, const gdouble * b,
+    gint len, gpointer icoeff, gint oversample)
 {
   gint i = 0;
   __m128d sum = _mm_setzero_pd (), t;
@@ -183,18 +212,18 @@ inner_product_gdouble_2_sse2 (gdouble * o, const gdouble * a, const gdouble * b,
   _mm_store_pd (o, sum);
 }
 
-MAKE_RESAMPLE_FUNC (gint16, 1, sse2);
-MAKE_RESAMPLE_FUNC (gdouble, 1, sse2);
-MAKE_RESAMPLE_FUNC (gint16, 2, sse2);
-MAKE_RESAMPLE_FUNC (gdouble, 2, sse2);
+MAKE_RESAMPLE_FUNC (gint16, none, 1, sse2);
+MAKE_RESAMPLE_FUNC (gdouble, none, 1, sse2);
+MAKE_RESAMPLE_FUNC (gint16, none, 2, sse2);
+MAKE_RESAMPLE_FUNC (gdouble, none, 2, sse2);
 #endif
 
 #if defined (HAVE_SMMINTRIN_H) && defined(__SSE4_1__)
 #include <smmintrin.h>
 
 static inline void
-inner_product_gint32_1_sse41 (gint32 * o, const gint32 * a, const gint32 * b,
-    gint len)
+inner_product_gint32_none_1_sse41 (gint32 * o, const gint32 * a, const gint32 * b,
+    gint len, gpointer icoeff, gint oversample)
 {
   gint i = 0;
   __m128i sum, ta, tb;
@@ -230,7 +259,7 @@ inner_product_gint32_1_sse41 (gint32 * o, const gint32 * a, const gint32 * b,
   *o = CLAMP (res, -(1L << 31), (1L << 31) - 1);
 }
 
-MAKE_RESAMPLE_FUNC (gint32, 1, sse41);
+MAKE_RESAMPLE_FUNC (gint32, none, 1, sse41);
 #endif
 
 static void
@@ -239,23 +268,25 @@ audio_resampler_check_x86 (const gchar *option)
   if (!strcmp (option, "sse")) {
 #if defined (HAVE_XMMINTRIN_H) && defined(__SSE__)
     GST_DEBUG ("enable SSE optimisations");
-    resample_gfloat_1 = resample_gfloat_1_sse;
-    resample_gfloat_2 = resample_gfloat_2_sse;
+    resample_gfloat_none_1 = resample_gfloat_none_1_sse;
+    resample_gfloat_none_2 = resample_gfloat_none_2_sse;
+    resample_gfloat_linear_1 = resample_gfloat_linear_1_sse;
 #endif
   } else if (!strcmp (option, "sse2")) {
 #if defined (HAVE_EMMINTRIN_H) && defined(__SSE2__)
     GST_DEBUG ("enable SSE2 optimisations");
-    resample_gint16_1 = resample_gint16_1_sse2;
-    resample_gfloat_1 = resample_gfloat_1_sse;
-    resample_gfloat_2 = resample_gfloat_2_sse;
-    resample_gdouble_1 = resample_gdouble_1_sse2;
-    resample_gint16_2 = resample_gint16_2_sse2;
-    resample_gdouble_2 = resample_gdouble_2_sse2;
+    resample_gint16_none_1 = resample_gint16_none_1_sse2;
+    resample_gfloat_none_1 = resample_gfloat_none_1_sse;
+    resample_gfloat_linear_1 = resample_gfloat_linear_1_sse;
+    resample_gfloat_none_2 = resample_gfloat_none_2_sse;
+    resample_gdouble_none_1 = resample_gdouble_none_1_sse2;
+    resample_gint16_none_2 = resample_gint16_none_2_sse2;
+    resample_gdouble_none_2 = resample_gdouble_none_2_sse2;
 #endif
   } else if (!strcmp (option, "sse41")) {
 #if defined (HAVE_SMMINTRIN_H) && defined(__SSE4_1__)
     GST_DEBUG ("enable SSE41 optimisations");
-    resample_gint32_1 = resample_gint32_1_sse41;
+    resample_gint32_none_1 = resample_gint32_none_1_sse41;
 #endif
   }
 }

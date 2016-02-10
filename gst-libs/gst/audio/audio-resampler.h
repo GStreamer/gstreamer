@@ -113,11 +113,42 @@ typedef enum {
 #define GST_AUDIO_RESAMPLER_OPT_FILTER_MODE_THRESHOLD "GstAudioResampler.filter-mode-threshold"
 
 /**
+ * GstAudioResamplerFilterInterpolation:
+ * @GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_NONE: no interpolation
+ * @GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR: linear interpolation of the
+ *   filter coeficients.
+ * @GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC: cubic interpolation of the
+ *   filter coeficients.
+ *
+ * The different filter interpolation methods.
+ */
+typedef enum {
+  GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_NONE = (0),
+  GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR,
+  GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC,
+} GstAudioResamplerFilterInterpolation;
+/**
+ * GST_AUDIO_RESAMPLER_OPT_FILTER_INTERPOLATION:
+ *
+ * GST_TYPE_AUDIO_RESAMPLER_INTERPOLATION: how the filter coeficients should be
+ *    interpolated.
+ * GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR is default.
+ */
+#define GST_AUDIO_RESAMPLER_OPT_FILTER_INTERPOLATION "GstAudioResampler.filter-interpolation"
+/**
+ * GST_AUDIO_RESAMPLER_OPT_FILTER_OVERSAMPLE
+ *
+ * G_TYPE_UINT, oversampling to use when interpolating filters
+ * 8 is the default.
+ */
+#define GST_AUDIO_RESAMPLER_OPT_FILTER_OVERSAMPLE "GstAudioResampler.filter-oversample"
+
+/**
  * GST_AUDIO_RESAMPLER_OPT_MAX_PHASE_ERROR:
  *
  * G_TYPE_DOUBLE: The maximum allowed phase error when switching sample
  * rates.
- * 0.02 is the default.
+ * 0.05 is the default.
  */
 #define GST_AUDIO_RESAMPLER_OPT_MAX_PHASE_ERROR "GstAudioResampler.max-phase-error"
 
