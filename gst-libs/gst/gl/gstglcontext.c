@@ -1489,8 +1489,10 @@ gst_gl_context_thread_add (GstGLContext * context,
   g_return_if_fail (GST_IS_GL_CONTEXT (context));
   g_return_if_fail (func != NULL);
 
-  if (GST_IS_GL_WRAPPED_CONTEXT (context)) {
+  if (GST_IS_GL_WRAPPED_CONTEXT (context))
     g_return_if_fail (context->priv->active_thread == g_thread_self ());
+
+  if (context->priv->active_thread == g_thread_self ()) {
     func (context, data);
     return;
   }
