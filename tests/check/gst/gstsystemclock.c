@@ -752,6 +752,146 @@ GST_START_TEST (test_resolution)
 
 GST_END_TEST;
 
+typedef struct {
+  GThread *thread_wait;
+  GThread *thread_unschedule;
+  GMutex lock;
+  gboolean running;
+  GstClockID id;
+  gboolean unschedule;
+  gint32 time_offset_min;
+  gint32 time_offset_max;
+  gboolean dont_unschedule_positive_offset;
+} WaitUnscheduleData;
+
+static gpointer
+single_shot_wait_thread_func (gpointer data)
+{
+  WaitUnscheduleData *d = data;
+  GstClock *clock = gst_system_clock_obtain ();
+
+  while (d->running) {
+    GstClockTime now;
+    gint offset;
+    GstClockID id;
+
+    now = gst_clock_get_time (clock);
+    offset = g_random_int_range (d->time_offset_min, d->time_offset_max);
+
+    g_mutex_lock (&d->lock);
+    d->unschedule = d->dont_unschedule_positive_offset ? offset < 0 : TRUE;
+    id = d->id = gst_clock_new_single_shot_id (clock, now + (GstClockTime)offset);
+    g_mutex_unlock (&d->lock);
+
+    fail_unless (id != NULL, "Could not create single shot id");
+
+    gst_clock_id_wait (id, NULL);
+
+    g_mutex_lock (&d->lock);
+    gst_clock_id_unref (id);
+    d->id = NULL;
+    g_mutex_unlock (&d->lock);
+  }
+
+  g_object_unref (clock);
+
+  return NULL;
+}
+
+static gpointer
+unschedule_thread_func (gpointer data)
+{
+  WaitUnscheduleData *d = data;
+
+  while (d->running) {
+    g_mutex_lock (&d->lock);
+    if (d->id && d->unschedule) {
+      g_thread_yield ();
+      gst_clock_id_unschedule (d->id);
+    }
+    g_mutex_unlock (&d->lock);
+    g_thread_yield ();
+  }
+
+  return NULL;
+}
+
+GST_START_TEST (test_stress_cleanup_unschedule)
+{
+  WaitUnscheduleData data[50];
+
+  for (gint i = 0; i < G_N_ELEMENTS (data); i++) {
+    WaitUnscheduleData *d = &data[i];
+
+    /* Don't unschedule waits with positive offsets in order to trigger
+     * gst_system_clock_wait_wakeup() */
+    d->dont_unschedule_positive_offset = TRUE;
+    /* Overweight of negative offsets in order to trigger GST_CLOCK_EARLY more
+     * frequently */
+    d->time_offset_min = -GST_MSECOND;
+    d->time_offset_max = GST_MSECOND / 10;
+
+    /* Initialize test */
+    d->id = NULL;
+    d->running = TRUE;
+    g_mutex_init (&d->lock);
+    d->thread_wait = g_thread_new ("wait", single_shot_wait_thread_func, d);
+    d->thread_unschedule = g_thread_new ("unschedule", unschedule_thread_func,
+        d);
+  }
+
+  /* Test duration */
+  g_usleep (G_USEC_PER_SEC);
+
+  /* Stop and free test data */
+  for (gint i = 0; i < G_N_ELEMENTS (data); i++) {
+    WaitUnscheduleData *d = &data[i];
+    d->running = FALSE;
+    g_thread_join (d->thread_wait);
+    g_thread_join (d->thread_unschedule);
+    g_mutex_clear (&d->lock);
+  }
+}
+GST_END_TEST;
+
+
+GST_START_TEST (test_stress_reschedule)
+{
+  WaitUnscheduleData data[50];
+
+  for (gint i = 0; i < G_N_ELEMENTS (data); i++) {
+    WaitUnscheduleData *d = &data[i];
+
+    /* Try to unschedule all waits */
+    d->dont_unschedule_positive_offset = FALSE;
+    /* Small positive offsets in order to have both negative and positive
+     * diffs when a reschedule is needed. */
+    d->time_offset_min = 0;
+    d->time_offset_max = GST_MSECOND;
+
+    d->id = NULL;
+    d->running = TRUE;
+    g_mutex_init (&d->lock);
+    d->thread_wait = g_thread_new ("wait", single_shot_wait_thread_func, d);
+    d->thread_unschedule = g_thread_new ("unschedule", unschedule_thread_func,
+        d);
+  }
+
+  /* Test duration */
+  g_usleep (G_USEC_PER_SEC);
+
+  /* Stop and free test data */
+  for (gint i = 0; i < G_N_ELEMENTS (data); i++) {
+    WaitUnscheduleData *d = &data[i];
+    d->running = FALSE;
+    g_thread_join (d->thread_wait);
+    g_thread_join (d->thread_unschedule);
+    g_mutex_clear (&d->lock);
+  }
+}
+GST_END_TEST;
+
+
 static Suite *
 gst_systemclock_suite (void)
 {
@@ -772,6 +912,8 @@ gst_systemclock_suite (void)
   tcase_add_test (tc_chain, test_async_full);
   tcase_add_test (tc_chain, test_set_default);
   tcase_add_test (tc_chain, test_resolution);
+  tcase_add_test (tc_chain, test_stress_cleanup_unschedule);
+  tcase_add_test (tc_chain, test_stress_reschedule);
 
   return s;
 }

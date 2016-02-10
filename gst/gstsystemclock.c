@@ -702,8 +702,10 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
   GstClockReturn status;
 
   status = GET_ENTRY_STATUS (entry);
-  if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED))
+  if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED)) {
+    gst_system_clock_cleanup_unscheduled (sysclock, entry);
     return GST_CLOCK_UNSCHEDULED;
+  }
 
   /* need to call the overridden method because we want to sync against the time
    * of the clock, whatever the subclass uses as a clock. */
