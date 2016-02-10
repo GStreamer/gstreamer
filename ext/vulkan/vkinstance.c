@@ -43,7 +43,7 @@ static const char *instance_validation_layers[] = {
 #define GST_CAT_DEFAULT gst_vulkan_instance_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 GST_DEBUG_CATEGORY (GST_VULKAN_DEBUG_CAT);
-GST_DEBUG_CATEGORY (GST_CAT_CONTEXT);
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
 enum
 {
@@ -485,4 +485,58 @@ gst_context_get_vulkan_instance (GstContext * context,
       ") from context(%" GST_PTR_FORMAT ")", *instance, context);
 
   return ret;
+}
+
+gboolean
+gst_vulkan_instance_handle_context_query (GstElement * element,
+    GstQuery * query, GstVulkanInstance ** instance)
+{
+  gboolean res = FALSE;
+  const gchar *context_type;
+  GstContext *context, *old_context;
+
+  g_return_val_if_fail (element != NULL, FALSE);
+  g_return_val_if_fail (query != NULL, FALSE);
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT, FALSE);
+  g_return_val_if_fail (instance != NULL, FALSE);
+
+  gst_query_parse_context_type (query, &context_type);
+
+  if (g_strcmp0 (context_type, GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR) == 0) {
+    gst_query_parse_context (query, &old_context);
+
+    if (old_context)
+      context = gst_context_copy (old_context);
+    else
+      context = gst_context_new (GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR, TRUE);
+
+    gst_context_set_vulkan_instance (context, *instance);
+    gst_query_set_context (query, context);
+    gst_context_unref (context);
+
+    res = *instance != NULL;
+  }
+
+  return res;
+}
+
+gboolean
+gst_vulkan_instance_run_context_query (GstElement * element,
+    GstVulkanInstance ** instance)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (instance != NULL, FALSE);
+
+  if (*instance && GST_IS_VULKAN_INSTANCE (*instance))
+    return TRUE;
+
+  gst_vulkan_global_context_query (element,
+      GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR);
+
+  GST_DEBUG_OBJECT (element, "found instance %p", *instance);
+
+  if (*instance)
+    return TRUE;
+
+  return FALSE;
 }

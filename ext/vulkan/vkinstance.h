@@ -56,20 +56,25 @@ struct _GstVulkanInstanceClass
   GstObjectClass parent_class;
 };
 
-GstVulkanInstance * gst_vulkan_instance_new                 (void);
-gboolean            gst_vulkan_instance_open                (GstVulkanInstance * instance,
-                                                             GError ** error);
+GstVulkanInstance * gst_vulkan_instance_new                     (void);
+gboolean            gst_vulkan_instance_open                    (GstVulkanInstance * instance,
+                                                                 GError ** error);
 
-gpointer            gst_vulkan_instance_get_proc_address    (GstVulkanInstance * instance,
-                                                             const gchar * name);
+gpointer            gst_vulkan_instance_get_proc_address        (GstVulkanInstance * instance,
+                                                                 const gchar * name);
 
-GstVulkanDevice *   gst_vulkan_instance_create_device       (GstVulkanInstance * instance,
-                                                             GError ** error);
+GstVulkanDevice *   gst_vulkan_instance_create_device           (GstVulkanInstance * instance,
+                                                                 GError ** error);
 
-void                gst_context_set_vulkan_instance         (GstContext * context,
-                                                             GstVulkanInstance * instance);
-gboolean            gst_context_get_vulkan_instance         (GstContext * context,
-                                                             GstVulkanInstance ** instance);
+void                gst_context_set_vulkan_instance             (GstContext * context,
+                                                                 GstVulkanInstance * instance);
+gboolean            gst_context_get_vulkan_instance             (GstContext * context,
+                                                                 GstVulkanInstance ** instance);
+gboolean            gst_vulkan_instance_handle_context_query    (GstElement * element,
+                                                                 GstQuery * query,
+                                                                 GstVulkanInstance ** instance);
+gboolean            gst_vulkan_instance_run_context_query       (GstElement * element,
+                                                                 GstVulkanInstance ** instance);
 
 G_END_DECLS
 

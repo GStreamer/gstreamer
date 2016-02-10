@@ -32,6 +32,8 @@ gboolean gst_vulkan_handle_set_context (GstElement * element, GstContext * conte
 gboolean gst_vulkan_handle_context_query (GstElement * element, GstQuery * query,
     GstVulkanDisplay ** display, GstVulkanInstance ** instance, GstVulkanDevice ** device);
 
+void gst_vulkan_global_context_query (GstElement * element, const gchar * context_type);
+GstQuery * gst_vulkan_local_context_query (GstElement * element, const gchar * context_type, gboolean set_context);
 gboolean gst_vulkan_run_query (GstElement * element,
     GstQuery * query, GstPadDirection direction);
 

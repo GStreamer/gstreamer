@@ -34,6 +34,8 @@ G_BEGIN_DECLS
 #define GST_VULKAN_DEVICE_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_VULKAN_DEVICE, GstVulkanDeviceClass))
 GType gst_vulkan_device_get_type       (void);
 
+#define GST_VULKAN_DEVICE_CONTEXT_TYPE_STR "gst.vulkan.device"
+
 struct _GstVulkanDevice
 {
   GstObject parent;
@@ -76,6 +78,16 @@ VkPhysicalDevice    gst_vulkan_device_get_physical_device   (GstVulkanDevice * d
 gboolean            gst_vulkan_device_create_cmd_buffer     (GstVulkanDevice * device,
                                                              VkCommandBuffer * cmd,
                                                              GError ** error);
+
+void                gst_context_set_vulkan_device           (GstContext * context,
+                                                             GstVulkanDevice * device);
+gboolean            gst_context_get_vulkan_device           (GstContext * context,
+                                                             GstVulkanDevice ** device);
+gboolean            gst_vulkan_device_handle_context_query  (GstElement * element,
+                                                             GstQuery * query,
+                                                             GstVulkanDevice ** device);
+gboolean            gst_vulkan_device_run_context_query     (GstElement * element,
+                                                             GstVulkanDevice ** device);
 
 G_END_DECLS
 

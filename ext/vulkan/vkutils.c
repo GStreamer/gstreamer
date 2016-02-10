@@ -106,8 +106,39 @@ gst_vulkan_run_query (GstElement * element, GstQuery * query,
   return g_value_get_boolean (&res);
 }
 
-static void
-_vk_gst_context_query (GstElement * element, const gchar * display_type)
+void
+gst_vulkan_global_context_query (GstElement * element,
+    const gchar * context_type)
+{
+  GstQuery *query;
+  GstMessage *msg;
+
+  if ((query = gst_vulkan_local_context_query (element, context_type, TRUE))) {
+    gst_query_unref (query);
+    return;
+  }
+
+  /* 3) Post a GST_MESSAGE_NEED_CONTEXT message on the bus with
+   *    the required context type and afterwards check if a
+   *    usable context was set now as in 1). The message could
+   *    be handled by the parent bins of the element and the
+   *    application.
+   */
+  GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+      "posting need context message");
+  msg = gst_message_new_need_context (GST_OBJECT_CAST (element), context_type);
+  gst_element_post_message (element, msg);
+
+  /*
+   * Whomever responds to the need-context message performs a
+   * GstElement::set_context() with the required context in which the element
+   * is required to update the display_ptr or call gst_vulkan_handle_set_context().
+   */
+}
+
+GstQuery *
+gst_vulkan_local_context_query (GstElement * element,
+    const gchar * context_type, gboolean set_context)
 {
   GstQuery *query;
   GstContext *ctxt;
@@ -118,47 +149,33 @@ _vk_gst_context_query (GstElement * element, const gchar * display_type)
    *      check if downstream already has a context of the specific type
    *  2b) Query upstream as above.
    */
-  query = gst_query_new_context (display_type);
+  query = gst_query_new_context (context_type);
   if (gst_vulkan_run_query (element, query, GST_PAD_SRC)) {
     gst_query_parse_context (query, &ctxt);
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
         "found context (%p) in downstream query", ctxt);
-    gst_element_set_context (element, ctxt);
+    if (set_context)
+      gst_element_set_context (element, ctxt);
   } else if (gst_vulkan_run_query (element, query, GST_PAD_SINK)) {
     gst_query_parse_context (query, &ctxt);
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
         "found context (%p) in upstream query", ctxt);
-    gst_element_set_context (element, ctxt);
+    if (set_context)
+      gst_element_set_context (element, ctxt);
   } else {
-    /* 3) Post a GST_MESSAGE_NEED_CONTEXT message on the bus with
-     *    the required context type and afterwards check if a
-     *    usable context was set now as in 1). The message could
-     *    be handled by the parent bins of the element and the
-     *    application.
-     */
-    GstMessage *msg;
-
-    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
-        "posting need context message");
-    msg = gst_message_new_need_context (GST_OBJECT_CAST (element),
-        display_type);
-    gst_element_post_message (element, msg);
+    gst_query_unref (query);
+    query = NULL;
   }
 
-  /*
-   * Whomever responds to the need-context message performs a
-   * GstElement::set_context() with the required context in which the element
-   * is required to update the display_ptr or call gst_vulkan_handle_set_context().
-   */
-
-  gst_query_unref (query);
+  return query;
 }
 
 static void
 _vk_display_context_query (GstElement * element,
     GstVulkanDisplay ** display_ptr)
 {
-  _vk_gst_context_query (element, GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR);
+  gst_vulkan_global_context_query (element,
+      GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR);
 }
 
 /*  4) Create a context by itself and post a GST_MESSAGE_HAVE_CONTEXT
@@ -197,7 +214,8 @@ gst_vulkan_ensure_element_data (gpointer element,
   if (!*instance_ptr) {
     GError *error = NULL;
 
-    _vk_gst_context_query (element, GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR);
+    gst_vulkan_global_context_query (element,
+        GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR);
 
     /* Neighbour found and it updated the display */
     if (!*instance_ptr) {
@@ -295,63 +313,12 @@ gst_vulkan_handle_context_query (GstElement * element, GstQuery * query,
     GstVulkanDisplay ** display, GstVulkanInstance ** instance,
     GstVulkanDevice ** device)
 {
-  gboolean res = FALSE;
-  const gchar *context_type;
-  GstContext *context, *old_context;
+  if (gst_vulkan_display_handle_context_query (element, query, display))
+    return TRUE;
+  if (gst_vulkan_instance_handle_context_query (element, query, instance))
+    return TRUE;
+  if (gst_vulkan_device_handle_context_query (element, query, device))
+    return TRUE;
 
-  g_return_val_if_fail (element != NULL, FALSE);
-  g_return_val_if_fail (query != NULL, FALSE);
-  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT, FALSE);
-  g_return_val_if_fail (display != NULL, FALSE);
-  g_return_val_if_fail (instance != NULL, FALSE);
-  g_return_val_if_fail (device != NULL, FALSE);
-
-  gst_query_parse_context_type (query, &context_type);
-
-  if (g_strcmp0 (context_type, GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR) == 0) {
-    gst_query_parse_context (query, &old_context);
-
-    if (old_context)
-      context = gst_context_copy (old_context);
-    else
-      context = gst_context_new (GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR, TRUE);
-
-    gst_context_set_vulkan_display (context, *display);
-    gst_query_set_context (query, context);
-    gst_context_unref (context);
-
-    res = *display != NULL;
-  } else if (g_strcmp0 (context_type,
-          GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR) == 0) {
-    gst_query_parse_context (query, &old_context);
-
-    if (old_context)
-      context = gst_context_copy (old_context);
-    else
-      context = gst_context_new (GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR, TRUE);
-
-    gst_context_set_vulkan_instance (context, *instance);
-    gst_query_set_context (query, context);
-    gst_context_unref (context);
-
-    res = *instance != NULL;
-  } else if (g_strcmp0 (context_type, "gst.vulkan.device") == 0) {
-    GstStructure *s;
-
-    gst_query_parse_context (query, &old_context);
-
-    if (old_context)
-      context = gst_context_copy (old_context);
-    else
-      context = gst_context_new ("gst.vulkan.device", TRUE);
-
-    s = gst_context_writable_structure (context);
-    gst_structure_set (s, "device", GST_TYPE_VULKAN_DEVICE, *device, NULL);
-    gst_query_set_context (query, context);
-    gst_context_unref (context);
-
-    res = *instance != NULL;
-  }
-
-  return res;
+  return FALSE;
 }

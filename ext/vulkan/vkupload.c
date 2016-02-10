@@ -583,47 +583,6 @@ gst_vulkan_upload_set_context (GstElement * element, GstContext * context)
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
-static gboolean
-_find_vulkan_device (GstVulkanUpload * upload)
-{
-  /* Requires the instance to exist */
-  GstQuery *query;
-  GstContext *context;
-  const GstStructure *s;
-
-  if (upload->device)
-    return TRUE;
-
-  query = gst_query_new_context ("gst.vulkan.device");
-  if (!upload->device
-      && gst_vulkan_run_query (GST_ELEMENT (upload), query, GST_PAD_SRC)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "device", GST_TYPE_VULKAN_DEVICE, &upload->device,
-          NULL);
-    }
-  }
-  if (!upload->device
-      && gst_vulkan_run_query (GST_ELEMENT (upload), query, GST_PAD_SINK)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "device", GST_TYPE_VULKAN_DEVICE, &upload->device,
-          NULL);
-    }
-  }
-
-  GST_DEBUG_OBJECT (upload, "found device %p", upload->device);
-
-  gst_query_unref (query);
-
-  if (upload->device)
-    return TRUE;
-
-  return FALSE;
-}
-
 static GstStateChangeReturn
 gst_vulkan_upload_change_state (GstElement * element, GstStateChange transition)
 {
@@ -644,7 +603,8 @@ gst_vulkan_upload_change_state (GstElement * element, GstStateChange transition)
             ("Failed to retreive vulkan instance/display"), (NULL));
         return GST_STATE_CHANGE_FAILURE;
       }
-      if (!_find_vulkan_device (vk_upload)) {
+      if (!gst_vulkan_device_run_context_query (GST_ELEMENT (vk_upload),
+              &vk_upload->device)) {
         GST_ELEMENT_ERROR (vk_upload, RESOURCE, NOT_FOUND,
             ("Failed to retreive vulkan device"), (NULL));
         return GST_STATE_CHANGE_FAILURE;

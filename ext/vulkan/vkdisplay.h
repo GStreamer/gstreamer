@@ -101,6 +101,11 @@ gboolean                gst_context_get_vulkan_display              (GstContext 
                                                                      GstVulkanDisplay ** display);
 void                    gst_context_set_vulkan_display              (GstContext * context,
                                                                      GstVulkanDisplay * display);
+gboolean                gst_vulkan_display_handle_context_query     (GstElement * element,
+                                                                     GstQuery * query,
+                                                                     GstVulkanDisplay ** display);
+gboolean                gst_vulkan_display_run_context_query        (GstElement * element,
+                                                                     GstVulkanDisplay ** display);
 
 /* GstVulkanWindow usage only */
 gboolean                gst_vulkan_display_remove_window            (GstVulkanDisplay * display, GstVulkanWindow * window);

@@ -40,11 +40,13 @@ static const char *device_validation_layers[] = {
 
 #define GST_CAT_DEFAULT gst_vulkan_device_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
 #define gst_vulkan_device_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanDevice, gst_vulkan_device, GST_TYPE_OBJECT,
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkandevice", 0,
-        "Vulkan Device"));
+        "Vulkan Device");
+    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT"));
 
 static void gst_vulkan_device_finalize (GObject * object);
 
@@ -401,4 +403,124 @@ gst_vulkan_device_create_cmd_buffer (GstVulkanDevice * device,
   GST_LOG_OBJECT (device, "created cmd buffer %p", cmd);
 
   return TRUE;
+}
+
+/**
+ * gst_context_set_vulkan_device:
+ * @context: a #GstContext
+ * @device: a #GstVulkanDevice
+ *
+ * Sets @device on @context
+ *
+ * Since: 1.10
+ */
+void
+gst_context_set_vulkan_device (GstContext * context, GstVulkanDevice * device)
+{
+  GstStructure *s;
+
+  g_return_if_fail (context != NULL);
+  g_return_if_fail (gst_context_is_writable (context));
+
+  if (device)
+    GST_CAT_LOG (GST_CAT_CONTEXT,
+        "setting GstVulkanDevice(%" GST_PTR_FORMAT ") on context(%"
+        GST_PTR_FORMAT ")", device, context);
+
+  s = gst_context_writable_structure (context);
+  gst_structure_set (s, GST_VULKAN_DEVICE_CONTEXT_TYPE_STR,
+      GST_TYPE_VULKAN_DEVICE, device, NULL);
+}
+
+/**
+ * gst_context_get_vulkan_device:
+ * @context: a #GstContext
+ * @device: resulting #GstVulkanDevice
+ *
+ * Returns: Whether @device was in @context
+ *
+ * Since: 1.10
+ */
+gboolean
+gst_context_get_vulkan_device (GstContext * context, GstVulkanDevice ** device)
+{
+  const GstStructure *s;
+  gboolean ret;
+
+  g_return_val_if_fail (device != NULL, FALSE);
+  g_return_val_if_fail (context != NULL, FALSE);
+
+  s = gst_context_get_structure (context);
+  ret = gst_structure_get (s, GST_VULKAN_DEVICE_CONTEXT_TYPE_STR,
+      GST_TYPE_VULKAN_DEVICE, device, NULL);
+
+  GST_CAT_LOG (GST_CAT_CONTEXT, "got GstVulkanDevice(%" GST_PTR_FORMAT
+      ") from context(%" GST_PTR_FORMAT ")", *device, context);
+
+  return ret;
+}
+
+gboolean
+gst_vulkan_device_handle_context_query (GstElement * element, GstQuery * query,
+    GstVulkanDevice ** device)
+{
+  gboolean res = FALSE;
+  const gchar *context_type;
+  GstContext *context, *old_context;
+
+  g_return_val_if_fail (element != NULL, FALSE);
+  g_return_val_if_fail (query != NULL, FALSE);
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT, FALSE);
+  g_return_val_if_fail (device != NULL, FALSE);
+
+  gst_query_parse_context_type (query, &context_type);
+
+  if (g_strcmp0 (context_type, GST_VULKAN_DEVICE_CONTEXT_TYPE_STR) == 0) {
+    gst_query_parse_context (query, &old_context);
+
+    if (old_context)
+      context = gst_context_copy (old_context);
+    else
+      context = gst_context_new (GST_VULKAN_DEVICE_CONTEXT_TYPE_STR, TRUE);
+
+    gst_context_set_vulkan_device (context, *device);
+    gst_query_set_context (query, context);
+    gst_context_unref (context);
+
+    res = *device != NULL;
+  }
+
+  return res;
+}
+
+gboolean
+gst_vulkan_device_run_context_query (GstElement * element,
+    GstVulkanDevice ** device)
+{
+  GstQuery *query;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (device != NULL, FALSE);
+
+  if (*device && GST_IS_VULKAN_DEVICE (*device))
+    return TRUE;
+
+  if ((query =
+          gst_vulkan_local_context_query (element,
+              GST_VULKAN_DEVICE_CONTEXT_TYPE_STR, FALSE))) {
+    GstContext *context;
+
+    gst_query_parse_context (query, &context);
+    if (context)
+      gst_context_get_vulkan_device (context, device);
+  }
+
+  GST_DEBUG_OBJECT (element, "found device %p", *device);
+
+  gst_query_unref (query);
+
+  if (*device)
+    return TRUE;
+
+  return FALSE;
 }

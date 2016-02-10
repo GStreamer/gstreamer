@@ -205,15 +205,13 @@ static gboolean
 gst_vulkan_sink_query (GstBaseSink * bsink, GstQuery * query)
 {
   GstVulkanSink *vk_sink = GST_VULKAN_SINK (bsink);
-  gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:{
-      res = gst_vulkan_handle_context_query (GST_ELEMENT (vk_sink), query,
-          &vk_sink->display, &vk_sink->instance, &vk_sink->device);
+      if (gst_vulkan_handle_context_query (GST_ELEMENT (vk_sink), query,
+              &vk_sink->display, &vk_sink->instance, &vk_sink->device))
+        return TRUE;
 
-      if (res)
-        return res;
       break;
     }
     default:

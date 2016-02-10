@@ -410,3 +410,57 @@ gst_vulkan_display_type_to_extension_string (GstVulkanDisplayType type)
 
   return NULL;
 }
+
+gboolean
+gst_vulkan_display_handle_context_query (GstElement * element, GstQuery * query,
+    GstVulkanDisplay ** display)
+{
+  gboolean res = FALSE;
+  const gchar *context_type;
+  GstContext *context, *old_context;
+
+  g_return_val_if_fail (element != NULL, FALSE);
+  g_return_val_if_fail (query != NULL, FALSE);
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT, FALSE);
+  g_return_val_if_fail (display != NULL, FALSE);
+
+  gst_query_parse_context_type (query, &context_type);
+
+  if (g_strcmp0 (context_type, GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR) == 0) {
+    gst_query_parse_context (query, &old_context);
+
+    if (old_context)
+      context = gst_context_copy (old_context);
+    else
+      context = gst_context_new (GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR, TRUE);
+
+    gst_context_set_vulkan_display (context, *display);
+    gst_query_set_context (query, context);
+    gst_context_unref (context);
+
+    res = *display != NULL;
+  }
+
+  return res;
+}
+
+gboolean
+gst_vulkan_display_run_context_query (GstElement * element,
+    GstVulkanDisplay ** display)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (display != NULL, FALSE);
+
+  if (*display && GST_IS_VULKAN_DISPLAY (*display))
+    return TRUE;
+
+  gst_vulkan_global_context_query (element,
+      GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR);
+
+  GST_DEBUG_OBJECT (element, "found display %p", *display);
+
+  if (*display)
+    return TRUE;
+
+  return FALSE;
+}
