@@ -125,6 +125,8 @@ gst_vulkan_instance_finalize (GObject * object)
   if (instance->instance)
     vkDestroyInstance (instance->instance, NULL);
   instance->instance = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static VkBool32

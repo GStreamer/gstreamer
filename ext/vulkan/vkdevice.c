@@ -41,6 +41,7 @@ static const char *device_validation_layers[] = {
 #define GST_CAT_DEFAULT gst_vulkan_device_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
+#define gst_vulkan_device_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanDevice, gst_vulkan_device, GST_TYPE_OBJECT,
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkandevice", 0,
         "Vulkan Device"));
@@ -102,6 +103,8 @@ gst_vulkan_device_finalize (GObject * object)
   if (device->instance)
     gst_object_unref (device->instance);
   device->instance = VK_NULL_HANDLE;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static const gchar *

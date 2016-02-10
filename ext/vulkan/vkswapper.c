@@ -305,6 +305,8 @@ gst_vulkan_swapper_finalize (GObject * object)
   gst_caps_replace (&swapper->caps, NULL);
 
   g_mutex_clear (&swapper->priv->render_lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
