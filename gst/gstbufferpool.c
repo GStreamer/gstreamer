@@ -1088,7 +1088,7 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
 
     /* no buffer, try to allocate some more */
     GST_LOG_OBJECT (pool, "no buffer, trying to allocate");
-    result = do_alloc_buffer (pool, buffer, NULL);
+    result = do_alloc_buffer (pool, buffer, params);
     if (G_LIKELY (result == GST_FLOW_OK))
       /* we have a buffer, return it */
       break;
