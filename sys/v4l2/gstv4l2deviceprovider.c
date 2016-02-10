@@ -99,17 +99,17 @@ static GstV4l2Device *
 gst_v4l2_device_provider_probe_device (GstV4l2DeviceProvider * provider,
     const gchar * device_path, const gchar * device_name)
 {
-  GstV4l2Object *v4l2obj;
+  GstV4l2Object *v4l2obj = NULL;
   GstCaps *caps;
   GstV4l2Device *device = NULL;
   struct stat st;
   GstV4l2DeviceType type = GST_V4L2_DEVICE_TYPE_INVALID;
 
   if (stat (device_path, &st) == -1)
-    return NULL;
+    goto destroy;
 
   if (!S_ISCHR (st.st_mode))
-    return NULL;
+    goto destroy;
 
   v4l2obj = gst_v4l2_object_new ((GstElement *) provider,
       V4L2_BUF_TYPE_VIDEO_CAPTURE, device_path, NULL, NULL, NULL);
@@ -153,7 +153,8 @@ close:
 
 destroy:
 
-  gst_v4l2_object_destroy (v4l2obj);
+  if (v4l2obj)
+    gst_v4l2_object_destroy (v4l2obj);
 
   return device;
 }
