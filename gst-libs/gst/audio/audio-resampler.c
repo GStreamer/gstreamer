@@ -288,8 +288,8 @@ get_kaiser_tap (gdouble x, gint n_taps, gdouble Fc, gdouble beta)
   return s * bessel (beta * sqrt (MAX (1 - w * w, 0)));
 }
 
-#define PRECISION_S16 14
-#define PRECISION_S32 30
+#define PRECISION_S16 15
+#define PRECISION_S32 31
 
 static inline gdouble
 fill_taps (GstAudioResampler * resampler,
@@ -342,7 +342,8 @@ static inline void                                                      \
 convert_taps_##type (gdouble *tmpcoeff, type *taps,                     \
     gdouble weight, gint n_taps)                                        \
 {                                                                       \
-  gdouble multiplier = (1 << precision);                                \
+  gint64 one = (1L << precision) - 1;                                   \
+  gdouble multiplier = one;                                             \
   gint i, j;                                                            \
   gdouble offset, l_offset, h_offset;                                   \
   gboolean exact = FALSE;                                               \
@@ -355,13 +356,13 @@ convert_taps_##type (gdouble *tmpcoeff, type *taps,                     \
     gint64 sum = 0;                                                     \
     for (j = 0; j < n_taps; j++)                                        \
       sum += floor (offset + tmpcoeff[j] * multiplier / weight);        \
-    if (sum == (1 << precision)) {                                      \
+    if (sum == one) {                                                   \
       exact = TRUE;                                                     \
       break;                                                            \
     }                                                                   \
     if (l_offset == h_offset)                                           \
       break;                                                            \
-    if (sum < (1 << precision)) {                                       \
+    if (sum < one) {                                                    \
       if (offset > l_offset)                                            \
         l_offset = offset;                                              \
       offset += (h_offset - l_offset) / 2;                              \
@@ -455,7 +456,7 @@ make_coeff_##type##_linear (gint frac, gint out_rate, type *icoeff)     \
 {                                                                       \
   type x = ((type2)frac << prec) / out_rate;                            \
   icoeff[0] = icoeff[2] = x;                                            \
-  icoeff[1] = icoeff[3] = (1L << prec) - x;                             \
+  icoeff[1] = icoeff[3] = (1L << prec) - 1 - x;                         \
 }
 #define MAKE_COEFF_LINEAR_FLOAT_FUNC(type)                              \
 static inline void                                                      \
@@ -474,8 +475,8 @@ MAKE_COEFF_LINEAR_FLOAT_FUNC (gdouble);
 static inline void                                                      \
 make_coeff_##type##_cubic (gint frac, gint out_rate, type *icoeff)      \
 {                                                                       \
+  type one = (1L << prec) - 1;                                          \
   type x = ((type2) frac << prec) / out_rate;                           \
-  type one = 1 << prec;                                                 \
   type x2 = ((type2) x * (type2) x) >> prec;                            \
   type x3 = ((type2) x2 * (type2) x) >> prec;                           \
   icoeff[0] = (((type2) (x3 - x) << prec) / 6) >> prec;                 \
