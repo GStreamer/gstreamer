@@ -168,13 +168,13 @@ static inline double interpolate_product_double(const double *a, const double *b
   {
      for(;i<len-1;i+=2)
      {
-       t = _mm_mul_pd(_mm_load1_pd(a+i), _mm_loadu_pd(b+i*oversample));
-       sum1 = _mm_add_pd(sum1, t);
-       sum2 = _mm_add_pd(sum2, _mm_unpackhi_pd(t, t));
+       t = _mm_load1_pd(a+i);
+       sum1 = _mm_add_pd(sum1, _mm_mul_pd(t, _mm_loadu_pd(b+i*oversample)));
+       sum2 = _mm_add_pd(sum2, _mm_mul_pd(t, _mm_loadu_pd(b+i*oversample+2)));
 
-       t = _mm_mul_pd(_mm_load1_pd(a+i+1), _mm_loadu_pd(b+(i+1)*oversample));
-       sum1 = _mm_add_pd(sum1, t);
-       sum2 = _mm_add_pd(sum2, _mm_unpackhi_pd(t, t));
+       t = _mm_load1_pd(a+i+1);
+       sum1 = _mm_add_pd(sum1, _mm_mul_pd(t, _mm_loadu_pd(b+(i+1)*oversample)));
+       sum2 = _mm_add_pd(sum2, _mm_mul_pd(t, _mm_loadu_pd(b+(i+1)*oversample+2)));
      }
      sum1 = _mm_mul_pd(f1, sum1);
      sum2 = _mm_mul_pd(f2, sum2);
