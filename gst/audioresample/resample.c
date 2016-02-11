@@ -598,8 +598,8 @@ resampler_basic_interpolate_single (SpeexResamplerState * st,
     const int offset = samp_frac_num * st->oversample / st->den_rate;
 #ifdef FIXED_POINT
     const spx_word16_t frac =
-        PDIV32 (SHL32 ((samp_frac_num * st->oversample) % st->den_rate, 15),
-        st->den_rate);
+        ((((gint64) samp_frac_num * (gint64) st->oversample) % st->den_rate)
+        << 15) / st->den_rate;
 #else
     const spx_word16_t frac =
         ((float) ((samp_frac_num * st->oversample) % st->den_rate)) /
@@ -1386,7 +1386,8 @@ speex_resampler_set_rate_frac (SpeexResamplerState * st, spx_uint32_t ratio_num,
 
   if (old_den > 0) {
     for (i = 0; i < st->nb_channels; i++) {
-      st->samp_frac_num[i] = st->samp_frac_num[i] * st->den_rate / old_den;
+      st->samp_frac_num[i] =
+          (gint64) st->samp_frac_num[i] * (gint64) st->den_rate / old_den;
       /* Safety net */
       if (st->samp_frac_num[i] >= st->den_rate)
         st->samp_frac_num[i] = st->den_rate - 1;
