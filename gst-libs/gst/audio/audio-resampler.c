@@ -354,7 +354,7 @@ convert_taps_##type (gdouble *tmpcoeff, type *taps,                     \
   for (i = 0; i < 32; i++) {                                            \
     gint64 sum = 0;                                                     \
     for (j = 0; j < n_taps; j++)                                        \
-      sum += taps[j] = floor (offset + tmpcoeff[j] * multiplier / weight); \
+      sum += floor (offset + tmpcoeff[j] * multiplier / weight);        \
     if (sum == (1 << precision)) {                                      \
       exact = TRUE;                                                     \
       break;                                                            \
@@ -371,6 +371,8 @@ convert_taps_##type (gdouble *tmpcoeff, type *taps,                     \
       offset -= (h_offset - l_offset) / 2;                              \
     }                                                                   \
   }                                                                     \
+  for (j = 0; j < n_taps; j++)                                          \
+    taps[j] = floor (offset + tmpcoeff[j] * multiplier / weight);       \
   if (!exact)                                                           \
     GST_WARNING ("can't find exact taps");                              \
 }
