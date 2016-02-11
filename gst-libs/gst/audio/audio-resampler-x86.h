@@ -45,23 +45,15 @@ inner_product_gfloat_linear_1_sse (gfloat * o, const gfloat * a,
     const gfloat * b, gint len, const gfloat * icoeff, gint oversample)
 {
   gint i = 0;
-  __m128 sum = _mm_setzero_ps (), t, b0;
+  __m128 sum = _mm_setzero_ps (), t;
   __m128 f = _mm_loadu_ps(icoeff);
 
   for (; i < len; i += 4) {
     t = _mm_loadu_ps (a + i);
-
-    b0 = _mm_loadh_pi (b0, (__m64 *) (b + (i+0)*oversample));
-    b0 = _mm_loadl_pi (b0, (__m64 *) (b + (i+1)*oversample));
-
-    sum =
-        _mm_add_ps (sum, _mm_mul_ps (_mm_unpacklo_ps (t, t), b0));
-
-    b0 = _mm_loadh_pi (b0, (__m64 *) (b + (i+2)*oversample));
-    b0 = _mm_loadl_pi (b0, (__m64 *) (b + (i+3)*oversample));
-
-    sum =
-        _mm_add_ps (sum, _mm_mul_ps (_mm_unpackhi_ps (t, t), b0));
+    sum = _mm_add_ps (sum, _mm_mul_ps (_mm_unpacklo_ps (t, t),
+          _mm_load_ps (b + 2 * (i + 0))));
+    sum = _mm_add_ps (sum, _mm_mul_ps (_mm_unpackhi_ps (t, t),
+          _mm_load_ps (b + 2 * (i + 2))));
   }
   sum = _mm_mul_ps (sum, f);
   sum = _mm_add_ps (sum, _mm_movehl_ps (sum, sum));
@@ -79,9 +71,9 @@ inner_product_gfloat_cubic_1_sse (gfloat * o, const gfloat * a,
 
   for (; i < len; i += 2) {
     sum = _mm_add_ps (sum, _mm_mul_ps (_mm_load1_ps (a + i + 0),
-          _mm_loadu_ps (b + (i + 0) * oversample)));
+          _mm_load_ps (b + 4 * (i + 0))));
     sum = _mm_add_ps (sum, _mm_mul_ps (_mm_load1_ps (a + i + 1),
-          _mm_loadu_ps (b + (i + 1) * oversample)));
+          _mm_load_ps (b + 4 * (i + 1))));
   }
   sum = _mm_mul_ps (sum, f);
   sum = _mm_add_ps (sum, _mm_movehl_ps (sum, sum));
@@ -118,9 +110,10 @@ inner_product_gfloat_none_2_sse (gfloat * o, const gfloat * a,
 }
 
 MAKE_RESAMPLE_FUNC (gfloat, none, 1, sse);
-MAKE_RESAMPLE_FUNC (gfloat, none, 2, sse);
 MAKE_RESAMPLE_FUNC (gfloat, linear, 1, sse);
 MAKE_RESAMPLE_FUNC (gfloat, cubic, 1, sse);
+
+MAKE_RESAMPLE_FUNC (gfloat, none, 2, sse);
 #endif
 
 #if defined (HAVE_EMMINTRIN_H) && defined(__SSE2__)
@@ -141,6 +134,94 @@ inner_product_gint16_none_1_sse2 (gint16 * o, const gint16 * a,
 
     sum = _mm_add_epi32 (sum, _mm_madd_epi16 (ta, tb));
   }
+  sum =
+      _mm_add_epi32 (sum, _mm_shuffle_epi32 (sum, _MM_SHUFFLE (2, 3, 2,
+              3)));
+  sum =
+      _mm_add_epi32 (sum, _mm_shuffle_epi32 (sum, _MM_SHUFFLE (1, 1, 1,
+              1)));
+
+  sum = _mm_add_epi32 (sum, _mm_set1_epi32 (1 << (PRECISION_S16 - 1)));
+  sum = _mm_srai_epi32 (sum, PRECISION_S16);
+  sum = _mm_packs_epi32 (sum, sum);
+  *o = _mm_extract_epi16 (sum, 0);
+}
+
+static inline void
+inner_product_gint16_linear_1_sse2 (gint16 * o, const gint16 * a,
+    const gint16 * b, gint len, const gint16 * icoeff, gint oversample)
+{
+  gint i = 0;
+  __m128i sum, t, ta, tb, m1, m2;
+  __m128i f = _mm_cvtsi64_si128 (*((long long*)icoeff));
+
+  sum = _mm_setzero_si128 ();
+  f = _mm_unpacklo_epi16 (f, sum);
+
+  for (; i < len; i += 8) {
+    t = _mm_loadu_si128 ((__m128i *) (a + i));
+
+    ta = _mm_unpacklo_epi16 (t, t);
+    tb = _mm_load_si128 ((__m128i *) (b + 2 * i + 0));
+
+    m1 = _mm_mulhi_epi16 (ta, tb);
+    m2 = _mm_mullo_epi16 (ta, tb);
+
+    sum = _mm_add_epi32 (sum, _mm_unpacklo_epi16 (m2, m1));
+    sum = _mm_add_epi32 (sum, _mm_unpackhi_epi16 (m2, m1));
+
+    ta = _mm_unpackhi_epi16 (t, t);
+    tb = _mm_load_si128 ((__m128i *) (b + 2 * i + 8));
+
+    m1 = _mm_mulhi_epi16 (ta, tb);
+    m2 = _mm_mullo_epi16 (ta, tb);
+
+    sum = _mm_add_epi32 (sum, _mm_unpacklo_epi16 (m2, m1));
+    sum = _mm_add_epi32 (sum, _mm_unpackhi_epi16 (m2, m1));
+  }
+  sum = _mm_srai_epi32 (sum, PRECISION_S16);
+  sum = _mm_madd_epi16 (sum, f);
+
+  sum =
+      _mm_add_epi32 (sum, _mm_shuffle_epi32 (sum, _MM_SHUFFLE (2, 3, 2,
+              3)));
+  sum =
+      _mm_add_epi32 (sum, _mm_shuffle_epi32 (sum, _MM_SHUFFLE (1, 1, 1,
+              1)));
+
+  sum = _mm_add_epi32 (sum, _mm_set1_epi32 (1 << (PRECISION_S16 - 1)));
+  sum = _mm_srai_epi32 (sum, PRECISION_S16);
+  sum = _mm_packs_epi32 (sum, sum);
+  *o = _mm_extract_epi16 (sum, 0);
+}
+
+static inline void
+inner_product_gint16_cubic_1_sse2 (gint16 * o, const gint16 * a,
+    const gint16 * b, gint len, const gint16 * icoeff, gint oversample)
+{
+  gint i = 0;
+  __m128i sum, ta, tb, m1, m2;
+  __m128i f = _mm_cvtsi64_si128 (*((long long*)icoeff));
+
+  sum = _mm_setzero_si128 ();
+  f = _mm_unpacklo_epi16 (f, sum);
+
+  for (; i < len; i += 2) {
+    ta = _mm_cvtsi32_si128 (*(gint32*)(a + i));
+    ta = _mm_unpacklo_epi16 (ta, ta);
+    ta = _mm_unpacklo_epi16 (ta, ta);
+
+    tb = _mm_load_si128 ((__m128i *) (b + 4 * i + 0));
+
+    m1 = _mm_mulhi_epi16 (ta, tb);
+    m2 = _mm_mullo_epi16 (ta, tb);
+
+    sum = _mm_add_epi32 (sum, _mm_unpacklo_epi16 (m2, m1));
+    sum = _mm_add_epi32 (sum, _mm_unpackhi_epi16 (m2, m1));
+  }
+  sum = _mm_srai_epi32 (sum, PRECISION_S16);
+  sum = _mm_madd_epi16 (sum, f);
+
   sum =
       _mm_add_epi32 (sum, _mm_shuffle_epi32 (sum, _MM_SHUFFLE (2, 3, 2,
               3)));
@@ -177,6 +258,51 @@ inner_product_gdouble_none_1_sse2 (gdouble * o, const gdouble * a,
   }
   sum = _mm_add_sd (sum, _mm_unpackhi_pd (sum, sum));
   _mm_store_sd (o, sum);
+}
+
+static inline void
+inner_product_gdouble_linear_1_sse2 (gdouble * o, const gdouble * a,
+    const gdouble * b, gint len, const gdouble * icoeff, gint oversample)
+{
+  gint i = 0;
+  __m128d sum = _mm_setzero_pd ();
+  __m128d f = _mm_loadu_pd (icoeff);
+
+  for (; i < len; i += 4) {
+    sum = _mm_add_pd (sum, _mm_mul_pd (_mm_load1_pd (a + i + 0), _mm_load_pd (b + 2 * i + 0)));
+    sum = _mm_add_pd (sum, _mm_mul_pd (_mm_load1_pd (a + i + 1), _mm_load_pd (b + 2 * i + 2)));
+    sum = _mm_add_pd (sum, _mm_mul_pd (_mm_load1_pd (a + i + 2), _mm_load_pd (b + 2 * i + 4)));
+    sum = _mm_add_pd (sum, _mm_mul_pd (_mm_load1_pd (a + i + 3), _mm_load_pd (b + 2 * i + 6)));
+  }
+  sum = _mm_mul_pd (sum, f);
+  sum = _mm_add_sd (sum, _mm_unpackhi_pd (sum, sum));
+  _mm_store_sd (o, sum);
+}
+
+static inline void
+inner_product_gdouble_cubic_1_sse2 (gdouble * o, const gdouble * a,
+    const gdouble * b, gint len, const gdouble * icoeff, gint oversample)
+{
+  gint i = 0;
+  __m128d sum1 = _mm_setzero_pd (), t;
+  __m128d sum2 = _mm_setzero_pd ();
+  __m128d f1 = _mm_loadu_pd (icoeff);
+  __m128d f2 = _mm_loadu_pd (icoeff+2);
+
+  for (; i < len; i += 2) {
+    t = _mm_load1_pd (a + i + 0);
+    sum1 = _mm_add_pd (sum1, _mm_mul_pd (t, _mm_load_pd (b + 4 * i + 0)));
+    sum2 = _mm_add_pd (sum2, _mm_mul_pd (t, _mm_load_pd (b + 4 * i + 2)));
+
+    t = _mm_load1_pd (a + i + 1);
+    sum1 = _mm_add_pd (sum1, _mm_mul_pd (t, _mm_load_pd (b + 4 * i + 4)));
+    sum2 = _mm_add_pd (sum2, _mm_mul_pd (t, _mm_load_pd (b + 4 * i + 6)));
+  }
+  sum1 = _mm_mul_pd (sum1, f1);
+  sum2 = _mm_mul_pd (sum2, f2);
+  sum1 = _mm_add_pd (sum1, sum2);
+  sum1 = _mm_add_sd (sum1, _mm_unpackhi_pd (sum1, sum1));
+  _mm_store_sd (o, sum1);
 }
 
 static inline void
@@ -239,9 +365,16 @@ inner_product_gdouble_none_2_sse2 (gdouble * o, const gdouble * a,
 }
 
 MAKE_RESAMPLE_FUNC (gint16, none, 1, sse2);
+MAKE_RESAMPLE_FUNC (gint16, linear, 1, sse2);
+MAKE_RESAMPLE_FUNC (gint16, cubic, 1, sse2);
+
 MAKE_RESAMPLE_FUNC (gdouble, none, 1, sse2);
+MAKE_RESAMPLE_FUNC (gdouble, linear, 1, sse2);
+MAKE_RESAMPLE_FUNC (gdouble, cubic, 1, sse2);
+
 MAKE_RESAMPLE_FUNC (gint16, none, 2, sse2);
 MAKE_RESAMPLE_FUNC (gdouble, none, 2, sse2);
+
 #endif
 
 #if defined (HAVE_SMMINTRIN_H) && defined(__SSE4_1__)
@@ -295,21 +428,29 @@ audio_resampler_check_x86 (const gchar *option)
 #if defined (HAVE_XMMINTRIN_H) && defined(__SSE__)
     GST_DEBUG ("enable SSE optimisations");
     resample_gfloat_none_1 = resample_gfloat_none_1_sse;
-    resample_gfloat_none_2 = resample_gfloat_none_2_sse;
     resample_gfloat_linear_1 = resample_gfloat_linear_1_sse;
     resample_gfloat_cubic_1 = resample_gfloat_cubic_1_sse;
+
+    resample_gfloat_none_2 = resample_gfloat_none_2_sse;
 #endif
   } else if (!strcmp (option, "sse2")) {
 #if defined (HAVE_EMMINTRIN_H) && defined(__SSE2__)
     GST_DEBUG ("enable SSE2 optimisations");
     resample_gint16_none_1 = resample_gint16_none_1_sse2;
+    resample_gint16_linear_1 = resample_gint16_linear_1_sse2;
+    resample_gint16_cubic_1 = resample_gint16_cubic_1_sse2;
+
     resample_gfloat_none_1 = resample_gfloat_none_1_sse;
-    resample_gfloat_none_2 = resample_gfloat_none_2_sse;
-    resample_gdouble_none_1 = resample_gdouble_none_1_sse2;
-    resample_gint16_none_2 = resample_gint16_none_2_sse2;
-    resample_gdouble_none_2 = resample_gdouble_none_2_sse2;
     resample_gfloat_linear_1 = resample_gfloat_linear_1_sse;
     resample_gfloat_cubic_1 = resample_gfloat_cubic_1_sse;
+
+    resample_gdouble_none_1 = resample_gdouble_none_1_sse2;
+    resample_gdouble_linear_1 = resample_gdouble_linear_1_sse2;
+    resample_gdouble_cubic_1 = resample_gdouble_cubic_1_sse2;
+
+    resample_gint16_none_2 = resample_gint16_none_2_sse2;
+    resample_gfloat_none_2 = resample_gfloat_none_2_sse;
+    resample_gdouble_none_2 = resample_gdouble_none_2_sse2;
 #endif
   } else if (!strcmp (option, "sse41")) {
 #if defined (HAVE_SMMINTRIN_H) && defined(__SSE4_1__)
