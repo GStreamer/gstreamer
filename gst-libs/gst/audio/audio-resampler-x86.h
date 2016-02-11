@@ -411,7 +411,98 @@ inner_product_gint32_none_1_sse41 (gint32 * o, const gint32 * a,
   *o = CLAMP (res, -(1L << 31), (1L << 31) - 1);
 }
 
+static inline void
+inner_product_gint32_linear_1_sse41 (gint32 * o, const gint32 * a,
+    const gint32 * b, gint len, const gint32 * icoeff, gint oversample)
+{
+  gint i = 0;
+  gint64 res;
+  __m128i sum, t, ta, tb;
+  __m128i f = _mm_loadu_si128 ((__m128i *)icoeff);
+
+  sum = _mm_setzero_si128 ();
+  f = _mm_unpacklo_epi32 (f, f);
+
+  for (; i < len; i += 4) {
+    t = _mm_loadu_si128 ((__m128i *)(a + i));
+
+    ta = _mm_unpacklo_epi32 (t, t);
+    tb = _mm_load_si128 ((__m128i *)(b + 2*i + 0));
+
+    sum =
+        _mm_add_epi64 (sum, _mm_mul_epi32 (_mm_unpacklo_epi64 (ta, ta),
+              _mm_unpacklo_epi32 (tb, tb)));
+    sum =
+        _mm_add_epi64 (sum, _mm_mul_epi32 (_mm_unpackhi_epi64 (ta, ta),
+              _mm_unpackhi_epi32 (tb, tb)));
+
+    ta = _mm_unpackhi_epi32 (t, t);
+    tb = _mm_load_si128 ((__m128i *)(b + 2*i + 4));
+
+    sum =
+        _mm_add_epi64 (sum, _mm_mul_epi32 (_mm_unpacklo_epi64 (ta, ta),
+              _mm_unpacklo_epi32 (tb, tb)));
+    sum =
+        _mm_add_epi64 (sum, _mm_mul_epi32 (_mm_unpackhi_epi64 (ta, ta),
+              _mm_unpackhi_epi32 (tb, tb)));
+  }
+  sum = _mm_srli_epi64 (sum, PRECISION_S32);
+  sum = _mm_mul_epi32 (sum, f);
+  sum = _mm_add_epi64 (sum, _mm_unpackhi_epi64 (sum, sum));
+  res = _mm_cvtsi128_si64 (sum);
+
+  res = (res + (1 << (PRECISION_S32 - 1))) >> PRECISION_S32;
+  *o = CLAMP (res, -(1L << 31), (1L << 31) - 1);
+}
+
+static inline void
+inner_product_gint32_cubic_1_sse41 (gint32 * o, const gint32 * a,
+    const gint32 * b, gint len, const gint32 * icoeff, gint oversample)
+{
+  gint i = 0;
+  gint64 res;
+  __m128i sum1, sum2, t, ta, tb;
+  __m128i f = _mm_loadu_si128 ((__m128i *)icoeff), f1, f2;
+
+  sum1 = sum2 = _mm_setzero_si128 ();
+  f1 = _mm_unpacklo_epi32 (f, f);
+  f2 = _mm_unpackhi_epi32 (f, f);
+
+  for (; i < len; i += 2) {
+    t = _mm_cvtsi64_si128 (*(gint64 *)(a + i));
+    t = _mm_unpacklo_epi32 (t, t);
+
+    ta = _mm_unpacklo_epi64 (t, t);
+    tb = _mm_load_si128 ((__m128i *)(b + 4*i + 0));
+
+    sum1 =
+        _mm_add_epi64 (sum1, _mm_mul_epi32 (ta, _mm_unpacklo_epi32 (tb, tb)));
+    sum2 =
+        _mm_add_epi64 (sum2, _mm_mul_epi32 (ta, _mm_unpackhi_epi32 (tb, tb)));
+
+    ta = _mm_unpackhi_epi64 (t, t);
+    tb = _mm_load_si128 ((__m128i *)(b + 4*i + 4));
+
+    sum1 =
+        _mm_add_epi64 (sum1, _mm_mul_epi32 (ta, _mm_unpacklo_epi32 (tb, tb)));
+    sum2 =
+        _mm_add_epi64 (sum2, _mm_mul_epi32 (ta, _mm_unpackhi_epi32 (tb, tb)));
+  }
+  sum1 = _mm_srli_epi64 (sum1, PRECISION_S32);
+  sum2 = _mm_srli_epi64 (sum2, PRECISION_S32);
+  sum1 = _mm_mul_epi32 (sum1, f1);
+  sum2 = _mm_mul_epi32 (sum2, f2);
+  sum1 = _mm_add_epi64 (sum1, sum2);
+  sum1 = _mm_add_epi64 (sum1, _mm_unpackhi_epi64 (sum1, sum1));
+  res = _mm_cvtsi128_si64 (sum1);
+
+  res = (res + (1 << (PRECISION_S32 - 1))) >> PRECISION_S32;
+  *o = CLAMP (res, -(1L << 31), (1L << 31) - 1);
+}
+
 MAKE_RESAMPLE_FUNC (gint32, none, 1, sse41);
+MAKE_RESAMPLE_FUNC (gint32, linear, 1, sse41);
+MAKE_RESAMPLE_FUNC (gint32, cubic, 1, sse41);
 #endif
 
 static void
@@ -425,6 +516,8 @@ audio_resampler_check_x86 (const gchar *option)
     resample_gfloat_cubic_1 = resample_gfloat_cubic_1_sse;
 
     resample_gfloat_none_2 = resample_gfloat_none_2_sse;
+#else
+    GST_DEBUG ("SSE optimisations not enabled");
 #endif
   } else if (!strcmp (option, "sse2")) {
 #if defined (HAVE_EMMINTRIN_H) && defined(__SSE2__)
@@ -444,11 +537,17 @@ audio_resampler_check_x86 (const gchar *option)
     resample_gint16_none_2 = resample_gint16_none_2_sse2;
     resample_gfloat_none_2 = resample_gfloat_none_2_sse;
     resample_gdouble_none_2 = resample_gdouble_none_2_sse2;
+#else
+    GST_DEBUG ("SSE2 optimisations not enabled");
 #endif
   } else if (!strcmp (option, "sse41")) {
 #if defined (HAVE_SMMINTRIN_H) && defined(__SSE4_1__)
     GST_DEBUG ("enable SSE41 optimisations");
     resample_gint32_none_1 = resample_gint32_none_1_sse41;
+    resample_gint32_linear_1 = resample_gint32_linear_1_sse41;
+    resample_gint32_cubic_1 = resample_gint32_cubic_1_sse41;
+#else
+    GST_DEBUG ("SSE41 optimisations not enabled");
 #endif
   }
 }
