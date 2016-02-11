@@ -2552,3 +2552,14 @@ x4 convsuswb d, p
 loadpq m, masks
 x4 addusw p, d, e1
 x4 andnw d, m, p
+
+.function video_orc_convert_UYVY_GRAY8
+.flags 2d
+.dest 1 d guint8
+.source 2 s
+.temp 1 t1
+.temp 2 t2
+
+loadw t2, s
+convhwb t1, t2
+storeb d, t1

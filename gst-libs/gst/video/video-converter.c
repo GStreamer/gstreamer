@@ -3183,6 +3183,24 @@ convert_UYVY_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
 }
 
 static void
+convert_UYVY_GRAY8 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
+{
+  gint width = convert->in_width;
+  gint height = convert->in_height;
+  guint16 *s;
+  guint8 *d;
+
+  s = GST_VIDEO_FRAME_PLANE_DATA (src, 0);
+  d = GST_VIDEO_FRAME_PLANE_DATA (dest, 0);
+
+  video_orc_convert_UYVY_GRAY8 (d,
+      FRAME_GET_STRIDE (dest), s, FRAME_GET_STRIDE (src), width, height);
+
+  convert_fill_border (convert, dest);
+}
+
+static void
 convert_AYUV_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
@@ -4353,6 +4371,8 @@ static const VideoTransform transforms[] = {
       TRUE, FALSE, FALSE, FALSE, 0, 0, convert_YUY2_Y42B},
   {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, TRUE, TRUE,
       TRUE, FALSE, FALSE, FALSE, 0, 0, convert_YUY2_Y444},
+  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_GRAY8, TRUE, TRUE, TRUE, TRUE,
+      TRUE, FALSE, FALSE, FALSE, 0, 0, convert_UYVY_GRAY8},
 
   {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_I420, TRUE, FALSE, TRUE, FALSE,
       FALSE, FALSE, FALSE, FALSE, 0, 0, convert_UYVY_I420},
