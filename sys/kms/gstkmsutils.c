@@ -57,6 +57,7 @@ static const struct
   /* DEF_FMT (YVYU, ???), */
   DEF_FMT (YUV420, I420),
   DEF_FMT (YVU420, YV12),
+  DEF_FMT (YUV422, Y42B),
   DEF_FMT (NV12, NV12),
   DEF_FMT (NV21, NV21),
 
