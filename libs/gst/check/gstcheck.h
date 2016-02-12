@@ -140,7 +140,7 @@ G_STMT_START {                        \
  * wrapper for checks END_TEST
  */
 #define GST_START_TEST(__testname) \
-static void __testname (int __i__)\
+static void __testname (int G_GNUC_UNUSED __i__) \
 {\
   GST_DEBUG ("test start"); \
   GST_DO_CHECK_TEST_ENVIRONMENT; \
