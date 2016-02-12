@@ -60,6 +60,7 @@ static const struct
   DEF_FMT (YUV422, Y42B),
   DEF_FMT (NV12, NV12),
   DEF_FMT (NV21, NV21),
+  DEF_FMT (NV16, NV16),
 
 #undef DEF_FMT
 };
