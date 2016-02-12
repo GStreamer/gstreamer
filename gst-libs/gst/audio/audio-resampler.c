@@ -421,14 +421,15 @@ get_taps_##type##_none (GstAudioResampler * resampler,                          
 {                                                                               \
   Tap *t = &resampler->taps[*samp_phase];                                       \
   gpointer res;                                                                 \
-  gdouble x, weight;                                                            \
   gint out_rate = resampler->out_rate;                                          \
-  gdouble *tmpcoeff = resampler->tmpcoeff;                                      \
-  gint n_taps = resampler->n_taps;                                              \
                                                                                 \
   if (G_LIKELY (t->taps)) {                                                     \
     res = t->taps;                                                              \
   } else {                                                                      \
+    gdouble x, weight;                                                          \
+    gdouble *tmpcoeff = resampler->tmpcoeff;                                    \
+    gint n_taps = resampler->n_taps;                                            \
+                                                                                \
     res = (gint8 *) resampler->coeff + *samp_phase * resampler->cstride;        \
                                                                                 \
     x = 1.0 - n_taps / 2 - (double) *samp_phase / out_rate;                     \
@@ -450,11 +451,11 @@ GET_TAPS_NONE_FUNC (gint32);
 GET_TAPS_NONE_FUNC (gfloat);
 GET_TAPS_NONE_FUNC (gdouble);
 
-#define MAKE_COEFF_LINEAR_INT_FUNC(type,type2,prec)                     \
+#define MAKE_COEFF_LINEAR_INT_FUNC(type,prec)                           \
 static inline void                                                      \
 make_coeff_##type##_linear (gint frac, gint out_rate, type *icoeff)     \
 {                                                                       \
-  type x = ((type2)frac << prec) / out_rate;                            \
+  type x = ((gint64)frac << prec) / out_rate;                           \
   icoeff[0] = icoeff[2] = x;                                            \
   icoeff[1] = icoeff[3] = (1L << prec) - 1 - x;                         \
 }
@@ -466,8 +467,8 @@ make_coeff_##type##_linear (gint frac, gint out_rate, type *icoeff)     \
   icoeff[0] = icoeff[2] = x;                                            \
   icoeff[1] = icoeff[3] = 1.0 - x;                                      \
 }
-MAKE_COEFF_LINEAR_INT_FUNC (gint16, gint32, PRECISION_S16);
-MAKE_COEFF_LINEAR_INT_FUNC (gint32, gint64, PRECISION_S32);
+MAKE_COEFF_LINEAR_INT_FUNC (gint16, PRECISION_S16);
+MAKE_COEFF_LINEAR_INT_FUNC (gint32, PRECISION_S32);
 MAKE_COEFF_LINEAR_FLOAT_FUNC (gfloat);
 MAKE_COEFF_LINEAR_FLOAT_FUNC (gdouble);
 
@@ -475,14 +476,14 @@ MAKE_COEFF_LINEAR_FLOAT_FUNC (gdouble);
 static inline void                                                      \
 make_coeff_##type##_cubic (gint frac, gint out_rate, type *icoeff)      \
 {                                                                       \
-  type one = (1L << prec) - 1;                                          \
-  type x = ((type2) frac << prec) / out_rate;                           \
-  type x2 = ((type2) x * (type2) x) >> prec;                            \
-  type x3 = ((type2) x2 * (type2) x) >> prec;                           \
-  icoeff[0] = (((type2) (x3 - x) << prec) / 6) >> prec;                 \
+  type2 one = (1L << prec) - 1;                                         \
+  type2 x = ((gint64) frac << prec) / out_rate;                         \
+  type2 x2 = (x * x) >> prec;                                           \
+  type2 x3 = (x2 * x) >> prec;                                          \
+  icoeff[0] = (((x3 - x) << prec) / 6) >> prec;                         \
   icoeff[1] = x + ((x2 - x3) >> 1);                                     \
-  icoeff[3] = -((((type2) x << prec) / 3) >> prec) +                    \
-            (x2 >> 1) - ((((type2) x3 << prec) / 6) >> prec);           \
+  icoeff[3] = -(((x << prec) / 3) >> prec) +                            \
+            (x2 >> 1) - (((x3 << prec) / 6) >> prec);                   \
   icoeff[2] = one - icoeff[0] - icoeff[1] - icoeff[3];                  \
 }
 #define MAKE_COEFF_CUBIC_FLOAT_FUNC(type)                               \
