@@ -53,8 +53,9 @@ static const struct
   DEF_FMT (ABGR8888, ABGR),
   DEF_FMT (XBGR8888, xBGR),
 #endif
-  /* DEF_FMT (YUYV, ???), */
-  /* DEF_FMT (YVYU, ???), */
+  DEF_FMT (UYVY, UYVY),
+  DEF_FMT (YUYV, YUY2),
+  DEF_FMT (YVYU, YVYU),
   DEF_FMT (YUV420, I420),
   DEF_FMT (YVU420, YV12),
   DEF_FMT (YUV422, Y42B),
