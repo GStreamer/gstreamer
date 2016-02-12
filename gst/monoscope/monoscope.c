@@ -99,7 +99,7 @@ monoscope_update (struct monoscope_state *stateptr, gint16 data[convolver_big])
   int hh1 = hh - 1;
   guint32 *loc;
 
-  int factor;
+  double factor;
   int max = 1;
   short *thisEq = stateptr->copyEq;
 
@@ -108,21 +108,26 @@ monoscope_update (struct monoscope_state *stateptr, gint16 data[convolver_big])
 
   memset (stateptr->display, 0, scope_width * scope_height * sizeof (guint32));
   for (i = 0; i < convolver_small; i++) {
-    avg = thisEq[i] + (stateptr->avgEq[i] >> 1);
+    avg = (thisEq[i] + stateptr->avgEq[i]) >> 1;
     stateptr->avgEq[i] = avg;
     avg = abs (avg);
     max = MAX (max, avg);
   }
-  stateptr->avgMax += max - (stateptr->avgMax >> 8);
-  if (stateptr->avgMax < max)
-    stateptr->avgMax = max;     /* Avoid overflow */
-  factor = 0x7fffffff / stateptr->avgMax;
-  /* Keep the scaling sensible. */
-  factor = CLAMP (factor, (1 << 8), (1 << 18));
+  /* running average, 4 values is enough to make it follow volume changes
+   * if this value is too large it will converge slowly
+   */
+  stateptr->avgMax += (max / 4) - (stateptr->avgMax / 4);
+
+  /* input is +/- avgMax, output is +/- hh */
+  if (stateptr->avgMax) {
+    factor = (gdouble) hh / stateptr->avgMax;
+  } else {
+    factor = 1.0;
+  }
 
   for (i = 0; i < scope_width; i++) {
+    /* scale 16bit signed audio values to scope_height */
     foo = stateptr->avgEq[i] * factor;
-    foo >>= 18;
     foo = CLAMP (foo, -hh1, hh1);
     bar = (i + ((foo + hh) * scope_width));
     if ((bar > 0) && (bar < (scope_width * scope_height))) {
