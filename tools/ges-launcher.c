@@ -793,6 +793,7 @@ _shutdown (GApplication * application)
 {
   gint validate_res = 0;
   GESLauncher *self = GES_LAUNCHER (application);
+  ParsedOptions *opts = &self->priv->parsed_options;
 
   _save_timeline (self);
 
@@ -807,6 +808,8 @@ _shutdown (GApplication * application)
 #ifdef G_OS_UNIX
   g_source_remove (self->priv->signal_watch_id);
 #endif
+
+  g_free (opts->sanitized_timeline);
 
   G_APPLICATION_CLASS (ges_launcher_parent_class)->shutdown (application);
 }
