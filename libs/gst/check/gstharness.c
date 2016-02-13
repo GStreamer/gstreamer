@@ -725,7 +725,8 @@ gst_harness_add_element_full (GstHarness * h, GstElement * element,
     gst_harness_play (h);
 
   /* if the element already has a testclock attached, we replace our own with it */
-  if (GST_ELEMENT_CLOCK (element) && GST_IS_TEST_CLOCK (GST_ELEMENT_CLOCK (element))) {
+  if (GST_ELEMENT_CLOCK (element)
+      && GST_IS_TEST_CLOCK (GST_ELEMENT_CLOCK (element))) {
     gst_object_replace ((GstObject **) & h->priv->testclock,
         (GstObject *) GST_ELEMENT_CLOCK (element));
   }
@@ -1501,7 +1502,7 @@ static void
 gst_harness_set_forward_pad (GstHarness * h, GstPad * fwdpad)
 {
   HARNESS_LOCK (h);
-  gst_object_replace ((GstObject **) &h->priv->sink_forward_pad,
+  gst_object_replace ((GstObject **) & h->priv->sink_forward_pad,
       (GstObject *) fwdpad);
   HARNESS_UNLOCK (h);
 }
@@ -3080,8 +3081,8 @@ gst_harness_stress_push_event_start_full (GstHarness * h,
  */
 GstHarnessThread *
 gst_harness_stress_push_event_with_cb_start_full (GstHarness * h,
-      GstHarnessPrepareEventFunc func, gpointer data, GDestroyNotify notify,
-      gulong sleep)
+    GstHarnessPrepareEventFunc func, gpointer data, GDestroyNotify notify,
+    gulong sleep)
 {
   GstHarnessPushEventThread *t = g_slice_new0 (GstHarnessPushEventThread);
   gst_harness_thread_init (&t->t,
