@@ -48,11 +48,10 @@
 /* define to support printing 64-bit integers with format I64 */
 #define HAVE_INT64_AND_I64 1
 
-/* FIXME: do we need to do anything else here? or should we just typedef/define
- * intmax_t etc. to __int64? */
 #if defined (_MSC_VER) && _MSC_VER >= 1600
 #undef HAVE_INTMAX_T
 #define HAVE_INTMAX_T 1
+#define HAVE_STDINT_H_WITH_UINTMAX 1
 #endif
 
 #endif /* G_OS_WIN32 */
