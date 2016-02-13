@@ -1492,7 +1492,12 @@ gst_plugin_ext_dep_extract_env_vars_paths (GstPlugin * plugin,
 static guint
 gst_plugin_ext_dep_get_hash_from_stat_entry (GStatBuf * s)
 {
+#ifdef S_IFBLK
   if (!(s->st_mode & (S_IFDIR | S_IFREG | S_IFBLK | S_IFCHR)))
+#else
+  /* MSVC does not have S_IFBLK */
+  if (!(s->st_mode & (S_IFDIR | S_IFREG | S_IFCHR)))
+#endif
     return (guint) - 1;
 
   /* completely random formula */
