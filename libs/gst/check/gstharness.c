@@ -231,6 +231,7 @@ gst_harness_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstHarness *h = g_object_get_data (G_OBJECT (pad), HARNESS_KEY);
   GstHarnessPrivate *priv = h->priv;
+  gboolean ret = TRUE;
   gboolean forward;
 
   g_assert (h != NULL);
@@ -260,7 +261,7 @@ gst_harness_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   }
   HARNESS_UNLOCK (h);
 
-  return TRUE;
+  return ret;
 }
 
 static void
