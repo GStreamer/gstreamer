@@ -74,15 +74,19 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 #undef USE_SPEEX
 
 #define DEFAULT_QUALITY GST_AUDIO_RESAMPLER_QUALITY_DEFAULT
+#define DEFAULT_RESAMPLE_METHOD GST_AUDIO_RESAMPLER_METHOD_KAISER
 #define DEFAULT_SINC_FILTER_MODE GST_AUDIO_RESAMPLER_FILTER_MODE_AUTO
 #define DEFAULT_SINC_FILTER_AUTO_THRESHOLD (1*1048576)
+#define DEFAULT_SINC_FILTER_INTERPOLATION GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC
 
 enum
 {
   PROP_0,
   PROP_QUALITY,
+  PROP_RESAMPLE_METHOD,
   PROP_SINC_FILTER_MODE,
-  PROP_SINC_FILTER_AUTO_THRESHOLD
+  PROP_SINC_FILTER_AUTO_THRESHOLD,
+  PROP_SINC_FILTER_INTERPOLATION
 };
 
 #define SUPPORTED_CAPS \
@@ -150,6 +154,11 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
           DEFAULT_QUALITY,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_RESAMPLE_METHOD,
+      g_param_spec_enum ("resample-method", "Resample method to use",
+          "What resample method to use",
+          GST_TYPE_AUDIO_RESAMPLER_METHOD,
+          DEFAULT_RESAMPLE_METHOD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SINC_FILTER_MODE,
       g_param_spec_enum ("sinc-filter-mode", "Sinc filter table mode",
           "What sinc filter table mode to use",
@@ -163,6 +172,14 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
           "Sinc filter auto mode threshold",
           "Memory usage threshold to use if sinc filter mode is AUTO, given in bytes",
           0, G_MAXUINT, DEFAULT_SINC_FILTER_AUTO_THRESHOLD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_SINC_FILTER_INTERPOLATION,
+      g_param_spec_enum ("sinc-filter-interpolation",
+          "Sinc filter interpolation",
+          "How to interpolate the sinc filter table",
+          GST_TYPE_AUDIO_RESAMPLER_FILTER_INTERPOLATION,
+          DEFAULT_SINC_FILTER_INTERPOLATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class,
@@ -205,10 +222,11 @@ gst_audio_resample_init (GstAudioResample * resample)
 {
   GstBaseTransform *trans = GST_BASE_TRANSFORM (resample);
 
-  resample->method = GST_AUDIO_RESAMPLER_METHOD_KAISER;
+  resample->method = DEFAULT_RESAMPLE_METHOD;
   resample->quality = DEFAULT_QUALITY;
   resample->sinc_filter_mode = DEFAULT_SINC_FILTER_MODE;
   resample->sinc_filter_auto_threshold = DEFAULT_SINC_FILTER_AUTO_THRESHOLD;
+  resample->sinc_filter_interpolation = DEFAULT_SINC_FILTER_INTERPOLATION;
 
   gst_base_transform_set_gap_aware (trans, TRUE);
   gst_pad_set_query_function (trans->srcpad, gst_audio_resample_query);
@@ -357,7 +375,10 @@ make_options (GstAudioResample * resample, GstAudioInfo * in,
       resample->method,
       GST_AUDIO_RESAMPLER_OPT_FILTER_MODE, GST_TYPE_AUDIO_RESAMPLER_FILTER_MODE,
       resample->sinc_filter_mode, GST_AUDIO_RESAMPLER_OPT_FILTER_MODE_THRESHOLD,
-      G_TYPE_UINT, resample->sinc_filter_auto_threshold, NULL);
+      G_TYPE_UINT, resample->sinc_filter_auto_threshold,
+      GST_AUDIO_RESAMPLER_OPT_FILTER_INTERPOLATION,
+      GST_TYPE_AUDIO_RESAMPLER_FILTER_INTERPOLATION,
+      resample->sinc_filter_interpolation, NULL);
 
   return options;
 }
@@ -999,6 +1020,10 @@ gst_audio_resample_set_property (GObject * object, guint prop_id,
       GST_DEBUG_OBJECT (resample, "new quality %d", resample->quality);
       gst_audio_resample_update_state (resample, NULL, NULL);
       break;
+    case PROP_RESAMPLE_METHOD:
+      resample->method = g_value_get_enum (value);
+      gst_audio_resample_update_state (resample, NULL, NULL);
+      break;
     case PROP_SINC_FILTER_MODE:
       /* FIXME locking! */
       resample->sinc_filter_mode = g_value_get_enum (value);
@@ -1007,6 +1032,11 @@ gst_audio_resample_set_property (GObject * object, guint prop_id,
     case PROP_SINC_FILTER_AUTO_THRESHOLD:
       /* FIXME locking! */
       resample->sinc_filter_auto_threshold = g_value_get_uint (value);
+      gst_audio_resample_update_state (resample, NULL, NULL);
+      break;
+    case PROP_SINC_FILTER_INTERPOLATION:
+      /* FIXME locking! */
+      resample->sinc_filter_interpolation = g_value_get_enum (value);
       gst_audio_resample_update_state (resample, NULL, NULL);
       break;
     default:
@@ -1027,11 +1057,17 @@ gst_audio_resample_get_property (GObject * object, guint prop_id,
     case PROP_QUALITY:
       g_value_set_int (value, resample->quality);
       break;
+    case PROP_RESAMPLE_METHOD:
+      g_value_set_enum (value, resample->method);
+      break;
     case PROP_SINC_FILTER_MODE:
       g_value_set_enum (value, resample->sinc_filter_mode);
       break;
     case PROP_SINC_FILTER_AUTO_THRESHOLD:
       g_value_set_uint (value, resample->sinc_filter_auto_threshold);
+      break;
+    case PROP_SINC_FILTER_INTERPOLATION:
+      g_value_set_enum (value, resample->sinc_filter_interpolation);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -67,6 +67,7 @@ struct _GstAudioResample {
   gint quality;
   GstAudioResamplerFilterMode sinc_filter_mode;
   guint32 sinc_filter_auto_threshold;
+  GstAudioResamplerFilterInterpolation sinc_filter_interpolation;
 
   /* state */
   GstAudioInfo in;

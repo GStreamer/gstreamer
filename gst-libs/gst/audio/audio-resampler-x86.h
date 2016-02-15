@@ -22,7 +22,7 @@
 
 static inline void
 inner_product_gfloat_none_1_sse (gfloat * o, const gfloat * a,
-    const gfloat * b, gint len, const gfloat * icoeff, gint oversample)
+    const gfloat * b, gint len, const gfloat * icoeff)
 {
   gint i = 0;
   __m128 sum = _mm_setzero_ps ();
@@ -42,12 +42,13 @@ inner_product_gfloat_none_1_sse (gfloat * o, const gfloat * a,
 
 static inline void
 inner_product_gfloat_linear_1_sse (gfloat * o, const gfloat * a,
-    const gfloat * b, gint len, const gfloat * icoeff, gint oversample)
+    const gfloat * b, gint len, const gfloat * icoeff)
 {
   gint i = 0;
-  __m128 sum = _mm_setzero_ps (), t;
+  __m128 sum, t;
   __m128 f = _mm_loadu_ps(icoeff);
 
+  sum = _mm_setzero_ps ();
   for (; i < len; i += 4) {
     t = _mm_loadu_ps (a + i);
     sum = _mm_add_ps (sum, _mm_mul_ps (_mm_unpacklo_ps (t, t),
@@ -63,7 +64,7 @@ inner_product_gfloat_linear_1_sse (gfloat * o, const gfloat * a,
 
 static inline void
 inner_product_gfloat_cubic_1_sse (gfloat * o, const gfloat * a,
-    const gfloat * b, gint len, const gfloat * icoeff, gint oversample)
+    const gfloat * b, gint len, const gfloat * icoeff)
 {
   gint i = 0;
   __m128 sum = _mm_setzero_ps ();
@@ -83,7 +84,7 @@ inner_product_gfloat_cubic_1_sse (gfloat * o, const gfloat * a,
 
 static inline void
 inner_product_gfloat_none_2_sse (gfloat * o, const gfloat * a,
-    const gfloat * b, gint len, const gfloat * icoeff, gint oversample)
+    const gfloat * b, gint len, const gfloat * icoeff)
 {
   gint i = 0;
   __m128 sum = _mm_setzero_ps (), t;
@@ -121,7 +122,7 @@ MAKE_RESAMPLE_FUNC (gfloat, none, 2, sse);
 
 static inline void
 inner_product_gint16_none_1_sse2 (gint16 * o, const gint16 * a,
-    const gint16 * b, gint len, const gint16 * icoeff, gint oversample)
+    const gint16 * b, gint len, const gint16 * icoeff)
 {
   gint i = 0;
   __m128i sum, ta, tb;
@@ -149,7 +150,7 @@ inner_product_gint16_none_1_sse2 (gint16 * o, const gint16 * a,
 
 static inline void
 inner_product_gint16_linear_1_sse2 (gint16 * o, const gint16 * a,
-    const gint16 * b, gint len, const gint16 * icoeff, gint oversample)
+    const gint16 * b, gint len, const gint16 * icoeff)
 {
   gint i = 0;
   __m128i sum, t, ta, tb;
@@ -193,7 +194,7 @@ inner_product_gint16_linear_1_sse2 (gint16 * o, const gint16 * a,
 
 static inline void
 inner_product_gint16_cubic_1_sse2 (gint16 * o, const gint16 * a,
-    const gint16 * b, gint len, const gint16 * icoeff, gint oversample)
+    const gint16 * b, gint len, const gint16 * icoeff)
 {
   gint i = 0;
   __m128i sum, ta, tb;
@@ -230,7 +231,7 @@ inner_product_gint16_cubic_1_sse2 (gint16 * o, const gint16 * a,
 
 static inline void
 inner_product_gdouble_none_1_sse2 (gdouble * o, const gdouble * a,
-    const gdouble * b, gint len, const gdouble * icoeff, gint oversample)
+    const gdouble * b, gint len, const gdouble * icoeff)
 {
   gint i = 0;
   __m128d sum = _mm_setzero_pd ();
@@ -255,7 +256,7 @@ inner_product_gdouble_none_1_sse2 (gdouble * o, const gdouble * a,
 
 static inline void
 inner_product_gdouble_linear_1_sse2 (gdouble * o, const gdouble * a,
-    const gdouble * b, gint len, const gdouble * icoeff, gint oversample)
+    const gdouble * b, gint len, const gdouble * icoeff)
 {
   gint i = 0;
   __m128d sum = _mm_setzero_pd ();
@@ -274,7 +275,7 @@ inner_product_gdouble_linear_1_sse2 (gdouble * o, const gdouble * a,
 
 static inline void
 inner_product_gdouble_cubic_1_sse2 (gdouble * o, const gdouble * a,
-    const gdouble * b, gint len, const gdouble * icoeff, gint oversample)
+    const gdouble * b, gint len, const gdouble * icoeff)
 {
   gint i = 0;
   __m128d sum1 = _mm_setzero_pd (), t;
@@ -300,7 +301,7 @@ inner_product_gdouble_cubic_1_sse2 (gdouble * o, const gdouble * a,
 
 static inline void
 inner_product_gint16_none_2_sse2 (gint16 * o, const gint16 * a,
-    const gint16 * b, gint len, const gint16 * icoeff, gint oversample)
+    const gint16 * b, gint len, const gint16 * icoeff)
 {
   gint i = 0;
   __m128i sum, ta, tb, t1;
@@ -332,7 +333,7 @@ inner_product_gint16_none_2_sse2 (gint16 * o, const gint16 * a,
 
 static inline void
 inner_product_gdouble_none_2_sse2 (gdouble * o, const gdouble * a,
-    const gdouble * b, gint len, const gdouble * icoeff, gint oversample)
+    const gdouble * b, gint len, const gdouble * icoeff)
 {
   gint i = 0;
   __m128d sum = _mm_setzero_pd (), t;
@@ -368,6 +369,45 @@ MAKE_RESAMPLE_FUNC (gdouble, cubic, 1, sse2);
 MAKE_RESAMPLE_FUNC (gint16, none, 2, sse2);
 MAKE_RESAMPLE_FUNC (gdouble, none, 2, sse2);
 
+static void
+interpolate_gdouble_linear_sse2 (gdouble * o, const gdouble * a,
+    gint len, const gdouble * icoeff)
+{
+  gint i = 0;
+  __m128d f = _mm_loadu_pd (icoeff), t1, t2;
+
+  for (; i < len; i += 2) {
+    t1 = _mm_mul_pd (_mm_load_pd (a + 2*i + 0), f);
+    t1 = _mm_add_sd (t1, _mm_unpackhi_pd (t1, t1));
+    t2 = _mm_mul_pd (_mm_load_pd (a + 2*i + 2), f);
+    t2 = _mm_add_sd (t2, _mm_unpackhi_pd (t2, t2));
+
+    _mm_store_pd (o + i, _mm_unpacklo_pd (t1, t2));
+  }
+}
+
+static void
+interpolate_gdouble_cubic_sse2 (gdouble * o, const gdouble * a,
+    gint len, const gdouble * icoeff)
+{
+  gint i = 0;
+  __m128d t1, t2;
+  __m128d f1 = _mm_loadu_pd (icoeff);
+  __m128d f2 = _mm_loadu_pd (icoeff+2);
+
+  for (; i < len; i += 2) {
+    t1 = _mm_add_pd (_mm_mul_pd (_mm_load_pd (a + 4*i + 0), f1),
+                     _mm_mul_pd (_mm_load_pd (a + 4*i + 2), f2));
+    t1 = _mm_add_sd (t1, _mm_unpackhi_pd (t1, t1));
+
+    t2 = _mm_add_pd (_mm_mul_pd (_mm_load_pd (a + 4*i + 4), f1),
+                     _mm_mul_pd (_mm_load_pd (a + 4*i + 6), f2));
+    t2 = _mm_add_sd (t2, _mm_unpackhi_pd (t2, t2));
+
+    _mm_store_pd (o + i, _mm_unpacklo_pd (t1, t2));
+  }
+}
+
 #endif
 
 #if defined (HAVE_SMMINTRIN_H) && defined(__SSE4_1__)
@@ -375,7 +415,7 @@ MAKE_RESAMPLE_FUNC (gdouble, none, 2, sse2);
 
 static inline void
 inner_product_gint32_none_1_sse41 (gint32 * o, const gint32 * a,
-    const gint32 * b, gint len, const gint32 * icoeff, gint oversample)
+    const gint32 * b, gint len, const gint32 * icoeff)
 {
   gint i = 0;
   __m128i sum, ta, tb;
@@ -413,7 +453,7 @@ inner_product_gint32_none_1_sse41 (gint32 * o, const gint32 * a,
 
 static inline void
 inner_product_gint32_linear_1_sse41 (gint32 * o, const gint32 * a,
-    const gint32 * b, gint len, const gint32 * icoeff, gint oversample)
+    const gint32 * b, gint len, const gint32 * icoeff)
 {
   gint i = 0;
   gint64 res;
@@ -457,7 +497,7 @@ inner_product_gint32_linear_1_sse41 (gint32 * o, const gint32 * a,
 
 static inline void
 inner_product_gint32_cubic_1_sse41 (gint32 * o, const gint32 * a,
-    const gint32 * b, gint len, const gint32 * icoeff, gint oversample)
+    const gint32 * b, gint len, const gint32 * icoeff)
 {
   gint i = 0;
   gint64 res;
@@ -537,6 +577,9 @@ audio_resampler_check_x86 (const gchar *option)
     resample_gint16_none_2 = resample_gint16_none_2_sse2;
     resample_gfloat_none_2 = resample_gfloat_none_2_sse;
     resample_gdouble_none_2 = resample_gdouble_none_2_sse2;
+
+    interpolate_gdouble_linear = interpolate_gdouble_linear_sse2;
+    interpolate_gdouble_cubic = interpolate_gdouble_cubic_sse2;
 #else
     GST_DEBUG ("SSE2 optimisations not enabled");
 #endif

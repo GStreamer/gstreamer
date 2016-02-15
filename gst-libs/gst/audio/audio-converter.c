@@ -337,14 +337,13 @@ gst_audio_converter_update_config (GstAudioConverter * convert,
   convert->in.rate = in_rate;
   convert->out.rate = out_rate;
 
+  if (convert->resampler)
+    gst_audio_resampler_update (convert->resampler, in_rate, out_rate, config);
+
   if (config) {
     gst_structure_foreach (config, copy_config, convert);
     gst_structure_free (config);
   }
-
-  if (convert->resampler)
-    gst_audio_resampler_update (convert->resampler, in_rate, out_rate,
-        convert->config);
 
   return TRUE;
 }
