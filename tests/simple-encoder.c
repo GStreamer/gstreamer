@@ -442,7 +442,8 @@ app_run (App * app)
 
     app->read_frames++;
     id = gst_vaapi_surface_get_id (surface);
-    g_debug ("input frame %d, surface id = %lu", app->read_frames, id);
+    g_debug ("input frame %d, surface id = %" G_GSIZE_FORMAT, app->read_frames,
+        id);
 
     gst_vaapi_surface_proxy_unref (proxy);
   }
