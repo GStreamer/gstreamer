@@ -114,4 +114,6 @@ main (gint argc, gchar * argv[])
   }
   end = gst_util_get_timestamp ();
   g_print ("%" GST_TIME_FORMAT ": GVariant\n", GST_TIME_ARGS (end - start));
+
+  return 0;
 }
