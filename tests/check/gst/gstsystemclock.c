@@ -346,6 +346,7 @@ GST_START_TEST (test_async_order_stress_test)
   GList *cb_list = NULL, *cb_list_it;
   GstClockTime base;
   GstClockReturn result;
+  unsigned int i;
 
   clock = gst_system_clock_obtain ();
   fail_unless (clock != NULL, "Could not create instance of GstSystemClock");
@@ -357,7 +358,7 @@ GST_START_TEST (test_async_order_stress_test)
    * We expect the alarm thread to keep detecting the new entries and to
    * switch to wait on the first entry on the list
    */
-  for (unsigned int i = ALARM_COUNT; i > 0; --i) {
+  for (i = ALARM_COUNT; i > 0; --i) {
     id[i - 1] = gst_clock_new_single_shot_id (clock, base + i * TIME_UNIT);
     result =
         gst_clock_id_wait_async (id[i - 1], store_callback, &cb_list, NULL);
@@ -373,7 +374,7 @@ GST_START_TEST (test_async_order_stress_test)
    * Will fail if alarm thread did not properly switch to wait on first entry
    * from the list
    */
-  for (unsigned int i = 0; i < ALARM_COUNT; ++i) {
+  for (i = 0; i < ALARM_COUNT; ++i) {
     fail_unless (cb_list_it != NULL, "No notification received for id[%d]", i);
     fail_unless (cb_list_it->data == id[i],
         "Expected notification for id[%d]", i);
@@ -381,7 +382,7 @@ GST_START_TEST (test_async_order_stress_test)
   }
   g_mutex_unlock (&store_lock);
 
-  for (unsigned int i = 0; i < ALARM_COUNT; ++i)
+  for (i = 0; i < ALARM_COUNT; ++i)
     gst_clock_id_unref (id[i]);
   g_list_free (cb_list);
 
@@ -752,7 +753,8 @@ GST_START_TEST (test_resolution)
 
 GST_END_TEST;
 
-typedef struct {
+typedef struct
+{
   GThread *thread_wait;
   GThread *thread_unschedule;
   GMutex lock;
@@ -780,7 +782,8 @@ single_shot_wait_thread_func (gpointer data)
 
     g_mutex_lock (&d->lock);
     d->unschedule = d->dont_unschedule_positive_offset ? offset < 0 : TRUE;
-    id = d->id = gst_clock_new_single_shot_id (clock, now + (GstClockTime)offset);
+    id = d->id =
+        gst_clock_new_single_shot_id (clock, now + (GstClockTime) offset);
     g_mutex_unlock (&d->lock);
 
     fail_unless (id != NULL, "Could not create single shot id");
@@ -819,8 +822,9 @@ unschedule_thread_func (gpointer data)
 GST_START_TEST (test_stress_cleanup_unschedule)
 {
   WaitUnscheduleData data[50];
+  gint i;
 
-  for (gint i = 0; i < G_N_ELEMENTS (data); i++) {
+  for (i = 0; i < G_N_ELEMENTS (data); i++) {
     WaitUnscheduleData *d = &data[i];
 
     /* Don't unschedule waits with positive offsets in order to trigger
@@ -844,7 +848,7 @@ GST_START_TEST (test_stress_cleanup_unschedule)
   g_usleep (G_USEC_PER_SEC);
 
   /* Stop and free test data */
-  for (gint i = 0; i < G_N_ELEMENTS (data); i++) {
+  for (i = 0; i < G_N_ELEMENTS (data); i++) {
     WaitUnscheduleData *d = &data[i];
     d->running = FALSE;
     g_thread_join (d->thread_wait);
@@ -852,14 +856,16 @@ GST_START_TEST (test_stress_cleanup_unschedule)
     g_mutex_clear (&d->lock);
   }
 }
+
 GST_END_TEST;
 
 
 GST_START_TEST (test_stress_reschedule)
 {
   WaitUnscheduleData data[50];
+  gint i;
 
-  for (gint i = 0; i < G_N_ELEMENTS (data); i++) {
+  for (i = 0; i < G_N_ELEMENTS (data); i++) {
     WaitUnscheduleData *d = &data[i];
 
     /* Try to unschedule all waits */
@@ -881,7 +887,7 @@ GST_START_TEST (test_stress_reschedule)
   g_usleep (G_USEC_PER_SEC);
 
   /* Stop and free test data */
-  for (gint i = 0; i < G_N_ELEMENTS (data); i++) {
+  for (i = 0; i < G_N_ELEMENTS (data); i++) {
     WaitUnscheduleData *d = &data[i];
     d->running = FALSE;
     g_thread_join (d->thread_wait);
@@ -889,6 +895,7 @@ GST_START_TEST (test_stress_reschedule)
     g_mutex_clear (&d->lock);
   }
 }
+
 GST_END_TEST;
 
 

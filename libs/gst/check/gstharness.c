@@ -691,7 +691,7 @@ gst_harness_add_element_full (GstHarness * h, GstElement * element,
     GstStaticPadTemplate * hsrc, const gchar * element_sinkpad_name,
     GstStaticPadTemplate * hsink, const gchar * element_srcpad_name)
 {
-  GstClock * element_clock;
+  GstClock *element_clock;
   gboolean has_sinkpad, has_srcpad;
 
   g_return_if_fail (element != NULL);
@@ -2221,16 +2221,17 @@ gst_harness_src_crank_and_push_many (GstHarness * h, gint cranks, gint pushes)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean crank;
+  int i;
 
   g_assert (h->src_harness);
   gst_harness_play (h->src_harness);
 
-  for (int i = 0; i < cranks; i++) {
+  for (i = 0; i < cranks; i++) {
     crank = gst_harness_crank_single_clock_wait (h->src_harness);
     g_assert (crank);
   }
 
-  for (int i = 0; i < pushes; i++) {
+  for (i = 0; i < pushes; i++) {
     GstBuffer *buf;
     buf = gst_harness_pull (h->src_harness);
     g_assert (buf != NULL);
@@ -2384,8 +2385,9 @@ GstFlowReturn
 gst_harness_sink_push_many (GstHarness * h, gint pushes)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  int i;
   g_assert (h->sink_harness);
-  for (int i = 0; i < pushes; i++) {
+  for (i = 0; i < pushes; i++) {
     ret = gst_harness_push_to_sink (h);
     if (ret != GST_FLOW_OK)
       break;

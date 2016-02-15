@@ -203,8 +203,9 @@ gst_protection_factory_check (GstElementFactory * fact,
     GstStaticPadTemplate *templ = walk->data;
     GstCaps *caps = gst_static_pad_template_get_caps (templ);
     guint leng = gst_caps_get_size (caps);
+    guint i, j;
 
-    for (guint i = 0; !retval && i < leng; ++i) {
+    for (i = 0; !retval && i < leng; ++i) {
       GstStructure *st;
 
       st = gst_caps_get_structure (caps, i);
@@ -214,7 +215,7 @@ gst_protection_factory_check (GstElementFactory * fact,
             gst_structure_get_string (st, GST_PROTECTION_SYSTEM_ID_CAPS_FIELD);
         GST_DEBUG ("Found decryptor that supports protection system %s",
             sys_id);
-        for (guint j = 0; !retval && system_identifiers[j]; ++j) {
+        for (j = 0; !retval && system_identifiers[j]; ++j) {
           GST_TRACE ("  compare with %s", system_identifiers[j]);
           if (g_ascii_strcasecmp (system_identifiers[j], sys_id) == 0) {
             GST_DEBUG ("  Selecting %s", system_identifiers[j]);
