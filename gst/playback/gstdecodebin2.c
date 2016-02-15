@@ -843,9 +843,8 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   /**
    * GstDecodeBin::autoplug-query:
    * @bin: The decodebin.
-   * @child: The child element doing the query
    * @pad: The #GstPad.
-   * @element: The #GstElement.
+   * @child: The child element doing the query
    * @query: The #GstQuery.
    *
    * This signal is emitted whenever an autoplugged element that is
