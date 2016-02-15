@@ -31,7 +31,7 @@ import os
 import gc
 import unittest
 import gi.overrides
-gi.overrides
+
 
 from gi.repository import Gst
 
