@@ -516,6 +516,7 @@ GST_START_TEST (test_rtpmux_ssrc_downstream_dynamic)
   gst_buffer_unref (buf1);
 
   gst_object_unref (rtpmux);
+  gst_object_unref (capsfilter);
   gst_harness_teardown (h0);
   gst_harness_teardown (h1);
   gst_harness_teardown (h);
