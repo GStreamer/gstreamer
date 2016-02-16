@@ -138,13 +138,13 @@ _gst_vk_debug_callback (VkDebugReportFlagsEXT msgFlags,
   if (msgFlags & VK_DEBUG_REPORT_ERROR_BIT_EXT) {
     GST_CAT_ERROR (GST_VULKAN_DEBUG_CAT, "[%s] Code %d : %s", pLayerPrefix,
         msgCode, pMsg);
-  } else if (msgFlags & VK_DEBUG_REPORT_WARN_BIT_EXT) {
+  } else if (msgFlags & VK_DEBUG_REPORT_WARNING_BIT_EXT) {
     GST_CAT_WARNING (GST_VULKAN_DEBUG_CAT, "[%s] Code %d : %s", pLayerPrefix,
         msgCode, pMsg);
-  } else if (msgFlags & VK_DEBUG_REPORT_INFO_BIT_EXT) {
+  } else if (msgFlags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT) {
     GST_CAT_LOG (GST_VULKAN_DEBUG_CAT, "[%s] Code %d : %s", pLayerPrefix,
         msgCode, pMsg);
-  } else if (msgFlags & VK_DEBUG_REPORT_PERF_WARN_BIT_EXT) {
+  } else if (msgFlags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) {
     GST_CAT_FIXME (GST_VULKAN_DEBUG_CAT, "[%s] Code %d : %s", pLayerPrefix,
         msgCode, pMsg);
   } else if (msgFlags & VK_DEBUG_REPORT_DEBUG_BIT_EXT) {
@@ -369,9 +369,9 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     info.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
     info.pNext = NULL;
     info.flags =
-        VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARN_BIT_EXT |
-        VK_DEBUG_REPORT_INFO_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT |
-        VK_DEBUG_REPORT_PERF_WARN_BIT_EXT;
+        VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT |
+        VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT |
+        VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
     info.pfnCallback = (PFN_vkDebugReportCallbackEXT) _gst_vk_debug_callback;
     info.pUserData = NULL;
 

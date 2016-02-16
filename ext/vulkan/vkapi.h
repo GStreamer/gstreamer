@@ -35,6 +35,5 @@
 #endif
 
 #include <vulkan/vulkan.h>
-#include <vulkan/vk_ext_debug_report.h>
 
 #endif /* _VK_H_ */
