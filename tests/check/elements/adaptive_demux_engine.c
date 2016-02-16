@@ -195,6 +195,29 @@ on_demux_sent_data (GstPad * pad, GstPadProbeInfo * info, gpointer data)
   return GST_PAD_PROBE_OK;
 }
 
+/* callback called when dash sends event to AppSink */
+static GstPadProbeReturn
+on_demux_sent_event (GstPad * pad, GstPadProbeInfo * info, gpointer data)
+{
+  GstAdaptiveDemuxTestEnginePrivate *priv =
+      (GstAdaptiveDemuxTestEnginePrivate *) data;
+  GstAdaptiveDemuxTestOutputStream *stream = NULL;
+  GstEvent *event;
+
+  event = GST_PAD_PROBE_INFO_EVENT (info);
+
+  GST_TEST_LOCK (&priv->engine);
+
+  if (priv->callbacks->demux_sent_event) {
+    stream = getTestOutputDataByPad (priv, pad, TRUE);
+    (*priv->callbacks->demux_sent_event) (&priv->engine,
+        stream, event, priv->user_data);
+  }
+
+  GST_TEST_UNLOCK (&priv->engine);
+  return GST_PAD_PROBE_OK;
+}
+
 /* callback called when demux receives events from GstFakeSoupHTTPSrc */
 static GstPadProbeReturn
 on_demuxReceivesEvent (GstPad * pad, GstPadProbeInfo * info, gpointer data)
@@ -310,6 +333,9 @@ on_demuxNewPad (GstElement * demux, GstPad * pad, gpointer user_data)
 
   gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) on_demux_sent_data, priv, NULL);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM |
+      GST_PAD_PROBE_TYPE_EVENT_FLUSH,
+      (GstPadProbeCallback) on_demux_sent_event, priv, NULL);
   gobject_class = G_OBJECT_GET_CLASS (sink);
   if (g_object_class_find_property (gobject_class, "sync")) {
     GST_DEBUG ("Setting sync=FALSE on AppSink");

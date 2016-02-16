@@ -46,6 +46,9 @@ typedef struct _GstTestHTTPSrcTestData
 typedef struct _GstDashDemuxTestCase
 {
   GstAdaptiveDemuxTestCase parent;
+
+  /* the number of Protection Events sent to each pad */
+  GstStructure *countContentProtectionEvents;
 } GstDashDemuxTestCase;
 
 GType gst_dash_demux_test_case_get_type (void);
@@ -97,12 +100,17 @@ gst_dash_demux_test_case_class_init (GstDashDemuxTestCaseClass * klass)
 static void
 gst_dash_demux_test_case_init (GstDashDemuxTestCase * test_case)
 {
+  test_case->countContentProtectionEvents = NULL;
   gst_dash_demux_test_case_clear (test_case);
 }
 
 static void
 gst_dash_demux_test_case_clear (GstDashDemuxTestCase * test_case)
 {
+  if (test_case->countContentProtectionEvents) {
+    gst_structure_free (test_case->countContentProtectionEvents);
+    test_case->countContentProtectionEvents = NULL;
+  }
 }
 
 static void
@@ -686,7 +694,8 @@ run_seek_position_test (gdouble rate, GstSeekType start_type,
    * first chunk of at least one byte has already arrived in AppSink
    */
   if (seek_threshold_bytes)
-    GST_ADAPTIVE_DEMUX_TEST_CASE (testData)->threshold_for_seek = seek_threshold_bytes;
+    GST_ADAPTIVE_DEMUX_TEST_CASE (testData)->threshold_for_seek =
+        seek_threshold_bytes;
   else
     GST_ADAPTIVE_DEMUX_TEST_CASE (testData)->threshold_for_seek = 4687 + 1;
 
@@ -1318,6 +1327,185 @@ GST_START_TEST (testQuery)
 
 GST_END_TEST;
 
+static gboolean
+testContentProtectionDashdemuxSendsEvent (GstAdaptiveDemuxTestEngine * engine,
+    GstAdaptiveDemuxTestOutputStream * stream,
+    GstEvent * event, gpointer user_data)
+{
+  GstDashDemuxTestCase *test_case = GST_DASH_DEMUX_TEST_CASE (user_data);
+  const gchar *system_id;
+  GstBuffer *data;
+  const gchar *origin;
+  GstMapInfo info;
+  gchar *value;
+  gchar *name;
+  guint event_count = 0;
+
+  GST_DEBUG ("received event %s", GST_EVENT_TYPE_NAME (event));
+
+  if (GST_EVENT_TYPE (event) != GST_EVENT_PROTECTION) {
+    return TRUE;
+  }
+
+  /* we expect content protection events only on video pad */
+  name = gst_pad_get_name (stream->pad);
+  fail_unless (g_strcmp0 (name, "video_00") == 0);
+  gst_event_parse_protection (event, &system_id, &data, &origin);
+
+  gst_buffer_map (data, &info, GST_MAP_READ);
+
+  value = g_malloc (info.size + 1);
+  strncpy (value, (gchar *) info.data, info.size);
+  value[info.size] = 0;
+  gst_buffer_unmap (data, &info);
+
+  if (g_strcmp0 (system_id, "11111111-AAAA-BBBB-CCCC-123456789ABC") == 0) {
+    fail_unless (g_strcmp0 (origin, "dash/mpd") == 0);
+    fail_unless (g_strcmp0 (value, "test value") == 0);
+  } else if (g_strcmp0 (system_id, "5e629af5-38da-4063-8977-97ffbd9902d4") == 0) {
+    const gchar *str;
+
+    fail_unless (g_strcmp0 (origin, "dash/mpd") == 0);
+
+    /* We can't do a simple compare of value (which should be an XML dump
+       of the ContentProtection element), because the whitespace
+       formatting from xmlDump might differ between versions of libxml */
+    str = strstr (value, "<ContentProtection");
+    fail_if (str == NULL);
+    str = strstr (value, "<mas:MarlinContentIds>");
+    fail_if (str == NULL);
+    str = strstr (value, "<mas:MarlinContentId>");
+    fail_if (str == NULL);
+    str = strstr (value, "urn:marlin:kid:02020202020202020202020202020202");
+    fail_if (str == NULL);
+    str = strstr (value, "</ContentProtection>");
+    fail_if (str == NULL);
+  } else {
+    fail ("unexpected content protection event '%s'", system_id);
+  }
+
+  g_free (value);
+
+  fail_if (test_case->countContentProtectionEvents == NULL);
+  gst_structure_get_uint (test_case->countContentProtectionEvents, name,
+      &event_count);
+  event_count++;
+  gst_structure_set (test_case->countContentProtectionEvents, name, G_TYPE_UINT,
+      event_count, NULL);
+
+  g_free (name);
+  return TRUE;
+}
+
+/*
+ * Test content protection
+ * Configure 3 content protection sources:
+ * - a uuid scheme/value pair
+ * - a non uuid scheme/value pair (dash recognises only uuid schemes)
+ * - a complex uuid scheme, with trailing spaces and capital letters in scheme uri
+ * Only the uuid scheme will be recognised. We expect to receive 2 content
+ * protection events
+ */
+GST_START_TEST (testContentProtection)
+{
+  const gchar *mpd =
+      "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+      "<MPD xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+      "     xmlns=\"urn:mpeg:DASH:schema:MPD:2011\""
+      "     xsi:schemaLocation=\"urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\""
+      "     type=\"static\""
+      "     minBufferTime=\"PT1.500S\""
+      "     mediaPresentationDuration=\"PT135.743S\">"
+      "  <Period>"
+      "    <AdaptationSet mimeType=\"audio/webm\""
+      "                   subsegmentAlignment=\"true\">"
+      "      <Representation id=\"171\""
+      "                      codecs=\"vorbis\""
+      "                      audioSamplingRate=\"44100\""
+      "                      startWithSAP=\"1\""
+      "                      bandwidth=\"129553\">"
+      "        <AudioChannelConfiguration"
+      "           schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\""
+      "           value=\"2\" />"
+      "        <BaseURL>audio.webm</BaseURL>"
+      "        <SegmentBase indexRange=\"4452-4686\""
+      "                     indexRangeExact=\"true\">"
+      "          <Initialization range=\"0-4451\" />"
+      "        </SegmentBase>"
+      "      </Representation>"
+      "    </AdaptationSet>"
+      "    <AdaptationSet mimeType=\"video/webm\""
+      "                   subsegmentAlignment=\"true\">"
+      "      <ContentProtection schemeIdUri=\"urn:uuid:11111111-AAAA-BBBB-CCCC-123456789ABC\" value=\"test value\"/>"
+      "      <ContentProtection schemeIdUri=\"urn:mpeg:dash:mp4protection:2011\" value=\"cenc\"/>"
+      "      <ContentProtection schemeIdUri=\" URN:UUID:5e629af5-38da-4063-8977-97ffbd9902d4\" xmlns:mas=\"urn:marlin:mas:1-0:services:schemas:mpd\">"
+      "        <mas:MarlinContentIds>"
+      "          <mas:MarlinContentId>urn:marlin:kid:02020202020202020202020202020202</mas:MarlinContentId>"
+      "        </mas:MarlinContentIds>"
+      "      </ContentProtection>"
+      "      <Representation id=\"242\""
+      "                      codecs=\"vp9\""
+      "                      width=\"426\""
+      "                      height=\"240\""
+      "                      startWithSAP=\"1\""
+      "                      bandwidth=\"490208\">"
+      "        <BaseURL>video.webm</BaseURL>"
+      "        <SegmentBase indexRange=\"234-682\""
+      "                     indexRangeExact=\"true\">"
+      "          <Initialization range=\"0-233\" />"
+      "        </SegmentBase>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  GstDashDemuxTestInputData inputTestData[] = {
+    {"http://unit.test/test.mpd", (guint8 *) mpd, 0},
+    {"http://unit.test/audio.webm", NULL, 5000},
+    {"http://unit.test/video.webm", NULL, 9000},
+    {NULL, NULL, 0},
+  };
+  GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
+    {"audio_00", 5000, NULL},
+    {"video_00", 9000, NULL},
+  };
+  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
+  GstTestHTTPSrcTestData http_src_test_data = { 0 };
+  GstAdaptiveDemuxTestCallbacks test_callbacks = { 0 };
+  GstDashDemuxTestCase *testData;
+  guint event_count = 0;
+
+  http_src_callbacks.src_start = gst_dashdemux_http_src_start;
+  http_src_callbacks.src_create = gst_dashdemux_http_src_create;
+  http_src_test_data.input = inputTestData;
+  gst_test_http_src_install_callbacks (&http_src_callbacks,
+      &http_src_test_data);
+
+  test_callbacks.appsink_received_data =
+      gst_adaptive_demux_test_check_received_data;
+  test_callbacks.appsink_eos =
+      gst_adaptive_demux_test_check_size_of_received_data;
+  test_callbacks.demux_sent_event = testContentProtectionDashdemuxSendsEvent;
+
+  testData = gst_dash_demux_test_case_new ();
+  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+  testData->countContentProtectionEvents =
+      gst_structure_new_empty ("countContentProtectionEvents");
+  gst_adaptive_demux_test_run (DEMUX_ELEMENT_NAME, "http://unit.test/test.mpd",
+      &test_callbacks, testData);
+
+  fail_unless (gst_structure_has_field_typed
+      (testData->countContentProtectionEvents, "video_00", G_TYPE_UINT));
+
+  gst_structure_get_uint (testData->countContentProtectionEvents, "video_00",
+      &event_count);
+  fail_unless (event_count == 2);
+
+  g_object_unref (testData);
+  if (http_src_test_data.data)
+    gst_structure_free (http_src_test_data.data);
+}
+
+GST_END_TEST;
+
 static Suite *
 dash_demux_suite (void)
 {
@@ -1342,6 +1530,7 @@ dash_demux_suite (void)
   tcase_add_test (tc_basicTest, testMediaDownloadErrorLastFragment);
   tcase_add_test (tc_basicTest, testMediaDownloadErrorMiddleFragment);
   tcase_add_test (tc_basicTest, testQuery);
+  tcase_add_test (tc_basicTest, testContentProtection);
 
   tcase_add_unchecked_fixture (tc_basicTest, gst_adaptive_demux_test_setup,
       gst_adaptive_demux_test_teardown);
