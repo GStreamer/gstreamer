@@ -64,6 +64,8 @@
 #include "gstrtph263pay.h"
 #include "gstrtph264depay.h"
 #include "gstrtph264pay.h"
+#include "gstrtph265depay.h"
+#include "gstrtph265pay.h"
 #include "gstrtpj2kdepay.h"
 #include "gstrtpj2kpay.h"
 #include "gstrtpjpegdepay.h"
@@ -230,6 +232,12 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_h264_pay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_h265_depay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_h265_pay_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtp_j2k_depay_plugin_init (plugin))
