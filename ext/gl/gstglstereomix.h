@@ -40,14 +40,29 @@ G_BEGIN_DECLS
 
 typedef struct _GstGLStereoMix GstGLStereoMix;
 typedef struct _GstGLStereoMixClass GstGLStereoMixClass;
-typedef struct _GstGLStereoMixFrameData GstGLStereoMixFrameData;
+typedef struct _GstGLStereoMixPad GstGLStereoMixPad;
+typedef struct _GstGLStereoMixPadClass GstGLStereoMixPadClass;
+
+struct _GstGLStereoMixPad
+{
+  GstGLMixerPad mixer_pad;
+
+  gboolean mapped;
+  GstBuffer *current_buffer;
+};
+
+struct _GstGLStereoMixPadClass
+{
+  GstGLMixerPadClass mixer_pad_class;
+};
+
+#define GST_TYPE_GL_STEREO_MIX_PAD (gst_gl_stereo_mix_pad_get_type ())
+GType gst_gl_stereo_mix_pad_get_type (void);
+
 
 struct _GstGLStereoMix
 {
   GstGLMixer mixer;
-
-  GPtrArray *array_buffers;
-  GPtrArray *frames;
 
   GLuint out_tex_id;
 
@@ -67,13 +82,6 @@ struct _GstGLStereoMix
 struct _GstGLStereoMixClass
 {
     GstGLMixerClass mixer_class;
-};
-
-struct _GstGLStereoMixFrameData
-{
-  GstGLMixerFrameData base;
-  gboolean mapped;
-  GstBuffer *buf;
 };
 
 GType gst_gl_stereo_mix_get_type(void);
