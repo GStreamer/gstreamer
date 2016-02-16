@@ -36,6 +36,8 @@ GType gst_vulkan_device_get_type       (void);
 
 #define GST_VULKAN_DEVICE_CONTEXT_TYPE_STR "gst.vulkan.device"
 
+typedef gboolean (*GstVulkanDeviceForEachQueueFunc) (GstVulkanDevice * device, GstVulkanQueue * queue, gpointer user_data);
+
 struct _GstVulkanDevice
 {
   GstObject parent;
@@ -71,6 +73,9 @@ gboolean            gst_vulkan_device_open                  (GstVulkanDevice * d
 
 gpointer            gst_vulkan_device_get_proc_address      (GstVulkanDevice * device,
                                                              const gchar * name);
+void                gst_vulkan_device_foreach_queue         (GstVulkanDevice * device,
+                                                             GstVulkanDeviceForEachQueueFunc func,
+                                                             gpointer user_data);
 GstVulkanQueue *    gst_vulkan_device_get_queue             (GstVulkanDevice * device,
                                                              guint32 queue_family,
                                                              guint32 queue_i);

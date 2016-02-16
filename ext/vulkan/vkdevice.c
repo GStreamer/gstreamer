@@ -349,6 +349,28 @@ gst_vulkan_device_get_queue (GstVulkanDevice * device, guint32 queue_family,
   return ret;
 }
 
+void
+gst_vulkan_device_foreach_queue (GstVulkanDevice * device,
+    GstVulkanDeviceForEachQueueFunc func, gpointer user_data)
+{
+  gboolean done = FALSE;
+  guint i;
+
+  for (i = 0; i < device->n_queues; i++) {
+    GstVulkanQueue *queue =
+        queue =
+        gst_vulkan_device_get_queue (device, device->queue_family_id, i);
+
+    if (!func (device, queue, user_data))
+      done = TRUE;
+
+    gst_object_unref (queue);
+
+    if (done)
+      break;
+  }
+}
+
 gpointer
 gst_vulkan_device_get_proc_address (GstVulkanDevice * device,
     const gchar * name)
