@@ -27,6 +27,20 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_TEST_HTTP_SRC            (gst_test_http_src_get_type ())
 
+/**
+ * TEST_HTTP_SRC_REQUEST_HEADERS_NAME:
+ * The name of the #GstStructure that will contain all the HTTP request
+ * headers
+ */
+#define TEST_HTTP_SRC_REQUEST_HEADERS_NAME "request-headers"
+
+/**
+ * TEST_HTTP_SRC_RESPONSE_HEADERS_NAME:
+ * The name of the #GstStructure that will contain all the HTTP response
+ * headers
+ */
+#define TEST_HTTP_SRC_RESPONSE_HEADERS_NAME "response-headers"
+
 /* structure used by src_start function to configure the
  * GstTestHTTPSrc plugin.
  * It specifies information about a given URI.

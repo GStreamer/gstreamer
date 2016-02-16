@@ -314,7 +314,8 @@ gst_test_http_src_start (GstBaseSrc * basesrc)
   http_headers = gst_structure_new_empty ("http-headers");
   gst_structure_set (http_headers, "uri", G_TYPE_STRING, src->uri, NULL);
   if (!src->input.request_headers) {
-    src->input.request_headers = gst_structure_new_empty ("request-headers");
+    src->input.request_headers =
+        gst_structure_new_empty (TEST_HTTP_SRC_REQUEST_HEADERS_NAME);
   }
   if (!gst_structure_has_field_typed (src->input.request_headers,
           "User-Agent", G_TYPE_STRING)) {
@@ -334,10 +335,11 @@ gst_test_http_src_start (GstBaseSrc * basesrc)
     gst_structure_set (src->input.request_headers, "Accept-Encoding",
         G_TYPE_STRING, "compress, gzip", NULL);
   }
-  gst_structure_set (http_headers, "request-headers", GST_TYPE_STRUCTURE,
-      src->input.request_headers, NULL);
+  gst_structure_set (http_headers, TEST_HTTP_SRC_REQUEST_HEADERS_NAME,
+      GST_TYPE_STRUCTURE, src->input.request_headers, NULL);
   if (!src->input.response_headers) {
-    src->input.response_headers = gst_structure_new_empty ("response-headers");
+    src->input.response_headers =
+        gst_structure_new_empty (TEST_HTTP_SRC_RESPONSE_HEADERS_NAME);
   }
   if (!gst_structure_has_field_typed (src->input.response_headers,
           "Connection", G_TYPE_STRING)) {
@@ -359,8 +361,8 @@ gst_test_http_src_start (GstBaseSrc * basesrc)
     g_free (date_str);
     g_date_time_unref (now);
   }
-  gst_structure_set (http_headers, "response-headers", GST_TYPE_STRUCTURE,
-      src->input.response_headers, NULL);
+  gst_structure_set (http_headers, TEST_HTTP_SRC_RESPONSE_HEADERS_NAME,
+      GST_TYPE_STRUCTURE, src->input.response_headers, NULL);
   if (src->http_headers_event) {
     gst_event_unref (src->http_headers_event);
   }
