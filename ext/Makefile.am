@@ -184,12 +184,6 @@ else
 MPEG2ENC_DIR=
 endif
 
-if USE_MPG123
-MPG123_DIR=mpg123
-else
-MPG123_DIR=
-endif
-
 if USE_MIMIC
 MIMIC_DIR=mimic
 else
@@ -446,7 +440,6 @@ SUBDIRS=\
 	$(LIBVISUAL_DIR) \
 	$(MODPLUG_DIR) \
 	$(MPEG2ENC_DIR) \
-	$(MPG123_DIR) \
 	$(MIMIC_DIR) \
 	$(MPLEX_DIR) \
 	$(MUSEPACK_DIR) \
@@ -514,7 +507,6 @@ DIST_SUBDIRS = \
 	modplug \
 	mimic \
 	mpeg2enc \
-	mpg123 \
 	mplex \
 	musepack \
 	nas \

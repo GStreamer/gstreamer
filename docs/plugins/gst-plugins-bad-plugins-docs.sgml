@@ -68,7 +68,6 @@
     <xi:include href="xml/element-mpegpsmux.xml" />
     <xi:include href="xml/element-mpegtsmux.xml" />
     <xi:include href="xml/element-mplex.xml" />
-    <xi:include href="xml/element-mpg123audiodec.xml" />
     <xi:include href="xml/element-neonhttpsrc.xml" />
     <xi:include href="xml/element-ofa.xml" />
     <xi:include href="xml/element-openalsrc.xml" />

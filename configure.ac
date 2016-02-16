@@ -2455,14 +2455,6 @@ AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
   fi
 ])
 
-dnl *** mpg123 ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_MPG123, true)
-AG_GST_CHECK_FEATURE(MPG123, [mpg123 audio decoder], mpg123, [
-  PKG_CHECK_MODULES(MPG123, libmpg123 >= 1.13, HAVE_MPG123="yes", HAVE_MPG123="no")
-  AC_SUBST(MPG123_CFLAGS)
-  AC_SUBST(MPG123_LIBS)
-])
-
 dnl *** mplex ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPLEX, true)
 AG_GST_CHECK_FEATURE(MPLEX, [mplex], mplex, [
@@ -3301,7 +3293,6 @@ AM_CONDITIONAL(USE_LINSYS, false)
 AM_CONDITIONAL(USE_MODPLUG, false)
 AM_CONDITIONAL(USE_MIMIC, false)
 AM_CONDITIONAL(USE_MPEG2ENC, false)
-AM_CONDITIONAL(USE_MPG123, false)
 AM_CONDITIONAL(USE_MPLEX, false)
 AM_CONDITIONAL(USE_MUSEPACK, false)
 AM_CONDITIONAL(USE_NAS, false)
@@ -3615,7 +3606,6 @@ ext/libvisual/Makefile
 ext/Makefile
 ext/modplug/Makefile
 ext/mpeg2enc/Makefile
-ext/mpg123/Makefile
 ext/mimic/Makefile
 ext/mplex/Makefile
 ext/musepack/Makefile

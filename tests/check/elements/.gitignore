@@ -38,12 +38,12 @@ mpeg2enc
 mpegvideoparse
 mpeg4videoparse
 mpegtsmux
-mpg123audiodec
 mplex
 mssdemux
 mxfdemux
 mxfmux
 neonhttpsrc
+netsim
 ofa
 opus
 pcapparse
