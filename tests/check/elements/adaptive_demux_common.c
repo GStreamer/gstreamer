@@ -163,6 +163,23 @@ gst_adaptive_demux_test_check_received_data (GstAdaptiveDemuxTestEngine *
   testOutputStreamData =
       gst_adaptive_demux_test_find_test_data_by_stream (testData, stream, NULL);
   fail_unless (testOutputStreamData != NULL);
+
+  GST_DEBUG
+      ("total_received_size=%" G_GUINT64_FORMAT
+      " segment_received_size = %" G_GUINT64_FORMAT
+      " buffer_size=%" G_GUINT64_FORMAT
+      " expected_size=%" G_GUINT64_FORMAT
+      " segment_start = %" G_GUINT64_FORMAT,
+      stream->total_received_size,
+      stream->segment_received_size,
+      (guint64) gst_buffer_get_size (buffer),
+      testOutputStreamData->expected_size, stream->segment_start);
+
+  fail_unless (stream->total_received_size +
+      stream->segment_received_size +
+      gst_buffer_get_size (buffer) <= testOutputStreamData->expected_size,
+      "Received unexpected data, please check what segments are being downloaded");
+
   streamOffset = stream->segment_start + stream->segment_received_size;
   if (testOutputStreamData->expected_data) {
     gsize size = gst_buffer_get_size (buffer);
@@ -177,11 +194,6 @@ gst_adaptive_demux_test_check_received_data (GstAdaptiveDemuxTestEngine *
   }
 
   gst_buffer_map (buffer, &info, GST_MAP_READ);
-
-  GST_DEBUG
-      ("segment_start = %" G_GUINT64_FORMAT " segment_received_size = %"
-      G_GUINT64_FORMAT " bufferSize=%d",
-      stream->segment_start, stream->segment_received_size, (gint) info.size);
 
   pattern = streamOffset - streamOffset % sizeof (pattern);
   for (guint64 i = 0; i != info.size; ++i) {

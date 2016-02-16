@@ -687,12 +687,19 @@ GST_START_TEST (testFragmentDownloadError)
     {"http://unit.test/002.ts", NULL, segment_size},
     {NULL, NULL, 0}
   };
+  const guint64 failure_position = 2048;
   GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
-    {"src_0", 2 * segment_size, NULL},
+    /* adaptive demux tries for 4 times (MAX_DOWNLOAD_ERROR_COUNT + 1) before giving up */
+    {"src_0", failure_position * 4, NULL},
     {NULL, 0, NULL}
   };
-  const guint64 failure_position = 2048;
   TESTCASE_INIT_BOILERPLATE (segment_size);
+
+  /* download in chunks of failure_position size.
+   * This means the first chunk will succeed, the second will generate
+   * error because we already exceeded failure_position bytes.
+   */
+  gst_test_http_src_set_default_blocksize (failure_position);
 
   http_src_callbacks.src_start = gst_hlsdemux_test_src_start;
   http_src_callbacks.src_create = gst_hlsdemux_test_network_error_src_create;
