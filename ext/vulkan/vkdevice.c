@@ -281,11 +281,13 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
   {
     VkDeviceQueueCreateInfo queue_info = { 0, };
     VkDeviceCreateInfo device_info = { 0, };
+    gfloat queue_priority = 0.5;
 
     queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     queue_info.pNext = NULL;
     queue_info.queueFamilyIndex = device->queue_family_id;
     queue_info.queueCount = device->n_queues;
+    queue_info.pQueuePriorities = &queue_priority;
 
     device_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     device_info.pNext = NULL;
