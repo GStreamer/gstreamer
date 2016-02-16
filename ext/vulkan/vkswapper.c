@@ -159,11 +159,50 @@ _vulkan_swapper_ensure_surface (GstVulkanSwapper * swapper, GError ** error)
   return TRUE;
 }
 
+struct choose_data
+{
+  GstVulkanSwapper *swapper;
+  GstVulkanQueue *graphics_queue;
+  GstVulkanQueue *present_queue;
+};
+
+static gboolean
+_choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
+    struct choose_data *data)
+{
+  guint flags = device->queue_family_props[queue->family].queueFlags;
+  gboolean supports_present;
+
+  supports_present =
+      gst_vulkan_window_get_presentation_support (data->swapper->window,
+      device, queue->index);
+
+  if ((flags & VK_QUEUE_GRAPHICS_BIT) != 0) {
+    if (supports_present) {
+      /* found one that supports both */
+      if (data->graphics_queue)
+        gst_object_unref (data->graphics_queue);
+      data->graphics_queue = gst_object_ref (queue);
+      if (data->present_queue)
+        gst_object_unref (data->present_queue);
+      data->present_queue = gst_object_ref (queue);
+      return FALSE;
+    }
+    if (!data->graphics_queue)
+      data->present_queue = gst_object_ref (queue);
+  } else if (supports_present) {
+    if (!data->present_queue)
+      data->present_queue = gst_object_ref (queue);
+  }
+
+  return TRUE;
+}
+
 static gboolean
 _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
     GError ** error)
 {
-  guint32 i, present_queue = -1, graphics_queue = -1;
+  struct choose_data data;
   VkPhysicalDevice gpu;
   VkResult err;
 
@@ -175,38 +214,30 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
 
   gpu = gst_vulkan_device_get_physical_device (swapper->device);
 
-  for (i = 0; i < swapper->device->n_queues; i++) {
-    gboolean supports_present;
+  data.swapper = swapper;
+  data.present_queue = NULL;
+  data.graphics_queue = NULL;
 
-    supports_present =
-        gst_vulkan_window_get_presentation_support (swapper->window,
-        swapper->device, i);
-    if ((swapper->device->
-            queue_family_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
-      if (supports_present) {
-        /* found one that supports both */
-        graphics_queue = present_queue = i;
-        break;
-      }
-      if (graphics_queue != -1)
-        graphics_queue = i;
-    } else if (supports_present) {
-      if (present_queue != -1)
-        present_queue = i;
-    }
-  }
+  gst_vulkan_device_foreach_queue (swapper->device,
+      (GstVulkanDeviceForEachQueueFunc) _choose_queue, &data);
 
-  if (graphics_queue != present_queue) {
+  if (data.graphics_queue != data.present_queue) {
     /* FIXME: add support for separate graphics/present queues */
     g_set_error (error, GST_VULKAN_ERROR,
         VK_ERROR_INITIALIZATION_FAILED,
         "Failed to find a compatible present/graphics queue");
+    if (data.present_queue)
+      gst_object_unref (data.present_queue);
+    if (data.graphics_queue)
+      gst_object_unref (data.graphics_queue);
     return FALSE;
   }
 
-  if (!(swapper->queue = gst_vulkan_device_get_queue (swapper->device,
-              swapper->device->queue_family_id, graphics_queue, error)))
-    return FALSE;
+  swapper->queue = gst_object_ref (data.present_queue);
+  if (data.present_queue)
+    gst_object_unref (data.present_queue);
+  if (data.graphics_queue)
+    gst_object_unref (data.graphics_queue);
 
   err =
       swapper->GetPhysicalDeviceSurfaceCapabilitiesKHR (gpu, swapper->surface,
