@@ -92,6 +92,8 @@ struct _GESTimelineClass {
   void (*track_removed)	(GESTimeline *timeline, GESTrack * track);
   void (*layer_added)	(GESTimeline *timeline, GESLayer *layer);
   void (*layer_removed)	(GESTimeline *timeline, GESLayer *layer);
+  void (*group_added) (GESTimeline *timeline, GESGroup *group);
+  void (*group_removed) (GESTimeline *timeline, GESGroup *group, GPtrArray *children);
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
@@ -129,6 +131,7 @@ GstClockTime ges_timeline_get_snapping_distance (GESTimeline * timeline);
 void ges_timeline_set_snapping_distance (GESTimeline * timeline, GstClockTime snapping_distance);
 GESTimelineElement * ges_timeline_get_element (GESTimeline * timeline, const gchar *name);
 gboolean ges_timeline_is_empty (GESTimeline * timeline);
+void ges_timeline_emit_group_removed (GESTimeline * timeline, GESGroup * group, GPtrArray * array);
 
 G_END_DECLS
 

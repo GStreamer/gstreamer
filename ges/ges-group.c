@@ -554,7 +554,13 @@ _child_removed (GESContainer * group, GESTimelineElement * child)
 static GList *
 _ungroup (GESContainer * group, gboolean recursive)
 {
+  GPtrArray *children_array;
+  GESTimeline *timeline;
   GList *children, *tmp, *ret = NULL;
+
+  /* We choose 16 just as an arbitrary value */
+  children_array = g_ptr_array_sized_new (16);
+  timeline = GES_TIMELINE_ELEMENT_TIMELINE (group);
 
   children = ges_container_get_children (group, FALSE);
   for (tmp = children; tmp; tmp = tmp->next) {
@@ -562,8 +568,12 @@ _ungroup (GESContainer * group, gboolean recursive)
 
     gst_object_ref (child);
     ges_container_remove (group, child);
+    g_ptr_array_add (children_array, child);
     ret = g_list_append (ret, child);
   }
+  ges_timeline_emit_group_removed (timeline, (GESGroup *) group,
+      children_array);
+  g_ptr_array_free (children_array, TRUE);
   g_list_free_full (children, gst_object_unref);
 
   /* No need to remove from the timeline here, this will be done in _child_removed */

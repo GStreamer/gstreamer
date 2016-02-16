@@ -238,6 +238,8 @@ enum
   TRACK_REMOVED,
   LAYER_ADDED,
   LAYER_REMOVED,
+  GROUP_ADDED,
+  GROUP_REMOVED,
   SNAPING_STARTED,
   SNAPING_ENDED,
   SELECT_TRACKS_FOR_OBJECT,
@@ -563,6 +565,32 @@ ges_timeline_class_init (GESTimelineClass * klass)
       g_signal_new ("layer-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, layer_removed),
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_LAYER);
+
+  /**
+   * GESTimeline::group-added
+   * @timeline: the #GESTimeline
+   * @group: the #GESGroup
+   *
+   * Will be emitted after a group has been added to to the timeline.
+   */
+  ges_timeline_signals[GROUP_ADDED] =
+      g_signal_new ("group-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, group_added), NULL,
+      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_GROUP);
+
+  /**
+   * GESTimeline::group-removed
+   * @timeline: the #GESTimeline
+   * @group: the #GESGroup
+   * @children: (element-type GES.Container) (transfer container): a list of #GESContainer
+   *
+   * Will be emitted after a group has been removed from the timeline.
+   */
+  ges_timeline_signals[GROUP_REMOVED] =
+      g_signal_new ("group-removed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, group_removed),
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, GES_TYPE_GROUP,
+      G_TYPE_PTR_ARRAY);
 
   /**
    * GESTimeline::track-elements-snapping:
@@ -2125,6 +2153,16 @@ timeline_add_group (GESTimeline * timeline, GESGroup * group)
       gst_object_ref_sink (group));
 
   ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (group), timeline);
+
+  g_signal_emit (timeline, ges_timeline_signals[GROUP_ADDED], 0, group);
+}
+
+void
+ges_timeline_emit_group_removed (GESTimeline * timeline, GESGroup * group,
+    GPtrArray * array)
+{
+  g_signal_emit (timeline, ges_timeline_signals[GROUP_REMOVED], 0, group,
+      array);
 }
 
 void
