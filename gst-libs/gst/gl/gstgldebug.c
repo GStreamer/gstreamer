@@ -293,7 +293,6 @@ _gst_gl_debug_enable (GstGLContext * context)
   }
 
   level = gst_debug_category_get_threshold (gst_gl_debug);
-  g_print ("level: %u\n", level);
 
   if (level < GST_LEVEL_ERROR) {
     GST_CAT_INFO_OBJECT (gst_gl_context_debug, context,

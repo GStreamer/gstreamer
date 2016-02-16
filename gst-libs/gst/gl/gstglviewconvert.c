@@ -1775,7 +1775,6 @@ _init_view_convert (GstGLViewConvert * viewconvert)
       tex_scale[1][0], tex_scale[1][1],
       offsets[0][0], offsets[0][1], offsets[1][0], offsets[1][1]);
   fragment_source_str = _get_shader_string (viewconvert, in_mode, out_mode);
-// g_print ("%s\n", fragment_source_str);
   res = gst_gl_context_gen_shader (viewconvert->context,
       gst_gl_shader_string_vertex_mat4_texture_transform, fragment_source_str,
       &viewconvert->shader);
