@@ -834,15 +834,10 @@ dnl *** finalize CFLAGS, LDFLAGS, LIBS
 
 # set by AG_GST_PARSE_SUBSYSTEM_DISABLES above
 dnl make sure it doesn't complain about unused variables if debugging is disabled
-NO_WARNINGS=""
-AG_GST_CHECK_GST_DEBUG_DISABLED([NO_WARNINGS="-Wno-unused"], [
-    -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
-    -Wwrite-strings -Wformat-security -Wold-style-definition
-    -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
-    -Wnested-externs $NO_WARNINGS])
+AG_GST_CHECK_GST_DEBUG_DISABLED([NO_WARNINGS="-Wno-unused"], [NO_WARNINGS=""])
 
 dnl define an ERROR_CFLAGS Makefile variable
-AG_GST_SET_ERROR_CFLAGS([$FATAL_WARNINGS], [$NO_WARNINGS])
+AG_GST_SET_ERROR_CFLAGS([$FATAL_WARNINGS], [-Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wwrite-strings -Wformat-security -Wold-style-definition -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar -Wnested-externs $NO_WARNINGS])
 
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT([$GST_GIT])
