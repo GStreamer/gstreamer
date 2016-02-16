@@ -100,8 +100,6 @@ typedef struct
   GQuark keep_tag;
 } DropMetaData;
 
-void gst_rtp_copy_meta (GstElement * element, GstBuffer *outbuf, GstBuffer *inbuf, GQuark copy_tag);
-
 GType gst_rtp_h265_depay_get_type (void);
 
 gboolean gst_rtp_h265_depay_plugin_init (GstPlugin * plugin);

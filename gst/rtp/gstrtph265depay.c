@@ -29,6 +29,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/video/video.h>
 #include "gstrtph265depay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtph265depay_debug);
 #define GST_CAT_DEFAULT (rtph265depay_debug)
@@ -938,70 +939,6 @@ gst_rtp_h265_complete_au (GstRtpH265Depay * rtph265depay,
 												||  ((nt) == GST_H265_NAL_SLICE_CRA_NUT)		)
 
 #define NAL_TYPE_IS_KEY(nt) (NAL_TYPE_IS_PARAMETER_SET(nt) || NAL_TYPE_IS_CODED_SLICE_SEGMENT(nt))
-
-static gboolean
-foreach_metadata_copy (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
-{
-  CopyMetaData *data = user_data;
-  GstElement *element = data->element;
-  GstBuffer *outbuf = data->outbuf;
-  GQuark copy_tag = data->copy_tag;
-  const GstMetaInfo *info = (*meta)->info;
-  const gchar *const *tags = gst_meta_api_type_get_tags (info->api);
-
-  if (!tags || (copy_tag != 0 && g_strv_length ((gchar **) tags) == 1
-          && gst_meta_api_type_has_tag (info->api, copy_tag))) {
-    GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
-    GST_DEBUG_OBJECT (element, "copy metadata %s", g_type_name (info->api));
-    /* simply copy then */
-    info->transform_func (outbuf, *meta, inbuf,
-        _gst_meta_transform_copy, &copy_data);
-  } else {
-    GST_DEBUG_OBJECT (element, "not copying metadata %s",
-        g_type_name (info->api));
-  }
-
-  return TRUE;
-}
-
-/* TODO: Should probably make copy_tag an array at some point */
-void
-gst_rtp_copy_meta (GstElement * element, GstBuffer * outbuf, GstBuffer * inbuf,
-    GQuark copy_tag)
-{
-  CopyMetaData data = { element, outbuf, copy_tag };
-
-  gst_buffer_foreach_meta (inbuf, foreach_metadata_copy, &data);
-}
-
-static gboolean
-foreach_metadata_drop (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
-{
-  DropMetaData *data = user_data;
-  GstElement *element = data->element;
-  GQuark keep_tag = data->keep_tag;
-  const GstMetaInfo *info = (*meta)->info;
-  const gchar *const *tags = gst_meta_api_type_get_tags (info->api);
-
-  if (!tags || (keep_tag != 0 && g_strv_length ((gchar **) tags) == 1
-          && gst_meta_api_type_has_tag (info->api, keep_tag))) {
-    GST_DEBUG_OBJECT (element, "keeping metadata %s", g_type_name (info->api));
-  } else {
-    GST_DEBUG_OBJECT (element, "dropping metadata %s", g_type_name (info->api));
-    *meta = NULL;
-  }
-
-  return TRUE;
-}
-
-/* TODO: Should probably make keep_tag an array at some point */
-static void
-gst_rtp_drop_meta (GstElement * element, GstBuffer * buf, GQuark keep_tag)
-{
-  DropMetaData data = { element, keep_tag };
-
-  gst_buffer_foreach_meta (buf, foreach_metadata_drop, &data);
-}
 
 static GstBuffer *
 gst_rtp_h265_depay_handle_nal (GstRtpH265Depay * rtph265depay, GstBuffer * nal,
