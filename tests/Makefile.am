@@ -4,6 +4,6 @@ else
 SUBDIRS_CHECK =
 endif
 
-SUBDIRS = $(SUBDIRS_CHECK)
+SUBDIRS = $(SUBDIRS_CHECK) files
 
-DIST_SUBDIRS = check
+DIST_SUBDIRS = check files

@@ -1,5 +1,6 @@
 amrnbenc
 mpeg2dec
+mpg123audiodec
 x264enc
 xingmux
 .dirstamp

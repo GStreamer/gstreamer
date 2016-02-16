@@ -470,6 +470,7 @@ docs/plugins/Makefile
 docs/version.entities
 tests/Makefile
 tests/check/Makefile
+tests/files/Makefile
 m4/Makefile
 po/Makefile.in
 pkgconfig/Makefile
