@@ -509,25 +509,24 @@ fill_taps (GstAudioResampler * resampler,
     gdouble x = 1.0 - n_taps / 2 - (gdouble) phase / n_phases;
     res = make_taps (resampler, tmp_taps, x, n_taps, 1);
   } else {
-    gint out_rate = resampler->out_rate;
     gint offset, pos, frac;
     gint oversample = resampler->oversample;
     gint taps_stride = resampler->taps_stride;
     gdouble ic[4], *taps;
 
     pos = phase * oversample;
-    offset = (oversample - 1) - (pos / out_rate);
-    frac = pos % out_rate;
+    offset = (oversample - 1) - (pos / n_phases);
+    frac = pos % n_phases;
 
     taps = (gdouble *) ((gint8 *) resampler->taps + offset * taps_stride);
 
     switch (resampler->filter_interpolation) {
       case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR:
-        make_coeff_gdouble_linear (frac, out_rate, ic);
+        make_coeff_gdouble_linear (frac, n_phases, ic);
         interpolate_gdouble_linear (tmp_taps, taps, n_taps, ic);
         break;
       case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC:
-        make_coeff_gdouble_cubic (frac, out_rate, ic);
+        make_coeff_gdouble_cubic (frac, n_phases, ic);
         interpolate_gdouble_cubic (tmp_taps, taps, n_taps, ic);
         break;
       default:
@@ -1172,7 +1171,7 @@ resampler_calculate_taps (GstAudioResampler * resampler)
 
     switch (filter_interpolation) {
       case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR:
-        oversample <<= 5;
+        oversample *= 11;
         break;
       default:
         break;
@@ -1218,9 +1217,11 @@ resampler_calculate_taps (GstAudioResampler * resampler)
     switch (resampler->filter_interpolation) {
       default:
       case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR:
+        GST_DEBUG ("using linear interpolation to build filter");
         isize = 2;
         break;
       case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC:
+        GST_DEBUG ("using cubic interpolation to build filter");
         isize = 4;
         break;
     }
@@ -1621,6 +1622,11 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
 
       resampler->samples_avail += diff;
     }
+  } else if (resampler->filter_mode == GST_AUDIO_RESAMPLER_FILTER_MODE_FULL) {
+    GST_DEBUG ("setting up filter cache");
+    resampler->n_phases = resampler->out_rate;
+    alloc_cache_mem (resampler, resampler->bps, resampler->n_taps,
+        resampler->n_phases);
   }
   return TRUE;
 }
