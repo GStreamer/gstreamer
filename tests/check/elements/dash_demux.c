@@ -893,135 +893,6 @@ GST_START_TEST (testDownloadError)
 
 GST_END_TEST;
 
-/* generate queries to adaptive demux */
-static gboolean
-testQueryCheckDataReceived (GstAdaptiveDemuxTestEngine * engine,
-    GstAdaptiveDemuxTestOutputStream * stream,
-    GstBuffer * buffer, gpointer user_data)
-{
-  GList *pads;
-  GstPad *pad;
-  GstQuery *query;
-  gboolean ret;
-  gint64 duration;
-  gboolean seekable;
-  gint64 segment_start;
-  gint64 segment_end;
-  gchar *uri;
-  gchar *redirect_uri;
-  gboolean redirect_permanent;
-
-  pads = GST_ELEMENT_PADS (stream->appsink);
-
-  /* AppSink should have only 1 pad */
-  fail_unless (pads != NULL);
-  fail_unless (g_list_length (pads) == 1);
-  pad = GST_PAD (pads->data);
-
-  query = gst_query_new_duration (GST_FORMAT_TIME);
-  ret = gst_pad_peer_query (pad, query);
-  fail_unless (ret == TRUE);
-  gst_query_parse_duration (query, NULL, &duration);
-  fail_unless (duration == 135743 * GST_MSECOND);
-  gst_query_unref (query);
-
-  query = gst_query_new_seeking (GST_FORMAT_TIME);
-  ret = gst_pad_peer_query (pad, query);
-  fail_unless (ret == TRUE);
-  gst_query_parse_seeking (query, NULL, &seekable, &segment_start,
-      &segment_end);
-  fail_unless (seekable == TRUE);
-  fail_unless (segment_start == 0);
-  fail_unless (segment_end == duration);
-  gst_query_unref (query);
-
-  query = gst_query_new_uri ();
-  ret = gst_pad_peer_query (pad, query);
-  fail_unless (ret == TRUE);
-  gst_query_parse_uri (query, &uri);
-  gst_query_parse_uri_redirection (query, &redirect_uri);
-  gst_query_parse_uri_redirection_permanent (query, &redirect_permanent);
-  fail_unless (strcmp (uri, "http://unit.test/test.mpd") == 0);
-  /* adaptive demux does not reply with redirect information */
-  fail_unless (redirect_uri == NULL);
-  fail_unless (redirect_permanent == FALSE);
-  g_free (uri);
-  g_free (redirect_uri);
-  gst_query_unref (query);
-
-  return gst_adaptive_demux_test_check_received_data (engine,
-      stream, buffer, user_data);
-}
-
-/*
- * Test queries
- *
- */
-GST_START_TEST (testQuery)
-{
-  const gchar *mpd =
-      "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-      "<MPD xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
-      "     xmlns=\"urn:mpeg:DASH:schema:MPD:2011\""
-      "     xsi:schemaLocation=\"urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd\""
-      "     profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\""
-      "     type=\"static\""
-      "     minBufferTime=\"PT1.500S\""
-      "     mediaPresentationDuration=\"PT135.743S\">"
-      "  <Period>"
-      "    <AdaptationSet mimeType=\"audio/webm\""
-      "                   subsegmentAlignment=\"true\">"
-      "      <Representation id=\"171\""
-      "                      codecs=\"vorbis\""
-      "                      audioSamplingRate=\"44100\""
-      "                      startWithSAP=\"1\""
-      "                      bandwidth=\"129553\">"
-      "        <AudioChannelConfiguration"
-      "           schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\""
-      "           value=\"2\" />"
-      "        <BaseURL>audio.webm</BaseURL>"
-      "        <SegmentBase indexRange=\"4452-4686\""
-      "                     indexRangeExact=\"true\">"
-      "          <Initialization range=\"0-4451\" />"
-      "        </SegmentBase>"
-      "      </Representation></AdaptationSet></Period></MPD>";
-
-  GstDashDemuxTestInputData inputTestData[] = {
-    {"http://unit.test/test.mpd", (guint8 *) mpd, 0},
-    {"http://unit.test/audio.webm", NULL, 5000},
-    {NULL, NULL, 0},
-  };
-  GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
-    {"audio_00", 5000, NULL},
-  };
-  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
-  GstTestHTTPSrcTestData http_src_test_data = { 0 };
-  GstAdaptiveDemuxTestCallbacks test_callbacks = { 0 };
-  GstDashDemuxTestCase *testData;
-
-  http_src_callbacks.src_start = gst_dashdemux_http_src_start;
-  http_src_callbacks.src_create = gst_dashdemux_http_src_create;
-  http_src_test_data.input = inputTestData;
-  gst_test_http_src_install_callbacks (&http_src_callbacks,
-      &http_src_test_data);
-
-  test_callbacks.appsink_received_data = testQueryCheckDataReceived;
-  test_callbacks.appsink_eos =
-      gst_adaptive_demux_test_check_size_of_received_data;
-
-  testData = gst_dash_demux_test_case_new ();
-  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
-
-  gst_adaptive_demux_test_run (DEMUX_ELEMENT_NAME,
-      "http://unit.test/test.mpd", &test_callbacks, testData);
-
-  g_object_unref (testData);
-  if (http_src_test_data.data)
-    gst_structure_free (http_src_test_data.data);
-}
-
-GST_END_TEST;
-
 static GstFlowReturn
 test_fragment_download_error_src_create (GstTestHTTPSrc * src,
     guint64 offset,
@@ -1138,6 +1009,135 @@ GST_START_TEST (testFragmentDownloadError)
   test_callbacks.appsink_eos = testFragmentDownloadErrorCheckSizeOfDataReceived;
   /*  test_callbacks.demux_sent_eos = gst_adaptive_demux_test_check_size_of_received_data; */
   test_callbacks.bus_error_message = testDownloadErrorMessageCallback;
+
+  testData = gst_dash_demux_test_case_new ();
+  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+
+  gst_adaptive_demux_test_run (DEMUX_ELEMENT_NAME,
+      "http://unit.test/test.mpd", &test_callbacks, testData);
+
+  g_object_unref (testData);
+  if (http_src_test_data.data)
+    gst_structure_free (http_src_test_data.data);
+}
+
+GST_END_TEST;
+
+/* generate queries to adaptive demux */
+static gboolean
+testQueryCheckDataReceived (GstAdaptiveDemuxTestEngine * engine,
+    GstAdaptiveDemuxTestOutputStream * stream,
+    GstBuffer * buffer, gpointer user_data)
+{
+  GList *pads;
+  GstPad *pad;
+  GstQuery *query;
+  gboolean ret;
+  gint64 duration;
+  gboolean seekable;
+  gint64 segment_start;
+  gint64 segment_end;
+  gchar *uri;
+  gchar *redirect_uri;
+  gboolean redirect_permanent;
+
+  pads = GST_ELEMENT_PADS (stream->appsink);
+
+  /* AppSink should have only 1 pad */
+  fail_unless (pads != NULL);
+  fail_unless (g_list_length (pads) == 1);
+  pad = GST_PAD (pads->data);
+
+  query = gst_query_new_duration (GST_FORMAT_TIME);
+  ret = gst_pad_peer_query (pad, query);
+  fail_unless (ret == TRUE);
+  gst_query_parse_duration (query, NULL, &duration);
+  fail_unless (duration == 135743 * GST_MSECOND);
+  gst_query_unref (query);
+
+  query = gst_query_new_seeking (GST_FORMAT_TIME);
+  ret = gst_pad_peer_query (pad, query);
+  fail_unless (ret == TRUE);
+  gst_query_parse_seeking (query, NULL, &seekable, &segment_start,
+      &segment_end);
+  fail_unless (seekable == TRUE);
+  fail_unless (segment_start == 0);
+  fail_unless (segment_end == duration);
+  gst_query_unref (query);
+
+  query = gst_query_new_uri ();
+  ret = gst_pad_peer_query (pad, query);
+  fail_unless (ret == TRUE);
+  gst_query_parse_uri (query, &uri);
+  gst_query_parse_uri_redirection (query, &redirect_uri);
+  gst_query_parse_uri_redirection_permanent (query, &redirect_permanent);
+  fail_unless (strcmp (uri, "http://unit.test/test.mpd") == 0);
+  /* adaptive demux does not reply with redirect information */
+  fail_unless (redirect_uri == NULL);
+  fail_unless (redirect_permanent == FALSE);
+  g_free (uri);
+  g_free (redirect_uri);
+  gst_query_unref (query);
+
+  return gst_adaptive_demux_test_check_received_data (engine,
+      stream, buffer, user_data);
+}
+
+/*
+ * Test queries
+ *
+ */
+GST_START_TEST (testQuery)
+{
+  const gchar *mpd =
+      "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+      "<MPD xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+      "     xmlns=\"urn:mpeg:DASH:schema:MPD:2011\""
+      "     xsi:schemaLocation=\"urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\""
+      "     type=\"static\""
+      "     minBufferTime=\"PT1.500S\""
+      "     mediaPresentationDuration=\"PT135.743S\">"
+      "  <Period>"
+      "    <AdaptationSet mimeType=\"audio/webm\""
+      "                   subsegmentAlignment=\"true\">"
+      "      <Representation id=\"171\""
+      "                      codecs=\"vorbis\""
+      "                      audioSamplingRate=\"44100\""
+      "                      startWithSAP=\"1\""
+      "                      bandwidth=\"129553\">"
+      "        <AudioChannelConfiguration"
+      "           schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\""
+      "           value=\"2\" />"
+      "        <BaseURL>audio.webm</BaseURL>"
+      "        <SegmentBase indexRange=\"4452-4686\""
+      "                     indexRangeExact=\"true\">"
+      "          <Initialization range=\"0-4451\" />"
+      "        </SegmentBase>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  GstDashDemuxTestInputData inputTestData[] = {
+    {"http://unit.test/test.mpd", (guint8 *) mpd, 0},
+    {"http://unit.test/audio.webm", NULL, 5000},
+    {NULL, NULL, 0},
+  };
+  GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
+    {"audio_00", 5000, NULL},
+  };
+  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
+  GstTestHTTPSrcTestData http_src_test_data = { 0 };
+  GstAdaptiveDemuxTestCallbacks test_callbacks = { 0 };
+  GstDashDemuxTestCase *testData;
+
+  http_src_callbacks.src_start = gst_dashdemux_http_src_start;
+  http_src_callbacks.src_create = gst_dashdemux_http_src_create;
+  http_src_test_data.input = inputTestData;
+  gst_test_http_src_install_callbacks (&http_src_callbacks,
+      &http_src_test_data);
+
+  test_callbacks.appsink_received_data = testQueryCheckDataReceived;
+  test_callbacks.appsink_eos =
+      gst_adaptive_demux_test_check_size_of_received_data;
 
   testData = gst_dash_demux_test_case_new ();
   COPY_OUTPUT_TEST_DATA (outputTestData, testData);
