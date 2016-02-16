@@ -37,18 +37,24 @@ typedef struct _GstDashDemuxTestInputData
   guint64 size;
 } GstDashDemuxTestInputData;
 
+typedef struct _GstTestHTTPSrcTestData
+{
+  const GstDashDemuxTestInputData *input;
+  GstStructure *data;
+} GstTestHTTPSrcTestData;
+
 static gboolean
 gst_dashdemux_http_src_start (GstTestHTTPSrc * src,
     const gchar * uri, GstTestHTTPSrcInput * input_data, gpointer user_data)
 {
-  const GstDashDemuxTestInputData *input =
-      (const GstDashDemuxTestInputData *) user_data;
-  for (guint i = 0; input[i].uri; ++i) {
-    if (strcmp (input[i].uri, uri) == 0) {
-      input_data->context = (gpointer) & input[i];
-      input_data->size = input[i].size;
-      if (input[i].size == 0)
-        input_data->size = strlen ((gchar *) input[i].payload);
+  const GstTestHTTPSrcTestData *test_case =
+      (const GstTestHTTPSrcTestData *) user_data;
+  for (guint i = 0; test_case->input[i].uri; ++i) {
+    if (g_strcmp0 (test_case->input[i].uri, uri) == 0) {
+      input_data->context = (gpointer) & test_case->input[i];
+      input_data->size = test_case->input[i].size;
+      if (test_case->input[i].size == 0)
+        input_data->size = strlen ((gchar *) test_case->input[i].payload);
       return TRUE;
     }
   }
@@ -60,8 +66,6 @@ gst_dashdemux_http_src_create (GstTestHTTPSrc * src,
     guint64 offset,
     guint length, GstBuffer ** retbuf, gpointer context, gpointer user_data)
 {
-  /*  const GstDashDemuxTestInputData *input =
-     (const GstDashDemuxTestInputData *) user_data; */
   const GstDashDemuxTestInputData *input =
       (const GstDashDemuxTestInputData *) context;
   GstBuffer *buf;
@@ -140,34 +144,42 @@ GST_START_TEST (simpleTest)
       "          <Initialization range=\"0-233\" />"
       "        </SegmentBase>"
       "      </Representation></AdaptationSet></Period></MPD>";
+
   GstDashDemuxTestInputData inputTestData[] = {
     {"http://unit.test/test.mpd", (guint8 *) mpd, 0},
     {"http://unit.test/audio.webm", NULL, 5000},
     {"http://unit.test/video.webm", NULL, 9000},
     {NULL, NULL, 0},
   };
-  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
   GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
     {"audio_00", 5000, NULL},
     {"video_00", 9000, NULL}
   };
+  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
+  GstTestHTTPSrcTestData http_src_test_data = { 0 };
   GstAdaptiveDemuxTestCallbacks test_callbacks = { 0 };
   GstAdaptiveDemuxTestCase *testData;
 
-  testData = gst_adaptive_demux_test_case_new ();
   http_src_callbacks.src_start = gst_dashdemux_http_src_start;
   http_src_callbacks.src_create = gst_dashdemux_http_src_create;
-  gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
+  http_src_test_data.input = inputTestData;
+  gst_test_http_src_install_callbacks (&http_src_callbacks,
+      &http_src_test_data);
 
-  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
   test_callbacks.appsink_received_data =
       gst_adaptive_demux_test_check_received_data;
   test_callbacks.appsink_eos =
       gst_adaptive_demux_test_check_size_of_received_data;
 
+  testData = gst_adaptive_demux_test_case_new ();
+  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+
   gst_adaptive_demux_test_run (DEMUX_ELEMENT_NAME, "http://unit.test/test.mpd",
       &test_callbacks, testData);
+
   g_object_unref (testData);
+  if (http_src_test_data.data)
+    gst_structure_free (http_src_test_data.data);
 }
 
 GST_END_TEST;
@@ -262,29 +274,37 @@ GST_START_TEST (testTwoPeriods)
     {"http://unit.test/video2.webm", NULL, 9002},
     {NULL, NULL, 0},
   };
-  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
   GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
     {"audio_00", 5001, NULL},
     {"video_00", 9001, NULL},
     {"audio_01", 5002, NULL},
     {"video_01", 9002, NULL},
   };
+  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
+  GstTestHTTPSrcTestData http_src_test_data = { 0 };
   GstAdaptiveDemuxTestCallbacks test_callbacks = { 0 };
   GstAdaptiveDemuxTestCase *testData;
 
-  testData = gst_adaptive_demux_test_case_new ();
   http_src_callbacks.src_start = gst_dashdemux_http_src_start;
   http_src_callbacks.src_create = gst_dashdemux_http_src_create;
-  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+  http_src_test_data.input = inputTestData;
+  gst_test_http_src_install_callbacks (&http_src_callbacks,
+      &http_src_test_data);
+
   test_callbacks.appsink_received_data =
       gst_adaptive_demux_test_check_received_data;
   test_callbacks.appsink_eos =
       gst_adaptive_demux_test_check_size_of_received_data;
 
-  gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
+  testData = gst_adaptive_demux_test_case_new ();
+  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+
   gst_adaptive_demux_test_run (DEMUX_ELEMENT_NAME,
       "http://unit.test/test.mpd", &test_callbacks, testData);
+
   g_object_unref (testData);
+  if (http_src_test_data.data)
+    gst_structure_free (http_src_test_data.data);
 }
 
 GST_END_TEST;
@@ -401,27 +421,35 @@ GST_START_TEST (testParameters)
     {"http://unit.test/audio.webm", NULL, 5000},
     {NULL, NULL, 0},
   };
-  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
   GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
     {"audio_00", 5000, NULL},
   };
+  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
+  GstTestHTTPSrcTestData http_src_test_data = { 0 };
   GstAdaptiveDemuxTestCallbacks test_callbacks = { 0 };
   GstAdaptiveDemuxTestCase *testData;
 
-  testData = gst_adaptive_demux_test_case_new ();
   http_src_callbacks.src_start = gst_dashdemux_http_src_start;
   http_src_callbacks.src_create = gst_dashdemux_http_src_create;
-  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+  http_src_test_data.input = inputTestData;
+  gst_test_http_src_install_callbacks (&http_src_callbacks,
+      &http_src_test_data);
+
   test_callbacks.pre_test = setAndTestDashParams;
   test_callbacks.appsink_received_data =
       gst_adaptive_demux_test_check_received_data;
   test_callbacks.appsink_eos =
       gst_adaptive_demux_test_check_size_of_received_data;
 
-  gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
+  testData = gst_adaptive_demux_test_case_new ();
+  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+
   gst_adaptive_demux_test_run (DEMUX_ELEMENT_NAME, "http://unit.test/test.mpd",
       &test_callbacks, testData);
+
   g_object_unref (testData);
+  if (http_src_test_data.data)
+    gst_structure_free (http_src_test_data.data);
 }
 
 GST_END_TEST;
@@ -458,21 +486,26 @@ GST_START_TEST (testSeek)
       "          <Initialization range=\"0-4451\" />"
       "        </SegmentBase>"
       "      </Representation></AdaptationSet></Period></MPD>";
+
   GstDashDemuxTestInputData inputTestData[] = {
     {"http://unit.test/test.mpd", (guint8 *) mpd, 0},
     {"http://unit.test/audio.webm", NULL, 10000},
     {NULL, NULL, 0},
   };
-  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
   GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
     {"audio_00", 10000, NULL},
   };
+  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
+  GstTestHTTPSrcTestData http_src_test_data = { 0 };
   GstAdaptiveDemuxTestCase *testData;
-
-  testData = gst_adaptive_demux_test_case_new ();
 
   http_src_callbacks.src_start = gst_dashdemux_http_src_start;
   http_src_callbacks.src_create = gst_dashdemux_http_src_create;
+  http_src_test_data.input = inputTestData;
+  gst_test_http_src_install_callbacks (&http_src_callbacks,
+      &http_src_test_data);
+
+  testData = gst_adaptive_demux_test_case_new ();
   COPY_OUTPUT_TEST_DATA (outputTestData, testData);
 
   /* media segment starts at 4687
@@ -491,10 +524,12 @@ GST_START_TEST (testSeek)
       GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, GST_SEEK_TYPE_SET,
       5 * GST_MSECOND, GST_SEEK_TYPE_NONE, 0);
 
-  gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
   gst_adaptive_demux_test_seek (DEMUX_ELEMENT_NAME,
       "http://unit.test/test.mpd", testData);
+
   g_object_unref (testData);
+  if (http_src_test_data.data)
+    gst_structure_free (http_src_test_data.data);
 }
 
 GST_END_TEST;
@@ -538,6 +573,7 @@ run_seek_position_test (gdouble rate, GstSeekType start_type,
       "            value=\"2\"> "
       "        </AudioChannelConfiguration> "
       "    </Representation></AdaptationSet></Period></MPD>";
+
   GstDashDemuxTestInputData inputTestData[] = {
     {"http://unit.test/test.mpd", (guint8 *) mpd, 0},
     {"http://unit.test/init-audio.mp4", NULL, 10000},
@@ -548,16 +584,20 @@ run_seek_position_test (gdouble rate, GstSeekType start_type,
     {NULL, NULL, 0},
   };
   GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
+  GstTestHTTPSrcTestData http_src_test_data = { 0 };
   GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
     /* 1 from the init segment */
     {"audio_00", (segments ? 1 + segments : 0) * 10000, NULL},
   };
   GstAdaptiveDemuxTestCase *testData;
 
-  testData = gst_adaptive_demux_test_case_new ();
-
   http_src_callbacks.src_start = gst_dashdemux_http_src_start;
   http_src_callbacks.src_create = gst_dashdemux_http_src_create;
+  http_src_test_data.input = inputTestData;
+  gst_test_http_src_install_callbacks (&http_src_callbacks,
+      &http_src_test_data);
+
+  testData = gst_adaptive_demux_test_case_new ();
   COPY_OUTPUT_TEST_DATA (outputTestData, testData);
 
   /* media segment starts at 4687
@@ -581,10 +621,12 @@ run_seek_position_test (gdouble rate, GstSeekType start_type,
       gst_event_new_seek (rate, GST_FORMAT_TIME, flags, start_type,
       seek_start, stop_type, seek_stop);
 
-  gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
   gst_adaptive_demux_test_seek (DEMUX_ELEMENT_NAME,
       "http://unit.test/test.mpd", testData);
+
   g_object_unref (testData);
+  if (http_src_test_data.data)
+    gst_structure_free (http_src_test_data.data);
 }
 
 GST_START_TEST (testSeekKeyUnitPosition)
@@ -738,27 +780,35 @@ GST_START_TEST (testDownloadError)
     {"http://unit.test/test.mpd", (guint8 *) mpd, 0},
     {NULL, NULL, 0},
   };
-  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
   GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
     {"audio_00", 0, NULL},
   };
+  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
+  GstTestHTTPSrcTestData http_src_test_data = { 0 };
   GstAdaptiveDemuxTestCallbacks test_callbacks = { 0 };
   GstAdaptiveDemuxTestCase *testData;
 
-  testData = gst_adaptive_demux_test_case_new ();
   http_src_callbacks.src_start = gst_dashdemux_http_src_start;
   http_src_callbacks.src_create = gst_dashdemux_http_src_create;
-  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+  http_src_test_data.input = inputTestData;
+  gst_test_http_src_install_callbacks (&http_src_callbacks,
+      &http_src_test_data);
+
   test_callbacks.appsink_received_data =
       gst_adaptive_demux_test_check_received_data;
   test_callbacks.bus_error_message = testDownloadErrorMessageCallback;
   test_callbacks.appsink_eos =
       gst_adaptive_demux_test_check_size_of_received_data;
 
-  gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
+  testData = gst_adaptive_demux_test_case_new ();
+  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+
   gst_adaptive_demux_test_run (DEMUX_ELEMENT_NAME, "http://unit.test/test.mpd",
       &test_callbacks, testData);
+
   g_object_unref (testData);
+  if (http_src_test_data.data)
+    gst_structure_free (http_src_test_data.data);
 }
 
 GST_END_TEST;
@@ -855,30 +905,39 @@ GST_START_TEST (testQuery)
       "          <Initialization range=\"0-4451\" />"
       "        </SegmentBase>"
       "      </Representation></AdaptationSet></Period></MPD>";
+
   GstDashDemuxTestInputData inputTestData[] = {
     {"http://unit.test/test.mpd", (guint8 *) mpd, 0},
     {"http://unit.test/audio.webm", NULL, 5000},
     {NULL, NULL, 0},
   };
-  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
   GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
     {"audio_00", 5000, NULL},
   };
+  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
+  GstTestHTTPSrcTestData http_src_test_data = { 0 };
   GstAdaptiveDemuxTestCallbacks test_callbacks = { 0 };
   GstAdaptiveDemuxTestCase *testData;
 
-  testData = gst_adaptive_demux_test_case_new ();
   http_src_callbacks.src_start = gst_dashdemux_http_src_start;
   http_src_callbacks.src_create = gst_dashdemux_http_src_create;
-  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+  http_src_test_data.input = inputTestData;
+  gst_test_http_src_install_callbacks (&http_src_callbacks,
+      &http_src_test_data);
+
   test_callbacks.appsink_received_data = testQueryCheckDataReceived;
   test_callbacks.appsink_eos =
       gst_adaptive_demux_test_check_size_of_received_data;
 
-  gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
+  testData = gst_adaptive_demux_test_case_new ();
+  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+
   gst_adaptive_demux_test_run (DEMUX_ELEMENT_NAME,
       "http://unit.test/test.mpd", &test_callbacks, testData);
+
   g_object_unref (testData);
+  if (http_src_test_data.data)
+    gst_structure_free (http_src_test_data.data);
 }
 
 GST_END_TEST;
@@ -890,10 +949,18 @@ test_fragment_download_error_src_create (GstTestHTTPSrc * src,
 {
   const GstDashDemuxTestInputData *input =
       (const GstDashDemuxTestInputData *) context;
+  const GstTestHTTPSrcTestData *http_src_test_data =
+      (const GstTestHTTPSrcTestData *) user_data;
+  guint64 threshold_for_trigger;
+
   fail_unless (input != NULL);
-  if (!g_str_has_suffix (input->uri, ".mpd") && offset > 2000) {
-    GST_DEBUG ("network_error %s %" G_GUINT64_FORMAT " @ %d",
-        input->uri, offset, 2000);
+  gst_structure_get_uint64 (http_src_test_data->data, "threshold_for_trigger",
+      &threshold_for_trigger);
+
+  if (!g_str_has_suffix (input->uri, ".mpd") && offset > threshold_for_trigger) {
+
+    GST_DEBUG ("network_error %s %" G_GUINT64_FORMAT " @ %" G_GUINT64_FORMAT,
+        input->uri, offset, threshold_for_trigger);
     GST_ELEMENT_ERROR (src, RESOURCE, READ,
         (("A network error occurred, or the server closed the connection unexpectedly.")), ("A network error occurred, or the server closed the connection unexpectedly."));
     return GST_FLOW_ERROR;
@@ -968,28 +1035,39 @@ GST_START_TEST (testFragmentDownloadError)
     {"http://unit.test/audio.webm", NULL, 5000},
     {NULL, NULL, 0},
   };
-  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
   GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
     {"audio_00", 5000, NULL},
   };
+  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
+  GstTestHTTPSrcTestData http_src_test_data = { 0 };
   GstAdaptiveDemuxTestCallbacks test_callbacks = { 0 };
   GstAdaptiveDemuxTestCase *testData;
+  guint64 threshold_for_trigger = 2000;
 
-  testData = gst_adaptive_demux_test_case_new ();
   http_src_callbacks.src_start = gst_dashdemux_http_src_start;
   http_src_callbacks.src_create = test_fragment_download_error_src_create;
-  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+  http_src_test_data.data = gst_structure_new_empty (__FUNCTION__);
+  gst_structure_set (http_src_test_data.data, "threshold_for_trigger",
+      G_TYPE_UINT64, threshold_for_trigger, NULL);
+  http_src_test_data.input = inputTestData;
+  gst_test_http_src_install_callbacks (&http_src_callbacks,
+      &http_src_test_data);
+
   test_callbacks.appsink_received_data =
       gst_adaptive_demux_test_check_received_data;
   test_callbacks.appsink_eos = testFragmentDownloadErrorCheckSizeOfDataReceived;
   /*  test_callbacks.demux_sent_eos = gst_adaptive_demux_test_check_size_of_received_data; */
-
   test_callbacks.bus_error_message = testDownloadErrorMessageCallback;
 
-  gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
+  testData = gst_adaptive_demux_test_case_new ();
+  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+
   gst_adaptive_demux_test_run (DEMUX_ELEMENT_NAME,
       "http://unit.test/test.mpd", &test_callbacks, testData);
+
   g_object_unref (testData);
+  if (http_src_test_data.data)
+    gst_structure_free (http_src_test_data.data);
 }
 
 GST_END_TEST;
