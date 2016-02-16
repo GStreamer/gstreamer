@@ -15121,7 +15121,7 @@
 <ARG>
 <NAME>avenc_msmpeg4v2::max-bframes</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,16]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max B-Frames</NICK>
 <BLURB>Maximum B-frames in a row.</BLURB>
@@ -15711,7 +15711,7 @@
 <ARG>
 <NAME>avenc_msmpeg4::max-bframes</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,16]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max B-Frames</NICK>
 <BLURB>Maximum B-frames in a row.</BLURB>
@@ -16301,7 +16301,7 @@
 <ARG>
 <NAME>avenc_mpeg4::max-bframes</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,16]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max B-Frames</NICK>
 <BLURB>Maximum B-frames in a row.</BLURB>
@@ -16901,7 +16901,7 @@
 <ARG>
 <NAME>avenc_mpeg2video::max-bframes</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,16]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max B-Frames</NICK>
 <BLURB>Maximum B-frames in a row.</BLURB>
@@ -17501,7 +17501,7 @@
 <ARG>
 <NAME>avenc_mpeg1video::max-bframes</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,16]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max B-Frames</NICK>
 <BLURB>Maximum B-frames in a row.</BLURB>
@@ -18411,7 +18411,7 @@
 <ARG>
 <NAME>avenc_h263p::max-bframes</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,16]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max B-Frames</NICK>
 <BLURB>Maximum B-frames in a row.</BLURB>
@@ -19011,7 +19011,7 @@
 <ARG>
 <NAME>avenc_h263::max-bframes</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,16]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max B-Frames</NICK>
 <BLURB>Maximum B-frames in a row.</BLURB>
@@ -19701,7 +19701,7 @@
 <ARG>
 <NAME>avenc_flv::max-bframes</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,16]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max B-Frames</NICK>
 <BLURB>Maximum B-frames in a row.</BLURB>
@@ -32649,6 +32649,16 @@
 </ARG>
 
 <ARG>
+<NAME>avdec_dirac::max-threads</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum decode threads</NICK>
+<BLURB>Maximum number of worker threads to spawn. (0 = auto).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>avdec_cpia::debug-mv</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -33170,6 +33180,346 @@
 
 <ARG>
 <NAME>avdec_dds::skip-frame</NAME>
+<TYPE>GstLibAVVidDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_wrapped_avframe::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bit Rate</NICK>
+<BLURB>Target Video Bitrate.</BLURB>
+<DEFAULT>300000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_wrapped_avframe::buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Buffer Size</NICK>
+<BLURB>Size of the video buffers.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_wrapped_avframe::compliance</NAME>
+<TYPE>GstFFMpegCompliance</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Compliance</NICK>
+<BLURB>Adherence of the encoder to the specifications.</BLURB>
+<DEFAULT>Normal behavior</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_wrapped_avframe::gop-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>GOP Size</NICK>
+<BLURB>Number of frames within one GOP.</BLURB>
+<DEFAULT>15</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_wrapped_avframe::me-method</NAME>
+<TYPE>GstLibAVVidEncMeMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ME Method</NICK>
+<BLURB>Motion Estimation Method.</BLURB>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_wrapped_avframe::rtp-payload-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTP Payload Size</NICK>
+<BLURB>Target GOB length.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_vc2::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bit Rate</NICK>
+<BLURB>Target Video Bitrate.</BLURB>
+<DEFAULT>300000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_vc2::buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Buffer Size</NICK>
+<BLURB>Size of the video buffers.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_vc2::compliance</NAME>
+<TYPE>GstFFMpegCompliance</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Compliance</NICK>
+<BLURB>Adherence of the encoder to the specifications.</BLURB>
+<DEFAULT>Normal behavior</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_vc2::gop-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>GOP Size</NICK>
+<BLURB>Number of frames within one GOP.</BLURB>
+<DEFAULT>15</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_vc2::max-threads</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum encode threads</NICK>
+<BLURB>Maximum number of worker threads to spawn. (0 = auto).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_vc2::me-method</NAME>
+<TYPE>GstLibAVVidEncMeMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ME Method</NICK>
+<BLURB>Motion Estimation Method.</BLURB>
+<DEFAULT>EPZS (Best quality, Fast)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_vc2::rtp-payload-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTP Payload Size</NICK>
+<BLURB>Target GOB length.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_screenpresso::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether libav should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_screenpresso::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_screenpresso::lowres</NAME>
+<TYPE>GstLibAVVidDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_screenpresso::output-corrupt</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output corrupt buffers</NICK>
+<BLURB>Whether libav should output frames even if corrupted.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_screenpresso::skip-frame</NAME>
+<TYPE>GstLibAVVidDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_rscc::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether libav should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_rscc::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_rscc::lowres</NAME>
+<TYPE>GstLibAVVidDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_rscc::output-corrupt</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output corrupt buffers</NICK>
+<BLURB>Whether libav should output frames even if corrupted.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_rscc::skip-frame</NAME>
+<TYPE>GstLibAVVidDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_dxv::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether libav should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_dxv::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_dxv::lowres</NAME>
+<TYPE>GstLibAVVidDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_dxv::max-threads</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum decode threads</NICK>
+<BLURB>Maximum number of worker threads to spawn. (0 = auto).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_dxv::output-corrupt</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output corrupt buffers</NICK>
+<BLURB>Whether libav should output frames even if corrupted.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_dxv::skip-frame</NAME>
+<TYPE>GstLibAVVidDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_cfhd::debug-mv</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Debug motion vectors</NICK>
+<BLURB>Whether libav should print motion vectors on top of the image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_cfhd::direct-rendering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Direct Rendering</NICK>
+<BLURB>Enable direct rendering.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_cfhd::lowres</NAME>
+<TYPE>GstLibAVVidDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_cfhd::output-corrupt</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output corrupt buffers</NICK>
+<BLURB>Whether libav should output frames even if corrupted.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avdec_cfhd::skip-frame</NAME>
 <TYPE>GstLibAVVidDecSkipFrame</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>

@@ -91,11 +91,13 @@ avenc_utvideo GstPreset
 avenc_v308 GstPreset
 avenc_v408 GstPreset
 avenc_v410 GstPreset
+avenc_vc2 GstPreset
 avenc_wavpack GstPreset
 avenc_wmav1 GstPreset
 avenc_wmav2 GstPreset
 avenc_wmv1 GstPreset
 avenc_wmv2 GstPreset
+avenc_wrapped_avframe GstPreset
 avenc_xbm GstPreset
 avenc_xface GstPreset
 avenc_xwd GstPreset

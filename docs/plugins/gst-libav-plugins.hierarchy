@@ -19,6 +19,7 @@ GObject
           avdec_adpcm_4xm
           avdec_adpcm_adx
           avdec_adpcm_afc
+          avdec_adpcm_aica
           avdec_adpcm_ct
           avdec_adpcm_dtk
           avdec_adpcm_ea
@@ -41,6 +42,7 @@ GObject
           avdec_adpcm_ima_wav
           avdec_adpcm_ima_ws
           avdec_adpcm_ms
+          avdec_adpcm_psx
           avdec_adpcm_sbpro_2
           avdec_adpcm_sbpro_3
           avdec_adpcm_sbpro_4
@@ -70,6 +72,7 @@ GObject
           avdec_dsd_msbf_planar
           avdec_dsicinaudio
           avdec_dss_sp
+          avdec_dvaudio
           avdec_eac3
           avdec_evrc
           avdec_flac
@@ -83,6 +86,7 @@ GObject
           avdec_iac
           avdec_imc
           avdec_interplay_dpcm
+          avdec_interplayacm
           avdec_mace3
           avdec_mace6
           avdec_metasound
@@ -113,6 +117,7 @@ GObject
           avdec_real_288
           avdec_roq_dpcm
           avdec_s302m
+          avdec_sdx2_dpcm
           avdec_shorten
           avdec_sipr
           avdec_smackaud
@@ -123,7 +128,6 @@ GObject
           avdec_truespeech
           avdec_tta
           avdec_twinvq
-          avdec_vima
           avdec_vmdaudio
           avdec_wavesynth
           avdec_wmalossless
@@ -133,6 +137,8 @@ GObject
           avdec_wmavoice
           avdec_ws_snd1
           avdec_xan_dpcm
+          avdec_xma1
+          avdec_xma2
         GstAudioEncoder
           avenc_aac
           avenc_ac3
@@ -202,6 +208,7 @@ GObject
           avdec_cavs
           avdec_cdgraphics
           avdec_cdxl
+          avdec_cfhd
           avdec_cinepak
           avdec_cljr
           avdec_cllc
@@ -216,6 +223,7 @@ GObject
           avdec_dvvideo
           avdec_dxa
           avdec_dxtory
+          avdec_dxv
           avdec_eacmv
           avdec_eamad
           avdec_eatgq
@@ -302,11 +310,13 @@ GObject
           avdec_rl2
           avdec_roqvideo
           avdec_rpza
+          avdec_rscc
           avdec_rv10
           avdec_rv20
           avdec_rv30
           avdec_rv40
           avdec_sanm
+          avdec_screenpresso
           avdec_sgi
           avdec_sgirle
           avdec_smackvid
@@ -429,8 +439,10 @@ GObject
           avenc_v308
           avenc_v408
           avenc_v410
+          avenc_vc2
           avenc_wmv1
           avenc_wmv2
+          avenc_wrapped_avframe
           avenc_xbm
           avenc_xface
           avenc_xwd
