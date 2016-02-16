@@ -34,11 +34,11 @@
 #ifndef GL_DEBUG_TYPE_ERROR
 #define GL_DEBUG_TYPE_ERROR 0x824C
 #endif
-#ifndef GL_DEBUG_TYPE_DEPRECATED_BEHAVIOUR
-#define GL_DEBUG_TYPE_DEPRECATED_BEHAVIOUR 0x824D
+#ifndef GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR
+#define GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR 0x824D
 #endif
-#ifndef GL_DEBUG_TYPE_UNDEFINED_BEHAVIOUR
-#define GL_DEBUG_TYPE_UNDEFINED_BEHAVIOUR 0x824E
+#ifndef GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR
+#define GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR 0x824E
 #endif
 #ifndef GL_DEBUG_TYPE_PORTABILITY
 #define GL_DEBUG_TYPE_PORTABILITY 0x824F
@@ -224,9 +224,9 @@ _debug_type_to_string (GLenum type)
   switch (type) {
     case GL_DEBUG_TYPE_ERROR:
       return "error";
-    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOUR:
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
       return "deprecated";
-    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOUR:
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
       return "undefined";
     case GL_DEBUG_TYPE_PORTABILITY:
       return "portability";
@@ -254,11 +254,11 @@ _gst_gl_debug_callback (GLenum source, GLenum type, GLuint id, GLenum severity,
 
   switch (type) {
     case GL_DEBUG_TYPE_ERROR:
-    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOUR:
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
       GST_ERROR_OBJECT (context, "%s: GL %s from %s id:%u, %s", severity_str,
           type_str, source_str, id, message);
       break;
-    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOUR:
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
     case GL_DEBUG_TYPE_PORTABILITY:
       GST_FIXME_OBJECT (context, "%s: GL %s from %s id:%u, %s", severity_str,
           type_str, source_str, id, message);
