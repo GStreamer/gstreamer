@@ -266,7 +266,8 @@ static GstCaps *gst_dash_demux_get_input_caps (GstDashDemux * demux,
     GstActiveStream * stream);
 static GstPad *gst_dash_demux_create_pad (GstDashDemux * demux,
     GstActiveStream * stream);
-static GstDashDemuxClockDrift *gst_dash_demux_clock_drift_new (void);
+static GstDashDemuxClockDrift *gst_dash_demux_clock_drift_new (GstDashDemux *
+    demux);
 static void gst_dash_demux_clock_drift_free (GstDashDemuxClockDrift *);
 static gboolean gst_dash_demux_poll_clock_drift (GstDashDemux * demux);
 static GTimeSpan gst_dash_demux_get_clock_compensation (GstDashDemux * demux);
@@ -711,7 +712,7 @@ gst_dash_demux_setup_streams (GstAdaptiveDemux * demux)
           SUPPORTED_CLOCK_FORMATS, NULL);
       if (urls) {
         GST_DEBUG_OBJECT (dashdemux, "Found a supported UTCTiming element");
-        dashdemux->clock_drift = gst_dash_demux_clock_drift_new ();
+        dashdemux->clock_drift = gst_dash_demux_clock_drift_new (dashdemux);
         gst_dash_demux_poll_clock_drift (dashdemux);
       }
     }
@@ -1540,8 +1541,12 @@ gst_dash_demux_stream_get_fragment_waiting_time (GstAdaptiveDemuxStream *
     gint64 diff;
     GstDateTime *cur_time;
 
-    cur_time = gst_date_time_new_now_utc ();
-    diff = gst_mpd_client_calculate_time_difference (cur_time,
+    cur_time =
+        gst_date_time_new_from_g_date_time
+        (gst_adaptive_demux_get_client_now_utc (GST_ADAPTIVE_DEMUX_CAST
+            (dashdemux)));
+    diff =
+        gst_mpd_client_calculate_time_difference (cur_time,
         segmentAvailability);
     gst_date_time_unref (segmentAvailability);
     gst_date_time_unref (cur_time);
@@ -1725,13 +1730,15 @@ gst_dash_demux_stream_free (GstAdaptiveDemuxStream * stream)
 }
 
 static GstDashDemuxClockDrift *
-gst_dash_demux_clock_drift_new (void)
+gst_dash_demux_clock_drift_new (GstDashDemux * demux)
 {
   GstDashDemuxClockDrift *clock_drift;
 
   clock_drift = g_slice_new0 (GstDashDemuxClockDrift);
   g_mutex_init (&clock_drift->clock_lock);
-  clock_drift->next_update = g_get_monotonic_time ();
+  clock_drift->next_update =
+      GST_TIME_AS_USECONDS (gst_adaptive_demux_get_monotonic_time
+      (GST_ADAPTIVE_DEMUX_CAST (demux)));
   return clock_drift;
 }
 
@@ -2020,7 +2027,9 @@ gst_dash_demux_poll_clock_drift (GstDashDemux * demux)
   g_return_val_if_fail (demux != NULL, FALSE);
   g_return_val_if_fail (demux->clock_drift != NULL, FALSE);
   clock_drift = demux->clock_drift;
-  now = g_get_monotonic_time ();
+  now =
+      GST_TIME_AS_USECONDS (gst_adaptive_demux_get_monotonic_time
+      (GST_ADAPTIVE_DEMUX_CAST (demux)));
   if (now < clock_drift->next_update) {
     /*TODO: If a fragment fails to download in adaptivedemux, it waits
        for a manifest reload before another attempt to fetch a fragment.
@@ -2050,7 +2059,8 @@ gst_dash_demux_poll_clock_drift (GstDashDemux * demux)
       goto quit;
     }
   }
-  start = g_date_time_new_now_utc ();
+  start =
+      gst_adaptive_demux_get_client_now_utc (GST_ADAPTIVE_DEMUX_CAST (demux));
   if (!value) {
     GstFragment *download;
     gint64 range_start = 0, range_end = -1;
@@ -2078,7 +2088,7 @@ gst_dash_demux_poll_clock_drift (GstDashDemux * demux)
         urls[clock_drift->selected_url]);
     goto quit;
   }
-  end = g_date_time_new_now_utc ();
+  end = gst_adaptive_demux_get_client_now_utc (GST_ADAPTIVE_DEMUX_CAST (demux));
   if (!value && method == GST_MPD_UTCTIMING_TYPE_HTTP_NTP) {
     value = gst_dash_demux_parse_http_ntp (clock_drift, buffer);
   } else if (!value) {
@@ -2155,8 +2165,13 @@ gst_dash_demux_get_clock_compensation (GstDashDemux * demux)
 static GDateTime *
 gst_dash_demux_get_server_now_utc (GstDashDemux * demux)
 {
-  GDateTime *client_now = g_date_time_new_now_utc ();
-  GDateTime *server_now = g_date_time_add (client_now,
+  GDateTime *client_now;
+  GDateTime *server_now;
+
+  client_now =
+      gst_adaptive_demux_get_client_now_utc (GST_ADAPTIVE_DEMUX_CAST (demux));
+  server_now =
+      g_date_time_add (client_now,
       gst_dash_demux_get_clock_compensation (demux));
   g_date_time_unref (client_now);
   return server_now;

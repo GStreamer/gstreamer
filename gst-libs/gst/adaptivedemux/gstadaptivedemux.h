@@ -205,6 +205,10 @@ struct _GstAdaptiveDemux
   gboolean have_group_id;
   guint group_id;
 
+  /* Realtime clock */
+  GstClock *realtime_clock;
+  gint64 clock_offset; /* offset between realtime_clock and UTC (in usec) */
+
   /* < private > */
   GstAdaptiveDemuxPrivate *priv;
 };
@@ -449,6 +453,9 @@ gst_adaptive_demux_stream_advance_fragment (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, GstClockTime duration);
 void gst_adaptive_demux_stream_queue_event (GstAdaptiveDemuxStream * stream,
     GstEvent * event);
+
+GstClockTime gst_adaptive_demux_get_monotonic_time (GstAdaptiveDemux * demux);
+GDateTime *gst_adaptive_demux_get_client_now_utc (GstAdaptiveDemux * demux);
 
 G_END_DECLS
 
