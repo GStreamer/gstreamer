@@ -77,7 +77,11 @@ typedef struct _GstAdaptiveDemuxTestExpectedOutput
   gboolean segment_verification_needed;
 } GstAdaptiveDemuxTestExpectedOutput;
 
-typedef struct _GstAdaptiveDemuxTestCaseClass GstAdaptiveDemuxTestCaseClass;
+typedef struct _GstAdaptiveDemuxTestCaseClass
+{
+  GObjectClass parent_class;
+} GstAdaptiveDemuxTestCaseClass;
+
 typedef struct _GstAdaptiveDemuxTestCase
 {
   GObject parent;

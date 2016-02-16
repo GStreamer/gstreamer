@@ -25,11 +25,6 @@
 
 #define GST_TEST_HTTP_SRC_NAME            "testhttpsrc"
 
-struct _GstAdaptiveDemuxTestCaseClass
-{
-  GObjectClass parent_class;
-};
-
 #define gst_adaptive_demux_test_case_parent_class parent_class
 
 static void gst_adaptive_demux_test_case_dispose (GObject * object);
