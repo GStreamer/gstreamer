@@ -31,6 +31,8 @@
 #define GST_VULKAN_QUEUE_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_VULKAN_QUEUE, GstVulkanQueueClass))
 GType gst_vulkan_queue_get_type       (void);
 
+#define GST_VULKAN_QUEUE_CONTEXT_TYPE_STR "gst.vulkan.queue"
+
 struct _GstVulkanQueue
 {
   GstObject parent;
@@ -47,6 +49,16 @@ struct _GstVulkanQueueClass
   GstObjectClass parent_class;
 };
 
-GstVulkanDevice * gst_vulkan_queue_get_device (GstVulkanQueue * queue);
+GstVulkanDevice *   gst_vulkan_queue_get_device (GstVulkanQueue * queue);
+
+void                gst_context_set_vulkan_queue                (GstContext * context,
+                                                                 GstVulkanQueue * queue);
+gboolean            gst_context_get_vulkan_queue                (GstContext * context,
+                                                                 GstVulkanQueue ** queue);
+gboolean            gst_vulkan_queue_handle_context_query       (GstElement * element,
+                                                                 GstQuery * query,
+                                                                 GstVulkanQueue ** queue);
+gboolean            gst_vulkan_queue_run_context_query          (GstElement * element,
+                                                                 GstVulkanQueue ** queue);
 
 #endif /* _VK_QUEUE_H_ */
