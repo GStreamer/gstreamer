@@ -351,6 +351,12 @@ gst_gl_video_flip_set_method (GstGLVideoFlip * vf, GstGLVideoFlipMethod method,
 
   if (vf->input_caps)
     _set_active_method (vf, method, vf->input_caps);
+  else {
+    /* just store the configured method here. The actual transform configuration
+     * will be done once caps are configured. See caps handling in
+     * _input_sink_probe. */
+    vf->active_method = method;
+  }
 
   GST_OBJECT_UNLOCK (vf);
 }
