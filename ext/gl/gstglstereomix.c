@@ -30,6 +30,18 @@
 #define GST_CAT_DEFAULT gst_gl_stereo_mix_debug
 GST_DEBUG_CATEGORY (gst_gl_stereo_mix_debug);
 
+G_DEFINE_TYPE (GstGLStereoMixPad, gst_gl_stereo_mix_pad, GST_TYPE_GL_MIXER_PAD);
+
+static void
+gst_gl_stereo_mix_pad_class_init (GstGLStereoMixPadClass * klass)
+{
+}
+
+static void
+gst_gl_stereo_mix_pad_init (GstGLStereoMixPad * pad)
+{
+}
+
 #define gst_gl_stereo_mix_parent_class parent_class
 G_DEFINE_TYPE (GstGLStereoMix, gst_gl_stereo_mix, GST_TYPE_GL_MIXER);
 
@@ -38,8 +50,7 @@ static GstCaps *_update_caps (GstVideoAggregator * vagg, GstCaps * caps,
 static gboolean _negotiated_caps (GstVideoAggregator * videoaggregator,
     GstCaps * caps);
 gboolean gst_gl_stereo_mix_make_output (GstGLStereoMix * mix);
-static gboolean gst_gl_stereo_mix_process_frames (GstGLStereoMix * mixer,
-    GPtrArray * in_frames);
+static gboolean gst_gl_stereo_mix_process_frames (GstGLStereoMix * mixer);
 
 #define DEFAULT_DOWNMIX GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS
 
@@ -144,6 +155,7 @@ gst_gl_stereo_mix_class_init (GstGLStereoMixClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
+  agg_class->sinkpads_type = GST_TYPE_GL_STEREO_MIX_PAD;
   agg_class->stop = gst_gl_stereo_mix_stop;
   agg_class->start = gst_gl_stereo_mix_start;
   agg_class->src_query = gst_gl_stereo_mix_src_query;
@@ -250,10 +262,8 @@ gst_gl_stereo_mix_get_output_buffer (GstVideoAggregator * videoaggregator,
 gboolean
 gst_gl_stereo_mix_make_output (GstGLStereoMix * mix)
 {
-  guint i;
   GList *walk;
   gboolean res = FALSE;
-  guint array_index = 0;
   GstElement *element = GST_ELEMENT (mix);
   gboolean missing_buffer = FALSE;
 
@@ -261,33 +271,23 @@ gst_gl_stereo_mix_make_output (GstGLStereoMix * mix)
 
   GST_OBJECT_LOCK (mix);
   walk = element->sinkpads;
-
-  i = mix->frames->len;
-  g_ptr_array_set_size (mix->frames, element->numsinkpads);
-  for (; i < element->numsinkpads; i++)
-    mix->frames->pdata[i] = g_slice_new0 (GstGLStereoMixFrameData);
   while (walk) {
-    GstGLMixerPad *pad = GST_GL_MIXER_PAD (walk->data);
     GstVideoAggregatorPad *vaggpad = walk->data;
-    GstGLStereoMixFrameData *frame;
+    GstGLStereoMixPad *pad = walk->data;
 
     GST_LOG_OBJECT (mix, "Checking pad %" GST_PTR_FORMAT, vaggpad);
 
-    frame = g_ptr_array_index (mix->frames, array_index);
-    frame->base.pad = pad;
-    frame->buf = NULL;
-
-    walk = g_list_next (walk);
-
     if (vaggpad->buffer != NULL) {
-      frame->buf = vaggpad->buffer;
+      pad->current_buffer = vaggpad->buffer;
 
-      GST_DEBUG_OBJECT (pad, "Got buffer %" GST_PTR_FORMAT, frame->buf);
+      GST_DEBUG_OBJECT (pad, "Got buffer %" GST_PTR_FORMAT,
+          pad->current_buffer);
     } else {
       GST_LOG_OBJECT (mix, "No buffer on pad %" GST_PTR_FORMAT, vaggpad);
+      pad->current_buffer = NULL;
       missing_buffer = TRUE;
     }
-    ++array_index;
+    walk = g_list_next (walk);
   }
   if (missing_buffer) {
     /* We're still waiting for a buffer to turn up on at least one input */
@@ -297,7 +297,7 @@ gst_gl_stereo_mix_make_output (GstGLStereoMix * mix)
   }
 
   /* Copy GL memory from each input frame to the output */
-  if (!gst_gl_stereo_mix_process_frames (mix, mix->frames)) {
+  if (!gst_gl_stereo_mix_process_frames (mix)) {
     GST_LOG_OBJECT (mix, "Failed to process frames to output");
     goto out;
   }
@@ -371,41 +371,18 @@ gst_gl_stereo_mix_set_property (GObject * object,
   }
 }
 
-static void
-_free_glmixer_frame_data (GstGLStereoMixFrameData * frame)
-{
-  if (frame == NULL)
-    return;
-  if (frame->buf)
-    gst_buffer_unref (frame->buf);
-  g_slice_free1 (sizeof (GstGLStereoMixFrameData), frame);
-}
-
 static gboolean
 gst_gl_stereo_mix_start (GstAggregator * agg)
 {
-  guint i;
   GstGLStereoMix *mix = GST_GL_STEREO_MIX (agg);
-  GstElement *element = GST_ELEMENT (agg);
 
   if (!GST_AGGREGATOR_CLASS (parent_class)->start (agg))
     return FALSE;
 
   GST_OBJECT_LOCK (mix);
-  mix->array_buffers = g_ptr_array_new_full (element->numsinkpads,
-      (GDestroyNotify) _free_glmixer_frame_data);
-  mix->frames = g_ptr_array_new_full (element->numsinkpads, NULL);
-
-  g_ptr_array_set_size (mix->array_buffers, element->numsinkpads);
-  g_ptr_array_set_size (mix->frames, element->numsinkpads);
-
-  for (i = 0; i < element->numsinkpads; i++)
-    mix->frames->pdata[i] = g_slice_new0 (GstGLStereoMixFrameData);
-
   mix->viewconvert = gst_gl_view_convert_new ();
   g_object_set (G_OBJECT (mix->viewconvert), "downmix-mode",
       mix->downmix_mode, NULL);
-
   GST_OBJECT_UNLOCK (mix);
 
   return TRUE;
@@ -418,13 +395,6 @@ gst_gl_stereo_mix_stop (GstAggregator * agg)
 
   if (!GST_AGGREGATOR_CLASS (parent_class)->stop (agg))
     return FALSE;
-
-  GST_OBJECT_LOCK (agg);
-  g_ptr_array_free (mix->frames, TRUE);
-  mix->frames = NULL;
-  g_ptr_array_free (mix->array_buffers, TRUE);
-  mix->array_buffers = NULL;
-  GST_OBJECT_UNLOCK (agg);
 
   if (mix->viewconvert) {
     gst_object_unref (mix->viewconvert);
@@ -511,34 +481,34 @@ _negotiated_caps (GstVideoAggregator * vagg, GstCaps * caps)
   return TRUE;
 }
 
+/* called with the object lock held */
 static gboolean
-gst_gl_stereo_mix_process_frames (GstGLStereoMix * mixer, GPtrArray * frames)
+gst_gl_stereo_mix_process_frames (GstGLStereoMix * mixer)
 {
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (mixer);
   GstBuffer *converted_buffer, *inbuf;
   GstVideoInfo *out_info = &vagg->info;
-  gint count = 0;
 #ifndef G_DISABLE_ASSERT
   gint n;
 #endif
   gint v, views;
   gint valid_views = 0;
+  GList *walk;
 
   inbuf = gst_buffer_new ();
-  while (count < frames->len) {
-    GstGLStereoMixFrameData *frame;
+  walk = GST_ELEMENT (mixer)->sinkpads;
+  while (walk) {
+    GstGLStereoMixPad *pad = walk->data;
     GstMemory *in_mem;
 
-    frame = g_ptr_array_index (frames, count);
-    GST_LOG_OBJECT (mixer, "Handling frame %d", count);
+    GST_LOG_OBJECT (mixer, "Handling frame %d", valid_views);
 
-    if (!frame) {
+    if (!pad || !pad->current_buffer) {
       GST_DEBUG ("skipping texture, null frame");
-      count++;
       continue;
     }
 
-    in_mem = gst_buffer_get_memory (frame->buf, 0);
+    in_mem = gst_buffer_get_memory (pad->current_buffer, 0);
 
     GST_LOG_OBJECT (mixer,
         "Appending memory %" GST_PTR_FORMAT " to intermediate buffer", in_mem);
@@ -551,10 +521,10 @@ gst_gl_stereo_mix_process_frames (GstGLStereoMix * mixer, GPtrArray * frames)
      */
     gst_buffer_append_memory (inbuf, in_mem);
     /* Use parent buffer meta to keep input buffer alive */
-    gst_buffer_add_parent_buffer_meta (inbuf, frame->buf);
+    gst_buffer_add_parent_buffer_meta (inbuf, pad->current_buffer);
 
-    count++;
     valid_views++;
+    walk = g_list_next (walk);
   }
 
   if (mixer->mix_info.views != valid_views) {
