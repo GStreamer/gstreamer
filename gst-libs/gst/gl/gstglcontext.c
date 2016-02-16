@@ -67,9 +67,7 @@
 #include "eagl/gstglcontext_eagl.h"
 #endif
 
-extern void GSTGLAPI _gst_gl_debug_callback (GLenum source, GLenum type,
-    GLuint id, GLenum severity, GLsizei length, const gchar * message,
-    gpointer user_data);
+extern void _gst_gl_debug_enable (GstGLContext * context);
 
 static GPrivate current_context_key;
 
@@ -186,6 +184,7 @@ _context_share_group_is_shared (struct ContextShareGroup *share)
 
 #define GST_CAT_DEFAULT gst_gl_context_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
+GST_DEBUG_CATEGORY_STATIC (gst_gl_debug);
 
 #define gst_gl_context_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstGLContext, gst_gl_context, GST_TYPE_OBJECT);
@@ -303,6 +302,7 @@ _init_debug (void)
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (gst_gl_context_debug, "glcontext", 0,
         "glcontext element");
+    GST_DEBUG_CATEGORY_INIT (gst_gl_debug, "gldebug", 0, "OpenGL Debugging");
     g_once_init_leave (&_init, 1);
   }
 }
@@ -1086,7 +1086,6 @@ gst_gl_context_create_thread (GstGLContext * context)
 {
   GstGLContextClass *context_class;
   GstGLWindowClass *window_class;
-  GstGLFuncs *gl;
   GstGLAPI compiled_api, user_api, gl_api, display_api;
   gchar *api_string;
   gchar *compiled_api_s;
@@ -1122,7 +1121,6 @@ gst_gl_context_create_thread (GstGLContext * context)
     }
   }
 
-  gl = context->gl_vtable;
   compiled_api = _compiled_api ();
   compiled_api_s = gst_gl_api_to_string (compiled_api);
 
@@ -1210,15 +1208,9 @@ gst_gl_context_create_thread (GstGLContext * context)
 
   context->priv->alive = TRUE;
 
-  if (gl->DebugMessageCallback) {
 #if !defined(GST_DISABLE_GST_DEBUG)
-    GST_INFO_OBJECT (context, "Enabling GL context debugging");
-    /* enable them all */
-    gl->DebugMessageControl (GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0,
-        GL_TRUE);
-    gl->DebugMessageCallback (_gst_gl_debug_callback, context);
+  _gst_gl_debug_enable (context);
 #endif
-  }
 
   if (other_context) {
     GST_DEBUG_OBJECT (context, "Unreffing other_context %" GST_PTR_FORMAT,
