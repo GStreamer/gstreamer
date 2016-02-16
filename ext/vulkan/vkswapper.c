@@ -171,7 +171,26 @@ _choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
     struct choose_data *data)
 {
   guint flags = device->queue_family_props[queue->family].queueFlags;
+  VkPhysicalDevice gpu;
   gboolean supports_present;
+
+  gpu = gst_vulkan_device_get_physical_device (data->swapper->device);
+
+  {
+    VkResult err;
+    GError *error = NULL;
+    VkBool32 physical_device_supported;
+
+    err =
+        data->swapper->GetPhysicalDeviceSurfaceSupportKHR (gpu, queue->index,
+        data->swapper->surface, &physical_device_supported);
+    if (gst_vulkan_error_to_g_error (err, &error,
+            "GetPhysicalDeviceSurfaceSupport") < 0) {
+      GST_DEBUG_OBJECT (data->swapper,
+          "surface not supported by the physical device: %s", error->message);
+      return TRUE;
+    }
+  }
 
   supports_present =
       gst_vulkan_window_get_presentation_support (data->swapper->window,
@@ -603,8 +622,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     n_images_wanted = swapper->surf_props.maxImageCount;
   }
 
-  if (swapper->surf_props.
-      supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
+  if (swapper->
+      surf_props.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
     preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
   } else {
     preTransform = swapper->surf_props.currentTransform;
@@ -636,8 +655,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
         "Incorrect usage flags available for the swap images");
     return FALSE;
   }
-  if ((swapper->
-          surf_props.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+  if ((swapper->surf_props.
+          supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
       != 0) {
     usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   } else {
