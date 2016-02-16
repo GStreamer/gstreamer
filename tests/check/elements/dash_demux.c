@@ -1086,6 +1086,92 @@ GST_START_TEST (testMediaDownloadErrorLastFragment)
 
 GST_END_TEST;
 
+/*
+ * Test media download error on a media fragment which is not the last one.
+ * Let the adaptive demux download a few bytes, then instruct the
+ * GstTestHTTPSrc element to generate an error while a media fragment
+ * is being downloaded.
+ */
+GST_START_TEST (testMediaDownloadErrorMiddleFragment)
+{
+  const gchar *mpd =
+      "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+      "<MPD xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+      "     xmlns=\"urn:mpeg:DASH:schema:MPD:2011\""
+      "     xsi:schemaLocation=\"urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\""
+      "     type=\"static\""
+      "     minBufferTime=\"PT1.500S\""
+      "     mediaPresentationDuration=\"PT10S\">"
+      "  <Period>"
+      "    <AdaptationSet mimeType=\"audio/webm\""
+      "                   subsegmentAlignment=\"true\">"
+      "      <Representation id=\"171\""
+      "                      codecs=\"vorbis\""
+      "                      audioSamplingRate=\"44100\""
+      "                      startWithSAP=\"1\""
+      "                      bandwidth=\"129553\">"
+      "        <AudioChannelConfiguration"
+      "           schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\""
+      "           value=\"2\" />"
+      "        <BaseURL>audio.webm</BaseURL>"
+      "        <SegmentList duration=\"1\">"
+      "          <SegmentURL indexRange=\"1-10\""
+      "                      mediaRange=\"11-30\">"
+      "          </SegmentURL>"
+      "          <SegmentURL indexRange=\"31-60\""
+      "                      mediaRange=\"61-100\">"
+      "          </SegmentURL>"
+      "          <SegmentURL indexRange=\"101-150\""
+      "                      mediaRange=\"151-210\">"
+      "          </SegmentURL>"
+      "        </SegmentList>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  /* generate error on the second media fragment */
+  guint64 threshold_for_trigger = 31;
+
+  GstDashDemuxTestInputData inputTestData[] = {
+    {"http://unit.test/test.mpd", (guint8 *) mpd, 0},
+    {"http://unit.test/audio.webm", NULL, 5000},
+    {NULL, NULL, 0},
+  };
+  GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
+    /* adaptive demux will download only the first media fragment */
+    {"audio_00", 20, NULL},
+  };
+  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
+  GstTestHTTPSrcTestData http_src_test_data = { 0 };
+  GstAdaptiveDemuxTestCallbacks test_callbacks = { 0 };
+  GstDashDemuxTestCase *testData;
+
+  http_src_callbacks.src_start = gst_dashdemux_http_src_start;
+  http_src_callbacks.src_create = test_fragment_download_error_src_create;
+  http_src_test_data.data = gst_structure_new_empty (__FUNCTION__);
+  gst_structure_set (http_src_test_data.data, "threshold_for_trigger",
+      G_TYPE_UINT64, threshold_for_trigger, NULL);
+  http_src_test_data.input = inputTestData;
+  gst_test_http_src_install_callbacks (&http_src_callbacks,
+      &http_src_test_data);
+
+  test_callbacks.appsink_received_data =
+      gst_adaptive_demux_test_check_received_data;
+  test_callbacks.appsink_eos = gst_adaptive_demux_test_unexpected_eos;
+  test_callbacks.bus_error_message = testDownloadErrorMessageCallback;
+
+  testData = gst_dash_demux_test_case_new ();
+  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+
+  gst_adaptive_demux_test_run (DEMUX_ELEMENT_NAME,
+      "http://unit.test/test.mpd", &test_callbacks, testData);
+
+  g_object_unref (testData);
+  if (http_src_test_data.data)
+    gst_structure_free (http_src_test_data.data);
+}
+
+GST_END_TEST;
+
 /* generate queries to adaptive demux */
 static gboolean
 testQueryCheckDataReceived (GstAdaptiveDemuxTestEngine * engine,
@@ -1254,6 +1340,7 @@ dash_demux_suite (void)
   tcase_add_test (tc_basicTest, testDownloadError);
   tcase_add_test (tc_basicTest, testHeaderDownloadError);
   tcase_add_test (tc_basicTest, testMediaDownloadErrorLastFragment);
+  tcase_add_test (tc_basicTest, testMediaDownloadErrorMiddleFragment);
   tcase_add_test (tc_basicTest, testQuery);
 
   tcase_add_unchecked_fixture (tc_basicTest, gst_adaptive_demux_test_setup,
