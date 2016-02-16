@@ -69,6 +69,8 @@ struct _GstGtkBaseSink
   GBinding             *bind_ignore_alpha;
 
   GtkWidget            *window;
+  gulong               widget_destroy_id;
+  gulong               window_destroy_id;
 };
 
 /**
