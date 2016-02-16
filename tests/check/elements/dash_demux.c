@@ -918,6 +918,94 @@ test_fragment_download_error_src_create (GstTestHTTPSrc * src,
 }
 
 /*
+ * Test header download error
+ * Let the adaptive demux download a few bytes, then instruct the
+ * GstTestHTTPSrc element to generate an error while the fragment header
+ * is still being downloaded.
+ */
+GST_START_TEST (testHeaderDownloadError)
+{
+  const gchar *mpd =
+      "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+      "<MPD xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+      "     xmlns=\"urn:mpeg:DASH:schema:MPD:2011\""
+      "     xsi:schemaLocation=\"urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\""
+      "     type=\"static\""
+      "     minBufferTime=\"PT1.500S\""
+      "     mediaPresentationDuration=\"PT0.5S\">"
+      "  <Period>"
+      "    <AdaptationSet mimeType=\"audio/webm\""
+      "                   subsegmentAlignment=\"true\">"
+      "      <Representation id=\"171\""
+      "                      codecs=\"vorbis\""
+      "                      audioSamplingRate=\"44100\""
+      "                      startWithSAP=\"1\""
+      "                      bandwidth=\"129553\">"
+      "        <AudioChannelConfiguration"
+      "           schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\""
+      "           value=\"2\" />"
+      "        <BaseURL>audio.webm</BaseURL>"
+      "        <SegmentBase indexRange=\"4452-4686\""
+      "                     indexRangeExact=\"true\">"
+      "          <Initialization range=\"0-4451\" />"
+      "        </SegmentBase>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  /* generate error while the headers are still being downloaded
+   * threshold_for_trigger must be less than the size of headers
+   * (initialization + index) which is 4687.
+   */
+  guint64 threshold_for_trigger = 2000;
+
+  GstDashDemuxTestInputData inputTestData[] = {
+    {"http://unit.test/test.mpd", (guint8 *) mpd, 0},
+    {"http://unit.test/audio.webm", NULL, 5000},
+    {NULL, NULL, 0},
+  };
+  GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
+    /* adaptive demux tries for 4 times (MAX_DOWNLOAD_ERROR_COUNT + 1) before giving up */
+    {"audio_00", threshold_for_trigger * 4, NULL},
+  };
+  GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
+  GstTestHTTPSrcTestData http_src_test_data = { 0 };
+  GstAdaptiveDemuxTestCallbacks test_callbacks = { 0 };
+  GstDashDemuxTestCase *testData;
+
+  http_src_callbacks.src_start = gst_dashdemux_http_src_start;
+  http_src_callbacks.src_create = test_fragment_download_error_src_create;
+  http_src_test_data.data = gst_structure_new_empty (__FUNCTION__);
+  gst_structure_set (http_src_test_data.data, "threshold_for_trigger",
+      G_TYPE_UINT64, threshold_for_trigger, NULL);
+  http_src_test_data.input = inputTestData;
+  gst_test_http_src_install_callbacks (&http_src_callbacks,
+      &http_src_test_data);
+
+  test_callbacks.appsink_received_data =
+      gst_adaptive_demux_test_check_received_data;
+  test_callbacks.appsink_eos = gst_adaptive_demux_test_unexpected_eos;
+  test_callbacks.bus_error_message = testDownloadErrorMessageCallback;
+
+  testData = gst_dash_demux_test_case_new ();
+  COPY_OUTPUT_TEST_DATA (outputTestData, testData);
+
+  /* download in chunks of threshold_for_trigger size.
+   * This means the first chunk will succeed, the second will generate
+   * error because we already exceeded threshold_for_trigger bytes.
+   */
+  gst_test_http_src_set_default_blocksize (threshold_for_trigger);
+
+  gst_adaptive_demux_test_run (DEMUX_ELEMENT_NAME,
+      "http://unit.test/test.mpd", &test_callbacks, testData);
+
+  g_object_unref (testData);
+  if (http_src_test_data.data)
+    gst_structure_free (http_src_test_data.data);
+}
+
+GST_END_TEST;
+
+/*
  * Test media download error on the last media fragment.
  * Let the adaptive demux download a few bytes, then instruct the
  * GstTestHTTPSrc element to generate an error while the last media fragment
@@ -1164,6 +1252,7 @@ dash_demux_suite (void)
   tcase_add_test (tc_basicTest, testReverseSeekSnapBeforePosition);
   tcase_add_test (tc_basicTest, testReverseSeekSnapAfterPosition);
   tcase_add_test (tc_basicTest, testDownloadError);
+  tcase_add_test (tc_basicTest, testHeaderDownloadError);
   tcase_add_test (tc_basicTest, testMediaDownloadErrorLastFragment);
   tcase_add_test (tc_basicTest, testQuery);
 
