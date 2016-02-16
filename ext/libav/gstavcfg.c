@@ -513,13 +513,19 @@ gst_ffmpeg_cfg_init (void)
   gst_ffmpeg_add_pspec (pspec, config.rc_buffer_aggressivity, FALSE, mpeg,
       NULL);
 
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT (57, 3, 0)
   pspec = g_param_spec_int ("rc-max-rate", "Ratecontrol Maximum Bitrate",
       "Ratecontrol Maximum Bitrate", 0, G_MAXINT, 0,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+#else
+  pspec = g_param_spec_int64 ("rc-max-rate", "Ratecontrol Maximum Bitrate",
+      "Ratecontrol Maximum Bitrate", 0, G_MAXINT64, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+#endif
   gst_ffmpeg_add_pspec (pspec, config.rc_max_rate, FALSE, mpeg, NULL);
 
-  pspec = g_param_spec_int ("rc-min-rate", "Ratecontrol Minimum Bitrate",
-      "Ratecontrol Minimum Bitrate", 0, G_MAXINT, 0,
+  pspec = g_param_spec_int64 ("rc-min-rate", "Ratecontrol Minimum Bitrate",
+      "Ratecontrol Minimum Bitrate", 0, G_MAXINT64, 0,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.rc_min_rate, FALSE, mpeg, NULL);
 
@@ -770,6 +776,15 @@ gst_ffmpeg_cfg_install_property (GstFFMpegVidEncClass * klass, guint base)
               : pint->default_value, pspec->flags);
           break;
         }
+        case G_TYPE_INT64:{
+          GParamSpecInt64 *pint = G_PARAM_SPEC_INT64 (pspec);
+
+          pspec = g_param_spec_int64 (name, nick, blurb,
+              pint->minimum, pint->maximum,
+              lavc_default ? G_STRUCT_MEMBER (gint64, ctx, ctx_offset)
+              : pint->default_value, pspec->flags);
+          break;
+        }
         case G_TYPE_UINT:{
           GParamSpecUInt *puint = G_PARAM_SPEC_UINT (pspec);
 
@@ -862,6 +877,11 @@ gst_ffmpeg_cfg_set_property (GObject * object,
       G_STRUCT_MEMBER (gint, ffmpegenc, qdata->offset) =
           g_value_get_int (value);
       break;
+    case G_TYPE_INT64:
+      g_return_val_if_fail (qdata->size == sizeof (gint64), TRUE);
+      G_STRUCT_MEMBER (gint64, ffmpegenc, qdata->offset) =
+          g_value_get_int64 (value);
+      break;
     case G_TYPE_FLOAT:
       g_return_val_if_fail (qdata->size == sizeof (gfloat), TRUE);
       G_STRUCT_MEMBER (gfloat, ffmpegenc, qdata->offset) =
@@ -923,6 +943,11 @@ gst_ffmpeg_cfg_get_property (GObject * object,
     case G_TYPE_INT:
       g_return_val_if_fail (qdata->size == sizeof (gint), TRUE);
       g_value_set_int (value, G_STRUCT_MEMBER (gint, ffmpegenc, qdata->offset));
+      break;
+    case G_TYPE_INT64:
+      g_return_val_if_fail (qdata->size == sizeof (gint64), TRUE);
+      g_value_set_int64 (value, G_STRUCT_MEMBER (gint64, ffmpegenc,
+              qdata->offset));
       break;
     case G_TYPE_FLOAT:
       g_return_val_if_fail (qdata->size == sizeof (gfloat), TRUE);
