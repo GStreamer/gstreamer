@@ -107,6 +107,20 @@ gst_mad_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-mpg123audiodec</FILE>
+<TITLE>mpg123audiodec</TITLE>
+GstMpg123AudioDec
+<SUBSECTION Standard>
+GstMpg123AudioDecClass
+GST_MPG123_AUDIO_DEC
+GST_MPG123_AUDIO_DEC_CLASS
+GST_IS_MPG123_AUDIO_DEC
+GST_IS_MPG123_AUDIO_DEC_CLASS
+GST_TYPE_MPG123_AUDIO_DEC
+gst_mpg123_audio_dec_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-rademux</FILE>
 <TITLE>rademux</TITLE>
 GstRealAudioDemux

@@ -25,6 +25,7 @@ BuildRequires:  gcc-c++
 @USE_LAME_TRUE@BuildRequires:  lame-devel >= 3.89
 @USE_MAD_TRUE@BuildRequires:  libmad-devel >= 0.15.0
 @USE_MPEG2DEC_TRUE@BuildRequires:  mpeg2dec-devel >= 0.4.0
+@USE_MPG123_TRUE@BuildRequires:  mpg123-devel >= 1.13
 
 @USE_SIDPLAY_TRUE@Provides:       gstreamer-sid = %{version}-%{release}
 @USE_LAME_TRUE@Provides:      gstreamer-lame = %{version}-%{release}
@@ -105,6 +106,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_A52DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsta52dec.so
 @USE_DVDREAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdread.so
 @USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2dec.so
+@USE_MPG123_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpg123.so
 @USE_TWOLAME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttwolame.so
 %doc %{_datadir}/gtk-doc/html/gst-plugins-ugly-plugins-%{majorminor}/*
 @USE_X264_TRUE@%{_datadir}/gstreamer-%{majorminor}/presets/GstX264Enc.prs

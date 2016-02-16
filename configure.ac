@@ -342,6 +342,14 @@ AG_GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
   AG_GST_PKG_CHECK_MODULES(MPEG2DEC, libmpeg2 >= 0.4.0)
 ])
 
+dnl *** mpg123 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MPG123, true)
+AG_GST_CHECK_FEATURE(MPG123, [mpg123 audio decoder], mpg123, [
+  PKG_CHECK_MODULES(MPG123, libmpg123 >= 1.13, HAVE_MPG123="yes", HAVE_MPG123="no")
+  AC_SUBST(MPG123_CFLAGS)
+  AC_SUBST(MPG123_LIBS)
+])
+
 dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
 AG_GST_CHECK_FEATURE(SIDPLAY, [libsidplay], sid, [
@@ -378,6 +386,7 @@ AM_CONDITIONAL(USE_DVDREAD, false)
 AM_CONDITIONAL(USE_LAME, false)
 AM_CONDITIONAL(USE_MAD, false)
 AM_CONDITIONAL(USE_MPEG2DEC, false)
+AM_CONDITIONAL(USE_MPG123, false)
 AM_CONDITIONAL(USE_SIDPLAY, false)
 AM_CONDITIONAL(USE_TWOLAME, false)
 AM_CONDITIONAL(USE_X264, false)
@@ -462,6 +471,7 @@ ext/dvdread/Makefile
 ext/lame/Makefile
 ext/mad/Makefile
 ext/mpeg2dec/Makefile
+ext/mpg123/Makefile
 ext/sidplay/Makefile
 ext/twolame/Makefile
 ext/x264/Makefile
