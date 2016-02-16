@@ -358,7 +358,7 @@ gst_vaapi_value_set_format_list (GValue * value, GArray * formats)
   return TRUE;
 }
 
-void
+static void
 set_video_template_caps (GstCaps * caps)
 {
   GstStructure *const structure = gst_caps_get_structure (caps, 0);
@@ -662,7 +662,7 @@ gst_video_info_change_format (GstVideoInfo * vip, GstVideoFormat format,
  * gst_vaapi_display_unref () after use.
  **/
 GstVaapiDisplay *
-gst_vaapi_create_test_display ()
+gst_vaapi_create_test_display (void)
 {
   return gst_vaapi_create_display (GST_VAAPI_DISPLAY_TYPE_ANY, NULL);
 }

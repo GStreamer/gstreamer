@@ -456,7 +456,7 @@ decode_gop (GstVaapiDecoderMpeg4 * decoder, const guint8 * buf, guint buf_size)
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
-void
+static void
 calculate_pts_diff (GstVaapiDecoderMpeg4 * decoder,
     GstMpeg4VideoObjectLayer * vol_hdr, GstMpeg4VideoObjectPlane * vop_hdr)
 {

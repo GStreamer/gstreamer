@@ -461,7 +461,7 @@ gst_vaapi_decode_bin_class_init (GstVaapiDecodeBinClass * klass)
 static gboolean
 gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
 {
-  gchar *missing_factory = NULL;
+  const gchar *missing_factory = NULL;
   GstPad *pad, *ghostpad;
   GstPadTemplate *tmpl;
 

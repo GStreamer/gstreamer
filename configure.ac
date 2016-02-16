@@ -837,7 +837,8 @@ dnl make sure it doesn't complain about unused variables if debugging is disable
 AG_GST_CHECK_GST_DEBUG_DISABLED([NO_WARNINGS="-Wno-unused"], [NO_WARNINGS=""])
 
 dnl define an ERROR_CFLAGS Makefile variable
-AG_GST_SET_ERROR_CFLAGS([$FATAL_WARNINGS], [-Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wwrite-strings -Wformat-security -Wold-style-definition -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar -Wnested-externs $NO_WARNINGS])
+dnl FIXME Add -Wredundant-decls again if considered useful and warnings are fixed
+AG_GST_SET_ERROR_CFLAGS([$FATAL_WARNINGS], [-Wmissing-declarations -Wmissing-prototypes -Wwrite-strings -Wformat-security -Wold-style-definition -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar -Wnested-externs $NO_WARNINGS])
 
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT([$GST_GIT])

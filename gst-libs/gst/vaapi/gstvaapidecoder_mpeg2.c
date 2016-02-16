@@ -365,7 +365,7 @@ copy_quant_matrix (guint8 dst[64], const guint8 src[64])
 static const char *
 get_profile_str (GstVaapiProfile profile)
 {
-  char *str;
+  const char *str;
 
   switch (profile) {
     case GST_VAAPI_PROFILE_MPEG2_SIMPLE:

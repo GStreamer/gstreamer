@@ -79,7 +79,7 @@ struct _GstVaapiFilter
 /* --- VPP Types                                                         --- */
 /* ------------------------------------------------------------------------- */
 
-GType
+static GType
 gst_vaapi_scale_method_get_type (void)
 {
   static gsize g_type = 0;
@@ -725,7 +725,7 @@ ensure_operations (GstVaapiFilter * filter)
 }
 
 /* Find whether the VPP operation is supported or not */
-GstVaapiFilterOpData *
+static GstVaapiFilterOpData *
 find_operation (GstVaapiFilter * filter, GstVaapiFilterOp op)
 {
   guint i;
@@ -905,7 +905,7 @@ op_set_deinterlace (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data,
 
 /* Update skin tone enhancement */
 #if USE_VA_VPP
-gboolean
+static gboolean
 op_set_skintone_unlocked (GstVaapiFilter * filter,
     GstVaapiFilterOpData * op_data, gboolean value)
 {

@@ -572,7 +572,7 @@ decode_buffer (GstVaapiDecoderVp8 * decoder, const guchar * buf, guint buf_size)
   return decode_picture (decoder, buf, buf_size);
 }
 
-GstVaapiDecoderStatus
+static GstVaapiDecoderStatus
 gst_vaapi_decoder_vp8_decode (GstVaapiDecoder * base_decoder,
     GstVaapiDecoderUnit * unit)
 {
