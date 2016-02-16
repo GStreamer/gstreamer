@@ -141,9 +141,16 @@ gst_gtk_base_sink_init (GstGtkBaseSink * gtk_sink)
 static void
 gst_gtk_base_sink_finalize (GObject * object)
 {
-  GstGtkBaseSink *gtk_sink = GST_GTK_BASE_SINK (object);;
+  GstGtkBaseSink *gtk_sink = GST_GTK_BASE_SINK (object);
+
+  GST_OBJECT_LOCK (gtk_sink);
+  if (gtk_sink->window && gtk_sink->window_destroy_id)
+    g_signal_handler_disconnect (gtk_sink->window, gtk_sink->window_destroy_id);
+  if (gtk_sink->widget && gtk_sink->widget_destroy_id)
+    g_signal_handler_disconnect (gtk_sink->widget, gtk_sink->widget_destroy_id);
 
   g_clear_object (&gtk_sink->widget);
+  GST_OBJECT_UNLOCK (gtk_sink);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -194,7 +201,7 @@ gst_gtk_base_sink_get_widget (GstGtkBaseSink * gtk_sink)
   /* Take the floating ref, other wise the destruction of the container will
    * make this widget disapear possibly before we are done. */
   gst_object_ref_sink (gtk_sink->widget);
-  g_signal_connect (gtk_sink->widget, "destroy",
+  gtk_sink->widget_destroy_id = g_signal_connect (gtk_sink->widget, "destroy",
       G_CALLBACK (widget_destroy_cb), gtk_sink);
 
   /* back pointer */
@@ -316,7 +323,7 @@ gst_gtk_base_sink_start_on_main (GstBaseSink * bsink)
     gtk_window_set_default_size (GTK_WINDOW (gst_sink->window), 640, 480);
     gtk_window_set_title (GTK_WINDOW (gst_sink->window), klass->window_title);
     gtk_container_add (GTK_CONTAINER (gst_sink->window), toplevel);
-    g_signal_connect (gst_sink->window, "destroy",
+    gst_sink->window_destroy_id = g_signal_connect (gst_sink->window, "destroy",
         G_CALLBACK (window_destroy_cb), gst_sink);
   }
 
