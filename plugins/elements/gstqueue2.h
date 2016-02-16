@@ -170,9 +170,6 @@ struct _GstQueue2
 struct _GstQueue2Class
 {
   GstElementClass parent_class;
-
-  /* signals */
-  void (*overrun)       (GstQueue2 *queue2);
 };
 
 G_GNUC_INTERNAL GType gst_queue2_get_type (void);

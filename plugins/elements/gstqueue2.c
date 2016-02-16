@@ -97,7 +97,6 @@ GST_DEBUG_CATEGORY_STATIC (queue_dataflow);
 
 enum
 {
-  SIGNAL_OVERRUN,
   LAST_SIGNAL
 };
 
@@ -293,7 +292,7 @@ typedef struct
   GstMiniObject *item;
 } GstQueue2Item;
 
-static guint gst_queue2_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_queue2_signals[LAST_SIGNAL] = { 0 }; */
 
 static void
 gst_queue2_class_init (GstQueue2Class * klass)
@@ -303,23 +302,6 @@ gst_queue2_class_init (GstQueue2Class * klass)
 
   gobject_class->set_property = gst_queue2_set_property;
   gobject_class->get_property = gst_queue2_get_property;
-
-  /* signals */
-  /**
-   * GstQueue2::overrun:
-   * @queue: the queue2 instance
-   *
-   * Reports that the buffer became full (overrun).
-   * A buffer is full if the total amount of data inside it (num-buffers, time,
-   * size) is higher than the boundary values which can be set through the
-   * GObject properties.
-   *
-   * Since: 1.8
-   */
-  gst_queue2_signals[SIGNAL_OVERRUN] =
-      g_signal_new ("overrun", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
-      G_STRUCT_OFFSET (GstQueue2Class, overrun), NULL, NULL,
-      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   /* properties */
   g_object_class_install_property (gobject_class, PROP_CUR_LEVEL_BYTES,
@@ -1766,13 +1748,6 @@ gst_queue2_wait_free_space (GstQueue2 * queue)
     GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
         "queue is full, waiting for free space");
     do {
-      GST_QUEUE2_MUTEX_UNLOCK (queue);
-      g_signal_emit (queue, gst_queue2_signals[SIGNAL_OVERRUN], 0);
-      GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->srcresult, out_flushing);
-      /* we recheck, the signal could have changed the thresholds */
-      if (!gst_queue2_is_filled (queue))
-        break;
-
       /* Wait for space to be available, we could be unlocked because of a flush. */
       GST_QUEUE2_WAIT_DEL_CHECK (queue, queue->sinkresult, out_flushing);
     }
