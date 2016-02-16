@@ -818,7 +818,6 @@ testDownloadErrorMessageCallback (GstAdaptiveDemuxTestEngine * engine,
   GST_DEBUG ("Error from element %s : %s\n",
       GST_OBJECT_NAME (msg->src), err->message);
   fail_unless_equals_string (GST_OBJECT_NAME (msg->src), DEMUX_ELEMENT_NAME);
-  /*GST_DEBUG ("dbg_info=%s\n", dbg_info); */
   g_error_free (err);
   g_free (dbg_info);
   g_main_loop_quit (engine->loop);
@@ -877,8 +876,7 @@ GST_START_TEST (testDownloadError)
   test_callbacks.appsink_received_data =
       gst_adaptive_demux_test_check_received_data;
   test_callbacks.bus_error_message = testDownloadErrorMessageCallback;
-  test_callbacks.appsink_eos =
-      gst_adaptive_demux_test_check_size_of_received_data;
+  test_callbacks.appsink_eos = gst_adaptive_demux_test_unexpected_eos;
 
   testData = gst_dash_demux_test_case_new ();
   COPY_OUTPUT_TEST_DATA (outputTestData, testData);
@@ -908,8 +906,7 @@ test_fragment_download_error_src_create (GstTestHTTPSrc * src,
   gst_structure_get_uint64 (http_src_test_data->data, "threshold_for_trigger",
       &threshold_for_trigger);
 
-  if (!g_str_has_suffix (input->uri, ".mpd") && offset > threshold_for_trigger) {
-
+  if (!g_str_has_suffix (input->uri, ".mpd") && offset >= threshold_for_trigger) {
     GST_DEBUG ("network_error %s %" G_GUINT64_FORMAT " @ %" G_GUINT64_FORMAT,
         input->uri, offset, threshold_for_trigger);
     GST_ELEMENT_ERROR (src, RESOURCE, READ,
@@ -920,39 +917,15 @@ test_fragment_download_error_src_create (GstTestHTTPSrc * src,
       user_data);
 }
 
-/* function to check total size of data received by AppSink
- * will be called when AppSink receives eos.
- */
-static void
-testFragmentDownloadErrorCheckSizeOfDataReceived (GstAdaptiveDemuxTestEngine *
-    engine, GstAdaptiveDemuxTestOutputStream * stream, gpointer user_data)
-{
-  GstAdaptiveDemuxTestCase *testData = GST_ADAPTIVE_DEMUX_TEST_CASE (user_data);
-  GstAdaptiveDemuxTestExpectedOutput *testOutputStreamData;
-
-  testOutputStreamData =
-      gst_adaptive_demux_test_find_test_data_by_stream (testData, stream, NULL);
-  fail_unless (testOutputStreamData != NULL);
-
-  /* expect to receive more than 0 */
-  fail_unless (stream->total_received_size > 0,
-      "size validation failed for %s, expected > 0, received %d",
-      testOutputStreamData->name, stream->total_received_size);
-
-  /* expect to receive less than file size */
-  fail_unless (stream->total_received_size <
-      testOutputStreamData->expected_size,
-      "size validation failed for %s, expected < %d received %d",
-      testOutputStreamData->name, testOutputStreamData->expected_size,
-      stream->total_received_size);
-}
-
 /*
- * Test fragment download error
+ * Test media download error on the last media fragment.
  * Let the adaptive demux download a few bytes, then instruct the
- * GstTestHTTPSrc element to generate an error.
+ * GstTestHTTPSrc element to generate an error while the last media fragment
+ * is being downloaded.
+ * Adaptive demux will not retry downloading the last media fragment. It will
+ * be considered eos.
  */
-GST_START_TEST (testFragmentDownloadError)
+GST_START_TEST (testMediaDownloadErrorLastFragment)
 {
   const gchar *mpd =
       "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
@@ -981,19 +954,22 @@ GST_START_TEST (testFragmentDownloadError)
       "        </SegmentBase>"
       "      </Representation></AdaptationSet></Period></MPD>";
 
+  /* generate error on the first media fragment */
+  guint64 threshold_for_trigger = 4687;
+
   GstDashDemuxTestInputData inputTestData[] = {
     {"http://unit.test/test.mpd", (guint8 *) mpd, 0},
     {"http://unit.test/audio.webm", NULL, 5000},
     {NULL, NULL, 0},
   };
   GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
-    {"audio_00", 5000, NULL},
+    /* adaptive demux will not retry because this is the last fragment */
+    {"audio_00", threshold_for_trigger, NULL},
   };
   GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
   GstTestHTTPSrcTestData http_src_test_data = { 0 };
   GstAdaptiveDemuxTestCallbacks test_callbacks = { 0 };
   GstDashDemuxTestCase *testData;
-  guint64 threshold_for_trigger = 2000;
 
   http_src_callbacks.src_start = gst_dashdemux_http_src_start;
   http_src_callbacks.src_create = test_fragment_download_error_src_create;
@@ -1006,9 +982,8 @@ GST_START_TEST (testFragmentDownloadError)
 
   test_callbacks.appsink_received_data =
       gst_adaptive_demux_test_check_received_data;
-  test_callbacks.appsink_eos = testFragmentDownloadErrorCheckSizeOfDataReceived;
-  /*  test_callbacks.demux_sent_eos = gst_adaptive_demux_test_check_size_of_received_data; */
-  test_callbacks.bus_error_message = testDownloadErrorMessageCallback;
+  test_callbacks.appsink_eos =
+      gst_adaptive_demux_test_check_size_of_received_data;
 
   testData = gst_dash_demux_test_case_new ();
   COPY_OUTPUT_TEST_DATA (outputTestData, testData);
@@ -1189,7 +1164,7 @@ dash_demux_suite (void)
   tcase_add_test (tc_basicTest, testReverseSeekSnapBeforePosition);
   tcase_add_test (tc_basicTest, testReverseSeekSnapAfterPosition);
   tcase_add_test (tc_basicTest, testDownloadError);
-  tcase_add_test (tc_basicTest, testFragmentDownloadError);
+  tcase_add_test (tc_basicTest, testMediaDownloadErrorLastFragment);
   tcase_add_test (tc_basicTest, testQuery);
 
   tcase_add_unchecked_fixture (tc_basicTest, gst_adaptive_demux_test_setup,

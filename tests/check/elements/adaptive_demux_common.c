@@ -218,8 +218,19 @@ gst_adaptive_demux_test_check_received_data (GstAdaptiveDemuxTestEngine *
   return TRUE;
 }
 
-/* function to check total size of data received by AppSink
- * will be called when AppSink receives eos.
+/* AppSink EOS callback.
+ * To be used by tests that don't expect AppSink to receive EOS.
+ */
+void
+gst_adaptive_demux_test_unexpected_eos (GstAdaptiveDemuxTestEngine *
+    engine, GstAdaptiveDemuxTestOutputStream * stream, gpointer user_data)
+{
+  fail_if (TRUE);
+}
+
+/* AppSink EOS callback.
+ * To be used by tests that expect AppSink to receive EOS.
+ * Will check total size of data received by AppSink.
  */
 void
 gst_adaptive_demux_test_check_size_of_received_data (GstAdaptiveDemuxTestEngine
