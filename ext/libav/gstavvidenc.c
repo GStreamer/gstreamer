@@ -643,6 +643,10 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
     }
   }
 
+  ffmpegenc->picture->format = ffmpegenc->context->pix_fmt;
+  ffmpegenc->picture->width = GST_VIDEO_FRAME_WIDTH (&buffer_info->vframe);
+  ffmpegenc->picture->height = GST_VIDEO_FRAME_HEIGHT (&buffer_info->vframe);
+
   ffmpegenc->picture->pts =
       gst_ffmpeg_time_gst_to_ff (frame->pts /
       ffmpegenc->context->ticks_per_frame, ffmpegenc->context->time_base);
