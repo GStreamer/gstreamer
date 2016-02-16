@@ -144,7 +144,8 @@ struct _GstAdaptiveDemuxStream
   GstPad *src_srcpad;
   GMutex fragment_download_lock;
   GCond fragment_download_cond;
-  gboolean download_finished;
+  gboolean download_finished;   /* protected by fragment_download_lock */
+  gboolean cancelled;           /* protected by fragment_download_lock */
   gboolean starting_fragment;
   gboolean first_fragment_buffer;
   gint64 download_start_time;

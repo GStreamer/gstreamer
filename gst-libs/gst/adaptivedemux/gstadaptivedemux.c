@@ -939,8 +939,12 @@ gst_adaptive_demux_stream_free (GstAdaptiveDemuxStream * stream)
       GST_DEBUG_OBJECT (demux, "Leaving streaming task %s:%s",
           GST_DEBUG_PAD_NAME (stream->pad));
 
-      g_cond_signal (&stream->fragment_download_cond);
       gst_task_stop (stream->download_task);
+
+      g_mutex_lock (&stream->fragment_download_lock);
+      stream->cancelled = TRUE;
+      g_cond_signal (&stream->fragment_download_cond);
+      g_mutex_unlock (&stream->fragment_download_lock);
     }
     GST_LOG_OBJECT (demux, "Waiting for task to finish");
     gst_task_join (stream->download_task);
@@ -1305,6 +1309,11 @@ gst_adaptive_demux_start_tasks (GstAdaptiveDemux * demux)
   demux->cancelled = FALSE;
   for (iter = demux->streams; iter; iter = g_list_next (iter)) {
     GstAdaptiveDemuxStream *stream = iter->data;
+
+    g_mutex_lock (&stream->fragment_download_lock);
+    stream->cancelled = FALSE;
+    g_mutex_unlock (&stream->fragment_download_lock);
+
     stream->last_ret = GST_FLOW_OK;
     gst_task_start (stream->download_task);
   }
@@ -1333,7 +1342,7 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux)
     if (stream->src)
       gst_element_set_state (stream->src, GST_STATE_READY);
     g_mutex_lock (&stream->fragment_download_lock);
-    stream->download_finished = TRUE;
+    stream->cancelled = TRUE;
     g_cond_signal (&stream->fragment_download_cond);
     g_mutex_unlock (&stream->fragment_download_lock);
   }
@@ -1952,7 +1961,8 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
       /* wait for the fragment to be completely downloaded */
       GST_DEBUG_OBJECT (stream->pad,
           "Waiting for fragment download to finish: %s", uri);
-      while (!stream->demux->cancelled && !stream->download_finished) {
+      while (!stream->demux->cancelled && !stream->download_finished
+          && !stream->cancelled) {
         g_cond_wait (&stream->fragment_download_cond,
             &stream->fragment_download_lock);
       }
