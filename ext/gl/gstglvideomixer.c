@@ -468,7 +468,7 @@ static gboolean gst_gl_video_mixer_init_shader (GstGLMixer * mixer,
     GstCaps * outcaps);
 
 static gboolean gst_gl_video_mixer_process_textures (GstGLMixer * mixer,
-    GPtrArray * in_frames, guint out_tex);
+    guint out_tex);
 static void gst_gl_video_mixer_callback (gpointer stuff);
 
 /* *INDENT-OFF* */
@@ -878,7 +878,6 @@ gst_gl_video_mixer_init (GstGLVideoMixer * video_mixer)
 {
   video_mixer->background = DEFAULT_BACKGROUND;
   video_mixer->shader = NULL;
-  video_mixer->input_frames = NULL;
 }
 
 static void
@@ -1096,8 +1095,6 @@ gst_gl_video_mixer_reset (GstGLMixer * mixer)
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (mixer);
   GstGLContext *context = GST_GL_BASE_MIXER (mixer)->context;
 
-  video_mixer->input_frames = NULL;
-
   GST_DEBUG_OBJECT (mixer, "context:%p", context);
 
   if (video_mixer->shader)
@@ -1127,12 +1124,9 @@ gst_gl_video_mixer_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
 }
 
 static gboolean
-gst_gl_video_mixer_process_textures (GstGLMixer * mix, GPtrArray * frames,
-    guint out_tex)
+gst_gl_video_mixer_process_textures (GstGLMixer * mix, guint out_tex)
 {
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (mix);
-
-  video_mixer->input_frames = frames;
 
   gst_gl_context_use_fbo_v2 (GST_GL_BASE_MIXER (mix)->context,
       GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR (mix)->info),
@@ -1364,12 +1358,10 @@ gst_gl_video_mixer_callback (gpointer stuff)
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (stuff);
   GstGLMixer *mixer = GST_GL_MIXER (video_mixer);
   GstGLFuncs *gl = GST_GL_BASE_MIXER (mixer)->context->gl_vtable;
-
   GLint attr_position_loc = 0;
   GLint attr_texture_loc = 0;
   guint out_width, out_height;
-
-  guint count = 0;
+  GList *walk;
 
   out_width = GST_VIDEO_INFO_WIDTH (&vagg->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&vagg->info);
@@ -1398,9 +1390,11 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
   gl->Enable (GL_BLEND);
 
-  while (count < video_mixer->input_frames->len) {
-    GstGLMixerFrameData *frame;
-    GstGLVideoMixerPad *pad;
+  GST_OBJECT_LOCK (video_mixer);
+  walk = GST_ELEMENT (video_mixer)->sinkpads;
+  while (walk) {
+    GstGLMixerPad *mix_pad = walk->data;
+    GstGLVideoMixerPad *pad = walk->data;
     GstVideoInfo *v_info;
     guint in_tex;
     guint in_width, in_height;
@@ -1414,22 +1408,14 @@ gst_gl_video_mixer_callback (gpointer stuff)
     };
     /* *INDENT-ON* */
 
-    frame = g_ptr_array_index (video_mixer->input_frames, count);
-    if (!frame) {
-      GST_DEBUG ("skipping texture, null frame");
-      count++;
-      continue;
-    }
-    pad = (GstGLVideoMixerPad *) frame->pad;
     v_info = &GST_VIDEO_AGGREGATOR_PAD (pad)->info;
     in_width = GST_VIDEO_INFO_WIDTH (v_info);
     in_height = GST_VIDEO_INFO_HEIGHT (v_info);
 
-    if (!frame->texture || in_width <= 0 || in_height <= 0
+    if (!mix_pad->current_texture || in_width <= 0 || in_height <= 0
         || pad->alpha == 0.0f) {
-      GST_DEBUG ("skipping texture:%u frame:%p width:%u height:%u alpha:%f",
-          frame->texture, frame, in_width, in_height, pad->alpha);
-      count++;
+      GST_DEBUG ("skipping texture:%u pad:%p width:%u height:%u alpha:%f",
+          mix_pad->current_texture, pad, in_width, in_height, pad->alpha);
       continue;
     }
 
@@ -1438,7 +1424,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
       continue;
     }
 
-    in_tex = frame->texture;
+    in_tex = mix_pad->current_texture;
 
     _init_vbo_indices (video_mixer);
 
@@ -1497,8 +1483,9 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
     gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
-    ++count;
+    walk = g_list_next (walk);
   }
+  GST_OBJECT_UNLOCK (video_mixer);
 
   gl->DisableVertexAttribArray (attr_position_loc);
   gl->DisableVertexAttribArray (attr_texture_loc);

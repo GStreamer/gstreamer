@@ -121,7 +121,6 @@ struct _GstGLVideoMixer
 
     GstGLShader *shader;
     GstGLShader *checker;
-    GPtrArray *input_frames;
 
     GLuint vao;
     GLuint vbo_indices;

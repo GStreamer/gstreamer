@@ -70,7 +70,7 @@ static gboolean gst_gl_mosaic_init_shader (GstGLMixer * mixer,
     GstCaps * outcaps);
 
 static gboolean gst_gl_mosaic_process_textures (GstGLMixer * mixer,
-    GPtrArray * frames, guint out_tex);
+    guint out_tex);
 static void gst_gl_mosaic_callback (gpointer stuff);
 
 //vertex source
@@ -142,7 +142,6 @@ static void
 gst_gl_mosaic_init (GstGLMosaic * mosaic)
 {
   mosaic->shader = NULL;
-  mosaic->input_frames = NULL;
 }
 
 static void
@@ -176,8 +175,6 @@ gst_gl_mosaic_reset (GstGLMixer * mixer)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mixer);
 
-  mosaic->input_frames = NULL;
-
   //blocking call, wait the opengl thread has destroyed the shader
   if (mosaic->shader)
     gst_gl_context_del_shader (GST_GL_BASE_MIXER (mixer)->context,
@@ -196,12 +193,9 @@ gst_gl_mosaic_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
 }
 
 static gboolean
-gst_gl_mosaic_process_textures (GstGLMixer * mix, GPtrArray * frames,
-    guint out_tex)
+gst_gl_mosaic_process_textures (GstGLMixer * mix, guint out_tex)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mix);
-
-  mosaic->input_frames = frames;
 
   //blocking call, use a FBO
   gst_gl_context_use_fbo_v2 (GST_GL_BASE_MIXER (mix)->context,
@@ -219,6 +213,7 @@ gst_gl_mosaic_callback (gpointer stuff)
   GstGLMosaic *mosaic = GST_GL_MOSAIC (stuff);
   GstGLMixer *mixer = GST_GL_MIXER (mosaic);
   GstGLFuncs *gl = GST_GL_BASE_MIXER (mixer)->context->gl_vtable;
+  GList *walk;
 
   static GLfloat xrot = 0;
   static GLfloat yrot = 0;
@@ -255,8 +250,10 @@ gst_gl_mosaic_callback (gpointer stuff)
   attr_texture_loc =
       gst_gl_shader_get_attribute_location (mosaic->shader, "a_texCoord");
 
-  while (count < mosaic->input_frames->len && count < 6) {
-    GstGLMixerFrameData *frame;
+  GST_OBJECT_LOCK (mosaic);
+  walk = GST_ELEMENT (mosaic)->sinkpads;
+  while (walk) {
+    GstGLMixerPad *pad = walk->data;
     /* *INDENT-OFF* */
     gfloat v_vertices[] = {
       /* front face */
@@ -294,20 +291,13 @@ gst_gl_mosaic_callback (gpointer stuff)
     guint in_tex;
     guint width, height;
 
-    frame = g_ptr_array_index (mosaic->input_frames, count);
-    if (!frame) {
-      GST_DEBUG ("skipping texture, null frame");
-      count++;
-      continue;
-    }
-    in_tex = frame->texture;
-    width = GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR_PAD (frame->pad)->info);
-    height =
-        GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR_PAD (frame->pad)->info);
+    in_tex = pad->current_texture;
+    width = GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR_PAD (pad)->info);
+    height = GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR_PAD (pad)->info);
 
     if (!in_tex || width <= 0 || height <= 0) {
-      GST_DEBUG ("skipping texture:%u frame:%p width:%u height %u",
-          in_tex, frame, width, height);
+      GST_DEBUG ("skipping texture:%u pad:%p width:%u height %u",
+          in_tex, pad, width, height);
       count++;
       continue;
     }
@@ -335,7 +325,10 @@ gst_gl_mosaic_callback (gpointer stuff)
     gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
     ++count;
+
+    walk = g_list_next (walk);
   }
+  GST_OBJECT_UNLOCK (mosaic);
 
   gl->DisableVertexAttribArray (attr_position_loc);
   gl->DisableVertexAttribArray (attr_texture_loc);
