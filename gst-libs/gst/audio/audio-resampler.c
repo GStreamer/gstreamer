@@ -637,14 +637,17 @@ inner_product_##type##_none_1_c (type * o, const type * a,      \
     const type * b, gint len, const type *ic)                   \
 {                                                               \
   gint i;                                                       \
-  type2 res = 0;                                                \
+  type2 res[4] = { 0, 0, 0, 0 };                                \
                                                                 \
-  for (i = 0; i < len; i += 2) {                                \
-    res += (type2) a[2*i+0] * (type2) b[2*i+0];                 \
-    res += (type2) a[2*i+1] * (type2) b[2*i+1];                 \
+  for (i = 0; i < len; i += 4) {                                \
+    res[0] += (type2) a[i + 0] * (type2) b[i + 0];              \
+    res[1] += (type2) a[i + 1] * (type2) b[i + 1];              \
+    res[2] += (type2) a[i + 2] * (type2) b[i + 2];              \
+    res[3] += (type2) a[i + 3] * (type2) b[i + 3];              \
   }                                                             \
-  res = (res + ((type2)1 << ((prec) - 1))) >> (prec);           \
-  *o = CLAMP (res, -(limit), (limit) - 1);                      \
+  res[0] = res[0] + res[1] + res[2] + res[3];                   \
+  res[0] = (res[0] + ((type2)1 << ((prec) - 1))) >> (prec);     \
+  *o = CLAMP (res[0], -(limit), (limit) - 1);                   \
 }
 
 INNER_PRODUCT_INT_NONE_FUNC (gint16, gint32, PRECISION_S16, (gint32) 1 << 15);
@@ -656,14 +659,18 @@ inner_product_##type##_linear_1_c (type * o, const type * a,    \
     const type * b, gint len, const type *ic)                   \
 {                                                               \
   gint i;                                                       \
-  type2 res[2] = { 0, 0 };                                      \
+  type2 res[4] = { 0, 0, 0, 0 };                                \
                                                                 \
-  for (i = 0; i < len; i++) {                                   \
-    res[0] += (type2) a[i] * (type2) b[2 * i + 0];              \
-    res[1] += (type2) a[i] * (type2) b[2 * i + 1];              \
+  for (i = 0; i < len; i += 2) {                                \
+    res[0] += (type2) a[i + 0] * (type2) b[2 * i + 0];          \
+    res[1] += (type2) a[i + 0] * (type2) b[2 * i + 1];          \
+    res[2] += (type2) a[i + 1] * (type2) b[2 * i + 2];          \
+    res[3] += (type2) a[i + 1] * (type2) b[2 * i + 3];          \
   }                                                             \
-  res[0] = (type2)(type)(res[0] >> (prec)) * (type2) ic[0] +    \
-           (type2)(type)(res[1] >> (prec)) * (type2) ic[1];     \
+  res[0] = (res[0] + res[2]) >> (prec);                         \
+  res[1] = (res[1] + res[3]) >> (prec);                         \
+  res[0] = (type2)(type)res[0] * (type2) ic[0] +                \
+           (type2)(type)res[1] * (type2) ic[1];                 \
   res[0] = (res[0] + ((type2)1 << ((prec) - 1))) >> (prec);     \
   *o = CLAMP (res[0], -(limit), (limit) - 1);                   \
 }
@@ -702,13 +709,15 @@ inner_product_##type##_none_1_c (type * o, const type * a,      \
     const type * b, gint len, const type *ic)                   \
 {                                                               \
   gint i;                                                       \
-  type res = 0.0;                                               \
+  type res[4] = { 0.0, 0.0, 0.0, 0.0 };                         \
                                                                 \
-  for (i = 0; i < len; i += 2) {                                \
-    res += a[2 * i + 0] * b[2 * i + 0];                         \
-    res += a[2 * i + 1] * b[2 * i + 1];                         \
+  for (i = 0; i < len; i += 4) {                                \
+    res[0] += a[i + 0] * b[i + 0];                              \
+    res[1] += a[i + 1] * b[i + 1];                              \
+    res[2] += a[i + 2] * b[i + 2];                              \
+    res[3] += a[i + 3] * b[i + 3];                              \
   }                                                             \
-  *o = res;                                                     \
+  *o = res[0] + res[1] + res[2] + res[3];                       \
 }
 
 INNER_PRODUCT_FLOAT_NONE_FUNC (gfloat);
@@ -720,13 +729,16 @@ inner_product_##type##_linear_1_c (type * o, const type * a,    \
     const type * b, gint len, const type *ic)                   \
 {                                                               \
   gint i;                                                       \
-  type res[2] = { 0.0, 0.0 };                                   \
+  type res[4] = { 0.0, 0.0, 0.0, 0.0 };                         \
                                                                 \
-  for (i = 0; i < len; i++) {                                   \
+  for (i = 0; i < len; i += 2) {                                \
     res[0] += a[i] * b[2 * i + 0];                              \
     res[1] += a[i] * b[2 * i + 1];                              \
+    res[2] += a[i] * b[2 * i + 2];                              \
+    res[3] += a[i] * b[2 * i + 3];                              \
   }                                                             \
-  *o = res[0] * ic[0] + res[1] * ic[1];                         \
+  *o = (res[0] + res[2]) * ic[0] +                              \
+       (res[1] + res[3]) * ic[1];                               \
 }
 INNER_PRODUCT_FLOAT_LINEAR_FUNC (gfloat);
 INNER_PRODUCT_FLOAT_LINEAR_FUNC (gdouble);
@@ -856,6 +868,10 @@ static ResampleFunc resample_funcs[] = {
 #define resample_gdouble_cubic_1 resample_funcs[19]
 
 #if defined HAVE_ORC && !defined DISABLE_ORC
+# if defined (__ARM_NEON__)
+#  define CHECK_NEON
+#  include "audio-resampler-neon.h"
+# endif
 # if defined (__i386__) || defined (__x86_64__)
 #  define CHECK_X86
 #  include "audio-resampler-x86.h"
@@ -880,17 +896,20 @@ audio_resampler_init (void)
 
       if (target) {
         unsigned int flags = orc_target_get_default_flags (target);
-        const gchar *name;
+        const gchar *tname, *name;
 
-        name = orc_target_get_name (target);
-        GST_DEBUG ("target %s, default flags %08x", name, flags);
+        tname = orc_target_get_name (target);
+        GST_DEBUG ("target %s, default flags %08x", tname, flags);
 
         for (i = 0; i < 32; ++i) {
           if (flags & (1U << i)) {
             name = orc_target_get_flag_name (target, i);
             GST_DEBUG ("target flag %s", name);
 #ifdef CHECK_X86
-            audio_resampler_check_x86 (name);
+            audio_resampler_check_x86 (tname, name);
+#endif
+#ifdef CHECK_NEON
+            audio_resampler_check_neon (tname, name);
 #endif
           }
         }

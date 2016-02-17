@@ -546,9 +546,9 @@ MAKE_RESAMPLE_FUNC (gint32, cubic, 1, sse41);
 #endif
 
 static void
-audio_resampler_check_x86 (const gchar *option)
+audio_resampler_check_x86 (const gchar *target_name, const gchar *option)
 {
-  if (!strcmp (option, "sse")) {
+  if (!strcmp (target_name, "sse")) {
 #if defined (HAVE_XMMINTRIN_H) && defined(__SSE__)
     GST_DEBUG ("enable SSE optimisations");
     resample_gfloat_none_1 = resample_gfloat_none_1_sse;
@@ -559,23 +559,19 @@ audio_resampler_check_x86 (const gchar *option)
 #else
     GST_DEBUG ("SSE optimisations not enabled");
 #endif
-  } else if (!strcmp (option, "sse2")) {
+  }
+  if (!strcmp (option, "sse2")) {
 #if defined (HAVE_EMMINTRIN_H) && defined(__SSE2__)
     GST_DEBUG ("enable SSE2 optimisations");
     resample_gint16_none_1 = resample_gint16_none_1_sse2;
     resample_gint16_linear_1 = resample_gint16_linear_1_sse2;
     resample_gint16_cubic_1 = resample_gint16_cubic_1_sse2;
 
-    resample_gfloat_none_1 = resample_gfloat_none_1_sse;
-    resample_gfloat_linear_1 = resample_gfloat_linear_1_sse;
-    resample_gfloat_cubic_1 = resample_gfloat_cubic_1_sse;
-
     resample_gdouble_none_1 = resample_gdouble_none_1_sse2;
     resample_gdouble_linear_1 = resample_gdouble_linear_1_sse2;
     resample_gdouble_cubic_1 = resample_gdouble_cubic_1_sse2;
 
     resample_gint16_none_2 = resample_gint16_none_2_sse2;
-    resample_gfloat_none_2 = resample_gfloat_none_2_sse;
     resample_gdouble_none_2 = resample_gdouble_none_2_sse2;
 
     interpolate_gdouble_linear = interpolate_gdouble_linear_sse2;
