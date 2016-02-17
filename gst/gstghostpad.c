@@ -277,7 +277,19 @@ static gboolean
 gst_ghost_pad_internal_activate_push_default (GstPad * pad, GstObject * parent,
     gboolean active)
 {
-  return TRUE;
+  gboolean ret;
+  GstPad *other;
+
+  GST_LOG_OBJECT (pad, "%sactivate push on %s:%s, we're ok",
+      (active ? "" : "de"), GST_DEBUG_PAD_NAME (pad));
+
+  /* in both cases (SRC and SINK) we activate just the internal pad. The targets
+   * will be activated later (or already in case of a ghost sinkpad). */
+  GST_PROXY_PAD_ACQUIRE_INTERNAL (pad, other, FALSE);
+  ret = gst_pad_activate_mode (other, GST_PAD_MODE_PUSH, active);
+  GST_PROXY_PAD_RELEASE_INTERNAL (other);
+
+  return ret;
 }
 
 static gboolean
