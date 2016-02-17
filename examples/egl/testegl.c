@@ -323,6 +323,7 @@ typedef struct
   GstElement *pipeline;
   GstElement *vsink;
   GstGLDisplayEGL *gst_display;
+  GstGLContext *gl_context;
   gboolean can_avoid_upload;
 
   /* Interthread comunication */
@@ -487,6 +488,11 @@ init_ogl (APP_STATE_T * state)
       eglMakeCurrent (state->display, state->surface, state->surface,
       state->context);
   assert (EGL_FALSE != result);
+
+  state->gst_display = gst_gl_display_egl_new_with_egl_display (state->display);
+  state->gl_context =
+      gst_gl_context_new_wrapped (GST_GL_DISPLAY (state->gst_display),
+      (guintptr) state->context, GST_GL_PLATFORM_EGL, GST_GL_API_GLES2);
 }
 
 /***********************************************************
@@ -726,13 +732,17 @@ init_textures (APP_STATE_T * state, GstBuffer * buffer)
   } else if (gst_caps_features_contains (feature,
           "meta:GstVideoGLTextureUploadMeta")) {
     GstVideoMeta *meta = NULL;
+    guint internal_format =
+        gst_gl_sized_gl_format_from_gl_format_type (state->gl_context,
+        GL_RGBA, GL_UNSIGNED_BYTE);
+
     g_print ("Prepare texture for GstVideoGLTextureUploadMeta\n");
     meta = gst_buffer_get_video_meta (buffer);
     state->can_avoid_upload = FALSE;
     glGenTextures (1, &state->tex);
     glBindTexture (GL_TEXTURE_2D, state->tex);
-    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, meta->width, meta->height, 0,
-        GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D (GL_TEXTURE_2D, 0, internal_format, meta->width, meta->height,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   } else {
     g_assert_not_reached ();
   }
@@ -1050,36 +1060,14 @@ query_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   APP_STATE_T *state = (APP_STATE_T *) user_data;
   GstQuery *query = GST_PAD_PROBE_INFO_QUERY (info);
-  GstStructure *external_gl_context_desc = NULL;
-  gchar *platform = NULL;
-  gchar *gl_apis = NULL;
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ALLOCATION:
-    {
-      platform = gst_gl_platform_to_string (GST_GL_PLATFORM_EGL);
-      gl_apis = gst_gl_api_to_string (GST_GL_API_GLES2);
-
-      external_gl_context_desc =
-          gst_structure_new ("GstVideoGLTextureUploadMeta",
-          "gst.gl.context.handle", G_TYPE_POINTER, state->context,
-          "gst.gl.context.type", G_TYPE_STRING, platform,
-          "gst.gl.context.apis", G_TYPE_STRING, gl_apis, NULL);
-      gst_query_add_allocation_meta (query,
-          GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, external_gl_context_desc);
-      gst_structure_free (external_gl_context_desc);
-
-      g_free (gl_apis);
-      g_free (platform);
-
-      GST_DEBUG ("done alocation");
-      return GST_PAD_PROBE_OK;
-      break;
-    }
     case GST_QUERY_CONTEXT:
     {
-      return gst_gl_handle_context_query (state->pipeline, query,
-          (GstGLDisplay **) & state->gst_display);
+      if (gst_gl_handle_context_query (state->pipeline, query,
+              (GstGLDisplay **) & state->gst_display,
+              (GstGLContext **) & state->gl_context))
+        return GST_PAD_PROBE_HANDLED;
       break;
     }
     case GST_QUERY_DRAIN:
@@ -1103,16 +1091,20 @@ init_playbin_player (APP_STATE_T * state, const gchar * uri)
 
   /* insert a gl filter so that the GstGLBufferPool
    * is managed automatically */
-  GstElement *glfilter = gst_element_factory_make ("glcolorscale", "glfilter");
+  GstElement *glfilter = gst_element_factory_make ("glupload", "glfilter");
+  GstElement *capsfilter = gst_element_factory_make ("capsfilter", NULL);
   GstElement *vsink = gst_element_factory_make ("fakesink", "vsink");
+
+  g_object_set (capsfilter, "caps",
+      gst_caps_from_string ("video/x-raw(memory:GLMemory)"), NULL);
   g_object_set (vsink, "sync", TRUE, "silent", TRUE, "qos", TRUE,
-      "enable-last-sample", FALSE,
-      "max-lateness", 20 * GST_MSECOND, "signal-handoffs", TRUE, NULL);
+      "enable-last-sample", FALSE, "max-lateness", 20 * GST_MSECOND,
+      "signal-handoffs", TRUE, NULL);
 
   g_signal_connect (vsink, "preroll-handoff", G_CALLBACK (preroll_cb), state);
   g_signal_connect (vsink, "handoff", G_CALLBACK (buffers_cb), state);
 
-  gst_bin_add_many (GST_BIN (vbin), glfilter, vsink, NULL);
+  gst_bin_add_many (GST_BIN (vbin), glfilter, capsfilter, vsink, NULL);
 
   pad = gst_element_get_static_pad (glfilter, "sink");
   ghostpad = gst_ghost_pad_new ("sink", pad);
@@ -1126,7 +1118,8 @@ init_playbin_player (APP_STATE_T * state, const gchar * uri)
       NULL);
   gst_object_unref (pad);
 
-  gst_element_link (glfilter, vsink);
+  gst_element_link (glfilter, capsfilter);
+  gst_element_link (capsfilter, vsink);
 
   /* Instantiate and configure playbin */
   state->pipeline = gst_element_factory_make ("playbin", "player");
@@ -1420,6 +1413,7 @@ close_ogl (void)
       EGL_NO_CONTEXT);
   eglDestroySurface (state->display, state->surface);
   eglDestroyContext (state->display, state->context);
+  gst_object_unref (state->gl_context);
   gst_object_unref (state->gst_display);
 
 #if defined (USE_OMX_TARGET_RPI)
@@ -1445,9 +1439,6 @@ open_ogl (void)
   /* Create surface and gl context */
   init_ogl (state);
   TRACE_VC_MEMORY ("after init_ogl");
-
-  /* Wrap the EGLDisplay to GstGLDisplayEGL */
-  state->gst_display = gst_gl_display_egl_new_with_egl_display (state->display);
 }
 
 static gpointer
