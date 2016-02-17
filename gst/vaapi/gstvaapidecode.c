@@ -254,6 +254,8 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   if (!state || state->info.width == 0 || state->info.height == 0) {
     if (features)
       gst_caps_features_free (features);
+    if (state)
+      gst_video_codec_state_unref (state);
     return FALSE;
   }
 
