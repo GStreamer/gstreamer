@@ -21,12 +21,14 @@
 #define __GST_RTP_UTILS_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbitreader.h>
 
 G_BEGIN_DECLS
 
 void gst_rtp_copy_meta (GstElement * element, GstBuffer *outbuf, GstBuffer *inbuf, GQuark copy_tag);
 void gst_rtp_drop_meta (GstElement * element, GstBuffer *buf, GQuark keep_tag);
 
+gboolean gst_rtp_read_golomb (GstBitReader * br, guint32 * value);
 
 G_END_DECLS
 

@@ -229,31 +229,6 @@ gst_rtp_h264_depay_negotiate (GstRtpH264Depay * rtph264depay)
   }
 }
 
-/* Stolen from bad/gst/mpegtsdemux/payloader_parsers.c */
-/* variable length Exp-Golomb parsing according to H.264 spec 9.1*/
-static gboolean
-read_golomb (GstBitReader * br, guint32 * value)
-{
-  guint8 b, leading_zeros = -1;
-  *value = 1;
-
-  for (b = 0; !b; leading_zeros++) {
-    if (!gst_bit_reader_get_bits_uint8 (br, &b, 1))
-      return FALSE;
-    *value *= 2;
-  }
-
-  *value = (*value >> 1) - 1;
-  if (leading_zeros > 0) {
-    guint32 tmp = 0;
-    if (!gst_bit_reader_get_bits_uint32 (br, &tmp, leading_zeros))
-      return FALSE;
-    *value += tmp;
-  }
-
-  return TRUE;
-}
-
 static gboolean
 parse_sps (GstMapInfo * map, guint32 * sps_id)
 {
@@ -263,7 +238,7 @@ parse_sps (GstMapInfo * map, guint32 * sps_id)
   if (map->size < 5)
     return FALSE;
 
-  if (!read_golomb (&br, sps_id))
+  if (!gst_rtp_read_golomb (&br, sps_id))
     return FALSE;
 
   return TRUE;
@@ -278,9 +253,9 @@ parse_pps (GstMapInfo * map, guint32 * sps_id, guint32 * pps_id)
   if (map->size < 2)
     return FALSE;
 
-  if (!read_golomb (&br, pps_id))
+  if (!gst_rtp_read_golomb (&br, pps_id))
     return FALSE;
-  if (!read_golomb (&br, sps_id))
+  if (!gst_rtp_read_golomb (&br, sps_id))
     return FALSE;
 
   return TRUE;
@@ -1034,8 +1009,8 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
         /* STAP-A    Single-time aggregation packet     5.7.1 */
         while (payload_len > 2) {
-          /*                      1          
-           *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 
+          /*                      1
+           *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
            * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
            * |         NALU Size             |
            * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

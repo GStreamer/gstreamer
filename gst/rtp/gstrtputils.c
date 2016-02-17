@@ -95,3 +95,28 @@ gst_rtp_drop_meta (GstElement * element, GstBuffer * buf, GQuark keep_tag)
 
   gst_buffer_foreach_meta (buf, foreach_metadata_drop, &data);
 }
+
+/* Stolen from bad/gst/mpegtsdemux/payloader_parsers.c */
+/* variable length Exp-Golomb parsing according to H.265 spec section 9.2*/
+gboolean
+gst_rtp_read_golomb (GstBitReader * br, guint32 * value)
+{
+  guint8 b, leading_zeros = -1;
+  *value = 1;
+
+  for (b = 0; !b; leading_zeros++) {
+    if (!gst_bit_reader_get_bits_uint8 (br, &b, 1))
+      return FALSE;
+    *value *= 2;
+  }
+
+  *value = (*value >> 1) - 1;
+  if (leading_zeros > 0) {
+    guint32 tmp = 0;
+    if (!gst_bit_reader_get_bits_uint32 (br, &tmp, leading_zeros))
+      return FALSE;
+    *value += tmp;
+  }
+
+  return TRUE;
+}

@@ -259,31 +259,6 @@ gst_rtp_h265_depay_negotiate (GstRtpH265Depay * rtph265depay)
   }
 }
 
-/* Stolen from bad/gst/mpegtsdemux/payloader_parsers.c */
-/* variable length Exp-Golomb parsing according to H.265 spec section 9.2*/
-static gboolean
-read_golomb (GstBitReader * br, guint32 * value)
-{
-  guint8 b, leading_zeros = -1;
-  *value = 1;
-
-  for (b = 0; !b; leading_zeros++) {
-    if (!gst_bit_reader_get_bits_uint8 (br, &b, 1))
-      return FALSE;
-    *value *= 2;
-  }
-
-  *value = (*value >> 1) - 1;
-  if (leading_zeros > 0) {
-    guint32 tmp = 0;
-    if (!gst_bit_reader_get_bits_uint32 (br, &tmp, leading_zeros))
-      return FALSE;
-    *value += tmp;
-  }
-
-  return TRUE;
-}
-
 static gboolean
 parse_sps (GstMapInfo * map, guint32 * sps_id)
 {                               /* To parse seq_parameter_set_id */
@@ -293,7 +268,7 @@ parse_sps (GstMapInfo * map, guint32 * sps_id)
   if (map->size < 16)
     return FALSE;
 
-  if (!read_golomb (&br, sps_id))
+  if (!gst_rtp_read_golomb (&br, sps_id))
     return FALSE;
 
   return TRUE;
@@ -308,9 +283,9 @@ parse_pps (GstMapInfo * map, guint32 * sps_id, guint32 * pps_id)
   if (map->size < 3)
     return FALSE;
 
-  if (!read_golomb (&br, pps_id))
+  if (!gst_rtp_read_golomb (&br, pps_id))
     return FALSE;
-  if (!read_golomb (&br, sps_id))
+  if (!gst_rtp_read_golomb (&br, sps_id))
     return FALSE;
 
   return TRUE;
@@ -394,26 +369,26 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
 
     gst_bit_reader_init (&br, nalmap.data + 15, nalmap.size - 15);
 
-    read_golomb (&br, &tmp);    /* sps_seq_parameter_set_id */
-    read_golomb (&br, &chroma_format_idc);      /* chroma_format_idc */
+    gst_rtp_read_golomb (&br, &tmp);    /* sps_seq_parameter_set_id */
+    gst_rtp_read_golomb (&br, &chroma_format_idc);      /* chroma_format_idc */
 
     if (chroma_format_idc == 3)
 
       gst_bit_reader_get_bits_uint8 (&br, &tmp8, 1);    /* separate_colour_plane_flag */
 
-    read_golomb (&br, &tmp);    /* pic_width_in_luma_samples */
-    read_golomb (&br, &tmp);    /* pic_height_in_luma_samples */
+    gst_rtp_read_golomb (&br, &tmp);    /* pic_width_in_luma_samples */
+    gst_rtp_read_golomb (&br, &tmp);    /* pic_height_in_luma_samples */
 
     gst_bit_reader_get_bits_uint8 (&br, &tmp8, 1);      /* conformance_window_flag */
     if (tmp8) {
-      read_golomb (&br, &tmp);  /* conf_win_left_offset */
-      read_golomb (&br, &tmp);  /* conf_win_right_offset */
-      read_golomb (&br, &tmp);  /* conf_win_top_offset */
-      read_golomb (&br, &tmp);  /* conf_win_bottom_offset */
+      gst_rtp_read_golomb (&br, &tmp);  /* conf_win_left_offset */
+      gst_rtp_read_golomb (&br, &tmp);  /* conf_win_right_offset */
+      gst_rtp_read_golomb (&br, &tmp);  /* conf_win_top_offset */
+      gst_rtp_read_golomb (&br, &tmp);  /* conf_win_bottom_offset */
     }
 
-    read_golomb (&br, &bit_depth_luma_minus8);  /* bit_depth_luma_minus8 */
-    read_golomb (&br, &bit_depth_chroma_minus8);        /* bit_depth_chroma_minus8 */
+    gst_rtp_read_golomb (&br, &bit_depth_luma_minus8);  /* bit_depth_luma_minus8 */
+    gst_rtp_read_golomb (&br, &bit_depth_chroma_minus8);        /* bit_depth_chroma_minus8 */
 
     GST_DEBUG_OBJECT (rtph265depay,
         "Ignoring min_spatial_segmentation for now (assuming zero)");
