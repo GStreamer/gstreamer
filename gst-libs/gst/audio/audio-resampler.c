@@ -31,10 +31,9 @@
 
 #include "audio-resampler.h"
 
-/**
- * Contains a collection of all things found in other resamplers:
- *  speex (optimizations), ffmpeg (fixed phase filter, blackman filter),
- *  SRC (linear interpolation, fixed precomputed tables),...
+/* Contains a collection of all things found in other resamplers:
+ * speex (optimizations), ffmpeg (fixed phase filter, blackman filter),
+ * SRC (linear interpolation, fixed precomputed tables),...
  *
  *  Supports:
  *   - S16, S32, F32 and F64 formats
@@ -468,13 +467,13 @@ static InterpolateFunc interpolate_funcs[] = {
 #define interpolate_gdouble_linear interpolate_funcs[0]
 #define interpolate_gdouble_cubic interpolate_funcs[1]
 
-#define MAKE_COEFF_LINEAR_INT_FUNC(type,prec)                           \
+#define MAKE_COEFF_LINEAR_INT_FUNC(type,type2,prec)                     \
 static inline void                                                      \
 make_coeff_##type##_linear (gint frac, gint out_rate, type *icoeff)     \
 {                                                                       \
   type x = ((gint64)frac << prec) / out_rate;                           \
   icoeff[0] = icoeff[2] = x;                                            \
-  icoeff[1] = icoeff[3] = (1LL << prec) -1  - x;                        \
+  icoeff[1] = icoeff[3] = (type)(((type2)1 << prec)-1)  - x;            \
 }
 #define MAKE_COEFF_LINEAR_FLOAT_FUNC(type)                              \
 static inline void                                                      \
@@ -484,8 +483,8 @@ make_coeff_##type##_linear (gint frac, gint out_rate, type *icoeff)     \
   icoeff[0] = icoeff[2] = x;                                            \
   icoeff[1] = icoeff[3] = (type)1.0 - x;                                \
 }
-MAKE_COEFF_LINEAR_INT_FUNC (gint16, PRECISION_S16);
-MAKE_COEFF_LINEAR_INT_FUNC (gint32, PRECISION_S32);
+MAKE_COEFF_LINEAR_INT_FUNC (gint16, gint32, PRECISION_S16);
+MAKE_COEFF_LINEAR_INT_FUNC (gint32, gint64, PRECISION_S32);
 MAKE_COEFF_LINEAR_FLOAT_FUNC (gfloat);
 MAKE_COEFF_LINEAR_FLOAT_FUNC (gdouble);
 
@@ -493,7 +492,7 @@ MAKE_COEFF_LINEAR_FLOAT_FUNC (gdouble);
 static inline void                                                      \
 make_coeff_##type##_cubic (gint frac, gint out_rate, type *icoeff)      \
 {                                                                       \
-  type2 one = (1LL << prec) - 1;                                        \
+  type2 one = ((type2)1 << prec) - 1;                                   \
   type2 x = ((gint64) frac << prec) / out_rate;                         \
   type2 x2 = (x * x) >> prec;                                           \
   type2 x3 = (x2 * x) >> prec;                                          \
@@ -644,12 +643,12 @@ inner_product_##type##_none_1_c (type * o, const type * a,      \
     res += (type2) a[2*i+0] * (type2) b[2*i+0];                 \
     res += (type2) a[2*i+1] * (type2) b[2*i+1];                 \
   }                                                             \
-  res = (res + (1LL << ((prec) - 1))) >> (prec);                \
+  res = (res + ((type2)1 << ((prec) - 1))) >> (prec);           \
   *o = CLAMP (res, -(limit), (limit) - 1);                      \
 }
 
-INNER_PRODUCT_INT_NONE_FUNC (gint16, gint32, PRECISION_S16, 1LL << 15);
-INNER_PRODUCT_INT_NONE_FUNC (gint32, gint64, PRECISION_S32, 1LL << 31);
+INNER_PRODUCT_INT_NONE_FUNC (gint16, gint32, PRECISION_S16, (gint32) 1 << 15);
+INNER_PRODUCT_INT_NONE_FUNC (gint32, gint64, PRECISION_S32, (gint64) 1 << 31);
 
 #define INNER_PRODUCT_INT_LINEAR_FUNC(type,type2,prec,limit)    \
 static inline void                                              \
@@ -663,14 +662,14 @@ inner_product_##type##_linear_1_c (type * o, const type * a,    \
     res[0] += (type2) a[i] * (type2) b[2 * i + 0];              \
     res[1] += (type2) a[i] * (type2) b[2 * i + 1];              \
   }                                                             \
-  res[0] = (res[0] >> (prec)) * (type2) ic[0] +                 \
-           (res[1] >> (prec)) * (type2) ic[1];                  \
-  res[0] = (res[0] + (1LL << ((prec) - 1))) >> (prec);          \
+  res[0] = (type2)(type)(res[0] >> (prec)) * (type2) ic[0] +    \
+           (type2)(type)(res[1] >> (prec)) * (type2) ic[1];     \
+  res[0] = (res[0] + ((type2)1 << ((prec) - 1))) >> (prec);     \
   *o = CLAMP (res[0], -(limit), (limit) - 1);                   \
 }
 
-INNER_PRODUCT_INT_LINEAR_FUNC (gint16, gint32, PRECISION_S16, 1LL << 15);
-INNER_PRODUCT_INT_LINEAR_FUNC (gint32, gint64, PRECISION_S32, 1LL << 31);
+INNER_PRODUCT_INT_LINEAR_FUNC (gint16, gint32, PRECISION_S16, (gint32) 1 << 15);
+INNER_PRODUCT_INT_LINEAR_FUNC (gint32, gint64, PRECISION_S32, (gint64) 1 << 31);
 
 #define INNER_PRODUCT_INT_CUBIC_FUNC(type,type2,prec,limit)     \
 static inline void                                              \
@@ -686,16 +685,16 @@ inner_product_##type##_cubic_1_c (type * o, const type * a,     \
     res[2] += (type2) a[i] * (type2) b[4 * i + 2];              \
     res[3] += (type2) a[i] * (type2) b[4 * i + 3];              \
   }                                                             \
-  res[0] = (res[0] >> (prec)) * (type2) ic[0] +                 \
-           (res[1] >> (prec)) * (type2) ic[1] +                 \
-           (res[2] >> (prec)) * (type2) ic[2] +                 \
-           (res[3] >> (prec)) * (type2) ic[3];                  \
-  res[0] = (res[0] + (1LL << ((prec) - 1))) >> (prec);          \
+  res[0] = (type2)(type)(res[0] >> (prec)) * (type2) ic[0] +    \
+           (type2)(type)(res[1] >> (prec)) * (type2) ic[1] +    \
+           (type2)(type)(res[2] >> (prec)) * (type2) ic[2] +    \
+           (type2)(type)(res[3] >> (prec)) * (type2) ic[3];     \
+  res[0] = (res[0] + ((type2)1 << ((prec) - 1))) >> (prec);     \
   *o = CLAMP (res[0], -(limit), (limit) - 1);                   \
 }
 
-INNER_PRODUCT_INT_CUBIC_FUNC (gint16, gint32, PRECISION_S16, 1LL << 15);
-INNER_PRODUCT_INT_CUBIC_FUNC (gint32, gint64, PRECISION_S32, 1LL << 31);
+INNER_PRODUCT_INT_CUBIC_FUNC (gint16, gint32, PRECISION_S16, (gint32) 1 << 15);
+INNER_PRODUCT_INT_CUBIC_FUNC (gint32, gint64, PRECISION_S32, (gint64) 1 << 31);
 
 #define INNER_PRODUCT_FLOAT_NONE_FUNC(type)                     \
 static inline void                                              \
