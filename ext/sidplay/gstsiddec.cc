@@ -75,7 +75,7 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-sid")
     );
 
-#define FORMATS "{ "GST_AUDIO_NE(S16)","GST_AUDIO_NE(U16)", S8, U8 }"
+#define FORMATS "{ " GST_AUDIO_NE(S16) "," GST_AUDIO_NE(U16) ", S8, U8 }"
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
