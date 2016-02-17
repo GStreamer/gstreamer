@@ -3536,15 +3536,26 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     }
     /* else duration is diff between timecode of this and next block */
 
-    /* For SimpleBlock, look at the keyframe bit in flags. Otherwise,
-       a ReferenceBlock implies that this is not a keyframe. In either
-       case, it only makes sense for video streams. */
     if (stream->type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
+      /* For SimpleBlock, look at the keyframe bit in flags. Otherwise,
+         a ReferenceBlock implies that this is not a keyframe. In either
+         case, it only makes sense for video streams. */
       if ((is_simpleblock && !(flags & 0x80)) || referenceblock) {
         delta_unit = TRUE;
         invisible_frame = ((flags & 0x08)) &&
             (!strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP8) ||
             !strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP9));
+      }
+
+      /* If we're doing a keyframe-only trickmode, only push keyframes on video
+       * streams */
+      if (delta_unit
+          && demux->common.
+          segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
+        GST_LOG_OBJECT (demux, "Skipping non-keyframe on stream %d",
+            stream->index);
+        ret = GST_FLOW_OK;
+        goto done;
       }
     }
 
