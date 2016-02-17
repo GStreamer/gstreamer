@@ -136,10 +136,6 @@ static gboolean
 gst_vaapi_decode_input_state_replace (GstVaapiDecode * decode,
     const GstVideoCodecState * new_state);
 
-static gboolean
-gst_vaapidecode_sink_query (GstVideoDecoder * vdec, GstQuery * query);
-static gboolean
-gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query);
 static gboolean gst_vaapidecode_negotiate (GstVaapiDecode * decode);
 
 static void
@@ -946,52 +942,6 @@ gst_vaapidecode_parse (GstVideoDecoder * vdec,
   return ret;
 }
 
-static void
-gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
-{
-  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
-  GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
-  GstVideoDecoderClass *const vdec_class = GST_VIDEO_DECODER_CLASS (klass);
-  GstPadTemplate *pad_template;
-
-  GST_DEBUG_CATEGORY_INIT (gst_debug_vaapidecode,
-      GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
-
-  gst_vaapi_plugin_base_class_init (GST_VAAPI_PLUGIN_BASE_CLASS (klass));
-
-  object_class->finalize = gst_vaapidecode_finalize;
-
-  vdec_class->open = GST_DEBUG_FUNCPTR (gst_vaapidecode_open);
-  vdec_class->close = GST_DEBUG_FUNCPTR (gst_vaapidecode_close);
-  vdec_class->set_format = GST_DEBUG_FUNCPTR (gst_vaapidecode_set_format);
-  vdec_class->flush = GST_DEBUG_FUNCPTR (gst_vaapidecode_flush);
-  vdec_class->parse = GST_DEBUG_FUNCPTR (gst_vaapidecode_parse);
-  vdec_class->handle_frame = GST_DEBUG_FUNCPTR (gst_vaapidecode_handle_frame);
-  vdec_class->finish = GST_DEBUG_FUNCPTR (gst_vaapidecode_finish);
-  vdec_class->drain = GST_DEBUG_FUNCPTR (gst_vaapidecode_drain);
-  vdec_class->decide_allocation =
-      GST_DEBUG_FUNCPTR (gst_vaapidecode_decide_allocation);
-  vdec_class->src_query = GST_DEBUG_FUNCPTR (gst_vaapidecode_src_query);
-  vdec_class->sink_query = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_query);
-
-  gst_element_class_set_static_metadata (element_class,
-      "VA-API decoder",
-      "Codec/Decoder/Video",
-      GST_PLUGIN_DESC,
-      "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, "
-      "Halley Zhao <halley.zhao@intel.com>, "
-      "Sreerenj Balachandran <sreerenj.balachandran@intel.com>, "
-      "Wind Yuan <feng.yuan@intel.com>");
-
-  /* sink pad */
-  pad_template = gst_static_pad_template_get (&gst_vaapidecode_sink_factory);
-  gst_element_class_add_pad_template (element_class, pad_template);
-
-  /* src pad */
-  pad_template = gst_static_pad_template_get (&gst_vaapidecode_src_factory);
-  gst_element_class_add_pad_template (element_class, pad_template);
-}
-
 static gboolean
 gst_vaapidecode_ensure_allowed_caps (GstVaapiDecode * decode)
 {
@@ -1052,16 +1002,16 @@ error_no_memory:
 }
 
 static GstCaps *
-gst_vaapidecode_get_caps (GstPad * pad)
+gst_vaapidecode_sink_getcaps (GstVideoDecoder * vdec, GstCaps * filter)
 {
-  GstVaapiDecode *const decode = GST_VAAPIDECODE (GST_OBJECT_PARENT (pad));
+  GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
 
   if (decode->allowed_caps)
     goto bail;
 
   /* if we haven't a display yet, return our pad's template caps */
   if (!GST_VAAPI_PLUGIN_BASE_DISPLAY (decode))
-    return gst_pad_get_pad_template_caps (pad);
+    return gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SINK_PAD (vdec));
 
   /* if the allowed caps calculation fails, return an empty caps, so
    * the auto-plug can try other decoder */
@@ -1080,23 +1030,6 @@ gst_vaapidecode_sink_query (GstVideoDecoder * vdec, GstQuery * query)
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (decode);
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CAPS:{
-      GstCaps *caps, *filter = NULL;
-      GstPad *pad = GST_VIDEO_DECODER_SINK_PAD (vdec);
-
-      gst_query_parse_caps (query, &filter);
-      caps = gst_vaapidecode_get_caps (pad);
-
-      if (filter) {
-        GstCaps *tmp = caps;
-        caps = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
-        gst_caps_unref (tmp);
-      }
-
-      gst_query_set_caps_result (query, caps);
-      gst_caps_unref (caps);
-      break;
-    }
     case GST_QUERY_CONTEXT:{
       ret = gst_vaapi_handle_context_query (query, plugin->display);
       break;
@@ -1148,6 +1081,53 @@ gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query)
   }
 
   return ret;
+}
+
+static void
+gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
+{
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
+  GstVideoDecoderClass *const vdec_class = GST_VIDEO_DECODER_CLASS (klass);
+  GstPadTemplate *pad_template;
+
+  GST_DEBUG_CATEGORY_INIT (gst_debug_vaapidecode,
+      GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
+
+  gst_vaapi_plugin_base_class_init (GST_VAAPI_PLUGIN_BASE_CLASS (klass));
+
+  object_class->finalize = gst_vaapidecode_finalize;
+
+  vdec_class->open = GST_DEBUG_FUNCPTR (gst_vaapidecode_open);
+  vdec_class->close = GST_DEBUG_FUNCPTR (gst_vaapidecode_close);
+  vdec_class->set_format = GST_DEBUG_FUNCPTR (gst_vaapidecode_set_format);
+  vdec_class->flush = GST_DEBUG_FUNCPTR (gst_vaapidecode_flush);
+  vdec_class->parse = GST_DEBUG_FUNCPTR (gst_vaapidecode_parse);
+  vdec_class->handle_frame = GST_DEBUG_FUNCPTR (gst_vaapidecode_handle_frame);
+  vdec_class->finish = GST_DEBUG_FUNCPTR (gst_vaapidecode_finish);
+  vdec_class->drain = GST_DEBUG_FUNCPTR (gst_vaapidecode_drain);
+  vdec_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_vaapidecode_decide_allocation);
+  vdec_class->src_query = GST_DEBUG_FUNCPTR (gst_vaapidecode_src_query);
+  vdec_class->sink_query = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_query);
+  vdec_class->getcaps = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_getcaps);
+
+  gst_element_class_set_static_metadata (element_class,
+      "VA-API decoder",
+      "Codec/Decoder/Video",
+      GST_PLUGIN_DESC,
+      "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, "
+      "Halley Zhao <halley.zhao@intel.com>, "
+      "Sreerenj Balachandran <sreerenj.balachandran@intel.com>, "
+      "Wind Yuan <feng.yuan@intel.com>");
+
+  /* sink pad */
+  pad_template = gst_static_pad_template_get (&gst_vaapidecode_sink_factory);
+  gst_element_class_add_pad_template (element_class, pad_template);
+
+  /* src pad */
+  pad_template = gst_static_pad_template_get (&gst_vaapidecode_src_factory);
+  gst_element_class_add_pad_template (element_class, pad_template);
 }
 
 static void
