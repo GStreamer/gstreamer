@@ -916,6 +916,13 @@ inbuf_error:
   return ret;
 }
 
+static void
+_debug_marker (GstGLContext * context, GstGLFilter * filter)
+{
+  gst_gl_insert_debug_marker (context,
+      "processing in element %s", GST_OBJECT_NAME (filter));
+}
+
 static GstFlowReturn
 gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     GstBuffer * outbuf)
@@ -936,8 +943,8 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   if (in_sync_meta)
     gst_gl_sync_meta_wait (in_sync_meta, context);
 
-  gst_gl_insert_debug_marker (context,
-      "processing in element %s", GST_OBJECT_NAME (filter));
+  gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _debug_marker,
+      filter);
   if (filter_class->filter)
     ret = filter_class->filter (filter, inbuf, outbuf);
   else
