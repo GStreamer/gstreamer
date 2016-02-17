@@ -91,7 +91,7 @@ enum
 #define DEFAULT_OVERSAMP         TRUE
 #define DEFAULT_NOISE_REDUCTION  TRUE
 
-#define FORMATS "{ "GST_AUDIO_NE (S32)", "GST_AUDIO_NE (S16)", U8 }"
+#define FORMATS "{ " GST_AUDIO_NE (S32) ", " GST_AUDIO_NE (S16) ", U8 }"
 
 static GstStaticPadTemplate modplug_src_template_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
