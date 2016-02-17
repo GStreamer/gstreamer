@@ -570,8 +570,6 @@ error_pool_config:
   }
 }
 
-/* XXXX: GStreamer 1.2 doesn't check, in gst_buffer_pool_set_config()
-   if the config option is already set */
 static inline gboolean
 gst_vaapi_plugin_base_set_pool_config (GstBufferPool * pool,
     const gchar * option)
@@ -579,13 +577,8 @@ gst_vaapi_plugin_base_set_pool_config (GstBufferPool * pool,
   GstStructure *config;
 
   config = gst_buffer_pool_get_config (pool);
-  if (!gst_buffer_pool_config_has_option (config, option)) {
-    gst_buffer_pool_config_add_option (config, option);
-    return gst_buffer_pool_set_config (pool, config);
-  } else {
-    gst_structure_free (config);
-  }
-  return TRUE;
+  gst_buffer_pool_config_add_option (config, option);
+  return gst_buffer_pool_set_config (pool, config);
 }
 
 /**
