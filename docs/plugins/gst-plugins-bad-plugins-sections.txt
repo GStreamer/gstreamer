@@ -1141,32 +1141,6 @@ GST_IS_OPUS_PARSE
 GST_IS_OPUS_PARSE_CLASS
 </SECTION>
 
-<FILE>element-rtpopusdepay</FILE>
-<TITLE>rtpopusdepay</TITLE>
-GstRTPOpusDepay
-<SUBSECTION Standard>
-GstRTPOpusDepayClass
-gst_rtp_opus_depay_get_type
-GST_TYPE_RTP_OPUS_DEPAY
-GST_RTP_OPUS_DEPAY
-GST_RTP_OPUS_DEPAY_CLASS
-GST_IS_RTP_OPUS_DEPAY
-GST_IS_RTP_OPUS_DEPAY_CLASS
-</SECTION>
-
-<FILE>element-rtpopuspay</FILE>
-<TITLE>rtpopuspay</TITLE>
-GstRtpOPUSPay
-<SUBSECTION Standard>
-GstRtpOPUSPayClass
-gst_rtp_opus_pay_get_type
-GST_TYPE_RTP_OPUS_PAY
-GST_RTP_OPUS_PAY
-GST_RTP_OPUS_PAY_CLASS
-GST_IS_RTP_OPUS_PAY
-GST_IS_RTP_OPUS_PAY_CLASS
-</SECTION>
-
 <SECTION>
 <FILE>element-pcapparse</FILE>
 <TITLE>pcapparse</TITLE>
