@@ -1220,11 +1220,101 @@ GST_START_TEST (test_activate_sink_and_src)
   h = gst_harness_new_with_element (b, "sink", "src");
   gst_harness_set_src_caps_str (h, "mycaps");
 
-  gst_harness_push (h, gst_buffer_new());
+  gst_harness_push (h, gst_buffer_new ());
   gst_buffer_unref (gst_harness_pull (h));
 
   gst_object_unref (b);
   gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_activate_src_pull_mode)
+{
+  GstElement *b;
+  GstElement *src;
+  GstPad *srcpad;
+  GstPad *internalpad;
+  GstPad *ghost;
+
+  b = gst_bin_new (NULL);
+  src = gst_element_factory_make ("fakesrc", NULL);
+  gst_bin_add (GST_BIN (b), src);
+
+  srcpad = gst_element_get_static_pad (src, "src");
+  ghost = gst_ghost_pad_new ("src", srcpad);
+  gst_element_add_pad (b, ghost);
+
+  internalpad = (GstPad *) gst_proxy_pad_get_internal ((GstProxyPad *) ghost);
+
+  fail_if (GST_PAD_IS_ACTIVE (ghost));
+  fail_if (GST_PAD_IS_ACTIVE (internalpad));
+  fail_if (GST_PAD_IS_ACTIVE (srcpad));
+  fail_unless (gst_pad_activate_mode (ghost, GST_PAD_MODE_PULL, TRUE));
+  fail_unless (GST_PAD_IS_ACTIVE (ghost));
+  fail_unless (GST_PAD_IS_ACTIVE (internalpad));
+  fail_unless (GST_PAD_IS_ACTIVE (srcpad));
+
+  gst_object_unref (b);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_activate_sink_switch_mode)
+{
+  GstElement *pipeline;
+  GstElement *b, *src, *identity;
+  GstPad *srcpad, *sinkpad, *internalpad, *ghost;
+
+  pipeline = gst_pipeline_new (NULL);
+  b = gst_bin_new (NULL);
+  gst_bin_add (GST_BIN (pipeline), b);
+  src = gst_element_factory_make ("fakesrc", NULL);
+  gst_bin_add (GST_BIN (pipeline), src);
+  identity = gst_element_factory_make ("identity", NULL);
+  gst_bin_add (GST_BIN (b), identity);
+
+  sinkpad = gst_element_get_static_pad (identity, "sink");
+  ghost = gst_ghost_pad_new ("sink", sinkpad);
+  gst_element_add_pad (b, ghost);
+  srcpad = gst_element_get_static_pad (src, "src");
+  gst_pad_link (srcpad, ghost);
+
+  internalpad = (GstPad *) gst_proxy_pad_get_internal ((GstProxyPad *) ghost);
+
+  /* We start with no active pads */
+  fail_if (GST_PAD_IS_ACTIVE (ghost));
+  fail_if (GST_PAD_IS_ACTIVE (internalpad));
+  fail_if (GST_PAD_IS_ACTIVE (sinkpad));
+  fail_if (GST_PAD_IS_ACTIVE (srcpad));
+
+  GST_DEBUG ("Activating pads in push mode");
+  /* Let's first try to activate everything in push-mode, for this we need
+   * to go on every exposed pad */
+  fail_unless (gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE));
+  fail_unless (gst_pad_activate_mode (ghost, GST_PAD_MODE_PUSH, TRUE));
+  fail_unless (gst_pad_activate_mode (srcpad, GST_PAD_MODE_PUSH, TRUE));
+
+  GST_DEBUG ("Checking pads are all activated properly");
+  /* Let's check all pads are now active, including internal ones */
+  fail_unless (GST_PAD_MODE (ghost) == GST_PAD_MODE_PUSH);
+  fail_unless (GST_PAD_MODE (internalpad) == GST_PAD_MODE_PUSH);
+  fail_unless (GST_PAD_MODE (srcpad) == GST_PAD_MODE_PUSH);
+  fail_unless (GST_PAD_MODE (sinkpad) == GST_PAD_MODE_PUSH);
+
+  /* Now simulate a scheduling reconfiguration (PUSH=>PULL) */
+  fail_unless (gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE));
+
+  /* All pads should have switched modes */
+  fail_unless (GST_PAD_MODE (ghost) == GST_PAD_MODE_PULL);
+  fail_unless (GST_PAD_MODE (srcpad) == GST_PAD_MODE_PULL);
+  fail_unless (GST_PAD_MODE (sinkpad) == GST_PAD_MODE_PULL);
+  fail_unless (GST_PAD_MODE (internalpad) == GST_PAD_MODE_PULL);
+
+  gst_object_unref (internalpad);
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+  gst_object_unref (pipeline);
 }
 
 GST_END_TEST;
@@ -1257,6 +1347,8 @@ gst_ghost_pad_suite (void)
 
   tcase_add_test (tc_chain, test_activate_src);
   tcase_add_test (tc_chain, test_activate_sink_and_src);
+  tcase_add_test (tc_chain, test_activate_src_pull_mode);
+  tcase_add_test (tc_chain, test_activate_sink_switch_mode);
 
   return s;
 }
