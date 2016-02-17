@@ -3327,22 +3327,27 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_android_graphics_imageformat_init ()) {
     GST_ERROR ("Failed to init android image format");
-    gst_android_graphics_surfacetexture_deinit ();
-    return FALSE;
+    goto failed_surfacetexture;
   }
 
   if (!gst_android_hardware_camera_init ()) {
-    gst_android_graphics_surfacetexture_deinit ();
-    gst_android_graphics_imageformat_deinit ();
-    return FALSE;
+    goto failed_graphics_imageformat;
   }
 
   if (!gst_element_register (plugin, "ahcsrc", GST_RANK_NONE, GST_TYPE_AHC_SRC)) {
     GST_ERROR ("Failed to register android camera source");
-    return FALSE;
+    goto failed_hardware_camera;
   }
 
   return TRUE;
+
+failed_hardware_camera:
+  gst_android_hardware_camera_deinit ();
+failed_graphics_imageformat:
+  gst_android_graphics_imageformat_deinit ();
+failed_surfacetexture:
+  gst_android_graphics_surfacetexture_deinit ();
+  return FALSE;
 }
 
 void
