@@ -375,12 +375,19 @@ has_dmabuf_capable_peer (GstVaapiPluginBase * plugin, GstPad * pad)
 
     if (GST_IS_PUSH_SRC (element)) {
       element_name = gst_element_get_name (element);
-      if (!element_name || sscanf (element_name, "v4l2src%d", &v) != 1)
+      if (!element_name)
+        break;
+
+      if ((sscanf (element_name, "v4l2src%d", &v) != 1)
+          && (sscanf (element_name, "camerasrc%d", &v) != 1))
         break;
 
       v = 0;
       g_object_get (element, "io-mode", &v, NULL);
-      is_dmabuf_capable = v == 5;       /* "dmabuf-import" enum value */
+      if (strncmp (element_name, "camerasrc", 9) == 0)
+        is_dmabuf_capable = v == 3;
+      else
+        is_dmabuf_capable = v == 5;     /* "dmabuf-import" enum value */
       break;
     } else if (GST_IS_BASE_TRANSFORM (element)) {
       element_name = gst_element_get_name (element);
