@@ -105,20 +105,19 @@ gst_ladspa_filter_type_transform_caps (GstBaseTransform * base,
       g_assert_not_reached ();
   }
 
-  GST_DEBUG_OBJECT (ladspa_debug, "transformed %" GST_PTR_FORMAT, ret);
+  GST_DEBUG_OBJECT (base, "transformed %" GST_PTR_FORMAT, ret);
 
   if (filter) {
     GstCaps *intersection;
 
-    GST_DEBUG_OBJECT (ladspa_debug, "Using filter caps %" GST_PTR_FORMAT,
-        filter);
+    GST_DEBUG_OBJECT (base, "Using filter caps %" GST_PTR_FORMAT, filter);
 
     intersection =
         gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (ret);
     ret = intersection;
 
-    GST_DEBUG_OBJECT (ladspa_debug, "Intersection %" GST_PTR_FORMAT, ret);
+    GST_DEBUG_OBJECT (base, "Intersection %" GST_PTR_FORMAT, ret);
   }
 
   gst_caps_unref (srccaps);
