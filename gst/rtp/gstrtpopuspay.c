@@ -276,3 +276,10 @@ gst_rtp_opus_pay_getcaps (GstRTPBasePayload * payload,
   GST_DEBUG_OBJECT (payload, "Returning caps: %" GST_PTR_FORMAT, caps);
   return caps;
 }
+
+gboolean
+gst_rtp_opus_pay_plugin_init (GstPlugin * plugin)
+{
+  return gst_element_register (plugin, "rtpopuspay",
+      GST_RANK_PRIMARY, GST_TYPE_RTP_OPUS_PAY);
+}

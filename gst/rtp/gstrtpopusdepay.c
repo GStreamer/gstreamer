@@ -173,3 +173,10 @@ gst_rtp_opus_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   return outbuf;
 }
+
+gboolean
+gst_rtp_opus_depay_plugin_init (GstPlugin * plugin)
+{
+  return gst_element_register (plugin, "rtpopusdepay",
+      GST_RANK_PRIMARY, GST_TYPE_RTP_OPUS_DEPAY);
+}
