@@ -242,7 +242,14 @@ _get_merged_memory (GstBuffer * buffer, guint idx, guint length)
       left = size;
 
       for (i = idx; i < (idx + length) && left > 0; i++) {
-        gst_memory_map (mem[i], &sinfo, GST_MAP_READ);
+        if (!gst_memory_map (mem[i], &sinfo, GST_MAP_READ)) {
+          GST_CAT_ERROR (GST_CAT_BUFFER,
+              "buffer %p, idx %u, length %u failed to map readable", buffer,
+              idx, length);
+          gst_memory_unmap (result, &dinfo);
+          gst_memory_unref (result);
+          return NULL;
+        }
         tocopy = MIN (sinfo.size, left);
         GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
             "memcpy %" G_GSIZE_FORMAT " bytes for merge %p from memory %p",
