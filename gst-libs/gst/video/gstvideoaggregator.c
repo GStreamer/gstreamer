@@ -892,15 +892,7 @@ gst_videoaggregator_pad_sink_getcaps (GstPad * pad, GstVideoAggregator * vagg,
 
   GST_DEBUG_OBJECT (pad, "Get caps with filter: %" GST_PTR_FORMAT, filter);
 
-  srccaps = gst_pad_get_current_caps (srcpad);
-  if (srccaps == NULL) {
-    srccaps = gst_pad_peer_query_caps (srcpad, template_caps);
-    GST_DEBUG_OBJECT (pad, "No output caps, using possible formats: %"
-        GST_PTR_FORMAT, srccaps);
-  } else {
-    GST_DEBUG_OBJECT (pad, "Using output caps: %" GST_PTR_FORMAT, srccaps);
-  }
-
+  srccaps = gst_pad_peer_query_caps (srcpad, template_caps);
   srccaps = gst_caps_make_writable (srccaps);
   has_alpha = gst_videoaggregator_caps_has_alpha (srccaps);
 
