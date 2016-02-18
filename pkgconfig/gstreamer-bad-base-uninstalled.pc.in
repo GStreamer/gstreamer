@@ -1,6 +1,6 @@
 prefix=
 exec_prefix=
-libdir=
+libdir=@abs_top_builddir@/gst-libs/gst/base/.libs
 includedir=@abs_top_builddir@/gst-libs
 girdir=@abs_top_builddir@/gst-libs/gst/base
 typelibdir=@abs_top_builddir@/gst-libs/gst/base
@@ -10,5 +10,5 @@ Description: Bad base classes for GStreamer elements, Not Installed
 Version: @VERSION@
 Requires: gstreamer-@GST_API_VERSION@
 
-Libs: @abs_top_builddir@/gst-libs/gst/base/libgstbadbase-@GST_API_VERSION@.la
+Libs: -L${libdir} -lgstbadbase-@GST_API_VERSION@
 Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs

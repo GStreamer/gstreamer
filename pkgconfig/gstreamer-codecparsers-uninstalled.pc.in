@@ -1,12 +1,12 @@
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../gst-libs/gst/codecparsers
+libdir=${pcfiledir}/../gst-libs/gst/codecparsers/.libs
 includedir=${pcfiledir}/../gst-libs
 
 Name: GStreamer codec parsers, Uninstalled
 Description: Bitstream parsers for GStreamer elements, uninstalled
 Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@
 Version: @VERSION@
-Libs: -L${libdir} ${libdir}/libgstcodecparsers-@GST_API_VERSION@.la
+Libs: -L${libdir} -lgstcodecparsers-@GST_API_VERSION@
 Cflags: -I${includedir}
 

@@ -1,12 +1,12 @@
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../gst-libs/gst/player
+libdir=${pcfiledir}/../gst-libs/gst/player/.libs
 includedir=${pcfiledir}/../gst-libs
 
 Name: GStreamer Player, Uninstalled
 Description: GStreamer Player convenience library, uninstalled
 Requires: gstreamer-@GST_API_VERSION@
 Version: @VERSION@
-Libs: -L${libdir} ${libdir}/libgstplayer-@GST_API_VERSION@.la
+Libs: -L${libdir} -lgstplayer-@GST_API_VERSION@
 Cflags: -I${includedir}
 
