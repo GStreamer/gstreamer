@@ -1681,7 +1681,8 @@ _init_classes (void)
 
 failed:
   if (err) {
-    GST_ERROR ("Failed to get android.hardware.Camera class: %s", err->message);
+    GST_ERROR ("Failed to initialize android.hardware.Camera classes: %s",
+        err->message);
     g_clear_error (&err);
   }
 
