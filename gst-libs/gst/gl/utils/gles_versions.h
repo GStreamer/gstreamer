@@ -18,37 +18,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _OPENGL_VERSIONS_H_
-#define _OPENGL_VERSIONS_H_
+#ifndef _GLES_VERSIONS_H_
+#define _GLES_VERSIONS_H_
 
 /* list of known OpenGL versions */
 /* *INDENT-OFF* */
-static const struct { int major, minor; } opengl_versions[] = {
-   {4, 5},
-   {4, 4},
-   {4, 3},
-   {4, 2},
-   {4, 1},
-   {4, 0},
 
-   {3, 3},
+static const struct { int major, minor; } gles2_versions[] = {
    {3, 2},
    {3, 1},
    {3, 0},
 
-   {2, 1},
    {2, 0},
-
-   {1, 5},
-   {1, 4},
-   {1, 3},
-   {1, 2},
-   {1, 1},
-   {1, 0},
 
    {0, 0} /* end of list */
 };
-
 /* *INDENT-ON* */
 
-#endif /* _OPENGL_VERSIONS_H_ */
+#endif /* _GLES_VERSIONS_H_ */
