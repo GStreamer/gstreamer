@@ -3384,8 +3384,8 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   type = info->type;
   original_data = info->data;
 
-  /* one of the data types for non-idle, non-pull probes */
-  if ((type & (GST_PAD_PROBE_TYPE_IDLE | GST_PAD_PROBE_TYPE_PULL)) == 0
+  /* one of the data types for non-idle probes */
+  if ((type & GST_PAD_PROBE_TYPE_IDLE) == 0
       && (flags & GST_PAD_PROBE_TYPE_ALL_BOTH & type) == 0)
     goto no_match;
   /* one of the scheduling types */
