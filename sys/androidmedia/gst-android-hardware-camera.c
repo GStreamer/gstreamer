@@ -2211,17 +2211,20 @@ gst_ah_camera_auto_focus (GstAHCamera * self,
     GstAHCAutoFocusCallback cb, gpointer user_data)
 {
   JNIEnv *env = gst_amc_jni_get_env ();
+  GError *err = NULL;
   jobject object = NULL;
   gboolean ret = FALSE;
 
   if (cb) {
-    object = (*env)->NewObject (env,
+    object = gst_amc_jni_new_object (env,
+        &err,
+        FALSE,
         org_freedesktop_gstreamer_androidmedia_gstahccallback.klass,
         org_freedesktop_gstreamer_androidmedia_gstahccallback.constructor,
         *((jlong *) & cb), *((jlong *) & user_data));
-    if (!object) {
-      GST_ERROR ("Failed to create callback object");
-      (*env)->ExceptionClear (env);
+    if (err) {
+      GST_ERROR ("Failed to create org.freedesktop.gstreamer.androidmedia.GstAhcCallback object");
+      g_clear_error (&err);
       goto done;
     }
   }
@@ -2250,15 +2253,18 @@ gboolean
 gst_ah_camera_get_camera_info (gint camera_id, GstAHCCameraInfo * camera_info)
 {
   JNIEnv *env = gst_amc_jni_get_env ();
+  GError *err = NULL;
   jobject jcamera_info = NULL;
   gboolean ret = FALSE;
 
-  jcamera_info = (*env)->NewObject (env,
+  jcamera_info = gst_amc_jni_new_object (env,
+      &err,
+      FALSE,
       android_hardware_camera_camerainfo.klass,
       android_hardware_camera_camerainfo.constructor);
-  if (!jcamera_info) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
+  if (err) {
+    GST_ERROR ("Failed to create android.hardware.camera.CameraInfo object");
+    g_clear_error (&err);
     goto done;
   }
 
@@ -2401,17 +2407,20 @@ gst_ah_camera_set_error_callback (GstAHCamera * self, GstAHCErrorCallback cb,
     gpointer user_data)
 {
   JNIEnv *env = gst_amc_jni_get_env ();
+  GError *err = NULL;
   jobject object = NULL;
   gboolean ret = FALSE;
 
   if (cb) {
-    object = (*env)->NewObject (env,
+    object = gst_amc_jni_new_object (env,
+        &err,
+        FALSE,
         org_freedesktop_gstreamer_androidmedia_gstahccallback.klass,
         org_freedesktop_gstreamer_androidmedia_gstahccallback.constructor,
         *((jlong *) & cb), *((jlong *) & user_data));
-    if (!object) {
-      GST_ERROR ("Failed to create callback object");
-      (*env)->ExceptionClear (env);
+    if (err) {
+      GST_ERROR ("Failed to create org.freedesktop.gstreamer.androidmedia.GstAhcCallback object");
+      g_clear_error (&err);
       goto done;
     }
   }
@@ -2431,17 +2440,20 @@ gst_ah_camera_set_preview_callback_with_buffer (GstAHCamera * self,
     GstAHCPreviewCallback cb, gpointer user_data)
 {
   JNIEnv *env = gst_amc_jni_get_env ();
+  GError *err = NULL;
   jobject object = NULL;
   gboolean ret = FALSE;
 
   if (cb) {
-    object = (*env)->NewObject (env,
+    object = gst_amc_jni_new_object (env,
+        &err,
+        FALSE,
         org_freedesktop_gstreamer_androidmedia_gstahccallback.klass,
         org_freedesktop_gstreamer_androidmedia_gstahccallback.constructor,
         *((jlong *) & cb), *((jlong *) & user_data));
-    if (!object) {
-      GST_ERROR ("Failed to create callback object");
-      (*env)->ExceptionClear (env);
+    if (err) {
+      GST_ERROR ("Failed to create org.freedesktop.gstreamer.androidmedia.GstAhcCallback object");
+      g_clear_error (&err);
       goto done;
     }
   }
