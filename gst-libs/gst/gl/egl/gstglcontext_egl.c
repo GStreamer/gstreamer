@@ -31,6 +31,7 @@
 #include "gstglcontext_egl.h"
 #include <gst/gl/egl/gstegl.h>
 #include "../utils/opengl_versions.h"
+#include "../utils/gles_versions.h"
 
 #if GST_GL_HAVE_WINDOW_X11
 #include "../x11/gstglwindow_x11.h"
