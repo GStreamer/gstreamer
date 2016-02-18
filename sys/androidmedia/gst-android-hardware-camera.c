@@ -657,8 +657,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.WHITE_BALANCE_AUTO;
 
     android_hardware_camera_parameters.WHITE_BALANCE_AUTO =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -678,8 +677,7 @@ _init_classes (void)
         android_hardware_camera_parameters.WHITE_BALANCE_INCANDESCENT;
 
     android_hardware_camera_parameters.WHITE_BALANCE_INCANDESCENT =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -699,8 +697,7 @@ _init_classes (void)
         android_hardware_camera_parameters.WHITE_BALANCE_FLUORESCENT;
 
     android_hardware_camera_parameters.WHITE_BALANCE_FLUORESCENT =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -720,8 +717,7 @@ _init_classes (void)
         android_hardware_camera_parameters.WHITE_BALANCE_WARM_FLUORESCENT;
 
     android_hardware_camera_parameters.WHITE_BALANCE_WARM_FLUORESCENT =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -740,8 +736,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.WHITE_BALANCE_DAYLIGHT;
 
     android_hardware_camera_parameters.WHITE_BALANCE_DAYLIGHT =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -760,8 +755,7 @@ _init_classes (void)
         android_hardware_camera_parameters.WHITE_BALANCE_CLOUDY_DAYLIGHT;
 
     android_hardware_camera_parameters.WHITE_BALANCE_CLOUDY_DAYLIGHT =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -779,8 +773,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.WHITE_BALANCE_TWILIGHT;
 
     android_hardware_camera_parameters.WHITE_BALANCE_TWILIGHT =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -799,8 +792,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.WHITE_BALANCE_SHADE;
 
     android_hardware_camera_parameters.WHITE_BALANCE_SHADE =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -819,8 +811,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.EFFECT_NONE;
 
     android_hardware_camera_parameters.EFFECT_NONE =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -839,8 +830,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.EFFECT_MONO;
 
     android_hardware_camera_parameters.EFFECT_MONO =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -859,8 +849,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.EFFECT_NEGATIVE;
 
     android_hardware_camera_parameters.EFFECT_NEGATIVE =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -879,8 +868,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.EFFECT_SOLARIZE;
 
     android_hardware_camera_parameters.EFFECT_SOLARIZE =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -899,8 +887,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.EFFECT_SEPIA;
 
     android_hardware_camera_parameters.EFFECT_SEPIA =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -919,8 +906,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.EFFECT_POSTERIZE;
 
     android_hardware_camera_parameters.EFFECT_POSTERIZE =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -939,8 +925,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.EFFECT_WHITEBOARD;
 
     android_hardware_camera_parameters.EFFECT_WHITEBOARD =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -959,8 +944,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.EFFECT_BLACKBOARD;
 
     android_hardware_camera_parameters.EFFECT_BLACKBOARD =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -979,8 +963,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.EFFECT_AQUA;
 
     android_hardware_camera_parameters.EFFECT_AQUA =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -999,8 +982,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.ANTIBANDING_AUTO;
 
     android_hardware_camera_parameters.ANTIBANDING_AUTO =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1019,8 +1001,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.ANTIBANDING_50HZ;
 
     android_hardware_camera_parameters.ANTIBANDING_50HZ =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1039,8 +1020,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.ANTIBANDING_60HZ;
 
     android_hardware_camera_parameters.ANTIBANDING_60HZ =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1059,8 +1039,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.ANTIBANDING_OFF;
 
     android_hardware_camera_parameters.ANTIBANDING_OFF =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1079,8 +1058,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.FLASH_MODE_OFF;
 
     android_hardware_camera_parameters.FLASH_MODE_OFF =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1099,8 +1077,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.FLASH_MODE_AUTO;
 
     android_hardware_camera_parameters.FLASH_MODE_AUTO =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1119,8 +1096,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.FLASH_MODE_ON;
 
     android_hardware_camera_parameters.FLASH_MODE_ON =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1139,8 +1115,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.FLASH_MODE_RED_EYE;
 
     android_hardware_camera_parameters.FLASH_MODE_RED_EYE =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1159,8 +1134,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.FLASH_MODE_TORCH;
 
     android_hardware_camera_parameters.FLASH_MODE_TORCH =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1179,8 +1153,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_AUTO;
 
     android_hardware_camera_parameters.SCENE_MODE_AUTO =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1199,8 +1172,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_ACTION;
 
     android_hardware_camera_parameters.SCENE_MODE_ACTION =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1219,8 +1191,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_PORTRAIT;
 
     android_hardware_camera_parameters.SCENE_MODE_PORTRAIT =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1238,8 +1209,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_LANDSCAPE;
 
     android_hardware_camera_parameters.SCENE_MODE_LANDSCAPE =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1258,8 +1228,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_NIGHT;
 
     android_hardware_camera_parameters.SCENE_MODE_NIGHT =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1278,8 +1247,7 @@ _init_classes (void)
         android_hardware_camera_parameters.SCENE_MODE_NIGHT_PORTRAIT;
 
     android_hardware_camera_parameters.SCENE_MODE_NIGHT_PORTRAIT =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
   fieldID =
       gst_amc_jni_get_static_field_id (env, &err, klass, "SCENE_MODE_THEATRE",
@@ -1297,8 +1265,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_THEATRE;
 
     android_hardware_camera_parameters.SCENE_MODE_THEATRE =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1317,8 +1284,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_BEACH;
 
     android_hardware_camera_parameters.SCENE_MODE_BEACH =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1337,8 +1303,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_SNOW;
 
     android_hardware_camera_parameters.SCENE_MODE_SNOW =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1358,8 +1323,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_SUNSET;
 
     android_hardware_camera_parameters.SCENE_MODE_SUNSET =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1379,8 +1343,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_STEADYPHOTO;
 
     android_hardware_camera_parameters.SCENE_MODE_STEADYPHOTO =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1399,8 +1362,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_FIREWORKS;
 
     android_hardware_camera_parameters.SCENE_MODE_FIREWORKS =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1420,8 +1382,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_SPORTS;
 
     android_hardware_camera_parameters.SCENE_MODE_SPORTS =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1440,8 +1401,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_PARTY;
 
     android_hardware_camera_parameters.SCENE_MODE_PARTY =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1460,8 +1420,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_CANDLELIGHT;
 
     android_hardware_camera_parameters.SCENE_MODE_CANDLELIGHT =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
 
@@ -1481,8 +1440,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.SCENE_MODE_BARCODE;
 
     android_hardware_camera_parameters.SCENE_MODE_BARCODE =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1501,8 +1459,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.FOCUS_MODE_AUTO;
 
     android_hardware_camera_parameters.FOCUS_MODE_AUTO =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1521,8 +1478,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.FOCUS_MODE_INFINITY;
 
     android_hardware_camera_parameters.FOCUS_MODE_INFINITY =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1541,8 +1497,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.FOCUS_MODE_MACRO;
 
     android_hardware_camera_parameters.FOCUS_MODE_MACRO =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1561,8 +1516,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.FOCUS_MODE_FIXED;
 
     android_hardware_camera_parameters.FOCUS_MODE_FIXED =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1581,8 +1535,7 @@ _init_classes (void)
     jobject local = android_hardware_camera_parameters.FOCUS_MODE_EDOF;
 
     android_hardware_camera_parameters.FOCUS_MODE_EDOF =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1602,8 +1555,7 @@ _init_classes (void)
         android_hardware_camera_parameters.FOCUS_MODE_CONTINUOUS_VIDEO;
 
     android_hardware_camera_parameters.FOCUS_MODE_CONTINUOUS_VIDEO =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   fieldID =
@@ -1624,8 +1576,7 @@ _init_classes (void)
         android_hardware_camera_parameters.FOCUS_MODE_CONTINUOUS_PICTURE;
 
     android_hardware_camera_parameters.FOCUS_MODE_CONTINUOUS_PICTURE =
-        (*env)->NewGlobalRef (env, local);
-    (*env)->DeleteLocalRef (env, local);
+        gst_amc_jni_object_make_global (env, local);
   }
 
   /* java.lang.String */
@@ -1710,19 +1661,19 @@ gst_android_hardware_camera_deinit (void)
   JNIEnv *env = gst_amc_jni_get_env ();
 
   if (android_hardware_camera.klass)
-    (*env)->DeleteGlobalRef (env, android_hardware_camera.klass);
+    gst_amc_jni_object_unref (env, android_hardware_camera.klass);
   android_hardware_camera.klass = NULL;
 
   if (android_hardware_camera_camerainfo.klass)
-    (*env)->DeleteGlobalRef (env, android_hardware_camera_camerainfo.klass);
+    gst_amc_jni_object_unref (env, android_hardware_camera_camerainfo.klass);
   android_hardware_camera_camerainfo.klass = NULL;
 
   if (android_hardware_camera_size.klass)
-    (*env)->DeleteGlobalRef (env, android_hardware_camera_size.klass);
+    gst_amc_jni_object_unref (env, android_hardware_camera_size.klass);
   android_hardware_camera_size.klass = NULL;
 
   if (android_hardware_camera_parameters.klass)
-    (*env)->DeleteGlobalRef (env, android_hardware_camera_parameters.klass);
+    gst_amc_jni_object_unref (env, android_hardware_camera_parameters.klass);
   android_hardware_camera_parameters.klass = NULL;
   if (Parameters_WHITE_BALANCE_AUTO)
     (*env)->ReleaseStringUTFChars (env,
@@ -1730,7 +1681,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_WHITE_BALANCE_AUTO);
   Parameters_WHITE_BALANCE_AUTO = NULL;
   if (android_hardware_camera_parameters.WHITE_BALANCE_AUTO)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.WHITE_BALANCE_AUTO);
   android_hardware_camera_parameters.WHITE_BALANCE_AUTO = NULL;
   if (Parameters_WHITE_BALANCE_INCANDESCENT)
@@ -1739,7 +1690,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_WHITE_BALANCE_INCANDESCENT);
   Parameters_WHITE_BALANCE_INCANDESCENT = NULL;
   if (android_hardware_camera_parameters.WHITE_BALANCE_INCANDESCENT)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.WHITE_BALANCE_INCANDESCENT);
   android_hardware_camera_parameters.WHITE_BALANCE_INCANDESCENT = NULL;
   if (Parameters_WHITE_BALANCE_FLUORESCENT)
@@ -1748,7 +1699,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_WHITE_BALANCE_FLUORESCENT);
   Parameters_WHITE_BALANCE_FLUORESCENT = NULL;
   if (android_hardware_camera_parameters.WHITE_BALANCE_FLUORESCENT)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.WHITE_BALANCE_FLUORESCENT);
   android_hardware_camera_parameters.WHITE_BALANCE_FLUORESCENT = NULL;
   if (Parameters_WHITE_BALANCE_WARM_FLUORESCENT)
@@ -1757,7 +1708,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_WHITE_BALANCE_WARM_FLUORESCENT);
   Parameters_WHITE_BALANCE_WARM_FLUORESCENT = NULL;
   if (android_hardware_camera_parameters.WHITE_BALANCE_WARM_FLUORESCENT)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.WHITE_BALANCE_WARM_FLUORESCENT);
   android_hardware_camera_parameters.WHITE_BALANCE_WARM_FLUORESCENT = NULL;
   if (Parameters_WHITE_BALANCE_DAYLIGHT)
@@ -1766,7 +1717,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_WHITE_BALANCE_DAYLIGHT);
   Parameters_WHITE_BALANCE_DAYLIGHT = NULL;
   if (android_hardware_camera_parameters.WHITE_BALANCE_DAYLIGHT)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.WHITE_BALANCE_DAYLIGHT);
   android_hardware_camera_parameters.WHITE_BALANCE_DAYLIGHT = NULL;
   if (Parameters_WHITE_BALANCE_CLOUDY_DAYLIGHT)
@@ -1775,7 +1726,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_WHITE_BALANCE_CLOUDY_DAYLIGHT);
   Parameters_WHITE_BALANCE_CLOUDY_DAYLIGHT = NULL;
   if (android_hardware_camera_parameters.WHITE_BALANCE_CLOUDY_DAYLIGHT)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.WHITE_BALANCE_CLOUDY_DAYLIGHT);
   android_hardware_camera_parameters.WHITE_BALANCE_CLOUDY_DAYLIGHT = NULL;
   if (Parameters_WHITE_BALANCE_TWILIGHT)
@@ -1784,7 +1735,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_WHITE_BALANCE_TWILIGHT);
   Parameters_WHITE_BALANCE_TWILIGHT = NULL;
   if (android_hardware_camera_parameters.WHITE_BALANCE_TWILIGHT)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.WHITE_BALANCE_TWILIGHT);
   android_hardware_camera_parameters.WHITE_BALANCE_TWILIGHT = NULL;
   if (Parameters_WHITE_BALANCE_SHADE)
@@ -1793,7 +1744,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_WHITE_BALANCE_SHADE);
   Parameters_WHITE_BALANCE_SHADE = NULL;
   if (android_hardware_camera_parameters.WHITE_BALANCE_SHADE)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.WHITE_BALANCE_SHADE);
   android_hardware_camera_parameters.WHITE_BALANCE_SHADE = NULL;
   if (Parameters_EFFECT_NONE)
@@ -1801,7 +1752,7 @@ gst_android_hardware_camera_deinit (void)
         android_hardware_camera_parameters.EFFECT_NONE, Parameters_EFFECT_NONE);
   Parameters_EFFECT_NONE = NULL;
   if (android_hardware_camera_parameters.EFFECT_NONE)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.EFFECT_NONE);
   android_hardware_camera_parameters.EFFECT_NONE = NULL;
   if (Parameters_EFFECT_MONO)
@@ -1809,7 +1760,7 @@ gst_android_hardware_camera_deinit (void)
         android_hardware_camera_parameters.EFFECT_MONO, Parameters_EFFECT_MONO);
   Parameters_EFFECT_MONO = NULL;
   if (android_hardware_camera_parameters.EFFECT_MONO)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.EFFECT_MONO);
   android_hardware_camera_parameters.EFFECT_MONO = NULL;
   if (Parameters_EFFECT_NEGATIVE)
@@ -1818,7 +1769,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_EFFECT_NEGATIVE);
   Parameters_EFFECT_NEGATIVE = NULL;
   if (android_hardware_camera_parameters.EFFECT_NEGATIVE)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.EFFECT_NEGATIVE);
   android_hardware_camera_parameters.EFFECT_NEGATIVE = NULL;
   if (Parameters_EFFECT_SOLARIZE)
@@ -1827,7 +1778,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_EFFECT_SOLARIZE);
   Parameters_EFFECT_SOLARIZE = NULL;
   if (android_hardware_camera_parameters.EFFECT_SOLARIZE)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.EFFECT_SOLARIZE);
   android_hardware_camera_parameters.EFFECT_SOLARIZE = NULL;
   if (Parameters_EFFECT_SEPIA)
@@ -1836,7 +1787,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_EFFECT_SEPIA);
   Parameters_EFFECT_SEPIA = NULL;
   if (android_hardware_camera_parameters.EFFECT_SEPIA)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.EFFECT_SEPIA);
   android_hardware_camera_parameters.EFFECT_SEPIA = NULL;
   if (Parameters_EFFECT_POSTERIZE)
@@ -1845,7 +1796,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_EFFECT_POSTERIZE);
   Parameters_EFFECT_POSTERIZE = NULL;
   if (android_hardware_camera_parameters.EFFECT_POSTERIZE)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.EFFECT_POSTERIZE);
   android_hardware_camera_parameters.EFFECT_POSTERIZE = NULL;
   if (Parameters_EFFECT_WHITEBOARD)
@@ -1854,7 +1805,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_EFFECT_WHITEBOARD);
   Parameters_EFFECT_WHITEBOARD = NULL;
   if (android_hardware_camera_parameters.EFFECT_WHITEBOARD)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.EFFECT_WHITEBOARD);
   android_hardware_camera_parameters.EFFECT_WHITEBOARD = NULL;
   if (Parameters_EFFECT_BLACKBOARD)
@@ -1863,7 +1814,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_EFFECT_BLACKBOARD);
   Parameters_EFFECT_BLACKBOARD = NULL;
   if (android_hardware_camera_parameters.EFFECT_BLACKBOARD)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.EFFECT_BLACKBOARD);
   android_hardware_camera_parameters.EFFECT_BLACKBOARD = NULL;
   if (Parameters_EFFECT_AQUA)
@@ -1871,7 +1822,7 @@ gst_android_hardware_camera_deinit (void)
         android_hardware_camera_parameters.EFFECT_AQUA, Parameters_EFFECT_AQUA);
   Parameters_EFFECT_AQUA = NULL;
   if (android_hardware_camera_parameters.EFFECT_AQUA)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.EFFECT_AQUA);
   android_hardware_camera_parameters.EFFECT_AQUA = NULL;
   if (Parameters_ANTIBANDING_AUTO)
@@ -1880,7 +1831,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_ANTIBANDING_AUTO);
   Parameters_ANTIBANDING_AUTO = NULL;
   if (android_hardware_camera_parameters.ANTIBANDING_AUTO)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.ANTIBANDING_AUTO);
   android_hardware_camera_parameters.ANTIBANDING_AUTO = NULL;
   if (Parameters_ANTIBANDING_50HZ)
@@ -1889,7 +1840,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_ANTIBANDING_50HZ);
   Parameters_ANTIBANDING_50HZ = NULL;
   if (android_hardware_camera_parameters.ANTIBANDING_50HZ)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.ANTIBANDING_50HZ);
   android_hardware_camera_parameters.ANTIBANDING_50HZ = NULL;
   if (Parameters_ANTIBANDING_60HZ)
@@ -1898,7 +1849,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_ANTIBANDING_60HZ);
   Parameters_ANTIBANDING_60HZ = NULL;
   if (android_hardware_camera_parameters.ANTIBANDING_60HZ)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.ANTIBANDING_60HZ);
   android_hardware_camera_parameters.ANTIBANDING_60HZ = NULL;
   if (Parameters_ANTIBANDING_OFF)
@@ -1907,7 +1858,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_ANTIBANDING_OFF);
   Parameters_ANTIBANDING_OFF = NULL;
   if (android_hardware_camera_parameters.ANTIBANDING_OFF)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.ANTIBANDING_OFF);
   android_hardware_camera_parameters.ANTIBANDING_OFF = NULL;
   if (Parameters_FLASH_MODE_OFF)
@@ -1916,7 +1867,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_FLASH_MODE_OFF);
   Parameters_FLASH_MODE_OFF = NULL;
   if (android_hardware_camera_parameters.FLASH_MODE_OFF)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.FLASH_MODE_OFF);
   android_hardware_camera_parameters.FLASH_MODE_OFF = NULL;
   if (Parameters_FLASH_MODE_AUTO)
@@ -1925,7 +1876,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_FLASH_MODE_AUTO);
   Parameters_FLASH_MODE_AUTO = NULL;
   if (android_hardware_camera_parameters.FLASH_MODE_AUTO)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.FLASH_MODE_AUTO);
   android_hardware_camera_parameters.FLASH_MODE_AUTO = NULL;
   if (Parameters_FLASH_MODE_ON)
@@ -1934,7 +1885,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_FLASH_MODE_ON);
   Parameters_FLASH_MODE_ON = NULL;
   if (android_hardware_camera_parameters.FLASH_MODE_ON)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.FLASH_MODE_ON);
   android_hardware_camera_parameters.FLASH_MODE_ON = NULL;
   if (Parameters_FLASH_MODE_RED_EYE)
@@ -1943,7 +1894,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_FLASH_MODE_RED_EYE);
   Parameters_FLASH_MODE_RED_EYE = NULL;
   if (android_hardware_camera_parameters.FLASH_MODE_RED_EYE)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.FLASH_MODE_RED_EYE);
   android_hardware_camera_parameters.FLASH_MODE_RED_EYE = NULL;
   if (Parameters_FLASH_MODE_TORCH)
@@ -1952,7 +1903,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_FLASH_MODE_TORCH);
   Parameters_FLASH_MODE_TORCH = NULL;
   if (android_hardware_camera_parameters.FLASH_MODE_TORCH)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.FLASH_MODE_TORCH);
   android_hardware_camera_parameters.FLASH_MODE_TORCH = NULL;
   if (Parameters_SCENE_MODE_AUTO)
@@ -1961,7 +1912,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_AUTO);
   Parameters_SCENE_MODE_AUTO = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_AUTO)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_AUTO);
   android_hardware_camera_parameters.SCENE_MODE_AUTO = NULL;
   if (Parameters_SCENE_MODE_ACTION)
@@ -1970,7 +1921,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_ACTION);
   Parameters_SCENE_MODE_ACTION = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_ACTION)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_ACTION);
   android_hardware_camera_parameters.SCENE_MODE_ACTION = NULL;
   if (Parameters_SCENE_MODE_PORTRAIT)
@@ -1979,7 +1930,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_PORTRAIT);
   Parameters_SCENE_MODE_PORTRAIT = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_PORTRAIT)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_PORTRAIT);
   android_hardware_camera_parameters.SCENE_MODE_PORTRAIT = NULL;
   if (Parameters_SCENE_MODE_LANDSCAPE)
@@ -1988,7 +1939,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_LANDSCAPE);
   Parameters_SCENE_MODE_LANDSCAPE = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_LANDSCAPE)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_LANDSCAPE);
   android_hardware_camera_parameters.SCENE_MODE_LANDSCAPE = NULL;
   if (Parameters_SCENE_MODE_NIGHT)
@@ -1997,7 +1948,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_NIGHT);
   Parameters_SCENE_MODE_NIGHT = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_NIGHT)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_NIGHT);
   android_hardware_camera_parameters.SCENE_MODE_NIGHT = NULL;
   if (Parameters_SCENE_MODE_NIGHT_PORTRAIT)
@@ -2006,7 +1957,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_NIGHT_PORTRAIT);
   Parameters_SCENE_MODE_NIGHT_PORTRAIT = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_NIGHT_PORTRAIT)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_NIGHT_PORTRAIT);
   android_hardware_camera_parameters.SCENE_MODE_NIGHT_PORTRAIT = NULL;
   if (Parameters_SCENE_MODE_THEATRE)
@@ -2015,7 +1966,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_THEATRE);
   Parameters_SCENE_MODE_THEATRE = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_THEATRE)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_THEATRE);
   android_hardware_camera_parameters.SCENE_MODE_THEATRE = NULL;
   if (Parameters_SCENE_MODE_BEACH)
@@ -2024,7 +1975,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_BEACH);
   Parameters_SCENE_MODE_BEACH = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_BEACH)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_BEACH);
   android_hardware_camera_parameters.SCENE_MODE_BEACH = NULL;
   if (Parameters_SCENE_MODE_SNOW)
@@ -2033,7 +1984,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_SNOW);
   Parameters_SCENE_MODE_SNOW = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_SNOW)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_SNOW);
   android_hardware_camera_parameters.SCENE_MODE_SNOW = NULL;
   if (Parameters_SCENE_MODE_SUNSET)
@@ -2042,7 +1993,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_SUNSET);
   Parameters_SCENE_MODE_SUNSET = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_SUNSET)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_SUNSET);
   android_hardware_camera_parameters.SCENE_MODE_SUNSET = NULL;
   if (Parameters_SCENE_MODE_STEADYPHOTO)
@@ -2051,7 +2002,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_STEADYPHOTO);
   Parameters_SCENE_MODE_STEADYPHOTO = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_STEADYPHOTO)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_STEADYPHOTO);
   android_hardware_camera_parameters.SCENE_MODE_STEADYPHOTO = NULL;
   if (Parameters_SCENE_MODE_FIREWORKS)
@@ -2060,7 +2011,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_FIREWORKS);
   Parameters_SCENE_MODE_FIREWORKS = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_FIREWORKS)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_FIREWORKS);
   android_hardware_camera_parameters.SCENE_MODE_FIREWORKS = NULL;
   if (Parameters_SCENE_MODE_SPORTS)
@@ -2069,7 +2020,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_SPORTS);
   Parameters_SCENE_MODE_SPORTS = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_SPORTS)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_SPORTS);
   android_hardware_camera_parameters.SCENE_MODE_SPORTS = NULL;
   if (Parameters_SCENE_MODE_PARTY)
@@ -2078,7 +2029,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_PARTY);
   Parameters_SCENE_MODE_PARTY = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_PARTY)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_PARTY);
   android_hardware_camera_parameters.SCENE_MODE_PARTY = NULL;
   if (Parameters_SCENE_MODE_CANDLELIGHT)
@@ -2087,7 +2038,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_CANDLELIGHT);
   Parameters_SCENE_MODE_CANDLELIGHT = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_CANDLELIGHT)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_CANDLELIGHT);
   android_hardware_camera_parameters.SCENE_MODE_CANDLELIGHT = NULL;
   if (Parameters_SCENE_MODE_BARCODE)
@@ -2096,7 +2047,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_SCENE_MODE_BARCODE);
   Parameters_SCENE_MODE_BARCODE = NULL;
   if (android_hardware_camera_parameters.SCENE_MODE_BARCODE)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.SCENE_MODE_BARCODE);
   android_hardware_camera_parameters.SCENE_MODE_BARCODE = NULL;
   if (Parameters_FOCUS_MODE_AUTO)
@@ -2105,7 +2056,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_FOCUS_MODE_AUTO);
   Parameters_FOCUS_MODE_AUTO = NULL;
   if (android_hardware_camera_parameters.FOCUS_MODE_AUTO)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.FOCUS_MODE_AUTO);
   android_hardware_camera_parameters.FOCUS_MODE_AUTO = NULL;
   if (Parameters_FOCUS_MODE_INFINITY)
@@ -2114,7 +2065,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_FOCUS_MODE_INFINITY);
   Parameters_FOCUS_MODE_INFINITY = NULL;
   if (android_hardware_camera_parameters.FOCUS_MODE_INFINITY)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.FOCUS_MODE_INFINITY);
   android_hardware_camera_parameters.FOCUS_MODE_INFINITY = NULL;
   if (Parameters_FOCUS_MODE_MACRO)
@@ -2123,7 +2074,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_FOCUS_MODE_MACRO);
   Parameters_FOCUS_MODE_MACRO = NULL;
   if (android_hardware_camera_parameters.FOCUS_MODE_MACRO)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.FOCUS_MODE_MACRO);
   android_hardware_camera_parameters.FOCUS_MODE_MACRO = NULL;
   if (Parameters_FOCUS_MODE_FIXED)
@@ -2132,7 +2083,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_FOCUS_MODE_FIXED);
   Parameters_FOCUS_MODE_FIXED = NULL;
   if (android_hardware_camera_parameters.FOCUS_MODE_FIXED)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.FOCUS_MODE_FIXED);
   android_hardware_camera_parameters.FOCUS_MODE_FIXED = NULL;
   if (Parameters_FOCUS_MODE_EDOF)
@@ -2141,7 +2092,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_FOCUS_MODE_EDOF);
   Parameters_FOCUS_MODE_EDOF = NULL;
   if (android_hardware_camera_parameters.FOCUS_MODE_EDOF)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.FOCUS_MODE_EDOF);
   android_hardware_camera_parameters.FOCUS_MODE_EDOF = NULL;
   if (Parameters_FOCUS_MODE_CONTINUOUS_VIDEO)
@@ -2150,7 +2101,7 @@ gst_android_hardware_camera_deinit (void)
         Parameters_FOCUS_MODE_CONTINUOUS_VIDEO);
   Parameters_FOCUS_MODE_CONTINUOUS_VIDEO = NULL;
   if (android_hardware_camera_parameters.FOCUS_MODE_CONTINUOUS_VIDEO)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
   android_hardware_camera_parameters.FOCUS_MODE_CONTINUOUS_VIDEO = NULL;
   if (Parameters_FOCUS_MODE_CONTINUOUS_PICTURE)
@@ -2159,30 +2110,30 @@ gst_android_hardware_camera_deinit (void)
         Parameters_FOCUS_MODE_CONTINUOUS_PICTURE);
   Parameters_FOCUS_MODE_CONTINUOUS_PICTURE = NULL;
   if (android_hardware_camera_parameters.FOCUS_MODE_CONTINUOUS_PICTURE)
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         android_hardware_camera_parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
   android_hardware_camera_parameters.FOCUS_MODE_CONTINUOUS_PICTURE = NULL;
 
   if (java_lang_string.klass)
-    (*env)->DeleteGlobalRef (env, java_lang_string.klass);
+    gst_amc_jni_object_unref (env, java_lang_string.klass);
   java_lang_string.klass = NULL;
 
   if (java_util_list.klass)
-    (*env)->DeleteGlobalRef (env, java_util_list.klass);
+    gst_amc_jni_object_unref (env, java_util_list.klass);
   java_util_list.klass = NULL;
 
   if (java_util_iterator.klass)
-    (*env)->DeleteGlobalRef (env, java_util_iterator.klass);
+    gst_amc_jni_object_unref (env, java_util_iterator.klass);
   java_util_iterator.klass = NULL;
 
   if (java_lang_integer.klass)
-    (*env)->DeleteGlobalRef (env, java_lang_integer.klass);
+    gst_amc_jni_object_unref (env, java_lang_integer.klass);
   java_lang_integer.klass = NULL;
 
   if (org_freedesktop_gstreamer_androidmedia_gstahccallback.klass) {
     (*env)->UnregisterNatives (env,
         org_freedesktop_gstreamer_androidmedia_gstahccallback.klass);
-    (*env)->DeleteGlobalRef (env,
+    gst_amc_jni_object_unref (env,
         org_freedesktop_gstreamer_androidmedia_gstahccallback.klass);
   }
   org_freedesktop_gstreamer_androidmedia_gstahccallback.klass = NULL;
@@ -2234,7 +2185,7 @@ gst_ah_camera_auto_focus (GstAHCamera * self,
   ret = TRUE;
 done:
   if (object)
-    (*env)->DeleteLocalRef (env, object);
+    gst_amc_jni_object_local_unref (env, object);
 
   return ret;
 }
@@ -2289,7 +2240,7 @@ gst_ah_camera_get_camera_info (gint camera_id, GstAHCCameraInfo * camera_info)
   ret = TRUE;
 done:
   if (jcamera_info)
-    (*env)->DeleteLocalRef (env, jcamera_info);
+    gst_amc_jni_object_local_unref (env, jcamera_info);
 
   return ret;
 }
@@ -2315,8 +2266,8 @@ gst_ah_camera_get_parameters (GstAHCamera * self)
   object = AHC_CALL (return NULL, Object, getParameters);
   if (object) {
     params = g_slice_new0 (GstAHCParameters);
-    params->object = (*env)->NewGlobalRef (env, object);
-    (*env)->DeleteLocalRef (env, object);
+    params->object = gst_amc_jni_object_ref (env, object);
+    gst_amc_jni_object_local_unref (env, object);
     if (!params->object) {
       GST_ERROR ("Failed to create global reference");
       (*env)->ExceptionClear (env);
@@ -2350,8 +2301,8 @@ gst_ah_camera_open (gint camera_id)
   object = AHC_STATIC_CALL (goto done, Object, open, camera_id);
   if (object) {
     camera = g_slice_new0 (GstAHCamera);
-    camera->object = (*env)->NewGlobalRef (env, object);
-    (*env)->DeleteLocalRef (env, object);
+    camera->object = gst_amc_jni_object_ref (env, object);
+    gst_amc_jni_object_local_unref (env, object);
     if (!camera->object) {
       GST_ERROR ("Failed to create global reference");
       (*env)->ExceptionClear (env);
@@ -2387,7 +2338,7 @@ gst_ah_camera_free (GstAHCamera * self)
 {
   JNIEnv *env = gst_amc_jni_get_env ();
 
-  (*env)->DeleteGlobalRef (env, self->object);
+  gst_amc_jni_object_unref (env, self->object);
   g_slice_free (GstAHCamera, self);
 }
 
@@ -2430,7 +2381,7 @@ gst_ah_camera_set_error_callback (GstAHCamera * self, GstAHCErrorCallback cb,
   ret = TRUE;
 done:
   if (object)
-    (*env)->DeleteLocalRef (env, object);
+    gst_amc_jni_object_local_unref (env, object);
 
   return ret;
 }
@@ -2463,7 +2414,7 @@ gst_ah_camera_set_preview_callback_with_buffer (GstAHCamera * self,
   ret = TRUE;
 done:
   if (object)
-    (*env)->DeleteLocalRef (env, object);
+    gst_amc_jni_object_local_unref (env, object);
 
   return ret;
 }
@@ -2979,7 +2930,7 @@ done:
   if (v)
     (*env)->ReleaseStringUTFChars (env, v_str, v);
   if (v_str)
-    (*env)->DeleteLocalRef (env, v_str);
+    gst_amc_jni_object_local_unref (env, v_str);
 
   return ret;
 }
@@ -2996,7 +2947,7 @@ gst_ahc_parameters_get_antibanding (GstAHCParameters * self)
   ret = _antibanding_to_gchar (env, antibanding);
 
   if (antibanding)
-    (*env)->DeleteLocalRef (env, antibanding);
+    gst_amc_jni_object_local_unref (env, antibanding);
 
   return ret;
 }
@@ -3013,7 +2964,7 @@ gst_ahc_parameters_get_color_effect (GstAHCParameters * self)
   ret = _color_effect_to_gchar (env, color_effect);
 
   if (color_effect)
-    (*env)->DeleteLocalRef (env, color_effect);
+    gst_amc_jni_object_local_unref (env, color_effect);
 
   return ret;
 }
@@ -3052,7 +3003,7 @@ gst_ahc_parameters_get_flash_mode (GstAHCParameters * self)
   ret = _flash_mode_to_gchar (env, flash_mode);
 
   if (flash_mode)
-    (*env)->DeleteLocalRef (env, flash_mode);
+    gst_amc_jni_object_local_unref (env, flash_mode);
 
   return ret;
 }
@@ -3080,7 +3031,7 @@ gst_ahc_parameters_get_focus_mode (GstAHCParameters * self)
   ret = _focus_mode_to_gchar (env, focus_mode);
 
   if (focus_mode)
-    (*env)->DeleteLocalRef (env, focus_mode);
+    gst_amc_jni_object_local_unref (env, focus_mode);
 
   return ret;
 }
@@ -3174,7 +3125,7 @@ done:
   if (fps)
     (*env)->ReleaseIntArrayElements (env, range, fps, JNI_ABORT);
   if (range)
-    (*env)->DeleteLocalRef (env, range);
+    gst_amc_jni_object_local_unref (env, range);
 
   return ret;
 }
@@ -3212,7 +3163,7 @@ gst_ahc_parameters_get_preview_size (GstAHCParameters * self)
 
 done:
   if (jsize)
-    (*env)->DeleteLocalRef (env, jsize);
+    gst_amc_jni_object_local_unref (env, jsize);
 
   return size;
 }
@@ -3229,7 +3180,7 @@ gst_ahc_parameters_get_scene_mode (GstAHCParameters * self)
   ret = _scene_mode_to_gchar (env, scene_mode);
 
   if (scene_mode)
-    (*env)->DeleteLocalRef (env, scene_mode);
+    gst_amc_jni_object_local_unref (env, scene_mode);
 
   return ret;
 }
@@ -3255,12 +3206,12 @@ gst_ahc_parameters_get_supported_antibanding (GstAHCParameters * self)
           const gchar *value = _antibanding_to_gchar (env, str);
 
           ret = g_list_append (ret, (gchar *) value);
-          (*env)->DeleteLocalRef (env, str);
+          gst_amc_jni_object_local_unref (env, str);
         }
       }
-      (*env)->DeleteLocalRef (env, iterator);
+      gst_amc_jni_object_local_unref (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, list);
+    gst_amc_jni_object_local_unref (env, list);
   }
 
   return ret;
@@ -3293,12 +3244,12 @@ gst_ahc_parameters_get_supported_color_effects (GstAHCParameters * self)
           const gchar *value = _color_effect_to_gchar (env, str);
 
           ret = g_list_append (ret, (gchar *) value);
-          (*env)->DeleteLocalRef (env, str);
+          gst_amc_jni_object_local_unref (env, str);
         }
       }
-      (*env)->DeleteLocalRef (env, iterator);
+      gst_amc_jni_object_local_unref (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, list);
+    gst_amc_jni_object_local_unref (env, list);
   }
 
   return ret;
@@ -3331,12 +3282,12 @@ gst_ahc_parameters_get_supported_flash_modes (GstAHCParameters * self)
           const gchar *value = _flash_mode_to_gchar (env, str);
 
           ret = g_list_append (ret, (gchar *) value);
-          (*env)->DeleteLocalRef (env, str);
+          gst_amc_jni_object_local_unref (env, str);
         }
       }
-      (*env)->DeleteLocalRef (env, iterator);
+      gst_amc_jni_object_local_unref (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, list);
+    gst_amc_jni_object_local_unref (env, list);
   }
 
   return ret;
@@ -3369,12 +3320,12 @@ gst_ahc_parameters_get_supported_focus_modes (GstAHCParameters * self)
           const gchar *value = _focus_mode_to_gchar (env, str);
 
           ret = g_list_append (ret, (gchar *) value);
-          (*env)->DeleteLocalRef (env, str);
+          gst_amc_jni_object_local_unref (env, str);
         }
       }
-      (*env)->DeleteLocalRef (env, iterator);
+      gst_amc_jni_object_local_unref (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, list);
+    gst_amc_jni_object_local_unref (env, list);
   }
 
   return ret;
@@ -3407,12 +3358,12 @@ gst_ahc_parameters_get_supported_preview_formats (GstAHCParameters * self)
           jint value = java_lang_integer_int_value (env, integer);
 
           ret = g_list_append (ret, GINT_TO_POINTER (value));
-          (*env)->DeleteLocalRef (env, integer);
+          gst_amc_jni_object_local_unref (env, integer);
         }
       }
-      (*env)->DeleteLocalRef (env, iterator);
+      gst_amc_jni_object_local_unref (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, list);
+    gst_amc_jni_object_local_unref (env, list);
   }
 
   return ret;
@@ -3446,12 +3397,12 @@ gst_ahc_parameters_get_supported_preview_fps_range (GstAHCParameters * self)
 
           (*env)->GetIntArrayRegion (env, range, 0, 2, fps);
           ret = g_list_append (ret, fps);
-          (*env)->DeleteLocalRef (env, range);
+          gst_amc_jni_object_local_unref (env, range);
         }
       }
-      (*env)->DeleteLocalRef (env, iterator);
+      gst_amc_jni_object_local_unref (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, list);
+    gst_amc_jni_object_local_unref (env, list);
   }
 
   return ret;
@@ -3490,12 +3441,12 @@ gst_ahc_parameters_get_supported_preview_sizes (GstAHCParameters * self)
               android_hardware_camera_size.height);
 
           ret = g_list_append (ret, gst_ahc_size_new (width, height));
-          (*env)->DeleteLocalRef (env, jsize);
+          gst_amc_jni_object_local_unref (env, jsize);
         }
       }
-      (*env)->DeleteLocalRef (env, iterator);
+      gst_amc_jni_object_local_unref (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, list);
+    gst_amc_jni_object_local_unref (env, list);
   }
 
   return ret;
@@ -3529,12 +3480,12 @@ gst_ahc_parameters_get_supported_scene_modes (GstAHCParameters * self)
           const gchar *value = _scene_mode_to_gchar (env, str);
 
           ret = g_list_append (ret, (gchar *) value);
-          (*env)->DeleteLocalRef (env, str);
+          gst_amc_jni_object_local_unref (env, str);
         }
       }
-      (*env)->DeleteLocalRef (env, iterator);
+      gst_amc_jni_object_local_unref (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, list);
+    gst_amc_jni_object_local_unref (env, list);
   }
 
   return ret;
@@ -3567,12 +3518,12 @@ gst_ahc_parameters_get_supported_white_balance (GstAHCParameters * self)
           const gchar *value = _white_balance_to_gchar (env, str);
 
           ret = g_list_append (ret, (gchar *) value);
-          (*env)->DeleteLocalRef (env, str);
+          gst_amc_jni_object_local_unref (env, str);
         }
       }
-      (*env)->DeleteLocalRef (env, iterator);
+      gst_amc_jni_object_local_unref (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, list);
+    gst_amc_jni_object_local_unref (env, list);
   }
 
   return ret;
@@ -3618,7 +3569,7 @@ gst_ahc_parameters_get_white_balance (GstAHCParameters * self)
   ret = _white_balance_to_gchar (env, white_balance);
 
   if (white_balance)
-    (*env)->DeleteLocalRef (env, white_balance);
+    gst_amc_jni_object_local_unref (env, white_balance);
 
   return ret;
 }
@@ -3655,12 +3606,12 @@ gst_ahc_parameters_get_zoom_ratios (GstAHCParameters * self)
           jint value = java_lang_integer_int_value (env, integer);
 
           ret = g_list_append (ret, GINT_TO_POINTER (value));
-          (*env)->DeleteLocalRef (env, integer);
+          gst_amc_jni_object_local_unref (env, integer);
         }
       }
-      (*env)->DeleteLocalRef (env, iterator);
+      gst_amc_jni_object_local_unref (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, list);
+    gst_amc_jni_object_local_unref (env, list);
   }
 
   return ret;
@@ -3876,7 +3827,7 @@ gst_ahc_parameters_unflatten (GstAHCParameters * self, const gchar * flattened)
 
   AHCP_CALL (ret = FALSE, Void, unflatten, v_str);
 
-  (*env)->DeleteLocalRef (env, v_str);
+  gst_amc_jni_object_local_unref (env, self->object);
 
   return ret;
 }
@@ -3891,6 +3842,6 @@ gst_ahc_parameters_free (GstAHCParameters * self)
 
   GST_DEBUG ("freeing parameters %p", self->object);
 
-  (*env)->DeleteGlobalRef (env, self->object);
+  gst_amc_jni_object_unref (env, self->object);
   g_slice_free (GstAHCParameters, self);
 }
