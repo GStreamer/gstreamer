@@ -1,12 +1,12 @@
 # the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../gst/rtsp-server
+libdir=${pcfiledir}/../gst/rtsp-server/.libs
 includedir=${pcfiledir}/..
 
 Name: gst-rtsp-server
 Description: GStreamer based RTSP server
 Version: @VERSION@
 Requires: gstreamer-@GST_API_VERSION@ gstreamer-plugins-base-@GST_API_VERSION@
-Libs: ${libdir}/libgstrtspserver-@GST_API_VERSION@.la
+Libs: -L${libdir} -lgstrtspserver-@GST_API_VERSION@
 Cflags: -I${includedir} -I@srcdir@/..
