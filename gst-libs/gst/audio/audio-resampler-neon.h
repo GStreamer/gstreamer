@@ -24,51 +24,38 @@ inner_product_gint16_none_1_neon (gint16 * o, const gint16 * a,
     uint32_t remainder = len % 16;
     len = len - remainder;
 
-    asm volatile ("      cmp %[len], #0\n"
-                  "      bne 1f\n"
-                  "      vld1.16 {d16}, [%[b]]!\n"
-                  "      vld1.16 {d20}, [%[a]]!\n"
-                  "      subs %[remainder], %[remainder], #4\n"
-                  "      vmull.s16 q0, d16, d20\n"
-                  "      beq 5f\n" 
-                  "      b 4f\n"
+    asm volatile ("      vmov.s32 q0, #0\n"
+                  "      cmp %[len], #0\n"
+                  "      beq 2f\n"
+                  "      vmov.s32 q1, #0\n"
                   "1:"
                   "      vld1.16 {d16, d17, d18, d19}, [%[b]]!\n"
                   "      vld1.16 {d20, d21, d22, d23}, [%[a]]!\n"
                   "      subs %[len], %[len], #16\n"
-                  "      vmull.s16 q0, d16, d20\n"
-                  "      vmlal.s16 q0, d17, d21\n"
-                  "      vmlal.s16 q0, d18, d22\n"
-                  "      vmlal.s16 q0, d19, d23\n"
-                  "      beq 3f\n"
-                  "2:"
-                  "      vld1.16 {d16, d17, d18, d19}, [%[b]]!\n"
-                  "      vld1.16 {d20, d21, d22, d23}, [%[a]]!\n"
-                  "      subs %[len], %[len], #16\n"
                   "      vmlal.s16 q0, d16, d20\n"
-                  "      vmlal.s16 q0, d17, d21\n"
+                  "      vmlal.s16 q1, d17, d21\n"
                   "      vmlal.s16 q0, d18, d22\n"
-                  "      vmlal.s16 q0, d19, d23\n"
-                  "      bne 2b\n"
-                  "3:"
+                  "      vmlal.s16 q1, d19, d23\n"
+                  "      bne 1b\n"
+                  "      vadd.s32 q0, q0, q1\n"
+                  "2:"
                   "      cmp %[remainder], #0\n"
-                  "      beq 5f\n"
-                  "4:"
+                  "      beq 4f\n"
+                  "3:"
                   "      vld1.16 {d16}, [%[b]]!\n"
                   "      vld1.16 {d20}, [%[a]]!\n"
                   "      subs %[remainder], %[remainder], #4\n"
                   "      vmlal.s16 q0, d16, d20\n"
-                  "      bne 4b\n"
-                  "5:"
-                  "      vaddl.s32 q0, d0, d1\n"
-                  "      vadd.s64 d0, d0, d1\n"
-                  "      vqmovn.s64 d0, q0\n"
+                  "      bne 3b\n"
+                  "4:"
+                  "      vadd.s32 d0, d0, d1\n"
+                  "      vpadd.s32 d0, d0, d0\n"
                   "      vqrshrn.s32 d0, q0, #15\n"
                   "      vst1.s16 d0[0], [%[o]]\n"
                   : [a] "+r" (a), [b] "+r" (b),
                     [len] "+r" (len), [remainder] "+r" (remainder)
                   : [o] "r" (o)
-                  : "cc", "q0",
+                  : "cc", "q0", "q1",
                     "d16", "d17", "d18", "d19",
                     "d20", "d21", "d22", "d23");
 }
@@ -77,12 +64,97 @@ static inline void
 inner_product_gint16_linear_1_neon (gint16 * o, const gint16 * a,
     const gint16 * b, gint len, const gint16 * icoeff)
 {
+    uint32_t remainder = len % 8;
+    len = len - remainder;
+
+    asm volatile ("      vmov.s16 q0, #0\n"
+                  "      cmp %[len], #0\n"
+                  "      beq 2f\n"
+                  "      vmov.s16 q1, #0\n"
+                  "1:"
+                  "      vld1.16 {d16, d17, d18, d19}, [%[b]]!\n"
+                  "      vld1.16 {d20, d21}, [%[a]]!\n"
+                  "      vmov.16 q11, q10\n"
+                  "      vzip.16 q10, q11\n"
+                  "      subs %[len], %[len], #8\n"
+                  "      vmlal.s16 q0, d16, d20\n"
+                  "      vmlal.s16 q1, d17, d21\n"
+                  "      vmlal.s16 q0, d18, d22\n"
+                  "      vmlal.s16 q1, d19, d23\n"
+                  "      bne 1b\n"
+                  "      vadd.s32 q0, q0, q1\n"
+                  "2:"
+                  "      cmp %[remainder], #0\n"
+                  "      beq 4f\n"
+                  "3:"
+                  "      vld1.16 {d16, d17}, [%[b]]!\n"
+                  "      vld1.16 {d20}, [%[a]]!\n"
+                  "      vmov.16 d21, d20\n"
+                  "      vzip.16 d20, d21\n"
+                  "      subs %[remainder], %[remainder], #4\n"
+                  "      vmlal.s16 q0, d16, d20\n"
+                  "      vmlal.s16 q0, d17, d21\n"
+                  "      bne 3b\n"
+                  "4:"
+                  "      vshrn.s32 d0, q0, #15\n"
+                  "      vld1.16 {d20}, [%[ic]]\n"
+                  "      vmull.s16 q0, d0, d20\n"
+                  "      vadd.s32 d0, d0, d1\n"
+                  "      vpadd.s32 d0, d0, d0\n"
+                  "      vqrshrn.s32 d0, q0, #15\n"
+                  "      vst1.s16 d0[0], [%[o]]\n"
+                  : [a] "+r" (a), [b] "+r" (b),
+                    [len] "+r" (len), [remainder] "+r" (remainder)
+                  : [o] "r" (o), [ic] "r" (icoeff)
+                  : "cc", "q0", "q1",
+                    "d16", "d17", "d18", "d19",
+                    "d20", "d21", "d22", "d23" , "memory");
 }
 
 static inline void
 inner_product_gint16_cubic_1_neon (gint16 * o, const gint16 * a,
     const gint16 * b, gint len, const gint16 * icoeff)
 {
+    uint32_t remainder = len % 4;
+    len = len - remainder;
+
+    asm volatile ("      vmov.s32 q0, #0\n"
+                  "      cmp %[len], #0\n"
+                  "      beq 2f\n"
+                  "      vmov.s32 q1, #0\n"
+                  "1:"
+                  "      vld1.16 {d16, d17, d18, d19}, [%[b]]!\n"
+                  "      vld4.16 {d20[], d21[], d22[], d23[]}, [%[a]]!\n"
+                  "      subs %[len], %[len], #4\n"
+                  "      vmlal.s16 q0, d16, d20\n"
+                  "      vmlal.s16 q1, d17, d21\n"
+                  "      vmlal.s16 q0, d18, d22\n"
+                  "      vmlal.s16 q1, d19, d23\n"
+                  "      bne 1b\n"
+                  "      vadd.s32 q0, q0, q1\n"
+                  "2:"
+                  "      cmp %[remainder], #0\n"
+                  "      beq 4f\n"
+                  "3:"
+                  "      vld1.16 {d16}, [%[b]]!\n"
+                  "      vld1.16 {d20[]}, [%[a]]!\n"
+                  "      subs %[remainder], %[remainder], #1\n"
+                  "      vmlal.s16 q0, d16, d20\n"
+                  "      bne 3b\n"
+                  "4:"
+                  "      vshrn.s32 d0, q0, #15\n"
+                  "      vld1.16 {d20}, [%[ic]]\n"
+                  "      vmull.s16 q0, d0, d20\n"
+                  "      vadd.s32 d0, d0, d1\n"
+                  "      vpadd.s32 d0, d0, d0\n"
+                  "      vqrshrn.s32 d0, q0, #15\n"
+                  "      vst1.s16 d0[0], [%[o]]\n"
+                  : [a] "+r" (a), [b] "+r" (b),
+                    [len] "+r" (len), [remainder] "+r" (remainder)
+                  : [o] "r" (o), [ic] "r" (icoeff)
+                  : "cc", "q0", "q1",
+                    "d16", "d17", "d18", "d19",
+                    "d20", "d21", "d22", "d23" , "memory");
 }
 
 static inline void
@@ -110,26 +182,11 @@ inner_product_gfloat_none_1_neon (gfloat * o, const gfloat * a,
     uint32_t remainder = len % 16;
     len = len - remainder;
 
-    asm volatile ("      cmp %[len], #0\n"
-                  "      bne 1f\n"
-                  "      vld1.32 {q4}, [%[b]]!\n"
-                  "      vld1.32 {q8}, [%[a]]!\n"
-                  "      subs %[remainder], %[remainder], #4\n"
-                  "      vmul.f32 q0, q4, q8\n"
-                  "      bne 4f\n"
-                  "      b 5f\n"
+    asm volatile ("      vmov.f32 q0, #0.0\n"
+                  "      cmp %[len], #0\n"
+                  "      beq 2f\n"
+                  "      vmov.f32 q1, #0.0\n"
                   "1:"
-                  "      vld1.32 {q4, q5}, [%[b]]!\n"
-                  "      vld1.32 {q8, q9}, [%[a]]!\n"
-                  "      vld1.32 {q6, q7}, [%[b]]!\n"
-                  "      vld1.32 {q10, q11}, [%[a]]!\n"
-                  "      subs %[len], %[len], #16\n"
-                  "      vmul.f32 q0, q4, q8\n"
-                  "      vmul.f32 q1, q5, q9\n"
-                  "      vmul.f32 q2, q6, q10\n"
-                  "      vmul.f32 q3, q7, q11\n"
-                  "      beq 3f\n"
-                  "2:"
                   "      vld1.32 {q4, q5}, [%[b]]!\n"
                   "      vld1.32 {q8, q9}, [%[a]]!\n"
                   "      vld1.32 {q6, q7}, [%[b]]!\n"
@@ -137,29 +194,27 @@ inner_product_gfloat_none_1_neon (gfloat * o, const gfloat * a,
                   "      subs %[len], %[len], #16\n"
                   "      vmla.f32 q0, q4, q8\n"
                   "      vmla.f32 q1, q5, q9\n"
-                  "      vmla.f32 q2, q6, q10\n"
-                  "      vmla.f32 q3, q7, q11\n"
-                  "      bne 2b\n"
-                  "3:"
-                  "      vadd.f32 q4, q0, q1\n"
-                  "      vadd.f32 q5, q2, q3\n"
+                  "      vmla.f32 q0, q6, q10\n"
+                  "      vmla.f32 q1, q7, q11\n"
+                  "      bne 1b\n"
+                  "      vadd.f32 q0, q0, q1\n"
+                  "2:"
                   "      cmp %[remainder], #0\n"
-                  "      vadd.f32 q0, q4, q5\n"
-                  "      beq 5f\n"
-                  "4:"
+                  "      beq 4f\n"
+                  "3:"
                   "      vld1.32 {q6}, [%[b]]!\n"
                   "      vld1.32 {q10}, [%[a]]!\n"
                   "      subs %[remainder], %[remainder], #4\n"
                   "      vmla.f32 q0, q6, q10\n"
-                  "      bne 4b\n"
-                  "5:"
+                  "      bne 3b\n"
+                  "4:"
                   "      vadd.f32 d0, d0, d1\n"
                   "      vpadd.f32 d0, d0, d0\n"
                   "      vst1.f32 d0[0], [%[o]]\n"
                   : [a] "+r" (a), [b] "+r" (b),
                     [len] "+r" (len), [remainder] "+r" (remainder)
                   : [o] "r" (o)
-                  : "cc", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8",
+                  : "cc", "q0", "q1", "q4", "q5", "q6", "q7", "q8",
                     "q9", "q10", "q11");
 
 }
@@ -168,12 +223,91 @@ static inline void
 inner_product_gfloat_linear_1_neon (gfloat * o, const gfloat * a,
     const gfloat * b, gint len, const gfloat * icoeff)
 {
+    uint32_t remainder = len % 8;
+    len = len - remainder;
+
+    asm volatile ("      vmov.f32 q0, #0.0\n"
+                  "      cmp %[len], #0\n"
+                  "      beq 2f\n"
+                  "      vmov.f32 q1, #0.0\n"
+                  "1:"
+                  "      vld2.f32 {q4, q5}, [%[b]]!\n"
+                  "      vld2.f32 {q6, q7}, [%[b]]!\n"
+                  "      vld1.f32 {q8, q9}, [%[a]]!\n"
+                  "      subs %[len], %[len], #8\n"
+                  "      vmla.f32 q0, q4, q8\n"
+                  "      vmla.f32 q1, q5, q8\n"
+                  "      vmla.f32 q0, q6, q9\n"
+                  "      vmla.f32 q1, q7, q9\n"
+                  "      bne 1b\n"
+                  "      vadd.f32 q0, q0, q1\n"
+                  "2:"
+                  "      cmp %[remainder], #0\n"
+                  "      beq 4f\n"
+                  "3:"
+                  "      vld2.f32 {q4}, [%[b]]!\n"
+                  "      vld1.f32 {q8}, [%[a]]!\n"
+                  "      subs %[remainder], %[remainder], #2\n"
+                  "      vmla.f32 q0, q4, q8\n"
+                  "      bne 3b\n"
+                  "4:"
+                  "      vld1.f32 {q10}, [%[ic]]\n"
+                  "      vmul.f32 q0, q0, q10\n"
+                  "      vadd.f32 d0, d0, d1\n"
+                  "      vpadd.f32 d0, d0, d0\n"
+                  "      vst1.f32 d0[0], [%[o]]\n"
+                  : [a] "+r" (a), [b] "+r" (b),
+                    [len] "+r" (len), [remainder] "+r" (remainder)
+                  : [o] "r" (o), [ic] "r" (icoeff)
+                  : "cc", "q0", "q1", "q4", "q5", "q6", "q7", "q8",
+                    "q9", "q10", "q11", "memory");
 }
 
 static inline void
 inner_product_gfloat_cubic_1_neon (gfloat * o, const gfloat * a,
     const gfloat * b, gint len, const gfloat * icoeff)
 {
+    uint32_t remainder = len % 4;
+    len = len - remainder;
+
+    asm volatile ("      vmov.f32 q0, #0.0\n"
+                  "      cmp %[len], #0\n"
+                  "      beq 2f\n"
+                  "      vmov.f32 q1, #0.0\n"
+                  "1:"
+                  "      vld1.f32 {q4, q5}, [%[b]]!\n"
+                  "      vld1.f32 {q6, q7}, [%[b]]!\n"
+                  "      vld1.f32 {d16[], d17[]}, [%[a]]!\n"
+                  "      vld1.f32 {d18[], d19[]}, [%[a]]!\n"
+                  "      vld1.f32 {d20[], d21[]}, [%[a]]!\n"
+                  "      vld1.f32 {d22[], d23[]}, [%[a]]!\n"
+                  "      subs %[len], %[len], #4\n"
+                  "      vmla.f32 q0, q4, q8\n"
+                  "      vmla.f32 q1, q5, q9\n"
+                  "      vmla.f32 q0, q6, q10\n"
+                  "      vmla.f32 q1, q7, q11\n"
+                  "      bne 1b\n"
+                  "      vadd.f32 q0, q0, q1\n"
+                  "2:"
+                  "      cmp %[remainder], #0\n"
+                  "      beq 4f\n"
+                  "3:"
+                  "      vld1.f32 {q4}, [%[b]]!\n"
+                  "      vld1.f32 {d16[], d17[]}, [%[a]]!\n"
+                  "      subs %[remainder], %[remainder], #1\n"
+                  "      vmla.f32 q0, q4, q8\n"
+                  "      bne 3b\n"
+                  "4:"
+                  "      vld1.f32 {q10}, [%[ic]]\n"
+                  "      vmul.f32 q0, q0, q10\n"
+                  "      vadd.f32 d0, d0, d1\n"
+                  "      vpadd.f32 d0, d0, d0\n"
+                  "      vst1.f32 d0[0], [%[o]]\n"
+                  : [a] "+r" (a), [b] "+r" (b),
+                    [len] "+r" (len), [remainder] "+r" (remainder)
+                  : [o] "r" (o), [ic] "r" (icoeff)
+                  : "cc", "q0", "q1", "q4", "q5", "q6", "q7", "q8",
+                    "q9", "q10", "q11", "memory");
 }
 
 static inline void
@@ -228,19 +362,17 @@ audio_resampler_check_neon (const gchar *target_name, const gchar *option)
   if (!strcmp (target_name, "neon")) {
     GST_DEBUG ("enable NEON optimisations");
     resample_gint16_none_1 = resample_gint16_none_1_neon;
+    resample_gint16_linear_1 = resample_gint16_linear_1_neon;
+    resample_gint16_cubic_1 = resample_gint16_cubic_1_neon;
 
     resample_gfloat_none_1 = resample_gfloat_none_1_neon;
+    resample_gfloat_linear_1 = resample_gfloat_linear_1_neon;
+    resample_gfloat_cubic_1 = resample_gfloat_cubic_1_neon;
 
     if (0) {
-      resample_gint16_linear_1 = resample_gint16_linear_1_neon;
-      resample_gint16_cubic_1 = resample_gint16_cubic_1_neon;
-
       resample_gint32_none_1 = resample_gint32_none_1_neon;
       resample_gint32_linear_1 = resample_gint32_linear_1_neon;
       resample_gint32_cubic_1 = resample_gint32_cubic_1_neon;
-
-      resample_gfloat_linear_1 = resample_gfloat_linear_1_neon;
-      resample_gfloat_cubic_1 = resample_gfloat_cubic_1_neon;
 
       resample_gdouble_none_1 = resample_gdouble_none_1_neon;
       resample_gdouble_linear_1 = resample_gdouble_linear_1_neon;
