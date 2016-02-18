@@ -1,7 +1,7 @@
 # the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=@abs_top_builddir@/libs/gst/check
+libdir=@abs_top_builddir@/libs/gst/check/.libs
 includedir=
 girdir=@abs_top_builddir@/libs/gst/check
 typelibdir=@abs_top_builddir@/libs/gst/check
@@ -11,5 +11,5 @@ Description: Unit testing helper library for GStreamer modules, Not Installed
 Requires: gstreamer-@GST_API_VERSION@ = @VERSION@
 Version: @VERSION@
 
-Libs: @abs_top_builddir@/libs/gst/check/libgstcheck-@GST_API_VERSION@.la @LIBM@
+Libs: -L${libdir} -lgstcheck-@GST_API_VERSION@ @LIBM@
 Cflags: -I@abs_top_srcdir@/libs -I@abs_top_builddir@/libs
