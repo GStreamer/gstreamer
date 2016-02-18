@@ -3279,6 +3279,7 @@ qtdemux_parse_cenc_aux_info (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
     buf = gst_buffer_new_wrapped (data, iv_size);
     gst_structure_set (properties, "iv", GST_TYPE_BUFFER, buf, NULL);
+    gst_buffer_unref (buf);
     size = info_sizes[i];
     if (size > iv_size) {
       if (!gst_byte_reader_get_uint16_be (br, &n_subsamples)
@@ -3303,6 +3304,7 @@ qtdemux_parse_cenc_aux_info (GstQTDemux * qtdemux, QtDemuxStream * stream,
       gst_structure_set (properties,
           "subsample_count", G_TYPE_UINT, n_subsamples,
           "subsamples", GST_TYPE_BUFFER, buf, NULL);
+      gst_buffer_unref (buf);
     } else {
       gst_structure_set (properties, "subsample_count", G_TYPE_UINT, 0, NULL);
     }
