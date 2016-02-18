@@ -15,7 +15,8 @@ AM_TESTS_ENVIRONMENT = \
 		cacasink cairotextoverlay \
 		halaudiosrc halaudiosink jackaudiosrc jackaudiosink \
 		osssrc osssink osxaudiosink osxaudiosrc osxvideosrc osxvideosink \
-		pulsesink pulsesrc pulsemixer v4l2src"
+		pulsesink pulsesrc pulsemixer v4l2src" \
+	GSETTINGS_BACKEND="memory"
 
 # fake device drivers: we could run hardware element tests against dummy drivers
 # v4l2: vivo (part of normal kernel)
