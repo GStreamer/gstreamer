@@ -1,6 +1,6 @@
 prefix=
 exec_prefix=
-libdir=
+libdir=@abs_top_builddir@/gst-libs/gst/gl/.libs
 includedir=@abs_top_builddir@/gst-libs
 girdir=@abs_top_builddir@/gst-libs/gst/base
 typelibdir=@abs_top_builddir@/gst-libs/gst/base
@@ -10,5 +10,6 @@ Description: Streaming media framework, OpenGL plugins libraries, uninstalled
 Version: @VERSION@
 Requires: gstreamer-base-@GST_API_VERSION@ gstreamer-@GST_API_VERSION@
 
-Libs: @abs_top_builddir@/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la
+Libs: -L${libdir} -lgstgl-@GST_API_VERSION@ @GL_LIBS@
 Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
+
