@@ -333,6 +333,8 @@ gst_gl_insert_debug_marker (GstGLContext * context, const gchar * format, ...)
   gint len;
   va_list args;
 
+  _init_debug ();
+
   /* are we enabled */
   if (gst_debug_category_get_threshold (gst_gl_marker_debug) < GST_LEVEL_FIXME)
     return;
