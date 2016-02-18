@@ -10,7 +10,7 @@ Name: GStreamer Base Plugins Libraries, Uninstalled
 Description: Streaming media framework, base plugins libraries, uninstalled
 Version: @VERSION@
 Requires: gstreamer-@GST_API_VERSION@
-Libs: -L@abs_top_builddir@/gst-libs/gst/allocators -L@abs_top_builddir@/gst-libs/gst/app -L@abs_top_builddir@/gst-libs/gst/audio -L@abs_top_builddir@/gst-libs/gst/fft -L@abs_top_builddir@/gst-libs/gst/pbutils -L@abs_top_builddir@/gst-libs/gst/riff -L@abs_top_builddir@/gst-libs/gst/rtp -L@abs_top_builddir@/gst-libs/gst/rtsp -L@abs_top_builddir@/gst-libs/gst/sdp -L@abs_top_builddir@/gst-libs/gst/tag -L@abs_top_builddir@/gst-libs/gst/video
+Libs: -L@abs_top_builddir@/gst-libs/gst/allocators/.libs -L@abs_top_builddir@/gst-libs/gst/app/.libs -L@abs_top_builddir@/gst-libs/gst/audio/.libs -L@abs_top_builddir@/gst-libs/gst/fft/.libs -L@abs_top_builddir@/gst-libs/gst/pbutils/.libs -L@abs_top_builddir@/gst-libs/gst/riff/.libs -L@abs_top_builddir@/gst-libs/gst/rtp/.libs -L@abs_top_builddir@/gst-libs/gst/rtsp/.libs -L@abs_top_builddir@/gst-libs/gst/sdp/.libs -L@abs_top_builddir@/gst-libs/gst/tag/.libs -L@abs_top_builddir@/gst-libs/gst/video/.libs
 Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
 
 libraries=allocators app audio fft pbutils riff rtp rtsp sdp tag video

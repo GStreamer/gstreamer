@@ -1,7 +1,7 @@
 # the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=
+libdir=@abs_top_builddir@/gst-libs/gst/tag/.libs
 # includedir is builddir because it is used to find gstconfig.h in places
 includedir=@abs_top_builddir@/gst-libs
 girdir=@abs_top_builddir@/gst-libs/gst/tag
@@ -11,6 +11,6 @@ Name: GStreamer Tag Library, Uninstalled
 Description: Tag base classes and helper functions, uninstalled
 Version: @VERSION@
 Requires: gstreamer-@GST_API_VERSION@
-Libs: @abs_top_builddir@/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la
+Libs: -L${libdir} -lgsttag-@GST_API_VERSION@
 Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
 
