@@ -836,15 +836,17 @@ gst_vaapisink_navigation_send_event (GstNavigation * navigation,
   GstVaapiSink *const sink = GST_VAAPISINK (navigation);
   GstPad *peer;
 
+  if (!sink->window) {
+    gst_structure_free (structure);
+    return;
+  }
+
   if ((peer = gst_pad_get_peer (GST_VAAPI_PLUGIN_BASE_SINK_PAD (sink)))) {
     GstEvent *event;
     GstVaapiRectangle *disp_rect = &sink->display_rect;
     gdouble x, y, xscale = 1.0, yscale = 1.0;
 
     event = gst_event_new_navigation (structure);
-
-    if (!sink->window)
-      return;
 
     /* We calculate scaling using the original video frames geometry to include
        pixel aspect ratio scaling. */
