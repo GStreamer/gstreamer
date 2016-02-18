@@ -385,36 +385,6 @@ inner_product_gfloat_cubic_1_neon (gfloat * o, const gfloat * a,
                     "q9", "q10", "q11", "memory");
 }
 
-static inline void
-inner_product_gdouble_none_1_neon (gdouble * o, const gdouble * a,
-    const gdouble * b, gint len, const gdouble * icoeff)
-{
-}
-
-static inline void
-inner_product_gdouble_linear_1_neon (gdouble * o, const gdouble * a,
-    const gdouble * b, gint len, const gdouble * icoeff)
-{
-}
-
-static inline void
-inner_product_gdouble_cubic_1_neon (gdouble * o, const gdouble * a,
-    const gdouble * b, gint len, const gdouble * icoeff)
-{
-}
-
-static void
-interpolate_gdouble_linear_neon (gdouble * o, const gdouble * a,
-    gint len, const gdouble * icoeff)
-{
-}
-
-static void
-interpolate_gdouble_cubic_neon (gdouble * o, const gdouble * a,
-    gint len, const gdouble * icoeff)
-{
-}
-
 MAKE_RESAMPLE_FUNC (gint16, none, 1, neon);
 MAKE_RESAMPLE_FUNC (gint16, linear, 1, neon);
 MAKE_RESAMPLE_FUNC (gint16, cubic, 1, neon);
@@ -426,10 +396,6 @@ MAKE_RESAMPLE_FUNC (gint32, cubic, 1, neon);
 MAKE_RESAMPLE_FUNC (gfloat, none, 1, neon);
 MAKE_RESAMPLE_FUNC (gfloat, linear, 1, neon);
 MAKE_RESAMPLE_FUNC (gfloat, cubic, 1, neon);
-
-MAKE_RESAMPLE_FUNC (gdouble, none, 1, neon);
-MAKE_RESAMPLE_FUNC (gdouble, linear, 1, neon);
-MAKE_RESAMPLE_FUNC (gdouble, cubic, 1, neon);
 
 static void
 audio_resampler_check_neon (const gchar *target_name, const gchar *option)
@@ -447,15 +413,5 @@ audio_resampler_check_neon (const gchar *target_name, const gchar *option)
     resample_gfloat_none_1 = resample_gfloat_none_1_neon;
     resample_gfloat_linear_1 = resample_gfloat_linear_1_neon;
     resample_gfloat_cubic_1 = resample_gfloat_cubic_1_neon;
-
-    if (0) {
-
-      resample_gdouble_none_1 = resample_gdouble_none_1_neon;
-      resample_gdouble_linear_1 = resample_gdouble_linear_1_neon;
-      resample_gdouble_cubic_1 = resample_gdouble_cubic_1_neon;
-
-      interpolate_gdouble_linear = interpolate_gdouble_linear_neon;
-      interpolate_gdouble_cubic = interpolate_gdouble_cubic_neon;
-    }
   }
 }
