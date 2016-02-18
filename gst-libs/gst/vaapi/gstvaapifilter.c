@@ -27,6 +27,7 @@
 #include "gstvaapiminiobject.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapisurface_priv.h"
+#include "gstvaapiutils_core.h"
 
 #if USE_VA_VPP
 # include <va/va_vpp.h>
@@ -992,63 +993,12 @@ deint_refs_clear_all (GstVaapiFilter * filter)
 static gboolean
 ensure_formats (GstVaapiFilter * filter)
 {
-#if VA_CHECK_VERSION(0,34,0)
-  VASurfaceAttrib *surface_attribs = NULL;
-  guint i, num_surface_attribs = 0;
-  VAStatus va_status;
-
   if (G_LIKELY (filter->formats))
     return TRUE;
 
-  GST_VAAPI_DISPLAY_LOCK (filter->display);
-  va_status = vaQuerySurfaceAttributes (filter->va_display, filter->va_config,
-      NULL, &num_surface_attribs);
-  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
-  if (!vaapi_check_status (va_status, "vaQuerySurfaceAttributes()"))
-    return FALSE;
-
-  surface_attribs = g_malloc (num_surface_attribs * sizeof (*surface_attribs));
-  if (!surface_attribs)
-    return FALSE;
-
-  GST_VAAPI_DISPLAY_LOCK (filter->display);
-  va_status = vaQuerySurfaceAttributes (filter->va_display, filter->va_config,
-      surface_attribs, &num_surface_attribs);
-  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
-  if (!vaapi_check_status (va_status, "vaQuerySurfaceAttributes()"))
-    return FALSE;
-
-  filter->formats = g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat),
-      num_surface_attribs);
-  if (!filter->formats)
-    goto error;
-
-  for (i = 0; i < num_surface_attribs; i++) {
-    const VASurfaceAttrib *const surface_attrib = &surface_attribs[i];
-    GstVideoFormat format;
-
-    if (surface_attrib->type != VASurfaceAttribPixelFormat)
-      continue;
-    if (!(surface_attrib->flags & VA_SURFACE_ATTRIB_SETTABLE))
-      continue;
-
-    format =
-        gst_vaapi_video_format_from_va_fourcc (surface_attrib->value.value.i);
-    if (format == GST_VIDEO_FORMAT_UNKNOWN)
-      continue;
-    g_array_append_val (filter->formats, format);
-  }
-
-  g_free (surface_attribs);
-  return TRUE;
-
-  /* ERRORS */
-error:
-  {
-    g_free (surface_attribs);
-  }
-#endif
-  return FALSE;
+  filter->formats = gst_vaapi_get_surface_formats (filter->display,
+      filter->va_config);
+  return (filter->formats != NULL);
 }
 
 static inline gboolean

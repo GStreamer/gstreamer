@@ -24,6 +24,7 @@
 
 #include "sysdeps.h"
 #include "gstvaapicompat.h"
+#include "gstvaapiimage.h"
 #include "gstvaapiutils.h"
 #include "gstvaapiutils_core.h"
 #include "gstvaapidisplay_priv.h"
@@ -74,4 +75,79 @@ gst_vaapi_get_config_attribute (GstVaapiDisplay * display, VAProfile profile,
   if (out_value_ptr)
     *out_value_ptr = attrib.value;
   return TRUE;
+}
+
+/**
+ * gst_vaapi_get_surface_formats:
+ * @display: a #GstVaapiDisplay
+ * @config: a #VAConfigID
+ *
+ * Gets surface formats for the supplied config.
+ *
+ * This function will query for all the supported formats for the
+ * supplied VA @config.
+ *
+ * Return value: (transfer full): a #GArray of #GstVideoFormats or %NULL
+ */
+GArray *
+gst_vaapi_get_surface_formats (GstVaapiDisplay * display, VAConfigID config)
+{
+#if VA_CHECK_VERSION(0,34,0)
+  VASurfaceAttrib *surface_attribs = NULL;
+  guint i, num_surface_attribs = 0;
+  VAStatus va_status;
+  GArray *formats;
+
+  if (config == VA_INVALID_ID)
+    return NULL;
+
+  GST_VAAPI_DISPLAY_LOCK (display);
+  va_status = vaQuerySurfaceAttributes (GST_VAAPI_DISPLAY_VADISPLAY (display),
+      config, NULL, &num_surface_attribs);
+  GST_VAAPI_DISPLAY_UNLOCK (display);
+  if (!vaapi_check_status (va_status, "vaQuerySurfaceAttributes()"))
+    return NULL;
+
+  surface_attribs = g_malloc (num_surface_attribs * sizeof (*surface_attribs));
+  if (!surface_attribs)
+    return NULL;
+
+  GST_VAAPI_DISPLAY_LOCK (display);
+  va_status = vaQuerySurfaceAttributes (GST_VAAPI_DISPLAY_VADISPLAY (display),
+      config, surface_attribs, &num_surface_attribs);
+  GST_VAAPI_DISPLAY_UNLOCK (display);
+  if (!vaapi_check_status (va_status, "vaQuerySurfaceAttributes()"))
+    return NULL;
+
+  formats = g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat),
+      num_surface_attribs);
+  if (!formats)
+    goto error;
+
+  for (i = 0; i < num_surface_attribs; i++) {
+    const VASurfaceAttrib *const attrib = &surface_attribs[i];
+    GstVideoFormat fmt;
+
+    if (attrib->type != VASurfaceAttribPixelFormat)
+      continue;
+    if (!(attrib->flags & VA_SURFACE_ATTRIB_SETTABLE))
+      continue;
+
+    fmt = gst_vaapi_video_format_from_va_fourcc (attrib->value.value.i);
+    if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+      continue;
+    g_array_append_val (formats, fmt);
+  }
+
+  g_free (surface_attribs);
+  return formats;
+
+  /* ERRORS */
+error:
+  {
+    g_free (surface_attribs);
+  }
+#endif
+  return NULL;
+
 }
