@@ -109,6 +109,7 @@ struct _GstVaapiContext
   GPtrArray *overlays[2];
   guint overlay_id;
   gboolean reset_on_resize;
+  GArray *formats;
 };
 
 /**
@@ -148,6 +149,10 @@ G_GNUC_INTERNAL
 void
 gst_vaapi_context_reset_on_resize (GstVaapiContext * context,
     gboolean reset_on_resize);
+
+G_GNUC_INTERNAL
+GArray *
+gst_vaapi_context_get_surface_formats (GstVaapiContext * context);
 
 G_END_DECLS
 

@@ -50,6 +50,18 @@
 /* Number of scratch surfaces beyond those used as reference */
 #define SCRATCH_SURFACES_COUNT (4)
 
+static gboolean
+ensure_formats (GstVaapiContext * context)
+{
+  if (G_LIKELY (context->formats))
+    return TRUE;
+
+  context->formats =
+      gst_vaapi_get_surface_formats (GST_VAAPI_OBJECT_DISPLAY (context),
+      context->va_config);
+  return (context->formats != NULL);
+}
+
 static void
 unref_surface_cb (GstVaapiSurface * surface)
 {
@@ -105,6 +117,11 @@ context_destroy (GstVaapiContext * context)
     if (!vaapi_check_status (status, "vaDestroyConfig()"))
       GST_WARNING ("failed to destroy config 0x%08x", context->va_config);
     context->va_config = VA_INVALID_ID;
+  }
+
+  if (context->formats) {
+    g_array_unref (context->formats);
+    context->formats = NULL;
   }
 }
 
@@ -325,6 +342,8 @@ gst_vaapi_context_init (GstVaapiContext * context,
   context->va_config = VA_INVALID_ID;
   context->reset_on_resize = TRUE;
   gst_vaapi_context_overlay_init (context);
+
+  context->formats = NULL;
 }
 
 static void
@@ -519,4 +538,26 @@ gst_vaapi_context_reset_on_resize (GstVaapiContext * context,
   g_return_if_fail (context != NULL);
 
   context->reset_on_resize = reset_on_resize;
+}
+
+/**
+ * gst_vaapi_context_get_surface_formats:
+ * @context: a #GstVaapiContext
+ *
+ * Determines the set of supported formats by the surfaces associated
+ * to @context. The caller owns an extra reference of the resulting
+ * array of #GstVideoFormat elements, so it shall be released with
+ * g_array_unref after usage.
+ *
+ * Return value: (transfer full): the set of target formats supported
+ * by the surfaces in @context.
+ */
+GArray *
+gst_vaapi_context_get_surface_formats (GstVaapiContext * context)
+{
+  g_return_val_if_fail (context, NULL);
+
+  if (!ensure_formats (context))
+    return NULL;
+  return g_array_ref (context->formats);
 }
