@@ -1,8 +1,7 @@
 
-Release notes for GStreamer RTSP Server Library 1.7.1
+Release notes for GStreamer RTSP Server Library 1.7.2
 
-
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.7 release series. The 1.7 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.7 release series
@@ -13,31 +12,26 @@ API can still change until that point.
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
 during the unstable 1.7 release series.
 
-
   
 
 Bugs fixed in this release
      
-      * 753863 : rtsp-server: examples: Fix memory leaks when context parse fails
-      * 756969 : rtsp-server unit tests don't test udp-mcast transport
-      * 757949 : gst_rtsp_server_io_func() pops a context that has not been pushed
-      * 758179 : GstRTSPStream : Create pipeline based on enabled transport type
-      * 758268 : handle_setup_request() expect the media to be suspended
-      * 758319 : rtsp-server: Seeking often hangs forever, waiting for prerolling to happen again
-      * 758364 : rtsp-session-pool: Avoid dollar sign ($) in session ids
-      * 759010 : Valgrind test are faling for rtsp-server for master
+      * 758180 : Add rtspclientsink plugin
+      * 758999 : rtsp-media: Add property to decide if sending media should be stopped when a client disconnects without TEARDOWN
+      * 759773 : Prevent simultaneous prepare/unprepare of RTSP media
+      * 760150 : Updating transport for multicast case gives assertion
 
 ==== Download ====
 
 You can find source releases of gst-rtsp-server in the download
-directory: http://gstreamer.freedesktop.org/src/gst-rtsp-server/
+directory: https://gstreamer.freedesktop.org/src/gst-rtsp-server/
 
 The git repository and details how to clone it can be found at
 http://cgit.freedesktop.org/gstreamer/gst-rtsp-server/
 
 ==== Homepage ====
 
-The project's website is http://gstreamer.freedesktop.org/
+The project's website is https://gstreamer.freedesktop.org/
 
 ==== Support and Bugs ====
 
@@ -62,17 +56,14 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * David Svensson Fors
       * Hyunjun Ko
       * Jan Schmidt
-      * Koop Mast
-      * Marcus Prebble
-      * Nicolas Dufresne
-      * Olivier Crête
+      * Julien Isorce
+      * Luis de Bethencourt
       * Sebastian Dröge
       * Sebastian Rasmussen
       * Srimanta Panda
+      * Steven Hoving
+      * Thiago Santos
       * Tim-Philipp Müller
-      * Vineeth TM
-      * Xavier Claessens
  

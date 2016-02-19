@@ -1,9 +1,237 @@
-=== release 1.7.1 ===
+=== release 1.7.2 ===
 
-2015-12-24  Sebastian Dröge <slomo@coaxion.net>
+2016-02-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.1
+	  releasing 1.7.2
+
+2016-02-18 15:20:05 +0000  Julien Isorce <j.isorce@samsung.com>
+
+	* pkgconfig/gstreamer-rtsp-server-uninstalled.pc.in:
+	  uninstalled.pc: add support for non libtool build systems
+	  Currently the .la path is provided which requires to use libtool as
+	  mentioned in the GStreamer manual section-helloworld-compilerun.html.
+	  It is fine as long as the application is built using libtool.
+	  So currently it is not possible to compile a GStreamer application
+	  within gst-uninstalled with CMake or other build system different
+	  than autotools.
+	  This patch allows to do the following in gst-uninstalled env:
+	  gcc test.c -o test $(pkg-config --cflags --libs gstreamer-1.0 \
+	  gstreamer-rtsp-server-1.0)
+	  Previously it required to prepend libtool --mode=link
+	  https://bugzilla.gnome.org/show_bug.cgi?id=720778
+
+2016-02-09 10:34:22 +0000  Luis de Bethencourt <luisbg@osg.samsung.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: remove check for impossible condition
+	  Goto error label checks stream to see if it needs to be unreferenced before
+	  returning, but this goto jumps happens before the stream is ever set, so it
+	  will always be NULL in this error label.
+	  CID #1352034
+
+2016-02-08 23:33:03 +0000  Luis de Bethencourt <luisbg@osg.samsung.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: clean switch statements
+	  Coverity demands for fallthrough statements to be clearly commented,
+	  to distinguish from accidental fall throughs. And it also needs all
+	  cases to finish with a break, even if the break is never going to be
+	  executed like in the case of a continue jump.
+	  CID #1352039
+	  CID #1352040
+
+2016-02-05 20:03:01 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* tests/check/Makefile.am:
+	  tests: extend the AM_TESTS_ENVIRONMENT from check.mak
+	  To get the CK_DEFAULT_TIMEOUT defined for all tests
+	  Also removes a 120 seconds timeout that was set as default
+	  explicitly in this module
+	  https://bugzilla.gnome.org/show_bug.cgi?id=761472
+
+2016-02-05 18:11:41 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From 86e4663 to b64f03f
+
+2016-02-02 09:01:51 +0100  Steven Hoving <sh@bigbrother.nl>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: fix state_lock not locked again when preroll fails
+	  https://bugzilla.gnome.org/show_bug.cgi?id=761399
+
+2016-01-28 22:05:56 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Move plugin specific flags below all the others
+	  They use some of the other flags, like $GST_ALL_LDFLAGS which is adding
+	  -no-undefined. And -no-undefined is required on Windows to build DLLs.
+
+2016-01-28 04:58:00 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Simplify slightly using new -base API
+	  Use the new Mikey and SDP API in the base plugins libs
+	  to simplify some code.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758180
+
+2015-11-17 01:12:28 +1100  Jan Schmidt <jan@centricular.com>
+
+	* .gitignore:
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/rtsp-sink/Makefile.am:
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	* gst/rtsp-sink/gstrtspclientsink.h:
+	* gst/rtsp-sink/plugin.c:
+	* tests/check/Makefile.am:
+	* tests/check/gst/rtspclientsink.c:
+	  rtspsink: Add rtspclientsink element
+	  Add an rtspclientsink element that accepts streams for which
+	  there is a registered payloader and sends them to
+	  an RTSP server using RECORD.
+	  Sending is synchronised to the pipeline clock. Payload-types
+	  are automatically selected. The 'new-payloader' signal is fired
+	  for custom configuration of payloaders when they are created.
+	  Can now stream a movie like this:
+	  receiver:
+	  ./test-record "( decodebin name=depay0 ! videoconvert ! autovideosink \
+	  decodebin name=depay1 ! audioconvert ! autoaudiosink )"
+	  sender:
+	  gst-launch-1.0 filesrc location=file-with-aac-and-h264.mp4 ! qtdemux name=d ! \
+	  queue ! aacparse ! rtspclientsink location=rtsp://127.0.0.1:8554/test name=s \
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758180
+
+2015-11-17 01:12:28 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-stream: Add functions for using rtsp-stream from the client
+	  Add a boolean to indicate that the rtsp-stream is running on the
+	  'client' side of an RTSP connection, for sending streams via
+	  RECORD. In that case, the roles of the client/server ports
+	  in transport setup are swapped.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758180
+
+2015-11-17 01:12:28 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-sdp.h:
+	  rtsp-sdp: Add gst_rtsp_sdp_from_stream()
+	  A new function that adds info from a GstRTSPStream into an SDP message.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758180
+
+2016-01-28 09:22:18 +0100  Steven Hoving <sh@bigbrother.nl>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Fix mutex beeing unlocked while they should be locked
+	  https://bugzilla.gnome.org/show_bug.cgi?id=761226
+
+2016-01-15 07:01:37 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  rtsp-media-factory: add missing break in "clock" property setter
+	  CID 1348453
+
+2016-01-05 13:10:36 +0100  Srimanta Panda <srimanta@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: fixed assert during update transport
+	  When RTSP server trying update transport during multicast, it throws an
+	  assert. The assert is thrown because it is trying to get the parent of
+	  an non-existing funnel element.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=760150
+
+2016-01-03 17:26:31 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-permissions.h:
+	* gst/rtsp-server/rtsp-thread-pool.h:
+	* gst/rtsp-server/rtsp-token.h:
+	  docs: remove dummy function declarations with G_INLINE_FUNC for gtk-doc
+	  gtk-doc can handle static inline functions just fine these days,
+	  there's no need for this stuff any more.
+
+2015-10-07 18:53:01 +0900  Hyunjun Ko <zzoon.ko@samsung.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-sdp.c:
+	  sdp: replace duplicated codes to call new base sdp apis
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745880
+
+2015-12-30 16:34:30 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/test-netclock.c:
+	  test-netclock: Use the new API to configure a clock directly
+
+2015-12-30 16:31:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  rtsp-media: Add API to directly configure a clock on the media pipelines
+
+2015-12-30 16:43:17 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Fix typo in docs gst_rtsp_media_set_latncy() -> latency()
+
+2015-12-30 16:30:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  rtsp-media-factory: Add FIXME for 2.0
+
+2015-12-30 16:29:45 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Fix indentation
+
+2015-12-22 12:08:02 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Do not prepare media after media times out
+	  Deferred calls to start_prepare() can be deferred past the point until
+	  which wait_preroll() and by proxy gst_rtsp_media_get_status() is
+	  prepared to wait. Previously there was no lock and no check for this
+	  situation. This meant that a media could be prepared and unprepared
+	  simultaneously by two different threads. Now a lock is in place and a
+	  suitable check is done.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=759773
+
+2015-12-09 18:24:24 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  rtsp-media: Add property to decide if sending media should be stopped when a client disconnects without TEARDOWN
+	  Without TEARDOWN it might be desireable to keep the media running and continue
+	  sending data to the client, even if the RTSP connection itself is
+	  disconnected.
+	  Only do this for session medias that have only UDP transports. If there's at
+	  least on TCP transport, it will stop working and cause problems when the
+	  connection is disconnected.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758999
+
+2015-12-24 15:29:33 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.7.1 ===
+
+2015-12-24 14:54:06 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.7.1
 
 2015-12-21 00:43:49 +0100  Koop Mast <kwm@rainbow-runner.nl>
 
