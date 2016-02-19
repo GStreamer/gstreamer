@@ -1,9 +1,319 @@
-=== release 1.7.1 ===
+=== release 1.7.2 ===
 
-2015-12-24  Sebastian Dröge <slomo@coaxion.net>
+2016-02-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.1
+	  releasing 1.7.2
+
+2016-02-19 10:32:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/fr.po:
+	* po/pt_BR.po:
+	  po: Update translations
+
+2016-02-18 00:25:56 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/sidplay/gstsiddec.cc:
+	  sidplay: Fix compiler warning about C++11 compatibility
+	  gstsiddec.cc:78:17: error: invalid suffix on literal; C++11 requires a space between literal and string macro [-Werror=literal-suffix]
+	  #define FORMATS "{ "GST_AUDIO_NE(S16)","GST_AUDIO_NE(U16)", S8, U8 }"
+	  ^
+	  gstsiddec.cc:78:38: error: invalid suffix on literal; C++11 requires a space between literal and string macro [-Werror=literal-suffix]
+	  #define FORMATS "{ "GST_AUDIO_NE(S16)","GST_AUDIO_NE(U16)", S8, U8 }"
+	  ^
+
+2016-02-16 14:46:11 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* docs/plugins/xml/plugin-mpg123.xml:
+	  docs: update inspection to git and fix mpg123 inspect location
+
+2016-02-16 12:23:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/files/Makefile.am:
+	* tests/files/stream.mp2:
+	  tests: fix distcheck
+
+2016-02-16 10:38:18 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* docs/plugins/xml/plugin-mpg123.xml:
+	* ext/Makefile.am:
+	* gst-plugins-ugly.spec.in:
+	* tests/check/Makefile.am:
+	  mpg123: move from -bad to -ugly
+	  Hook up to build system, add to docs
+
+2016-02-16 10:55:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	* tests/Makefile.am:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.gitignore:
+	* tests/files/Makefile.am:
+	* tests/files/cbr_stream.mp3:
+	* tests/files/vbr_stream.mp3:
+	  tests: add test data for mpg123 plugin
+
+2016-02-16 10:41:07 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	  Merge branch 'plugin-move-mpg123'
+	  Move mpg123 plugin from -bad to -ugly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=719849
+
+2015-12-14 11:09:46 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  plugins-bad: Fix example pipelines
+	  rename gst-launch --> gst-launch-1.0
+	  replace old elements with new elements(ffmpegcolorspace -> videoconvert, ffenc_** -> avenc_**)
+	  fix caps in examples
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759432
+
+2015-08-17 11:50:28 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: still reset pending audio info on hard flush
+	  Follow-up to previous commit.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752431
+
+2015-07-15 10:44:02 -0600  Jason Litzinger <jlitzinger@control4.com>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: fix handling of sample rate change during playback
+	  If the sample rate of the media changes, the resulting flush will
+	  clear the has_next_audioinfo flag, and the caps won't be sent
+	  downstream.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752431
+
+2015-08-15 12:58:40 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  audiodecoders: use default pad accept-caps handling
+	  Avoids useless check of downstream caps when handling an
+	  accept-caps query
+	  Elements: dtsdec, faad, gsmdec, mpg123audiodec, opusdec,
+	  sbcdec, adpcmdec, sirendec
+
+2015-04-26 18:04:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/mpg123/Makefile.am:
+	  Remove obsolete Android build cruft
+	  This is not needed any longer.
+
+2015-01-11 01:08:08 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: fix compiler warning and simplify checks in set_caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740195
+
+2015-01-03 13:06:45 +0100  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: rework set_format code so mpg123audiodec works with decodebin/playbin
+	  The old code was using gst_caps_normalize() and was generally overly
+	  complex. Simplify by picking sample rate and number of channels from
+	  upstream and the sample format from the allowed caps. If the format caps
+	  is a list of strins, just pick the first one. And if the srcpad isn't
+	  linked yet, use the default format (S16).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740195
+
+2014-09-10 17:24:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  Fix up one-element lists in template caps
+
+2014-03-05 00:51:04 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/mpg123audiodec.c:
+	  tests: fix mpg123audiodec test for big-endian architectures
+
+2014-02-04 17:22:27 +0100  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: improved error report and checks
+	  Signed-off-by: Carlos Rafael Giani <dv@pseudoterminal.org>
+
+2013-12-05 12:04:39 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123audiodec: Require caps to be set before any data processing
+
+2013-07-26 17:25:42 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: Remove dead assignment
+	  harder ? :)
+
+2013-05-15 11:25:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/mpg123audiodec.c:
+	  mpg123audiodec: Fix event handling in unit test
+
+2012-10-24 12:16:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/mpg123/Makefile.am:
+	  gst: Add better support for static plugins
+
+2013-04-15 00:22:39 -0700  David Schleef <ds@schleef.org>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: Add conditional on API version for new enum
+
+2016-02-05 19:11:38 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* tests/check/Makefile.am:
+	  tests: extend the AM_TESTS_ENVIRONMENT from check.mak
+	  To get the CK_DEFAULT_TIMEOUT defined for all tests
+	  https://bugzilla.gnome.org/show_bug.cgi?id=761472
+
+2016-02-05 18:07:02 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From 86e4663 to b64f03f
+
+2016-01-25 20:00:26 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	* ext/amrnb/amrnbdec.h:
+	* ext/amrnb/amrnbenc.h:
+	* ext/amrwbdec/amrwbdec.h:
+	  amrnb, amrwb: unconditionally depend on opencore-amr*b >= 0.1.3
+	  We don't really need to cater for older versions any more.
+
+2016-01-21 17:34:38 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Demote rank to SECONDARY
+	  https://bugzilla.gnome.org/show_bug.cgi?id=574461
+
+2016-01-08 21:40:53 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	  dvdsubdec: use query caps instead of accept-caps
+	  accept-caps does only a shallow check and a full downstream
+	  caps query is needed to check if ARGB is possible
+
+2015-10-30 11:06:11 +0530  Ravi Kiran K N <ravi.kiran@samsung.com>
+
+	* gst/asfdemux/asfpacket.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: Support reverse playback
+	  Support reverse playback for ASF format.
+	  Parse packets and queue the payloads, then push
+	  the payload buffer to decoder in reverse order.
+	  Video buffers are pushed from KeyFrame to next
+	  Keyframe.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757341
+
+2015-12-24 15:28:46 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+2015-12-24 14:48:50 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/elements/amrnbenc.c:
+	  amrnbenc: Fix various compiler warnings in the test
+
+2015-12-24 14:48:38 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/elements/x264enc.c:
+	  x264enc: Fix various compiler warnings in the test
+
+=== release 1.7.1 ===
+
+2015-12-24 14:41:21 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.7.1
+
+2015-12-24 14:10:29 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2015-12-24 12:23:27 +0100  Sebastian Dröge <sebastian@centricular.com>
 
@@ -3034,6 +3344,12 @@
 	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
 	  dvdlpcmdec: Fix parsing of headers to set correct width to allow decode.
 
+2012-11-03 20:38:00 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/mpg123audiodec.c:
+	  Fix FSF address
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687520
+
 2012-11-03 20:40:37 +0000  Tim-Philipp Müller <tim@centricular.net>
 
 	* docs/random/LICENSE:
@@ -3127,12 +3443,23 @@
 	  dvdsubdec: allocate correct amount of memory for bitmap
 	  https://bugzilla.gnome.org/show_bug.cgi?id=687192
 
+2012-10-30 09:27:24 +0100  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: removed unnecessary finalize function
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687176
+
 2012-10-30 09:20:04 +0000  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* ext/sidplay/gstsiddec.cc:
 	  siddec: reset bytes counter
 	  Reset the total_bytes counter so that we get timestamps correct.
 	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=686931
+
+2012-10-30 10:20:09 +1100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: Fix leaks from not chaining up in the finalize function
 
 2012-10-25 12:38:47 +0100  Tim-Philipp Müller <tim@centricular.net>
 
@@ -3184,6 +3511,38 @@
 	* win32/common/config.h:
 	  Release 1.0.2
 
+2012-10-24 13:41:00 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/mpg123audiodec.c:
+	  tests: fix up mpg123 test a little
+	  - dist input files
+	  - fix sample leak
+	  - simplify check for elements
+	  - only run mpg123 test if mpg123 is available and selected
+	  - fix build in uninstalled setup
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686595
+
+2012-10-24 12:30:10 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* tests/check/elements/mpg123audiodec.c:
+	  tets: add unit test for mpg123audiodec
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686595
+
+2012-10-24 00:36:42 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: added gtkdoc section
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686595
+
+2012-10-24 00:22:05 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: fixed bug with last frame, disabled internal resampler & chatter
+	  * The last MP3 frame wasn't being pushed when base class was draining
+	  * Made sure mpg123 cannot ever use its (crude) internal resampler
+	  * Disabled mpg123 stderr output
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686595
+
 2012-10-24 20:10:03 +0800  Scott Fan <fanchp@neusoft.com>
 
 	* gst/asfdemux/Makefile.am:
@@ -3193,6 +3552,13 @@
 	  The typos led to generate the incorrect Android.mk files for the asfdemux
 	  and realmedia plugin.
 	  https://bugzilla.gnome.org/show_bug.cgi?id=686748
+
+2012-10-24 00:21:45 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: cleaned up comments, formatting, and logging lines
+	  also replaced mpg123decoder->handle != NULL checks with asserts
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686595
 
 2012-10-18 22:19:04 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
 
@@ -3575,6 +3941,11 @@
 	* ext/x264/gstx264enc.c:
 	  x264enc: Use new video encoder base class API for handling tags
 
+2012-08-09 11:48:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: Give MARGINAL rank to the mpg123 decoder element
+
 2012-08-08 16:27:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* gst/dvdsub/gstdvdsubdec.c:
@@ -3600,6 +3971,11 @@
 	* gst/asfdemux/asfpacket.c:
 	* gst/realmedia/rmdemux.c:
 	  gst: silence some compiler warnings with -DG_DISABLE_ASSERT
+
+2012-08-08 12:58:50 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/mpg123/Makefile.am:
+	  mpg123: dist header file
 
 2012-08-06 15:31:50 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
 
@@ -3638,6 +4014,32 @@
 	* gst/realmedia/rmdemux.c:
 	* gst/realmedia/rmutils.c:
 	  gst_tag_list_free -> gst_tag_list_unref
+
+2012-08-03 13:43:31 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: map input buffer in READ mode, not WRITE mode
+	  Makes things actually work.
+
+2012-08-03 11:50:10 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: query supported output formats at run-time
+	  Fixes stuff. We use a string here since we can't be bothered
+	  with GValue.
+
+2012-08-03 11:48:02 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/mpg123/Makefile.am:
+	  mpg123: hook up to build system
+
+2012-08-03 11:13:48 +0100  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	* ext/mpg123/gstmpg123audiodec.h:
+	  mpg123: add new libmpg123-based mp3 decoder plugin
+	  Needs a bit of cleaning up.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=681003
 
 2012-07-28 00:28:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
@@ -20714,4 +21116,10 @@
 	  Restructure LPCM decoder to not expect the demuxer to parse the LPCM
 	  header; instead do this internally. Also support the old way, using
 	  a different mime-type. CVS:
+
+2001-12-17 18:37:01 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	  building up speed
+	  Original commit message from CVS:
+	  building up speed
 
