@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 13:55+0100\n"
+"POT-Creation-Date: 2016-02-19 10:32+0200\n"
 "PO-Revision-Date: 2015-12-24 11:34+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -20,112 +20,6 @@ msgstr ""
 
 msgid "format wasn't negotiated before get function"
 msgstr "запис није договорен пре функције добављања (get)"
-
-msgid "default GStreamer sound events audiosink"
-msgstr "основни аудио усклађивач звучних догађаја Гстримера"
-
-msgid ""
-"GStreamer can play audio using any number of output elements. Some possible "
-"choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
-"pipeline instead of just one element."
-msgstr ""
-"Гстример може да пушта аудио користећи било који број излазних елемената. "
-"Неки могући избори су „osssink“, „pulsesink“ и „alsasink“. Аудио усклађивач "
-"може бити делимична спојка уместо само једног елемента."
-
-msgid "description for default GStreamer sound events audiosink"
-msgstr "опис основног аудио усклађивача звучних догађаја Гстримера"
-
-msgid "Describes the selected audiosink element."
-msgstr "Описује изабрани елемент аудио усклађивача."
-
-msgid "default GStreamer audiosink for Audio/Video Conferencing"
-msgstr "основни аудио усклађивач Гстримера за аудио/видео састанчење"
-
-msgid ""
-"description for default GStreamer audiosink for Audio/Video Conferencing"
-msgstr "опис основног аудио усклађивач Гстримера за аудио/видео састанчење"
-
-msgid "default GStreamer audiosink for Music and Movies"
-msgstr "основни аудио усклађивач Гстримера за музику и филмове"
-
-msgid "description for default GStreamer audiosink for Music and Movies"
-msgstr "опис основног аудио усклађивача Гстримера за музику и филмове"
-
-msgid "default GStreamer videosink"
-msgstr "основни видео усклађивач Гстримера"
-
-msgid ""
-"GStreamer can play video using any number of output elements. Some possible "
-"choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
-"can be a partial pipeline instead of just one element."
-msgstr ""
-"Гстример може да пушта видео користећи било који број излазних елемената. "
-"Неки могући избори су „xvimagesink“, „ximagesink“, „sdlvideosink“ и "
-"„aasink“. Видео усклађивач може бити делимична спојка уместо само једног "
-"елемента."
-
-msgid "description for default GStreamer videosink"
-msgstr "опис основног видео усклађивача Гстримера"
-
-msgid "Describes the selected videosink element."
-msgstr "Описује изабрани елемент видео усклађивача."
-
-msgid "default GStreamer audiosrc"
-msgstr "основни аудио извор Гстримера"
-
-msgid ""
-"GStreamer can record audio using any number of input elements. Some possible "
-"choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
-"pipeline instead of just one element."
-msgstr ""
-"Гстример може да снима аудио користећи било који број излазних елемената. "
-"Неки могући избори су „osssrc“, „pulsesrc“ и „alsasrc“. Извор звука може "
-"бити делимична спојка уместо само једног елемента."
-
-msgid "description for default GStreamer audiosrc"
-msgstr "опис основног аудио извора Гстримера"
-
-msgid "Describes the selected audiosrc element."
-msgstr "Описује изабрани елемент аудио извора."
-
-msgid "default GStreamer videosrc"
-msgstr "основни видео извор Гстримера"
-
-msgid ""
-"GStreamer can record video from any number of input elements. Some possible "
-"choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
-"partial pipeline instead of just one element."
-msgstr ""
-"Гстример може да снима видео користећи било који број излазних елемената. "
-"Неки могући избори су „v4lsrc“, „v4l2src“ и “videotestsrc“. Извор видеа може "
-"бити делимична спојка уместо само једног елемента."
-
-msgid "description for default GStreamer videosrc"
-msgstr "опис основног видео извора Гстримера"
-
-msgid "Describes the selected videosrc element."
-msgstr "Описује изабрани елемент видео извора."
-
-msgid "default GStreamer visualization"
-msgstr "основно приказивање Гстримера"
-
-msgid ""
-"GStreamer can put visualization plugins in a pipeline to transform audio "
-"streams in video frames. Some possible choices are goom, goom2k1 and "
-"synaesthesia. The visualization plugin can be a partial pipeline instead of "
-"just one element."
-msgstr ""
-"Гстример може да стави прикључке приказивања у спојку да претвори аудио "
-"токове у видео кадрове. Неки могући избори су „goom“, „goom2k1“ и "
-"„synaesthesia“. Прикључак приказивања може бити делимична спојка уместо само "
-"једног елемента."
-
-msgid "description for default GStreamer visualization"
-msgstr "опис основног приказивања Гстримера"
-
-msgid "Describes the selected visualization element."
-msgstr "Описује изабрани елемент приказивања."
 
 msgid "OpenCV failed to load template image"
 msgstr "ОтворениЦВ није успео да учита слику шаблона"
@@ -243,6 +137,112 @@ msgstr "Датотека подешавања ДВБ канала не садр�
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Не могу да пронађем податке за ДВБ канал „%s“"
+
+#~ msgid "default GStreamer sound events audiosink"
+#~ msgstr "основни аудио усклађивач звучних догађаја Гстримера"
+
+#~ msgid ""
+#~ "GStreamer can play audio using any number of output elements. Some "
+#~ "possible choices are osssink, pulsesink and alsasink. The audiosink can "
+#~ "be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "Гстример може да пушта аудио користећи било који број излазних елемената. "
+#~ "Неки могући избори су „osssink“, „pulsesink“ и „alsasink“. Аудио "
+#~ "усклађивач може бити делимична спојка уместо само једног елемента."
+
+#~ msgid "description for default GStreamer sound events audiosink"
+#~ msgstr "опис основног аудио усклађивача звучних догађаја Гстримера"
+
+#~ msgid "Describes the selected audiosink element."
+#~ msgstr "Описује изабрани елемент аудио усклађивача."
+
+#~ msgid "default GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "основни аудио усклађивач Гстримера за аудио/видео састанчење"
+
+#~ msgid ""
+#~ "description for default GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "опис основног аудио усклађивач Гстримера за аудио/видео састанчење"
+
+#~ msgid "default GStreamer audiosink for Music and Movies"
+#~ msgstr "основни аудио усклађивач Гстримера за музику и филмове"
+
+#~ msgid "description for default GStreamer audiosink for Music and Movies"
+#~ msgstr "опис основног аудио усклађивача Гстримера за музику и филмове"
+
+#~ msgid "default GStreamer videosink"
+#~ msgstr "основни видео усклађивач Гстримера"
+
+#~ msgid ""
+#~ "GStreamer can play video using any number of output elements. Some "
+#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
+#~ "The videosink can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "Гстример може да пушта видео користећи било који број излазних елемената. "
+#~ "Неки могући избори су „xvimagesink“, „ximagesink“, „sdlvideosink“ и "
+#~ "„aasink“. Видео усклађивач може бити делимична спојка уместо само једног "
+#~ "елемента."
+
+#~ msgid "description for default GStreamer videosink"
+#~ msgstr "опис основног видео усклађивача Гстримера"
+
+#~ msgid "Describes the selected videosink element."
+#~ msgstr "Описује изабрани елемент видео усклађивача."
+
+#~ msgid "default GStreamer audiosrc"
+#~ msgstr "основни аудио извор Гстримера"
+
+#~ msgid ""
+#~ "GStreamer can record audio using any number of input elements. Some "
+#~ "possible choices are osssrc, pulsesrc and alsasrc. The audio source can "
+#~ "be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "Гстример може да снима аудио користећи било који број излазних елемената. "
+#~ "Неки могући избори су „osssrc“, „pulsesrc“ и „alsasrc“. Извор звука може "
+#~ "бити делимична спојка уместо само једног елемента."
+
+#~ msgid "description for default GStreamer audiosrc"
+#~ msgstr "опис основног аудио извора Гстримера"
+
+#~ msgid "Describes the selected audiosrc element."
+#~ msgstr "Описује изабрани елемент аудио извора."
+
+#~ msgid "default GStreamer videosrc"
+#~ msgstr "основни видео извор Гстримера"
+
+#~ msgid ""
+#~ "GStreamer can record video from any number of input elements. Some "
+#~ "possible choices are v4lsrc, v4l2src and videotestsrc. The video source "
+#~ "can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "Гстример може да снима видео користећи било који број излазних елемената. "
+#~ "Неки могући избори су „v4lsrc“, „v4l2src“ и “videotestsrc“. Извор видеа "
+#~ "може бити делимична спојка уместо само једног елемента."
+
+#~ msgid "description for default GStreamer videosrc"
+#~ msgstr "опис основног видео извора Гстримера"
+
+#~ msgid "Describes the selected videosrc element."
+#~ msgstr "Описује изабрани елемент видео извора."
+
+#~ msgid "default GStreamer visualization"
+#~ msgstr "основно приказивање Гстримера"
+
+#~ msgid ""
+#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
+#~ "streams in video frames. Some possible choices are goom, goom2k1 and "
+#~ "synaesthesia. The visualization plugin can be a partial pipeline instead "
+#~ "of just one element."
+#~ msgstr ""
+#~ "Гстример може да стави прикључке приказивања у спојку да претвори аудио "
+#~ "токове у видео кадрове. Неки могући избори су „goom“, „goom2k1“ и "
+#~ "„synaesthesia“. Прикључак приказивања може бити делимична спојка уместо "
+#~ "само једног елемента."
+
+#~ msgid "description for default GStreamer visualization"
+#~ msgstr "опис основног приказивања Гстримера"
+
+#~ msgid "Describes the selected visualization element."
+#~ msgstr "Описује изабрани елемент приказивања."
 
 #~ msgid "Couldn't get the Manifest's URI"
 #~ msgstr "Не могу да добавим путању Манифеста"

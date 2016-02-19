@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 13:55+0100\n"
+"POT-Creation-Date: 2016-02-19 10:32+0200\n"
 "PO-Revision-Date: 2015-10-21 00:15+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -21,118 +21,6 @@ msgstr ""
 
 msgid "format wasn't negotiated before get function"
 msgstr "das Format wurde vor der get-Funktion nicht ausgehandelt"
-
-msgid "default GStreamer sound events audiosink"
-msgstr "Voreingestellte GStreamer Tonereignis-Audioziel"
-
-msgid ""
-"GStreamer can play audio using any number of output elements. Some possible "
-"choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
-"pipeline instead of just one element."
-msgstr ""
-"GStreamer kann Ton mit einer beliebigen Anzahl an Ausgabeelementen "
-"wiedergeben. Einige Wahlmöglichkeiten sind »osssink«, »pulsesink« und "
-"»alsasink«. Das Audioziel kann eine teilweise Weiterleitung anstelle nur "
-"eines einzigen Elements sein."
-
-msgid "description for default GStreamer sound events audiosink"
-msgstr "Beschreibung des voreingestellten GStreamer Tonereignis-Audioziel"
-
-msgid "Describes the selected audiosink element."
-msgstr "Beschreibt das gewählte Audioziel-Element."
-
-msgid "default GStreamer audiosink for Audio/Video Conferencing"
-msgstr "Voreingestelltes GStreamer-Audioziel für Ton- und Videokonferenzen"
-
-msgid ""
-"description for default GStreamer audiosink for Audio/Video Conferencing"
-msgstr ""
-"Beschreibung des voreingestellten GStreamer-Audioziel für Ton- und "
-"Videokonferenzen"
-
-msgid "default GStreamer audiosink for Music and Movies"
-msgstr "Voreingestelltes GStreamer-Audioziel für Musik und Filme"
-
-msgid "description for default GStreamer audiosink for Music and Movies"
-msgstr ""
-"Beschreibung des voreingestellten GStreamer-Audioziel für Musik und Filme"
-
-msgid "default GStreamer videosink"
-msgstr "Voreingestelltes GStreamer-Videoziel"
-
-msgid ""
-"GStreamer can play video using any number of output elements. Some possible "
-"choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
-"can be a partial pipeline instead of just one element."
-msgstr ""
-"GStreamer kann Video mit einer beliebigen Anzahl an Ausgabeelementen "
-"wiedergeben. Einige Wahlmöglichkeiten sind »xvimagesink«, »ximagesink«, "
-"»sdlvideosink« und »aasink«. Das Videoziel kann eine anteilige Weiterleitung "
-"anstelle eines einzigen Elements sein."
-
-msgid "description for default GStreamer videosink"
-msgstr "Beschreibung des voreingestellten GStreamer-Videoziel"
-
-msgid "Describes the selected videosink element."
-msgstr "Beschreibt das gewählte Videoziel-Element."
-
-msgid "default GStreamer audiosrc"
-msgstr "Voreingestelltes GStreamer-audiosrc"
-
-msgid ""
-"GStreamer can record audio using any number of input elements. Some possible "
-"choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
-"pipeline instead of just one element."
-msgstr ""
-"GStreamer kann Ton mit einer beliebigen Anzahl an Eingabeelementen "
-"aufzeichnen. Einige Wahlmöglichkeiten sind »osssrc«, »pulsesrc« und "
-"»alsasrc«. Die Audioquelle kann eine anteilige Weiterleitung anstelle eines "
-"einzigen Elements sein."
-
-msgid "description for default GStreamer audiosrc"
-msgstr "Beschreibung des voreingestellten GStreamer-audiosrc"
-
-msgid "Describes the selected audiosrc element."
-msgstr "Beschreibt das gewählte audiosrc-Element."
-
-msgid "default GStreamer videosrc"
-msgstr "Voreingestelltes GStreamer-videosrc"
-
-msgid ""
-"GStreamer can record video from any number of input elements. Some possible "
-"choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
-"partial pipeline instead of just one element."
-msgstr ""
-"GStreamer kann Video mit einer beliebigen Anzahl an Eingabeelementen "
-"aufzeichnen. Einige Wahlmöglichkeiten sind »v4lsrc«, »v4l2src« und "
-"»videotestsrc«. Die Videoquelle kann eine anteilige Weiterleitung anstelle "
-"eines einzigen Elements sein."
-
-msgid "description for default GStreamer videosrc"
-msgstr "Beschreibung des voreingestellten GStreamer-videosrc"
-
-msgid "Describes the selected videosrc element."
-msgstr "Beschreibt das gewählte videosrc-Element."
-
-msgid "default GStreamer visualization"
-msgstr "Voreingestellte GStreamer-Visualisierung"
-
-msgid ""
-"GStreamer can put visualization plugins in a pipeline to transform audio "
-"streams in video frames. Some possible choices are goom, goom2k1 and "
-"synaesthesia. The visualization plugin can be a partial pipeline instead of "
-"just one element."
-msgstr ""
-"GStreamer kann Visualisierungs-Plugins in eine Weiterleitung integrieren, um "
-"Audioströme in Videobilder umzuwandeln. Einige Wahlmöglichkeiten sind "
-"»goom«, »goom2k1« und »synaesthesia«. Das Visualisierungs-Plugin kann eine "
-"anteilige Weiterleitung anstelle eines einzigen Elements sein."
-
-msgid "description for default GStreamer visualization"
-msgstr "Beschreibung der voreingestellten GStreamer-Visualisierung"
-
-msgid "Describes the selected visualization element."
-msgstr "Beschreibt das gewählte Visualisierungselement."
 
 # OpenCV ist eine freie Programmbibliothek mit Algorithmen für die Bildverarbeitung und maschinelles Sehen.
 msgid "OpenCV failed to load template image"
@@ -258,6 +146,118 @@ msgstr "DVB Kanal-Konfigurationsdatei enthält keine Kanäle"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Details zu DVB-Kanal %s konnten nicht gefunden werden"
+
+#~ msgid "default GStreamer sound events audiosink"
+#~ msgstr "Voreingestellte GStreamer Tonereignis-Audioziel"
+
+#~ msgid ""
+#~ "GStreamer can play audio using any number of output elements. Some "
+#~ "possible choices are osssink, pulsesink and alsasink. The audiosink can "
+#~ "be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer kann Ton mit einer beliebigen Anzahl an Ausgabeelementen "
+#~ "wiedergeben. Einige Wahlmöglichkeiten sind »osssink«, »pulsesink« und "
+#~ "»alsasink«. Das Audioziel kann eine teilweise Weiterleitung anstelle nur "
+#~ "eines einzigen Elements sein."
+
+#~ msgid "description for default GStreamer sound events audiosink"
+#~ msgstr "Beschreibung des voreingestellten GStreamer Tonereignis-Audioziel"
+
+#~ msgid "Describes the selected audiosink element."
+#~ msgstr "Beschreibt das gewählte Audioziel-Element."
+
+#~ msgid "default GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "Voreingestelltes GStreamer-Audioziel für Ton- und Videokonferenzen"
+
+#~ msgid ""
+#~ "description for default GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr ""
+#~ "Beschreibung des voreingestellten GStreamer-Audioziel für Ton- und "
+#~ "Videokonferenzen"
+
+#~ msgid "default GStreamer audiosink for Music and Movies"
+#~ msgstr "Voreingestelltes GStreamer-Audioziel für Musik und Filme"
+
+#~ msgid "description for default GStreamer audiosink for Music and Movies"
+#~ msgstr ""
+#~ "Beschreibung des voreingestellten GStreamer-Audioziel für Musik und Filme"
+
+#~ msgid "default GStreamer videosink"
+#~ msgstr "Voreingestelltes GStreamer-Videoziel"
+
+#~ msgid ""
+#~ "GStreamer can play video using any number of output elements. Some "
+#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
+#~ "The videosink can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer kann Video mit einer beliebigen Anzahl an Ausgabeelementen "
+#~ "wiedergeben. Einige Wahlmöglichkeiten sind »xvimagesink«, »ximagesink«, "
+#~ "»sdlvideosink« und »aasink«. Das Videoziel kann eine anteilige "
+#~ "Weiterleitung anstelle eines einzigen Elements sein."
+
+#~ msgid "description for default GStreamer videosink"
+#~ msgstr "Beschreibung des voreingestellten GStreamer-Videoziel"
+
+#~ msgid "Describes the selected videosink element."
+#~ msgstr "Beschreibt das gewählte Videoziel-Element."
+
+#~ msgid "default GStreamer audiosrc"
+#~ msgstr "Voreingestelltes GStreamer-audiosrc"
+
+#~ msgid ""
+#~ "GStreamer can record audio using any number of input elements. Some "
+#~ "possible choices are osssrc, pulsesrc and alsasrc. The audio source can "
+#~ "be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer kann Ton mit einer beliebigen Anzahl an Eingabeelementen "
+#~ "aufzeichnen. Einige Wahlmöglichkeiten sind »osssrc«, »pulsesrc« und "
+#~ "»alsasrc«. Die Audioquelle kann eine anteilige Weiterleitung anstelle "
+#~ "eines einzigen Elements sein."
+
+#~ msgid "description for default GStreamer audiosrc"
+#~ msgstr "Beschreibung des voreingestellten GStreamer-audiosrc"
+
+#~ msgid "Describes the selected audiosrc element."
+#~ msgstr "Beschreibt das gewählte audiosrc-Element."
+
+#~ msgid "default GStreamer videosrc"
+#~ msgstr "Voreingestelltes GStreamer-videosrc"
+
+#~ msgid ""
+#~ "GStreamer can record video from any number of input elements. Some "
+#~ "possible choices are v4lsrc, v4l2src and videotestsrc. The video source "
+#~ "can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer kann Video mit einer beliebigen Anzahl an Eingabeelementen "
+#~ "aufzeichnen. Einige Wahlmöglichkeiten sind »v4lsrc«, »v4l2src« und "
+#~ "»videotestsrc«. Die Videoquelle kann eine anteilige Weiterleitung "
+#~ "anstelle eines einzigen Elements sein."
+
+#~ msgid "description for default GStreamer videosrc"
+#~ msgstr "Beschreibung des voreingestellten GStreamer-videosrc"
+
+#~ msgid "Describes the selected videosrc element."
+#~ msgstr "Beschreibt das gewählte videosrc-Element."
+
+#~ msgid "default GStreamer visualization"
+#~ msgstr "Voreingestellte GStreamer-Visualisierung"
+
+#~ msgid ""
+#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
+#~ "streams in video frames. Some possible choices are goom, goom2k1 and "
+#~ "synaesthesia. The visualization plugin can be a partial pipeline instead "
+#~ "of just one element."
+#~ msgstr ""
+#~ "GStreamer kann Visualisierungs-Plugins in eine Weiterleitung integrieren, "
+#~ "um Audioströme in Videobilder umzuwandeln. Einige Wahlmöglichkeiten sind "
+#~ "»goom«, »goom2k1« und »synaesthesia«. Das Visualisierungs-Plugin kann "
+#~ "eine anteilige Weiterleitung anstelle eines einzigen Elements sein."
+
+#~ msgid "description for default GStreamer visualization"
+#~ msgstr "Beschreibung der voreingestellten GStreamer-Visualisierung"
+
+#~ msgid "Describes the selected visualization element."
+#~ msgstr "Beschreibt das gewählte Visualisierungselement."
 
 #~ msgid "Couldn't get the Manifest's URI"
 #~ msgstr "Adresse der Frachtliste konnte nicht ermittelt werden"

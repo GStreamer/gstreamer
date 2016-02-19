@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 13:55+0100\n"
+"POT-Creation-Date: 2016-02-19 10:32+0200\n"
 "PO-Revision-Date: 2015-12-05 11:28+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -19,111 +19,6 @@ msgstr ""
 
 msgid "format wasn't negotiated before get function"
 msgstr "format blev ikke forhandlet før hent funktion"
-
-msgid "default GStreamer sound events audiosink"
-msgstr "standardlydkanal for GStreamers lydhændelser"
-
-msgid ""
-"GStreamer can play audio using any number of output elements. Some possible "
-"choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
-"pipeline instead of just one element."
-msgstr ""
-"GStreamer kan afspille lyd via et antal udgangselementer. Nogle mulige valg "
-"er osssink, pulsesink og alsasink. Lydudgangen kan være en delvis datakanal "
-"i stedet for bare et element."
-
-msgid "description for default GStreamer sound events audiosink"
-msgstr "beskrivelse af standardlydkanal for GStreamers lydhændelser"
-
-msgid "Describes the selected audiosink element."
-msgstr "Beskriver det valge lydkanalelement."
-
-msgid "default GStreamer audiosink for Audio/Video Conferencing"
-msgstr "standardlydkanal til GStreamers lyd/video-konference"
-
-msgid ""
-"description for default GStreamer audiosink for Audio/Video Conferencing"
-msgstr "beskrivelse for standardlydkanal til GStreamers lyd/video-konference"
-
-msgid "default GStreamer audiosink for Music and Movies"
-msgstr "standardlydkanal til GStreamers musik og film"
-
-msgid "description for default GStreamer audiosink for Music and Movies"
-msgstr "beskrivelse for standardlydkanal til GStreamers musik og film"
-
-msgid "default GStreamer videosink"
-msgstr "standardlydkanal for GStreamer"
-
-msgid ""
-"GStreamer can play video using any number of output elements. Some possible "
-"choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
-"can be a partial pipeline instead of just one element."
-msgstr ""
-"GStreamer kan afspille video via et antal udgangselementer. Nogle mulige "
-"valg er xvimagesink, ximagesink, sdlvideosink og aasink. Videoudgangen kan "
-"være en delvis datakanal i stedet for bare et element."
-
-msgid "description for default GStreamer videosink"
-msgstr "beskrivelse for standardvideokanal for GStreamer"
-
-msgid "Describes the selected videosink element."
-msgstr "Beskriver den valgte videokanalselement."
-
-msgid "default GStreamer audiosrc"
-msgstr "standardlydoptagelse for GStreamer"
-
-msgid ""
-"GStreamer can record audio using any number of input elements. Some possible "
-"choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
-"pipeline instead of just one element."
-msgstr ""
-"GStreamer kan optage lyd via et antal indgangselementer. Nogle mulige valg "
-"er osssrc, pulsesrc og alsasrc. Lydkilden kan være en delvis datakanal i "
-"stedet for bare et element."
-
-msgid "description for default GStreamer audiosrc"
-msgstr "beskrivelse for standardlydoptagelsen til GStreamer"
-
-msgid "Describes the selected audiosrc element."
-msgstr "Beskriver det valgte lydoptagelseselement."
-
-msgid "default GStreamer videosrc"
-msgstr "standardvideooptager for GStreamer"
-
-msgid ""
-"GStreamer can record video from any number of input elements. Some possible "
-"choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
-"partial pipeline instead of just one element."
-msgstr ""
-"GStreamer kan optage video via et antal indgangselementer. Nogle mulige valg "
-"er v4lsrc, v4l2src og videotestsrc. Videokilden kan være en delvis datakanal "
-"i stedet for bare et element."
-
-msgid "description for default GStreamer videosrc"
-msgstr "beskrivelse for standardvideooptageren til GStreamer"
-
-msgid "Describes the selected videosrc element."
-msgstr "Beskriver det valgte videooptagerelement."
-
-msgid "default GStreamer visualization"
-msgstr "Standardvisualisering for GStreamer"
-
-msgid ""
-"GStreamer can put visualization plugins in a pipeline to transform audio "
-"streams in video frames. Some possible choices are goom, goom2k1 and "
-"synaesthesia. The visualization plugin can be a partial pipeline instead of "
-"just one element."
-msgstr ""
-"GStreamer kan placere visualiseringsudvidelsesmoduler i en datakanal for at "
-"transformere lydstrømme i videobilleder. Nogle mulige valg er goom, goom2k1 "
-"og synaesthesia. Visualiseringsudvidelsesmodulerne kan være en delvis "
-"datakanal i stedet for bare et element."
-
-msgid "description for default GStreamer visualization"
-msgstr "beskrivelse for standardvisualisering til GStreamer"
-
-msgid "Describes the selected visualization element."
-msgstr "Beskriver det valgte visualiseringselement."
 
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV mislykkedes i at indlæse skabelonaftryk"
@@ -241,6 +136,112 @@ msgstr "DVB-kanalens konfigurationsfil indeholder ikke nogen kanaler"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Kunne ikke finde detaljer for DVB-kanalen %s"
+
+#~ msgid "default GStreamer sound events audiosink"
+#~ msgstr "standardlydkanal for GStreamers lydhændelser"
+
+#~ msgid ""
+#~ "GStreamer can play audio using any number of output elements. Some "
+#~ "possible choices are osssink, pulsesink and alsasink. The audiosink can "
+#~ "be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer kan afspille lyd via et antal udgangselementer. Nogle mulige "
+#~ "valg er osssink, pulsesink og alsasink. Lydudgangen kan være en delvis "
+#~ "datakanal i stedet for bare et element."
+
+#~ msgid "description for default GStreamer sound events audiosink"
+#~ msgstr "beskrivelse af standardlydkanal for GStreamers lydhændelser"
+
+#~ msgid "Describes the selected audiosink element."
+#~ msgstr "Beskriver det valge lydkanalelement."
+
+#~ msgid "default GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "standardlydkanal til GStreamers lyd/video-konference"
+
+#~ msgid ""
+#~ "description for default GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr ""
+#~ "beskrivelse for standardlydkanal til GStreamers lyd/video-konference"
+
+#~ msgid "default GStreamer audiosink for Music and Movies"
+#~ msgstr "standardlydkanal til GStreamers musik og film"
+
+#~ msgid "description for default GStreamer audiosink for Music and Movies"
+#~ msgstr "beskrivelse for standardlydkanal til GStreamers musik og film"
+
+#~ msgid "default GStreamer videosink"
+#~ msgstr "standardlydkanal for GStreamer"
+
+#~ msgid ""
+#~ "GStreamer can play video using any number of output elements. Some "
+#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
+#~ "The videosink can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer kan afspille video via et antal udgangselementer. Nogle mulige "
+#~ "valg er xvimagesink, ximagesink, sdlvideosink og aasink. Videoudgangen "
+#~ "kan være en delvis datakanal i stedet for bare et element."
+
+#~ msgid "description for default GStreamer videosink"
+#~ msgstr "beskrivelse for standardvideokanal for GStreamer"
+
+#~ msgid "Describes the selected videosink element."
+#~ msgstr "Beskriver den valgte videokanalselement."
+
+#~ msgid "default GStreamer audiosrc"
+#~ msgstr "standardlydoptagelse for GStreamer"
+
+#~ msgid ""
+#~ "GStreamer can record audio using any number of input elements. Some "
+#~ "possible choices are osssrc, pulsesrc and alsasrc. The audio source can "
+#~ "be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer kan optage lyd via et antal indgangselementer. Nogle mulige "
+#~ "valg er osssrc, pulsesrc og alsasrc. Lydkilden kan være en delvis "
+#~ "datakanal i stedet for bare et element."
+
+#~ msgid "description for default GStreamer audiosrc"
+#~ msgstr "beskrivelse for standardlydoptagelsen til GStreamer"
+
+#~ msgid "Describes the selected audiosrc element."
+#~ msgstr "Beskriver det valgte lydoptagelseselement."
+
+#~ msgid "default GStreamer videosrc"
+#~ msgstr "standardvideooptager for GStreamer"
+
+#~ msgid ""
+#~ "GStreamer can record video from any number of input elements. Some "
+#~ "possible choices are v4lsrc, v4l2src and videotestsrc. The video source "
+#~ "can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer kan optage video via et antal indgangselementer. Nogle mulige "
+#~ "valg er v4lsrc, v4l2src og videotestsrc. Videokilden kan være en delvis "
+#~ "datakanal i stedet for bare et element."
+
+#~ msgid "description for default GStreamer videosrc"
+#~ msgstr "beskrivelse for standardvideooptageren til GStreamer"
+
+#~ msgid "Describes the selected videosrc element."
+#~ msgstr "Beskriver det valgte videooptagerelement."
+
+#~ msgid "default GStreamer visualization"
+#~ msgstr "Standardvisualisering for GStreamer"
+
+#~ msgid ""
+#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
+#~ "streams in video frames. Some possible choices are goom, goom2k1 and "
+#~ "synaesthesia. The visualization plugin can be a partial pipeline instead "
+#~ "of just one element."
+#~ msgstr ""
+#~ "GStreamer kan placere visualiseringsudvidelsesmoduler i en datakanal for "
+#~ "at transformere lydstrømme i videobilleder. Nogle mulige valg er goom, "
+#~ "goom2k1 og synaesthesia. Visualiseringsudvidelsesmodulerne kan være en "
+#~ "delvis datakanal i stedet for bare et element."
+
+#~ msgid "description for default GStreamer visualization"
+#~ msgstr "beskrivelse for standardvisualisering til GStreamer"
+
+#~ msgid "Describes the selected visualization element."
+#~ msgstr "Beskriver det valgte visualiseringselement."
 
 #~ msgid "Couldn't get the Manifest's URI"
 #~ msgstr "Kunne ikke indhente Manifestens adresse"
