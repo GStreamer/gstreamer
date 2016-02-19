@@ -1762,6 +1762,57 @@ GST_START_TEST (test_pad_probe_flush_events)
 
 GST_END_TEST;
 
+static gboolean probe_was_called;
+
+static GstPadProbeReturn
+flush_events_only_probe (GstPad * pad, GstPadProbeInfo * info, gpointer data)
+{
+  GST_LOG_OBJECT (pad, "%" GST_PTR_FORMAT, GST_PAD_PROBE_INFO_DATA (info));
+
+  probe_was_called = TRUE;
+
+  return GST_PAD_PROBE_OK;
+}
+
+GST_START_TEST (test_pad_probe_flush_events_only)
+{
+  GstPad *src, *sink;
+
+  src = gst_pad_new ("src", GST_PAD_SRC);
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
+  gst_pad_set_chain_function (sink, gst_check_chain_func);
+  gst_pad_set_active (src, TRUE);
+  gst_pad_set_active (sink, TRUE);
+
+  fail_unless (gst_pad_link (src, sink) == GST_PAD_LINK_OK);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_stream_start ("test")) == TRUE);
+
+  gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_EVENT_FLUSH,
+      flush_events_only_probe, NULL, NULL);
+
+  probe_was_called = FALSE;
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
+  fail_if (probe_was_called);
+
+  fail_unless_equals_int (gst_pad_push (src, gst_buffer_new ()), GST_FLOW_OK);
+  fail_if (probe_was_called);
+
+  gst_pad_push_event (src, gst_event_new_flush_start ());
+  fail_unless (probe_was_called);
+
+  probe_was_called = FALSE;
+  gst_pad_push_event (src, gst_event_new_flush_stop (TRUE));
+  fail_unless (probe_was_called);
+
+  gst_object_unref (src);
+  gst_object_unref (sink);
+}
+
+GST_END_TEST;
+
 #define NUM_PROBES 4
 static guint count;
 
@@ -2722,6 +2773,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_pad_probe_block_add_remove);
   tcase_add_test (tc_chain, test_pad_probe_block_and_drop_buffer);
   tcase_add_test (tc_chain, test_pad_probe_flush_events);
+  tcase_add_test (tc_chain, test_pad_probe_flush_events_only);
   tcase_add_test (tc_chain, test_pad_probe_call_order);
   tcase_add_test (tc_chain, test_events_query_unlinked);
   tcase_add_test (tc_chain, test_queue_src_caps_notify_linked);
