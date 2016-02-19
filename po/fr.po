@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 1.4.1\n"
+"Project-Id-Version: gst-plugins-ugly 1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 14:03+0100\n"
-"PO-Revision-Date: 2015-04-26 19:15+0200\n"
+"POT-Creation-Date: 2016-02-19 10:32+0200\n"
+"PO-Revision-Date: 2015-12-27 01:51+0100\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -32,18 +32,18 @@ msgstr "Impossible d’ouvrir le DVD"
 
 #, c-format
 msgid "Could not open DVD title %d"
-msgstr "Impossible d’ouvrir le titre %d du DVD"
+msgstr "Impossible d’ouvrir le DVD intitulé %d"
 
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
-msgstr "Impossible d’aller au chapitre %d du titre %d du DVD"
+msgstr "Impossible d’aller au chapitre %d du DVD intitulé %d"
 
 #, c-format
 msgid ""
 "Could not open DVD title %d. Interactive titles are not supported by this "
 "element"
 msgstr ""
-"Impossible d’ouvrir le titre %d du DVD. Les titres interactifs ne sont pas "
+"Impossible d’ouvrir le DVD intitulé %d. Les titres interactifs ne sont pas "
 "pris en charge par cet élément"
 
 msgid ""
@@ -51,7 +51,7 @@ msgid ""
 "decryption library is not installed."
 msgstr ""
 "Impossible de lire le DVD. Il se peut que le DVD soit chiffré et qu’aucune "
-"bibliothèque de déchiffrement DVD de ne soit installée."
+"bibliothèque de déchiffrement de DVD de ne soit installée."
 
 msgid "Could not read DVD."
 msgstr "Impossible de lire le DVD."
@@ -67,8 +67,8 @@ msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
-"Le débit binaire demandé de %d kbit/s pour la propriété « %s » n’est pas "
-"autorisé. Le débit binaire a été défini à %d kbits/s."
+"Le débit de transfert demandé de %d kbit/s pour la propriété « %s » n’est "
+"pas autorisé. Le débit de transfert a été défini à %d kbits/s."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
@@ -76,7 +76,7 @@ msgstr ""
 "d’encodage."
 
 msgid "This stream contains no data."
-msgstr "Ce flux ne contient aucune donnée."
+msgstr "Ce flux ne contient aucune données."
 
 msgid "Internal data stream error."
-msgstr "Erreur interne de flux de données."
+msgstr "Erreur du flux de données interne."
