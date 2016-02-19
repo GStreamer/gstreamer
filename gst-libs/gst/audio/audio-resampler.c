@@ -322,8 +322,6 @@ make_taps (GstAudioResampler * resampler,
 
   switch (resampler->method) {
     case GST_AUDIO_RESAMPLER_METHOD_NEAREST:
-      for (i = 0; i < n_taps; i++)
-        weight += tmp_taps[i] = get_nearest_tap (x + i, resampler->n_taps);
       break;
 
     case GST_AUDIO_RESAMPLER_METHOD_LINEAR:
@@ -418,14 +416,12 @@ static inline void                                                      \
 extract_taps_##type (GstAudioResampler * resampler, type *tmp_taps,     \
     gint n_taps, gint oversample, gint mult)                            \
 {                                                                       \
-  gint i, j, k, o = oversample - 1;                                     \
-  for (i = 0; i < oversample; i++, o--) {                               \
+  gint i, j, o = oversample + mult - 1;                                 \
+  for (i = 0; i < o; i++) {                                             \
     type *taps = (type *) ((gint8*)resampler->taps +                    \
-                o * resampler->taps_stride);                            \
+                i * resampler->taps_stride);                            \
     for (j = 0; j < n_taps; j++) {                                      \
-      for (k = 0; k < mult; k++) {                                      \
-        *taps++ = tmp_taps[i + j*oversample + k];                       \
-      }                                                                 \
+      *taps++ = tmp_taps[i + j*oversample];                             \
     }                                                                   \
   }                                                                     \
 }
@@ -435,28 +431,35 @@ MAKE_EXTRACT_TAPS_FUNC (gfloat);
 MAKE_EXTRACT_TAPS_FUNC (gdouble);
 
 typedef void (*InterpolateFunc) (gdouble * o, const gdouble * a, gint len,
-    const gdouble * icoeff);
+    const gdouble * icoeff, gint astride);
 
 static void
 interpolate_gdouble_linear_c (gdouble * o, const gdouble * a, gint len,
-    const gdouble * ic)
+    const gdouble * ic, gint astride)
 {
   gint i;
+  const gdouble *c[2] = { (gdouble *) ((gint8 *) a + 0 * astride),
+    (gdouble *) ((gint8 *) a + 1 * astride)
+  };
 
   for (i = 0; i < len; i++)
-    o[i] = (a[2 * i + 0] - a[2 * i + 1]) * ic[0] + a[2 * i + 1];
+    o[i] = (c[0][i] - c[1][i]) * ic[0] + c[1][i];
 }
 
 static void
 interpolate_gdouble_cubic_c (gdouble * o, const gdouble * a, gint len,
-    const gdouble * ic)
+    const gdouble * ic, gint astride)
 {
   gint i;
+  const gdouble *c[4] = { (gdouble *) ((gint8 *) a + 0 * astride),
+    (gdouble *) ((gint8 *) a + 1 * astride),
+    (gdouble *) ((gint8 *) a + 2 * astride),
+    (gdouble *) ((gint8 *) a + 3 * astride)
+  };
 
   for (i = 0; i < len; i++)
-    o[i] =
-        a[4 * i + 0] * ic[0] + a[4 * i + 1] * ic[1] + a[4 * i + 2] * ic[2] +
-        a[4 * i + 3] * ic[3];
+    o[i] = c[0][i] * ic[0] + c[1][i] * ic[1] +
+        c[2][i] * ic[2] + c[3][i] * ic[3];
 }
 
 static InterpolateFunc interpolate_funcs[] = {
@@ -534,7 +537,7 @@ fill_taps (GstAudioResampler * resampler,
     gdouble ic[4], *taps;
 
     pos = phase * oversample;
-    offset = pos / n_phases;
+    offset = (oversample - 1) - pos / n_phases;
     frac = pos % n_phases;
 
     taps = (gdouble *) ((gint8 *) resampler->taps + offset * taps_stride);
@@ -542,11 +545,11 @@ fill_taps (GstAudioResampler * resampler,
     switch (resampler->filter_interpolation) {
       case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR:
         make_coeff_gdouble_linear (frac, n_phases, ic);
-        interpolate_gdouble_linear (tmp_taps, taps, n_taps, ic);
+        interpolate_gdouble_linear (tmp_taps, taps, n_taps, ic, taps_stride);
         break;
       case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC:
         make_coeff_gdouble_cubic (frac, n_phases, ic);
-        interpolate_gdouble_cubic (tmp_taps, taps, n_taps, ic);
+        interpolate_gdouble_cubic (tmp_taps, taps, n_taps, ic, taps_stride);
         break;
       default:
         break;
@@ -555,6 +558,25 @@ fill_taps (GstAudioResampler * resampler,
   }
   return res;
 }
+
+#define GET_TAPS_NEAREST_FUNC(type)                                             \
+static inline gpointer                                                          \
+get_taps_##type##_nearest (GstAudioResampler * resampler,                       \
+    gint *samp_index, gint *samp_phase, type icoeff[4])                         \
+{                                                                               \
+  gint out_rate = resampler->out_rate;                                          \
+  *samp_index += resampler->samp_inc;                                           \
+  *samp_phase += resampler->samp_frac;                                          \
+  if (*samp_phase >= out_rate) {                                                \
+    *samp_phase -= out_rate;                                                    \
+    *samp_index += 1;                                                           \
+  }                                                                             \
+  return NULL;                                                                  \
+}
+GET_TAPS_NEAREST_FUNC (gint16);
+GET_TAPS_NEAREST_FUNC (gint32);
+GET_TAPS_NEAREST_FUNC (gfloat);
+GET_TAPS_NEAREST_FUNC (gdouble);
 
 #define GET_TAPS_FULL_FUNC(type)                                                \
 static inline gpointer                                                          \
@@ -606,7 +628,7 @@ get_taps_##type##_##inter (GstAudioResampler * resampler,       \
   gint taps_stride = resampler->taps_stride;                    \
                                                                 \
   pos = *samp_phase * oversample;                               \
-  offset = pos / out_rate;                                      \
+  offset = (oversample - 1) - pos / out_rate;                   \
   frac = pos % out_rate;                                        \
                                                                 \
   res = (gint8 *) resampler->taps + offset * taps_stride;       \
@@ -631,10 +653,22 @@ GET_TAPS_INTERPOLATE_FUNC (gint32, cubic);
 GET_TAPS_INTERPOLATE_FUNC (gfloat, cubic);
 GET_TAPS_INTERPOLATE_FUNC (gdouble, cubic);
 
+#define INNER_PRODUCT_NEAREST_FUNC(type)                        \
+static inline void                                              \
+inner_product_##type##_nearest_1_c (type * o, const type * a,   \
+    const type * b, gint len, const type *ic, gint bstride)     \
+{                                                               \
+  *o = *a;                                                      \
+}
+INNER_PRODUCT_NEAREST_FUNC (gint16);
+INNER_PRODUCT_NEAREST_FUNC (gint32);
+INNER_PRODUCT_NEAREST_FUNC (gfloat);
+INNER_PRODUCT_NEAREST_FUNC (gdouble);
+
 #define INNER_PRODUCT_INT_FULL_FUNC(type,type2,prec,limit)      \
 static inline void                                              \
 inner_product_##type##_full_1_c (type * o, const type * a,      \
-    const type * b, gint len, const type *ic)                   \
+    const type * b, gint len, const type *ic, gint bstride)     \
 {                                                               \
   gint i;                                                       \
   type2 res[4] = { 0, 0, 0, 0 };                                \
@@ -656,16 +690,18 @@ INNER_PRODUCT_INT_FULL_FUNC (gint32, gint64, PRECISION_S32, (gint64) 1 << 31);
 #define INNER_PRODUCT_INT_LINEAR_FUNC(type,type2,prec,limit)    \
 static inline void                                              \
 inner_product_##type##_linear_1_c (type * o, const type * a,    \
-    const type * b, gint len, const type *ic)                   \
+    const type * b, gint len, const type *ic, gint bstride)     \
 {                                                               \
   gint i;                                                       \
   type2 res[4] = { 0, 0, 0, 0 };                                \
+  const type *c[2] = {(type*)((gint8*)b + 0*bstride),           \
+                      (type*)((gint8*)b + 1*bstride)};          \
                                                                 \
   for (i = 0; i < len; i += 2) {                                \
-    res[0] += (type2) a[i + 0] * (type2) b[2 * i + 0];          \
-    res[1] += (type2) a[i + 0] * (type2) b[2 * i + 1];          \
-    res[2] += (type2) a[i + 1] * (type2) b[2 * i + 2];          \
-    res[3] += (type2) a[i + 1] * (type2) b[2 * i + 3];          \
+    res[0] += (type2) a[i + 0] * (type2) c[0][i + 0];           \
+    res[1] += (type2) a[i + 0] * (type2) c[1][i + 0];           \
+    res[2] += (type2) a[i + 1] * (type2) c[0][i + 1];           \
+    res[3] += (type2) a[i + 1] * (type2) c[1][i + 1];           \
   }                                                             \
   res[0] = (res[0] + res[2]) >> (prec);                         \
   res[1] = (res[1] + res[3]) >> (prec);                         \
@@ -681,16 +717,20 @@ INNER_PRODUCT_INT_LINEAR_FUNC (gint32, gint64, PRECISION_S32, (gint64) 1 << 31);
 #define INNER_PRODUCT_INT_CUBIC_FUNC(type,type2,prec,limit)     \
 static inline void                                              \
 inner_product_##type##_cubic_1_c (type * o, const type * a,     \
-    const type * b, gint len, const type *ic)                   \
+    const type * b, gint len, const type *ic, gint bstride)     \
 {                                                               \
   gint i;                                                       \
   type2 res[4] = { 0, 0, 0, 0 };                                \
+  const type *c[4] = {(type*)((gint8*)b + 0*bstride),           \
+                      (type*)((gint8*)b + 1*bstride),           \
+                      (type*)((gint8*)b + 2*bstride),           \
+                      (type*)((gint8*)b + 3*bstride)};          \
                                                                 \
   for (i = 0; i < len; i++) {                                   \
-    res[0] += (type2) a[i] * (type2) b[4 * i + 0];              \
-    res[1] += (type2) a[i] * (type2) b[4 * i + 1];              \
-    res[2] += (type2) a[i] * (type2) b[4 * i + 2];              \
-    res[3] += (type2) a[i] * (type2) b[4 * i + 3];              \
+    res[0] += (type2) a[i] * (type2) c[0][i];                   \
+    res[1] += (type2) a[i] * (type2) c[1][i];                   \
+    res[2] += (type2) a[i] * (type2) c[2][i];                   \
+    res[3] += (type2) a[i] * (type2) c[3][i];                   \
   }                                                             \
   res[0] = (type2)(type)(res[0] >> (prec)) * (type2) ic[0] +    \
            (type2)(type)(res[1] >> (prec)) * (type2) ic[1] +    \
@@ -706,7 +746,7 @@ INNER_PRODUCT_INT_CUBIC_FUNC (gint32, gint64, PRECISION_S32, (gint64) 1 << 31);
 #define INNER_PRODUCT_FLOAT_FULL_FUNC(type)                     \
 static inline void                                              \
 inner_product_##type##_full_1_c (type * o, const type * a,      \
-    const type * b, gint len, const type *ic)                   \
+    const type * b, gint len, const type *ic, gint bstride)     \
 {                                                               \
   gint i;                                                       \
   type res[4] = { 0.0, 0.0, 0.0, 0.0 };                         \
@@ -726,16 +766,18 @@ INNER_PRODUCT_FLOAT_FULL_FUNC (gdouble);
 #define INNER_PRODUCT_FLOAT_LINEAR_FUNC(type)                   \
 static inline void                                              \
 inner_product_##type##_linear_1_c (type * o, const type * a,    \
-    const type * b, gint len, const type *ic)                   \
+    const type * b, gint len, const type *ic, gint bstride)     \
 {                                                               \
   gint i;                                                       \
   type res[4] = { 0.0, 0.0, 0.0, 0.0 };                         \
+  const type *c[2] = {(type*)((gint8*)b + 0*bstride),           \
+                      (type*)((gint8*)b + 1*bstride)};          \
                                                                 \
   for (i = 0; i < len; i += 2) {                                \
-    res[0] += a[i] * b[2 * i + 0];                              \
-    res[1] += a[i] * b[2 * i + 1];                              \
-    res[2] += a[i] * b[2 * i + 2];                              \
-    res[3] += a[i] * b[2 * i + 3];                              \
+    res[0] += a[i + 0] * c[0][i + 0];                           \
+    res[1] += a[i + 0] * c[1][i + 0];                           \
+    res[2] += a[i + 1] * c[0][i + 1];                           \
+    res[3] += a[i + 1] * c[1][i + 1];                           \
   }                                                             \
   *o = (res[0] + res[2]) * ic[0] +                              \
        (res[1] + res[3]) * ic[1];                               \
@@ -746,16 +788,20 @@ INNER_PRODUCT_FLOAT_LINEAR_FUNC (gdouble);
 #define INNER_PRODUCT_FLOAT_CUBIC_FUNC(type)                    \
 static inline void                                              \
 inner_product_##type##_cubic_1_c (type * o, const type * a,     \
-    const type * b, gint len, const type *ic)                   \
+    const type * b, gint len, const type *ic, gint bstride)     \
 {                                                               \
   gint i;                                                       \
   type res[4] = { 0.0, 0.0, 0.0, 0.0 };                         \
+  const type *c[4] = {(type*)((gint8*)b + 0*bstride),           \
+                      (type*)((gint8*)b + 1*bstride),           \
+                      (type*)((gint8*)b + 2*bstride),           \
+                      (type*)((gint8*)b + 3*bstride)};          \
                                                                 \
   for (i = 0; i < len; i++) {                                   \
-    res[0] += a[i] * b[4 * i + 0];                              \
-    res[1] += a[i] * b[4 * i + 1];                              \
-    res[2] += a[i] * b[4 * i + 2];                              \
-    res[3] += a[i] * b[4 * i + 3];                              \
+    res[0] += a[i] * c[0][i];                                   \
+    res[1] += a[i] * c[1][i];                                   \
+    res[2] += a[i] * c[2][i];                                   \
+    res[3] += a[i] * c[3][i];                                   \
   }                                                             \
   *o = res[0] * ic[0] + res[1] * ic[1] +                        \
        res[2] * ic[2] + res[3] * ic[3];                         \
@@ -773,6 +819,7 @@ resample_ ##type## _ ##inter## _ ##channels## _ ##arch (GstAudioResampler * resa
   gint n_taps = resampler->n_taps;                                              \
   gint blocks = resampler->blocks;                                              \
   gint ostride = resampler->ostride;                                            \
+  gint taps_stride = resampler->taps_stride;                                    \
   gint samp_index = 0;                                                          \
   gint samp_phase = 0;                                                          \
                                                                                 \
@@ -791,7 +838,7 @@ resample_ ##type## _ ##inter## _ ##channels## _ ##arch (GstAudioResampler * resa
       taps = get_taps_ ##type##_##inter                                         \
               (resampler, &samp_index, &samp_phase, icoeff);                    \
       inner_product_ ##type##_##inter##_##channels##_##arch                     \
-              (op, ipp, taps, n_taps, icoeff);                                  \
+              (op, ipp, taps, n_taps, icoeff, taps_stride);                     \
       op += ostride;                                                            \
     }                                                                           \
     if (in_len > samp_index)                                                    \
@@ -803,6 +850,11 @@ resample_ ##type## _ ##inter## _ ##channels## _ ##arch (GstAudioResampler * resa
   resampler->samp_index = 0;                                                    \
   resampler->samp_phase = samp_phase;                                           \
 }
+
+MAKE_RESAMPLE_FUNC (gint16, nearest, 1, c);
+MAKE_RESAMPLE_FUNC (gint32, nearest, 1, c);
+MAKE_RESAMPLE_FUNC (gfloat, nearest, 1, c);
+MAKE_RESAMPLE_FUNC (gdouble, nearest, 1, c);
 
 MAKE_RESAMPLE_FUNC (gint16, full, 1, c);
 MAKE_RESAMPLE_FUNC (gint32, full, 1, c);
@@ -820,6 +872,11 @@ MAKE_RESAMPLE_FUNC (gfloat, cubic, 1, c);
 MAKE_RESAMPLE_FUNC (gdouble, cubic, 1, c);
 
 static ResampleFunc resample_funcs[] = {
+  resample_gint16_nearest_1_c,
+  resample_gint32_nearest_1_c,
+  resample_gfloat_nearest_1_c,
+  resample_gdouble_nearest_1_c,
+
   resample_gint16_full_1_c,
   resample_gint32_full_1_c,
   resample_gfloat_full_1_c,
@@ -836,20 +893,25 @@ static ResampleFunc resample_funcs[] = {
   resample_gdouble_cubic_1_c,
 };
 
-#define resample_gint16_full_1 resample_funcs[0]
-#define resample_gint32_full_1 resample_funcs[1]
-#define resample_gfloat_full_1 resample_funcs[2]
-#define resample_gdouble_full_1 resample_funcs[3]
+#define resample_gint16_nearest_1 resample_funcs[0]
+#define resample_gint32_nearest_1 resample_funcs[1]
+#define resample_gfloat_nearest_1 resample_funcs[2]
+#define resample_gdouble_nearest_1 resample_funcs[3]
 
-#define resample_gint16_linear_1 resample_funcs[4]
-#define resample_gint32_linear_1 resample_funcs[5]
-#define resample_gfloat_linear_1 resample_funcs[6]
-#define resample_gdouble_linear_1 resample_funcs[7]
+#define resample_gint16_full_1 resample_funcs[4]
+#define resample_gint32_full_1 resample_funcs[5]
+#define resample_gfloat_full_1 resample_funcs[6]
+#define resample_gdouble_full_1 resample_funcs[7]
 
-#define resample_gint16_cubic_1 resample_funcs[8]
-#define resample_gint32_cubic_1 resample_funcs[9]
-#define resample_gfloat_cubic_1 resample_funcs[10]
-#define resample_gdouble_cubic_1 resample_funcs[11]
+#define resample_gint16_linear_1 resample_funcs[8]
+#define resample_gint32_linear_1 resample_funcs[9]
+#define resample_gfloat_linear_1 resample_funcs[10]
+#define resample_gdouble_linear_1 resample_funcs[11]
+
+#define resample_gint16_cubic_1 resample_funcs[12]
+#define resample_gint32_cubic_1 resample_funcs[13]
+#define resample_gfloat_cubic_1 resample_funcs[14]
+#define resample_gdouble_cubic_1 resample_funcs[15]
 
 #if defined HAVE_ORC && !defined DISABLE_ORC
 # if defined (__ARM_NEON__)
@@ -879,21 +941,25 @@ audio_resampler_init (void)
       gint i;
 
       if (target) {
+        const gchar *name;
         unsigned int flags = orc_target_get_default_flags (target);
-        const gchar *tname, *name;
 
-        tname = orc_target_get_name (target);
-        GST_DEBUG ("target %s, default flags %08x", tname, flags);
-
-        for (i = 0; i < 32; ++i) {
-          if (flags & (1U << i)) {
+        for (i = -1; i < 32; ++i) {
+          if (i == -1) {
+            name = orc_target_get_name (target);
+            GST_DEBUG ("target %s, default flags %08x", name, flags);
+          } else if (flags & (1U << i)) {
             name = orc_target_get_flag_name (target, i);
             GST_DEBUG ("target flag %s", name);
+          } else
+            name = NULL;
+
+          if (name) {
 #ifdef CHECK_X86
-            audio_resampler_check_x86 (tname, name);
+            audio_resampler_check_x86 (name);
 #endif
 #ifdef CHECK_NEON
-            audio_resampler_check_neon (tname, name);
+            audio_resampler_check_neon (name);
 #endif
           }
         }
@@ -978,19 +1044,18 @@ calculate_kaiser_params (GstAudioResampler * resampler)
 
 static void
 alloc_taps_mem (GstAudioResampler * resampler, gint bps, gint n_taps,
-    gint n_phases, gint n_mult)
+    gint n_phases, gint n_tmp)
 {
   if (resampler->alloc_taps >= n_taps && resampler->alloc_phases >= n_phases)
     return;
 
-  GST_DEBUG ("allocate n_taps %d n_phases %d n_mult %d", n_taps, n_phases,
-      n_mult);
+  GST_DEBUG ("allocate n_taps %d n_phases %d n_tmp %d", n_taps, n_phases,
+      n_tmp);
 
   resampler->tmp_taps =
-      g_realloc_n (resampler->tmp_taps, n_taps, sizeof (gdouble));
+      g_realloc_n (resampler->tmp_taps, n_tmp, sizeof (gdouble));
 
-  resampler->taps_stride =
-      GST_ROUND_UP_32 (bps * (n_mult * n_taps + TAPS_OVERREAD));
+  resampler->taps_stride = GST_ROUND_UP_32 (bps * (n_taps + TAPS_OVERREAD));
 
   g_free (resampler->taps_mem);
   resampler->taps_mem =
@@ -1058,23 +1123,30 @@ setup_functions (GstAudioResampler * resampler)
       break;
   }
   deinterleave = deinterleave_funcs[index];
-
-  switch (resampler->filter_mode) {
-    default:
-    case GST_AUDIO_RESAMPLER_FILTER_MODE_FULL:
-      GST_DEBUG ("using full filter function");
+  switch (resampler->method) {
+    case GST_AUDIO_RESAMPLER_METHOD_NEAREST:
+      GST_DEBUG ("using nearest filter function");
       break;
-    case GST_AUDIO_RESAMPLER_FILTER_MODE_INTERPOLATED:
-      switch (resampler->filter_interpolation) {
-        case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR:
-          GST_DEBUG ("using linear interpolation filter function");
-          index += 4;
-          break;
-        case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC:
-          GST_DEBUG ("using cubic interpolation filter function");
-          index += 8;
-          break;
+    default:
+      index += 4;
+      switch (resampler->filter_mode) {
         default:
+        case GST_AUDIO_RESAMPLER_FILTER_MODE_FULL:
+          GST_DEBUG ("using full filter function");
+          break;
+        case GST_AUDIO_RESAMPLER_FILTER_MODE_INTERPOLATED:
+          switch (resampler->filter_interpolation) {
+            case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR:
+              GST_DEBUG ("using linear interpolation filter function");
+              index += 4;
+              break;
+            case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC:
+              GST_DEBUG ("using cubic interpolation filter function");
+              index += 8;
+              break;
+            default:
+              break;
+          }
           break;
       }
       break;
@@ -1194,7 +1266,8 @@ resampler_calculate_taps (GstAudioResampler * resampler)
     }
   }
 
-  if (resampler->filter_mode == GST_AUDIO_RESAMPLER_FILTER_MODE_FULL) {
+  if (resampler->filter_mode == GST_AUDIO_RESAMPLER_FILTER_MODE_FULL &&
+      resampler->method != GST_AUDIO_RESAMPLER_METHOD_NEAREST) {
     GST_DEBUG ("setting up filter cache");
     resampler->n_phases = out_rate;
     alloc_cache_mem (resampler, bps, n_taps, out_rate);
@@ -1202,7 +1275,7 @@ resampler_calculate_taps (GstAudioResampler * resampler)
 
   if (resampler->filter_interpolation !=
       GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_NONE) {
-    gint otaps, isize;
+    gint n_tmp, isize;
     gdouble x, weight, *tmp_taps;
     GstAudioFormat format;
     gpointer taps;
@@ -1218,7 +1291,6 @@ resampler_calculate_taps (GstAudioResampler * resampler)
         isize = 4;
         break;
     }
-    otaps = oversample * n_taps + isize - 1;
 
     if (resampler->filter_mode == GST_AUDIO_RESAMPLER_FILTER_MODE_FULL) {
       format = GST_AUDIO_FORMAT_F64;
@@ -1226,28 +1298,30 @@ resampler_calculate_taps (GstAudioResampler * resampler)
     } else
       format = resampler->format;
 
-    alloc_taps_mem (resampler, bps, otaps, oversample, isize);
+    n_tmp = oversample * n_taps + isize - 1;
+
+    alloc_taps_mem (resampler, bps, n_taps, oversample + isize - 1, n_tmp);
 
     taps = tmp_taps = resampler->tmp_taps;
     x = 1.0 - n_taps / 2;
-    weight = make_taps (resampler, tmp_taps, x, otaps, oversample);
+    weight = make_taps (resampler, tmp_taps, x, n_tmp, oversample);
 
     switch (format) {
       case GST_AUDIO_FORMAT_S16:
-        convert_taps_gint16 (tmp_taps, taps, weight / oversample, otaps);
+        convert_taps_gint16 (tmp_taps, taps, weight / oversample, n_tmp);
         extract_taps_gint16 (resampler, taps, n_taps, oversample, isize);
         break;
       case GST_AUDIO_FORMAT_S32:
-        convert_taps_gint32 (tmp_taps, taps, weight / oversample, otaps);
+        convert_taps_gint32 (tmp_taps, taps, weight / oversample, n_tmp);
         extract_taps_gint32 (resampler, taps, n_taps, oversample, isize);
         break;
       case GST_AUDIO_FORMAT_F32:
-        convert_taps_gfloat (tmp_taps, taps, weight / oversample, otaps);
+        convert_taps_gfloat (tmp_taps, taps, weight / oversample, n_tmp);
         extract_taps_gfloat (resampler, taps, n_taps, oversample, isize);
         break;
       default:
       case GST_AUDIO_FORMAT_F64:
-        convert_taps_gdouble (tmp_taps, taps, weight / oversample, otaps);
+        convert_taps_gdouble (tmp_taps, taps, weight / oversample, n_tmp);
         extract_taps_gdouble (resampler, taps, n_taps, oversample, isize);
         break;
     }

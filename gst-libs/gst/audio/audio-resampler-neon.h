@@ -398,9 +398,9 @@ MAKE_RESAMPLE_FUNC (gfloat, linear, 1, neon);
 MAKE_RESAMPLE_FUNC (gfloat, cubic, 1, neon);
 
 static void
-audio_resampler_check_neon (const gchar *target_name, const gchar *option)
+audio_resampler_check_neon (const gchar *option)
 {
-  if (!strcmp (target_name, "neon")) {
+  if (!strcmp (option, "neon")) {
     GST_DEBUG ("enable NEON optimisations");
     resample_gint16_full_1 = resample_gint16_full_1_neon;
     resample_gint16_linear_1 = resample_gint16_linear_1_neon;
