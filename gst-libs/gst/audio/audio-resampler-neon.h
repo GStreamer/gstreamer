@@ -18,7 +18,7 @@
  */
 
 static inline void
-inner_product_gint16_none_1_neon (gint16 * o, const gint16 * a,
+inner_product_gint16_full_1_neon (gint16 * o, const gint16 * a,
     const gint16 * b, gint len, const gint16 * icoeff)
 {
     uint32_t remainder = len % 16;
@@ -146,7 +146,7 @@ inner_product_gint16_cubic_1_neon (gint16 * o, const gint16 * a,
 }
 
 static inline void
-inner_product_gint32_none_1_neon (gint32 * o, const gint32 * a,
+inner_product_gint32_full_1_neon (gint32 * o, const gint32 * a,
     const gint32 * b, gint len, const gint32 * icoeff)
 {
     uint32_t remainder = len % 8;
@@ -264,7 +264,7 @@ inner_product_gint32_cubic_1_neon (gint32 * o, const gint32 * a,
 }
 
 static inline void
-inner_product_gfloat_none_1_neon (gfloat * o, const gfloat * a,
+inner_product_gfloat_full_1_neon (gfloat * o, const gfloat * a,
     const gfloat * b, gint len, const gfloat * icoeff)
 {
     uint32_t remainder = len % 16;
@@ -385,15 +385,15 @@ inner_product_gfloat_cubic_1_neon (gfloat * o, const gfloat * a,
                     "q9", "q10", "q11", "memory");
 }
 
-MAKE_RESAMPLE_FUNC (gint16, none, 1, neon);
+MAKE_RESAMPLE_FUNC (gint16, full, 1, neon);
 MAKE_RESAMPLE_FUNC (gint16, linear, 1, neon);
 MAKE_RESAMPLE_FUNC (gint16, cubic, 1, neon);
 
-MAKE_RESAMPLE_FUNC (gint32, none, 1, neon);
+MAKE_RESAMPLE_FUNC (gint32, full, 1, neon);
 MAKE_RESAMPLE_FUNC (gint32, linear, 1, neon);
 MAKE_RESAMPLE_FUNC (gint32, cubic, 1, neon);
 
-MAKE_RESAMPLE_FUNC (gfloat, none, 1, neon);
+MAKE_RESAMPLE_FUNC (gfloat, full, 1, neon);
 MAKE_RESAMPLE_FUNC (gfloat, linear, 1, neon);
 MAKE_RESAMPLE_FUNC (gfloat, cubic, 1, neon);
 
@@ -402,15 +402,15 @@ audio_resampler_check_neon (const gchar *target_name, const gchar *option)
 {
   if (!strcmp (target_name, "neon")) {
     GST_DEBUG ("enable NEON optimisations");
-    resample_gint16_none_1 = resample_gint16_none_1_neon;
+    resample_gint16_full_1 = resample_gint16_full_1_neon;
     resample_gint16_linear_1 = resample_gint16_linear_1_neon;
     resample_gint16_cubic_1 = resample_gint16_cubic_1_neon;
 
-    resample_gint32_none_1 = resample_gint32_none_1_neon;
+    resample_gint32_full_1 = resample_gint32_full_1_neon;
     resample_gint32_linear_1 = resample_gint32_linear_1_neon;
     resample_gint32_cubic_1 = resample_gint32_cubic_1_neon;
 
-    resample_gfloat_none_1 = resample_gfloat_none_1_neon;
+    resample_gfloat_full_1 = resample_gfloat_full_1_neon;
     resample_gfloat_linear_1 = resample_gfloat_linear_1_neon;
     resample_gfloat_cubic_1 = resample_gfloat_cubic_1_neon;
   }
