@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 13:17+0100\n"
+"POT-Creation-Date: 2016-02-19 10:31+0200\n"
 "PO-Revision-Date: 2015-10-17 12:36+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -151,6 +151,12 @@ msgstr ""
 
 msgid "Could not open audio device for recording."
 msgstr "Kan het audio-apparaat niet openen voor opnemen."
+
+msgid "CoreAudio device not found"
+msgstr ""
+
+msgid "CoreAudio device could not be opened"
+msgstr ""
 
 msgid "Record Source"
 msgstr "Opnamebron"

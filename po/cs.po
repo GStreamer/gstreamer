@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 13:17+0100\n"
+"POT-Creation-Date: 2016-02-19 10:31+0200\n"
 "PO-Revision-Date: 2015-10-15 20:58+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -152,6 +152,12 @@ msgstr ""
 
 msgid "Could not open audio device for recording."
 msgstr "Zvukové zařízení nelze otevřít pro nahrávání."
+
+msgid "CoreAudio device not found"
+msgstr ""
+
+msgid "CoreAudio device could not be opened"
+msgstr ""
 
 msgid "Record Source"
 msgstr "Zdroj nahrávání"

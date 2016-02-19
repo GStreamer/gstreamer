@@ -11,10 +11,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.4.1\n"
+"Project-Id-Version: gst-plugins-good-1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 13:17+0100\n"
-"PO-Revision-Date: 2015-02-01 23:02-0200\n"
+"POT-Creation-Date: 2016-02-19 10:31+0200\n"
+"PO-Revision-Date: 2015-12-28 19:47-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -53,7 +53,6 @@ msgstr "Não foi possível estabelecer uma conexão com servidor."
 msgid "Secure connection setup failed."
 msgstr "Configuração de conexão segura falhou."
 
-#, fuzzy
 msgid ""
 "A network error occurred, or the server closed the connection unexpectedly."
 msgstr ""
@@ -159,6 +158,12 @@ msgstr ""
 
 msgid "Could not open audio device for recording."
 msgstr "Não foi possível abrir o dispositivo de áudio para gravação."
+
+msgid "CoreAudio device not found"
+msgstr ""
+
+msgid "CoreAudio device could not be opened"
+msgstr ""
 
 msgid "Record Source"
 msgstr "Origem de gravação"

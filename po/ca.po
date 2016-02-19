@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 13:17+0100\n"
+"POT-Creation-Date: 2016-02-19 10:31+0200\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -154,6 +154,12 @@ msgstr ""
 
 msgid "Could not open audio device for recording."
 msgstr "No s'ha pogut obrir el dispositiu d'àudio per a l'enregistrament."
+
+msgid "CoreAudio device not found"
+msgstr ""
+
+msgid "CoreAudio device could not be opened"
+msgstr ""
 
 msgid "Record Source"
 msgstr "Font d'enregistrament"

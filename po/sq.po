@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 13:17+0100\n"
+"POT-Creation-Date: 2016-02-19 10:31+0200\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -139,6 +139,13 @@ msgstr ""
 #, fuzzy
 msgid "Could not open audio device for recording."
 msgstr "I pamundur hapja e dispozitivit CD për lexim."
+
+msgid "CoreAudio device not found"
+msgstr ""
+
+#, fuzzy
+msgid "CoreAudio device could not be opened"
+msgstr "Dispozitivi juaj OSS mund të mos provohet korrektësisht"
 
 #, fuzzy
 msgid "Record Source"
@@ -588,9 +595,6 @@ msgstr ""
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "E pamundur hapja e file vfs \"%s\" për lexim."
-
-#~ msgid "Your OSS device could not be probed correctly"
-#~ msgstr "Dispozitivi juaj OSS mund të mos provohet korrektësisht"
 
 #~ msgid "Could not open device \"%s\" for reading."
 #~ msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim."
