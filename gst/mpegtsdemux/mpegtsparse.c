@@ -543,9 +543,10 @@ mpegts_parse_tspad_push_section (MpegTSParse2 * parse, MpegTSParsePad * tspad,
         if (section->subtable_extension != tspad->program_number)
           to_push = FALSE;
       }
-    } else {
+    } else if (section->table_id != 0x00) {
       /* there's a program filter on the pad but the PMT for the program has not
-       * been parsed yet, ignore the pad until we get a PMT */
+       * been parsed yet, ignore the pad until we get a PMT.
+       * But we always allow PAT to go through */
       to_push = FALSE;
     }
   }
@@ -560,8 +561,10 @@ mpegts_parse_tspad_push_section (MpegTSParse2 * parse, MpegTSParsePad * tspad,
     gst_buffer_fill (buf, 0, packet->data_start,
         packet->data_end - packet->data_start);
     ret = gst_pad_push (tspad->pad, buf);
+    ret = gst_flow_combiner_update_flow (parse->flowcombiner, ret);
   }
 
+  GST_LOG_OBJECT (parse, "Returning %s", gst_flow_get_name (ret));
   return ret;
 }
 
@@ -570,29 +573,30 @@ mpegts_parse_tspad_push (MpegTSParse2 * parse, MpegTSParsePad * tspad,
     MpegTSPacketizerPacket * packet)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  MpegTSBaseStream **pad_pids = NULL;
+  MpegTSBaseProgram *bp = NULL;
 
   if (tspad->program_number != -1) {
-    if (tspad->program) {
-      MpegTSBaseProgram *bp = (MpegTSBaseProgram *) tspad->program;
-      pad_pids = bp->streams;
-    } else {
-      /* there's a program filter on the pad but the PMT for the program has not
-       * been parsed yet, ignore the pad until we get a PMT */
-      goto out;
+    if (tspad->program)
+      bp = (MpegTSBaseProgram *) tspad->program;
+    else
+      bp = mpegts_base_get_program ((MpegTSBase *) parse,
+          tspad->program_number);
+  }
+
+  if (bp) {
+    if (packet->pid == bp->pmt_pid || bp->streams == NULL
+        || bp->streams[packet->pid]) {
+      GstBuffer *buf =
+          gst_buffer_new_and_alloc (packet->data_end - packet->data_start);
+      gst_buffer_fill (buf, 0, packet->data_start,
+          packet->data_end - packet->data_start);
+      /* push if there's no filter or if the pid is in the filter */
+      ret = gst_pad_push (tspad->pad, buf);
+      ret = gst_flow_combiner_update_flow (parse->flowcombiner, ret);
     }
   }
+  GST_DEBUG_OBJECT (parse, "Returning %s", gst_flow_get_name (ret));
 
-  if (pad_pids == NULL || pad_pids[packet->pid]) {
-    GstBuffer *buf =
-        gst_buffer_new_and_alloc (packet->data_end - packet->data_start);
-    gst_buffer_fill (buf, 0, packet->data_start,
-        packet->data_end - packet->data_start);
-    /* push if there's no filter or if the pid is in the filter */
-    ret = gst_pad_push (tspad->pad, buf);
-  }
-
-out:
   return ret;
 }
 
