@@ -2338,7 +2338,7 @@ gst_ahc_src_on_error (gint error, gpointer user_data)
 static gboolean
 gst_ahc_src_open (GstAHCSrc * self)
 {
-  GST_DEBUG_OBJECT (self, "Openning camera");
+  GST_DEBUG_OBJECT (self, "Opening camera");
 
   self->camera = gst_ah_camera_open (self->device);
 
