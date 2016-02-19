@@ -156,12 +156,6 @@ else
 check_opencv =
 endif
 
-if USE_OPUS
-check_opus = elements/opus
-else
-check_opus =
-endif
-
 if USE_SSH2
 check_curl_sftp = elements/curlsftpsink
 else
@@ -253,7 +247,6 @@ check_PROGRAMS = \
 	$(check_timidity)  \
 	$(check_kate)  \
 	$(check_opencv) \
-	$(check_opus)  \
 	$(check_curl) \
 	$(check_shm) \
 	elements/aiffparse \
