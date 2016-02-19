@@ -15390,7 +15390,7 @@
 
 <ARG>
 <NAME>avenc_msmpeg4v2::rc-max-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Maximum Bitrate</NICK>
@@ -15400,7 +15400,7 @@
 
 <ARG>
 <NAME>avenc_msmpeg4v2::rc-min-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Minimum Bitrate</NICK>
@@ -15980,7 +15980,7 @@
 
 <ARG>
 <NAME>avenc_msmpeg4::rc-max-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Maximum Bitrate</NICK>
@@ -15990,7 +15990,7 @@
 
 <ARG>
 <NAME>avenc_msmpeg4::rc-min-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Minimum Bitrate</NICK>
@@ -16570,7 +16570,7 @@
 
 <ARG>
 <NAME>avenc_mpeg4::rc-max-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Maximum Bitrate</NICK>
@@ -16580,7 +16580,7 @@
 
 <ARG>
 <NAME>avenc_mpeg4::rc-min-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Minimum Bitrate</NICK>
@@ -17170,7 +17170,7 @@
 
 <ARG>
 <NAME>avenc_mpeg2video::rc-max-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Maximum Bitrate</NICK>
@@ -17180,7 +17180,7 @@
 
 <ARG>
 <NAME>avenc_mpeg2video::rc-min-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Minimum Bitrate</NICK>
@@ -17770,7 +17770,7 @@
 
 <ARG>
 <NAME>avenc_mpeg1video::rc-max-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Maximum Bitrate</NICK>
@@ -17780,7 +17780,7 @@
 
 <ARG>
 <NAME>avenc_mpeg1video::rc-min-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Minimum Bitrate</NICK>
@@ -18680,7 +18680,7 @@
 
 <ARG>
 <NAME>avenc_h263p::rc-max-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Maximum Bitrate</NICK>
@@ -18690,7 +18690,7 @@
 
 <ARG>
 <NAME>avenc_h263p::rc-min-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Minimum Bitrate</NICK>
@@ -19280,7 +19280,7 @@
 
 <ARG>
 <NAME>avenc_h263::rc-max-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Maximum Bitrate</NICK>
@@ -19290,7 +19290,7 @@
 
 <ARG>
 <NAME>avenc_h263::rc-min-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Minimum Bitrate</NICK>
@@ -19970,7 +19970,7 @@
 
 <ARG>
 <NAME>avenc_flv::rc-max-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Maximum Bitrate</NICK>
@@ -19980,7 +19980,7 @@
 
 <ARG>
 <NAME>avenc_flv::rc-min-rate</NAME>
-<TYPE>gint</TYPE>
+<TYPE>gint64</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Ratecontrol Minimum Bitrate</NICK>

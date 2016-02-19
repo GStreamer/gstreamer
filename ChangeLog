@@ -1,9 +1,158 @@
-=== release 1.7.1 ===
+=== release 1.7.2 ===
 
-2015-12-24  Sebastian Dröge <slomo@coaxion.net>
+2016-02-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.1
+	  releasing 1.7.2
+
+2016-02-16 16:32:38 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  avcfg: rc-min-rate and rc-max-rate are now 64bit integers
+	  Switch the gobject properties and internal handling to support that
+
+2016-02-16 09:11:08 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Set width/height and format in the AVFrame we pass to the encoder API
+
+2016-02-16 09:02:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/plugins/gst-libav-plugins.args:
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	* docs/plugins/gst-libav-plugins.interfaces:
+	* docs/plugins/inspect/plugin-libav.xml:
+	  docs: Update docs to not have unstaged changes after build again
+	  There are some new codec IDs that we probably would like to map too, e.g.
+	  Dirac/VC2 and Cineform HD.
+
+2016-02-15 17:06:05 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to n3.0
+
+2016-02-05 18:10:53 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From 86e4663 to b64f03f
+
+2016-01-25 20:13:10 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Also use av_free() instead of g_free()
+
+2016-01-25 20:08:11 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Use av_malloc() instead of GLib malloc() wrappers for memory freed by ffmpeg
+	  It has its own allocator that is not necessarily doing the same as malloc and
+	  will then usually crash. E.g. on Windows or when memalign() is available.
+
+2016-01-21 17:35:51 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avvidec: Bring mpeg video decoders up to PRIMARY rank
+	  We should have done that ages ago ...
+	  https://bugzilla.gnome.org/show_bug.cgi?id=574461
+
+2016-01-21 11:41:45 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  libav: Ensure to link with -lavfilter
+
+2016-01-20 10:31:40 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Use AVFrame API instead of deprecated AVPicture API
+
+2016-01-19 09:42:47 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavdeinterlace.c:
+	* ext/libav/gstavscale.c:
+	  av: Use av_image_get_buffer_size() instead of deprecated avpicture_get_size()
+
+2016-01-19 09:39:00 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: Use av_packet_unref() instead of deprecated av_free_packet()
+
+2016-01-19 09:36:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Use AVPacket.flags for detecting keyframes
+	  AVCodec.coded_frame is deprecated and will disappear at some point
+	  in the future.
+
+2016-01-16 16:43:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavdeinterlace.c:
+	  avdeinterlace: Chain up to parent class' dispose()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757498
+
+2016-01-16 16:40:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavcodecmap.c:
+	  libav: Bitrate field changed from int to int64_t, fix compiler warnings
+	  Cast it to a gint64 for now though, as otherwise we will fail compilation
+	  with ffmpeg 2.8.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757498
+
+2015-11-04 21:18:56 +0100  Andreas Cadhalpun <Andreas.Cadhalpun@googlemail.com>
+
+	* ext/libav/gstavcfg.c:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavcodecmap.h:
+	* ext/libav/gstavdeinterlace.c:
+	* ext/libav/gstavutils.c:
+	* ext/libav/gstavutils.h:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	* ext/libav/gstavvidenc.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  libav: Remove usage of deprecated API
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757498
+
+2015-11-04 21:16:18 +0100  Andreas Cadhalpun <Andreas.Cadhalpun@googlemail.com>
+
+	* configure.ac:
+	* ext/libav/gstavdeinterlace.c:
+	  avdeinterlace: Port non-deprecated AVFilter API
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757498
+
+2016-01-16 11:09:31 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n2.8.5
+
+2016-01-07 17:13:29 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavdemux.c:
+	* ext/libav/gstavmux.c:
+	  av: canonicalise av plugin name more consistently in more places
+	  Use g_strdelimit(), make sure to include comma as well, which
+	  isn't included in G_STR_DELIMITERS.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734451
+
+2015-12-24 15:29:11 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.7.1 ===
+
+2015-12-24 14:49:39 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.7.1
 
 2015-12-24 13:06:13 +0100  Sebastian Dröge <sebastian@centricular.com>
 
