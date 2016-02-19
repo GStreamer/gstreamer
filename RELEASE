@@ -1,8 +1,7 @@
 
-Release notes for GStreamer Python bindings 1.7.1
+Release notes for GStreamer Python bindings 1.7.2
 
-
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.7 release series. The 1.7 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.7 release series
@@ -13,20 +12,19 @@ API can still change until that point.
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
 during the unstable 1.7 release series.
 
-
   
 
 ==== Download ====
 
 You can find source releases of gst-python in the download
-directory: http://gstreamer.freedesktop.org/src/gst-python/
+directory: https://gstreamer.freedesktop.org/src/gst-python/
 
 The git repository and details how to clone it can be found at
 http://cgit.freedesktop.org/gstreamer/gst-python/
 
 ==== Homepage ====
 
-The project's website is http://gstreamer.freedesktop.org/
+The project's website is https://gstreamer.freedesktop.org/
 
 ==== Support and Bugs ====
 
@@ -51,7 +49,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Mark Nauwelaerts
       * Sebastian Dröge
       * Thibault Saunier
  
