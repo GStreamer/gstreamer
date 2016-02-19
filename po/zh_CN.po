@@ -2,13 +2,13 @@
 # This file is put in the public domain.
 # Funda Wang <fundawang@linux.net.cn>, 2005.
 # Ji ZhengYu <zhengyuji@gmail.com>, 2008.
-# zwpwjwtz <zwpwjwtz@126.com>, 2015.
+# Tianze Wang <zwpwjwtz@126.com>, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.6.0\n"
+"Project-Id-Version: gst-plugins-base 1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:56+0100\n"
-"PO-Revision-Date: 2015-10-16 19:29+0800\n"
+"POT-Creation-Date: 2016-02-19 10:30+0200\n"
+"PO-Revision-Date: 2015-12-25 11:26+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
@@ -590,13 +590,19 @@ msgid "change subtitle track"
 msgstr "改变字幕轨"
 
 msgid "seek to beginning"
-msgstr ""
+msgstr "定位至开始处"
 
 msgid "show keyboard shortcuts"
 msgstr "显示键盘快捷键"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "交互模式 - 键盘控制："
+
+msgid "Output status information and property notifications"
+msgstr ""
+
+msgid "Control playback behaviour setting playbin 'flags' property"
+msgstr ""
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "要使用的视频接收组件（默认为autovideosink）"

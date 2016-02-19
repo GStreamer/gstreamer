@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:56+0100\n"
+"POT-Creation-Date: 2016-02-19 10:30+0200\n"
 "PO-Revision-Date: 2012-05-05 19:13+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -628,6 +628,12 @@ msgid "show keyboard shortcuts"
 msgstr ""
 
 msgid "Interactive mode - keyboard controls:"
+msgstr ""
+
+msgid "Output status information and property notifications"
+msgstr ""
+
+msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr ""
 
 msgid "Video sink to use (default is autovideosink)"

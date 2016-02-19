@@ -8,10 +8,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.5.2\n"
+"Project-Id-Version: gst-plugins-base-1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:56+0100\n"
-"PO-Revision-Date: 2015-06-26 08:29+0200\n"
+"POT-Creation-Date: 2016-02-19 10:30+0200\n"
+"PO-Revision-Date: 2015-12-24 22:31+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -603,13 +603,19 @@ msgid "change subtitle track"
 msgstr "změnit stopu titulků"
 
 msgid "seek to beginning"
-msgstr ""
+msgstr "přeskočit na začátek"
 
 msgid "show keyboard shortcuts"
 msgstr "zobrazit klávesové zkratky"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktivní režim – ovládání klávesnicí:"
+
+msgid "Output status information and property notifications"
+msgstr ""
+
+msgid "Control playback behaviour setting playbin 'flags' property"
+msgstr ""
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Spotřebič videa, který se má použít (výchozí je autovideosink)"

@@ -6,10 +6,10 @@
 # Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012, 2013, 2014, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.5.2\n"
+"Project-Id-Version: gst-plugins-base 1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:56+0100\n"
-"PO-Revision-Date: 2015-06-26 07:35+0300\n"
+"POT-Creation-Date: 2016-02-19 10:30+0200\n"
+"PO-Revision-Date: 2015-12-25 07:16+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -615,13 +615,19 @@ msgid "change subtitle track"
 msgstr "змінити доріжку субтитрів"
 
 msgid "seek to beginning"
-msgstr ""
+msgstr "позиціювати на початок"
 
 msgid "show keyboard shortcuts"
 msgstr "показати клавіатурні скорочення"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Інтерактивне керування за допомогою клавіатури:"
+
+msgid "Output status information and property notifications"
+msgstr ""
+
+msgid "Control playback behaviour setting playbin 'flags' property"
+msgstr ""
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Приймач відеоданих, яким слід скористатися (типовим є autovideosink)"

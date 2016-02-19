@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.5.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:56+0100\n"
+"POT-Creation-Date: 2016-02-19 10:30+0200\n"
 "PO-Revision-Date: 2015-06-30 13:34+0200\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -607,6 +607,12 @@ msgstr "gyorsbillentyűk megjelenítése"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktív mód - billentyűzetvezérlők:"
+
+msgid "Output status information and property notifications"
+msgstr ""
+
+msgid "Control playback behaviour setting playbin 'flags' property"
+msgstr ""
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Használandó videosüllyesztés (az alapértelmezett az autovideosink)"

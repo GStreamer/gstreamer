@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.6.0\n"
+"Project-Id-Version: gst-plugins-base 1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:56+0100\n"
-"PO-Revision-Date: 2015-11-01 00:49+0100\n"
+"POT-Creation-Date: 2016-02-19 10:30+0200\n"
+"PO-Revision-Date: 2015-12-25 01:11+0100\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -50,7 +50,7 @@ msgstr "Kunde inte öppna enheten för inspelning i stereoläge."
 
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "Kunde inte öppna enheten för inspelning i %d-kanalsläge."
+msgstr "Kunde inte öppna enheten för inspelning i %d-kanalsläge"
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
@@ -127,7 +127,7 @@ msgstr "Konfigurerat audiosink %s fungerar inte."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "Det finns både autoaudiosink- och %s-element som inte fungerar.."
+msgstr "Det finns både autoaudiosink- och %s-element som inte fungerar."
 
 msgid "The autoaudiosink element is not working."
 msgstr "Elementet autoaudiosink fungerar inte."
@@ -598,13 +598,19 @@ msgid "change subtitle track"
 msgstr "byt undertextspår"
 
 msgid "seek to beginning"
-msgstr ""
+msgstr "sök till början"
 
 msgid "show keyboard shortcuts"
 msgstr "visa tangentbordsgenvägar"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktivt läge: tangentbordsstyrning:"
+
+msgid "Output status information and property notifications"
+msgstr ""
+
+msgid "Control playback behaviour setting playbin 'flags' property"
+msgstr ""
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Videoutgång som ska användas (standard är autovideosink)"
