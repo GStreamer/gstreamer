@@ -1,8 +1,7 @@
 
-Release notes for GStreamer Bad Plugins 1.7.1
+Release notes for GStreamer Bad Plugins 1.7.2
 
-
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.7 release series. The 1.7 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.7 release series
@@ -12,7 +11,6 @@ API can still change until that point.
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
 during the unstable 1.7 release series.
-
 
 
 "That an accusation?"
@@ -63,150 +61,67 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 759679 : gl: unused function '_get_plane_width'
-      * 759729 : audiofxbad: Name collision with new GstAudioChannelMix API from libgstaudio
-      * 731204 : androidmedia: Implement zerocopy rendering
-      * 733467 : Cannot play JPEG2000 encoded QuickTime video
-      * 733819 : Port teletextdec to 1.0
+      * 719849 : [PLUGIN-MOVE] move mpg123 to -ugly
+      * 729485 : avfvideosrc: Cannot reconfigure caps
       * 733959 : hlsdemux: download bitrate algorithms don't reflect real download rate
-      * 743345 : glupload: Add support for dmabuf
-      * 744047 : Port acmmp3dec plugin to 1.x
-      * 745564 : qtkitvideosrc: fails to build on OSX > = 10.9 and not using cerbero (ex: MacPorts)
-      * 747482 : waylandsink: need exception code in gst_wayland_sink_set_window_handle() and gst_wayland_sink_set_context()
-      * 747774 : dashdemux: text streams support
-      * 748259 : New audio/video level element
-      * 748316 : hlsdemux: The end offset (range_end) of a segment is not calculated properly in the m3u8 parser
-      * 748337 : ksvideosrc: dropping frames
-      * 749653 : dashdemux: Implement binary search for stream_sidx_seek
-      * 750402 : tsdemux: pads are removed before new ones are added
-      * 750847 : dashdemux: variables containing time information should be guint64 not gint64
-      * 750852 : dashdemux: idRepresentationType should be StringNoWhitespaceType but accepts spaces
-      * 750869 : dashdemux: assertion raised if profiles information is not provided
-      * 751068 : gl: Use pkg-config if found to configure GL/EGL/GLES (as provided by mesa and libmali)
-      * 751529 : dashdemux: stream- > presentationTimeOffset is not always set
-      * 751650 : dashdemux: extra validations needed when parsing the representation element
-      * 751735 : dashdemux: incorrect parsing and handling of segment templates
-      * 751832 : dashdemux: segment list inherits segment URLs element from parent node
-      * 752326 : dashdemux: parser should reject MPD files with negative mediaPresentationDuration
-      * 752329 : dashdemux: parser should reject MPD files with negative Period duration
-      * 752336 : dashdemux: duration field could overflow
-      * 752340 : dashdemux: period bitstreamSwitching is not used
-      * 752367 : dashdemux: adaptation set language could be better detected
-      * 752409 : dashdemux: gst_mpd_parser_get_stream_presentation_offset returns a wrong value
-      * 752415 : dashdemux: provide a default suggestedPresentationDelay
-      * 752429 : dashdemux: negative numbers are successfully read into unsigned variables
-      * 752492 : dashdemux: suggestedPresentationDelay should be positive
-      * 752496 : dashdemux: illegal memory access when the list of S nodes is greater than the list of SegmentURL nodes
-      * 753405 : nvenc element
-      * 753613 : mssdemux: PlayReady WRM parsing support
-      * 753821 : assrender: improve overlay blending performance
-      * 753824 : assrender: render overlay using the video output window size
-      * 753854 : gstreamer: bad: Fix memory leaks when context parse fails.
-      * 753885 : opencv: use gst_opencv_video_filter_set_in_place()
-      * 753889 : opencv: cvlaplace: add scale and shift properties
-      * 753890 : dashdemux: PROP_BANDWIDTH_USAGE should be deprecated
-      * 753940 : opencv: handdetect: haar cascade files path is wrong in gst-uninstalled
-      * 754057 : sfdec: Fix a typo in goto variable name
-      * 754247 : vc1parse: add break to switch case
-      * 754251 : qtsink: explicitely fallthrough switch statement
-      * 754253 : qml: remove overwritten value
-      * 754285 : compositor: add unit test for ensuring that sinkpads are sorted by zorder
-      * 754466 : qml: add android support
-      * 754786 : vtdec: fails on OSX with GL3 context
-      * 755100 : qt: add build support for iOS/OSX
-      * 755105 : dashdemux: tests: add test for fix of the period start time scaling
-      * 755120 : dashdemux: stop_updates_task needs to be accessed with the lock taken
-      * 755121 : dahsdemux: task is signaled to stop without stop condition being set
-      * 755161 : h264parse, h265parse: initialize picture parameter set structure
-      * 755169 : dashdemux: can we have multiple seek events at the same time?
-      * 755226 : dashdemux: download_finish variable is not reset safely
-      * 755232 : dashdemux: demux- > cancelled is not properly protected
-      * 755319 : configure: add --with-hls-crypto=auto|nettle|libgcrypt|openssl option
-      * 755486 : glimagesink: doesn't support YUY2 properly
-      * 755656 : adaptivedemux: remove unused but set variable
-      * 756209 : adaptivedemux: adaptive demux hangs if src element cannot be started
-      * 756237 : adaptivedemux: waiting for playlist updates in case of fragment errors does not wait
-      * 756239 : adaptivedemux: header is not re-downloaded in case of errors
-      * 756240 : adaptivedemux: download thread should stop in case of multiple download errors
-      * 756322 : dashdemux: add unit test for dashdemux
-      * 756424 : docs: documentation not committed
-      * 756492 : gl: fix leak in gst_gl_insert_debug_marker
-      * 756556 : adaptivedemux: hang if application quits just after start
-      * 757018 : aggregator: Add create_new_pad() vfunc to allow subclasses to override the default behaviour
-      * 757049 : tsdemux: Add support for Opus
-      * 757050 : liveadder: type change of " latency " property might cause crashes
-      * 757152 : opus: Add proper multichannel support
-      * 757153 : opus: Handle start/end trimming
-      * 757245 : dashdemux: tests: add more tests for BaseURL
-      * 757285 : androidmedia: Zerocopy decoding potentially slower than before due to missing queueing
-      * 757335 : adaptivedemux: release manifest lock before changing internal pipeline state
-      * 757336 : adaptivedemux: reset download_finished before starting the src element
-      * 757337 : adaptivedemux: release manifest lock before sending flush stop event
-      * 757354 : adaptivedemux: tests: add download error test
-      * 757359 : adaptivedemux: fix a missing lock in write to stream- > last_ret
-      * 757361 : adaptivedemux: tests: add query and fragment download error test
-      * 757619 : hlsdemux: incorrect segment start value on bitrate switch
-      * 757688 : rtponviftimestamp: element does not work properly
-      * 757776 : dashdemux: Unit test fails reliably
-      * 757801 : tests:aggregator: tc failure
-      * 757825 : ivfparse: Fix the wrong width & height parsing of vp9 bitstream
-      * 757859 : adaptivedemux: memory leak in adaptive demux src bin
-      * 757903 : mpd verification broke http://www.bok.net/dash/tears_of_steel/cleartext/stream.mpd
-      * 757938 : glcolorconvert fails on OSX
-      * 757947 : adaptivedemux: http src errors are no longer detected
-      * 757974 : glcolorconvert: Fix memory leak while running glcolorconvert test
-      * 758010 : mpegtsdemux: stream- > section_data leak if there is a stream discontinuity
-      * 758188 : dashdemux: illegal memory access in gst_mpd_client_get_last_fragment_timestamp_end
-      * 758228 : amcvideodec: Don't require a non-zero buffer size when doing decoding to a surface
-      * 758233 : mpdparser: remove unused functions gst_mpdparser_get_chunk_by_index and gst_mpdparser_find_segment_by_index
-      * 758384 : dashdemux: tests: refactor into adaptive_engine components
-      * 758386 : hlsdemux: incorrect calculation of seek range of non-live streams
-      * 758405 : h264/h265parse: Should resend pps/sps after seeks in byte-stream mode
-      * 758410 : mpdparser: parsing of dateTime fields does not read the microseconds part
-      * 758515 : dashdemux:  Set framerate based on the Manifest on the caps
-      * 758517 : spu-pgs: Fix array memory leak
-      * 758586 : mssdemux: missing depth in audio caps
-      * 758593 : mpdparser: remove gst_mpd_client_check_time_position
-      * 758694 : android media fails to update affine transformation meta
-      * 758728 : id3mux: write private data tag
-      * 758820 : glwindow: Fix memory leak of navigation thread
-      * 758877 : glupload: Should not offer its allocator unless memory:GLMemory is negotiated
-      * 758904 : gl: YUY2 conversion broken
-      * 758946 : hlsdemux: change of playlist to the same playlist after first fragment, when connection speed is set
-      * 758987 : hlsdemux: Resync live playlists to the 3rd newest fragment if we fall off the playlist
-      * 759108 : hlsdemux: add support for snapping seek flags
-      * 759118 : mxfdemux: IndexTableSegment handling is wrong
-      * 759432 : bad plugins: Fix example pipelines
-      * 759443 : videoframe-audiolevel: Fix possible division by zero
-      * 759484 : directsoundsrc: add device property as it is done in directsoundsink
-      * 759518 : yadif: Fix memory leak and mishandling.
-      * 759519 : gdppay: Fix buffer memory leak
-      * 759520 : pnmenc: Fix memory leaks/mishandling
-      * 759522 : pnmdec: Fix memory leaks
-      * 759523 : combdetect: Fix value memory leak
-      * 759525 : ivtc: Fix value memory leak
-      * 759534 : dashdemux: clock compensation is not correctly used in get_fragment_waiting_time
-      * 759537 : dashdemux: clock compensation: clock_cond is not used and should be removed
-      * 759547 : dashdemux: insufficient validation of UTCtiming element
-      * 759592 : Seek with negative rates appears to be broken with hlsdemux
-      * 759600 : decklinkvideosink: Made " auto " mode work according to caps
-      * 759728 : teletextdec: build error with clang
-      * 759742 : nvenc: very high CPU load when multiple nvenc instances are initialised at the same time
-      * 752528 : OpenCV hand gesture detection does not work with OpenCV newer than 2.4.10
-      * 753994 : opencv/faceblur: does not work with OpenCV newer than 2.4.10
-      * 754148 : OpenCV port remaining elements to C++ and new API
+      * 737786 : android: Upstream one of the android video source implementations
+      * 744367 : mpegtsmux: add HEVC support
+      * 748507 : mpegtsmux: set non-0 payload length in PES header if video ES packet is small enough
+      * 752374 : dashdemux: gst_dash_demux_get_live_seek_range should not return negative values
+      * 752688 : wayland: improve check for wayland-scanner
+      * 756207 : videoaggregator: Setting aspect ratio crops the frame
+      * 756252 : Resurrect NetSim
+      * 757597 : codecparsers: Add VP9 parser
+      * 757602 : adaptivedemux: improved error message if availabilityStartTime is missing for a live stream
+      * 757655 : dashdemux: cannot get segment availability start time if segment duration is not present
+      * 757951 : adaptivedemux: set src element to ready before flushing the input pad
+      * 758516 : mpegtsbase: Add condition to check for non working negative rate
+      * 759158 : dashdemux/mssdemux: add support for snapping seek flags
+      * 759679 : gl: unused function '_get_plane_width'
+      * 759743 : dashdemux: getting clock compensation using HTTP HEAD uses an incorrect year
+      * 759860 : glupload: Attaches composition overlay when not supported
+      * 759869 : glimagesink: navigation messages are not posted on the bus
+      * 759902 : glshader: fix usage documentation
+      * 759913 : glbufferpool: Fix build error
+      * 760090 : gst-plugins-bad: implicit declaration of function ‘gst_init’
+      * 760120 : dashdemux: memory leak in gst_dash_demux_update_manifest_data
+      * 760242 : rtmpsink: should get streamheaders from caps instead of first buffer.
+      * 760270 : videoparse: add support of padded video
+      * 760328 : adaptivedemux: tests: clean tests
+      * 760559 : glvideomixer ! glimagesink deadlocks on resize
+      * 760594 : decklinkvideosrc: does not support capture in RGB mode
+      * 760600 : tests: memory leak in test HTTP source
+      * 760696 : gl: Regression with caps ref-couting
+      * 760873 : GstGLVideoMixerPad vertex_buffer leaks when pad dynamic removed
+      * 760936 : dash, mpdparser: Fix the bug when getting the URL of index segment by SegmentBase
+      * 760972 : glwindow: Fix android build
+      * 760982 : adaptivedemux: memory leak of stream- > internal_pad
+      * 761014 : h264parse: sends unnecessary caps events/queries for every (unchanging) SPS/PPS when converting to byte-stream (android mediacodec)
+      * 761108 : uvch264_src: Fix caps memory leak
+      * 761109 : acmenc/acmmp3dec: remove unnecessary break after return
+      * 761230 : tinyalsa: Add a new sink plugin using tinyalsa
+      * 761458 : adaptivedemux: Unused GstSegment variable in download loop
+      * 761460 : player: Makefile does not use configured PKG_CONFIG_PATH when performing introspection scan
+      * 761519 : gl: Activate " qos " in filters
+      * 761538 : gst_gl_insert_debug_marker called with no current context
+      * 761578 : GstGLContext  didn't get unref correctly
+      * 761606 : Move H.265 RTP payloader/depayloader from -bad to -good
+      * 761704 : POTFILES.skip is out of date
+      * 762013 : curlhttpsink: Problem in curlhttpsink when qtmux uses faststart, don't send empty buffers
+      * 762171 : soundtouch plugin is not shipped
+      * 758158 : opusdec: in-band FEC has no effect
 
 ==== Download ====
 
 You can find source releases of gst-plugins-bad in the download
-directory: http://gstreamer.freedesktop.org/src/gst-plugins-bad/
+directory: https://gstreamer.freedesktop.org/src/gst-plugins-bad/
 
 The git repository and details how to clone it can be found at
 http://cgit.freedesktop.org/gstreamer/gst-plugins-bad/
 
 ==== Homepage ====
 
-The project's website is http://gstreamer.freedesktop.org/
+The project's website is https://gstreamer.freedesktop.org/
 
 ==== Support and Bugs ====
 
@@ -231,71 +146,43 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
       * Alessandro Decina
       * Alex Ashley
-      * André Draszik
-      * Antoine Jacoutot
-      * Antonio Ospite
-      * Arnaud Vrac
-      * Branko Subasic
-      * Chris Bass
-      * Daniel Kamil Kozar
-      * Dave Craig
-      * Duncan Palmer
-      * Edward Hervey
-      * Etienne Peron
+      * Arun Raghavan
+      * Aurélien Zanelli
+      * Bob Holcomb
+      * David Fernandez
+      * David Waring
+      * Florent Thiéry
       * Florin Apostol
-      * Frédéric Wang
       * George Kiagiadakis
-      * Guillaume Desmottes
       * Haihua Hu
-      * Havard Graff
-      * Heinrich Fink
-      * Hyunil Park
+      * Holger Kaelberer
       * Hyunjun Ko
+      * Ilya Konstantinov
       * Jan Schmidt
-      * Jimmy Ohn
       * John Chang
-      * John Slade
-      * Julian Bouzas
       * Julien Isorce
-      * Linus Svensson
-      * Lubosz Sarnecki
+      * Julien MOUTTE
+      * Julien Moutte
+      * Justin Kim
       * Luis de Bethencourt
-      * Maroš Ondrášek
-      * Mathias Hasselmann
-      * Matthew Marsh
+      * Matt Crane
       * Matthew Waters
-      * Matthieu Bouron
-      * Miguel París Díaz
       * Nicolas Dufresne
-      * Nicolas Huet
-      * Nirbheek Chauhan
-      * Olivier Crête
-      * Paolo Pettinato
-      * Paul Arzelier
       * Philippe Normand
-      * Philippe Renon
-      * Polochon_street
-      * Ravi Kiran K N
+      * Piotr Drąg
       * Reynaldo H. Verdejo Pinochet
-      * Roman Nowicki
-      * Santiago Carot-Nemesio
       * Sebastian Dröge
+      * Sergey Borovkov
       * Sreerenj Balachandran
-      * Stefan Sauer
+      * Stian Selnes
       * Thiago Santos
       * Thibault Saunier
-      * Thomas Roos
+      * Tim Sheridan
       * Tim-Philipp Müller
-      * Vanessa Chipirrás Navalón
       * Vincent Penquerc'h
-      * Vineeth T M
       * Vineeth TM
-      * Vivia Nikolaidou
-      * Víctor Manuel Jáquez Leal
-      * Xavier Claessens
-      * plamot
-      * suhwang.kim
+      * Wang Xin-yu (王昕宇)
+      * Youness Alaoui
  

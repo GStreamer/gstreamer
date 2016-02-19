@@ -3,7 +3,7 @@
   <description>libspandsp plugin</description>
   <filename>../../ext/spandsp/.libs/libgstspandsp.so</filename>
   <basename>libgstspandsp.so</basename>
-  <version>1.7.1</version>
+  <version>1.7.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -48,6 +48,21 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw, format=(string)S16LE, rate=(int)[ 1, 2147483647 ], channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>tonegeneratesrc</name>
+      <longname>Telephony Tone  Generator source</longname>
+      <class>Source/Audio</class>
+      <description>Creates telephony signals of given frequency, volume, cadence</description>
+      <author>Iskratel &lt;www.iskratel.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)8000, channels=(int)1</details>
         </caps>
       </pads>
     </element>

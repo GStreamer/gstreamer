@@ -31,12 +31,6 @@
    language is requested. */
 #undef ENABLE_NLS
 
-/* The x in 2.x */
-#undef FAAD2_MINOR_VERSION
-
-/* Define if AAC is using new api prefix */
-#undef FAAD_IS_NEAAC
-
 /* gettext package name */
 #define GETTEXT_PACKAGE "gst-plugins-bad-1.0"
 
@@ -95,7 +89,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2015-12-24"
+#define GST_PACKAGE_RELEASE_DATETIME "2016-02-19"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -244,7 +238,7 @@
 /* Define to enable AAC encoder plug-in (used by faac). */
 #undef HAVE_FAAC
 
-/* Define to enable AAC decoder plug-in (used by faad). */
+/* Define to enable FAAD2 AAC decoder plug-in (used by faad). */
 #undef HAVE_FAAD
 
 /* Define to enable linux framebuffer (used by fbdevsink). */
@@ -280,6 +274,9 @@
 /* Define to 1 if the system has the type `GLeglImageOES'. */
 #undef HAVE_GLEGLIMAGEOES
 
+/* Define to 1 if the system has the type `GLint64'. */
+#undef HAVE_GLINT64
+
 /* Define to 1 if the system has the type `GLintptr'. */
 #undef HAVE_GLINTPTR
 
@@ -300,9 +297,6 @@
 
 /* Use graphene */
 #undef HAVE_GRAPHENE
-
-/* Define to enable GSettings plugin (used by gsettings). */
-#undef HAVE_GSETTINGS
 
 /* Define to enable GSM library (used by gsmenc gsmdec). */
 #undef HAVE_GSM
@@ -384,9 +378,6 @@
 
 /* Define to enable mpeg2enc (used by mpeg2enc). */
 #undef HAVE_MPEG2ENC
-
-/* Define to enable mpg123 audio decoder (used by mpg123). */
-#undef HAVE_MPG123
 
 /* Define to enable mplex (used by mplex). */
 #undef HAVE_MPLEX
@@ -537,9 +528,6 @@
 /* Define to enable rsvg decoder (used by rsvg). */
 #undef HAVE_RSVG
 
-/* Have RSVG 2.36.2 or newer */
-#undef HAVE_RSVG_2_36_2
-
 /* Define to enable rtmp library (used by rtmp). */
 #undef HAVE_RTMP
 
@@ -621,6 +609,9 @@
 /* Define to enable timidity midi soft synth plugin (used by timidity). */
 #undef HAVE_TIMIDITY
 
+/* Define to enable tinyalsa (used by tinyalsa). */
+#undef HAVE_TINYALSA
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
@@ -647,6 +638,9 @@
 
 /* Define to enable vo-amrwbenc library (used by vo-amrwbenc). */
 #undef HAVE_VOAMRWBENC
+
+/* Define to enable Vulkan elements (used by vulkan). */
+#undef HAVE_VULKAN
 
 /* Define to enable WASAPI plug-in (used by wasapi). */
 #undef HAVE_WASAPI
@@ -715,8 +709,7 @@
 /* gettext locale dir */
 #define LOCALEDIR PREFIX "\\share\\locale"
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
 
 /* Define if the old MusePack API is used */
@@ -738,7 +731,7 @@
 #define PACKAGE_NAME "GStreamer Bad Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.7.1"
+#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.7.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-bad"
@@ -747,7 +740,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.7.1"
+#define PACKAGE_VERSION "1.7.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -791,7 +784,7 @@
 #undef USE_EGL_RPI
 
 /* Version number of package */
-#define VERSION "1.7.1"
+#define VERSION "1.7.2"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
