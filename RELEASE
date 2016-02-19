@@ -1,8 +1,7 @@
 
-Release notes for GStreamer 1.7.1
+Release notes for GStreamer 1.7.2
 
-
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.7 release series. The 1.7 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.7 release series
@@ -12,7 +11,6 @@ API can still change until that point.
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
 during the unstable 1.7 release series.
-
 
 
 This module, gstreamer, only contains core functionality.
@@ -38,65 +36,49 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 600648 : multiqueue: queues up too much data, excessive memory use with subtitle streams
-      * 755822 : test_ABI: failed ABI check
-      * 702921 : [pygi] python applications cannot interpret buffer metadata
-      * 733187 : integrating the tracer branch
-      * 744040 : bin: Deadlock when sending event
-      * 753851 : gstreamer: Fix memory leaks when context parse fails.
-      * 754112 : pad: don't fallback to caps queries with proxy pads
-      * 754166 : debug: Dump pad properties values
-      * 754356 : event: Make sure that timestamp + diff in QoS events is never smaller than 0
-      * 754418 : segment: Added gst_segment_position_from_stream_time()
-      * 754457 : segment: Rewording of struct field descriptions
-      * 754464 : Add support for g_autoptr() and friends
-      * 754496 : tracer: stats: log message structures
-      * 754678 : controller: the cubic interpolation we have implemented can overshoot min/max of the control-point values
-      * 755498 : timedvaluecontrolsource: Use g_sequence_lookup where possible
-      * 755651 : gst-uninstalled: Added env var for uninstalled PTP helper
-      * 755657 : Fix -Werror build for clang
-      * 755832 : interpolationcontrolsource: memory corruption due to wrong  assignment
-      * 756208 : pad: memory leak when pushing events to an EOS pad
-      * 756507 : multiqueue: Use buffer DTS if present, else PTS
-      * 756564 : segment: Don't return -1 for out-of-segment values in running/stream-time conversion functions
-      * 756760 : Tracer framework reuses existing GST_TRACE environment variable
-      * 756864 : stats: memory leak when fgets() fails
-      * 756870 : Don't disable assertions for releases and provide a new GST_ENABLE_EXTRA_CHECKS #define
-      * 756954 : basesink: rename 'pad' arg in LOCK/COND macros
-      * 757045 : tracer: Emit 'element-new' hook when using parse_launch
-      * 757193 : multiqueue: Handle negative DTS
-      * 757197 : pad: Append hooks instead of prepending to call them in the order they were added
-      * 757353 : multiqueue: Fix high_time computation
-      * 757596 : filesink: left in half cleaned in case of fclose failure
-      * 757821 : New GstPadEventFunction which returns a GstFlowReturn
-      * 758012 : systemclock: Use mach_time on Apple platforms
-      * 758078 : plugin: Dependency hash does not work with 32 or more files
-      * 758080 : plugin: Allow using device nodes as plugin dependency
-      * 758083 : plugin: Add prefix support to dependencies
-      * 758207 : debugutils: Fix string memory leak
-      * 758340 : tests: funnel test is racy
-      * 758541 : gstinfo: Fix ISO non-standard predefined identifier warning for __FUNCTION__ when compiled with gcc 5 -Wpedantic
-      * 758870 : clock: GST_STIME_ARGS does not handle GST_CLOCK_STIME_NONE
-      * 759055 : baseparse: post tag list updates on percentage delta instead of fixed delta
-      * 759089 : Add a fallback that copies the commit hook in autogen.sh
-      * 759125 : GstBin: async-handling latency handling is decoupled from parent pipeline
-      * 759300 : element: unref message in _post_message when there is no implementation
-      * 759430 : queue: Illegal memory access of sink event
-      * 759503 : Stopping a stream very soon after starting asserts
-      * 759713 : -Bsymbolic configure check doesn't work on FreeBSD.
-      * 751182 : identity: allow dropping buffers with specified flags
+      * 720778 : gst-uninstalled requires building with libtool
+      * 745939 : funnel: modify debug message for a better debugging
+      * 753899 : baseparse: push sticky events to downstreams for initial prerolling
+      * 758668 : controlsource: fix GetValue and GetValueArray documentation
+      * 760003 : gst_parse_launch: warn if we're still waiting to plug sub-pipelines after no-more-pads
+      * 760267 : tracer: how to pass and structure tracing data (GstStructure, GVariant, etc.)
+      * 760421 : info: expose custom vasprintf implementation
+      * 760479 : basesrc: Only respond to duration/position queries if the quantity is valid
+      * 760598 : gstnetclientclock: memory leak in handling gst_ntp_packet_receive errors
+      * 760757 : systemclock: incorrect handling of wait requests
+      * 760762 : tracer: Fix compiler warnings on 32-bit systems
+      * 760767 : gst: ref/unref new enum types in gst_init/deinit
+      * 760821 : tracerrecord: Fix memory leaks and mishandlings
+      * 761071 : tests: gstinfo: Fix string memory leak
+      * 761273 : typefind: " Stream contains not enough data " is bad grammar
+      * 761586 : systemclock: regression causing audiomixer to stall
+      * 761824 : bufferpool: pass acquire params to alloc_buffer
+      * 761901 : harness: fix up docs to reference functions properly
+      * 761904 : gstharness: Unset sink_forward_pad before tearing down sink_harness
+      * 761905 : gstharness: enable empty harness creation and refactor around this
+      * 761906 : testclock: add crank method
+      * 761909 : gstharness: Fix docs for stress test functions
+      * 761910 : gstharness: Fix MT issues when forwarding event/query to sink harness
+      * 761913 : ghostpad: Do nothing in _internal_activate_push_default
+      * 761914 : gstharness: always set our test-clock on the harnessed element
+      * 761917 : check: Add tcase_skip_broken_loop_test convenience macro
+      * 761919 : check: fix unused parameter
+      * 761931 : harness: fix the race in blocking push mode
+      * 761932 : gstharness: Add event stress test functions with callback
+      * 761970 : pushsrc: fix minor typo in header
+      * 760732 : gsttracer.h uses private header file gsttracerutils
 
 ==== Download ====
 
 You can find source releases of gstreamer in the download
-directory: http://gstreamer.freedesktop.org/src/gstreamer/
+directory: https://gstreamer.freedesktop.org/src/gstreamer/
 
 The git repository and details how to clone it can be found at
 http://cgit.freedesktop.org/gstreamer/gstreamer/
 
 ==== Homepage ====
 
-The project's website is http://gstreamer.freedesktop.org/
+The project's website is https://gstreamer.freedesktop.org/
 
 ==== Support and Bugs ====
 
@@ -121,40 +103,30 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * Anton Bondarenko
-      * Athanasios Oikonomou
+      * Aleksander Wabik
+      * Alex Henrie
       * Aurélien Zanelli
-      * Duncan Palmer
+      * Carlos Rafael Giani
       * Edward Hervey
+      * Evan Nemerson
       * Florin Apostol
-      * Guillaume Desmottes
-      * Heinrich Fink
-      * Jan Alexander Steffens (heftig)
+      * Havard Graff
+      * HoonHee Lee
       * Jan Schmidt
-      * Koop Mast
+      * Julien Isorce
       * Luis de Bethencourt
-      * Lukasz Forynski
-      * Marcin Kolny
-      * Mathieu Duponchelle
+      * Martin Kelly
+      * Matej Knopp
       * Matthew Waters
-      * Miguel París Díaz
-      * Nicolas Dufresne
+      * Mikhail Fludkov
       * Nirbheek Chauhan
-      * Philippe Normand
-      * Ravi Kiran K N
-      * Reynaldo H. Verdejo Pinochet
-      * Ross Burton
+      * Philip Van Hoof
       * Sebastian Dröge
       * Stefan Sauer
       * Stian Selnes
       * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
-      * Ting-Wei Lan
-      * Vincent Penquerc'h
       * Vineeth TM
-      * Vivia Nikolaidou
-      * Wim Taymans
-      * Xavier Claessens
+      * Víctor Manuel Jáquez Leal
  

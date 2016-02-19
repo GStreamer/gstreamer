@@ -1822,6 +1822,52 @@ gst_toc_loop_type_get_type (void)
   return (GType) id;
 }
 
+/* enumerations from "gsttracerrecord.h" */
+GType
+gst_tracer_value_scope_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_TRACER_VALUE_SCOPE_PROCESS), "GST_TRACER_VALUE_SCOPE_PROCESS",
+        "process"},
+    {C_ENUM (GST_TRACER_VALUE_SCOPE_THREAD), "GST_TRACER_VALUE_SCOPE_THREAD",
+        "thread"},
+    {C_ENUM (GST_TRACER_VALUE_SCOPE_ELEMENT), "GST_TRACER_VALUE_SCOPE_ELEMENT",
+        "element"},
+    {C_ENUM (GST_TRACER_VALUE_SCOPE_PAD), "GST_TRACER_VALUE_SCOPE_PAD", "pad"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstTracerValueScope", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
+GType
+gst_tracer_value_flags_get_type (void)
+{
+  static gsize id = 0;
+  static const GFlagsValue values[] = {
+    {C_FLAGS (GST_TRACER_VALUE_FLAGS_NONE), "GST_TRACER_VALUE_FLAGS_NONE",
+        "none"},
+    {C_FLAGS (GST_TRACER_VALUE_FLAGS_OPTIONAL),
+        "GST_TRACER_VALUE_FLAGS_OPTIONAL", "optional"},
+    {C_FLAGS (GST_TRACER_VALUE_FLAGS_AGGREGATED),
+        "GST_TRACER_VALUE_FLAGS_AGGREGATED", "aggregated"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_flags_register_static ("GstTracerValueFlags", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
 /* enumerations from "gsttypefind.h" */
 GType
 gst_type_find_probability_get_type (void)
@@ -1925,6 +1971,8 @@ gst_parse_error_get_type (void)
     {C_ENUM (GST_PARSE_ERROR_EMPTY_BIN), "GST_PARSE_ERROR_EMPTY_BIN",
         "empty-bin"},
     {C_ENUM (GST_PARSE_ERROR_EMPTY), "GST_PARSE_ERROR_EMPTY", "empty"},
+    {C_ENUM (GST_PARSE_ERROR_DELAYED_LINK), "GST_PARSE_ERROR_DELAYED_LINK",
+        "delayed-link"},
     {0, NULL, NULL}
   };
 

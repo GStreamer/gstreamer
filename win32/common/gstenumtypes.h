@@ -210,6 +210,12 @@ GType gst_toc_entry_type_get_type (void);
 GType gst_toc_loop_type_get_type (void);
 #define GST_TYPE_TOC_LOOP_TYPE (gst_toc_loop_type_get_type())
 
+/* enumerations from "gsttracerrecord.h" */
+GType gst_tracer_value_scope_get_type (void);
+#define GST_TYPE_TRACER_VALUE_SCOPE (gst_tracer_value_scope_get_type())
+GType gst_tracer_value_flags_get_type (void);
+#define GST_TYPE_TRACER_VALUE_FLAGS (gst_tracer_value_flags_get_type())
+
 /* enumerations from "gsttypefind.h" */
 GType gst_type_find_probability_get_type (void);
 #define GST_TYPE_TYPE_FIND_PROBABILITY (gst_type_find_probability_get_type())

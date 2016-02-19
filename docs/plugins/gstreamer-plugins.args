@@ -259,6 +259,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstQueue2::use-tags-bitrate</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use bitrate from tags</NICK>
+<BLURB>Use a bitrate from upstream tags to estimate buffer duration if not provided.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstQueue::current-level-buffers</NAME>
 <TYPE>guint</TYPE>
 <RANGE></RANGE>
