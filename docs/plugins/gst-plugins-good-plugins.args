@@ -1005,7 +1005,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.7.1"</DEFAULT>
+<DEFAULT>"GStreamer/1.7.2"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20145,7 +20145,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Mode</NICK>
 <BLURB>Deinterlace Mode.</BLURB>
-<DEFAULT>Auto detection</DEFAULT>
+<DEFAULT>Auto detection (best effort)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -23826,5 +23826,35 @@
 <NICK>Sink</NICK>
 <BLURB>The sink element (or element chain) to use (NULL = default filesink).</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpVP9Pay::picture-id-mode</NAME>
+<TYPE>GstVP9RTPPayMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Picture ID Mode</NICK>
+<BLURB>The picture ID mode for payloading.</BLURB>
+<DEFAULT>No Picture ID</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpH265Pay::config-interval</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,3600]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VPS SPS PPS Send Interval</NICK>
+<BLURB>Send VPS, SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled, -1 = send with every IDR frame).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpH265Pay::sprop-parameter-sets</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>sprop-parameter-sets</NICK>
+<BLURB>The base64 sprop-parameter-sets to set in out caps (set to NULL to extract from stream).</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 

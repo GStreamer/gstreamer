@@ -1,8 +1,7 @@
 
-Release notes for GStreamer Good Plugins 1.7.1
+Release notes for GStreamer Good Plugins 1.7.2
 
-
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.7 release series. The 1.7 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.7 release series
@@ -12,7 +11,6 @@ API can still change until that point.
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
 during the unstable 1.7 release series.
-
 
 
 "Such ingratitude.  After all the times I've saved your life."
@@ -58,68 +56,42 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 727305 : matroskademux: complete support for A_OPUS (SeekPreRoll, CodecDelay and DiscardPadding)
-      * 729950 : matroskamux: support video/x-vp9. webmmux: support audio/x-opus
-      * 734659 : qtdemux: Does not properly update base time for non-flushing seeks
-      * 745372 : vpxdec: Should try to avoid copies at output
-      * 746747 : rtpsession: Also report internal sources in on-new-ssrc and on-ssrc-active
-      * 748680 : directsoundsink: fix sleep for buffer-time lower than 200000
-      * 750456 : rtpsession: Implement sending of reduced size RTCP packets
-      * 750709 : souphttpsrc: add tls-interaction property
-      * 751311 : rtp: Dynamic dropout / reorder limits
-      * 752669 : rtpsession: Expose RTPSource stats through stats property
-      * 752694 : rtpmux: allow the ssrc-property to decide ssrc on outgoing  buffers
-      * 752818 : qtdemux: add support for XML timed-text subtitles
-      * 753087 : jpegdec: fix output state memory leak
-      * 753484 : qtdemux: support edit lists partially in push-mode
-      * 753853 : gstreamer: good: Fix memory leaks when context parse fails.
-      * 754435 : flvmux: use time segment and copy timestamps when streamable
-      * 754548 : rtpsource: In case of sender, doesn't need to think about probation and rtp gap.
-      * 754555 : smpte: Memory leak
-      * 754558 : smpte: Use video info data instead of macro
-      * 754864 : qtdemux: check multi trex to find track id in mp4 (DASH) stream.
-      * 755094 : avidemux: Reverse playback does not consider segment.start
-      * 755125 : rtp: RTCP mapping between NTP and RTP time could be capture or send time based
-      * 755326 : souphttpclientsink: Fix memory leaks and segfault crash
-      * 755478 : flvdemux: output speex vorbiscomment as a GstTagList
-      * 755479 : flvdemux: speex is also always 16KHz
-      * 755510 : vpx: create base class for vpx encoders and decoders
-      * 756219 : gdkpixbufdec: Fix pixbuf_loader leak during failures
-      * 756226 : qtdemux: fix memory leak for corrupted file
-      * 756231 : mpegaudioparse: Fix buffer memory leak
-      * 756234 : audiofx: Remove unused variable
-      * 756318 : souphttpclientsink: Add " retry " for request failures
-      * 756905 : audiofx: remove unused variable
-      * 757340 : audiochebband: Fix typo in example pipeline
-      * 757892 : rtph264pay: add config-interval option to send PPS/SPS before every key frame
-      * 758058 : v4l2object: add support of NV16, NV61 and NV24 formats
-      * 758085 : v4l2: Track /dev/video* to triggered required probe
-      * 758161 : qtdemux: Fix string memory leak
-      * 758171 : qtdemux: Seeking in dashdemux broken since edit list changes
-      * 758195 : vpxdec: Use more threads by default
-      * 758258 : matroska: Missing support for prores video
-      * 758260 : souphttpclientsink: Fix error leak and handle error
-      * 758390 : multifilesink: fix spelling on multi_file_sink_next_type variable
-      * 758826 : aacparse: Avoid over-skipping when checking LOAS config
-      * 758928 : qtdemux: letting flushes pass downstream on upstream offset seeks
-      * 759226 : interleave: Remove unsed field
-      * 759452 : directsoundsink: check device property, don't use default if a specific device is set
-      * 759614 : dvdec: Remove unused fields
-      * 759615 : DTS > PTS creates invalid mp4 files
-      * 759635 : progressreport: Add support for using format=buffers with do-query=false
-      * 758114 : tests: souphttpsrc test_icy_stream:0: Assertion 'caps != NULL' failed
+      * 617563 : matroskademux: pelicula.mkv doesn't preroll/play due to audio track without data
+      * 709839 : matroskademux: file with late audio stream start does not preroll
+      * 720388 : deinterlace: handle unsupported features caps in passthrough mode
+      * 735673 : interleave: the example in the documentation does not work
+      * 741280 : matroskademux: Send GAP events for non sparse streams
+      * 754773 : rtp: Implement VP9 payloader and depayloader
+      * 755736 : v4l2transform: configure output pool to use min_buffer
+      * 757290 : gdkpixbufoverlay crash
+      * 759293 : rtpbin: add " get-session " property
+      * 759780 : v4l2: deviceprovider: Add the device and sysfs paths to the GstDevice properties
+      * 760774 : qtdemux: fix framerate calculation for fragmented format
+      * 760779 : qtdemux: fix framerate calculation for fragmented format in push mode
+      * 760781 : qtdemux: handling zero segment-duration edit list
+      * 760905 : taginject: Unable to add tags with spaces using example pipeline from docs
+      * 760995 : deinterlace: Do passthrough if downstream only supports interlaced
+      * 761094 : unintialized variable warnings (gcc 5.1)
+      * 761144 : matroskamux: use A_AAC instead of A_AAC/MPEGx/y
+      * 761670 : jpegdec: Possible endless loop if file is corrupt
+      * 761705 : POTFILES.in is out of date
+      * 761769 : qtdemux: incorrectly sets caps of CENC encrypted streams
+      * 762057 : tests: rtpmux: Fix element memory leak
+      * 762117 : avidemux: Fix string memory leak
+      * 762185 : matroskademux: Simple implementation of GST_SEEK_FLAG_TRICKMODE_KEY_UNITS
+      * 762211 : rtpjitterbuffer: Don't drop packets after big gap
 
 ==== Download ====
 
 You can find source releases of gst-plugins-good in the download
-directory: http://gstreamer.freedesktop.org/src/gst-plugins-good/
+directory: https://gstreamer.freedesktop.org/src/gst-plugins-good/
 
 The git repository and details how to clone it can be found at
 http://cgit.freedesktop.org/gstreamer/gst-plugins-good/
 
 ==== Homepage ====
 
-The project's website is http://gstreamer.freedesktop.org/
+The project's website is https://gstreamer.freedesktop.org/
 
 ==== Support and Bugs ====
 
@@ -144,50 +116,34 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alessandro Decina
-      * Anton Bondarenko
-      * Arun Raghavan
-      * Aurélien Zanelli
-      * Chris Bass
-      * Dave Craig
-      * Edward Hervey
-      * Evan Callaway
+      * Aleix Conchillo Flaqué
+      * Alex Ashley
+      * Antonio Ospite
       * George Kiagiadakis
-      * Graham Leggett
-      * Guillaume Desmottes
-      * Guillaume Marquebielle
-      * Havard Graff
       * Hyunjun Ko
       * Jan Schmidt
-      * Josep Torra
-      * Julien Isorce
       * Luis de Bethencourt
-      * Manasa Athreya
-      * Michael Olbrich
+      * Matej Knopp
       * Miguel París Díaz
-      * Mischa Spiegelmock
-      * Nicola Murino
       * Nicolas Dufresne
       * Nirbheek Chauhan
-      * Olivier Crête
-      * Philipp Zabel
+      * Ognyan Tonchev
+      * Pablo Anton
       * Philippe Normand
-      * Prashant Gotarne
-      * Ramiro Polla
-      * Ravi Kiran K N
+      * Piotr Drąg
       * Reynaldo H. Verdejo Pinochet
-      * Ryan Hendrickson
       * Sebastian Dröge
-      * Stavros Vagionitis
+      * Seungha Yang
+      * Stefan Sauer
+      * Steven Hoving
       * Stian Selnes
       * Thiago Santos
       * Thibault Saunier
-      * Thomas Roos
+      * Thijs Vermeir
+      * Tim Sheridan
       * Tim-Philipp Müller
-      * Vincent Dehors
-      * Vineeth T M
       * Vineeth TM
-      * William Manley
+      * Vivia Nikolaidou
+      * Víctor Manuel Jáquez Leal
       * Wim Taymans
-      * Xavier Claessens
  

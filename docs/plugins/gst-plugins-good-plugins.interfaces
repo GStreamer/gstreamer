@@ -1,4 +1,5 @@
 GSocket GInitable
+GSocket GInitable GDatagramBased
 GdkPixbuf GIcon
 GdkPixbuf GIcon GLoadableIcon
 Gst3GPPMux GstTagSetter GstTagXmpWriter

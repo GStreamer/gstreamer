@@ -200,6 +200,7 @@ GObject
           GstRtpH263Depay
           GstRtpH263PDepay
           GstRtpH264Depay
+          GstRtpH265Depay
           GstRtpJ2KDepay
           GstRtpJPEGDepay
           GstRtpKlvDepay
@@ -222,6 +223,7 @@ GObject
           GstRtpSbcDepay
           GstRtpTheoraDepay
           GstRtpVP8Depay
+          GstRtpVP9Depay
           GstRtpVRawDepay
           GstRtpVorbisDepay
           GstRtpXQTDepay
@@ -250,6 +252,7 @@ GObject
           GstRtpH263PPay
           GstRtpH263Pay
           GstRtpH264Pay
+          GstRtpH265Pay
           GstRtpJ2KPay
           GstRtpJPEGPay
           GstRtpKlvPay
@@ -261,6 +264,7 @@ GObject
           GstRtpSPEEXPay
           GstRtpTheoraPay
           GstRtpVP8Pay
+          GstRtpVP9Pay
           GstRtpVRawPay
           GstRtpVorbisPay
         GstRTPDec
@@ -323,6 +327,7 @@ GObject
   RTPSession
   SoupSession
 GInterface
+  GDatagramBased
   GIcon
   GInitable
   GLoadableIcon

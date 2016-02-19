@@ -3,7 +3,7 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>1.7.1</version>
+  <version>1.7.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -741,6 +741,48 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)H264</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtph265depay</name>
+      <longname>RTP H265 depayloader</longname>
+      <class>Codec/Depayloader/Network/RTP</class>
+      <description>Extracts H265 video from RTP packets (draft-ietf-payload-rtp-h265-03.txt)</description>
+      <author>Jurgen Slowack &lt;jurgenslowack@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H265</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-h265, stream-format=(string)byte-stream, alignment=(string){ nal, au }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtph265pay</name>
+      <longname>RTP H265 payloader</longname>
+      <class>Codec/Payloader/Network/RTP</class>
+      <description>Payload-encode H265 video into RTP packets (based on draft-ietf-payload-rtp-h265-03.txt)</description>
+      <author>Jurgen Slowack &lt;jurgenslowack@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-h265, stream-format=(string)byte-stream, alignment=(string){ nal, au }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)H265</details>
         </caps>
       </pads>
     </element>
@@ -1644,6 +1686,48 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-rtp, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string){ VP8, VP8-DRAFT-IETF-01 }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpvp9depay</name>
+      <longname>RTP VP9 depayloader</longname>
+      <class>Codec/Depayloader/Network/RTP</class>
+      <description>Extracts VP9 video from RTP packets)</description>
+      <author>Stian Selnes &lt;stian@pexip.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, clock-rate=(int)90000, media=(string)video, encoding-name=(string){ VP9, VP9-DRAFT-IETF-01 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-vp9</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpvp9pay</name>
+      <longname>RTP VP9 payloader</longname>
+      <class>Codec/Payloader/Network/RTP</class>
+      <description>Puts VP9 video in RTP packets)</description>
+      <author>Stian Selnes &lt;stian@pexip.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-vp9</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string){ VP9, VP9-DRAFT-IETF-01 }</details>
         </caps>
       </pads>
     </element>

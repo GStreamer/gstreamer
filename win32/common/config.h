@@ -64,7 +64,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2015-12-24"
+#define GST_PACKAGE_RELEASE_DATETIME "2016-02-19"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -382,8 +382,7 @@
 /* gettext locale dir */
 #define LOCALEDIR PREFIX "\\share\\locale"
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
 
 /* Name of package */
@@ -396,7 +395,7 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 1.7.1"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 1.7.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
@@ -405,7 +404,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.7.1"
+#define PACKAGE_VERSION "1.7.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -436,7 +435,7 @@
 #undef TARGET_CPU
 
 /* Version number of package */
-#define VERSION "1.7.1"
+#define VERSION "1.7.2"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
