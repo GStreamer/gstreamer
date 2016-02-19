@@ -1195,6 +1195,16 @@ main (int argc, char **argv)
           to flush any queued data in the element by sending an EOS event
           down the element sink pad(s) and by waiting that the EOS leaves
           the elements (with an event probe).
+        </para>
+          If you do not do this, you will lose the data which is buffered
+          by the unlinked element. This can result in a simple frame loss
+          (one or more video frames, several milliseconds of audio). However
+          if you remove a muxer (and in some cases an encoder or similar elements)
+          from the pipeline, you risk getting a corrupted file which could not be
+          played properly, as some relevant metadata (header, seek/index tables, internal
+          sync tags) will not be stored or updated properly.
+        <para>
+
           See also <xref linkend="section-dynamic-changing"/>.
         </para>
       </listitem>
