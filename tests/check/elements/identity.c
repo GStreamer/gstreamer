@@ -51,12 +51,13 @@ GST_START_TEST (test_one_buffer)
   gst_buffer_unref (buffer_out);
   gst_harness_teardown (h);
 }
+
 GST_END_TEST;
 
 static void
-handoff_func (GstElement * identity, GstBuffer * buf,  GstBuffer ** ret)
+handoff_func (GstElement * identity, GstBuffer * buf, GstBuffer ** ret)
 {
-  (void)identity;
+  (void) identity;
   *ret = buf;
 }
 
@@ -95,6 +96,7 @@ GST_START_TEST (test_signal_handoffs)
   /* cleanup */
   gst_harness_teardown (h);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_sync_on_timestamp)
@@ -102,7 +104,7 @@ GST_START_TEST (test_sync_on_timestamp)
   /* the reason to use the queue in front of the identity element
      is to effectively make gst_harness_push asynchronous, not locking
      up the test, waiting for gst_clock_id_wait */
-  GstHarness * h = gst_harness_new_parse ("queue ! identity sync=1");
+  GstHarness *h = gst_harness_new_parse ("queue ! identity sync=1");
   GstBuffer *buf;
   GstClock *clock;
   GstClockTime timestamp = 123456789;
@@ -137,6 +139,7 @@ GST_START_TEST (test_sync_on_timestamp)
   gst_buffer_unref (buf);
   gst_harness_teardown (h);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_stopping_element_unschedules_sync)
@@ -144,7 +147,7 @@ GST_START_TEST (test_stopping_element_unschedules_sync)
   /* the reason to use the queue in front of the identity element
      is to effectively make gst_harness_push asynchronous, not locking
      up the test, waiting for gst_clock_id_wait */
-  GstHarness * h = gst_harness_new_parse ("queue ! identity sync=1");
+  GstHarness *h = gst_harness_new_parse ("queue ! identity sync=1");
   GstBuffer *buf;
   GstClockTime timestamp = 123456789;
 
@@ -174,6 +177,7 @@ GST_START_TEST (test_stopping_element_unschedules_sync)
 
   gst_harness_teardown (h);
 }
+
 GST_END_TEST;
 
 static Suite *
