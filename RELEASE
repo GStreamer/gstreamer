@@ -1,8 +1,7 @@
 
-Release notes for GStreamer Base Plugins 1.7.1
+Release notes for GStreamer Base Plugins 1.7.2
 
-
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.7 release series. The 1.7 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.7 release series
@@ -12,7 +11,6 @@ API can still change until that point.
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
 during the unstable 1.7 release series.
-
 
 
 This module contains a set of reference plugins, base classes for other
@@ -61,55 +59,42 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 681447 : video overlay composition: fix video blending over transparent frame
-      * 705579 : Playbin prevents plugins requesting a GstContext to work properly
-      * 726117 : typefinding: issue in MPEG-TS detection logic for streams with Null Pids
-      * 726472 : rtpbasepayload: Implement video SDP attributes
-      * 727970 : videorate: remove dead code
-      * 730926 : tags: add GST_TAG_PRIVATE_DATA and expose ID3 private frame ( " PRIV " ) data
-      * 731791 : videometa: add GstVideoAffineTransformationMeta
-      * 738687 : midi: add alsamidisrc, an ALSA MIDI sequencer source
-      * 749596 : rtsp-over-http authentication failure
-      * 751470 : encodebin: Fix special case.
-      * 752651 : decodebin: segfault on setting to NULL
-      * 753852 : gstreamer: base: Fix memory leaks when context parse fails.
-      * 754054 : videorate: remove unnecessary break statement
-      * 754196 : audiodecoder-test: port to using GstHarness
-      * 754223 : audioencoder-tests: port to use GstHarness
-      * 754450 : audiotestsrc: remove frequency and channel number limit
-      * 755260 : decodebin: Fix a race condition accessing the decode_chain field.
-      * 755301 : audioconvert: Integer- > Float conversion creates values slightly smaller than -1.0
-      * 755440 : gst-play: Add keyboard shortcut '0' to seek to beginning
-      * 755482 : videotestsrc: Force alpha downstream if foreground color contains alpha
-      * 756804 : playsink: text_sink dynamic reconnection is not working
-      * 757008 : tests: typefindfunctions: Fix error leak
-      * 757068 : audio{filter,convert,resample}: Clip input buffers to the segment before handling them
-      * 757351 : audioconvert: Latest audioconvert outputs noise
-      * 757480 : Use GST_STIME_FORMAT and GST_STIME_ARGS with GstClockTimeDiff
-      * 757926 : pbutils:encoding-target: Fix string memory leak
-      * 757927 : tests:video: Fix overlay rectangle and buffer leak
-      * 757928 : audio-quantize: Fix dither_buffer memory leak
-      * 758235 : rtspconnection: add support for parsing custom headers
-      * 758744 : allocators: Add logging category for GstFdMemory
-      * 758911 : audiobasesink/src: send latency message on setcaps
-      * 758922 : rtspconnection should optionally make HTTP requests with abs_path instead of absoluteURI
-      * 759126 : appsrc: issues with duration query handling
-      * 759329 : convertframe: Support video crop when convert frame
-      * 759356 : encodebin: Implement an encoding profile serialization format
-      * 742875 : [API] new audiovisualizer base class
-      * 758754 : oggdemux: failing to play an Opus sample file
+      * 745880 : sdp: SDP < - > GstCaps helper functions
+      * 751901 : gst-play: verbose & playbin flags options support
+      * 755918 : decodebin: Refactor code to remove assertion errors
+      * 756187 : appsink: Always blocks on EOS until buffers are consumed since 1.6, should be configurable
+      * 758212 : playbin adds the template caps on autoplug-query
+      * 759729 : audiofxbad: Name collision with new GstAudioChannelMix API from libgstaudio
+      * 759855 : build: pbutils needs to link to libgstbase for bytewriter and adapter
+      * 759890 : audioconvert: creates choppy audio
+      * 760134 : audioconvert test: doesn't build with clang
+      * 760204 : videotestsrc: add missing break in set_property switch case
+      * 760234 : playbin: Assumes recursive accept-caps query, breaks totem
+      * 760408 : #750013 (streamsynchronizer patches) broke some use cases in GES
+      * 760477 : playbin: caps intersection autoplugs too early and stream stops
+      * 760769 : tests:audioconvert: Build error when running make check
+      * 760938 : audioconvert: crash when executing orc unpack function
+      * 760949 : decodebin: Correctly expose pads from elements that have directly exposable pads
+      * 761132 : video-format: fix GstVideoFormatInfo documentation warnings
+      * 761218 : audio/videodecoder: Use gst_pad_peer_query_caps() instead of using gst_pad_get_allowed_caps() to make negotiated output caps before forwarding GAP event
+      * 761251 : textoverlay: Expose text rendering dimensions to applications and remove absolute positioning limit
+      * 761949 : gst-libs/gst/Makefile.am: build audio before rtp
+      * 761951 : videoencoder: Fix leak when pre_push does not return OK
+      * 762085 : gst-base 1.7 update created background buzzing noise with audioconvert
+      * 762239 : matroskademux: Assertions about unmappable memory when demuxing wavpack streams
+      * 693263 : typefinding: MPEG-2 video ES detected as H.263
 
 ==== Download ====
 
 You can find source releases of gst-plugins-base in the download
-directory: http://gstreamer.freedesktop.org/src/gst-plugins-base/
+directory: https://gstreamer.freedesktop.org/src/gst-plugins-base/
 
 The git repository and details how to clone it can be found at
 http://cgit.freedesktop.org/gstreamer/gst-plugins-base/
 
 ==== Homepage ====
 
-The project's website is http://gstreamer.freedesktop.org/
+The project's website is https://gstreamer.freedesktop.org/
 
 ==== Support and Bugs ====
 
@@ -134,50 +119,27 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Andreas Frisch
-      * Antonio Ospite
-      * Arnaud Vrac
-      * Csaba Toth
+      * Arun Raghavan
+      * Aurélien Zanelli
       * Edward Hervey
-      * Eunhae Choi
       * Evan Callaway
-      * Guillaume Desmottes
       * Havard Graff
-      * Jan Schmidt
-      * Joan Pau Beltran
+      * HoonHee Lee
+      * Hugues Fruchet
+      * Hyunjun Ko
       * Julien Isorce
-      * Kazunori Kobayashi
       * Koop Mast
-      * Luis de Bethencourt
+      * Lubosz Sarnecki
       * Mathieu Duponchelle
-      * Matthew Waters
-      * Michael Olbrich
-      * Miguel París Díaz
-      * Nicolas Dufresne
       * Nirbheek Chauhan
-      * Ognyan Tonchev
-      * Pankaj Darak
-      * Pavel Bludov
-      * Perry Hung
-      * Philippe Normand
-      * Rajat Verma
-      * Ravi Kiran K N
       * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
-      * Sebastian Rasmussen
-      * Song Bing
       * Stefan Sauer
       * Stian Selnes
       * Thiago Santos
       * Thibault Saunier
-      * Thomas Bluemel
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Vineeth T M
       * Vineeth TM
-      * Vivia Nikolaidou
-      * William Manley
       * Wim Taymans
-      * Xavier Claessens
-      * eunhae choi
  

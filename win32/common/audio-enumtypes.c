@@ -6,7 +6,7 @@
 #include "audio.h"
 #include "audio-format.h"
 #include "audio-channels.h"
-#include "audio-channel-mix.h"
+#include "audio-channel-mixer.h"
 #include "audio-converter.h"
 #include "audio-info.h"
 #include "audio-quantize.h"
@@ -196,25 +196,26 @@ gst_audio_channel_position_get_type (void)
   return g_define_type_id__volatile;
 }
 
-/* enumerations from "audio-channel-mix.h" */
+/* enumerations from "audio-channel-mixer.h" */
 GType
-gst_audio_channel_mix_flags_get_type (void)
+gst_audio_channel_mixer_flags_get_type (void)
 {
   static volatile gsize g_define_type_id__volatile = 0;
   if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GFlagsValue values[] = {
-      {GST_AUDIO_CHANNEL_MIX_FLAGS_NONE, "GST_AUDIO_CHANNEL_MIX_FLAGS_NONE",
+      {GST_AUDIO_CHANNEL_MIXER_FLAGS_NONE, "GST_AUDIO_CHANNEL_MIXER_FLAGS_NONE",
           "none"},
-      {GST_AUDIO_CHANNEL_MIX_FLAGS_NON_INTERLEAVED,
-          "GST_AUDIO_CHANNEL_MIX_FLAGS_NON_INTERLEAVED", "non-interleaved"},
-      {GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN,
-          "GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_IN", "unpositioned-in"},
-      {GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT,
-          "GST_AUDIO_CHANNEL_MIX_FLAGS_UNPOSITIONED_OUT", "unpositioned-out"},
+      {GST_AUDIO_CHANNEL_MIXER_FLAGS_NON_INTERLEAVED,
+          "GST_AUDIO_CHANNEL_MIXER_FLAGS_NON_INTERLEAVED", "non-interleaved"},
+      {GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_IN,
+          "GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_IN", "unpositioned-in"},
+      {GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_OUT,
+            "GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_OUT",
+          "unpositioned-out"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
-        g_flags_register_static ("GstAudioChannelMixFlags", values);
+        g_flags_register_static ("GstAudioChannelMixerFlags", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;
@@ -228,8 +229,10 @@ gst_audio_converter_flags_get_type (void)
   if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GFlagsValue values[] = {
       {GST_AUDIO_CONVERTER_FLAG_NONE, "GST_AUDIO_CONVERTER_FLAG_NONE", "none"},
-      {GST_AUDIO_CONVERTER_FLAG_SOURCE_WRITABLE,
-          "GST_AUDIO_CONVERTER_FLAG_SOURCE_WRITABLE", "source-writable"},
+      {GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE,
+          "GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE", "in-writable"},
+      {GST_AUDIO_CONVERTER_FLAG_VARIABLE_RATE,
+          "GST_AUDIO_CONVERTER_FLAG_VARIABLE_RATE", "variable-rate"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =

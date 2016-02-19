@@ -20,9 +20,9 @@ GType gst_audio_pack_flags_get_type (void);
 GType gst_audio_channel_position_get_type (void);
 #define GST_TYPE_AUDIO_CHANNEL_POSITION (gst_audio_channel_position_get_type())
 
-/* enumerations from "audio-channel-mix.h" */
-GType gst_audio_channel_mix_flags_get_type (void);
-#define GST_TYPE_AUDIO_CHANNEL_MIX_FLAGS (gst_audio_channel_mix_flags_get_type())
+/* enumerations from "audio-channel-mixer.h" */
+GType gst_audio_channel_mixer_flags_get_type (void);
+#define GST_TYPE_AUDIO_CHANNEL_MIXER_FLAGS (gst_audio_channel_mixer_flags_get_type())
 
 /* enumerations from "audio-converter.h" */
 GType gst_audio_converter_flags_get_type (void);

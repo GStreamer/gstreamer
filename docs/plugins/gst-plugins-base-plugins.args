@@ -1349,6 +1349,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstAppSink::wait-on-eos</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Wait on EOS</NICK>
+<BLURB>Wait for all buffers to be processed after receiving an EOS.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstVolume::mute</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>

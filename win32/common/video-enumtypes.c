@@ -205,6 +205,7 @@ gst_video_transfer_function_get_type (void)
       {GST_VIDEO_TRANSFER_LOG316, "GST_VIDEO_TRANSFER_LOG316", "log316"},
       {GST_VIDEO_TRANSFER_BT2020_12, "GST_VIDEO_TRANSFER_BT2020_12",
           "bt2020-12"},
+      {GST_VIDEO_TRANSFER_ADOBERGB, "GST_VIDEO_TRANSFER_ADOBERGB", "adobergb"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
@@ -236,6 +237,8 @@ gst_video_color_primaries_get_type (void)
           "film"},
       {GST_VIDEO_COLOR_PRIMARIES_BT2020, "GST_VIDEO_COLOR_PRIMARIES_BT2020",
           "bt2020"},
+      {GST_VIDEO_COLOR_PRIMARIES_ADOBERGB, "GST_VIDEO_COLOR_PRIMARIES_ADOBERGB",
+          "adobergb"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
