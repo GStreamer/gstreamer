@@ -481,8 +481,11 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
   packet->type = (GstMpeg4StartCode) (data[off1 + 3]);
 
 find_end:
-  off2 = gst_byte_reader_masked_scan_uint32 (&br, 0xffffff00, 0x00000100,
-      off1 + 4, size - off1 - 4);
+  if (off1 < size - 4)
+    off2 = gst_byte_reader_masked_scan_uint32 (&br, 0xffffff00, 0x00000100,
+        off1 + 4, size - off1 - 4);
+  else
+    off2 = -1;
 
   if (off2 == -1) {
     GST_DEBUG ("Packet start %d, No end found", off1 + 4);
