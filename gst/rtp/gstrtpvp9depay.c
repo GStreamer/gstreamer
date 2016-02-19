@@ -81,8 +81,7 @@ gst_rtp_vp9_depay_class_init (GstRtpVP9DepayClass * gst_rtp_vp9_depay_class)
 
   gst_element_class_set_static_metadata (element_class, "RTP VP9 depayloader",
       "Codec/Depayloader/Network/RTP",
-      "Extracts VP9 video from RTP packets)",
-      "Stian Selnes <stian@pexip.com>");
+      "Extracts VP9 video from RTP packets)", "Stian Selnes <stian@pexip.com>");
 
   object_class->dispose = gst_rtp_vp9_depay_dispose;
 
