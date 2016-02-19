@@ -251,6 +251,7 @@ static gboolean flac_streamheader_to_codecdata (const GValue * streamheader,
 static void
 gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
     gpointer data);
+static gboolean gst_matroska_mux_tag_list_is_empty (const GstTagList * list);
 static void gst_matroska_mux_write_streams_tags (GstMatroskaMux * mux);
 static gboolean gst_matroska_mux_streams_have_tags (GstMatroskaMux * mux);
 
@@ -2790,7 +2791,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
 
     /* tags */
     tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
-    has_main_tags = tags != NULL && !gst_tag_list_is_empty (tags);
+    has_main_tags = tags != NULL && !gst_matroska_mux_tag_list_is_empty (tags);
 
     if (has_main_tags || gst_matroska_mux_streams_have_tags (mux)) {
       guint64 master_tags, master_tag;
@@ -2957,41 +2958,74 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
 #endif
 }
 
+/* TODO: more sensible tag mappings */
+static const struct
+{
+  const gchar *matroska_tagname;
+  const gchar *gstreamer_tagname;
+}
+gst_matroska_tag_conv[] = {
+  {
+  GST_MATROSKA_TAG_ID_TITLE, GST_TAG_TITLE}, {
+  GST_MATROSKA_TAG_ID_ARTIST, GST_TAG_ARTIST}, {
+  GST_MATROSKA_TAG_ID_ALBUM, GST_TAG_ALBUM}, {
+  GST_MATROSKA_TAG_ID_COMMENTS, GST_TAG_COMMENT}, {
+  GST_MATROSKA_TAG_ID_BITSPS, GST_TAG_BITRATE}, {
+  GST_MATROSKA_TAG_ID_BPS, GST_TAG_BITRATE}, {
+  GST_MATROSKA_TAG_ID_ENCODER, GST_TAG_ENCODER}, {
+  GST_MATROSKA_TAG_ID_DATE, GST_TAG_DATE}, {
+  GST_MATROSKA_TAG_ID_ISRC, GST_TAG_ISRC}, {
+  GST_MATROSKA_TAG_ID_COPYRIGHT, GST_TAG_COPYRIGHT}, {
+  GST_MATROSKA_TAG_ID_BPM, GST_TAG_BEATS_PER_MINUTE}, {
+  GST_MATROSKA_TAG_ID_TERMS_OF_USE, GST_TAG_LICENSE}, {
+  GST_MATROSKA_TAG_ID_COMPOSER, GST_TAG_COMPOSER}, {
+  GST_MATROSKA_TAG_ID_LEAD_PERFORMER, GST_TAG_PERFORMER}, {
+  GST_MATROSKA_TAG_ID_GENRE, GST_TAG_GENRE}
+};
+
+/* Every stagefright implementation on android up to and including 6.0.1 is using
+ libwebm with bug in matroska parsing, where it will choke on empty tag elements;
+ so before outputting tags and tag elements we better make sure that there are
+ actually tags we are going to write */
+static gboolean
+gst_matroska_mux_tag_list_is_empty (const GstTagList * list)
+{
+  int i;
+  for (i = 0; i < gst_tag_list_n_tags (list); i++) {
+    const gchar *tag = gst_tag_list_nth_tag_name (list, i);
+    int i;
+    for (i = 0; i < G_N_ELEMENTS (gst_matroska_tag_conv); i++) {
+      const gchar *tagname_gst = gst_matroska_tag_conv[i].gstreamer_tagname;
+      if (strcmp (tagname_gst, tag) == 0) {
+        GValue src = { 0, };
+        gchar *dest;
+
+        if (!gst_tag_list_copy_value (&src, list, tag))
+          break;
+        dest = gst_value_serialize (&src);
+
+        g_value_unset (&src);
+        if (dest) {
+          g_free (dest);
+          return FALSE;
+        }
+      }
+    }
+  }
+  return TRUE;
+}
+
 static void
 gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
     gpointer data)
 {
-  /* TODO: more sensible tag mappings */
-  static const struct
-  {
-    const gchar *matroska_tagname;
-    const gchar *gstreamer_tagname;
-  }
-  tag_conv[] = {
-    {
-    GST_MATROSKA_TAG_ID_TITLE, GST_TAG_TITLE}, {
-    GST_MATROSKA_TAG_ID_ARTIST, GST_TAG_ARTIST}, {
-    GST_MATROSKA_TAG_ID_ALBUM, GST_TAG_ALBUM}, {
-    GST_MATROSKA_TAG_ID_COMMENTS, GST_TAG_COMMENT}, {
-    GST_MATROSKA_TAG_ID_BITSPS, GST_TAG_BITRATE}, {
-    GST_MATROSKA_TAG_ID_BPS, GST_TAG_BITRATE}, {
-    GST_MATROSKA_TAG_ID_ENCODER, GST_TAG_ENCODER}, {
-    GST_MATROSKA_TAG_ID_DATE, GST_TAG_DATE}, {
-    GST_MATROSKA_TAG_ID_ISRC, GST_TAG_ISRC}, {
-    GST_MATROSKA_TAG_ID_COPYRIGHT, GST_TAG_COPYRIGHT}, {
-    GST_MATROSKA_TAG_ID_BPM, GST_TAG_BEATS_PER_MINUTE}, {
-    GST_MATROSKA_TAG_ID_TERMS_OF_USE, GST_TAG_LICENSE}, {
-    GST_MATROSKA_TAG_ID_COMPOSER, GST_TAG_COMPOSER}, {
-    GST_MATROSKA_TAG_ID_LEAD_PERFORMER, GST_TAG_PERFORMER}, {
-    GST_MATROSKA_TAG_ID_GENRE, GST_TAG_GENRE}
-  };
   GstEbmlWrite *ebml = (GstEbmlWrite *) data;
   guint i;
   guint64 simpletag_master;
 
-  for (i = 0; i < G_N_ELEMENTS (tag_conv); i++) {
-    const gchar *tagname_gst = tag_conv[i].gstreamer_tagname;
-    const gchar *tagname_mkv = tag_conv[i].matroska_tagname;
+  for (i = 0; i < G_N_ELEMENTS (gst_matroska_tag_conv); i++) {
+    const gchar *tagname_gst = gst_matroska_tag_conv[i].gstreamer_tagname;
+    const gchar *tagname_mkv = gst_matroska_tag_conv[i].matroska_tagname;
 
     if (strcmp (tagname_gst, tag) == 0) {
       GValue src = { 0, };
@@ -3024,7 +3058,8 @@ gst_matroska_mux_write_stream_tags (GstMatroskaMux * mux, GstMatroskaPad * mpad)
 
   ebml = mux->ebml_write;
 
-  if (G_UNLIKELY (mpad->tags == NULL || gst_tag_list_is_empty (mpad->tags)))
+  if (G_UNLIKELY (mpad->tags == NULL
+          || gst_matroska_mux_tag_list_is_empty (mpad->tags)))
     return;
 
   master_tag = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TAG);
@@ -3060,7 +3095,7 @@ gst_matroska_mux_streams_have_tags (GstMatroskaMux * mux)
     GstMatroskaPad *collect_pad;
 
     collect_pad = (GstMatroskaPad *) walk->data;
-    if (!gst_tag_list_is_empty (collect_pad->tags))
+    if (!gst_matroska_mux_tag_list_is_empty (collect_pad->tags))
       return TRUE;
   }
   return FALSE;
@@ -3077,7 +3112,8 @@ gst_matroska_mux_write_toc_entry_tags (GstMatroskaMux * mux,
 
   ebml = mux->ebml_write;
 
-  if (G_UNLIKELY (entry->tags != NULL && !gst_tag_list_is_empty (entry->tags))) {
+  if (G_UNLIKELY (entry->tags != NULL
+          && !gst_matroska_mux_tag_list_is_empty (entry->tags))) {
     if (*master_tags == 0) {
       mux->tags_pos = ebml->pos;
       *master_tags = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TAGS);
@@ -3159,7 +3195,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
 
   /* tags */
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
-  has_main_tags = tags != NULL && !gst_tag_list_is_empty (tags);
+  has_main_tags = tags != NULL && !gst_matroska_mux_tag_list_is_empty (tags);
 
   if (has_main_tags || gst_matroska_mux_streams_have_tags (mux)
       || gst_toc_setter_get_toc (GST_TOC_SETTER (mux)) != NULL) {
