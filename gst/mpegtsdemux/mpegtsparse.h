@@ -26,6 +26,7 @@
 #define GST_MPEG_TS_PARSE_H
 
 #include <gst/gst.h>
+#include <gst/base/gstflowcombiner.h>
 #include "mpegtsbase.h"
 #include "mpegtspacketizer.h"
 
@@ -61,8 +62,11 @@ struct _MpegTSParse2 {
   /* Always present source pad */
   GstPad *srcpad;
 
+  /* Request source (single program) pads */
   GList *srcpads;
 
+  GstFlowCombiner *flowcombiner;
+  
   /* state */
   gboolean first;
   gboolean set_timestamps;

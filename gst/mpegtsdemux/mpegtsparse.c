@@ -125,6 +125,16 @@ static GstFlowReturn
 drain_pending_buffers (MpegTSParse2 * parse, gboolean drain_all);
 
 static void
+mpegts_parse_dispose (GObject * object)
+{
+  MpegTSParse2 *parse = (MpegTSParse2 *) object;
+
+  gst_flow_combiner_free (parse->flowcombiner);
+
+  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
+}
+
+static void
 mpegts_parse_class_init (MpegTSParse2Class * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) (klass);
@@ -133,6 +143,7 @@ mpegts_parse_class_init (MpegTSParse2Class * klass)
 
   gobject_class->set_property = mpegts_parse_set_property;
   gobject_class->get_property = mpegts_parse_get_property;
+  gobject_class->dispose = mpegts_parse_dispose;
 
   g_object_class_install_property (gobject_class, PROP_SET_TIMESTAMPS,
       g_param_spec_boolean ("set-timestamps",
@@ -187,7 +198,10 @@ mpegts_parse_init (MpegTSParse2 * parse)
 
   parse->user_pcr_pid = parse->pcr_pid = -1;
 
+  parse->flowcombiner = gst_flow_combiner_new ();
+
   parse->srcpad = gst_pad_new_from_static_template (&src_template, "src");
+  gst_flow_combiner_add_pad (parse->flowcombiner, parse->srcpad);
   parse->first = TRUE;
   gst_pad_set_query_function (parse->srcpad,
       GST_DEBUG_FUNCPTR (mpegts_parse_src_pad_query));
@@ -396,6 +410,7 @@ mpegts_parse_create_tspad (MpegTSParse2 * parse, const gchar * pad_name)
   tspad->pushed = FALSE;
   tspad->flow_return = GST_FLOW_NOT_LINKED;
   gst_pad_set_element_private (pad, tspad);
+  gst_flow_combiner_add_pad (parse->flowcombiner, pad);
 
   return tspad;
 }
@@ -504,8 +519,11 @@ mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
 static void
 mpegts_parse_release_pad (GstElement * element, GstPad * pad)
 {
+  MpegTSParse2 *parse = (MpegTSParse2 *) element;
+
   gst_pad_set_active (pad, FALSE);
   /* we do the cleanup in GstElement::pad-removed */
+  gst_flow_combiner_remove_pad (parse->flowcombiner, pad);
   gst_element_remove_pad (element, pad);
 }
 
@@ -818,9 +836,10 @@ drain_pending_buffers (MpegTSParse2 * parse, gboolean drain_all)
 
     GST_BUFFER_PTS (buffer) = out_ts + parse->ts_offset;
     GST_BUFFER_DTS (buffer) = out_ts + parse->ts_offset;
-    if (ret == GST_FLOW_OK)
+    if (ret == GST_FLOW_OK) {
       ret = gst_pad_push (parse->srcpad, buffer);
-    else
+      ret = gst_flow_combiner_update_flow (parse->flowcombiner, ret);
+    } else
       gst_buffer_unref (buffer);
 
     /* Free this list node and move to the next */
@@ -871,8 +890,10 @@ mpegts_parse_input_done (MpegTSBase * base, GstBuffer * buffer)
     }
   }
 
-  if (buffer != NULL)
+  if (buffer != NULL) {
     ret = gst_pad_push (parse->srcpad, buffer);
+    ret = gst_flow_combiner_update_flow (parse->flowcombiner, ret);
+  }
 
   return ret;
 }
