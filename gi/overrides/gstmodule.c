@@ -147,10 +147,27 @@ add_templates (gpointer gclass, PyObject * templates)
 
     for (i = 0; i < len; i++) {
       templ = (PyGObject *) PyTuple_GetItem (templates, i);
-      if (!pygobject_check (templates, &PyGObject_Type) ||
-          GST_IS_PAD_TEMPLATE (pygobject_get (templates)) == FALSE) {
-        PyErr_SetString (PyExc_TypeError,
-            "entries for __gsttemplates__ must be of type GstPadTemplate");
+
+      if (!pygobject_check (templ, &PyGObject_Type)) {
+        PyObject *repr = PyObject_Repr ((PyObject *) templ);
+#if PY_VERSION_HEX < 0x03000000
+        PyErr_Format (PyExc_TypeError, "expected GObject but got %s",
+            PyString_AsString (repr));
+#else
+        PyErr_Format (PyExc_TypeError, "expected GObject but got %s",
+            _PyUnicode_AsString (repr));
+#endif
+        Py_DECREF (repr);
+
+        return -1;
+      } else if (!GST_IS_PAD_TEMPLATE (pygobject_get (templ))) {
+        gchar *error =
+            g_strdup_printf
+            ("entries for __gsttemplates__ must be of type GstPadTemplate (%s)",
+            G_OBJECT_TYPE_NAME (pygobject_get (templ)));
+        PyErr_SetString (PyExc_TypeError, error);
+        g_free (error);
+
         return -1;
       }
     }
