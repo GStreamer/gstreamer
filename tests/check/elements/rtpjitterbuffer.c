@@ -649,9 +649,8 @@ GST_START_TEST (test_two_lost_one_arrives_in_time)
   /* the first lost buffer (buffer 3) out on
    * (buffer-timestamp (60) + latency (100) = 160) */
   gst_test_clock_wait_for_next_pending_id (testclock, &id);
-  fail_unless_equals_uint64 (
-      3 * PCMU_BUF_DURATION + jb_latency_ms * GST_MSECOND,
-      gst_clock_id_get_time (id));
+  fail_unless_equals_uint64 (3 * PCMU_BUF_DURATION +
+      jb_latency_ms * GST_MSECOND, gst_clock_id_get_time (id));
   gst_clock_id_unref (id);
 
   /* let the time expire... */
@@ -1057,8 +1056,8 @@ GST_START_TEST (test_rtx_packet_delay)
    * are exceeding the max allowed reorder distance and should request a
    * retransmission right away */
   fail_unless_equals_int (GST_FLOW_OK,
-      gst_harness_push (h, generate_test_buffer_full (
-          20 * GST_MSECOND, TRUE, 8, 8 * PCMU_RTP_TS_DURATION)));
+      gst_harness_push (h, generate_test_buffer_full (20 * GST_MSECOND, TRUE, 8,
+              8 * PCMU_RTP_TS_DURATION)));
 
   /* drop reconfigure event */
   gst_event_unref (gst_harness_pull_upstream_event (h));
@@ -1079,8 +1078,8 @@ GST_START_TEST (test_rtx_packet_delay)
 
   /* push 9, this should immediately request retransmission of 5 */
   fail_unless_equals_int (GST_FLOW_OK,
-      gst_harness_push (h, generate_test_buffer_full (
-          20 * GST_MSECOND, TRUE, 9, 9 * PCMU_RTP_TS_DURATION)));
+      gst_harness_push (h, generate_test_buffer_full (20 * GST_MSECOND, TRUE, 9,
+              9 * PCMU_RTP_TS_DURATION)));
 
   /* we should now receive retransmission requests for 5 */
   out_event = gst_harness_pull_upstream_event (h);
@@ -1203,7 +1202,7 @@ GST_START_TEST (test_gap_exceeds_latency)
 
   /*  Now data comes in again, a "bulk" lost packet is created for 3 -> 5 */
   fail_unless_equals_int (GST_FLOW_OK,
-     gst_harness_push (h, generate_test_buffer (16)));
+      gst_harness_push (h, generate_test_buffer (16)));
 
   /* FIXME: something is up with the timestamp here!!?! */
   out_event = gst_harness_pull_upstream_event (h);
@@ -1219,7 +1218,7 @@ GST_START_TEST (test_gap_exceeds_latency)
 
   for (i = 8; i < 16; i++) {
     fail_unless_equals_int (GST_FLOW_OK,
-       gst_harness_push (h, generate_test_buffer (i)));
+        gst_harness_push (h, generate_test_buffer (i)));
   }
 
   /* FIXME: wtf is going on with timestamps and durations here??!? */
@@ -1242,7 +1241,7 @@ GST_START_TEST (test_gap_exceeds_latency)
 
   /* 8 */
   for (i = 8; i <= 16; i++) {
-    GstBuffer * out_buf = gst_harness_pull (h);
+    GstBuffer *out_buf = gst_harness_pull (h);
     GST_DEBUG ("pop %d", i);
     fail_unless_equals_int (i, get_rtp_seq_num (out_buf));
     gst_buffer_unref (out_buf);
@@ -1341,7 +1340,7 @@ GST_START_TEST (test_dts_gap_larger_than_latency)
   /* Push packet with DTS larger than latency */
   fail_unless_equals_int (GST_FLOW_OK,
       gst_harness_push (h, generate_test_buffer_full (dts_after_gap,
-          TRUE, 5, 5 * PCMU_RTP_TS_DURATION)));
+              TRUE, 5, 5 * PCMU_RTP_TS_DURATION)));
 
   /* drop GstEventStreamStart & GstEventCaps & GstEventSegment */
   for (int i = 0; i < 3; i++)
@@ -1364,7 +1363,7 @@ GST_END_TEST;
 GST_START_TEST (test_push_big_gap)
 {
   GstHarness *h = gst_harness_new ("rtpjitterbuffer");
-  GstBuffer * buf;
+  GstBuffer *buf;
   const gint num_consecutive = 5;
   gint i;
 
@@ -1377,7 +1376,7 @@ GST_START_TEST (test_push_big_gap)
   fail_unless (gst_harness_crank_single_clock_wait (h));
 
   for (i = 0; i < num_consecutive; i++) {
-    GstBuffer * buf = gst_harness_pull (h);
+    GstBuffer *buf = gst_harness_pull (h);
     fail_unless_equals_int (1000 + i, get_rtp_seq_num (buf));
     gst_buffer_unref (buf);
   }
@@ -1391,7 +1390,7 @@ GST_START_TEST (test_push_big_gap)
   fail_unless (gst_harness_crank_single_clock_wait (h));
 
   for (i = 0; i < num_consecutive; i++) {
-    GstBuffer * buf = gst_harness_pull (h);
+    GstBuffer *buf = gst_harness_pull (h);
     fail_unless_equals_int (20000 + i, get_rtp_seq_num (buf));
     gst_buffer_unref (buf);
   }

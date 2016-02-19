@@ -59,6 +59,7 @@ GST_START_TEST (test_h263depay_start_packet_too_small_mode_a)
 
   gst_harness_teardown (h);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_h263depay_start_packet_too_small_mode_b)
@@ -78,6 +79,7 @@ GST_START_TEST (test_h263depay_start_packet_too_small_mode_b)
 
   gst_harness_teardown (h);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_h263depay_start_packet_too_small_mode_c)
@@ -97,6 +99,7 @@ GST_START_TEST (test_h263depay_start_packet_too_small_mode_c)
 
   gst_harness_teardown (h);
 }
+
 GST_END_TEST;
 
 static Suite *
