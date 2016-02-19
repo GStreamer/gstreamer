@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:45+0100\n"
+"POT-Creation-Date: 2016-02-19 10:29+0200\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -885,6 +885,9 @@ msgstr "δεν υπάρχει ιδιότητα «%s» στο στοιχείο «
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "αδυναμία ορισμού ιδιότητας «%s» στο στοιχείο «%s» σε «%s»"
 
+msgid "Delayed linking failed."
+msgstr ""
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "αδυναμία σύνδεσης %s σε %s"
@@ -1032,7 +1035,7 @@ msgid "force caps without doing a typefind"
 msgstr "επιβολή δυνατοτήτων χωρίς εκτέλεση typefind"
 
 #, fuzzy
-msgid "Stream contains not enough data."
+msgid "Stream doesn't contain enough data."
 msgstr "Η ροή δεν περιέχει δεδομένα."
 
 msgid "Stream contains no data."

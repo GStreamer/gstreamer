@@ -5,10 +5,10 @@
 # Tianze Wang <zwpwjwtz@126.com>, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.6.0\n"
+"Project-Id-Version: gstreamer 1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:45+0100\n"
-"PO-Revision-Date: 2015-10-16 19:25+0800\n"
+"POT-Creation-Date: 2016-02-19 10:29+0200\n"
+"PO-Revision-Date: 2015-12-25 11:26+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
@@ -786,10 +786,10 @@ msgid "Midi note number of the audio track."
 msgstr "音频轨的midi注解编号"
 
 msgid "private-data"
-msgstr ""
+msgstr "私有数据"
 
 msgid "Private data"
-msgstr ""
+msgstr "专有用途的数据"
 
 msgid ", "
 msgstr ", "
@@ -829,6 +829,9 @@ msgstr "组件“%2$s”中找不到属性“%1$s”"
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "无法设置组件“%2$s”中的属性“%1$s”为“%3$s”"
+
+msgid "Delayed linking failed."
+msgstr ""
 
 #, c-format
 msgid "could not link %s to %s"
@@ -975,7 +978,8 @@ msgstr "强制分析"
 msgid "force caps without doing a typefind"
 msgstr "不做类型查找的强制分析"
 
-msgid "Stream contains not enough data."
+#, fuzzy
+msgid "Stream doesn't contain enough data."
 msgstr "流中没有足够数据。"
 
 msgid "Stream contains no data."

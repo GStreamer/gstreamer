@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:45+0100\n"
+"POT-Creation-Date: 2016-02-19 10:29+0200\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -1027,6 +1027,9 @@ msgstr "Oya indangakintu in Ikigize:"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "OYA Gushyiraho indangakintu in Ikigize: Kuri"
 
+msgid "Delayed linking failed."
+msgstr ""
+
 #, fuzzy, c-format
 msgid "could not link %s to %s"
 msgstr "OYA Ihuza Kuri"
@@ -1186,7 +1189,7 @@ msgid "force caps without doing a typefind"
 msgstr ""
 
 #, fuzzy
-msgid "Stream contains not enough data."
+msgid "Stream doesn't contain enough data."
 msgstr "iyi Ibyatanzwe"
 
 #, fuzzy

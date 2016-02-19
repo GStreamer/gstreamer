@@ -2,13 +2,13 @@
 # Copyright (C) 2014 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Danilo Segan <dsegan@gmx.net>, 2004-2005.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011-2014.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011—2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.3.2\n"
+"Project-Id-Version: gstreamer-1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:45+0100\n"
-"PO-Revision-Date: 2014-06-18 20:12+0200\n"
+"POT-Creation-Date: 2016-02-19 10:29+0200\n"
+"PO-Revision-Date: 2015-12-26 20:29+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -819,10 +819,10 @@ msgid "Midi note number of the audio track."
 msgstr "Број миди ноте звучне нумере."
 
 msgid "private-data"
-msgstr ""
+msgstr "приватни подаци"
 
 msgid "Private data"
-msgstr ""
+msgstr "Приватни подаци"
 
 msgid ", "
 msgstr ", "
@@ -862,6 +862,9 @@ msgstr "нема особине „%s“ у елементу „%s“"
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "не могу да поставим особину „%s“ у елементу „%s“ на „%s“"
+
+msgid "Delayed linking failed."
+msgstr ""
 
 #, c-format
 msgid "could not link %s to %s"
@@ -927,7 +930,7 @@ msgid "Failed to map buffer."
 msgstr "Нисам успео да мапирам међумеморију."
 
 msgid "Filter caps"
-msgstr "Филтрира могућности"
+msgstr "Издваја могућности"
 
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
@@ -937,10 +940,10 @@ msgstr ""
 "својства поставља као орјентир придодати објекат Гст могућности."
 
 msgid "Caps Change Mode"
-msgstr ""
+msgstr "Режим промене могућности"
 
 msgid "Filter caps change behaviour"
-msgstr ""
+msgstr "Издваја понашање промене могућности"
 
 msgid "No Temp directory specified."
 msgstr "Није наведен привремени директоријум."
@@ -1010,8 +1013,8 @@ msgid "force caps without doing a typefind"
 msgstr "приморај могућности без обављања претраге уписа"
 
 #, fuzzy
-msgid "Stream contains not enough data."
-msgstr "Овај ток не садржи податке."
+msgid "Stream doesn't contain enough data."
+msgstr "Овај ток не садржи довољно података."
 
 msgid "Stream contains no data."
 msgstr "Овај ток не садржи податке."
@@ -1026,7 +1029,7 @@ msgid "writable"
 msgstr "уписив"
 
 msgid "deprecated"
-msgstr ""
+msgstr "застарело"
 
 msgid "controllable"
 msgstr "управљив"
@@ -1233,9 +1236,11 @@ msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
+"Не исписује податке стања за наведено својство ако је укључен опширан излаз "
+"(може да се користи више пута)"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "СВОЈСТВО-НАЗИВ"
 
 msgid "Do not install a fault handler"
 msgstr "Неће инсталирати руковаоца грешкама"

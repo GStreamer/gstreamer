@@ -106,7 +106,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:45+0100\n"
+"POT-Creation-Date: 2016-02-19 10:29+0200\n"
 "PO-Revision-Date: 2010-10-25 10:03+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -1018,6 +1018,9 @@ msgstr "nessuna proprietà «%s» nell'elemento «%s»"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "impossibile impostare la proprietà «%s» nell'elemento «%s» a «%s»"
 
+msgid "Delayed linking failed."
+msgstr ""
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "impossibile collegare %s a %s"
@@ -1170,7 +1173,7 @@ msgid "force caps without doing a typefind"
 msgstr "forza i caps senza eseguire un typefind"
 
 #, fuzzy
-msgid "Stream contains not enough data."
+msgid "Stream doesn't contain enough data."
 msgstr "Lo stream non contiene dati."
 
 msgid "Stream contains no data."

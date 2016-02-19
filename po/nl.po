@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:45+0100\n"
+"POT-Creation-Date: 2016-02-19 10:29+0200\n"
 "PO-Revision-Date: 2015-10-17 12:38+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -872,6 +872,9 @@ msgstr "geen eigenschap \"%s\" in element \"%s\""
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kon eigenschap \"%s\" in element \"%s\" niet op \"%s\" instellen"
 
+msgid "Delayed linking failed."
+msgstr ""
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "kon %s niet verbinden met %s"
@@ -1018,7 +1021,8 @@ msgstr "forceer mogelijkheden"
 msgid "force caps without doing a typefind"
 msgstr "forceer mogelijkheden zonder een \"typefind\" te doen"
 
-msgid "Stream contains not enough data."
+#, fuzzy
+msgid "Stream doesn't contain enough data."
 msgstr "Stream bevat niet genoeg gegevens."
 
 msgid "Stream contains no data."

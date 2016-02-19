@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:45+0100\n"
+"POT-Creation-Date: 2016-02-19 10:29+0200\n"
 "PO-Revision-Date: 2015-11-20 23:51+0100\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -860,6 +860,9 @@ msgstr "nincs „%s” tulajdonság a(z) „%s” elemben"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "nem állítható be a(z) „%2$s” elem „%1$s” tulajdonsága „%3$s” értékre"
 
+msgid "Delayed linking failed."
+msgstr ""
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "%s nem linkelhető a következőre: %s"
@@ -1005,7 +1008,8 @@ msgstr "nagybetűk kényszerítése"
 msgid "force caps without doing a typefind"
 msgstr "nagybetűk kényszerítése betűkeresés nélkül"
 
-msgid "Stream contains not enough data."
+#, fuzzy
+msgid "Stream doesn't contain enough data."
 msgstr "Az adatfolyam nem tartalmaz elég adatot."
 
 msgid "Stream contains no data."

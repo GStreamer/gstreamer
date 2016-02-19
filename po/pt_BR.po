@@ -1,7 +1,7 @@
 # Brazilian Portuguese translation of GStreamer.
 # Copyright (C) 2008-2013 Free Software Foundation, Inc.
 # This file is distributed under the same license as the GStreamer package.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2013.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2015.
 #
 # pipeline -> fila de processamento
 # sink -> consumidor
@@ -15,10 +15,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.2.1\n"
+"Project-Id-Version: gstreamer-1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:45+0100\n"
-"PO-Revision-Date: 2013-12-29 18:20-0200\n"
+"POT-Creation-Date: 2016-02-19 10:29+0200\n"
+"PO-Revision-Date: 2015-12-28 20:54-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -217,9 +217,8 @@ msgstr "Não foi possível obter/definir configurações para/do recurso."
 msgid "No space left on the resource."
 msgstr "Não foi deixado espaço no recurso."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "Não foi deixado espaço no recurso."
+msgstr "O acesso ao recurso não foi autorizado."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "O GStreamer encontrou um erro geral no fluxo."
@@ -830,16 +829,16 @@ msgstr ""
 "Informações sobre a pessoa detrás de um remix ou interpretações similares"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "nota-base-midi"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Número MIDI da nota da trilha de áudio."
 
 msgid "private-data"
-msgstr ""
+msgstr "dados-privados"
 
 msgid "Private data"
-msgstr ""
+msgstr "Dados privados"
 
 msgid ", "
 msgstr ", "
@@ -866,11 +865,11 @@ msgstr ""
 
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "não há elemento fonte no link [sink=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "não há consumidor no link [source=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -882,6 +881,9 @@ msgstr ""
 "não foi possível definir a propriedade \"%s\" no elemento \"%s\" para o "
 "valor \"%s\""
 
+msgid "Delayed linking failed."
+msgstr ""
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "não foi possível vincular %s em %s"
@@ -892,11 +894,11 @@ msgstr "nenhum elemento \"%s\""
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "referência inesperada \"%s\" - ignorando"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "referência ao Pad inesperada \"%s\" - ignorando"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -911,18 +913,18 @@ msgid "no source element for URI \"%s\""
 msgstr "nenhum elemento fonte para o URI \"%s\""
 
 msgid "syntax error"
-msgstr ""
+msgstr "erro de sintaxe"
 
 msgid "bin"
-msgstr ""
+msgstr "Bin"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr "o arquivo \"%s\" está vazio, operação não permitida"
+msgstr "o Bin \"%s\" está vazio, operação não permitida"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "nenhum arquivo \"%s\", cancelando"
+msgstr "nenhum Bin \"%s\", descarregando elementos"
 
 msgid "empty pipeline not allowed"
 msgstr "não é permitido que a fila de processamento seja vazia"
@@ -946,7 +948,7 @@ msgid "Failed to map buffer."
 msgstr "Falha ao mapear o buffer."
 
 msgid "Filter caps"
-msgstr "Caps do filtro"
+msgstr "Filtro Caps"
 
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
@@ -956,10 +958,10 @@ msgstr ""
 "propriedade é levada uma referência ao objeto GstCaps fornecido."
 
 msgid "Caps Change Mode"
-msgstr ""
+msgstr "Modo de Alteração do Caps"
 
 msgid "Filter caps change behaviour"
-msgstr ""
+msgstr "Comportamento de alteração do filtro Caps"
 
 msgid "No Temp directory specified."
 msgstr "Nenhum diretório temporário especificado."
@@ -1028,8 +1030,8 @@ msgid "force caps without doing a typefind"
 msgstr "forçar Caps sem usar o typefind"
 
 #, fuzzy
-msgid "Stream contains not enough data."
-msgstr "O fluxo não contém dados."
+msgid "Stream doesn't contain enough data."
+msgstr "O fluxo não contém dados suficientes."
 
 msgid "Stream contains no data."
 msgstr "O fluxo não contém dados."
@@ -1044,7 +1046,7 @@ msgid "writable"
 msgstr "gravável"
 
 msgid "deprecated"
-msgstr ""
+msgstr "obsoleto"
 
 msgid "controllable"
 msgstr "controlável"
@@ -1249,9 +1251,11 @@ msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
+"Não exibir informações de status para a propriedade especificada se o modo "
+"detalhado de saída estiver ativado (pode ser usado várias vezes)"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "NOME-PROPRIEDADE"
 
 msgid "Do not install a fault handler"
 msgstr "Não instale um manipulador de falhas"

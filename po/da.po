@@ -1,16 +1,16 @@
 # translation of gstreamer to Danish
-# Copyright (C) 2004, 2005, 2007 Free Software Foundation, Inc.
+# Copyright (C) 2015 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
-#
-# Mogens Jæger <mogensjaeger@gmail.com>, 2010.
 # Mogens Jaeger <mogensjaeger@gmail.com>, 2007, 2010, 2013, 2014.
+# Joe Hansen <joedalton2@yahoo.dk>, 2015.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.3.90\n"
+"Project-Id-Version: gstreamer 1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:45+0100\n"
-"PO-Revision-Date: 2014-07-16 13:26+0200\n"
-"Last-Translator: Mogens Jaeger <mogensjaeger@gmail.com>\n"
+"POT-Creation-Date: 2016-02-19 10:29+0200\n"
+"PO-Revision-Date: 2015-12-28 13:26+0200\n"
+"Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
 "MIME-Version: 1.0\n"
@@ -20,7 +20,7 @@ msgstr ""
 "X-Generator: Lokalize 1.5\n"
 
 msgid "Print the GStreamer version"
-msgstr "Udskriv Gstreamer versionsnummer"
+msgstr "Udskriv GStreamer-versionsnummer"
 
 msgid "Make all warnings fatal"
 msgstr "Gør alle advarsler fatale"
@@ -93,7 +93,7 @@ msgid "GStreamer Options"
 msgstr "GStreamer indstillinger"
 
 msgid "Show GStreamer Options"
-msgstr "Vis Gstreamer indstillinger"
+msgstr "Vis GStreamer-indstillinger"
 
 msgid "Unknown option"
 msgstr "Ukendt indstilling"
@@ -817,10 +817,10 @@ msgid "Midi note number of the audio track."
 msgstr "Midi-nodenummer på lydsporet."
 
 msgid "private-data"
-msgstr ""
+msgstr "private-data"
 
 msgid "Private data"
-msgstr ""
+msgstr "Private data"
 
 msgid ", "
 msgstr ", "
@@ -860,6 +860,9 @@ msgstr "ingen egenskab \"%s\" for element \"%s\""
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kunne ikke sætte egenskab \"%s\" for element \"%s\" til \"%s\""
+
+msgid "Delayed linking failed."
+msgstr ""
 
 #, c-format
 msgid "could not link %s to %s"
@@ -935,10 +938,10 @@ msgstr ""
 "egenskab gives en reference til det leverede GstCaps objekt."
 
 msgid "Caps Change Mode"
-msgstr ""
+msgstr "Caps-ændringstilstand"
 
 msgid "Filter caps change behaviour"
-msgstr ""
+msgstr "Filtrer caps-ændringsopførsel"
 
 msgid "No Temp directory specified."
 msgstr "Der er ikke angivet en mappe til midlertidige filer."
@@ -1008,14 +1011,14 @@ msgid "force caps without doing a typefind"
 msgstr "gennemtving kapabiliteter uden at gennemføre en typefind"
 
 #, fuzzy
-msgid "Stream contains not enough data."
-msgstr "Mediestrøm indeholder ingen data"
+msgid "Stream doesn't contain enough data."
+msgstr "Mediestrøm indeholder ikke nok data."
 
 msgid "Stream contains no data."
 msgstr "Mediestrøm indeholder ingen data"
 
 msgid "Implemented Interfaces:\n"
-msgstr "Implementerede Grænseflader:\n"
+msgstr "Implementerede grænseflader:\n"
 
 msgid "readable"
 msgstr "læselig"
@@ -1024,7 +1027,7 @@ msgid "writable"
 msgstr "som kan skrives"
 
 msgid "deprecated"
-msgstr ""
+msgstr "forældet"
 
 msgid "controllable"
 msgstr "kontrollerbar"
@@ -1231,9 +1234,11 @@ msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
+"Vis ikke statusinformation for den specificerede egenskab hvis uddybende "
+"uddata er aktiveret (kan bruges flere gange)"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "EGENSKABSNAVN"
 
 msgid "Do not install a fault handler"
 msgstr "Installér ikke en fejlhåndterer"
@@ -1299,7 +1304,7 @@ msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
 msgstr "Afbrydelse afventende EOS  - stopper rørledning...\n"
 
 msgid "An error happened while waiting for EOS\n"
-msgstr "En fejl opstod mens der ventedes på medieslut\n"
+msgstr "Der opstod en fejl mens der ventedes på medieslut\n"
 
 msgid "Execution ended after %"
 msgstr "Udførsel afsluttet efter %"
@@ -1312,77 +1317,3 @@ msgstr "Rørledning sættes til NUL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Rørledning frigøres ...\n"
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Send ikke statusinformation af TYPE ud"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TYPE1,TYPE2,..."
-
-#~ msgid "link without source element"
-#~ msgstr "lænke uden kilde-element"
-
-#~ msgid "link without sink element"
-#~ msgstr "lænke uden udgangselement"
-
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "intet element at lænke URI \"%s\" til"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "kunne ikke lænke udgangselement for URI \"%s\""
-
-#~ msgid "maximum"
-#~ msgstr "maksimum"
-
-#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr "Brug: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-
-#~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "FEJL: tolkning af XML fil '%s' mislykkedes.\n"
-
-#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr "FEJL: intet topniveau rørledningselement i fil '%s'.\n"
-
-#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
-#~ msgstr ""
-#~ "ADVARSEL: der understøttes kun ét topniveauelement på nuværende "
-#~ "tidspunkt.\n"
-
-#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr "FEJL: kunne ikke tolke kommandolinieargumenetet %d: %s.\n"
-
-#~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "ADVARSEL: elementet ved navn '%s' blev ikke fundet.\n"
-
-#~ msgid "Save xml representation of pipeline to FILE and exit"
-#~ msgstr "Gem XML-repræsentation af rørledning til FIL og afslut"
-
-#~ msgid "FILE"
-#~ msgstr "FIL"
-
-#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr "Undlad installering af signalhåndtering for SIGUSR1 og SIGUSR2"
-
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Udskriv allokeringsspor (hvis tilladt på oversættelsestidspunktet)"
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "Kunne ikke genskanne registratur %s: %s"
-
-#~ msgid "Error re-scanning registry %s"
-#~ msgstr "Kunne ikke genskanne registratur %s"
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Intern GStreamer fejl: tilstandsændring mislykkedes."
-
-#~ msgid "original location of file as a URI"
-#~ msgstr "oprindeligt sted for en fil som en URI"
-
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Fejl under skrivning til filbeskriver \"%d\"."
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "Filbeskriver \"%d\" er ugyldig."
-
-#~ msgid "FREEING pipeline ...\n"
-#~ msgstr "Rørledning renses ...\n"

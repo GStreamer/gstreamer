@@ -7,10 +7,10 @@
 # Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.6.0\n"
+"Project-Id-Version: gstreamer 1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:45+0100\n"
-"PO-Revision-Date: 2015-10-18 13:38+0300\n"
+"POT-Creation-Date: 2016-02-19 10:29+0200\n"
+"PO-Revision-Date: 2015-12-25 19:12+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -820,10 +820,10 @@ msgid "Midi note number of the audio track."
 msgstr "Номер ноты midi на аудио дорожке."
 
 msgid "private-data"
-msgstr ""
+msgstr "private-data"
 
 msgid "Private data"
-msgstr ""
+msgstr "Частная информация"
 
 msgid ", "
 msgstr ", "
@@ -863,6 +863,9 @@ msgstr "свойство «%s» не найдено для элемента «%s
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "не удалось установить свойство «%s» элемента «%s» в значение «%s»"
+
+msgid "Delayed linking failed."
+msgstr ""
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1009,7 +1012,8 @@ msgstr "форсировать возможности"
 msgid "force caps without doing a typefind"
 msgstr "форсировать возможности без выполнения typefind"
 
-msgid "Stream contains not enough data."
+#, fuzzy
+msgid "Stream doesn't contain enough data."
 msgstr "Поток содержит недостаточно данных."
 
 msgid "Stream contains no data."

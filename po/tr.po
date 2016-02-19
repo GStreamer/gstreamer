@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:45+0100\n"
+"POT-Creation-Date: 2016-02-19 10:29+0200\n"
 "PO-Revision-Date: 2015-01-10 21:06+0100\n"
 "Last-Translator: Volkan Gezer <volkangezer@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -851,6 +851,9 @@ msgstr "\"%2$s\" öğesinde \"%1$s\" özelliği yok"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "\"%2$s\" öğesindeki \"%1$s\" özelliğine \"%3$s\" değeri atanamadı"
 
+msgid "Delayed linking failed."
+msgstr ""
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "%s, %s'a bağlanamadı"
@@ -997,7 +1000,7 @@ msgid "force caps without doing a typefind"
 msgstr "bir tür tanımlaması yapmadan kapasiteyi zorla"
 
 #, fuzzy
-msgid "Stream contains not enough data."
+msgid "Stream doesn't contain enough data."
 msgstr "Akış hiçbir veri içermiyor."
 
 msgid "Stream contains no data."

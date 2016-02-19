@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.6.0\n"
+"Project-Id-Version: gstreamer 1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:45+0100\n"
-"PO-Revision-Date: 2015-10-16 08:03+0700\n"
+"POT-Creation-Date: 2016-02-19 10:29+0200\n"
+"PO-Revision-Date: 2015-12-25 07:29+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
@@ -46,7 +46,7 @@ msgstr ""
 "cho mỗi loại. Thí dụ: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 msgid "LIST"
-msgstr "DANH SÁCH"
+msgstr "DANH_SÁCH"
 
 msgid "Disable colored debugging output"
 msgstr "Tắt xuất dữ liệu gỡ lỗi với màu"
@@ -809,7 +809,7 @@ msgid "Name of the label or publisher"
 msgstr "Tên của nhãn hay nhà xuất bản"
 
 msgid "interpreted-by"
-msgstr "biên-dịch-bởi"
+msgstr "phiên-dịch-bởi"
 
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr "Thông tin về người đứng sau phối và biên tập lại"
@@ -821,10 +821,10 @@ msgid "Midi note number of the audio track."
 msgstr "Số ghi chú midi của rãnh âm thanh."
 
 msgid "private-data"
-msgstr ""
+msgstr "dữ-liệu-riêng"
 
 msgid "Private data"
-msgstr ""
+msgstr "Dữ liệu riêng"
 
 msgid ", "
 msgstr ", "
@@ -864,6 +864,9 @@ msgstr "không có thuộc tính “%s” trong phần tử “%s”"
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "không thể đặt thuộc tính “%s” trong phần tử “%s” thành “%s”"
+
+msgid "Delayed linking failed."
+msgstr ""
 
 #, c-format
 msgid "could not link %s to %s"
@@ -993,7 +996,7 @@ msgstr "“%s” là thư mục."
 
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr "Tập tin “%s” là ổ cắm."
+msgstr "Tập tin “%s” là ổ cắm mạng."
 
 msgid "Failed after iterations as requested."
 msgstr "Lỗi sau số lần lặp lại được chọn."
@@ -1013,7 +1016,8 @@ msgstr "buộc khả năng"
 msgid "force caps without doing a typefind"
 msgstr "buộc các khả năng mà không tìm kiểu"
 
-msgid "Stream contains not enough data."
+#, fuzzy
+msgid "Stream doesn't contain enough data."
 msgstr "Luồng không chứa đủ dữ liệu."
 
 msgid "Stream contains no data."
@@ -1164,7 +1168,7 @@ msgid ""
 "INFO:\n"
 "%s\n"
 msgstr ""
-"Thông tin:\n"
+"THÔNG TIN:\n"
 "%s\n"
 
 #, c-format

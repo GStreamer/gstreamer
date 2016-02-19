@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.6.0\n"
+"Project-Id-Version: gstreamer 1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2015-12-24 12:45+0100\n"
-"PO-Revision-Date: 2015-10-15 20:45+0200\n"
+"POT-Creation-Date: 2016-02-19 10:29+0200\n"
+"PO-Revision-Date: 2015-12-24 23:07+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -821,10 +821,10 @@ msgid "Midi note number of the audio track."
 msgstr "Numer dźwięku MIDI ścieżki dźwiękowej."
 
 msgid "private-data"
-msgstr ""
+msgstr "dane-prywatne"
 
 msgid "Private data"
-msgstr ""
+msgstr "Dane prywatne"
 
 msgid ", "
 msgstr ", "
@@ -864,6 +864,9 @@ msgstr "brak właściwości \"%s\" w elemencie \"%s\""
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "nie udało się ustawić właściwości \"%s\" w elemencie \"%s\" na \"%s\""
+
+msgid "Delayed linking failed."
+msgstr ""
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1010,7 +1013,8 @@ msgstr "wymuszenie możliwości"
 msgid "force caps without doing a typefind"
 msgstr "wymuszenie możliwości bez sprawdzania"
 
-msgid "Stream contains not enough data."
+#, fuzzy
+msgid "Stream doesn't contain enough data."
 msgstr "Strumień nie zawiera wystarczająco dużo danych."
 
 msgid "Stream contains no data."
