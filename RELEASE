@@ -1,8 +1,7 @@
 
-Release notes for GStreamer Editing Services 1.7.1
+Release notes for GStreamer Editing Services 1.7.2
 
-
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.7 release series. The 1.7 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.7 release series
@@ -13,26 +12,19 @@ API can still change until that point.
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
 during the unstable 1.7 release series.
 
-
   
-
-Bugs fixed in this release
-     
-      * 753864 : editing-services: Fix memory leaks when context parse fails.
-      * 755247 : {track,videotrack,smart-video-mixer}: leaks their internal objects
-      * 759758 : build failure with clang, converting one enum type to another
 
 ==== Download ====
 
 You can find source releases of gst-editing-services in the download
-directory: http://gstreamer.freedesktop.org/src/gst-editing-services/
+directory: https://gstreamer.freedesktop.org/src/gst-editing-services/
 
 The git repository and details how to clone it can be found at
 http://cgit.freedesktop.org/gstreamer/gst-editing-services/
 
 ==== Homepage ====
 
-The project's website is http://gstreamer.freedesktop.org/
+The project's website is https://gstreamer.freedesktop.org/
 
 ==== Support and Bugs ====
 
@@ -57,11 +49,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Justin Kim
+      * Julien Isorce
+      * Lubosz Sarnecki
       * Mathieu Duponchelle
-      * Nicolas Dufresne
       * Sebastian Dröge
+      * Thiago Santos
       * Thibault Saunier
-      * Tim-Philipp Müller
-      * Vineeth TM
  

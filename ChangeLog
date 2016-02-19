@@ -1,9 +1,254 @@
-=== release 1.7.1 ===
+=== release 1.7.2 ===
 
-2015-12-24  Sebastian Dröge <slomo@coaxion.net>
+2016-02-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.1
+	  releasing 1.7.2
+
+2016-02-18 15:26:11 +0000  Julien Isorce <j.isorce@samsung.com>
+
+	* pkgconfig/gst-editing-services-uninstalled.pc.in:
+	  uninstalled.pc: add support for non libtool build systems
+	  Currently the .la path is provided which requires to use libtool as
+	  mentioned in the GStreamer manual section-helloworld-compilerun.html.
+	  It is fine as long as the application is built using libtool.
+	  So currently it is not possible to compile a GStreamer application
+	  within gst-uninstalled with CMake or other build system different
+	  than autotools.
+	  This patch allows to do the following in gst-uninstalled env:
+	  gcc test.c -o test $(pkg-config --cflags --libs gstreamer-1.0 \
+	  gst-editing-services-1.0)
+	  Previously it required to prepend libtool --mode=link
+	  https://bugzilla.gnome.org/show_bug.cgi?id=720778
+
+2016-02-09 12:31:10 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-clip.c:
+	* tests/check/ges/effects.c:
+	  Fix and test priority of TrackElement after splitting
+	  And make sure we properly handle transitions in that case
+
+2016-02-09 12:14:15 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-track-element.c:
+	  ges: Give better names to nleobjects
+
+2016-02-05 20:02:40 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* tests/check/Makefile.am:
+	  tests: extend the AM_TESTS_ENVIRONMENT from check.mak
+	  To get the CK_DEFAULT_TIMEOUT defined for all tests
+	  https://bugzilla.gnome.org/show_bug.cgi?id=761472
+
+2016-02-05 18:11:59 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From 86e4663 to b64f03f
+
+2016-01-28 13:37:13 +0100  Lubosz Sarnecki <lubosz.sarnecki@collabora.co.uk>
+
+	* ges/ges-title-source.c:
+	  titlesource: Add properties for text dimensions.
+
+2016-02-02 20:31:13 +0100  Lubosz Sarnecki <lubosz.sarnecki@collabora.co.uk>
+
+	* ges/ges-track-element.c:
+	  trackelement: Make use of read-only children properties.
+	  Read only properties will throw a GLib warning like this
+	  when accessed with "set_child_property":
+	  Warning: g_object_set_property: property 'text-x' of object class 'GstTextOverlay' is not writable
+
+2016-01-26 12:52:36 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* plugins/nle/nlecomposition.c:
+	  nle: Turn composition structural issue into ERROR on the bus
+	  Those error are really critical and we are then enable to keep
+	  working. Just post an ERROR message on the bus and let the
+	  application deal with it.
+	  Reviewed-by: Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D740
+
+2016-01-25 16:11:14 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-track-element.c:
+	  track-element: Rely on nleobject to be created at construct time
+	  Avoiding all the pending_xx dance and making the code simpler.
+	  This is now possible thanks to the various recent refactoring.
+	  Thanks to that the user is able to set_child_property on objects
+	  that are not in GESTrack yet, as expected.
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D739
+
+2016-01-25 15:57:22 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-effect-asset.c:
+	* ges/ges-effect.c:
+	* ges/ges-internal.h:
+	* tests/check/ges/asset.c:
+	* tests/check/ges/project.c:
+	  effect: Determine the effect type as soon as possible
+	  Making it possible to create the nleobject right at the creation
+	  of the element.
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D738
+
+2016-01-25 15:51:26 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-title-clip.c:
+	* ges/ges-title-source.c:
+	* tests/check/python/test_clip.py:
+	  title-clip: Return default GESTitleSource value if no child set yet
+	  In get_property we should return the default values if
+	  we have not created any GESTitleSource yet
+	  (instead of segfaulting).
+	  And fix GESTitleSource default values!
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D737
+
+2016-01-25 11:56:57 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-track-element.c:
+	* ges/gstframepositionner.c:
+	  ges: track-element: Try to create NleObject as soon as possible
+	  This way we have informations about the content of the
+	  children as soon as possible.
+	  Most code paths where already ready to handle that as we use it for
+	  copying clips.
+	  Fix framepositionner to properly handle that (it would have broke
+	  with copied clips before).
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D736
+
+2016-01-19 11:22:57 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline.c:
+	  timeline: Avoid possible crash disposing the timeline
+
+2016-01-19 11:15:58 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/Makefile.am:
+	  g-i: fix init section to avoid compiler warnings
+
+2016-01-06 17:20:20 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-container.c:
+	  container: Update start if adding a child that as a start < current start
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D629
+
+2016-01-06 18:14:07 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline.c:
+	  timeline: Fix infinite loop on dispose
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D628
+
+2016-01-01 11:56:27 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-audio-source.c:
+	* ges/ges-audio-uri-source.c:
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-group.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-video-source.c:
+	* ges/ges-video-uri-source.c:
+	* ges/gstframepositionner.c:
+	* tests/check/python/test_clip.py:
+	* tests/check/python/test_group.py:
+	  group: Make deep copying actually copy deep
+	  Allowing pasting groups paste exactly what had been copied
+	  And not the new version of the contained objects
+	  This technically breaks the C API but this is a new API and I believe
+	  and hope nobody is using it right now.
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D616
+
+2015-12-22 23:21:44 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* configure.ac:
+	* tests/check/Makefile.am:
+	* tests/check/python/test_group.py:
+	  tests_: Add a simple python copy/paste test for groups
+	  Integrating python tests in the build system
+	  And cleanup configure.ac
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D601
+
+2016-01-02 16:15:02 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/Makefile.am:
+	  Do not install ges-smart-video-mixer.h
+	  it should always have been private
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D617
+
+2016-01-06 09:50:39 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline-element.c:
+	  Revert "timeline-element: Do not consider not serializable elements when getting top element"
+	  This commit was causing issue where we were reporting the toplevel
+	  element as an element but that element was actually in another
+	  not serialized group. That is very tricky to handle for end users
+	  as they are not guaranteed the toplevel clips were actually not
+	  contained in another element.
+	  This reverts commit ceb82ba3028332987d8d5251f98b4896120aa59b.
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D627
+
+2016-01-09 05:15:47 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: use correct type for flush_seqnum.
+
+2016-01-09 05:14:36 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* plugins/nle/nleghostpad.c:
+	  nleghostpad: use GST_SEGMENT_FORMAT
+	  This isn't 2005 anymore.
+
+2015-12-29 18:08:03 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-asset.c:
+	  ges-asset: Don't dereference NULL proxy assets when resolving fails
+	  CID 1346531
+
+2015-12-26 09:43:11 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-extractable.c:
+	* ges/ges-project.c:
+	* ges/ges-project.h:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-track-element.c:
+	  ges: Fix various g-i warnings
+
+2015-12-26 09:43:19 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-track-element.c:
+	  ges-track-element: Rename control-binding-reomved signal to control-binding-removed
+	  Strictly speaking an API change but nobody on the Internet seemed to have used
+	  the signal with the typo in the name.
+
+2015-12-24 15:30:23 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.7.1 ===
+
+2015-12-24 15:07:57 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.7.1
 
 2015-12-22 09:58:06 +0100  Sebastian Dröge <sebastian@centricular.com>
 
