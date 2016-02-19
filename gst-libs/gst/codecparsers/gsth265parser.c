@@ -1955,6 +1955,7 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
    * and have valid defaults */
   slice->pic_output_flag = 1;
   slice->collocated_from_l0_flag = 1;
+  slice->deblocking_filter_disabled_flag = pps->deblocking_filter_disabled_flag;
   slice->beta_offset_div2 = pps->beta_offset_div2;
   slice->tc_offset_div2 = pps->tc_offset_div2;
   slice->loop_filter_across_slices_enabled_flag =
