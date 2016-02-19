@@ -519,15 +519,14 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     caps = gst_pad_peer_query_caps (decoder->srcpad, filter);
     gst_caps_unref (filter);
 
-    GST_DEBUG_OBJECT (self, "Possible decoded caps: %" GST_PTR_FORMAT,
-        caps);
+    GST_DEBUG_OBJECT (self, "Possible decoded caps: %" GST_PTR_FORMAT, caps);
     if (gst_caps_is_empty (caps)) {
       gst_caps_unref (caps);
       goto not_negotiated;
     }
 
     /* Fixate pixel format */
-    caps = gst_caps_fixate(caps);
+    caps = gst_caps_fixate (caps);
 
     GST_DEBUG_OBJECT (self, "Chosen decoded caps: %" GST_PTR_FORMAT, caps);
 

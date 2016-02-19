@@ -811,7 +811,8 @@ retry:
 
   /* use generated offset values only if there are not already valid ones
    * set by the v4l2 device */
-  if (!GST_BUFFER_OFFSET_IS_VALID (*buf) || !GST_BUFFER_OFFSET_END_IS_VALID (*buf)) {
+  if (!GST_BUFFER_OFFSET_IS_VALID (*buf)
+      || !GST_BUFFER_OFFSET_END_IS_VALID (*buf)) {
     GST_BUFFER_OFFSET (*buf) = v4l2src->offset++;
     GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
   } else {
@@ -820,15 +821,17 @@ retry:
     GST_BUFFER_OFFSET (*buf) += v4l2src->renegotiation_adjust;
     GST_BUFFER_OFFSET_END (*buf) += v4l2src->renegotiation_adjust;
     /* check for frame loss with given (from v4l2 device) buffer offset */
-    if ((v4l2src->offset != 0) && (GST_BUFFER_OFFSET (*buf) != (v4l2src->offset + 1))) {
+    if ((v4l2src->offset != 0)
+        && (GST_BUFFER_OFFSET (*buf) != (v4l2src->offset + 1))) {
       guint64 lost_frame_count = GST_BUFFER_OFFSET (*buf) - v4l2src->offset - 1;
       GST_WARNING_OBJECT (v4l2src,
-          "lost frames detected: count = %" G_GUINT64_FORMAT " - ts: %" GST_TIME_FORMAT,
-              lost_frame_count, GST_TIME_ARGS (timestamp));
+          "lost frames detected: count = %" G_GUINT64_FORMAT " - ts: %"
+          GST_TIME_FORMAT, lost_frame_count, GST_TIME_ARGS (timestamp));
 
       qos_msg = gst_message_new_qos (GST_OBJECT_CAST (v4l2src), TRUE,
           GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, timestamp,
-          GST_CLOCK_TIME_IS_VALID (duration) ? lost_frame_count * duration : GST_CLOCK_TIME_NONE);
+          GST_CLOCK_TIME_IS_VALID (duration) ? lost_frame_count *
+          duration : GST_CLOCK_TIME_NONE);
       gst_element_post_message (GST_ELEMENT_CAST (v4l2src), qos_msg);
 
     }
