@@ -2779,9 +2779,12 @@ gst_vaapi_decoder_h265_parse (GstVaapiDecoder * base_decoder,
   } else {
     if (size < 4)
       return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
-    if (priv->stream_alignment == GST_VAAPI_STREAM_ALIGN_H265_NALU)
+    if (priv->stream_alignment == GST_VAAPI_STREAM_ALIGN_H265_NALU) {
       buf_size = size;
-    else {
+      ofs = scan_for_start_code (adapter, 4, size - 4, NULL);
+      if (ofs > 0)
+        buf_size = ofs;
+    } else {
       ofs = scan_for_start_code (adapter, 0, size, NULL);
       if (ofs < 0)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
