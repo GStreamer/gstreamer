@@ -50,8 +50,8 @@
 #include <gst/video/gstvideopool.h>
 
 #define GST_CAT_DEFAULT daaladec_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
+GST_DEBUG_CATEGORY_STATIC (daaladec_debug);
+GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 
 /* This was removed from the base class, this is used as a
    temporary return to signal the need to call _drop_frame,
@@ -122,6 +122,7 @@ gst_daala_dec_class_init (GstDaalaDecClass * klass)
       GST_DEBUG_FUNCPTR (daala_dec_decide_allocation);
 
   GST_DEBUG_CATEGORY_INIT (daaladec_debug, "daaladec", 0, "Daala decoder");
+  GST_DEBUG_CATEGIRY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 }
 
 static void
@@ -449,7 +450,7 @@ daala_handle_image (GstDaalaDec * dec, od_img * img, GstVideoCodecFrame * frame)
   }
 
   /* if only libdaala would allow us to give it a destination frame */
-  GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, dec,
+  GST_CAT_TRACE_OBJECT (CAT_PERFORMANCE, dec,
       "doing unavoidable video frame copy");
 
   if (G_UNLIKELY (!gst_video_frame_map (&vframe, &dec->output_state->info,
