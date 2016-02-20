@@ -35,6 +35,7 @@
 #include "gstavutils.h"
 
 GST_DEBUG_CATEGORY (ffmpeg_debug);
+GST_DEBUG_CATEGORY (CAT_PERFORMANCE);
 
 static GMutex gst_avcodec_mutex;
 
@@ -135,6 +136,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (ffmpeg_debug, "libav", 0, "libav elements");
+  GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 
   /* Bail if not FFmpeg. We can no longer ensure operation with Libav */
   if (!gst_ffmpeg_avcodec_is_ffmpeg ()) {

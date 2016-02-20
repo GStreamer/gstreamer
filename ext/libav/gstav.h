@@ -34,6 +34,8 @@
 GST_DEBUG_CATEGORY_EXTERN (ffmpeg_debug);
 #define GST_CAT_DEFAULT ffmpeg_debug
 
+GST_DEBUG_CATEGORY_EXTERN (CAT_PERFORMANCE);
+
 G_BEGIN_DECLS
 
 extern gboolean gst_ffmpegdemux_register (GstPlugin * plugin);
