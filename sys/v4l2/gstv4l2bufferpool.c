@@ -47,7 +47,7 @@
 #include <gst/glib-compat-private.h>
 
 GST_DEBUG_CATEGORY_STATIC (v4l2bufferpool_debug);
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
+GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 #define GST_CAT_DEFAULT v4l2bufferpool_debug
 
 #define GST_V4L2_IMPORT_QUARK gst_v4l2_buffer_pool_import_quark ()
@@ -152,8 +152,7 @@ gst_v4l2_buffer_pool_copy_buffer (GstV4l2BufferPool * pool, GstBuffer * dest,
   gst_buffer_copy_into (dest, src,
       GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 
-  GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, pool, "slow copy into buffer %p",
-      dest);
+  GST_CAT_LOG_OBJECT (CAT_PERFORMANCE, pool, "slow copy into buffer %p", dest);
 
   return GST_FLOW_OK;
 
@@ -1548,6 +1547,7 @@ gst_v4l2_buffer_pool_class_init (GstV4l2BufferPoolClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (v4l2bufferpool_debug, "v4l2bufferpool", 0,
       "V4L2 Buffer Pool");
+  GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 }
 
 /**
