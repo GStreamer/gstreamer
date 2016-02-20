@@ -1196,6 +1196,7 @@ main (int argc, char **argv)
           down the element sink pad(s) and by waiting that the EOS leaves
           the elements (with an event probe).
         </para>
+        <para>
           If you do not do this, you will lose the data which is buffered
           by the unlinked element. This can result in a simple frame loss
           (one or more video frames, several milliseconds of audio). However
@@ -1203,8 +1204,8 @@ main (int argc, char **argv)
           from the pipeline, you risk getting a corrupted file which could not be
           played properly, as some relevant metadata (header, seek/index tables, internal
           sync tags) will not be stored or updated properly.
+        </para>
         <para>
-
           See also <xref linkend="section-dynamic-changing"/>.
         </para>
       </listitem>
