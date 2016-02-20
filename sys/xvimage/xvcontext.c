@@ -34,7 +34,6 @@
 #include <X11/XKBlib.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_xv_context);
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 #define GST_CAT_DEFAULT gst_debug_xv_context
 
 void

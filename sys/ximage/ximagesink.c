@@ -119,7 +119,7 @@
 #include <X11/XKBlib.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_x_image_sink);
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
+GST_DEBUG_CATEGORY_EXTERN (CAT_PERFORMANCE);
 #define GST_CAT_DEFAULT gst_debug_x_image_sink
 
 typedef struct
@@ -1370,7 +1370,7 @@ gst_x_image_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     if (res != GST_FLOW_OK)
       goto no_buffer;
 
-    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, ximagesink,
+    GST_CAT_LOG_OBJECT (CAT_PERFORMANCE, ximagesink,
         "slow copy into bufferpool buffer %p", to_put);
 
     if (!gst_video_frame_map (&src, &ximagesink->info, buf, GST_MAP_READ))

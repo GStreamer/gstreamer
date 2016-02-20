@@ -49,8 +49,8 @@
 #include <gst/video/gstvideopool.h>
 
 #define GST_CAT_DEFAULT theoradec_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
+GST_DEBUG_CATEGORY_STATIC (theoradec_debug);
+GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 
 #define THEORA_DEF_TELEMETRY_MV 0
 #define THEORA_DEF_TELEMETRY_MBMODE 0
@@ -697,7 +697,7 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
   }
 
   /* if only libtheora would allow us to give it a destination frame */
-  GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, dec,
+  GST_CAT_TRACE_OBJECT (CAT_PERFORMANCE, dec,
       "doing unavoidable video frame copy");
 
   if (G_UNLIKELY (!gst_video_frame_map (&vframe, &dec->uncropped_info,
@@ -997,6 +997,8 @@ theora_dec_get_property (GObject * object, guint prop_id,
 gboolean
 gst_theora_dec_register (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
+
   return gst_element_register (plugin, "theoradec",
       GST_RANK_PRIMARY, GST_TYPE_THEORA_DEC);
 }

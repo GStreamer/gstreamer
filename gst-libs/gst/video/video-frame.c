@@ -31,7 +31,21 @@
 #include "video-tile.h"
 #include "gstvideometa.h"
 
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
+#define CAT_PERFORMANCE video_frame_get_perf_category()
+
+static inline GstDebugCategory *
+video_frame_get_perf_category (void)
+{
+  static GstDebugCategory *cat = NULL;
+
+  if (g_once_init_enter (&cat)) {
+    GstDebugCategory *c;
+
+    GST_DEBUG_CATEGORY_GET (c, "GST_PERFORMANCE");
+    g_once_init_leave (&cat, c);
+  }
+  return cat;
+}
 
 /**
  * gst_video_frame_map_id:
@@ -316,8 +330,7 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
   } else {
     guint j;
 
-    GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy plane %d, w:%d h:%d ", plane, w,
-        h);
+    GST_CAT_DEBUG (CAT_PERFORMANCE, "copy plane %d, w:%d h:%d ", plane, w, h);
 
     for (j = 0; j < h; j++) {
       memcpy (dp, sp, w);

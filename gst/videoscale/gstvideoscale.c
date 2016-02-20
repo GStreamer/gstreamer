@@ -80,7 +80,7 @@
 
 #define GST_CAT_DEFAULT video_scale_debug
 GST_DEBUG_CATEGORY_STATIC (video_scale_debug);
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
+GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 
 #define DEFAULT_PROP_METHOD       GST_VIDEO_SCALE_BILINEAR
 #define DEFAULT_PROP_ADD_BORDERS  TRUE
@@ -517,7 +517,7 @@ gst_video_scale_set_info (GstVideoFilter * filter, GstCaps * in,
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
   } else {
     GstStructure *options;
-    GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, filter, "setup videoscaling");
+    GST_CAT_DEBUG_OBJECT (CAT_PERFORMANCE, filter, "setup videoscaling");
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), FALSE);
 
     options = gst_structure_new_empty ("videoscale");
@@ -1079,7 +1079,7 @@ gst_video_scale_transform_frame (GstVideoFilter * filter,
   GstVideoScale *videoscale = GST_VIDEO_SCALE_CAST (filter);
   GstFlowReturn ret = GST_FLOW_OK;
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, filter, "doing video scaling");
+  GST_CAT_DEBUG_OBJECT (CAT_PERFORMANCE, filter, "doing video scaling");
 
   gst_video_converter_frame (videoscale->convert, in_frame, out_frame);
 
@@ -1134,7 +1134,7 @@ plugin_init (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (video_scale_debug, "videoscale", 0,
       "videoscale element");
-  GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
+  GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 
   return TRUE;
 }

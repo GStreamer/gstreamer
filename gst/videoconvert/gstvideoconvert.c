@@ -49,7 +49,7 @@
 
 GST_DEBUG_CATEGORY (videoconvert_debug);
 #define GST_CAT_DEFAULT videoconvert_debug
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
+GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 
 GType gst_video_convert_get_type (void);
 
@@ -684,7 +684,7 @@ gst_video_convert_transform_frame (GstVideoFilter * filter,
 
   space = GST_VIDEO_CONVERT_CAST (filter);
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, filter,
+  GST_CAT_DEBUG_OBJECT (CAT_PERFORMANCE, filter,
       "doing colorspace conversion from %s -> to %s",
       GST_VIDEO_INFO_NAME (&filter->in_info),
       GST_VIDEO_INFO_NAME (&filter->out_info));
@@ -699,6 +699,8 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (videoconvert_debug, "videoconvert", 0,
       "Colorspace Converter");
+
+  GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 
   _colorspace_quark = g_quark_from_static_string ("colorspace");
 

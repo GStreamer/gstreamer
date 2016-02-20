@@ -25,7 +25,7 @@
 
 GST_DEBUG_CATEGORY (gst_debug_x_image_pool);
 GST_DEBUG_CATEGORY (gst_debug_x_image_sink);
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
+GST_DEBUG_CATEGORY (CAT_PERFORMANCE);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -39,7 +39,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_debug_x_image_pool, "ximagepool", 0,
       "ximagepool object");
 
-  GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
+  GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 
   return TRUE;
 }
