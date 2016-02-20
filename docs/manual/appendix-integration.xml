@@ -184,8 +184,7 @@ main (gint argc, gchar **argv)
       &GStreamer; has been proposed for inclusion in KDE-4.0. Currently,
       &GStreamer; is included as an optional component, and it's used by
       several KDE applications, including <ulink type="http"
-      url="http://amarok.kde.org/">AmaroK</ulink>, <ulink type="http"
-      url="http://developer.kde.org/~wheeler/juk.html">JuK</ulink>,
+      url="http://amarok.kde.org/">AmaroK</ulink>,
       <ulink type="http"
       url="http://www.xs4all.nl/~jjvrieze/kmplayer.html">KMPlayer</ulink> and
       <ulink type="http"
