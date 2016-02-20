@@ -46,8 +46,8 @@ typedef gint mpeg2_state_t;
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (mpeg2dec_debug);
-#define GST_CAT_DEFAULT (mpeg2dec_debug)
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
+#define GST_CAT_DEFAULT mpeg2dec_debug
+GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 
 /* Send a warning message about decoding errors after receiving this many
  * STATE_INVALID return values from mpeg2_parse. -1 means never.
@@ -128,6 +128,7 @@ gst_mpeg2dec_class_init (GstMpeg2decClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (mpeg2dec_debug, "mpeg2dec", 0,
       "MPEG-2 Video Decoder");
+  GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 }
 
 static void
@@ -500,7 +501,7 @@ gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstVideoCodecFrame * in_frame,
   info = &state->info;
   dinfo = &dec->decoded_info;
 
-  GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, dec,
+  GST_CAT_LOG_OBJECT (CAT_PERFORMANCE, dec,
       "Copying input buffer %ux%u (%" G_GSIZE_FORMAT ") to output buffer "
       "%ux%u (%" G_GSIZE_FORMAT ")", dinfo->width, dinfo->height,
       dinfo->size, info->width, info->height, info->size);
