@@ -53,10 +53,13 @@ struct _GstKMSSink {
   gint crtc_id;
   gint plane_id;
 
+  /* crtc data */
   guint16 hdisplay, vdisplay;
+  guint32 buffer_id;
 
   /* capabilities */
   gboolean has_prime_import;
+  gboolean has_async_page_flip;
 
   GstVideoInfo vinfo;
   GstCaps *allowed_caps;
@@ -66,6 +69,9 @@ struct _GstKMSSink {
   gchar *devname;
 
   guint32 mm_width, mm_height;
+
+  GstPoll *poll;
+  GstPollFD pollfd;
 };
 
 struct _GstKMSSinkClass {

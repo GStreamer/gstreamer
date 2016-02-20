@@ -261,6 +261,7 @@ get_drm_caps (GstKMSSink * self)
   gint ret;
   guint64 has_dumb_buffer;
   guint64 has_prime;
+  guint64 has_async_page_flip;
 
   has_dumb_buffer = 0;
   ret = drmGetCap (self->fd, DRM_CAP_DUMB_BUFFER, &has_dumb_buffer);
@@ -278,8 +279,16 @@ get_drm_caps (GstKMSSink * self)
   else
     self->has_prime_import = (gboolean) (has_prime & DRM_PRIME_CAP_IMPORT);
 
-  GST_INFO_OBJECT (self, "prime import (%s)",
-      self->has_prime_import ? "✓" : "✗");
+  has_async_page_flip = 0;
+  ret = drmGetCap (self->fd, DRM_CAP_ASYNC_PAGE_FLIP, &has_async_page_flip);
+  if (ret)
+    GST_WARNING_OBJECT (self, "could not get async page flip capability");
+  else
+    self->has_async_page_flip = (gboolean) has_async_page_flip;
+
+  GST_INFO_OBJECT (self, "prime import (%s) / async page flip (%s)",
+      self->has_prime_import ? "✓" : "✗",
+      self->has_async_page_flip ? "✓" : "✗");
 
   return TRUE;
 }
@@ -392,12 +401,17 @@ gst_kms_sink_start (GstBaseSink * bsink)
 
   self->hdisplay = crtc->mode.hdisplay;
   self->vdisplay = crtc->mode.vdisplay;
+  self->buffer_id = crtc->buffer_id;
 
   self->mm_width = conn->mmWidth;
   self->mm_height = conn->mmHeight;
 
   GST_INFO_OBJECT (self, "display size: pixels = %dx%d / millimeters = %dx%d",
       self->hdisplay, self->vdisplay, self->mm_width, self->mm_height);
+
+  self->pollfd.fd = self->fd;
+  gst_poll_add_fd (self->poll, &self->pollfd);
+  gst_poll_fd_ctl_read (self->poll, &self->pollfd, TRUE);
 
   ret = TRUE;
 
@@ -471,6 +485,10 @@ gst_kms_sink_stop (GstBaseSink * bsink)
   gst_caps_replace (&self->allowed_caps, NULL);
   gst_object_replace ((GstObject **) & self->pool, NULL);
   gst_object_replace ((GstObject **) & self->allocator, NULL);
+
+  gst_poll_remove_fd (self->poll, &self->pollfd);
+  gst_poll_restart (self->poll);
+  gst_poll_fd_init (&self->pollfd);
 
   if (self->fd >= 0) {
     drmClose (self->fd);
@@ -748,6 +766,78 @@ gst_kms_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
   }
 }
 
+static void
+sync_handler (gint fd, guint frame, guint sec, guint usec, gpointer data)
+{
+  gboolean *waiting;
+
+  waiting = data;
+  *waiting = FALSE;
+}
+
+static gboolean
+gst_kms_sink_sync (GstKMSSink * self)
+{
+  gint ret;
+  gboolean waiting;
+  drmEventContext evctxt = {
+    .version = DRM_EVENT_CONTEXT_VERSION,
+    .page_flip_handler = sync_handler,
+    .vblank_handler = sync_handler,
+  };
+  drmVBlank vbl = {
+    .request = {
+          .type = DRM_VBLANK_RELATIVE | DRM_VBLANK_EVENT,
+          .sequence = 1,
+          .signal = (gulong) & waiting,
+        },
+  };
+
+  waiting = TRUE;
+  if (!self->has_async_page_flip) {
+    ret = drmWaitVBlank (self->fd, &vbl);
+    if (ret)
+      goto vblank_failed;
+  } else {
+    ret = drmModePageFlip (self->fd, self->crtc_id, self->buffer_id,
+        DRM_MODE_PAGE_FLIP_EVENT, &waiting);
+    if (ret)
+      goto pageflip_failed;
+  }
+
+  while (waiting) {
+    do {
+      ret = gst_poll_wait (self->poll, 3 * GST_SECOND);
+    } while (ret == -1 && (errno == EAGAIN || errno == EINTR));
+
+    ret = drmHandleEvent (self->fd, &evctxt);
+    if (ret)
+      goto event_failed;
+  }
+
+  return TRUE;
+
+  /* ERRORS */
+vblank_failed:
+  {
+    GST_WARNING_OBJECT (self, "drmWaitVBlank failed: %s (%d)", strerror (-ret),
+        ret);
+    return FALSE;
+  }
+pageflip_failed:
+  {
+    GST_WARNING_OBJECT (self, "drmModePageFlip failed: %s (%d)",
+        strerror (-ret), ret);
+    return FALSE;
+  }
+event_failed:
+  {
+    GST_ERROR_OBJECT (self, "drmHandleEvent failed: %s (%d)", strerror (-ret),
+        ret);
+    return FALSE;
+  }
+}
+
 static GstMemory *
 get_cached_kmsmem (GstMemory * mem)
 {
@@ -961,8 +1051,11 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   GstVideoRectangle src = { 0, };
   GstVideoRectangle dst = { 0, };
   GstVideoRectangle result;
+  GstFlowReturn res;
 
   self = GST_KMS_SINK (vsink);
+
+  res = GST_FLOW_ERROR;
 
   buffer = gst_kms_sink_get_input_buffer (self, buf);
   if (!buffer)
@@ -999,19 +1092,24 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
       result.x, result.y, result.w, result.h,
       /* source/cropping coordinates are given in Q16 */
       src.x << 16, src.y << 16, src.w << 16, src.h << 16);
-
-  gst_buffer_unref (buffer);
-
   if (ret)
     goto set_plane_failed;
 
-  return GST_FLOW_OK;
+  /* Wait for the previous frame to complete redraw */
+  if (!gst_kms_sink_sync (self))
+    goto bail;
+
+  res = GST_FLOW_OK;
+
+bail:
+  gst_buffer_unref (buffer);
+  return res;
 
   /* ERRORS */
 buffer_invalid:
   {
     GST_ERROR_OBJECT (self, "invalid buffer: it doesn't have a fb id");
-    return GST_FLOW_ERROR;
+    goto bail;
   }
 set_plane_failed:
   {
@@ -1021,7 +1119,7 @@ set_plane_failed:
         dst.h);
     GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
         (NULL), ("drmModeSetPlane failed: %s (%d)", strerror (-ret), ret));
-    return GST_FLOW_ERROR;
+    goto bail;
   }
 }
 
@@ -1074,6 +1172,7 @@ gst_kms_sink_finalize (GObject * object)
 
   sink = GST_KMS_SINK (object);
   g_clear_pointer (&sink->devname, g_free);
+  gst_poll_free (sink->poll);
 }
 
 static void
@@ -1081,6 +1180,8 @@ gst_kms_sink_init (GstKMSSink * sink)
 {
   sink->fd = -1;
   sink->conn_id = -1;
+  gst_poll_fd_init (&sink->pollfd);
+  sink->poll = gst_poll_new (TRUE);
   gst_video_info_init (&sink->vinfo);
 }
 
