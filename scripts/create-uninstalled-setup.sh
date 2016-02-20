@@ -68,6 +68,8 @@ elif ! bison --version 2>/dev/null >/dev/null; then
   DEPS_OK="no"
 elif ! flex --version 2>/dev/null >/dev/null; then
   DEPS_OK="no"
+elif ! git --version 2>/dev/null >/dev/null; then
+  DEPS_OK="no"
 else
   DEPS_OK="yes"
 fi
@@ -77,7 +79,7 @@ echo "==========================================================================
 echo ""
 echo "  Some very basic build tools or dependencies are missing."
 echo ""
-echo "  Please install the following tools: pkg-config, bison, flex"
+echo "  Please install the following tools: pkg-config, bison, flex, git"
 echo ""
 echo "  and the following libraries: GLib (libglib2.0-dev or glib2-devel)"
 echo "                           and Orc  (liborc-0.4-dev or orc-devel)"
