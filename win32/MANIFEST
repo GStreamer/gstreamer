@@ -1,6 +1,0 @@
-win32/MANIFEST
-win32/common/config.h
-win32/common/config.h.in
-win32/vs6/gst_python.dsw
-win32/vs6/libgstpython.dsp
-win32/vs6/pygenfiles.dsp
