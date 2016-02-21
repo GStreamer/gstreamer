@@ -1,9 +1,2 @@
 win32/MANIFEST
 win32/common/config.h
-win32/vs6/gst_plugins_bad.dsw
-win32/vs6/libgstdshow.dsp
-win32/vs6/libgstdshowdecwrapper.dsp
-win32/vs6/libgstflv.dsp
-win32/vs6/libgstmpegvideoparse.dsp
-win32/vs6/libgstneon.dsp
-win32/vs8/gst-plugins-bad.sln
