@@ -4,14 +4,9 @@ COMMON_SUBDIRS = ext docs common tests
 SUBDIRS = $(LIBAV_SUBDIRS) $(COMMON_SUBDIRS) pkgconfig
 DIST_SUBDIRS = $(COMMON_SUBDIRS) gst-libs pkgconfig
 
-# include before EXTRA_DIST for win32 assignment
-include $(top_srcdir)/common/win32.mak
-
 EXTRA_DIST = \
 	gst-libav.spec depcomp autogen.sh \
-	AUTHORS COPYING NEWS README ChangeLog gst-libav.doap \
-	$(win32)
-
+	AUTHORS COPYING NEWS README ChangeLog gst-libav.doap
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
 include $(top_srcdir)/common/release.mak
