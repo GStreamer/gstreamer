@@ -1,10 +1,2 @@
 win32/MANIFEST
 win32/common/config.h
-win32/vs6/gst_plugins_ugly.dsw
-win32/vs6/libgstasfdemux.dsp
-win32/vs6/libgstdvdlpcmdec.dsp
-win32/vs6/libgstdvdsub.dsp
-win32/vs6/libgstlame.dsp
-win32/vs6/libgstmad.dsp
-win32/vs6/libgstrealmedia.dsp
-win32/vs6/libgstsynaesthesia.dsp
