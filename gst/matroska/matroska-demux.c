@@ -1295,7 +1295,8 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
 
   stream_id =
       gst_pad_create_stream_id_printf (context->pad, GST_ELEMENT_CAST (demux),
-      "%03" G_GUINT64_FORMAT, context->uid);
+      "%03" G_GUINT64_FORMAT ":%03" G_GUINT64_FORMAT,
+      context->num, context->uid);
   stream_start =
       gst_pad_get_sticky_event (demux->common.sinkpad, GST_EVENT_STREAM_START,
       0);
