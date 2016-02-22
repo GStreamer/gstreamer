@@ -3721,10 +3721,12 @@ gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf)
   if (g_ascii_isdigit (ptr[0])) {
     gst_avi_demux_parse_idit_nums_only (avi, safedata);
     g_free (safedata);
+    gst_buffer_unmap (buf, &map);
     return;
   } else if (g_ascii_isalpha (ptr[0])) {
     gst_avi_demux_parse_idit_text (avi, safedata);
     g_free (safedata);
+    gst_buffer_unmap (buf, &map);
     return;
   }
 
