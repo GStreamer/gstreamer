@@ -310,44 +310,31 @@ static inline void
 inner_product_gfloat_linear_1_neon (gfloat * o, const gfloat * a,
     const gfloat * b, gint len, const gfloat * icoeff)
 {
-    uint32_t remainder = len % 8;
-    len = len - remainder;
-
     asm volatile ("      vmov.f32 q0, #0.0\n"
                   "      cmp %[len], #0\n"
                   "      beq 2f\n"
                   "      vmov.f32 q1, #0.0\n"
                   "1:"
-                  "      vld2.f32 {q4, q5}, [%[b]]!\n"
-                  "      vld2.f32 {q6, q7}, [%[b]]!\n"
-                  "      vld1.f32 {q8, q9}, [%[a]]!\n"
-                  "      subs %[len], %[len], #8\n"
-                  "      vmla.f32 q0, q4, q8\n"
-                  "      vmla.f32 q1, q5, q8\n"
-                  "      vmla.f32 q0, q6, q9\n"
-                  "      vmla.f32 q1, q7, q9\n"
+                  "      vld1.f32 {d16, d17, d18, d19}, [%[b]]!\n"
+                  "      vld2.f32 {d20[], d21[]}, [%[a]]!\n"
+                  "      vld2.f32 {d22[], d23[]}, [%[a]]!\n"
+                  "      subs %[len], %[len], #4\n"
+                  "      vmla.f32 q0, q8, q10\n"
+                  "      vmla.f32 q1, q9, q11\n"
                   "      bne 1b\n"
                   "      vadd.f32 q0, q0, q1\n"
                   "2:"
-                  "      cmp %[remainder], #0\n"
-                  "      beq 4f\n"
-                  "3:"
-                  "      vld2.f32 {q4}, [%[b]]!\n"
-                  "      vld1.f32 {q8}, [%[a]]!\n"
-                  "      subs %[remainder], %[remainder], #4\n"
-                  "      vmla.f32 q0, q4, q8\n"
-                  "      bne 3b\n"
-                  "4:"
                   "      vld1.f32 {q10}, [%[ic]]\n"
                   "      vmul.f32 q0, q0, q10\n"
                   "      vadd.f32 d0, d0, d1\n"
                   "      vpadd.f32 d0, d0, d0\n"
                   "      vst1.f32 d0[0], [%[o]]\n"
                   : [a] "+r" (a), [b] "+r" (b),
-                    [len] "+r" (len), [remainder] "+r" (remainder)
+                    [len] "+r" (len)
                   : [o] "r" (o), [ic] "r" (icoeff)
-                  : "cc", "q0", "q1", "q4", "q5", "q6", "q7", "q8",
-                    "q9", "q10", "q11", "memory");
+                  : "cc", "q0", "q1",
+                    "d16", "d17", "d18", "d19",
+                    "d20", "d21", "d22", "d23", "memory");
 }
 
 static inline void
