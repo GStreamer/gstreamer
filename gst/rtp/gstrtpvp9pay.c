@@ -308,6 +308,7 @@ gst_rtp_vp9_calc_header_len (GstRtpVP9Pay * self, gboolean start)
   switch (self->picture_id_mode) {
     case VP9_PAY_PICTURE_ID_7BITS:
       len += 1;
+      break;
     case VP9_PAY_PICTURE_ID_15BITS:
       len += 2;
     default:
