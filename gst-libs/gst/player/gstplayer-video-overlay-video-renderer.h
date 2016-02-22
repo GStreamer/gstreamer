@@ -44,6 +44,10 @@ GstPlayerVideoRenderer * gst_player_video_overlay_video_renderer_new (gpointer w
 void gst_player_video_overlay_video_renderer_set_window_handle (GstPlayerVideoOverlayVideoRenderer * self, gpointer window_handle);
 gpointer gst_player_video_overlay_video_renderer_get_window_handle (GstPlayerVideoOverlayVideoRenderer * self);
 
+void gst_player_video_overlay_video_renderer_expose (GstPlayerVideoOverlayVideoRenderer * self);
+void gst_player_video_overlay_video_renderer_set_render_rectangle (GstPlayerVideoOverlayVideoRenderer * self, gint x, gint y, gint width, gint height);
+void gst_player_video_overlay_video_renderer_get_render_rectangle (GstPlayerVideoOverlayVideoRenderer * self, gint *x, gint *y, gint *width, gint *height);
+
 G_END_DECLS
 
 #endif /* __GST_PLAYER_VIDEO_OVERLAY_VIDEO_RENDERER_H__ */

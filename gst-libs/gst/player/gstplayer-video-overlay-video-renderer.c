@@ -39,6 +39,7 @@ struct _GstPlayerVideoOverlayVideoRenderer
 
   GstVideoOverlay *video_overlay;
   gpointer window_handle;
+  gint x, y, width, height;
 };
 
 struct _GstPlayerVideoOverlayVideoRendererClass
@@ -141,8 +142,9 @@ static void
 
 static void
     gst_player_video_overlay_video_renderer_init
-    (G_GNUC_UNUSED GstPlayerVideoOverlayVideoRenderer * self)
+    (GstPlayerVideoOverlayVideoRenderer * self)
 {
+  self->x = self->y = self->width = self->height = -1;
 }
 
 static GstElement *gst_player_video_overlay_video_renderer_create_video_sink
@@ -162,6 +164,9 @@ static GstElement *gst_player_video_overlay_video_renderer_create_video_sink
 
   gst_video_overlay_set_window_handle (self->video_overlay,
       (guintptr) self->window_handle);
+  if (self->width != -1 || self->height != -1)
+    gst_video_overlay_set_render_rectangle (self->video_overlay, self->x,
+        self->y, self->width, self->height);
 
   return NULL;
 }
@@ -221,4 +226,84 @@ gpointer
   g_object_get (self, "window-handle", &window_handle, NULL);
 
   return window_handle;
+}
+
+/**
+ * gst_player_video_overlay_video_renderer_expose:
+ * @self: a #GstPlayerVideoOverlayVideoRenderer instance.
+ *
+ * Tell an overlay that it has been exposed. This will redraw the current frame
+ * in the drawable even if the pipeline is PAUSED.
+ */
+void gst_player_video_overlay_video_renderer_expose
+    (GstPlayerVideoOverlayVideoRenderer * self)
+{
+  g_return_if_fail (GST_IS_PLAYER_VIDEO_OVERLAY_VIDEO_RENDERER (self));
+
+  if (self->video_overlay)
+    gst_video_overlay_expose (self->video_overlay);
+}
+
+/**
+ * gst_player_video_overlay_video_renderer_set_render_rectangle:
+ * @self: a #GstPlayerVideoOverlayVideoRenderer instance
+ * @x: the horizontal offset of the render area inside the window
+ * @y: the vertical offset of the render area inside the window
+ * @width: the width of the render area inside the window
+ * @height: the height of the render area inside the window
+ *
+ * Configure a subregion as a video target within the window set by
+ * gst_player_video_overlay_video_renderer_set_window_handle(). If this is not
+ * used or not supported the video will fill the area of the window set as the
+ * overlay to 100%. By specifying the rectangle, the video can be overlayed to
+ * a specific region of that window only. After setting the new rectangle one
+ * should call gst_player_video_overlay_video_renderer_expose() to force a
+ * redraw. To unset the region pass -1 for the @width and @height parameters.
+ *
+ * This method is needed for non fullscreen video overlay in UI toolkits that
+ * do not support subwindows.
+ *
+ */
+void gst_player_video_overlay_video_renderer_set_render_rectangle
+    (GstPlayerVideoOverlayVideoRenderer * self, gint x, gint y, gint width,
+    gint height)
+{
+  g_return_if_fail (GST_IS_PLAYER_VIDEO_OVERLAY_VIDEO_RENDERER (self));
+
+  self->x = x;
+  self->y = y;
+  self->width = width;
+  self->height = height;
+
+  if (self->video_overlay)
+    gst_video_overlay_set_render_rectangle (self->video_overlay,
+        x, y, width, height);
+}
+
+/**
+ * gst_player_video_overlay_video_renderer_get_render_rectangle:
+ * @self: a #GstPlayerVideoOverlayVideoRenderer instance
+ * @x: (out) (allow-none): the horizontal offset of the render area inside the window
+ * @y: (out) (allow-none): the vertical offset of the render area inside the window
+ * @width: (out) (allow-none): the width of the render area inside the window
+ * @height: (out) (allow-none): the height of the render area inside the window
+ *
+ * Return the currently configured render rectangle. See gst_player_video_overlay_video_renderer_set_render_rectangle()
+ * for details.
+ *
+ */
+void gst_player_video_overlay_video_renderer_get_render_rectangle
+    (GstPlayerVideoOverlayVideoRenderer * self, gint * x, gint * y,
+    gint * width, gint * height)
+{
+  g_return_if_fail (GST_IS_PLAYER_VIDEO_OVERLAY_VIDEO_RENDERER (self));
+
+  if (x)
+    *x = self->x;
+  if (y)
+    *y = self->y;
+  if (width)
+    *width = self->width;
+  if (height)
+    *height = self->height;
 }
