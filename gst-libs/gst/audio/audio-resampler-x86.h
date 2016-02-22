@@ -104,6 +104,59 @@ inner_product_gfloat_cubic_1_sse (gfloat * o, const gfloat * a,
 MAKE_RESAMPLE_FUNC (gfloat, full, 1, sse);
 MAKE_RESAMPLE_FUNC (gfloat, linear, 1, sse);
 MAKE_RESAMPLE_FUNC (gfloat, cubic, 1, sse);
+
+static void
+interpolate_gfloat_linear_sse (gpointer op, const gpointer ap,
+    gint len, const gpointer icp, gint astride)
+{
+  gint i;
+  gfloat *o = op, *a = ap, *ic = icp;
+  __m128 f[2], t1, t2;
+  const gfloat *c[2] = {(gfloat*)((gint8*)a + 0*astride),
+                        (gfloat*)((gint8*)a + 1*astride)};
+
+  f[0] = _mm_load1_ps (ic+0);
+  f[1] = _mm_load1_ps (ic+1);
+
+  for (i = 0; i < len; i += 8) {
+    t1 = _mm_mul_ps (_mm_load_ps (c[0] + i + 0), f[0]);
+    t2 = _mm_mul_ps (_mm_load_ps (c[1] + i + 0), f[1]);
+    _mm_store_ps (o + i + 0, _mm_add_ps (t1, t2));
+
+    t1 = _mm_mul_ps (_mm_load_ps (c[0] + i + 4), f[0]);
+    t2 = _mm_mul_ps (_mm_load_ps (c[1] + i + 4), f[1]);
+    _mm_store_ps (o + i + 4, _mm_add_ps (t1, t2));
+  }
+}
+
+static void
+interpolate_gfloat_cubic_sse (gpointer op, const gpointer ap,
+    gint len, const gpointer icp, gint astride)
+{
+  gint i;
+  gfloat *o = op, *a = ap, *ic = icp;
+  __m128 f[4], t[4];
+  const gfloat *c[4] = {(gfloat*)((gint8*)a + 0*astride),
+                        (gfloat*)((gint8*)a + 1*astride),
+                        (gfloat*)((gint8*)a + 2*astride),
+                        (gfloat*)((gint8*)a + 3*astride)};
+
+  f[0] = _mm_load1_ps (ic+0);
+  f[1] = _mm_load1_ps (ic+1);
+  f[2] = _mm_load1_ps (ic+2);
+  f[3] = _mm_load1_ps (ic+3);
+
+  for (i = 0; i < len; i += 4) {
+    t[0] = _mm_mul_ps (_mm_load_ps (c[0] + i + 0), f[0]);
+    t[1] = _mm_mul_ps (_mm_load_ps (c[1] + i + 0), f[1]);
+    t[2] = _mm_mul_ps (_mm_load_ps (c[2] + i + 0), f[2]);
+    t[3] = _mm_mul_ps (_mm_load_ps (c[3] + i + 0), f[3]);
+    t[0] = _mm_add_ps (t[0], t[1]);
+    t[2] = _mm_add_ps (t[2], t[3]);
+    _mm_store_ps (o + i + 0, _mm_add_ps (t[0], t[2]));
+  }
+}
+
 #endif
 
 #if defined (HAVE_EMMINTRIN_H) && defined(__SSE2__)
@@ -113,12 +166,12 @@ static inline void
 inner_product_gint16_full_1_sse2 (gint16 * o, const gint16 * a,
     const gint16 * b, gint len, const gint16 * icoeff, gint bstride)
 {
-  gint i = 0;
+  gint i;
   __m128i sum, t;
 
   sum = _mm_setzero_si128 ();
 
-  for (; i < len; i += 8) {
+  for (i = 0; i < len; i += 8) {
     t = _mm_loadu_si128 ((__m128i *) (a + i));
     sum = _mm_add_epi32 (sum, _mm_madd_epi16 (t, _mm_load_si128 ((__m128i *) (b + i))));
   }
@@ -302,17 +355,93 @@ MAKE_RESAMPLE_FUNC (gdouble, full, 1, sse2);
 MAKE_RESAMPLE_FUNC (gdouble, linear, 1, sse2);
 MAKE_RESAMPLE_FUNC (gdouble, cubic, 1, sse2);
 
+static inline void
+interpolate_gint16_linear_sse2 (gpointer op, const gpointer ap,
+    gint len, const gpointer icp, gint astride)
+{
+  gint i = 0;
+  gint16 *o = op, *a = ap, *ic = icp;
+  __m128i ta, tb, t1, t2;
+  __m128i f = _mm_cvtsi64_si128 (*((gint64*)ic));
+  const gint16 *c[2] = {(gint16*)((gint8*)a + 0*astride),
+                        (gint16*)((gint8*)a + 1*astride)};
+
+  f = _mm_unpacklo_epi32 (f, f);
+  f = _mm_unpacklo_epi64 (f, f);
+
+  for (; i < len; i += 8) {
+    ta = _mm_load_si128 ((__m128i *) (c[0] + i));
+    tb = _mm_load_si128 ((__m128i *) (c[1] + i));
+
+    t1 = _mm_madd_epi16 (_mm_unpacklo_epi16 (ta, tb), f);
+    t2 = _mm_madd_epi16 (_mm_unpackhi_epi16 (ta, tb), f);
+
+    t1 = _mm_add_epi32 (t1, _mm_set1_epi32 (1 << (PRECISION_S16 - 1)));
+    t2 = _mm_add_epi32 (t2, _mm_set1_epi32 (1 << (PRECISION_S16 - 1)));
+
+    t1 = _mm_srai_epi32 (t1, PRECISION_S16);
+    t2 = _mm_srai_epi32 (t2, PRECISION_S16);
+
+    t1 = _mm_packs_epi32 (t1, t2);
+    _mm_store_si128 ((__m128i *) (o + i), t1);
+  }
+}
+
+static inline void
+interpolate_gint16_cubic_sse2 (gpointer op, const gpointer ap,
+    gint len, const gpointer icp, gint astride)
+{
+  gint i = 0;
+  gint16 *o = op, *a = ap, *ic = icp;
+  __m128i ta, tb, tl1, tl2, th1, th2;
+  __m128i f[2];
+  const gint16 *c[4] = {(gint16*)((gint8*)a + 0*astride),
+                        (gint16*)((gint8*)a + 1*astride),
+                        (gint16*)((gint8*)a + 2*astride),
+                        (gint16*)((gint8*)a + 3*astride)};
+
+  f[0] = _mm_set_epi16 (ic[1], ic[0], ic[1], ic[0], ic[1], ic[0], ic[1], ic[0]);
+  f[1] = _mm_set_epi16 (ic[3], ic[2], ic[3], ic[2], ic[3], ic[2], ic[3], ic[2]);
+
+  for (; i < len; i += 8) {
+    ta = _mm_load_si128 ((__m128i *) (c[0] + i));
+    tb = _mm_load_si128 ((__m128i *) (c[1] + i));
+
+    tl1 = _mm_madd_epi16 (_mm_unpacklo_epi16 (ta, tb), f[0]);
+    th1 = _mm_madd_epi16 (_mm_unpackhi_epi16 (ta, tb), f[0]);
+
+    ta = _mm_load_si128 ((__m128i *) (c[2] + i));
+    tb = _mm_load_si128 ((__m128i *) (c[3] + i));
+
+    tl2 = _mm_madd_epi16 (_mm_unpacklo_epi16 (ta, tb), f[1]);
+    th2 = _mm_madd_epi16 (_mm_unpackhi_epi16 (ta, tb), f[1]);
+
+    tl1 = _mm_add_epi32 (tl1, tl2);
+    th1 = _mm_add_epi32 (th1, th2);
+
+    tl1 = _mm_add_epi32 (tl1, _mm_set1_epi32 (1 << (PRECISION_S16 - 1)));
+    th1 = _mm_add_epi32 (th1, _mm_set1_epi32 (1 << (PRECISION_S16 - 1)));
+
+    tl1 = _mm_srai_epi32 (tl1, PRECISION_S16);
+    th1 = _mm_srai_epi32 (th1, PRECISION_S16);
+
+    tl1 = _mm_packs_epi32 (tl1, th1);
+    _mm_store_si128 ((__m128i *) (o + i), tl1);
+  }
+}
+
 static void
-interpolate_gdouble_linear_sse2 (gdouble * o, const gdouble * a,
-    gint len, const gdouble * icoeff, gint astride)
+interpolate_gdouble_linear_sse2 (gpointer op, const gpointer ap,
+    gint len, const gpointer icp, gint astride)
 {
   gint i;
+  gdouble *o = op, *a = ap, *ic = icp;
   __m128d f[2], t1, t2;
   const gdouble *c[2] = {(gdouble*)((gint8*)a + 0*astride),
                          (gdouble*)((gint8*)a + 1*astride)};
 
-  f[0] = _mm_load1_pd (icoeff+0);
-  f[1] = _mm_load1_pd (icoeff+1);
+  f[0] = _mm_load1_pd (ic+0);
+  f[1] = _mm_load1_pd (ic+1);
 
   for (i = 0; i < len; i += 4) {
     t1 = _mm_mul_pd (_mm_load_pd (c[0] + i + 0), f[0]);
@@ -326,20 +455,21 @@ interpolate_gdouble_linear_sse2 (gdouble * o, const gdouble * a,
 }
 
 static void
-interpolate_gdouble_cubic_sse2 (gdouble * o, const gdouble * a,
-    gint len, const gdouble * icoeff, gint astride)
+interpolate_gdouble_cubic_sse2 (gpointer op, const gpointer ap,
+    gint len, const gpointer icp, gint astride)
 {
   gint i;
+  gdouble *o = op, *a = ap, *ic = icp;
   __m128d f[4], t[4];
   const gdouble *c[4] = {(gdouble*)((gint8*)a + 0*astride),
                          (gdouble*)((gint8*)a + 1*astride),
                          (gdouble*)((gint8*)a + 2*astride),
                          (gdouble*)((gint8*)a + 3*astride)};
 
-  f[0] = _mm_load1_pd (icoeff+0);
-  f[1] = _mm_load1_pd (icoeff+1);
-  f[2] = _mm_load1_pd (icoeff+2);
-  f[3] = _mm_load1_pd (icoeff+3);
+  f[0] = _mm_load1_pd (ic+0);
+  f[1] = _mm_load1_pd (ic+1);
+  f[2] = _mm_load1_pd (ic+2);
+  f[3] = _mm_load1_pd (ic+3);
 
   for (i = 0; i < len; i += 2) {
     t[0] = _mm_mul_pd (_mm_load_pd (c[0] + i + 0), f[0]);
@@ -509,6 +639,9 @@ audio_resampler_check_x86 (const gchar *option)
     resample_gfloat_full_1 = resample_gfloat_full_1_sse;
     resample_gfloat_linear_1 = resample_gfloat_linear_1_sse;
     resample_gfloat_cubic_1 = resample_gfloat_cubic_1_sse;
+
+    interpolate_gfloat_linear = interpolate_gfloat_linear_sse;
+    interpolate_gfloat_cubic = interpolate_gfloat_cubic_sse;
 #else
     GST_DEBUG ("SSE optimisations not enabled");
 #endif
@@ -518,6 +651,9 @@ audio_resampler_check_x86 (const gchar *option)
     resample_gint16_full_1 = resample_gint16_full_1_sse2;
     resample_gint16_linear_1 = resample_gint16_linear_1_sse2;
     resample_gint16_cubic_1 = resample_gint16_cubic_1_sse2;
+
+    interpolate_gint16_linear = interpolate_gint16_linear_sse2;
+    interpolate_gint16_cubic = interpolate_gint16_cubic_sse2;
 
     resample_gdouble_full_1 = resample_gdouble_full_1_sse2;
     resample_gdouble_linear_1 = resample_gdouble_linear_1_sse2;
