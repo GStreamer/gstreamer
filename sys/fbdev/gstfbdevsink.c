@@ -227,7 +227,7 @@ gst_fbdevsink_setcaps (GstBaseSink * bsink, GstCaps * vscapslist)
   gst_structure_get_int (structure, "height", &fbdevsink->height);
 
   /* calculate centering and scanlengths for the video */
-  fbdevsink->bytespp = fbdevsink->fixinfo.line_length / fbdevsink->varinfo.xres;
+  fbdevsink->bytespp = fbdevsink->fixinfo.line_length / fbdevsink->varinfo.xres_virtual;
 
   fbdevsink->cx = ((int) fbdevsink->varinfo.xres - fbdevsink->width) / 2;
   if (fbdevsink->cx < 0)
