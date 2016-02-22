@@ -627,8 +627,10 @@ gst_multi_file_sink_write_buffer (GstMultiFileSink * multifilesink,
           "Writing buffer data (%" G_GSIZE_FORMAT " bytes) to new file",
           map.size);
       ret = fwrite (map.data, map.size, 1, multifilesink->file);
-      if (ret != 1)
+      if (ret != 1) {
+        gst_multi_file_sink_close_file (multifilesink, NULL);
         goto stdio_write_error;
+      }
 
       gst_multi_file_sink_close_file (multifilesink, buffer);
       break;
