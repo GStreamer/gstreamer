@@ -595,7 +595,7 @@ gst_matroska_pad_reset (GstMatroskaPad * collect_pad, gboolean full)
 
     context->type = type;
     context->name = name;
-    context->track_uid = gst_matroska_mux_create_uid (collect_pad->mux);
+    context->uid = gst_matroska_mux_create_uid (collect_pad->mux);
     /* TODO: check default values for the context */
     context->flags = GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT;
     collect_pad->track = context;
@@ -2387,7 +2387,7 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKNUMBER, context->num);
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKTYPE, context->type);
 
-  gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKUID, context->track_uid);
+  gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKUID, context->uid);
   if (context->default_duration) {
     gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKDEFAULTDURATION,
         context->default_duration);
@@ -2978,8 +2978,7 @@ gst_matroska_mux_write_stream_tags (GstMatroskaMux * mux, GstMatroskaPad * mpad)
   master_tag = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TAG);
   master_targets = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TARGETS);
 
-  gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TARGETTRACKUID,
-      mpad->track->track_uid);
+  gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TARGETTRACKUID, mpad->track->uid);
 
   gst_ebml_write_master_finish (ebml, master_targets);
   gst_tag_list_foreach (mpad->tags, gst_matroska_mux_write_simple_tag, ebml);

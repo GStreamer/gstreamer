@@ -522,7 +522,6 @@ struct _GstMatroskaTrackContext {
   gint          index_writer_id;
 
   /* some often-used info */
-  guint64       track_uid;
   gchar        *codec_id, *codec_name, *name, *language;
   gpointer      codec_priv;
   gsize         codec_priv_size;
