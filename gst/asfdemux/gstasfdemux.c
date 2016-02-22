@@ -3748,10 +3748,10 @@ gst_asf_demux_process_bitrate_props_object (GstASFDemux * demux, guint8 * data,
       GST_DEBUG_OBJECT (demux, "bitrate of stream %u = %u", stream_id, bitrate);
       stream = gst_asf_demux_get_stream (demux, stream_id);
       if (stream) {
-        if (stream->pending_tags == NULL) {
-          stream->pending_tags =
-              gst_tag_list_new (GST_TAG_BITRATE, bitrate, NULL);
-        }
+        if (stream->pending_tags == NULL)
+          stream->pending_tags = gst_tag_list_new_empty ();
+        gst_tag_list_add (stream->pending_tags, GST_TAG_MERGE_REPLACE,
+            GST_TAG_BITRATE, bitrate, NULL);
       } else {
         GST_WARNING_OBJECT (demux, "Stream id %u wasn't found", stream_id);
       }
