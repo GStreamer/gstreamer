@@ -489,11 +489,31 @@ gst_gl_base_mixer_decide_allocation (GstGLBaseMixer * mix, GstQuery * query)
     GST_OBJECT_UNLOCK (mix->display);
   }
 
+  {
+    GstGLAPI current_gl_api = gst_gl_context_get_gl_api (mix->context);
+    if ((current_gl_api & mix_class->supported_gl_api) == 0)
+      goto unsupported_gl_api;
+  }
+
   if (mix_class->decide_allocation)
     ret = mix_class->decide_allocation (mix, query);
 
   return ret;
 
+unsupported_gl_api:
+  {
+    GstGLAPI gl_api = gst_gl_context_get_gl_api (mix->context);
+    gchar *gl_api_str = gst_gl_api_to_string (gl_api);
+    gchar *supported_gl_api_str =
+        gst_gl_api_to_string (mix_class->supported_gl_api);
+    GST_ELEMENT_ERROR (mix, RESOURCE, BUSY,
+        ("GL API's not compatible context: %s supported: %s", gl_api_str,
+            supported_gl_api_str), (NULL));
+
+    g_free (supported_gl_api_str);
+    g_free (gl_api_str);
+    return FALSE;
+  }
 context_error:
   {
     GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("%s", error->message),

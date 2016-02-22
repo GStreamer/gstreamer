@@ -50,7 +50,8 @@ enum
 #define gst_gl_base_filter_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLBaseFilter, gst_gl_base_filter,
     GST_TYPE_BASE_TRANSFORM, GST_DEBUG_CATEGORY_INIT (gst_gl_base_filter_debug,
-        "glbasefilter", 0, "glbasefilter element"););
+        "glbasefilter", 0, "glbasefilter element");
+    );
 
 static void gst_gl_base_filter_finalize (GObject * object);
 static void gst_gl_base_filter_set_property (GObject * object, guint prop_id,
@@ -357,6 +358,7 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
     GstQuery * query)
 {
   GstGLBaseFilter *filter = GST_GL_BASE_FILTER (trans);
+  GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
   GError *error = NULL;
   gboolean new_context = FALSE;
 
@@ -389,6 +391,12 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
       gst_gl_context_thread_add (filter->context, gst_gl_base_filter_gl_stop,
           filter);
 
+    {
+      GstGLAPI current_gl_api = gst_gl_context_get_gl_api (mix->context);
+      if ((current_gl_api & filter_class->supported_gl_api) == 0)
+        goto unsupported_gl_api;
+    }
+
     gst_gl_context_thread_add (filter->context, gst_gl_base_filter_gl_start,
         filter);
 
@@ -404,6 +412,21 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
   return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
       query);
 
+
+unsupported_gl_api:
+  {
+    GstGLAPI gl_api = gst_gl_context_get_gl_api (filter->context);
+    gchar *gl_api_str = gst_gl_api_to_string (gl_api);
+    gchar *supported_gl_api_str =
+        gst_gl_api_to_string (filter_class->supported_gl_api);
+    GST_ELEMENT_ERROR (filter, RESOURCE, BUSY,
+        ("GL API's not compatible context: %s supported: %s", gl_api_str,
+            supported_gl_api_str), (NULL));
+
+    g_free (supported_gl_api_str);
+    g_free (gl_api_str);
+    return FALSE;
+  }
 context_error:
   {
     GST_ELEMENT_ERROR (trans, RESOURCE, NOT_FOUND, ("%s", error->message),
