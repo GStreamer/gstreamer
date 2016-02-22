@@ -392,7 +392,7 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
           filter);
 
     {
-      GstGLAPI current_gl_api = gst_gl_context_get_gl_api (mix->context);
+      GstGLAPI current_gl_api = gst_gl_context_get_gl_api (filter->context);
       if ((current_gl_api & filter_class->supported_gl_api) == 0)
         goto unsupported_gl_api;
     }
