@@ -593,11 +593,11 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             scenarios = self.scenarios_manager.get_scenario(None)
         uris = self._list_uris()
 
-        if uris:
-            for generator in self.get_generators():
-                for test in generator.generate_tests(uris, scenarios):
-                    self.add_test(test)
-        else:
+        for generator in self.get_generators():
+            for test in generator.generate_tests(uris, scenarios):
+                self.add_test(test)
+
+        if not self.tests and not uris:
             printc("No valid uris present in the path. Check if media files and info files exist", Colors.FAIL)
 
         return self.tests
