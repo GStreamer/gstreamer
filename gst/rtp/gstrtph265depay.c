@@ -296,6 +296,7 @@ static gboolean
 gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
 {
   gboolean res;
+  GstCaps *old_caps;
   GstCaps *srccaps;
 
   if (!rtph265depay->byte_stream &&
@@ -507,9 +508,9 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
     gst_buffer_unref (codec_data);
   }
 
-  if (gst_pad_has_current_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (rtph265depay))) {
-    GstCaps *old_caps =
-        gst_pad_get_current_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (rtph265depay));
+  old_caps =
+      gst_pad_get_current_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (rtph265depay));
+  if (old_caps != NULL) {
 
     /* Only update the caps if they are not equal. For
      * AVC we don't update caps if only the codec_data
