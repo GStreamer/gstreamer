@@ -2343,6 +2343,7 @@ gst_matroska_demux_handle_src_event (GstPad * pad, GstObject * parent,
       /* no seeking until we are (safely) ready */
       if (demux->common.state != GST_MATROSKA_READ_STATE_DATA) {
         GST_DEBUG_OBJECT (demux, "not ready for seeking yet");
+        gst_event_unref (event);
         return FALSE;
       }
       if (!demux->streaming)
