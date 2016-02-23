@@ -236,7 +236,12 @@ _get_merged_memory (GstBuffer * buffer, guint idx, guint length)
       guint8 *ptr;
 
       result = gst_allocator_alloc (NULL, size, NULL);
-      gst_memory_map (result, &dinfo, GST_MAP_WRITE);
+      if (result == NULL || !gst_memory_map (result, &dinfo, GST_MAP_WRITE)) {
+        GST_CAT_ERROR (GST_CAT_BUFFER, "Failed to map memory writable");
+        if (result)
+          gst_memory_unref (result);
+        return NULL;
+      }
 
       ptr = dinfo.data;
       left = size;
