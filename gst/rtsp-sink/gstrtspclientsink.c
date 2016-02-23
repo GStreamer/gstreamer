@@ -1047,6 +1047,8 @@ gst_rtsp_client_sink_sinkpad_event (GstPad * pad, GstObject * parent,
         gst_event_unref (event);
         return FALSE;
       }
+    } else {
+      gst_object_unref (target);
     }
   }
 
@@ -1071,6 +1073,7 @@ gst_rtsp_client_sink_sinkpad_query (GstPad * pad, GstObject * parent,
 
       return TRUE;
     }
+    gst_object_unref (target);
   }
 
   return gst_pad_query_default (pad, parent, query);

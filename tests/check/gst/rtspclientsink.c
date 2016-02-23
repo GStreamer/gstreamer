@@ -163,13 +163,17 @@ GST_START_TEST (test_record)
   /* Create an rtspclientsink and send some data */
   {
     gchar *uri = get_server_uri (test_port, TEST_MOUNT_POINT);
-    gchar *pipe_str = g_strdup_printf (AUDIO_PIPELINE,
-        RECORD_N_BUFS, uri);
+    gchar *pipe_str;
     GstMessage *msg;
     GstElement *pipeline;
     GstBus *bus;
 
+    pipe_str = g_strdup_printf (AUDIO_PIPELINE, RECORD_N_BUFS, uri);
+    g_free (uri);
+
     pipeline = gst_parse_launch (pipe_str, NULL);
+    g_free (pipe_str);
+
     fail_unless (pipeline != NULL);
 
     bus = gst_element_get_bus (pipeline);
