@@ -122,7 +122,7 @@ void InitializeSceneGraph::run()
 
 QtGLVideoItem::QtGLVideoItem()
 {
-  QGuiApplication *app = dynamic_cast<QGuiApplication *> (QCoreApplication::instance ());
+  QGuiApplication *app = static_cast<QGuiApplication *> (QCoreApplication::instance ());
   static volatile gsize _debug;
 
   g_assert (app != NULL);
