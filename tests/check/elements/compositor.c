@@ -1902,17 +1902,6 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_start_time_first_live_drop_3);
   tcase_add_test (tc_chain, test_start_time_first_live_drop_3_unlinked_1);
 
-  /* Use a longer timeout */
-#ifdef HAVE_VALGRIND
-  if (RUNNING_ON_VALGRIND) {
-    tcase_set_timeout (tc_chain, 5 * 60);
-  } else
-#endif
-  {
-    /* this is shorter than the default 60 seconds?! (tpm) */
-    /* tcase_set_timeout (tc_chain, 6); */
-  }
-
   return s;
 }
 
