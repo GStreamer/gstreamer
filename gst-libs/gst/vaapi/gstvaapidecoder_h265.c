@@ -1601,18 +1601,10 @@ init_picture_refs (GstVaapiDecoderH265 * decoder,
   memset (priv->RefPicList1, 0, sizeof (GstVaapiPictureH265 *) * 16);
   priv->RefPicList0_count = priv->RefPicList1_count = 0;
 
-  if (slice_hdr->dependent_slice_segment_flag) {
-    GstH265SliceHdr *tmp = &priv->prev_independent_slice_pi->data.slice_hdr;
-    num_ref_idx_l0_active_minus1 = tmp->num_ref_idx_l0_active_minus1;
-    num_ref_idx_l1_active_minus1 = tmp->num_ref_idx_l1_active_minus1;
-    ref_pic_list_modification = &tmp->ref_pic_list_modification;
-    type = tmp->type;
-  } else {
-    num_ref_idx_l0_active_minus1 = slice_hdr->num_ref_idx_l0_active_minus1;
-    num_ref_idx_l1_active_minus1 = slice_hdr->num_ref_idx_l1_active_minus1;
-    ref_pic_list_modification = &slice_hdr->ref_pic_list_modification;
-    type = slice_hdr->type;
-  }
+  num_ref_idx_l0_active_minus1 = slice_hdr->num_ref_idx_l0_active_minus1;
+  num_ref_idx_l1_active_minus1 = slice_hdr->num_ref_idx_l1_active_minus1;
+  ref_pic_list_modification = &slice_hdr->ref_pic_list_modification;
+  type = slice_hdr->type;
 
   /* decoding process for reference picture list construction needs to be
    * invoked only for P and B slice */
@@ -2434,7 +2426,6 @@ fill_slice (GstVaapiDecoderH265 * decoder,
     GstVaapiPictureH265 * picture, GstVaapiSlice * slice,
     GstVaapiParserInfoH265 * pi, GstVaapiDecoderUnit * unit)
 {
-  GstVaapiDecoderH265Private *const priv = &decoder->priv;
   VASliceParameterBufferHEVC *const slice_param = slice->param;
   GstH265SliceHdr *slice_hdr = &pi->data.slice_hdr;
 
@@ -2454,11 +2445,6 @@ fill_slice (GstVaapiDecoderH265 * decoder,
     slice_param->LongSliceFlags.fields.LastSliceOfPic = 0;
 
   COPY_LFF (dependent_slice_segment_flag);
-
-  /* use most recent independent slice segment header syntax elements
-   * for filling the missing fields in dependent slice segment header */
-  if (slice_hdr->dependent_slice_segment_flag)
-    slice_hdr = &priv->prev_independent_slice_pi->data.slice_hdr;
 
   COPY_LFF (mvd_l1_zero_flag);
   COPY_LFF (cabac_init_flag);
@@ -2731,6 +2717,18 @@ ensure_decoder (GstVaapiDecoderH265 * decoder)
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
+static void
+populate_dependent_slice_hdr (GstVaapiParserInfoH265 * pi,
+    GstVaapiParserInfoH265 * indep_pi)
+{
+  GstH265SliceHdr *slice_hdr = &pi->data.slice_hdr;
+  GstH265SliceHdr *indep_slice_hdr = &indep_pi->data.slice_hdr;
+
+  memcpy (&slice_hdr->type, &indep_slice_hdr->type,
+      offsetof (GstH265SliceHdr, num_entry_point_offsets) -
+      offsetof (GstH265SliceHdr, type));
+}
+
 static GstVaapiDecoderStatus
 gst_vaapi_decoder_h265_parse (GstVaapiDecoder * base_decoder,
     GstAdapter * adapter, gboolean at_eos, GstVaapiDecoderUnit * unit)
@@ -2928,6 +2926,8 @@ gst_vaapi_decoder_h265_parse (GstVaapiDecoder * base_decoder,
       if (!pi->data.slice_hdr.dependent_slice_segment_flag)
         gst_vaapi_parser_info_h265_replace (&priv->prev_independent_slice_pi,
             pi);
+      else
+        populate_dependent_slice_hdr (pi, priv->prev_independent_slice_pi);
       break;
     default:
       /* Fix */
