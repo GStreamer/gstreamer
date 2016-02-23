@@ -559,8 +559,10 @@ input_formats_do_not_match:
     GST_ELEMENT_ERROR (smpte, CORE, NEGOTIATION, (NULL),
         ("input formats don't match: %" GST_PTR_FORMAT " vs. %" GST_PTR_FORMAT,
             caps1, caps2));
-    gst_caps_unref (caps1);
-    gst_caps_unref (caps2);
+    if (caps1)
+      gst_caps_unref (caps1);
+    if (caps2)
+      gst_caps_unref (caps2);
     return GST_FLOW_ERROR;
   }
 }

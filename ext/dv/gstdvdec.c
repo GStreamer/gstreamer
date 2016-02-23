@@ -479,6 +479,9 @@ gst_dvdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     GstCaps *caps;
 
     caps = gst_pad_get_current_caps (dvdec->srcpad);
+    if (!caps)
+      goto not_negotiated;
+
     gst_dvdec_negotiate_pool (dvdec, caps, &dvdec->vinfo);
     gst_caps_unref (caps);
   }

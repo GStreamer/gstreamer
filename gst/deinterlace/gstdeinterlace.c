@@ -1546,8 +1546,9 @@ restart:
 
       /* setcaps on sink and src pads */
       sinkcaps = gst_pad_get_current_caps (self->sinkpad);
-      if (!gst_deinterlace_setcaps (self, self->sinkpad, sinkcaps)) {
-        gst_caps_unref (sinkcaps);
+      if (!sinkcaps || !gst_deinterlace_setcaps (self, self->sinkpad, sinkcaps)) {
+        if (sinkcaps)
+          gst_caps_unref (sinkcaps);
         return GST_FLOW_NOT_NEGOTIATED;
       }
 
