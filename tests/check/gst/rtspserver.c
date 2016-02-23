@@ -169,6 +169,8 @@ start_server (void)
   pool = gst_rtsp_address_pool_new ();
   gst_rtsp_address_pool_add_range (pool,
       "224.3.0.0", "224.3.0.10", 5000, 5010, 16);
+  gst_rtsp_address_pool_add_range (pool, GST_RTSP_ADDRESS_POOL_ANY_IPV4,
+      GST_RTSP_ADDRESS_POOL_ANY_IPV4, 6000, 6010, 0);
   gst_rtsp_media_factory_set_address_pool (factory, pool);
   gst_object_unref (pool);
 
@@ -1511,6 +1513,9 @@ GST_START_TEST (test_play_specific_server_port)
   mounts = gst_rtsp_server_get_mount_points (server);
 
   factory = gst_rtsp_media_factory_new ();
+  /* we have to suspend media after SDP in order to make sure that
+   * we can reconfigure UDP sink with new UDP ports */
+  gst_rtsp_media_factory_set_suspend_mode (factory, GST_RTSP_SUSPEND_MODE_RESET);
   pool = gst_rtsp_address_pool_new ();
   gst_rtsp_address_pool_add_range (pool, GST_RTSP_ADDRESS_POOL_ANY_IPV4,
       GST_RTSP_ADDRESS_POOL_ANY_IPV4, 7770, 7780, 0);
@@ -1744,7 +1749,7 @@ GST_START_TEST (test_record_tcp)
   gint i;
 
   mfactory =
-      start_record_server ("( rtppcmadepay name=depay0 ! appsink name=sink )");
+      start_record_server ("( rtppcmadepay name=depay0 ! appsink name=sink async=false )");
 
   g_signal_connect (mfactory, "media-constructed",
       G_CALLBACK (media_constructed_cb), &server_sink);
