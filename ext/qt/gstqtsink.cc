@@ -305,7 +305,7 @@ gst_qt_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      app = dynamic_cast<QGuiApplication *> (QCoreApplication::instance ());
+      app = static_cast<QGuiApplication *> (QCoreApplication::instance ());
       if (!app) {
         GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
             ("%s", "Failed to connect to Qt"),
