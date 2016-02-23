@@ -404,16 +404,15 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstObject * parent,
 
   GST_OBJECT_LOCK (deinterlace);
   if (deinterlace->reconfigure) {
+    GstCaps *caps;
+
     if ((gint) deinterlace->new_mode != -1)
       deinterlace->mode = deinterlace->new_mode;
     deinterlace->new_mode = -1;
 
     deinterlace->reconfigure = FALSE;
     GST_OBJECT_UNLOCK (deinterlace);
-    if (gst_pad_has_current_caps (deinterlace->srcpad)) {
-      GstCaps *caps;
-
-      caps = gst_pad_get_current_caps (deinterlace->sinkpad);
+    if ((caps = gst_pad_get_current_caps (deinterlace->srcpad))) {
       gst_ffmpegdeinterlace_sink_setcaps (deinterlace->sinkpad, caps);
       gst_caps_unref (caps);
     }
