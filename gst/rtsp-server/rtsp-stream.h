@@ -168,6 +168,9 @@ guint             gst_rtsp_stream_get_buffer_size  (GstRTSPStream *stream);
 
 void              gst_rtsp_stream_set_pt_map                 (GstRTSPStream * stream, guint pt, GstCaps * caps);
 GstElement *      gst_rtsp_stream_request_aux_sender         (GstRTSPStream * stream, guint sessid);
+
+gboolean          gst_rtsp_stream_allocate_udp_sockets       (GstRTSPStream * stream, GSocketFamily family,
+                                                              GstRTSPTransport *transport, gboolean use_client_setttings);
 /**
  * GstRTSPStreamTransportFilterFunc:
  * @stream: a #GstRTSPStream object

@@ -1403,26 +1403,26 @@ default_configure_client_transport (GstRTSPClient * client,
   /* we have a valid transport now, set the destination of the client. */
   if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
     gboolean use_client_settings;
+    GSocketFamily family;
 
     use_client_settings =
         gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_TRANSPORT_CLIENT_SETTINGS);
 
     if (ct->destination && use_client_settings) {
-      GstRTSPAddress *addr;
+      family = priv->is_ipv6 ? G_SOCKET_FAMILY_IPV6 : G_SOCKET_FAMILY_IPV4;
 
-      addr = gst_rtsp_stream_reserve_address (ctx->stream, ct->destination,
-          ct->port.min, ct->port.max - ct->port.min + 1, ct->ttl);
+      if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, family, ct, TRUE))
+        goto no_udp_protocol;
 
-      if (addr == NULL)
-        goto no_address;
-
-      gst_rtsp_address_free (addr);
     } else {
       GstRTSPAddress *addr;
-      GSocketFamily family;
 
       family = priv->is_ipv6 ? G_SOCKET_FAMILY_IPV6 : G_SOCKET_FAMILY_IPV4;
 
+      if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, family, ct, FALSE))
+        goto no_udp_protocol;
+
+      gst_rtsp_stream_get_server_port (ctx->stream, &ct->port, family);
       addr = gst_rtsp_stream_get_multicast_address (ctx->stream, family);
       if (addr == NULL)
         goto no_address;
@@ -1475,6 +1475,11 @@ default_configure_client_transport (GstRTSPClient * client,
         gst_rtsp_session_media_alloc_channels (ctx->sessmedia,
             &ct->interleaved);
       }
+    } else if (ct->lower_transport & GST_RTSP_LOWER_TRANS_UDP) {
+      GSocketFamily family;
+      family = priv->is_ipv6 ? G_SOCKET_FAMILY_IPV6 : G_SOCKET_FAMILY_IPV4;
+      if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, family, ct, FALSE))
+        goto no_udp_protocol;
     }
   }
   return TRUE;
@@ -1483,6 +1488,11 @@ default_configure_client_transport (GstRTSPClient * client,
 no_address:
   {
     GST_ERROR_OBJECT (client, "failed to acquire address for stream");
+    return FALSE;
+  }
+no_udp_protocol:
+  {
+    GST_ERROR_OBJECT (client, "failed to allocate udp ports");
     return FALSE;
   }
 }
