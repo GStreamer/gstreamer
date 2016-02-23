@@ -544,11 +544,13 @@ gst_rtp_base_payload_src_event_default (GstRTPBasePayload * rtpbasepayload,
             rtpbasepayload->current_ssrc = g_random_int ();
 
           caps = gst_pad_get_current_caps (rtpbasepayload->srcpad);
-          caps = gst_caps_make_writable (caps);
-          gst_caps_set_simple (caps,
-              "ssrc", G_TYPE_UINT, rtpbasepayload->current_ssrc, NULL);
-          res = gst_pad_set_caps (rtpbasepayload->srcpad, caps);
-          gst_caps_unref (caps);
+          if (caps) {
+            caps = gst_caps_make_writable (caps);
+            gst_caps_set_simple (caps,
+                "ssrc", G_TYPE_UINT, rtpbasepayload->current_ssrc, NULL);
+            res = gst_pad_set_caps (rtpbasepayload->srcpad, caps);
+            gst_caps_unref (caps);
+          }
 
           /* the event was for us */
           forward = FALSE;
