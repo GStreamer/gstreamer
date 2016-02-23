@@ -1347,11 +1347,11 @@ resampler_calculate_taps (GstAudioResampler * resampler)
         break;
     }
 
-    alloc_taps_mem (resampler, bps, n_taps, oversample + isize - 1);
+    alloc_taps_mem (resampler, bps, n_taps, oversample + isize);
 
     tmp_taps = resampler->tmp_taps;
-    for (i = 0; i < oversample + isize - 1; i++) {
-      x = 1.0 - n_taps / 2 + i / (gdouble) oversample;
+    for (i = 0; i < oversample + isize; i++) {
+      x = -(n_taps / 2) + i / (gdouble) oversample;
 
       taps = (gint8 *) resampler->taps + i * resampler->taps_stride;
       weight = make_taps (resampler, tmp_taps, x, n_taps);
