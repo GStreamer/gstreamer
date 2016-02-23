@@ -1252,6 +1252,7 @@ class _TestsLauncher(Loggable):
             return
 
         tests_names = [test.classname for test in tests]
+        testlist_changed = False
         for testsuite in self.options.testsuites:
             if not self._check_tester_has_other_testsuite(testsuite, tester) \
                     and tester.check_testslist:
@@ -1269,6 +1270,7 @@ class _TestsLauncher(Loggable):
 
                 for test in know_tests:
                     if test and test not in tests_names:
+                        testlist_changed = True
                         printc("Test %s Not in testsuite %s anymore"
                                % (test, testsuite.__file__), Colors.FAIL)
 
@@ -1277,14 +1279,20 @@ class _TestsLauncher(Loggable):
                     if test and test not in know_tests:
                         printc("Test %s is NEW in testsuite %s"
                                % (test, testsuite.__file__), Colors.OKGREEN)
+                        testlist_changed = True
 
                 testlist_file.close()
-                return
+                break
+
+        return testlist_changed
 
     def list_tests(self):
         for tester in self.testers:
             tests = tester.list_tests()
-            self._check_defined_tests(tester, tests)
+            if self._check_defined_tests(tester, tests) and \
+                    self.options.fail_on_testlist_change:
+                return -1
+
             self.tests.extend(tests)
         return sorted(list(self.tests))
 

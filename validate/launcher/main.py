@@ -375,6 +375,12 @@ Note that all testsuite should be inside python modules, so the directory should
     parser.add_argument("-F", "--fatal-error", dest="fatal_error",
                         action="store_true",
                         help="Stop on first fail")
+    parser.add_argument("--fail-on-testlist-change",
+                        dest="fail_on_testlist_change",
+                        action="store_true",
+                        help="Fail the testsuite if a test has been added"
+                        " or removed without being explicitely added/removed "
+                        "from the testlist file.")
     parser.add_argument("-t", "--wanted-tests", dest="wanted_tests",
                         action="append",
                         help="Define the tests to execute, it can be a regex."
@@ -510,7 +516,10 @@ Note that all testsuite should be inside python modules, so the directory should
     # Ensure that the scenario manager singleton is ready to be used
     ScenarioManager().config = options
     tests_launcher.set_settings(options, [])
-    tests_launcher.list_tests()
+    if tests_launcher.list_tests() == -1:
+        printc("\nFailling as tests have been removed/added "
+               " (--fail-on-testlist-change)", Colors.FAIL)
+        exit(1)
 
     if options.list_tests:
         l = tests_launcher.tests
