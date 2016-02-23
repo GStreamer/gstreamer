@@ -129,7 +129,7 @@ enum
 
 static GParamSpec *properties[PROP_LAST];
 
-static guint _signals[LAST_SIGNAL] = { NULL, };
+static guint _signals[LAST_SIGNAL] = { 0, };
 
 static gboolean
 gst_validate_runner_should_monitor (GstValidateRunner * self,
