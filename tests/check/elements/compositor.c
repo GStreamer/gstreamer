@@ -45,6 +45,24 @@
 
 static GMainLoop *main_loop;
 
+static GstCaps *
+_compositor_get_all_supported_caps (void)
+{
+  return gst_caps_from_string (GST_VIDEO_CAPS_MAKE
+      (" { AYUV, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, "
+          "   YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "
+          "   RGBx, BGRx } "));
+}
+
+static GstCaps *
+_compositor_get_non_alpha_supported_caps (void)
+{
+  return gst_caps_from_string (GST_VIDEO_CAPS_MAKE
+      (" { Y444, Y42B, YUY2, UYVY, "
+          "   YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "
+          "   RGBx, BGRx } "));
+}
+
 /* make sure downstream gets a CAPS event before buffers are sent */
 GST_START_TEST (test_caps)
 {
@@ -283,72 +301,72 @@ create_video_buffer (GstCaps * caps, gint ts_in_seconds)
   return buf;
 }
 
+
+GST_START_TEST (test_caps_query)
+{
+  GstElement *compositor, *capsfilter, *sink;
+  GstElement *pipeline;
+  gboolean res;
+  GstStateChangeReturn state_res;
+  GstPad *sinkpad;
+  GstCaps *caps, *restriction_caps;
+  GstCaps *all_caps, *non_alpha_caps;
+
+  /* initial setup */
+  all_caps = _compositor_get_all_supported_caps ();
+  non_alpha_caps = _compositor_get_non_alpha_supported_caps ();
+
+  compositor = gst_element_factory_make ("compositor", "compositor");
+  capsfilter = gst_element_factory_make ("capsfilter", "out-cf");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  pipeline = gst_pipeline_new ("test-pipeline");
+
+  gst_bin_add_many (GST_BIN (pipeline), compositor, capsfilter, sink, NULL);
+  res = gst_element_link (compositor, capsfilter);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (capsfilter, sink);
+  fail_unless (res == TRUE, NULL);
+
+  sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
+
+  state_res = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_if (state_res == GST_STATE_CHANGE_FAILURE);
+
+  /* try an unrestricted caps query, should return all formats */
+  caps = gst_pad_query_caps (sinkpad, NULL);
+  fail_unless (gst_caps_is_equal (caps, all_caps));
+  gst_caps_unref (caps);
+
+  /* now restrict downstream to a single alpha format, it should still
+   * be able to convert anything else to it */
+  restriction_caps = gst_caps_from_string ("video/x-raw, format=(string)AYUV");
+  g_object_set (capsfilter, "caps", restriction_caps, NULL);
+  caps = gst_pad_query_caps (sinkpad, NULL);
+  fail_unless (gst_caps_is_equal (caps, all_caps));
+  gst_caps_unref (caps);
+  gst_caps_unref (restriction_caps);
+
+  /* now restrict downstream to a non-alpha format, it should
+   * be able to accept non-alpha formats */
+  restriction_caps = gst_caps_from_string ("video/x-raw, format=(string)I420");
+  g_object_set (capsfilter, "caps", restriction_caps, NULL);
+  caps = gst_pad_query_caps (sinkpad, NULL);
+  fail_unless (gst_caps_is_equal (caps, non_alpha_caps));
+  gst_caps_unref (caps);
+  gst_caps_unref (restriction_caps);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_element_release_request_pad (compositor, sinkpad);
+  gst_object_unref (sinkpad);
+  gst_object_unref (pipeline);
+  gst_caps_unref (all_caps);
+  gst_caps_unref (non_alpha_caps);
+}
+
+GST_END_TEST;
+
 #define MODE_ALL 1
 #define MODE_NON_ALPHA 2
-
-/* mostly copied from videoaggregator */
-static inline GstCaps *
-_get_non_alpha_caps_from_caps (GstCaps * caps)
-{
-  GstCaps *result;
-  guint i, size;
-
-  size = gst_caps_get_size (caps);
-  result = gst_caps_new_empty ();
-  for (i = 0; i < size; i++) {
-    GstStructure *s = gst_caps_get_structure (caps, i);
-    const GValue *formats = gst_structure_get_value (s, "format");
-    GValue new_formats = { 0, };
-    gboolean has_format = FALSE;
-
-    /* FIXME what to do if formats are missing? */
-    if (formats) {
-      const GstVideoFormatInfo *info;
-
-      if (GST_VALUE_HOLDS_LIST (formats)) {
-        guint list_size = gst_value_list_get_size (formats);
-        guint index;
-
-        g_value_init (&new_formats, GST_TYPE_LIST);
-
-        for (index = 0; index < list_size; index++) {
-          const GValue *list_item = gst_value_list_get_value (formats, index);
-
-          info =
-              gst_video_format_get_info (gst_video_format_from_string
-              (g_value_get_string (list_item)));
-          if (!GST_VIDEO_FORMAT_INFO_HAS_ALPHA (info)) {
-            has_format = TRUE;
-            gst_value_list_append_value (&new_formats, list_item);
-          }
-        }
-
-      } else if (G_VALUE_HOLDS_STRING (formats)) {
-        info =
-            gst_video_format_get_info (gst_video_format_from_string
-            (g_value_get_string (formats)));
-        if (!GST_VIDEO_FORMAT_INFO_HAS_ALPHA (info)) {
-          has_format = TRUE;
-          gst_value_init_and_copy (&new_formats, formats);
-        }
-
-      } else {
-        g_assert_not_reached ();
-        GST_WARNING ("Unexpected type for video 'format' field: %s",
-            G_VALUE_TYPE_NAME (formats));
-      }
-
-      if (has_format) {
-        s = gst_structure_copy (s);
-        gst_structure_take_value (s, "format", &new_formats);
-        gst_caps_append_structure (result, s);
-      }
-
-    }
-  }
-
-  return result;
-}
 
 static void
 run_late_caps_query_test (GstCaps * input_caps, GstCaps * output_allowed_caps,
@@ -363,16 +381,8 @@ run_late_caps_query_test (GstCaps * input_caps, GstCaps * output_allowed_caps,
   GstSegment segment;
   GstCaps *caps, *all_caps, *non_alpha_caps;
 
-  all_caps =
-      gst_caps_from_string (GST_VIDEO_CAPS_MAKE
-      (" { AYUV, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, "
-          "   YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "
-          "   RGBx, BGRx } "));
-  non_alpha_caps =
-      gst_caps_from_string (GST_VIDEO_CAPS_MAKE
-      (" { Y444, Y42B, YUY2, UYVY, "
-          "   YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "
-          "   RGBx, BGRx } "));
+  all_caps = _compositor_get_all_supported_caps ();
+  non_alpha_caps = _compositor_get_non_alpha_supported_caps ();
 
   compositor = gst_element_factory_make ("compositor", "compositor");
   capsfilter = gst_element_factory_make ("capsfilter", "out-cf");
@@ -1870,6 +1880,7 @@ compositor_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_caps);
   tcase_add_test (tc_chain, test_event);
+  tcase_add_test (tc_chain, test_caps_query);
   tcase_add_test (tc_chain, test_late_caps_query);
   tcase_add_test (tc_chain, test_play_twice);
   tcase_add_test (tc_chain, test_play_twice_then_add_and_play_again);
