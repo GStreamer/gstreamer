@@ -1,7 +1,8 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- *
- * gstladspa.h: Header for LV2 plugin
+ * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
+ *               2001 Steve Baker <stevebaker_org@yahoo.co.uk>
+ *               2003 Andy Wingo <wingo at pobox.com>
+ *               2016 Thibault Saunier <thibault.saunier@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,77 +20,39 @@
  * Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef __GST_LV2_H__
 #define __GST_LV2_H__
 
-
-#include <slv2/slv2.h>
-
+#include <lilv/lilv.h>
 #include <gst/gst.h>
 
-#include <gst/signalprocessor/gstsignalprocessor.h>
+LilvWorld *world;
+LilvNode *audio_class;
+LilvNode *control_class;
+LilvNode *input_class;
+LilvNode *output_class;
+LilvNode *integer_prop;
+LilvNode *toggled_prop;
+LilvNode *in_place_broken_pred;
+LilvNode *group_pred;
+LilvNode *has_role_pred;
+LilvNode *lv2_symbol_pred;
 
+LilvNode *center_role;
+LilvNode *left_role;
+LilvNode *right_role;
+LilvNode *rear_center_role;
+LilvNode *rear_left_role;
+LilvNode *rear_right_role;
+LilvNode *lfe_role;
+LilvNode *center_left_role;
+LilvNode *center_right_role;
+LilvNode *side_left_role;
+LilvNode *side_right_role;
 
-G_BEGIN_DECLS
+GQuark descriptor_quark;
 
-
-typedef struct _lv2_control_info {
-  gchar *name;
-  gchar *param_name;
-  gfloat lowerbound, upperbound;
-  gfloat def;
-  gboolean lower, upper, samplerate;
-  gboolean toggled, logarithmic, integer, writable;
-} lv2_control_info;
-
-
-typedef struct _GstLV2 GstLV2;
-typedef struct _GstLV2Class GstLV2Class;
-typedef struct _GstLV2Group GstLV2Group;
-typedef struct _GstLV2Port GstLV2Port;
-
-
-struct _GstLV2 {
-  GstSignalProcessor parent;
-
-  SLV2Plugin plugin;
-  SLV2Instance instance;
-
-  gboolean activated;
-};
-
-struct _GstLV2Group {
-  SLV2Value uri; /**< RDF resource (URI or blank node) */
-  guint pad; /**< Gst pad index */
-  SLV2Value symbol; /**< Gst pad name / LV2 group symbol */
-  GArray *ports; /**< Array of GstLV2Port */
-  gboolean has_roles; /**< TRUE iff all ports have a known role */
-};
-
-struct _GstLV2Port {
-  gint index; /**< LV2 port index (on LV2 plugin) */
-  gint pad; /**< Gst pad index (iff not part of a group) */
-  SLV2Value role; /**< Channel position / port role */
-  GstAudioChannelPosition position; /**< Channel position */
-};
-
-struct _GstLV2Class {
-  GstSignalProcessorClass parent_class;
-
-  SLV2Plugin plugin;
-
-  GArray *in_groups; /**< Array of GstLV2Group */
-  GArray *out_groups; /**< Array of GstLV2Group */
-  GArray *audio_in_ports; /**< Array of GstLV2Port */
-  GArray *audio_out_ports; /**< Array of GstLV2Port */
-  GArray *control_in_ports; /**< Array of GstLV2Port */
-  GArray *control_out_ports; /**< Array of GstLV2Port */
-
-};
-
-
-G_END_DECLS
-
-
+gboolean gst_lv2_filter_register_element (GstPlugin *plugin,
+                                          const gchar *type_name,
+                                          gpointer *lv2plugin);
 #endif /* __GST_LV2_H__ */
