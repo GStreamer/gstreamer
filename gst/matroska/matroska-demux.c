@@ -1578,6 +1578,12 @@ gst_matroska_demux_element_send_event (GstElement * element, GstEvent * event)
   g_return_val_if_fail (event != NULL, FALSE);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
+    /* no seeking until we are (safely) ready */
+    if (demux->common.state != GST_MATROSKA_READ_STATE_DATA) {
+      GST_DEBUG_OBJECT (demux, "not ready for seeking yet");
+      gst_event_unref (event);
+      return FALSE;
+    }
     res = gst_matroska_demux_handle_seek_event (demux, NULL, event);
   } else {
     GST_WARNING_OBJECT (demux, "Unhandled event of type %s",
