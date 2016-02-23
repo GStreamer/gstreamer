@@ -51,7 +51,7 @@ inner_product_gint16_full_1_neon (gint16 * o, const gint16 * a,
                   "      vadd.s32 d0, d0, d1\n"
                   "      vpadd.s32 d0, d0, d0\n"
                   "      vqrshrn.s32 d0, q0, #15\n"
-                  "      vst1.s16 d0[0], [%[o]]\n"
+                  "      vst1.16 d0[0], [%[o]]\n"
                   : [a] "+r" (a), [b] "+r" (b),
                     [len] "+r" (len), [remainder] "+r" (remainder)
                   : [o] "r" (o)
@@ -92,11 +92,11 @@ inner_product_gint16_linear_1_neon (gint16 * o, const gint16 * a,
                   "      beq 4f\n"
                   "3:"
                   "      vld1.16 {d16}, [%[c0]]!\n"
-                  "      vld1.16 {d17}, [%[c1]]!\n"
-                  "      vld1.16 {d20}, [%[a]]!\n"
+                  "      vld1.16 {d20}, [%[c1]]!\n"
+                  "      vld1.16 {d24}, [%[a]]!\n"
                   "      subs %[remainder], %[remainder], #4\n"
-                  "      vmlal.s16 q0, d16, d20\n"
-                  "      vmlal.s16 q1, d17, d20\n"
+                  "      vmlal.s16 q0, d16, d24\n"
+                  "      vmlal.s16 q1, d20, d24\n"
                   "      bne 3b\n"
                   "4:"
                   "      vld2.16 {d20[], d21[]}, [%[ic]]\n"
@@ -107,13 +107,14 @@ inner_product_gint16_linear_1_neon (gint16 * o, const gint16 * a,
                   "      vadd.s32 d0, d0, d1\n"
                   "      vpadd.s32 d0, d0, d0\n"
                   "      vqrshrn.s32 d0, q0, #15\n"
-                  "      vst1.s16 d0[0], [%[o]]\n"
+                  "      vst1.16 d0[0], [%[o]]\n"
                   : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
                     [len] "+r" (len), [remainder] "+r" (remainder)
                   : [o] "r" (o), [ic] "r" (icoeff)
                   : "cc", "q0", "q1",
                     "d16", "d17", "d18", "d19",
-                    "d20", "d21", "d22", "d23" , "memory");
+                    "d20", "d21", "d22", "d23",
+                    "d24", "d25", "d26", "d27", "memory");
 }
 
 static inline void
@@ -160,13 +161,14 @@ inner_product_gint16_cubic_1_neon (gint16 * o, const gint16 * a,
                   "      vadd.s32 d0, d0, d1\n"
                   "      vpadd.s32 d0, d0, d0\n"
                   "      vqrshrn.s32 d0, q0, #15\n"
-                  "      vst1.s16 d0[0], [%[o]]\n"
+                  "      vst1.16 d0[0], [%[o]]\n"
                   : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
                     [c2] "+r" (c[2]), [c3] "+r" (c[3]), [len] "+r" (len)
                   : [o] "r" (o), [ic] "r" (icoeff)
                   : "cc", "q0", "q1", "q2", "q3",
                     "d16", "d17", "d18", "d19",
-                    "d20", "d21", "d22", "d23", "d24", "d25", "memory");
+                    "d20", "d21", "d22", "d23",
+                    "d24", "d25", "memory");
 }
 
 static inline void
@@ -190,7 +192,7 @@ interpolate_gint16_linear_neon (gpointer op, const gpointer ap,
                   "      vmlal.s16 q1, d19, d21\n"
                   "      vqrshrn.s32 d0, q0, #15\n"
                   "      vqrshrn.s32 d1, q1, #15\n"
-                  "      vst1.s16 {d0, d1}, [%[o]]!\n"
+                  "      vst1.16 {d0, d1}, [%[o]]!\n"
                   "      bne 1b\n"
                   "2:"
                   : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
@@ -198,6 +200,46 @@ interpolate_gint16_linear_neon (gpointer op, const gpointer ap,
                   : [ic] "r" (ic)
                   : "cc", "q0", "q1",
                     "d16", "d17", "d18", "d19", "d20", "d21", "memory");
+}
+
+static inline void
+interpolate_gint16_cubic_neon (gpointer op, const gpointer ap,
+    gint len, const gpointer icp, gint astride)
+{
+    gint16 *o = op, *a = ap, *ic = icp;
+    const gint16 *c[4] = {(gint16*)((gint8*)a + 0*astride),
+                          (gint16*)((gint8*)a + 1*astride),
+                          (gint16*)((gint8*)a + 2*astride),
+                          (gint16*)((gint8*)a + 3*astride)};
+
+    asm volatile ("      cmp %[len], #0\n"
+                  "      beq 2f\n"
+                  "      vld4.16 {d24[], d25[], d26[], d27[]}, [%[ic]]\n"
+                  "1:"
+                  "      vld1.16 {d16, d17}, [%[c0]]!\n"
+                  "      vld1.16 {d18, d19}, [%[c1]]!\n"
+                  "      vld1.16 {d20, d21}, [%[c2]]!\n"
+                  "      vld1.16 {d22, d23}, [%[c3]]!\n"
+                  "      subs %[len], %[len], #8\n"
+                  "      vmull.s16 q0, d16, d24\n"
+                  "      vmull.s16 q1, d17, d24\n"
+                  "      vmlal.s16 q0, d18, d25\n"
+                  "      vmlal.s16 q1, d19, d25\n"
+                  "      vmlal.s16 q0, d20, d26\n"
+                  "      vmlal.s16 q1, d21, d26\n"
+                  "      vmlal.s16 q0, d22, d27\n"
+                  "      vmlal.s16 q1, d23, d27\n"
+                  "      vqrshrn.s32 d0, q0, #15\n"
+                  "      vqrshrn.s32 d1, q1, #15\n"
+                  "      vst1.16 {d0, d1}, [%[o]]!\n"
+                  "      bne 1b\n"
+                  "2:"
+                  : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]), [c2] "+r" (c[2]), [c3] "+r" (c[3]),
+                    [len] "+r" (len), [o] "+r" (o)
+                  : [ic] "r" (ic)
+                  : "cc", "q0", "q1",
+                    "d16", "d17", "d18", "d19", "d20", "d21", "d22",
+                    "d23", "d24", "d25", "d26", "d27", "memory");
 }
 
 static inline void
@@ -234,7 +276,7 @@ inner_product_gint32_full_1_neon (gint32 * o, const gint32 * a,
                   "4:"
                   "      vadd.s64 d0, d0, d1\n"
                   "      vqrshrn.s64 d0, q0, #31\n"
-                  "      vst1.s32 d0[0], [%[o]]\n"
+                  "      vst1.32 d0[0], [%[o]]\n"
                   : [a] "+r" (a), [b] "+r" (b),
                     [len] "+r" (len), [remainder] "+r" (remainder)
                   : [o] "r" (o)
@@ -276,7 +318,7 @@ inner_product_gint32_linear_1_neon (gint32 * o, const gint32 * a,
                   "      vmlal.s32 q0, d2, d21\n"
                   "      vadd.s64 d0, d0, d1\n"
                   "      vqrshrn.s64 d0, q0, #31\n"
-                  "      vst1.s32 d0[0], [%[o]]\n"
+                  "      vst1.32 d0[0], [%[o]]\n"
                   : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
                     [len] "+r" (len)
                   : [o] "r" (o), [ic] "r" (icoeff)
@@ -328,7 +370,7 @@ inner_product_gint32_cubic_1_neon (gint32 * o, const gint32 * a,
                   "      vmlal.s32 q0, d6, d23\n"
                   "      vadd.s64 d0, d0, d1\n"
                   "      vqrshrn.s64 d0, q0, #31\n"
-                  "      vst1.s32 d0[0], [%[o]]\n"
+                  "      vst1.32 d0[0], [%[o]]\n"
                   : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
                     [c2] "+r" (c[2]), [c3] "+r" (c[3]), [len] "+r" (len)
                   : [o] "r" (o), [ic] "r" (icoeff)
@@ -364,14 +406,54 @@ interpolate_gint32_linear_neon (gpointer op, const gpointer ap,
                   "      vqrshrn.s64 d1, q1, #31\n"
                   "      vqrshrn.s64 d2, q2, #31\n"
                   "      vqrshrn.s64 d3, q3, #31\n"
-                  "      vst1.s32 {d0, d1, d2, d3}, [%[o]]!\n"
+                  "      vst1.32 {d0, d1, d2, d3}, [%[o]]!\n"
                   "      bne 1b\n"
                   "2:"
                   : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
-                    [len] "+r" (len)
-                  : [o] "r" (o), [ic] "r" (ic)
+                    [len] "+r" (len), [o] "+r" (o)
+                  : [ic] "r" (ic)
                   : "cc", "q0", "q1", "q2", "q3",
                     "d16", "d17", "d18", "d19", "d20", "d21", "d22", "d23", "d24", "d25", "memory");
+}
+
+static inline void
+interpolate_gint32_cubic_neon (gpointer op, const gpointer ap,
+    gint len, const gpointer icp, gint astride)
+{
+    gint32 *o = op, *a = ap, *ic = icp;
+    const gint32 *c[4] = {(gint32*)((gint8*)a + 0*astride),
+                          (gint32*)((gint8*)a + 1*astride),
+                          (gint32*)((gint8*)a + 2*astride),
+                          (gint32*)((gint8*)a + 3*astride)};
+
+    asm volatile ("      cmp %[len], #0\n"
+                  "      beq 2f\n"
+                  "      vld4.32 {d24[], d25[], d26[], d27[]}, [%[ic]]!\n"
+                  "1:"
+                  "      vld1.32 {d16, d17}, [%[c0]]!\n"
+                  "      vld1.32 {d18, d19}, [%[c1]]!\n"
+                  "      vld1.32 {d20, d21}, [%[c2]]!\n"
+                  "      vld1.32 {d22, d23}, [%[c3]]!\n"
+                  "      subs %[len], %[len], #4\n"
+                  "      vmull.s32 q0, d16, d24\n"
+                  "      vmull.s32 q1, d17, d24\n"
+                  "      vmlal.s32 q0, d18, d25\n"
+                  "      vmlal.s32 q1, d19, d25\n"
+                  "      vmlal.s32 q0, d20, d26\n"
+                  "      vmlal.s32 q1, d21, d26\n"
+                  "      vmlal.s32 q0, d22, d27\n"
+                  "      vmlal.s32 q1, d23, d27\n"
+                  "      vqrshrn.s64 d0, q0, #31\n"
+                  "      vqrshrn.s64 d1, q1, #31\n"
+                  "      vst1.32 {d0, d1}, [%[o]]!\n"
+                  "      bne 1b\n"
+                  "2:"
+                  : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
+                    [c2] "+r" (c[2]), [c3] "+r" (c[3]), [len] "+r" (len), [o] "+r" (o)
+                  : [ic] "r" (ic)
+                  : "cc", "q0", "q1",
+                    "d16", "d17", "d18", "d19", "d20",
+                    "d21", "d22", "d23", "d24", "d25", "d26", "d27", "memory");
 }
 
 static inline void
@@ -409,7 +491,7 @@ inner_product_gfloat_full_1_neon (gfloat * o, const gfloat * a,
                   "4:"
                   "      vadd.f32 d0, d0, d1\n"
                   "      vpadd.f32 d0, d0, d0\n"
-                  "      vst1.f32 d0[0], [%[o]]\n"
+                  "      vst1.32 d0[0], [%[o]]\n"
                   : [a] "+r" (a), [b] "+r" (b),
                     [len] "+r" (len), [remainder] "+r" (remainder)
                   : [o] "r" (o)
@@ -429,9 +511,9 @@ inner_product_gfloat_linear_1_neon (gfloat * o, const gfloat * a,
                   "      cmp %[len], #0\n"
                   "      beq 2f\n"
                   "1:"
-                  "      vld1.f32 {q8, q9}, [%[c0]]!\n"
-                  "      vld1.f32 {q10, q11}, [%[c1]]!\n"
-                  "      vld1.f32 {q12, q13}, [%[a]]!\n"
+                  "      vld1.32 {q8, q9}, [%[c0]]!\n"
+                  "      vld1.32 {q10, q11}, [%[c1]]!\n"
+                  "      vld1.32 {q12, q13}, [%[a]]!\n"
                   "      subs %[len], %[len], #8\n"
                   "      vmla.f32 q0, q8, q12\n"
                   "      vmla.f32 q1, q10, q12\n"
@@ -439,13 +521,13 @@ inner_product_gfloat_linear_1_neon (gfloat * o, const gfloat * a,
                   "      vmla.f32 q1, q11, q13\n"
                   "      bne 1b\n"
                   "2:"
-                  "      vld2.f32 {d20[], d21[]}, [%[ic]]\n"
+                  "      vld2.32 {d20[], d21[]}, [%[ic]]\n"
                   "      vmul.f32 d0, d0, d20\n"
                   "      vmla.f32 d0, d1, d20\n"
                   "      vmla.f32 d0, d2, d21\n"
                   "      vmla.f32 d0, d3, d21\n"
                   "      vpadd.f32 d0, d0, d0\n"
-                  "      vst1.f32 d0[0], [%[o]]\n"
+                  "      vst1.32 d0[0], [%[o]]\n"
                   : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
                     [len] "+r" (len)
                   : [o] "r" (o), [ic] "r" (icoeff)
@@ -469,11 +551,11 @@ inner_product_gfloat_cubic_1_neon (gfloat * o, const gfloat * a,
                   "      cmp %[len], #0\n"
                   "      beq 2f\n"
                   "1:"
-                  "      vld1.f32 {q8}, [%[c0]]!\n"
-                  "      vld1.f32 {q9}, [%[c1]]!\n"
-                  "      vld1.f32 {q10}, [%[c2]]!\n"
-                  "      vld1.f32 {q11}, [%[c3]]!\n"
-                  "      vld1.f32 {q12}, [%[a]]!\n"
+                  "      vld1.32 {q8}, [%[c0]]!\n"
+                  "      vld1.32 {q9}, [%[c1]]!\n"
+                  "      vld1.32 {q10}, [%[c2]]!\n"
+                  "      vld1.32 {q11}, [%[c3]]!\n"
+                  "      vld1.32 {q12}, [%[a]]!\n"
                   "      subs %[len], %[len], #4\n"
                   "      vmla.f32 q0, q8, q12\n"
                   "      vmla.f32 q1, q9, q12\n"
@@ -481,7 +563,7 @@ inner_product_gfloat_cubic_1_neon (gfloat * o, const gfloat * a,
                   "      vmla.f32 q3, q11, q12\n"
                   "      bne 1b\n"
                   "2:"
-                  "      vld4.f32 {d20[], d21[], d22[], d23[]}, [%[ic]]\n"
+                  "      vld4.32 {d20[], d21[], d22[], d23[]}, [%[ic]]\n"
                   "      vmul.f32 d0, d0, d20\n"
                   "      vmla.f32 d0, d1, d20\n"
                   "      vmla.f32 d0, d2, d21\n"
@@ -491,10 +573,10 @@ inner_product_gfloat_cubic_1_neon (gfloat * o, const gfloat * a,
                   "      vmla.f32 d0, d6, d23\n"
                   "      vmla.f32 d0, d7, d23\n"
                   "      vpadd.f32 d0, d0, d0\n"
-                  "      vst1.f32 d0[0], [%[o]]\n"
+                  "      vst1.32 d0[0], [%[o]]\n"
                   : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
-                    [c2] "+r" (c[2]), [c3] "+r" (c[3]), [len] "+r" (len)
-                  : [o] "r" (o), [ic] "r" (icoeff)
+                    [c2] "+r" (c[2]), [c3] "+r" (c[3]), [len] "+r" (len), [o] "+r" (o)
+                  : [ic] "r" (icoeff)
                   : "cc", "q0", "q1", "q2", "q3",
                     "q8", "q9", "q10", "q11", "q12", "memory");
 }
@@ -520,15 +602,54 @@ interpolate_gfloat_linear_neon (gpointer op, const gpointer ap,
                   "      vmul.f32 q1, q9, q12\n"
                   "      vmla.f32 q0, q10, q13\n"
                   "      vmla.f32 q1, q11, q13\n"
-                  "      vst1.f32 {q0, q1}, [%[o]]!\n"
+                  "      vst1.32 {q0, q1}, [%[o]]!\n"
                   "      bne 1b\n"
                   "2:"
                   : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
-                    [len] "+r" (len)
-                  : [o] "r" (o), [ic] "r" (ic)
-                  : "cc", "q0", "q1",
-                    "q8", "q9", "q10", "q11", "q12", "q13", "memory");
+                    [len] "+r" (len), [o] "+r" (o)
+                  : [ic] "r" (ic)
+                  : "cc", "q0", "q1", "q8", "q9",
+                    "q10", "q11", "q12", "q13", "memory");
 }
+
+static inline void
+interpolate_gfloat_cubic_neon (gpointer op, const gpointer ap,
+    gint len, const gpointer icp, gint astride)
+{
+    gfloat *o = op, *a = ap, *ic = icp;
+    const gfloat *c[4] = {(gfloat*)((gint8*)a + 0*astride),
+                          (gfloat*)((gint8*)a + 1*astride),
+                          (gfloat*)((gint8*)a + 2*astride),
+                          (gfloat*)((gint8*)a + 3*astride)};
+
+    asm volatile ("      cmp %[len], #0\n"
+                  "      beq 2f\n"
+                  "      vld4.32 {d24[], d26[], d28[], d30[]}, [%[ic]]!\n"
+                  "      vmov.32 d25, d24\n"
+                  "      vmov.32 d27, d26\n"
+                  "      vmov.32 d29, d28\n"
+                  "      vmov.32 d31, d30\n"
+                  "1:"
+                  "      vld1.32 {q8}, [%[c0]]!\n"
+                  "      vld1.32 {q9}, [%[c1]]!\n"
+                  "      vld1.32 {q10}, [%[c2]]!\n"
+                  "      vld1.32 {q11}, [%[c3]]!\n"
+                  "      subs %[len], %[len], #4\n"
+                  "      vmul.f32 q0, q8, q12\n"
+                  "      vmla.f32 q0, q9, q13\n"
+                  "      vmla.f32 q0, q10, q14\n"
+                  "      vmla.f32 q0, q11, q15\n"
+                  "      vst1.32 {q0}, [%[o]]!\n"
+                  "      bne 1b\n"
+                  "2:"
+                  : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
+                    [c2] "+r" (c[2]), [c3] "+r" (c[3]),
+                    [len] "+r" (len), [o] "+r" (o)
+                  : [ic] "r" (ic)
+                  : "cc", "q0", "q8", "q9",
+                    "q10", "q11", "q12", "q13", "q14", "q15", "memory");
+}
+
 MAKE_RESAMPLE_FUNC (gint16, full, 1, neon);
 MAKE_RESAMPLE_FUNC (gint16, linear, 1, neon);
 MAKE_RESAMPLE_FUNC (gint16, cubic, 1, neon);
@@ -551,17 +672,20 @@ audio_resampler_check_neon (const gchar *option)
     resample_gint16_cubic_1 = resample_gint16_cubic_1_neon;
 
     interpolate_gint16_linear = interpolate_gint16_linear_neon;
+    interpolate_gint16_cubic = interpolate_gint16_cubic_neon;
 
     resample_gint32_full_1 = resample_gint32_full_1_neon;
     resample_gint32_linear_1 = resample_gint32_linear_1_neon;
     resample_gint32_cubic_1 = resample_gint32_cubic_1_neon;
 
     interpolate_gint32_linear = interpolate_gint32_linear_neon;
+    interpolate_gint32_cubic = interpolate_gint32_cubic_neon;
 
     resample_gfloat_full_1 = resample_gfloat_full_1_neon;
     resample_gfloat_linear_1 = resample_gfloat_linear_1_neon;
     resample_gfloat_cubic_1 = resample_gfloat_cubic_1_neon;
 
     interpolate_gfloat_linear = interpolate_gfloat_linear_neon;
+    interpolate_gfloat_cubic = interpolate_gfloat_cubic_neon;
   }
 }
