@@ -228,6 +228,8 @@ gst_gdk_pixbuf_dec_setup_pool (GstGdkPixbufDec * filter, GstVideoInfo * info)
   guint size, min, max;
 
   target = gst_pad_get_current_caps (filter->srcpad);
+  if (!target)
+    return FALSE;
 
   /* try to get a bufferpool now */
   /* find a pool for the negotiated caps now */
