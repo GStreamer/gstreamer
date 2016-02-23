@@ -416,12 +416,12 @@ gst_disparity_handle_query (GstPad * pad, GstObject * parent, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
       g_mutex_lock (&fs->lock);
-      if (!gst_pad_has_current_caps (fs->srcpad)) {
+      current_caps = gst_pad_get_current_caps (fs->srcpad);
+      if (current_caps == NULL) {
         template_caps = gst_pad_get_pad_template_caps (pad);
         gst_query_set_caps_result (query, template_caps);
         gst_caps_unref (template_caps);
       } else {
-        current_caps = gst_pad_get_current_caps (fs->srcpad);
         gst_query_set_caps_result (query, current_caps);
         gst_caps_unref (current_caps);
       }
