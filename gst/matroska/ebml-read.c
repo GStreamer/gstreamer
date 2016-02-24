@@ -30,8 +30,9 @@
 
 #include <math.h>
 
-/* NAN is supposed to be in math.h, Microsoft defines it in xmath.h */
-#ifdef _MSC_VER
+/* NAN is supposed to be in math.h, Microsoft defines it in xmath.h
+ * However, starting iwth Visual Studio 8, NAN is defined by default */
+#if defined (_MSC_VER) && _MSC_VER < 1500
 #include <xmath.h>
 #endif
 
