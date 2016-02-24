@@ -7145,6 +7145,7 @@ static gboolean
 gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GstTagList * list)
 {
+  gboolean ret = TRUE;
   /* consistent default for push based mode */
   gst_segment_init (&stream->segment, GST_FORMAT_TIME);
 
@@ -7155,7 +7156,13 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
         gst_pad_new_from_static_template (&gst_qtdemux_videosrc_template, name);
     g_free (name);
 
-    gst_qtdemux_configure_stream (qtdemux, stream);
+    if (!gst_qtdemux_configure_stream (qtdemux, stream)) {
+      gst_object_unref (stream->pad);
+      stream->pad = NULL;
+      ret = FALSE;
+      goto done;
+    }
+
     qtdemux->n_video_streams++;
   } else if (stream->subtype == FOURCC_soun) {
     gchar *name = g_strdup_printf ("audio_%u", qtdemux->n_audio_streams);
@@ -7163,7 +7170,12 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     stream->pad =
         gst_pad_new_from_static_template (&gst_qtdemux_audiosrc_template, name);
     g_free (name);
-    gst_qtdemux_configure_stream (qtdemux, stream);
+    if (!gst_qtdemux_configure_stream (qtdemux, stream)) {
+      gst_object_unref (stream->pad);
+      stream->pad = NULL;
+      ret = FALSE;
+      goto done;
+    }
     qtdemux->n_audio_streams++;
   } else if (stream->subtype == FOURCC_strm) {
     GST_DEBUG_OBJECT (qtdemux, "stream type, not creating pad");
@@ -7174,7 +7186,12 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     stream->pad =
         gst_pad_new_from_static_template (&gst_qtdemux_subsrc_template, name);
     g_free (name);
-    gst_qtdemux_configure_stream (qtdemux, stream);
+    if (!gst_qtdemux_configure_stream (qtdemux, stream)) {
+      gst_object_unref (stream->pad);
+      stream->pad = NULL;
+      ret = FALSE;
+      goto done;
+    }
     qtdemux->n_sub_streams++;
   } else if (stream->caps) {
     gchar *name = g_strdup_printf ("video_%u", qtdemux->n_video_streams);
@@ -7182,7 +7199,12 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     stream->pad =
         gst_pad_new_from_static_template (&gst_qtdemux_videosrc_template, name);
     g_free (name);
-    gst_qtdemux_configure_stream (qtdemux, stream);
+    if (!gst_qtdemux_configure_stream (qtdemux, stream)) {
+      gst_object_unref (stream->pad);
+      stream->pad = NULL;
+      ret = FALSE;
+      goto done;
+    }
     qtdemux->n_video_streams++;
   } else {
     GST_DEBUG_OBJECT (qtdemux, "unknown stream type");
@@ -7211,7 +7233,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
 done:
   if (list)
     gst_tag_list_unref (list);
-  return TRUE;
+  return ret;
 }
 
 /* find next atom with @fourcc starting at @offset */
@@ -10606,7 +10628,8 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
     stream->pending_tags = NULL;
     if (oldpad)
       oldpads = g_slist_prepend (oldpads, oldpad);
-    gst_qtdemux_add_stream (qtdemux, stream, list);
+    if (!gst_qtdemux_add_stream (qtdemux, stream, list))
+      return GST_FLOW_ERROR;
   }
 
   gst_qtdemux_guess_bitrate (qtdemux);
