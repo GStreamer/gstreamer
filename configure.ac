@@ -973,6 +973,7 @@ AC_CONFIG_FILES([
     Makefile
     common/Makefile
     common/m4/Makefile
+    m4/Makefile
     docs/Makefile
     docs/version.entities
     docs/plugins/Makefile
