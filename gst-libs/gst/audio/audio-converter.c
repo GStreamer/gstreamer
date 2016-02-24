@@ -657,7 +657,7 @@ chain_convert_out (GstAudioConverter * convert, AudioChain * prev)
 static AudioChain *
 chain_quantize (GstAudioConverter * convert, AudioChain * prev)
 {
-  GstAudioInfo *in = &convert->in;
+  const GstAudioFormatInfo *cur_finfo;
   GstAudioInfo *out = &convert->out;
   gint in_depth, out_depth;
   gboolean in_int, out_int;
@@ -667,11 +667,13 @@ chain_quantize (GstAudioConverter * convert, AudioChain * prev)
   dither = GET_OPT_DITHER_METHOD (convert);
   ns = GET_OPT_NOISE_SHAPING_METHOD (convert);
 
-  in_depth = GST_AUDIO_FORMAT_INFO_DEPTH (in->finfo);
+  cur_finfo = gst_audio_format_get_info (convert->current_format);
+
+  in_depth = GST_AUDIO_FORMAT_INFO_DEPTH (cur_finfo);
   out_depth = GST_AUDIO_FORMAT_INFO_DEPTH (out->finfo);
   GST_INFO ("depth in %d, out %d", in_depth, out_depth);
 
-  in_int = GST_AUDIO_FORMAT_INFO_IS_INTEGER (in->finfo);
+  in_int = GST_AUDIO_FORMAT_INFO_IS_INTEGER (cur_finfo);
   out_int = GST_AUDIO_FORMAT_INFO_IS_INTEGER (out->finfo);
 
   /* Don't dither or apply noise shaping if target depth is bigger than 20 bits
