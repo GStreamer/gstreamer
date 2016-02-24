@@ -1437,11 +1437,13 @@ gst_gl_video_mixer_callback (gpointer stuff)
         || pad->alpha == 0.0f) {
       GST_DEBUG ("skipping texture:%u pad:%p width:%u height:%u alpha:%f",
           mix_pad->current_texture, pad, in_width, in_height, pad->alpha);
+      walk = g_list_next (walk);
       continue;
     }
 
     if (!_set_blend_state (video_mixer, pad)) {
       GST_FIXME_OBJECT (pad, "skipping due to incorrect blend parameters");
+      walk = g_list_next (walk);
       continue;
     }
 

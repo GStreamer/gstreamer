@@ -505,6 +505,7 @@ gst_gl_stereo_mix_process_frames (GstGLStereoMix * mixer)
 
     if (!pad || !pad->current_buffer) {
       GST_DEBUG ("skipping texture, null frame");
+      walk = g_list_next (walk);
       continue;
     }
 

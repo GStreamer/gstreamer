@@ -299,6 +299,7 @@ gst_gl_mosaic_callback (gpointer stuff)
       GST_DEBUG ("skipping texture:%u pad:%p width:%u height %u",
           in_tex, pad, width, height);
       count++;
+      walk = g_list_next (walk);
       continue;
     }
 
