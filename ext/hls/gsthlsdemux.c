@@ -428,22 +428,60 @@ gst_hls_demux_update_manifest (GstAdaptiveDemux * demux)
   return GST_FLOW_OK;
 }
 
-static gboolean
-gst_hls_demux_setup_streams (GstAdaptiveDemux * demux)
+static void
+create_stream_for_playlist (GstAdaptiveDemux * demux, GstM3U8 * playlist)
 {
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
-  GstAdaptiveDemuxStream *stream;
   GstHLSDemuxStream *hlsdemux_stream;
+  GstAdaptiveDemuxStream *stream;
 
-  /* only 1 output supported */
-  gst_hls_demux_clear_all_pending_data (hlsdemux);
   stream = gst_adaptive_demux_stream_new (demux,
       gst_hls_demux_create_pad (hlsdemux));
 
   hlsdemux_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
+  hlsdemux_stream->playlist = gst_m3u8_ref (playlist);
 
   hlsdemux_stream->do_typefind = TRUE;
   hlsdemux_stream->reset_pts = TRUE;
+}
+
+static gboolean
+gst_hls_demux_setup_streams (GstAdaptiveDemux * demux)
+{
+  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
+  GstHLSVariantStream *playlist = hlsdemux->current_variant;
+  gint i;
+
+  if (playlist == NULL) {
+    GST_WARNING_OBJECT (demux, "Can't configure streams - no variant selected");
+    return FALSE;
+  }
+
+  gst_hls_demux_clear_all_pending_data (hlsdemux);
+
+  /* 1 output for the main playlist */
+  create_stream_for_playlist (demux, playlist->m3u8);
+
+  for (i = 0; i < GST_HLS_N_MEDIA_TYPES; ++i) {
+    GList *mlist = playlist->media[i];
+    while (mlist != NULL) {
+      GstHLSMedia *media = mlist->data;
+
+      if (media->uri == NULL /* || media->mtype != GST_HLS_MEDIA_TYPE_AUDIO */ ) {
+        /* No uri means this is a placeholder for a stream
+         * contained in another mux */
+        GST_LOG_OBJECT (demux, "Skipping stream %s type %d with no URI",
+            media->name, media->mtype);
+        mlist = mlist->next;
+        continue;
+      }
+      GST_LOG_OBJECT (demux, "media of type %d - %s, uri: %s", i,
+          media->name, media->uri);
+      create_stream_for_playlist (demux, media->playlist);
+
+      mlist = mlist->next;
+    }
+  }
 
   return TRUE;
 }
@@ -671,7 +709,7 @@ key_failed:
 
 static GstFlowReturn
 gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
-    GstAdaptiveDemuxStream * stream, GstBuffer * buffer, gboolean force)
+    GstAdaptiveDemuxStream * stream, GstBuffer * buffer, gboolean at_eos)
 {
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);   // FIXME: pass HlsStream into function
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
@@ -694,7 +732,7 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
 
     /* Typefind could miss if buffer is too small. In this case we
      * will retry later */
-    if (buffer_size >= (2 * 1024)) {
+    if (buffer_size >= (2 * 1024) || at_eos) {
       caps =
           gst_type_find_helper_for_data (GST_OBJECT_CAST (hlsdemux), info.data,
           info.size, &prob);
@@ -704,7 +742,7 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
     if (G_UNLIKELY (!caps)) {
       /* Only fail typefinding if we already a good amount of data
        * and we still don't know the type */
-      if (buffer_size > (2 * 1024 * 1024) || force) {
+      if (buffer_size > (2 * 1024 * 1024) || at_eos) {
         GST_ELEMENT_ERROR (hlsdemux, STREAM, TYPE_NOT_FOUND,
             ("Could not determine type of stream"), (NULL));
         gst_buffer_unref (buffer);
@@ -826,6 +864,11 @@ gst_hls_demux_stream_free (GstAdaptiveDemuxStream * stream)
 {
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
 
+  if (hls_stream->playlist) {
+    gst_m3u8_unref (hls_stream->playlist);
+    hls_stream->playlist = NULL;
+  }
+
   if (hls_stream->pending_encrypted_data)
     g_object_unref (hls_stream->pending_encrypted_data);
 
@@ -846,15 +889,9 @@ gst_hls_demux_stream_free (GstAdaptiveDemuxStream * stream)
 static GstM3U8 *
 gst_hls_demux_stream_get_m3u8 (GstHLSDemuxStream * hlsdemux_stream)
 {
-  GstAdaptiveDemuxStream *stream = (GstAdaptiveDemuxStream *) hlsdemux_stream;
-  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (stream->demux);
   GstM3U8 *m3u8;
 
-  g_assert (hlsdemux->current_variant != NULL);
-
-  // FIXME: what about locking? should always be called with lock
-  // that makes sure playlist aren't changed while we do things
-  m3u8 = hlsdemux->current_variant->m3u8;
+  m3u8 = hlsdemux_stream->playlist;
 
   return m3u8;
 }
@@ -1024,6 +1061,8 @@ gst_hls_demux_find_variant_match (const GstHLSVariantStream * a,
   return 1;
 }
 
+/* Update the master playlist, which contains the list of available
+ * variants */
 static gboolean
 gst_hls_demux_update_variant_playlist (GstHLSDemux * hlsdemux, gchar * data,
     const gchar * uri, const gchar * base_uri)
@@ -1113,6 +1152,57 @@ out:
 }
 
 static gboolean
+gst_hls_demux_update_rendition_manifest (GstHLSDemux * demux,
+    GstHLSMedia * media, GError ** err)
+{
+  GstAdaptiveDemux *adaptive_demux = GST_ADAPTIVE_DEMUX (demux);
+  GstFragment *download;
+  GstBuffer *buf;
+  gchar *playlist;
+  const gchar *main_uri;
+  GstM3U8 *m3u8;
+  gchar *uri = media->uri;
+
+  main_uri = gst_adaptive_demux_get_manifest_ref_uri (adaptive_demux);
+  download =
+      gst_uri_downloader_fetch_uri (adaptive_demux->downloader, uri, main_uri,
+      TRUE, TRUE, TRUE, err);
+
+  if (download == NULL)
+    return FALSE;
+
+  m3u8 = media->playlist;
+
+  /* Set the base URI of the playlist to the redirect target if any */
+  if (download->redirect_permanent && download->redirect_uri) {
+    gst_m3u8_set_uri (m3u8, download->redirect_uri, NULL, media->name);
+  } else {
+    gst_m3u8_set_uri (m3u8, download->uri, download->redirect_uri, media->name);
+  }
+
+  buf = gst_fragment_get_buffer (download);
+  playlist = gst_hls_src_buf_to_utf8_playlist (buf);
+  gst_buffer_unref (buf);
+  g_object_unref (download);
+
+  if (playlist == NULL) {
+    GST_WARNING_OBJECT (demux, "Couldn't validate playlist encoding");
+    g_set_error (err, GST_STREAM_ERROR, GST_STREAM_ERROR_WRONG_TYPE,
+        "Couldn't validate playlist encoding");
+    return FALSE;
+  }
+
+  if (!gst_m3u8_update (m3u8, playlist)) {
+    GST_WARNING_OBJECT (demux, "Couldn't update playlist");
+    g_set_error (err, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
+        "Couldn't update playlist");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
     GError ** err)
 {
@@ -1124,6 +1214,7 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
   const gchar *main_uri;
   GstM3U8 *m3u8;
   gchar *uri;
+  gint i;
 
 retry:
   uri = gst_m3u8_get_uri (demux->current_variant->m3u8);
@@ -1216,6 +1307,29 @@ retry:
     g_set_error (err, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
         "Couldn't update playlist");
     return FALSE;
+  }
+
+  for (i = 0; i < GST_HLS_N_MEDIA_TYPES; ++i) {
+    GList *mlist = demux->current_variant->media[i];
+
+    while (mlist != NULL) {
+      GstHLSMedia *media = mlist->data;
+
+      if (media->uri == NULL) {
+        /* No uri means this is a placeholder for a stream
+         * contained in another mux */
+        mlist = mlist->next;
+        continue;
+      }
+      GST_LOG_OBJECT (demux,
+          "Updating playlist for media of type %d - %s, uri: %s", i,
+          media->name, media->uri);
+
+      if (!gst_hls_demux_update_rendition_manifest (demux, media, err))
+        return FALSE;
+
+      mlist = mlist->next;
+    }
   }
 
   /* If it's a live source, do not let the sequence number go beyond
