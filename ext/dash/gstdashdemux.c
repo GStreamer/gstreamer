@@ -317,10 +317,12 @@ gst_dash_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
   GDateTime *now;
   GDateTime *mstart;
   GTimeSpan stream_now;
+  GstClockTime seg_duration;
 
   if (self->client->mpd_node->availabilityStartTime == NULL)
     return FALSE;
 
+  seg_duration = gst_mpd_client_get_maximum_segment_duration (self->client);
   now = gst_dash_demux_get_server_now_utc (self);
   mstart =
       gst_date_time_to_g_date_time (self->client->
@@ -341,6 +343,17 @@ gst_dash_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
     if (*start < 0)
       *start = 0;
   }
+
+  /* As defined in 5.3.9.5.3 of the DASH specification, a segment does
+     not become available until the sum of:
+     * the value of the MPD@availabilityStartTime,
+     * the PeriodStart time of the containing Period
+     * the MPD start time of the Media Segment, and
+     * the MPD duration of the Media Segment.
+     Therefore we need to subtract the media segment duration from the stop
+     time.
+   */
+  *stop -= seg_duration;
   return TRUE;
 }
 

@@ -538,6 +538,7 @@ gboolean gst_mpd_client_setup_streaming (GstMpdClient * client, GstAdaptationSet
 gboolean gst_mpd_client_setup_representation (GstMpdClient *client, GstActiveStream *stream, GstRepresentationNode *representation);
 GstClockTime gst_mpd_client_get_next_fragment_duration (GstMpdClient * client, GstActiveStream * stream);
 GstClockTime gst_mpd_client_get_media_presentation_duration (GstMpdClient *client);
+GstClockTime gst_mpd_client_get_maximum_segment_duration (GstMpdClient * client);
 gboolean gst_mpd_client_get_last_fragment_timestamp_end (GstMpdClient * client, guint stream_idx, GstClockTime * ts);
 gboolean gst_mpd_client_get_next_fragment_timestamp (GstMpdClient * client, guint stream_idx, GstClockTime * ts);
 gboolean gst_mpd_client_get_next_fragment (GstMpdClient *client, guint indexStream, GstMediaFragmentInfo * fragment);

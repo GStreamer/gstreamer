@@ -5989,3 +5989,29 @@ gst_mpd_client_parse_default_presentation_delay (GstMpdClient * client,
   }
   return value;
 }
+
+GstClockTime
+gst_mpd_client_get_maximum_segment_duration (GstMpdClient * client)
+{
+  GstClockTime ret = GST_CLOCK_TIME_NONE, dur;
+  GList *stream;
+
+  g_return_val_if_fail (client != NULL, GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (client->mpd_node != NULL, GST_CLOCK_TIME_NONE);
+
+  if (client->mpd_node->maxSegmentDuration != GST_MPD_DURATION_NONE) {
+    return client->mpd_node->maxSegmentDuration * GST_MSECOND;
+  }
+
+  /* According to the DASH specification, if maxSegmentDuration is not present:
+     "If not present, then the maximum Segment duration shall be the maximum
+     duration of any Segment documented in this MPD"
+   */
+  for (stream = client->active_streams; stream; stream = g_list_next (stream)) {
+    dur = gst_mpd_client_get_segment_duration (client, stream->data, NULL);
+    if (dur != GST_CLOCK_TIME_NONE && (dur > ret || ret == GST_CLOCK_TIME_NONE)) {
+      ret = dur;
+    }
+  }
+  return ret;
+}
