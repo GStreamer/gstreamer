@@ -47,22 +47,20 @@
 GST_DEBUG_CATEGORY_STATIC (monoscope_debug);
 #define GST_CAT_DEFAULT monoscope_debug
 
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#define RGB_ORDER "xRGB"
+#else
+#define RGB_ORDER "BGRx"
+#endif
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-#if G_BYTE_ORDER == G_BIG_ENDIAN
     GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) xRGB, "
+        "format = (string) " RGB_ORDER ", "
         "width = " G_STRINGIFY (scope_width) ", "
         "height = " G_STRINGIFY (scope_height) ", "
         "framerate = " GST_VIDEO_FPS_RANGE)
-#else
-    GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) BGRx, "
-        "width = " G_STRINGIFY (scope_width) ", "
-        "height = " G_STRINGIFY (scope_height) ", "
-        "framerate = " GST_VIDEO_FPS_RANGE)
-#endif
     );
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",

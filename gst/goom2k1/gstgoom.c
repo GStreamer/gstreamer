@@ -51,14 +51,16 @@ GST_DEBUG_CATEGORY_STATIC (goom2k1_debug);
 #define DEFAULT_FPS_N  25
 #define DEFAULT_FPS_D  1
 
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#define RGB_ORDER "xRGB"
+#else
+#define RGB_ORDER "BGRx"
+#endif
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("xRGB"))
-#else
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("BGRx"))
-#endif
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (RGB_ORDER))
     );
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",    /* the name of the pads */
