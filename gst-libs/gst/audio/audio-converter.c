@@ -959,10 +959,7 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
           ("same formats, no resampler and passthrough mixing -> passthrough");
       convert->convert = converter_passthrough;
     } else {
-      if (in_info->finfo->format == GST_AUDIO_FORMAT_S16 ||
-          in_info->finfo->format == GST_AUDIO_FORMAT_S32 ||
-          in_info->finfo->format == GST_AUDIO_FORMAT_F32 ||
-          in_info->finfo->format == GST_AUDIO_FORMAT_F64) {
+      if (is_intermediate_format (in_info->finfo->format)) {
         GST_INFO ("same formats, and passthrough mixing -> only resampling");
         convert->convert = converter_resample;
       }
