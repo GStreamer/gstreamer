@@ -145,6 +145,7 @@ struct _GstAdaptiveDemuxStream
 
   /* download tooling */
   GstElement *src;
+  guint last_status_code;
   GstPad *src_srcpad;
   GstElement *uri_handler;
   GstElement *queue;
