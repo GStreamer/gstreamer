@@ -55,7 +55,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-hls"));
 
-GST_DEBUG_CATEGORY_STATIC (gst_hls_demux_debug);
+GST_DEBUG_CATEGORY (gst_hls_demux_debug);
 #define GST_CAT_DEFAULT gst_hls_demux_debug
 
 #define GST_M3U8_CLIENT_LOCK(l) /* FIXME */
@@ -248,6 +248,7 @@ gst_hls_demux_stream_clear_pending_data (GstHLSDemuxStream * hls_stream)
     gst_adapter_clear (hls_stream->pending_encrypted_data);
   gst_buffer_replace (&hls_stream->pending_decrypted_buffer, NULL);
   gst_buffer_replace (&hls_stream->pending_typefind_buffer, NULL);
+  gst_buffer_replace (&hls_stream->pending_pcr_buffer, NULL);
   hls_stream->current_offset = -1;
   gst_hls_demux_stream_decrypt_end (hls_stream);
 }
@@ -695,6 +696,9 @@ gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
 
   gst_hls_demux_stream_clear_pending_data (hls_stream);
 
+  /* Init the MPEG-TS reader for this fragment */
+  gst_hlsdemux_tsreader_init (&hls_stream->tsreader);
+
   /* If no decryption is needed, there's nothing to be done here */
   if (hls_stream->current_key == NULL)
     return TRUE;
@@ -727,13 +731,16 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
 {
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);   // FIXME: pass HlsStream into function
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
+  GstMapInfo info;
+  GstClockTime first_pcr, last_pcr;
 
   if (buffer == NULL)
     return GST_FLOW_OK;
 
+  gst_buffer_map (buffer, &info, GST_MAP_READ);
+
   if (G_UNLIKELY (hls_stream->do_typefind)) {
     GstCaps *caps = NULL;
-    GstMapInfo info;
     guint buffer_size;
     GstTypeFindProbability prob = GST_TYPE_FIND_NONE;
 
@@ -751,9 +758,11 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
           gst_type_find_helper_for_data (GST_OBJECT_CAST (hlsdemux), info.data,
           info.size, &prob);
     }
-    gst_buffer_unmap (buffer, &info);
 
     if (G_UNLIKELY (!caps)) {
+      /* Won't need this mapping any more all paths return inside this if() */
+      gst_buffer_unmap (buffer, &info);
+
       /* Only fail typefinding if we already a good amount of data
        * and we still don't know the type */
       if (buffer_size > (2 * 1024 * 1024) || at_eos) {
@@ -775,6 +784,25 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
     hls_stream->do_typefind = FALSE;
   }
   g_assert (hls_stream->pending_typefind_buffer == NULL);
+
+  // Accumulate this buffer
+  if (hls_stream->pending_pcr_buffer) {
+    gst_buffer_unmap (buffer, &info);
+    buffer = gst_buffer_append (hls_stream->pending_pcr_buffer, buffer);
+    hls_stream->pending_pcr_buffer = NULL;
+    gst_buffer_map (buffer, &info, GST_MAP_READ);
+  }
+
+  if (!gst_hlsdemux_tsreader_find_pcrs (&hls_stream->tsreader, info.data,
+          info.size, &first_pcr, &last_pcr)
+      && !at_eos) {
+    gst_buffer_unmap (buffer, &info);
+    // Store this buffer for later
+    hls_stream->pending_pcr_buffer = buffer;
+    return GST_FLOW_OK;
+  }
+
+  gst_buffer_unmap (buffer, &info);
 
   if (buffer) {
     buffer = gst_buffer_make_writable (buffer);
@@ -818,6 +846,21 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
       hls_stream->pending_decrypted_buffer = NULL;
     }
   }
+
+  if (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED) {
+    if (hls_stream->pending_pcr_buffer) {
+      GstBuffer *buf = hls_stream->pending_pcr_buffer;
+      hls_stream->pending_pcr_buffer = NULL;
+
+      ret = gst_hls_demux_handle_buffer (demux, stream, buf, TRUE);
+    }
+
+    GST_LOG_OBJECT (stream,
+        "Fragment PCRs were %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (hls_stream->tsreader.first_pcr),
+        GST_TIME_ARGS (hls_stream->tsreader.last_pcr));
+  }
+
   gst_hls_demux_stream_clear_pending_data (hls_stream);
 
   if (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED)
@@ -888,6 +931,7 @@ gst_hls_demux_stream_free (GstAdaptiveDemuxStream * stream)
 
   gst_buffer_replace (&hls_stream->pending_decrypted_buffer, NULL);
   gst_buffer_replace (&hls_stream->pending_typefind_buffer, NULL);
+  gst_buffer_replace (&hls_stream->pending_pcr_buffer, NULL);
 
   if (hls_stream->current_key) {
     g_free (hls_stream->current_key);

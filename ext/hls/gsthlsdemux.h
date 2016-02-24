@@ -58,8 +58,19 @@ G_BEGIN_DECLS
 typedef struct _GstHLSDemux GstHLSDemux;
 typedef struct _GstHLSDemuxClass GstHLSDemuxClass;
 typedef struct _GstHLSDemuxStream GstHLSDemuxStream;
+typedef struct _GstHLSTSReader GstHLSTSReader;
 
 #define GST_HLS_DEMUX_STREAM_CAST(stream) ((GstHLSDemuxStream *)(stream))
+
+struct _GstHLSTSReader
+{
+  gint packet_size;
+  gint pmt_pid;
+  gint pcr_pid;
+
+  GstClockTime last_pcr;
+  GstClockTime first_pcr;
+};
 
 struct _GstHLSDemuxStream
 {
@@ -89,10 +100,12 @@ struct _GstHLSDemuxStream
   gchar     *current_key;
   guint8    *current_iv;
 
-  GstBuffer *pending_buffer; /* decryption scenario:
-                              * the last buffer can only be pushed when
-                              * resized, so need to store and wait for
-                              * EOS to know it is the last */
+  /* Accumulator for reading PAT/PMT/PCR from
+   * the stream so we can set timestamps/segments
+   * and switch cleanly */
+  GstBuffer *pending_pcr_buffer;
+
+  GstHLSTSReader tsreader;
 };
 
 typedef struct {
@@ -125,6 +138,10 @@ struct _GstHLSDemuxClass
 {
   GstAdaptiveDemuxClass parent_class;
 };
+
+void gst_hlsdemux_tsreader_init (GstHLSTSReader *r);
+gboolean gst_hlsdemux_tsreader_find_pcrs (GstHLSTSReader *r, const guint8 * data, guint size,
+    GstClockTime *first_pcr, GstClockTime *last_pcr);
 
 GType gst_hls_demux_get_type (void);
 
