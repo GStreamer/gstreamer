@@ -1,0 +1,22 @@
+EXPORTS
+	gst_fft_f32_fft
+	gst_fft_f32_free
+	gst_fft_f32_inverse_fft
+	gst_fft_f32_new
+	gst_fft_f32_window
+	gst_fft_f64_fft
+	gst_fft_f64_free
+	gst_fft_f64_inverse_fft
+	gst_fft_f64_new
+	gst_fft_f64_window
+	gst_fft_next_fast_length
+	gst_fft_s16_fft
+	gst_fft_s16_free
+	gst_fft_s16_inverse_fft
+	gst_fft_s16_new
+	gst_fft_s16_window
+	gst_fft_s32_fft
+	gst_fft_s32_free
+	gst_fft_s32_inverse_fft
+	gst_fft_s32_new
+	gst_fft_s32_window
