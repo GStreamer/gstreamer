@@ -31,7 +31,11 @@ typedef struct
     unsigned int         range;
 } BOOL_DECODER;
 
+#ifdef _MSC_VER
+__declspec(align(16)) extern const unsigned char vp8_norm[256];
+#else
 extern const unsigned char vp8_norm[256] __attribute__((aligned(16)));
+#endif
 
 int vp8dx_start_decode(BOOL_DECODER *br,
                        const unsigned char *source,

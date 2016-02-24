@@ -33,8 +33,12 @@
 #define DEFAULT_MIN_FRAMES 0
 #define RTP_SBC_HEADER_TOTAL (12 + RTP_SBC_PAYLOAD_HEADER_SIZE)
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+/* BEGIN: Packing for rtp_payload */
+#ifdef _MSC_VER
+#pragma pack(push, 1)
+#endif
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
 /* FIXME: this seems all a bit over the top for a single byte.. */
 struct rtp_payload
 {
@@ -43,10 +47,8 @@ struct rtp_payload
   guint8 is_last_fragment:1;
   guint8 is_first_fragment:1;
   guint8 is_fragmented:1;
-} __attribute__ ((packed));
-
+}
 #elif G_BYTE_ORDER == G_BIG_ENDIAN
-
 struct rtp_payload
 {
   guint8 is_fragmented:1;
@@ -54,11 +56,18 @@ struct rtp_payload
   guint8 is_last_fragment:1;
   guint8 rfa0:1;
   guint8 frame_count:4;
-} __attribute__ ((packed));
-
+}
 #else
 #error "Unknown byte order"
 #endif
+
+#ifdef _MSC_VER
+;
+#pragma pack(pop)
+#else
+__attribute__ ((packed));
+#endif
+/* END: Packing for rtp_payload */
 
 enum
 {
