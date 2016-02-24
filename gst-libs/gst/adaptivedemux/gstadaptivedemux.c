@@ -2588,11 +2588,14 @@ gst_ad_stream_src_to_ready_cb (GstPad * pad, GstPadProbeInfo * info,
 static GstFlowReturn
 gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, const gchar * uri, gint64 start,
-    gint64 end)
+    gint64 end, guint * http_status)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GST_DEBUG_OBJECT (stream->pad, "Downloading uri: %s, range:%" G_GINT64_FORMAT
       " - %" G_GINT64_FORMAT, uri, start, end);
+
+  if (http_status)
+    *http_status = 200;         /* default to ok if no further information */
 
   if (!gst_adaptive_demux_stream_update_source (stream, uri, NULL, FALSE, TRUE)) {
     ret = stream->last_ret = GST_FLOW_ERROR;
@@ -2676,6 +2679,9 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
 
       GST_DEBUG_OBJECT (stream->pad, "Fragment download finished: %s %d %s",
           uri, stream->last_ret, gst_flow_get_name (stream->last_ret));
+      if (stream->last_ret != GST_FLOW_OK && http_status) {
+        *http_status = stream->last_status_code;
+      }
     }
   } else {
     if (stream->last_ret == GST_FLOW_OK)
@@ -2739,7 +2745,7 @@ gst_adaptive_demux_stream_download_header_fragment (GstAdaptiveDemuxStream *
     stream->downloading_header = TRUE;
     ret = gst_adaptive_demux_stream_download_uri (demux, stream,
         stream->fragment.header_uri, stream->fragment.header_range_start,
-        stream->fragment.header_range_end);
+        stream->fragment.header_range_end, NULL);
     stream->downloading_header = FALSE;
   }
 
@@ -2754,7 +2760,7 @@ gst_adaptive_demux_stream_download_header_fragment (GstAdaptiveDemuxStream *
       stream->downloading_index = TRUE;
       ret = gst_adaptive_demux_stream_download_uri (demux, stream,
           stream->fragment.index_uri, stream->fragment.index_range_start,
-          stream->fragment.index_range_end);
+          stream->fragment.index_range_end, NULL);
       stream->downloading_index = FALSE;
     }
   }
@@ -2791,11 +2797,12 @@ gst_adaptive_demux_stream_download_fragment (GstAdaptiveDemuxStream * stream)
   url = stream->fragment.uri;
   GST_DEBUG_OBJECT (stream->pad, "Got url '%s' for stream %p", url, stream);
   if (url) {
+    guint http_status = 200;
     ret =
         gst_adaptive_demux_stream_download_uri (demux, stream, url,
-        stream->fragment.range_start, stream->fragment.range_end);
-    GST_DEBUG_OBJECT (stream->pad, "Fragment download result: %d %s",
-        stream->last_ret, gst_flow_get_name (stream->last_ret));
+        stream->fragment.range_start, stream->fragment.range_end, &http_status);
+    GST_DEBUG_OBJECT (stream->pad, "Fragment download result: %d (%d) %s",
+        stream->last_ret, http_status, gst_flow_get_name (stream->last_ret));
     if (ret != GST_FLOW_OK) {
       g_mutex_lock (&stream->fragment_download_lock);
       if (G_UNLIKELY (stream->cancelled)) {
