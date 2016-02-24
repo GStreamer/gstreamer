@@ -511,23 +511,33 @@ gst_nv_base_enc_finalize (GObject * obj)
 static GstVideoCodecFrame *
 _find_frame_with_output_buffer (GstNvBaseEnc * nvenc, NV_ENC_OUTPUT_PTR out_buf)
 {
-  GList *l = gst_video_encoder_get_frames (GST_VIDEO_ENCODER (nvenc));
+  GList *l, *walk = gst_video_encoder_get_frames (GST_VIDEO_ENCODER (nvenc));
+  GstVideoCodecFrame *ret = NULL;
   gint i;
 
-  for (; l; l = l->next) {
+  for (l = walk; l; l = l->next) {
     GstVideoCodecFrame *frame = (GstVideoCodecFrame *) l->data;
     struct frame_state *state = frame->user_data;
 
+    if (!state)
+      continue;
+
     for (i = 0; i < N_BUFFERS_PER_FRAME; i++) {
+
       if (!state->out_bufs[i])
         break;
 
       if (state->out_bufs[i] == out_buf)
-        return frame;
+        ret = frame;
     }
   }
 
-  return NULL;
+  if (ret)
+    gst_video_codec_frame_ref (ret);
+
+  g_list_free_full (walk, (GDestroyNotify) gst_video_codec_frame_unref);
+
+  return ret;
 }
 
 static gpointer
