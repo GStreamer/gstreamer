@@ -240,10 +240,10 @@ inner_product_gint16_cubic_1_sse2 (gint16 * o, const gint16 * a,
     sum[2] = _mm_add_epi32 (sum[2], _mm_madd_epi16 (t, _mm_load_si128 ((__m128i *) (c[2] + i))));
     sum[3] = _mm_add_epi32 (sum[3], _mm_madd_epi16 (t, _mm_load_si128 ((__m128i *) (c[3] + i))));
   }
-  sum[0] = _mm_srai_epi32 (sum[0], PRECISION_S16);
-  sum[1] = _mm_srai_epi32 (sum[1], PRECISION_S16);
-  sum[2] = _mm_srai_epi32 (sum[2], PRECISION_S16);
-  sum[3] = _mm_srai_epi32 (sum[3], PRECISION_S16);
+  sum[0] = _mm_srai_epi32 (sum[0], PRECISION_S16+1);
+  sum[1] = _mm_srai_epi32 (sum[1], PRECISION_S16+1);
+  sum[2] = _mm_srai_epi32 (sum[2], PRECISION_S16+1);
+  sum[3] = _mm_srai_epi32 (sum[3], PRECISION_S16+1);
 
   sum[0] = _mm_madd_epi16 (sum[0], _mm_shuffle_epi32 (f,  _MM_SHUFFLE (0, 0, 0, 0)));
   sum[1] = _mm_madd_epi16 (sum[1], _mm_shuffle_epi32 (f,  _MM_SHUFFLE (1, 1, 1, 1)));
@@ -256,8 +256,8 @@ inner_product_gint16_cubic_1_sse2 (gint16 * o, const gint16 * a,
   sum[0] = _mm_add_epi32 (sum[0], _mm_shuffle_epi32 (sum[0], _MM_SHUFFLE (2, 3, 2, 3)));
   sum[0] = _mm_add_epi32 (sum[0], _mm_shuffle_epi32 (sum[0], _MM_SHUFFLE (1, 1, 1, 1)));
 
-  sum[0] = _mm_add_epi32 (sum[0], _mm_set1_epi32 (1 << (PRECISION_S16 - 1)));
-  sum[0] = _mm_srai_epi32 (sum[0], PRECISION_S16);
+  sum[0] = _mm_add_epi32 (sum[0], _mm_set1_epi32 (1 << (PRECISION_S16 - 2)));
+  sum[0] = _mm_srai_epi32 (sum[0], PRECISION_S16-1);
   sum[0] = _mm_packs_epi32 (sum[0], sum[0]);
   *o = _mm_extract_epi16 (sum[0], 0);
 }
@@ -482,6 +482,11 @@ interpolate_gdouble_cubic_sse2 (gpointer op, const gpointer ap,
   }
 }
 
+#endif
+
+#if 0
+#define __SSE4_1__
+#pragma GCC target("sse4.1")
 #endif
 
 #if defined (HAVE_SMMINTRIN_H) && defined(__SSE4_1__)
