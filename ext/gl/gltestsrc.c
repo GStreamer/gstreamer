@@ -21,17 +21,18 @@
 #include "config.h"
 #endif
 
-/* non-GST-specific stuff */
-
 #include "gltestsrc.h"
 
-#include <string.h>
-#include <stdlib.h>
 #include <math.h>
 
 #ifndef M_PI
 #define M_PI  3.14159265358979323846
 #endif
+
+struct vts_color_struct
+{
+  gfloat R, G, B;
+};
 
 enum
 {
@@ -51,42 +52,75 @@ enum
 
 static const struct vts_color_struct vts_colors[] = {
   /* 100% white */
-  {255, 128, 128, 255, 255, 255, 255},
+  {1.0f, 1.0f, 1.0f},
   /* yellow */
-  {226, 0, 155, 255, 255, 0, 255},
+  {1.0f, 1.0f, 0.0f},
   /* cyan */
-  {179, 170, 0, 0, 255, 255, 255},
+  {0.0f, 1.0f, 1.0f},
   /* green */
-  {150, 46, 21, 0, 255, 0, 255},
+  {0.0f, 1.0f, 0.0f},
   /* magenta */
-  {105, 212, 235, 255, 0, 255, 255},
+  {1.0f, 0.0f, 1.0f},
   /* red */
-  {76, 85, 255, 255, 0, 0, 255},
+  {1.0f, 0.0f, 0.0f},
   /* blue */
-  {29, 255, 107, 0, 0, 255, 255},
+  {0.0f, 0.0f, 1.0f},
   /* black */
-  {16, 128, 128, 0, 0, 0, 255},
+  {0.0f, 0.0f, 0.0f},
   /* -I */
-  {16, 198, 21, 0, 0, 128, 255},
+  {0.0, 0.0f, 0.5f},
   /* +Q */
-  {16, 235, 198, 0, 128, 255, 255},
+  {0.0f, 0.5, 1.0f},
   /* superblack */
-  {0, 128, 128, 0, 0, 0, 255},
-  /* 5% grey */
-  {32, 128, 128, 32, 32, 32, 255},
+  {0.0f, 0.0f, 0.0f},
+  /* 7.421875% grey */
+  {19. / 256.0f, 19. / 256.0f, 19. / 256.0},
 };
 
-static void
-gst_gl_test_src_unicolor (GstGLTestSrc * v, GstBuffer * buffer, int w,
-    int h, const struct vts_color_struct *color);
+/* *INDENT-OFF* */
+static const GLfloat positions[] = {
+     -1.0,  1.0,  0.0, 1.0,
+      1.0,  1.0,  0.0, 1.0,
+      1.0, -1.0,  0.0, 1.0,
+     -1.0, -1.0,  0.0, 1.0,
+};
 
-void
-gst_gl_test_src_smpte (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
+static const GLushort indices_quad[] = { 0, 1, 2, 0, 2, 3 };
+/* *INDENT-ON* */
+
+struct SrcSMPTE
+{
+  struct BaseSrcImpl base;
+};
+
+static gpointer
+_src_smpte_new (GstGLTestSrc * test)
+{
+  struct SrcSMPTE *src = g_new0 (struct SrcSMPTE, 1);
+
+  src->base.src = test;
+
+  return src;
+}
+
+static gboolean
+_src_smpte_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
+{
+  struct SrcSMPTE *src = impl;
+
+  src->base.context = context;
+
+  return TRUE;
+}
+
+static gboolean
+_src_smpte_fill_bound_fbo (gpointer impl)
 {
 #if GST_GL_HAVE_OPENGL
+  struct SrcSMPTE *src = impl;
   int i;
 
-  if (gst_gl_context_get_gl_api (v->context) & GST_GL_API_OPENGL) {
+  if (gst_gl_context_get_gl_api (src->base.context) & GST_GL_API_OPENGL) {
 
     glClearColor (0.0, 0.0, 0.0, 1.0);
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -97,8 +131,7 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
     glLoadIdentity ();
 
     for (i = 0; i < 7; i++) {
-      glColor4f (vts_colors[i].R * (1 / 255.0f), vts_colors[i].G * (1 / 255.0f),
-          vts_colors[i].B * (1 / 255.0f), 1.0f);
+      glColor4f (vts_colors[i].R, vts_colors[i].G, vts_colors[i].B, 1.0f);
       glBegin (GL_QUADS);
       glVertex3f (-1.0f + i * (2.0f / 7.0f), -1.0f + 2.0 * (2.0f / 3.0f), 0);
       glVertex3f (-1.0f + (i + 1.0f) * (2.0f / 7.0f),
@@ -117,8 +150,7 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
         k = 6 - i;
       }
 
-      glColor4f (vts_colors[k].R * (1 / 255.0f), vts_colors[k].G * (1 / 255.0f),
-          vts_colors[k].B * (1 / 255.0f), 1.0f);
+      glColor4f (vts_colors[k].R, vts_colors[k].G, vts_colors[k].B, 1.0f);
       glBegin (GL_QUADS);
       glVertex3f (-1.0f + i * (2.0f / 7.0f), -1.0f + 2.0f * (3.0f / 4.0f), 0);
       glVertex3f (-1.0f + (i + 1) * (2.0f / 7.0f), -1.0f + 2.0f * (3.0f / 4.0f),
@@ -140,8 +172,7 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
         k = 9;
       }
 
-      glColor4f (vts_colors[k].R * (1 / 255.0f), vts_colors[k].G * (1 / 255.0f),
-          vts_colors[k].B * (1 / 255.0f), 1.0f);
+      glColor4f (vts_colors[k].R, vts_colors[k].G, vts_colors[k].B, 1.0f);
       glBegin (GL_QUADS);
       glVertex3f (-1.0f + i * (2.0f / 6.0f), -1.0f + 2.0f * 1, 0);
       glVertex3f (-1.0f + (i + 1) * (2.0f / 6.0f), -1.0f + 2.0f * 1, 0);
@@ -162,8 +193,7 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
         k = COLOR_DARK_GREY;
       }
 
-      glColor4f (vts_colors[k].R * (1 / 255.0f), vts_colors[k].G * (1 / 255.0f),
-          vts_colors[k].B * (1 / 255.0f), 1.0f);
+      glColor4f (vts_colors[k].R, vts_colors[k].G, vts_colors[k].B, 1.0f);
       glBegin (GL_QUADS);
       glVertex3f (-1.0f + 2.0f * (0.5f + i * (1.0f / 12.0f)), -1.0 + 2.0f * 1,
           0);
@@ -185,193 +215,540 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
     glEnd ();
   }
 #endif
-}
 
-/* *INDENT-OFF* */
-
-static const GLfloat positions[] = {
-     -1.0,  1.0,  0.0, 1.0,
-      1.0,  1.0,  0.0, 1.0,
-      1.0, -1.0,  0.0, 1.0,
-     -1.0, -1.0,  0.0, 1.0,
-  };
-static const GLfloat identitiy_matrix[] = {
-      1.0,  0.0,  0.0, 0.0,
-      0.0,  1.0,  0.0, 0.0,
-      0.0,  0.0,  1.0, 0.0,
-      0.0,  0.0,  0.0, 1.0,
-  };
-
-/* *INDENT-ON* */
-
-void
-gst_gl_test_src_shader (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
-{
-
-  GstGLFuncs *gl = v->context->gl_vtable;
-
-/* *INDENT-OFF* */
-  const GLfloat uvs[] = {
-     0.0,  1.0,
-     1.0,  1.0,
-     1.0,  0.0,
-     0.0,  0.0,
-  };
-/* *INDENT-ON* */
-
-  GLushort indices[] = { 0, 1, 2, 3, 0 };
-
-  GLint attr_position_loc = -1;
-  GLint attr_uv_loc = -1;
-
-  if (gst_gl_context_get_gl_api (v->context)) {
-
-    gst_gl_context_clear_shader (v->context);
-    gl->BindTexture (GL_TEXTURE_2D, 0);
-
-    gst_gl_shader_use (v->shader);
-
-    attr_position_loc =
-        gst_gl_shader_get_attribute_location (v->shader, "position");
-
-    attr_uv_loc = gst_gl_shader_get_attribute_location (v->shader, "uv");
-
-    /* Load the vertex position */
-    gl->VertexAttribPointer (attr_position_loc, 4, GL_FLOAT,
-        GL_FALSE, 0, positions);
-    /* Load the texture coordinate */
-    gl->VertexAttribPointer (attr_uv_loc, 2, GL_FLOAT, GL_FALSE, 0, uvs);
-
-    gl->EnableVertexAttribArray (attr_position_loc);
-    gl->EnableVertexAttribArray (attr_uv_loc);
-
-    gst_gl_shader_set_uniform_matrix_4fv (v->shader, "mvp",
-        1, GL_FALSE, identitiy_matrix);
-
-    gst_gl_shader_set_uniform_1f (v->shader, "time",
-        (gfloat) v->running_time / GST_SECOND);
-
-    gst_gl_shader_set_uniform_1f (v->shader, "aspect_ratio",
-        (gfloat) w / (gfloat) h);
-
-    gl->DrawElements (GL_TRIANGLE_STRIP, 5, GL_UNSIGNED_SHORT, indices);
-
-    gl->DisableVertexAttribArray (attr_position_loc);
-    gl->DisableVertexAttribArray (attr_uv_loc);
-
-    gst_gl_context_clear_shader (v->context);
-  }
+  return TRUE;
 }
 
 static void
-gst_gl_test_src_unicolor (GstGLTestSrc * v, GstBuffer * buffer, int w,
-    int h, const struct vts_color_struct *color)
+_src_smpte_free (gpointer impl)
 {
-#if GST_GL_HAVE_OPENGL
-  if (gst_gl_context_get_gl_api (v->context) & GST_GL_API_OPENGL) {
-    glClearColor (color->R * (1 / 255.0f), color->G * (1 / 255.0f),
-        color->B * (1 / 255.0f), 1.0f);
-    glClear (GL_COLOR_BUFFER_BIT);
-  }
-#endif
+  g_free (impl);
 }
 
-void
-gst_gl_test_src_black (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
+
+static const struct SrcFuncs src_smpte = {
+  GST_GL_TEST_SRC_SMPTE,
+  _src_smpte_new,
+  _src_smpte_init,
+  _src_smpte_fill_bound_fbo,
+  _src_smpte_free,
+};
+
+struct SrcUniColor
 {
-  gst_gl_test_src_unicolor (v, buffer, w, h, vts_colors + COLOR_BLACK);
+  struct BaseSrcImpl base;
+
+  struct vts_color_struct color;
+};
+
+static gpointer
+_src_uni_color_new (GstGLTestSrc * test)
+{
+  struct SrcUniColor *src = g_new0 (struct SrcUniColor, 1);
+
+  src->base.src = test;
+
+  return src;
 }
 
-void
-gst_gl_test_src_white (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
+static gboolean
+_src_uni_color_init (gpointer impl, GstGLContext * context,
+    GstVideoInfo * v_info)
 {
-  gst_gl_test_src_unicolor (v, buffer, w, h, vts_colors + COLOR_WHITE);
+  struct SrcUniColor *src = impl;
+
+  src->base.context = context;
+  src->base.v_info = *v_info;
+
+  return TRUE;
 }
 
-void
-gst_gl_test_src_red (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
+static gboolean
+_src_uni_color_fill_bound_fbo (gpointer impl)
 {
-  gst_gl_test_src_unicolor (v, buffer, w, h, vts_colors + COLOR_RED);
-}
+  struct SrcUniColor *src = impl;
+  const GstGLFuncs *gl = src->base.context->gl_vtable;
 
-void
-gst_gl_test_src_green (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
-{
-  gst_gl_test_src_unicolor (v, buffer, w, h, vts_colors + COLOR_GREEN);
-}
+  gl->ClearColor (src->color.R, src->color.G, src->color.B, 1.0f);
+  gl->Clear (GL_COLOR_BUFFER_BIT);
 
-void
-gst_gl_test_src_blue (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
-{
-  gst_gl_test_src_unicolor (v, buffer, w, h, vts_colors + COLOR_BLUE);
+  return TRUE;
 }
 
 static void
-gst_gl_test_src_checkers (GstGLTestSrc * v, gint checker_width)
+_src_uni_color_free (gpointer impl)
 {
+  g_free (impl);
+}
 
-  GstGLFuncs *gl = v->context->gl_vtable;
+#define SRC_UNICOLOR(name, cap_name) \
+static gpointer \
+G_PASTE(G_PASTE(_src_unicolor_,name),_new) (GstGLTestSrc * test) \
+{ \
+  struct SrcUniColor *src = _src_uni_color_new (test); \
+  src->color = vts_colors[G_PASTE(COLOR_,cap_name)]; \
+  return src; \
+} \
+static const struct SrcFuncs G_PASTE (src_,name) = { \
+  G_PASTE(GST_GL_TEST_SRC_,cap_name), \
+  G_PASTE(G_PASTE(_src_unicolor_,name),_new), \
+  _src_uni_color_init, \
+  _src_uni_color_fill_bound_fbo, \
+  _src_uni_color_free, \
+}
 
-  GLushort indices[] = { 0, 1, 2, 3, 0 };
+SRC_UNICOLOR (white, WHITE);
+SRC_UNICOLOR (black, BLACK);
+SRC_UNICOLOR (red, RED);
+SRC_UNICOLOR (green, GREEN);
+SRC_UNICOLOR (blue, BLUE);
 
-  GLint attr_position_loc = -1;
+static gpointer
+_src_blink_new (GstGLTestSrc * test)
+{
+  struct SrcUniColor *src = _src_uni_color_new (test);
 
-  if (gst_gl_context_get_gl_api (v->context)) {
+  src->color = vts_colors[COLOR_WHITE];
 
-    gst_gl_context_clear_shader (v->context);
-    gl->BindTexture (GL_TEXTURE_2D, 0);
+  return src;
+}
 
-    gst_gl_shader_use (v->shader);
+static gboolean
+_src_blink_fill_bound_fbo (gpointer impl)
+{
+  struct SrcUniColor *src = impl;
 
-    attr_position_loc =
-        gst_gl_shader_get_attribute_location (v->shader, "position");
-
-    /* Load the vertex position */
-    gl->VertexAttribPointer (attr_position_loc, 4, GL_FLOAT,
-        GL_FALSE, 0, positions);
-
-    gl->EnableVertexAttribArray (attr_position_loc);
-
-    gst_gl_shader_set_uniform_matrix_4fv (v->shader, "mvp",
-        1, GL_FALSE, identitiy_matrix);
-
-    gst_gl_shader_set_uniform_1f (v->shader, "checker_width", checker_width);
-
-    gl->DrawElements (GL_TRIANGLE_STRIP, 5, GL_UNSIGNED_SHORT, indices);
-
-    gl->DisableVertexAttribArray (attr_position_loc);
-
-    gst_gl_context_clear_shader (v->context);
+  if (src->color.R > 0.5) {
+    src->color = vts_colors[COLOR_BLACK];
+  } else {
+    src->color = vts_colors[COLOR_WHITE];
   }
+
+  return _src_uni_color_fill_bound_fbo (impl);
 }
 
+static const struct SrcFuncs src_blink = {
+  GST_GL_TEST_SRC_BLINK,
+  _src_blink_new,
+  _src_uni_color_init,
+  _src_blink_fill_bound_fbo,
+  _src_uni_color_free,
+};
 
-void
-gst_gl_test_src_checkers1 (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
+struct SrcShader
 {
-  gst_gl_test_src_checkers (v, 1);
-}
+  struct BaseSrcImpl base;
 
+  GstGLShader *shader;
 
-void
-gst_gl_test_src_checkers2 (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
+  gint attr_position;
+  gint attr_texcoord;
+  /* x, y, z, w */
+  const gfloat *vertices;
+  guint n_vertices;
+  const gushort *indices;
+  guint n_indices;
+};
+
+static gboolean
+_src_shader_fill_bound_fbo (gpointer impl)
 {
-  gst_gl_test_src_checkers (v, 2);
+  struct SrcShader *src = impl;
+  const GstGLFuncs *gl;
+
+  g_return_val_if_fail (src->base.context, FALSE);
+  g_return_val_if_fail (src->shader, FALSE);
+  gl = src->base.context->gl_vtable;
+
+  gst_gl_shader_use (src->shader);
+
+  if (src->attr_position != -1) {
+    gl->VertexAttribPointer (src->attr_position, 4, GL_FLOAT, GL_FALSE, 0,
+        src->vertices);
+    gl->EnableVertexAttribArray (src->attr_position);
+  }
+  gl->DrawElements (GL_TRIANGLES, src->n_indices, GL_UNSIGNED_SHORT,
+      src->indices);
+
+  if (src->attr_position != -1)
+    gl->DisableVertexAttribArray (src->attr_position);
+  gst_gl_context_clear_shader (src->base.context);
+
+  return TRUE;
 }
 
-void
-gst_gl_test_src_checkers4 (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
+/* *INDENT-OFF* */
+static const gchar *checkers_vertex_src = "attribute vec4 position;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = position;\n"
+    "}";
+
+static const gchar *checkers_fragment_src =
+    "#ifdef GL_ES\n"
+    "precision mediump float;\n"
+    "#endif\n"
+    "uniform float checker_width;\n"
+    "void main()\n"
+    "{\n"
+    "  vec2 xy_index= floor((gl_FragCoord.xy-vec2(0.5,0.5))/checker_width);\n"
+    "  vec2 xy_mod=mod(xy_index,vec2(2.0,2.0));\n"
+    "  float result=mod(xy_mod.x+xy_mod.y,2.0);\n"
+    "  gl_FragColor.r=step(result,0.5);\n"
+    "  gl_FragColor.g=1.0-gl_FragColor.r;\n"
+    "  gl_FragColor.ba=vec2(0,1);\n"
+    "}";
+/* *INDENT-ON* */
+
+struct SrcCheckers
 {
-  gst_gl_test_src_checkers (v, 4);
+  struct SrcShader base;
 
-}
+  guint checker_width;
+};
 
-void
-gst_gl_test_src_checkers8 (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
+static gboolean
+_src_checkers_init (gpointer impl, GstGLContext * context,
+    GstVideoInfo * v_info)
 {
-  gst_gl_test_src_checkers (v, 8);
+  struct SrcCheckers *src = impl;
+  GError *error = NULL;
+
+  src->base.base.context = context;
+
+  if (src->base.shader)
+    gst_object_unref (src->base.shader);
+  src->base.shader = gst_gl_shader_new_link_with_stages (context, &error,
+      gst_glsl_stage_new_with_string (context, GL_VERTEX_SHADER,
+          GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
+          checkers_vertex_src),
+      gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+          GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
+          checkers_fragment_src), NULL);
+  if (!src->base.shader) {
+    GST_ERROR_OBJECT (src->base.base.src, "%s", error->message);
+    return FALSE;
+  }
+
+  src->base.attr_position =
+      gst_gl_shader_get_attribute_location (src->base.shader, "position");
+  if (src->base.attr_position == -1) {
+    GST_ERROR_OBJECT (src->base.base.src, "No position attribute");
+    return FALSE;
+  }
+  src->base.vertices = positions;
+  src->base.n_vertices = 4;
+  src->base.indices = indices_quad;
+  src->base.n_indices = 6;
+
+  gst_gl_shader_use (src->base.shader);
+  gst_gl_shader_set_uniform_1f (src->base.shader, "checker_width",
+      src->checker_width);
+  gst_gl_context_clear_shader (src->base.base.context);
+
+  return TRUE;
 }
 
+static void
+_src_checkers_free (gpointer impl)
+{
+  struct SrcCheckers *src = impl;
+
+  if (!src)
+    return;
+
+  if (src->base.shader)
+    gst_object_unref (src->base.shader);
+  src->base.shader = NULL;
+
+  g_free (impl);
+}
+
+static gpointer
+_src_checkers_new (GstGLTestSrc * test)
+{
+  struct SrcCheckers *src = g_new0 (struct SrcCheckers, 1);
+
+  src->base.base.src = test;
+
+  return src;
+}
+
+#define SRC_CHECKERS(spacing) \
+static gpointer \
+G_PASTE(G_PASTE(_src_checkers,spacing),_new) (GstGLTestSrc * test) \
+{ \
+  struct SrcCheckers *src = _src_checkers_new (test); \
+  src->checker_width = spacing; \
+  return src; \
+} \
+static const struct SrcFuncs G_PASTE(src_checkers,spacing) = { \
+  G_PASTE(GST_GL_TEST_SRC_CHECKERS,spacing), \
+  G_PASTE(G_PASTE(_src_checkers,spacing),_new), \
+  _src_checkers_init, \
+  _src_shader_fill_bound_fbo, \
+  _src_checkers_free, \
+}
+
+SRC_CHECKERS (1);
+SRC_CHECKERS (2);
+SRC_CHECKERS (4);
+SRC_CHECKERS (8);
+
+/* *INDENT-OFF* */
+static const gchar *snow_vertex_src =
+    "attribute vec4 position;\n"
+    "varying vec2 out_uv;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = position;\n"
+    "   out_uv = position.xy;\n"
+    "}";
+
+static const gchar *snow_fragment_src = 
+    "#ifdef GL_ES\n"
+    "precision mediump float;\n"
+    "#endif\n"
+    "uniform float time;\n"
+    "varying vec2 out_uv;\n"
+    "\n"
+    "float rand(vec2 co){\n"
+    "    return fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453);\n"
+    "}\n"
+    "void main()\n"
+    "{\n"
+    "  gl_FragColor = vec4(rand(time * out_uv));\n"
+    "}";
+/* *INDENT-ON* */
+
+static gboolean
+_src_snow_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
+{
+  struct SrcShader *src = impl;
+  GError *error = NULL;
+
+  src->base.context = context;
+
+  if (src->shader)
+    gst_object_unref (src->shader);
+  src->shader = gst_gl_shader_new_link_with_stages (context, &error,
+      gst_glsl_stage_new_with_string (context, GL_VERTEX_SHADER,
+          GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
+          snow_vertex_src),
+      gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+          GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
+          snow_fragment_src), NULL);
+  if (!src->shader) {
+    GST_ERROR_OBJECT (src->base.src, "%s", error->message);
+    return FALSE;
+  }
+
+  src->attr_position =
+      gst_gl_shader_get_attribute_location (src->shader, "position");
+  if (src->attr_position == -1) {
+    GST_ERROR_OBJECT (src->base.src, "No position attribute");
+    return FALSE;
+  }
+  src->vertices = positions;
+  src->n_vertices = 4;
+  src->indices = indices_quad;
+  src->n_indices = 6;
+
+  return TRUE;
+}
+
+static gboolean
+_src_snow_fill_bound_fbo (gpointer impl)
+{
+  struct SrcShader *src = impl;
+
+  g_return_val_if_fail (src->base.context, FALSE);
+  g_return_val_if_fail (src->shader, FALSE);
+
+  gst_gl_shader_use (src->shader);
+  gst_gl_shader_set_uniform_1f (src->shader, "time",
+      (gfloat) src->base.src->running_time / GST_SECOND);
+
+  return _src_shader_fill_bound_fbo (impl);
+}
+
+static void
+_src_snow_free (gpointer impl)
+{
+  struct SrcShader *src = impl;
+
+  if (!src)
+    return;
+
+  if (src->shader)
+    gst_object_unref (src->shader);
+  src->shader = NULL;
+
+  g_free (impl);
+}
+
+static gpointer
+_src_snow_new (GstGLTestSrc * test)
+{
+  struct SrcShader *src = g_new0 (struct SrcShader, 1);
+
+  src->base.src = test;
+
+  return src;
+}
+
+static const struct SrcFuncs src_snow = {
+  GST_GL_TEST_SRC_SNOW,
+  _src_snow_new,
+  _src_snow_init,
+  _src_snow_fill_bound_fbo,
+  _src_snow_free,
+};
+
+/* *INDENT-OFF* */
+static const gchar *mandelbrot_vertex_src = "attribute vec4 position;\n"
+    "uniform float aspect_ratio;\n"
+    "varying vec2 fractal_position;\n"
+    "void main()\n"
+    "{\n"
+    "  gl_Position = position;\n"
+    "  fractal_position = vec2(position.y * 0.5 - 0.3, aspect_ratio * position.x * 0.5);\n"
+    "  fractal_position *= 2.5;\n"
+    "}";
+
+static const gchar *mandelbrot_fragment_src = 
+    "#ifdef GL_ES\n"
+    "precision mediump float;\n"
+    "#endif\n"
+    "uniform float time;\n"
+    "varying vec2 fractal_position;\n"
+    "const vec4 K = vec4(1.0, 0.66, 0.33, 3.0);\n"
+    "vec4 hsv_to_rgb(float hue, float saturation, float value) {\n"
+    "  vec4 p = abs(fract(vec4(hue) + K) * 6.0 - K.wwww);\n"
+    "  return value * mix(K.xxxx, clamp(p - K.xxxx, 0.0, 1.0), saturation);\n"
+    "}\n"
+    "vec4 i_to_rgb(int i) {\n"
+    "  float hue = float(i) / 100.0 + sin(time);\n"
+    "  return hsv_to_rgb(hue, 0.5, 0.8);\n"
+    "}\n"
+    "vec2 pow_2_complex(vec2 c) {\n"
+    "  return vec2(c.x*c.x - c.y*c.y, 2.0 * c.x * c.y);\n"
+    "}\n"
+    "vec2 mandelbrot(vec2 c, vec2 c0) {\n"
+    "  return pow_2_complex(c) + c0;\n"
+    "}\n"
+    "vec4 iterate_pixel(vec2 position) {\n"
+    "  vec2 c = vec2(0);\n"
+    "  for (int i=0; i < 100; i++) {\n"
+    "    if (c.x*c.x + c.y*c.y > 2.0*2.0)\n"
+    "      return i_to_rgb(i);\n"
+    "    c = mandelbrot(c, position);\n"
+    "  }\n"
+    "  return vec4(0, 0, 0, 1);\n"
+    "}\n"
+    "void main() {\n"
+    "  gl_FragColor = iterate_pixel(fractal_position);\n"
+    "}";
+/* *INDENT-ON* */
+
+static gboolean
+_src_mandelbrot_init (gpointer impl, GstGLContext * context,
+    GstVideoInfo * v_info)
+{
+  struct SrcShader *src = impl;
+  GError *error = NULL;
+
+  src->base.context = context;
+
+  if (src->shader)
+    gst_object_unref (src->shader);
+  src->shader = gst_gl_shader_new_link_with_stages (context, &error,
+      gst_glsl_stage_new_with_string (context, GL_VERTEX_SHADER,
+          GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
+          mandelbrot_vertex_src),
+      gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+          GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
+          mandelbrot_fragment_src), NULL);
+  if (!src->shader) {
+    GST_ERROR_OBJECT (src->base.src, "%s", error->message);
+    return FALSE;
+  }
+
+  src->attr_position =
+      gst_gl_shader_get_attribute_location (src->shader, "position");
+  if (src->attr_position == -1) {
+    GST_ERROR_OBJECT (src->base.src, "No position attribute");
+    return FALSE;
+  }
+  src->vertices = positions;
+  src->n_vertices = 4;
+  src->indices = indices_quad;
+  src->n_indices = 6;
+
+  gst_gl_shader_use (src->shader);
+  gst_gl_shader_set_uniform_1f (src->shader, "aspect_ratio",
+      (gfloat) GST_VIDEO_INFO_WIDTH (v_info) /
+      (gfloat) GST_VIDEO_INFO_HEIGHT (v_info));
+  gst_gl_context_clear_shader (src->base.context);
+
+  return TRUE;
+}
+
+static gboolean
+_src_mandelbrot_fill_bound_fbo (gpointer impl)
+{
+  struct SrcShader *src = impl;
+
+  g_return_val_if_fail (src->base.context, FALSE);
+  g_return_val_if_fail (src->shader, FALSE);
+
+  gst_gl_shader_use (src->shader);
+  gst_gl_shader_set_uniform_1f (src->shader, "time",
+      (gfloat) src->base.src->running_time / GST_SECOND);
+
+  return _src_shader_fill_bound_fbo (impl);
+}
+
+static void
+_src_mandelbrot_free (gpointer impl)
+{
+  struct SrcShader *src = impl;
+
+  if (!src)
+    return;
+
+  if (src->shader)
+    gst_object_unref (src->shader);
+  src->shader = NULL;
+
+  g_free (impl);
+}
+
+static gpointer
+_src_mandelbrot_new (GstGLTestSrc * test)
+{
+  struct SrcShader *src = g_new0 (struct SrcShader, 1);
+
+  src->base.src = test;
+
+  return src;
+}
+
+static const struct SrcFuncs src_mandelbrot = {
+  GST_GL_TEST_SRC_MANDELBROT,
+  _src_mandelbrot_new,
+  _src_mandelbrot_init,
+  _src_mandelbrot_fill_bound_fbo,
+  _src_mandelbrot_free,
+};
+
+#if 0
 void
 gst_gl_test_src_circular (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
@@ -455,4 +832,33 @@ gst_gl_test_src_circular (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
     }
   }
 #endif
+}
+#endif
+static const struct SrcFuncs *src_impls[] = {
+  &src_smpte,
+  &src_snow,
+  &src_black,
+  &src_white,
+  &src_red,
+  &src_green,
+  &src_blue,
+  &src_checkers1,
+  &src_checkers2,
+  &src_checkers4,
+  &src_checkers8,
+  &src_blink,
+  &src_mandelbrot,
+};
+
+const struct SrcFuncs *
+gst_gl_test_src_get_src_funcs_for_pattern (GstGLTestSrcPattern pattern)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (src_impls); i++) {
+    if (src_impls[i]->pattern == pattern)
+      return src_impls[i];
+  }
+
+  return NULL;
 }

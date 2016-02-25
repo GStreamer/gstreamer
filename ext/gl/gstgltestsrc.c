@@ -228,162 +228,10 @@ gst_gl_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   return caps;
 }
 
-const gchar *snow_vertex_src = "attribute vec4 position; \
-    attribute vec2 uv; \
-    uniform mat4 mvp; \
-    varying vec2 out_uv; \
-    void main() \
-    { \
-       gl_Position = mvp * position; \
-       out_uv = uv; \
-    }";
-
-const gchar *snow_fragment_src = "uniform float time; \
-    varying vec2 out_uv; \
-    \
-    float rand(vec2 co){ \
-        return fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453); \
-    } \
-    void main() \
-    { \
-      gl_FragColor = rand(time * out_uv) * vec4(1); \
-    }";
-
-const gchar *mandelbrot_vertex_src = "attribute vec4 position; \
-    attribute vec2 uv; \
-    uniform mat4 mvp; \
-    uniform float aspect_ratio; \
-    varying vec2 fractal_position; \
-    \
-    void main() \
-    { \
-       gl_Position = mvp * position; \
-       fractal_position = vec2(uv.y - 0.8, aspect_ratio * (uv.x - 0.5)); \
-       fractal_position *= 2.5; \
-    }";
-
-const gchar *mandelbrot_fragment_src = "uniform float time; \
-    varying vec2 fractal_position; \
-    \
-    const vec4 K = vec4(1.0, 0.66, 0.33, 3.0); \
-    \
-    vec4 hsv_to_rgb(float hue, float saturation, float value) { \
-      vec4 p = abs(fract(vec4(hue) + K) * 6.0 - K.wwww); \
-      return value * mix(K.xxxx, clamp(p - K.xxxx, 0.0, 1.0), saturation); \
-    } \
-    \
-    vec4 i_to_rgb(int i) { \
-      float hue = float(i) / 100.0 + sin(time); \
-      return hsv_to_rgb(hue, 0.5, 0.8); \
-    } \
-    \
-    vec2 pow_2_complex(vec2 c) { \
-      return vec2(c.x*c.x - c.y*c.y, 2.0 * c.x * c.y); \
-    } \
-    \
-    vec2 mandelbrot(vec2 c, vec2 c0) { \
-      return pow_2_complex(c) + c0; \
-    } \
-    \
-    vec4 iterate_pixel(vec2 position) { \
-      vec2 c = vec2(0); \
-      for (int i=0; i < 100; i++) { \
-        if (c.x*c.x + c.y*c.y > 2.0*2.0) \
-          return i_to_rgb(i); \
-        c = mandelbrot(c, position); \
-      } \
-      return vec4(0, 0, 0, 1); \
-    } \
-    \
-    void main() { \
-      gl_FragColor = iterate_pixel(fractal_position); \
-    }";
-
-
-const gchar *checkers_vertex_src = "attribute vec4 position; \
-    uniform mat4 mvp; \
-    void main() \
-    { \
-       gl_Position = mvp * position; \
-    }";
-
-const gchar *checkers_fragment_src = "uniform float checker_width; \
-    void main() \
-    { \
-      vec2 xy_index= floor((gl_FragCoord.xy-vec2(0.5,0.5))/checker_width); \
-      vec2 xy_mod=mod(xy_index,vec2(2.0,2.0)); \
-      float result=mod(xy_mod.x+xy_mod.y,2.0); \
-      gl_FragColor.r=step(result,0.5); \
-      gl_FragColor.g=1.0-gl_FragColor.r; \
-      gl_FragColor.ba=vec2(0,1); \
-    }";
-
-
 static void
 gst_gl_test_src_set_pattern (GstGLTestSrc * gltestsrc, gint pattern_type)
 {
-  gltestsrc->pattern_type = pattern_type;
-
-  GST_DEBUG_OBJECT (gltestsrc, "setting pattern to %d", pattern_type);
-
-  switch (pattern_type) {
-    case GST_GL_TEST_SRC_SMPTE:
-      gltestsrc->make_image = gst_gl_test_src_smpte;
-      break;
-    case GST_GL_TEST_SRC_SNOW:
-      gltestsrc->vertex_src = snow_vertex_src;
-      gltestsrc->fragment_src = snow_fragment_src;
-      gltestsrc->make_image = gst_gl_test_src_shader;
-      break;
-    case GST_GL_TEST_SRC_BLACK:
-      gltestsrc->make_image = gst_gl_test_src_black;
-      break;
-    case GST_GL_TEST_SRC_WHITE:
-      gltestsrc->make_image = gst_gl_test_src_white;
-      break;
-    case GST_GL_TEST_SRC_RED:
-      gltestsrc->make_image = gst_gl_test_src_red;
-      break;
-    case GST_GL_TEST_SRC_GREEN:
-      gltestsrc->make_image = gst_gl_test_src_green;
-      break;
-    case GST_GL_TEST_SRC_BLUE:
-      gltestsrc->make_image = gst_gl_test_src_blue;
-      break;
-    case GST_GL_TEST_SRC_CHECKERS1:
-      gltestsrc->vertex_src = checkers_vertex_src;
-      gltestsrc->fragment_src = checkers_fragment_src;
-      gltestsrc->make_image = gst_gl_test_src_checkers1;
-      break;
-    case GST_GL_TEST_SRC_CHECKERS2:
-      gltestsrc->vertex_src = checkers_vertex_src;
-      gltestsrc->fragment_src = checkers_fragment_src;
-      gltestsrc->make_image = gst_gl_test_src_checkers2;
-      break;
-    case GST_GL_TEST_SRC_CHECKERS4:
-      gltestsrc->vertex_src = checkers_vertex_src;
-      gltestsrc->fragment_src = checkers_fragment_src;
-      gltestsrc->make_image = gst_gl_test_src_checkers4;
-      break;
-    case GST_GL_TEST_SRC_CHECKERS8:
-      gltestsrc->vertex_src = checkers_vertex_src;
-      gltestsrc->fragment_src = checkers_fragment_src;
-      gltestsrc->make_image = gst_gl_test_src_checkers8;
-      break;
-    case GST_GL_TEST_SRC_CIRCULAR:
-      gltestsrc->make_image = gst_gl_test_src_circular;
-      break;
-    case GST_GL_TEST_SRC_BLINK:
-      gltestsrc->make_image = gst_gl_test_src_black;
-      break;
-    case GST_GL_TEST_SRC_MANDELBROT:
-      gltestsrc->vertex_src = mandelbrot_vertex_src;
-      gltestsrc->fragment_src = mandelbrot_fragment_src;
-      gltestsrc->make_image = gst_gl_test_src_shader;
-      break;
-    default:
-      g_assert_not_reached ();
-  }
+  gltestsrc->set_pattern = pattern_type;
 }
 
 static void
@@ -415,7 +263,7 @@ gst_gl_test_src_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PATTERN:
-      g_value_set_enum (value, src->pattern_type);
+      g_value_set_enum (value, src->set_pattern);
       break;
     case PROP_TIMESTAMP_OFFSET:
       g_value_set_int64 (value, src->timestamp_offset);
@@ -598,10 +446,10 @@ gst_gl_test_src_init_shader (GstGLTestSrc * gltestsrc)
 {
   if (gst_gl_context_get_gl_api (gltestsrc->context)) {
     /* blocking call, wait until the opengl thread has compiled the shader */
-    if (gltestsrc->vertex_src == NULL)
-      return FALSE;
-    return gst_gl_context_gen_shader (gltestsrc->context, gltestsrc->vertex_src,
-        gltestsrc->fragment_src, &gltestsrc->shader);
+//    if (gltestsrc->vertex_src == NULL)
+//      return FALSE;
+//    return gst_gl_context_gen_shader (gltestsrc->context, gltestsrc->vertex_src,
+//        gltestsrc->fragment_src, &gltestsrc->shader);
   }
   return TRUE;
 }
@@ -627,13 +475,6 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
           && src->n_frames == 1))
     goto eos;
 
-  if (src->pattern_type == GST_GL_TEST_SRC_BLINK) {
-    if (src->n_frames & 0x1)
-      src->make_image = gst_gl_test_src_white;
-    else
-      src->make_image = gst_gl_test_src_black;
-  }
-
   if (!gst_video_frame_map (&out_frame, &src->out_info, buffer,
           GST_MAP_WRITE | GST_MAP_GL)) {
     return GST_FLOW_NOT_NEGOTIATED;
@@ -641,15 +482,15 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 
   out_tex = *(guint *) out_frame.data[0];
 
-  gst_buffer_replace (&src->buffer, buffer);
-
   if (!gst_gl_context_use_fbo_v2 (src->context, width, height, src->fbo,
           src->depthbuffer, out_tex, gst_gl_test_src_callback,
           (gpointer) src)) {
-    goto not_negotiated;
+    gst_video_frame_unmap (&out_frame);
+    goto gl_error;
   }
-
   gst_video_frame_unmap (&out_frame);
+  if (!src->gl_result)
+    goto gl_error;
 
   sync_meta = gst_buffer_get_gl_sync_meta (buffer);
   if (sync_meta)
@@ -673,6 +514,12 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 
   return GST_FLOW_OK;
 
+gl_error:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (_("failed to draw pattern")),
+        (_("A GL error occured")));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 not_negotiated:
   {
     GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL),
@@ -888,12 +735,33 @@ static void
 gst_gl_test_src_callback (gpointer stuff)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (stuff);
+  const struct SrcFuncs *funcs;
 
-  src->make_image (src, src->buffer, GST_VIDEO_INFO_WIDTH (&src->out_info),
-      GST_VIDEO_INFO_HEIGHT (&src->out_info));
+  funcs = src->src_funcs;
 
-  gst_buffer_unref (src->buffer);
-  src->buffer = NULL;
+  if (!funcs || src->set_pattern != src->active_pattern) {
+    if (src->src_impl)
+      funcs->free (src->src_impl);
+    src->src_funcs = funcs =
+        gst_gl_test_src_get_src_funcs_for_pattern (src->set_pattern);
+    if (funcs == NULL) {
+      GST_ERROR_OBJECT (src, "Could not find an implementation of the "
+          "requested pattern");
+      src->gl_result = FALSE;
+      return;
+    }
+    src->src_impl = funcs->new (src);
+    if (!(src->gl_result =
+            funcs->init (src->src_impl, src->context, &src->out_info))) {
+      GST_ERROR_OBJECT (src, "Failed to initialize pattern");
+      return;
+    }
+    src->active_pattern = src->set_pattern;
+  }
+
+  src->gl_result = funcs->fill_bound_fbo (src->src_impl);
+  if (!src->gl_result)
+    GST_ERROR_OBJECT (src, "Failed to render the pattern");
 }
 
 static GstStateChangeReturn
