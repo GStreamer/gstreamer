@@ -1067,3 +1067,21 @@ gst_vaapi_decoder_decode_codec_data (GstVaapiDecoder * decoder)
   gst_buffer_unmap (codec_data, &map_info);
   return status;
 }
+
+/**
+ * gst_vaapi_decoder_get_surface_formats:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Retrieves an array of #GstVideoFormat which the output surfaces of
+ * the @decoder can handle.
+ *
+ * Return value: (transfer full): a #GArray of #GstVideoFormat or
+ * %NULL
+ */
+GArray *
+gst_vaapi_decoder_get_surface_formats (GstVaapiDecoder * decoder)
+{
+  if (decoder && decoder->context)
+    return gst_vaapi_context_get_surface_formats (decoder->context);
+  return NULL;
+}
