@@ -892,6 +892,10 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
   }
 
   source = gst_bus_create_watch (bus);
+  if (!source) {
+    g_critical ("Creating bus watch failed");
+    return 0;
+  }
 
   if (priority != G_PRIORITY_DEFAULT)
     g_source_set_priority (source, priority);
