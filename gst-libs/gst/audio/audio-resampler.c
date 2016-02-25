@@ -32,13 +32,12 @@
 #include "audio-resampler.h"
 
 /* Contains a collection of all things found in other resamplers:
- * speex (optimizations), ffmpeg (fixed phase filter, blackman filter),
+ * speex (filter construction, optimizations), ffmpeg (fixed phase filter, blackman filter),
  * SRC (linear interpolation, fixed precomputed tables),...
  *
  *  Supports:
  *   - S16, S32, F32 and F64 formats
- *   - linear interpolation
- *   - cubic interpolation
+ *   - nearest, linear and cubic interpolation
  *   - sinc based interpolation with kaiser or blackman-nutall windows
  *   - fully configurable kaiser parameters
  *   - dynamic linear or cubic interpolation of filter table, this can
@@ -46,9 +45,9 @@
  *   - full filter table, generated from optionally linear or cubic
  *     interpolation of filter table
  *   - fixed filter table size with nearest neighbour phase, optionally
- *     using a precomputed table
+ *     using a precomputed tables
  *   - dynamic samplerate changes
- *   - x86 optimizations
+ *   - x86 and neon optimizations
  */
 typedef void (*ConvertTapsFunc) (gdouble * tmp_taps, gpointer taps,
     gdouble weight, gint n_taps);
@@ -603,6 +602,11 @@ GET_TAPS_NEAREST_FUNC (gint32);
 GET_TAPS_NEAREST_FUNC (gfloat);
 GET_TAPS_NEAREST_FUNC (gdouble);
 
+#define get_taps_gint16_nearest get_taps_gint16_nearest
+#define get_taps_gint32_nearest get_taps_gint32_nearest
+#define get_taps_gfloat_nearest get_taps_gfloat_nearest
+#define get_taps_gdouble_nearest get_taps_gdouble_nearest
+
 #define GET_TAPS_FULL_FUNC(type)                                                \
 static inline gpointer                                                          \
 get_taps_##type##_full (GstAudioResampler * resampler,                          \
@@ -1148,37 +1152,41 @@ setup_functions (GstAudioResampler * resampler)
 
   index = resampler->format_index;
 
-  switch (resampler->filter_interpolation) {
-    default:
-    case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR:
-      GST_DEBUG ("using linear interpolation filter function");
-      fidx = 0;
-      break;
-    case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC:
-      GST_DEBUG ("using cubic interpolation filter function");
-      fidx = 4;
-      break;
-  }
-  resampler->interpolate = interpolate_funcs[index + fidx];
+  if (resampler->in_rate == resampler->out_rate)
+    resampler->resample = resample_funcs[index];
+  else {
+    switch (resampler->filter_interpolation) {
+      default:
+      case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR:
+        GST_DEBUG ("using linear interpolation filter function");
+        fidx = 0;
+        break;
+      case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC:
+        GST_DEBUG ("using cubic interpolation filter function");
+        fidx = 4;
+        break;
+    }
+    resampler->interpolate = interpolate_funcs[index + fidx];
 
-  switch (resampler->method) {
-    case GST_AUDIO_RESAMPLER_METHOD_NEAREST:
-      GST_DEBUG ("using nearest filter function");
-      break;
-    default:
-      index += 4;
-      switch (resampler->filter_mode) {
-        default:
-        case GST_AUDIO_RESAMPLER_FILTER_MODE_FULL:
-          GST_DEBUG ("using full filter function");
-          break;
-        case GST_AUDIO_RESAMPLER_FILTER_MODE_INTERPOLATED:
-          index += 4 + fidx;
-          break;
-      }
-      break;
+    switch (resampler->method) {
+      case GST_AUDIO_RESAMPLER_METHOD_NEAREST:
+        GST_DEBUG ("using nearest filter function");
+        break;
+      default:
+        index += 4;
+        switch (resampler->filter_mode) {
+          default:
+          case GST_AUDIO_RESAMPLER_FILTER_MODE_FULL:
+            GST_DEBUG ("using full filter function");
+            break;
+          case GST_AUDIO_RESAMPLER_FILTER_MODE_INTERPOLATED:
+            index += 4 + fidx;
+            break;
+        }
+        break;
+    }
+    resampler->resample = resample_funcs[index];
   }
-  resampler->resample = resample_funcs[index];
 }
 
 static void
@@ -1325,7 +1333,6 @@ resampler_calculate_taps (GstAudioResampler * resampler)
       resampler->convert_taps (tmp_taps, taps, weight, n_taps);
     }
   }
-  setup_functions (resampler);
 }
 
 #define PRINT_TAPS(type,print)                          \
@@ -1728,6 +1735,8 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
     alloc_cache_mem (resampler, resampler->bps, resampler->n_taps,
         resampler->n_phases);
   }
+  setup_functions (resampler);
+
   return TRUE;
 }
 
