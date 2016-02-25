@@ -535,10 +535,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
                */
               frame_duration_value = [rate valueForKey:@"minFrameDuration"];
             } else {
-              double frame_duration;
-
-              gst_util_fraction_to_double (info->fps_d, info->fps_n, &frame_duration);
-              frame_duration_value = [NSNumber numberWithDouble:frame_duration];
+              // Invert fps_n and fps_d to get frame duration value and timescale (or numerator and denominator)
+              frame_duration_value = [NSValue valueWithCMTime:CMTimeMake (info->fps_d, info->fps_n)];
             }
             [device setValue:frame_duration_value forKey:@"activeVideoMinFrameDuration"];
             @try {
