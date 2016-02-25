@@ -25,7 +25,7 @@
  * A baseclass for scopes (visualizers). It takes care of re-fitting the
  * audio-rate to video-rate and handles renegotiation (downstream video size
  * changes).
- * 
+ *
  * It also provides several background shading effects. These effects are
  * applied to a previous picture before the render() implementation can draw a
  * new frame.
@@ -167,9 +167,7 @@ gst_audio_visualizer_shader_get_type (void)
 
   if (G_UNLIKELY (shader_type == 0)) {
     /* TODO: rename when exporting it as a library */
-    shader_type =
-        g_enum_register_static
-        ("GstAudioVisualizerShader-BaseExtLibvisual", shaders);
+    shader_type = g_enum_register_static ("GstAudioVisualizerShader", shaders);
   }
   return shader_type;
 }
@@ -553,8 +551,7 @@ gst_audio_visualizer_get_type (void)
 
     /* TODO: rename when exporting it as a library */
     _type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstAudioVisualizer-BaseExtLibvisual", &audio_visualizer_info,
-        G_TYPE_FLAG_ABSTRACT);
+        "GstAudioVisualizer", &audio_visualizer_info, G_TYPE_FLAG_ABSTRACT);
     g_once_init_leave (&audio_visualizer_type, _type);
   }
   return (GType) audio_visualizer_type;
