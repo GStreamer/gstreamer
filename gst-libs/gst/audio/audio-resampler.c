@@ -69,6 +69,7 @@ struct _GstAudioResampler
   GstAudioResamplerFlags flags;
   GstAudioFormat format;
   GstStructure *options;
+  gint format_index;
   gint channels;
   gint in_rate;
   gint out_rate;
@@ -353,9 +354,6 @@ make_taps (GstAudioResampler * resampler,
         weight += tmp_taps[i] =
             get_kaiser_tap (x + i, resampler->n_taps,
             resampler->cutoff, resampler->kaiser_beta);
-      break;
-
-    default:
       break;
   }
   return weight;
@@ -1146,40 +1144,9 @@ alloc_cache_mem (GstAudioResampler * resampler, gint bps, gint n_taps,
 static void
 setup_functions (GstAudioResampler * resampler)
 {
-  gboolean non_interleaved;
   gint index, fidx;
 
-  non_interleaved =
-      (resampler->flags & GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED);
-
-  /* we resample each channel separately */
-  resampler->blocks = resampler->channels;
-  resampler->inc = 1;
-  resampler->ostride = non_interleaved ? 1 : resampler->channels;
-
-  switch (resampler->format) {
-    case GST_AUDIO_FORMAT_S16:
-      GST_DEBUG ("using S16 functions");
-      index = 0;
-      break;
-    case GST_AUDIO_FORMAT_S32:
-      GST_DEBUG ("using S32 functions");
-      index = 1;
-      break;
-    case GST_AUDIO_FORMAT_F32:
-      GST_DEBUG ("using F32 functions");
-      index = 2;
-      break;
-    case GST_AUDIO_FORMAT_F64:
-      GST_DEBUG ("using F64 functions");
-      index = 3;
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-  resampler->deinterleave = deinterleave_funcs[index];
-  resampler->convert_taps = convert_taps_funcs[index];
+  index = resampler->format_index;
 
   switch (resampler->filter_interpolation) {
     default:
@@ -1266,10 +1233,6 @@ resampler_calculate_taps (GstAudioResampler * resampler)
         GET_OPT_FILTER_MODE_THRESHOLD (resampler->options);
     filter_interpolation = GET_OPT_FILTER_INTERPOLATION (resampler->options);
 
-    /* interpolated table but no interpolation given, assume default */
-    if (resampler->filter_mode != GST_AUDIO_RESAMPLER_FILTER_MODE_FULL &&
-        filter_interpolation == GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_NONE)
-      filter_interpolation = DEFAULT_OPT_FILTER_INTERPOLATION;
   } else {
     resampler->filter_mode = GST_AUDIO_RESAMPLER_FILTER_MODE_FULL;
     filter_interpolation = GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_NONE;
@@ -1299,7 +1262,6 @@ resampler_calculate_taps (GstAudioResampler * resampler)
     oversample = 1;
   }
   resampler->oversample = oversample;
-  resampler->filter_interpolation = filter_interpolation;
 
   n_taps = resampler->n_taps;
   bps = resampler->bps;
@@ -1308,7 +1270,8 @@ resampler_calculate_taps (GstAudioResampler * resampler)
       oversample);
 
   if (resampler->filter_mode == GST_AUDIO_RESAMPLER_FILTER_MODE_AUTO) {
-    if (out_rate <= oversample) {
+    if (out_rate <= oversample
+        && !(resampler->flags & GST_AUDIO_RESAMPLER_FLAG_VARIABLE_RATE)) {
       /* don't interpolate if we need to calculate at least the same amount
        * of filter coefficients than the full table case */
       resampler->filter_mode = GST_AUDIO_RESAMPLER_FILTER_MODE_FULL;
@@ -1319,6 +1282,12 @@ resampler_calculate_taps (GstAudioResampler * resampler)
       resampler->filter_mode = GST_AUDIO_RESAMPLER_FILTER_MODE_INTERPOLATED;
     }
   }
+  /* interpolated table but no interpolation given, assume default */
+  if (resampler->filter_mode != GST_AUDIO_RESAMPLER_FILTER_MODE_FULL &&
+      filter_interpolation == GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_NONE)
+    filter_interpolation = DEFAULT_OPT_FILTER_INTERPOLATION;
+
+  resampler->filter_interpolation = filter_interpolation;
 
   if (resampler->filter_mode == GST_AUDIO_RESAMPLER_FILTER_MODE_FULL &&
       resampler->method != GST_AUDIO_RESAMPLER_METHOD_NEAREST) {
@@ -1326,8 +1295,6 @@ resampler_calculate_taps (GstAudioResampler * resampler)
     resampler->n_phases = out_rate;
     alloc_cache_mem (resampler, bps, n_taps, out_rate);
   }
-
-  setup_functions (resampler);
 
   if (resampler->filter_interpolation !=
       GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_NONE) {
@@ -1358,6 +1325,7 @@ resampler_calculate_taps (GstAudioResampler * resampler)
       resampler->convert_taps (tmp_taps, taps, weight, n_taps);
     }
   }
+  setup_functions (resampler);
 }
 
 #define PRINT_TAPS(type,print)                          \
@@ -1499,13 +1467,19 @@ gst_audio_resampler_new (GstAudioResamplerMethod method,
     GstAudioFormat format, gint channels,
     gint in_rate, gint out_rate, GstStructure * options)
 {
+  gboolean non_interleaved;
   GstAudioResampler *resampler;
   const GstAudioFormatInfo *info;
   GstStructure *def_options = NULL;
 
-  g_return_val_if_fail (channels > 0, FALSE);
-  g_return_val_if_fail (in_rate > 0, FALSE);
-  g_return_val_if_fail (out_rate > 0, FALSE);
+  g_return_val_if_fail (method >= GST_AUDIO_RESAMPLER_METHOD_NEAREST
+      && method <= GST_AUDIO_RESAMPLER_METHOD_KAISER, NULL);
+  g_return_val_if_fail (format == GST_AUDIO_FORMAT_S16 ||
+      format == GST_AUDIO_FORMAT_S32 || format == GST_AUDIO_FORMAT_F32 ||
+      format == GST_AUDIO_FORMAT_F64, NULL);
+  g_return_val_if_fail (channels > 0, NULL);
+  g_return_val_if_fail (in_rate > 0, NULL);
+  g_return_val_if_fail (out_rate > 0, NULL);
 
   audio_resampler_init ();
 
@@ -1515,9 +1489,37 @@ gst_audio_resampler_new (GstAudioResamplerMethod method,
   resampler->format = format;
   resampler->channels = channels;
 
+  switch (format) {
+    case GST_AUDIO_FORMAT_S16:
+      resampler->format_index = 0;
+      break;
+    case GST_AUDIO_FORMAT_S32:
+      resampler->format_index = 1;
+      break;
+    case GST_AUDIO_FORMAT_F32:
+      resampler->format_index = 2;
+      break;
+    case GST_AUDIO_FORMAT_F64:
+      resampler->format_index = 3;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
   info = gst_audio_format_get_info (format);
   resampler->bps = GST_AUDIO_FORMAT_INFO_WIDTH (info) / 8;
   resampler->sbuf = g_malloc0 (sizeof (gpointer) * channels);
+
+  non_interleaved =
+      (resampler->flags & GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED);
+
+  /* we resample each channel separately */
+  resampler->blocks = resampler->channels;
+  resampler->inc = 1;
+  resampler->ostride = non_interleaved ? 1 : resampler->channels;
+  resampler->deinterleave = deinterleave_funcs[resampler->format_index];
+  resampler->convert_taps = convert_taps_funcs[resampler->format_index];
 
   GST_DEBUG ("method %d, bps %d, channels %d", method, resampler->bps,
       resampler->channels);

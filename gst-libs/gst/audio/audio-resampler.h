@@ -82,7 +82,8 @@ typedef struct _GstAudioResampler GstAudioResampler;
 /**
  * GstAudioResamplerFilterMode:
  * @GST_AUDIO_RESAMPLER_FILTER_MODE_INTERPOLATED: Use interpolated filter tables. This
- *     uses less memory but more CPU and is slightly less accurate.
+ *     uses less memory but more CPU and is slightly less accurate but it allows for more
+ *     efficient variable rate resampling with gst_audio_resampler_update().
  * @GST_AUDIO_RESAMPLER_FILTER_MODE_FULL: Use full filter table. This uses more memory
  *     but less CPU.
  * @GST_AUDIO_RESAMPLER_FILTER_MODE_AUTO: Automatically choose between interpolated
@@ -132,7 +133,7 @@ typedef enum {
  *
  * GST_TYPE_AUDIO_RESAMPLER_INTERPOLATION: how the filter coeficients should be
  *    interpolated.
- * GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR is default.
+ * GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC is default.
  */
 #define GST_AUDIO_RESAMPLER_OPT_FILTER_INTERPOLATION "GstAudioResampler.filter-interpolation"
 /**
@@ -148,7 +149,7 @@ typedef enum {
  *
  * G_TYPE_DOUBLE: The maximum allowed phase error when switching sample
  * rates.
- * 0.05 is the default.
+ * 0.1 is the default.
  */
 #define GST_AUDIO_RESAMPLER_OPT_MAX_PHASE_ERROR "GstAudioResampler.max-phase-error"
 
@@ -180,12 +181,16 @@ typedef enum {
  * @GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED: samples are non-interleaved. an array
  *    of blocks of samples, one for each channel, should be passed to the resample
  *    function.
+ * @GST_AUDIO_RESAMPLER_FLAG_VARIABLE_RATE: optimize for dynamic updates of the sample
+ *    rates with gst_audio_resampler_update(). This will select an interpolating filter
+ *    when #GST_AUDIO_RESAMPLER_FILTER_MODE_AUTO is configured.
  *
  * Different resampler flags.
  */
 typedef enum {
   GST_AUDIO_RESAMPLER_FLAG_NONE                 = (0),
   GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED      = (1 << 0),
+  GST_AUDIO_RESAMPLER_FLAG_VARIABLE_RATE        = (1 << 1),
 } GstAudioResamplerFlags;
 
 #define GST_AUDIO_RESAMPLER_QUALITY_MIN 0

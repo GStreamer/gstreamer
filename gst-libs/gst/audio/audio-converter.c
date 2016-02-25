@@ -673,14 +673,18 @@ chain_resample (GstAudioConverter * convert, AudioChain * prev)
   GstAudioResamplerFlags flags;
   GstAudioFormat format = convert->current_format;
   gint channels = convert->current_channels;
+  gboolean variable_rate;
 
-  if (in->rate != out->rate
-      || convert->flags & GST_AUDIO_CONVERTER_FLAG_VARIABLE_RATE) {
+  variable_rate = convert->flags & GST_AUDIO_CONVERTER_FLAG_VARIABLE_RATE;
+
+  if (in->rate != out->rate || variable_rate) {
     method = GET_OPT_RESAMPLER_METHOD (convert);
 
     flags = 0;
     if (convert->current_layout == GST_AUDIO_LAYOUT_NON_INTERLEAVED)
       flags |= GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED;
+    if (variable_rate)
+      flags |= GST_AUDIO_RESAMPLER_FLAG_VARIABLE_RATE;
 
     convert->resampler =
         gst_audio_resampler_new (method, flags, format, channels, in->rate,
