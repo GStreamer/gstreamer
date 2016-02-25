@@ -22,37 +22,60 @@
 
 #include <glib.h>
 
+typedef struct _GstGLTestSrc GstGLTestSrc;
+
+/**
+ * GstGLTestSrcPattern:
+ * @GST_GL_TEST_SRC_SMPTE: A standard SMPTE test pattern
+ * @GST_GL_TEST_SRC_SNOW: Random noise
+ * @GST_GL_TEST_SRC_BLACK: A black image
+ * @GST_GL_TEST_SRC_WHITE: A white image
+ * @GST_GL_TEST_SRC_RED: A red image
+ * @GST_GL_TEST_SRC_GREEN: A green image
+ * @GST_GL_TEST_SRC_BLUE: A blue image
+ * @GST_GL_TEST_SRC_CHECKERS1: Checkers pattern (1px)
+ * @GST_GL_TEST_SRC_CHECKERS2: Checkers pattern (2px)
+ * @GST_GL_TEST_SRC_CHECKERS4: Checkers pattern (4px)
+ * @GST_GL_TEST_SRC_CHECKERS8: Checkers pattern (8px)
+ * @GST_GL_TEST_SRC_CIRCULAR: Circular pattern
+ * @GST_GL_TEST_SRC_BLINK: Alternate between black and white
+ *
+ * The test pattern to produce.
+ */
+typedef enum {
+    GST_GL_TEST_SRC_SMPTE,
+    GST_GL_TEST_SRC_SNOW,
+    GST_GL_TEST_SRC_BLACK,
+    GST_GL_TEST_SRC_WHITE,
+    GST_GL_TEST_SRC_RED,
+    GST_GL_TEST_SRC_GREEN,
+    GST_GL_TEST_SRC_BLUE,
+    GST_GL_TEST_SRC_CHECKERS1,
+    GST_GL_TEST_SRC_CHECKERS2,
+    GST_GL_TEST_SRC_CHECKERS4,
+    GST_GL_TEST_SRC_CHECKERS8,
+    GST_GL_TEST_SRC_CIRCULAR,
+    GST_GL_TEST_SRC_BLINK,
+    GST_GL_TEST_SRC_MANDELBROT
+} GstGLTestSrcPattern;
+
 #include "gstgltestsrc.h"
 
-struct vts_color_struct {
-        guint8 Y, U, V;
-        guint8 R, G, B;
-	guint8 A;
+struct BaseSrcImpl {
+  GstGLTestSrc *src;
+  GstGLContext *context;
+  GstVideoInfo v_info;
 };
 
-void    gst_gl_test_src_smpte        (GstGLTestSrc * v,
-                                         GstBuffer *buffer, int w, int h);
-void    gst_gl_test_src_shader       (GstGLTestSrc * v,
-                                         GstBuffer *buffer, int w, int h);
-void    gst_gl_test_src_black        (GstGLTestSrc * v,
-                                         GstBuffer *buffer, int w, int h);
-void    gst_gl_test_src_white        (GstGLTestSrc * v,
-                                         GstBuffer *buffer, int w, int h);
-void    gst_gl_test_src_red          (GstGLTestSrc * v,
-                                         GstBuffer *buffer, int w, int h);
-void    gst_gl_test_src_green        (GstGLTestSrc * v,
-                                         GstBuffer *buffer, int w, int h);
-void    gst_gl_test_src_blue         (GstGLTestSrc * v,
-                                         GstBuffer *buffer, int w, int h);
-void    gst_gl_test_src_checkers1    (GstGLTestSrc * v,
-                                         GstBuffer *buffer, int w, int h);
-void    gst_gl_test_src_checkers2    (GstGLTestSrc * v,
-                                         GstBuffer *buffer, int w, int h);
-void    gst_gl_test_src_checkers4    (GstGLTestSrc * v,
-                                         GstBuffer *buffer, int w, int h);
-void    gst_gl_test_src_checkers8    (GstGLTestSrc * v,
-                                         GstBuffer *buffer, int w, int h);
-void    gst_gl_test_src_circular     (GstGLTestSrc * v,
-                                         GstBuffer *buffer, int w, int h);
+struct SrcFuncs
+{
+  GstGLTestSrcPattern pattern;
+  gpointer (*new) (GstGLTestSrc * src);
+  gboolean (*init) (gpointer impl, GstGLContext * context, GstVideoInfo * v_info);
+  gboolean (*fill_bound_fbo) (gpointer impl);
+  void (*free) (gpointer impl);
+};
+
+const struct SrcFuncs * gst_gl_test_src_get_src_funcs_for_pattern (GstGLTestSrcPattern pattern);
 
 #endif

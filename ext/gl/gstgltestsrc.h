@@ -28,6 +28,8 @@
 
 #include <gst/gl/gl.h>
 
+#include "gltestsrc.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_GL_TEST_SRC \
@@ -40,41 +42,6 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_TEST_SRC))
 #define GST_IS_GL_TEST_SRC_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GL_TEST_SRC))
-
-/**
- * GstGLTestSrcPattern:
- * @GST_GL_TEST_SRC_SMPTE: A standard SMPTE test pattern
- * @GST_GL_TEST_SRC_SNOW: Random noise
- * @GST_GL_TEST_SRC_BLACK: A black image
- * @GST_GL_TEST_SRC_WHITE: A white image
- * @GST_GL_TEST_SRC_RED: A red image
- * @GST_GL_TEST_SRC_GREEN: A green image
- * @GST_GL_TEST_SRC_BLUE: A blue image
- * @GST_GL_TEST_SRC_CHECKERS1: Checkers pattern (1px)
- * @GST_GL_TEST_SRC_CHECKERS2: Checkers pattern (2px)
- * @GST_GL_TEST_SRC_CHECKERS4: Checkers pattern (4px)
- * @GST_GL_TEST_SRC_CHECKERS8: Checkers pattern (8px)
- * @GST_GL_TEST_SRC_CIRCULAR: Circular pattern
- * @GST_GL_TEST_SRC_BLINK: Alternate between black and white
- *
- * The test pattern to produce.
- */
-typedef enum {
-    GST_GL_TEST_SRC_SMPTE,
-    GST_GL_TEST_SRC_SNOW,
-    GST_GL_TEST_SRC_BLACK,
-    GST_GL_TEST_SRC_WHITE,
-    GST_GL_TEST_SRC_RED,
-    GST_GL_TEST_SRC_GREEN,
-    GST_GL_TEST_SRC_BLUE,
-    GST_GL_TEST_SRC_CHECKERS1,
-    GST_GL_TEST_SRC_CHECKERS2,
-    GST_GL_TEST_SRC_CHECKERS4,
-    GST_GL_TEST_SRC_CHECKERS8,
-    GST_GL_TEST_SRC_CIRCULAR,
-    GST_GL_TEST_SRC_BLINK,
-    GST_GL_TEST_SRC_MANDELBROT
-} GstGLTestSrcPattern;
 
 typedef struct _GstGLTestSrc GstGLTestSrc;
 typedef struct _GstGLTestSrcClass GstGLTestSrcClass;
@@ -90,10 +57,10 @@ struct _GstGLTestSrc {
     /*< private >*/
 
     /* type of output */
-    GstGLTestSrcPattern pattern_type;
+    GstGLTestSrcPattern set_pattern;
+    GstGLTestSrcPattern active_pattern;
 
     /* video state */
-    char *format_name;
     GstVideoInfo out_info;
 
     GLuint fbo;
@@ -101,7 +68,6 @@ struct _GstGLTestSrc {
 
     GstGLShader *shader;
 
-    GstBuffer* buffer;
     GstBufferPool *pool;
 
     GstGLDisplay *display;
@@ -111,10 +77,9 @@ struct _GstGLTestSrc {
     gint64 n_frames;                      /* total frames sent */
     gboolean negotiated;
 
-    const gchar *vertex_src;
-    const gchar *fragment_src;
-
-    void (*make_image) (GstGLTestSrc* v, GstBuffer* buffer, gint w, gint h);
+    gboolean gl_result;
+    const struct SrcFuncs *src_funcs;
+    gpointer src_impl;
 
     GstCaps *out_caps;
 };
