@@ -3458,7 +3458,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
         qtdemux->cenc_aux_info_sizes = NULL;
         goto fail;
       }
-      if (base_offset > qtdemux->moof_offset)
+      if (base_offset > -1 && base_offset > qtdemux->moof_offset)
         offset += (guint64) (base_offset - qtdemux->moof_offset);
       if (info_type == FOURCC_cenc && info_type_parameter == 0U) {
         GstByteReader br;
@@ -5218,6 +5218,30 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
         sample_size, stream->max_buffer_size);
     size =
         MIN (sample_size - stream->offset_in_sample, stream->max_buffer_size);
+  }
+
+  if (qtdemux->cenc_aux_info_offset > 0) {
+    GstMapInfo map;
+    GstByteReader br;
+    GstBuffer* aux_info = NULL;
+
+    /* pull the data stored before the sample */
+    ret = gst_qtdemux_pull_atom (qtdemux, qtdemux->offset, offset + stream->offset_in_sample - qtdemux->offset, &aux_info);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto beach;
+    gst_buffer_map(aux_info, &map, GST_MAP_READ);
+    GST_DEBUG_OBJECT (qtdemux, "parsing cenc auxiliary info");
+    gst_byte_reader_init (&br, map.data + 8, map.size);
+    if (!qtdemux_parse_cenc_aux_info (qtdemux, stream, &br,
+                                      qtdemux->cenc_aux_info_sizes, qtdemux->cenc_aux_sample_count)) {
+      GST_ERROR_OBJECT (qtdemux, "failed to parse cenc auxiliary info");
+      gst_buffer_unmap(aux_info, &map);
+      gst_buffer_unref(aux_info);
+      ret = GST_FLOW_ERROR;
+      goto beach;
+    }
+    gst_buffer_unmap(aux_info, &map);
+    gst_buffer_unref(aux_info);
   }
 
   GST_LOG_OBJECT (qtdemux, "reading %d bytes @ %" G_GUINT64_FORMAT, size,
