@@ -4615,6 +4615,41 @@ kate_type_find (GstTypeFind * tf, gpointer private)
   }
 }
 
+/*** WEBVTTT subtitles ***/
+static GstStaticCaps webvtt_caps =
+GST_STATIC_CAPS ("application/x-subtitle-vtt, parsed=(boolean)false");
+#define WEBVTT_CAPS (gst_static_caps_get(&webvtt_caps))
+
+static void
+webvtt_type_find (GstTypeFind * tf, gpointer private)
+{
+  const guint8 *data;
+
+  data = gst_type_find_peek (tf, 0, 9);
+
+  if (data == NULL)
+    return;
+
+  /* there might be a UTF-8 BOM at the beginning */
+  if (memcmp (data, "WEBVTT", 6) != 0 && memcmp (data + 3, "WEBVTT", 6) != 0) {
+    return;
+  }
+
+  if (data[0] != 'W') {
+    if (data[0] != 0xef || data[1] != 0xbb || data[2] != 0xbf)
+      return;                   /* Not a UTF-8 BOM */
+    data += 3;
+  }
+
+  /* After the WEBVTT magic must be one of these chars:
+   *   0x20 (space), 0x9 (tab), 0xa (LF) or 0xd (CR) */
+  if (data[6] != 0x20 && data[6] != 0x9 && data[6] != 0xa && data[6] != 0xd) {
+    return;
+  }
+
+  gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, WEBVTT_CAPS);
+}
+
 /*** application/x-ogm-video or audio***/
 
 static GstStaticCaps ogmvideo_caps =
@@ -5737,6 +5772,8 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_SECONDARY, "Z", "\037\235", 2, GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER (plugin, "subtitle/x-kate", GST_RANK_MARGINAL,
       kate_type_find, NULL, NULL, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-subtitle-vtt", GST_RANK_MARGINAL,
+      webvtt_type_find, "vtt", WEBVTT_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-flac", GST_RANK_PRIMARY, flac_type_find,
       "flac", FLAC_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-vorbis", GST_RANK_PRIMARY,
