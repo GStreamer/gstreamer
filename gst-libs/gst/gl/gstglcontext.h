@@ -149,6 +149,7 @@ guintptr      gst_gl_context_get_current_gl_context     (GstGLPlatform platform)
 GstGLAPI      gst_gl_context_get_current_gl_api         (GstGLPlatform platform, guint *major, guint *minor);
 
 gboolean      gst_gl_context_is_shared                  (GstGLContext * context);
+void          gst_gl_context_set_shared_with            (GstGLContext * context, GstGLContext * share);
 
 gboolean gst_gl_context_fill_info (GstGLContext * context, GError ** error);
 
