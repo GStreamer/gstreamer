@@ -177,6 +177,7 @@ GObject
         GstMatroskaMux
           GstWebMMux
         GstMatroskaParse
+        GstMonoscope
         GstMultipartDemux
         GstMultipartMux
         GstQTDemux
@@ -185,6 +186,7 @@ GObject
           GstRTPBVDepay
           GstRTPDVDepay
           GstRTPGSMDepay
+          GstRTPOpusDepay
           GstRTPSirenDepay
           GstRTPiLBCDepay
           GstRtpAC3Depay
@@ -260,6 +262,7 @@ GObject
           GstRtpMP4GPay
           GstRtpMP4VPay
           GstRtpMPAPay
+          GstRtpOPUSPay
           GstRtpSBCPay
           GstRtpSPEEXPay
           GstRtpTheoraPay
@@ -327,7 +330,6 @@ GObject
   RTPSession
   SoupSession
 GInterface
-  GDatagramBased
   GIcon
   GInitable
   GLoadableIcon

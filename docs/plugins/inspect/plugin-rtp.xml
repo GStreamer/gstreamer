@@ -3,10 +3,10 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>1.7.2</version>
+  <version>1.7.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -1245,6 +1245,48 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-rtp, media=(string)video, payload=(int)32, clock-rate=(int)90000, encoding-name=(string)MPV; application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)MPV</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpopusdepay</name>
+      <longname>RTP Opus packet depayloader</longname>
+      <class>Codec/Depayloader/Network/RTP</class>
+      <description>Extracts Opus audio from RTP packets</description>
+      <author>Danilo Cesar Lemes de Paula &lt;danilo.cesar@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)48000, encoding-name=(string){ OPUS, X-GST-OPUS-DRAFT-SPITTKA-00 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-opus, channel-mapping-family=(int)0</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpopuspay</name>
+      <longname>RTP Opus payloader</longname>
+      <class>Codec/Payloader/Network/RTP</class>
+      <description>Puts Opus audio in RTP packets</description>
+      <author>Danilo Cesar Lemes de Paula &lt;danilo.cesar@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-opus, channels=(int)[ 1, 2 ], channel-mapping-family=(int)0</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)48000, encoding-params=(string)2, encoding-name=(string){ OPUS, X-GST-OPUS-DRAFT-SPITTKA-00 }</details>
         </caps>
       </pads>
     </element>

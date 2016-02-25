@@ -144,7 +144,6 @@
     <xi:include href="xml/element-rtpj2kpay.xml" />
     <xi:include href="xml/element-rtpjpegpay.xml" />
     <xi:include href="xml/element-rtpsbcpay.xml" />
-    <xi:include href="xml/element-rtspsrc.xml" />
     <xi:include href="xml/element-rtpbin.xml" />
     <xi:include href="xml/element-rtpdec.xml" />
     <xi:include href="xml/element-rtpdtmfdepay.xml" />
@@ -158,6 +157,8 @@
     <xi:include href="xml/element-rtpL16depay.xml" />
     <xi:include href="xml/element-rtpL16pay.xml" />
     <xi:include href="xml/element-rtpmux.xml" />
+    <xi:include href="xml/element-rtpopuspay.xml" />
+    <xi:include href="xml/element-rtpopusdepay.xml" />
     <xi:include href="xml/element-rtpptdemux.xml" />
     <xi:include href="xml/element-rtprtxreceive.xml" />
     <xi:include href="xml/element-rtprtxsend.xml" />
