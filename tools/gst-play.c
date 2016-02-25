@@ -988,8 +988,8 @@ print_keyboard_help (void)
     {
     N_("space"), N_("pause/unpause")}, {
     N_("q or ESC"), N_("quit")}, {
-    ">", N_("play next")}, {
-    "<", N_("play previous")}, {
+    N_("> or n"), N_("play next")}, {
+    N_("< or b"), N_("play previous")}, {
     "\342\206\222", N_("seek forward")}, {
     "\342\206\220", N_("seek backward")}, {
     "\342\206\221", N_("volume up")}, {
@@ -1043,12 +1043,14 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
     case 'Q':
       g_main_loop_quit (play->loop);
       break;
+    case 'n':
     case '>':
       if (!play_next (play)) {
         g_print ("\n%s\n", _("Reached end of play list."));
         g_main_loop_quit (play->loop);
       }
       break;
+    case 'b':
     case '<':
       play_prev (play);
       break;
