@@ -19,10 +19,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "../../gst-libs/gst/pbutils/gstaudiovisualizer.c"
 #undef GST_CAT_DEFAULT
 
 #include <gst/check/gstcheck.h>
+#include <gst/pbutils/gstaudiovisualizer.h>
 #include <string.h>
 
 /* dummy subclass for testing */

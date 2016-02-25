@@ -345,11 +345,9 @@ libs_audiocdsrc_LDADD = \
 libs_baseaudiovisualizer_SOURCES = libs/baseaudiovisualizer.c
 libs_baseaudiovisualizer_CFLAGS = \
         $(GST_PLUGINS_BASE_CFLAGS) \
-        $(GST_BASE_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+        $(GST_CFLAGS) $(AM_CFLAGS)
 libs_baseaudiovisualizer_LDADD = \
-        $(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
-        $(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
-        $(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) \
+        $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
         $(GST_LIBS) $(LDADD)
 
 libs_discoverer_CFLAGS = \
