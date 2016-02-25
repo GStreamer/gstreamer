@@ -418,7 +418,7 @@ uri_type_find (GstTypeFind * tf, gpointer unused)
       return;
     }
 
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, URI_CAPS);
+    gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, URI_CAPS);
   }
 }
 
