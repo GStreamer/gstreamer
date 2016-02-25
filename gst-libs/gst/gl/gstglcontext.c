@@ -1617,9 +1617,36 @@ gboolean
 gst_gl_context_is_shared (GstGLContext * context)
 {
   g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
-  g_return_val_if_fail (context->priv->alive, FALSE);
+  if (GST_IS_GL_WRAPPED_CONTEXT (context))
+    g_return_val_if_fail (context->priv->active_thread, FALSE);
+  else
+    g_return_val_if_fail (context->priv->alive, FALSE);
 
   return _context_share_group_is_shared (context->priv->sharegroup);
+}
+
+/**
+ * gst_gl_context_set_shared_with:
+ * @context: a wrapped #GstGLContext
+ * @share: another #GstGLContext
+ *
+ * Will internally set @context as shared with @share
+ *
+ * Since: 1.8
+ */
+void
+gst_gl_context_set_shared_with (GstGLContext * context, GstGLContext * share)
+{
+  g_return_if_fail (GST_IS_GL_CONTEXT (context));
+  g_return_if_fail (GST_IS_GL_CONTEXT (share));
+  g_return_if_fail (!gst_gl_context_is_shared (context));
+  /* XXX: may be a little too strict */
+  g_return_if_fail (GST_IS_GL_WRAPPED_CONTEXT (context));
+
+  if (context->priv->sharegroup)
+    _context_share_group_unref (context->priv->sharegroup);
+  context->priv->sharegroup =
+      _context_share_group_ref (share->priv->sharegroup);
 }
 
 static GstGLAPI
