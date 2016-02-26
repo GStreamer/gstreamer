@@ -200,13 +200,10 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 enum
 {
   PROP_0,
-  PROP_AUDIO,
   PROP_AUDIO_TYPE,
   PROP_BITRATE,
   PROP_BANDWIDTH,
   PROP_FRAME_SIZE,
-  PROP_CBR,
-  PROP_CONSTRAINED_VBR,
   PROP_BITRATE_TYPE,
   PROP_COMPLEXITY,
   PROP_INBAND_FEC,
@@ -290,11 +287,6 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
   base_class->sink_event = GST_DEBUG_FUNCPTR (gst_opus_enc_sink_event);
   base_class->getcaps = GST_DEBUG_FUNCPTR (gst_opus_enc_sink_getcaps);
 
-  g_object_class_install_property (gobject_class, PROP_AUDIO,
-      g_param_spec_boolean ("audio",
-          "Audio or voice",
-          "Audio or voice (DEPRECATED: use audio-type)", DEFAULT_AUDIO,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
   g_object_class_install_property (gobject_class, PROP_AUDIO_TYPE,
       g_param_spec_enum ("audio-type", "What type of audio to optimize for",
           "What type of audio to optimize for", GST_OPUS_ENC_TYPE_AUDIO_TYPE,
@@ -316,17 +308,6 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
           DEFAULT_FRAMESIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
-  g_object_class_install_property (gobject_class, PROP_CBR,
-      g_param_spec_boolean ("cbr", "Constant bit rate",
-          "Constant bit rate (DEPRECATED: use bitrate-type)", DEFAULT_CBR,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING
-          | G_PARAM_DEPRECATED));
-  g_object_class_install_property (gobject_class, PROP_CONSTRAINED_VBR,
-      g_param_spec_boolean ("constrained-vbr", "Constrained VBR",
-          "Constrained VBR (DEPRECATED: use bitrate-type)",
-          DEFAULT_CONSTRAINED_VBR,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING
-          | G_PARAM_DEPRECATED));
   g_object_class_install_property (gobject_class, PROP_BITRATE_TYPE,
       g_param_spec_enum ("bitrate-type", "Bitrate type", "Bitrate type",
           GST_OPUS_ENC_TYPE_BITRATE_TYPE, DEFAULT_BITRATE_TYPE,
@@ -1123,10 +1104,6 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
   g_mutex_lock (&enc->property_lock);
 
   switch (prop_id) {
-    case PROP_AUDIO:
-      g_value_set_boolean (value,
-          enc->audio_type == OPUS_APPLICATION_AUDIO ? TRUE : FALSE);
-      break;
     case PROP_AUDIO_TYPE:
       g_value_set_enum (value, enc->audio_type);
       break;
@@ -1138,17 +1115,6 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_FRAME_SIZE:
       g_value_set_enum (value, enc->frame_size);
-      break;
-    case PROP_CBR:
-      GST_WARNING_OBJECT (enc,
-          "cbr property is deprecated; use bitrate-type instead");
-      g_value_set_boolean (value, enc->bitrate_type == BITRATE_TYPE_CBR);
-      break;
-    case PROP_CONSTRAINED_VBR:
-      GST_WARNING_OBJECT (enc,
-          "constrained-vbr property is deprecated; use bitrate-type instead");
-      g_value_set_boolean (value,
-          enc->bitrate_type == BITRATE_TYPE_CONSTRAINED_VBR);
       break;
     case PROP_BITRATE_TYPE:
       g_value_set_enum (value, enc->bitrate_type);
@@ -1194,11 +1160,6 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
 } while(0)
 
   switch (prop_id) {
-    case PROP_AUDIO:
-      enc->audio_type =
-          g_value_get_boolean (value) ? OPUS_APPLICATION_AUDIO :
-          OPUS_APPLICATION_VOIP;
-      break;
     case PROP_AUDIO_TYPE:
       enc->audio_type = g_value_get_enum (value);
       break;
@@ -1213,33 +1174,6 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
       enc->frame_size = g_value_get_enum (value);
       enc->frame_samples = gst_opus_enc_get_frame_samples (enc);
       gst_opus_enc_setup_base_class (enc, GST_AUDIO_ENCODER (enc));
-      g_mutex_unlock (&enc->property_lock);
-      break;
-    case PROP_CBR:
-      GST_WARNING_OBJECT (enc,
-          "cbr property is deprecated; use bitrate-type instead");
-      g_warning ("cbr property is deprecated; use bitrate-type instead");
-      g_mutex_lock (&enc->property_lock);
-      enc->bitrate_type = BITRATE_TYPE_CBR;
-      if (enc->state) {
-        opus_multistream_encoder_ctl (enc->state, OPUS_SET_VBR (FALSE));
-        opus_multistream_encoder_ctl (enc->state,
-            OPUS_SET_VBR_CONSTRAINT (FALSE), 0);
-      }
-      g_mutex_unlock (&enc->property_lock);
-      break;
-    case PROP_CONSTRAINED_VBR:
-      GST_WARNING_OBJECT (enc,
-          "constrained-vbr property is deprecated; use bitrate-type instead");
-      g_warning
-          ("constrained-vbr property is deprecated; use bitrate-type instead");
-      g_mutex_lock (&enc->property_lock);
-      enc->bitrate_type = BITRATE_TYPE_CONSTRAINED_VBR;
-      if (enc->state) {
-        opus_multistream_encoder_ctl (enc->state, OPUS_SET_VBR (TRUE));
-        opus_multistream_encoder_ctl (enc->state,
-            OPUS_SET_VBR_CONSTRAINT (TRUE), 0);
-      }
       g_mutex_unlock (&enc->property_lock);
       break;
     case PROP_BITRATE_TYPE:
