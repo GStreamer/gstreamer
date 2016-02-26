@@ -500,11 +500,12 @@ GST_START_TEST (testSeek)
 GST_END_TEST;
 
 
+#define SEGMENT_SIZE 10000
 static void
 run_seek_position_test (gdouble rate, GstSeekType start_type,
     guint64 seek_start, GstSeekType stop_type, guint64 seek_stop,
     GstSeekFlags flags, guint64 segment_start, guint64 segment_stop,
-    gint segments)
+    gint segments, gint seek_threshold_bytes)
 {
   const gchar *mpd =
       "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
@@ -549,7 +550,7 @@ run_seek_position_test (gdouble rate, GstSeekType start_type,
   GstTestHTTPSrcCallbacks http_src_callbacks = { 0 };
   GstAdaptiveDemuxTestExpectedOutput outputTestData[] = {
     /* 1 from the init segment */
-    {"audio_00", (1 + segments) * 10000, NULL},
+    {"audio_00", (segments ? 1 + segments : 0) * 10000, NULL},
   };
   GstAdaptiveDemuxTestCase *testData;
 
@@ -564,7 +565,10 @@ run_seek_position_test (gdouble rate, GstSeekType start_type,
    * on the first pad listed in GstAdaptiveDemuxTestOutputStreamData and the
    * first chunk of at least one byte has already arrived in AppSink
    */
-  testData->threshold_for_seek = 4687 + 1;
+  if (seek_threshold_bytes)
+    testData->threshold_for_seek = seek_threshold_bytes;
+  else
+    testData->threshold_for_seek = 4687 + 1;
 
   /* FIXME hack to avoid having a 0 seqnum */
   gst_util_seqnum_next ();
@@ -589,7 +593,7 @@ GST_START_TEST (testSeekKeyUnitPosition)
    * pushed */
   run_seek_position_test (1.0, GST_SEEK_TYPE_SET, 1500 * GST_MSECOND,
       GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT,
-      1000 * GST_MSECOND, -1, 3);
+      1000 * GST_MSECOND, -1, 3, 0);
 }
 
 GST_END_TEST;
@@ -598,7 +602,7 @@ GST_END_TEST;
 GST_START_TEST (testSeekUpdateStopPosition)
 {
   run_seek_position_test (1.0, GST_SEEK_TYPE_NONE, 1500 * GST_MSECOND,
-      GST_SEEK_TYPE_SET, 3000 * GST_MSECOND, 0, 0, 3000 * GST_MSECOND, 3);
+      GST_SEEK_TYPE_SET, 3000 * GST_MSECOND, 0, 0, 3000 * GST_MSECOND, 3, 0);
 }
 
 GST_END_TEST;
@@ -609,7 +613,7 @@ GST_START_TEST (testSeekPosition)
    * from the 1st segment, so 3 segments will be
    * pushed */
   run_seek_position_test (1.0, GST_SEEK_TYPE_SET, 1500 * GST_MSECOND,
-      GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH, 1500 * GST_MSECOND, -1, 3);
+      GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH, 1500 * GST_MSECOND, -1, 3, 0);
 }
 
 GST_END_TEST;
@@ -619,7 +623,7 @@ GST_START_TEST (testSeekSnapBeforePosition)
   /* Seek to 1.5s, snap before, it go to 1s */
   run_seek_position_test (1.0, GST_SEEK_TYPE_SET, 1500 * GST_MSECOND,
       GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_BEFORE,
-      1000 * GST_MSECOND, -1, 3);
+      1000 * GST_MSECOND, -1, 3, 0);
 }
 
 GST_END_TEST;
@@ -630,10 +634,33 @@ GST_START_TEST (testSeekSnapAfterPosition)
   /* Seek to 1.5s with snap after, it should move to 2s */
   run_seek_position_test (1.0, GST_SEEK_TYPE_SET, 1500 * GST_MSECOND,
       GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_AFTER,
-      2000 * GST_MSECOND, -1, 2);
+      2000 * GST_MSECOND, -1, 2, 0);
 }
 
 GST_END_TEST;
+
+
+GST_START_TEST (testSeekSnapBeforeSamePosition)
+{
+  /* Snap seek without position */
+  run_seek_position_test (1.0, GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE,
+      GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_BEFORE,
+      2 * GST_MSECOND, -1, 2, SEGMENT_SIZE * 3 + 1);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (testSeekSnapAfterSamePosition)
+{
+  /* Snap seek without position */
+  run_seek_position_test (1.0, GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE,
+      GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_AFTER,
+      3 * GST_MSECOND, -1, 1, SEGMENT_SIZE * 3 + 1);
+}
+
+GST_END_TEST;
+
 
 
 GST_START_TEST (testReverseSeekSnapBeforePosition)
@@ -641,7 +668,7 @@ GST_START_TEST (testReverseSeekSnapBeforePosition)
   run_seek_position_test (-1.0, GST_SEEK_TYPE_SET, 1000 * GST_MSECOND,
       GST_SEEK_TYPE_SET, 2500 * GST_MSECOND,
       GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_BEFORE, 1000 * GST_MSECOND,
-      3000 * GST_MSECOND, 2);
+      3000 * GST_MSECOND, 2, 0);
 }
 
 GST_END_TEST;
@@ -652,7 +679,7 @@ GST_START_TEST (testReverseSeekSnapAfterPosition)
   run_seek_position_test (-1.0, GST_SEEK_TYPE_SET, 1000 * GST_MSECOND,
       GST_SEEK_TYPE_SET, 2500 * GST_MSECOND,
       GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_AFTER, 1000 * GST_MSECOND,
-      2000 * GST_MSECOND, 1);
+      2000 * GST_MSECOND, 1, 0);
 }
 
 GST_END_TEST;
@@ -982,6 +1009,8 @@ dash_demux_suite (void)
   tcase_add_test (tc_basicTest, testSeekUpdateStopPosition);
   tcase_add_test (tc_basicTest, testSeekSnapBeforePosition);
   tcase_add_test (tc_basicTest, testSeekSnapAfterPosition);
+  tcase_add_test (tc_basicTest, testSeekSnapBeforeSamePosition);
+  tcase_add_test (tc_basicTest, testSeekSnapAfterSamePosition);
   tcase_add_test (tc_basicTest, testReverseSeekSnapBeforePosition);
   tcase_add_test (tc_basicTest, testReverseSeekSnapAfterPosition);
   tcase_add_test (tc_basicTest, testDownloadError);

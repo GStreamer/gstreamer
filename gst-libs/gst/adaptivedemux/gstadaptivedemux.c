@@ -1305,20 +1305,6 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
       }
 
       GST_ADAPTIVE_DEMUX_SEGMENT_LOCK (demux);
-      gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
-          start, stop_type, stop, &update);
-
-      /* FIXME - this seems unatural, do_seek() is updating base when we
-       * only want the start/stop position to change, maybe do_seek() needs
-       * some fixing? */
-      if (!(flags & GST_SEEK_FLAG_FLUSH) && ((rate > 0
-                  && start_type == GST_SEEK_TYPE_NONE) || (rate < 0
-                  && stop_type == GST_SEEK_TYPE_NONE))) {
-        demux->segment.base = oldsegment.base;
-      }
-
-      GST_DEBUG_OBJECT (demux, "Seeking to segment %" GST_SEGMENT_FORMAT,
-          &demux->segment);
 
       /*
        * Handle snap seeks as follows:
@@ -1341,10 +1327,20 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
         /* snap-seek on the stream that received the event and then
          * use the resulting position to seek on all streams */
 
-        if (rate >= 0 && start_type != GST_SEEK_TYPE_NONE) {
-          ts = start;
-        } else if (rate < 0 && stop_type != GST_SEEK_TYPE_NONE) {
-          ts = stop;
+        if (rate >= 0) {
+          if (start_type != GST_SEEK_TYPE_NONE)
+            ts = start;
+          else {
+            ts = stream->segment.position;
+            start_type = GST_SEEK_TYPE_SET;
+          }
+        } else {
+          if (stop_type != GST_SEEK_TYPE_NONE)
+            ts = stop;
+          else {
+            stop_type = GST_SEEK_TYPE_SET;
+            ts = stream->segment.position;
+          }
         }
 
         demux_class->stream_seek (stream, rate >= 0, stream_seek_flags, ts,
@@ -1352,9 +1348,9 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
 
         /* replace event with a new one without snaping to seek on all streams */
         gst_event_unref (event);
-        if (rate >= 0 && start_type != GST_SEEK_TYPE_NONE) {
+        if (rate >= 0) {
           start = ts;
-        } else if (rate < 0 && stop_type != GST_SEEK_TYPE_NONE) {
+        } else {
           stop = ts;
         }
         event =
@@ -1363,8 +1359,22 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
         GST_DEBUG_OBJECT (demux, "Adapted snap seek to %" GST_PTR_FORMAT,
             event);
       }
+
+      gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
+          start, stop_type, stop, &update);
+
+      /* FIXME - this seems unatural, do_seek() is updating base when we
+       * only want the start/stop position to change, maybe do_seek() needs
+       * some fixing? */
+      if (!(flags & GST_SEEK_FLAG_FLUSH) && ((rate > 0
+                  && start_type == GST_SEEK_TYPE_NONE) || (rate < 0
+                  && stop_type == GST_SEEK_TYPE_NONE))) {
+        demux->segment.base = oldsegment.base;
+      }
+
       GST_DEBUG_OBJECT (demux, "Calling subclass seek: %" GST_PTR_FORMAT,
           event);
+
       ret = demux_class->seek (demux, event);
 
       if (!ret) {
