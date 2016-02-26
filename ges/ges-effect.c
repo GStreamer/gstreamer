@@ -19,7 +19,7 @@
 
 /**
  * SECTION:geseffect
- * @short_description: adds an effect build from a parse-launch style 
+ * @short_description: adds an effect build from a parse-launch style
  * bin description to a stream in a GESSourceClip or a GESLayer
  */
 
@@ -160,6 +160,7 @@ ges_effect_class_init (GESEffectClass * klass)
   obj_bg_class->create_element = ges_effect_create_element;
 
   klass->rate_properties = NULL;
+  ges_effect_class_register_rate_property (klass, "scaletempo", "rate");
   ges_effect_class_register_rate_property (klass, "pitch", "tempo");
   ges_effect_class_register_rate_property (klass, "pitch", "rate");
 
