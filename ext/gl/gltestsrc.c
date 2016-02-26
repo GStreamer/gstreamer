@@ -23,12 +23,6 @@
 
 #include "gltestsrc.h"
 
-#include <math.h>
-
-#ifndef M_PI
-#define M_PI  3.14159265358979323846
-#endif
-
 struct vts_color_struct
 {
   gfloat R, G, B;
@@ -748,92 +742,113 @@ static const struct SrcFuncs src_mandelbrot = {
   _src_mandelbrot_free,
 };
 
-#if 0
-void
-gst_gl_test_src_circular (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
+/* *INDENT-OFF* */
+static const gchar *circular_vertex_src =
+    "attribute vec4 position;\n"
+    "varying vec2 uv;\n"
+    "void main()\n"
+    "{\n"
+    "  gl_Position = position;\n"
+    "  uv = position.xy;\n"
+    "}";
+
+static const gchar *circular_fragment_src =
+    "#ifdef GL_ES\n"
+    "precision mediump float;\n"
+    "#endif\n"
+    "uniform float aspect_ratio;\n"
+    "varying vec2 uv;\n"
+    "#define PI 3.14159265\n"
+    "void main() {\n"
+    "  float dist = 0.5 * sqrt(uv.x * uv.x + uv.y / aspect_ratio * uv.y / aspect_ratio);\n"
+    "  float seg = floor(dist * 16.0);\n"
+    "  if (seg <= 0.0 || seg >= 8.0) {\n"
+    "    gl_FragColor = vec4(vec3(0.0), 1.0);\n"
+    "  } else {\n"
+    "    float d = floor (256.0 * dist * 200.0 * pow (2.0, - (seg - 1.0) / 4.0) + 0.5) / 128.0;\n"
+    "    gl_FragColor = vec4 (vec3(sin (d * PI) * 0.5 + 0.5), 1.0);\n"
+    "  }\n"
+    "}";
+/* *INDENT-ON* */
+
+static gboolean
+_src_circular_init (gpointer impl, GstGLContext * context,
+    GstVideoInfo * v_info)
 {
-#if 0
-  int i;
-  int j;
-  paintinfo pi = { NULL, };
-  paintinfo *p = &pi;
-  struct fourcc_list_struct *fourcc;
-  struct vts_color_struct color;
-  static uint8_t sine_array[256];
-  static int sine_array_inited = FALSE;
-  double freq[8];
+  struct SrcShader *src = impl;
+  GError *error = NULL;
 
-#ifdef SCALE_AMPLITUDE
-  double ampl[8];
-#endif
-  int d;
+  src->base.context = context;
 
-  if (!sine_array_inited) {
-    for (i = 0; i < 256; i++) {
-      sine_array[i] =
-          floor (255 * (0.5 + 0.5 * sin (i * 2 * M_PI / 256)) + 0.5);
-    }
-    sine_array_inited = TRUE;
+  if (src->shader)
+    gst_object_unref (src->shader);
+  src->shader = gst_gl_shader_new_link_with_stages (context, &error,
+      gst_glsl_stage_new_with_string (context, GL_VERTEX_SHADER,
+          GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
+          circular_vertex_src),
+      gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+          GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
+          circular_fragment_src), NULL);
+  if (!src->shader) {
+    GST_ERROR_OBJECT (src->base.src, "%s", error->message);
+    return FALSE;
   }
 
-  p->width = w;
-  p->height = h;
-  fourcc = v->fourcc;
-  if (fourcc == NULL)
+  src->attr_position =
+      gst_gl_shader_get_attribute_location (src->shader, "position");
+  if (src->attr_position == -1) {
+    GST_ERROR_OBJECT (src->base.src, "No position attribute");
+    return FALSE;
+  }
+  src->vertices = positions;
+  src->n_vertices = 4;
+  src->indices = indices_quad;
+  src->n_indices = 6;
+
+  gst_gl_shader_use (src->shader);
+  gst_gl_shader_set_uniform_1f (src->shader, "aspect_ratio",
+      (gfloat) GST_VIDEO_INFO_WIDTH (v_info) /
+      (gfloat) GST_VIDEO_INFO_HEIGHT (v_info));
+  gst_gl_context_clear_shader (src->base.context);
+
+  return TRUE;
+}
+
+static void
+_src_circular_free (gpointer impl)
+{
+  struct SrcShader *src = impl;
+
+  if (!src)
     return;
 
-  fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
+  if (src->shader)
+    gst_object_unref (src->shader);
+  src->shader = NULL;
 
-  color = vts_colors[COLOR_BLACK];
-  p->color = &color;
-
-  for (i = 1; i < 8; i++) {
-    freq[i] = 200 * pow (2.0, -(i - 1) / 4.0);
-#ifdef SCALE_AMPLITUDE
-    {
-      double x;
-
-      x = 2 * M_PI * freq[i] / w;
-      ampl[i] = sin (x) / x;
-    }
-#endif
-  }
-
-  for (i = 0; i < w; i++) {
-    for (j = 0; j < h; j++) {
-      double dist;
-      int seg;
-
-      dist =
-          sqrt ((2 * i - w) * (2 * i - w) + (2 * j - h) * (2 * j -
-              h)) / (2 * w);
-      seg = floor (dist * 16);
-      if (seg == 0 || seg >= 8) {
-        color.Y = 255;
-      } else {
-#ifdef SCALE_AMPLITUDE
-        double a;
-#endif
-        d = floor (256 * dist * freq[seg] + 0.5);
-#ifdef SCALE_AMPLITUDE
-        a = ampl[seg];
-        if (a < 0)
-          a = 0;
-        color.Y = 128 + a * (sine_array[d & 0xff] - 128);
-#else
-        color.Y = sine_array[d & 0xff];
-#endif
-      }
-      color.R = color.Y;
-      color.G = color.Y;
-      color.B = color.Y;
-      p->paint_hline (p, i, j, 1);
-    }
-  }
-#endif
+  g_free (impl);
 }
-#endif
+
+static gpointer
+_src_circular_new (GstGLTestSrc * test)
+{
+  struct SrcShader *src = g_new0 (struct SrcShader, 1);
+
+  src->base.src = test;
+
+  return src;
+}
+
+static const struct SrcFuncs src_circular = {
+  GST_GL_TEST_SRC_CIRCULAR,
+  _src_circular_new,
+  _src_circular_init,
+  _src_mandelbrot_fill_bound_fbo,
+  _src_circular_free,
+};
+
 static const struct SrcFuncs *src_impls[] = {
   &src_smpte,
   &src_snow,
@@ -846,6 +861,7 @@ static const struct SrcFuncs *src_impls[] = {
   &src_checkers2,
   &src_checkers4,
   &src_checkers8,
+  &src_circular,
   &src_blink,
   &src_mandelbrot,
 };
