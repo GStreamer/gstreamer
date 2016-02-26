@@ -56,6 +56,7 @@ CRUFT_FILES = \
 	$(top_builddir)/ext/hls/.libs/libgstfragmented* \
 	$(top_builddir)/ext/ivorbis/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/ext/jack/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/opus/.libs/libgstopus.{so,dll,DLL,dylib} \
 	$(top_builddir)/ext/mpg123/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/aacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/amrparse/.libs/*.{so,dll,DLL,dylib} \
