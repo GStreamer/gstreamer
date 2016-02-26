@@ -49,7 +49,7 @@
 #include <gst/gst-i18n-plugin.h>
 
 #define USE_PEER_BUFFERALLOC
-#define SUPPORTED_GL_APIS GST_GL_API_OPENGL
+#define SUPPORTED_GL_APIS (GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2)
 
 GST_DEBUG_CATEGORY_STATIC (gl_test_src_debug);
 #define GST_CAT_DEFAULT gl_test_src_debug
