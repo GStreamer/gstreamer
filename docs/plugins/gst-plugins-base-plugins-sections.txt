@@ -490,6 +490,32 @@ GST_TYPE_OGM_VIDEO_PARSE
 gst_ogm_video_parse_get_type
 </SECTION>
 
+<FILE>element-opusdec</FILE>
+<TITLE>opusdec</TITLE>
+GstOpusDec
+<SUBSECTION Standard>
+GstOpusDecClass
+gst_opus_dec_get_type
+GST_TYPE_OPUS_DEC
+GST_OPUS_DEC
+GST_OPUS_DEC_CLASS
+GST_IS_OPUS_DEC
+GST_IS_OPUS_DEC_CLASS
+</SECTION>
+
+<FILE>element-opusenc</FILE>
+<TITLE>opusenc</TITLE>
+GstOpusEnc
+<SUBSECTION Standard>
+GstOpusEncClass
+gst_opus_enc_get_type
+GST_TYPE_OPUS_ENC
+GST_OPUS_ENC
+GST_OPUS_ENC_CLASS
+GST_IS_OPUS_ENC
+GST_IS_OPUS_ENC_CLASS
+</SECTION>
+
 <SECTION>
 <FILE>element-playbin</FILE>
 <TITLE>playbin</TITLE>

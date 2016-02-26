@@ -15,11 +15,13 @@ GObject
       GstElement
         GstAdder
         GstAudioDecoder
+          GstOpusDec
           GstVorbisDec
         GstAudioEncoder
+          GstOpusEnc
           GstVorbisEnc
         GstAudioRate
-        GstAudioVisualizer-BaseExtLibvisual
+        GstAudioVisualizer
           GstVisual
             GstVisualbumpscope
             GstVisualcorona
@@ -126,7 +128,6 @@ GObject
     PangoFcFontMap
       PangoCairoFcFontMap
 GInterface
-  GDatagramBased
   GFile
   GInitable
   GTypePlugin

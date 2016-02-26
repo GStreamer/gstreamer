@@ -13,6 +13,7 @@ GstEncodeBin GstChildProxy
 GstGioSink GstURIHandler
 GstGioSrc GstURIHandler
 GstOggMux GstPreset
+GstOpusEnc GstPreset GstTagSetter
 GstPipeline GstChildProxy
 GstPlayBin GstChildProxy GstStreamVolume GstVideoOverlay GstNavigation GstColorBalance
 GstPlaySink GstChildProxy GstStreamVolume GstVideoOverlay GstNavigation GstColorBalance

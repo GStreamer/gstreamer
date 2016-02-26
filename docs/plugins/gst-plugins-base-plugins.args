@@ -2598,3 +2598,153 @@
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstOpusEnc::audio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio or voice</NICK>
+<BLURB>Audio or voice (DEPRECATED: use audio-type).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::audio-type</NAME>
+<TYPE>GstOpusEncAudioType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>What type of audio to optimize for</NICK>
+<BLURB>What type of audio to optimize for.</BLURB>
+<DEFAULT>Generic audio</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::bandwidth</NAME>
+<TYPE>GstOpusEncBandwidth</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Band Width</NICK>
+<BLURB>Audio Band Width.</BLURB>
+<DEFAULT>Full band</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[4000,650000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding Bit-rate</NICK>
+<BLURB>Specify an encoding bit-rate (in bps).</BLURB>
+<DEFAULT>64000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::bitrate-type</NAME>
+<TYPE>GstOpusEncBitrateType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate type</NICK>
+<BLURB>Bitrate type.</BLURB>
+<DEFAULT>CBR</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::cbr</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Constant bit rate</NICK>
+<BLURB>Constant bit rate (DEPRECATED: use bitrate-type).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::complexity</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Complexity</NICK>
+<BLURB>Complexity.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::constrained-vbr</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Constrained VBR</NICK>
+<BLURB>Constrained VBR (DEPRECATED: use bitrate-type).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::dtx</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DTX</NICK>
+<BLURB>DTX.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::frame-size</NAME>
+<TYPE>GstOpusEncFrameSize</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frame Size</NICK>
+<BLURB>The duration of an audio frame, in ms.</BLURB>
+<DEFAULT>20</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::inband-fec</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>In-band FEC</NICK>
+<BLURB>Enable forward error correction.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::max-payload-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[2,4000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max payload size</NICK>
+<BLURB>Maximum payload size in bytes.</BLURB>
+<DEFAULT>4000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::packet-loss-percentage</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Loss percentage</NICK>
+<BLURB>Packet loss percentage.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusDec::apply-gain</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Apply gain</NICK>
+<BLURB>Apply gain if any is specified in the header.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusDec::use-inband-fec</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use in-band FEC</NICK>
+<BLURB>Use forward error correction if available (needs PLC enabled).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+

@@ -44,6 +44,8 @@
     <xi:include href="xml/element-ogmaudioparse.xml" />
     <xi:include href="xml/element-ogmtextparse.xml" />
     <xi:include href="xml/element-ogmvideoparse.xml" />
+    <xi:include href="xml/element-opusdec.xml" />
+    <xi:include href="xml/element-opusenc.xml" />
     <xi:include href="xml/element-playbin.xml" />
     <xi:include href="xml/element-playsink.xml" />
     <xi:include href="xml/element-socketsrc.xml" />
@@ -90,6 +92,7 @@
     <xi:include href="xml/plugin-ivorbisdec.xml" />
     <xi:include href="xml/plugin-libvisual.xml" />
     <xi:include href="xml/plugin-ogg.xml" />
+    <xi:include href="xml/plugin-opus.xml" />
     <xi:include href="xml/plugin-pango.xml" />
     <xi:include href="xml/plugin-playback.xml" />
     <xi:include href="xml/plugin-subparse.xml" />
