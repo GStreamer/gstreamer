@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2016> Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,14 +24,16 @@
 
 #include "gltestsrc.h"
 
+#define MAX_ATTRIBUTES 4
+
 struct vts_color_struct
 {
   gfloat R, G, B;
 };
 
-struct XYZW
+struct XYZWRGB
 {
-  gfloat X, Y, Z, W;
+  gfloat X, Y, Z, W, R, G, B;
 };
 
 enum
@@ -87,20 +90,114 @@ static const GLfloat positions[] = {
 static const GLushort indices_quad[] = { 0, 1, 2, 0, 2, 3 };
 /* *INDENT-ON* */
 
+struct attribute
+{
+  const gchar *name;
+  gint location;
+  guint n_elements;
+  GLenum element_type;
+  guint offset;                 /* in bytes */
+  guint stride;                 /* in bytes */
+};
+
 struct SrcShader
 {
   struct BaseSrcImpl base;
 
   GstGLShader *shader;
 
-  gint attr_position;
-  gint attr_texcoord;
-  /* x, y, z, w */
-  const gfloat *vertices;
-  guint n_vertices;
+  guint vao;
+  guint vbo;
+  guint vbo_indices;
+
+  guint n_attributes;
+  struct attribute attributes[MAX_ATTRIBUTES];
+
+  gconstpointer vertices;
+  gsize vertices_size;
   const gushort *indices;
+  guint index_offset;
   guint n_indices;
 };
+
+static void
+_bind_buffer (struct SrcShader *src)
+{
+  GstGLContext *context = src->base.context;
+  const GstGLFuncs *gl = context->gl_vtable;
+  gint i;
+
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, src->vbo_indices);
+  gl->BindBuffer (GL_ARRAY_BUFFER, src->vbo);
+
+  /* Load the vertex position */
+  for (i = 0; i < src->n_attributes; i++) {
+    struct attribute *attr = &src->attributes[i];
+
+    if (attr->location == -1)
+      attr->location =
+          gst_gl_shader_get_attribute_location (src->shader, attr->name);
+
+    gl->VertexAttribPointer (attr->location, attr->n_elements,
+        attr->element_type, GL_FALSE, attr->stride,
+        (void *) (gintptr) attr->offset);
+
+    gl->EnableVertexAttribArray (attr->location);
+  }
+}
+
+static void
+_unbind_buffer (struct SrcShader *src)
+{
+  GstGLContext *context = src->base.context;
+  const GstGLFuncs *gl = context->gl_vtable;
+  gint i;
+
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
+  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+
+  for (i = 0; i < src->n_attributes; i++) {
+    struct attribute *attr = &src->attributes[i];
+
+    gl->DisableVertexAttribArray (attr->location);
+  }
+}
+
+static gboolean
+_src_shader_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
+{
+  struct SrcShader *src = impl;
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  src->base.context = context;
+
+  if (!src->vbo) {
+    if (gl->GenVertexArrays) {
+      gl->GenVertexArrays (1, &src->vao);
+      gl->BindVertexArray (src->vao);
+    }
+
+    gl->GenBuffers (1, &src->vbo);
+    gl->BindBuffer (GL_ARRAY_BUFFER, src->vbo);
+    gl->BufferData (GL_ARRAY_BUFFER, src->vertices_size,
+        src->vertices, GL_STATIC_DRAW);
+
+    gl->GenBuffers (1, &src->vbo_indices);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, src->vbo_indices);
+    gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, src->n_indices * sizeof (gushort),
+        src->indices, GL_STATIC_DRAW);
+
+    if (gl->GenVertexArrays) {
+      _bind_buffer (src);
+      gl->BindVertexArray (0);
+    }
+
+    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
+  }
+
+  return TRUE;
+}
 
 static gboolean
 _src_shader_fill_bound_fbo (gpointer impl)
@@ -114,19 +211,45 @@ _src_shader_fill_bound_fbo (gpointer impl)
 
   gst_gl_shader_use (src->shader);
 
-  if (src->attr_position != -1) {
-    gl->VertexAttribPointer (src->attr_position, 4, GL_FLOAT, GL_FALSE, 0,
-        src->vertices);
-    gl->EnableVertexAttribArray (src->attr_position);
-  }
-  gl->DrawElements (GL_TRIANGLES, src->n_indices, GL_UNSIGNED_SHORT,
-      src->indices);
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (src->vao);
+  else
+    _bind_buffer (src);
 
-  if (src->attr_position != -1)
-    gl->DisableVertexAttribArray (src->attr_position);
+  gl->DrawElements (GL_TRIANGLES, src->n_indices, GL_UNSIGNED_SHORT,
+      (gpointer) (gintptr) src->index_offset);
+
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (0);
+  else
+    _unbind_buffer (src);
+
   gst_gl_context_clear_shader (src->base.context);
 
   return TRUE;
+}
+
+static void
+_src_shader_deinit (gpointer impl)
+{
+  struct SrcShader *src = impl;
+  const GstGLFuncs *gl = src->base.context->gl_vtable;
+
+  if (src->shader)
+    gst_object_unref (src->shader);
+  src->shader = NULL;
+
+  if (src->vao)
+    gl->DeleteVertexArrays (1, &src->vao);
+  src->vao = 0;
+
+  if (src->vbo)
+    gl->DeleteBuffers (1, &src->vbo);
+  src->vbo = 0;
+
+  if (src->vbo_indices)
+    gl->DeleteBuffers (1, &src->vbo_indices);
+  src->vbo_indices = 0;
 }
 
 /* *INDENT-OFF* */
@@ -182,11 +305,7 @@ struct SrcSMPTE
 
   GstGLShader *snow_shader;
   GstGLShader *color_shader;
-  gint a_color_loc;
-
-  gfloat *vertices;
-  gushort *indices;
-  struct vts_color_struct *colors;
+  gint attr_snow_position;
 };
 
 static gpointer
@@ -203,68 +322,66 @@ static gboolean
 _src_smpte_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
 {
   struct SrcSMPTE *src = impl;
-  struct XYZW *plane_positions;
+  struct XYZWRGB *coord;
   gushort *plane_indices;
-  struct vts_color_struct *colors;
   GError *error = NULL;
   int color_idx = 0;
   int i;
 
   src->base.base.context = context;
 
-  colors = g_new0 (struct vts_color_struct, N_QUADS * 4);
-  plane_positions = g_new0 (struct XYZW, N_QUADS * 4);
+  coord = g_new0 (struct XYZWRGB, N_QUADS * 4);
   plane_indices = g_new0 (gushort, N_QUADS * 6);
 
   /* top row */
   for (int i = 0; i < 7; i++) {
-    plane_positions[color_idx * 4 + 0].X = -1.0f + i * (2.0f / 7.0f);
-    plane_positions[color_idx * 4 + 0].Y = 1.0f / 3.0f;
-    plane_positions[color_idx * 4 + 1].X = -1.0f + (i + 1) * (2.0f / 7.0f);
-    plane_positions[color_idx * 4 + 1].Y = 1.0f / 3.0f;
-    plane_positions[color_idx * 4 + 2].X = -1.0f + (i + 1) * (2.0f / 7.0f),
-        plane_positions[color_idx * 4 + 2].Y = -1.0f;
-    plane_positions[color_idx * 4 + 3].X = -1.0f + i * (2.0f / 7.0f);
-    plane_positions[color_idx * 4 + 3].Y = -1.0f;
+    coord[color_idx * 4 + 0].X = -1.0f + i * (2.0f / 7.0f);
+    coord[color_idx * 4 + 0].Y = 1.0f / 3.0f;
+    coord[color_idx * 4 + 1].X = -1.0f + (i + 1) * (2.0f / 7.0f);
+    coord[color_idx * 4 + 1].Y = 1.0f / 3.0f;
+    coord[color_idx * 4 + 2].X = -1.0f + (i + 1) * (2.0f / 7.0f);
+    coord[color_idx * 4 + 2].Y = -1.0f;
+    coord[color_idx * 4 + 3].X = -1.0f + i * (2.0f / 7.0f);
+    coord[color_idx * 4 + 3].Y = -1.0f;
     color_idx++;
   }
 
   /* middle row */
   for (int i = 0; i < 7; i++) {
-    plane_positions[color_idx * 4 + 0].X = -1.0f + i * (2.0f / 7.0f);
-    plane_positions[color_idx * 4 + 0].Y = 0.5f;
-    plane_positions[color_idx * 4 + 1].X = -1.0f + (i + 1) * (2.0f / 7.0f);
-    plane_positions[color_idx * 4 + 1].Y = 0.5f;
-    plane_positions[color_idx * 4 + 2].X = -1.0f + (i + 1) * (2.0f / 7.0f);
-    plane_positions[color_idx * 4 + 2].Y = 1.0f / 3.0f;
-    plane_positions[color_idx * 4 + 3].X = -1.0f + i * (2.0f / 7.0f);
-    plane_positions[color_idx * 4 + 3].Y = 1.0f / 3.0f;
+    coord[color_idx * 4 + 0].X = -1.0f + i * (2.0f / 7.0f);
+    coord[color_idx * 4 + 0].Y = 0.5f;
+    coord[color_idx * 4 + 1].X = -1.0f + (i + 1) * (2.0f / 7.0f);
+    coord[color_idx * 4 + 1].Y = 0.5f;
+    coord[color_idx * 4 + 2].X = -1.0f + (i + 1) * (2.0f / 7.0f);
+    coord[color_idx * 4 + 2].Y = 1.0f / 3.0f;
+    coord[color_idx * 4 + 3].X = -1.0f + i * (2.0f / 7.0f);
+    coord[color_idx * 4 + 3].Y = 1.0f / 3.0f;
     color_idx++;
   }
 
   /* bottom row, left three */
   for (int i = 0; i < 3; i++) {
-    plane_positions[color_idx * 4 + 0].X = -1.0f + i / 3.0f;
-    plane_positions[color_idx * 4 + 0].Y = 1.0f;
-    plane_positions[color_idx * 4 + 1].X = -1.0f + (i + 1) / 3.0f;
-    plane_positions[color_idx * 4 + 1].Y = 1.0f;
-    plane_positions[color_idx * 4 + 2].X = -1.0f + (i + 1) / 3.0f;
-    plane_positions[color_idx * 4 + 2].Y = 0.5f;
-    plane_positions[color_idx * 4 + 3].X = -1.0f + i / 3.0f;
-    plane_positions[color_idx * 4 + 3].Y = 0.5f;
+    coord[color_idx * 4 + 0].X = -1.0f + i / 3.0f;
+    coord[color_idx * 4 + 0].Y = 1.0f;
+    coord[color_idx * 4 + 1].X = -1.0f + (i + 1) / 3.0f;
+    coord[color_idx * 4 + 1].Y = 1.0f;
+    coord[color_idx * 4 + 2].X = -1.0f + (i + 1) / 3.0f;
+    coord[color_idx * 4 + 2].Y = 0.5f;
+    coord[color_idx * 4 + 3].X = -1.0f + i / 3.0f;
+    coord[color_idx * 4 + 3].Y = 0.5f;
     color_idx++;
   }
 
   /* bottom row, middle three (the blacks) */
   for (int i = 0; i < 3; i++) {
-    plane_positions[color_idx * 4 + 0].X = i / 6.0f;
-    plane_positions[color_idx * 4 + 0].Y = 1.0f;
-    plane_positions[color_idx * 4 + 1].X = (i + 1) / 6.0f;
-    plane_positions[color_idx * 4 + 1].Y = 1.0f;
-    plane_positions[color_idx * 4 + 2].X = (i + 1) / 6.0f;
-    plane_positions[color_idx * 4 + 2].Y = 0.5f;
-    plane_positions[color_idx * 4 + 3].X = i / 6.0f;
-    plane_positions[color_idx * 4 + 3].Y = 0.5f;
+    coord[color_idx * 4 + 0].X = i / 6.0f;
+    coord[color_idx * 4 + 0].Y = 1.0f;
+    coord[color_idx * 4 + 1].X = (i + 1) / 6.0f;
+    coord[color_idx * 4 + 1].Y = 1.0f;
+    coord[color_idx * 4 + 2].X = (i + 1) / 6.0f;
+    coord[color_idx * 4 + 2].Y = 0.5f;
+    coord[color_idx * 4 + 3].X = i / 6.0f;
+    coord[color_idx * 4 + 3].Y = 0.5f;
     color_idx++;
   }
 
@@ -295,9 +412,11 @@ _src_smpte_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
     }
 
     for (j = 0; j < 4; j++) {
-      plane_positions[i * 4 + j].Z = 0.0f;
-      plane_positions[i * 4 + j].W = 1.0f;
-      colors[i * 4 + j] = vts_colors[k];
+      coord[i * 4 + j].Z = 0.0f;
+      coord[i * 4 + j].W = 1.0f;
+      coord[i * 4 + j].R = vts_colors[k].R;
+      coord[i * 4 + j].G = vts_colors[k].G;
+      coord[i * 4 + j].B = vts_colors[k].B;
     }
 
     for (j = 0; j < 6; j++)
@@ -305,22 +424,24 @@ _src_smpte_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
   }
 
   /* snow */
-  plane_positions[color_idx * 4 + 0].X = 0.5f;
-  plane_positions[color_idx * 4 + 0].Y = 1.0f;
-  plane_positions[color_idx * 4 + 0].Z = 0.0f;
-  plane_positions[color_idx * 4 + 0].W = 1.0f;
-  plane_positions[color_idx * 4 + 1].X = 1.0f;
-  plane_positions[color_idx * 4 + 1].Y = 1.0f;
-  plane_positions[color_idx * 4 + 1].Z = 0.0f;
-  plane_positions[color_idx * 4 + 1].W = 1.0f;
-  plane_positions[color_idx * 4 + 2].X = 1.0f;
-  plane_positions[color_idx * 4 + 2].Y = 0.5f;
-  plane_positions[color_idx * 4 + 2].Z = 0.0f;
-  plane_positions[color_idx * 4 + 2].W = 1.0f;
-  plane_positions[color_idx * 4 + 3].X = 0.5f;
-  plane_positions[color_idx * 4 + 3].Y = 0.5f;
-  plane_positions[color_idx * 4 + 3].Z = 0.0f;
-  plane_positions[color_idx * 4 + 3].W = 1.0f;
+  coord[color_idx * 4 + 0].X = 0.5f;
+  coord[color_idx * 4 + 0].Y = 1.0f;
+  coord[color_idx * 4 + 0].Z = 0.0f;
+  coord[color_idx * 4 + 0].W = 1.0f;
+  coord[color_idx * 4 + 1].X = 1.0f;
+  coord[color_idx * 4 + 1].Y = 1.0f;
+  coord[color_idx * 4 + 1].Z = 0.0f;
+  coord[color_idx * 4 + 1].W = 1.0f;
+  coord[color_idx * 4 + 2].X = 1.0f;
+  coord[color_idx * 4 + 2].Y = 0.5f;
+  coord[color_idx * 4 + 2].Z = 0.0f;
+  coord[color_idx * 4 + 2].W = 1.0f;
+  coord[color_idx * 4 + 3].X = 0.5f;
+  coord[color_idx * 4 + 3].Y = 0.5f;
+  coord[color_idx * 4 + 3].Z = 0.0f;
+  coord[color_idx * 4 + 3].W = 1.0f;
+  for (i = 0; i < 6; i++)
+    plane_indices[color_idx * 6 + i] = color_idx * 4 + indices_quad[i];
   color_idx++;
 
   if (src->color_shader)
@@ -355,60 +476,59 @@ _src_smpte_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
     return FALSE;
   }
 
-  gst_gl_shader_use (src->color_shader);
-  src->base.attr_position =
-      gst_gl_shader_get_attribute_location (src->color_shader, "position");
-  if (src->base.attr_position == -1) {
-    GST_ERROR_OBJECT (src->base.base.src, "No position attribute");
-    return FALSE;
-  }
+  src->attr_snow_position = -1;
 
-  src->a_color_loc =
-      gst_gl_shader_get_attribute_location (src->color_shader, "a_color");
-/*  if (src->a_color_loc == -1) {
-    GST_ERROR_OBJECT (src->base.base.src, "No color attribute");
-    return FALSE;
-  }*/
-  gst_gl_context_clear_shader (src->base.base.context);
+  src->base.n_attributes = 2;
 
-  src->vertices = (gfloat *) plane_positions;
-  src->indices = plane_indices;
-  src->colors = colors;
+  src->base.attributes[0].name = "position";
+  src->base.attributes[0].location = -1;
+  src->base.attributes[0].n_elements = 4;
+  src->base.attributes[0].element_type = GL_FLOAT;
+  src->base.attributes[0].offset = 0;
+  src->base.attributes[0].stride = sizeof (struct XYZWRGB);
 
-  return TRUE;
+  src->base.attributes[1].name = "a_color";
+  src->base.attributes[1].location = -1;
+  src->base.attributes[1].n_elements = 3;
+  src->base.attributes[1].element_type = GL_FLOAT;
+  src->base.attributes[1].offset = 4 * sizeof (gfloat);
+  src->base.attributes[1].stride = sizeof (struct XYZWRGB);
+
+  src->base.shader = src->color_shader;
+  src->base.vertices = (gfloat *) coord;
+  src->base.vertices_size = sizeof (struct XYZWRGB) * N_QUADS * 4;
+  src->base.indices = plane_indices;
+  src->base.n_indices = N_QUADS * 6;
+
+  return _src_shader_init (impl, context, v_info);
 }
 
 static gboolean
 _src_smpte_fill_bound_fbo (gpointer impl)
 {
   struct SrcSMPTE *src = impl;
-  const GstGLFuncs *gl = src->base.base.context->gl_vtable;
+  gint attr_color_position = -1;
 
-  if (src->a_color_loc != -1) {
-    gl->VertexAttribPointer (src->a_color_loc, 3, GL_FLOAT, GL_FALSE, 0,
-        src->colors);
-    gl->EnableVertexAttribArray (src->a_color_loc);
-  }
+  src->base.n_attributes = 2;
   src->base.shader = src->color_shader;
-  src->base.vertices = src->vertices;
-  src->base.n_vertices = (N_QUADS - 1) * 4 * 4;
-  src->base.indices = src->indices;
   src->base.n_indices = (N_QUADS - 1) * 6;
+  src->base.index_offset = 0;
   if (!_src_shader_fill_bound_fbo (impl))
     return FALSE;
-  if (src->a_color_loc != -1)
-    gl->DisableVertexAttribArray (src->a_color_loc);
+  attr_color_position = src->base.attributes[0].location;
 
+  src->base.attributes[0].location = src->attr_snow_position;
+  src->base.n_attributes = 1;
   src->base.shader = src->snow_shader;
-  src->base.vertices = &src->vertices[src->base.n_vertices];
-  src->base.n_vertices = 4;
-  src->base.indices = src->indices;
   src->base.n_indices = 6;
+  src->base.index_offset = (N_QUADS - 1) * 6 * sizeof (gushort);
   gst_gl_shader_use (src->snow_shader);
   gst_gl_shader_set_uniform_1f (src->snow_shader, "time",
       (gfloat) src->base.base.src->running_time / GST_SECOND);
   if (!_src_shader_fill_bound_fbo (impl))
     return FALSE;
+  src->attr_snow_position = src->base.attributes[0].location;
+  src->base.attributes[0].location = attr_color_position;
 
   return TRUE;
 }
@@ -421,13 +541,10 @@ _src_smpte_free (gpointer impl)
   if (!impl)
     return;
 
-  if (src->base.shader)
-    gst_object_unref (src->base.shader);
-  src->base.shader = NULL;
+  _src_shader_deinit (impl);
 
-  g_free (src->vertices);
-  g_free (src->indices);
-  g_free (src->colors);
+  g_free ((gpointer) src->base.vertices);
+  g_free ((gpointer) src->base.indices);
 
   g_free (impl);
 }
@@ -545,9 +662,13 @@ static const struct SrcFuncs src_blink = {
 
 /* *INDENT-OFF* */
 static const gchar *checkers_vertex_src = "attribute vec4 position;\n"
+    "varying vec2 uv;\n"
     "void main()\n"
     "{\n"
-    "   gl_Position = position;\n"
+    "  gl_Position = position;\n"
+    /* RPi gives incorrect results for positive uv (plus it makes us start on
+     * the right pixel color i.e. red) */
+    "  uv = position.xy - 1.0;\n"
     "}";
 
 static const gchar *checkers_fragment_src =
@@ -555,14 +676,16 @@ static const gchar *checkers_fragment_src =
     "precision mediump float;\n"
     "#endif\n"
     "uniform float checker_width;\n"
+    "uniform float width;\n"
+    "uniform float height;\n"
+    "varying vec2 uv;\n"
     "void main()\n"
     "{\n"
-    "  vec2 xy_index= floor((gl_FragCoord.xy-vec2(0.5,0.5))/checker_width);\n"
-    "  vec2 xy_mod=mod(xy_index,vec2(2.0,2.0));\n"
-    "  float result=mod(xy_mod.x+xy_mod.y,2.0);\n"
-    "  gl_FragColor.r=step(result,0.5);\n"
-    "  gl_FragColor.g=1.0-gl_FragColor.r;\n"
-    "  gl_FragColor.ba=vec2(0,1);\n"
+    "  vec2 xy_mod = floor (0.5 * uv * vec2(width, height) / (checker_width));\n"
+    "  float result = mod (xy_mod.x + xy_mod.y, 2.0);\n"
+    "  gl_FragColor.r = step (result, 0.5);\n"
+    "  gl_FragColor.g = 1.0 - gl_FragColor.r;\n"
+    "  gl_FragColor.ba = vec2(0.0, 1.0);\n"
     "}";
 /* *INDENT-ON* */
 
@@ -598,23 +721,30 @@ _src_checkers_init (gpointer impl, GstGLContext * context,
     return FALSE;
   }
 
-  src->base.attr_position =
-      gst_gl_shader_get_attribute_location (src->base.shader, "position");
-  if (src->base.attr_position == -1) {
-    GST_ERROR_OBJECT (src->base.base.src, "No position attribute");
-    return FALSE;
-  }
+  src->base.n_attributes = 1;
+
+  src->base.attributes[0].name = "position";
+  src->base.attributes[0].location = -1;
+  src->base.attributes[0].n_elements = 4;
+  src->base.attributes[0].element_type = GL_FLOAT;
+  src->base.attributes[0].offset = 0;
+  src->base.attributes[0].stride = 4 * sizeof (gfloat);
+
   src->base.vertices = positions;
-  src->base.n_vertices = 4;
+  src->base.vertices_size = sizeof (positions);
   src->base.indices = indices_quad;
   src->base.n_indices = 6;
 
   gst_gl_shader_use (src->base.shader);
   gst_gl_shader_set_uniform_1f (src->base.shader, "checker_width",
       src->checker_width);
+  gst_gl_shader_set_uniform_1f (src->base.shader, "width",
+      (gfloat) GST_VIDEO_INFO_WIDTH (v_info));
+  gst_gl_shader_set_uniform_1f (src->base.shader, "height",
+      (gfloat) GST_VIDEO_INFO_HEIGHT (v_info));
   gst_gl_context_clear_shader (src->base.base.context);
 
-  return TRUE;
+  return _src_shader_init (impl, context, v_info);
 }
 
 static void
@@ -625,9 +755,7 @@ _src_checkers_free (gpointer impl)
   if (!src)
     return;
 
-  if (src->base.shader)
-    gst_object_unref (src->base.shader);
-  src->base.shader = NULL;
+  _src_shader_deinit (impl);
 
   g_free (impl);
 }
@@ -687,18 +815,21 @@ _src_snow_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
     return FALSE;
   }
 
-  src->attr_position =
-      gst_gl_shader_get_attribute_location (src->shader, "position");
-  if (src->attr_position == -1) {
-    GST_ERROR_OBJECT (src->base.src, "No position attribute");
-    return FALSE;
-  }
+  src->n_attributes = 1;
+
+  src->attributes[0].name = "position";
+  src->attributes[0].location = -1;
+  src->attributes[0].n_elements = 4;
+  src->attributes[0].element_type = GL_FLOAT;
+  src->attributes[0].offset = 0;
+  src->attributes[0].stride = 4 * sizeof (gfloat);
+
   src->vertices = positions;
-  src->n_vertices = 4;
+  src->vertices_size = sizeof (positions);
   src->indices = indices_quad;
   src->n_indices = 6;
 
-  return TRUE;
+  return _src_shader_init (impl, context, v_info);
 }
 
 static gboolean
@@ -724,9 +855,7 @@ _src_snow_free (gpointer impl)
   if (!src)
     return;
 
-  if (src->shader)
-    gst_object_unref (src->shader);
-  src->shader = NULL;
+  _src_shader_deinit (impl);
 
   g_free (impl);
 }
@@ -783,7 +912,7 @@ static const gchar *mandelbrot_fragment_src =
     "}\n"
     "vec4 iterate_pixel(vec2 position) {\n"
     "  vec2 c = vec2(0);\n"
-    "  for (int i=0; i < 100; i++) {\n"
+    "  for (int i=0; i < 20; i++) {\n"
     "    if (c.x*c.x + c.y*c.y > 2.0*2.0)\n"
     "      return i_to_rgb(i);\n"
     "    c = mandelbrot(c, position);\n"
@@ -820,14 +949,17 @@ _src_mandelbrot_init (gpointer impl, GstGLContext * context,
     return FALSE;
   }
 
-  src->attr_position =
-      gst_gl_shader_get_attribute_location (src->shader, "position");
-  if (src->attr_position == -1) {
-    GST_ERROR_OBJECT (src->base.src, "No position attribute");
-    return FALSE;
-  }
+  src->n_attributes = 1;
+
+  src->attributes[0].name = "position";
+  src->attributes[0].location = -1;
+  src->attributes[0].n_elements = 4;
+  src->attributes[0].element_type = GL_FLOAT;
+  src->attributes[0].offset = 0;
+  src->attributes[0].stride = 4 * sizeof (gfloat);
+
   src->vertices = positions;
-  src->n_vertices = 4;
+  src->vertices_size = sizeof (positions);
   src->indices = indices_quad;
   src->n_indices = 6;
 
@@ -837,7 +969,7 @@ _src_mandelbrot_init (gpointer impl, GstGLContext * context,
       (gfloat) GST_VIDEO_INFO_HEIGHT (v_info));
   gst_gl_context_clear_shader (src->base.context);
 
-  return TRUE;
+  return _src_shader_init (impl, context, v_info);
 }
 
 static gboolean
@@ -863,9 +995,7 @@ _src_mandelbrot_free (gpointer impl)
   if (!src)
     return;
 
-  if (src->shader)
-    gst_object_unref (src->shader);
-  src->shader = NULL;
+  _src_shader_deinit (impl);
 
   g_free (impl);
 }
@@ -942,14 +1072,17 @@ _src_circular_init (gpointer impl, GstGLContext * context,
     return FALSE;
   }
 
-  src->attr_position =
-      gst_gl_shader_get_attribute_location (src->shader, "position");
-  if (src->attr_position == -1) {
-    GST_ERROR_OBJECT (src->base.src, "No position attribute");
-    return FALSE;
-  }
+  src->n_attributes = 1;
+
+  src->attributes[0].name = "position";
+  src->attributes[0].location = -1;
+  src->attributes[0].n_elements = 4;
+  src->attributes[0].element_type = GL_FLOAT;
+  src->attributes[0].offset = 0;
+  src->attributes[0].stride = 4 * sizeof (gfloat);
+
   src->vertices = positions;
-  src->n_vertices = 4;
+  src->vertices_size = sizeof (positions);
   src->indices = indices_quad;
   src->n_indices = 6;
 
@@ -959,7 +1092,7 @@ _src_circular_init (gpointer impl, GstGLContext * context,
       (gfloat) GST_VIDEO_INFO_HEIGHT (v_info));
   gst_gl_context_clear_shader (src->base.context);
 
-  return TRUE;
+  return _src_shader_init (impl, context, v_info);
 }
 
 static void
@@ -970,9 +1103,7 @@ _src_circular_free (gpointer impl)
   if (!src)
     return;
 
-  if (src->shader)
-    gst_object_unref (src->shader);
-  src->shader = NULL;
+  _src_shader_deinit (impl);
 
   g_free (impl);
 }
