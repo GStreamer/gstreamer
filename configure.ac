@@ -687,6 +687,19 @@ AG_GST_CHECK_FEATURE(OGG, [Xiph Ogg library], ogg, [
   AG_GST_PKG_CHECK_MODULES(OGG, ogg >= 1.0)
 ])
 
+dnl *** Opus ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPUS, true)
+AG_GST_CHECK_FEATURE(OPUS, [opus], opus, [
+  PKG_CHECK_MODULES(OPUS, opus >= 0.9.4, [
+          AC_DEFINE([HAVE_OPUS], 1, [Define if Opus >= 0.9.4 is installed])
+          HAVE_OPUS="yes"
+  ], [
+          HAVE_OPUS="no"
+  ])
+  AC_SUBST(OPUS_CFLAGS)
+  AC_SUBST(OPUS_LIBS)
+])
+
 dnl *** pango ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_PANGO, true)
 AG_GST_CHECK_FEATURE(PANGO, [Pango font rendering], pango, [
@@ -731,6 +744,7 @@ AM_CONDITIONAL(USE_CDPARANOIA, false)
 AM_CONDITIONAL(USE_IVORBIS, false)
 AM_CONDITIONAL(USE_LIBVISUAL, false)
 AM_CONDITIONAL(USE_OGG, false)
+AM_CONDITIONAL(USE_OPUS, false)
 AM_CONDITIONAL(USE_PANGO, false)
 AM_CONDITIONAL(USE_THEORA, false)
 AM_CONDITIONAL(USE_VORBIS, false)
@@ -849,6 +863,7 @@ ext/alsa/Makefile
 ext/cdparanoia/Makefile
 ext/libvisual/Makefile
 ext/ogg/Makefile
+ext/opus/Makefile
 ext/pango/Makefile
 ext/theora/Makefile
 ext/vorbis/Makefile

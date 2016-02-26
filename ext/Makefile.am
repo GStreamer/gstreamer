@@ -22,6 +22,12 @@ else
 OGG_DIR=
 endif
 
+if USE_OPUS
+OPUS_DIR=opus
+else
+OPUS_DIR=
+endif
+
 if USE_PANGO
 PANGO_DIR = pango
 else
@@ -53,6 +59,7 @@ SUBDIRS = \
   $(CDPARANOIA_DIR) \
   $(LIBVISUAL_DIR) \
   $(OGG_DIR) \
+  $(OPUS_DIR) \
   $(PANGO_DIR) \
   $(THEORA_DIR) \
   $(VORBIS_DIR)
@@ -62,6 +69,7 @@ DIST_SUBDIRS = \
   cdparanoia \
   libvisual \
   ogg \
+  opus \
   pango \
   theora \
   vorbis

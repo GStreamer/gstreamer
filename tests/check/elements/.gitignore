@@ -12,6 +12,7 @@ encodebin
 libvisual
 multifdsink
 multisocketsink
+opus
 videorate
 videotestsrc
 volume
@@ -24,5 +25,6 @@ vorbistag
 playbin
 playbin-compressed
 playbin-complex
+playsink
 streamsynchronizer
 subparse

@@ -42,6 +42,12 @@ else
 check_ogg =
 endif
 
+if USE_OPUS
+check_opus = elements/opus
+else
+check_opus =
+endif
+
 if USE_PANGO
 check_pango = elements/textoverlay
 else
@@ -224,6 +230,7 @@ check_PROGRAMS = \
 	$(check_encodebin) \
 	$(check_gio) \
 	$(check_ogg) \
+	$(check_opus) \
 	$(check_pango) \
 	$(check_playback) \
 	$(check_subparse) \
