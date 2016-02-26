@@ -58,14 +58,12 @@
  *      serialization format to describe the <link linkend="GstEncodeBin--profile"><type>GstEncodeBin.profile</type></link>
  *     property of the encodebin.
  *    </para>
- *
  *    <para>
  *        The simplest serialized profile looks like:
  *    </para>
  *    <informalexample>
  *      <programlisting>muxer_source_caps:videoencoder_source_caps:audioencoder_source_caps</programlisting>
  *    </informalexample>
- *
  *     <para>
  *         For example to encode a stream into a WebM container, with an OGG audio stream and a VP8 video stream,
  *         the serialized <link linkend="GstEncodingProfile"><type>GstEncodingProfile</type></link> will look like:
@@ -73,14 +71,12 @@
  *     <informalexample>
  *       <programlisting>video/webm:video/x-vp8:audio/x-vorbis</programlisting>
  *     </informalexample>
- *
  *    <para>
  *        You can also set the preset name of the encoding profile using the caps+preset_name syntax as in:
  *    </para>
  *    <informalexample>
  *      <programlisting>video/webm:video/x-vp8+youtube-preset:audio/x-vorbis</programlisting>
  *    </informalexample>
- *
  *    <para>
  *        Moreover, you can set the <link linkend="gst-encoding-profile-set-presence">presence</link> property of an
  *        encoding profile using the <code>|presence</code> syntax as in:
@@ -88,7 +84,6 @@
  *    <informalexample>
  *       <programlisting>video/webm:video/x-vp8|1:audio/x-vorbis</programlisting>
  *    </informalexample>
- *
  *    <para>
  *      This field allows you to specify how many times maximum a <link linkend="GstEncodingProfile"><type>GstEncodingProfile</type></link> can be used inside an encodebin.
  *    </para>
@@ -117,14 +112,12 @@
  *    <informalexample>
  *      <programlisting>video/quicktime,variant=iso:video/x-h264:audio/mpeg,mpegversion=1,layer=3</programlisting>
  *    </informalexample>
- *
  *    <para>
  *      Vorbis and theora in OGG:
  *    </para>
  *    <informalexample>
  *      <programlisting>application/ogg:video/x-theora:audio/x-vorbis</programlisting>
  *    </informalexample>
- *
  *     <para>
  *      AC3 and H264 in MPEG-TS:
  *    </para>
