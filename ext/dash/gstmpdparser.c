@@ -4708,7 +4708,7 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
               if (index + 1 >= stream->segments->len) {
                 selectedChunk = NULL;
               } else {
-                selectedChunk = g_ptr_array_index (stream->segments, index + 1);
+                selectedChunk = g_ptr_array_index (stream->segments, ++index);
               }
             }
           }
