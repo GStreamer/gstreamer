@@ -207,6 +207,7 @@ nle_operation_reset (NleOperation * operation)
 static void
 nle_operation_init (NleOperation * operation)
 {
+  GST_OBJECT_FLAG_SET (operation, NLE_OBJECT_OPERATION);
   nle_operation_reset (operation);
   operation->element = NULL;
 }
