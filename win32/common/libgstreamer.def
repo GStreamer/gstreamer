@@ -480,6 +480,7 @@ EXPORTS
 	gst_element_class_add_metadata
 	gst_element_class_add_pad_template
 	gst_element_class_add_static_metadata
+	gst_element_class_add_static_pad_template
 	gst_element_class_get_metadata
 	gst_element_class_get_pad_template
 	gst_element_class_get_pad_template_list

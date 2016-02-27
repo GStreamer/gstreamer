@@ -663,6 +663,9 @@ struct _GstElementClass
 
 /* element class pad templates */
 void                    gst_element_class_add_pad_template      (GstElementClass *klass, GstPadTemplate *templ);
+
+void                    gst_element_class_add_static_pad_template (GstElementClass *klass, GstStaticPadTemplate *static_templ);
+
 GstPadTemplate*         gst_element_class_get_pad_template      (GstElementClass *element_class, const gchar *name);
 GList*                  gst_element_class_get_pad_template_list (GstElementClass *element_class);
 
