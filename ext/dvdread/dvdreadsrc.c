@@ -717,7 +717,8 @@ gst_dvd_read_src_get_sector_from_time (GstDvdReadSrc * src, GstClockTime ts)
   if (src->vts_tmapt == NULL || src->vts_tmapt->nr_of_tmaps < src->ttn)
     return -1;
 
-  sector = 0;
+  sector = src->vts_tmapt->tmap[src->ttn - 1].map_ent[0] & 0x7fffffff;
+
   for (j = 0; j < src->vts_tmapt->tmap[src->ttn - 1].nr_of_entries; ++j) {
     GstClockTime entry_time;
 
