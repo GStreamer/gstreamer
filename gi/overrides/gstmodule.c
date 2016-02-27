@@ -368,7 +368,8 @@ static PyMethodDef _gi_gst_functions[] = {
   {"fixme", (PyCFunction) _wrap_gst_fixme, METH_VARARGS,
       NULL},
   {"memdump", (PyCFunction) _wrap_gst_memdump, METH_VARARGS,
-      NULL}
+      NULL},
+  {NULL, NULL, 0, NULL}
 };
 
 PYGLIB_MODULE_START (_gi_gst, "_gi_gst")
