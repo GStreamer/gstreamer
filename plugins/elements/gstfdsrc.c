@@ -174,8 +174,7 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
       "Filedescriptor Source",
       "Source/File",
       "Read from a file descriptor", "Erik Walthinsen <omega@cse.ogi.edu>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_fd_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_fd_src_stop);

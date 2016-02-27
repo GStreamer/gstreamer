@@ -145,10 +145,8 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
       "Generic",
       "Pass data without modification, limiting formats",
       "David Schleef <ds@schleef.org>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 
   trans_class = GST_BASE_TRANSFORM_CLASS (klass);
   trans_class->transform_caps =

@@ -474,10 +474,8 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "MultiQueue",
       "Generic", "Multiple data queue", "Edward Hervey <edward@fluendo.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_multi_queue_request_new_pad);

@@ -95,14 +95,12 @@ gst_funnel_pad_init (GstFunnelPad * pad)
   pad->got_eos = FALSE;
 }
 
-static GstStaticPadTemplate funnel_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink_%u",
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 
-static GstStaticPadTemplate funnel_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
@@ -199,10 +197,8 @@ gst_funnel_class_init (GstFunnelClass * klass)
       "Funnel pipe fitting", "Generic", "N-to-1 pipe fitting",
       "Olivier Crete <olivier.crete@collabora.co.uk>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&funnel_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&funnel_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_funnel_request_new_pad);
@@ -213,8 +209,7 @@ gst_funnel_class_init (GstFunnelClass * klass)
 static void
 gst_funnel_init (GstFunnel * funnel)
 {
-  funnel->srcpad = gst_pad_new_from_static_template (&funnel_src_template,
-      "src");
+  funnel->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_use_fixed_caps (funnel->srcpad);
 
   gst_element_add_pad (GST_ELEMENT (funnel), funnel->srcpad);

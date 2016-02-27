@@ -242,10 +242,8 @@ gst_identity_class_init (GstIdentityClass * klass)
       "Identity",
       "Generic",
       "Pass data without modification", "Erik Walthinsen <omega@cse.ogi.edu>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_identity_change_state);

@@ -232,10 +232,10 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
       "Generic",
       "Finds the media type of a stream",
       "Benjamin Otte <in7y118@public.uni-hamburg.de>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&type_find_element_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&type_find_element_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &type_find_element_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &type_find_element_sink_template);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_type_find_element_change_state);

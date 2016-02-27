@@ -95,10 +95,8 @@ gst_valve_class_init (GstValveClass * klass)
           DEFAULT_DROP, G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
           G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 
   gst_element_class_set_static_metadata (gstelement_class, "Valve element",
       "Filter", "Drops buffers and events or lets them through",

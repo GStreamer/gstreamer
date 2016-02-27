@@ -146,8 +146,7 @@ gst_fd_sink_class_init (GstFdSinkClass * klass)
       "Filedescriptor Sink",
       "Sink/File",
       "Write data to a file descriptor", "Erik Walthinsen <omega@cse.ogi.edu>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_fd_sink_render);
   gstbasesink_class->render_list = GST_DEBUG_FUNCPTR (gst_fd_sink_render_list);

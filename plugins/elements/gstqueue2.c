@@ -410,10 +410,8 @@ gst_queue2_class_init (GstQueue2Class * klass)
   /* set several parent class virtual functions */
   gobject_class->finalize = gst_queue2_finalize;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 
   gst_element_class_set_static_metadata (gstelement_class, "Queue 2",
       "Generic",

@@ -110,11 +110,11 @@ gst_streamid_demux_class_init (GstStreamidDemuxClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "Streamid Demux",
       "Generic", "1-to-N output stream by stream-id",
       "HoonHee Lee <hoonhee.lee@lge.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_streamid_demux_sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_streamid_demux_sink_factory);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_streamid_demux_src_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_streamid_demux_src_factory);
 
   gstelement_class->change_state = gst_streamid_demux_change_state;
 }

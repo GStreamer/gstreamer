@@ -95,14 +95,12 @@ gst_concat_pad_init (GstConcatPad * self)
   self->flushing = FALSE;
 }
 
-static GstStaticPadTemplate concat_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink_%u",
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 
-static GstStaticPadTemplate concat_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
@@ -178,10 +176,8 @@ gst_concat_class_init (GstConcatClass * klass)
       "Concat", "Generic", "Concatenate multiple streams",
       "Sebastian Dröge <sebastian@centricular.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&concat_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&concat_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_concat_request_new_pad);
@@ -195,7 +191,7 @@ gst_concat_init (GstConcat * self)
   g_mutex_init (&self->lock);
   g_cond_init (&self->cond);
 
-  self->srcpad = gst_pad_new_from_static_template (&concat_src_template, "src");
+  self->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_set_event_function (self->srcpad,
       GST_DEBUG_FUNCPTR (gst_concat_src_event));
   gst_pad_set_query_function (self->srcpad,

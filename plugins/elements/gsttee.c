@@ -99,8 +99,7 @@ enum
   PROP_ALLOW_NOT_LINKED,
 };
 
-static GstStaticPadTemplate tee_src_template =
-GST_STATIC_PAD_TEMPLATE ("src_%u",
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
@@ -290,10 +289,8 @@ gst_tee_class_init (GstTeeClass * klass)
       "Generic",
       "1-to-N pipe fitting",
       "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&tee_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_tee_request_new_pad);
