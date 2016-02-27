@@ -50,9 +50,6 @@
 GST_DEBUG_CATEGORY (goom_debug);
 #define GST_CAT_DEFAULT goom_debug
 
-#define DEFAULT_WIDTH  320
-#define DEFAULT_HEIGHT 240
-
 /* signals and args */
 enum
 {
@@ -129,11 +126,9 @@ gst_goom_class_init (GstGoomClass * klass)
 static void
 gst_goom_init (GstGoom * goom)
 {
-  goom->width = DEFAULT_WIDTH;
-  goom->height = DEFAULT_HEIGHT;
+  goom->width = -1;
+  goom->height = -1;
   goom->channels = 0;
-
-  goom->plugin = goom_init (goom->width, goom->height);
 }
 
 static void
@@ -152,8 +147,15 @@ gst_goom_setup (GstAudioVisualizer * base)
 {
   GstGoom *goom = GST_GOOM (base);
 
-  goom->width = GST_VIDEO_INFO_WIDTH (&base->vinfo);
-  goom->height = GST_VIDEO_INFO_HEIGHT (&base->vinfo);
+  if (!goom->plugin ||
+      goom->width != GST_VIDEO_INFO_WIDTH (&base->vinfo) ||
+      goom->height != GST_VIDEO_INFO_HEIGHT (&base->vinfo)) {
+    goom->width = GST_VIDEO_INFO_WIDTH (&base->vinfo);
+    goom->height = GST_VIDEO_INFO_HEIGHT (&base->vinfo);
+    if (goom->plugin)
+      goom_close (goom->plugin);
+    goom->plugin = goom_init (goom->width, goom->height);
+  }
 
   return TRUE;
 }
@@ -167,6 +169,9 @@ gst_goom_render (GstAudioVisualizer * base, GstBuffer * audio,
   gint16 datain[2][GOOM_SAMPLES];
   gint16 *adata;
   gint i;
+
+  if (!goom->plugin)
+    return FALSE;
 
   /* get next GOOM_SAMPLES, we have at least this amount of samples */
   gst_buffer_map (audio, &amap, GST_MAP_READ);
