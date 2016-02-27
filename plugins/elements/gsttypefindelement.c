@@ -929,7 +929,8 @@ not_enough_data:
 
     if (at_eos) {
       GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
-          (_("Stream doesn't contain enough data.")), ("Can't typefind stream"));
+          (_("Stream doesn't contain enough data.")),
+          ("Can't typefind stream"));
       return GST_FLOW_ERROR;
     } else {
       GST_DEBUG_OBJECT (typefind, "not enough data for typefinding yet "
@@ -950,7 +951,8 @@ wait_for_data:
 
     if (at_eos) {
       GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
-          (_("Stream doesn't contain enough data.")), ("Can't typefind stream"));
+          (_("Stream doesn't contain enough data.")),
+          ("Can't typefind stream"));
       return GST_FLOW_ERROR;
     } else {
       GST_DEBUG_OBJECT (typefind,
