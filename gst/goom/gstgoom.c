@@ -154,6 +154,7 @@ gst_goom_setup (GstAudioVisualizer * base)
 
   goom->width = GST_VIDEO_INFO_WIDTH (&base->vinfo);
   goom->height = GST_VIDEO_INFO_HEIGHT (&base->vinfo);
+  goom_set_resolution (goom->plugin, goom->width, goom->height);
 
   return TRUE;
 }
