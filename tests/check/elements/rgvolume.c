@@ -383,8 +383,14 @@ GST_START_TEST (test_events)
       GST_TAG_TRACK_GAIN, +4.95, GST_TAG_TRACK_PEAK, 0.59463,
       GST_TAG_ALBUM_GAIN, -1.54, GST_TAG_ALBUM_PEAK, 0.693415,
       GST_TAG_ARTIST, "Foobar", NULL);
+  gst_tag_list_ref (tag_list);
   event = gst_event_new_tag (tag_list);
   new_event = send_tag_event (element, event);
+
+  /* Make sure our tags weren't modified in place while we still got a ref */
+  fail_unless_equals_int (5, gst_tag_list_n_tags (tag_list));
+  gst_tag_list_unref (tag_list);
+
   gst_event_parse_tag (new_event, &tag_list);
   fail_unless (gst_tag_list_get_string (tag_list, GST_TAG_ARTIST, &artist));
   fail_unless (g_str_equal (artist, "Foobar"));
