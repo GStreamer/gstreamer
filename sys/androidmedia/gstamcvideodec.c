@@ -805,12 +805,12 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
     return FALSE;
   }
 
-  gst_format =
-      gst_amc_color_format_to_video_format (klass->codec_info, mime,
-      color_format);
-
   if (self->codec_config == AMC_CODEC_CONFIG_WITH_SURFACE) {
     gst_format = GST_VIDEO_FORMAT_RGBA;
+  } else {
+    gst_format =
+        gst_amc_color_format_to_video_format (klass->codec_info, mime,
+        color_format);
   }
 
   if (gst_format == GST_VIDEO_FORMAT_UNKNOWN) {
@@ -827,6 +827,7 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
         GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM, GST_VIDEO_MULTIVIEW_FLAGS_NONE);
   }
 
+  memset (&self->color_format_info, 0, sizeof (self->color_format_info));
   if (self->codec_config == AMC_CODEC_CONFIG_WITH_SURFACE) {
     if (output_state->caps)
       gst_caps_unref (output_state->caps);
@@ -835,6 +836,21 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
     gst_caps_set_simple (output_state->caps, "texture-target", G_TYPE_STRING,
         "external-oes", NULL);
+    GST_DEBUG_OBJECT (self, "Configuring for Surface output");
+
+    /* The width/height values are used in other places for
+     * checking if the resolution changed. Set everything
+     * that makes sense here
+     */
+    self->color_format_info.color_format = COLOR_FormatAndroidOpaque;
+    self->color_format_info.width = width;
+    self->color_format_info.height = height;
+    self->color_format_info.crop_left = crop_left;
+    self->color_format_info.crop_right = crop_right;
+    self->color_format_info.crop_top = crop_top;
+    self->color_format_info.crop_bottom = crop_bottom;
+
+    goto out;
   }
 
   self->format = gst_format;
@@ -858,6 +874,7 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
       self->color_format_info.crop_top, self->color_format_info.crop_right,
       self->color_format_info.crop_bottom, self->color_format_info.frame_size);
 
+out:
   ret = gst_video_decoder_negotiate (GST_VIDEO_DECODER (self));
 
   gst_video_codec_state_unref (output_state);
@@ -874,6 +891,9 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, GstAmcBuffer * buf,
       gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
   GstVideoInfo *info = &state->info;
   gboolean ret = FALSE;
+
+  if (self->color_format_info.color_format == COLOR_FormatAndroidOpaque)
+    return FALSE;
 
   ret =
       gst_amc_color_format_copy (&self->color_format_info, buf, buffer_info,
