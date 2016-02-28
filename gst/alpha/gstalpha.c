@@ -30,12 +30,13 @@
  *
  * Sample pipeline:
  * |[
- * gst-launch-1.0 videotestsrc pattern=smpte75 ! alpha method=green ! \
- *   videomixer name=mixer ! videoconvert ! autovideosink     \
- *   videotestsrc pattern=snow ! mixer.
+ * gst-launch-1.0 videotestsrc pattern=snow ! mixer.sink_0 \
+ *   videotestsrc pattern=smpte75 ! alpha method=green ! mixer.sink_1 \
+ *   videomixer name=mixer sink_0::zorder=0 sink_1::zorder=1 ! \
+ *   videoconvert ! autovideosink
  * ]| This pipeline adds a alpha channel to the SMPTE color bars
- * with green as the transparent color and mixes the output with
- * a snow video stream.
+ * with green as the transparent color and overlays the output on
+ * top of a snow video stream.
  */
 
 
