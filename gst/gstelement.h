@@ -816,6 +816,13 @@ GstStateChangeReturn    gst_element_continue_state      (GstElement * element,
                                                          GstStateChangeReturn ret);
 void                    gst_element_lost_state          (GstElement * element);
 
+typedef void          (*GstElementCallAsyncFunc)        (GstElement * element,
+                                                         gpointer     user_data);
+
+void                    gst_element_call_async          (GstElement * element,
+                                                         GstElementCallAsyncFunc func, gpointer user_data,
+                                                         GDestroyNotify destroy_notify);
+
 /* factory management */
 GstElementFactory*      gst_element_get_factory         (GstElement *element);
 

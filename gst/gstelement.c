@@ -147,8 +147,12 @@ static GstPadTemplate
     * gst_element_class_get_request_pad_template (GstElementClass *
     element_class, const gchar * name);
 
+static void gst_element_call_async_func (gpointer data, gpointer user_data);
+
 static GstObjectClass *parent_class = NULL;
 static guint gst_element_signals[LAST_SIGNAL] = { 0 };
+
+static GThreadPool *gst_element_pool = NULL;
 
 /* this is used in gstelementfactory.c:gst_element_register() */
 GQuark __gst_elementclass_factory = 0;
@@ -187,6 +191,7 @@ static void
 gst_element_class_init (GstElementClass * klass)
 {
   GObjectClass *gobject_class;
+  GError *err = NULL;
 
   gobject_class = (GObjectClass *) klass;
 
@@ -247,6 +252,15 @@ gst_element_class_init (GstElementClass * klass)
   klass->set_context = GST_DEBUG_FUNCPTR (gst_element_set_context_default);
 
   klass->elementfactory = NULL;
+
+  GST_DEBUG ("creating element thread pool");
+  gst_element_pool =
+      g_thread_pool_new ((GFunc) gst_element_call_async_func, NULL, -1, FALSE,
+      &err);
+  if (err != NULL) {
+    g_critical ("could not alloc threadpool %s", err->message);
+    g_clear_error (&err);
+  }
 }
 
 static void
@@ -3363,4 +3377,61 @@ void
 gst_element_remove_property_notify_watch (GstElement * element, gulong watch_id)
 {
   g_signal_handler_disconnect (element, watch_id);
+}
+
+typedef struct
+{
+  GstElement *element;
+  GstElementCallAsyncFunc func;
+  gpointer user_data;
+  GDestroyNotify destroy_notify;
+} GstElementCallAsyncData;
+
+static void
+gst_element_call_async_func (gpointer data, gpointer user_data)
+{
+  GstElementCallAsyncData *async_data = data;
+
+  async_data->func (async_data->element, async_data->user_data);
+  if (async_data->destroy_notify)
+    async_data->destroy_notify (async_data->user_data);
+  gst_object_unref (async_data->element);
+  g_free (async_data);
+}
+
+/**
+ * gst_element_call_async:
+ * @element: a #GstElement
+ * @func: Function to call asynchronously from another thread
+ * @user_data: Data to pass to @func
+ * @destroy_notify: GDestroyNotify for @user_data
+ *
+ * Calls @func from another thread and passes @user_data to it. This is to be
+ * used for cases when a state change has to be performed from a streaming
+ * thread, directly via gst_element_set_state() or indirectly e.g. via SEEK
+ * events.
+ *
+ * Calling those functions directly from the streaming thread will cause
+ * deadlocks in many situations, as they might involve waiting for the
+ * streaming thread to shut down from this very streaming thread.
+ *
+ * MT safe.
+ *
+ * Since: 1.10
+ */
+void
+gst_element_call_async (GstElement * element, GstElementCallAsyncFunc func,
+    gpointer user_data, GDestroyNotify destroy_notify)
+{
+  GstElementCallAsyncData *async_data;
+
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  async_data = g_new0 (GstElementCallAsyncData, 1);
+  async_data->element = gst_object_ref (element);
+  async_data->func = func;
+  async_data->user_data = user_data;
+  async_data->destroy_notify = destroy_notify;
+
+  g_thread_pool_push (gst_element_pool, async_data, NULL);
 }

@@ -917,6 +917,10 @@ gst_element_add_property_notify_watch
 gst_element_add_property_deep_notify_watch
 gst_element_remove_property_notify_watch
 
+<SUBSECTION element-call-async>
+GstElementCallAsyncFunc
+gst_element_call_async
+
 <SUBSECTION Standard>
 GST_ELEMENT
 GST_IS_ELEMENT

@@ -201,7 +201,6 @@ struct _GstBinPrivate
 
 typedef struct
 {
-  GstBin *bin;
   guint32 cookie;
   GstState pending;
 } BinContinueData;
@@ -221,7 +220,7 @@ static GstStateChangeReturn gst_bin_get_state_func (GstElement * element,
 static void bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
     gboolean flag_pending, GstClockTime running_time);
 static void bin_handle_async_start (GstBin * bin);
-static void bin_push_state_continue (BinContinueData * data);
+static void bin_push_state_continue (GstBin * bin, BinContinueData * data);
 static void bin_do_eos (GstBin * bin);
 
 static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
@@ -249,7 +248,7 @@ static gboolean gst_bin_do_latency_func (GstBin * bin);
 
 static void bin_remove_messages (GstBin * bin, GstObject * src,
     GstMessageType types);
-static void gst_bin_continue_func (BinContinueData * data);
+static void gst_bin_continue_func (GstBin * bin, BinContinueData * data);
 static gint bin_element_is_sink (GstElement * child, GstBin * bin);
 static gint bin_element_is_src (GstElement * child, GstBin * bin);
 
@@ -358,7 +357,6 @@ gst_bin_class_init (GstBinClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GError *err;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -470,14 +468,6 @@ gst_bin_class_init (GstBinClass * klass)
   klass->handle_message = GST_DEBUG_FUNCPTR (gst_bin_handle_message_func);
 
   klass->do_latency = GST_DEBUG_FUNCPTR (gst_bin_do_latency_func);
-
-  GST_DEBUG ("creating bin thread pool");
-  err = NULL;
-  klass->pool =
-      g_thread_pool_new ((GFunc) gst_bin_continue_func, NULL, -1, FALSE, &err);
-  if (err != NULL) {
-    g_critical ("could not alloc threadpool %s", err->message);
-  }
 }
 
 static void
@@ -3025,13 +3015,11 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
  * their state, this function will attempt to bring the bin to the next state.
  */
 static void
-gst_bin_continue_func (BinContinueData * data)
+gst_bin_continue_func (GstBin * bin, BinContinueData * data)
 {
-  GstBin *bin;
   GstState current, next, pending;
   GstStateChange transition;
 
-  bin = data->bin;
   pending = data->pending;
 
   GST_DEBUG_OBJECT (bin, "waiting for state lock");
@@ -3065,8 +3053,6 @@ gst_bin_continue_func (BinContinueData * data)
   GST_STATE_UNLOCK (bin);
   GST_DEBUG_OBJECT (bin, "state continue done");
 
-  gst_object_unref (bin);
-  g_slice_free (BinContinueData, data);
   return;
 
 interrupted:
@@ -3074,8 +3060,6 @@ interrupted:
     GST_OBJECT_UNLOCK (bin);
     GST_STATE_UNLOCK (bin);
     GST_DEBUG_OBJECT (bin, "state continue aborted due to intervening change");
-    gst_object_unref (bin);
-    g_slice_free (BinContinueData, data);
     return;
   }
 }
@@ -3095,17 +3079,18 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
 }
 
 static void
-bin_push_state_continue (BinContinueData * data)
+free_bin_continue_data (BinContinueData * data)
 {
-  GstBinClass *klass;
-  GstBin *bin;
+  g_slice_free (BinContinueData, data);
+}
 
-  /* ref was taken */
-  bin = data->bin;
-  klass = GST_BIN_GET_CLASS (bin);
-
+static void
+bin_push_state_continue (GstBin * bin, BinContinueData * data)
+{
   GST_DEBUG_OBJECT (bin, "pushing continue on thread pool");
-  g_thread_pool_push (klass->pool, data, NULL);
+  gst_element_call_async (GST_ELEMENT_CAST (bin),
+      (GstElementCallAsyncFunc) gst_bin_continue_func, data,
+      (GDestroyNotify) free_bin_continue_data);
 }
 
 /* an element started an async state change, if we were not busy with a state
@@ -3268,8 +3253,6 @@ bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
 
     cont = g_slice_new (BinContinueData);
 
-    /* ref to the bin */
-    cont->bin = gst_object_ref (bin);
     /* cookie to detect concurrent state change */
     cont->cookie = GST_ELEMENT_CAST (bin)->state_cookie;
     /* pending target state */
@@ -3300,7 +3283,7 @@ bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
   if (cont) {
     /* toplevel, start continue state */
     GST_DEBUG_OBJECT (bin, "all async-done, starting state continue");
-    bin_push_state_continue (cont);
+    bin_push_state_continue (bin, cont);
   } else {
     GST_DEBUG_OBJECT (bin, "state change complete");
     GST_STATE_BROADCAST (bin);

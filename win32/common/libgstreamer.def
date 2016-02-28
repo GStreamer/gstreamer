@@ -478,6 +478,7 @@ EXPORTS
 	gst_element_add_pad
 	gst_element_add_property_deep_notify_watch
 	gst_element_add_property_notify_watch
+	gst_element_call_async
 	gst_element_change_state
 	gst_element_class_add_metadata
 	gst_element_class_add_pad_template

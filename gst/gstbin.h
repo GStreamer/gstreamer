@@ -152,7 +152,7 @@ struct _GstBinClass {
   GstElementClass parent_class;
 
   /*< private >*/
-  GThreadPool  *pool;
+  GThreadPool  *pool; /* deprecated */
 
   /* signals */
   void		(*element_added)	(GstBin *bin, GstElement *child);
