@@ -99,6 +99,7 @@ EXPORTS
 	gst_gl_context_new
 	gst_gl_context_new_wrapped
 	gst_gl_context_set_error
+	gst_gl_context_set_shared_with
 	gst_gl_context_set_window
 	gst_gl_context_supports_glsl_profile_version
 	gst_gl_context_thread_add
