@@ -559,9 +559,7 @@ gst_rg_volume_tag_event (GstRgVolume * self, GstEvent * event)
   self->has_album_gain |= has_album_gain;
   self->has_album_peak |= has_album_peak;
 
-  event = (GstEvent *) gst_mini_object_make_writable (GST_MINI_OBJECT (event));
-  gst_event_parse_tag (event, &tag_list);
-
+  tag_list = gst_tag_list_copy (tag_list);
   gst_tag_list_remove_tag (tag_list, GST_TAG_TRACK_GAIN);
   gst_tag_list_remove_tag (tag_list, GST_TAG_TRACK_PEAK);
   gst_tag_list_remove_tag (tag_list, GST_TAG_ALBUM_GAIN);
@@ -570,12 +568,13 @@ gst_rg_volume_tag_event (GstRgVolume * self, GstEvent * event)
 
   gst_rg_volume_update_gain (self);
 
+  gst_event_unref (event);
   if (gst_tag_list_is_empty (tag_list)) {
-    gst_event_unref (event);
-    event = NULL;
+    gst_tag_list_unref (tag_list);
+    return NULL;
   }
 
-  return event;
+  return gst_event_new_tag (tag_list);
 }
 
 static void
