@@ -5623,7 +5623,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       *codec_name = g_strdup ("Opus");
     } else if (context->codec_priv_size == 0) {
       GST_WARNING ("No Opus codec data found, trying to create one");
-      if (audiocontext->channels >= 0 && audiocontext->channels <= 2) {
+      if (audiocontext->channels <= 2) {
         guint8 streams, coupled, channels;
         guint32 samplerate;
 
