@@ -1036,5 +1036,6 @@ _on_window_draw (GstVulkanWindow * window, GstVulkanSwapper * swapper)
   if (!_render_buffer_unlocked (swapper, swapper->current_buffer, &error))
     GST_ERROR_OBJECT (swapper, "Failed to redraw buffer %p %s",
         swapper->current_buffer, error->message);
+  g_clear_error (&error);
   RENDER_UNLOCK (swapper);
 }
