@@ -200,7 +200,7 @@ GST_START_TEST (test_bus)
 
   id = gst_bus_add_watch (bus, message_received, pipeline);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline after add_watch", 1);
-  ASSERT_OBJECT_REFCOUNT (bus, "bus after add_watch", 2);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus after add_watch", 3);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC);
@@ -225,7 +225,7 @@ GST_START_TEST (test_bus)
   fail_unless (current == GST_STATE_NULL, "state is not NULL but %d", current);
 
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline at start of cleanup", 1);
-  ASSERT_OBJECT_REFCOUNT (bus, "bus at start of cleanup", 2);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus at start of cleanup", 3);
 
   fail_unless (g_source_remove (id));
   ASSERT_OBJECT_REFCOUNT (bus, "bus after removing source", 2);

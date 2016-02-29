@@ -741,7 +741,7 @@ no_replace:
 typedef struct
 {
   GSource source;
-  GWeakRef bus_ref;
+  GstBus *bus;
 } GstBusSource;
 
 static gboolean
@@ -755,16 +755,8 @@ static gboolean
 gst_bus_source_check (GSource * source)
 {
   GstBusSource *bsrc = (GstBusSource *) source;
-  GstBus *bus;
-  gboolean ret = FALSE;
 
-  bus = g_weak_ref_get (&bsrc->bus_ref);
-  if (bus) {
-    ret = bus->priv->pollfd.revents & (G_IO_IN | G_IO_HUP | G_IO_ERR);
-    g_object_unref (bus);
-  }
-
-  return ret;
+  return bsrc->bus->priv->pollfd.revents & (G_IO_IN | G_IO_HUP | G_IO_ERR);
 }
 
 static gboolean
@@ -774,39 +766,32 @@ gst_bus_source_dispatch (GSource * source, GSourceFunc callback,
   GstBusFunc handler = (GstBusFunc) callback;
   GstBusSource *bsource = (GstBusSource *) source;
   GstMessage *message;
-  gboolean keep = TRUE;
+  gboolean keep;
   GstBus *bus;
 
   g_return_val_if_fail (bsource != NULL, FALSE);
 
-  bus = g_weak_ref_get (&bsource->bus_ref);
+  bus = bsource->bus;
 
-  if (bus) {
-    g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
+  g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
 
-    message = gst_bus_pop (bus);
+  message = gst_bus_pop (bus);
 
-    /* The message queue might be empty if some other thread or callback set
-     * the bus to flushing between check/prepare and dispatch */
-    if (G_UNLIKELY (message == NULL))
-      return TRUE;
+  /* The message queue might be empty if some other thread or callback set
+   * the bus to flushing between check/prepare and dispatch */
+  if (G_UNLIKELY (message == NULL))
+    return TRUE;
 
-    if (!handler)
-      goto no_handler;
+  if (!handler)
+    goto no_handler;
 
-    GST_DEBUG_OBJECT (bus, "source %p calling dispatch with %" GST_PTR_FORMAT,
-        source, message);
+  GST_DEBUG_OBJECT (bus, "source %p calling dispatch with %" GST_PTR_FORMAT,
+      source, message);
 
-    keep = handler (bus, message, user_data);
-    gst_message_unref (message);
+  keep = handler (bus, message, user_data);
+  gst_message_unref (message);
 
-    GST_DEBUG_OBJECT (bus, "source %p handler returns %d", source, keep);
-    g_object_unref (bus);
-  } else {
-    GST_WARNING ("GstBusSource without a bus and still attached to a context."
-        " The application is responsible for removing the GstBus"
-        " watch when it isn't needed anymore.");
-  }
+  GST_DEBUG_OBJECT (bus, "source %p handler returns %d", source, keep);
 
   return keep;
 
@@ -825,19 +810,17 @@ gst_bus_source_finalize (GSource * source)
   GstBusSource *bsource = (GstBusSource *) source;
   GstBus *bus;
 
-  bus = g_weak_ref_get (&bsource->bus_ref);
+  bus = bsource->bus;
 
-  if (bus) {
-    GST_DEBUG_OBJECT (bus, "finalize source %p", source);
+  GST_DEBUG_OBJECT (bus, "finalize source %p", source);
 
-    GST_OBJECT_LOCK (bus);
-    if (bus->priv->signal_watch == source)
-      bus->priv->signal_watch = NULL;
-    GST_OBJECT_UNLOCK (bus);
+  GST_OBJECT_LOCK (bus);
+  if (bus->priv->signal_watch == source)
+    bus->priv->signal_watch = NULL;
+  GST_OBJECT_UNLOCK (bus);
 
-    g_object_unref (bus);
-  }
-  g_weak_ref_clear (&bsource->bus_ref);
+  gst_object_unref (bsource->bus);
+  bsource->bus = NULL;
 }
 
 static GSourceFuncs gst_bus_source_funcs = {
@@ -870,7 +853,7 @@ gst_bus_create_watch (GstBus * bus)
 
   g_source_set_name ((GSource *) source, "GStreamer message bus watch");
 
-  g_weak_ref_init (&source->bus_ref, (GObject *) bus);
+  source->bus = gst_object_ref (bus);
   g_source_add_poll ((GSource *) source, &bus->priv->pollfd);
 
   return (GSource *) source;
