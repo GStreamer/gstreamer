@@ -49,8 +49,6 @@ struct _GstGLStereoSplit
   GstGLContext      *context;
   GstGLContext      *other_context;
 
-  GstGLUpload       *upload;
-  GstGLColorConvert *convert;
   GstGLViewConvert    *viewconvert;
 };
 

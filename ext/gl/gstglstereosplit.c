@@ -55,53 +55,21 @@ G_DEFINE_TYPE_WITH_CODE (GstGLStereoSplit, gst_gl_stereosplit,
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-            "RGBA") "; "
-#if GST_GL_HAVE_PLATFORM_EGL
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
-            "RGBA") "; "
-#endif
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "RGBA") "; "
-        GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS)
-    )
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, "RGBA"))
     );
 
 static GstStaticPadTemplate src_left_template = GST_STATIC_PAD_TEMPLATE ("left",
     GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-            "RGBA")
-#if 0
-        "; "
-#if GST_GL_HAVE_PLATFORM_EGL
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
-            "RGBA") "; "
-#endif
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "RGBA") "; "
-        GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS)
-#endif
-    )
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, "RGBA"))
     );
 
 static GstStaticPadTemplate src_right_template =
-    GST_STATIC_PAD_TEMPLATE ("right",
+GST_STATIC_PAD_TEMPLATE ("right",
     GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-            "RGBA")
-#if 0
-        "; "
-#if GST_GL_HAVE_PLATFORM_EGL
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
-            "RGBA") "; "
-#endif
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "RGBA") "; "
-        GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS)
-#endif
-    )
+            "RGBA"))
     );
 
 static void stereosplit_reset (GstGLStereoSplit * self);
@@ -177,10 +145,6 @@ gst_gl_stereosplit_init (GstGLStereoSplit * self)
 static void
 stereosplit_reset (GstGLStereoSplit * self)
 {
-  if (self->upload)
-    gst_object_replace ((GstObject **) & self->upload, NULL);
-  if (self->convert)
-    gst_object_replace ((GstObject **) & self->convert, NULL);
   if (self->context)
     gst_object_replace ((GstObject **) & self->context, NULL);
   if (self->display)
@@ -267,37 +231,9 @@ stereosplit_transform_caps (GstGLStereoSplit * self, GstPadDirection direction,
   if (!ensure_context (self))
     return NULL;
 
-  if (direction == GST_PAD_SINK) {
-    next_caps =
-        gst_gl_upload_transform_caps (self->context, direction, caps, filter);
-    caps = next_caps;
-
-    next_caps =
-        gst_gl_color_convert_transform_caps (self->context, direction, caps,
-        NULL);
-    gst_caps_unref (caps);
-    caps = next_caps;
-
-    next_caps =
-        gst_gl_view_convert_transform_caps (self->viewconvert, direction, caps,
-        NULL);
-    gst_caps_unref (caps);
-  } else {
-    next_caps =
-        gst_gl_view_convert_transform_caps (self->viewconvert, direction, caps,
-        filter);
-    caps = next_caps;
-
-    next_caps =
-        gst_gl_color_convert_transform_caps (self->context, direction, caps,
-        NULL);
-    gst_caps_unref (caps);
-    caps = next_caps;
-
-    next_caps =
-        gst_gl_upload_transform_caps (self->context, direction, caps, NULL);
-    gst_caps_unref (caps);
-  }
+  next_caps =
+      gst_gl_view_convert_transform_caps (self->viewconvert, direction, caps,
+      NULL);
 
   return next_caps;
 }
@@ -451,6 +387,18 @@ stereosplit_set_output_caps (GstGLStereoSplit * split, GstCaps * sinkcaps)
     goto fail;
   }
 
+  gst_gl_view_convert_set_context (split->viewconvert, split->context);
+
+  tridcaps = gst_caps_make_writable (tridcaps);
+  gst_caps_set_simple (tridcaps, "multiview-mode", G_TYPE_STRING,
+      "separated", "views", G_TYPE_INT, 2, NULL);
+  tridcaps = gst_caps_fixate (tridcaps);
+
+  if (!gst_gl_view_convert_set_caps (split->viewconvert, sinkcaps, tridcaps)) {
+    GST_ERROR_OBJECT (split, "Failed to set caps on converter");
+    goto fail;
+  }
+
   /* FIXME: Provide left and right caps to do_bufferpool */
   stereosplit_do_bufferpool (split, left);
 
@@ -504,51 +452,6 @@ _find_local_gl_context (GstGLStereoSplit * split)
     return TRUE;
 
   return FALSE;
-}
-
-static void
-_init_upload (GstGLStereoSplit * split)
-{
-  GstGLContext *context = split->context;
-
-  if (!split->upload) {
-    GstCaps *in_caps = gst_pad_get_current_caps (GST_PAD (split->sink_pad));
-    GstCaps *split_caps = gst_pad_get_current_caps (split->left_pad);
-    GstCaps *upload_caps = gst_caps_copy (in_caps);
-    GstCapsFeatures *gl_features =
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-    GstCaps *gl_caps;
-
-    split->upload = gst_gl_upload_new (context);
-
-    gst_caps_set_features (upload_caps, 0,
-        gst_caps_features_copy (gl_features));
-    gst_gl_upload_set_caps (split->upload, in_caps, upload_caps);
-    gst_caps_unref (in_caps);
-
-    gl_caps = gst_caps_copy (upload_caps);
-    gst_caps_set_simple (gl_caps, "format", G_TYPE_STRING, "RGBA", NULL);
-    gst_caps_set_features (gl_caps, 0, gst_caps_features_copy (gl_features));
-
-    if (!split->convert) {
-      split->convert = gst_gl_color_convert_new (context);
-      gst_gl_color_convert_set_caps (split->convert, upload_caps, gl_caps);
-    }
-
-    gst_caps_unref (upload_caps);
-    gst_caps_features_free (gl_features);
-
-    gst_gl_view_convert_set_context (split->viewconvert, split->context);
-
-    split_caps = gst_caps_make_writable (split_caps);
-    gst_caps_set_simple (split_caps, "multiview-mode", G_TYPE_STRING,
-        "separated", "views", G_TYPE_INT, 2, NULL);
-
-    gst_gl_view_convert_set_caps (split->viewconvert, gl_caps, split_caps);
-
-    gst_caps_unref (split_caps);
-    gst_caps_unref (gl_caps);
-  }
 }
 
 static gboolean
@@ -617,10 +520,6 @@ stereosplit_decide_allocation (GstGLStereoSplit * self, GstQuery * query)
 {
   if (!ensure_context (self))
     return FALSE;
-  if (self->upload)
-    gst_object_replace ((GstObject **) & self->upload, NULL);
-  if (self->convert)
-    gst_object_replace ((GstObject **) & self->convert, NULL);
 
   return TRUE;
 
@@ -632,10 +531,6 @@ stereosplit_propose_allocation (GstGLStereoSplit * self, GstQuery * query)
 
   if (!gst_gl_ensure_element_data (self, &self->display, &self->other_context))
     return FALSE;
-
-  _init_upload (self);
-
-  gst_gl_upload_propose_allocation (self->upload, NULL, query);
 
   return TRUE;
 }
@@ -664,39 +559,17 @@ stereosplit_do_bufferpool (GstGLStereoSplit * self, GstCaps * caps)
 static GstFlowReturn
 stereosplit_chain (GstPad * pad, GstGLStereoSplit * split, GstBuffer * buf)
 {
-  GstBuffer *uploaded_buffer, *converted_buffer, *left, *right;
+  GstBuffer *left, *right;
   GstBuffer *split_buffer = NULL;
   GstFlowReturn ret;
   gint i, n_planes;
-
-  if (!split->upload)
-    _init_upload (split);
 
   n_planes = GST_VIDEO_INFO_N_PLANES (&split->viewconvert->out_info);
 
   GST_LOG_OBJECT (split, "chaining buffer %" GST_PTR_FORMAT, buf);
 
-  if (GST_GL_UPLOAD_DONE != gst_gl_upload_perform_with_buffer (split->upload,
-          buf, &uploaded_buffer)) {
-    gst_buffer_unref (buf);
-    GST_ELEMENT_ERROR (split, RESOURCE, NOT_FOUND, ("%s",
-            "Failed to upload buffer"), (NULL));
-    return GST_FLOW_ERROR;
-  }
-  gst_buffer_unref (buf);
-
-  if (!(converted_buffer =
-          gst_gl_color_convert_perform (split->convert, uploaded_buffer))) {
-    GST_ELEMENT_ERROR (split, RESOURCE, NOT_FOUND, ("%s",
-            "Failed to convert buffer"), (NULL));
-    gst_buffer_unref (uploaded_buffer);
-    return GST_FLOW_ERROR;
-  }
-  gst_buffer_unref (uploaded_buffer);
-
   if (gst_gl_view_convert_submit_input_buffer (split->viewconvert,
-          GST_BUFFER_IS_DISCONT (converted_buffer),
-          converted_buffer) != GST_FLOW_OK) {
+          GST_BUFFER_IS_DISCONT (buf), buf) != GST_FLOW_OK) {
     GST_ELEMENT_ERROR (split, RESOURCE, NOT_FOUND, ("%s",
             "Failed to 3d convert buffer"),
         ("Could not get submit input buffer"));
