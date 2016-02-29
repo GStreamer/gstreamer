@@ -248,7 +248,7 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
       if (!gst_vulkan_ensure_element_data (element, &vk_sink->display,
               &vk_sink->instance)) {
         GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
-            ("Failed to retreive vulkan instance/display"), (NULL));
+            ("Failed to retrieve vulkan instance/display"), (NULL));
         return GST_STATE_CHANGE_FAILURE;
       }
 
