@@ -360,7 +360,6 @@ gst_vulkan_device_foreach_queue (GstVulkanDevice * device,
 
   for (i = 0; i < device->n_queues; i++) {
     GstVulkanQueue *queue =
-        queue =
         gst_vulkan_device_get_queue (device, device->queue_family_id, i);
 
     if (!func (device, queue, user_data))
