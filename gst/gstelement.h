@@ -495,8 +495,6 @@ G_STMT_START {                                                          \
 #define GST_STATE_LOCK(elem)                   g_rec_mutex_lock(GST_STATE_GET_LOCK(elem))
 #define GST_STATE_TRYLOCK(elem)                g_rec_mutex_trylock(GST_STATE_GET_LOCK(elem))
 #define GST_STATE_UNLOCK(elem)                 g_rec_mutex_unlock(GST_STATE_GET_LOCK(elem))
-#define GST_STATE_UNLOCK_FULL(elem)            g_rec_mutex_unlock_full(GST_STATE_GET_LOCK(elem))
-#define GST_STATE_LOCK_FULL(elem,t)            g_rec_mutex_lock_full(GST_STATE_GET_LOCK(elem), t)
 #define GST_STATE_WAIT(elem)                   g_cond_wait (GST_STATE_GET_COND (elem), \
                                                         GST_OBJECT_GET_LOCK (elem))
 #define GST_STATE_WAIT_UNTIL(elem, end_time)   g_cond_wait_until (GST_STATE_GET_COND (elem), \
