@@ -138,7 +138,7 @@ serialize_filenode (GstValidateMediaDescriptorWriter * writer)
     caps_str = g_strdup ("");
 
   res = g_string_new (tmpstr);
-  g_string_append_printf (res, "  <streams caps=\"%s\">", caps_str);
+  g_string_append_printf (res, "  <streams caps=\"%s\">\n", caps_str);
   g_free (caps_str);
   g_free (tmpstr);
   for (tmp = filenode->streams; tmp; tmp = tmp->next) {
