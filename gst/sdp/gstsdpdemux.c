@@ -393,9 +393,14 @@ gst_sdp_demux_create_stream (GstSDPDemux * demux, GstSDPMessage * sdp, gint idx)
   /* we must have a payload. No payload means we cannot create caps */
   /* FIXME, handle multiple formats. */
   if ((payload = gst_sdp_media_get_format (media, 0))) {
+    GstStructure *s;
+
     stream->pt = atoi (payload);
     /* convert caps */
     stream->caps = gst_sdp_media_get_caps_from_media (media, stream->pt);
+
+    s = gst_caps_get_structure (stream->caps, 0);
+    gst_structure_set_name (s, "application/x-rtp");
 
     if (stream->pt >= 96) {
       /* If we have a dynamic payload type, see if we have a stream with the
