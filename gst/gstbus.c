@@ -119,8 +119,6 @@ struct _GstBusPrivate
   gboolean enable_async;
   GstPoll *poll;
   GPollFD pollfd;
-
-  GList *sources;
 };
 
 #define gst_bus_parent_class parent_class
@@ -235,7 +233,6 @@ gst_bus_dispose (GObject * object)
 
   if (bus->priv->queue) {
     GstMessage *message;
-    GList *l;
 
     g_mutex_lock (&bus->priv->queue_lock);
     do {
@@ -247,13 +244,6 @@ gst_bus_dispose (GObject * object)
     bus->priv->queue = NULL;
     g_mutex_unlock (&bus->priv->queue_lock);
     g_mutex_clear (&bus->priv->queue_lock);
-
-    GST_OBJECT_LOCK (bus);
-    for (l = bus->priv->sources; l; l = l->next)
-      g_source_remove_poll (l->data, &bus->priv->pollfd);
-    g_list_free (bus->priv->sources);
-    bus->priv->sources = NULL;
-    GST_OBJECT_UNLOCK (bus);
 
     if (bus->priv->poll)
       gst_poll_free (bus->priv->poll);
@@ -843,7 +833,6 @@ gst_bus_source_finalize (GSource * source)
     GST_OBJECT_LOCK (bus);
     if (bus->priv->signal_watch == source)
       bus->priv->signal_watch = NULL;
-    bus->priv->sources = g_list_remove (bus->priv->sources, source);
     GST_OBJECT_UNLOCK (bus);
 
     g_object_unref (bus);
@@ -858,26 +847,6 @@ static GSourceFuncs gst_bus_source_funcs = {
   gst_bus_source_finalize
 };
 
-static GSource *
-gst_bus_create_watch_unlocked (GstBus * bus)
-{
-  GstBusSource *source;
-
-  g_return_val_if_fail (GST_IS_BUS (bus), NULL);
-  g_return_val_if_fail (bus->priv->poll != NULL, NULL);
-
-  source = (GstBusSource *) g_source_new (&gst_bus_source_funcs,
-      sizeof (GstBusSource));
-
-  g_source_set_name ((GSource *) source, "GStreamer message bus watch");
-
-  g_weak_ref_init (&source->bus_ref, (GObject *) bus);
-  bus->priv->sources = g_list_prepend (bus->priv->sources, source);
-  g_source_add_poll ((GSource *) source, &bus->priv->pollfd);
-
-  return (GSource *) source;
-}
-
 /**
  * gst_bus_create_watch:
  * @bus: a #GstBus to create the watch for
@@ -891,14 +860,18 @@ gst_bus_create_watch_unlocked (GstBus * bus)
 GSource *
 gst_bus_create_watch (GstBus * bus)
 {
-  GSource *source;
+  GstBusSource *source;
 
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
   g_return_val_if_fail (bus->priv->poll != NULL, NULL);
 
-  GST_OBJECT_LOCK (bus);
-  source = gst_bus_create_watch_unlocked (bus);
-  GST_OBJECT_UNLOCK (bus);
+  source = (GstBusSource *) g_source_new (&gst_bus_source_funcs,
+      sizeof (GstBusSource));
+
+  g_source_set_name ((GSource *) source, "GStreamer message bus watch");
+
+  g_weak_ref_init (&source->bus_ref, (GObject *) bus);
+  g_source_add_poll ((GSource *) source, &bus->priv->pollfd);
 
   return (GSource *) source;
 }
@@ -918,7 +891,7 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
     return 0;
   }
 
-  source = gst_bus_create_watch_unlocked (bus);
+  source = gst_bus_create_watch (bus);
   if (!source) {
     g_critical ("Creating bus watch failed");
     return 0;
