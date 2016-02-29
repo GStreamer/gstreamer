@@ -1255,6 +1255,8 @@ GST_START_TEST (test_activate_src_pull_mode)
   fail_unless (GST_PAD_IS_ACTIVE (internalpad));
   fail_unless (GST_PAD_IS_ACTIVE (srcpad));
 
+  gst_object_unref (internalpad);
+  gst_object_unref (srcpad);
   gst_object_unref (b);
 }
 
