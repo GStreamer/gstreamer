@@ -2368,6 +2368,12 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     }
   }
 
+  /* Fixme: setting passthrough mode casuing multiple issues:
+   * For nal aligned multiresoluton streams, passthrough mode make h264parse
+   * unable to advertise the new resoultions. Also causing issues while
+   * parsing MVC streams when it has two layers.
+   * Disabing passthourgh mode for now */
+#if 0
   /* If SPS/PPS and a keyframe have been parsed, and we're not converting,
    * we might switch to passthrough mode now on the basis that we've seen
    * the SEI packets and know optional caps params (such as multiview).
@@ -2379,6 +2385,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       gst_base_parse_set_passthrough (parse, TRUE);
     }
   }
+#endif
 
   gst_h264_parse_reset_frame (h264parse);
 
