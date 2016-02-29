@@ -253,6 +253,9 @@ LogFuncEntry;
 static GMutex __log_func_mutex;
 static GSList *__log_functions = NULL;
 
+/* whether to add the default log function in gst_init() */
+static gboolean add_default_log_func = TRUE;
+
 #define PRETTY_TAGS_DEFAULT  TRUE
 static gboolean pretty_tags = PRETTY_TAGS_DEFAULT;
 
@@ -321,7 +324,8 @@ _priv_gst_debug_init (void)
   _GST_CAT_DEBUG = _gst_debug_category_new ("GST_DEBUG",
       GST_DEBUG_BOLD | GST_DEBUG_FG_YELLOW, "debugging subsystem");
 
-  gst_debug_add_log_function (gst_debug_log_default, log_file, NULL);
+  if (add_default_log_func)
+    gst_debug_add_log_function (gst_debug_log_default, log_file, NULL);
 
   /* FIXME: add descriptions here */
   GST_CAT_GST_INIT = _gst_debug_category_new ("GST_INIT",
@@ -1265,9 +1269,18 @@ gst_debug_remove_log_function (GstLogFunction func)
   removals =
       gst_debug_remove_with_compare_func
       (gst_debug_compare_log_function_by_func, (gpointer) func);
-  if (gst_is_initialized ())
+
+  if (gst_is_initialized ()) {
     GST_DEBUG ("removed log function %p %d times from log function list", func,
         removals);
+  } else {
+    /* If the default log function is removed before gst_init() was called,
+     * set a flag so we don't add it in gst_init() later */
+    if (func == gst_debug_log_default) {
+      add_default_log_func = FALSE;
+      ++removals;
+    }
+  }
 
   return removals;
 }
