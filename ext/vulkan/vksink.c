@@ -256,6 +256,7 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
               gst_vulkan_instance_create_device (vk_sink->instance, &error))) {
         GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
             ("Failed to create vulkan device"), ("%s", error->message));
+        g_clear_error (&error);
         return GST_STATE_CHANGE_FAILURE;
       }
 
@@ -269,6 +270,7 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
       if (!gst_vulkan_window_open (vk_sink->window, &error)) {
         GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
             ("Failed to open window"), ("%s", error->message));
+        g_clear_error (&error);
         return GST_STATE_CHANGE_FAILURE;
       }
 
