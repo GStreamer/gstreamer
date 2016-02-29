@@ -393,6 +393,8 @@ fill_slices (GstVaapiEncoderJpeg * encoder, GstVaapiEncPicture * picture)
   g_assert (slice && slice->param_id != VA_INVALID_ID);
   slice_param = slice->param;
 
+  memset (slice_param, 0, sizeof (VAEncSliceParameterBufferJPEG));
+
   slice_param->restart_interval = 0;
   slice_param->num_components = pic_param->num_components;
 
