@@ -1,28 +1,28 @@
 # Bulgarian translation of gst-plugins-bad.
-# Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Fondation, Inc.
+# Copyright (C) 2007, 2008, 2009, 2010, 2011, 2016 Free Software Fondation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Alexander Shopov <ash@kambanaria.org>, 2007, 2008, 2009, 2010, 2011.
+# Alexander Shopov <ash@kambanaria.org>, 2007, 2008, 2009, 2010, 2011, 2016.
 #
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
+"Project-Id-Version: gst-plugins-bad 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:32+0200\n"
-"PO-Revision-Date: 2011-04-26 22:30+0300\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-21 21:03+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
-"Language-Team: Bulgarian <dict@fsa-bg.org>\n"
-"Language: \n"
+"Language-Team: Bulgarian <dict@ludost.net>\n"
+"Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "format wasn't negotiated before get function"
-msgstr ""
+msgstr "форматът не е бил уточнен преди извикване на функцията за получаване"
 
 msgid "OpenCV failed to load template image"
-msgstr ""
+msgstr "OpenCV не успя да зареди изображението-шаблон"
 
 msgid "Could not read title information for DVD."
 msgstr "Информацията за заглавните части на DVD-то не може да бъде прочетена."
@@ -45,53 +45,52 @@ msgid "Could not read DVD."
 msgstr "DVD-то не може да бъде прочетено."
 
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Файлът не съдържа потоци за изпълнение."
 
-#, fuzzy
 msgid "Could not open sndfile stream for reading."
-msgstr "Файлът „%s“ не може да се отвори за четене."
+msgstr "Потокът sndfile не може да се отвори за четене."
 
 msgid "Could not establish connection to sndio"
-msgstr ""
+msgstr "Не може да се установи връзка към sndio"
 
 msgid "Failed to query sndio capabilities"
-msgstr ""
+msgstr "Неуспешно запитване за възможностите на sndio"
 
-#, fuzzy
 msgid "Could not configure sndio"
-msgstr "Файлът „%s“ не може да се отвори за четене."
+msgstr "Не може да се настрои sndio"
 
-#, fuzzy
 msgid "Could not start sndio"
-msgstr "DVD-то не може да бъде прочетено."
+msgstr "Не може да се стартира sndio"
 
 msgid "Internal data flow error."
 msgstr "Вътрешна грешка в потока на данни."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
+"Генерираният файл е с по-дълго време за буфериране отколкото е самата му "
+"продължителност"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
+msgstr "Елементът „%s“ липсва, проверете инсталацията на GStreamer."
 
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr ""
+msgstr "Местоположението на файла е NULL. Задайте име на файл"
 
 msgid "Digitalzoom element couldn't be created"
-msgstr ""
+msgstr "Елементът за цифрово увеличение не може да бъде създаден"
 
 msgid "Subpicture format was not configured before data flow"
-msgstr ""
+msgstr "Форматът на подкартината не е бил уточнен преди началото на потока"
 
 msgid "Failed to get fragment URL."
-msgstr ""
+msgstr "Неуспешно получаване на адреса на фрагмента."
 
 msgid "Internal data stream error."
 msgstr "Вътрешна грешка в потока на данни."
 
 msgid "Couldn't download fragments"
-msgstr ""
+msgstr "Фрагментите не могат да бъдат свалени"
 
 msgid "No file name specified for writing."
 msgstr "Не е указано име на файл за запис."
@@ -99,6 +98,8 @@ msgstr "Не е указано име на файл за запис."
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
+"Зададеното име на файл „%s“ не може да бъде прехвърлено в локалното кодиране "
+"на имена на файлове."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
@@ -116,9 +117,9 @@ msgstr "Устройството „%s“ не може да бъде отвор
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Настройките на устройството „%s“ не могат да бъдат получени."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Настройките на устройството „%s“ не могат да бъдат получени."
+msgstr "Системите за доставка от устройството „%s“ не могат да бъдат изброени."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -126,17 +127,20 @@ msgstr "Файлът „%s“ не може да се отвори за чете
 
 msgid "Couldn't find DVB channel configuration file"
 msgstr ""
+"Файлът с настройките на цифровото видеоръзпръскване (DVB) не може да бъде "
+"открит"
 
 #, c-format
 msgid "Couldn't load DVB channel configuration file: %s"
 msgstr ""
+"Файлът с настройките на цифровото видеоръзпръскване (DVB) „%s“ не може да "
+"бъде прочетен"
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr ""
+"Файлът с настройките на цифровото видеоръзпръскване (DVB) не съдържа никакви "
+"канали"
 
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
-msgstr ""
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Не може да се записва във файла „%s“."
+msgstr "Липсват данни за канала за цифрово видеоръзпръскване (DVB) „%s“"

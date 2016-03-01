@@ -2,13 +2,13 @@
 # Copyright (C) 2004, 2007, 2008, 2009 Free Software Foundation, Inc.
 #
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2011, 2013, 2014, 2015.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2011, 2013, 2014, 2015, 2016.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.6.0\n"
+"Project-Id-Version: gst-plugins-bad 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:32+0200\n"
-"PO-Revision-Date: 2015-10-17 12:35+0200\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-20 12:35+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
