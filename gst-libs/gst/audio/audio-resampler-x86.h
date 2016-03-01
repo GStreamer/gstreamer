@@ -223,7 +223,7 @@ inner_product_gint16_cubic_1_sse2 (gint16 * o, const gint16 * a,
     const gint16 * b, gint len, const gint16 * icoeff, gint bstride)
 {
   gint i = 0;
-  __m128i sum[4], t;
+  __m128i sum[4], t[4];
   __m128i f = _mm_cvtsi64_si128 (*((long long*)icoeff));
   const gint16 *c[4] = {(gint16*)((gint8*)b + 0*bstride),
                         (gint16*)((gint8*)b + 1*bstride),
@@ -234,30 +234,29 @@ inner_product_gint16_cubic_1_sse2 (gint16 * o, const gint16 * a,
   f = _mm_unpacklo_epi16 (f, sum[0]);
 
   for (; i < len; i += 8) {
-    t = _mm_loadu_si128 ((__m128i *) (a + i));
-    sum[0] = _mm_add_epi32 (sum[0], _mm_madd_epi16 (t, _mm_load_si128 ((__m128i *) (c[0] + i))));
-    sum[1] = _mm_add_epi32 (sum[1], _mm_madd_epi16 (t, _mm_load_si128 ((__m128i *) (c[1] + i))));
-    sum[2] = _mm_add_epi32 (sum[2], _mm_madd_epi16 (t, _mm_load_si128 ((__m128i *) (c[2] + i))));
-    sum[3] = _mm_add_epi32 (sum[3], _mm_madd_epi16 (t, _mm_load_si128 ((__m128i *) (c[3] + i))));
+    t[0] = _mm_loadu_si128 ((__m128i *) (a + i));
+    sum[0] = _mm_add_epi32 (sum[0], _mm_madd_epi16 (t[0], _mm_load_si128 ((__m128i *) (c[0] + i))));
+    sum[1] = _mm_add_epi32 (sum[1], _mm_madd_epi16 (t[0], _mm_load_si128 ((__m128i *) (c[1] + i))));
+    sum[2] = _mm_add_epi32 (sum[2], _mm_madd_epi16 (t[0], _mm_load_si128 ((__m128i *) (c[2] + i))));
+    sum[3] = _mm_add_epi32 (sum[3], _mm_madd_epi16 (t[0], _mm_load_si128 ((__m128i *) (c[3] + i))));
   }
-  sum[0] = _mm_srai_epi32 (sum[0], PRECISION_S16+1);
-  sum[1] = _mm_srai_epi32 (sum[1], PRECISION_S16+1);
-  sum[2] = _mm_srai_epi32 (sum[2], PRECISION_S16+1);
-  sum[3] = _mm_srai_epi32 (sum[3], PRECISION_S16+1);
+  t[0] = _mm_unpacklo_epi32 (sum[0], sum[1]);
+  t[1] = _mm_unpacklo_epi32 (sum[2], sum[3]);
+  t[2] = _mm_unpackhi_epi32 (sum[0], sum[1]);
+  t[3] = _mm_unpackhi_epi32 (sum[2], sum[3]);
 
-  sum[0] = _mm_madd_epi16 (sum[0], _mm_shuffle_epi32 (f,  _MM_SHUFFLE (0, 0, 0, 0)));
-  sum[1] = _mm_madd_epi16 (sum[1], _mm_shuffle_epi32 (f,  _MM_SHUFFLE (1, 1, 1, 1)));
-  sum[2] = _mm_madd_epi16 (sum[2], _mm_shuffle_epi32 (f,  _MM_SHUFFLE (2, 2, 2, 2)));
-  sum[3] = _mm_madd_epi16 (sum[3], _mm_shuffle_epi32 (f,  _MM_SHUFFLE (3, 3, 3, 3)));
-  sum[0] = _mm_add_epi32 (sum[0], sum[1]);
-  sum[2] = _mm_add_epi32 (sum[2], sum[3]);
+  sum[0] = _mm_add_epi32 (_mm_unpacklo_epi64(t[0], t[1]), _mm_unpackhi_epi64(t[0], t[1]));
+  sum[2] = _mm_add_epi32 (_mm_unpacklo_epi64(t[2], t[3]), _mm_unpackhi_epi64(t[2], t[3]));
   sum[0] = _mm_add_epi32 (sum[0], sum[2]);
+
+  sum[0] = _mm_srai_epi32 (sum[0], PRECISION_S16);
+  sum[0] = _mm_madd_epi16 (sum[0], f);
 
   sum[0] = _mm_add_epi32 (sum[0], _mm_shuffle_epi32 (sum[0], _MM_SHUFFLE (2, 3, 2, 3)));
   sum[0] = _mm_add_epi32 (sum[0], _mm_shuffle_epi32 (sum[0], _MM_SHUFFLE (1, 1, 1, 1)));
 
-  sum[0] = _mm_add_epi32 (sum[0], _mm_set1_epi32 (1 << (PRECISION_S16 - 2)));
-  sum[0] = _mm_srai_epi32 (sum[0], PRECISION_S16-1);
+  sum[0] = _mm_add_epi32 (sum[0], _mm_set1_epi32 (1 << (PRECISION_S16 - 1)));
+  sum[0] = _mm_srai_epi32 (sum[0], PRECISION_S16);
   sum[0] = _mm_packs_epi32 (sum[0], sum[0]);
   *o = _mm_extract_epi16 (sum[0], 0);
 }
