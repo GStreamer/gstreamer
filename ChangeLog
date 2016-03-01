@@ -1,9 +1,116 @@
-=== release 1.7.2 ===
+=== release 1.7.90 ===
 
-2016-02-19  Sebastian Dröge <slomo@coaxion.net>
+2016-03-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.2
+	  releasing 1.7.90
+
+2016-02-26 12:42:51 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b64f03f to 6f2d209
+
+2016-02-24 00:10:52 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	* tests/check/gst/rtspclientsink.c:
+	  rtspsink: Fix some leaks in rtspclientsink and the unit test.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762525
+
+2016-02-23 15:01:22 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* tests/check/gst/media.c:
+	* tests/check/gst/rtspclientsink.c:
+	* tests/check/gst/rtspserver.c:
+	* tests/check/gst/stream.c:
+	  tests: unit test fixes
+	  Removed port allocation test from the media suite.
+	  The port allocation failure is now in the stream suite.
+	  rtspserver:
+	  Make sure that the media is suspended after the DESCRIBE request
+	  before reconfiguring the UDP sinks.
+	  rtspclientsink:
+	  In the RECORD case we have to set async property to false
+	  for the appsink element in the test in order to make sure
+	  that the media pipeline doesn't hang in start_preroll().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757488
+
+2016-02-23 14:59:32 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-stream: postpone UDP socket allocation until SETUP
+	  Postpone the allocation of the UDP sockets until we know
+	  what transport has been chosen by the client.
+	  Both unicast and multicast UDP sources are created in one
+	  function.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757488
+
+2016-01-13 11:29:35 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: postpone the creation of the UDP sources
+	  Code refactoring: allocate the UDP ports after the sender and
+	  the reciver parts have been created.
+	  We postpone the creation of the UDP sources until the UDP
+	  ports have been allocated.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757488
+
+2016-01-13 10:55:40 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: added function for setting UDP sources to PLAYING state
+	  Code refactoring: Introduced a function for setting UDP sources
+	  to PLAYING state.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757488
+
+2015-11-20 15:34:43 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: added function for creating and configuring UDP sources
+	  Code refactoring: create and configure UDP sources in a separate function.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757488
+
+2015-11-20 14:43:38 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: added function for RTP/RTCP socket configuration
+	  Code refactoring: configure RTP and RTCP sockets for UDP sinks
+	  in a separate function.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757488
+
+2015-11-20 08:38:42 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: added function for creating and configuring UDP sinks
+	  Code refactoring: create and configure UDP sinks in a separate function.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757488
+
+2015-11-19 14:09:25 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: added helper function for creating the sender/receiver parts
+	  Code refactoring: introduced helper function for creating
+	  the receiver and the sender parts of the streaming pipeline.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757488
+
+2016-02-19 12:38:42 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.7.2 ===
+
+2016-02-19 12:03:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.7.2
 
 2016-02-18 15:20:05 +0000  Julien Isorce <j.isorce@samsung.com>
 

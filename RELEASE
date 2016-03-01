@@ -1,25 +1,21 @@
 
-Release notes for GStreamer RTSP Server Library 1.7.2
+Release notes for GStreamer RTSP Server Library 1.7.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.7 release series. The 1.7 release series is adding new features on top of
+The GStreamer team is pleased to announce the first release candidate of the stable
+1.8 release series. The 1.8 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.7 release series
-will lead to the stable 1.8 release series in the next weeks. Any newly added
-API can still change until that point.
+series of the GStreamer multimedia framework.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the unstable 1.7 release series.
+during the stable 1.8 release series.
 
   
 
 Bugs fixed in this release
      
-      * 758180 : Add rtspclientsink plugin
-      * 758999 : rtsp-media: Add property to decide if sending media should be stopped when a client disconnects without TEARDOWN
-      * 759773 : Prevent simultaneous prepare/unprepare of RTSP media
-      * 760150 : Updating transport for multicast case gives assertion
+      * 757488 : gst-rtsp-server: multicast functionality is broken if using the same port ranges for multicast and unicast
+      * 762525 : rtspclientsink test: Memory leaks
 
 ==== Download ====
 
@@ -56,14 +52,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Hyunjun Ko
       * Jan Schmidt
-      * Julien Isorce
-      * Luis de Bethencourt
+      * Patricia Muscalu
       * Sebastian Dröge
-      * Sebastian Rasmussen
-      * Srimanta Panda
-      * Steven Hoving
-      * Thiago Santos
-      * Tim-Philipp Müller
  
