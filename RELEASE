@@ -1,16 +1,14 @@
 
-Release notes for GStreamer 1.7.2
+Release notes for GStreamer 1.7.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.7 release series. The 1.7 release series is adding new features on top of
+The GStreamer team is pleased to announce the first release candidate of the stable
+1.8 release series. The 1.8 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.7 release series
-will lead to the stable 1.8 release series in the next weeks. Any newly added
-API can still change until that point.
+series of the GStreamer multimedia framework.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the unstable 1.7 release series.
+during the stable 1.8 release series.
 
 
 This module, gstreamer, only contains core functionality.
@@ -36,37 +34,15 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 720778 : gst-uninstalled requires building with libtool
-      * 745939 : funnel: modify debug message for a better debugging
-      * 753899 : baseparse: push sticky events to downstreams for initial prerolling
-      * 758668 : controlsource: fix GetValue and GetValueArray documentation
-      * 760003 : gst_parse_launch: warn if we're still waiting to plug sub-pipelines after no-more-pads
-      * 760267 : tracer: how to pass and structure tracing data (GstStructure, GVariant, etc.)
-      * 760421 : info: expose custom vasprintf implementation
-      * 760479 : basesrc: Only respond to duration/position queries if the quantity is valid
-      * 760598 : gstnetclientclock: memory leak in handling gst_ntp_packet_receive errors
-      * 760757 : systemclock: incorrect handling of wait requests
-      * 760762 : tracer: Fix compiler warnings on 32-bit systems
-      * 760767 : gst: ref/unref new enum types in gst_init/deinit
-      * 760821 : tracerrecord: Fix memory leaks and mishandlings
-      * 761071 : tests: gstinfo: Fix string memory leak
-      * 761273 : typefind: " Stream contains not enough data " is bad grammar
-      * 761586 : systemclock: regression causing audiomixer to stall
-      * 761824 : bufferpool: pass acquire params to alloc_buffer
-      * 761901 : harness: fix up docs to reference functions properly
-      * 761904 : gstharness: Unset sink_forward_pad before tearing down sink_harness
-      * 761905 : gstharness: enable empty harness creation and refactor around this
-      * 761906 : testclock: add crank method
-      * 761909 : gstharness: Fix docs for stress test functions
-      * 761910 : gstharness: Fix MT issues when forwarding event/query to sink harness
-      * 761913 : ghostpad: Do nothing in _internal_activate_push_default
-      * 761914 : gstharness: always set our test-clock on the harnessed element
-      * 761917 : check: Add tcase_skip_broken_loop_test convenience macro
-      * 761919 : check: fix unused parameter
-      * 761931 : harness: fix the race in blocking push mode
-      * 761932 : gstharness: Add event stress test functions with callback
-      * 761970 : pushsrc: fix minor typo in header
-      * 760732 : gsttracer.h uses private header file gsttracerutils
+      * 728326 : Check for return values of gst_buffer_map and gst_memory_map
+      * 759539 : Stopping a stream with AAC very soon after starting crashes
+      * 760979 : tracers: Allow adding tracers programatically without defining environment variables
+      * 762450 : tags: add GST_TAG_CONDUCTOR
+      * 762702 : gst_bus_add_watch will SEGV when process reaches fd limit
+      * 762778 : API: add gst_element_class_add_static_pad_template()
+      * 762792 : amcvideodec: Can't render to Surface if the color format is not supported
+      * 762845 : tests: ghostpad: Fix memory leak
+      * 762849 : bus: GSource can access GPollFD after the bus was destroyed
 
 ==== Download ====
 
@@ -103,30 +79,15 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleksander Wabik
-      * Alex Henrie
-      * Aurélien Zanelli
-      * Carlos Rafael Giani
+      * Adam Miartus
       * Edward Hervey
-      * Evan Nemerson
-      * Florin Apostol
-      * Havard Graff
-      * HoonHee Lee
-      * Jan Schmidt
-      * Julien Isorce
-      * Luis de Bethencourt
-      * Martin Kelly
-      * Matej Knopp
-      * Matthew Waters
-      * Mikhail Fludkov
+      * George Yunaev
+      * James Stevenson
+      * Mark Nauwelaerts
       * Nirbheek Chauhan
-      * Philip Van Hoof
       * Sebastian Dröge
-      * Stefan Sauer
-      * Stian Selnes
       * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
       * Vineeth TM
-      * Víctor Manuel Jáquez Leal
  

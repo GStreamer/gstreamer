@@ -1,9 +1,371 @@
-=== release 1.7.2 ===
+=== release 1.7.90 ===
 
-2016-02-19  Sebastian Dröge <slomo@coaxion.net>
+2016-03-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.2
+	  releasing 1.7.90
+
+2016-03-01 16:52:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  po: Update translations
+
+2016-02-29 23:33:03 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbus.c:
+	* tests/check/gst/gstpipeline.c:
+	  Revert "bus: change GstBusSource to hold a weak ref to GstBus"
+	  This reverts commit 894c67e642c0f858b5b18097fa7c995bf3cc50c1.
+
+2016-02-29 23:32:58 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbus.c:
+	  Revert "bus: Make sure to remove the GPollFD from the GSources when destroying the bus"
+	  This reverts commit 05700a7082c145057ccc0be763067bcc263239eb.
+
+2016-02-29 17:06:36 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstelement.h:
+	  element: Remove GST_STATE_LOCK_FULL() / UNLOCK_FULL()
+	  There is no corresponding API for that in GLib and nobody could've ever used
+	  these macros without compiler errors anyway.
+
+2016-02-29 10:01:50 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbus.c:
+	  bus: Make sure to remove the GPollFD from the GSources when destroying the bus
+	  Otherwise the GSource can look into our already destroyed bus where the
+	  GPollFD is stored.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762849
+
+2016-02-29 11:06:50 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* tests/check/gst/gstghostpad.c:
+	  tests: ghostpad: Fix memory leaks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762845
+
+2016-02-28 13:59:48 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gsttaglist.c:
+	  taglist: add guard to check writability when removing tags from a taglist
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762793
+
+2016-02-27 15:36:28 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstcapsfilter.c:
+	* plugins/elements/gstconcat.c:
+	* plugins/elements/gstdownloadbuffer.c:
+	* plugins/elements/gstfakesink.c:
+	* plugins/elements/gstfakesrc.c:
+	* plugins/elements/gstfdsink.c:
+	* plugins/elements/gstfdsrc.c:
+	* plugins/elements/gstfilesink.c:
+	* plugins/elements/gstfilesrc.c:
+	* plugins/elements/gstfunnel.c:
+	* plugins/elements/gstidentity.c:
+	* plugins/elements/gstinputselector.c:
+	* plugins/elements/gstmultiqueue.c:
+	* plugins/elements/gstoutputselector.c:
+	* plugins/elements/gstqueue.c:
+	* plugins/elements/gstqueue2.c:
+	* plugins/elements/gststreamiddemux.c:
+	* plugins/elements/gsttee.c:
+	* plugins/elements/gsttypefindelement.c:
+	* plugins/elements/gstvalve.c:
+	  elements: use new gst_element_class_add_static_pad_template()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762778
+
+2016-02-27 15:28:49 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstelement.c:
+	* gst/gstelement.h:
+	* win32/common/libgstreamer.def:
+	  element: add gst_element_class_add_static_pad_template()
+	  Pretty much every single element does
+	  gst_element_class_add_pad_template (element_class,
+	  gst_static_pad_template_get (&some_templ));
+	  which is both confusing and unnecessary. We might just
+	  as well add a function to do that in one step.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762778
+
+2016-02-27 15:32:19 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: fix indentation
+
+2016-02-26 12:40:55 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b64f03f to 6f2d209
+
+2016-02-25 22:36:14 +0000  James Stevenson <james@stev.org>
+
+	* gst/gstbus.c:
+	  bus: Prevent gst_bus_add_watch_full_unlocked from a segfault if priv->poll == NULL
+	  This happens if the process runs out of file descriptors. Better print
+	  a critical warning instead of just crashing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762702
+
+2016-02-24 10:56:24 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst/gstbus.c:
+	* tests/check/gst/gstpipeline.c:
+	  bus: change GstBusSource to hold a weak ref to GstBus
+	  When holding a regular ref it will cause the GstBus to never
+	  reach 0 references and it won't be destroyed unless the application
+	  explicitly calls gst_bus_remove_signal_watch().
+	  Switching to weakref will allow the GstBus to be destroyed.
+	  The application is still responsible for destroying the
+	  GSource.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762552
+
+2016-02-25 14:11:34 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstidentity.c:
+	  identity: Add a " " after pts: in the silent=false output
+
+2014-04-16 11:42:18 +0200  Edward Hervey <edward@collabora.com>
+
+	* docs/manual/advanced-dataaccess.xml:
+	  manual: Fix examples to check for gst_buffer_map return values
+	  Otherwise people reading the manual will expect it to always
+	  succeed :)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728326
+
+2014-04-16 11:40:46 +0200  Edward Hervey <edward@collabora.com>
+
+	* libs/gst/check/gstcheck.c:
+	  gstcheck: Check return value of gst_buffer_map
+	  We can't check contents if we don't have access to it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728326
+
+2014-04-16 11:39:15 +0200  Edward Hervey <edward@collabora.com>
+
+	* plugins/elements/gstfakesink.c:
+	* plugins/elements/gstfakesrc.c:
+	* plugins/elements/gstfdsrc.c:
+	* plugins/elements/gstfilesrc.c:
+	* plugins/elements/gstidentity.c:
+	* plugins/elements/gstqueue2.c:
+	  plugins: Check return values of gst_buffer_map()
+	  They can fail for various reasons.
+	  For non-fatal cases (such as the dump feature of identiy and fakesink),
+	  we just silently skip it.
+	  For other cases post an error message.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728326
+
+2016-02-23 17:23:43 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstbuffer.c:
+	  buffer: Check return value of gst_memory_map()
+	  Only do memory operations if the memory was succesfully map'ed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=728326
+
+2015-12-10 15:32:27 +0100  Adam Miartus <adam.miartus@streamunlimited.com>
+
+	* gst/gsttaglist.c:
+	* gst/gsttaglist.h:
+	  taglist: add GST_TAG_CONDUCTOR
+	  This is useful for metadata which explicitely distinguishes
+	  between artist/composer and conductor.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762450
+
+2016-02-22 14:09:56 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/gstevent.c:
+	  event: add some more documentation on stream-id
+	  ... where it might end up being used for.
+
+2016-01-22 11:25:30 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst/gsttracerutils.c:
+	  tracer: Initialize GstTracer _priv_tracers and quarks unconditionnally
+	  Some people might use tracer hooks even if GST_TRACER_PLUGINS is not
+	  set.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=760979
+
+2016-02-20 10:18:06 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/manual/appendix-integration.xml:
+	  docs: manual: remove dead link from integration page
+
+2016-02-20 10:13:38 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/manual/advanced-dataaccess.xml:
+	  docs: manual: fix formatting
+	  advanced-dataaccess.xml:1210: element listitem: validity error : Element
+	  listitem content does not follow the DTD, expecting (...),
+	  got (para CDATA para )
+	  </listitem>
+
+2016-02-20 00:55:30 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* scripts/create-uninstalled-setup.sh:
+	  scripts: check for git in create-uninstalled-setup.sh as well
+
+2016-02-19 20:26:26 +0530  Nirbheek Chauhan <nirbheek.chauhan@gmail.com>
+
+	* gst/glib-compat.c:
+	* gst/gsttask.c:
+	* libs/gst/net/gstptpclock.c:
+	  Whenever we include windows.h, also define WIN32_LEAN_AND_MEAN
+	  This reduces the number of symbols and code pulled in drastically
+
+2016-02-13 06:53:24 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/printf/gst-printf.h:
+	  printf: On MSVC, also define HAVE_STDINT_H_WITH_UINTMAX
+	  MSVC provides stdint.h but not inttypes.h, and we need to include stdint.h to
+	  get intmax_t
+
+2016-02-13 06:42:06 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* libs/gst/net/gstptpclock.c:
+	  ptpclock: Only include unistd.h if found
+	  unistd.h is not provided by the  Microsoft Visual C++ compiler. It instead
+	  provides the necessary defines through io.h
+
+2016-02-13 06:19:52 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/gstplugin.c:
+	  plugin: Only check for S_IFBLK if it is defined
+	  Windows does not define S_IFBLK since it doesn't have block devices
+
+2016-02-19 20:17:02 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* win32/MANIFEST:
+	* win32/README.txt:
+	* win32/common/dirent.c:
+	* win32/common/dirent.h:
+	* win32/common/gtchar.h:
+	* win32/common/libgstdataprotocol.def:
+	* win32/vs10/Common.props:
+	* win32/vs10/Library.props:
+	* win32/vs10/Plugin.props:
+	* win32/vs10/ReadMe.txt:
+	* win32/vs10/Tool.props:
+	* win32/vs10/base/base.vcxproj:
+	* win32/vs10/base/base.vcxproj.filters:
+	* win32/vs10/controller/controller.vcxproj:
+	* win32/vs10/controller/controller.vcxproj.filters:
+	* win32/vs10/generated/generated.vcxproj:
+	* win32/vs10/generated/generated.vcxproj.filters:
+	* win32/vs10/gst-inspect/gst-inspect.vcxproj:
+	* win32/vs10/gst-inspect/gst-inspect.vcxproj.filters:
+	* win32/vs10/gst-launch/gst-launch.vcxproj:
+	* win32/vs10/gst-launch/gst-launch.vcxproj.filters:
+	* win32/vs10/gst-typefind/gst-typefind.vcxproj:
+	* win32/vs10/gst-typefind/gst-typefind.vcxproj.filters:
+	* win32/vs10/gstcoreelements/gstcoreelements.vcxproj:
+	* win32/vs10/gstcoreelements/gstcoreelements.vcxproj.filters:
+	* win32/vs10/gstreamer.sln:
+	* win32/vs10/gstreamer/gstreamer.vcxproj:
+	* win32/vs10/gstreamer/gstreamer.vcxproj.filters:
+	* win32/vs10/net/net.vcxproj:
+	* win32/vs10/net/net.vcxproj.filters:
+	* win32/vs6/grammar.dsp:
+	* win32/vs6/gst_inspect.dsp:
+	* win32/vs6/gst_launch.dsp:
+	* win32/vs6/gstreamer.dsw:
+	* win32/vs6/libgstbase.dsp:
+	* win32/vs6/libgstcontroller.dsp:
+	* win32/vs6/libgstcoreelements.dsp:
+	* win32/vs6/libgstnet.dsp:
+	* win32/vs6/libgstreamer.dsp:
+	* win32/vs7/grammar.vcproj:
+	* win32/vs7/gst-inspect.vcproj:
+	* win32/vs7/gst-launch.vcproj:
+	* win32/vs7/gstreamer.sln:
+	* win32/vs7/libgstbase.vcproj:
+	* win32/vs7/libgstcontroller.vcproj:
+	* win32/vs7/libgstcoreelements.vcproj:
+	* win32/vs7/libgstreamer.vcproj:
+	* win32/vs8/grammar.vcproj:
+	* win32/vs8/gst-inspect.vcproj:
+	* win32/vs8/gst-launch.vcproj:
+	* win32/vs8/gstreamer.sln:
+	* win32/vs8/libgstbase.vcproj:
+	* win32/vs8/libgstcontroller.vcproj:
+	* win32/vs8/libgstcoreelements.vcproj:
+	* win32/vs8/libgstreamer.vcproj:
+	  win32: update README and remove outdated build cruft
+	  This hasn't been touched for generations, doesn't work,
+	  and is just causing confusion. We also don't want to
+	  maintain these files manually.
+
+2016-02-19 08:43:00 +0000  George Yunaev <gyunaev@gmail.com>
+
+	* docs/manual/advanced-dataaccess.xml:
+	  manual: Explain what happens if upstream elements are removed from the pipeline without draining them first
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762302
+
+2016-02-19 14:41:55 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/identity.c:
+	* tests/check/libs/gstharness.c:
+	  tests: fix indentation
+
+2016-02-19 12:38:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.7.2 ===
+
+2016-02-19 11:47:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gstreamer-plugins.args:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstenumtypes.h:
+	* win32/common/gstversion.h:
+	  Release 1.7.2
 
 2016-02-19 10:29:40 +0200  Sebastian Dröge <sebastian@centricular.com>
 
