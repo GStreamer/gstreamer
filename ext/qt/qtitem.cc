@@ -129,7 +129,10 @@ QtGLVideoItem::QtGLVideoItem()
 QtGLVideoItem::~QtGLVideoItem()
 {
   g_mutex_clear (&this->priv->lock);
-
+  if (this->priv->context)
+    gst_object_unref(this->priv->context);
+  if (this->priv->other_context)
+    gst_object_unref(this->priv->other_context);
   g_free (this->priv);
   this->priv = NULL;
 }
