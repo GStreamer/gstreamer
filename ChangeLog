@@ -1,9 +1,54 @@
-=== release 1.7.2 ===
+=== release 1.7.90 ===
 
-2016-02-19  Sebastian Dröge <slomo@coaxion.net>
+2016-03-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.2
+	  releasing 1.7.90
+
+2016-02-27 11:16:00 +0000  Hanno Boeck <hanno@hboeck.de>
+
+	* gi/overrides/gstmodule.c:
+	  NULL-terminate PyMethodDef array
+	  PyMethodDef arrays are supposed to end with an entry full of NULL/0 values.
+	  This is missing in gst-python in the file gstmodule.c.
+	  This causes out of bounds memory reads which can be seen / tested by compiling
+	  gst-python with address sanitizer (-fsanitize=address in CFLAGS/LDFLAGS).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762766
+
+2016-02-21 10:46:24 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	* win32/MANIFEST:
+	* win32/common/.gitignore:
+	* win32/common/config.h.in:
+	* win32/vs6/gst_python.dsw:
+	* win32/vs6/libgstpython.dsp:
+	* win32/vs6/pygenfiles.dsp:
+	  win32: remove outdated build cruft
+	  This hasn't been touched for generations, doesn't work,
+	  and is just causing confusion. We also don't want to
+	  maintain these files manually.
+
+2016-02-19 17:13:57 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* gi/overrides/gstmodule.c:
+	  Fix bug when checking template object type
+
+2016-02-19 12:38:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.7.2 ===
+
+2016-02-19 12:16:05 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.7.2
 
 2016-02-15 23:26:06 +0100  Thibault Saunier <tsaunier@gnome.org>
 
