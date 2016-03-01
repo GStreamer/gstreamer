@@ -374,7 +374,8 @@ class Test(Loggable):
         self.proc_env = self.get_subproc_env()
 
         for var, value in self.extra_env_variables.items():
-            self.proc_env[var] = self.proc_env.get(var, '') + os.pathsep + value
+            value = self.proc_env.get(var, '') + os.pathsep + value
+            self.proc_env[var] = value.strip(os.pathsep)
             self.add_env_variable(var, self.proc_env[var])
 
         if self.options.gdb:
