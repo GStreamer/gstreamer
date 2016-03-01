@@ -1,9 +1,62 @@
-=== release 1.7.2 ===
+=== release 1.7.90 ===
 
-2016-02-19  Sebastian Dröge <slomo@coaxion.net>
+2016-03-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.2
+	  releasing 1.7.90
+
+2016-02-26 12:42:36 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b64f03f to 6f2d209
+
+2016-02-23 18:19:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavdeinterlace.c:
+	  avdeinterlace: Don't assume that get_current_caps() returns non-NULL caps after has_current_caps()
+	  Remove calls to gst_pad_has_current_caps() which then go on to call
+	  gst_pad_get_current_caps() as the caps can go to NULL in between. Instead just
+	  use gst_pad_get_current_caps() and check for NULL.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759539
+
+2016-02-21 10:40:02 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	* win32/MANIFEST:
+	* win32/vs6/gst_ffmpeg.dsw:
+	* win32/vs6/libgstffmpeg.dsp:
+	  win32: remove outdated build cruft
+	  This hasn't been touched for generations, doesn't work,
+	  and is just causing confusion. We also don't want to
+	  maintain these files manually.
+
+2016-02-20 12:59:38 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstav.c:
+	* ext/libav/gstav.h:
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavviddec.c:
+	  Don't use exported but undeclared core debug category symbols
+	  It's not right and won't work on Windows with MSVC.
+
+2016-02-19 12:38:37 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.7.2 ===
+
+2016-02-19 12:00:24 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-libav-plugins.args:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.7.2
 
 2016-02-16 16:32:38 +0100  Edward Hervey <edward@centricular.com>
 
