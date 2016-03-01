@@ -1,16 +1,14 @@
 
-Release notes for GStreamer Ugly Plugins 1.7.2
+Release notes for GStreamer Ugly Plugins 1.7.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.7 release series. The 1.7 release series is adding new features on top of
+The GStreamer team is pleased to announce the first release candidate of the stable
+1.8 release series. The 1.8 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.7 release series
-will lead to the stable 1.8 release series in the next weeks. Any newly added
-API can still change until that point.
+series of the GStreamer multimedia framework.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the unstable 1.7 release series.
+during the stable 1.8 release series.
 
 
 "When you have to shoot, shoot.  Don't talk."
@@ -56,11 +54,6 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Bugs fixed in this release
-     
-      * 574461 : mpeg2dec: Lower rank and make avdec_mpeg2video PRIMARY
-      * 757341 : asfdemux: Support reverse playback
-
 ==== Download ====
 
 You can find source releases of gst-plugins-ugly in the download
@@ -96,13 +89,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Carlos Rafael Giani
-      * David Schleef
-      * Edward Hervey
-      * Jason Litzinger
-      * Ravi Kiran K N
+      * Jens Georg
       * Sebastian Dröge
-      * Thiago Santos
       * Tim-Philipp Müller
-      * Vineeth TM
  
