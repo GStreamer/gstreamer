@@ -1714,6 +1714,12 @@ gst_flac_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     flacparse->sent_codec_tag = TRUE;
   }
 
+  /* Push tags */
+  if (flacparse->tags) {
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (flacparse),
+        gst_event_new_tag (flacparse->tags));
+    flacparse->tags = NULL;
+  }
   /* Push toc */
   if (flacparse->toc) {
     gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (flacparse),
