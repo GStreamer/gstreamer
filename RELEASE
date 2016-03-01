@@ -1,18 +1,19 @@
 
-Release notes for GStreamer Editing Services 1.7.2
+Release notes for GStreamer Editing Services 1.7.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.7 release series. The 1.7 release series is adding new features on top of
+The GStreamer team is pleased to announce the first release candidate of the stable
+1.8 release series. The 1.8 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.7 release series
-will lead to the stable 1.8 release series in the next weeks. Any newly added
-API can still change until that point.
+series of the GStreamer multimedia framework.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the unstable 1.7 release series.
+during the stable 1.8 release series.
 
   
+
+There were no bugs fixed in this release
+    
 
 ==== Download ====
 
@@ -49,10 +50,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Julien Isorce
-      * Lubosz Sarnecki
-      * Mathieu Duponchelle
+      * Fabian Orccon
       * Sebastian Dröge
-      * Thiago Santos
+      * Sjors Gielen
       * Thibault Saunier
  

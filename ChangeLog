@@ -1,9 +1,90 @@
-=== release 1.7.2 ===
+=== release 1.7.90 ===
 
-2016-02-19  Sebastian Dröge <slomo@coaxion.net>
+2016-03-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.2
+	  releasing 1.7.90
+
+2016-02-26 21:13:37 +0100  Sjors Gielen <sjors@sjorsgielen.nl>
+
+	* plugins/nle/nleoperation.c:
+	  nle: Set the NleOperation flags to NLE_OBJECT_OPERATION
+	  Reviewed By: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D770
+
+2016-02-26 20:42:41 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-effect.c:
+	  ges: Register scaletempo::rate as a rate changing property
+
+2015-12-20 14:03:57 +0100  Sjors Gielen <sjors@sjorsgielen.nl>
+
+	  Handle changing playback rate
+	  Before this patch, NLE and GES did not support NleOperations (respectively
+	  GESEffects) that changed the speed/tempo/rate at which the source plays. For
+	  example, the 'pitch' element can make audio play faster or slower. In GES 1.5.90
+	  and before, an NleOperation containing the pitch element to change the rate (or
+	  tempo) would cause a pipeline state change to PAUSED after that stack; that has
+	  been fixed in 1.5.91 (see #755012 [0]). But even then, in 1.5.91 and later,
+	  NleComposition would send segment events to its NleSources assuming that one
+	  source second is equal to one pipeline second. The resulting early EOS event
+	  (in the case of a source rate higher than 1.0) would cause it to switch stacks
+	  too early, causing confusion in the timeline and spectacularly messed up
+	  output.
+	  This patch fixes that by searching for rate-changing elements in
+	  GESTrackElements such as GESEffects. If such rate-changing elements are found,
+	  their final effect on the playing rate is stored in the corresponding NleObject
+	  as the 'media duration factor', named like this because the 'media duration',
+	  or source duration, of an NleObject can be computed by multiplying the duration
+	  with the media duration factor of that object and its parents (this is called
+	  the 'recursive media duration factor'). For example, a 4-second NleSource with
+	  an NleOperation with a media duration factor of 2.0 will have an 8-second media
+	  duration, which means that for playing 4 seconds in the pipeline, the seek
+	  event sent to it must span 8 seconds of media. (So, the 'duration' of an
+	  NleObject or GES object always refers to its duration in the timeline, not the
+	  media duration.)
+	  To summarize:
+	  * Rate-changing elements are registered in the GESEffectClass (pitch::tempo and
+	  pitch::rate are registered by default);
+	  * GESTimelineElement is responsible for detecting rate-changing elements and
+	  computing the media_duration_factor;
+	  * GESTrackElement is responsible for storing the media_duration_factor in
+	  NleObject;
+	  * NleComposition is responsible for the recursive_media_duration_factor;
+	  * The latter property finally fixes media time computations in NleObject.
+	  NLE and GES tests are included.
+	  [0] https://bugzilla.gnome.org/show_bug.cgi?id=755012
+	  Differential Revision: https://phabricator.freedesktop.org/D276
+
+2016-02-26 12:42:55 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b64f03f to 6f2d209
+
+2016-02-16 12:49:57 +0000  Fabian Orccon <fabian.orccon@pucp.pe>
+
+	* ges/ges-group.c:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	  group-added and group-removed signals added
+	  Differential Revision: https://phabricator.freedesktop.org/D619
+
+2016-02-19 12:38:45 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.7.2 ===
+
+2016-02-19 12:26:27 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.7.2
 
 2016-02-18 15:26:11 +0000  Julien Isorce <j.isorce@samsung.com>
 
