@@ -1730,6 +1730,7 @@ no_caps:
   }
 out_flushing:
   {
+    JBUF_UNLOCK (jitterbuffer->priv);
     GST_DEBUG_OBJECT (jitterbuffer, "we are flushing");
     return GST_FLOW_FLUSHING;
   }
@@ -3051,6 +3052,7 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
   /* ERRORS */
 out_flushing:
   {
+    JBUF_UNLOCK (priv);
     return priv->srcresult;
   }
 }
