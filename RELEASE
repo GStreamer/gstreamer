@@ -1,16 +1,14 @@
 
-Release notes for GStreamer Base Plugins 1.7.2
+Release notes for GStreamer Base Plugins 1.7.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.7 release series. The 1.7 release series is adding new features on top of
+The GStreamer team is pleased to announce the first release candidate of the stable
+1.8 release series. The 1.8 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.7 release series
-will lead to the stable 1.8 release series in the next weeks. Any newly added
-API can still change until that point.
+series of the GStreamer multimedia framework.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the unstable 1.7 release series.
+during the stable 1.8 release series.
 
 
 This module contains a set of reference plugins, base classes for other
@@ -59,30 +57,11 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 745880 : sdp: SDP < - > GstCaps helper functions
-      * 751901 : gst-play: verbose & playbin flags options support
-      * 755918 : decodebin: Refactor code to remove assertion errors
-      * 756187 : appsink: Always blocks on EOS until buffers are consumed since 1.6, should be configurable
-      * 758212 : playbin adds the template caps on autoplug-query
-      * 759729 : audiofxbad: Name collision with new GstAudioChannelMix API from libgstaudio
-      * 759855 : build: pbutils needs to link to libgstbase for bytewriter and adapter
-      * 759890 : audioconvert: creates choppy audio
-      * 760134 : audioconvert test: doesn't build with clang
-      * 760204 : videotestsrc: add missing break in set_property switch case
-      * 760234 : playbin: Assumes recursive accept-caps query, breaks totem
-      * 760408 : #750013 (streamsynchronizer patches) broke some use cases in GES
-      * 760477 : playbin: caps intersection autoplugs too early and stream stops
-      * 760769 : tests:audioconvert: Build error when running make check
-      * 760938 : audioconvert: crash when executing orc unpack function
-      * 760949 : decodebin: Correctly expose pads from elements that have directly exposable pads
-      * 761132 : video-format: fix GstVideoFormatInfo documentation warnings
-      * 761218 : audio/videodecoder: Use gst_pad_peer_query_caps() instead of using gst_pad_get_allowed_caps() to make negotiated output caps before forwarding GAP event
-      * 761251 : textoverlay: Expose text rendering dimensions to applications and remove absolute positioning limit
-      * 761949 : gst-libs/gst/Makefile.am: build audio before rtp
-      * 761951 : videoencoder: Fix leak when pre_push does not return OK
-      * 762085 : gst-base 1.7 update created background buzzing noise with audioconvert
-      * 762239 : matroskademux: Assertions about unmappable memory when demuxing wavpack streams
-      * 693263 : typefinding: MPEG-2 video ES detected as H.263
+      * 761257 : multisocketsink: doesn't handle client close and EWOULDBLOCK
+      * 761588 : opusdec: no mono/stereo channel conversion
+      * 761851 : video: add orc UYVY422 to GRAY8 conversion function
+      * 762451 : id3v2frames: read conductor tag
+      * 762674 : Compilation error building html in gst-plugins-base-1.7.2
 
 ==== Download ====
 
@@ -119,27 +98,14 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arun Raghavan
-      * Aurélien Zanelli
+      * Adam Miartus
       * Edward Hervey
-      * Evan Callaway
-      * Havard Graff
-      * HoonHee Lee
-      * Hugues Fruchet
-      * Hyunjun Ko
-      * Julien Isorce
-      * Koop Mast
-      * Lubosz Sarnecki
-      * Mathieu Duponchelle
-      * Nirbheek Chauhan
-      * Reynaldo H. Verdejo Pinochet
+      * Göran Jönsson
+      * Lim Siew Hoon
+      * Luis de Bethencourt
       * Sebastian Dröge
-      * Stefan Sauer
-      * Stian Selnes
-      * Thiago Santos
-      * Thibault Saunier
       * Tim-Philipp Müller
-      * Vineeth T M
-      * Vineeth TM
+      * Tom Deseyn
+      * Vincent Penquerc'h
       * Wim Taymans
  
