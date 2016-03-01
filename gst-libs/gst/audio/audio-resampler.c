@@ -250,19 +250,6 @@ get_opt_enum (GstStructure * options, const gchar * name, GType type, gint def)
 #define bessel dbesi0
 
 static inline gdouble
-get_nearest_tap (gdouble x, gint n_taps)
-{
-  gdouble a = fabs (x), res;;
-
-  if (a < 0.5)
-    res = 1.0;
-  else
-    res = 0.0;
-
-  return res;
-}
-
-static inline gdouble
 get_linear_tap (gdouble x, gint n_taps)
 {
   gdouble res = GST_ROUND_UP_2 (n_taps) / 2 - fabs (x);
@@ -318,45 +305,6 @@ get_kaiser_tap (gdouble x, gint n_taps, gdouble Fc, gdouble beta)
 
 #define PRECISION_S16 15
 #define PRECISION_S32 31
-
-static gdouble
-make_taps (GstAudioResampler * resampler,
-    gdouble * tmp_taps, gdouble x, gint n_taps)
-{
-  gdouble weight = 0.0;
-  gint i;
-
-  switch (resampler->method) {
-    case GST_AUDIO_RESAMPLER_METHOD_NEAREST:
-      break;
-
-    case GST_AUDIO_RESAMPLER_METHOD_LINEAR:
-      for (i = 0; i < n_taps; i++)
-        weight += tmp_taps[i] = get_linear_tap (x + i, resampler->n_taps);
-      break;
-
-    case GST_AUDIO_RESAMPLER_METHOD_CUBIC:
-      for (i = 0; i < n_taps; i++)
-        weight += tmp_taps[i] = get_cubic_tap (x + i, resampler->n_taps,
-            resampler->b, resampler->c);
-      break;
-
-    case GST_AUDIO_RESAMPLER_METHOD_BLACKMAN_NUTTALL:
-      for (i = 0; i < n_taps; i++)
-        weight += tmp_taps[i] =
-            get_blackman_nuttall_tap (x + i,
-            resampler->n_taps, resampler->cutoff);
-      break;
-
-    case GST_AUDIO_RESAMPLER_METHOD_KAISER:
-      for (i = 0; i < n_taps; i++)
-        weight += tmp_taps[i] =
-            get_kaiser_tap (x + i, resampler->n_taps,
-            resampler->cutoff, resampler->kaiser_beta);
-      break;
-  }
-  return weight;
-}
 
 #define MAKE_CONVERT_TAPS_INT_FUNC(type, precision)                     \
 static void                                                             \
@@ -427,6 +375,44 @@ static ConvertTapsFunc convert_taps_funcs[] = {
 #define convert_taps_gint32   convert_taps_funcs[1]
 #define convert_taps_gfloat   convert_taps_funcs[2]
 #define convert_taps_gdouble  convert_taps_funcs[3]
+
+static void
+make_taps (GstAudioResampler * resampler, gdouble * res, gdouble x, gint n_taps)
+{
+  gdouble weight = 0.0, *tmp_taps = resampler->tmp_taps;
+  gint i;
+
+  switch (resampler->method) {
+    case GST_AUDIO_RESAMPLER_METHOD_NEAREST:
+      break;
+
+    case GST_AUDIO_RESAMPLER_METHOD_LINEAR:
+      for (i = 0; i < n_taps; i++)
+        weight += tmp_taps[i] = get_linear_tap (x + i, resampler->n_taps);
+      break;
+
+    case GST_AUDIO_RESAMPLER_METHOD_CUBIC:
+      for (i = 0; i < n_taps; i++)
+        weight += tmp_taps[i] = get_cubic_tap (x + i, resampler->n_taps,
+            resampler->b, resampler->c);
+      break;
+
+    case GST_AUDIO_RESAMPLER_METHOD_BLACKMAN_NUTTALL:
+      for (i = 0; i < n_taps; i++)
+        weight += tmp_taps[i] =
+            get_blackman_nuttall_tap (x + i,
+            resampler->n_taps, resampler->cutoff);
+      break;
+
+    case GST_AUDIO_RESAMPLER_METHOD_KAISER:
+      for (i = 0; i < n_taps; i++)
+        weight += tmp_taps[i] =
+            get_kaiser_tap (x + i, resampler->n_taps,
+            resampler->cutoff, resampler->kaiser_beta);
+      break;
+  }
+  resampler->convert_taps (tmp_taps, res, weight, n_taps);
+}
 
 #define MAKE_COEFF_LINEAR_INT_FUNC(type,type2,prec)                     \
 static inline void                                                      \
@@ -625,12 +611,11 @@ get_taps_##type##_full (GstAudioResampler * resampler,                          
     switch (resampler->filter_interpolation) {                                  \
       case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_NONE:                       \
       {                                                                         \
-        gdouble x, weight;                                                      \
+        gdouble x;                                                              \
         gint n_taps = resampler->n_taps;                                        \
                                                                                 \
         x = 1.0 - n_taps / 2 - (gdouble) phase / n_phases;                      \
-        weight = make_taps (resampler, resampler->tmp_taps, x, n_taps);         \
-        convert_taps_##type (resampler->tmp_taps, res, weight, n_taps);         \
+        make_taps (resampler, res, x, n_taps);                                  \
         break;                                                                  \
       }                                                                         \
       default:                                                                  \
@@ -1157,6 +1142,9 @@ setup_functions (GstAudioResampler * resampler)
   else {
     switch (resampler->filter_interpolation) {
       default:
+      case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_NONE:
+        fidx = 0;
+        break;
       case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR:
         GST_DEBUG ("using linear interpolation filter function");
         fidx = 0;
@@ -1307,7 +1295,7 @@ resampler_calculate_taps (GstAudioResampler * resampler)
   if (resampler->filter_interpolation !=
       GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_NONE) {
     gint i, isize;
-    gdouble x, weight, *tmp_taps;
+    gdouble x;
     gpointer taps;
 
     switch (resampler->filter_interpolation) {
@@ -1324,13 +1312,10 @@ resampler_calculate_taps (GstAudioResampler * resampler)
 
     alloc_taps_mem (resampler, bps, n_taps, oversample + isize);
 
-    tmp_taps = resampler->tmp_taps;
     for (i = 0; i < oversample + isize; i++) {
       x = -(n_taps / 2) + i / (gdouble) oversample;
-
       taps = (gint8 *) resampler->taps + i * resampler->taps_stride;
-      weight = make_taps (resampler, tmp_taps, x, n_taps);
-      resampler->convert_taps (tmp_taps, taps, weight, n_taps);
+      make_taps (resampler, taps, x, n_taps);
     }
   }
 }
@@ -1539,10 +1524,7 @@ gst_audio_resampler_new (GstAudioResamplerMethod method,
   }
 
   gst_audio_resampler_update (resampler, in_rate, out_rate, options);
-
-  /* half of the filter is filled with 0 */
-  resampler->samp_index = 0;
-  resampler->samples_avail = resampler->n_taps / 2 - 1;
+  gst_audio_resampler_reset (resampler);
 
   if (def_options)
     gst_structure_free (def_options);
