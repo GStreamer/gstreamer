@@ -1,17 +1,17 @@
 # Bulgarian translation of gst-plugins-good.
-# Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+# Copyright (C) 2007, 2008, 2009, 2010, 2011, 2016 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Alexander Shopov <ash@kambanaria.org>, 2007, 2008, 2009, 2010, 2011.
+# Alexander Shopov <ash@kambanaria.org>, 2007, 2008, 2009, 2010, 2011, 2016.
 #
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.28.2\n"
+"Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:31+0200\n"
-"PO-Revision-Date: 2011-04-26 22:35+0300\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-21 21:03+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
-"Language-Team: Bulgarian <dict@fsa-bg.org>\n"
+"Language-Team: Bulgarian <dict@ludost.net>\n"
 "Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Jack server not found"
-msgstr ""
+msgstr "Сървърът Jack не е открит."
 
 msgid "Failed to decode JPEG image"
 msgstr "Неуспешно декодиране на изображение, формат JPEG."
@@ -47,7 +47,6 @@ msgstr "Не може да се осъществи връзка към сърв�
 msgid "Secure connection setup failed."
 msgstr "Неуспешно осъществяване на шифрирана връзка."
 
-#, fuzzy
 msgid ""
 "A network error occurred, or the server closed the connection unexpectedly."
 msgstr "Възникна мрежова грешка или сървърът неочаквано прекъсна връзката."
@@ -68,7 +67,7 @@ msgid "This file is invalid and cannot be played."
 msgstr "Този файл е повреден и не може да бъде изпълнен."
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
-msgstr ""
+msgstr "Потокът не може да се изпълни, защото е шифриран с PlayReady DRM."
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Този файл е повреден и не може да бъде изпълнен."
@@ -150,10 +149,10 @@ msgid "Could not open audio device for recording."
 msgstr "Аудио устройството не може да се отвори за запис."
 
 msgid "CoreAudio device not found"
-msgstr ""
+msgstr "Устройството CoreAudio не е открито"
 
 msgid "CoreAudio device could not be opened"
-msgstr ""
+msgstr "Устройството CoreAudio не може да се отвори"
 
 msgid "Record Source"
 msgstr "Източник за запис"
@@ -176,13 +175,11 @@ msgstr "Вход AUX 1"
 msgid "AUX 2 In"
 msgstr "Вход AUX 2"
 
-#, fuzzy
 msgid "Codec Loopback"
-msgstr "Обратна връзка"
+msgstr "Обратна връзка на кодека"
 
-#, fuzzy
 msgid "SunVTS Loopback"
-msgstr "Обратна връзка"
+msgstr "Обратна връзка на SunVTS"
 
 msgid "Volume"
 msgstr "Сила на звука"
@@ -218,125 +215,116 @@ msgstr "Грешка при прочитане %d байта от устройс
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
+"Неуспешно изброяване на поддържаните от устройството „%s“ видео формати"
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Не могат да се получат буферите от устройството „%s“."
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr "Драйверът за устройството „%s“ не поддържа познати методи за запис."
+msgstr "Драйверът за устройството „%s“ не поддържа познати метода за В/И %d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr "Драйверът за устройството „%s“ не поддържа познати методи за запис."
+msgstr "Драйверът за устройството „%s“ не поддържа познат метод за В/И."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "Устройството „%s“ не е изходно устройство."
+msgstr "Устройството „%s“ е заето"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Устройството „%s“ не е устройство за запис."
+msgstr "Устройството „%s“ не може да записва с разделителна способност %d×%d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "Устройството „%s“ не е устройство за запис."
+msgstr "Устройството „%s“ не може да записва в указания формат."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Устройството „%s“ не е изходно устройство."
+msgstr "Устройството „%s“ не поддържа несъседни равнини"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Не могат да се получат параметрите на устройството „%s“."
 
-#, fuzzy
 msgid "Video device did not accept new frame rate setting."
 msgstr ""
-"Устройството за видео вход не приема новите настройки за честотата на кадри."
+"Устройството за видео не приема новите настройки за честотата на кадри."
 
-#, fuzzy
 msgid "Video device did not provide output format."
-msgstr ""
-"Устройството за видео вход не приема новите настройки за честотата на кадри."
+msgstr "Видео устройството не указва формат."
 
 msgid "Video device returned invalid dimensions."
-msgstr ""
+msgstr "Видео устройството върна неправилни размери"
 
-#, fuzzy
 msgid "Video devices uses an unsupported interlacing method."
-msgstr "Драйверът за устройството „%s“ не поддържа познати методи за запис."
+msgstr "Видео устройството използва неподдържана презредова развивка."
 
 msgid "Video devices uses an unsupported pixel format."
-msgstr ""
+msgstr "Видео устройството използва неподдържан формат на пикселите."
 
 msgid "Failed to configure internal buffer pool."
-msgstr ""
+msgstr "Неуспешно настройване на вътрешните буфери."
 
-#, fuzzy
 msgid "Video device did not suggest any buffer size."
-msgstr ""
-"Устройството за видео вход не приема новите настройки за честотата на кадри."
+msgstr "Видео устройството не указва размер на буфера."
 
 msgid "No downstream pool to import from."
-msgstr ""
+msgstr "Няма буфери, които да се внесат."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Неуспешно получаване на настройките на тунер %d на устройство „%s“."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Грешка при прочитане %d байта от устройство „%s“."
+msgstr "Грешка при получаване на възможностите на устройство „%s“."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Устройството „%s“ не е изходно устройство."
+msgstr "Устройството „%s“ не е тунер."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Неуспешно задаване на вход %d на устройство „%s“."
+msgstr "Неуспешно получаване на радио входа на устройство „%s“."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Неуспешно задаване на вход %d на устройство „%s“."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Неуспешно получаване на силата на сигнала на устройство „%s“."
+msgstr "Неуспешна смяна на заглушаването устройство „%s“."
 
 msgid "Failed to allocated required memory."
-msgstr ""
+msgstr "Неуспешно заделяне на необходимата памет."
 
 msgid "Failed to allocate required memory."
-msgstr ""
+msgstr "Неуспешно заделяне на необходимата памет."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported input format"
-msgstr "Драйверът за устройството „%s“ не поддържа познати методи за запис."
+msgstr "Конверторът на устройството „%s“ не поддържа познати метод за вход."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported output format"
-msgstr ""
-"Устройството за видео вход не приема новите настройки за честотата на кадри."
+msgstr "Конверторът на устройството „%s“ не поддържа познати метод за изход."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported input format"
-msgstr ""
-"Устройството за видео вход не приема новите настройки за честотата на кадри."
+msgstr "Кодерът устройството „%s“ не поддържа познати метод за вход."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr ""
-"Устройството за видео вход не приема новите настройки за честотата на кадри."
+msgstr "Кодерът на устройството „%s“ не поддържа познати метод за изход."
 
-#, fuzzy
 msgid "Failed to start decoding thread."
-msgstr "Неуспешно декодиране на изображение, формат JPEG."
+msgstr "Неуспешно стартиране на нишката за декодиране."
 
 msgid "Failed to process frame."
-msgstr ""
+msgstr "Неуспешна обработка на кадър."
 
 #, c-format
 msgid ""
@@ -382,13 +370,13 @@ msgstr "Устройството „%s“ не е устройство за за
 msgid "Device '%s' is not a output device."
 msgstr "Устройството „%s“ не е изходно устройство."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a M2M device."
-msgstr "Устройството „%s“ не е изходно устройство."
+msgstr "Устройството „%s“ не е M2M."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not dup device '%s' for reading and writing."
-msgstr "Устройството „%s“ не може да се отвори за четене и запис."
+msgstr "Устройството „%s“ не може да се дуплексира за четене и запис."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
@@ -439,354 +427,3 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Работата без часовник е невъзможна."
-
-#, fuzzy
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Устройството „%s“ не е изходно устройство."
-
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Получена е рамка с размер %u вместо очаквания %u."
-
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Неуспешен опит за получаване на видео кадрите от устройство „%s“."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Неуспех след %d опита. Устройство „%s“. Системна грешка: %s"
-
-#~ msgid "Bass"
-#~ msgstr "Баси"
-
-#~ msgid "Treble"
-#~ msgstr "Високи"
-
-#~ msgid "Synth"
-#~ msgstr "Синтезатор"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Speaker"
-#~ msgstr "Високоговорител"
-
-#~ msgid "Line-in"
-#~ msgstr "Вход"
-
-#~ msgid "CD"
-#~ msgstr "CD"
-
-#~ msgid "Mixer"
-#~ msgstr "Смесител"
-
-#~ msgid "PCM-2"
-#~ msgstr "PCM-2"
-
-#~ msgid "Record"
-#~ msgstr "Запис"
-
-#~ msgid "In-gain"
-#~ msgstr "Входно усилване"
-
-#~ msgid "Out-gain"
-#~ msgstr "Изходно усилване"
-
-#~ msgid "Line-1"
-#~ msgstr "Вход-1"
-
-#~ msgid "Line-2"
-#~ msgstr "Вход-2"
-
-#~ msgid "Line-3"
-#~ msgstr "Вход-3"
-
-#~ msgid "Digital-1"
-#~ msgstr "Цифрова-1"
-
-#~ msgid "Digital-2"
-#~ msgstr "Цифрова-2"
-
-#~ msgid "Digital-3"
-#~ msgstr "Цифрова-3"
-
-#~ msgid "Phone-in"
-#~ msgstr "Вход за слушалки"
-
-#~ msgid "Phone-out"
-#~ msgstr "Изход за слушалки"
-
-#~ msgid "Video"
-#~ msgstr "Видео"
-
-#~ msgid "Radio"
-#~ msgstr "Радио"
-
-#~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr ""
-#~ "Аудио устройството не може да се отвори за управление на смесването."
-
-#~ msgid ""
-#~ "Could not open audio device for mixer control handling. This version of "
-#~ "the Open Sound System is not supported by this element."
-#~ msgstr ""
-#~ "Аудио устройството не може да се отвори за управление на смесването. "
-#~ "Елементът не поддържа тази версия на OSS."
-
-#~ msgid "Master"
-#~ msgstr "Основна"
-
-#~ msgid "Front"
-#~ msgstr "Отпред"
-
-#~ msgid "Rear"
-#~ msgstr "Отзад"
-
-#~ msgid "Headphones"
-#~ msgstr "Слушалки"
-
-#~ msgid "Center"
-#~ msgstr "Център"
-
-#~ msgid "LFE"
-#~ msgstr "Баси"
-
-#~ msgid "Surround"
-#~ msgstr "Съраунд"
-
-#~ msgid "Side"
-#~ msgstr "Отстрани"
-
-#~ msgid "AUX Out"
-#~ msgstr "Изход AUX"
-
-#~ msgid "3D Depth"
-#~ msgstr "3D — дълбочина"
-
-#~ msgid "3D Center"
-#~ msgstr "3D — център"
-
-#~ msgid "3D Enhance"
-#~ msgstr "3D — подобрения"
-
-#~ msgid "Telephone"
-#~ msgstr "Телефон"
-
-#~ msgid "Video In"
-#~ msgstr "Видео вход"
-
-#~ msgid "AUX In"
-#~ msgstr "Вход AUX"
-
-#~ msgid "Record Gain"
-#~ msgstr "Усилване на записа"
-
-#~ msgid "Output Gain"
-#~ msgstr "Усилване на изхода"
-
-#~ msgid "Microphone Boost"
-#~ msgstr "Усилване на микрофона"
-
-#~ msgid "Diagnostic"
-#~ msgstr "Диагностика"
-
-#~ msgid "Bass Boost"
-#~ msgstr "Усилване на баситe"
-
-#~ msgid "Playback Ports"
-#~ msgstr "Изходни гнезда"
-
-#~ msgid "Input"
-#~ msgstr "Вход"
-
-#~ msgid "Monitor Source"
-#~ msgstr "Източник за звуков монитор"
-
-#~ msgid "Keyboard Beep"
-#~ msgstr "Клавиатурен звънец"
-
-#~ msgid "Simulate Stereo"
-#~ msgstr "Симулирано стерео"
-
-#~ msgid "Stereo"
-#~ msgstr "Стерео"
-
-#~ msgid "Surround Sound"
-#~ msgstr "Стерео и съраунд"
-
-#~ msgid "Microphone Gain"
-#~ msgstr "Усилване на микрофона"
-
-#~ msgid "Speaker Source"
-#~ msgstr "Източник за високоговорител"
-
-#~ msgid "Microphone Source"
-#~ msgstr "Източник за микрофон"
-
-#~ msgid "Jack"
-#~ msgstr "Жак"
-
-#~ msgid "Center / LFE"
-#~ msgstr "Център/баси"
-
-#~ msgid "Stereo Mix"
-#~ msgstr "Смесител на стерео"
-
-#~ msgid "Mono Mix"
-#~ msgstr "Смесител на моно"
-
-#~ msgid "Input Mix"
-#~ msgstr "Смесител на входа"
-
-#~ msgid "Microphone 1"
-#~ msgstr "Микрофон 1"
-
-#~ msgid "Microphone 2"
-#~ msgstr "Микрофон 2"
-
-#~ msgid "Digital Out"
-#~ msgstr "Цифров изход"
-
-#~ msgid "Digital In"
-#~ msgstr "Цифров вход"
-
-#~ msgid "HDMI"
-#~ msgstr "HDMI"
-
-#~ msgid "Modem"
-#~ msgstr "Модем"
-
-#~ msgid "Handset"
-#~ msgstr "Слушалка"
-
-#~ msgid "Other"
-#~ msgstr "Друго"
-
-#~ msgid "None"
-#~ msgstr "Няма"
-
-#~ msgid "On"
-#~ msgstr "Включено"
-
-#~ msgid "Off"
-#~ msgstr "Изключено"
-
-#~ msgid "Mute"
-#~ msgstr "Заглушаване"
-
-#~ msgid "Fast"
-#~ msgstr "Бързо"
-
-#~ msgid "Very Low"
-#~ msgstr "Много ниско"
-
-#~ msgid "Low"
-#~ msgstr "Ниско"
-
-#~ msgid "Medium"
-#~ msgstr "Средно"
-
-#~ msgid "High"
-#~ msgstr "Високо"
-
-#~ msgid "Very High"
-#~ msgstr "Много високо"
-
-#~ msgid "Production"
-#~ msgstr "Професионално"
-
-#~ msgid "Front Panel Microphone"
-#~ msgstr "Микрофон на предния панел"
-
-#~ msgid "Front Panel Line In"
-#~ msgstr "Вход на предния панел"
-
-#~ msgid "Front Panel Headphones"
-#~ msgstr "Слушалки на предния панел"
-
-#~ msgid "Front Panel Line Out"
-#~ msgstr "Изход на предния панел"
-
-#~ msgid "Green Connector"
-#~ msgstr "Зелено гнездо"
-
-#~ msgid "Pink Connector"
-#~ msgstr "Розово гнездо"
-
-#~ msgid "Blue Connector"
-#~ msgstr "Синьо гнездо"
-
-#~ msgid "White Connector"
-#~ msgstr "Бяло гнездо"
-
-#~ msgid "Black Connector"
-#~ msgstr "Черно гнездо"
-
-#~ msgid "Gray Connector"
-#~ msgstr "Сиво гнездо"
-
-#~ msgid "Orange Connector"
-#~ msgstr "Оранжево гнездо"
-
-#~ msgid "Red Connector"
-#~ msgstr "Червено гнездо"
-
-#~ msgid "Yellow Connector"
-#~ msgstr "Жълто гнездо"
-
-#~ msgid "Green Front Panel Connector"
-#~ msgstr "Зелено гнездо на предния панел"
-
-#~ msgid "Pink Front Panel Connector"
-#~ msgstr "Розово гнездо на предния панел"
-
-#~ msgid "Blue Front Panel Connector"
-#~ msgstr "Синьо гнездо на предния панел"
-
-#~ msgid "White Front Panel Connector"
-#~ msgstr "Бяло гнездо на предния панел"
-
-#~ msgid "Black Front Panel Connector"
-#~ msgstr "Черно гнездо на предния панел"
-
-#~ msgid "Gray Front Panel Connector"
-#~ msgstr "Сиво гнездо на предния панел"
-
-#~ msgid "Orange Front Panel Connector"
-#~ msgstr "Оранжево гнездо на предния панел"
-
-#~ msgid "Red Front Panel Connector"
-#~ msgstr "Червено гнездо на предния панел"
-
-#~ msgid "Yellow Front Panel Connector"
-#~ msgstr "Жълто гнездо на предния панел"
-
-#~ msgid "Spread Output"
-#~ msgstr "Към повече изходи"
-
-#~ msgid "Downmix"
-#~ msgstr "Към по-малко изходи"
-
-#~ msgid "Virtual Mixer Input"
-#~ msgstr "Вход на виртуален смесител"
-
-#~ msgid "Virtual Mixer Output"
-#~ msgstr "Изход на виртуален смесител"
-
-#~ msgid "Virtual Mixer Channels"
-#~ msgstr "Канали на виртуален смесител"
-
-#~ msgid "%s %d Function"
-#~ msgstr "Функция на %s № %d"
-
-#~ msgid "%s Function"
-#~ msgstr "Функция на %s"
-
-#~ msgid "Error reading %d bytes on device '%s'."
-#~ msgstr "Грешка при прочитане на %d байта на устройство „%s“."
-
-#~ msgid "Could not enqueue buffers in device '%s'."
-#~ msgstr "Буферите в устройство „%s“ не могат да се подредят в опашка."
-
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Не може да се осъществи връзка към звуковия сървър."
-
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Неуспешно запитване за възможностите на звуковия сървър."

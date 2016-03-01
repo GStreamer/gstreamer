@@ -1,15 +1,16 @@
 # Vietnamese Translation for GST Plugins Good.
-# Copyright © 2015 Free Software Foundation, Inc.
+# Bản dịch tiếng Việt dành cho GST Plugins Good.
+# Copyright © 2016 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
-# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2014, 2015.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2014, 2015, 2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.6.0\n"
+"Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:31+0200\n"
-"PO-Revision-Date: 2015-10-16 08:17+0700\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-21 07:25+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
@@ -153,10 +154,10 @@ msgid "Could not open audio device for recording."
 msgstr "Không thể mở thiết bị âm thanh để thu."
 
 msgid "CoreAudio device not found"
-msgstr ""
+msgstr "Không tìm thấy thiết bị CoreAudio"
 
 msgid "CoreAudio device could not be opened"
-msgstr ""
+msgstr "Không thể mở thiết bị CoreAudio"
 
 msgid "Record Source"
 msgstr "Ghi lưu nguồn"
@@ -425,8 +426,8 @@ msgstr ""
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Gặp lỗi khi lấy đầu vào hiện hành trên thiết bị “%s”. Có thể là thiết bị vô "
-"tuyến."
+"Gặp lỗi khi lấy đầu vào hiện hành trên thiết bị “%s”. Có thể nó là thiết bị "
+"vô tuyến."
 
 #, c-format
 msgid "Failed to set output %d on device %s."

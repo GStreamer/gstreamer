@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015.
+# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015, 2016.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.6.0\n"
+"Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:31+0200\n"
-"PO-Revision-Date: 2015-11-13 21:55+0200\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-20 17:27+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -158,10 +158,10 @@ msgid "Could not open audio device for recording."
 msgstr "Не вдалося відкрити пристрій для запису."
 
 msgid "CoreAudio device not found"
-msgstr ""
+msgstr "Пристрій CoreAudio не знайдено"
 
 msgid "CoreAudio device could not be opened"
-msgstr ""
+msgstr "Не вдалося відкрити пристрій CoreAudio"
 
 msgid "Record Source"
 msgstr "Запис джерела"

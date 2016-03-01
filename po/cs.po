@@ -4,14 +4,14 @@
 #
 # Miloslav Trmac <mitr@volny.cz>, 2004.
 # Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009, 2010, 2011.
-# Marek Černocký <marek@manet.cz>, 2013, 2015.
+# Marek Černocký <marek@manet.cz>, 2013, 2015, 2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.6.0\n"
+"Project-Id-Version: gst-plugins-good-1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:31+0200\n"
-"PO-Revision-Date: 2015-10-15 20:58+0200\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-27 16:40+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -154,10 +154,10 @@ msgid "Could not open audio device for recording."
 msgstr "Zvukové zařízení nelze otevřít pro nahrávání."
 
 msgid "CoreAudio device not found"
-msgstr ""
+msgstr "Nebylo nalezeno zařízení CoreAudio"
 
 msgid "CoreAudio device could not be opened"
-msgstr ""
+msgstr "Nelze otevřít zařízení CoreAudio"
 
 msgid "Record Source"
 msgstr "Zdroj nahrávání"

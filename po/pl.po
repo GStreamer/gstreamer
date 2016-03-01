@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-good.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2015.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.6.0\n"
+"Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:31+0200\n"
-"PO-Revision-Date: 2015-10-15 20:49+0200\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-20 21:43+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -149,10 +149,10 @@ msgid "Could not open audio device for recording."
 msgstr "Nie udało się otworzyć urządzenia dźwiękowego do nagrywania."
 
 msgid "CoreAudio device not found"
-msgstr ""
+msgstr "Nie znaleziono urządzenia CoreAudio"
 
 msgid "CoreAudio device could not be opened"
-msgstr ""
+msgstr "Nie udało się otworzyć urządzenia CoreAudio"
 
 msgid "Record Source"
 msgstr "Źródło nagrywania"

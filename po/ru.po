@@ -3,14 +3,14 @@
 #
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2011, 2012, 2013, 2014, 2015.
+# Yuri Kozlov <yuray@komyakino.ru>, 2011, 2012, 2013, 2014, 2015, 2016.
 # Pavel Maryanov <acid@jack.kiev.ua>, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.6.0\n"
+"Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:31+0200\n"
-"PO-Revision-Date: 2015-10-18 13:39+0300\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-21 09:55+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -158,10 +158,10 @@ msgid "Could not open audio device for recording."
 msgstr "Не удалось открыть аудио-устройство для записи."
 
 msgid "CoreAudio device not found"
-msgstr ""
+msgstr "Устройство CoreAudio не найдено"
 
 msgid "CoreAudio device could not be opened"
-msgstr ""
+msgstr "Невозможно открыть устройство CoreAudio"
 
 msgid "Record Source"
 msgstr "Устройство записи"

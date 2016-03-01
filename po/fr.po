@@ -8,10 +8,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.7.1\n"
+"Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:31+0200\n"
-"PO-Revision-Date: 2015-12-27 01:51+0100\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-20 16:27+0100\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -156,10 +156,10 @@ msgid "Could not open audio device for recording."
 msgstr "Impossible d’ouvrir le périphérique audio pour l’enregistrement."
 
 msgid "CoreAudio device not found"
-msgstr ""
+msgstr "Périphèrique CoreAudio introuvable"
 
 msgid "CoreAudio device could not be opened"
-msgstr ""
+msgstr "Le périphèrique CoreAudio n’a pas pu être ouvert"
 
 msgid "Record Source"
 msgstr "Source d’enregistrement"
