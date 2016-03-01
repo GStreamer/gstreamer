@@ -1,0 +1,13 @@
+EXPORTS
+	gst_adaptive_demux_find_stream_for_pad
+	gst_adaptive_demux_get_client_now_utc
+	gst_adaptive_demux_get_monotonic_time
+	gst_adaptive_demux_get_type
+	gst_adaptive_demux_set_stream_struct_size
+	gst_adaptive_demux_stream_advance_fragment
+	gst_adaptive_demux_stream_fragment_clear
+	gst_adaptive_demux_stream_new
+	gst_adaptive_demux_stream_push_buffer
+	gst_adaptive_demux_stream_queue_event
+	gst_adaptive_demux_stream_set_caps
+	gst_adaptive_demux_stream_set_tags

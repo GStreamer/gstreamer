@@ -1,0 +1,13 @@
+EXPORTS
+	gst_base_camera_src_finish_capture
+	gst_base_camera_src_get_type
+	gst_base_camera_src_post_preview
+	gst_base_camera_src_set_mode
+	gst_base_camera_src_setup_preview
+	gst_base_camera_src_setup_zoom
+	gst_camerabin_create_preview_pipeline
+	gst_camerabin_destroy_preview_pipeline
+	gst_camerabin_mode_get_type
+	gst_camerabin_preview_pipeline_post
+	gst_camerabin_preview_set_caps
+	gst_camerabin_preview_set_filter

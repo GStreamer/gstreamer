@@ -1,0 +1,8 @@
+EXPORTS
+	gst_insert_bin_append
+	gst_insert_bin_get_type
+	gst_insert_bin_insert_after
+	gst_insert_bin_insert_before
+	gst_insert_bin_new
+	gst_insert_bin_prepend
+	gst_insert_bin_remove

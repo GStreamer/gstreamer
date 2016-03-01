@@ -1,0 +1,13 @@
+EXPORTS
+	gst_fragment_add_buffer
+	gst_fragment_get_buffer
+	gst_fragment_get_caps
+	gst_fragment_get_type
+	gst_fragment_new
+	gst_fragment_set_caps
+	gst_uri_downloader_cancel
+	gst_uri_downloader_fetch_uri
+	gst_uri_downloader_fetch_uri_with_range
+	gst_uri_downloader_get_type
+	gst_uri_downloader_new
+	gst_uri_downloader_reset

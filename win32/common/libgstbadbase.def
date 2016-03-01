@@ -1,0 +1,12 @@
+EXPORTS
+	gst_aggregator_finish_buffer
+	gst_aggregator_get_latency
+	gst_aggregator_get_type
+	gst_aggregator_iterate_sinkpads
+	gst_aggregator_pad_drop_buffer
+	gst_aggregator_pad_get_buffer
+	gst_aggregator_pad_get_type
+	gst_aggregator_pad_is_eos
+	gst_aggregator_pad_steal_buffer
+	gst_aggregator_set_latency
+	gst_aggregator_set_src_caps

@@ -1,0 +1,5 @@
+EXPORTS
+	gst_audio_aggregator_get_type
+	gst_audio_aggregator_pad_get_type
+	gst_audio_aggregator_set_sink_caps
+	gst_audio_aggregator_set_src_caps
