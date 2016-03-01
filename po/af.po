@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:29+0200\n"
+"POT-Creation-Date: 2016-03-01 16:45+0200\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -460,6 +460,12 @@ msgstr ""
 #, fuzzy
 msgid "person(s) who composed the recording"
 msgstr "persoon(e) verantwoordelik vir die opname"
+
+msgid "conductor"
+msgstr ""
+
+msgid "conductor/performer refinement"
+msgstr ""
 
 msgid "duration"
 msgstr "duur"

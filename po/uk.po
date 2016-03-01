@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gstreamer package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015.
+# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015, 2016.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.1\n"
+"Project-Id-Version: gstreamer 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:29+0200\n"
-"PO-Revision-Date: 2015-12-25 07:14+0200\n"
+"POT-Creation-Date: 2016-03-01 16:45+0200\n"
+"PO-Revision-Date: 2016-02-20 17:16+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -453,6 +453,12 @@ msgstr "композитор"
 msgid "person(s) who composed the recording"
 msgstr "особа чи особи, якими було створено музику запису"
 
+msgid "conductor"
+msgstr ""
+
+msgid "conductor/performer refinement"
+msgstr ""
+
 msgid "duration"
 msgstr "тривалість"
 
@@ -862,7 +868,7 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "не вдалося встановити властивість «%s» у елементі «%s» у значення «%s»"
 
 msgid "Delayed linking failed."
-msgstr ""
+msgstr "Спроба відкладеного компонування зазнала невдачі."
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1009,9 +1015,8 @@ msgstr "примусово визначені можливості"
 msgid "force caps without doing a typefind"
 msgstr "примусово визначити можливості без виконання typefind"
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
-msgstr "Потік не містить достатньо даних."
+msgstr "У потоці міститься недостатньо даних."
 
 msgid "Stream contains no data."
 msgstr "Потік не містить даних."

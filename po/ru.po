@@ -4,13 +4,13 @@
 # Peter Astakhov <astakhovp@mail.ru>, 2005.
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015.
+# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.1\n"
+"Project-Id-Version: gstreamer 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:29+0200\n"
-"PO-Revision-Date: 2015-12-25 19:12+0300\n"
+"POT-Creation-Date: 2016-03-01 16:45+0200\n"
+"PO-Revision-Date: 2016-02-21 09:53+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -456,6 +456,12 @@ msgstr "композитор"
 msgid "person(s) who composed the recording"
 msgstr "лицо/лица, написавшие композицию"
 
+msgid "conductor"
+msgstr ""
+
+msgid "conductor/performer refinement"
+msgstr ""
+
 msgid "duration"
 msgstr "длительность"
 
@@ -865,7 +871,7 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "не удалось установить свойство «%s» элемента «%s» в значение «%s»"
 
 msgid "Delayed linking failed."
-msgstr ""
+msgstr "Ошибка при отложенной компоновке."
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1012,7 +1018,6 @@ msgstr "форсировать возможности"
 msgid "force caps without doing a typefind"
 msgstr "форсировать возможности без выполнения typefind"
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
 msgstr "Поток содержит недостаточно данных."
 

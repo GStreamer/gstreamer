@@ -1,16 +1,16 @@
 # Swedish messages for gstreamer.
-# Copyright (C) 2004-2015 Free Software Foundation, Inc.
+# Copyright © 2004-2016 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009, 2010, 2011.
-# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.1\n"
+"Project-Id-Version: gstreamer 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:29+0200\n"
-"PO-Revision-Date: 2015-12-25 01:12+0100\n"
+"POT-Creation-Date: 2016-03-01 16:45+0200\n"
+"PO-Revision-Date: 2016-02-20 16:13+0100\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.8.6\n"
+"X-Generator: Poedit 1.8.7\n"
 
 msgid "Print the GStreamer version"
 msgstr "Skriv ut GStreamer-versionen"
@@ -455,6 +455,12 @@ msgstr "kompositör"
 msgid "person(s) who composed the recording"
 msgstr "person(er) som komponerade inspelningen"
 
+msgid "conductor"
+msgstr ""
+
+msgid "conductor/performer refinement"
+msgstr ""
+
 msgid "duration"
 msgstr "varaktighet"
 
@@ -864,7 +870,7 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kunde inte ställa in egenskapen \"%s\" i elementet \"%s\" till \"%s\""
 
 msgid "Delayed linking failed."
-msgstr ""
+msgstr "Fördröjd länkning misslyckades."
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1011,7 +1017,6 @@ msgstr "tvinga förmågor"
 msgid "force caps without doing a typefind"
 msgstr "tvinga förmågor utan att göra en typefind"
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
 msgstr "Strömmen innehåller inte tillräckligt med data."
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:29+0200\n"
+"POT-Creation-Date: 2016-03-01 16:45+0200\n"
 "PO-Revision-Date: 2011-06-04 21:11+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -428,6 +428,12 @@ msgid "composer"
 msgstr "komponisto"
 
 msgid "person(s) who composed the recording"
+msgstr ""
+
+msgid "conductor"
+msgstr ""
+
+msgid "conductor/performer refinement"
 msgstr ""
 
 msgid "duration"

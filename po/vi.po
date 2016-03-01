@@ -1,16 +1,16 @@
 # Vietnamese Translation for GStreamer.
 # Bản dịch tiếng Việt dành cho GStreamer.
-# Copyright © 2015 Free Software Foundation, Inc.
+# Copyright © 2016 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
-# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2014, 2015.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2014, 2015, 2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.1\n"
+"Project-Id-Version: gstreamer 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:29+0200\n"
-"PO-Revision-Date: 2015-12-25 07:29+0700\n"
+"POT-Creation-Date: 2016-03-01 16:45+0200\n"
+"PO-Revision-Date: 2016-02-21 07:11+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
@@ -452,6 +452,12 @@ msgstr "người soạn"
 msgid "person(s) who composed the recording"
 msgstr "(những) người đã soạn bản thu này"
 
+msgid "conductor"
+msgstr ""
+
+msgid "conductor/performer refinement"
+msgstr ""
+
 msgid "duration"
 msgstr "thời lượng"
 
@@ -866,7 +872,7 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "không thể đặt thuộc tính “%s” trong phần tử “%s” thành “%s”"
 
 msgid "Delayed linking failed."
-msgstr ""
+msgstr "Gặp lỗi khi liên kết trễ."
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1016,7 +1022,6 @@ msgstr "buộc khả năng"
 msgid "force caps without doing a typefind"
 msgstr "buộc các khả năng mà không tìm kiểu"
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
 msgstr "Luồng không chứa đủ dữ liệu."
 

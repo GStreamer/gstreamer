@@ -1,17 +1,19 @@
 # Bulgarian translation of gstreamer.
-# Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Fondation, Inc.
+# Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Free Software Fondation, Inc.
+# Copyright (C) 2011, 2016 Free Software Fondation, Inc.
 # This file is distributed under the same license as the gstreamer package.
-# Alexander Shopov <ash@contact.bg>, 2005, 2006, 2007, 2008, 2009, 2010, 2011.
+# Alexander Shopov <ash@contact.bg>, 2005, 2006, 2007, 2008, 2009, 2010.
+# Alexander Shopov <ash@contact.bg>, 2011, 2016.
 #
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.32.2\n"
+"Project-Id-Version: gstreamer 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:29+0200\n"
-"PO-Revision-Date: 2011-04-26 22:40+0300\n"
+"POT-Creation-Date: 2016-03-01 16:45+0200\n"
+"PO-Revision-Date: 2016-02-21 21:02+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
-"Language-Team: Bulgarian <dict@fsa-bg.org>\n"
+"Language-Team: Bulgarian <dict@ludost.net>\n"
 "Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -27,11 +29,10 @@ msgstr "Всички предупреждения да са фатални"
 msgid "Print available debug categories and exit"
 msgstr "Отпечатване на наличните категории за изчистване на грешки и изход"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Стандартното ниво за изчистване на грешки — от 1 (само грешки) до 5 (всичко) "
+"Стандартното ниво за изчистване на грешки — от 1 (само грешки) до 9 (всичко) "
 "или 0 — без никакви съобщения за изчистване на грешки"
 
 msgid "LEVEL"
@@ -55,6 +56,9 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Смяна на режима на оцветяване на съобщенията за изчистване на грешки. "
+"Възможните стойности са: „off“ (изключване), „on“ (включване), "
+"„disable“ (спиране), „auto“ (автоматично), „unix“ (стандартно за unix)"
 
 msgid "Disable debugging"
 msgstr "Спиране на съобщенията за изчистване на грешки"
@@ -124,7 +128,6 @@ msgstr "Вътрешна грешка на GStreamer: проблем в допъ
 msgid "Internal GStreamer error: thread problem."
 msgstr "Вътрешна грешка на GStreamer: проблем с нишките."
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
 msgstr "Вътрешна грешка на GStreamer: проблем с договарянето."
 
@@ -143,9 +146,8 @@ msgstr "Вътрешна грешка на GStreamer: проблем с етик
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Липсва необходима приставка в тази инсталация на GStreamer"
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Вътрешна грешка на GStreamer: проблем с часовника."
+msgstr "Грешка на GStreamer: проблем с часовника."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -208,9 +210,8 @@ msgstr "Не може да се получи/зададе настройка о�
 msgid "No space left on the resource."
 msgstr "Върху ресурса не е останало свободно място."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "Върху ресурса не е останало свободно място."
+msgstr "Няма права за достъп до ресурса."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer получи обща грешка в потока от данни."
@@ -267,7 +268,7 @@ msgstr "Избраният часовник не може да се използ
 
 #, c-format
 msgid "Error writing registry cache to %s: %s"
-msgstr ""
+msgstr "Грешка при запазване на кеша на регистъра в „%s“: %s"
 
 msgid "title"
 msgstr "заглавие"
@@ -387,7 +388,7 @@ msgid "homepage"
 msgstr "сайт"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr "Страница в Интернет за тази медия (напр. сайт на изпълнител/филм)"
+msgstr "Страница в Интернет за тази медия (напр. сайт на изпълнител или филм)"
 
 msgid "description"
 msgstr "описание"
@@ -457,6 +458,12 @@ msgstr "композитор"
 
 msgid "person(s) who composed the recording"
 msgstr "композитор/и на записа"
+
+msgid "conductor"
+msgstr ""
+
+msgid "conductor/performer refinement"
+msgstr ""
 
 msgid "duration"
 msgstr "продължителност"
@@ -569,16 +576,14 @@ msgstr "еталонно ниво на усилването на песните 
 msgid "language code"
 msgstr "езиков код"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "езиковият код на този поток според ISO-639-1"
+msgstr "езиковият код на този поток според ISO-639-1 или ISO-639-2"
 
-#, fuzzy
 msgid "language name"
-msgstr "езиков код"
+msgstr "име на езика"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "свободно име на езика на потока"
 
 msgid "image"
 msgstr "изображение"
@@ -620,14 +625,14 @@ msgid ""
 msgstr "разбираемо описание на мястото на запис или създаване на медията"
 
 msgid "geo location latitude"
-msgstr "географска широчина"
+msgstr "географска ширина"
 
 msgid ""
 "geo latitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the equator, negative values for "
 "southern latitudes)"
 msgstr ""
-"географска широчина на мястото на запис или създаване на медията в градуси "
+"географска ширина на мястото на запис или създаване на медията в градуси "
 "според WGS84 (0 при екватора, отрицателна в южното полукълбо)"
 
 msgid "geo location longitude"
@@ -667,11 +672,10 @@ msgstr "град на запис или създаване на медията (
 msgid "geo location sublocation"
 msgstr "квартал по координати"
 
-#, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
-msgstr "квартал в града на запис или създаване на медията"
+msgstr "място в града на запис или създаване на медията (напр. квартал)"
 
 msgid "geo location horizontal error"
 msgstr "хоризонтална грешка по координати"
@@ -716,7 +720,7 @@ msgstr "име на шоу"
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
-"Името телевизионно или Интернет шоу, поредица от серии, от което е медията"
+"Името на телевизионно или Интернет шоу, поредица от серии, от което е медията"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 msgid "show sortname"
@@ -725,8 +729,8 @@ msgstr "име на шоу за подреждане"
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
-"Името телевизионно или Интернет шоу, поредица от серии, от което е медията, "
-"ползва се при подреждане"
+"Името на телевизионно или Интернет шоу, поредица от серии, от което е "
+"медията, ползва се при подреждане"
 
 msgid "episode number"
 msgstr "номер на епизода"
@@ -802,39 +806,39 @@ msgid "How the image should be rotated or flipped before display"
 msgstr "Как да се завърти изображението при показване"
 
 msgid "publisher"
-msgstr ""
+msgstr "издател"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Името на издателя или издателската къща"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "интерпретирано от"
 
 msgid "Information about the people behind a remix and similar interpretations"
-msgstr ""
+msgstr "Информация за хората създали ремикс или друга интерпретация"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "нота за midi"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Номер на нотата по Midi за песента"
 
 msgid "private-data"
-msgstr ""
+msgstr "собствени данни"
 
 msgid "Private data"
-msgstr ""
+msgstr "Собствени данни"
 
 msgid ", "
 msgstr ", "
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "Няма модул за обработка на протокола „%s“"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "Схемата „%s“ в адреса не се поддържа"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -850,11 +854,11 @@ msgstr ""
 
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "връзка без източник [sink=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "връзка без приемник [source=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -865,7 +869,7 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "свойството „%s“ на елемента „%s“ не може да се зададе да е „%s“"
 
 msgid "Delayed linking failed."
-msgstr ""
+msgstr "Неуспешно отложено свързване."
 
 #, c-format
 msgid "could not link %s to %s"
@@ -877,11 +881,11 @@ msgstr "елементът „%s“ липсва"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "неочакван указател „%s“ — прескача се"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "неочакван указател за допълване „%s“ — прескача се"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -896,18 +900,18 @@ msgid "no source element for URI \"%s\""
 msgstr "няма елемент-източник за адрес „%s“"
 
 msgid "syntax error"
-msgstr ""
+msgstr "синтактична грешка"
 
 msgid "bin"
-msgstr ""
+msgstr "резервоар"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "указан е празен резервоар „%s“, това е забранено"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "няма резервоар на име „%s“, пропуска се"
+msgstr "няма резервоар на име „%s“, елементите се разпакетират"
 
 msgid "empty pipeline not allowed"
 msgstr "не е позволен празен конвейер"
@@ -928,7 +932,7 @@ msgid "Internal clock error."
 msgstr "Вътрешна грешка на часовника."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Неуспешно поместване на буфера в паметта."
 
 msgid "Filter caps"
 msgstr "Възможности на филтър"
@@ -941,10 +945,10 @@ msgstr ""
 "Задаването на това свойство поема указател към подадения обект GstCaps."
 
 msgid "Caps Change Mode"
-msgstr ""
+msgstr "Режим на смяна на възможностите"
 
 msgid "Filter caps change behaviour"
-msgstr ""
+msgstr "Филтриране на поведението на смяна на възможностите"
 
 msgid "No Temp directory specified."
 msgstr "Не е указана временна папка"
@@ -1012,9 +1016,8 @@ msgstr "принудително прилагане на възможности"
 msgid "force caps without doing a typefind"
 msgstr "принудително прилагане на възможности без търсене на видовете"
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
-msgstr "Потокът не съдържа никакви данни"
+msgstr "Потокът не съдържа достатъчно данни."
 
 msgid "Stream contains no data."
 msgstr "Потокът не съдържа никакви данни"
@@ -1029,7 +1032,7 @@ msgid "writable"
 msgstr "с права за запис"
 
 msgid "deprecated"
-msgstr ""
+msgstr "изоставен"
 
 msgid "controllable"
 msgstr "може да се контролира"
@@ -1099,16 +1102,18 @@ msgid "List the plugin contents"
 msgstr "Отпечатване на съдържанието на приставките"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Проверка дали избраният елемент или приставка съществуват"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"При проверката за съществуване на елемент или приставка да се проверява дали "
+"версията е минимум указаната"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
-"Отпечатване на поддържаните схеми за URI, както и елементите с тяхна "
+"Отпечатване на поддържаните схеми за адреси URI, както и елементите с тяхна "
 "реализация"
 
 #, c-format
@@ -1157,17 +1162,16 @@ msgstr "ОТКРИТ ЕТИКЕТ      : открит около обект „%
 msgid "FOUND TAG\n"
 msgstr "ОТКРИТ ЕТИКЕТ\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "ОТКРИТ ЕТИКЕТ      : открит около елемент „%s“.\n"
+msgstr "ОТКРИТО СЪДЪРЖАНИЕ : открито около елемент „%s“.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "ОТКРИТ ЕТИКЕТ      : открит около обект „%s“.\n"
+msgstr "ОТКРИТО СЪДЪРЖАНИЕ : открито около обект „%s“.\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "ОТКРИТ ЕТИКЕТ\n"
+msgstr "ОТКРИТО СЪДЪРЖАНИЕ\n"
 
 #, c-format
 msgid ""
@@ -1184,9 +1188,8 @@ msgstr "ПРЕДУПРЕЖДЕНИЕ: от елемент %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Буфериран, изчаква се завършването на буферирането…\n"
 
-#, fuzzy
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Буфериран, изчаква се завършването на буферирането…\n"
+msgstr "Буфериран, изчаква се завършването…\n"
 
 msgid "buffering..."
 msgstr "буфериране…"
@@ -1209,27 +1212,27 @@ msgstr "Прекъсване: Конвейерът се спира…\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "Напредък: (%s) %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "елементът „%s“ липсва"
+msgstr "Липсващ елемент: „%s“\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "ПРЕДУПРЕЖДЕНИЕ: от елемент %s: %s\n"
+msgstr "Получен е контекст от елемента „%s“: %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
-msgstr "Изходни съобщения за етикетите (метаданните)"
+msgstr "Извеждане на етикетите (метаданните)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "Извеждане на съдържанието (глави и издания)"
 
 msgid "Output status information and property notifications"
-msgstr "Да се дават изходни съобщения за състоянието и промяната на свойства"
+msgstr "Извеждане на съобщения за състоянието и промяната на свойства"
 
 msgid "Do not print any progress information"
-msgstr "Да не се отпечатва информация за напредъка"
+msgstr "Да не се извежда информация за напредъка"
 
 msgid "Output messages"
 msgstr "Изходни съобщения"
@@ -1238,9 +1241,11 @@ msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
+"Без извеждане на информацията за състоянието на указаното свойство, ако е "
+"включен подробния изход (може да се ползва много пъти)"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "ИМЕ-НА-СВОЙСТВО"
 
 msgid "Do not install a fault handler"
 msgstr "Да не се инсталира модул за обработка на грешки"
@@ -1293,9 +1298,8 @@ msgstr "ГРЕШКА: конвейерът не иска да проработи
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "Включен е EOS при спиране — извеждане на EOS по конвейера\n"
 
-#, fuzzy
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "Включен е EOS при спиране — извеждане на EOS по конвейера\n"
+msgstr "Включен е EOS при спиране — извеждане на EOS след грешка\n"
 
 msgid "Waiting for EOS...\n"
 msgstr "Изчакване на EOS…\n"
@@ -1303,9 +1307,8 @@ msgstr "Изчакване на EOS…\n"
 msgid "EOS received - stopping pipeline...\n"
 msgstr "Получен е край на поток: конвейерът се спира…\n"
 
-#, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Прекъсване: Конвейерът се спира…\n"
+msgstr "Прекъсване при изчакване: конвейерът се спира…\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Възникна грешка при изчакването на EOS\n"
@@ -1321,57 +1324,3 @@ msgstr "Конвейерът се ЗАНУЛЯВА…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Конвейерът се освобождава…\n"
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Да не се дават изходни съобщения от следните ВИДове за състоянието "
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "ВИД1,ВИД2,…"
-
-#~ msgid "link without source element"
-#~ msgstr "връзка без елемент-източник"
-
-#~ msgid "link without sink element"
-#~ msgstr "връзка без елемент-приемник"
-
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "няма елемент-връзка от адрес „%s“ към"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "не може да се свърже елемент-приемник към адрес „%s“"
-
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr ""
-#~ "Отпечатване на заделянето на памет (ако е било включено при компилиране "
-#~ "на програмата)"
-
-#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr ""
-#~ "Употреба: gst-xmllaunch <файл.xml> [ елемент.свойство=стойност … ]\n"
-
-#~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "ГРЕШКА: файлът с xml „%s“ не може да бъде анализиран.\n"
-
-#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr "ГРЕШКА: няма най-горен елемент за конвейер във файла „%s“.\n"
-
-#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
-#~ msgstr "ПРЕДУПРЕЖДЕНИЕ: засега е позволен само един най-горен елемент.\n"
-
-#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr ""
-#~ "ГРЕШКА: аргументът подаден на командния ред не може да бъде анализиран "
-#~ "%d: %s.\n"
-
-#~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "ПРЕДУПРЕЖДЕНИЕ: елементът на име „%s“ не е открит.\n"
-
-#~ msgid "Save xml representation of pipeline to FILE and exit"
-#~ msgstr "Запазване на конвейера във вид на XML във ФАЙЛа и изход"
-
-#~ msgid "FILE"
-#~ msgstr "ФАЙЛ"
-
-#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr ""
-#~ "Да не се включват функции за обработка на сигналите SIGUSR1 и SIGUSR2"

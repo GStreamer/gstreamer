@@ -8,10 +8,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.1\n"
+"Project-Id-Version: gstreamer 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:29+0200\n"
-"PO-Revision-Date: 2015-12-27 02:13+0100\n"
+"POT-Creation-Date: 2016-03-01 16:45+0200\n"
+"PO-Revision-Date: 2016-02-20 16:17+0100\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -458,6 +458,12 @@ msgstr "compositeur"
 msgid "person(s) who composed the recording"
 msgstr "personne(s) qui a/ont composé l’enregistrement"
 
+msgid "conductor"
+msgstr ""
+
+msgid "conductor/performer refinement"
+msgstr ""
+
 msgid "duration"
 msgstr "durée"
 
@@ -871,7 +877,7 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "impossible de définir la propriété « %s » de l’élément « %s » à « %s »"
 
 msgid "Delayed linking failed."
-msgstr ""
+msgstr "Échec du chargement dynamique différé."
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1019,7 +1025,6 @@ msgstr "forcer les capacités"
 msgid "force caps without doing a typefind"
 msgstr "force les capacités sans faire de recherche de type"
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
 msgstr "Le flux ne contient pas assez de données."
 

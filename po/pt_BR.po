@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:29+0200\n"
+"POT-Creation-Date: 2016-03-01 16:45+0200\n"
 "PO-Revision-Date: 2015-12-28 20:54-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
@@ -468,6 +468,12 @@ msgstr "compositor"
 
 msgid "person(s) who composed the recording"
 msgstr "pessoa(s) que compôs(useram) a gravação"
+
+msgid "conductor"
+msgstr ""
+
+msgid "conductor/performer refinement"
+msgstr ""
 
 msgid "duration"
 msgstr "duração"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:29+0200\n"
+"POT-Creation-Date: 2016-03-01 16:45+0200\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -472,6 +472,12 @@ msgstr ""
 #, fuzzy
 msgid "person(s) who composed the recording"
 msgstr "personi(at) përgjegjës për regjistrimin"
+
+msgid "conductor"
+msgstr ""
+
+msgid "conductor/performer refinement"
+msgstr ""
 
 msgid "duration"
 msgstr "kohëzgjatja"

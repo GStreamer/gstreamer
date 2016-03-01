@@ -1,13 +1,13 @@
 # Polish translation for gstreamer.
 # This file is distributed under the same license as the gstreamer package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2015.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.1\n"
+"Project-Id-Version: gstreamer 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:29+0200\n"
-"PO-Revision-Date: 2015-12-24 23:07+0100\n"
+"POT-Creation-Date: 2016-03-01 16:45+0200\n"
+"PO-Revision-Date: 2016-02-20 21:41+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -453,6 +453,12 @@ msgstr "kompozytor"
 msgid "person(s) who composed the recording"
 msgstr "osoba lub osoby, które skomponowały to nagranie"
 
+msgid "conductor"
+msgstr ""
+
+msgid "conductor/performer refinement"
+msgstr ""
+
 msgid "duration"
 msgstr "czas trwania"
 
@@ -866,7 +872,7 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "nie udało się ustawić właściwości \"%s\" w elemencie \"%s\" na \"%s\""
 
 msgid "Delayed linking failed."
-msgstr ""
+msgstr "Opóźnione dowiązanie nie powiodło się."
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1013,7 +1019,6 @@ msgstr "wymuszenie możliwości"
 msgid "force caps without doing a typefind"
 msgstr "wymuszenie możliwości bez sprawdzania"
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
 msgstr "Strumień nie zawiera wystarczająco dużo danych."
 
