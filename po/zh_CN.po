@@ -5,17 +5,17 @@
 # Tianze Wang <zwpwjwtz@126.com>, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.7.1\n"
+"Project-Id-Version: gst-plugins-base 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:30+0200\n"
-"PO-Revision-Date: 2015-12-25 11:26+0800\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-21 16:57+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.8.5\n"
+"X-Generator: Poedit 1.8.7\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "无法在单声道模式打开设备播放。"
@@ -550,8 +550,14 @@ msgstr "q 或 ESC"
 msgid "quit"
 msgstr "退出"
 
+msgid "> or n"
+msgstr ""
+
 msgid "play next"
 msgstr "下一曲"
+
+msgid "< or b"
+msgstr ""
 
 msgid "play previous"
 msgstr "上一曲"
@@ -599,10 +605,10 @@ msgid "Interactive mode - keyboard controls:"
 msgstr "交互模式 - 键盘控制："
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "输出状态信息和属性通知"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
-msgstr ""
+msgstr "控制回放行为设置中 playbin 的“flags”属性"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "要使用的视频接收组件（默认为autovideosink）"

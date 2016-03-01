@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.5.2\n"
+"Project-Id-Version: gst-plugins-base 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:30+0200\n"
-"PO-Revision-Date: 2015-07-12 23:00+0100\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-22 23:44+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.7.5\n"
+"X-Generator: Poedit 1.8.7\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Gerät konnte nicht zur Wiedergabe in Mono geöffnet werden."
@@ -566,8 +566,14 @@ msgstr "q oder ESC"
 msgid "quit"
 msgstr "Beenden"
 
+msgid "> or n"
+msgstr ""
+
 msgid "play next"
 msgstr "Nächsten wiedergeben"
+
+msgid "< or b"
+msgstr ""
 
 msgid "play previous"
 msgstr "Vorherigen wiedergeben"
@@ -606,7 +612,7 @@ msgid "change subtitle track"
 msgstr "Untertitel wechseln"
 
 msgid "seek to beginning"
-msgstr ""
+msgstr "An den Anfang springen"
 
 msgid "show keyboard shortcuts"
 msgstr "Tastenkombinationen anzeigen"
@@ -615,10 +621,10 @@ msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktiver Modus - Tastatursteuerung:"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Zustandsinformation und Eigenschaftsmitteilungen ausgeben"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
-msgstr ""
+msgstr "Steuerung der Wiedergabe mittels der playbin-Eigenschaft »flags«"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Zu verwendende Video-Ziel (Voreinstellung ist »autovideosink«)"

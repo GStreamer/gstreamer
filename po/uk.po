@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012, 2013, 2014, 2015.
+# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012, 2013, 2014, 2015, 2016.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.7.1\n"
+"Project-Id-Version: gst-plugins-base 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:30+0200\n"
-"PO-Revision-Date: 2015-12-25 07:16+0200\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-20 17:29+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -575,8 +575,14 @@ msgstr "q або ESC"
 msgid "quit"
 msgstr "вийти"
 
+msgid "> or n"
+msgstr ""
+
 msgid "play next"
 msgstr "наступна"
+
+msgid "< or b"
+msgstr ""
 
 msgid "play previous"
 msgstr "попередня"
@@ -624,10 +630,11 @@ msgid "Interactive mode - keyboard controls:"
 msgstr "Інтерактивне керування за допомогою клавіатури:"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Виводити дані щодо стану та сповіщення щодо властивостей"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr ""
+"Керувати параметром поведінки відтворення встановленням властивості «flags»"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Приймач відеоданих, яким слід скористатися (типовим є autovideosink)"

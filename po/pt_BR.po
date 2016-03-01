@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:30+0200\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
 "PO-Revision-Date: 2015-12-28 18:04-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
@@ -572,8 +572,14 @@ msgstr "q ou ESC"
 msgid "quit"
 msgstr "sair"
 
+msgid "> or n"
+msgstr ""
+
 msgid "play next"
 msgstr "reproduzir próxima"
+
+msgid "< or b"
+msgstr ""
 
 msgid "play previous"
 msgstr "reproduzir anterior"

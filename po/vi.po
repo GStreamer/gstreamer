@@ -1,16 +1,16 @@
 # Vietnamese Translation for GST Plugins Base.
 # Bản dịch tiếng Việt dành cho GST Plugins Base.
-# Copyright © 2015 Free Software Foundation, Inc.
+# Copyright © 2016 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
-# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2014, 2015.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2014, 2015, 2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.7.1\n"
+"Project-Id-Version: gst-plugins-base 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:30+0200\n"
-"PO-Revision-Date: 2015-12-25 07:21+0700\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-21 07:33+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
@@ -565,8 +565,14 @@ msgstr "q hay ESC"
 msgid "quit"
 msgstr "thoát"
 
+msgid "> or n"
+msgstr ""
+
 msgid "play next"
 msgstr "phát kế"
+
+msgid "< or b"
+msgstr ""
 
 msgid "play previous"
 msgstr "phát kế trước"
@@ -614,10 +620,10 @@ msgid "Interactive mode - keyboard controls:"
 msgstr "Chế độ tương tác - điều khiển thông qua bàn phím:"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Thông tin trạng thái xuất và các thông báo thuộc tính"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
-msgstr ""
+msgstr "Cài đặt ứng xử điều khiển phát lại phát thuộc tính “flags”"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Bộ chứa video được dùng (mặc định là autovideosink)"

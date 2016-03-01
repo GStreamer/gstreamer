@@ -4,14 +4,14 @@
 #
 # Miloslav Trmac <mitr@volny.cz>, 2004.
 # Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009, 2010, 2011.
-# Marek Černocký <marek@manet.cz>, 2013, 2014, 2015.
+# Marek Černocký <marek@manet.cz>, 2013, 2014, 2015, 2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.7.1\n"
+"Project-Id-Version: gst-plugins-base-1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:30+0200\n"
-"PO-Revision-Date: 2015-12-24 22:31+0100\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-27 16:39+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -563,8 +563,14 @@ msgstr "q nebo ESC"
 msgid "quit"
 msgstr "ukončit"
 
+msgid "> or n"
+msgstr ""
+
 msgid "play next"
 msgstr "přehrát následující"
+
+msgid "< or b"
+msgstr ""
 
 msgid "play previous"
 msgstr "přehrát předchozí"
@@ -612,10 +618,11 @@ msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktivní režim – ovládání klávesnicí:"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Vypsat upozornění na vlastnosti a stavové informace"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr ""
+"Vlastnost „flags“ nastavení chování pro ovládání přehrávání u prvku playbin"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Spotřebič videa, který se má použít (výchozí je autovideosink)"

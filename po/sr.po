@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.7.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:30+0200\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
 "PO-Revision-Date: 2015-12-26 19:57+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -557,8 +557,14 @@ msgstr "ку или ЕСК"
 msgid "quit"
 msgstr "излази"
 
+msgid "> or n"
+msgstr ""
+
 msgid "play next"
 msgstr "пушта следеће"
+
+msgid "< or b"
+msgstr ""
 
 msgid "play previous"
 msgstr "пушта претходно"

@@ -3,13 +3,13 @@
 #
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015.
+# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.7.1\n"
+"Project-Id-Version: gst-plugins-base 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:30+0200\n"
-"PO-Revision-Date: 2015-12-25 19:13+0300\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-21 10:02+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -563,8 +563,14 @@ msgstr "q или ESC"
 msgid "quit"
 msgstr "выход"
 
+msgid "> or n"
+msgstr ""
+
 msgid "play next"
 msgstr "воспроизвести следующее"
+
+msgid "< or b"
+msgstr ""
 
 msgid "play previous"
 msgstr "воспроизвести предыдущее"
@@ -612,10 +618,11 @@ msgid "Interactive mode - keyboard controls:"
 msgstr "Интерактивный режим — управление с клавиатуры:"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Выводить информацию о состоянии и уведомления о свойствах"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr ""
+"Управлять настройкой поведения воспроизведения playbin через свойство «flags»"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Используемый приёмник видео (по умолчанию autovideosink)"

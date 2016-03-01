@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.5.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:30+0200\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
 "PO-Revision-Date: 2015-06-30 13:34+0200\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -560,8 +560,14 @@ msgstr "q vagy ESC"
 msgid "quit"
 msgstr "kilépés"
 
+msgid "> or n"
+msgstr ""
+
 msgid "play next"
 msgstr "következő lejátszása"
+
+msgid "< or b"
+msgstr ""
 
 msgid "play previous"
 msgstr "előző lejátszása"

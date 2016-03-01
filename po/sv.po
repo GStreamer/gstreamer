@@ -1,23 +1,23 @@
 # Swedish messages for gst-plugins-base.
-# Copyright (C) 2004-2015 Free Software Foundation, Inc.
+# Copyright © 2004-2016 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Christian Rose <menthos@menthos.com>, 2004.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009.
-# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.7.1\n"
+"Project-Id-Version: gst-plugins-base 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-02-19 10:30+0200\n"
-"PO-Revision-Date: 2015-12-25 01:11+0100\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-02-20 17:51+0100\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.8.6\n"
+"X-Generator: Poedit 1.8.7\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunde inte öppna enheten för uppspelning i monoläge."
@@ -558,8 +558,14 @@ msgstr "q eller ESC"
 msgid "quit"
 msgstr "avsluta"
 
+msgid "> or n"
+msgstr ""
+
 msgid "play next"
 msgstr "spela nästa"
+
+msgid "< or b"
+msgstr ""
 
 msgid "play previous"
 msgstr "spela föregående"
@@ -607,10 +613,11 @@ msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktivt läge: tangentbordsstyrning:"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Mata ut statusinformation och egenskapsaviseringar"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr ""
+"Styr uppspelningsbeteende genom att ställa in playbins egenskap ”flags”"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Videoutgång som ska användas (standard är autovideosink)"
