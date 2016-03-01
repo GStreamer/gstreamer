@@ -37,7 +37,7 @@ typedef struct _GstChecksumSinkClass GstChecksumSinkClass;
 struct _GstChecksumSink
 {
   GstBaseSink base_checksumsink;
-
+  GChecksumType hash;
 };
 
 struct _GstChecksumSinkClass
