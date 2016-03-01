@@ -114,6 +114,10 @@ AG_GST_ARG_DEBUG
 
 AG_GST_ARG_WITH_PKG_CONFIG_PATH
 
+AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
+  ["${srcdir}/gstreamer-vaapi.doap"],
+  [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
+
 AC_ARG_ENABLE([encoders],
   AS_HELP_STRING([--enable-encoders],
     [enable video encoders @<:@default=yes@:>@]),
