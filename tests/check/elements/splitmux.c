@@ -216,16 +216,46 @@ GST_START_TEST (test_splitmuxsink)
 
 GST_END_TEST;
 
+/* For verifying bug https://bugzilla.gnome.org/show_bug.cgi?id=762893 */
+GST_START_TEST (test_splitmuxsink_reuse_simple)
+{
+  GstElement *sink;
+  GstPad *pad;
+
+  sink = gst_element_factory_make ("splitmuxsink", NULL);
+  pad = gst_element_get_request_pad (sink, "video");
+  fail_unless (pad != NULL);
+  g_object_set (sink, "location", "/dev/null", NULL);
+
+  fail_unless (gst_element_set_state (sink,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_ASYNC);
+  fail_unless (gst_element_set_state (sink,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (gst_element_set_state (sink,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_ASYNC);
+  fail_unless (gst_element_set_state (sink,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+
+  gst_element_release_request_pad (sink, pad);
+  gst_object_unref (pad);
+  gst_object_unref (sink);
+}
+
+GST_END_TEST;
+
 static Suite *
 splitmux_suite (void)
 {
   Suite *s = suite_create ("splitmux");
   TCase *tc_chain = tcase_create ("general");
+  TCase *tc_chain_basic = tcase_create ("basic");
 
   suite_add_tcase (s, tc_chain);
+  suite_add_tcase (s, tc_chain_basic);
+
+  tcase_add_test (tc_chain_basic, test_splitmuxsink_reuse_simple);
 
   tcase_add_checked_fixture (tc_chain, tempdir_setup, tempdir_cleanup);
-
   tcase_add_test (tc_chain, test_splitmuxsrc);
   tcase_add_test (tc_chain, test_splitmuxsink);
 
