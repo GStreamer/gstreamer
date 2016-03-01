@@ -1,9 +1,584 @@
-=== release 1.6.0 ===
+=== release 1.7.90 ===
 
-2015-09-25  Thibault Saunier <tsaunier@gnome.org>
+2016-03-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.6.0
+	  releasing 1.7.90
+
+2016-03-01 14:59:29 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Strip os.pathsep from extra env variables
+	  We might be working with something that is not a path
+
+2016-02-29 15:55:47 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate: Add a missing new line to media info files
+
+2016-02-23 12:15:21 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: Fix build
+
+2016-02-23 11:29:56 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate:launcher: Add a way to fail if test have been removed/added
+
+2016-01-22 20:55:27 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-override.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/media-descriptor.c:
+	  validate: Fix annotations
+	  Skipping all functions and methods that are not relevant and not easily
+	  introspectable
+	  Differential Revision: https://phabricator.freedesktop.org/D706
+
+2016-01-22 20:45:01 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate: Remove unimplemented function
+	  Differential Revision: https://phabricator.freedesktop.org/D705
+
+2016-01-22 20:14:16 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.h:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	* validate/gst/validate/media-descriptor-parser.c:
+	* validate/gst/validate/media-descriptor-parser.h:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/gst/validate/media-descriptor-writer.h:
+	* validate/gst/validate/media-descriptor.c:
+	* validate/gst/validate/media-descriptor.h:
+	* validate/tests/check/validate/padmonitor.c:
+	* validate/tools/gst-validate-media-check.c:
+	* validate/tools/gst-validate.c:
+	  validate: Namespace all our structures and objects
+	  Making GI a bit happier.
+	  Those are not stable API anyway...
+	  Differential Revision: https://phabricator.freedesktop.org/D704
+
+2016-01-22 19:50:15 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/media-descriptor-parser.c:
+	* validate/gst/validate/media-descriptor-parser.h:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/gst/validate/media-descriptor-writer.h:
+	* validate/gst/validate/media-descriptor.h:
+	* validate/gst/validate/validate.c:
+	  validate: Misc annotation and gi friendly cleanups
+	  Differential Revision: https://phabricator.freedesktop.org/D703
+
+2016-01-22 19:38:53 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-monitor-factory.c:
+	  validate: Guarantee that we never create 2 monitors for the same object
+	  Differential Revision: https://phabricator.freedesktop.org/D702
+
+2015-10-24 09:28:51 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/configure.ac:
+	* validate/gst/Makefile.am:
+	* validate/gst/preload/Makefile.am:
+	* validate/gst/preload/gst-validate-monitor-preload.c:
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-runner.h:
+	* validate/gst/validate/validate.c:
+	* validate/plugins/fault_injection/Makefile.am:
+	* validate/plugins/gapplication/Makefile.am:
+	* validate/plugins/gtk/Makefile.am:
+	* validate/plugins/ssim/Makefile.am:
+	* validate/tests/check/validate/monitoring.c:
+	* validate/tests/check/validate/overrides.c:
+	* validate/tests/check/validate/padmonitor.c:
+	* validate/tests/check/validate/reporting.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Turn GstValidateRunner into a GstTracer
+	  This way we do not need the LD_PRELOAD hack anymore
+	  Add a new libgstvalidateplugin GStreamer plugin, making sure it shares
+	  the exact same code as the library (exposing only the wanted symbols).
+	  Fix the way we set where to install GstValidate plugins
+	  Try to keep backward compatibility even if tracers should never be instantiated
+	  after an GstElement has been instantiated.
+	  Differential Revision: https://phabricator.freedesktop.org/D459
+
+2016-01-22 12:58:31 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-reporter.c:
+	  reporter: Properly reset g_log handler when reporter is destroyed
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D699
+
+2016-01-19 11:10:49 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/validate.c:
+	  validate: Make _deinit thread safe
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D698
+
+2015-10-08 10:19:39 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: handle spaces in transcode output path
+	  When there are spaces in transcoding output path, then it fails. Hence adding the
+	  path in double quotes
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756217
+
+2015-11-12 09:04:01 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Add proper check for is_seekable
+	  The seekable variable in media_info file is of type string. When checking if the file
+	  is seekable using is_seekable, it just returns the string, resulting in it always being true.
+	  It should actually be comparing the string and returning true or false based on comparison
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755854
+
+2015-08-27 11:16:39 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/data/scenarios/fast_forward.scenario:
+	  validate: fast_forward: Calculate proper playback-time for scenario
+	  In case of fast-forward scenario, the playback-time is not set properly
+	  as per increase in the rate. This is resulting in short media files of duration
+	  less that 15 seconds to fail.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754151
+
+2016-01-28 14:59:08 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* codecanalyzer/src/gst_analyzer.h:
+	  codecanalyzer: fix typo leading to implicit decl warning at build-time
+
+2016-01-28 14:48:17 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* codecanalyzer/src/codecanalyzer.c:
+	* codecanalyzer/src/gst_analyzer.c:
+	* codecanalyzer/src/plugins/gst/analyzersink/mpeg_xml.c:
+	* codecanalyzer/src/xml_parse.c:
+	  codecanalyzer: do not use g_error if abort is not desired
+	  Use g_printerr() instead.
+	  g_error() calls abort after outputting the message
+	  so these blocks' return statements and free()s
+	  were unreachable.
+	  Aditionally, fix wrong void returns on non-void
+	  function, drop trailing whitespace before newline and
+	  add \n's as needed (default handler won't add one).
+
+2016-01-28 14:34:37 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* codecanalyzer/src/codecanalyzer.c:
+	* codecanalyzer/src/gst_analyzer.c:
+	  codecanalyzer: add missing includes for g_printf()
+
+2016-01-28 14:25:59 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* codecanalyzer/src/codecanalyzer.c:
+	  codecanalyzer: Update README URL in help dialog
+	  Previous one was a 404
+
+2016-01-28 11:22:15 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* configure:
+	  configure: fix typos
+
+2016-01-21 15:05:52 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: More fixes of previous commit
+	  You'd think in 2016 compilers could complain when assigning/comparing
+	  different types of enums ... *sigh*.
+
+2016-01-20 13:42:31 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/tools/gst-validate.c:
+	  tools: Fix relative track switching
+	  I have no idea where that "-2" came from, but it was obviously wrong.
+	  Just use modulo "total number of streams" to get the proper track id.
+
+2016-01-21 14:23:24 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  validate: Remove debugging left overs
+
+2016-01-21 14:17:40 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	  pad-monitor: Add support for GstPadEventFullFunc
+	  This ensures our sink pad event wrapper is properly called if the
+	  element implement a GstPadEventFullFunc instead of a regular one.
+	  Removes all stray "buffer received before segment" issues with
+	  queue/multiqueue
+
+2016-01-21 11:13:55 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tests/check/validate/padmonitor.c:
+	* validate/tests/check/validate/reporting.c:
+	* validate/tests/check/validate/test-utils.c:
+	* validate/tests/check/validate/test-utils.h:
+	  validate: Fix testsuite
+	  Use fake elements instead of real ones in our tests so that
+	  we control exactly the number of issues generated.
+	  Until now we were trying to hide extra issues with a probe dropping
+	  events and buffers but since 2dfa548f3645844082c3db65d96d87255701b3ad
+	  "pad: Append hooks instead of prepending to call them in the order they were added"
+	  in core, hidding will not work.
+
+2016-01-19 11:31:37 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/Makefile.am:
+	  g-i: fix init section to avoid compiler warnings
+
+2016-01-15 20:13:59 +0000  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	  runner: Report criticals when the reporter is in smart mode
+
+2015-11-26 17:08:12 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* validate/gst/validate/media-descriptor-parser.c:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/gst/validate/media-descriptor.c:
+	* validate/gst/validate/media-descriptor.h:
+	  media-descriptor-writer: track running time of buffers
+	  PTS and DTS can be deceiving as a change in segment can dramatically change
+	  playback synchronization. Track the running-time as well to properly
+	  get any change in synchronization
+
+2015-12-10 14:10:54 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* configure:
+	  Add a toplevel configure script to build components at once
+	  And this way respect https://github.com/cgwalters/build-api
+
+2015-11-30 11:54:05 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	* validate/gst/validate/media-descriptor.h:
+	* validate/tools/gst-validate-media-check.c:
+	  media-check: enable 'full' for files which reference are also 'full'
+	  If the reference file has frames information, enable it automatically
+	  so that the comparison file also has frames to be used.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758855
+
+2015-11-27 18:05:23 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/media-descriptor.c:
+	  media-descriptor: check if frame data matches
+	  When comparing media descriptors, also check if the frames
+	  match
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758855
+
+2015-11-26 16:30:20 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* validate/gst/validate/media-descriptor-writer.c:
+	  media-descriptor-writer: refactor getting the streamnode by a pad
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758855
+
+2015-11-26 17:20:20 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* validate/gst/validate/media-descriptor-writer.c:
+	  media-descriptor-writer: remove condition from inside loop
+	  Only enter the loop if it indeed has a change of doing something
+
+2015-11-30 11:00:07 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  docs: fix typo
+	  Retrive -> retrieve
+
+2015-12-02 13:50:02 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Add some documentation and annotiations
+
+2015-12-02 13:49:01 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-enums.h:
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: Add a 'smart' reporting details mode
+	  Making sure to show all informations for critical issues, but be synthetic for others
+
+2015-11-23 17:44:27 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Set the default action execution interval to 10ms
+	  Having a default value of 0 meant that a g_idle_add loop was constantly
+	  running, causing each test to use 100% cpu.
+	  This is no longer required. Using a 10ms interval brings down cpu usage
+	  to a sane value
+
+2015-08-20 16:54:14 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* codecanalyzer/src/codecanalyzer.c:
+	  codecanalyzer: Fix memory leaks when context parse fails
+	  When g_option_context_parse fails, context and error variables are
+	  not getting free'd which results in memory leaks being reported.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753862
+
+2015-08-24 12:30:57 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate: media-descriptor-writer: Don't create media info when stream info is not present.
+	  When a file does not contain any stream info, then there is no need
+	  to create the media info file as, it is not considered to be a valid file
+	  and no validate checks are done for the same.
+	  This skips unnecessary files like .txt, .dump files
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754006
+
+2015-11-16 16:45:13 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/main.py:
+	  validate: launcher: Set scenario manager config before discovering testsuites
+
+2015-10-05 13:38:10 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: launcher: Print error when media-info files not present
+	  When there are no media-info files present and --generate-media-info
+	  option is not given, then it just fails without printing error.
+	  Printing an error stating, use --generate-media-info if there are no
+	  media info files.
+	  When there are neither media files and media info files, print error
+	  stating the same
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755087
+
+2015-08-20 16:51:03 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/tools/gst-validate-images-check.c:
+	* validate/tools/gst-validate-media-check.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Fix memory leaks when context parse fails
+	  When g_option_context_parse fails, context and error variables are not getting free'd
+	  which results in memory leaks. Free'ing the same.
+	  And replacing g_error_free with g_clear_error, which checks if the error being passed
+	  is not NULL and sets the variable to NULL on free'ing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753862
+
+2015-08-05 13:40:52 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/data/gstvalidate.supp:
+	  validate: suppression: suppress 'uninitialised value of size 4' in aacdec
+	  Suppress this error, until the logic in libav is fixed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753268
+
+2015-11-10 17:43:54 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate: Implement support to run tests inside gdb
+	  Making debugging races leading to crashes easier to debug
+
+2015-11-10 15:14:49 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/docs/validate/gst-validate-transcoding.xml:
+	  validate: Minor documentation fix
+
+2015-11-08 01:37:14 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/docs/validate/gst-validate-transcoding.xml:
+	  validate: Remove 0.10 caps reference from the documentation
+
+2015-10-29 14:53:53 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate: Handle setting several scenarios
+	  The user might have scenarios specific to a particular pipeline, and the
+	  application might have several pipelines running and scenarios that
+	  apply on specific pipeline. We have to handle that valid use case.
+
+2015-10-27 15:51:44 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Un-blacklist seeking HLS tests
+	  They are reliable enough after 36b80edb7263118467dfcaee3923f7c964ae6bc8
+	  in gst-plugins-base now.
+
+2015-10-26 15:35:42 +0100  Wonchul Lee <wonchul.lee@collabora.co.uk>
+
+	* validate/gst/validate/Makefile.am:
+	  validate: Add missing gir include path
+	  Add missing gir include path for building with gst-uninstalled script
+	  Differential Revision: https://phabricator.freedesktop.org/D461
+
+2015-10-08 09:58:25 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  validate-transcoding: trivial patch to change error from 0.10 to 1.0
+	  While printing error in transcoding, gst-validate-transcoding-0.10 is being used.
+	  Changing the same to 1.0
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756215
+
+2015-10-14 11:56:56 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	  validate: Add support for prores
+
+2015-10-10 10:51:10 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: fix double free
+	  Summary:
+	  Move variable declarations in the for block so we won't try re-free
+	  tldir in case of early short circuiting of the 'for' code.
+	  Depends on D348
+	  Reviewers: thiblahute
+	  Reviewed By: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D349
+
+2015-10-10 10:50:58 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: fix loading of full path scenario
+	  Summary:
+	  We were checking if the path was a full one but was using the
+	  scenario_name instead of this path when trying to load the scenario.
+	  Depends on D346
+	  Reviewers: thiblahute
+	  Reviewed By: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D348
+
+2015-10-10 10:47:40 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* .arcconfig:
+	  Update .arcconfig
+
+2015-07-27 08:46:01 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: throw valgrind error only for definite loss
+	  errors-for-leak-kinds should be set to definite, because almost every test case
+	  , will have possibly lost memory, which may or may not be a leak.
+	  And throwing error for all these cases doesn't seem to be correct.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752754
+
+2015-08-07 21:38:20 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  validate: launcher: Fix media_check class name and add double quotes for valgrind logs
+	  When creating the class names for media check, uri is being used,
+	  instead of the path. Hence converting the uri using uri2path and creating
+	  class name.
+	  Add double quotes for valgrind logs, to support special characters like space
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752808
+
+2015-08-17 10:40:22 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/tools/gst-validate-media-check.c:
+	  validate: media-check: Pass NULL instead of GError if not using it
+	  If not using the GError being passed on to media descriptor, writer and parser,
+	  simply pass NULL instead of GError.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753340
+
+2015-08-17 10:31:33 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate: descriptor-writer: Handle NULL GError address and free GError during error cases
+	  writer_new_discover() API should be able to accept NULL GError and in case of
+	  error, if GError is passed on as parameter, it should be propagated, else it
+	  should be free'd.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753340
+
+2015-08-11 10:05:41 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/tools/gst-validate-images-check.c:
+	* validate/tools/gst-validate-media-check.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate:tools: set locale to all and change argument to FILENAME
+	  When file name consists of characters from other languages, say korean,
+	  then it throws an error
+	  Error initializing: Invalid byte sequence in conversion input
+	  Hence setting locale to all to fix this.
+	  And changing the media-info argument to type G_OPTION_ARG_FILENAME
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753486
+
+2015-08-24 16:39:15 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/tools/gst-validate-images-check.c:
+	* validate/tools/gst-validate-media-check.c:
+	  validate: Print the return value at the end
+	  Makes it easier to know if the test passed or failed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754013
+
+2015-08-26 10:36:51 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: launcher: Support relative path for folder names
+	  Even though relative paths are supported, right now it does not
+	  work when we give the path as 'media/' present in the current directory.
+	  Adding support for the same.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754100
+
+2015-09-30 18:13:28 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Treat min-media-duration as a float
+
+2015-09-30 15:02:03 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/scenarios/switch_audio_track.scenario:
+	  scenarios: Set min-media-duration on switch_audio_track
+
+2015-09-30 14:55:37 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Add a way to define a timeout for actions execution
+	  Reviewers: Mathieu_Du
+	  Differential Revision: https://phabricator.freedesktop.org/D271
+
+2015-09-26 18:46:05 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validatessim: Stop using deprecated gst_segment_to_position()
+
+2015-09-25 12:51:31 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/configure.ac:
+	  Back to development
+
+=== release 1.6.0 ===
+
+2015-09-25 12:50:13 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.6.0
 
 2015-09-16 17:12:17 +0900  eunhae choi <eunhae1.choi@samsung.com>
 
