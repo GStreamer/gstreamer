@@ -1005,13 +1005,16 @@ static GstCaps *
 gst_vaapidecode_sink_getcaps (GstVideoDecoder * vdec, GstCaps * filter)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
+  GstCaps *tmp, *caps = NULL;
 
   if (decode->allowed_caps)
     goto bail;
 
   /* if we haven't a display yet, return our pad's template caps */
-  if (!GST_VAAPI_PLUGIN_BASE_DISPLAY (decode))
-    return gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SINK_PAD (vdec));
+  if (!GST_VAAPI_PLUGIN_BASE_DISPLAY (decode)) {
+    caps = gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SINK_PAD (vdec));
+    goto bail;
+  }
 
   /* if the allowed caps calculation fails, return an empty caps, so
    * the auto-plug can try other decoder */
@@ -1019,7 +1022,16 @@ gst_vaapidecode_sink_getcaps (GstVideoDecoder * vdec, GstCaps * filter)
     return gst_caps_new_empty ();
 
 bail:
-  return gst_caps_ref (decode->allowed_caps);
+  if (!caps)
+    caps = gst_caps_ref (decode->allowed_caps);
+
+  if (filter) {
+    tmp = caps;
+    caps = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+  }
+
+  return caps;
 }
 
 static gboolean
