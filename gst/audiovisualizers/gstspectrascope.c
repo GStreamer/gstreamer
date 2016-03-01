@@ -40,15 +40,17 @@
 
 #include "gstspectrascope.h"
 
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#define RGB_ORDER "xRGB"
+#else
+#define RGB_ORDER "BGRx"
+#endif
+
 static GstStaticPadTemplate gst_spectra_scope_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("xRGB"))
-#else
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("BGRx"))
-#endif
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (RGB_ORDER))
     );
 
 static GstStaticPadTemplate gst_spectra_scope_sink_template =
