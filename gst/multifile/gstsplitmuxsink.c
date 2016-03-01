@@ -1439,42 +1439,43 @@ create_sink (GstSplitMuxSink * splitmux)
 {
   GstElement *provided_sink = NULL;
 
-  g_return_val_if_fail (splitmux->active_sink == NULL, TRUE);
+  if (splitmux->active_sink == NULL) {
 
-  GST_OBJECT_LOCK (splitmux);
-  if (splitmux->provided_sink != NULL)
-    provided_sink = gst_object_ref (splitmux->provided_sink);
-  GST_OBJECT_UNLOCK (splitmux);
+    GST_OBJECT_LOCK (splitmux);
+    if (splitmux->provided_sink != NULL)
+      provided_sink = gst_object_ref (splitmux->provided_sink);
+    GST_OBJECT_UNLOCK (splitmux);
 
-  if (provided_sink == NULL) {
-    if ((splitmux->sink =
-            create_element (splitmux, DEFAULT_SINK, "sink")) == NULL)
-      goto fail;
-    splitmux->active_sink = splitmux->sink;
-  } else {
-    if (!gst_bin_add (GST_BIN (splitmux), provided_sink)) {
-      g_warning ("Could not add sink elements - splitmuxsink will not work");
+    if (provided_sink == NULL) {
+      if ((splitmux->sink =
+              create_element (splitmux, DEFAULT_SINK, "sink")) == NULL)
+        goto fail;
+      splitmux->active_sink = splitmux->sink;
+    } else {
+      if (!gst_bin_add (GST_BIN (splitmux), provided_sink)) {
+        g_warning ("Could not add sink elements - splitmuxsink will not work");
+        gst_object_unref (provided_sink);
+        goto fail;
+      }
+
+      splitmux->active_sink = provided_sink;
+
+      /* The bin holds a ref now, we can drop our tmp ref */
       gst_object_unref (provided_sink);
-      goto fail;
+
+      /* Find the sink element */
+      splitmux->sink = find_sink (splitmux->active_sink);
+      if (splitmux->sink == NULL) {
+        g_warning
+            ("Could not locate sink element in provided sink - splitmuxsink will not work");
+        goto fail;
+      }
     }
 
-    splitmux->active_sink = provided_sink;
-
-    /* The bin holds a ref now, we can drop our tmp ref */
-    gst_object_unref (provided_sink);
-
-    /* Find the sink element */
-    splitmux->sink = find_sink (splitmux->active_sink);
-    if (splitmux->sink == NULL) {
-      g_warning
-          ("Could not locate sink element in provided sink - splitmuxsink will not work");
+    if (!gst_element_link (splitmux->muxer, splitmux->active_sink)) {
+      g_warning ("Failed to link muxer and sink- splitmuxsink will not work");
       goto fail;
     }
-  }
-
-  if (!gst_element_link (splitmux->muxer, splitmux->active_sink)) {
-    g_warning ("Failed to link muxer and sink- splitmuxsink will not work");
-    goto fail;
   }
 
   return TRUE;
