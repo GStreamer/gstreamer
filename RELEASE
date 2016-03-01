@@ -1,16 +1,14 @@
 
-Release notes for GStreamer Bad Plugins 1.7.2
+Release notes for GStreamer Bad Plugins 1.7.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.7 release series. The 1.7 release series is adding new features on top of
+The GStreamer team is pleased to announce the first release candidate of the stable
+1.8 release series. The 1.8 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.7 release series
-will lead to the stable 1.8 release series in the next weeks. Any newly added
-API can still change until that point.
+series of the GStreamer multimedia framework.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the unstable 1.7 release series.
+during the stable 1.8 release series.
 
 
 "That an accusation?"
@@ -61,55 +59,19 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 719849 : [PLUGIN-MOVE] move mpg123 to -ugly
-      * 729485 : avfvideosrc: Cannot reconfigure caps
-      * 733959 : hlsdemux: download bitrate algorithms don't reflect real download rate
-      * 737786 : android: Upstream one of the android video source implementations
-      * 744367 : mpegtsmux: add HEVC support
-      * 748507 : mpegtsmux: set non-0 payload length in PES header if video ES packet is small enough
-      * 752374 : dashdemux: gst_dash_demux_get_live_seek_range should not return negative values
-      * 752688 : wayland: improve check for wayland-scanner
-      * 756207 : videoaggregator: Setting aspect ratio crops the frame
-      * 756252 : Resurrect NetSim
-      * 757597 : codecparsers: Add VP9 parser
-      * 757602 : adaptivedemux: improved error message if availabilityStartTime is missing for a live stream
-      * 757655 : dashdemux: cannot get segment availability start time if segment duration is not present
-      * 757951 : adaptivedemux: set src element to ready before flushing the input pad
-      * 758516 : mpegtsbase: Add condition to check for non working negative rate
-      * 759158 : dashdemux/mssdemux: add support for snapping seek flags
-      * 759679 : gl: unused function '_get_plane_width'
-      * 759743 : dashdemux: getting clock compensation using HTTP HEAD uses an incorrect year
-      * 759860 : glupload: Attaches composition overlay when not supported
-      * 759869 : glimagesink: navigation messages are not posted on the bus
-      * 759902 : glshader: fix usage documentation
-      * 759913 : glbufferpool: Fix build error
-      * 760090 : gst-plugins-bad: implicit declaration of function ‘gst_init’
-      * 760120 : dashdemux: memory leak in gst_dash_demux_update_manifest_data
-      * 760242 : rtmpsink: should get streamheaders from caps instead of first buffer.
-      * 760270 : videoparse: add support of padded video
-      * 760328 : adaptivedemux: tests: clean tests
-      * 760559 : glvideomixer ! glimagesink deadlocks on resize
-      * 760594 : decklinkvideosrc: does not support capture in RGB mode
-      * 760600 : tests: memory leak in test HTTP source
-      * 760696 : gl: Regression with caps ref-couting
+      * 676425 : aiffparse: fails to extract channel layout for multichannel files
+      * 757610 : compositor: negotation failure when mixing alpha and non alpha branches
       * 760873 : GstGLVideoMixerPad vertex_buffer leaks when pad dynamic removed
-      * 760936 : dash, mpdparser: Fix the bug when getting the URL of index segment by SegmentBase
-      * 760972 : glwindow: Fix android build
-      * 760982 : adaptivedemux: memory leak of stream- > internal_pad
-      * 761014 : h264parse: sends unnecessary caps events/queries for every (unchanging) SPS/PPS when converting to byte-stream (android mediacodec)
-      * 761108 : uvch264_src: Fix caps memory leak
-      * 761109 : acmenc/acmmp3dec: remove unnecessary break after return
-      * 761230 : tinyalsa: Add a new sink plugin using tinyalsa
-      * 761458 : adaptivedemux: Unused GstSegment variable in download loop
-      * 761460 : player: Makefile does not use configured PKG_CONFIG_PATH when performing introspection scan
-      * 761519 : gl: Activate " qos " in filters
-      * 761538 : gst_gl_insert_debug_marker called with no current context
-      * 761578 : GstGLContext  didn't get unref correctly
-      * 761606 : Move H.265 RTP payloader/depayloader from -bad to -good
-      * 761704 : POTFILES.skip is out of date
-      * 762013 : curlhttpsink: Problem in curlhttpsink when qtmux uses faststart, don't send empty buffers
-      * 762171 : soundtouch plugin is not shipped
-      * 758158 : opusdec: in-band FEC has no effect
+      * 761003 : Error getting OpenGL context when qml item when scene graph is initialized.
+      * 762148 : dashdemux: correctly handle an HTTP-XSDATE that is exactly the size of the date string
+      * 762351 : codecparsers: h265: Fix initialization of slice_deblocking_filter_disabled_flag
+      * 762482 : fbdevsink SIGSEGV
+      * 762519 : doc: audiointerleave doesn't appear in the doc
+      * 762575 : avfvideosrc: Crashes with uncaught exception - wrong type for AVCaptureDevice.activeVideoMinFrameDuration
+      * 762613 : playbin regression: On failure of vtdec_hw, playbin errors out and doesn't fall back to avdec_h264
+      * 762620 : Playback stutters with avdec_h264 via glimagesink on OSX (gst_gl_context_is_shared() returning FALSE)
+      * 762684 : hlsdemux: tests: pass test name into test setup function
+      * 762842 : vulkan: Fix GError memory leak
 
 ==== Download ====
 
@@ -146,43 +108,19 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alessandro Decina
       * Alex Ashley
-      * Arun Raghavan
-      * Aurélien Zanelli
-      * Bob Holcomb
-      * David Fernandez
-      * David Waring
-      * Florent Thiéry
+      * Dave Craig
+      * Edward Hervey
       * Florin Apostol
-      * George Kiagiadakis
-      * Haihua Hu
-      * Holger Kaelberer
-      * Hyunjun Ko
-      * Ilya Konstantinov
-      * Jan Schmidt
-      * John Chang
-      * Julien Isorce
-      * Julien MOUTTE
-      * Julien Moutte
-      * Justin Kim
-      * Luis de Bethencourt
-      * Matt Crane
+      * Joe Gorse
       * Matthew Waters
-      * Nicolas Dufresne
-      * Philippe Normand
-      * Piotr Drąg
-      * Reynaldo H. Verdejo Pinochet
+      * Peter Seiderer
+      * Scott D Phillips
       * Sebastian Dröge
       * Sergey Borovkov
       * Sreerenj Balachandran
-      * Stian Selnes
       * Thiago Santos
-      * Thibault Saunier
-      * Tim Sheridan
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Vineeth TM
       * Wang Xin-yu (王昕宇)
-      * Youness Alaoui
  

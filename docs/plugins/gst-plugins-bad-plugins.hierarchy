@@ -37,18 +37,16 @@ GObject
           GstDtsDec
           GstFaad
           GstGSMDec
-          GstOpusDec
           GstSbcDec
           GstSirenDec
         GstAudioEncoder
           ADPCMEnc
           GstGSMEnc
-          GstOpusEnc
           GstSbcEnc
           GstSirenEnc
           GstVoAacEnc
           GstVoAmrWbEnc
-        GstAudioVisualizer-BaseExtLibvisual
+        GstAudioVisualizer
           GstSpaceScope
           GstSpectraScope
           GstSynaeScope
@@ -207,28 +205,8 @@ GObject
               GstPerspective
               GstRotate
               GstSquare
-            GstGrabcut
-            GstOpencvVideoFilter
-              GstCvDilateErode
-                GstCvDilate
-                GstCvErode
-              GstCvEqualizeHist
-              GstCvLaplace
-              GstCvSmooth
-              GstCvSobel
-              GstEdgeDetect
-              GstFaceBlur
-              GstFaceDetect
-              GstHanddetect
-              GstMotioncells
-              GstOpencvTextOverlay
-              GstPyramidSegment
-              GstSkinDetect
-              GstTemplateMatch
-            GstRetinex
             GstRsvgOverlay
             GstSceneChange
-            GstSegmentation
             GstSimpleVideoMark
             GstSimpleVideoMarkDetect
             GstSmooth
@@ -273,7 +251,6 @@ GObject
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
-        GstDisparity
         GstDtlsDec
         GstDtlsEnc
         GstDtlsSrtpDemux
