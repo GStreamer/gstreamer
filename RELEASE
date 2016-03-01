@@ -1,16 +1,14 @@
 
-Release notes for GStreamer Good Plugins 1.7.2
+Release notes for GStreamer Good Plugins 1.7.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.7 release series. The 1.7 release series is adding new features on top of
+The GStreamer team is pleased to announce the first release candidate of the stable
+1.8 release series. The 1.8 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.7 release series
-will lead to the stable 1.8 release series in the next weeks. Any newly added
-API can still change until that point.
+series of the GStreamer multimedia framework.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the unstable 1.7 release series.
+during the stable 1.8 release series.
 
 
 "Such ingratitude.  After all the times I've saved your life."
@@ -56,30 +54,23 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 617563 : matroskademux: pelicula.mkv doesn't preroll/play due to audio track without data
-      * 709839 : matroskademux: file with late audio stream start does not preroll
-      * 720388 : deinterlace: handle unsupported features caps in passthrough mode
-      * 735673 : interleave: the example in the documentation does not work
-      * 741280 : matroskademux: Send GAP events for non sparse streams
-      * 754773 : rtp: Implement VP9 payloader and depayloader
-      * 755736 : v4l2transform: configure output pool to use min_buffer
-      * 757290 : gdkpixbufoverlay crash
-      * 759293 : rtpbin: add " get-session " property
-      * 759780 : v4l2: deviceprovider: Add the device and sysfs paths to the GstDevice properties
-      * 760774 : qtdemux: fix framerate calculation for fragmented format
-      * 760779 : qtdemux: fix framerate calculation for fragmented format in push mode
-      * 760781 : qtdemux: handling zero segment-duration edit list
-      * 760905 : taginject: Unable to add tags with spaces using example pipeline from docs
-      * 760995 : deinterlace: Do passthrough if downstream only supports interlaced
-      * 761094 : unintialized variable warnings (gcc 5.1)
-      * 761144 : matroskamux: use A_AAC instead of A_AAC/MPEGx/y
-      * 761670 : jpegdec: Possible endless loop if file is corrupt
-      * 761705 : POTFILES.in is out of date
-      * 761769 : qtdemux: incorrectly sets caps of CENC encrypted streams
-      * 762057 : tests: rtpmux: Fix element memory leak
-      * 762117 : avidemux: Fix string memory leak
-      * 762185 : matroskademux: Simple implementation of GST_SEEK_FLAG_TRICKMODE_KEY_UNITS
-      * 762211 : rtpjitterbuffer: Don't drop packets after big gap
+      * 756897 : qtdemux: cenc aux_info_type endianness issue
+      * 761489 : matroskademux: fails to parse opus ('audio/x-unknown, codec-id=(string)A_OPUS')
+      * 761637 : qtmux: handle file with wrong color_table_id values
+      * 762208 : rtpmanager: Don't warn for duplicate/reordered packets
+      * 762209 : flvdemux: leaking eos event fix
+      * 762210 : flvmux: plug leak(s) in error-scenario
+      * 762214 : jitterbuffer: Fix leaks in test
+      * 762254 : rtpjitterbuffer: test cleanups/improvements
+      * 762267 : rtpjitterbuffer: port testharness to GstHarness and cleanup/improve
+      * 762349 : matroskamux: generated files sometimes don't open on android
+      * 762420 : avidemux: Fix buffer memory leak
+      * 762434 : multifilesink: close file on write error with next-file mode is set to buffer
+      * 762516 : qtdemux: cenc auxiliary info parsing crashes
+      * 762542 : matroskademux: CRITICAL when seeking on matroska files without buffers
+      * 762765 : goom: crashes on window resize
+      * 762793 : rgvolume: modifies upstream tags in place without making them writable first
+      * 762809 : alpha: Sample pipeline does not demonstrate functionality
 
 ==== Download ====
 
@@ -116,34 +107,18 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * Alex Ashley
-      * Antonio Ospite
-      * George Kiagiadakis
-      * Hyunjun Ko
-      * Jan Schmidt
+      * Aurélien Zanelli
+      * Dave Craig
+      * Havard Graff
+      * Linus Svensson
       * Luis de Bethencourt
+      * Mark Nauwelaerts
       * Matej Knopp
-      * Miguel París Díaz
-      * Nicolas Dufresne
-      * Nirbheek Chauhan
-      * Ognyan Tonchev
-      * Pablo Anton
+      * Petr Viktorin
       * Philippe Normand
-      * Piotr Drąg
-      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
-      * Seungha Yang
-      * Stefan Sauer
-      * Steven Hoving
       * Stian Selnes
-      * Thiago Santos
-      * Thibault Saunier
-      * Thijs Vermeir
-      * Tim Sheridan
       * Tim-Philipp Müller
+      * Vincent Penquerc'h
       * Vineeth TM
-      * Vivia Nikolaidou
-      * Víctor Manuel Jáquez Leal
-      * Wim Taymans
  

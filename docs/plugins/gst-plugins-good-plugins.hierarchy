@@ -33,7 +33,7 @@ GObject
           GstMuLawEnc
           GstSpeexEnc
           GstWavpackEnc
-        GstAudioVisualizer-BaseExtLibvisual
+        GstAudioVisualizer
           GstGoom
           GstGoom2k1
         GstAviDemux
@@ -177,7 +177,6 @@ GObject
         GstMatroskaMux
           GstWebMMux
         GstMatroskaParse
-        GstMonoscope
         GstMultipartDemux
         GstMultipartMux
         GstQTDemux
@@ -330,6 +329,7 @@ GObject
   RTPSession
   SoupSession
 GInterface
+  GDatagramBased
   GIcon
   GInitable
   GLoadableIcon
