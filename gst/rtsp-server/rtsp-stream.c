@@ -1261,6 +1261,15 @@ again:
 
     g_clear_object (&inetaddr);
     inetaddr = g_inet_address_new_from_string (addr->address);
+
+    /* Don't bind to multicast addresses, this does not work on
+     * Windows. You're supposed to bind to ANY and then join the
+     * multicast group, which udpsrc/sink does for us already.
+     */
+    if (g_inet_address_get_is_multicast (inetaddr)) {
+      g_object_unref (inetaddr);
+      inetaddr = g_inet_address_new_any (family);
+    }
   } else {
     if (tmp_rtp != 0) {
       tmp_rtp += 2;
