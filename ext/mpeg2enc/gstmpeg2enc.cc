@@ -255,7 +255,7 @@ gst_mpeg2enc_structure_from_norm (GstMpeg2enc * enc, gint horiz,
   GstStructure *structure;
 
   structure = gst_structure_new ("video/x-raw",
-      "format", G_TYPE_STRING, 'I420', NULL);
+      "format", G_TYPE_STRING, "I420", NULL);
 
   switch (enc->options->norm) {
     case 0:
