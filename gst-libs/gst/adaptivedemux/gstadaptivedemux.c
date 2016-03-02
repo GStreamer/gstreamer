@@ -1213,7 +1213,7 @@ gst_adaptive_demux_can_seek (GstAdaptiveDemux * demux)
 #define IS_SNAP_SEEK(f) (f & (GST_SEEK_FLAG_SNAP_BEFORE | \
                               GST_SEEK_FLAG_SNAP_AFTER | \
                               GST_SEEK_FLAG_SNAP_NEAREST))
-#define REMOVE_SNAP_FLAGS(f) (f & !(GST_SEEK_FLAG_SNAP_BEFORE | \
+#define REMOVE_SNAP_FLAGS(f) (f & ~(GST_SEEK_FLAG_SNAP_BEFORE | \
                               GST_SEEK_FLAG_SNAP_AFTER | \
                               GST_SEEK_FLAG_SNAP_NEAREST))
 
