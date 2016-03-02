@@ -3522,40 +3522,56 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
         GST_TIME_ARGS (now));
 
     len = priv->timers->len;
-    for (i = 0; i < len; i++) {
+    for (i = 0; i < len;) {
       TimerData *test = &g_array_index (priv->timers, TimerData, i);
       GstClockTime test_timeout = get_timeout (jitterbuffer, test);
       gboolean save_best = FALSE;
 
-      GST_DEBUG_OBJECT (jitterbuffer, "%d, %d, %d, %" GST_TIME_FORMAT,
-          i, test->type, test->seqnum, GST_TIME_ARGS (test_timeout));
+      GST_DEBUG_OBJECT (jitterbuffer,
+          "%d, %d, %d, %" GST_TIME_FORMAT " diff:%" GST_STIME_FORMAT, i,
+          test->type, test->seqnum, GST_TIME_ARGS (test_timeout),
+          GST_STIME_ARGS ((gint64) (test_timeout - now)));
 
-      /* find the smallest timeout */
-      if (timer == NULL) {
-        save_best = TRUE;
-      } else if (timer_timeout == -1) {
-        /* we already have an immediate timeout, the new timer must be an
-         * immediate timer with smaller seqnum to become the best */
-        if (test_timeout == -1
-            && (gst_rtp_buffer_compare_seqnum (test->seqnum,
-                    timer->seqnum) > 0))
+      /* Weed out anything too late */
+      if (test->type == TIMER_TYPE_LOST &&
+          (test_timeout == -1 || test_timeout <= now)) {
+        GST_DEBUG_OBJECT (jitterbuffer, "Weeding out late entry");
+        do_lost_timeout (jitterbuffer, test, now);
+        if (!priv->timer_running)
+          break;
+        /* We don't move the iterator forward since we just removed the current entry,
+         * but we update the termination condition */
+        len = priv->timers->len;
+      } else {
+        /* find the smallest timeout */
+        if (timer == NULL) {
           save_best = TRUE;
-      } else if (test_timeout == -1) {
-        /* first immediate timer */
-        save_best = TRUE;
-      } else if (test_timeout < timer_timeout) {
-        /* earlier timer */
-        save_best = TRUE;
-      } else if (test_timeout == timer_timeout
-          && (gst_rtp_buffer_compare_seqnum (test->seqnum,
-                  timer->seqnum) > 0)) {
-        /* same timer, smaller seqnum */
-        save_best = TRUE;
-      }
-      if (save_best) {
-        GST_DEBUG_OBJECT (jitterbuffer, "new best %d", i);
-        timer = test;
-        timer_timeout = test_timeout;
+        } else if (timer_timeout == -1) {
+          /* we already have an immediate timeout, the new timer must be an
+           * immediate timer with smaller seqnum to become the best */
+          if (test_timeout == -1
+              && (gst_rtp_buffer_compare_seqnum (test->seqnum,
+                      timer->seqnum) > 0))
+            save_best = TRUE;
+        } else if (test_timeout == -1) {
+          /* first immediate timer */
+          save_best = TRUE;
+        } else if (test_timeout < timer_timeout) {
+          /* earlier timer */
+          save_best = TRUE;
+        } else if (test_timeout == timer_timeout
+            && (gst_rtp_buffer_compare_seqnum (test->seqnum,
+                    timer->seqnum) > 0)) {
+          /* same timer, smaller seqnum */
+          save_best = TRUE;
+        }
+
+        if (save_best) {
+          GST_DEBUG_OBJECT (jitterbuffer, "new best %d", i);
+          timer = test;
+          timer_timeout = test_timeout;
+        }
+        i++;
       }
     }
     if (timer && !priv->blocked) {
@@ -3564,6 +3580,9 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       GstClockID id;
       GstClockReturn ret;
       GstClockTimeDiff clock_jitter;
+
+      /* We have normally removed all lost timers in the loop above */
+      g_assert (timer->type != TIMER_TYPE_LOST);
 
       if (timer_timeout == -1 || timer_timeout <= now) {
         do_timeout (jitterbuffer, timer, now);
