@@ -1185,7 +1185,7 @@ error:
 static gboolean
 alloc_ports_one_family (GstRTSPStream * stream, GSocketFamily family,
     GstElement * udpsrc_out[2], GstRTSPRange * server_port_out,
-    GstRTSPTransport *ct, GstRTSPAddress ** server_addr_out,
+    GstRTSPTransport * ct, GstRTSPAddress ** server_addr_out,
     gboolean use_client_settings)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
@@ -1200,7 +1200,7 @@ alloc_ports_one_family (GstRTSPStream * stream, GSocketFamily family,
   gchar *addr_str;
   GSocketAddress *rtp_sockaddr = NULL;
   GSocketAddress *rtcp_sockaddr = NULL;
-  GstRTSPAddressPool * pool;
+  GstRTSPAddressPool *pool;
   GstRTSPLowerTrans transport;
 
   pool = priv->pool;
@@ -1248,7 +1248,8 @@ again:
     else
       flags |= GST_RTSP_ADDRESS_FLAG_IPV4;
 
-    if (ct->destination && transport == GST_RTSP_LOWER_TRANS_UDP_MCAST && use_client_settings)
+    if (ct->destination && transport == GST_RTSP_LOWER_TRANS_UDP_MCAST
+        && use_client_settings)
       gst_rtsp_address_pool_reserve_address (pool, ct->destination,
           ct->port.min, 2, ct->ttl, &addr);
     else
@@ -1324,7 +1325,7 @@ again:
   g_clear_object (&inetaddr);
 
   if (!create_and_configure_udpsources_one_family (udpsrc_out, rtp_socket,
-        rtcp_socket, family, addr_str, tmp_rtp, tmp_rtcp, transport)) {
+          rtcp_socket, family, addr_str, tmp_rtp, tmp_rtcp, transport)) {
     if (addr == NULL)
       g_free (addr_str);
     goto no_udp_protocol;
@@ -1401,7 +1402,7 @@ cleanup:
  */
 gboolean
 gst_rtsp_stream_allocate_udp_sockets (GstRTSPStream * stream,
-    GSocketFamily family, GstRTSPTransport *ct, gboolean use_client_settings)
+    GSocketFamily family, GstRTSPTransport * ct, gboolean use_client_settings)
 {
   GstRTSPStreamPrivate *priv;
   gboolean result = FALSE;
@@ -1418,32 +1419,36 @@ gst_rtsp_stream_allocate_udp_sockets (GstRTSPStream * stream,
       if (priv->have_ipv4_mcast)
         goto done;
       priv->have_ipv4_mcast =
-        alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV4, priv->udpsrc_mcast_v4,
-            &priv->server_port_v4, ct, &priv->addr_v4, use_client_settings);
+          alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV4,
+          priv->udpsrc_mcast_v4, &priv->server_port_v4, ct, &priv->addr_v4,
+          use_client_settings);
     } else {
       priv->have_ipv4 =
-        alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV4, priv->udpsrc_v4,
-            &priv->server_port_v4, ct, &priv->server_addr_v4, use_client_settings);
+          alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV4, priv->udpsrc_v4,
+          &priv->server_port_v4, ct, &priv->server_addr_v4,
+          use_client_settings);
     }
   } else {
     if (transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
       if (priv->have_ipv6_mcast)
         goto done;
       priv->have_ipv6_mcast =
-        alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV6, priv->udpsrc_mcast_v6,
-            &priv->server_port_v6, ct, &priv->addr_v6, use_client_settings);
+          alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV6,
+          priv->udpsrc_mcast_v6, &priv->server_port_v6, ct, &priv->addr_v6,
+          use_client_settings);
     } else {
       if (priv->have_ipv6)
         goto done;
       priv->have_ipv6 =
-        alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV6, priv->udpsrc_v6,
-            &priv->server_port_v6, ct, &priv->server_addr_v6, use_client_settings);
+          alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV6, priv->udpsrc_v6,
+          &priv->server_port_v6, ct, &priv->server_addr_v6,
+          use_client_settings);
     }
   }
 
 done:
   result = priv->have_ipv4 || priv->have_ipv4_mcast || priv->have_ipv6 ||
-    priv->have_ipv6_mcast;
+      priv->have_ipv6_mcast;
 
   g_mutex_unlock (&priv->lock);
 
@@ -2272,8 +2277,7 @@ on_npt_stop (GstElement * rtpbin, guint session, guint ssrc,
 
 /* must be called with lock */
 static gboolean
-create_sender_part (GstRTSPStream * stream, GstBin * bin,
-    GstState state)
+create_sender_part (GstRTSPStream * stream, GstBin * bin, GstState state)
 {
   GstRTSPStreamPrivate *priv;
   GstPad *pad, *sinkpad = NULL;
@@ -2422,8 +2426,7 @@ no_udp_protocol:
 
 /* must be called with lock */
 static void
-create_receiver_part (GstRTSPStream * stream, GstBin * bin,
-    GstState state)
+create_receiver_part (GstRTSPStream * stream, GstBin * bin, GstState state)
 {
   GstRTSPStreamPrivate *priv;
   GstPad *pad, *selpad;

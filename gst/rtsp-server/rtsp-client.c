@@ -1419,7 +1419,8 @@ default_configure_client_transport (GstRTSPClient * client,
 
       family = priv->is_ipv6 ? G_SOCKET_FAMILY_IPV6 : G_SOCKET_FAMILY_IPV4;
 
-      if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, family, ct, FALSE))
+      if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, family, ct,
+              FALSE))
         goto no_udp_protocol;
 
       gst_rtsp_stream_get_server_port (ctx->stream, &ct->port, family);
@@ -1478,7 +1479,8 @@ default_configure_client_transport (GstRTSPClient * client,
     } else if (ct->lower_transport & GST_RTSP_LOWER_TRANS_UDP) {
       GSocketFamily family;
       family = priv->is_ipv6 ? G_SOCKET_FAMILY_IPV6 : G_SOCKET_FAMILY_IPV4;
-      if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, family, ct, FALSE))
+      if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, family, ct,
+              FALSE))
         goto no_udp_protocol;
     }
   }
