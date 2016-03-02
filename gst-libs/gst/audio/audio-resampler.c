@@ -60,7 +60,7 @@ typedef void (*DeinterleaveFunc) (GstAudioResampler * resampler,
 
 #define MEM_ALIGN(m,a) ((gint8 *)((guintptr)((gint8 *)(m) + ((a)-1)) & ~((a)-1)))
 #define ALIGN 16
-#define TAPS_OVERREAD 8
+#define TAPS_OVERREAD 16
 
 struct _GstAudioResampler
 {
