@@ -61,6 +61,7 @@ struct _GstRTSPMediaFactoryPrivate
   GstRTSPAddressPool *pool;
   GstRTSPTransportMode transport_mode;
   gboolean stop_on_disconnect;
+  gchar *multicast_iface;
 
   GstClockTime rtx_time;
   guint latency;
@@ -282,6 +283,7 @@ gst_rtsp_media_factory_finalize (GObject * obj)
   g_mutex_clear (&priv->lock);
   if (priv->pool)
     g_object_unref (priv->pool);
+  g_free (priv->multicast_iface);
 
   G_OBJECT_CLASS (gst_rtsp_media_factory_parent_class)->finalize (obj);
 }
@@ -792,6 +794,64 @@ gst_rtsp_media_factory_get_address_pool (GstRTSPMediaFactory * factory)
   if ((result = priv->pool))
     g_object_ref (result);
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_media_factory_set_multicast_iface:
+ * @media_factory: a #GstRTSPMediaFactory
+ * @multicast_iface: (transfer none): a multicast interface
+ *
+ * configure @multicast_iface to be used for @media_factory.
+ */
+void
+gst_rtsp_media_factory_set_multicast_iface (GstRTSPMediaFactory * media_factory,
+    const gchar * multicast_iface)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  gchar *old;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (media_factory));
+
+  priv = media_factory->priv;
+
+  GST_LOG_OBJECT (media_factory, "set multicast interface %s", multicast_iface);
+
+  g_mutex_lock (&priv->lock);
+  if ((old = priv->multicast_iface) != multicast_iface)
+    priv->multicast_iface = multicast_iface ? g_strdup (multicast_iface) : NULL;
+  else
+    old = NULL;
+  g_mutex_unlock (&priv->lock);
+
+  if (old)
+    g_object_unref (old);
+}
+
+/**
+ * gst_rtsp_media_factory_get_multicast_iface:
+ * @media_factory: a #GstRTSPMediaFactory
+ *
+ * Get the multicast interface used for @media_factory.
+ *
+ * Returns: (transfer full): the multicast interface for @media_factory. g_free() after
+ * usage.
+ */
+gchar *
+gst_rtsp_media_factory_get_multicast_iface (GstRTSPMediaFactory * media_factory)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  gchar *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (media_factory), NULL);
+
+  priv = media_factory->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->multicast_iface))
+    result = g_strdup (result);
+  g_mutex_unlock (&priv->lock);
 
   return result;
 }
@@ -1419,6 +1479,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   guint latency;
   GstRTSPTransportMode transport_mode;
   GstClock *clock;
+  gchar *multicast_iface;
 
   /* configure the sharedness */
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
@@ -1454,6 +1515,10 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   if ((pool = gst_rtsp_media_factory_get_address_pool (factory))) {
     gst_rtsp_media_set_address_pool (media, pool);
     g_object_unref (pool);
+  }
+  if ((multicast_iface = gst_rtsp_media_factory_get_multicast_iface (factory))) {
+    gst_rtsp_media_set_multicast_iface (media, multicast_iface);
+    g_free (multicast_iface);
   }
   if ((perms = gst_rtsp_media_factory_get_permissions (factory))) {
     gst_rtsp_media_set_permissions (media, perms);

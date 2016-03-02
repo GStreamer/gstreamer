@@ -142,6 +142,9 @@ void                  gst_rtsp_media_factory_set_address_pool (GstRTSPMediaFacto
                                                                GstRTSPAddressPool * pool);
 GstRTSPAddressPool *  gst_rtsp_media_factory_get_address_pool (GstRTSPMediaFactory * factory);
 
+void                  gst_rtsp_media_factory_set_multicast_iface (GstRTSPMediaFactory *factory, const gchar *multicast_iface);
+gchar *               gst_rtsp_media_factory_get_multicast_iface (GstRTSPMediaFactory *factory);
+
 void                  gst_rtsp_media_factory_set_buffer_size  (GstRTSPMediaFactory * factory,
                                                                guint size);
 guint                 gst_rtsp_media_factory_get_buffer_size  (GstRTSPMediaFactory * factory);

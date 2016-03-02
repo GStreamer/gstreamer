@@ -207,6 +207,9 @@ gboolean              gst_rtsp_media_is_eos_shutdown  (GstRTSPMedia *media);
 void                  gst_rtsp_media_set_address_pool (GstRTSPMedia *media, GstRTSPAddressPool *pool);
 GstRTSPAddressPool *  gst_rtsp_media_get_address_pool (GstRTSPMedia *media);
 
+void                  gst_rtsp_media_set_multicast_iface (GstRTSPMedia *media, const gchar *multicast_iface);
+gchar *               gst_rtsp_media_get_multicast_iface (GstRTSPMedia *media);
+
 void                  gst_rtsp_media_set_buffer_size  (GstRTSPMedia *media, guint size);
 guint                 gst_rtsp_media_get_buffer_size  (GstRTSPMedia *media);
 

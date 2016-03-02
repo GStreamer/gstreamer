@@ -96,6 +96,9 @@ void              gst_rtsp_stream_set_address_pool (GstRTSPStream *stream, GstRT
 GstRTSPAddressPool *
                   gst_rtsp_stream_get_address_pool (GstRTSPStream *stream);
 
+void              gst_rtsp_stream_set_multicast_iface (GstRTSPStream *stream, const gchar * multicast_iface);
+gchar *           gst_rtsp_stream_get_multicast_iface (GstRTSPStream *stream);
+
 GstRTSPAddress *  gst_rtsp_stream_reserve_address  (GstRTSPStream *stream,
                                                     const gchar * address,
                                                     guint port,

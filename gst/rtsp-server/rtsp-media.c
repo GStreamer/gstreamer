@@ -100,6 +100,7 @@ struct _GstRTSPMediaPrivate
   gboolean eos_shutdown;
   guint buffer_size;
   GstRTSPAddressPool *pool;
+  gchar *multicast_iface;
   gboolean blocked;
   GstRTSPTransportMode transport_mode;
   gboolean stop_on_disconnect;
@@ -443,6 +444,7 @@ gst_rtsp_media_finalize (GObject * obj)
     g_object_unref (priv->pool);
   if (priv->payloads)
     g_list_free (priv->payloads);
+  g_free (priv->multicast_iface);
   g_mutex_clear (&priv->lock);
   g_cond_clear (&priv->cond);
   g_rec_mutex_clear (&priv->state_lock);
@@ -1496,6 +1498,66 @@ gst_rtsp_media_get_address_pool (GstRTSPMedia * media)
   return result;
 }
 
+/**
+ * gst_rtsp_media_set_multicast_iface:
+ * @media: a #GstRTSPMedia
+ * @multicast_iface: (transfer none): a multicast interface
+ *
+ * configure @multicast_iface to be used for @media.
+ */
+void
+gst_rtsp_media_set_multicast_iface (GstRTSPMedia * media,
+    const gchar * multicast_iface)
+{
+  GstRTSPMediaPrivate *priv;
+  gchar *old;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  priv = media->priv;
+
+  GST_LOG_OBJECT (media, "set multicast interface %s", multicast_iface);
+
+  g_mutex_lock (&priv->lock);
+  if ((old = priv->multicast_iface) != multicast_iface)
+    priv->multicast_iface = multicast_iface ? g_strdup (multicast_iface) : NULL;
+  else
+    old = NULL;
+  g_ptr_array_foreach (priv->streams,
+      (GFunc) gst_rtsp_stream_set_multicast_iface, (gchar *) multicast_iface);
+  g_mutex_unlock (&priv->lock);
+
+  if (old)
+    g_object_unref (old);
+}
+
+/**
+ * gst_rtsp_media_get_multicast_iface:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the multicast interface used for @media.
+ *
+ * Returns: (transfer full): the multicast interface for @media. g_free() after
+ * usage.
+ */
+gchar *
+gst_rtsp_media_get_multicast_iface (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  gchar *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->multicast_iface))
+    result = g_strdup (result);
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
+
 static GList *
 _find_payload_types (GstRTSPMedia * media)
 {
@@ -1677,6 +1739,7 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
   stream = gst_rtsp_stream_new (idx, payloader, ghostpad);
   if (priv->pool)
     gst_rtsp_stream_set_address_pool (stream, priv->pool);
+  gst_rtsp_stream_set_multicast_iface (stream, priv->multicast_iface);
   gst_rtsp_stream_set_profiles (stream, priv->profiles);
   gst_rtsp_stream_set_protocols (stream, priv->protocols);
   gst_rtsp_stream_set_retransmission_time (stream, priv->rtx_time);

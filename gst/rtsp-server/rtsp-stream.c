@@ -140,6 +140,8 @@ struct _GstRTSPStreamPrivate
   gboolean have_ipv4_mcast;
   gboolean have_ipv6_mcast;
 
+  gchar *multicast_iface;
+
   /* the caps of the stream */
   gulong caps_sig;
   GstCaps *caps;
@@ -292,6 +294,8 @@ gst_rtsp_stream_finalize (GObject * obj)
     g_object_unref (priv->pool);
   if (priv->rtxsend)
     g_object_unref (priv->rtxsend);
+
+  g_free (priv->multicast_iface);
 
   gst_object_unref (priv->payloader);
   if (priv->srcpad)
@@ -862,6 +866,65 @@ gst_rtsp_stream_get_address_pool (GstRTSPStream * stream)
 }
 
 /**
+ * gst_rtsp_stream_set_multicast_iface:
+ * @stream: a #GstRTSPStream
+ * @multicast_iface: (transfer none): a multicast interface
+ *
+ * configure @multicast_iface to be used for @stream.
+ */
+void
+gst_rtsp_stream_set_multicast_iface (GstRTSPStream * stream,
+    const gchar * multicast_iface)
+{
+  GstRTSPStreamPrivate *priv;
+  gchar *old;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  priv = stream->priv;
+
+  GST_LOG_OBJECT (stream, "set multicast iface %s",
+      GST_STR_NULL (multicast_iface));
+
+  g_mutex_lock (&priv->lock);
+  if ((old = priv->multicast_iface) != multicast_iface)
+    priv->multicast_iface = multicast_iface ? g_strdup (multicast_iface) : NULL;
+  else
+    old = NULL;
+  g_mutex_unlock (&priv->lock);
+
+  if (old)
+    g_free (old);
+}
+
+/**
+ * gst_rtsp_stream_get_multicast_iface:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the multicast interface used for @stream.
+ *
+ * Returns: (transfer full): the multicast interface for @stream. g_free() after
+ * usage.
+ */
+gchar *
+gst_rtsp_stream_get_multicast_iface (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  gchar *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->multicast_iface))
+    result = g_strdup (result);
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
+
+/**
  * gst_rtsp_stream_get_multicast_address:
  * @stream: a #GstRTSPStream
  * @family: the #GSocketFamily
@@ -1145,7 +1208,7 @@ static gboolean
 create_and_configure_udpsources_one_family (GstElement * udpsrc_out[2],
     GSocket * rtp_socket, GSocket * rtcp_socket, GSocketFamily family,
     const gchar * address, gint rtpport, gint rtcpport,
-    GstRTSPLowerTrans transport)
+    const gchar * multicast_iface, GstRTSPLowerTrans transport)
 {
   GstStateChangeReturn ret;
 
@@ -1160,6 +1223,10 @@ create_and_configure_udpsources_one_family (GstElement * udpsrc_out[2],
     g_object_set (G_OBJECT (udpsrc_out[1]), "address", address, NULL);
     g_object_set (G_OBJECT (udpsrc_out[0]), "port", rtpport, NULL);
     g_object_set (G_OBJECT (udpsrc_out[1]), "port", rtcpport, NULL);
+    g_object_set (G_OBJECT (udpsrc_out[0]), "multicast-iface", multicast_iface,
+        NULL);
+    g_object_set (G_OBJECT (udpsrc_out[1]), "multicast-iface", multicast_iface,
+        NULL);
     g_object_set (G_OBJECT (udpsrc_out[0]), "loop", FALSE, NULL);
     g_object_set (G_OBJECT (udpsrc_out[1]), "loop", FALSE, NULL);
   }
@@ -1208,6 +1275,7 @@ alloc_ports_one_family (GstRTSPStream * stream, GSocketFamily family,
   GSocketAddress *rtcp_sockaddr = NULL;
   GstRTSPAddressPool *pool;
   GstRTSPLowerTrans transport;
+  const gchar *multicast_iface = priv->multicast_iface;
 
   pool = priv->pool;
   count = 0;
@@ -1339,7 +1407,8 @@ again:
   g_clear_object (&inetaddr);
 
   if (!create_and_configure_udpsources_one_family (udpsrc_out, rtp_socket,
-          rtcp_socket, family, addr_str, tmp_rtp, tmp_rtcp, transport)) {
+          rtcp_socket, family, addr_str, tmp_rtp, tmp_rtcp, multicast_iface,
+          transport)) {
     if (addr == NULL)
       g_free (addr_str);
     goto no_udp_protocol;
