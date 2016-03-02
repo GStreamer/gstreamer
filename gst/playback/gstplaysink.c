@@ -1491,10 +1491,6 @@ gen_video_deinterlace_chain (GstPlaySink * playsink)
   GST_DEBUG_OBJECT (playsink, "creating deinterlace");
   chain->deinterlace = gst_element_factory_make ("deinterlace", "deinterlace");
   if (chain->deinterlace == NULL) {
-    chain->deinterlace =
-        gst_element_factory_make ("avdeinterlace", "deinterlace");
-  }
-  if (chain->deinterlace == NULL) {
     post_missing_element_message (playsink, "deinterlace");
     GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
