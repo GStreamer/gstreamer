@@ -445,15 +445,21 @@ GstMessage *    gst_message_new_eos             (GstObject * src) G_GNUC_MALLOC;
 /* ERROR */
 
 GstMessage *    gst_message_new_error           (GstObject * src, GError * error, const gchar * debug) G_GNUC_MALLOC;
+GstMessage *    gst_message_new_error_with_details (GstObject * src, GError * error, const gchar * debug, GstStructure * details) G_GNUC_MALLOC;
 void            gst_message_parse_error         (GstMessage *message, GError **gerror, gchar **debug);
+void            gst_message_parse_error_details (GstMessage *message, const GstStructure **structure);
 
 /* WARNING */
 GstMessage *    gst_message_new_warning         (GstObject * src, GError * error, const gchar * debug) G_GNUC_MALLOC;
+GstMessage *    gst_message_new_warning_with_details (GstObject * src, GError * error, const gchar * debug, GstStructure * details) G_GNUC_MALLOC;
 void            gst_message_parse_warning       (GstMessage *message, GError **gerror, gchar **debug);
+void            gst_message_parse_warning_details (GstMessage *message, const GstStructure **structure);
 
 /* INFO */
 GstMessage *    gst_message_new_info            (GstObject * src, GError * error, const gchar * debug) G_GNUC_MALLOC;
+GstMessage *    gst_message_new_info_with_details (GstObject * src, GError * error, const gchar * debug, GstStructure * details) G_GNUC_MALLOC;
 void            gst_message_parse_info          (GstMessage *message, GError **gerror, gchar **debug);
+void            gst_message_parse_info_details  (GstMessage *message, const GstStructure **structure);
 
 /* TAG */
 GstMessage *    gst_message_new_tag             (GstObject * src, GstTagList * tag_list) G_GNUC_MALLOC;

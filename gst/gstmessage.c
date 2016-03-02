@@ -112,6 +112,8 @@ static GstMessageQuarks message_quarks[] = {
   {0, NULL, 0}
 };
 
+static GQuark details_quark = 0;
+
 GType _gst_message_type = 0;
 GST_DEFINE_MINI_OBJECT_TYPE (GstMessage, gst_message);
 
@@ -126,6 +128,7 @@ _priv_gst_message_initialize (void)
     message_quarks[i].quark =
         g_quark_from_static_string (message_quarks[i].name);
   }
+  details_quark = g_quark_from_static_string ("details");
 
   _gst_message_type = gst_message_get_type ();
 }
@@ -389,6 +392,47 @@ gst_message_new_eos (GstObject * src)
 }
 
 /**
+ * gst_message_new_error_with_details:
+ * @src: (transfer none) (allow-none): The object originating the message.
+ * @error: (transfer none): The GError for this message.
+ * @debug: A debugging string.
+ * @details: (transfer full): (allow-none): A GstStructure with details
+ *
+ * Create a new error message. The message will copy @error and
+ * @debug. This message is posted by element when a fatal event
+ * occurred. The pipeline will probably (partially) stop. The application
+ * receiving this message should stop the pipeline.
+ *
+ * Returns: (transfer full): the new error message.
+ *
+ * Since: 1.10
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_error_with_details (GstObject * src, GError * error,
+    const gchar * debug, GstStructure * details)
+{
+  GstMessage *message;
+  GstStructure *structure;
+
+  structure = gst_structure_new_id (GST_QUARK (MESSAGE_ERROR),
+      GST_QUARK (GERROR), G_TYPE_ERROR, error,
+      GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
+  message = gst_message_new_custom (GST_MESSAGE_ERROR, src, structure);
+  if (details) {
+    GValue v = G_VALUE_INIT;
+
+    g_value_init (&v, GST_TYPE_STRUCTURE);
+    g_value_take_boxed (&v, details);
+    gst_structure_id_take_value (GST_MESSAGE_STRUCTURE (message), details_quark,
+        &v);
+  }
+
+  return message;
+}
+
+/**
  * gst_message_new_error:
  * @src: (transfer none) (allow-none): The object originating the message.
  * @error: (transfer none): The GError for this message.
@@ -406,13 +450,74 @@ gst_message_new_eos (GstObject * src)
 GstMessage *
 gst_message_new_error (GstObject * src, GError * error, const gchar * debug)
 {
+  return gst_message_new_error_with_details (src, error, debug, NULL);
+}
+
+/**
+ * gst_message_parse_error_details:
+ * @message: (transfer none): The message object
+ * @structure: (out): A pointer to the returned details
+ *
+ * Returns the optional details structure, may be NULL if none.
+ * The returned structure must not be freed.
+ *
+ * Since: 1.10
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_error_details (GstMessage * message,
+    const GstStructure ** structure)
+{
+  const GValue *v;
+
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR);
+  g_return_if_fail (structure != NULL);
+
+  *structure = NULL;
+  v = gst_structure_id_get_value (GST_MESSAGE_STRUCTURE (message),
+      details_quark);
+  if (v) {
+    *structure = g_value_get_boxed (v);
+  }
+}
+
+/**
+ * gst_message_new_warning_with_details:
+ * @src: (transfer none) (allow-none): The object originating the message.
+ * @error: (transfer none): The GError for this message.
+ * @debug: A debugging string.
+ * @details: (transfer full): (allow-none): A GstStructure with details
+ *
+ * Create a new warning message. The message will make copies of @error and
+ * @debug.
+ *
+ * Returns: (transfer full): the new warning message.
+ *
+ * Since: 1.10
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_warning_with_details (GstObject * src, GError * error,
+    const gchar * debug, GstStructure * details)
+{
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_new_id (GST_QUARK (MESSAGE_ERROR),
+  structure = gst_structure_new_id (GST_QUARK (MESSAGE_WARNING),
       GST_QUARK (GERROR), G_TYPE_ERROR, error,
       GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
-  message = gst_message_new_custom (GST_MESSAGE_ERROR, src, structure);
+  message = gst_message_new_custom (GST_MESSAGE_WARNING, src, structure);
+  if (details) {
+    GValue v = G_VALUE_INIT;
+
+    g_value_init (&v, GST_TYPE_STRUCTURE);
+    g_value_take_boxed (&v, details);
+    gst_structure_id_take_value (GST_MESSAGE_STRUCTURE (message), details_quark,
+        &v);
+  }
 
   return message;
 }
@@ -426,20 +531,81 @@ gst_message_new_error (GstObject * src, GError * error, const gchar * debug)
  * Create a new warning message. The message will make copies of @error and
  * @debug.
  *
- * Returns: (transfer full): The new warning message.
+ * Returns: (transfer full): the new warning message.
  *
  * MT safe.
  */
 GstMessage *
 gst_message_new_warning (GstObject * src, GError * error, const gchar * debug)
 {
+  return gst_message_new_warning_with_details (src, error, debug, NULL);
+}
+
+/**
+ * gst_message_parse_warning_details:
+ * @message: (transfer none): The message object
+ * @structure: (out): A pointer to the returned details structure
+ *
+ * Returns the optional details structure, may be NULL if none
+ * The returned structure must not be freed.
+ *
+ * Since: 1.10
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_warning_details (GstMessage * message,
+    const GstStructure ** structure)
+{
+  const GValue *v;
+
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_WARNING);
+  g_return_if_fail (structure != NULL);
+
+  *structure = NULL;
+  v = gst_structure_id_get_value (GST_MESSAGE_STRUCTURE (message),
+      details_quark);
+  if (v) {
+    *structure = g_value_get_boxed (v);
+  }
+}
+
+/**
+ * gst_message_new_info_with_details:
+ * @src: (transfer none) (allow-none): The object originating the message.
+ * @error: (transfer none): The GError for this message.
+ * @debug: A debugging string.
+ * @details: (transfer full): (allow-none): A GstStructure with details
+ *
+ * Create a new info message. The message will make copies of @error and
+ * @debug.
+ *
+ * Returns: (transfer full): the new warning message.
+ *
+ * Since: 1.10
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_info_with_details (GstObject * src, GError * error,
+    const gchar * debug, GstStructure * details)
+{
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_new_id (GST_QUARK (MESSAGE_WARNING),
+  structure = gst_structure_new_id (GST_QUARK (MESSAGE_INFO),
       GST_QUARK (GERROR), G_TYPE_ERROR, error,
       GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
-  message = gst_message_new_custom (GST_MESSAGE_WARNING, src, structure);
+  message = gst_message_new_custom (GST_MESSAGE_INFO, src, structure);
+  if (details) {
+    GValue v = G_VALUE_INIT;
+
+    g_value_init (&v, GST_TYPE_STRUCTURE);
+    g_value_take_boxed (&v, details);
+    gst_structure_id_take_value (GST_MESSAGE_STRUCTURE (message), details_quark,
+        &v);
+  }
 
   return message;
 }
@@ -453,22 +619,44 @@ gst_message_new_warning (GstObject * src, GError * error, const gchar * debug)
  * Create a new info message. The message will make copies of @error and
  * @debug.
  *
- * MT safe.
- *
  * Returns: (transfer full): the new info message.
+ *
+ * MT safe.
  */
 GstMessage *
 gst_message_new_info (GstObject * src, GError * error, const gchar * debug)
 {
-  GstMessage *message;
-  GstStructure *structure;
+  return gst_message_new_info_with_details (src, error, debug, NULL);
+}
 
-  structure = gst_structure_new_id (GST_QUARK (MESSAGE_INFO),
-      GST_QUARK (GERROR), G_TYPE_ERROR, error,
-      GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
-  message = gst_message_new_custom (GST_MESSAGE_INFO, src, structure);
+/**
+ * gst_message_parse_info_details:
+ * @message: (transfer none): The message object
+ * @structure: (out): A pointer to the returned details structure
+ *
+ * Returns the optional details structure, may be NULL if none
+ * The returned structure must not be freed.
+ *
+ * Since: 1.10
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_info_details (GstMessage * message,
+    const GstStructure ** structure)
+{
+  const GValue *v;
 
-  return message;
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_INFO);
+  g_return_if_fail (structure != NULL);
+
+  *structure = NULL;
+  v = gst_structure_id_get_value (GST_MESSAGE_STRUCTURE (message),
+      details_quark);
+  if (v) {
+    *structure = g_value_get_boxed (v);
+  }
 }
 
 /**

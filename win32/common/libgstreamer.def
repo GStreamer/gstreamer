@@ -538,6 +538,7 @@ EXPORTS
 	gst_element_lost_state
 	gst_element_make_from_uri
 	gst_element_message_full
+	gst_element_message_full_with_details
 	gst_element_no_more_pads
 	gst_element_post_message
 	gst_element_provide_clock
@@ -698,11 +699,13 @@ EXPORTS
 	gst_memory_resize
 	gst_memory_share
 	gst_memory_unmap
+	gst_message_error_set_details
 	gst_message_get_seqnum
 	gst_message_get_stream_status_object
 	gst_message_get_structure
 	gst_message_get_type
 	gst_message_has_name
+	gst_message_info_set_details
 	gst_message_new_application
 	gst_message_new_async_done
 	gst_message_new_async_start
@@ -716,8 +719,10 @@ EXPORTS
 	gst_message_new_element
 	gst_message_new_eos
 	gst_message_new_error
+	gst_message_new_error_with_details
 	gst_message_new_have_context
 	gst_message_new_info
+	gst_message_new_info_with_details
 	gst_message_new_latency
 	gst_message_new_need_context
 	gst_message_new_new_clock
@@ -740,6 +745,7 @@ EXPORTS
 	gst_message_new_tag
 	gst_message_new_toc
 	gst_message_new_warning
+	gst_message_new_warning_with_details
 	gst_message_parse_async_done
 	gst_message_parse_buffering
 	gst_message_parse_buffering_stats
@@ -749,9 +755,11 @@ EXPORTS
 	gst_message_parse_device_added
 	gst_message_parse_device_removed
 	gst_message_parse_error
+	gst_message_parse_error_details
 	gst_message_parse_group_id
 	gst_message_parse_have_context
 	gst_message_parse_info
+	gst_message_parse_info_details
 	gst_message_parse_new_clock
 	gst_message_parse_progress
 	gst_message_parse_property_notify
@@ -772,6 +780,7 @@ EXPORTS
 	gst_message_parse_tag
 	gst_message_parse_toc
 	gst_message_parse_warning
+	gst_message_parse_warning_details
 	gst_message_set_buffering_stats
 	gst_message_set_group_id
 	gst_message_set_qos_stats
@@ -784,6 +793,7 @@ EXPORTS
 	gst_message_type_get_name
 	gst_message_type_get_type
 	gst_message_type_to_quark
+	gst_message_warning_set_details
 	gst_meta_api_type_get_tags
 	gst_meta_api_type_has_tag
 	gst_meta_api_type_register

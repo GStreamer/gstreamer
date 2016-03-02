@@ -68,6 +68,46 @@ GST_START_TEST (test_parsing)
     g_error_free (error);
     g_free (debug);
   }
+  /* GST_MESSAGE_ERROR with details */
+  {
+    GError *error = NULL;
+    gchar *debug;
+    GstStructure *d;
+    const GstStructure *dc;
+
+    error = g_error_new (domain, 10, "test error");
+    fail_if (error == NULL);
+    d = gst_structure_new ("title", "test-field", G_TYPE_STRING,
+        "test-contents", NULL);
+    message =
+        gst_message_new_error_with_details (NULL, error, "error string", d);
+    fail_if (message == NULL);
+    fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR);
+    fail_unless (GST_MESSAGE_SRC (message) == NULL);
+
+    g_error_free (error);
+    error = NULL;
+    debug = NULL;
+
+    gst_message_parse_error (message, NULL, NULL);
+
+    gst_message_parse_error (message, &error, &debug);
+    fail_if (error == NULL);
+    fail_if (debug == NULL);
+    fail_unless (strcmp (error->message, "test error") == 0);
+    fail_unless (error->domain == domain);
+    fail_unless (error->code == 10);
+    fail_unless (strcmp (debug, "error string") == 0);
+    gst_message_parse_error_details (message, &dc);
+    fail_unless (dc != NULL);
+    fail_unless (gst_structure_has_field_typed (dc, "test-field",
+            G_TYPE_STRING));
+    fail_unless (gst_structure_get_string (dc, "test-field"), "test-contents");
+
+    gst_message_unref (message);
+    g_error_free (error);
+    g_free (debug);
+  }
   /* GST_MESSAGE_WARNING   */
   {
     GError *warning = NULL;
