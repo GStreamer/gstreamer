@@ -112,6 +112,7 @@ gst_tracer_record_build_format (GstTracerRecord * self)
   /* cut off '.class' suffix */
   name = g_strdup (name);
   p = strrchr (name, '.');
+  g_assert (p != NULL);
   *p = '\0';
 
   s = g_string_sized_new (STRUCTURE_ESTIMATED_STRING_LEN (structure));
@@ -186,37 +187,35 @@ gst_tracer_record_new (const gchar * name, const gchar * firstfield, ...)
   GstTracerRecord *self;
   GstStructure *structure;
   va_list varargs;
+  gchar *err = NULL;
+  GType type;
+  GQuark id;
 
   va_start (varargs, firstfield);
   structure = gst_structure_new_empty (name);
-  if (structure) {
-    gchar *err = NULL;
-    GType type;
-    GQuark id;
 
-    while (firstfield) {
-      GValue val = { 0, };
+  while (firstfield) {
+    GValue val = { 0, };
 
-      id = g_quark_from_string (firstfield);
-      type = va_arg (varargs, GType);
+    id = g_quark_from_string (firstfield);
+    type = va_arg (varargs, GType);
 
-      /* all fields passed here must be GstStructures which we take over */
-      if (type != GST_TYPE_STRUCTURE) {
-        GST_WARNING ("expected field of type GstStructure, but %s is %s",
-            firstfield, g_type_name (type));
-      }
-
-      G_VALUE_COLLECT_INIT (&val, type, varargs, G_VALUE_NOCOPY_CONTENTS, &err);
-      if (G_UNLIKELY (err)) {
-        g_critical ("%s", err);
-        break;
-      }
-      /* see boxed_proxy_collect_value */
-      val.data[1].v_uint &= ~G_VALUE_NOCOPY_CONTENTS;
-      gst_structure_id_take_value (structure, id, &val);
-
-      firstfield = va_arg (varargs, gchar *);
+    /* all fields passed here must be GstStructures which we take over */
+    if (type != GST_TYPE_STRUCTURE) {
+      GST_WARNING ("expected field of type GstStructure, but %s is %s",
+          firstfield, g_type_name (type));
     }
+
+    G_VALUE_COLLECT_INIT (&val, type, varargs, G_VALUE_NOCOPY_CONTENTS, &err);
+    if (G_UNLIKELY (err)) {
+      g_critical ("%s", err);
+      break;
+    }
+    /* see boxed_proxy_collect_value */
+    val.data[1].v_uint &= ~G_VALUE_NOCOPY_CONTENTS;
+    gst_structure_id_take_value (structure, id, &val);
+
+    firstfield = va_arg (varargs, gchar *);
   }
   va_end (varargs);
 
