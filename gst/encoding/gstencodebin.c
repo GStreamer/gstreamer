@@ -463,22 +463,28 @@ gst_encode_bin_dispose (GObject * object)
 
   if (ebin->muxers)
     gst_plugin_feature_list_free (ebin->muxers);
+  ebin->muxers = NULL;
 
   if (ebin->formatters)
     gst_plugin_feature_list_free (ebin->formatters);
+  ebin->formatters = NULL;
 
   if (ebin->encoders)
     gst_plugin_feature_list_free (ebin->encoders);
+  ebin->encoders = NULL;
 
   if (ebin->parsers)
     gst_plugin_feature_list_free (ebin->parsers);
+  ebin->parsers = NULL;
 
   gst_encode_bin_tear_down_profile (ebin);
 
   if (ebin->raw_video_caps)
     gst_caps_unref (ebin->raw_video_caps);
+  ebin->raw_video_caps = NULL;
   if (ebin->raw_audio_caps)
     gst_caps_unref (ebin->raw_audio_caps);
+  ebin->raw_audio_caps = NULL;
   /* if (ebin->raw_text_caps) */
   /*   gst_caps_unref (ebin->raw_text_caps); */
 
