@@ -923,6 +923,7 @@ gst_rtsp_client_sink_create_stream (GstRTSPClientSink * sink,
   gst_rtsp_stream_set_buffer_size (stream, sink->udp_buffer_size);
   if (sink->rtp_blocksize > 0)
     gst_rtsp_stream_set_mtu (stream, sink->rtp_blocksize);
+  gst_rtsp_stream_set_multicast_iface (stream, sink->multi_iface);
 
 #if 0
   if (priv->pool)
