@@ -173,14 +173,21 @@ enum
   PROP_RFC7273_SYNC
 };
 
-#define JBUF_LOCK(priv)   (g_mutex_lock (&(priv)->jbuf_lock))
+#define JBUF_LOCK(priv)   G_STMT_START {			\
+    GST_TRACE("Locking from thread %p", g_thread_self());	\
+    (g_mutex_lock (&(priv)->jbuf_lock));			\
+    GST_TRACE("Locked from thread %p", g_thread_self());	\
+  } G_STMT_END
 
 #define JBUF_LOCK_CHECK(priv,label) G_STMT_START {    \
   JBUF_LOCK (priv);                                   \
   if (G_UNLIKELY (priv->srcresult != GST_FLOW_OK))    \
     goto label;                                       \
 } G_STMT_END
-#define JBUF_UNLOCK(priv) (g_mutex_unlock (&(priv)->jbuf_lock))
+#define JBUF_UNLOCK(priv) G_STMT_START {			\
+    GST_TRACE ("Unlocking from thread %p", g_thread_self ());	\
+    (g_mutex_unlock (&(priv)->jbuf_lock));			\
+} G_STMT_END
 
 #define JBUF_WAIT_TIMER(priv)   G_STMT_START {            \
   GST_DEBUG ("waiting timer");                            \
