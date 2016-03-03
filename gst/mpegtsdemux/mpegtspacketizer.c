@@ -558,8 +558,7 @@ mpegts_packetizer_clear (MpegTSPacketizer2 * packetizer)
 {
   guint i;
 
-  if (packetizer->packet_size)
-    packetizer->packet_size = 0;
+  packetizer->packet_size = 0;
 
   if (packetizer->streams) {
     int i;
