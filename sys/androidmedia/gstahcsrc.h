@@ -80,7 +80,6 @@ struct _GstAHCSrc
 struct _GstAHCSrcClass
 {
   GstPushSrcClass parent_class;
-  GList *probe_properties;
 };
 
 GType gst_ahc_src_get_type (void);
