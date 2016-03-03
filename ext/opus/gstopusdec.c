@@ -888,7 +888,7 @@ gst_opus_dec_getcaps (GstAudioDecoder * dec, GstCaps * filter)
   if (filter)
     gst_caps_unref (filter);
   if (caps) {
-    caps = gst_caps_copy (caps);
+    caps = gst_caps_make_writable (caps);
     for (n = 0; n < gst_caps_get_size (caps); ++n) {
       GstStructure *s = gst_caps_get_structure (caps, n);
       if (gst_structure_get_int (s, "channels", &channels)) {
