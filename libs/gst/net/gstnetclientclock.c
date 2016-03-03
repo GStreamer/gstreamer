@@ -360,6 +360,11 @@ gst_net_client_internal_clock_observe_times (GstNetClientInternalClock * self,
   GST_OBJECT_LOCK (self);
   rtt_limit = self->roundtrip_limit;
 
+  GST_LOG_OBJECT (self,
+      "local1 %" G_GUINT64_FORMAT " remote1 %" G_GUINT64_FORMAT " remote2 %"
+      G_GUINT64_FORMAT " local2 %" G_GUINT64_FORMAT, local_1, remote_1,
+      remote_2, local_2);
+
   /* If the server told us a poll interval and it's bigger than the
    * one configured via the property, use the server's */
   if (self->last_remote_poll_interval != GST_CLOCK_TIME_NONE &&
@@ -477,10 +482,8 @@ gst_net_client_internal_clock_observe_times (GstNetClientInternalClock * self,
   remote_avg = (remote_2 + remote_1) / 2;
 
   GST_LOG_OBJECT (self,
-      "local1 %" G_GUINT64_FORMAT " remote1 %" G_GUINT64_FORMAT " remote2 %"
-      G_GUINT64_FORMAT " remoteavg %" G_GUINT64_FORMAT " localavg %"
-      G_GUINT64_FORMAT " local2 %" G_GUINT64_FORMAT, local_1, remote_1,
-      remote_2, remote_avg, local_avg, local_2);
+      "remoteavg %" G_GUINT64_FORMAT " localavg %" G_GUINT64_FORMAT,
+      remote_avg, local_avg);
 
   clock = GST_CLOCK_CAST (self);
 
