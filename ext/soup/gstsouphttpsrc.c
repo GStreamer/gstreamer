@@ -1223,10 +1223,13 @@ gst_soup_http_src_got_headers (GstSoupHTTPSrc * src, SoupMessage * msg)
   if (src->ret == GST_FLOW_CUSTOM_ERROR &&
       src->read_position && msg->status_code != SOUP_STATUS_PARTIAL_CONTENT) {
     src->seekable = FALSE;
-    GST_ELEMENT_ERROR (src, RESOURCE, SEEK,
+    GST_ELEMENT_ERROR_WITH_DETAILS (src, RESOURCE, SEEK,
         (_("Server does not support seeking.")),
         ("Server does not accept Range HTTP header, URL: %s, Redirect to: %s",
-            src->location, GST_STR_NULL (src->redirection_uri)));
+            src->location, GST_STR_NULL (src->redirection_uri)),
+        ("http-status-code", G_TYPE_UINT, msg->status_code,
+            "http-redirection-uri", G_TYPE_STRING,
+            GST_STR_NULL (src->redirection_uri), NULL));
     src->ret = GST_FLOW_ERROR;
   }
 
@@ -1255,9 +1258,13 @@ gst_soup_http_src_alloc_buffer (GstSoupHTTPSrc * src)
 }
 
 #define SOUP_HTTP_SRC_ERROR(src,soup_msg,cat,code,error_message)     \
-  GST_ELEMENT_ERROR ((src), cat, code, ("%s", error_message),        \
-      ("%s (%d), URL: %s, Redirect to: %s", (soup_msg)->reason_phrase,                \
-          (soup_msg)->status_code, (src)->location, GST_STR_NULL ((src)->redirection_uri)));
+  do { \
+    GST_ELEMENT_ERROR_WITH_DETAILS ((src), cat, code, ("%s", error_message), \
+        ("%s (%d), URL: %s, Redirect to: %s", (soup_msg)->reason_phrase, \
+            (soup_msg)->status_code, (src)->location, GST_STR_NULL ((src)->redirection_uri)), \
+            ("http-status-code", G_TYPE_UINT, msg->status_code, \
+             "http-redirect-uri", G_TYPE_STRING, GST_STR_NULL ((src)->redirection_uri), NULL)); \
+  } while(0)
 
 static void
 gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
@@ -1324,25 +1331,33 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
      * error dialog according to libsoup documentation.
      */
     if (msg->status_code == SOUP_STATUS_NOT_FOUND) {
-      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+      GST_ELEMENT_ERROR_WITH_DETAILS (src, RESOURCE, NOT_FOUND,
           ("%s", msg->reason_phrase),
           ("%s (%d), URL: %s, Redirect to: %s", msg->reason_phrase,
               msg->status_code, src->location,
-              GST_STR_NULL (src->redirection_uri)));
+              GST_STR_NULL (src->redirection_uri)),
+          ("http-status-code", G_TYPE_UINT, msg->status_code,
+              "http-redirect-uri", G_TYPE_STRING,
+              GST_STR_NULL (src->redirection_uri), NULL));
     } else if (msg->status_code == SOUP_STATUS_UNAUTHORIZED
         || msg->status_code == SOUP_STATUS_PAYMENT_REQUIRED
         || msg->status_code == SOUP_STATUS_FORBIDDEN
         || msg->status_code == SOUP_STATUS_PROXY_AUTHENTICATION_REQUIRED) {
-      GST_ELEMENT_ERROR (src, RESOURCE, NOT_AUTHORIZED, ("%s",
+      GST_ELEMENT_ERROR_WITH_DETAILS (src, RESOURCE, NOT_AUTHORIZED, ("%s",
               msg->reason_phrase), ("%s (%d), URL: %s, Redirect to: %s",
               msg->reason_phrase, msg->status_code, src->location,
-              GST_STR_NULL (src->redirection_uri)));
+              GST_STR_NULL (src->redirection_uri)), ("http-status-code",
+              G_TYPE_UINT, msg->status_code, "http-redirect-uri", G_TYPE_STRING,
+              GST_STR_NULL (src->redirection_uri), NULL));
     } else {
-      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+      GST_ELEMENT_ERROR_WITH_DETAILS (src, RESOURCE, OPEN_READ,
           ("%s", msg->reason_phrase),
           ("%s (%d), URL: %s, Redirect to: %s", msg->reason_phrase,
               msg->status_code, src->location,
-              GST_STR_NULL (src->redirection_uri)));
+              GST_STR_NULL (src->redirection_uri)),
+          ("http-status-code", G_TYPE_UINT, msg->status_code,
+              "http-redirect-uri", G_TYPE_STRING,
+              GST_STR_NULL (src->redirection_uri), NULL));
     }
     src->ret = GST_FLOW_ERROR;
   }
