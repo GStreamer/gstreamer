@@ -220,6 +220,212 @@ GST_START_TEST (test_get_multicast_address)
 
 GST_END_TEST;
 
+/*  test case: address pool only contains multicast addresses,
+ *  but the client is requesting unicast udp */
+GST_START_TEST (test_multicast_address_and_unicast_udp)
+{
+  GstPad *srcpad;
+  GstElement *pay;
+  GstRTSPStream *stream;
+  GstBin *bin;
+  GstElement *rtpbin;
+  GstRTSPAddressPool *pool;
+  GstRTSPTransport *tr;
+
+  srcpad = gst_pad_new ("testsrcpad", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+  gst_pad_set_active (srcpad, TRUE);
+  pay = gst_element_factory_make ("rtpgstpay", "testpayloader");
+  fail_unless (pay != NULL);
+  stream = gst_rtsp_stream_new (0, pay, srcpad);
+  fail_unless (stream != NULL);
+  gst_object_unref (pay);
+  gst_object_unref (srcpad);
+  rtpbin = gst_element_factory_make ("rtpbin", "testrtpbin");
+  fail_unless (rtpbin != NULL);
+  bin = GST_BIN (gst_bin_new ("testbin"));
+  fail_unless (bin != NULL);
+  fail_unless (gst_bin_add (bin, rtpbin));
+
+  pool = gst_rtsp_address_pool_new ();
+  /* add a multicast addres to the address pool */
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          "233.252.0.0", "233.252.0.0", 5000, 5001, 1));
+  gst_rtsp_stream_set_address_pool (stream, pool);
+
+  fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
+
+  gst_rtsp_transport_new (&tr);
+  /* unicast udp */
+  tr->lower_transport = GST_RTSP_LOWER_TRANS_UDP;
+  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV4,
+        tr, FALSE));
+
+  gst_rtsp_transport_free (tr);
+  g_object_unref (pool);
+  fail_unless (gst_rtsp_stream_leave_bin (stream, bin, rtpbin));
+  gst_object_unref (bin);
+  gst_object_unref (stream);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_allocate_udp_ports_multicast)
+{
+  GstPad *srcpad;
+  GstElement *pay;
+  GstRTSPStream *stream;
+  GstBin *bin;
+  GstElement *rtpbin;
+  GstRTSPAddressPool *pool;
+  GstRTSPTransport *tr;
+  GstRTSPAddress *addr;
+
+  srcpad = gst_pad_new ("testsrcpad", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+  gst_pad_set_active (srcpad, TRUE);
+  pay = gst_element_factory_make ("rtpgstpay", "testpayloader");
+  fail_unless (pay != NULL);
+  stream = gst_rtsp_stream_new (0, pay, srcpad);
+  fail_unless (stream != NULL);
+  gst_object_unref (pay);
+  gst_object_unref (srcpad);
+  rtpbin = gst_element_factory_make ("rtpbin", "testrtpbin");
+  fail_unless (rtpbin != NULL);
+  bin = GST_BIN (gst_bin_new ("testbin"));
+  fail_unless (bin != NULL);
+  fail_unless (gst_bin_add (bin, rtpbin));
+
+  pool = gst_rtsp_address_pool_new ();
+  /* add multicast addresses to the address pool */
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          "233.252.0.1", "233.252.0.1", 6000, 6001, 1));
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          "FF11:DB8::1", "FF11:DB8::1", 6002, 6003, 1));
+  gst_rtsp_stream_set_address_pool (stream, pool);
+
+  fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
+
+  /* allocate udp multicast ports for IPv4 */
+  gst_rtsp_transport_new (&tr);
+  tr->lower_transport = GST_RTSP_LOWER_TRANS_UDP_MCAST;
+  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV4,
+        tr, FALSE));
+
+  /* check the multicast address and ports for IPv4 */
+  addr = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV4);
+  fail_unless (addr != NULL);
+  fail_unless_equals_string (addr->address, "233.252.0.1");
+  fail_unless_equals_int (addr->port, 6000);
+  fail_unless_equals_int (addr->n_ports, 2);
+  gst_rtsp_address_free (addr);
+
+  /* allocate upd multicast ports for IPv6 */
+  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV6,
+        tr, FALSE));
+
+  /* check the multicast address and ports for IPv6 */
+  addr = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV6);
+  fail_unless (addr != NULL);
+  fail_unless (!g_ascii_strcasecmp (addr->address, "FF11:DB8::1"));
+  fail_unless_equals_int (addr->port, 6002);
+  fail_unless_equals_int (addr->n_ports, 2);
+  gst_rtsp_address_free (addr);
+
+  gst_rtsp_transport_free (tr);
+  g_object_unref (pool);
+  fail_unless (gst_rtsp_stream_leave_bin (stream, bin, rtpbin));
+  gst_object_unref (bin);
+  gst_object_unref (stream);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_allocate_udp_ports_client_settings)
+{
+  GstPad *srcpad;
+  GstElement *pay;
+  GstRTSPStream *stream;
+  GstBin *bin;
+  GstElement *rtpbin;
+  GstRTSPAddressPool *pool;
+  GstRTSPTransport *tr;
+  GstRTSPAddress *addr;
+
+  srcpad = gst_pad_new ("testsrcpad", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+  gst_pad_set_active (srcpad, TRUE);
+  pay = gst_element_factory_make ("rtpgstpay", "testpayloader");
+  fail_unless (pay != NULL);
+  stream = gst_rtsp_stream_new (0, pay, srcpad);
+  fail_unless (stream != NULL);
+  gst_object_unref (pay);
+  gst_object_unref (srcpad);
+  rtpbin = gst_element_factory_make ("rtpbin", "testrtpbin");
+  fail_unless (rtpbin != NULL);
+  bin = GST_BIN (gst_bin_new ("testbin"));
+  fail_unless (bin != NULL);
+  fail_unless (gst_bin_add (bin, rtpbin));
+
+  pool = gst_rtsp_address_pool_new ();
+  /* add multicast addresses to the address pool */
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          "233.252.0.1", "233.252.0.1", 6000, 6001, 1));
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          "FF11:DB7::1", "FF11:DB7::1", 6004, 6005, 1));
+  /* multicast address specified by the client */
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          "233.252.0.2", "233.252.0.2", 6002, 6003, 1));
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          "FF11:DB8::1", "FF11:DB8::1", 6006, 6007, 1));
+  gst_rtsp_stream_set_address_pool (stream, pool);
+
+  fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
+
+  /* client transport settings for IPv4 */
+  gst_rtsp_transport_new (&tr);
+  tr->destination = g_strdup ("233.252.0.2");
+  tr->port.min = 6002;
+  tr->port.max = 6003;
+  tr->lower_transport = GST_RTSP_LOWER_TRANS_UDP_MCAST;
+  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV4,
+        tr, FALSE));
+
+  /* verify that the multicast address and ports correspond to the requested client
+   * transport information for IPv4 */
+  addr = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV4);
+  fail_unless (addr != NULL);
+  fail_unless_equals_string (addr->address, "233.252.0.2");
+  fail_unless_equals_int (addr->port, 6002);
+  fail_unless_equals_int (addr->n_ports, 2);
+  gst_rtsp_address_free (addr);
+
+  /* client transport settings for IPv6 */
+  g_free (tr->destination);
+  tr->destination = g_strdup ("FF11:DB8::1");
+  tr->port.min = 6006;
+  tr->port.max = 6007;
+  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV6,
+        tr, FALSE));
+
+  /* verify that the multicast address and ports correspond to the requested client
+   * transport information for IPv6 */
+  addr = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV6);
+  fail_unless (addr != NULL);
+  fail_unless (!g_ascii_strcasecmp (addr->address, "FF11:DB8::1"));
+  fail_unless_equals_int (addr->port, 6006);
+  fail_unless_equals_int (addr->n_ports, 2);
+  gst_rtsp_address_free (addr);
+
+  gst_rtsp_transport_free (tr);
+  g_object_unref (pool);
+  fail_unless (gst_rtsp_stream_leave_bin (stream, bin, rtpbin));
+  gst_object_unref (bin);
+  gst_object_unref (stream);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspstream_suite (void)
 {
@@ -230,6 +436,9 @@ rtspstream_suite (void)
   tcase_add_test (tc, test_get_sockets);
   tcase_add_test (tc, test_allocate_udp_ports_fail);
   tcase_add_test (tc, test_get_multicast_address);
+  tcase_add_test (tc, test_multicast_address_and_unicast_udp);
+  tcase_add_test (tc, test_allocate_udp_ports_multicast);
+  tcase_add_test (tc, test_allocate_udp_ports_client_settings);
 
   return s;
 }
