@@ -122,8 +122,7 @@ gst_tcp_server_src_class_init (GstTCPServerSrcClass * klass)
           "The port number the socket is currently bound to", 0,
           TCP_HIGHEST_PORT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "TCP server source", "Source/Network",

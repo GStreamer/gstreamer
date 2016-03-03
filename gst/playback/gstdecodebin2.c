@@ -998,10 +998,10 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   klass->autoplug_select = GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_select);
   klass->autoplug_query = GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_query);
 
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&decoder_bin_sink_template));
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&decoder_bin_src_template));
+  gst_element_class_add_static_pad_template (gstelement_klass,
+      &decoder_bin_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_klass,
+      &decoder_bin_src_template);
 
   gst_element_class_set_static_metadata (gstelement_klass,
       "Decoder Bin", "Generic/Bin/Decoder",

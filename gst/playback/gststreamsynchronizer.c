@@ -1020,10 +1020,8 @@ gst_stream_synchronizer_class_init (GstStreamSynchronizerClass * klass)
 
   gobject_class->finalize = gst_stream_synchronizer_finalize;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (element_class, &srctemplate);
+  gst_element_class_add_static_pad_template (element_class, &sinktemplate);
 
   gst_element_class_set_static_metadata (element_class,
       "Stream Synchronizer", "Generic",

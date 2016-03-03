@@ -655,10 +655,8 @@ gst_play_sink_convert_bin_class_init (GstPlaySinkConvertBinClass * klass)
   gobject_class->dispose = gst_play_sink_convert_bin_dispose;
   gobject_class->finalize = gst_play_sink_convert_bin_finalize;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
   gst_element_class_set_static_metadata (gstelement_class,
       "Player Sink Converter Bin", "Bin/Converter",
       "Convenience bin for audio/video conversion",

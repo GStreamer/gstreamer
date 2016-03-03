@@ -162,8 +162,8 @@ gst_vorbis_enc_class_init (GstVorbisEncClass * klass)
   gst_element_class_add_pad_template (gstelement_class, sink_templ);
   gst_caps_unref (sink_caps);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vorbis_enc_src_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &vorbis_enc_src_factory);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Vorbis audio encoder", "Codec/Encoder/Audio",

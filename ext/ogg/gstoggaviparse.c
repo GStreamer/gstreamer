@@ -140,10 +140,10 @@ gst_ogg_avi_parse_base_init (gpointer g_class)
       "parse an ogg avi stream into pages (info about ogg: http://xiph.org)",
       "Wim Taymans <wim@fluendo.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&ogg_avi_parse_sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&ogg_avi_parse_src_template_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &ogg_avi_parse_sink_template_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &ogg_avi_parse_src_template_factory);
 }
 
 static void

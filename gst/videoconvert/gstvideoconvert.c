@@ -511,10 +511,10 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
   gobject_class->get_property = gst_video_convert_get_property;
   gobject_class->finalize = gst_video_convert_finalize;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_video_convert_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_video_convert_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_video_convert_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_video_convert_sink_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Colorspace converter", "Filter/Converter/Video",

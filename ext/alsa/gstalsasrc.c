@@ -142,8 +142,8 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
       "Audio source (ALSA)", "Source/Audio",
       "Read from a sound card via ALSA", "Wim Taymans <wim@fluendo.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&alsasrc_src_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &alsasrc_src_factory);
 
   gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_alsasrc_getcaps);
 

@@ -126,13 +126,12 @@ gst_opus_dec_class_init (GstOpusDecClass * klass)
   adclass->set_format = GST_DEBUG_FUNCPTR (gst_opus_dec_set_format);
   adclass->getcaps = GST_DEBUG_FUNCPTR (gst_opus_dec_getcaps);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&opus_dec_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&opus_dec_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &opus_dec_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &opus_dec_sink_factory);
   gst_element_class_set_static_metadata (element_class, "Opus audio decoder",
-      "Codec/Decoder/Audio",
-      "decode opus streams to audio",
+      "Codec/Decoder/Audio", "decode opus streams to audio",
       "Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>");
   g_object_class_install_property (gobject_class, PROP_USE_INBAND_FEC,
       g_param_spec_boolean ("use-inband-fec", "Use in-band FEC",

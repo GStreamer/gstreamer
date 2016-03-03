@@ -190,10 +190,10 @@ gst_audio_rate_class_init (GstAudioRateClass * klass)
       "Drops/duplicates/adjusts timestamps on audio samples to make a perfect stream",
       "Wim Taymans <wim@fluendo.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_audio_rate_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_audio_rate_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_audio_rate_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_audio_rate_src_template);
 
   element_class->change_state = gst_audio_rate_change_state;
 }

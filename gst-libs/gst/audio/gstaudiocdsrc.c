@@ -291,8 +291,8 @@ gst_audio_cd_src_class_init (GstAudioCdSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_audio_cd_src_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_audio_cd_src_src_template);
 
 #if 0
   element_class->set_index = GST_DEBUG_FUNCPTR (gst_audio_cd_src_set_index);

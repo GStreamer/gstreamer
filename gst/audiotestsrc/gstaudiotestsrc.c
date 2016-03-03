@@ -207,10 +207,10 @@ gst_audio_test_src_class_init (GstAudioTestSrcClass * klass)
           "Can activate in pull mode", DEFAULT_CAN_ACTIVATE_PULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_audio_test_src_src_template));
-  gst_element_class_set_static_metadata (gstelement_class,
-      "Audio test source", "Source/Audio",
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_audio_test_src_src_template);
+  gst_element_class_set_static_metadata (gstelement_class, "Audio test source",
+      "Source/Audio",
       "Creates audio test signals of given frequency and volume",
       "Stefan Kost <ensonic@users.sf.net>");
 

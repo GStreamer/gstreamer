@@ -620,16 +620,13 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
       G_STRUCT_OFFSET (GstPlaySinkClass, convert_sample), NULL, NULL,
       g_cclosure_marshal_generic, GST_TYPE_SAMPLE, 1, GST_TYPE_CAPS);
 
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&audiorawtemplate));
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&audiotemplate));
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&videorawtemplate));
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&videotemplate));
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&texttemplate));
+  gst_element_class_add_static_pad_template (gstelement_klass,
+      &audiorawtemplate);
+  gst_element_class_add_static_pad_template (gstelement_klass, &audiotemplate);
+  gst_element_class_add_static_pad_template (gstelement_klass,
+      &videorawtemplate);
+  gst_element_class_add_static_pad_template (gstelement_klass, &videotemplate);
+  gst_element_class_add_static_pad_template (gstelement_klass, &texttemplate);
   gst_element_class_set_static_metadata (gstelement_klass, "Player Sink",
       "Generic/Bin/Sink",
       "Convenience sink for multiple streams",

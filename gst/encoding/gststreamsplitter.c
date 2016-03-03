@@ -66,10 +66,8 @@ gst_stream_splitter_class_init (GstStreamSplitterClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_stream_splitter_debug, "streamsplitter", 0,
       "Stream Splitter");
 
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (gstelement_klass, &src_template);
+  gst_element_class_add_static_pad_template (gstelement_klass, &sink_template);
 
   gstelement_klass->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_stream_splitter_request_new_pad);
@@ -157,8 +155,7 @@ _flush_events (GstPad * pad, GList * events)
   for (tmp = events; tmp; tmp = tmp->next) {
     if (GST_EVENT_TYPE (tmp->data) != GST_EVENT_EOS &&
         GST_EVENT_TYPE (tmp->data) != GST_EVENT_SEGMENT &&
-        GST_EVENT_IS_STICKY (tmp->data) &&
-        pad != NULL) {
+        GST_EVENT_IS_STICKY (tmp->data) && pad != NULL) {
       gst_pad_store_sticky_event (pad, GST_EVENT_CAST (tmp->data));
     }
     gst_event_unref (tmp->data);

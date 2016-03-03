@@ -178,10 +178,10 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
           0, G_MAXUINT, SPEEX_RESAMPLER_SINC_FILTER_AUTO_THRESHOLD_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_audio_resample_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_audio_resample_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_audio_resample_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_audio_resample_sink_template);
 
   gst_element_class_set_static_metadata (gstelement_class, "Audio resampler",
       "Filter/Converter/Audio", "Resamples audio",

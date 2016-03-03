@@ -856,13 +856,12 @@ gst_adder_class_init (GstAdderClass * klass)
           "object.", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_adder_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_adder_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_adder_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_adder_sink_template);
   gst_element_class_set_static_metadata (gstelement_class, "Adder",
-      "Generic/Audio",
-      "Add N audio channels together",
+      "Generic/Audio", "Add N audio channels together",
       "Thomas Vander Stichele <thomas at apestaart dot org>");
 
   gstelement_class->request_new_pad =

@@ -59,8 +59,7 @@ gst_gio_base_sink_class_init (GstGioBaseSinkClass * klass)
 
   gobject_class->finalize = gst_gio_base_sink_finalize;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
 
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_gio_base_sink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_gio_base_sink_stop);

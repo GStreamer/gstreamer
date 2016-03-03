@@ -80,10 +80,10 @@ gst_rtp_dummy_pay_class_init (GstRtpDummyPayClass * klass)
   gstelement_class = GST_ELEMENT_CLASS (klass);
   gstrtpbasepayload_class = GST_RTP_BASE_PAYLOAD_CLASS (klass);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_dummy_pay_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_dummy_pay_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_dummy_pay_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_dummy_pay_src_template);
 
   gstrtpbasepayload_class->handle_buffer = gst_rtp_dummy_pay_handle_buffer;
 }

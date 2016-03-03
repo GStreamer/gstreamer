@@ -431,16 +431,15 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
   klass->request_pad = gst_encode_bin_request_pad_signal;
   klass->request_profile_pad = gst_encode_bin_request_profile_pad_signal;
 
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&muxer_src_template));
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&video_sink_template));
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&audio_sink_template));
-  /* gst_element_class_add_pad_template (gstelement_klass, */
-  /*     gst_static_pad_template_get (&text_sink_template)); */
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&private_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_klass,
+      &muxer_src_template);
+  gst_element_class_add_static_pad_template (gstelement_klass,
+      &video_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_klass,
+      &audio_sink_template);
+  /* gst_element_class_add_static_pad_template (gstelement_klass, &text_sink_template); */
+  gst_element_class_add_static_pad_template (gstelement_klass,
+      &private_sink_template);
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_encode_bin_change_state);

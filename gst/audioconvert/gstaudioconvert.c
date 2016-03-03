@@ -158,13 +158,13 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
           GST_TYPE_AUDIO_NOISE_SHAPING_METHOD, GST_AUDIO_NOISE_SHAPING_NONE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_audio_convert_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_audio_convert_sink_template));
-  gst_element_class_set_static_metadata (element_class,
-      "Audio converter", "Filter/Converter/Audio",
-      "Convert audio to different formats", "Benjamin Otte <otte@gnome.org>");
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_audio_convert_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_audio_convert_sink_template);
+  gst_element_class_set_static_metadata (element_class, "Audio converter",
+      "Filter/Converter/Audio", "Convert audio to different formats",
+      "Benjamin Otte <otte@gnome.org>");
 
   basetransform_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_audio_convert_get_unit_size);

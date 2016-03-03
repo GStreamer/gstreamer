@@ -2013,8 +2013,8 @@ gst_xv_image_sink_class_init (GstXvImageSinkClass * klass)
       "Video sink", "Sink/Video",
       "A Xv based videosink", "Julien Moutte <julien@moutte.net>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_xv_image_sink_sink_template_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_xv_image_sink_sink_template_factory);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_xv_image_sink_change_state);

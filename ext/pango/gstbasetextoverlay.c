@@ -351,10 +351,10 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
   gobject_class->set_property = gst_base_text_overlay_set_property;
   gobject_class->get_property = gst_base_text_overlay_get_property;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&video_sink_template_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &src_template_factory);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &video_sink_template_factory);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_text_overlay_change_state);

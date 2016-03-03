@@ -127,10 +127,8 @@ gst_sub_parse_class_init (GstSubParseClass * klass)
   object_class->set_property = gst_sub_parse_set_property;
   object_class->get_property = gst_sub_parse_get_property;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_static_pad_template (element_class, &sink_templ);
+  gst_element_class_add_static_pad_template (element_class, &src_templ);
   gst_element_class_set_static_metadata (element_class,
       "Subtitle parser", "Codec/Parser/Subtitle",
       "Parses subtitle (.sub) files into text streams",

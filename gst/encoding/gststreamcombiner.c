@@ -77,10 +77,8 @@ gst_stream_combiner_class_init (GstStreamCombinerClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_stream_combiner_debug, "streamcombiner", 0,
       "Stream Combiner");
 
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (gstelement_klass, &src_template);
+  gst_element_class_add_static_pad_template (gstelement_klass, &sink_template);
 
   gstelement_klass->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_stream_combiner_request_new_pad);

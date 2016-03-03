@@ -279,8 +279,8 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
       "Video test source", "Source/Video",
       "Creates a test video stream", "David A. Schleef <ds@schleef.org>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_video_test_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_video_test_src_template);
 
   gstbasesrc_class->set_caps = gst_video_test_src_setcaps;
   gstbasesrc_class->fixate = gst_video_test_src_src_fixate;

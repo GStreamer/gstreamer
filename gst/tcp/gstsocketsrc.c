@@ -153,8 +153,7 @@ gst_socket_src_class_init (GstSocketSrcClass * klass)
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstSocketSrcClass,
           connection_closed_by_peer), NULL, NULL, NULL, G_TYPE_NONE, 0);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "socket source", "Source/Network",

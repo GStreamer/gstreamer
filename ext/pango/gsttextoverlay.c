@@ -90,8 +90,8 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
 {
   GstElementClass *element_class = (GstElementClass *) klass;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&text_sink_template_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &text_sink_template_factory);
 
   gst_element_class_set_static_metadata (element_class, "Text overlay",
       "Filter/Editor/Video",

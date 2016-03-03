@@ -170,8 +170,7 @@ gst_caps_src_class_init (GstCapsSrcClass * klass)
       GST_PAD_SRC, GST_PAD_ALWAYS,
       GST_STATIC_CAPS_ANY);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_static_pad_template (element_class, &src_templ);
   gst_element_class_set_metadata (element_class,
       "CapsSource", "Source/Generic", "yep", "me");
 
@@ -321,8 +320,7 @@ gst_audio_codec_sink_class_init (GstAudioCodecSinkClass * klass)
       g_param_spec_boolean ("mute", "Mute",
           "Mute", FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
+  gst_element_class_add_static_pad_template (element_class, &sink_templ);
   gst_element_class_set_metadata (element_class,
       "AudioCodecSink", "Sink/Audio", "yep", "me");
 
@@ -372,8 +370,7 @@ gst_video_codec_sink_class_init (GstVideoCodecSinkClass * klass)
       );
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
+  gst_element_class_add_static_pad_template (element_class, &sink_templ);
   gst_element_class_set_metadata (element_class,
       "VideoCodecSink", "Sink/Video", "yep", "me");
 
@@ -441,10 +438,8 @@ gst_codec_demuxer_class_init (GstCodecDemuxerClass * klass)
 
   gobject_class->finalize = gst_codec_demuxer_finalize;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&cd_sink_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&cd_src_templ));
+  gst_element_class_add_static_pad_template (element_class, &cd_sink_templ);
+  gst_element_class_add_static_pad_template (element_class, &cd_src_templ);
   gst_element_class_set_metadata (element_class,
       "CodecDemuxer", "Codec/Demuxer", "yep", "me");
 }
@@ -647,8 +642,7 @@ gst_video_sink1_class_init (GstVideoSink1Class * klass)
           GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL))
       );
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
+  gst_element_class_add_static_pad_template (element_class, &sink_templ);
 
   gst_element_class_set_static_metadata (element_class,
       "Fake Video Sink1", "Sink/Video",
@@ -669,8 +663,7 @@ gst_video_sink2_class_init (GstVideoSink2Class * klass)
       GST_PAD_SINK, GST_PAD_ALWAYS,
       GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL)));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
+  gst_element_class_add_static_pad_template (element_class, &sink_templ);
 
   gst_element_class_set_static_metadata (element_class,
       "Fake Video Sink2", "Sink/Video",
@@ -710,10 +703,8 @@ gst_video_decoder1_class_init (GstVideoDecoder1Class * klass)
               GST_VIDEO_FORMATS_ALL) ";"
           GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL)));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_static_pad_template (element_class, &sink_templ);
+  gst_element_class_add_static_pad_template (element_class, &src_templ);
   gst_element_class_set_static_metadata (element_class,
       "Fake theora video decoder1", "Codec/Decoder/Video",
       "decode theora stream",
@@ -741,10 +732,8 @@ gst_video_decoder2_class_init (GstVideoDecoder2Class * klass)
       GST_PAD_SRC, GST_PAD_ALWAYS,
       GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL)));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_static_pad_template (element_class, &sink_templ);
+  gst_element_class_add_static_pad_template (element_class, &src_templ);
   gst_element_class_set_static_metadata (element_class,
       "Fake theora video decoder2", "Codec/Decoder/Video",
       "decode theora stream",

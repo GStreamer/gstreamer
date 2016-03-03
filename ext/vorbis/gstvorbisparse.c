@@ -93,13 +93,12 @@ gst_vorbis_parse_class_init (GstVorbisParseClass * klass)
 
   gstelement_class->change_state = vorbis_parse_change_state;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vorbis_parse_src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vorbis_parse_sink_factory));
-  gst_element_class_set_static_metadata (gstelement_class,
-      "VorbisParse", "Codec/Parser/Audio",
-      "parse raw vorbis streams",
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &vorbis_parse_src_factory);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &vorbis_parse_sink_factory);
+  gst_element_class_set_static_metadata (gstelement_class, "VorbisParse",
+      "Codec/Parser/Audio", "parse raw vorbis streams",
       "Thomas Vander Stichele <thomas at apestaart dot org>");
 
   klass->parse_packet = GST_DEBUG_FUNCPTR (vorbis_parse_parse_packet);

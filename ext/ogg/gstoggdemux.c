@@ -2238,10 +2238,10 @@ gst_ogg_demux_class_init (GstOggDemuxClass * klass)
       "demux ogg streams (info about ogg: http://xiph.org)",
       "Wim Taymans <wim@fluendo.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&ogg_demux_sink_template_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&ogg_demux_src_template_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &ogg_demux_sink_template_factory);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &ogg_demux_src_template_factory);
 
   gstelement_class->change_state = gst_ogg_demux_change_state;
   gstelement_class->send_event = gst_ogg_demux_receive_event;

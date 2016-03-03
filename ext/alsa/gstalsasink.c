@@ -166,8 +166,8 @@ gst_alsasink_class_init (GstAlsaSinkClass * klass)
       "Audio sink (ALSA)", "Sink/Audio",
       "Output to a sound card via ALSA", "Wim Taymans <wim@fluendo.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&alsasink_sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &alsasink_sink_factory);
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_alsasink_getcaps);
   gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_alsasink_query);

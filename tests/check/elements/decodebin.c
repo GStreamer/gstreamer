@@ -230,10 +230,8 @@ test_mpeg_audio_parse_class_init (TestMpegAudioParseClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
+  gst_element_class_add_static_pad_template (element_class, &src_template);
 
   gst_element_class_set_metadata (element_class, "MPEG1 Audio Parser",
       "Codec/Parser/Audio", "Pretends to parse mpeg1 audio stream",
@@ -383,10 +381,8 @@ gst_fake_h264_parser_class_init (GstFakeH264ParserClass * klass)
           "stream-format=(string) { avc, byte-stream }"));
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_static_pad_template (element_class, &sink_templ);
+  gst_element_class_add_static_pad_template (element_class, &src_templ);
   gst_element_class_set_metadata (element_class,
       "FakeH264Parser", "Codec/Parser/Converter/Video", "yep", "me");
 }
@@ -486,10 +482,8 @@ gst_fake_h264_decoder_class_init (GstFakeH264DecoderClass * klass)
       GST_STATIC_CAPS ("video/x-raw"));
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_static_pad_template (element_class, &sink_templ);
+  gst_element_class_add_static_pad_template (element_class, &src_templ);
   gst_element_class_set_metadata (element_class,
       "FakeH264Decoder", "Codec/Decoder/Video", "yep", "me");
 }

@@ -212,13 +212,12 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
   gobject_class->get_property = theora_enc_get_property;
   gobject_class->finalize = theora_enc_finalize;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&theora_enc_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&theora_enc_sink_factory));
-  gst_element_class_set_static_metadata (element_class,
-      "Theora video encoder", "Codec/Encoder/Video",
-      "encode raw YUV video to a theora stream",
+  gst_element_class_add_static_pad_template (element_class,
+      &theora_enc_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &theora_enc_sink_factory);
+  gst_element_class_set_static_metadata (element_class, "Theora video encoder",
+      "Codec/Encoder/Video", "encode raw YUV video to a theora stream",
       "Wim Taymans <wim@fluendo.com>");
 
   gstvideo_encoder_class->start = GST_DEBUG_FUNCPTR (theora_enc_start);

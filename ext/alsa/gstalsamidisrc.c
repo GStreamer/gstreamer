@@ -247,8 +247,7 @@ gst_alsa_midi_src_class_init (GstAlsaMidiSrcClass * klass)
       "AlsaMidi Source",
       "Source",
       "Push ALSA MIDI sequencer events around", "Antonio Ospite <ao2@ao2.it>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
   gstbase_src_class->start = GST_DEBUG_FUNCPTR (gst_alsa_midi_src_start);
   gstbase_src_class->stop = GST_DEBUG_FUNCPTR (gst_alsa_midi_src_stop);

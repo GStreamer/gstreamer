@@ -456,8 +456,7 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
       G_STRUCT_OFFSET (GstMultiHandleSinkClass, clear), NULL, NULL,
       g_cclosure_marshal_generic, G_TYPE_NONE, 0);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Multi socket sink", "Sink/Network",

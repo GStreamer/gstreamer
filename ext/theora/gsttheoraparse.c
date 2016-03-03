@@ -135,13 +135,13 @@ gst_theora_parse_class_init (GstTheoraParseClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&theora_parse_src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&theora_parse_sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &theora_parse_src_factory);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &theora_parse_sink_factory);
   gst_element_class_set_static_metadata (gstelement_class,
-      "Theora video parser", "Codec/Parser/Video",
-      "parse raw theora streams", "Andy Wingo <wingo@pobox.com>");
+      "Theora video parser", "Codec/Parser/Video", "parse raw theora streams",
+      "Andy Wingo <wingo@pobox.com>");
 
   gstelement_class->change_state = theora_parse_change_state;
 

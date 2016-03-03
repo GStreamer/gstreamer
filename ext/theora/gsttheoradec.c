@@ -172,13 +172,12 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   }
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&theora_dec_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&theora_dec_sink_factory));
-  gst_element_class_set_static_metadata (element_class,
-      "Theora video decoder", "Codec/Decoder/Video",
-      "decode raw theora streams to raw YUV video",
+  gst_element_class_add_static_pad_template (element_class,
+      &theora_dec_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &theora_dec_sink_factory);
+  gst_element_class_set_static_metadata (element_class, "Theora video decoder",
+      "Codec/Decoder/Video", "decode raw theora streams to raw YUV video",
       "Benjamin Otte <otte@gnome.org>, Wim Taymans <wim@fluendo.com>");
 
   video_decoder_class->start = GST_DEBUG_FUNCPTR (theora_dec_start);
