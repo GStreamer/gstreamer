@@ -2173,6 +2173,8 @@ gst_ahc_src_on_error (gint error, gpointer user_data)
 static gboolean
 gst_ahc_src_open (GstAHCSrc * self)
 {
+  GError *err = NULL;
+
   GST_DEBUG_OBJECT (self, "Opening camera");
 
   self->camera = gst_ah_camera_open (self->device);
@@ -2180,7 +2182,13 @@ gst_ahc_src_open (GstAHCSrc * self)
   if (self->camera) {
     GST_DEBUG_OBJECT (self, "Opened camera");
 
-    self->texture = gst_ag_surfacetexture_new (0);
+    self->texture = gst_amc_surface_texture_new (&err);
+    if (self->texture == NULL) {
+      GST_ERROR_OBJECT (self,
+          "Failed to create surface texture object: %s", err->message);
+      g_clear_error (&err);
+      goto failed_surfacetexutre;
+    }
     gst_ah_camera_set_preview_texture (self->camera, self->texture);
     self->buffer_size = 0;
   } else {
@@ -2198,11 +2206,20 @@ gst_ahc_src_open (GstAHCSrc * self)
   }
 
   return (self->camera != NULL);
+
+failed_surfacetexutre:
+  gst_ah_camera_release (self->camera);
+  gst_ah_camera_free (self->camera);
+  self->camera = NULL;
+
+  return FALSE;
 }
 
 static void
 gst_ahc_src_close (GstAHCSrc * self)
 {
+  GError *err = NULL;
+
   if (self->camera) {
     gst_ah_camera_set_error_callback (self->camera, NULL, NULL);
     gst_ah_camera_set_preview_callback_with_buffer (self->camera, NULL, NULL);
@@ -2211,11 +2228,13 @@ gst_ahc_src_close (GstAHCSrc * self)
   }
   self->camera = NULL;
 
-  if (self->texture) {
-    gst_ag_surfacetexture_release (self->texture);
-    gst_ag_surfacetexture_free (self->texture);
+  if (self->texture && !gst_amc_surface_texture_release (self->texture, &err)) {
+    GST_ERROR_OBJECT (self,
+        "Failed to release surface texture object: %s", err->message);
+    g_clear_error (&err);
   }
-  self->texture = NULL;
+
+  g_clear_object (&self->texture);
 }
 
 static GstStateChangeReturn

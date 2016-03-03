@@ -9,7 +9,6 @@ libgstandroidmedia_la_SOURCES = \
 	gstamcvideodec.c \
 	gstamcvideoenc.c \
 	gst-android-graphics-imageformat.c \
-	gst-android-graphics-surfacetexture.c \
 	gst-android-hardware-camera.c \
 	gstjniutils.c
 
@@ -23,7 +22,6 @@ noinst_HEADERS = \
 	gstamcvideodec.h \
 	gstamcvideoenc.h \
 	gst-android-graphics-imageformat.h \
-	gst-android-graphics-surfacetexture.h \
 	gst-android-hardware-camera.h \
 	gstjniutils.h
 
