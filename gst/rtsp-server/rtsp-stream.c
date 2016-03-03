@@ -1229,16 +1229,15 @@ again:
       goto no_udp_protocol;
   }
 
-  if (pool) {
-    GstRTSPAddressFlags flags;
+  if (pool && ((transport == GST_RTSP_LOWER_TRANS_UDP &&
+              gst_rtsp_address_pool_has_unicast_addresses (pool))
+          || transport == GST_RTSP_LOWER_TRANS_UDP_MCAST)) {
+    GstRTSPAddressFlags flags = GST_RTSP_ADDRESS_FLAG_EVEN_PORT;
 
-    if (transport == GST_RTSP_LOWER_TRANS_UDP &&
-        gst_rtsp_address_pool_has_unicast_addresses (pool))
-      flags = GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_UNICAST;
-    else if (transport == GST_RTSP_LOWER_TRANS_UDP_MCAST)
-      flags = GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_MULTICAST;
+    if (transport == GST_RTSP_LOWER_TRANS_UDP)
+      flags |= GST_RTSP_ADDRESS_FLAG_UNICAST;
     else
-      goto no_ports;
+      flags |= GST_RTSP_ADDRESS_FLAG_MULTICAST;
 
     if (addr)
       rejected_addresses = g_list_prepend (rejected_addresses, addr);
