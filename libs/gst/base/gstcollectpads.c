@@ -515,6 +515,12 @@ gst_collect_pads_clip_running_time (GstCollectPads * pads,
 
     time = GST_BUFFER_PTS (buf);
 
+    /* If PTS is not set, the best guess we can make is to assume that both
+     * PTS and DTS are the same. If it was possible, parsers should have fixed
+     * it already as explained in https://bugzilla.gnome.org/show_bug.cgi?id=659489 */
+    if (!GST_CLOCK_TIME_IS_VALID (time))
+      time = GST_BUFFER_DTS (buf);
+
     if (GST_CLOCK_TIME_IS_VALID (time)) {
       time =
           gst_segment_to_running_time (&cdata->segment, GST_FORMAT_TIME, time);
