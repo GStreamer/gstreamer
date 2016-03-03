@@ -546,8 +546,8 @@ gst_parse_test_element_class_init (GstParseTestElementClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&test_element_pad_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &test_element_pad_template);
 
   gst_element_class_set_metadata (gstelement_class,
       "Test element for parse launch tests", "Source",

@@ -2546,8 +2546,8 @@ gst_proxytestelement_class_init (GstProxyTestElementClass * klass)
       "Proxy Test Element", "Test", "Proxy test element",
       "Thiago Santos <thiagoss@osg.samsung.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&proxytestelement_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &proxytestelement_sink_template);
 }
 
 static void

@@ -217,10 +217,10 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
 
   gobject_class->dispose = gst_aggregator_dispose;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_aggregator_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_aggregator_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_aggregator_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_aggregator_sink_template);
   gst_element_class_set_static_metadata (gstelement_class, "Aggregator",
       "Testing", "Combine N buffers", "Stefan Sauer <ensonic@users.sf.net>");
 

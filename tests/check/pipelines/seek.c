@@ -75,8 +75,8 @@ timed_test_src_class_init (TimedTestSrcClass * klass)
   gstbasesrc_class->stop = timed_test_src_stop;
   gstbasesrc_class->create = timed_test_src_create;
 
-  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
-      gst_static_pad_template_get (&timed_test_src_src_template));
+  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
+      &timed_test_src_src_template);
 }
 
 static void

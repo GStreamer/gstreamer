@@ -51,7 +51,7 @@
  *
  * A padtemplate can be used to create a pad (see gst_pad_new_from_template()
  * or gst_pad_new_from_static_template ()) or to add to an element class
- * (see gst_element_class_add_pad_template ()).
+ * (see gst_element_class_add_static_pad_template ()).
  *
  * The following code example shows the code to create a pad from a padtemplate.
  * |[<!-- language="C" -->
@@ -82,8 +82,7 @@
  *   {
  *     GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
  *
- *     gst_element_class_add_pad_template (gstelement_class,
- *         gst_static_pad_template_get (&amp;my_template));
+ *     gst_element_class_add_static_pad_template (gstelement_class, &amp;my_template);
  *   }
  * ]|
  */

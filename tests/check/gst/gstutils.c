@@ -1385,8 +1385,8 @@ gst_fakereqsink_class_init (GstFakeReqSinkClass * klass)
       "Fake Request Sink", "Sink", "Fake sink with request pads",
       "Sebastian Rasmussen <sebras@hotmail.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&fakereqsink_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &fakereqsink_sink_template);
 
   gstelement_class->request_new_pad = gst_fakereqsink_request_new_pad;
   gstelement_class->release_pad = gst_fakereqsink_release_pad;
@@ -1593,10 +1593,10 @@ gst_testpadreqsink_class_init (GstTestPadReqSinkClass * klass)
       "Test Pad Request Sink", "Sink", "Sink for unit tests with request pads",
       "Thiago Santos <thiagoss@osg.samsung.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&testpadreqsink_video_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&testpadreqsink_audio_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &testpadreqsink_video_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &testpadreqsink_audio_template);
 
   gstelement_class->request_new_pad = gst_testpadreqsink_request_new_pad;
   gstelement_class->release_pad = gst_testpadreqsink_release_pad;
