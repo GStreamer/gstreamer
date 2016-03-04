@@ -1,6 +1,8 @@
 /* GStreamer unit tests for flvmux
  *
  * Copyright (C) 2009 Tim-Philipp Müller  <tim centricular net>
+ * Copyright (C) 2016 Havard Graff <havard@pexip.com>
+ * Copyright (C) 2016 David Buchmann <david@pexip.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -333,6 +335,95 @@ GST_START_TEST (test_speex_streamable)
 
 GST_END_TEST;
 
+static void
+check_buf_type_timestamp (GstBuffer *buf, gint packet_type, gint timestamp)
+{
+  GstMapInfo map = GST_MAP_INFO_INIT;
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  fail_unless_equals_int (packet_type, map.data[0]);
+  fail_unless_equals_int (timestamp, map.data[6]);
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_unref (buf);
+}
+
+GST_START_TEST(test_increasing_timestamp_when_pts_none)
+{
+  const gint AUDIO = 0x08;
+  const gint VIDEO = 0x09;
+  gint timestamp = 3;
+  GstClockTime base_time = 42 * GST_SECOND;
+  GstPad *audio_sink, *video_sink, *audio_src, *video_src;
+  GstHarness *h, *audio, *video, *audio_q, *video_q;
+  GstCaps *audio_caps, *video_caps;
+  GstBuffer *buf;
+
+  h = gst_harness_new_with_padnames ("flvmux", NULL, "src");
+  audio = gst_harness_new_with_element (h->element, "audio", NULL);
+  video = gst_harness_new_with_element (h->element, "video", NULL);
+  audio_q = gst_harness_new ("queue");
+  video_q = gst_harness_new ("queue");
+
+  audio_sink = GST_PAD_PEER (audio->srcpad);
+  video_sink = GST_PAD_PEER (video->srcpad);
+  audio_src = GST_PAD_PEER (audio_q->sinkpad);
+  video_src = GST_PAD_PEER (video_q->sinkpad);
+
+  gst_pad_unlink (audio->srcpad, audio_sink);
+  gst_pad_unlink (video->srcpad, video_sink);
+  gst_pad_unlink (audio_src, audio_q->sinkpad);
+  gst_pad_unlink (video_src, video_q->sinkpad);
+  gst_pad_link (audio_src, audio_sink);
+  gst_pad_link (video_src, video_sink);
+
+  audio_caps = gst_caps_new_simple ("audio/x-speex",
+      "rate", G_TYPE_INT, 16000,
+      "channels", G_TYPE_INT, 1,
+      NULL);
+  gst_harness_set_src_caps (audio_q, audio_caps);
+  video_caps = gst_caps_new_simple ("video/x-h264",
+      "stream-format", G_TYPE_STRING, "avc",
+      NULL);
+  gst_harness_set_src_caps (video_q, video_caps);
+
+  /* Push audio + video + audio with increasing DTS, but PTS for video is
+   * GST_CLOCK_TIME_NONE
+   */
+  buf = gst_buffer_new();
+  GST_BUFFER_DTS (buf) = timestamp * GST_MSECOND + base_time;
+  GST_BUFFER_PTS (buf) = timestamp * GST_MSECOND + base_time;
+  gst_harness_push (audio_q, buf);
+
+  buf = gst_buffer_new();
+  GST_BUFFER_DTS (buf) = (timestamp + 1) * GST_MSECOND + base_time;
+  GST_BUFFER_PTS (buf) = GST_CLOCK_TIME_NONE;
+  gst_harness_push (video_q, buf);
+
+  buf = gst_buffer_new();
+  GST_BUFFER_DTS (buf) = (timestamp + 2) * GST_MSECOND + base_time;
+  GST_BUFFER_PTS (buf) = (timestamp + 2) * GST_MSECOND + base_time;
+  gst_harness_push (audio_q, buf);
+
+  /* Pull two metadata packets out */
+  gst_buffer_unref (gst_harness_pull (h));
+  gst_buffer_unref (gst_harness_pull (h));
+
+  /* Check that we receive the packets in monotonically increasing order and
+   * that their timestamps are correct (should start at 0)
+   */
+  buf = gst_harness_pull (h);
+  check_buf_type_timestamp (buf, AUDIO, 0);
+  buf = gst_harness_pull (h);
+  check_buf_type_timestamp (buf, VIDEO, 1);
+
+  /* teardown */
+  gst_harness_teardown (h);
+  gst_harness_teardown (audio);
+  gst_harness_teardown (video);
+  gst_harness_teardown (audio_q);
+  gst_harness_teardown (video_q);
+}
+GST_END_TEST;
+
 static Suite *
 flvmux_suite (void)
 {
@@ -351,6 +442,7 @@ flvmux_suite (void)
   tcase_add_loop_test (tc_chain, test_index_writing, 1, loop);
 
   tcase_add_test (tc_chain, test_speex_streamable);
+  tcase_add_test (tc_chain, test_increasing_timestamp_when_pts_none);
 
   return s;
 }
