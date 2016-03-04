@@ -12,4 +12,8 @@ MAINTAINERCLEANFILES = \
 	$(srcdir)/autoregen.sh $(srcdir)/INSTALL	\
 	$(NULL)
 
+EXTRA_DIST = \
+	configure.ac autogen.sh \
+	gstreamer-vaapi.doap
+
 -include $(top_srcdir)/git.mk
