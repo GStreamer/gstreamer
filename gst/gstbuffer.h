@@ -597,7 +597,10 @@ struct _GstParentBufferMeta
 };
 
 GType gst_parent_buffer_meta_api_get_type (void);
-#define GST_TYPE_PARENT_BUFFER_META_API_TYPE (gst_parent_buffer_meta_api_get_type())
+#ifndef GST_DISABLE_DEPRECATED
+#define GST_TYPE_PARENT_BUFFER_META_API_TYPE GST_PARENT_BUFFER_META_API_TYPE
+#endif
+#define GST_PARENT_BUFFER_META_API_TYPE (gst_parent_buffer_meta_api_get_type())
 
 /**
  * gst_buffer_get_parent_buffer_meta:

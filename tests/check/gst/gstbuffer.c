@@ -890,6 +890,26 @@ GST_START_TEST (test_fill)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parent_buffer_meta)
+{
+  GstBuffer *buf, *parent;
+  GstParentBufferMeta *meta;
+
+  buf = gst_buffer_new ();
+  parent = gst_buffer_new ();
+
+  gst_buffer_add_parent_buffer_meta (buf, parent);
+  meta = gst_buffer_get_parent_buffer_meta (buf);
+  fail_unless (meta);
+  fail_unless (parent == meta->buffer);
+
+  gst_buffer_unref (buf);
+  gst_buffer_unref (parent);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_buffer_suite (void)
 {
@@ -912,6 +932,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_map_range);
   tcase_add_test (tc_chain, test_find);
   tcase_add_test (tc_chain, test_fill);
+  tcase_add_test (tc_chain, test_parent_buffer_meta);
 
   return s;
 }
