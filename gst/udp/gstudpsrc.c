@@ -968,18 +968,47 @@ gst_udpsrc_open (GstUDPSrc * src)
     g_object_unref (bind_saddr);
     g_socket_set_multicast_loopback (src->used_socket, src->loop);
   } else {
+    GInetSocketAddress *local_addr;
+
     GST_DEBUG_OBJECT (src, "using provided socket %p", src->socket);
     /* we use the configured socket, try to get some info about it */
     src->used_socket = G_SOCKET (g_object_ref (src->socket));
     src->external_socket = TRUE;
 
-    if (src->addr)
-      g_object_unref (src->addr);
-    src->addr =
+    local_addr =
         G_INET_SOCKET_ADDRESS (g_socket_get_local_address (src->used_socket,
             &err));
-    if (!src->addr)
+    if (!local_addr)
       goto getsockname_error;
+
+    /* See above for the reasons. Without this we would behave different on
+     * Windows and Linux, joining multicast groups below for provided sockets
+     * on Linux but not on Windows
+     */
+#ifdef G_OS_WIN32
+    addr = gst_udpsrc_resolve (src, src->address);
+    if (!addr)
+      goto name_resolve;
+
+    if (!src->auto_multicast ||
+        !g_inet_address_get_is_any (g_inet_socket_address_get_address
+            (local_addr))
+        || !g_inet_address_get_is_multicast (addr)) {
+      g_object_unref (addr);
+#endif
+      if (src->addr)
+        g_object_unref (src->addr);
+      src->addr = local_addr;
+#ifdef G_OS_WIN32
+    } else {
+      g_object_unref (local_addr);
+      if (src->addr)
+        g_object_unref (src->addr);
+      src->addr =
+          G_INET_SOCKET_ADDRESS (g_inet_socket_address_new (addr, src->port));
+      g_object_unref (addr);
+    }
+#endif
   }
 
   {
