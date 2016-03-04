@@ -171,7 +171,7 @@ gst_gl_base_memory_init (GstGLBaseMemory * mem, GstAllocator * allocator,
 }
 
 static gpointer
-_align_data (gpointer data, gsize align, gsize * maxsize)
+_align_data (gpointer data, gsize align)
 {
   guint8 *ret = data;
   gsize aoffset;
@@ -180,7 +180,6 @@ _align_data (gpointer data, gsize align, gsize * maxsize)
   if ((aoffset = ((guintptr) ret & align))) {
     aoffset = (align + 1) - aoffset;
     ret += aoffset;
-    *maxsize -= aoffset;
   }
 
   return ret;
@@ -202,7 +201,7 @@ gst_gl_base_memory_alloc_data (GstGLBaseMemory * gl_mem)
   if (gl_mem->alloc_data == NULL)
     return FALSE;
 
-  gl_mem->data = _align_data (gl_mem->alloc_data, mem->align, &mem->maxsize);
+  gl_mem->data = _align_data (gl_mem->alloc_data, mem->align);
 
   GST_CAT_DEBUG (GST_CAT_GL_BASE_MEMORY, "%p allocated data pointer alloc %p, "
       "data %p", gl_mem, gl_mem->alloc_data, gl_mem->data);
