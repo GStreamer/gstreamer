@@ -31,17 +31,19 @@ typedef struct _GstAudioChannelMixer GstAudioChannelMixer;
 /**
  * GstAudioChannelMixerFlags:
  * @GST_AUDIO_CHANNEL_MIXER_FLAGS_NONE: no flag
- * @GST_AUDIO_CHANNEL_MIXER_FLAGS_NON_INTERLEAVED: channels are not interleaved
+ * @GST_AUDIO_CHANNEL_MIXER_FLAGS_NON_INTERLEAVED_IN: input channels are not interleaved
+ * @GST_AUDIO_CHANNEL_MIXER_FLAGS_NON_INTERLEAVED_OUT: output channels are not interleaved
  * @GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_IN: input channels are explicitly unpositioned
  * @GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_OUT: output channels are explicitly unpositioned
  *
  * Flags passed to gst_audio_channel_mixer_new()
  */
 typedef enum {
-  GST_AUDIO_CHANNEL_MIXER_FLAGS_NONE             = 0,
-  GST_AUDIO_CHANNEL_MIXER_FLAGS_NON_INTERLEAVED  = (1 << 0),
-  GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_IN  = (1 << 1),
-  GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_OUT = (1 << 2)
+  GST_AUDIO_CHANNEL_MIXER_FLAGS_NONE                = 0,
+  GST_AUDIO_CHANNEL_MIXER_FLAGS_NON_INTERLEAVED_IN  = (1 << 0),
+  GST_AUDIO_CHANNEL_MIXER_FLAGS_NON_INTERLEAVED_OUT = (1 << 1),
+  GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_IN     = (1 << 2),
+  GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_OUT    = (1 << 3)
 } GstAudioChannelMixerFlags;
 
 GstAudioChannelMixer * gst_audio_channel_mixer_new   (GstAudioChannelMixerFlags flags,
