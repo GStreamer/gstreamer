@@ -178,8 +178,7 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
       "Source/Video", "Creates a test video stream",
       "David A. Schleef <ds@schleef.org>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_static_pad_template (element_class, &src_factory);
 
   element_class->set_context = gst_gl_test_src_set_context;
   element_class->change_state = gst_gl_test_src_change_state;

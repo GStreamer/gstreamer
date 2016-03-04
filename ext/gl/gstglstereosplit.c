@@ -139,12 +139,10 @@ gst_gl_stereosplit_class_init (GstGLStereoSplitClass * klass)
   element_class->change_state = stereosplit_change_state;
   element_class->set_context = stereosplit_set_context;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_left_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_right_template));
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
+  gst_element_class_add_static_pad_template (element_class, &src_left_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &src_right_template);
 }
 
 static void

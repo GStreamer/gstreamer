@@ -570,8 +570,8 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_BOOLEAN, 3, GST_GL_TYPE_CONTEXT, G_TYPE_UINT, G_TYPE_UINT);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_glimage_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_glimage_sink_template);
 
   gobject_class->finalize = gst_glimage_sink_finalize;
 

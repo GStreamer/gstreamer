@@ -103,12 +103,10 @@ gst_gl_color_convert_element_class_init (GstGLColorConvertElementClass * klass)
 
   bt_class->passthrough_on_same_caps = TRUE;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get
-      (&gst_gl_color_convert_element_src_pad_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get
-      (&gst_gl_color_convert_element_sink_pad_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_gl_color_convert_element_src_pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_gl_color_convert_element_sink_pad_template);
 
   gst_element_class_set_metadata (element_class,
       "OpenGL color converter", "Filter/Converter/Video",

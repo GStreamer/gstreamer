@@ -102,8 +102,8 @@ gst_gl_src_bin_class_init (GstGLSrcBinClass * klass)
       "Infrastructure to process GL textures",
       "Matthew Waters <matthew@centricular.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gl_src_bin_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_gl_src_bin_template);
 }
 
 static void
