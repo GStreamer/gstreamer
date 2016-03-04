@@ -617,8 +617,6 @@ play_about_to_finish (GstElement * playbin, gpointer user_data)
 
   g_object_set (play->playbin, "uri", next_uri, NULL);
   play->cur_idx = next_idx;
-
-  g_object_set (play->playbin, "-v", NULL);
 }
 
 static void
