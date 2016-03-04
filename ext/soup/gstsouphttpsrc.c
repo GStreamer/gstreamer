@@ -1143,7 +1143,7 @@ gst_soup_http_src_got_headers (GstSoupHTTPSrc * src, SoupMessage * msg)
       if (param != NULL)
         rate = atol (param);
 
-      src->src_caps = gst_caps_new_simple ("audio/x-raw",
+      src->src_caps = gst_caps_new_simple ("audio/x-unaligned-raw",
           "format", G_TYPE_STRING, "S16BE",
           "layout", G_TYPE_STRING, "interleaved",
           "channels", G_TYPE_INT, channels, "rate", G_TYPE_INT, rate, NULL);
