@@ -1715,7 +1715,7 @@ gst_v4l2_object_get_interlace_mode (enum v4l2_field field,
 static gboolean
 gst_v4l2_object_get_colorspace (enum v4l2_colorspace colorspace,
     enum v4l2_quantization range, enum v4l2_ycbcr_encoding matrix,
-    enum v4l2_xfer_func transfer, GstVideoColorimetry * cinfo)
+    enum v4l2_xfer_func transfer, gboolean is_rgb, GstVideoColorimetry * cinfo)
 {
   gboolean ret = TRUE;
 
@@ -1786,7 +1786,15 @@ gst_v4l2_object_get_colorspace (enum v4l2_colorspace colorspace,
       cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
       break;
     case V4L2_QUANTIZATION_DEFAULT:
-      /* nothing, just use defaults for colorspace */
+      /* replicated V4L2_MAP_QUANTIZATION_DEFAULT macro behavior */
+      if (is_rgb && colorspace == V4L2_COLORSPACE_BT2020)
+        cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
+      else if (is_rgb || matrix == V4L2_YCBCR_ENC_XV601
+          || matrix == V4L2_YCBCR_ENC_XV709
+          || colorspace == V4L2_COLORSPACE_JPEG)
+        cinfo->range = GST_VIDEO_COLOR_RANGE_0_255;
+      else
+        cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
       break;
     default:
       GST_WARNING ("Unknown enum v4l2_quantization value %d", range);
@@ -1967,6 +1975,7 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
     enum v4l2_quantization range;
     enum v4l2_ycbcr_encoding matrix;
     enum v4l2_xfer_func transfer;
+    gboolean is_rgb = gst_v4l2_object_v4l2fourcc_is_rgb (pixelformat);
 
     if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
       colorspace = fmt.fmt.pix_mp.colorspace;
@@ -1981,11 +1990,11 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
     }
 
     if (gst_v4l2_object_get_colorspace (colorspace, range, matrix, transfer,
-            &cinfo)) {
+            is_rgb, &cinfo)) {
       /* Set identity matrix for R'G'B' formats to avoid creating
        * confusion. This though is cosmetic as it's now properly ignored by
        * the video info API and videoconvert. */
-      if (gst_v4l2_object_v4l2fourcc_is_rgb (pixelformat))
+      if (is_rgb)
         cinfo.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
 
       g_value_init (&colorimetry, G_TYPE_STRING);
