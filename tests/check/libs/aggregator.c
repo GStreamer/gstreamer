@@ -152,11 +152,9 @@ gst_test_aggregator_class_init (GstTestAggregatorClass * klass)
       GST_STATIC_PAD_TEMPLATE ("sink_%u", GST_PAD_SINK, GST_PAD_REQUEST,
       GST_STATIC_CAPS_ANY);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &_src_template);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &_sink_template);
 
   gst_element_class_set_static_metadata (gstelement_class, "Aggregator",
       "Testing", "Combine N buffers", "Stefan Sauer <ensonic@users.sf.net>");
