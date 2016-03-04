@@ -119,10 +119,10 @@ gst_rtp_vp8_pay_class_init (GstRtpVP8PayClass * gst_rtp_vp8_pay_class)
           GST_TYPE_RTP_VP8_PAY_PICTURE_ID_MODE, DEFAULT_PICTURE_ID_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_vp8_pay_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_vp8_pay_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_rtp_vp8_pay_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_rtp_vp8_pay_src_template);
 
   gst_element_class_set_static_metadata (element_class, "RTP VP8 payloader",
       "Codec/Payloader/Network/RTP",

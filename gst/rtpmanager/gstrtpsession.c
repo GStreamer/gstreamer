@@ -773,22 +773,22 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
   klass->clear_pt_map = GST_DEBUG_FUNCPTR (gst_rtp_session_clear_pt_map);
 
   /* sink pads */
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtpsession_recv_rtp_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtpsession_recv_rtcp_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtpsession_send_rtp_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtpsession_recv_rtp_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtpsession_recv_rtcp_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtpsession_send_rtp_sink_template);
 
   /* src pads */
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtpsession_recv_rtp_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtpsession_sync_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtpsession_send_rtp_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtpsession_send_rtcp_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtpsession_recv_rtp_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtpsession_sync_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtpsession_send_rtp_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtpsession_send_rtcp_src_template);
 
   gst_element_class_set_static_metadata (gstelement_class, "RTP Session",
       "Filter/Network/RTP",

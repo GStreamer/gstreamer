@@ -149,8 +149,8 @@ gst_gdk_pixbuf_sink_class_init (GstGdkPixbufSinkClass * klass)
       "Sink/Video", "Output images as GdkPixbuf objects in bus messages",
       "Tim-Philipp Müller <tim centricular net>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&pixbufsink_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &pixbufsink_sink_factory);
 
   gobject_class->set_property = gst_gdk_pixbuf_sink_set_property;
   gobject_class->get_property = gst_gdk_pixbuf_sink_get_property;

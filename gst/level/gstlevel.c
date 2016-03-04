@@ -224,10 +224,10 @@ gst_level_class_init (GstLevelClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (level_debug, "level", 0, "Level calculation");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &sink_template_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &src_template_factory);
   gst_element_class_set_static_metadata (element_class, "Level",
       "Filter/Analyzer/Audio",
       "RMS/Peak/Decaying Peak Level messager for audio/raw",

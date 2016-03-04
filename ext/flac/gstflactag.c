@@ -109,11 +109,10 @@ gst_flac_tag_class_init (GstFlacTagClass * klass)
       "Formatter/Metadata",
       "Rewrite tags in a FLAC file", "Christophe Fergeau <teuf@gnome.org>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&flac_tag_sink_template));
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&flac_tag_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &flac_tag_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &flac_tag_src_template);
 }
 
 static void

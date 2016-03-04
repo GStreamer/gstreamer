@@ -80,10 +80,10 @@ gst_rtp_speex_pay_class_init (GstRtpSPEEXPayClass * klass)
   gstrtpbasepayload_class->get_caps = gst_rtp_speex_pay_getcaps;
   gstrtpbasepayload_class->handle_buffer = gst_rtp_speex_pay_handle_buffer;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_speex_pay_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_speex_pay_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_speex_pay_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_speex_pay_src_template);
   gst_element_class_set_static_metadata (gstelement_class,
       "RTP Speex payloader", "Codec/Payloader/Network/RTP",
       "Payload-encodes Speex audio into a RTP packet",

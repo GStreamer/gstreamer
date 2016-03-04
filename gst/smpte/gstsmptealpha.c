@@ -205,10 +205,10 @@ gst_smpte_alpha_class_init (GstSMPTEAlphaClass * klass)
   vfilter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_smpte_alpha_transform_frame);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_smpte_alpha_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_smpte_alpha_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_smpte_alpha_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_smpte_alpha_src_template);
   gst_element_class_set_static_metadata (element_class, "SMPTE transitions",
       "Filter/Editor/Video",
       "Apply the standard SMPTE transitions as alpha on video images",

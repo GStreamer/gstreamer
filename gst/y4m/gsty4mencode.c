@@ -97,10 +97,10 @@ gst_y4m_encode_class_init (GstY4mEncodeClass * klass)
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_y4m_encode_change_state);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&y4mencode_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&y4mencode_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &y4mencode_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &y4mencode_sink_factory);
 
   gst_element_class_set_static_metadata (element_class,
       "YUV4MPEG video encoder", "Codec/Encoder/Video",

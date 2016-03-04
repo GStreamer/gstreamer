@@ -149,10 +149,10 @@ gst_mulawdec_class_init (GstMuLawDecClass * klass)
   GstElementClass *element_class = (GstElementClass *) klass;
   GstAudioDecoderClass *audiodec_class = GST_AUDIO_DECODER_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mulaw_dec_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mulaw_dec_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &mulaw_dec_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &mulaw_dec_sink_factory);
 
 
   audiodec_class->start = GST_DEBUG_FUNCPTR (gst_mulawdec_start);

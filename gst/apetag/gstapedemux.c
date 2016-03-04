@@ -91,8 +91,7 @@ gst_ape_demux_class_init (GstApeDemuxClass * klass)
       "Read and output APE tags while demuxing the contents",
       "Tim-Philipp Müller <tim centricular net>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (element_class, &sink_factory);
 
   tagdemux_class->identify_tag = GST_DEBUG_FUNCPTR (gst_ape_demux_identify_tag);
   tagdemux_class->parse_tag = GST_DEBUG_FUNCPTR (gst_ape_demux_parse_tag);

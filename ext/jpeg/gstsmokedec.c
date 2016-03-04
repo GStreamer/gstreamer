@@ -106,13 +106,13 @@ gst_smokedec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_smokedec_src_pad_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_smokedec_sink_pad_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_smokedec_src_pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_smokedec_sink_pad_template);
   gst_element_class_set_static_metadata (element_class, "Smoke video decoder",
-      "Codec/Decoder/Video",
-      "Decode video from Smoke format", "Wim Taymans <wim@fluendo.com>");
+      "Codec/Decoder/Video", "Decode video from Smoke format",
+      "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

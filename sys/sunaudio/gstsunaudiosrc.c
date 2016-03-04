@@ -108,11 +108,10 @@ gst_sunaudiosrc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_sunaudiosrc_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_sunaudiosrc_factory);
   gst_element_class_set_static_metadata (element_class, "Sun Audio Source",
-      "Source/Audio",
-      "Audio source for Sun Audio devices",
+      "Source/Audio", "Audio source for Sun Audio devices",
       "Brian Cameron <brian.cameron@sun.com>");
 }
 

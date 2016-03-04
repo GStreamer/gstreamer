@@ -186,12 +186,11 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_flv_mux_request_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_flv_mux_release_pad);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&videosink_templ));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&audiosink_templ));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &videosink_templ);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &audiosink_templ);
+  gst_element_class_add_static_pad_template (gstelement_class, &src_templ);
   gst_element_class_set_static_metadata (gstelement_class, "FLV muxer",
       "Codec/Muxer",
       "Muxes video/audio streams into a FLV stream",

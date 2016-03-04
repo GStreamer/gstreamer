@@ -273,10 +273,10 @@ gst_alpha_class_init (GstAlphaClass * klass)
       "Edward Hervey <edward.hervey@collabora.co.uk>\n"
       "Jan Schmidt <thaytan@noraisin.net>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_alpha_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_alpha_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_alpha_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_alpha_src_template);
 
   btrans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_alpha_before_transform);

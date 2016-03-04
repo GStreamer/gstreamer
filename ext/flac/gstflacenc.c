@@ -341,8 +341,7 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
           DEFAULT_SEEKPOINTS,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
 
   sink_caps = gst_flac_enc_generate_sink_caps ();
   sink_templ = gst_pad_template_new ("sink",

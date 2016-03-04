@@ -3538,15 +3538,14 @@ gst_flv_demux_class_init (GstFlvDemuxClass * klass)
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_flv_demux_get_index);
 #endif
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&flv_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&audio_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&video_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &flv_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &audio_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &video_src_template);
   gst_element_class_set_static_metadata (gstelement_class, "FLV Demuxer",
-      "Codec/Demuxer",
-      "Demux FLV feeds into digital streams",
+      "Codec/Demuxer", "Demux FLV feeds into digital streams",
       "Julien Moutte <julien@moutte.net>");
 }
 

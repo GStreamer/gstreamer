@@ -213,8 +213,8 @@ gst_rtp_dtmf_src_class_init (GstRTPDTMFSrcClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_rtp_dtmf_src_debug,
       "rtpdtmfsrc", 0, "rtpdtmfsrc element");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_dtmf_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_dtmf_src_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "RTP DTMF packet generator", "Source/Network",

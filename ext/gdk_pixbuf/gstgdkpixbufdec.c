@@ -180,10 +180,10 @@ gst_gdk_pixbuf_dec_class_init (GstGdkPixbufDecClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_dec_change_state);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_gdk_pixbuf_dec_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_gdk_pixbuf_dec_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_gdk_pixbuf_dec_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_gdk_pixbuf_dec_sink_template);
   gst_element_class_set_static_metadata (gstelement_class,
       "GdkPixbuf image decoder", "Codec/Decoder/Image",
       "Decodes images in a video stream using GdkPixbuf",

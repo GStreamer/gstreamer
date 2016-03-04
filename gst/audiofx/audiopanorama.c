@@ -199,10 +199,8 @@ gst_audio_panorama_class_init (GstAudioPanoramaClass * klass)
       "Positions audio streams in the stereo panorama",
       "Stefan Kost <ensonic@users.sf.net>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
 
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_audio_panorama_get_unit_size);

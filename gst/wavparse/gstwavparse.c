@@ -188,8 +188,8 @@ gst_wavparse_class_init (GstWavParseClass * klass)
   gstelement_class->send_event = gst_wavparse_send_event;
 
   /* register pads */
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &sink_template_factory);
 
   src_template = gst_pad_template_new ("src", GST_PAD_SRC,
       GST_PAD_ALWAYS, gst_riff_create_audio_template_caps ());

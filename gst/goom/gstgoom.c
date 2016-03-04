@@ -119,10 +119,8 @@ gst_goom_class_init (GstGoomClass * klass)
       "Visualization",
       "Takes frames of data and outputs video frames using the GOOM filter",
       "Wim Taymans <wim@fluendo.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   visualizer_class->setup = GST_DEBUG_FUNCPTR (gst_goom_setup);
   visualizer_class->render = GST_DEBUG_FUNCPTR (gst_goom_render);

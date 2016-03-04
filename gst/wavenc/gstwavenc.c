@@ -139,10 +139,8 @@ gst_wavenc_class_init (GstWavEncClass * klass)
       "Codec/Muxer/Audio",
       "Encode raw audio into WAV", "Iain Holmes <iain@prettypeople.org>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (element_class, &src_factory);
+  gst_element_class_add_static_pad_template (element_class, &sink_factory);
 
   GST_DEBUG_CATEGORY_INIT (wavenc_debug, "wavenc", 0, "WAV encoder element");
 }

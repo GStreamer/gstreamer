@@ -209,12 +209,9 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
   GstAudioEncoderClass *base_class = (GstAudioEncoderClass *) (klass);
 
   /* add pad templates */
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&wvcsrc_factory));
+  gst_element_class_add_static_pad_template (element_class, &sink_factory);
+  gst_element_class_add_static_pad_template (element_class, &src_factory);
+  gst_element_class_add_static_pad_template (element_class, &wvcsrc_factory);
 
   /* set element details */
   gst_element_class_set_static_metadata (element_class, "Wavpack audio encoder",

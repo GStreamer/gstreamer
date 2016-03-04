@@ -152,8 +152,7 @@ gst_push_file_src_class_init (GstPushFileSrcClass * g_class)
           "Applied rate to use in TIME SEGMENT", G_MINDOUBLE, G_MAXDOUBLE,
           DEFAULT_APPLIED_RATE, G_PARAM_READWRITE));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_static_pad_template (element_class, &srctemplate);
 
   gst_element_class_set_static_metadata (element_class, "Push File Source",
       "Testing",

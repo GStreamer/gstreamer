@@ -223,8 +223,7 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_shout2send_event);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_shout2send_setcaps);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Icecast network sink",

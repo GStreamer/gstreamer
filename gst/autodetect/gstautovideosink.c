@@ -81,8 +81,7 @@ gst_auto_video_sink_class_init (GstAutoVideoSinkClass * klass)
           "Timestamp offset in nanoseconds", G_MININT64, G_MAXINT64,
           DEFAULT_TS_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (eklass,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (eklass, &sink_template);
   gst_element_class_set_static_metadata (eklass, "Auto video sink",
       "Sink/Video",
       "Wrapper video sink for automatically detected video sink",

@@ -203,10 +203,10 @@ gst_alaw_dec_class_init (GstALawDecClass * klass)
   GstElementClass *element_class = (GstElementClass *) klass;
   GstAudioDecoderClass *audiodec_class = GST_AUDIO_DECODER_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&alaw_dec_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&alaw_dec_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &alaw_dec_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &alaw_dec_sink_factory);
 
   audiodec_class->start = GST_DEBUG_FUNCPTR (gst_alaw_dec_start);
   audiodec_class->set_format = GST_DEBUG_FUNCPTR (gst_alaw_dec_set_format);

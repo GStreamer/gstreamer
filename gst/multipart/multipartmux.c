@@ -121,10 +121,8 @@ gst_multipart_mux_class_init (GstMultipartMuxClass * klass)
   gstelement_class->request_new_pad = gst_multipart_mux_request_new_pad;
   gstelement_class->change_state = gst_multipart_mux_change_state;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
 
   gst_element_class_set_static_metadata (gstelement_class, "Multipart muxer",
       "Codec/Muxer", "mux multipart streams", "Wim Taymans <wim@fluendo.com>");

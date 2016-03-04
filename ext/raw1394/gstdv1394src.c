@@ -218,8 +218,7 @@ gst_dv1394src_class_init (GstDV1394SrcClass * klass)
 
   gstpushsrc_class->create = gst_dv1394src_create;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Firewire (1394) DV video source", "Source/Video",

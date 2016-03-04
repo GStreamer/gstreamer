@@ -1047,10 +1047,10 @@ gst_rtp_h261_pay_class_init (GstRtpH261PayClass * klass)
   element_class = GST_ELEMENT_CLASS (klass);
   gstrtpbasepayload_class = GST_RTP_BASE_PAYLOAD_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_h261_pay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_h261_pay_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_rtp_h261_pay_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_rtp_h261_pay_sink_template);
 
   gst_element_class_set_static_metadata (element_class,
       "RTP H261 packet payloader", "Codec/Payloader/Network/RTP",

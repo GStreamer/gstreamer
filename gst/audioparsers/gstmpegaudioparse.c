@@ -177,10 +177,8 @@ gst_mpeg_audio_parse_class_init (GstMpegAudioParseClass * klass)
 
   g_type_class_ref (GST_TYPE_MPEG_AUDIO_CHANNEL_MODE);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
+  gst_element_class_add_static_pad_template (element_class, &src_template);
 
   gst_element_class_set_static_metadata (element_class, "MPEG1 Audio Parser",
       "Codec/Parser/Audio",

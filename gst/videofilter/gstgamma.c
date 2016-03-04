@@ -125,10 +125,10 @@ gst_gamma_class_init (GstGammaClass * g_class)
       "Video gamma correction", "Filter/Effect/Video",
       "Adjusts gamma on a video stream", "Arwed v. Merkatz <v.merkatz@gmx.net");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_gamma_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_gamma_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_gamma_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_gamma_src_template);
 
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_gamma_before_transform);

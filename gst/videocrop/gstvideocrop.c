@@ -194,10 +194,8 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
           "Pixels to crop at bottom (-1 to auto-crop)", -1, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
+  gst_element_class_add_static_pad_template (element_class, &src_template);
   gst_element_class_set_static_metadata (element_class, "Crop",
       "Filter/Effect/Video",
       "Crops video into a user-defined region",

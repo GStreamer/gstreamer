@@ -120,10 +120,10 @@ gst_rtp_dv_pay_class_init (GstRTPDVPayClass * klass)
           GST_TYPE_DV_PAY_MODE, DEFAULT_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_dv_pay_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_dv_pay_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_dv_pay_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_dv_pay_src_template);
 
   gst_element_class_set_static_metadata (gstelement_class, "RTP DV Payloader",
       "Codec/Payloader/Network/RTP",

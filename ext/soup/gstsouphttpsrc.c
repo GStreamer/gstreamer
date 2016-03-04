@@ -421,8 +421,7 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
           "The HTTP method to use (GET, HEAD, OPTIONS, etc)",
           DEFAULT_SOUP_METHOD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
   gst_element_class_set_static_metadata (gstelement_class, "HTTP client source",
       "Source/Network",

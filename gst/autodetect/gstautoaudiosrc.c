@@ -75,8 +75,7 @@ gst_auto_audio_src_class_init (GstAutoAudioSrcClass * klass)
   GstAutoDetectClass *autoclass = GST_AUTO_DETECT_CLASS (klass);
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (eklass,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (eklass, &src_template);
   gst_element_class_set_static_metadata (eklass, "Auto audio source",
       "Source/Audio",
       "Wrapper audio source for automatically detected audio source",

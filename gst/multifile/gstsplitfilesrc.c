@@ -122,8 +122,8 @@ gst_split_file_src_class_init (GstSplitFileSrcClass * klass)
   GST_DEBUG_CATEGORY_INIT (splitfilesrc_debug, "splitfilesrc", 0,
       "splitfilesrc element");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_split_file_src_pad_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_split_file_src_pad_template);
 
   gst_element_class_set_static_metadata (gstelement_class, "Split-File Source",
       "Source/File",

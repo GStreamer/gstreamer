@@ -128,10 +128,10 @@ gst_pngenc_class_init (GstPngEncClass * klass)
           DEFAULT_COMPRESSION_LEVEL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template
-      (element_class, gst_static_pad_template_get (&pngenc_sink_template));
-  gst_element_class_add_pad_template
-      (element_class, gst_static_pad_template_get (&pngenc_src_template));
+  gst_element_class_add_static_pad_template
+      (element_class, &pngenc_sink_template);
+  gst_element_class_add_static_pad_template
+      (element_class, &pngenc_src_template);
   gst_element_class_set_static_metadata (element_class, "PNG image encoder",
       "Codec/Encoder/Image",
       "Encode a video frame to a .png image",

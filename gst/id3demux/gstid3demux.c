@@ -108,8 +108,7 @@ gst_id3demux_class_init (GstID3DemuxClass * klass)
           "and ID3v2 tags are present", DEFAULT_PREFER_V1,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
 
   gst_element_class_set_static_metadata (gstelement_class, "ID3 tag demuxer",
       "Codec/Demuxer/Metadata",

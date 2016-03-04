@@ -193,10 +193,10 @@ gst_mulawenc_class_init (GstMuLawEncClass * klass)
   audio_encoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_mulawenc_handle_frame);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mulaw_enc_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mulaw_enc_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &mulaw_enc_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &mulaw_enc_sink_factory);
 
   gst_element_class_set_static_metadata (element_class, "Mu Law audio encoder",
       "Codec/Encoder/Audio",

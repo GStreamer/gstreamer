@@ -160,13 +160,13 @@ gst_jpeg_dec_class_init (GstJpegDecClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
 #endif
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_jpeg_dec_src_pad_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_jpeg_dec_sink_pad_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_jpeg_dec_src_pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_jpeg_dec_sink_pad_template);
   gst_element_class_set_static_metadata (element_class, "JPEG image decoder",
-      "Codec/Decoder/Image",
-      "Decode images from JPEG format", "Wim Taymans <wim@fluendo.com>");
+      "Codec/Decoder/Image", "Decode images from JPEG format",
+      "Wim Taymans <wim@fluendo.com>");
 
   vdec_class->start = gst_jpeg_dec_start;
   vdec_class->stop = gst_jpeg_dec_stop;

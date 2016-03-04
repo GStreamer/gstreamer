@@ -101,10 +101,8 @@ gst_rtp_rtx_queue_class_init (GstRTPRtxQueueClass * klass)
           DEFAULT_MAX_SIZE_PACKETS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "RTP Retransmission Queue", "Codec",

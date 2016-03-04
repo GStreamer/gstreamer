@@ -129,10 +129,10 @@ gst_rtp_xqt_depay_class_init (GstRtpXQTDepayClass * klass)
   GST_DEBUG_CATEGORY_INIT (rtpxqtdepay_debug, "rtpxqtdepay", 0,
       "QT Media RTP Depayloader");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_xqt_depay_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_xqt_depay_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_xqt_depay_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_xqt_depay_sink_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "RTP packet depayloader", "Codec/Depayloader/Network",

@@ -242,10 +242,10 @@ gst_navigationtest_class_init (GstNavigationtestClass * klass)
       "Handle navigation events showing a black square following mouse pointer",
       "David Schleef <ds@schleef.org>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_navigationtest_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_navigationtest_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_navigationtest_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_navigationtest_src_template);
 
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_navigationtest_src_event);
 

@@ -2528,10 +2528,10 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
       "Resizes a video by adding borders or cropping",
       "Wim Taymans <wim@fluendo.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_video_box_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_video_box_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_video_box_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_video_box_src_template);
 }
 
 static void

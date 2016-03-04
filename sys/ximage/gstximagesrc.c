@@ -1287,7 +1287,7 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
       "Lutz Mueller <lutz@users.sourceforge.net>, "
       "Jan Schmidt <thaytan@mad.scientist.com>, "
       "Zaheer Merali <zaheerabbas at merali dot org>");
-  gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&t));
+  gst_element_class_add_static_pad_template (ec, &t);
 
   bc->fixate = gst_ximage_src_fixate;
   bc->get_caps = gst_ximage_src_get_caps;

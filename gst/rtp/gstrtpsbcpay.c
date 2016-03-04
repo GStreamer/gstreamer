@@ -293,10 +293,10 @@ gst_rtp_sbc_pay_class_init (GstRtpSBCPayClass * klass)
           "(-1 for maximum allowed by the mtu)",
           -1, G_MAXINT, DEFAULT_MIN_FRAMES, G_PARAM_READWRITE));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_sbc_pay_sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_sbc_pay_src_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_rtp_sbc_pay_sink_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_rtp_sbc_pay_src_factory);
 
   gst_element_class_set_static_metadata (element_class, "RTP packet payloader",
       "Codec/Payloader/Network", "Payload SBC audio as RTP packets",

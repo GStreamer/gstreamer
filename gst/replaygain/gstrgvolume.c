@@ -271,10 +271,8 @@ gst_rg_volume_class_init (GstRgVolumeClass * klass)
   bin_class->add_element = NULL;
   bin_class->remove_element = NULL;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (element_class, &src_template);
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_set_static_metadata (element_class, "ReplayGain volume",
       "Filter/Effect/Audio",
       "Apply ReplayGain volume adjustment",

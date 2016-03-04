@@ -152,8 +152,7 @@ gst_cacasink_class_init (GstCACASinkClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "A colored ASCII art video sink", "Sink/Video",
       "A colored ASCII art videosink", "Zeeshan Ali <zak147@yahoo.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
 
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_cacasink_setcaps);
   gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_cacasink_get_times);

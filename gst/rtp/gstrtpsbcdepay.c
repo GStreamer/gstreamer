@@ -76,10 +76,10 @@ gst_rtp_sbc_depay_class_init (GstRtpSbcDepayClass * klass)
   gstbasertpdepayload_class->set_caps = gst_rtp_sbc_depay_setcaps;
   gstbasertpdepayload_class->process_rtp_packet = gst_rtp_sbc_depay_process;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_sbc_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_sbc_depay_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_rtp_sbc_depay_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_rtp_sbc_depay_sink_template);
 
   GST_DEBUG_CATEGORY_INIT (rtpsbcdepay_debug, "rtpsbcdepay", 0,
       "SBC Audio RTP Depayloader");

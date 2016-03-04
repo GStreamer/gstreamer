@@ -198,12 +198,12 @@ gst_splitmux_src_class_init (GstSplitMuxSrcClass * klass)
       "Source that reads a set of files created by splitmuxsink",
       "Jan Schmidt <jan@centricular.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&video_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&audio_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&subtitle_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &video_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &audio_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &subtitle_src_template);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_splitmux_src_change_state);

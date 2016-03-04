@@ -227,14 +227,13 @@ gst_matroska_demux_class_init (GstMatroskaDemuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_matroska_demux_get_index);
 #endif
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&video_src_templ));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&audio_src_templ));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&subtitle_src_templ));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_templ));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &video_src_templ);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &audio_src_templ);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &subtitle_src_templ);
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_templ);
 
   gst_element_class_set_static_metadata (gstelement_class, "Matroska demuxer",
       "Codec/Demuxer",

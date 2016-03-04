@@ -96,10 +96,10 @@ gst_rtp_theora_depay_class_init (GstRtpTheoraDepayClass * klass)
   gstrtpbasedepayload_class->set_caps = gst_rtp_theora_depay_setcaps;
   gstrtpbasedepayload_class->packet_lost = gst_rtp_theora_depay_packet_lost;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_theora_depay_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_theora_depay_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_theora_depay_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_theora_depay_src_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "RTP Theora depayloader", "Codec/Depayloader/Network/RTP",

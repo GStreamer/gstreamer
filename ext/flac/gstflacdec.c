@@ -164,10 +164,10 @@ gst_flac_dec_class_init (GstFlacDecClass * klass)
   audiodecoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_flac_dec_handle_frame);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&flac_dec_src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&flac_dec_sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &flac_dec_src_factory);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &flac_dec_sink_factory);
 
   gst_element_class_set_static_metadata (gstelement_class, "FLAC audio decoder",
       "Codec/Decoder/Audio", "Decodes FLAC lossless audio streams",

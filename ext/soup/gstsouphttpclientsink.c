@@ -192,8 +192,8 @@ gst_soup_http_client_sink_class_init (GstSoupHttpClientSinkClass * klass)
           SOUP_TYPE_LOGGER_LOG_LEVEL, DEFAULT_SOUP_LOG_LEVEL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_soup_http_client_sink_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_soup_http_client_sink_sink_template);
 
   gst_element_class_set_static_metadata (gstelement_class, "HTTP client sink",
       "Generic", "Sends streams to HTTP server via PUT",

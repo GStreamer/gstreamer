@@ -188,11 +188,10 @@ gst_multi_file_src_class_init (GstMultiFileSrcClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_multi_file_src_debug, "multifilesrc", 0,
       "multifilesrc element");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_multi_file_src_pad_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_multi_file_src_pad_template);
   gst_element_class_set_static_metadata (gstelement_class, "Multi-File Source",
-      "Source/File",
-      "Read a sequentially named set of files into buffers",
+      "Source/File", "Read a sequentially named set of files into buffers",
       "David Schleef <ds@schleef.org>");
 }
 

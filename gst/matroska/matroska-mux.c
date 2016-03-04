@@ -296,14 +296,13 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&videosink_templ));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&audiosink_templ));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&subtitlesink_templ));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &videosink_templ);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &audiosink_templ);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &subtitlesink_templ);
+  gst_element_class_add_static_pad_template (gstelement_class, &src_templ);
   gst_element_class_set_static_metadata (gstelement_class, "Matroska muxer",
       "Codec/Muxer",
       "Muxes video/audio/subtitle streams into a matroska stream",

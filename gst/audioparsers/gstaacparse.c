@@ -114,10 +114,8 @@ gst_aac_parse_class_init (GstAacParseClass * klass)
   GST_DEBUG_CATEGORY_INIT (aacparse_debug, "aacparse", 0,
       "AAC audio stream parser");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
+  gst_element_class_add_static_pad_template (element_class, &src_template);
 
   gst_element_class_set_static_metadata (element_class,
       "AAC audio stream parser", "Codec/Parser/Audio",

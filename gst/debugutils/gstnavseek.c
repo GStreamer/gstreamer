@@ -84,10 +84,10 @@ gst_navseek_class_init (GstNavSeekClass * klass)
           "Time in seconds to seek by", 0.0, G_MAXDOUBLE, 5.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&navseek_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&navseek_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &navseek_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &navseek_src_template);
 
   gst_element_class_set_static_metadata (element_class,
       "Seek based on left-right arrows", "Filter/Video",

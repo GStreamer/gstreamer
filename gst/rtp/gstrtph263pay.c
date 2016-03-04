@@ -424,10 +424,10 @@ gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass)
           "Disable packetization modes B and C", DEFAULT_MODE_A,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_h263_pay_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_h263_pay_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_h263_pay_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_h263_pay_sink_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "RTP H263 packet payloader", "Codec/Payloader/Network/RTP",

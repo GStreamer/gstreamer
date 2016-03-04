@@ -85,10 +85,8 @@ gst_alpha_color_class_init (GstAlphaColorClass * klass)
       "ARGB from/to AYUV colorspace conversion preserving the alpha channel",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   gstbasetransform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_alpha_color_transform_caps);

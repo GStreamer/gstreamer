@@ -138,10 +138,10 @@ gst_break_my_data_class_init (GstBreakMyDataClass * klass)
           "probability for each byte in the buffer to be changed", 0.0, 1.0,
           0.0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&bmd_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&bmd_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &bmd_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &bmd_src_template);
 
   gst_element_class_set_static_metadata (gstelement_class, "Break my data",
       "Testing",

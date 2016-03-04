@@ -327,10 +327,8 @@ gst_avi_subtitle_class_init (GstAviSubtitleClass * klass)
   gstelement_class->send_event =
       GST_DEBUG_FUNCPTR (gst_avi_subtitle_send_event);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Avi subtitle parser", "Codec/Parser/Subtitle",

@@ -65,10 +65,10 @@ gst_rtp_siren_pay_class_init (GstRTPSirenPayClass * klass)
 
   gstrtpbasepayload_class->set_caps = gst_rtp_siren_pay_setcaps;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_siren_pay_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_siren_pay_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_siren_pay_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_siren_pay_src_template);
   gst_element_class_set_static_metadata (gstelement_class,
       "RTP Payloader for Siren Audio", "Codec/Payloader/Network/RTP",
       "Packetize Siren audio streams into RTP packets",

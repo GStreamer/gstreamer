@@ -168,12 +168,12 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
       "Convenience bin that muxes incoming streams into multiple time/size limited files",
       "Jan Schmidt <jan@centricular.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&video_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&audio_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&subtitle_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &video_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &audio_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &subtitle_sink_template);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_splitmux_sink_change_state);

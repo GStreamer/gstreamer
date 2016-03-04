@@ -189,12 +189,12 @@ gst_smpte_class_init (GstSMPTEClass * klass)
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_smpte_change_state);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_smpte_sink1_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_smpte_sink2_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_smpte_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_smpte_sink1_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_smpte_sink2_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_smpte_src_template);
   gst_element_class_set_static_metadata (gstelement_class, "SMPTE transitions",
       "Filter/Editor/Video",
       "Apply the standard SMPTE transitions on video images",

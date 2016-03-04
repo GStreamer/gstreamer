@@ -2320,20 +2320,20 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_rtp_bin_release_pad);
 
   /* sink pads */
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtpbin_recv_rtp_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtpbin_recv_rtcp_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtpbin_send_rtp_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtpbin_recv_rtp_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtpbin_recv_rtcp_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtpbin_send_rtp_sink_template);
 
   /* src pads */
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtpbin_recv_rtp_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtpbin_send_rtcp_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtpbin_send_rtp_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtpbin_recv_rtp_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtpbin_send_rtcp_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtpbin_send_rtp_src_template);
 
   gst_element_class_set_static_metadata (gstelement_class, "RTP Bin",
       "Filter/Network/RTP",

@@ -155,8 +155,7 @@ gst_osx_audio_src_class_init (GstOsxAudioSrcClass * klass)
   gstaudiobasesrc_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_osx_audio_src_create_ringbuffer);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
 
   gst_element_class_set_static_metadata (gstelement_class, "Audio Source (OSX)",
       "Source/Audio",

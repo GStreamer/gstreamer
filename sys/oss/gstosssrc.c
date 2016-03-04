@@ -167,8 +167,8 @@ gst_oss_src_class_init (GstOssSrcClass * klass)
       "Capture from a sound card via OSS",
       "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&osssrc_src_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &osssrc_src_factory);
 }
 
 static void

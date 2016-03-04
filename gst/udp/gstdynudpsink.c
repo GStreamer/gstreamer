@@ -130,8 +130,7 @@ gst_dynudpsink_class_init (GstDynUDPSinkClass * klass)
           "Port to bind the socket to", 0, G_MAXUINT16,
           UDP_DEFAULT_BIND_PORT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
 
   gst_element_class_set_static_metadata (gstelement_class, "UDP packet sender",
       "Sink/Network",

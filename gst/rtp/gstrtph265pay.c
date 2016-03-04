@@ -170,10 +170,10 @@ gst_rtp_h265_pay_class_init (GstRtpH265PayClass * klass)
 
   gobject_class->finalize = gst_rtp_h265_pay_finalize;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_h265_pay_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_h265_pay_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_h265_pay_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_h265_pay_sink_template);
 
   gst_element_class_set_static_metadata (gstelement_class, "RTP H265 payloader",
       "Codec/Payloader/Network/RTP",

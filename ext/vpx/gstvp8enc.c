@@ -141,10 +141,10 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
   vpx_encoder_class = GST_VPX_ENC_CLASS (klass);
 
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vp8_enc_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vp8_enc_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vp8_enc_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vp8_enc_sink_template);
 
   gst_element_class_set_static_metadata (element_class,
       "On2 VP8 Encoder",

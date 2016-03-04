@@ -222,8 +222,7 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
       "PulseAudio Audio Source",
       "Source/Audio",
       "Captures audio from a PulseAudio server", "Lennart Poettering");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&pad_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &pad_template);
 
   /**
    * GstPulseSrc:volume:

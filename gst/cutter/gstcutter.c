@@ -147,13 +147,12 @@ gst_cutter_class_init (GstCutterClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (cutter_debug, "cutter", 0, "Audio cutting");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&cutter_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&cutter_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &cutter_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &cutter_sink_factory);
   gst_element_class_set_static_metadata (element_class, "Audio cutter",
-      "Filter/Editor/Audio",
-      "Audio Cutter to split audio into non-silent bits",
+      "Filter/Editor/Audio", "Audio Cutter to split audio into non-silent bits",
       "Thomas Vander Stichele <thomas at apestaart dot org>");
   element_class->change_state = gst_cutter_change_state;
 }

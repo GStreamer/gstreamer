@@ -106,10 +106,8 @@ gst_rg_limiter_class_init (GstRgLimiterClass * klass)
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_rg_limiter_transform_ip);
   trans_class->passthrough_on_same_caps = FALSE;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (element_class, &src_factory);
+  gst_element_class_add_static_pad_template (element_class, &sink_factory);
   gst_element_class_set_static_metadata (element_class, "ReplayGain limiter",
       "Filter/Effect/Audio",
       "Apply signal compression to raw audio data",

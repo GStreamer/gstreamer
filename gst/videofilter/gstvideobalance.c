@@ -598,10 +598,10 @@ gst_video_balance_class_init (GstVideoBalanceClass * klass)
       "Adjusts brightness, contrast, hue, saturation on a video stream",
       "David Schleef <ds@schleef.org>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_video_balance_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_video_balance_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_video_balance_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_video_balance_src_template);
 
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_video_balance_before_transform);

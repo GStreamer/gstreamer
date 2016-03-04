@@ -396,10 +396,10 @@ gst_optv_class_init (GstOpTVClass * klass)
       "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_optv_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_optv_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_optv_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_optv_src_template);
 
   trans_class->start = GST_DEBUG_FUNCPTR (gst_optv_start);
 

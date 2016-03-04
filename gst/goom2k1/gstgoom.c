@@ -104,10 +104,8 @@ gst_goom2k1_class_init (GstGoom2k1Class * klass)
       "GOOM: what a GOOM! 2k1 edition", "Visualization",
       "Takes frames of data and outputs video frames using the GOOM 2k1 filter",
       "Wim Taymans <wim@fluendo.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   GST_DEBUG_CATEGORY_INIT (goom2k1_debug, "goom2k1", 0,
       "goom2k1 visualisation element");

@@ -67,10 +67,10 @@ gst_rtp_opus_depay_class_init (GstRTPOpusDepayClass * klass)
   element_class = GST_ELEMENT_CLASS (klass);
   gstbasertpdepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_opus_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_opus_depay_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_rtp_opus_depay_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_rtp_opus_depay_sink_template);
   gst_element_class_set_static_metadata (element_class,
       "RTP Opus packet depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts Opus audio from RTP packets",

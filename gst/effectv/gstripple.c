@@ -586,10 +586,10 @@ gst_rippletv_class_init (GstRippleTVClass * klass)
       "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rippletv_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rippletv_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rippletv_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rippletv_src_template);
 
   trans_class->start = GST_DEBUG_FUNCPTR (gst_rippletv_start);
 

@@ -170,8 +170,7 @@ gst_avi_demux_class_init (GstAviDemuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class, videosrctempl);
   gst_element_class_add_pad_template (gstelement_class, subsrctempl);
   gst_element_class_add_pad_template (gstelement_class, subpicsrctempl);
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_templ));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_templ);
 
   gst_element_class_set_static_metadata (gstelement_class, "Avi demuxer",
       "Codec/Demuxer",

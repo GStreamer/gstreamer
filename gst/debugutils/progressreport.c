@@ -165,10 +165,10 @@ gst_progress_report_class_init (GstProgressReportClass * g_class)
           "Format to use for the querying", DEFAULT_FORMAT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&progress_report_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&progress_report_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &progress_report_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &progress_report_src_template);
 
   gst_element_class_set_static_metadata (element_class, "Progress report",
       "Testing",

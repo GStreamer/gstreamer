@@ -408,10 +408,10 @@ gst_alaw_enc_class_init (GstALawEncClass * klass)
   audio_encoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_alaw_enc_handle_frame);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&alaw_enc_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&alaw_enc_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &alaw_enc_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &alaw_enc_sink_factory);
 
   gst_element_class_set_static_metadata (element_class,
       "A Law audio encoder", "Codec/Encoder/Audio",

@@ -828,8 +828,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtptemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &rtptemplate);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "RTSP packet receiver", "Source/Network",

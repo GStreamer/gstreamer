@@ -80,10 +80,8 @@ gst_rtp_stream_pay_class_init (GstRtpStreamPayClass * klass)
       "Payloads RTP/RTCP packets for streaming protocols according to RFC4571",
       "Sebastian Dröge <sebastian@centricular.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
 }
 
 static void

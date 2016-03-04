@@ -160,13 +160,12 @@ gst_multipart_demux_class_init (GstMultipartDemuxClass * klass)
 
   gstelement_class->change_state = gst_multipart_demux_change_state;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&multipart_demux_sink_template_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&multipart_demux_src_template_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &multipart_demux_sink_template_factory);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &multipart_demux_src_template_factory);
   gst_element_class_set_static_metadata (gstelement_class, "Multipart demuxer",
-      "Codec/Demuxer",
-      "demux multipart streams",
+      "Codec/Demuxer", "demux multipart streams",
       "Wim Taymans <wim.taymans@gmail.com>, Sjoerd Simons <sjoerd@luon.net>");
 }
 

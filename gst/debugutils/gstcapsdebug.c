@@ -77,10 +77,10 @@ gst_caps_debug_class_init (GstCapsDebugClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_caps_debug_debug, "capsdebug", 0,
       "debug category for capsdebug element");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_caps_debug_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_caps_debug_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_caps_debug_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_caps_debug_sink_template);
 
   gst_element_class_set_static_metadata (element_class, "Caps debug",
       "Generic", "Debug caps negotiation", "David Schleef <ds@schleef.org>");

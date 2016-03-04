@@ -79,10 +79,10 @@ gst_rtp_speex_depay_class_init (GstRtpSPEEXDepayClass * klass)
   gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_speex_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_speex_depay_setcaps;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_speex_depay_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_speex_depay_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_speex_depay_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_speex_depay_sink_template);
   gst_element_class_set_static_metadata (gstelement_class,
       "RTP Speex depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts Speex audio from RTP packets",

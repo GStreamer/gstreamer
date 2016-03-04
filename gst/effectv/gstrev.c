@@ -230,10 +230,10 @@ gst_revtv_class_init (GstRevTVClass * klass)
       "A video waveform monitor for each line of video processed",
       "Wim Taymans <wim.taymans@gmail.be>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_revtv_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_revtv_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_revtv_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_revtv_src_template);
 
   vfilter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_revtv_transform_frame);
