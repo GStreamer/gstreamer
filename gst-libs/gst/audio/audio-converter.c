@@ -681,8 +681,10 @@ chain_resample (GstAudioConverter * convert, AudioChain * prev)
     method = GET_OPT_RESAMPLER_METHOD (convert);
 
     flags = 0;
-    if (convert->current_layout == GST_AUDIO_LAYOUT_NON_INTERLEAVED)
-      flags |= GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED;
+    if (convert->current_layout == GST_AUDIO_LAYOUT_NON_INTERLEAVED) {
+      flags |= GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED_IN;
+      flags |= GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED_OUT;
+    }
     if (variable_rate)
       flags |= GST_AUDIO_RESAMPLER_FLAG_VARIABLE_RATE;
 

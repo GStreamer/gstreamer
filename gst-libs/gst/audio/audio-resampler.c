@@ -1504,7 +1504,7 @@ gst_audio_resampler_new (GstAudioResamplerMethod method,
   resampler->sbuf = g_malloc0 (sizeof (gpointer) * channels);
 
   non_interleaved =
-      (resampler->flags & GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED);
+      (resampler->flags & GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED_OUT);
 
   /* we resample each channel separately */
   resampler->blocks = resampler->channels;

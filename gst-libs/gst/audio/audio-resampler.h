@@ -178,9 +178,12 @@ typedef enum {
 /**
  * GstAudioResamplerFlags:
  * @GST_AUDIO_RESAMPLER_FLAG_NONE: no flags
- * @GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED: samples are non-interleaved. an array
- *    of blocks of samples, one for each channel, should be passed to the resample
- *    function.
+ * @GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED_IN: input samples are non-interleaved.
+ *    an array of blocks of samples, one for each channel, should be passed to the
+ *    resample function.
+ * @GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED_OUT: output samples are non-interleaved.
+ *    an array of blocks of samples, one for each channel, should be passed to the
+ *    resample function.
  * @GST_AUDIO_RESAMPLER_FLAG_VARIABLE_RATE: optimize for dynamic updates of the sample
  *    rates with gst_audio_resampler_update(). This will select an interpolating filter
  *    when #GST_AUDIO_RESAMPLER_FILTER_MODE_AUTO is configured.
@@ -189,8 +192,9 @@ typedef enum {
  */
 typedef enum {
   GST_AUDIO_RESAMPLER_FLAG_NONE                 = (0),
-  GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED      = (1 << 0),
-  GST_AUDIO_RESAMPLER_FLAG_VARIABLE_RATE        = (1 << 1),
+  GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED_IN   = (1 << 0),
+  GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED_OUT  = (1 << 1),
+  GST_AUDIO_RESAMPLER_FLAG_VARIABLE_RATE        = (1 << 2),
 } GstAudioResamplerFlags;
 
 #define GST_AUDIO_RESAMPLER_QUALITY_MIN 0
