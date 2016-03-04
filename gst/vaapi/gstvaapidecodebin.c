@@ -264,11 +264,11 @@ gst_vaapi_decode_bin_class_init (GstVaapiDecodeBinClass * klass)
 
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vaapi_decode_bin_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vaapi_decode_bin_sink_factory);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vaapi_decode_bin_src_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vaapi_decode_bin_src_factory);
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_vaapi_decode_bin,
       GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);

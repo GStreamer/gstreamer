@@ -1703,7 +1703,6 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
   GstVideoSinkClass *const videosink_class = GST_VIDEO_SINK_CLASS (klass);
   GstVaapiPluginBaseClass *const base_plugin_class =
       GST_VAAPI_PLUGIN_BASE_CLASS (klass);
-  GstPadTemplate *pad_template;
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_vaapisink,
       GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
@@ -1734,8 +1733,8 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
       "VA-API sink", "Sink/Video", GST_PLUGIN_DESC,
       "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
 
-  pad_template = gst_static_pad_template_get (&gst_vaapisink_sink_factory);
-  gst_element_class_add_pad_template (element_class, pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vaapisink_sink_factory);
 
   /**
    * GstVaapiSink:display:

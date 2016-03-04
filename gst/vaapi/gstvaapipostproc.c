@@ -1527,7 +1527,6 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *const trans_class = GST_BASE_TRANSFORM_CLASS (klass);
-  GstPadTemplate *pad_template;
   GPtrArray *filter_ops;
   GstVaapiFilterOpInfo *filter_op;
 
@@ -1560,12 +1559,12 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
       GST_PLUGIN_DESC, "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
 
   /* sink pad */
-  pad_template = gst_static_pad_template_get (&gst_vaapipostproc_sink_factory);
-  gst_element_class_add_pad_template (element_class, pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vaapipostproc_sink_factory);
 
   /* src pad */
-  pad_template = gst_static_pad_template_get (&gst_vaapipostproc_src_factory);
-  gst_element_class_add_pad_template (element_class, pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vaapipostproc_src_factory);
 
   /**
    * GstVaapiPostproc:deinterlace-mode:

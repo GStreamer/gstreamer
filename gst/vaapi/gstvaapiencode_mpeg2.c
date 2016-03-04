@@ -169,12 +169,12 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
       GST_PLUGIN_DESC, "Guangxin Xu <guangxin.xu@intel.com>");
 
   /* sink pad */
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vaapiencode_mpeg2_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vaapiencode_mpeg2_sink_factory);
 
   /* src pad */
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vaapiencode_mpeg2_src_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vaapiencode_mpeg2_src_factory);
 
   gst_vaapiencode_class_init_properties (encode_class);
 }

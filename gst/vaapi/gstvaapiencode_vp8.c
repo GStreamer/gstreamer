@@ -166,12 +166,12 @@ gst_vaapiencode_vp8_class_init (GstVaapiEncodeVP8Class * klass)
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
 
   /* sink pad */
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vaapiencode_vp8_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vaapiencode_vp8_sink_factory);
 
   /* src pad */
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vaapiencode_vp8_src_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vaapiencode_vp8_src_factory);
 
   gst_vaapiencode_class_init_properties (encode_class);
 }
