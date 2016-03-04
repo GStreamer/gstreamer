@@ -169,8 +169,7 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
       GST_TYPE_ELEMENT, 0);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_static_pad_template (element_class, &src_factory);
 
   upload_caps = gst_gl_upload_get_input_template_caps ();
   gst_element_class_add_pad_template (element_class,
