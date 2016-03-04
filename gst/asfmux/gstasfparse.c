@@ -400,10 +400,8 @@ gst_asf_parse_class_init (GstAsfParseClass * klass)
   gstbaseparse_class->stop = gst_asf_parse_stop;
   gstbaseparse_class->handle_frame = gst_asf_parse_handle_frame;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
 
   gst_element_class_set_static_metadata (gstelement_class, "ASF parser",
       "Parser", "Parses ASF", "Thiago Santos <thiagoss@embedded.ufcg.edu.br>");

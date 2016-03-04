@@ -205,8 +205,8 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
 
   gstelement_klass->change_state = fps_display_sink_change_state;
 
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&fps_display_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_klass,
+      &fps_display_sink_template);
 
   gst_element_class_set_static_metadata (gstelement_klass,
       "Measure and show framerate on videosink", "Sink/Video",

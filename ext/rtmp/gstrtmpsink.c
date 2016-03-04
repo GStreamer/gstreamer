@@ -109,8 +109,7 @@ gst_rtmp_sink_class_init (GstRTMPSinkClass * klass)
       "Sink/Network", "Sends FLV content to a server via RTMP",
       "Jan Schmidt <thaytan@noraisin.net>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
 
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_rtmp_sink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_rtmp_sink_stop);

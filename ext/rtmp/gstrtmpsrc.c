@@ -125,8 +125,7 @@ gst_rtmp_src_class_init (GstRTMPSrcClass * klass)
           "Location of the RTMP url to read",
           DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "RTMP Source",

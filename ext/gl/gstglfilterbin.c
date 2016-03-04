@@ -73,8 +73,7 @@ gst_gl_filter_bin_class_init (GstGLFilterBinClass * klass)
   gobject_class->set_property = gst_gl_filter_bin_set_property;
   gobject_class->get_property = gst_gl_filter_bin_get_property;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&_src_pad_template));
+  gst_element_class_add_static_pad_template (element_class, &_src_pad_template);
 
   upload_caps = gst_gl_upload_get_input_template_caps ();
   gst_element_class_add_pad_template (element_class,

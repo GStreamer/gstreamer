@@ -120,10 +120,10 @@ gst_aiff_parse_class_init (GstAiffParseClass * klass)
 
   object_class->dispose = gst_aiff_parse_dispose;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &sink_template_factory);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &src_template_factory);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "AIFF audio demuxer", "Codec/Demuxer/Audio",

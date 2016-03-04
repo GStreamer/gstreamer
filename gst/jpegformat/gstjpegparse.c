@@ -144,10 +144,10 @@ gst_jpeg_parse_class_init (GstJpegParseClass * klass)
   gstbaseparse_class->handle_frame = gst_jpeg_parse_handle_frame;
   gstbaseparse_class->pre_push_frame = gst_jpeg_parse_pre_push_frame;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_jpeg_parse_src_pad_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_jpeg_parse_sink_pad_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_jpeg_parse_src_pad_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_jpeg_parse_sink_pad_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "JPEG stream parser",

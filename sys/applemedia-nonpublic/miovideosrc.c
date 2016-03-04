@@ -1133,8 +1133,7 @@ gst_mio_video_src_base_init (gpointer gclass)
       "Reads frames from a Mac OS X MIO device",
       "Ole André Vadla Ravnås <oleavr@soundrop.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (element_class, &src_template);
 }
 
 static void

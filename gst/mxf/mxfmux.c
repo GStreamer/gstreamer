@@ -171,8 +171,7 @@ gst_mxf_mux_class_init (GstMXFMuxClass * klass)
   gstaggregator_class->aggregate = GST_DEBUG_FUNCPTR (gst_mxf_mux_aggregate);
   gstaggregator_class->sinkpads_type = GST_TYPE_MXF_MUX_PAD;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_templ);
 
   p = mxf_essence_element_writer_get_pad_templates ();
   while (p && *p) {

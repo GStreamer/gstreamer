@@ -63,10 +63,8 @@ gst_png_parse_class_init (GstPngParseClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (png_parse_debug, "pngparse", 0, "png parser");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
   gst_element_class_set_static_metadata (gstelement_class, "PNG parser",
       "Codec/Parser/Video/Image",
       "Parses PNG files", "Olivier Crete <olivier.crete@collabora.com>");

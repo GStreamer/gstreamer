@@ -366,8 +366,8 @@ gst_a2dp_sink_class_init (GstA2dpSinkClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_a2dp_sink_debug, "a2dpsink", 0,
       "A2DP sink element");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_a2dp_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_a2dp_sink_factory);
 }
 
 GstCaps *

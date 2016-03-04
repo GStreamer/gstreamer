@@ -140,10 +140,10 @@ gst_exclusion_class_init (GstExclusionClass * klass)
       "Exclusion exclodes the colors in the video signal.",
       "Luis de Bethencourt <luis@debethencourt.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_exclusion_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_exclusion_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_exclusion_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_exclusion_src_template);
 
   gobject_class->set_property = gst_exclusion_set_property;
   gobject_class->get_property = gst_exclusion_get_property;

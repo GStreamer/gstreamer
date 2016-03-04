@@ -94,13 +94,12 @@ gst_webp_dec_class_init (GstWebPDecClass * klass)
   gobject_class->set_property = gst_webp_dec_set_property;
   gobject_class->get_property = gst_webp_dec_get_property;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_webp_dec_src_pad_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_webp_dec_sink_pad_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_webp_dec_src_pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_webp_dec_sink_pad_template);
   gst_element_class_set_static_metadata (element_class, "WebP image decoder",
-      "Codec/Decoder/Image",
-      "Decode images from WebP format",
+      "Codec/Decoder/Image", "Decode images from WebP format",
       "Sreerenj Balachandran <sreerenj.balachandrn@intel.com>");
 
   g_object_class_install_property (gobject_class, PROP_BYPASS_FILTERING,

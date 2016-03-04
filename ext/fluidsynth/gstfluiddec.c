@@ -177,10 +177,8 @@ gst_fluid_dec_class_init (GstFluidDecClass * klass)
           "Synth Polyphony", "The number of simultaneous voices", 1, 65535,
           DEFAULT_SYNTH_POLYPHONY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
 
   gst_element_class_set_static_metadata (gstelement_class, "Fluidsynth",
       "Codec/Decoder/Audio",

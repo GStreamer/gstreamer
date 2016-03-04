@@ -89,13 +89,12 @@ gst_smooth_class_init (GstSmoothClass * klass)
       g_param_spec_boolean ("luma-only", "luma-only", "only filter luma part",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_smooth_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_smooth_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_smooth_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_smooth_src_template);
   gst_element_class_set_static_metadata (gstelement_class, "Smooth effect",
-      "Filter/Effect/Video",
-      "Apply a smooth filter to an image",
+      "Filter/Effect/Video", "Apply a smooth filter to an image",
       "Wim Taymans <wim.taymans@chello.be>");
 
   vfilter_class->transform_frame =

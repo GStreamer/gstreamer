@@ -110,17 +110,17 @@ gst_overlay_base_init (GstOverlayClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&overlay_sink1_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&overlay_sink2_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&overlay_sink3_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&overlay_src_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &overlay_sink1_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &overlay_sink2_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &overlay_sink3_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &overlay_src_factory);
   gst_element_class_set_static_metadata (element_class, "Video overlay",
-      "Filter/Editor/Video",
-      "Overlay multiple video streams", "David Schleef <ds@schleef.org>");
+      "Filter/Editor/Video", "Overlay multiple video streams",
+      "David Schleef <ds@schleef.org>");
 }
 
 static void

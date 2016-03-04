@@ -163,10 +163,8 @@ gst_cv_sobel_class_init (GstCvSobelClass * klass)
           "Sets whether the detected derivative edges should be used as a mask on the original input or not",
           DEFAULT_MASK, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (element_class, &src_factory);
+  gst_element_class_add_static_pad_template (element_class, &sink_factory);
 
   gst_element_class_set_static_metadata (element_class,
       "cvsobel",

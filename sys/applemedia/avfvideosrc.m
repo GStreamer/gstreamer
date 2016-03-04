@@ -1180,8 +1180,7 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
       "Reads frames from an iOS AVFoundation device",
       "Ole André Vadla Ravnås <oleavr@soundrop.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_INDEX,
       g_param_spec_int ("device-index", "Device Index",

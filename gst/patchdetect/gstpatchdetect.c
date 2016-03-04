@@ -109,10 +109,10 @@ gst_patchdetect_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_patchdetect_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_patchdetect_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_patchdetect_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_patchdetect_src_template);
 
   gst_element_class_set_static_metadata (element_class, "Color Patch Detector",
       "Video/Analysis", "Detects color patches from a color calibration chart",

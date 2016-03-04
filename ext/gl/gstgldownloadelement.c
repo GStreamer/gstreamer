@@ -73,10 +73,10 @@ gst_gl_download_element_class_init (GstGLDownloadElementClass * klass)
 
   bt_class->passthrough_on_same_caps = TRUE;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gl_download_element_src_pad_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gl_download_element_sink_pad_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_gl_download_element_src_pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_gl_download_element_sink_pad_template);
 
   gst_element_class_set_metadata (element_class,
       "OpenGL uploader", "Filter/Video",

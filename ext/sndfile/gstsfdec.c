@@ -157,8 +157,8 @@ gst_sf_dec_class_init (GstSFDecClass * klass)
       "Read audio streams using libsndfile",
       "Stefan Sauer <ensonic@user.sf.net>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sf_dec_src_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &sf_dec_src_factory);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,

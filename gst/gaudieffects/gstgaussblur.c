@@ -137,10 +137,10 @@ gst_gaussianblur_class_init (GstGaussianBlurClass * klass)
       "Perform Gaussian blur/sharpen on a video",
       "Jan Schmidt <thaytan@noraisin.net>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_gaussianblur_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_gaussianblur_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_gaussianblur_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_gaussianblur_src_template);
 
   gobject_class->set_property = gst_gaussianblur_set_property;
   gobject_class->get_property = gst_gaussianblur_get_property;

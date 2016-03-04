@@ -131,8 +131,7 @@ gst_opensles_src_class_init (GstOpenSLESSrcClass * klass)
           GST_TYPE_OPENSLES_RECORDING_PRESET, DEFAULT_PRESET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
 
   gst_element_class_set_static_metadata (gstelement_class, "OpenSL ES Src",
       "Source/Audio",

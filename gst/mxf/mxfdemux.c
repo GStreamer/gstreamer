@@ -4461,13 +4461,13 @@ gst_mxf_demux_class_init (GstMXFDemuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_mxf_demux_change_state);
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_mxf_demux_query);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&mxf_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&mxf_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &mxf_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &mxf_src_template);
   gst_element_class_set_static_metadata (gstelement_class, "MXF Demuxer",
-      "Codec/Demuxer",
-      "Demux MXF files", "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+      "Codec/Demuxer", "Demux MXF files",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 }
 
 static void

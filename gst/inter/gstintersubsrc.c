@@ -93,8 +93,8 @@ gst_inter_sub_src_class_init (GstInterSubSrcClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_inter_sub_src_debug_category, "intersubsrc", 0,
       "debug category for intersubsrc element");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_inter_sub_src_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_inter_sub_src_src_template);
 
   gst_element_class_set_static_metadata (element_class,
       "Internal subtitle source",

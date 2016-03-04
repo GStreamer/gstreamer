@@ -116,10 +116,8 @@ gst_hdvparse_base_init (gpointer klass)
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (element_class, &src_template);
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_set_static_metadata (element_class, "HDVParser",
       "Data/Parser",
       "HDV private stream Parser", "Edward Hervey <bilboed@bilboed.com>");

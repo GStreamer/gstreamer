@@ -231,10 +231,8 @@ gst_teletextdec_class_init (GstTeletextDecClass * klass)
       "Sebastian Pölsterl <sebp@k-d-w.org>, "
       "Andoni Morales Alastruey <ylatuya@gmail.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
 }
 
 /* initialize the new element

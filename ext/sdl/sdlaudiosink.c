@@ -151,8 +151,8 @@ gst_sdlaudio_sink_base_init (gpointer g_class)
       "Output to a sound card via SDLAUDIO",
       "Edgard Lima <edgard.lima@indt.org.br>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sdlaudiosink_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &sdlaudiosink_sink_factory);
 }
 
 static void

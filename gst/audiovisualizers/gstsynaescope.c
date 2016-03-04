@@ -87,10 +87,10 @@ gst_synae_scope_class_init (GstSynaeScopeClass * g_class)
       "Creates video visualizations of audio input, using stereo and pitch information",
       "Stefan Kost <ensonic@users.sf.net>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_synae_scope_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_synae_scope_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_synae_scope_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_synae_scope_sink_template);
 
   scope_class->setup = GST_DEBUG_FUNCPTR (gst_synae_scope_setup);
   scope_class->render = GST_DEBUG_FUNCPTR (gst_synae_scope_render);

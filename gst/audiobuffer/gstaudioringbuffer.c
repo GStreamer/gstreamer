@@ -319,10 +319,8 @@ gst_audio_ringbuffer_class_init (GstAudioRingbufferClass * klass)
           G_MAXINT64, DEFAULT_SEGMENT_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 
   gst_element_class_set_static_metadata (gstelement_class, "AudioRingbuffer",
       "Generic",

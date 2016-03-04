@@ -1390,8 +1390,7 @@ gst_vdp_sink_base_init (gpointer g_class)
       "Sink/Video",
       "VDPAU Sink", "Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
 }
 
 static void

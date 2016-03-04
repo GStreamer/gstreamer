@@ -76,10 +76,10 @@ gst_pnmdec_class_init (GstPnmdecClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *vdec_class = (GstVideoDecoderClass *) klass;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_pnmdec_src_pad_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_pnmdec_sink_pad_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_pnmdec_src_pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_pnmdec_sink_pad_template);
   gst_element_class_set_static_metadata (element_class, "PNM image decoder",
       "Codec/Decoder/Image",
       "Decodes images in portable pixmap/graymap/bitmap/anymamp (PNM) format",

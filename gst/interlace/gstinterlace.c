@@ -247,10 +247,10 @@ gst_interlace_class_init (GstInterlaceClass * klass)
       "Creates an interlaced video from progressive frames",
       "David Schleef <ds@schleef.org>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_interlace_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_interlace_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_interlace_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_interlace_src_template);
 
   element_class->change_state = gst_interlace_change_state;
 }

@@ -417,13 +417,12 @@ acmmp3dec_class_init (ACMMP3DecClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   gobjectclass->dispose = acmmp3dec_dispose;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&acmmp3dec_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&acmmp3dec_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &acmmp3dec_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &acmmp3dec_src_template);
   gst_element_class_set_static_metadata (element_class, "ACM MP3 decoder",
-      "Codec/Decoder/Audio",
-      "Decode MP3 using ACM decoder",
+      "Codec/Decoder/Audio", "Decode MP3 using ACM decoder",
       "Pioneers of the Inevitable <songbird@songbirdnest.com");
 }
 

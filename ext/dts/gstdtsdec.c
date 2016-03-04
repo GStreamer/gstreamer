@@ -156,10 +156,8 @@ gst_dtsdec_class_init (GstDtsDecClass * klass)
   gobject_class->set_property = gst_dtsdec_set_property;
   gobject_class->get_property = gst_dtsdec_get_property;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
+  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
   gst_element_class_set_static_metadata (gstelement_class, "DTS audio decoder",
       "Codec/Decoder/Audio",
       "Decodes DTS audio streams",

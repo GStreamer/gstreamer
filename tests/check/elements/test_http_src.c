@@ -192,8 +192,8 @@ gst_test_http_src_class_init (GstTestHTTPSrcClass * klass)
       "Test HTTP source element for unit tests",
       "Source/Network",
       "Use in unit tests", "Alex Ashley <alex.ashley@youview.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_dashdemux_test_source_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_dashdemux_test_source_template);
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_test_http_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_test_http_src_stop);

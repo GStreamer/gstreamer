@@ -473,8 +473,7 @@ gst_tinyalsa_sink_class_init (GstTinyalsaSinkClass * klass)
       "Sink/Audio", "Plays audio to an ALSA device",
       "Arun Raghavan <arun@centricular.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
 
   g_object_class_install_property (gobject_class,
       PROP_CARD,

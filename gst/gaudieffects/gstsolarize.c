@@ -143,10 +143,10 @@ gst_solarize_class_init (GstSolarizeClass * klass)
       "Solarize tunable inverse in the video signal.",
       "Luis de Bethencourt <luis@debethencourt.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_solarize_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_solarize_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_solarize_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_solarize_src_template);
 
   gobject_class->set_property = gst_solarize_set_property;
   gobject_class->get_property = gst_solarize_get_property;

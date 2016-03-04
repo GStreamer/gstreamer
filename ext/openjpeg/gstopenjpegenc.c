@@ -177,10 +177,10 @@ gst_openjpeg_enc_class_init (GstOpenJPEGEncClass * klass)
           "Tile Height", 0, G_MAXINT, DEFAULT_TILE_HEIGHT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_openjpeg_enc_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_openjpeg_enc_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_openjpeg_enc_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_openjpeg_enc_sink_template);
 
   gst_element_class_set_static_metadata (element_class,
       "OpenJPEG JPEG2000 encoder",

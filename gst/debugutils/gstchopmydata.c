@@ -121,10 +121,10 @@ gst_chop_my_data_class_init (GstChopMyDataClass * klass)
           "Step increment for random buffer sizes", 1, G_MAXINT,
           DEFAULT_MAX_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_chop_my_data_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_chop_my_data_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_chop_my_data_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_chop_my_data_sink_template);
 
   gst_element_class_set_static_metadata (element_class, "FIXME",
       "Generic", "FIXME", "David Schleef <ds@schleef.org>");

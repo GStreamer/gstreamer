@@ -485,13 +485,12 @@ gst_audiomixer_class_init (GstAudioMixerClass * klass)
           "Setting this property takes a reference to the supplied GstCaps "
           "object", GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_audiomixer_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_audiomixer_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_audiomixer_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_audiomixer_sink_template);
   gst_element_class_set_static_metadata (gstelement_class, "AudioMixer",
-      "Generic/Audio",
-      "Mixes multiple audio streams",
+      "Generic/Audio", "Mixes multiple audio streams",
       "Sebastian Dröge <sebastian@centricular.com>");
 
   gstelement_class->request_new_pad =

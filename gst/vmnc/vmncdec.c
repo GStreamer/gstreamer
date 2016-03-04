@@ -90,13 +90,12 @@ gst_vmnc_dec_class_init (GstVMncDecClass * klass)
   decoder_class->handle_frame = gst_vmnc_dec_handle_frame;
   decoder_class->set_format = gst_vmnc_dec_set_format;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vmnc_dec_src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vmnc_dec_sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &vmnc_dec_src_factory);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &vmnc_dec_sink_factory);
   gst_element_class_set_static_metadata (gstelement_class, "VMnc video decoder",
-      "Codec/Decoder/Video",
-      "Decode VmWare video to raw (RGB) video",
+      "Codec/Decoder/Video", "Decode VmWare video to raw (RGB) video",
       "Michael Smith <msmith@xiph.org>");
 
   GST_DEBUG_CATEGORY_INIT (vmnc_debug, "vmncdec", 0, "VMnc decoder");

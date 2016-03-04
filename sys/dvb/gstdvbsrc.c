@@ -614,8 +614,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_dvbsrc_change_state);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&ts_src_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &ts_src_factory);
 
   gst_element_class_set_static_metadata (gstelement_class, "DVB Source",
       "Source/Video",

@@ -227,8 +227,7 @@ gst_ca_opengl_layer_sink_class_init (GstCAOpenGLLayerSinkClass * klass)
       "Sink/Video", "A video sink based on CAOpenGLLayer",
       "Matthew Waters <matthew@centricular.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_ca_opengl_layer_sink_template));
+  gst_element_class_add_static_pad_template (element_class, &gst_ca_opengl_layer_sink_template);
 
   gobject_class->finalize = gst_ca_opengl_layer_sink_finalize;
 

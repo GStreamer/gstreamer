@@ -124,10 +124,8 @@ gst_dtmf_detect_class_init (GstDtmfDetectClass * klass)
 
   gobject_class->finalize = gst_dtmf_detect_finalize;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "DTMF detector element", "Filter/Analyzer/Audio",

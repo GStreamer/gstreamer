@@ -73,10 +73,8 @@ gst_h263_parse_class_init (GstH263ParseClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (h263_parse_debug, "h263parse", 0, "h263 parser");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
   gst_element_class_set_static_metadata (gstelement_class, "H.263 parser",
       "Codec/Parser/Video",
       "Parses H.263 streams",

@@ -281,14 +281,11 @@ gst_uvc_h264_src_class_init (GstUvcH264SrcClass * klass)
       "UVC H264 Encoding camera source",
       "Youness Alaoui <youness.alaoui@collabora.co.uk>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vidsrc_template));
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&imgsrc_template));
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vfsrc_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &vidsrc_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &imgsrc_template);
+  gst_element_class_add_static_pad_template (gstelement_class, &vfsrc_template);
 
   /* Properties */
   g_object_class_install_property (gobject_class, PROP_COLORSPACE_NAME,

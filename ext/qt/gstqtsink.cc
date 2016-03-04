@@ -126,8 +126,7 @@ gst_qt_sink_class_init (GstQtSinkClass * klass)
           G_MAXINT, 1, 1, 1,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_qt_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &gst_qt_sink_template);
 
   gobject_class->finalize = gst_qt_sink_finalize;
 

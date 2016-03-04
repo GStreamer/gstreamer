@@ -219,12 +219,10 @@ gst_kate_tiger_base_init (gpointer gclass)
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&kate_sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&video_sink_factory));
+  gst_element_class_add_static_pad_template (element_class, &src_factory);
+  gst_element_class_add_static_pad_template (element_class, &kate_sink_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &video_sink_factory);
   gst_element_class_set_static_metadata (element_class, "Kate stream renderer",
       "Mixer/Video/Overlay/Subtitle",
       "Decodes and renders Kate streams on top of a video",

@@ -109,10 +109,10 @@ gst_dirac_parse_class_init (GstDiracParseClass * klass)
   gobject_class->dispose = gst_dirac_parse_dispose;
   gobject_class->finalize = gst_dirac_parse_finalize;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_dirac_parse_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_dirac_parse_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_dirac_parse_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_dirac_parse_sink_template);
 
   gst_element_class_set_static_metadata (element_class, "Dirac parser",
       "Codec/Parser/Video", "Parses Dirac streams",

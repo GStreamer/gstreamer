@@ -100,8 +100,8 @@ gst_inter_video_src_class_init (GstInterVideoSrcClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_inter_video_src_debug_category, "intervideosrc",
       0, "debug category for intervideosrc element");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_inter_video_src_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_inter_video_src_src_template);
 
   gst_element_class_set_static_metadata (element_class,
       "Internal video source",

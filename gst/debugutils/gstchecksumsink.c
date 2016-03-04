@@ -63,10 +63,10 @@ gst_checksum_sink_class_init (GstChecksumSinkClass * klass)
   base_sink_class->stop = GST_DEBUG_FUNCPTR (gst_checksum_sink_stop);
   base_sink_class->render = GST_DEBUG_FUNCPTR (gst_checksum_sink_render);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_checksum_sink_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_checksum_sink_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_checksum_sink_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_checksum_sink_sink_template);
 
   gst_element_class_set_static_metadata (element_class, "Checksum sink",
       "Debug/Sink", "Calculates a checksum for buffers",

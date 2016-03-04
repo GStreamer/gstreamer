@@ -146,13 +146,12 @@ gst_mixmatrix_base_init (GstMixMatrixClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mixmatrix_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mixmatrix_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &mixmatrix_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &mixmatrix_src_template);
   gst_element_class_set_static_metadata (element_class, "Mixing Matrix",
-      "Filter/Editor/Audio",
-      "Mix N audio channels together into M channels",
+      "Filter/Editor/Audio", "Mix N audio channels together into M channels",
       "Erik Walthinsen <omega@temple-baptist.com>");
 }
 

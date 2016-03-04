@@ -166,10 +166,10 @@ gst_vbidec_base_init (gpointer g_class)
       "Decodes closed captions and XDS data from VBI data",
       "David I. Lehn <dlehn@users.sourceforge.net>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vbidec_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vbidec_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vbidec_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vbidec_sink_template);
 }
 
 static void

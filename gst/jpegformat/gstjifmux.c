@@ -136,10 +136,10 @@ gst_jif_mux_class_init (GstJifMuxClass * klass)
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_jif_mux_change_state);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_jif_mux_src_pad_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_jif_mux_sink_pad_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_jif_mux_src_pad_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_jif_mux_sink_pad_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "JPEG stream muxer",

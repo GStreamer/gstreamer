@@ -113,10 +113,8 @@ gst_aiff_mux_class_init (GstAiffMuxClass * klass)
       "AIFF audio muxer", "Muxer/Audio", "Multiplex raw audio into AIFF",
       "Robert Swain <robert.swain@gmail.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_aiff_mux_change_state);

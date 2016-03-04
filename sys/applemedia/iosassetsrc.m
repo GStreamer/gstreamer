@@ -129,8 +129,7 @@ gst_ios_asset_src_class_init (GstIOSAssetSrcClass * klass)
       "Read from arbitrary point in a iOS asset",
       "Andoni Morales Alastruey <amorales@fluendo.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_ios_asset_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_ios_asset_src_stop);

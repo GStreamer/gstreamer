@@ -117,12 +117,12 @@ rsn_dvdbin_class_init (RsnDvdBinClass * klass)
       g_param_spec_string ("device", "Device", "DVD device location",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&video_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&audio_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&subpicture_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &video_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &audio_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &subpicture_src_template);
 
   element_class->change_state = GST_DEBUG_FUNCPTR (rsn_dvdbin_change_state);
 

@@ -153,8 +153,7 @@ gst_openni2_src_class_init (GstOpenni2SrcClass * klass)
   basesrc_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_openni2src_decide_allocation);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_static_pad_template (element_class, &srctemplate);
 
   gst_element_class_set_static_metadata (element_class, "Openni2 client source",
       "Source/Video",

@@ -50,13 +50,15 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 static void gst_wasapi_src_dispose (GObject * object);
 static void gst_wasapi_src_finalize (GObject * object);
 
-static GstCaps * gst_wasapi_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter);
+static GstCaps *gst_wasapi_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter);
 
 static gboolean gst_wasapi_src_open (GstAudioSrc * asrc);
 static gboolean gst_wasapi_src_close (GstAudioSrc * asrc);
-static gboolean gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec);
+static gboolean gst_wasapi_src_prepare (GstAudioSrc * asrc,
+    GstAudioRingBufferSpec * spec);
 static gboolean gst_wasapi_src_unprepare (GstAudioSrc * asrc);
-static guint gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length, GstClockTime * timestamp);
+static guint gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data,
+    guint length, GstClockTime * timestamp);
 static guint gst_wasapi_src_delay (GstAudioSrc * asrc);
 static void gst_wasapi_src_reset (GstAudioSrc * asrc);
 
@@ -76,8 +78,7 @@ gst_wasapi_src_class_init (GstWasapiSrcClass * klass)
   gobject_class->dispose = gst_wasapi_src_dispose;
   gobject_class->finalize = gst_wasapi_src_finalize;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
   gst_element_class_set_static_metadata (gstelement_class, "WasapiSrc",
       "Source/Audio",
       "Stream audio from an audio capture device through WASAPI",
@@ -89,8 +90,7 @@ gst_wasapi_src_class_init (GstWasapiSrcClass * klass)
   gstaudiosrc_class->close = GST_DEBUG_FUNCPTR (gst_wasapi_src_close);
   gstaudiosrc_class->read = GST_DEBUG_FUNCPTR (gst_wasapi_src_read);
   gstaudiosrc_class->prepare = GST_DEBUG_FUNCPTR (gst_wasapi_src_prepare);
-  gstaudiosrc_class->unprepare =
-      GST_DEBUG_FUNCPTR (gst_wasapi_src_unprepare);
+  gstaudiosrc_class->unprepare = GST_DEBUG_FUNCPTR (gst_wasapi_src_unprepare);
   gstaudiosrc_class->delay = GST_DEBUG_FUNCPTR (gst_wasapi_src_delay);
   gstaudiosrc_class->reset = GST_DEBUG_FUNCPTR (gst_wasapi_src_reset);
 
@@ -147,9 +147,10 @@ gst_wasapi_src_open (GstAudioSrc * asrc)
 {
   GstWasapiSrc *self = GST_WASAPI_SRC (asrc);
   gboolean res = FALSE;
-  IAudioClient * client = NULL;
+  IAudioClient *client = NULL;
 
-  if (!gst_wasapi_util_get_default_device_client (GST_ELEMENT (self), TRUE, &client)) {
+  if (!gst_wasapi_util_get_default_device_client (GST_ELEMENT (self), TRUE,
+          &client)) {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
         ("Failed to get default device"));
     goto beach;
@@ -197,8 +198,9 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   gst_wasapi_util_audio_info_to_waveformatex (&spec->info, &format);
   self->info = spec->info;
 
-  hr = IAudioClient_Initialize (self->client, AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
-      spec->buffer_time / 100, 0, (WAVEFORMATEX *) & format, NULL);
+  hr = IAudioClient_Initialize (self->client, AUDCLNT_SHAREMODE_SHARED,
+      AUDCLNT_STREAMFLAGS_EVENTCALLBACK, spec->buffer_time / 100, 0,
+      (WAVEFORMATEX *) & format, NULL);
   if (hr != S_OK) {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
         ("IAudioClient::Initialize () failed: %s",

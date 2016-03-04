@@ -284,10 +284,8 @@ gst_field_analysis_class_init (GstFieldAnalysisClass * klass)
       "Analyse fields from video frames to identify if they are progressive/telecined/interlaced",
       "Robert Swain <robert.swain@collabora.co.uk>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
 
 }
 

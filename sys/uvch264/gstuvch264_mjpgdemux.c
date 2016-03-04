@@ -190,20 +190,16 @@ gst_uvc_h264_mjpg_demux_class_init (GstUvcH264MjpgDemuxClass * klass)
   gobject_class->get_property = gst_uvc_h264_mjpg_demux_get_property;
   gobject_class->dispose = gst_uvc_h264_mjpg_demux_dispose;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mjpgsink_pad_template));
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&jpegsrc_pad_template));
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&h264src_pad_template));
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&yuy2src_pad_template));
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&nv12src_pad_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &mjpgsink_pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &jpegsrc_pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &h264src_pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &yuy2src_pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &nv12src_pad_template);
 
   gst_element_class_set_static_metadata (element_class,
       "UVC H264 MJPG Demuxer",

@@ -335,10 +335,8 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
   element_class->request_new_pad = dvb_base_bin_request_new_pad;
   element_class->release_pad = dvb_base_bin_release_pad;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&program_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (element_class, &program_template);
+  gst_element_class_add_static_pad_template (element_class, &src_template);
 
   gst_element_class_set_static_metadata (element_class, "DVB bin",
       "Source/Bin/Video",

@@ -140,10 +140,10 @@ gst_dilate_class_init (GstDilateClass * klass)
       "Dilate copies the brightest pixel around.",
       "Luis de Bethencourt <luis@debethencourt.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_dilate_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_dilate_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_dilate_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_dilate_src_template);
 
   gobject_class->set_property = gst_dilate_set_property;
   gobject_class->get_property = gst_dilate_get_property;

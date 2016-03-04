@@ -118,8 +118,7 @@ gst_vcdsrc_class_init (GstVCDSrcClass * klass)
       "Source/File",
       "Asynchronous read from VCD disk", "Erik Walthinsen <omega@cse.ogi.edu>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_static_pad_template (element_class, &srctemplate);
 }
 
 static void

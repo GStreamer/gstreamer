@@ -239,10 +239,8 @@ gst_wildmidi_class_init (GstWildmidiClass * klass)
           "High Quality", DEFAULT_HIGH_QUALITY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
   gst_element_class_set_static_metadata (gstelement_class, "WildMidi",
       "Codec/Decoder/Audio",
       "Midi Synthesizer Element", "Wouter Paesen <wouter@blue-gate.be>");

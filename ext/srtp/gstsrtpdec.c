@@ -248,14 +248,14 @@ gst_srtp_dec_class_init (GstSrtpDecClass * klass)
   gobject_class->set_property = gst_srtp_dec_set_property;
   gobject_class->get_property = gst_srtp_dec_get_property;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtp_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtp_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtcp_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtcp_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtp_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtp_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtcp_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtcp_sink_template);
 
   gst_element_class_set_static_metadata (gstelement_class, "SRTP decoder",
       "Filter/Network/SRTP",

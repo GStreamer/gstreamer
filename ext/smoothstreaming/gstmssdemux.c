@@ -150,12 +150,12 @@ gst_mss_demux_class_init (GstMssDemuxClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstadaptivedemux_class = (GstAdaptiveDemuxClass *) klass;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_mss_demux_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_mss_demux_videosrc_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_mss_demux_audiosrc_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_mss_demux_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_mss_demux_videosrc_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_mss_demux_audiosrc_template);
   gst_element_class_set_static_metadata (gstelement_class,
       "Smooth Streaming demuxer", "Codec/Demuxer/Adaptive",
       "Parse and demultiplex a Smooth Streaming manifest into audio and video "

@@ -162,12 +162,11 @@ gst_test_camera_src_class_init (GstTestCameraSrcClass * klass)
       "Some test camera src",
       "Thiago Santos <thiago.sousa.santos@collabora.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vidsrc_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&imgsrc_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vfsrc_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &vidsrc_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &imgsrc_template);
+  gst_element_class_add_static_pad_template (gstelement_class, &vfsrc_template);
 }
 
 static void
@@ -372,8 +371,7 @@ gst_test_video_src_class_init (GstTestVideoSrcClass * klass)
       "Video/Src",
       "Test camera video src", "Thiago Santos <thiagoss@osg.samsung.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   gobject_class->get_property = gst_test_video_src_get_property;
   gobject_class->set_property = gst_test_video_src_set_property;

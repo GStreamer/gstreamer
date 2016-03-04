@@ -127,10 +127,10 @@ mpegpsmux_class_init (MpegPsMuxClass * klass)
           "Whether to aggregate GOPs and push them out as buffer lists",
           DEFAULT_AGGREGATE_GOPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&mpegpsmux_sink_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&mpegpsmux_src_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &mpegpsmux_sink_factory);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &mpegpsmux_src_factory);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "MPEG Program Stream Muxer", "Codec/Muxer",

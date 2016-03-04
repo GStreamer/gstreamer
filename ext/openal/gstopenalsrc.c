@@ -192,8 +192,8 @@ gst_openal_src_class_init (GstOpenalSrcClass * klass)
       "OpenAL Audio Source", "Source/Audio", "Input audio through OpenAL",
       "Juan Manuel Borges Caño <juanmabcmail@gmail.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&openalsrc_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &openalsrc_factory);
 }
 
 static void

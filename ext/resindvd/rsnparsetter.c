@@ -55,10 +55,8 @@ rsn_parsetter_class_init (RsnParSetterClass * klass)
 
   gobject_class->finalize = rsn_parsetter_finalize;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (element_class, &src_factory);
+  gst_element_class_add_static_pad_template (element_class, &sink_factory);
 
   gst_element_class_set_static_metadata (element_class,
       "Resin Aspect Ratio Setter", "Filter/Video",

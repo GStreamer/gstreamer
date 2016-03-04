@@ -103,13 +103,12 @@ gst_daala_dec_class_init (GstDaalaDecClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&daala_dec_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&daala_dec_sink_factory));
-  gst_element_class_set_static_metadata (element_class,
-      "Daala video decoder", "Codec/Decoder/Video",
-      "Decode raw Daala streams to raw YUV video",
+  gst_element_class_add_static_pad_template (element_class,
+      &daala_dec_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &daala_dec_sink_factory);
+  gst_element_class_set_static_metadata (element_class, "Daala video decoder",
+      "Codec/Decoder/Video", "Decode raw Daala streams to raw YUV video",
       "Sebastian Dröge <slomo@circular-chaos.org>");
 
   video_decoder_class->start = GST_DEBUG_FUNCPTR (daala_dec_start);

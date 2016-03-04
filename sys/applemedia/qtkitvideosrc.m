@@ -518,8 +518,7 @@ gst_qtkit_video_src_class_init (GstQTKitVideoSrcClass * klass)
       "Reads frames from a Mac OS X QTKit device",
       "Ole André Vadla Ravnås <oleavr@soundrop.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   gobject_class->finalize = gst_qtkit_video_src_finalize;
   gobject_class->get_property = gst_qtkit_video_src_get_property;

@@ -265,8 +265,8 @@ gst_apexsink_base_init (gpointer g_class)
       "Apple AirPort Express Audio Sink", "Sink/Audio/Wireless",
       "Output stream to an AirPort Express",
       "Jérémie Bernard [GRemi] <gremimail@gmail.com>");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_apexsink_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_apexsink_sink_factory);
 }
 
 /* sink class init */

@@ -111,10 +111,8 @@ gst_openh264dec_class_init (GstOpenh264DecClass * klass)
 
   /* Setting up pads and setting metadata should be moved to
      base_class_init if you intend to subclass this class. */
-  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
-      gst_static_pad_template_get (&gst_openh264dec_sink_template));
-  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
-      gst_static_pad_template_get (&gst_openh264dec_src_template));
+  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass), &gst_openh264dec_sink_template);
+  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass), &gst_openh264dec_src_template);
 
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "OpenH264 video decoder", "Decoder/Video", "OpenH264 video decoder",

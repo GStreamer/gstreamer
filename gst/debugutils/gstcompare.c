@@ -169,12 +169,10 @@ gst_compare_class_init (GstCompareClass * klass)
           "Whether threshold value is upper bound or lower bound for difference measure",
           DEFAULT_UPPER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&check_sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &check_sink_factory);
   gst_element_class_set_static_metadata (gstelement_class, "Compare buffers",
       "Filter/Debug", "Compares incoming buffers",
       "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");

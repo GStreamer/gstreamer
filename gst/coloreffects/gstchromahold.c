@@ -153,10 +153,10 @@ gst_chroma_hold_class_init (GstChromaHoldClass * klass)
       "Removes all color information except for one color",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_chroma_hold_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_chroma_hold_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_chroma_hold_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_chroma_hold_src_template);
 
   GST_DEBUG_CATEGORY_INIT (gst_chroma_hold_debug, "chromahold", 0,
       "chromahold - Removes all color information except for one color");

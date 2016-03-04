@@ -61,10 +61,8 @@ gst_video_segment_clip_class_init (GstVideoSegmentClipClass * klass)
       "Clips video buffers to the configured segment",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_pad_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_pad_template));
+  gst_element_class_add_static_pad_template (element_class, &sink_pad_template);
+  gst_element_class_add_static_pad_template (element_class, &src_pad_template);
 
   segment_clip_klass->reset = GST_DEBUG_FUNCPTR (gst_video_segment_clip_reset);
   segment_clip_klass->set_caps =

@@ -106,8 +106,8 @@ gst_inter_audio_src_class_init (GstInterAudioSrcClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_inter_audio_src_debug_category, "interaudiosrc",
       0, "debug category for interaudiosrc element");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_inter_audio_src_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_inter_audio_src_src_template);
 
   gst_element_class_set_static_metadata (element_class,
       "Internal audio source",

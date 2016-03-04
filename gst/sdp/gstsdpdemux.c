@@ -150,10 +150,8 @@ gst_sdp_demux_class_init (GstSDPDemuxClass * klass)
           DEFAULT_REDIRECT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtptemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &rtptemplate);
 
   gst_element_class_set_static_metadata (gstelement_class, "SDP session setup",
       "Codec/Demuxer/Network/RTP",

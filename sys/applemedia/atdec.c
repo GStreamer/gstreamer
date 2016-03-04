@@ -93,10 +93,10 @@ gst_atdec_class_init (GstATDecClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstAudioDecoderClass *audio_decoder_class = GST_AUDIO_DECODER_CLASS (klass);
 
-  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
-      gst_static_pad_template_get (&gst_atdec_src_template));
-  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
-      gst_static_pad_template_get (&gst_atdec_sink_template));
+  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
+      &gst_atdec_src_template);
+  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
+      &gst_atdec_sink_template);
 
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "AudioToolbox based audio decoder",

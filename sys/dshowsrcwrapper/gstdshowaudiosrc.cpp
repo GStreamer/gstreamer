@@ -122,8 +122,7 @@ gst_dshowaudiosrc_class_init (GstDshowAudioSrcClass * klass)
           "Human-readable name of the sound device", NULL,
           static_cast < GParamFlags > (G_PARAM_READWRITE)));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Directshow audio capture source", "Source/Audio",

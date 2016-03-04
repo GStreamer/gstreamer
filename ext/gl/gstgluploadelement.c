@@ -80,8 +80,8 @@ gst_gl_upload_element_class_init (GstGLUploadElementClass * klass)
 
   bt_class->passthrough_on_same_caps = TRUE;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gl_upload_element_src_pad_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_gl_upload_element_src_pad_template);
 
   upload_caps = gst_gl_upload_get_input_template_caps ();
   gst_element_class_add_pad_template (element_class,

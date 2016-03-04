@@ -87,10 +87,10 @@ gst_rgb2bayer_class_init (GstRGB2BayerClass * klass)
 
   gobject_class->finalize = gst_rgb2bayer_finalize;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rgb2bayer_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rgb2bayer_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_rgb2bayer_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_rgb2bayer_sink_template);
 
   gst_element_class_set_static_metadata (element_class,
       "RGB to Bayer converter",

@@ -77,8 +77,7 @@ gst_wasapi_sink_class_init (GstWasapiSinkClass * klass)
   gobject_class->dispose = gst_wasapi_sink_dispose;
   gobject_class->finalize = gst_wasapi_sink_finalize;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
   gst_element_class_set_static_metadata (gstelement_class, "WasapiSrc",
       "Sink/Audio",
       "Stream audio to an audio capture device through WASAPI",

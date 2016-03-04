@@ -162,10 +162,8 @@ gst_kate_dec_class_init (GstKateDecClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_kate_dec_change_state);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Kate stream text decoder", "Codec/Decoder/Subtitle",

@@ -156,8 +156,7 @@ gst_d3dvideosink_class_init (GstD3DVideoSinkClass * klass)
       "Display data using a Direct3D video renderer",
       "David Hoyt <dhoyt@hoytsoft.org>, Roland Krikava <info@bluedigits.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
 
   g_rec_mutex_init (&klass->lock);
 }

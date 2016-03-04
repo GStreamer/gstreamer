@@ -138,10 +138,10 @@ gst_burn_class_init (GstBurnClass * klass)
       "Burn adjusts the colors in the video signal.",
       "Luis de Bethencourt <luis@debethencourt.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_burn_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_burn_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_burn_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_burn_src_template);
 
   gobject_class->set_property = gst_burn_set_property;
   gobject_class->get_property = gst_burn_get_property;

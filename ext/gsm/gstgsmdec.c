@@ -84,13 +84,13 @@ gst_gsmdec_class_init (GstGSMDecClass * klass)
   element_class = (GstElementClass *) klass;
   base_class = (GstAudioDecoderClass *) klass;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gsmdec_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gsmdec_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gsmdec_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gsmdec_src_template);
   gst_element_class_set_static_metadata (element_class, "GSM audio decoder",
-      "Codec/Decoder/Audio",
-      "Decodes GSM encoded audio", "Philippe Khalaf <burger@speedy.org>");
+      "Codec/Decoder/Audio", "Decodes GSM encoded audio",
+      "Philippe Khalaf <burger@speedy.org>");
 
   base_class->start = GST_DEBUG_FUNCPTR (gst_gsmdec_start);
   base_class->stop = GST_DEBUG_FUNCPTR (gst_gsmdec_stop);

@@ -229,8 +229,8 @@ gst_openal_sink_class_init (GstOpenALSinkClass * klass)
       "Sink/Audio", "Output audio through OpenAL",
       "Juan Manuel Borges Caño <juanmabcmail@gmail.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&openalsink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &openalsink_factory);
 
 }
 

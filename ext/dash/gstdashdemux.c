@@ -403,15 +403,14 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
           DEFAULT_PRESENTATION_DELAY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_dash_demux_audiosrc_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_dash_demux_videosrc_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_dash_demux_subtitlesrc_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_dash_demux_audiosrc_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_dash_demux_videosrc_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_dash_demux_subtitlesrc_template);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "DASH Demuxer",

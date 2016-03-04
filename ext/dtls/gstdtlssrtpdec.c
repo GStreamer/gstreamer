@@ -133,14 +133,10 @@ gst_dtls_srtp_dec_class_init (GstDtlsSrtpDecClass * klass)
 
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&rtp_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&rtcp_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&data_src_template));
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
+  gst_element_class_add_static_pad_template (element_class, &rtp_src_template);
+  gst_element_class_add_static_pad_template (element_class, &rtcp_src_template);
+  gst_element_class_add_static_pad_template (element_class, &data_src_template);
 
   gst_element_class_set_static_metadata (element_class,
       "DTLS-SRTP Decoder",

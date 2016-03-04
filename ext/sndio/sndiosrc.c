@@ -93,8 +93,7 @@ gst_sndiosrc_base_init (gpointer g_class)
       "Source/Audio",
       "Records audio through sndio", "Jacob Meuser <jakemsr@sdf.lonestar.org>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sndio_src_factory));
+  gst_element_class_add_static_pad_template (element_class, &sndio_src_factory);
 }
 
 static void

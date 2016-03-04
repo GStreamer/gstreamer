@@ -303,11 +303,8 @@ gst_pnmenc_class_init (GstPnmencClass * klass)
       g_param_spec_boolean ("ascii", "ASCII Encoding", "The output will be "
           "ASCII encoded", FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_pad_template));
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_pad_template));
+  gst_element_class_add_static_pad_template (element_class, &sink_pad_template);
+  gst_element_class_add_static_pad_template (element_class, &src_pad_template);
 
   gst_element_class_set_static_metadata (element_class, "PNM image encoder",
       "Codec/Encoder/Image",

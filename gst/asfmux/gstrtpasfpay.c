@@ -96,10 +96,10 @@ gst_rtp_asf_pay_class_init (GstRtpAsfPayClass * klass)
   gstbasertppayload_class->handle_buffer = gst_rtp_asf_pay_handle_buffer;
   gstbasertppayload_class->set_caps = gst_rtp_asf_pay_set_caps;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_asf_pay_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtp_asf_pay_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_asf_pay_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rtp_asf_pay_src_template);
   gst_element_class_set_static_metadata (gstelement_class, "RTP ASF payloader",
       "Codec/Payloader/Network",
       "Payload-encodes ASF into RTP packets (MS_RTSP)",

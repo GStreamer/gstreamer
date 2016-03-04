@@ -123,13 +123,12 @@ gst_webp_enc_class_init (GstWebpEncClass * klass)
 
   gobject_class->set_property = gst_webp_enc_set_property;
   gobject_class->get_property = gst_webp_enc_get_property;
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&webp_enc_sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&webp_enc_src_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &webp_enc_sink_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &webp_enc_src_factory);
   gst_element_class_set_static_metadata (element_class, "WEBP image encoder",
-      "Codec/Encoder/Image",
-      "Encode images in WEBP format",
+      "Codec/Encoder/Image", "Encode images in WEBP format",
       "Sreerenj Balachandran <sreerenjb@gnome.org>");
 
   venc_class->start = gst_webp_enc_start;

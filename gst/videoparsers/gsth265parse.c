@@ -124,10 +124,8 @@ gst_h265_parse_class_init (GstH265ParseClass * klass)
   parse_class->sink_event = GST_DEBUG_FUNCPTR (gst_h265_parse_event);
   parse_class->src_event = GST_DEBUG_FUNCPTR (gst_h265_parse_src_event);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 
   gst_element_class_set_static_metadata (gstelement_class, "H.265 parser",
       "Codec/Parser/Converter/Video",

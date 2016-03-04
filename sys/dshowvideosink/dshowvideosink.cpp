@@ -206,8 +206,7 @@ gst_dshowvideosink_class_init (GstDshowVideoSinkClass * klass)
       "Pioneers of the Inevitable <songbird@songbirdnest.com>, " \
       "FLUENDO S.A. <support@fluendo.com>");
 
-  gst_element_class_add_pad_template (e_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (e_class, &sink_template);
 
   e_class->change_state = GST_DEBUG_FUNCPTR (gst_dshowvideosink_change_state);
 

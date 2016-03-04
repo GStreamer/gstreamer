@@ -1095,15 +1095,14 @@ gst_ssim_class_init (GstSSimClass * klass)
           "(only when using Gaussian window).",
           G_MINFLOAT, 10, 1.5, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_ssim_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_ssim_sink_original_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_ssim_sink_modified_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_ssim_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_ssim_sink_original_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_ssim_sink_modified_template);
   gst_element_class_set_static_metadata (gstelement_class, "SSim",
-      "Filter/Analyzer/Video",
-      "Calculate Y-SSIM for n+2 YUV video streams",
+      "Filter/Analyzer/Video", "Calculate Y-SSIM for n+2 YUV video streams",
       "Руслан Ижбулатов <lrn1986 _at_ gmail _dot_ com>");
 
   parent_class = g_type_class_peek_parent (klass);

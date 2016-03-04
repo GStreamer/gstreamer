@@ -126,8 +126,8 @@ gst_vtdec_class_init (GstVtdecClass * klass)
 
   /* Setting up pads and setting metadata should be moved to
      base_class_init if you intend to subclass this class. */
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vtdec_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vtdec_sink_template);
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
           gst_caps_from_string (VIDEO_SRC_CAPS)));

@@ -467,13 +467,12 @@ adpcmdec_class_init (ADPCMDecClass * klass)
   GstElementClass *element_class = (GstElementClass *) klass;
   GstAudioDecoderClass *base_class = (GstAudioDecoderClass *) klass;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&adpcmdec_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&adpcmdec_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &adpcmdec_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &adpcmdec_src_template);
   gst_element_class_set_static_metadata (element_class, "ADPCM decoder",
-      "Codec/Decoder/Audio",
-      "Decode MS and IMA ADPCM audio",
+      "Codec/Decoder/Audio", "Decode MS and IMA ADPCM audio",
       "Pioneers of the Inevitable <songbird@songbirdnest.com>");
 
   base_class->start = GST_DEBUG_FUNCPTR (adpcmdec_start);

@@ -126,8 +126,8 @@ gst_flite_test_src_class_init (GstFliteTestSrcClass * klass)
           1, G_MAXINT, DEFAULT_SAMPLES_PER_BUFFER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_flite_test_src_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_flite_test_src_src_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Flite speech test source", "Source/Audio",

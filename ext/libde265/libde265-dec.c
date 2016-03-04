@@ -117,10 +117,8 @@ gst_libde265_dec_class_init (GstLibde265DecClass * klass)
   decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_libde265_dec_handle_frame);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "HEVC/H.265 decoder",

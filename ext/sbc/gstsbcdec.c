@@ -165,7 +165,8 @@ gst_sbc_dec_set_format (GstAudioDecoder * audio_dec, GstCaps * caps)
   } else if (strcmp (channel_mode, "stereo") == 0) {
     dec->frame_len = 4 + (subbands * 2) / 2 + ((blocks * bitpool) + 7) / 8;
   } else if (strcmp (channel_mode, "joint") == 0) {
-    dec->frame_len = 4 + (subbands * 2) / 2 + ((subbands + blocks * bitpool) + 7) / 8;
+    dec->frame_len =
+        4 + (subbands * 2) / 2 + ((subbands + blocks * bitpool) + 7) / 8;
   } else {
     return FALSE;
   }
@@ -219,11 +220,10 @@ gst_sbc_dec_class_init (GstSbcDecClass * klass)
   audio_decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_sbc_dec_handle_frame);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sbc_dec_sink_factory));
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sbc_dec_src_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &sbc_dec_sink_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &sbc_dec_src_factory);
 
   gst_element_class_set_static_metadata (element_class,
       "Bluetooth SBC audio decoder", "Codec/Decoder/Audio",

@@ -212,13 +212,12 @@ gst_daala_enc_class_init (GstDaalaEncClass * klass)
           1, G_MAXINT, DEFAULT_KEYFRAME_RATE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&daala_enc_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&daala_enc_sink_factory));
-  gst_element_class_set_static_metadata (element_class,
-      "Daala video encoder", "Codec/Encoder/Video",
-      "Encode raw YUV video to a Daala stream",
+  gst_element_class_add_static_pad_template (element_class,
+      &daala_enc_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &daala_enc_sink_factory);
+  gst_element_class_set_static_metadata (element_class, "Daala video encoder",
+      "Codec/Encoder/Video", "Encode raw YUV video to a Daala stream",
       "Sebastian Dröge <slomo@circular-chaos.org>");
 
   gstvideo_encoder_class->start = GST_DEBUG_FUNCPTR (daala_enc_start);

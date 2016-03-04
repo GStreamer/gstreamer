@@ -133,10 +133,8 @@ gst_gl_video_flip_class_init (GstGLVideoFlipClass * klass)
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
           G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&_sink_template));
+  gst_element_class_add_static_pad_template (element_class, &_src_template);
+  gst_element_class_add_static_pad_template (element_class, &_sink_template);
 
   gst_element_class_set_metadata (element_class, "OpenGL video flip filter",
       "Filter/Effect/Video", "Flip video on the GPU",

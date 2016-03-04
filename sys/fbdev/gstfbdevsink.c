@@ -227,7 +227,8 @@ gst_fbdevsink_setcaps (GstBaseSink * bsink, GstCaps * vscapslist)
   gst_structure_get_int (structure, "height", &fbdevsink->height);
 
   /* calculate centering and scanlengths for the video */
-  fbdevsink->bytespp = fbdevsink->fixinfo.line_length / fbdevsink->varinfo.xres_virtual;
+  fbdevsink->bytespp =
+      fbdevsink->fixinfo.line_length / fbdevsink->varinfo.xres_virtual;
 
   fbdevsink->cx = ((int) fbdevsink->varinfo.xres - fbdevsink->width) / 2;
   if (fbdevsink->cx < 0)
@@ -432,8 +433,7 @@ gst_fbdevsink_class_init (GstFBDEVSinkClass * klass)
       "Sink/Video", "Linux framebuffer videosink",
       "Sean D'Epagnier <sean@depagnier.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
 }
 
 static void

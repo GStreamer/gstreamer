@@ -128,10 +128,10 @@ gst_schro_dec_class_init (GstSchroDecClass * klass)
 
   gobject_class->finalize = gst_schro_dec_finalize;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_schro_dec_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_schro_dec_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_schro_dec_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_schro_dec_sink_template);
 
   gst_element_class_set_static_metadata (element_class, "Dirac Decoder",
       "Codec/Decoder/Video",

@@ -87,13 +87,12 @@ gst_opus_parse_class_init (GstOpusParseClass * klass)
   bpclass->stop = GST_DEBUG_FUNCPTR (gst_opus_parse_stop);
   bpclass->handle_frame = GST_DEBUG_FUNCPTR (gst_opus_parse_handle_frame);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&opus_parse_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&opus_parse_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &opus_parse_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &opus_parse_sink_factory);
   gst_element_class_set_static_metadata (element_class, "Opus audio parser",
-      "Codec/Parser/Audio",
-      "parses opus audio streams",
+      "Codec/Parser/Audio", "parses opus audio streams",
       "Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>");
 
   GST_DEBUG_CATEGORY_INIT (opusparse_debug, "opusparse", 0,
