@@ -288,7 +288,10 @@ fill_picture (GstVaapiDecoderVp9 * decoder, GstVaapiPicture * picture)
   COPY_FIELD (frame_hdr, log2_tile_columns);
   COPY_FIELD (frame_hdr, frame_header_length_in_bytes);
   COPY_FIELD (frame_hdr, first_partition_size);
-
+  COPY_FIELD (frame_hdr, profile);
+#if VA_CHECK_VERSION (0, 39, 0)
+  COPY_FIELD (frame_hdr, bit_depth);
+#endif
   g_assert (G_N_ELEMENTS (pic_param->mb_segment_tree_probs) ==
       G_N_ELEMENTS (parser->mb_segment_tree_probs));
   g_assert (G_N_ELEMENTS (pic_param->segment_pred_probs) ==
