@@ -566,13 +566,12 @@ gst_audio_interleave_class_init (GstAudioInterleaveClass * klass)
   gobject_class->get_property = gst_audio_interleave_get_property;
   gobject_class->finalize = gst_audio_interleave_finalize;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_audio_interleave_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_audio_interleave_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_audio_interleave_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_audio_interleave_sink_template);
   gst_element_class_set_static_metadata (gstelement_class, "AudioInterleave",
-      "Generic/Audio",
-      "Mixes multiple audio streams",
+      "Generic/Audio", "Mixes multiple audio streams",
       "Olivier Crete <olivier.crete@collabora.com>");
 
   gstelement_class->request_new_pad =
