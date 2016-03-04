@@ -66,6 +66,7 @@ struct _GstHLSDemuxStream
   GstAdaptiveDemux adaptive_demux_stream;
 
   GstM3U8 *playlist;
+  gboolean is_primary_playlist;
 
   gboolean do_typefind;         /* Whether we need to typefind the next buffer */
   GstBuffer *pending_typefind_buffer; /* for collecting data until typefind succeeds */

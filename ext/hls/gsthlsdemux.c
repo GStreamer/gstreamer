@@ -430,7 +430,7 @@ gst_hls_demux_update_manifest (GstAdaptiveDemux * demux)
 
 static void
 create_stream_for_playlist (GstAdaptiveDemux * demux, GstM3U8 * playlist,
-    gboolean selected)
+    gboolean is_primary_playlist, gboolean selected)
 {
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   GstHLSDemuxStream *hlsdemux_stream;
@@ -447,6 +447,7 @@ create_stream_for_playlist (GstAdaptiveDemux * demux, GstM3U8 * playlist,
 
   hlsdemux_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
   hlsdemux_stream->playlist = gst_m3u8_ref (playlist);
+  hlsdemux_stream->is_primary_playlist = is_primary_playlist;
 
   hlsdemux_stream->do_typefind = TRUE;
   hlsdemux_stream->reset_pts = TRUE;
@@ -467,7 +468,7 @@ gst_hls_demux_setup_streams (GstAdaptiveDemux * demux)
   gst_hls_demux_clear_all_pending_data (hlsdemux);
 
   /* 1 output for the main playlist */
-  create_stream_for_playlist (demux, playlist->m3u8, TRUE);
+  create_stream_for_playlist (demux, playlist->m3u8, TRUE, TRUE);
 
   for (i = 0; i < GST_HLS_N_MEDIA_TYPES; ++i) {
     GList *mlist = playlist->media[i];
@@ -484,7 +485,7 @@ gst_hls_demux_setup_streams (GstAdaptiveDemux * demux)
       }
       GST_LOG_OBJECT (demux, "media of type %d - %s, uri: %s", i,
           media->name, media->uri);
-      create_stream_for_playlist (demux, media->playlist,
+      create_stream_for_playlist (demux, media->playlist, FALSE,
           (media->mtype == GST_HLS_MEDIA_TYPE_VIDEO ||
               media->mtype == GST_HLS_MEDIA_TYPE_AUDIO));
 
@@ -563,6 +564,7 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
     return FALSE;
   }
 
+  GST_M3U8_CLIENT_LOCK (self);
   hlsdemux->master = gst_hls_master_playlist_new_from_data (playlist,
       gst_adaptive_demux_get_manifest_ref_uri (demux));
 
@@ -572,6 +574,7 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
      * the playlist */
     GST_ELEMENT_ERROR (demux, STREAM, DECODE, ("Invalid playlist."),
         ("Could not parse playlist. Check if the URL is correct."));
+    GST_M3U8_CLIENT_UNLOCK (self);
     return FALSE;
   }
 
@@ -594,9 +597,11 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
     if (!gst_hls_demux_update_playlist (hlsdemux, FALSE, &err)) {
       GST_ELEMENT_ERROR_FROM_ERROR (demux, "Could not fetch media playlist",
           err);
+      GST_M3U8_CLIENT_UNLOCK (self);
       return FALSE;
     }
   }
+  GST_M3U8_CLIENT_UNLOCK (self);
 
   return gst_hls_demux_setup_streams (demux);
 }
@@ -992,14 +997,22 @@ gst_hls_demux_select_bitrate (GstAdaptiveDemuxStream * stream, guint64 bitrate)
 {
   GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX_CAST (stream->demux);
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (stream->demux);
+  GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
+
   gboolean changed = FALSE;
 
   GST_M3U8_CLIENT_LOCK (hlsdemux->client);
-  if (hlsdemux->master->is_simple) {
+  if (hlsdemux->master == NULL || hlsdemux->master->is_simple) {
     GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
     return FALSE;
   }
   GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
+
+  if (hls_stream->is_primary_playlist == FALSE) {
+    GST_LOG_OBJECT (stream,
+        "Not choosing new bitrate - not the primary stream");
+    return FALSE;
+  }
 
   /* Bitrate adaptation during trick modes does not work well */
   if (demux->segment.rate != 1.0)
@@ -1016,6 +1029,7 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
 {
   GstHLSDemux *demux = GST_HLS_DEMUX_CAST (ademux);
 
+  GST_M3U8_CLIENT_LOCK (hlsdemux->client);
   if (demux->master) {
     gst_hls_master_playlist_unref (demux->master);
     demux->master = NULL;
@@ -1027,6 +1041,7 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
   demux->srcpad_counter = 0;
 
   gst_hls_demux_clear_all_pending_data (demux);
+  GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
 }
 
 static gchar *
