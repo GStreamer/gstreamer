@@ -3,6 +3,7 @@ plugin_LTLIBRARIES = libgstrawparse.la
 
 libgstrawparse_la_SOURCES = \
 	gstrawparse.c \
+	gstunalignedaudioparse.c \
 	gstaudioparse.c \
 	gstvideoparse.c \
 	plugin.c
@@ -19,6 +20,8 @@ libgstrawparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstrawparse_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
+	unalignedaudio.h \
+	gstunalignedaudioparse.h \
 	gstaudioparse.h \
 	gstrawparse.h \
 	gstvideoparse.h

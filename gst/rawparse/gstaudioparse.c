@@ -33,6 +33,7 @@
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #include "gstaudioparse.h"
+#include "unalignedaudio.h"
 
 #include <string.h>
 
@@ -159,6 +160,7 @@ gst_audio_parse_class_init (GstAudioParseClass * klass)
 
   caps = gst_caps_from_string (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL)
       ", layout = (string) { interleaved, non-interleaved }; "
+      GST_UNALIGNED_RAW_AUDIO_CAPS "; "
       "audio/x-alaw, rate=(int)[1,MAX], channels=(int)[1,MAX]; "
       "audio/x-mulaw, rate=(int)[1,MAX], channels=(int)[1,MAX]");
 
@@ -371,11 +373,24 @@ gst_audio_parse_get_caps (GstRawParse * rp)
   if (ap->use_sink_caps) {
     gint rate;
     GstCaps *caps = gst_pad_get_current_caps (rp->sinkpad);
+    GstStructure *structure;
+
     if (!caps) {
       GST_WARNING_OBJECT (ap,
           "Sink pad has no caps, but we were asked to use its caps");
       return NULL;
     }
+
+    /* For unaligned raw data, the output caps stay the same,
+     * except that audio/x-unaligned-raw becomes audio/x-raw,
+     * since audioparse aligns the sample data */
+    structure = gst_caps_get_structure (caps, 0);
+    if (gst_structure_has_name (structure, "audio/x-unaligned-raw")) {
+      caps = gst_caps_make_writable (caps);
+      structure = gst_caps_get_structure (caps, 0);
+      gst_structure_set_name (structure, "audio/x-raw");
+    }
+
     if (!gst_audio_info_from_caps (&info, caps)) {
       GST_WARNING_OBJECT (ap, "Failed to parse caps %" GST_PTR_FORMAT, caps);
       gst_caps_unref (caps);
