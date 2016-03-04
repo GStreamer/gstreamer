@@ -80,8 +80,8 @@ gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)
       "Sink/Video", "A video sink that renders to a GtkWidget",
       "Matthew Waters <matthew@centricular.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_gtk_gl_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_gtk_gl_sink_template);
 }
 
 static void
