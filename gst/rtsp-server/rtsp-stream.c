@@ -1262,14 +1262,21 @@ again:
     g_clear_object (&inetaddr);
     inetaddr = g_inet_address_new_from_string (addr->address);
 
-    /* Don't bind to multicast addresses, this does not work on
-     * Windows. You're supposed to bind to ANY and then join the
-     * multicast group, which udpsrc/sink does for us already.
+    /* On Windows it's not possible to bind to a multicast address
+     * but the OS will make sure to filter out all packets that
+     * arrive not for the multicast address the socket joined.
+     *
+     * On Linux and others it is necessary to bind to a multicast
+     * address to let the OS filter out all packets that are received
+     * on the same port but for different addresses than the multicast
+     * address
      */
+#ifdef G_OS_WIN32
     if (g_inet_address_get_is_multicast (inetaddr)) {
       g_object_unref (inetaddr);
       inetaddr = g_inet_address_new_any (family);
     }
+#endif
   } else {
     if (tmp_rtp != 0) {
       tmp_rtp += 2;
