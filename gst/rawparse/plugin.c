@@ -3,6 +3,7 @@
 #endif
 
 #include <gst/gst.h>
+#include "gstunalignedaudioparse.h"
 #include "gstaudioparse.h"
 #include "gstvideoparse.h"
 
@@ -15,6 +16,8 @@ plugin_init (GstPlugin * plugin)
       gst_video_parse_get_type ());
   ret &= gst_element_register (plugin, "audioparse", GST_RANK_NONE,
       gst_audio_parse_get_type ());
+  ret &= gst_element_register (plugin, "unalignedaudioparse", GST_RANK_MARGINAL,
+      gst_unaligned_audio_parse_get_type ());
 
   return ret;
 }
