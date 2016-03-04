@@ -517,15 +517,15 @@ gst_rdt_manager_class_init (GstRDTManagerClass * g_class)
       GST_DEBUG_FUNCPTR (gst_rdt_manager_release_pad);
 
   /* sink pads */
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rdt_manager_recv_rtp_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rdt_manager_recv_rtcp_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rdt_manager_recv_rtp_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rdt_manager_recv_rtcp_sink_template);
   /* src pads */
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rdt_manager_recv_rtp_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rdt_manager_rtcp_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rdt_manager_recv_rtp_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rdt_manager_rtcp_src_template);
 
   gst_element_class_set_static_metadata (gstelement_class, "RTP Decoder",
       "Codec/Parser/Network",

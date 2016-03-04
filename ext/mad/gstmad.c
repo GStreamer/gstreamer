@@ -120,10 +120,10 @@ gst_mad_class_init (GstMadClass * klass)
       g_param_spec_boolean ("ignore-crc", "Ignore CRC", "Ignore CRC errors",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mad_sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mad_src_template_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &mad_sink_template_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &mad_src_template_factory);
 
   gst_element_class_set_static_metadata (element_class, "mad mp3 decoder",
       "Codec/Decoder/Audio",

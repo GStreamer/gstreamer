@@ -92,10 +92,10 @@ gst_rdt_depay_class_init (GstRDTDepayClass * klass)
 
   gstelement_class->change_state = gst_rdt_depay_change_state;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rdt_depay_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rdt_depay_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rdt_depay_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_rdt_depay_sink_template);
 
   gst_element_class_set_static_metadata (gstelement_class, "RDT packet parser",
       "Codec/Depayloader/Network",

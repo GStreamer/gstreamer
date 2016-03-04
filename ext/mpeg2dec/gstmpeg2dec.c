@@ -105,10 +105,10 @@ gst_mpeg2dec_class_init (GstMpeg2decClass * klass)
 
   gobject_class->finalize = gst_mpeg2dec_finalize;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &src_template_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &sink_template_factory);
   gst_element_class_set_static_metadata (element_class,
       "mpeg1 and mpeg2 video decoder", "Codec/Decoder/Video",
       "Uses libmpeg2 to decode MPEG video streams",
