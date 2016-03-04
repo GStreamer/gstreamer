@@ -507,6 +507,7 @@ dvb_base_bin_init (DvbBaseBin * dvbbasebin)
   if (dvbbasebin->tsparse != NULL) {
     pad = gst_element_get_static_pad (dvbbasebin->tsparse, "src");
     ghost = gst_ghost_pad_new ("src", pad);
+    gst_object_unref (pad);
   } else {
     ghost = gst_ghost_pad_new_no_target ("src", GST_PAD_SRC);
   }
@@ -552,6 +553,10 @@ dvb_base_bin_dispose (GObject * object)
       gst_bin_remove (GST_BIN (dvbbasebin), dvbbasebin->tsparse);
     gst_bin_remove (GST_BIN (dvbbasebin), dvbbasebin->dvbsrc);
     gst_bin_remove (GST_BIN (dvbbasebin), dvbbasebin->buffer_queue);
+    g_free (dvbbasebin->program_numbers);
+    gst_poll_free (dvbbasebin->poll);
+    gst_object_unref (dvbbasebin->task);
+    g_rec_mutex_clear (&dvbbasebin->lock);
     dvbbasebin->disposed = TRUE;
   }
 
