@@ -4440,7 +4440,7 @@ gst_vaapi_decoder_h264_parse (GstVaapiDecoder * base_decoder,
         buf, 0, buf_size, &pi->nalu);
   status = get_status (result);
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-    return status;
+    goto exit;
 
   switch (pi->nalu.type) {
     case GST_H264_NAL_SPS:
@@ -4470,7 +4470,7 @@ gst_vaapi_decoder_h264_parse (GstVaapiDecoder * base_decoder,
       break;
   }
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-    return status;
+    goto exit;
 
   flags = 0;
   if (at_au_end) {
@@ -4545,6 +4545,10 @@ gst_vaapi_decoder_h264_parse (GstVaapiDecoder * base_decoder,
   pi->flags = flags;
   gst_vaapi_parser_info_h264_replace (&priv->prev_pi, pi);
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+exit:
+  gst_vaapi_parser_info_h264_unref (pi);
+  return status;
 }
 
 static GstVaapiDecoderStatus
