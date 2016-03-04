@@ -2828,7 +2828,7 @@ gst_vaapi_decoder_h265_parse (GstVaapiDecoder * base_decoder,
         buf, 0, buf_size, &pi->nalu);
   status = get_status (result);
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-    return status;
+    goto exit;
   switch (pi->nalu.type) {
     case GST_H265_NAL_VPS:
       status = parse_vps (decoder, unit);
@@ -2866,7 +2866,7 @@ gst_vaapi_decoder_h265_parse (GstVaapiDecoder * base_decoder,
       break;
   }
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-    return status;
+    goto exit;
   flags = 0;
   if (at_au_end) {
     flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_END |
@@ -2941,6 +2941,10 @@ gst_vaapi_decoder_h265_parse (GstVaapiDecoder * base_decoder,
   pi->flags = flags;
   gst_vaapi_parser_info_h265_replace (&priv->prev_pi, pi);
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+exit:
+  gst_vaapi_parser_info_h265_unref (pi);
+  return status;
 }
 
 static GstVaapiDecoderStatus
