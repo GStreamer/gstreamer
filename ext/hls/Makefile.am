@@ -8,7 +8,7 @@ libgsthls_la_SOURCES =			\
 	gsthlssink.c 				\
 	gstm3u8playlist.c
 
-libgsthls_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(LIBGCRYPT_CFLAGS) $(NETTLE_CFLAGS)
+libgsthls_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(LIBGCRYPT_CFLAGS) $(NETTLE_CFLAGS) $(OPENSSL_CFLAGS)
 libgsthls_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/uridownloader/libgsturidownloader-@GST_API_VERSION@.la \
         $(top_builddir)/gst-libs/gst/adaptivedemux/libgstadaptivedemux-@GST_API_VERSION@.la \
