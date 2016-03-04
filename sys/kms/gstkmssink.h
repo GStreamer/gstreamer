@@ -65,6 +65,7 @@ struct _GstKMSSink {
   GstCaps *allowed_caps;
   GstBufferPool *pool;
   GstAllocator *allocator;
+  GstBuffer *last_buffer;
 
   gchar *devname;
 

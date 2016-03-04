@@ -482,6 +482,7 @@ gst_kms_sink_stop (GstBaseSink * bsink)
 
   self = GST_KMS_SINK (bsink);
 
+  gst_buffer_replace (&self->last_buffer, NULL);
   gst_caps_replace (&self->allowed_caps, NULL);
   gst_object_replace ((GstObject **) & self->pool, NULL);
   gst_object_replace ((GstObject **) & self->allocator, NULL);
@@ -1098,6 +1099,8 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   /* Wait for the previous frame to complete redraw */
   if (!gst_kms_sink_sync (self))
     goto bail;
+
+  gst_buffer_replace (&self->last_buffer, buffer);
 
   res = GST_FLOW_OK;
 
