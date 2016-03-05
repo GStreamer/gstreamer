@@ -476,6 +476,8 @@ EXPORTS
 	gst_double_range_get_type
 	gst_element_abort_state
 	gst_element_add_pad
+	gst_element_add_property_deep_notify_watch
+	gst_element_add_property_notify_watch
 	gst_element_change_state
 	gst_element_class_add_metadata
 	gst_element_class_add_pad_template
@@ -545,6 +547,7 @@ EXPORTS
 	gst_element_register
 	gst_element_release_request_pad
 	gst_element_remove_pad
+	gst_element_remove_property_notify_watch
 	gst_element_request_pad
 	gst_element_seek
 	gst_element_seek_simple
@@ -712,6 +715,7 @@ EXPORTS
 	gst_message_new_need_context
 	gst_message_new_new_clock
 	gst_message_new_progress
+	gst_message_new_property_notify
 	gst_message_new_qos
 	gst_message_new_request_state
 	gst_message_new_reset_time
@@ -741,6 +745,7 @@ EXPORTS
 	gst_message_parse_info
 	gst_message_parse_new_clock
 	gst_message_parse_progress
+	gst_message_parse_property_notify
 	gst_message_parse_qos
 	gst_message_parse_qos_stats
 	gst_message_parse_qos_values

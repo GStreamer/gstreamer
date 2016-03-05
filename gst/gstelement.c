@@ -3245,3 +3245,122 @@ gst_element_get_context (GstElement * element, const gchar * context_type)
 
   return ret;
 }
+
+static void
+gst_element_property_post_notify_msg (GstElement * element, GObject * obj,
+    GParamSpec * pspec, gboolean include_value)
+{
+  GValue val = G_VALUE_INIT;
+  GValue *v;
+
+  GST_LOG_OBJECT (element, "property '%s' of object %" GST_PTR_FORMAT " has "
+      "changed, posting message with%s value", pspec->name, obj,
+      include_value ? "" : "out");
+
+  if (include_value && (pspec->flags & G_PARAM_READABLE) != 0) {
+    g_value_init (&val, pspec->value_type);
+    g_object_get_property (obj, pspec->name, &val);
+    v = &val;
+  } else {
+    v = NULL;
+  }
+  gst_element_post_message (element,
+      gst_message_new_property_notify (GST_OBJECT_CAST (obj), pspec->name, v));
+}
+
+static void
+gst_element_property_deep_notify_cb (GstElement * element, GObject * prop_obj,
+    GParamSpec * pspec, gpointer user_data)
+{
+  gboolean include_value = GPOINTER_TO_INT (user_data);
+
+  gst_element_property_post_notify_msg (element, prop_obj, pspec,
+      include_value);
+}
+
+static void
+gst_element_property_notify_cb (GObject * obj, GParamSpec * pspec,
+    gpointer user_data)
+{
+  gboolean include_value = GPOINTER_TO_INT (user_data);
+
+  gst_element_property_post_notify_msg (GST_ELEMENT_CAST (obj), obj, pspec,
+      include_value);
+}
+
+/**
+ * gst_element_add_property_notify_watch:
+ * @element: a #GstElement to watch for property changes
+ * @property_name: (allow-none): name of property to watch for changes, or
+ *     NULL to watch all properties
+ * @include_value: whether to include the new property value in the message
+ *
+ * Returns: a watch id, which can be used in connection with
+ *     gst_element_remove_property_notify_watch() to remove the watch again.
+ *
+ * Since: 1.10
+ */
+gulong
+gst_element_add_property_notify_watch (GstElement * element,
+    const gchar * property_name, gboolean include_value)
+{
+  const gchar *sep;
+  gchar *signal_name;
+  gulong id;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), 0);
+
+  sep = (property_name != NULL) ? "::" : NULL;
+  signal_name = g_strconcat ("notify", sep, property_name, NULL);
+  id = g_signal_connect (element, signal_name,
+      G_CALLBACK (gst_element_property_notify_cb),
+      GINT_TO_POINTER (include_value));
+  g_free (signal_name);
+
+  return id;
+}
+
+/**
+ * gst_element_add_property_deep_notify_watch:
+ * @element: a #GstElement to watch (recursively) for property changes
+ * @property_name: (allow-none): name of property to watch for changes, or
+ *     NULL to watch all properties
+ * @include_value: whether to include the new property value in the message
+ *
+ * Returns: a watch id, which can be used in connection with
+ *     gst_element_remove_property_notify_watch() to remove the watch again.
+ *
+ * Since: 1.10
+ */
+gulong
+gst_element_add_property_deep_notify_watch (GstElement * element,
+    const gchar * property_name, gboolean include_value)
+{
+  const gchar *sep;
+  gchar *signal_name;
+  gulong id;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), 0);
+
+  sep = (property_name != NULL) ? "::" : NULL;
+  signal_name = g_strconcat ("deep-notify", sep, property_name, NULL);
+  id = g_signal_connect (element, signal_name,
+      G_CALLBACK (gst_element_property_deep_notify_cb),
+      GINT_TO_POINTER (include_value));
+  g_free (signal_name);
+
+  return id;
+}
+
+/**
+ * gst_element_remove_property_notify_watch:
+ * @element: a #GstElement being watched for property changes
+ * @watch_id: watch id to remove
+ *
+ * Since: 1.10
+ */
+void
+gst_element_remove_property_notify_watch (GstElement * element, gulong watch_id)
+{
+  g_signal_handler_disconnect (element, watch_id);
+}

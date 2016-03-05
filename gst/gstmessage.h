@@ -108,6 +108,8 @@ typedef struct _GstMessage GstMessage;
  *     a #GstDeviceProvider (Since 1.4)
  * @GST_MESSAGE_DEVICE_REMOVED: Message indicating a #GstDevice was removed
  *     from a #GstDeviceProvider (Since 1.4)
+ * @GST_MESSAGE_PROPERTY_NOTIFY: Message indicating a #GObject property has
+ *     changed (Since 1.10)
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.
@@ -156,6 +158,7 @@ typedef enum
   GST_MESSAGE_EXTENDED          = (1 << 31),
   GST_MESSAGE_DEVICE_ADDED      = GST_MESSAGE_EXTENDED + 1,
   GST_MESSAGE_DEVICE_REMOVED    = GST_MESSAGE_EXTENDED + 2,
+  GST_MESSAGE_PROPERTY_NOTIFY   = GST_MESSAGE_EXTENDED + 3,
   GST_MESSAGE_ANY               = (gint) (0xffffffff)
 } GstMessageType;
 
@@ -592,6 +595,9 @@ void            gst_message_parse_device_added  (GstMessage * message, GstDevice
 GstMessage *    gst_message_new_device_removed    (GstObject * src, GstDevice * device) G_GNUC_MALLOC;
 void            gst_message_parse_device_removed  (GstMessage * message, GstDevice ** device);
 
+/* PROPERTY_NOTIFY */
+GstMessage *    gst_message_new_property_notify   (GstObject * src, const gchar * property_name, GValue * val) G_GNUC_MALLOC;
+void            gst_message_parse_property_notify (GstMessage * message, GstObject ** object, const gchar ** property_name, const GValue ** property_value);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMessage, gst_message_unref)

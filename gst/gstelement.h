@@ -819,6 +819,18 @@ void                    gst_element_lost_state          (GstElement * element);
 /* factory management */
 GstElementFactory*      gst_element_get_factory         (GstElement *element);
 
+/* utility functions */
+gulong                  gst_element_add_property_notify_watch (GstElement  * element,
+                                                               const gchar * property_name,
+                                                               gboolean      include_value);
+
+gulong                  gst_element_add_property_deep_notify_watch (GstElement  * element,
+                                                                    const gchar * property_name,
+                                                                    gboolean      include_value);
+
+void                    gst_element_remove_property_notify_watch (GstElement * element,
+                                                                  gulong       watch_id);
+
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstElement, gst_object_unref)
 #endif

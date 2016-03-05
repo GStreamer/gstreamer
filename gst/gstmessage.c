@@ -105,6 +105,7 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_HAVE_CONTEXT, "have-context", 0},
   {GST_MESSAGE_DEVICE_ADDED, "device-added", 0},
   {GST_MESSAGE_DEVICE_REMOVED, "device-removed", 0},
+  {GST_MESSAGE_PROPERTY_NOTIFY, "property-notify", 0},
   {0, NULL, 0}
 };
 
@@ -2449,4 +2450,75 @@ gst_message_parse_device_removed (GstMessage * message, GstDevice ** device)
   if (device)
     gst_structure_id_get (GST_MESSAGE_STRUCTURE (message),
         GST_QUARK (DEVICE), GST_TYPE_DEVICE, device, NULL);
+}
+
+/**
+ * gst_message_new_property_notify:
+ * @src: The #GstObject whose property changed (may or may not be a #GstElement)
+ * @property_name: name of the property that changed
+ * @val: (allow-none) (transfer full): new property value, or %NULL
+ *
+ * Returns: a newly allocated #GstMessage
+ *
+ * Since: 1.10
+ */
+GstMessage *
+gst_message_new_property_notify (GstObject * src, const gchar * property_name,
+    GValue * val)
+{
+  GstStructure *structure;
+  GValue name_val = G_VALUE_INIT;
+
+  g_return_val_if_fail (property_name != NULL, NULL);
+
+  structure = gst_structure_new_id_empty (GST_QUARK (MESSAGE_PROPERTY_NOTIFY));
+  g_value_init (&name_val, G_TYPE_STRING);
+  /* should already be interned, but let's make sure */
+  g_value_set_static_string (&name_val, g_intern_string (property_name));
+  gst_structure_id_take_value (structure, GST_QUARK (PROPERTY_NAME), &name_val);
+  if (val != NULL)
+    gst_structure_id_take_value (structure, GST_QUARK (PROPERTY_VALUE), val);
+
+  return gst_message_new_custom (GST_MESSAGE_PROPERTY_NOTIFY, src, structure);
+}
+
+/**
+ * gst_message_parse_property_notify:
+ * @message: a #GstMessage of type %GST_MESSAGE_PROPERTY_NOTIFY
+ * @object: (out) (allow-none) (transfer none): location where to store a
+ *     pointer to the object whose property got changed, or %NULL
+ * @property_name: (out) (allow-none): return location for the name of the
+ *     property that got changed, or %NULL
+ * @property_value: (out) (allow-none): return location for the new value of
+ *     the property that got changed, or %NULL. This will only be set if the
+ *     property notify watch was told to include the value when it was set up
+ *
+ * Parses a property-notify message. These will be posted on the bus only
+ * when set up with gst_element_add_property_notify_watch() or
+ * gst_element_add_property_deep_notify_watch().
+ *
+ * Since: 1.10
+ */
+void
+gst_message_parse_property_notify (GstMessage * message, GstObject ** object,
+    const gchar ** property_name, const GValue ** property_value)
+{
+  const GstStructure *s = GST_MESSAGE_STRUCTURE (message);
+
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_PROPERTY_NOTIFY);
+
+  if (object)
+    *object = GST_MESSAGE_SRC (message);
+
+  if (property_name) {
+    const GValue *name_value;
+
+    name_value = gst_structure_id_get_value (s, GST_QUARK (PROPERTY_NAME));
+    *property_name = g_value_get_string (name_value);
+  }
+
+  if (property_value)
+    *property_value =
+        gst_structure_id_get_value (s, GST_QUARK (PROPERTY_VALUE));
 }

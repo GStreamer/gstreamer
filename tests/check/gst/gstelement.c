@@ -347,6 +347,141 @@ GST_START_TEST (test_pad_templates)
 
 GST_END_TEST;
 
+/* need to return the message here because object, property name and value
+ * are only valid as long as we keep the message alive */
+static GstMessage *
+bus_wait_for_notify_message (GstBus * bus, GstElement ** obj,
+    const gchar ** prop_name, const GValue ** val)
+{
+  GstMessage *msg;
+
+  do {
+    msg = gst_bus_timed_pop_filtered (bus, -1, GST_MESSAGE_ANY);
+    if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_PROPERTY_NOTIFY)
+      break;
+    gst_message_unref (msg);
+  } while (TRUE);
+
+  gst_message_parse_property_notify (msg, (GstObject **) obj, prop_name, val);
+  return msg;
+}
+
+GST_START_TEST (test_property_notify_message)
+{
+  GstElement *pipeline, *identity;
+  gulong watch_id0, watch_id1, watch_id2, deep_watch_id1, deep_watch_id2;
+  GstBus *bus;
+
+  pipeline = gst_pipeline_new (NULL);
+  identity = gst_element_factory_make ("identity", NULL);
+  gst_bin_add (GST_BIN (pipeline), identity);
+
+  bus = GST_ELEMENT_BUS (pipeline);
+
+  /* need to set state to READY, otherwise bus will be flushing and discard
+   * our messages */
+  gst_element_set_state (pipeline, GST_STATE_READY);
+
+  watch_id0 = gst_element_add_property_notify_watch (identity, NULL, FALSE);
+
+  watch_id1 = gst_element_add_property_notify_watch (identity, "sync", FALSE);
+
+  watch_id2 = gst_element_add_property_notify_watch (identity, "silent", TRUE);
+
+  deep_watch_id1 =
+      gst_element_add_property_deep_notify_watch (pipeline, NULL, TRUE);
+
+  deep_watch_id2 =
+      gst_element_add_property_deep_notify_watch (pipeline, "silent", FALSE);
+
+  /* Now test property changes and if we get the messages we expect. We rely
+   * on the signals being fired in the order that they were set up here. */
+  {
+    const GValue *val;
+    const gchar *name;
+    GstMessage *msg;
+    GstElement *obj;
+
+    /* A - This should be picked up by... */
+    g_object_set (identity, "dump", TRUE, NULL);
+    /* 1) the catch-all notify on the element (no value) */
+    msg = bus_wait_for_notify_message (bus, &obj, &name, &val);
+    fail_unless (obj == identity);
+    fail_unless_equals_string (name, "dump");
+    fail_unless (val == NULL);
+    gst_message_unref (msg);
+    /* 2) the catch-all deep-notify on the pipeline (with value) */
+    msg = bus_wait_for_notify_message (bus, &obj, &name, &val);
+    fail_unless_equals_string (name, "dump");
+    fail_unless (obj == identity);
+    fail_unless (G_VALUE_HOLDS_BOOLEAN (val));
+    fail_unless_equals_int (g_value_get_boolean (val), TRUE);
+    gst_message_unref (msg);
+
+    /* B - This should be picked up by... */
+    g_object_set (identity, "sync", TRUE, NULL);
+    /* 1) the catch-all notify on the element (no value) */
+    msg = bus_wait_for_notify_message (bus, &obj, &name, &val);
+    fail_unless (obj == identity);
+    fail_unless_equals_string (name, "sync");
+    fail_unless (val == NULL);
+    gst_message_unref (msg);
+    /* 2) the "sync" notify on the element (no value) */
+    msg = bus_wait_for_notify_message (bus, &obj, &name, &val);
+    fail_unless (obj == identity);
+    fail_unless_equals_string (name, "sync");
+    fail_unless (val == NULL);
+    gst_message_unref (msg);
+    /* 3) the catch-all deep-notify on the pipeline (with value) */
+    msg = bus_wait_for_notify_message (bus, &obj, &name, &val);
+    fail_unless_equals_string (name, "sync");
+    fail_unless (obj == identity);
+    fail_unless (G_VALUE_HOLDS_BOOLEAN (val));
+    fail_unless_equals_int (g_value_get_boolean (val), TRUE);
+    gst_message_unref (msg);
+
+    /* C - This should be picked up by... */
+    g_object_set (identity, "silent", FALSE, NULL);
+    /* 1) the catch-all notify on the element (no value) */
+    msg = bus_wait_for_notify_message (bus, &obj, &name, &val);
+    fail_unless (obj == identity);
+    fail_unless_equals_string (name, "silent");
+    fail_unless (val == NULL);
+    gst_message_unref (msg);
+    /* 2) the "silent" notify on the element (with value) */
+    msg = bus_wait_for_notify_message (bus, &obj, &name, &val);
+    fail_unless (obj == identity);
+    fail_unless_equals_string (name, "silent");
+    fail_unless (val != NULL);
+    fail_unless (G_VALUE_HOLDS_BOOLEAN (val));
+    fail_unless_equals_int (g_value_get_boolean (val), FALSE);
+    gst_message_unref (msg);
+    /* 3) the catch-all deep-notify on the pipeline (with value) */
+    msg = bus_wait_for_notify_message (bus, &obj, &name, &val);
+    fail_unless_equals_string (name, "silent");
+    fail_unless (obj == identity);
+    fail_unless (G_VALUE_HOLDS_BOOLEAN (val));
+    fail_unless_equals_int (g_value_get_boolean (val), FALSE);
+    gst_message_unref (msg);
+    /* 4) the "silent" deep-notify on the pipeline (without value) */
+    msg = bus_wait_for_notify_message (bus, &obj, &name, &val);
+    fail_unless_equals_string (name, "silent");
+    fail_unless (obj == identity);
+    fail_unless (val == NULL);
+    gst_message_unref (msg);
+  }
+
+  gst_element_remove_property_notify_watch (identity, watch_id0);
+  gst_element_remove_property_notify_watch (identity, watch_id1);
+  gst_element_remove_property_notify_watch (identity, watch_id2);
+  gst_element_remove_property_notify_watch (pipeline, deep_watch_id1);
+  gst_element_remove_property_notify_watch (pipeline, deep_watch_id2);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_element_suite (void)
 {
@@ -360,6 +495,7 @@ gst_element_suite (void)
   tcase_add_test (tc_chain, test_link);
   tcase_add_test (tc_chain, test_link_no_pads);
   tcase_add_test (tc_chain, test_pad_templates);
+  tcase_add_test (tc_chain, test_property_notify_message);
 
   return s;
 }
