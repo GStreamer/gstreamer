@@ -336,7 +336,13 @@ gst_gl_filter_fixate_caps (GstBaseTransform * bt,
       GST_DEBUG_OBJECT (bt, "height is fixed (%d)", h);
 
       if (!gst_value_is_fixed (to_par)) {
-        gst_value_set_fraction (&tpar, 1, 1);
+        /* (shortcut) copy-paste (??) of videoscale seems to aim for 1/1,
+         * so let's make it so ...
+         * especially if following code assumes fixed */
+        GST_DEBUG_OBJECT (bt, "fixating to_par to 1x1");
+        gst_structure_fixate_field_nearest_fraction (outs,
+            "pixel-aspect-ratio", 1, 1);
+        to_par = gst_structure_get_value (outs, "pixel-aspect-ratio");
       }
 
       /* PAR is fixed, choose the height that is nearest to the
@@ -363,7 +369,13 @@ gst_gl_filter_fixate_caps (GstBaseTransform * bt,
       GST_DEBUG_OBJECT (bt, "width is fixed (%d)", w);
 
       if (!gst_value_is_fixed (to_par)) {
-        gst_value_set_fraction (&tpar, 1, 1);
+        /* (shortcut) copy-paste (??) of videoscale seems to aim for 1/1,
+         * so let's make it so ...
+         * especially if following code assumes fixed */
+        GST_DEBUG_OBJECT (bt, "fixating to_par to 1x1");
+        gst_structure_fixate_field_nearest_fraction (outs,
+            "pixel-aspect-ratio", 1, 1);
+        to_par = gst_structure_get_value (outs, "pixel-aspect-ratio");
       }
 
       /* PAR is fixed, choose the height that is nearest to the
