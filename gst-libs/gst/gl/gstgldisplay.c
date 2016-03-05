@@ -437,8 +437,11 @@ _get_gl_context_for_thread_unlocked (GstGLDisplay * display, GThread * thread)
       continue;
     }
 
+    if (thread == NULL)
+      return context;
+
     context_thread = gst_gl_context_get_thread (context);
-    if (thread != NULL && thread == context_thread) {
+    if (thread != context_thread) {
       g_thread_unref (context_thread);
       gst_object_unref (context);
       prev = l;
