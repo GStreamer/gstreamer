@@ -65,6 +65,7 @@ static gboolean toc = FALSE;
 static gboolean messages = FALSE;
 static gboolean is_live = FALSE;
 static gboolean waiting_eos = FALSE;
+static gchar **exclude_args = NULL;
 
 /* convenience macro so we don't have to litter the code with if(!quiet) */
 #define PRINT if(!quiet)g_print
@@ -834,6 +835,44 @@ event_loop (GstElement * pipeline, gboolean blocking, gboolean do_progress,
         gst_context_unref (context);
         break;
       }
+      case GST_MESSAGE_PROPERTY_NOTIFY:{
+        const GValue *val;
+        const gchar *name;
+        GstObject *obj;
+        gchar *val_str = NULL;
+        gchar **ex_prop, *obj_name;
+
+        if (quiet)
+          break;
+
+        gst_message_parse_property_notify (message, &obj, &name, &val);
+
+        /* Let's not print anything for excluded properties... */
+        ex_prop = exclude_args;
+        while (ex_prop != NULL && *ex_prop != NULL) {
+          if (strcmp (name, *ex_prop) == 0)
+            break;
+          ex_prop++;
+        }
+        if (ex_prop != NULL && *ex_prop != NULL)
+          break;
+
+        obj_name = gst_object_get_path_string (GST_OBJECT (obj));
+        if (val != NULL) {
+          if (G_VALUE_HOLDS_STRING (val))
+            val_str = g_value_dup_string (val);
+          else if (G_VALUE_TYPE (val) == GST_TYPE_CAPS)
+            val_str = gst_caps_to_string (g_value_get_boxed (val));
+          val_str = gst_value_serialize (val);
+        } else {
+          val_str = g_strdup ("(no value)");
+        }
+
+        g_print ("%s: %s = %s\n", obj_name, name, val_str);
+        g_free (obj_name);
+        g_free (val_str);
+        break;
+      }
       default:
         /* just be quiet by default */
         break;
@@ -913,7 +952,6 @@ main (int argc, char *argv[])
   gboolean check_index = FALSE;
 #endif
   gchar *savefile = NULL;
-  gchar **exclude_args = NULL;
 #ifndef GST_DISABLE_OPTION_PARSING
   GOptionEntry options[] = {
     {"tags", 't', 0, G_OPTION_ARG_NONE, &tags,
@@ -1032,8 +1070,8 @@ main (int argc, char *argv[])
       pipeline = real_pipeline;
     }
     if (verbose) {
-      deep_notify_id = g_signal_connect (pipeline, "deep-notify",
-          G_CALLBACK (gst_object_default_deep_notify), exclude_args);
+      deep_notify_id =
+          gst_element_add_property_deep_notify_watch (pipeline, NULL, TRUE);
     }
 #if 0
     if (check_index) {
