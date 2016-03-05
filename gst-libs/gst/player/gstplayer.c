@@ -2235,6 +2235,7 @@ gst_player_media_info_create (GstPlayer * self)
   media_info = gst_player_media_info_new (self->uri);
   media_info->duration = gst_player_get_duration (self);
   media_info->tags = self->global_tags;
+  media_info->is_live = self->is_live;
   self->global_tags = NULL;
 
   query = gst_query_new_seeking (GST_FORMAT_TIME);
@@ -2256,10 +2257,10 @@ gst_player_media_info_create (GstPlayer * self)
   media_info->image_sample = get_from_tags (self, media_info, get_cover_sample);
 
   GST_DEBUG_OBJECT (self, "uri: %s title: %s duration: %" GST_TIME_FORMAT
-      " seekable: %s container: %s image_sample %p",
+      " seekable: %s live: %s container: %s image_sample %p",
       media_info->uri, media_info->title, GST_TIME_ARGS (media_info->duration),
-      media_info->seekable ? "yes" : "no", media_info->container,
-      media_info->image_sample);
+      media_info->seekable ? "yes" : "no", media_info->is_live ? "yes" : "no",
+      media_info->container, media_info->image_sample);
 
   GST_DEBUG_OBJECT (self, "end");
   return media_info;

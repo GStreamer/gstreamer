@@ -40,6 +40,7 @@ EXPORTS
 	gst_player_media_info_get_title
 	gst_player_media_info_get_type
 	gst_player_media_info_get_uri
+	gst_player_media_info_is_live
 	gst_player_media_info_is_seekable
 	gst_player_new
 	gst_player_pause
