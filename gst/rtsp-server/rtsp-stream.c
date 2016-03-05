@@ -1214,6 +1214,7 @@ alloc_ports_one_family (GstRTSPStream * stream, GSocketFamily family,
       G_SOCKET_PROTOCOL_UDP, NULL);
   if (!rtcp_socket)
     goto no_udp_protocol;
+  g_socket_set_multicast_loopback (rtcp_socket, FALSE);
 
   if (*server_addr_out)
     gst_rtsp_address_free (*server_addr_out);
@@ -1227,6 +1228,7 @@ again:
         G_SOCKET_PROTOCOL_UDP, NULL);
     if (!rtp_socket)
       goto no_udp_protocol;
+    g_socket_set_multicast_loopback (rtp_socket, FALSE);
   }
 
   if (pool && ((transport == GST_RTSP_LOWER_TRANS_UDP &&
