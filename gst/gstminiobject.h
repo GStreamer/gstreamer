@@ -237,10 +237,10 @@ gboolean        gst_mini_object_lock            (GstMiniObject *object, GstLockF
 void            gst_mini_object_unlock          (GstMiniObject *object, GstLockFlags flags);
 
 gboolean        gst_mini_object_is_writable     (const GstMiniObject *mini_object);
-GstMiniObject * gst_mini_object_make_writable	(GstMiniObject *mini_object);
+GstMiniObject * gst_mini_object_make_writable	(GstMiniObject *mini_object) G_GNUC_WARN_UNUSED_RESULT;
 
 /* copy */
-GstMiniObject * gst_mini_object_copy		(const GstMiniObject *mini_object) G_GNUC_MALLOC;
+GstMiniObject * gst_mini_object_copy		(const GstMiniObject *mini_object) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
 void            gst_mini_object_set_qdata       (GstMiniObject *object, GQuark quark,
@@ -251,7 +251,7 @@ gpointer        gst_mini_object_steal_qdata     (GstMiniObject *object, GQuark q
 
 gboolean        gst_mini_object_replace         (GstMiniObject **olddata, GstMiniObject *newdata);
 gboolean        gst_mini_object_take            (GstMiniObject **olddata, GstMiniObject *newdata);
-GstMiniObject * gst_mini_object_steal           (GstMiniObject **olddata);
+GstMiniObject * gst_mini_object_steal           (GstMiniObject **olddata) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * GST_DEFINE_MINI_OBJECT_TYPE:

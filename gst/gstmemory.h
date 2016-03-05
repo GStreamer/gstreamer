@@ -351,13 +351,13 @@ void           gst_memory_resize       (GstMemory *mem, gssize offset, gsize siz
 #define        gst_memory_make_writable(m) GST_MEMORY_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (m)))
 
 /* retrieving data */
-GstMemory *    gst_memory_make_mapped  (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);
+GstMemory *    gst_memory_make_mapped  (GstMemory *mem, GstMapInfo *info, GstMapFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 gboolean       gst_memory_map          (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);
 void           gst_memory_unmap        (GstMemory *mem, GstMapInfo *info);
 
 /* copy and subregions */
-GstMemory *    gst_memory_copy         (GstMemory *mem, gssize offset, gssize size);
-GstMemory *    gst_memory_share        (GstMemory *mem, gssize offset, gssize size);
+GstMemory *    gst_memory_copy         (GstMemory *mem, gssize offset, gssize size) G_GNUC_WARN_UNUSED_RESULT;
+GstMemory *    gst_memory_share        (GstMemory *mem, gssize offset, gssize size) G_GNUC_WARN_UNUSED_RESULT;
 
 /* span memory */
 gboolean       gst_memory_is_span      (GstMemory *mem1, GstMemory *mem2, gsize *offset);

@@ -209,11 +209,11 @@ GstUri * gst_uri_from_string_with_base (GstUri * base,
 gboolean gst_uri_equal                 (const GstUri * first,
                                         const GstUri * second);
 GstUri * gst_uri_join                  (GstUri * base_uri,
-                                        GstUri * ref_uri);
+                                        GstUri * ref_uri) G_GNUC_WARN_UNUSED_RESULT;
 gchar *  gst_uri_join_strings          (const gchar * base_uri,
                                         const gchar * ref_uri) G_GNUC_MALLOC;
 gboolean gst_uri_is_writable           (const GstUri * uri);
-GstUri * gst_uri_make_writable         (GstUri * uri);
+GstUri * gst_uri_make_writable         (GstUri * uri) G_GNUC_WARN_UNUSED_RESULT;
 gchar *  gst_uri_to_string             (const GstUri * uri) G_GNUC_MALLOC;
 gboolean gst_uri_is_normalized         (const GstUri * uri);
 gboolean gst_uri_normalize             (GstUri * uri);
