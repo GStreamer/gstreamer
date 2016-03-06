@@ -612,8 +612,7 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_rtsp_client_sink_release_pad);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&rtptemplate));
+  gst_element_class_add_static_pad_template (gstelement_class, &rtptemplate);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "RTSP RECORD client", "Sink/Network",
