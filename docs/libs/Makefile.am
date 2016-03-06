@@ -40,7 +40,9 @@ IGNORE_HFILES = \
 	$(top_srcdir)/gst-libs/gst/mpegts/gstmpegts-private.h \
 	$(top_srcdir)/gst-libs/gst/player/gstplayer-signal-dispatcher-private.h \
 	$(top_srcdir)/gst-libs/gst/player/gstplayer-video-renderer-private.h \
-	$(top_srcdir)/gst-libs/gst/player/gstplayer-media-info-private.h
+	$(top_srcdir)/gst-libs/gst/player/gstplayer-media-info-private.h \
+	$(top_srcdir)/gst-libs/gst/gl/gstglcontext_private.h \
+	$(top_srcdir)/gst-libs/gst/gl/gstglsl_private.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =
