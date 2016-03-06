@@ -40,6 +40,17 @@ GType gst_gl_display_get_type (void);
 #define GST_GL_DISPLAY_CAST(obj)        ((GstGLDisplay*)(obj))
 #define GST_GL_DISPLAY_GET_CLASS(o)     (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_DISPLAY, GstGLDisplayClass))
 
+/**
+ * GstGLDisplayType:
+ * @GST_GL_DISPLAY_TYPE_NONE: no display type
+ * @GST_GL_DISPLAY_TYPE_X11: X11 display
+ * @GST_GL_DISPLAY_TYPE_WAYLAND: Wayland display
+ * @GST_GL_DISPLAY_TYPE_COCOA: Cocoa display
+ * @GST_GL_DISPLAY_TYPE_WIN32: Win32 display
+ * @GST_GL_DISPLAY_TYPE_DISPMANX: Dispmanx display
+ * @GST_GL_DISPLAY_TYPE_EGL: EGL display
+ * @GST_GL_DISPLAY_TYPE_ANY: any display type
+ */
 typedef enum
 {
   GST_GL_DISPLAY_TYPE_NONE = 0,
@@ -84,7 +95,7 @@ GstGLDisplay *gst_gl_display_new (void);
 guintptr         gst_gl_display_get_handle             (GstGLDisplay * display);
 GstGLDisplayType gst_gl_display_get_handle_type        (GstGLDisplay * display);
 void             gst_gl_display_filter_gl_api          (GstGLDisplay * display,
-                                                        GstGLAPI api);
+                                                        GstGLAPI gl_api);
 GstGLAPI         gst_gl_display_get_gl_api             (GstGLDisplay * display);
 GstGLAPI         gst_gl_display_get_gl_api_unlocked    (GstGLDisplay * display);
 

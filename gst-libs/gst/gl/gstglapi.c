@@ -120,9 +120,9 @@ gst_gl_api_from_string (const gchar * apis_s)
 
 /**
  * gst_gl_platform_to_string:
- * @api: a #GstGLPlatform to stringify
+ * @platform: a #GstGLPlatform to stringify
  *
- * Returns: A space seperated string of the OpenGL platforms enabled in @api
+ * Returns: A space seperated string of the OpenGL platforms enabled in @platform
  */
 gchar *
 gst_gl_platform_to_string (GstGLPlatform platform)

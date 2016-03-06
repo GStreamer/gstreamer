@@ -41,12 +41,11 @@ GType gst_gl_base_filter_get_type(void);
 
 /**
  * GstGLBaseFilter:
- * @base_transform: parent #GstBaseTransform
+ * @parent: parent #GstBaseTransform
  * @display: the currently configured #GstGLDisplay
  * @context: the currently configured #GstGLContext
- *
- * #GstGLBaseFilter is a base class that provides the logic of getting the
- * GL context from the pipeline.
+ * @in_caps: the currently configured input #GstCaps
+ * @out_caps: the currently configured output #GstCaps
  */
 struct _GstGLBaseFilter
 {
@@ -66,7 +65,8 @@ struct _GstGLBaseFilter
 
 /**
  * GstGLBaseFilterClass:
- * @base_transform_class: parent class
+ * @parent_class: parent class
+ * @supported_gl_api: the logical-OR of #GstGLAPI's supported by this element
  * @gl_start: called in the GL thread to setup the element GL state.
  * @gl_stop: called in the GL thread to setup the element GL state.
  * @gl_set_caps: called in the GL thread when caps are set on @filter.
@@ -80,6 +80,7 @@ struct _GstGLBaseFilterClass
   void     (*gl_stop)           (GstGLBaseFilter *filter);
   gboolean (*gl_set_caps)       (GstGLBaseFilter *filter, GstCaps * incaps, GstCaps * outcaps);
 
+  /* <private> */
   gpointer _padding[GST_PADDING];
 };
 

@@ -458,6 +458,12 @@ gst_gl_buffer_pool_finalize (GObject * object)
   priv->gl_params = NULL;
 }
 
+/**
+ * gst_buffer_pool_config_get_gl_allocation_params:
+ * @config: a buffer pool config
+ *
+ * Returns: (transfer full): the currently set #GstGLAllocationParams or %NULL
+ */
 GstGLAllocationParams *
 gst_buffer_pool_config_get_gl_allocation_params (GstStructure * config)
 {
@@ -470,6 +476,13 @@ gst_buffer_pool_config_get_gl_allocation_params (GstStructure * config)
   return ret;
 }
 
+/**
+ * gst_buffer_pool_config_set_gl_allocation_params:
+ * @config: a buffer pool config
+ * @params: (transfer none): a #GstGLAllocationParams
+ *
+ * Sets @params on @config
+ */
 void
 gst_buffer_pool_config_set_gl_allocation_params (GstStructure * config,
     GstGLAllocationParams * params)

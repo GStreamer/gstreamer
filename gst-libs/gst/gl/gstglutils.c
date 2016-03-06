@@ -952,7 +952,7 @@ gst_gl_caps_replace_all_caps_features (const GstCaps * caps,
  * gst_gl_value_get_texture_target_mask:
  * @value: an initialized #GValue of type G_TYPE_STRING
  *
- * See gst_gl_value_set_texture_target_mask() for what entails a mask
+ * See gst_gl_value_set_texture_target_from_mask() for what entails a mask
  *
  * Returns: the mask of #GstGLTextureTarget's in @value
  */

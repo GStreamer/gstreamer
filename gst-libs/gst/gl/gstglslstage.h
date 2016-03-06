@@ -32,6 +32,11 @@ G_BEGIN_DECLS
 #define GST_IS_GLSL_STAGE_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_GLSL_STAGE))
 #define GST_GLSL_STAGE_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GLSL_STAGE, GstGLSLStageClass))
 
+/**
+ * GstGLSLStage:
+ *
+ * Opaque #GstGLSLStage struct
+ */
 struct _GstGLSLStage
 {
   /*< private >*/
@@ -44,11 +49,15 @@ struct _GstGLSLStage
   gpointer _padding[GST_PADDING];
 };
 
+/**
+ * GstGLSLStageClass:
+ *
+ * Opaque #GstGLSLStageClass struct
+ */
 struct _GstGLSLStageClass
 {
-  GstObjectClass parent;
-
   /*< private >*/
+  GstObjectClass parent;
 };
 
 GType          gst_glsl_stage_get_type          (void);

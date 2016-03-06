@@ -26,6 +26,18 @@
 
 #include <gst/gl/gl.h>
 
+/**
+ * SECTION:gstglbasefilter
+ * @short_description: #GstBaseTransform subclass for transformin OpenGL resources
+ * @title: GstGLBaseFilter
+ * @see_also: #GstBaseTransform
+ *
+ * #GstGLBaseFilter handles the nitty gritty details of retrieving an OpenGL
+ * context.  It also provided some wrappers around #GstBaseTransform's
+ * start(), stop() and set_caps() virtual methods that ensure an OpenGL context
+ * is available and current in the calling thread.
+ */
+
 #define GST_CAT_DEFAULT gst_gl_base_filter_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 

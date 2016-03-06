@@ -27,6 +27,15 @@
 #include "gstglslstage.h"
 #include "gstglsl_private.h"
 
+/**
+ * SECTION:gstglslstage
+ * @short_description: object for dealing with OpenGL shader stages
+ * @title: GstGLSLStage
+ * @see_also: #GstGLShader
+ *
+ * #GstGLSLStage holds and represents a single OpenGL shader stage.
+ */
+
 static const gchar *es2_version_header = "#version 100\n";
 
 GST_DEBUG_CATEGORY_STATIC (gst_glsl_stage_debug);
@@ -185,6 +194,10 @@ _ensure_shader (GstGLSLStage * stage)
  * gst_glsl_stage_new_with_strings:
  * @context: a #GstGLContext
  * @type: the GL enum shader stage type
+ * @version: the #GstGLSLVersion
+ * @profile: the #GstGLSLProfile
+ * @n_strings: the number of strings in @str
+ * @str: an array of strings concatted together to produce a shader
  *
  * Returns: (transfer full): a new #GstGLSLStage of the specified @type
  */
@@ -216,9 +229,12 @@ gst_glsl_stage_new_with_strings (GstGLContext * context, guint type,
 }
 
 /**
- * gst_glsl_stage_new_with_strings:
+ * gst_glsl_stage_new_with_string:
  * @context: a #GstGLContext
  * @type: the GL enum shader stage type
+ * @version: the #GstGLSLVersion
+ * @profile: the #GstGLSLProfile
+ * @str: a shader string
  *
  * Returns: (transfer full): a new #GstGLSLStage of the specified @type
  */
@@ -484,6 +500,7 @@ _compile_shader (GstGLContext * context, struct compile *data)
 /**
  * gst_glsl_stage_compile:
  * @stage: a #GstGLSLStage
+ * @error: a #GError to use on failure
  *
  * Returns: whether the compilation suceeded
  */

@@ -21,7 +21,7 @@
  */
 
 /**
- * SECTION:viewconvert
+ * SECTION:gstglviewconvert
  *
  * Convert stereoscopic/multiview video using fragment shaders.
  */
