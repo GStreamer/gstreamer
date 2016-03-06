@@ -227,6 +227,19 @@ _gl_buffer_unmap (GstGLBuffer * mem, GstMapInfo * info)
   /* XXX: optimistically transfer data */
 }
 
+/**
+ * gst_gl_buffer_copy_buffer_sub_data:
+ * @src: the source #GstGLBuffer
+ * @dest: the destination #GstGLBuffer
+ * @offset: the offset to copy from @src
+ * @size: the size to copy from @src
+ *
+ * Copies @src into @dest using glCopyBufferSubData().
+ *
+ * Returns: whether the copy operation succeeded
+ *
+ * Since: 1.8
+ */
 static gboolean
 gst_gl_buffer_copy_buffer_sub_data (GstGLBuffer * src,
     GstGLBuffer * dest, gssize offset, gssize size)
@@ -332,6 +345,19 @@ _gst_gl_buffer_allocation_params_free_data (GstGLBufferAllocationParams *
   gst_gl_allocation_params_free_data (&params->parent);
 }
 
+/**
+ * gst_gl_buffer_allocation_params_new:
+ * @context: a #GstGLContext
+ * @alloc_size: the size in bytes to allocate
+ * @alloc_params: (allow-none): the #GstAllocationParams for @tex_id
+ * @gl_target: the OpenGL target to allocate
+ * @gl_usage: the OpenGL usage hint to allocate with
+ *
+ * Returns: a new #GstGLBufferAllocationParams for allocating OpenGL buffer
+ *          objects
+ *
+ * Since: 1.8
+ */
 GstGLBufferAllocationParams *
 gst_gl_buffer_allocation_params_new (GstGLContext * context, gsize alloc_size,
     GstAllocationParams * alloc_params, guint gl_target, guint gl_usage)
@@ -413,7 +439,9 @@ gst_gl_buffer_allocator_init (GstGLBufferAllocator * allocator)
  * gst_gl_buffer_init_once:
  *
  * Initializes the GL Buffer allocator. It is safe to call this function
- * multiple times.  This must be called before any other GstGLBuffer operation.
+ * multiple times.  This must be called before any other #GstGLBuffer operation.
+ *
+ * Since: 1.8
  */
 void
 gst_gl_buffer_init_once (void)
@@ -439,6 +467,8 @@ gst_gl_buffer_init_once (void)
  * @mem:a #GstMemory
  * 
  * Returns: whether the memory at @mem is a #GstGLBuffer
+ *
+ * Since: 1.8
  */
 gboolean
 gst_is_gl_buffer (GstMemory * mem)

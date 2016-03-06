@@ -44,6 +44,13 @@ GType gst_gl_base_memory_allocator_get_type(void);
 GQuark gst_gl_base_memory_error_quark (void);
 #define GST_GL_BASE_MEMORY_ERROR (gst_gl_base_memory_error_quark ())
 
+/**
+ * GstGLBaseMemoryError:
+ * @GST_GL_BASE_MEMORY_ERROR_FAILED: generic faliure
+ * @GST_GL_BASE_MEMORY_ERROR_OLD_LIBS: the implementation is too old and doesn't
+ *                                     implement enough features
+ * @GST_GL_BASE_MEMORY_ERROR_RESOURCE_UNAVAILABLE: a resource could not be found
+ */
 typedef enum
 {
   GST_GL_BASE_MEMORY_ERROR_FAILED,
@@ -51,6 +58,13 @@ typedef enum
   GST_GL_BASE_MEMORY_ERROR_RESOURCE_UNAVAILABLE,
 } GstGLBaseMemoryError;
 
+/**
+ * GstGLBaseMemoryTransfer:
+ * @GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD: the texture needs downloading
+ *                                             to the data pointer
+ * @GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD:   the data pointer needs uploading
+ *                                             to the texture
+ */
 typedef enum
 {
   GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD   = (GST_MEMORY_FLAG_LAST << 0),
@@ -101,9 +115,22 @@ struct _GstGLBaseMemory
 };
 
 typedef struct _GstGLAllocationParams GstGLAllocationParams;
-/* subclass has to compose with the parent class */
+/**
+ * GstGLAllocationParamsCopyFunc:
+ * @src: the source #GstGLAllocationParams to copy from
+ * @dest: the source #GstGLAllocationParams to copy
+ *
+ * Copies the parameters from @src into @dest.  The subclass must compose copy
+ * functions from the superclass.
+ */
 typedef void    (*GstGLAllocationParamsCopyFunc)    (GstGLAllocationParams * src, GstGLAllocationParams * dest);
-/* subclass has to compose with the parent class */
+/**
+ * GstGLAllocationParamsFreeFunc:
+ * @params: a #GstGLAllocationParams
+ *
+ * Free any dynamically allocated data.  The subclass must call the superclass'
+ * free.
+ */
 typedef void    (*GstGLAllocationParamsFreeFunc)    (gpointer params);
 
 #define GST_TYPE_GL_ALLOCATION_PARAMS (gst_gl_allocation_params_get_type())
@@ -114,6 +141,20 @@ GType gst_gl_allocation_params_get_type (void);
 #define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE (1 << 2)
 #define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_USER (1 << 16)
 
+/**
+ * GstGLAllocationParams:
+ * @struct_size: the size of the struct (including and subclass data)
+ * @copy: a #GstGLAllocationParamsCopyFunc
+ * @free: a #GstGLAllocationParamsFreeFunc
+ * @alloc_flags: allocation flags
+ * @alloc_size: the allocation size
+ * @alloc_params: the #GstAllocationParams
+ * @context: a #GstGLContext
+ * @notify: a #GDestroyNotify
+ * @user_data: argument to call @notify with
+ * @wrapped_data: the wrapped data pointer
+ * @gl_handle: the wrapped OpenGL handle
+ */
 /* Because GstAllocationParams is not subclassable, start our own subclass
  * chain.  FIXME: 2.0 make GstAllocationParams subclassable */
 struct _GstGLAllocationParams
@@ -158,35 +199,113 @@ void                    gst_gl_allocation_params_free_data  (GstGLAllocationPara
 void                    gst_gl_allocation_params_copy_data  (GstGLAllocationParams * src,
                                                              GstGLAllocationParams * dest);
 
+/**
+ * GstGLBaseMemoryAllocatorAllocFunction:
+ * @allocator: a #GstGLBaseMemoryAllocator
+ * @params: the #GstGLAllocationParams to allocate the memory with
+ *
+ * Note: not called with a GL context current
+ *
+ * Returns: a newly allocated #GstGLBaseMemory from @allocator and @params
+ *
+ * Since: 1.8
+ */
 typedef GstGLBaseMemory *   (*GstGLBaseMemoryAllocatorAllocFunction)        (GstGLBaseMemoryAllocator * allocator,
                                                                              GstGLAllocationParams * params);
+
+/**
+ * GstGLBaseMemoryAllocatorCreateFunction:
+ * @mem: a #GstGLBaseMemory
+ * @error: a #GError to use on failure
+ *
+ * As this virtual method is called with an OpenGL context current, use this
+ * function to allocate and OpenGL resources needed for your application
+ *
+ * Returns: whether the creation succeeded
+ *
+ * Since: 1.8
+ */
 typedef gboolean            (*GstGLBaseMemoryAllocatorCreateFunction)       (GstGLBaseMemory * mem,
                                                                              GError ** error);
+
+/**
+ * GstGLBaseMemoryAllocatorMapFunction:
+ * @mem: a #GstGLBaseMemory
+ * @info: a #GstMapInfo to map with
+ * @maxsize: the size to map
+ *
+ * Also see gst_memory_map();
+ *
+ * Returns: the mapped pointer
+ *
+ * Since: 1.8
+ */
 typedef gpointer            (*GstGLBaseMemoryAllocatorMapFunction)          (GstGLBaseMemory * mem,
                                                                              GstMapInfo * info,
                                                                              gsize maxsize);
+/**
+ * GstGLBaseMemoryAllocatorUnmapFunction:
+ * @mem: a #GstGLBaseMemory
+ * @info: a #GstMapInfo to map with
+ *
+ * Also see gst_memory_unmap();
+ *
+ * Since: 1.8
+ */
 typedef void                (*GstGLBaseMemoryAllocatorUnmapFunction)        (GstGLBaseMemory * mem,
                                                                              GstMapInfo * info);
+
+/**
+ * GstGLBaseMemoryAllocatorCopyFunction:
+ * @mem: a #GstGLBaseMemory
+ * @offset: the offset to copy from
+ * @size: the number of bytes to copy
+ *
+ * Also see gst_memory_copy();
+ *
+ * Returns: the newly copied #GstGLMemory or %NULL
+ *
+ * Since: 1.8
+ */
 typedef GstGLBaseMemory *   (*GstGLBaseMemoryAllocatorCopyFunction)         (GstGLBaseMemory * mem,
                                                                              gssize offset,
                                                                              gssize size);
+
+/**
+ * GstGLBaseMemoryAllocatorDestroyFunction:
+ * @mem: a #GstGLBaseMemory
+ *
+ * Destroy any resources allocated throughout the lifetime of @mem
+ *
+ * Since: 1.8
+ */
 typedef void                (*GstGLBaseMemoryAllocatorDestroyFunction)      (GstGLBaseMemory * mem);
 
 /**
  * GstGLBaseMemoryAllocator
  *
- * Opaque #GstGLAllocator struct
+ * Opaque #GstGLBaseMemoryAllocator struct
+ *
+ * Since: 1.8
  */
 struct _GstGLBaseMemoryAllocator
 {
+  /*< private >*/
   GstAllocator parent;
   GstMemoryCopyFunction fallback_mem_copy;
 };
 
 /**
  * GstGLBaseMemoryAllocatorClass:
+ * @parent_class: the parent class
+ * @alloc: a #GstGLBaseMemoryAllocatorAllocFunctions
+ * @create: a #GstGLBaseMemoryAllocatorCreateFunction
+ * @map: a #GstGLBaseMemoryAllocatorMapFunction
+ * @unmap: a #GstGLBaseMemoryAllocatorUnmapFunction
+ * @copy: a #GstGLBaseMemoryAllocatorCopyFunction
+ * @destroy: a #GstGLBaseMemoryAllocatorDestroyFunction
  *
- * The #GstGLBaseMemoryAllocatorClass only contains private data
+ * Since: 1.8
  */
 struct _GstGLBaseMemoryAllocatorClass
 {
@@ -211,6 +330,8 @@ struct _GstGLBaseMemoryAllocatorClass
  * GST_GL_BASE_MEMORY_ALLOCATOR_NAME:
  *
  * The name of the GL buffer allocator
+ *
+ * Since: 1.8
  */
 #define GST_GL_BASE_MEMORY_ALLOCATOR_NAME   "GLBaseMemory"
 
@@ -222,7 +343,7 @@ void          gst_gl_base_memory_init      (GstGLBaseMemory * mem,
                                             GstMemory * parent,
                                             GstGLContext * context,
                                             GstAllocationParams * params,
-                                            gsize maxsize,
+                                            gsize size,
                                             gpointer user_data,
                                             GDestroyNotify notify);
 

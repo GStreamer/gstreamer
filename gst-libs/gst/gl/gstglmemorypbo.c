@@ -34,8 +34,8 @@
  * @short_description: memory subclass for GL textures
  * @see_also: #GstMemory, #GstAllocator, #GstGLBufferPool
  *
- * GstGLMemoryPBO is a #GstGLMemory subclass providing support for the mapping of
- * GL textures.  
+ * #GstGLMemoryPBO is created or wrapped through gst_gl_base_memory_alloc()
+ * with #GstGLVideoAllocationParams.
  *
  * #GstGLMemoryPBO is created through gst_gl_memory_pbo_alloc() or system memory can
  * be wrapped through gst_gl_memory_pbo_wrapped().
@@ -731,8 +731,9 @@ gst_gl_memory_pbo_allocator_init (GstGLMemoryPBOAllocator * allocator)
 /**
  * gst_gl_memory_pbo_copy_into_texture:
  * @gl_mem:a #GstGLMemoryPBO
- * @tex_id:OpenGL texture id
- * @tex_type: a #GstVideoGLTextureType
+ * @tex_id: the destination texture id
+ * @target: the destination #GstGLTextureTarget
+ * @tex_type: the destination #GstVideoGLTextureType
  * @width: width of @tex_id
  * @height: height of @tex_id
  * @stride: stride of the backing texture data
@@ -753,6 +754,8 @@ gst_gl_memory_pbo_allocator_init (GstGLMemoryPBOAllocator * allocator)
  * mappings between texture formats.
  *
  * Returns: Whether the copy suceeded
+ *
+ * Since: 1.8
  */
 gboolean
 gst_gl_memory_pbo_copy_into_texture (GstGLMemoryPBO * gl_mem, guint tex_id,
@@ -789,6 +792,14 @@ _download_transfer (GstGLContext * context, GstGLMemoryPBO * gl_mem)
   g_mutex_unlock (&mem->lock);
 }
 
+/**
+ * gst_gl_memory_pbo_download_transfer:
+ * @gl_mem: a #GstGLMemoryPBO
+ *
+ * Transfer the texture data from the texture into the PBO if necessary.
+ *
+ * Since: 1.8
+ */
 void
 gst_gl_memory_pbo_download_transfer (GstGLMemoryPBO * gl_mem)
 {
@@ -815,6 +826,14 @@ _upload_transfer (GstGLContext * context, GstGLMemoryPBO * gl_mem)
   g_mutex_unlock (&mem->lock);
 }
 
+/**
+ * gst_gl_memory_pbo_download_transfer:
+ * @gl_mem: a #GstGLMemoryPBO
+ *
+ * Transfer the texture data from the PBO into the texture if necessary.
+ *
+ * Since: 1.8
+ */
 void
 gst_gl_memory_pbo_upload_transfer (GstGLMemoryPBO * gl_mem)
 {
@@ -850,10 +869,12 @@ gst_gl_memory_pbo_init_once (void)
 }
 
 /**
- * gst_is_gl_memory:
+ * gst_is_gl_memory_pbo:
  * @mem:a #GstMemory
  * 
  * Returns: whether the memory at @mem is a #GstGLMemoryPBO
+ *
+ * Since: 1.8
  */
 gboolean
 gst_is_gl_memory_pbo (GstMemory * mem)

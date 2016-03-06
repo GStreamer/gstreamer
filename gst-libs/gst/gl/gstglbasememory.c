@@ -107,6 +107,8 @@ _mem_create_gl (GstGLContext * context, struct create_data *transfer)
  * @notify: (allow-none): a #GDestroyNotify
  *
  * Initializes @mem with the required parameters
+ *
+ * Since: 1.8
  */
 void
 gst_gl_base_memory_init (GstGLBaseMemory * mem, GstAllocator * allocator,
@@ -176,7 +178,8 @@ _align_data (gpointer data, gsize align)
   guint8 *ret = data;
   gsize aoffset;
 
-  /* do alignment */
+  /* do alignment, data must have enough padding at the end to move at most
+   * align bytes */
   if ((aoffset = ((guintptr) ret & align))) {
     aoffset = (align + 1) - aoffset;
     ret += aoffset;
@@ -457,6 +460,8 @@ _mem_free (GstAllocator * allocator, GstMemory * memory)
  *
  * Initializes the GL Base Memory allocator. It is safe to call this function
  * multiple times.  This must be called before any other GstGLBaseMemory operation.
+ *
+ * Since: 1.8
  */
 void
 gst_gl_base_memory_init_once (void)
@@ -508,6 +513,8 @@ gst_gl_base_memory_allocator_init (GstGLBaseMemoryAllocator * allocator)
  * @mem:a #GstMemory
  * 
  * Returns: whether the memory at @mem is a #GstGLBaseMemory
+ *
+ * Since: 1.8
  */
 gboolean
 gst_is_gl_base_memory (GstMemory * mem)
@@ -525,6 +532,8 @@ gst_is_gl_base_memory (GstMemory * mem)
  * @size: the number of bytes to copy
  *
  * Returns: whether the copy suceeded.
+ *
+ * Since: 1.8
  */
 gboolean
 gst_gl_base_memory_memcpy (GstGLBaseMemory * src, GstGLBaseMemory * dest,
@@ -564,7 +573,7 @@ gst_gl_base_memory_memcpy (GstGLBaseMemory * src, GstGLBaseMemory * dest,
  * gst_gl_allocation_params_init:
  * @params: the #GstGLAllocationParams to initialize
  * @struct_size: the struct size of the implementation
- * @alloc: some alloc flags
+ * @alloc_flags: some alloc flags
  * @copy: a copy function
  * @free: a free function
  * @context: (transfer none): a #GstGLContext
@@ -579,6 +588,8 @@ gst_gl_base_memory_memcpy (GstGLBaseMemory * src, GstGLBaseMemory * dest,
  * when freeing the memory.
  *
  * Returns: whether the paramaters could be initialized
+ *
+ * Since: 1.8
  */
 gboolean
 gst_gl_allocation_params_init (GstGLAllocationParams * params,
@@ -617,6 +628,8 @@ gst_gl_allocation_params_init (GstGLAllocationParams * params,
  *
  * Returns: a copy of the #GstGLAllocationParams specified by @src or %NULL on
  *          failure
+ *
+ * Since: 1.8
  */
 GstGLAllocationParams *
 gst_gl_allocation_params_copy (GstGLAllocationParams * src)
@@ -638,6 +651,8 @@ gst_gl_allocation_params_copy (GstGLAllocationParams * src)
  * @params: the #GstGLAllocationParams to initialize
  *
  * Frees the #GstGLAllocationParams and all associated data.
+ *
+ * Since: 1.8
  */
 void
 gst_gl_allocation_params_free (GstGLAllocationParams * params)
@@ -648,6 +663,15 @@ gst_gl_allocation_params_free (GstGLAllocationParams * params)
   g_free (params);
 }
 
+/**
+ * gst_gl_allocation_params_free_data:
+ * @params: the source #GstGLAllocationParams
+ *
+ * Frees the dynamically allocated data in @params.  Direct subclasses
+ * should call this function in their own overriden free function.
+ *
+ * Since: 1.8
+ */
 void
 gst_gl_allocation_params_free_data (GstGLAllocationParams * params)
 {
@@ -657,6 +681,16 @@ gst_gl_allocation_params_free_data (GstGLAllocationParams * params)
     gst_allocation_params_free (params->alloc_params);
 }
 
+/**
+ * gst_gl_allocation_params_copy_data:
+ * @src: the source #GstGLAllocationParams
+ * @dest: the destination #GstGLAllocationParams
+ *
+ * Copies the dynamically allocated data from @src to @dest.  Direct subclasses
+ * should call this function in their own overriden copy function.
+ *
+ * Since: 1.8
+ */
 void
 gst_gl_allocation_params_copy_data (GstGLAllocationParams * src,
     GstGLAllocationParams * dest)
@@ -679,6 +713,8 @@ G_DEFINE_BOXED_TYPE (GstGLAllocationParams, gst_gl_allocation_params,
  * @params: the #GstGLAllocationParams to allocate the memory with
  *
  * Returns: a new #GstGLBaseMemory from @allocator with the requested @params.
+ *
+ * Since: 1.8
  */
 GstGLBaseMemory *
 gst_gl_base_memory_alloc (GstGLBaseMemoryAllocator * allocator,

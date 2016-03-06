@@ -26,12 +26,46 @@
 #include <gst/gl/gstgl_fwd.h>
 #include <gst/video/video.h>
 
+/**
+ * GST_GL_TEXTURE_TARGET_2D_STR:
+ *
+ * String used for %GST_GL_TEXTURE_TARGET_2D in things like caps values
+ */
 #define GST_GL_TEXTURE_TARGET_2D_STR "2D"
+
+/**
+ * GST_GL_TEXTURE_TARGET_RECTANGLE_STR:
+ *
+ * String used for %GST_GL_TEXTURE_TARGET_RECTANGLE in things like caps values
+ */
 #define GST_GL_TEXTURE_TARGET_RECTANGLE_STR "rectangle"
+
+/**
+ * GST_GL_TEXTURE_TARGET_EXTERNAL_OES_STR:
+ *
+ * String used for %GST_GL_TEXTURE_TARGET_EXTERNAL_OES in things like caps values
+ */
 #define GST_GL_TEXTURE_TARGET_EXTERNAL_OES_STR "external-oes"
 
+/**
+ * GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_2D:
+ *
+ * String used for %GST_GL_TEXTURE_TARGET_2D as a #GstBufferPool pool option
+ */
 #define GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_2D "GstBufferPoolOptionGLTextureTarget2D"
+
+/**
+ * GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_RECTANGLE:
+ *
+ * String used for %GST_GL_TEXTURE_TARGET_RECTANGLE as a #GstBufferPool pool option
+ */
 #define GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_RECTANGLE "GstBufferPoolOptionGLTextureTargetRectangle"
+
+/**
+ * GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_EXTERNAL_OES:
+ *
+ * String used for %GST_GL_TEXTURE_TARGET_ESTERNAL_OES as a #GstBufferPool pool option
+ */
 #define GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_EXTERNAL_OES "GstBufferPoolOptionGLTextureTargetExternalOES"
 
 G_BEGIN_DECLS

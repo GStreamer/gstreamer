@@ -44,7 +44,8 @@ GType gst_gl_buffer_allocator_get_type(void);
  * @mem: the parent object
  * @context: the #GstGLContext to use for GL operations
  * @id: the buffer id for this memory
- * @target: the GL target of this texture for binding purposes
+ * @target: the OpenGL target of this texture for binding purposes
+ * @usage_hints: the OpenGL usage hints this buffer was created with
  *
  * Represents information about a GL buffer
  */
@@ -61,6 +62,12 @@ typedef struct _GstGLBufferAllocationParams GstGLBufferAllocationParams;
 
 #define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_BUFFER (1 << 4)
 
+/**
+ * GstGLBufferAllocationParams:
+ * @parent: parent object
+ * @gl_target: the OpenGL target to bind the buffer to
+ * @gl_usage: the OpenGL usage hint to create the buffer with
+ */
 struct _GstGLBufferAllocationParams
 {
   GstGLAllocationParams     parent;
