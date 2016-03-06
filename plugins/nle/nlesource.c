@@ -106,8 +106,8 @@ nle_source_class_init (NleSourceClass * klass)
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (nle_source_dispose);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&nle_source_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &nle_source_src_template);
 
 }
 

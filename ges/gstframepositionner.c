@@ -240,10 +240,10 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
   GstBaseTransformClass *base_transform_class =
       GST_BASE_TRANSFORM_CLASS (klass);
 
-  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
-      gst_static_pad_template_get (&gst_frame_positionner_src_template));
-  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
-      gst_static_pad_template_get (&gst_frame_positionner_sink_template));
+  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
+      &gst_frame_positionner_src_template);
+  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
+      &gst_frame_positionner_sink_template);
 
   gobject_class->set_property = gst_frame_positionner_set_property;
   gobject_class->get_property = gst_frame_positionner_get_property;

@@ -904,8 +904,8 @@ nle_composition_class_init (NleCompositionClass * klass)
   gstbin_class->handle_message =
       GST_DEBUG_FUNCPTR (nle_composition_handle_message);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&nle_composition_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &nle_composition_src_template);
 
   /* Get the paramspec of the NleObject klass so we can do
    * fast notifies */

@@ -87,8 +87,8 @@ nle_urisource_class_init (NleURISourceClass * klass)
       g_param_spec_string ("uri", "Uri",
           "Uri of the file to use", NULL, G_PARAM_READWRITE));
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&nle_urisource_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &nle_urisource_src_template);
 
   nleobject_class->prepare = nle_urisource_prepare;
 }

@@ -168,12 +168,10 @@ nle_operation_class_init (NleOperationClass * klass)
   nleobject_class->prepare = GST_DEBUG_FUNCPTR (nle_operation_prepare);
   nleobject_class->cleanup = GST_DEBUG_FUNCPTR (nle_operation_cleanup);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&nle_operation_src_template));
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&nle_operation_sink_template));
-
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &nle_operation_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &nle_operation_sink_template);
 }
 
 static void
