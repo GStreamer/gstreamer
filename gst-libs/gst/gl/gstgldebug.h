@@ -65,9 +65,6 @@ void                gst_gl_async_debug_thaw                     (GstGLAsyncDebug
  * @ad: the #GstGLAsyncDebug to store the message in
  * @cat: the #GstDebugCategory to output the message in
  * @level: the #GstLevel
- * @file: the file where the debug message originates from
- * @function: the function where the debug message originates from
- * @line: the line in @file where the debug message originates from
  * @object: (allow-none): a #GObject to associate with the debug message
  * @format: a printf style format string
  * @varargs: the list of arguments for @format
@@ -83,9 +80,6 @@ void                gst_gl_async_debug_thaw                     (GstGLAsyncDebug
  * @ad: the #GstGLAsyncDebug to store the message in
  * @cat: the #GstDebugCategory to output the message in
  * @level: the #GstLevel
- * @file: the file where the debug message originates from
- * @function: the function where the debug message originates from
- * @line: the line in @file where the debug message originates from
  * @object: (allow-none): a #GObject to associate with the debug message
  * @format: a printf style format string
  * @...: the list of arguments for @format

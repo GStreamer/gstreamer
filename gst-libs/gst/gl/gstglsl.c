@@ -27,6 +27,12 @@
 #include "gstglsl.h"
 #include "gstglsl_private.h"
 
+/**
+ * SECTION:gstglsl
+ * @short_description: helpers for dealing with OpenGL shaders
+ * @see_also: #GstGLSLStage, #GstGLShader
+ */
+
 GQuark
 gst_glsl_error_quark (void)
 {

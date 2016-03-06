@@ -79,6 +79,16 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstGLAPI:
+ * @GST_GL_API_NONE: no API
+ * @GST_GL_API_OPENGL: Desktop OpenGL up to and including 3.1.  The
+ *                    compatibility profile when the OpenGL version is >= 3.2
+ * @GST_GL_API_OPENGL3: Desktop OpenGL >= 3.2 core profile
+ * @GST_GL_API_GLES1: OpenGL ES 1.x
+ * @GST_GL_API_GLES2: OpenGL ES 2.x and 3.x
+ * @GST_GL_API_ANY: Any OpenGL API
+ */
 typedef enum {
   GST_GL_API_NONE = 0,
   GST_GL_API_OPENGL = (1 << 0),
@@ -89,11 +99,45 @@ typedef enum {
   GST_GL_API_ANY = G_MAXUINT32
 } GstGLAPI;
 
+/**
+ * GST_GL_API_OPENGL_NAME:
+ *
+ * The name for %GST_GL_API_OPENGL used in various places
+ */
 #define GST_GL_API_OPENGL_NAME "opengl"
+
+/**
+ * GST_GL_API_OPENGL3_NAME:
+ *
+ * The name for %GST_GL_API_OPENGL3 used in various places
+ */
 #define GST_GL_API_OPENGL3_NAME "opengl3"
+
+/**
+ * GST_GL_API_GLES1_NAME:
+ *
+ * The name for %GST_GL_API_GLES1 used in various places
+ */
 #define GST_GL_API_GLES1_NAME "gles1"
+
+/**
+ * GST_GL_API_GLES2_NAME:
+ *
+ * The name for %GST_GL_API_GLES2 used in various places
+ */
 #define GST_GL_API_GLES2_NAME "gles2"
 
+/**
+ * GstGLPlatform:
+ * @GST_GL_PLATFORM_NONE: no platform
+ * @GST_GL_PLATFORM_EGL: the EGL platform used primarily with the X11, wayland
+ *                      and android window systems as well as on embedded Linux
+ * @GST_GL_PLATFORM_GLX: the GLX platform used primarily with the X11 window system
+ * @GST_GL_PLATFORM_WGL: the WGL platform used primarily on Windows
+ * @GST_GL_PLATFORM_CGL: the CGL platform used primarily on OS X
+ * @GST_GL_PLATFORM_EAGL: the EAGL platform used primarily on iOS
+ * @GST_GL_PLATFORM_ANY: any OpenGL platform
+ */
 typedef enum
 {
   GST_GL_PLATFORM_NONE = 0,
@@ -125,7 +169,7 @@ typedef struct _GstGLFuncs
 gchar * gst_gl_api_to_string (GstGLAPI api);
 GstGLAPI gst_gl_api_from_string (const gchar * api_s);
 
-gchar * gst_gl_platform_to_string (GstGLPlatform api);
+gchar * gst_gl_platform_to_string (GstGLPlatform platform);
 GstGLPlatform gst_gl_platform_from_string (const gchar * platform_s);
 
 G_END_DECLS

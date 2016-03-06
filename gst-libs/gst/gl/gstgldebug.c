@@ -27,6 +27,13 @@
 #include <glib/gprintf.h>
 #include <string.h>
 
+/**
+ * SECTION:gstgldebug
+ * @short_description: helper routines for dealing with OpenGL debugging
+ * @title: OpenGL debugging
+ * @see_also: #GstGLContext
+ */
+
 #define ASYNC_DEBUG_FILLED (1 << 0)
 #define ASYNC_DEBUG_FROZEN (1 << 1)
 
@@ -119,6 +126,15 @@ _free_async_debug_data (GstGLAsyncDebug * ad)
   }
 }
 
+/**
+ * gst_gl_async_debug_init:
+ * @ad: a #GstGLAsyncDebug
+ *
+ * Initialize @ad.  Intended for use with #GstGLAsyncDebug's that are embedded
+ * in other structs.
+ *
+ * Since: 1.8
+ */
 void
 gst_gl_async_debug_init (GstGLAsyncDebug * ad)
 {
@@ -127,6 +143,13 @@ gst_gl_async_debug_init (GstGLAsyncDebug * ad)
   memset (ad, 0, sizeof (*ad));
 }
 
+/**
+ * gst_gl_async_debug_unset:
+ * @ad: a #GstGLAsyncDebug
+ *
+ * Unset any dynamically allocated data.  Intended for use with
+ * #GstGLAsyncDebug's that are embedded in other structs.
+ */
 void
 gst_gl_async_debug_unset (GstGLAsyncDebug * ad)
 {
@@ -138,12 +161,30 @@ gst_gl_async_debug_unset (GstGLAsyncDebug * ad)
     ad->notify (ad->user_data);
 }
 
+/**
+ * gst_gl_async_debug_new:
+ * @ad: a #GstGLAsyncDebug
+ *
+ * Free with gst_gl_async_debug_free()
+ *
+ * Returns: a new #GstGLAsyncDebug
+ *
+ * Since: 1.8
+ */
 GstGLAsyncDebug *
 gst_gl_async_debug_new (void)
 {
   return g_new0 (GstGLAsyncDebug, 1);
 }
 
+/**
+ * gst_gl_async_debug_free:
+ * @ad: a #GstGLAsyncDebug
+ *
+ * Frees @ad
+ *
+ * Since: 1.8
+ */
 void
 gst_gl_async_debug_free (GstGLAsyncDebug * ad)
 {
@@ -159,6 +200,8 @@ gst_gl_async_debug_free (GstGLAsyncDebug * ad)
  * gst_gl_async_debug_output_log_msg() will not output any messages but
  * subsequent calls to gst_gl_async_debug_store_log_msg() will overwrite previous
  * messages.
+ *
+ * Since: 1.8
  */
 void
 gst_gl_async_debug_freeze (GstGLAsyncDebug * ad)
@@ -171,6 +214,8 @@ gst_gl_async_debug_freeze (GstGLAsyncDebug * ad)
  * @ad: a #GstGLAsyncDebug
  *
  * unfreeze the debug output.  See gst_gl_async_debug_freeze() for what freezing means
+ *
+ * Since: 1.8
  */
 void
 gst_gl_async_debug_thaw (GstGLAsyncDebug * ad)
@@ -325,6 +370,17 @@ _gst_gl_debug_enable (GstGLContext * context)
   }
 }
 
+/**
+ * gst_gl_insert_debug_marker:
+ * @context: a #GstGLContext
+ * @format: a printf-style format string
+ * @...: arguments form @format
+ *
+ * Inserts a marker into a GL debug stream.  Requires the 'gldebugmarker'
+ * debug category to be at least %GST_LEVEL_FIXME.
+ *
+ * Since: 1.8
+ */
 void
 gst_gl_insert_debug_marker (GstGLContext * context, const gchar * format, ...)
 {
@@ -373,6 +429,8 @@ gst_gl_insert_debug_marker (GstGLContext * context, const gchar * format, ...)
  * @varargs: the list of arguments for @format
  *
  * Stores a debug message for later output by gst_gl_async_debug_output_log_msg()
+ *
+ * Since: 1.8
  */
 void
 gst_gl_async_debug_store_log_msg_valist (GstGLAsyncDebug * ad,
@@ -438,6 +496,8 @@ gst_gl_async_debug_output_log_msg (GstGLAsyncDebug * ad)
  * @...: the list of arguments for @format
  *
  * Stores a debug message for later output by gst_gl_async_debug_output_log_msg()
+ *
+ * Since: 1.8
  */
 void
 gst_gl_async_debug_store_log_msg (GstGLAsyncDebug * ad, GstDebugCategory * cat,

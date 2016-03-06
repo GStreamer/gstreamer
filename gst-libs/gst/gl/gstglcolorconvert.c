@@ -31,15 +31,12 @@
 /**
  * SECTION:gstglcolorconvert
  * @short_description: an object that converts between color spaces/formats
- * @see_also: #GstGLUpload, #GstGLDownload, #GstGLMemory
+ * @see_also: #GstGLUpload, #GstGLMemory, #GstGLBaseMemory
  *
  * #GstGLColorConvert is an object that converts between color spaces and/or
  * formats using OpenGL Shaders.
  *
  * A #GstGLColorConvert can be created with gst_gl_color_convert_new().
- *
- * For handling stride scaling in the shader, see
- * gst_gl_color_convert_set_texture_scaling().
  */
 
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
