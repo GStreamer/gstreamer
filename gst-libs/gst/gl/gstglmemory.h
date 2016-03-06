@@ -138,8 +138,8 @@ GstGLVideoAllocationParams * gst_gl_video_allocation_params_new_wrapped_texture 
 /* subclass usage */
 void            gst_gl_video_allocation_params_free_data    (GstGLVideoAllocationParams * params);
 /* subclass usage */
-void            gst_gl_video_allocation_params_copy_data    (GstGLVideoAllocationParams * src,
-                                                             GstGLVideoAllocationParams * dest);
+void            gst_gl_video_allocation_params_copy_data    (GstGLVideoAllocationParams * src_vid,
+                                                             GstGLVideoAllocationParams * dest_vid);
 
 /**
  * GstGLMemoryAllocator

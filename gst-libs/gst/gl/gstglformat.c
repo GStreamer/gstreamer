@@ -108,6 +108,14 @@ _gl_type_n_bytes (guint type)
   }
 }
 
+/**
+ * gst_gl_format_type_n_bytes:
+ * @format: the OpenGL format, %GL_RGBA, %GL_LUMINANCE, etc
+ * @type: the OpenGL type, %GL_UNSIGNED_BYTE, %GL_FLOAT, etc
+ *
+ * Returns: the number of bytes the specified @format, @type combination takes
+ * per pixel
+ */
 guint
 gst_gl_format_type_n_bytes (guint format, guint type)
 {
@@ -115,6 +123,12 @@ gst_gl_format_type_n_bytes (guint format, guint type)
       _gl_type_n_bytes (type);
 }
 
+/**
+ * gst_gl_texture_type_n_bytes:
+ * @tex_format: a #GstVideoGLTextureType
+ *
+ * Returns: the number of bytes @tex_format used per pixel
+ */
 guint
 gst_gl_texture_type_n_bytes (GstVideoGLTextureType tex_format)
 {
@@ -128,6 +142,12 @@ gst_gl_texture_type_n_bytes (GstVideoGLTextureType tex_format)
   return gst_gl_format_type_n_bytes (format, type);
 }
 
+/**
+ * gst_gl_format_from_gl_texture_type:
+ * @tex_format: a #GstVideoGLTextureType
+ *
+ * Returns: the OpenGL format specified by @tex_format
+ */
 guint
 gst_gl_format_from_gl_texture_type (GstVideoGLTextureType tex_format)
 {
@@ -150,6 +170,15 @@ gst_gl_format_from_gl_texture_type (GstVideoGLTextureType tex_format)
   }
 }
 
+/**
+ * gst_gl_texture_type_from_format:
+ * @context: a #GstGLContext
+ * @v_format: a #GstVideoFormat
+ * @plane: the plane number (starting from 0)
+ *
+ * Returns: the #GstVideoGLTextureType for the specified @format and @plane
+ *          that can be allocated using @context
+ */
 GstVideoGLTextureType
 gst_gl_texture_type_from_format (GstGLContext * context,
     GstVideoFormat v_format, guint plane)
@@ -227,6 +256,15 @@ gst_gl_texture_type_from_format (GstGLContext * context,
   return GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
 }
 
+/**
+ * gst_gl_sized_gl_format_from_gl_format_type:
+ * @context: a #GstGLContext
+ * @format: an OpenGL format, %GL_RGBA, %GL_LUMINANCE, etc
+ * @type: an OpenGL type, %GL_UNSIGNED_BYTE, %GL_FLOAT, etc
+ *
+ * Returns: the sized internal format specified by @format and @type that can
+ *          be used in @context
+ */
 guint
 gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
     guint format, guint type)
@@ -288,6 +326,12 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
   return 0;
 }
 
+/**
+ * gst_gl_texture_target_to_string:
+ * @target: a #GstGLTextureTarget
+ *
+ * Returns: the stringified version of @target or %NULL
+ */
 const gchar *
 gst_gl_texture_target_to_string (GstGLTextureTarget target)
 {
@@ -303,6 +347,13 @@ gst_gl_texture_target_to_string (GstGLTextureTarget target)
   }
 }
 
+/**
+ * gst_gl_texture_target_to_string:
+ * @str: a string equivalant to one of the GST_GL_TEXTURE_TARGET_*_STR values
+ *
+ * Returns: the #GstGLTextureTarget represented by @str or
+ *          %GST_GL_TEXTURE_TARGET_NONE
+ */
 GstGLTextureTarget
 gst_gl_texture_target_from_string (const gchar * str)
 {
@@ -319,6 +370,13 @@ gst_gl_texture_target_from_string (const gchar * str)
   return GST_GL_TEXTURE_TARGET_NONE;
 }
 
+/**
+ * gst_gl_texture_target_to_gl:
+ * @target: a #GstGLTextureTarget
+ *
+ * Returns: the OpenGL value for binding the @target with glBindTexture() and
+ *          similar functions or 0
+ */
 guint
 gst_gl_texture_target_to_gl (GstGLTextureTarget target)
 {
@@ -334,6 +392,13 @@ gst_gl_texture_target_to_gl (GstGLTextureTarget target)
   }
 }
 
+/**
+ * gst_gl_texture_target_from_gl:
+ * @target: an OpenGL texture binding target
+ *
+ * Returns: the #GstGLTextureTarget that's equiavalant to @target or
+ *          %GST_GL_TEXTURE_TARGET_NONE
+ */
 GstGLTextureTarget
 gst_gl_texture_target_from_gl (guint target)
 {
@@ -349,6 +414,12 @@ gst_gl_texture_target_from_gl (guint target)
   }
 }
 
+/**
+ * gst_gl_texture_target_to_buffer_pool_option:
+ * @target: a #GstGLTextureTarget
+ *
+ * Returns: a string representing the @GstBufferPoolOption specified by @target
+ */
 const gchar *
 gst_gl_texture_target_to_buffer_pool_option (GstGLTextureTarget target)
 {

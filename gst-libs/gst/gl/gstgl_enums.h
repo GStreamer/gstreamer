@@ -21,6 +21,15 @@
 #ifndef _GST_GL_ENUMS_H_
 #define _GST_GL_ENUMS_H_
 
+/**
+ * GstGLTextureTarget:
+ * @GST_GL_TEXTURE_TARGET_NONE: no texture target
+ * @GST_GL_TEXTURE_TARGET_2D: 2D texture target
+ * @GST_GL_TEXTURE_TARGET_RECTANGLE: rectangle texture target
+ * @GST_GL_TEXTURE_TARGET_EXTERNAL_OES: external oes texture target
+ *
+ * Since: 1.8
+ */
 typedef enum
 {
   GST_GL_TEXTURE_TARGET_NONE,
