@@ -73,6 +73,9 @@
     <chapter id="gl">
       <title>OpenGL Helper Library</title>
       <xi:include href="xml/gstglapi.xml"/>
+      <xi:include href="xml/gstglbasememory.xml"/>
+      <xi:include href="xml/gstglbasefilter.xml"/>
+      <xi:include href="xml/gstglbuffer.xml"/>
       <xi:include href="xml/gstglbufferpool.xml"/>
       <xi:include href="xml/gstglcolorconvert.xml"/>
       <xi:include href="xml/gstglcontext.xml"/>
@@ -83,14 +86,15 @@
       <xi:include href="xml/gstglcontextwgl.xml"/>
       <xi:include href="xml/gstgldisplay.xml"/>
       <xi:include href="xml/gsteglimagememory.xml"/>
-      <xi:include href="xml/gstglbasefilter.xml"/>
       <xi:include href="xml/gstglfilter.xml"/>
       <xi:include href="xml/gstglframebuffer.xml"/>
       <xi:include href="xml/gstglmemory.xml"/>
+      <xi:include href="xml/gstglmemorypbo.xml"/>
       <xi:include href="xml/gstglshader.xml"/>
+      <xi:include href="xml/gstglsl.xml"/>
+      <xi:include href="xml/gstglslstage.xml"/>
       <xi:include href="xml/gstglsyncmeta.xml"/>
       <xi:include href="xml/gstglupload.xml"/>
-      <xi:include href="xml/gstglutils.xml"/>
       <xi:include href="xml/gstglwindow.xml"/>
       <xi:include href="xml/gstglwindowandroid.xml"/>
       <xi:include href="xml/gstglwindowcocoa.xml"/>
@@ -98,6 +102,9 @@
       <xi:include href="xml/gstglwindowwayland.xml"/>
       <xi:include href="xml/gstglwindowwin32.xml"/>
       <xi:include href="xml/gstglwindowx11.xml"/>
+      <xi:include href="xml/gstgldebug.xml"/>
+      <xi:include href="xml/gstglutils.xml"/>
+      <xi:include href="xml/gstglformat.xml"/>
     </chapter>
 
     <chapter id="player">
