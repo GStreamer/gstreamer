@@ -144,12 +144,12 @@ fake_demuxer_class_init (FakeDemuxerClass * self_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (self_class);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&fake_demuxer_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&fake_demuxer_sink_template));
-  gst_element_class_set_static_metadata (gstelement_class,
-      "Fake Demuxer", "Demuxer", "Some demuxer", "Thibault Saunier");
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &fake_demuxer_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &fake_demuxer_sink_template);
+  gst_element_class_set_static_metadata (gstelement_class, "Fake Demuxer",
+      "Demuxer", "Some demuxer", "Thibault Saunier");
 }
 
 GType
@@ -264,12 +264,12 @@ fake_decoder_class_init (FakeDecoderClass * self_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (self_class);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&fake_decoder_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&fake_decoder_sink_template));
-  gst_element_class_set_static_metadata (gstelement_class,
-      "Fake Decoder", "Decoder", "Some decoder", "Thibault Saunier");
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &fake_decoder_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &fake_decoder_sink_template);
+  gst_element_class_set_static_metadata (gstelement_class, "Fake Decoder",
+      "Decoder", "Some decoder", "Thibault Saunier");
 }
 
 GType
@@ -401,12 +401,12 @@ fake_mixer_class_init (FakeMixerClass * self_class)
 
   fake_mixer_parent_class = g_type_class_peek_parent (self_class);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&fake_mixer_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&fake_mixer_sink_template));
-  gst_element_class_set_static_metadata (gstelement_class,
-      "Fake mixer", "Mixer", "Some mixer", "Thibault Saunier");
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &fake_mixer_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &fake_mixer_sink_template);
+  gst_element_class_set_static_metadata (gstelement_class, "Fake mixer",
+      "Mixer", "Some mixer", "Thibault Saunier");
 
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR (_request_new_pad);
 }
@@ -479,10 +479,10 @@ fake_src_class_init (FakeSrcClass * self_class)
 
   fake_src_parent_class = g_type_class_peek_parent (self_class);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&fake_src_src_template));
-  gst_element_class_set_static_metadata (gstelement_class,
-      "Fake src", "Source", "Some src", "Thibault Saunier");
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &fake_src_src_template);
+  gst_element_class_set_static_metadata (gstelement_class, "Fake src", "Source",
+      "Some src", "Thibault Saunier");
 }
 
 GType
