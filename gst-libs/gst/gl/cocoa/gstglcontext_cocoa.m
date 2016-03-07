@@ -43,17 +43,13 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_context_cocoa_debug);
 
 G_DEFINE_TYPE_WITH_CODE (GstGLContextCocoa, gst_gl_context_cocoa,
     GST_GL_TYPE_CONTEXT, GST_DEBUG_CATEGORY_INIT (gst_gl_context_cocoa_debug, "glcontext_cocoa", 0, "Cocoa GL Context"); );
-static void gst_gl_context_cocoa_finalize (GObject * object);
 
 static void
 gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
 {
-  GObjectClass *gobject_class = (GObjectClass *) klass;
   GstGLContextClass *context_class = (GstGLContextClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstGLContextCocoaPrivate));
-
-  gobject_class->finalize = gst_gl_context_cocoa_finalize;
 
   context_class->destroy_context =
       GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_destroy_context);
@@ -72,13 +68,6 @@ static void
 gst_gl_context_cocoa_init (GstGLContextCocoa * context)
 {
   context->priv = GST_GL_CONTEXT_COCOA_GET_PRIVATE (context);
-  g_rec_mutex_init (&context->priv->current_lock);
-}
-
-static void gst_gl_context_cocoa_finalize (GObject * object)
-{
-  g_rec_mutex_clear (&GST_GL_CONTEXT_COCOA (object)->priv->current_lock);
-  G_OBJECT_CLASS (gst_gl_context_cocoa_parent_class)->finalize (object);
 }
 
 /* Must be called in the gl thread */
@@ -337,18 +326,4 @@ guintptr
 gst_gl_context_cocoa_get_current_context (void)
 {
   return (guintptr) CGLGetCurrentContext ();
-}
-
-void
-_gst_gl_context_cocoa_invoke (GstGLContext * context,
-        GstGLContextCocoaInvokeFunc func, gpointer data, GDestroyNotify destroy)
-{
-  GstGLContextCocoa *context_cocoa = (GstGLContextCocoa *) context;
-
-  g_rec_mutex_lock (&context_cocoa->priv->current_lock);
-  gst_gl_context_activate (context, TRUE);
-  func (data);
-  if (destroy)
-    destroy (data);
-  g_rec_mutex_unlock (&context_cocoa->priv->current_lock);
 }

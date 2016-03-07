@@ -77,10 +77,6 @@ static void gst_gl_window_cocoa_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
 static void gst_gl_window_cocoa_show (GstGLWindow * window);
 static void gst_gl_window_cocoa_queue_resize (GstGLWindow * window);
-static void gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
-static void gst_gl_window_cocoa_send_message (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data);
 
 struct _GstGLWindowCocoaPrivate
 {
@@ -115,10 +111,6 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_set_preferred_size);
   window_class->show = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_show);
   window_class->queue_resize = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_queue_resize);
-  window_class->send_message_async =
-      GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_send_message_async);
-  window_class->send_message =
-      GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_send_message);
 
   gobject_class->finalize = gst_gl_window_cocoa_finalize;
 }
@@ -376,24 +368,6 @@ gst_gl_cocoa_resize_cb (GstGLNSView * view, guint width, guint height)
 
   gst_object_unref (context);
   [pool release];
-}
-
-static void
-gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
-{
-  GstGLContext *context = gst_gl_window_get_context (window);
-  _gst_gl_context_cocoa_invoke (context, callback, data, destroy);
-  gst_object_unref (context);
-}
-
-static void
-gst_gl_window_cocoa_send_message (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data)
-{
-  GstGLContext *context = gst_gl_window_get_context (window);
-  _gst_gl_context_cocoa_invoke (context, callback, data, NULL);
-  gst_object_unref (context);
 }
 
 /* =============================================================*/

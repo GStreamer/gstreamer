@@ -40,7 +40,6 @@ struct _GstGLContextCocoaPrivate
   GstGLAPI context_api;
 
   gint source_id;
-  GRecMutex current_lock;
 };
 
 
@@ -60,12 +59,7 @@ struct _GstGLContextCocoaPrivate
 
 gboolean gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa);
 
-
 void _invoke_on_main (GstGLWindowCB func, gpointer data);
-
-typedef void (*GstGLContextCocoaInvokeFunc) (gpointer data);
-void _gst_gl_context_cocoa_invoke (GstGLContext * context,
-    GstGLContextCocoaInvokeFunc func, gpointer data, GDestroyNotify notify);
 
 G_END_DECLS
 
