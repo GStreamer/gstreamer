@@ -517,6 +517,97 @@ GST_START_TEST (test_is_shared)
 
 GST_END_TEST;
 
+GST_START_TEST (test_display_list)
+{
+  GstGLContext *c1, *c2;
+  GError *error = NULL;
+
+  c1 = gst_gl_context_new (display);
+  gst_gl_context_create (c1, NULL, &error);
+  fail_if (error != NULL, "Error creating context %s\n",
+      error ? error->message : "Unknown Error");
+
+  GST_OBJECT_LOCK (display);
+  {
+    /* no context added so get should return NULL */
+    GstGLContext *tmp =
+        gst_gl_display_get_gl_context_for_thread (display, NULL);
+    fail_unless (tmp == NULL);
+  }
+
+  fail_unless (gst_gl_display_add_context (display, c1));
+  /* re-adding the same context is a no-op */
+  fail_unless (gst_gl_display_add_context (display, c1));
+
+  {
+    GThread *thread;
+    GstGLContext *tmp;
+
+    thread = gst_gl_context_get_thread (c1);
+    fail_unless (thread != NULL);
+
+    tmp = gst_gl_display_get_gl_context_for_thread (display, thread);
+    fail_unless (tmp == c1);
+    g_thread_unref (thread);
+    gst_object_unref (tmp);
+
+    tmp = gst_gl_display_get_gl_context_for_thread (display, NULL);
+    fail_unless (tmp == c1);
+    gst_object_unref (tmp);
+  }
+
+  c2 = gst_gl_context_new (display);
+  gst_gl_context_create (c2, c1, &error);
+  fail_if (error != NULL, "Error creating context %s\n",
+      error ? error->message : "Unknown Error");
+
+  fail_unless (gst_gl_display_add_context (display, c2));
+  /* re-adding the same context is a no-op */
+  fail_unless (gst_gl_display_add_context (display, c2));
+
+  {
+    GThread *thread;
+    GstGLContext *tmp;
+
+    thread = gst_gl_context_get_thread (c2);
+    fail_unless (thread != NULL);
+
+    tmp = gst_gl_display_get_gl_context_for_thread (display, thread);
+    fail_unless (tmp == c2);
+    g_thread_unref (thread);
+    gst_object_unref (tmp);
+
+    /* undefined which context will be returned for the NULL thread */
+    tmp = gst_gl_display_get_gl_context_for_thread (display, NULL);
+    fail_unless (tmp != NULL);
+    gst_object_unref (tmp);
+  }
+
+  gst_object_unref (c1);
+  /* c1 is now dead */
+
+  {
+    GstGLContext *tmp;
+
+    tmp = gst_gl_display_get_gl_context_for_thread (display, NULL);
+    fail_unless (tmp == c2);
+    gst_object_unref (tmp);
+  }
+  GST_OBJECT_UNLOCK (display);
+
+  gst_object_unref (c2);
+  /* c2 is now dead */
+
+  {
+    /* no more contexts alive */
+    GstGLContext *tmp =
+        gst_gl_display_get_gl_context_for_thread (display, NULL);
+    fail_unless (tmp == NULL);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_gl_context_suite (void)
 {
@@ -530,6 +621,7 @@ gst_gl_context_suite (void)
   tcase_add_test (tc_chain, test_current_context);
   tcase_add_test (tc_chain, test_context_can_share);
   tcase_add_test (tc_chain, test_is_shared);
+  tcase_add_test (tc_chain, test_display_list);
 
   return s;
 }

@@ -500,7 +500,7 @@ _check_collision (GstGLContext * context, GstGLContext * collision)
     goto out;
   }
 
-  if (collision == context) {
+  if (thread == collision_thread) {
     ret = TRUE;
     goto out;
   }
@@ -546,6 +546,13 @@ gst_gl_display_add_context (GstGLDisplay * display, GstGLContext * context)
   if (thread) {
     collision = _get_gl_context_for_thread_unlocked (display, thread);
     g_thread_unref (thread);
+
+    /* adding the same context is a no-op */
+    if (context == collision) {
+      ret = TRUE;
+      goto out;
+    }
+
     if (_check_collision (context, collision)) {
       ret = FALSE;
       goto out;
