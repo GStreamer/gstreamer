@@ -1083,7 +1083,7 @@ _reset_pad_gl (GstAggregator * agg, GstAggregatorPad * aggpad, gpointer udata)
     pad->vertex_buffer = 0;
   }
 
-  return FALSE;
+  return TRUE;
 }
 
 static void
