@@ -1341,6 +1341,23 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
       gst_event_unref (event);
       return FALSE;
     }
+
+    if (!(flags & GST_SEEK_FLAG_ACCURATE)) {
+      /* If the accurate flag is not set, we allow seeking before the start
+       * to map to the start for live cases, since those can return a "moving
+       * target" based on wall time.
+       */
+      if (start < range_start) {
+        guint64 dt = range_start - start;
+        GST_DEBUG_OBJECT (demux,
+            "Non accurate seek before live stream start, offsetting by %"
+            GST_TIME_FORMAT, GST_TIME_ARGS (dt));
+        start = range_start;
+        if (stop != GST_CLOCK_TIME_NONE)
+          stop += dt;
+      }
+    }
+
     if (start < range_start || start >= range_stop) {
       GST_MANIFEST_UNLOCK (demux);
       GST_API_UNLOCK (demux);
