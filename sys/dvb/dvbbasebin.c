@@ -1093,6 +1093,7 @@ dvb_base_bin_pat_info_cb (DvbBaseBin * dvbbasebin, GstMpegtsSection * section)
       rebuild_filter = TRUE;
     }
   }
+  g_ptr_array_unref (pat);
 
   if (rebuild_filter)
     dvb_base_bin_rebuild_filter (dvbbasebin);
