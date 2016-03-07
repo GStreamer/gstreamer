@@ -782,8 +782,7 @@ gst_hls_demux_data_received (GstAdaptiveDemux * demux,
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
 
   if (hls_stream->current_offset == -1)
-    hls_stream->current_offset =
-        GST_BUFFER_OFFSET_IS_VALID (buffer) ? GST_BUFFER_OFFSET (buffer) : 0;
+    hls_stream->current_offset = 0;
 
   /* Is it encrypted? */
   if (hls_stream->current_key) {
