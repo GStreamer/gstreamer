@@ -160,6 +160,25 @@ static SubParseInputChunk srt_input3[] = {
       3090 * GST_MSECOND, 4000 * GST_MSECOND, "Three"}
 };
 
+/* Some WebVTT chunks, this format is similar to SRT but should be
+ * parsed differently nonetheless, the WebVTT tags should be stripped
+ * off. */
+static SubParseInputChunk srt_input4[] = {
+  {
+        "1\n00:00:01,000 --> 00:00:02,000\n<v>some text\n\n",
+      1 * GST_SECOND, 2 * GST_SECOND, "some text"}
+  ,
+  {
+        "1\n00:00:01,000 --> 00:00:02,000\n<b.loud>some text\n\n",
+      1 * GST_SECOND, 2 * GST_SECOND, "<b>some text</b>"}
+  ,
+  {
+        "1\n00:00:01,000 --> 00:00:02,000\n<ruby>base text<rt>annotation</rt></ruby>\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND,
+      "base textannotation"}
+  ,
+};
+
 static void
 setup_subparse (void)
 {
@@ -260,6 +279,71 @@ test_srt_do_test (SubParseInputChunk * input, guint start_idx, guint num)
   teardown_subparse ();
 }
 
+static void
+test_vtt_do_test (SubParseInputChunk * input, guint start_idx, guint num)
+{
+  guint n;
+
+  GST_LOG ("vtt test: start_idx = %u, num = %u", start_idx, num);
+
+  setup_subparse ();
+
+  for (n = start_idx; n < start_idx + num; ++n) {
+    GstBuffer *buf;
+    gchar *data = g_strconcat ("WEBVTT FILE\n", input[n].in, NULL);
+    buf = buffer_from_static_string (data);
+    fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+    g_free (data);
+  }
+
+  gst_pad_push_event (mysrcpad, gst_event_new_eos ());
+
+  fail_unless_equals_int (g_list_length (buffers), num);
+
+  for (n = start_idx; n < start_idx + num; ++n) {
+    const GstStructure *buffer_caps_struct;
+    GstMapInfo map;
+    GstBuffer *buf;
+    GstCaps *outcaps;
+    gchar *out;
+    guint out_size;
+
+    buf = g_list_nth_data (buffers, n - start_idx);
+    fail_unless (buf != NULL);
+    fail_unless (GST_BUFFER_TIMESTAMP_IS_VALID (buf), NULL);
+    fail_unless (GST_BUFFER_DURATION_IS_VALID (buf), NULL);
+    fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (buf), input[n].from_ts);
+    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf),
+        input[n].to_ts - input[n].from_ts);
+    fail_unless (gst_buffer_map (buf, &map, GST_MAP_READ));
+    out = (gchar *) map.data;
+
+    out_size = gst_buffer_get_size (buf);
+    /* shouldn't have trailing newline characters */
+    fail_if (out_size > 0 && out[out_size - 1] == '\n');
+    /* shouldn't include NUL-terminator in data size */
+    fail_if (out_size > 0 && out[out_size - 1] == '\0');
+    /* but should still have a  NUL-terminator behind the declared data */
+    fail_unless_equals_int (out[out_size], '\0');
+    /* make sure out string matches expected string */
+    fail_unless_equals_string (out, input[n].out);
+
+    gst_buffer_unmap (buf, &map);
+
+    /* check caps */
+    outcaps = gst_pad_get_current_caps (mysinkpad);
+    fail_unless (outcaps != NULL);
+    buffer_caps_struct = gst_caps_get_structure (outcaps, 0);
+    fail_unless_equals_string (gst_structure_get_name (buffer_caps_struct),
+        "text/x-raw");
+    fail_unless_equals_string (gst_structure_get_string (buffer_caps_struct, "format"),
+        "pango-markup");
+    gst_caps_unref (outcaps);
+  }
+
+  teardown_subparse ();
+}
+
 GST_START_TEST (test_srt)
 {
   test_srt_do_test (srt_input, 0, G_N_ELEMENTS (srt_input));
@@ -284,6 +368,96 @@ GST_START_TEST (test_srt)
 
   /* try with fewer than three post-comma digits, and some extra spaces */
   test_srt_do_test (srt_input3, 0, G_N_ELEMENTS (srt_input3));
+
+  /* try with some WebVTT chunks */
+  test_srt_do_test (srt_input4, 0, G_N_ELEMENTS (srt_input4));
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_webvtt)
+{
+  SubParseInputChunk webvtt_input[] = {
+    {
+          "1\n00:00:01.000 --> 00:00:02.000 D:vertical T:50%\nOne\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "One"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000 D:vertical   T:50%\nOne\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "One"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000 D:vertical\tT:50%\nOne\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "One"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000 D:vertical-lr\nOne\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "One"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000 L:-123\nOne\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "One"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000 L:123\nOne\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "One"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000 L:12%\nOne\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "One"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000 L:12% S:35% A:start\nOne\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "One"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000 A:middle\nOne\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "One"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000 A:end\nOne\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "One"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000\nOne & Two\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "One &amp; Two"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000\nOne < Two\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "One &lt; Two"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000\n<v Spoke>Live long and prosper\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "<v Spoke>Live long and prosper</v>"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000\n<v The Joker>HAHAHA\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "<v The Joker>HAHAHA</v>"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000\n<c.someclass>some text\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "<c.someclass>some text</c>"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000\n<b.loud>some text\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "<b.loud>some text</b>"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:02.000\n<ruby>base text<rt>annotation</rt></ruby>\n\n",
+          1 * GST_SECOND, 2 * GST_SECOND,
+        "<ruby>base text<rt>annotation</rt></ruby>"}
+    ,
+    {
+          "1\n00:00:01.000 --> 00:00:03.000\nOne... <00:00:00,200>Two... <00:00:00,500>Three...\n\n",
+          1 * GST_SECOND, 3 * GST_SECOND,
+        "One... &lt;00:00:00,200&gt;Two... &lt;00:00:00,500&gt;Three..."}
+    ,
+    {"1\n00:00:02.000 --> 00:00:03.000\nHello\nWorld\n\n",
+        2 * GST_SECOND, 3 * GST_SECOND, "Hello\nWorld"}
+    ,
+  };
+  test_vtt_do_test (webvtt_input, 0, G_N_ELEMENTS (webvtt_input));
 }
 
 GST_END_TEST;
@@ -836,6 +1010,7 @@ subparse_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_srt);
+  tcase_add_test (tc_chain, test_webvtt);
   tcase_add_test (tc_chain, test_tmplayer_multiline);
   tcase_add_test (tc_chain, test_tmplayer_multiline_with_bogus_lines);
   tcase_add_test (tc_chain, test_tmplayer_style1);
