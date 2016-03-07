@@ -31,7 +31,6 @@
 
 #define GST_CAT_DEFAULT gst_gl_context_debug
 
-static void gst_gl_context_eagl_finalize (GObject * object);
 static gboolean gst_gl_context_eagl_create_context (GstGLContext * context,
     GstGLAPI gl_api, GstGLContext * other_context, GError ** error);
 static void gst_gl_context_eagl_destroy_context (GstGLContext * context);
@@ -54,7 +53,6 @@ struct _GstGLContextEaglPrivate
   GLuint framebuffer;
   GLuint color_renderbuffer;
   GLuint depth_renderbuffer;
-  GRecMutex current_lock;
 };
 
 #define GST_GL_CONTEXT_EAGL_GET_PRIVATE(o)  \
@@ -65,12 +63,11 @@ G_DEFINE_TYPE (GstGLContextEagl, gst_gl_context_eagl, GST_GL_TYPE_CONTEXT);
 static void
 gst_gl_context_eagl_class_init (GstGLContextEaglClass * klass)
 {
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstGLContextClass *context_class = (GstGLContextClass *) klass;
+  GstGLContextClass *context_class;
+
+  context_class = (GstGLContextClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstGLContextEaglPrivate));
-
-  gobject_class->finalize = gst_gl_context_eagl_finalize;
 
   context_class->destroy_context =
       GST_DEBUG_FUNCPTR (gst_gl_context_eagl_destroy_context);
@@ -93,14 +90,6 @@ static void
 gst_gl_context_eagl_init (GstGLContextEagl * context)
 {
   context->priv = GST_GL_CONTEXT_EAGL_GET_PRIVATE (context);
-  g_rec_mutex_init (&context->priv->current_lock);
-}
-
-static void
-gst_gl_context_eagl_finalize (GObject * object)
-{
-  g_rec_mutex_clear (&GST_GL_CONTEXT_EAGL (object)->priv->current_lock);
-  G_OBJECT_CLASS (gst_gl_context_eagl_parent_class)->finalize (object);
 }
 
 /* Must be called in the gl thread */
@@ -372,20 +361,6 @@ gst_gl_context_eagl_activate (GstGLContext * context, gboolean activate)
   }
 
   return TRUE;
-}
-
-void
-_gst_gl_context_eagl_invoke (GstGLContext * context,
-        GstGLContextEaglInvokeFunc func, gpointer data, GDestroyNotify destroy)
-{
-  GstGLContextEagl *context_eagl = (GstGLContextEagl *) context;
-
-  g_rec_mutex_lock (&context_eagl->priv->current_lock);
-  gst_gl_context_activate (context, TRUE);
-  func (data);
-  if (destroy)
-    destroy (data);
-  g_rec_mutex_unlock (&context_eagl->priv->current_lock);
 }
 
 static GstGLAPI
