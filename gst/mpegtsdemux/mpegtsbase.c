@@ -991,6 +991,7 @@ mpegts_base_get_tags_from_eit (MpegTSBase * base, GstMpegtsSection * section)
             program->tags =
                 gst_tag_list_new (GST_TAG_TITLE, name, GST_TAG_DURATION,
                 event->duration * GST_SECOND, NULL);
+            g_free (name);
             return TRUE;
           }
         }
