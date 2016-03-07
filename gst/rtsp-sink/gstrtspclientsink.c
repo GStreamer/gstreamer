@@ -1345,11 +1345,9 @@ gst_rtsp_client_sink_set_property (GObject * object, guint prop_id,
       const gchar *str;
 
       str = g_value_get_string (value);
-      if (str) {
-        sscanf (str, "%u-%u",
-            &rtsp_client_sink->client_port_range.min,
-            &rtsp_client_sink->client_port_range.max);
-      } else {
+      if (!str || !sscanf (str, "%u-%u",
+              &rtsp_client_sink->client_port_range.min,
+              &rtsp_client_sink->client_port_range.max)) {
         rtsp_client_sink->client_port_range.min = 0;
         rtsp_client_sink->client_port_range.max = 0;
       }
