@@ -48,6 +48,10 @@ static void gst_gl_window_eagl_set_window_handle (GstGLWindow * window,
 static void gst_gl_window_eagl_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
 static void gst_gl_window_eagl_draw (GstGLWindow * window);
+static void gst_gl_window_eagl_send_message_async (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
+static void gst_gl_window_eagl_send_message (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data);
 
 struct _GstGLWindowEaglPrivate
 {
@@ -72,6 +76,10 @@ gst_gl_window_eagl_class_init (GstGLWindowEaglClass * klass)
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_eagl_draw);
   window_class->set_preferred_size =
       GST_DEBUG_FUNCPTR (gst_gl_window_eagl_set_preferred_size);
+  window_class->send_message_async =
+      GST_DEBUG_FUNCPTR (gst_gl_window_eagl_send_message_async);
+  window_class->send_message =
+      GST_DEBUG_FUNCPTR (gst_gl_window_eagl_send_message);
 }
 
 static void
@@ -125,6 +133,25 @@ gst_gl_window_eagl_set_preferred_size (GstGLWindow * window, gint width, gint he
   window_eagl->priv->preferred_width = width;
   window_eagl->priv->preferred_height = height;
 }
+ 
+static void
+gst_gl_window_eagl_send_message_async (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
+{
+  GstGLContext *context = gst_gl_window_get_context (window);
+  _gst_gl_context_eagl_invoke (context, callback, data, destroy);
+  gst_object_unref (context);
+}
+
+static void
+gst_gl_window_eagl_send_message (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data)
+{
+  GstGLContext *context = gst_gl_window_get_context (window);
+  _gst_gl_context_eagl_invoke (context, callback, data, NULL);
+  gst_object_unref (context);
+}
+
 
 static void
 draw_cb (gpointer data)
