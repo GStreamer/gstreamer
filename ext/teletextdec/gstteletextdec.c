@@ -657,12 +657,13 @@ static gboolean
 gst_teletextdec_negotiate_caps (GstTeletextDec * teletext, guint width,
     guint height)
 {
-  guint i, caps_size;
   gboolean rv = FALSE;
-
   /* get the peer's caps filtered by our own ones. */
   GstCaps *ourcaps = gst_pad_query_caps (teletext->srcpad, NULL);
   GstCaps *peercaps = gst_pad_peer_query_caps (teletext->srcpad, ourcaps);
+  GstStructure *caps_struct;
+  const gchar *caps_name, *caps_fmt;
+
   gst_caps_unref (ourcaps);
 
   if (gst_caps_is_empty (peercaps)) {
@@ -671,33 +672,26 @@ gst_teletextdec_negotiate_caps (GstTeletextDec * teletext, guint width,
 
   /* make them writable in case we need to fixate them (video/x-raw). */
   peercaps = gst_caps_make_writable (peercaps);
-  caps_size = gst_caps_get_size (peercaps);
+  caps_struct = gst_caps_get_structure (peercaps, 0);
+  caps_name = gst_structure_get_name (caps_struct);
+  caps_fmt = gst_structure_get_string (caps_struct, "format");
 
-  for (i = 0; i < caps_size; i++) {
-    GstStructure *caps_struct = gst_caps_get_structure (peercaps, i);
-    const gchar *caps_name = gst_structure_get_name (caps_struct);
-    const gchar *caps_fmt = gst_structure_get_string (caps_struct, "format");
-
-    if (g_strcmp0 (caps_name, "video/x-raw") == 0) {
-      teletext->width = width;
-      teletext->height = height;
-      teletext->export_func = gst_teletextdec_export_rgba_page;
-      gst_structure_set (caps_struct,
-          "width", G_TYPE_INT, width,
-          "height", G_TYPE_INT, height,
-          "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
-      break;
-    } else if ((g_strcmp0 (caps_name, "text/x-raw") == 0) &&
-        (g_strcmp0 (caps_fmt, "utf-8") == 0)) {
-      teletext->export_func = gst_teletextdec_export_text_page;
-      break;
-    } else if ((g_strcmp0 (caps_name, "text/x-raw") == 0) &&
-        (g_strcmp0 (caps_fmt, "pango-markup") == 0)) {
-      teletext->export_func = gst_teletextdec_export_pango_page;
-      break;
-    } else {
-      goto beach;
-    }
+  if (!g_strcmp0 (caps_name, "video/x-raw")) {
+    teletext->width = width;
+    teletext->height = height;
+    teletext->export_func = gst_teletextdec_export_rgba_page;
+    gst_structure_set (caps_struct,
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height,
+        "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
+  } else if (!g_strcmp0 (caps_name, "text/x-raw") &&
+      !g_strcmp0 (caps_fmt, "utf-8")) {
+    teletext->export_func = gst_teletextdec_export_text_page;
+  } else if (!g_strcmp0 (caps_name, "text/x-raw") &&
+      !g_strcmp0 (caps_fmt, "pango-markup")) {
+    teletext->export_func = gst_teletextdec_export_pango_page;
+  } else {
+    goto beach;
   }
 
   if (!gst_pad_push_event (teletext->srcpad, gst_event_new_caps (peercaps))) {
