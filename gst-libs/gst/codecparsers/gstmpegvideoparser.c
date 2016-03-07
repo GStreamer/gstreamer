@@ -408,7 +408,8 @@ gst_mpeg_video_packet_parse_sequence_extension (const GstMpegVideoPacket *
   }
 
   /* skip profile and level escape bit */
-  gst_bit_reader_skip_unchecked (&br, 1);
+  seqext->profile_level_escape_bit =
+      gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
 
   seqext->profile = gst_bit_reader_get_bits_uint8_unchecked (&br, 3);
   seqext->level = gst_bit_reader_get_bits_uint8_unchecked (&br, 4);

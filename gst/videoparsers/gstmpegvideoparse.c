@@ -815,6 +815,7 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
   }
 
   if (mpvparse->config_flags & FLAG_SEQUENCE_EXT) {
+    guint8 escape = mpvparse->sequenceext.profile_level_escape_bit;
     const guint profile_c = mpvparse->sequenceext.profile;
     const guint level_c = mpvparse->sequenceext.level;
     const gchar *profile = NULL, *level = NULL;
@@ -824,20 +825,14 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
      * 4:2:2 and Multi-view have profile = 0, with the escape bit set to 1
      */
     const gchar *const profiles[] =
-        { "high", "spatial", "snr", "main", "simple" };
+        { "4:2:2", "high", "spatial", "snr", "main", "simple" };
     /*
      * Level indication - 4 => High, 6 => High-1440, 8 => Main, 10 => Low,
      *                    except in the case of profile = 0
      */
     const gchar *const levels[] = { "high", "high-1440", "main", "low" };
 
-    if (profile_c > 0 && profile_c < 6)
-      profile = profiles[profile_c - 1];
-
-    if ((level_c > 3) && (level_c < 11) && (level_c % 2 == 0))
-      level = levels[(level_c >> 1) - 2];
-
-    if (profile_c == 8) {
+    if (escape) {
       /* Non-hierarchical profile */
       switch (level_c) {
         case 2:
@@ -863,9 +858,14 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
         default:
           break;
       }
-    }
 
-    /* FIXME does it make sense to expose profile/level in the caps ? */
+    } else {
+      if (profile_c < 6)
+        profile = profiles[profile_c];
+
+      if ((level_c > 3) && (level_c < 11) && (level_c % 2 == 0))
+        level = levels[(level_c >> 1) - 2];
+    }
 
     GST_DEBUG_OBJECT (mpvparse, "profile:'%s' level:'%s'", profile, level);
 

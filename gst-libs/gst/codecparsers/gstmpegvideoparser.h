@@ -249,6 +249,8 @@ struct _GstMpegVideoSequenceHdr
  * otherwise
  * @fps_n_ext: Framerate nominator code
  * @fps_d_ext: Framerate denominator code
+ * @profile_level_escape_bit: Escape bit. If set, the meaning of the
+ *    @profile and @level fields is different.
  *
  * The Mpeg2 Video Sequence Extension structure.
  **/
@@ -269,6 +271,8 @@ struct _GstMpegVideoSequenceExt
   guint8 low_delay;
   guint8 fps_n_ext, fps_d_ext;
 
+  /* Additional information */
+  guint8 profile_level_escape_bit;
 };
 
 /**
