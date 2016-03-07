@@ -2105,6 +2105,8 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       GST_DEBUG_OBJECT (demux, "Pushing newseg %" GST_SEGMENT_FORMAT, &segment);
       segment_event = gst_event_new_segment (&segment);
       gst_event_set_seqnum (segment_event, gst_event_get_seqnum (event));
+      /* erase any previously set segment */
+      gst_event_replace (&demux->pending_newsegment, NULL);
       gst_qtdemux_push_event (demux, segment_event);
 
       /* clear leftover in current segment, if any */
