@@ -89,6 +89,8 @@ struct _GstValidatePadMonitor {
   guint32 pending_newsegment_seqnum;
   guint32 pending_eos_seqnum;
 
+  GstClockTime pending_seek_accurate_time;
+
   GstEvent *expected_segment;
   GPtrArray *serialized_events;
   GList *expired_events;

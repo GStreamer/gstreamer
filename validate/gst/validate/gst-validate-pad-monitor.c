@@ -893,6 +893,7 @@ gst_validate_pad_monitor_init (GstValidatePadMonitor * pad_monitor)
 
   pad_monitor->timestamp_range_start = GST_CLOCK_TIME_NONE;
   pad_monitor->timestamp_range_end = GST_CLOCK_TIME_NONE;
+  pad_monitor->pending_seek_accurate_time = GST_CLOCK_TIME_NONE;
 }
 
 /**
@@ -1706,6 +1707,16 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
               "Got: %u Expected: %u", seqnum, pad_monitor->pending_eos_seqnum);
         }
       }
+      if (GST_CLOCK_TIME_IS_VALID (pad_monitor->pending_seek_accurate_time)) {
+        if (segment->time == pad_monitor->pending_seek_accurate_time) {
+          pad_monitor->pending_seek_accurate_time = GST_CLOCK_TIME_NONE;
+        } else {
+          GST_VALIDATE_REPORT (pad_monitor, SEGMENT_HAS_WRONG_START,
+              "After an accurate seek, got: %" GST_TIME_FORMAT " Expected: %"
+              GST_TIME_FORMAT, GST_TIME_ARGS (segment->time),
+              GST_TIME_ARGS (pad_monitor->pending_seek_accurate_time));
+        }
+      }
 
       pad_monitor->pending_eos_seqnum = seqnum;
 
@@ -1862,6 +1873,9 @@ gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
         pad_monitor->pending_flush_start_seqnum = seqnum;
         pad_monitor->pending_flush_stop_seqnum = seqnum;
       }
+      if (seek_flags & GST_SEEK_FLAG_ACCURATE) {
+        pad_monitor->pending_seek_accurate_time = start;
+      }
     }
       break;
       /* both flushes are handled by the common event handling function */
@@ -1895,6 +1909,7 @@ gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
         pad_monitor->pending_flush_stop_seqnum = 0;
         pad_monitor->pending_newsegment_seqnum = 0;
         pad_monitor->pending_eos_seqnum = 0;
+        pad_monitor->pending_seek_accurate_time = GST_CLOCK_TIME_NONE;
       }
     }
       break;

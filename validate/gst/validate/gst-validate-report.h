@@ -78,6 +78,7 @@ typedef enum {
 #define FLUSH_START_HAS_WRONG_SEQNUM            _QUARK("event::flush-start-has-wrong-seqnum")
 #define FLUSH_STOP_HAS_WRONG_SEQNUM             _QUARK("event::flush-stop-has-wrong-seqnum")
 #define SEGMENT_HAS_WRONG_SEQNUM                _QUARK("event::segment-has-wrong-seqnum")
+#define SEGMENT_HAS_WRONG_START                 _QUARK("event::segment-has-wrong-start")
 
 
 #define EVENT_SERIALIZED_OUT_OF_ORDER            _QUARK("event::serialized-out-of-order")

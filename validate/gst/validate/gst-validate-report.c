@@ -259,6 +259,11 @@ gst_validate_report_load_issues (void)
       _("when events/messages are created from another event/message, "
           "they should have their seqnums set to the original event/message "
           "seqnum"));
+  REGISTER_VALIDATE_ISSUE (CRITICAL, SEGMENT_HAS_WRONG_START,
+      _("A segment doesn't have the proper time value after an ACCURATE seek"),
+      _("If a seek with the ACCURATE flag was accepted, the following segment "
+          "should have a time value corresponding exactly to the requested start "
+          "seek time"));
   REGISTER_VALIDATE_ISSUE (WARNING, EVENT_SERIALIZED_OUT_OF_ORDER,
       _("a serialized event received should be pushed in the same order "
           "as it was received"),
