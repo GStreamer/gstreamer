@@ -1883,9 +1883,6 @@ gst_audio_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   dec = GST_AUDIO_DECODER (parent);
 
-  if (G_UNLIKELY (!gst_pad_has_current_caps (pad) && dec->priv->needs_format))
-    goto not_negotiated;
-
   GST_LOG_OBJECT (dec,
       "received buffer of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT
       ", duration %" GST_TIME_FORMAT, gst_buffer_get_size (buffer),
@@ -1893,6 +1890,9 @@ gst_audio_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
+
+  if (G_UNLIKELY (dec->priv->ctx.input_caps == NULL && dec->priv->needs_format))
+    goto not_negotiated;
 
   dec->priv->ctx.had_input_data = TRUE;
 
@@ -1930,6 +1930,7 @@ gst_audio_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   /* ERRORS */
 not_negotiated:
   {
+    GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
     GST_ELEMENT_ERROR (dec, CORE, NEGOTIATION, (NULL),
         ("decoder not initialized"));
     gst_buffer_unref (buffer);
