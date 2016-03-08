@@ -43,7 +43,7 @@ typedef struct
   jmp_buf err_jmp_buf;
   const gchar *error;
   void *user_data;
-  GstValidateGstValidateParseVariableFunc variable_func;
+  GstValidateParseVariableFunc variable_func;
 } MathParser;
 
 static gdouble _read_power (MathParser * parser);
@@ -298,7 +298,7 @@ _read_boolean_or (MathParser * parser)
 
 static gboolean
 _init (MathParser * parser, const gchar * str,
-    GstValidateGstValidateParseVariableFunc variable_func, void *user_data)
+    GstValidateParseVariableFunc variable_func, void *user_data)
 {
   parser->str = str;
   parser->len = strlen (str) + 1;
@@ -451,7 +451,7 @@ _read_power (MathParser * parser)
  */
 gdouble
 gst_validate_utils_parse_expression (const gchar * expr,
-    GstValidateGstValidateParseVariableFunc variable_func, gpointer user_data,
+    GstValidateParseVariableFunc variable_func, gpointer user_data,
     gchar ** error)
 {
   gdouble val;

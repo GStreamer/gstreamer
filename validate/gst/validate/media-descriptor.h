@@ -30,21 +30,21 @@
 G_BEGIN_DECLS typedef struct
 {
   /* Children */
-  /* GstValidateMediaGstValidateMediaGstValidateMediaTagNode */
+  /* GstValidateMediaTagNode */
   GList *tags;
 
   gchar *str_open;
   gchar *str_close;
-} GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaTagsNode;
+} GstValidateMediaTagsNode;
 
 /* Parsing structures */
 typedef struct
 {
   /* Children */
-  /* GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode */
+  /* GstValidateMediaStreamNode */
   GList *streams;
-  /* GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaTagsNode */
-  GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaTagsNode *tags;
+  /* GstValidateMediaTagsNode */
+  GstValidateMediaTagsNode *tags;
 
   /* attributes */
   guint64 id;
@@ -57,7 +57,7 @@ typedef struct
 
   gchar *str_open;
   gchar *str_close;
-} GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaFileNode;
+} GstValidateMediaFileNode;
 
 typedef struct
 {
@@ -69,16 +69,16 @@ typedef struct
 
   gchar *str_open;
   gchar *str_close;
-} GstValidateMediaGstValidateMediaGstValidateMediaTagNode;
+} GstValidateMediaTagNode;
 
 typedef struct
 {
   /* Children */
-  /* GstValidateMediaGstValidateMediaGstValidateMediaFrameNode */
+  /* GstValidateMediaFrameNode */
   GList *frames;
 
-  /* GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaTagsNode */
-  GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaTagsNode *tags;
+  /* GstValidateMediaTagsNode */
+  GstValidateMediaTagsNode *tags;
 
   /* Attributes */
   GstCaps *caps;
@@ -92,7 +92,7 @@ typedef struct
 
   gchar *str_open;
   gchar *str_close;
-} GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaStreamNode;
+} GstValidateMediaStreamNode;
 
 typedef struct
 {
@@ -110,11 +110,11 @@ typedef struct
   gchar *checksum;
   gchar *str_open;
   gchar *str_close;
-} GstValidateMediaGstValidateMediaGstValidateMediaFrameNode;
+} GstValidateMediaFrameNode;
 
-void gst_validate_filenode_free (GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaFileNode *
+void gst_validate_filenode_free (GstValidateMediaFileNode *
     filenode);
-gboolean gst_validate_gst_validate_gst_validate_gst_validate_tag_node_compare (GstValidateMediaGstValidateMediaGstValidateMediaTagNode *
+gboolean gst_validate_tag_node_compare (GstValidateMediaTagNode *
     tnode, const GstTagList * tlist);
 
 GType gst_validate_media_descriptor_get_type (void);
@@ -137,7 +137,7 @@ typedef struct
 {
   GObject parent;
 
-  GstValidateMediaGstValidateMediaGstValidateMediaGstValidateMediaFileNode *filenode;
+  GstValidateMediaFileNode *filenode;
 
   GMutex lock;
 

@@ -29,11 +29,11 @@
 #include<gio/gio.h>
 #include <gst/gst.h>
 
-typedef int (*GstValidateGstValidateParseVariableFunc) (const gchar *name,
+typedef int (*GstValidateParseVariableFunc) (const gchar *name,
     double *value, gpointer user_data);
 
 gdouble gst_validate_utils_parse_expression (const gchar *expr,
-                                             GstValidateGstValidateParseVariableFunc variable_func,
+                                             GstValidateParseVariableFunc variable_func,
                                              gpointer user_data,
                                              gchar **error);
 guint gst_validate_utils_flags_from_str     (GType type, const gchar * str_flags);
