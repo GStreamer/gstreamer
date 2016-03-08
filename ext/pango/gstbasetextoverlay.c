@@ -90,6 +90,8 @@ enum
   PROP_DELTAY,
   PROP_XPOS,
   PROP_YPOS,
+  PROP_X_ABSOLUTE,
+  PROP_Y_ABSOLUTE,
   PROP_WRAP_MODE,
   PROP_FONT_DESC,
   PROP_SILENT,
@@ -141,8 +143,10 @@ gst_base_text_overlay_valign_get_type (void)
     {GST_BASE_TEXT_OVERLAY_VALIGN_BASELINE, "baseline", "baseline"},
     {GST_BASE_TEXT_OVERLAY_VALIGN_BOTTOM, "bottom", "bottom"},
     {GST_BASE_TEXT_OVERLAY_VALIGN_TOP, "top", "top"},
-    {GST_BASE_TEXT_OVERLAY_VALIGN_POS, "position", "position"},
+    {GST_BASE_TEXT_OVERLAY_VALIGN_POS, "position",
+        "Absolute position clamped to canvas"},
     {GST_BASE_TEXT_OVERLAY_VALIGN_CENTER, "center", "center"},
+    {GST_BASE_TEXT_OVERLAY_VALIGN_ABSOLUTE, "absolute", "Absolute position"},
     {0, NULL, NULL},
   };
 
@@ -163,7 +167,9 @@ gst_base_text_overlay_halign_get_type (void)
     {GST_BASE_TEXT_OVERLAY_HALIGN_LEFT, "left", "left"},
     {GST_BASE_TEXT_OVERLAY_HALIGN_CENTER, "center", "center"},
     {GST_BASE_TEXT_OVERLAY_HALIGN_RIGHT, "right", "right"},
-    {GST_BASE_TEXT_OVERLAY_HALIGN_POS, "position", "position"},
+    {GST_BASE_TEXT_OVERLAY_HALIGN_POS, "position",
+        "Absolute position clamped to canvas"},
+    {GST_BASE_TEXT_OVERLAY_HALIGN_ABSOLUTE, "absolute", "Absolute position"},
     {0, NULL, NULL},
   };
 
@@ -445,7 +451,7 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_XPOS,
       g_param_spec_double ("xpos", "horizontal position",
-          "Horizontal position when using position alignment", 0, 1.0,
+          "Horizontal position when using clamped position alignment", 0, 1.0,
           DEFAULT_PROP_XPOS,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   /**
@@ -455,9 +461,45 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_YPOS,
       g_param_spec_double ("ypos", "vertical position",
-          "Vertical position when using position alignment", 0, 1.0,
+          "Vertical position when using clamped position alignment", 0, 1.0,
           DEFAULT_PROP_YPOS,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstBaseTextOverlay:x-absolute:
+   *
+   * Horizontal position of the rendered text when using absolute alignment.
+   *
+   * Maps the text area to be exactly inside of video canvas for [0, 0] - [1, 1]:
+   *
+   * [0, 0]: Top-Lefts of video and text are aligned
+   * [0.5, 0.5]: Centers are aligned
+   * [1, 1]: Bottom-Rights are aligned
+   *
+   * Values beyond [0, 0] - [1, 1] place the text outside of the video canvas.
+   *
+   * Since: 1.8
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_X_ABSOLUTE,
+      g_param_spec_double ("x-absolute", "horizontal position",
+          "Horizontal position when using absolute alignment", -G_MAXDOUBLE,
+          G_MAXDOUBLE, DEFAULT_PROP_XPOS,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstBaseTextOverlay:y-absolute:
+   *
+   * See x-absolute.
+   *
+   * Vertical position of the rendered text when using absolute alignment.
+   *
+   * Since: 1.8
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_Y_ABSOLUTE,
+      g_param_spec_double ("y-absolute", "vertical position",
+          "Vertical position when using absolute alignment", -G_MAXDOUBLE,
+          G_MAXDOUBLE, DEFAULT_PROP_YPOS,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WRAP_MODE,
       g_param_spec_enum ("wrap-mode", "wrap mode",
           "Whether to wrap the text and if so how.",
@@ -978,6 +1020,12 @@ gst_base_text_overlay_set_property (GObject * object, guint prop_id,
     case PROP_YPOS:
       overlay->ypos = g_value_get_double (value);
       break;
+    case PROP_X_ABSOLUTE:
+      overlay->xpos = g_value_get_double (value);
+      break;
+    case PROP_Y_ABSOLUTE:
+      overlay->ypos = g_value_get_double (value);
+      break;
     case PROP_VALIGNMENT:
       overlay->valign = g_value_get_enum (value);
       break;
@@ -1089,6 +1137,12 @@ gst_base_text_overlay_get_property (GObject * object, guint prop_id,
       g_value_set_double (value, overlay->xpos);
       break;
     case PROP_YPOS:
+      g_value_set_double (value, overlay->ypos);
+      break;
+    case PROP_X_ABSOLUTE:
+      g_value_set_double (value, overlay->xpos);
+      break;
+    case PROP_Y_ABSOLUTE:
       g_value_set_double (value, overlay->ypos);
       break;
     case PROP_VALIGNMENT:
@@ -1496,6 +1550,9 @@ gst_base_text_overlay_get_pos (GstBaseTextOverlay * overlay,
       if (*xpos < 0)
         *xpos = 0;
       break;
+    case GST_BASE_TEXT_OVERLAY_HALIGN_ABSOLUTE:
+      *xpos = (overlay->width - overlay->text_width) * overlay->xpos;
+      break;
     default:
       *xpos = 0;
   }
@@ -1520,6 +1577,9 @@ gst_base_text_overlay_get_pos (GstBaseTextOverlay * overlay,
     case GST_BASE_TEXT_OVERLAY_VALIGN_POS:
       *ypos = (gint) (overlay->height * overlay->ypos) - height / 2;
       *ypos = CLAMP (*ypos, 0, overlay->height - overlay->ink_rect.height);
+      break;
+    case GST_BASE_TEXT_OVERLAY_VALIGN_ABSOLUTE:
+      *ypos = (overlay->height - overlay->text_height) * overlay->ypos;
       break;
     case GST_BASE_TEXT_OVERLAY_VALIGN_CENTER:
       *ypos = (overlay->height - height) / 2;
