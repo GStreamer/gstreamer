@@ -923,7 +923,8 @@ gst_directsound_sink_set_mute (GstDirectSoundSink * dsoundsink, gboolean mute)
     gst_directsound_sink_set_volume (dsoundsink, 0, FALSE);
     dsoundsink->mute = TRUE;
   } else {
-    gst_directsound_sink_set_volume (dsoundsink, dsoundsink->volume, FALSE);
+    gst_directsound_sink_set_volume (dsoundsink,
+        gst_directsound_sink_get_volume (dsoundsink), FALSE);
     dsoundsink->mute = FALSE;
   }
 
