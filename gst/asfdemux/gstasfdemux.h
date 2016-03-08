@@ -213,6 +213,7 @@ struct _GstASFDemux {
 
   GstSegment           segment;          /* configured play segment                 */
   gboolean             keyunit_sync;
+  gboolean             accurate;
 
   gboolean             need_newsegment;  /* do we need to send a new-segment event? */
   guint32              segment_seqnum;   /* if the new segment must have this seqnum */
