@@ -1071,10 +1071,10 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act,
 
   if (priv->seeked_in_pause && priv->seek_flags & GST_SEEK_FLAG_ACCURATE) {
     if ((rate > 0 && (*position >= priv->segment_start + priv->seek_pos_tol ||
-                *position < MIN (0,
+                *position < MAX (0,
                     ((gint64) priv->segment_start - priv->seek_pos_tol))))
         || (rate < 0 && (*position > priv->segment_start + priv->seek_pos_tol
-                || *position < MIN (0,
+                || *position < MAX (0,
                     (gint64) priv->segment_start - priv->seek_pos_tol)))) {
       priv->seeked_in_pause = FALSE;
       GST_VALIDATE_REPORT (scenario, EVENT_SEEK_RESULT_POSITION_WRONG,
