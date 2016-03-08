@@ -1552,6 +1552,29 @@ gst_hls_variant_stream_is_live (GstHLSVariantStream * variant)
   return is_live;
 }
 
+static gint
+compare_media (const GstHLSMedia * a, const GstHLSMedia * b)
+{
+  return strcmp (a->name, b->name);
+}
+
+GstHLSMedia *
+gst_hls_variant_find_matching_media (GstHLSVariantStream * stream,
+    GstHLSMedia * media)
+{
+  GList *mlist = stream->media[media->mtype];
+  GList *match;
+
+  if (mlist == NULL)
+    return NULL;
+
+  match = g_list_find_custom (mlist, media, (GCompareFunc) compare_media);
+  if (match == NULL)
+    return NULL;
+
+  return match->data;
+}
+
 GstHLSVariantStream *
 gst_hls_master_playlist_get_variant_for_bitrate (GstHLSMasterPlaylist *
     playlist, GstHLSVariantStream * current_variant, guint bitrate)
@@ -1573,4 +1596,16 @@ gst_hls_master_playlist_get_variant_for_bitrate (GstHLSMasterPlaylist *
   }
 
   return variant;
+}
+
+GstHLSVariantStream *
+gst_hls_master_playlist_get_matching_variant (GstHLSMasterPlaylist * playlist,
+    GstHLSVariantStream * current_variant)
+{
+  if (current_variant->iframe) {
+    return find_variant_stream_by_uri (playlist->iframe_variants,
+        current_variant->uri);
+  }
+
+  return find_variant_stream_by_uri (playlist->variants, current_variant->uri);
 }

@@ -462,19 +462,36 @@ gst_hls_demux_set_current_variant (GstHLSDemux * hlsdemux,
     return;
 
   if (hlsdemux->current_variant != NULL) {
+    gint i;
+
     //#warning FIXME: Synching fragments across variants
     //  should be done based on media timestamps, and
     //  discont-sequence-numbers not sequence numbers.
     variant->m3u8->sequence_position =
         hlsdemux->current_variant->m3u8->sequence_position;
     variant->m3u8->sequence = hlsdemux->current_variant->m3u8->sequence;
-    variant->m3u8->highest_sequence_number =
-        hlsdemux->current_variant->m3u8->highest_sequence_number;
 
     GST_DEBUG_OBJECT (hlsdemux,
         "Switching Variant. Copying over sequence %" G_GINT64_FORMAT
         " and sequence_pos %" GST_TIME_FORMAT, variant->m3u8->sequence,
         GST_TIME_ARGS (variant->m3u8->sequence_position));
+
+    for (i = 0; i < GST_HLS_N_MEDIA_TYPES; ++i) {
+      GList *mlist = hlsdemux->current_variant->media[i];
+
+      while (mlist != NULL) {
+        GstHLSMedia *old_media = mlist->data;
+        GstHLSMedia *new_media =
+            gst_hls_variant_find_matching_media (variant, old_media);
+
+        if (new_media) {
+          new_media->playlist->sequence = old_media->playlist->sequence;
+          new_media->playlist->sequence_position =
+              old_media->playlist->sequence_position;
+        }
+        mlist = mlist->next;
+      }
+    }
 
     gst_hls_variant_stream_unref (hlsdemux->current_variant);
   }
@@ -513,7 +530,7 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
 
   /* select the initial variant stream */
   if (demux->connection_speed == 0) {
-    variant = hlsdemux->master->variants->data;
+    variant = hlsdemux->master->default_variant;
   } else {
     variant =
         gst_hls_master_playlist_get_variant_for_bitrate (hlsdemux->master,
@@ -908,6 +925,9 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream * stream)
 
   g_free (stream->fragment.uri);
   stream->fragment.uri = g_strdup (file->uri);
+
+  GST_DEBUG_OBJECT (stream, "URI now %s", file->uri);
+
   stream->fragment.range_start = file->offset;
   if (file->size != -1)
     stream->fragment.range_end = file->offset + file->size - 1;
@@ -1012,66 +1032,83 @@ gst_hls_demux_update_variant_playlist (GstHLSDemux * hlsdemux, gchar * data,
   GstHLSMasterPlaylist *new_master, *old;
   gboolean ret = FALSE;
   GList *l, *unmatched_lists;
+  GstHLSVariantStream *new_variant;
 
   new_master = gst_hls_master_playlist_new_from_data (data, base_uri ? base_uri : uri); // FIXME: check which uri to use here
 
-  if (new_master != NULL) {
-    if (new_master->is_simple) {
-      // FIXME: we should be able to support this though, in the unlikely
-      // case that it changed?
-      GST_ERROR
-          ("Cannot update variant playlist: New playlist is not a variant playlist");
-      gst_hls_master_playlist_unref (new_master);
-      return FALSE;
-    }
+  if (new_master == NULL)
+    return ret;
 
-    GST_M3U8_CLIENT_LOCK (self);
-
-    if (hlsdemux->master->is_simple) {
-      GST_ERROR
-          ("Cannot update variant playlist: Current playlist is not a variant playlist");
-      goto out;
-    }
-
-    /* Now see if the variant playlist still has the same lists */
-    unmatched_lists = g_list_copy (hlsdemux->master->variants);
-    for (l = new_master->variants; l != NULL; l = l->next) {
-      GList *match = g_list_find_custom (unmatched_lists, l->data,
-          (GCompareFunc) gst_hls_demux_find_variant_match);
-      if (match) {
-        unmatched_lists = g_list_delete_link (unmatched_lists, match);
-        // FIXME: copy over state variables of playlist, or keep old instance
-        GST_ERROR ("FIXME: copy over state variables of playlist");
-      }
-    }
-
-    if (unmatched_lists != NULL) {
-      GST_WARNING ("Unable to match all playlists");
-
-      for (l = unmatched_lists; l != NULL; l = l->next) {
-        if (l->data == hlsdemux->current_variant) {
-          GST_WARNING ("Unable to match current playlist");
-        }
-      }
-
-      g_list_free (unmatched_lists);
-    }
-
-    /* Switch out the variant playlist, steal it from new_client */
-    old = hlsdemux->master;
-
-    // FIXME: check all this and also switch of variants, if anything needs updating
-    hlsdemux->master = new_master;
-
-    hlsdemux->current_variant = hlsdemux->master->default_variant;
-
-    gst_hls_master_playlist_unref (old);
-
-    ret = TRUE;
-
-  out:
-    GST_M3U8_CLIENT_UNLOCK (self);
+  if (new_master->is_simple) {
+    // FIXME: we should be able to support this though, in the unlikely
+    // case that it changed?
+    GST_ERROR
+        ("Cannot update variant playlist: New playlist is not a variant playlist");
+    gst_hls_master_playlist_unref (new_master);
+    return FALSE;
   }
+
+  GST_M3U8_CLIENT_LOCK (self);
+
+  if (hlsdemux->master->is_simple) {
+    GST_ERROR
+        ("Cannot update variant playlist: Current playlist is not a variant playlist");
+    goto out;
+  }
+
+  /* Now see if the variant playlist still has the same lists */
+  unmatched_lists = g_list_copy (hlsdemux->master->variants);
+  for (l = new_master->variants; l != NULL; l = l->next) {
+    GList *match = g_list_find_custom (unmatched_lists, l->data,
+        (GCompareFunc) gst_hls_demux_find_variant_match);
+
+    if (match) {
+      GstHLSVariantStream *variant = l->data;
+      GstHLSVariantStream *old = match->data;
+
+      unmatched_lists = g_list_delete_link (unmatched_lists, match);
+      /* FIXME: Deal with losing position due to missing an update */
+      variant->m3u8->sequence_position = old->m3u8->sequence_position;
+      variant->m3u8->sequence = old->m3u8->sequence;
+    }
+  }
+
+  if (unmatched_lists != NULL) {
+    GST_WARNING ("Unable to match all playlists");
+
+    for (l = unmatched_lists; l != NULL; l = l->next) {
+      if (l->data == hlsdemux->current_variant) {
+        GST_WARNING ("Unable to match current playlist");
+      }
+    }
+
+    g_list_free (unmatched_lists);
+  }
+
+  /* Switch out the variant playlist */
+  old = hlsdemux->master;
+
+  // FIXME: check all this and also switch of variants, if anything needs updating
+  hlsdemux->master = new_master;
+
+  if (hlsdemux->current_variant == NULL) {
+    new_variant = new_master->default_variant;
+  } else {
+    /* Find the same variant in the new playlist */
+    new_variant =
+        gst_hls_master_playlist_get_matching_variant (new_master,
+        hlsdemux->current_variant);
+  }
+
+  /* Use the function to set the current variant, as it copies over data */
+  if (new_variant != NULL)
+    gst_hls_demux_set_current_variant (hlsdemux, new_variant);
+
+  gst_hls_master_playlist_unref (old);
+
+  ret = (hlsdemux->current_variant != NULL);
+out:
+  GST_M3U8_CLIENT_UNLOCK (self);
 
   return ret;
 }

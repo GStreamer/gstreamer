@@ -193,6 +193,9 @@ void                  gst_hls_variant_stream_unref (GstHLSVariantStream * stream
 
 gboolean              gst_hls_variant_stream_is_live (GstHLSVariantStream * stream);
 
+GstHLSMedia *         gst_hls_variant_find_matching_media (GstHLSVariantStream  * stream,
+                          GstHLSMedia *media);
+
 
 struct _GstHLSMasterPlaylist
 {
@@ -220,6 +223,8 @@ GstHLSMasterPlaylist * gst_hls_master_playlist_new_from_data (gchar       * data
 GstHLSVariantStream *  gst_hls_master_playlist_get_variant_for_bitrate (GstHLSMasterPlaylist * playlist,
                                                                         GstHLSVariantStream  * current_variant,
                                                                         guint                  bitrate);
+GstHLSVariantStream *  gst_hls_master_playlist_get_matching_variant (GstHLSMasterPlaylist * playlist,
+                                                                     GstHLSVariantStream  * current_variant);
 
 void                   gst_hls_master_playlist_unref (GstHLSMasterPlaylist * playlist);
 
