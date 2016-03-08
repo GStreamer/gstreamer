@@ -167,6 +167,7 @@ gst_capsfilter_init (GstCapsFilter * filter)
   gst_base_transform_set_prefer_passthrough (trans, FALSE);
   filter->filter_caps = gst_caps_new_any ();
   filter->filter_caps_used = FALSE;
+  filter->got_sink_caps = FALSE;
   filter->caps_change_mode = DEFAULT_CAPS_CHANGE_MODE;
 }
 
@@ -404,7 +405,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
   *buf = input;
 
   if (GST_PAD_MODE (trans->srcpad) == GST_PAD_MODE_PUSH
-      && !gst_pad_has_current_caps (trans->sinkpad)) {
+      && !filter->got_sink_caps) {
 
     /* No caps. See if the output pad only supports fixed caps */
     GstCaps *out_caps;
@@ -505,7 +506,7 @@ gst_capsfilter_sink_event (GstBaseTransform * trans, GstEvent * event)
     }
     g_list_free (filter->pending_events);
     filter->pending_events = NULL;
-  } else if (!gst_pad_has_current_caps (trans->sinkpad)) {
+  } else if (!filter->got_sink_caps) {
     GST_LOG_OBJECT (trans, "Got %s event before caps, queueing",
         GST_EVENT_TYPE_NAME (event));
 
@@ -521,32 +522,35 @@ done:
       GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans,
       gst_event_ref (event));
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS
-      && filter->caps_change_mode == GST_CAPS_FILTER_CAPS_CHANGE_MODE_DELAYED) {
-    GList *l;
-    GstCaps *caps;
+  if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
+    filter->got_sink_caps = TRUE;
+    if (filter->caps_change_mode == GST_CAPS_FILTER_CAPS_CHANGE_MODE_DELAYED) {
+      GList *l;
+      GstCaps *caps;
 
-    gst_event_parse_caps (event, &caps);
+      gst_event_parse_caps (event, &caps);
 
-    /* Remove all previous caps up to one that works.
-     * Note that this might keep some leftover caps if there
-     * are multiple compatible caps */
-    GST_OBJECT_LOCK (filter);
-    for (l = g_list_last (filter->previous_caps); l; l = l->prev) {
-      if (gst_caps_can_intersect (caps, l->data)) {
-        while (l->next) {
-          gst_caps_unref (l->next->data);
-          l = g_list_delete_link (l, l->next);
+      /* Remove all previous caps up to one that works.
+       * Note that this might keep some leftover caps if there
+       * are multiple compatible caps */
+      GST_OBJECT_LOCK (filter);
+      for (l = g_list_last (filter->previous_caps); l; l = l->prev) {
+        if (gst_caps_can_intersect (caps, l->data)) {
+          while (l->next) {
+            gst_caps_unref (l->next->data);
+            l = g_list_delete_link (l, l->next);
+          }
+          break;
         }
-        break;
       }
+      if (!l && gst_caps_can_intersect (caps, filter->filter_caps)) {
+        g_list_free_full (filter->previous_caps,
+            (GDestroyNotify) gst_caps_unref);
+        filter->previous_caps = NULL;
+        filter->filter_caps_used = TRUE;
+      }
+      GST_OBJECT_UNLOCK (filter);
     }
-    if (!l && gst_caps_can_intersect (caps, filter->filter_caps)) {
-      g_list_free_full (filter->previous_caps, (GDestroyNotify) gst_caps_unref);
-      filter->previous_caps = NULL;
-      filter->filter_caps_used = TRUE;
-    }
-    GST_OBJECT_UNLOCK (filter);
   }
   gst_event_unref (event);
 
@@ -565,6 +569,8 @@ gst_capsfilter_stop (GstBaseTransform * trans)
   g_list_free_full (filter->previous_caps, (GDestroyNotify) gst_caps_unref);
   filter->previous_caps = NULL;
   GST_OBJECT_UNLOCK (filter);
+
+  filter->got_sink_caps = FALSE;
 
   return TRUE;
 }
