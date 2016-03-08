@@ -34,7 +34,7 @@ DEFAULT_TIMEOUT = 30
 DEFAULT_MAIN_DIR = os.path.join(os.path.expanduser("~"), "gst-validate")
 DEFAULT_GST_QA_ASSETS = os.path.join(DEFAULT_MAIN_DIR, "gst-integration-testsuites")
 DISCOVERER_COMMAND = "gst-discoverer-1.0"
-# Use to set the duration from which a test is concidered as being 'long'
+# Use to set the duration from which a test is considered as being 'long'
 LONG_TEST = 40
 
 

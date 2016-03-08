@@ -64,7 +64,7 @@ class HTTPServer(loggable.Loggable):
 
             print "Starting Server"
             try:
-                self.debug("Lunching http server")
+                self.debug("Launching http server")
                 cmd = "%s %s %d %s" % (sys.executable, os.path.join(os.path.dirname(__file__),
                                                                     "RangeHTTPServer.py"),
                                        self.options.http_server_port,
@@ -75,12 +75,12 @@ class HTTPServer(loggable.Loggable):
                 # cmd = "twistd -no web --path=%s -p %d" % (
                 # self.options.http_server_dir, self.options.http_server_port)
                 self.debug(
-                    "Lunching server: %s (logs in %s)", cmd, self._logsfile)
+                    "Launching server: %s (logs in %s)", cmd, self._logsfile)
                 self._process = subprocess.Popen(cmd.split(" "),
                                                  stderr=self._logsfile,
                                                  stdout=self._logsfile)
                 os.chdir(curdir)
-                self.debug("Lunched http server")
+                self.debug("Launched http server")
                 # Dirty way to avoid eating to much CPU...
                 # good enough for us anyway.
                 time.sleep(1)

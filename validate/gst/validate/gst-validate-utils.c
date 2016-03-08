@@ -696,7 +696,7 @@ done:
  * @retval: (out): The clocktime contained in @structure
  *
  * Get @name from @structure as a #GstClockTime, it handles various types
- * for the value, if it is a double, it conciders the value to be in second
+ * for the value, if it is a double, it considers the value to be in second
  * it can be a gint, gint64 a guint, a gint64.
  *
  * Return: %TRUE in case of success, %FALSE otherwize.

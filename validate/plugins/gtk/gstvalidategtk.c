@@ -486,7 +486,7 @@ gst_validate_gtk_init (GstPlugin * plugin)
               .description = "The event type to get executed. "
               "the string should look like the ones in GdkEventType but without"
               " the leading 'GDK_'. It is not mandatory as it can be computed from"
-              " other present fields (e.g, an action with 'keys' will concider the type"
+              " other present fields (e.g, an action with 'keys' will consider the type"
               " as 'key_pressed' by default).",
               .mandatory = FALSE,
               .types = "string",

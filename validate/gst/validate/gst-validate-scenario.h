@@ -138,7 +138,7 @@ GType gst_validate_action_get_type (void);
  *                                                 is specified
  * @GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK: The pipeline will need to be synchronized with the clock
  *                                        for that action type to be used.
- * @GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL: Do not concider the non execution of the action
+ * @GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL: Do not consider the non execution of the action
  *                                                   as a fatal error.
  * @GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL: The action can use the 'optional' keyword. Such action
  *                                            instances will have the #GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL
