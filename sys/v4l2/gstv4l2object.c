@@ -1573,7 +1573,17 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
     } else if (g_str_equal (mimetype, "video/x-vp8")) {
       fourcc = V4L2_PIX_FMT_VP8;
     } else if (g_str_equal (mimetype, "video/x-bayer")) {
-      fourcc = V4L2_PIX_FMT_SBGGR8;
+      const gchar *format = gst_structure_get_string (structure, "format");
+      if (format) {
+	if (!g_ascii_strcasecmp (format, "bggr"))
+	  fourcc = V4L2_PIX_FMT_SBGGR8;
+	else if (!g_ascii_strcasecmp (format, "gbrg"))
+	  fourcc = V4L2_PIX_FMT_SGBRG8;
+	else if (!g_ascii_strcasecmp (format, "grbg"))
+	  fourcc = V4L2_PIX_FMT_SGRBG8;
+	else if (!g_ascii_strcasecmp (format, "rggb"))
+	  fourcc = V4L2_PIX_FMT_SRGGB8;
+      }
     } else if (g_str_equal (mimetype, "video/x-sonix")) {
       fourcc = V4L2_PIX_FMT_SN9C10X;
     } else if (g_str_equal (mimetype, "video/x-pwc1")) {
