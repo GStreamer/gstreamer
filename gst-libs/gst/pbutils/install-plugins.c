@@ -323,7 +323,7 @@
  * <literal>gst-inspect</literal> utility has a special command line option
  * that will output information similar to what is required. For example
  * <command>
- * $ gst-inspect-0.10 --print-plugin-auto-install-info /path/to/libgstvorbis.so
+ * $ gst-inspect-1.0 --print-plugin-auto-install-info /path/to/libgstvorbis.so
  * </command>
  * should output something along the lines of
  * <computeroutput>
