@@ -340,31 +340,16 @@ gst_vaapiencode_buffer_loop (GstVaapiEncode * encode)
 }
 
 static GstCaps *
-gst_vaapiencode_get_caps_impl (GstVideoEncoder * venc)
-{
-  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (venc);
-  GstCaps *caps;
-
-  if (plugin->sinkpad_caps)
-    caps = gst_caps_ref (plugin->sinkpad_caps);
-  else {
-    caps = gst_pad_get_pad_template_caps (plugin->sinkpad);
-  }
-  return caps;
-}
-
-static GstCaps *
 gst_vaapiencode_get_caps (GstVideoEncoder * venc, GstCaps * filter)
 {
-  GstCaps *caps, *out_caps;
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (venc);
+  GstCaps *result;
 
-  out_caps = gst_vaapiencode_get_caps_impl (venc);
-  if (out_caps && filter) {
-    caps = gst_caps_intersect_full (out_caps, filter, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (out_caps);
-    out_caps = caps;
-  }
-  return out_caps;
+  result = gst_video_encoder_proxy_getcaps (venc, plugin->sinkpad_caps, filter);
+
+  GST_DEBUG_OBJECT (venc, "Returning sink caps %" GST_PTR_FORMAT, result);
+
+  return result;
 }
 
 static gboolean
