@@ -99,9 +99,6 @@ static const char gst_vaapi_decode_bin_sink_caps_str[] =
 #if USE_VP8_DECODER
     GST_CAPS_CODEC("video/x-vp8")
 #endif
-#if USE_JPEG_DECODER
-    GST_CAPS_CODEC("image/jpeg")
-#endif
     ;
 /* *INDENT-ON* */
 
@@ -466,6 +463,11 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
   GstPadTemplate *tmpl;
 
   /* create the decoder */
+  /* @FIXME: "vaapidecode" is going to be removed soon: (bug
+   * #734093). Instead there are going to be a set of elements
+   * "vaapi{codec}dec". We will need a mechanism to automatically
+   * select de correct decoder based on caps.
+   */
   vaapidecbin->decoder =
       gst_element_factory_make ("vaapidecode", "vaapidecode");
   if (!vaapidecbin->decoder) {
