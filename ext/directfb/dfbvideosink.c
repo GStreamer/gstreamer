@@ -2026,8 +2026,14 @@ gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
   pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (dfbvideosink));
 
   if (GST_IS_PAD (pad) && GST_IS_EVENT (event)) {
-    gst_pad_send_event (pad, event);
-
+    if (!gst_pad_send_event (pad, gst_event_ref (event))) {
+      /* If upstream didn't handle the event we'll post a message with it
+       * for the application in case it wants to do something with it */
+      gst_element_post_message (GST_ELEMENT_CAST (dfbvideosink),
+          gst_navigation_message_new_event (GST_OBJECT_CAST (dfbvideosink),
+              event));
+    }
+    gst_event_unref (event);
     gst_object_unref (pad);
   }
 }
