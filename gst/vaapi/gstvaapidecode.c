@@ -76,6 +76,9 @@
 GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapidecode);
 #define GST_CAT_DEFAULT gst_debug_vaapidecode
 
+#define GST_VAAPI_DECODE_PARAMS_QDATA \
+  g_quark_from_static_string("vaapidec-params")
+
 /* Default templates */
 #define GST_CAPS_CODEC(CODEC) CODEC "; "
 
@@ -94,9 +97,6 @@ static const char gst_vaapidecode_sink_caps_str[] =
 #if USE_VP8_DECODER
     GST_CAPS_CODEC("video/x-vp8")
 #endif
-#if USE_JPEG_DECODER
-    GST_CAPS_CODEC("image/jpeg")
-#endif
 #if USE_VP9_DECODER
     GST_CAPS_CODEC("video/x-vp9")
 #endif
@@ -107,13 +107,6 @@ static const char gst_vaapidecode_src_caps_str[] =
     GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS ";"
     GST_VIDEO_CAPS_MAKE("{ I420, YV12, NV12 }");
 
-static GstStaticPadTemplate gst_vaapidecode_sink_factory =
-    GST_STATIC_PAD_TEMPLATE(
-        "sink",
-        GST_PAD_SINK,
-        GST_PAD_ALWAYS,
-        GST_STATIC_CAPS(gst_vaapidecode_sink_caps_str));
-
 static GstStaticPadTemplate gst_vaapidecode_src_factory =
     GST_STATIC_PAD_TEMPLATE(
         "src",
@@ -121,6 +114,23 @@ static GstStaticPadTemplate gst_vaapidecode_src_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapidecode_src_caps_str));
 /* *INDENT-ON* */
+
+typedef struct _GstVaapiDecoderMap GstVaapiDecoderMap;
+struct _GstVaapiDecoderMap
+{
+  guint codec;
+  guint rank;
+  const gchar *name;
+  const gchar *caps_str;
+};
+
+static const GstVaapiDecoderMap vaapi_decode_map[] = {
+#if USE_JPEG_DECODER
+  {GST_VAAPI_CODEC_JPEG, GST_RANK_MARGINAL, "jpeg", "image/jpeg"},
+#endif
+  {0 /* the rest */ , GST_RANK_PRIMARY + 1, NULL,
+      gst_vaapidecode_sink_caps_str},
+};
 
 static GstElementClass *parent_class = NULL;
 
@@ -1085,6 +1095,9 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
   GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *const vdec_class = GST_VIDEO_DECODER_CLASS (klass);
   GstPadTemplate *pad_template;
+  GstVaapiDecoderMap *map;
+  gchar *name, *longname;
+  GstCaps *caps;
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_vaapidecode,
       GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
@@ -1109,17 +1122,31 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
   vdec_class->sink_query = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_query);
   vdec_class->getcaps = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_getcaps);
 
-  gst_element_class_set_static_metadata (element_class,
-      "VA-API decoder",
-      "Codec/Decoder/Video",
-      GST_PLUGIN_DESC,
+  map = (GstVaapiDecoderMap *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
+      GST_VAAPI_DECODE_PARAMS_QDATA);
+
+  if (map->codec) {
+    name = g_ascii_strup (map->name, -1);
+    longname = g_strdup_printf ("VA-API %s decoder", name);
+    g_free (name);
+  } else {
+    longname = g_strdup ("VA-API decoder");
+  }
+
+  gst_element_class_set_static_metadata (element_class, longname,
+      "Codec/Decoder/Video", GST_PLUGIN_DESC,
       "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, "
       "Halley Zhao <halley.zhao@intel.com>, "
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>, "
       "Wind Yuan <feng.yuan@intel.com>");
 
+  g_free (longname);
+
   /* sink pad */
-  pad_template = gst_static_pad_template_get (&gst_vaapidecode_sink_factory);
+  caps = gst_caps_from_string (map->caps_str);
+  pad_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+      caps);
+  gst_caps_unref (caps);
   gst_element_class_add_pad_template (element_class, pad_template);
 
   /* src pad */
@@ -1147,6 +1174,10 @@ gst_vaapidecode_init (GstVaapiDecode * decode)
 gboolean
 gst_vaapidecode_register (GstPlugin * plugin)
 {
+  gboolean ret = FALSE;
+  guint i, codec, rank;
+  gchar *type_name, *element_name;
+  const gchar *name;
   GType type;
   GTypeInfo typeinfo = {
     sizeof (GstVaapiDecodeClass),
@@ -1160,13 +1191,34 @@ gst_vaapidecode_register (GstPlugin * plugin)
     (GInstanceInitFunc) gst_vaapidecode_init,
   };
 
-  type = g_type_from_name ("GstVaapiDecode");
-  if (!type) {
-    type = g_type_register_static (GST_TYPE_VIDEO_DECODER, "GstVaapiDecode",
-        &typeinfo, 0);
-    gst_vaapi_plugin_base_init_interfaces (type);
+  for (i = 0; i < G_N_ELEMENTS (vaapi_decode_map); i++) {
+    codec = vaapi_decode_map[i].codec;
+    rank = vaapi_decode_map[i].rank;
+    name = vaapi_decode_map[i].name;
+
+    if (codec) {
+      type_name = g_strdup_printf ("GstVaapiDecode_%s", name);
+      element_name = g_strdup_printf ("vaapi%sdec", name);
+    } else {
+      type_name = g_strdup ("GstVaapiDecode");
+      element_name = g_strdup_printf ("vaapidecode");
+    }
+
+    type = g_type_from_name (type_name);
+    if (!type) {
+      /* create the gtype now */
+      type = g_type_register_static (GST_TYPE_VIDEO_DECODER, type_name,
+          &typeinfo, 0);
+      gst_vaapi_plugin_base_init_interfaces (type);
+      g_type_set_qdata (type, GST_VAAPI_DECODE_PARAMS_QDATA,
+          (gpointer) & vaapi_decode_map[i]);
+    }
+
+    ret |= gst_element_register (plugin, element_name, rank, type);
+
+    g_free (element_name);
+    g_free (type_name);
   }
 
-  return
-      gst_element_register (plugin, "vaapidecode", GST_RANK_PRIMARY + 1, type);
+  return ret;
 }
