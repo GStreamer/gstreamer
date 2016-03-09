@@ -1199,10 +1199,3 @@ theora_enc_get_property (GObject * object, guint prop_id,
       break;
   }
 }
-
-gboolean
-gst_theora_enc_register (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "theoraenc",
-      GST_RANK_PRIMARY, GST_TYPE_THEORA_ENC);
-}

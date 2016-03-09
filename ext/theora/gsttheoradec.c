@@ -192,6 +192,7 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
       GST_DEBUG_FUNCPTR (theora_dec_decide_allocation);
 
   GST_DEBUG_CATEGORY_INIT (theoradec_debug, "theoradec", 0, "Theora decoder");
+  GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 }
 
 static void
@@ -992,13 +993,4 @@ theora_dec_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-gboolean
-gst_theora_dec_register (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
-
-  return gst_element_register (plugin, "theoradec",
-      GST_RANK_PRIMARY, GST_TYPE_THEORA_DEC);
 }
