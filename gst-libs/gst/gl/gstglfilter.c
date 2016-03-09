@@ -1032,6 +1032,28 @@ gst_gl_filter_render_to_target (GstGLFilter * filter, gboolean resize,
 }
 
 static void
+_get_attributes (GstGLFilter * filter)
+{
+  if (!filter->default_shader)
+    return;
+
+  if (filter->valid_attributes)
+    return;
+
+  if (filter->draw_attr_position_loc == -1)
+    filter->draw_attr_position_loc =
+        gst_gl_shader_get_attribute_location (filter->default_shader,
+        "a_position");
+
+  if (filter->draw_attr_texture_loc == -1)
+    filter->draw_attr_texture_loc =
+        gst_gl_shader_get_attribute_location (filter->default_shader,
+        "a_texcoord");
+
+  filter->valid_attributes = TRUE;
+}
+
+static void
 _draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
@@ -1045,6 +1067,7 @@ _draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
   }
 #endif
 
+  _get_attributes (filter);
   gst_gl_shader_use (filter->default_shader);
 
   gl->ActiveTexture (GL_TEXTURE1);
@@ -1055,23 +1078,6 @@ _draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
   gst_gl_shader_set_uniform_1f (filter->default_shader, "height", height);
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
-}
-
-static void
-_get_attributes (GstGLFilter * filter)
-{
-  if (!filter->default_shader)
-    return;
-
-  if (filter->draw_attr_position_loc == -1)
-    filter->draw_attr_position_loc =
-        gst_gl_shader_get_attribute_location (filter->default_shader,
-        "a_position");
-
-  if (filter->draw_attr_texture_loc == -1)
-    filter->draw_attr_texture_loc =
-        gst_gl_shader_get_attribute_location (filter->default_shader,
-        "a_texcoord");
 }
 
 /**
@@ -1094,8 +1100,9 @@ void
 gst_gl_filter_render_to_target_with_shader (GstGLFilter * filter,
     gboolean resize, GLuint input, GLuint target, GstGLShader * shader)
 {
+  if (filter->default_shader != shader)
+    filter->valid_attributes = FALSE;
   filter->default_shader = shader;
-  _get_attributes (filter);
 
   gst_gl_filter_render_to_target (filter, resize, input, target,
       _draw_with_shader_cb, filter);
