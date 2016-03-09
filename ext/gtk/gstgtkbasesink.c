@@ -286,10 +286,14 @@ gst_gtk_base_sink_navigation_send_event (GstNavigation * navigation,
 
   GST_TRACE_OBJECT (sink, "navigation event %" GST_PTR_FORMAT, structure);
 
-  if (GST_IS_PAD (pad)) {
-    if (GST_IS_EVENT (event))
-      gst_pad_send_event (pad, event);
-
+  if (GST_IS_PAD (pad) && GST_IS_EVENT (event)) {
+    if (!gst_pad_send_event (pad, gst_event_ref (event))) {
+      /* If upstream didn't handle the event we'll post a message with it
+       * for the application in case it wants to do something with it */
+      gst_element_post_message (GST_ELEMENT_CAST (sink),
+          gst_navigation_message_new_event (GST_OBJECT_CAST (sink), event));
+    }
+    gst_event_unref (event);
     gst_object_unref (pad);
   }
 }
