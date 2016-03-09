@@ -597,7 +597,13 @@ gst_d3dvideosink_navigation_send_event (GstNavigation * navigation,
   if ((e = gst_event_new_navigation (structure))) {
     GstPad *pad;
     if ((pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (sink)))) {
-      gst_pad_send_event (pad, e);
+      if (!gst_pad_send_event (pad, gst_event_ref (e))) {
+        /* If upstream didn't handle the event we'll post a message with it
+         * for the application in case it wants to do something with it */
+        gst_element_post_message (GST_ELEMENT_CAST (sink),
+            gst_navigation_message_new_event (GST_OBJECT_CAST (sink), e));
+      }
+      gst_event_unref (e);
       gst_object_unref (pad);
     }
   }
