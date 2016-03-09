@@ -71,6 +71,7 @@ struct _GstGLFilter
   GLuint             out_tex_id;
 
   GstGLShader       *default_shader;
+  gboolean           valid_attributes;
 
   GLuint             vao;
   GLuint             vbo_indices;
