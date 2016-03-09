@@ -120,13 +120,9 @@ static GstStaticPadTemplate gst_vaapidecode_src_factory =
         GST_PAD_SRC,
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapidecode_src_caps_str));
-
-G_DEFINE_TYPE_WITH_CODE(
-    GstVaapiDecode,
-    gst_vaapidecode,
-    GST_TYPE_VIDEO_DECODER,
-    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES)
 /* *INDENT-ON* */
+
+static GstElementClass *parent_class = NULL;
 
 static gboolean gst_vaapidecode_update_sink_caps (GstVaapiDecode * decode,
     GstCaps * caps);
@@ -815,7 +811,7 @@ gst_vaapidecode_finalize (GObject * object)
   g_mutex_clear (&decode->surface_ready_mutex);
 
   gst_vaapi_plugin_base_finalize (GST_VAAPI_PLUGIN_BASE (object));
-  G_OBJECT_CLASS (gst_vaapidecode_parent_class)->finalize (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -1036,8 +1032,7 @@ gst_vaapidecode_sink_query (GstVideoDecoder * vdec, GstQuery * query)
       break;
     }
     default:{
-      ret = GST_VIDEO_DECODER_CLASS (gst_vaapidecode_parent_class)->sink_query
-          (vdec, query);
+      ret = GST_VIDEO_DECODER_CLASS (parent_class)->sink_query (vdec, query);
       break;
     }
   }
@@ -1075,8 +1070,7 @@ gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query)
       break;
     }
     default:{
-      ret = GST_VIDEO_DECODER_CLASS (gst_vaapidecode_parent_class)->src_query
-          (vdec, query);
+      ret = GST_VIDEO_DECODER_CLASS (parent_class)->src_query (vdec, query);
       break;
     }
   }
@@ -1094,6 +1088,8 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_vaapidecode,
       GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
+
+  parent_class = g_type_class_peek_parent (klass);
 
   gst_vaapi_plugin_base_class_init (GST_VAAPI_PLUGIN_BASE_CLASS (klass));
 
@@ -1146,4 +1142,31 @@ gst_vaapidecode_init (GstVaapiDecode * decode)
   g_cond_init (&decode->surface_ready);
 
   gst_video_decoder_set_packetized (vdec, FALSE);
+}
+
+gboolean
+gst_vaapidecode_register (GstPlugin * plugin)
+{
+  GType type;
+  GTypeInfo typeinfo = {
+    sizeof (GstVaapiDecodeClass),
+    NULL,
+    NULL,
+    (GClassInitFunc) gst_vaapidecode_class_init,
+    NULL,
+    NULL,
+    sizeof (GstVaapiDecode),
+    0,
+    (GInstanceInitFunc) gst_vaapidecode_init,
+  };
+
+  type = g_type_from_name ("GstVaapiDecode");
+  if (!type) {
+    type = g_type_register_static (GST_TYPE_VIDEO_DECODER, "GstVaapiDecode",
+        &typeinfo, 0);
+    gst_vaapi_plugin_base_init_interfaces (type);
+  }
+
+  return
+      gst_element_register (plugin, "vaapidecode", GST_RANK_PRIMARY + 1, type);
 }

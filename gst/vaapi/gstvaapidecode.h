@@ -81,8 +81,7 @@ struct _GstVaapiDecodeClass {
     GstVaapiPluginBaseClass parent_class;
 };
 
-GType
-gst_vaapidecode_get_type(void) G_GNUC_CONST;
+gboolean gst_vaapidecode_register (GstPlugin * plugin);
 
 G_END_DECLS
 

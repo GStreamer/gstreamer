@@ -53,8 +53,8 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "vaapidecode",
-      GST_RANK_PRIMARY + 1, GST_TYPE_VAAPIDECODE);
+  gst_vaapidecode_register (plugin);
+
   gst_element_register (plugin, "vaapipostproc",
       GST_RANK_PRIMARY, GST_TYPE_VAAPIPOSTPROC);
   gst_element_register (plugin, "vaapisink",
