@@ -57,6 +57,7 @@ static guint gst_gl_filter_app_signals[LAST_SIGNAL] = { 0 };
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_filter_app_debug, "glfilterapp", 0, "glfilterapp element");
 
+#define gst_gl_filter_app_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLFilterApp, gst_gl_filter_app,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
 
@@ -69,9 +70,9 @@ static gboolean gst_gl_filter_app_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
 static gboolean gst_gl_filter_app_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
-static void gst_gl_filter_app_callback (gint width, gint height, guint texture,
-    gpointer stuff);
 
+static gboolean gst_gl_filter_app_gl_start (GstGLBaseFilter * base_filter);
+static void gst_gl_filter_app_gl_stop (GstGLBaseFilter * base_filter);
 
 static void
 gst_gl_filter_app_class_init (GstGLFilterAppClass * klass)
@@ -84,6 +85,9 @@ gst_gl_filter_app_class_init (GstGLFilterAppClass * klass)
 
   gobject_class->set_property = gst_gl_filter_app_set_property;
   gobject_class->get_property = gst_gl_filter_app_get_property;
+
+  GST_GL_BASE_FILTER_CLASS (klass)->gl_start = gst_gl_filter_app_gl_start;
+  GST_GL_BASE_FILTER_CLASS (klass)->gl_stop = gst_gl_filter_app_gl_stop;
 
   GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_filter_app_set_caps;
   GST_GL_FILTER_CLASS (klass)->filter_texture =
@@ -141,6 +145,34 @@ gst_gl_filter_app_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+gst_gl_filter_app_gl_start (GstGLBaseFilter * base_filter)
+{
+  GstGLFilter *filter = GST_GL_FILTER (base_filter);
+  GError *error = NULL;
+
+  if (!(filter->default_shader =
+          gst_gl_shader_new_default (base_filter->context, &error))) {
+    GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND, ("%s",
+            "Failed to create the default shader"), ("%s", error->message));
+    return FALSE;
+  }
+
+  return GST_GL_BASE_FILTER_CLASS (parent_class)->gl_start (base_filter);
+}
+
+static void
+gst_gl_filter_app_gl_stop (GstGLBaseFilter * base_filter)
+{
+  GstGLFilter *filter = GST_GL_FILTER (base_filter);
+
+  if (filter->default_shader)
+    gst_object_unref (filter->default_shader);
+  filter->default_shader = NULL;
+
+  GST_GL_BASE_FILTER_CLASS (parent_class)->gl_stop (base_filter);
 }
 
 static gboolean
@@ -202,29 +234,9 @@ gst_gl_filter_app_filter_texture (GstGLFilter * filter, guint in_tex,
       filter->fbo, filter->depthbuffer, out_tex, _glcb2, &cb);
 
   if (app_filter->default_draw) {
-    gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
-        gst_gl_filter_app_callback, filter);
+    gst_gl_filter_render_to_target_with_shader (filter, TRUE, in_tex, out_tex,
+        filter->default_shader);
   }
 
   return TRUE;
-}
-
-//opengl scene, params: input texture (not the output filter->texture)
-static void
-gst_gl_filter_app_callback (gint width, gint height, guint texture,
-    gpointer stuff)
-{
-  GstGLFilter *filter = GST_GL_FILTER (stuff);
-
-#if GST_GL_HAVE_OPENGL
-  if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context) &
-      GST_GL_API_OPENGL) {
-    GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
-
-    gl->MatrixMode (GL_PROJECTION);
-    gl->LoadIdentity ();
-  }
-#endif
-
-  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
