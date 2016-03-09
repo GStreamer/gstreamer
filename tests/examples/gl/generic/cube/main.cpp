@@ -120,7 +120,8 @@ static gboolean drawCallback (GstElement * gl_sink, GstGLContext *context, GstSa
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    glScalef(0.5f,0.5f,0.5f);
+    /* invert the y-axis to get the front face the correct way up */
+    glScalef (0.5f, -0.5f, 0.5f);
 
     glRotatef(xrot,1.0f,0.0f,0.0f);
     glRotatef(yrot,0.0f,1.0f,0.0f);
@@ -181,6 +182,9 @@ gint main (gint argc, gchar *argv[])
 
     GMainLoop *loop;
     GstBus *bus;
+
+    /* FIXME: remove once the example supports gl3 and/or gles2 */
+    g_setenv ("GST_GL_API", "opengl", FALSE);
 
     /* initialization */
     gst_init (&argc, &argv);
