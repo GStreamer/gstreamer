@@ -2139,6 +2139,7 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
     if (gl_sink->next_buffer == NULL) {
       /* Nothing to display yet */
       GST_GLIMAGE_SINK_UNLOCK (gl_sink);
+      gst_object_unref (window);
       return TRUE;
     }
 
