@@ -1298,7 +1298,6 @@ gst_net_client_clock_constructed (GObject * object)
 {
   GstNetClientClock *self = GST_NET_CLIENT_CLOCK (object);
   GstClock *internal_clock;
-  GstClockTime internal;
   GList *l;
   ClockCache *cache = NULL;
 
@@ -1345,15 +1344,6 @@ gst_net_client_clock_constructed (GObject * object)
   G_UNLOCK (clocks_lock);
 
   self->priv->internal_clock = internal_clock = cache->clock;
-
-  {
-    GstClockTime now = gst_clock_get_time (internal_clock);
-
-    if (GST_CLOCK_DIFF (now, self->priv->base_time) > 0 ||
-        GST_CLOCK_DIFF (now, self->priv->base_time + GST_SECOND) < 0) {
-      g_warning ("unable to set the base time, expect sync problems!");
-    }
-  }
 
   /* all systems go, cap'n */
 }
