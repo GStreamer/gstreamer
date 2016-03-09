@@ -85,6 +85,8 @@ SUBDIRS =
 MAINTAINERCLEANFILES = \
         gstreamer-vaapi-plugins.* \
 	*.stamp inspect \
+	gstreamer-vaapi-plugins-overrides.txt \
+	gstreamer-vaapi-plugins-sections.new \
 	$(NULL)
 
 -include $(top_srcdir)/git.mk
