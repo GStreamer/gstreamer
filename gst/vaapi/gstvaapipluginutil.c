@@ -174,14 +174,14 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
           display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
 #endif
       }
+      gst_object_unref (gl_window);
       break;
     }
     default:
       display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
       break;
   }
-  if (!display_type)
-    return NULL;
+  gst_object_unref (gl_display);
 
   display = gst_vaapi_create_display_from_handle (display_type, native_display);
   if (!display)
@@ -209,8 +209,10 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
           out_display = NULL;
           break;
       }
-      if (!out_display)
+      if (!out_display) {
+        gst_vaapi_display_unref (display);
         return NULL;
+      }
       gst_vaapi_display_egl_set_gl_context (GST_VAAPI_DISPLAY_EGL (out_display),
           GSIZE_TO_POINTER (gst_gl_context_get_gl_context (gl_context)));
       break;
