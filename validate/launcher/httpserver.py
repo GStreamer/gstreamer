@@ -22,6 +22,7 @@ import time
 import loggable
 import subprocess
 import sys
+import urllib2
 
 logcat = "httpserver"
 
@@ -41,12 +42,10 @@ class HTTPServer(loggable.Loggable):
         start = time.time()
         while True:
             try:
-                subprocess.check_output(["wget", "127.0.0.1:%s" %
-                                         (self.options.http_server_port),
-                                         "-O", os.devnull],
-                                        stderr=self._logsfile)
+                response = urllib2.urlopen('http://127.0.0.1:%s' % (
+                    self.options.http_server_port))
                 return True
-            except subprocess.CalledProcessError:
+            except urllib2.URLError as e:
                 pass
 
             if time.time() - start > timeout:
