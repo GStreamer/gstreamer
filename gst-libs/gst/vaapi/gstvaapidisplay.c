@@ -1798,7 +1798,7 @@ get_attribute (GstVaapiDisplay * display, VADisplayAttribType type,
     gint * value)
 {
   GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
-  VADisplayAttribute attr;
+  VADisplayAttribute attr = { 0, };
   VAStatus status;
 
   attr.type = type;
@@ -1814,7 +1814,7 @@ static gboolean
 set_attribute (GstVaapiDisplay * display, VADisplayAttribType type, gint value)
 {
   GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
-  VADisplayAttribute attr;
+  VADisplayAttribute attr = { 0, };
   VAStatus status;
 
   attr.type = type;
