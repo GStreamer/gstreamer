@@ -748,7 +748,7 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
 #endif
 
   return gst_vaapi_plugin_base_decide_allocation (GST_VAAPI_PLUGIN_BASE (vdec),
-      query, 0);
+      query);
 
   /* ERRORS */
 error_no_caps:

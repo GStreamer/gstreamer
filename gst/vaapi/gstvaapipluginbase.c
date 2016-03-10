@@ -594,7 +594,7 @@ gst_vaapi_plugin_base_set_pool_config (GstBufferPool * pool,
  */
 gboolean
 gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
-    GstQuery * query, guint feature)
+    GstQuery * query)
 {
   GstCaps *caps = NULL;
   GstBufferPool *pool;
@@ -620,17 +620,14 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   if (!caps)
     goto error_no_caps;
 
-  if (!feature)
-    feature = gst_vaapi_find_preferred_caps_feature (plugin->srcpad, caps,
-        NULL);
-
   has_video_meta = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
 
 #if (USE_GLX || USE_EGL)
   has_texture_upload_meta = gst_query_find_allocation_meta (query,
       GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx) &&
-      (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META);
+      gst_vaapi_caps_feature_contains (caps,
+      GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META);
 
 #if USE_GST_GL_HELPERS
   if (has_texture_upload_meta) {
