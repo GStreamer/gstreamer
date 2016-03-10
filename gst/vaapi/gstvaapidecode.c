@@ -163,7 +163,6 @@ static gboolean gst_vaapidecode_update_sink_caps (GstVaapiDecode * decode,
     GstCaps * caps);
 static gboolean gst_vaapi_decode_input_state_replace (GstVaapiDecode * decode,
     const GstVideoCodecState * new_state);
-static gboolean gst_vaapidecode_negotiate (GstVaapiDecode * decode);
 
 /* get invoked only if actural VASurface size (not the cropped values) changed */
 static void
@@ -408,6 +407,26 @@ set_display_res:
   return TRUE;
 }
 
+static gboolean
+gst_vaapidecode_negotiate (GstVaapiDecode * decode)
+{
+  GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (vdec);
+
+  GST_DEBUG_OBJECT (decode, "Input codec state changed, doing renegotiation");
+
+  if (!gst_vaapi_plugin_base_set_caps (plugin, decode->sinkpad_caps, NULL))
+    return FALSE;
+  if (!gst_vaapidecode_update_src_caps (decode))
+    return FALSE;
+  if (!gst_video_decoder_negotiate (vdec))
+    return FALSE;
+  if (!gst_vaapi_plugin_base_set_caps (plugin, NULL, decode->srcpad_caps))
+    return FALSE;
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
     GstVideoCodecFrame * out_frame)
@@ -533,26 +552,6 @@ error_commit_buffer:
     gst_video_codec_frame_unref (out_frame);
     return ret;
   }
-}
-
-static gboolean
-gst_vaapidecode_negotiate (GstVaapiDecode * decode)
-{
-  GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
-  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (vdec);
-
-  GST_DEBUG_OBJECT (decode, "Input codec state changed, doing renegotiation");
-
-  if (!gst_vaapi_plugin_base_set_caps (plugin, decode->sinkpad_caps, NULL))
-    return FALSE;
-  if (!gst_vaapidecode_update_src_caps (decode))
-    return FALSE;
-  if (!gst_video_decoder_negotiate (vdec))
-    return FALSE;
-  if (!gst_vaapi_plugin_base_set_caps (plugin, NULL, decode->srcpad_caps))
-    return FALSE;
-
-  return TRUE;
 }
 
 static GstFlowReturn
