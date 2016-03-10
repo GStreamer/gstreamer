@@ -733,7 +733,12 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
   GstCaps *caps = NULL;
 
   gst_query_parse_allocation (query, &caps, NULL);
+
   decode->has_texture_upload_meta = FALSE;
+
+  if (!caps)
+    goto error_no_caps;
+
 #if (USE_GLX || USE_EGL)
   decode->has_texture_upload_meta =
       gst_query_find_allocation_meta (query,
@@ -744,6 +749,13 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
 
   return gst_vaapi_plugin_base_decide_allocation (GST_VAAPI_PLUGIN_BASE (vdec),
       query, 0);
+
+  /* ERRORS */
+error_no_caps:
+  {
+    GST_ERROR_OBJECT (decode, "no caps specified");
+    return FALSE;
+  }
 }
 
 static inline gboolean
