@@ -1488,7 +1488,7 @@ gst_rtsp_stream_set_client_side (GstRTSPStream * stream, gboolean client_side)
 }
 
 /**
- * gst_rtsp_stream_set_client_side:
+ * gst_rtsp_stream_is_client_side:
  * @stream: a #GstRTSPStream
  *
  * See gst_rtsp_stream_set_client_side()
