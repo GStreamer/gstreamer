@@ -1128,6 +1128,12 @@ play_udpsources_one_family (GstRTSPStream * stream, GstElement * udpsrc_out[2],
       gst_pad_link (pad, selpad);
       gst_object_unref (pad);
       gst_object_unref (selpad);
+
+      /* otherwise sync state with parent in case it's running already
+       * at this point */
+      if (!priv->srcpad) {
+        gst_element_sync_state_with_parent (udpsrc_out[i]);
+      }
     }
   }
 
@@ -2507,7 +2513,12 @@ create_receiver_part (GstRTSPStream * stream, GstBin * bin, GstState state)
         /* make and add appsrc */
         priv->appsrc[i] = gst_element_factory_make ("appsrc", NULL);
         priv->appsrc_base_time[i] = -1;
-        g_object_set (priv->appsrc[i], "format", GST_FORMAT_TIME, NULL);
+        if (priv->srcpad) {
+          gst_element_set_state (priv->appsrc[i], GST_STATE_PLAYING);
+          gst_element_set_locked_state (priv->appsrc[i], TRUE);
+        }
+        g_object_set (priv->appsrc[i], "format", GST_FORMAT_TIME, "is-live",
+            TRUE, NULL);
         gst_bin_add (bin, priv->appsrc[i]);
         /* and link to the funnel */
         selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
@@ -2857,8 +2868,16 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
 
     if (priv->udpsink[i] && is_udp && (priv->srcpad || i == 1))
       gst_bin_remove (bin, priv->udpsink[i]);
-    if (priv->appsrc[i] && (priv->sinkpad || i == 1))
-      gst_bin_remove (bin, priv->appsrc[i]);
+    if (priv->appsrc[i]) {
+      if (priv->sinkpad || i == 1) {
+        gst_element_set_locked_state (priv->appsrc[i], FALSE);
+        gst_element_set_state (priv->appsrc[i], GST_STATE_NULL);
+        gst_bin_remove (bin, priv->appsrc[i]);
+      } else {
+        gst_element_set_state (priv->appsrc[i], GST_STATE_NULL);
+        gst_object_unref (priv->appsrc[i]);
+      }
+    }
     if (priv->appsink[i] && is_tcp && (priv->srcpad || i == 1))
       gst_bin_remove (bin, priv->appsink[i]);
     if (priv->appqueue[i] && is_tcp && is_udp && (priv->srcpad || i == 1))
