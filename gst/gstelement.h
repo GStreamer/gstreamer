@@ -346,8 +346,9 @@ typedef enum
  * GST_ELEMENT_NAME:
  * @elem: A #GstElement to query
  *
- * Gets the name of this element. Use only in core as this is not
- * ABI-compatible. Others use gst_element_get_name()
+ * Gets the name of this element. This is not thread-safe by default
+ * (i.e. you will have to make sure the object lock is taken yourself).
+ * If in doubt use gst_element_get_name() instead.
  */
 #define GST_ELEMENT_NAME(elem)                  (GST_OBJECT_NAME(elem))
 
@@ -355,7 +356,9 @@ typedef enum
  * GST_ELEMENT_PARENT:
  * @elem: A #GstElement to query
  *
- * Get the parent object of this element.
+ * Get the parent object of this element. This is not thread-safe by default
+ * (i.e. you will have to make sure the object lock is taken yourself).
+ * If in doubt use gst_object_get_parent() instead.
  */
 #define GST_ELEMENT_PARENT(elem)                (GST_ELEMENT_CAST(GST_OBJECT_PARENT(elem)))
 
@@ -363,7 +366,9 @@ typedef enum
  * GST_ELEMENT_BUS:
  * @elem: A #GstElement to query
  *
- * Get the message bus of this element.
+ * Get the message bus of this element. This is not thread-safe by default
+ * (i.e. you will have to make sure the object lock is taken yourself).
+ * If in doubt use gst_element_get_bus() instead.
  */
 #define GST_ELEMENT_BUS(elem)                   (GST_ELEMENT_CAST(elem)->bus)
 
@@ -371,7 +376,9 @@ typedef enum
  * GST_ELEMENT_CLOCK:
  * @elem: A #GstElement to query
  *
- * Get the clock of this element
+ * Get the clock of this element.This is not thread-safe by default
+ * (i.e. you will have to make sure it is safe yourself).
+ * If in doubt use gst_element_get_clock() instead.
  */
 #define GST_ELEMENT_CLOCK(elem)                 (GST_ELEMENT_CAST(elem)->clock)
 

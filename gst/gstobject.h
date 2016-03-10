@@ -105,14 +105,18 @@ typedef enum
  * GST_OBJECT_NAME:
  * @obj: a #GstObject
  *
- * Get the name of this object
+ * Get the name of this object. This is not thread-safe by default
+ * (i.e. you will have to make sure the object lock is taken yourself).
+ * If in doubt use gst_object_get_name() instead.
  */
 #define GST_OBJECT_NAME(obj)            (GST_OBJECT_CAST(obj)->name)
 /**
  * GST_OBJECT_PARENT:
  * @obj: a #GstObject
  *
- * Get the parent of this object
+ * Get the parent of this object. This is not thread-safe by default
+ * (i.e. you will have to make sure the object lock is taken yourself).
+ * If in doubt use gst_object_get_parent() instead.
  */
 #define GST_OBJECT_PARENT(obj)          (GST_OBJECT_CAST(obj)->parent)
 
