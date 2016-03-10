@@ -458,9 +458,11 @@ gst_gl_shader_detach_unlocked (GstGLShader * shader, GstGLSLStage * stage)
     return;
   }
 
-  g_assert (shader->context->gl_vtable->IsProgram (shader->priv->
-          program_handle));
-  g_assert (shader->context->gl_vtable->IsShader (stage_handle));
+  if (shader->context->gl_vtable->IsProgram)
+    g_assert (shader->context->gl_vtable->IsProgram (shader->
+            priv->program_handle));
+  if (shader->context->gl_vtable->IsShader)
+    g_assert (shader->context->gl_vtable->IsShader (stage_handle));
 
   GST_LOG_OBJECT (shader, "detaching shader %i from program %i", stage_handle,
       (int) shader->priv->program_handle);
@@ -533,9 +535,11 @@ gst_gl_shader_attach_unlocked (GstGLShader * shader, GstGLSLStage * stage)
     return FALSE;
   }
 
-  g_assert (shader->context->gl_vtable->IsProgram (shader->priv->
-          program_handle));
-  g_assert (shader->context->gl_vtable->IsShader (stage_handle));
+  if (shader->context->gl_vtable->IsProgram)
+    g_assert (shader->context->gl_vtable->IsProgram (shader->
+            priv->program_handle));
+  if (shader->context->gl_vtable->IsShader)
+    g_assert (shader->context->gl_vtable->IsShader (stage_handle));
 
   shader->priv->stages =
       g_list_prepend (shader->priv->stages, gst_object_ref_sink (stage));
