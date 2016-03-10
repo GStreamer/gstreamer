@@ -46,6 +46,7 @@ typedef struct {
   gint effect;
   guint supported_properties;
   const gchar *filter_name;
+  const gchar *filter_longname;
 } GstGLEffectsFilterDescriptor;
 
 typedef void (* GstGLEffectProcessFunc) (GstGLEffects *effects);
