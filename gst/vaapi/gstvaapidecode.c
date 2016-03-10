@@ -128,14 +128,10 @@ G_DEFINE_TYPE_WITH_CODE(
     GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES)
 /* *INDENT-ON* */
 
-static gboolean
-gst_vaapidecode_update_sink_caps (GstVaapiDecode * decode, GstCaps * caps);
-static gboolean gst_vaapidecode_update_src_caps (GstVaapiDecode * decode);
-
-static gboolean
-gst_vaapi_decode_input_state_replace (GstVaapiDecode * decode,
+static gboolean gst_vaapidecode_update_sink_caps (GstVaapiDecode * decode,
+    GstCaps * caps);
+static gboolean gst_vaapi_decode_input_state_replace (GstVaapiDecode * decode,
     const GstVideoCodecState * new_state);
-
 static gboolean gst_vaapidecode_negotiate (GstVaapiDecode * decode);
 
 static void
