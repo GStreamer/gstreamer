@@ -350,6 +350,7 @@ gst_gl_effects_filter_class_init (GstGLEffectsClass * klass,
     const GstGLEffectsFilterDescriptor * filter_descriptor)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   klass->filter_descriptor = filter_descriptor;
 
@@ -366,6 +367,15 @@ gst_gl_effects_filter_class_init (GstGLEffectsClass * klass,
             GST_TYPE_GL_EFFECTS_EFFECT,
             GST_GL_EFFECT_IDENTITY,
             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  } else {
+    gchar *description = g_strdup_printf ("GL Shading Language effects - %s",
+        filter_descriptor->filter_longname);
+
+    gst_element_class_set_metadata (element_class,
+        filter_descriptor->filter_longname, "Filter/Effect/Video",
+        description, "Filippo Argiolas <filippo.argiolas@gmail.com>");
+
+    g_free (description);
   }
 
   g_object_class_install_property (gobject_class,
@@ -605,6 +615,7 @@ gst_gl_effects_filters_descriptors (void)
     for (i = 0; i < n_filters; ++i, ++effect) {
       descriptors[i].effect = effect->value;
       descriptors[i].filter_name = effect->value_nick;
+      descriptors[i].filter_longname = effect->value_name;
     }
 
     for (defined = gst_gl_effects_filters_supported_properties ();
