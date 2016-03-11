@@ -306,7 +306,9 @@ gst_parse_launch (const gchar * pipeline_description, GError ** error)
  *
  * Returns: (transfer floating): a new element on success, %NULL on failure. If
  *    more than one toplevel element is specified by the @pipeline_description,
- *    all elements are put into a #GstPipeline, which then is returned.
+ *    all elements are put into a #GstPipeline, which then is returned (unless
+ *    the GST_PARSE_FLAG_PLACE_IN_BIN flag is set, in which case they are put
+ *    in a #GstBin instead).
  */
 GstElement *
 gst_parse_launch_full (const gchar * pipeline_description,

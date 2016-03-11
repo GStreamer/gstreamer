@@ -333,7 +333,7 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
        GstElement *bin;
 
        bin = gst_parse_bin_from_description_full (set->value_str, TRUE, NULL,
-           GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS, NULL);
+           GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS | GST_PARSE_FLAG_PLACE_IN_BIN, NULL);
        if (bin) {
          g_value_set_object (&v, bin);
          got_value = TRUE;
@@ -429,7 +429,7 @@ static void gst_parse_element_set (gchar *value, GstElement *element, graph_t *g
        GstElement *bin;
 
        bin = gst_parse_bin_from_description_full (pos, TRUE, NULL,
-           GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS, NULL);
+           GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS | GST_PARSE_FLAG_PLACE_IN_BIN, NULL);
        if (bin) {
          g_value_set_object (&v, bin);
          got_value = TRUE;
@@ -1107,7 +1107,10 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
 
   /* put all elements in our bin if necessary */
   if(g.chain->elements->next){
-    bin = GST_BIN (gst_element_factory_make ("pipeline", NULL));
+    if (flags & GST_PARSE_FLAG_PLACE_IN_BIN)
+      bin = GST_BIN (gst_element_factory_make ("bin", NULL));
+    else
+      bin = GST_BIN (gst_element_factory_make ("pipeline", NULL));
     g_assert (bin);
 
     for (walk = g.chain->elements; walk; walk = walk->next) {

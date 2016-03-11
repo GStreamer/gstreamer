@@ -70,6 +70,9 @@ typedef enum
  *      in some cases)
  * @GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS: If a bin only has a single element,
  *     just return the element.
+ * @GST_PARSE_FLAG_PLACE_IN_BIN: If more than one toplevel element is described
+ *     by the pipeline description string, put them in a #GstBin instead of a
+ *     #GstPipeline. (Since 1.10)
  *
  * Parsing options.
  */
@@ -77,7 +80,8 @@ typedef enum
 {
   GST_PARSE_FLAG_NONE = 0,
   GST_PARSE_FLAG_FATAL_ERRORS = (1 << 0),
-  GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS = (1 << 1)
+  GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS = (1 << 1),
+  GST_PARSE_FLAG_PLACE_IN_BIN = (1 << 2)
 } GstParseFlags;
 
 #define GST_TYPE_PARSE_CONTEXT (gst_parse_context_get_type())
