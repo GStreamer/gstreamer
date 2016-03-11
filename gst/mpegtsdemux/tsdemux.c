@@ -407,6 +407,11 @@ gst_ts_demux_reset (MpegTSBase * base)
     demux->global_tags = NULL;
   }
 
+  if (demux->previous_program) {
+    mpegts_base_deactivate_and_free_program (base, demux->previous_program);
+    demux->previous_program = NULL;
+  }
+
   demux->have_group_id = FALSE;
   demux->group_id = G_MAXUINT;
 

@@ -816,6 +816,11 @@ mpegts_base_apply_pat (MpegTSBase * base, GstMpegtsSection * section)
       if (klass->can_remove_program (base, program)) {
         mpegts_base_deactivate_program (base, program);
         mpegts_base_remove_program (base, patp->program_number);
+      } else {
+        /* sub-class now owns the program and must call
+         * mpegts_base_deactivate_and_free_program later */
+        g_hash_table_steal (base->programs,
+            GINT_TO_POINTER ((gint) patp->program_number));
       }
       /* FIXME: when this happens it may still be pmt pid of another
        * program, so setting to False may make it go through expensive
@@ -891,6 +896,11 @@ mpegts_base_apply_pmt (MpegTSBase * base, GstMpegtsSection * section)
     if (klass->can_remove_program (base, old_program)) {
       mpegts_base_deactivate_program (base, old_program);
       mpegts_base_free_program (old_program);
+    } else {
+      /* sub-class now owns the program and must call
+       * mpegts_base_deactivate_and_free_program later */
+      g_hash_table_steal (base->programs,
+          GINT_TO_POINTER ((gint) old_program->program_number));
     }
     initial_program = FALSE;
   } else
