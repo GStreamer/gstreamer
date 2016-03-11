@@ -362,7 +362,10 @@ gst_amc_codec_get_output_buffer (GstAmcCodec * codec, gint index, GError ** err)
 
   if (!media_codec.get_output_buffer) {
     g_return_val_if_fail (index < codec->n_output_buffers && index >= 0, NULL);
-    return gst_amc_buffer_copy (&codec->output_buffers[index]);
+    if (codec->output_buffers[index].object)
+      return gst_amc_buffer_copy (&codec->output_buffers[index]);
+    else
+      return NULL;
   }
 
   if (!gst_amc_jni_call_object_method (env, err, codec->object,
@@ -440,7 +443,10 @@ gst_amc_codec_get_input_buffer (GstAmcCodec * codec, gint index, GError ** err)
 
   if (!media_codec.get_input_buffer) {
     g_return_val_if_fail (index < codec->n_input_buffers && index >= 0, NULL);
-    return gst_amc_buffer_copy (&codec->input_buffers[index]);
+    if (codec->input_buffers[index].object)
+      return gst_amc_buffer_copy (&codec->input_buffers[index]);
+    else
+      return NULL;
   }
 
   if (!gst_amc_jni_call_object_method (env, err, codec->object,

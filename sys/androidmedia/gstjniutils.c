@@ -1028,11 +1028,16 @@ gst_amc_jni_get_buffer_array (JNIEnv * env, GError ** err, jobject array,
     jobject buffer = NULL;
 
     buffer = (*env)->GetObjectArrayElement (env, array, i);
-    if ((*env)->ExceptionCheck (env) || !buffer) {
+    if ((*env)->ExceptionCheck (env)) {
       gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
           GST_LIBRARY_ERROR_FAILED, "Failed to get buffer %d", i);
       goto error;
     }
+
+    /* NULL buffers are not a problem and are happening when we configured
+     * a surface as input/output */
+    if (!buffer)
+      continue;
 
     (*buffers)[i].object = gst_amc_jni_object_make_global (env, buffer);
     if (!(*buffers)[i].object) {
