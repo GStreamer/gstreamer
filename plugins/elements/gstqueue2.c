@@ -2395,14 +2395,17 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
         /* unblock the loop and chain functions */
         GST_QUEUE2_SIGNAL_ADD (queue);
         GST_QUEUE2_SIGNAL_DEL (queue);
-        queue->last_query = FALSE;
-        g_cond_signal (&queue->query_handled);
         GST_QUEUE2_MUTEX_UNLOCK (queue);
 
         /* make sure it pauses, this should happen since we sent
          * flush_start downstream. */
         gst_pad_pause_task (queue->srcpad);
         GST_CAT_LOG_OBJECT (queue_dataflow, queue, "loop stopped");
+
+        GST_QUEUE2_MUTEX_LOCK (queue);
+        queue->last_query = FALSE;
+        g_cond_signal (&queue->query_handled);
+        GST_QUEUE2_MUTEX_UNLOCK (queue);
       } else {
         GST_QUEUE2_MUTEX_LOCK (queue);
         /* flush the sink pad */
@@ -3373,9 +3376,6 @@ gst_queue2_sink_activate_mode (GstPad * pad, GstObject * parent,
         queue->srcresult = GST_FLOW_FLUSHING;
         queue->sinkresult = GST_FLOW_FLUSHING;
         GST_QUEUE2_SIGNAL_DEL (queue);
-        /* Unblock query handler */
-        queue->last_query = FALSE;
-        g_cond_signal (&queue->query_handled);
         GST_QUEUE2_MUTEX_UNLOCK (queue);
 
         /* wait until it is unblocked and clean up */
