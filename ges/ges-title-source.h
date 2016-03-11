@@ -92,9 +92,9 @@ void ges_title_source_set_text_color (GESTitleSource *self,
 					   guint32 color);
 void ges_title_source_set_background_color (GESTitleSource *self,
 					   guint32 color);
-void ges_title_source_set_xpos (GESTitleSource *self,
+void ges_title_source_set_xabsolute (GESTitleSource *self,
 					   gdouble position);
-void ges_title_source_set_ypos (GESTitleSource *self,
+void ges_title_source_set_yabsolute (GESTitleSource *self,
 					   gdouble position);
 
 const gchar *ges_title_source_get_text (GESTitleSource *source);
@@ -103,8 +103,8 @@ GESTextHAlign ges_title_source_get_halignment (GESTitleSource *source);
 GESTextVAlign ges_title_source_get_valignment (GESTitleSource *source);
 const guint32 ges_title_source_get_text_color (GESTitleSource *source);
 const guint32 ges_title_source_get_background_color (GESTitleSource *source);
-const gdouble ges_title_source_get_xpos (GESTitleSource *source);
-const gdouble ges_title_source_get_ypos (GESTitleSource *source);
+const gdouble ges_title_source_get_xabsolute (GESTitleSource *source);
+const gdouble ges_title_source_get_yabsolute (GESTitleSource *source);
 
 G_END_DECLS
 
