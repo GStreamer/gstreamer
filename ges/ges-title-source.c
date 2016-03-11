@@ -106,8 +106,8 @@ struct _GESTitleSourcePrivate
   GESTextVAlign valign;
   guint32 color;
   guint32 background;
-  gdouble xabsolute;
-  gdouble yabsolute;
+  gdouble xpos;
+  gdouble ypos;
   GstElement *text_el;
   GstElement *background_el;
 };
@@ -181,8 +181,8 @@ ges_title_source_init (GESTitleSource * self)
   self->priv->valign = DEFAULT_VALIGNMENT;
   self->priv->color = G_MAXUINT32;
   self->priv->background = G_MAXUINT32;
-  self->priv->xabsolute = 0.5;
-  self->priv->yabsolute = 0.5;
+  self->priv->xpos = 0.5;
+  self->priv->ypos = 0.5;
   self->priv->background_el = NULL;
 }
 
@@ -241,7 +241,7 @@ ges_title_source_create_source (GESTrackElement * object)
   GESTitleSourcePrivate *priv = self->priv;
   const gchar *bg_props[] = { "pattern", "foreground-color", NULL };
   const gchar *text_props[] = { "text", "font-desc", "valignment", "halignment",
-    "color", "x-absolute", "y-absolute", "outline-color", "shaded-background",
+    "color", "xpos", "ypos", "outline-color", "shaded-background",
     "text-x", "text-y", "text-width", "text-height", NULL
   };
 
@@ -258,8 +258,8 @@ ges_title_source_create_source (GESTrackElement * object)
   g_object_set (text, "valignment", (gint) priv->valign, "halignment",
       (gint) priv->halign, NULL);
   g_object_set (text, "color", (guint) self->priv->color, NULL);
-  g_object_set (text, "x-absolute", (gdouble) self->priv->xabsolute, NULL);
-  g_object_set (text, "y-absolute", (gdouble) self->priv->yabsolute, NULL);
+  g_object_set (text, "xpos", (gdouble) self->priv->xpos, NULL);
+  g_object_set (text, "ypos", (gdouble) self->priv->ypos, NULL);
 
 
   g_object_set (background, "pattern", (gint) GES_VIDEO_TEST_PATTERN_SOLID,
@@ -406,37 +406,37 @@ ges_title_source_set_background_color (GESTitleSource * self, guint32 color)
 }
 
 /**
- * ges_title_source_set_xabsolute:
+ * ges_title_source_set_xpos:
  * @self: the #GESTitleSource* to set
  * @position: the horizontal position @self is being set to
  *
  * Sets the horizontal position of the text.
  */
 void
-ges_title_source_set_xabsolute (GESTitleSource * self, gdouble position)
+ges_title_source_set_xpos (GESTitleSource * self, gdouble position)
 {
-  GST_DEBUG ("self:%p, x-absolute:%f", self, position);
+  GST_DEBUG ("self:%p, xpos:%f", self, position);
 
-  self->priv->xabsolute = position;
+  self->priv->xpos = position;
   if (self->priv->text_el)
-    g_object_set (self->priv->text_el, "x-absolute", position, NULL);
+    g_object_set (self->priv->text_el, "xpos", position, NULL);
 }
 
 /**
- * ges_title_source_set_yabsolute:
+ * ges_title_source_set_ypos:
  * @self: the #GESTitleSource* to set
  * @position: the color @self is being set to
  *
  * Sets the vertical position of the text.
  */
 void
-ges_title_source_set_yabsolute (GESTitleSource * self, gdouble position)
+ges_title_source_set_ypos (GESTitleSource * self, gdouble position)
 {
-  GST_DEBUG ("self:%p, y-absolute:%f", self, position);
+  GST_DEBUG ("self:%p, ypos:%f", self, position);
 
-  self->priv->yabsolute = position;
+  self->priv->ypos = position;
   if (self->priv->text_el)
-    g_object_set (self->priv->text_el, "y-absolute", position, NULL);
+    g_object_set (self->priv->text_el, "ypos", position, NULL);
 }
 
 /**
@@ -555,7 +555,7 @@ ges_title_source_get_background_color (GESTitleSource * source)
 }
 
 /**
- * ges_title_source_get_xabsolute:
+ * ges_title_source_get_xpos:
  * @source: a #GESTitleSource
  *
  * Get the horizontal position used by @source.
@@ -563,18 +563,18 @@ ges_title_source_get_background_color (GESTitleSource * source)
  * Returns: The horizontal position used by @source.
  */
 const gdouble
-ges_title_source_get_xabsolute (GESTitleSource * source)
+ges_title_source_get_xpos (GESTitleSource * source)
 {
-  gdouble xabsolute;
+  gdouble xpos;
 
-  ges_track_element_get_child_properties (GES_TRACK_ELEMENT (source),
-      "x-absolute", &xabsolute, NULL);
+  ges_track_element_get_child_properties (GES_TRACK_ELEMENT (source), "xpos",
+      &xpos, NULL);
 
-  return xabsolute;
+  return xpos;
 }
 
 /**
- * ges_title_source_get_yabsolute:
+ * ges_title_source_get_ypos:
  * @source: a #GESTitleSource
  *
  * Get the vertical position used by @source.
@@ -582,14 +582,14 @@ ges_title_source_get_xabsolute (GESTitleSource * source)
  * Returns: The vertical position used by @source.
  */
 const gdouble
-ges_title_source_get_yabsolute (GESTitleSource * source)
+ges_title_source_get_ypos (GESTitleSource * source)
 {
-  gdouble yabsolute;
+  gdouble ypos;
 
-  ges_track_element_get_child_properties (GES_TRACK_ELEMENT (source),
-      "y-absolute", &yabsolute, NULL);
+  ges_track_element_get_child_properties (GES_TRACK_ELEMENT (source), "ypos",
+      &ypos, NULL);
 
-  return yabsolute;
+  return ypos;
 }
 
 /**

@@ -68,8 +68,8 @@ make_overlay (char *text, guint64 start, guint64 duration, gint priority,
       "priority", (guint32) priority,
       "in-point", (guint64) 0,
       "color", (guint32) color,
-      "valignment", (gint) GES_TEXT_VALIGN_ABSOLUTE,
-      "halignment", (gint) GES_TEXT_HALIGN_ABSOLUTE,
+      "valignment", (gint) GES_TEXT_VALIGN_POSITION,
+      "halignment", (gint) GES_TEXT_HALIGN_POSITION,
       "xpos", (gdouble) xpos, "ypos", (gdouble) ypos, NULL);
 
   return ret;
