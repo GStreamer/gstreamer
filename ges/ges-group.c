@@ -571,8 +571,10 @@ _ungroup (GESContainer * group, gboolean recursive)
     g_ptr_array_add (children_array, child);
     ret = g_list_append (ret, child);
   }
-  ges_timeline_emit_group_removed (timeline, (GESGroup *) group,
-      children_array);
+
+  if (timeline)
+    ges_timeline_emit_group_removed (timeline, (GESGroup *) group,
+        children_array);
   g_ptr_array_free (children_array, TRUE);
   g_list_free_full (children, gst_object_unref);
 
