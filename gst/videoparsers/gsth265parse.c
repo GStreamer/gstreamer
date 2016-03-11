@@ -762,12 +762,21 @@ gst_h265_parse_handle_frame_packetized (GstBaseParse * parse,
 
     /* dispatch per NALU if needed */
     if (h265parse->split_packetized) {
+      GstBaseParseFrame tmp_frame;
+
+      gst_base_parse_frame_init (&tmp_frame);
+      tmp_frame.flags |= frame->flags;
+      tmp_frame.offset = frame->offset;
+      tmp_frame.overhead = frame->overhead;
+      tmp_frame.buffer = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL,
+          nalu.offset, nalu.size);
+
       /* note we don't need to come up with a sub-buffer, since
        * subsequent code only considers input buffer's metadata.
        * Real data is either taken from input by baseclass or
        * a replacement output buffer is provided anyway. */
-      gst_h265_parse_parse_frame (parse, frame);
-      ret = gst_base_parse_finish_frame (parse, frame, nl + nalu.size);
+      gst_h265_parse_parse_frame (parse, &tmp_frame);
+      ret = gst_base_parse_finish_frame (parse, &tmp_frame, nl + nalu.size);
       left -= nl + nalu.size;
     }
 
