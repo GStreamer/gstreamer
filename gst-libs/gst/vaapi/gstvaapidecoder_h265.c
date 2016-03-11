@@ -2688,6 +2688,7 @@ gst_vaapi_decoder_h265_decode_codec_data (GstVaapiDecoder *
             goto cleanup;
           break;
       }
+      ofs = pi->nalu.offset + pi->nalu.size;
       gst_vaapi_parser_info_h265_replace (&pi, NULL);
     }
   }
