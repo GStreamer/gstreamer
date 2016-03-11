@@ -1469,8 +1469,10 @@ again:
   /* Copy the buffer content in chunks of size as requested
    * by the port */
   buf = gst_amc_codec_get_input_buffer (self->codec, idx, &err);
-  if (!buf)
+  if (err)
     goto failed_to_get_input_buffer;
+  else if (!buf)
+    goto got_null_input_buffer;
 
   memset (&buffer_info, 0, sizeof (buffer_info));
   buffer_info.offset = 0;
@@ -1536,6 +1538,13 @@ downstream_error:
 failed_to_get_input_buffer:
   {
     GST_ELEMENT_ERROR_FROM_ERROR (self, err);
+    gst_video_codec_frame_unref (frame);
+    return GST_FLOW_ERROR;
+  }
+got_null_input_buffer:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
+        ("Got no input buffer"));
     gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
