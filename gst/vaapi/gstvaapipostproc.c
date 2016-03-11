@@ -1298,8 +1298,8 @@ gst_vaapipostproc_set_caps (GstBaseTransform * trans, GstCaps * caps,
 }
 
 static gboolean
-gst_vaapipostproc_query (GstBaseTransform * trans, GstPadDirection direction,
-    GstQuery * query)
+gst_vaapipostproc_query (GstBaseTransform * trans,
+    GstPadDirection direction, GstQuery * query)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
 
@@ -1793,10 +1793,11 @@ typedef struct
 } ColorBalanceChannel;
 
 ColorBalanceChannel cb_channels[] = {
-  {GST_VAAPI_FILTER_OP_HUE, "VA_FILTER_HUE"},
-  {GST_VAAPI_FILTER_OP_SATURATION, "VA_FILTER_SATURATION"},
-  {GST_VAAPI_FILTER_OP_BRIGHTNESS, "VA_FILTER_BRIGHTNESS"},
-  {GST_VAAPI_FILTER_OP_CONTRAST, "VA_FILTER_CONTRAST"},
+  {
+      GST_VAAPI_FILTER_OP_HUE, "VA_FILTER_HUE"}, {
+      GST_VAAPI_FILTER_OP_SATURATION, "VA_FILTER_SATURATION"}, {
+      GST_VAAPI_FILTER_OP_BRIGHTNESS, "VA_FILTER_BRIGHTNESS"}, {
+      GST_VAAPI_FILTER_OP_CONTRAST, "VA_FILTER_CONTRAST"},
 };
 
 static void
@@ -1846,8 +1847,8 @@ gst_vaapipostproc_colorbalance_list_channels (GstColorBalance * balance)
 }
 
 static gfloat *
-cb_get_value_ptr (GstVaapiPostproc * postproc, GstColorBalanceChannel * channel,
-    GstVaapiPostprocFlags * flags)
+cb_get_value_ptr (GstVaapiPostproc * postproc,
+    GstColorBalanceChannel * channel, GstVaapiPostprocFlags * flags)
 {
   guint i;
   gfloat *ret = NULL;
