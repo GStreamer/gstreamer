@@ -2366,8 +2366,8 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
   gst_structure_get_int (structure, "channels", &context->channels);
   gst_structure_get_int (structure, "rate", &context->sample_rate);
   gst_structure_get_int (structure, "block_align", &context->block_align);
-  gst_structure_get_int (structure, "bitrate", &bitrate);
-  context->bit_rate = bitrate;
+  if (gst_structure_get_int (structure, "bitrate", &bitrate))
+    context->bit_rate = bitrate;
 
   if (!raw)
     return;
