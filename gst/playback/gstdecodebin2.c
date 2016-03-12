@@ -2841,7 +2841,6 @@ type_found (GstElement * typefind, guint probability,
     goto exit;
   }
 
-  EXPOSE_LOCK (decode_bin);
   pad = gst_element_get_static_pad (typefind, "src");
   sink_pad = gst_element_get_static_pad (typefind, "sink");
 
@@ -2862,16 +2861,14 @@ type_found (GstElement * typefind, guint probability,
     if (analyze_new_pad (decode_bin, typefind, pad, caps,
             decode_bin->decode_chain, NULL))
       expose_pad (decode_bin, typefind, decode_bin->decode_chain->current_pad,
-          pad, caps, decode_bin->decode_chain, FALSE);
+          pad, caps, decode_bin->decode_chain, TRUE);
+
     gst_decode_chain_unref (chain);
   }
 
   GST_PAD_STREAM_UNLOCK (sink_pad);
-
   gst_object_unref (sink_pad);
   gst_object_unref (pad);
-
-  EXPOSE_UNLOCK (decode_bin);
 
 exit:
   return;
