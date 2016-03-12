@@ -1458,8 +1458,7 @@ static gboolean connect_pad (GstDecodeBin * dbin, GstElement * src,
 static GList *connect_element (GstDecodeBin * dbin, GstDecodeElement * delem,
     GstDecodeChain * chain);
 static void expose_pad (GstDecodeBin * dbin, GstElement * src,
-    GstDecodePad * dpad, GstPad * pad, GstCaps * caps, GstDecodeChain * chain,
-    gboolean lock);
+    GstDecodePad * dpad, GstPad * pad, GstCaps * caps, GstDecodeChain * chain);
 
 static void pad_added_cb (GstElement * element, GstPad * pad,
     GstDecodeChain * chain);
@@ -2244,7 +2243,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       case GST_AUTOPLUG_SELECT_EXPOSE:
         GST_DEBUG_OBJECT (dbin, "autoplug select requested expose");
         /* expose the pad, we don't have the source element */
-        expose_pad (dbin, src, dpad, pad, caps, chain, TRUE);
+        expose_pad (dbin, src, dpad, pad, caps, chain);
         res = TRUE;
         goto beach;
       case GST_AUTOPLUG_SELECT_SKIP:
@@ -2598,7 +2597,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
       ocaps = get_pad_caps (expose_data->pad);
       expose_pad (dbin, delem->element, expose_data->chain->current_pad,
-          expose_data->pad, ocaps, expose_data->chain, TRUE);
+          expose_data->pad, ocaps, expose_data->chain);
 
       if (ocaps)
         gst_caps_unref (ocaps);
@@ -2739,7 +2738,7 @@ connect_element (GstDecodeBin * dbin, GstDecodeElement * delem,
  */
 static void
 expose_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
-    GstPad * pad, GstCaps * caps, GstDecodeChain * chain, gboolean lock)
+    GstPad * pad, GstCaps * caps, GstDecodeChain * chain)
 {
   GstPad *mqpad = NULL;
 
@@ -2766,15 +2765,13 @@ expose_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
   chain->endpad = gst_object_ref (dpad);
   chain->endcaps = gst_caps_ref (caps);
 
-  if (lock)
-    EXPOSE_LOCK (dbin);
+  EXPOSE_LOCK (dbin);
   if (dbin->decode_chain) {
     if (gst_decode_chain_is_complete (dbin->decode_chain)) {
       gst_decode_bin_expose (dbin);
     }
   }
-  if (lock)
-    EXPOSE_UNLOCK (dbin);
+  EXPOSE_UNLOCK (dbin);
 
   if (mqpad)
     gst_object_unref (mqpad);
@@ -2861,7 +2858,7 @@ type_found (GstElement * typefind, guint probability,
     if (analyze_new_pad (decode_bin, typefind, pad, caps,
             decode_bin->decode_chain, NULL))
       expose_pad (decode_bin, typefind, decode_bin->decode_chain->current_pad,
-          pad, caps, decode_bin->decode_chain, TRUE);
+          pad, caps, decode_bin->decode_chain);
 
     gst_decode_chain_unref (chain);
   }
@@ -2925,8 +2922,7 @@ pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
 
   caps = get_pad_caps (pad);
   if (analyze_new_pad (dbin, element, pad, caps, chain, &new_chain))
-    expose_pad (dbin, element, new_chain->current_pad, pad, caps, new_chain,
-        TRUE);
+    expose_pad (dbin, element, new_chain->current_pad, pad, caps, new_chain);
   if (caps)
     gst_caps_unref (caps);
 
