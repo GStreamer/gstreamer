@@ -2930,18 +2930,6 @@ pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
   if (caps)
     gst_caps_unref (caps);
 
-  EXPOSE_LOCK (dbin);
-  if (dbin->decode_chain) {
-    if (gst_decode_chain_is_complete (dbin->decode_chain)) {
-      GST_LOG_OBJECT (dbin,
-          "That was the last dynamic object, now attempting to expose the group");
-      if (!gst_decode_bin_expose (dbin))
-        GST_WARNING_OBJECT (dbin, "Couldn't expose group");
-    }
-  } else {
-    GST_DEBUG_OBJECT (dbin, "No decode chain, new pad ignored");
-  }
-  EXPOSE_UNLOCK (dbin);
   GST_PAD_STREAM_UNLOCK (pad);
 }
 
