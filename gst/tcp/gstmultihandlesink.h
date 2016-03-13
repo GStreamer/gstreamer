@@ -203,7 +203,7 @@ struct _GstMultiHandleSink {
   GCancellable *cancellable;
 
   GSList *streamheader; /* GSList of GstBuffers to use as streamheader */
-  gboolean previous_buffer_in_caps;
+  gboolean previous_buffer_is_header;
 
   gint qos_dscp;
 
