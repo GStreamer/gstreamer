@@ -101,7 +101,7 @@ CK_DLL_EXP char *strdup (const char *str);
 #endif /* !HAVE_DECL_STRDUP && HAVE__STRDUP */
 
 #if !HAVE_DECL_STRSIGNAL
-CK_DLL_EXP const char *strsignal (int sig);
+CK_DLL_EXP char *strsignal (int sig);
 #endif /* !HAVE_DECL_STRSIGNAL */
 
 /*
