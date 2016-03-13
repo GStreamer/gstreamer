@@ -400,9 +400,9 @@ GST_START_TEST (test_change_streamheader)
 
   /* change the streamheader */
 
-  /* before we change, multifdsink still has a list of the old streamheaders */
-  ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 2);
-  ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 2);
+  /* only we have a reference to the streamheaders now */
+  ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 1);
+  ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 1);
   gst_buffer_unref (hbuf1);
   gst_buffer_unref (hbuf2);
 

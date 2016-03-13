@@ -1959,32 +1959,15 @@ gst_multi_handle_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
-  /* if we get IN_CAPS buffers, but the previous buffer was not IN_CAPS,
-   * it means we're getting new streamheader buffers, and we should clear
-   * the old ones */
-  if (is_header && !sink->previous_buffer_is_header) {
-    GST_DEBUG_OBJECT (sink,
-        "receiving new HEADER buffers, clearing old streamheader");
-    g_slist_foreach (sink->streamheader, (GFunc) gst_mini_object_unref, NULL);
-    g_slist_free (sink->streamheader);
-    sink->streamheader = NULL;
-  }
-
-  /* save the current in_caps */
-  sink->previous_buffer_is_header = is_header;
-
-  /* if the incoming buffer is marked as IN CAPS, then we assume for now
-   * it's a streamheader that needs to be sent to each new client, so we
-   * put it on our internal list of streamheader buffers.
-   * FIXME: we could check if the buffer's contents are in fact part of the
-   * current streamheader.
+  /* if the incoming buffer is a streamheader from the caps, then we assume for now
+   * it's a streamheader that needs to be sent to each new client.
    *
    * We don't send the buffer to the client, since streamheaders are sent
    * separately when necessary. */
   if (in_caps) {
-    GST_DEBUG_OBJECT (sink, "appending HEADER buffer with length %"
-        G_GSIZE_FORMAT " to streamheader", gst_buffer_get_size (buf));
-    sink->streamheader = g_slist_append (sink->streamheader, buf);
+    GST_DEBUG_OBJECT (sink, "ignoring HEADER buffer with length %"
+        G_GSIZE_FORMAT, gst_buffer_get_size (buf));
+    gst_buffer_unref (buf);
   } else {
     /* queue the buffer, this is a regular data buffer. */
     gst_multi_handle_sink_queue_buffer (sink, buf);
@@ -2162,7 +2145,6 @@ gst_multi_handle_sink_start (GstBaseSink * bsink)
   if (!mhsclass->start_pre (mhsink))
     return FALSE;
 
-  mhsink->streamheader = NULL;
   mhsink->bytes_to_serve = 0;
   mhsink->bytes_served = 0;
 
@@ -2206,12 +2188,6 @@ gst_multi_handle_sink_stop (GstBaseSink * bsink)
 
   /* free the clients */
   mhclass->clear (GST_MULTI_HANDLE_SINK (mhsink));
-
-  if (mhsink->streamheader) {
-    g_slist_foreach (mhsink->streamheader, (GFunc) gst_mini_object_unref, NULL);
-    g_slist_free (mhsink->streamheader);
-    mhsink->streamheader = NULL;
-  }
 
   if (mhclass->close)
     mhclass->close (mhsink);
