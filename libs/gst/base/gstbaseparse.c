@@ -2350,6 +2350,14 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
   }
 
+  /* Push pending events, if there are any new ones
+   * like tags added by pre_push_frame */
+  if (parse->priv->tags_changed) {
+    gst_base_parse_queue_tag_event_update (parse);
+    parse->priv->tags_changed = FALSE;
+  }
+  gst_base_parse_push_pending_events (parse);
+
   /* take final ownership of frame buffer */
   if (frame->out_buffer) {
     buffer = frame->out_buffer;
