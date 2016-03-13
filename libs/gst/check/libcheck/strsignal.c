@@ -1,6 +1,6 @@
 #include "libcompat.h"
 
-const char *
+char *
 strsignal (int sig)
 {
   static char signame[40];
