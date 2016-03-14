@@ -389,6 +389,7 @@ rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
         ("A major protocol version of %d is not supported, falling back to 3",
         decoder->protocol_major);
     decoder->protocol_major = 3;
+    decoder->protocol_minor = 3;
   }
   switch (decoder->protocol_minor) {
     case 3:
