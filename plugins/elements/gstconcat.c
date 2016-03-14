@@ -35,7 +35,7 @@
  * the segment transitions between streams are continuous. In some cases,
  * it may be desirable to turn off these adjustments (for example, because
  * another downstream element like a streamsynchronizer adjusts the base
- * values on its own). The adjust-value property can be used for this purpose.
+ * values on its own). The adjust-base property can be used for this purpose.
  *
  * <refsect2>
  * <title>Example launch line</title>
