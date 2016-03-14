@@ -444,8 +444,11 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
     GST_DEBUG ("security = %d", decoder->security_type);
 
     g_return_val_if_fail (decoder->security_type < 3, FALSE);
-    g_return_val_if_fail (decoder->security_type != SECURITY_FAIL,
-        rfb_decoder_state_reason (decoder));
+
+    if (decoder->security_type == SECURITY_FAIL) {
+      decoder->state = rfb_decoder_state_reason;
+      return TRUE;
+    }
   } else {
     /* \TODO Add behavior for the rfb 3.7 and 3.8 servers */
     GST_WARNING ("Other versions are not yet supported");
