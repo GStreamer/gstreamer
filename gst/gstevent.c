@@ -130,6 +130,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_CUSTOM_DOWNSTREAM_STICKY, "custom-downstream-sticky", 0},
   {GST_EVENT_CUSTOM_BOTH, "custom-both", 0},
   {GST_EVENT_CUSTOM_BOTH_OOB, "custom-both-oob", 0},
+  {GST_EVENT_STREAM_GROUP_DONE, "stream-group-done", 0},
 
   {0, NULL, 0}
 };
@@ -651,6 +652,57 @@ gst_event_parse_select_streams (GstEvent * event, GList ** streams)
   }
 }
 
+
+/**
+ * gst_event_new_stream_group_done:
+ * @group_id: the group id of the stream group which is ending
+ *
+ * Create a new Stream Group Done event. The stream-group-done event can
+ * only travel downstream synchronized with the buffer flow. Elements
+ * that receive the event on a pad should handle it mostly like EOS,
+ * and emit any data or pending buffers that would depend on more data
+ * arriving and unblock, since there won't be any more data.
+ *
+ * This event is followed by EOS at some point in the future, and is
+ * generally used when switching pads - to unblock downstream so that
+ * new pads can be exposed before sending EOS on the existing pads.
+ *
+ * Returns: (transfer full): the new stream-group-done event.
+ *
+ * Since: 1.10
+ */
+GstEvent *
+gst_event_new_stream_group_done (guint group_id)
+{
+  GstStructure *s;
+
+  s = gst_structure_new_id (GST_QUARK (EVENT_STREAM_GROUP_DONE),
+      GST_QUARK (GROUP_ID), G_TYPE_UINT, group_id, NULL);
+
+  return gst_event_new_custom (GST_EVENT_STREAM_GROUP_DONE, s);
+}
+
+/**
+ * gst_event_parse_stream_group_done:
+ * @event: a stream-group-done event.
+ * @group_id: (out): address of variable to store the group id into
+ *
+ * Parse a stream-group-done @event and store the result in the given
+ * @group_id location.
+ *
+ * Since: 1.10
+ */
+void
+gst_event_parse_stream_group_done (GstEvent * event, guint * group_id)
+{
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_GROUP_DONE);
+
+  if (group_id) {
+    gst_structure_id_get (GST_EVENT_STRUCTURE (event),
+        GST_QUARK (GROUP_ID), G_TYPE_UINT, group_id, NULL);
+  }
+}
 
 /**
  * gst_event_new_eos:

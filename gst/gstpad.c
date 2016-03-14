@@ -5035,8 +5035,9 @@ store_sticky_event (GstPad * pad, GstEvent * event)
   /* Unset the EOS flag when received STREAM_START event, so pad can
    * store sticky event and then push it later */
   if (type == GST_EVENT_STREAM_START) {
-    GST_LOG_OBJECT (pad, "Removing pending EOS events");
+    GST_LOG_OBJECT (pad, "Removing pending EOS and StreamGroupDone events");
     remove_event_by_type (pad, GST_EVENT_EOS);
+    remove_event_by_type (pad, GST_EVENT_STREAM_GROUP_DONE);
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
   }
 
@@ -5202,6 +5203,7 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
       /* Remove sticky EOS events */
       GST_LOG_OBJECT (pad, "Removing pending EOS events");
       remove_event_by_type (pad, GST_EVENT_EOS);
+      remove_event_by_type (pad, GST_EVENT_STREAM_GROUP_DONE);
       remove_event_by_type (pad, GST_EVENT_SEGMENT);
       GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
       pad->ABI.abi.last_flowret = GST_FLOW_OK;
@@ -5526,6 +5528,7 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
       /* Remove pending EOS events */
       GST_LOG_OBJECT (pad, "Removing pending EOS and SEGMENT events");
       remove_event_by_type (pad, GST_EVENT_EOS);
+      remove_event_by_type (pad, GST_EVENT_STREAM_GROUP_DONE);
       remove_event_by_type (pad, GST_EVENT_SEGMENT);
       GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
       pad->ABI.abi.last_flowret = GST_FLOW_OK;
@@ -5553,6 +5556,7 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
           /* Remove sticky EOS events */
           GST_LOG_OBJECT (pad, "Removing pending EOS events");
           remove_event_by_type (pad, GST_EVENT_EOS);
+          remove_event_by_type (pad, GST_EVENT_STREAM_GROUP_DONE);
           GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
           break;
         default:

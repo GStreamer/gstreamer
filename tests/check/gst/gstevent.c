@@ -52,6 +52,7 @@ GST_START_TEST (create_events)
     fail_unless (reset_time == TRUE);
     gst_event_unref (event);
   }
+
   /* SELECT_STREAMS */
   {
     GList *streams = NULL;
@@ -77,6 +78,22 @@ GST_START_TEST (create_events)
     g_list_free (streams);
     g_list_free_full (res, g_free);
   }
+
+  /* STREAM_GROUP_DONE */
+  {
+    guint group_id = 0;
+
+    event = gst_event_new_stream_group_done (0x42);
+    fail_if (event == NULL);
+    fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_GROUP_DONE);
+    fail_if (GST_EVENT_IS_UPSTREAM (event));
+    fail_unless (GST_EVENT_IS_DOWNSTREAM (event));
+    fail_unless (GST_EVENT_IS_SERIALIZED (event));
+    gst_event_parse_stream_group_done (event, &group_id);
+    fail_unless (group_id == 0x42);
+    gst_event_unref (event);
+  }
+
   /* EOS */
   {
     event = gst_event_new_eos ();

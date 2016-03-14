@@ -1183,6 +1183,9 @@ gst_event_parse_select_streams
 
 gst_event_new_stream_collection
 gst_event_parse_stream_collection
+
+gst_event_new_stream_group_done
+gst_event_parse_stream_group_done
 <SUBSECTION Standard>
 GstEventClass
 GST_EVENT

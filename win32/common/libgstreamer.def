@@ -594,6 +594,7 @@ EXPORTS
 	gst_event_new_sink_message
 	gst_event_new_step
 	gst_event_new_stream_collection
+	gst_event_new_stream_group_done
 	gst_event_new_stream_start
 	gst_event_new_tag
 	gst_event_new_toc
@@ -615,6 +616,7 @@ EXPORTS
 	gst_event_parse_stream
 	gst_event_parse_stream_collection
 	gst_event_parse_stream_flags
+	gst_event_parse_stream_group_done
 	gst_event_parse_stream_start
 	gst_event_parse_tag
 	gst_event_parse_toc

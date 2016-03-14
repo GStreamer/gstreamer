@@ -74,7 +74,8 @@ static const gchar *_quark_strings[] = {
   "property-value", "streams", "GstEventSelectStreams",
   "GstMessageStreamCollection", "collection", "stream", "stream-collection",
   "GstMessageStreamsSelected", "GstMessageRedirect", "redirect-entry-locations",
-  "redirect-entry-taglists", "redirect-entry-structures"
+  "redirect-entry-taglists", "redirect-entry-structures",
+  "GstEventStreamGroupDone"
 };
 
 GQuark _priv_gst_quark_table[GST_QUARK_MAX];

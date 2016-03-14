@@ -95,6 +95,9 @@ typedef enum {
  * @GST_EVENT_SINK_MESSAGE: An event that sinks turn into a message. Used to
  *                          send messages that should be emitted in sync with
  *                          rendering.
+ * @GST_EVENT_STREAM_GROUP_DONE: Indicates that there is no more data for
+ *                 the stream group ID in the message. Sent before EOS
+ *                 in some instances and should be handled mostly the same. (Since 1.10)
  * @GST_EVENT_EOS: End-Of-Stream. No more data is to be expected to follow
  *                 without either a STREAM_START event, or a FLUSH_STOP and a SEGMENT
  *                 event.
@@ -151,6 +154,7 @@ typedef enum {
   GST_EVENT_TAG                   = GST_EVENT_MAKE_TYPE (80, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
   GST_EVENT_BUFFERSIZE            = GST_EVENT_MAKE_TYPE (90, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (100, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
+  GST_EVENT_STREAM_GROUP_DONE     = GST_EVENT_MAKE_TYPE (105, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_EOS                   = GST_EVENT_MAKE_TYPE (110, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_TOC                   = GST_EVENT_MAKE_TYPE (120, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
   GST_EVENT_PROTECTION            = GST_EVENT_MAKE_TYPE (130, FLAG (DOWNSTREAM) | FLAG (SERIALIZED) | FLAG (STICKY) | FLAG (STICKY_MULTI)),
@@ -495,6 +499,10 @@ void            gst_event_parse_stream_collection (GstEvent *event, GstStreamCol
 /* select streams event */
 GstEvent *      gst_event_new_select_streams    (GList *streams);
 void            gst_event_parse_select_streams  (GstEvent *event, GList **streams);
+
+/* stream-group-done event */
+GstEvent *      gst_event_new_stream_group_done (const guint group_id) G_GNUC_MALLOC;
+void            gst_event_parse_stream_group_done (GstEvent *event, guint *group_id);
 
 /* EOS event */
 GstEvent *      gst_event_new_eos               (void) G_GNUC_MALLOC;
