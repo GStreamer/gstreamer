@@ -5165,6 +5165,80 @@ unblock_pads (GstDecodeBin * dbin)
   dbin->blocked_pads = NULL;
 }
 
+static void
+gst_decode_chain_stop (GstDecodeBin * dbin, GstDecodeChain * chain,
+    GQueue * elements)
+{
+  GQueue *internal_elements, internal_elements_ = G_QUEUE_INIT;
+  GList *l;
+
+  CHAIN_MUTEX_LOCK (chain);
+  if (elements) {
+    internal_elements = elements;
+  } else {
+    internal_elements = &internal_elements_;
+  }
+
+  for (l = chain->next_groups; l; l = l->next) {
+    GstDecodeGroup *group = l->data;
+    GList *m;
+
+    for (m = group->children; m; m = m->next) {
+      GstDecodeChain *chain2 = m->data;
+      gst_decode_chain_stop (dbin, chain2, internal_elements);
+    }
+    if (group->multiqueue)
+      g_queue_push_head (internal_elements, gst_object_ref (group->multiqueue));
+  }
+
+  if (chain->active_group) {
+    for (l = chain->active_group->children; l; l = l->next) {
+      GstDecodeChain *chain2 = l->data;
+      gst_decode_chain_stop (dbin, chain2, internal_elements);
+    }
+    if (chain->active_group->multiqueue)
+      g_queue_push_head (internal_elements,
+          gst_object_ref (chain->active_group->multiqueue));
+  }
+
+  for (l = chain->old_groups; l; l = l->next) {
+    GstDecodeGroup *group = l->data;
+    GList *m;
+
+    for (m = group->children; m; m = m->next) {
+      GstDecodeChain *chain2 = m->data;
+      gst_decode_chain_stop (dbin, chain2, internal_elements);
+    }
+    if (group->multiqueue)
+      g_queue_push_head (internal_elements, gst_object_ref (group->multiqueue));
+  }
+
+  for (l = chain->elements; l; l = l->next) {
+    GstDecodeElement *delem = l->data;
+
+    if (delem->capsfilter)
+      g_queue_push_head (internal_elements, gst_object_ref (delem->capsfilter));
+    g_queue_push_head (internal_elements, gst_object_ref (delem->element));
+  }
+
+  CHAIN_MUTEX_UNLOCK (chain);
+
+  if (!elements) {
+    GstElement *element;
+
+    EXPOSE_UNLOCK (dbin);
+    /* Shut down from bottom to top */
+    while ((element = g_queue_pop_tail (internal_elements))) {
+      /* The bin must never ever change the state of this element anymore */
+      gst_element_set_locked_state (element, TRUE);
+      gst_element_set_state (element, GST_STATE_NULL);
+      gst_object_unref (element);
+    }
+    g_queue_clear (internal_elements);
+    EXPOSE_LOCK (dbin);
+  }
+}
+
 static GstStateChangeReturn
 gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
 {
@@ -5229,6 +5303,7 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       do_async_done (dbin);
       EXPOSE_LOCK (dbin);
       if (dbin->decode_chain) {
+        gst_decode_chain_stop (dbin, dbin->decode_chain, NULL);
         chain_to_free = dbin->decode_chain;
         gst_decode_chain_free_internal (dbin->decode_chain, TRUE);
         dbin->decode_chain = NULL;
