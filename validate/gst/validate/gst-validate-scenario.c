@@ -1046,8 +1046,8 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act,
       GST_TIME_ARGS (*position));
 
   /* Check if playback is within seek segment */
-  start_with_tolerance =
-      MAX (0, (gint64) (priv->segment_start - priv->seek_pos_tol));
+  start_with_tolerance = (priv->segment_start <
+      priv->seek_pos_tol) ? 0 : priv->segment_start - priv->seek_pos_tol;
   stop_with_tolerance =
       GST_CLOCK_TIME_IS_VALID (priv->segment_stop) ? priv->segment_stop +
       priv->seek_pos_tol : -1;
@@ -1071,11 +1071,13 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act,
 
   if (priv->seeked_in_pause && priv->seek_flags & GST_SEEK_FLAG_ACCURATE) {
     if ((rate > 0 && (*position >= priv->segment_start + priv->seek_pos_tol ||
-                *position < MAX (0,
-                    ((gint64) priv->segment_start - priv->seek_pos_tol))))
+                *position < (priv->segment_start <
+                    priv->seek_pos_tol) ? 0 : priv->segment_start -
+                priv->seek_pos_tol))
         || (rate < 0 && (*position > priv->segment_start + priv->seek_pos_tol
-                || *position < MAX (0,
-                    (gint64) priv->segment_start - priv->seek_pos_tol)))) {
+                || *position < (priv->segment_start <
+                    priv->seek_pos_tol) ? 0 : priv->segment_start -
+                priv->seek_pos_tol))) {
       priv->seeked_in_pause = FALSE;
       GST_VALIDATE_REPORT (scenario, EVENT_SEEK_RESULT_POSITION_WRONG,
           "Reported position after accurate seek in PAUSED state should be exactly"
