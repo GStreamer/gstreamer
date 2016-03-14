@@ -2165,7 +2165,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
       G_TYPE_UINT);
   /**
-   * GstRtpBin::on-ssrc-active:
+   * GstRtpBin::on-sender-ssrc-active:
    * @rtpbin: the object which received the signal
    * @session: the session
    * @ssrc: the sender SSRC

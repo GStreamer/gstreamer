@@ -108,7 +108,7 @@ rtp_source_class_init (RTPSourceClass * klass)
    * The current SDES items of the source. Returns a structure with name
    * application/x-rtp-source-sdes and may contain the following fields:
    *
-   *  'cname'       G_TYPE_STRING  : The canonical name
+   *  'cname'       G_TYPE_STRING  : The canonical name in the form user@host
    *  'name'        G_TYPE_STRING  : The user name
    *  'email'       G_TYPE_STRING  : The user's electronic mail address
    *  'phone'       G_TYPE_STRING  : The user's phone number
@@ -188,30 +188,30 @@ rtp_source_class_init (RTPSourceClass * klass)
    * These values are only updated when the source is sending.
    *
    *  "sent-rb"               G_TYPE_BOOLEAN  we have sent an RB
-   *  "sent-rb-fractionlost"  G_TYPE_UINT     calculated lost fraction
+   *  "sent-rb-fractionlost"  G_TYPE_UINT     calculated lost 8-bit fraction
    *  "sent-rb-packetslost"   G_TYPE_INT      lost packets
    *  "sent-rb-exthighestseq" G_TYPE_UINT     last seen seqnum
    *  "sent-rb-jitter"        G_TYPE_UINT     jitter (in clock rate units)
-   *  "sent-rb-lsr"           G_TYPE_UINT     last SR time (in NTP Short Format, 16.16 fixed point)
-   *  "sent-rb-dlsr"          G_TYPE_UINT     delay since last SR (in NTP Short Format, 16.16 fixed point)
+   *  "sent-rb-lsr"           G_TYPE_UINT     last SR time (seconds in NTP Short Format, 16.16 fixed point)
+   *  "sent-rb-dlsr"          G_TYPE_UINT     delay since last SR (seconds in NTP Short Format, 16.16 fixed point)
    *
    * The following fields are only present for non-internal sources and
    * represents the last RB that this source sent. This is only updated
    * when the source is receiving data and sending RB blocks.
    *
    *  "have-rb"          G_TYPE_BOOLEAN  the source has sent RB
-   *  "rb-fractionlost"  G_TYPE_UINT     lost fraction
+   *  "rb-fractionlost"  G_TYPE_UINT     lost 8-bit fraction
    *  "rb-packetslost"   G_TYPE_INT      lost packets
    *  "rb-exthighestseq" G_TYPE_UINT     highest received seqnum
    *  "rb-jitter"        G_TYPE_UINT     reception jitter (in clock rate units)
-   *  "rb-lsr"           G_TYPE_UINT     last SR time (in NTP Short Format, 16.16 fixed point)
-   *  "rb-dlsr"          G_TYPE_UINT     delay since last SR (in NTP Short Format, 16.16 fixed point)
+   *  "rb-lsr"           G_TYPE_UINT     last SR time (seconds in NTP Short Format, 16.16 fixed point)
+   *  "rb-dlsr"          G_TYPE_UINT     delay since last SR (seconds in NTP Short Format, 16.16 fixed point)
    *
    * The round trip of this source is calculated from the last RB
    * values and the reception time of the last RB packet. It is only present for
    * non-internal sources.
    *
-   *  "rb-round-trip"    G_TYPE_UINT     the round-trip time (in NTP Short Format, 16.16 fixed point)
+   *  "rb-round-trip"    G_TYPE_UINT     the round-trip time (seconds in NTP Short Format, 16.16 fixed point)
    *
    */
   g_object_class_install_property (gobject_class, PROP_STATS,
