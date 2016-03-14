@@ -531,6 +531,13 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   width = payload[6] * 8;
   height = payload[7] * 8;
 
+  /* saw a packet with fragment offset > 0 and we don't already have data queued
+   * up (most importantly, we don't have a header for this data) -- drop it
+   * XXX: maybe we can check if the jpeg is progressive and salvage the data?
+   * XXX: not implemented yet because jpegenc can't create progressive jpegs */
+  if (frag_offset > 0 && gst_adapter_available (rtpjpegdepay->adapter) == 0)
+    goto no_header_packet;
+
   /* allow frame dimensions > 2040, passed in SDP session or media attributes
    * from gstrtspsrc.c (gst_rtspsrc_sdp_attributes_to_caps), or in caps */
   if (!width)
@@ -745,6 +752,12 @@ invalid_packet:
     GST_WARNING_OBJECT (rtpjpegdepay, "invalid packet");
     gst_adapter_flush (rtpjpegdepay->adapter,
         gst_adapter_available (rtpjpegdepay->adapter));
+    return NULL;
+  }
+no_header_packet:
+  {
+    GST_WARNING_OBJECT (rtpjpegdepay,
+        "discarding data packets received when we have no header");
     return NULL;
   }
 }
