@@ -1,9 +1,20 @@
-=== release 1.7.90 ===
+=== release 1.7.91 ===
 
-2016-03-01  Sebastian Dröge <slomo@coaxion.net>
+2016-03-15  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.90
+	  releasing 1.7.91
+
+=== release 1.7.90 ===
+
+2016-03-01 18:53:59 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.7.90
 
 2016-02-27 11:16:00 +0000  Hanno Boeck <hanno@hboeck.de>
 
