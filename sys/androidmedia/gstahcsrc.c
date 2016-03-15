@@ -2125,7 +2125,7 @@ gst_ahc_src_on_preview_frame (jbyteArray array, gpointer user_data)
 
   GST_DEBUG_OBJECT (self, "Received data buffer %p", array);
 
-  malloc_data = g_slice_new0 (FreeFuncBuffer);
+  malloc_data = g_slice_new (FreeFuncBuffer);
   malloc_data->self = gst_object_ref (self);
   malloc_data->array = (*env)->NewGlobalRef (env, array);
   malloc_data->data = (*env)->GetByteArrayElements (env, array, NULL);
@@ -2140,7 +2140,7 @@ gst_ahc_src_on_preview_frame (jbyteArray array, gpointer user_data)
   GST_DEBUG_OBJECT (self, "creating wrapped buffer (size: %d)",
       self->buffer_size);
 
-  item = g_slice_new0 (GstDataQueueItem);
+  item = g_slice_new (GstDataQueueItem);
   item->object = GST_MINI_OBJECT (buffer);
   item->size = gst_buffer_get_size (buffer);
   item->duration = GST_BUFFER_DURATION (buffer);

@@ -2606,7 +2606,7 @@ gst_ah_camera_unlock (GstAHCamera * self)
 GstAHCSize *
 gst_ahc_size_new (gint width, gint height)
 {
-  GstAHCSize *self = g_slice_new0 (GstAHCSize);
+  GstAHCSize *self = g_slice_new (GstAHCSize);
 
   self->width = width;
   self->height = height;
@@ -3374,8 +3374,7 @@ gst_ahc_parameters_get_preview_size (GstAHCParameters * self)
     goto done;
   }
 
-  size = g_slice_new0 (GstAHCSize);
-
+  size = g_slice_new (GstAHCSize);
   size->width = (*env)->GetIntField (env, jsize,
       android_hardware_camera_size.width);
   if ((*env)->ExceptionCheck (env)) {
