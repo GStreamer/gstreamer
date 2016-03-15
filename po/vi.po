@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.2\n"
+"Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-01 16:45+0200\n"
-"PO-Revision-Date: 2016-02-21 07:11+0700\n"
+"POT-Creation-Date: 2016-03-15 11:38+0200\n"
+"PO-Revision-Date: 2016-03-03 07:44+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
@@ -453,10 +453,10 @@ msgid "person(s) who composed the recording"
 msgstr "(những) người đã soạn bản thu này"
 
 msgid "conductor"
-msgstr ""
+msgstr "người chỉ huy"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "thanh lọc người chỉ huy / biểu diễn"
 
 msgid "duration"
 msgstr "thời lượng"

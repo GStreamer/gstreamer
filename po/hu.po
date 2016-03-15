@@ -2,21 +2,21 @@
 # Copyright (c) 2006 Canonical Ltd, and Rosetta Contributors
 # This file is distributed under the same license as the gstreamer package.
 #
-# Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009, 2010, 2012.
+# Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009, 2010, 2012, 2016.
 # Balázs Úr <urbalazs@gmail.com>, 2014, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.6.0\n"
+"Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-01 16:45+0200\n"
-"PO-Revision-Date: 2015-11-20 23:51+0100\n"
-"Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
+"POT-Creation-Date: 2016-03-15 11:38+0200\n"
+"PO-Revision-Date: 2016-03-14 16:10+0100\n"
+"Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.2\n"
+"X-Generator: Lokalize 1.5\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 msgid "Print the GStreamer version"
@@ -454,10 +454,10 @@ msgid "person(s) who composed the recording"
 msgstr "a felvétel szerzői"
 
 msgid "conductor"
-msgstr ""
+msgstr "vezényel"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "vezényel/előadó finomítása"
 
 msgid "duration"
 msgstr "időtartam"
@@ -681,7 +681,7 @@ msgid "geo location horizontal error"
 msgstr "földrajzi hely vízszintes hibája"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr "a vízszintes pozícionálási értékek várt hibája (méterben)"
+msgstr "a vízszintes pozicionálási értékek várt hibája (méterben)"
 
 msgid "geo location movement speed"
 msgstr "földrajzi hely mozgási sebessége"
@@ -822,10 +822,10 @@ msgid "Midi note number of the audio track."
 msgstr "A hangsáv midi hangjegy száma."
 
 msgid "private-data"
-msgstr ""
+msgstr "privát-adatok"
 
 msgid "Private data"
-msgstr ""
+msgstr "Privát adatok"
 
 msgid ", "
 msgstr ", "
@@ -867,7 +867,7 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "nem állítható be a(z) „%2$s” elem „%1$s” tulajdonsága „%3$s” értékre"
 
 msgid "Delayed linking failed."
-msgstr ""
+msgstr "A késleltetett linkelés meghiúsult."
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1014,7 +1014,6 @@ msgstr "nagybetűk kényszerítése"
 msgid "force caps without doing a typefind"
 msgstr "nagybetűk kényszerítése betűkeresés nélkül"
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
 msgstr "Az adatfolyam nem tartalmaz elég adatot."
 

@@ -7,10 +7,10 @@
 # Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.2\n"
+"Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-01 16:45+0200\n"
-"PO-Revision-Date: 2016-02-21 09:53+0300\n"
+"POT-Creation-Date: 2016-03-15 11:38+0200\n"
+"PO-Revision-Date: 2016-03-05 08:41+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -457,10 +457,10 @@ msgid "person(s) who composed the recording"
 msgstr "лицо/лица, написавшие композицию"
 
 msgid "conductor"
-msgstr ""
+msgstr "дирижёр"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "дирижёр/в обработке"
 
 msgid "duration"
 msgstr "длительность"

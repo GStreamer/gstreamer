@@ -8,10 +8,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.2\n"
+"Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-01 16:45+0200\n"
-"PO-Revision-Date: 2016-02-20 16:17+0100\n"
+"POT-Creation-Date: 2016-03-15 11:38+0200\n"
+"PO-Revision-Date: 2016-03-04 13:08+0100\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -459,10 +459,10 @@ msgid "person(s) who composed the recording"
 msgstr "personne(s) qui a/ont composé l’enregistrement"
 
 msgid "conductor"
-msgstr ""
+msgstr "réalisateur"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "détails sur le réalisateur / interprète"
 
 msgid "duration"
 msgstr "durée"

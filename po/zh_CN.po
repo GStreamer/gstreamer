@@ -5,10 +5,10 @@
 # Tianze Wang <zwpwjwtz@126.com>, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.2\n"
+"Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-01 16:45+0200\n"
-"PO-Revision-Date: 2016-02-21 16:53+0800\n"
+"POT-Creation-Date: 2016-03-15 11:38+0200\n"
+"PO-Revision-Date: 2016-03-03 12:49+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
@@ -435,10 +435,10 @@ msgid "person(s) who composed the recording"
 msgstr "负责录制的人"
 
 msgid "conductor"
-msgstr ""
+msgstr "指挥"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "现场指挥/演奏者"
 
 msgid "duration"
 msgstr "时期"
