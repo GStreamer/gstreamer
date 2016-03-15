@@ -1,7 +1,7 @@
 # gstreamer-vaapi package version number
 m4_define([gst_vaapi_major_version], [1])
 m4_define([gst_vaapi_minor_version], [7])
-m4_define([gst_vaapi_micro_version], [90])
+m4_define([gst_vaapi_micro_version], [91])
 m4_define([gst_vaapi_nano_version],  [0])
 m4_define([gst_vaapi_version],
           [gst_vaapi_major_version.gst_vaapi_minor_version.gst_vaapi_micro_version])
@@ -16,7 +16,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 # gstreamer-vaapi library (libtool) version number
-m4_define([gst_vaapi_lt_current],       [790])
+m4_define([gst_vaapi_lt_current],       [791])
 m4_define([gst_vaapi_lt_revision],      [0])
 m4_define([gst_vaapi_lt_age],           [790])
 
@@ -24,9 +24,9 @@ m4_define([gst_vaapi_lt_age],           [790])
 m4_define([glib_version], [2.32])
 
 # gstreamer version number
-m4_define([gst_version],                [1.7.90])
-m4_define([gst_plugins_base_version],   [1.7.90])
-m4_define([gst_plugins_bad_version],    [1.7.90])
+m4_define([gst_version],                [1.7.91])
+m4_define([gst_plugins_base_version],   [1.7.91])
+m4_define([gst_plugins_bad_version],    [1.7.91])
 
 # Wayland minimum version number
 m4_define([wayland_api_version], [1.0.2])
