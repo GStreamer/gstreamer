@@ -203,9 +203,6 @@ gst_type_find_element_have_type (GstTypeFindElement * typefind,
     event = gst_event_new_caps (caps);
   }
 
-  if (typefind->caps)
-    gst_caps_unref (typefind->caps);
-  typefind->caps = gst_caps_ref (caps);
   GST_OBJECT_UNLOCK (typefind);
 
   gst_pad_push_event (typefind->src, event);
@@ -216,6 +213,15 @@ gst_type_find_element_emit_have_type (GstTypeFindElement * typefind,
     guint probability, GstCaps * caps)
 {
   GstEvent *event;
+
+  /* Update caps field immediatly so that caps queries and properties can be
+   * honored in all "have-type" signal handlers.
+   */
+  GST_OBJECT_LOCK (typefind);
+  if (typefind->caps)
+    gst_caps_unref (typefind->caps);
+  typefind->caps = gst_caps_ref (caps);
+  GST_OBJECT_UNLOCK (typefind);
 
   /* Only store the caps event at this point. We give signal handlers
    * the chance to look at the caps before they are sent downstream.
