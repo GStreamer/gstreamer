@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Ugly Plugins 1.7.90
+Release notes for GStreamer Ugly Plugins 1.7.91
 
-The GStreamer team is pleased to announce the first release candidate of the stable
+The GStreamer team is pleased to announce the second release candidate of the stable
 1.8 release series. The 1.8 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework.
@@ -54,6 +54,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
+Bugs fixed in this release
+     
+      * 755469 : asfdemux: Non-flushing seeks don't work, broken segment seek handling and other seeking related issues
+
 ==== Download ====
 
 You can find source releases of gst-plugins-ugly in the download
@@ -89,7 +93,5 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Jens Georg
-      * Sebastian Dröge
-      * Tim-Philipp Müller
+      * Edward Hervey
  
