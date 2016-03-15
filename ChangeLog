@@ -1,9 +1,89 @@
-=== release 1.7.90 ===
+=== release 1.7.91 ===
 
-2016-03-01  Sebastian Dröge <slomo@coaxion.net>
+2016-03-15  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.90
+	  releasing 1.7.91
+
+2016-03-10 13:54:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Ensure that the pipeline is live and later-added udpsrcs are syncing the state with the parent bin
+	  Without this, RECORD pipelines are broken because
+	  a) we wait for ASYNC_DONE which never happens anymore because udpsrc would be
+	  added later. Previously it was there earlier and due to NO_PREROLL caused the
+	  pipeline to preroll immediately
+	  b) the udpsrc for the pipeline is added later and never set to PLAYING state,
+	  as the corresponding code previously was only for PLAY pipelines.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763281
+
+2016-03-11 01:22:54 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Fix typo in the docstring
+	  gst_rtsp_stream_set_client_side -> gst_rtsp_stream_is_client_side
+
+2016-03-05 10:52:11 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Disable multicast loopback for all our sockets
+	  On Windows this is a receiver-side setting, on Linux a sender-side setting. As
+	  we provide a socket ourselves to udpsrc, udpsrc is never setting the multicast
+	  loopback setting on the socket... while udpsink does which unfortunately has
+	  no effect here on Windows but on Linux.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757488
+
+2016-03-03 15:07:06 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* tests/check/gst/stream.c:
+	  stream tests: added new tests
+	  Test a case when the address pool only contains multicast addresses
+	  and the client is requesting unicast udp.
+	  Added tests for multicast ports allocation.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757488
+
+2016-03-04 13:51:12 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Only bind multicast sockets to ANY on Windows
+	  On Linux it is still needed to bind to the multicast address
+	  to filter out random other packets, while on Windows binding
+	  to multicast addresses just fails.
+
+2016-03-03 10:41:51 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Only use the address pool for unicast UDP if it contains unicast addresses
+	  Otherwise we fail to allocate UDP ports if the pool only contains multicast
+	  addresses, which is something that used to work before. For unicast addresses
+	  if the pool contains none, we just allocate them as if there is no pool at
+	  all.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757488
+
+2016-03-02 11:48:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-server: Fix indentation
+
+2016-03-02 11:47:47 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Don't bind the sockets to multicast addresses
+	  This works on Linux but fails completely on Windows. You're supposed
+	  to bind to ANY and then join the multicast group.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757488
+
+=== release 1.7.90 ===
+
+2016-03-01 19:00:45 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.7.90
 
 2016-02-26 12:42:51 +0200  Sebastian Dröge <sebastian@centricular.com>
 
