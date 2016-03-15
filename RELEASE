@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Good Plugins 1.7.90
+Release notes for GStreamer Good Plugins 1.7.91
 
-The GStreamer team is pleased to announce the first release candidate of the stable
+The GStreamer team is pleased to announce the second release candidate of the stable
 1.8 release series. The 1.8 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework.
@@ -54,23 +54,12 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 756897 : qtdemux: cenc aux_info_type endianness issue
-      * 761489 : matroskademux: fails to parse opus ('audio/x-unknown, codec-id=(string)A_OPUS')
-      * 761637 : qtmux: handle file with wrong color_table_id values
-      * 762208 : rtpmanager: Don't warn for duplicate/reordered packets
-      * 762209 : flvdemux: leaking eos event fix
-      * 762210 : flvmux: plug leak(s) in error-scenario
-      * 762214 : jitterbuffer: Fix leaks in test
-      * 762254 : rtpjitterbuffer: test cleanups/improvements
-      * 762267 : rtpjitterbuffer: port testharness to GstHarness and cleanup/improve
-      * 762349 : matroskamux: generated files sometimes don't open on android
-      * 762420 : avidemux: Fix buffer memory leak
-      * 762434 : multifilesink: close file on write error with next-file mode is set to buffer
-      * 762516 : qtdemux: cenc auxiliary info parsing crashes
-      * 762542 : matroskademux: CRITICAL when seeking on matroska files without buffers
-      * 762765 : goom: crashes on window resize
-      * 762793 : rgvolume: modifies upstream tags in place without making them writable first
-      * 762809 : alpha: Sample pipeline does not demonstrate functionality
+      * 755106 : directsoundsink: mute property doesn't work
+      * 760553 : deinterlace: Bug in caps passthrough lead to black screen with Android HW decoder
+      * 762529 : v4l2src produces wrong colorimetry info for NV12
+      * 763093 : udpsrc: Fix multicast group joining with provided sockets on Windows
+      * 763165 : qtdemux: Seeking in push mode broken
+      * 763318 : v4l2: fix capture with bayer formats other than bggr
 
 ==== Download ====
 
@@ -107,18 +96,11 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aurélien Zanelli
-      * Dave Craig
-      * Havard Graff
-      * Linus Svensson
+      * Alban Bedel
+      * Josep Torra
       * Luis de Bethencourt
-      * Mark Nauwelaerts
-      * Matej Knopp
-      * Petr Viktorin
-      * Philippe Normand
+      * Nirbheek Chauhan
       * Sebastian Dröge
-      * Stian Selnes
-      * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Vineeth TM
+      * Thiago Santos
+      * Thomas Roos
  

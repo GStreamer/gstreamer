@@ -64,7 +64,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2016-03-01"
+#define GST_PACKAGE_RELEASE_DATETIME "2016-03-15"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -395,7 +395,7 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 1.7.90"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 1.7.91"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
@@ -404,7 +404,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.7.90"
+#define PACKAGE_VERSION "1.7.91"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -435,7 +435,7 @@
 #undef TARGET_CPU
 
 /* Version number of package */
-#define VERSION "1.7.90"
+#define VERSION "1.7.91"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
