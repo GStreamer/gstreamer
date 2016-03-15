@@ -1,9 +1,28 @@
-=== release 1.7.90 ===
+=== release 1.7.91 ===
 
-2016-03-01  Sebastian Dröge <slomo@coaxion.net>
+2016-03-15  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.90
+	  releasing 1.7.91
+
+2016-03-11 15:44:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Only set the bitrate if we actually got it from the caps
+	  Otherwise we set a random value from the stack as bitrate. The default (0)
+	  is a better choice and doesn't upset valgrind.
+
+=== release 1.7.90 ===
+
+2016-03-01 18:51:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.7.90
 
 2016-02-26 12:42:36 +0200  Sebastian Dröge <sebastian@centricular.com>
 
