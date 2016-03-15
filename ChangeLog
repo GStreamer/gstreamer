@@ -1,9 +1,55 @@
-=== release 1.7.90 ===
+=== release 1.7.91 ===
 
-2016-03-01  Sebastian Dröge <slomo@coaxion.net>
+2016-03-15  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.90
+	  releasing 1.7.91
+
+2016-03-11 17:31:15 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* examples/c/overlays.c:
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	* ges/ges-title-source.c:
+	* ges/ges-title-source.h:
+	  Revert "titlesource: use x/yabsolute instead of x/ypos."
+	  This reverts commit c4356db40c6e50f7314a75ea65d46f9f21ef0a5d.
+	  This commit was not ready and was not support to be pushed
+
+2016-03-11 17:29:08 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-group.c:
+	  ges: Don't emit timeline::group-removed when ungrouping outside a timeline
+
+2016-03-11 12:45:37 +0100  Lubosz Sarnecki <lubosz.sarnecki@collabora.co.uk>
+
+	* examples/c/overlays.c:
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	* ges/ges-title-source.c:
+	* ges/ges-title-source.h:
+	  titlesource: use x/yabsolute instead of x/ypos.
+
+2016-02-12 19:18:24 +0100  Justin Kim <justin.kim@collabora.com>
+
+	* tools/ges-launcher.c:
+	  ges-launcher: don't leak sanitized_timeline string
+	  Summary:
+	  sanitized_timeline is created when parsing command line,
+	  but it isn't free'd.
+	  Reviewers: thiblahute
+	  Differential Revision: https://phabricator.freedesktop.org/D382
+
+=== release 1.7.90 ===
+
+2016-03-01 19:09:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.7.90
 
 2016-02-26 21:13:37 +0100  Sjors Gielen <sjors@sjorsgielen.nl>
 
