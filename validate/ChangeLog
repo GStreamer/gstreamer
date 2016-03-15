@@ -1,9 +1,87 @@
-=== release 1.7.90 ===
+=== release 1.7.91 ===
 
-2016-03-01  Sebastian Dröge <slomo@coaxion.net>
+2016-03-15  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.90
+	  releasing 1.7.91
+
+2016-03-14 14:29:57 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Add missing parenthesis to seek position check
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763602
+
+2016-03-14 12:55:57 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Fix overflow seek position comparision
+	  MAX(0, ((gint64) priv->segment_start - priv->seek_pos_tol) will be a high
+	  positive number thanks to being interpreted as unsigned values if
+	  segment_start < seek_pos_tol. Fix this by explicitly checking for this case
+	  and only doing the subtraction otherwise.
+	  This fixes the problem from fdccffbb2e5885b3f8e7369cdbda45b6717ffab0
+	  completely now.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763602
+
+2016-03-08 17:01:09 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	* validate/gst/validate/media-descriptor-parser.c:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/gst/validate/media-descriptor.c:
+	* validate/gst/validate/media-descriptor.h:
+	  validate: Fix seding mistakes
+	  When we added namespace to make GI happy we ended up with
+	  structure called like GstValidateMediaGstValidateMediaXXX.
+
+2016-03-08 10:49:43 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	  monitor: Add critical issue for checking accurate seek results
+	  If an accurate seek is accepted, the resulting segment.time should be
+	  exactly the requested seek start value..
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763299
+
+2016-03-08 12:00:19 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Fix accurate seeking in paused failling condition
+
+2016-03-08 15:54:32 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/launcher/httpserver.py:
+	* validate/launcher/utils.py:
+	* validate/plugins/gtk/gstvalidategtk.c:
+	* validate/tools/gst-validate-images-check.c:
+	  Validate: Fix consider, launch spelling mistakes
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763289
+
+2016-02-22 11:49:48 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Fix wrong condition check when adding tests
+	  When listing tests, checking whether uri is present or not and displaying error.
+	  But uri does notneed to be present in case of pipeline generator. So the condition check is wrong.
+	  This results in validateelements testsuite not working. Hence modifying the condition to
+	  not error out on valid cases.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762422
+
+=== release 1.7.90 ===
+
+2016-03-01 19:23:37 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.7.90
 
 2016-03-01 14:59:29 +0100  Thibault Saunier <tsaunier@gnome.org>
 
