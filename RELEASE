@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Bad Plugins 1.7.90
+Release notes for GStreamer Bad Plugins 1.7.91
 
-The GStreamer team is pleased to announce the first release candidate of the stable
+The GStreamer team is pleased to announce the second release candidate of the stable
 1.8 release series. The 1.8 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework.
@@ -59,19 +59,20 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 676425 : aiffparse: fails to extract channel layout for multichannel files
-      * 757610 : compositor: negotation failure when mixing alpha and non alpha branches
-      * 760873 : GstGLVideoMixerPad vertex_buffer leaks when pad dynamic removed
-      * 761003 : Error getting OpenGL context when qml item when scene graph is initialized.
-      * 762148 : dashdemux: correctly handle an HTTP-XSDATE that is exactly the size of the date string
-      * 762351 : codecparsers: h265: Fix initialization of slice_deblocking_filter_disabled_flag
-      * 762482 : fbdevsink SIGSEGV
-      * 762519 : doc: audiointerleave doesn't appear in the doc
-      * 762575 : avfvideosrc: Crashes with uncaught exception - wrong type for AVCaptureDevice.activeVideoMinFrameDuration
-      * 762613 : playbin regression: On failure of vtdec_hw, playbin errors out and doesn't fall back to avdec_h264
-      * 762620 : Playback stutters with avdec_h264 via glimagesink on OSX (gst_gl_context_is_shared() returning FALSE)
-      * 762684 : hlsdemux: tests: pass test name into test setup function
-      * 762842 : vulkan: Fix GError memory leak
+      * 743259 : tsdemux:  bogus timestamp when PTS < PCR
+      * 756282 : [PLUGIN-MOVE] Move opus to -base
+      * 760566 : All the gleffects have the same name and description
+      * 762999 : Memory leak in qmlglsink
+      * 763045 : glmemoryallocator: Buffer size miss-match when mapping GLMemory without PBO
+      * 763079 : hls/Makefile.am missing OPENSSL_CFLAGS
+      * 763098 : ahcsrc: remove unused file
+      * 763168 : gldisplay: _get_gl_context_for_thread_unlocked looks suspicious
+      * 763220 : mpegvideoparse: Support non-hierarchical profile/level again [REGRESSION]
+      * 763356 : glimagesink: Fix window memory leak
+      * 763365 : glfilterapp not correctly drawing the default scene
+      * 763401 : Zero-copy video playback doesn't work on Android 4.x (QA 1.7.90)
+      * 763494 : h265parse: Segfault while tranforming hevc packetized  stream to nal aligned bytestream
+      * 763503 : tsdemux can crash on shutdown
 
 ==== Download ====
 
@@ -108,19 +109,21 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alex Ashley
-      * Dave Craig
+      * Alessandro Decina
+      * Aurélien Zanelli
       * Edward Hervey
-      * Florin Apostol
+      * Jan Schmidt
       * Joe Gorse
+      * Justin Kim
+      * Mark Nauwelaerts
+      * Martin Kelly
       * Matthew Waters
-      * Peter Seiderer
-      * Scott D Phillips
+      * Nicolas Dufresne
+      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
       * Sergey Borovkov
       * Sreerenj Balachandran
-      * Thiago Santos
       * Tim-Philipp Müller
       * Vineeth TM
-      * Wang Xin-yu (王昕宇)
+      * Vivia Nikolaidou
  
