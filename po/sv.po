@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.7.2\n"
+"Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-01 16:53+0200\n"
-"PO-Revision-Date: 2016-02-20 17:51+0100\n"
+"POT-Creation-Date: 2016-03-15 11:40+0200\n"
+"PO-Revision-Date: 2016-03-02 22:20+0100\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -559,13 +559,13 @@ msgid "quit"
 msgstr "avsluta"
 
 msgid "> or n"
-msgstr ""
+msgstr "> eller n"
 
 msgid "play next"
 msgstr "spela nästa"
 
 msgid "< or b"
-msgstr ""
+msgstr "< eller b"
 
 msgid "play previous"
 msgstr "spela föregående"

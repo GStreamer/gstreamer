@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.7.2\n"
+"Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-01 16:53+0200\n"
-"PO-Revision-Date: 2016-02-20 21:44+0100\n"
+"POT-Creation-Date: 2016-03-15 11:40+0200\n"
+"PO-Revision-Date: 2016-03-02 22:08+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -566,13 +566,13 @@ msgid "quit"
 msgstr "wyjście"
 
 msgid "> or n"
-msgstr ""
+msgstr "> lub n"
 
 msgid "play next"
 msgstr "odtworzenie następnego"
 
 msgid "< or b"
-msgstr ""
+msgstr "< lub b"
 
 msgid "play previous"
 msgstr "odtworzenie poprzedniego"

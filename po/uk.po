@@ -6,10 +6,10 @@
 # Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012, 2013, 2014, 2015, 2016.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.7.2\n"
+"Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-01 16:53+0200\n"
-"PO-Revision-Date: 2016-02-20 17:29+0200\n"
+"POT-Creation-Date: 2016-03-15 11:40+0200\n"
+"PO-Revision-Date: 2016-03-02 22:05+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -576,13 +576,13 @@ msgid "quit"
 msgstr "вийти"
 
 msgid "> or n"
-msgstr ""
+msgstr "> або n"
 
 msgid "play next"
 msgstr "наступна"
 
 msgid "< or b"
-msgstr ""
+msgstr "< або b"
 
 msgid "play previous"
 msgstr "попередня"

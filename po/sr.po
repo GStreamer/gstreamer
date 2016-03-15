@@ -2,13 +2,13 @@
 # Copyright (C) 2014 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Danilo Segan <dsegan@gmx.net>, 2004.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011—20145.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011—2016.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.7.1\n"
+"Project-Id-Version: gst-plugins-base-1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-01 16:53+0200\n"
-"PO-Revision-Date: 2015-12-26 19:57+0200\n"
+"POT-Creation-Date: 2016-03-15 11:40+0200\n"
+"PO-Revision-Date: 2016-03-05 09:48+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -558,13 +558,13 @@ msgid "quit"
 msgstr "излази"
 
 msgid "> or n"
-msgstr ""
+msgstr "> или н"
 
 msgid "play next"
 msgstr "пушта следеће"
 
 msgid "< or b"
-msgstr ""
+msgstr "< или б"
 
 msgid "play previous"
 msgstr "пушта претходно"
@@ -612,10 +612,10 @@ msgid "Interactive mode - keyboard controls:"
 msgstr "Међудејствени режим — управљање тастатуром:"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Исписује податке о стању и обавештења о власништву"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
-msgstr ""
+msgstr "Управља понашањем пуштања подешавајући „flags“ својство плејбина"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Усаглашавање снимка за коришћење (основно је „autovideosink“)"

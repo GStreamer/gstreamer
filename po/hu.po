@@ -3,15 +3,15 @@
 # Copyright (C) 2004, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 #
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
-# Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009, 2012.
+# Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009, 2012, 2016.
 # Balázs Úr <urbalazs@gmail.com>, 2014, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.5.2\n"
+"Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-01 16:53+0200\n"
-"PO-Revision-Date: 2015-06-30 13:34+0200\n"
-"Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
+"POT-Creation-Date: 2016-03-15 11:40+0200\n"
+"PO-Revision-Date: 2016-03-14 19:14+0100\n"
+"Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
@@ -561,13 +561,13 @@ msgid "quit"
 msgstr "kilépés"
 
 msgid "> or n"
-msgstr ""
+msgstr "> vagy n"
 
 msgid "play next"
 msgstr "következő lejátszása"
 
 msgid "< or b"
-msgstr ""
+msgstr "< vagy b"
 
 msgid "play previous"
 msgstr "előző lejátszása"
@@ -606,7 +606,7 @@ msgid "change subtitle track"
 msgstr "feliratsáv megváltoztatása"
 
 msgid "seek to beginning"
-msgstr ""
+msgstr "tekerés az elejére"
 
 msgid "show keyboard shortcuts"
 msgstr "gyorsbillentyűk megjelenítése"
@@ -615,10 +615,12 @@ msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktív mód - billentyűzetvezérlők:"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Állapotinformációk és tulajdonságértesítések kiírása"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr ""
+"Lejátszás viselkedésének módosítása a playbin „flags” tulajdonságának "
+"beállításával"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Használandó videosüllyesztés (az alapértelmezett az autovideosink)"

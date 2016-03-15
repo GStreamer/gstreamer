@@ -8,10 +8,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.7.2\n"
+"Project-Id-Version: gst-plugins-base-1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-01 16:53+0200\n"
-"PO-Revision-Date: 2016-02-27 16:39+0100\n"
+"POT-Creation-Date: 2016-03-15 11:40+0200\n"
+"PO-Revision-Date: 2016-03-03 15:35+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -564,13 +564,13 @@ msgid "quit"
 msgstr "ukončit"
 
 msgid "> or n"
-msgstr ""
+msgstr "> nebo n"
 
 msgid "play next"
 msgstr "přehrát následující"
 
 msgid "< or b"
-msgstr ""
+msgstr "< nebo b"
 
 msgid "play previous"
 msgstr "přehrát předchozí"
