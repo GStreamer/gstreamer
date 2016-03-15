@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Base Plugins 1.7.90
+Release notes for GStreamer Base Plugins 1.7.91
 
-The GStreamer team is pleased to announce the first release candidate of the stable
+The GStreamer team is pleased to announce the second release candidate of the stable
 1.8 release series. The 1.8 release series is adding new features on top of
 the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework.
@@ -57,11 +57,12 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 761257 : multisocketsink: doesn't handle client close and EWOULDBLOCK
-      * 761588 : opusdec: no mono/stereo channel conversion
-      * 761851 : video: add orc UYVY422 to GRAY8 conversion function
-      * 762451 : id3v2frames: read conductor tag
-      * 762674 : Compilation error building html in gst-plugins-base-1.7.2
+      * 761251 : textoverlay: Expose text rendering dimensions to applications and remove absolute positioning limit
+      * 763059 : opusdec: plug caps leak
+      * 763094 : gst-play: remove peculiar setting of invalid -v property
+      * 763278 : tcpserversink: problems with TS muxed stream, not detecting/sending keyframes
+      * 763625 : decodebin: Crashes when shutting down during autoplugging
+      * 758282 : OGG streams buffer constantly even with plenty of bandwidth
 
 ==== Download ====
 
@@ -98,14 +99,11 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Adam Miartus
-      * Edward Hervey
-      * Göran Jönsson
-      * Lim Siew Hoon
-      * Luis de Bethencourt
+      * Havard Graff
+      * Lubosz Sarnecki
+      * Nirbheek Chauhan
       * Sebastian Dröge
       * Tim-Philipp Müller
-      * Tom Deseyn
       * Vincent Penquerc'h
       * Wim Taymans
  

@@ -1,9 +1,207 @@
-=== release 1.7.90 ===
+=== release 1.7.91 ===
 
-2016-03-01  Sebastian Dröge <slomo@coaxion.net>
+2016-03-15  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.90
+	  releasing 1.7.91
+
+2016-03-15 11:40:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/cs.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/pl.po:
+	* po/ru.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: Update translations
+
+2016-03-14 17:06:53 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin: Shut down all elements explicitly to NULL state before freeing the decode chain
+	  Due to transient locked state during autoplugging, some elements might be
+	  ignored by the GstBin::change_state() and might still be running. Which could
+	  then cause pad-added and similar accessing decodebin state that does not exist
+	  anymore, and crash.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763625
+
+2016-03-13 13:59:25 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/tcp/gstmultihandlesink.c:
+	* gst/tcp/gstmultihandlesink.h:
+	* tests/check/elements/multifdsink.c:
+	* tests/check/elements/multisocketsink.c:
+	  multihandlesink: Remove useless streamheader storage
+	  We don't do anything with it but always get them from the caps anyway, so
+	  stop storing them and having complicated logic around that.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763278
+
+2016-03-13 10:51:30 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/tcp/gstmultihandlesink.c:
+	* gst/tcp/gstmultihandlesink.h:
+	  multihandlesink: Only don't send HEADER buffers normally if they are actually streamheaders from the caps
+	  And also consider HEADER buffers without DELTA_UNIT flag as sync points. This
+	  fixes sync-mode=2 with mpegtsmux for example, which has no streamheaders but
+	  puts the HEADER flag on its keyframes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763278
+
+2016-03-12 19:47:47 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin: expose_pad() is always called with lock==TRUE, simplify code
+	  This basically reverts ee44337fc3e3030a5155d28b3561af157e6c6003 .
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763491
+
+2016-03-12 19:46:44 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin: Don't check twice if the decode chain is complete in pad_added_cb()
+	  expose_pad() already does the same.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763491
+
+2016-03-12 19:45:26 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin: Don't hold EXPOSE_LOCK in type_found() outside the stream lock
+	  In other places we lock it the other way around, leading to possible
+	  deadlocks. Also this will deadlock if analyze_pad() causes a new element to be
+	  autoplugged that adds new pads on itself when its state is changed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763491
+
+2016-03-13 10:58:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/tcp/gstmultioutputsink.c:
+	  tcp: Remove unused file
+	  It's a copy of multihandlesink, but completely outdated. Let's get rid of it
+	  before it gets even more outdated.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763278
+
+2016-03-08 19:22:34 +0100  Lubosz Sarnecki <lubosz.sarnecki@collabora.co.uk>
+
+	* ext/pango/gstbasetextoverlay.c:
+	* ext/pango/gstbasetextoverlay.h:
+	  basetextoverlay: Add new properties and alignment type for unclamped absolute positions
+	  Introduces [x-absolute, y-absolute] properties
+	  for positioning in +/- MAX_DOUBLE range.
+	  Adds new (h/v)alignment type "absolute" where coordinates
+	  map the text area to be exactly inside of video canvas for [0, 0] - [1, 1]:
+	  [0, 0]: Top-Lefts of video and text are aligned
+	  [0.5, 0.5]: Centers are aligned
+	  [1, 1]: Bottom-Rights are aligned
+	  https://bugzilla.gnome.org/show_bug.cgi?id=761251
+
+2016-03-11 13:15:03 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  Revert "textoverlay: Do not limit positioning to video area."
+	  This reverts commit a48daf6dd8cb69b4260a03aa7f3cdf227d4f1602.
+	  This changed behaviour in a way that's not always
+	  backwards-compatible.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=761251
+
+2016-02-25 05:07:04 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* win32/common/libgstfft.def:
+	  win32: Add a module definitions file for gstfft
+
+2016-03-09 09:56:52 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/theora/gsttheoradec.c:
+	* ext/theora/gsttheoradec.h:
+	* ext/theora/gsttheoraenc.c:
+	* ext/theora/gsttheoraenc.h:
+	  theora: fix performance category initialisation
+	  Remove unused _register() functions and look up the performance
+	  debug category in a function that's actually called at some point.
+
+2016-03-04 17:13:59 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst-libs/gst/audio/audio-channel-mixer.h:
+	  audio-channel-mixer: improve non-interleaved flags
+	  Make separate flags for non-interleaved input and output because the
+	  channel mixer should be able to convert between the two layouts in the
+	  future.
+
+2016-03-04 12:12:56 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* tools/gst-play.c:
+	  gst-play: remove peculiar setting of invalid -v property
+
+2016-02-05 14:14:37 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: fix chaining causing running time to restart from 0
+	  This fixes:
+	  gst-play-1.0 http://relay-nyc.gameowls.com:8000/chiptune.ogg
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758282
+
+2016-03-03 20:10:17 +0100  Havard Graff <havard.graff@gmail.com>
+
+	* ext/opus/gstopusdec.c:
+	  opusdec: plug caps leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763059
+
+2016-03-02 20:47:42 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaysink.c:
+	  Revert "playbin: use avdeinterlace for deinterlacing until deinterlace is ported"
+	  This reverts commit 0615794300234e3efbcb49a524efdee11171ab4c.
+	  deinterlace was ported at some point in the last 4 years and has better video
+	  format support, and especially better negotiation than avdeinterlace. Having
+	  avdeinterlace but not deinterlace causes various problems in zerocopy
+	  scenarios.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=760553
+
+2016-03-02 18:47:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/encoding/gstencodebin.c:
+	  encodebin: Make dispose() function safe to be called multiple times
+
+=== release 1.7.90 ===
+
+2016-03-01 18:14:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.7.90
 
 2016-03-01 16:53:05 +0200  Sebastian Dröge <sebastian@centricular.com>
 
