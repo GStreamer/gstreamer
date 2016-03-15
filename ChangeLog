@@ -1,9 +1,122 @@
-=== release 1.7.90 ===
+=== release 1.7.91 ===
 
-2016-03-01  Sebastian Dröge <slomo@coaxion.net>
+2016-03-15  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.90
+	  releasing 1.7.91
+
+2016-03-15 11:39:42 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/cs.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/ru.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: Update translations
+
+2016-03-11 14:17:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Store caps on the pad before emitting have-type but send it downstream only in the default signal handler
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763491
+
+2016-03-13 10:33:53 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: Recheck after pre_push_frame() if there are tags pending
+	  Many parsers are storing tags only in pre_push_frame(), if we wouldn't check
+	  afterwards we would push buffers before those tags and a lot of code assumes that
+	  tags are available before preroll.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763553
+
+2016-03-14 11:15:07 +0100  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* plugins/elements/gstconcat.c:
+	  concat: Fix comment typo
+
+2016-03-12 12:56:28 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  Revert "typefind: Store caps on the pad before emitting have-type but send it downstream only in the default signal handler"
+	  This reverts commit 0835c3d6569dde0ec9e5524436367c7678cc4a4a.
+	  It causes deadlocks in decodebin, which currently would deadlock if the caps
+	  are already on the pad in have-type and are forwarded while copying the sticky
+	  events (while holding the decodebin lock)... as that might cause the next
+	  element to expose pads, which then calls back into decodebin and takes the
+	  decodebin lock.
+	  This needs some more thoughts.
+
+2016-03-11 14:17:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Store caps on the pad before emitting have-type but send it downstream only in the default signal handler
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763491
+
+2016-03-10 10:35:40 +0100  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* gst/gstelement.h:
+	* gst/gstobject.h:
+	  docs: Flesh out element and object macro accessor docs a bit
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763213
+
+2016-03-09 16:06:58 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclientclock: Remove some obsolete code that can cause warnings
+
+2016-03-09 13:44:24 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclientclock: Don't reset calibration of internal clock whenever a new netclient clock is created
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763325
+
+2016-03-04 18:23:18 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/gstbuffer.h:
+	* tests/check/gst/gstbuffer.c:
+	  gstbuffer: fix GstParentBufferMeta GType name
+	  The alias define GST_TYPE_PARENT_BUFFER_META_API_TYPE is wrong and
+	  breaks the usage of gst_buffer_get_parent_buffer_meta().
+	  This patch fixes the GType alias and make another alias to keep the API
+	  compatibility guarded by GST_DISABLE_DEPRECATED.
+	  Also added a unit test.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763112
+
+2016-03-02 10:37:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gsttracerrecord.c:
+	  tracerrecord: Remove useless NULL check and add assertion for making assumptions explicit
+	  gst_structure_new_empty() is not returning NULL in any valid scenarios,
+	  checking for NULL here is useless. Especially because we would dereference any
+	  NULL right after the NULL check again.
+	  CID 1352037.
+	  We previously check if the string ends on .class, as such strrchr() should
+	  return something non-NULL. Add an assertion for that.
+	  CID 1349642.
+
+2016-03-01 19:50:26 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstelement.c:
+	  element: minor docs fix
+	  Make gtk-doc happy.
+
+=== release 1.7.90 ===
+
+2016-03-01 18:14:03 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.7.90
 
 2016-03-01 16:52:41 +0200  Sebastian Dröge <sebastian@centricular.com>
 
