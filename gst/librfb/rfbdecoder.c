@@ -51,7 +51,8 @@ rfb_decoder_new (void)
 {
   RfbDecoder *decoder = g_new0 (RfbDecoder, 1);
 
-  decoder->socket = NULL;
+  decoder->socket_client = g_socket_client_new ();
+  decoder->connection = NULL;
   decoder->cancellable = g_cancellable_new ();
 
   decoder->password = NULL;
@@ -82,15 +83,10 @@ rfb_decoder_free (RfbDecoder * decoder)
     decoder->cancellable = NULL;
   }
 
-  if (decoder->socket) {
-    g_object_unref (decoder->socket);
-    decoder->socket = NULL;
-  }
-
+  g_clear_object (&decoder->connection);
+  g_clear_object (&decoder->socket_client);
   g_clear_error (&decoder->error);
-
   g_free (decoder->data);
-
   g_free (decoder);
 }
 
@@ -98,78 +94,26 @@ gboolean
 rfb_decoder_connect_tcp (RfbDecoder * decoder, gchar * host, guint port)
 {
   GError *err = NULL;
-  GInetAddress *addr;
-  GSocketAddress *saddr;
-  GResolver *resolver;
+  GSocketConnection *connection;
 
   GST_DEBUG ("connecting to the rfb server");
 
   g_return_val_if_fail (decoder != NULL, FALSE);
-  g_return_val_if_fail (decoder->socket == NULL, FALSE);
+  g_return_val_if_fail (decoder->connection == NULL, FALSE);
   g_return_val_if_fail (host != NULL, FALSE);
 
-  /* look up name if we need to */
-  addr = g_inet_address_new_from_string (host);
-  if (!addr) {
-    GList *results;
+  connection =
+      g_socket_client_connect_to_host (decoder->socket_client, host, port,
+      decoder->cancellable, &err);
 
-    resolver = g_resolver_get_default ();
-
-    results =
-        g_resolver_lookup_by_name (resolver, host, decoder->cancellable, &err);
-    if (!results)
-      goto name_resolve;
-    addr = G_INET_ADDRESS (g_object_ref (results->data));
-
-    g_resolver_free_addresses (results);
-    g_object_unref (resolver);
-  }
-
-  saddr = g_inet_socket_address_new (addr, port);
-
-  decoder->socket =
-      g_socket_new (g_socket_address_get_family (saddr), G_SOCKET_TYPE_STREAM,
-      G_SOCKET_PROTOCOL_TCP, &err);
-
-  if (!decoder->socket)
-    goto no_socket;
-
-  GST_DEBUG ("opened receiving client socket");
-
-  if (!g_socket_connect (decoder->socket, saddr, decoder->cancellable, &err))
+  if (!connection)
     goto connect_failed;
 
-  g_object_unref (saddr);
-
+  decoder->connection = connection;
   decoder->disconnected = FALSE;
 
   return TRUE;
 
-no_socket:
-  {
-    GST_WARNING ("Failed to create socket: %s", err->message);
-    if (decoder->error == NULL)
-      decoder->error = err;
-    else
-      g_clear_error (&err);
-    g_object_unref (saddr);
-    return FALSE;
-  }
-name_resolve:
-  {
-    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
-      GST_DEBUG ("Cancelled name resolval");
-    } else {
-      GST_WARNING ("Failed to resolve host '%s': %s", host, err->message);
-      if (decoder->error == NULL) {
-        decoder->error = err;
-        err = NULL;
-      }
-    }
-    g_clear_error (&err);
-    g_object_unref (resolver);
-    return FALSE;
-  }
 connect_failed:
   {
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
@@ -183,7 +127,6 @@ connect_failed:
       }
     }
     g_clear_error (&err);
-    g_object_unref (saddr);
     return FALSE;
   }
 }
@@ -202,7 +145,7 @@ rfb_decoder_iterate (RfbDecoder * decoder)
   gboolean ret;
 
   g_return_val_if_fail (decoder != NULL, FALSE);
-  g_return_val_if_fail (decoder->socket != NULL, FALSE);
+  g_return_val_if_fail (decoder->connection != NULL, FALSE);
 
   if (decoder->state == NULL) {
     GST_DEBUG ("First iteration: set state to -> wait for protocol version");
@@ -225,12 +168,15 @@ rfb_decoder_iterate (RfbDecoder * decoder)
 static guint8 *
 rfb_decoder_read (RfbDecoder * decoder, guint32 len)
 {
-  guint32 total = 0;
-  gssize now = 0;
+  GInputStream *in;
   GError *err = NULL;
 
-  g_return_val_if_fail (decoder->socket != NULL, NULL);
+  g_return_val_if_fail (decoder->connection != NULL, NULL);
   g_return_val_if_fail (len > 0, NULL);
+
+  in = g_io_stream_get_input_stream (G_IO_STREAM (decoder->connection));
+
+  g_return_val_if_fail (in != NULL, NULL);
 
   if (G_UNLIKELY (len > decoder->data_len)) {
     g_free (decoder->data);
@@ -238,15 +184,10 @@ rfb_decoder_read (RfbDecoder * decoder, guint32 len)
     decoder->data_len = len;
   }
 
-  while (total < len) {
-    now = g_socket_receive (decoder->socket, (gchar *) decoder->data + total,
-        len - total, decoder->cancellable, &err);
+  if (!g_input_stream_read_all (in, decoder->data, len, NULL,
+          decoder->cancellable, &err))
+    goto recv_error;
 
-    if (now < 0)
-      goto recv_error;
-
-    total += now;
-  }
   return decoder->data;
 
 recv_error:
@@ -266,24 +207,23 @@ recv_error:
   }
 }
 
-static gint
+static gboolean
 rfb_decoder_send (RfbDecoder * decoder, guint8 * buffer, guint len)
 {
-  gssize now = 0;
+  GOutputStream *out;
   GError *err = NULL;
 
-  g_return_val_if_fail (decoder->socket != NULL, 0);
+  g_return_val_if_fail (decoder->connection != NULL, 0);
   g_return_val_if_fail (buffer != NULL, 0);
   g_return_val_if_fail (len > 0, 0);
 
-  now = g_socket_send (decoder->socket, (gchar *) buffer, len,
-      decoder->cancellable, &err);
+  out = g_io_stream_get_output_stream (G_IO_STREAM (decoder->connection));
 
-  if (now < 0)
+  if (!g_output_stream_write_all (out, buffer, len, NULL, decoder->cancellable,
+          &err))
     goto send_error;
 
-done:
-  return now;
+  return TRUE;
 
 send_error:
   {
@@ -297,7 +237,7 @@ send_error:
       }
     }
     g_clear_error (&err);
-    goto done;
+    return FALSE;
   }
 }
 
@@ -308,7 +248,7 @@ rfb_decoder_send_update_request (RfbDecoder * decoder,
   guint8 data[10];
 
   g_return_if_fail (decoder != NULL);
-  g_return_if_fail (decoder->socket != NULL);
+  g_return_if_fail (decoder->connection != NULL);
 
   data[0] = 3;
   data[1] = incremental;
@@ -334,7 +274,7 @@ rfb_decoder_send_key_event (RfbDecoder * decoder, guint key, gboolean down_flag)
   guint8 data[8];
 
   g_return_if_fail (decoder != NULL);
-  g_return_if_fail (decoder->socket != NULL);
+  g_return_if_fail (decoder->connection != NULL);
 
   data[0] = 4;
   data[1] = down_flag;
@@ -351,7 +291,7 @@ rfb_decoder_send_pointer_event (RfbDecoder * decoder,
   guint8 data[6];
 
   g_return_if_fail (decoder != NULL);
-  g_return_if_fail (decoder->socket != NULL);
+  g_return_if_fail (decoder->connection != NULL);
 
   data[0] = 5;
   data[1] = button_mask;

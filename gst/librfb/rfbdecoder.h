@@ -42,7 +42,8 @@ struct _RfbDecoder
 
   gpointer buffer_handler_data;
 
-  GSocket *socket;
+  GSocketClient *socket_client;
+  GSocketConnection *connection;
   GCancellable *cancellable;
 
   guint8 *data;
