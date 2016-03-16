@@ -45,6 +45,12 @@ GST_STATIC_PAD_TEMPLATE ("src",
       "width = " GST_VIDEO_SIZE_RANGE ", "
       "height = " GST_VIDEO_SIZE_RANGE ", "
       "framerate = " GST_VIDEO_FPS_RANGE ","
+      "texture-target = (string) 2D ; "
+      "video/x-raw(ANY), "
+      "format = (string) RGBA, "
+      "width = " GST_VIDEO_SIZE_RANGE ", "
+      "height = " GST_VIDEO_SIZE_RANGE ", "
+      "framerate = " GST_VIDEO_FPS_RANGE ","
       "texture-target = (string) 2D"
     ));
 
@@ -52,7 +58,13 @@ static GstStaticPadTemplate gst_gl_filter_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY "), "
+    GST_STATIC_CAPS ("video/x-raw(ANY), "
+      "format = (string) RGBA, "
+      "width = " GST_VIDEO_SIZE_RANGE ", "
+      "height = " GST_VIDEO_SIZE_RANGE ", "
+      "framerate = " GST_VIDEO_FPS_RANGE ","
+      "texture-target = (string) 2D ; "
+      "video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY "), "
       "format = (string) RGBA, "
       "width = " GST_VIDEO_SIZE_RANGE ", "
       "height = " GST_VIDEO_SIZE_RANGE ", "
@@ -70,8 +82,7 @@ enum
 #define gst_gl_filter_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLFilter, gst_gl_filter, GST_TYPE_GL_BASE_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_gl_filter_debug, "glfilter", 0,
-        "glfilter element");
-    );
+        "glfilter element"););
 
 static void gst_gl_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -631,13 +642,18 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
   GstCaps *tmp = NULL;
   GstCaps *result = NULL;
 
-  tmp = GST_GL_FILTER_GET_CLASS (filter)->transform_internal_caps (filter,
-      direction, caps, NULL);
+  if (gst_base_transform_is_passthrough (bt)) {
+    tmp = gst_caps_ref (caps);
+  } else {
+    tmp = GST_GL_FILTER_GET_CLASS (filter)->transform_internal_caps (filter,
+        direction, caps, NULL);
 
-  result =
-      gst_gl_filter_set_caps_features (tmp, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-  gst_caps_unref (tmp);
-  tmp = result;
+    result =
+        gst_gl_filter_set_caps_features (tmp,
+        GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+    gst_caps_unref (tmp);
+    tmp = result;
+  }
 
   if (filter_caps) {
     result =
