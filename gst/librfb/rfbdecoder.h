@@ -95,21 +95,6 @@ struct _RfbDecoder
   guint line_size;
 };
 
-#if 0
-typedef struct _RfbRect
-{
-  RfbConnection *connection;
-
-  guint x_pos;
-  guint y_pos;
-  guint width;
-  guint height;
-  guint encoding_type;
-
-  gchar *data;
-} RfbRect;
-#endif
-
 RfbDecoder *rfb_decoder_new (void);
 void rfb_decoder_free (RfbDecoder * decoder);
 gboolean rfb_decoder_connect_tcp (RfbDecoder * decoder,

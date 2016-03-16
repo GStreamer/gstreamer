@@ -20,8 +20,5 @@ librfb_la_LIBADD = $(GST_LIBS) $(GIO_LIBS)
 noinst_HEADERS = \
 	rfb.h \
 	rfbdecoder.h \
-	rfbbuffer.h \
-	rfbcontext.h \
-	rfbutil.h \
 	gstrfbsrc.h \
 	d3des.h
