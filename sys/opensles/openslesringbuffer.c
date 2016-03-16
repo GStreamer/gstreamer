@@ -973,7 +973,14 @@ gst_opensles_ringbuffer_delay (GstAudioRingBuffer * rb)
       playedpos =
           gst_util_uint64_scale_round (position, rb->spec.info.rate, 1000);
       queuedpos = g_atomic_int_get (&thiz->segqueued) * rb->samples_per_seg;
-      res = queuedpos - playedpos;
+      if (queuedpos < playedpos) {
+        res = 0;
+        GST_ERROR_OBJECT (thiz,
+            "Queued position smaller than playback position (%" G_GUINT64_FORMAT
+            " < %" G_GUINT64_FORMAT ")", queuedpos, playedpos);
+      } else {
+        res = queuedpos - playedpos;
+      }
     }
 
     GST_LOG_OBJECT (thiz, "queued samples %" G_GUINT64_FORMAT " position %u ms "
