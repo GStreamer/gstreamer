@@ -167,7 +167,8 @@ gst_gl_stereo_mix_class_init (GstGLStereoMixClass * klass)
       gst_gl_stereo_mix_get_output_buffer;
   videoaggregator_class->find_best_format = gst_gl_stereo_mix_find_best_format;
 
-  base_mix_class->supported_gl_api = GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
+  base_mix_class->supported_gl_api =
+      GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
 }
 
 static void

@@ -45,7 +45,7 @@
 #define GST_CAT_DEFAULT gst_gl_stereosplit_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define SUPPORTED_GL_APIS GST_GL_API_OPENGL | GST_GL_API_OPENGL3
+#define SUPPORTED_GL_APIS GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_stereosplit_debug, "glstereosplit", 0, "glstereosplit element");
 
