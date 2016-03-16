@@ -1043,9 +1043,42 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
       "%d bits width, codec tag %u (flags %02X)", channels, rate, width,
       codec_tag, flags);
 
+  if (codec_tag == 10) {
+    guint8 aac_packet_type = GST_READ_UINT8 (data + 8);
+
+    switch (aac_packet_type) {
+      case 0:
+      {
+        /* AudioSpecificConfig data */
+        GST_LOG_OBJECT (demux, "got an AAC codec data packet");
+        if (demux->audio_codec_data) {
+          gst_buffer_unref (demux->audio_codec_data);
+        }
+        demux->audio_codec_data = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY,
+            7 + codec_data, demux->tag_data_size - codec_data);
+
+        /* Use that buffer data in the caps */
+        if (demux->audio_pad)
+          gst_flv_demux_audio_negotiate (demux, codec_tag, rate, channels, width);
+        goto beach;
+      }
+      case 1:
+        if (!demux->audio_codec_data) {
+          GST_ERROR_OBJECT (demux, "got AAC audio packet before codec data");
+          ret = GST_FLOW_OK;
+          goto beach;
+        }
+        /* AAC raw packet */
+        GST_LOG_OBJECT (demux, "got a raw AAC audio packet");
+        break;
+      default:
+        GST_WARNING_OBJECT (demux, "invalid AAC packet type %u",
+            aac_packet_type);
+    }
+  }
+
   /* If we don't have our audio pad created, then create it. */
   if (G_UNLIKELY (!demux->audio_pad)) {
-
     demux->audio_pad =
         gst_pad_new_from_template (gst_element_class_get_pad_template
         (GST_ELEMENT_GET_CLASS (demux), "audio"), "audio");
@@ -1130,38 +1163,6 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   /* Create buffer from pad */
   outbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY,
       7 + codec_data, demux->tag_data_size - codec_data);
-
-  if (demux->audio_codec_tag == 10) {
-    guint8 aac_packet_type = GST_READ_UINT8 (data + 8);
-
-    switch (aac_packet_type) {
-      case 0:
-      {
-        /* AudioSpecificConfig data */
-        GST_LOG_OBJECT (demux, "got an AAC codec data packet");
-        if (demux->audio_codec_data) {
-          gst_buffer_unref (demux->audio_codec_data);
-        }
-        demux->audio_codec_data = outbuf;
-        /* Use that buffer data in the caps */
-        gst_flv_demux_audio_negotiate (demux, codec_tag, rate, channels, width);
-        goto beach;
-      }
-      case 1:
-        if (!demux->audio_codec_data) {
-          GST_ERROR_OBJECT (demux, "got AAC audio packet before codec data");
-          ret = GST_FLOW_OK;
-          gst_buffer_unref (outbuf);
-          goto beach;
-        }
-        /* AAC raw packet */
-        GST_LOG_OBJECT (demux, "got a raw AAC audio packet");
-        break;
-      default:
-        GST_WARNING_OBJECT (demux, "invalid AAC packet type %u",
-            aac_packet_type);
-    }
-  }
 
   /* detect (and deem to be resyncs)  large pts gaps */
   if (gst_flv_demux_update_resync (demux, pts, demux->audio_need_discont,
@@ -1457,6 +1458,40 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   GST_LOG_OBJECT (demux, "video tag with codec tag %u, keyframe (%d) "
       "(flags %02X)", codec_tag, keyframe, flags);
 
+  if (codec_tag == 7) {
+    guint8 avc_packet_type = GST_READ_UINT8 (data + 8);
+
+    switch (avc_packet_type) {
+      case 0:
+      {
+        /* AVCDecoderConfigurationRecord data */
+        GST_LOG_OBJECT (demux, "got an H.264 codec data packet");
+        if (demux->video_codec_data) {
+          gst_buffer_unref (demux->video_codec_data);
+        }
+        demux->video_codec_data = gst_buffer_copy_region (buffer,
+            GST_BUFFER_COPY_MEMORY, 7 + codec_data,
+            demux->tag_data_size - codec_data);;
+        /* Use that buffer data in the caps */
+        if (demux->video_pad)
+          gst_flv_demux_video_negotiate (demux, codec_tag);
+        goto beach;
+      }
+      case 1:
+        /* H.264 NALU packet */
+        if (!demux->video_codec_data) {
+          GST_ERROR_OBJECT (demux, "got H.264 video packet before codec data");
+          ret = GST_FLOW_OK;
+          goto beach;
+        }
+        GST_LOG_OBJECT (demux, "got a H.264 NALU video packet");
+        break;
+      default:
+        GST_WARNING_OBJECT (demux, "invalid video packet type %u",
+            avc_packet_type);
+    }
+  }
+
   /* If we don't have our video pad created, then create it. */
   if (G_UNLIKELY (!demux->video_pad)) {
     demux->video_pad =
@@ -1547,38 +1582,6 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   /* Create buffer from pad */
   outbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY,
       7 + codec_data, demux->tag_data_size - codec_data);
-
-  if (demux->video_codec_tag == 7) {
-    guint8 avc_packet_type = GST_READ_UINT8 (data + 8);
-
-    switch (avc_packet_type) {
-      case 0:
-      {
-        /* AVCDecoderConfigurationRecord data */
-        GST_LOG_OBJECT (demux, "got an H.264 codec data packet");
-        if (demux->video_codec_data) {
-          gst_buffer_unref (demux->video_codec_data);
-        }
-        demux->video_codec_data = outbuf;
-        /* Use that buffer data in the caps */
-        gst_flv_demux_video_negotiate (demux, codec_tag);
-        goto beach;
-      }
-      case 1:
-        /* H.264 NALU packet */
-        if (!demux->video_codec_data) {
-          GST_ERROR_OBJECT (demux, "got H.264 video packet before codec data");
-          ret = GST_FLOW_OK;
-          gst_buffer_unref (outbuf);
-          goto beach;
-        }
-        GST_LOG_OBJECT (demux, "got a H.264 NALU video packet");
-        break;
-      default:
-        GST_WARNING_OBJECT (demux, "invalid video packet type %u",
-            avc_packet_type);
-    }
-  }
 
   /* detect (and deem to be resyncs)  large dts gaps */
   if (gst_flv_demux_update_resync (demux, dts, demux->video_need_discont,
