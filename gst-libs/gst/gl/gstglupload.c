@@ -111,32 +111,50 @@ _set_caps_features_with_passthrough (const GstCaps * caps,
   guint i, j, m, n;
   GstCaps *tmp;
 
-  tmp = gst_caps_copy (caps);
+  tmp = gst_caps_new_empty ();
 
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
     GstCapsFeatures *features, *orig_features;
+    GstStructure *s = gst_caps_get_structure (caps, i);
 
     orig_features = gst_caps_get_features (caps, i);
     features = gst_caps_features_new (feature_name, NULL);
 
-    m = gst_caps_features_get_size (orig_features);
-    for (j = 0; j < m; j++) {
-      const gchar *feature = gst_caps_features_get_nth (orig_features, j);
+    if (gst_caps_features_is_any (orig_features)) {
+      /* if we have any features, we add both the features with and without @passthrough */
+      gst_caps_append_structure_full (tmp, gst_structure_copy (s),
+          gst_caps_features_copy (features));
 
-      /* if we already have the features */
-      if (gst_caps_features_contains (features, feature))
-        continue;
+      m = gst_caps_features_get_size (passthrough);
+      for (j = 0; j < m; j++) {
+        const gchar *feature = gst_caps_features_get_nth (passthrough, j);
 
-      if (g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY) == 0)
-        continue;
+        /* if we already have the features */
+        if (gst_caps_features_contains (features, feature))
+          continue;
 
-      if (gst_caps_features_contains (passthrough, feature)) {
         gst_caps_features_add (features, feature);
+      }
+    } else {
+      m = gst_caps_features_get_size (orig_features);
+      for (j = 0; j < m; j++) {
+        const gchar *feature = gst_caps_features_get_nth (orig_features, j);
+
+        /* if we already have the features */
+        if (gst_caps_features_contains (features, feature))
+          continue;
+
+        if (g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY) == 0)
+          continue;
+
+        if (gst_caps_features_contains (passthrough, feature)) {
+          gst_caps_features_add (features, feature);
+        }
       }
     }
 
-    gst_caps_set_features (tmp, i, features);
+    gst_caps_append_structure_full (tmp, gst_structure_copy (s), features);
   }
 
   return tmp;
@@ -297,8 +315,8 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
     gst_allocation_params_init (&params);
 
     allocator =
-        GST_ALLOCATOR (gst_gl_memory_allocator_get_default (upload->upload->
-            context));
+        GST_ALLOCATOR (gst_gl_memory_allocator_get_default (upload->
+            upload->context));
     gst_query_add_allocation_param (query, allocator, &params);
     gst_object_unref (allocator);
   }
@@ -584,8 +602,8 @@ _egl_image_upload_perform_gl_thread (GstGLContext * context,
   }
 
   if (GST_IS_GL_BUFFER_POOL (image->buffer->pool))
-    gst_gl_buffer_pool_replace_last_buffer (GST_GL_BUFFER_POOL (image->buffer->
-            pool), image->buffer);
+    gst_gl_buffer_pool_replace_last_buffer (GST_GL_BUFFER_POOL (image->
+            buffer->pool), image->buffer);
 }
 
 static GstGLUploadReturn
@@ -1026,11 +1044,11 @@ _upload_meta_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
   gpointer handle;
 
   gl_apis =
-      gst_gl_api_to_string (gst_gl_context_get_gl_api (upload->
-          upload->context));
+      gst_gl_api_to_string (gst_gl_context_get_gl_api (upload->upload->
+          context));
   platform =
-      gst_gl_platform_to_string (gst_gl_context_get_gl_platform
-      (upload->upload->context));
+      gst_gl_platform_to_string (gst_gl_context_get_gl_platform (upload->
+          upload->context));
   handle = (gpointer) gst_gl_context_get_gl_context (upload->upload->context);
 
   gl_context =
