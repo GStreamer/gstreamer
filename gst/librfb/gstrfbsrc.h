@@ -25,7 +25,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
 #include <gst/video/gstvideopool.h>
-#include <librfb/rfb.h>
+
+#include "rfbdecoder.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_RFB_SRC \

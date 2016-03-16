@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include "rfb.h"
+#include "rfbdecoder.h"
 #include "d3des.h"
 #include <gst/gst.h>
 
