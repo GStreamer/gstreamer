@@ -932,17 +932,8 @@ gst_gl_caps_replace_all_caps_features (const GstCaps * caps,
   guint i = 0;
 
   for (i = 0; i < n; i++) {
-    GstCapsFeatures *features = gst_caps_get_features (tmp, i);
-    if (features) {
-      guint n_f = gst_caps_features_get_size (features);
-      guint j = 0;
-      for (j = 0; j < n_f; j++) {
-        gst_caps_features_remove_id (features,
-            gst_caps_features_get_nth_id (features, j));
-      }
-    }
-
-    gst_caps_features_add (features, feature_name);
+    gst_caps_set_features (tmp, i,
+        gst_caps_features_from_string (feature_name));
   }
 
   return tmp;
