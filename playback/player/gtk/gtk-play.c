@@ -1060,7 +1060,7 @@ create_visualization_menu (GtkPlay * play)
     item = gtk_radio_menu_item_new_with_label (group, label);
     group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (item));
     if (g_strcmp0 (label, cur_vis) == 0)
-      gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), True);
+      gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), TRUE);
     g_object_set_data_full (G_OBJECT (item), "name", label,
         (GDestroyNotify) g_free);
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
@@ -1075,7 +1075,7 @@ create_visualization_menu (GtkPlay * play)
   group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (item));
   g_object_set_data (G_OBJECT (item), "name", (gpointer) "disable");
   if (cur_vis == NULL)
-    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), True);
+    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), TRUE);
   g_signal_connect (G_OBJECT (item), "toggled",
       G_CALLBACK (visualization_changed_cb), play);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), sep);
@@ -1130,7 +1130,7 @@ create_tracks_menu (GtkPlay * play, GstPlayerMediaInfo * media_info, GType type)
     g_object_set_data (G_OBJECT (item), "index", GINT_TO_POINTER (index));
     g_object_set_data (G_OBJECT (item), "type", GSIZE_TO_POINTER (type));
     if (current_index == index)
-      gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), True);
+      gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), TRUE);
     g_free (buffer);
     g_signal_connect (G_OBJECT (item), "toggled",
         G_CALLBACK (track_changed_cb), play);
@@ -1143,7 +1143,7 @@ create_tracks_menu (GtkPlay * play, GstPlayerMediaInfo * media_info, GType type)
   g_object_set_data (G_OBJECT (item), "index", GINT_TO_POINTER (-1));
   g_object_set_data (G_OBJECT (item), "type", GSIZE_TO_POINTER (type));
   if (current_index == -1)
-    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), True);
+    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), TRUE);
   g_signal_connect (G_OBJECT (item), "toggled",
       G_CALLBACK (track_changed_cb), play);
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), sep);
