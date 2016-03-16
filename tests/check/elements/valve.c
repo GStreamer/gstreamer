@@ -23,82 +23,62 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 #include <gst/gst.h>
-
-
-static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw"));
-
-static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw"));
-
-gboolean event_received = FALSE;
-gboolean buffer_allocated = FALSE;
-
-static gboolean
-event_func (GstPad * pad, GstObject * parent, GstEvent * event)
-{
-  event_received = TRUE;
-  gst_event_unref (event);
-  return TRUE;
-}
 
 GST_START_TEST (test_valve_basic)
 {
-  GstElement *valve;
-  GstPad *sink;
-  GstPad *src;
-  GstCaps *caps, *templ_caps;
+  GstHarness *h = gst_harness_new ("valve");
 
-  valve = gst_check_setup_element ("valve");
+  /* when not dropping, we don't drop buffers.... */
+  g_object_set (h->element, "drop", FALSE, NULL);
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, gst_buffer_new ()));
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, gst_buffer_new ()));
+  fail_unless_equals_int (2, gst_harness_buffers_received (h));
 
-  sink = gst_check_setup_sink_pad_by_name (valve, &sinktemplate, "src");
-  src = gst_check_setup_src_pad_by_name (valve, &srctemplate, "sink");
-  gst_pad_set_event_function (sink, event_func);
-  gst_pad_set_active (src, TRUE);
-  gst_pad_set_active (sink, TRUE);
-  gst_element_set_state (valve, GST_STATE_PLAYING);
+  /* when dropping, the buffers don't make it through */
+  g_object_set (h->element, "drop", TRUE, NULL);
+  fail_unless_equals_int (1, gst_harness_events_received (h));
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, gst_buffer_new ()));
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, gst_buffer_new ()));
+  fail_unless_equals_int (2, gst_harness_buffers_received (h));
 
-  g_object_set (valve, "drop", FALSE, NULL);
+  gst_harness_teardown (h);
+}
 
-  fail_unless (gst_pad_push_event (src, gst_event_new_eos ()) == TRUE);
-  fail_unless (event_received == TRUE);
-  fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_EOS);
-  fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_EOS);
-  fail_unless (buffers == NULL);
-  caps = gst_pad_query_caps (src, NULL);
-  templ_caps = gst_pad_get_pad_template_caps (src);
-  fail_unless (caps && gst_caps_is_equal (caps, templ_caps));
-  gst_caps_unref (templ_caps);
-  gst_caps_unref (caps);
+GST_END_TEST;
 
-  gst_check_drop_buffers ();
-  fail_unless (gst_pad_push_event (src, gst_event_new_flush_start ()) == TRUE);
-  fail_unless (gst_pad_push_event (src,
-          gst_event_new_flush_stop (TRUE)) == TRUE);
-  event_received = buffer_allocated = FALSE;
+GST_START_TEST (test_valve_upstream_events_dont_send_sticky)
+{
+  GstHarness *h = gst_harness_new ("valve");
 
-  g_object_set (valve, "drop", TRUE, NULL);
-  fail_unless (gst_pad_push_event (src, gst_event_new_eos ()) == TRUE);
-  fail_unless (event_received == FALSE);
-  fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_EOS);
-  fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_EOS);
-  fail_unless (buffers == NULL);
-  caps = gst_pad_query_caps (src, NULL);
-  templ_caps = gst_pad_get_pad_template_caps (src);
-  fail_unless (caps && gst_caps_is_equal (caps, templ_caps));
-  gst_caps_unref (templ_caps);
-  gst_caps_unref (caps);
+  /* set to drop */
+  g_object_set (h->element, "drop", TRUE, NULL);
 
-  gst_pad_set_active (src, FALSE);
-  gst_pad_set_active (sink, FALSE);
-  gst_check_teardown_src_pad (valve);
-  gst_check_teardown_sink_pad (valve);
-  gst_check_teardown_element (valve);
+  /* set caps to trigger sticky-events being pushed to valve */
+  gst_harness_set_src_caps_str (h, "mycaps");
+
+  /* verify no events have made it through yet */
+  fail_unless_equals_int (0, gst_harness_events_received (h));
+
+   /* stop dropping */
+   g_object_set (h->element, "drop", FALSE, NULL);
+
+  /* send an upstream event and verify that no
+     downstream events was pushed as a result of this */
+  gst_harness_push_upstream_event (h, gst_event_new_reconfigure ());
+  fail_unless_equals_int (0, gst_harness_events_received (h));
+
+  /* push a buffer, and verify this pushes the sticky events */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, gst_buffer_new ()));
+  fail_unless_equals_int (3, gst_harness_events_received (h));
+
+  gst_harness_teardown (h);
 }
 
 GST_END_TEST;
@@ -111,6 +91,8 @@ valve_suite (void)
 
   tc_chain = tcase_create ("valve_basic");
   tcase_add_test (tc_chain, test_valve_basic);
+  tcase_add_test (tc_chain, test_valve_upstream_events_dont_send_sticky);
+
   suite_add_tcase (s, tc_chain);
 
   return s;
