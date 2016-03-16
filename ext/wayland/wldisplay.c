@@ -56,7 +56,8 @@ gst_wl_display_finalize (GObject * gobject)
   GstWlDisplay *self = GST_WL_DISPLAY (gobject);
 
   gst_poll_set_flushing (self->wl_fd_poll, TRUE);
-  g_thread_join (self->thread);
+  if (self->thread)
+    g_thread_join (self->thread);
 
   /* to avoid buffers being unregistered from another thread
    * at the same time, take their ownership */
