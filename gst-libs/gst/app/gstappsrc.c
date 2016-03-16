@@ -1707,6 +1707,40 @@ gst_app_src_push_buffer_full (GstAppSrc * appsrc, GstBuffer * buffer,
 
   priv = appsrc->priv;
 
+  if (GST_BUFFER_DTS (buffer) == GST_CLOCK_TIME_NONE &&
+      GST_BUFFER_PTS (buffer) == GST_CLOCK_TIME_NONE &&
+      gst_base_src_get_do_timestamp (GST_BASE_SRC_CAST (appsrc))) {
+    GstClock *clock;
+
+    clock = gst_element_get_clock (GST_ELEMENT_CAST (appsrc));
+    if (clock) {
+      GstClockTime now;
+      GstClockTime base_time =
+          gst_element_get_base_time (GST_ELEMENT_CAST (appsrc));
+
+      now = gst_clock_get_time (clock);
+      if (now > base_time)
+        now -= base_time;
+      else
+        now = 0;
+      gst_object_unref (clock);
+
+      if (!steal_ref)
+        buffer = gst_buffer_copy (buffer);
+      else
+        buffer = gst_buffer_make_writable (buffer);
+
+      GST_BUFFER_PTS (buffer) = now;
+      GST_BUFFER_DTS (buffer) = now;
+      steal_ref = TRUE;
+    } else {
+      GST_WARNING_OBJECT (appsrc,
+          "do-timestamp=TRUE but buffers are provided before "
+          "reaching the PLAYING state and having a clock. Timestamps will "
+          "not be accurate!");
+    }
+  }
+
   g_mutex_lock (&priv->mutex);
 
   while (TRUE) {
