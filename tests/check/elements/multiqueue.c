@@ -314,6 +314,8 @@ mq_dummypad_query (GstPad * sinkpad, GstObject * parent, GstQuery * query)
 
 struct PadData
 {
+  GstPad *input_pad;
+  GstPad *out_pad;
   guint8 pad_num;
   guint32 *max_linked_id_ptr;
   guint32 *eos_count_ptr;
@@ -352,20 +354,22 @@ mq_dummypad_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buf)
   /* For not-linked pads, ensure that we're not running ahead of the 'linked'
    * pads. The first buffer is allowed to get ahead, because otherwise things can't
    * always pre-roll correctly */
-  if (!pad_data->is_linked) {
-    /* If there are no linked pads, we can't track a max_id for them :) */
-    if (pad_data->n_linked > 0 && !pad_data->first_buf) {
-      g_mutex_lock (&_check_lock);
-      fail_unless (cur_id <= *(pad_data->max_linked_id_ptr) + 1,
-          "Got buffer %u on pad %u before buffer %u was seen on a "
-          "linked pad (max: %u)", cur_id, pad_data->pad_num, cur_id - 1,
-          *(pad_data->max_linked_id_ptr));
-      g_mutex_unlock (&_check_lock);
+  if (pad_data->max_linked_id_ptr) {
+    if (!pad_data->is_linked) {
+      /* If there are no linked pads, we can't track a max_id for them :) */
+      if (pad_data->n_linked > 0 && !pad_data->first_buf) {
+        g_mutex_lock (&_check_lock);
+        fail_unless (cur_id <= *(pad_data->max_linked_id_ptr) + 1,
+            "Got buffer %u on pad %u before buffer %u was seen on a "
+            "linked pad (max: %u)", cur_id, pad_data->pad_num, cur_id - 1,
+            *(pad_data->max_linked_id_ptr));
+        g_mutex_unlock (&_check_lock);
+      }
+    } else {
+      /* Update the max_id value */
+      if (cur_id > *(pad_data->max_linked_id_ptr))
+        *(pad_data->max_linked_id_ptr) = cur_id;
     }
-  } else {
-    /* Update the max_id value */
-    if (cur_id > *(pad_data->max_linked_id_ptr))
-      *(pad_data->max_linked_id_ptr) = cur_id;
   }
   pad_data->first_buf = FALSE;
 
@@ -406,16 +410,112 @@ mq_dummypad_event (GstPad * sinkpad, GstObject * parent, GstEvent * event)
 }
 
 static void
+construct_n_pads (GstElement * mq, struct PadData *pad_data, gint n_pads,
+    gint n_linked)
+{
+  gint i;
+  GstSegment segment;
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+
+  /* Construct NPADS dummy output pads. The first 'n_linked' return FLOW_OK, the rest
+   * return NOT_LINKED. The not-linked ones check the expected ordering of 
+   * output buffers */
+  for (i = 0; i < n_pads; i++) {
+    GstPad *mq_srcpad, *mq_sinkpad, *inpad, *outpad;
+    gchar *name;
+
+    name = g_strdup_printf ("dummysrc%d", i);
+    inpad = gst_pad_new (name, GST_PAD_SRC);
+    g_free (name);
+    gst_pad_set_query_function (inpad, mq_dummypad_query);
+
+    mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
+    fail_unless (mq_sinkpad != NULL);
+    fail_unless (gst_pad_link (inpad, mq_sinkpad) == GST_PAD_LINK_OK);
+
+    gst_pad_set_active (inpad, TRUE);
+
+    gst_pad_push_event (inpad, gst_event_new_stream_start ("test"));
+    gst_pad_push_event (inpad, gst_event_new_segment (&segment));
+
+    mq_srcpad = mq_sinkpad_to_srcpad (mq, mq_sinkpad);
+
+    name = g_strdup_printf ("dummysink%d", i);
+    outpad = gst_pad_new (name, GST_PAD_SINK);
+    g_free (name);
+    gst_pad_set_chain_function (outpad, mq_dummypad_chain);
+    gst_pad_set_event_function (outpad, mq_dummypad_event);
+    gst_pad_set_query_function (outpad, mq_dummypad_query);
+
+    pad_data[i].pad_num = i;
+    pad_data[i].input_pad = inpad;
+    pad_data[i].out_pad = outpad;
+    pad_data[i].max_linked_id_ptr = NULL;
+    pad_data[i].eos_count_ptr = NULL;
+    pad_data[i].is_linked = (i < n_linked ? TRUE : FALSE);
+    pad_data[i].n_linked = n_linked;
+    pad_data[i].cond = NULL;
+    pad_data[i].mutex = NULL;
+    pad_data[i].first_buf = TRUE;
+    gst_pad_set_element_private (outpad, pad_data + i);
+
+    fail_unless (gst_pad_link (mq_srcpad, outpad) == GST_PAD_LINK_OK);
+    gst_pad_set_active (outpad, TRUE);
+
+    gst_object_unref (mq_sinkpad);
+    gst_object_unref (mq_srcpad);
+  }
+}
+
+static void
+push_n_buffers (struct PadData *pad_data, gint num_buffers,
+    const guint8 * pad_pattern, guint pattern_size)
+{
+  gint i;
+
+  for (i = 0; i < num_buffers; i++) {
+    guint8 cur_pad;
+    GstBuffer *buf;
+    GstFlowReturn ret;
+    GstMapInfo info;
+
+    cur_pad = pad_pattern[i % pattern_size];
+
+    buf = gst_buffer_new_and_alloc (4);
+    g_mutex_lock (&_check_lock);
+    fail_if (buf == NULL);
+    g_mutex_unlock (&_check_lock);
+
+    fail_unless (gst_buffer_map (buf, &info, GST_MAP_WRITE));
+    GST_WRITE_UINT32_BE (info.data, i + 1);
+    gst_buffer_unmap (buf, &info);
+    GST_BUFFER_TIMESTAMP (buf) = (i + 1) * GST_SECOND;
+
+    ret = gst_pad_push (pad_data[cur_pad].input_pad, buf);
+    g_mutex_lock (&_check_lock);
+    if (pad_data[cur_pad].is_linked) {
+      fail_unless (ret == GST_FLOW_OK,
+          "Push on pad %d returned %d when FLOW_OK was expected", cur_pad, ret);
+    } else {
+      /* Expect OK initially, then NOT_LINKED when the srcpad starts pushing */
+      fail_unless (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED,
+          "Push on pad %d returned %d when FLOW_OK or NOT_LINKED  was expected",
+          cur_pad, ret);
+    }
+    g_mutex_unlock (&_check_lock);
+  }
+}
+
+static void
 run_output_order_test (gint n_linked)
 {
-  /* This test creates a multiqueue with 2 linked output, and 3 outputs that 
-   * return 'not-linked' when data is pushed, then verifies that all buffers 
-   * are received on not-linked pads only after earlier buffers on the 
+  /* This test creates a multiqueue with 2 linked output, and 3 outputs that
+   * return 'not-linked' when data is pushed, then verifies that all buffers
+   * are received on not-linked pads only after earlier buffers on the
    * 'linked' pads are made */
   GstElement *pipe;
   GstElement *mq;
-  GstPad *inputpads[5];
-  GstPad *sinkpads[5];
   struct PadData pad_data[5];
   guint32 max_linked_id;
   guint32 eos_seen;
@@ -424,6 +524,99 @@ run_output_order_test (gint n_linked)
   gint i;
   const gint NPADS = 5;
   const gint NBUFFERS = 1000;
+
+  g_mutex_init (&mutex);
+  g_cond_init (&cond);
+
+  pipe = gst_bin_new ("testbin");
+
+  mq = gst_element_factory_make ("multiqueue", NULL);
+  fail_unless (mq != NULL);
+  gst_bin_add (GST_BIN (pipe), mq);
+
+  /* No limits */
+  g_object_set (mq,
+      "max-size-bytes", (guint) 0,
+      "max-size-buffers", (guint) 0,
+      "max-size-time", (guint64) 0,
+      "extra-size-bytes", (guint) 0,
+      "extra-size-buffers", (guint) 0, "extra-size-time", (guint64) 0, NULL);
+
+  construct_n_pads (mq, pad_data, NPADS, n_linked);
+  for (i = 0; i < NPADS; i++) {
+    pad_data[i].max_linked_id_ptr = &max_linked_id;
+    /* Only look for EOS on the linked pads */
+    pad_data[i].eos_count_ptr = (i < n_linked) ? &eos_seen : NULL;
+    pad_data[i].cond = &cond;
+    pad_data[i].mutex = &mutex;
+  }
+
+  /* Run the test. Push 1000 buffers through the multiqueue in a pattern */
+  max_linked_id = 0;
+  eos_seen = 0;
+  gst_element_set_state (pipe, GST_STATE_PLAYING);
+
+  {
+    const guint8 pad_pattern[] =
+        { 0, 0, 0, 0, 1, 1, 2, 1, 0, 2, 3, 2, 3, 1, 4 };
+    const guint n = sizeof (pad_pattern) / sizeof (guint8);
+    push_n_buffers (pad_data, NBUFFERS, pad_pattern, n);
+  }
+
+  for (i = 0; i < NPADS; i++) {
+    gst_pad_push_event (pad_data[i].input_pad, gst_event_new_eos ());
+  }
+
+  /* Wait while the buffers are processed */
+  g_mutex_lock (&mutex);
+  /* We wait until EOS has been pushed on all linked pads */
+  while (eos_seen < n_linked) {
+    g_cond_wait (&cond, &mutex);
+  }
+  g_mutex_unlock (&mutex);
+
+  /* Clean up */
+  for (i = 0; i < NPADS; i++) {
+    GstPad *mq_input = gst_pad_get_peer (pad_data[i].input_pad);
+
+    gst_pad_unlink (pad_data[i].input_pad, mq_input);
+    gst_element_release_request_pad (mq, mq_input);
+    gst_object_unref (mq_input);
+    gst_object_unref (pad_data[i].input_pad);
+    gst_object_unref (pad_data[i].out_pad);
+  }
+
+  gst_element_set_state (pipe, GST_STATE_NULL);
+  gst_object_unref (pipe);
+
+  g_cond_clear (&cond);
+  g_mutex_clear (&mutex);
+}
+
+GST_START_TEST (test_output_order)
+{
+  run_output_order_test (2);
+  run_output_order_test (0);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_not_linked_eos)
+{
+  /* This test creates a multiqueue with 1 linked output and 1 not-linked
+   * pad. It pushes a few buffers through each, then EOS on the linked
+   * pad and waits until that arrives. After that, it pushes some more
+   * buffers on the not-linked pad and then EOS and checks that those
+   * are all output */
+  GstElement *pipe;
+  GstElement *mq;
+  struct PadData pad_data[2];
+  guint32 eos_seen;
+  GMutex mutex;
+  GCond cond;
+  gint i;
+  const gint NPADS = 2;
+  const gint NBUFFERS = 20;
   GstSegment segment;
 
   gst_segment_init (&segment, GST_FORMAT_BYTES);
@@ -445,115 +638,58 @@ run_output_order_test (gint n_linked)
       "extra-size-bytes", (guint) 0,
       "extra-size-buffers", (guint) 0, "extra-size-time", (guint64) 0, NULL);
 
-  /* Construct NPADS dummy output pads. The first 'n_linked' return FLOW_OK, the rest
-   * return NOT_LINKED. The not-linked ones check the expected ordering of 
-   * output buffers */
+  /* Construct NPADS dummy output pads. The first 1 returns FLOW_OK, the rest
+   * return NOT_LINKED. */
+  construct_n_pads (mq, pad_data, NPADS, 1);
   for (i = 0; i < NPADS; i++) {
-    GstPad *mq_srcpad, *mq_sinkpad;
-    gchar *name;
-
-    name = g_strdup_printf ("dummysrc%d", i);
-    inputpads[i] = gst_pad_new (name, GST_PAD_SRC);
-    g_free (name);
-    gst_pad_set_query_function (inputpads[i], mq_dummypad_query);
-
-    mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
-    fail_unless (mq_sinkpad != NULL);
-    fail_unless (gst_pad_link (inputpads[i], mq_sinkpad) == GST_PAD_LINK_OK);
-
-    gst_pad_set_active (inputpads[i], TRUE);
-
-    gst_pad_push_event (inputpads[i], gst_event_new_stream_start ("test"));
-    gst_pad_push_event (inputpads[i], gst_event_new_segment (&segment));
-
-    mq_srcpad = mq_sinkpad_to_srcpad (mq, mq_sinkpad);
-
-    name = g_strdup_printf ("dummysink%d", i);
-    sinkpads[i] = gst_pad_new (name, GST_PAD_SINK);
-    g_free (name);
-    gst_pad_set_chain_function (sinkpads[i], mq_dummypad_chain);
-    gst_pad_set_event_function (sinkpads[i], mq_dummypad_event);
-    gst_pad_set_query_function (sinkpads[i], mq_dummypad_query);
-
-    pad_data[i].pad_num = i;
-    pad_data[i].max_linked_id_ptr = &max_linked_id;
+    /* Only look for EOS on the linked pads */
     pad_data[i].eos_count_ptr = &eos_seen;
-    pad_data[i].is_linked = (i < n_linked ? TRUE : FALSE);
-    pad_data[i].n_linked = n_linked;
     pad_data[i].cond = &cond;
     pad_data[i].mutex = &mutex;
-    pad_data[i].first_buf = TRUE;
-    gst_pad_set_element_private (sinkpads[i], pad_data + i);
-
-    fail_unless (gst_pad_link (mq_srcpad, sinkpads[i]) == GST_PAD_LINK_OK);
-    gst_pad_set_active (sinkpads[i], TRUE);
-
-    gst_object_unref (mq_sinkpad);
-    gst_object_unref (mq_srcpad);
   }
 
-  /* Run the test. Push 1000 buffers through the multiqueue in a pattern */
-
-  max_linked_id = 0;
+  /* Run the test. Push 20 buffers through the multiqueue in a pattern */
   eos_seen = 0;
   gst_element_set_state (pipe, GST_STATE_PLAYING);
 
-  for (i = 0; i < NBUFFERS; i++) {
-    const guint8 pad_pattern[] =
-        { 0, 0, 0, 0, 1, 1, 2, 1, 0, 2, 3, 2, 3, 1, 4 };
+  {
+    const guint8 pad_pattern[] = { 0, 1 };
     const guint n = sizeof (pad_pattern) / sizeof (guint8);
-    guint8 cur_pad;
-    GstBuffer *buf;
-    GstFlowReturn ret;
-    GstMapInfo info;
-
-    cur_pad = pad_pattern[i % n];
-
-    buf = gst_buffer_new_and_alloc (4);
-    g_mutex_lock (&_check_lock);
-    fail_if (buf == NULL);
-    g_mutex_unlock (&_check_lock);
-
-    fail_unless (gst_buffer_map (buf, &info, GST_MAP_WRITE));
-    GST_WRITE_UINT32_BE (info.data, i + 1);
-    gst_buffer_unmap (buf, &info);
-    GST_BUFFER_TIMESTAMP (buf) = (i + 1) * GST_SECOND;
-
-    ret = gst_pad_push (inputpads[cur_pad], buf);
-    g_mutex_lock (&_check_lock);
-    if (pad_data[cur_pad].is_linked) {
-      fail_unless (ret == GST_FLOW_OK,
-          "Push on pad %d returned %d when FLOW_OK was expected", cur_pad, ret);
-    } else {
-      /* Expect OK initially, then NOT_LINKED when the srcpad starts pushing */
-      fail_unless (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED,
-          "Push on pad %d returned %d when FLOW_OK or NOT_LINKED  was expected",
-          cur_pad, ret);
-    }
-    g_mutex_unlock (&_check_lock);
-  }
-  for (i = 0; i < NPADS; i++) {
-    gst_pad_push_event (inputpads[i], gst_event_new_eos ());
+    push_n_buffers (pad_data, NBUFFERS, pad_pattern, n);
   }
 
-  /* Wait while the buffers are processed */
+  /* Make the linked pad go EOS */
+  gst_pad_push_event (pad_data[0].input_pad, gst_event_new_eos ());
+
   g_mutex_lock (&mutex);
-  /* We wait until EOS has been pushed on all linked pads */
-  while (eos_seen < n_linked) {
+  /* Wait until EOS has been seen on the linked pad */
+  while (eos_seen == 0)
     g_cond_wait (&cond, &mutex);
+  g_mutex_unlock (&mutex);
+
+  /* Now push some more buffers to the not-linked pad */
+  {
+    const guint8 pad_pattern[] = { 1, 1 };
+    const guint n = sizeof (pad_pattern) / sizeof (guint8);
+    push_n_buffers (pad_data, NBUFFERS, pad_pattern, n);
   }
+  /* And EOS on the not-linked pad */
+  gst_pad_push_event (pad_data[1].input_pad, gst_event_new_eos ());
+
+  g_mutex_lock (&mutex);
+  while (eos_seen < NPADS)
+    g_cond_wait (&cond, &mutex);
   g_mutex_unlock (&mutex);
 
   /* Clean up */
   for (i = 0; i < NPADS; i++) {
-    GstPad *mq_input = gst_pad_get_peer (inputpads[i]);
+    GstPad *mq_input = gst_pad_get_peer (pad_data[i].input_pad);
 
-    gst_pad_unlink (inputpads[i], mq_input);
+    gst_pad_unlink (pad_data[i].input_pad, mq_input);
     gst_element_release_request_pad (mq, mq_input);
     gst_object_unref (mq_input);
-    gst_object_unref (inputpads[i]);
-
-    gst_object_unref (sinkpads[i]);
+    gst_object_unref (pad_data[i].input_pad);
+    gst_object_unref (pad_data[i].out_pad);
   }
 
   gst_element_set_state (pipe, GST_STATE_NULL);
@@ -561,12 +697,6 @@ run_output_order_test (gint n_linked)
 
   g_cond_clear (&cond);
   g_mutex_clear (&mutex);
-}
-
-GST_START_TEST (test_output_order)
-{
-  run_output_order_test (2);
-  run_output_order_test (0);
 }
 
 GST_END_TEST;
@@ -1076,6 +1206,8 @@ multiqueue_suite (void)
   /* Disabled, The test (and not multiqueue itself) is racy.
    * See https://bugzilla.gnome.org/show_bug.cgi?id=708661 */
   tcase_skip_broken_test (tc_chain, test_output_order);
+
+  tcase_add_test (tc_chain, test_not_linked_eos);
 
   tcase_add_test (tc_chain, test_sparse_stream);
   tcase_add_test (tc_chain, test_limit_changes);
