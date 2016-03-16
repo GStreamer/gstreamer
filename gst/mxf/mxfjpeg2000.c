@@ -207,7 +207,7 @@ mxf_jpeg2000_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
         }
       }
       if (rgb) {
-        colorspace = "sRGC";
+        colorspace = "sRGB";
       } else if (yuv) {
         colorspace = "sYUV";
       } else if (xyz) {
