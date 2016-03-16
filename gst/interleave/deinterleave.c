@@ -554,9 +554,10 @@ gst_deinterleave_getcaps (GstPad * pad, GstObject * parent, GstCaps * filter)
 {
   GstDeinterleave *self = GST_DEINTERLEAVE (parent);
   GstCaps *ret;
-  GList *l;
+  GstIterator *it;
+  GstIteratorResult res;
+  GValue v = G_VALUE_INIT;
 
-  GST_OBJECT_LOCK (self);
   /* Intersect all of our pad template caps with the peer caps of the pad
    * to get all formats that are possible up- and downstream.
    *
@@ -565,52 +566,74 @@ gst_deinterleave_getcaps (GstPad * pad, GstObject * parent, GstCaps * filter)
    * will be detected here already
    */
   ret = gst_caps_new_any ();
-  for (l = GST_ELEMENT (self)->pads; l != NULL; l = l->next) {
-    GstPad *ourpad = GST_PAD (l->data);
-    GstCaps *peercaps = NULL, *ourcaps;
-    GstCaps *templ_caps = gst_pad_get_pad_template_caps (ourpad);
+  it = gst_element_iterate_pads (GST_ELEMENT_CAST (self));
 
-    ourcaps = gst_caps_copy (templ_caps);
-    gst_caps_unref (templ_caps);
+  do {
+    res = gst_iterator_next (it, &v);
+    switch (res) {
+      case GST_ITERATOR_OK:{
+        GstPad *ourpad = GST_PAD (g_value_get_object (&v));
+        GstCaps *peercaps = NULL, *ourcaps;
+        GstCaps *templ_caps = gst_pad_get_pad_template_caps (ourpad);
 
-    if (pad == ourpad) {
-      if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK)
-        __set_channels (ourcaps, GST_AUDIO_INFO_CHANNELS (&self->audio_info));
-      else
-        __set_channels (ourcaps, 1);
-    } else {
-      __remove_channels (ourcaps);
-      /* Only ask for peer caps for other pads than pad
-       * as otherwise gst_pad_peer_get_caps() might call
-       * back into this function and deadlock
-       */
-      peercaps = gst_pad_peer_query_caps (ourpad, NULL);
-      peercaps = gst_caps_make_writable (peercaps);
+        ourcaps = gst_caps_copy (templ_caps);
+        gst_caps_unref (templ_caps);
+
+        if (pad == ourpad) {
+          if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK)
+            __set_channels (ourcaps,
+                GST_AUDIO_INFO_CHANNELS (&self->audio_info));
+          else
+            __set_channels (ourcaps, 1);
+        } else {
+          __remove_channels (ourcaps);
+          /* Only ask for peer caps for other pads than pad
+           * as otherwise gst_pad_peer_get_caps() might call
+           * back into this function and deadlock
+           */
+          peercaps = gst_pad_peer_query_caps (ourpad, NULL);
+          peercaps = gst_caps_make_writable (peercaps);
+        }
+
+        /* If the peer exists and has caps add them to the intersection,
+         * otherwise assume that the peer accepts everything */
+        if (peercaps) {
+          GstCaps *intersection;
+          GstCaps *oldret = ret;
+
+          __remove_channels (peercaps);
+
+          intersection = gst_caps_intersect (peercaps, ourcaps);
+
+          ret = gst_caps_intersect (ret, intersection);
+          gst_caps_unref (intersection);
+          gst_caps_unref (peercaps);
+          gst_caps_unref (oldret);
+        } else {
+          GstCaps *oldret = ret;
+
+          ret = gst_caps_intersect (ret, ourcaps);
+          gst_caps_unref (oldret);
+        }
+        gst_caps_unref (ourcaps);
+        g_value_reset (&v);
+        break;
+      }
+      case GST_ITERATOR_DONE:
+        break;
+      case GST_ITERATOR_ERROR:
+        gst_caps_unref (ret);
+        ret = gst_caps_new_empty ();
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_caps_unref (ret);
+        ret = gst_caps_new_empty ();
+        gst_iterator_resync (it);
+        break;
     }
-
-    /* If the peer exists and has caps add them to the intersection,
-     * otherwise assume that the peer accepts everything */
-    if (peercaps) {
-      GstCaps *intersection;
-      GstCaps *oldret = ret;
-
-      __remove_channels (peercaps);
-
-      intersection = gst_caps_intersect (peercaps, ourcaps);
-
-      ret = gst_caps_intersect (ret, intersection);
-      gst_caps_unref (intersection);
-      gst_caps_unref (peercaps);
-      gst_caps_unref (oldret);
-    } else {
-      GstCaps *oldret = ret;
-
-      ret = gst_caps_intersect (ret, ourcaps);
-      gst_caps_unref (oldret);
-    }
-    gst_caps_unref (ourcaps);
-  }
-  GST_OBJECT_UNLOCK (self);
+  } while (res != GST_ITERATOR_DONE && res != GST_ITERATOR_ERROR);
+  g_value_unset (&v);
+  gst_iterator_free (it);
 
   if (filter) {
     GstCaps *aux;
@@ -827,7 +850,8 @@ gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
      * here is an unliked pad */
     if (!buffers_out[i])
       goto alloc_buffer_failed;
-    else if (buffers_out[i] && gst_buffer_get_size (buffers_out[i]) != bufsize)
+    else if (buffers_out[i]
+        && gst_buffer_get_size (buffers_out[i]) != bufsize)
       goto alloc_buffer_bad_size;
 
     if (buffers_out[i]) {
