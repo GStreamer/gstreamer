@@ -2533,8 +2533,6 @@ create_receiver_part (GstRTSPStream * stream, GstBin * bin, GstState state)
     if (state != GST_STATE_NULL) {
       if (priv->funnel[i] && (priv->sinkpad || i == 1))
         gst_element_set_state (priv->funnel[i], state);
-      if (priv->appsrc[i] && (priv->sinkpad || i == 1))
-        gst_element_set_state (priv->appsrc[i], state);
     }
   }
 }
