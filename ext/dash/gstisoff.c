@@ -25,6 +25,8 @@
 #include "gstisoff.h"
 #include <gst/base/gstbytereader.h>
 
+#include <string.h>
+
 void
 gst_isoff_sidx_parser_init (GstSidxParser * parser)
 {
@@ -56,6 +58,60 @@ gst_isoff_parse_sidx_entry (GstSidxBoxEntry * entry, GstByteReader * reader)
   entry->sap_delta_time = aux & 0xFFFFFFF;
 }
 
+/* gst_isoff_parse_box:
+ * @reader:
+ * @type: type that was found at the current position
+ * @extended_type: (allow-none): extended type if type=='uuid'
+ * @header_size: (allow-none): size of the box header (type, extended type and size)
+ * @size: size of the complete box including type, extended type and size
+ *
+ * Advances the byte reader to the start of the box content. To skip
+ * over the complete box, skip size - header_size bytes.
+ *
+ * Returns: TRUE if a box header could be parsed, FALSE if more data is needed
+ */
+gboolean
+gst_isoff_parse_box_header (GstByteReader * reader, guint32 * type,
+    guint8 extended_type[16], guint * header_size, guint64 * size)
+{
+  guint header_start_offset;
+  guint32 size_field;
+
+  header_start_offset = gst_byte_reader_get_pos (reader);
+
+  if (gst_byte_reader_get_remaining (reader) < 8)
+    goto not_enough_data;
+
+  size_field = gst_byte_reader_get_uint32_be_unchecked (reader);
+  *type = gst_byte_reader_get_uint32_le_unchecked (reader);
+
+  if (size_field == 1) {
+    if (gst_byte_reader_get_remaining (reader) < 8)
+      goto not_enough_data;
+    *size = gst_byte_reader_get_uint64_be_unchecked (reader);
+  } else {
+    *size = size_field;
+  }
+
+  if (*type == GST_MAKE_FOURCC ('u', 'u', 'i', 'd')) {
+    if (gst_byte_reader_get_remaining (reader) < 16)
+      goto not_enough_data;
+
+    if (extended_type)
+      memcpy (extended_type, gst_byte_reader_get_data_unchecked (reader, 16),
+          16);
+  }
+
+  if (header_size)
+    *header_size = gst_byte_reader_get_pos (reader) - header_start_offset;
+
+  return TRUE;
+
+not_enough_data:
+  gst_byte_reader_set_pos (reader, header_start_offset);
+  return FALSE;
+}
+
 GstIsoffParserResult
 gst_isoff_sidx_parser_add_buffer (GstSidxParser * parser, GstBuffer * buffer,
     guint * consumed)
@@ -75,27 +131,24 @@ gst_isoff_sidx_parser_add_buffer (GstSidxParser * parser, GstBuffer * buffer,
 
   switch (parser->status) {
     case GST_ISOFF_SIDX_PARSER_INIT:
-      if (gst_byte_reader_get_remaining (&reader) < GST_ISOFF_FULL_BOX_SIZE) {
+      if (!gst_isoff_parse_box_header (&reader, &fourcc, NULL, NULL,
+              &parser->size))
         break;
-      }
 
-      parser->size = gst_byte_reader_get_uint32_be_unchecked (&reader);
-      fourcc = gst_byte_reader_get_uint32_le_unchecked (&reader);
       if (fourcc != GST_ISOFF_FOURCC_SIDX) {
         res = GST_ISOFF_PARSER_UNEXPECTED;
         gst_byte_reader_set_pos (&reader, 0);
         break;
       }
-      if (parser->size == 1) {
-        if (gst_byte_reader_get_remaining (&reader) < 12) {
-          gst_byte_reader_set_pos (&reader, 0);
-          break;
-        }
 
-        parser->size = gst_byte_reader_get_uint64_be_unchecked (&reader);
-      }
       if (parser->size == 0) {
         res = GST_ISOFF_PARSER_ERROR;
+        gst_byte_reader_set_pos (&reader, 0);
+        break;
+      }
+
+      /* Try again once we have enough data for the FullBox header */
+      if (gst_byte_reader_get_remaining (&reader) < 4) {
         gst_byte_reader_set_pos (&reader, 0);
         break;
       }

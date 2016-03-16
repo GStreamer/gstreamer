@@ -26,6 +26,7 @@
 #define __GST_ISOFF_H__
 
 #include <gst/gst.h>
+#include <gst/base/base.h>
 
 G_BEGIN_DECLS
 
@@ -35,6 +36,8 @@ typedef enum {
   GST_ISOFF_PARSER_UNEXPECTED,
   GST_ISOFF_PARSER_ERROR
 } GstIsoffParserResult;
+
+gboolean gst_isoff_parse_box_header (GstByteReader * reader, guint32 * type, guint8 extended_type[16], guint * header_size, guint64 * size);
 
 /* this is the minimum size, it can be larger if it
  * uses extended size or type */
