@@ -46,7 +46,6 @@ inner_product_gfloat_linear_1_sse (gfloat * o, const gfloat * a,
 {
   gint i = 0;
   __m128 sum[2], t;
-  __m128 f = _mm_loadu_ps(icoeff);
   const gfloat *c[2] = {(gfloat*)((gint8*)b + 0*bstride),
                         (gfloat*)((gint8*)b + 1*bstride)};
 
@@ -60,8 +59,7 @@ inner_product_gfloat_linear_1_sse (gfloat * o, const gfloat * a,
     sum[0] = _mm_add_ps (sum[0], _mm_mul_ps (t, _mm_load_ps (c[0] + i + 4)));
     sum[1] = _mm_add_ps (sum[1], _mm_mul_ps (t, _mm_load_ps (c[1] + i + 4)));
   }
-  sum[0] = _mm_mul_ps (sum[0], _mm_shuffle_ps (f, f, 0x00));
-  sum[1] = _mm_mul_ps (sum[1], _mm_shuffle_ps (f, f, 0x55));
+  sum[0] = _mm_mul_ps (_mm_sub_ps (sum[0], sum[1]), _mm_load1_ps (icoeff));
   sum[0] = _mm_add_ps (sum[0], sum[1]);
   sum[0] = _mm_add_ps (sum[0], _mm_movehl_ps (sum[0], sum[0]));
   sum[0] = _mm_add_ss (sum[0], _mm_shuffle_ps (sum[0], sum[0], 0x55));
@@ -299,7 +297,6 @@ inner_product_gdouble_linear_1_sse2 (gdouble * o, const gdouble * a,
 {
   gint i = 0;
   __m128d sum[2], t;
-  __m128d f = _mm_loadu_pd (icoeff);
   const gdouble *c[2] = {(gdouble*)((gint8*)b + 0*bstride),
                          (gdouble*)((gint8*)b + 1*bstride)};
 
@@ -313,8 +310,7 @@ inner_product_gdouble_linear_1_sse2 (gdouble * o, const gdouble * a,
     sum[0] = _mm_add_pd (sum[0], _mm_mul_pd (t, _mm_load_pd (c[0] + i + 2)));
     sum[1] = _mm_add_pd (sum[1], _mm_mul_pd (t, _mm_load_pd (c[1] + i + 2)));
   }
-  sum[0] = _mm_mul_pd (sum[0], _mm_shuffle_pd (f, f, _MM_SHUFFLE2 (0, 0)));
-  sum[1] = _mm_mul_pd (sum[1], _mm_shuffle_pd (f, f, _MM_SHUFFLE2 (1, 1)));
+  sum[0] = _mm_mul_pd (_mm_sub_pd (sum[0], sum[1]), _mm_load1_pd (icoeff));
   sum[0] = _mm_add_pd (sum[0], sum[1]);
   sum[0] = _mm_add_sd (sum[0], _mm_unpackhi_pd (sum[0], sum[0]));
   _mm_store_sd (o, sum[0]);

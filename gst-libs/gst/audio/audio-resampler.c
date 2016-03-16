@@ -471,15 +471,14 @@ interpolate_##type##_linear_c (gpointer op, const gpointer ap,  \
 {                                                               \
   gint i;                                                       \
   type *o = op, *a = ap, *ic = icp;                             \
-  type2 tmp;                                                    \
+  type2 tmp, c0 = ic[0];                                        \
   const type *c[2] = {(type*)((gint8*)a + 0*astride),           \
                       (type*)((gint8*)a + 1*astride)};          \
                                                                 \
   for (i = 0; i < len; i++) {                                   \
-    tmp = (type2)c[0][i] * (type2)ic[0] +                       \
-          (type2)c[1][i] * (type2)ic[1];                        \
-    tmp = (tmp + ((type2)1 << ((prec) - 1))) >> (prec);         \
-    o[i] = CLAMP (tmp, -(limit), (limit) - 1);                  \
+    tmp = ((type2)c[0][i] - (type2)c[1][i]) * c0 +              \
+         (((type2)c[1][i]) << (prec));                          \
+    o[i] = (tmp + ((type2)1 << ((prec) - 1))) >> (prec);        \
   }                                                             \
 }
 #define INTERPOLATE_FLOAT_LINEAR_FUNC(type)                     \
@@ -489,11 +488,12 @@ interpolate_##type##_linear_c (gpointer op, const gpointer ap,  \
 {                                                               \
   gint i;                                                       \
   type *o = op, *a = ap, *ic = icp;                             \
+  type c0 = ic[0];                                              \
   const type *c[2] = {(type*)((gint8*)a + 0*astride),           \
                       (type*)((gint8*)a + 1*astride)};          \
                                                                 \
   for (i = 0; i < len; i++) {                                   \
-    o[i] = (c[0][i] - c[1][i]) * ic[0] + c[1][i];               \
+    o[i] = (c[0][i] - c[1][i]) * c0 + c[1][i];                  \
   }                                                             \
 }
 
@@ -509,17 +509,15 @@ interpolate_##type##_cubic_c (gpointer op, const gpointer ap,   \
 {                                                               \
   gint i;                                                       \
   type *o = op, *a = ap, *ic = icp;                             \
-  type2 tmp;                                                    \
+  type2 tmp, c0 = ic[0], c1 = ic[1], c2 = ic[2], c3 = ic[3];    \
   const type *c[4] = {(type*)((gint8*)a + 0*astride),           \
                       (type*)((gint8*)a + 1*astride),           \
                       (type*)((gint8*)a + 2*astride),           \
                       (type*)((gint8*)a + 3*astride)};          \
                                                                 \
   for (i = 0; i < len; i++) {                                   \
-    tmp = (type2)c[0][i] * (type2)ic[0] +                       \
-          (type2)c[1][i] * (type2)ic[1] +                       \
-          (type2)c[2][i] * (type2)ic[2] +                       \
-          (type2)c[3][i] * (type2)ic[3];                        \
+    tmp = (type2)c[0][i] * c0 + (type2)c[1][i] * c1 +           \
+          (type2)c[2][i] * c2 + (type2)c[3][i] * c3;            \
     tmp = (tmp + ((type2)1 << ((prec) - 1))) >> (prec);         \
     o[i] = CLAMP (tmp, -(limit), (limit) - 1);                  \
   }                                                             \
@@ -531,14 +529,15 @@ interpolate_##type##_cubic_c (gpointer op, const gpointer ap,   \
 {                                                               \
   gint i;                                                       \
   type *o = op, *a = ap, *ic = icp;                             \
+  type c0 = ic[0], c1 = ic[1], c2 = ic[2], c3 = ic[3];          \
   const type *c[4] = {(type*)((gint8*)a + 0*astride),           \
                       (type*)((gint8*)a + 1*astride),           \
                       (type*)((gint8*)a + 2*astride),           \
                       (type*)((gint8*)a + 3*astride)};          \
                                                                 \
   for (i = 0; i < len; i++) {                                   \
-    o[i] = c[0][i] * ic[0] + c[1][i] * ic[1] +                  \
-           c[2][i] * ic[2] + c[3][i] * ic[3];                   \
+    o[i] = c[0][i] * c0 + c[1][i] * c1 +                        \
+           c[2][i] * c2 + c[3][i] * c3;                         \
   }                                                             \
 }
 
@@ -736,7 +735,7 @@ inner_product_##type##_linear_1_c (type * o, const type * a,    \
     const type * b, gint len, const type *ic, gint bstride)     \
 {                                                               \
   gint i;                                                       \
-  type2 res[4] = { 0, 0, 0, 0 };                                \
+  type2 res[4] = { 0, 0, 0, 0 }, c0 = ic[0];                    \
   const type *c[2] = {(type*)((gint8*)b + 0*bstride),           \
                       (type*)((gint8*)b + 1*bstride)};          \
                                                                 \
@@ -748,8 +747,8 @@ inner_product_##type##_linear_1_c (type * o, const type * a,    \
   }                                                             \
   res[0] = (res[0] + res[2]) >> (prec);                         \
   res[1] = (res[1] + res[3]) >> (prec);                         \
-  res[0] = (type2)(type)res[0] * (type2) ic[0] +                \
-           (type2)(type)res[1] * (type2) ic[1];                 \
+  res[0] = ((type2)(type)res[0] - (type2)(type)res[1]) * c0 +   \
+           ((type2)(type)res[1] << (prec));                     \
   res[0] = (res[0] + ((type2)1 << ((prec) - 1))) >> (prec);     \
   *o = CLAMP (res[0], -(limit), (limit) - 1);                   \
 }
@@ -822,8 +821,9 @@ inner_product_##type##_linear_1_c (type * o, const type * a,    \
     res[2] += a[i + 1] * c[0][i + 1];                           \
     res[3] += a[i + 1] * c[1][i + 1];                           \
   }                                                             \
-  *o = (res[0] + res[2]) * ic[0] +                              \
-       (res[1] + res[3]) * ic[1];                               \
+  res[0] += res[2];                                             \
+  res[1] += res[3];                                             \
+  *o = (res[0] - res[1]) * ic[0] + res[1];                      \
 }
 INNER_PRODUCT_FLOAT_LINEAR_FUNC (gfloat);
 INNER_PRODUCT_FLOAT_LINEAR_FUNC (gdouble);
@@ -1146,14 +1146,15 @@ setup_functions (GstAudioResampler * resampler)
         fidx = 0;
         break;
       case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR:
-        GST_DEBUG ("using linear interpolation filter function");
+        GST_DEBUG ("using linear interpolation for filter coefficients");
         fidx = 0;
         break;
       case GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC:
-        GST_DEBUG ("using cubic interpolation filter function");
+        GST_DEBUG ("using cubic interpolation for filter coefficients");
         fidx = 4;
         break;
     }
+    GST_DEBUG ("using filter interpolate function %d", index + fidx);
     resampler->interpolate = interpolate_funcs[index + fidx];
 
     switch (resampler->method) {
@@ -1169,10 +1170,12 @@ setup_functions (GstAudioResampler * resampler)
             break;
           case GST_AUDIO_RESAMPLER_FILTER_MODE_INTERPOLATED:
             index += 4 + fidx;
+            GST_DEBUG ("using interpolated filter function");
             break;
         }
         break;
     }
+    GST_DEBUG ("using resample function %d", index);
     resampler->resample = resample_funcs[index];
   }
 }
