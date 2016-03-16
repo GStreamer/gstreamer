@@ -556,6 +556,19 @@ gst_deinterleave_getcaps (GstPad * pad, GstObject * parent, GstCaps * filter)
   GstIteratorResult res;
   GValue v = G_VALUE_INIT;
 
+  if (pad != self->sink) {
+    ret = gst_pad_get_current_caps (pad);
+    if (ret) {
+      if (filter) {
+        GstCaps *tmp =
+            gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref (ret);
+        ret = tmp;
+      }
+      return ret;
+    }
+  }
+
   /* Intersect all of our pad template caps with the peer caps of the pad
    * to get all formats that are possible up- and downstream.
    *
@@ -636,7 +649,7 @@ gst_deinterleave_getcaps (GstPad * pad, GstObject * parent, GstCaps * filter)
   if (filter) {
     GstCaps *aux;
 
-    aux = gst_caps_intersect (ret, filter);
+    aux = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (ret);
     ret = aux;
   }
