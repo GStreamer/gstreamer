@@ -155,6 +155,9 @@ struct _GstSelectorPad
   GstPad parent;
 
   gboolean pushed;              /* when buffer was pushed downstream since activation */
+  guint group_id;               /* Group ID from the last stream-start */
+  gboolean group_done;          /* when Stream Group Done has been
+                                   received */
   gboolean eos;                 /* when EOS has been received */
   gboolean eos_sent;            /* when EOS was sent downstream */
   gboolean discont;             /* after switching we create a discont */
@@ -340,6 +343,7 @@ gst_selector_pad_reset (GstSelectorPad * pad)
 {
   GST_OBJECT_LOCK (pad);
   pad->pushed = FALSE;
+  pad->group_done = FALSE;
   pad->eos = FALSE;
   pad->eos_sent = FALSE;
   pad->events_pending = FALSE;
@@ -550,16 +554,17 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_STREAM_START:{
-      guint group_id;
-
-      if (!gst_event_parse_group_id (event, &group_id))
+      if (!gst_event_parse_group_id (event, &selpad->group_id)) {
         sel->have_group_id = FALSE;
+        selpad->group_id = 0;
+      }
       break;
     }
     case GST_EVENT_FLUSH_START:
       /* Unblock the pad if it's waiting */
       selpad->flushing = TRUE;
       sel->eos = FALSE;
+      selpad->group_done = FALSE;
       GST_INPUT_SELECTOR_BROADCAST (sel);
       break;
     case GST_EVENT_FLUSH_STOP:
@@ -626,6 +631,15 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
     }
       break;
+    case GST_EVENT_STREAM_GROUP_DONE:{
+      GST_DEBUG_OBJECT (sel, "Stream group-done in inputselector pad %s",
+          GST_OBJECT_NAME (selpad));
+      gst_event_parse_stream_group_done (event, &selpad->group_id);
+      selpad->group_done = TRUE;
+      if (sel->sync_streams && active_sinkpad == pad)
+        GST_INPUT_SELECTOR_BROADCAST (sel);
+      break;
+    }
     default:
       break;
   }
@@ -796,6 +810,15 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
       if (active_seg->format == GST_FORMAT_TIME)
         cur_running_time = gst_segment_to_running_time (active_seg,
             GST_FORMAT_TIME, active_seg->position);
+    }
+
+    /* Don't wait if the group is finished on the active pad,
+     * as the running time won't progress now */
+    if (selpad != active_selpad && active_selpad->group_done &&
+        selpad->group_id == active_selpad->group_id) {
+      GST_DEBUG_OBJECT (selpad, "Active pad received group-done. Unblocking");
+      GST_INPUT_SELECTOR_UNLOCK (sel);
+      break;
     }
 
     if (selpad != active_selpad && !sel->eos && !sel->flushing
