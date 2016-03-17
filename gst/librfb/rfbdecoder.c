@@ -305,12 +305,12 @@ rfb_decoder_send_pointer_event (RfbDecoder * decoder,
  * rfb_decoder_state_wait_for_protocol_version:
  *
  * Negotiate the rfb version used
- *
- * \TODO Support for versions 3.7 and 3.8
  */
 static gboolean
 rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
 {
+  gchar version_str[] = "RFB 003.003\n";
+
   rfb_decoder_read (decoder, 12);
 
   g_return_val_if_fail (memcmp (decoder->data, "RFB 003.00", 10) == 0, FALSE);
@@ -333,13 +333,17 @@ rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
   }
   switch (decoder->protocol_minor) {
     case 3:
+    case 7:
+    case 8:
       break;
     default:
       GST_INFO ("Minor version %d is not supported, using 3",
           decoder->protocol_minor);
       decoder->protocol_minor = 3;
   }
-  rfb_decoder_send (decoder, (guint8 *) "RFB 003.003\n", 12);
+
+  version_str[10] = '0' + decoder->protocol_minor;
+  rfb_decoder_send (decoder, (guint8 *) version_str, 12);
 
   decoder->state = rfb_decoder_state_wait_for_security;
   return TRUE;
@@ -391,8 +395,43 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
       return TRUE;
     }
   } else {
-    /* \TODO Add behavior for the rfb 3.7 and 3.8 servers */
-    GST_WARNING ("Other versions are not yet supported");
+    guint8 num_type;
+    gint i;
+    guint8 *type = NULL;
+
+    rfb_decoder_read (decoder, 1);
+
+    num_type = RFB_GET_UINT8 (decoder->data);
+    if (num_type == 0) {
+      decoder->state = rfb_decoder_state_reason;
+      return TRUE;
+    }
+
+    rfb_decoder_read (decoder, num_type);
+    decoder->security_type = SECURITY_FAIL;
+
+    /* For now, simply pick the first support security method */
+    for (i = 0; i < num_type; i++) {
+      guint val = RFB_GET_UINT8 (decoder->data + i);
+
+      GST_DEBUG ("Server supports security type %u", val);
+
+      if (val == SECURITY_NONE || val == SECURITY_VNC) {
+        decoder->security_type = val;
+        type = decoder->data + i;
+        break;
+      }
+    }
+
+    if (!type) {
+      GST_WARNING ("Security type negotiation failed.");
+      decoder->error = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+          "VNC server requires unsupported security method.");
+      return FALSE;
+    }
+
+    GST_DEBUG ("security = %d", decoder->security_type);
+    rfb_decoder_send (decoder, type, 1);
   }
 
   switch (decoder->security_type) {
