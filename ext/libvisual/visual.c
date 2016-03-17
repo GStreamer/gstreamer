@@ -30,16 +30,16 @@ GST_DEBUG_CATEGORY_EXTERN (libvisual_debug);
 /* amounf of samples before we can feed libvisual */
 #define VISUAL_SAMPLES  512
 
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#define RGB_ORDER_CAPS "xRGB, RGB"
+#else
+#define RGB_ORDER_CAPS "BGRx, BGR"
+#endif
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (" { "
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-            "\"xRGB\", " "\"RGB\", "
-#else
-            "\"BGRx\", " "\"BGR\", "
-#endif
-            "\"RGB16\" } "))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (" { " RGB_ORDER_CAPS ", RGB16 } "))
     );
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
