@@ -18,11 +18,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
 #include "../gstgtk.h"
+
+#ifdef HAVE_X11
+#include <X11/Xlib.h>
+#endif
 
 
 static GstBusSyncReply create_window (GstBus* bus, GstMessage* message, GtkWidget* widget)
@@ -140,6 +148,10 @@ static gchar* slider_fps_cb (GtkScale* scale, gdouble value, GstElement* pipelin
 
 gint main (gint argc, gchar *argv[])
 {
+#ifdef HAVE_X11
+    XInitThreads ();
+#endif
+
     GtkWidget *area;
     gst_init (&argc, &argv);
     gtk_init (&argc, &argv);

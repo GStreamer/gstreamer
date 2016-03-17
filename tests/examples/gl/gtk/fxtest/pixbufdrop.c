@@ -32,6 +32,10 @@
 
 #include <gst/video/videooverlay.h>
 
+#ifdef HAVE_X11
+#include <X11/Xlib.h>
+#endif
+
 static gint delay = 0;
 static gint saveddelay = 0;
 static gint method = 1;
@@ -200,6 +204,10 @@ main (gint argc, gchar * argv[])
     {NULL}
   };
 
+#ifdef HAVE_X11
+  XInitThreads ();
+#endif
+
   context = g_option_context_new (NULL);
   g_option_context_add_main_entries (context, options, NULL);
   g_option_context_add_group (context, gst_init_get_option_group ());
@@ -219,7 +227,7 @@ main (gint argc, gchar * argv[])
   if (source_desc == NULL) {
     source_desc =
         g_strdup
-        ("videotestsrc ! video/x-raw, width=352, height=288 ! identity");
+        ("videotestsrc ! video/x-raw, width=352, height=288 ! identity ! glupload");
   }
 
   sourcebin =
