@@ -495,6 +495,154 @@ gst_interlace_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return ret;
 }
 
+static gboolean
+gst_interlace_fraction_double (gint * n_out, gint * d_out, gboolean half)
+{
+  gint n, d, gcd;
+
+  n = *n_out;
+  d = *d_out;
+
+  if (d == 0)
+    return FALSE;
+
+  if (n == 0)
+    return TRUE;
+
+  gcd = gst_util_greatest_common_divisor (n, d);
+  n /= gcd;
+  d /= gcd;
+
+  if (half) {
+    if (G_MAXINT / 2 >= ABS (d)) {
+      d *= 2;
+    } else if (n >= 2 && n != G_MAXINT) {
+      n /= 2;
+    } else {
+      d = G_MAXINT;
+    }
+  } else {
+    if (G_MAXINT / 2 >= ABS (n)) {
+      n *= 2;
+    } else if (d >= 2 && d != G_MAXINT) {
+      d /= 2;
+    } else {
+      n = G_MAXINT;
+    }
+  }
+
+  *n_out = n;
+  *d_out = d;
+
+  return TRUE;
+}
+
+static GstCaps *
+gst_interlace_caps_double_framerate (GstCaps * caps, gboolean half)
+{
+  guint len;
+
+  for (len = gst_caps_get_size (caps); len > 0; len--) {
+    GstStructure *s = gst_caps_get_structure (caps, len - 1);
+    const GValue *val;
+
+    val = gst_structure_get_value (s, "framerate");
+    if (!val)
+      continue;
+
+    if (G_VALUE_TYPE (val) == GST_TYPE_FRACTION) {
+      gint n, d;
+
+      n = gst_value_get_fraction_numerator (val);
+      d = gst_value_get_fraction_denominator (val);
+
+      if (!gst_interlace_fraction_double (&n, &d, half)) {
+        gst_caps_remove_structure (caps, len - 1);
+        continue;
+      }
+
+      gst_structure_set (s, "framerate", GST_TYPE_FRACTION, n, d, NULL);
+    } else if (G_VALUE_TYPE (val) == GST_TYPE_FRACTION_RANGE) {
+      const GValue *min, *max;
+      GValue nrange = { 0, }, nmin = {
+      0,}, nmax = {
+      0,};
+      gint n, d;
+
+      g_value_init (&nrange, GST_TYPE_FRACTION_RANGE);
+      g_value_init (&nmin, GST_TYPE_FRACTION);
+      g_value_init (&nmax, GST_TYPE_FRACTION);
+
+      min = gst_value_get_fraction_range_min (val);
+      max = gst_value_get_fraction_range_max (val);
+
+      n = gst_value_get_fraction_numerator (min);
+      d = gst_value_get_fraction_denominator (min);
+
+      if (!gst_interlace_fraction_double (&n, &d, half)) {
+        g_value_unset (&nrange);
+        g_value_unset (&nmax);
+        g_value_unset (&nmin);
+        gst_caps_remove_structure (caps, len - 1);
+        continue;
+      }
+
+      gst_value_set_fraction (&nmin, n, d);
+
+      n = gst_value_get_fraction_numerator (max);
+      d = gst_value_get_fraction_denominator (max);
+
+      if (!gst_interlace_fraction_double (&n, &d, half)) {
+        g_value_unset (&nrange);
+        g_value_unset (&nmax);
+        g_value_unset (&nmin);
+        gst_caps_remove_structure (caps, len - 1);
+        continue;
+      }
+
+      gst_value_set_fraction (&nmax, n, d);
+      gst_value_set_fraction_range (&nrange, &nmin, &nmax);
+
+      gst_structure_take_value (s, "framerate", &nrange);
+
+      g_value_unset (&nmin);
+      g_value_unset (&nmax);
+    } else if (G_VALUE_TYPE (val) == GST_TYPE_LIST) {
+      const GValue *lval;
+      GValue nlist = { 0, };
+      GValue nval = { 0, };
+      gint i;
+
+      g_value_init (&nlist, GST_TYPE_LIST);
+      for (i = gst_value_list_get_size (val); i > 0; i--) {
+        gint n, d;
+
+        lval = gst_value_list_get_value (val, i - 1);
+
+        if (G_VALUE_TYPE (lval) != GST_TYPE_FRACTION)
+          continue;
+
+        n = gst_value_get_fraction_numerator (lval);
+        d = gst_value_get_fraction_denominator (lval);
+
+        /* Double/Half the framerate but if this fails simply
+         * skip this value from the list */
+        if (!gst_interlace_fraction_double (&n, &d, half)) {
+          continue;
+        }
+
+        g_value_init (&nval, GST_TYPE_FRACTION);
+
+        gst_value_set_fraction (&nval, n, d);
+        gst_value_list_append_and_take_value (&nlist, &nval);
+      }
+      gst_structure_take_value (s, "framerate", &nlist);
+    }
+  }
+
+  return caps;
+}
+
 static GstCaps *
 gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
 {
@@ -510,6 +658,9 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
 
   if (filter != NULL) {
     clean_filter = gst_caps_copy (filter);
+    clean_filter =
+        gst_interlace_caps_double_framerate (clean_filter,
+        (pad == interlace->sinkpad));
     for (i = 0; i < gst_caps_get_size (clean_filter); ++i) {
       GstStructure *s;
 
@@ -542,6 +693,9 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
   }
   gst_caps_set_simple (icaps, "interlace-mode", G_TYPE_STRING,
       pad == interlace->srcpad ? mode : "progressive", NULL);
+
+  icaps =
+      gst_interlace_caps_double_framerate (icaps, (pad == interlace->srcpad));
 
   if (clean_filter)
     gst_caps_unref (clean_filter);
