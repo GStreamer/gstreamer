@@ -294,6 +294,7 @@ check_PROGRAMS = \
 	$(check_hlsdemux_m3u8) \
 	$(check_hlsdemux) \
 	$(check_player) \
+	pipelines/simple-launch-lines \
 	$(EXPERIMENTAL_CHECKS)
 
 noinst_HEADERS = elements/mxfdemux.h
