@@ -63,7 +63,8 @@ typedef enum
 {
   GST_DEINTERLACE_ALL,         /* All (missing data is interp.) */
   GST_DEINTERLACE_TF,          /* Top Fields Only */
-  GST_DEINTERLACE_BF           /* Bottom Fields Only */
+  GST_DEINTERLACE_BF,          /* Bottom Fields Only */
+  GST_DEINTERLACE_FIELDS_AUTO  /* Automatically detect */
 } GstDeinterlaceFields;
 
 typedef enum
@@ -125,6 +126,8 @@ struct _GstDeinterlace
   GstDeinterlaceFieldLayout field_layout;
 
   GstDeinterlaceFields fields;
+
+  GstDeinterlaceFields user_set_fields;
 
   /* current state (differs when flushing/inverse telecine using weave) */
   GstDeinterlaceMethods method_id;

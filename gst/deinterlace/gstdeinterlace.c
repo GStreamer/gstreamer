@@ -199,6 +199,7 @@ gst_deinterlace_fields_get_type (void)
     {GST_DEINTERLACE_ALL, "All fields", "all"},
     {GST_DEINTERLACE_TF, "Top fields only", "top"},
     {GST_DEINTERLACE_BF, "Bottom fields only", "bottom"},
+    {GST_DEINTERLACE_FIELDS_AUTO, "Automatically detect", "auto"},
     {0, NULL, NULL},
   };
 
@@ -720,6 +721,7 @@ gst_deinterlace_init (GstDeinterlace * self)
   gst_video_info_init (&self->vinfo);
   gst_deinterlace_set_method (self, self->user_set_method_id);
   self->fields = DEFAULT_FIELDS;
+  self->user_set_fields = DEFAULT_FIELDS;
   self->field_layout = DEFAULT_FIELD_LAYOUT;
   self->locking = DEFAULT_LOCKING;
   self->ignore_obscure = DEFAULT_IGNORE_OBSCURE;
@@ -809,7 +811,7 @@ gst_deinterlace_reset (GstDeinterlace * self)
   if ((gint) self->new_mode != -1)
     self->mode = self->new_mode;
   if ((gint) self->new_fields != -1)
-    self->fields = self->new_fields;
+    self->user_set_fields = self->new_fields;
   self->new_mode = -1;
   self->new_fields = -1;
 
@@ -861,11 +863,12 @@ gst_deinterlace_set_property (GObject * object, guint prop_id,
 
       GST_OBJECT_LOCK (self);
       new_fields = g_value_get_enum (value);
-      if (self->fields != new_fields && gst_pad_has_current_caps (self->srcpad)) {
+      if (self->user_set_fields != new_fields
+          && gst_pad_has_current_caps (self->srcpad)) {
         self->reconfigure = TRUE;
         self->new_fields = new_fields;
       } else {
-        self->fields = new_fields;
+        self->user_set_fields = new_fields;
       }
       GST_OBJECT_UNLOCK (self);
       break;
@@ -904,7 +907,7 @@ gst_deinterlace_get_property (GObject * object, guint prop_id,
       g_value_set_enum (value, self->user_set_method_id);
       break;
     case PROP_FIELDS:
-      g_value_set_enum (value, self->fields);
+      g_value_set_enum (value, self->user_set_fields);
       break;
     case PROP_FIELD_LAYOUT:
       g_value_set_enum (value, self->field_layout);
@@ -2017,7 +2020,7 @@ gst_deinterlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     GstCaps *caps;
 
     if ((gint) self->new_fields != -1)
-      self->fields = self->new_fields;
+      self->user_set_fields = self->new_fields;
     if ((gint) self->new_mode != -1)
       self->mode = self->new_mode;
     self->new_mode = -1;
@@ -2355,12 +2358,20 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
           NULL);
   }
 
-  if (self->fields == GST_DEINTERLACE_ALL) {
+  if (self->user_set_fields == GST_DEINTERLACE_ALL) {
     tmp2 = gst_deinterlace_caps_double_framerate (tmp2, (pad == self->sinkpad));
+  }
+  if (self->user_set_fields == GST_DEINTERLACE_FIELDS_AUTO) {
+    tmp = gst_caps_copy (tmp2);
+    tmp = gst_deinterlace_caps_double_framerate (tmp, (pad == self->sinkpad));
   }
 
   ret = gst_caps_merge (ret, tmp2);
   tmp2 = NULL;
+  if (tmp != NULL) {
+    ret = gst_caps_merge (ret, tmp);
+    tmp = NULL;
+  }
 
   /* or
    * - anything else in which case we would just passthrough again if we're
@@ -2506,8 +2517,27 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
   GstCaps *srccaps = NULL;
   GstVideoInterlaceMode interlacing_mode;
   gint fps_n, fps_d;
+  GstCaps *peercaps;
 
   gst_pad_check_reconfigure (self->srcpad);
+  peercaps = gst_pad_peer_query_caps (self->srcpad, NULL);
+
+  /* Make sure the peer caps are compatible with the template caps */
+  if (peercaps) {
+    GstCaps *tmp = gst_pad_get_pad_template_caps (self->srcpad);
+    GstCaps *tmp2 = gst_caps_intersect (peercaps, tmp);
+
+    gst_caps_unref (peercaps);
+    peercaps = NULL;
+    gst_caps_unref (tmp);
+
+    if (gst_caps_is_empty (tmp2)) {
+      gst_caps_unref (tmp2);
+      GST_ERROR_OBJECT (self, "Peer caps not compatible with template caps");
+      goto invalid_caps;
+    }
+    peercaps = tmp2;
+  }
 
   if (self->locking != GST_DEINTERLACE_LOCKING_NONE) {
     if (self->low_latency == -1)
@@ -2556,21 +2586,12 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
           "Passthrough because mode=auto and progressive caps");
       self->passthrough = TRUE;
     } else if (gst_caps_can_intersect (caps, tmp)) {
-      GstCaps *peercaps;
-
-      peercaps = gst_pad_peer_query_caps (self->srcpad, NULL);
       if (peercaps) {
-        GstCaps *templcaps = gst_pad_get_pad_template_caps (self->srcpad);
         GstCaps *allowed_caps;
         GstCaps *tmp2;
         GstStructure *s;
 
-        allowed_caps = gst_caps_intersect (templcaps, peercaps);
-        gst_caps_unref (templcaps);
-        gst_caps_unref (peercaps);
-        peercaps = allowed_caps;
         allowed_caps = gst_caps_intersect (peercaps, tmp);
-        gst_caps_unref (peercaps);
 
         tmp2 = gst_caps_copy (caps);
         s = gst_caps_get_structure (tmp2, 0);
@@ -2646,20 +2667,51 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
        * mode */
       srccaps = gst_caps_copy (caps);
       gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
-    } else if (self->fields == GST_DEINTERLACE_ALL) {
-      if (!gst_deinterlace_fraction_double (&fps_n, &fps_d, FALSE))
-        goto invalid_caps;
-
+    } else if (self->user_set_fields == GST_DEINTERLACE_FIELDS_AUTO) {
       srccaps = gst_caps_copy (caps);
+      if (peercaps) {
+        gboolean can_be_tf = FALSE;
 
-      gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, fps_n,
-          fps_d, NULL);
+        /* We already know that we are not passthrough: interlace-mode will
+         * be progressive */
+        gst_caps_set_simple (srccaps, "interlace-mode", G_TYPE_STRING,
+            "progressive", NULL);
+
+        if (gst_caps_can_intersect (peercaps, srccaps)) {
+          GST_DEBUG_OBJECT (self, "Can deinterlace top fields");
+          can_be_tf = TRUE;
+        }
+        srccaps = gst_deinterlace_caps_double_framerate (srccaps, FALSE);
+        if (!gst_caps_can_intersect (peercaps, srccaps)) {
+          if (can_be_tf) {
+            GST_DEBUG_OBJECT (self, "Will deinterlace top fields");
+            gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, fps_n,
+                fps_d, NULL);
+            self->fields = GST_DEINTERLACE_TF;
+          } else {
+            GST_DEBUG_OBJECT (self,
+                "Can't negotiate upstream and downstream caps");
+            gst_caps_unref (srccaps);
+            goto invalid_caps;
+          }
+        } else {
+          GST_DEBUG_OBJECT (self, "Deinterlacing all fields");
+          self->fields = GST_DEINTERLACE_ALL;
+        }
+      } else {
+        GST_DEBUG_OBJECT (self,
+            "No peer caps yet, falling back to deinterlacing all fields");
+        self->fields = GST_DEINTERLACE_ALL;
+        srccaps = gst_deinterlace_caps_double_framerate (srccaps, FALSE);
+      }
     } else {
+      self->fields = self->user_set_fields;
       srccaps = gst_caps_copy (caps);
+      if (self->fields == GST_DEINTERLACE_ALL)
+        srccaps = gst_deinterlace_caps_double_framerate (srccaps, FALSE);
     }
 
     /* If not passthrough, we are going to output progressive content */
-    srccaps = gst_caps_make_writable (srccaps);
     gst_caps_set_simple (srccaps, "interlace-mode", G_TYPE_STRING,
         "progressive", NULL);
 
@@ -2684,18 +2736,24 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
   if (!gst_deinterlace_do_bufferpool (self, srccaps))
     goto no_bufferpool;
 
+  if (peercaps)
+    gst_caps_unref (peercaps);
   gst_caps_unref (srccaps);
 
   return TRUE;
 
 invalid_caps:
   {
+    if (peercaps)
+      gst_caps_unref (peercaps);
     GST_ERROR_OBJECT (pad, "Invalid caps: %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 set_caps_failed:
   {
     GST_ERROR_OBJECT (pad, "Failed to set caps: %" GST_PTR_FORMAT, srccaps);
+    if (peercaps)
+      gst_caps_unref (peercaps);
     if (srccaps)
       gst_caps_unref (srccaps);
     return FALSE;
