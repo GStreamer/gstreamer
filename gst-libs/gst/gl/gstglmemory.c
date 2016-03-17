@@ -522,7 +522,8 @@ gst_gl_memory_texsubimage (GstGLMemory * gl_mem, gpointer read_pointer)
   gst_gl_query_end (GST_GL_BASE_MEMORY_CAST (gl_mem)->query);
 
   /* Reset to default values */
-  if (USING_OPENGL (context) || USING_GLES3 (context)) {
+  if (USING_OPENGL (context) || USING_GLES3 (context)
+      || USING_OPENGL3 (context)) {
     gl->PixelStorei (GL_UNPACK_ROW_LENGTH, 0);
   } else if (USING_GLES2 (context)) {
     gl->PixelStorei (GL_UNPACK_ALIGNMENT, 4);
