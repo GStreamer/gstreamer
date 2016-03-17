@@ -27,6 +27,9 @@
 int
 main(int argc, char *argv[])
 {
+  /* FIXME: port the example to shaders and remove this */
+  g_setenv ("GST_GL_API", "opengl", FALSE);
+
   gst_init (NULL, NULL);
   QApplication a(argc, argv);
   a.connect(&a, SIGNAL(lastWindowClosed()), &a, SLOT(quit()));
