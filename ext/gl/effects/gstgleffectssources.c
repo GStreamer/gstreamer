@@ -466,32 +466,44 @@ const gchar *sin_fragment_source_gles2 =
   "}";
 
 const gchar *interpolate_fragment_source =
+  "#ifdef GL_ES\n"
+  "precision mediump float;\n"
+  "#endif\n"
+  "varying vec2 v_texcoord;"
   "uniform sampler2D base;"
   "uniform sampler2D blend;"
   "void main () {"
-  "vec4 basecolor = texture2D (base, gl_TexCoord[0].st);"
-  "vec4 blendcolor = texture2D (blend, gl_TexCoord[0].st);"
+  "vec4 basecolor = texture2D (base, v_texcoord);"
+  "vec4 blendcolor = texture2D (blend, v_texcoord);"
   "vec4 white = vec4(1.0);"
   "gl_FragColor = blendcolor + (1.0 - blendcolor.a) * basecolor;"
   "}";
 
 const gchar *texture_interp_fragment_source =
+  "#ifdef GL_ES\n"
+  "precision mediump float;\n"
+  "#endif\n"
+  "varying vec2 v_texcoord;"
   "uniform sampler2D base;"
   "uniform sampler2D blend;"
   "uniform sampler2D alpha;"
   "void main () {"
-  "  vec4 basecolor = texture2D (base, gl_TexCoord[0].st);"
-  "  vec4 blendcolor = texture2D (blend, gl_TexCoord[0].st);"
-  "  vec4 alphacolor = texture2D (alpha, gl_TexCoord[0].st);"
+  "  vec4 basecolor = texture2D (base, v_texcoord);"
+  "  vec4 blendcolor = texture2D (blend, v_texcoord);"
+  "  vec4 alphacolor = texture2D (alpha, v_texcoord);"
   "  gl_FragColor = (alphacolor * blendcolor) + (1.0 - alphacolor) * basecolor;"
   "}";
 
 const gchar *difference_fragment_source =
+  "#ifdef GL_ES\n"
+  "precision mediump float;\n"
+  "#endif\n"
+  "varying vec2 v_texcoord;"
   "uniform sampler2D saved;"
   "uniform sampler2D current;"
   "void main () {"
-  "vec4 savedcolor = texture2D (saved, gl_TexCoord[0].st);"
-  "vec4 currentcolor = texture2D (current, gl_TexCoord[0].st);"
+  "vec4 savedcolor = texture2D (saved, v_texcoord);"
+  "vec4 currentcolor = texture2D (current, v_texcoord);"
   "gl_FragColor = vec4 (step (0.12, length (savedcolor - currentcolor)));"
   "}";
 
