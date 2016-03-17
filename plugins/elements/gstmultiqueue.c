@@ -1477,8 +1477,9 @@ next:
           goto out_flushing;
         }
 
-        /* Recompute the high time */
+        /* Recompute the high time and ID */
         compute_high_time (mq);
+        compute_high_id (mq);
 
         GST_DEBUG_OBJECT (mq, "queue %d woken from sleeping for not-linked "
             "wakeup with newid %u, highid %u, next_time %" GST_TIME_FORMAT
@@ -1588,23 +1589,24 @@ next:
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
   gst_multi_queue_post_buffering (mq);
 
+  GST_LOG_OBJECT (mq, "sq:%d AFTER PUSHING sq->srcresult: %s", sq->id,
+      gst_flow_get_name (sq->srcresult));
+
+  /* Need to make sure wake up any sleeping pads when we exit */
+  GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+  if (mq->numwaiting > 0 && GST_PAD_IS_EOS (sq->srcpad)) {
+    compute_high_time (mq);
+    compute_high_id (mq);
+    wake_up_next_non_linked (mq);
+  }
+  GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+
   if (dropping)
     goto next;
 
   if (result != GST_FLOW_OK && result != GST_FLOW_NOT_LINKED
       && result != GST_FLOW_EOS)
     goto out_flushing;
-
-  GST_LOG_OBJECT (mq, "AFTER PUSHING sq->srcresult: %s",
-      gst_flow_get_name (sq->srcresult));
-
-  GST_MULTI_QUEUE_MUTEX_LOCK (mq);
-  if (mq->numwaiting > 0 && sq->srcresult == GST_FLOW_EOS) {
-    compute_high_time (mq);
-    compute_high_id (mq);
-    wake_up_next_non_linked (mq);
-  }
-  GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 
   return;
 
@@ -1613,11 +1615,7 @@ out_flushing:
     if (object)
       gst_mini_object_unref (object);
 
-    /* Need to make sure wake up any sleeping pads when we exit */
     GST_MULTI_QUEUE_MUTEX_LOCK (mq);
-    compute_high_time (mq);
-    compute_high_id (mq);
-    wake_up_next_non_linked (mq);
     sq->last_query = FALSE;
     g_cond_signal (&sq->query_handled);
 
@@ -2095,10 +2093,10 @@ compute_high_id (GstMultiQueue * mq)
 
       if (sq->nextid < lowest)
         lowest = sq->nextid;
-    } else if (sq->srcresult != GST_FLOW_EOS) {
+    } else if (!GST_PAD_IS_EOS (sq->srcpad)) {
       /* If we don't have a global highid, or the global highid is lower than
        * this single queue's last outputted id, store the queue's one, 
-       * unless the singlequeue is at EOS (srcresult = EOS) */
+       * unless the singlequeue output is at EOS */
       if ((highid == G_MAXUINT32) || (sq->oldid > highid))
         highid = sq->oldid;
     }
@@ -2140,10 +2138,10 @@ compute_high_time (GstMultiQueue * mq)
 
       if (lowest == GST_CLOCK_TIME_NONE || sq->next_time < lowest)
         lowest = sq->next_time;
-    } else if (sq->srcresult != GST_FLOW_EOS) {
+    } else if (!GST_PAD_IS_EOS (sq->srcpad)) {
       /* If we don't have a global highid, or the global highid is lower than
        * this single queue's last outputted id, store the queue's one, 
-       * unless the singlequeue is at EOS (srcresult = EOS) */
+       * unless the singlequeue output is at EOS */
       if (highest == GST_CLOCK_TIME_NONE || sq->last_time > highest)
         highest = sq->last_time;
     }
