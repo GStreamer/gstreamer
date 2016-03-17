@@ -32,6 +32,10 @@
 
 #include <gst/video/videooverlay.h>
 
+#ifdef HAVE_X11
+#include <X11/Xlib.h>
+#endif
+
 
 static GstBusSyncReply
 create_window (GstBus * bus, GstMessage * message, GtkWidget * widget)
@@ -178,6 +182,10 @@ main (gint argc, gchar * argv[])
   GstElement *sourcebin;
   GstBus *bus;
   GError *error = NULL;
+
+#ifdef HAVE_X11
+  XInitThreads ();
+#endif
 
   GtkWidget *window;
   GtkWidget *screen;
