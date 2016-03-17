@@ -2347,8 +2347,8 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
   gst_caps_unref (tmp);
   tmp = NULL;
 
-  for (len = gst_caps_get_size (caps); len > 0; len--) {
-    GstStructure *s = gst_caps_get_structure (caps, len - 1);
+  for (len = gst_caps_get_size (tmp2); len > 0; len--) {
+    GstStructure *s = gst_caps_get_structure (tmp2, len - 1);
 
     if (pad == self->sinkpad)
       gst_structure_remove_field (s, "interlace-mode");
