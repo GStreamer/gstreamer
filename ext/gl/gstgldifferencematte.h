@@ -37,6 +37,7 @@ struct _GstGLDifferenceMatte
 {
   GstGLFilter filter;
 
+  GstGLShader *identity_shader;
   GstGLShader *shader[4];
 
   gchar *location;
