@@ -23,14 +23,17 @@ libgstvulkan_la_SOURCES = \
 
 noinst_HEADERS = \
 	vk.h \
+	vkapi.h \
 	vk_fwd.h \
+	vkbuffermemory.h \
+	vkbufferpool.h \
+	vkconfig.h \
 	vkdevice.h \
 	vkdisplay.h \
 	vkerror.h \
-	vkbuffermemory.h \
 	vkimagememory.h \
-	vkbufferpool.h \
 	vkinstance.h \
+	vkmacros.h \
 	vkmemory.h \
 	vkqueue.h \
 	vksink.h \
