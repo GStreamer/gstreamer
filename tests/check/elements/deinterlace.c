@@ -985,6 +985,37 @@ GST_START_TEST (test_mode_auto_strict_expected_caps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_fields_auto_expected_caps)
+{
+  deinterlace_set_caps_with_filter_and_check_result (0, 3,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=progressive, framerate=20/1",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=20/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 3,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=progressive, framerate=40/1",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=40/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 3,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=progressive",
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=progressive, framerate=40/1");
+
+  deinterlace_set_caps_with_filter_and_check_result (0, 3,
+      "video/x-raw, format=I420, width=320, height=240, "
+      "interlace-mode=interleaved, framerate=20/1",
+      "video/x-raw, interlace-mode=progressive, framerate=15/1", NULL);
+}
+
+GST_END_TEST;
+
 
 
 static Suite *
@@ -1013,6 +1044,7 @@ deinterlace_suite (void)
   tcase_add_test (tc_chain, test_mode_interlaced_expected_caps);
   tcase_add_test (tc_chain, test_mode_auto_expected_caps);
   tcase_add_test (tc_chain, test_mode_auto_strict_expected_caps);
+  tcase_add_test (tc_chain, test_fields_auto_expected_caps);
 
   return s;
 }
