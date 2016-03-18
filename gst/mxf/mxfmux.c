@@ -221,19 +221,24 @@ gst_mxf_mux_reset (GstMXFMux * mux)
   GList *l;
 
   GST_OBJECT_LOCK (mux);
-  while ((l = GST_ELEMENT_CAST (mux)->sinkpads) != NULL) {
-    GstPad *pad = (GstPad *) l->data;
+  for (l = GST_ELEMENT_CAST (mux)->sinkpads; l; l = l->next) {
+    GstMXFMuxPad *pad = l->data;
 
-    gst_object_ref (pad);
-    GST_OBJECT_UNLOCK (mux);
-    gst_element_release_request_pad (GST_ELEMENT_CAST (mux), pad);
-    gst_object_unref (pad);
-    GST_OBJECT_LOCK (mux);
+    gst_adapter_clear (pad->adapter);
+    g_free (pad->mapping_data);
+    pad->mapping_data = NULL;
+
+    pad->pos = 0;
+    pad->last_timestamp = 0;
+    pad->descriptor = NULL;
+    pad->have_complete_edit_unit = FALSE;
+
+    pad->source_package = NULL;
+    pad->source_track = NULL;
   }
   GST_OBJECT_UNLOCK (mux);
 
   mux->state = GST_MXF_MUX_STATE_HEADER;
-  mux->n_pads = 0;
 
   if (mux->metadata) {
     g_hash_table_destroy (mux->metadata);
