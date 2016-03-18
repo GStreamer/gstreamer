@@ -2281,7 +2281,7 @@ gst_element_query_duration (GstElement * element, GstFormat format,
 /**
  * gst_element_query_convert:
  * @element: a #GstElement to invoke the convert query on.
- * @src_format: (inout): a #GstFormat to convert from.
+ * @src_format: a #GstFormat to convert from.
  * @src_val: a value to convert.
  * @dest_format: the #GstFormat to convert to.
  * @dest_val: (out): a pointer to the result.
