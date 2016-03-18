@@ -937,8 +937,6 @@ gst_vaapidecode_finalize (GObject * object)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (object);
 
-  gst_caps_replace (&decode->sinkpad_caps, NULL);
-  gst_caps_replace (&decode->srcpad_caps, NULL);
   gst_caps_replace (&decode->allowed_caps, NULL);
 
   g_cond_clear (&decode->surface_ready);
@@ -976,9 +974,22 @@ gst_vaapidecode_close (GstVideoDecoder * vdec)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
 
-  gst_vaapi_decode_input_state_replace (decode, NULL);
   gst_vaapidecode_destroy (decode);
   gst_vaapi_plugin_base_close (GST_VAAPI_PLUGIN_BASE (decode));
+  return TRUE;
+}
+
+static gboolean
+gst_vaapidecode_stop (GstVideoDecoder * vdec)
+{
+  GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
+
+  gst_vaapidecode_purge (decode);
+  gst_vaapi_decode_input_state_replace (decode, NULL);
+  gst_vaapi_decoder_replace (&decode->decoder, NULL);
+  gst_caps_replace (&decode->decoder_caps, NULL);
+  gst_caps_replace (&decode->sinkpad_caps, NULL);
+  gst_caps_replace (&decode->srcpad_caps, NULL);
   return TRUE;
 }
 
@@ -1235,6 +1246,7 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
 
   vdec_class->open = GST_DEBUG_FUNCPTR (gst_vaapidecode_open);
   vdec_class->close = GST_DEBUG_FUNCPTR (gst_vaapidecode_close);
+  vdec_class->stop = GST_DEBUG_FUNCPTR (gst_vaapidecode_stop);
   vdec_class->set_format = GST_DEBUG_FUNCPTR (gst_vaapidecode_set_format);
   vdec_class->flush = GST_DEBUG_FUNCPTR (gst_vaapidecode_flush);
   vdec_class->parse = GST_DEBUG_FUNCPTR (gst_vaapidecode_parse);
