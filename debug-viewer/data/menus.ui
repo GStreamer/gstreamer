@@ -25,9 +25,14 @@
       <placeholder name="ViewMenuAdditions"/>
       <separator/>
       <menuitem name="ViewContextMenuHideLevel" action="hide-log-level"/>
+      <menuitem name="ViewContextMenuHideLevelAndAbove" action="hide-log-level-and-above"/>
+      <menuitem name="ViewContextMenuShowOnlyLevel" action="show-only-log-level"/>
       <menuitem name="ViewContextMenuHideCategory" action="hide-log-category"/>
+      <menuitem name="ViewContextMenuShowOnlyCategory" action="show-only-log-category"/>
       <menuitem name="ViewContextMenuHideObject" action="hide-log-object"/>
+      <menuitem name="ViewContextMenuShowOnlyObject" action="show-only-log-object"/>
       <menuitem name="ViewContextMenuHideFilename" action="hide-filename"/>
+      <menuitem name="ViewContextMenuShowOnlyFilename" action="show-only-filename"/>
       <menuitem name="ViewContextMenuHideBefore" action="hide-before-line"/>
       <menuitem name="ViewContextMenuHideAfter" action="hide-after-line"/>
       <menuitem name="ViewContextMenuShowHidden" action="show-hidden-lines"/>
@@ -46,9 +51,14 @@
       <separator/>
       <menuitem name="ViewContextMenuSetBaseTime" action="set-base-time"/>
       <menuitem name="ViewContextMenuHideLevel" action="hide-log-level"/>
+      <menuitem name="ViewContextMenuHideLevelAndAbove" action="hide-log-level-and-above"/>
+      <menuitem name="ViewContextMenuShowOnlyLevel" action="show-only-log-level"/>
       <menuitem name="ViewContextMenuHideCategory" action="hide-log-category"/>
+      <menuitem name="ViewContextMenuShowOnlyCategory" action="show-only-log-category"/>
       <menuitem name="ViewContextMenuHideObject" action="hide-log-object"/>
+      <menuitem name="ViewContextMenuShowOnlyObject" action="show-only-log-object"/>
       <menuitem name="ViewContextMenuHideFilename" action="hide-filename"/>
+      <menuitem name="ViewContextMenuShowOnlyFilename" action="show-only-filename"/>
       <menuitem name="ViewContextMenuHideBefore" action="hide-before-line"/>
       <menuitem name="ViewContextMenuHideAfter" action="hide-after-line"/>
       <menuitem name="ViewContextMenuShowHidden" action="show-hidden-lines"/>

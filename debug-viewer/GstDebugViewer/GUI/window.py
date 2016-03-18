@@ -260,9 +260,14 @@ class Window (object):
                             ("edit-copy-message", Gtk.STOCK_COPY, _("Copy message"), ""),
                             ("set-base-time", None, _("Set base time")),
                             ("hide-log-level", None, _("Hide log level")),
+                            ("hide-log-level-and-above", None, _("Hide this log level and above")),
+                            ("show-only-log-level", None, _("Show only log level")),
                             ("hide-log-category", None, _("Hide log category")),
+                            ("show-only-log-category", None, _("Show only log category")),
                             ("hide-log-object", None, _("Hide object")),
-                            ("hide-filename", None, _("Hide filename"))])
+                            ("show-only-log-object", None, _("Show only object")),
+                            ("hide-filename", None, _("Hide filename")),
+                            ("show-only-filename", None, _("Show only filename"))])
         group.props.sensitive = False
         self.actions.add_group (group)
 
@@ -776,6 +781,41 @@ class Window (object):
         row = self.get_active_line ()
         filename = row[LogModelBase.COL_FILENAME]
         self.add_model_filter (FilenameFilter (filename))
+
+    @action
+    def handle_hide_log_level_and_above_action_activate (self, action):
+
+        row = self.get_active_line ()
+        debug_level = row[LogModelBase.COL_LEVEL]
+        self.add_model_filter (DebugLevelFilter (debug_level, DebugLevelFilter.this_and_above))
+
+    @action
+    def handle_show_only_log_level_action_activate (self, action):
+
+        row = self.get_active_line ()
+        debug_level = row[LogModelBase.COL_LEVEL]
+        self.add_model_filter (DebugLevelFilter (debug_level, DebugLevelFilter.all_but_this))
+
+    @action
+    def handle_show_only_log_category_action_activate (self, action):
+
+        row = self.get_active_line ()
+        category = row[LogModelBase.COL_CATEGORY]
+        self.add_model_filter (CategoryFilter (category, True))
+
+    @action
+    def handle_show_only_log_object_action_activate (self, action):
+
+        row = self.get_active_line ()
+        object_ = row[LogModelBase.COL_OBJECT]
+        self.add_model_filter (ObjectFilter (object_, True))
+
+    @action
+    def handle_show_only_filename_action_activate (self, action):
+
+        row = self.get_active_line ()
+        filename = row[LogModelBase.COL_FILENAME]
+        self.add_model_filter (FilenameFilter (filename, True))
 
     @action
     def handle_show_about_action_activate (self, action):
