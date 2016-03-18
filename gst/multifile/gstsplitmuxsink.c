@@ -627,6 +627,25 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
         GST_SPLITMUX_UNLOCK (splitmux);
         break;
       }
+      case GST_EVENT_CUSTOM_DOWNSTREAM:{
+        const GstStructure *s;
+        GstClockTime ts = 0;
+
+        s = gst_event_get_structure (event);
+        if (!gst_structure_has_name (s, "splitmuxsink-unblock"))
+          break;
+
+        gst_structure_get_uint64 (s, "timestamp", &ts);
+
+        GST_SPLITMUX_LOCK (splitmux);
+
+        if (splitmux->state == SPLITMUX_STATE_STOPPED)
+          goto beach;
+        ctx->out_running_time = ts;
+        complete_or_wait_on_out (splitmux, ctx);
+        GST_SPLITMUX_UNLOCK (splitmux);
+        return GST_PAD_PROBE_DROP;
+      }
       default:
         break;
     }
@@ -1125,7 +1144,23 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
             "Collected last packet of GOP. Checking other pads");
         check_completed_gop (splitmux, ctx);
         break;
-      case SPLITMUX_STATE_ENDING_FILE:
+      case SPLITMUX_STATE_ENDING_FILE:{
+        GstEvent *event;
+
+        /* If somes streams received no buffer during the last GOP that overran,
+         * because its next buffer has a timestamp bigger than
+         * ctx->max_in_running_time, its queue is empty. In that case the only
+         * way to wakeup the output thread is by injecting an event in the
+         * queue. This usually happen with subtitle streams.
+         * See https://bugzilla.gnome.org/show_bug.cgi?id=763711. */
+        GST_LOG_OBJECT (pad, "Sending splitmuxsink-unblock event");
+        event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM |
+            GST_EVENT_TYPE_SERIALIZED,
+            gst_structure_new ("splitmuxsink-unblock", "timestamp",
+                G_TYPE_UINT64, splitmux->max_in_running_time, NULL));
+        gst_pad_send_event (ctx->sinkpad, event);
+        /* fallthrough */
+      }
       case SPLITMUX_STATE_START_NEXT_FRAGMENT:
         /* A fragment is ending, wait until that's done before continuing */
         GST_DEBUG_OBJECT (pad, "Sleeping for fragment restart");
