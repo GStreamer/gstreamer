@@ -2867,9 +2867,9 @@ gst_pad_query_caps (GstPad * pad, GstCaps * filter)
  * downstream in the preferred order. @filter might be %NULL but
  * if it is not %NULL the returned caps will be a subset of @filter.
  *
- * Returns: the caps of the peer pad with incremented ref-count. When there is
- * no peer pad, this function returns @filter or, when @filter is %NULL, ANY
- * caps.
+ * Returns: (transfer full): the caps of the peer pad with incremented
+ * ref-count. When there is no peer pad, this function returns @filter or,
+ * when @filter is %NULL, ANY caps.
  */
 GstCaps *
 gst_pad_peer_query_caps (GstPad * pad, GstCaps * filter)
