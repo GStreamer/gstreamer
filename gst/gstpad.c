@@ -2632,7 +2632,8 @@ gst_pad_has_current_caps (GstPad * pad)
  * Gets the capabilities currently configured on @pad with the last
  * #GST_EVENT_CAPS event.
  *
- * Returns: the current caps of the pad with incremented ref-count.
+ * Returns: (transfer full) (nullable): the current caps of the pad with
+ * incremented ref-count or %NULL when pad has no caps. Unref after usage.
  */
 GstCaps *
 gst_pad_get_current_caps (GstPad * pad)
