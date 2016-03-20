@@ -4177,8 +4177,32 @@ gst_decode_pad_handle_eos (GstDecodePad * pad)
   gboolean drained = FALSE;
   GstDecodeChain *chain = pad->chain;
   GstDecodeBin *dbin = chain->dbin;
+  GstEvent *tmp;
 
   GST_LOG_OBJECT (dbin, "pad %p", pad);
+
+  /* Send a stream-group-done event in case downstream needs
+   * to unblock before we can drain */
+  tmp = gst_pad_get_sticky_event (GST_PAD (pad), GST_EVENT_STREAM_START, 0);
+  if (tmp) {
+    guint group_id;
+    if (gst_event_parse_group_id (tmp, &group_id)) {
+      GstPad *peer = gst_pad_get_peer (GST_PAD (pad));
+
+      if (peer) {
+        GST_DEBUG_OBJECT (dbin,
+            "Sending stream-group-done for group %u to pad %"
+            GST_PTR_FORMAT, group_id, pad);
+        gst_pad_send_event (peer, gst_event_new_stream_group_done (group_id));
+        gst_object_unref (peer);
+      }
+    } else {
+      GST_DEBUG_OBJECT (dbin,
+          "No group ID to send stream-group-done on pad %" GST_PTR_FORMAT, pad);
+    }
+    gst_event_unref (tmp);
+  }
+
   EXPOSE_LOCK (dbin);
   if (dbin->decode_chain) {
     drain_and_switch_chains (dbin->decode_chain, pad, &last_group, &drained,
