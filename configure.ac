@@ -285,7 +285,6 @@ if test "x$with_system_libav" = "xyes"; then
   saved_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $LIBAV_CFLAGS"
   AC_CHECK_HEADERS([avi.h])
-  CPPFLAGS="$saved_CPPFLAGS"
   AC_DEFINE([LIBAV_SOURCE], ["system install"], [Describes where the Libav libraries come from.])
   HAVE_LIBAV_UNINSTALLED=0
   AC_MSG_NOTICE([Using system-installed libav code])
@@ -300,6 +299,7 @@ if test "x$with_system_libav" = "xyes"; then
         #endif
     ]])], [is_ffmpeg=yes], [is_ffmpeg=no])
   AC_MSG_RESULT([$is_ffmpeg])
+  CPPFLAGS="$saved_CPPFLAGS"
   if test "$is_ffmpeg" = no; then
     AC_MSG_ERROR([Uncompatible libavcodec found])
   fi
