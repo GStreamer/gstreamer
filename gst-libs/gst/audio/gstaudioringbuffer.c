@@ -1984,6 +1984,19 @@ gst_audio_ring_buffer_set_channel_positions (GstAudioRingBuffer * buf,
 
   for (i = 0; i < channels; i++) {
     if (buf->channel_reorder_map[i] != i) {
+#ifndef GST_DISABLE_GST_DEBUG
+      {
+        gchar *tmp1, *tmp2;
+
+        tmp1 = gst_audio_channel_positions_to_string (position, channels);
+        tmp2 = gst_audio_channel_positions_to_string (to, channels);
+        GST_LOG_OBJECT (buf, "may have to reorder channels: %s -> %s", tmp1,
+            tmp2);
+        g_free (tmp1);
+        g_free (tmp2);
+      }
+#endif /* GST_DISABLE_GST_DEBUG */
+
       buf->need_reorder = TRUE;
       break;
     }
