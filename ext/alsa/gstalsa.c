@@ -750,6 +750,7 @@ alsa_chmap_to_channel_positions (const snd_pcm_chmap_t * chmap,
     GstAudioChannelPosition * pos)
 {
   int c;
+  gboolean all_mono = TRUE;
 
   for (c = 0; c < chmap->channels; c++) {
     if (chmap->pos[c] > SND_CHMAP_LAST)
@@ -758,7 +759,22 @@ alsa_chmap_to_channel_positions (const snd_pcm_chmap_t * chmap,
     if (!pos[c])
       return FALSE;
     pos[c]--;
+
+    if (pos[c] != GST_AUDIO_CHANNEL_POSITION_MONO)
+      all_mono = FALSE;
   }
+
+  if (all_mono && chmap->channels > 1) {
+    /* GST_AUDIO_CHANNEL_POSITION_MONO can only be used with 1 channel and
+     * GST_AUDIO_CHANNEL_POSITION_NONE is meant to be used for position-less
+     * multi channels.
+     * Converting as ALSA can only express such configuration by using an array
+     * full of SND_CHMAP_MONO.
+     */
+    for (c = 0; c < chmap->channels; c++)
+      pos[c] = GST_AUDIO_CHANNEL_POSITION_NONE;
+  }
+
   return TRUE;
 }
 
