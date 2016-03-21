@@ -47,6 +47,9 @@ typedef struct _localstate
 static GstBusSyncReply
 create_window (GstBus * bus, GstMessage * message, GtkWidget * widget)
 {
+  if (gst_gtk_handle_need_context (bus, message, NULL))
+    return GST_BUS_DROP;
+
   /* ignore anything but 'prepare-window-handle' element messages */
   if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
     return GST_BUS_PASS;
@@ -105,6 +108,17 @@ draw_cb (GtkWidget * widget, cairo_t * cr, GstElement * videosink)
 {
   gst_video_overlay_expose (GST_VIDEO_OVERLAY (videosink));
   return FALSE;
+}
+
+static gboolean
+resize_cb (GtkWidget * widget, GdkEvent * event, gpointer sink)
+{
+  GtkAllocation allocation;
+
+  gtk_widget_get_allocation (widget, &allocation);
+  gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (sink), allocation.x, allocation.y, allocation.width, allocation.height);
+
+  return G_SOURCE_CONTINUE;
 }
 
 static void
@@ -406,6 +420,7 @@ main (gint argc, gchar * argv[])
 
   /* Redraw needed when paused or stopped (PAUSED or READY) */
   g_signal_connect (area, "draw", G_CALLBACK (draw_cb), videosink);
+  g_signal_connect(area, "configure-event", G_CALLBACK(resize_cb), videosink);
 
   gtk_widget_show_all (window);
 
