@@ -160,7 +160,6 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 
       gst_message_parse_buffering (message, &percent);
       gst_message_parse_buffering_stats (message, &mode, NULL, NULL, NULL);
-      g_print ("%s %d%%  \r", "Buffering...", percent);
 
       /* no state management needed for live pipelines */
       if (mode == GST_BUFFERING_LIVE) {
@@ -174,16 +173,12 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
           buffering = FALSE;
 
           if (target_state == GST_STATE_PLAYING) {
-            g_print ("Done buffering, setting pipeline to PLAYING\n");
             gst_element_set_state (pipeline, GST_STATE_PLAYING);
-          } else {
-            g_print ("Done buffering, staying in PAUSED\n");
           }
         }
       } else {
         /* buffering... */
         if (!buffering) {
-          g_print ("Start buffering, setting pipeline to PAUSED\n");
           gst_element_set_state (pipeline, GST_STATE_PAUSED);
           buffering = TRUE;
         }

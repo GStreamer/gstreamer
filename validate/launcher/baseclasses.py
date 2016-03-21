@@ -632,7 +632,7 @@ class GstValidateTest(Test):
                 utils.gsttime_from_tuple(times[0][4:]))
 
     def _parse_buffering(self, b):
-        return b.split("buffering... ")[1].split("%")[0], 100
+        return b.lower().split("buffering... ")[1].split("%")[0], 100
 
     def _get_position(self):
         position = duration = -1
