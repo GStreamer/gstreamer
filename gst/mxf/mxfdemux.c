@@ -3964,6 +3964,8 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
           gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0, -1);
         else
           gst_query_set_seeking (query, GST_FORMAT_TIME, FALSE, -1, -1);
+
+        gst_query_unref (peerquery);
       }
 
       break;
