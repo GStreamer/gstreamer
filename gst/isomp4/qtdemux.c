@@ -830,7 +830,7 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstObject * parent,
         /* First try to query upstream */
         res = gst_pad_query_default (pad, parent, query);
         if (!res) {
-          guint64 duration;
+          GstClockTime duration;
           if (gst_qtdemux_get_duration (qtdemux, &duration) && duration > 0) {
             gst_query_set_duration (query, GST_FORMAT_TIME, duration);
             res = TRUE;
