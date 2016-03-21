@@ -74,6 +74,12 @@ extern const GstAudioChannelPosition alsa_position[][8];
 #ifdef SND_CHMAP_API_VERSION
 gboolean alsa_chmap_to_channel_positions (const snd_pcm_chmap_t *chmap,
                                           GstAudioChannelPosition *pos);
+
+void alsa_detect_channels_mapping (GstObject * obj,
+                                   snd_pcm_t * handle,
+                                   GstAudioRingBufferSpec * spec,
+                                   guint channels,
+                                   GstAudioRingBuffer * buf);
 #endif
 
 #endif /* __GST_ALSA_H__ */

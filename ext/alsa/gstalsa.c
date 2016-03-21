@@ -761,4 +761,19 @@ alsa_chmap_to_channel_positions (const snd_pcm_chmap_t * chmap,
   }
   return TRUE;
 }
+
+void
+alsa_detect_channels_mapping (GstObject * obj, snd_pcm_t * handle,
+    GstAudioRingBufferSpec * spec, guint channels, GstAudioRingBuffer * buf)
+{
+  if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW && channels < 9) {
+    snd_pcm_chmap_t *chmap = snd_pcm_get_chmap (handle);
+    if (chmap && chmap->channels == channels) {
+      GstAudioChannelPosition pos[8];
+      if (alsa_chmap_to_channel_positions (chmap, pos))
+        gst_audio_ring_buffer_set_channel_positions (buf, pos);
+    }
+    free (chmap);
+  }
+}
 #endif /* SND_CHMAP_API_VERSION */
