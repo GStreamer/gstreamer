@@ -3647,7 +3647,6 @@ tests/examples/gl/generic/cubeyuv/Makefile
 tests/examples/gl/generic/doublecube/Makefile
 tests/examples/gl/generic/recordgraphic/Makefile
 tests/examples/gl/gtk/Makefile
-tests/examples/gl/gtk/gtkvideooverlay/Makefile
 tests/examples/gl/gtk/3dvideo/Makefile
 tests/examples/gl/gtk/filternovideooverlay/Makefile
 tests/examples/gl/gtk/filtervideooverlay/Makefile
