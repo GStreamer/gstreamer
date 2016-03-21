@@ -2794,13 +2794,10 @@ check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad)
   query = gst_query_new_seeking (GST_FORMAT_BYTES);
   if (!gst_pad_peer_query (pad, query)) {
     GST_DEBUG_OBJECT (dbin, "seeking query failed");
-    gst_query_unref (query);
-    return FALSE;
+    goto done;
   }
 
   gst_query_parse_seeking (query, NULL, &seekable, &start, &stop);
-
-  gst_query_unref (query);
 
   /* try harder to query upstream size if we didn't get it the first time */
   if (seekable && stop == -1) {
@@ -2812,10 +2809,13 @@ check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad)
    * practice even if it technically may be seekable */
   if (seekable && (start != 0 || stop <= start)) {
     GST_DEBUG_OBJECT (dbin, "seekable but unknown start/stop -> disable");
-    return FALSE;
+    seekable = FALSE;
+  } else {
+    GST_DEBUG_OBJECT (dbin, "upstream seekable: %d", seekable);
   }
 
-  GST_DEBUG_OBJECT (dbin, "upstream seekable: %d", seekable);
+done:
+  gst_query_unref (query);
   return seekable;
 }
 
