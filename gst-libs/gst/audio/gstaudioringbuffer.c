@@ -1952,6 +1952,23 @@ gst_audio_ring_buffer_may_start (GstAudioRingBuffer * buf, gboolean allowed)
   g_atomic_int_set (&buf->may_start, allowed);
 }
 
+/* GST_AUDIO_CHANNEL_POSITION_NONE is used for position-less
+ * mutually exclusive channels. In this case we should not attempt
+ * to do any reordering.
+ */
+static gboolean
+position_less_channels (const GstAudioChannelPosition * pos, guint channels)
+{
+  guint i;
+
+  for (i = 0; i < channels; i++) {
+    if (pos[i] != GST_AUDIO_CHANNEL_POSITION_NONE)
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 /**
  * gst_audio_ring_buffer_set_channel_positions:
  * @buf: the #GstAudioRingBuffer
@@ -1976,6 +1993,11 @@ gst_audio_ring_buffer_set_channel_positions (GstAudioRingBuffer * buf,
 
   if (memcmp (position, to, channels * sizeof (to[0])) == 0)
     return;
+
+  if (position_less_channels (position, channels)) {
+    GST_LOG_OBJECT (buf, "position-less channels, no need to reorder");
+    return;
+  }
 
   buf->need_reorder = FALSE;
   if (!gst_audio_get_channel_reorder_map (channels, position, to,
