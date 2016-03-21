@@ -36,6 +36,7 @@ EXPORTS
 	gst_audio_channel_position_get_type
 	gst_audio_channel_positions_from_mask
 	gst_audio_channel_positions_to_mask
+	gst_audio_channel_positions_to_string
 	gst_audio_channel_positions_to_valid_order
 	gst_audio_check_valid_channel_positions
 	gst_audio_clipping_meta_api_get_type

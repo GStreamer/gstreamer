@@ -538,3 +538,108 @@ gst_audio_channel_get_fallback_mask (gint channels)
 
   return default_masks[channels - 1];
 }
+
+static const gchar *
+position_to_string (GstAudioChannelPosition pos)
+{
+  switch (pos) {
+    case GST_AUDIO_CHANNEL_POSITION_NONE:
+      return "NONE";
+    case GST_AUDIO_CHANNEL_POSITION_MONO:
+      return "MONO";
+    case GST_AUDIO_CHANNEL_POSITION_INVALID:
+      return "INVALID";
+    case GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT:
+      return "FL";
+    case GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT:
+      return "FR";
+    case GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER:
+      return "FC";
+    case GST_AUDIO_CHANNEL_POSITION_LFE1:
+      return "LFE1";
+    case GST_AUDIO_CHANNEL_POSITION_REAR_LEFT:
+      return "RL";
+    case GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT:
+      return "RR";
+    case GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER:
+      return "FLoC";
+    case GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER:
+      return "FRoC";
+    case GST_AUDIO_CHANNEL_POSITION_REAR_CENTER:
+      return "RC";
+    case GST_AUDIO_CHANNEL_POSITION_LFE2:
+      return "LF2";
+    case GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT:
+      return "SL";
+    case GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT:
+      return "SR";
+    case GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT:
+      return "TFL";
+    case GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT:
+      return "TFR";
+    case GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER:
+      return "TFC";
+    case GST_AUDIO_CHANNEL_POSITION_TOP_CENTER:
+      return "TFC";
+    case GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT:
+      return "TRL";
+    case GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT:
+      return "TRR";
+    case GST_AUDIO_CHANNEL_POSITION_TOP_SIDE_LEFT:
+      return "TSL";
+    case GST_AUDIO_CHANNEL_POSITION_TOP_SIDE_RIGHT:
+      return "TSR";
+    case GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER:
+      return "TRC";
+    case GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_CENTER:
+      return "BFC";
+    case GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_LEFT:
+      return "BFL";
+    case GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_RIGHT:
+      return "BFR";
+    case GST_AUDIO_CHANNEL_POSITION_WIDE_LEFT:
+      return "WL";
+    case GST_AUDIO_CHANNEL_POSITION_WIDE_RIGHT:
+      return "WR";
+    case GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT:
+      return "SL";
+    case GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT:
+      return "SR";
+    default:
+      break;
+  }
+
+  return "UNKNOWN";
+}
+
+/**
+ * gst_audio_channel_positions_to_string:
+ * @position: (array length=channels): The %GstAudioChannelPositions
+ *   to convert.
+ * @channels: The number of channels.
+ *
+ * Converts @position to a human-readable string representation for
+ * debugging purposes.
+ *
+ * Returns: (transfer full): a newly allocated string representing
+ * @position
+ *
+ * Since 1.10
+ */
+gchar *
+gst_audio_channel_positions_to_string (const GstAudioChannelPosition * position,
+    gint channels)
+{
+  guint i;
+  GString *tmp;
+
+  g_return_val_if_fail (channels > 0, FALSE);
+  g_return_val_if_fail (position != NULL, FALSE);
+
+  tmp = g_string_new ("[");
+  for (i = 0; i < channels; i++)
+    g_string_append_printf (tmp, " %s", position_to_string (position[i]));
+  g_string_append (tmp, " ]");
+
+  return g_string_free (tmp, FALSE);
+}
