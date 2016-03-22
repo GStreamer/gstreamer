@@ -104,6 +104,7 @@ struct _GstInterlace
   GstClockTime timebase;
   int fields_since_timebase;
   guint pattern_offset;         /* initial offset into the pattern */
+  gboolean passthrough;
 };
 
 struct _GstInterlaceClass
@@ -182,7 +183,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
         ("{AYUV,YUY2,UYVY,I420,YV12,Y42B,Y444,NV12,NV21}")
-        ",interlace-mode=progressive")
+    )
     );
 
 GType gst_interlace_get_type (void);
@@ -267,6 +268,7 @@ gst_interlace_reset (GstInterlace * interlace)
   interlace->phase_index = interlace->pattern_offset;
   interlace->timebase = GST_CLOCK_TIME_NONE;
   interlace->field_index = 0;
+  interlace->passthrough = FALSE;
   if (interlace->stored_frame) {
     gst_buffer_unref (interlace->stored_frame);
     interlace->stored_frame = NULL;
@@ -392,8 +394,21 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
     gst_caps_set_simple (othercaps, "interlace-mode", G_TYPE_STRING,
         "interleaved", NULL);
   }
-  gst_caps_set_simple (othercaps, "framerate", GST_TYPE_FRACTION,
-      interlace->src_fps_n, interlace->src_fps_d, NULL);
+
+  if (gst_caps_can_intersect (caps, othercaps)) {
+    interlace->passthrough = TRUE;
+  } else {
+    if (GST_VIDEO_INFO_IS_INTERLACED (&info)) {
+      GST_ERROR_OBJECT (interlace,
+          "Caps %" GST_PTR_FORMAT " not compatible with %" GST_PTR_FORMAT, caps,
+          othercaps);
+      gst_caps_unref (othercaps);
+      goto caps_error;
+    }
+    interlace->passthrough = FALSE;
+    gst_caps_set_simple (othercaps, "framerate", GST_TYPE_FRACTION,
+        interlace->src_fps_n, interlace->src_fps_d, NULL);
+  }
 
   ret = gst_pad_set_caps (interlace->srcpad, othercaps);
   gst_caps_unref (othercaps);
@@ -686,6 +701,7 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
   }
 
   icaps = gst_caps_make_writable (icaps);
+  tcaps = gst_caps_copy (icaps);
   if (interlace->pattern > GST_INTERLACE_PATTERN_2_2) {
     mode = "mixed";
   } else {
@@ -693,6 +709,13 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
   }
   gst_caps_set_simple (icaps, "interlace-mode", G_TYPE_STRING,
       pad == interlace->srcpad ? mode : "progressive", NULL);
+  if (pad == interlace->sinkpad) {
+    gst_caps_set_simple (tcaps, "interlace-mode", G_TYPE_STRING, mode, NULL);
+    icaps = gst_caps_merge (icaps, tcaps);
+    tcaps = NULL;
+  } else {
+    gst_caps_unref (tcaps);
+  }
 
   icaps =
       gst_interlace_caps_double_framerate (icaps, (pad == interlace->srcpad));
@@ -836,6 +859,10 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       (GST_BUFFER_FLAGS (buffer) & GST_VIDEO_BUFFER_FLAG_RFF) ? "rff" : "",
       (GST_BUFFER_FLAGS (buffer) & GST_VIDEO_BUFFER_FLAG_ONEFIELD) ? "onefield"
       : "");
+
+  if (interlace->passthrough) {
+    return gst_pad_push (interlace->srcpad, buffer);
+  }
 
   if (GST_BUFFER_FLAGS (buffer) & GST_BUFFER_FLAG_DISCONT) {
     GST_DEBUG ("discont");
