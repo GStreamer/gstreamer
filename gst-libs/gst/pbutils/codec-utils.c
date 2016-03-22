@@ -110,6 +110,59 @@ gst_codec_utils_aac_get_index_from_sample_rate (guint rate)
 }
 
 /**
+ * gst_codec_utils_aac_get_sample_rate:
+ * @audio_config: a pointer to the AudioSpecificConfig as specified in the
+ *                Elementary Stream Descriptor (esds) in ISO/IEC 14496-1.
+ * @len: Length of @audio_config in bytes
+ *
+ * Translates the sample rate index found in AAC headers to the actual sample
+ * rate.
+ *
+ * Returns: The sample rate if sr_idx is valid, 0 otherwise.
+ *
+ * Since 1.10
+ */
+guint
+gst_codec_utils_aac_get_sample_rate (const guint8 * audio_config, guint len)
+{
+  guint rate_index;
+
+  if (len < 2)
+    return 0;
+
+  rate_index = ((audio_config[0] & 0x7) << 1) | ((audio_config[1] & 0x80) >> 7);
+  return gst_codec_utils_aac_get_sample_rate_from_index (rate_index);
+}
+
+/**
+ * gst_codec_utils_aac_get_channels:
+ * @audio_config: a pointer to the AudioSpecificConfig as specified in the
+ *                Elementary Stream Descriptor (esds) in ISO/IEC 14496-1.
+ *
+ * Returns the channels of the given AAC stream.
+ *
+ * Returns: The channels or 0 if the channel could not be determined.
+ *
+ * Since 1.10
+ */
+guint
+gst_codec_utils_aac_get_channels (const guint8 * audio_config, guint len)
+{
+  guint channels;
+
+  if (len < 2)
+    return 0;
+
+  channels = (audio_config[1] & 0x7f) >> 3;
+  if (channels > 0 && channels < 7)
+    return channels;
+  else if (channels == 7)
+    return 8;
+  else
+    return 0;
+}
+
+/**
  * gst_codec_utils_aac_get_profile:
  * @audio_config: a pointer to the AudioSpecificConfig as specified in the
  *                Elementary Stream Descriptor (esds) in ISO/IEC 14496-1 (see

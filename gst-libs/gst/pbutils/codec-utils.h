@@ -35,6 +35,10 @@ const gchar * gst_codec_utils_aac_get_profile (const guint8 * audio_config, guin
 
 const gchar * gst_codec_utils_aac_get_level   (const guint8 * audio_config, guint len);
 
+guint         gst_codec_utils_aac_get_sample_rate (const guint8 * audio_config, guint len);
+
+guint         gst_codec_utils_aac_get_channels (const guint8 * audio_config, guint len);
+
 gboolean      gst_codec_utils_aac_caps_set_level_and_profile (GstCaps      * caps,
                                                               const guint8 * audio_config,
                                                               guint          len);
