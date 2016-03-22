@@ -12169,18 +12169,13 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
        * wrong. */
       /* Only do so for basic setup without HE-AAC extension */
       if (data_ptr && data_len == 2) {
-        guint channels, rateindex, rate;
+        guint channels, rate;
 
-        /* FIXME: add gst_codec_utils_aac_get_{channels|sample_rate}()? */
-        channels = (data_ptr[1] & 0x7f) >> 3;
-        if (channels > 0 && channels < 7) {
+        channels = gst_codec_utils_aac_get_channels (data_ptr, data_len);
+        if (channels > 0)
           stream->n_channels = channels;
-        } else if (channels == 7) {
-          stream->n_channels = 8;
-        }
 
-        rateindex = ((data_ptr[0] & 0x7) << 1) | ((data_ptr[1] & 0x80) >> 7);
-        rate = gst_codec_utils_aac_get_sample_rate_from_index (rateindex);
+        rate = gst_codec_utils_aac_get_sample_rate (data_ptr, data_len);
         if (rate > 0)
           stream->rate = rate;
       }
