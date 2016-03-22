@@ -18,12 +18,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
 #include "../gstgtk.h"
 
+#ifdef HAVE_X11
+#include <X11/Xlib.h>
+#endif
 
 static GstBusSyncReply create_window (GstBus* bus, GstMessage* message, GtkWidget* widget)
 {
@@ -59,7 +66,7 @@ resize_cb (GtkWidget * widget, GdkEvent * event, gpointer sink)
     gtk_widget_get_allocation (widget, &allocation);
     gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (sink), allocation.x, allocation.y, allocation.width, allocation.height);
 
-    return G_SOURCE_CONTINUE;
+    return FALSE;
 }
 
 static void end_stream_cb(GstBus* bus, GstMessage* message, GstElement* pipeline)
@@ -104,12 +111,18 @@ static gboolean expose_cb(GtkWidget* widget, cairo_t *cr, GstElement* videosink)
 static gboolean on_click_drawing_area(GtkWidget* widget, GdkEventButton* event, GstElement* videosink)
 {
     GtkAllocation allocation;
+    GtkWidget *parent = gtk_widget_get_parent (widget);
 
     g_print ("switch the drawing area %p\n", widget);
     gst_video_overlay_set_gtk_window (GST_VIDEO_OVERLAY (videosink), widget);
 
     gtk_widget_get_allocation (widget, &allocation);
     gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (videosink), allocation.x, allocation.y, allocation.width, allocation.height);
+
+    /* XXX: required on wayland as changing the window handle (subsurface)
+     * requires a wl_surface::commit from the parent */
+    if (parent)
+      gtk_widget_queue_draw (parent);
 
     return FALSE;
 }
@@ -153,16 +166,12 @@ static void button_state_playing_cb(GtkWidget* widget, GstElement* pipeline)
     g_print ("GST_STATE_PLAYING\n");
 }
 
-static void area_realize_cb(GtkWidget* widget, gpointer data)
-{
-    g_print ("realize %p\n", widget);
-    if (!gdk_window_ensure_native (gtk_widget_get_window (widget)))
-        g_error ("Failed to create native window!");
-}
-
-
 gint main (gint argc, gchar *argv[])
 {
+#ifdef HAVE_X11
+    XInitThreads();
+#endif
+
     gtk_init (&argc, &argv);
     gst_init (&argc, &argv);
 
@@ -249,10 +258,6 @@ gint main (gint argc, gchar *argv[])
     gtk_widget_add_events(area_top_right, GDK_BUTTON_PRESS_MASK);
     gtk_widget_set_size_request (area_top_right, 320, 240);
     gtk_grid_attach (GTK_GRID (table_areas), area_top_right, 1, 0, 1, 1);
-
-    //set window id on this event
-    g_signal_connect(area_top_left, "realize", G_CALLBACK(area_realize_cb), NULL);
-    g_signal_connect(area_top_right, "realize", G_CALLBACK(area_realize_cb), NULL);
 
     gtk_widget_set_redraw_on_allocate (area_top_left, TRUE);
     gtk_widget_set_redraw_on_allocate (area_top_right, TRUE);
