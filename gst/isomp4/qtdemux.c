@@ -788,15 +788,18 @@ done:
 static gboolean
 gst_qtdemux_get_duration (GstQTDemux * qtdemux, GstClockTime * duration)
 {
-  gboolean res = TRUE;
+  gboolean res = FALSE;
 
   *duration = GST_CLOCK_TIME_NONE;
 
-  if (qtdemux->duration != 0) {
-    if (qtdemux->duration != G_MAXINT64 && qtdemux->timescale != 0) {
-      *duration = QTTIME_TO_GSTTIME (qtdemux, qtdemux->duration);
-    }
+  if (qtdemux->duration != 0 &&
+      qtdemux->duration != G_MAXINT64 && qtdemux->timescale != 0) {
+    *duration = QTTIME_TO_GSTTIME (qtdemux, qtdemux->duration);
+    res = TRUE;
+  } else {
+    *duration = GST_CLOCK_TIME_NONE;
   }
+
   return res;
 }
 
@@ -867,7 +870,7 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstObject * parent,
       if (!res) {
         gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
         if (fmt == GST_FORMAT_TIME) {
-          GstClockTime duration = GST_CLOCK_TIME_NONE;
+          GstClockTime duration;
 
           gst_qtdemux_get_duration (qtdemux, &duration);
           seekable = TRUE;
@@ -10499,8 +10502,7 @@ gst_qtdemux_guess_bitrate (GstQTDemux * qtdemux)
 
   size = size - qtdemux->header_size;
 
-  if (!gst_qtdemux_get_duration (qtdemux, &duration) ||
-      duration == GST_CLOCK_TIME_NONE) {
+  if (!gst_qtdemux_get_duration (qtdemux, &duration)) {
     GST_DEBUG_OBJECT (qtdemux, "Stream duration not known - bailing");
     return;
   }
