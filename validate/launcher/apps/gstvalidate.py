@@ -792,6 +792,8 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             # hls known issues
             ("validate.hls.playback.seek_with_stop.*",
              "https://bugzilla.gnome.org/show_bug.cgi?id=753689"),
+            ("validate.hls.playback.scrub_forward_seeking.hls_bibbop",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=764020"),
 
             # dash known issues
             ("validate.dash.media_check.*",
