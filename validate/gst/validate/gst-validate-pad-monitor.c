@@ -1711,19 +1711,19 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
       if (pad_monitor->pending_newsegment_seqnum) {
         if (pad_monitor->pending_newsegment_seqnum == seqnum) {
           pad_monitor->pending_newsegment_seqnum = 0;
+          if (GST_CLOCK_TIME_IS_VALID (pad_monitor->pending_seek_accurate_time)) {
+            if (segment->time == pad_monitor->pending_seek_accurate_time) {
+              pad_monitor->pending_seek_accurate_time = GST_CLOCK_TIME_NONE;
+            } else {
+              GST_VALIDATE_REPORT (pad_monitor, SEGMENT_HAS_WRONG_START,
+                  "After an accurate seek, got: %" GST_TIME_FORMAT
+                  " Expected: %" GST_TIME_FORMAT, GST_TIME_ARGS (segment->time),
+                  GST_TIME_ARGS (pad_monitor->pending_seek_accurate_time));
+            }
+          }
         } else {
           GST_VALIDATE_REPORT (pad_monitor, SEGMENT_HAS_WRONG_SEQNUM,
               "Got: %u Expected: %u", seqnum, pad_monitor->pending_eos_seqnum);
-        }
-      }
-      if (GST_CLOCK_TIME_IS_VALID (pad_monitor->pending_seek_accurate_time)) {
-        if (segment->time == pad_monitor->pending_seek_accurate_time) {
-          pad_monitor->pending_seek_accurate_time = GST_CLOCK_TIME_NONE;
-        } else {
-          GST_VALIDATE_REPORT (pad_monitor, SEGMENT_HAS_WRONG_START,
-              "After an accurate seek, got: %" GST_TIME_FORMAT " Expected: %"
-              GST_TIME_FORMAT, GST_TIME_ARGS (segment->time),
-              GST_TIME_ARGS (pad_monitor->pending_seek_accurate_time));
         }
       }
 
