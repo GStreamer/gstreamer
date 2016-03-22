@@ -345,8 +345,8 @@ gst_eglimage_to_gl_texture_upload_meta (GstVideoGLTextureUploadMeta *
   }
 
   if (GST_IS_GL_BUFFER_POOL (meta->buffer->pool))
-    gst_gl_buffer_pool_replace_last_buffer (GST_GL_BUFFER_POOL (meta->
-            buffer->pool), meta->buffer);
+    gst_gl_buffer_pool_replace_last_buffer (GST_GL_BUFFER_POOL (meta->buffer->
+            pool), meta->buffer);
 
 
   return TRUE;
@@ -479,9 +479,9 @@ gst_egl_image_memory_from_dmabuf (GstGLContext * context,
 }
 #endif /* GST_GL_HAVE_DMABUF */
 
-gboolean
-gst_egl_image_memory_setup_buffer (GstGLContext * ctx, GstVideoInfo * info,
-    GstBuffer * buffer)
+static gboolean
+_gst_egl_image_memory_setup_buffer_thread (GstGLContext * ctx,
+    GstVideoInfo * info, GstBuffer * buffer)
 {
   gint i = 0;
   gint stride[3];
@@ -729,4 +729,33 @@ mem_error:
 
     return FALSE;
   }
+}
+
+struct egl_image_setup_buffer
+{
+  gboolean ret;
+  GstVideoInfo *info;
+  GstBuffer *buffer;
+};
+
+static void
+_setup_buffer (GstGLContext * ctx, struct egl_image_setup_buffer *data)
+{
+  data->ret = _gst_egl_image_memory_setup_buffer_thread (ctx, data->info,
+      data->buffer);
+}
+
+gboolean
+gst_egl_image_memory_setup_buffer (GstGLContext * ctx, GstVideoInfo * info,
+    GstBuffer * buffer)
+{
+  struct egl_image_setup_buffer data = { 0, };
+
+  data.info = info;
+  data.buffer = buffer;
+
+  gst_gl_context_thread_add (ctx, (GstGLContextThreadFunc) _setup_buffer,
+      &data);
+
+  return data.ret;
 }
