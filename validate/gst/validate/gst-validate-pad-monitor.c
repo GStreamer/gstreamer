@@ -1198,7 +1198,7 @@ _combine_flows (GstFlowReturn ret1, GstFlowReturn ret2)
 
 static void
 gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
-    monitor, GstFlowReturn ret)
+    monitor, GstObject * parent, GstFlowReturn ret)
 {
   GstIterator *iter;
   gboolean done;
@@ -1250,10 +1250,19 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
     return;
   }
   if (aggregated == GST_FLOW_OK || aggregated == GST_FLOW_EOS) {
-    /* those are acceptable situations */
+    GstState state, pending;
 
+    /* those are acceptable situations */
     if (GST_PAD_IS_FLUSHING (pad) && ret == GST_FLOW_FLUSHING) {
       /* pad is flushing, always acceptable to return flushing */
+      return;
+    }
+
+    gst_element_get_state (GST_ELEMENT (parent), &state, &pending, 0);
+    if (ret == GST_FLOW_FLUSHING && (state < GST_STATE_PAUSED
+            || pending < GST_STATE_PAUSED)) {
+      /* Element is being teared down, accept FLOW_FLUSHING */
+
       return;
     }
 
@@ -2071,7 +2080,7 @@ gst_validate_pad_monitor_chain_func (GstPad * pad, GstObject * parent,
     mark_pads_eos (pad_monitor);
   }
   if (PAD_PARENT_IS_DEMUXER (pad_monitor))
-    gst_validate_pad_monitor_check_aggregated_return (pad_monitor, ret);
+    gst_validate_pad_monitor_check_aggregated_return (pad_monitor, parent, ret);
 
   GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
   GST_VALIDATE_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);

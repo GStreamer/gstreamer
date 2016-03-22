@@ -158,7 +158,7 @@ _bus_handler (GstBus * bus, GstMessage * message,
 
       if (percent == 100) {
         /* a 100% message means buffering is done */
-        gst_validate_printf (NULL, "Done buffering\n");
+        gst_validate_printf (NULL, "\nDone buffering\n");
         if (monitor->buffering) {
           monitor->print_pos_srcid =
               g_timeout_add (PRINT_POSITION_TIMEOUT,
@@ -169,7 +169,7 @@ _bus_handler (GstBus * bus, GstMessage * message,
         /* buffering... */
         if (!monitor->buffering) {
           monitor->buffering = TRUE;
-          gst_validate_printf (NULL, "Start buffering\n");
+          gst_validate_printf (NULL, "\nStart buffering\n");
           if (monitor->print_pos_srcid
               && g_source_remove (monitor->print_pos_srcid)) {
             monitor->print_pos_srcid = 0;
