@@ -7,7 +7,7 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="pixel_size">30</property>
-    <property name="icon_name">gtk-media-forward</property>
+    <property name="icon_name">media-seek-forward</property>
     <property name="icon_size">0</property>
   </object>
   <object class="GtkImage" id="fullscreen_image">
@@ -21,7 +21,7 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="pixel_size">30</property>
-    <property name="icon_name">gtk-media-next</property>
+    <property name="icon_name">media-skip-forward</property>
     <property name="icon_size">0</property>
   </object>
   <object class="GtkImage" id="pause_image">
@@ -37,14 +37,14 @@
     <property name="xalign">0</property>
     <property name="yalign">0</property>
     <property name="pixel_size">35</property>
-    <property name="icon_name">gtk-media-play</property>
+    <property name="icon_name">media-playback-start</property>
     <property name="icon_size">0</property>
   </object>
   <object class="GtkImage" id="prev_image">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="pixel_size">30</property>
-    <property name="icon_name">gtk-media-previous</property>
+    <property name="icon_name">media-skip-backward</property>
   </object>
   <object class="GtkImage" id="restore_image">
     <property name="name">restore_image</property>
@@ -58,7 +58,7 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="pixel_size">30</property>
-    <property name="icon_name">gtk-media-rewind</property>
+    <property name="icon_name">media-seek-backward</property>
   </object>
   <object class="GtkBox" id="toolbar">
     <property name="name">toolbar</property>
