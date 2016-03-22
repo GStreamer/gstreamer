@@ -19,7 +19,7 @@
  */
 
 GST_GL_EXT_BEGIN (sync,
-                  GST_GL_API_OPENGL3,
+                  GST_GL_API_OPENGL3 | GST_GL_API_GLES2,
                   3, 2,
                   3, 0,
                   "APPLE\0",
