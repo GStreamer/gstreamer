@@ -223,22 +223,34 @@ gst_gl_context_wgl_create_context (GstGLContext * context,
   }
 
   if (!context_wgl->wgl_context) {
-    context_wgl->wgl_context = wglCreateContext (device);
 
-    if (!context_wgl->wgl_context) {
-      g_set_error (error, GST_GL_CONTEXT_ERROR,
-          GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
-          "Failed to create WGL context 0x%x", (unsigned int) GetLastError ());
-      goto failure;
+    if (context_wgl->priv->wglCreateContextAttribsARB && external_gl_context) {
+      context_wgl->wgl_context =
+          context_wgl->priv->wglCreateContextAttribsARB (device,
+          external_gl_context, 0);
     }
 
-    if (external_gl_context) {
-      if (!wglShareLists (external_gl_context, context_wgl->wgl_context)) {
+
+    if (!context_wgl->wgl_context) {
+
+      context_wgl->wgl_context = wglCreateContext (device);
+
+      if (!context_wgl->wgl_context) {
         g_set_error (error, GST_GL_CONTEXT_ERROR,
             GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
-            "failed to share contexts through wglShareLists 0x%x",
+            "Failed to create WGL context 0x%x",
             (unsigned int) GetLastError ());
         goto failure;
+      }
+
+      if (external_gl_context) {
+        if (!wglShareLists (external_gl_context, context_wgl->wgl_context)) {
+          g_set_error (error, GST_GL_CONTEXT_ERROR,
+              GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
+              "failed to share contexts through wglShareLists 0x%x",
+              (unsigned int) GetLastError ());
+          goto failure;
+        }
       }
     }
 
