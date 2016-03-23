@@ -954,6 +954,7 @@ class TestsManager(Loggable):
     def _check_blacklisted(self, test):
         for pattern in self.blacklisted_tests_patterns:
             if pattern.findall(test.classname):
+                self.info("%s is blacklisted by %s", test.classname, pattern)
                 return True
 
         return False
@@ -1234,15 +1235,12 @@ class _TestsLauncher(Loggable):
             self._setup_testsuites()
 
     def _check_tester_has_other_testsuite(self, testsuite, tester):
-        if len(testsuite.TEST_MANAGER) > 1:
-            return True
-
         if tester.name != testsuite.TEST_MANAGER[0]:
             return True
 
         for t in self.options.testsuites:
             if t != testsuite:
-                for other_testmanager in testsuite.TEST_MANAGER:
+                for other_testmanager in t.TEST_MANAGER:
                     if other_testmanager == tester.name:
                         return True
 
