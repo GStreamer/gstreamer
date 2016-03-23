@@ -21,15 +21,15 @@
 
 import os
 import re
-import sys
 import time
 import codecs
 import datetime
+import tempfile
 from loggable import Loggable
 from xml.sax import saxutils
-from utils import mkdir, Result, printc, Colors
+from utils import Result, printc, Colors
 
-UNICODE_STRINGS = (type(unicode()) == type(str()))
+UNICODE_STRINGS = (type(unicode()) == type(str()))  # noqa
 
 
 class UnknownResult(Exception):
@@ -127,11 +127,11 @@ class XunitReporter(Reporter):
     """This reporter provides test results in the standard XUnit XML format."""
     name = 'xunit'
     encoding = 'UTF-8'
-    xml_file = None
 
     def __init__(self, options):
         super(XunitReporter, self).__init__(options)
-        self.errorlist = []
+
+        self._createTmpFile()
 
     def final_report(self):
         self.report()
@@ -168,25 +168,43 @@ class XunitReporter(Reporter):
 
         """
         self.debug("Writing XML file to: %s", self.options.xunit_file)
-        self.xml_file = codecs.open(self.options.xunit_file, 'w',
-                                    self.encoding, 'replace')
+        xml_file = codecs.open(self.options.xunit_file, 'w',
+                               self.encoding, 'replace')
+
         self.stats['encoding'] = self.encoding
-        self.stats['total'] = (self.stats['timeout'] + self.stats['failures']
-                               + self.stats['passed'] + self.stats['skipped'])
-        self.xml_file.write(u'<?xml version="1.0" encoding="%(encoding)s"?>'
-                            u'<testsuite name="gst-validate-launcher" tests="%(total)d" '
-                            u'errors="%(timeout)d" failures="%(failures)d" '
-                            u'skip="%(skipped)d">' % self.stats)
-        self.xml_file.write(u''.join([self._forceUnicode(e)
-                            for e in self.errorlist]))
-        self.xml_file.write(u'</testsuite>')
-        self.xml_file.close()
+        self.stats['total'] = (self.stats['timeout'] + self.stats['failures'] +
+                               self.stats['passed'] + self.stats['skipped'])
+
+        xml_file.write(u'<?xml version="1.0" encoding="%(encoding)s"?>'
+                       u'<testsuite name="gst-validate-launcher" tests="%(total)d" '
+                       u'errors="%(timeout)d" failures="%(failures)d" '
+                       u'skip="%(skipped)d">' % self.stats)
+
+        tmp_xml_file = codecs.open(self.tmp_xml_file.name, 'r',
+                                   self.encoding, 'replace')
+
+        for l in tmp_xml_file:
+            xml_file.write(l)
+
+        xml_file.write(u'</testsuite>')
+        xml_file.close()
+        tmp_xml_file.close()
+        os.remove(self.tmp_xml_file.name)
+
+        self._createTmpFile()
+
+    def _createTmpFile(self):
+        self.tmp_xml_file = tempfile.NamedTemporaryFile(delete=False)
+        self.tmp_xml_file.close()
 
     def set_failed(self, test):
         """Add failure output to Xunit report.
         """
         self.stats['failures'] += 1
-        self.errorlist.append(
+
+        xml_file = codecs.open(self.tmp_xml_file.name, 'a',
+                               self.encoding, 'replace')
+        xml_file.write(self._forceUnicode(
             '<testcase classname=%(cls)s name=%(name)s time="%(taken).3f">'
             '<failure type=%(errtype)s message=%(message)s>'
             '</failure>%(systemout)s</testcase>' %
@@ -196,20 +214,25 @@ class XunitReporter(Reporter):
              'errtype': self._quoteattr(test.result),
              'message': self._quoteattr(test.message),
              'systemout': self._get_captured(test),
-             })
+             }))
+        xml_file.close()
 
     def set_passed(self, test):
         """Add success output to Xunit report.
         """
         self.stats['passed'] += 1
-        self.errorlist.append(
+
+        xml_file = codecs.open(self.tmp_xml_file.name, 'a',
+                               self.encoding, 'replace')
+        xml_file.write(self._forceUnicode(
             '<testcase classname=%(cls)s name=%(name)s '
             'time="%(taken).3f">%(systemout)s</testcase>' %
             {'cls': self._quoteattr(test.get_classname()),
              'name': self._quoteattr(test.get_name()),
              'taken': test.time_taken,
              'systemout': self._get_captured(test),
-             })
+             }))
+        xml_file.close()
 
     def _forceUnicode(self, s):
         if not UNICODE_STRINGS:
