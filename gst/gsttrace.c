@@ -179,6 +179,15 @@ gst_alloc_trace_print (const GstAllocTrace * trace)
             extra = g_strdup_printf ("%s", GST_MESSAGE_TYPE_NAME (data));
           else
             extra = gst_structure_to_string (s);
+        } else if (type == GST_TYPE_BUFFER) {
+          guint size = gst_buffer_get_size (data);
+
+          extra = g_strdup_printf ("%u bytes", size);
+        } else if (type == GST_TYPE_MEMORY) {
+          GstMemory *mem = (GstMemory *) data;
+
+          extra = g_strdup_printf ("%u bytes, %s allocator", (guint) mem->size,
+              mem->allocator ? mem->allocator->mem_type : "unknown");
         }
         refcount = GST_MINI_OBJECT_REFCOUNT_VALUE (data);
       }
