@@ -1775,17 +1775,16 @@ gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
   GError *error = NULL;
   GstGLSLStage *frag_stage, *vert_stage;
 
+  vert_stage = gst_glsl_stage_new_with_string (gl_sink->context,
+      GL_VERTEX_SHADER, GST_GLSL_VERSION_NONE,
+      GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
+      gst_gl_shader_string_vertex_mat4_texture_transform);
   if (gl_sink->texture_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES) {
-    vert_stage = gst_glsl_stage_new_with_string (gl_sink->context,
-        GL_VERTEX_SHADER, GST_GLSL_VERSION_NONE,
-        GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-        gst_gl_shader_string_vertex_mat4_texture_transform);
     frag_stage = gst_glsl_stage_new_with_string (gl_sink->context,
         GL_FRAGMENT_SHADER, GST_GLSL_VERSION_NONE,
         GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
         gst_gl_shader_string_fragment_external_oes_default);
   } else {
-    vert_stage = gst_glsl_stage_new_default_vertex (gl_sink->context);
     frag_stage = gst_glsl_stage_new_default_fragment (gl_sink->context);
   }
   if (!vert_stage || !frag_stage) {
@@ -2029,7 +2028,7 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
     gl->ActiveTexture (GL_TEXTURE0);
     gl->BindTexture (gl_target, gl_sink->redisplay_texture);
     gst_gl_shader_set_uniform_1i (gl_sink->redisplay_shader, "tex", 0);
-    if (gl_sink->texture_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES) {
+    {
       GstVideoAffineTransformationMeta *af_meta;
 
       af_meta =
