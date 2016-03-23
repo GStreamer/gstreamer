@@ -1182,7 +1182,7 @@ class _TestsLauncher(Loggable):
                         tester.name not in wanted_test_manager:
                     continue
 
-                if self.options.paths:
+                if self.options.user_paths:
                     tester.register_defaults()
                     loaded = True
                 elif testsuite.setup_tests(tester, self.options):

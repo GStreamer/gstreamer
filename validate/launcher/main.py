@@ -202,6 +202,8 @@ class LauncherConfig(Loggable):
         self.num_jobs = 1
         self.dest = None
         self._using_default_paths = False
+        # paths passed with --media-path, and not defined by a testsuite
+        self.user_paths = []
         self.paths = []
         self.testsuites_dir = DEFAULT_TESTSUITES_DIR
 
@@ -274,6 +276,11 @@ class LauncherConfig(Loggable):
 
         if not isinstance(self.paths, list):
             self.paths = [self.paths]
+
+        if not isinstance(self.user_paths, list):
+            self.user_paths = [self.user_paths]
+
+        self.paths = list(set(self.paths).union(set(self.user_paths)))
 
         if self.generate_info_full is True:
             self.generate_info = True
@@ -450,7 +457,7 @@ Note that all testsuite should be inside python modules, so the directory should
                            help="Directory where to store logs, default is OUTPUT_DIR/logs.")
     dir_group.add_argument("-R", "--render-path", dest="dest",
                            help="Set the path to which projects should be rendered, default is OUTPUT_DIR/rendered")
-    dir_group.add_argument("-p", "--medias-paths", dest="paths", action="append",
+    dir_group.add_argument("-p", "--medias-paths", dest="user_paths", action="append",
                            help="Paths in which to look for media files")
     dir_group.add_argument("-a", "--clone-dir", dest="clone_dir",
                            help="Paths where to clone the testuite to run "
