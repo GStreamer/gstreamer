@@ -140,6 +140,7 @@ static gboolean gst_vaapi_decode_input_state_replace (GstVaapiDecode * decode,
     const GstVideoCodecState * new_state);
 static gboolean gst_vaapidecode_negotiate (GstVaapiDecode * decode);
 
+/* get invoked only if actural VASurface size (not the cropped values) changed */
 static void
 gst_vaapi_decoder_state_changed (GstVaapiDecoder * decoder,
     const GstVideoCodecState * codec_state, gpointer user_data)
@@ -153,7 +154,7 @@ gst_vaapi_decoder_state_changed (GstVaapiDecoder * decoder,
   if (!gst_vaapidecode_update_sink_caps (decode, decode->input_state->caps))
     return;
 
-  decode->do_renego = TRUE;
+  decode->do_pool_renego = TRUE;
 }
 
 static GstVideoCodecState *
@@ -218,6 +219,7 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   GstVideoFormat format = GST_VIDEO_FORMAT_I420;
   GstClockTime latency;
   gint fps_d, fps_n;
+  guint width, height;
 
   if (!decode->input_state)
     return FALSE;
@@ -247,8 +249,16 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
       break;
   }
 
+  width = GST_VIDEO_INFO_WIDTH (&decode->display_info);
+  height = GST_VIDEO_INFO_HEIGHT (&decode->display_info);
+
+  if (!width || !height) {
+    width = ref_state->info.width;
+    height = ref_state->info.height;
+  }
+
   state = gst_video_decoder_set_output_state (vdec, format,
-      ref_state->info.width, ref_state->info.height, ref_state);
+      width, height, ref_state);
   if (!state || state->info.width == 0 || state->info.height == 0) {
     if (features)
       gst_caps_features_free (features);
@@ -281,6 +291,7 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   latency = gst_util_uint64_scale (2 * GST_SECOND, fps_d, fps_n);
   gst_video_decoder_set_latency (vdec, latency, latency);
 
+  decode->do_outstate_renego = FALSE;
   return TRUE;
 }
 
@@ -293,26 +304,83 @@ gst_vaapidecode_release (GstVaapiDecode * decode)
   gst_object_unref (decode);
 }
 
+/* check whether the decoded surface size has changed */
 static gboolean
-is_surface_resolution_changed (GstVideoDecoder * vdec,
+is_surface_resolution_changed (GstVaapiDecode * decode,
     GstVaapiSurface * surface)
 {
+  GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
+  GstVideoInfo *vinfo = &decode->decoded_info;
+  GstVideoFormat format = GST_VIDEO_FORMAT_ENCODED;
   guint surface_width, surface_height;
-  guint configured_width, configured_height;
   GstVideoCodecState *state;
-  gboolean ret = FALSE;
+
+  g_return_val_if_fail (surface != NULL, FALSE);
 
   gst_vaapi_surface_get_size (surface, &surface_width, &surface_height);
 
+  if (GST_VIDEO_INFO_WIDTH (vinfo) == surface_width
+      && GST_VIDEO_INFO_HEIGHT (vinfo) == surface_height)
+    return FALSE;
+
   state = gst_video_decoder_get_output_state (vdec);
-  configured_width = GST_VIDEO_INFO_WIDTH (&state->info);
-  configured_height = GST_VIDEO_INFO_HEIGHT (&state->info);
-  gst_video_codec_state_unref (state);
+  if (state) {
+    /* Fixme: Get exact surface format usings gst_vaapi_surface_get_format () */
+    format = GST_VIDEO_INFO_FORMAT (&state->info);
+    gst_video_codec_state_unref (state);
+  }
+  gst_video_info_set_format (vinfo, format, surface_width, surface_height);
 
-  if (surface_width != configured_width || surface_height != configured_height)
-    ret = TRUE;
+  return TRUE;
+}
 
-  return ret;
+/* check whether display resolution changed */
+static gboolean
+is_display_resolution_changed (GstVaapiDecode * decode,
+    const GstVaapiRectangle * crop_rect)
+{
+  GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
+  GstVideoFormat format = GST_VIDEO_FORMAT_ENCODED;
+  GstVideoCodecState *state;
+  GstVideoInfo *vinfo;
+  guint display_width = GST_VIDEO_INFO_WIDTH (&decode->decoded_info);
+  guint display_height = GST_VIDEO_INFO_HEIGHT (&decode->decoded_info);
+
+  if (crop_rect) {
+    display_width = crop_rect->width;
+    display_height = crop_rect->height;
+  }
+  state = gst_video_decoder_get_output_state (vdec);
+  if (G_UNLIKELY (!state))
+    goto set_display_res;
+  vinfo = &state->info;
+  format = GST_VIDEO_INFO_FORMAT (vinfo);
+
+  if (GST_VIDEO_INFO_FORMAT (&decode->display_info) == GST_VIDEO_FORMAT_UNKNOWN)
+    decode->display_info = *vinfo;
+
+  if (!crop_rect) {
+    display_width = GST_VIDEO_INFO_WIDTH (&decode->decoded_info);
+    display_height = GST_VIDEO_INFO_HEIGHT (&decode->decoded_info);
+
+    if (G_UNLIKELY (display_width !=
+            GST_VIDEO_INFO_WIDTH (&decode->display_info)
+            || display_height != GST_VIDEO_INFO_HEIGHT (&decode->display_info)))
+      goto set_display_res;
+  }
+
+  if (GST_VIDEO_INFO_WIDTH (vinfo) == display_width
+      && GST_VIDEO_INFO_HEIGHT (vinfo) == display_height) {
+    gst_video_codec_state_unref (state);
+    return FALSE;
+  }
+
+set_display_res:
+  gst_video_info_set_format (&decode->display_info, format, display_width,
+      display_height);
+  if (state)
+    gst_video_codec_state_unref (state);
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -328,17 +396,29 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
 
   if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (out_frame)) {
     proxy = gst_video_codec_frame_get_user_data (out_frame);
+    crop_rect = gst_vaapi_surface_proxy_get_crop_rect (proxy);
+
+    /* in theory, we are not supposed to check the surface resolution
+     * change here since it should be advertised before from ligstvaapi.
+     * But there are issues with it especially for some vp9 streams where
+     * upstream element set un-cropped values in set_format() which make
+     * everything a mess. So better doing the explicit check here irrespective
+     * of what notification we get from upstream or libgstvaapi */
+    decode->do_pool_renego =
+        is_surface_resolution_changed (decode,
+        GST_VAAPI_SURFACE_PROXY_SURFACE (proxy));
+
+    decode->do_outstate_renego =
+        is_display_resolution_changed (decode, crop_rect);
 
     if (G_UNLIKELY (!decode->active) ||
         gst_pad_needs_reconfigure (GST_VIDEO_DECODER_SRC_PAD (vdec)) ||
-        decode->do_renego ||
-        is_surface_resolution_changed (vdec,
-            GST_VAAPI_SURFACE_PROXY_SURFACE (proxy))) {
+        decode->do_outstate_renego || decode->do_pool_renego) {
+
       if (!gst_vaapidecode_negotiate (decode))
         return GST_FLOW_ERROR;
 
       decode->active = TRUE;
-      decode->do_renego = FALSE;
     }
 
     gst_vaapi_surface_proxy_set_destroy_notify (proxy,
@@ -372,7 +452,6 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
           GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE);
     }
 
-    crop_rect = gst_vaapi_surface_proxy_get_crop_rect (proxy);
     if (crop_rect) {
       GstVideoCropMeta *const crop_meta =
           gst_buffer_add_video_crop_meta (out_frame->output_buffer);
@@ -616,8 +695,22 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
       GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META);
 #endif
 
-  return gst_vaapi_plugin_base_decide_allocation (GST_VAAPI_PLUGIN_BASE (vdec),
-      query, 0);
+  if (decode->do_pool_renego) {
+    gboolean ret;
+
+    caps = gst_caps_copy (caps);
+    gst_caps_set_simple (caps, "width", G_TYPE_INT,
+        GST_VIDEO_INFO_WIDTH (&decode->decoded_info), "height", G_TYPE_INT,
+        GST_VIDEO_INFO_HEIGHT (&decode->decoded_info), NULL);
+    ret =
+        gst_vaapi_plugin_base_decide_allocation (GST_VAAPI_PLUGIN_BASE (vdec),
+        query, 0, caps);
+    gst_caps_unref (caps);
+    decode->do_pool_renego = FALSE;
+    return ret;
+  } else {
+    return TRUE;
+  }
 }
 
 static inline gboolean
@@ -822,8 +915,6 @@ gst_vaapidecode_open (GstVideoDecoder * vdec)
   success = gst_vaapidecode_ensure_display (decode);
   if (old_display)
     gst_vaapi_display_unref (old_display);
-
-  decode->do_renego = TRUE;
 
   return success;
 }
@@ -1146,9 +1237,14 @@ gst_vaapidecode_init (GstVaapiDecode * decode)
   decode->decoder = NULL;
   decode->decoder_caps = NULL;
   decode->allowed_caps = NULL;
+  decode->do_outstate_renego = TRUE;
+  decode->do_pool_renego = TRUE;
 
   g_mutex_init (&decode->surface_ready_mutex);
   g_cond_init (&decode->surface_ready);
+
+  gst_video_info_init (&decode->decoded_info);
+  gst_video_info_init (&decode->display_info);
 
   gst_video_decoder_set_packetized (vdec, FALSE);
 }

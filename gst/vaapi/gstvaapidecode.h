@@ -41,6 +41,8 @@ struct _GstVaapiDecode {
 
     GstCaps            *sinkpad_caps;
     GstCaps            *srcpad_caps;
+    GstVideoInfo        decoded_info;
+    GstVideoInfo        display_info;
     GstVaapiDecoder    *decoder;
     GMutex              surface_ready_mutex;
     GCond               surface_ready;
@@ -51,7 +53,8 @@ struct _GstVaapiDecode {
 
     GstVideoCodecState *input_state;
     volatile gboolean   active;
-    volatile gboolean   do_renego;
+    volatile gboolean   do_outstate_renego;
+    volatile gboolean   do_pool_renego;
 };
 
 struct _GstVaapiDecodeClass {

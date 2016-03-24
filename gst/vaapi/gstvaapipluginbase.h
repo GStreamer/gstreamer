@@ -213,7 +213,7 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
 G_GNUC_INTERNAL
 gboolean
 gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
-    GstQuery * query, guint feature);
+    GstQuery * query, guint feature, GstCaps *preferred_caps);
 
 G_GNUC_INTERNAL
 GstFlowReturn
