@@ -187,6 +187,7 @@ struct _GstDecodeBin
 
   GList *buffering_status;      /* element currently buffering messages */
   GMutex buffering_lock;
+  GMutex buffering_post_lock;
 };
 
 struct _GstDecodeBinClass
@@ -1113,6 +1114,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
 
   g_mutex_init (&decode_bin->subtitle_lock);
   g_mutex_init (&decode_bin->buffering_lock);
+  g_mutex_init (&decode_bin->buffering_post_lock);
 
   decode_bin->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
   decode_bin->caps = gst_static_caps_get (&default_raw_caps);
@@ -1167,6 +1169,7 @@ gst_decode_bin_finalize (GObject * object)
   g_mutex_clear (&decode_bin->dyn_lock);
   g_mutex_clear (&decode_bin->subtitle_lock);
   g_mutex_clear (&decode_bin->buffering_lock);
+  g_mutex_clear (&decode_bin->buffering_post_lock);
   g_mutex_clear (&decode_bin->factories_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -5376,6 +5379,10 @@ gst_decode_bin_handle_message (GstBin * bin, GstMessage * msg)
     BUFFERING_LOCK (dbin);
     gst_message_parse_buffering (msg, &msg_perc);
 
+    GST_DEBUG_OBJECT (dbin, "Got buffering msg %" GST_PTR_FORMAT, msg);
+
+    g_mutex_lock (&dbin->buffering_post_lock);
+
     /*
      * Single loop for 2 things:
      * 1) Look for a message with the same source
@@ -5387,6 +5394,8 @@ gst_decode_bin_handle_message (GstBin * bin, GstMessage * msg)
       if (GST_MESSAGE_SRC (bufstats) == GST_MESSAGE_SRC (msg)) {
         found = iter;
         if (msg_perc < 100) {
+          GST_DEBUG_OBJECT (dbin, "Replacing old buffering msg %"
+              GST_PTR_FORMAT, iter->data);
           gst_message_unref (iter->data);
           bufstats = iter->data = gst_message_ref (msg);
         } else {
@@ -5394,6 +5403,9 @@ gst_decode_bin_handle_message (GstBin * bin, GstMessage * msg)
 
           /* remove the element here and avoid confusing the loop */
           iter = g_list_next (iter);
+
+          GST_DEBUG_OBJECT (dbin, "Deleting old buffering msg %"
+              GST_PTR_FORMAT, current->data);
 
           gst_message_unref (current->data);
           dbin->buffering_status =
@@ -5416,6 +5428,7 @@ gst_decode_bin_handle_message (GstBin * bin, GstMessage * msg)
         smaller_perc = msg_perc;
         smaller = msg;
       }
+      GST_DEBUG_OBJECT (dbin, "Storing buffering msg %" GST_PTR_FORMAT, msg);
       dbin->buffering_status =
           g_list_prepend (dbin->buffering_status, gst_message_ref (msg));
     }
@@ -5428,12 +5441,20 @@ gst_decode_bin_handle_message (GstBin * bin, GstMessage * msg)
       gst_message_replace (&msg, smaller);
     }
     BUFFERING_UNLOCK (dbin);
+
+    GST_DEBUG_OBJECT (dbin, "Forwarding buffering msg %" GST_PTR_FORMAT, msg);
+    GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
+
+    g_mutex_unlock (&dbin->buffering_post_lock);
+    return;
   }
 
-  if (drop)
+  if (drop) {
     gst_message_unref (msg);
-  else
+  } else {
+    GST_DEBUG_OBJECT (dbin, "Forwarding msg %" GST_PTR_FORMAT, msg);
     GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
+  }
 }
 
 static gboolean
