@@ -3407,13 +3407,25 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   type = info->type;
   original_data = info->data;
 
-  /* one of the data types for non-idle probes */
-  if ((type & GST_PAD_PROBE_TYPE_IDLE) == 0
-      && (flags & _PAD_PROBE_TYPE_ALL_BOTH_AND_FLUSH & type) == 0)
-    goto no_match;
   /* one of the scheduling types */
   if ((flags & GST_PAD_PROBE_TYPE_SCHEDULING & type) == 0)
     goto no_match;
+
+  if (type & GST_PAD_PROBE_TYPE_PUSH) {
+    /* one of the data types for non-idle probes */
+    if ((type & GST_PAD_PROBE_TYPE_IDLE) == 0
+        && (flags & _PAD_PROBE_TYPE_ALL_BOTH_AND_FLUSH & type) == 0)
+      goto no_match;
+  } else if (type & GST_PAD_PROBE_TYPE_PULL) {
+    /* one of the data types for non-idle probes */
+    if ((type & GST_PAD_PROBE_TYPE_BLOCKING) == 0
+        && (flags & _PAD_PROBE_TYPE_ALL_BOTH_AND_FLUSH & type) == 0)
+      goto no_match;
+  } else {
+    /* Type must have PULL or PUSH probe types */
+    g_assert_not_reached ();
+  }
+
   /* one of the blocking types must match */
   if ((type & GST_PAD_PROBE_TYPE_BLOCKING) &&
       (flags & GST_PAD_PROBE_TYPE_BLOCKING & type) == 0)
