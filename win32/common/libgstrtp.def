@@ -12,7 +12,17 @@ EXPORTS
 	gst_rtcp_buffer_validate_data_reduced
 	gst_rtcp_buffer_validate_reduced
 	gst_rtcp_ntp_to_unix
+	gst_rtcp_packet_add_profile_specific_ext
 	gst_rtcp_packet_add_rb
+	gst_rtcp_packet_app_get_data
+	gst_rtcp_packet_app_get_data_length
+	gst_rtcp_packet_app_get_name
+	gst_rtcp_packet_app_get_ssrc
+	gst_rtcp_packet_app_get_subtype
+	gst_rtcp_packet_app_set_data_length
+	gst_rtcp_packet_app_set_name
+	gst_rtcp_packet_app_set_ssrc
+	gst_rtcp_packet_app_set_subtype
 	gst_rtcp_packet_bye_add_ssrc
 	gst_rtcp_packet_bye_add_ssrcs
 	gst_rtcp_packet_bye_get_nth_ssrc
@@ -34,7 +44,7 @@ EXPORTS
 	gst_rtcp_packet_get_length
 	gst_rtcp_packet_get_padding
 	gst_rtcp_packet_get_profile_specific_ext
-	gst_rtcp_packet_get_profile_specific_ext_len
+	gst_rtcp_packet_get_profile_specific_ext_length
 	gst_rtcp_packet_get_rb
 	gst_rtcp_packet_get_rb_count
 	gst_rtcp_packet_get_type
@@ -52,7 +62,6 @@ EXPORTS
 	gst_rtcp_packet_sdes_get_ssrc
 	gst_rtcp_packet_sdes_next_entry
 	gst_rtcp_packet_sdes_next_item
-	gst_rtcp_packet_set_profile_specific_ext
 	gst_rtcp_packet_set_rb
 	gst_rtcp_packet_sr_get_sender_info
 	gst_rtcp_packet_sr_set_sender_info
