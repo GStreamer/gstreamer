@@ -94,6 +94,9 @@ struct _RfbDecoder
   /* some many used values */
   guint bytespp;
   guint line_size;
+
+  /* Seriliaze writes operations */
+  GMutex write_lock;
 };
 
 RfbDecoder *rfb_decoder_new (void);

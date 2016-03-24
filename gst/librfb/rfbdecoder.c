@@ -69,6 +69,8 @@ rfb_decoder_new (void)
   decoder->data_len = 0;
   decoder->error = NULL;
 
+  g_mutex_init (&decoder->write_lock);
+
   return decoder;
 }
 
@@ -87,6 +89,7 @@ rfb_decoder_free (RfbDecoder * decoder)
   g_clear_object (&decoder->socket_client);
   g_clear_error (&decoder->error);
   g_free (decoder->data);
+  g_mutex_clear (&decoder->write_lock);
   g_free (decoder);
 }
 
@@ -217,11 +220,15 @@ rfb_decoder_send (RfbDecoder * decoder, guint8 * buffer, guint len)
   g_return_val_if_fail (buffer != NULL, 0);
   g_return_val_if_fail (len > 0, 0);
 
+  g_mutex_lock (&decoder->write_lock);
+
   out = g_io_stream_get_output_stream (G_IO_STREAM (decoder->connection));
 
   if (!g_output_stream_write_all (out, buffer, len, NULL, decoder->cancellable,
           &err))
     goto send_error;
+
+  g_mutex_unlock (&decoder->write_lock);
 
   return TRUE;
 
@@ -237,6 +244,7 @@ send_error:
       }
     }
     g_clear_error (&err);
+    g_mutex_unlock (&decoder->write_lock);
     return FALSE;
   }
 }
