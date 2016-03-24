@@ -414,7 +414,6 @@ GST_START_TEST (test_aac)
     gint rate;
     gint channels;
     const GValue *codec_data;
-    const GstBuffer *buf;
 
     caps = gst_pad_get_current_caps (h->sinkpad);
     s = gst_caps_get_structure (caps, 0);
@@ -439,7 +438,6 @@ GST_START_TEST (test_aac)
     codec_data = gst_structure_get_value (s, "codec_data");
     fail_unless (codec_data != NULL);
     fail_unless (G_VALUE_HOLDS (codec_data, GST_TYPE_BUFFER));
-    buf = gst_value_get_buffer (codec_data);
 
     gst_caps_unref (caps);
   }
@@ -501,7 +499,6 @@ GST_START_TEST (test_h264)
     const GstStructure *s;
     const gchar *stream_format;
     const GValue *codec_data;
-    const GstBuffer *buf;
 
     caps = gst_pad_get_current_caps (h->sinkpad);
     s = gst_caps_get_structure (caps, 0);
@@ -514,7 +511,6 @@ GST_START_TEST (test_h264)
     codec_data = gst_structure_get_value (s, "codec_data");
     fail_unless (codec_data != NULL);
     fail_unless (G_VALUE_HOLDS (codec_data, GST_TYPE_BUFFER));
-    buf = gst_value_get_buffer (codec_data);
 
     gst_caps_unref (caps);
   }
