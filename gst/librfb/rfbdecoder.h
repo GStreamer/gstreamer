@@ -56,7 +56,6 @@ struct _RfbDecoder
 
   /* settable properties */
   gboolean shared_flag;
-  gboolean disconnected;
 
   /* readable properties */
   gboolean inited;
@@ -103,6 +102,7 @@ RfbDecoder *rfb_decoder_new (void);
 void rfb_decoder_free (RfbDecoder * decoder);
 gboolean rfb_decoder_connect_tcp (RfbDecoder * decoder,
     gchar * host, guint port);
+void rfb_decoder_disconnect (RfbDecoder * decoder);
 gboolean rfb_decoder_iterate (RfbDecoder * decoder);
 void rfb_decoder_send_update_request (RfbDecoder * decoder,
     gboolean incremental, gint x, gint y, gint width, gint height);

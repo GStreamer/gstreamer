@@ -64,7 +64,6 @@ rfb_decoder_new (void)
   decoder->rect_width = 0;
   decoder->rect_height = 0;
   decoder->shared_flag = TRUE;
-  decoder->disconnected = FALSE;
   decoder->data = NULL;
   decoder->data_len = 0;
   decoder->error = NULL;
@@ -79,16 +78,10 @@ rfb_decoder_free (RfbDecoder * decoder)
 {
   g_return_if_fail (decoder != NULL);
 
-  if (decoder->cancellable) {
-    g_cancellable_cancel (decoder->cancellable);
-    g_object_unref (decoder->cancellable);
-    decoder->cancellable = NULL;
-  }
+  rfb_decoder_disconnect (decoder);
 
-  g_clear_object (&decoder->connection);
   g_clear_object (&decoder->socket_client);
-  g_clear_error (&decoder->error);
-  g_free (decoder->data);
+  g_clear_object (&decoder->cancellable);
   g_mutex_clear (&decoder->write_lock);
   g_free (decoder);
 }
@@ -105,6 +98,8 @@ rfb_decoder_connect_tcp (RfbDecoder * decoder, gchar * host, guint port)
   g_return_val_if_fail (decoder->connection == NULL, FALSE);
   g_return_val_if_fail (host != NULL, FALSE);
 
+  g_cancellable_reset (decoder->cancellable);
+
   connection =
       g_socket_client_connect_to_host (decoder->socket_client, host, port,
       decoder->cancellable, &err);
@@ -113,7 +108,6 @@ rfb_decoder_connect_tcp (RfbDecoder * decoder, gchar * host, guint port)
     goto connect_failed;
 
   decoder->connection = connection;
-  decoder->disconnected = FALSE;
 
   return TRUE;
 
@@ -132,6 +126,27 @@ connect_failed:
     g_clear_error (&err);
     return FALSE;
   }
+}
+
+void
+rfb_decoder_disconnect (RfbDecoder * decoder)
+{
+  GST_DEBUG ("Disconnecting from the rfb server");
+
+  g_return_if_fail (decoder);
+  g_return_if_fail (decoder->cancellable);
+
+  g_cancellable_cancel (decoder->cancellable);
+
+  /* Make sure threaded write a done first, this avoids race condition,
+   * specially when the decoder is freed */
+  g_mutex_lock (&decoder->write_lock);
+
+  g_clear_object (&decoder->connection);
+  g_clear_error (&decoder->error);
+  g_clear_pointer (&decoder->data, g_free);
+
+  g_mutex_unlock (&decoder->write_lock);
 }
 
 /**
@@ -205,7 +220,6 @@ recv_error:
       }
     }
     g_clear_error (&err);
-    decoder->disconnected = TRUE;
     return NULL;
   }
 }
@@ -761,7 +775,6 @@ rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
   if (((w * h) + (x * y)) > (decoder->width * decoder->height)) {
     GST_ERROR ("Desktop resize is unsupported.");
     decoder->state = NULL;
-    decoder->disconnected = TRUE;
     return TRUE;
   }
 
@@ -786,7 +799,7 @@ rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
       break;
   }
   decoder->n_rects--;
-  if (decoder->n_rects == 0 || decoder->disconnected) {
+  if (decoder->n_rects == 0) {
     decoder->state = NULL;
   } else {
     decoder->state = rfb_decoder_state_framebuffer_update_rectangle;

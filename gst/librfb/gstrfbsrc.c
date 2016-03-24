@@ -516,10 +516,7 @@ gst_rfb_src_stop (GstBaseSrc * bsrc)
 {
   GstRfbSrc *src = GST_RFB_SRC (bsrc);
 
-  if (src->decoder->connection) {
-    g_object_unref (src->decoder->connection);
-    src->decoder->connection = NULL;
-  }
+  rfb_decoder_disconnect (src->decoder);
 
   if (src->decoder->frame) {
     g_free (src->decoder->frame);
