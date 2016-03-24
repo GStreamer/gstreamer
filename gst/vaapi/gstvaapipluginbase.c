@@ -601,8 +601,8 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   GstCaps *caps = NULL;
   GstBufferPool *pool;
   GstStructure *config;
-  GstQuery *new_query;
   GstVideoInfo vi;
+  GstQuery *old_query = NULL, *new_query = NULL;
   guint size, min, max;
   gboolean update_pool = FALSE;
   gboolean has_video_meta = FALSE;
@@ -614,16 +614,17 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
   g_return_val_if_fail (plugin->display != NULL, FALSE);
 
-  gst_query_parse_allocation (query, &caps, NULL);
-
   /* Make sure new caps get advertised to all downstream elements */
   if (preferred_caps) {
-    new_query = gst_query_new_allocation (preferred_caps, FALSE);
+    new_query = gst_query_new_allocation (preferred_caps, TRUE);
     if (!gst_pad_peer_query (GST_VAAPI_PLUGIN_BASE_SRC_PAD (plugin), new_query)) {
       GST_DEBUG ("didn't get downstream ALLOCATION hints");
     }
-    gst_query_unref (new_query);
+    old_query = query;
+    query = new_query;
   }
+
+  gst_query_parse_allocation (query, &caps, NULL);
 
   /* We don't need any GL context beyond this point if not requested
      so explicitly through GstVideoGLTextureUploadMeta */
@@ -669,10 +670,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     goto error_ensure_display;
 
   gst_video_info_init (&vi);
-  if (!preferred_caps)
-    gst_video_info_from_caps (&vi, caps);
-  else
-    gst_video_info_from_caps (&vi, preferred_caps);
+  gst_video_info_from_caps (&vi, caps);
 
   if (GST_VIDEO_INFO_FORMAT (&vi) == GST_VIDEO_FORMAT_ENCODED)
     gst_video_info_set_format (&vi, GST_VIDEO_FORMAT_I420,
@@ -706,11 +704,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
       goto error_create_pool;
 
     config = gst_buffer_pool_get_config (pool);
-    if (!preferred_caps)
-      gst_buffer_pool_config_set_params (config, caps, size, min, max);
-    else
-      gst_buffer_pool_config_set_params (config, preferred_caps, size, min,
-          max);
+    gst_buffer_pool_config_set_params (config, caps, size, min, max);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META);
     if (!gst_buffer_pool_set_config (pool, config))
@@ -736,6 +730,11 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
       goto config_failed;
   }
 #endif
+
+  if (old_query)
+    query = old_query;
+  if (new_query)
+    gst_query_unref (new_query);
 
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);

@@ -399,7 +399,10 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
      * But there are issues with it especially for some vp9 streams where
      * upstream element set un-cropped values in set_format() which make
      * everything a mess. So better doing the explicit check here irrespective
-     * of what notification we get from upstream or libgstvaapi */
+     * of what notification we get from upstream or libgstvaapi.Also, even if
+     * we received notification from libgstvaapi, the frame we are going to
+     * be pushed at this point might not have the notified resolution if there
+     * are queued frames in decoded picture buffer. */
     decode->do_pool_renego =
         is_surface_resolution_changed (decode,
         GST_VAAPI_SURFACE_PROXY_SURFACE (proxy));
@@ -680,6 +683,7 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
   GstCaps *caps = NULL;
+  gboolean ret = FALSE;
 
   gst_query_parse_allocation (query, &caps, NULL);
   decode->has_texture_upload_meta = FALSE;
@@ -692,21 +696,45 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
 #endif
 
   if (decode->do_pool_renego) {
-    gboolean ret;
-
     caps = gst_caps_copy (caps);
+    /* Always use un-cropped dimension of decoded surface for pool negotiation */
     gst_caps_set_simple (caps, "width", G_TYPE_INT,
         GST_VIDEO_INFO_WIDTH (&decode->decoded_info), "height", G_TYPE_INT,
         GST_VIDEO_INFO_HEIGHT (&decode->decoded_info), NULL);
+
     ret =
         gst_vaapi_plugin_base_decide_allocation (GST_VAAPI_PLUGIN_BASE (vdec),
         query, 0, caps);
+
     gst_caps_unref (caps);
     decode->do_pool_renego = FALSE;
-    return ret;
   } else {
-    return TRUE;
+    /* No need to renegotiate the pool, set the previously configured pool in query */
+    guint size, min, max;
+    GstStructure *config;
+    GstVaapiPluginBase *plugin = GST_VAAPI_PLUGIN_BASE (vdec);
+    GstBufferPool *pool = plugin->srcpad_buffer_pool;
+
+    if (G_UNLIKELY (!pool)) {
+      GST_ERROR ("Failed to find configured VaapiVideoBufferPool! ");
+      return ret;
+    }
+
+    config = gst_buffer_pool_get_config (pool);
+    if (!config
+        || !gst_buffer_pool_config_get_params (config, NULL, &size, &min, &max))
+      return ret;
+    gst_structure_free (config);
+
+    if (gst_query_get_n_allocation_pools (query) > 0)
+      gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+    else
+      gst_query_add_allocation_pool (query, pool, size, min, max);
+
+    ret = TRUE;
   }
+
+  return ret;
 }
 
 static inline gboolean
