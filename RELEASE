@@ -1,21 +1,21 @@
 
-Release notes for GStreamer RTSP Server Library 1.7.91
+Release notes for GStreamer RTSP Server Library 1.8.0
 
-The GStreamer team is pleased to announce the second release candidate of the stable
+The GStreamer team is pleased to announce the first release of the new stable
 1.8 release series. The 1.8 release series is adding new features on top of
-the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework.
+the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x
+release series of the GStreamer multimedia framework.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the stable 1.8 release series.
-
+Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
+the source release by the GStreamer project during the stable 1.8 release
+series.
 
   
 
 Bugs fixed in this release
      
-      * 763281 : RTSP RECORD: pipeline never prerolls
+      * 740509 : Seek fail with test-uri
 
 ==== Download ====
 
@@ -52,7 +52,5 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Jan Schmidt
-      * Patricia Muscalu
       * Sebastian Dröge
  

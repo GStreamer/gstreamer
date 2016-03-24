@@ -1,9 +1,28 @@
-=== release 1.7.91 ===
+=== release 1.8.0 ===
 
-2016-03-15  Sebastian Dröge <slomo@coaxion.net>
+2016-03-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.91
+	  releasing 1.8.0
+
+2016-03-16 23:35:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Don't set the state of the appsrc from PLAYING to PAUSED again during setup
+	  This would get us NO_PREROLL in the bin again and break seeking.
+	  Thanks to Carlos Rafael Giani for helping to debug this!
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740509
+
+=== release 1.7.91 ===
+
+2016-03-15 12:26:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.7.91
 
 2016-03-10 13:54:38 +0200  Sebastian Dröge <sebastian@centricular.com>
 
