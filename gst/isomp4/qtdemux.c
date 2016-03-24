@@ -718,12 +718,12 @@ gst_qtdemux_pull_atom (GstQTDemux * qtdemux, guint64 offset, guint64 size,
 
 #if 1
 static gboolean
-gst_qtdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
-    GstFormat dest_format, gint64 * dest_value)
+gst_qtdemux_src_convert (GstQTDemux * qtdemux, GstPad * pad,
+    GstFormat src_format, gint64 src_value, GstFormat dest_format,
+    gint64 * dest_value)
 {
   gboolean res = TRUE;
   QtDemuxStream *stream = gst_pad_get_element_private (pad);
-  GstQTDemux *qtdemux = GST_QTDEMUX (gst_pad_get_parent (pad));
   gint32 index;
 
   if (stream->subtype != FOURCC_vide) {
@@ -736,8 +736,10 @@ gst_qtdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
       switch (dest_format) {
         case GST_FORMAT_BYTES:{
           index = gst_qtdemux_find_index_linear (qtdemux, stream, src_value);
-          if (-1 == index)
-            return FALSE;
+          if (-1 == index) {
+            res = FALSE;
+            goto done;
+          }
 
           *dest_value = stream->samples[index].offset;
 
@@ -758,8 +760,10 @@ gst_qtdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
               gst_qtdemux_find_index_for_given_media_offset_linear (qtdemux,
               stream, src_value);
 
-          if (-1 == index)
-            return FALSE;
+          if (-1 == index) {
+            res = FALSE;
+            goto done;
+          }
 
           *dest_value =
               QTSTREAMTIME_TO_GSTTIME (stream,
@@ -776,11 +780,10 @@ gst_qtdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
       break;
     default:
       res = FALSE;
+      break;
   }
 
 done:
-  gst_object_unref (qtdemux);
-
   return res;
 }
 #endif
@@ -848,7 +851,7 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstObject * parent,
 
       gst_query_parse_convert (query, &src_fmt, &src_value, &dest_fmt, NULL);
 
-      res = gst_qtdemux_src_convert (pad,
+      res = gst_qtdemux_src_convert (qtdemux, pad,
           src_fmt, src_value, dest_fmt, &dest_value);
       if (res) {
         gst_query_set_convert (query, src_fmt, src_value, dest_fmt, dest_value);
