@@ -577,7 +577,11 @@ gst_vpx_dec_open_codec (GstVPXDec * dec, GstVideoCodecFrame * frame)
 
   cfg.w = stream_info.w;
   cfg.h = stream_info.h;
-  cfg.threads = dec->threads;
+
+  if (dec->threads > 0)
+    cfg.threads = dec->threads;
+  else
+    cfg.threads = g_get_num_processors ();
 
   caps = vpx_codec_get_caps (vpxclass->codec_algo);
 
