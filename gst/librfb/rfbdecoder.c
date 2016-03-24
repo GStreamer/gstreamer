@@ -35,16 +35,16 @@ static gboolean rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder *
     decoder);
 static gboolean rfb_decoder_state_set_colour_map_entries (RfbDecoder * decoder);
 static gboolean rfb_decoder_state_server_cut_text (RfbDecoder * decoder);
-static void rfb_decoder_raw_encoding (RfbDecoder * decoder, gint start_x,
+static gboolean rfb_decoder_raw_encoding (RfbDecoder * decoder, gint start_x,
     gint start_y, gint rect_w, gint rect_h);
-static void rfb_decoder_copyrect_encoding (RfbDecoder * decoder, gint start_x,
+static gboolean rfb_decoder_copyrect_encoding (RfbDecoder * decoder,
+    gint start_x, gint start_y, gint rect_w, gint rect_h);
+static gboolean rfb_decoder_rre_encoding (RfbDecoder * decoder, gint start_x,
     gint start_y, gint rect_w, gint rect_h);
-static void rfb_decoder_rre_encoding (RfbDecoder * decoder, gint start_x,
+static gboolean rfb_decoder_corre_encoding (RfbDecoder * decoder, gint start_x,
     gint start_y, gint rect_w, gint rect_h);
-static void rfb_decoder_corre_encoding (RfbDecoder * decoder, gint start_x,
-    gint start_y, gint rect_w, gint rect_h);
-static void rfb_decoder_hextile_encoding (RfbDecoder * decoder, gint start_x,
-    gint start_y, gint rect_w, gint rect_h);
+static gboolean rfb_decoder_hextile_encoding (RfbDecoder * decoder,
+    gint start_x, gint start_y, gint rect_w, gint rect_h);
 
 RfbDecoder *
 rfb_decoder_new (void)
@@ -189,7 +189,9 @@ rfb_decoder_read (RfbDecoder * decoder, guint32 len)
   GInputStream *in;
   GError *err = NULL;
 
-  g_return_val_if_fail (decoder->connection != NULL, NULL);
+  if (!decoder->connection)
+    return FALSE;
+
   g_return_val_if_fail (len > 0, NULL);
 
   in = g_io_stream_get_input_stream (G_IO_STREAM (decoder->connection));
@@ -230,7 +232,9 @@ rfb_decoder_send (RfbDecoder * decoder, guint8 * buffer, guint len)
   GOutputStream *out;
   GError *err = NULL;
 
-  g_return_val_if_fail (decoder->connection != NULL, 0);
+  if (!decoder->connection)
+    return FALSE;
+
   g_return_val_if_fail (buffer != NULL, 0);
   g_return_val_if_fail (len > 0, 0);
 
@@ -333,7 +337,8 @@ rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
 {
   gchar version_str[] = "RFB 003.003\n";
 
-  rfb_decoder_read (decoder, 12);
+  if (!rfb_decoder_read (decoder, 12))
+    return FALSE;
 
   g_return_val_if_fail (memcmp (decoder->data, "RFB 003.00", 10) == 0, FALSE);
   g_return_val_if_fail (*(decoder->data + 11) == 0x0a, FALSE);
@@ -365,7 +370,9 @@ rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
   }
 
   version_str[10] = '0' + decoder->protocol_minor;
-  rfb_decoder_send (decoder, (guint8 *) version_str, 12);
+
+  if (!rfb_decoder_send (decoder, (guint8 *) version_str, 12))
+    return FALSE;
 
   decoder->state = rfb_decoder_state_wait_for_security;
   return TRUE;
@@ -380,10 +387,14 @@ rfb_decoder_state_reason (RfbDecoder * decoder)
 {
   gint reason_length;
 
-  rfb_decoder_read (decoder, 4);
+  if (!rfb_decoder_read (decoder, 4))
+    return FALSE;
 
   reason_length = RFB_GET_UINT32 (decoder->data);
-  rfb_decoder_read (decoder, reason_length);
+
+  if (!rfb_decoder_read (decoder, reason_length))
+    return FALSE;
+
   GST_WARNING ("Reason by server: %s", decoder->data);
 
   if (decoder->error == NULL) {
@@ -405,7 +416,8 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
    * above.
    */
   if (IS_VERSION_3_3 (decoder)) {
-    rfb_decoder_read (decoder, 4);
+    if (!rfb_decoder_read (decoder, 4))
+      return FALSE;
 
     decoder->security_type = RFB_GET_UINT32 (decoder->data);
     GST_DEBUG ("security = %d", decoder->security_type);
@@ -421,7 +433,8 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
     gint i;
     guint8 *type = NULL;
 
-    rfb_decoder_read (decoder, 1);
+    if (!rfb_decoder_read (decoder, 1))
+      return FALSE;
 
     num_type = RFB_GET_UINT8 (decoder->data);
     if (num_type == 0) {
@@ -429,7 +442,9 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
       return TRUE;
     }
 
-    rfb_decoder_read (decoder, num_type);
+    if (!rfb_decoder_read (decoder, num_type))
+      return FALSE;
+
     decoder->security_type = SECURITY_FAIL;
 
     /* For now, simply pick the first support security method */
@@ -453,7 +468,8 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
     }
 
     GST_DEBUG ("security = %d", decoder->security_type);
-    rfb_decoder_send (decoder, type, 1);
+    if (!rfb_decoder_send (decoder, type, 1))
+      return FALSE;
   }
 
   switch (decoder->security_type) {
@@ -502,7 +518,8 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
       des (&des_ctx, challenge + 8, challenge + 8);
 
       /* .. and send back to server */
-      rfb_decoder_send (decoder, challenge, 16);
+      if (!rfb_decoder_send (decoder, challenge, 16))
+        return FALSE;
 
       GST_DEBUG ("Encrypted challenge sent to server");
 
@@ -524,7 +541,9 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
 static gboolean
 rfb_decoder_state_security_result (RfbDecoder * decoder)
 {
-  rfb_decoder_read (decoder, 4);
+  if (!rfb_decoder_read (decoder, 4))
+    return FALSE;
+
   if (RFB_GET_UINT32 (decoder->data) != 0) {
     GST_WARNING ("Security handshaking failed");
     if (IS_VERSION_3_8 (decoder)) {
@@ -598,7 +617,11 @@ rfb_decoder_state_set_encodings (RfbDecoder * decoder)
 
   message = rfb_decoder_message_set_encodings (encoder_list);
 
-  rfb_decoder_send (decoder, message, 4 + 4 * g_slist_length (encoder_list));
+  if (!rfb_decoder_send (decoder, message,
+          4 + 4 * g_slist_length (encoder_list))) {
+    g_free (message);
+    return FALSE;
+  }
 
   g_free (message);
 
@@ -614,7 +637,10 @@ rfb_decoder_state_send_client_initialisation (RfbDecoder * decoder)
   guint8 shared_flag;
 
   shared_flag = decoder->shared_flag;
-  rfb_decoder_send (decoder, &shared_flag, 1);
+
+  if (!rfb_decoder_send (decoder, &shared_flag, 1))
+    return FALSE;
+
   GST_DEBUG ("shared_flag is %d", shared_flag);
 
   decoder->state = rfb_decoder_state_wait_for_server_initialisation;
@@ -626,7 +652,8 @@ rfb_decoder_state_wait_for_server_initialisation (RfbDecoder * decoder)
 {
   guint32 name_length;
 
-  rfb_decoder_read (decoder, 24);
+  if (!rfb_decoder_read (decoder, 24))
+    return FALSE;
 
   decoder->width = RFB_GET_UINT16 (decoder->data + 0);
   decoder->height = RFB_GET_UINT16 (decoder->data + 2);
@@ -657,7 +684,8 @@ rfb_decoder_state_wait_for_server_initialisation (RfbDecoder * decoder)
 
   name_length = RFB_GET_UINT32 (decoder->data + 20);
 
-  rfb_decoder_read (decoder, name_length);
+  if (!rfb_decoder_read (decoder, name_length))
+    return FALSE;
 
   decoder->name = g_strndup ((gchar *) (decoder->data), name_length);
   GST_DEBUG ("name       = %s", decoder->name);
@@ -714,7 +742,9 @@ rfb_decoder_state_normal (RfbDecoder * decoder)
 
   GST_DEBUG ("decoder_state_normal");
 
-  rfb_decoder_read (decoder, 1);
+  if (!rfb_decoder_read (decoder, 1))
+    return FALSE;
+
   message_type = RFB_GET_UINT8 (decoder->data);
 
   switch (message_type) {
@@ -743,7 +773,8 @@ static gboolean
 rfb_decoder_state_framebuffer_update (RfbDecoder * decoder)
 {
 
-  rfb_decoder_read (decoder, 3);
+  if (!rfb_decoder_read (decoder, 3))
+    return FALSE;
 
   decoder->n_rects = RFB_GET_UINT16 (decoder->data + 1);
   GST_DEBUG ("Number of rectangles : %d", decoder->n_rects);
@@ -758,8 +789,10 @@ rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
 {
   gint x, y, w, h;
   gint encoding;
+  gboolean ret = FALSE;
 
-  rfb_decoder_read (decoder, 12);
+  if (!rfb_decoder_read (decoder, 12))
+    return FALSE;
 
   x = RFB_GET_UINT16 (decoder->data + 0) - decoder->offset_x;
   y = RFB_GET_UINT16 (decoder->data + 2) - decoder->offset_y;
@@ -780,34 +813,39 @@ rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
 
   switch (encoding) {
     case ENCODING_TYPE_RAW:
-      rfb_decoder_raw_encoding (decoder, x, y, w, h);
+      ret = rfb_decoder_raw_encoding (decoder, x, y, w, h);
       break;
     case ENCODING_TYPE_COPYRECT:
-      rfb_decoder_copyrect_encoding (decoder, x, y, w, h);
+      ret = rfb_decoder_copyrect_encoding (decoder, x, y, w, h);
       break;
     case ENCODING_TYPE_RRE:
-      rfb_decoder_rre_encoding (decoder, x, y, w, h);
+      ret = rfb_decoder_rre_encoding (decoder, x, y, w, h);
       break;
     case ENCODING_TYPE_CORRE:
-      rfb_decoder_corre_encoding (decoder, x, y, w, h);
+      ret = rfb_decoder_corre_encoding (decoder, x, y, w, h);
       break;
     case ENCODING_TYPE_HEXTILE:
-      rfb_decoder_hextile_encoding (decoder, x, y, w, h);
+      ret = rfb_decoder_hextile_encoding (decoder, x, y, w, h);
       break;
     default:
       g_critical ("unimplemented encoding\n");
       break;
   }
+
+  if (!ret)
+    return FALSE;
+
   decoder->n_rects--;
   if (decoder->n_rects == 0) {
     decoder->state = NULL;
   } else {
     decoder->state = rfb_decoder_state_framebuffer_update_rectangle;
   }
+
   return TRUE;
 }
 
-static void
+static gboolean
 rfb_decoder_raw_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     gint rect_w, gint rect_h)
 {
@@ -817,8 +855,11 @@ rfb_decoder_raw_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
 
   raw_line_size = rect_w * decoder->bytespp;
   size = rect_h * raw_line_size;
+
   GST_DEBUG ("Reading %d bytes (%dx%d)", size, rect_w, rect_h);
-  rfb_decoder_read (decoder, size);
+
+  if (!rfb_decoder_read (decoder, size))
+    return FALSE;
 
   frame =
       decoder->frame + (((start_y * decoder->rect_width) +
@@ -830,9 +871,11 @@ rfb_decoder_raw_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     p += raw_line_size;
     frame += decoder->line_size;
   }
+
+  return TRUE;
 }
 
-static void
+static gboolean
 rfb_decoder_copyrect_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     gint rect_w, gint rect_h)
 {
@@ -840,7 +883,8 @@ rfb_decoder_copyrect_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
   gint line_width, copyrect_width;
   guint8 *src, *dst;
 
-  rfb_decoder_read (decoder, 4);
+  if (!rfb_decoder_read (decoder, 4))
+    return FALSE;
 
   /* don't forget the offset */
   src_x = RFB_GET_UINT16 (decoder->data) - decoder->offset_x;
@@ -861,6 +905,8 @@ rfb_decoder_copyrect_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     src += line_width;
     dst += line_width;
   }
+
+  return TRUE;
 }
 
 static void
@@ -882,14 +928,16 @@ rfb_decoder_fill_rectangle (RfbDecoder * decoder, gint x, gint y, gint w,
   }
 }
 
-static void
+static gboolean
 rfb_decoder_rre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     gint rect_w, gint rect_h)
 {
   guint32 number_of_rectangles, color;
   guint16 x, y, w, h;
 
-  rfb_decoder_read (decoder, 4 + decoder->bytespp);
+  if (!rfb_decoder_read (decoder, 4 + decoder->bytespp))
+    return FALSE;
+
   number_of_rectangles = RFB_GET_UINT32 (decoder->data);
   color = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (decoder->data + 4)));
 
@@ -900,7 +948,9 @@ rfb_decoder_rre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
 
   while (number_of_rectangles--) {
 
-    rfb_decoder_read (decoder, decoder->bytespp + 8);
+    if (!rfb_decoder_read (decoder, decoder->bytespp + 8))
+      return FALSE;
+
     color = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (decoder->data)));
     x = RFB_GET_UINT16 (decoder->data + decoder->bytespp);
     y = RFB_GET_UINT16 (decoder->data + decoder->bytespp + 2);
@@ -910,16 +960,20 @@ rfb_decoder_rre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     /* draw the rectangle in the foreground */
     rfb_decoder_fill_rectangle (decoder, start_x + x, start_y + y, w, h, color);
   }
+
+  return TRUE;
 }
 
-static void
+static gboolean
 rfb_decoder_corre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     gint rect_w, gint rect_h)
 {
   guint32 number_of_rectangles, color;
   guint8 x, y, w, h;
 
-  rfb_decoder_read (decoder, 4 + decoder->bytespp);
+  if (!rfb_decoder_read (decoder, 4 + decoder->bytespp))
+    return FALSE;
+
   number_of_rectangles = RFB_GET_UINT32 (decoder->data);
   color = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (decoder->data + 4)));
   g_free (decoder->data);
@@ -931,7 +985,9 @@ rfb_decoder_corre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
 
   while (number_of_rectangles--) {
 
-    rfb_decoder_read (decoder, decoder->bytespp + 4);
+    if (!rfb_decoder_read (decoder, decoder->bytespp + 4))
+      return FALSE;
+
     color = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (decoder->data)));
     x = RFB_GET_UINT8 (decoder->data + decoder->bytespp);
     y = RFB_GET_UINT8 (decoder->data + decoder->bytespp + 1);
@@ -943,9 +999,11 @@ rfb_decoder_corre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
 
     g_free (decoder->data);
   }
+
+  return TRUE;
 }
 
-static void
+static gboolean
 rfb_decoder_hextile_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     gint rect_w, gint rect_h)
 {
@@ -967,7 +1025,9 @@ rfb_decoder_hextile_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
   for (y = start_y; y < y_max; y += 16) {
     for (x = start_x; x < x_max; x += 16) {
 
-      rfb_decoder_read (decoder, 1);
+      if (!rfb_decoder_read (decoder, 1))
+        return FALSE;
+
       subencoding = RFB_GET_UINT8 (decoder->data);
 
       if (subencoding & SUBENCODING_RAW) {
@@ -977,7 +1037,9 @@ rfb_decoder_hextile_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
       }
 
       if (subencoding & SUBENCODING_BACKGROUND) {
-        rfb_decoder_read (decoder, decoder->bytespp);
+        if (!rfb_decoder_read (decoder, decoder->bytespp))
+          return FALSE;
+
         background = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (decoder->data)));
       }
       rfb_decoder_fill_rectangle (decoder, x, y,
@@ -985,12 +1047,16 @@ rfb_decoder_hextile_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
           background);
 
       if (subencoding & SUBENCODING_FOREGROUND) {
-        rfb_decoder_read (decoder, decoder->bytespp);
+        if (!rfb_decoder_read (decoder, decoder->bytespp))
+          return FALSE;
+
         foreground = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (decoder->data)));
       }
 
       if (subencoding & SUBENCODING_ANYSUBRECTS) {
-        rfb_decoder_read (decoder, 1);
+        if (!rfb_decoder_read (decoder, 1))
+          return FALSE;
+
         nr_subrect = RFB_GET_UINT8 (decoder->data);
       } else {
         continue;
@@ -999,7 +1065,8 @@ rfb_decoder_hextile_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
       if (subencoding & SUBENCODING_SUBRECTSCOLORED) {
         guint offset = 0;
 
-        rfb_decoder_read (decoder, nr_subrect * (2 + decoder->bytespp));
+        if (!rfb_decoder_read (decoder, nr_subrect * (2 + decoder->bytespp)))
+          return FALSE;
 
         while (nr_subrect--) {
           foreground =
@@ -1013,7 +1080,8 @@ rfb_decoder_hextile_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
       } else {
         guint offset = 0;
 
-        rfb_decoder_read (decoder, 2 * nr_subrect);
+        if (!rfb_decoder_read (decoder, 2 * nr_subrect))
+          return FALSE;
 
         while (nr_subrect--) {
           xy = RFB_GET_UINT8 (decoder->data + offset++);
@@ -1024,6 +1092,8 @@ rfb_decoder_hextile_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
       }
     }
   }
+
+  return TRUE;
 }
 
 static gboolean
@@ -1040,13 +1110,18 @@ rfb_decoder_state_server_cut_text (RfbDecoder * decoder)
   gint cut_text_length;
 
   /* 3 bytes padding, 4 bytes cut_text_length */
-  rfb_decoder_read (decoder, 7);
+  if (!rfb_decoder_read (decoder, 7))
+    return FALSE;
+
   cut_text_length = RFB_GET_UINT32 (decoder->data + 3);
 
-  rfb_decoder_read (decoder, cut_text_length);
+  if (!rfb_decoder_read (decoder, cut_text_length))
+    return FALSE;
+
   GST_DEBUG ("rfb_decoder_state_server_cut_text: throw away '%s'",
       decoder->data);
 
   decoder->state = rfb_decoder_state_normal;
+
   return TRUE;
 }
