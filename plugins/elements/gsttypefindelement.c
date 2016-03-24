@@ -193,9 +193,7 @@ gst_type_find_element_have_type (GstTypeFindElement * typefind,
     GstCaps *event_caps;
 
     gst_event_parse_caps (event, &event_caps);
-    if (caps == event_caps) {
-      event = event;
-    } else {
+    if (caps != event_caps) {
       gst_event_unref (event);
       event = gst_event_new_caps (caps);
     }
