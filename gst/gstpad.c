@@ -123,6 +123,8 @@ enum
 #define GST_PAD_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_PAD, GstPadPrivate))
 
+#define _PAD_PROBE_TYPE_ALL_BOTH_AND_FLUSH (GST_PAD_PROBE_TYPE_ALL_BOTH | GST_PAD_PROBE_TYPE_EVENT_FLUSH)
+
 /* we have a pending and an active event on the pad. On source pads only the
  * active event is used. On sinkpads, events are copied to the pending entry and
  * moved to the active event when the eventfunc returned %TRUE. */
@@ -1380,7 +1382,7 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
 
   /* when no contraints are given for the types, assume all types are
    * acceptable */
-  if ((mask & GST_PAD_PROBE_TYPE_ALL_BOTH) == 0)
+  if ((mask & _PAD_PROBE_TYPE_ALL_BOTH_AND_FLUSH) == 0)
     mask |= GST_PAD_PROBE_TYPE_ALL_BOTH;
   if ((mask & GST_PAD_PROBE_TYPE_SCHEDULING) == 0)
     mask |= GST_PAD_PROBE_TYPE_SCHEDULING;
@@ -3408,7 +3410,7 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
 
   /* one of the data types for non-idle probes */
   if ((type & GST_PAD_PROBE_TYPE_IDLE) == 0
-      && (flags & GST_PAD_PROBE_TYPE_ALL_BOTH & type) == 0)
+      && (flags & _PAD_PROBE_TYPE_ALL_BOTH_AND_FLUSH & type) == 0)
     goto no_match;
   /* one of the scheduling types */
   if ((flags & GST_PAD_PROBE_TYPE_SCHEDULING & type) == 0)
