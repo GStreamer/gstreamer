@@ -30,29 +30,7 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VAAPIDECODE \
-    (gst_vaapidecode_get_type())
-
-#define GST_VAAPIDECODE(obj)                            \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_TYPE_VAAPIDECODE,   \
-                                GstVaapiDecode))
-
-#define GST_VAAPIDECODE_CLASS(klass)                    \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_TYPE_VAAPIDECODE,      \
-                             GstVaapiDecodeClass))
-
-#define GST_IS_VAAPIDECODE(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VAAPIDECODE))
-
-#define GST_IS_VAAPIDECODE_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VAAPIDECODE))
-
-#define GST_VAAPIDECODE_GET_CLASS(obj)                  \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_TYPE_VAAPIDECODE,    \
-                               GstVaapiDecodeClass))
+#define GST_VAAPIDECODE(obj) ((GstVaapiDecode *)(obj))
 
 typedef struct _GstVaapiDecode                  GstVaapiDecode;
 typedef struct _GstVaapiDecodeClass             GstVaapiDecodeClass;
