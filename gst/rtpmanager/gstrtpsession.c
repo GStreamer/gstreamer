@@ -1016,7 +1016,7 @@ static void
 get_current_times (GstRtpSession * rtpsession, GstClockTime * running_time,
     guint64 * ntpnstime)
 {
-  guint64 ntpns;
+  guint64 ntpns = -1;
   GstClock *clock;
   GstClockTime base_time, rt, clock_time;
 
