@@ -557,6 +557,7 @@ gst_rfb_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
             ("Error on setup VNC connection to host %s on port %d", src->host,
                 src->port), (NULL));
       }
+      return GST_FLOW_ERROR;
     }
   }
 
