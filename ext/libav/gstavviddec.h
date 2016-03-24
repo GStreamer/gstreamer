@@ -83,17 +83,6 @@ struct _GstFFMpegVidDecClass
   AVCodec *in_plugin;
 };
 
-#define GST_TYPE_FFMPEGDEC \
-  (gst_ffmpegviddec_get_type())
-#define GST_FFMPEGDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGDEC,GstFFMpegVidDec))
-#define GST_FFMPEGVIDDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGDEC,GstFFMpegVidDecClass))
-#define GST_IS_FFMPEGDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGDEC))
-#define GST_IS_FFMPEGVIDDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGDEC))
-
 G_END_DECLS
 
 #endif

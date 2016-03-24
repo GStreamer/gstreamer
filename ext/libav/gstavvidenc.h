@@ -82,17 +82,6 @@ struct _GstFFMpegVidEncClass
   GstPadTemplate *srctempl, *sinktempl;
 };
 
-#define GST_TYPE_FFMPEGVIDENC \
-  (gst_ffmpegvidenc_get_type())
-#define GST_FFMPEGVIDENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGVIDENC,GstFFMpegVidEnc))
-#define GST_FFMPEGVIDENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGVIDENC,GstFFMpegVidEncClass))
-#define GST_IS_FFMPEGVIDENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGVIDENC))
-#define GST_IS_FFMPEGVIDENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGVIDENC))
-
 G_END_DECLS
 
 #endif /* __GST_FFMPEGVIDENC_H__ */
