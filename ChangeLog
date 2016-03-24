@@ -1,9 +1,135 @@
-=== release 1.7.91 ===
+=== release 1.8.0 ===
 
-2016-03-15  Sebastian Dröge <slomo@coaxion.net>
+2016-03-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.91
+	  releasing 1.8.0
+
+2016-03-13 11:05:29 -0400  Anthony G. Basile <blueness@gentoo.org>
+
+	* libs/gst/check/libcheck/libcompat.h:
+	  libcompat.h: strsignal() should be not be decleared const
+	  POSIX standards requires strsignal() to return a pointer to a char,
+	  not a const pointer to a char. [1]  On uClibc, and possibly other
+	  libc's, that do not HAVE_DECL_STRSIGNAL, libcompat.h declares
+	  const char *strsignal (int sig) which causes a type error.
+	  [1] man 3 strsignal
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763567
+
+2016-03-22 19:04:59 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpreset.c:
+	  preset: Use GST_PRESET_PATH as an extension of the system path, not a replacement of the user path
+	  First load all system presets, then all from the environment variable, then
+	  from the app directory, then from the user directory. Any one in the chain
+	  with the highest version completely replaces all previous ones, later ones
+	  with lower versions are merged in without replacing existing presets.
+	  This is basically the same behaviour as before, just that GST_PRESET_PATH is
+	  inserted as another source of directories between the system and app presets.
+	  It was added in ca08af1f17d2ce36b83998a0ba3a7b8bcafd7872, but was
+	  accidentially overriding the user preset path there. Which caused inconsistent
+	  behaviour as new presets were still stored in the system path, just not loaded
+	  from there. Meaning you could store a new preset (in the user path), just for
+	  GstPreset to not find it anymore later (because it only looked in the
+	  GST_PRESET_PATH instead of the user path).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764034
+
+2016-03-19 12:55:09 +0100  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* gst/gstutils.c:
+	  utils: add 'transfer full' annotation to gst_pad_peer_query_caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763912
+
+2016-03-19 12:39:18 +0100  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* gst/gstpad.c:
+	  pad: add 'transfer full' and 'nullable' annotations to gst_pad_get_current_caps
+	  and also change the description accordingly since function returns an
+	  incremented caps object or NULL if there is no caps set.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763912
+
+2016-03-18 16:02:43 -0400  Ben Iofel <iofelben@gmail.com>
+
+	* gst/gstutils.c:
+	  utils: fix gir annotation for gst_element_query_convert()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763895
+
+2016-03-17 01:42:55 +1100  Jan Schmidt <jan@centricular.com>
+
+	* tests/check/elements/multiqueue.c:
+	  tests: Check multiqueue not-linked EOS handling
+	  Add a test which checks that not-linked pads continue
+	  to output data after linked pads have gone EOS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763770
+
+2016-03-18 03:08:39 +1100  Jan Schmidt <jan@centricular.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Fix not-linked pad handling at EOS
+	  Ensure that not-linked pads will drain out at EOS by
+	  correctly detecting the EOS condition based on the EOS
+	  pad flag (which indicates we actually pushed an EOS),
+	  and make sure that not-linked pads are woken when doing
+	  EOS processing on linked pads.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763770
+
+2016-03-15 16:37:33 +0100  Romain Picard <romain.picard@oakbits.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Allow caps query in "have-type" signal handlers
+	  If an application calls gst_pad_query_caps from its "have-type" signal handler,
+	  then the query fails because typefind->caps has not been set yet.
+	  This patch sets typefind->caps in the object method handler, before the signal
+	  handlers are called.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763491
+
+=== release 1.7.91 ===
+
+2016-03-15 11:56:10 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.7.91
+
+2016-03-15 11:44:03 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/tr.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2016-03-15 11:39:42 +0200  Sebastian Dröge <sebastian@centricular.com>
 

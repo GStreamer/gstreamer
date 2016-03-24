@@ -1,14 +1,15 @@
 
-Release notes for GStreamer 1.7.91
+Release notes for GStreamer 1.8.0
 
-The GStreamer team is pleased to announce the second release candidate of the stable
+The GStreamer team is pleased to announce the first release of the new stable
 1.8 release series. The 1.8 release series is adding new features on top of
-the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework.
+the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x
+release series of the GStreamer multimedia framework.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the stable 1.8 release series.
+Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
+the source release by the GStreamer project during the stable 1.8 release
+series.
 
 
 This module, gstreamer, only contains core functionality.
@@ -34,11 +35,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 763112 : gstbuffer: fix GstParentBufferMeta GType name
-      * 763213 : Add documentation about _NAME macros vs. _get_name functions
-      * 763325 : Multiple netclocks do not work anymore
       * 763491 : typefind: behavior has changed on have-type signal, sets pad caps after signal handlers
-      * 763553 : baseparse: Not pushing tags before PREROLL
+      * 763895 : Incorrect gir annotation on gst_element_query_convert
+      * 764034 : preset: Use GST_PRESET_PATH as an extension of the system path, not a replacement of the user path
+      * 763770 : multiqueue: not-linked pads might not drain out at EOS
 
 ==== Download ====
 
@@ -75,8 +75,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Carlos Rafael Giani
+      * Anthony G. Basile
+      * Aurélien Zanelli
+      * Ben Iofel
+      * Jan Schmidt
+      * Romain Picard
       * Sebastian Dröge
-      * Tim-Philipp Müller
-      * Víctor Manuel Jáquez Leal
  
