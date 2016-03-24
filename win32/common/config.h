@@ -58,9 +58,6 @@
 /* Defined if gcov is enabled to force a rebuild due to config.h changing */
 #undef GST_GCOV_ENABLED
 
-/* DMABUF available for gl plugins */
-#undef GST_GL_HAVE_DMABUF
-
 /* EGL module name */
 #undef GST_GL_LIBEGL_MODULE_NAME
 
@@ -89,7 +86,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2016-03-15"
+#define GST_PACKAGE_RELEASE_DATETIME "2016-03-24"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -731,7 +728,7 @@
 #define PACKAGE_NAME "GStreamer Bad Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.7.91"
+#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.8.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-bad"
@@ -740,7 +737,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.7.91"
+#define PACKAGE_VERSION "1.8.0"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -784,7 +781,7 @@
 #undef USE_EGL_RPI
 
 /* Version number of package */
-#define VERSION "1.7.91"
+#define VERSION "1.8.0"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

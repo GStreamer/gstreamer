@@ -1,14 +1,15 @@
 
-Release notes for GStreamer Bad Plugins 1.7.91
+Release notes for GStreamer Bad Plugins 1.8.0
 
-The GStreamer team is pleased to announce the second release candidate of the stable
+The GStreamer team is pleased to announce the first release of the new stable
 1.8 release series. The 1.8 release series is adding new features on top of
-the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework.
+the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x
+release series of the GStreamer multimedia framework.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the stable 1.8 release series.
+Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
+the source release by the GStreamer project during the stable 1.8 release
+series.
 
 
 "That an accusation?"
@@ -59,20 +60,12 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 743259 : tsdemux:  bogus timestamp when PTS < PCR
-      * 756282 : [PLUGIN-MOVE] Move opus to -base
-      * 760566 : All the gleffects have the same name and description
-      * 762999 : Memory leak in qmlglsink
-      * 763045 : glmemoryallocator: Buffer size miss-match when mapping GLMemory without PBO
-      * 763079 : hls/Makefile.am missing OPENSSL_CFLAGS
-      * 763098 : ahcsrc: remove unused file
-      * 763168 : gldisplay: _get_gl_context_for_thread_unlocked looks suspicious
-      * 763220 : mpegvideoparse: Support non-hierarchical profile/level again [REGRESSION]
-      * 763356 : glimagesink: Fix window memory leak
-      * 763365 : glfilterapp not correctly drawing the default scene
-      * 763401 : Zero-copy video playback doesn't work on Android 4.x (QA 1.7.90)
-      * 763494 : h265parse: Segfault while tranforming hevc packetized  stream to nal aligned bytestream
-      * 763503 : tsdemux can crash on shutdown
+      * 763756 : gl ! textoverlay ! glupload ! glfilter doesn't negotiate
+      * 763793 : h264parse, h265parse: failure to parse downstream force-key-unit event
+      * 763877 : Unable to build vulkan plugin from released tarball
+      * 763974 : mxfdemux: Fix query memory leak
+      * 764066 : vulkan: Build failure on arch not finding VK_API_VERSION
+      * 763262 : mpegtsdemux: accurate seeks are no more accurate (regression)
 
 ==== Download ====
 
@@ -109,21 +102,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alessandro Decina
-      * Aurélien Zanelli
-      * Edward Hervey
-      * Jan Schmidt
-      * Joe Gorse
-      * Justin Kim
-      * Mark Nauwelaerts
-      * Martin Kelly
+      * Aleksander Wabik
+      * Jimmy Ohn
       * Matthew Waters
-      * Nicolas Dufresne
-      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
-      * Sergey Borovkov
-      * Sreerenj Balachandran
-      * Tim-Philipp Müller
-      * Vineeth TM
-      * Vivia Nikolaidou
+      * Thibault Saunier
  
