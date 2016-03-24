@@ -183,10 +183,6 @@ main (gint argc, gchar * argv[])
   GstBus *bus;
   GError *error = NULL;
 
-#ifdef HAVE_X11
-  XInitThreads ();
-#endif
-
   GtkWidget *window;
   GtkWidget *screen;
   GtkWidget *vbox, *combo;
@@ -203,6 +199,10 @@ main (gint argc, gchar * argv[])
     ,
     {NULL}
   };
+
+#ifdef HAVE_X11
+  XInitThreads ();
+#endif
 
   context = g_option_context_new (NULL);
   g_option_context_add_main_entries (context, options, NULL);
