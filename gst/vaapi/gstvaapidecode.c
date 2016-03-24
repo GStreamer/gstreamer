@@ -329,10 +329,17 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
   if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (out_frame)) {
     proxy = gst_video_codec_frame_get_user_data (out_frame);
 
-    /* reconfigure if un-cropped surface resolution changed */
-    if (is_surface_resolution_changed (vdec,
-            GST_VAAPI_SURFACE_PROXY_SURFACE (proxy)))
-      gst_vaapidecode_negotiate (decode);
+    if (G_UNLIKELY (!decode->active) ||
+        gst_pad_needs_reconfigure (GST_VIDEO_DECODER_SRC_PAD (vdec)) ||
+        decode->do_renego ||
+        is_surface_resolution_changed (vdec,
+            GST_VAAPI_SURFACE_PROXY_SURFACE (proxy))) {
+      if (!gst_vaapidecode_negotiate (decode))
+        return GST_FLOW_ERROR;
+
+      decode->active = TRUE;
+      decode->do_renego = FALSE;
+    }
 
     gst_vaapi_surface_proxy_set_destroy_notify (proxy,
         (GDestroyNotify) gst_vaapidecode_release, gst_object_ref (decode));
@@ -427,9 +434,6 @@ gst_vaapidecode_negotiate (GstVaapiDecode * decode)
   GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (vdec);
 
-  if (!decode->do_renego)
-    return TRUE;
-
   GST_DEBUG_OBJECT (decode, "Input codec state changed, doing renegotiation");
 
   if (!gst_vaapi_plugin_base_set_caps (plugin, decode->sinkpad_caps, NULL))
@@ -440,8 +444,6 @@ gst_vaapidecode_negotiate (GstVaapiDecode * decode)
     return FALSE;
   if (!gst_vaapi_plugin_base_set_caps (plugin, NULL, decode->srcpad_caps))
     return FALSE;
-
-  decode->do_renego = FALSE;
 
   return TRUE;
 }
@@ -464,12 +466,6 @@ gst_vaapidecode_push_all_decoded_frames (GstVaapiDecode * decode)
           return ret;
         break;
       case GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA:
-        /* Delayed the pool re-negotiation untill we push all decoded (and queued)
-         * frames downstream. Otherwise for the multi-resolution videos, the
-         * GstVideoVideoMemory will be having wrong resolution.
-         * commit 6eba201f3252eba6a99ab7da7a4c662091a3e884 */
-        if (!gst_vaapidecode_negotiate (decode))
-          return GST_FLOW_ERROR;
         return GST_FLOW_OK;
       default:
         GST_VIDEO_DECODER_ERROR (vdec, 1, STREAM, DECODE, ("Decoding failed"),
@@ -486,27 +482,10 @@ gst_vaapidecode_handle_frame (GstVideoDecoder * vdec,
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
   GstVaapiDecoderStatus status;
-  GstVaapiPluginBase *plugin;
   GstFlowReturn ret;
 
   if (!decode->input_state)
     goto not_negotiated;
-
-  if (G_UNLIKELY (!decode->active) ||
-      gst_pad_needs_reconfigure (GST_VIDEO_DECODER_SRC_PAD (vdec))) {
-    GST_DEBUG_OBJECT (decode, "activating the decoder");
-    if (!gst_vaapidecode_update_src_caps (decode))
-      goto not_negotiated;
-
-    if (!gst_video_decoder_negotiate (vdec))
-      goto not_negotiated;
-
-    plugin = GST_VAAPI_PLUGIN_BASE (vdec);
-    if (!gst_vaapi_plugin_base_set_caps (plugin, NULL, decode->srcpad_caps))
-      goto not_negotiated;
-
-    decode->active = TRUE;
-  }
 
   /* Decode current frame */
   for (;;) {
@@ -843,6 +822,9 @@ gst_vaapidecode_open (GstVideoDecoder * vdec)
   success = gst_vaapidecode_ensure_display (decode);
   if (old_display)
     gst_vaapi_display_unref (old_display);
+
+  decode->do_renego = TRUE;
+
   return success;
 }
 
