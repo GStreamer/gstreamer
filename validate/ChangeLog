@@ -1,9 +1,87 @@
-=== release 1.7.91 ===
+=== release 1.8.0 ===
 
-2016-03-15  Sebastian Dröge <slomo@coaxion.net>
+2016-03-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.91
+	  releasing 1.8.0
+
+2016-03-23 20:02:47 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate: launcher: Make sure to properly setup all testsuites
+	  When a first testsuite will set paths, it does not mean that we should
+	  just register following testsuite test manager default tests.
+	  So we need to make a difference between the media paths the user passed
+	  with --media-path and the ones defined by the testsuite.
+
+2016-03-23 19:34:10 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Handle testslist files even running several testsuites
+	  Only if those testsuites do not use the same Tester as we
+	  currently can't know to what testsuite a test belongs.
+
+2016-03-23 11:48:10 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/reporters.py:
+	  launcher: Avoid caching all the debug logs in memory
+	  And just write the temporary XML file on disc
+
+2016-03-22 19:00:48 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: launcher: Blacklist dash and HLS failling seeking tests
+	  As described in https://bugzilla.gnome.org/show_bug.cgi?id=764020
+
+2016-03-22 17:46:50 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:testsuite: Blacklist validate.hls.playback.scrub_forward_seeking.hls_bibbop as it is racy
+
+2016-03-22 12:07:08 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  validate: pad-monitor: Check right segment after seek
+	  After a seek we need to wait for the right segment (meaning the segment
+	  with seqnum == last seek/flush stop seqnum) to check whether the segment.time
+	  has been properly set.
+
+2016-03-22 11:19:42 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate: Accept pad return FLUSHING when the element is being teared down
+	  In the case and element is in READY or is going to READY state, it can
+	  always return GST_FLOW_FLUSHING.
+	  Avoid a race where a demuxer sinkpad has not been set to FLUSHING when we are
+	  still processing a buffer but downstream is already FLUSHING and thus
+	  the demuxer is already returning FLUSHING.
+
+2016-03-21 14:34:27 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/launcher/baseclasses.py:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Use GstValidate logging system to print buffering avancement
+	  So it can be used in the launcher.
+	  And make sure to properly parse the info in the launcher.
+
+2016-03-09 10:05:49 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/httpserver.py:
+	  validate:launcher: Remove dependency on wget
+
+=== release 1.7.91 ===
+
+2016-03-15 12:40:03 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.7.91
 
 2016-03-14 14:29:57 +0200  Sebastian Dröge <sebastian@centricular.com>
 
