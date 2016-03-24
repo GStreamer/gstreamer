@@ -1459,6 +1459,26 @@ GST_START_TEST (test_pad_blocking_with_probe_type_idle)
 
 GST_END_TEST;
 
+static gboolean pull_probe_called;
+static gboolean pull_probe_called_with_bad_type;
+static gboolean pull_probe_called_with_bad_data;
+
+static GstPadProbeReturn
+probe_pull_buffer_cb_check_buffer_return_ok (GstPad * pad,
+    GstPadProbeInfo * info, gpointer user_data)
+{
+  if (info->type & GST_PAD_PROBE_TYPE_BUFFER) {
+    if (GST_IS_BUFFER (info->data))
+      pull_probe_called = TRUE;
+    else
+      pull_probe_called_with_bad_data = TRUE;
+  } else {
+    /* shouldn't be called */
+    pull_probe_called_with_bad_type = TRUE;
+  }
+  return GST_PAD_PROBE_OK;
+}
+
 static GstFlowReturn
 test_probe_pull_getrange (GstPad * pad, GstObject * parent, guint64 offset,
     guint length, GstBuffer ** buf)
@@ -1523,6 +1543,136 @@ GST_START_TEST (test_pad_probe_pull)
   /* must be wrong state */
   fail_unless (ret == GST_FLOW_FLUSHING);
 
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+}
+
+GST_END_TEST;
+
+static gboolean idle_probe_called;
+static gboolean get_range_wait;
+static gboolean getrange_waiting;
+
+static GstPadProbeReturn
+idle_cb_return_ok (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  idle_probe_called = TRUE;
+  return GST_PAD_PROBE_OK;
+}
+
+static GstFlowReturn
+test_probe_pull_getrange_wait (GstPad * pad, GstObject * parent, guint64 offset,
+    guint length, GstBuffer ** buf)
+{
+  getrange_waiting = TRUE;
+
+  *buf = gst_buffer_new ();
+  while (get_range_wait) {
+    g_usleep (10000);
+  }
+
+  getrange_waiting = FALSE;
+  return GST_FLOW_OK;
+}
+
+GST_START_TEST (test_pad_probe_pull_idle)
+{
+  GstPad *srcpad, *sinkpad;
+  GThread *thread;
+  GstFlowReturn ret;
+
+  srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+  sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_unless (sinkpad != NULL);
+
+  gst_pad_set_getrange_function (srcpad, test_probe_pull_getrange_wait);
+  gst_pad_set_activate_function (sinkpad, test_probe_pull_activate_pull);
+  gst_pad_link (srcpad, sinkpad);
+
+  gst_pad_set_active (sinkpad, TRUE);
+  gst_pad_set_active (srcpad, TRUE);
+
+  idle_probe_called = FALSE;
+  get_range_wait = TRUE;
+  thread = g_thread_try_new ("gst-check", (GThreadFunc) pull_range_async,
+      sinkpad, NULL);
+
+  /* wait for the block */
+  while (!getrange_waiting) {
+    g_usleep (10000);
+  }
+
+  id = gst_pad_add_probe (sinkpad,
+      GST_PAD_PROBE_TYPE_IDLE | GST_PAD_PROBE_TYPE_PULL,
+      idle_cb_return_ok, NULL, NULL);
+
+  fail_if (idle_probe_called);
+
+  get_range_wait = FALSE;
+  while (getrange_waiting) {
+    g_usleep (10000);
+  }
+  while (!idle_probe_called) {
+    g_usleep (10000);
+  }
+
+  ret = GPOINTER_TO_INT (g_thread_join (thread));
+  fail_unless (ret == GST_FLOW_OK);
+  gst_pad_set_active (srcpad, FALSE);
+  gst_pad_set_active (sinkpad, FALSE);
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_pad_probe_pull_buffer)
+{
+  GstPad *srcpad, *sinkpad;
+  GThread *thread;
+  GstFlowReturn ret;
+
+  srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+  sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_unless (sinkpad != NULL);
+
+  gst_pad_set_getrange_function (srcpad, test_probe_pull_getrange);
+  gst_pad_set_activate_function (sinkpad, test_probe_pull_activate_pull);
+  gst_pad_link (srcpad, sinkpad);
+
+  gst_pad_set_active (sinkpad, TRUE);
+  gst_pad_set_active (srcpad, TRUE);
+
+  id = gst_pad_add_probe (sinkpad,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PULL,
+      probe_pull_buffer_cb_check_buffer_return_ok, NULL, NULL);
+
+  pull_probe_called = FALSE;
+  pull_probe_called_with_bad_type = FALSE;
+  pull_probe_called_with_bad_data = FALSE;
+
+  thread = g_thread_try_new ("gst-check", (GThreadFunc) pull_range_async,
+      sinkpad, NULL);
+
+  /* wait for the block */
+  while (!pull_probe_called && !pull_probe_called_with_bad_data
+      && !pull_probe_called_with_bad_type) {
+    g_usleep (10000);
+  }
+
+  fail_unless (pull_probe_called);
+  fail_if (pull_probe_called_with_bad_data);
+  fail_if (pull_probe_called_with_bad_type);
+
+  /* get return value from push */
+  ret = GPOINTER_TO_INT (g_thread_join (thread));
+  fail_unless (ret == GST_FLOW_OK);
+
+  gst_pad_set_active (sinkpad, FALSE);
+  gst_pad_set_active (srcpad, FALSE);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
 }
@@ -2840,6 +2990,8 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_pad_blocking_with_probe_type_blocking);
   tcase_add_test (tc_chain, test_pad_blocking_with_probe_type_idle);
   tcase_add_test (tc_chain, test_pad_probe_pull);
+  tcase_add_test (tc_chain, test_pad_probe_pull_idle);
+  tcase_add_test (tc_chain, test_pad_probe_pull_buffer);
   tcase_add_test (tc_chain, test_pad_probe_remove);
   tcase_add_test (tc_chain, test_pad_probe_block_add_remove);
   tcase_add_test (tc_chain, test_pad_probe_block_and_drop_buffer);
