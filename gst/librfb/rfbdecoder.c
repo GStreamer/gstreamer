@@ -188,6 +188,7 @@ rfb_decoder_read (RfbDecoder * decoder, guint32 len)
 {
   GInputStream *in;
   GError *err = NULL;
+  gsize count = 0;
 
   if (!decoder->connection)
     return FALSE;
@@ -204,9 +205,15 @@ rfb_decoder_read (RfbDecoder * decoder, guint32 len)
     decoder->data_len = len;
   }
 
-  if (!g_input_stream_read_all (in, decoder->data, len, NULL,
+  if (!g_input_stream_read_all (in, decoder->data, len, &count,
           decoder->cancellable, &err))
     goto recv_error;
+
+  if (count == 0) {
+    g_set_error_literal (&err, G_IO_ERROR, G_IO_ERROR_BROKEN_PIPE,
+        "Connection was closed.");
+    goto recv_error;
+  }
 
   return decoder->data;
 
