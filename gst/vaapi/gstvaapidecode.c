@@ -309,11 +309,9 @@ static gboolean
 is_surface_resolution_changed (GstVaapiDecode * decode,
     GstVaapiSurface * surface)
 {
-  GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
   GstVideoInfo *vinfo = &decode->decoded_info;
-  GstVideoFormat format = GST_VIDEO_FORMAT_ENCODED;
+  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
   guint surface_width, surface_height;
-  GstVideoCodecState *state;
 
   g_return_val_if_fail (surface != NULL, FALSE);
 
@@ -323,12 +321,13 @@ is_surface_resolution_changed (GstVaapiDecode * decode,
       && GST_VIDEO_INFO_HEIGHT (vinfo) == surface_height)
     return FALSE;
 
-  state = gst_video_decoder_get_output_state (vdec);
-  if (state) {
-    /* Fixme: Get exact surface format usings gst_vaapi_surface_get_format () */
-    format = GST_VIDEO_INFO_FORMAT (&state->info);
-    gst_video_codec_state_unref (state);
-  }
+  /* doing gst_vaapi_surface_get_format() only if necessary since it execute
+   * vaDeriveImage in the backgrorund . This will usually get executed only once */
+  format =
+      (GST_VIDEO_INFO_FORMAT (vinfo) ==
+      GST_VIDEO_FORMAT_UNKNOWN) ? gst_vaapi_surface_get_format (surface) :
+      GST_VIDEO_INFO_FORMAT (vinfo);
+
   gst_video_info_set_format (vinfo, format, surface_width, surface_height);
 
   return TRUE;
@@ -340,9 +339,9 @@ is_display_resolution_changed (GstVaapiDecode * decode,
     const GstVaapiRectangle * crop_rect)
 {
   GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
-  GstVideoFormat format = GST_VIDEO_FORMAT_ENCODED;
   GstVideoCodecState *state;
   GstVideoInfo *vinfo;
+  GstVideoFormat format = GST_VIDEO_INFO_FORMAT (&decode->decoded_info);
   guint display_width = GST_VIDEO_INFO_WIDTH (&decode->decoded_info);
   guint display_height = GST_VIDEO_INFO_HEIGHT (&decode->decoded_info);
 
@@ -360,9 +359,6 @@ is_display_resolution_changed (GstVaapiDecode * decode,
     decode->display_info = *vinfo;
 
   if (!crop_rect) {
-    display_width = GST_VIDEO_INFO_WIDTH (&decode->decoded_info);
-    display_height = GST_VIDEO_INFO_HEIGHT (&decode->decoded_info);
-
     if (G_UNLIKELY (display_width !=
             GST_VIDEO_INFO_WIDTH (&decode->display_info)
             || display_height != GST_VIDEO_INFO_HEIGHT (&decode->display_info)))
