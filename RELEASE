@@ -1,14 +1,15 @@
 
-Release notes for GStreamer Base Plugins 1.7.91
+Release notes for GStreamer Base Plugins 1.8.0
 
-The GStreamer team is pleased to announce the second release candidate of the stable
+The GStreamer team is pleased to announce the first release of the new stable
 1.8 release series. The 1.8 release series is adding new features on top of
-the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework.
+the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x
+release series of the GStreamer multimedia framework.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the stable 1.8 release series.
+Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
+the source release by the GStreamer project during the stable 1.8 release
+series.
 
 
 This module contains a set of reference plugins, base classes for other
@@ -57,12 +58,7 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 761251 : textoverlay: Expose text rendering dimensions to applications and remove absolute positioning limit
-      * 763059 : opusdec: plug caps leak
-      * 763094 : gst-play: remove peculiar setting of invalid -v property
-      * 763278 : tcpserversink: problems with TS muxed stream, not detecting/sending keyframes
-      * 763625 : decodebin: Crashes when shutting down during autoplugging
-      * 758282 : OGG streams buffer constantly even with plenty of bandwidth
+      * 763316 : install-plugins: update documentation
 
 ==== Download ====
 
@@ -99,11 +95,5 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Havard Graff
-      * Lubosz Sarnecki
-      * Nirbheek Chauhan
-      * Sebastian Dröge
-      * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Wim Taymans
+      * Víctor Manuel Jáquez Leal
  
