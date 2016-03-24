@@ -1,14 +1,15 @@
 
-Release notes for GStreamer libav Plugins 1.7.91
+Release notes for GStreamer libav Plugins 1.8.0
 
-The GStreamer team is pleased to announce the second release candidate of the stable
+The GStreamer team is pleased to announce the first release of the new stable
 1.8 release series. The 1.8 release series is adding new features on top of
-the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework.
+the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x
+release series of the GStreamer multimedia framework.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the stable 1.8 release series.
+Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
+the source release by the GStreamer project during the stable 1.8 release
+series.
 
 
 This module contains plugins based on the libav project, including codecs.
@@ -33,6 +34,10 @@ contains a set of less supported plugins that haven't passed the
 
 
   
+
+Bugs fixed in this release
+     
+      * 763940 : 'configure' using system libav always fails with " Uncompatible libavcodec found " 
 
 ==== Download ====
 
@@ -69,5 +74,5 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Sebastian Dröge
+      * Egor Zaharov
  

@@ -1,9 +1,28 @@
-=== release 1.7.91 ===
+=== release 1.8.0 ===
 
-2016-03-15  Sebastian Dröge <slomo@coaxion.net>
+2016-03-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.7.91
+	  releasing 1.8.0
+
+2016-03-20 13:43:00 +0000  Egor Zaharov <nexfwall@yandex.ru>
+
+	* configure.ac:
+	  configure: Restore CPPFLAGS after the last check
+	  The next checks can also set CPPFLAGS.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763940
+
+=== release 1.7.91 ===
+
+2016-03-15 12:23:48 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.7.91
 
 2016-03-11 15:44:16 +0200  Sebastian Dröge <sebastian@centricular.com>
 
