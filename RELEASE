@@ -1,14 +1,15 @@
 
-Release notes for GStreamer Good Plugins 1.7.91
+Release notes for GStreamer Good Plugins 1.8.0
 
-The GStreamer team is pleased to announce the second release candidate of the stable
+The GStreamer team is pleased to announce the first release of the new stable
 1.8 release series. The 1.8 release series is adding new features on top of
-the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework.
+the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x
+release series of the GStreamer multimedia framework.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided separately
-during the stable 1.8 release series.
+Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
+the source release by the GStreamer project during the stable 1.8 release
+series.
 
 
 "Such ingratitude.  After all the times I've saved your life."
@@ -52,15 +53,6 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Bugs fixed in this release
-     
-      * 755106 : directsoundsink: mute property doesn't work
-      * 760553 : deinterlace: Bug in caps passthrough lead to black screen with Android HW decoder
-      * 762529 : v4l2src produces wrong colorimetry info for NV12
-      * 763093 : udpsrc: Fix multicast group joining with provided sockets on Windows
-      * 763165 : qtdemux: Seeking in push mode broken
-      * 763318 : v4l2: fix capture with bayer formats other than bggr
-
 ==== Download ====
 
 You can find source releases of gst-plugins-good in the download
@@ -96,11 +88,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alban Bedel
-      * Josep Torra
-      * Luis de Bethencourt
-      * Nirbheek Chauhan
       * Sebastian Dröge
-      * Thiago Santos
-      * Thomas Roos
+      * Vivia Nikolaidou
  
