@@ -287,8 +287,8 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
     height = ref_state->info.height;
   }
 
-  state = gst_video_decoder_set_output_state (vdec, format,
-      width, height, ref_state);
+  state = gst_video_decoder_set_output_state (vdec, format, width, height,
+      ref_state);
   if (!state || state->info.width == 0 || state->info.height == 0) {
     if (features)
       gst_caps_features_free (features);
@@ -450,6 +450,7 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
   GstVaapiSurfaceProxy *proxy;
+  GstVaapiSurface *surface;
   GstFlowReturn ret;
   const GstVaapiRectangle *crop_rect;
   GstVaapiVideoMeta *meta;
@@ -458,6 +459,7 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
 
   if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (out_frame)) {
     proxy = gst_video_codec_frame_get_user_data (out_frame);
+    surface = GST_VAAPI_SURFACE_PROXY_SURFACE (proxy);
     crop_rect = gst_vaapi_surface_proxy_get_crop_rect (proxy);
 
     /* in theory, we are not supposed to check the surface resolution
@@ -469,8 +471,7 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
      * we received notification from libgstvaapi, the frame we are going to
      * be pushed at this point might not have the notified resolution if there
      * are queued frames in decoded picture buffer. */
-    alloc_renegotiate = is_surface_resolution_changed (decode,
-        GST_VAAPI_SURFACE_PROXY_SURFACE (proxy));
+    alloc_renegotiate = is_surface_resolution_changed (decode, surface);
     caps_renegotiate = is_display_resolution_changed (decode, crop_rect);
 
     if (gst_pad_needs_reconfigure (GST_VIDEO_DECODER_SRC_PAD (vdec))
