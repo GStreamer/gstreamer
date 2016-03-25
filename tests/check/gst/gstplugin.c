@@ -60,7 +60,7 @@ GST_START_TEST (test_registry)
     GstPlugin *plugin = GST_PLUGIN (g->data);
 
     /* one for the registry, one for the list */
-    GST_DEBUG ("refcount %d %s", GST_OBJECT_REFCOUNT_VALUE (plugin),
+    GST_DEBUG ("Plugin refcount %d %s", GST_OBJECT_REFCOUNT_VALUE (plugin),
         gst_plugin_get_name (plugin));
     ASSERT_OBJECT_REFCOUNT (plugin, "plugin in registry", 2);
 
@@ -73,7 +73,7 @@ GST_START_TEST (test_registry)
     GstPluginFeature *feature = GST_PLUGIN_FEATURE (g->data);
 
     /* one for the registry, one for the list */
-    GST_DEBUG ("refcount %d %s", GST_OBJECT_REFCOUNT_VALUE (feature),
+    GST_DEBUG ("Feature refcount %d %s", GST_OBJECT_REFCOUNT_VALUE (feature),
         GST_OBJECT_NAME (feature));
     ASSERT_OBJECT_REFCOUNT (feature, "feature in registry", 2);
     gst_object_unref (feature);
