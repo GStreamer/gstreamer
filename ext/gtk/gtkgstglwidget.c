@@ -420,8 +420,13 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
 
   gtk_widget_realize (GTK_WIDGET (gst_widget));
 
+  if (priv->other_context)
+    gst_object_unref (priv->other_context);
+  priv->other_context = NULL;
+
   if (priv->gdk_context)
     g_object_unref (priv->gdk_context);
+
   priv->gdk_context = gtk_gl_area_get_context (GTK_GL_AREA (gst_widget));
   if (priv->gdk_context == NULL) {
     GError *error = gtk_gl_area_get_error (GTK_GL_AREA (gst_widget));
@@ -429,7 +434,6 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
     GST_ERROR_OBJECT (gst_widget, "Error creating GdkGLContext : %s",
         error ? error->message : "No error set by Gdk");
     g_clear_error (&error);
-    g_assert_not_reached ();
     return;
   }
 
