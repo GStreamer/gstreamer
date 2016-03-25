@@ -976,7 +976,7 @@ AC_SUBST(GST_PTP_HELPER_INSTALLED)
 
 dnl things for our internal libcheck (must be called even if building
 dnl libcheck is disabled because it defines conditionals)
-AG_GST_CHECK_CHECKS()
+AG_GST_CHECK_CHECKS
 
 AC_CONFIG_FILES(
 Makefile
