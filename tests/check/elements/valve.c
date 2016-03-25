@@ -30,21 +30,19 @@ GST_START_TEST (test_valve_basic)
 {
   GstHarness *h = gst_harness_new ("valve");
 
+  gst_harness_set_src_caps_str (h, "mycaps");
+
   /* when not dropping, we don't drop buffers.... */
   g_object_set (h->element, "drop", FALSE, NULL);
-  fail_unless_equals_int (GST_FLOW_OK,
-      gst_harness_push (h, gst_buffer_new ()));
-  fail_unless_equals_int (GST_FLOW_OK,
-      gst_harness_push (h, gst_buffer_new ()));
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, gst_buffer_new ()));
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, gst_buffer_new ()));
   fail_unless_equals_int (2, gst_harness_buffers_received (h));
 
   /* when dropping, the buffers don't make it through */
   g_object_set (h->element, "drop", TRUE, NULL);
-  fail_unless_equals_int (1, gst_harness_events_received (h));
-  fail_unless_equals_int (GST_FLOW_OK,
-      gst_harness_push (h, gst_buffer_new ()));
-  fail_unless_equals_int (GST_FLOW_OK,
-      gst_harness_push (h, gst_buffer_new ()));
+  fail_unless_equals_int (3, gst_harness_events_received (h));
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, gst_buffer_new ()));
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, gst_buffer_new ()));
   fail_unless_equals_int (2, gst_harness_buffers_received (h));
 
   gst_harness_teardown (h);
@@ -65,8 +63,8 @@ GST_START_TEST (test_valve_upstream_events_dont_send_sticky)
   /* verify no events have made it through yet */
   fail_unless_equals_int (0, gst_harness_events_received (h));
 
-   /* stop dropping */
-   g_object_set (h->element, "drop", FALSE, NULL);
+  /* stop dropping */
+  g_object_set (h->element, "drop", FALSE, NULL);
 
   /* send an upstream event and verify that no
      downstream events was pushed as a result of this */
@@ -74,8 +72,7 @@ GST_START_TEST (test_valve_upstream_events_dont_send_sticky)
   fail_unless_equals_int (0, gst_harness_events_received (h));
 
   /* push a buffer, and verify this pushes the sticky events */
-  fail_unless_equals_int (GST_FLOW_OK,
-      gst_harness_push (h, gst_buffer_new ()));
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, gst_buffer_new ()));
   fail_unless_equals_int (3, gst_harness_events_received (h));
 
   gst_harness_teardown (h);
