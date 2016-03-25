@@ -1819,6 +1819,7 @@ gst_pad_get_pad_template
 
 gst_pad_link
 gst_pad_link_full
+gst_pad_link_maybe_ghosting_full
 gst_pad_unlink
 gst_pad_is_linked
 gst_pad_can_link

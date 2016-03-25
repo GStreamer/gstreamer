@@ -1518,6 +1518,38 @@ pad_link_maybe_ghosting (GstPad * src, GstPad * sink, GstPadLinkCheck flags)
   return ret;
 }
 
+/**
+ * gst_pad_link_maybe_ghosting_full:
+ * @src: a #GstPad
+ * @sink: a #GstPad
+ * @flags: some #GstPadLinkCheck flags
+ *
+ * Links @src to @sink, creating any #GstGhostPad's in between as necessary.
+ *
+ * This is a convenience function to save having to create and add intermediate
+ * #GstGhostPad's as required for linking across #GstBin boundaries.
+ *
+ * If @src or @sink pads don't have parent elements or do not share a common
+ * ancestor, the link will fail.
+ *
+ * Calling gst_pad_link_maybe_ghosting_full() with
+ * @flags == %GST_PAD_LINK_CHECK_DEFAULT is the recommended way of linking
+ * pads with safety checks applied.
+ *
+ * Returns: whether the link succeeded.
+ *
+ * Since: 1.10
+ */
+gboolean
+gst_pad_link_maybe_ghosting_full (GstPad * src, GstPad * sink,
+    GstPadLinkCheck flags)
+{
+  g_return_val_if_fail (GST_IS_PAD (src), FALSE);
+  g_return_val_if_fail (GST_IS_PAD (sink), FALSE);
+
+  return pad_link_maybe_ghosting (src, sink, flags);
+}
+
 static void
 release_and_unref_pad (GstElement * element, GstPad * pad, gboolean requestpad)
 {
