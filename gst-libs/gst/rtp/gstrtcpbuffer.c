@@ -957,8 +957,8 @@ gst_rtcp_packet_add_rb (GstRTCPPacket * packet, guint32 ssrc,
   g_return_val_if_fail (packet->rtcp != NULL, FALSE);
   g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_WRITE, FALSE);
   /* if profile-specific extension is added, fail for now!? */
-  g_return_val_if_fail (
-      gst_rtcp_packet_get_profile_specific_ext_length (packet) == 0, FALSE);
+  g_return_val_if_fail (gst_rtcp_packet_get_profile_specific_ext_length (packet)
+      == 0, FALSE);
 
   if (packet->count >= GST_RTCP_MAX_RB_COUNT)
     goto no_space;
@@ -1180,7 +1180,7 @@ gst_rtcp_packet_copy_profile_specific_ext (GstRTCPPacket * packet,
     if (len != NULL)
       *len = pse_len * sizeof (guint32);
     if (data != NULL) {
-      guint8 * ptr = packet->rtcp->map.data + packet->offset;
+      guint8 *ptr = packet->rtcp->map.data + packet->offset;
       ptr += ((packet->length + 1 - pse_len) * sizeof (guint32));
       *data = g_memdup (ptr, pse_len * sizeof (guint32));
     }
@@ -2449,7 +2449,7 @@ gst_rtcp_packet_app_get_name (GstRTCPPacket * packet)
   g_return_val_if_fail (packet->rtcp != NULL, NULL);
   g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ, NULL);
 
-  return (const gchar *)&packet->rtcp->map.data[packet->offset + 8];
+  return (const gchar *) &packet->rtcp->map.data[packet->offset + 8];
 }
 
 /**
