@@ -336,8 +336,8 @@ test_vtt_do_test (SubParseInputChunk * input, guint start_idx, guint num)
     buffer_caps_struct = gst_caps_get_structure (outcaps, 0);
     fail_unless_equals_string (gst_structure_get_name (buffer_caps_struct),
         "text/x-raw");
-    fail_unless_equals_string (gst_structure_get_string (buffer_caps_struct, "format"),
-        "pango-markup");
+    fail_unless_equals_string (gst_structure_get_string (buffer_caps_struct,
+            "format"), "pango-markup");
     gst_caps_unref (outcaps);
   }
 

@@ -1026,13 +1026,15 @@ GST_START_TEST (test_rtcp_buffer_profile_specific_extension)
         gst_rtcp_packet_get_profile_specific_ext_length (&packet));
 
     /* gst_rtcp_packet_get_profile_specific_ext */
-    fail_unless (gst_rtcp_packet_get_profile_specific_ext (&packet, &data, &len));
+    fail_unless (gst_rtcp_packet_get_profile_specific_ext (&packet, &data,
+            &len));
     fail_unless_equals_int (sizeof (pse), len);
     fail_unless (data != NULL);
     fail_unless_equals_int (0, memcmp (pse, data, sizeof (pse)));
 
     /* gst_rtcp_packet_copy_profile_specific_ext */
-    fail_unless (gst_rtcp_packet_copy_profile_specific_ext (&packet, &data, &len));
+    fail_unless (gst_rtcp_packet_copy_profile_specific_ext (&packet, &data,
+            &len));
     fail_unless_equals_int (sizeof (pse), len);
     fail_unless (data != NULL);
     fail_unless_equals_int (0, memcmp (pse, data, sizeof (pse)));
@@ -1059,13 +1061,15 @@ GST_START_TEST (test_rtcp_buffer_profile_specific_extension)
         gst_rtcp_packet_get_profile_specific_ext_length (&packet));
 
     /* gst_rtcp_packet_get_profile_specific_ext */
-    fail_unless (gst_rtcp_packet_get_profile_specific_ext (&packet, &data, &len));
+    fail_unless (gst_rtcp_packet_get_profile_specific_ext (&packet, &data,
+            &len));
     fail_unless_equals_int (concat_len, len);
     fail_unless (data != NULL);
     fail_unless_equals_int (0, memcmp (concat_pse, data, len));
 
     /* gst_rtcp_packet_copy_profile_specific_ext */
-    fail_unless (gst_rtcp_packet_copy_profile_specific_ext (&packet, &data, &len));
+    fail_unless (gst_rtcp_packet_copy_profile_specific_ext (&packet, &data,
+            &len));
     fail_unless_equals_int (concat_len, len);
     fail_unless (data != NULL);
     fail_unless_equals_int (0, memcmp (concat_pse, data, len));
@@ -1078,6 +1082,7 @@ GST_START_TEST (test_rtcp_buffer_profile_specific_extension)
   fail_unless (gst_rtcp_buffer_validate (buf) == TRUE);
   gst_buffer_unref (buf);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_rtcp_buffer_app)
@@ -1109,7 +1114,8 @@ GST_START_TEST (test_rtcp_buffer_app)
   fail_unless (gst_rtcp_packet_app_set_data_length (&packet, max_data_length));
 
   /* Add data */
-  fail_unless (gst_rtcp_packet_app_set_data_length (&packet, (sizeof (data) + 3) / 4));
+  fail_unless (gst_rtcp_packet_app_set_data_length (&packet,
+          (sizeof (data) + 3) / 4));
   fail_unless_equals_int (gst_rtcp_packet_app_get_data_length (&packet), 2);
   fail_unless ((data_ptr = gst_rtcp_packet_app_get_data (&packet)));
   memcpy (data_ptr, data, sizeof (data));
@@ -1128,6 +1134,7 @@ GST_START_TEST (test_rtcp_buffer_app)
 
   gst_buffer_unref (buf);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_rtp_ntp64_extension)
