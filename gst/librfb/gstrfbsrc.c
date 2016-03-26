@@ -76,6 +76,7 @@ static GstCaps *gst_rfb_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 static gboolean gst_rfb_src_start (GstBaseSrc * bsrc);
 static gboolean gst_rfb_src_stop (GstBaseSrc * bsrc);
 static gboolean gst_rfb_src_event (GstBaseSrc * bsrc, GstEvent * event);
+static gboolean gst_rfb_src_unlock (GstBaseSrc * bsrc);
 static GstFlowReturn gst_rfb_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
 
@@ -150,6 +151,7 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rfb_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rfb_src_stop);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_rfb_src_event);
+  gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_rfb_src_unlock);
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_rfb_src_create);
 
   gstelement_class = GST_ELEMENT_CLASS (klass);
@@ -652,6 +654,14 @@ gst_rfb_src_event (GstBaseSrc * bsrc, GstEvent * event)
       break;
   }
 
+  return TRUE;
+}
+
+static gboolean
+gst_rfb_src_unlock (GstBaseSrc * bsrc)
+{
+  GstRfbSrc *src = GST_RFB_SRC (bsrc);
+  g_cancellable_cancel (src->decoder->cancellable);
   return TRUE;
 }
 
