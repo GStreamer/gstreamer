@@ -132,7 +132,57 @@ debug_dump_get_object_params (GObject * object,
       g_value_init (&value, property->value_type);
       g_object_get_property (G_OBJECT (object), property->name, &value);
       if (!(g_param_value_defaults (property, &value))) {
-        tmp = g_strdup_value_contents (&value);
+        /* we need to serialise enums and flags ourselves to make sure the
+         * enum/flag nick is used and not the enum/flag name, which would be the
+         * C header enum/flag for public enums/flags, but for element-specific
+         * enums/flags we abuse the name field for the property description,
+         * and we don't want to print that in the dot file. The nick will
+         * always work, and it's also shorter. */
+        if (G_VALUE_HOLDS_ENUM (&value)) {
+          GEnumClass *e_class = g_type_class_ref (G_VALUE_TYPE (&value));
+          gint idx, e_val;
+
+          tmp = NULL;
+          e_val = g_value_get_enum (&value);
+          for (idx = 0; idx < e_class->n_values; ++idx) {
+            if (e_class->values[idx].value == e_val) {
+              tmp = g_strdup (e_class->values[idx].value_nick);
+              break;
+            }
+          }
+          if (tmp == NULL)
+            continue;
+        } else if (G_VALUE_HOLDS_FLAGS (&value)) {
+          GFlagsClass *f_class = g_type_class_ref (G_VALUE_TYPE (&value));
+          GFlagsValue *vals = f_class->values;
+          GString *s = NULL;
+          guint idx, flags_left;
+
+          s = g_string_new (NULL);
+
+          /* we assume the values are sorted from lowest to highest value */
+          flags_left = g_value_get_flags (&value);
+          idx = f_class->n_values;
+          while (idx > 0) {
+            --idx;
+            if (vals[idx].value != 0
+                && (flags_left & vals[idx].value) == vals[idx].value) {
+              if (s->len > 0)
+                g_string_prepend_c (s, '+');
+              g_string_prepend (s, vals[idx].value_nick);
+              flags_left -= vals[idx].value;
+              if (flags_left == 0)
+                break;
+            }
+          }
+
+          if (s->len == 0)
+            g_string_assign (s, "(none)");
+
+          tmp = g_string_free (s, FALSE);
+        } else {
+          tmp = g_strdup_value_contents (&value);
+        }
         value_str = g_strescape (tmp, NULL);
         g_free (tmp);
 
