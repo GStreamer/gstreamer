@@ -2319,7 +2319,7 @@ gst_rtcp_packet_fb_get_fci (GstRTCPPacket * packet)
  *
  * Set the subtype field of the APP @packet.
  *
- * Since: 1.8
+ * Since: 1.10
  **/
 void
 gst_rtcp_packet_app_set_subtype (GstRTCPPacket * packet, guint8 subtype)
@@ -2343,7 +2343,7 @@ gst_rtcp_packet_app_set_subtype (GstRTCPPacket * packet, guint8 subtype)
  *
  * Returns: The subtype.
  *
- * Since: 1.8
+ * Since: 1.10
  */
 guint8
 gst_rtcp_packet_app_get_subtype (GstRTCPPacket * packet)
@@ -2367,8 +2367,8 @@ gst_rtcp_packet_app_get_subtype (GstRTCPPacket * packet)
  *
  * Set the SSRC/CSRC field of the APP @packet.
  *
- * Since: 1.8
- **/
+ * Since: 1.10
+ */
 void
 gst_rtcp_packet_app_set_ssrc (GstRTCPPacket * packet, guint32 ssrc)
 {
@@ -2391,8 +2391,8 @@ gst_rtcp_packet_app_set_ssrc (GstRTCPPacket * packet, guint32 ssrc)
  *
  * Returns: The SSRC/CSRC.
  *
- * Since: 1.8
- **/
+ * Since: 1.10
+ */
 guint32
 gst_rtcp_packet_app_get_ssrc (GstRTCPPacket * packet)
 {
@@ -2415,8 +2415,8 @@ gst_rtcp_packet_app_get_ssrc (GstRTCPPacket * packet)
  *
  * Set the name field of the APP @packet.
  *
- * Since: 1.8
- **/
+ * Since: 1.10
+ */
 void
 gst_rtcp_packet_app_set_name (GstRTCPPacket * packet, const gchar * name)
 {
@@ -2439,8 +2439,8 @@ gst_rtcp_packet_app_set_name (GstRTCPPacket * packet, const gchar * name)
  *
  * Returns: The 4-byte name field, not zero-terminated.
  *
- * Since: 1.8
- **/
+ * Since: 1.10
+ */
 const gchar *
 gst_rtcp_packet_app_get_name (GstRTCPPacket * packet)
 {
@@ -2461,8 +2461,8 @@ gst_rtcp_packet_app_get_name (GstRTCPPacket * packet)
  *
  * Returns: The length of data in 32-bit words.
  *
- * Since: 1.8
- **/
+ * Since: 1.10
+ */
 guint16
 gst_rtcp_packet_app_get_data_length (GstRTCPPacket * packet)
 {
@@ -2489,7 +2489,7 @@ gst_rtcp_packet_app_get_data_length (GstRTCPPacket * packet)
  * Returns: %TRUE if there was enough space in the packet to add this much
  * data.
  *
- * Since: 1.8
+ * Since: 1.10
  */
 gboolean
 gst_rtcp_packet_app_set_data_length (GstRTCPPacket * packet, guint16 wordlen)
@@ -2521,7 +2521,7 @@ gst_rtcp_packet_app_set_data_length (GstRTCPPacket * packet, guint16 wordlen)
  *
  * Returns: A pointer to the data
  *
- * Since: 1.8
+ * Since: 1.10
  */
 guint8 *
 gst_rtcp_packet_app_get_data (GstRTCPPacket * packet)
