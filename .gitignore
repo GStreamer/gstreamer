@@ -56,3 +56,5 @@ Build
 .dirstamp
 *.gc??
 *.swp
+
+/tests/misc/netclock-replay
