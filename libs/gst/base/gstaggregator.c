@@ -1316,7 +1316,7 @@ gst_aggregator_default_create_new_pad (GstAggregator * self,
   gchar *name = NULL;
 
   if (templ->direction != GST_PAD_SINK ||
-      g_strcmp0 (templ->name_template, "sink_%u"))
+      g_strcmp0 (templ->name_template, "sink_%u") != 0)
     goto not_sink;
 
   GST_OBJECT_LOCK (self);
