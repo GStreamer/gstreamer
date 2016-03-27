@@ -54,7 +54,7 @@ static GstStaticPadTemplate gst_gtk_gl_sink_template =
 #define gst_gtk_gl_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGtkGLSink, gst_gtk_gl_sink,
     GST_TYPE_GTK_BASE_SINK, GST_DEBUG_CATEGORY_INIT (gst_debug_gtk_gl_sink,
-        "gtkglsink", 0, "Gtk Video Sink"));
+        "gtkglsink", 0, "Gtk GL Video Sink"));
 
 static void
 gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)
@@ -76,8 +76,8 @@ gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)
   gstgtkbasesink_class->create_widget = gtk_gst_gl_widget_new;
   gstgtkbasesink_class->window_title = "Gtk+ GL renderer";
 
-  gst_element_class_set_metadata (gstelement_class, "Gtk Video Sink",
-      "Sink/Video", "A video sink that renders to a GtkWidget",
+  gst_element_class_set_metadata (gstelement_class, "Gtk GL Video Sink",
+      "Sink/Video", "A video sink that renders to a GtkWidget using OpenGL",
       "Matthew Waters <matthew@centricular.com>");
 
   gst_element_class_add_pad_template (gstelement_class,

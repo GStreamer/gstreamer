@@ -30,6 +30,9 @@
 #include "gtkgstwidget.h"
 #include "gstgtksink.h"
 
+GST_DEBUG_CATEGORY (gst_debug_gtk_sink);
+#define GST_CAT_DEFAULT gst_debug_gtk_sink
+
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define FORMATS "{ BGRx, BGRA }"
 #else
@@ -44,7 +47,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #define gst_gtk_sink_parent_class parent_class
-G_DEFINE_TYPE (GstGtkSink, gst_gtk_sink, GST_TYPE_GTK_BASE_SINK);
+G_DEFINE_TYPE_WITH_CODE (GstGtkSink, gst_gtk_sink, GST_TYPE_GTK_BASE_SINK,
+    GST_DEBUG_CATEGORY_INIT (gst_debug_gtk_sink, "gtksink", 0,
+        "Gtk Video Sink"));
 
 static void
 gst_gtk_sink_class_init (GstGtkSinkClass * klass)
