@@ -90,7 +90,7 @@ x11_create_window (Display * dpy, guint w, guint h, guint vid, Colormap cmap)
 
   XGetWindowAttributes (dpy, rootwin, &wattr);
   depth = wattr.depth;
-  if (depth != 15 && depth != 16 && depth != 24 && depth != 32)
+  if (depth != 15 && depth != 16 && depth != 24 && depth != 30 && depth != 32)
     depth = 24;
 
   xswa_mask = CWBorderPixel | CWBackPixel;
