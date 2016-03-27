@@ -26,6 +26,9 @@
 
 #include "gtkgstbasewidget.h"
 
+GST_DEBUG_CATEGORY (gst_debug_gtk_base_widget);
+#define GST_CAT_DEFAULT gst_debug_gtk_base_widget
+
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
 #define DEFAULT_PAR_N               0
 #define DEFAULT_PAR_D               1
@@ -399,6 +402,9 @@ gtk_gst_base_widget_class_init (GtkGstBaseWidgetClass * klass)
   widget_klass->button_press_event = gtk_gst_base_widget_button_event;
   widget_klass->button_release_event = gtk_gst_base_widget_button_event;
   widget_klass->motion_notify_event = gtk_gst_base_widget_motion_event;
+
+  GST_DEBUG_CATEGORY_INIT (gst_debug_gtk_base_widget, "gtkbasewidget", 0,
+      "Gtk Video Base Widget");
 }
 
 void
