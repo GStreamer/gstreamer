@@ -2541,7 +2541,7 @@ _relink_children_recursively (NleComposition * comp,
     GST_ELEMENT_ERROR (comp, STREAM, FAILED,
         ("The NleComposition structure is not valid"),
         ("Operation %" GST_PTR_FORMAT
-            " has no child objects to be connected to"
+            " has no child objects to be connected to "
             "current toplevel seek: %" GST_PTR_FORMAT, oper, toplevel_seek));
   }
   /* Make sure we have enough sinkpads */
