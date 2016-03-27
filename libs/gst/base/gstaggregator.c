@@ -270,7 +270,7 @@ static GstElementClass *aggregator_parent_class = NULL;
 
 struct _GstAggregatorPrivate
 {
-  gint padcount;
+  gint max_padserial;
 
   /* Our state is >= PAUSED */
   gboolean running;             /* protected by src_lock */
@@ -1323,15 +1323,15 @@ gst_aggregator_default_create_new_pad (GstAggregator * self,
   if (req_name == NULL || strlen (req_name) < 6
       || !g_str_has_prefix (req_name, "sink_")) {
     /* no name given when requesting the pad, use next available int */
-    priv->padcount++;
+    serial = ++priv->max_padserial;
   } else {
     /* parse serial number from requested padname */
     serial = g_ascii_strtoull (&req_name[5], NULL, 10);
-    if (serial >= priv->padcount)
-      priv->padcount = serial;
+    if (serial > priv->max_padserial)
+      priv->max_padserial = serial;
   }
 
-  name = g_strdup_printf ("sink_%u", priv->padcount);
+  name = g_strdup_printf ("sink_%u", serial);
   agg_pad = g_object_new (GST_AGGREGATOR_GET_CLASS (self)->sinkpads_type,
       "name", name, "direction", GST_PAD_SINK, "template", templ, NULL);
   g_free (name);
@@ -2011,7 +2011,7 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "src");
   g_return_if_fail (pad_template != NULL);
 
-  priv->padcount = -1;
+  priv->max_padserial = -1;
   priv->tags_changed = FALSE;
 
   self->priv->peer_latency_live = FALSE;
