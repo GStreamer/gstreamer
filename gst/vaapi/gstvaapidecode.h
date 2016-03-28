@@ -52,9 +52,6 @@ struct _GstVaapiDecode {
     guint               has_texture_upload_meta : 1;
 
     GstVideoCodecState *input_state;
-    volatile gboolean   active;
-    volatile gboolean   do_outstate_renego;
-    volatile gboolean   do_pool_renego;
 };
 
 struct _GstVaapiDecodeClass {

@@ -179,8 +179,6 @@ gst_vaapi_decoder_state_changed (GstVaapiDecoder * decoder,
     return;
   if (!gst_vaapidecode_update_sink_caps (decode, decode->input_state->caps))
     return;
-
-  decode->do_pool_renego = TRUE;
 }
 
 static GstVideoCodecState *
@@ -339,7 +337,6 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   latency = gst_util_uint64_scale (2 * GST_SECOND, fps_d, fps_n);
   gst_video_decoder_set_latency (vdec, latency, latency);
 
-  decode->do_outstate_renego = FALSE;
   return TRUE;
 }
 
@@ -457,6 +454,7 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
   const GstVaapiRectangle *crop_rect;
   GstVaapiVideoMeta *meta;
   guint flags, out_flags = 0;
+  gboolean alloc_renegotiate, caps_renegotiate;
 
   if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (out_frame)) {
     proxy = gst_video_codec_frame_get_user_data (out_frame);
@@ -471,21 +469,15 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
      * we received notification from libgstvaapi, the frame we are going to
      * be pushed at this point might not have the notified resolution if there
      * are queued frames in decoded picture buffer. */
-    decode->do_pool_renego =
-        is_surface_resolution_changed (decode,
+    alloc_renegotiate = is_surface_resolution_changed (decode,
         GST_VAAPI_SURFACE_PROXY_SURFACE (proxy));
+    caps_renegotiate = is_display_resolution_changed (decode, crop_rect);
 
-    decode->do_outstate_renego =
-        is_display_resolution_changed (decode, crop_rect);
-
-    if (G_UNLIKELY (!decode->active) ||
-        gst_pad_needs_reconfigure (GST_VIDEO_DECODER_SRC_PAD (vdec)) ||
-        decode->do_outstate_renego || decode->do_pool_renego) {
+    if (gst_pad_needs_reconfigure (GST_VIDEO_DECODER_SRC_PAD (vdec))
+        || alloc_renegotiate || caps_renegotiate) {
 
       if (!gst_vaapidecode_negotiate (decode))
         return GST_FLOW_ERROR;
-
-      decode->active = TRUE;
     }
 
     gst_vaapi_surface_proxy_set_destroy_notify (proxy,
@@ -887,8 +879,6 @@ gst_vaapidecode_destroy (GstVaapiDecode * decode)
   gst_vaapi_decoder_replace (&decode->decoder, NULL);
   gst_caps_replace (&decode->decoder_caps, NULL);
 
-  decode->active = FALSE;
-
   gst_vaapidecode_release (gst_object_ref (decode));
 }
 
@@ -1282,8 +1272,6 @@ gst_vaapidecode_init (GstVaapiDecode * decode)
   decode->decoder = NULL;
   decode->decoder_caps = NULL;
   decode->allowed_caps = NULL;
-  decode->do_outstate_renego = TRUE;
-  decode->do_pool_renego = TRUE;
 
   g_mutex_init (&decode->surface_ready_mutex);
   g_cond_init (&decode->surface_ready);
