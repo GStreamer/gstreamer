@@ -59,15 +59,9 @@
 #include <gst/audio/audio.h>
 #include <gst/base/gstbasetransform.h>
 
-#ifndef DISABLE_ORC
-#include <orc/orc.h>
-#include <orc-test/orctest.h>
-#include <orc-test/orcprofile.h>
-#endif
-
 GST_DEBUG_CATEGORY (audio_resample_debug);
 #define GST_CAT_DEFAULT audio_resample_debug
-#if !defined(AUDIORESAMPLE_FORMAT_AUTO) || defined(DISABLE_ORC)
+#if !defined(AUDIORESAMPLE_FORMAT_AUTO)
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 #endif
 
