@@ -48,6 +48,9 @@ tmp-orc.c
 gst*orc.h
 
 /tests/check/orc
+/tests/check/media/
+/tests/check/libs/player
+/tests/check/libs/player_dummy.c
 /tests/check/elements/videoframe-audiolevel
 /tests/examples/codecparsers/parse-jpeg
 /tests/examples/codecparsers/parse-vp8
