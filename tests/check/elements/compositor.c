@@ -1708,6 +1708,40 @@ GST_START_TEST (test_pad_z_order)
 
 GST_END_TEST;
 
+/* 
+ * Test that the pad numbering assigned by aggregator behaves as follows:
+ * 1. If a pad number is requested, it must be assigned if it is available
+ * 2. When numbering automatically, the largest available pad number is used
+ * 3. Pad names must be unique
+ */
+GST_START_TEST (test_pad_numbering)
+{
+  GstElement *mixer;
+  GstPad *sinkpad1, *sinkpad2, *sinkpad3, *sinkpad4;
+
+  GST_INFO ("preparing test");
+
+  mixer = gst_element_factory_make ("compositor", NULL);
+  sinkpad1 = gst_element_get_request_pad (mixer, "sink_%u");
+  sinkpad2 = gst_element_get_request_pad (mixer, "sink_7");
+  sinkpad3 = gst_element_get_request_pad (mixer, "sink_1");
+  sinkpad4 = gst_element_get_request_pad (mixer, "sink_%u");
+
+  ck_assert_str_eq (GST_PAD_NAME (sinkpad1), "sink_0");
+  ck_assert_str_eq (GST_PAD_NAME (sinkpad2), "sink_7");
+  ck_assert_str_eq (GST_PAD_NAME (sinkpad3), "sink_1");
+  ck_assert_str_eq (GST_PAD_NAME (sinkpad4), "sink_8");
+
+  /* cleanup */
+  gst_object_unref (mixer);
+  gst_object_unref (sinkpad1);
+  gst_object_unref (sinkpad2);
+  gst_object_unref (sinkpad3);
+  gst_object_unref (sinkpad4);
+}
+
+GST_END_TEST;
+
 typedef struct
 {
   gint buffers_sent;
@@ -1895,6 +1929,7 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_obscured_skipped);
   tcase_add_test (tc_chain, test_ignore_eos);
   tcase_add_test (tc_chain, test_pad_z_order);
+  tcase_add_test (tc_chain, test_pad_numbering);
   tcase_add_test (tc_chain, test_start_time_zero_live_drop_0);
   tcase_add_test (tc_chain, test_start_time_zero_live_drop_3);
   tcase_add_test (tc_chain, test_start_time_zero_live_drop_3_unlinked_1);
