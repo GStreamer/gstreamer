@@ -1276,6 +1276,11 @@ resampler_calculate_taps (GstAudioResampler * resampler)
       resampler->filter_mode = GST_AUDIO_RESAMPLER_FILTER_MODE_FULL;
       GST_DEBUG ("automatically selected full filter, %d <= %d", out_rate,
           oversample);
+    } else if (bps * n_taps * out_rate < resampler->filter_threshold) {
+      /* switch to full filter when memory is below threshold */
+      resampler->filter_mode = GST_AUDIO_RESAMPLER_FILTER_MODE_FULL;
+      GST_DEBUG ("automatically selected full filter, memory %d <= %d",
+          bps * n_taps * out_rate, resampler->filter_threshold);
     } else {
       GST_DEBUG ("automatically selected interpolated filter");
       resampler->filter_mode = GST_AUDIO_RESAMPLER_FILTER_MODE_INTERPOLATED;
