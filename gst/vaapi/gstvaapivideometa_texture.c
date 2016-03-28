@@ -40,7 +40,7 @@
 struct _GstVaapiVideoMetaTexture
 {
   GstVaapiTexture *texture;
-  GstVideoGLTextureType texture_type;
+  GstVideoGLTextureType texture_type[4];
   guint gl_format;
   guint width;
   guint height;
@@ -73,15 +73,17 @@ static gboolean
 meta_texture_ensure_format (GstVaapiVideoMetaTexture * meta,
     GstVideoFormat format)
 {
+  memset (meta->texture_type, 0, sizeof (meta->texture_type));
+
   switch (format) {
     case GST_VIDEO_FORMAT_RGBA:
       meta->gl_format = GL_RGBA;
-      meta->texture_type = GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
+      meta->texture_type[0] = GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
       break;
     case GST_VIDEO_FORMAT_BGRA:
       meta->gl_format = GL_BGRA_EXT;
       /* FIXME: add GST_VIDEO_GL_TEXTURE_TYPE_BGRA extension */
-      meta->texture_type = GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
+      meta->texture_type[0] = GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
       break;
     default:
       goto error_unsupported_format;
@@ -155,7 +157,7 @@ meta_texture_copy (GstVaapiVideoMetaTexture * meta)
   if (!copy)
     return NULL;
 
-  copy->texture_type = meta->texture_type;
+  memcpy (copy->texture_type, meta->texture_type, sizeof (meta->texture_type));
   copy->gl_format = meta->gl_format;
   copy->width = meta->width;
   copy->height = meta->height;
@@ -220,7 +222,7 @@ gst_buffer_add_texture_upload_meta (GstBuffer * buffer)
 
   meta = gst_buffer_add_video_gl_texture_upload_meta (buffer,
       GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL,
-      1, &meta_texture->texture_type, gst_vaapi_texture_upload,
+      1, meta_texture->texture_type, gst_vaapi_texture_upload,
       meta_texture, (GBoxedCopyFunc) meta_texture_copy,
       (GBoxedFreeFunc) meta_texture_free);
   if (!meta)
