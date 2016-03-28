@@ -355,6 +355,15 @@ GST_START_TEST (test_caps_query)
   gst_caps_unref (caps);
   gst_caps_unref (restriction_caps);
 
+  /* check that compositor proxies downstream interlaced-mode */
+  restriction_caps =
+      gst_caps_from_string ("video/x-raw, interlace-mode=(string)interleaved");
+  g_object_set (capsfilter, "caps", restriction_caps, NULL);
+  caps = gst_pad_query_caps (sinkpad, NULL);
+  fail_unless (gst_caps_is_subset (caps, restriction_caps));
+  gst_caps_unref (caps);
+  gst_caps_unref (restriction_caps);
+
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_element_release_request_pad (compositor, sinkpad);
   gst_object_unref (sinkpad);
@@ -364,6 +373,82 @@ GST_START_TEST (test_caps_query)
 }
 
 GST_END_TEST;
+
+
+GST_START_TEST (test_caps_query_interlaced)
+{
+  GstElement *compositor, *sink;
+  GstElement *pipeline;
+  gboolean res;
+  GstStateChangeReturn state_res;
+  GstPad *sinkpad;
+  GstCaps *caps;
+  GstCaps *caps_mixed, *caps_progressive, *caps_interleaved;
+  GstEvent *caps_event;
+
+  caps_interleaved =
+      gst_caps_from_string ("video/x-raw, interlace-mode=interleaved");
+  caps_mixed = gst_caps_from_string ("video/x-raw, interlace-mode=mixed");
+  caps_progressive =
+      gst_caps_from_string ("video/x-raw, interlace-mode=progressive");
+
+  /* initial setup */
+  compositor = gst_element_factory_make ("compositor", "compositor");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  pipeline = gst_pipeline_new ("test-pipeline");
+
+  gst_bin_add_many (GST_BIN (pipeline), compositor, sink, NULL);
+  res = gst_element_link (compositor, sink);
+  fail_unless (res == TRUE, NULL);
+  sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
+
+  state_res = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_if (state_res == GST_STATE_CHANGE_FAILURE);
+
+  /* try an unrestricted caps query, should be compatible with all formats */
+  caps = gst_pad_query_caps (sinkpad, NULL);
+  fail_unless (gst_caps_can_intersect (caps, caps_interleaved));
+  fail_unless (gst_caps_can_intersect (caps, caps_progressive));
+  fail_unless (gst_caps_can_intersect (caps, caps_mixed));
+  gst_caps_unref (caps);
+
+  /* now set caps on the pad, it should restrict the interlaced-mode for
+   * future caps */
+  caps = gst_caps_from_string ("video/x-raw, width=100, height=100, "
+      "format=RGB, framerate=1/1, interlace-mode=progressive");
+  caps_event = gst_event_new_caps (caps);
+  gst_caps_unref (caps);
+  fail_unless (gst_pad_send_event (sinkpad, caps_event));
+
+  /* now recheck the interlace-mode */
+  gst_object_unref (sinkpad);
+  sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
+  caps = gst_pad_query_caps (sinkpad, NULL);
+  fail_if (gst_caps_can_intersect (caps, caps_interleaved));
+  fail_unless (gst_caps_can_intersect (caps, caps_progressive));
+  fail_if (gst_caps_can_intersect (caps, caps_mixed));
+  gst_object_unref (sinkpad);
+  gst_caps_unref (caps);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+  gst_caps_unref (caps_interleaved);
+  gst_caps_unref (caps_mixed);
+  gst_caps_unref (caps_progressive);
+}
+
+GST_END_TEST;
+
+static void
+add_interlaced_mode_to_caps (GstCaps * caps, const gchar * mode)
+{
+  GstStructure *s;
+
+  for (gint i = 0; i < gst_caps_get_size (caps); i++) {
+    s = gst_caps_get_structure (caps, i);
+    gst_structure_set (s, "interlace-mode", G_TYPE_STRING, mode, NULL);
+  }
+}
 
 #define MODE_ALL 1
 #define MODE_NON_ALPHA 2
@@ -383,6 +468,11 @@ run_late_caps_query_test (GstCaps * input_caps, GstCaps * output_allowed_caps,
 
   all_caps = _compositor_get_all_supported_caps ();
   non_alpha_caps = _compositor_get_non_alpha_supported_caps ();
+
+  /* add progressive mode as it is what is used in the test, otherwise
+   * is_equal checks would fail */
+  add_interlaced_mode_to_caps (all_caps, "progressive");
+  add_interlaced_mode_to_caps (non_alpha_caps, "progressive");
 
   compositor = gst_element_factory_make ("compositor", "compositor");
   capsfilter = gst_element_factory_make ("capsfilter", "out-cf");
@@ -450,7 +540,6 @@ GST_START_TEST (test_late_caps_query)
 
   rgb_caps = gst_caps_from_string ("video/x-raw, format=(string)RGB, "
       "width=(int)100, height=(int)100, framerate=(fraction)1/1");
-
   non_alpha_caps = gst_caps_from_string ("video/x-raw, format=(string)RGB");
 
   /* check that a 2nd pad that is added late to compositor will be able to
@@ -461,6 +550,80 @@ GST_START_TEST (test_late_caps_query)
 
   gst_caps_unref (non_alpha_caps);
   gst_caps_unref (rgb_caps);
+}
+
+GST_END_TEST;
+
+static void
+run_late_caps_set_test (GstCaps * first_caps, GstCaps * expected_query_caps,
+    GstCaps * second_caps, gboolean accept_caps)
+{
+  GstElement *capsfilter_1;
+  GstElement *compositor;
+  GstElement *pipeline;
+  GstStateChangeReturn state_res;
+  GstPad *sinkpad_2;
+  GstCaps *caps;
+  GstEvent *caps_event;
+  GstBus *bus;
+  GstMessage *msg;
+
+  pipeline =
+      gst_parse_launch ("videotestsrc num-buffers=10 ! capsfilter name=cf1 !"
+      " compositor name=c ! fakesink sync=true", NULL);
+  fail_unless (pipeline != NULL);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+
+  compositor = gst_bin_get_by_name (GST_BIN (pipeline), "c");
+  capsfilter_1 = gst_bin_get_by_name (GST_BIN (pipeline), "cf1");
+
+  g_object_set (capsfilter_1, "caps", first_caps, NULL);
+
+  state_res = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  fail_if (state_res == GST_STATE_CHANGE_FAILURE);
+
+  /* wait for pipeline to get to paused */
+  msg =
+      gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_ASYNC_DONE);
+  fail_unless (msg != NULL);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ASYNC_DONE);
+  gst_message_unref (msg);
+
+  /* try to set the second caps */
+  sinkpad_2 = gst_element_get_request_pad (compositor, "sink_%u");
+  caps = gst_pad_query_caps (sinkpad_2, NULL);
+  fail_unless (gst_caps_is_subset (expected_query_caps, caps));
+  caps_event = gst_event_new_caps (second_caps);
+  fail_unless (gst_pad_send_event (sinkpad_2, caps_event) == accept_caps);
+  gst_caps_unref (caps);
+  gst_object_unref (sinkpad_2);
+
+  gst_object_unref (bus);
+  gst_object_unref (compositor);
+  gst_object_unref (capsfilter_1);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_START_TEST (test_late_caps_different_interlaced)
+{
+  GstCaps *non_interlaced_caps;
+  GstCaps *interlaced_caps;
+
+  non_interlaced_caps =
+      gst_caps_from_string ("video/x-raw, interlace-mode=progressive, "
+      "format=RGB, width=100, height=100, framerate=1/1");
+  interlaced_caps =
+      gst_caps_from_string ("video/x-raw, interlace-mode=interleaved, "
+      "format=RGB, width=100, height=100, framerate=1/1");
+
+  run_late_caps_set_test (non_interlaced_caps, non_interlaced_caps,
+      interlaced_caps, FALSE);
+
+  gst_caps_unref (non_interlaced_caps);
+  gst_caps_unref (interlaced_caps);
 }
 
 GST_END_TEST;
@@ -1915,7 +2078,9 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_caps);
   tcase_add_test (tc_chain, test_event);
   tcase_add_test (tc_chain, test_caps_query);
+  tcase_add_test (tc_chain, test_caps_query_interlaced);
   tcase_add_test (tc_chain, test_late_caps_query);
+  tcase_add_test (tc_chain, test_late_caps_different_interlaced);
   tcase_add_test (tc_chain, test_play_twice);
   tcase_add_test (tc_chain, test_play_twice_then_add_and_play_again);
   tcase_add_test (tc_chain, test_add_pad);

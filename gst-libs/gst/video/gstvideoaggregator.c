@@ -820,6 +820,26 @@ done:
 }
 
 static gboolean
+gst_videoaggregator_get_sinkpads_interlace_mode (GstVideoAggregator * vagg,
+    GstVideoAggregatorPad * skip_pad, GstVideoInterlaceMode * mode)
+{
+  GList *walk;
+
+  for (walk = GST_ELEMENT (vagg)->sinkpads; walk; walk = g_list_next (walk)) {
+    GstVideoAggregatorPad *vaggpad = walk->data;
+
+    if (skip_pad && vaggpad == skip_pad)
+      continue;
+    if (vaggpad->info.finfo
+        && GST_VIDEO_INFO_FORMAT (&vaggpad->info) != GST_VIDEO_FORMAT_UNKNOWN) {
+      *mode = GST_VIDEO_INFO_INTERLACE_MODE (&vaggpad->info);
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+static gboolean
 gst_videoaggregator_pad_sink_setcaps (GstPad * pad, GstObject * parent,
     GstCaps * caps)
 {
@@ -839,14 +859,28 @@ gst_videoaggregator_pad_sink_setcaps (GstPad * pad, GstObject * parent,
   }
 
   GST_VIDEO_AGGREGATOR_LOCK (vagg);
-  if (GST_VIDEO_INFO_FORMAT (&vagg->info) != GST_VIDEO_FORMAT_UNKNOWN) {
-    if (GST_VIDEO_INFO_INTERLACE_MODE (&vagg->info) !=
-        GST_VIDEO_INFO_INTERLACE_MODE (&info)) {
-      GST_ERROR_OBJECT (pad,
-          "got input caps %" GST_PTR_FORMAT ", but " "current caps are %"
-          GST_PTR_FORMAT, caps, vagg->priv->current_caps);
-      GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
-      return FALSE;
+  {
+    GstVideoInterlaceMode pads_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+    gboolean has_mode = FALSE;
+
+    /* get the current output setting or fallback to other pads settings */
+    if (GST_VIDEO_INFO_FORMAT (&vagg->info) != GST_VIDEO_FORMAT_UNKNOWN) {
+      pads_mode = GST_VIDEO_INFO_INTERLACE_MODE (&vagg->info);
+      has_mode = TRUE;
+    } else {
+      has_mode =
+          gst_videoaggregator_get_sinkpads_interlace_mode (vagg, vaggpad,
+          &pads_mode);
+    }
+
+    if (has_mode) {
+      if (pads_mode != GST_VIDEO_INFO_INTERLACE_MODE (&info)) {
+        GST_ERROR_OBJECT (pad,
+            "got input caps %" GST_PTR_FORMAT ", but current caps are %"
+            GST_PTR_FORMAT, caps, vagg->priv->current_caps);
+        GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
+        return FALSE;
+      }
     }
   }
 
@@ -918,6 +952,8 @@ gst_videoaggregator_pad_sink_getcaps (GstPad * pad, GstVideoAggregator * vagg,
   GstAggregator *agg = GST_AGGREGATOR (vagg);
   GstPad *srcpad = GST_PAD (agg->srcpad);
   gboolean has_alpha;
+  GstVideoInterlaceMode interlace_mode;
+  gboolean has_interlace_mode;
 
   template_caps = gst_pad_get_pad_template_caps (srcpad);
 
@@ -926,6 +962,10 @@ gst_videoaggregator_pad_sink_getcaps (GstPad * pad, GstVideoAggregator * vagg,
   srccaps = gst_pad_peer_query_caps (srcpad, template_caps);
   srccaps = gst_caps_make_writable (srccaps);
   has_alpha = gst_videoaggregator_caps_has_alpha (srccaps);
+
+  has_interlace_mode =
+      gst_videoaggregator_get_sinkpads_interlace_mode (vagg, NULL,
+      &interlace_mode);
 
   n = gst_caps_get_size (srccaps);
   for (i = 0; i < n; i++) {
@@ -936,6 +976,9 @@ gst_videoaggregator_pad_sink_getcaps (GstPad * pad, GstVideoAggregator * vagg,
 
     gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
         "pixel-aspect-ratio", NULL);
+    if (has_interlace_mode)
+      gst_structure_set (s, "interlace-mode", G_TYPE_STRING,
+          gst_video_interlace_mode_to_string (interlace_mode), NULL);
   }
 
   if (filter) {
