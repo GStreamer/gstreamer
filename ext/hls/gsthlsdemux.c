@@ -92,7 +92,7 @@ gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
 static GstFlowReturn gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream);
 static GstFlowReturn gst_hls_demux_data_received (GstAdaptiveDemux * demux,
-    GstAdaptiveDemuxStream * stream);
+    GstAdaptiveDemuxStream * stream, GstBuffer * buffer);
 static gboolean gst_hls_demux_stream_has_next_fragment (GstAdaptiveDemuxStream *
     stream);
 static GstFlowReturn gst_hls_demux_advance_fragment (GstAdaptiveDemuxStream *
@@ -114,6 +114,7 @@ gst_hls_demux_finalize (GObject * obj)
   GstHLSDemux *demux = GST_HLS_DEMUX (obj);
 
   gst_hls_demux_reset (GST_ADAPTIVE_DEMUX_CAST (demux));
+  g_object_unref (demux->pending_encrypted_data);
   gst_m3u8_client_free (demux->client);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
@@ -172,6 +173,7 @@ static void
 gst_hls_demux_init (GstHLSDemux * demux)
 {
   demux->do_typefind = TRUE;
+  demux->pending_encrypted_data = gst_adapter_new ();
 }
 
 static GstStateChangeReturn
@@ -520,6 +522,7 @@ key_failed:
   }
 }
 
+/* Handles decrypted buffers only */
 static GstFlowReturn
 gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, GstBuffer * buffer, gboolean force)
@@ -531,6 +534,10 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
     GstMapInfo info;
     guint buffer_size;
     GstTypeFindProbability prob = GST_TYPE_FIND_NONE;
+
+    if (hlsdemux->pending_typefind_buffer)
+      buffer = gst_buffer_append (hlsdemux->pending_typefind_buffer, buffer);
+    hlsdemux->pending_typefind_buffer = NULL;
 
     gst_buffer_map (buffer, &info, GST_MAP_READ);
     buffer_size = info.size;
@@ -553,11 +560,7 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
         gst_buffer_unref (buffer);
         return GST_FLOW_NOT_NEGOTIATED;
       } else {
-        if (hlsdemux->pending_buffer)
-          hlsdemux->pending_buffer =
-              gst_buffer_append (buffer, hlsdemux->pending_buffer);
-        else
-          hlsdemux->pending_buffer = buffer;
+        hlsdemux->pending_typefind_buffer = buffer;
         return GST_FLOW_OK;
       }
     }
@@ -568,6 +571,8 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
     gst_adaptive_demux_stream_set_caps (stream, caps);
     hlsdemux->do_typefind = FALSE;
   }
+
+  g_assert (hlsdemux->pending_typefind_buffer == NULL);
 
   if (buffer)
     return gst_adaptive_demux_stream_push_buffer (stream, buffer);
@@ -584,35 +589,30 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
   if (hlsdemux->current_key)
     gst_hls_demux_decrypt_end (hlsdemux);
 
-  /* ideally this should be empty, but this eos might have been
-   * caused by an error on the source element */
-  GST_DEBUG_OBJECT (demux, "Data still on the adapter when EOS was received"
-      ": %" G_GSIZE_FORMAT, gst_adapter_available (stream->adapter));
-  gst_adapter_clear (stream->adapter);
-
   if (stream->last_ret == GST_FLOW_OK) {
-    if (hlsdemux->pending_buffer) {
+    if (hlsdemux->pending_decrypted_buffer) {
       if (hlsdemux->current_key) {
         GstMapInfo info;
         gssize unpadded_size;
 
         /* Handle pkcs7 unpadding here */
-        gst_buffer_map (hlsdemux->pending_buffer, &info, GST_MAP_READ);
+        gst_buffer_map (hlsdemux->pending_decrypted_buffer, &info,
+            GST_MAP_READ);
         unpadded_size = info.size - info.data[info.size - 1];
-        gst_buffer_unmap (hlsdemux->pending_buffer, &info);
+        gst_buffer_unmap (hlsdemux->pending_decrypted_buffer, &info);
 
-        gst_buffer_resize (hlsdemux->pending_buffer, 0, unpadded_size);
+        gst_buffer_resize (hlsdemux->pending_decrypted_buffer, 0,
+            unpadded_size);
       }
 
       ret =
-          gst_hls_demux_handle_buffer (demux, stream, hlsdemux->pending_buffer,
-          TRUE);
-      hlsdemux->pending_buffer = NULL;
+          gst_hls_demux_handle_buffer (demux, stream,
+          hlsdemux->pending_decrypted_buffer, TRUE);
+      hlsdemux->pending_decrypted_buffer = NULL;
     }
   } else {
-    if (hlsdemux->pending_buffer)
-      gst_buffer_unref (hlsdemux->pending_buffer);
-    hlsdemux->pending_buffer = NULL;
+    gst_buffer_replace (&hlsdemux->pending_decrypted_buffer, NULL);
+    gst_adapter_clear (hlsdemux->pending_encrypted_data);
   }
 
   if (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED)
@@ -623,27 +623,27 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
 
 static GstFlowReturn
 gst_hls_demux_data_received (GstAdaptiveDemux * demux,
-    GstAdaptiveDemuxStream * stream)
+    GstAdaptiveDemuxStream * stream, GstBuffer * buffer)
 {
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
-  gsize available;
-  GstBuffer *buffer = NULL;
-
-  available = gst_adapter_available (stream->adapter);
 
   /* Is it encrypted? */
   if (hlsdemux->current_key) {
     GError *err = NULL;
+    gsize size;
     GstBuffer *tmp_buffer;
 
-    /* must be a multiple of 16 */
-    available = available & (~0xF);
+    gst_adapter_push (hlsdemux->pending_encrypted_data, buffer);
+    size = gst_adapter_available (hlsdemux->pending_encrypted_data);
 
-    if (available == 0) {
+    /* must be a multiple of 16 */
+    size = size & (~0xF);
+
+    if (size == 0) {
       return GST_FLOW_OK;
     }
 
-    buffer = gst_adapter_take_buffer (stream->adapter, available);
+    buffer = gst_adapter_take_buffer (hlsdemux->pending_encrypted_data, size);
     buffer = gst_hls_demux_decrypt_fragment (hlsdemux, buffer, &err);
     if (buffer == NULL) {
       GST_ELEMENT_ERROR (demux, STREAM, DECODE, ("Failed to decrypt buffer"),
@@ -652,15 +652,9 @@ gst_hls_demux_data_received (GstAdaptiveDemux * demux,
       return GST_FLOW_ERROR;
     }
 
-    tmp_buffer = hlsdemux->pending_buffer;
-    hlsdemux->pending_buffer = buffer;
+    tmp_buffer = hlsdemux->pending_decrypted_buffer;
+    hlsdemux->pending_decrypted_buffer = buffer;
     buffer = tmp_buffer;
-  } else {
-    buffer = gst_adapter_take_buffer (stream->adapter, available);
-    if (hlsdemux->pending_buffer) {
-      buffer = gst_buffer_append (hlsdemux->pending_buffer, buffer);
-      hlsdemux->pending_buffer = NULL;
-    }
   }
 
   return gst_hls_demux_handle_buffer (demux, stream, buffer, FALSE);
@@ -779,9 +773,9 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
   demux->client = gst_m3u8_client_new ("", NULL);
 
   demux->srcpad_counter = 0;
-  if (demux->pending_buffer)
-    gst_buffer_unref (demux->pending_buffer);
-  demux->pending_buffer = NULL;
+  gst_adapter_clear (demux->pending_encrypted_data);
+  gst_buffer_replace (&demux->pending_decrypted_buffer, NULL);
+  gst_buffer_replace (&demux->pending_typefind_buffer, NULL);
   if (demux->current_key) {
     g_free (demux->current_key);
     demux->current_key = NULL;

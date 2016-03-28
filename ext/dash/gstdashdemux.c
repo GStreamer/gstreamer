@@ -253,7 +253,7 @@ gst_dash_demux_stream_get_fragment_waiting_time (GstAdaptiveDemuxStream *
 static void gst_dash_demux_advance_period (GstAdaptiveDemux * demux);
 static gboolean gst_dash_demux_has_next_period (GstAdaptiveDemux * demux);
 static GstFlowReturn gst_dash_demux_data_received (GstAdaptiveDemux * demux,
-    GstAdaptiveDemuxStream * stream);
+    GstAdaptiveDemuxStream * stream, GstBuffer * buffer);
 static GstFlowReturn
 gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream);
@@ -631,6 +631,8 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     }
 
     gst_isoff_sidx_parser_init (&stream->sidx_parser);
+    if (gst_mpd_client_has_isoff_ondemand_profile (demux->client))
+      stream->sidx_adapter = gst_adapter_new ();
   }
 
   return TRUE;
@@ -1301,6 +1303,7 @@ gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
       /* if we switched, we need a new index */
       gst_isoff_sidx_parser_clear (&dashstream->sidx_parser);
       gst_isoff_sidx_parser_init (&dashstream->sidx_parser);
+      gst_adapter_clear (dashstream->sidx_adapter);
     }
   }
 
@@ -1388,6 +1391,8 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     if (flags & GST_SEEK_FLAG_FLUSH) {
       gst_isoff_sidx_parser_clear (&dashstream->sidx_parser);
       gst_isoff_sidx_parser_init (&dashstream->sidx_parser);
+      if (dashstream->sidx_adapter)
+        gst_adapter_clear (dashstream->sidx_adapter);
     }
     gst_dash_demux_stream_seek (iter->data, rate >= 0, 0, target_pos, NULL);
   }
@@ -1631,24 +1636,25 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
 
 static GstFlowReturn
 gst_dash_demux_data_received (GstAdaptiveDemux * demux,
-    GstAdaptiveDemuxStream * stream)
+    GstAdaptiveDemuxStream * stream, GstBuffer * buffer)
 {
   GstDashDemuxStream *dash_stream = (GstDashDemuxStream *) stream;
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *buffer;
-  gsize available;
 
   if (!gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client))
-    return GST_ADAPTIVE_DEMUX_CLASS (parent_class)->data_received (demux,
-        stream);
+    return gst_adaptive_demux_stream_push_buffer (stream, buffer);
+
+  gst_adapter_push (dash_stream->sidx_adapter, buffer);
+  buffer = NULL;
 
   if (stream->downloading_index) {
     GstIsoffParserResult res;
     guint consumed;
+    gsize available;
 
-    available = gst_adapter_available (stream->adapter);
-    buffer = gst_adapter_take_buffer (stream->adapter, available);
+    available = gst_adapter_available (dash_stream->sidx_adapter);
+    buffer = gst_adapter_take_buffer (dash_stream->sidx_adapter, available);
 
     if (dash_stream->sidx_parser.status != GST_ISOFF_SIDX_PARSER_FINISHED) {
       res =
@@ -1677,23 +1683,24 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
           /* we still need to keep some data around for the next parsing round
            * so just push what was already processed by the parser */
           pending = _gst_buffer_split (buffer, consumed, -1);
-          gst_adapter_push (stream->adapter, pending);
+          gst_adapter_push (dash_stream->sidx_adapter, pending);
         }
       }
     }
     ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
   } else if (dash_stream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
+    gsize available;
 
     while (ret == GST_FLOW_OK
-        && ((available = gst_adapter_available (stream->adapter)) > 0)) {
+        && ((available = gst_adapter_available (dash_stream->sidx_adapter)) > 0)) {
       gboolean advance = FALSE;
 
       if (available < dash_stream->sidx_current_remaining) {
-        buffer = gst_adapter_take_buffer (stream->adapter, available);
+        buffer = gst_adapter_take_buffer (dash_stream->sidx_adapter, available);
         dash_stream->sidx_current_remaining -= available;
       } else {
         buffer =
-            gst_adapter_take_buffer (stream->adapter,
+            gst_adapter_take_buffer (dash_stream->sidx_adapter,
             dash_stream->sidx_current_remaining);
         dash_stream->sidx_current_remaining = 0;
         advance = TRUE;
@@ -1714,8 +1721,8 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
     /* this should be the main header, just push it all */
     ret =
         gst_adaptive_demux_stream_push_buffer (stream,
-        gst_adapter_take_buffer (stream->adapter,
-            gst_adapter_available (stream->adapter)));
+        gst_adapter_take_buffer (dash_stream->sidx_adapter,
+            gst_adapter_available (dash_stream->sidx_adapter)));
   }
 
   return ret;
@@ -1727,6 +1734,8 @@ gst_dash_demux_stream_free (GstAdaptiveDemuxStream * stream)
   GstDashDemuxStream *dash_stream = (GstDashDemuxStream *) stream;
 
   gst_isoff_sidx_parser_clear (&dash_stream->sidx_parser);
+  if (dash_stream->sidx_adapter)
+    g_object_unref (dash_stream->sidx_adapter);
 }
 
 static GstDashDemuxClockDrift *

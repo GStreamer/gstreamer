@@ -120,8 +120,6 @@ struct _GstAdaptiveDemuxStream
 
   GstSegment segment;
 
-  GstAdapter *adapter;
-
   GstCaps *pending_caps;
   GstEvent *pending_segment;
   GstTagList *pending_tags;
@@ -385,13 +383,14 @@ struct _GstAdaptiveDemuxClass
    * data_received:
    * @demux: #GstAdaptiveDemux
    * @stream: #GstAdaptiveDemuxStream
+   * @buffer: #GstBuffer
    *
    * Notifies the subclass that a fragment chunk was downloaded. The subclass
-   * can look at the data at the adapter and modify/push data as desired.
+   * can look at the data and modify/push data as desired.
    *
    * Returns: #GST_FLOW_OK if successful, #GST_FLOW_ERROR in case of error.
    */
-  GstFlowReturn (*data_received) (GstAdaptiveDemux * demux, GstAdaptiveDemuxStream * stream);
+  GstFlowReturn (*data_received) (GstAdaptiveDemux * demux, GstAdaptiveDemuxStream * stream, GstBuffer * buffer);
 
   /**
    * get_live_seek_range:

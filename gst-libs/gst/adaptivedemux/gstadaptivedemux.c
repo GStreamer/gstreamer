@@ -273,7 +273,7 @@ gst_adaptive_demux_stream_fragment_download_finish (GstAdaptiveDemuxStream *
     stream, GstFlowReturn ret, GError * err);
 static GstFlowReturn
 gst_adaptive_demux_stream_data_received_default (GstAdaptiveDemux * demux,
-    GstAdaptiveDemuxStream * stream);
+    GstAdaptiveDemuxStream * stream, GstBuffer * buffer);
 static GstFlowReturn
 gst_adaptive_demux_stream_finish_fragment_default (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream);
@@ -1117,7 +1117,6 @@ gst_adaptive_demux_stream_new (GstAdaptiveDemux * demux, GstPad * pad)
   gst_segment_init (&stream->segment, GST_FORMAT_TIME);
   g_cond_init (&stream->fragment_download_cond);
   g_mutex_init (&stream->fragment_download_lock);
-  stream->adapter = gst_adapter_new ();
 
   demux->next_streams = g_list_append (demux->next_streams, stream);
 
@@ -1220,8 +1219,6 @@ gst_adaptive_demux_stream_free (GstAdaptiveDemuxStream * stream)
     gst_caps_unref (stream->pending_caps);
 
   g_clear_pointer (&stream->pending_tags, gst_tag_list_unref);
-
-  g_object_unref (stream->adapter);
 
   g_free (stream);
 }
@@ -1722,7 +1719,6 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux)
 
     stream->download_error_count = 0;
     stream->need_header = TRUE;
-    gst_adapter_clear (stream->adapter);
   }
 }
 
@@ -2019,12 +2015,8 @@ gst_adaptive_demux_stream_finish_fragment_default (GstAdaptiveDemux * demux,
  */
 static GstFlowReturn
 gst_adaptive_demux_stream_data_received_default (GstAdaptiveDemux * demux,
-    GstAdaptiveDemuxStream * stream)
+    GstAdaptiveDemuxStream * stream, GstBuffer * buffer)
 {
-  GstBuffer *buffer;
-
-  buffer = gst_adapter_take_buffer (stream->adapter,
-      gst_adapter_available (stream->adapter));
   return gst_adaptive_demux_stream_push_buffer (stream, buffer);
 }
 
@@ -2124,12 +2116,10 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       stream->download_chunk_start_time;
   stream->download_total_bytes += gst_buffer_get_size (buffer);
 
-  gst_adapter_push (stream->adapter, buffer);
-  GST_DEBUG_OBJECT (stream->pad, "Received buffer of size %" G_GSIZE_FORMAT
-      ". Now %" G_GSIZE_FORMAT " on adapter", gst_buffer_get_size (buffer),
-      gst_adapter_available (stream->adapter));
+  GST_DEBUG_OBJECT (stream->pad, "Received buffer of size %" G_GSIZE_FORMAT,
+      gst_buffer_get_size (buffer));
 
-  ret = klass->data_received (demux, stream);
+  ret = klass->data_received (demux, stream, buffer);
 
   if (ret == GST_FLOW_FLUSHING) {
     /* do not make any changes if the stream is cancelled */
@@ -3302,7 +3292,6 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
     if (gst_adaptive_demux_stream_select_bitrate (demux, stream,
             gst_adaptive_demux_stream_update_current_bitrate (demux, stream))) {
       stream->need_header = TRUE;
-      gst_adapter_clear (stream->adapter);
       ret = (GstFlowReturn) GST_ADAPTIVE_DEMUX_FLOW_SWITCH;
     }
 
