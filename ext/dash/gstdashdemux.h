@@ -76,6 +76,18 @@ struct _GstDashDemuxStream
   guint64 sidx_current_offset;
   /* index = 1, header = 2, data = 3 */
   guint sidx_index_header_or_data;
+
+  /* ISOBMFF box parsing */
+  gboolean is_isobmff;
+  GstAdapter *isobmff_adapter;
+  struct {
+    /* index = 1, header = 2, data = 3 */
+    guint index_header_or_data;
+    guint32 current_fourcc;
+    guint64 current_start_offset;
+    guint64 current_offset;
+    guint64 current_size;
+  } isobmff_parser;
 };
 
 /**
