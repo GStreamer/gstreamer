@@ -342,6 +342,8 @@ downstream_probe_cb (GstPad * pad, GstPadProbeInfo * info, TestData * test)
       g_atomic_int_inc (&test->flush_stop_events);
   }
 
+  gst_mini_object_unref (info->data);
+
   return GST_PAD_PROBE_HANDLED;
 }
 
