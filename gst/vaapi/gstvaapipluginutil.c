@@ -432,55 +432,30 @@ gst_vaapi_video_format_new_template_caps_with_features (GstVideoFormat format,
   return caps;
 }
 
-static GstCaps *
-new_gl_texture_upload_meta_caps (void)
-{
-  return
-      gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-      (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
-          "{ RGBA, BGRA }"));
-}
-
 GstVaapiCapsFeature
 gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
     GstVideoFormat * out_format_ptr)
 {
-  GstVaapiCapsFeature feature = GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY;
-  guint i, num_structures;
+  GstVaapiCapsFeature feature = GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED;
+  guint i, j, num_structures;
   GstCaps *caps = NULL;
-  GstCaps *gl_texture_upload_caps = NULL;
-  GstCaps *sysmem_caps = NULL;
-  GstCaps *vaapi_caps = NULL;
   GstCaps *out_caps, *templ;
   GstVideoFormat out_format;
+  static const guint feature_list[] = { GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE,
+    GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META,
+    GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY,
+  };
 
   templ = gst_pad_get_pad_template_caps (pad);
   out_caps = gst_pad_peer_query_caps (pad, templ);
   gst_caps_unref (templ);
-  if (!out_caps) {
-    feature = GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED;
+  if (!out_caps)
     goto cleanup;
-  }
 
   out_format = format == GST_VIDEO_FORMAT_ENCODED ?
       GST_VIDEO_FORMAT_NV12 : format;
 
-  gl_texture_upload_caps = new_gl_texture_upload_meta_caps ();
-  if (!gl_texture_upload_caps)
-    goto cleanup;
-
-  vaapi_caps =
-      gst_vaapi_video_format_new_template_caps_with_features (out_format,
-      GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE);
-  if (!vaapi_caps)
-    goto cleanup;
-
-  sysmem_caps =
-      gst_vaapi_video_format_new_template_caps_with_features (out_format,
-      GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
-  if (!sysmem_caps)
-    goto cleanup;
-
+  feature = GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY;
   num_structures = gst_caps_get_size (out_caps);
   for (i = 0; i < num_structures; i++) {
     GstCapsFeatures *const features = gst_caps_get_features (out_caps, i);
@@ -490,21 +465,19 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
     if (gst_caps_features_is_any (features))
       continue;
 
+    gst_caps_replace (&caps, NULL);
     caps = gst_caps_new_full (gst_structure_copy (structure), NULL);
     if (!caps)
       continue;
     gst_caps_set_features (caps, 0, gst_caps_features_copy (features));
 
-    if (gst_caps_can_intersect (caps, vaapi_caps) &&
-        feature < GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE)
-      feature = GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE;
-    else if (gst_caps_can_intersect (caps, gl_texture_upload_caps) &&
-        feature < GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META)
-      feature = GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META;
-    else if (gst_caps_can_intersect (caps, sysmem_caps) &&
-        feature < GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY)
-      feature = GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY;
-    gst_caps_replace (&caps, NULL);
+    for (j = 0; j < G_N_ELEMENTS (feature_list); j++) {
+      if (gst_vaapi_caps_feature_contains (caps, feature_list[j])
+          && feature < feature_list[j]) {
+        feature = feature_list[j];
+        break;
+      }
+    }
 
     /* Stop at the first match, the caps should already be sorted out
        by preference order from downstream elements */
@@ -512,35 +485,25 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
       break;
   }
 
+  if (!caps)
+    goto cleanup;
+
   if (out_format_ptr) {
     if (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META) {
-      GstStructure *structure;
-      gchar *format_str;
-      out_format = GST_VIDEO_FORMAT_UNKNOWN;
-      do {
-        caps = gst_caps_intersect_full (out_caps, gl_texture_upload_caps,
-            GST_CAPS_INTERSECT_FIRST);
-        if (!caps)
-          break;
-        structure = gst_caps_get_structure (caps, 0);
-        if (!structure)
-          break;
-        if (!gst_structure_get (structure, "format", G_TYPE_STRING,
-                &format_str, NULL))
-          break;
-        out_format = gst_video_format_from_string (format_str);
-        g_free (format_str);
-      } while (0);
-      if (!out_format)
+      GstVideoInfo vinfo;
+      if (!gst_caps_is_fixed (caps))
+        caps = gst_caps_fixate (caps);
+
+      gst_video_info_from_caps (&vinfo, caps);
+      out_format = GST_VIDEO_INFO_FORMAT (&vinfo);
+
+      if (out_format == GST_VIDEO_FORMAT_UNKNOWN)
         goto cleanup;
     }
     *out_format_ptr = out_format;
   }
 
 cleanup:
-  gst_caps_replace (&gl_texture_upload_caps, NULL);
-  gst_caps_replace (&sysmem_caps, NULL);
-  gst_caps_replace (&vaapi_caps, NULL);
   gst_caps_replace (&caps, NULL);
   gst_caps_replace (&out_caps, NULL);
   return feature;
