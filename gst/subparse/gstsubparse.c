@@ -779,7 +779,7 @@ subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
       /* Look for a white listed tag */
       cur_tag = g_strconcat ("<", iter_tag, ATTRIBUTE_REGEX, ">", NULL);
       tag_regex = g_regex_new (cur_tag, 0, 0, NULL);
-      g_regex_match (tag_regex, next_tag, 0, &match_info);
+      (void) g_regex_match (tag_regex, next_tag, 0, &match_info);
 
       if (g_match_info_matches (match_info)) {
         gint start_pos, end_pos;
@@ -810,15 +810,17 @@ subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
 
     if (*next_tag == '<' && *(next_tag + 1) == '/') {
       end_tag = strchr (cur, '>');
-      if (num_open_tags == 0
-          || g_ascii_strncasecmp (end_tag - 1, open_tags[num_open_tags - 1],
-              strlen (open_tags[num_open_tags - 1]))) {
-        GST_LOG ("broken input, closing tag '%s' is not open", next_tag);
-        memmove (next_tag, end_tag + 1, strlen (end_tag) + 1);
-        next_tag -= strlen (end_tag);
-      } else {
-        --num_open_tags;
-        g_free (open_tags[num_open_tags]);
+      if (end_tag) {
+        if (num_open_tags == 0
+            || g_ascii_strncasecmp (end_tag - 1, open_tags[num_open_tags - 1],
+                strlen (open_tags[num_open_tags - 1]))) {
+          GST_LOG ("broken input, closing tag '%s' is not open", next_tag);
+          memmove (next_tag, end_tag + 1, strlen (end_tag) + 1);
+          next_tag -= strlen (end_tag);
+        } else {
+          --num_open_tags;
+          g_free (open_tags[num_open_tags]);
+        }
       }
     }
     ++next_tag;
@@ -911,36 +913,57 @@ parse_webvtt_cue_settings (ParserState * state, const gchar * settings)
   gboolean alignment_found = FALSE;
 
   while (i < g_strv_length (splitted_settings)) {
+    gboolean valid_tag = FALSE;
     switch (splitted_settings[i][0]) {
       case 'T':
-        sscanf (splitted_settings[i], "T:%" G_GINT16_FORMAT "%%",
-            &text_position);
-        state->text_position = (guint8) text_position;
+        if (sscanf (splitted_settings[i], "T:%" G_GINT16_FORMAT "%%",
+                &text_position) > 0) {
+          state->text_position = (guint8) text_position;
+          valid_tag = TRUE;
+        }
         break;
       case 'D':
-        vertical_found = TRUE;
-        state->vertical = g_strdup (splitted_settings[i] + 2);
+        if (strlen (splitted_settings[i]) > 2) {
+          vertical_found = TRUE;
+          state->vertical = g_strdup (splitted_settings[i] + 2);
+          valid_tag = TRUE;
+        }
         break;
       case 'L':
         if (g_str_has_suffix (splitted_settings[i], "%")) {
-          sscanf (splitted_settings[i], "L:%" G_GINT16_FORMAT "%%",
-              &line_position);
-          state->line_position = line_position;
+          if (sscanf (splitted_settings[i], "L:%" G_GINT16_FORMAT "%%",
+                  &line_position) > 0) {
+            state->line_position = line_position;
+            valid_tag = TRUE;
+          }
         } else {
-          sscanf (splitted_settings[i], "L:%" G_GINT16_FORMAT, &line_position);
-          state->line_number = line_position;
+          if (sscanf (splitted_settings[i], "L:%" G_GINT16_FORMAT,
+                  &line_position) > 0) {
+            state->line_number = line_position;
+            valid_tag = TRUE;
+          }
         }
         break;
       case 'S':
-        sscanf (splitted_settings[i], "S:%" G_GINT16_FORMAT "%%", &text_size);
-        state->text_size = (guint8) text_size;
+        if (sscanf (splitted_settings[i], "S:%" G_GINT16_FORMAT "%%",
+                &text_size) > 0) {
+          state->text_size = (guint8) text_size;
+          valid_tag = TRUE;
+        }
         break;
       case 'A':
-        state->alignment = g_strdup (splitted_settings[i] + 2);
-        alignment_found = TRUE;
+        if (strlen (splitted_settings[i]) > 2) {
+          state->alignment = g_strdup (splitted_settings[i] + 2);
+          alignment_found = TRUE;
+          valid_tag = TRUE;
+        }
         break;
       default:
         break;
+    }
+    if (!valid_tag) {
+      GST_LOG ("Invalid or unrecognised setting found: %s",
+          splitted_settings[i]);
     }
     i++;
   }
