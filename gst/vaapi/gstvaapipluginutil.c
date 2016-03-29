@@ -432,6 +432,52 @@ gst_vaapi_video_format_new_template_caps_with_features (GstVideoFormat format,
   return caps;
 }
 
+static GstVideoFormat
+gst_vaapi_find_preferred_format (const GValue * format_list,
+    GstVideoFormat native_format)
+{
+  const GValue *frmt;
+  GstVideoFormat out_format;
+  guint i;
+
+  /* if one format, that is the one */
+  if (G_VALUE_HOLDS_STRING (format_list))
+    return gst_video_format_from_string (g_value_get_string (format_list));
+
+  if (!GST_VALUE_HOLDS_LIST (format_list)) {
+    GST_ERROR ("negotiated caps do not have a valid format");
+    return GST_VIDEO_FORMAT_UNKNOWN;
+  }
+
+  if (native_format == GST_VIDEO_FORMAT_UNKNOWN
+      || native_format == GST_VIDEO_FORMAT_ENCODED) {
+    native_format = GST_VIDEO_FORMAT_NV12;      /* default VA format */
+  }
+
+  /* search our native format in the list */
+  for (i = 0; i < gst_value_list_get_size (format_list); i++) {
+    frmt = gst_value_list_get_value (format_list, i);
+    out_format = gst_video_format_from_string (g_value_get_string (frmt));
+
+    /* GStreamer do not handle encoded formats nicely. Try the next
+     * one. */
+    if (out_format == GST_VIDEO_FORMAT_ENCODED)
+      continue;
+
+    if (native_format == out_format)
+      return out_format;
+  }
+
+  /* just pick the first valid format in the list */
+  i = 0;
+  do {
+    frmt = gst_value_list_get_value (format_list, i++);
+    out_format = gst_video_format_from_string (g_value_get_string (frmt));
+  } while (out_format == GST_VIDEO_FORMAT_ENCODED);
+
+  return out_format;
+}
+
 GstVaapiCapsFeature
 gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
     GstVideoFormat * out_format_ptr)
@@ -440,7 +486,6 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
   guint i, j, num_structures;
   GstCaps *caps = NULL;
   GstCaps *out_caps, *templ;
-  GstVideoFormat out_format;
   static const guint feature_list[] = { GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE,
     GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META,
     GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY,
@@ -451,9 +496,6 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
   gst_caps_unref (templ);
   if (!out_caps)
     goto cleanup;
-
-  out_format = format == GST_VIDEO_FORMAT_ENCODED ?
-      GST_VIDEO_FORMAT_NV12 : format;
 
   feature = GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY;
   num_structures = gst_caps_get_size (out_caps);
@@ -489,17 +531,27 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
     goto cleanup;
 
   if (out_format_ptr) {
-    if (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META) {
-      GstVideoInfo vinfo;
-      if (!gst_caps_is_fixed (caps))
-        caps = gst_caps_fixate (caps);
+    GstVideoFormat out_format;
+    GstStructure *structure;
+    const GValue *format_list;
 
-      gst_video_info_from_caps (&vinfo, caps);
-      out_format = GST_VIDEO_INFO_FORMAT (&vinfo);
+    /* if the best feature is SystemMemory, we should use the first
+     * caps in the peer caps set, which is the preferred by
+     * downstream. */
+    if (feature == GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY)
+      gst_caps_replace (&caps, out_caps);
 
-      if (out_format == GST_VIDEO_FORMAT_UNKNOWN)
-        goto cleanup;
-    }
+    /* use the first caps, which is the preferred by downstream. */
+    structure = gst_caps_get_structure (caps, 0);
+    if (!structure)
+      goto cleanup;
+    format_list = gst_structure_get_value (structure, "format");
+    if (!format_list)
+      goto cleanup;
+    out_format = gst_vaapi_find_preferred_format (format_list, format);
+    if (out_format == GST_VIDEO_FORMAT_UNKNOWN)
+      goto cleanup;
+
     *out_format_ptr = out_format;
   }
 
