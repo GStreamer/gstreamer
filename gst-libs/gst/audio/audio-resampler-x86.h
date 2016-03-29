@@ -191,7 +191,7 @@ inner_product_gint16_linear_1_sse2 (gint16 * o, const gint16 * a,
 {
   gint i = 0;
   __m128i sum[2], t;
-  __m128i f = _mm_cvtsi64_si128 (*((gint64*)icoeff));
+  __m128i f = _mm_set_epi64x (0, *((gint64*)icoeff));
   const gint16 *c[2] = {(gint16*)((gint8*)b + 0*bstride),
                         (gint16*)((gint8*)b + 1*bstride)};
 
