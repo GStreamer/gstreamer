@@ -229,7 +229,7 @@ inner_product_gint16_cubic_1_sse2 (gint16 * o, const gint16 * a,
 {
   gint i = 0;
   __m128i sum[4], t[4];
-  __m128i f = _mm_cvtsi64_si128 (*((long long*)icoeff));
+  __m128i f = _mm_set_epi64x (0, *((long long*)icoeff));
   const gint16 *c[4] = {(gint16*)((gint8*)b + 0*bstride),
                         (gint16*)((gint8*)b + 1*bstride),
                         (gint16*)((gint8*)b + 2*bstride),
@@ -364,7 +364,7 @@ interpolate_gint16_linear_sse2 (gpointer op, const gpointer ap,
   gint i = 0;
   gint16 *o = op, *a = ap, *ic = icp;
   __m128i ta, tb, t1, t2;
-  __m128i f = _mm_cvtsi64_si128 (*((gint64*)ic));
+  __m128i f = _mm_set_epi64x (0, *((gint64*)ic));
   const gint16 *c[2] = {(gint16*)((gint8*)a + 0*astride),
                         (gint16*)((gint8*)a + 1*astride)};
 
