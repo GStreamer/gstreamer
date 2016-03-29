@@ -50,7 +50,9 @@ typedef struct
     { VA_FOURCC FOURCC, VA_##ENDIAN##_FIRST, BPP, DEPTH, R,G,B,A }, }
 
 /* Image formats, listed in HW order preference */
+/* *INDENT-OFF* */
 static const GstVideoFormatMap gst_vaapi_video_formats[] = {
+  DEF_YUV (P010_10LE, ('P', '0', '1', '0'), LSB, 24, 420_10BPP),
   DEF_YUV (NV12, ('N', 'V', '1', '2'), LSB, 12, 420),
   DEF_YUV (YV12, ('Y', 'V', '1', '2'), LSB, 12, 420),
   DEF_YUV (I420, ('I', '4', '2', '0'), LSB, 12, 420),
@@ -79,6 +81,7 @@ static const GstVideoFormatMap gst_vaapi_video_formats[] = {
   DEF_YUV (GRAY8, ('Y', '8', '0', '0'), LSB, 8, 400),
   {0,}
 };
+/* *INDENT-ON* */
 
 #undef DEF_RGB
 #undef DEF_YUV
@@ -298,6 +301,8 @@ gst_vaapi_video_format_get_best_native (GstVideoFormat format)
     case GST_VAAPI_CHROMA_TYPE_YUV420:
     case GST_VAAPI_CHROMA_TYPE_RGB32:  /* GstVideoGLTextureUploadMeta */
       return GST_VIDEO_FORMAT_NV12;
+    case GST_VAAPI_CHROMA_TYPE_YUV420_10BPP:
+      return GST_VIDEO_FORMAT_P010_10LE;
     default:
       return GST_VIDEO_FORMAT_UNKNOWN;
   };
