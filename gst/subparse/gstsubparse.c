@@ -2024,6 +2024,7 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
     case GST_SUB_PARSE_FORMAT_LRC:
       GST_DEBUG ("LRC format detected");
       caps = LRC_CAPS;
+      break;
     case GST_SUB_PARSE_FORMAT_VTT:
       GST_DEBUG ("WebVTT format detected");
       caps = VTT_CAPS;
