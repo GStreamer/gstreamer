@@ -236,6 +236,8 @@ static gboolean
 gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
 {
   GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
+  GstPad *const srcpad = GST_VIDEO_DECODER_SRC_PAD (vdec);
+  GstCaps *templ;
   GstVideoCodecState *state, *ref_state;
   GstVaapiCapsFeature feature;
   GstCapsFeatures *features = NULL;
@@ -253,9 +255,9 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   ref_state = decode->input_state;
 
   format = GST_VIDEO_INFO_FORMAT (&decode->decoded_info);
-  feature =
-      gst_vaapi_find_preferred_caps_feature (GST_VIDEO_DECODER_SRC_PAD (vdec),
-      &format);
+  templ = gst_pad_get_pad_template_caps (srcpad);
+  feature = gst_vaapi_find_preferred_caps_feature (srcpad, templ, &format);
+  gst_caps_unref (templ);
 
   if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
     return FALSE;

@@ -1105,29 +1105,20 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
    * if the user didn't explicitly ask for colorspace conversion.
    * Use a filter caps which contain all raw video formats, (excluding
    * GST_VIDEO_FORMAT_ENCODED) */
+  out_format = GST_VIDEO_FORMAT_UNKNOWN;
   if (postproc->format != DEFAULT_FORMAT)
     out_format = postproc->format;
-  else {
-    GstCaps *peer_caps;
-    GstVideoInfo peer_vi;
-    peer_caps =
-        gst_pad_peer_query_caps (GST_BASE_TRANSFORM_SRC_PAD (trans),
-        postproc->allowed_srcpad_caps);
-    if (gst_caps_is_any (peer_caps) || gst_caps_is_empty (peer_caps))
-      return peer_caps;
-    if (!gst_caps_is_fixed (peer_caps))
-      peer_caps = gst_caps_fixate (peer_caps);
-    gst_video_info_from_caps (&peer_vi, peer_caps);
-    out_format = GST_VIDEO_INFO_FORMAT (&peer_vi);
-    if (peer_caps)
-      gst_caps_unref (peer_caps);
-  }
 
   feature =
       gst_vaapi_find_preferred_caps_feature (GST_BASE_TRANSFORM_SRC_PAD (trans),
-      &out_format);
-  gst_video_info_change_format (&vi, out_format, width, height);
+      postproc->allowed_srcpad_caps,
+      (out_format == GST_VIDEO_FORMAT_UNKNOWN) ? &out_format : NULL);
 
+  if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
+    return gst_pad_peer_query_caps (GST_BASE_TRANSFORM_SRC_PAD (trans),
+        postproc->allowed_srcpad_caps);
+
+  gst_video_info_change_format (&vi, out_format, width, height);
   out_caps = gst_video_info_to_caps (&vi);
   if (!out_caps)
     return NULL;

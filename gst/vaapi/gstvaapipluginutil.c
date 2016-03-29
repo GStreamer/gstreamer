@@ -479,22 +479,22 @@ gst_vaapi_find_preferred_format (const GValue * format_list,
 }
 
 GstVaapiCapsFeature
-gst_vaapi_find_preferred_caps_feature (GstPad * pad,
+gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstCaps * allowed_caps,
     GstVideoFormat * out_format_ptr)
 {
   GstVaapiCapsFeature feature = GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED;
   guint i, j, num_structures;
-  GstCaps *caps = NULL;
-  GstCaps *out_caps, *templ;
+  GstCaps *out_caps, *caps = NULL;
   static const guint feature_list[] = { GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE,
     GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META,
     GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY,
   };
 
-  templ = gst_pad_get_pad_template_caps (pad);
-  out_caps = gst_pad_peer_query_caps (pad, templ);
-  gst_caps_unref (templ);
+  out_caps = gst_pad_peer_query_caps (pad, allowed_caps);
   if (!out_caps)
+    goto cleanup;
+
+  if (gst_caps_is_any (out_caps) || gst_caps_is_empty (out_caps))
     goto cleanup;
 
   feature = GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY;

@@ -621,7 +621,8 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     goto error_no_caps;
 
   if (!feature)
-    feature = gst_vaapi_find_preferred_caps_feature (plugin->srcpad, NULL);
+    feature = gst_vaapi_find_preferred_caps_feature (plugin->srcpad, caps,
+        NULL);
 
   has_video_meta = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);

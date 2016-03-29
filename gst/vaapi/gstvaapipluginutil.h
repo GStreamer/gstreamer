@@ -84,7 +84,7 @@ gst_vaapi_video_format_new_template_caps_with_features (GstVideoFormat format,
 
 G_GNUC_INTERNAL
 GstVaapiCapsFeature
-gst_vaapi_find_preferred_caps_feature (GstPad * pad,
+gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstCaps * allowed_caps,
     GstVideoFormat * out_format_ptr);
 
 G_GNUC_INTERNAL
