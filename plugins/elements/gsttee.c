@@ -410,9 +410,9 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
   gst_pad_set_query_function (srcpad, GST_DEBUG_FUNCPTR (gst_tee_src_query));
   gst_pad_set_getrange_function (srcpad,
       GST_DEBUG_FUNCPTR (gst_tee_src_get_range));
+  GST_OBJECT_FLAG_SET (srcpad, GST_PAD_FLAG_PROXY_CAPS);
   /* Forward sticky events to the new srcpad */
   gst_pad_sticky_events_foreach (tee->sinkpad, forward_sticky_events, srcpad);
-  GST_OBJECT_FLAG_SET (srcpad, GST_PAD_FLAG_PROXY_CAPS);
   gst_element_add_pad (GST_ELEMENT_CAST (tee), srcpad);
 
   return srcpad;
