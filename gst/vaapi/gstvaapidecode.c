@@ -105,7 +105,7 @@ static const char gst_vaapidecode_sink_caps_str[] =
 static const char gst_vaapidecode_src_caps_str[] =
     GST_VAAPI_MAKE_SURFACE_CAPS ";"
     GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS ";"
-    GST_VIDEO_CAPS_MAKE("{ I420, YV12, NV12, P010_10LE }");
+    GST_VIDEO_CAPS_MAKE("{ NV12, I420, YV12, P010_10LE }");
 
 static GstStaticPadTemplate gst_vaapidecode_src_factory =
     GST_STATIC_PAD_TEMPLATE(
@@ -216,7 +216,7 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   GstVaapiCapsFeature feature;
   GstCapsFeatures *features = NULL;
   GstVideoInfo *vi, *decoded_info;
-  GstVideoFormat format = GST_VIDEO_FORMAT_I420;
+  GstVideoFormat format = GST_VIDEO_FORMAT_NV12;
   GstClockTime latency;
   gint fps_d, fps_n;
   guint width, height;

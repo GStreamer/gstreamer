@@ -673,7 +673,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   gst_video_info_from_caps (&vi, caps);
 
   if (GST_VIDEO_INFO_FORMAT (&vi) == GST_VIDEO_FORMAT_ENCODED)
-    gst_video_info_set_format (&vi, GST_VIDEO_FORMAT_I420,
+    gst_video_info_set_format (&vi, GST_VIDEO_FORMAT_NV12,
         GST_VIDEO_INFO_WIDTH (&vi), GST_VIDEO_INFO_HEIGHT (&vi));
 
   if (gst_query_get_n_allocation_pools (query) > 0) {

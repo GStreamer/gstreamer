@@ -461,7 +461,7 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
   }
 
   out_format = format == GST_VIDEO_FORMAT_ENCODED ?
-      GST_VIDEO_FORMAT_I420 : format;
+      GST_VIDEO_FORMAT_NV12 : format;
 
   gl_texture_upload_caps = new_gl_texture_upload_meta_caps ();
   if (!gl_texture_upload_caps)

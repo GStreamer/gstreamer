@@ -716,7 +716,7 @@ allocator_configure_image_info (GstVaapiDisplay * display,
   vinfo = &allocator->video_info;
 
   if (GST_VIDEO_INFO_FORMAT (vinfo) == GST_VIDEO_FORMAT_ENCODED)
-    gst_video_info_set_format (&allocator->image_info, GST_VIDEO_FORMAT_I420,
+    gst_video_info_set_format (&allocator->image_info, GST_VIDEO_FORMAT_NV12,
         GST_VIDEO_INFO_WIDTH (vinfo), GST_VIDEO_INFO_HEIGHT (vinfo));
   else
     allocator->image_info = *vinfo;
