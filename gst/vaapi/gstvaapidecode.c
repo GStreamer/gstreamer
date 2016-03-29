@@ -215,7 +215,7 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   GstVideoCodecState *state, *ref_state;
   GstVaapiCapsFeature feature;
   GstCapsFeatures *features = NULL;
-  GstVideoInfo *vi;
+  GstVideoInfo *vi, *decoded_info;
   GstVideoFormat format = GST_VIDEO_FORMAT_I420;
   GstClockTime latency;
   gint fps_d, fps_n;
@@ -226,9 +226,13 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
 
   ref_state = decode->input_state;
 
+  decoded_info =
+      (GST_VIDEO_INFO_FORMAT (&decode->decoded_info) !=
+      GST_VIDEO_FORMAT_UNKNOWN) ? &decode->decoded_info : &ref_state->info;
+
   feature =
       gst_vaapi_find_preferred_caps_feature (GST_VIDEO_DECODER_SRC_PAD (vdec),
-      GST_VIDEO_INFO_FORMAT (&ref_state->info), &format);
+      GST_VIDEO_INFO_FORMAT (decoded_info), &format);
 
   if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
     return FALSE;
