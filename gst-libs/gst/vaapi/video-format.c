@@ -52,7 +52,6 @@ typedef struct
 /* Image formats, listed in HW order preference */
 /* *INDENT-OFF* */
 static const GstVideoFormatMap gst_vaapi_video_formats[] = {
-  DEF_YUV (P010_10LE, ('P', '0', '1', '0'), LSB, 24, 420_10BPP),
   DEF_YUV (NV12, ('N', 'V', '1', '2'), LSB, 12, 420),
   DEF_YUV (YV12, ('Y', 'V', '1', '2'), LSB, 12, 420),
   DEF_YUV (I420, ('I', '4', '2', '0'), LSB, 12, 420),
@@ -79,6 +78,7 @@ static const GstVideoFormatMap gst_vaapi_video_formats[] = {
       24, 0x000000ff, 0x0000ff00, 0x00ff0000, 0x00000000),
 #endif
   DEF_YUV (GRAY8, ('Y', '8', '0', '0'), LSB, 8, 400),
+  DEF_YUV (P010_10LE, ('P', '0', '1', '0'), LSB, 24, 420_10BPP),
   {0,}
 };
 /* *INDENT-ON* */
