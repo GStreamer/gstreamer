@@ -12,6 +12,7 @@
   <chapter>
     <title>gstreamer-vaapi Elements</title>
     <xi:include href="xml/element-vaapidecode.xml"/>
+    <xi:include href="xml/element-vaapijpegdec.xml"/>
     <xi:include href="xml/element-vaapidecodebin.xml"/>
     <xi:include href="xml/element-vaapipostproc.xml"/>
     <xi:include href="xml/element-vaapisink.xml"/>

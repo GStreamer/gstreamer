@@ -2,15 +2,16 @@
 <FILE>element-vaapidecode</FILE>
 <TITLE>vaapidecode</TITLE>
 <SUBSECTION Standard>
-GST_IS_VAAPIDECODE
-GST_IS_VAAPIDECODE_CLASS
-GST_TYPE_VAAPIDECODE
-GST_VAAPIDECODE
-GST_VAAPIDECODE_CLASS
-GST_VAAPIDECODE_GET_CLASS
 GstVaapiDecode
 GstVaapiDecodeClass
-gst_vaapidecode_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-vaapijpegdec</FILE>
+<TITLE>vaapijpegdec</TITLE>
+<SUBSECTION Standard>
+GstVaapiDecode_jpeg
+GstVaapiDecode_jpegClass
 </SECTION>
 
 <SECTION>
