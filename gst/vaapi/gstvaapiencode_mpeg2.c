@@ -54,7 +54,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_vaapi_mpeg2_encode_debug);
 
 /* *INDENT-OFF* */
 static const char gst_vaapiencode_mpeg2_sink_caps_str[] =
-  GST_VAAPI_MAKE_ENC_SURFACE_CAPS ", "
+  GST_VAAPI_MAKE_SURFACE_CAPS ", "
   GST_CAPS_INTERLACED_FALSE "; "
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
   GST_CAPS_INTERLACED_FALSE;
