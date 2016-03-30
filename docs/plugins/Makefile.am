@@ -94,7 +94,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/opencv/gstedgedetect.h \
 	$(top_srcdir)/ext/opencv/gstfaceblur.h \
 	$(top_srcdir)/ext/opencv/gstfacedetect.h \
-	$(top_srcdir)/ext/opencv/gstpyramidsegment.h \
 	$(top_srcdir)/ext/opencv/gsttemplatematch.h \
 	$(top_srcdir)/ext/opencv/gsttextoverlay.h \
 	$(top_srcdir)/ext/openni2/gstopenni2src.h \

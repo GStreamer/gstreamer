@@ -46909,46 +46909,6 @@
 </ARG>
 
 <ARG>
-<NAME>Gstpyramidsegment::level</NAME>
-<TYPE>gint</TYPE>
-<RANGE>[0,4]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Level</NICK>
-<BLURB>Maximum level of the pyramid segmentation.</BLURB>
-<DEFAULT>4</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>Gstpyramidsegment::silent</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Silent</NICK>
-<BLURB>Produce verbose output ?.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>Gstpyramidsegment::threshold1</NAME>
-<TYPE>gdouble</TYPE>
-<RANGE>[0,1000]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Threshold1</NICK>
-<BLURB>Error threshold for establishing links.</BLURB>
-<DEFAULT>50</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>Gstpyramidsegment::threshold2</NAME>
-<TYPE>gdouble</TYPE>
-<RANGE>[0,1000]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Threshold2</NICK>
-<BLURB>Error threshold for segment clustering.</BLURB>
-<DEFAULT>60</DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>Gstfacedetect::display</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>

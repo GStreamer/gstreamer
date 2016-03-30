@@ -33,7 +33,6 @@
 #include "gstfaceblur.h"
 #include "gstfacedetect.h"
 #include "gstmotioncells.h"
-#include "gstpyramidsegment.h"
 #include "gsttemplatematch.h"
 #include "gsttextoverlay.h"
 #include "gsthanddetect.h"
@@ -74,9 +73,6 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_motion_cells_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_pyramid_segment_plugin_init (plugin))
     return FALSE;
 
   if (!gst_template_match_plugin_init (plugin))

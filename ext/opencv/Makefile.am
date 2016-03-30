@@ -14,7 +14,6 @@ libgstopencv_la_SOURCES = gstopencv.cpp \
 			gstedgedetect.cpp \
 			gstfaceblur.cpp \
 			gsthanddetect.cpp \
-			gstpyramidsegment.cpp \
 			gsttemplatematch.cpp \
 			gsttextoverlay.cpp \
 			gstmotioncells.cpp \
@@ -59,7 +58,6 @@ noinst_HEADERS = gstopencvvideofilter.h gstopencvutils.h \
 		gstfaceblur.h \
 		gstfacedetect.h \
 		gsthanddetect.h \
-		gstpyramidsegment.h \
 		gsttemplatematch.h \
 		gsttextoverlay.h \
 		gstskindetect.h \

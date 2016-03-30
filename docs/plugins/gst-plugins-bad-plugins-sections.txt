@@ -1133,20 +1133,6 @@ gst_pinch_get_type
 gst_pinch_plugin_init
 </SECTION>
 
-<FILE>element-pyramidsegment</FILE>
-<TITLE>pyramidsegment</TITLE>
-Gstpyramidsegment
-<SUBSECTION Standard>
-GstpyramidsegmentClass
-GST_PYRAMIDSEGMENT
-GST_PYRAMIDSEGMENT_CLASS
-GST_TYPE_PYRAMIDSEGMENT
-GST_IS_PYRAMIDSEGMENT
-GST_IS_PYRAMIDSEGMENT_CLASS
-gst_pyramidsegment_get_type
-gst_pyramidsegment_plugin_init
-</SECTION>
-
 <SECTION>
 <FILE>element-rfbsrc</FILE>
 <TITLE>rfbsrc</TITLE>

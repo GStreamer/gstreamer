@@ -306,27 +306,6 @@ IF nothing is present, then nothing is done.</description>
       </pads>
     </element>
     <element>
-      <name>pyramidsegment</name>
-      <longname>pyramidsegment</longname>
-      <class>Filter/Effect/Video</class>
-      <description>Applies pyramid segmentation to a video or image.</description>
-      <author>Michael Sheldon &lt;mike@mikeasoft.com&gt;</author>
-      <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-raw, format=(string)RGB, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
-        </caps>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-raw, format=(string)RGB, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
       <name>retinex</name>
       <longname>Retinex image colour enhacement</longname>
       <class>Filter/Effect/Video</class>
