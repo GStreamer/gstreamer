@@ -957,7 +957,7 @@ static ResampleFunc resample_funcs[] = {
 #define resample_gdouble_cubic_1 resample_funcs[15]
 
 #if defined HAVE_ORC && !defined DISABLE_ORC
-# if defined (__ARM_NEON__)
+# if defined (HAVE_ARM_NEON)
 #  define CHECK_NEON
 #  include "audio-resampler-neon.h"
 # endif
