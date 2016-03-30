@@ -297,7 +297,7 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
    */
   properties[PROP_DEVICE] = g_param_spec_string ("device",
       "Device", "Device ID", DEFAULT_DEVICE,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       properties[PROP_DEVICE]);
 
@@ -308,7 +308,7 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
    */
   properties[PROP_DEVICE_NAME] = g_param_spec_string ("device-name",
       "Device name", "Device name", NULL,
-      G_PARAM_READABLE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       properties[PROP_DEVICE_NAME]);
 
