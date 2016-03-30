@@ -2650,13 +2650,15 @@ gst_vaapi_decoder_h265_decode_codec_data (GstVaapiDecoder *
   ofs = 23;
   for (i = 0; i < num_nal_arrays; i++) {
     num_nals = GST_READ_UINT16_BE (buf + ofs + 1);
+    ofs += 3;
+
     for (j = 0; j < num_nals; j++) {
       pi = gst_vaapi_parser_info_h265_new ();
       if (!pi)
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
       unit.parsed_info = pi;
       result = gst_h265_parser_identify_nalu_hevc (priv->parser,
-          buf, ofs + 3, buf_size, 2, &pi->nalu);
+          buf, ofs, buf_size, 2, &pi->nalu);
       if (result != GST_H265_PARSER_OK) {
         status = get_status (result);
         goto cleanup;
