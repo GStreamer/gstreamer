@@ -38,6 +38,9 @@
  *  - reset last_flow on FLUSH_STOP (seeking)
  */
 
+/* This currently supports both 5.x and 6.x versions of the NvEncodeAPI.h
+ * header which are mostly API compatible. */
+
 #define N_BUFFERS_PER_FRAME 1
 #define SUPPORTED_GL_APIS GST_GL_API_OPENGL3
 
@@ -173,23 +176,40 @@ _get_supported_input_formats (GstNvBaseEnc * nvenc)
      * it the respective untiled planar format instead ?! */
     switch (formats[i]) {
       case NV_ENC_BUFFER_FORMAT_NV12_PL:
+#if defined (NV_ENC_BUFFER_FORMAT_NV12_TILED16x16)
       case NV_ENC_BUFFER_FORMAT_NV12_TILED16x16:
+#endif
+#if defined (NV_ENC_BUFFER_FORMAT_NV12_TILED64x16)
       case NV_ENC_BUFFER_FORMAT_NV12_TILED64x16:
+#endif
         format_mask |= (1 << GST_VIDEO_FORMAT_NV12);
         break;
       case NV_ENC_BUFFER_FORMAT_YV12_PL:
+#if defined(NV_ENC_BUFFER_FORMAT_YV12_TILED16x16)
       case NV_ENC_BUFFER_FORMAT_YV12_TILED16x16:
+#endif
+#if defined (NV_ENC_BUFFER_FORMAT_YV12_TILED64x16)
       case NV_ENC_BUFFER_FORMAT_YV12_TILED64x16:
+#endif
         format_mask |= (1 << GST_VIDEO_FORMAT_YV12);
         break;
       case NV_ENC_BUFFER_FORMAT_IYUV_PL:
+#if defined (NV_ENC_BUFFER_FORMAT_IYUV_TILED16x16)
       case NV_ENC_BUFFER_FORMAT_IYUV_TILED16x16:
+#endif
+#if defined (NV_ENC_BUFFER_FORMAT_IYUV_TILED64x16)
       case NV_ENC_BUFFER_FORMAT_IYUV_TILED64x16:
+#endif
         format_mask |= (1 << GST_VIDEO_FORMAT_I420);
         break;
       case NV_ENC_BUFFER_FORMAT_YUV444_PL:
+#if defined (NV_ENC_BUFFER_FORMAT_YUV444_TILED16x16)
       case NV_ENC_BUFFER_FORMAT_YUV444_TILED16x16:
-      case NV_ENC_BUFFER_FORMAT_YUV444_TILED64x16:{
+#endif
+#if defined (NV_ENC_BUFFER_FORMAT_YUV444_TILED64x16)
+      case NV_ENC_BUFFER_FORMAT_YUV444_TILED64x16:
+#endif
+      {
         NV_ENC_CAPS_PARAM caps_param = { 0, };
         int yuv444_supported = 0;
 
