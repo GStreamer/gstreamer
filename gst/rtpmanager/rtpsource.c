@@ -1143,7 +1143,7 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo,
       g_queue_clear (src->packets);
 
       /* duplicate or reordered packet, will be filtered by jitterbuffer. */
-      GST_WARNING ("duplicate or reordered packet (seqnr %u, expected %u)",
+      GST_INFO ("duplicate or reordered packet (seqnr %u, expected %u)",
           seqnr, expected);
     }
   }
