@@ -43,21 +43,23 @@ GST_DEBUG_CATEGORY (_ges_debug);
 
 static gboolean ges_initialized = FALSE;
 
-/**
- * ges_init:
- *
- * Initialize the GStreamer Editing Service. Call this before any usage of
- * GES. You should take care of initilizing GStreamer before calling this
- * function.
- */
 
-gboolean
-ges_init (void)
+
+static gboolean
+ges_init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
+    GError ** error)
 {
   /* initialize debugging category */
   GST_DEBUG_CATEGORY_INIT (_ges_debug, "ges", GST_DEBUG_FG_YELLOW,
       "GStreamer Editing Services");
 
+  return TRUE;
+}
+
+static gboolean
+ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
+    GError ** error)
+{
   if (ges_initialized) {
     GST_DEBUG ("already initialized ges");
     return TRUE;
@@ -99,6 +101,23 @@ ges_init (void)
   return TRUE;
 }
 
+/**
+ * ges_init:
+ *
+ * Initialize the GStreamer Editing Service. Call this before any usage of
+ * GES. You should take care of initilizing GStreamer before calling this
+ * function.
+ */
+
+gboolean
+ges_init (void)
+{
+  ges_init_pre (NULL, NULL, NULL, NULL);
+  ges_init_post (NULL, NULL, NULL, NULL);
+
+  return TRUE;
+}
+
 #ifndef GST_DISABLE_OPTION_PARSING
 static gboolean
 parse_goption_arg (const gchar * s_opt,
@@ -129,7 +148,9 @@ parse_goption_arg (const gchar * s_opt,
  * libraries that use GOption (see g_option_context_add_group() ).
  *
  * If you use this function, you should make sure you initialise the GStreamer
- * as one of the very first things in your program.
+ * as one of the very first things in your program. That means you need to
+ * use gst_init_get_option_group() and add it to the option context before
+ * using the ges_init_get_option_group() result.
  *
  * Returns: (transfer full): a pointer to GES's option group.
  */
@@ -155,6 +176,8 @@ ges_init_get_option_group (void)
 
   group = g_option_group_new ("GES", "GStreamer Editing Services Options",
       "Show GStreamer Options", NULL, NULL);
+  g_option_group_set_parse_hooks (group, (GOptionParseFunc) ges_init_pre,
+      (GOptionParseFunc) ges_init_post);
   g_option_group_add_entries (group, ges_args);
 
   return group;
