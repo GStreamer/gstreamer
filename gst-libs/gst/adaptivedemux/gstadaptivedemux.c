@@ -1092,7 +1092,6 @@ gst_adaptive_demux_find_stream_for_pad (GstAdaptiveDemux * demux, GstPad * pad)
       return stream;
     }
   }
-  g_assert_not_reached ();
   return NULL;
 }
 
@@ -1241,6 +1240,7 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
       gboolean update;
       gboolean ret = TRUE;
       GstSegment oldsegment;
+      GstAdaptiveDemuxStream *stream = NULL;
 
       GST_INFO_OBJECT (demux, "Received seek event");
 
@@ -1318,9 +1318,8 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
        * use the one that received the event as the 'leading'
        * one to do the snap seek.
        */
-      if (IS_SNAP_SEEK (flags) && demux_class->stream_seek) {
-        GstAdaptiveDemuxStream *stream =
-            gst_adaptive_demux_find_stream_for_pad (demux, pad);
+      if (IS_SNAP_SEEK (flags) && demux_class->stream_seek && (stream =
+              gst_adaptive_demux_find_stream_for_pad (demux, pad))) {
         GstClockTime ts;
         GstSeekFlags stream_seek_flags = flags;
 
@@ -1359,6 +1358,7 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
         GST_DEBUG_OBJECT (demux, "Adapted snap seek to %" GST_PTR_FORMAT,
             event);
       }
+      stream = NULL;
 
       gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
           start, stop_type, stop, &update);
