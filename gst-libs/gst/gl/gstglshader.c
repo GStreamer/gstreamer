@@ -1306,3 +1306,23 @@ gst_gl_shader_bind_attribute_location (GstGLShader * shader, GLuint index,
 
   gl->BindAttribLocation (priv->program_handle, index, name);
 }
+
+void
+gst_gl_shader_bind_frag_data_location (GstGLShader * shader,
+    guint index, const gchar * name)
+{
+  GstGLShaderPrivate *priv;
+  GstGLFuncs *gl;
+
+  g_return_if_fail (shader != NULL);
+  if (!_ensure_program (shader))
+    g_return_if_fail (shader->priv->program_handle);
+  priv = shader->priv;
+  gl = shader->context->gl_vtable;
+  g_return_if_fail (gl->BindFragDataLocation);
+
+  GST_TRACE_OBJECT (shader, "binding program %i frag data \'%s\' location %i",
+      (int) priv->program_handle, name, index);
+
+  gl->BindFragDataLocation (priv->program_handle, index, name);
+}
