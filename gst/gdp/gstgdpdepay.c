@@ -86,6 +86,7 @@ static void gst_gdp_depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gdp_depay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_gdp_depay_decide_allocation (GstGDPDepay * depay);
 
 static void
 gst_gdp_depay_class_init (GstGDPDepayClass * klass)
@@ -140,6 +141,9 @@ gst_gdp_depay_init (GstGDPDepay * gdpdepay)
   gst_element_add_pad (GST_ELEMENT (gdpdepay), gdpdepay->srcpad);
 
   gdpdepay->adapter = gst_adapter_new ();
+
+  gdpdepay->allocator = NULL;
+  gst_allocation_params_init (&gdpdepay->allocation_params);
 }
 
 static void
@@ -153,6 +157,8 @@ gst_gdp_depay_finalize (GObject * gobject)
   g_free (this->header);
   gst_adapter_clear (this->adapter);
   g_object_unref (this->adapter);
+  if (this->allocator)
+    gst_object_unref (this->allocator);
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (gobject));
 }
@@ -265,6 +271,10 @@ gst_gdp_depay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   this = GST_GDP_DEPAY (parent);
 
+  if (gst_pad_check_reconfigure (this->srcpad)) {
+    gst_gdp_depay_decide_allocation (this);
+  }
+
   /* On DISCONT, get rid of accumulated data. We assume a buffer after the
    * DISCONT contains (part of) a new valid header, if not we error because we
    * lost sync */
@@ -352,7 +362,9 @@ gst_gdp_depay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           goto no_caps;
 
         GST_LOG_OBJECT (this, "reading GDP buffer from adapter");
-        buf = gst_dp_buffer_from_header (GST_DP_HEADER_LENGTH, this->header);
+        buf =
+            gst_dp_buffer_from_header (GST_DP_HEADER_LENGTH, this->header,
+            this->allocator, &this->allocation_params);
         if (!buf)
           goto buffer_failed;
 
@@ -411,6 +423,7 @@ gst_gdp_depay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         GST_DEBUG_OBJECT (this, "deserialized caps %" GST_PTR_FORMAT, caps);
         gst_caps_replace (&(this->caps), caps);
         gst_pad_set_caps (this->srcpad, caps);
+        gst_gdp_depay_decide_allocation (this);
         /* drop the creation ref we still have */
         gst_caps_unref (caps);
 
@@ -521,11 +534,52 @@ gst_gdp_depay_change_state (GstElement * element, GstStateChange transition)
         this->caps = NULL;
       }
       gst_adapter_clear (this->adapter);
+      if (this->allocator)
+        gst_object_unref (this->allocator);
+      this->allocator = NULL;
+      gst_allocation_params_init (&this->allocation_params);
       break;
     default:
       break;
   }
   return ret;
+}
+
+static void
+gst_gdp_depay_decide_allocation (GstGDPDepay * gdpdepay)
+{
+  GstAllocator *allocator;
+  GstAllocationParams params;
+  GstQuery *query = NULL;
+  GstCaps *caps;
+
+  caps = gst_pad_query_caps (gdpdepay->srcpad, NULL);
+  if (!caps) {
+    GST_LOG_OBJECT (gdpdepay,
+        "No peer pad caps found. Using default allocator.");
+    return;
+  }
+
+  query = gst_query_new_allocation (caps, TRUE);
+  if (!gst_pad_peer_query (gdpdepay->srcpad, query)) {
+    GST_WARNING_OBJECT (gdpdepay, "Peer allocation query failed.");
+  }
+
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+  }
+
+  if (gdpdepay->allocator)
+    gst_object_unref (gdpdepay->allocator);
+
+  gdpdepay->allocator = allocator;
+  gdpdepay->allocation_params = params;
+
+  gst_caps_unref (caps);
+  gst_query_unref (query);
 }
 
 gboolean

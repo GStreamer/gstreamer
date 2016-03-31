@@ -78,7 +78,9 @@ GstDPPayloadType
 
 /* converting to GstBuffer/GstEvent/GstCaps */
 GstBuffer *     gst_dp_buffer_from_header       (guint header_length,
-                                                const guint8 * header);
+                                                const guint8 * header,
+                                                GstAllocator * allocator,
+                                                GstAllocationParams * allocation_params);
 GstCaps *       gst_dp_caps_from_packet         (guint header_length,
                                                 const guint8 * header,
                                                 const guint8 * payload);

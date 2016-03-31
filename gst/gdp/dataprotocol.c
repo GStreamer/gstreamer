@@ -477,6 +477,8 @@ gst_dp_header_payload_type (const guint8 * header)
  * gst_dp_buffer_from_header:
  * @header_length: the length of the packet header
  * @header: the byte array of the packet header
+ * @allocator: the allocator used to allocate the new #GstBuffer
+ * @allocation_params: the allocations parameters used to allocate the new #GstBuffer
  *
  * Creates a newly allocated #GstBuffer from the given header.
  * The buffer data needs to be copied into it before validating.
@@ -490,7 +492,8 @@ gst_dp_header_payload_type (const guint8 * header)
  * Returns: A #GstBuffer if the buffer was successfully created, or NULL.
  */
 GstBuffer *
-gst_dp_buffer_from_header (guint header_length, const guint8 * header)
+gst_dp_buffer_from_header (guint header_length, const guint8 * header,
+    GstAllocator * allocator, GstAllocationParams * allocation_params)
 {
   GstBuffer *buffer;
 
@@ -500,8 +503,8 @@ gst_dp_buffer_from_header (guint header_length, const guint8 * header)
       GST_DP_PAYLOAD_BUFFER, NULL);
 
   buffer =
-      gst_buffer_new_allocate (NULL,
-      (guint) GST_DP_HEADER_PAYLOAD_LENGTH (header), NULL);
+      gst_buffer_new_allocate (allocator,
+      (guint) GST_DP_HEADER_PAYLOAD_LENGTH (header), allocation_params);
 
   GST_BUFFER_TIMESTAMP (buffer) = GST_DP_HEADER_TIMESTAMP (header);
   GST_BUFFER_DTS (buffer) = GST_DP_HEADER_DTS (header);
