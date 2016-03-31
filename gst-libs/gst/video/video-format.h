@@ -401,7 +401,7 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_DEPTH(info,c)      ((info)->depth[c])
 /**
  * GST_VIDEO_FORMAT_INFO_PSTRIDE:
- * @info: a #GstVideoInfo
+ * @info: a #GstVideoFormatInfo
  * @c: the component index
  *
  * pixel stride for the given component. This is the amount of bytes to the
@@ -416,7 +416,7 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_PSTRIDE(info,c)    ((info)->pixel_stride[c])
 /**
  * GST_VIDEO_FORMAT_INFO_N_PLANES:
- * @info: a #GstVideoInfo
+ * @info: a #GstVideoFormatInfo
  *
  * Number of planes. This is the number of planes the pixel layout is
  * organized in in memory. The number of planes can be less than the
@@ -429,7 +429,7 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_N_PLANES(info)     ((info)->n_planes)
 /**
  * GST_VIDEO_FORMAT_INFO_PLANE:
- * @info: a #GstVideoInfo
+ * @info: a #GstVideoFormatInfo
  * @c: the component index
  *
  * Plane number where the given component can be found. A plane may
@@ -450,7 +450,7 @@ struct _GstVideoFormatInfo {
   (((guint8*)(planes)[(info)->plane[comp]]) + (info)->poffset[comp])
 /**
  * GST_VIDEO_FORMAT_INFO_STRIDE:
- * @info: a #GstVideoInfo
+ * @info: a #GstVideoFormatInfo
  * @strides: an array of strides
  * @comp: the component index
  *
