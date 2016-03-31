@@ -226,6 +226,8 @@ _map_data_gl (GstGLContext * context, struct map_data *transfer)
   GstGLBaseMemoryAllocatorClass *alloc_class;
   GstGLBaseMemory *mem = transfer->mem;
   GstMapInfo *info = transfer->info;
+  guint prev_map_flags;
+  guint prev_gl_map_count;
 
   alloc_class =
       GST_GL_BASE_MEMORY_ALLOCATOR_GET_CLASS (transfer->mem->mem.allocator);
@@ -233,6 +235,9 @@ _map_data_gl (GstGLContext * context, struct map_data *transfer)
   g_return_if_fail (alloc_class->map != NULL);
 
   g_mutex_lock (&mem->lock);
+
+  prev_map_flags = mem->map_flags;
+  prev_gl_map_count = mem->gl_map_count;
 
   GST_CAT_LOG (GST_CAT_GL_BASE_MEMORY, "mapping mem %p flags %04x", mem,
       info->flags);
@@ -267,6 +272,11 @@ _map_data_gl (GstGLContext * context, struct map_data *transfer)
         GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD);
       GST_MEMORY_FLAG_UNSET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD);
     }
+  } else {
+    /* undo state tracking on error */
+    mem->map_flags = prev_map_flags;
+    mem->gl_map_count = prev_gl_map_count;
+    mem->map_count--;
   }
 
   g_mutex_unlock (&mem->lock);
