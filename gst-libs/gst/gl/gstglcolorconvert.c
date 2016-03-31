@@ -1798,10 +1798,11 @@ _mangle_sampler_type (const gchar * str, GstGLTextureTarget from,
 
 static gchar *
 _mangle_varying_attribute (const gchar * str, guint shader_type,
-    GstGLAPI gl_api)
+    GstGLAPI gl_api, guint gl_major, guint gl_minor)
 {
-  if (gl_api & GST_GL_API_OPENGL3) {
-    if (shader_type == GL_VERTEX_SHADER) {
+  if (shader_type == GL_VERTEX_SHADER) {
+    if ((gl_api & GST_GL_API_OPENGL3) || (gl_api & GST_GL_API_GLES2
+            && gl_major >= 3)) {
       gchar *tmp, *tmp2;
       GRegex *regex;
 
@@ -1817,7 +1818,10 @@ _mangle_varying_attribute (const gchar * str, guint shader_type,
 
       g_free (tmp);
       return tmp2;
-    } else if (shader_type == GL_FRAGMENT_SHADER) {
+    }
+  } else if (shader_type == GL_FRAGMENT_SHADER) {
+    if ((gl_api & GST_GL_API_OPENGL3) || (gl_api & GST_GL_API_GLES2
+            && gl_major > 3)) {
       gchar *tmp;
       GRegex *regex;
 
@@ -1833,28 +1837,48 @@ _mangle_varying_attribute (const gchar * str, guint shader_type,
 }
 
 static gchar *
-_mangle_frag_color (const gchar * str)
+_mangle_frag_color_data (const gchar * str)
 {
   GRegex *regex;
-  gchar *ret;
+  gchar *ret, *tmp;
 
   regex = g_regex_new ("gl_FragColor", 0, 0, NULL);
   ret = g_regex_replace_literal (regex, str, -1, 0, "fragColor", 0, NULL);
   g_regex_unref (regex);
 
+  tmp = ret;
+  /* search and replace 'gl_FragData[NUM]' into fragColor_NUM */
+  regex = g_regex_new ("gl_FragData\\[(\\d+)\\]", 0, 0, NULL);
+  ret = g_regex_replace (regex, tmp, -1, 0, "fragColor_\\1", 0, NULL);
+  g_regex_unref (regex);
+  g_free (tmp);
+
   return ret;
 }
 
 static void
-_mangle_version_profile_from_gl_api (GstGLAPI gl_api, GstGLSLVersion * version,
-    GstGLSLProfile * profile)
+_mangle_version_profile_from_gl_api (GstGLAPI gl_api, gint gl_major,
+    gint gl_minor, GstGLSLVersion * version, GstGLSLProfile * profile)
 {
+  *version = GST_GLSL_VERSION_NONE;
+  *profile = GST_GLSL_PROFILE_NONE;
+
   if (gl_api & GST_GL_API_OPENGL3) {
-    *version = GST_GLSL_VERSION_150;
-    *profile = GST_GLSL_PROFILE_NONE;
+    if (gl_major > 3 || gl_minor >= 3) {
+      *version = GST_GLSL_VERSION_330;
+      *profile = GST_GLSL_PROFILE_CORE;
+    } else {
+      *version = GST_GLSL_VERSION_150;
+      *profile = GST_GLSL_PROFILE_NONE;
+    }
   } else if (gl_api & GST_GL_API_GLES2) {
-    *version = GST_GLSL_VERSION_100;
-    *profile = GST_GLSL_PROFILE_ES;
+    if (gl_major >= 3) {
+      *version = GST_GLSL_VERSION_300;
+      *profile = GST_GLSL_PROFILE_ES;
+    } else if (gl_major >= 2) {
+      *version = GST_GLSL_VERSION_100;
+      *profile = GST_GLSL_PROFILE_ES;
+    }
   } else if (gl_api & GST_GL_API_OPENGL) {
     *version = GST_GLSL_VERSION_110;
     *profile = GST_GLSL_PROFILE_COMPATIBILITY;
@@ -1863,22 +1887,28 @@ _mangle_version_profile_from_gl_api (GstGLAPI gl_api, GstGLSLVersion * version,
 
 static gchar *
 _mangle_shader (const gchar * str, guint shader_type, GstGLTextureTarget from,
-    GstGLTextureTarget to, GstGLAPI gl_api, GstGLSLVersion * version,
-    GstGLSLProfile * profile)
+    GstGLTextureTarget to, GstGLAPI gl_api, gint gl_major, gint gl_minor,
+    GstGLSLVersion * version, GstGLSLProfile * profile)
 {
   gchar *tmp, *tmp2;
 
+  _mangle_version_profile_from_gl_api (gl_api, gl_major, gl_minor, version,
+      profile);
   tmp = _mangle_texture_access (str, from, to, gl_api);
   tmp2 = _mangle_sampler_type (tmp, from, to);
   g_free (tmp);
-  tmp = _mangle_varying_attribute (tmp2, shader_type, gl_api);
+  tmp =
+      _mangle_varying_attribute (tmp2, shader_type, gl_api, gl_major, gl_minor);
   g_free (tmp2);
-  if (shader_type == GL_FRAGMENT_SHADER && gl_api & GST_GL_API_OPENGL3) {
-    tmp2 = _mangle_frag_color (tmp);
-    g_free (tmp);
-    tmp = tmp2;
+  if (shader_type == GL_FRAGMENT_SHADER) {
+    if ((*profile == GST_GLSL_PROFILE_ES && *version >= GST_GLSL_VERSION_300)
+        || (*profile == GST_GLSL_PROFILE_CORE
+            && *version >= GST_GLSL_VERSION_150)) {
+      tmp2 = _mangle_frag_color_data (tmp);
+      g_free (tmp);
+      tmp = tmp2;
+    }
   }
-  _mangle_version_profile_from_gl_api (gl_api, version, profile);
   return tmp;
 }
 
@@ -1895,15 +1925,18 @@ _create_shader (GstGLColorConvert * convert)
   const gchar *strings[2];
   GError *error = NULL;
   GstGLAPI gl_api;
+  gint gl_major, gl_minor;
   int i;
 
   gl_api = gst_gl_context_get_gl_api (convert->context);
+  gst_gl_context_get_gl_version (convert->context, &gl_major, &gl_minor);
 
   ret = gst_gl_shader_new (convert->context);
 
   tmp =
       _mangle_shader (text_vertex_shader, GL_VERTEX_SHADER, info->templ->target,
-      convert->priv->from_texture_target, gl_api, &version, &profile);
+      convert->priv->from_texture_target, gl_api, gl_major, gl_minor, &version,
+      &profile);
 
   tmp1 = gst_glsl_version_profile_to_string (version, profile);
   version_str = g_strdup_printf ("#version %s\n", tmp1);
@@ -1941,9 +1974,37 @@ _create_shader (GstGLColorConvert * convert)
   if (info->templ->uniforms)
     g_string_append (str, info->templ->uniforms);
 
-  if (gl_api & GST_GL_API_OPENGL3) {
-    g_string_append_c (str, '\n');
-    g_string_append (str, "out vec4 fragColor;\n");
+  g_string_append_c (str, '\n');
+
+  /* GL 3.3+ and GL ES 3.x */
+  if ((profile == GST_GLSL_PROFILE_CORE && version >= GST_GLSL_VERSION_330)
+      || (profile == GST_GLSL_PROFILE_ES && version >= GST_GLSL_VERSION_300)) {
+    if (info->out_n_textures > 1) {
+      gint i;
+
+      for (i = 0; i < info->out_n_textures; i++) {
+        g_string_append_printf (str,
+            "layout(location = %d) out vec4 fragColor_%d;\n", i, i);
+      }
+    } else {
+      g_string_append (str, "layout (location = 0) out vec4 fragColor;\n");
+    }
+  } else if (profile == GST_GLSL_PROFILE_CORE
+      && version >= GST_GLSL_VERSION_150) {
+    /* no layout specifiers, use glBindFragDataLocation instead */
+    if (info->out_n_textures > 1) {
+      gint i;
+
+      for (i = 0; i < info->out_n_textures; i++) {
+        gchar *var_name = g_strdup_printf ("fragColor_%d", i);
+        g_string_append_printf (str, "out vec4 %s;\n", var_name);
+        gst_gl_shader_bind_frag_data_location (ret, i, var_name);
+        g_free (var_name);
+      }
+    } else {
+      g_string_append (str, "out vec4 fragColor;\n");
+      gst_gl_shader_bind_frag_data_location (ret, 0, "fragColor");
+    }
   }
 
   for (i = 0; i < MAX_FUNCTIONS; i++) {
@@ -1955,7 +2016,19 @@ _create_shader (GstGLColorConvert * convert)
     g_string_append_c (str, '\n');
   }
 
-  g_string_append (str, "\nvarying vec2 v_texcoord;\nvoid main (void) {\n");
+  {
+    const gchar *varying = NULL;
+
+    if ((profile == GST_GLSL_PROFILE_ES && version >= GST_GLSL_VERSION_300)
+        || (profile == GST_GLSL_PROFILE_CORE
+            && version >= GST_GLSL_VERSION_150)) {
+      varying = "in";
+    } else {
+      varying = "varying";
+    }
+    g_string_append_printf (str, "\n%s vec2 v_texcoord;\nvoid main (void) {\n",
+        varying);
+  }
   if (info->frag_body) {
     g_string_append (str, "vec2 texcoord;\n");
     if (convert->priv->from_texture_target == GST_GL_TEXTURE_TARGET_RECTANGLE
@@ -1971,7 +2044,7 @@ _create_shader (GstGLColorConvert * convert)
   tmp = g_string_free (str, FALSE);
   info->frag_prog = _mangle_shader (tmp, GL_FRAGMENT_SHADER,
       info->templ->target, convert->priv->from_texture_target, gl_api,
-      &version, &profile);
+      gl_major, gl_minor, &version, &profile);
   g_free (tmp);
 
   strings[1] = info->frag_prog;
