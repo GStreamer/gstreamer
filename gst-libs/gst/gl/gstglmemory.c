@@ -367,6 +367,26 @@ gst_gl_memory_read_pixels (GstGLMemory * gl_mem, gpointer read_pointer)
     return FALSE;
   }
 
+  if (USING_GLES2 (context) || USING_GLES3 (context)) {
+    if (format == GL_RGBA && type == GL_UNSIGNED_BYTE) {
+      /* explicitly supported */
+    } else {
+      gint supported_format, supported_type;
+
+      gl->GetIntegerv (GL_IMPLEMENTATION_COLOR_READ_FORMAT, &supported_format);
+      gl->GetIntegerv (GL_IMPLEMENTATION_COLOR_READ_TYPE, &supported_type);
+
+      if (supported_format != format || supported_type != type) {
+        GST_CAT_ERROR (GST_CAT_GL_MEMORY, "cannot read pixels with "
+            "unsupported format and type.  Supported format 0x%x type 0x%x",
+            supported_format, supported_type);
+        gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
+        gl->DeleteFramebuffers (1, &fbo);
+        return FALSE;
+      }
+    }
+  }
+
   gst_gl_query_start_log (GST_GL_BASE_MEMORY_CAST (gl_mem)->query,
       GST_CAT_GL_MEMORY, GST_LEVEL_LOG, NULL, "%s", "glReadPixels took");
   gl->ReadPixels (0, 0, gl_mem->tex_width, GL_MEM_HEIGHT (gl_mem), format,
@@ -374,7 +394,6 @@ gst_gl_memory_read_pixels (GstGLMemory * gl_mem, gpointer read_pointer)
   gst_gl_query_end (GST_GL_BASE_MEMORY_CAST (gl_mem)->query);
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
-
   gl->DeleteFramebuffers (1, &fbo);
 
   return TRUE;
