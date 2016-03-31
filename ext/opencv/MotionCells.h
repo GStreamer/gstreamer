@@ -242,7 +242,6 @@ private:
 
   IplImage *m_pcurFrame, *m_pprevFrame, *m_pdifferenceImage,
       *m_pbwImage,*transparencyimg;
-  CvSize m_frameSize;
   bool m_isVisible, m_changed_datafile, m_useAlpha, m_saveInDatafile;
   Cell **m_pCells;
   vector < MotionCellsIdx > m_MotionCells;
