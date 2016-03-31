@@ -952,18 +952,15 @@ static GstRtpH263PayMB *
 gst_rtp_h263_pay_B_mbfinder (GstRtpH263PayContext * context,
     GstRtpH263PayGob * gob, GstRtpH263PayMB * macroblock, guint mba)
 {
-
   guint mb_type_index;
   guint cbpy_type_index;
   guint tcoef_type_index;
   GstRtpH263PayMB *mac;
   GstRtpH263PayBoundry boundry;
 
-
   gst_rtp_h263_pay_boundry_init (&boundry, macroblock->end,
       macroblock->end, 8 - macroblock->ebit, macroblock->ebit);
   mac = gst_rtp_h263_pay_mb_new (&boundry, mba);
-
 
   if (mac->sbit == 8) {
     mac->start++;
@@ -973,6 +970,9 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263PayContext * context,
 
   GST_LOG ("current_pos:%p, end:%p, rest_bits:%d, window:%x",
       mac->start, mac->end, macroblock->ebit, context->window);
+
+  /* macroblock isn't needed anymore */
+  gst_rtp_h263_pay_mb_destroy (macroblock);
 
   GST_LOG ("Current pos after COD: %p", mac->end);
 
@@ -1225,7 +1225,6 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263PayContext * context,
   return mac;
 
 beach:
-  gst_rtp_h263_pay_mb_destroy (mac);
   return NULL;
 }
 
@@ -1589,7 +1588,6 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
   }
 
     /*---------- END OF MODE B FRAGMENTATION ----------*/
-
   gst_rtp_h263_pay_mb_destroy (mac);
   return TRUE;
 
