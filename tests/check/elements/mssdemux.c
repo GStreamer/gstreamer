@@ -206,7 +206,7 @@ GST_START_TEST (testSeek)
   gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
   gst_adaptive_demux_test_seek (DEMUX_ELEMENT_NAME,
       "http://unit.test/Manifest", testData);
-  gst_object_unref (testData);
+  g_object_unref (testData);
 }
 
 GST_END_TEST;
@@ -273,7 +273,7 @@ run_seek_position_test (gdouble rate, GstSeekType start_type,
   gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
   gst_adaptive_demux_test_seek (DEMUX_ELEMENT_NAME,
       "http://unit.test/Manifest", testData);
-  gst_object_unref (testData);
+  g_object_unref (testData);
 }
 
 GST_START_TEST (testSeekKeyUnitPosition)
@@ -404,7 +404,7 @@ GST_START_TEST (testDownloadError)
   gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
   gst_adaptive_demux_test_run (DEMUX_ELEMENT_NAME, "http://unit.test/Manifest",
       &test_callbacks, testData);
-  gst_object_unref (testData);
+  g_object_unref (testData);
 }
 
 GST_END_TEST;
@@ -505,7 +505,7 @@ GST_START_TEST (testQuery)
   gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
   gst_adaptive_demux_test_run (DEMUX_ELEMENT_NAME,
       "http://unit.test/Manifest", &test_callbacks, testData);
-  gst_object_unref (testData);
+  g_object_unref (testData);
 }
 
 GST_END_TEST;
@@ -597,7 +597,7 @@ GST_START_TEST (testFragmentDownloadError)
   gst_test_http_src_install_callbacks (&http_src_callbacks, inputTestData);
   gst_adaptive_demux_test_run (DEMUX_ELEMENT_NAME,
       "http://unit.test/Manifest", &test_callbacks, testData);
-  gst_object_unref (testData);
+  g_object_unref (testData);
 }
 
 GST_END_TEST;
