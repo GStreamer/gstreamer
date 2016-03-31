@@ -279,13 +279,15 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   height = decode->display_height;
 
   if (!width || !height) {
-    width = ref_state->info.width;
-    height = ref_state->info.height;
+    width = GST_VIDEO_INFO_WIDTH (&ref_state->info);
+    height = GST_VIDEO_INFO_HEIGHT (&ref_state->info);
   }
 
   state = gst_video_decoder_set_output_state (vdec, format, width, height,
       ref_state);
-  if (!state || state->info.width == 0 || state->info.height == 0) {
+  if (!state
+      || GST_VIDEO_INFO_WIDTH (&state->info) == 0
+      || GST_VIDEO_INFO_HEIGHT (&state->info) == 0) {
     if (features)
       gst_caps_features_free (features);
     if (state)
