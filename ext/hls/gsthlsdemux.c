@@ -236,6 +236,7 @@ gst_hls_demux_clear_pending_data (GstHLSDemux * hlsdemux)
   gst_adapter_clear (hlsdemux->pending_encrypted_data);
   gst_buffer_replace (&hlsdemux->pending_decrypted_buffer, NULL);
   gst_buffer_replace (&hlsdemux->pending_typefind_buffer, NULL);
+  hlsdemux->current_offset = -1;
 }
 
 static gboolean
@@ -586,8 +587,13 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
 
   g_assert (hlsdemux->pending_typefind_buffer == NULL);
 
-  if (buffer)
+  if (buffer) {
+    buffer = gst_buffer_make_writable (buffer);
+    GST_BUFFER_OFFSET (buffer) = hlsdemux->current_offset;
+    hlsdemux->current_offset += gst_buffer_get_size (buffer);
+    GST_BUFFER_OFFSET_END (buffer) = hlsdemux->current_offset;
     return gst_adaptive_demux_stream_push_buffer (stream, buffer);
+  }
   return GST_FLOW_OK;
 }
 
@@ -636,6 +642,10 @@ gst_hls_demux_data_received (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, GstBuffer * buffer)
 {
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
+
+  if (hlsdemux->current_offset == -1)
+    hlsdemux->current_offset =
+        GST_BUFFER_OFFSET_IS_VALID (buffer) ? GST_BUFFER_OFFSET (buffer) : 0;
 
   /* Is it encrypted? */
   if (hlsdemux->current_key) {
