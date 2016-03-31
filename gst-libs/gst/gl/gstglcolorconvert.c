@@ -261,9 +261,9 @@ static const struct shader_templ templ_RGB_to_PLANAR_YUV =
     "    for (int j = 0; j < int(chroma_sampling.y); j++) {\n"
     "      int n = (i+1)*(j+1);\n"
     "      delta.y = float(j);\n"
-    "      vec4 sample = texture2D(tex, (chroma_pos + delta) / unnormalization).%c%c%c%c;\n"
+    "      vec4 s = texture2D(tex, (chroma_pos + delta) / unnormalization).%c%c%c%c;\n"
            /* rolling average */
-    "      uv_texel = (float(n-1) * uv_texel + sample) / float(n);\n"
+    "      uv_texel = (float(n-1) * uv_texel + s) / float(n);\n"
     "    }\n"
     "  }\n"
     "}\n"
