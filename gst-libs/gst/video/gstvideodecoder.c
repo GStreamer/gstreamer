@@ -3797,6 +3797,8 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
 
   if (state->caps == NULL)
     state->caps = gst_video_info_to_caps (&state->info);
+  if (state->allocation_caps == NULL)
+    state->allocation_caps = gst_caps_ref (state->caps);
 
   GST_DEBUG_OBJECT (decoder, "setting caps %" GST_PTR_FORMAT, state->caps);
 
@@ -3845,7 +3847,7 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
     goto done;
   decoder->priv->output_state_changed = FALSE;
   /* Negotiate pool */
-  ret = gst_video_decoder_negotiate_pool (decoder, state->caps);
+  ret = gst_video_decoder_negotiate_pool (decoder, state->allocation_caps);
 
 done:
   return ret;

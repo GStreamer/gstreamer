@@ -1630,6 +1630,9 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
     encoder->priv->output_state_changed = FALSE;
   }
 
+  if (state->allocation_caps == NULL)
+    state->allocation_caps = gst_caps_ref (state->caps);
+
   /* Push all pending pre-caps events of the oldest frame before
    * setting caps */
   frame = encoder->priv->frames ? encoder->priv->frames->data : NULL;
@@ -1668,7 +1671,7 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
   if (!ret)
     goto done;
 
-  query = gst_query_new_allocation (state->caps, TRUE);
+  query = gst_query_new_allocation (state->allocation_caps, TRUE);
   if (!gst_pad_peer_query (encoder->srcpad, query)) {
     GST_DEBUG_OBJECT (encoder, "didn't get downstream ALLOCATION hints");
   }

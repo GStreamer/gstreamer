@@ -41,9 +41,11 @@ typedef struct _GstVideoCodecFrame GstVideoCodecFrame;
 /**
  * GstVideoCodecState:
  * @info: The #GstVideoInfo describing the stream
- * @caps: The #GstCaps
+ * @caps: The #GstCaps used in the caps negotiation of the pad.
  * @codec_data: a #GstBuffer corresponding to the
  *     'codec_data' field of a stream, or NULL.
+ * @allocation_caps: The #GstCaps for allocation query and pool
+ *     negotiation. Since: 1.10
  *
  * Structure representing the state of an incoming or outgoing video
  * stream for encoders and decoders.
@@ -67,8 +69,10 @@ struct _GstVideoCodecState
 
   GstBuffer *codec_data;
 
+  GstCaps *allocation_caps;
+
   /*< private >*/
-  void         *padding[GST_PADDING_LARGE];
+  void         *padding[GST_PADDING_LARGE - 1];
 };
 
 /**
