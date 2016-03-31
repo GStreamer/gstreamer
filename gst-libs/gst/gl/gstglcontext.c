@@ -132,10 +132,6 @@ load_self_module (gpointer user_data)
   return NULL;
 }
 
-#if GST_GL_HAVE_GLES3
-#error "Add module loading support for GLES3"
-#endif
-
 /* Context sharedness is tracked by a refcounted pointer stored in each context
  * object to track complex creation/deletion scenarios.  As a result,
  * sharedness can only be successfully validated between two GstGLContext's

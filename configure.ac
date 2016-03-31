@@ -682,6 +682,7 @@ save_LIBS="$LIBS"
 
 HAVE_GL=no
 HAVE_GLES2=no
+HAVE_GLES3_H=no
 HAVE_WAYLAND_EGL=no
 
 HAVE_EGL_RPI=no
@@ -708,6 +709,7 @@ case $host in
       if test "x$HAVE_GLES2" != "xyes"; then
         AG_GST_CHECK_LIBHEADER(GLES2, GLESv2, glTexImage2D,, GLES2/gl2.h)
       fi
+      AC_CHECK_HEADER([GLES3/gl3.h], [HAVE_GLES3_H=yes])
     fi
     if test "x$NEED_EGL" != "xno"; then
       AG_GST_PKG_CHECK_MODULES(EGL, egl)
@@ -872,6 +874,10 @@ if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
 # else
 #  include <GLES2/gl2.h>
 #  include <GLES2/gl2ext.h>
+#  if $HAVE_GLES3_H
+#   include <GLES3/gl3.h>
+#   include <GLES3/gl3ext.h>
+#  endif
 # endif
 # ifdef __APPLE__
 #  include <OpenGL/OpenGL.h>
@@ -907,6 +913,7 @@ int main (int argc, char **argv) { return 0; }
     else
       AC_MSG_WARN([Disabling GL|ES 2.0 support])
       HAVE_GLES2=no
+      HAVE_GLES3_H=no
     fi
   ])
   CFLAGS="$save_CFLAGS"
@@ -1150,6 +1157,9 @@ fi
 if test "x$USE_GLES2" = "xyes"; then
   GL_APIS="gles2 $GL_APIS"
   GST_GL_HAVE_GLES2=1
+  if test "x$HAVE_GLES3_H" = "xyes"; then
+    GST_GL_HAVE_GLES3=1
+  fi
 fi
 
 GL_CONFIG_DEFINES="$GL_CONFIG_DEFINES
@@ -1321,6 +1331,10 @@ if test "x$USE_GLES2" = "xyes"; then
 # else
 #  include <GLES2/gl2.h>
 #  include <GLES2/gl2ext.h>
+#  if GST_GL_HAVE_GLES3
+#   include <GLES3/gl3.h>
+#   include <GLES3/gl3ext.h>
+#  endif
 # endif
 "
 fi
