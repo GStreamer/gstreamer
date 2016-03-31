@@ -299,20 +299,24 @@ _priv_gst_debug_init (void)
   const gchar *env;
   FILE *log_file;
 
-  env = g_getenv ("GST_DEBUG_FILE");
-  if (env != NULL && *env != '\0') {
-    if (strcmp (env, "-") == 0) {
-      log_file = stdout;
-    } else {
-      log_file = g_fopen (env, "w");
-      if (log_file == NULL) {
-        g_printerr ("Could not open log file '%s' for writing: %s\n", env,
-            g_strerror (errno));
-        log_file = stderr;
+  if (add_default_log_func) {
+    env = g_getenv ("GST_DEBUG_FILE");
+    if (env != NULL && *env != '\0') {
+      if (strcmp (env, "-") == 0) {
+        log_file = stdout;
+      } else {
+        log_file = g_fopen (env, "w");
+        if (log_file == NULL) {
+          g_printerr ("Could not open log file '%s' for writing: %s\n", env,
+              g_strerror (errno));
+          log_file = stderr;
+        }
       }
+    } else {
+      log_file = stderr;
     }
-  } else {
-    log_file = stderr;
+
+    gst_debug_add_log_function (gst_debug_log_default, log_file, NULL);
   }
 
   __gst_printf_pointer_extension_set_func
@@ -323,9 +327,6 @@ _priv_gst_debug_init (void)
       GST_DEBUG_UNDERLINE, NULL);
   _GST_CAT_DEBUG = _gst_debug_category_new ("GST_DEBUG",
       GST_DEBUG_BOLD | GST_DEBUG_FG_YELLOW, "debugging subsystem");
-
-  if (add_default_log_func)
-    gst_debug_add_log_function (gst_debug_log_default, log_file, NULL);
 
   /* FIXME: add descriptions here */
   GST_CAT_GST_INIT = _gst_debug_category_new ("GST_INIT",
