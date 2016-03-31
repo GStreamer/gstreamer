@@ -362,3 +362,13 @@ GST_GL_EXT_FUNCTION (void, UniformMatrix3x4fv,
 GST_GL_EXT_FUNCTION (void, UniformMatrix4x3fv,
                      (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value))
 GST_GL_EXT_END ()
+
+GST_GL_EXT_BEGIN (bind_frag_data,
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3,
+                  3, 0,
+                  255, 255,
+                  "\0",
+                  "\0")
+GST_GL_EXT_FUNCTION (void, BindFragDataLocation,
+                     (GLuint program, GLuint index, const GLchar * name))
+GST_GL_EXT_END ()
