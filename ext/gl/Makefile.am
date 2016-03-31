@@ -66,7 +66,7 @@ noinst_HEADERS = \
 	gstglstereosplit.h \
 	gstglstereomix.h \
 	gstglviewconvert.h \
-	gltestsrc.h
+	gltestsrc.h \
 	gstgltestsrc.h
 
 # full opengl required
