@@ -421,6 +421,7 @@ ges_text_valign_get_type (void)
     {GES_TEXT_VALIGN_BOTTOM, "GES_TEXT_VALIGN_BOTTOM", "bottom"},
     {GES_TEXT_VALIGN_TOP, "GES_TEXT_VALIGN_TOP", "top"},
     {GES_TEXT_VALIGN_POSITION, "GES_TEXT_VALIGN_POSITION", "position"},
+    {GES_TEXT_VALIGN_ABSOLUTE, "GES_TEXT_VALIGN_ABSOLUTE", "absolute"},
     {GES_TEXT_VALIGN_CENTER, "GES_TEXT_VALIGN_CENTER", "center"},
     {0, NULL, NULL},
   };
@@ -443,6 +444,7 @@ ges_text_halign_get_type (void)
     {GES_TEXT_HALIGN_CENTER, "GES_TEXT_HALIGN_CENTER", "center"},
     {GES_TEXT_HALIGN_RIGHT, "GES_TEXT_HALIGN_RIGHT", "right"},
     {GES_TEXT_HALIGN_POSITION, "GES_TEXT_HALIGN_POSITION", "position"},
+    {GES_TEXT_HALIGN_ABSOLUTE, "GES_TEXT_HALIGN_ABSOLUTE", "absolute"},
     {0, NULL, NULL},
   };
 
