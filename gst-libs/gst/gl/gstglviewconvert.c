@@ -152,8 +152,10 @@ static gfloat identity_matrix[] = {
   0.0f, 0.0f, 0.0f, 1.0f,
 };
 
+#define glsl_OES_extension_string "#extension GL_OES_EGL_image_external : require \n"
+
 /* *INDENT-OFF* */
-static const gchar *fragment_source =
+static const gchar *fragment_header =
   "#ifdef GL_ES\n"
   "precision mediump float;\n"
   "#endif\n"
@@ -164,15 +166,7 @@ static const gchar *fragment_source =
   "uniform float height;\n"
   "uniform mat3 downmix[2];\n"
   "uniform vec2 tex_scale[2];\n"
-  "uniform vec2 offsets[2];\n"
-  "void main () {\n"
-  "vec4 l, r;\n"
-  /* input */
-  "%s"
-  /* now have left and right pixel into l and r */
-  /* output */
-  "%s"
-  "}\n";
+  "uniform vec2 offsets[2];\n";
 
 static const gchar *frag_input =
   "  vec2 l_tex = v_texcoord * tex_scale[0] + offsets[0];\n"
@@ -1542,28 +1536,129 @@ _mangle_sampler_type (const gchar * str, GstGLTextureTarget from,
 }
 
 static gchar *
-_mangle_extensions (const gchar * str, GstGLTextureTarget from)
+_mangle_varying_attribute (const gchar * str, guint shader_type,
+    GstGLSLVersion version, GstGLSLProfile profile)
 {
-  const gchar *ext_str = NULL;
+  if (shader_type == GL_VERTEX_SHADER) {
+    if (profile == GST_GLSL_PROFILE_CORE || (profile == GST_GLSL_PROFILE_ES
+            && version >= GST_GLSL_VERSION_300)) {
+      gchar *tmp, *tmp2;
+      GRegex *regex;
 
-  if (from == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
-    ext_str = "#extension GL_OES_EGL_image_external : require\n";
+      /* followed by some whitespace  */
+      regex = g_regex_new ("varying(?=\\s)", 0, 0, NULL);
+      tmp = g_regex_replace_literal (regex, str, -1, 0, "out", 0, NULL);
+      g_regex_unref (regex);
 
-  if (ext_str) {
-    return g_strdup_printf ("%s%s", ext_str, str);
-  } else {
-    return g_strdup (str);
+      /* followed by some whitespace  */
+      regex = g_regex_new ("attribute(?=\\s)", 0, 0, NULL);
+      tmp2 = g_regex_replace_literal (regex, tmp, -1, 0, "in", 0, NULL);
+      g_regex_unref (regex);
+
+      g_free (tmp);
+      return tmp2;
+    }
+  } else if (shader_type == GL_FRAGMENT_SHADER) {
+    if (profile == GST_GLSL_PROFILE_CORE || (profile == GST_GLSL_PROFILE_ES
+            && version >= GST_GLSL_VERSION_300)) {
+      gchar *tmp;
+      GRegex *regex;
+
+      /* followed by some whitespace  */
+      regex = g_regex_new ("varying(?=\\s)", 0, 0, NULL);
+      tmp = g_regex_replace_literal (regex, str, -1, 0, "in", 0, NULL);
+      g_regex_unref (regex);
+
+      return tmp;
+    }
   }
+  return g_strdup (str);
+}
+
+static gchar *
+_mangle_frag_color_data (const gchar * str)
+{
+  GRegex *regex;
+  gchar *ret, *tmp;
+
+  regex = g_regex_new ("gl_FragColor", 0, 0, NULL);
+  ret = g_regex_replace_literal (regex, str, -1, 0, "fragColor", 0, NULL);
+  g_regex_unref (regex);
+
+  tmp = ret;
+  /* search and replace 'gl_FragData[NUM]' into fragColor_NUM */
+  regex = g_regex_new ("gl_FragData\\[(\\d+)\\]", 0, 0, NULL);
+  ret = g_regex_replace (regex, tmp, -1, 0, "fragColor_\\1", 0, NULL);
+  g_regex_unref (regex);
+  g_free (tmp);
+
+  return ret;
+}
+
+static void
+_mangle_version_profile_from_gl_api (GstGLAPI gl_api, gint gl_major,
+    gint gl_minor, GstGLSLVersion * version, GstGLSLProfile * profile)
+{
+  *version = GST_GLSL_VERSION_NONE;
+  *profile = GST_GLSL_PROFILE_NONE;
+
+  if (gl_api & GST_GL_API_OPENGL3) {
+    if (gl_major > 3 || gl_minor >= 3) {
+      *version = GST_GLSL_VERSION_330;
+      *profile = GST_GLSL_PROFILE_CORE;
+    } else {
+      *version = GST_GLSL_VERSION_150;
+      *profile = GST_GLSL_PROFILE_NONE;
+    }
+  } else if (gl_api & GST_GL_API_GLES2) {
+    if (gl_major >= 3) {
+      *version = GST_GLSL_VERSION_300;
+      *profile = GST_GLSL_PROFILE_ES;
+    } else if (gl_major >= 2) {
+      *version = GST_GLSL_VERSION_100;
+      *profile = GST_GLSL_PROFILE_ES;
+    }
+  } else if (gl_api & GST_GL_API_OPENGL) {
+    *version = GST_GLSL_VERSION_110;
+    *profile = GST_GLSL_PROFILE_COMPATIBILITY;
+  }
+}
+
+static gchar *
+_mangle_shader (const gchar * str, guint shader_type, GstGLTextureTarget from,
+    GstGLTextureTarget to, GstGLSLVersion version, GstGLSLProfile profile)
+{
+  gchar *tmp, *tmp2;
+
+  tmp2 = _mangle_sampler_type (str, from, to);
+  tmp = _mangle_texture_access (tmp2, from, to);
+  g_free (tmp2);
+  tmp2 = _mangle_varying_attribute (tmp, shader_type, version, profile);
+  g_free (tmp);
+  if (shader_type == GL_FRAGMENT_SHADER) {
+    if ((profile == GST_GLSL_PROFILE_ES && version >= GST_GLSL_VERSION_300)
+        || (profile == GST_GLSL_PROFILE_CORE
+            && version >= GST_GLSL_VERSION_150)) {
+      tmp = _mangle_frag_color_data (tmp2);
+      g_free (tmp2);
+      tmp2 = tmp;
+    }
+  }
+
+  return tmp2;
 }
 
 /* free after use */
 static gchar *
-_get_shader_string (GstGLViewConvert * viewconvert,
-    GstVideoMultiviewMode in_mode, GstVideoMultiviewMode out_mode)
+_get_shader_string (GstGLViewConvert * viewconvert, GstGLShader * shader,
+    GstVideoMultiviewMode in_mode, GstVideoMultiviewMode out_mode,
+    GstGLSLVersion version, GstGLSLProfile profile)
 {
   const gchar *input_str, *output_str;
   gboolean mono_input = FALSE;
   gchar *tmp, *tmp2;
+  GString *str = g_string_new (NULL);
+  guint n_outputs = 1;
 
   switch (in_mode) {
     case GST_VIDEO_MULTIVIEW_MODE_NONE:
@@ -1601,6 +1696,7 @@ _get_shader_string (GstGLViewConvert * viewconvert,
     case GST_VIDEO_MULTIVIEW_MODE_SEPARATED:
     case GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME:
       output_str = frag_output_separated;
+      n_outputs = 2;
       break;
     case GST_VIDEO_MULTIVIEW_MODE_CHECKERBOARD:
       output_str = frag_output_checkerboard;
@@ -1615,15 +1711,50 @@ _get_shader_string (GstGLViewConvert * viewconvert,
       break;
   }
 
-  tmp = g_strdup_printf (fragment_source, input_str, output_str);
-  tmp2 = _mangle_sampler_type (tmp, GST_GL_TEXTURE_TARGET_2D,
-      viewconvert->from_texture_target);
-  g_free (tmp);
-  tmp = _mangle_texture_access (tmp2, GST_GL_TEXTURE_TARGET_2D,
-      viewconvert->from_texture_target);
-  g_free (tmp2);
-  tmp2 = _mangle_extensions (tmp, viewconvert->from_texture_target);
-  g_free (tmp);
+  if (viewconvert->from_texture_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
+    g_string_append (str, glsl_OES_extension_string);
+
+  g_string_append (str, fragment_header);
+
+  /* GL 3.3+ and GL ES 3.x */
+  if ((profile == GST_GLSL_PROFILE_CORE && version >= GST_GLSL_VERSION_330)
+      || (profile == GST_GLSL_PROFILE_ES && version >= GST_GLSL_VERSION_300)) {
+    if (n_outputs > 1) {
+      gint i;
+
+      for (i = 0; i < n_outputs; i++) {
+        g_string_append_printf (str,
+            "layout(location = %d) out vec4 fragColor_%d;\n", i, i);
+      }
+    } else {
+      g_string_append (str, "layout (location = 0) out vec4 fragColor;\n");
+    }
+  } else if (profile == GST_GLSL_PROFILE_CORE
+      && version >= GST_GLSL_VERSION_150) {
+    /* no layout specifiers, use glBindFragDataLocation instead */
+    if (n_outputs > 1) {
+      gint i;
+
+      for (i = 0; i < n_outputs; i++) {
+        gchar *var_name = g_strdup_printf ("fragColor_%d", i);
+        g_string_append_printf (str, "out vec4 %s;\n", var_name);
+        gst_gl_shader_bind_frag_data_location (shader, i, var_name);
+        g_free (var_name);
+      }
+    } else {
+      g_string_append (str, "out vec4 fragColor;\n");
+      gst_gl_shader_bind_frag_data_location (shader, 0, "fragColor");
+    }
+  }
+
+  g_string_append (str, "\nvoid main() {\nvec4 l, r;\n");
+  g_string_append (str, input_str);
+  g_string_append (str, output_str);
+  g_string_append (str, "\n}");
+  tmp = g_string_free (str, FALSE);
+
+  tmp2 = _mangle_shader (tmp, GL_FRAGMENT_SHADER, GST_GL_TEXTURE_TARGET_2D,
+      viewconvert->from_texture_target, version, profile);
 
   return tmp2;
 }
@@ -1673,7 +1804,6 @@ _init_view_convert (GstGLViewConvert * viewconvert)
   };
   gchar *fragment_source_str;
   GstGLFuncs *gl;
-  gboolean res;
   gint l_index, r_index;
 
   gl = viewconvert->context->gl_vtable;
@@ -1774,13 +1904,74 @@ _init_view_convert (GstGLViewConvert * viewconvert)
       tex_scale[0][0], tex_scale[0][1],
       tex_scale[1][0], tex_scale[1][1],
       offsets[0][0], offsets[0][1], offsets[1][0], offsets[1][1]);
-  fragment_source_str = _get_shader_string (viewconvert, in_mode, out_mode);
-  res = gst_gl_context_gen_shader (viewconvert->context,
-      gst_gl_shader_string_vertex_mat4_texture_transform, fragment_source_str,
-      &viewconvert->shader);
-  g_free (fragment_source_str);
-  if (!res)
-    goto error;
+
+  viewconvert->shader = gst_gl_shader_new (viewconvert->context);
+  {
+    GstGLSLVersion version;
+    GstGLSLProfile profile;
+    GstGLAPI gl_api;
+    gint gl_major, gl_minor;
+    GstGLSLStage *vert, *frag;
+    gchar *tmp, *version_str;
+    const gchar *strings[2];
+    GError *error = NULL;
+
+    gl_api = gst_gl_context_get_gl_api (viewconvert->context);
+    gst_gl_context_get_gl_version (viewconvert->context, &gl_major, &gl_minor);
+    _mangle_version_profile_from_gl_api (gl_api, gl_major, gl_minor, &version,
+        &profile);
+
+    tmp = gst_glsl_version_profile_to_string (version, profile);
+    version_str = g_strdup_printf ("#version %s\n", tmp);
+    g_free (tmp);
+    strings[0] = version_str;
+
+    tmp = _mangle_shader (gst_gl_shader_string_vertex_mat4_texture_transform,
+        GL_VERTEX_SHADER, GST_GL_TEXTURE_TARGET_2D,
+        viewconvert->from_texture_target, version, profile);
+    strings[1] = tmp;
+    vert =
+        gst_glsl_stage_new_with_strings (viewconvert->context,
+        GL_VERTEX_SHADER, version, profile, 2, strings);
+    g_free (tmp);
+
+    if (!gst_gl_shader_compile_attach_stage (viewconvert->shader, vert, &error)) {
+      GST_ERROR_OBJECT (viewconvert, "Failed to compile vertex stage %s",
+          error->message);
+      gst_object_unref (viewconvert->shader);
+      viewconvert->shader = NULL;
+      g_free (version_str);
+      goto error;
+    }
+
+    fragment_source_str = _get_shader_string (viewconvert, viewconvert->shader,
+        in_mode, out_mode, version, profile);
+    strings[1] = fragment_source_str;
+
+    frag =
+        gst_glsl_stage_new_with_strings (viewconvert->context,
+        GL_FRAGMENT_SHADER, version, profile, 2, strings);
+    g_free (version_str);
+
+    if (!gst_gl_shader_compile_attach_stage (viewconvert->shader, frag, &error)) {
+      GST_ERROR_OBJECT (viewconvert, "Failed to compile fragment stage %s",
+          error->message);
+      g_free (fragment_source_str);
+      gst_object_unref (viewconvert->shader);
+      viewconvert->shader = NULL;
+      goto error;
+    }
+    g_free (fragment_source_str);
+
+    if (!gst_gl_shader_link (viewconvert->shader, &error)) {
+      GST_ERROR_OBJECT (viewconvert, "Failed to link conversion shader %s",
+          error->message);
+      gst_object_unref (viewconvert->shader);
+      viewconvert->shader = NULL;
+      goto error;
+    }
+  }
+
   viewconvert->priv->attr_position =
       gst_gl_shader_get_attribute_location (viewconvert->shader, "a_position");
   viewconvert->priv->attr_texture =
