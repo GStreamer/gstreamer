@@ -1,0 +1,34 @@
+
+# gst-msdk
+
+gst-msdk is a plugin for
+[Intel Media SDK](https://software.intel.com/en-us/media-sdk), a
+cross-platform API for developing media applications. The plugin has
+multiple elements for video hardware encoding leveraging latest Intel
+processors through Intel Media SDK.
+
+- MPEG2 encoding (*msdkmpeg2enc*)
+
+- H.264 encoding (*msdkh264enc*)
+
+- H.265 encoding (*msdkh265enc*)
+
+- VP8 encoding (*msdkvp8enc*)
+
+
+It requires:
+
+- Intel Media SDK
+
+
+# Giving it a try
+
+Encoding a simple video test source and saving it to a file.
+
+    $ gst-launch-1.0 videotestsrc ! msdkh264enc ! filesink location=test.h264
+
+
+# License
+
+gst-mdk is freely available for download under the terms of the
+[BSD-3-Clause License](https://spdx.org/licenses/BSD-3-Clause.html).
