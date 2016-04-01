@@ -4054,18 +4054,47 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
     }
   }
 
-  /* check duration of last segment */
-  last_media_segment = (stream->segments && stream->segments->len) ?
-      g_ptr_array_index (stream->segments, stream->segments->len - 1) : NULL;
+  /* clip duration of segments to stop at period end */
+  if (stream->segments && stream->segments->len) {
+    if (GST_CLOCK_TIME_IS_VALID (PeriodEnd)) {
+      for (guint n = 0; n < stream->segments->len; ++n) {
+        GstMediaSegment *media_segment =
+            g_ptr_array_index (stream->segments, n);
+        if (media_segment) {
+          if (media_segment->start + media_segment->duration >
+              PeriodEnd - PeriodStart) {
+            GstClockTime stop = PeriodEnd - PeriodStart;
+            if (n < stream->segments->len - 1) {
+              GstMediaSegment *next_segment =
+                  g_ptr_array_index (stream->segments, n + 1);
+              if (next_segment && next_segment->start < PeriodEnd - PeriodStart)
+                stop = next_segment->start;
+            }
+            media_segment->duration =
+                media_segment->start > stop ? 0 : stop - media_segment->start;
+            GST_LOG ("Fixed duration of segment %u: %" GST_TIME_FORMAT, n,
+                GST_TIME_ARGS (media_segment->duration));
 
-  if (last_media_segment && GST_CLOCK_TIME_IS_VALID (PeriodEnd)) {
-    if (last_media_segment->start + last_media_segment->duration > PeriodEnd) {
-      last_media_segment->duration =
-          PeriodEnd - PeriodStart - last_media_segment->start;
-      GST_LOG ("Fixed duration of last segment: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (last_media_segment->duration));
+            /* If the segment was clipped entirely, we discard it and all
+             * subsequent ones */
+            if (media_segment->duration == 0) {
+              GST_WARNING ("Discarding %u segments outside period",
+                  stream->segments->len - n);
+              /* _set_size should properly unref elements */
+              g_ptr_array_set_size (stream->segments, n);
+              break;
+            }
+          }
+        }
+      }
     }
-    GST_LOG ("Built a list of %d segments", last_media_segment->number);
+    if (stream->segments->len > 0) {
+      last_media_segment =
+          g_ptr_array_index (stream->segments, stream->segments->len - 1);
+      GST_LOG ("Built a list of %d segments", last_media_segment->number);
+    } else {
+      GST_LOG ("All media segments were clipped");
+    }
   }
 
   g_free (stream->baseURL);
