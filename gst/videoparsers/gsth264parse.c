@@ -1389,7 +1389,7 @@ get_compatible_profile_caps (GstH264SPS * sps)
     case GST_H264_PROFILE_BASELINE:
       if (sps->constraint_set1_flag) {  /* A.2.1 */
         static const gchar *profile_array[] =
-            { "constrained-baseline", "main", "high", "high-10", "high-4:2:2",
+            { "baseline", "main", "high", "high-10", "high-4:2:2",
           "high-4:4:4", NULL
         };
         profiles = profile_array;
