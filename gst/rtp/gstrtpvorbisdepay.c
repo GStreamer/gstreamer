@@ -612,20 +612,12 @@ switch_failed:
   {
     GST_ELEMENT_WARNING (rtpvorbisdepay, STREAM, DECODE,
         (NULL), ("Could not switch codebooks"));
-    if (payload_buffer) {
-      gst_buffer_unmap (payload_buffer, &map);
-      gst_buffer_unref (payload_buffer);
-    }
     return NULL;
   }
 packet_short:
   {
     GST_ELEMENT_WARNING (rtpvorbisdepay, STREAM, DECODE,
         (NULL), ("Packet was too short (%d < 4)", payload_len));
-    if (payload_buffer) {
-      gst_buffer_unmap (payload_buffer, &map);
-      gst_buffer_unref (payload_buffer);
-    }
     return NULL;
   }
 ignore_reserved:
