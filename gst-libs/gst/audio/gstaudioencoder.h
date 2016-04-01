@@ -295,6 +295,9 @@ void            gst_audio_encoder_set_latency (GstAudioEncoder * enc,
 void            gst_audio_encoder_set_headers (GstAudioEncoder * enc,
                                                GList           * headers);
 
+void            gst_audio_encoder_set_allocation_caps (GstAudioEncoder * enc,
+                                                       GstCaps         * allocation_caps);
+
 /* object properties */
 
 void            gst_audio_encoder_set_mark_granule (GstAudioEncoder * enc,

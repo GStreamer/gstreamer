@@ -203,6 +203,7 @@ typedef struct _GstAudioDecoderContext
   gboolean do_plc;
   gboolean do_estimate_rate;
   gint max_errors;
+  GstCaps *allocation_caps;
   /* MT-protected (with LOCK) */
   GstClockTime min_latency;
   GstClockTime max_latency;
@@ -525,6 +526,7 @@ gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full)
       gst_object_unref (dec->priv->ctx.allocator);
 
     gst_caps_replace (&dec->priv->ctx.input_caps, NULL);
+    gst_caps_replace (&dec->priv->ctx.allocation_caps, NULL);
 
     memset (&dec->priv->ctx, 0, sizeof (dec->priv->ctx));
 
@@ -639,6 +641,8 @@ gst_audio_decoder_negotiate_default (GstAudioDecoder * dec)
   klass = GST_AUDIO_DECODER_GET_CLASS (dec);
 
   caps = gst_audio_info_to_caps (&dec->priv->ctx.info);
+  if (dec->priv->ctx.allocation_caps == NULL)
+    dec->priv->ctx.allocation_caps = gst_caps_ref (caps);
 
   GST_DEBUG_OBJECT (dec, "setting src caps %" GST_PTR_FORMAT, caps);
 
@@ -673,7 +677,7 @@ gst_audio_decoder_negotiate_default (GstAudioDecoder * dec)
     goto done;
   dec->priv->ctx.output_format_changed = FALSE;
 
-  query = gst_query_new_allocation (caps, TRUE);
+  query = gst_query_new_allocation (dec->priv->ctx.allocation_caps, TRUE);
   if (!gst_pad_peer_query (dec->srcpad, query)) {
     GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
   }
@@ -3263,6 +3267,27 @@ gst_audio_decoder_get_parse_state (GstAudioDecoder * dec,
     *sync = dec->priv->ctx.sync;
   if (eos)
     *eos = dec->priv->ctx.eos;
+}
+
+/**
+ * gst_audio_decoder_set_allocation_caps:
+ * @dec: a #GstAudioDecoder
+ * @allocation_caps: (allow-none): a #GstCaps or %NULL
+ *
+ * Sets a caps in allocation query which are different from the set
+ * pad's caps. Use this function before calling
+ * gst_audio_decoder_negotiate(). Setting to %NULL the allocation
+ * query will use the caps from the pad.
+ *
+ * Since: 1.10
+ */
+void
+gst_audio_decoder_set_allocation_caps (GstAudioDecoder * dec,
+    GstCaps * allocation_caps)
+{
+  g_return_if_fail (GST_IS_AUDIO_DECODER (dec));
+
+  gst_caps_replace (&dec->priv->ctx.allocation_caps, allocation_caps);
 }
 
 /**

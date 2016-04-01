@@ -360,6 +360,8 @@ void              gst_audio_decoder_get_parse_state (GstAudioDecoder * dec,
                                                      gboolean        * sync,
                                                      gboolean        * eos);
 
+void              gst_audio_decoder_set_allocation_caps (GstAudioDecoder * dec,
+                                                         GstCaps         * allocation_caps);
 
 /* object properties */
 void              gst_audio_decoder_set_plc (GstAudioDecoder * dec,

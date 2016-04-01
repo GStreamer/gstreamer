@@ -194,6 +194,7 @@ typedef struct _GstAudioEncoderContext
 
   /* output */
   GstCaps *caps;
+  GstCaps *allocation_caps;
   gboolean output_caps_changed;
   gint frame_samples_min, frame_samples_max;
   gint frame_max;
@@ -492,6 +493,7 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
 
     gst_caps_replace (&enc->priv->ctx.input_caps, NULL);
     gst_caps_replace (&enc->priv->ctx.caps, NULL);
+    gst_caps_replace (&enc->priv->ctx.allocation_caps, NULL);
 
     memset (&enc->priv->ctx, 0, sizeof (enc->priv->ctx));
     gst_audio_info_init (&enc->priv->ctx.info);
@@ -2387,6 +2389,27 @@ gst_audio_encoder_set_headers (GstAudioEncoder * enc, GList * headers)
 }
 
 /**
+ * gst_audio_encoder_set_allocation_caps:
+ * @enc: a #GstAudioEncoder
+ * @allocation_caps: (allow-none): a #GstCaps or %NULL
+ *
+ * Sets a caps in allocation query which are different from the set
+ * pad's caps. Use this function before calling
+ * gst_audio_encoder_negotiate(). Setting to %NULL the allocation
+ * query will use the caps from the pad.
+ *
+ * Since: 1.10
+ */
+void
+gst_audio_encoder_set_allocation_caps (GstAudioEncoder * enc,
+    GstCaps * allocation_caps)
+{
+  g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
+
+  gst_caps_replace (&enc->priv->ctx.allocation_caps, allocation_caps);
+}
+
+/**
  * gst_audio_encoder_set_mark_granule:
  * @enc: a #GstAudioEncoder
  * @enabled: new state
@@ -2717,6 +2740,8 @@ gst_audio_encoder_negotiate_default (GstAudioEncoder * enc)
   klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
 
   caps = enc->priv->ctx.caps;
+  if (enc->priv->ctx.allocation_caps == NULL)
+    enc->priv->ctx.allocation_caps = gst_caps_ref (caps);
 
   GST_DEBUG_OBJECT (enc, "Setting srcpad caps %" GST_PTR_FORMAT, caps);
 
@@ -2751,7 +2776,7 @@ gst_audio_encoder_negotiate_default (GstAudioEncoder * enc)
     goto done;
   enc->priv->ctx.output_caps_changed = FALSE;
 
-  query = gst_query_new_allocation (caps, TRUE);
+  query = gst_query_new_allocation (enc->priv->ctx.allocation_caps, TRUE);
   if (!gst_pad_peer_query (enc->srcpad, query)) {
     GST_DEBUG_OBJECT (enc, "didn't get downstream ALLOCATION hints");
   }
