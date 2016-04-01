@@ -2,26 +2,22 @@ Gst-LV2 Quickstart
 
 Dependencies:
 
-SLV2 0.6.* <http://drobilla.net/software/slv2>
-
-Which in turn depends on:
-
-librdf (redland) >= 1.0.6 <http://librdf.org>
+Lilv 0.6.6 <http://drobilla.net/software/lilv/>
 
 
 Example Pipeline:
 
 Requires swh-lv2 <http://plugin.org.uk/releases/>
 
-gst-launch-0.10 -v filesrc location=/usr/share/sounds/login.wav ! wavparse ! audioconvert ! plugin-org-uk-swh-plugins-djFlanger ! audioconvert ! alsasink
+gst-launch-1.0 -v filesrc location=/usr/share/sounds/login.wav ! wavparse ! audioconvert ! plugin-org-uk-swh-plugins-djFlanger ! audioconvert ! autoaudiosink
 
 (A longer wav will be a better example)
 
 
 Requires calf <http://calf.sourceforge.net/>
 
-GST_DEBUG="*:2,signalprocessor:5,lv2:5" 
-gst-launch calf-sourceforge-net-plugins-Monosynth event-in="C-3" ! pulsesink
-gst-launch calf-sourceforge-net-plugins-Monosynth event-in="C-3" name=ms ! pulsesink ms. ! fakesink
-gst-launch calf-sourceforge-net-plugins-Organ event-in="C-3" name=s ! interleave name=i ! pulsesink s. ! i.
+GST_DEBUG="*:2,lv2:5"
+gst-launch-1.0 calf-sourceforge-net-plugins-Monosynth event-in="C-3" ! autoaudiosink
+gst-launch-1.0 calf-sourceforge-net-plugins-Monosynth event-in="C-3" name=ms ! autoaudiosink ms. ! fakesink
+gst-launch-1.0 calf-sourceforge-net-plugins-Organ event-in="C-3" name=s ! interleave name=i ! autoaudiosink s. ! i.
 
