@@ -47,7 +47,11 @@
 #include <gst/gst.h>
 #include <gst/video/gstvideofilter.h>
 #include <opencv2/core/core_c.h>
-
+#include <opencv2/video/background_segm.hpp>
+#include <opencv2/core/version.hpp>
+#if (CV_MAJOR_VERSION >= 3)
+  #include <opencv2/bgsegm.hpp>
+#endif
 
 
 G_BEGIN_DECLS
@@ -107,8 +111,13 @@ struct _GstSegmentation
   CvSeq *contours;
 
   /* for MOG methods */
+#if (CV_MAJOR_VERSION >= 3)
+  cv::Ptr<cv::BackgroundSubtractor> mog;                   /* cv::BackgroundSubtractorMOG */
+  cv::Ptr<cv::BackgroundSubtractorMOG2> mog2;                   /* cv::BackgroundSubtractorMOG2 */
+#else
   void *mog;                    /* cv::BackgroundSubtractorMOG */
   void *mog2;                   /* cv::BackgroundSubtractorMOG2 */
+#endif
   void *img_input_as_cvMat;     /* cv::Mat */
   void *img_fg_as_cvMat;        /* cv::Mat */
   double learning_rate;

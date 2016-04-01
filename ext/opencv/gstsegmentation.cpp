@@ -91,12 +91,15 @@
 #endif
 
 #include "gstsegmentation.h"
-#include <opencv2/video/background_segm.hpp>
 #include <opencv2/imgproc/imgproc_c.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_segmentation_debug);
 #define GST_CAT_DEFAULT gst_segmentation_debug
 
+using namespace cv;
+#if (CV_MAJOR_VERSION >= 3)
+  using namespace cv::bgsegm;
+#endif
 /* Filter signals and args */
 enum
 {
@@ -777,11 +780,16 @@ find_connected_components (IplImage * mask, int poly1_hull0, float perimScale,
 int
 initialise_mog (GstSegmentation * filter)
 {
-  filter->img_input_as_cvMat = (void *) new cv::Mat (filter->cvYUV, false);
-  filter->img_fg_as_cvMat = (void *) new cv::Mat (filter->cvFG, false);
+  filter->img_input_as_cvMat = (void *) new Mat (cvarrToMat (filter->cvYUV, false));
+  filter->img_fg_as_cvMat = (void *) new Mat (cvarrToMat(filter->cvFG, false));
 
-  filter->mog = (void *) new cv::BackgroundSubtractorMOG ();
-  filter->mog2 = (void *) new cv::BackgroundSubtractorMOG2 ();
+#if (CV_MAJOR_VERSION >= 3)
+  filter->mog = bgsegm::createBackgroundSubtractorMOG ();
+  filter->mog2 = createBackgroundSubtractorMOG2 ();
+#else
+  filter->mog = (void *) new BackgroundSubtractorMOG ();
+  filter->mog2 = (void *) new BackgroundSubtractorMOG2 ();
+#endif
 
   return (0);
 }
@@ -804,9 +812,15 @@ run_mog_iteration (GstSegmentation * filter)
      European Workshop on Advanced Video-Based Surveillance Systems, 2001
    */
 
-  (*((cv::BackgroundSubtractorMOG *) filter->mog)) (*((cv::Mat *) filter->
-          img_input_as_cvMat), *((cv::Mat *) filter->img_fg_as_cvMat),
+#if (CV_MAJOR_VERSION >= 3)
+  filter->mog->apply (*((Mat *) filter->
+          img_input_as_cvMat), *((Mat *) filter->img_fg_as_cvMat),
       filter->learning_rate);
+#else
+  (*((BackgroundSubtractorMOG *) filter->mog)) (*((Mat *) filter->
+          img_input_as_cvMat), *((Mat *) filter->img_fg_as_cvMat),
+      filter->learning_rate);
+#endif
 
   return (0);
 }
@@ -814,10 +828,10 @@ run_mog_iteration (GstSegmentation * filter)
 int
 run_mog2_iteration (GstSegmentation * filter)
 {
-  ((cv::Mat *) filter->img_input_as_cvMat)->data =
-      (uchar *) filter->cvYUV->imageData;
-  ((cv::Mat *) filter->img_fg_as_cvMat)->data =
-      (uchar *) filter->cvFG->imageData;
+  ((Mat *) filter->img_input_as_cvMat)->data =
+       (uchar *) filter->cvYUV->imageData;
+  ((Mat *) filter->img_fg_as_cvMat)->data =
+       (uchar *) filter->cvFG->imageData;
 
   /*
      BackgroundSubtractorMOG2 [1], Gaussian Mixture-based Background/Foreground
@@ -832,9 +846,15 @@ run_mog2_iteration (GstSegmentation * filter)
      Letters, vol. 27, no. 7, pages 773-780, 2006.
    */
 
-  (*((cv::BackgroundSubtractorMOG *) filter->mog2)) (*((cv::Mat *) filter->
-          img_input_as_cvMat), *((cv::Mat *) filter->img_fg_as_cvMat),
+#if (CV_MAJOR_VERSION >= 3)
+  filter->mog2->apply (*((Mat *) filter->
+          img_input_as_cvMat), *((Mat *) filter->img_fg_as_cvMat),
       filter->learning_rate);
+#else
+  (*((BackgroundSubtractorMOG *) filter->mog2)) (*((Mat *) filter->
+          img_input_as_cvMat), *((Mat *) filter->img_fg_as_cvMat),
+      filter->learning_rate);
+#endif
 
   return (0);
 }
@@ -842,9 +862,14 @@ run_mog2_iteration (GstSegmentation * filter)
 int
 finalise_mog (GstSegmentation * filter)
 {
-  delete (cv::Mat *) filter->img_input_as_cvMat;
-  delete (cv::Mat *) filter->img_fg_as_cvMat;
-  delete (cv::BackgroundSubtractorMOG *) filter->mog;
-  delete (cv::BackgroundSubtractorMOG2 *) filter->mog2;
+  delete (Mat *) filter->img_input_as_cvMat;
+  delete (Mat *) filter->img_fg_as_cvMat;
+#if (CV_MAJOR_VERSION >= 3)
+  filter->mog.release ();
+  filter->mog2.release ();
+#else
+  delete (BackgroundSubtractorMOG *) filter->mog;
+  delete (BackgroundSubtractorMOG2 *) filter->mog2;
+#endif
   return (0);
 }
