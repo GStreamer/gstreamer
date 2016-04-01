@@ -20,19 +20,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/**
- * SECTION:element-lv2
- * @short_description: bridge for LV2.
- *
- * LV2 is a standard for plugins and matching host applications,
- * mainly targeted at audio processing and generation.  It is intended as
- * a successor to LADSPA (Linux Audio Developer's Simple Plugin API).
- *
- * The LV2 element is a bridge for plugins using the
- * <ulink url="http://www.lv2plug.in/">LV2</ulink> API.  It scans all
- * installed LV2 plugins and registers them as gstreamer elements.
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
