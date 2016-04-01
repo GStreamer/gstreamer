@@ -525,7 +525,6 @@ gst_lv2_filter_base_init (gpointer g_class)
   /* FIXME Handle channels positionning
    * GstAudioChannelPosition position = GST_AUDIO_CHANNEL_POSITION_INVALID; */
   guint j, in_pad_index = 0, out_pad_index = 0;
-  const gchar *klass_tags;
   gchar *longname, *author;
 
   lv2plugin = (LilvPlugin *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
@@ -615,11 +614,8 @@ gst_lv2_filter_base_init (gpointer g_class)
     author = g_strdup ("no author available");
   }
 
-  klass_tags = "Filter/Effect/Audio/LV2";
-
-  GST_INFO ("tags : %s", klass_tags);
   gst_element_class_set_metadata (element_class, longname,
-      klass_tags, longname, author);
+      "Filter/Effect/Audio/LV2", longname, author);
   g_free (longname);
   g_free (author);
 
