@@ -291,8 +291,8 @@ fill_picture (GstVaapiDecoderVp9 * decoder, GstVaapiPicture * picture)
 #define COPY_BFM(a, s, f) \
     pic_param->a.bits.f = (s)->f
 
-  COPY_BFM (pic_fields, frame_hdr, subsampling_x);
-  COPY_BFM (pic_fields, frame_hdr, subsampling_y);
+  COPY_BFM (pic_fields, parser, subsampling_x);
+  COPY_BFM (pic_fields, parser, subsampling_y);
   COPY_BFM (pic_fields, frame_hdr, frame_type);
   COPY_BFM (pic_fields, frame_hdr, show_frame);
   COPY_BFM (pic_fields, frame_hdr, error_resilient_mode);
@@ -320,7 +320,7 @@ fill_picture (GstVaapiDecoderVp9 * decoder, GstVaapiPicture * picture)
   COPY_FIELD (frame_hdr, first_partition_size);
   COPY_FIELD (frame_hdr, profile);
 #if VA_CHECK_VERSION (0, 39, 0)
-  COPY_FIELD (frame_hdr, bit_depth);
+  COPY_FIELD (parser, bit_depth);
 #endif
 
   g_assert (G_N_ELEMENTS (pic_param->mb_segment_tree_probs) ==
