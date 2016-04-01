@@ -823,7 +823,8 @@ gst_dash_demux_setup_streams (GstAdaptiveDemux * demux)
       gint64 dfp =
           gst_mpd_client_parse_default_presentation_delay (dashdemux->client,
           dashdemux->default_presentation_delay);
-      GstDateTime *target = gst_mpd_client_add_time_difference (now, dfp);
+      GstDateTime *target = gst_mpd_client_add_time_difference (now,
+          dfp * -1000);
       gst_date_time_unref (now);
       now = target;
     }
