@@ -763,8 +763,41 @@ gst_debug_help (void)
   /* FIXME this is gross.  why don't debug have categories PluginFeatures? */
   for (g = list2; g; g = g_list_next (g)) {
     GstPlugin *plugin = GST_PLUGIN_CAST (g->data);
+    GList *features, *orig_features;
+
+    if (GST_OBJECT_FLAG_IS_SET (plugin, GST_PLUGIN_FLAG_BLACKLISTED))
+      continue;
 
     gst_plugin_load (plugin);
+    /* Now create one of each feature so the class_init functions
+     * are called, as that's where most debug categories are
+     * registered. FIXME: If debug categories were a plugin feature,
+     * this would be unneeded */
+    orig_features = features =
+        gst_registry_get_feature_list_by_plugin (gst_registry_get (),
+        gst_plugin_get_name (plugin));
+    while (features) {
+      GstPluginFeature *feature;
+
+      if (G_UNLIKELY (features->data == NULL))
+        goto next;
+
+      feature = GST_PLUGIN_FEATURE (features->data);
+      if (GST_IS_ELEMENT_FACTORY (feature)) {
+        GstElementFactory *factory;
+        GstElement *e;
+
+        factory = GST_ELEMENT_FACTORY (feature);
+        e = gst_element_factory_create (factory, NULL);
+        if (e)
+          gst_object_unref (e);
+      }
+
+    next:
+      features = g_list_next (features);
+    }
+
+    gst_plugin_feature_list_free (orig_features);
   }
   g_list_free (list2);
 
