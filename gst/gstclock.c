@@ -1474,7 +1474,7 @@ invalid:
   {
     /* no valid regression has been done, ignore the result then */
     GST_CLOCK_SLAVE_UNLOCK (clock);
-    return TRUE;
+    return FALSE;
   }
 }
 
