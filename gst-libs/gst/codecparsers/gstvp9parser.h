@@ -350,17 +350,12 @@ struct _GstVp9SegmentationInfo {
  * @frame_type: frame type
  * @show_frame: indicate whether it is a displayable frame or not
  * @error_resilient_mode: error resilent mode
- * @subsampling_x: horizontal subsampling
- * @subsampling_y: vertical subsampling
  * @width: frame width
  * @height: frame height
  * @display_size_enabled: display size enabled (cropping)
  * @display_width: display width
  * @display_height: display height
  * @frame_context_idx: frame context index
- * @bit_depth: bit depth of the stream
- * @color_space: color space standard
- * @color_range: color range standard
  * @intra_only: intra only frame
  * @reset_frame_context: reset frame context
  * @refresh_frame_flags: refresh reference frame flags
@@ -391,18 +386,12 @@ struct _GstVp9FrameHdr
   guint frame_type;
   guint8 show_frame;
   guint8 error_resilient_mode;
-  gint subsampling_x;
-  gint subsampling_y;
   guint32 width;
   guint32 height;
   guint8 display_size_enabled;
   guint32 display_width;
   guint32 display_height;
   guint frame_context_idx;
-
-  guint bit_depth;
-  guint color_space;
-  guint color_range;
 
   guint8 intra_only;
   gint reset_frame_context;
@@ -464,6 +453,11 @@ struct _GstVp9Segmentation
 /**
  * GstVp9Parser:
  * @priv: GstVp9ParserPrivate struct to keep track of state variables
+ * @subsampling_x: horizontal subsampling
+ * @subsampling_y: vertical subsampling
+ * @bit_depth: bit depth of the stream
+ * @color_space: color space standard
+ * @color_range: color range standard
  * @mb_segment_tree_probs: decoding tree probabilities
  * @segment_pred_probs: segment prediction probabiilties
  * @segmentation: Segmentation info
@@ -476,6 +470,12 @@ struct _GstVp9Parser
 {
   /* private stuct for tracking state variables across frames */
   void *priv;
+
+  gint subsampling_x;
+  gint subsampling_y;
+  guint bit_depth;
+  guint color_space;
+  guint color_range;
 
   guint8 mb_segment_tree_probs[GST_VP9_SEG_TREE_PROBS];
   guint8 segment_pred_probs[GST_VP9_PREDICTION_PROBS];

@@ -103,26 +103,26 @@ verify_sync_code (GstBitReader * const br)
 }
 
 static gboolean
-parse_bitdepth_colorspace_sampling (GstBitReader * const br,
-    GstVp9FrameHdr * frame_hdr)
+parse_bitdepth_colorspace_sampling (GstVp9Parser * parser,
+    GstBitReader * const br, GstVp9FrameHdr * frame_hdr)
 {
   if (frame_hdr->profile > GST_VP9_PROFILE_1)
-    frame_hdr->bit_depth =
+    parser->bit_depth =
         gst_vp9_read_bit (br) ? GST_VP9_BIT_DEPTH_12 : GST_VP9_BIT_DEPTH_10;
   else
-    frame_hdr->bit_depth = GST_VP9_BIT_DEPTH_8;
+    parser->bit_depth = GST_VP9_BIT_DEPTH_8;
 
-  frame_hdr->color_space = gst_vp9_read_bits (br, 3);
-  if (frame_hdr->color_space != GST_VP9_CS_SRGB) {
-    frame_hdr->color_range = gst_vp9_read_bit (br);
+  parser->color_space = gst_vp9_read_bits (br, 3);
+  if (parser->color_space != GST_VP9_CS_SRGB) {
+    parser->color_range = gst_vp9_read_bit (br);
 
     if (frame_hdr->profile == GST_VP9_PROFILE_1
         || frame_hdr->profile == GST_VP9_PROFILE_3) {
 
-      frame_hdr->subsampling_x = gst_vp9_read_bit (br);
-      frame_hdr->subsampling_y = gst_vp9_read_bit (br);
+      parser->subsampling_x = gst_vp9_read_bit (br);
+      parser->subsampling_y = gst_vp9_read_bit (br);
 
-      if (frame_hdr->subsampling_x == 1 && frame_hdr->subsampling_y == 1) {
+      if (parser->subsampling_x == 1 && parser->subsampling_y == 1) {
         GST_ERROR
             ("4:2:0 subsampling is not supported in profile_1 or profile_3");
         goto error;
@@ -133,10 +133,10 @@ parse_bitdepth_colorspace_sampling (GstBitReader * const br,
         goto error;
       }
     } else {
-      frame_hdr->subsampling_y = frame_hdr->subsampling_x = 1;
+      parser->subsampling_y = parser->subsampling_x = 1;
     }
   } else {
-    frame_hdr->color_range = GST_VP9_CR_FULL;
+    parser->color_range = GST_VP9_CR_FULL;
 
     if (frame_hdr->profile == GST_VP9_PROFILE_1
         || frame_hdr->profile == GST_VP9_PROFILE_3) {
@@ -481,12 +481,12 @@ segmentation_update (GstVp9Parser * parser, const GstVp9FrameHdr * frame_hdr)
     const GstVp9SegmentationInfoData *info = priv->segmentation + i;
 
     seg->luma_dc_quant_scale =
-        gst_vp9_dc_quant (q, quant_indices->y_dc_delta, frame_hdr->bit_depth);
-    seg->luma_ac_quant_scale = gst_vp9_ac_quant (q, 0, frame_hdr->bit_depth);
+        gst_vp9_dc_quant (q, quant_indices->y_dc_delta, parser->bit_depth);
+    seg->luma_ac_quant_scale = gst_vp9_ac_quant (q, 0, parser->bit_depth);
     seg->chroma_dc_quant_scale =
-        gst_vp9_dc_quant (q, quant_indices->uv_dc_delta, frame_hdr->bit_depth);
+        gst_vp9_dc_quant (q, quant_indices->uv_dc_delta, parser->bit_depth);
     seg->chroma_ac_quant_scale =
-        gst_vp9_ac_quant (q, quant_indices->uv_ac_delta, frame_hdr->bit_depth);
+        gst_vp9_ac_quant (q, quant_indices->uv_ac_delta, parser->bit_depth);
 
     if (lf->filter_level) {
       guint8 filter = seg_get_filter_level (parser, frame_hdr, i);
@@ -578,13 +578,17 @@ setup_past_independence (GstVp9Parser * parser,
 }
 
 static void
-gst_vp9_parser_init (GstVp9Parser * parser)
+gst_vp9_parser_reset (GstVp9Parser * parser)
 {
   GstVp9ParserPrivate *priv = parser->priv;
 
-  memset (parser, 0, sizeof (GstVp9Parser));
-  memset (priv, 0, sizeof (GstVp9ParserPrivate));
+  parser->priv = NULL;
+  memset (parser->mb_segment_tree_probs, 0,
+      sizeof (parser->mb_segment_tree_probs));
+  memset (parser->segment_pred_probs, 0, sizeof (parser->segment_pred_probs));
+  memset (parser->segmentation, 0, sizeof (parser->segmentation));
 
+  memset (priv, 0, sizeof (GstVp9ParserPrivate));
   parser->priv = priv;
 }
 
@@ -592,7 +596,7 @@ static GstVp9ParserResult
 gst_vp9_parser_update (GstVp9Parser * parser, GstVp9FrameHdr * const frame_hdr)
 {
   if (frame_hdr->frame_type == GST_VP9_KEY_FRAME)
-    gst_vp9_parser_init (parser);
+    gst_vp9_parser_reset (parser);
 
   if (frame_is_intra_only (frame_hdr) || frame_hdr->error_resilient_mode)
     setup_past_independence (parser, frame_hdr);
@@ -626,16 +630,15 @@ gst_vp9_parser_new (void)
   INITIALIZE_DEBUG_CATEGORY;
   GST_DEBUG ("Create VP9 Parser");
 
-  parser = g_slice_new (GstVp9Parser);
+  parser = g_slice_new0 (GstVp9Parser);
   if (!parser)
     return NULL;
 
-  priv = g_slice_new (GstVp9ParserPrivate);
+  priv = g_slice_new0 (GstVp9ParserPrivate);
   if (!priv)
     return NULL;
 
   parser->priv = priv;
-  gst_vp9_parser_init (parser);
 
   return parser;
 }
@@ -712,7 +715,7 @@ gst_vp9_parser_parse_frame_header (GstVp9Parser * parser,
       goto error;
     }
 
-    if (!parse_bitdepth_colorspace_sampling (br, frame_hdr)) {
+    if (!parse_bitdepth_colorspace_sampling (parser, br, frame_hdr)) {
       GST_ERROR ("Failed to parse color_space/bit_depth info !");
       goto error;
     }
@@ -734,15 +737,15 @@ gst_vp9_parser_parse_frame_header (GstVp9Parser * parser,
       }
 
       if (frame_hdr->profile > GST_VP9_PROFILE_0) {
-        if (!parse_bitdepth_colorspace_sampling (br, frame_hdr)) {
+        if (!parse_bitdepth_colorspace_sampling (parser, br, frame_hdr)) {
           GST_ERROR ("Failed to parse color_space/bit_depth info !");
           goto error;
         }
       } else {
-        frame_hdr->color_space = GST_VP9_CS_BT_601;
-        frame_hdr->color_range = GST_VP9_CR_LIMITED;
-        frame_hdr->subsampling_y = frame_hdr->subsampling_x = 1;
-        frame_hdr->bit_depth = GST_VP9_BIT_DEPTH_8;
+        parser->color_space = GST_VP9_CS_BT_601;
+        parser->color_range = GST_VP9_CR_LIMITED;
+        parser->subsampling_y = parser->subsampling_x = 1;
+        parser->bit_depth = GST_VP9_BIT_DEPTH_8;
       }
 
       frame_hdr->refresh_frame_flags =
@@ -766,12 +769,6 @@ gst_vp9_parser_parse_frame_header (GstVp9Parser * parser,
 
       frame_hdr->allow_high_precision_mv = gst_vp9_read_bit (br);
       frame_hdr->mcomp_filter_type = parse_interp_filter (br);
-
-      /* Assing defalut values */
-      frame_hdr->color_space = GST_VP9_CS_BT_601;
-      frame_hdr->color_range = GST_VP9_CR_LIMITED;
-      frame_hdr->subsampling_y = frame_hdr->subsampling_x = 1;
-      frame_hdr->bit_depth = GST_VP9_BIT_DEPTH_8;
     }
   }
 
@@ -811,7 +808,6 @@ gst_vp9_parser_parse_frame_header (GstVp9Parser * parser,
 
   frame_hdr->frame_header_length_in_bytes =
       (gst_bit_reader_get_pos (br) + 7) / 8;
-
   return gst_vp9_parser_update (parser, frame_hdr);
 
 error:
