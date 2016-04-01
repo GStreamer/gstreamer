@@ -153,13 +153,43 @@ gst_vaapi_decoder_vp9_create (GstVaapiDecoder * base_decoder)
   return TRUE;
 }
 
+/* Returns GstVaapiProfile from VP9 frame_hdr profile value */
+static GstVaapiProfile
+get_profile (guint profile_idc)
+{
+  GstVaapiProfile profile;
+
+  switch (profile_idc) {
+    case GST_VP9_PROFILE_0:
+      profile = GST_VAAPI_PROFILE_VP9_0;
+      break;
+    case GST_VP9_PROFILE_1:
+      profile = GST_VAAPI_PROFILE_VP9_1;
+      break;
+    case GST_VP9_PROFILE_2:
+      profile = GST_VAAPI_PROFILE_VP9_2;
+      break;
+    case GST_VP9_PROFILE_3:
+      profile = GST_VAAPI_PROFILE_VP9_3;
+      break;
+    default:
+      g_debug ("unsupported profile_idc value");
+      profile = GST_VAAPI_PROFILE_UNKNOWN;
+      break;
+  }
+  return profile;
+}
+
 static GstVaapiDecoderStatus
 ensure_context (GstVaapiDecoderVp9 * decoder)
 {
   GstVaapiDecoderVp9Private *const priv = &decoder->priv;
-  const GstVaapiProfile profile = GST_VAAPI_PROFILE_VP9;
+  GstVp9FrameHdr *frame_hdr = &priv->frame_hdr;
+  GstVaapiProfile profile;
   const GstVaapiEntrypoint entrypoint = GST_VAAPI_ENTRYPOINT_VLD;
   gboolean reset_context = FALSE;
+
+  profile = get_profile (frame_hdr->profile);
 
   if (priv->profile != profile) {
     if (!gst_vaapi_display_has_decoder (GST_VAAPI_DECODER_DISPLAY (decoder),
@@ -292,6 +322,7 @@ fill_picture (GstVaapiDecoderVp9 * decoder, GstVaapiPicture * picture)
 #if VA_CHECK_VERSION (0, 39, 0)
   COPY_FIELD (frame_hdr, bit_depth);
 #endif
+
   g_assert (G_N_ELEMENTS (pic_param->mb_segment_tree_probs) ==
       G_N_ELEMENTS (parser->mb_segment_tree_probs));
   g_assert (G_N_ELEMENTS (pic_param->segment_pred_probs) ==
