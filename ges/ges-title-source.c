@@ -241,7 +241,8 @@ ges_title_source_create_source (GESTrackElement * object)
   GESTitleSourcePrivate *priv = self->priv;
   const gchar *bg_props[] = { "pattern", "foreground-color", NULL };
   const gchar *text_props[] = { "text", "font-desc", "valignment", "halignment",
-    "color", "xpos", "ypos", "outline-color", "shaded-background",
+    "color", "xpos", "ypos", "x-absolute", "y-absolute", "outline-color",
+    "shaded-background",
     "text-x", "text-y", "text-width", "text-height", NULL
   };
 
