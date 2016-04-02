@@ -46,6 +46,7 @@ struct _GstRTPBaseDepayloadPrivate
   GstClockTime dts;
   GstClockTime duration;
 
+  guint32 last_ssrc;
   guint32 last_seqnum;
   guint32 last_rtptime;
   guint32 next_seqnum;
@@ -356,6 +357,7 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
   GstRTPBaseDepayloadPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *out_buf;
+  guint32 ssrc;
   guint16 seqnum;
   guint32 rtptime;
   gboolean discont, buf_discont;
@@ -380,6 +382,7 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
   priv->dts = GST_BUFFER_DTS (in);
   priv->duration = GST_BUFFER_DURATION (in);
 
+  ssrc = gst_rtp_buffer_get_ssrc (&rtp);
   seqnum = gst_rtp_buffer_get_seq (&rtp);
   rtptime = gst_rtp_buffer_get_timestamp (&rtp);
 
@@ -396,32 +399,40 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
    * are strictly increasing, dropping anything that is out of the ordinary. We
    * can only do this when the next_seqnum is known. */
   if (G_LIKELY (priv->next_seqnum != -1)) {
-    gap = gst_rtp_buffer_compare_seqnum (seqnum, priv->next_seqnum);
+    if (ssrc != priv->last_ssrc) {
+      GST_LOG_OBJECT (filter,
+          "New ssrc %u (current ssrc %u), sender restarted",
+          ssrc, priv->last_ssrc);
+          discont = TRUE;
+    } else {
+      gap = gst_rtp_buffer_compare_seqnum (seqnum, priv->next_seqnum);
 
-    /* if we have no gap, all is fine */
-    if (G_UNLIKELY (gap != 0)) {
-      GST_LOG_OBJECT (filter, "got packet %u, expected %u, gap %d", seqnum,
-          priv->next_seqnum, gap);
-      if (gap < 0) {
-        /* seqnum > next_seqnum, we are missing some packets, this is always a
-         * DISCONT. */
-        GST_LOG_OBJECT (filter, "%d missing packets", gap);
-        discont = TRUE;
-      } else {
-        /* seqnum < next_seqnum, we have seen this packet before or the sender
-         * could be restarted. If the packet is not too old, we throw it away as
-         * a duplicate, otherwise we mark discont and continue. 100 misordered
-         * packets is a good threshold. See also RFC 4737. */
-        if (gap < 100)
-          goto dropping;
+      /* if we have no gap, all is fine */
+      if (G_UNLIKELY (gap != 0)) {
+        GST_LOG_OBJECT (filter, "got packet %u, expected %u, gap %d", seqnum,
+            priv->next_seqnum, gap);
+        if (gap < 0) {
+          /* seqnum > next_seqnum, we are missing some packets, this is always a
+           * DISCONT. */
+          GST_LOG_OBJECT (filter, "%d missing packets", gap);
+          discont = TRUE;
+        } else {
+          /* seqnum < next_seqnum, we have seen this packet before or the sender
+           * could be restarted. If the packet is not too old, we throw it away as
+           * a duplicate, otherwise we mark discont and continue. 100 misordered
+           * packets is a good threshold. See also RFC 4737. */
+          if (gap < 100)
+            goto dropping;
 
-        GST_LOG_OBJECT (filter,
-            "%d > 100, packet too old, sender likely restarted", gap);
-        discont = TRUE;
+          GST_LOG_OBJECT (filter,
+              "%d > 100, packet too old, sender likely restarted", gap);
+          discont = TRUE;
+        }
       }
     }
   }
   priv->next_seqnum = (seqnum + 1) & 0xffff;
+  priv->last_ssrc = ssrc;
 
   if (G_UNLIKELY (discont)) {
     priv->discont = TRUE;

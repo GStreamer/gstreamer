@@ -730,6 +730,50 @@ GST_START_TEST (rtp_base_depayload_reversed_test)
 }
 
 GST_END_TEST
+/* The same scenario as in rtp_base_depayload_reversed_test
+ * except that SSRC is changed for the 2nd packet that is why
+ * it should not be discarded.
+ */
+GST_START_TEST (rtp_base_depayload_ssrc_changed_test)
+{
+  State *state;
+
+  state = create_depayloader ("application/x-rtp", NULL);
+
+  set_state (state, GST_STATE_PLAYING);
+
+  push_rtp_buffer (state,
+      "pts", 0 * GST_SECOND,
+      "rtptime", G_GUINT64_CONSTANT (0x43214321),
+      "seq", 0x4242, "ssrc", 0xabe2b0b, NULL);
+
+  push_rtp_buffer (state,
+      "pts", 1 * GST_SECOND,
+      "rtptime", G_GUINT64_CONSTANT (0x43214321) + 1 * DEFAULT_CLOCK_RATE,
+      "seq", 0x4242 - 1, "ssrc", 0xcafebabe, NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  validate_buffers_received (2);
+
+  validate_buffer (0, "pts", 0 * GST_SECOND, "discont", FALSE, NULL);
+
+  validate_buffer (1, "pts", 1 * GST_SECOND, "discont", TRUE, NULL);
+
+  validate_events_received (3);
+
+  validate_event (0, "stream-start", NULL);
+
+  validate_event (1, "caps", "media-type", "application/x-rtp", NULL);
+
+  validate_event (2, "segment",
+      "time", G_GUINT64_CONSTANT (0),
+      "start", G_GUINT64_CONSTANT (0), "stop", G_MAXUINT64, NULL);
+
+  destroy_depayloader (state);
+}
+
+GST_END_TEST
 /* the intent of this test is to push two RTP packets that have reverse sequence
  * numbers that differ significantly. the depayloader will consider RTP packets
  * where the sequence numbers differ by more than 1000 to indicate that the
@@ -1198,6 +1242,7 @@ rtp_basepayloading_suite (void)
   tcase_add_test (tc_chain, rtp_base_depayload_invalid_rtp_packet_test);
   tcase_add_test (tc_chain, rtp_base_depayload_with_gap_test);
   tcase_add_test (tc_chain, rtp_base_depayload_reversed_test);
+  tcase_add_test (tc_chain, rtp_base_depayload_ssrc_changed_test);
   tcase_add_test (tc_chain, rtp_base_depayload_old_reversed_test);
 
   tcase_add_test (tc_chain, rtp_base_depayload_without_negotiation_test);
