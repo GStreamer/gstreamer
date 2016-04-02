@@ -202,7 +202,7 @@ invalid_size:
  *   if (gst_video_frame_map (&amp;vframe, video_info, video_buffer)) {
  *     guint8 *pixels = GST_VIDEO_FRAME_PLANE_DATA (vframe, 0);
  *     guint stride = GST_VIDEO_FRAME_PLANE_STRIDE (vframe, 0);
- *     guint pixel_stride = GST_VIDEO_FRAME_PLANE_PSTRIDE (vframe, 0);
+ *     guint pixel_stride = GST_VIDEO_FRAME_COMP_PSTRIDE (vframe, 0);
  *
  *     for (h = 0; h < height; ++h) {
  *       for (w = 0; w < width; ++w) {
