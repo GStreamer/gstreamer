@@ -410,6 +410,8 @@ gst_discoverer_info_copy (GstDiscovererInfo * ptr)
         stream_map);
   }
   ret->duration = ptr->duration;
+  ret->result = ptr->result;
+  ret->seekable = ptr->seekable;
   if (ptr->misc)
     ret->misc = gst_structure_copy (ptr->misc);
 
