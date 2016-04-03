@@ -720,10 +720,11 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
         /* fill up to the end of current segment,
          * or only send out the stored buffer if there is no specific stop.
          * regardless, prevent going loopy in strange cases */
-        while (res == GST_FLOW_OK && count <= MAGIC_LIMIT &&
-            ((GST_CLOCK_TIME_IS_VALID (videorate->segment.stop) &&
-                    videorate->next_ts - videorate->segment.base
-                    < videorate->segment.stop)
+        while (res == GST_FLOW_OK && count <= MAGIC_LIMIT
+            && !videorate->drop_only
+            && ((GST_CLOCK_TIME_IS_VALID (videorate->segment.stop)
+                    && videorate->next_ts - videorate->segment.base <
+                    videorate->segment.stop)
                 || count < 1)) {
           res = gst_video_rate_flush_prev (videorate, count > 0);
           count++;
@@ -759,14 +760,15 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
         /* fill up to the end of current segment,
          * or only send out the stored buffer if there is no specific stop.
          * regardless, prevent going loopy in strange cases */
-        while (res == GST_FLOW_OK && count <= MAGIC_LIMIT &&
-            ((videorate->next_ts - videorate->segment.base <
+        while (res == GST_FLOW_OK && count <= MAGIC_LIMIT
+            && !videorate->drop_only
+            && ((videorate->next_ts - videorate->segment.base <
                     videorate->segment.stop)
                 || count < 1)) {
           res = gst_video_rate_flush_prev (videorate, count > 0);
           count++;
         }
-      } else if (videorate->prevbuf) {
+      } else if (!videorate->drop_only && videorate->prevbuf) {
         /* Output at least one frame but if the buffer duration is valid, output
          * enough frames to use the complete buffer duration */
         if (GST_BUFFER_DURATION_IS_VALID (videorate->prevbuf)) {
