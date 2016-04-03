@@ -2139,10 +2139,6 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
   if (aggpad->priv->pending_eos == TRUE)
     goto eos;
 
-  flow_return = aggpad->priv->flow_return;
-  if (flow_return != GST_FLOW_OK)
-    goto flushing;
-
   PAD_UNLOCK (aggpad);
 
   if (aggclass->clip && head) {
