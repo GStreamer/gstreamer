@@ -1227,9 +1227,6 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
         }
       }
 
-      /* Do not produce any dups. We can exit loop now */
-      if (videorate->drop_only)
-        break;
       /* continue while the first one was the best, if they were equal avoid
        * going into an infinite loop */
     }
