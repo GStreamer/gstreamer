@@ -48,12 +48,13 @@ lib_LTLIBRARIES = \
 libgstrtspserver_@GST_API_VERSION@_la_SOURCES = \
     $(c_sources)
 
-libgstrtspserver_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+libgstrtspserver_@GST_API_VERSION@_la_CFLAGS = \
+    $(GST_PLUGINS_BASE_CFLAGS) $(GST_NET_CFLAGS) \
+    $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstrtspserver_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 libgstrtspserver_@GST_API_VERSION@_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_NET_LIBS) $(GST_BASE_LIBS) \
     -lgstrtp-@GST_API_VERSION@ -lgstrtsp-@GST_API_VERSION@ \
-            -lgstnet-@GST_API_VERSION@ \
             -lgstsdp-@GST_API_VERSION@ \
             -lgstapp-@GST_API_VERSION@ \
 	    $(GST_LIBS) $(GIO_LIBS) $(LIBM)
