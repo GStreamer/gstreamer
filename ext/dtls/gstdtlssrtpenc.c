@@ -172,19 +172,19 @@ gst_dtls_srtp_enc_init (GstDtlsSrtpEnc * self)
                  +--------------------+     +-----------------+
 */
 
-  self->srtp_enc = gst_element_factory_make ("srtpenc", "srtp-encoder");
+  self->srtp_enc = gst_element_factory_make ("srtpenc", NULL);
   if (!self->srtp_enc) {
     GST_ERROR_OBJECT (self,
         "failed to create srtp encoder, is the srtp plugin registered?");
     return;
   }
   g_return_if_fail (self->srtp_enc);
-  self->bin.dtls_element = gst_element_factory_make ("dtlsenc", "dtls-encoder");
+  self->bin.dtls_element = gst_element_factory_make ("dtlsenc", NULL);
   if (!self->bin.dtls_element) {
     GST_ERROR_OBJECT (self, "failed to create dtls encoder");
     return;
   }
-  self->funnel = gst_element_factory_make ("funnel", "funnel");
+  self->funnel = gst_element_factory_make ("funnel", NULL);
   if (!self->funnel) {
     GST_ERROR_OBJECT (self, "failed to create funnel");
     return;

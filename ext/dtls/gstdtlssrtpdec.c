@@ -165,19 +165,19 @@ gst_dtls_srtp_dec_init (GstDtlsSrtpDec * self)
                                  +-----------+
 */
 
-  self->srtp_dec = gst_element_factory_make ("srtpdec", "srtp-decoder");
+  self->srtp_dec = gst_element_factory_make ("srtpdec", NULL);
   if (!self->srtp_dec) {
     GST_ERROR_OBJECT (self,
         "failed to create srtp_dec, is the srtp plugin registered?");
     return;
   }
   self->dtls_srtp_demux =
-      gst_element_factory_make ("dtlssrtpdemux", "dtls-srtp-demux");
+      gst_element_factory_make ("dtlssrtpdemux", NULL);
   if (!self->dtls_srtp_demux) {
     GST_ERROR_OBJECT (self, "failed to create dtls_srtp_demux");
     return;
   }
-  self->bin.dtls_element = gst_element_factory_make ("dtlsdec", "dtls-decoder");
+  self->bin.dtls_element = gst_element_factory_make ("dtlsdec", NULL);
   if (!self->bin.dtls_element) {
     GST_ERROR_OBJECT (self, "failed to create dtls_dec");
     return;
