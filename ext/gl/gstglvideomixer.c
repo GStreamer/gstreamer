@@ -984,14 +984,10 @@ _update_caps (GstVideoAggregator * vagg, GstCaps * caps, GstCaps * filter)
 {
   GstCaps *ret;
 
-  ret =
-      GST_VIDEO_AGGREGATOR_CLASS (gst_gl_video_mixer_parent_class)->update_caps
-      (vagg, caps, NULL);
-
   if (filter) {
-    GstCaps *tmp = gst_caps_intersect (ret, filter);
-    gst_caps_unref (ret);
-    ret = tmp;
+    ret = gst_caps_intersect (caps, filter);
+  } else {
+    ret = gst_caps_ref (caps);
   }
 
   return ret;
