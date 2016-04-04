@@ -15,20 +15,16 @@ LDADD += $(LIBCGROUP_LIBS)
 endif
 
 test_netclock_CFLAGS = \
-	$(GST_NET_CFAGS) \
-        $(GST_CFLAGS) \
-	$(AM_CFLAGS)
+	$(AM_CFLAGS) \
+	$(GST_NET_CFLAGS)
 test_netclock_LDADD = \
-	$(GST_NET_LIBS) \
-        $(GST_LIBS) \
-        $(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_API_VERSION@.la \
-	$(LDADD)
+	$(LDADD) \
+	$(GST_NET_LIBS)
 
 test_netclock_client_CFLAGS = \
-	$(GST_NET_CFAGS) \
-        $(GST_CFLAGS) \
-	$(AM_CFLAGS)
+	$(AM_CFLAGS) \
+	$(GST_NET_CFLAGS)
 test_netclock_client_LDADD = \
-	$(GST_NET_LIBS) \
-        $(GST_LIBS) \
-	$(LDADD)
+	$(LDADD) \
+	$(GST_NET_LIBS)
+
