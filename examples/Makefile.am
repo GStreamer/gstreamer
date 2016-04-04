@@ -14,11 +14,21 @@ noinst_PROGRAMS += test-cgroups
 LDADD += $(LIBCGROUP_LIBS)
 endif
 
-test_netclock_LDFLAGS = \
+test_netclock_CFLAGS = \
+	$(GST_NET_CFAGS) \
+        $(GST_CFLAGS) \
+	$(AM_CFLAGS)
+test_netclock_LDADD = \
+	$(GST_NET_LIBS) \
         $(GST_LIBS) \
-        -lgstnet-@GST_API_VERSION@ \
-        $(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_API_VERSION@.la
+        $(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_API_VERSION@.la \
+	$(LDADD)
 
-test_netclock_client_LDFLAGS = \
+test_netclock_client_CFLAGS = \
+	$(GST_NET_CFAGS) \
+        $(GST_CFLAGS) \
+	$(AM_CFLAGS)
+test_netclock_client_LDADD = \
+	$(GST_NET_LIBS) \
         $(GST_LIBS) \
-        -lgstnet-@GST_API_VERSION@
+	$(LDADD)
