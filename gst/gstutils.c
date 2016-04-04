@@ -1387,20 +1387,20 @@ ghost_up (GstElement * e, GstPad * pad)
   gpad = gst_ghost_pad_new (name, pad);
   g_free (name);
 
-  GST_STATE_LOCK (e);
-  gst_element_get_state (e, &current, &next, 0);
+  GST_STATE_LOCK (parent);
+  gst_element_get_state (GST_ELEMENT (parent), &current, &next, 0);
 
-  if (current > GST_STATE_READY || next == GST_STATE_PAUSED)
+  if (current > GST_STATE_READY || next >= GST_STATE_PAUSED)
     gst_pad_set_active (gpad, TRUE);
 
   if (!gst_element_add_pad ((GstElement *) parent, gpad)) {
     g_warning ("Pad named %s already exists in element %s\n",
         GST_OBJECT_NAME (gpad), GST_OBJECT_NAME (parent));
     gst_object_unref ((GstObject *) gpad);
-    GST_STATE_UNLOCK (e);
+    GST_STATE_UNLOCK (parent);
     return NULL;
   }
-  GST_STATE_UNLOCK (e);
+  GST_STATE_UNLOCK (parent);
 
   return gpad;
 }

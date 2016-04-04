@@ -1701,6 +1701,52 @@ GST_START_TEST (test_element_get_compatible_pad_request)
 
 GST_END_TEST;
 
+GST_START_TEST (test_element_link_with_ghost_pads)
+{
+  GstElement *sink_bin, *sink2_bin, *pipeline;
+  GstElement *src, *tee, *queue, *queue2, *sink, *sink2;
+  GstMessage *message;
+  GstBus *bus;
+
+  fail_unless (pipeline = gst_pipeline_new (NULL));
+  fail_unless (sink_bin = gst_bin_new (NULL));
+  fail_unless (sink2_bin = gst_bin_new (NULL));
+  fail_unless (src = gst_element_factory_make ("fakesrc", NULL));
+  fail_unless (tee = gst_element_factory_make ("tee", NULL));
+  fail_unless (queue = gst_element_factory_make ("queue", NULL));
+  fail_unless (sink = gst_element_factory_make ("fakesink", NULL));
+  fail_unless (queue2 = gst_element_factory_make ("queue", NULL));
+  fail_unless (sink2 = gst_element_factory_make ("fakesink", NULL));
+
+  gst_bin_add_many (GST_BIN (pipeline), src, tee, queue, sink, sink2_bin, NULL);
+  fail_unless (gst_element_link_many (src, tee, queue, sink, NULL));
+  fail_unless (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_ASYNC);
+
+  /* wait for a buffer to arrive at the sink */
+  bus = gst_element_get_bus (pipeline);
+  message = gst_bus_poll (bus, GST_MESSAGE_ASYNC_DONE, -1);
+  gst_message_unref (message);
+  gst_object_unref (bus);
+
+  gst_bin_add_many (GST_BIN (sink_bin), queue2, sink2, NULL);
+  fail_unless (gst_element_link (queue2, sink2));
+
+  gst_bin_add (GST_BIN (sink2_bin), sink_bin);
+  /* The two levels of bins with the outer bin in the running state is
+   * important, when the second ghost pad is created (from this
+   * gst_element_link()) in the running bin, we need to activate the
+   * created ghost pad */
+  fail_unless (gst_element_link (tee, queue2));
+
+  fail_unless (gst_element_set_state (pipeline,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_utils_suite (void)
 {
@@ -1729,6 +1775,7 @@ gst_utils_suite (void)
 #endif
   tcase_add_test (tc_chain, test_element_found_tags);
   tcase_add_test (tc_chain, test_element_link);
+  tcase_add_test (tc_chain, test_element_link_with_ghost_pads);
   tcase_add_test (tc_chain, test_element_unlink);
   tcase_add_test (tc_chain, test_element_get_compatible_pad_request);
   tcase_add_test (tc_chain, test_set_value_from_string);
@@ -1739,6 +1786,7 @@ gst_utils_suite (void)
 
   tcase_add_test (tc_chain, test_read_macros);
   tcase_add_test (tc_chain, test_write_macros);
+
   return s;
 }
 
