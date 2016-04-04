@@ -18,6 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -1049,6 +1050,73 @@ GST_START_TEST (rtp_jpeg_list_width_and_height_greater_than_2040)
 
 GST_END_TEST;
 
+static void
+rtp_jpeg_do_packet_loss (gdouble prob, gint num_expected)
+{
+  GstHarness *h;
+  gboolean eos = FALSE;
+  gchar *s;
+  guint i, buffer_count;
+
+  s = g_strdup_printf ("videotestsrc pattern=ball num-buffers=100 ! "
+      "jpegenc quality=50 ! rtpjpegpay ! identity drop-probability=%g ! "
+      "rtpjpegdepay", prob);
+  GST_INFO ("running pipeline %s", s);
+  h = gst_harness_new_parse (s);
+  g_free (s);
+
+  gst_harness_play (h);
+
+  do {
+    GstEvent *event;
+
+    event = gst_harness_pull_event (h);
+    eos = (GST_EVENT_TYPE (event) == GST_EVENT_EOS);
+    gst_event_unref (event);
+  } while (!eos);
+
+  buffer_count = gst_harness_buffers_received (h);
+  GST_INFO ("Got %u buffers", buffer_count);
+
+  if (num_expected >= 0) {
+    fail_unless_equals_int (num_expected, buffer_count);
+  }
+
+  for (i = 0; i < buffer_count; ++i) {
+    GstBuffer *buf;
+    GstMapInfo map;
+    guint16 soi, eoi;
+
+    buf = gst_harness_pull (h);
+    fail_unless (buf != NULL);
+
+    fail_unless (gst_buffer_map (buf, &map, GST_MAP_READ));
+    GST_MEMDUMP ("jpeg frame", map.data, map.size);
+    fail_unless (map.size > 4);
+    soi = GST_READ_UINT16_BE (map.data);
+    fail_unless (soi == 0xffd8, "expected JPEG frame start FFD8 not %02X", soi);
+    eoi = GST_READ_UINT16_BE (map.data + map.size - 2);
+    fail_unless (eoi == 0xffd9, "expected JPEG frame end FFD9 not %02X", eoi);
+    gst_buffer_unmap (buf, &map);
+    gst_buffer_unref (buf);
+  }
+
+  gst_harness_teardown (h);
+}
+
+GST_START_TEST (rtp_jpeg_packet_loss)
+{
+  gdouble probabilities[] = { 0.0, 0.001, 0.01, 0.1, 0.2, 0.5, 1.0 };
+  gint num_expected[] = { 100, -1, -1, -1, -1, -1, 0 };
+
+  GST_INFO ("Start iteration %d", __i__);
+  fail_unless (__i__ < G_N_ELEMENTS (probabilities));
+  rtp_jpeg_do_packet_loss (probabilities[__i__], num_expected[__i__]);
+  GST_INFO ("Done with iteration %d", __i__);
+}
+
+GST_END_TEST;
+
 static const guint8 rtp_g729_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -1109,6 +1177,7 @@ GST_END_TEST;
 static Suite *
 rtp_payloading_suite (void)
 {
+  GstRegistry *registry = gst_registry_get ();
   Suite *s = suite_create ("rtp_data_test");
 
   TCase *tc_chain = tcase_create ("linear");
@@ -1149,6 +1218,9 @@ rtp_payloading_suite (void)
   tcase_add_test (tc_chain, rtp_jpeg_list_width_greater_than_2040);
   tcase_add_test (tc_chain, rtp_jpeg_list_height_greater_than_2040);
   tcase_add_test (tc_chain, rtp_jpeg_list_width_and_height_greater_than_2040);
+  if (gst_registry_check_feature_version (registry, "jpegenc", 1, 0, 0)
+      && gst_registry_check_feature_version (registry, "videotestsrc", 1, 0, 0))
+    tcase_add_loop_test (tc_chain, rtp_jpeg_packet_loss, 0, 7);
   tcase_add_test (tc_chain, rtp_g729);
   tcase_add_test (tc_chain, rtp_gst_custom_event);
   return s;
