@@ -257,6 +257,8 @@ class FilteredLogModel (FilteredLogModelBase):
 
     def reset (self):
 
+        self.logger.debug ("reset filter")
+
         self.line_offsets = self.super_model.line_offsets
         self.line_levels = self.super_model.line_levels
         self.super_index = xrange (len (self.line_offsets))
@@ -307,6 +309,8 @@ class FilteredLogModel (FilteredLogModelBase):
 
         if self.__active_process is not None:
             raise ValueError ("dispatched a filter process already")
+
+        self.logger.debug ("adding filter")
 
         self.filters.append (filter)
 
