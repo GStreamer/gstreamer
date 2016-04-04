@@ -337,7 +337,7 @@ Locking overview (element)
            
 
 
-* Element commiting ASYNC
+* Element committing ASYNC
 
  - STATE_LOCK is taken in set_state
  - change state is called and returns ASYNC
