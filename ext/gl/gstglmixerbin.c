@@ -31,6 +31,36 @@
 GST_DEBUG_CATEGORY (gst_gl_mixer_bin_debug);
 
 #define DEFAULT_LATENCY        0
+#define DEFAULT_START_TIME_SELECTION 0
+#define DEFAULT_START_TIME           (-1)
+
+typedef enum
+{
+  GST_GL_MIXER_BIN_START_TIME_SELECTION_ZERO,
+  GST_GL_MIXER_BIN_START_TIME_SELECTION_FIRST,
+  GST_GL_MIXER_BIN_START_TIME_SELECTION_SET
+} GstGLMixerBinStartTimeSelection;
+
+static GType
+gst_gl_mixer_bin_start_time_selection_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {GST_GL_MIXER_BIN_START_TIME_SELECTION_ZERO,
+          "Start at 0 running time (default)", "zero"},
+      {GST_GL_MIXER_BIN_START_TIME_SELECTION_FIRST,
+          "Start at first observed input running time", "first"},
+      {GST_GL_MIXER_BIN_START_TIME_SELECTION_SET,
+          "Set start time with start-time property", "set"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstGLMixerBinStartTimeSelection", values);
+  }
+  return gtype;
+}
 
 struct input_chain
 {
@@ -82,6 +112,8 @@ enum
   PROP_0,
   PROP_MIXER,
   PROP_LATENCY,
+  PROP_START_TIME_SELECTION,
+  PROP_START_TIME,
 };
 
 enum
@@ -155,6 +187,19 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
           "position", 0,
           (G_MAXLONG == G_MAXINT64) ? G_MAXINT64 : (G_MAXLONG * GST_SECOND - 1),
           DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_START_TIME_SELECTION,
+      g_param_spec_enum ("start-time-selection", "Start Time Selection",
+          "Decides which start time is output",
+          gst_gl_mixer_bin_start_time_selection_get_type (),
+          DEFAULT_START_TIME_SELECTION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_START_TIME,
+      g_param_spec_uint64 ("start-time", "Start Time",
+          "Start time to use if start-time-selection=set", 0,
+          G_MAXUINT64,
+          DEFAULT_START_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstMixerBin::create-element:
