@@ -57,6 +57,7 @@ typedef struct
 {
   IDeckLinkAudioInputPacket *packet;
   GstClockTime capture_time;
+  gboolean discont;
 } CapturePacket;
 
 static void
@@ -410,7 +411,7 @@ gst_decklink_audio_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 
 static void
 gst_decklink_audio_src_got_packet (GstElement * element,
-    IDeckLinkAudioInputPacket * packet, GstClockTime capture_time)
+    IDeckLinkAudioInputPacket * packet, GstClockTime capture_time, gboolean discont)
 {
   GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (element);
   GstDecklinkVideoSrc *videosrc = NULL;
@@ -446,6 +447,7 @@ gst_decklink_audio_src_got_packet (GstElement * element,
     p = (CapturePacket *) g_malloc0 (sizeof (CapturePacket));
     p->packet = packet;
     p->capture_time = capture_time;
+    p->discont = discont;
     packet->AddRef ();
     g_queue_push_tail (&self->current_packets, p);
     g_cond_signal (&self->cond);
@@ -500,6 +502,7 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   ap->input->AddRef ();
 
   timestamp = p->capture_time;
+  discont = p->discont;
 
   // Jitter and discontinuity handling, based on audiobasesrc
   start_time = timestamp;
@@ -514,7 +517,7 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
 
   duration = end_time - start_time;
 
-  if (self->next_offset == (guint64) - 1) {
+  if (discont || self->next_offset == (guint64) - 1) {
     discont = TRUE;
   } else {
     guint64 diff, max_sample_diff;
