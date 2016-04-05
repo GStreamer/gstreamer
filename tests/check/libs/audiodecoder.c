@@ -73,6 +73,8 @@ struct _GstAudioDecoderTester
 
   gboolean setoutputformat_on_decoding;
   gboolean output_too_many_frames;
+  gboolean delay_decoding;
+  GstBuffer *prev_buf;
 };
 
 struct _GstAudioDecoderTesterClass
@@ -92,6 +94,11 @@ gst_audio_decoder_tester_start (GstAudioDecoder * dec)
 static gboolean
 gst_audio_decoder_tester_stop (GstAudioDecoder * dec)
 {
+  GstAudioDecoderTester *tester = (GstAudioDecoderTester *)dec;
+  if (tester->prev_buf) {
+    gst_buffer_unref (tester->prev_buf);
+    tester->prev_buf = NULL;
+  }
   return TRUE;
 }
 
@@ -127,10 +134,14 @@ gst_audio_decoder_tester_handle_frame (GstAudioDecoder * dec,
   gint size;
   GstMapInfo map;
   GstBuffer *output_buffer;
+  GstFlowReturn ret = GST_FLOW_OK;
+  gboolean do_plc = gst_audio_decoder_get_plc (dec) &&
+      gst_audio_decoder_get_plc_aware (dec);
 
-  if (buffer == NULL)
+  if (buffer == NULL || (!do_plc && gst_buffer_get_size (buffer) == 0))
     return GST_FLOW_OK;
 
+  gst_buffer_ref (buffer);
   if (tester->setoutputformat_on_decoding) {
     GstCaps *caps;
     GstAudioInfo info;
@@ -143,25 +154,46 @@ gst_audio_decoder_tester_handle_frame (GstAudioDecoder * dec,
 
     gst_audio_decoder_set_output_format (dec, &info);
   }
+  if ((tester->delay_decoding && tester->prev_buf != NULL) ||
+      !tester->delay_decoding) {
+    gsize buf_num = tester->delay_decoding ? 2 : 1;
+    for (gint i = 0; i != buf_num; ++i) {
+      GstBuffer *cur_buf = buf_num == 1 || i != 0 ? buffer : tester->prev_buf;
+      gst_buffer_map (cur_buf, &map, GST_MAP_READ);
 
-  gst_buffer_map (buffer, &map, GST_MAP_READ);
+      /* the output is SE32LE stereo 44100 Hz */
+      size = 2 * 4;
+      g_assert (size == sizeof (guint64));
+      data = g_malloc0 (size);
 
-  /* the output is SE32LE stereo 44100 Hz */
-  size = 2 * 4;
-  g_assert (size == sizeof (guint64));
-  data = g_malloc0 (size);
+      if (map.size) {
+        g_assert_cmpint (map.size, >=, sizeof (guint64));
+        memcpy (data, map.data, sizeof (guint64));
+      }
 
-  memcpy (data, map.data, sizeof (guint64));
+      output_buffer = gst_buffer_new_wrapped (data, size);
 
-  output_buffer = gst_buffer_new_wrapped (data, size);
+      gst_buffer_unmap (cur_buf, &map);
 
-  gst_buffer_unmap (buffer, &map);
-
-  if (tester->output_too_many_frames) {
-    return gst_audio_decoder_finish_frame (dec, output_buffer, 2);
-  } else {
-    return gst_audio_decoder_finish_frame (dec, output_buffer, 1);
+      if (tester->output_too_many_frames) {
+        ret = gst_audio_decoder_finish_frame (dec, output_buffer, 2);
+      } else {
+        ret = gst_audio_decoder_finish_frame (dec, output_buffer, 1);
+      }
+      if (ret != GST_FLOW_OK)
+        break;
+    }
+    tester->delay_decoding = FALSE;
   }
+
+  if (tester->prev_buf)
+    gst_buffer_unref (tester->prev_buf);
+  tester->prev_buf = NULL;
+  if (tester->delay_decoding)
+    tester->prev_buf = buffer;
+  else
+    gst_buffer_unref (buffer);
+  return ret;
 }
 
 static void
@@ -1010,6 +1042,92 @@ GST_START_TEST (audiodecoder_tag_handling)
 
 GST_END_TEST;
 
+GST_START_TEST (audiodecoder_plc_on_gap_event)
+{
+  /* GstAudioDecoder should not mark the stream DISCOUNT flag when
+  concealed audio eliminate discontinuity. More important it should not
+  mess with the timestamps */
+
+  GstClockTime pts;
+  GstClockTime dur = gst_util_uint64_scale_round (1, GST_SECOND, TEST_MSECS_PER_SAMPLE);
+  GstBuffer *buf;
+  GstHarness *h = setup_audiodecodertester (NULL, NULL);
+  gst_audio_decoder_set_plc_aware (GST_AUDIO_DECODER (h->element), TRUE);
+  gst_audio_decoder_set_plc (GST_AUDIO_DECODER (h->element), TRUE);
+
+  pts = gst_util_uint64_scale_round (0, GST_SECOND, TEST_MSECS_PER_SAMPLE);
+  gst_harness_push (h, create_test_buffer(0));
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (pts, GST_BUFFER_PTS (buf));
+  fail_unless_equals_int (dur, GST_BUFFER_DURATION (buf));
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT));
+  gst_buffer_unref (buf);
+
+  pts = gst_util_uint64_scale_round (1, GST_SECOND, TEST_MSECS_PER_SAMPLE);
+  gst_harness_push_event (h, gst_event_new_gap (pts, dur));
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (pts, GST_BUFFER_PTS (buf));
+  fail_unless_equals_int (dur, GST_BUFFER_DURATION (buf));
+  fail_unless (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT));
+  gst_buffer_unref (buf);
+
+  pts = gst_util_uint64_scale_round (2, GST_SECOND, TEST_MSECS_PER_SAMPLE);
+  buf = create_test_buffer(2);
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+  gst_harness_push (h, buf);
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (pts, GST_BUFFER_PTS (buf));
+  fail_unless_equals_int (dur, GST_BUFFER_DURATION (buf));
+  fail_unless (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT));
+  gst_buffer_unref (buf);
+  gst_harness_teardown (h);
+}
+GST_END_TEST;
+
+GST_START_TEST (audiodecoder_plc_on_gap_event_with_delay)
+{
+  /* The same thing as in audiodecoder_plc_on_gap_event, but GstAudioDecoder
+  subclass delays the decoding
+  */
+  GstClockTime pts0, pts1;
+  GstClockTime dur = gst_util_uint64_scale_round (1, GST_SECOND, TEST_MSECS_PER_SAMPLE);
+  GstBuffer *buf;
+  GstHarness *h = setup_audiodecodertester (NULL, NULL);
+  gst_audio_decoder_set_plc_aware (GST_AUDIO_DECODER (h->element), TRUE);
+  gst_audio_decoder_set_plc (GST_AUDIO_DECODER (h->element), TRUE);
+
+  pts0 = gst_util_uint64_scale_round (0, GST_SECOND, TEST_MSECS_PER_SAMPLE);;
+  gst_harness_push (h, create_test_buffer(0));
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (pts0, GST_BUFFER_PTS (buf));
+  fail_unless_equals_int (dur, GST_BUFFER_DURATION (buf));
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT));
+  gst_buffer_unref (buf);
+
+  ((GstAudioDecoderTester *)h->element)->delay_decoding = TRUE;
+  pts0 = gst_util_uint64_scale_round (1, GST_SECOND, TEST_MSECS_PER_SAMPLE);
+  gst_harness_push_event (h, gst_event_new_gap (pts0, dur));
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h));
+
+  pts1 = gst_util_uint64_scale_round (2, GST_SECOND, TEST_MSECS_PER_SAMPLE);
+  buf = create_test_buffer(2);
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+  gst_harness_push (h, buf);
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (pts0, GST_BUFFER_PTS (buf));
+  fail_unless_equals_int (dur, GST_BUFFER_DURATION (buf));
+  fail_unless (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT));
+  gst_buffer_unref (buf);
+
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (pts1, GST_BUFFER_PTS (buf));
+  fail_unless_equals_int (dur, GST_BUFFER_DURATION (buf));
+  fail_unless (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT));
+  gst_buffer_unref (buf);
+  gst_harness_teardown (h);
+}
+GST_END_TEST;
+
 static Suite *
 gst_audiodecoder_suite (void)
 {
@@ -1036,6 +1154,9 @@ gst_audiodecoder_suite (void)
   tcase_add_test (tc, audiodecoder_query_caps_with_custom_getcaps);
 
   tcase_add_test (tc, audiodecoder_tag_handling);
+
+  tcase_add_test (tc, audiodecoder_plc_on_gap_event);
+  tcase_add_test (tc, audiodecoder_plc_on_gap_event_with_delay);
 
   return s;
 }
