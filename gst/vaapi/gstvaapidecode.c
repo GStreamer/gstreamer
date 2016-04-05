@@ -286,11 +286,12 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
 
   state = gst_video_decoder_set_output_state (vdec, format, width, height,
       ref_state);
-  if (!state
-      || GST_VIDEO_INFO_WIDTH (&state->info) == 0
+  if (!state)
+    return FALSE;
+
+  if (GST_VIDEO_INFO_WIDTH (&state->info) == 0
       || GST_VIDEO_INFO_HEIGHT (&state->info) == 0) {
-    if (state)
-      gst_video_codec_state_unref (state);
+    gst_video_codec_state_unref (state);
     return FALSE;
   }
 
