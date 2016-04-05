@@ -240,14 +240,14 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   GstCaps *templ;
   GstVideoCodecState *state, *ref_state;
   GstVaapiCapsFeature feature;
-  GstCapsFeatures *features = NULL;
+  GstCapsFeatures *features;
   GstCaps *allocation_caps;
   GstVideoInfo *vi;
   GstVideoFormat format;
   GstClockTime latency;
   gint fps_d, fps_n;
   guint width, height;
-  const gchar *format_str;
+  const gchar *format_str, *feature_str;
 
   if (!decode->input_state)
     return FALSE;
@@ -276,20 +276,6 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
             (&decode->decoded_info)), gst_video_format_to_string (format));
   }
 
-  switch (feature) {
-    case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
-      features =
-          gst_caps_features_new
-          (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
-      break;
-    case GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE:
-      features =
-          gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, NULL);
-      break;
-    default:
-      break;
-  }
-
   width = decode->display_width;
   height = decode->display_height;
 
@@ -303,18 +289,25 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   if (!state
       || GST_VIDEO_INFO_WIDTH (&state->info) == 0
       || GST_VIDEO_INFO_HEIGHT (&state->info) == 0) {
-    if (features)
-      gst_caps_features_free (features);
     if (state)
       gst_video_codec_state_unref (state);
     return FALSE;
   }
 
   vi = &state->info;
-
   state->caps = gst_video_info_to_caps (vi);
-  if (features)
-    gst_caps_set_features (state->caps, 0, features);
+
+  switch (feature) {
+    case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
+    case GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE:{
+      feature_str = gst_vaapi_caps_feature_to_string (feature);
+      features = gst_caps_features_new (feature_str, NULL);
+      gst_caps_set_features (state->caps, 0, features);
+      break;
+    }
+    default:
+      break;
+  }
 
   /* Allocation query is different from pad's caps */
   allocation_caps = NULL;
