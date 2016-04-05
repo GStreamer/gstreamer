@@ -262,6 +262,12 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
     return FALSE;
 
+#if (!USE_GLX && !USE_EGL)
+  /* This is a very pathological situation. Should not happen. */
+  if (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META)
+    return FALSE;
+#endif
+
   if ((feature == GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY ||
           feature == GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE)
       && format != GST_VIDEO_INFO_FORMAT (&decode->decoded_info)) {
@@ -271,13 +277,11 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   }
 
   switch (feature) {
-#if (USE_GLX || USE_EGL)
     case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
       features =
           gst_caps_features_new
           (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
       break;
-#endif
     case GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE:
       features =
           gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, NULL);
