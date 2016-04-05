@@ -94,6 +94,8 @@
 #define QTDEMUX_SECONDS_FROM_1904_TO_1970 (((1970 - 1904) * (guint64) 365 + \
     QTDEMUX_LEAP_YEARS_FROM_1904_TO_1970) * QTDEMUX_SECONDS_PER_DAY)
 
+#define QTDEMUX_TREE_NODE_FOURCC(n) (QT_FOURCC(((guint8 *) (n)->data) + 4))
+
 #define STREAM_IS_EOS(s) (s->time_position == GST_CLOCK_TIME_NONE)
 
 #define ABSDIFF(x, y) ( (x) > (y) ? ((x) - (y)) : ((y) - (x)) )
@@ -7541,6 +7543,12 @@ qtdemux_tree_get_child_by_type_full (GNode * node, guint32 fourcc,
 }
 
 static GNode *
+qtdemux_tree_get_child_by_index (GNode * node, guint index)
+{
+  return g_node_nth_child (node, index);
+}
+
+static GNode *
 qtdemux_tree_get_sibling_by_type_full (GNode * node, guint32 fourcc,
     GstByteReader * parser)
 {
@@ -9881,10 +9889,16 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     colr = NULL;
     fiel = NULL;
     /* pick 'the' stsd child */
-    if (!stream->protected)
-      mp4v = qtdemux_tree_get_child_by_type (stsd, fourcc);
-    else
-      mp4v = qtdemux_tree_get_child_by_type (stsd, FOURCC_encv);
+    mp4v = qtdemux_tree_get_child_by_index (stsd, 0);
+    if (!stream->protected) {
+      if (QTDEMUX_TREE_NODE_FOURCC (mp4v) != fourcc) {
+        mp4v = NULL;
+      }
+    } else {
+      if (QTDEMUX_TREE_NODE_FOURCC (mp4v) != FOURCC_encv) {
+        mp4v = NULL;
+      }
+    }
 
     if (mp4v) {
       esds = qtdemux_tree_get_child_by_type (mp4v, FOURCC_esds);
@@ -10200,7 +10214,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
           GST_DEBUG_OBJECT (qtdemux, "found mjp2");
           /* some required atoms */
-          mjp2 = qtdemux_tree_get_child_by_type (stsd, FOURCC_mjp2);
+          mjp2 = qtdemux_tree_get_child_by_index (stsd, 0);
           if (!mjp2)
             break;
           jp2h = qtdemux_tree_get_child_by_type (mjp2, FOURCC_jp2h);
@@ -10484,7 +10498,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           GNode *xith, *xdxt;
 
           GST_DEBUG_OBJECT (qtdemux, "found XiTh");
-          xith = qtdemux_tree_get_child_by_type (stsd, FOURCC_XiTh);
+          xith = qtdemux_tree_get_child_by_index (stsd, 0);
           if (!xith)
             break;
 
@@ -10506,7 +10520,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           GstBuffer *buf;
 
           GST_DEBUG_OBJECT (qtdemux, "parse ovc1 header");
-          ovc1 = qtdemux_tree_get_child_by_type (stsd, FOURCC_ovc1);
+          ovc1 = qtdemux_tree_get_child_by_index (stsd, 0);
           if (!ovc1)
             break;
           ovc1_data = ovc1->data;
@@ -10754,7 +10768,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       }
       case FOURCC_owma:
       {
-        GNode *owma;
         const guint8 *owma_data;
         const gchar *codec_name = NULL;
         guint owma_len;
@@ -10776,10 +10789,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         WAVEFORMATEX *wfex;
 
         GST_DEBUG_OBJECT (qtdemux, "parse owma");
-        owma = qtdemux_tree_get_child_by_type (stsd, FOURCC_owma);
-        if (!owma)
-          break;
-        owma_data = owma->data;
+        owma_data = stsd_entry_data;
         owma_len = QT_UINT32 (owma_data);
         if (owma_len <= 54) {
           GST_WARNING_OBJECT (qtdemux, "Too small owma header, skipping");
@@ -10926,7 +10936,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       }
       case FOURCC_opus:
       {
-        GNode *opus;
         const guint8 *opus_data;
         guint8 *channel_mapping = NULL;
         guint32 rate;
@@ -10936,8 +10945,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         guint8 coupled_count;
         guint8 i;
 
-        opus = qtdemux_tree_get_child_by_type (stsd, FOURCC_opus);
-        opus_data = opus->data;
+        opus_data = stsd_entry_data;
 
         channels = GST_READ_UINT8 (opus_data + 45);
         rate = GST_READ_UINT32_LE (opus_data + 48);
@@ -10977,10 +10985,22 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             GST_TAG_BITRATE, bitrate, NULL);
     }
 
-    if (stream->protected && fourcc == FOURCC_mp4a)
-      mp4a = qtdemux_tree_get_child_by_type (stsd, FOURCC_enca);
-    else
-      mp4a = qtdemux_tree_get_child_by_type (stsd, FOURCC_mp4a);
+    mp4a = qtdemux_tree_get_child_by_index (stsd, 0);
+    if (!stream->protected) {
+    } else {
+      if (QTDEMUX_TREE_NODE_FOURCC (mp4v) != FOURCC_encv) {
+        mp4v = NULL;
+      }
+    }
+    if (stream->protected && fourcc == FOURCC_mp4a) {
+      if (QTDEMUX_TREE_NODE_FOURCC (mp4a) != FOURCC_enca) {
+        mp4a = NULL;
+      }
+    } else {
+      if (QTDEMUX_TREE_NODE_FOURCC (mp4a) != FOURCC_mp4a) {
+        mp4a = NULL;
+      }
+    }
 
     wave = NULL;
     esds = NULL;
