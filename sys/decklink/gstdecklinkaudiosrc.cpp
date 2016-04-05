@@ -411,7 +411,8 @@ gst_decklink_audio_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 
 static void
 gst_decklink_audio_src_got_packet (GstElement * element,
-    IDeckLinkAudioInputPacket * packet, GstClockTime capture_time, gboolean discont)
+    IDeckLinkAudioInputPacket * packet, GstClockTime capture_time,
+    gboolean discont)
 {
   GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (element);
   GstDecklinkVideoSrc *videosrc = NULL;
@@ -470,6 +471,7 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   guint64 start_offset, end_offset;
   gboolean discont = FALSE;
 
+retry:
   g_mutex_lock (&self->lock);
   while (g_queue_is_empty (&self->current_packets) && !self->flushing) {
     g_cond_wait (&self->cond, &self->lock);
@@ -488,6 +490,13 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   p->packet->GetBytes ((gpointer *) & data);
   sample_count = p->packet->GetSampleFrameCount ();
   data_size = self->info.bpf * sample_count;
+
+  if (p->capture_time == GST_CLOCK_TIME_NONE && self->next_offset == (guint64) - 1) {
+    GST_DEBUG_OBJECT (self, "Got packet without timestamp before initial "
+        "timestamp after discont - dropping");
+    capture_packet_free (p);
+    goto retry;
+  }
 
   ap = (AudioPacket *) g_malloc0 (sizeof (AudioPacket));
 
