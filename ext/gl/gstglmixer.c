@@ -604,6 +604,7 @@ _upload_frames (GstAggregator * agg, GstAggregatorPad * agg_pad,
   GstGLMixerPad *pad = GST_GL_MIXER_PAD (agg_pad);
   GstGLMixer *mix = GST_GL_MIXER (agg);
 
+  pad->current_texture = 0;
   if (vaggpad->buffer != NULL) {
     GstVideoInfo gl_info;
     GstVideoFrame gl_frame;
