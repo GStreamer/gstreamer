@@ -72,8 +72,7 @@ static void gst_rfb_src_set_property (GObject * object, guint prop_id,
 static void gst_rfb_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_rfb_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
-static gboolean gst_rfb_src_start (GstBaseSrc * bsrc);
+static gboolean gst_rfb_src_negotiate (GstBaseSrc * bsrc);
 static gboolean gst_rfb_src_stop (GstBaseSrc * bsrc);
 static gboolean gst_rfb_src_event (GstBaseSrc * bsrc, GstEvent * event);
 static gboolean gst_rfb_src_unlock (GstBaseSrc * bsrc);
@@ -147,8 +146,8 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
       g_param_spec_boolean ("view-only", "Only view the desktop",
           "only view the desktop", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  gstbasesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_rfb_src_fixate);
-  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rfb_src_start);
+
+  gstbasesrc_class->negotiate = GST_DEBUG_FUNCPTR (gst_rfb_src_negotiate);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rfb_src_stop);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_rfb_src_event);
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_rfb_src_unlock);
@@ -342,37 +341,6 @@ gst_rfb_src_get_property (GObject * object, guint prop_id,
   }
 }
 
-static GstCaps *
-gst_rfb_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
-{
-  GstRfbSrc *src = GST_RFB_SRC (bsrc);
-  RfbDecoder *decoder;
-  GstStructure *structure;
-  guint i;
-
-  decoder = src->decoder;
-
-  GST_DEBUG_OBJECT (src, "fixating caps %" GST_PTR_FORMAT, caps);
-
-  caps = gst_caps_make_writable (caps);
-
-  for (i = 0; i < gst_caps_get_size (caps); ++i) {
-    structure = gst_caps_get_structure (caps, i);
-
-    gst_structure_fixate_field_nearest_int (structure,
-        "width", decoder->rect_width);
-    gst_structure_fixate_field_nearest_int (structure,
-        "height", decoder->rect_height);
-    gst_structure_fixate_field (structure, "format");
-  }
-
-  GST_DEBUG_OBJECT (src, "fixated caps %" GST_PTR_FORMAT, caps);
-
-  caps = GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
-
-  return caps;
-}
-
 static void
 gst_rfb_negotiate_pool (GstRfbSrc * src, GstCaps * caps)
 {
@@ -419,7 +387,7 @@ gst_rfb_negotiate_pool (GstRfbSrc * src, GstCaps * caps)
 }
 
 static gboolean
-gst_rfb_src_start (GstBaseSrc * bsrc)
+gst_rfb_src_negotiate (GstBaseSrc * bsrc)
 {
   GstRfbSrc *src = GST_RFB_SRC (bsrc);
   RfbDecoder *decoder;
@@ -431,6 +399,9 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
   GstEvent *stream_start = NULL;
 
   decoder = src->decoder;
+
+  if (decoder->inited)
+    return TRUE;
 
   GST_DEBUG_OBJECT (src, "connecting to host %s on port %d",
       src->host, src->port);
@@ -504,8 +475,7 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
 
   caps = gst_video_info_to_caps (&vinfo);
 
-  gst_pad_set_caps (GST_BASE_SRC_PAD (bsrc), caps);
-
+  gst_base_src_set_caps (bsrc, caps);
   gst_rfb_negotiate_pool (src, caps);
 
   gst_caps_unref (caps);
