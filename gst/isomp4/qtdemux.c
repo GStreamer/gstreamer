@@ -524,7 +524,7 @@ static void qtdemux_parse_udta (GstQTDemux * qtdemux, GstTagList * taglist,
 static void gst_qtdemux_handle_esds (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GNode * esds, GstTagList * list);
 static GstCaps *qtdemux_video_caps (GstQTDemux * qtdemux,
-    QtDemuxStream * stream, guint32 fourcc, const guint8 * stsd_data,
+    QtDemuxStream * stream, guint32 fourcc, const guint8 * stsd_entry_data,
     gchar ** codec_name);
 static GstCaps *qtdemux_audio_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 fourcc, const guint8 * data, int len,
@@ -533,7 +533,7 @@ static GstCaps *qtdemux_sub_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 fourcc, const guint8 * data,
     gchar ** codec_name);
 static GstCaps *qtdemux_generic_caps (GstQTDemux * qtdemux,
-    QtDemuxStream * stream, guint32 fourcc, const guint8 * stsd_data,
+    QtDemuxStream * stream, guint32 fourcc, const guint8 * stsd_entry_data,
     gchar ** codec_name);
 
 static gboolean qtdemux_parse_samples (GstQTDemux * qtdemux,
@@ -9003,12 +9003,12 @@ done:
  * the SMI and gama atoms.
  */
 static void
-qtdemux_parse_svq3_stsd_data (GstQTDemux * qtdemux, GNode * stsd,
-    guint8 ** gamma, GstBuffer ** seqh)
+qtdemux_parse_svq3_stsd_data (GstQTDemux * qtdemux,
+    const guint8 * stsd_entry_data, const guint8 ** gamma, GstBuffer ** seqh)
 {
-  guint8 *_gamma = NULL;
+  const guint8 *_gamma = NULL;
   GstBuffer *_seqh = NULL;
-  guint8 *stsd_data = stsd->data;
+  const guint8 *stsd_data = stsd_entry_data;
   guint32 length = QT_UINT32 (stsd_data);
   guint16 version;
 
@@ -9017,8 +9017,8 @@ qtdemux_parse_svq3_stsd_data (GstQTDemux * qtdemux, GNode * stsd,
     goto end;
   }
 
-  stsd_data += 32;
-  length -= 32;
+  stsd_data += 16;
+  length -= 16;
   version = QT_UINT16 (stsd_data);
   if (version == 3) {
     if (length >= 70) {
@@ -9026,7 +9026,7 @@ qtdemux_parse_svq3_stsd_data (GstQTDemux * qtdemux, GNode * stsd,
       stsd_data += 70;
       while (length > 8) {
         guint32 fourcc, size;
-        guint8 *data;
+        const guint8 *data;
         size = QT_UINT32 (stsd_data);
         fourcc = QT_FOURCC (stsd_data + 4);
         data = stsd_data + 8;
@@ -9463,6 +9463,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   gboolean new_stream = FALSE;
   gchar *codec = NULL;
   const guint8 *stsd_data;
+  const guint8 *stsd_entry_data;
+  guint remaining_stsd_len;
   guint16 lang_code;            /* quicktime lang code or packed iso code */
   guint32 version;
   guint32 tkhd_flags = 0;
@@ -9684,13 +9686,15 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   }
 
   GST_LOG_OBJECT (qtdemux, "stsd len:           %d", stsd_len);
+  stsd_entry_data = stsd_data + 16;
+  remaining_stsd_len = stsd_len - 16;
 
   /* and that entry should fit within stsd */
-  len = QT_UINT32 (stsd_data + 16);
-  if (len > stsd_len + 16)
+  len = QT_UINT32 (stsd_entry_data);
+  if (len > remaining_stsd_len)
     goto corrupt_file;
 
-  stream->fourcc = fourcc = QT_FOURCC (stsd_data + 16 + 4);
+  stream->fourcc = fourcc = QT_FOURCC (stsd_entry_data + 4);
   GST_LOG_OBJECT (qtdemux, "stsd type:          %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (stream->fourcc));
   GST_LOG_OBJECT (qtdemux, "stsd type len:      %d", len);
@@ -9732,21 +9736,22 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         &stream->stream_tags);
 
     offset = 16;
-    if (len < 86)
+    if (len < 86)               /* TODO verify */
       goto corrupt_file;
 
-    stream->width = QT_UINT16 (stsd_data + offset + 32);
-    stream->height = QT_UINT16 (stsd_data + offset + 34);
+    stream->width = QT_UINT16 (stsd_entry_data + offset + 16);
+    stream->height = QT_UINT16 (stsd_entry_data + offset + 18);
     stream->fps_n = 0;          /* this is filled in later */
     stream->fps_d = 0;          /* this is filled in later */
-    stream->bits_per_sample = QT_UINT16 (stsd_data + offset + 82);
-    stream->color_table_id = QT_UINT16 (stsd_data + offset + 84);
+    stream->bits_per_sample = QT_UINT16 (stsd_entry_data + offset + 66);
+    stream->color_table_id = QT_UINT16 (stsd_entry_data + offset + 68);
 
     /* if color_table_id is 0, ctab atom must follow; however some files
      * produced by TMPEGEnc have color_table_id = 0 and no ctab atom, so
      * if color table is not present we'll correct the value */
     if (stream->color_table_id == 0 &&
-        (len < 90 || QT_FOURCC (stsd_data + offset + 86) != FOURCC_ctab)) {
+        (len < 90
+            || QT_FOURCC (stsd_entry_data + offset + 70) != FOURCC_ctab)) {
       stream->color_table_id = -1;
     }
 
@@ -9802,9 +9807,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         goto corrupt_file;
 
       /* read table */
-      start = QT_UINT32 (stsd_data + offset + 86);
-      palette_count = QT_UINT16 (stsd_data + offset + 90);
-      end = QT_UINT16 (stsd_data + offset + 92);
+      start = QT_UINT32 (stsd_entry_data + offset + 70);
+      palette_count = QT_UINT16 (stsd_entry_data + offset + 74);
+      end = QT_UINT16 (stsd_entry_data + offset + 76);
 
       GST_LOG_OBJECT (qtdemux, "start %d, end %d, palette_count %d",
           start, end, palette_count);
@@ -9824,10 +9829,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       for (j = 0, i = start; i <= end; j++, i++) {
         guint32 a, r, g, b;
 
-        a = QT_UINT16 (stsd_data + offset + 94 + (j * 8));
-        r = QT_UINT16 (stsd_data + offset + 96 + (j * 8));
-        g = QT_UINT16 (stsd_data + offset + 98 + (j * 8));
-        b = QT_UINT16 (stsd_data + offset + 100 + (j * 8));
+        a = QT_UINT16 (stsd_entry_data + offset + 78 + (j * 8));
+        r = QT_UINT16 (stsd_entry_data + offset + 80 + (j * 8));
+        g = QT_UINT16 (stsd_entry_data + offset + 82 + (j * 8));
+        b = QT_UINT16 (stsd_entry_data + offset + 84 + (j * 8));
 
         palette_data[i] = ((a & 0xff00) << 16) | ((r & 0xff00) << 8) |
             (g & 0xff00) | (b >> 8);
@@ -9838,7 +9843,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       gst_caps_unref (stream->caps);
 
     stream->caps =
-        qtdemux_video_caps (qtdemux, stream, fourcc, stsd_data, &codec);
+        qtdemux_video_caps (qtdemux, stream, fourcc, stsd_entry_data, &codec);
     if (G_UNLIKELY (!stream->caps)) {
       g_free (palette_data);
       goto unknown_stream;
@@ -9882,7 +9887,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
 
     GST_LOG_OBJECT (qtdemux, "frame count:   %u",
-        QT_UINT16 (stsd_data + offset + 48));
+        QT_UINT16 (stsd_entry_data + offset + 32));
 
     esds = NULL;
     pasp = NULL;
@@ -10011,8 +10016,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         case FOURCC_avc1:
         case FOURCC_avc3:
         {
-          gint len = QT_UINT32 (stsd_data) - 0x66;
-          const guint8 *avc_data = stsd_data + 0x66;
+          gint len = QT_UINT32 (stsd_entry_data) - 0x56;
+          const guint8 *avc_data = stsd_entry_data + 0x56;
 
           /* find avcC */
           while (len >= 0x8) {
@@ -10121,8 +10126,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         case FOURCC_hvc1:
         case FOURCC_hev1:
         {
-          gint len = QT_UINT32 (stsd_data) - 0x66;
-          const guint8 *hevc_data = stsd_data + 0x66;
+          gint len = QT_UINT32 (stsd_entry_data) - 0x56;
+          const guint8 *hevc_data = stsd_entry_data + 0x56;
 
           /* find hevc */
           while (len >= 0x8) {
@@ -10462,10 +10467,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         {
           GstBuffer *buf;
           GstBuffer *seqh = NULL;
-          guint8 *gamma_data = NULL;
-          gint len = QT_UINT32 (stsd_data);
+          const guint8 *gamma_data = NULL;
+          gint len = QT_UINT32 (stsd_data);     /* FIXME review - why put the whole stsd in codec data? */
 
-          qtdemux_parse_svq3_stsd_data (qtdemux, stsd, &gamma_data, &seqh);
+          qtdemux_parse_svq3_stsd_data (qtdemux, stsd_entry_data, &gamma_data,
+              &seqh);
           if (gamma_data) {
             gst_caps_set_simple (stream->caps, "applied-gamma", G_TYPE_DOUBLE,
                 QT_FP32 (gamma_data), NULL);
@@ -10490,7 +10496,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         case FOURCC_WRLE:
         {
           gst_caps_set_simple (stream->caps,
-              "depth", G_TYPE_INT, QT_UINT16 (stsd_data + offset + 82), NULL);
+              "depth", G_TYPE_INT, QT_UINT16 (stsd_entry_data + offset + 66),
+              NULL);
           break;
         }
         case FOURCC_XiTh:
@@ -10538,8 +10545,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         case FOURCC_vc_1:
         {
-          gint len = QT_UINT32 (stsd_data) - 0x66;
-          const guint8 *vc1_data = stsd_data + 0x66;
+          gint len = QT_UINT32 (stsd_entry_data) - 0x56;
+          const guint8 *vc1_data = stsd_entry_data + 0x56;
 
           /* find dvc1 */
           while (len >= 8) {
@@ -10589,25 +10596,25 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     guint16 compression_id;
     gboolean amrwb = FALSE;
 
-    offset = 32;
+    offset = 16;
     /* sample description entry (16) + sound sample description v0 (20) */
     if (len < 36)
       goto corrupt_file;
 
-    version = QT_UINT32 (stsd_data + offset);
-    stream->n_channels = QT_UINT16 (stsd_data + offset + 8);
-    samplesize = QT_UINT16 (stsd_data + offset + 10);
-    compression_id = QT_UINT16 (stsd_data + offset + 12);
-    stream->rate = QT_FP32 (stsd_data + offset + 16);
+    version = QT_UINT32 (stsd_entry_data + offset);
+    stream->n_channels = QT_UINT16 (stsd_entry_data + offset + 8);
+    samplesize = QT_UINT16 (stsd_entry_data + offset + 10);
+    compression_id = QT_UINT16 (stsd_entry_data + offset + 12);
+    stream->rate = QT_FP32 (stsd_entry_data + offset + 16);
 
     GST_LOG_OBJECT (qtdemux, "version/rev:      %08x", version);
     GST_LOG_OBJECT (qtdemux, "vendor:           %08x",
-        QT_UINT32 (stsd_data + offset + 4));
+        QT_UINT32 (stsd_entry_data + offset + 4));
     GST_LOG_OBJECT (qtdemux, "n_channels:       %d", stream->n_channels);
     GST_LOG_OBJECT (qtdemux, "sample_size:      %d", samplesize);
     GST_LOG_OBJECT (qtdemux, "compression_id:   %d", compression_id);
     GST_LOG_OBJECT (qtdemux, "packet size:      %d",
-        QT_UINT16 (stsd_data + offset + 14));
+        QT_UINT16 (stsd_entry_data + offset + 14));
     GST_LOG_OBJECT (qtdemux, "sample rate:      %g", stream->rate);
 
     if (compression_id == 0xfffe)
@@ -10620,7 +10627,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     stream->samples_per_packet = stream->samples_per_frame;
     stream->bytes_per_packet = stream->bytes_per_sample;
 
-    offset = 52;
+    offset = 36;
     switch (fourcc) {
         /* Yes, these have to be hard-coded */
       case FOURCC_MAC6:
@@ -10686,10 +10693,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         default:
         {
           /* only parse extra decoding config for non-pcm audio */
-          stream->samples_per_packet = QT_UINT32 (stsd_data + offset);
-          stream->bytes_per_packet = QT_UINT32 (stsd_data + offset + 4);
-          stream->bytes_per_frame = QT_UINT32 (stsd_data + offset + 8);
-          stream->bytes_per_sample = QT_UINT32 (stsd_data + offset + 12);
+          stream->samples_per_packet = QT_UINT32 (stsd_entry_data + offset);
+          stream->bytes_per_packet = QT_UINT32 (stsd_entry_data + offset + 4);
+          stream->bytes_per_frame = QT_UINT32 (stsd_entry_data + offset + 8);
+          stream->bytes_per_sample = QT_UINT32 (stsd_entry_data + offset + 12);
 
           GST_LOG_OBJECT (qtdemux, "samples/packet:   %d",
               stream->samples_per_packet);
@@ -10720,21 +10727,21 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       if (len < 72)
         goto corrupt_file;
 
-      qtfp.val = QT_UINT64 (stsd_data + offset + 4);
+      qtfp.val = QT_UINT64 (stsd_entry_data + offset + 4);
       stream->rate = qtfp.fp;
-      stream->n_channels = QT_UINT32 (stsd_data + offset + 12);
+      stream->n_channels = QT_UINT32 (stsd_entry_data + offset + 12);
 
       GST_LOG_OBJECT (qtdemux, "Sound sample description Version 2");
       GST_LOG_OBJECT (qtdemux, "sample rate:        %g", stream->rate);
       GST_LOG_OBJECT (qtdemux, "n_channels:         %d", stream->n_channels);
       GST_LOG_OBJECT (qtdemux, "bits/channel:       %d",
-          QT_UINT32 (stsd_data + offset + 20));
+          QT_UINT32 (stsd_entry_data + offset + 20));
       GST_LOG_OBJECT (qtdemux, "format flags:       %X",
-          QT_UINT32 (stsd_data + offset + 24));
+          QT_UINT32 (stsd_entry_data + offset + 24));
       GST_LOG_OBJECT (qtdemux, "bytes/packet:       %d",
-          QT_UINT32 (stsd_data + offset + 28));
+          QT_UINT32 (stsd_entry_data + offset + 28));
       GST_LOG_OBJECT (qtdemux, "LPCM frames/packet: %d",
-          QT_UINT32 (stsd_data + offset + 32));
+          QT_UINT32 (stsd_entry_data + offset + 32));
     } else if (version != 0x00000) {
       GST_WARNING_OBJECT (qtdemux, "unknown audio STSD version %08x", version);
     }
@@ -10743,7 +10750,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       gst_caps_unref (stream->caps);
 
     stream->caps = qtdemux_audio_caps (qtdemux, stream, fourcc,
-        stsd_data + 32, len - 16, &codec);
+        stsd_entry_data + 32, len - 16, &codec);
 
     switch (fourcc) {
       case FOURCC_in24:
@@ -10829,8 +10836,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       }
       case FOURCC_wma_:
       {
-        gint len = QT_UINT32 (stsd_data) - offset;
-        const guint8 *wfex_data = stsd_data + offset;
+        gint len = QT_UINT32 (stsd_entry_data) - offset;
+        const guint8 *wfex_data = stsd_entry_data + offset;
         const gchar *codec_name = NULL;
         gint version = 1;
         /* from http://msdn.microsoft.com/en-us/library/dd757720(VS.85).aspx */
@@ -11024,8 +11031,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       if (len < offset + 20) {
         GST_WARNING_OBJECT (qtdemux, "No wave atom in MS-style audio");
       } else {
-        guint32 datalen = QT_UINT32 (stsd_data + offset + 16);
-        const guint8 *data = stsd_data + offset + 16;
+        guint32 datalen = QT_UINT32 (stsd_entry_data + offset + 16);
+        const guint8 *data = stsd_entry_data + offset + 16;
         GNode *wavenode;
         GNode *waveheadernode;
 
@@ -11083,12 +11090,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 #endif
         case FOURCC_QDM2:
         {
-          gint len = QT_UINT32 (stsd_data);
+          gint len = QT_UINT32 (stsd_entry_data);
 
-          if (len > 0x4C) {
-            GstBuffer *buf = gst_buffer_new_and_alloc (len - 0x4C);
+          if (len > 0x3C) {
+            GstBuffer *buf = gst_buffer_new_and_alloc (len - 0x3C);
 
-            gst_buffer_fill (buf, 0, stsd_data + 0x4C, len - 0x4C);
+            gst_buffer_fill (buf, 0, stsd_entry_data + 0x3C, len - 0x3C);
             gst_caps_set_simple (stream->caps,
                 "codec_data", GST_TYPE_BUFFER, buf, NULL);
             gst_buffer_unref (buf);
@@ -11245,13 +11252,13 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           amrwb = TRUE;
         case FOURCC_samr:
         {
-          gint len = QT_UINT32 (stsd_data);
+          gint len = QT_UINT32 (stsd_entry_data);
 
-          if (len > 0x34) {
-            GstBuffer *buf = gst_buffer_new_and_alloc (len - 0x34);
+          if (len > 0x24) {
+            GstBuffer *buf = gst_buffer_new_and_alloc (len - 0x24);
             guint bitrate;
 
-            gst_buffer_fill (buf, 0, stsd_data + 0x34, len - 0x34);
+            gst_buffer_fill (buf, 0, stsd_entry_data + 0x24, len - 0x24);
 
             /* If we have enough data, let's try to get the 'damr' atom. See
              * the 3GPP container spec (26.244) for more details. */
@@ -11270,14 +11277,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         case FOURCC_mp4a:
         {
           /* mp4a atom withtout ESDS; Attempt to build codec data from atom */
-          gint len = QT_UINT32 (stsd_data);
+          gint len = QT_UINT32 (stsd_entry_data);
 
-          if (len >= 50) {
-            guint16 sound_version = QT_UINT16 (stsd_data + 32);
+          if (len >= 34) {
+            guint16 sound_version = QT_UINT16 (stsd_entry_data + 16);
 
             if (sound_version == 1) {
-              guint16 channels = QT_UINT16 (stsd_data + 40);
-              guint32 time_scale = QT_UINT32 (stsd_data + 46);
+              guint16 channels = QT_UINT16 (stsd_entry_data + 24);
+              guint32 time_scale = QT_UINT32 (stsd_entry_data + 30);
               guint8 codec_data[2];
               GstBuffer *buf;
               gint profile = 2; /* FIXME: Can this be determined somehow? There doesn't seem to be anything in mp4a atom that specifis compression */
@@ -11326,7 +11333,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     stream->sparse = TRUE;
 
     stream->caps =
-        qtdemux_sub_caps (qtdemux, stream, fourcc, stsd_data, &codec);
+        qtdemux_sub_caps (qtdemux, stream, fourcc, stsd_entry_data, &codec);
     if (codec) {
       gst_tag_list_add (stream->stream_tags, GST_TAG_MERGE_REPLACE,
           GST_TAG_SUBTITLE_CODEC, codec, NULL);
@@ -11367,7 +11374,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     stream->sampled = TRUE;
 
     stream->caps =
-        qtdemux_generic_caps (qtdemux, stream, fourcc, stsd_data, &codec);
+        qtdemux_generic_caps (qtdemux, stream, fourcc, stsd_entry_data, &codec);
 
     if (stream->caps == NULL)
       goto unknown_stream;
@@ -13398,7 +13405,7 @@ _get_unknown_codec_name (const gchar * type, guint32 fourcc)
 
 static GstCaps *
 qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    guint32 fourcc, const guint8 * stsd_data, gchar ** codec_name)
+    guint32 fourcc, const guint8 * stsd_entry_data, gchar ** codec_name)
 {
   GstCaps *caps = NULL;
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
@@ -13454,7 +13461,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     {
       guint16 bps;
 
-      bps = QT_UINT16 (stsd_data + 98);
+      bps = QT_UINT16 (stsd_entry_data + 82);
       switch (bps) {
         case 15:
           format = GST_VIDEO_FORMAT_RGB15;
@@ -14153,7 +14160,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
 static GstCaps *
 qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    guint32 fourcc, const guint8 * stsd_data, gchar ** codec_name)
+    guint32 fourcc, const guint8 * stsd_entry_data, gchar ** codec_name)
 {
   GstCaps *caps;
 
@@ -14191,7 +14198,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
 static GstCaps *
 qtdemux_generic_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    guint32 fourcc, const guint8 * stsd_data, gchar ** codec_name)
+    guint32 fourcc, const guint8 * stsd_entry_data, gchar ** codec_name)
 {
   GstCaps *caps;
 
