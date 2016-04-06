@@ -57,6 +57,8 @@ typedef struct _GstRTSPThreadImpl
 
   gint reused;
   GSource *source;
+  /* FIXME, the source has to be part of GstRTSPThreadImpl, due to a bug in GLib:
+   * https://bugzilla.gnome.org/show_bug.cgi?id=720186 */
 } GstRTSPThreadImpl;
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstRTSPThread, gst_rtsp_thread);
