@@ -222,10 +222,10 @@ Lists use this format:      { VALUE \fI[, VALUE ...]\fR }
 .SH "PIPELINE EXAMPLES"
 
 The examples below assume that you have the correct plug-ins available.
-In general, "osssink" can be substituted with another audio output
-plug-in such as "esdsink", "alsasink", "osxaudiosink", or "artsdsink".
-Likewise, "xvimagesink" can be substituted with "ximagesink", "sdlvideosink",
-"osxvideosink", or "aasink". Keep in mind though that different sinks might
+In general, "pulsesink" can be substituted with another audio output
+plug-in such as "alsasink" or "osxaudiosink"
+Likewise, "xvimagesink" can be substituted with "ximagesink", "glimagesink",
+or "osxvideosink". Keep in mind though that different sinks might
 accept different formats and even the same sink might accept different formats
 on different machines, so you might need to add converter elements like
 audioconvert and audioresample (for audio) or videoconvert (for video)
@@ -234,45 +234,45 @@ in front of the sink to make things work.
 .B Audio playback
 
 .B
-        gst\-launch filesrc location=music.mp3 ! mad ! audioconvert ! audioresample ! osssink
+        gst\-launch filesrc location=music.mp3 ! mad ! audioconvert ! audioresample ! pulsesink
 .br
 Play the mp3 music file "music.mp3" using a libmad-based plug-in and
-output to an OSS device
+output to an Pulseaudio device
 
 .B
-        gst\-launch filesrc location=music.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! osssink
+        gst\-launch filesrc location=music.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! pulsesink
 .br
 Play an Ogg Vorbis format file
 
 .B
-        gst\-launch gnomevfssrc location=music.mp3 ! mad ! osssink
+        gst\-launch giosrc location=music.mp3 ! mpegaudioparse ! mad ! pulsesink
 .br
 .B
-        gst\-launch gnomevfssrc location=http://domain.com/music.mp3 ! mad ! audioconvert ! audioresample ! osssink
+        gst\-launch giosrc location=http://domain.com/music.mp3 ! mpegaudioparse ! mad ! audioconvert ! audioresample ! pulsesink
 .br
-Play an mp3 file or an http stream using GNOME\-VFS
+Play an mp3 file or an http stream using GIO
 
 .B
-        gst\-launch gnomevfssrc location=smb://computer/music.mp3 ! mad ! audioconvert ! audioresample ! osssink
+        gst\-launch giosrc location=smb://computer/music.mp3 ! mpegaudioparse ! mad ! audioconvert ! audioresample ! pulsesink
 .br
-Use GNOME\-VFS to play an mp3 file located on an SMB server
+Use GIO to play an mp3 file located on an SMB server
 
 .B Format conversion
 
 .B
-        gst\-launch filesrc location=music.mp3 ! mad ! audioconvert ! vorbisenc ! oggmux ! filesink location=music.ogg
+        gst\-launch filesrc location=music.mp3 ! mpegaudioparse ! mad ! audioconvert ! vorbisenc ! oggmux ! filesink location=music.ogg
 .br
 Convert an mp3 music file to an Ogg Vorbis file
 
 .B
-        gst\-launch filesrc location=music.mp3 ! mad ! audioconvert ! flacenc ! filesink location=test.flac
+        gst\-launch filesrc location=music.mp3 ! mpegaudioparse ! mad ! audioconvert ! flacenc ! filesink location=test.flac
 .br
 Convert to the FLAC format
 
 .B Other
 
 .B
-        gst\-launch filesrc location=music.wav ! wavparse ! audioconvert ! audioresample ! osssink
+        gst\-launch filesrc location=music.wav ! wavparse ! audioconvert ! audioresample ! pulsesink
 .br
 Plays a .WAV file that contains raw audio data (PCM).
 
@@ -285,12 +285,12 @@ Plays a .WAV file that contains raw audio data (PCM).
 Convert a .WAV file containing raw audio data into an Ogg Vorbis or mp3 file
 
 .B
-        gst\-launch cdparanoiasrc mode=continuous ! audioconvert ! lame ! id3v2mux ! filesink location=cd.mp3
+        gst\-launch cdparanoiasrc mode=continuous ! audioconvert ! lame ! mpegaudioparse ! id3v2mux ! filesink location=cd.mp3
 .br
 rips all tracks from compact disc and convert them into a single mp3 file
 
 .B
-        gst\-launch cdparanoiasrc track=5 ! audioconvert ! lame ! id3v2mux ! filesink location=track5.mp3
+        gst\-launch cdparanoiasrc track=5 ! audioconvert ! lame ! mpegaudioparse ! id3v2mux ! filesink location=track5.mp3
 .br
 rips track 5 from the CD and converts it into a single mp3 file
 
@@ -302,31 +302,31 @@ cdparanoia) that supports that protocol for you, e.g.:
        gst\-launch cdda://5 ! lame vbr=new vbr-quality=6 ! filesink location=track5.mp3
 
 .B
-        gst\-launch osssrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=input.ogg
+        gst\-launch pulsesrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=input.ogg
 .br
 records sound from your audio input and encodes it into an ogg file
 
 .B Video
 
 .B
-        gst\-launch filesrc location=JB_FF9_TheGravityOfLove.mpg ! dvddemux ! mpeg2dec ! xvimagesink
+        gst\-launch filesrc location=JB_FF9_TheGravityOfLove.mpg ! dvddemux ! mpegvideoparse ! mpeg2dec ! xvimagesink
 .br
 Display only the video portion of an MPEG-1 video file, outputting to
 an X display window
 
 .B
-        gst\-launch filesrc location=/flflfj.vob ! dvddemux ! mpeg2dec ! sdlvideosink
+        gst\-launch filesrc location=/flflfj.vob ! dvddemux ! mpegvideoparse ! mpeg2dec ! sdlvideosink
 .br
 Display the video portion of a .vob file (used on DVDs), outputting to
 an SDL window
 
 .B
-        gst\-launch filesrc location=movie.mpg ! dvddemux name=demuxer  demuxer. ! queue ! mpeg2dec ! sdlvideosink  demuxer. ! queue ! mad ! audioconvert ! audioresample ! osssink
+        gst\-launch filesrc location=movie.mpg ! dvddemux name=demuxer  demuxer. ! queue ! mpegvideoparse ! mpeg2dec ! sdlvideosink  demuxer. ! queue ! mpegaudioparse ! mad ! audioconvert ! audioresample ! pulsesink
 .br
 Play both video and audio portions of an MPEG movie
 
 .B
-        gst\-launch filesrc location=movie.mpg ! mpegdemux name=demuxer demuxer. ! queue ! mpeg2dec ! videoconvert ! sdlvideosink   demuxer. ! queue ! mad ! audioconvert ! audioresample ! osssink
+        gst\-launch filesrc location=movie.mpg ! mpegdemux name=demuxer demuxer. ! queue ! mpegvideoparse ! mpeg2dec ! videoconvert ! sdlvideosink   demuxer. ! queue ! mpegaudioparse ! mad ! audioconvert ! audioresample ! pulsesink
 .br
 Play an AVI movie with an external text subtitle stream
 
@@ -364,7 +364,7 @@ Use this command on the receiver
 Generate a null stream and ignore it (and print out details).
 
 .B
-        gst\-launch audiotestsrc ! audioconvert ! audioresample ! osssink
+        gst\-launch audiotestsrc ! audioconvert ! audioresample ! pulsesink
 .br
 Generate a pure sine tone to test the audio output
 
@@ -382,12 +382,12 @@ You can use the decodebin element to automatically select the right elements
 to get a working pipeline.
 
 .B
-        gst\-launch filesrc location=musicfile ! decodebin ! audioconvert ! audioresample ! osssink
+        gst\-launch filesrc location=musicfile ! decodebin ! audioconvert ! audioresample ! pulsesink
 .br
 Play any supported audio format
 
 .B
-        gst\-launch filesrc location=videofile ! decodebin name=decoder decoder. ! queue ! audioconvert ! audioresample ! osssink   decoder. !  videoconvert ! xvimagesink
+        gst\-launch filesrc location=videofile ! decodebin name=decoder decoder. ! queue ! audioconvert ! audioresample ! pulsesink   decoder. !  videoconvert ! xvimagesink
 .br
 Play any supported video format with video and audio output. Threads are used
 automatically. To make this even easier, you can use the playbin element:
@@ -407,7 +407,7 @@ These examples show you how to use filtered caps.
 Show a test image and use the YUY2 or YV12 video format for this.
 
 .B
-        gst\-launch osssrc !  'audio/x-raw,rate=[32000,64000],format={S16LE,S24LE,S32LE}' ! wavenc ! filesink location=recording.wav
+        gst\-launch pulsesrc !  'audio/x-raw,rate=[32000,64000],format={S16LE,S24LE,S32LE}' ! wavenc ! filesink location=recording.wav
 .br
 record audio and write it to a .wav file. Force usage of signed 16 to 32 bit
 samples and a sample rate between 32kHz and 64KHz.
