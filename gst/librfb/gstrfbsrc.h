@@ -61,8 +61,6 @@ struct _GstRfbSrc
 
   guint button_mask;
 
-  GstBufferPool *pool;
-
   /* protocol version */
   guint version_major;
   guint version_minor;

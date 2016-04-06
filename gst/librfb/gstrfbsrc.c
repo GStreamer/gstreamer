@@ -76,8 +76,9 @@ static gboolean gst_rfb_src_negotiate (GstBaseSrc * bsrc);
 static gboolean gst_rfb_src_stop (GstBaseSrc * bsrc);
 static gboolean gst_rfb_src_event (GstBaseSrc * bsrc, GstEvent * event);
 static gboolean gst_rfb_src_unlock (GstBaseSrc * bsrc);
-static GstFlowReturn gst_rfb_src_create (GstPushSrc * psrc,
-    GstBuffer ** outbuf);
+static gboolean gst_rfb_src_decide_allocation (GstBaseSrc * bsrc,
+    GstQuery * query);
+static GstFlowReturn gst_rfb_src_fill (GstPushSrc * psrc, GstBuffer * outbuf);
 
 #define gst_rfb_src_parent_class parent_class
 G_DEFINE_TYPE (GstRfbSrc, gst_rfb_src, GST_TYPE_PUSH_SRC);
@@ -151,7 +152,9 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rfb_src_stop);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_rfb_src_event);
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_rfb_src_unlock);
-  gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_rfb_src_create);
+  gstpushsrc_class->fill = GST_DEBUG_FUNCPTR (gst_rfb_src_fill);
+  gstbasesrc_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_rfb_src_decide_allocation);
 
   gstelement_class = GST_ELEMENT_CLASS (klass);
 
@@ -184,10 +187,7 @@ gst_rfb_src_init (GstRfbSrc * src)
 
   src->view_only = FALSE;
 
-  src->pool = NULL;
-
   src->decoder = rfb_decoder_new ();
-
 }
 
 static void
@@ -196,10 +196,7 @@ gst_rfb_src_finalize (GObject * object)
   GstRfbSrc *src = GST_RFB_SRC (object);
 
   g_free (src->host);
-  if (src->pool) {
-    gst_object_unref (src->pool);
-    src->pool = NULL;
-  }
+
   if (src->decoder) {
     rfb_decoder_free (src->decoder);
     src->decoder = NULL;
@@ -341,49 +338,48 @@ gst_rfb_src_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
-gst_rfb_negotiate_pool (GstRfbSrc * src, GstCaps * caps)
+static gboolean
+gst_rfb_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 {
-  GstQuery *query;
   GstBufferPool *pool = NULL;
-  guint size, min, max;
+  guint size, min = 1, max = 0;
   GstStructure *config;
+  GstCaps *caps;
+  GstVideoInfo info;
+  gint i;
+  gboolean ret;
 
-  /* find a pool for the negotiated caps now */
-  query = gst_query_new_allocation (caps, TRUE);
+  gst_query_parse_allocation (query, &caps, NULL);
 
-  if (!gst_pad_peer_query (GST_BASE_SRC_PAD (src), query)) {
-    /* not a problem, we use the defaults of query */
-    GST_DEBUG_OBJECT (src, "could not get downstream ALLOCATION hints");
-  }
+  if (!caps || !gst_video_info_from_caps (&info, caps))
+    return FALSE;
 
-  if (gst_query_get_n_allocation_pools (query) > 0) {
-    /* we got configuration from our peer, parse them */
+  for (i = 0; i < gst_query_get_n_allocation_pools (query); i++) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-  } else {
-    GST_DEBUG_OBJECT (src, "didn't get downstream pool hints");
-    size = GST_BASE_SRC (src)->blocksize;
-    min = max = 0;
+
+    /* TODO We restrict to the exact size as we don't support strides or
+     * special padding */
+    if (size == info.size)
+      break;
+
+    gst_object_unref (pool);
+    pool = NULL;
   }
 
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
     pool = gst_video_buffer_pool_new ();
+    size = info.size;
+    min = max = 0;
   }
-
-  if (src->pool)
-    gst_object_unref (src->pool);
-  src->pool = pool;
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-  gst_buffer_pool_set_config (pool, config);
-  // and activate
-  gst_buffer_pool_set_active (pool, TRUE);
+  ret = gst_buffer_pool_set_config (pool, config);
+  gst_object_unref (pool);
 
-  gst_query_unref (query);
+  return ret;
 }
 
 static gboolean
@@ -444,13 +440,6 @@ gst_rfb_src_negotiate (GstBaseSrc * bsrc)
   decoder->rect_height =
       (decoder->rect_height ? decoder->rect_height : decoder->height);
 
-  g_object_set (bsrc, "blocksize",
-      src->decoder->width * src->decoder->height * (decoder->bpp / 8), NULL);
-
-  decoder->frame = g_malloc (bsrc->blocksize);
-  if (decoder->use_copyrect) {
-    decoder->prev_frame = g_malloc (bsrc->blocksize);
-  }
   decoder->decoder_private = src;
 
   /* calculate some many used values */
@@ -473,10 +462,13 @@ gst_rfb_src_negotiate (GstBaseSrc * bsrc)
   gst_video_info_set_format (&vinfo, vformat, decoder->rect_width,
       decoder->rect_height);
 
+  decoder->frame = g_malloc (vinfo.size);
+  if (decoder->use_copyrect)
+    decoder->prev_frame = g_malloc (vinfo.size);
+
   caps = gst_video_info_to_caps (&vinfo);
 
   gst_base_src_set_caps (bsrc, caps);
-  gst_rfb_negotiate_pool (src, caps);
 
   gst_caps_unref (caps);
 
@@ -504,12 +496,11 @@ gst_rfb_src_stop (GstBaseSrc * bsrc)
 }
 
 static GstFlowReturn
-gst_rfb_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
+gst_rfb_src_fill (GstPushSrc * psrc, GstBuffer * outbuf)
 {
   GstRfbSrc *src = GST_RFB_SRC (psrc);
   RfbDecoder *decoder = src->decoder;
   GstMapInfo info;
-  GstFlowReturn ret;
 
   rfb_decoder_send_update_request (decoder, src->incremental_update,
       decoder->offset_x, decoder->offset_y, decoder->rect_width,
@@ -530,22 +521,19 @@ gst_rfb_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     }
   }
 
-  /* Create the buffer. */
-  ret = gst_buffer_pool_acquire_buffer (src->pool, outbuf, NULL);
-
-  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+  if (!gst_buffer_map (outbuf, &info, GST_MAP_WRITE)) {
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
+        ("Could not map the output frame"), (NULL));
     return GST_FLOW_ERROR;
   }
 
-  gst_buffer_map (*outbuf, &info, GST_MAP_WRITE);
-
   memcpy (info.data, decoder->frame, info.size);
 
-  GST_BUFFER_PTS (*outbuf) =
+  GST_BUFFER_PTS (outbuf) =
       gst_clock_get_time (GST_ELEMENT_CLOCK (src)) -
       GST_ELEMENT_CAST (src)->base_time;
 
-  gst_buffer_unmap (*outbuf, &info);
+  gst_buffer_unmap (outbuf, &info);
 
   return GST_FLOW_OK;
 }
