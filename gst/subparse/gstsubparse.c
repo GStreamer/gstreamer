@@ -977,15 +977,19 @@ parse_webvtt_cue_settings (ParserState * state, const gchar * settings)
 static gchar *
 parse_subrip (ParserState * state, const gchar * line)
 {
-  int subnum;
   gchar *ret;
 
   switch (state->state) {
-    case 0:
-      /* looking for a single integer */
-      if (sscanf (line, "%u", &subnum) == 1)
+    case 0:{
+      char *endptr;
+
+      /* looking for a single integer as a Cue ID, but we
+       * don't actually use it */
+      (void) strtol (line, &endptr, 10);
+      if (endptr != line && *endptr == '\0')
         state->state = 1;
       return NULL;
+    }
     case 1:
     {
       GstClockTime ts_start, ts_end;
@@ -1082,7 +1086,10 @@ parse_lrc (ParserState * state, const gchar * line)
 static gchar *
 parse_webvtt (ParserState * state, const gchar * line)
 {
-  if (state->state == 1) {
+  /* Cue IDs are optional in WebVTT, but not in subrip,
+   * so when in state 0 (cue ID), also check if we're
+   * already at the start --> end time marker */
+  if (state->state == 0 || state->state == 1) {
     GstClockTime ts_start, ts_end;
     gchar *end_time;
     gchar *cue_settings = NULL;
@@ -1733,7 +1740,8 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
     /* Set segment on our parser state machine */
     self->state.segment = &self->segment;
     /* Now parse the line, out of segment lines will just return NULL */
-    GST_LOG_OBJECT (self, "Parsing line '%s'", line + offset);
+    GST_LOG_OBJECT (self, "State %d. Parsing line '%s'", self->state.state,
+        line + offset);
     subtitle = self->parse_line (&self->state, line + offset);
     g_free (line);
 
