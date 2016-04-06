@@ -1018,10 +1018,17 @@ _pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GstCaps *subcaps;
   GList *l, *factories = NULL;
 
-  if (GST_IS_EVENT (info->data) && !GST_EVENT_IS_SERIALIZED (info->data)) {
-    GST_DEBUG_OBJECT (pad, "Letting non-serialized event %s pass",
-        GST_EVENT_TYPE_NAME (info->data));
-    return GST_PAD_PROBE_PASS;
+  if (GST_IS_EVENT (info->data)) {
+    if (!GST_EVENT_IS_SERIALIZED (info->data)) {
+      GST_DEBUG_OBJECT (pad, "Letting non-serialized event %s pass",
+          GST_EVENT_TYPE_NAME (info->data));
+      return GST_PAD_PROBE_PASS;
+    }
+    if (GST_EVENT_TYPE (info->data) == GST_EVENT_STREAM_START) {
+      GST_DEBUG_OBJECT (pad, "Letting event %s pass",
+          GST_EVENT_TYPE_NAME (info->data));
+      return GST_PAD_PROBE_PASS;
+    }
   }
 
   GST_DEBUG_OBJECT (pad, "Pad blocked");
@@ -1059,7 +1066,7 @@ _pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
   /* If there are no subcaps but the subtitle sink is blocked upstream
    * must behave wrong as there are no fixed caps set for the first
-   * buffer or in-order event */
+   * buffer or in-order event after stream-start */
   if (G_UNLIKELY (!subcaps && self->subtitle_sink_blocked)) {
     GST_ELEMENT_WARNING (self, CORE, NEGOTIATION, (NULL),
         ("Subtitle sink is blocked but we have no subtitle caps"));
