@@ -583,6 +583,8 @@ _egl_image_upload_perform_gl_thread (GstGLContext * context,
 
   /* FIXME: buffer pool */
   *image->outbuf = gst_buffer_new ();
+  gst_buffer_add_parent_buffer_meta (*image->outbuf, image->buffer);
+
   gst_gl_memory_setup_buffer (allocator, *image->outbuf, image->params);
   gst_object_unref (allocator);
 
@@ -600,10 +602,6 @@ _egl_image_upload_perform_gl_thread (GstGLContext * context,
     gl->EGLImageTargetTexture2D (GL_TEXTURE_2D,
         gst_egl_image_memory_get_image (mem));
   }
-
-  if (GST_IS_GL_BUFFER_POOL (image->buffer->pool))
-    gst_gl_buffer_pool_replace_last_buffer (GST_GL_BUFFER_POOL (image->
-            buffer->pool), image->buffer);
 }
 
 static GstGLUploadReturn
