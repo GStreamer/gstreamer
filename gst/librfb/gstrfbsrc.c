@@ -346,7 +346,6 @@ gst_rfb_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   GstStructure *config;
   GstCaps *caps;
   GstVideoInfo info;
-  gint i;
   gboolean ret;
 
   gst_query_parse_allocation (query, &caps, NULL);
@@ -354,7 +353,7 @@ gst_rfb_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   if (!caps || !gst_video_info_from_caps (&info, caps))
     return FALSE;
 
-  for (i = 0; i < gst_query_get_n_allocation_pools (query); i++) {
+  while (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
     /* TODO We restrict to the exact size as we don't support strides or
@@ -362,6 +361,7 @@ gst_rfb_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     if (size == info.size)
       break;
 
+    gst_query_remove_nth_allocation_pool (query, 0);
     gst_object_unref (pool);
     pool = NULL;
   }
@@ -370,7 +370,9 @@ gst_rfb_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     /* we did not get a pool, make one ourselves then */
     pool = gst_video_buffer_pool_new ();
     size = info.size;
-    min = max = 0;
+    min = 1;
+    max = 0;
+    gst_query_add_allocation_pool (query, pool, size, min, max);
   }
 
   config = gst_buffer_pool_get_config (pool);
