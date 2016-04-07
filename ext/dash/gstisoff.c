@@ -27,36 +27,6 @@
 
 #include <string.h>
 
-void
-gst_isoff_sidx_parser_init (GstSidxParser * parser)
-{
-  parser->status = GST_ISOFF_SIDX_PARSER_INIT;
-  parser->cumulative_entry_size = 0;
-  parser->sidx.entries = NULL;
-  parser->sidx.entries_count = 0;
-}
-
-void
-gst_isoff_sidx_parser_clear (GstSidxParser * parser)
-{
-  g_free (parser->sidx.entries);
-  parser->sidx.entries = NULL;
-}
-
-static void
-gst_isoff_parse_sidx_entry (GstSidxBoxEntry * entry, GstByteReader * reader)
-{
-  guint32 aux;
-
-  aux = gst_byte_reader_get_uint32_be_unchecked (reader);
-  entry->ref_type = aux >> 31;
-  entry->size = aux & 0x7FFFFFFF;
-  entry->duration = gst_byte_reader_get_uint32_be_unchecked (reader);
-  aux = gst_byte_reader_get_uint32_be_unchecked (reader);
-  entry->starts_with_sap = aux >> 31;
-  entry->sap_type = ((aux >> 28) & 0x7);
-  entry->sap_delta_time = aux & 0xFFFFFFF;
-}
 
 /* gst_isoff_parse_box:
  * @reader:
@@ -110,6 +80,37 @@ gst_isoff_parse_box_header (GstByteReader * reader, guint32 * type,
 not_enough_data:
   gst_byte_reader_set_pos (reader, header_start_offset);
   return FALSE;
+}
+
+void
+gst_isoff_sidx_parser_init (GstSidxParser * parser)
+{
+  parser->status = GST_ISOFF_SIDX_PARSER_INIT;
+  parser->cumulative_entry_size = 0;
+  parser->sidx.entries = NULL;
+  parser->sidx.entries_count = 0;
+}
+
+void
+gst_isoff_sidx_parser_clear (GstSidxParser * parser)
+{
+  g_free (parser->sidx.entries);
+  parser->sidx.entries = NULL;
+}
+
+static void
+gst_isoff_parse_sidx_entry (GstSidxBoxEntry * entry, GstByteReader * reader)
+{
+  guint32 aux;
+
+  aux = gst_byte_reader_get_uint32_be_unchecked (reader);
+  entry->ref_type = aux >> 31;
+  entry->size = aux & 0x7FFFFFFF;
+  entry->duration = gst_byte_reader_get_uint32_be_unchecked (reader);
+  aux = gst_byte_reader_get_uint32_be_unchecked (reader);
+  entry->starts_with_sap = aux >> 31;
+  entry->sap_type = ((aux >> 28) & 0x7);
+  entry->sap_delta_time = aux & 0xFFFFFFF;
 }
 
 GstIsoffParserResult
