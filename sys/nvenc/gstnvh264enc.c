@@ -57,8 +57,8 @@ static GstCaps *gst_nv_h264_enc_getcaps (GstVideoEncoder * enc,
     GstCaps * filter);
 static gboolean gst_nv_h264_enc_set_src_caps (GstNvBaseEnc * nvenc,
     GstVideoCodecState * state);
-static gboolean gst_nv_h264_enc_initialize_encoder (GstNvBaseEnc * nvenc,
-    GstVideoCodecState * old_state, GstVideoCodecState * state);
+static gboolean gst_nv_h264_enc_set_encoder_config (GstNvBaseEnc * nvenc,
+    GstVideoCodecState * state, NV_ENC_CONFIG * config);
 static gboolean gst_nv_h264_enc_set_pic_params (GstNvBaseEnc * nvenc,
     GstVideoCodecFrame * frame, NV_ENC_PIC_PARAMS * pic_params);
 static void gst_nv_h264_enc_set_property (GObject * object, guint prop_id,
@@ -85,7 +85,7 @@ gst_nv_h264_enc_class_init (GstNvH264EncClass * klass)
   videoenc_class->getcaps = GST_DEBUG_FUNCPTR (gst_nv_h264_enc_getcaps);
 
   nvenc_class->codec_id = NV_ENC_CODEC_H264_GUID;
-  nvenc_class->initialize_encoder = gst_nv_h264_enc_initialize_encoder;
+  nvenc_class->set_encoder_config = gst_nv_h264_enc_set_encoder_config;
   nvenc_class->set_src_caps = gst_nv_h264_enc_set_src_caps;
   nvenc_class->set_pic_params = gst_nv_h264_enc_set_pic_params;
 
@@ -411,28 +411,14 @@ gst_nv_h264_enc_set_src_caps (GstNvBaseEnc * nvenc, GstVideoCodecState * state)
 }
 
 static gboolean
-gst_nv_h264_enc_initialize_encoder (GstNvBaseEnc * nvenc,
-    GstVideoCodecState * old_state, GstVideoCodecState * state)
+gst_nv_h264_enc_set_encoder_config (GstNvBaseEnc * nvenc,
+    GstVideoCodecState * state, NV_ENC_CONFIG * config)
 {
   GstNvH264Enc *h264enc = GST_NV_H264_ENC (nvenc);
-  NV_ENC_RECONFIGURE_PARAMS reconfigure_params = { 0, };
-  NV_ENC_INITIALIZE_PARAMS init_params = { 0, };
-  NV_ENC_INITIALIZE_PARAMS *params;
-  NV_ENC_PRESET_CONFIG preset_config = { 0, };
-  NVENCSTATUS nv_ret;
-  GstVideoInfo *info = &state->info;
   GstCaps *allowed_caps, *template_caps;
   GUID selected_profile = NV_ENC_CODEC_PROFILE_AUTOSELECT_GUID;
-  GUID selected_preset = nvenc->selected_preset;
   int level_idc = NV_ENC_LEVEL_AUTOSELECT;
-
-  /* TODO: support reconfiguration */
-  if (old_state) {
-    reconfigure_params.version = NV_ENC_RECONFIGURE_PARAMS_VER;
-    params = &reconfigure_params.reInitEncodeParams;
-  } else {
-    params = &init_params;
-  }
+  GstVideoInfo *info = &state->info;
 
   template_caps = gst_static_pad_template_get_caps (&src_factory);
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (h264enc));
@@ -482,133 +468,19 @@ gst_nv_h264_enc_initialize_encoder (GstNvBaseEnc * nvenc,
   }
   gst_caps_unref (template_caps);
 
-  params->version = NV_ENC_INITIALIZE_PARAMS_VER;
-  params->encodeGUID = NV_ENC_CODEC_H264_GUID;
-  params->encodeWidth = GST_VIDEO_INFO_WIDTH (info);
-  params->encodeHeight = GST_VIDEO_INFO_HEIGHT (info);
-
-  {
-    guint32 n_presets;
-    GUID *presets;
-    guint32 i;
-
-    nv_ret =
-        NvEncGetEncodePresetCount (GST_NV_BASE_ENC (h264enc)->encoder,
-        params->encodeGUID, &n_presets);
-    if (nv_ret != NV_ENC_SUCCESS) {
-      GST_ELEMENT_ERROR (h264enc, LIBRARY, SETTINGS, (NULL),
-          ("Failed to get encoder presets"));
-      return FALSE;
-    }
-
-    presets = g_new0 (GUID, n_presets);
-    nv_ret =
-        NvEncGetEncodePresetGUIDs (GST_NV_BASE_ENC (h264enc)->encoder,
-        params->encodeGUID, presets, n_presets, &n_presets);
-    if (nv_ret != NV_ENC_SUCCESS) {
-      GST_ELEMENT_ERROR (h264enc, LIBRARY, SETTINGS, (NULL),
-          ("Failed to get encoder presets"));
-      g_free (presets);
-      return FALSE;
-    }
-
-    for (i = 0; i < n_presets; i++) {
-      if (gst_nvenc_cmp_guid (presets[i], selected_preset))
-        break;
-    }
-    g_free (presets);
-    if (i >= n_presets) {
-      GST_ELEMENT_ERROR (h264enc, LIBRARY, SETTINGS, (NULL),
-          ("Selected preset not supported"));
-      return FALSE;
-    }
-
-    params->presetGUID = selected_preset;
-  }
-  params->enablePTD = 1;
-  if (!old_state) {
-    /* this sets the required buffer size and the maximum allowed size on
-     * subsequent reconfigures */
-    /* FIXME: propertise this */
-    params->maxEncodeWidth = GST_VIDEO_INFO_WIDTH (info);
-    params->maxEncodeHeight = GST_VIDEO_INFO_HEIGHT (info);
-    gst_nv_base_enc_set_max_encode_size (GST_NV_BASE_ENC (h264enc),
-        params->maxEncodeWidth, params->maxEncodeHeight);
-  } else {
-    guint max_width, max_height;
-
-    gst_nv_base_enc_get_max_encode_size (GST_NV_BASE_ENC (h264enc),
-        &max_width, &max_height);
-
-    if (GST_VIDEO_INFO_WIDTH (info) > max_width
-        || GST_VIDEO_INFO_HEIGHT (info) > max_height) {
-      GST_ELEMENT_ERROR (h264enc, STREAM, FORMAT, ("%s", "Requested stream "
-              "size is larger than the maximum configured size"), (NULL));
-      return FALSE;
-    }
-  }
-
-  preset_config.version = NV_ENC_PRESET_CONFIG_VER;
-  preset_config.presetCfg.version = NV_ENC_CONFIG_VER;
-
-  nv_ret =
-      NvEncGetEncodePresetConfig (GST_NV_BASE_ENC (h264enc)->encoder,
-      params->encodeGUID, params->presetGUID, &preset_config);
-  if (nv_ret != NV_ENC_SUCCESS) {
-    GST_ELEMENT_ERROR (h264enc, LIBRARY, SETTINGS, (NULL),
-        ("Failed to get encode preset configuration: %d", nv_ret));
-    return FALSE;
-  }
-  params->encodeConfig = &preset_config.presetCfg;
-
   /* override some defaults */
   GST_LOG_OBJECT (h264enc, "setting parameters");
-  preset_config.presetCfg.version = NV_ENC_CONFIG_VER;
-  preset_config.presetCfg.profileGUID = selected_profile;
-  preset_config.presetCfg.encodeCodecConfig.h264Config.level = level_idc;
-  preset_config.presetCfg.encodeCodecConfig.h264Config.chromaFormatIDC = 1;
+  config->profileGUID = selected_profile;
+  config->encodeCodecConfig.h264Config.level = level_idc;
+  config->encodeCodecConfig.h264Config.chromaFormatIDC = 1;
   if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_Y444) {
     GST_DEBUG_OBJECT (h264enc, "have Y444 input, setting config accordingly");
-    preset_config.presetCfg.encodeCodecConfig.h264Config.
-        separateColourPlaneFlag = 1;
-    preset_config.presetCfg.encodeCodecConfig.h264Config.chromaFormatIDC = 3;
+    config->encodeCodecConfig.h264Config.separateColourPlaneFlag = 1;
+    config->encodeCodecConfig.h264Config.chromaFormatIDC = 3;
   }
 
   /* FIXME: make property */
-  preset_config.presetCfg.encodeCodecConfig.h264Config.outputAUD = 1;
-
-  if (GST_VIDEO_INFO_IS_INTERLACED (info)) {
-    if (GST_VIDEO_INFO_INTERLACE_MODE (info) ==
-        GST_VIDEO_INTERLACE_MODE_INTERLEAVED
-        || GST_VIDEO_INFO_INTERLACE_MODE (info) ==
-        GST_VIDEO_INTERLACE_MODE_MIXED) {
-      preset_config.presetCfg.frameFieldMode =
-          NV_ENC_PARAMS_FRAME_FIELD_MODE_FIELD;
-    }
-  }
-
-  if (info->fps_d > 0 && info->fps_n > 0) {
-    params->frameRateNum = info->fps_n;
-    params->frameRateDen = info->fps_d;
-  } else {
-    GST_FIXME_OBJECT (h264enc, "variable framerate");
-  }
-
-  if (old_state) {
-    nv_ret =
-        NvEncReconfigureEncoder (GST_NV_BASE_ENC (h264enc)->encoder,
-        &reconfigure_params);
-  } else {
-    nv_ret =
-        NvEncInitializeEncoder (GST_NV_BASE_ENC (h264enc)->encoder, params);
-  }
-
-  if (nv_ret != NV_ENC_SUCCESS) {
-    GST_ELEMENT_ERROR (h264enc, LIBRARY, SETTINGS, (NULL),
-        ("Failed to %sinit encoder: %d", old_state ? "re" : "", nv_ret));
-    return FALSE;
-  }
-  GST_INFO_OBJECT (h264enc, "configured encoder");
+  config->encodeCodecConfig.h264Config.outputAUD = 1;
 
   return TRUE;
 }

@@ -969,22 +969,136 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
   GstVideoInfo *info = &state->info;
   GstVideoCodecState *old_state = nvenc->input_state;
+  NV_ENC_RECONFIGURE_PARAMS reconfigure_params = { 0, };
+  NV_ENC_INITIALIZE_PARAMS init_params = { 0, };
+  NV_ENC_INITIALIZE_PARAMS *params;
+  NV_ENC_PRESET_CONFIG preset_config = { 0, };
   NVENCSTATUS nv_ret;
 
-  g_assert (nvenc_class->initialize_encoder);
+  if (old_state) {
+    reconfigure_params.version = NV_ENC_RECONFIGURE_PARAMS_VER;
+    params = &reconfigure_params.reInitEncodeParams;
+  } else {
+    params = &init_params;
+  }
+
+  params->version = NV_ENC_INITIALIZE_PARAMS_VER;
+  params->encodeGUID = nvenc_class->codec_id;
+  params->encodeWidth = GST_VIDEO_INFO_WIDTH (info);
+  params->encodeHeight = GST_VIDEO_INFO_HEIGHT (info);
+
+  {
+    guint32 n_presets;
+    GUID *presets;
+    guint32 i;
+
+    nv_ret =
+        NvEncGetEncodePresetCount (nvenc->encoder,
+        params->encodeGUID, &n_presets);
+    if (nv_ret != NV_ENC_SUCCESS) {
+      GST_ELEMENT_ERROR (nvenc, LIBRARY, SETTINGS, (NULL),
+          ("Failed to get encoder presets"));
+      return FALSE;
+    }
+
+    presets = g_new0 (GUID, n_presets);
+    nv_ret =
+        NvEncGetEncodePresetGUIDs (nvenc->encoder,
+        params->encodeGUID, presets, n_presets, &n_presets);
+    if (nv_ret != NV_ENC_SUCCESS) {
+      GST_ELEMENT_ERROR (nvenc, LIBRARY, SETTINGS, (NULL),
+          ("Failed to get encoder presets"));
+      g_free (presets);
+      return FALSE;
+    }
+
+    for (i = 0; i < n_presets; i++) {
+      if (gst_nvenc_cmp_guid (presets[i], nvenc->selected_preset))
+        break;
+    }
+    g_free (presets);
+    if (i >= n_presets) {
+      GST_ELEMENT_ERROR (nvenc, LIBRARY, SETTINGS, (NULL),
+          ("Selected preset not supported"));
+      return FALSE;
+    }
+
+    params->presetGUID = nvenc->selected_preset;
+  }
+
+  params->enablePTD = 1;
+  if (!old_state) {
+    /* this sets the required buffer size and the maximum allowed size on
+     * subsequent reconfigures */
+    /* FIXME: propertise this */
+    params->maxEncodeWidth = GST_VIDEO_INFO_WIDTH (info);
+    params->maxEncodeHeight = GST_VIDEO_INFO_HEIGHT (info);
+    gst_nv_base_enc_set_max_encode_size (nvenc, params->maxEncodeWidth,
+        params->maxEncodeHeight);
+  } else {
+    guint max_width, max_height;
+
+    gst_nv_base_enc_get_max_encode_size (nvenc, &max_width, &max_height);
+
+    if (GST_VIDEO_INFO_WIDTH (info) > max_width
+        || GST_VIDEO_INFO_HEIGHT (info) > max_height) {
+      GST_ELEMENT_ERROR (nvenc, STREAM, FORMAT, ("%s", "Requested stream "
+              "size is larger than the maximum configured size"), (NULL));
+      return FALSE;
+    }
+  }
+
+  preset_config.version = NV_ENC_PRESET_CONFIG_VER;
+  preset_config.presetCfg.version = NV_ENC_CONFIG_VER;
+
+  nv_ret =
+      NvEncGetEncodePresetConfig (nvenc->encoder,
+      params->encodeGUID, params->presetGUID, &preset_config);
+  if (nv_ret != NV_ENC_SUCCESS) {
+    GST_ELEMENT_ERROR (nvenc, LIBRARY, SETTINGS, (NULL),
+        ("Failed to get encode preset configuration: %d", nv_ret));
+    return FALSE;
+  }
+
+  if (GST_VIDEO_INFO_IS_INTERLACED (info)) {
+    if (GST_VIDEO_INFO_INTERLACE_MODE (info) ==
+        GST_VIDEO_INTERLACE_MODE_INTERLEAVED
+        || GST_VIDEO_INFO_INTERLACE_MODE (info) ==
+        GST_VIDEO_INTERLACE_MODE_MIXED) {
+      preset_config.presetCfg.frameFieldMode =
+          NV_ENC_PARAMS_FRAME_FIELD_MODE_FIELD;
+    }
+  }
+
+  if (info->fps_d > 0 && info->fps_n > 0) {
+    params->frameRateNum = info->fps_n;
+    params->frameRateDen = info->fps_d;
+  } else {
+    GST_FIXME_OBJECT (nvenc, "variable framerate");
+  }
+
+  params->encodeConfig = &preset_config.presetCfg;
+
+  g_assert (nvenc_class->set_encoder_config);
+  if (!nvenc_class->set_encoder_config (nvenc, state, params->encodeConfig)) {
+    GST_ERROR_OBJECT (enc, "Subclass failed to set encoder configuration");
+    return FALSE;
+  }
 
   G_LOCK (initialization_lock);
-  if (!nvenc_class->initialize_encoder (nvenc, old_state, state)) {
-    GST_ERROR_OBJECT (enc, "Subclass failed to reconfigure encoder");
-    G_UNLOCK (initialization_lock);
-    return FALSE;
+  if (old_state) {
+    nv_ret = NvEncReconfigureEncoder (nvenc->encoder, &reconfigure_params);
+  } else {
+    nv_ret = NvEncInitializeEncoder (nvenc->encoder, params);
   }
   G_UNLOCK (initialization_lock);
 
-  if (!nvenc->max_encode_width && !nvenc->max_encode_height) {
-    gst_nv_base_enc_set_max_encode_size (nvenc, GST_VIDEO_INFO_WIDTH (info),
-        GST_VIDEO_INFO_HEIGHT (info));
+  if (nv_ret != NV_ENC_SUCCESS) {
+    GST_ELEMENT_ERROR (nvenc, LIBRARY, SETTINGS, (NULL),
+        ("Failed to %sinit encoder: %d", old_state ? "re" : "", nv_ret));
+    return FALSE;
   }
+  GST_INFO_OBJECT (nvenc, "configured encoder");
 
   if (!old_state) {
     nvenc->input_info = *info;
@@ -1268,9 +1382,8 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
     }
 
     cuda_ret =
-        cudaGraphicsResourceGetMappedPointer (&data->
-        in_gl_resource->cuda_plane_pointers[i],
-        &data->in_gl_resource->cuda_num_bytes,
+        cudaGraphicsResourceGetMappedPointer (&data->in_gl_resource->
+        cuda_plane_pointers[i], &data->in_gl_resource->cuda_num_bytes,
         data->in_gl_resource->cuda_texture);
     if (cuda_ret != cudaSuccess) {
       GST_ERROR_OBJECT (data->nvenc, "failed to get mapped pointer of map GL "

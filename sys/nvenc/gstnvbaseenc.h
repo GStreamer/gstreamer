@@ -104,14 +104,14 @@ typedef struct {
 
   GUID codec_id;
 
-  gboolean (*initialize_encoder) (GstNvBaseEnc * nvenc,
-                                  GstVideoCodecState * old_state,
-                                  GstVideoCodecState * state);
   gboolean (*set_src_caps)       (GstNvBaseEnc * nvenc,
                                   GstVideoCodecState * state);
   gboolean (*set_pic_params)     (GstNvBaseEnc * nvenc,
                                   GstVideoCodecFrame * frame,
                                   NV_ENC_PIC_PARAMS * pic_params);
+  gboolean (*set_encoder_config) (GstNvBaseEnc * nvenc,
+                                  GstVideoCodecState * state,
+                                  NV_ENC_CONFIG * config);
 } GstNvBaseEncClass;
 
 G_GNUC_INTERNAL
