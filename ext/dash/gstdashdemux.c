@@ -1711,10 +1711,21 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
     GstDashDemuxStream * dash_stream, GstBuffer * buffer)
 {
   GstAdaptiveDemuxStream *stream = (GstAdaptiveDemuxStream *) dash_stream;
-  GstBuffer *outbuf = NULL;
   gsize available;
   guint index_header_or_data;
-  guint64 buffer_offset;
+  GstMapInfo map;
+  GstByteReader reader;
+  guint32 fourcc;
+  guint header_size;
+  guint64 size, buffer_offset;
+
+  /* This must not be called when we're in the mdat. We only look at the mdat
+   * header and then stop parsing the boxes as we're only interested in the
+   * metadata! Handling mdat is the job of the surrounding code, as well as
+   * stopping or starting the next fragment when mdat is over (=> sidx)
+   */
+  g_assert (dash_stream->isobmff_parser.current_fourcc !=
+      GST_ISOFF_FOURCC_MDAT);
 
   if (stream->downloading_index)
     index_header_or_data = 1;
@@ -1746,156 +1757,118 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
   buffer = gst_adapter_take_buffer (dash_stream->isobmff_adapter, available);
   buffer_offset = dash_stream->isobmff_parser.current_offset;
 
-  /* Are we waiting for the current box to finish and it happens in this
-   * buffer? Push the current box and parse the remainder */
-  if (dash_stream->isobmff_parser.current_size != 0
-      && dash_stream->isobmff_parser.current_size != -1
-      && dash_stream->isobmff_parser.current_start_offset +
-      dash_stream->isobmff_parser.current_size <=
-      dash_stream->isobmff_parser.current_offset + available) {
-    GstBuffer *pending = NULL;
-    guint64 split_at =
-        (dash_stream->isobmff_parser.current_start_offset +
-        dash_stream->isobmff_parser.current_size) -
-        dash_stream->isobmff_parser.current_offset;
+  /* Always at the start of a box here */
+  g_assert (dash_stream->isobmff_parser.current_size == 0);
 
-    if (split_at != available)
-      pending = _gst_buffer_split (buffer, split_at, -1);
+  /* At the start of a box => Parse it */
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  gst_byte_reader_init (&reader, map.data, map.size);
 
-    /* Reset, we're now at the start of a new box */
+  /* While there are more boxes left to parse ... */
+  dash_stream->isobmff_parser.current_start_offset =
+      dash_stream->isobmff_parser.current_offset;
+  do {
     dash_stream->isobmff_parser.current_fourcc = 0;
     dash_stream->isobmff_parser.current_size = 0;
-    dash_stream->isobmff_parser.current_offset += split_at;
-    dash_stream->isobmff_parser.current_start_offset =
-        dash_stream->isobmff_parser.current_offset;
 
-    outbuf = buffer;
-    if (!pending) {
-      GST_BUFFER_OFFSET (outbuf) = buffer_offset;
-      GST_BUFFER_OFFSET_END (outbuf) =
-          buffer_offset + gst_buffer_get_size (outbuf);
-      return outbuf;
+    if (!gst_isoff_parse_box_header (&reader, &fourcc, NULL, &header_size,
+            &size)) {
+      break;
     }
 
-    buffer_offset = dash_stream->isobmff_parser.current_offset;
-    buffer = pending;
-    available = gst_buffer_get_size (buffer);
-  }
+    dash_stream->isobmff_parser.current_fourcc = fourcc;
+    if (size == 0) {
+      /* We assume this is mdat, anything else with "size until end"
+       * does not seem to make sense */
+      g_assert (dash_stream->isobmff_parser.current_fourcc ==
+          GST_ISOFF_FOURCC_MDAT);
+      dash_stream->isobmff_parser.current_size = -1;
+      break;
+    }
 
-  /* Are we at the start of a box? Parse it */
-  if (dash_stream->isobmff_parser.current_size == 0) {
-    GstMapInfo map;
-    GstByteReader reader;
-    guint32 fourcc;
-    guint header_size;
-    guint64 size;
+    dash_stream->isobmff_parser.current_size = size;
 
-    gst_buffer_map (buffer, &map, GST_MAP_READ);
-    gst_byte_reader_init (&reader, map.data, map.size);
+    /* Do we have the complete box or are at MDAT */
+    if (gst_byte_reader_get_remaining (&reader) < size - header_size ||
+        dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT) {
+      /* Reset byte reader to the beginning of the box */
+      gst_byte_reader_set_pos (&reader,
+          gst_byte_reader_get_pos (&reader) - header_size);
+      break;
+    }
 
-    /* While there are more boxes left to parse ... */
-    dash_stream->isobmff_parser.current_start_offset =
-        dash_stream->isobmff_parser.current_offset;
-    do {
-      dash_stream->isobmff_parser.current_fourcc = 0;
-      dash_stream->isobmff_parser.current_size = 0;
+    GST_LOG_OBJECT (stream->pad,
+        "box %" GST_FOURCC_FORMAT " at offset %" G_GUINT64_FORMAT " size %"
+        G_GUINT64_FORMAT, GST_FOURCC_ARGS (fourcc),
+        dash_stream->isobmff_parser.current_offset +
+        gst_byte_reader_get_pos (&reader) - header_size, size);
 
-      if (!gst_isoff_parse_box_header (&reader, &fourcc, NULL, &header_size,
-              &size)) {
-        break;
-      }
+    if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MOOF) {
+      GstByteReader sub_reader;
+      GstMoofBox *moof;
 
-      dash_stream->isobmff_parser.current_fourcc = fourcc;
-      if (size == 0) {
-        dash_stream->isobmff_parser.current_size = -1;
-        break;
-      }
-
-      dash_stream->isobmff_parser.current_size = size;
-
-      /* Do we have the complete box? */
-      if (gst_byte_reader_get_remaining (&reader) < size - header_size) {
-        /* Reset byte reader to the beginning of the box */
-        gst_byte_reader_set_pos (&reader,
-            gst_byte_reader_get_pos (&reader) - header_size);
-        break;
-      }
-
-      GST_LOG_OBJECT (stream->pad,
-          "box %" GST_FOURCC_FORMAT " at offset %" G_GUINT64_FORMAT " size %"
-          G_GUINT64_FORMAT, GST_FOURCC_ARGS (fourcc),
-          dash_stream->isobmff_parser.current_offset +
-          gst_byte_reader_get_pos (&reader) - header_size, size);
-
-      gst_byte_reader_skip (&reader, size - header_size);
-      dash_stream->isobmff_parser.current_fourcc = 0;
-      dash_stream->isobmff_parser.current_start_offset += size;
-      dash_stream->isobmff_parser.current_size = 0;
-    } while (gst_byte_reader_get_remaining (&reader) > 0);
-
-    gst_buffer_unmap (buffer, &map);
-    /* mdat? Push all we have and wait for it to be over */
-    if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT
-        || dash_stream->isobmff_parser.current_size == -1) {
-      /* Nothing here, we just go out */
-      GST_LOG_OBJECT (stream->pad,
-          "box %" GST_FOURCC_FORMAT " at offset %" G_GUINT64_FORMAT " size %"
-          G_GUINT64_FORMAT, GST_FOURCC_ARGS (fourcc),
-          dash_stream->isobmff_parser.current_offset +
-          gst_byte_reader_get_pos (&reader) - header_size,
-          dash_stream->isobmff_parser.current_size);
-    } else if (gst_byte_reader_get_pos (&reader) != 0) {
-      GstBuffer *pending;
-
-      /* Multiple complete boxes and no mdat? Push them and
-       * keep the remainder, which is the start of the next box
-       * if any remainder */
-
-      pending =
-          _gst_buffer_split (buffer, gst_byte_reader_get_pos (&reader), -1);
-      gst_adapter_push (dash_stream->isobmff_adapter, pending);
-      dash_stream->isobmff_parser.current_offset +=
-          gst_byte_reader_get_pos (&reader);
-      dash_stream->isobmff_parser.current_size = 0;
-      if (outbuf)
-        outbuf = gst_buffer_append (outbuf, buffer);
-      else
-        outbuf = buffer;
-      buffer = NULL;
-
-      GST_BUFFER_OFFSET (outbuf) = buffer_offset;
-      GST_BUFFER_OFFSET_END (outbuf) =
-          buffer_offset + gst_buffer_get_size (outbuf);
-      return outbuf;
+      gst_byte_reader_get_sub_reader (&reader, &sub_reader, size - header_size);
+      moof = gst_isoff_moof_box_parse (&sub_reader);
+      /* TODO: Do something with this */
+      gst_isoff_moof_box_free (moof);
     } else {
-
-      /* Not even a complete box, wait */
-      dash_stream->isobmff_parser.current_size = 0;
-      gst_adapter_push (dash_stream->isobmff_adapter, buffer);
-
-      if (outbuf) {
-        GST_BUFFER_OFFSET (outbuf) = buffer_offset;
-        GST_BUFFER_OFFSET_END (outbuf) =
-            buffer_offset + gst_buffer_get_size (outbuf);
-      }
-      return outbuf;
+      gst_byte_reader_skip (&reader, size - header_size);
     }
 
-    /* Otherwise we pass through mdat, see above */
+    dash_stream->isobmff_parser.current_fourcc = 0;
+    dash_stream->isobmff_parser.current_start_offset += size;
+    dash_stream->isobmff_parser.current_size = 0;
+  } while (gst_byte_reader_get_remaining (&reader) > 0);
+
+  gst_buffer_unmap (buffer, &map);
+
+  /* mdat? Push all we have and wait for it to be over */
+  if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT) {
+    GstBuffer *pending;
+
+    GST_LOG_OBJECT (stream->pad,
+        "box %" GST_FOURCC_FORMAT " at offset %" G_GUINT64_FORMAT " size %"
+        G_GUINT64_FORMAT, GST_FOURCC_ARGS (fourcc),
+        dash_stream->isobmff_parser.current_offset +
+        gst_byte_reader_get_pos (&reader) - header_size,
+        dash_stream->isobmff_parser.current_size);
+
+    /* At mdat. Move the start of the mdat to the adapter and have everything
+     * else be pushed. We parsed all header boxes at this point and are not
+     * supposed to be called again until the next moof */
+    pending = _gst_buffer_split (buffer, gst_byte_reader_get_pos (&reader), -1);
+    gst_adapter_push (dash_stream->isobmff_adapter, pending);
+    dash_stream->isobmff_parser.current_offset +=
+        gst_byte_reader_get_pos (&reader);
+    dash_stream->isobmff_parser.current_size = 0;
+
+    GST_BUFFER_OFFSET (buffer) = buffer_offset;
+    GST_BUFFER_OFFSET_END (buffer) =
+        buffer_offset + gst_buffer_get_size (buffer);
+    return buffer;
+  } else if (gst_byte_reader_get_pos (&reader) != 0) {
+    GstBuffer *pending;
+
+    /* Multiple complete boxes and no mdat? Push them and keep the remainder,
+     * which is the start of the next box if any remainder */
+
+    pending = _gst_buffer_split (buffer, gst_byte_reader_get_pos (&reader), -1);
+    gst_adapter_push (dash_stream->isobmff_adapter, pending);
+    dash_stream->isobmff_parser.current_offset +=
+        gst_byte_reader_get_pos (&reader);
+    dash_stream->isobmff_parser.current_size = 0;
+
+    GST_BUFFER_OFFSET (buffer) = buffer_offset;
+    GST_BUFFER_OFFSET_END (buffer) =
+        buffer_offset + gst_buffer_get_size (buffer);
+    return buffer;
   }
 
-  /* Passing through mdat here */
-  dash_stream->isobmff_parser.current_offset += gst_buffer_get_size (buffer);
-  if (outbuf)
-    outbuf = gst_buffer_append (outbuf, buffer);
-  else
-    outbuf = buffer;
-  buffer = NULL;
+  /* Not even a single complete, non-mdat box, wait */
+  dash_stream->isobmff_parser.current_size = 0;
+  gst_adapter_push (dash_stream->isobmff_adapter, buffer);
 
-  GST_BUFFER_OFFSET (outbuf) = buffer_offset;
-  GST_BUFFER_OFFSET_END (outbuf) = buffer_offset + gst_buffer_get_size (outbuf);
-
-  return outbuf;
+  return NULL;
 }
 
 static GstFlowReturn
@@ -1909,9 +1882,25 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
 
   if (!gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
     if (dash_stream->is_isobmff) {
-      buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
-      if (!buffer)
-        return GST_FLOW_OK;
+      if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
+        buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
+
+        if (buffer
+            && (ret =
+                gst_adaptive_demux_stream_push_buffer (stream,
+                    buffer)) != GST_FLOW_OK)
+          return ret;
+
+        if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT
+            && gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
+          buffer =
+              gst_adapter_take_buffer (dash_stream->isobmff_adapter,
+              gst_adapter_available (dash_stream->isobmff_adapter));
+          ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
+        }
+
+        return ret;
+      }
     }
 
     return gst_adaptive_demux_stream_push_buffer (stream, buffer);
@@ -2010,10 +1999,25 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
       dash_stream->sidx_current_offset = GST_BUFFER_OFFSET_END (buffer);
 
       if (dash_stream->is_isobmff) {
-        buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
-        g_assert (buffer || !advance);
-        g_assert (buffer
-            || gst_adapter_available (dash_stream->sidx_adapter) == 0);
+        if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
+          buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
+
+          /* Leftover in the adapter is actual mdat data if any */
+          if (dash_stream->isobmff_parser.current_fourcc ==
+              GST_ISOFF_FOURCC_MDAT
+              && gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
+            GstBuffer *buffer2 =
+                gst_adapter_take_buffer (dash_stream->isobmff_adapter,
+                gst_adapter_available (dash_stream->isobmff_adapter));
+
+            if (buffer)
+              buffer = gst_buffer_append (buffer, buffer2);
+            else
+              buffer = buffer2;
+          }
+
+          g_assert (buffer || !advance);
+        }
       }
 
       if (buffer) {
@@ -2041,13 +2045,27 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
     dash_stream->sidx_current_offset = GST_BUFFER_OFFSET_END (buffer);
 
     if (dash_stream->is_isobmff) {
-      buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
-    }
+      if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
+        buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
 
-    if (buffer)
-      ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
-    else
-      ret = GST_FLOW_OK;
+        if (buffer
+            && (ret =
+                gst_adaptive_demux_stream_push_buffer (stream,
+                    buffer)) != GST_FLOW_OK)
+          return ret;
+
+        if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT
+            && gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
+          buffer =
+              gst_adapter_take_buffer (dash_stream->isobmff_adapter,
+              gst_adapter_available (dash_stream->isobmff_adapter));
+          ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
+        }
+
+        return ret;
+      }
+    }
+    ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
   }
 
   return ret;
