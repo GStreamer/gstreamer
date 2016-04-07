@@ -371,6 +371,7 @@ struct _QtDemuxStream
   guint32 current_chunk;
   guint32 last_chunk;
   guint32 samples_per_chunk;
+  guint32 stsd_sample_description_id;
   guint32 stco_sample_index;
   /* stsz */
   guint32 sample_size;          /* 0 means variable sizes are stored in stsz */
@@ -522,6 +523,8 @@ static gboolean gst_qtdemux_handle_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_qtdemux_setcaps (GstQTDemux * qtdemux, GstCaps * caps);
 static gboolean gst_qtdemux_configure_stream (GstQTDemux * qtdemux,
+    QtDemuxStream * stream);
+static void gst_qtdemux_stream_check_and_change_stsd_index (GstQTDemux * demux,
     QtDemuxStream * stream);
 static GstFlowReturn gst_qtdemux_process_adapter (GstQTDemux * demux,
     gboolean force);
@@ -5725,15 +5728,16 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   }
 
   stream = qtdemux->streams[index];
-  if (stream->new_caps) {
-    gst_qtdemux_configure_stream (qtdemux, stream);
-    qtdemux_do_allocation (qtdemux, stream);
-  }
-
   /* fetch info for the current sample of this stream */
   if (G_UNLIKELY (!gst_qtdemux_prepare_current_sample (qtdemux, stream, &empty,
               &offset, &sample_size, &dts, &pts, &duration, &keyframe)))
     goto eos_stream;
+
+  gst_qtdemux_stream_check_and_change_stsd_index (qtdemux, stream);
+  if (stream->new_caps) {
+    gst_qtdemux_configure_stream (qtdemux, stream);
+    qtdemux_do_allocation (qtdemux, stream);
+  }
 
   /* If we're doing a keyframe-only trickmode, only push keyframes on video streams */
   if (G_UNLIKELY (qtdemux->
@@ -6852,6 +6856,8 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         if (G_UNLIKELY (stream == NULL || i == demux->n_streams))
           goto unknown_stream;
 
+        gst_qtdemux_stream_check_and_change_stsd_index (demux, stream);
+
         if (stream->new_caps) {
           gst_qtdemux_configure_stream (demux, stream);
         }
@@ -7947,6 +7953,19 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
   return TRUE;
 }
 
+static void
+gst_qtdemux_stream_check_and_change_stsd_index (GstQTDemux * demux,
+    QtDemuxStream * stream)
+{
+  if (stream->cur_stsd_entry_index == stream->stsd_sample_description_id)
+    return;
+
+  GST_DEBUG_OBJECT (stream->pad, "Changing stsd index from '%u' to '%u'",
+      stream->cur_stsd_entry_index, stream->stsd_sample_description_id);
+  stream->cur_stsd_entry_index = stream->stsd_sample_description_id;
+  stream->new_caps = TRUE;
+}
+
 static gboolean
 gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GstTagList * list)
@@ -8503,7 +8522,9 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
           gst_byte_reader_get_uint32_be_unchecked (&stream->stsc);
       stream->samples_per_chunk =
           gst_byte_reader_get_uint32_be_unchecked (&stream->stsc);
-      gst_byte_reader_skip_unchecked (&stream->stsc, 4);
+      /* starts from 1 */
+      stream->stsd_sample_description_id =
+          gst_byte_reader_get_uint32_be_unchecked (&stream->stsc) - 1;
 
       /* chunk numbers are counted from 1 it seems */
       if (G_UNLIKELY (stream->first_chunk == 0))
@@ -8526,8 +8547,9 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
       }
 
       GST_LOG_OBJECT (qtdemux,
-          "entry %d has first_chunk %d, last_chunk %d, samples_per_chunk %d", i,
-          stream->first_chunk, stream->last_chunk, stream->samples_per_chunk);
+          "entry %d has first_chunk %d, last_chunk %d, samples_per_chunk %d"
+          "sample desc ID: %d", i, stream->first_chunk, stream->last_chunk,
+          stream->samples_per_chunk, stream->stsd_sample_description_id);
 
       if (G_UNLIKELY (stream->last_chunk < stream->first_chunk))
         goto corrupt_file;
