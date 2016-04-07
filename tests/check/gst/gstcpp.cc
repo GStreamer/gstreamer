@@ -23,9 +23,10 @@
 GST_START_TEST (test_init_macros)
 {
   GstMapInfo map = GST_MAP_INFO_INIT;
+  GstPollFD poll_fd = GST_POLL_FD_INIT;
 
   fail_unless_equals_int (map.size, 0);
-
+  fail_unless_equals_int (poll_fd.fd, -1);
 }
 
 GST_END_TEST;

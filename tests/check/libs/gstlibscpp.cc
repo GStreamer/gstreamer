@@ -36,6 +36,17 @@ GST_START_TEST (test_nothing)
 
 GST_END_TEST;
 
+GST_START_TEST (test_init_macros)
+{
+  GstBitReader bit_reader = GST_BIT_READER_INIT (NULL, 0);
+  GstByteReader byte_reader = GST_BYTE_READER_INIT (NULL, 0);
+
+  fail_unless (bit_reader.data == NULL);
+  fail_unless (byte_reader.data == NULL);
+}
+
+GST_END_TEST;
+
 static Suite *
 libscpp_suite (void)
 {
@@ -44,6 +55,7 @@ libscpp_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_nothing);
+  tcase_add_test (tc_chain, test_init_macros);
 
   return s;
 }
