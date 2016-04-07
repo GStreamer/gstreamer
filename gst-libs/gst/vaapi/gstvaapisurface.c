@@ -624,6 +624,7 @@ gst_vaapi_surface_derive_image (GstVaapiSurface * surface)
   GstVaapiDisplay *display;
   VAImage va_image;
   VAStatus status;
+  GstVaapiImage *image;
 
   g_return_val_if_fail (surface != NULL, NULL);
 
@@ -640,7 +641,10 @@ gst_vaapi_surface_derive_image (GstVaapiSurface * surface)
   if (va_image.image_id == VA_INVALID_ID || va_image.buf == VA_INVALID_ID)
     return NULL;
 
-  return gst_vaapi_image_new_with_image (display, &va_image);
+  image = gst_vaapi_image_new_with_image (display, &va_image);
+  if (!image)
+    vaDestroyImage (GST_VAAPI_DISPLAY_VADISPLAY (display), va_image.image_id);
+  return image;
 }
 
 /**
