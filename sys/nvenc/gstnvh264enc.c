@@ -423,6 +423,7 @@ gst_nv_h264_enc_initialize_encoder (GstNvBaseEnc * nvenc,
   GstVideoInfo *info = &state->info;
   GstCaps *allowed_caps, *template_caps;
   GUID selected_profile = NV_ENC_CODEC_PROFILE_AUTOSELECT_GUID;
+  GUID selected_preset = nvenc->selected_preset;
   int level_idc = NV_ENC_LEVEL_AUTOSELECT;
 
   /* TODO: support reconfiguration */
@@ -485,8 +486,45 @@ gst_nv_h264_enc_initialize_encoder (GstNvBaseEnc * nvenc,
   params->encodeGUID = NV_ENC_CODEC_H264_GUID;
   params->encodeWidth = GST_VIDEO_INFO_WIDTH (info);
   params->encodeHeight = GST_VIDEO_INFO_HEIGHT (info);
-  /* FIXME: make this a property */
-  params->presetGUID = NV_ENC_PRESET_HP_GUID;   // _DEFAULT
+
+  {
+    guint32 n_presets;
+    GUID *presets;
+    guint32 i;
+
+    nv_ret =
+        NvEncGetEncodePresetCount (GST_NV_BASE_ENC (h264enc)->encoder,
+        params->encodeGUID, &n_presets);
+    if (nv_ret != NV_ENC_SUCCESS) {
+      GST_ELEMENT_ERROR (h264enc, LIBRARY, SETTINGS, (NULL),
+          ("Failed to get encoder presets"));
+      return FALSE;
+    }
+
+    presets = g_new0 (GUID, n_presets);
+    nv_ret =
+        NvEncGetEncodePresetGUIDs (GST_NV_BASE_ENC (h264enc)->encoder,
+        params->encodeGUID, presets, n_presets, &n_presets);
+    if (nv_ret != NV_ENC_SUCCESS) {
+      GST_ELEMENT_ERROR (h264enc, LIBRARY, SETTINGS, (NULL),
+          ("Failed to get encoder presets"));
+      g_free (presets);
+      return FALSE;
+    }
+
+    for (i = 0; i < n_presets; i++) {
+      if (gst_nvenc_cmp_guid (presets[i], selected_preset))
+        break;
+    }
+    g_free (presets);
+    if (i >= n_presets) {
+      GST_ELEMENT_ERROR (h264enc, LIBRARY, SETTINGS, (NULL),
+          ("Selected preset not supported"));
+      return FALSE;
+    }
+
+    params->presetGUID = selected_preset;
+  }
   params->enablePTD = 1;
   if (!old_state) {
     /* this sets the required buffer size and the maximum allowed size on
@@ -531,8 +569,8 @@ gst_nv_h264_enc_initialize_encoder (GstNvBaseEnc * nvenc,
   preset_config.presetCfg.encodeCodecConfig.h264Config.chromaFormatIDC = 1;
   if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_Y444) {
     GST_DEBUG_OBJECT (h264enc, "have Y444 input, setting config accordingly");
-    preset_config.presetCfg.encodeCodecConfig.
-        h264Config.separateColourPlaneFlag = 1;
+    preset_config.presetCfg.encodeCodecConfig.h264Config.
+        separateColourPlaneFlag = 1;
     preset_config.presetCfg.encodeCodecConfig.h264Config.chromaFormatIDC = 3;
   }
 

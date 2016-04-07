@@ -78,6 +78,24 @@ NvEncGetInputFormats (void *encoder, GUID enc_guid,
 }
 
 NVENCSTATUS
+NvEncGetEncodePresetCount (void *encoder, GUID encodeGUID,
+    uint32_t * encodePresetGUIDCount)
+{
+  g_assert (nvenc_api.nvEncGetEncodeProfileGUIDCount != NULL);
+  return nvenc_api.nvEncGetEncodePresetCount (encoder, encodeGUID,
+      encodePresetGUIDCount);
+}
+
+NVENCSTATUS
+NvEncGetEncodePresetGUIDs (void *encoder, GUID encodeGUID,
+    GUID * presetGUIDs, uint32_t guidArraySize, uint32_t * GUIDCount)
+{
+  g_assert (nvenc_api.nvEncGetEncodeProfileGUIDs != NULL);
+  return nvenc_api.nvEncGetEncodePresetGUIDs (encoder, encodeGUID,
+      presetGUIDs, guidArraySize, GUIDCount);
+}
+
+NVENCSTATUS
 NvEncGetEncodePresetConfig (void *encoder, GUID encodeGUID,
     GUID presetGUID, NV_ENC_PRESET_CONFIG * presetConfig)
 {

@@ -50,6 +50,55 @@
 #define parent_class gst_nv_base_enc_parent_class
 G_DEFINE_ABSTRACT_TYPE (GstNvBaseEnc, gst_nv_base_enc, GST_TYPE_VIDEO_ENCODER);
 
+#define GST_TYPE_NV_PRESET (gst_nv_preset_get_type())
+static GType
+gst_nv_preset_get_type (void)
+{
+  static GType nv_preset_type = 0;
+
+  static const GEnumValue presets[] = {
+    {GST_NV_PRESET_DEFAULT, "Default", "default"},
+    {GST_NV_PRESET_HP, "High Performance", "hp"},
+    {GST_NV_PRESET_HQ, "High Quality", "hq"},
+/*    {GST_NV_PRESET_BD, "BD", "bd"}, */
+    {GST_NV_PRESET_LOW_LATENCY_DEFAULT, "Low Latency", "low-latency"},
+    {GST_NV_PRESET_LOW_LATENCY_HQ, "Low Latency, High Quality",
+        "low-latency-hq"},
+    {GST_NV_PRESET_LOW_LATENCY_HP, "Low Latency, High Performance",
+        "low-latency-hp"},
+    {GST_NV_PRESET_LOSSLESS_DEFAULT, "Lossless", "lossless"},
+    {GST_NV_PRESET_LOSSLESS_HP, "Lossless, High Performance", "lossless-hp"},
+    {0, NULL, NULL},
+  };
+
+  if (!nv_preset_type) {
+    nv_preset_type = g_enum_register_static ("GstNvPreset", presets);
+  }
+  return nv_preset_type;
+}
+
+static GUID
+_nv_preset_to_guid (GstNvPreset preset)
+{
+  GUID null = { 0, };
+
+  switch (preset) {
+#define CASE(gst,nv) case G_PASTE(GST_NV_PRESET_,gst): return G_PASTE(G_PASTE(NV_ENC_PRESET_,nv),_GUID)
+      CASE (DEFAULT, DEFAULT);
+      CASE (HP, HP);
+      CASE (HQ, HQ);
+/*    CASE (BD, BD);*/
+      CASE (LOW_LATENCY_DEFAULT, LOW_LATENCY_DEFAULT);
+      CASE (LOW_LATENCY_HQ, LOW_LATENCY_HQ);
+      CASE (LOW_LATENCY_HP, LOW_LATENCY_HQ);
+      CASE (LOSSLESS_DEFAULT, LOSSLESS_DEFAULT);
+      CASE (LOSSLESS_HP, LOSSLESS_HP);
+#undef CASE
+    default:
+      return null;
+  }
+}
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -71,7 +120,10 @@ enum
 {
   PROP_0,
   PROP_DEVICE_ID,
+  PROP_PRESET,
 };
+
+#define DEFAULT_PRESET GST_NV_PRESET_DEFAULT
 
 /* This lock is needed to prevent the situation where multiple encoders are
  * initialised at the same time which appears to cause excessive CPU usage over
@@ -154,6 +206,11 @@ gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
           "Cuda Device ID",
           "Set the GPU device to use for operations",
           0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PRESET,
+      g_param_spec_enum ("preset", "Encoding Preset",
+          "Encoding Preset",
+          GST_TYPE_NV_PRESET,
+          DEFAULT_PRESET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static gboolean
@@ -516,6 +573,9 @@ static void
 gst_nv_base_enc_init (GstNvBaseEnc * nvenc)
 {
   GstVideoEncoder *encoder = GST_VIDEO_ENCODER (nvenc);
+
+  nvenc->preset_enum = DEFAULT_PRESET;
+  nvenc->selected_preset = _nv_preset_to_guid (nvenc->preset_enum);
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
@@ -1590,6 +1650,10 @@ gst_nv_base_enc_set_property (GObject * object, guint prop_id,
     case PROP_DEVICE_ID:
       nvenc->cuda_device_id = g_value_get_uint (value);
       break;
+    case PROP_PRESET:
+      nvenc->preset_enum = g_value_get_enum (value);
+      nvenc->selected_preset = _nv_preset_to_guid (nvenc->preset_enum);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1605,6 +1669,9 @@ gst_nv_base_enc_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_DEVICE_ID:
       g_value_set_uint (value, nvenc->cuda_device_id);
+      break;
+    case PROP_PRESET:
+      g_value_set_enum (value, nvenc->preset_enum);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

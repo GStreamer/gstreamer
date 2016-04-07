@@ -37,11 +37,25 @@
 #define GST_IS_NV_BASE_ENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_NV_BASE_ENC))
 
+typedef enum {
+  GST_NV_PRESET_DEFAULT,
+  GST_NV_PRESET_HP,
+  GST_NV_PRESET_HQ,
+/* FIXME: problematic GST_NV_PRESET_BD, */
+  GST_NV_PRESET_LOW_LATENCY_DEFAULT,
+  GST_NV_PRESET_LOW_LATENCY_HQ,
+  GST_NV_PRESET_LOW_LATENCY_HP,
+  GST_NV_PRESET_LOSSLESS_DEFAULT,
+  GST_NV_PRESET_LOSSLESS_HP,
+} GstNvPreset;
+
 typedef struct {
   GstVideoEncoder video_encoder;
 
   /* properties */
   guint           cuda_device_id;
+  GstNvPreset     preset_enum;
+  GUID            selected_preset;
 
   CUcontext       cuda_ctx;
   void          * encoder;
