@@ -1835,8 +1835,8 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
 
     gst_buffer_unmap (buffer, &map);
     /* mdat? Push all we have and wait for it to be over */
-    if (dash_stream->isobmff_parser.current_fourcc == GST_MAKE_FOURCC ('m', 'd',
-            'a', 't') || dash_stream->isobmff_parser.current_size == -1) {
+    if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT
+        || dash_stream->isobmff_parser.current_size == -1) {
       /* Nothing here, we just go out */
       GST_LOG_OBJECT (stream->pad,
           "box %" GST_FOURCC_FORMAT " at offset %" G_GUINT64_FORMAT " size %"

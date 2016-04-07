@@ -39,11 +39,10 @@ typedef enum {
 
 gboolean gst_isoff_parse_box_header (GstByteReader * reader, guint32 * type, guint8 extended_type[16], guint * header_size, guint64 * size);
 
-/* this is the minimum size, it can be larger if it
- * uses extended size or type */
-#define GST_ISOFF_FULL_BOX_SIZE 12
-
+#define GST_ISOFF_FOURCC_UUID GST_MAKE_FOURCC('u','u','i','d')
+#define GST_ISOFF_FOURCC_MDAT GST_MAKE_FOURCC('m','d','a','t')
 #define GST_ISOFF_FOURCC_SIDX GST_MAKE_FOURCC('s','i','d','x')
+
 typedef struct _GstSidxBoxEntry
 {
   gboolean ref_type;

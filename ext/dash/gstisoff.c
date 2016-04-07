@@ -93,7 +93,7 @@ gst_isoff_parse_box_header (GstByteReader * reader, guint32 * type,
     *size = size_field;
   }
 
-  if (*type == GST_MAKE_FOURCC ('u', 'u', 'i', 'd')) {
+  if (*type == GST_ISOFF_FOURCC_UUID) {
     if (gst_byte_reader_get_remaining (reader) < 16)
       goto not_enough_data;
 
