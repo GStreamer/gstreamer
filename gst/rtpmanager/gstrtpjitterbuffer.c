@@ -3581,10 +3581,10 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       GstClockReturn ret;
       GstClockTimeDiff clock_jitter;
 
-      /* We have normally removed all lost timers in the loop above */
-      g_assert (timer->type != TIMER_TYPE_LOST);
-
       if (timer_timeout == -1 || timer_timeout <= now) {
+        /* We have normally removed all lost timers in the loop above */
+        g_assert (timer->type != TIMER_TYPE_LOST);
+
         do_timeout (jitterbuffer, timer, now);
         /* check here, do_timeout could have released the lock */
         if (!priv->timer_running)
