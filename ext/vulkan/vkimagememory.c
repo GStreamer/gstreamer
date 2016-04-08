@@ -442,6 +442,8 @@ gst_vulkan_image_memory_set_layout (GstVulkanImageMemory * vk_mem,
   barrier->srcAccessMask = _access_flags_from_layout (vk_mem->image_layout);
   barrier->oldLayout = vk_mem->image_layout;
   barrier->newLayout = image_layout;
+  barrier->srcQueueFamilyIndex = 0;
+  barrier->dstQueueFamilyIndex = 0;
   barrier->image = vk_mem->image;
   GST_VK_IMAGE_SUBRESOURCE_RANGE (barrier->subresourceRange,
       VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
