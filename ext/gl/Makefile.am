@@ -40,6 +40,7 @@ libgstopengl_la_SOURCES = \
 	gstglfilterapp.c \
 	gstglviewconvert.c \
 	gstglstereosplit.c \
+	gstgldeinterlace.c \
 	gstglstereomix.c \
 	gltestsrc.c \
 	gstgltestsrc.c
@@ -65,6 +66,7 @@ noinst_HEADERS = \
 	gstglfilterapp.h \
 	gstglstereosplit.h \
 	gstglstereomix.h \
+	gstgldeinterlace.h \
 	gstglviewconvert.h \
 	gltestsrc.h \
 	gstgltestsrc.h
@@ -73,12 +75,10 @@ noinst_HEADERS = \
 if USE_OPENGL
 libgstopengl_la_SOURCES += \
 	gstglfilterglass.c \
-	gstgldeinterlace.c \
 	gstglmosaic.c
 
 noinst_HEADERS += \
 	gstglfilterglass.h \
-	gstgldeinterlace.h \
 	gstglmosaic.h \
 	effects/gstgleffectscurves.h \
 	effects/gstgleffectlumatocurve.h

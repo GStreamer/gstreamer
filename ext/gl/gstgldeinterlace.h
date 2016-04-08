@@ -32,15 +32,21 @@ G_BEGIN_DECLS
 #define GST_IS_GL_DEINTERLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_GL_DEINTERLACE))
 #define GST_GL_DEINTERLACE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_DEINTERLACE,GstGLDeinterlaceClass))
 
+#define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
+
 typedef struct _GstGLDeinterlace GstGLDeinterlace;
 typedef struct _GstGLDeinterlaceClass GstGLDeinterlaceClass;
 
 struct _GstGLDeinterlace
 {
   GstGLFilter  filter;
-  GstGLShader  *shader;
+
+  GLCB	       deinterlacefunc; 
+  GHashTable   *shaderstable;
   GstBuffer    *prev_buffer;
   guint         prev_tex;
+
+  gint	       current_method;
 };
 
 struct _GstGLDeinterlaceClass
