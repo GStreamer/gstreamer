@@ -174,7 +174,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   uint32_t enabled_extension_count = 0;
   uint32_t instance_layer_count = 0;
   uint32_t enabled_layer_count = 0;
-  gboolean validation_found;
+  gchar **enabled_layers;
   VkResult err;
 
   GST_OBJECT_LOCK (instance);
@@ -200,23 +200,18 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   }
 
   /* TODO: allow outside selection */
-  validation_found =
-      _check_for_all_layers (G_N_ELEMENTS (instance_validation_layers),
-      instance_validation_layers, instance_layer_count, instance_layers);
-  if (!validation_found) {
-    g_error ("vkEnumerateInstanceLayerProperties failed to find"
-        " required validation layer.\n\n"
-        "Please look at the Getting Started guide for additional "
-        "information.\nvkCreateInstance Failure");
-  }
-  enabled_layer_count = G_N_ELEMENTS (instance_validation_layers);
+  _check_for_all_layers (G_N_ELEMENTS (instance_validation_layers),
+      instance_validation_layers, instance_layer_count, instance_layers,
+      &enabled_layer_count, &enabled_layers);
+
+  g_free (instance_layers);
 
   err =
       vkEnumerateInstanceExtensionProperties (NULL, &instance_extension_count,
       NULL);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateInstanceExtensionProperties") < 0) {
-    g_free (instance_layers);
+    g_strfreev (enabled_layers);
     goto error;
   }
   GST_DEBUG_OBJECT (instance, "Found %u extensions", instance_extension_count);
@@ -229,7 +224,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
       instance_extensions);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateInstanceExtensionProperties") < 0) {
-    g_free (instance_layers);
+    g_strfreev (enabled_layers);
     g_free (instance_extensions);
     goto error;
   }
@@ -275,7 +270,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
       g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
           "vkEnumerateInstanceExtensionProperties failed to find the required "
           "\"" VK_KHR_SURFACE_EXTENSION_NAME "\" extension");
-      g_free (instance_layers);
+      g_strfreev (enabled_layers);
       g_free (instance_extensions);
       goto error;
     }
@@ -283,7 +278,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
       g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
           "vkEnumerateInstanceExtensionProperties failed to find the required "
           "\"%s\" window system extension", winsys_ext_name);
-      g_free (instance_layers);
+      g_strfreev (enabled_layers);
       g_free (instance_extensions);
       goto error;
     }
@@ -305,21 +300,20 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     inst_info.pNext = NULL;
     inst_info.pApplicationInfo = &app;
     inst_info.enabledLayerCount = enabled_layer_count;
-    inst_info.ppEnabledLayerNames =
-        (const char *const *) instance_validation_layers;
+    inst_info.ppEnabledLayerNames = (const char *const *) enabled_layers;
     inst_info.enabledExtensionCount = enabled_extension_count;
     inst_info.ppEnabledExtensionNames = (const char *const *) extension_names;
 
     err = vkCreateInstance (&inst_info, NULL, &instance->instance);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateInstance") < 0) {
-      g_free (instance_layers);
+      g_strfreev (enabled_layers);
       g_free (instance_extensions);
       goto error;
     }
   }
 
-  g_free (instance_layers);
   g_free (instance_extensions);
+  g_strfreev (enabled_layers);
 
   err =
       vkEnumeratePhysicalDevices (instance->instance,
