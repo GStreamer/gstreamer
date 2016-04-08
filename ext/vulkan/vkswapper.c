@@ -93,12 +93,16 @@ _vk_format_to_video_format (VkFormat format)
   switch (format) {
       /* double check endianess */
     case VK_FORMAT_R8G8B8A8_UNORM:
+    case VK_FORMAT_R8G8B8A8_SRGB:
       return GST_VIDEO_FORMAT_RGBA;
     case VK_FORMAT_R8G8B8_UNORM:
+    case VK_FORMAT_R8G8B8_SRGB:
       return GST_VIDEO_FORMAT_RGB;
     case VK_FORMAT_B8G8R8A8_UNORM:
+    case VK_FORMAT_B8G8R8A8_SRGB:
       return GST_VIDEO_FORMAT_BGRA;
     case VK_FORMAT_B8G8R8_UNORM:
+    case VK_FORMAT_B8G8R8_SRGB:
       return GST_VIDEO_FORMAT_BGR;
     default:
       return GST_VIDEO_FORMAT_UNKNOWN;
@@ -106,17 +110,33 @@ _vk_format_to_video_format (VkFormat format)
 }
 
 static VkFormat
-_vk_format_from_video_format (GstVideoFormat v_format)
+_vk_format_from_video_info (GstVideoInfo * v_info)
 {
-  switch (v_format) {
+  switch (GST_VIDEO_INFO_FORMAT (v_info)) {
     case GST_VIDEO_FORMAT_RGBA:
-      return VK_FORMAT_R8G8B8A8_UNORM;
+      if (GST_VIDEO_INFO_COLORIMETRY (v_info).transfer ==
+          GST_VIDEO_TRANSFER_SRGB)
+        return VK_FORMAT_R8G8B8A8_SRGB;
+      else
+        return VK_FORMAT_R8G8B8A8_UNORM;
     case GST_VIDEO_FORMAT_RGB:
-      return VK_FORMAT_R8G8B8_UNORM;
+      if (GST_VIDEO_INFO_COLORIMETRY (v_info).transfer ==
+          GST_VIDEO_TRANSFER_SRGB)
+        return VK_FORMAT_R8G8B8_SRGB;
+      else
+        return VK_FORMAT_R8G8B8_UNORM;
     case GST_VIDEO_FORMAT_BGRA:
-      return VK_FORMAT_B8G8R8A8_UNORM;
+      if (GST_VIDEO_INFO_COLORIMETRY (v_info).transfer ==
+          GST_VIDEO_TRANSFER_SRGB)
+        return VK_FORMAT_B8G8R8A8_SRGB;
+      else
+        return VK_FORMAT_B8G8R8A8_UNORM;
     case GST_VIDEO_FORMAT_BGR:
-      return VK_FORMAT_B8G8R8_UNORM;
+      if (GST_VIDEO_INFO_COLORIMETRY (v_info).transfer ==
+          GST_VIDEO_TRANSFER_SRGB)
+        return VK_FORMAT_B8G8R8_SRGB;
+      else
+        return VK_FORMAT_B8G8R8_UNORM;
     default:
       return VK_FORMAT_UNDEFINED;
   }
@@ -629,8 +649,7 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     preTransform = swapper->surf_props.currentTransform;
   }
 
-  format =
-      _vk_format_from_video_format (GST_VIDEO_INFO_FORMAT (&swapper->v_info));
+  format = _vk_format_from_video_info (&swapper->v_info);
   color_space = _vk_color_space_from_video_info (&swapper->v_info);
 
   if ((swapper->surf_props.supportedCompositeAlpha &
