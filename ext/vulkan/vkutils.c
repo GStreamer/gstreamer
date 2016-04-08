@@ -29,22 +29,34 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
 gboolean
 _check_for_all_layers (uint32_t check_count, const char **check_names,
-    uint32_t layer_count, VkLayerProperties * layers)
+    uint32_t layer_count, VkLayerProperties * layers,
+    guint32 * supported_layers_count, gchar *** supported_layers)
 {
-  uint32_t i, j;
+  uint32_t i, j, k;
+
+  if (check_count <= 0 || layer_count <= 0) {
+    GST_WARNING ("no layers requested or supported");
+    return FALSE;
+  }
+
+  *supported_layers = g_new0 (gchar *, check_count + 1);
+  k = 0;
 
   for (i = 0; i < check_count; i++) {
     gboolean found = FALSE;
     for (j = 0; j < layer_count; j++) {
       if (g_strcmp0 (check_names[i], layers[j].layerName) == 0) {
+        GST_TRACE ("found layer: %s", check_names[i]);
         found = TRUE;
+        (*supported_layers)[k++] = g_strdup (check_names[i]);
       }
     }
-    if (!found) {
-      GST_ERROR ("Cannot find layer: %s", check_names[i]);
-      return FALSE;
-    }
+    if (!found)
+      GST_WARNING ("Cannot find layer: %s", check_names[i]);
   }
+
+  *supported_layers_count = g_strv_length (*supported_layers);
+
   return TRUE;
 }
 
