@@ -28,7 +28,7 @@
 #include <string.h>
 
 static const char *device_validation_layers[] = {
-  "VK_LAYER_LUNARG_threading",
+  "VK_LAYER_GOOGLE_threading",
   "VK_LAYER_LUNARG_mem_tracker",
   "VK_LAYER_LUNARG_object_tracker",
   "VK_LAYER_LUNARG_draw_state",
