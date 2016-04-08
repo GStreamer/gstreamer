@@ -30,7 +30,7 @@
 #define APP_SHORT_NAME "GStreamer"
 
 static const char *instance_validation_layers[] = {
-  "VK_LAYER_LUNARG_threading",
+  "VK_LAYER_GOOGLE_threading",
   "VK_LAYER_LUNARG_mem_tracker",
   "VK_LAYER_LUNARG_object_tracker",
   "VK_LAYER_LUNARG_draw_state",
