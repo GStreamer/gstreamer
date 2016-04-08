@@ -69,13 +69,15 @@ enum
   PROP_WRITING_APP,
   PROP_DOCTYPE_VERSION,
   PROP_MIN_INDEX_INTERVAL,
-  PROP_STREAMABLE
+  PROP_STREAMABLE,
+  PROP_TIMECODESCALE
 };
 
 #define  DEFAULT_DOCTYPE_VERSION         2
 #define  DEFAULT_WRITING_APP             "GStreamer Matroska muxer"
 #define  DEFAULT_MIN_INDEX_INTERVAL      0
 #define  DEFAULT_STREAMABLE              FALSE
+#define  DEFAULT_TIMECODESCALE           GST_MSECOND
 
 /* WAVEFORMATEX is gst_riff_strf_auds + an extra guint16 extension size */
 #define WAVEFORMATEX_SIZE  (2 + sizeof (gst_riff_strf_auds))
@@ -335,6 +337,11 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
           "be streamable", "If set to true, the output should be as if it is "
           "to be streamed and hence no indexes written or duration written.",
           DEFAULT_STREAMABLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_TIMECODESCALE,
+      g_param_spec_int64 ("timecodescale", "Timecode Scale",
+          "TimecodeScale used to calculate the Raw Timecode of a Block", 1,
+          GST_SECOND, DEFAULT_TIMECODESCALE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_matroska_mux_change_state);
@@ -462,6 +469,7 @@ gst_matroska_mux_init (GstMatroskaMux * mux, gpointer g_class)
   mux->writing_app = g_strdup (DEFAULT_WRITING_APP);
   mux->min_index_interval = DEFAULT_MIN_INDEX_INTERVAL;
   mux->ebml_write->streamable = DEFAULT_STREAMABLE;
+  mux->time_scale = DEFAULT_TIMECODESCALE;
 
   /* initialize internal variables */
   mux->index = NULL;
@@ -655,7 +663,6 @@ gst_matroska_mux_reset (GstElement * element)
   mux->index = NULL;
 
   /* reset timers */
-  mux->time_scale = GST_MSECOND;
   mux->max_cluster_duration = G_MAXINT16 * mux->time_scale;
   mux->duration = 0;
 
@@ -3922,6 +3929,9 @@ gst_matroska_mux_set_property (GObject * object,
     case PROP_STREAMABLE:
       mux->ebml_write->streamable = g_value_get_boolean (value);
       break;
+    case PROP_TIMECODESCALE:
+      mux->time_scale = g_value_get_int64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3949,6 +3959,9 @@ gst_matroska_mux_get_property (GObject * object,
       break;
     case PROP_STREAMABLE:
       g_value_set_boolean (value, mux->ebml_write->streamable);
+      break;
+    case PROP_TIMECODESCALE:
+      g_value_set_int64 (value, mux->time_scale);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
