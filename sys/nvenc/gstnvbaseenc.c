@@ -99,6 +99,46 @@ _nv_preset_to_guid (GstNvPreset preset)
   }
 }
 
+#define GST_TYPE_NV_RC_MODE (gst_nv_rc_mode_get_type())
+static GType
+gst_nv_rc_mode_get_type (void)
+{
+  static GType nv_rc_mode_type = 0;
+
+  static const GEnumValue modes[] = {
+    {GST_NV_RC_MODE_DEFAULT, "Default (from NVENC preset)", "default"},
+    {GST_NV_RC_MODE_CONSTQP, "Constant Quantization", "constqp"},
+    {GST_NV_RC_MODE_CBR, "Constant Bit Rate", "cbr"},
+    {GST_NV_RC_MODE_VBR, "Variable Bit Rate", "vbr"},
+    {GST_NV_RC_MODE_VBR_MINQP,
+          "Variable Bit Rate (with minimum quantization parameter)",
+        "vbr-minqp"},
+    {0, NULL, NULL},
+  };
+
+  if (!nv_rc_mode_type) {
+    nv_rc_mode_type = g_enum_register_static ("GstNvRCMode", modes);
+  }
+  return nv_rc_mode_type;
+}
+
+static NV_ENC_PARAMS_RC_MODE
+_rc_mode_to_nv (GstNvRCMode mode)
+{
+  switch (mode) {
+    case GST_NV_RC_MODE_DEFAULT:
+      return -1;
+#define CASE(gst,nv) case G_PASTE(GST_NV_RC_MODE_,gst): return G_PASTE(NV_ENC_PARAMS_RC_,nv)
+      CASE (CONSTQP, CONSTQP);
+      CASE (CBR, CBR);
+      CASE (VBR, VBR);
+      CASE (VBR_MINQP, VBR_MINQP);
+#undef CASE
+    default:
+      return -1;
+  }
+}
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -121,9 +161,19 @@ enum
   PROP_0,
   PROP_DEVICE_ID,
   PROP_PRESET,
+  PROP_BITRATE,
+  PROP_RC_MODE,
+  PROP_QP_MIN,
+  PROP_QP_MAX,
+  PROP_QP_CONST,
 };
 
 #define DEFAULT_PRESET GST_NV_PRESET_DEFAULT
+#define DEFAULT_BITRATE 0
+#define DEFAULT_RC_MODE GST_NV_RC_MODE_DEFAULT
+#define DEFAULT_QP_MIN -1
+#define DEFAULT_QP_MAX -1
+#define DEFAULT_QP_CONST -1
 
 /* This lock is needed to prevent the situation where multiple encoders are
  * initialised at the same time which appears to cause excessive CPU usage over
@@ -211,6 +261,28 @@ gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
           "Encoding Preset",
           GST_TYPE_NV_PRESET,
           DEFAULT_PRESET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_RC_MODE,
+      g_param_spec_enum ("rc-mode", "RC Mode",
+          "Rate Control Mode",
+          GST_TYPE_NV_RC_MODE,
+          DEFAULT_RC_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QP_MIN,
+      g_param_spec_int ("qp-min", "Minimum Quantizer",
+          "Minimum quantizer (-1 = from NVENC preset)", -1, 51, DEFAULT_QP_MIN,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QP_MAX,
+      g_param_spec_int ("qp-max", "Maximum Quantizer",
+          "Maximum quantizer (-1 = from NVENC preset)", -1, 51, DEFAULT_QP_MAX,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QP_CONST,
+      g_param_spec_int ("qp-const", "Constant Quantizer",
+          "Constant quantizer (-1 = from NVENC preset)",
+          -1, 51, DEFAULT_QP_CONST,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_BITRATE,
+      g_param_spec_uint ("bitrate", "Bitrate",
+          "Bitrate in kbit/sec (0 = from NVENC preset)", 0, 2000 * 1024,
+          DEFAULT_BITRATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static gboolean
@@ -576,6 +648,11 @@ gst_nv_base_enc_init (GstNvBaseEnc * nvenc)
 
   nvenc->preset_enum = DEFAULT_PRESET;
   nvenc->selected_preset = _nv_preset_to_guid (nvenc->preset_enum);
+  nvenc->rate_control_mode = DEFAULT_RC_MODE;
+  nvenc->qp_min = DEFAULT_QP_MIN;
+  nvenc->qp_max = DEFAULT_QP_MAX;
+  nvenc->qp_const = DEFAULT_QP_CONST;
+  nvenc->bitrate = DEFAULT_BITRATE;
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
@@ -1060,6 +1137,8 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     return FALSE;
   }
 
+  params->encodeConfig = &preset_config.presetCfg;
+
   if (GST_VIDEO_INFO_IS_INTERLACED (info)) {
     if (GST_VIDEO_INFO_INTERLACE_MODE (info) ==
         GST_VIDEO_INTERLACE_MODE_INTERLEAVED
@@ -1077,7 +1156,32 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     GST_FIXME_OBJECT (nvenc, "variable framerate");
   }
 
-  params->encodeConfig = &preset_config.presetCfg;
+  if (nvenc->rate_control_mode != GST_NV_RC_MODE_DEFAULT) {
+    params->encodeConfig->rcParams.rateControlMode =
+        _rc_mode_to_nv (nvenc->rate_control_mode);
+    if (nvenc->bitrate > 0) {
+      /* FIXME: this produces larger bitrates?! */
+      params->encodeConfig->rcParams.averageBitRate = nvenc->bitrate * 1024;
+      params->encodeConfig->rcParams.maxBitRate = nvenc->bitrate * 1024;
+    }
+    if (nvenc->qp_const > 0) {
+      params->encodeConfig->rcParams.constQP.qpInterB = nvenc->qp_const;
+      params->encodeConfig->rcParams.constQP.qpInterP = nvenc->qp_const;
+      params->encodeConfig->rcParams.constQP.qpIntra = nvenc->qp_const;
+    }
+    if (nvenc->qp_min >= 0) {
+      params->encodeConfig->rcParams.enableMinQP = 1;
+      params->encodeConfig->rcParams.minQP.qpInterB = nvenc->qp_min;
+      params->encodeConfig->rcParams.minQP.qpInterP = nvenc->qp_min;
+      params->encodeConfig->rcParams.minQP.qpIntra = nvenc->qp_min;
+    }
+    if (nvenc->qp_max >= 0) {
+      params->encodeConfig->rcParams.enableMaxQP = 1;
+      params->encodeConfig->rcParams.maxQP.qpInterB = nvenc->qp_max;
+      params->encodeConfig->rcParams.maxQP.qpInterP = nvenc->qp_max;
+      params->encodeConfig->rcParams.maxQP.qpIntra = nvenc->qp_max;
+    }
+  }
 
   g_assert (nvenc_class->set_encoder_config);
   if (!nvenc_class->set_encoder_config (nvenc, state, params->encodeConfig)) {
@@ -1767,6 +1871,21 @@ gst_nv_base_enc_set_property (GObject * object, guint prop_id,
       nvenc->preset_enum = g_value_get_enum (value);
       nvenc->selected_preset = _nv_preset_to_guid (nvenc->preset_enum);
       break;
+    case PROP_RC_MODE:
+      nvenc->rate_control_mode = g_value_get_enum (value);
+      break;
+    case PROP_QP_MIN:
+      nvenc->qp_min = g_value_get_int (value);
+      break;
+    case PROP_QP_MAX:
+      nvenc->qp_max = g_value_get_int (value);
+      break;
+    case PROP_QP_CONST:
+      nvenc->qp_const = g_value_get_int (value);
+      break;
+    case PROP_BITRATE:
+      nvenc->bitrate = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1785,6 +1904,21 @@ gst_nv_base_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_PRESET:
       g_value_set_enum (value, nvenc->preset_enum);
+      break;
+    case PROP_RC_MODE:
+      g_value_set_enum (value, nvenc->rate_control_mode);
+      break;
+    case PROP_QP_MIN:
+      g_value_set_int (value, nvenc->qp_min);
+      break;
+    case PROP_QP_MAX:
+      g_value_set_int (value, nvenc->qp_max);
+      break;
+    case PROP_QP_CONST:
+      g_value_set_int (value, nvenc->qp_const);
+      break;
+    case PROP_BITRATE:
+      g_value_set_uint (value, nvenc->bitrate);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
