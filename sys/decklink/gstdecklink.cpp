@@ -532,7 +532,7 @@ public:
     void (*got_audio_packet) (GstElement * videosrc,
         IDeckLinkAudioInputPacket * packet, GstClockTime capture_time, gboolean discont) = NULL;
     GstDecklinkModeEnum mode;
-    BMDTimeValue capture_time, capture_duration;
+    BMDTimeValue capture_time = GST_CLOCK_TIME_NONE, capture_duration = GST_CLOCK_TIME_NONE;
     HRESULT res;
 
     if (video_frame == NULL)
