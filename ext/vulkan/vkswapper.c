@@ -551,11 +551,13 @@ _swapper_set_image_layout (GstVulkanSwapper * swapper,
 
   {
     VkSubmitInfo submit_info = { 0, };
+    VkPipelineStageFlags stages = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.pNext = NULL;
     submit_info.waitSemaphoreCount = 0;
     submit_info.pWaitSemaphores = NULL;
+    submit_info.pWaitDstStageMask = &stages;
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &cmd;
     submit_info.signalSemaphoreCount = 0;
@@ -949,11 +951,13 @@ reacquire:
 
   {
     VkSubmitInfo submit_info = { 0, };
+    VkPipelineStageFlags stages = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.pNext = NULL;
     submit_info.waitSemaphoreCount = 1;
     submit_info.pWaitSemaphores = &semaphore;
+    submit_info.pWaitDstStageMask = &stages;
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &cmd_data.cmd;
     submit_info.signalSemaphoreCount = 0;
