@@ -501,7 +501,7 @@ ges_video_transition_set_transition_type_internal (GESVideoTransition
   }
 
   if (type == priv->type) {
-    GST_ERROR ("This type is already set on this transition\n");
+    GST_DEBUG ("%d type is already set on this transition\n", type);
     return TRUE;
   }
 
