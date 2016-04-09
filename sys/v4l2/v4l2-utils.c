@@ -29,7 +29,7 @@
 /* Common device iterator */
 /**************************/
 
-#if HAVE_GUDEV
+#ifdef HAVE_GUDEV
 #include <gudev/gudev.h>
 
 struct _GstV4l2GUdevIterator

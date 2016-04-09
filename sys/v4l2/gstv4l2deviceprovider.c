@@ -49,7 +49,7 @@ G_DEFINE_TYPE (GstV4l2DeviceProvider, gst_v4l2_device_provider,
 static void gst_v4l2_device_provider_finalize (GObject * object);
 static GList *gst_v4l2_device_provider_probe (GstDeviceProvider * provider);
 
-#if HAVE_GUDEV
+#ifdef HAVE_GUDEV
 static gboolean gst_v4l2_device_provider_start (GstDeviceProvider * provider);
 static void gst_v4l2_device_provider_stop (GstDeviceProvider * provider);
 #endif
@@ -63,7 +63,7 @@ gst_v4l2_device_provider_class_init (GstV4l2DeviceProviderClass * klass)
 
   dm_class->probe = gst_v4l2_device_provider_probe;
 
-#if HAVE_GUDEV
+#ifdef HAVE_GUDEV
   dm_class->start = gst_v4l2_device_provider_start;
   dm_class->stop = gst_v4l2_device_provider_stop;
 #endif
@@ -79,7 +79,7 @@ gst_v4l2_device_provider_class_init (GstV4l2DeviceProviderClass * klass)
 static void
 gst_v4l2_device_provider_init (GstV4l2DeviceProvider * provider)
 {
-#if HAVE_GUDEV
+#ifdef HAVE_GUDEV
   g_cond_init (&provider->started_cond);
 #endif
 }
@@ -87,7 +87,7 @@ gst_v4l2_device_provider_init (GstV4l2DeviceProvider * provider)
 static void
 gst_v4l2_device_provider_finalize (GObject * object)
 {
-#if HAVE_GUDEV
+#ifdef HAVE_GUDEV
   GstV4l2DeviceProvider *provider = GST_V4L2_DEVICE_PROVIDER (object);
 
   g_cond_clear (&provider->started_cond);
@@ -219,7 +219,7 @@ gst_v4l2_device_provider_probe (GstDeviceProvider * provider)
   return devices;
 }
 
-#if HAVE_GUDEV
+#ifdef HAVE_GUDEV
 
 static GstDevice *
 gst_v4l2_device_provider_device_from_udev (GstV4l2DeviceProvider * provider,
