@@ -40,6 +40,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define gst_gl_window_eagl_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLWindowEagl, gst_gl_window_eagl,
     GST_GL_TYPE_WINDOW, DEBUG_INIT);
+static void gst_gl_window_eagl_finalize (GObject * object);
 
 static guintptr gst_gl_window_eagl_get_display (GstGLWindow * window);
 static guintptr gst_gl_window_eagl_get_window_handle (GstGLWindow * window);
@@ -48,20 +49,26 @@ static void gst_gl_window_eagl_set_window_handle (GstGLWindow * window,
 static void gst_gl_window_eagl_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
 static void gst_gl_window_eagl_draw (GstGLWindow * window);
+static void gst_gl_window_eagl_send_message_async (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 
 struct _GstGLWindowEaglPrivate
 {
   UIView *view;
   gint window_width, window_height;
   gint preferred_width, preferred_height;
+  dispatch_queue_t gl_queue;
 };
 
 static void
 gst_gl_window_eagl_class_init (GstGLWindowEaglClass * klass)
 {
+  GObjectClass *gobject_class = (GObjectClass *) klass;
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstGLWindowEaglPrivate));
+
+  gobject_class->finalize = gst_gl_window_eagl_finalize;
 
   window_class->get_display =
       GST_DEBUG_FUNCPTR (gst_gl_window_eagl_get_display);
@@ -72,13 +79,24 @@ gst_gl_window_eagl_class_init (GstGLWindowEaglClass * klass)
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_eagl_draw);
   window_class->set_preferred_size =
       GST_DEBUG_FUNCPTR (gst_gl_window_eagl_set_preferred_size);
+  window_class->send_message_async =
+      GST_DEBUG_FUNCPTR (gst_gl_window_eagl_send_message_async);
 }
 
 static void
 gst_gl_window_eagl_init (GstGLWindowEagl * window)
 {
   window->priv = GST_GL_WINDOW_EAGL_GET_PRIVATE (window);
+  window->priv->gl_queue =
+      dispatch_queue_create ("org.freedesktop.gstreamer.glwindow", NULL);
+}
 
+static void
+gst_gl_window_eagl_finalize (GObject * object)
+{
+  GstGLWindowEagl *window = GST_GL_WINDOW_EAGL (object);
+  dispatch_release (window->priv->gl_queue);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /* Must be called in the gl thread */
@@ -124,6 +142,30 @@ gst_gl_window_eagl_set_preferred_size (GstGLWindow * window, gint width, gint he
 
   window_eagl->priv->preferred_width = width;
   window_eagl->priv->preferred_height = height;
+}
+
+static void
+gst_gl_window_eagl_send_message_async (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
+{
+  GstGLWindowEagl *window_eagl = (GstGLWindowEagl *) window;
+  GstGLContext *context = gst_gl_window_get_context (window);
+
+  if (gst_gl_context_get_thread (context) == g_thread_self()) {
+    /* this case happens for nested calls happening from inside the GCD queue */
+    callback (data);
+    if (destroy)
+      destroy (data);
+    gst_object_unref (context);
+  } else {
+    dispatch_async (window_eagl->priv->gl_queue, ^{
+      gst_gl_context_activate (context, TRUE);
+      gst_object_unref (context);
+      callback (data);
+      if (destroy)
+        destroy (data);
+    });
+  }
 }
 
 static void
