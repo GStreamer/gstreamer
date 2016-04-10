@@ -299,8 +299,13 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     inst_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     inst_info.pNext = NULL;
     inst_info.pApplicationInfo = &app;
+#if 0
     inst_info.enabledLayerCount = enabled_layer_count;
     inst_info.ppEnabledLayerNames = (const char *const *) enabled_layers;
+#else
+    inst_info.enabledLayerCount = 0;
+    inst_info.ppEnabledLayerNames = NULL;
+#endif
     inst_info.enabledExtensionCount = enabled_extension_count;
     inst_info.ppEnabledExtensionNames = (const char *const *) extension_names;
 

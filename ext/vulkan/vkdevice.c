@@ -289,8 +289,13 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
     device_info.pNext = NULL;
     device_info.queueCreateInfoCount = 1;
     device_info.pQueueCreateInfos = &queue_info;
+#if 0
     device_info.enabledLayerCount = enabled_layer_count;
     device_info.ppEnabledLayerNames = (const char *const *) enabled_layers;
+#else
+    device_info.enabledLayerCount = 0;
+    device_info.ppEnabledLayerNames = NULL;
+#endif
     device_info.enabledExtensionCount = enabled_extension_count;
     device_info.ppEnabledExtensionNames = (const char *const *) extension_names;
     device_info.pEnabledFeatures = NULL;

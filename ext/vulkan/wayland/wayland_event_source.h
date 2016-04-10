@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2015 Matthew Waters <matthew@centricular.com>
+ * Copyright (C) 2016 Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,28 +18,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _VK_API_H_
-#define _VK_API_H_
+#ifndef __WAYLAND_EVENT_SOURCE_H__
+#define __WAYLAND_EVENT_SOURCE_H__
 
-#define VK_PROTOTYPES
+#include <glib-object.h>
 
-#include "vkconfig.h"
-#include "vk_fwd.h"
-#include "vkmacros.h"
+#include <wayland-client.h>
 
-/* Need these defined to have access to winsys functions before including vulkan.h */
-#if GST_VULKAN_HAVE_WINDOW_XCB
-#ifndef VK_USE_PLATFORM_XCB_KHR
-#define VK_USE_PLATFORM_XCB_KHR
-#endif
-#endif
+GSource * wayland_event_source_new (struct wl_display *display,
+                                    struct wl_event_queue *queue);
 
-#if GST_VULKAN_HAVE_WINDOW_WAYLAND
-#ifndef VK_USE_PLATFORM_WAYLAND_KHR
-#define VK_USE_PLATFORM_WAYLAND_KHR
-#endif
-#endif
+G_GNUC_INTERNAL gint      gst_vulkan_wl_display_roundtrip_queue (struct wl_display *display,
+                                             struct wl_event_queue *queue);
 
-#include <vulkan/vulkan.h>
-
-#endif /* _VK_H_ */
+#endif /* __WAYLAND_EVENT_SOURCE_H__ */

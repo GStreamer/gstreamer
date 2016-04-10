@@ -1,7 +1,7 @@
 plugin_LTLIBRARIES = libgstvulkan.la
 
 SUBDIRS =
-DIST_SUBDIRS = xcb
+DIST_SUBDIRS = xcb wayland
 DISTCLEANFILES = vkconfig.h
 
 libgstvulkan_la_SOURCES = \
@@ -60,6 +60,11 @@ libgstvulkan_la_LIBADD = \
 if USE_XCB
 SUBDIRS += xcb
 libgstvulkan_la_LIBADD += xcb/libgstvulkan-xcb.la
+endif
+
+if USE_WAYLAND
+SUBDIRS += wayland
+libgstvulkan_la_LIBADD += wayland/libgstvulkan-wayland.la
 endif
 
 libgstvulkan_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

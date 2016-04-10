@@ -33,6 +33,9 @@
 #if GST_VULKAN_HAVE_WINDOW_XCB
 #include "xcb/vkdisplay_xcb.h"
 #endif
+#if GST_VULKAN_HAVE_WINDOW_WAYLAND
+#include "wayland/vkdisplay_wayland.h"
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 #define GST_CAT_DEFAULT gst_vulkan_display_debug
@@ -142,11 +145,6 @@ gst_vulkan_display_finalize (GObject * object)
   GstVulkanDisplay *display = GST_VULKAN_DISPLAY (object);
 
   g_mutex_lock (&display->priv->thread_lock);
-  if (display->main_context && display->event_source) {
-    g_source_destroy (display->event_source);
-    g_source_unref (display->event_source);
-  }
-  display->event_source = NULL;
 
   if (display->main_loop)
     g_main_loop_quit (display->main_loop);
@@ -158,6 +156,12 @@ gst_vulkan_display_finalize (GObject * object)
     g_thread_unref (display->priv->event_thread);
   display->priv->event_thread = NULL;
   g_mutex_unlock (&display->priv->thread_lock);
+
+  if (display->main_context && display->event_source) {
+    g_source_destroy (display->event_source);
+    g_source_unref (display->event_source);
+  }
+  display->event_source = NULL;
 
   if (display->instance) {
     gst_object_unref (display->instance);
@@ -177,6 +181,11 @@ gst_vulkan_display_new_with_type (GstVulkanInstance * instance,
 #if GST_VULKAN_HAVE_WINDOW_XCB
   if (!display && type & GST_VULKAN_DISPLAY_TYPE_XCB) {
     display = GST_VULKAN_DISPLAY (gst_vulkan_display_xcb_new (NULL));
+  }
+#endif
+#if GST_VULKAN_HAVE_WINDOW_WAYLAND
+  if (!display && type & GST_VULKAN_DISPLAY_TYPE_WAYLAND) {
+    display = GST_VULKAN_DISPLAY (gst_vulkan_display_wayland_new (NULL));
   }
 #endif
 
@@ -387,6 +396,9 @@ gst_vulkan_display_choose_type (GstVulkanInstance * instance)
 #if GST_VULKAN_HAVE_WINDOW_XCB
   CHOOSE_WINSYS (xcb, XCB);
 #endif
+#if GST_VULKAN_HAVE_WINDOW_WAYLAND
+  CHOOSE_WINSYS (wayland, WAYLAND);
+#endif
 
 #undef CHOOSE_WINSYS
 
@@ -407,6 +419,9 @@ gst_vulkan_display_type_to_extension_string (GstVulkanDisplayType type)
 
   if (type & GST_VULKAN_DISPLAY_TYPE_XCB)
     return VK_KHR_XCB_SURFACE_EXTENSION_NAME;
+
+  if (type & GST_VULKAN_DISPLAY_TYPE_WAYLAND)
+    return VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME;
 
   return NULL;
 }
