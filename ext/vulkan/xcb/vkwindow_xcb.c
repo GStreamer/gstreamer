@@ -206,6 +206,7 @@ gst_vulkan_window_xcb_create_window (GstVulkanWindowXCB * window_xcb)
 static VkSurfaceKHR
 gst_vulkan_window_xcb_get_surface (GstVulkanWindow * window, GError ** error)
 {
+  GstVulkanWindowXCB *window_xcb = GST_VULKAN_WINDOW_XCB (window);
   VkXcbSurfaceCreateInfoKHR info = { 0, };
   VkSurfaceKHR ret;
   VkResult err;
@@ -216,9 +217,19 @@ gst_vulkan_window_xcb_get_surface (GstVulkanWindow * window, GError ** error)
   info.connection = GST_VULKAN_DISPLAY_XCB_CONNECTION (window->display);
   info.window = GST_VULKAN_WINDOW_XCB (window)->win_id;
 
+  if (!window_xcb->CreateXcbSurface)
+    window_xcb->CreateXcbSurface =
+        gst_vulkan_instance_get_proc_address (window->display->instance,
+        "vkCreateXcbSurfaceKHR");
+  if (!window_xcb->CreateXcbSurface) {
+    g_set_error_literal (error, GST_VULKAN_ERROR, VK_ERROR_FEATURE_NOT_PRESENT,
+        "Could not retrieve \"vkCreateXcbSurfaceKHR\" function pointer");
+    return NULL;
+  }
+
   err =
-      vkCreateXcbSurfaceKHR (window->display->instance->instance, &info, NULL,
-      &ret);
+      window_xcb->CreateXcbSurface (window->display->instance->instance, &info,
+      NULL, &ret);
   if (gst_vulkan_error_to_g_error (err, error, "vkCreateXcbSurfaceKHR") < 0)
     return NULL;
 
@@ -229,14 +240,25 @@ static gboolean
 gst_vulkan_window_xcb_get_presentation_support (GstVulkanWindow * window,
     GstVulkanDevice * device, guint32 queue_family_idx)
 {
+  GstVulkanWindowXCB *window_xcb = GST_VULKAN_WINDOW_XCB (window);
   VkPhysicalDevice gpu;
   xcb_screen_t *screen;
 
   screen = GST_VULKAN_DISPLAY_XCB_SCREEN (window->display);
 
+  if (!window_xcb->GetPhysicalDeviceXcbPresentationSupport)
+    window_xcb->GetPhysicalDeviceXcbPresentationSupport =
+        gst_vulkan_instance_get_proc_address (window->display->instance,
+        "vkGetPhysicalDeviceXcbPresentationSupportKHR");
+  if (!window_xcb->GetPhysicalDeviceXcbPresentationSupport) {
+    GST_WARNING_OBJECT (window, "Could not retrieve "
+        "\"vkGetPhysicalDeviceXcbPresentationSupportKHR\" " "function pointer");
+    return FALSE;
+  }
+
   gpu = gst_vulkan_device_get_physical_device (device);
-  if (vkGetPhysicalDeviceXcbPresentationSupportKHR (gpu, queue_family_idx,
-          GST_VULKAN_DISPLAY_XCB_CONNECTION (window->display),
+  if (window_xcb->GetPhysicalDeviceXcbPresentationSupport (gpu,
+          queue_family_idx, GST_VULKAN_DISPLAY_XCB_CONNECTION (window->display),
           screen->root_visual))
     return TRUE;
   return FALSE;

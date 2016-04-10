@@ -53,6 +53,9 @@ struct _GstVulkanWindowXCB
 
   gint          visible :1;
 
+  PFN_vkCreateXcbSurfaceKHR CreateXcbSurface;
+  PFN_vkGetPhysicalDeviceXcbPresentationSupportKHR GetPhysicalDeviceXcbPresentationSupport;
+
   /*< private >*/
   GstVulkanWindowXCBPrivate *priv;
   
