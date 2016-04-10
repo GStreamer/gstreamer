@@ -186,6 +186,7 @@ EXPORTS
 	gst_gl_shader_attach
 	gst_gl_shader_attach_unlocked
 	gst_gl_shader_bind_attribute_location
+	gst_gl_shader_bind_frag_data_location
 	gst_gl_shader_compile_attach_stage
 	gst_gl_shader_detach
 	gst_gl_shader_detach_unlocked
