@@ -8326,7 +8326,7 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
       /* time and duration expressed in global timescale */
       segment->time = stime;
       /* add non scaled values so we don't cause roundoff errors */
-      if (duration) {
+      if (duration || media_start == GST_CLOCK_TIME_NONE) {
         time += duration;
         stime = QTTIME_TO_GSTTIME (qtdemux, time);
         segment->duration = stime - segment->time;
