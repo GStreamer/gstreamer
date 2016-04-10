@@ -110,11 +110,6 @@
         reading the next part of the guide, <xref linkend="part-advanced"/>, you
         will be able to add even more functionality to your plugins.
       </para>
-      <para>
-        The example code used in this part of the guide can be found in
-        <filename class="directory">examples/pwg/examplefilter/</filename> in
-        your &GStreamer; directory.
-      </para>
     </partintro>
 
     &BUILDING_BOILER;

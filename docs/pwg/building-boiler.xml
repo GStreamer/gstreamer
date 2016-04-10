@@ -159,9 +159,6 @@ Resolving deltas: 100% (240/240), done.
       file (although since the interface to the code is entirely defined by the
       plugin system, and doesn't depend on reading a header file, this is not
       crucial.)
-
-      The code here can be found in
-      <filename>examples/pwg/examplefilter/boiler/gstexamplefilter.h</filename>.
     </para>
 
     <example id="ex-boiler-examine-h">
