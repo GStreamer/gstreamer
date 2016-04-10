@@ -63,9 +63,10 @@ release_test_objects (struct TestData *td)
 
   gst_caps_unref (td->mycaps);
 
-  if (active_srcpad)
+  if (active_srcpad) {
     gst_object_unref (active_srcpad);
-
+    active_srcpad = NULL;
+  }
   gst_object_unref (td->demux);
 }
 
