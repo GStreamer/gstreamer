@@ -390,7 +390,7 @@ gst_query_new_latency (void)
   structure = gst_structure_new_id (GST_QUARK (QUERY_LATENCY),
       GST_QUARK (LIVE), G_TYPE_BOOLEAN, FALSE,
       GST_QUARK (MIN_LATENCY), G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
-      GST_QUARK (MAX_LATENCY), G_TYPE_UINT64, G_GUINT64_CONSTANT (-1), NULL);
+      GST_QUARK (MAX_LATENCY), G_TYPE_UINT64, GST_CLOCK_TIME_NONE, NULL);
 
   query = gst_query_new_custom (GST_QUERY_LATENCY, structure);
 
