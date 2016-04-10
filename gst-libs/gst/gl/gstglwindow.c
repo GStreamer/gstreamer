@@ -102,6 +102,8 @@ struct _GstGLWindowPrivate
   GMutex nav_lock;
   GCond nav_create_cond;
   gboolean nav_alive;
+  GMutex sync_message_lock;
+  GCond sync_message_cond;
 };
 
 static void gst_gl_window_finalize (GObject * object);
@@ -196,6 +198,9 @@ gst_gl_window_init (GstGLWindow * window)
   window->priv->nav_alive = FALSE;
 
   g_weak_ref_init (&window->context_ref, NULL);
+
+  g_mutex_init (&window->priv->sync_message_lock);
+  g_cond_init (&window->priv->sync_message_cond);
 
   priv->main_context = g_main_context_new ();
   priv->loop = g_main_loop_new (priv->main_context, FALSE);
@@ -348,6 +353,8 @@ gst_gl_window_finalize (GObject * object)
   g_mutex_clear (&window->lock);
   g_mutex_clear (&window->priv->nav_lock);
   g_cond_clear (&window->priv->nav_create_cond);
+  g_mutex_clear (&window->priv->sync_message_lock);
+  g_cond_clear (&window->priv->sync_message_cond);
   gst_object_unref (window->display);
 
   G_OBJECT_CLASS (gst_gl_window_parent_class)->finalize (object);
@@ -590,8 +597,7 @@ gst_gl_window_quit (GstGLWindow * window)
 
 typedef struct _GstGLSyncMessage
 {
-  GMutex lock;
-  GCond cond;
+  GstGLWindow *window;
   gboolean fired;
 
   GstGLWindowCB callback;
@@ -601,14 +607,14 @@ typedef struct _GstGLSyncMessage
 static void
 _run_message_sync (GstGLSyncMessage * message)
 {
-  g_mutex_lock (&message->lock);
 
   if (message->callback)
     message->callback (message->data);
 
+  g_mutex_lock (&message->window->priv->sync_message_lock);
   message->fired = TRUE;
-  g_cond_signal (&message->cond);
-  g_mutex_unlock (&message->lock);
+  g_cond_broadcast (&message->window->priv->sync_message_cond);
+  g_mutex_unlock (&message->window->priv->sync_message_lock);
 }
 
 void
@@ -617,24 +623,21 @@ gst_gl_window_default_send_message (GstGLWindow * window,
 {
   GstGLSyncMessage message;
 
+  message.window = window;
   message.callback = callback;
   message.data = data;
   message.fired = FALSE;
-  g_mutex_init (&message.lock);
-  g_cond_init (&message.cond);
 
   gst_gl_window_send_message_async (window, (GstGLWindowCB) _run_message_sync,
       &message, NULL);
 
-  g_mutex_lock (&message.lock);
+  g_mutex_lock (&window->priv->sync_message_lock);
 
   /* block until opengl calls have been executed in the gl thread */
   while (!message.fired)
-    g_cond_wait (&message.cond, &message.lock);
-  g_mutex_unlock (&message.lock);
-
-  g_mutex_clear (&message.lock);
-  g_cond_clear (&message.cond);
+    g_cond_wait (&window->priv->sync_message_cond,
+        &window->priv->sync_message_lock);
+  g_mutex_unlock (&window->priv->sync_message_lock);
 }
 
 /**
