@@ -35,6 +35,27 @@ create_pool (guint size, guint min_buf, guint max_buf)
   return pool;
 }
 
+static void
+buffer_destroy_notify (gpointer ptr)
+{
+  gint *counter = ptr;
+
+  GST_DEBUG ("buffer destroyed");
+
+  *counter += 1;
+}
+
+/* Track when a buffer is destroyed. The counter will be increased if the
+ * buffer is finalized (but not if it was re-surrected in dispose and put
+ * back into the buffer pool. */
+static void
+buffer_track_destroy (GstBuffer * buf, gint * counter)
+{
+  gst_mini_object_set_qdata (GST_MINI_OBJECT (buf),
+      g_quark_from_static_string ("TestTracker"),
+      counter, buffer_destroy_notify);
+}
+
 GST_START_TEST (test_new_buffer_from_empty_pool)
 {
   GstBufferPool *pool = create_pool (10, 0, 0);
@@ -56,11 +77,16 @@ GST_START_TEST (test_buffer_is_recycled)
 {
   GstBufferPool *pool = create_pool (10, 0, 0);
   GstBuffer *buf = NULL, *prev;
+  gint dcount = 0;
 
   gst_buffer_pool_set_active (pool, TRUE);
   gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
   prev = buf;
+  buffer_track_destroy (buf, &dcount);
   gst_buffer_unref (buf);
+
+  /* buffer should not have been freed, but have been recycled */
+  fail_unless (dcount == 0);
 
   gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
   fail_unless (buf == prev, "got a fresh buffer instead of previous");
@@ -68,6 +94,9 @@ GST_START_TEST (test_buffer_is_recycled)
   gst_buffer_unref (buf);
   gst_buffer_pool_set_active (pool, FALSE);
   gst_object_unref (pool);
+
+  /* buffer should now be gone */
+  fail_unless (dcount == 1);
 }
 
 GST_END_TEST;
@@ -77,12 +106,18 @@ GST_START_TEST (test_buffer_out_of_order_reuse)
 {
   GstBufferPool *pool = create_pool (10, 0, 0);
   GstBuffer *buf1 = NULL, *buf2 = NULL, *prev;
+  gint dcount1 = 0, dcount2 = 0;
 
   gst_buffer_pool_set_active (pool, TRUE);
   gst_buffer_pool_acquire_buffer (pool, &buf1, NULL);
+  buffer_track_destroy (buf1, &dcount1);
   gst_buffer_pool_acquire_buffer (pool, &buf2, NULL);
+  buffer_track_destroy (buf2, &dcount2);
   prev = buf2;
   gst_buffer_unref (buf2);
+
+  /* buffer should not have been freed, but have been recycled */
+  fail_unless (dcount2 == 0);
 
   gst_buffer_pool_acquire_buffer (pool, &buf2, NULL);
   fail_unless (buf2 == prev, "got a fresh buffer instead of previous");
@@ -91,6 +126,9 @@ GST_START_TEST (test_buffer_out_of_order_reuse)
   gst_buffer_unref (buf2);
   gst_buffer_pool_set_active (pool, FALSE);
   gst_object_unref (pool);
+
+  fail_unless (dcount1 == 1);
+  fail_unless (dcount2 == 1);
 }
 
 GST_END_TEST;
@@ -133,31 +171,44 @@ GST_START_TEST (test_buffer_modify_discard)
   GstBufferPool *pool = create_pool (10, 0, 0);
   GstBuffer *buf = NULL, *prev;
   GstMemory *mem;
+  gint dcount = 0;
 
   gst_buffer_pool_set_active (pool, TRUE);
   gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
+  fail_unless (buf != NULL);
   prev = buf;
+  buffer_track_destroy (buf, &dcount);
   /* remove all memory, pool should not reuse this buffer */
   gst_buffer_remove_all_memory (buf);
   gst_buffer_unref (buf);
 
+  /* buffer should've been destroyed instead of going back into pool */
+  fail_unless_equals_int (dcount, 1);
+
   gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
-  fail_if (buf == prev, "got a reused buffer instead of new one");
   prev = buf;
+  buffer_track_destroy (buf, &dcount);
   /* do resize, pool should not reuse this buffer */
   gst_buffer_resize (buf, 5, 2);
   gst_buffer_unref (buf);
 
+  /* buffer should've been destroyed instead of going back into pool */
+  fail_unless_equals_int (dcount, 2);
+
   gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
-  fail_if (buf == prev, "got a reused buffer instead of new one");
   prev = buf;
+  buffer_track_destroy (buf, &dcount);
   /* keep ref to memory, not exclusive so pool should reuse this buffer */
   mem = gst_buffer_get_memory (buf, 0);
   gst_buffer_unref (buf);
   gst_memory_unref (mem);
 
+  /* buffer should not have been destroyed and gone back into pool */
+  fail_unless_equals_int (dcount, 2);
+
   gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
   fail_unless (buf == prev, "got a fresh buffer instead of previous");
+  /* we're already did track_destroy on this buf, so no need to do it again */
   mem = gst_buffer_get_memory (buf, 0);
   /* exclusive lock so pool should not reuse this buffer */
   gst_memory_lock (mem, GST_LOCK_FLAG_EXCLUSIVE);
@@ -165,9 +216,10 @@ GST_START_TEST (test_buffer_modify_discard)
   gst_memory_unlock (mem, GST_LOCK_FLAG_EXCLUSIVE);
   gst_memory_unref (mem);
 
-  gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
-  fail_if (buf == prev, "got a reused buffer instead of new one");
-  gst_buffer_unref (buf);
+  /* buffer should have been destroyed and not gone back into pool because
+   * of the exclusive lock */
+  fail_unless_equals_int (dcount, 3);
+
   gst_buffer_pool_set_active (pool, FALSE);
   gst_object_unref (pool);
 }
