@@ -77,6 +77,8 @@ static void gst_gl_window_cocoa_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
 static void gst_gl_window_cocoa_show (GstGLWindow * window);
 static void gst_gl_window_cocoa_queue_resize (GstGLWindow * window);
+static void gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 
 struct _GstGLWindowCocoaPrivate
 {
@@ -90,6 +92,8 @@ struct _GstGLWindowCocoaPrivate
 
   /* atomic set when the internal NSView has been created */
   int view_ready;
+
+  dispatch_queue_t gl_queue;
 };
 
 static void
@@ -111,6 +115,8 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_set_preferred_size);
   window_class->show = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_show);
   window_class->queue_resize = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_queue_resize);
+  window_class->send_message_async =
+      GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_send_message_async);
 
   gobject_class->finalize = gst_gl_window_cocoa_finalize;
 }
@@ -122,11 +128,15 @@ gst_gl_window_cocoa_init (GstGLWindowCocoa * window)
 
   window->priv->preferred_width = 320;
   window->priv->preferred_height = 240;
+  window->priv->gl_queue =
+      dispatch_queue_create ("org.freedesktop.gstreamer.glwindow", NULL);
 }
 
 static void
 gst_gl_window_cocoa_finalize (GObject * object)
 {
+  GstGLWindowCocoa *window = GST_GL_WINDOW_COCOA (object);
+  dispatch_release (window->priv->gl_queue);
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -368,6 +378,30 @@ gst_gl_cocoa_resize_cb (GstGLNSView * view, guint width, guint height)
 
   gst_object_unref (context);
   [pool release];
+}
+
+static void
+gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
+{
+  GstGLWindowCocoa *window_cocoa = (GstGLWindowCocoa *) window;
+  GstGLContext *context = gst_gl_window_get_context (window);
+
+  if (gst_gl_context_get_thread (context) == g_thread_self()) {
+    /* this case happens for nested calls happening from inside the GCD queue */
+    callback (data);
+    if (destroy)
+      destroy (data);
+    gst_object_unref (context);
+  } else {
+    dispatch_async (window_cocoa->priv->gl_queue, ^{
+      gst_gl_context_activate (context, TRUE);
+      gst_object_unref (context);
+      callback (data);
+      if (destroy)
+        destroy (data);
+    });
+  }
 }
 
 /* =============================================================*/
