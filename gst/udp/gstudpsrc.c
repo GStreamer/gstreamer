@@ -942,20 +942,10 @@ gst_udpsrc_open (GstUDPSrc * src)
 
     GST_DEBUG_OBJECT (src, "binding on port %d", src->port);
 
-    /* On Windows it's not possible to bind to a multicast address
-     * but the OS will make sure to filter out all packets that
-     * arrive not for the multicast address the socket joined.
-     *
-     * On Linux and others it is necessary to bind to a multicast
-     * address to let the OS filter out all packets that are received
-     * on the same port but for different addresses than the multicast
-     * address
-     */
-#ifdef G_OS_WIN32
+    /* For multicast, bind to ANY and join the multicast group later */
     if (g_inet_address_get_is_multicast (addr))
       bind_addr = g_inet_address_new_any (g_inet_address_get_family (addr));
     else
-#endif
       bind_addr = G_INET_ADDRESS (g_object_ref (addr));
 
     g_object_unref (addr);
@@ -981,25 +971,22 @@ gst_udpsrc_open (GstUDPSrc * src)
     if (!local_addr)
       goto getsockname_error;
 
-    /* See above for the reasons. Without this we would behave different on
-     * Windows and Linux, joining multicast groups below for provided sockets
-     * on Linux but not on Windows
-     */
-#ifdef G_OS_WIN32
     addr = gst_udpsrc_resolve (src, src->address);
     if (!addr)
       goto name_resolve;
 
+    /* If bound to ANY and address points to a multicast address, make
+     * sure that address is not overridden with ANY but we have the
+     * opportunity later to join the multicast address. This ensures that we
+     * have the same behaviour as for sockets created by udpsrc */
     if (!src->auto_multicast ||
         !g_inet_address_get_is_any (g_inet_socket_address_get_address
             (local_addr))
         || !g_inet_address_get_is_multicast (addr)) {
       g_object_unref (addr);
-#endif
       if (src->addr)
         g_object_unref (src->addr);
       src->addr = local_addr;
-#ifdef G_OS_WIN32
     } else {
       g_object_unref (local_addr);
       if (src->addr)
@@ -1008,7 +995,6 @@ gst_udpsrc_open (GstUDPSrc * src)
           G_INET_SOCKET_ADDRESS (g_inet_socket_address_new (addr, src->port));
       g_object_unref (addr);
     }
-#endif
   }
 
   {
