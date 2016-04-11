@@ -162,7 +162,7 @@ parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename,
 open_fail:
   if (err->code == G_FILE_ERROR_NOENT) {
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
-        _("Couldn't find DVB channel configuration file"));
+        _("Couldn't find DVB channel configuration file: %s"), err->message);
   } else {
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
         _("Couldn't load DVB channel configuration file: %s"), err->message);
