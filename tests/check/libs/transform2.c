@@ -49,10 +49,13 @@ static GstFlowReturn
 collate_submit_input_buffer (GstBaseTransform * trans,
     gboolean is_discont, GstBuffer * input)
 {
-  GstFlowReturn ret =
-      GST_BASE_TRANSFORM_CLASS
-      (gst_test_trans_parent_class)->submit_input_buffer (trans, is_discont,
-      input);
+  GstBaseTransformClass *tt_parent_class;
+  GstFlowReturn ret;
+
+  tt_parent_class =
+      g_type_class_peek_parent (GST_BASE_TRANSFORM_GET_CLASS (trans));
+
+  ret = tt_parent_class->submit_input_buffer (trans, is_discont, input);
 
   if (ret != GST_FLOW_OK)
     return ret;

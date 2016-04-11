@@ -96,6 +96,14 @@ GST_START_TEST (basetransform_chain_pt1)
   gst_test_trans_push_segment (trans);
 
   gst_test_trans_free (trans);
+
+  klass_transform_ip = NULL;
+  klass_transform = NULL;
+  klass_transform_caps = NULL;
+  klass_transform_size = NULL;
+  klass_set_caps = NULL;
+  klass_submit_input_buffer = NULL;
+  klass_generate_output = NULL;
 }
 
 GST_END_TEST;
@@ -879,6 +887,25 @@ GST_START_TEST (basetransform_chain_ct3)
 
 GST_END_TEST;
 
+static void
+transform1_setup (void)
+{
+  sink_template = &gst_test_trans_sink_template;
+  src_template = &gst_test_trans_src_template;
+}
+
+static void
+transform1_teardown (void)
+{
+  /* reset global state */
+  klass_transform_ip = NULL;
+  klass_transform = NULL;
+  klass_transform_caps = NULL;
+  klass_transform_size = NULL;
+  klass_set_caps = NULL;
+  klass_submit_input_buffer = NULL;
+  klass_generate_output = NULL;
+}
 
 static Suite *
 gst_basetransform_suite (void)
@@ -887,6 +914,8 @@ gst_basetransform_suite (void)
   TCase *tc = tcase_create ("general");
 
   suite_add_tcase (s, tc);
+  tcase_add_checked_fixture (tc, transform1_setup, transform1_teardown);
+
   /* pass through */
   tcase_add_test (tc, basetransform_chain_pt1);
   tcase_add_test (tc, basetransform_chain_pt2);

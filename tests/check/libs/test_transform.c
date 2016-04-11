@@ -28,18 +28,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 typedef struct _GstTestTrans GstTestTrans;
 typedef struct _GstTestTransClass GstTestTransClass;
 
-#define GST_TYPE_TEST_TRANS \
-  (gst_test_trans_get_type())
-#define GST_TEST_TRANS(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TEST_TRANS,GstTestTrans))
-#define GST_TEST_TRANS_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TEST_TRANS,GstTestTransClass))
-#define GST_TEST_TRANS_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_TEST_TRANS, GstTestTransClass))
-#define GST_IS_TEST_TRANS(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TEST_TRANS))
-#define GST_IS_TEST_TRANS_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TEST_TRANS))
+#define GST_TEST_TRANS(obj) ((GstTestTrans *)(obj))
 
 struct _GstTestTrans
 {
@@ -52,10 +41,6 @@ struct _GstTestTransClass
 {
   GstBaseTransformClass parent_class;
 };
-
-GType gst_test_trans_get_type (void);
-
-G_DEFINE_TYPE (GstTestTrans, gst_test_trans, GST_TYPE_BASE_TRANSFORM);
 
 static GstFlowReturn (*klass_transform) (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf) = NULL;
@@ -91,6 +76,8 @@ gst_test_trans_class_init (GstTestTransClass * klass)
 
   gst_element_class_add_static_pad_template (element_class, sink_template);
   gst_element_class_add_static_pad_template (element_class, src_template);
+
+  GST_INFO ("setting up %s", g_type_name (((GTypeClass *) klass)->g_type));
 
   trans_class->passthrough_on_same_caps = klass_passthrough_on_same_caps;
   if (klass_transform_ip != NULL)
@@ -156,9 +143,24 @@ gst_test_trans_new (void)
   TestTransData *res;
   GstPad *tmp;
   GstPadTemplate *templ;
+  GType type;
+
+  /* we register a new sub-class for every test-run, so the class init
+   * function is called for every test run and can be set up properly
+   * even with CK_FORK=no */
+  {
+    static gint counter = 0;
+    gchar name[100];
+
+    g_snprintf (name, sizeof (name), "GstTestTrans%d", ++counter);
+
+    type = g_type_register_static_simple (GST_TYPE_BASE_TRANSFORM, name,
+        sizeof (GstTestTransClass), (GClassInitFunc) gst_test_trans_class_init,
+        sizeof (GstTestTrans), (GInstanceInitFunc) gst_test_trans_init, 0);
+  }
 
   res = g_new0 (TestTransData, 1);
-  res->trans = g_object_new (GST_TYPE_TEST_TRANS, NULL);
+  res->trans = g_object_new (type, NULL);
 
   templ = gst_static_pad_template_get (sink_template);
   templ->direction = GST_PAD_SRC;
