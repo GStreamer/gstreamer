@@ -425,6 +425,15 @@ gst_video_crop_meta_api_get_type (void)
   return type;
 }
 
+static gboolean
+gst_video_crop_meta_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
+{
+  GstVideoCropMeta *emeta = (GstVideoCropMeta *) meta;
+  emeta->x = emeta->y = emeta->width = emeta->height = 0;
+
+  return TRUE;
+}
+
 const GstMetaInfo *
 gst_video_crop_meta_get_info (void)
 {
@@ -433,7 +442,8 @@ gst_video_crop_meta_get_info (void)
   if (g_once_init_enter (&video_crop_meta_info)) {
     const GstMetaInfo *meta =
         gst_meta_register (GST_VIDEO_CROP_META_API_TYPE, "GstVideoCropMeta",
-        sizeof (GstVideoCropMeta), (GstMetaInitFunction) NULL,
+        sizeof (GstVideoCropMeta),
+        (GstMetaInitFunction) gst_video_crop_meta_init,
         (GstMetaFreeFunction) NULL, gst_video_crop_meta_transform);
     g_once_init_leave (&video_crop_meta_info, meta);
   }
