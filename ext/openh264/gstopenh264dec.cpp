@@ -37,11 +37,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_openh264dec_debug_category);
 #define GST_CAT_DEFAULT gst_openh264dec_debug_category
 
 /* prototypes */
-static void gst_openh264dec_set_property (GObject * object,
-    guint property_id, const GValue * value, GParamSpec * pspec);
-static void gst_openh264dec_get_property (GObject * object, guint property_id,
-    GValue * value, GParamSpec * pspec);
-
 static gboolean gst_openh264dec_start (GstVideoDecoder * decoder);
 static gboolean gst_openh264dec_stop (GstVideoDecoder * decoder);
 
@@ -55,12 +50,6 @@ static GstFlowReturn gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
 static gboolean gst_openh264dec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query);
 
-enum
-{
-  PROP_0,
-  N_PROPERTIES
-};
-
 /* pad templates */
 
 static GstStaticPadTemplate gst_openh264dec_sink_template =
@@ -68,7 +57,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS
-    ("video/x-h264, stream-format=(string)byte-stream, alignment=(string)au,profile=(string){constrained-baseline,baseline}"));
+    ("video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, "
+        "profile=(string){ constrained-baseline, baseline}"));
 
 static GstStaticPadTemplate gst_openh264dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -86,11 +76,8 @@ G_DEFINE_TYPE_WITH_CODE (GstOpenh264Dec, gst_openh264dec,
 static void
 gst_openh264dec_class_init (GstOpenh264DecClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
 
-  /* Setting up pads and setting metadata should be moved to
-     base_class_init if you intend to subclass this class. */
   gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
       &gst_openh264dec_sink_template);
   gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
@@ -99,8 +86,6 @@ gst_openh264dec_class_init (GstOpenh264DecClass * klass)
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "OpenH264 video decoder", "Decoder/Video", "OpenH264 video decoder",
       "Ericsson AB, http://www.ericsson.com");
-  gobject_class->set_property = gst_openh264dec_set_property;
-  gobject_class->get_property = gst_openh264dec_get_property;
 
   video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_openh264dec_start);
   video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_openh264dec_stop);
@@ -122,36 +107,6 @@ gst_openh264dec_init (GstOpenh264Dec * openh264dec)
 
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (openh264dec), TRUE);
   gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (openh264dec), TRUE);
-}
-
-void
-gst_openh264dec_set_property (GObject * object, guint property_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstOpenh264Dec *openh264dec = GST_OPENH264DEC (object);
-
-  GST_DEBUG_OBJECT (openh264dec, "set_property");
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
-}
-
-void
-gst_openh264dec_get_property (GObject * object, guint property_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstOpenh264Dec *openh264dec = GST_OPENH264DEC (object);
-
-  GST_DEBUG_OBJECT (openh264dec, "get_property");
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
 }
 
 static gboolean
@@ -208,8 +163,7 @@ gst_openh264dec_set_format (GstVideoDecoder * decoder,
 {
   GstOpenh264Dec *openh264dec = GST_OPENH264DEC (decoder);
 
-  GST_DEBUG_OBJECT (openh264dec,
-      "openh264_dec_set_format called, caps: %" GST_PTR_FORMAT, state->caps);
+  GST_DEBUG_OBJECT (openh264dec, "input caps: %" GST_PTR_FORMAT, state->caps);
 
   if (openh264dec->input_state) {
     gst_video_codec_state_unref (openh264dec->input_state);
@@ -282,9 +236,7 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
     frame = NULL;
   } else {
     memset (&dst_buf_info, 0, sizeof (SBufferInfo));
-    ret =
-        openh264dec->decoder->DecodeFrame2 (NULL, 0, yuvdata,
-        &dst_buf_info);
+    ret = openh264dec->decoder->DecodeFrame2 (NULL, 0, yuvdata, &dst_buf_info);
     if (ret != dsErrorFree) {
       gst_video_codec_frame_unref (frame);
       return GST_FLOW_EOS;
