@@ -27,27 +27,16 @@
 #include "config.h"
 #endif
 
-#include <wels/codec_api.h>
-#include <wels/codec_app_def.h>
-#include <wels/codec_def.h>
-
 #include "gstopenh264dec.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideodecoder.h>
 #include <string.h>             /* for memcpy */
 
-
-#define GST_OPENH264DEC_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ( \
-                                     (obj), GST_TYPE_OPENH264DEC, \
-                                     GstOpenh264DecPrivate))
-
 GST_DEBUG_CATEGORY_STATIC (gst_openh264dec_debug_category);
 #define GST_CAT_DEFAULT gst_openh264dec_debug_category
 
 /* prototypes */
-
-
 static void gst_openh264dec_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_openh264dec_get_property (GObject * object, guint property_id,
@@ -70,13 +59,6 @@ enum
 {
   PROP_0,
   N_PROPERTIES
-};
-
-struct _GstOpenh264DecPrivate
-{
-  ISVCDecoder *decoder;
-  GstVideoCodecState *input_state;
-  guint width, height;
 };
 
 /* pad templates */
@@ -107,8 +89,6 @@ gst_openh264dec_class_init (GstOpenh264DecClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GstOpenh264DecPrivate));
-
   /* Setting up pads and setting metadata should be moved to
      base_class_init if you intend to subclass this class. */
   gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
@@ -138,8 +118,7 @@ gst_openh264dec_class_init (GstOpenh264DecClass * klass)
 static void
 gst_openh264dec_init (GstOpenh264Dec * openh264dec)
 {
-  openh264dec->priv = GST_OPENH264DEC_GET_PRIVATE (openh264dec);
-  openh264dec->priv->decoder = NULL;
+  openh264dec->decoder = NULL;
 
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (openh264dec), TRUE);
   gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (openh264dec), TRUE);
@@ -182,19 +161,19 @@ gst_openh264dec_start (GstVideoDecoder * decoder)
   gint ret;
   SDecodingParam dec_param = { 0 };
 
-  if (openh264dec->priv->decoder != NULL) {
-    openh264dec->priv->decoder->Uninitialize ();
-    WelsDestroyDecoder (openh264dec->priv->decoder);
-    openh264dec->priv->decoder = NULL;
+  if (openh264dec->decoder != NULL) {
+    openh264dec->decoder->Uninitialize ();
+    WelsDestroyDecoder (openh264dec->decoder);
+    openh264dec->decoder = NULL;
   }
-  WelsCreateDecoder (&(openh264dec->priv->decoder));
+  WelsCreateDecoder (&(openh264dec->decoder));
 
   dec_param.uiTargetDqLayer = 255;
   dec_param.eEcActiveIdc = ERROR_CON_FRAME_COPY;
   dec_param.eOutputColorFormat = videoFormatI420;
   dec_param.sVideoProperty.eVideoBsType = VIDEO_BITSTREAM_AVC;
 
-  ret = openh264dec->priv->decoder->Initialize (&dec_param);
+  ret = openh264dec->decoder->Initialize (&dec_param);
 
   GST_DEBUG_OBJECT (openh264dec,
       "openh264_dec_start called, openh264dec %sinitialized OK!",
@@ -208,17 +187,17 @@ gst_openh264dec_stop (GstVideoDecoder * decoder)
 {
   GstOpenh264Dec *openh264dec = GST_OPENH264DEC (decoder);
 
-  if (openh264dec->priv->decoder) {
-    openh264dec->priv->decoder->Uninitialize ();
-    WelsDestroyDecoder (openh264dec->priv->decoder);
-    openh264dec->priv->decoder = NULL;
+  if (openh264dec->decoder) {
+    openh264dec->decoder->Uninitialize ();
+    WelsDestroyDecoder (openh264dec->decoder);
+    openh264dec->decoder = NULL;
   }
 
-  if (openh264dec->priv->input_state) {
-    gst_video_codec_state_unref (openh264dec->priv->input_state);
-    openh264dec->priv->input_state = NULL;
+  if (openh264dec->input_state) {
+    gst_video_codec_state_unref (openh264dec->input_state);
+    openh264dec->input_state = NULL;
   }
-  openh264dec->priv->width = openh264dec->priv->height = 0;
+  openh264dec->width = openh264dec->height = 0;
 
   return TRUE;
 }
@@ -232,11 +211,11 @@ gst_openh264dec_set_format (GstVideoDecoder * decoder,
   GST_DEBUG_OBJECT (openh264dec,
       "openh264_dec_set_format called, caps: %" GST_PTR_FORMAT, state->caps);
 
-  if (openh264dec->priv->input_state) {
-    gst_video_codec_state_unref (openh264dec->priv->input_state);
-    openh264dec->priv->input_state = NULL;
+  if (openh264dec->input_state) {
+    gst_video_codec_state_unref (openh264dec->input_state);
+    openh264dec->input_state = NULL;
   }
-  openh264dec->priv->input_state = gst_video_codec_state_ref (state);
+  openh264dec->input_state = gst_video_codec_state_ref (state);
 
   return TRUE;
 }
@@ -280,7 +259,7 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
 
     memset (&dst_buf_info, 0, sizeof (SBufferInfo));
     ret =
-        openh264dec->priv->decoder->DecodeFrame2 (map_info.data, map_info.size,
+        openh264dec->decoder->DecodeFrame2 (map_info.data, map_info.size,
         yuvdata, &dst_buf_info);
 
     if (ret == dsNoParamSets) {
@@ -304,7 +283,7 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
   } else {
     memset (&dst_buf_info, 0, sizeof (SBufferInfo));
     ret =
-        openh264dec->priv->decoder->DecodeFrame2 (NULL, 0, yuvdata,
+        openh264dec->decoder->DecodeFrame2 (NULL, 0, yuvdata,
         &dst_buf_info);
     if (ret != dsErrorFree) {
       gst_video_codec_frame_unref (frame);
@@ -332,13 +311,13 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
   actual_height = dst_buf_info.UsrData.sSystemBuffer.iHeight;
 
   if (!gst_pad_has_current_caps (GST_VIDEO_DECODER_SRC_PAD (openh264dec))
-      || actual_width != openh264dec->priv->width
-      || actual_height != openh264dec->priv->height) {
+      || actual_width != openh264dec->width
+      || actual_height != openh264dec->height) {
     state =
         gst_video_decoder_set_output_state (decoder, GST_VIDEO_FORMAT_I420,
-        actual_width, actual_height, openh264dec->priv->input_state);
-    openh264dec->priv->width = actual_width;
-    openh264dec->priv->height = actual_height;
+        actual_width, actual_height, openh264dec->input_state);
+    openh264dec->width = actual_width;
+    openh264dec->height = actual_height;
 
     if (!gst_video_decoder_negotiate (decoder)) {
       GST_ERROR_OBJECT (openh264dec,
@@ -395,7 +374,7 @@ gst_openh264dec_finish (GstVideoDecoder * decoder)
   GST_DEBUG_OBJECT (openh264dec, "finish");
 
   /* Decoder not negotiated yet */
-  if (openh264dec->priv->width == 0)
+  if (openh264dec->width == 0)
     return GST_FLOW_OK;
 
   /* Drain all pending frames */

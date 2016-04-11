@@ -33,7 +33,12 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideodecoder.h>
 
+#include <wels/codec_api.h>
+#include <wels/codec_app_def.h>
+#include <wels/codec_def.h>
+
 G_BEGIN_DECLS
+
 #define GST_TYPE_OPENH264DEC          (gst_openh264dec_get_type())
 #define GST_OPENH264DEC(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OPENH264DEC,GstOpenh264Dec))
 #define GST_OPENH264DEC_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OPENH264DEC,GstOpenh264DecClass))
@@ -42,14 +47,15 @@ G_BEGIN_DECLS
 
 typedef struct _GstOpenh264Dec GstOpenh264Dec;
 typedef struct _GstOpenh264DecClass GstOpenh264DecClass;
-typedef struct _GstOpenh264DecPrivate GstOpenh264DecPrivate;
 
 struct _GstOpenh264Dec
 {
-    GstVideoDecoder base_openh264dec;
+  GstVideoDecoder base_openh264dec;
 
-    /*< private >*/
-    GstOpenh264DecPrivate *priv;
+  /*< private >*/
+  ISVCDecoder *decoder;
+  GstVideoCodecState *input_state;
+  guint width, height;
 };
 
 struct _GstOpenh264DecClass
