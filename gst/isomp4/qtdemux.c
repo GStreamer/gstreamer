@@ -7166,6 +7166,8 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
   if (stream->subtype == FOURCC_vide) {
     /* fps is calculated base on the duration of the average framerate since
      * qt does not have a fixed framerate. */
+    gboolean fps_available = TRUE;
+
     if ((stream->n_samples == 1) && (stream->first_duration == 0)) {
       /* still frame */
       stream->fps_n = 0;
@@ -7174,6 +7176,7 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       if (stream->duration == 0 || stream->n_samples < 2) {
         stream->fps_n = stream->timescale;
         stream->fps_d = 1;
+        fps_available = FALSE;
       } else {
         GstClockTime avg_duration;
         guint64 duration;
@@ -7206,10 +7209,11 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
 
         gst_video_guess_framerate (avg_duration, &stream->fps_n,
             &stream->fps_d);
+
+        GST_DEBUG_OBJECT (qtdemux,
+            "Calculating framerate, timescale %u gave fps_n %d fps_d %d",
+            stream->timescale, stream->fps_n, stream->fps_d);
       }
-      GST_DEBUG_OBJECT (qtdemux,
-          "Calculating framerate, timescale %u gave fps_n %d fps_d %d",
-          stream->timescale, stream->fps_n, stream->fps_d);
     }
 
     if (stream->caps) {
@@ -7217,8 +7221,13 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
 
       gst_caps_set_simple (stream->caps,
           "width", G_TYPE_INT, stream->width,
-          "height", G_TYPE_INT, stream->height,
-          "framerate", GST_TYPE_FRACTION, stream->fps_n, stream->fps_d, NULL);
+          "height", G_TYPE_INT, stream->height, NULL);
+
+      /* set framerate if calculated framerate is reliable */
+      if (fps_available) {
+        gst_caps_set_simple (stream->caps,
+            "framerate", GST_TYPE_FRACTION, stream->fps_n, stream->fps_d, NULL);
+      }
 
       /* calculate pixel-aspect-ratio using display width and height */
       GST_DEBUG_OBJECT (qtdemux,
