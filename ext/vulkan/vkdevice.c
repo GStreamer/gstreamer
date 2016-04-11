@@ -143,10 +143,14 @@ _physical_device_info (GstVulkanDevice * device, GError ** error)
 
   vkGetPhysicalDeviceProperties (gpu, &props);
 
-  GST_INFO_OBJECT (device, "device name %s type %s api version %u, "
-      "driver version %u vendor ID 0x%x, device ID 0x%x", props.deviceName,
-      _device_type_to_string (props.deviceType), props.apiVersion,
-      props.driverVersion, props.vendorID, props.deviceID);
+  GST_INFO_OBJECT (device, "device name %s type %s api version %u.%u.%u, "
+      "driver version %u.%u.%u vendor ID 0x%x, device ID 0x%x",
+      props.deviceName, _device_type_to_string (props.deviceType),
+      VK_VERSION_MAJOR (props.apiVersion), VK_VERSION_MINOR (props.apiVersion),
+      VK_VERSION_PATCH (props.apiVersion),
+      VK_VERSION_MAJOR (props.driverVersion),
+      VK_VERSION_MINOR (props.driverVersion),
+      VK_VERSION_PATCH (props.driverVersion), props.vendorID, props.deviceID);
 
   return TRUE;
 }
