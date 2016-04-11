@@ -887,8 +887,6 @@ mpegts_base_apply_pmt (MpegTSBase * base, GstMpegtsSection * section)
     old_program = mpegts_base_steal_program (base, program_number);
     program = mpegts_base_new_program (base, program_number, section->pid);
     program->patcount = old_program->patcount;
-    g_hash_table_insert (base->programs,
-        GINT_TO_POINTER (program_number), program);
 
     /* Desactivate the old program */
     /* FIXME : THIS IS BREAKING THE STREAM SWITCHING LOGIC !
@@ -902,6 +900,9 @@ mpegts_base_apply_pmt (MpegTSBase * base, GstMpegtsSection * section)
       g_hash_table_steal (base->programs,
           GINT_TO_POINTER ((gint) old_program->program_number));
     }
+    /* Add new program to the programs we track */
+    g_hash_table_insert (base->programs,
+        GINT_TO_POINTER (program_number), program);
     initial_program = FALSE;
   } else
     program = old_program;
