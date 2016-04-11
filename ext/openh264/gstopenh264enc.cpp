@@ -75,7 +75,8 @@ gst_openh264enc_rc_modes_get_type (void)
     static const GEnumValue rc_modes_types[] = {
       {RC_QUALITY_MODE, "Quality mode", "quality"},
       {RC_BITRATE_MODE, "Bitrate mode", "bitrate"},
-      {RC_BUFFERBASED_MODE, "No bitrate control, just using buffer status", "buffer"},
+      {RC_BUFFERBASED_MODE, "No bitrate control, just using buffer status",
+          "buffer"},
       {RC_OFF_MODE, "Rate control off mode", "off"},
       {0, NULL, NULL},
     };
@@ -106,9 +107,9 @@ gst_openh264enc_deblocking_mode_get_type (void)
   };
   static gsize id = 0;
 
-  if (g_once_init_enter (& id)) {
+  if (g_once_init_enter (&id)) {
     GType _id = g_enum_register_static ("GstOpenh264encDeblockingModes", types);
-    g_once_init_leave (& id, _id);
+    g_once_init_leave (&id, _id);
   }
 
   return (GType) id;
@@ -125,9 +126,9 @@ gst_openh264enc_slice_mode_get_type (void)
   };
   static gsize id = 0;
 
-  if (g_once_init_enter (& id)) {
+  if (g_once_init_enter (&id)) {
     GType _id = g_enum_register_static ("GstOpenh264encSliceModes", types);
-    g_once_init_leave (& id, _id);
+    g_once_init_leave (&id, _id);
   }
 
   return (GType) id;
@@ -145,9 +146,9 @@ gst_openh264enc_complexity_get_type (void)
   };
   static gsize id = 0;
 
-  if (g_once_init_enter (& id)) {
+  if (g_once_init_enter (&id)) {
     GType _id = g_enum_register_static ("GstOpenh264encComplexity", types);
-    g_once_init_leave (& id, _id);
+    g_once_init_leave (&id, _id);
   }
 
   return (GType) id;
@@ -275,8 +276,10 @@ gst_openh264enc_class_init (GstOpenh264EncClass * klass)
 
   /* Setting up pads and setting metadata should be moved to
      base_class_init if you intend to subclass this class. */
-  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass), &gst_openh264enc_src_template);
-  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass), &gst_openh264enc_sink_template);
+  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
+      &gst_openh264enc_src_template);
+  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
+      &gst_openh264enc_sink_template);
 
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "OpenH264 video encoder", "Encoder/Video", "OpenH264 video encoder",
@@ -376,8 +379,8 @@ gst_openh264enc_class_init (GstOpenh264EncClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_COMPLEXITY,
-      g_param_spec_enum ("complexity", "Complexity / quality / speed tradeoff", "Complexity",
-          GST_TYPE_OPENH264ENC_COMPLEXITY, DEFAULT_COMPLEXITY,
+      g_param_spec_enum ("complexity", "Complexity / quality / speed tradeoff",
+          "Complexity", GST_TYPE_OPENH264ENC_COMPLEXITY, DEFAULT_COMPLEXITY,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 }
 
@@ -514,7 +517,8 @@ gst_openh264enc_set_property (GObject * object, guint property_id,
       break;
 
     case PROP_COMPLEXITY:
-      openh264enc->priv->complexity = (ECOMPLEXITY_MODE) g_value_get_enum (value);
+      openh264enc->priv->complexity =
+          (ECOMPLEXITY_MODE) g_value_get_enum (value);
       break;
 
     default:
@@ -696,7 +700,7 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   }
   WelsCreateSVCEncoder (&(priv->encoder));
   unsigned int uiTraceLevel = WELS_LOG_ERROR;
-  priv->encoder->SetOption(ENCODER_OPTION_TRACE_LEVEL, &uiTraceLevel);
+  priv->encoder->SetOption (ENCODER_OPTION_TRACE_LEVEL, &uiTraceLevel);
 
   priv->encoder->GetDefaultParams (&enc_params);
 
@@ -746,7 +750,7 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
     return FALSE;
   }
 
-  priv->encoder->SetOption(ENCODER_OPTION_DATAFORMAT, &video_format);
+  priv->encoder->SetOption (ENCODER_OPTION_DATAFORMAT, &video_format);
 
   memset (&bsInfo, 0, sizeof (SFrameBSInfo));
 
