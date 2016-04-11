@@ -665,7 +665,7 @@ gst_gl_base_mixer_set_property (GObject * object,
 static gboolean
 gst_gl_base_mixer_start (GstAggregator * agg)
 {
-  return TRUE;
+  return GST_AGGREGATOR_CLASS (parent_class)->start (agg);;
 }
 
 static gboolean
