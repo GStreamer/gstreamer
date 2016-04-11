@@ -453,6 +453,23 @@ GST_START_TEST (parser_reverse_playback)
 
 GST_END_TEST;
 
+static void
+baseparse_setup (void)
+{
+  /* init/reset global state */
+  mysrcpad = mysinkpad = NULL;
+  parsetest = NULL;
+  bus = NULL;
+  loop = NULL;
+  have_eos = have_data = caps_set = FALSE;
+  buffer_count = 0;
+}
+
+static void
+baseparse_teardown (void)
+{
+}
+
 static Suite *
 gst_baseparse_suite (void)
 {
@@ -460,6 +477,7 @@ gst_baseparse_suite (void)
   TCase *tc = tcase_create ("general");
 
   suite_add_tcase (s, tc);
+  tcase_add_checked_fixture (tc, baseparse_setup, baseparse_teardown);
   tcase_add_test (tc, parser_playback);
   tcase_add_test (tc, parser_empty_stream);
   tcase_add_test (tc, parser_reverse_playback_on_passthrough);
