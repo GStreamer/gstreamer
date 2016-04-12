@@ -740,7 +740,7 @@ gst_gl_test_src_callback (gpointer stuff)
   funcs = src->src_funcs;
 
   if (!funcs || src->set_pattern != src->active_pattern) {
-    if (src->src_impl)
+    if (src->src_impl && funcs)
       funcs->free (src->src_impl);
     src->src_funcs = funcs =
         gst_gl_test_src_get_src_funcs_for_pattern (src->set_pattern);
