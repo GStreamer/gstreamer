@@ -2201,27 +2201,30 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
     return FALSE;
   }
 
-  GST_DEBUG_OBJECT (object, "check delivery systems");
-
-  dvb_prop[0].cmd = DTV_ENUM_DELSYS;
-  props.num = 1;
-  props.props = dvb_prop;
-
-  LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_GET_PROPERTY, &props));
-  if (err) {
-    GST_WARNING_OBJECT (object, "Error enumerating delsys: %s",
-        g_strerror (errno));
-
-    return FALSE;
-  }
-
-  /* If there's no delivery system set yet. Choose the
-   * last from the list of frontend supported ones */
-  if (object->delsys == SYS_UNDEFINED) {
+  /* If there's no delivery system set yet, proceed with the autodetected
+   * one, otherwise confirm the one set is supported */
+  if (object->delsys == SYS_UNDEFINED)
     object->delsys = object->best_guess_delsys;
-  } else if (!gst_dvbsrc_check_delsys (&dvb_prop[0], object->delsys)) {
-    GST_WARNING_OBJECT (object, "Delsys fail %u", object->delsys);
-    return FALSE;
+  else {
+    GST_DEBUG_OBJECT (object, "Confirming delsys '%u' is supported",
+        object->delsys);
+
+    dvb_prop[0].cmd = DTV_ENUM_DELSYS;
+    props.num = 1;
+    props.props = dvb_prop;
+
+    LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend,
+            FE_GET_PROPERTY, &props));
+    if (err) {
+      GST_WARNING_OBJECT (object, "Error enumerating delsys: %s",
+          g_strerror (errno));
+      return FALSE;
+    }
+    if (!gst_dvbsrc_check_delsys (&dvb_prop[0], object->delsys)) {
+      GST_WARNING_OBJECT (object, "Adapter does not support delsys '%u'",
+          object->delsys);
+      return FALSE;
+    }
   }
 
   gst_dvbsrc_unset_pes_filters (object);
