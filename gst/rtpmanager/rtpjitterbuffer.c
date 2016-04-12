@@ -956,8 +956,8 @@ rtp_jitter_buffer_get_ts_diff (RTPJitterBuffer * jbuf)
 
   g_return_val_if_fail (jbuf != NULL, 0);
 
-  high_buf = (RTPJitterBufferItem *) g_queue_peek_head_link (jbuf->packets);
-  low_buf = (RTPJitterBufferItem *) g_queue_peek_tail_link (jbuf->packets);
+  high_buf = (RTPJitterBufferItem *) g_queue_peek_tail_link (jbuf->packets);
+  low_buf = (RTPJitterBufferItem *) g_queue_peek_head_link (jbuf->packets);
 
   if (!high_buf || !low_buf || high_buf == low_buf)
     return 0;
