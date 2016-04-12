@@ -744,7 +744,11 @@ gst_video_frame_new_and_map (GstVideoInfo * vinfo, GstBuffer * buffer,
     GstMapFlags flags)
 {
   GstVideoFrame *frame = g_malloc0 (sizeof (GstVideoFrame));
-  gst_video_frame_map (frame, vinfo, buffer, flags);
+  if (!gst_video_frame_map (frame, vinfo, buffer, flags)) {
+    g_free (frame);
+    g_return_val_if_reached (NULL);
+    return NULL;
+  }
   return frame;
 }
 
