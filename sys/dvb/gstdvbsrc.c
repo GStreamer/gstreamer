@@ -1049,6 +1049,7 @@ gst_dvbsrc_init (GstDvbSrc * object)
   object->inversion = DEFAULT_INVERSION;
   object->stats_interval = DEFAULT_STATS_REPORTING_INTERVAL;
   object->delsys = DEFAULT_DELSYS;
+  object->best_guess_delsys = DEFAULT_DELSYS;
   object->pilot = DEFAULT_PILOT;
   object->rolloff = DEFAULT_ROLLOFF;
   object->stream_id = DEFAULT_STREAM_ID;
@@ -1573,6 +1574,11 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
     return FALSE;
   }
 
+  if (object->best_guess_delsys != DEFAULT_DELSYS)
+    goto delsys_already_autodetected;
+
+  /* Perform delivery system autodetection */
+
   GST_DEBUG_OBJECT (object, "Device opened, querying information");
 
   LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_GET_INFO, &fe_info));
@@ -1728,8 +1734,10 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
       adapter_structure);
   gst_element_post_message (GST_ELEMENT_CAST (object), gst_message_new_element
       (GST_OBJECT (object), adapter_structure));
-  g_free (frontend_dev);
   g_free (adapter_name);
+
+delsys_already_autodetected:
+  g_free (frontend_dev);
 
   return TRUE;
 }
