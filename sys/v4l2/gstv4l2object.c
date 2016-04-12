@@ -1738,14 +1738,14 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
     } else if (g_str_equal (mimetype, "video/x-bayer")) {
       const gchar *format = gst_structure_get_string (structure, "format");
       if (format) {
-	if (!g_ascii_strcasecmp (format, "bggr"))
-	  fourcc = V4L2_PIX_FMT_SBGGR8;
-	else if (!g_ascii_strcasecmp (format, "gbrg"))
-	  fourcc = V4L2_PIX_FMT_SGBRG8;
-	else if (!g_ascii_strcasecmp (format, "grbg"))
-	  fourcc = V4L2_PIX_FMT_SGRBG8;
-	else if (!g_ascii_strcasecmp (format, "rggb"))
-	  fourcc = V4L2_PIX_FMT_SRGGB8;
+        if (!g_ascii_strcasecmp (format, "bggr"))
+          fourcc = V4L2_PIX_FMT_SBGGR8;
+        else if (!g_ascii_strcasecmp (format, "gbrg"))
+          fourcc = V4L2_PIX_FMT_SGBRG8;
+        else if (!g_ascii_strcasecmp (format, "grbg"))
+          fourcc = V4L2_PIX_FMT_SGRBG8;
+        else if (!g_ascii_strcasecmp (format, "rggb"))
+          fourcc = V4L2_PIX_FMT_SRGGB8;
       }
     } else if (g_str_equal (mimetype, "video/x-sonix")) {
       fourcc = V4L2_PIX_FMT_SN9C10X;
@@ -2163,6 +2163,8 @@ gst_v4l2_object_fill_colorimetry_list (GValue * list,
 
   if (!found)
     gst_value_list_append_and_take_value (list, &colorimetry);
+  else
+    g_value_unset (&colorimetry);
 }
 
 static void
@@ -2265,6 +2267,8 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
 
   if (gst_value_list_get_size (&list) > 0)
     gst_structure_take_value (s, "colorimetry", &list);
+  else
+    g_value_unset (&list);
 
   return;
 }
