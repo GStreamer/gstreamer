@@ -2508,8 +2508,18 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
   GstCaps *srccaps = NULL;
   GstVideoInterlaceMode interlacing_mode;
   gint fps_n, fps_d;
+  GstCaps *current_caps;
 
   gst_pad_check_reconfigure (self->srcpad);
+
+  if ((current_caps = gst_pad_get_current_caps (pad))) {
+    if (gst_caps_is_equal (caps, current_caps)) {
+      GST_DEBUG_OBJECT (pad, "Got same caps again, returning");
+      gst_caps_unref (current_caps);
+      return TRUE;
+    }
+    gst_deinterlace_reset_history (self, FALSE);
+  }
 
   if (self->locking != GST_DEINTERLACE_LOCKING_NONE) {
     if (self->low_latency == -1)
