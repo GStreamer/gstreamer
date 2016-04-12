@@ -422,6 +422,9 @@ process_list_item (GstBuffer ** buffer, guint idx, gpointer user_data)
   return TRUE;
 }
 
+static gboolean resend_events (GstPad * pad, GstEvent ** event,
+    gpointer user_data);
+
 static GstFlowReturn
 gst_rtp_mux_chain_list (GstPad * pad, GstObject * parent,
     GstBufferList * bufferlist)
@@ -429,6 +432,7 @@ gst_rtp_mux_chain_list (GstPad * pad, GstObject * parent,
   GstRTPMux *rtp_mux;
   GstFlowReturn ret;
   GstRTPMuxPadPrivate *padpriv;
+  gboolean changed = FALSE;
   struct BufferListData bd;
 
   rtp_mux = GST_RTP_MUX (parent);
@@ -461,7 +465,16 @@ gst_rtp_mux_chain_list (GstPad * pad, GstObject * parent,
   bufferlist = gst_buffer_list_make_writable (bufferlist);
   gst_buffer_list_foreach (bufferlist, process_list_item, &bd);
 
+  if (!bd.drop && pad != rtp_mux->last_pad) {
+    changed = TRUE;
+    g_clear_object (&rtp_mux->last_pad);
+    rtp_mux->last_pad = g_object_ref (pad);
+  }
+
   GST_OBJECT_UNLOCK (rtp_mux);
+
+  if (changed)
+    gst_pad_sticky_events_foreach (pad, resend_events, rtp_mux);
 
   if (bd.drop) {
     gst_buffer_list_unref (bufferlist);
