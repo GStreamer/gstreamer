@@ -201,7 +201,7 @@ gst_fd_allocator_class_init (GstFdAllocatorClass * klass)
   allocator_class->free = gst_fd_mem_free;
 
   GST_DEBUG_CATEGORY_INIT (gst_fdmemory_debug, "fdmemory", 0,
-    "GstFdMemory and GstFdAllocator");
+      "GstFdMemory and GstFdAllocator");
 }
 
 static void

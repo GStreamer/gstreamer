@@ -403,7 +403,7 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
       GST_LOG_OBJECT (filter,
           "New ssrc %u (current ssrc %u), sender restarted",
           ssrc, priv->last_ssrc);
-          discont = TRUE;
+      discont = TRUE;
     } else {
       gap = gst_rtp_buffer_compare_seqnum (seqnum, priv->next_seqnum);
 
