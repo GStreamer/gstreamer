@@ -2467,6 +2467,9 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
   const gchar *system_id;
   gboolean uses_sub_sample_encryption = FALSE;
 
+  if (!qtdemux->streams)
+    return;
+
   stream = qtdemux->streams[0];
 
   structure = gst_caps_get_structure (stream->caps, 0);
