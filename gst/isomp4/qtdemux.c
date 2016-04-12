@@ -2467,7 +2467,7 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
   const gchar *system_id;
   gboolean uses_sub_sample_encryption = FALSE;
 
-  if (!qtdemux->streams)
+  if (qtdemux->n_streams == 0)
     return;
 
   stream = qtdemux->streams[0];
