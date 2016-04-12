@@ -2133,6 +2133,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     GList *to_connect = NULL;
     GList *to_expose = NULL;
     gboolean is_parser = FALSE;
+    gboolean is_decoder = FALSE;
 
     /* Set dpad target to pad again, it might've been unset
      * below but we came back here because something failed
@@ -2392,6 +2393,23 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
       if (parent_chain->adaptive_demuxer)
         chain->demuxer = TRUE;
+    }
+
+    /* If we are configured to use buffering and there is no demuxer in the
+     * chain, we still want a multiqueue, otherwise we will ignore the
+     * use-buffering property. In that case, we will insert a multiqueue after
+     * the parser or decoder - not elsewhere, otherwise we won't have
+     * timestamps.
+     */
+    is_decoder = strstr (gst_element_factory_get_metadata (factory,
+            GST_ELEMENT_METADATA_KLASS), "Decoder") != NULL;
+
+    if (!chain->parent && (is_parser || is_decoder) && dbin->use_buffering) {
+      chain->demuxer = TRUE;
+      if (is_decoder) {
+        GST_WARNING_OBJECT (dbin,
+            "Buffering messages used for decoded and non-parsed data");
+      }
     }
 
     CHAIN_MUTEX_UNLOCK (chain);
