@@ -386,8 +386,9 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
 {
   GstGLWindowCocoa *window_cocoa = (GstGLWindowCocoa *) window;
   GstGLContext *context = gst_gl_window_get_context (window);
+  GThread *thread = gst_gl_context_get_thread (context);
 
-  if (gst_gl_context_get_thread (context) == g_thread_self()) {
+  if (thread == g_thread_self()) {
     /* this case happens for nested calls happening from inside the GCD queue */
     callback (data);
     if (destroy)
@@ -402,6 +403,8 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
         destroy (data);
     });
   }
+  if (thread)
+    g_thread_unref (thread);
 }
 
 /* =============================================================*/
