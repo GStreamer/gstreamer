@@ -3038,12 +3038,10 @@ gst_base_sink_wait_event (GstBaseSink * basesink, GstEvent * event)
 
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
-  GST_BASE_SINK_PREROLL_LOCK (basesink);
   if (G_LIKELY (bclass->wait_event))
     ret = bclass->wait_event (basesink, event);
   else
     ret = GST_FLOW_NOT_SUPPORTED;
-  GST_BASE_SINK_PREROLL_UNLOCK (basesink);
 
   return ret;
 }
