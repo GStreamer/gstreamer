@@ -32,7 +32,7 @@
 
 #include <stdlib.h>
 #include <ges/ges.h>
-#include "ges/gstframepositionner.h"
+#include "ges/gstframepositioner.h"
 #include "ges-internal.h"
 
 #define GES_GNONLIN_VERSION_NEEDED_MAJOR 1
@@ -89,8 +89,7 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   ges_asset_cache_init ();
 
-  gst_element_register (NULL, "framepositionner", 0,
-      GST_TYPE_FRAME_POSITIONNER);
+  gst_element_register (NULL, "framepositioner", 0, GST_TYPE_FRAME_POSITIONNER);
   gst_element_register (NULL, "gespipeline", 0, GES_TYPE_PIPELINE);
 
   /* TODO: user-defined types? */

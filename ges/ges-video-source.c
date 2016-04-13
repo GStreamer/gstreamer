@@ -75,14 +75,14 @@
 #include "ges-track-element.h"
 #include "ges-video-source.h"
 #include "ges-layer.h"
-#include "gstframepositionner.h"
+#include "gstframepositioner.h"
 
 #define parent_class ges_video_source_parent_class
 G_DEFINE_ABSTRACT_TYPE (GESVideoSource, ges_video_source, GES_TYPE_SOURCE);
 
 struct _GESVideoSourcePrivate
 {
-  GstFramePositionner *positionner;
+  GstFramePositioner *positioner;
   GstElement *capsfilter;
 };
 
@@ -97,9 +97,8 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   res = GES_TIMELINE_ELEMENT_CLASS (parent_class)->set_priority (element,
       priority);
 
-  if (res && self->priv->positionner)
-    g_object_set (self->priv->positionner, "zorder",
-        G_MAXUINT - priority, NULL);
+  if (res && self->priv->positioner)
+    g_object_set (self->priv->positioner, "zorder", G_MAXUINT - priority, NULL);
 
   return res;
 }
@@ -121,7 +120,7 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   GstElement *queue = gst_element_factory_make ("queue", NULL);
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_GET_CLASS (trksrc);
   GESVideoSource *self;
-  GstElement *positionner, *videoscale, *videorate, *capsfilter, *videoconvert,
+  GstElement *positioner, *videoscale, *videorate, *capsfilter, *videoconvert,
       *deinterlace;
   const gchar *props[] = { "alpha", "posx", "posy", "width", "height", NULL };
 
@@ -132,10 +131,10 @@ ges_video_source_create_element (GESTrackElement * trksrc)
 
   self = (GESVideoSource *) trksrc;
 
-  /* That positionner will add metadata to buffers according to its
+  /* That positioner will add metadata to buffers according to its
      properties, acting like a proxy for our smart-mixer dynamic pads. */
-  positionner = gst_element_factory_make ("framepositionner", "frame_tagger");
-  g_object_set (positionner, "zorder",
+  positioner = gst_element_factory_make ("framepositioner", "frame_tagger");
+  g_object_set (positioner, "zorder",
       G_MAXUINT - GES_TIMELINE_ELEMENT_PRIORITY (self), NULL);
 
   videoscale =
@@ -150,10 +149,10 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   capsfilter =
       gst_element_factory_make ("capsfilter", "track-element-capsfilter");
 
-  ges_frame_positionner_set_source_and_filter (GST_FRAME_POSITIONNER
-      (positionner), trksrc, capsfilter);
+  ges_frame_positioner_set_source_and_filter (GST_FRAME_POSITIONNER
+      (positioner), trksrc, capsfilter);
 
-  ges_track_element_add_children_props (trksrc, positionner, NULL, NULL, props);
+  ges_track_element_add_children_props (trksrc, positioner, NULL, NULL, props);
 
   if (deinterlace == NULL) {
     post_missing_element_message (sub_element, "deinterlace");
@@ -163,15 +162,15 @@ ges_video_source_create_element (GESTrackElement * trksrc)
             "deinterlace"), ("deinterlacing won't work"));
     topbin =
         ges_source_create_topbin ("videosrcbin", sub_element, queue,
-        videoconvert, positionner, videoscale, videorate, capsfilter, NULL);
+        videoconvert, positioner, videoscale, videorate, capsfilter, NULL);
   } else {
     topbin =
         ges_source_create_topbin ("videosrcbin", sub_element, queue,
-        videoconvert, deinterlace, positionner, videoscale, videorate,
+        videoconvert, deinterlace, positioner, videoscale, videorate,
         capsfilter, NULL);
   }
 
-  self->priv->positionner = GST_FRAME_POSITIONNER (positionner);
+  self->priv->positioner = GST_FRAME_POSITIONNER (positioner);
   self->priv->capsfilter = capsfilter;
 
   return topbin;
@@ -198,6 +197,6 @@ ges_video_source_init (GESVideoSource * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_VIDEO_SOURCE, GESVideoSourcePrivate);
-  self->priv->positionner = NULL;
+  self->priv->positioner = NULL;
   self->priv->capsfilter = NULL;
 }

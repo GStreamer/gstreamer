@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 
-#include "gstframepositionner.h"
+#include "gstframepositioner.h"
 #include "ges-types.h"
 #include "ges-internal.h"
 #include "ges-smart-video-mixer.h"
@@ -84,20 +84,20 @@ ges_smart_mixer_get_mixer_pad (GESSmartMixer * self, GstPad ** mixerpad)
   return sinkpad;
 }
 
-/* These metadata will get set by the upstream framepositionner element,
+/* These metadata will get set by the upstream framepositioner element,
    added in the video sources' bin */
 static GstPadProbeReturn
 parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info,
     GESSmartMixer * self)
 {
-  GstFramePositionnerMeta *meta;
+  GstFramePositionerMeta *meta;
 
   meta =
-      (GstFramePositionnerMeta *) gst_buffer_get_meta ((GstBuffer *) info->data,
-      gst_frame_positionner_meta_api_get_type ());
+      (GstFramePositionerMeta *) gst_buffer_get_meta ((GstBuffer *) info->data,
+      gst_frame_positioner_meta_api_get_type ());
 
   if (!meta) {
-    GST_WARNING ("The current source should use a framepositionner");
+    GST_WARNING ("The current source should use a framepositioner");
     return GST_PAD_PROBE_OK;
   }
 

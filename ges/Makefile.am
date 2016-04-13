@@ -77,7 +77,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-validate.c \
 	ges-structured-interface.c \
 	ges-structure-parser.c \
-	gstframepositionner.c
+	gstframepositioner.c
 
 libges_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/ges/
 libges_@GST_API_VERSION@include_HEADERS = 	\
@@ -149,7 +149,7 @@ noinst_HEADERS = \
 	ges-structured-interface.h \
 	ges-structure-parser.h \
 	ges-smart-video-mixer.h \
-	gstframepositionner.h
+	gstframepositioner.h
 
 libges_@GST_API_VERSION@_la_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) \
 		$(GST_VIDEO_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \

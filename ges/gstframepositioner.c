@@ -24,23 +24,23 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#include "gstframepositionner.h"
+#include "gstframepositioner.h"
 
 /* We  need to define a max number of pixel so we can interpolate them */
 #define MAX_PIXELS 100000
 #define MIN_PIXELS -100000
 
-static void gst_frame_positionner_set_property (GObject * object,
+static void gst_frame_positioner_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
-static void gst_frame_positionner_get_property (GObject * object,
+static void gst_frame_positioner_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
-static GstFlowReturn gst_frame_positionner_transform_ip (GstBaseTransform *
+static GstFlowReturn gst_frame_positioner_transform_ip (GstBaseTransform *
     trans, GstBuffer * buf);
 
 static gboolean
-gst_frame_positionner_meta_init (GstMeta * meta, gpointer params,
+gst_frame_positioner_meta_init (GstMeta * meta, gpointer params,
     GstBuffer * buffer);
-static gboolean gst_frame_positionner_meta_transform (GstBuffer * dest,
+static gboolean gst_frame_positioner_meta_transform (GstBuffer * dest,
     GstMeta * meta, GstBuffer * buffer, GQuark type, gpointer data);
 
 enum
@@ -54,31 +54,31 @@ enum
   PROP_HEIGHT
 };
 
-static GstStaticPadTemplate gst_frame_positionner_src_template =
+static GstStaticPadTemplate gst_frame_positioner_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw")
     );
 
-static GstStaticPadTemplate gst_frame_positionner_sink_template =
+static GstStaticPadTemplate gst_frame_positioner_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw")
     );
 
-G_DEFINE_TYPE (GstFramePositionner, gst_frame_positionner,
+G_DEFINE_TYPE (GstFramePositioner, gst_frame_positioner,
     GST_TYPE_BASE_TRANSFORM);
 
 static void
-_weak_notify_cb (GstFramePositionner * pos, GObject * old)
+_weak_notify_cb (GstFramePositioner * pos, GObject * old)
 {
   pos->current_track = NULL;
 }
 
 static void
-gst_frame_positionner_update_properties (GstFramePositionner * pos,
+gst_frame_positioner_update_properties (GstFramePositioner * pos,
     gint old_track_width, gint old_track_height)
 {
   GstCaps *caps;
@@ -117,7 +117,7 @@ gst_frame_positionner_update_properties (GstFramePositionner * pos,
 }
 
 static void
-sync_properties_from_caps (GstFramePositionner * pos, GstCaps * caps)
+sync_properties_from_caps (GstFramePositioner * pos, GstCaps * caps)
 {
   gint width, height;
   gint old_track_width, old_track_height;
@@ -146,12 +146,12 @@ sync_properties_from_caps (GstFramePositionner * pos, GstCaps * caps)
   GST_DEBUG_OBJECT (pos, "syncing framerate from caps : %d/%d", pos->fps_n,
       pos->fps_d);
 
-  gst_frame_positionner_update_properties (pos, old_track_width,
+  gst_frame_positioner_update_properties (pos, old_track_width,
       old_track_height);
 }
 
 static void
-sync_properties_with_track (GstFramePositionner * pos, GESTrack * track)
+sync_properties_with_track (GstFramePositioner * pos, GESTrack * track)
 {
   GstCaps *caps;
 
@@ -161,13 +161,13 @@ sync_properties_with_track (GstFramePositionner * pos, GESTrack * track)
 
 static void
 _track_restriction_changed_cb (GESTrack * track, GParamSpec * arg G_GNUC_UNUSED,
-    GstFramePositionner * pos)
+    GstFramePositioner * pos)
 {
   sync_properties_with_track (pos, track);
 }
 
 static void
-set_track (GstFramePositionner * pos)
+set_track (GstFramePositioner * pos)
 {
   GESTrack *new_track;
 
@@ -195,13 +195,13 @@ set_track (GstFramePositionner * pos)
 
 static void
 _track_changed_cb (GESTrackElement * trksrc, GParamSpec * arg G_GNUC_UNUSED,
-    GstFramePositionner * pos)
+    GstFramePositioner * pos)
 {
   set_track (pos);
 }
 
 void
-ges_frame_positionner_set_source_and_filter (GstFramePositionner * pos,
+ges_frame_positioner_set_source_and_filter (GstFramePositioner * pos,
     GESTrackElement * trksrc, GstElement * capsfilter)
 {
   pos->track_source = trksrc;
@@ -214,9 +214,9 @@ ges_frame_positionner_set_source_and_filter (GstFramePositionner * pos,
 }
 
 static void
-gst_frame_positionner_dispose (GObject * object)
+gst_frame_positioner_dispose (GObject * object)
 {
-  GstFramePositionner *pos = GST_FRAME_POSITIONNER (object);
+  GstFramePositioner *pos = GST_FRAME_POSITIONNER (object);
 
   if (pos->track_source) {
     g_signal_handlers_disconnect_by_func (pos->track_source, _track_changed_cb,
@@ -232,29 +232,29 @@ gst_frame_positionner_dispose (GObject * object)
     pos->current_track = NULL;
   }
 
-  G_OBJECT_CLASS (gst_frame_positionner_parent_class)->dispose (object);
+  G_OBJECT_CLASS (gst_frame_positioner_parent_class)->dispose (object);
 }
 
 static void
-gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
+gst_frame_positioner_class_init (GstFramePositionerClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseTransformClass *base_transform_class =
       GST_BASE_TRANSFORM_CLASS (klass);
 
   gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
-      &gst_frame_positionner_src_template);
+      &gst_frame_positioner_src_template);
   gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
-      &gst_frame_positionner_sink_template);
+      &gst_frame_positioner_sink_template);
 
-  gobject_class->set_property = gst_frame_positionner_set_property;
-  gobject_class->get_property = gst_frame_positionner_get_property;
-  gobject_class->dispose = gst_frame_positionner_dispose;
+  gobject_class->set_property = gst_frame_positioner_set_property;
+  gobject_class->get_property = gst_frame_positioner_get_property;
+  gobject_class->dispose = gst_frame_positioner_dispose;
   base_transform_class->transform_ip =
-      GST_DEBUG_FUNCPTR (gst_frame_positionner_transform_ip);
+      GST_DEBUG_FUNCPTR (gst_frame_positioner_transform_ip);
 
   /**
-   * gstframepositionner:alpha:
+   * gstframepositioner:alpha:
    *
    * The desired alpha for the stream.
    */
@@ -263,7 +263,7 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
           0.0, 1.0, 1.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   /**
-   * gstframepositionner:posx:
+   * gstframepositioner:posx:
    *
    * The desired x position for the stream.
    */
@@ -274,7 +274,7 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
 
 
   /**
-   * gstframepositionner:posy:
+   * gstframepositioner:posy:
    *
    * The desired y position for the stream.
    */
@@ -284,7 +284,7 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   /**
-   * gstframepositionner:zorder:
+   * gstframepositioner:zorder:
    *
    * The desired z order for the stream.
    */
@@ -293,7 +293,7 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
           0, G_MAXUINT, 0, G_PARAM_READWRITE));
 
   /**
-   * gesframepositionner:width:
+   * gesframepositioner:width:
    *
    * The desired width for that source.
    * Set to 0 if size is not mandatory, will be set to width of the current track.
@@ -303,7 +303,7 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
           0, MAX_PIXELS, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   /**
-   * gesframepositionner:height:
+   * gesframepositioner:height:
    *
    * The desired height for that source.
    * Set to 0 if size is not mandatory, will be set to height of the current track.
@@ -313,70 +313,70 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
           0, MAX_PIXELS, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
-      "frame positionner", "Metadata",
+      "frame positioner", "Metadata",
       "This element provides with tagging facilities",
       "mduponchelle1@gmail.com");
 }
 
 static void
-gst_frame_positionner_init (GstFramePositionner * framepositionner)
+gst_frame_positioner_init (GstFramePositioner * framepositioner)
 {
-  framepositionner->alpha = 1.0;
-  framepositionner->posx = 0.0;
-  framepositionner->posy = 0.0;
-  framepositionner->zorder = 0;
-  framepositionner->width = 0;
-  framepositionner->height = 0;
-  framepositionner->fps_n = -1;
-  framepositionner->fps_d = -1;
-  framepositionner->track_width = 0;
-  framepositionner->track_height = 0;
-  framepositionner->capsfilter = NULL;
-  framepositionner->track_source = NULL;
-  framepositionner->current_track = NULL;
+  framepositioner->alpha = 1.0;
+  framepositioner->posx = 0.0;
+  framepositioner->posy = 0.0;
+  framepositioner->zorder = 0;
+  framepositioner->width = 0;
+  framepositioner->height = 0;
+  framepositioner->fps_n = -1;
+  framepositioner->fps_d = -1;
+  framepositioner->track_width = 0;
+  framepositioner->track_height = 0;
+  framepositioner->capsfilter = NULL;
+  framepositioner->track_source = NULL;
+  framepositioner->current_track = NULL;
 }
 
 void
-gst_frame_positionner_set_property (GObject * object, guint property_id,
+gst_frame_positioner_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstFramePositionner *framepositionner = GST_FRAME_POSITIONNER (object);
+  GstFramePositioner *framepositioner = GST_FRAME_POSITIONNER (object);
 
 
-  GST_OBJECT_LOCK (framepositionner);
+  GST_OBJECT_LOCK (framepositioner);
   switch (property_id) {
     case PROP_ALPHA:
-      framepositionner->alpha = g_value_get_double (value);
+      framepositioner->alpha = g_value_get_double (value);
       break;
     case PROP_POSX:
-      framepositionner->posx = g_value_get_int (value);
+      framepositioner->posx = g_value_get_int (value);
       break;
     case PROP_POSY:
-      framepositionner->posy = g_value_get_int (value);
+      framepositioner->posy = g_value_get_int (value);
       break;
     case PROP_ZORDER:
-      framepositionner->zorder = g_value_get_uint (value);
+      framepositioner->zorder = g_value_get_uint (value);
       break;
     case PROP_WIDTH:
-      framepositionner->width = g_value_get_int (value);
-      gst_frame_positionner_update_properties (framepositionner, 0, 0);
+      framepositioner->width = g_value_get_int (value);
+      gst_frame_positioner_update_properties (framepositioner, 0, 0);
       break;
     case PROP_HEIGHT:
-      framepositionner->height = g_value_get_int (value);
-      gst_frame_positionner_update_properties (framepositionner, 0, 0);
+      framepositioner->height = g_value_get_int (value);
+      gst_frame_positioner_update_properties (framepositioner, 0, 0);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
   }
-  GST_OBJECT_UNLOCK (framepositionner);
+  GST_OBJECT_UNLOCK (framepositioner);
 }
 
 void
-gst_frame_positionner_get_property (GObject * object, guint property_id,
+gst_frame_positioner_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstFramePositionner *pos = GST_FRAME_POSITIONNER (object);
+  GstFramePositioner *pos = GST_FRAME_POSITIONNER (object);
   gint real_width, real_height;
 
   GST_DEBUG_OBJECT (pos, "get_property");
@@ -409,42 +409,42 @@ gst_frame_positionner_get_property (GObject * object, guint property_id,
 }
 
 GType
-gst_frame_positionner_meta_api_get_type (void)
+gst_frame_positioner_meta_api_get_type (void)
 {
   static volatile GType type;
   static const gchar *tags[] = { "video", NULL };
 
   if (g_once_init_enter (&type)) {
-    GType _type = gst_meta_api_type_register ("GstFramePositionnerApi", tags);
+    GType _type = gst_meta_api_type_register ("GstFramePositionerApi", tags);
     g_once_init_leave (&type, _type);
   }
   return type;
 }
 
 static const GstMetaInfo *
-gst_frame_positionner_get_info (void)
+gst_frame_positioner_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
   if (g_once_init_enter (&meta_info)) {
     const GstMetaInfo *meta =
-        gst_meta_register (gst_frame_positionner_meta_api_get_type (),
-        "GstFramePositionnerMeta",
-        sizeof (GstFramePositionnerMeta), gst_frame_positionner_meta_init,
+        gst_meta_register (gst_frame_positioner_meta_api_get_type (),
+        "GstFramePositionerMeta",
+        sizeof (GstFramePositionerMeta), gst_frame_positioner_meta_init,
         NULL,
-        gst_frame_positionner_meta_transform);
+        gst_frame_positioner_meta_transform);
     g_once_init_leave (&meta_info, meta);
   }
   return meta_info;
 }
 
 static gboolean
-gst_frame_positionner_meta_init (GstMeta * meta, gpointer params,
+gst_frame_positioner_meta_init (GstMeta * meta, gpointer params,
     GstBuffer * buffer)
 {
-  GstFramePositionnerMeta *smeta;
+  GstFramePositionerMeta *smeta;
 
-  smeta = (GstFramePositionnerMeta *) meta;
+  smeta = (GstFramePositionerMeta *) meta;
 
   smeta->alpha = 0.0;
   smeta->posx = smeta->posy = smeta->height = smeta->width = 0;
@@ -454,18 +454,18 @@ gst_frame_positionner_meta_init (GstMeta * meta, gpointer params,
 }
 
 static gboolean
-gst_frame_positionner_meta_transform (GstBuffer * dest, GstMeta * meta,
+gst_frame_positioner_meta_transform (GstBuffer * dest, GstMeta * meta,
     GstBuffer * buffer, GQuark type, gpointer data)
 {
-  GstFramePositionnerMeta *dmeta, *smeta;
+  GstFramePositionerMeta *dmeta, *smeta;
 
-  smeta = (GstFramePositionnerMeta *) meta;
+  smeta = (GstFramePositionerMeta *) meta;
 
   if (GST_META_TRANSFORM_IS_COPY (type)) {
     /* only copy if the complete data is copied as well */
     dmeta =
-        (GstFramePositionnerMeta *) gst_buffer_add_meta (dest,
-        gst_frame_positionner_get_info (), NULL);
+        (GstFramePositionerMeta *) gst_buffer_add_meta (dest,
+        gst_frame_positioner_get_info (), NULL);
     dmeta->alpha = smeta->alpha;
     dmeta->posx = smeta->posx;
     dmeta->posy = smeta->posy;
@@ -478,10 +478,10 @@ gst_frame_positionner_meta_transform (GstBuffer * dest, GstMeta * meta,
 }
 
 static GstFlowReturn
-gst_frame_positionner_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
+gst_frame_positioner_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
-  GstFramePositionnerMeta *meta;
-  GstFramePositionner *framepositionner = GST_FRAME_POSITIONNER (trans);
+  GstFramePositionerMeta *meta;
+  GstFramePositioner *framepositioner = GST_FRAME_POSITIONNER (trans);
   GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buf);
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
@@ -489,17 +489,17 @@ gst_frame_positionner_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   }
 
   meta =
-      (GstFramePositionnerMeta *) gst_buffer_add_meta (buf,
-      gst_frame_positionner_get_info (), NULL);
+      (GstFramePositionerMeta *) gst_buffer_add_meta (buf,
+      gst_frame_positioner_get_info (), NULL);
 
-  GST_OBJECT_LOCK (framepositionner);
-  meta->alpha = framepositionner->alpha;
-  meta->posx = framepositionner->posx;
-  meta->posy = framepositionner->posy;
-  meta->width = framepositionner->width;
-  meta->height = framepositionner->height;
-  meta->zorder = framepositionner->zorder;
-  GST_OBJECT_UNLOCK (framepositionner);
+  GST_OBJECT_LOCK (framepositioner);
+  meta->alpha = framepositioner->alpha;
+  meta->posx = framepositioner->posx;
+  meta->posy = framepositioner->posy;
+  meta->width = framepositioner->width;
+  meta->height = framepositioner->height;
+  meta->zorder = framepositioner->zorder;
+  GST_OBJECT_UNLOCK (framepositioner);
 
   return GST_FLOW_OK;
 }

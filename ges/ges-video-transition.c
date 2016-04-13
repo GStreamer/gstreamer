@@ -65,7 +65,7 @@ struct _GESVideoTransitionPrivate
   gint pending_border_value;
   gboolean pending_inverted;
 
-  GstElement *positionner;
+  GstElement *positioner;
 };
 
 enum
@@ -117,9 +117,8 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   res = GES_TIMELINE_ELEMENT_CLASS (parent_class)->set_priority (element,
       priority);
 
-  if (res && self->priv->positionner)
-    g_object_set (self->priv->positionner, "zorder",
-        G_MAXUINT - priority, NULL);
+  if (res && self->priv->positioner)
+    g_object_set (self->priv->positioner, "zorder", G_MAXUINT - priority, NULL);
 
   return res;
 }
@@ -330,13 +329,13 @@ ges_video_transition_create_element (GESTrackElement * object)
 
   iconva = gst_element_factory_make ("videoconvert", "tr-csp-a");
   iconvb = gst_element_factory_make ("videoconvert", "tr-csp-b");
-  priv->positionner =
-      gst_element_factory_make ("framepositionner", "frame_tagger");
-  g_object_set (priv->positionner, "zorder",
+  priv->positioner =
+      gst_element_factory_make ("framepositioner", "frame_tagger");
+  g_object_set (priv->positioner, "zorder",
       G_MAXUINT - GES_TIMELINE_ELEMENT_PRIORITY (self), NULL);
   oconv = gst_element_factory_make ("videoconvert", "tr-csp-output");
 
-  gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, priv->positionner,
+  gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, priv->positioner,
       oconv, NULL);
 
   mixer = ges_smart_mixer_new (NULL);
@@ -354,8 +353,8 @@ ges_video_transition_create_element (GESTrackElement * object)
   g_object_set (priv->mixer_sinka, "zorder", 0, NULL);
   g_object_set (priv->mixer_sinkb, "zorder", 1, NULL);
 
-  fast_element_link (mixer, priv->positionner);
-  fast_element_link (priv->positionner, oconv);
+  fast_element_link (mixer, priv->positioner);
+  fast_element_link (priv->positioner, oconv);
 
   sinka_target = gst_element_get_static_pad (iconva, "sink");
   sinkb_target = gst_element_get_static_pad (iconvb, "sink");

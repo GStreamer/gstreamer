@@ -26,19 +26,19 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_FRAME_POSITIONNER   (gst_frame_positionner_get_type())
-#define GST_FRAME_POSITIONNER(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FRAME_POSITIONNER,GstFramePositionner))
-#define GST_FRAME_POSITIONNER_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FRAME_POSITIONNER,GstFramePositionnerClass))
+#define GST_TYPE_FRAME_POSITIONNER   (gst_frame_positioner_get_type())
+#define GST_FRAME_POSITIONNER(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FRAME_POSITIONNER,GstFramePositioner))
+#define GST_FRAME_POSITIONNER_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FRAME_POSITIONNER,GstFramePositionerClass))
 #define GST_IS_FRAME_POSITIONNER(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FRAME_POSITIONNER))
 #define GST_IS_FRAME_POSITIONNER_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FRAME_POSITIONNER))
 
-typedef struct _GstFramePositionner GstFramePositionner;
-typedef struct _GstFramePositionnerClass GstFramePositionnerClass;
-typedef struct _GstFramePositionnerMeta GstFramePositionnerMeta;
+typedef struct _GstFramePositioner GstFramePositioner;
+typedef struct _GstFramePositionerClass GstFramePositionerClass;
+typedef struct _GstFramePositionerMeta GstFramePositionerMeta;
 
-struct _GstFramePositionner
+struct _GstFramePositioner
 {
-  GstBaseTransform base_framepositionner;
+  GstBaseTransform base_framepositioner;
 
   GstElement *capsfilter;
 
@@ -59,12 +59,12 @@ struct _GstFramePositionner
   /*  This should never be made public, no padding needed */
 };
 
-struct _GstFramePositionnerClass
+struct _GstFramePositionerClass
 {
-  GstBaseTransformClass base_framepositionner_class;
+  GstBaseTransformClass base_framepositioner_class;
 };
 
-struct _GstFramePositionnerMeta {
+struct _GstFramePositionerMeta {
   GstMeta meta;
 
   gdouble alpha;
@@ -75,12 +75,12 @@ struct _GstFramePositionnerMeta {
   guint zorder;
 };
 
-G_GNUC_INTERNAL void ges_frame_positionner_set_source_and_filter (GstFramePositionner *pos,
+G_GNUC_INTERNAL void ges_frame_positioner_set_source_and_filter (GstFramePositioner *pos,
 						  GESTrackElement *trksrc,
 						  GstElement *capsfilter);
-G_GNUC_INTERNAL GType gst_frame_positionner_get_type (void);
+G_GNUC_INTERNAL GType gst_frame_positioner_get_type (void);
 G_GNUC_INTERNAL GType
-gst_frame_positionner_meta_api_get_type (void);
+gst_frame_positioner_meta_api_get_type (void);
 
 G_END_DECLS
 

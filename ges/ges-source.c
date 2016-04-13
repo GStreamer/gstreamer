@@ -28,14 +28,14 @@
 #include "ges-track-element.h"
 #include "ges-source.h"
 #include "ges-layer.h"
-#include "gstframepositionner.h"
+#include "gstframepositioner.h"
 
 G_DEFINE_TYPE (GESSource, ges_source, GES_TYPE_TRACK_ELEMENT);
 
 struct _GESSourcePrivate
 {
   /*  Dummy variable */
-  GstFramePositionner *positionner;
+  GstFramePositioner *positioner;
 };
 
 /******************************
