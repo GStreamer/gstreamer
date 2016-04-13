@@ -37,6 +37,24 @@ gst_meta_ximage_api_get_type (void)
 }
 
 static gboolean
+gst_meta_ximage_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
+{
+  GstMetaXImage *emeta = (GstMetaXImage *) meta;
+
+  emeta->parent = NULL;
+  emeta->ximage = NULL;
+#ifdef HAVE_XSHM
+  emeta->SHMInfo.shmaddr = ((void *) -1);
+  emeta->SHMInfo.shmid = -1;
+  emeta->SHMInfo.readOnly = TRUE;
+#endif
+  emeta->width = emeta->height = emeta->size = 0;
+  emeta->return_func = NULL;
+
+  return TRUE;
+}
+
+static gboolean
 gst_meta_ximage_transform (GstBuffer * dest, GstMeta * meta,
     GstBuffer * buffer, GQuark type, gpointer data)
 {
@@ -53,7 +71,7 @@ gst_meta_ximage_get_info (void)
   if (g_once_init_enter (&meta_ximage_info)) {
     const GstMetaInfo *meta =
         gst_meta_register (gst_meta_ximage_api_get_type (), "GstMetaXImageSrc",
-        sizeof (GstMetaXImage), (GstMetaInitFunction) NULL,
+        sizeof (GstMetaXImage), (GstMetaInitFunction) gst_meta_ximage_init,
         (GstMetaFreeFunction) NULL, gst_meta_ximage_transform);
     g_once_init_leave (&meta_ximage_info, meta);
   }
