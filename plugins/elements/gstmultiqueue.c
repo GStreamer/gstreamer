@@ -2159,6 +2159,8 @@ gst_multi_queue_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
           GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
           res = gst_data_queue_push (sq->queue, (GstDataQueueItem *) item);
           GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+          if (!res || sq->flushing)
+            goto out_flushing;
           /* it might be that the query has been taken out of the queue
            * while we were unlocked. So, we need to check if the last
            * handled query is the same one than the one we just
