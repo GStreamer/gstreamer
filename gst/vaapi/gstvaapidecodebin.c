@@ -106,8 +106,10 @@ static const char gst_vaapi_decode_bin_sink_caps_str[] =
 static const char gst_vaapi_decode_bin_src_caps_str[] =
   GST_VAAPI_MAKE_SURFACE_CAPS ", "
   GST_CAPS_INTERLACED_FALSE "; "
+#if (USE_GLX || USE_EGL)
   GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS ", "
   GST_CAPS_INTERLACED_FALSE "; "
+#endif
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
   GST_CAPS_INTERLACED_FALSE;
 /* *INDENT-ON* */

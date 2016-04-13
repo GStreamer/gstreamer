@@ -55,7 +55,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapipostproc);
 static const char gst_vaapipostproc_sink_caps_str[] =
   GST_VAAPI_MAKE_SURFACE_CAPS ", "
   GST_CAPS_INTERLACED_MODES "; "
+#if (USE_GLX || USE_EGL)
   GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS "; "
+#endif
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
    GST_CAPS_INTERLACED_MODES;
 /* *INDENT-ON* */
@@ -64,7 +66,9 @@ static const char gst_vaapipostproc_sink_caps_str[] =
 static const char gst_vaapipostproc_src_caps_str[] =
   GST_VAAPI_MAKE_SURFACE_CAPS ", "
   GST_CAPS_INTERLACED_FALSE "; "
+#if (USE_GLX || USE_EGL)
   GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS "; "
+#endif
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
   GST_CAPS_INTERLACED_FALSE;
 /* *INDENT-ON* */
