@@ -172,6 +172,10 @@ gst_meta_register (GType api, const gchar * impl, gsize size,
   g_return_val_if_fail (impl != NULL, NULL);
   g_return_val_if_fail (size != 0, NULL);
 
+  if (init_func == NULL)
+    g_critical ("Registering meta implementation '%s' without init function",
+        impl);
+
   /* first try to register the implementation name. It's possible
    * that this fails because it was already registered. Don't warn,
    * glib did this for us already. */
