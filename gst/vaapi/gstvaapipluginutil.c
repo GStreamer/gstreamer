@@ -103,6 +103,7 @@ gst_vaapi_create_display (GstVaapiDisplayType display_type,
   return display;
 }
 
+#if USE_GST_GL_HELPERS
 static GstVaapiDisplay *
 gst_vaapi_create_display_from_handle (GstVaapiDisplayType display_type,
     gpointer handle)
@@ -122,6 +123,7 @@ gst_vaapi_create_display_from_handle (GstVaapiDisplayType display_type,
   }
   return NULL;
 }
+#endif
 
 static GstVaapiDisplay *
 gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
