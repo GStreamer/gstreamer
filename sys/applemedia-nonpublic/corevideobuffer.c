@@ -19,6 +19,17 @@
 
 #include "corevideobuffer.h"
 
+static gboolean
+gst_core_video_meta_init (GstCoreVideoMeta * meta, gpointer params,
+    GstBuffer * buf)
+{
+  meta->ctx = NULL;
+  meta->cvbuf = NULL;
+  meta->pixbuf = NULL;
+
+  return TRUE;
+}
+
 static void
 gst_core_video_meta_free (GstCoreVideoMeta * meta, GstBuffer * buf)
 {
@@ -54,7 +65,7 @@ gst_core_video_meta_get_info (void)
   if (g_once_init_enter (&core_video_meta_info)) {
     const GstMetaInfo *meta = gst_meta_register (GST_CORE_VIDEO_META_API_TYPE,
         "GstCoreVideoMeta", sizeof (GstCoreVideoMeta),
-        (GstMetaInitFunction) NULL,
+        (GstMetaInitFunction) gst_core_video_meta_init,
         (GstMetaFreeFunction) gst_core_video_meta_free,
         (GstMetaTransformFunction) NULL);
     g_once_init_leave (&core_video_meta_info, meta);

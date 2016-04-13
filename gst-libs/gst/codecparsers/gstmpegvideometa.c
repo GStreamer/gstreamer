@@ -37,6 +37,7 @@ gst_mpeg_video_meta_init (GstMpegVideoMeta * mpeg_video_meta,
   mpeg_video_meta->pichdr = NULL;
   mpeg_video_meta->picext = NULL;
   mpeg_video_meta->quantext = NULL;
+  mpeg_video_meta->num_slices = mpeg_video_meta->slice_offset = 0;
 
   return TRUE;
 }

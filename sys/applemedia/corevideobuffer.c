@@ -33,6 +33,17 @@ gst_core_video_meta_add (GstBuffer * buffer, CVBufferRef cvbuf)
   meta->pixbuf = (CVPixelBufferRef) cvbuf;
 }
 
+static gboolean
+gst_core_video_meta_init (GstCoreVideoMeta * meta, gpointer params,
+    GstBuffer * buf)
+{
+  meta->ctx = NULL;
+  meta->cvbuf = NULL;
+  meta->pixbuf = NULL;
+
+  return TRUE;
+}
+
 static void
 gst_core_video_meta_free (GstCoreVideoMeta * meta, GstBuffer * buf)
 {

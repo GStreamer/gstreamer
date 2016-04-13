@@ -19,6 +19,19 @@
 
 #include "coremediabuffer.h"
 
+static gboolean
+gst_core_media_meta_init (GstCoreMediaMeta * meta, gpointer params,
+    GstBuffer * buf)
+{
+  meta->ctx = NULL;
+  meta->sample_buf = NULL;
+  meta->image_buf = NULL;
+  meta->pixel_buf = NULL;
+  meta->block_buf = NULL;
+
+  return TRUE;
+}
+
 static void
 gst_core_media_meta_free (GstCoreMediaMeta * meta, GstBuffer * buf)
 {
@@ -52,7 +65,7 @@ gst_core_media_meta_get_info (void)
   if (g_once_init_enter (&core_media_meta_info)) {
     const GstMetaInfo *meta = gst_meta_register (GST_CORE_MEDIA_META_API_TYPE,
         "GstCoreMediaMeta", sizeof (GstCoreMediaMeta),
-        (GstMetaInitFunction) NULL,
+        (GstMetaInitFunction) gst_core_media_meta_init,
         (GstMetaFreeFunction) gst_core_media_meta_free,
         (GstMetaTransformFunction) NULL);
     g_once_init_leave (&core_media_meta_info, meta);
