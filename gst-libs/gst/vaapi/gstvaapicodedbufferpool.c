@@ -54,6 +54,7 @@ coded_buffer_pool_init (GstVaapiCodedBufferPool * pool,
 static void
 coded_buffer_pool_finalize (GstVaapiCodedBufferPool * pool)
 {
+  gst_vaapi_video_pool_finalize (GST_VAAPI_VIDEO_POOL (pool));
   gst_vaapi_object_replace (&pool->context, NULL);
 }
 
