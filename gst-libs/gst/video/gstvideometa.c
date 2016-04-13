@@ -43,6 +43,24 @@ ensure_debug_category (void)
 #endif /* GST_DISABLE_GST_DEBUG */
 
 static gboolean
+gst_video_meta_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
+{
+  GstVideoMeta *emeta = (GstVideoMeta *) meta;
+
+  emeta->buffer = NULL;
+  emeta->flags = GST_VIDEO_FRAME_FLAG_NONE;
+  emeta->format = GST_VIDEO_FORMAT_UNKNOWN;
+  emeta->id = 0;
+  emeta->width = emeta->height = emeta->n_planes = 0;
+  memset (emeta->offset, 0, sizeof (emeta->offset));
+  memset (emeta->stride, 0, sizeof (emeta->stride));
+  emeta->map = NULL;
+  emeta->unmap = NULL;
+
+  return TRUE;
+}
+
+static gboolean
 gst_video_meta_transform (GstBuffer * dest, GstMeta * meta,
     GstBuffer * buffer, GQuark type, gpointer data)
 {
@@ -113,7 +131,7 @@ gst_video_meta_get_info (void)
   if (g_once_init_enter (&video_meta_info)) {
     const GstMetaInfo *meta =
         gst_meta_register (GST_VIDEO_META_API_TYPE, "GstVideoMeta",
-        sizeof (GstVideoMeta), (GstMetaInitFunction) NULL,
+        sizeof (GstVideoMeta), (GstMetaInitFunction) gst_video_meta_init,
         (GstMetaFreeFunction) NULL, gst_video_meta_transform);
     g_once_init_leave (&video_meta_info, meta);
   }
@@ -484,6 +502,25 @@ gst_video_gl_texture_upload_meta_api_get_type (void)
   return type;
 }
 
+static gboolean
+gst_video_gl_texture_upload_meta_init (GstMeta * meta, gpointer params,
+    GstBuffer * buffer)
+{
+  GstVideoGLTextureUploadMeta *vmeta = (GstVideoGLTextureUploadMeta *) meta;
+
+  vmeta->texture_orientation =
+      GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL;
+  vmeta->n_textures = 0;
+  memset (vmeta->texture_type, 0, sizeof (vmeta->texture_type));
+  vmeta->buffer = NULL;
+  vmeta->upload = NULL;
+  vmeta->user_data = NULL;
+  vmeta->user_data_copy = NULL;
+  vmeta->user_data_free = NULL;
+
+  return TRUE;
+}
+
 static void
 gst_video_gl_texture_upload_meta_free (GstMeta * meta, GstBuffer * buffer)
 {
@@ -542,7 +579,7 @@ gst_video_gl_texture_upload_meta_get_info (void)
         gst_meta_register (GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE,
         "GstVideoGLTextureUploadMeta",
         sizeof (GstVideoGLTextureUploadMeta),
-        NULL,
+        gst_video_gl_texture_upload_meta_init,
         gst_video_gl_texture_upload_meta_free,
         gst_video_gl_texture_upload_meta_transform);
     g_once_init_leave (&info, meta);
@@ -692,6 +729,7 @@ gst_video_region_of_interest_meta_init (GstMeta * meta, gpointer params,
     GstBuffer * buffer)
 {
   GstVideoRegionOfInterestMeta *emeta = (GstVideoRegionOfInterestMeta *) meta;
+  emeta->roi_type = 0;
   emeta->id = 0;
   emeta->parent_id = 0;
   emeta->x = emeta->y = emeta->w = emeta->h = 0;

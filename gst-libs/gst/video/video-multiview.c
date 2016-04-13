@@ -418,6 +418,16 @@ gst_video_multiview_meta_api_get_type (void)
   return type;
 }
 
+static gboolean
+gst_video_multiview_meta_init (GstVideoMultiviewMeta * mview_meta,
+    gpointer params, GstBuffer * buffer)
+{
+  mview_meta->n_views = 0;
+  mview_meta->view_info = NULL;
+
+  return TRUE;
+}
+
 static void
 gst_video_multiview_meta_free (GstVideoMultiviewMeta * mview_meta,
     GstBuffer * buffer)
@@ -436,7 +446,7 @@ gst_video_multiview_meta_get_info (void)
         gst_meta_register (GST_VIDEO_MULTIVIEW_META_API_TYPE,
         "GstVideoMultiviewMeta",
         sizeof (GstVideoMultiviewMeta),
-        (GstMetaInitFunction) NULL,
+        (GstMetaInitFunction) gst_video_multiview_meta_init,
         (GstMetaFreeFunction) gst_video_multiview_meta_free,
         NULL);
     g_once_init_leave (&video_meta_info, meta);

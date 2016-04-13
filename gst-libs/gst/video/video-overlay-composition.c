@@ -186,6 +186,19 @@ gst_video_overlay_get_seqnum (void)
   return (guint) g_atomic_int_add (&seqnum, 1);
 }
 
+static gboolean
+gst_video_overlay_composition_meta_init (GstMeta * meta, gpointer params,
+    GstBuffer * buf)
+{
+  GstVideoOverlayCompositionMeta *ometa;
+
+  ometa = (GstVideoOverlayCompositionMeta *) meta;
+
+  ometa->overlay = NULL;
+
+  return TRUE;
+}
+
 static void
 gst_video_overlay_composition_meta_free (GstMeta * meta, GstBuffer * buf)
 {
@@ -251,7 +264,8 @@ gst_video_overlay_composition_meta_get_info (void)
     const GstMetaInfo *meta =
         gst_meta_register (GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE,
         "GstVideoOverlayCompositionMeta",
-        sizeof (GstVideoOverlayCompositionMeta), (GstMetaInitFunction) NULL,
+        sizeof (GstVideoOverlayCompositionMeta),
+        (GstMetaInitFunction) gst_video_overlay_composition_meta_init,
         (GstMetaFreeFunction) gst_video_overlay_composition_meta_free,
         (GstMetaTransformFunction)
         gst_video_overlay_composition_meta_transform);
