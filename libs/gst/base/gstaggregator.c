@@ -922,9 +922,11 @@ gst_aggregator_start_srcpad_task (GstAggregator * self)
 {
   GST_INFO_OBJECT (self, "Starting srcpad task");
 
-  self->priv->running = TRUE;
-  gst_pad_start_task (GST_PAD (self->srcpad),
-      (GstTaskFunction) gst_aggregator_aggregate_func, self, NULL);
+  if (gst_pad_is_active (self->srcpad)) {
+    self->priv->running = TRUE;
+    gst_pad_start_task (GST_PAD (self->srcpad),
+        (GstTaskFunction) gst_aggregator_aggregate_func, self, NULL);
+  }
 }
 
 static GstFlowReturn
@@ -1137,6 +1139,7 @@ gst_aggregator_default_sink_event (GstAggregator * self,
     }
     case GST_EVENT_STREAM_START:
     {
+      gst_aggregator_start_srcpad_task (self);
       goto eat;
     }
     case GST_EVENT_GAP:
@@ -1363,7 +1366,6 @@ gst_aggregator_request_new_pad (GstElement * element,
   GstAggregator *self;
   GstAggregatorPad *agg_pad;
   GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (element);
-  GstAggregatorPrivate *priv = GST_AGGREGATOR (element)->priv;
 
   self = GST_AGGREGATOR (element);
 
@@ -1376,7 +1378,7 @@ gst_aggregator_request_new_pad (GstElement * element,
   GST_DEBUG_OBJECT (element, "Adding pad %s", GST_PAD_NAME (agg_pad));
   self->priv->has_peer_latency = FALSE;
 
-  if (priv->running)
+  if (gst_pad_is_active (self->srcpad))
     gst_pad_set_active (GST_PAD (agg_pad), TRUE);
 
   /* add the pad to the element */
@@ -1785,7 +1787,6 @@ gst_aggregator_src_pad_activate_mode_func (GstPad * pad,
       case GST_PAD_MODE_PUSH:
       {
         GST_INFO_OBJECT (pad, "Activating pad!");
-        gst_aggregator_start_srcpad_task (self);
         return TRUE;
       }
       default:
