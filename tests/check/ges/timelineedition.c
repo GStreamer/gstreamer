@@ -1257,7 +1257,7 @@ _set_track_element_width_height (GESTrackElement * trksrc, gint wvalue,
 }
 
 static gboolean
-check_frame_positionner_size (GESClip * clip, gint width, gint height)
+check_frame_positioner_size (GESClip * clip, gint width, gint height)
 {
   GESTrackElement *trksrc;
   GValue val_width = { 0 };
@@ -1331,7 +1331,7 @@ GST_START_TEST (test_scaling)
    */
 
   /* clip takes the size set on the track as a default */
-  fail_unless (check_frame_positionner_size (clip, 1200, 1000));
+  fail_unless (check_frame_positioner_size (clip, 1200, 1000));
 
   if (GES_IS_VIDEO_SOURCE (GES_CONTAINER_CHILDREN (clip)->data))
     _set_track_element_width_height (GES_CONTAINER_CHILDREN (clip)->data, 1024,
@@ -1349,7 +1349,7 @@ GST_START_TEST (test_scaling)
    */
 
   /* Clip has to comply to direct orders */
-  fail_unless (check_frame_positionner_size (clip, 1024, 768));
+  fail_unless (check_frame_positioner_size (clip, 1024, 768));
 
   GST_DEBUG ("Changing caps, should still be 1024 x 768");
 
@@ -1369,7 +1369,7 @@ GST_START_TEST (test_scaling)
    */
 
   /* Clip still has to be the same size */
-  fail_unless (check_frame_positionner_size (clip, 1024, 768));
+  fail_unless (check_frame_positioner_size (clip, 1024, 768));
 
   GST_DEBUG ("Setting width to 0, should be 1400 x 768");
 
@@ -1389,7 +1389,7 @@ GST_START_TEST (test_scaling)
 
   /* Clip width was set to 0 so it has to use track width */
   /* Clip height is still directly set by the user */
-  fail_unless (check_frame_positionner_size (clip, 1400, 768));
+  fail_unless (check_frame_positioner_size (clip, 1400, 768));
 
   GST_DEBUG ("Setting height to 0, should be 1400 x 1200");
 
@@ -1408,7 +1408,7 @@ GST_START_TEST (test_scaling)
 
   /* Clip width still has to use track width */
   /* Clip height was set to 0 so it has to use track height */
-  fail_unless (check_frame_positionner_size (clip, 1400, 1200));
+  fail_unless (check_frame_positioner_size (clip, 1400, 1200));
 
   GST_DEBUG ("Removing restriction on track height, should be 1400 x 240");
 
@@ -1429,7 +1429,7 @@ GST_START_TEST (test_scaling)
 
   /* Clip width still has to use track width */
   /* Clip height was set to 0 so it has to use natural clip height */
-  fail_unless (check_frame_positionner_size (clip, 1400, 0));
+  fail_unless (check_frame_positioner_size (clip, 1400, 0));
 
   GST_DEBUG ("Removing restriction on track width, should be 320 x 240");
 
@@ -1448,7 +1448,7 @@ GST_START_TEST (test_scaling)
 
   /* Clip width was set to 0 so it has to use natural clip width */
   /* Clip height was set to 0 so it has to use natural clip height */
-  fail_unless (check_frame_positionner_size (clip, 0, 0));
+  fail_unless (check_frame_positioner_size (clip, 0, 0));
 
 
   /**
@@ -1473,7 +1473,7 @@ GST_START_TEST (test_scaling)
    * size */
   caps = gst_caps_from_string ("video/x-raw,height=1080,width=1920");
   ges_track_set_restriction_caps (trackv, caps);
-  fail_unless (check_frame_positionner_size (clip, 1920, 1080));
+  fail_unless (check_frame_positioner_size (clip, 1920, 1080));
 
   gst_object_unref (timeline);
 }
