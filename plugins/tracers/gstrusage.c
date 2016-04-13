@@ -85,7 +85,8 @@ make_trace_values (GstClockTime window)
 static void
 free_trace_values (GstTraceValues * self)
 {
-  g_queue_free_full (&self->values, free_trace_value);
+  g_queue_foreach (&self->values, (GFunc) free_trace_value, NULL);
+  g_queue_clear (&self->values);
   g_slice_free (GstTraceValues, self);
 }
 
