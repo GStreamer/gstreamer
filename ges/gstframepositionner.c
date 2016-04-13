@@ -38,8 +38,10 @@ static GstFlowReturn gst_frame_positionner_transform_ip (GstBaseTransform *
     trans, GstBuffer * buf);
 
 static gboolean
-gst_frame_positionner_meta_transform (GstBuffer * dest, GstMeta * meta,
-    GstBuffer * buffer, GQuark type, gpointer data);
+gst_frame_positionner_meta_init (GstMeta * meta, gpointer params,
+    GstBuffer * buffer);
+static gboolean gst_frame_positionner_meta_transform (GstBuffer * dest,
+    GstMeta * meta, GstBuffer * buffer, GQuark type, gpointer data);
 
 enum
 {
@@ -428,12 +430,27 @@ gst_frame_positionner_get_info (void)
     const GstMetaInfo *meta =
         gst_meta_register (gst_frame_positionner_meta_api_get_type (),
         "GstFramePositionnerMeta",
-        sizeof (GstFramePositionnerMeta), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL,
-        (GstMetaTransformFunction) gst_frame_positionner_meta_transform);
+        sizeof (GstFramePositionnerMeta), gst_frame_positionner_meta_init,
+        NULL,
+        gst_frame_positionner_meta_transform);
     g_once_init_leave (&meta_info, meta);
   }
   return meta_info;
+}
+
+static gboolean
+gst_frame_positionner_meta_init (GstMeta * meta, gpointer params,
+    GstBuffer * buffer)
+{
+  GstFramePositionnerMeta *smeta;
+
+  smeta = (GstFramePositionnerMeta *) meta;
+
+  smeta->alpha = 0.0;
+  smeta->posx = smeta->posy = smeta->height = smeta->width = 0;
+  smeta->zorder = 0;
+
+  return TRUE;
 }
 
 static gboolean
