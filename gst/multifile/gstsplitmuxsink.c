@@ -54,6 +54,7 @@
 #endif
 
 #include <string.h>
+#include <glib/gstdio.h>
 #include "gstsplitmuxsink.h"
 
 GST_DEBUG_CATEGORY_STATIC (splitmux_debug);
@@ -70,6 +71,7 @@ enum
   PROP_LOCATION,
   PROP_MAX_SIZE_TIME,
   PROP_MAX_SIZE_BYTES,
+  PROP_MAX_FILES,
   PROP_MUXER_OVERHEAD,
   PROP_MUXER,
   PROP_SINK
@@ -77,6 +79,7 @@ enum
 
 #define DEFAULT_MAX_SIZE_TIME       0
 #define DEFAULT_MAX_SIZE_BYTES      0
+#define DEFAULT_MAX_FILES           0
 #define DEFAULT_MUXER_OVERHEAD      0.02
 #define DEFAULT_MUXER "mp4mux"
 #define DEFAULT_SINK "filesink"
@@ -138,6 +141,8 @@ static void set_next_filename (GstSplitMuxSink * splitmux);
 static void start_next_fragment (GstSplitMuxSink * splitmux);
 static void check_queue_length (GstSplitMuxSink * splitmux, MqStreamCtx * ctx);
 static void mq_stream_ctx_unref (MqStreamCtx * ctx);
+
+static void gst_splitmux_sink_ensure_max_files (GstSplitMuxSink * splitmux);
 
 static MqStreamBuf *
 mq_stream_buf_new (void)
@@ -202,6 +207,13 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
       g_param_spec_uint64 ("max-size-bytes", "Max. size bytes",
           "Max. amount of data per file (in bytes, 0=disable)", 0, G_MAXUINT64,
           DEFAULT_MAX_SIZE_BYTES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_MAX_FILES,
+      g_param_spec_uint ("max-files", "Max files",
+          "Maximum number of files to keep on disk. Once the maximum is reached,"
+          "old files start to be deleted to make room for new ones.",
+          0, G_MAXUINT, DEFAULT_MAX_FILES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 
   g_object_class_install_property (gobject_class, PROP_MUXER,
       g_param_spec_object ("muxer", "Muxer",
@@ -233,6 +245,7 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
   splitmux->mux_overhead = DEFAULT_MUXER_OVERHEAD;
   splitmux->threshold_time = DEFAULT_MAX_SIZE_TIME;
   splitmux->threshold_bytes = DEFAULT_MAX_SIZE_BYTES;
+  splitmux->max_files = DEFAULT_MAX_FILES;
 
   GST_OBJECT_FLAG_SET (splitmux, GST_ELEMENT_FLAG_SINK);
 }
@@ -307,6 +320,11 @@ gst_splitmux_sink_set_property (GObject * object, guint prop_id,
       splitmux->threshold_time = g_value_get_uint64 (value);
       GST_OBJECT_UNLOCK (splitmux);
       break;
+    case PROP_MAX_FILES:
+      GST_OBJECT_LOCK (splitmux);
+      splitmux->max_files = g_value_get_uint (value);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
     case PROP_MUXER_OVERHEAD:
       GST_OBJECT_LOCK (splitmux);
       splitmux->mux_overhead = g_value_get_double (value);
@@ -352,6 +370,11 @@ gst_splitmux_sink_get_property (GObject * object, guint prop_id,
     case PROP_MAX_SIZE_TIME:
       GST_OBJECT_LOCK (splitmux);
       g_value_set_uint64 (value, splitmux->threshold_time);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
+    case PROP_MAX_FILES:
+      GST_OBJECT_LOCK (splitmux);
+      g_value_set_uint (value, splitmux->max_files);
       GST_OBJECT_UNLOCK (splitmux);
       break;
     case PROP_MUXER_OVERHEAD:
@@ -1530,6 +1553,7 @@ static void
 set_next_filename (GstSplitMuxSink * splitmux)
 {
   gchar *fname = NULL;
+  gst_splitmux_sink_ensure_max_files (splitmux);
 
   g_signal_emit (splitmux, signals[SIGNAL_FORMAT_LOCATION], 0,
       splitmux->fragment_id, &fname);
@@ -1626,4 +1650,12 @@ register_splitmuxsink (GstPlugin * plugin)
 
   return gst_element_register (plugin, "splitmuxsink", GST_RANK_NONE,
       GST_TYPE_SPLITMUX_SINK);
+}
+
+static void
+gst_splitmux_sink_ensure_max_files (GstSplitMuxSink * splitmux)
+{
+  if (splitmux->max_files && splitmux->fragment_id >= splitmux->max_files) {
+    splitmux->fragment_id = 0;
+  }
 }

@@ -94,6 +94,7 @@ struct _GstSplitMuxSink {
 
   GstClockTime threshold_time;
   guint64 threshold_bytes;
+  guint max_files;
 
   guint mq_max_buffers;
 
