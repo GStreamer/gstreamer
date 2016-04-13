@@ -205,9 +205,9 @@ gst_dvb_base_bin_conf_set_modulation (GstElement * dvbbasebin,
 {
   const gchar *modulations[] = {
     "QPSK", "QAM/16", "QAM/32", "QAM/64",
-    "QAM/128", "QAM/256", "AUTO", "8VSB",
-    "16VSB", "8PSK", "16APSK", "32APSK",
-    "DQPSK", "QAM4NR", NULL
+    "QAM/128", "QAM/256", "QAM/AUTO", "VSB/8",
+    "VSB/16", "PSK/8", "APSK/16", "APSK/32",
+    "DQPSK", "QAM/4_NR", NULL
   };
   return gst_dvb_base_bin_conf_set_property_from_string_array (dvbbasebin,
       property, kf, channel_name, key, modulations, 6);
@@ -227,6 +227,7 @@ GstDvbV5ChannelsConfToPropertyMap dvbv5_prop_map[] = {
   {"INVERSION", "inversion", gst_dvb_base_bin_conf_set_inversion},
   {"GUARD_INTERVAL", "guard", gst_dvb_base_bin_conf_set_guard},
   {"TRANSMISSION_MODE", "trans-mode", gst_dvb_base_bin_conf_set_trans_mode},
+  {"MODULATION", "modulation", gst_dvb_base_bin_conf_set_modulation},
   {"ISDBT_LAYER_ENABLED", "isdbt-layer-enabled",
       gst_dvb_base_bin_conf_set_uint},
   {"ISDBT_PARTIAL_RECEPTION", "isdbt-partial-reception",
