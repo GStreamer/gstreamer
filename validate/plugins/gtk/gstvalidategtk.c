@@ -75,6 +75,7 @@ get_event_type (GstValidateScenario * scenario, GstValidateAction * action)
   return -2;
 }
 
+#if ! GTK_CHECK_VERSION(3,20,0)
 static GdkDevice *
 get_device (GstValidateAction * action, GdkInputSource input_source)
 {
@@ -97,6 +98,7 @@ get_device (GstValidateAction * action, GdkInputSource input_source)
 
   return device;
 }
+#endif
 
 static GdkEvent *
 _create_key_event (GdkWindow * window, GdkEventType etype, guint keyval,
@@ -123,6 +125,10 @@ _create_keyboard_events (GstValidateAction * action,
     GdkEventType etype)
 {
   guint *keys;
+#if GTK_CHECK_VERSION(3,20,0)
+  GdkDisplay *display;
+  GdkSeat *seat;
+#endif
   GList *events = NULL;
   GdkDevice *device = NULL;
 
@@ -136,8 +142,21 @@ _create_keyboard_events (GstValidateAction * action,
 
     return NULL;
   }
+#if GTK_CHECK_VERSION(3,20,0)
+  display = gdk_display_get_default ();
+  if (display == NULL) {
+    GST_VALIDATE_REPORT (action->scenario,
+        g_quark_from_static_string ("scenario::execution-error"),
+        "Could not find a display");
 
+    return NULL;
+  }
+
+  seat = gdk_display_get_default_seat (display);
+  device = gdk_seat_get_keyboard (seat);
+#else
   device = get_device (action, GDK_SOURCE_KEYBOARD);
+#endif
   if (device == NULL) {
     GST_VALIDATE_REPORT (action->scenario,
         g_quark_from_static_string ("scenario::execution-error"),
