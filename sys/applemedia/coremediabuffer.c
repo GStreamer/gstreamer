@@ -52,7 +52,6 @@ static gboolean
 gst_core_media_meta_init (GstCoreMediaMeta * meta, gpointer params,
     GstBuffer * buf)
 {
-  meta->ctx = NULL;
   meta->sample_buf = NULL;
   meta->image_buf = NULL;
   meta->pixel_buf = NULL;
