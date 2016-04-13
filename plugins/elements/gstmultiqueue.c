@@ -209,6 +209,7 @@ static void single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq);
 
 static void update_buffering (GstMultiQueue * mq, GstSingleQueue * sq);
 static void gst_multi_queue_post_buffering (GstMultiQueue * mq);
+static void recheck_buffering_status (GstMultiQueue * mq);
 
 static void gst_single_queue_flush_queue (GstSingleQueue * sq, gboolean full);
 
@@ -613,36 +614,14 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_BUFFERING:
       mq->use_buffering = g_value_get_boolean (value);
-      if (!mq->use_buffering && mq->buffering) {
-        GST_MULTI_QUEUE_MUTEX_LOCK (mq);
-        mq->buffering = FALSE;
-        GST_DEBUG_OBJECT (mq, "buffering 100 percent");
-        SET_PERCENT (mq, 100);
-        GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
-      }
-
-      if (mq->use_buffering) {
-        GList *tmp;
-
-        GST_MULTI_QUEUE_MUTEX_LOCK (mq);
-
-        tmp = mq->queues;
-        while (tmp) {
-          GstSingleQueue *q = (GstSingleQueue *) tmp->data;
-          update_buffering (mq, q);
-          gst_data_queue_limits_changed (q->queue);
-          tmp = g_list_next (tmp);
-        }
-
-        GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
-      }
-      gst_multi_queue_post_buffering (mq);
+      recheck_buffering_status (mq);
       break;
     case PROP_LOW_PERCENT:
       mq->low_percent = g_value_get_int (value);
       break;
     case PROP_HIGH_PERCENT:
       mq->high_percent = g_value_get_int (value);
+      recheck_buffering_status (mq);
       break;
     case PROP_SYNC_BY_RUNNING_TIME:
       mq->sync_by_running_time = g_value_get_boolean (value);
@@ -1041,6 +1020,45 @@ gst_multi_queue_post_buffering (GstMultiQueue * mq)
     gst_element_post_message (GST_ELEMENT_CAST (mq), msg);
 
   g_mutex_unlock (&mq->buffering_post_lock);
+}
+
+static void
+recheck_buffering_status (GstMultiQueue * mq)
+{
+  if (!mq->use_buffering && mq->buffering) {
+    GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+    mq->buffering = FALSE;
+    GST_DEBUG_OBJECT (mq,
+        "Buffering property disabled, but queue was still buffering; setting percentage to 100%%");
+    SET_PERCENT (mq, 100);
+    GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+  }
+
+  if (mq->use_buffering) {
+    GList *tmp;
+    gint old_perc;
+
+    GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+
+    /* force fill level percentage to be recalculated */
+    old_perc = mq->percent;
+    mq->percent = 0;
+
+    tmp = mq->queues;
+    while (tmp) {
+      GstSingleQueue *q = (GstSingleQueue *) tmp->data;
+      update_buffering (mq, q);
+      gst_data_queue_limits_changed (q->queue);
+      tmp = g_list_next (tmp);
+    }
+
+    GST_DEBUG_OBJECT (mq, "Recalculated fill level: old: %d%% new: %d%%",
+        old_perc, mq->percent);
+
+    GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+  }
+
+  gst_multi_queue_post_buffering (mq);
 }
 
 static void
