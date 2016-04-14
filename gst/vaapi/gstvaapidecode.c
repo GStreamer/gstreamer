@@ -389,8 +389,8 @@ is_display_resolution_changed (GstVaapiDecode * decode,
 {
   GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
   GstVideoCodecState *state;
-  GstVideoInfo *vinfo;
   guint display_width, display_height;
+  guint negotiated_width, negotiated_height;
 
   display_width = GST_VIDEO_INFO_WIDTH (&decode->decoded_info);
   display_height = GST_VIDEO_INFO_HEIGHT (&decode->decoded_info);
@@ -402,23 +402,17 @@ is_display_resolution_changed (GstVaapiDecode * decode,
   state = gst_video_decoder_get_output_state (vdec);
   if (G_UNLIKELY (!state))
     goto set_display_res;
-  vinfo = &state->info;
 
-  if (!crop_rect) {
-    if (G_UNLIKELY (display_width != decode->display_width
-            || display_height != decode->display_height))
-      goto set_display_res;
-  }
+  negotiated_width = GST_VIDEO_INFO_WIDTH (&state->info);
+  negotiated_height = GST_VIDEO_INFO_HEIGHT (&state->info);
+  gst_video_codec_state_unref (state);
 
-  if (GST_VIDEO_INFO_WIDTH (vinfo) == display_width
-      && GST_VIDEO_INFO_HEIGHT (vinfo) == display_height) {
-    gst_video_codec_state_unref (state);
+  if ((display_width == negotiated_width && display_height == negotiated_height)
+      && (decode->display_width == negotiated_width
+          && decode->display_height == negotiated_height))
     return FALSE;
-  }
 
 set_display_res:
-  if (state)
-    gst_video_codec_state_unref (state);
   decode->display_width = display_width;
   decode->display_height = display_height;
   return TRUE;
