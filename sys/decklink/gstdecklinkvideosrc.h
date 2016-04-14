@@ -57,6 +57,7 @@ struct _GstDecklinkVideoSrc
   gint device_number;
 
   GstVideoInfo info;
+  GstDecklinkVideoFormat video_format;
 
   GstDecklinkInput *input;
 

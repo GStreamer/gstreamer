@@ -39,7 +39,8 @@ enum
   PROP_MODE,
   PROP_CONNECTION,
   PROP_DEVICE_NUMBER,
-  PROP_BUFFER_SIZE
+  PROP_BUFFER_SIZE,
+  PROP_VIDEO_FORMAT
 };
 
 typedef struct
@@ -161,6 +162,13 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
           G_MAXINT, DEFAULT_BUFFER_SIZE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_VIDEO_FORMAT,
+      g_param_spec_enum ("video-format", "Video format",
+          "Video format type to use for input (Only use auto for mode=auto)",
+          GST_TYPE_DECKLINK_VIDEO_FORMAT, GST_DECKLINK_VIDEO_FORMAT_AUTO,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
   templ_caps = gst_decklink_mode_get_template_caps ();
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, templ_caps));
@@ -183,6 +191,7 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
   self->connection = DEFAULT_CONNECTION;
   self->device_number = 0;
   self->buffer_size = DEFAULT_BUFFER_SIZE;
+  self->video_format = GST_DECKLINK_VIDEO_FORMAT_AUTO;
 
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
@@ -202,6 +211,13 @@ gst_decklink_video_src_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_MODE:
       self->mode = (GstDecklinkModeEnum) g_value_get_enum (value);
+      /* setting the default value for caps_mode here: if mode==auto then we
+       * configure caps_mode from the caps, if mode!=auto we set caps_mode to
+       * the same value as the mode. so self->caps_mode is essentially
+       * self->mode with mode=auto filtered into whatever we got from the
+       * negotiation */
+      if (self->mode != GST_DECKLINK_MODE_AUTO)
+        self->caps_mode = self->mode;
       break;
     case PROP_CONNECTION:
       self->connection = (GstDecklinkConnectionEnum) g_value_get_enum (value);
@@ -211,6 +227,23 @@ gst_decklink_video_src_set_property (GObject * object, guint property_id,
       break;
     case PROP_BUFFER_SIZE:
       self->buffer_size = g_value_get_uint (value);
+      break;
+    case PROP_VIDEO_FORMAT:
+      self->video_format = (GstDecklinkVideoFormat) g_value_get_enum (value);
+      switch (self->video_format) {
+        case GST_DECKLINK_VIDEO_FORMAT_8BIT_YUV:
+        case GST_DECKLINK_VIDEO_FORMAT_10BIT_YUV:
+        case GST_DECKLINK_VIDEO_FORMAT_8BIT_ARGB:
+        case GST_DECKLINK_VIDEO_FORMAT_8BIT_BGRA:
+          self->caps_format =
+              gst_decklink_pixel_format_from_type (self->video_format);
+        case GST_DECKLINK_VIDEO_FORMAT_AUTO:
+          break;
+        default:
+          GST_ELEMENT_WARNING (GST_ELEMENT (self), CORE, NOT_IMPLEMENTED,
+              ("Format %d not supported", self->video_format), (NULL));
+          break;
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -237,6 +270,9 @@ gst_decklink_video_src_get_property (GObject * object, guint property_id,
     case PROP_BUFFER_SIZE:
       g_value_set_uint (value, self->buffer_size);
       break;
+    case PROP_VIDEO_FORMAT:
+      g_value_set_enum (value, self->video_format);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -262,6 +298,7 @@ gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   const GstDecklinkMode *mode;
   BMDVideoInputFlags flags;
   HRESULT ret;
+  BMDPixelFormat format;
 
   GST_DEBUG_OBJECT (self, "Setting caps %" GST_PTR_FORMAT, caps);
 
@@ -329,8 +366,8 @@ gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   mode = gst_decklink_get_mode (self->mode);
   g_assert (mode != NULL);
 
-  ret = self->input->input->EnableVideoInput (mode->mode,
-      bmdFormat8BitYUV, flags);
+  format = self->caps_format;
+  ret = self->input->input->EnableVideoInput (mode->mode, format, flags);
   if (ret != S_OK) {
     GST_WARNING_OBJECT (self, "Failed to enable video input");
     return FALSE;
@@ -351,13 +388,15 @@ gst_decklink_video_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (bsrc);
   GstCaps *mode_caps, *caps;
+  BMDPixelFormat format;
+  GstDecklinkModeEnum mode;
 
   g_mutex_lock (&self->lock);
-  if (self->caps_mode != GST_DECKLINK_MODE_AUTO)
-    mode_caps = gst_decklink_mode_get_caps (self->caps_mode, self->caps_format);
-  else
-    mode_caps = gst_decklink_mode_get_caps (self->mode, self->caps_format);
+  mode = self->caps_mode;
+  format = self->caps_format;
   g_mutex_unlock (&self->lock);
+
+  mode_caps = gst_decklink_mode_get_caps (mode, format);
 
   if (filter) {
     caps =
@@ -501,6 +540,7 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   VideoFrame *vf;
   CaptureFrame *f;
   GstCaps *caps;
+  gboolean caps_changed = FALSE;
 
   g_mutex_lock (&self->lock);
   while (g_queue_is_empty (&self->current_frames) && !self->flushing) {
@@ -518,21 +558,48 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   }
 
   g_mutex_lock (&self->lock);
-  if (self->mode == GST_DECKLINK_MODE_AUTO &&
-      (self->caps_mode != f->mode || self->caps_format != f->format)) {
-    GST_DEBUG_OBJECT (self, "Mode/Format changed from %d/%d to %d/%d",
-        self->caps_mode, self->caps_format, f->mode, f->format);
-    self->caps_mode = f->mode;
-    self->caps_format = f->format;
-    g_mutex_unlock (&self->lock);
+  if (self->caps_mode != f->mode) {
+    if (self->mode == GST_DECKLINK_MODE_AUTO) {
+      GST_DEBUG_OBJECT (self, "Mode changed from %d to %d", self->caps_mode,
+          f->mode);
+      caps_changed = TRUE;
+      self->caps_mode = f->mode;
+    } else {
+      g_mutex_unlock (&self->lock);
+      if (f)
+        capture_frame_free (f);
+      GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
+          ("Invalid mode in captured frame"),
+          ("Mode set to %d but captured %d", self->caps_mode, f->mode));
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
+  if (self->caps_format != f->format) {
+    if (self->video_format == GST_DECKLINK_VIDEO_FORMAT_AUTO) {
+      GST_DEBUG_OBJECT (self, "Format changed from %d to %d", self->caps_format,
+          f->format);
+      caps_changed = TRUE;
+      self->caps_format = f->format;
+    } else {
+      g_mutex_unlock (&self->lock);
+      if (f)
+        capture_frame_free (f);
+      GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
+          ("Invalid pixel format in captured frame"),
+          ("Format set to %d but captured %d", self->caps_format, f->format));
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
+
+  g_mutex_unlock (&self->lock);
+  if (caps_changed) {
     caps = gst_decklink_mode_get_caps (f->mode, f->format);
     gst_video_info_from_caps (&self->info, caps);
     gst_base_src_set_caps (GST_BASE_SRC_CAST (bsrc), caps);
     gst_element_post_message (GST_ELEMENT_CAST (self),
         gst_message_new_latency (GST_OBJECT_CAST (self)));
     gst_caps_unref (caps);
-  } else {
-    g_mutex_unlock (&self->lock);
+
   }
 
   f->frame->GetBytes ((gpointer *) & data);
@@ -576,10 +643,7 @@ gst_decklink_video_src_query (GstBaseSrc * bsrc, GstQuery * query)
         const GstDecklinkMode *mode;
 
         g_mutex_lock (&self->lock);
-        if (self->caps_mode != GST_DECKLINK_MODE_AUTO)
-          mode = gst_decklink_get_mode (self->caps_mode);
-        else
-          mode = gst_decklink_get_mode (self->mode);
+        mode = gst_decklink_get_mode (self->caps_mode);
         g_mutex_unlock (&self->lock);
 
         min = gst_util_uint64_scale_ceil (GST_SECOND, mode->fps_d, mode->fps_n);
@@ -753,6 +817,11 @@ gst_decklink_video_src_change_state (GstElement * element,
       if (!gst_decklink_video_src_open (self)) {
         ret = GST_STATE_CHANGE_FAILURE;
         goto out;
+      }
+      if (self->mode == GST_DECKLINK_MODE_AUTO &&
+          self->video_format != GST_DECKLINK_VIDEO_FORMAT_AUTO) {
+        GST_WARNING_OBJECT (self, "Warning: mode=auto and format!=auto may \
+                            not work");
       }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:

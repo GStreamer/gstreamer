@@ -112,6 +112,34 @@ gst_decklink_connection_get_type (void)
 }
 
 GType
+gst_decklink_video_format_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue types[] = {
+    {GST_DECKLINK_VIDEO_FORMAT_AUTO, "auto", "Auto"},
+    {GST_DECKLINK_VIDEO_FORMAT_8BIT_YUV, "8bit-yuv", "bmdFormat8BitYUV"},
+    {GST_DECKLINK_VIDEO_FORMAT_10BIT_YUV, "10bit-yuv", "bmdFormat10BitYUV"},
+    {GST_DECKLINK_VIDEO_FORMAT_8BIT_ARGB, "8bit-argb", "bmdFormat8BitARGB"},
+    {GST_DECKLINK_VIDEO_FORMAT_8BIT_BGRA, "8bit-bgra", "bmdFormat8BitBGRA"},
+    /*
+    {GST_DECKLINK_VIDEO_FORMAT_10BIT_RGB, "10bit-rgb", "bmdFormat10BitRGB"},
+    {GST_DECKLINK_VIDEO_FORMAT_12BIT_RGB, "12bit-rgb", "bmdFormat12BitRGB"},
+    {GST_DECKLINK_VIDEO_FORMAT_12BIT_RGBLE, "12bit-rgble", "bmdFormat12BitRGBLE"},
+    {GST_DECKLINK_VIDEO_FORMAT_10BIT_RGBXLE, "10bit-rgbxle", "bmdFormat10BitRGBXLE"},
+    {GST_DECKLINK_VIDEO_FORMAT_10BIT_RGBX, "10bit-rgbx", "bmdFormat10BitRGBX"},
+    */
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstDecklinkVideoFormat", types);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
+GType
 gst_decklink_audio_connection_get_type (void)
 {
   static gsize id = 0;
@@ -181,6 +209,27 @@ static const GstDecklinkMode modes[] = {
   {bmdMode4K2160p50, 3840, 2160, 50, 1, false, UHD},
   {bmdMode4K2160p5994, 3840, 2160, 60000, 1001, false, UHD},
   {bmdMode4K2160p60, 3840, 2160, 60, 1, false, UHD}
+};
+
+static const struct
+{
+  BMDPixelFormat format;
+  gint bpp;
+  GstVideoFormat vformat;
+} formats[] = {
+  /* *INDENT-OFF* */
+  {bmdFormat8BitYUV, 2, GST_VIDEO_FORMAT_UYVY},  /* auto */
+  {bmdFormat8BitYUV, 2, GST_VIDEO_FORMAT_UYVY},
+  {bmdFormat10BitYUV, 4, GST_VIDEO_FORMAT_v210},
+  {bmdFormat8BitARGB, 4, GST_VIDEO_FORMAT_ARGB},
+  {bmdFormat8BitBGRA, 4, GST_VIDEO_FORMAT_BGRA},
+/* Not yet supported
+  {bmdFormat10BitRGB, FIXME, FIXME},
+  {bmdFormat12BitRGB, FIXME, FIXME},
+  {bmdFormat12BitRGBLE, FIXME, FIXME},
+  {bmdFormat10BitRGBXLE, FIXME, FIXME},
+  {bmdFormat10BitRGBX, FIXME, FIXME} */
+  /* *INDENT-ON* */
 };
 
 const GstDecklinkMode *
@@ -293,6 +342,31 @@ gst_decklink_get_mode_enum_from_bmd (BMDDisplayMode mode)
   return displayMode;
 }
 
+const BMDPixelFormat
+gst_decklink_pixel_format_from_type (GstDecklinkVideoFormat t)
+{
+  return formats[t].format;
+}
+
+const gint
+gst_decklink_bpp_from_type (GstDecklinkVideoFormat t)
+{
+  return formats[t].bpp;
+}
+
+const GstDecklinkVideoFormat
+gst_decklink_type_from_video_format (GstVideoFormat f)
+{
+  guint i;
+
+  for (i = 1; i < G_N_ELEMENTS (formats); i++) {
+    if (formats[i].vformat == f)
+      return (GstDecklinkVideoFormat) i;
+  }
+  g_assert_not_reached ();
+  return GST_DECKLINK_VIDEO_FORMAT_AUTO;
+}
+
 static const BMDVideoConnection connections[] = {
   0,                            /* auto */
   bmdVideoConnectionSDI,
@@ -313,6 +387,21 @@ gst_decklink_get_connection (GstDecklinkConnectionEnum e)
     e = GST_DECKLINK_CONNECTION_SDI;
 
   return connections[e];
+}
+
+static gboolean
+gst_decklink_caps_get_pixel_format (GstCaps * caps, BMDPixelFormat * format)
+{
+  GstVideoInfo vinfo;
+  GstVideoFormat f;
+
+  if (gst_video_info_from_caps (&vinfo, caps) == FALSE) {
+    GST_ERROR ("Could not get video info from caps: %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+
+  f = vinfo.finfo->format;
+  return gst_decklink_type_from_video_format (f);
 }
 
 static GstStructure *
@@ -363,7 +452,39 @@ gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDPixelFormat f)
   GstCaps *caps;
 
   caps = gst_caps_new_empty ();
-  gst_caps_append_structure (caps, gst_decklink_mode_get_structure (e, f));
+  caps =
+      gst_caps_merge_structure (caps, gst_decklink_mode_get_structure (e, f));
+
+  return caps;
+}
+
+GstCaps *
+gst_decklink_mode_get_caps_all_formats (GstDecklinkModeEnum e)
+{
+  GstCaps *caps;
+  guint i;
+
+  caps = gst_caps_new_empty ();
+  for (i = 1; i < G_N_ELEMENTS (formats); i++)
+    caps =
+        gst_caps_merge_structure (caps, gst_decklink_mode_get_structure (e,
+            formats[i].format));
+
+  return caps;
+}
+
+GstCaps *
+gst_decklink_pixel_format_get_caps (BMDPixelFormat f)
+{
+  int i;
+  GstCaps *caps;
+  GstStructure *s;
+
+  caps = gst_caps_new_empty ();
+  for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
+    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i, f);
+    caps = gst_caps_merge_structure (caps, s);
+  }
 
   return caps;
 }
@@ -373,30 +494,29 @@ gst_decklink_mode_get_template_caps (void)
 {
   int i;
   GstCaps *caps;
-  GstStructure *s;
 
   caps = gst_caps_new_empty ();
-  for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
-    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i,
-        bmdFormat8BitYUV);
-    gst_caps_append_structure (caps, s);
-    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i,
-        bmdFormat8BitARGB);
-    gst_caps_append_structure (caps, s);
-  }
+  for (i = 1; i < (int) G_N_ELEMENTS (modes); i++)
+    caps =
+        gst_caps_merge (caps,
+        gst_decklink_mode_get_caps_all_formats ((GstDecklinkModeEnum) i));
 
   return caps;
 }
 
 const GstDecklinkMode *
-gst_decklink_find_mode_for_caps (GstCaps * caps)
+gst_decklink_find_mode_and_format_for_caps (GstCaps * caps,
+    BMDPixelFormat * format)
 {
   int i;
   GstCaps *mode_caps;
 
+  g_return_val_if_fail (gst_caps_is_fixed (caps), NULL);
+  if (!gst_decklink_caps_get_pixel_format (caps, format))
+    return NULL;
+
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
-    mode_caps =
-        gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, bmdFormat8BitYUV);
+    mode_caps = gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, *format);
     if (gst_caps_can_intersect (caps, mode_caps)) {
       gst_caps_unref (mode_caps);
       return gst_decklink_get_mode ((GstDecklinkModeEnum) i);
@@ -405,6 +525,14 @@ gst_decklink_find_mode_for_caps (GstCaps * caps)
   }
 
   return NULL;
+}
+
+const GstDecklinkMode *
+gst_decklink_find_mode_for_caps (GstCaps * caps)
+{
+  BMDPixelFormat format;
+
+  return gst_decklink_find_mode_and_format_for_caps (caps, &format);
 }
 
 #define GST_TYPE_DECKLINK_CLOCK \

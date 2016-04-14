@@ -118,7 +118,8 @@ enum
 {
   PROP_0,
   PROP_MODE,
-  PROP_DEVICE_NUMBER
+  PROP_DEVICE_NUMBER,
+  PROP_VIDEO_FORMAT
 };
 
 static void gst_decklink_video_sink_set_property (GObject * object,
@@ -205,6 +206,13 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  g_object_class_install_property (gobject_class, PROP_VIDEO_FORMAT,
+      g_param_spec_enum ("video-format", "Video format",
+          "Video format type to use for playback",
+          GST_TYPE_DECKLINK_VIDEO_FORMAT, GST_DECKLINK_VIDEO_FORMAT_8BIT_YUV,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
   templ_caps = gst_decklink_mode_get_template_caps ();
   templ_caps = gst_caps_make_writable (templ_caps);
   /* For output we support any framerate and only really care about timestamps */
@@ -226,6 +234,7 @@ gst_decklink_video_sink_init (GstDecklinkVideoSink * self)
 {
   self->mode = GST_DECKLINK_MODE_NTSC;
   self->device_number = 0;
+  self->video_format = GST_DECKLINK_VIDEO_FORMAT_8BIT_YUV;
 
   gst_base_sink_set_max_lateness (GST_BASE_SINK_CAST (self), 20 * GST_MSECOND);
   gst_base_sink_set_qos_enabled (GST_BASE_SINK_CAST (self), TRUE);
@@ -243,6 +252,21 @@ gst_decklink_video_sink_set_property (GObject * object, guint property_id,
       break;
     case PROP_DEVICE_NUMBER:
       self->device_number = g_value_get_int (value);
+      break;
+    case PROP_VIDEO_FORMAT:
+      self->video_format = (GstDecklinkVideoFormat) g_value_get_enum (value);
+      switch (self->video_format) {
+        case GST_DECKLINK_VIDEO_FORMAT_AUTO:
+        case GST_DECKLINK_VIDEO_FORMAT_8BIT_YUV:
+        case GST_DECKLINK_VIDEO_FORMAT_10BIT_YUV:
+        case GST_DECKLINK_VIDEO_FORMAT_8BIT_ARGB:
+        case GST_DECKLINK_VIDEO_FORMAT_8BIT_BGRA:
+          break;
+        default:
+          GST_ELEMENT_WARNING (GST_ELEMENT (self), CORE, NOT_IMPLEMENTED,
+              ("Format %d not supported", self->video_format), (NULL));
+          break;
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -262,6 +286,9 @@ gst_decklink_video_sink_get_property (GObject * object, guint property_id,
       break;
     case PROP_DEVICE_NUMBER:
       g_value_set_int (value, self->device_number);
+      break;
+    case PROP_VIDEO_FORMAT:
+      g_value_set_enum (value, self->video_format);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -293,13 +320,23 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
       GStreamerVideoOutputCallback (self));
 
   if (self->mode == GST_DECKLINK_MODE_AUTO) {
-    mode = gst_decklink_find_mode_for_caps (caps);
+    BMDPixelFormat f;
+    mode = gst_decklink_find_mode_and_format_for_caps (caps, &f);
     if (mode == NULL) {
       GST_WARNING_OBJECT (self,
           "Failed to find compatible mode for caps  %" GST_PTR_FORMAT, caps);
       return FALSE;
     }
+    if (self->video_format != GST_DECKLINK_VIDEO_FORMAT_AUTO &&
+        gst_decklink_pixel_format_from_type (self->video_format) != f) {
+      GST_WARNING_OBJECT (self, "Failed to set pixel format to %d",
+          self->video_format);
+      return FALSE;
+    }
   } else {
+    /* We don't have to give the format in EnableVideoOutput. Therefore,
+     * even if it's AUTO, we have it stored in self->info and set it in
+     * gst_decklink_video_sink_prepare */
     mode = gst_decklink_get_mode (self->mode);
     g_assert (mode != NULL);
   };
@@ -327,10 +364,19 @@ gst_decklink_video_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (bsink);
   GstCaps *mode_caps, *caps;
 
-  if (self->mode == GST_DECKLINK_MODE_AUTO)
+  if (self->mode == GST_DECKLINK_MODE_AUTO
+      && self->video_format == GST_DECKLINK_VIDEO_FORMAT_AUTO)
     mode_caps = gst_decklink_mode_get_template_caps ();
+  else if (self->video_format == GST_DECKLINK_VIDEO_FORMAT_AUTO)
+    mode_caps = gst_decklink_mode_get_caps_all_formats (self->mode);
+  else if (self->mode == GST_DECKLINK_MODE_AUTO)
+    mode_caps =
+        gst_decklink_pixel_format_get_caps (gst_decklink_pixel_format_from_type
+        (self->video_format));
   else
-    mode_caps = gst_decklink_mode_get_caps (self->mode, bmdFormat8BitYUV);
+    mode_caps =
+        gst_decklink_mode_get_caps (self->mode,
+        gst_decklink_pixel_format_from_type (self->video_format));
   mode_caps = gst_caps_make_writable (mode_caps);
   /* For output we support any framerate and only really care about timestamps */
   gst_caps_map_in_place (mode_caps, reset_framerate, NULL);
@@ -454,6 +500,9 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   GstClockTime latency, render_delay;
   GstClockTimeDiff ts_offset;
   gint i;
+  GstDecklinkVideoFormat caps_format;
+  BMDPixelFormat format;
+  gint bpp;
 
   GST_DEBUG_OBJECT (self, "Preparing buffer %p", buffer);
 
@@ -461,6 +510,10 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
     return GST_FLOW_ERROR;
   }
+
+  caps_format = gst_decklink_type_from_video_format (self->info.finfo->format);
+  format = gst_decklink_pixel_format_from_type (caps_format);
+  bpp = gst_decklink_bpp_from_type (caps_format);
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
@@ -499,8 +552,8 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
     running_time = 0;
 
   ret = self->output->output->CreateVideoFrame (self->info.width,
-      self->info.height, self->info.stride[0], bmdFormat8BitYUV,
-      bmdFrameFlagDefault, &frame);
+      self->info.height, self->info.stride[0], format, bmdFrameFlagDefault,
+      &frame);
   if (ret != S_OK) {
     GST_ELEMENT_ERROR (self, STREAM, FAILED,
         (NULL), ("Failed to create video frame: 0x%08x", ret));
@@ -516,7 +569,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   frame->GetBytes ((void **) &outdata);
   indata = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
   for (i = 0; i < self->info.height; i++) {
-    memcpy (outdata, indata, GST_VIDEO_FRAME_WIDTH (&vframe) * 2);
+    memcpy (outdata, indata, GST_VIDEO_FRAME_WIDTH (&vframe) * bpp);
     indata += GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
     outdata += frame->GetRowBytes ();
   }

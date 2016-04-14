@@ -51,6 +51,7 @@ struct _GstDecklinkVideoSink
 
   GstDecklinkModeEnum mode;
   gint device_number;
+  GstDecklinkVideoFormat video_format;
 
   GstVideoInfo info;
 

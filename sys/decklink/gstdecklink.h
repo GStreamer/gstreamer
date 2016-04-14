@@ -23,6 +23,7 @@
 #define _GST_DECKLINK_H_
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #ifdef G_OS_UNIX
 #include "linux/DeckLinkAPI.h"
 #endif
@@ -108,6 +109,25 @@ typedef enum {
 } GstDecklinkAudioConnectionEnum;
 #define GST_TYPE_DECKLINK_AUDIO_CONNECTION (gst_decklink_audio_connection_get_type ())
 GType gst_decklink_audio_connection_get_type (void);
+
+typedef enum {
+  GST_DECKLINK_VIDEO_FORMAT_AUTO,
+  GST_DECKLINK_VIDEO_FORMAT_8BIT_YUV, /* bmdFormat8BitYUV */
+  GST_DECKLINK_VIDEO_FORMAT_10BIT_YUV, /* bmdFormat10BitYUV */
+  GST_DECKLINK_VIDEO_FORMAT_8BIT_ARGB, /* bmdFormat8BitARGB */
+  GST_DECKLINK_VIDEO_FORMAT_8BIT_BGRA, /* bmdFormat8BitBGRA */
+  GST_DECKLINK_VIDEO_FORMAT_10BIT_RGB, /* bmdFormat10BitRGB */
+  GST_DECKLINK_VIDEO_FORMAT_12BIT_RGB, /* bmdFormat12BitRGB */
+  GST_DECKLINK_VIDEO_FORMAT_12BIT_RGBLE, /* bmdFormat12BitRGBLE */
+  GST_DECKLINK_VIDEO_FORMAT_10BIT_RGBXLE, /* bmdFormat10BitRGBXLE */
+  GST_DECKLINK_VIDEO_FORMAT_10BIT_RGBX, /* bmdFormat10BitRGBX */
+} GstDecklinkVideoFormat;
+#define GST_TYPE_DECKLINK_VIDEO_FORMAT (gst_decklink_video_format_get_type ())
+GType gst_decklink_video_format_get_type (void);
+
+const BMDPixelFormat gst_decklink_pixel_format_from_type (GstDecklinkVideoFormat t);
+const gint gst_decklink_bpp_from_type (GstDecklinkVideoFormat t);
+const GstDecklinkVideoFormat gst_decklink_type_from_video_format (GstVideoFormat f);
 
 typedef struct _GstDecklinkMode GstDecklinkMode;
 struct _GstDecklinkMode {
@@ -195,5 +215,8 @@ GstDecklinkInput *  gst_decklink_acquire_nth_input (gint n, GstElement * src, gb
 void                gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio);
 
 const GstDecklinkMode * gst_decklink_find_mode_for_caps (GstCaps * caps);
+const GstDecklinkMode * gst_decklink_find_mode_and_format_for_caps (GstCaps * caps, BMDPixelFormat * format);
+GstCaps * gst_decklink_mode_get_caps_all_formats (GstDecklinkModeEnum e);
+GstCaps * gst_decklink_pixel_format_get_caps (BMDPixelFormat f);
 
 #endif
