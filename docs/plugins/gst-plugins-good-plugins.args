@@ -609,6 +609,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstUDPSrc::loop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Multicast Loopback</NICK>
+<BLURB>Used for setting the multicast loop parameter. TRUE = enable, FALSE = disable.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSMPTE::border</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -995,7 +1005,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.6.3"</DEFAULT>
+<DEFAULT>"GStreamer/1.6.4"</DEFAULT>
 </ARG>
 
 <ARG>
