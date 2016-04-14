@@ -1,9 +1,31 @@
-=== release 1.6.2 ===
+=== release 1.6.4 ===
 
-2015-12-14  Sebastian Dröge <slomo@coaxion.net>
+2016-04-14  Tim-Philipp Müller <tim@centricular.com>
 
 	* configure.ac:
-	  releasing 1.6.2
+	  releasing 1.6.4
+
+2016-02-19 17:13:57 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* gi/overrides/gstmodule.c:
+	  Fix bug when checking template object type
+
+2016-02-15 23:26:06 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* gi/overrides/gstmodule.c:
+	* testsuite/common.py:
+	  gst: Fix a crash when passing wrong type as __templates__
+
+=== release 1.6.2 ===
+
+2015-12-14 19:55:23 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.6.2
 
 2015-11-08 11:56:20 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
 

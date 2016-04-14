@@ -1,36 +1,31 @@
 
-Release notes for GStreamer Python bindings 1.6.2
-
-The GStreamer team is proud to announce the second bugfix release in the stable
-1.6 release series of your favourite cross-platform multimedia framework!
+Release notes for GStreamer Python bindings 1.6.4
 
 
-
-This release only contains bugfixes and it is safe to update from 1.6.0 and 1.6.1. For a
-full list of bugfixes see Bugzilla.
-
+The GStreamer team is pleased to announce a new bug-fix release in the
+old 1.6 stable series of the core of the GStreamer streaming media framework.
 
 
-See http://gstreamer.freedesktop.org/releases/1.6/
-for the full release notes.
+This release only contains bugfixes and it should be safe to update from 1.6.x.
+ 
+
+This release maintains API/ABI backwards compatibility with the
+GStreamer 1.0, 1.2, 1.4 and 1.6 release series.
 
 
-  
 
-There were no bugs fixed in this release
-    
 
 ==== Download ====
 
 You can find source releases of gst-python in the download
-directory: http://gstreamer.freedesktop.org/src/gst-python/
+directory: https://gstreamer.freedesktop.org/src/gst-python/
 
 The git repository and details how to clone it can be found at
 http://cgit.freedesktop.org/gstreamer/gst-python/
 
 ==== Homepage ====
 
-The project's website is http://gstreamer.freedesktop.org/
+The project's website is https://gstreamer.freedesktop.org/
 
 ==== Support and Bugs ====
 
@@ -53,10 +48,7 @@ Interested developers of the core library, plugins, and applications should
 subscribe to the gstreamer-devel list.
 
         
-Applications
-  
 Contributors to this release
     
-      * Mark Nauwelaerts
-      * Sebastian Dröge
+      * Thibault Saunier
  
