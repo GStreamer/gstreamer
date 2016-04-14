@@ -275,8 +275,8 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
       break;
   }
 
-  width = GST_VIDEO_INFO_WIDTH (&decode->display_info);
-  height = GST_VIDEO_INFO_HEIGHT (&decode->display_info);
+  width = decode->display_width;
+  height = decode->display_height;
 
   if (!width || !height) {
     width = ref_state->info.width;
@@ -390,27 +390,23 @@ is_display_resolution_changed (GstVaapiDecode * decode,
   GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
   GstVideoCodecState *state;
   GstVideoInfo *vinfo;
-  GstVideoFormat format = GST_VIDEO_INFO_FORMAT (&decode->decoded_info);
-  guint display_width = GST_VIDEO_INFO_WIDTH (&decode->decoded_info);
-  guint display_height = GST_VIDEO_INFO_HEIGHT (&decode->decoded_info);
+  guint display_width, display_height;
 
+  display_width = GST_VIDEO_INFO_WIDTH (&decode->decoded_info);
+  display_height = GST_VIDEO_INFO_HEIGHT (&decode->decoded_info);
   if (crop_rect) {
     display_width = crop_rect->width;
     display_height = crop_rect->height;
   }
+
   state = gst_video_decoder_get_output_state (vdec);
   if (G_UNLIKELY (!state))
     goto set_display_res;
   vinfo = &state->info;
-  format = GST_VIDEO_INFO_FORMAT (vinfo);
-
-  if (GST_VIDEO_INFO_FORMAT (&decode->display_info) == GST_VIDEO_FORMAT_UNKNOWN)
-    decode->display_info = *vinfo;
 
   if (!crop_rect) {
-    if (G_UNLIKELY (display_width !=
-            GST_VIDEO_INFO_WIDTH (&decode->display_info)
-            || display_height != GST_VIDEO_INFO_HEIGHT (&decode->display_info)))
+    if (G_UNLIKELY (display_width != decode->display_width
+            || display_height != decode->display_height))
       goto set_display_res;
   }
 
@@ -421,10 +417,10 @@ is_display_resolution_changed (GstVaapiDecode * decode,
   }
 
 set_display_res:
-  gst_video_info_set_format (&decode->display_info, format, display_width,
-      display_height);
   if (state)
     gst_video_codec_state_unref (state);
+  decode->display_width = display_width;
+  decode->display_height = display_height;
   return TRUE;
 }
 
@@ -932,8 +928,9 @@ gst_vaapidecode_open (GstVideoDecoder * vdec)
   if (!gst_vaapi_plugin_base_open (GST_VAAPI_PLUGIN_BASE (decode)))
     return FALSE;
 
+  decode->display_width = 0;
+  decode->display_height = 0;
   gst_video_info_init (&decode->decoded_info);
-  gst_video_info_init (&decode->display_info);
 
   /* Let GstVideoContext ask for a proper display to its neighbours */
   /* Note: steal old display that may be allocated from get_caps()

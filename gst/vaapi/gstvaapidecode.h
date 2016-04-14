@@ -42,7 +42,6 @@ struct _GstVaapiDecode {
     GstCaps            *sinkpad_caps;
     GstCaps            *srcpad_caps;
     GstVideoInfo        decoded_info;
-    GstVideoInfo        display_info;
     GstVaapiDecoder    *decoder;
     GMutex              surface_ready_mutex;
     GCond               surface_ready;
@@ -50,6 +49,9 @@ struct _GstVaapiDecode {
     GstCaps            *allowed_caps;
     guint               current_frame_size;
     guint               has_texture_upload_meta : 1;
+
+    guint               display_width;
+    guint               display_height;
 
     GstVideoCodecState *input_state;
 };
