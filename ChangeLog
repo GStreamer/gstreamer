@@ -1,9 +1,109 @@
-=== release 1.6.2 ===
+=== release 1.6.4 ===
 
-2015-12-14  Sebastian Dröge <slomo@coaxion.net>
+2016-04-14  Tim-Philipp Müller <tim@centricular.com>
 
 	* configure.ac:
-	  releasing 1.6.2
+	  releasing 1.6.4
+
+2016-01-05 13:10:36 +0100  Srimanta Panda <srimanta@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: fixed assert during update transport
+	  When RTSP server trying update transport during multicast, it throws an
+	  assert. The assert is thrown because it is trying to get the parent of
+	  an non-existing funnel element.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=760150
+
+2015-12-22 12:08:02 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Do not prepare media after media times out
+	  Deferred calls to start_prepare() can be deferred past the point until
+	  which wait_preroll() and by proxy gst_rtsp_media_get_status() is
+	  prepared to wait. Previously there was no lock and no check for this
+	  situation. This meant that a media could be prepared and unprepared
+	  simultaneously by two different threads. Now a lock is in place and a
+	  suitable check is done.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=759773
+
+2015-11-17 22:30:54 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-session-pool.c:
+	  rtsp-session-pool: Avoid dollar sign ($) in session ids
+	  Live555 in VLC strips off dollar signs and then gets very confused,
+	  we don't loose too much entropy by just skipping it.
+
+2015-12-08 08:27:20 +0100  Srimanta Panda <srimanta@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: fixed valgrind error
+	  Fixed the valgrind error in unit test. The UDP source created during
+	  gst_rtsp_stream_join_bin() was not released while destroying the rtp
+	  bin.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759010
+
+2015-11-18 11:14:39 +0100  Srimanta Panda <srimanta@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: suspend media during setup request
+	  SETUP request from clients needs to suspend the media to clear the
+	  prerolled buffers. Otherwise it will not affect the prerolled buffer
+	  and the prerolled buffers will be incorrect (for example block-size
+	  from setup request will not affect the prerolled buffer unless the
+	  media is suspended).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758268
+
+2015-11-19 15:01:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Only create RTP sending/receiving rtpbin pads if needed
+	  Adding them when not needed will start some logic inside rtpbin that might be
+	  problematic. Also if e.g. for a sender media we suddenly receive RTP data, we
+	  would start up a rtpjitterbuffer and behave in weird ways.
+	  We still set up the UDP sources for RTP receiving for a sender media to be
+	  able to receive any packets sent by the client for NAT traversal. They will
+	  all go to a fakesink though.
+	  Having an rtpjitterbuffer in the media pipeline will cause the pipeline to be
+	  NO_PREROLL, which will cause deadlocks when seeking the media as it will never
+	  receive ASYNC_DONE after a seek.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758319
+
+2015-11-17 12:44:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Disable multicast loopback for the multicast udp sources too
+	  On POSIX this setting is for sender sockets, on Windows for receiver sockets.
+	  Previously we were only setting this for sender sockets, which caused looped
+	  back packets to be received on Windows if a multicast transport was used.
+
+2015-11-17 01:12:28 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* tests/check/gst/client.c:
+	  rtsp-client: Report RECORD and ANNOUNCE as supported in the OPTIONS
+
+2016-02-02 09:01:51 +0100  Steven Hoving <sh@bigbrother.nl>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: fix state_lock not locked again when preroll fails
+	  https://bugzilla.gnome.org/show_bug.cgi?id=761399
+
+2016-01-28 09:22:18 +0100  Steven Hoving <sh@bigbrother.nl>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Fix mutex beeing unlocked while they should be locked
+	  https://bugzilla.gnome.org/show_bug.cgi?id=761226
+
+=== release 1.6.2 ===
+
+2015-12-14 19:54:57 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.6.2
 
 2015-11-11 14:58:33 +0100  Marcus Prebble <prebble@axis.com>
 
