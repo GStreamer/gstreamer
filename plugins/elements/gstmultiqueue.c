@@ -618,6 +618,11 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
       break;
     case PROP_LOW_PERCENT:
       mq->low_percent = g_value_get_int (value);
+      /* Recheck buffering status - the new low-percent value might
+       * be above the current fill level. If the old low-percent one
+       * was below the current level, this means that mq->buffering is
+       * disabled and needs to be re-enabled. */
+      recheck_buffering_status (mq);
       break;
     case PROP_HIGH_PERCENT:
       mq->high_percent = g_value_get_int (value);
