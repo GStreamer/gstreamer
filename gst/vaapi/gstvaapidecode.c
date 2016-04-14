@@ -240,7 +240,7 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   GstVaapiCapsFeature feature;
   GstCapsFeatures *features = NULL;
   GstCaps *allocation_caps;
-  GstVideoInfo *vi, *decoded_info;
+  GstVideoInfo *vi;
   GstVideoFormat format = GST_VIDEO_FORMAT_NV12;
   GstClockTime latency;
   gint fps_d, fps_n;
@@ -252,13 +252,9 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
 
   ref_state = decode->input_state;
 
-  decoded_info =
-      (GST_VIDEO_INFO_FORMAT (&decode->decoded_info) !=
-      GST_VIDEO_FORMAT_UNKNOWN) ? &decode->decoded_info : &ref_state->info;
-
   feature =
       gst_vaapi_find_preferred_caps_feature (GST_VIDEO_DECODER_SRC_PAD (vdec),
-      GST_VIDEO_INFO_FORMAT (decoded_info), &format);
+      GST_VIDEO_INFO_FORMAT (&decode->decoded_info), &format);
 
   if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
     return FALSE;
@@ -305,13 +301,13 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
 
   /* Allocation query is different from pad's caps */
   allocation_caps = NULL;
-  if (GST_VIDEO_INFO_WIDTH (decoded_info) != width
-      || GST_VIDEO_INFO_HEIGHT (decoded_info) != height) {
+  if (GST_VIDEO_INFO_WIDTH (&decode->decoded_info) != width
+      || GST_VIDEO_INFO_HEIGHT (&decode->decoded_info) != height) {
     allocation_caps = gst_caps_copy (state->caps);
     format_str = gst_video_format_to_string (format);
     gst_caps_set_simple (allocation_caps,
-        "width", G_TYPE_INT, GST_VIDEO_INFO_WIDTH (decoded_info),
-        "height", G_TYPE_INT, GST_VIDEO_INFO_HEIGHT (decoded_info),
+        "width", G_TYPE_INT, GST_VIDEO_INFO_WIDTH (&decode->decoded_info),
+        "height", G_TYPE_INT, GST_VIDEO_INFO_HEIGHT (&decode->decoded_info),
         "format", G_TYPE_STRING, format_str, NULL);
     GST_INFO_OBJECT (decode, "new alloc caps = %" GST_PTR_FORMAT,
         allocation_caps);
