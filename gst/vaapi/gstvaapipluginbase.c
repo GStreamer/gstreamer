@@ -587,8 +587,6 @@ gst_vaapi_plugin_base_set_pool_config (GstBufferPool * pool,
  * @query: the allocation query to parse
  * @feature: the desired #GstVaapiCapsFeature, or zero to find the
  *   preferred one
- * @preferred_caps: the desired #GstCaps, or NULL to find the
- *   preferred one from query
  *
  * Decides allocation parameters for the downstream elements.
  *
@@ -596,13 +594,12 @@ gst_vaapi_plugin_base_set_pool_config (GstBufferPool * pool,
  */
 gboolean
 gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
-    GstQuery * query, guint feature, GstCaps * preferred_caps)
+    GstQuery * query, guint feature)
 {
   GstCaps *caps = NULL;
   GstBufferPool *pool;
   GstStructure *config;
   GstVideoInfo vi;
-  GstQuery *old_query = NULL, *new_query = NULL;
   guint size, min, max;
   gboolean update_pool = FALSE;
   gboolean has_video_meta = FALSE;
@@ -613,16 +610,6 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 #endif
 
   g_return_val_if_fail (plugin->display != NULL, FALSE);
-
-  /* Make sure new caps get advertised to all downstream elements */
-  if (preferred_caps) {
-    new_query = gst_query_new_allocation (preferred_caps, TRUE);
-    if (!gst_pad_peer_query (GST_VAAPI_PLUGIN_BASE_SRC_PAD (plugin), new_query)) {
-      GST_DEBUG ("didn't get downstream ALLOCATION hints");
-    }
-    old_query = query;
-    query = new_query;
-  }
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -671,7 +658,6 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
   gst_video_info_init (&vi);
   gst_video_info_from_caps (&vi, caps);
-
   if (GST_VIDEO_INFO_FORMAT (&vi) == GST_VIDEO_FORMAT_ENCODED)
     gst_video_info_set_format (&vi, GST_VIDEO_FORMAT_NV12,
         GST_VIDEO_INFO_WIDTH (&vi), GST_VIDEO_INFO_HEIGHT (&vi));
@@ -730,11 +716,6 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
       goto config_failed;
   }
 #endif
-
-  if (old_query)
-    query = old_query;
-  if (new_query)
-    gst_query_unref (new_query);
 
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);

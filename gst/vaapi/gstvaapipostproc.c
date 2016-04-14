@@ -1343,7 +1343,7 @@ static gboolean
 gst_vaapipostproc_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 {
   return gst_vaapi_plugin_base_decide_allocation (GST_VAAPI_PLUGIN_BASE (trans),
-      query, 0, NULL);
+      query, 0);
 }
 
 static void

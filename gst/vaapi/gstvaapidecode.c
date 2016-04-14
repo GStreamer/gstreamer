@@ -241,11 +241,13 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   GstVideoCodecState *state, *ref_state;
   GstVaapiCapsFeature feature;
   GstCapsFeatures *features = NULL;
+  GstCaps *allocation_caps;
   GstVideoInfo *vi, *decoded_info;
   GstVideoFormat format = GST_VIDEO_FORMAT_NV12;
   GstClockTime latency;
   gint fps_d, fps_n;
   guint width, height;
+  const gchar *format_str;
 
   if (!decode->input_state)
     return FALSE;
@@ -302,6 +304,22 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   state->caps = gst_video_info_to_caps (vi);
   if (features)
     gst_caps_set_features (state->caps, 0, features);
+
+  /* Allocation query is different from pad's caps */
+  allocation_caps = NULL;
+  if (GST_VIDEO_INFO_WIDTH (decoded_info) != width
+      || GST_VIDEO_INFO_HEIGHT (decoded_info) != height) {
+    allocation_caps = gst_caps_copy (state->caps);
+    format_str = gst_video_format_to_string (format);
+    gst_caps_set_simple (allocation_caps,
+        "width", G_TYPE_INT, GST_VIDEO_INFO_WIDTH (decoded_info),
+        "height", G_TYPE_INT, GST_VIDEO_INFO_HEIGHT (decoded_info),
+        "format", G_TYPE_STRING, format_str, NULL);
+    GST_INFO_OBJECT (decode, "new alloc caps = %" GST_PTR_FORMAT,
+        allocation_caps);
+  }
+  gst_caps_replace (&state->allocation_caps, allocation_caps);
+
   GST_INFO_OBJECT (decode, "new src caps = %" GST_PTR_FORMAT, state->caps);
   gst_caps_replace (&decode->srcpad_caps, state->caps);
   gst_video_codec_state_unref (state);
@@ -713,7 +731,6 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
   GstCaps *caps = NULL;
-  gboolean ret = FALSE;
 
   gst_query_parse_allocation (query, &caps, NULL);
   decode->has_texture_upload_meta = FALSE;
@@ -725,46 +742,8 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
       GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META);
 #endif
 
-  if (decode->do_pool_renego) {
-    caps = gst_caps_copy (caps);
-    /* Always use un-cropped dimension of decoded surface for pool negotiation */
-    gst_caps_set_simple (caps, "width", G_TYPE_INT,
-        GST_VIDEO_INFO_WIDTH (&decode->decoded_info), "height", G_TYPE_INT,
-        GST_VIDEO_INFO_HEIGHT (&decode->decoded_info), NULL);
-
-    ret =
-        gst_vaapi_plugin_base_decide_allocation (GST_VAAPI_PLUGIN_BASE (vdec),
-        query, 0, caps);
-
-    gst_caps_unref (caps);
-    decode->do_pool_renego = FALSE;
-  } else {
-    /* No need to renegotiate the pool, set the previously configured pool in query */
-    guint size, min, max;
-    GstStructure *config;
-    GstVaapiPluginBase *plugin = GST_VAAPI_PLUGIN_BASE (vdec);
-    GstBufferPool *pool = plugin->srcpad_buffer_pool;
-
-    if (G_UNLIKELY (!pool)) {
-      GST_ERROR ("Failed to find configured VaapiVideoBufferPool! ");
-      return ret;
-    }
-
-    config = gst_buffer_pool_get_config (pool);
-    if (!config
-        || !gst_buffer_pool_config_get_params (config, NULL, &size, &min, &max))
-      return ret;
-    gst_structure_free (config);
-
-    if (gst_query_get_n_allocation_pools (query) > 0)
-      gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
-    else
-      gst_query_add_allocation_pool (query, pool, size, min, max);
-
-    ret = TRUE;
-  }
-
-  return ret;
+  return gst_vaapi_plugin_base_decide_allocation (GST_VAAPI_PLUGIN_BASE (vdec),
+      query, 0);
 }
 
 static inline gboolean
