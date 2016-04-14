@@ -1,9 +1,178 @@
-=== release 1.6.3 ===
+=== release 1.6.4 ===
 
-2016-01-20  Sebastian Dröge <slomo@coaxion.net>
+2016-04-14  Tim-Philipp Müller <tim@centricular.com>
 
 	* configure.ac:
-	  releasing 1.6.3
+	  releasing 1.6.4
+
+2016-04-11 11:28:09 +0200  Fabrice Bellet <fabrice@bellet.info>
+
+	* gst-libs/gst/audio/gstaudiosink.c:
+	* gst-libs/gst/audio/gstaudiosrc.c:
+	  audio: Fix a race with the audioringbuffer thread
+	  There is a small window of time where the audio ringbuffer thread
+	  can access the parent thread variable, before it's initialized
+	  by the parent thread. The patch replaces this variable use by
+	  g_thread_self().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764865
+
+2016-04-02 10:09:07 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/gst/pbutils/gstdiscoverer-types.c:
+	  discoverer: copy over result and seekable fields when copying a discoverer info
+	  The function gst_discoverer_info_copy doesn't copy the data members seekable
+	  and result of the source GstDiscovererInfo.
+	  In the case of copying a GstDiscovererInfo for later use, the seekbale will be
+	  undefined, which in practice usually will be false, even though the seekable of
+	  the original GstDiscovererInfo is true.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762710
+
+2016-03-24 14:59:48 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin2: Hold new buffering_post lock while posting msgs
+	  There's a small window between decodebin choosing a buffering level
+	  to post and another thread choosing a different buffering level
+	  where things can race. Close that window by holding a new lock
+	  that's only for posting buffering messages - like what was done
+	  in multiqueue.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764020
+
+2016-01-28 16:26:47 +0100  Tom Deseyn <tom.deseyn@gmail.com>
+
+	* gst/tcp/gstmultisocketsink.c:
+	  multisocketsink: handle client close correctly and EWOULDBLOCK
+	  Fixes 100% cpu usage when client disconnects. Commit 6db2ee56
+	  would just make multisocketsink ignore reads of 0 bytes without
+	  removing the client, so we'd get woken up over and over again
+	  for the client.
+	  Fix the original issue differently by handling the non-fatal error code.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=761257
+	  https://bugzilla.gnome.org/show_bug.cgi?id=743834
+
+2016-03-02 18:47:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/encoding/gstencodebin.c:
+	  encodebin: Make dispose() function safe to be called multiple times
+
+2016-01-22 18:26:01 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: strengthen check for valid H.263 picture layer
+	  Avoids some false positives leading to miss identification:
+	  * Prevent picture start code emulation for the first 2 bytes read
+	  * Add check for valid "picture coding type" and "PB-frames mode" combination
+	  Additionally, change name on confusingly named TR var to what
+	  it is, the layer's PTYPE.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=693263
+
+2016-02-23 09:36:50 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/playback/gstplaysink.c:
+	  Revert "playsink: Properly mark pending blocked pads"
+	  This reverts commit 3bc67006d4075f5bcbaa7de68230c8b0f551d44a.
+	  The issue that the patch fixes is only noticeable when using decodebin3,
+	  which isn't yet in master.
+
+2016-02-11 19:47:04 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/audioresample/resample.c:
+	  resample: avoid overflows
+	  Avoid overflow in rate calculation. This can cause the resampler to
+	  start on the wrong phase after a rate change.
+	  Avoid overflow in cubic fraction calculation. This can cause noise when
+	  dealing with higher samplerates.
+
+2016-02-11 18:01:40 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/audioresample/resample_sse.h:
+	  resample: fix double interpolation sse code
+	  We were only reading 2 filter taps and we need to read 4 to do cubic
+	  interpolation.
+
+=== release 1.6.3 ===
+
+2016-01-20 14:48:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/gst-plugins-base-plugins.interfaces:
+	* docs/plugins/gst-plugins-base-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.6.3
+
+2016-01-20 14:13:20 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2016-01-20 10:19:34 +0100  Wim Taymans <wtaymans@redhat.com>
 
