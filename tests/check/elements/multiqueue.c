@@ -1069,6 +1069,96 @@ GST_START_TEST (test_high_threshold_change)
 
 GST_END_TEST;
 
+GST_START_TEST (test_low_threshold_change)
+{
+  /* This tests what happens if the queue isn't currently buffering and the
+   * low-threshold is raised above the current fill level. */
+  GstElement *pipe;
+  GstElement *mq, *fakesink;
+  GstPad *inputpad;
+  GstPad *mq_sinkpad;
+  GstPad *sinkpad;
+  GstSegment segment;
+  GThread *thread;
+
+
+  /* Setup test pipeline with one multiqueue and one fakesink */
+
+  pipe = gst_pipeline_new ("testbin");
+  mq = gst_element_factory_make ("multiqueue", NULL);
+  fail_unless (mq != NULL);
+  gst_bin_add (GST_BIN (pipe), mq);
+
+  fakesink = gst_element_factory_make ("fakesink", NULL);
+  fail_unless (fakesink != NULL);
+  gst_bin_add (GST_BIN (pipe), fakesink);
+
+  /* Block fakesink sinkpad flow to ensure the queue isn't emptied
+   * by the prerolling sink */
+  sinkpad = gst_element_get_static_pad (fakesink, "sink");
+  gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_BLOCK, block_probe, NULL,
+      NULL);
+  gst_object_unref (sinkpad);
+
+  /* Enable buffering and set the low/high thresholds to 1%/5%. This ensures
+   * that after pushing one data block, the high threshold is reached, and
+   * buffering ceases. */
+  g_object_set (mq,
+      "use-buffering", (gboolean) TRUE,
+      "max-size-bytes", (guint) 1000 * 1000,
+      "max-size-buffers", (guint) 0,
+      "max-size-time", (guint64) 0,
+      "extra-size-bytes", (guint) 0,
+      "extra-size-buffers", (guint) 0,
+      "extra-size-time", (guint64) 0,
+      "low-percent", (gint) 1, "high-percent", (gint) 5, NULL);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  inputpad = gst_pad_new ("dummysrc", GST_PAD_SRC);
+  gst_pad_set_query_function (inputpad, mq_dummypad_query);
+
+  mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
+  fail_unless (mq_sinkpad != NULL);
+  fail_unless (gst_pad_link (inputpad, mq_sinkpad) == GST_PAD_LINK_OK);
+
+  gst_pad_set_active (inputpad, TRUE);
+
+  gst_pad_push_event (inputpad, gst_event_new_stream_start ("test"));
+  gst_pad_push_event (inputpad, gst_event_new_segment (&segment));
+
+  gst_object_unref (mq_sinkpad);
+
+  fail_unless (gst_element_link (mq, fakesink));
+
+  /* Start pipeline in paused state to ensure the sink remains
+   * in preroll mode and blocks */
+  gst_element_set_state (pipe, GST_STATE_PAUSED);
+
+  /* Feed data. queue will be filled to 8% (because it pushes 80000 bytes),
+   * which is above the high-threshold, ensuring that the queue disables
+   * its buffering mode internally. */
+  thread = g_thread_new ("push1", pad_push_datablock_thread, inputpad);
+  g_thread_join (thread);
+
+  /* Check for the buffering message; it should indicate 100% relative fill
+   * level (Note that the percentage from the message is normalized) */
+  CHECK_FOR_BUFFERING_MSG (pipe, 100);
+
+  /* Set low threshold to a 10%, which is above the current fill level of 8%.
+   * As a result, the queue must re-enable its buffering mode, and post the
+   * current relative fill level of 40% (since high-percent is also set to 20%
+   * and 8%/20% = 40%). */
+  g_object_set (mq, "high-percent", (gint) 20, "low-percent", (gint) 10, NULL);
+  CHECK_FOR_BUFFERING_MSG (pipe, 40);
+
+  gst_element_set_state (pipe, GST_STATE_NULL);
+  gst_object_unref (inputpad);
+  gst_object_unref (pipe);
+}
+
+GST_END_TEST;
+
 static gpointer
 pad_push_thread (gpointer data)
 {
@@ -1419,6 +1509,7 @@ multiqueue_suite (void)
   tcase_add_test (tc_chain, test_sparse_stream);
   tcase_add_test (tc_chain, test_initial_fill_above_high_threshold);
   tcase_add_test (tc_chain, test_high_threshold_change);
+  tcase_add_test (tc_chain, test_low_threshold_change);
   tcase_add_test (tc_chain, test_limit_changes);
 
   tcase_add_test (tc_chain, test_buffering_with_none_pts);
