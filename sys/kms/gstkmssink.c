@@ -125,7 +125,8 @@ find_plane_for_crtc (int fd, drmModeRes * res, drmModePlaneRes * pres,
 }
 
 static drmModeCrtc *
-find_crtc_for_connector (int fd, drmModeRes * res, drmModeConnector * conn)
+find_crtc_for_connector (int fd, drmModeRes * res, drmModeConnector * conn,
+    guint * pipe)
 {
   int i;
   int crtc_id;
@@ -151,8 +152,11 @@ find_crtc_for_connector (int fd, drmModeRes * res, drmModeConnector * conn)
   for (i = 0; i < res->count_crtcs; i++) {
     crtc = drmModeGetCrtc (fd, res->crtcs[i]);
     if (crtc) {
-      if (crtc_id == crtc->crtc_id)
+      if (crtc_id == crtc->crtc_id) {
+        if (pipe)
+          *pipe = i;
         return crtc;
+      }
       drmModeFreeCrtc (crtc);
     }
   }
@@ -167,7 +171,7 @@ connector_is_used (int fd, drmModeRes * res, drmModeConnector * conn)
   drmModeCrtc *crtc;
 
   result = FALSE;
-  crtc = find_crtc_for_connector (fd, res, conn);
+  crtc = find_crtc_for_connector (fd, res, conn, NULL);
   if (crtc) {
     result = crtc->buffer_id != 0;
     drmModeFreeCrtc (crtc);
@@ -376,7 +380,7 @@ gst_kms_sink_start (GstBaseSink * bsink)
   if (!conn)
     goto connector_failed;
 
-  crtc = find_crtc_for_connector (self->fd, res, conn);
+  crtc = find_crtc_for_connector (self->fd, res, conn, &self->pipe);
   if (!crtc)
     goto crtc_failed;
 
@@ -793,6 +797,11 @@ gst_kms_sink_sync (GstKMSSink * self)
           .signal = (gulong) & waiting,
         },
   };
+
+  if (self->pipe == 1)
+    vbl.request.type |= DRM_VBLANK_SECONDARY;
+  else if (self->pipe > 1)
+    vbl.request.type |= self->pipe << DRM_VBLANK_HIGH_CRTC_SHIFT;
 
   waiting = TRUE;
   if (!self->has_async_page_flip) {
