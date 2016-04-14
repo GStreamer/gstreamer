@@ -44,7 +44,7 @@
 #include <gst/gl/wayland/gstgldisplay_wayland.h>
 #endif
 
-#if GST_GL_HAVE_WINDOW_ANDROID && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_ANDROID)
+#if GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_EGLFS)
 #include <gst/gl/egl/gstgldisplay_egl.h>
 #include <gst/gl/egl/gstglcontext_egl.h>
 #endif
@@ -162,10 +162,14 @@ QtGLVideoItem::QtGLVideoItem()
         gst_gl_display_wayland_new_with_display (wayland_display);
   }
 #endif
-#if GST_GL_HAVE_WINDOW_ANDROID && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_ANDROID)
+#if GST_GL_HAVE_PLATFORM_EGL && GST_GL_HAVE_WINDOW_ANDROID
   if (QString::fromUtf8 ("android") == app->platformName())
     this->priv->display = (GstGLDisplay *) gst_gl_display_egl_new ();
+#elif GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_EGLFS)
+  if (QString::fromUtf8("eglfs") == app->platformName())
+    this->priv->display = (GstGLDisplay *) gst_gl_display_egl_new ();
 #endif
+
 #if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_COCOA && defined (HAVE_QT_MAC)
   if (QString::fromUtf8 ("cocoa") == app->platformName())
     this->priv->display = (GstGLDisplay *) gst_gl_display_cocoa_new ();
@@ -348,7 +352,8 @@ QtGLVideoItem::onSceneGraphInitialized ()
           platform, gl_api);
   }
 #endif
-#if GST_GL_HAVE_WINDOW_ANDROID && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_ANDROID)
+
+#if GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_EGLFS)
   if (GST_IS_GL_DISPLAY_EGL (this->priv->display)) {
     platform = GST_GL_PLATFORM_EGL;
     gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);
@@ -359,6 +364,7 @@ QtGLVideoItem::onSceneGraphInitialized ()
           platform, gl_api);
   }
 #endif
+
 #if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_COCOA && defined (HAVE_QT_MAC)
   if (this->priv->display) {
     platform = GST_GL_PLATFORM_CGL;
