@@ -1,9 +1,159 @@
-=== release 1.6.3 ===
+=== release 1.6.4 ===
 
-2016-01-20  Sebastian Dröge <slomo@coaxion.net>
+2016-04-14  Tim-Philipp Müller <tim@centricular.com>
 
 	* configure.ac:
-	  releasing 1.6.3
+	  releasing 1.6.4
+
+2016-03-19 12:55:09 +0100  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* gst/gstutils.c:
+	  utils: add 'transfer full' annotation to gst_pad_peer_query_caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763912
+
+2016-03-19 12:39:18 +0100  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* gst/gstpad.c:
+	  pad: add 'transfer full' and 'nullable' annotations to gst_pad_get_current_caps
+	  and also change the description accordingly since function returns an
+	  incremented caps object or NULL if there is no caps set.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763912
+
+2016-03-18 16:02:43 -0400  Ben Iofel <iofelben@gmail.com>
+
+	* gst/gstutils.c:
+	  utils: fix gir annotation for gst_element_query_convert()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763895
+
+2016-03-18 03:08:39 +1100  Jan Schmidt <jan@centricular.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Fix not-linked pad handling at EOS
+	  Ensure that not-linked pads will drain out at EOS by
+	  correctly detecting the EOS condition based on the EOS
+	  pad flag (which indicates we actually pushed an EOS),
+	  and make sure that not-linked pads are woken when doing
+	  EOS processing on linked pads.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763770
+
+2016-01-20 09:57:00 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: two small fixes for when an existing pad is requested
+	  Unlock when returning NULL from gst_single_queue_new(), and don't
+	  crash with debug logging enabled if NULL is returned.
+	  Spotted by Steven Hoving.
+
+2015-12-09 17:40:02 +0100  Edward Hervey <edward@centricular.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Don't use random segment.position from upstream
+	  segment.position is meant for internal usage only, but the various
+	  GST_EVENT_SEGMENT creationg/parsing functions won't clear that field.
+	  Use the appropriate segment boundary as an initial value instead
+
+2016-03-15 16:37:33 +0100  Romain Picard <romain.picard@oakbits.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Allow caps query in "have-type" signal handlers
+	  If an application calls gst_pad_query_caps from its "have-type" signal handler,
+	  then the query fails because typefind->caps has not been set yet.
+	  This patch sets typefind->caps in the object method handler, before the signal
+	  handlers are called.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763491
+
+2016-03-11 14:17:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Store caps on the pad before emitting have-type but send it downstream only in the default signal handler
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763491
+
+2016-03-13 10:33:53 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: Recheck after pre_push_frame() if there are tags pending
+	  Many parsers are storing tags only in pre_push_frame(), if we wouldn't check
+	  afterwards we would push buffers before those tags and a lot of code assumes that
+	  tags are available before preroll.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763553
+
+2016-02-04 10:07:22 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: fix stray discont flag set on outgoing buffers in push mode
+	  We have no guarantees about what flags are set on buffers we take
+	  out of the GstAdapter. If we push out multiple buffers from the
+	  first input buffer (which will have discont set), only the first
+	  buffer we push out should be flagged as discont, not all of the
+	  buffers produced from that first initial input buffer.
+	  Fixes issue where the first few mp3 frames/seconds of data in push
+	  mode were skipped or garbled in some cases, and the discont flags
+	  would also trip up decoders which were getting drained/flushed for
+	  every buffer. This was a regression introduced in 1.6 apparently.
+
+2016-02-02 16:35:34 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* libs/gst/controller/gstdirectcontrolbinding.c:
+	  controller: Do not unset uninitiallized GValue
+	  In case the property was not interpollable we might never initialize
+	  the GValue, we should thus never unset it.
+
+=== release 1.6.3 ===
+
+2016-01-20 14:34:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.6.3
+
+2016-01-20 14:09:59 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2016-01-16 16:01:38 +0000  Tim-Philipp Müller <tim@centricular.com>
 

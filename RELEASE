@@ -1,19 +1,23 @@
 
-Release notes for GStreamer 1.6.3
-
-The GStreamer team is proud to announce the third bugfix release in the stable
-1.6 release series of your favourite cross-platform multimedia framework!
+Release notes for GStreamer 1.6.4
 
 
-
-This release only contains bugfixes and it is safe to update from 1.6.x. For a
-full list of bugfixes see Bugzilla.
-
+The GStreamer team is pleased to announce a new bug-fix release in the
+old 1.6 stable series of the core of the GStreamer streaming media framework.
 
 
-See http://gstreamer.freedesktop.org/releases/1.6/
-for the full release notes.
+This release only contains bugfixes and it should be safe to update from 1.6.x.
+For a full list of bugfixes see Bugzilla.
+ 
 
+This release maintains API/ABI backwards compatibility with the
+GStreamer 1.0, 1.2, 1.4 and 1.6 release series.
+
+
+The 1.x series has been reworked for more flexible memory handling, improved
+caps negotiation and re-negotiation, better handling of dynamic pipelines,
+and increased performance in general. It also features countless other feature
+additions and enhancements.
 
 
 This module, gstreamer, only contains core functionality.
@@ -37,23 +41,27 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
+Features of this release
+    
+
 Bugs fixed in this release
      
-      * 755657 : Fix -Werror build for clang
-      * 755971 : queue2: may overflow unsigned integer arithmetic
-      * 759948 : caps: add 'transfer full' annotation to caps returned by intersection functions
+      * 763491 : typefind: behavior has changed on have-type signal, sets pad caps after signal handlers
+      * 763895 : Incorrect gir annotation on gst_element_query_convert
+      * 763912 : pad/utils: missing annotation for gst_pad_get_current_caps and gst_pad_peer_query_caps
+      * 763770 : multiqueue: not-linked pads might not drain out at EOS
 
 ==== Download ====
 
 You can find source releases of gstreamer in the download
-directory: http://gstreamer.freedesktop.org/src/gstreamer/
+directory: https://gstreamer.freedesktop.org/src/gstreamer/
 
 The git repository and details how to clone it can be found at
 http://cgit.freedesktop.org/gstreamer/gstreamer/
 
 ==== Homepage ====
 
-The project's website is http://gstreamer.freedesktop.org/
+The project's website is https://gstreamer.freedesktop.org/
 
 ==== Support and Bugs ====
 
@@ -78,11 +86,12 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleksander Wabik
       * Aurélien Zanelli
-      * Florin Apostol
-      * Nirbheek Chauhan
+      * Ben Iofel
+      * Edward Hervey
+      * Jan Schmidt
+      * Romain Picard
       * Sebastian Dröge
+      * Thibault Saunier
       * Tim-Philipp Müller
-      * Ting-Wei Lan
  
