@@ -30,7 +30,9 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
+#if !defined(__cplusplus)
 #pragma GCC optimize ("gnu89-inline")
+#endif
 #endif
 
 #ifndef EGL_EGLEXT_PROTOTYPES
