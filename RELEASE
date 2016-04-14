@@ -46,6 +46,7 @@ Features of this release
 
 Bugs fixed in this release
      
+      * 759539 : Stopping a stream with AAC very soon after starting crashes
       * 763491 : typefind: behavior has changed on have-type signal, sets pad caps after signal handlers
       * 763895 : Incorrect gir annotation on gst_element_query_convert
       * 763912 : pad/utils: missing annotation for gst_pad_get_current_caps and gst_pad_peer_query_caps
