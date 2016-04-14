@@ -1978,6 +1978,8 @@ priv__gst_structure_append_template_to_gstring (GQuark field_id,
   } else if (g_type_is_a (type, G_TYPE_ENUM)
       || g_type_is_a (type, G_TYPE_FLAGS)) {
     g_string_append (s, "%i");
+  } else if (type == G_TYPE_POINTER) {
+    g_string_append_len (s, "%p", 2);
   } else {
     GST_WARNING ("unhandled type: %s", g_type_name (type));
     g_string_append (s, "%" GST_WRAPPED_PTR_FORMAT);
