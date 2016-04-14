@@ -927,6 +927,9 @@ gst_vaapidecode_open (GstVideoDecoder * vdec)
   if (!gst_vaapi_plugin_base_open (GST_VAAPI_PLUGIN_BASE (decode)))
     return FALSE;
 
+  gst_video_info_init (&decode->decoded_info);
+  gst_video_info_init (&decode->display_info);
+
   /* Let GstVideoContext ask for a proper display to its neighbours */
   /* Note: steal old display that may be allocated from get_caps()
      so that to retain a reference to it, thus avoiding extra
@@ -1275,9 +1278,6 @@ gst_vaapidecode_init (GstVaapiDecode * decode)
 
   g_mutex_init (&decode->surface_ready_mutex);
   g_cond_init (&decode->surface_ready);
-
-  gst_video_info_init (&decode->decoded_info);
-  gst_video_info_init (&decode->display_info);
 
   gst_video_decoder_set_packetized (vdec, FALSE);
 }
