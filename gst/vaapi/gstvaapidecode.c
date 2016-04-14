@@ -355,7 +355,7 @@ is_surface_resolution_changed (GstVaapiDecode * decode,
     GstVaapiSurface * surface)
 {
   GstVideoInfo *vinfo = &decode->decoded_info;
-  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+  GstVideoFormat surface_format;
   guint surface_width, surface_height;
 
   g_return_val_if_fail (surface != NULL, FALSE);
@@ -366,14 +366,22 @@ is_surface_resolution_changed (GstVaapiDecode * decode,
       && GST_VIDEO_INFO_HEIGHT (vinfo) == surface_height)
     return FALSE;
 
-  /* doing gst_vaapi_surface_get_format() only if necessary since it execute
-   * vaDeriveImage in the backgrorund . This will usually get executed only once */
-  format =
-      (GST_VIDEO_INFO_FORMAT (vinfo) ==
-      GST_VIDEO_FORMAT_UNKNOWN) ? gst_vaapi_surface_get_format (surface) :
-      GST_VIDEO_INFO_FORMAT (vinfo);
+  /* doing gst_vaapi_surface_get_format() only if necessary since it
+   * execute vaDeriveImage in the background. This will usually get
+   * executed only once */
+  surface_format = GST_VIDEO_INFO_FORMAT (vinfo);
+  if (surface_format == GST_VIDEO_FORMAT_UNKNOWN) {
+    surface_format = gst_vaapi_surface_get_format (surface);
 
-  gst_video_info_set_format (vinfo, format, surface_width, surface_height);
+    /* if the VA context delivers a currently unrecognized format
+     * (ICM3, e.g.), we can assume NV12 "safely" */
+    if (surface_format == GST_VIDEO_FORMAT_UNKNOWN
+        || surface_format == GST_VIDEO_FORMAT_ENCODED)
+      surface_format = GST_VIDEO_FORMAT_NV12;
+  }
+
+  gst_video_info_set_format (vinfo, surface_format, surface_width,
+      surface_height);
 
   return TRUE;
 }
