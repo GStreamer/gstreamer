@@ -75,7 +75,7 @@
  * ]| A pipeline to demonstrate compositor used together with videobox.
  * This should show a 320x240 pixels video test source with some transparency
  * showing the background checker pattern. Another video test source with just
- * the snow pattern of 100x100 pixels is overlayed on top of the first one on
+ * the snow pattern of 100x100 pixels is overlaid on top of the first one on
  * the left vertically centered with a small transparency showing the first
  * video test source behind and the checker pattern under it. Note that the
  * framerate of the output video is 10 frames per second.

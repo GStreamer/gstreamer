@@ -255,7 +255,7 @@ void gst_player_video_overlay_video_renderer_expose
  * Configure a subregion as a video target within the window set by
  * gst_player_video_overlay_video_renderer_set_window_handle(). If this is not
  * used or not supported the video will fill the area of the window set as the
- * overlay to 100%. By specifying the rectangle, the video can be overlayed to
+ * overlay to 100%. By specifying the rectangle, the video can be overlaid to
  * a specific region of that window only. After setting the new rectangle one
  * should call gst_player_video_overlay_video_renderer_expose() to force a
  * redraw. To unset the region pass -1 for the @width and @height parameters.
