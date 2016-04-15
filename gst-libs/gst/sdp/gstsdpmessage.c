@@ -3619,11 +3619,6 @@ gst_sdp_make_keymgmt (const gchar * uri, const gchar * base64)
   return g_strdup_printf ("prot=mikey;uri=\"%s\";data=\"%s\"", uri, base64);
 }
 
-#define AES_128_KEY_LEN 16
-#define AES_256_KEY_LEN 32
-#define HMAC_32_KEY_LEN 4
-#define HMAC_80_KEY_LEN 10
-
 static gboolean
 gst_sdp_parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
 {
@@ -3631,9 +3626,6 @@ gst_sdp_parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
   gsize size;
   guchar *data;
   GstMIKEYMessage *msg;
-  const GstMIKEYPayload *payload;
-  const gchar *srtp_cipher;
-  const gchar *srtp_auth;
   gchar *orig_value;
   gchar *p, *kmpid;
 
@@ -3661,116 +3653,7 @@ gst_sdp_parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
   if (msg == NULL)
     return FALSE;
 
-  srtp_cipher = "aes-128-icm";
-  srtp_auth = "hmac-sha1-80";
-
-  /* check the Security policy if any */
-  if ((payload = gst_mikey_message_find_payload (msg, GST_MIKEY_PT_SP, 0))) {
-    GstMIKEYPayloadSP *p = (GstMIKEYPayloadSP *) payload;
-    guint len, i;
-
-    if (p->proto != GST_MIKEY_SEC_PROTO_SRTP)
-      goto done;
-
-    len = gst_mikey_payload_sp_get_n_params (payload);
-    for (i = 0; i < len; i++) {
-      const GstMIKEYPayloadSPParam *param =
-          gst_mikey_payload_sp_get_param (payload, i);
-
-      switch (param->type) {
-        case GST_MIKEY_SP_SRTP_ENC_ALG:
-          switch (param->val[0]) {
-            case 0:
-              srtp_cipher = "null";
-              break;
-            case 2:
-            case 1:
-              srtp_cipher = "aes-128-icm";
-              break;
-            default:
-              break;
-          }
-          break;
-        case GST_MIKEY_SP_SRTP_ENC_KEY_LEN:
-          switch (param->val[0]) {
-            case AES_128_KEY_LEN:
-              srtp_cipher = "aes-128-icm";
-              break;
-            case AES_256_KEY_LEN:
-              srtp_cipher = "aes-256-icm";
-              break;
-            default:
-              break;
-          }
-          break;
-        case GST_MIKEY_SP_SRTP_AUTH_ALG:
-          switch (param->val[0]) {
-            case 0:
-              srtp_auth = "null";
-              break;
-            case 2:
-            case 1:
-              srtp_auth = "hmac-sha1-80";
-              break;
-            default:
-              break;
-          }
-          break;
-        case GST_MIKEY_SP_SRTP_AUTH_KEY_LEN:
-          switch (param->val[0]) {
-            case HMAC_32_KEY_LEN:
-              srtp_auth = "hmac-sha1-32";
-              break;
-            case HMAC_80_KEY_LEN:
-              srtp_auth = "hmac-sha1-80";
-              break;
-            default:
-              break;
-          }
-          break;
-        case GST_MIKEY_SP_SRTP_SRTP_ENC:
-          break;
-        case GST_MIKEY_SP_SRTP_SRTCP_ENC:
-          break;
-        default:
-          break;
-      }
-    }
-  }
-
-  if (!(payload = gst_mikey_message_find_payload (msg, GST_MIKEY_PT_KEMAC, 0)))
-    goto done;
-  else {
-    GstMIKEYPayloadKEMAC *p = (GstMIKEYPayloadKEMAC *) payload;
-    const GstMIKEYPayload *sub;
-    GstMIKEYPayloadKeyData *pkd;
-    GstBuffer *buf;
-
-    if (p->enc_alg != GST_MIKEY_ENC_NULL || p->mac_alg != GST_MIKEY_MAC_NULL)
-      goto done;
-
-    if (!(sub = gst_mikey_payload_kemac_get_sub (payload, 0)))
-      goto done;
-
-    if (sub->type != GST_MIKEY_PT_KEY_DATA)
-      goto done;
-
-    pkd = (GstMIKEYPayloadKeyData *) sub;
-    buf =
-        gst_buffer_new_wrapped (g_memdup (pkd->key_data, pkd->key_len),
-        pkd->key_len);
-    gst_caps_set_simple (caps, "srtp-key", GST_TYPE_BUFFER, buf, NULL);
-    gst_buffer_unref (buf);
-  }
-
-  gst_caps_set_simple (caps,
-      "srtp-cipher", G_TYPE_STRING, srtp_cipher,
-      "srtp-auth", G_TYPE_STRING, srtp_auth,
-      "srtcp-cipher", G_TYPE_STRING, srtp_cipher,
-      "srtcp-auth", G_TYPE_STRING, srtp_auth, NULL);
-
-  res = TRUE;
-done:
+  res = gst_mikey_message_to_caps (msg, caps);
   gst_mikey_message_unref (msg);
 
   return res;
