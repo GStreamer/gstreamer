@@ -25,6 +25,7 @@ EXPORTS
 	gst_mikey_message_replace_payload
 	gst_mikey_message_set_info
 	gst_mikey_message_to_bytes
+	gst_mikey_message_to_caps
 	gst_mikey_payload_get_type
 	gst_mikey_payload_kemac_add_sub
 	gst_mikey_payload_kemac_get_n_sub
@@ -83,6 +84,7 @@ EXPORTS
 	gst_sdp_media_insert_connection
 	gst_sdp_media_insert_format
 	gst_sdp_media_new
+	gst_sdp_media_parse_keymgmt
 	gst_sdp_media_remove_attribute
 	gst_sdp_media_remove_bandwidth
 	gst_sdp_media_remove_connection
@@ -141,6 +143,7 @@ EXPORTS
 	gst_sdp_message_medias_len
 	gst_sdp_message_new
 	gst_sdp_message_parse_buffer
+	gst_sdp_message_parse_keymgmt
 	gst_sdp_message_parse_uri
 	gst_sdp_message_phones_len
 	gst_sdp_message_remove_attribute
