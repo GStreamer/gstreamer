@@ -1523,6 +1523,11 @@ gst_rtspsrc_collect_payloads (GstRTSPSrc * src, const GstSDPMessage * sdp,
   GST_DEBUG ("mapping sdp media level attributes to caps");
   gst_sdp_media_attributes_to_caps (media, global_caps);
 
+  /* Keep a copy of the SDP key management */
+  gst_sdp_media_parse_keymgmt (media, &stream->mikey);
+  if (stream->mikey == NULL)
+    gst_sdp_message_parse_keymgmt (sdp, &stream->mikey);
+
   len = gst_sdp_media_formats_len (media);
   for (i = 0; i < len; i++) {
     gint pt;
@@ -1632,6 +1637,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
   stream->send_ssrc = g_random_int ();
   stream->profile = GST_RTSP_PROFILE_AVP;
   stream->ptmap = g_array_new (FALSE, FALSE, sizeof (PtMapItem));
+  stream->mikey = NULL;
   g_array_set_clear_func (stream->ptmap, (GDestroyNotify) clear_ptmap_item);
 
   /* collect bandwidth information for this steam. FIXME, configure in the RTP
@@ -1741,6 +1747,8 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
     gst_object_unref (stream->srtpdec);
   if (stream->srtcpparams)
     gst_caps_unref (stream->srtcpparams);
+  if (stream->mikey)
+    gst_mikey_message_unref (stream->mikey);
   if (stream->rtcppad)
     gst_object_unref (stream->rtcppad);
   if (stream->session)
@@ -2747,8 +2755,27 @@ set_manager_buffer_mode (GstRTSPSrc * src)
 static GstCaps *
 request_key (GstElement * srtpdec, guint ssrc, GstRTSPStream * stream)
 {
-  GST_DEBUG ("request key %u", ssrc);
-  return gst_caps_ref (stream_get_caps_for_pt (stream, stream->default_pt));
+  guint i;
+  GstCaps *caps;
+  GstMIKEYMessage *msg = stream->mikey;
+
+  GST_DEBUG ("request key SSRC %u", ssrc);
+
+  caps = gst_caps_ref (stream_get_caps_for_pt (stream, stream->default_pt));
+  caps = gst_caps_make_writable (caps);
+
+  /* parse crypto sessions and look for the SSRC rollover counter */
+  msg = stream->mikey;
+  for (i = 0; msg && i < gst_mikey_message_get_n_cs (msg); i++) {
+    const GstMIKEYMapSRTP *map = gst_mikey_message_get_cs_srtp (msg, i);
+
+    if (ssrc == map->ssrc) {
+      gst_caps_set_simple (caps, "roc", G_TYPE_UINT, map->roc, NULL);
+      break;
+    }
+  }
+
+  return caps;
 }
 
 static GstElement *
