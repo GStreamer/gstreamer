@@ -144,6 +144,9 @@ struct _GstRTSPStream {
   /* session */
   GObject      *session;
 
+  /* srtp key management */
+  GstMIKEYMessage *mikey;
+
   /* bandwidth */
   guint         as_bandwidth;
   guint         rs_bandwidth;
