@@ -16,6 +16,9 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 /**
  * SECTION:rtsp-sdp
  * @short_description: Make SDP messages
@@ -73,7 +76,109 @@ update_sdp_from_tags (GstRTSPStream * stream, GstSDPMedia * stream_media)
   gst_object_unref (src_pad);
 }
 
-static void
+static guint
+get_roc_from_stats (GstStructure * stats, guint ssrc)
+{
+  const GValue *va, *v;
+  guint i, len;
+  /* initialize roc to something different than 0, so if we don't get
+     the proper ROC from the encoder, streaming should fail initially. */
+  guint roc = -1;
+
+  va = gst_structure_get_value (stats, "streams");
+  if (!va || !G_VALUE_HOLDS (va, GST_TYPE_ARRAY)) {
+    GST_WARNING ("stats doesn't have a valid 'streams' field");
+    return 0;
+  }
+
+  len = gst_value_array_get_size (va);
+
+  /* look if there's any SSRC that matches. */
+  for (i = 0; i < len; i++) {
+    GstStructure *stream;
+    v = gst_value_array_get_value (va, i);
+    if (v && (stream = g_value_get_boxed (v))) {
+      guint stream_ssrc;
+      gst_structure_get_uint (stream, "ssrc", &stream_ssrc);
+      if (stream_ssrc == ssrc) {
+        gst_structure_get_uint (stream, "roc", &roc);
+        break;
+      }
+    }
+  }
+
+  return roc;
+}
+
+static gboolean
+mikey_add_crypto_sessions (GstRTSPStream * stream, GstMIKEYMessage * msg)
+{
+  guint i;
+  GObject *session;
+  GstElement *encoder;
+  GValueArray *sources;
+  gboolean roc_found;
+
+  encoder = gst_rtsp_stream_get_srtp_encoder (stream);
+  if (encoder == NULL) {
+    GST_ERROR ("unable to get SRTP encoder from stream %p", stream);
+    return FALSE;
+  }
+
+  session = gst_rtsp_stream_get_rtpsession (stream);
+  if (session == NULL) {
+    GST_ERROR ("unable to get RTP session from stream %p", stream);
+    return FALSE;
+  }
+
+  roc_found = FALSE;
+  g_object_get (session, "sources", &sources, NULL);
+  for (i = 0; sources && (i < sources->n_values); i++) {
+    GValue *val;
+    GObject *source;
+    guint32 ssrc;
+    gboolean is_sender;
+
+    val = g_value_array_get_nth (sources, i);
+    source = (GObject *) g_value_get_object (val);
+
+    g_object_get (source, "ssrc", &ssrc, "is-sender", &is_sender, NULL);
+
+    if (is_sender) {
+      guint32 roc = -1;
+      GstStructure *stats;
+
+      g_object_get (encoder, "stats", &stats, NULL);
+
+      if (stats) {
+        roc = get_roc_from_stats (stats, ssrc);
+        gst_structure_free (stats);
+      }
+
+      roc_found = !!(roc != -1);
+      if (!roc_found) {
+        GST_ERROR ("unable to obtain ROC for stream %p with SSRC %u",
+            stream, ssrc);
+        goto cleanup;
+      }
+
+      GST_INFO ("stream %p with SSRC %u has a ROC of %u", stream, ssrc, roc);
+
+      gst_mikey_message_add_cs_srtp (msg, 0, ssrc, roc);
+    }
+  }
+
+cleanup:
+  {
+    g_value_array_free (sources);
+
+    gst_object_unref (encoder);
+    g_object_unref (session);
+    return roc_found;
+  }
+}
+
+static gboolean
 make_media (GstSDPMessage * sdp, GstSDPInfo * info,
     GstRTSPStream * stream, GstCaps * caps, GstRTSPProfile profile)
 {
@@ -86,13 +191,12 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info,
   guint ttl;
   GstClockTime rtx_time;
   gchar *base64;
-  guint32 ssrc;
   GstMIKEYMessage *mikey_msg;
 
   gst_sdp_media_new (&smedia);
 
   if (gst_sdp_media_set_media_from_caps (caps, smedia) != GST_SDP_OK) {
-    goto error;
+    goto caps_error;
   }
 
   gst_sdp_media_set_port_info (smedia, 0, 1);
@@ -155,9 +259,9 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info,
   /* check for srtp */
   mikey_msg = gst_mikey_message_new_from_caps (caps);
   if (mikey_msg) {
-    gst_rtsp_stream_get_ssrc (stream, &ssrc);
-    /* add policy '0' for our SSRC */
-    gst_mikey_message_add_cs_srtp (mikey_msg, 0, ssrc, 0);
+    /* add policy '0' for all sending SSRC */
+    if (!mikey_add_crypto_sessions (stream, mikey_msg))
+      goto crypto_sessions_error;
 
     base64 = gst_mikey_message_base64_encode (mikey_msg);
     if (base64) {
@@ -281,7 +385,7 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info,
 
       s = gst_caps_get_structure (caps, 0);
       if (s == NULL)
-        goto error;
+        goto no_caps_info;
 
       /* get payload type and clock rate */
       gst_structure_get_int (s, "payload", &caps_pt);
@@ -306,21 +410,36 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info,
   gst_sdp_message_add_media (sdp, smedia);
   gst_sdp_media_free (smedia);
 
-  return;
+  return TRUE;
 
   /* ERRORS */
+caps_error:
+  {
+    gst_sdp_media_free (smedia);
+    GST_ERROR ("unable to set media from caps for stream %d",
+        gst_rtsp_stream_get_index (stream));
+    return FALSE;
+  }
 no_multicast:
   {
     gst_sdp_media_free (smedia);
-    g_warning ("ignoring stream %d without multicast address",
+    GST_ERROR ("stream %d has no multicast address",
         gst_rtsp_stream_get_index (stream));
-    return;
+    return FALSE;
   }
-error:
+no_caps_info:
   {
     gst_sdp_media_free (smedia);
-    g_warning ("ignoring stream %d", gst_rtsp_stream_get_index (stream));
-    return;
+    GST_ERROR ("caps for stream %d have no structure",
+        gst_rtsp_stream_get_index (stream));
+    return FALSE;
+  }
+crypto_sessions_error:
+  {
+    gst_sdp_media_free (smedia);
+    GST_ERROR ("unable to add MIKEY crypto sessions for stream %d",
+        gst_rtsp_stream_get_index (stream));
+    return FALSE;
   }
 }
 
@@ -341,6 +460,7 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
 {
   guint i, n_streams;
   gchar *rangestr;
+  gboolean res;
 
   n_streams = gst_rtsp_media_n_streams (media);
 
@@ -351,11 +471,16 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
   gst_sdp_message_add_attribute (sdp, "range", rangestr);
   g_free (rangestr);
 
-  for (i = 0; i < n_streams; i++) {
+  res = TRUE;
+  for (i = 0; res && (i < n_streams); i++) {
     GstRTSPStream *stream;
 
     stream = gst_rtsp_media_get_stream (media, i);
-    gst_rtsp_sdp_from_stream (sdp, info, stream);
+    res = gst_rtsp_sdp_from_stream (sdp, info, stream);
+    if (!res) {
+      GST_ERROR ("could not get SDP from stream %p", stream);
+      goto sdp_error;
+    }
   }
 
   {
@@ -382,12 +507,17 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
     }
   }
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 not_prepared:
   {
     GST_ERROR ("media %p is not prepared", media);
+    return FALSE;
+  }
+sdp_error:
+  {
+    GST_ERROR ("could not get SDP from media %p", media);
     return FALSE;
   }
 }
@@ -400,32 +530,37 @@ not_prepared:
  *
  * Add info from @stream to @sdp.
  *
+ * Returns: TRUE on success.
  */
-void
+gboolean
 gst_rtsp_sdp_from_stream (GstSDPMessage * sdp, GstSDPInfo * info,
     GstRTSPStream * stream)
 {
   GstCaps *caps;
   GstRTSPProfile profiles;
   guint mask;
+  gboolean res;
 
   caps = gst_rtsp_stream_get_caps (stream);
 
   if (caps == NULL) {
-    g_warning ("ignoring stream without caps");
-    return;
+    GST_ERROR ("stream %p has no caps", stream);
+    return FALSE;
   }
 
   /* make a new media for each profile */
   profiles = gst_rtsp_stream_get_profiles (stream);
   mask = 1;
-  while (profiles >= mask) {
+  res = TRUE;
+  while (res && (profiles >= mask)) {
     GstRTSPProfile prof = profiles & mask;
 
     if (prof)
-      make_media (sdp, info, stream, caps, prof);
+      res = make_media (sdp, info, stream, caps, prof);
 
     mask <<= 1;
   }
   gst_caps_unref (caps);
+
+  return res;
 }

@@ -1672,6 +1672,32 @@ gst_rtsp_stream_get_rtpsession (GstRTSPStream * stream)
 }
 
 /**
+ * gst_rtsp_stream_get_encoder:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the SRTP encoder for this stream.
+ *
+ * Returns: (transfer full): The SRTP encoder for this stream. Unref after usage.
+ */
+GstElement *
+gst_rtsp_stream_get_srtp_encoder (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  GstElement *encoder;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((encoder = priv->srtpenc))
+    g_object_ref (encoder);
+  g_mutex_unlock (&priv->lock);
+
+  return encoder;
+}
+
+/**
  * gst_rtsp_stream_get_ssrc:
  * @stream: a #GstRTSPStream
  * @ssrc: (out): result ssrc

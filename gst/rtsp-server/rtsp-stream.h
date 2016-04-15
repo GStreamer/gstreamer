@@ -129,6 +129,8 @@ GstRTSPAddress *  gst_rtsp_stream_get_multicast_address (GstRTSPStream *stream,
 
 GObject *         gst_rtsp_stream_get_rtpsession   (GstRTSPStream *stream);
 
+GstElement *      gst_rtsp_stream_get_srtp_encoder (GstRTSPStream *stream);
+
 void              gst_rtsp_stream_get_ssrc         (GstRTSPStream *stream,
                                                     guint *ssrc);
 
