@@ -583,6 +583,7 @@ gst_soup_http_client_sink_start (GstBaseSink * sink)
           soup_session_async_new_with_options (SOUP_SESSION_ASYNC_CONTEXT,
           souphttpsink->context, SOUP_SESSION_USER_AGENT,
           souphttpsink->user_agent, SOUP_SESSION_TIMEOUT, souphttpsink->timeout,
+          SOUP_SESSION_ADD_FEATURE_BY_TYPE, SOUP_TYPE_PROXY_RESOLVER_DEFAULT,
           NULL);
     } else {
       souphttpsink->session =
