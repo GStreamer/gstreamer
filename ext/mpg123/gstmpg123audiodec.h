@@ -19,6 +19,18 @@
 #ifndef __GST_MPG123_AUDIO_DEC_H__
 #define __GST_MPG123_AUDIO_DEC_H__
 
+/* This is what the visual studio build in mpg123 does before including the
+ * original header file. Without this we get syntax errors in the
+ * replace_reader function declarations because it doesn't know ssize_t etc.
+ * It doesn't realy matter for us if the ssize_t typedef here is correct. */
+#ifdef _MSC_VER
+#include <tchar.h>
+#include <stdlib.h>
+#include <sys/types.h>
+typedef long ssize_t;
+#include <stdint.h>
+#endif
+
 #include <gst/gst.h>
 #include <gst/audio/gstaudiodecoder.h>
 #include <mpg123.h>
