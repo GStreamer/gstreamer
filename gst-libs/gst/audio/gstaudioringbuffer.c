@@ -1470,18 +1470,6 @@ default_commit (GstAudioRingBuffer * buf, guint64 * sample,
   g_return_val_if_fail (buf->memory != NULL, -1);
   g_return_val_if_fail (data != NULL, -1);
 
-  /* writing stuff now, ensure running clock */
-  if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
-          GST_AUDIO_RING_BUFFER_STATE_STARTED)) {
-    /* see if we are allowed to start it */
-    if (G_UNLIKELY (g_atomic_int_get (&buf->may_start) == FALSE)) {
-      GST_DEBUG_OBJECT (buf, "not allowed to start");
-    } else {
-      GST_DEBUG_OBJECT (buf, "start!");
-      gst_audio_ring_buffer_start (buf);
-    }
-  }
-
   need_reorder = buf->need_reorder;
 
   channels = buf->spec.info.channels;
