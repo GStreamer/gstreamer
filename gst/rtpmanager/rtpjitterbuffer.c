@@ -852,7 +852,7 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
    * do with the previous values */
   if (G_UNLIKELY (jbuf->need_resync && dts != -1)) {
     GST_INFO ("resync to time %" GST_TIME_FORMAT ", rtptime %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (time), GST_TIME_ARGS (gstrtptime));
+        GST_TIME_FORMAT, GST_TIME_ARGS (dts), GST_TIME_ARGS (gstrtptime));
     rtp_jitter_buffer_resync (jbuf, dts, gstrtptime, ext_rtptime, FALSE);
   }
 
@@ -1000,7 +1000,7 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
      * temporarily */
     GST_DEBUG ("out %" GST_TIME_FORMAT " + %" G_GUINT64_FORMAT " < time %"
         GST_TIME_FORMAT ", reset jitterbuffer", GST_TIME_ARGS (item->pts),
-        jbuf->delay, GST_TIME_ARGS (time));
+        jbuf->delay, GST_TIME_ARGS (dts));
     rtp_jitter_buffer_resync (jbuf, dts, gstrtptime, ext_rtptime, TRUE);
     item->pts = dts;
   }
