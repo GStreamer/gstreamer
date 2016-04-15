@@ -834,7 +834,6 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
   GList *cur;
   gsize queued_bytes = 0;
   GstClockTime queued_time = 0;
-  gboolean at_eos = TRUE;
 
   /* Assess if the multiqueue contents overflowed the current file */
   for (cur = g_list_first (splitmux->contexts);
@@ -843,7 +842,6 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
     if (tmpctx->in_running_time > queued_time)
       queued_time = tmpctx->in_running_time;
     queued_bytes += tmpctx->in_bytes;
-    at_eos &= tmpctx->in_eos;
   }
 
   g_assert (queued_bytes >= splitmux->mux_start_bytes);
@@ -864,7 +862,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
           ((splitmux->threshold_bytes > 0 &&
                   queued_bytes >= splitmux->threshold_bytes) ||
               (splitmux->threshold_time > 0 &&
-                  queued_time >= splitmux->threshold_time))) || at_eos) {
+                  queued_time >= splitmux->threshold_time)))) {
 
     splitmux->state = SPLITMUX_STATE_ENDING_FILE;
 
