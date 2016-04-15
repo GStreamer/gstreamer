@@ -2563,7 +2563,8 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
 
   if (!gst_dvbsrc_is_valid_modulation (object->delsys, object->modulation)) {
     GST_WARNING_OBJECT (object,
-        "Attempting an invalid modulation/delsys combination");
+        "Attempting invalid modulation '%u' for delivery system '%u'",
+        object->modulation, object->delsys);
   }
 
   set_prop (props->props, &n, DTV_TUNE, 0);
