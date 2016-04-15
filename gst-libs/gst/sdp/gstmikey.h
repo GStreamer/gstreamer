@@ -547,7 +547,8 @@ GstMIKEYMessage *           gst_mikey_message_new_from_bytes    (GBytes *bytes, 
                                                                  GError **error);
 GBytes *                    gst_mikey_message_to_bytes          (GstMIKEYMessage *msg, GstMIKEYEncryptInfo *info,
                                                                  GError **error);
-GstMIKEYMessage *           gst_mikey_message_new_from_caps         (GstCaps *caps);
+GstMIKEYMessage *           gst_mikey_message_new_from_caps     (GstCaps *caps);
+gboolean                    gst_mikey_message_to_caps           (const GstMIKEYMessage *msg, GstCaps *caps);
 gchar *                     gst_mikey_message_base64_encode     (GstMIKEYMessage* msg);
 
 /**
@@ -665,4 +666,3 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMIKEYPayload, gst_mikey_payload_unref)
 G_END_DECLS
 
 #endif /* __GST_MIKEY_H__ */
-
