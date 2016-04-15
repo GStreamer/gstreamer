@@ -339,7 +339,7 @@ AC_SUBST(MAD_LIBS)
 dnl *** mpeg2dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
 AG_GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
-  AG_GST_PKG_CHECK_MODULES(MPEG2DEC, libmpeg2 >= 0.4.0)
+  AG_GST_PKG_CHECK_MODULES(MPEG2DEC, libmpeg2 >= 0.5.1)
 ])
 
 dnl *** mpg123 ***

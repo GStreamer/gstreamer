@@ -32,19 +32,6 @@
 /* 16byte-aligns a buffer for libmpeg2 */
 #define ALIGN_16(p) ((void *)(((uintptr_t)(p) + 15) & ~((uintptr_t)15)))
 
-/* mpeg2dec changed a struct name after 0.3.1, here's a workaround */
-/* mpeg2dec also only defined MPEG2_RELEASE after 0.3.1
-   #if MPEG2_RELEASE < MPEG2_VERSION(0,3,2)
-*/
-#ifndef MPEG2_RELEASE
-#define MPEG2_VERSION(a,b,c) ((((a)&0xff)<<16)|(((b)&0xff)<<8)|((c)&0xff))
-#define MPEG2_RELEASE MPEG2_VERSION(0,3,1)
-typedef picture_t mpeg2_picture_t;
-typedef gint mpeg2_state_t;
-
-#define STATE_BUFFER 0
-#endif
-
 GST_DEBUG_CATEGORY_STATIC (mpeg2dec_debug);
 #define GST_CAT_DEFAULT mpeg2dec_debug
 GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
@@ -700,16 +687,12 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   if (GST_VIDEO_INFO_PAR_N (vinfo) == 1 &&
       GST_VIDEO_INFO_PAR_D (vinfo) == 1 &&
       sequence->pixel_width != 0 && sequence->pixel_height != 0) {
-#if MPEG2_RELEASE >= MPEG2_VERSION(0,5,0)
     guint pixel_width, pixel_height;
+
     if (mpeg2_guess_aspect (sequence, &pixel_width, &pixel_height)) {
       vinfo->par_n = pixel_width;
       vinfo->par_d = pixel_height;
     }
-#else
-    vinfo->par_n = sequence->pixel_width;
-    vinfo->par_d = sequence->pixel_height;
-#endif
     GST_DEBUG_OBJECT (mpeg2dec, "Setting PAR %d x %d",
         vinfo->par_n, vinfo->par_d);
   }
@@ -926,12 +909,9 @@ handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info,
       GST_BUFFER_FLAG_SET (frame->output_buffer,
           GST_VIDEO_BUFFER_FLAG_INTERLACED);
     }
-#if MPEG2_RELEASE >= MPEG2_VERSION(0,5,0)
-    /* repeat field introduced in 0.5.0 */
     if (picture->flags & PIC_FLAG_REPEAT_FIRST_FIELD) {
       GST_BUFFER_FLAG_SET (frame->output_buffer, GST_VIDEO_BUFFER_FLAG_RFF);
     }
-#endif
   }
 
   if (mpeg2dec->discont_state == MPEG2DEC_DISC_NEW_PICTURE && key_frame) {
@@ -943,11 +923,7 @@ handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info,
       GST_TIME_FORMAT,
       (picture->flags & PIC_FLAG_PROGRESSIVE_FRAME ? "prog" : "    "),
       (picture->flags & PIC_FLAG_TOP_FIELD_FIRST ? "tff" : "   "),
-#if MPEG2_RELEASE >= MPEG2_VERSION(0,5,0)
       (picture->flags & PIC_FLAG_REPEAT_FIRST_FIELD ? "rff" : "   "),
-#else
-      "unknown rff",
-#endif
       (picture->flags & PIC_FLAG_SKIP ? "skip" : "    "),
       (picture->flags & PIC_FLAG_COMPOSITE_DISPLAY ? "composite" : "         "),
       picture->nb_fields, GST_TIME_ARGS (frame->pts));
@@ -1095,13 +1071,11 @@ gst_mpeg2dec_handle_frame (GstVideoDecoder * decoder,
     GST_DEBUG_OBJECT (mpeg2dec, "parse state %d", state);
 
     switch (state) {
-#if MPEG2_RELEASE >= MPEG2_VERSION (0, 5, 0)
       case STATE_SEQUENCE_MODIFIED:
         GST_DEBUG_OBJECT (mpeg2dec, "sequence modified");
         mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
         gst_mpeg2dec_clear_buffers (mpeg2dec);
         /* fall through */
-#endif
       case STATE_SEQUENCE:
         ret = handle_sequence (mpeg2dec, info);
         /* if there is an error handling the sequence
@@ -1132,10 +1106,8 @@ gst_mpeg2dec_handle_frame (GstVideoDecoder * decoder,
         GST_LOG_OBJECT (mpeg2dec,
             "Second picture header encountered. Decoding 2nd field");
         break;
-#if MPEG2_RELEASE >= MPEG2_VERSION (0, 4, 0)
       case STATE_INVALID_END:
         GST_DEBUG_OBJECT (mpeg2dec, "invalid end");
-#endif
       case STATE_END:
         GST_DEBUG_OBJECT (mpeg2dec, "end");
       case STATE_SLICE:
