@@ -345,6 +345,62 @@ GST_START_TEST (segment_seek_size)
   fail_unless (update == FALSE);
   check_times (&segment, 200, 200, 0);
 
+  /* special case, segment's start and stop are identical */
+  /* completely outside */
+  res = gst_segment_clip (&segment, GST_FORMAT_BYTES, 50, 100, &cstart, &cstop);
+  fail_unless (res == FALSE);
+
+  /* completely outside also */
+  res = gst_segment_clip (&segment, GST_FORMAT_BYTES,
+      250, 300, &cstart, &cstop);
+  fail_unless (res == FALSE);
+
+  /* stop at boundary point. it's outside because stop is exclusive */
+  res = gst_segment_clip (&segment, GST_FORMAT_BYTES,
+      100, 200, &cstart, &cstop);
+  fail_unless (res == FALSE);
+
+  /* touching boundary point. it's inside because start at segment start */
+  res = gst_segment_clip (&segment, GST_FORMAT_BYTES,
+      200, 300, &cstart, &cstop);
+  fail_unless (res == TRUE);
+  fail_unless (cstart == 200);
+  fail_unless (cstop == 200);
+
+  /* completely inside */
+  res = gst_segment_clip (&segment, GST_FORMAT_BYTES,
+      200, 200, &cstart, &cstop);
+  fail_unless (res == TRUE);
+  fail_unless (cstart == 200);
+  fail_unless (cstop == 200);
+
+  /* exclusively cover boundary point */
+  res = gst_segment_clip (&segment, GST_FORMAT_BYTES,
+      150, 250, &cstart, &cstop);
+  fail_unless (res == TRUE);
+  fail_unless (cstart == 200);
+  fail_unless (cstop == 200);
+
+  /* invalid start */
+  res = gst_segment_clip (&segment, GST_FORMAT_BYTES, -1, 200, &cstart, &cstop);
+  fail_unless (res == FALSE);
+
+  /* start outside */
+  res = gst_segment_clip (&segment, GST_FORMAT_BYTES, 50, -1, &cstart, &cstop);
+  fail_unless (res == TRUE);
+  fail_unless (cstart == 200);
+  fail_unless (cstop == 200);
+
+  /* start on boundary point */
+  res = gst_segment_clip (&segment, GST_FORMAT_BYTES, 200, -1, &cstart, &cstop);
+  fail_unless (res == TRUE);
+  fail_unless (cstart == 200);
+  fail_unless (cstop == 200);
+
+  /* start completely outside */
+  res = gst_segment_clip (&segment, GST_FORMAT_BYTES, 250, -1, &cstart, &cstop);
+  fail_unless (res == FALSE);
+
   /* seek relative to end */
   gst_segment_do_seek (&segment, 1.0,
       GST_FORMAT_BYTES,
