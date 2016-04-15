@@ -982,11 +982,17 @@ parse_subrip (ParserState * state, const gchar * line)
   switch (state->state) {
     case 0:{
       char *endptr;
+      guint64 id;
 
       /* looking for a single integer as a Cue ID, but we
        * don't actually use it */
-      (void) strtol (line, &endptr, 10);
-      if (endptr != line && *endptr == '\0')
+      errno = 0;
+      id = g_ascii_strtoull (line, &endptr, 10);
+      if (id == G_MAXUINT64 && errno == ERANGE)
+        state->state = 1;
+      else if (id == 0 && errno == EINVAL)
+        state->state = 1;
+      else if (endptr != line && *endptr == '\0')
         state->state = 1;
       return NULL;
     }
