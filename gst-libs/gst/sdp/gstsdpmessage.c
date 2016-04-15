@@ -64,7 +64,6 @@
 
 #include <gst/rtp/gstrtppayloads.h>
 #include "gstsdpmessage.h"
-#include "gstmikey.h"
 
 #define FREE_STRING(field)              g_free (field); (field) = NULL
 #define REPLACE_STRING(field, val)      FREE_STRING(field); (field) = g_strdup (val)
@@ -3620,12 +3619,10 @@ gst_sdp_make_keymgmt (const gchar * uri, const gchar * base64)
 }
 
 static gboolean
-gst_sdp_parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
+gst_sdp_parse_keymgmt (const gchar * keymgmt, GstMIKEYMessage ** mikey)
 {
-  gboolean res = FALSE;
   gsize size;
   guchar *data;
-  GstMIKEYMessage *msg;
   gchar *orig_value;
   gchar *p, *kmpid;
 
@@ -3648,19 +3645,76 @@ gst_sdp_parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
   if (data == NULL)
     return FALSE;
 
-  msg = gst_mikey_message_new_from_data (data, size, NULL, NULL);
+  *mikey = gst_mikey_message_new_from_data (data, size, NULL, NULL);
   g_free (data);
-  if (msg == NULL)
-    return FALSE;
 
-  res = gst_mikey_message_to_caps (msg, caps);
-  gst_mikey_message_unref (msg);
+  return (*mikey != NULL);
+}
+
+static GstSDPResult
+sdp_add_attributes_to_keymgmt (GArray * attributes, GstMIKEYMessage ** mikey)
+{
+  GstSDPResult res = GST_SDP_OK;
+
+  if (attributes->len > 0) {
+    guint i;
+    for (i = 0; i < attributes->len; i++) {
+      GstSDPAttribute *attr = &g_array_index (attributes, GstSDPAttribute, i);
+
+      if (g_str_equal (attr->key, "key-mgmt")) {
+        res = gst_sdp_parse_keymgmt (attr->value, mikey);
+        break;
+      }
+    }
+  }
 
   return res;
 }
 
+/**
+ * gst_sdp_message_parse_keymgmt:
+ * @msg: a #GstSDPMessage
+ * @mikey: (out) (transfer full): pointer to new #GstMIKEYMessage
+ *
+ * Creates a new #GstMIKEYMessage after parsing the key-mgmt attribute
+ * from a #GstSDPMessage.
+ *
+ * Returns: a #GstSDPResult.
+ *
+ * Since: 1.10
+ */
+GstSDPResult
+gst_sdp_message_parse_keymgmt (const GstSDPMessage * msg,
+    GstMIKEYMessage ** mikey)
+{
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
+
+  return sdp_add_attributes_to_keymgmt (msg->attributes, mikey);
+}
+
+/**
+ * gst_sdp_media_parse_keymgmt:
+ * @media: a #GstSDPMedia
+ * @mikey: (out) (transfer full): pointer to new #GstMIKEYMessage
+ *
+ * Creates a new #GstMIKEYMessage after parsing the key-mgmt attribute
+ * from a #GstSDPMedia.
+ *
+ * Returns: a #GstSDPResult.
+ *
+ * Since: 1.10
+ */
+GstSDPResult
+gst_sdp_media_parse_keymgmt (const GstSDPMedia * media,
+    GstMIKEYMessage ** mikey)
+{
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+
+  return sdp_add_attributes_to_keymgmt (media->attributes, mikey);
+}
+
 static GstSDPResult
-sdp_addtributes_to_caps (GArray * attributes, GstCaps * caps)
+sdp_add_attributes_to_caps (GArray * attributes, GstCaps * caps)
 {
   if (attributes->len > 0) {
     GstStructure *s;
@@ -3685,10 +3739,8 @@ sdp_addtributes_to_caps (GArray * attributes, GstCaps * caps)
         continue;
       if (!strcmp (key, "framesize"))
         continue;
-      if (g_str_equal (key, "key-mgmt")) {
-        gst_sdp_parse_keymgmt (attr->value, caps);
+      if (!strcmp (key, "key-mgmt"))
         continue;
-      }
 
       /* string must be valid UTF8 */
       if (!g_utf8_validate (attr->value, -1, NULL))
@@ -3722,10 +3774,21 @@ sdp_addtributes_to_caps (GArray * attributes, GstCaps * caps)
 GstSDPResult
 gst_sdp_message_attributes_to_caps (const GstSDPMessage * msg, GstCaps * caps)
 {
+  GstSDPResult res;
+  GstMIKEYMessage *mikey = NULL;
+
   g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
   g_return_val_if_fail (caps != NULL && GST_IS_CAPS (caps), GST_SDP_EINVAL);
 
-  return sdp_addtributes_to_caps (msg->attributes, caps);
+  res = gst_sdp_message_parse_keymgmt (msg, &mikey);
+  if (mikey) {
+    res = GST_SDP_EINVAL;
+    if (gst_mikey_message_to_caps (mikey, caps))
+      res = sdp_add_attributes_to_caps (msg->attributes, caps);
+    gst_mikey_message_unref (mikey);
+  }
+
+  return res;
 }
 
 /**
@@ -3742,8 +3805,19 @@ gst_sdp_message_attributes_to_caps (const GstSDPMessage * msg, GstCaps * caps)
 GstSDPResult
 gst_sdp_media_attributes_to_caps (const GstSDPMedia * media, GstCaps * caps)
 {
+  GstSDPResult res;
+  GstMIKEYMessage *mikey = NULL;
+
   g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
   g_return_val_if_fail (caps != NULL && GST_IS_CAPS (caps), GST_SDP_EINVAL);
 
-  return sdp_addtributes_to_caps (media->attributes, caps);
+  res = gst_sdp_media_parse_keymgmt (media, &mikey);
+  if (mikey) {
+    res = GST_SDP_EINVAL;
+    if (gst_mikey_message_to_caps (mikey, caps))
+      res = sdp_add_attributes_to_caps (media->attributes, caps);
+    gst_mikey_message_unref (mikey);
+  }
+
+  return res;
 }

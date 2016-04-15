@@ -43,6 +43,8 @@
 #ifndef __GST_SDP_MESSAGE_H__
 #define __GST_SDP_MESSAGE_H__
 
+#include "gstmikey.h"
+
 #include <glib.h>
 #include <gst/gst.h>
 #include <gst/sdp/gstsdp.h>
@@ -504,6 +506,8 @@ GstSDPResult            gst_sdp_media_add_attribute         (GstSDPMedia *media,
 GstCaps*                gst_sdp_media_get_caps_from_media   (const GstSDPMedia *media, gint pt);
 GstSDPResult            gst_sdp_media_set_media_from_caps   (const GstCaps* caps, GstSDPMedia *media);
 gchar *                 gst_sdp_make_keymgmt                (const gchar *uri, const gchar *base64);
+GstSDPResult            gst_sdp_message_parse_keymgmt       (const GstSDPMessage *msg, GstMIKEYMessage **mikey);
+GstSDPResult            gst_sdp_media_parse_keymgmt         (const GstSDPMedia *media, GstMIKEYMessage **mikey);
 GstSDPResult            gst_sdp_message_attributes_to_caps  (const GstSDPMessage *msg, GstCaps *caps);
 GstSDPResult            gst_sdp_media_attributes_to_caps    (const GstSDPMedia *media, GstCaps *caps);
 
