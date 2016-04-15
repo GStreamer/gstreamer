@@ -649,6 +649,7 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
    * and if a pad does not have a buffer in time we ignore
    * that pad.
    */
+  GST_OBJECT_LOCK (self);
   if (!GST_CLOCK_TIME_IS_VALID (latency) ||
       !GST_IS_CLOCK (GST_ELEMENT_CLOCK (self)) ||
       !GST_CLOCK_TIME_IS_VALID (start) ||
@@ -659,6 +660,7 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
      * then check if we're ready now. If we return FALSE,
      * we will be directly called again.
      */
+    GST_OBJECT_UNLOCK (self);
     SRC_WAIT (self);
   } else {
     GstClockTime base_time, time;
@@ -669,11 +671,8 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
     GST_DEBUG_OBJECT (self, "got subclass start time: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (start));
 
-    GST_OBJECT_LOCK (self);
     base_time = GST_ELEMENT_CAST (self)->base_time;
-    clock = GST_ELEMENT_CLOCK (self);
-    if (clock)
-      gst_object_ref (clock);
+    clock = gst_object_ref (GST_ELEMENT_CLOCK (self));
     GST_OBJECT_UNLOCK (self);
 
     time = base_time + start;
@@ -683,7 +682,7 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
         GST_TIME_FORMAT " (base %" GST_TIME_FORMAT " start %" GST_TIME_FORMAT
         " latency %" GST_TIME_FORMAT " current %" GST_TIME_FORMAT ")",
         GST_TIME_ARGS (time),
-        GST_TIME_ARGS (GST_ELEMENT_CAST (self)->base_time),
+        GST_TIME_ARGS (base_time),
         GST_TIME_ARGS (start), GST_TIME_ARGS (latency),
         GST_TIME_ARGS (gst_clock_get_time (clock)));
 
