@@ -69,8 +69,8 @@ static const unsigned char block_size[16] =
 static gboolean gst_amrwbdec_start (GstAudioDecoder * dec);
 static gboolean gst_amrwbdec_stop (GstAudioDecoder * dec);
 static gboolean gst_amrwbdec_set_format (GstAudioDecoder * dec, GstCaps * caps);
-static gboolean gst_amrwbdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
-    gint * offset, gint * length);
+static GstFlowReturn gst_amrwbdec_parse (GstAudioDecoder * dec,
+    GstAdapter * adapter, gint * offset, gint * length);
 static GstFlowReturn gst_amrwbdec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
 

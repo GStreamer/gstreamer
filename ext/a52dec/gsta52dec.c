@@ -97,8 +97,8 @@ G_DEFINE_TYPE (GstA52Dec, gst_a52dec, GST_TYPE_AUDIO_DECODER);
 static gboolean gst_a52dec_start (GstAudioDecoder * dec);
 static gboolean gst_a52dec_stop (GstAudioDecoder * dec);
 static gboolean gst_a52dec_set_format (GstAudioDecoder * bdec, GstCaps * caps);
-static gboolean gst_a52dec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
-    gint * offset, gint * length);
+static GstFlowReturn gst_a52dec_parse (GstAudioDecoder * dec,
+    GstAdapter * adapter, gint * offset, gint * length);
 static GstFlowReturn gst_a52dec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
 
