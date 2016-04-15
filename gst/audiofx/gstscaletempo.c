@@ -292,8 +292,11 @@ reinit_buffers (GstScaletempo * st)
     st->bytes_standing = st->bytes_stride - st->bytes_overlap;
     st->samples_standing = st->bytes_standing / st->bytes_per_sample;
     st->buf_overlap = g_realloc (st->buf_overlap, st->bytes_overlap);
+    /* S16 uses gint32 blend table, floats/doubles use their respective type */
     st->table_blend =
-        g_realloc (st->table_blend, st->samples_overlap * st->bytes_per_sample);
+        g_realloc (st->table_blend,
+        st->samples_overlap * (st->format ==
+            GST_AUDIO_FORMAT_S16 ? 4 : st->bytes_per_sample));
     if (st->bytes_overlap > prev_overlap) {
       memset ((guint8 *) st->buf_overlap + prev_overlap, 0,
           st->bytes_overlap - prev_overlap);
@@ -338,8 +341,10 @@ reinit_buffers (GstScaletempo * st)
   if (st->frames_search < 1) {  /* if no search */
     st->best_overlap_offset = NULL;
   } else {
+    /* S16 uses gint32 buffer, floats/doubles use their respective type */
     guint bytes_pre_corr =
-        (st->samples_overlap - st->samples_per_frame) * st->bytes_per_sample;
+        (st->samples_overlap - st->samples_per_frame) * (st->format ==
+        GST_AUDIO_FORMAT_S16 ? 4 : st->bytes_per_sample);
     st->buf_pre_corr =
         g_realloc (st->buf_pre_corr, bytes_pre_corr + UNROLL_PADDING);
     st->table_window = g_realloc (st->table_window, bytes_pre_corr);
