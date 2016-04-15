@@ -1516,12 +1516,6 @@ gst_pulseringbuffer_commit (GstAudioRingBuffer * buf, guint64 * sample,
   if (pbuf->paused)
     goto was_paused;
 
-  /* ensure running clock for whatever out there */
-  if (pbuf->corked) {
-    if (!gst_pulsering_set_corked (pbuf, FALSE, FALSE))
-      goto uncork_failed;
-  }
-
   /* offset is in bytes */
   offset = *sample * bpf;
 
