@@ -787,6 +787,7 @@ gst_srtp_dec_sink_setcaps (GstPad * pad, GstObject * parent,
   ps = gst_caps_get_structure (caps, 0);
 
   if (gst_structure_has_field_typed (ps, "ssrc", G_TYPE_UINT) &&
+      gst_structure_has_field_typed (ps, "roc", G_TYPE_UINT) &&
       gst_structure_has_field_typed (ps, "srtp-cipher", G_TYPE_STRING) &&
       gst_structure_has_field_typed (ps, "srtp-auth", G_TYPE_STRING) &&
       gst_structure_has_field_typed (ps, "srtcp-cipher", G_TYPE_STRING) &&
