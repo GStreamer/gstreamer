@@ -2204,6 +2204,7 @@ gst_mikey_message_new_from_caps (GstCaps * caps)
   GstMapInfo info;
   GstBuffer *srtpkey;
   const GValue *val;
+  const gchar *cipher, *auth;
   const gchar *srtpcipher, *srtpauth, *srtcpcipher, *srtcpauth;
 
   g_return_val_if_fail (caps != NULL && GST_IS_CAPS (caps), NULL);
@@ -2224,11 +2225,22 @@ gst_mikey_message_new_from_caps (GstCaps * caps)
   srtcpcipher = gst_structure_get_string (s, "srtcp-cipher");
   srtcpauth = gst_structure_get_string (s, "srtcp-auth");
 
-  if (srtpcipher == NULL || srtpauth == NULL || srtcpcipher == NULL ||
-      srtcpauth == NULL) {
+  /* we need srtp cipher/auth or srtcp cipher/auth */
+  if ((srtpcipher == NULL || srtpauth == NULL)
+      && (srtcpcipher == NULL || srtcpauth == NULL)) {
     GST_WARNING ("could not find the right SRTP parameters in caps");
     return NULL;
   }
+
+  /* prefer srtp cipher over srtcp */
+  cipher = srtpcipher;
+  if (cipher == NULL)
+    cipher = srtcpcipher;
+
+  /* prefer srtp auth over srtcp */
+  auth = srtpauth;
+  if (auth == NULL)
+    auth = srtcpauth;
 
   msg = gst_mikey_message_new ();
   /* unencrypted MIKEY message, we send this over TLS so this is allowed */
@@ -2248,14 +2260,14 @@ gst_mikey_message_new_from_caps (GstCaps * caps)
   byte = 1;
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_ALG, 1, &byte);
   /* encryption key length */
-  byte = enc_key_length_from_cipher_name (srtpcipher);
+  byte = enc_key_length_from_cipher_name (cipher);
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_KEY_LEN, 1,
       &byte);
   /* only HMAC-SHA1 */
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_AUTH_ALG, 1,
       &byte);
   /* authentication key length */
-  byte = auth_key_length_from_auth_name (srtpauth);
+  byte = auth_key_length_from_auth_name (auth);
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_AUTH_KEY_LEN, 1,
       &byte);
   /* we enable encryption on RTP and RTCP */
