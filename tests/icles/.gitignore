@@ -13,3 +13,5 @@ test-scale
 test-box
 test-colorkey
 test-videooverlay
+test-resample
+
