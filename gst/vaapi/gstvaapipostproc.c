@@ -1321,7 +1321,33 @@ gst_vaapipostproc_propose_allocation (GstBaseTransform * trans,
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (trans);
+  GstCaps *allocation_caps;
+  GstStructure *structure;
+  gint allocation_width, allocation_height;
+  gint negotiated_width, negotiated_height;
 
+  negotiated_width = GST_VIDEO_INFO_WIDTH (&postproc->sinkpad_info);
+  negotiated_height = GST_VIDEO_INFO_HEIGHT (&postproc->sinkpad_info);
+
+  if (negotiated_width == 0 || negotiated_height == 0)
+    goto bail;
+
+  allocation_caps = NULL;
+  gst_query_parse_allocation (query, &allocation_caps, NULL);
+  if (!allocation_caps)
+    goto bail;
+
+  structure = gst_caps_get_structure (allocation_caps, 0);
+  if (!gst_structure_get_int (structure, "width", &allocation_width))
+    goto bail;
+  if (!gst_structure_get_int (structure, "height", &allocation_height))
+    goto bail;
+
+  if (allocation_width != negotiated_width
+      || allocation_height != negotiated_height)
+    postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SIZE;
+
+bail:
   /* Let vaapidecode allocate the video buffers */
   if (postproc->get_va_surfaces)
     return FALSE;
