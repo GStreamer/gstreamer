@@ -3180,7 +3180,7 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         !GST_CLOCK_TIME_IS_VALID (dts) &&
         !GST_CLOCK_TIME_IS_VALID (parse->priv->prev_dts) &&
         GST_CLOCK_TIME_IS_VALID (pts))
-      parse->priv->next_dts = pts;
+      parse->priv->prev_dts = parse->priv->next_dts = pts;
 
     /* always pass all available data */
     tmpbuf = gst_adapter_get_buffer (parse->priv->adapter, av);
