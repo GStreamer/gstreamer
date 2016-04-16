@@ -933,11 +933,9 @@ mpegtsmux_sink_event (GstCollectPads * pads, GstCollectData * data,
 
         lang_code = gst_tag_get_language_code_iso_639_2B (lang);
         if (lang_code) {
-          if (pad_data->language) {
-            g_free (pad_data->language);
-            pad_data->language = NULL;
-          }
           GST_DEBUG_OBJECT (pad, "Setting language to '%s'", lang_code);
+
+          g_free (pad_data->language);
           pad_data->language = g_strdup (lang_code);
         } else {
           GST_WARNING_OBJECT (pad, "Did not get language code for '%s'", lang);
