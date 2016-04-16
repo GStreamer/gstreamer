@@ -96,8 +96,8 @@ static void gst_amrnbdec_get_property (GObject * object, guint prop_id,
 static gboolean gst_amrnbdec_start (GstAudioDecoder * dec);
 static gboolean gst_amrnbdec_stop (GstAudioDecoder * dec);
 static gboolean gst_amrnbdec_set_format (GstAudioDecoder * dec, GstCaps * caps);
-static gboolean gst_amrnbdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
-    gint * offset, gint * length);
+static GstFlowReturn gst_amrnbdec_parse (GstAudioDecoder * dec,
+    GstAdapter * adapter, gint * offset, gint * length);
 static GstFlowReturn gst_amrnbdec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
 

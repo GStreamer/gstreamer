@@ -85,8 +85,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 static gboolean gst_mad_start (GstAudioDecoder * dec);
 static gboolean gst_mad_stop (GstAudioDecoder * dec);
-static gboolean gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
-    gint * offset, gint * length);
+static GstFlowReturn gst_mad_parse (GstAudioDecoder * dec,
+    GstAdapter * adapter, gint * offset, gint * length);
 static GstFlowReturn gst_mad_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
 static void gst_mad_flush (GstAudioDecoder * dec, gboolean hard);
