@@ -192,8 +192,9 @@ _context_ready (gpointer data)
   if (self->queue_resize || self->last_bounds.size.width != self.bounds.size.width
       || self->last_bounds.size.height != self.bounds.size.height) {
     if (self->resize_cb) {
-      self->resize_cb (self->resize_data, self.bounds.size.width,
-          self.bounds.size.height);
+      self->resize_cb (self->resize_data, 
+          self.bounds.size.width*self.contentsScale,
+          self.bounds.size.height*self.contentsScale);
 
       gl->GetIntegerv (GL_VIEWPORT, self->expected_dims);
     } else {
