@@ -1035,7 +1035,7 @@ gst_ca_opengl_layer_sink_on_draw (GstCAOpenGLLayerSink * ca_sink)
     gst_ca_opengl_layer_sink_on_resize (ca_sink, ca_sink->window_width,
         ca_sink->window_height);
     GST_CA_OPENGL_LAYER_SINK_LOCK (ca_sink);
-    ca_sink->caps_change = TRUE;
+    ca_sink->caps_change = FALSE;
   }
 
   sync_meta = gst_buffer_get_gl_sync_meta (ca_sink->stored_sync);
