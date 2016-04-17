@@ -96,7 +96,7 @@ GST_START_TEST (test_granulepos_offset)
 
   pipe_str = g_strdup_printf ("audiotestsrc timestamp-offset=%" G_GUINT64_FORMAT
       " ! audio/x-raw,rate=44100"
-      " ! audioconvert ! vorbisenc ! fakesink", TIMESTAMP_OFFSET);
+      " ! audioconvert ! vorbisenc ! fakesink name=sink", TIMESTAMP_OFFSET);
 
   bin = gst_parse_launch (pipe_str, &error);
   fail_unless (bin != NULL, "Error parsing pipeline: %s",
@@ -105,7 +105,7 @@ GST_START_TEST (test_granulepos_offset)
 
   /* get the pad */
   {
-    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "fakesink0");
+    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "sink");
 
     fail_unless (sink != NULL, "Could not get fakesink out of bin");
     pad = gst_element_get_static_pad (sink, "sink");
@@ -187,7 +187,8 @@ GST_START_TEST (test_timestamps)
   GError *error = NULL;
 
   pipe_str = g_strdup_printf ("audiotestsrc"
-      " ! audio/x-raw,rate=44100 ! audioconvert ! vorbisenc ! fakesink");
+      " ! audio/x-raw,rate=44100 ! audioconvert ! vorbisenc "
+      " ! fakesink name=sink");
 
   bin = gst_parse_launch (pipe_str, &error);
   fail_unless (bin != NULL, "Error parsing pipeline: %s",
@@ -196,7 +197,7 @@ GST_START_TEST (test_timestamps)
 
   /* get the pad */
   {
-    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "fakesink0");
+    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "sink");
 
     fail_unless (sink != NULL, "Could not get fakesink out of bin");
     pad = gst_element_get_static_pad (sink, "sink");
@@ -287,8 +288,8 @@ GST_START_TEST (test_discontinuity)
 
   /* make audioencoder act sufficiently pedantic */
   pipe_str = g_strdup_printf ("audiotestsrc samplesperbuffer=1024"
-      " ! audio/x-raw,rate=44100" " ! audioconvert "
-      " ! vorbisenc tolerance=10000000 ! fakesink");
+      " ! audio/x-raw,rate=44100 ! audioconvert "
+      " ! vorbisenc tolerance=10000000 name=enc ! fakesink name=sink");
 
   bin = gst_parse_launch (pipe_str, &error);
   fail_unless (bin != NULL, "Error parsing pipeline: %s",
@@ -300,7 +301,7 @@ GST_START_TEST (test_discontinuity)
 
   /* get the pad to use to drop buffers */
   {
-    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "vorbisenc0");
+    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "enc");
 
     fail_unless (sink != NULL, "Could not get vorbisenc out of bin");
     droppad = gst_element_get_static_pad (sink, "sink");
@@ -310,7 +311,7 @@ GST_START_TEST (test_discontinuity)
 
   /* get the pad */
   {
-    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "fakesink0");
+    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "sink");
 
     fail_unless (sink != NULL, "Could not get fakesink out of bin");
     pad = gst_element_get_static_pad (sink, "sink");
