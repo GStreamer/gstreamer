@@ -139,6 +139,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #define UDP_DEFAULT_AUTO_MULTICAST     TRUE
 #define UDP_DEFAULT_REUSE              TRUE
 #define UDP_DEFAULT_LOOP               TRUE
+#define UDP_DEFAULT_RETRIEVE_SENDER_ADDRESS TRUE
 
 enum
 {
@@ -158,7 +159,8 @@ enum
   PROP_AUTO_MULTICAST,
   PROP_REUSE,
   PROP_ADDRESS,
-  PROP_LOOP
+  PROP_LOOP,
+  PROP_RETRIEVE_SENDER_ADDRESS
 };
 
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
@@ -273,6 +275,22 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
           "Used for setting the multicast loop parameter. TRUE = enable,"
           " FALSE = disable", UDP_DEFAULT_LOOP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstUDPSrc::retrieve-sender-address:
+   *
+   * Whether to retrieve the sender address and add it to the buffers as
+   * meta. Disabling this might result in minor performance improvements
+   * in certain scenarios.
+   *
+   * Since: 1.10
+   */
+  g_object_class_install_property (gobject_class, PROP_RETRIEVE_SENDER_ADDRESS,
+      g_param_spec_boolean ("retrieve-sender-address",
+          "Retrieve Sender Address",
+          "Whether to retrieve the sender address and add it to buffers as "
+          "meta. Disabling this might result in minor performance improvements "
+          "in certain scenarios", UDP_DEFAULT_RETRIEVE_SENDER_ADDRESS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
@@ -312,6 +330,7 @@ gst_udpsrc_init (GstUDPSrc * udpsrc)
   udpsrc->used_socket = UDP_DEFAULT_USED_SOCKET;
   udpsrc->reuse = UDP_DEFAULT_REUSE;
   udpsrc->loop = UDP_DEFAULT_LOOP;
+  udpsrc->retrieve_sender_address = UDP_DEFAULT_RETRIEVE_SENDER_ADDRESS;
 
   /* configure basesrc to be a live source */
   gst_base_src_set_live (GST_BASE_SRC (udpsrc), TRUE);
@@ -511,6 +530,7 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   GstUDPSrc *udpsrc;
   GstBuffer *outbuf = NULL;
   GSocketAddress *saddr = NULL;
+  GSocketAddress **p_saddr;
   gint flags = G_SOCKET_MSG_NONE;
   gboolean try_again;
   GError *err = NULL;
@@ -521,6 +541,9 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 
   if (!gst_udpsrc_ensure_mem (udpsrc))
     goto memory_alloc_error;
+
+  /* Retrieve sender address unless we've been configured not to do so */
+  p_saddr = (udpsrc->retrieve_sender_address) ? &saddr : NULL;
 
 retry:
 
@@ -562,7 +585,7 @@ retry:
   }
 
   res =
-      g_socket_receive_message (udpsrc->used_socket, &saddr, udpsrc->vec, 2,
+      g_socket_receive_message (udpsrc->used_socket, p_saddr, udpsrc->vec, 2,
       NULL, NULL, &flags, udpsrc->cancellable, &err);
 
   if (G_UNLIKELY (res < 0)) {
@@ -801,6 +824,9 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_LOOP:
       udpsrc->loop = g_value_get_boolean (value);
       break;
+    case PROP_RETRIEVE_SENDER_ADDRESS:
+      udpsrc->retrieve_sender_address = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -857,6 +883,9 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_LOOP:
       g_value_set_boolean (value, udpsrc->loop);
+      break;
+    case PROP_RETRIEVE_SENDER_ADDRESS:
+      g_value_set_boolean (value, udpsrc->retrieve_sender_address);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

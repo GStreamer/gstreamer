@@ -61,6 +61,7 @@ struct _GstUDPSrc {
   gboolean   auto_multicast;
   gboolean   reuse;
   gboolean   loop;
+  gboolean   retrieve_sender_address;
 
   /* stats */
   guint      max_size;
