@@ -127,6 +127,9 @@ G_GNUC_INTERNAL  void  _priv_gst_context_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_toc_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_date_time_initialize (void);
 
+/* cleanup functions called from gst_deinit(). */
+G_GNUC_INTERNAL  void  _priv_gst_allocator_cleanup (void);
+
 /* Private registry functions */
 G_GNUC_INTERNAL
 gboolean _priv_gst_registry_remove_cache_plugins (GstRegistry *registry);

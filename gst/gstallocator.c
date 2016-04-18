@@ -536,7 +536,11 @@ default_free (GstAllocator * allocator, GstMemory * mem)
 static void
 gst_allocator_sysmem_finalize (GObject * obj)
 {
-  g_warning ("The default memory allocator was freed!");
+  /* Don't raise warnings if we are shutting down */
+  if (_default_allocator)
+    g_warning ("The default memory allocator was freed!");
+
+  ((GObjectClass *) gst_allocator_sysmem_parent_class)->finalize (obj);
 }
 
 static void
@@ -573,7 +577,8 @@ void
 _priv_gst_allocator_initialize (void)
 {
   g_rw_lock_init (&lock);
-  allocators = g_hash_table_new (g_str_hash, g_str_equal);
+  allocators = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
+      gst_object_unref);
 
 #ifdef HAVE_GETPAGESIZE
 #ifdef MEMORY_ALIGNMENT_PAGESIZE
@@ -590,6 +595,18 @@ _priv_gst_allocator_initialize (void)
       gst_object_ref (_sysmem_allocator));
 
   _default_allocator = gst_object_ref (_sysmem_allocator);
+}
+
+void
+_priv_gst_allocator_cleanup (void)
+{
+  gst_object_unref (_sysmem_allocator);
+  _sysmem_allocator = NULL;
+
+  gst_object_unref (_default_allocator);
+  _default_allocator = NULL;
+
+  g_clear_pointer (&allocators, g_hash_table_unref);
 }
 
 /**

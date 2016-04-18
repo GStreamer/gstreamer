@@ -990,6 +990,7 @@ gst_deinit (void)
   gst_object_unref (clock);
 
   _priv_gst_registry_cleanup ();
+  _priv_gst_allocator_cleanup ();
 
 #ifndef GST_DISABLE_TRACE
   _priv_gst_alloc_trace_deinit ();
