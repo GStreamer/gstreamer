@@ -479,7 +479,7 @@ gst_vaapi_find_preferred_format (const GValue * format_list,
 }
 
 GstVaapiCapsFeature
-gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
+gst_vaapi_find_preferred_caps_feature (GstPad * pad,
     GstVideoFormat * out_format_ptr)
 {
   GstVaapiCapsFeature feature = GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED;
@@ -548,7 +548,7 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
     format_list = gst_structure_get_value (structure, "format");
     if (!format_list)
       goto cleanup;
-    out_format = gst_vaapi_find_preferred_format (format_list, format);
+    out_format = gst_vaapi_find_preferred_format (format_list, *out_format_ptr);
     if (out_format == GST_VIDEO_FORMAT_UNKNOWN)
       goto cleanup;
 

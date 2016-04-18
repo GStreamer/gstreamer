@@ -1125,7 +1125,7 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
 
   feature =
       gst_vaapi_find_preferred_caps_feature (GST_BASE_TRANSFORM_SRC_PAD (trans),
-      out_format, &out_format);
+      &out_format);
   gst_video_info_change_format (&vi, out_format, width, height);
 
   out_caps = gst_video_info_to_caps (&vi);
