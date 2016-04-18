@@ -680,9 +680,10 @@ gst_videoaggregator_default_update_caps (GstVideoAggregator * vagg,
   ret = gst_caps_merge (best_format_caps, gst_caps_ref (caps));
 
   if (filter) {
-    ret = gst_caps_intersect (ret, filter);
-  } else {
-    gst_caps_ref (ret);
+    GstCaps *tmp;
+    tmp = gst_caps_intersect (ret, filter);
+    gst_caps_unref (ret);
+    ret = tmp;
   }
 
   return ret;
