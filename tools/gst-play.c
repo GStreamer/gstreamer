@@ -1289,5 +1289,6 @@ main (int argc, char **argv)
   g_free (video_sink);
 
   g_print ("\n");
+  gst_deinit ();
   return 0;
 }
