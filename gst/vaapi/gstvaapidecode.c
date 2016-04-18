@@ -259,6 +259,14 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
     return FALSE;
 
+  if ((feature == GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY ||
+          feature == GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE)
+      && format != GST_VIDEO_INFO_FORMAT (&decode->decoded_info)) {
+    GST_FIXME_OBJECT (decode, "validate if driver can convert from %s to %s",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT
+            (&decode->decoded_info)), gst_video_format_to_string (format));
+  }
+
   switch (feature) {
 #if (USE_GLX || USE_EGL)
     case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
