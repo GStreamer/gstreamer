@@ -3681,7 +3681,7 @@ sdp_add_attributes_to_keymgmt (GArray * attributes, GstMIKEYMessage ** mikey)
  *
  * Returns: a #GstSDPResult.
  *
- * Since: 1.10
+ * Since: 1.8.1
  */
 GstSDPResult
 gst_sdp_message_parse_keymgmt (const GstSDPMessage * msg,
@@ -3702,7 +3702,7 @@ gst_sdp_message_parse_keymgmt (const GstSDPMessage * msg,
  *
  * Returns: a #GstSDPResult.
  *
- * Since: 1.10
+ * Since: 1.8.1
  */
 GstSDPResult
 gst_sdp_media_parse_keymgmt (const GstSDPMedia * media,
