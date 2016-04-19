@@ -44,7 +44,6 @@
 #endif
 
 #include <d3d9.h>
-#include <d3dx9tex.h>
 
 typedef struct _GstD3DVideoSink GstD3DVideoSink;
 typedef struct _GstD3DVideoSinkClass GstD3DVideoSinkClass;
