@@ -1712,7 +1712,7 @@ _unbind_buffer (GstGLColorConvert * convert)
 
 static gchar *
 _mangle_texture_access (const gchar * str, GstGLTextureTarget from,
-    GstGLTextureTarget to, GstGLAPI gl_api)
+    GstGLTextureTarget to, GstGLAPI gl_api, guint gl_major, guint gl_minor)
 {
   const gchar *from_str = NULL, *to_str = NULL;
   gchar *ret, *tmp;
@@ -1726,7 +1726,8 @@ _mangle_texture_access (const gchar * str, GstGLTextureTarget from,
   if (from == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
     from_str = "texture2D";
 
-  if (gl_api & GST_GL_API_OPENGL3) {
+  if ((gl_api & GST_GL_API_OPENGL3) || (gl_api & GST_GL_API_GLES2
+          && gl_major >= 3)) {
     to_str = "texture";
   } else {
     if (to == GST_GL_TEXTURE_TARGET_2D)
@@ -1894,7 +1895,7 @@ _mangle_shader (const gchar * str, guint shader_type, GstGLTextureTarget from,
 
   _mangle_version_profile_from_gl_api (gl_api, gl_major, gl_minor, version,
       profile);
-  tmp = _mangle_texture_access (str, from, to, gl_api);
+  tmp = _mangle_texture_access (str, from, to, gl_api, gl_major, gl_minor);
   tmp2 = _mangle_sampler_type (tmp, from, to);
   g_free (tmp);
   tmp =
