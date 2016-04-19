@@ -1045,6 +1045,8 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         gst_object_unref (glimage_sink->context);
         glimage_sink->context = NULL;
       }
+      
+      glimage_sink->window_id = 0;
 
       if (glimage_sink->other_context) {
         gst_object_unref (glimage_sink->other_context);
