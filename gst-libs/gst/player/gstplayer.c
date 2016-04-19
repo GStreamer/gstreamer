@@ -95,6 +95,8 @@ enum
   PROP_RATE,
   PROP_PIPELINE,
   PROP_POSITION_UPDATE_INTERVAL,
+  PROP_VIDEO_MULTIVIEW_MODE,
+  PROP_VIDEO_MULTIVIEW_FLAGS,
   PROP_LAST
 };
 
@@ -324,6 +326,22 @@ gst_player_class_init (GstPlayerClass * klass)
       "Pass 0 to stop updating the position.",
       0, 10000, DEFAULT_POSITION_UPDATE_INTERVAL_MS,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  param_specs[PROP_VIDEO_MULTIVIEW_MODE] =
+      g_param_spec_enum ("video-multiview-mode",
+      "Multiview Mode Override",
+      "Re-interpret a video stream as one of several frame-packed stereoscopic modes.",
+      GST_TYPE_VIDEO_MULTIVIEW_FRAME_PACKING,
+      GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  param_specs[PROP_VIDEO_MULTIVIEW_FLAGS] =
+      g_param_spec_flags ("video-multiview-flags",
+      "Multiview Flags Override",
+      "Override details of the multiview frame layout",
+      GST_TYPE_VIDEO_MULTIVIEW_FLAGS, GST_VIDEO_MULTIVIEW_FLAGS_NONE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
 
   g_object_class_install_properties (gobject_class, PROP_LAST, param_specs);
 
@@ -570,6 +588,18 @@ gst_player_set_property (GObject * object, guint prop_id,
 
       gst_player_set_position_update_interval_internal (self);
       break;
+    case PROP_VIDEO_MULTIVIEW_MODE:
+      GST_DEBUG_OBJECT (self, "Set multiview mode=%u",
+          g_value_get_enum (value));
+      g_object_set_property (G_OBJECT (self->playbin), "video-multiview-mode",
+          value);
+      break;
+    case PROP_VIDEO_MULTIVIEW_FLAGS:
+      GST_DEBUG_OBJECT (self, "Set multiview flags=%x",
+          g_value_get_flags (value));
+      g_object_set_property (G_OBJECT (self->playbin), "video-multiview-flags",
+          value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -662,6 +692,20 @@ gst_player_get_property (GObject * object, guint prop_id,
       g_value_set_uint (value, gst_player_get_position_update_interval (self));
       g_mutex_unlock (&self->lock);
       break;
+    case PROP_VIDEO_MULTIVIEW_MODE:{
+      g_object_get_property (G_OBJECT (self->playbin), "video-multiview-mode",
+          value);
+      GST_TRACE_OBJECT (self, "Return multiview mode=%d",
+          g_value_get_enum (value));
+      break;
+    }
+    case PROP_VIDEO_MULTIVIEW_FLAGS:{
+      g_object_get_property (G_OBJECT (self->playbin), "video-multiview-flags",
+          value);
+      GST_TRACE_OBJECT (self, "Return multiview flags=%x",
+          g_value_get_flags (value));
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3661,6 +3705,88 @@ gst_player_get_color_balance (GstPlayer * self, GstPlayerColorBalanceType type)
       (gdouble) channel->min_value) / ((gdouble) channel->max_value -
       (gdouble) channel->min_value);
 }
+
+/**
+ * gst_player_get_multiview_mode:
+ * @player: #GstPlayer instance
+ *
+ * Retrieve the current value of the indicated @type.
+ *
+ * Returns: The current value of @type, Default: -1 "none"
+ *
+ * Since: 1.10
+ */
+GstVideoMultiviewMode
+gst_player_get_multiview_mode (GstPlayer * self)
+{
+  GstVideoMultiviewMode val = GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE;
+
+  g_return_val_if_fail (GST_IS_PLAYER (self),
+      GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE);
+
+  g_object_get (self, "video-multiview-mode", &val, NULL);
+
+  return val;
+}
+
+/**
+ * gst_player_set_multiview_mode:
+ * @player: #GstPlayer instance
+ * @mode: The new value for the @type
+ *
+ * Sets the current value of the indicated mode @type to the passed
+ * value.
+ *
+ * Since: 1.10
+ */
+void
+gst_player_set_multiview_mode (GstPlayer * self, GstVideoMultiviewMode mode)
+{
+  g_return_if_fail (GST_IS_PLAYER (self));
+
+  g_object_set (self, "video-multiview-mode", mode, NULL);
+}
+
+/**
+ * gst_player_get_multiview_flags:
+ * @player: #GstPlayer instance
+ *
+ * Retrieve the current value of the indicated @type.
+ *
+ * Returns: The current value of @type, Default: 0x00000000 "none
+ *
+ * Since: 1.10
+ */
+GstVideoMultiviewFlags
+gst_player_get_multiview_flags (GstPlayer * self)
+{
+  GstVideoMultiviewFlags val = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+
+  g_return_val_if_fail (GST_IS_PLAYER (self), val);
+
+  g_object_get (self, "video-multiview-flags", &val, NULL);
+
+  return val;
+}
+
+/**
+ * gst_player_set_multiview_flags:
+ * @player: #GstPlayer instance
+ * @flags: The new value for the @type
+ *
+ * Sets the current value of the indicated mode @type to the passed
+ * value.
+ *
+ * Since: 1.10
+ */
+void
+gst_player_set_multiview_flags (GstPlayer * self, GstVideoMultiviewFlags flags)
+{
+  g_return_if_fail (GST_IS_PLAYER (self));
+
+  g_object_set (self, "video-multiview-flags", flags, NULL);
+}
+
 
 #define C_ENUM(v) ((gint) v)
 #define C_FLAGS(v) ((guint) v)

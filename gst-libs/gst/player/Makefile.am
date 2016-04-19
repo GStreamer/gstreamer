@@ -70,6 +70,7 @@ GstPlayer-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstplayer-@GST_API_
 		--library-path=$(top_builddir)/gst-libs \
 		--library=libgstplayer-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
+		--include=GstVideo-@GST_API_VERSION@ \
 		--libtool="${LIBTOOL}" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-audio-@GST_API_VERSION@ \

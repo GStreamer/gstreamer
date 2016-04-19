@@ -22,6 +22,7 @@
 #define __GST_PLAYER_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <gst/player/gstplayer-types.h>
 #include <gst/player/gstplayer-signal-dispatcher.h>
 #include <gst/player/gstplayer-video-renderer.h>
@@ -177,6 +178,17 @@ void         gst_player_set_color_balance             (GstPlayer    * player,
                                                        gdouble value);
 gdouble      gst_player_get_color_balance             (GstPlayer    * player,
                                                        GstPlayerColorBalanceType type);
+
+
+GstVideoMultiviewMode	 gst_player_get_multiview_mode (GstPlayer    * player);
+void                     gst_player_set_multiview_mode (GstPlayer    * player,
+                                                        GstVideoMultiviewMode mode);
+
+GstVideoMultiviewFlags  gst_player_get_multiview_flags  (GstPlayer  * player);
+void                    gst_player_set_multiview_flags  (GstPlayer  * player,
+                                                         GstVideoMultiviewFlags flags);
+
+
 
 G_END_DECLS
 
