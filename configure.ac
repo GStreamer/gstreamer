@@ -244,8 +244,8 @@ AG_GST_CHECK_MODULES([GST_PBUTILS],
   [gstreamer-pbutils-$GST_API_VERSION], [$GST_PBREQ], [yes])
 
 dnl bitstream parsers (gstreamer-codecparsers)
-AG_GST_CHECK_MODULES([GST_CODEC_PARSERS],
-  [gstreamer-codecparsers-$GST_API_VERSION], [$GST_PBADREQ], [yes])
+AG_GST_PKG_CHECK_MODULES([GST_CODEC_PARSERS],
+  [gstreamer-codecparsers-$GST_API_VERSION >= 1.8.0 gstreamer-codecparsers-$GST_API_VERSION <= 1.8.99], [yes])
 
 AS_IF([test "x$enable_glx" = "xyes" -o "x$enable_egl" = "xyes"],
   [enable_opengl="yes"], [enable_opengl="no"])
