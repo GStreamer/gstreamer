@@ -34,7 +34,6 @@
 #include <gst/audio/gstaudiosink.h>
 
 #include <windows.h>
-#include <dxerr9.h>
 #include <dsound.h>
 #include <mmreg.h> 
 #include <ks.h> 
