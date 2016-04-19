@@ -211,6 +211,7 @@ struct TsMuxStream {
   gchar language[4];
 
   gboolean is_meta;
+  gboolean is_audio;
 
   /* Opus */
   gboolean is_opus;

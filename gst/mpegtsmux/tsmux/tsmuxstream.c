@@ -148,6 +148,7 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
     case TSMUX_ST_AUDIO_MPEG1:
     case TSMUX_ST_AUDIO_MPEG2:
       /* FIXME: Assign sequential IDs? */
+      stream->is_audio = TRUE;
       stream->id = 0xC0;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
       break;
@@ -163,12 +164,15 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
           stream->is_video_stream = TRUE;
           break;
         case TSMUX_ST_PS_AUDIO_LPCM:
+          stream->is_audio = TRUE;
           stream->id_extended = 0x80;
           break;
         case TSMUX_ST_PS_AUDIO_AC3:
+          stream->is_audio = TRUE;
           stream->id_extended = 0x71;
           break;
         case TSMUX_ST_PS_AUDIO_DTS:
+          stream->is_audio = TRUE;
           stream->id_extended = 0x82;
           break;
         default:
@@ -204,6 +208,7 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
     case TSMUX_ST_PS_OPUS:
       /* FIXME: assign sequential extended IDs? */
       stream->id = 0xBD;
+      stream->is_audio = TRUE;
       stream->stream_type = TSMUX_ST_PRIVATE_DATA;
       stream->is_opus = TRUE;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
@@ -732,7 +737,13 @@ tsmux_stream_get_es_descrs (TsMuxStream * stream,
   g_return_if_fail (stream != NULL);
   g_return_if_fail (pmt_stream != NULL);
 
-  /* Based on the stream type, write out any descriptors to go in the 
+  if (stream->is_audio && stream->language) {
+    descriptor = gst_mpegts_descriptor_from_iso_639_language (stream->language);
+    g_ptr_array_add (pmt_stream->descriptors, descriptor);
+    descriptor = NULL;
+  }
+
+  /* Based on the stream type, write out any descriptors to go in the
    * PMT ES_info field */
   /* tag (registration_descriptor), length, format_identifier */
   switch (stream->stream_type) {

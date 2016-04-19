@@ -1040,6 +1040,30 @@ gst_mpegts_descriptor_parse_iso_639_language_nb (const GstMpegtsDescriptor *
 }
 
 /**
+ * gst_mpegts_descriptor_from_iso_639_language:
+ * @language: (transfer none): ISO-639-2 language 3-char code
+ *
+ * Creates a %GST_MTS_DESC_ISO_639_LANGUAGE #GstMpegtsDescriptor with
+ * a single language
+ *
+ * Return: #GstMpegtsDescriptor, %NULL on failure
+ */
+GstMpegtsDescriptor *
+gst_mpegts_descriptor_from_iso_639_language (const gchar * language)
+{
+  GstMpegtsDescriptor *descriptor;
+
+  g_return_val_if_fail (language != NULL, NULL);
+
+  descriptor = _new_descriptor (GST_MTS_DESC_ISO_639_LANGUAGE, 4 + 4);  /* a language takes 4 bytes */
+
+  memcpy (descriptor->data + 2, language, 3);
+  descriptor->data[2 + 3] = 0;  /* set audio type to undefined */
+
+  return descriptor;
+}
+
+/**
  * gst_mpegts_descriptor_parse_logical_channel:
  * @descriptor: a %GST_MTS_DESC_DTG_LOGICAL_CHANNEL #GstMpegtsDescriptor
  * @res: (out) (transfer none): the #GstMpegtsLogicalChannelDescriptor to fill
