@@ -2311,7 +2311,7 @@ no_key:
  *
  * Returns: %TRUE on success
  *
- * Since: 1.10
+ * Since: 1.8.1
  */
 gboolean
 gst_mikey_message_to_caps (const GstMIKEYMessage * msg, GstCaps * caps)
