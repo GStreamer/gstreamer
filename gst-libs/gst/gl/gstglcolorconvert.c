@@ -27,6 +27,7 @@
 
 #include "gl.h"
 #include "gstglcolorconvert.h"
+#include "gstglsl_private.h"
 
 /**
  * SECTION:gstglcolorconvert
@@ -1710,209 +1711,6 @@ _unbind_buffer (GstGLColorConvert * convert)
   gl->DisableVertexAttribArray (convert->priv->attr_texture);
 }
 
-static gchar *
-_mangle_texture_access (const gchar * str, GstGLTextureTarget from,
-    GstGLTextureTarget to, GstGLAPI gl_api, guint gl_major, guint gl_minor)
-{
-  const gchar *from_str = NULL, *to_str = NULL;
-  gchar *ret, *tmp;
-  gchar *regex_find;
-  GRegex *regex;
-
-  if (from == GST_GL_TEXTURE_TARGET_2D)
-    from_str = "texture2D";
-  if (from == GST_GL_TEXTURE_TARGET_RECTANGLE)
-    from_str = "texture2DRect";
-  if (from == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
-    from_str = "texture2D";
-
-  if ((gl_api & GST_GL_API_OPENGL3) || (gl_api & GST_GL_API_GLES2
-          && gl_major >= 3)) {
-    to_str = "texture";
-  } else {
-    if (to == GST_GL_TEXTURE_TARGET_2D)
-      to_str = "texture2D";
-    if (to == GST_GL_TEXTURE_TARGET_RECTANGLE)
-      to_str = "texture2DRect";
-    if (to == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
-      to_str = "texture2D";
-  }
-
-  /* followed by any amount of whitespace then a bracket */
-  regex_find = g_strdup_printf ("%s(?=\\s*\\()", from_str);
-  regex = g_regex_new (regex_find, 0, 0, NULL);
-  tmp = g_regex_replace_literal (regex, str, -1, 0, to_str, 0, NULL);
-  g_free (regex_find);
-  g_regex_unref (regex);
-
-  if (tmp) {
-    ret = tmp;
-  } else {
-    GST_FIXME ("Couldn't mangle texture access successfully from %s to %s",
-        from_str, to_str);
-    ret = g_strdup (str);
-  }
-
-  return ret;
-}
-
-static gchar *
-_mangle_sampler_type (const gchar * str, GstGLTextureTarget from,
-    GstGLTextureTarget to)
-{
-  const gchar *from_str = NULL, *to_str = NULL;
-  gchar *ret, *tmp;
-  gchar *regex_find;
-  GRegex *regex;
-
-  if (from == GST_GL_TEXTURE_TARGET_2D)
-    from_str = "sampler2D";
-  if (from == GST_GL_TEXTURE_TARGET_RECTANGLE)
-    from_str = "sampler2DRect";
-  if (from == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
-    from_str = "samplerExternalOES";
-
-  if (to == GST_GL_TEXTURE_TARGET_2D)
-    to_str = "sampler2D";
-  if (to == GST_GL_TEXTURE_TARGET_RECTANGLE)
-    to_str = "sampler2DRect";
-  if (to == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
-    to_str = "samplerExternalOES";
-
-  /* followed by some whitespace  */
-  regex_find = g_strdup_printf ("%s(?=\\s)", from_str);
-  regex = g_regex_new (regex_find, 0, 0, NULL);
-  tmp = g_regex_replace_literal (regex, str, -1, 0, to_str, 0, NULL);
-  g_free (regex_find);
-  g_regex_unref (regex);
-
-  if (tmp) {
-    ret = tmp;
-  } else {
-    GST_FIXME ("Couldn't mangle sampler type successfully from %s to %s",
-        from_str, to_str);
-    ret = g_strdup (str);
-  }
-
-  return ret;
-}
-
-static gchar *
-_mangle_varying_attribute (const gchar * str, guint shader_type,
-    GstGLAPI gl_api, guint gl_major, guint gl_minor)
-{
-  if (shader_type == GL_VERTEX_SHADER) {
-    if ((gl_api & GST_GL_API_OPENGL3) || (gl_api & GST_GL_API_GLES2
-            && gl_major >= 3)) {
-      gchar *tmp, *tmp2;
-      GRegex *regex;
-
-      /* followed by some whitespace  */
-      regex = g_regex_new ("varying(?=\\s)", 0, 0, NULL);
-      tmp = g_regex_replace_literal (regex, str, -1, 0, "out", 0, NULL);
-      g_regex_unref (regex);
-
-      /* followed by some whitespace  */
-      regex = g_regex_new ("attribute(?=\\s)", 0, 0, NULL);
-      tmp2 = g_regex_replace_literal (regex, tmp, -1, 0, "in", 0, NULL);
-      g_regex_unref (regex);
-
-      g_free (tmp);
-      return tmp2;
-    }
-  } else if (shader_type == GL_FRAGMENT_SHADER) {
-    if ((gl_api & GST_GL_API_OPENGL3) || (gl_api & GST_GL_API_GLES2
-            && gl_major > 3)) {
-      gchar *tmp;
-      GRegex *regex;
-
-      /* followed by some whitespace  */
-      regex = g_regex_new ("varying(?=\\s)", 0, 0, NULL);
-      tmp = g_regex_replace_literal (regex, str, -1, 0, "in", 0, NULL);
-      g_regex_unref (regex);
-
-      return tmp;
-    }
-  }
-  return g_strdup (str);
-}
-
-static gchar *
-_mangle_frag_color_data (const gchar * str)
-{
-  GRegex *regex;
-  gchar *ret, *tmp;
-
-  regex = g_regex_new ("gl_FragColor", 0, 0, NULL);
-  ret = g_regex_replace_literal (regex, str, -1, 0, "fragColor", 0, NULL);
-  g_regex_unref (regex);
-
-  tmp = ret;
-  /* search and replace 'gl_FragData[NUM]' into fragColor_NUM */
-  regex = g_regex_new ("gl_FragData\\[(\\d+)\\]", 0, 0, NULL);
-  ret = g_regex_replace (regex, tmp, -1, 0, "fragColor_\\1", 0, NULL);
-  g_regex_unref (regex);
-  g_free (tmp);
-
-  return ret;
-}
-
-static void
-_mangle_version_profile_from_gl_api (GstGLAPI gl_api, gint gl_major,
-    gint gl_minor, GstGLSLVersion * version, GstGLSLProfile * profile)
-{
-  *version = GST_GLSL_VERSION_NONE;
-  *profile = GST_GLSL_PROFILE_NONE;
-
-  if (gl_api & GST_GL_API_OPENGL3) {
-    if (gl_major > 3 || gl_minor >= 3) {
-      *version = GST_GLSL_VERSION_330;
-      *profile = GST_GLSL_PROFILE_CORE;
-    } else {
-      *version = GST_GLSL_VERSION_150;
-      *profile = GST_GLSL_PROFILE_NONE;
-    }
-  } else if (gl_api & GST_GL_API_GLES2) {
-    if (gl_major >= 3) {
-      *version = GST_GLSL_VERSION_300;
-      *profile = GST_GLSL_PROFILE_ES;
-    } else if (gl_major >= 2) {
-      *version = GST_GLSL_VERSION_100;
-      *profile = GST_GLSL_PROFILE_ES;
-    }
-  } else if (gl_api & GST_GL_API_OPENGL) {
-    *version = GST_GLSL_VERSION_110;
-    *profile = GST_GLSL_PROFILE_COMPATIBILITY;
-  }
-}
-
-static gchar *
-_mangle_shader (const gchar * str, guint shader_type, GstGLTextureTarget from,
-    GstGLTextureTarget to, GstGLAPI gl_api, gint gl_major, gint gl_minor,
-    GstGLSLVersion * version, GstGLSLProfile * profile)
-{
-  gchar *tmp, *tmp2;
-
-  _mangle_version_profile_from_gl_api (gl_api, gl_major, gl_minor, version,
-      profile);
-  tmp = _mangle_texture_access (str, from, to, gl_api, gl_major, gl_minor);
-  tmp2 = _mangle_sampler_type (tmp, from, to);
-  g_free (tmp);
-  tmp =
-      _mangle_varying_attribute (tmp2, shader_type, gl_api, gl_major, gl_minor);
-  g_free (tmp2);
-  if (shader_type == GL_FRAGMENT_SHADER) {
-    if ((*profile == GST_GLSL_PROFILE_ES && *version >= GST_GLSL_VERSION_300)
-        || (*profile == GST_GLSL_PROFILE_CORE
-            && *version >= GST_GLSL_VERSION_150)) {
-      tmp2 = _mangle_frag_color_data (tmp);
-      g_free (tmp);
-      tmp = tmp2;
-    }
-  }
-  return tmp;
-}
-
 static GstGLShader *
 _create_shader (GstGLColorConvert * convert)
 {
@@ -1935,9 +1733,9 @@ _create_shader (GstGLColorConvert * convert)
   ret = gst_gl_shader_new (convert->context);
 
   tmp =
-      _mangle_shader (text_vertex_shader, GL_VERTEX_SHADER, info->templ->target,
-      convert->priv->from_texture_target, gl_api, gl_major, gl_minor, &version,
-      &profile);
+      _gst_glsl_mangle_shader (text_vertex_shader, GL_VERTEX_SHADER,
+      info->templ->target, convert->priv->from_texture_target, gl_api, gl_major,
+      gl_minor, &version, &profile);
 
   tmp1 = gst_glsl_version_profile_to_string (version, profile);
   version_str = g_strdup_printf ("#version %s\n", tmp1);
@@ -2043,7 +1841,7 @@ _create_shader (GstGLColorConvert * convert)
   }
   g_string_append (str, "\n}");
   tmp = g_string_free (str, FALSE);
-  info->frag_prog = _mangle_shader (tmp, GL_FRAGMENT_SHADER,
+  info->frag_prog = _gst_glsl_mangle_shader (tmp, GL_FRAGMENT_SHADER,
       info->templ->target, convert->priv->from_texture_target, gl_api,
       gl_major, gl_minor, &version, &profile);
   g_free (tmp);

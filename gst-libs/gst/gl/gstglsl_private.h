@@ -58,6 +58,11 @@ typedef struct _GstGLSLFuncs
 G_GNUC_INTERNAL gboolean _gst_glsl_funcs_fill (GstGLSLFuncs * vtable, GstGLContext * context);
 G_GNUC_INTERNAL const gchar * _gst_glsl_shader_string_find_version (const gchar * str);
 
+G_GNUC_INTERNAL gchar *
+_gst_glsl_mangle_shader (const gchar * str, guint shader_type, GstGLTextureTarget from,
+    GstGLTextureTarget to, GstGLAPI gl_api, gint gl_major, gint gl_minor,
+    GstGLSLVersion * version, GstGLSLProfile * profile);
+
 G_END_DECLS
 
 #endif /* __GST_GLSL_PRIVATE_H__ */
