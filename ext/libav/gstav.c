@@ -30,6 +30,7 @@
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libavfilter/avfiltergraph.h>
 
 #include "gstav.h"
 #include "gstavutils.h"
@@ -151,6 +152,7 @@ plugin_init (GstPlugin * plugin)
   gst_ffmpeg_init_pix_fmt_info ();
 
   av_register_all ();
+  avfilter_register_all ();
 
   gst_ffmpegaudenc_register (plugin);
   gst_ffmpegvidenc_register (plugin);
