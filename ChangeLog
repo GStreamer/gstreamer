@@ -1,9 +1,79 @@
-=== release 1.8.0 ===
+=== release 1.8.1 ===
 
-2016-03-24  Sebastian Dröge <slomo@coaxion.net>
+2016-04-20  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.0
+	  releasing 1.8.1
+
+2016-04-13 20:33:32 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: fix compilation when EGL/GLX is disabled
+	  The compiler might complain of gst_vaapi_create_display_from_handle() being
+	  unused if both EGL and GLX are disabled. This patch avoid that compilation
+	  error.
+
+2016-04-07 18:03:42 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapisurface.c:
+	  surface: destroy derived image
+	  If gst_vaapi_image_new_with_image() fails, the created derived image should be
+	  destroyed, otherwise the surface cannot be processed because is being used.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764607
+
+2016-04-19 12:00:11 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* configure.ac:
+	  build: restrict until codecparsers <= 1.8.99
+	  gstreamer-codecparsers-1.0 version 1.9 includes an API/ABI break in VP9
+	  parser. This patch restricts the compilation of gstreamer-vaapi version 1.8
+	  with a gstreamer-codecparsers-1.0 version lower than 1.8.99
+
+2016-04-13 14:09:00 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst-libs/gst/vaapi/gstvaapicodedbufferpool.c:
+	  libs: fix deleting a GstVaapiCodedBufferPool object
+	  Call gst_vaapi_video_pool_finalize() in coded_buffer_pool_finalize().
+	  Otherwise it is not called when the pool is destroyed and all objects
+	  referenced by the GstVaapiVideoPool are never released.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764993
+
+2016-03-30 14:37:21 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  decoder: h265: Fix offset calculation when there is more than one vps/sps/pps present in codec_data
+	  The array_completeness, reserved bit and num_nal_units fields
+	  in HEVCDecoderConfigurationRecord will be present for each VPS/SPS/PPS array list,
+	  but not for each occurance of similar headers.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764274
+
+2016-03-28 13:13:56 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideometa_texture.c:
+	  gltextureupload: use an array for texture type
+	  Instead of using a single value for the texture type, use an array with 4
+	  elements, just as the GstVideoGLTextureUploadMeta, avoiding a buffer
+	  overflow.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764231
+
+2016-03-24 13:36:24 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.h:
+	  vaapidecode: GST_VAAPIDECODE macro is a cast
+	  This patch is the continuation of commit 1e1d3b1d because the function
+	  gst_vaapidecode_get_type() got undefined since then.
+	  Now, the macro GST_VAAPIDECODE is a simple cast to the GstVaapiDecode
+	  structure. The rest of the GObject handling macros were deleted too.
+
+=== release 1.8.0 ===
+
+2016-03-24 13:11:05 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	  Release 1.8.0
 
 === release 1.7.91 ===
 
