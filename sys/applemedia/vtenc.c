@@ -57,6 +57,12 @@ CFSTR ("H264_Baseline_AutoLevel");
 const CFStringRef kVTCompressionPropertyKey_Quality = CFSTR ("Quality");
 #endif
 
+#ifdef HAVE_VIDEOTOOLBOX_10_9_6
+extern int
+VTCompressionSessionPrepareToEncodeFrames (VTCompressionSessionRef session)
+    __attribute__ ((weak_import));
+#endif
+
 enum
 {
   PROP_0,
