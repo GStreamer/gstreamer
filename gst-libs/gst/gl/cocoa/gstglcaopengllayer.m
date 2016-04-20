@@ -126,7 +126,7 @@ _context_ready (gpointer data)
   }
 
   gst_gl_context_activate (self->draw_context, TRUE);
-  gst_gl_context_set_shared_with (self->draw_context, self->gst_gl_context);
+  gst_gl_context_set_shared_with (self->draw_context, GST_GL_CONTEXT (self->gst_gl_context));
   if (!gst_gl_context_fill_info (self->draw_context, &error)) {
     GST_ERROR ("failed to fill wrapped context information: %s", error->message);
     return NULL;
