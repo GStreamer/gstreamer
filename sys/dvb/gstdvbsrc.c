@@ -2440,6 +2440,13 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
           GST_WARNING_OBJECT (object, "Wrong DVB-T2 stream ID '%d'. Value "
               "can't be greater than 255", object->stream_id);
         }
+        if (object->bandwidth != 6000000 && object->bandwidth != 7000000 &&
+            object->bandwidth != 8000000 && object->bandwidth != 1172000 &&
+            object->bandwidth != 5000000 && object->bandwidth != 10000000) {
+          GST_WARNING_OBJECT (object, "Wrong DVB-T2 parameter value: bandwidth "
+              "is '%d' but only 1.172, 5, 6, 7, 8 and 10 MHz are allowed",
+              object->bandwidth);
+        }
       }
       set_prop (props->props, &n, DTV_BANDWIDTH_HZ, object->bandwidth);
       set_prop (props->props, &n, DTV_CODE_RATE_HP, object->code_rate_hp);
