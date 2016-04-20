@@ -1,15 +1,15 @@
 
-Release notes for GStreamer Good Plugins 1.8.0
+Release notes for GStreamer Good Plugins 1.8.1
 
-The GStreamer team is pleased to announce the first release of the new stable
-1.8 release series. The 1.8 release series is adding new features on top of
-the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x
-release series of the GStreamer multimedia framework.
+The GStreamer team is proud to announce the first bugfix release in the stable
+1.8 release series of your favourite cross-platform multimedia framework!
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
-the source release by the GStreamer project during the stable 1.8 release
-series.
+This release only contains bugfixes and it is safe to update from 1.8.0. For a
+full list of bugfixes see Bugzilla.
+
+
+See /releases/1.8/ for the full release notes.
 
 
 "Such ingratitude.  After all the times I've saved your life."
@@ -53,6 +53,24 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
+Bugs fixed in this release
+     
+      * 764733 : qtdemux: Regression in YouTube TV tests in WebKit MSE after fix for #760779
+      * 763711 : splitmuxsink: deadlock when one streams doesn't have regular buffers
+      * 730540 : rtspsrc: parse crypto sessions to support rollover counters
+      * 744612 : splitmuxsink: add property for specifing maximum number of files to store
+      * 757569 : rtspsrc: avoid potentially overflowing expression
+      * 761345 : rtpjpegpay: Allow different quantization tables for components 2 and 3
+      * 762893 : splitmuxsink critical assertion when changing  from null to ready
+      * 763780 : flvdemux: don't emit pad-added until caps are ready
+      * 763973 : qtdemux: Fix qtdemux memory leak
+      * 764169 : vp9dec: Dogslow VP9 4k playback with libvpx, works fine with avdec_vp9
+      * 764798 : rtspsrc Critical errors when connecting with TLS / rtsps
+      * 764870 : qtdemux: Fix parsing segment duration of empty edit list box
+      * 764889 : rtpjitterbuffer: Drops wrong number of packets with drop-on-latency=true
+      * 765072 : splitmuxsink: Sometimes creates a small one-frame file after EOS
+      * 765116 : scaletempo: memory corruption
+
 ==== Download ====
 
 You can find source releases of gst-plugins-good in the download
@@ -88,6 +106,16 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Aleix Conchillo Flaqué
+      * Damian Ziobro
+      * Havard Graff
+      * Jan Schmidt
+      * Jihae Yi
+      * Jimmy Ohn
+      * Nicolas Dufresne
+      * Paolo Pettinato
       * Sebastian Dröge
-      * Vivia Nikolaidou
+      * Seungha Yang
+      * Thiago Santos
+      * Xavier Claessens
  

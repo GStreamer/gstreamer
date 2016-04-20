@@ -1005,7 +1005,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.8.0"</DEFAULT>
+<DEFAULT>"GStreamer/1.8.1"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -23826,6 +23826,16 @@
 <NICK>Sink</NICK>
 <BLURB>The sink element (or element chain) to use (NULL = default filesink).</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::max-files</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max files</NICK>
+<BLURB>Maximum number of files to keep on disk. Once the maximum is reached,old files start to be deleted to make room for new ones.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
