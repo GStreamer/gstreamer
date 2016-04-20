@@ -31,10 +31,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.7.2\n"
+"Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
-"PO-Revision-Date: 2016-02-23 16:38+0100\n"
+"POT-Creation-Date: 2016-04-20 15:29+0300\n"
+"PO-Revision-Date: 2016-03-27 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -600,13 +600,13 @@ msgid "quit"
 msgstr "afslut"
 
 msgid "> or n"
-msgstr ""
+msgstr "> eller n"
 
 msgid "play next"
 msgstr "afspil næste"
 
 msgid "< or b"
-msgstr ""
+msgstr "< eller b"
 
 msgid "play previous"
 msgstr "afspil forrige"
