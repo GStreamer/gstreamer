@@ -1,9 +1,173 @@
-=== release 1.8.0 ===
+=== release 1.8.1 ===
 
-2016-03-24  Sebastian Dröge <slomo@coaxion.net>
+2016-04-20  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.0
+	  releasing 1.8.1
+
+2016-04-15 17:48:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* win32/common/libgstsdp.def:
+	  win32: update .def for new API
+
+2016-04-20 15:30:04 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/da.po:
+	  po: Update translations
+
+2016-04-19 17:36:20 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst-libs/gst/sdp/gstmikey.c:
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	  sdp: update since markers to 1.8.1 for some new APIs
+	  As we decided to backport some fixes we update the since markers.
+
+2016-04-15 00:18:50 -0700  Aleix Conchillo Flaqué <aconchillo@gmail.com>
+
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	* gst-libs/gst/sdp/gstsdpmessage.h:
+	  sdpmessage: new gst_sdp_media_parse_keymgmt/gst_sdp_media_parse_keymgmt
+	  We add a couple of new functions gst_sdp_media_parse_keymgmt and
+	  gst_sdp_media_parse_keymgmt. We also implement
+	  gst_sdp_message_attributes_to_caps and gst_sdp_media_attributes_to_caps
+	  in terms of these new functions and also gst_mikey_message_to_caps.
+
+2016-04-14 23:29:34 -0700  Aleix Conchillo Flaqué <aconchillo@gmail.com>
+
+	* gst-libs/gst/sdp/gstmikey.c:
+	* gst-libs/gst/sdp/gstmikey.h:
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	  mikey: add new function gst_mikey_message_to_caps
+
+2016-04-16 02:11:59 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/audio/gstaudioringbuffer.c:
+	  Revert "audioringbuffer: start ringbuffer if needed upon commit"
+	  This reverts commit 13ee94ef1091f8a8a90dbd395b39876c26c5188e.
+	  Causes audio glitches at startup by starting to output segments
+	  from the ringbuffer before it has been filled / fully prerolled.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=657076
+
+2016-04-14 17:26:54 -0700  Aleix Conchillo Flaqué <aconchillo@gmail.com>
+
+	* gst-libs/gst/sdp/gstmikey.c:
+	  mikey: allow passing srtp or srtcp to create mikey message
+	  Current implementation requires all srtp and srtcp parameters to be
+	  given in the caps. MIKEY uses only one algorithm for encryption and one
+	  for authentication so we now allow passing srtp or srtcp parameters. If
+	  both are given srtp parametres will be preferred.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765027
+
+2016-04-11 11:28:09 +0200  Fabrice Bellet <fabrice@bellet.info>
+
+	* gst-libs/gst/audio/gstaudiosink.c:
+	* gst-libs/gst/audio/gstaudiosrc.c:
+	  audio: Fix a race with the audioringbuffer thread
+	  There is a small window of time where the audio ringbuffer thread
+	  can access the parent thread variable, before it's initialized
+	  by the parent thread. The patch replaces this variable use by
+	  g_thread_self().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764865
+
+2016-03-24 14:59:48 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin2: Hold new buffering_post lock while posting msgs
+	  There's a small window between decodebin choosing a buffering level
+	  to post and another thread choosing a different buffering level
+	  where things can race. Close that window by holding a new lock
+	  that's only for posting buffering messages - like what was done
+	  in multiqueue.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764020
+
+2016-02-26 02:56:15 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: Reduce URI typefinder from MAX to LIKELY
+	  Don't claim maximum likelihood for anything that starts
+	  with text that looks like a uri, it's too broad.
+
+=== release 1.8.0 ===
+
+2016-03-24 12:19:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.8.0
+
+2016-03-24 11:43:05 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2016-03-08 13:22:32 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
 
