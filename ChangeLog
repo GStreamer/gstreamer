@@ -1,9 +1,35 @@
-=== release 1.8.0 ===
+=== release 1.8.1 ===
 
-2016-03-24  Sebastian Dröge <slomo@coaxion.net>
+2016-04-20  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.0
+	  releasing 1.8.1
+
+2016-04-20 15:27:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* ext/libav/gstav.c:
+	  avdeinterlace: Register all filters and only disable all except for yadif during compilation
+	  Otherwise avdeinterlace won't find any filters, and we only use yadif in
+	  there.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765319
+
+2016-04-15 12:51:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to n3.0.1
+
+=== release 1.8.0 ===
+
+2016-03-24 12:55:15 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.8.0
 
 2016-03-20 13:43:00 +0000  Egor Zaharov <nexfwall@yandex.ru>
 
