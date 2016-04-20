@@ -1,9 +1,32 @@
-=== release 1.8.0 ===
+=== release 1.8.1 ===
 
-2016-03-24  Sebastian Dröge <slomo@coaxion.net>
+2016-04-20  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.0
+	  releasing 1.8.1
+
+2016-04-07 14:11:45 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/data/scenarios/scrub_backward_seeking.scenario:
+	* validate/data/scenarios/scrub_backward_seeking_full.scenario:
+	  scenarios: Fix scrub_backward scenarios
+	  We will be changing states, set the handles-state variable accordingly
+
+2016-03-25 14:17:28 +0000  Tom Schoonjans <Tom.Schoonjans@diamond.ac.uk>
+
+	* validate/gst-libs/gst/video/Makefile.am:
+	  gst-validate: Link with GIO and clean up CFLAGS/LIBADD/LDFLAGS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764192
+
+=== release 1.8.0 ===
+
+2016-03-24 13:11:29 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.8.0
 
 2016-03-23 20:02:47 +0100  Thibault Saunier <tsaunier@gnome.org>
 
