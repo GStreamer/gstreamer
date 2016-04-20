@@ -1,9 +1,166 @@
-=== release 1.8.0 ===
+=== release 1.8.1 ===
 
-2016-03-24  Sebastian Dröge <slomo@coaxion.net>
+2016-04-20  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.0
+	  releasing 1.8.1
+
+2016-04-20 15:29:15 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/da.po:
+	  po: Update translations
+
+2016-04-20 11:46:19 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: Remember if we interpolated DTS from PTS and refresh it whenever we update the PTS
+	  Otherwise PTS and DTS will come out of sync if upstream continues to provide
+	  PTS and not DTS, and we have to skip some data from the stream or PTS are not
+	  exactly increasing with the duration of each packet.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765260
+
+2016-04-14 11:54:32 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* plugins/elements/gstmultiqueue.c:
+	* tests/check/elements/multiqueue.c:
+	  multiqueue: Recheck buffering status after changing low threshold
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763757
+
+2016-04-14 00:09:44 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* plugins/elements/gstmultiqueue.c:
+	* tests/check/elements/multiqueue.c:
+	  multiqueue: Recalculate fill level after changing high-threshold
+	  This ensures the following special case is handled properly:
+	  1. Queue is empty
+	  2. Data is pushed, fill level is below the current high-threshold
+	  3. high-threshold is set to a level that is below the current fill level
+	  Since mq->percent wasn't being recalculated in step #3 properly, this
+	  caused the multiqueue to switch off its buffering state when new data is
+	  pushed in, and never post a 100% buffering message. The application will
+	  have received a <100% buffering message from step #2, but will never see
+	  100%.
+	  Fix this by recalculating the current fill level percentage during
+	  high-threshold property changes in the same manner as it is done when
+	  use-buffering is modified.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763757
+
+2016-04-15 13:50:30 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: When initializing DTS from PTS, remember that we did so
+	  If we don't store the value in prev_dts, we would over and over again
+	  initialize the DTS from the last known upstream PTS. If upstream only provides
+	  PTS every now and then, then this causes DTS to be rather static.
+	  For example in adaptive streaming scenarios this means that all buffers in a
+	  fragment will have exactly the same DTS while the PTS is properly updated. As
+	  our queues are now preferring to do buffer fill level calculations on DTS,
+	  this is causing huge problems there.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=691481#c27 where this part of
+	  the code was introduced.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765096
+
+2016-03-02 17:47:33 +0100  Edward Hervey <edward@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	* plugins/elements/gstqueue.h:
+	  queue: Use full running time for level calculation
+	  Ensures we have proper time level estimation for the cases where
+	  the incoming buffers have PTS/DTS outside of the segment start/stop
+	  values.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762995
+
+2016-01-27 11:46:06 +0100  Stian Selnes <stian@pexip.com>
+
+	* gst/gstpad.c:
+	  pad: Fix race between gst_element_remove_pad and state change
+	  When going from READY to NULL all element pads are deactivated. If
+	  simultaneously the pad is being removed from the element with
+	  gst_element_remove_pad() and the pad is unparented, there is a race
+	  where the deactivation will assert (g_critical) if the parent is lost at
+	  the wrong time.
+	  The proposed fix will check parent only once and retain it to avoid the
+	  race.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=761912
+
+2016-03-25 12:05:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/elements/valve.c:
+	  valve: Fix unit test by sending caps before buffers
+	  Unexpected critical/warning: gstpad.c:4400:gst_pad_push_data:<'':src> Got data flow before segment event
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763753
+
+2016-03-16 15:13:39 +0100  Havard Graff <havard.graff@gmail.com>
+
+	* plugins/elements/gstvalve.c:
+	* tests/check/elements/valve.c:
+	  valve: don't send sticky events as a direct response to upstream events
+	  Also refactor the existing valve test to actually test the valve,
+	  and not just test the EOS mechanism of a pad.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763753
+
+2016-03-24 11:49:44 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Remove redundant assignment
+	  CID 1357158
+
+=== release 1.8.0 ===
+
+2016-03-24 11:49:08 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.8.0
+
+2016-03-24 11:35:26 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2016-03-13 11:05:29 -0400  Anthony G. Basile <blueness@gentoo.org>
 
