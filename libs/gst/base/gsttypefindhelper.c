@@ -482,7 +482,7 @@ buf_helper_find_suggest (gpointer data, GstTypeFindProbability probability,
  * gst_type_find_helper_for_data:
  * @obj: (allow-none): object doing the typefinding, or %NULL (used for logging)
  * @data: (in) (transfer none): a pointer with data to typefind
- * @size: (in) (transfer none): the size of @data
+ * @size: (in): the size of @data
  * @prob: (out) (allow-none): location to store the probability of the found
  *     caps, or %NULL
  *
