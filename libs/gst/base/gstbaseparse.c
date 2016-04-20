@@ -273,6 +273,7 @@ struct _GstBaseParsePrivate
   GstClockTime next_dts;
   GstClockTime prev_pts;
   GstClockTime prev_dts;
+  gboolean prev_dts_from_pts;
   GstClockTime frame_duration;
   gboolean seen_keyframe;
   gboolean is_video;
@@ -1308,6 +1309,7 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
       parse->priv->last_dts = GST_CLOCK_TIME_NONE;
       parse->priv->prev_pts = GST_CLOCK_TIME_NONE;
       parse->priv->prev_dts = GST_CLOCK_TIME_NONE;
+      parse->priv->prev_dts_from_pts = FALSE;
       parse->priv->discont = TRUE;
       parse->priv->seen_keyframe = FALSE;
       parse->priv->skip = 0;
@@ -2772,6 +2774,7 @@ gst_base_parse_start_fragment (GstBaseParse * parse)
   parse->priv->prev_pts = GST_CLOCK_TIME_NONE;
   parse->priv->next_dts = GST_CLOCK_TIME_NONE;
   parse->priv->prev_dts = GST_CLOCK_TIME_NONE;
+  parse->priv->prev_dts_from_pts = FALSE;
   /* prevent it hanging around stop all the time */
   parse->segment.position = GST_CLOCK_TIME_NONE;
   /* mark next run */
@@ -3142,6 +3145,7 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   /* Stop either when adapter is empty or we are flushing */
   while (!parse->priv->flushing) {
     gint flush = 0;
+    gboolean updated_prev_pts = FALSE;
 
     /* note: if subclass indicates MAX fsize,
      * this will not likely be available anyway ... */
@@ -3166,11 +3170,15 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
      * but interpolate in between */
     pts = gst_adapter_prev_pts (parse->priv->adapter, NULL);
     dts = gst_adapter_prev_dts (parse->priv->adapter, NULL);
-    if (GST_CLOCK_TIME_IS_VALID (pts) && (parse->priv->prev_pts != pts))
+    if (GST_CLOCK_TIME_IS_VALID (pts) && (parse->priv->prev_pts != pts)) {
       parse->priv->prev_pts = parse->priv->next_pts = pts;
+      updated_prev_pts = TRUE;
+    }
 
-    if (GST_CLOCK_TIME_IS_VALID (dts) && (parse->priv->prev_dts != dts))
+    if (GST_CLOCK_TIME_IS_VALID (dts) && (parse->priv->prev_dts != dts)) {
       parse->priv->prev_dts = parse->priv->next_dts = dts;
+      parse->priv->prev_dts_from_pts = FALSE;
+    }
 
     /* we can mess with, erm interpolate, timestamps,
      * and incoming stuff has PTS but no DTS seen so far,
@@ -3178,9 +3186,12 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     if (parse->priv->infer_ts &&
         parse->priv->pts_interpolate &&
         !GST_CLOCK_TIME_IS_VALID (dts) &&
-        !GST_CLOCK_TIME_IS_VALID (parse->priv->prev_dts) &&
-        GST_CLOCK_TIME_IS_VALID (pts))
+        (!GST_CLOCK_TIME_IS_VALID (parse->priv->prev_dts)
+            || (parse->priv->prev_dts_from_pts && updated_prev_pts))
+        && GST_CLOCK_TIME_IS_VALID (pts)) {
       parse->priv->prev_dts = parse->priv->next_dts = pts;
+      parse->priv->prev_dts_from_pts = TRUE;
+    }
 
     /* always pass all available data */
     tmpbuf = gst_adapter_get_buffer (parse->priv->adapter, av);
@@ -4847,8 +4858,10 @@ gst_base_parse_set_ts_at_offset (GstBaseParse * parse, gsize offset)
   if (GST_CLOCK_TIME_IS_VALID (pts) && (parse->priv->prev_pts != pts))
     parse->priv->prev_pts = parse->priv->next_pts = pts;
 
-  if (GST_CLOCK_TIME_IS_VALID (dts) && (parse->priv->prev_dts != dts))
+  if (GST_CLOCK_TIME_IS_VALID (dts) && (parse->priv->prev_dts != dts)) {
     parse->priv->prev_dts = parse->priv->next_dts = dts;
+    parse->priv->prev_dts_from_pts = FALSE;
+  }
 }
 
 /**
