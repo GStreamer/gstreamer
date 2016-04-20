@@ -1,15 +1,16 @@
 
-Release notes for GStreamer Bad Plugins 1.8.0
+Release notes for GStreamer Bad Plugins 1.8.1
 
-The GStreamer team is pleased to announce the first release of the new stable
-1.8 release series. The 1.8 release series is adding new features on top of
-the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x
-release series of the GStreamer multimedia framework.
+The GStreamer team is proud to announce the first bugfix release in the stable
+1.8 release series of your favourite cross-platform multimedia framework!
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
-the source release by the GStreamer project during the stable 1.8 release
-series.
+This release only contains bugfixes and it is safe to update from 1.8.0. For a
+full list of bugfixes see Bugzilla.
+
+
+See /releases/1.8/ for the full release notes.
+
 
 
 "That an accusation?"
@@ -60,12 +61,23 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 763756 : gl ! textoverlay ! glupload ! glfilter doesn't negotiate
-      * 763793 : h264parse, h265parse: failure to parse downstream force-key-unit event
-      * 763877 : Unable to build vulkan plugin from released tarball
-      * 763974 : mxfdemux: Fix query memory leak
-      * 764066 : vulkan: Build failure on arch not finding VK_API_VERSION
-      * 763262 : mpegtsdemux: accurate seeks are no more accurate (regression)
+      * 760473 : OpenCV face detection does not work with OpenCV newer than 2.4.11
+      * 747633 : decklinkvideosrc: crash in ::VideoInputFrameArrived() callback with video_frame=NULL
+      * 762924 : interlace: negotiation fails unexpectedly
+      * 763324 : nvenc fails to compile with Nvidia video SDK 6.0
+      * 763403 : bad: video sink: Post un-handled keyboard/mouse events as message to application
+      * 763862 : mxfmux: Instead of releasing request pads on stop(), clear them only
+      * 764148 : gtkglsink doesn't fail to create on incompatible hardware
+      * 764339 : ahcsrc: g_object_class_install_property: assertion 'pspec- > flags & G_PARAM_WRITABLE' during initialization
+      * 764363 : videoaggregator: Does not take into account the best output format that is computed
+      * 764404 : hlsdemux: Assertion with AES encrypted stream
+      * 764448 : h264parse: constrained-baseline is a subset of baseline
+      * 764523 : -lole32 is missing for libgstdirectsoundsrc
+      * 764545 : Crash when trying to use vulkan sink
+      * 765005 : mpegtsmux: memory leak caused by pad_data- > language
+      * 765194 : caopengllayersink: renders blurry content on HiDPI screens because contentsScale is ignored
+      * 765241 : glimagesink: need to clean window_id when state change form READY to NULL
+      * 765079 : srtpdec request-key is not signaled if roc is missing
 
 ==== Download ====
 
@@ -102,9 +114,18 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleksander Wabik
-      * Jimmy Ohn
+      * Aleix Conchillo Flaqué
+      * Damian Ziobro
+      * Haihua Hu
+      * Heinrich Fink
+      * Jan Schmidt
+      * Kouhei Sutou
       * Matthew Waters
+      * Nirbheek Chauhan
+      * Patricia Muscalu
       * Sebastian Dröge
-      * Thibault Saunier
+      * Thiago Santos
+      * Tim-Philipp Müller
+      * Vincent Penquerc'h
+      * Vineeth TM
  
