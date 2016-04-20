@@ -384,7 +384,6 @@ static gboolean
 gst_ca_opengl_layer_sink_query (GstBaseSink * bsink, GstQuery * query)
 {
   GstCAOpenGLLayerSink *ca_sink = GST_CA_OPENGL_LAYER_SINK (bsink);
-  gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
