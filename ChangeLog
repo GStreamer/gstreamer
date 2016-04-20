@@ -1,9 +1,27 @@
-=== release 1.8.0 ===
+=== release 1.8.1 ===
 
-2016-03-24  Sebastian Dröge <slomo@coaxion.net>
+2016-04-20  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.0
+	  releasing 1.8.1
+
+2016-04-01 10:09:39 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	* ges/ges-title-source.c:
+	  titlesource: Add support for absolute positionning
+
+=== release 1.8.0 ===
+
+2016-03-24 13:05:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.8.0
 
 === release 1.7.91 ===
 
