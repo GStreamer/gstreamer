@@ -2436,6 +2436,10 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
               "transmission mode should be either AUTO, 1K, 2K, 4K, 8K, 16K "
               "or 32K");
         }
+        if (object->stream_id > 255) {
+          GST_WARNING_OBJECT (object, "Wrong DVB-T2 stream ID '%d'. Value "
+              "can't be greater than 255", object->stream_id);
+        }
       }
       set_prop (props->props, &n, DTV_BANDWIDTH_HZ, object->bandwidth);
       set_prop (props->props, &n, DTV_CODE_RATE_HP, object->code_rate_hp);
