@@ -38,44 +38,44 @@ gst_decklink_mode_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue modes[] = {
-    {GST_DECKLINK_MODE_AUTO, "auto", "Automatic detection"},
+    {GST_DECKLINK_MODE_AUTO, "Automatic detection", "auto"},
 
-    {GST_DECKLINK_MODE_NTSC, "ntsc", "NTSC SD 60i"},
-    {GST_DECKLINK_MODE_NTSC2398, "ntsc2398", "NTSC SD 60i (24 fps)"},
-    {GST_DECKLINK_MODE_PAL, "pal", "PAL SD 50i"},
-    {GST_DECKLINK_MODE_NTSC_P, "ntsc-p", "NTSC SD 60p"},
-    {GST_DECKLINK_MODE_PAL_P, "pal-p", "PAL SD 50p"},
+    {GST_DECKLINK_MODE_NTSC, "NTSC SD 60i", "ntsc"},
+    {GST_DECKLINK_MODE_NTSC2398, "NTSC SD 60i (24 fps)", "ntsc2398"},
+    {GST_DECKLINK_MODE_PAL, "PAL SD 50i", "pal"},
+    {GST_DECKLINK_MODE_NTSC_P, "NTSC SD 60p", "ntsc-p"},
+    {GST_DECKLINK_MODE_PAL_P, "PAL SD 50p", "pal-p"},
 
-    {GST_DECKLINK_MODE_1080p2398, "1080p2398", "HD1080 23.98p"},
-    {GST_DECKLINK_MODE_1080p24, "1080p24", "HD1080 24p"},
-    {GST_DECKLINK_MODE_1080p25, "1080p25", "HD1080 25p"},
-    {GST_DECKLINK_MODE_1080p2997, "1080p2997", "HD1080 29.97p"},
-    {GST_DECKLINK_MODE_1080p30, "1080p30", "HD1080 30p"},
+    {GST_DECKLINK_MODE_1080p2398, "HD1080 23.98p", "1080p2398"},
+    {GST_DECKLINK_MODE_1080p24, "HD1080 24p", "1080p24"},
+    {GST_DECKLINK_MODE_1080p25, "HD1080 25p", "1080p25"},
+    {GST_DECKLINK_MODE_1080p2997, "HD1080 29.97p", "1080p2997"},
+    {GST_DECKLINK_MODE_1080p30, "HD1080 30p", "1080p30"},
 
-    {GST_DECKLINK_MODE_1080i50, "1080i50", "HD1080 50i"},
-    {GST_DECKLINK_MODE_1080i5994, "1080i5994", "HD1080 59.94i"},
-    {GST_DECKLINK_MODE_1080i60, "1080i60", "HD1080 60i"},
+    {GST_DECKLINK_MODE_1080i50, "HD1080 50i", "1080i50"},
+    {GST_DECKLINK_MODE_1080i5994, "HD1080 59.94i", "1080i5994"},
+    {GST_DECKLINK_MODE_1080i60, "HD1080 60i", "1080i60"},
 
-    {GST_DECKLINK_MODE_1080p50, "1080p50", "HD1080 50p"},
-    {GST_DECKLINK_MODE_1080p5994, "1080p5994", "HD1080 59.94p"},
-    {GST_DECKLINK_MODE_1080p60, "1080p60", "HD1080 60p"},
+    {GST_DECKLINK_MODE_1080p50, "HD1080 50p", "1080p50"},
+    {GST_DECKLINK_MODE_1080p5994, "HD1080 59.94p", "1080p5994"},
+    {GST_DECKLINK_MODE_1080p60, "HD1080 60p", "1080p60"},
 
-    {GST_DECKLINK_MODE_720p50, "720p50", "HD720 50p"},
-    {GST_DECKLINK_MODE_720p5994, "720p5994", "HD720 59.94p"},
-    {GST_DECKLINK_MODE_720p60, "720p60", "HD720 60p"},
+    {GST_DECKLINK_MODE_720p50, "HD720 50p", "720p50"},
+    {GST_DECKLINK_MODE_720p5994, "HD720 59.94p", "720p5994"},
+    {GST_DECKLINK_MODE_720p60, "HD720 60p", "720p60"},
 
-    {GST_DECKLINK_MODE_1556p2398, "1556p2398", "2k 23.98p"},
-    {GST_DECKLINK_MODE_1556p24, "1556p24", "2k 24p"},
-    {GST_DECKLINK_MODE_1556p25, "1556p25", "2k 25p"},
+    {GST_DECKLINK_MODE_1556p2398, "2k 23.98p", "1556p2398"},
+    {GST_DECKLINK_MODE_1556p24, "2k 24p", "1556p24"},
+    {GST_DECKLINK_MODE_1556p25, "2k 25p", "1556p25"},
 
-    {GST_DECKLINK_MODE_2160p2398, "2160p2398", "4k 23.98p"},
-    {GST_DECKLINK_MODE_2160p24, "2160p24", "4k 24p"},
-    {GST_DECKLINK_MODE_2160p25, "2160p25", "4k 25p"},
-    {GST_DECKLINK_MODE_2160p2997, "2160p2997", "4k 29.97p"},
-    {GST_DECKLINK_MODE_2160p30, "2160p30", "4k 30p"},
-    {GST_DECKLINK_MODE_2160p50, "2160p50", "4k 50p"},
-    {GST_DECKLINK_MODE_2160p5994, "2160p5994", "4k 59.94p"},
-    {GST_DECKLINK_MODE_2160p60, "2160p60", "4k 60p"},
+    {GST_DECKLINK_MODE_2160p2398, "4k 23.98p", "2160p2398"},
+    {GST_DECKLINK_MODE_2160p24, "4k 24p", "2160p24"},
+    {GST_DECKLINK_MODE_2160p25, "4k 25p", "2160p25"},
+    {GST_DECKLINK_MODE_2160p2997, "4k 29.97p", "2160p2997"},
+    {GST_DECKLINK_MODE_2160p30, "4k 30p", "2160p30"},
+    {GST_DECKLINK_MODE_2160p50, "4k 50p", "2160p50"},
+    {GST_DECKLINK_MODE_2160p5994, "4k 59.94p", "2160p5994"},
+    {GST_DECKLINK_MODE_2160p60, "4k 60p", "2160p60"},
 
     {0, NULL, NULL}
   };
@@ -93,13 +93,13 @@ gst_decklink_connection_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue connections[] = {
-    {GST_DECKLINK_CONNECTION_AUTO, "auto", "Auto"},
-    {GST_DECKLINK_CONNECTION_SDI, "sdi", "SDI"},
-    {GST_DECKLINK_CONNECTION_HDMI, "hdmi", "HDMI"},
-    {GST_DECKLINK_CONNECTION_OPTICAL_SDI, "optical-sdi", "Optical SDI"},
-    {GST_DECKLINK_CONNECTION_COMPONENT, "component", "Component"},
-    {GST_DECKLINK_CONNECTION_COMPOSITE, "composite", "Composite"},
-    {GST_DECKLINK_CONNECTION_SVIDEO, "svideo", "S-Video"},
+    {GST_DECKLINK_CONNECTION_AUTO, "Auto", "auto"},
+    {GST_DECKLINK_CONNECTION_SDI, "SDI", "sdi"},
+    {GST_DECKLINK_CONNECTION_HDMI, "HDMI", "hdmi"},
+    {GST_DECKLINK_CONNECTION_OPTICAL_SDI, "Optical SDI", "optical-sdi"},
+    {GST_DECKLINK_CONNECTION_COMPONENT, "Component", "component"},
+    {GST_DECKLINK_CONNECTION_COMPOSITE, "Composite", "composite"},
+    {GST_DECKLINK_CONNECTION_SVIDEO, "S-Video", "svideo"},
     {0, NULL, NULL}
   };
 
@@ -116,18 +116,18 @@ gst_decklink_video_format_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue types[] = {
-    {GST_DECKLINK_VIDEO_FORMAT_AUTO, "auto", "Auto"},
-    {GST_DECKLINK_VIDEO_FORMAT_8BIT_YUV, "8bit-yuv", "bmdFormat8BitYUV"},
-    {GST_DECKLINK_VIDEO_FORMAT_10BIT_YUV, "10bit-yuv", "bmdFormat10BitYUV"},
-    {GST_DECKLINK_VIDEO_FORMAT_8BIT_ARGB, "8bit-argb", "bmdFormat8BitARGB"},
-    {GST_DECKLINK_VIDEO_FORMAT_8BIT_BGRA, "8bit-bgra", "bmdFormat8BitBGRA"},
-    /*
-    {GST_DECKLINK_VIDEO_FORMAT_10BIT_RGB, "10bit-rgb", "bmdFormat10BitRGB"},
-    {GST_DECKLINK_VIDEO_FORMAT_12BIT_RGB, "12bit-rgb", "bmdFormat12BitRGB"},
-    {GST_DECKLINK_VIDEO_FORMAT_12BIT_RGBLE, "12bit-rgble", "bmdFormat12BitRGBLE"},
-    {GST_DECKLINK_VIDEO_FORMAT_10BIT_RGBXLE, "10bit-rgbxle", "bmdFormat10BitRGBXLE"},
-    {GST_DECKLINK_VIDEO_FORMAT_10BIT_RGBX, "10bit-rgbx", "bmdFormat10BitRGBX"},
-    */
+    {GST_DECKLINK_VIDEO_FORMAT_AUTO, "Auto", "auto"},
+    {GST_DECKLINK_VIDEO_FORMAT_8BIT_YUV, "bmdFormat8BitYUV", "8bit-yuv"},
+    {GST_DECKLINK_VIDEO_FORMAT_10BIT_YUV, "bmdFormat10BitYUV", "10bit-yuv"},
+    {GST_DECKLINK_VIDEO_FORMAT_8BIT_ARGB, "bmdFormat8BitARGB", "8bit-argb"},
+    {GST_DECKLINK_VIDEO_FORMAT_8BIT_BGRA, "bmdFormat8BitBGRA", "8bit-bgra"},
+    /* Not yet supported:
+       {GST_DECKLINK_VIDEO_FORMAT_10BIT_RGB, "bmdFormat10BitRGB", "10bit-rgb"},
+       {GST_DECKLINK_VIDEO_FORMAT_12BIT_RGB, "bmdFormat12BitRGB", "12bit-rgb"},
+       {GST_DECKLINK_VIDEO_FORMAT_12BIT_RGBLE, "bmdFormat12BitRGBLE", "12bit-rgble"},
+       {GST_DECKLINK_VIDEO_FORMAT_10BIT_RGBXLE, "bmdFormat10BitRGBXLE", "10bit-rgbxle"},
+       {GST_DECKLINK_VIDEO_FORMAT_10BIT_RGBX, "bmdFormat10BitRGBX", "10bit-rgbx"},
+     */
     {0, NULL, NULL}
   };
 
@@ -144,15 +144,15 @@ gst_decklink_audio_connection_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue connections[] = {
-    {GST_DECKLINK_AUDIO_CONNECTION_AUTO, "auto", "Automatic"},
-    {GST_DECKLINK_AUDIO_CONNECTION_EMBEDDED, "embedded",
-        "SDI/HDMI embedded audio"},
-    {GST_DECKLINK_AUDIO_CONNECTION_AES_EBU, "aes", "AES/EBU input"},
-    {GST_DECKLINK_AUDIO_CONNECTION_ANALOG, "analog", "Analog input"},
-    {GST_DECKLINK_AUDIO_CONNECTION_ANALOG_XLR, "analog-xlr",
-        "Analog input (XLR)"},
-    {GST_DECKLINK_AUDIO_CONNECTION_ANALOG_RCA, "analog-rca",
-        "Analog input (RCA)"},
+    {GST_DECKLINK_AUDIO_CONNECTION_AUTO, "Automatic", "auto"},
+    {GST_DECKLINK_AUDIO_CONNECTION_EMBEDDED, "SDI/HDMI embedded audio",
+        "embedded"},
+    {GST_DECKLINK_AUDIO_CONNECTION_AES_EBU, "AES/EBU input", "aes"},
+    {GST_DECKLINK_AUDIO_CONNECTION_ANALOG, "Analog input", "analog"},
+    {GST_DECKLINK_AUDIO_CONNECTION_ANALOG_XLR, "Analog input (XLR)",
+        "analog-xlr"},
+    {GST_DECKLINK_AUDIO_CONNECTION_ANALOG_RCA, "Analog input (RCA)",
+        "analog-rca"},
     {0, NULL, NULL}
   };
 
