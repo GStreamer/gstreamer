@@ -1,15 +1,15 @@
 
-Release notes for GStreamer Ugly Plugins 1.8.0
+Release notes for GStreamer Ugly Plugins 1.8.1
 
-The GStreamer team is pleased to announce the first release of the new stable
-1.8 release series. The 1.8 release series is adding new features on top of
-the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x
-release series of the GStreamer multimedia framework.
+The GStreamer team is proud to announce the first bugfix release in the stable
+1.8 release series of your favourite cross-platform multimedia framework!
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
-the source release by the GStreamer project during the stable 1.8 release
-series.
+This release only contains bugfixes and it is safe to update from 1.8.0. For a
+full list of bugfixes see Bugzilla.
+
+
+See /releases/1.8/ for the full release notes.
 
 
 "When you have to shoot, shoot.  Don't talk."
@@ -90,6 +90,5 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
       * Sebastian Dröge
  
