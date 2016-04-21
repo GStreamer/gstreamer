@@ -20,6 +20,8 @@ EXPORTS
 	gst_player_get_current_visualization
 	gst_player_get_duration
 	gst_player_get_media_info
+	gst_player_get_multiview_flags
+	gst_player_get_multiview_mode
 	gst_player_get_mute
 	gst_player_get_pipeline
 	gst_player_get_position
@@ -49,6 +51,8 @@ EXPORTS
 	gst_player_set_audio_track
 	gst_player_set_audio_track_enabled
 	gst_player_set_color_balance
+	gst_player_set_multiview_flags
+	gst_player_set_multiview_mode
 	gst_player_set_mute
 	gst_player_set_position_update_interval
 	gst_player_set_rate
