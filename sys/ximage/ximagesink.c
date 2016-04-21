@@ -1585,7 +1585,6 @@ gst_x_image_sink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
   XID xwindow_id = id;
   GstXImageSink *ximagesink = GST_X_IMAGE_SINK (overlay);
   GstXWindow *xwindow = NULL;
-  XWindowAttributes attr;
 
   /* We acquire the stream lock while setting this window in the element.
      We are basically cleaning tons of stuff replacing the old window, putting
@@ -1626,12 +1625,8 @@ gst_x_image_sink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
 
     xwindow->win = xwindow_id;
 
-    /* We get window geometry, set the event we want to receive,
-       and create a GC */
+    /* We set the events we want to receive and create a GC. */
     g_mutex_lock (&ximagesink->x_lock);
-    XGetWindowAttributes (ximagesink->xcontext->disp, xwindow->win, &attr);
-    xwindow->width = attr.width;
-    xwindow->height = attr.height;
     xwindow->internal = FALSE;
     if (ximagesink->handle_events) {
       XSelectInput (ximagesink->xcontext->disp, xwindow->win, ExposureMask |
@@ -1643,8 +1638,11 @@ gst_x_image_sink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
     g_mutex_unlock (&ximagesink->x_lock);
   }
 
-  if (xwindow)
+  if (xwindow) {
     ximagesink->xwindow = xwindow;
+    /* Update the window geometry, possibly generating a reconfigure event. */
+    gst_x_image_sink_xwindow_update_geometry(ximagesink);
+  }
 
   g_mutex_unlock (&ximagesink->flow_lock);
 }
