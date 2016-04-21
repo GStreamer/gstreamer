@@ -799,7 +799,7 @@ gst_date_time_new_from_iso8601_string (const gchar * string)
       month = day = -1;
     }
 
-    if (ret >= 1 && year <= 0)
+    if (ret >= 1 && (year <= 0 || year > 9999 || month > 12 || day > 31))
       return NULL;
 
     else if (ret >= 1 && len < 16)
