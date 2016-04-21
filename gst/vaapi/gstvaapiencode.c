@@ -44,6 +44,8 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVaapiEncode,
     gst_vaapiencode, GST_TYPE_VIDEO_ENCODER,
     GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES);
 
+GST_VAAPI_PLUGIN_BASE_DEFINE_SET_CONTEXT (gst_vaapiencode_parent_class);
+
 enum
 {
   PROP_0,
@@ -629,6 +631,7 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
 
   object_class->finalize = gst_vaapiencode_finalize;
 
+  element_class->set_context = gst_vaapi_base_set_context;
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_vaapiencode_change_state);
 

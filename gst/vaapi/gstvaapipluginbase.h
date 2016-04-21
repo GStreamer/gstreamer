@@ -102,6 +102,16 @@ typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
   (gst_vaapi_display_replace(&GST_VAAPI_PLUGIN_BASE_DISPLAY(plugin), \
        (new_display)))
 
+#define GST_VAAPI_PLUGIN_BASE_DEFINE_SET_CONTEXT(parent_class) \
+  static void \
+  gst_vaapi_base_set_context (GstElement * element, GstContext * context) \
+  { \
+    GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (element); \
+    \
+    gst_vaapi_plugin_base_set_context (plugin, context); \
+    GST_ELEMENT_CLASS (parent_class)->set_context (element, context); \
+  }
+
 struct _GstVaapiPluginBase
 {
   /*< private >*/
@@ -219,6 +229,11 @@ G_GNUC_INTERNAL
 GstFlowReturn
 gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
     GstBuffer * inbuf, GstBuffer ** outbuf_ptr);
+
+G_GNUC_INTERNAL
+void
+gst_vaapi_plugin_base_set_context (GstVaapiPluginBase * plugin,
+    GstContext * context);
 
 G_GNUC_INTERNAL
 void

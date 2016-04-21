@@ -133,6 +133,7 @@ static const GstVaapiDecoderMap vaapi_decode_map[] = {
 };
 
 static GstElementClass *parent_class = NULL;
+GST_VAAPI_PLUGIN_BASE_DEFINE_SET_CONTEXT (parent_class);
 
 static gboolean gst_vaapidecode_update_sink_caps (GstVaapiDecode * decode,
     GstCaps * caps);
@@ -1133,6 +1134,7 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
     longname = g_strdup ("VA-API decoder");
   }
 
+  element_class->set_context = gst_vaapi_base_set_context;
   gst_element_class_set_static_metadata (element_class, longname,
       "Codec/Decoder/Video", GST_PLUGIN_DESC,
       "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, "

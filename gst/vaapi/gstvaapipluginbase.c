@@ -35,8 +35,6 @@
 /* Default debug category is from the subclass */
 #define GST_CAT_DEFAULT (plugin->debug_category)
 
-static gpointer plugin_parent_class = NULL;
-
 /* GstVideoContext interface */
 static void
 plugin_set_display (GstVaapiPluginBase * plugin, GstVaapiDisplay * display)
@@ -57,18 +55,25 @@ plugin_set_display (GstVaapiPluginBase * plugin, GstVaapiDisplay * display)
   gst_vaapi_display_unref (display);
 }
 
-static void
-plugin_set_context (GstElement * element, GstContext * context)
+/**
+ * gst_vaapi_plugin_base_set_context:
+ * @plugin: a #GstVaapiPluginBase instance
+ * @context: a #GstContext to set
+ *
+ * This is a common set_context() element's vmethod for all the
+ * GStreamer VA-API elements.
+ *
+ * It normally should be used through the macro
+ * #GST_VAAPI_PLUGIN_BASE_DEFINE_SET_CONTEXT()
+ **/
+void
+gst_vaapi_plugin_base_set_context (GstVaapiPluginBase * plugin,
+    GstContext * context)
 {
-  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (element);
-  GstElementClass *element_class = GST_ELEMENT_CLASS (plugin_parent_class);
   GstVaapiDisplay *display = NULL;
 
   if (gst_vaapi_video_context_get_display (context, &display))
     plugin_set_display (plugin, display);
-
-  if (element_class->set_context)
-    element_class->set_context (element, context);
 }
 
 void
@@ -180,14 +185,8 @@ error_create_proxy:
 void
 gst_vaapi_plugin_base_class_init (GstVaapiPluginBaseClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
   klass->has_interface = default_has_interface;
   klass->display_changed = default_display_changed;
-
-  plugin_parent_class = g_type_class_peek_parent (klass);
-
-  element_class->set_context = GST_DEBUG_FUNCPTR (plugin_set_context);
 }
 
 void
