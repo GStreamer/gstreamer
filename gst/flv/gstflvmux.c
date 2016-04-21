@@ -1604,7 +1604,7 @@ gst_flv_mux_handle_buffer (GstCollectPads * pads, GstCollectData * cdata,
     }
     mux->state = GST_FLV_MUX_STATE_DATA;
 
-    if (GST_COLLECT_PADS_DTS_IS_VALID (cdata))
+    if (cdata && GST_COLLECT_PADS_DTS_IS_VALID (cdata))
       mux->first_timestamp = GST_COLLECT_PADS_DTS (cdata);
     else
       mux->first_timestamp = 0;
