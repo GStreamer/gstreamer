@@ -102,6 +102,10 @@ typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
   (gst_vaapi_display_replace(&GST_VAAPI_PLUGIN_BASE_DISPLAY(plugin), \
        (new_display)))
 
+#define GST_VAAPI_PLUGIN_BASE_DEFINE_VMETHODS(parent_class) \
+  GST_VAAPI_PLUGIN_BASE_DEFINE_SET_CONTEXT(parent_class) \
+  GST_VAAPI_PLUGIN_BASE_DEFINE_CHANGE_STATE(parent_class)
+
 #define GST_VAAPI_PLUGIN_BASE_DEFINE_SET_CONTEXT(parent_class) \
   static void \
   gst_vaapi_base_set_context (GstElement * element, GstContext * context) \
@@ -110,6 +114,31 @@ typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
     \
     gst_vaapi_plugin_base_set_context (plugin, context); \
     GST_ELEMENT_CLASS (parent_class)->set_context (element, context); \
+  }
+
+#define GST_VAAPI_PLUGIN_BASE_DEFINE_CHANGE_STATE(parent_class) \
+  static GstStateChangeReturn \
+  gst_vaapi_base_change_state (GstElement * element, \
+      GstStateChange transition) \
+  { \
+    GstStateChangeReturn ret; \
+    \
+    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, \
+        transition);  \
+    if (ret == GST_STATE_CHANGE_FAILURE) \
+      return ret; \
+    \
+    switch (transition) { \
+      case GST_STATE_CHANGE_NULL_TO_READY:{ \
+        GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (element); \
+        if (!gst_vaapi_plugin_base_driver_is_whitelisted (plugin)) \
+          ret = GST_STATE_CHANGE_FAILURE; \
+        break; \
+      } \
+      default: \
+        break; \
+    }          \
+    return ret; \
   }
 
 struct _GstVaapiPluginBase
@@ -229,6 +258,10 @@ G_GNUC_INTERNAL
 GstFlowReturn
 gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
     GstBuffer * inbuf, GstBuffer ** outbuf_ptr);
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_plugin_base_driver_is_whitelisted (GstVaapiPluginBase * plugin);
 
 G_GNUC_INTERNAL
 void
