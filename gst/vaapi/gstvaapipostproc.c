@@ -96,6 +96,8 @@ G_DEFINE_TYPE_WITH_CODE (GstVaapiPostproc, gst_vaapipostproc,
     G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
         gst_vaapipostproc_colorbalance_init));
 
+GST_VAAPI_PLUGIN_BASE_DEFINE_SET_CONTEXT (gst_vaapipostproc_parent_class);
+
 static GstVideoFormat native_formats[] =
     { GST_VIDEO_FORMAT_NV12, GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_I420 };
 
@@ -1522,6 +1524,7 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
 
   trans_class->prepare_output_buffer = gst_vaapipostproc_prepare_output_buffer;
 
+  element_class->set_context = gst_vaapi_base_set_context;
   gst_element_class_set_static_metadata (element_class,
       "VA-API video postprocessing",
       "Filter/Converter/Video;Filter/Converter/Video/Scaler;"

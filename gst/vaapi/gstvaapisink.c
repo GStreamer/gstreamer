@@ -107,6 +107,8 @@ G_DEFINE_TYPE_WITH_CODE (GstVaapiSink,
     G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
         gst_vaapisink_navigation_iface_init));
 
+GST_VAAPI_PLUGIN_BASE_DEFINE_SET_CONTEXT (gst_vaapisink_parent_class);
+
 enum
 {
   HANDOFF_SIGNAL,
@@ -1663,6 +1665,7 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
 
   videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_vaapisink_show_frame);
 
+  element_class->set_context = gst_vaapi_base_set_context;
   element_class->set_bus = gst_vaapisink_set_bus;
   gst_element_class_set_static_metadata (element_class,
       "VA-API sink", "Sink/Video", GST_PLUGIN_DESC,
