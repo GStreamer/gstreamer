@@ -89,7 +89,6 @@ struct _GstQTDemux {
   gboolean posted_redirect;
 
   /* push based variables */
-  gboolean pending_configure;
   guint neededbytes;
   guint todrop;
   GstAdapter *adapter;
