@@ -46,12 +46,19 @@ STDMETHODIMP
 
 HRESULT CDshowFakeSink::CheckMediaType (const CMediaType * pmt)
 {
-  if (pmt != NULL) {
-    if (*pmt == m_MediaType)
-      return S_OK;
-  }
+  if (!IsEqualGUID(pmt->majortype, m_MediaType.majortype) ||
+      !IsEqualGUID(pmt->subtype, m_MediaType.subtype) ||
+      !IsEqualGUID(pmt->formattype, m_MediaType.formattype) ||
+      (pmt->cbFormat != m_MediaType.cbFormat))
+    return S_FALSE;
 
-  return S_FALSE;
+  VIDEOINFOHEADER *info1 = (VIDEOINFOHEADER*)pmt->pbFormat;
+  VIDEOINFOHEADER *info2 = (VIDEOINFOHEADER*)m_MediaType.pbFormat;
+
+  if (memcmp(&info1->bmiHeader, &info2->bmiHeader, sizeof(BITMAPINFOHEADER)))
+    return S_FALSE;
+
+  return S_OK;
 }
 
 HRESULT CDshowFakeSink::DoRenderSample (IMediaSample * pMediaSample)
