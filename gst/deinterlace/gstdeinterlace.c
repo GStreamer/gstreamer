@@ -148,7 +148,7 @@ static const GEnumValue methods_types[] = {
       "greedyh"},
   {GST_DEINTERLACE_GREEDY_L, "Motion Adaptive: Simple Detection", "greedyl"},
   {GST_DEINTERLACE_VFIR, "Blur Vertical", "vfir"},
-  {GST_DEINTERLACE_LINEAR, "Television: Full resolution", "linear"},
+  {GST_DEINTERLACE_LINEAR, "Linear", "linear"},
   {GST_DEINTERLACE_LINEAR_BLEND, "Blur: Temporal (Do Not Use)",
       "linearblend"},
   {GST_DEINTERLACE_SCALER_BOB, "Double lines", "scalerbob"},
