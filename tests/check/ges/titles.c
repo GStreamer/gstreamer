@@ -63,7 +63,7 @@ GST_START_TEST (test_title_source_properties)
       "in-point", (guint64) 12, NULL);
   assert_equals_uint64 (_START (clip), 42);
   assert_equals_uint64 (_DURATION (clip), 51);
-  assert_equals_uint64 (_INPOINT (clip), 12);
+  assert_equals_uint64 (_INPOINT (clip), 0);
 
   ges_layer_add_clip (layer, GES_CLIP (clip));
   ges_timeline_commit (timeline);
@@ -77,10 +77,10 @@ GST_START_TEST (test_title_source_properties)
   /* Check that trackelement has the same properties */
   assert_equals_uint64 (_START (trackelement), 42);
   assert_equals_uint64 (_DURATION (trackelement), 51);
-  assert_equals_uint64 (_INPOINT (trackelement), 12);
+  assert_equals_uint64 (_INPOINT (trackelement), 0);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  nle_object_check (ges_track_element_get_nleobject (trackelement), 42, 51, 12,
+  nle_object_check (ges_track_element_get_nleobject (trackelement), 42, 51, 0,
       51, MIN_NLE_PRIO, TRUE);
 
   /* Change more properties, see if they propagate */
@@ -89,14 +89,14 @@ GST_START_TEST (test_title_source_properties)
   ges_timeline_commit (timeline);
   assert_equals_uint64 (_START (clip), 420);
   assert_equals_uint64 (_DURATION (clip), 510);
-  assert_equals_uint64 (_INPOINT (clip), 120);
+  assert_equals_uint64 (_INPOINT (clip), 0);
   assert_equals_uint64 (_START (trackelement), 420);
   assert_equals_uint64 (_DURATION (trackelement), 510);
-  assert_equals_uint64 (_INPOINT (trackelement), 120);
+  assert_equals_uint64 (_INPOINT (trackelement), 0);
 
   /* And let's also check that it propagated correctly to GNonLin */
   nle_object_check (ges_track_element_get_nleobject (trackelement), 420, 510,
-      120, 510, MIN_NLE_PRIO + 0, TRUE);
+      0, 510, MIN_NLE_PRIO + 0, TRUE);
 
   ges_container_remove (GES_CONTAINER (clip),
       GES_TIMELINE_ELEMENT (trackelement));

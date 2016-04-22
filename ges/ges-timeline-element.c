@@ -726,7 +726,7 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
     return;
   }
 
-  GST_WARNING_OBJECT (self, "No set_inpoint virtual method implementation"
+  GST_DEBUG_OBJECT (self, "No set_inpoint virtual method implementation"
       " on class %s. Can not set inpoint %" GST_TIME_FORMAT,
       G_OBJECT_CLASS_NAME (klass), GST_TIME_ARGS (inpoint));
 }
