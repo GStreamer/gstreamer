@@ -38,6 +38,8 @@ static gboolean gst_mpdparser_get_xml_prop_validated_string (xmlNode * a_node,
     gboolean (*validator) (const char *));
 static gboolean gst_mpdparser_get_xml_prop_string (xmlNode * a_node,
     const gchar * property_name, gchar ** property_value);
+static gboolean gst_mpdparser_get_xml_prop_string_stripped (xmlNode * a_node,
+    const gchar * property_name, gchar ** property_value);
 static gboolean gst_mpdparser_get_xml_ns_prop_string (xmlNode * a_node,
     const gchar * ns_name, const gchar * property_name,
     gchar ** property_value);
@@ -308,6 +310,18 @@ gst_mpdparser_get_xml_prop_string (xmlNode * a_node,
 {
   return gst_mpdparser_get_xml_prop_validated_string (a_node, property_name,
       property_value, NULL);
+}
+
+static gboolean
+gst_mpdparser_get_xml_prop_string_stripped (xmlNode * a_node,
+    const gchar * property_name, gchar ** property_value)
+{
+  gboolean ret;
+  ret =
+      gst_mpdparser_get_xml_prop_string (a_node, property_name, property_value);
+  if (ret)
+    *property_value = g_strstrip (*property_value);
+  return ret;
 }
 
 static gboolean
@@ -1291,7 +1305,7 @@ gst_mpdparser_parse_descriptor_type_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_descriptor);
 
   GST_LOG ("attributes of %s node:", a_node->name);
-  gst_mpdparser_get_xml_prop_string (a_node, "schemeIdUri",
+  gst_mpdparser_get_xml_prop_string_stripped (a_node, "schemeIdUri",
       &new_descriptor->schemeIdUri);
   if (!gst_mpdparser_get_xml_prop_string (a_node, "value",
           &new_descriptor->value)) {
