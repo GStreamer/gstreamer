@@ -157,14 +157,17 @@ ges_title_source_class_init (GESTitleSourceClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_CLASS (klass);
   GESTrackElementClass *track_element_class = GES_TRACK_ELEMENT_CLASS (klass);
+  GESTimelineElementClass *timeline_element_class =
+      GES_TIMELINE_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTitleSourcePrivate));
 
   object_class->get_property = ges_title_source_get_property;
   object_class->set_property = ges_title_source_set_property;
   object_class->dispose = ges_title_source_dispose;
-  track_element_class->lookup_child = _lookup_child;
 
+  timeline_element_class->set_inpoint = NULL;
+  track_element_class->lookup_child = _lookup_child;
   source_class->create_source = ges_title_source_create_source;
 }
 

@@ -1581,6 +1581,7 @@ ges_timeline_trim_object_simple (GESTimeline * timeline,
     {
       GESTimelineElement *toplevel;
       GESChildrenControlMode old_mode;
+      gboolean use_inpoint;
       toplevel = ges_timeline_element_get_toplevel_parent (element);
 
       if (position < _START (toplevel) && _START (toplevel) < _START (element)) {
@@ -1616,17 +1617,26 @@ ges_timeline_trim_object_simple (GESTimeline * timeline,
       /* Calculate new values */
       position = MIN (position, start + duration);
 
-      if (inpoint + position < start) {
-        GST_INFO_OBJECT (timeline, "Track element %s inpoint would be negative,"
-            " not trimming", GES_TIMELINE_ELEMENT_NAME (track_element));
+      use_inpoint =
+          GES_TIMELINE_ELEMENT_GET_CLASS (track_element)->set_inpoint ? TRUE :
+          FALSE;
+
+      if (use_inpoint && inpoint + position < start) {
+        GST_ERROR_OBJECT (timeline, "Track element %s inpoint %" GST_TIME_FORMAT
+            " would be negative,"
+            " not trimming", GES_TIMELINE_ELEMENT_NAME (track_element),
+            GST_TIME_ARGS (inpoint));
         gst_object_unref (toplevel);
         return FALSE;
       }
 
       inpoint = inpoint + position - start;
       real_dur = _END (element) - position;
-      duration = CLAMP (real_dur, 0, max_duration > inpoint ?
-          max_duration - inpoint : G_MAXUINT64);
+      if (use_inpoint)
+        duration = CLAMP (real_dur, 0, max_duration > inpoint ?
+            max_duration - inpoint : G_MAXUINT64);
+      else
+        duration = real_dur;
 
 
       /* If we already are at max duration or duration == 0 do no useless work */
