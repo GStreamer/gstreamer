@@ -1663,6 +1663,7 @@ x4 addb argb, x, c128
 .temp 1 b
 .temp 4 x
 .const 1 c128 128
+.const 4 c4128 128
 
 subb r, y, c128
 splatbw wy, r
@@ -1693,7 +1694,61 @@ convssswb g, wg
 
 mergebw wb, b, g
 mergewl x, wb, wr
-x4 addb argb, x, c128
+x4 addb argb, x, c4128
+
+.function video_orc_convert_I420_ARGB
+.dest 4 argb guint8
+.source 1 y guint8
+.source 1 u guint8
+.source 1 v guint8
+.param 2 p1
+.param 2 p2
+.param 2 p3
+.param 2 p4
+.param 2 p5
+.temp 2 wy
+.temp 2 wu
+.temp 2 wv
+.temp 2 wr
+.temp 2 wg
+.temp 2 wb
+.temp 1 r
+.temp 1 g
+.temp 1 b
+.temp 4 x
+.const 1 c128 128
+.const 4 c4128 128
+
+subb r, y, c128
+splatbw wy, r
+loadupdb r, u
+subb r, r, c128
+splatbw wu, r
+loadupdb r, v
+subb r, r, c128
+splatbw wv, r
+
+mulhsw wy, wy, p1
+
+mulhsw wr, wv, p2
+addw wr, wy, wr
+convssswb r, wr
+mergebw wr, 127, r
+
+mulhsw wb, wu, p3
+addw wb, wy, wb
+convssswb b, wb
+
+mulhsw wg, wu, p4
+addw wg, wy, wg
+mulhsw wy, wv, p5
+addw wg, wg, wy
+
+convssswb g, wg
+
+mergebw wb, g, b
+mergewl x, wr, wb
+x4 addb argb, x, c4128
 
 .function video_orc_matrix8
 .backup _custom_video_orc_matrix8
