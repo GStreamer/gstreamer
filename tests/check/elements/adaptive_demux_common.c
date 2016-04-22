@@ -175,10 +175,12 @@ gst_adaptive_demux_test_check_received_data (GstAdaptiveDemuxTestEngine *
       (guint64) gst_buffer_get_size (buffer),
       testOutputStreamData->expected_size, stream->segment_start);
 
-  fail_unless (stream->total_received_size +
-      stream->segment_received_size +
-      gst_buffer_get_size (buffer) <= testOutputStreamData->expected_size,
-      "Received unexpected data, please check what segments are being downloaded");
+  /* Only verify after seeking */
+  if (testData->seek_event && testData->seeked)
+    fail_unless (stream->total_received_size +
+        stream->segment_received_size +
+        gst_buffer_get_size (buffer) <= testOutputStreamData->expected_size,
+        "Received unexpected data, please check what segments are being downloaded");
 
   streamOffset = stream->segment_start + stream->segment_received_size;
   if (testOutputStreamData->expected_data) {
@@ -357,6 +359,7 @@ testSeekAdaptiveDemuxSendsData (GstAdaptiveDemuxTestEngine * engine,
         g_cond_wait (&testData->test_task_state_cond,
             &testData->test_task_state_lock);
       }
+      testData->seeked = TRUE;
       g_mutex_unlock (&testData->test_task_state_lock);
       /* we can continue now, but this buffer will be rejected by AppSink
        * because it is in flushing mode
