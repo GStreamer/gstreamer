@@ -1888,7 +1888,17 @@ gst_vpx_enc_handle_frame (GstVideoEncoder * video_encoder,
     duration =
         gst_util_uint64_scale (frame->duration, encoder->cfg.g_timebase.den,
         encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND);
-    encoder->last_pts += frame->duration;
+
+    if (duration > 0) {
+      encoder->last_pts += frame->duration;
+    } else {
+      /* We force the path ignoring the duration if we end up with a zero
+       * value for duration after scaling (e.g. duration value too small) */
+      GST_WARNING_OBJECT (encoder,
+          "Ignoring too small frame duration %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (frame->duration));
+      duration = 1;
+    }
   } else {
     duration = 1;
   }
