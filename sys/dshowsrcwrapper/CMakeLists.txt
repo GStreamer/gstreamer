@@ -17,6 +17,7 @@ INCLUDE_DIRECTORIES(
   ${GST_INSTALL_BASE}/include/gstreamer-1.0
   ${GST_INSTALL_BASE}/include/glib-2.0
   ${GST_INSTALL_BASE}/lib/glib-2.0/include
+  ${GST_INSTALL_BASE}/lib/gstreamer-1.0/include
   ${SDK_INSTALL_BASE}/Samples/multimedia/directshow/baseclasses
   ${PROJECT_SOURCE_DIR}/../../win32/common
 )
@@ -26,6 +27,8 @@ LINK_DIRECTORIES(
   ${SDK_INSTALL_BASE}/Samples/multimedia/directshow/baseclasses/Release_MBCS
   ${SDK_INSTALL_BASE}/Samples/multimedia/directshow/baseclasses/Debug_MBCS
 )
+
+SET(CMAKE_SHARED_LINKER_FLAGS "${CMALE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
 
 ADD_LIBRARY(libgstdshowsrcwrapper SHARED
   gstdshow.cpp
