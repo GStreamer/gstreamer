@@ -424,6 +424,7 @@ gst_aggregator_check_pads_ready (GstAggregator * self)
 {
   GstAggregatorPad *pad;
   GList *l, *sinkpads;
+  gboolean have_data = TRUE;
 
   GST_LOG_OBJECT (self, "checking pads");
 
@@ -438,21 +439,29 @@ gst_aggregator_check_pads_ready (GstAggregator * self)
 
     PAD_LOCK (pad);
 
-    /* In live mode, having a single pad with buffers is enough to
-     * generate a start time from it. In non-live mode all pads need
-     * to have a buffer
-     */
-    if (self->priv->peer_latency_live &&
-        !gst_aggregator_pad_queue_is_empty (pad))
+    if (gst_aggregator_pad_queue_is_empty (pad)) {
+      if (!pad->priv->eos) {
+        have_data = FALSE;
+
+        /* If not live we need data on all pads, so leave the loop */
+        if (!self->priv->peer_latency_live) {
+          PAD_UNLOCK (pad);
+          goto pad_not_ready;
+        }
+      }
+    } else if (self->priv->peer_latency_live) {
+      /* In live mode, having a single pad with buffers is enough to
+       * generate a start time from it. In non-live mode all pads need
+       * to have a buffer
+       */
       self->priv->first_buffer = FALSE;
-
-    if (gst_aggregator_pad_queue_is_empty (pad) && !pad->priv->eos) {
-      PAD_UNLOCK (pad);
-      goto pad_not_ready;
     }
-    PAD_UNLOCK (pad);
 
+    PAD_UNLOCK (pad);
   }
+
+  if (!have_data)
+    goto pad_not_ready;
 
   self->priv->first_buffer = FALSE;
 
