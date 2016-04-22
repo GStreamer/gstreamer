@@ -406,6 +406,18 @@ gst_dshow_guid_to_gst_video_format (AM_MEDIA_TYPE *mediatype)
   if (gst_dshow_check_mediatype (mediatype, MEDIASUBTYPE_UYVY, FORMAT_VideoInfo))
     return GST_VIDEO_FORMAT_UYVY;
 
+  if (gst_dshow_check_mediatype (mediatype, MEDIASUBTYPE_RGB32, FORMAT_VideoInfo))
+    return GST_VIDEO_FORMAT_BGRx;
+
+  if (gst_dshow_check_mediatype (mediatype, MEDIASUBTYPE_RGB565, FORMAT_VideoInfo))
+    return GST_VIDEO_FORMAT_BGR16;
+
+  if (gst_dshow_check_mediatype (mediatype, MEDIASUBTYPE_RGB555, FORMAT_VideoInfo))
+    return GST_VIDEO_FORMAT_BGR15;
+
+  if (gst_dshow_check_mediatype (mediatype, MEDIASUBTYPE_RGB8, FORMAT_VideoInfo))
+    return GST_VIDEO_FORMAT_GRAY8;
+
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
 
@@ -448,6 +460,18 @@ gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar * name,
       break;
     case GST_VIDEO_FORMAT_UYVY:
       video_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("UYVY"));
+      break;
+    case GST_VIDEO_FORMAT_BGRx:
+      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("BGRx"));
+      break;
+    case GST_VIDEO_FORMAT_BGR16:
+      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("BGR16"));
+      break;
+    case GST_VIDEO_FORMAT_BGR15:
+      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("BGR15"));
+      break;
+    case GST_VIDEO_FORMAT_GRAY8:
+      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("GRAY8"));
       break;
     default:
       break;
