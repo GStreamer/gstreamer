@@ -109,6 +109,7 @@ typedef struct _GstAdaptiveDemuxTestCase
    */
   guint64 threshold_for_seek;
   GstEvent *seek_event;
+  gboolean seeked;
 
   gpointer signal_context;
 } GstAdaptiveDemuxTestCase;
