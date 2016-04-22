@@ -481,9 +481,10 @@ libs_player_SOURCES = libs/player.c
 
 libs_player_LDADD = \
 	$(top_builddir)/gst-libs/gst/player/libgstplayer-@GST_API_VERSION@.la \
+	-lgstvideo-@GST_API_VERSION@ \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 libs_player_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS) \
+	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS) \
 	-DTEST_PATH=\"$(builddir)/media\"
 
 if WITH_GST_PLAYER_TESTS
