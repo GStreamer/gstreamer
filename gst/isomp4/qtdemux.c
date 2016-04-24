@@ -1327,7 +1327,7 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
         index = kindex;
 
         /* get timestamp of keyframe */
-        media_time = QTSAMPLE_DTS (str, &str->samples[kindex]);
+        media_time = QTSAMPLE_PTS (str, &str->samples[kindex]);
         GST_DEBUG_OBJECT (qtdemux,
             "keyframe at %u with time %" GST_TIME_FORMAT " at offset %"
             G_GUINT64_FORMAT, kindex, GST_TIME_ARGS (media_time),
