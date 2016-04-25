@@ -24,6 +24,8 @@
 #include <glib-object.h>
 #include <ges/ges-timeline.h>
 
+G_BEGIN_DECLS
+
 #define GES_TYPE_FORMATTER ges_formatter_get_type()
 
 #define GES_FORMATTER(obj) \
@@ -161,5 +163,7 @@ gboolean ges_formatter_save_to_uri      (GESFormatter * formatter,
                                          GError **error);
 
 GESAsset *ges_formatter_get_default    (void);
+
+G_END_DECLS
 
 #endif /* _GES_FORMATTER */

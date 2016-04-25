@@ -21,6 +21,8 @@
 #ifndef __GES_TYPES_H__
 #define __GES_TYPES_H__
 
+G_BEGIN_DECLS
+
 /* Padding */
 #define GES_PADDING         4
 
@@ -178,5 +180,7 @@ typedef struct _GESVideoTrack GESVideoTrack;
 
 typedef struct _GESAudioTrackClass GESAudioTrackClass;
 typedef struct _GESAudioTrack GESAudioTrack;
+
+G_END_DECLS
 
 #endif /* __GES_TYPES_H__ */
