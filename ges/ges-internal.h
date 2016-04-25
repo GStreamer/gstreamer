@@ -31,6 +31,8 @@
 #include "ges-asset.h"
 #include "ges-base-xml-formatter.h"
 
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define GST_CAT_DEFAULT _ges_debug
 
@@ -393,5 +395,7 @@ G_GNUC_INTERNAL GESMultiFileURI * ges_multi_file_uri_new (const gchar * uri);
 G_GNUC_INTERNAL gboolean ges_nle_composition_add_object (GstElement *comp, GstElement *object);
 G_GNUC_INTERNAL gboolean ges_nle_composition_remove_object (GstElement *comp, GstElement *object);
 G_GNUC_INTERNAL gboolean ges_nle_object_commit (GstElement * nlesource, gboolean recurse);
+
+G_END_DECLS
 
 #endif /* __GES_INTERNAL_H__ */

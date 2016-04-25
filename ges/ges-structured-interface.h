@@ -23,6 +23,8 @@
 
 #include <ges/ges.h>
 
+G_BEGIN_DECLS
+
 typedef gboolean (*ActionFromStructureFunc)   (GESTimeline * timeline,
                                                GstStructure * structure,
                                                GError ** error);
@@ -54,5 +56,7 @@ _ges_get_asset_from_timeline                  (GESTimeline * timeline,
 G_GNUC_INTERNAL GESLayer *
 _ges_get_layer_by_priority                    (GESTimeline * timeline,
                                                gint priority);
+
+G_END_DECLS
 
 #endif /* __GES_STRUCTURED_INTERFACE__*/
