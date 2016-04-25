@@ -835,7 +835,9 @@ gst_codec_utils_h265_get_level (const guint8 * profile_tier_level, guint len)
 
   GST_MEMDUMP ("ProfileTierLevel", profile_tier_level, len);
 
-  if (profile_tier_level[11] % 30 == 0)
+  if (profile_tier_level[11] == 0)
+    return NULL;
+  else if (profile_tier_level[11] % 30 == 0)
     return digit_to_string (profile_tier_level[11] / 30);
   else {
     switch (profile_tier_level[11]) {
