@@ -23,10 +23,10 @@
 
 #include <gst/gst.h>
 
-G_BEGIN_DECLS
-
 #include <gst/pbutils/pbutils-enumtypes.h>
 #include <gst/pbutils/gstdiscoverer.h>
+
+G_BEGIN_DECLS
 
 /**
  * GstEncodingProfile:
