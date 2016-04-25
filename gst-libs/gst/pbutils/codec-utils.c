@@ -538,7 +538,9 @@ gst_codec_utils_h264_get_level (const guint8 * sps, guint len)
 
   csf3 = (sps[1] & 0x10) >> 4;
 
-  if ((sps[2] == 11 && csf3) || sps[2] == 9)
+  if (sps[2] == 0)
+    return NULL;
+  else if ((sps[2] == 11 && csf3) || sps[2] == 9)
     return "1b";
   else if (sps[2] % 10 == 0)
     return digit_to_string (sps[2] / 10);
