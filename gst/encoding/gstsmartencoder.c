@@ -356,9 +356,12 @@ smart_encoder_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       GST_DEBUG_OBJECT (smart_encoder, "segment: %" GST_SEGMENT_FORMAT,
           smart_encoder->segment);
-      if (smart_encoder->segment->format != GST_FORMAT_TIME)
+      if (smart_encoder->segment->format != GST_FORMAT_TIME) {
         GST_ERROR
             ("smart_encoder can not handle streams not specified in GST_FORMAT_TIME");
+        gst_event_unref (event);
+        return FALSE;
+      }
 
       /* And keep a copy for further usage */
       if (smart_encoder->newsegment)
@@ -368,7 +371,8 @@ smart_encoder_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     case GST_EVENT_EOS:
       GST_DEBUG ("Eos, flushing remaining data");
-      gst_smart_encoder_push_pending_gop (smart_encoder);
+      if (smart_encoder->segment->format == GST_FORMAT_TIME)
+        gst_smart_encoder_push_pending_gop (smart_encoder);
       break;
     default:
       break;
