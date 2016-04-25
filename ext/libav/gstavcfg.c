@@ -1030,7 +1030,7 @@ gst_ffmpeg_cfg_fill_context (GstFFMpegVidEnc * ffmpegenc,
         /* make a copy for ffmpeg, it will likely free only some,
          * but in any case safer than a potential double free */
         G_STRUCT_MEMBER (gchar *, context, context_offset) =
-            g_strdup (G_STRUCT_MEMBER (gchar *, ffmpegenc, qdata->offset));
+            av_strdup (G_STRUCT_MEMBER (gchar *, ffmpegenc, qdata->offset));
       } else {
         /* memcpy a bit heavy for a small copy,
          * but hardly part of 'inner loop' */
