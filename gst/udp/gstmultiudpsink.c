@@ -1312,7 +1312,7 @@ gst_multiudpsink_start (GstBaseSink * bsink)
 
   if (sink->socket_v6) {
     GST_DEBUG_OBJECT (sink, "using configured IPv6 socket");
-    g_return_val_if_fail (g_socket_get_family (sink->socket) !=
+    g_return_val_if_fail (!sink->socket || g_socket_get_family (sink->socket) !=
         G_SOCKET_FAMILY_IPV6, FALSE);
 
     if (sink->used_socket_v6 && sink->used_socket_v6 != sink->socket_v6) {
