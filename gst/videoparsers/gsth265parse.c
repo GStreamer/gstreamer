@@ -1254,7 +1254,9 @@ get_tier_string (guint8 tier_flag)
 static const gchar *
 get_level_string (guint8 level_idc)
 {
-  if (level_idc % 30 == 0)
+  if (level_idc == 0)
+    return NULL;
+  else if (level_idc % 30 == 0)
     return digit_to_string (level_idc / 30);
   else {
     switch (level_idc) {
