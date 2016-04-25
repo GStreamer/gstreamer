@@ -1625,7 +1625,9 @@ get_profile_string (GstH264SPS * sps)
 static const gchar *
 get_level_string (GstH264SPS * sps)
 {
-  if ((sps->level_idc == 11 && sps->constraint_set3_flag)
+  if (sps->level_idc == 0)
+    return NULL;
+  else if ((sps->level_idc == 11 && sps->constraint_set3_flag)
       || sps->level_idc == 9)
     return "1b";
   else if (sps->level_idc % 10 == 0)
