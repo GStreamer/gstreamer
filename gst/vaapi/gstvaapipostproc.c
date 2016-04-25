@@ -1146,12 +1146,19 @@ gst_vaapipostproc_transform_caps (GstBaseTransform * trans,
 {
   GstCaps *out_caps;
 
+  GST_DEBUG_OBJECT (trans,
+      "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
+      (direction == GST_PAD_SINK) ? "sink" : "src");
+
   caps = gst_vaapipostproc_transform_caps_impl (trans, direction, caps);
   if (caps && filter) {
     out_caps = gst_caps_intersect_full (caps, filter, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (caps);
-    return out_caps;
+    caps = out_caps;
   }
+
+  GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, caps);
+
   return caps;
 }
 
