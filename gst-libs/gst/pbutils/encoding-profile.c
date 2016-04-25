@@ -1531,8 +1531,19 @@ gst_encoding_profile_from_discoverer (GstDiscovererInfo * info)
       (sinfo));
   for (stream = streams; stream; stream = stream->next) {
     GstEncodingProfile *sprofile = NULL;
+    GstStructure *s;
     sinfo = (GstDiscovererStreamInfo *) stream->data;
     caps = gst_discoverer_stream_info_get_caps (sinfo);
+
+    s = gst_caps_get_structure (caps, 0);
+    if (gst_structure_has_field (s, "codec_data")
+        || gst_structure_has_field (s, "streamheader")) {
+      caps = gst_caps_make_writable (caps);
+      s = gst_caps_get_structure (caps, 0);
+      gst_structure_remove_field (s, "codec_data");
+      gst_structure_remove_field (s, "streamheader");
+    }
+
     GST_LOG ("Stream: %" GST_PTR_FORMAT "\n", caps);
     if (GST_IS_DISCOVERER_AUDIO_INFO (sinfo)) {
       sprofile =
