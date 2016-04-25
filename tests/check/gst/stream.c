@@ -52,18 +52,20 @@ GST_START_TEST (test_get_sockets)
 
   /* configure address pool for IPv4 and IPv6 unicast addresses */
   pool = gst_rtsp_address_pool_new ();
-  fail_unless (gst_rtsp_address_pool_add_range (pool, GST_RTSP_ADDRESS_POOL_ANY_IPV4,
-        GST_RTSP_ADDRESS_POOL_ANY_IPV4, 50000, 60000, 0));
-  fail_unless (gst_rtsp_address_pool_add_range (pool, GST_RTSP_ADDRESS_POOL_ANY_IPV6,
-        GST_RTSP_ADDRESS_POOL_ANY_IPV6, 50000, 60000, 0));
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          GST_RTSP_ADDRESS_POOL_ANY_IPV4, GST_RTSP_ADDRESS_POOL_ANY_IPV4, 50000,
+          60000, 0));
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          GST_RTSP_ADDRESS_POOL_ANY_IPV6, GST_RTSP_ADDRESS_POOL_ANY_IPV6, 50000,
+          60000, 0));
   gst_rtsp_stream_set_address_pool (stream, pool);
 
   fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
 
   gst_rtsp_transport_new (&tr);
   tr->lower_transport = GST_RTSP_LOWER_TRANS_UDP;
-  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV4,
-        tr, FALSE));
+  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
+          G_SOCKET_FAMILY_IPV4, tr, FALSE));
 
   socket = gst_rtsp_stream_get_rtp_socket (stream, G_SOCKET_FAMILY_IPV4);
   have_ipv4 = (socket != NULL);
@@ -138,7 +140,7 @@ GST_START_TEST (test_allocate_udp_ports_fail)
 
   pool = gst_rtsp_address_pool_new ();
   fail_unless (gst_rtsp_address_pool_add_range (pool, "192.168.1.1",
-        "192.168.1.1", 6000, 6001, 0));
+          "192.168.1.1", 6000, 6001, 0));
   gst_rtsp_stream_set_address_pool (stream, pool);
 
   fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
@@ -146,7 +148,7 @@ GST_START_TEST (test_allocate_udp_ports_fail)
   gst_rtsp_transport_new (&tr);
   tr->lower_transport = GST_RTSP_LOWER_TRANS_UDP;
   fail_if (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV4,
-        tr, FALSE));
+          tr, FALSE));
 
   gst_rtsp_transport_free (tr);
   g_object_unref (pool);
@@ -258,8 +260,8 @@ GST_START_TEST (test_multicast_address_and_unicast_udp)
   gst_rtsp_transport_new (&tr);
   /* unicast udp */
   tr->lower_transport = GST_RTSP_LOWER_TRANS_UDP;
-  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV4,
-        tr, FALSE));
+  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
+          G_SOCKET_FAMILY_IPV4, tr, FALSE));
 
   gst_rtsp_transport_free (tr);
   g_object_unref (pool);
@@ -309,8 +311,8 @@ GST_START_TEST (test_allocate_udp_ports_multicast)
   /* allocate udp multicast ports for IPv4 */
   gst_rtsp_transport_new (&tr);
   tr->lower_transport = GST_RTSP_LOWER_TRANS_UDP_MCAST;
-  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV4,
-        tr, FALSE));
+  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
+          G_SOCKET_FAMILY_IPV4, tr, FALSE));
 
   /* check the multicast address and ports for IPv4 */
   addr = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV4);
@@ -320,9 +322,9 @@ GST_START_TEST (test_allocate_udp_ports_multicast)
   fail_unless_equals_int (addr->n_ports, 2);
   gst_rtsp_address_free (addr);
 
-  /* allocate upd multicast ports for IPv6 */
-  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV6,
-        tr, FALSE));
+  /* allocate udp multicast ports for IPv6 */
+  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
+          G_SOCKET_FAMILY_IPV6, tr, FALSE));
 
   /* check the multicast address and ports for IPv6 */
   addr = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV6);
@@ -388,8 +390,8 @@ GST_START_TEST (test_allocate_udp_ports_client_settings)
   tr->port.min = 6002;
   tr->port.max = 6003;
   tr->lower_transport = GST_RTSP_LOWER_TRANS_UDP_MCAST;
-  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV4,
-        tr, FALSE));
+  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
+          G_SOCKET_FAMILY_IPV4, tr, FALSE));
 
   /* verify that the multicast address and ports correspond to the requested client
    * transport information for IPv4 */
@@ -405,8 +407,8 @@ GST_START_TEST (test_allocate_udp_ports_client_settings)
   tr->destination = g_strdup ("FF11:DB8::1");
   tr->port.min = 6006;
   tr->port.max = 6007;
-  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV6,
-        tr, FALSE));
+  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
+          G_SOCKET_FAMILY_IPV6, tr, FALSE));
 
   /* verify that the multicast address and ports correspond to the requested client
    * transport information for IPv6 */

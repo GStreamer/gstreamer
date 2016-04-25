@@ -149,7 +149,7 @@ get_client_ports (GstRTSPRange * range)
 
 /* start the tested rtsp server */
 static void
-start_server (void)
+start_server (gboolean set_shared_factory)
 {
   GstRTSPMountPoints *mounts;
   gchar *service;
@@ -172,6 +172,7 @@ start_server (void)
   gst_rtsp_address_pool_add_range (pool, GST_RTSP_ADDRESS_POOL_ANY_IPV4,
       GST_RTSP_ADDRESS_POOL_ANY_IPV4, 6000, 6010, 0);
   gst_rtsp_media_factory_set_address_pool (factory, pool);
+  gst_rtsp_media_factory_set_shared (factory, set_shared_factory);
   gst_object_unref (pool);
 
   /* set port to any */
@@ -571,7 +572,7 @@ GST_START_TEST (test_connect)
 {
   GstRTSPConnection *conn;
 
-  start_server ();
+  start_server (FALSE);
 
   /* connect to server */
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
@@ -597,7 +598,7 @@ GST_START_TEST (test_describe)
   const gchar *control_video;
   const gchar *control_audio;
 
-  start_server ();
+  start_server (FALSE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -668,7 +669,7 @@ GST_START_TEST (test_describe_non_existing_mount_point)
 {
   GstRTSPConnection *conn;
 
-  start_server ();
+  start_server (FALSE);
 
   /* send DESCRIBE request for a non-existing mount point
    * and check that we get a 404 Not Found */
@@ -697,7 +698,7 @@ do_test_setup (GstRTSPLowerTrans lower_transport)
   GstRTSPTransport *video_transport = NULL;
   GstRTSPTransport *audio_transport = NULL;
 
-  start_server ();
+  start_server (FALSE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -782,7 +783,7 @@ GST_START_TEST (test_setup_twice)
   gchar *session1 = NULL;
   gchar *session2 = NULL;
 
-  start_server ();
+  start_server (FALSE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -854,7 +855,7 @@ GST_START_TEST (test_setup_with_require_header)
   gchar *unsupported = NULL;
   GstRTSPTransport *video_transport = NULL;
 
-  start_server ();
+  start_server (FALSE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -916,7 +917,7 @@ GST_START_TEST (test_setup_non_existing_stream)
   GstRTSPConnection *conn;
   GstRTSPRange client_ports;
 
-  start_server ();
+  start_server (FALSE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -1009,7 +1010,8 @@ done:
 }
 
 static void
-do_test_play_full (const gchar * range, GstRTSPLowerTrans lower_transport)
+do_test_play_full (const gchar * range, GstRTSPLowerTrans lower_transport,
+    GMutex * lock)
 {
   GstRTSPConnection *conn;
   GstSDPMessage *sdp_message = NULL;
@@ -1051,8 +1053,20 @@ do_test_play_full (const gchar * range, GstRTSPLowerTrans lower_transport)
     fail_unless_equals_string (range, range_out);
   g_free (range_out);
 
-  receive_rtp (rtp_socket, NULL);
-  receive_rtcp (rtcp_socket, NULL, 0);
+  for (;;) {
+    receive_rtp (rtp_socket, NULL);
+    receive_rtcp (rtcp_socket, NULL, 0);
+
+    if (lock != NULL) {
+      if (g_mutex_trylock (lock) == TRUE) {
+        g_mutex_unlock (lock);
+        break;
+      }
+    } else {
+      break;
+    }
+
+  }
 
   /* send TEARDOWN request and check that we get 200 OK */
   fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
@@ -1076,12 +1090,12 @@ do_test_play_full (const gchar * range, GstRTSPLowerTrans lower_transport)
 static void
 do_test_play (const gchar * range)
 {
-  do_test_play_full (range, GST_RTSP_LOWER_TRANS_UDP);
+  do_test_play_full (range, GST_RTSP_LOWER_TRANS_UDP, NULL);
 }
 
 GST_START_TEST (test_play)
 {
-  start_server ();
+  start_server (FALSE);
 
   do_test_play (NULL);
 
@@ -1095,7 +1109,7 @@ GST_START_TEST (test_play_without_session)
 {
   GstRTSPConnection *conn;
 
-  start_server ();
+  start_server (FALSE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -1155,7 +1169,7 @@ GST_START_TEST (test_play_multithreaded)
   gst_rtsp_thread_pool_set_max_threads (pool, 2);
   g_object_unref (pool);
 
-  start_server ();
+  start_server (FALSE);
 
   do_test_play (NULL);
 
@@ -1215,7 +1229,7 @@ GST_START_TEST (test_play_multithreaded_block_in_describe)
   gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT "2", factory);
   g_object_unref (mounts);
 
-  start_server ();
+  start_server (FALSE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT "2");
   iterate ();
@@ -1294,7 +1308,7 @@ GST_START_TEST (test_play_multithreaded_timeout_client)
   g_signal_connect (server, "client-connected",
       G_CALLBACK (session_connected_new_session_cb), new_session_timeout_one);
 
-  start_server ();
+  start_server (FALSE);
 
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
@@ -1367,7 +1381,7 @@ GST_START_TEST (test_play_multithreaded_timeout_session)
   g_signal_connect (server, "client-connected",
       G_CALLBACK (session_connected_new_session_cb), new_session_timeout_one);
 
-  start_server ();
+  start_server (FALSE);
 
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
@@ -1443,7 +1457,7 @@ GST_START_TEST (test_play_disconnect)
   g_signal_connect (server, "client-connected",
       G_CALLBACK (session_connected_new_session_cb), new_session_timeout_one);
 
-  start_server ();
+  start_server (FALSE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -1515,7 +1529,8 @@ GST_START_TEST (test_play_specific_server_port)
   factory = gst_rtsp_media_factory_new ();
   /* we have to suspend media after SDP in order to make sure that
    * we can reconfigure UDP sink with new UDP ports */
-  gst_rtsp_media_factory_set_suspend_mode (factory, GST_RTSP_SUSPEND_MODE_RESET);
+  gst_rtsp_media_factory_set_suspend_mode (factory,
+      GST_RTSP_SUSPEND_MODE_RESET);
   pool = gst_rtsp_address_pool_new ();
   gst_rtsp_address_pool_add_range (pool, GST_RTSP_ADDRESS_POOL_ANY_IPV4,
       GST_RTSP_ADDRESS_POOL_ANY_IPV4, 7770, 7780, 0);
@@ -1603,13 +1618,72 @@ GST_END_TEST;
 
 GST_START_TEST (test_play_smpte_range)
 {
-  start_server ();
+  start_server (FALSE);
 
   do_test_play ("npt=5-");
   do_test_play ("smpte=0:00:00-");
   do_test_play ("smpte=1:00:00-");
   do_test_play ("smpte=1:00:03-");
   do_test_play ("clock=20120321T152256Z-");
+
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
+static gpointer
+thread_func (gpointer data)
+{
+  do_test_play_full (NULL, GST_RTSP_LOWER_TRANS_UDP, (GMutex *) data);
+  return NULL;
+}
+
+/* Test adding and removing clients to a 'Shared' media. */
+GST_START_TEST (test_shared)
+{
+  GMutex lock1, lock2, lock3, lock4;
+  GThread *thread1, *thread2, *thread3, *thread4;
+
+  /* Locks for each thread. Each thread will keep reading data as long as the
+   * thread is locked. */
+  g_mutex_init (&lock1);
+  g_mutex_init (&lock2);
+  g_mutex_init (&lock3);
+  g_mutex_init (&lock4);
+
+  start_server (TRUE);
+
+  /* Start the first receiver thread. */
+  g_mutex_lock (&lock1);
+  thread1 = g_thread_new ("thread1", thread_func, &lock1);
+
+  /* Connect and disconnect another client. */
+  g_mutex_lock (&lock2);
+  thread2 = g_thread_new ("thread2", thread_func, &lock2);
+  g_mutex_unlock (&lock2);
+  g_mutex_clear (&lock2);
+  g_thread_join (thread2);
+
+  /* Do it again. */
+  g_mutex_lock (&lock3);
+  thread3 = g_thread_new ("thread3", thread_func, &lock3);
+  g_mutex_unlock (&lock3);
+  g_mutex_clear (&lock3);
+  g_thread_join (thread3);
+
+  /* Disconnect the last client. This will clean up the media. */
+  g_mutex_unlock (&lock1);
+  g_mutex_clear (&lock1);
+  g_thread_join (thread1);
+
+  /* Connect and disconnect another client. This will create and clean up the 
+   * media. */
+  g_mutex_lock (&lock4);
+  thread4 = g_thread_new ("thread4", thread_func, &lock4);
+  g_mutex_unlock (&lock4);
+  g_mutex_clear (&lock4);
+  g_thread_join (thread4);
 
   stop_server ();
   iterate ();
@@ -1749,7 +1823,8 @@ GST_START_TEST (test_record_tcp)
   gint i;
 
   mfactory =
-      start_record_server ("( rtppcmadepay name=depay0 ! appsink name=sink async=false )");
+      start_record_server
+      ("( rtppcmadepay name=depay0 ! appsink name=sink async=false )");
 
   g_signal_connect (mfactory, "media-constructed",
       G_CALLBACK (media_constructed_cb), &server_sink);
@@ -1926,6 +2001,7 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_play_disconnect);
   tcase_add_test (tc, test_play_specific_server_port);
   tcase_add_test (tc, test_play_smpte_range);
+  tcase_add_test (tc, test_shared);
   tcase_add_test (tc, test_announce_without_sdp);
   tcase_add_test (tc, test_record_tcp);
   return s;
