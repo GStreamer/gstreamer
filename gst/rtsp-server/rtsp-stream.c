@@ -62,6 +62,18 @@
 #define GST_RTSP_STREAM_GET_PRIVATE(obj)  \
      (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_STREAM, GstRTSPStreamPrivate))
 
+/* Container for udpsrc elements created for a specific RTSPTransport. */
+typedef struct
+{
+  GstElement *udpsrc[2];
+} GstRTSPStreamUDPSrcs;
+
+static void
+destroy_udp_srcs_func (gpointer data)
+{
+  g_slice_free (GstRTSPStreamUDPSrcs, (GstRTSPStreamUDPSrcs *) data);
+}
+
 struct _GstRTSPStreamPrivate
 {
   GMutex lock;
@@ -95,16 +107,11 @@ struct _GstRTSPStreamPrivate
   GstElement *srtpdec;
   GHashTable *keys;
 
-  /* sinks used for sending and receiving RTP and RTCP over ipv4, they share
-   * sockets */
-  GstElement *udpsrc_v4[2];
-  /* UDP sources for UDP multicast transports */
-  GstElement *udpsrc_mcast_v4[2];
+  /* Unicast UDP sources associated with RTSPTransports */
+  GHashTable *udpsrcs;
 
-  /* sinks used for sending and receiving RTP and RTCP over ipv6, they share
-   * sockets */
-  GstElement *udpsrc_v6[2];
-  /* UDP sources for UDP multicast transports */
+  /* Only allow one set of IPV4 and IPV6 multicast udpsrcs */
+  GstElement *udpsrc_mcast_v4[2];
   GstElement *udpsrc_mcast_v6[2];
 
   GstElement *udpqueue[2];
@@ -127,12 +134,10 @@ struct _GstRTSPStreamPrivate
   /* server ports for sending/receiving over ipv4 */
   GstRTSPRange server_port_v4;
   GstRTSPAddress *server_addr_v4;
-  gboolean have_ipv4;
 
   /* server ports for sending/receiving over ipv6 */
   GstRTSPRange server_port_v6;
   GstRTSPAddress *server_addr_v6;
-  gboolean have_ipv6;
 
   /* multicast addresses */
   GstRTSPAddressPool *pool;
@@ -270,6 +275,8 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
       NULL, (GDestroyNotify) gst_caps_unref);
   priv->ptmap = g_hash_table_new_full (NULL, NULL, NULL,
       (GDestroyNotify) gst_caps_unref);
+  priv->udpsrcs = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+      NULL, (GDestroyNotify) destroy_udp_srcs_func);
 }
 
 static void
@@ -311,6 +318,11 @@ gst_rtsp_stream_finalize (GObject * obj)
 
   g_hash_table_unref (priv->keys);
   g_hash_table_destroy (priv->ptmap);
+
+  /* We expect all udpsrcs to be cleaned up by this point. */
+  if (g_hash_table_size (priv->udpsrcs) > 0)
+    g_critical ("Unreffing udpsrcs hash table that contains elements.");
+  g_hash_table_unref (priv->udpsrcs);
 
   G_OBJECT_CLASS (gst_rtsp_stream_parent_class)->finalize (obj);
 }
@@ -1493,42 +1505,63 @@ gst_rtsp_stream_allocate_udp_sockets (GstRTSPStream * stream,
 
   g_mutex_lock (&priv->lock);
 
-  if (family == G_SOCKET_FAMILY_IPV4) {
-    if (transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-      if (priv->have_ipv4_mcast)
+  if (transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
+    if (family == G_SOCKET_FAMILY_IPV4) {
+      /* Multicast IPV4 */
+      if (priv->have_ipv4_mcast) {
+        result = TRUE;
         goto done;
+      }
+
       priv->have_ipv4_mcast =
           alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV4,
           priv->udpsrc_mcast_v4, &priv->server_port_v4, ct, &priv->addr_v4,
           use_client_settings);
+      result = priv->have_ipv4_mcast;
+
     } else {
-      priv->have_ipv4 =
-          alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV4, priv->udpsrc_v4,
-          &priv->server_port_v4, ct, &priv->server_addr_v4,
-          use_client_settings);
-    }
-  } else {
-    if (transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-      if (priv->have_ipv6_mcast)
+      /* Multicast IPV6 */
+      if (priv->have_ipv6_mcast) {
+        result = TRUE;
         goto done;
+      }
+
       priv->have_ipv6_mcast =
           alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV6,
           priv->udpsrc_mcast_v6, &priv->server_port_v6, ct, &priv->addr_v6,
           use_client_settings);
-    } else {
-      if (priv->have_ipv6)
-        goto done;
-      priv->have_ipv6 =
-          alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV6, priv->udpsrc_v6,
-          &priv->server_port_v6, ct, &priv->server_addr_v6,
-          use_client_settings);
+      result = priv->have_ipv6_mcast;
     }
+  } else {
+    /* We allow multiple unicast transports, so we must maintain a table of the 
+     * udpsrcs created for them. */
+    GstRTSPStreamUDPSrcs *transport_udpsrcs =
+        g_slice_new0 (GstRTSPStreamUDPSrcs);
+
+    if (family == G_SOCKET_FAMILY_IPV4) {
+      /* Unicast IPV4 */
+      result =
+          alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV4,
+          transport_udpsrcs->udpsrc, &priv->server_port_v4, ct,
+          &priv->server_addr_v4, use_client_settings);
+    } else {
+      /* Unicast IPV6 */
+      result =
+          alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV6,
+          transport_udpsrcs->udpsrc, &priv->server_port_v6, ct,
+          &priv->server_addr_v6, use_client_settings);
+    }
+
+    /* If we didn't create any unicast udpsrcs, free the transport_udpsrcs struct. 
+     * Otherwise, add it to the hash table */
+    if (transport_udpsrcs->udpsrc[0] == NULL
+        && transport_udpsrcs->udpsrc[1] == NULL)
+      g_slice_free (GstRTSPStreamUDPSrcs, transport_udpsrcs);
+    else
+      g_hash_table_insert (priv->udpsrcs, ct, transport_udpsrcs);
   }
 
 done:
-  result = priv->have_ipv4 || priv->have_ipv4_mcast || priv->have_ipv6 ||
-      priv->have_ipv6_mcast;
-
   g_mutex_unlock (&priv->lock);
 
   return result;
@@ -2586,39 +2619,6 @@ create_receiver_part (GstRTSPStream * stream, GstBin * bin, GstState state)
       gst_pad_link (pad, priv->recv_sink[i]);
       gst_object_unref (pad);
 
-      if (priv->udpsrc_v4[i]) {
-        if (priv->srcpad) {
-          /* we set and keep these to playing so that they don't cause NO_PREROLL return
-           * values. This is only relevant for PLAY pipelines */
-          gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_PLAYING);
-          gst_element_set_locked_state (priv->udpsrc_v4[i], TRUE);
-        }
-        /* add udpsrc */
-        gst_bin_add (bin, priv->udpsrc_v4[i]);
-
-        /* and link to the funnel v4 */
-        selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
-        pad = gst_element_get_static_pad (priv->udpsrc_v4[i], "src");
-        gst_pad_link (pad, selpad);
-        gst_object_unref (pad);
-        gst_object_unref (selpad);
-      }
-
-      if (priv->udpsrc_v6[i]) {
-        if (priv->srcpad) {
-          gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_PLAYING);
-          gst_element_set_locked_state (priv->udpsrc_v6[i], TRUE);
-        }
-        gst_bin_add (bin, priv->udpsrc_v6[i]);
-
-        /* and link to the funnel v6 */
-        selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
-        pad = gst_element_get_static_pad (priv->udpsrc_v6[i], "src");
-        gst_pad_link (pad, selpad);
-        gst_object_unref (pad);
-        gst_object_unref (selpad);
-      }
-
       if (is_tcp) {
         /* make and add appsrc */
         priv->appsrc[i] = gst_element_factory_make ("appsrc", NULL);
@@ -2808,49 +2808,48 @@ no_udp_protocol:
       gst_element_set_state (priv->udpsink[0], GST_STATE_NULL);
     if (priv->udpsink[1])
       gst_element_set_state (priv->udpsink[1], GST_STATE_NULL);
-    if (priv->udpsrc_v4[0]) {
-      gst_element_set_state (priv->udpsrc_v4[0], GST_STATE_NULL);
-      gst_object_unref (priv->udpsrc_v4[0]);
-      priv->udpsrc_v4[0] = NULL;
-    }
-    if (priv->udpsrc_v4[1]) {
-      gst_element_set_state (priv->udpsrc_v4[1], GST_STATE_NULL);
-      gst_object_unref (priv->udpsrc_v4[1]);
-      priv->udpsrc_v4[1] = NULL;
-    }
-    if (priv->udpsrc_mcast_v4[0]) {
-      gst_element_set_state (priv->udpsrc_mcast_v4[0], GST_STATE_NULL);
-      gst_object_unref (priv->udpsrc_mcast_v4[0]);
-      priv->udpsrc_mcast_v4[0] = NULL;
-    }
-    if (priv->udpsrc_mcast_v4[1]) {
-      gst_element_set_state (priv->udpsrc_mcast_v4[1], GST_STATE_NULL);
-      gst_object_unref (priv->udpsrc_mcast_v4[1]);
-      priv->udpsrc_mcast_v4[1] = NULL;
-    }
-    if (priv->udpsrc_v6[0]) {
-      gst_element_set_state (priv->udpsrc_v6[0], GST_STATE_NULL);
-      gst_object_unref (priv->udpsrc_v6[0]);
-      priv->udpsrc_v6[0] = NULL;
-    }
-    if (priv->udpsrc_v6[1]) {
-      gst_element_set_state (priv->udpsrc_v6[1], GST_STATE_NULL);
-      gst_object_unref (priv->udpsrc_v6[1]);
-      priv->udpsrc_v6[1] = NULL;
-    }
-    if (priv->udpsrc_mcast_v6[0]) {
-      gst_element_set_state (priv->udpsrc_mcast_v6[0], GST_STATE_NULL);
-      gst_object_unref (priv->udpsrc_mcast_v6[0]);
-      priv->udpsrc_mcast_v6[0] = NULL;
-    }
-    if (priv->udpsrc_mcast_v6[1]) {
-      gst_element_set_state (priv->udpsrc_mcast_v6[1], GST_STATE_NULL);
-      gst_object_unref (priv->udpsrc_mcast_v6[1]);
-      priv->udpsrc_mcast_v6[1] = NULL;
-    }
+
     g_mutex_unlock (&priv->lock);
     return FALSE;
   }
+}
+
+/* Must be called with priv->lock. */
+static void
+remove_all_unicast_udpsrcs (GstRTSPStream * stream, GstBin * bin)
+{
+  GstRTSPStreamPrivate *priv;
+  GHashTableIter iter;
+  gpointer iter_key, iter_value;
+
+  priv = stream->priv;
+
+  /* Remove all of the unicast udpsrcs */
+  g_hash_table_iter_init (&iter, priv->udpsrcs);
+  while (g_hash_table_iter_next (&iter, &iter_key, &iter_value)) {
+    GstRTSPStreamUDPSrcs *transport_udpsrcs =
+        (GstRTSPStreamUDPSrcs *) iter_value;
+
+    for (int i = 0; i < 2; i++) {
+      if (transport_udpsrcs->udpsrc[i]) {
+        if (priv->sinkpad || i == 1) {
+          /* Set udpsrc to NULL now before removing */
+          gst_element_set_locked_state (transport_udpsrcs->udpsrc[i], FALSE);
+          gst_element_set_state (transport_udpsrcs->udpsrc[i], GST_STATE_NULL);
+
+          /* removing them should also nicely release the request
+           * pads when they finalize */
+          gst_bin_remove (bin, transport_udpsrcs->udpsrc[i]);
+        } else {
+          /* we need to set the state to NULL before unref */
+          gst_element_set_state (transport_udpsrcs->udpsrc[i], GST_STATE_NULL);
+          gst_object_unref (transport_udpsrcs->udpsrc[i]);
+        }
+      }
+    }
+  }
+
+  g_hash_table_remove_all (priv->udpsrcs);
 }
 
 /**
@@ -2910,6 +2909,7 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
   is_udp = ((priv->protocols & GST_RTSP_LOWER_TRANS_UDP) ||
       (priv->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST));
 
+  remove_all_unicast_udpsrcs (stream, bin);
 
   for (i = 0; i < 2; i++) {
     if (priv->udpsink[i])
@@ -2927,21 +2927,6 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
     if (priv->appsrc[i])
       gst_element_set_state (priv->appsrc[i], GST_STATE_NULL);
 
-    if (priv->udpsrc_v4[i]) {
-      if (priv->sinkpad || i == 1) {
-        /* and set udpsrc to NULL now before removing */
-        gst_element_set_locked_state (priv->udpsrc_v4[i], FALSE);
-        gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_NULL);
-        /* removing them should also nicely release the request
-         * pads when they finalize */
-        gst_bin_remove (bin, priv->udpsrc_v4[i]);
-      } else {
-        /* we need to set the state to NULL before unref */
-        gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_NULL);
-        gst_object_unref (priv->udpsrc_v4[i]);
-      }
-    }
-
     if (priv->udpsrc_mcast_v4[i]) {
       if (priv->sinkpad || i == 1) {
         /* and set udpsrc to NULL now before removing */
@@ -2956,16 +2941,6 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
       }
     }
 
-    if (priv->udpsrc_v6[i]) {
-      if (priv->sinkpad || i == 1) {
-        gst_element_set_locked_state (priv->udpsrc_v6[i], FALSE);
-        gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_NULL);
-        gst_bin_remove (bin, priv->udpsrc_v6[i]);
-      } else {
-        gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_NULL);
-        gst_object_unref (priv->udpsrc_v6[i]);
-      }
-    }
     if (priv->udpsrc_mcast_v6[i]) {
       if (priv->sinkpad || i == 1) {
         gst_element_set_locked_state (priv->udpsrc_mcast_v6[i], FALSE);
@@ -3006,8 +2981,6 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
       priv->recv_sink[i] = NULL;
     }
 
-    priv->udpsrc_v4[i] = NULL;
-    priv->udpsrc_v6[i] = NULL;
     priv->udpsrc_mcast_v4[i] = NULL;
     priv->udpsrc_mcast_v6[i] = NULL;
     priv->udpsink[i] = NULL;
@@ -3378,6 +3351,68 @@ gst_rtsp_stream_recv_rtcp (GstRTSPStream * stream, GstBuffer * buffer)
   return ret;
 }
 
+/* Properly dispose udpsrcs that were created for a given transport. */
+/* Must be called with priv->lock. */
+static void
+remove_transport_udpsrcs (GstRTSPStreamPrivate * priv,
+    const GstRTSPTransport * tr)
+{
+  /* Remove the udpsrcs associated with this transport. */
+  GstRTSPStreamUDPSrcs *transport_udpsrcs =
+      g_hash_table_lookup (priv->udpsrcs, tr);
+  if (transport_udpsrcs != NULL) {
+    for (int i = 0; i < 2; i++) {
+      if (transport_udpsrcs->udpsrc[i]) {
+        if (priv->sinkpad || i == 1) {
+          GstBin *bin;
+          GstPad *udpsrc_srcpad, *funnel_sinkpad;
+
+          /* We know these udpsrcs are all linked to funnels. Explicitely 
+           * get the funnel src pads so we can properly release them. */
+          udpsrc_srcpad =
+              gst_element_get_static_pad (transport_udpsrcs->udpsrc[i], "src");
+          funnel_sinkpad = gst_pad_get_peer (udpsrc_srcpad);
+
+          if (funnel_sinkpad != NULL) {
+            /* Unlink pads and release funnel's request pad. */
+            gst_pad_unlink (udpsrc_srcpad, funnel_sinkpad);
+            gst_element_release_request_pad (priv->funnel[i], funnel_sinkpad);
+            gst_object_unref (funnel_sinkpad);
+          }
+          gst_object_unref (udpsrc_srcpad);
+
+          /* Set udpsrc to NULL now before removing */
+          gst_element_set_locked_state (transport_udpsrcs->udpsrc[i], FALSE);
+          gst_element_set_state (transport_udpsrcs->udpsrc[i], GST_STATE_NULL);
+
+          /* This udpsrc is expected to be owned by a bin. Get the bin and 
+           * remove our element. */
+          bin = GST_BIN (gst_element_get_parent (transport_udpsrcs->udpsrc[i]));
+          if (bin != NULL) {
+            gst_bin_remove (bin, transport_udpsrcs->udpsrc[i]);
+            gst_object_unref (bin);
+          } else {
+            GST_ERROR ("Expected this udpsrc element to be part of a bin.");
+            gst_object_unref (transport_udpsrcs->udpsrc[i]);
+          }
+
+        } else {
+          /* we need to set the state to NULL before unref */
+          gst_element_set_state (transport_udpsrcs->udpsrc[i], GST_STATE_NULL);
+          gst_object_unref (transport_udpsrcs->udpsrc[i]);
+        }
+      }
+    }
+
+    /* The udpsrcs are now properly cleaned up. Remove them from the table */
+    g_hash_table_remove (priv->udpsrcs, tr);
+
+  } else {
+    /* This can happen if we're dealing with a multicast transport. */
+    GST_INFO ("Could not find udpsrcs associated with this transport.");
+  }
+}
+
 /* must be called with lock */
 static gboolean
 update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
@@ -3426,6 +3461,8 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
         g_signal_emit_by_name (priv->udpsink[0], "remove", dest, min, NULL);
         g_signal_emit_by_name (priv->udpsink[1], "remove", dest, max, NULL);
         priv->transports = g_list_remove (priv->transports, trans);
+
+        remove_transport_udpsrcs (priv, tr);
       }
       priv->transports_cookie++;
       break;
