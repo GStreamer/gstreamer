@@ -4868,6 +4868,7 @@ gst_qtdemux_stream_update_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
 {
   QtDemuxSegment *segment;
   GstClockTime start = 0, stop = GST_CLOCK_TIME_NONE, time = 0;
+  GstClockTime min_ts;
   gdouble rate;
   GstEvent *event;
 
@@ -4906,17 +4907,20 @@ gst_qtdemux_stream_update_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* Copy flags from main segment */
   stream->segment.flags = qtdemux->segment.flags;
 
+  /* need to offset with the start time of the first sample */
+  min_ts = gst_qtdemux_streams_get_first_sample_ts (qtdemux);
+
   /* update the segment values used for clipping */
   stream->segment.offset = qtdemux->segment.offset;
   stream->segment.base = qtdemux->segment.base + stream->accumulated_base;
   stream->segment.applied_rate = qtdemux->segment.applied_rate;
   stream->segment.rate = rate;
   stream->segment.start = start + QTSTREAMTIME_TO_GSTTIME (stream,
-      stream->cslg_shift);
+      stream->cslg_shift) + min_ts;
   stream->segment.stop = stop + QTSTREAMTIME_TO_GSTTIME (stream,
-      stream->cslg_shift);
-  stream->segment.time = time;
-  stream->segment.position = stream->segment.start;
+      stream->cslg_shift) + min_ts;
+  stream->segment.time = time + min_ts;
+  stream->segment.position = stream->segment.start + min_ts;
 
   GST_DEBUG_OBJECT (stream->pad, "New segment: %" GST_SEGMENT_FORMAT,
       &stream->segment);
