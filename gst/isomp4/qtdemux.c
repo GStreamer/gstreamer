@@ -546,6 +546,9 @@ static void gst_qtdemux_stream_check_and_change_stsd_index (GstQTDemux * demux,
     QtDemuxStream * stream);
 static GstFlowReturn gst_qtdemux_process_adapter (GstQTDemux * demux,
     gboolean force);
+static GstClockTime gst_qtdemux_streams_get_first_sample_ts (GstQTDemux *
+    demux);
+static GstClockTime gst_qtdemux_streams_have_samples (GstQTDemux * demux);
 
 static gboolean qtdemux_parse_moov (GstQTDemux * qtdemux,
     const guint8 * buffer, guint length);
@@ -1034,9 +1037,27 @@ gst_qtdemux_push_event (GstQTDemux * qtdemux, GstEvent * event)
 static void
 gst_qtdemux_push_pending_newsegment (GstQTDemux * qtdemux)
 {
-  if (qtdemux->pending_newsegment) {
-    gst_qtdemux_push_event (qtdemux, qtdemux->pending_newsegment);
-    qtdemux->pending_newsegment = NULL;
+  if (G_UNLIKELY (qtdemux->need_segment)) {
+    GstClockTime min_ts;
+    GstEvent *newsegment;
+
+    if (!gst_qtdemux_streams_have_samples (qtdemux)) {
+      /* No samples yet, can't decide on segment.start */
+      GST_DEBUG_OBJECT (qtdemux, "No samples yet, postponing segment event");
+      return;
+    }
+
+    min_ts = gst_qtdemux_streams_get_first_sample_ts (qtdemux);
+
+    /* have_samples() above should guarantee we have a valid time */
+    g_assert (GST_CLOCK_TIME_IS_VALID (min_ts));
+
+    qtdemux->segment.start = min_ts;
+    newsegment = gst_event_new_segment (&qtdemux->segment);
+    if (qtdemux->segment_seqnum != GST_SEQNUM_INVALID)
+      gst_event_set_seqnum (newsegment, qtdemux->segment_seqnum);
+    qtdemux->need_segment = FALSE;
+    gst_qtdemux_push_event (qtdemux, newsegment);
   }
 }
 
@@ -2131,9 +2152,6 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->element_index = NULL;
 #endif
     qtdemux->major_brand = 0;
-    if (qtdemux->pending_newsegment)
-      gst_event_unref (qtdemux->pending_newsegment);
-    qtdemux->pending_newsegment = NULL;
     qtdemux->upstream_format_is_time = FALSE;
     qtdemux->upstream_seekable = FALSE;
     qtdemux->upstream_size = 0;
@@ -2154,6 +2172,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
   gst_adapter_clear (qtdemux->adapter);
   gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
   qtdemux->segment_seqnum = GST_SEQNUM_INVALID;
+  qtdemux->need_segment = TRUE;
 
   if (hard) {
     g_list_free_full (qtdemux->active_streams,
@@ -2198,12 +2217,6 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
       stream->sent_eos = FALSE;
       stream->time_position = 0;
       stream->accumulated_base = 0;
-    }
-    if (!qtdemux->pending_newsegment) {
-      qtdemux->pending_newsegment = gst_event_new_segment (&qtdemux->segment);
-      if (qtdemux->segment_seqnum != GST_SEQNUM_INVALID)
-        gst_event_set_seqnum (qtdemux->pending_newsegment,
-            qtdemux->segment_seqnum);
     }
   }
 }
@@ -2275,12 +2288,7 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       GST_DEBUG_OBJECT (demux, "received newsegment %" GST_SEGMENT_FORMAT,
           &segment);
 
-      /* erase any previously set segment */
-      gst_event_replace (&demux->pending_newsegment, NULL);
-
       if (segment.format == GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (demux, "new pending_newsegment");
-        gst_event_replace (&demux->pending_newsegment, event);
         demux->upstream_format_is_time = TRUE;
       } else {
         GST_DEBUG_OBJECT (demux, "Not storing upstream newsegment, "
@@ -2359,13 +2367,15 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
         if (demux->fragmented) {
           GstEvent *segment_event = gst_event_new_segment (&segment);
 
-          gst_event_replace (&demux->pending_newsegment, NULL);
           gst_event_set_seqnum (segment_event, demux->segment_seqnum);
           gst_qtdemux_push_event (demux, segment_event);
         } else {
-          gst_event_replace (&demux->pending_newsegment, NULL);
           gst_qtdemux_map_and_push_segments (demux, &segment);
         }
+        /* keep need-segment as is in case this is the segment before
+         * fragmented data, we might not have pads yet to push it */
+        if (demux->exposed)
+          demux->need_segment = FALSE;
       }
 
       /* clear leftover in current segment, if any */
@@ -4516,6 +4526,11 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       gst_buffer_unmap (moov, &map);
       gst_buffer_unref (moov);
       qtdemux->got_moov = TRUE;
+      if (!qtdemux->fragmented && !qtdemux->upstream_format_is_time) {
+        /* in this case, parsing the edts entries will give us segments
+           already */
+        qtdemux->need_segment = FALSE;
+      }
 
       break;
     }
@@ -6527,7 +6542,7 @@ gst_qtdemux_drop_data (GstQTDemux * demux, gint bytes)
 static void
 gst_qtdemux_check_send_pending_segment (GstQTDemux * demux)
 {
-  if (G_UNLIKELY (demux->pending_newsegment)) {
+  if (G_UNLIKELY (demux->need_segment)) {
     gint i;
     GList *iter;
 
@@ -6570,6 +6585,35 @@ gst_qtdemux_send_gap_for_segment (GstQTDemux * demux,
         "segment: %" GST_PTR_FORMAT, gap);
     gst_pad_push_event (stream->pad, gap);
   }
+}
+
+static GstClockTime
+gst_qtdemux_streams_get_first_sample_ts (GstQTDemux * demux)
+{
+  GstClockTime res = GST_CLOCK_TIME_NONE;
+  GList *iter;
+
+  for (iter = demux->active_streams; iter; iter = g_list_next (iter)) {
+    QtDemuxStream *stream = QTDEMUX_STREAM (iter->data);
+    if (stream->n_samples) {
+      res = MIN (QTSAMPLE_PTS (stream, &stream->samples[0]), res);
+      res = MIN (QTSAMPLE_DTS (stream, &stream->samples[0]), res);
+    }
+  }
+  return res;
+}
+
+static GstClockTime
+gst_qtdemux_streams_have_samples (GstQTDemux * demux)
+{
+  GList *iter;
+
+  for (iter = demux->active_streams; iter; iter = g_list_next (iter)) {
+    QtDemuxStream *stream = QTDEMUX_STREAM (iter->data);
+    if (stream->n_samples)
+      return TRUE;
+  }
+  return FALSE;
 }
 
 static GstFlowReturn
@@ -6831,15 +6875,6 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
               if (demux->moov_node)
                 g_node_destroy (demux->moov_node);
               demux->moov_node = NULL;
-            } else {
-              /* prepare newsegment to send when streaming actually starts */
-              if (!demux->pending_newsegment) {
-                demux->pending_newsegment =
-                    gst_event_new_segment (&demux->segment);
-                if (demux->segment_seqnum != GST_SEQNUM_INVALID)
-                  gst_event_set_seqnum (demux->pending_newsegment,
-                      demux->segment_seqnum);
-              }
             }
 
             demux->last_moov_offset = demux->offset;
@@ -6858,8 +6893,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             QTDEMUX_EXPOSE_UNLOCK (demux);
 
             demux->got_moov = TRUE;
-
-            gst_event_replace (&demux->pending_newsegment, NULL);
+            demux->need_segment = TRUE;
             gst_qtdemux_map_and_push_segments (demux, &demux->segment);
 
             if (demux->moov_node_compressed) {
@@ -6943,20 +6977,15 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
               ret = GST_FLOW_ERROR;
               goto done;
             }
+
             /* in MSS we need to expose the pads after the first moof as we won't get a moov */
             if (demux->mss_mode && !demux->exposed) {
-              if (!demux->pending_newsegment) {
-                GST_DEBUG_OBJECT (demux, "new pending_newsegment");
-                demux->pending_newsegment =
-                    gst_event_new_segment (&demux->segment);
-                if (demux->segment_seqnum != GST_SEQNUM_INVALID)
-                  gst_event_set_seqnum (demux->pending_newsegment,
-                      demux->segment_seqnum);
-              }
               QTDEMUX_EXPOSE_LOCK (demux);
               qtdemux_expose_streams (demux);
               QTDEMUX_EXPOSE_UNLOCK (demux);
             }
+
+            gst_qtdemux_check_send_pending_segment (demux);
           } else {
             GST_DEBUG_OBJECT (demux, "Discarding [moof]");
           }
@@ -12376,14 +12405,6 @@ qtdemux_update_streams (GstQTDemux * qtdemux)
       stream->stream_tags = NULL;
       if (!gst_qtdemux_add_stream (qtdemux, stream, list))
         return FALSE;
-
-      /* New segment will be exposed at _update_segment in case of pull mode */
-      if (!qtdemux->pending_newsegment && !qtdemux->pullbased) {
-        qtdemux->pending_newsegment = gst_event_new_segment (&qtdemux->segment);
-        if (qtdemux->segment_seqnum)
-          gst_event_set_seqnum (qtdemux->pending_newsegment,
-              qtdemux->segment_seqnum);
-      }
     }
   }
 
@@ -12430,13 +12451,6 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
       if (!gst_qtdemux_add_stream (qtdemux, stream, list))
         return GST_FLOW_ERROR;
 
-      /* New segment will be exposed at _update_segment in case of pull mode */
-      if (!qtdemux->pending_newsegment && !qtdemux->pullbased) {
-        qtdemux->pending_newsegment = gst_event_new_segment (&qtdemux->segment);
-        if (qtdemux->segment_seqnum)
-          gst_event_set_seqnum (qtdemux->pending_newsegment,
-              qtdemux->segment_seqnum);
-      }
     }
   }
 

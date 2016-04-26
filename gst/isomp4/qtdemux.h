@@ -119,8 +119,8 @@ struct _GstQTDemux {
   /* configured playback region */
   GstSegment segment;
 
-  /* The SEGMENT_EVENT from upstream *OR* generated from segment (above) */
-  GstEvent *pending_newsegment;
+  /* If a segment event needs to be pushed */
+  gboolean need_segment;
 
   guint32 segment_seqnum;
 
