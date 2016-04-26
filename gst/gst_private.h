@@ -130,6 +130,7 @@ G_GNUC_INTERNAL  void  _priv_gst_date_time_initialize (void);
 /* cleanup functions called from gst_deinit(). */
 G_GNUC_INTERNAL  void  _priv_gst_allocator_cleanup (void);
 G_GNUC_INTERNAL  void  _priv_gst_caps_features_cleanup (void);
+G_GNUC_INTERNAL  void  _priv_gst_caps_cleanup (void);
 
 /* Private registry functions */
 G_GNUC_INTERNAL
