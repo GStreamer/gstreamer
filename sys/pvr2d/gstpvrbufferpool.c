@@ -85,7 +85,7 @@ gst_pvr_meta_get_info (void)
         sizeof (GstPVRMeta),
         (GstMetaInitFunction) gst_pvr_meta_init,
         (GstMetaFreeFunction) gst_pvr_meta_free,
-        (GstMetaCopyFunction) NULL, (GstMetaTransformFunction) NULL);
+        (GstMetaTransformFunction) NULL);
     g_once_init_leave (&pvr_meta_info, meta);
   }
   return pvr_meta_info;
