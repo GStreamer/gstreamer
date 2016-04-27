@@ -1637,6 +1637,10 @@ fill_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
     pic_param->pic_fields.bits.reference_pic_flag = TRUE;
   pic_param->pic_fields.bits.sign_data_hiding_enabled_flag = FALSE;
   pic_param->pic_fields.bits.transform_skip_enabled_flag = TRUE;
+  /* it seems driver requires enablement of cu_qp_delta_enabled_flag
+   * to modifiy QP values in CBR mode encoding */
+  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CBR)
+    pic_param->pic_fields.bits.cu_qp_delta_enabled_flag = TRUE;
   pic_param->pic_fields.bits.pps_loop_filter_across_slices_enabled_flag = TRUE;
 
   if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture))
