@@ -1550,6 +1550,7 @@ gst_adapter_prev_pts_at_offset (GstAdapter * adapter, gsize offset,
   GstBuffer *cur;
   GSList *g;
   gsize read_offset = 0;
+  gsize pts_offset = 0;
   GstClockTime pts = adapter->pts;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), GST_CLOCK_TIME_NONE);
@@ -1559,16 +1560,17 @@ gst_adapter_prev_pts_at_offset (GstAdapter * adapter, gsize offset,
   while (g && read_offset < offset + adapter->skip) {
     cur = g->data;
 
-    read_offset += gst_buffer_get_size (cur);
     if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (cur))) {
       pts = GST_BUFFER_PTS (cur);
+      pts_offset = read_offset;
     }
 
+    read_offset += gst_buffer_get_size (cur);
     g = g_slist_next (g);
   }
 
   if (distance)
-    *distance = adapter->pts_distance + offset;
+    *distance = adapter->pts_distance + offset - pts_offset;
 
   return pts;
 }
@@ -1598,6 +1600,7 @@ gst_adapter_prev_dts_at_offset (GstAdapter * adapter, gsize offset,
   GstBuffer *cur;
   GSList *g;
   gsize read_offset = 0;
+  gsize dts_offset = 0;
   GstClockTime dts = adapter->dts;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), GST_CLOCK_TIME_NONE);
@@ -1607,16 +1610,17 @@ gst_adapter_prev_dts_at_offset (GstAdapter * adapter, gsize offset,
   while (g && read_offset < offset + adapter->skip) {
     cur = g->data;
 
-    read_offset += gst_buffer_get_size (cur);
     if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (cur))) {
       dts = GST_BUFFER_DTS (cur);
+      dts_offset = read_offset;
     }
 
+    read_offset += gst_buffer_get_size (cur);
     g = g_slist_next (g);
   }
 
   if (distance)
-    *distance = adapter->dts_distance + offset;
+    *distance = adapter->dts_distance + offset - dts_offset;
 
   return dts;
 }
