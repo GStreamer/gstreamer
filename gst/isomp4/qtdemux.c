@@ -7752,7 +7752,8 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
 
         GST_DEBUG_OBJECT (qtdemux,
             "Calculating framerate, timescale %u gave fps_n %d fps_d %d",
-            stream->timescale, CUR_STREAM (stream)->fps_n, CUR_STREAM (stream)->fps_d);
+            stream->timescale, CUR_STREAM (stream)->fps_n,
+            CUR_STREAM (stream)->fps_d);
       }
     }
 
@@ -7767,7 +7768,8 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       /* set framerate if calculated framerate is reliable */
       if (fps_available) {
         gst_caps_set_simple (CUR_STREAM (stream)->caps,
-            "framerate", GST_TYPE_FRACTION, CUR_STREAM (stream)->fps_n, CUR_STREAM (stream)->fps_d, NULL);
+            "framerate", GST_TYPE_FRACTION, CUR_STREAM (stream)->fps_n,
+            CUR_STREAM (stream)->fps_d, NULL);
       }
 
       /* calculate pixel-aspect-ratio using display width and height */
@@ -9542,6 +9544,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   guint32 version;
   guint32 tkhd_flags = 0;
   guint8 tkhd_version = 0;
+  guint32 w = 0, h = 0;
   guint32 fourcc;
   guint value_size, stsd_len, len;
   guint32 track_id;
@@ -9740,6 +9743,25 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
   }
 
+  /* parse rest of tkhd */
+  if (stream->subtype == FOURCC_vide) {
+    guint32 matrix[9];
+
+    /* version 1 uses some 64-bit ints */
+    if (!gst_byte_reader_skip (&tkhd, 20 + value_size))
+      goto corrupt_file;
+
+    if (!qtdemux_parse_transformation_matrix (qtdemux, &tkhd, matrix, "tkhd"))
+      goto corrupt_file;
+
+    if (!gst_byte_reader_get_uint32_be (&tkhd, &w)
+        || !gst_byte_reader_get_uint32_be (&tkhd, &h))
+      goto corrupt_file;
+
+    qtdemux_inspect_transformation_matrix (qtdemux, stream, matrix,
+        &stream->stream_tags);
+  }
+
   /* parse stsd */
   if (!(stsd = qtdemux_tree_get_child_by_type (stbl, FOURCC_stsd)))
     goto corrupt_file;
@@ -9791,30 +9813,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
 
     if (stream->subtype == FOURCC_vide) {
-      guint32 w = 0, h = 0;
       gboolean gray;
       gint depth, palette_size, palette_count;
-      guint32 matrix[9];
       guint32 *palette_data = NULL;
 
       entry->sampled = TRUE;
 
-      /* version 1 uses some 64-bit ints */
-      if (!gst_byte_reader_skip (&tkhd, 20 + value_size))
-        goto corrupt_file;
-
-      if (!qtdemux_parse_transformation_matrix (qtdemux, &tkhd, matrix, "tkhd"))
-        goto corrupt_file;
-
-      if (!gst_byte_reader_get_uint32_be (&tkhd, &w)
-          || !gst_byte_reader_get_uint32_be (&tkhd, &h))
-        goto corrupt_file;
-
       stream->display_width = w >> 16;
       stream->display_height = h >> 16;
-
-      qtdemux_inspect_transformation_matrix (qtdemux, stream, matrix,
-          &stream->stream_tags);
 
       offset = 16;
       if (len < 86)             /* TODO verify */
