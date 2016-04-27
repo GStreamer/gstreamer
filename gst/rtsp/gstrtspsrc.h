@@ -103,6 +103,7 @@ struct _GstRTSPStream {
   gboolean      skipped;
   gboolean      eos;
   gboolean      discont;
+  gboolean      need_caps;
 
   /* for interleaved mode */
   guint8        channel[2];

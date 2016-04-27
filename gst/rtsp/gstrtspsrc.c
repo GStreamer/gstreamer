@@ -3948,8 +3948,10 @@ gst_rtspsrc_configure_caps (GstRTSPSrc * src, GstSegment * segment,
       GST_DEBUG_OBJECT (src, "stream %p, pt %d, caps %" GST_PTR_FORMAT, stream,
           item->pt, caps);
 
-      if (item->pt == stream->default_pt && stream->udpsrc[0]) {
-        g_object_set (stream->udpsrc[0], "caps", caps, NULL);
+      if (item->pt == stream->default_pt) {
+        if (stream->udpsrc[0])
+          g_object_set (stream->udpsrc[0], "caps", caps, NULL);
+        stream->need_caps = TRUE;
       }
     }
   }
@@ -4441,6 +4443,7 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
               gst_pad_send_event (ostream->channelpad[0],
                   gst_event_new_caps (caps));
           }
+          ostream->need_caps = FALSE;
 
           if (ostream->profile == GST_RTSP_PROFILE_SAVP ||
               ostream->profile == GST_RTSP_PROFILE_SAVPF)
@@ -4502,6 +4505,28 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
     src->need_segment = FALSE;
     gst_segment_init (&segment, GST_FORMAT_TIME);
     gst_rtspsrc_push_event (src, gst_event_new_segment (&segment));
+  }
+
+  if (stream->need_caps) {
+    GstCaps *caps;
+
+    if ((caps = stream_get_caps_for_pt (stream, stream->default_pt))) {
+      /* only streams that have a connection to the outside world */
+      if (stream->setup) {
+        /* Only need to update the TCP caps here, UDP is already handled */
+        if (stream->channelpad[0]) {
+          if (GST_PAD_IS_SRC (stream->channelpad[0]))
+            gst_pad_push_event (stream->channelpad[0],
+                gst_event_new_caps (caps));
+          else
+            gst_pad_send_event (stream->channelpad[0],
+                gst_event_new_caps (caps));
+        }
+        stream->need_caps = FALSE;
+      }
+    }
+
+    stream->need_caps = FALSE;
   }
 
   if (stream->discont && !is_rtcp) {
@@ -7157,7 +7182,10 @@ clear_rtp_base (GstRTSPSrc * src, GstRTSPStream * stream)
     item->caps = gst_caps_make_writable (item->caps);
     s = gst_caps_get_structure (item->caps, 0);
     gst_structure_remove_fields (s, "clock-base", "seqnum-base", NULL);
+    if (item->pt == stream->default_pt && stream->udpsrc[0])
+      g_object_set (stream->udpsrc[0], "caps", item->caps, NULL);
   }
+  stream->need_caps = TRUE;
 }
 
 static GstRTSPResult
