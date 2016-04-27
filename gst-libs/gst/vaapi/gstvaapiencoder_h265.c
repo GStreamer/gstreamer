@@ -45,12 +45,22 @@
 /* Define the maximum IDR period */
 #define MAX_IDR_PERIOD 512
 
+/* Default CPB length (in milliseconds) */
+#define DEFAULT_CPB_LENGTH 1500
+
+/* Scale factor for bitrate (HRD bit_rate_scale: min = 6) */
+#define SX_BITRATE 6
+
+/* Scale factor for CPB size (HRD cpb_size_scale: min = 4) */
+#define SX_CPB_SIZE 4
+
 /* Define default rate control mode ("constant-qp") */
 #define DEFAULT_RATECONTROL GST_VAAPI_RATECONTROL_CQP
 
 /* Supported set of VA rate controls, within this implementation */
 #define SUPPORTED_RATECONTROLS                          \
-  (GST_VAAPI_RATECONTROL_MASK (CQP))
+  (GST_VAAPI_RATECONTROL_MASK (CQP)) |                  \
+  GST_VAAPI_RATECONTROL_MASK (CBR)
 
 /* Supported set of tuning options, within this implementation */
 #define SUPPORTED_TUNE_OPTIONS                          \
@@ -137,6 +147,8 @@ struct _GstVaapiEncoderH265
   GstBuffer *pps_data;
 
   guint bitrate_bits;           // bitrate (bits)
+  guint cpb_length;             // length of CPB buffer (ms)
+  guint cpb_length_bits;        // length of CPB buffer (bits)
 
   /* Crop rectangle */
   guint conformance_window_flag:1;
@@ -413,7 +425,8 @@ bs_write_vps (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
 static gboolean
 bs_write_sps_data (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
     GstVaapiEncPicture * picture,
-    const VAEncSequenceParameterBufferHEVC * seq_param, GstVaapiProfile profile)
+    const VAEncSequenceParameterBufferHEVC * seq_param, GstVaapiProfile profile,
+    const VAEncMiscParameterHRD * hrd_params)
 {
   guint32 video_parameter_set_id = 0;
   guint32 max_sub_layers_minus1 = 0;
@@ -424,6 +437,8 @@ bs_write_sps_data (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
   guint32 num_short_term_ref_pic_sets = 0;
   guint32 long_term_ref_pics_present_flag = 0;
   guint32 sps_extension_flag = 0;
+  guint32 nal_hrd_parameters_present_flag = 0;
+  guint maxNumSubLayers = 1, i;
 
   /* video_parameter_set_id */
   WRITE_UINT32 (bs, video_parameter_set_id, 4);
@@ -550,8 +565,45 @@ bs_write_sps_data (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
 
       /* vui_hrd_parameters_present_flag */
       vui_hrd_parameters_present_flag = seq_param->bits_per_second > 0;
-      vui_hrd_parameters_present_flag = FALSE;  /* XXX: disabled for now */
       WRITE_UINT32 (bs, vui_hrd_parameters_present_flag, 1);
+
+      if (vui_hrd_parameters_present_flag) {
+        nal_hrd_parameters_present_flag = 1;
+        /* nal_hrd_parameters_present_flag */
+        WRITE_UINT32 (bs, nal_hrd_parameters_present_flag, 1);
+        /* vcl_hrd_parameters_present_flag */
+        WRITE_UINT32 (bs, 0, 1);
+
+        if (nal_hrd_parameters_present_flag) {
+          /* sub_pic_hrd_params_present_flag */
+          WRITE_UINT32 (bs, 0, 1);
+          /* bit_rate_scale */
+          WRITE_UINT32 (bs, SX_BITRATE - 6, 4);
+          /* cpb_size_scale */
+          WRITE_UINT32 (bs, SX_CPB_SIZE - 4, 4);
+          /* initial_cpb_removal_delay_length_minus1 */
+          WRITE_UINT32 (bs, 23, 5);
+          /* au_cpb_removal_delay_length_minus1 */
+          WRITE_UINT32 (bs, 23, 5);
+          /* dpb_output_delay_length_minus1 */
+          WRITE_UINT32 (bs, 23, 5);
+
+          for (i = 0; i < maxNumSubLayers; i++) {
+            /* fixed_pic_rate_general_flag */
+            WRITE_UINT32 (bs, 0, 1);
+            /* fixed_pic_rate_within_cvs_flag */
+            WRITE_UINT32 (bs, 0, 1);
+            /* low_delay_hrd_flag */
+            WRITE_UINT32 (bs, 1, 1);
+            /* bit_rate_value_minus1 */
+            WRITE_UE (bs, (seq_param->bits_per_second >> SX_BITRATE) - 1);
+            /* cpb_size_value_minus1 */
+            WRITE_UE (bs, (hrd_params->buffer_size >> SX_CPB_SIZE) - 1);
+            /* cbr_flag */
+            WRITE_UINT32 (bs, 1, 1);
+          }
+        }
+      }
     }
     /* bitstream_restriction_flag */
     WRITE_UINT32 (bs, seq_param->vui_fields.bits.bitstream_restriction_flag, 1);
@@ -572,9 +624,10 @@ bs_error:
 static gboolean
 bs_write_sps (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
     GstVaapiEncPicture * picture,
-    const VAEncSequenceParameterBufferHEVC * seq_param, GstVaapiProfile profile)
+    const VAEncSequenceParameterBufferHEVC * seq_param, GstVaapiProfile profile,
+    const VAEncMiscParameterHRD * hrd_params)
 {
-  if (!bs_write_sps_data (bs, encoder, picture, seq_param, profile))
+  if (!bs_write_sps_data (bs, encoder, picture, seq_param, profile, hrd_params))
     return FALSE;
 
   /* rbsp_trailing_bits */
@@ -805,7 +858,8 @@ bs_write_slice (GstBitWriter * bs,
         (slice_param->slice_fields.bits.slice_sao_luma_flag
             || slice_param->slice_fields.bits.slice_sao_chroma_flag
             || !slice_deblocking_filter_disabled_flag))
-      WRITE_UINT32 (bs, slice_param->slice_fields.bits.
+      WRITE_UINT32 (bs,
+          slice_param->slice_fields.bits.
           slice_loop_filter_across_slices_enabled_flag, 1);
 
   }
@@ -1115,6 +1169,19 @@ set_key_frame (GstVaapiEncPicture * picture,
     set_i_frame (picture, encoder);
 }
 
+/* Fills in VA HRD parameters */
+static void
+fill_hrd_params (GstVaapiEncoderH265 * encoder, VAEncMiscParameterHRD * hrd)
+{
+  if (encoder->bitrate_bits > 0) {
+    hrd->buffer_size = encoder->cpb_length_bits;
+    hrd->initial_buffer_fullness = hrd->buffer_size / 2;
+  } else {
+    hrd->buffer_size = 0;
+    hrd->initial_buffer_fullness = 0;
+  }
+}
+
 /* Adds the supplied video parameter set header (VPS) to the list of packed
    headers to pass down as-is to the encoder */
 static gboolean
@@ -1178,14 +1245,17 @@ add_packed_sequence_header (GstVaapiEncoderH265 * encoder,
   const VAEncSequenceParameterBufferHEVC *const seq_param = sequence->param;
   GstVaapiProfile profile = encoder->profile;
 
+  VAEncMiscParameterHRD hrd_params;
   guint32 data_bit_size;
   guint8 *data;
+
+  fill_hrd_params (encoder, &hrd_params);
 
   gst_bit_writer_init (&bs, 128 * 8);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
   bs_write_nal_header (&bs, GST_H265_NAL_SPS);
 
-  bs_write_sps (&bs, encoder, picture, seq_param, profile);
+  bs_write_sps (&bs, encoder, picture, seq_param, profile, &hrd_params);
 
   g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
@@ -1754,6 +1824,25 @@ error_create_packed_seq_hdr:
   }
 }
 
+static gboolean
+ensure_misc_params (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture)
+{
+  GstVaapiEncMiscParam *misc = NULL;
+
+  /* HRD params for rate control */
+  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CBR) {
+    misc = GST_VAAPI_ENC_MISC_PARAM_NEW (HRD, encoder);
+    g_assert (misc);
+    if (!misc)
+      return FALSE;
+    fill_hrd_params (encoder, misc->data);
+    gst_vaapi_enc_picture_add_misc_param (picture, misc);
+    gst_vaapi_codec_object_replace (&misc, NULL);
+  }
+
+  return TRUE;
+}
+
 /* Generates and submits PPS header accordingly into the bitstream */
 static gboolean
 ensure_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
@@ -1777,6 +1866,7 @@ ensure_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
   }
   return TRUE;
 }
+
 
 /* Generates slice headers */
 static gboolean
@@ -1809,6 +1899,38 @@ ensure_slices (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture)
   return TRUE;
 }
 
+/* Normalizes bitrate (and CPB size) for HRD conformance */
+static void
+ensure_bitrate_hrd (GstVaapiEncoderH265 * encoder)
+{
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
+  guint bitrate, cpb_size;
+
+  if (!base_encoder->bitrate) {
+    encoder->bitrate_bits = 0;
+    return;
+  }
+
+  /* Round down bitrate. This is a hard limit mandated by the user */
+  g_assert (SX_BITRATE >= 6);
+  bitrate = (base_encoder->bitrate * 1000) & ~((1U << SX_BITRATE) - 1);
+  if (bitrate != encoder->bitrate_bits) {
+    GST_DEBUG ("HRD bitrate: %u bits/sec", bitrate);
+    encoder->bitrate_bits = bitrate;
+    encoder->config_changed = TRUE;
+  }
+
+  /* Round up CPB size. This is an HRD compliance detail */
+  g_assert (SX_CPB_SIZE >= 4);
+  cpb_size = gst_util_uint64_scale (bitrate, encoder->cpb_length, 1000) &
+      ~((1U << SX_CPB_SIZE) - 1);
+  if (cpb_size != encoder->cpb_length_bits) {
+    GST_DEBUG ("HRD CPB size: %u bits", cpb_size);
+    encoder->cpb_length_bits = cpb_size;
+    encoder->config_changed = TRUE;
+  }
+}
+
 /* Estimates a good enough bitrate if none was supplied */
 static void
 ensure_bitrate (GstVaapiEncoderH265 * encoder)
@@ -1817,8 +1939,6 @@ ensure_bitrate (GstVaapiEncoderH265 * encoder)
 
   switch (GST_VAAPI_ENCODER_RATE_CONTROL (encoder)) {
     case GST_VAAPI_RATECONTROL_CBR:
-    case GST_VAAPI_RATECONTROL_VBR:
-    case GST_VAAPI_RATECONTROL_VBR_CONSTRAINED:
       if (!base_encoder->bitrate) {
         /* Fixme: Provide better estimation */
         /* Using a 1/6 compression ratio */
@@ -1834,6 +1954,7 @@ ensure_bitrate (GstVaapiEncoderH265 * encoder)
       base_encoder->bitrate = 0;
       break;
   }
+  ensure_bitrate_hrd (encoder);
 }
 
 /* Constructs profile, tier and level information based on user-defined limits */
@@ -1859,11 +1980,11 @@ ensure_profile_tier_level (GstVaapiEncoderH265 * encoder)
   if (!ensure_tier (encoder))
     return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
 
+  /* Ensure bitrate if not set already and derive the right level to use */
+  ensure_bitrate (encoder);
+
   if (!ensure_level (encoder))
-    /* Ensure bitrate if not set already and derive the right level to use */
-    ensure_bitrate (encoder);
-  if (!ensure_level (encoder))
-    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+      return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
 
   if (encoder->profile != profile || encoder->level != level
       || encoder->tier != tier) {
@@ -1952,6 +2073,8 @@ gst_vaapi_encoder_h265_encode (GstVaapiEncoder * base_encoder,
   g_assert (GST_VAAPI_SURFACE_PROXY_SURFACE (reconstruct));
 
   if (!ensure_sequence (encoder, picture))
+    goto error;
+  if (!ensure_misc_params (encoder, picture))
     goto error;
   if (!ensure_picture (encoder, picture, codedbuf, reconstruct))
     goto error;
@@ -2408,6 +2531,9 @@ gst_vaapi_encoder_h265_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H265_PROP_NUM_SLICES:
       encoder->num_slices = g_value_get_uint (value);
       break;
+    case GST_VAAPI_ENCODER_H265_PROP_CPB_LENGTH:
+      encoder->cpb_length = g_value_get_uint (value);
+      break;
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
   }
@@ -2508,6 +2634,19 @@ gst_vaapi_encoder_h265_get_default_properties (void)
           "Number of Slices",
           "Number of slices per frame",
           1, 200, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH265:cpb-length:
+   *
+   * The size of the CPB buffer in milliseconds.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H265_PROP_CPB_LENGTH,
+      g_param_spec_uint ("cpb-length",
+          "CPB Length", "Length of the CPB buffer in milliseconds",
+          1, 10000, DEFAULT_CPB_LENGTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   return props;
 }
 
