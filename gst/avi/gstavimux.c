@@ -1830,7 +1830,6 @@ gst_avi_mux_stop_file (GstAviMux * avimux)
         audpad->auds.blockalign = audpad->max_audio_chunk;
       if (audpad->auds.blockalign == 0)
         audpad->auds.blockalign = 1;
-      gst_avi_mux_audsink_set_fields (avimux, audpad);
       avimux->avi_hdr.max_bps += audpad->auds.av_bps;
       avipad->hdr.length = gst_util_uint64_scale (audpad->audio_time,
           avipad->hdr.rate, avipad->hdr.scale * GST_SECOND);
