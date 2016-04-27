@@ -75,8 +75,8 @@ ensure_debug_category (void)
  * is not clipped
  */
 GstBuffer *
-gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
-    gint bpf)
+gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
+    gint rate, gint bpf)
 {
   GstBuffer *ret;
   GstClockTime timestamp = GST_CLOCK_TIME_NONE, duration = GST_CLOCK_TIME_NONE;

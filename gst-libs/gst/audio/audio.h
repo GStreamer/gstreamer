@@ -88,7 +88,8 @@ G_BEGIN_DECLS
  * handling
  */
 
-GstBuffer *    gst_audio_buffer_clip     (GstBuffer *buffer, GstSegment *segment,
+GstBuffer *    gst_audio_buffer_clip     (GstBuffer *buffer,
+                                          const GstSegment *segment,
                                           gint rate, gint bpf);
 
 
