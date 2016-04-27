@@ -643,6 +643,9 @@ refuse_caps:
   }
 }
 
+static void gst_avi_mux_audsink_set_fields (GstAviMux * avimux,
+    GstAviAudioPad * avipad);
+
 static GstFlowReturn
 gst_avi_mux_audsink_scan_mpeg_audio (GstAviMux * avimux, GstAviPad * avipad,
     GstBuffer * buffer)
@@ -687,9 +690,10 @@ gst_avi_mux_audsink_scan_mpeg_audio (GstAviMux * avimux, GstAviPad * avipad,
     spf = 576;
   }
 
-  if (G_UNLIKELY (avipad->hdr.scale <= 1))
+  if (G_UNLIKELY (avipad->hdr.scale <= 1)) {
     avipad->hdr.scale = spf;
-  else if (G_UNLIKELY (avipad->hdr.scale != spf)) {
+    gst_avi_mux_audsink_set_fields (avimux, (GstAviAudioPad *) avipad);
+  } else if (G_UNLIKELY (avipad->hdr.scale != spf)) {
     GST_WARNING_OBJECT (avimux, "input mpeg audio has varying frame size");
     goto cbr_fallback;
   }
@@ -708,6 +712,7 @@ cbr_fallback:
   {
     GST_WARNING_OBJECT (avimux, "falling back to CBR muxing");
     avipad->hdr.scale = 1;
+    gst_avi_mux_audsink_set_fields (avimux, (GstAviAudioPad *) avipad);
     /* no need to check further */
     avipad->hook = NULL;
     goto done;
