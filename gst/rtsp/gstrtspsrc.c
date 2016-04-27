@@ -7790,6 +7790,16 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       ret = GST_STATE_CHANGE_SUCCESS;
       break;
     default:
+      /* Otherwise it's success, we don't want to return spurious
+       * NO_PREROLL or ASYNC from internal elements as we care for
+       * state changes ourselves here
+       *
+       * This is to catch PAUSED->PAUSED and PLAYING->PLAYING transitions.
+       */
+      if (GST_STATE_TRANSITION_NEXT (transition) == GST_STATE_PAUSED)
+        ret = GST_STATE_CHANGE_NO_PREROLL;
+      else
+        ret = GST_STATE_CHANGE_SUCCESS;
       break;
   }
 
