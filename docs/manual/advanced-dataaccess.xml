@@ -733,7 +733,7 @@ cb_need_data (GstElement *appsrc,
 
   /* this makes the image black/white */
   gst_buffer_memset (buffer, 0, white ? 0xff : 0x0, size);
-  
+
   white = !white;
 
   GST_BUFFER_PTS (buffer) = timestamp;
@@ -742,6 +742,7 @@ cb_need_data (GstElement *appsrc,
   timestamp += GST_BUFFER_DURATION (buffer);
 
   g_signal_emit_by_name (appsrc, "push-buffer", buffer, &ret);
+  gst_buffer_unref (buffer);
 
   if (ret != GST_FLOW_OK) {
     /* something wrong, stop pushing */
