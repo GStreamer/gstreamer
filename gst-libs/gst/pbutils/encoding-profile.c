@@ -1489,6 +1489,47 @@ gst_encoding_profile_deserialize_valfunc (GValue * value, const gchar * s)
   return FALSE;
 }
 
+static gboolean
+add_stream_to_profile (GstEncodingContainerProfile * profile,
+    GstDiscovererStreamInfo * sinfo)
+{
+  GstEncodingProfile *sprofile = NULL;
+  GstStructure *s;
+  GstCaps *caps;
+
+  caps = gst_discoverer_stream_info_get_caps (sinfo);
+
+  s = gst_caps_get_structure (caps, 0);
+  if (gst_structure_has_field (s, "codec_data")
+      || gst_structure_has_field (s, "streamheader")) {
+    caps = gst_caps_make_writable (caps);
+    s = gst_caps_get_structure (caps, 0);
+    gst_structure_remove_field (s, "codec_data");
+    gst_structure_remove_field (s, "streamheader");
+  }
+
+  GST_LOG ("Stream: %" GST_PTR_FORMAT "\n", caps);
+  if (GST_IS_DISCOVERER_AUDIO_INFO (sinfo)) {
+    sprofile =
+        (GstEncodingProfile *) gst_encoding_audio_profile_new (caps, NULL,
+        NULL, 0);
+  } else if (GST_IS_DISCOVERER_VIDEO_INFO (sinfo)) {
+    sprofile =
+        (GstEncodingProfile *) gst_encoding_video_profile_new (caps, NULL,
+        NULL, 0);
+  } else {
+    /* subtitles or other ? ignore for now */
+  }
+  if (sprofile)
+    gst_encoding_container_profile_add_profile (profile, sprofile);
+  else
+    GST_ERROR ("Failed to create stream profile from caps %" GST_PTR_FORMAT,
+        caps);
+  gst_caps_unref (caps);
+
+  return sprofile != NULL;
+}
+
 /**
  * gst_encoding_profile_from_discoverer:
  * @info: (transfer none): The #GstDiscovererInfo to read from
@@ -1530,38 +1571,7 @@ gst_encoding_profile_from_discoverer (GstDiscovererInfo * info)
       gst_discoverer_container_info_get_streams (GST_DISCOVERER_CONTAINER_INFO
       (sinfo));
   for (stream = streams; stream; stream = stream->next) {
-    GstEncodingProfile *sprofile = NULL;
-    GstStructure *s;
-    sinfo = (GstDiscovererStreamInfo *) stream->data;
-    caps = gst_discoverer_stream_info_get_caps (sinfo);
-
-    s = gst_caps_get_structure (caps, 0);
-    if (gst_structure_has_field (s, "codec_data")
-        || gst_structure_has_field (s, "streamheader")) {
-      caps = gst_caps_make_writable (caps);
-      s = gst_caps_get_structure (caps, 0);
-      gst_structure_remove_field (s, "codec_data");
-      gst_structure_remove_field (s, "streamheader");
-    }
-
-    GST_LOG ("Stream: %" GST_PTR_FORMAT "\n", caps);
-    if (GST_IS_DISCOVERER_AUDIO_INFO (sinfo)) {
-      sprofile =
-          (GstEncodingProfile *) gst_encoding_audio_profile_new (caps, NULL,
-          NULL, 0);
-    } else if (GST_IS_DISCOVERER_VIDEO_INFO (sinfo)) {
-      sprofile =
-          (GstEncodingProfile *) gst_encoding_video_profile_new (caps, NULL,
-          NULL, 0);
-    } else {
-      /* subtitles or other ? ignore for now */
-    }
-    if (sprofile)
-      gst_encoding_container_profile_add_profile (profile, sprofile);
-    else
-      GST_ERROR ("Failed to create stream profile from caps %" GST_PTR_FORMAT,
-          caps);
-    gst_caps_unref (caps);
+    add_stream_to_profile (profile, (GstDiscovererStreamInfo *) stream->data);
   }
   gst_discoverer_stream_info_list_free (streams);
 
