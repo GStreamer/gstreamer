@@ -21,6 +21,8 @@
 #ifndef __GES_TYPES_H__
 #define __GES_TYPES_H__
 
+#include <glib.h>
+
 G_BEGIN_DECLS
 
 /* Padding */
