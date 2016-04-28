@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
+#include <gst/audio/gstaudiodecoder.h>
 
 G_BEGIN_DECLS
 
@@ -40,11 +41,18 @@ G_BEGIN_DECLS
 typedef struct _GstDvdLpcmDec GstDvdLpcmDec;
 typedef struct _GstDvdLpcmDecClass GstDvdLpcmDecClass;
 
+typedef enum {
+  GST_LPCM_UNKNOWN,
+  GST_LPCM_RAW,
+  GST_LPCM_DVD,
+} GstDvdLpcmMode;
+
 struct _GstDvdLpcmDec {
-  GstElement element;
+  GstAudioDecoder element;
 
-  GstPad *sinkpad,*srcpad;
+  GstPadChainFunction base_chain;
 
+  GstDvdLpcmMode mode;
   guint32 header;
 
   GstAudioInfo info;
@@ -55,11 +63,10 @@ struct _GstDvdLpcmDec {
   gint mute;
 
   GstClockTime timestamp;
-  GstSegment   segment;
 };
 
 struct _GstDvdLpcmDecClass {
-  GstElementClass parent_class;
+  GstAudioDecoderClass parent_class;
 };
 
 GType gst_dvdlpcmdec_get_type (void);
