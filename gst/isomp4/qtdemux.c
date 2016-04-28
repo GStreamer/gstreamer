@@ -415,13 +415,22 @@ struct _QtDemuxCencSampleSetInfo
   GPtrArray *crypto_info;
 };
 
-enum QtDemuxState
+static const gchar *
+qt_demux_state_string (enum QtDemuxState state)
 {
-  QTDEMUX_STATE_INITIAL,        /* Initial state (haven't got the header yet) */
-  QTDEMUX_STATE_HEADER,         /* Parsing the header */
-  QTDEMUX_STATE_MOVIE,          /* Parsing/Playing the media data */
-  QTDEMUX_STATE_BUFFER_MDAT     /* Buffering the mdat atom */
-};
+  switch (state) {
+    case QTDEMUX_STATE_INITIAL:
+      return "<INITIAL>";
+    case QTDEMUX_STATE_HEADER:
+      return "<HEADER>";
+    case QTDEMUX_STATE_MOVIE:
+      return "<MOVIE>";
+    case QTDEMUX_STATE_BUFFER_MDAT:
+      return "<BUFFER_MDAT>";
+    default:
+      return "<UNKNOWN>";
+  }
+}
 
 static GNode *qtdemux_tree_get_child_by_type (GNode * node, guint32 fourcc);
 static GNode *qtdemux_tree_get_child_by_type_full (GNode * node,
@@ -5655,8 +5664,8 @@ gst_qtdemux_loop (GstPad * pad)
   qtdemux = GST_QTDEMUX (gst_pad_get_parent (pad));
 
   cur_offset = qtdemux->offset;
-  GST_LOG_OBJECT (qtdemux, "loop at position %" G_GUINT64_FORMAT ", state %d",
-      cur_offset, qtdemux->state);
+  GST_LOG_OBJECT (qtdemux, "loop at position %" G_GUINT64_FORMAT ", state %s",
+      cur_offset, qt_demux_state_string (qtdemux->state));
 
   switch (qtdemux->state) {
     case QTDEMUX_STATE_INITIAL:
@@ -6020,6 +6029,13 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
 
   demux = GST_QTDEMUX (parent);
 
+  GST_DEBUG_OBJECT (demux,
+      "Received buffer pts:%" GST_TIME_FORMAT " dts:%" GST_TIME_FORMAT
+      " offset:%" G_GUINT64_FORMAT " size:%" G_GSIZE_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_PTS (inbuf)),
+      GST_TIME_ARGS (GST_BUFFER_DTS (inbuf)), GST_BUFFER_OFFSET (inbuf),
+      gst_buffer_get_size (inbuf));
+
   if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DISCONT)) {
     gint i;
 
@@ -6065,8 +6081,9 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
       (ret == GST_FLOW_OK || (ret == GST_FLOW_NOT_LINKED && force))) {
 
     GST_DEBUG_OBJECT (demux,
-        "state:%d , demux->neededbytes:%d, demux->offset:%" G_GUINT64_FORMAT,
-        demux->state, demux->neededbytes, demux->offset);
+        "state:%s , demux->neededbytes:%d, demux->offset:%" G_GUINT64_FORMAT,
+        qt_demux_state_string (demux->state), demux->neededbytes,
+        demux->offset);
 
     switch (demux->state) {
       case QTDEMUX_STATE_INITIAL:{

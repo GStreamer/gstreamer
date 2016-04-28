@@ -54,6 +54,14 @@ typedef struct _GstQTDemux GstQTDemux;
 typedef struct _GstQTDemuxClass GstQTDemuxClass;
 typedef struct _QtDemuxStream QtDemuxStream;
 
+enum QtDemuxState
+{
+  QTDEMUX_STATE_INITIAL,        /* Initial state (haven't got the header yet) */
+  QTDEMUX_STATE_HEADER,         /* Parsing the header */
+  QTDEMUX_STATE_MOVIE,          /* Parsing/Playing the media data */
+  QTDEMUX_STATE_BUFFER_MDAT     /* Buffering the mdat atom */
+};
+
 struct _GstQTDemux {
   GstElement element;
 
