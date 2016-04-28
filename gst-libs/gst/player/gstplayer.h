@@ -188,7 +188,9 @@ GstVideoMultiviewFlags  gst_player_get_multiview_flags  (GstPlayer  * player);
 void                    gst_player_set_multiview_flags  (GstPlayer  * player,
                                                          GstVideoMultiviewFlags flags);
 
-
+gint64       gst_player_get_audio_video_offset        (GstPlayer    * player);
+void         gst_player_set_audio_video_offset        (GstPlayer    * player,
+                                                       gint64 offset);
 
 G_END_DECLS
 

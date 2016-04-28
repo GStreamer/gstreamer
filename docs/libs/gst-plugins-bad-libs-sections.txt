@@ -1750,6 +1750,9 @@ gst_player_set_multiview_mode
 gst_player_get_multiview_flags
 gst_player_set_multiview_flags
 
+gst_player_get_audio_video_offset
+gst_player_set_audio_video_offset
+
 gst_player_get_rate
 gst_player_set_rate
 

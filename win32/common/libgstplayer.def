@@ -13,6 +13,7 @@ EXPORTS
 	gst_player_g_main_context_signal_dispatcher_get_type
 	gst_player_g_main_context_signal_dispatcher_new
 	gst_player_get_audio_streams
+	gst_player_get_audio_video_offset
 	gst_player_get_color_balance
 	gst_player_get_current_audio_track
 	gst_player_get_current_subtitle_track
@@ -50,6 +51,7 @@ EXPORTS
 	gst_player_seek
 	gst_player_set_audio_track
 	gst_player_set_audio_track_enabled
+	gst_player_set_audio_video_offset
 	gst_player_set_color_balance
 	gst_player_set_multiview_flags
 	gst_player_set_multiview_mode

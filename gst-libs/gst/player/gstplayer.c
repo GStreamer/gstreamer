@@ -65,6 +65,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_player_debug);
 #define DEFAULT_MUTE FALSE
 #define DEFAULT_RATE 1.0
 #define DEFAULT_POSITION_UPDATE_INTERVAL_MS 100
+#define DEFAULT_AUDIO_VIDEO_OFFSET 0
 
 GQuark
 gst_player_error_quark (void)
@@ -97,6 +98,7 @@ enum
   PROP_POSITION_UPDATE_INTERVAL,
   PROP_VIDEO_MULTIVIEW_MODE,
   PROP_VIDEO_MULTIVIEW_FLAGS,
+  PROP_AUDIO_VIDEO_OFFSET,
   PROP_LAST
 };
 
@@ -342,6 +344,10 @@ gst_player_class_init (GstPlayerClass * klass)
       GST_TYPE_VIDEO_MULTIVIEW_FLAGS, GST_VIDEO_MULTIVIEW_FLAGS_NONE,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  param_specs[PROP_AUDIO_VIDEO_OFFSET] =
+      g_param_spec_int64 ("audio-video-offset", "Audio Video Offset",
+      "The synchronisation offset between audio and video in nanoseconds",
+      G_MININT64, G_MAXINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, PROP_LAST, param_specs);
 
@@ -600,6 +606,9 @@ gst_player_set_property (GObject * object, guint prop_id,
       g_object_set_property (G_OBJECT (self->playbin), "video-multiview-flags",
           value);
       break;
+    case PROP_AUDIO_VIDEO_OFFSET:
+      g_object_set_property (G_OBJECT (self->playbin), "av-offset", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -706,6 +715,9 @@ gst_player_get_property (GObject * object, guint prop_id,
           g_value_get_flags (value));
       break;
     }
+    case PROP_AUDIO_VIDEO_OFFSET:
+      g_object_get_property (G_OBJECT (self->playbin), "av-offset", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3787,6 +3799,46 @@ gst_player_set_multiview_flags (GstPlayer * self, GstVideoMultiviewFlags flags)
   g_object_set (self, "video-multiview-flags", flags, NULL);
 }
 
+/**
+ * gst_player_get_audio_video_offset:
+ * @player: #GstPlayer instance
+ *
+ * Retrieve the current value of audio-video-offset property
+ *
+ * Returns: The current value of audio-video-offset in nanoseconds
+ *
+ * Since 1.10
+ */
+gint64
+gst_player_get_audio_video_offset (GstPlayer * self)
+{
+  gint64 val = 0;
+
+  g_return_val_if_fail (GST_IS_PLAYER (self), DEFAULT_AUDIO_VIDEO_OFFSET);
+
+  g_object_get (self, "audio-video-offset", &val, NULL);
+
+  return val;
+}
+
+/**
+ * gst_player_set_audio_video_offset:
+ * @player: #GstPlayer instance
+ * @offset: #gint64 in nanoseconds
+ *
+ * Sets audio-video-offset property by value of @offset
+ *
+ * Returns: void
+ *
+ * Since 1.10
+ */
+void
+gst_player_set_audio_video_offset (GstPlayer * self, gint64 offset)
+{
+  g_return_if_fail (GST_IS_PLAYER (self));
+
+  g_object_set (self, "audio-video-offset", offset, NULL);
+}
 
 #define C_ENUM(v) ((gint) v)
 #define C_FLAGS(v) ((guint) v)
