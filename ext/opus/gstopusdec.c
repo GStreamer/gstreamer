@@ -268,6 +268,7 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
     if (gst_caps_is_empty (inter)) {
       GST_DEBUG_OBJECT (dec, "Empty intersection, failed to negotiate");
       gst_caps_unref (inter);
+      gst_caps_unref (caps);
       return FALSE;
     }
 
@@ -284,6 +285,7 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
 
     dec->sample_rate = rate;
     dec->n_channels = channels;
+    gst_caps_unref (caps);
   }
 
   if (dec->n_channels == 0) {
