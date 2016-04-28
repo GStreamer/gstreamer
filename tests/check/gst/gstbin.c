@@ -296,6 +296,8 @@ GST_START_TEST (test_message_state_changed)
 
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
 
+  gst_bus_set_flushing (bus, TRUE);
+
   /* clean up */
   ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
@@ -359,9 +361,12 @@ GST_START_TEST (test_message_state_changed_child)
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
 
+  gst_bus_set_flushing (bus, TRUE);
+
   /* clean up */
   ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+
   gst_object_unref (bus);
   gst_object_unref (bin);
 }
@@ -579,7 +584,8 @@ GST_START_TEST (test_watch_for_state_change)
   fail_unless (gst_bus_have_pending (bus) == FALSE,
       "Unexpected messages on bus");
 
-  /* setting bin to NULL flushes the bus automatically */
+  gst_bus_set_flushing (bus, TRUE);
+
   ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
@@ -1422,6 +1428,7 @@ GST_START_TEST (test_duration_is_max)
   GstFormat format = GST_FORMAT_BYTES;
   gboolean res;
   gint64 duration;
+  GstBus *bus;
 
   GST_INFO ("preparing test");
 
@@ -1466,6 +1473,10 @@ GST_START_TEST (test_duration_is_max)
 
   ck_assert_int_eq (duration, 3000);
 
+  bus = gst_element_get_bus (bin);
+  gst_bus_set_flushing (bus, TRUE);
+  gst_object_unref (bus);
+
   gst_element_set_state (bin, GST_STATE_NULL);
   gst_object_unref (bin);
 }
@@ -1479,6 +1490,7 @@ GST_START_TEST (test_duration_unknown_overrides)
   GstFormat format = GST_FORMAT_BYTES;
   gboolean res;
   gint64 duration;
+  GstBus *bus;
 
   GST_INFO ("preparing test");
 
@@ -1522,6 +1534,10 @@ GST_START_TEST (test_duration_unknown_overrides)
   fail_unless (res, NULL);
 
   ck_assert_int_eq (duration, GST_CLOCK_TIME_NONE);
+
+  bus = gst_element_get_bus (bin);
+  gst_bus_set_flushing (bus, TRUE);
+  gst_object_unref (bus);
 
   gst_element_set_state (bin, GST_STATE_NULL);
   gst_object_unref (bin);
