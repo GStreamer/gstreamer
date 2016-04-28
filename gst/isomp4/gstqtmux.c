@@ -3461,30 +3461,38 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
 
   /* now map onto a fourcc, and some extra properties */
   if (strcmp (mimetype, "audio/mpeg") == 0) {
-    gint mpegversion = 0;
+    gint mpegversion = 0, mpegaudioversion = 0;
     gint layer = -1;
 
     gst_structure_get_int (structure, "mpegversion", &mpegversion);
     switch (mpegversion) {
       case 1:
         gst_structure_get_int (structure, "layer", &layer);
-        switch (layer) {
-          case 3:
-            /* mp3 */
-            /* note: QuickTime player does not like mp3 either way in iso/mp4 */
-            if (format == GST_QT_MUX_FORMAT_QT)
-              entry.fourcc = FOURCC__mp3;
-            else {
-              entry.fourcc = FOURCC_mp4a;
-              ext_atom =
-                  build_esds_extension (qtpad->trak, ESDS_OBJECT_TYPE_MPEG1_P3,
-                  ESDS_STREAM_TYPE_AUDIO, codec_data, qtpad->avg_bitrate,
-                  qtpad->max_bitrate);
-            }
-            entry.samples_per_packet = 1152;
-            entry.bytes_per_sample = 2;
-            break;
+        gst_structure_get_int (structure, "mpegaudioversion",
+            &mpegaudioversion);
+
+        /* mp1/2/3 */
+        /* note: QuickTime player does not like mp3 either way in iso/mp4 */
+        if (format == GST_QT_MUX_FORMAT_QT)
+          entry.fourcc = FOURCC__mp3;
+        else {
+          entry.fourcc = FOURCC_mp4a;
+          ext_atom =
+              build_esds_extension (qtpad->trak, ESDS_OBJECT_TYPE_MPEG1_P3,
+              ESDS_STREAM_TYPE_AUDIO, codec_data, qtpad->avg_bitrate,
+              qtpad->max_bitrate);
         }
+        if (layer == 1) {
+          g_warn_if_fail (format == GST_QT_MUX_FORMAT_MP4);
+          entry.samples_per_packet = 384;
+        } else if (layer == 2) {
+          g_warn_if_fail (format == GST_QT_MUX_FORMAT_MP4);
+          entry.samples_per_packet = 1152;
+        } else {
+          g_warn_if_fail (layer == 3);
+          entry.samples_per_packet = (mpegaudioversion <= 1) ? 1152 : 576;
+        }
+        entry.bytes_per_sample = 2;
         break;
       case 4:
 

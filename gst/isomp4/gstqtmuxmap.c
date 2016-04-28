@@ -104,6 +104,12 @@
   "layer = (int) 3, " \
   COMMON_AUDIO_CAPS (2, MAX)
 
+#define MP123_CAPS \
+  "audio/mpeg, " \
+  "mpegversion = (int) 1, " \
+  "layer = (int) [1, 3], " \
+  COMMON_AUDIO_CAPS (2, MAX)
+
 #define AAC_CAPS \
   "audio/mpeg, " \
   "mpegversion = (int) 4, " \
@@ -190,7 +196,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS ("video/quicktime, variant = (string) iso"),
         GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS ";"
             "video/x-mp4-part," COMMON_VIDEO_CAPS),
-        GST_STATIC_CAPS (MP3_CAPS "; "
+        GST_STATIC_CAPS (MP123_CAPS "; "
             AAC_CAPS " ; " AC3_CAPS " ; " ALAC_CAPS " ; " OPUS_CAPS),
       GST_STATIC_CAPS (TEXT_UTF8)}
   ,
