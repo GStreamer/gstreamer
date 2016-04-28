@@ -475,6 +475,10 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
     info = gst_audio_encoder_get_audio_info (enc);
     planar = av_sample_fmt_is_planar (ffmpegaudenc->context->sample_fmt);
+    frame->format = ffmpegaudenc->context->sample_fmt;
+    frame->sample_rate = ffmpegaudenc->context->sample_rate;
+    frame->channels = ffmpegaudenc->context->channels;
+    frame->channel_layout = ffmpegaudenc->context->channel_layout;
 
     if (planar && info->channels > 1) {
       gint channels;
