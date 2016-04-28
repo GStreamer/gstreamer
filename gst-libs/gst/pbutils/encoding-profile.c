@@ -1517,6 +1517,21 @@ add_stream_to_profile (GstEncodingContainerProfile * profile,
     sprofile =
         (GstEncodingProfile *) gst_encoding_video_profile_new (caps, NULL,
         NULL, 0);
+  } else if (GST_IS_DISCOVERER_CONTAINER_INFO (sinfo)) {
+    GList *streams, *stream;
+    guint n_streams = 0;
+
+    streams =
+        gst_discoverer_container_info_get_streams (GST_DISCOVERER_CONTAINER_INFO
+        (sinfo));
+    for (stream = streams; stream; stream = stream->next) {
+      if (add_stream_to_profile (profile,
+              (GstDiscovererStreamInfo *) stream->data))
+        n_streams++;
+    }
+    gst_discoverer_stream_info_list_free (streams);
+
+    return n_streams != 0;
   } else {
     /* subtitles or other ? ignore for now */
   }
