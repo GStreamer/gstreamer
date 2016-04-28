@@ -893,6 +893,7 @@ GST_START_TEST (test_push_linked)
   buffers = NULL;
 
   /* teardown */
+  gst_check_drop_buffers ();
   gst_pad_unlink (src, sink);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
   gst_object_unref (src);
@@ -988,6 +989,7 @@ GST_START_TEST (test_push_linked_flushing)
   gst_pad_remove_probe (src, id);
 
   /* cleanup */
+  gst_check_drop_buffers ();
   ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   gst_pad_link (src, sink);
@@ -1085,6 +1087,7 @@ GST_START_TEST (test_push_buffer_list_compat)
   fail_unless (buffers == NULL);
 
   /* teardown */
+  gst_check_drop_buffers ();
   gst_pad_unlink (src, sink);
   gst_object_unref (src);
   gst_object_unref (sink);
@@ -1177,6 +1180,7 @@ GST_START_TEST (test_push_negotiation)
   fail_unless (gst_pad_set_caps (sink, caps) == FALSE);
 
   /* teardown */
+  gst_check_drop_buffers ();
   gst_pad_unlink (src, sink);
   gst_object_unref (src);
   gst_object_unref (sink);
@@ -1797,6 +1801,7 @@ GST_START_TEST (test_pad_probe_block_and_drop_buffer)
   fail_if (buffers && buffers->data == NULL);
   fail_unless (buffers == NULL);
 
+  gst_check_drop_buffers ();
   gst_object_unref (src);
   gst_object_unref (sink);
 }
@@ -1976,6 +1981,7 @@ GST_START_TEST (test_pad_probe_flush_events)
   fail_unless (sink_flush_start_probe_called);
   fail_unless (sink_flush_stop_probe_called);
 
+  gst_check_drop_buffers ();
   gst_object_unref (src);
   gst_object_unref (sink);
 }
@@ -2027,6 +2033,7 @@ GST_START_TEST (test_pad_probe_flush_events_only)
   gst_pad_push_event (src, gst_event_new_flush_stop (TRUE));
   fail_unless (probe_was_called);
 
+  gst_check_drop_buffers ();
   gst_object_unref (src);
   gst_object_unref (sink);
 }
@@ -2077,6 +2084,7 @@ GST_START_TEST (test_pad_probe_call_order)
     fail_unless (counters[i] == i + 1);
   }
 
+  gst_check_drop_buffers ();
   gst_object_unref (src);
   gst_object_unref (sink);
 }
