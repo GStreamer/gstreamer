@@ -28,13 +28,13 @@ G_BEGIN_DECLS
 #define GES_TYPE_MULTI_FILE_SOURCE ges_multi_file_source_get_type()
 #define GES_MULTI_FILE_SOURCE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_MULTI_FILE_SOURCE, GESMultiFileSource))
-#define ges_multi_file_source_CLASS(klass) \
+#define GES_MULTI_FILE_SOURCE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_MULTI_FILE_SOURCE, GESMultiFileSourceClass))
 #define GES_IS_MULTI_FILE_SOURCE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_MULTI_FILE_SOURCE))
 #define GES_IS_MULTI_FILE_SOURCE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_MULTI_FILE_SOURCE))
-#define ges_multi_file_source_GET_CLASS(obj) \
+#define GES_MULTI_FILE_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_MULTI_FILE_SOURCE, GESMultiFileSourceClass))
 typedef struct _GESMultiFileSourcePrivate GESMultiFileSourcePrivate;
 
