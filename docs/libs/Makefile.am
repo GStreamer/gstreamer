@@ -38,7 +38,14 @@ CFILE_GLOB=$(top_srcdir)/ges/ges-*.c
 SCANOBJ_OPTIONS=--type-init-func="g_type_init();gst_init(&argc,&argv)"
 
 # Header files to ignore when scanning.
-IGNORE_HFILES = gesmarshal.h ges-internal.h
+IGNORE_HFILES = \
+	gesmarshal.h \
+	ges-internal.h \
+	ges-auto-transition.h \
+	ges-structured-interface.h \
+	ges-structure-parser.h \
+	ges-smart-video-mixer.h \
+	gstframepositioner.h
 IGNORE_CFILES =
 
 # we add all .h files of elements that have signals/args we want
