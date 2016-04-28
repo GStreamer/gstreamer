@@ -36,6 +36,7 @@ static GstStaticPadTemplate gst_dvdlpcmdec_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-private1-lpcm; "
+        "audio/x-private2-lpcm; "
         "audio/x-lpcm, "
         "width = (int) { 16, 20, 24 }, "
         "rate = (int) { 32000, 44100, 48000, 96000 }, "
@@ -237,6 +238,10 @@ gst_dvdlpcmdec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
    * for incoming data before creating the output pad caps */
   if (gst_structure_has_name (structure, "audio/x-private1-lpcm")) {
     dvdlpcmdec->mode = GST_LPCM_DVD;
+    goto done;
+  }
+  if (gst_structure_has_name (structure, "audio/x-private2-lpcm")) {
+    dvdlpcmdec->mode = GST_LPCM_1394;
     goto done;
   }
 
@@ -501,6 +506,102 @@ negotiation_failed:
 }
 
 static GstFlowReturn
+gst_dvdlpcmdec_parse_1394 (GstDvdLpcmDec * dvdlpcmdec, GstAdapter * adapter,
+    gint * offset, gint * len)
+{
+  guint32 header;
+  const guint8 *data;
+
+  data = (const guint8 *) gst_adapter_map (adapter, 4);
+  if (!data)
+    goto too_small;
+
+  header = GST_READ_UINT32_BE (data);
+
+  gst_adapter_unmap (adapter);
+
+  /* see if we have a new header */
+  if (header != dvdlpcmdec->header) {
+    GstAudioFormat format;
+    gint rate, channels;
+
+    if (header >> 24 != 0xa0)
+      goto invalid_data;
+
+    switch ((header >> 6) & 0x3) {
+      case 0x0:
+        format = GST_AUDIO_FORMAT_S16BE;
+        dvdlpcmdec->width = 16;
+        break;
+      default:
+        format = GST_AUDIO_FORMAT_UNKNOWN;
+        dvdlpcmdec->width = 0;
+        GST_WARNING ("Invalid quantization word length!");
+        break;
+    }
+
+    switch ((header >> 3) & 0x7) {
+      case 0x1:
+        rate = 44100;
+        break;
+      case 0x2:
+        rate = 48000;
+        break;
+      default:
+        rate = 0;
+        GST_WARNING ("Invalid audio sampling frequency!");
+        break;
+    }
+    switch (header & 0x7) {
+      case 0x0:                /* 2 channels dual-mono */
+      case 0x1:                /* 2 channles stereo */
+        channels = 2;
+        break;
+      default:
+        channels = 0;
+        GST_WARNING ("Invalid number of audio channels!");
+        break;
+    }
+
+    gst_dvdlpcmdec_update_audio_formats (dvdlpcmdec, channels, rate, format);
+
+    if (!gst_dvdlpcmdec_set_output_format (dvdlpcmdec))
+      goto negotiation_failed;
+
+    dvdlpcmdec->header = header;
+  }
+
+  *offset = 4;
+  *len = gst_adapter_available (adapter) - 4;
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+too_small:
+  {
+    /* Buffer is too small */
+    GST_ELEMENT_WARNING (dvdlpcmdec, STREAM, DECODE,
+        ("Invalid data found parsing LPCM packet"),
+        ("LPCM packet was too small. Dropping"));
+    *offset = gst_adapter_available (adapter);
+    return GST_FLOW_EOS;
+  }
+invalid_data:
+  {
+    GST_ELEMENT_WARNING (dvdlpcmdec, STREAM, DECODE,
+        ("Invalid data found parsing LPCM packet"),
+        ("LPCM packet contains invalid sub_stream_id."));
+    return GST_FLOW_ERROR;
+  }
+negotiation_failed:
+  {
+    GST_ELEMENT_ERROR (dvdlpcmdec, STREAM, FORMAT, (NULL),
+        ("Failed to configure output format"));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+}
+
+static GstFlowReturn
 gst_dvdlpcmdec_parse (GstAudioDecoder * bdec, GstAdapter * adapter,
     gint * offset, gint * len)
 {
@@ -517,6 +618,9 @@ gst_dvdlpcmdec_parse (GstAudioDecoder * bdec, GstAdapter * adapter,
 
     case GST_LPCM_DVD:
       return gst_dvdlpcmdec_parse_dvd (dvdlpcmdec, adapter, offset, len);
+
+    case GST_LPCM_1394:
+      return gst_dvdlpcmdec_parse_1394 (dvdlpcmdec, adapter, offset, len);
   }
   return GST_FLOW_ERROR;
 }
