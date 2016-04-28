@@ -1518,6 +1518,8 @@ add_stream_to_profile (GstEncodingContainerProfile * profile,
         (GstEncodingProfile *) gst_encoding_video_profile_new (caps, NULL,
         NULL, 0);
   } else {
+    GST_WARNING ("Ignoring stream of type '%s'",
+        g_type_name (G_OBJECT_TYPE (sinfo)));
     /* subtitles or other ? ignore for now */
   }
   if (sprofile)
@@ -1547,6 +1549,7 @@ gst_encoding_profile_from_discoverer (GstDiscovererInfo * info)
   GstDiscovererStreamInfo *sinfo;
   GList *streams, *stream;
   GstCaps *caps = NULL;
+  guint n_streams = 0;
 
   if (!info || gst_discoverer_info_get_result (info) != GST_DISCOVERER_OK)
     return NULL;
@@ -1571,9 +1574,17 @@ gst_encoding_profile_from_discoverer (GstDiscovererInfo * info)
       gst_discoverer_container_info_get_streams (GST_DISCOVERER_CONTAINER_INFO
       (sinfo));
   for (stream = streams; stream; stream = stream->next) {
-    add_stream_to_profile (profile, (GstDiscovererStreamInfo *) stream->data);
+    if (add_stream_to_profile (profile,
+            (GstDiscovererStreamInfo *) stream->data))
+      n_streams++;
   }
   gst_discoverer_stream_info_list_free (streams);
+
+  if (n_streams == 0) {
+    GST_ERROR ("Failed to add any streams");
+    g_object_unref (profile);
+    return NULL;
+  }
 
   return (GstEncodingProfile *) profile;
 }
