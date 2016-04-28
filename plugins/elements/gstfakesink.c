@@ -59,6 +59,7 @@ enum
 };
 
 #define DEFAULT_SYNC FALSE
+#define DEFAULT_DROP_OUT_OF_SEGMENT TRUE
 
 #define DEFAULT_STATE_ERROR FAKE_SINK_STATE_ERROR_NONE
 #define DEFAULT_SILENT TRUE
@@ -76,6 +77,7 @@ enum
   PROP_SILENT,
   PROP_DUMP,
   PROP_SIGNAL_HANDOFFS,
+  PROP_DROP_OUT_OF_SEGMENT,
   PROP_LAST_MESSAGE,
   PROP_CAN_ACTIVATE_PUSH,
   PROP_CAN_ACTIVATE_PULL,
@@ -165,6 +167,12 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
       g_param_spec_boolean ("signal-handoffs", "Signal handoffs",
           "Send a signal before unreffing the buffer", DEFAULT_SIGNAL_HANDOFFS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_DROP_OUT_OF_SEGMENT,
+      g_param_spec_boolean ("drop-out-of-segment",
+          "Drop out-of-segment buffers",
+          "Drop and don't render / hand off out-of-segment buffers",
+          DEFAULT_DROP_OUT_OF_SEGMENT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent",
           "Don't produce last_message events", DEFAULT_SILENT,
@@ -172,15 +180,14 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
           G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DUMP,
       g_param_spec_boolean ("dump", "Dump", "Dump buffer contents to stdout",
-          DEFAULT_DUMP, G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          DEFAULT_DUMP,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
           G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class,
-      PROP_CAN_ACTIVATE_PUSH,
+  g_object_class_install_property (gobject_class, PROP_CAN_ACTIVATE_PUSH,
       g_param_spec_boolean ("can-activate-push", "Can activate push",
           "Can activate in push mode", DEFAULT_CAN_ACTIVATE_PUSH,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class,
-      PROP_CAN_ACTIVATE_PULL,
+  g_object_class_install_property (gobject_class, PROP_CAN_ACTIVATE_PULL,
       g_param_spec_boolean ("can-activate-pull", "Can activate pull",
           "Can activate in pull mode", DEFAULT_CAN_ACTIVATE_PULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -247,6 +254,8 @@ gst_fake_sink_init (GstFakeSink * fakesink)
   fakesink->num_buffers = DEFAULT_NUM_BUFFERS;
 
   gst_base_sink_set_sync (GST_BASE_SINK (fakesink), DEFAULT_SYNC);
+  gst_base_sink_set_drop_out_of_segment (GST_BASE_SINK (fakesink),
+      DEFAULT_DROP_OUT_OF_SEGMENT);
 }
 
 static void
@@ -275,6 +284,10 @@ gst_fake_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_SIGNAL_HANDOFFS:
       sink->signal_handoffs = g_value_get_boolean (value);
+      break;
+    case PROP_DROP_OUT_OF_SEGMENT:
+      gst_base_sink_set_drop_out_of_segment (GST_BASE_SINK (object),
+          g_value_get_boolean (value));
       break;
     case PROP_CAN_ACTIVATE_PUSH:
       GST_BASE_SINK (sink)->can_activate_push = g_value_get_boolean (value);
@@ -311,6 +324,10 @@ gst_fake_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SIGNAL_HANDOFFS:
       g_value_set_boolean (value, sink->signal_handoffs);
+      break;
+    case PROP_DROP_OUT_OF_SEGMENT:
+      g_value_set_boolean (value,
+          gst_base_sink_get_drop_out_of_segment (GST_BASE_SINK (object)));
       break;
     case PROP_LAST_MESSAGE:
       GST_OBJECT_LOCK (sink);

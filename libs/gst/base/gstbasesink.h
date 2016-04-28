@@ -207,6 +207,10 @@ GstFlowReturn   gst_base_sink_wait_preroll      (GstBaseSink *sink);
 void            gst_base_sink_set_sync          (GstBaseSink *sink, gboolean sync);
 gboolean        gst_base_sink_get_sync          (GstBaseSink *sink);
 
+/* Drop buffers which are out of segment */
+void            gst_base_sink_set_drop_out_of_segment (GstBaseSink *sink, gboolean drop_clipped);
+gboolean        gst_base_sink_get_drop_out_of_segment (GstBaseSink *sink);
+
 /* dropping late buffers */
 void            gst_base_sink_set_max_lateness  (GstBaseSink *sink, gint64 max_lateness);
 gint64          gst_base_sink_get_max_lateness  (GstBaseSink *sink);
