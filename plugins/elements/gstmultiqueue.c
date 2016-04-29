@@ -2449,9 +2449,10 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
 
-  /* check if we reached the hard time/bytes limits */
-  if (sq->is_eos || sq->is_sparse || IS_FILLED (sq, bytes, size.bytes) ||
-      IS_FILLED (sq, time, sq->cur_time)) {
+  /* check if we reached the hard time/bytes limits;
+     time limit is only taken into account for non-sparse streams */
+  if (sq->is_eos || IS_FILLED (sq, bytes, size.bytes) ||
+      (!sq->is_sparse && IS_FILLED (sq, time, sq->cur_time))) {
     goto done;
   }
 
