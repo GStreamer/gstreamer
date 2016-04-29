@@ -702,7 +702,7 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
   GstMapInfo map;
   gint size, bsize, len, have_data;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean do_padding;
+  gboolean do_padding, is_header;
 
   ffmpegdec = (GstFFMpegAudDec *) decoder;
 
@@ -715,6 +715,7 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
   }
 
   inbuf = gst_buffer_ref (inbuf);
+  is_header = GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_HEADER);
 
   oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
@@ -819,7 +820,7 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     ret =
         gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec),
         ffmpegdec->outbuf, 1);
-  else if (len < 0)
+  else if (len < 0 || is_header)
     ret =
         gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), NULL, 1);
   ffmpegdec->outbuf = NULL;
