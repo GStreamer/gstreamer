@@ -584,7 +584,7 @@ GST_START_TEST (test_name_is_valid)
   ASSERT_WARNING (name_is_valid ("src%s%s", GST_PAD_REQUEST));
   ASSERT_WARNING (name_is_valid ("src%c", GST_PAD_REQUEST));
   ASSERT_WARNING (name_is_valid ("src%", GST_PAD_REQUEST));
-  ASSERT_WARNING (name_is_valid ("src%dsrc", GST_PAD_REQUEST));
+  fail_unless (name_is_valid ("src%dsrc", GST_PAD_REQUEST));
 
   fail_unless (name_is_valid ("src", GST_PAD_SOMETIMES));
   fail_unless (name_is_valid ("src%c", GST_PAD_SOMETIMES));

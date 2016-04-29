@@ -920,6 +920,119 @@ gst_element_get_static_pad (GstElement * element, const gchar * name)
   return result;
 }
 
+static gboolean
+gst_element_is_valid_request_template_name (const gchar * templ_name,
+    const gchar * name)
+{
+  gchar *endptr;
+  const gchar *templ_name_ptr, *name_ptr;
+  gboolean next_specifier;
+  guint templ_postfix_len = 0, name_postfix_len = 0;
+
+  g_return_val_if_fail (templ_name != NULL, FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  /* Is this the template name? */
+  if (strcmp (templ_name, name) == 0)
+    return TRUE;
+
+  /* otherwise check all the specifiers */
+  do {
+    /* Because of sanity checks in gst_pad_template_new(), we know that %s
+     * and %d and %u, occurring at the template_name */
+    templ_name_ptr = strchr (templ_name, '%');
+
+    /* check characters ahead of the specifier */
+    if (!templ_name_ptr || strlen (name) <= templ_name_ptr - templ_name
+        || strncmp (templ_name, name, templ_name_ptr - templ_name) != 0) {
+      return FALSE;
+    }
+
+    /* %s is not allowed for multiple specifiers, just a single specifier can be
+     * accepted in gst_pad_template_new() and can not be mixed with other
+     * specifier '%u' and '%d' */
+    if (*(templ_name_ptr + 1) == 's' && g_strcmp0 (templ_name, name) == 0) {
+      return TRUE;
+    }
+
+    name_ptr = name + (templ_name_ptr - templ_name);
+
+    /* search next specifier, each of specifier should be separated by '_' */
+    templ_name = strchr (templ_name_ptr, '_');
+    name = strchr (name_ptr, '_');
+
+    /* don't match the number of specifiers */
+    if ((templ_name && !name) || (!templ_name && name))
+      return FALSE;
+
+    if (templ_name && name)
+      next_specifier = TRUE;
+    else
+      next_specifier = FALSE;
+
+    /* check characters followed by the specifier */
+    if (*(templ_name_ptr + 2) != '\0' && *(templ_name_ptr + 2) != '_') {
+      if (next_specifier) {
+        templ_postfix_len = templ_name - (templ_name_ptr + 2);
+        name_postfix_len = name - name_ptr;
+      } else {
+        templ_postfix_len = strlen (templ_name_ptr + 2);
+        name_postfix_len = strlen (name_ptr);
+      }
+
+      if (strncmp (templ_name_ptr + 2,
+              name_ptr + name_postfix_len - templ_postfix_len,
+              templ_postfix_len) != 0) {
+        return FALSE;
+      }
+    }
+
+    /* verify the specifier */
+    if (*(name_ptr) == '%') {
+      guint len;
+
+      len = (next_specifier) ? name - name_ptr : strlen (name_ptr);
+
+      if (strncmp (name_ptr, templ_name_ptr, len) != 0)
+        return FALSE;
+
+    } else {
+      const gchar *specifier;
+      gchar *target = NULL;
+
+      /* extract specifier when it has postfix characters */
+      if (name_postfix_len > templ_postfix_len) {
+        target = g_strndup (name_ptr, name_postfix_len - templ_postfix_len);
+      }
+      specifier = target ? target : name_ptr;
+
+      if (*(templ_name_ptr + 1) == 'd') {
+        gint64 tmp;
+
+        /* it's an int */
+        tmp = g_ascii_strtoll (specifier, &endptr, 10);
+        if (tmp < G_MININT || tmp > G_MAXINT || (*endptr != '\0'
+                && *endptr != '_'))
+          return FALSE;
+      } else if (*(templ_name_ptr + 1) == 'u') {
+        guint64 tmp;
+
+        /* it's an int */
+        tmp = g_ascii_strtoull (specifier, &endptr, 10);
+        if (tmp > G_MAXUINT || (*endptr != '\0' && *endptr != '_'))
+          return FALSE;
+      }
+
+      g_free (target);
+    }
+
+    templ_name++;
+    name++;
+  } while (next_specifier);
+
+  return TRUE;
+}
+
 static GstPad *
 _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name, const GstCaps * caps)
@@ -934,38 +1047,8 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
   if (name) {
     GstPad *pad;
 
-    /* Is this the template name? */
-    if (strstr (name, "%") || !strchr (templ->name_template, '%')) {
-      g_return_val_if_fail (strcmp (name, templ->name_template) == 0, NULL);
-    } else {
-      const gchar *str, *data;
-      gchar *endptr;
-
-      /* Otherwise check if it's a valid name for the name template */
-      str = strchr (templ->name_template, '%');
-      g_return_val_if_fail (str != NULL, NULL);
-      g_return_val_if_fail (strncmp (templ->name_template, name,
-              str - templ->name_template) == 0, NULL);
-      g_return_val_if_fail (strlen (name) > str - templ->name_template, NULL);
-
-      data = name + (str - templ->name_template);
-
-      /* Can either be %s or %d or %u, do sanity checking for %d */
-      if (*(str + 1) == 'd') {
-        gint64 tmp;
-
-        /* it's an int */
-        tmp = g_ascii_strtoll (data, &endptr, 10);
-        g_return_val_if_fail (tmp >= G_MININT && tmp <= G_MAXINT
-            && *endptr == '\0', NULL);
-      } else if (*(str + 1) == 'u') {
-        guint64 tmp;
-
-        /* it's an int */
-        tmp = g_ascii_strtoull (data, &endptr, 10);
-        g_return_val_if_fail (tmp <= G_MAXUINT && *endptr == '\0', NULL);
-      }
-    }
+    g_return_val_if_fail (gst_element_is_valid_request_template_name
+        (templ->name_template, name), NULL);
 
     pad = gst_element_get_static_pad (element, name);
     if (pad) {
@@ -1011,8 +1094,6 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
   const gchar *req_name = NULL;
   gboolean templ_found = FALSE;
   GList *list;
-  const gchar *data;
-  gchar *str, *endptr = NULL;
   GstElementClass *class;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
@@ -1020,13 +1101,10 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
 
   class = GST_ELEMENT_GET_CLASS (element);
 
-  /* if the name contains a %, we assume it's the complete template name. Get
-   * the template and try to get a pad */
-  if (strstr (name, "%")) {
-    templ = gst_element_class_get_request_pad_template (class, name);
-    req_name = NULL;
-    if (templ)
-      templ_found = TRUE;
+  templ = gst_element_class_get_request_pad_template (class, name);
+  if (templ) {
+    req_name = strstr (name, "%") ? NULL : name;
+    templ_found = TRUE;
   } else {
     /* there is no % in the name, try to find a matching template */
     list = class->padtemplates;
@@ -1035,47 +1113,11 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
       if (templ->presence == GST_PAD_REQUEST) {
         GST_CAT_DEBUG (GST_CAT_PADS, "comparing %s to %s", name,
             templ->name_template);
-        /* see if we find an exact match */
-        if (strcmp (name, templ->name_template) == 0) {
+        if (gst_element_is_valid_request_template_name (templ->name_template,
+                name)) {
           templ_found = TRUE;
           req_name = name;
           break;
-        }
-        /* Because of sanity checks in gst_pad_template_new(), we know that %s
-           and %d and %u, occurring at the end of the name_template, are the only
-           possibilities. */
-        else if ((str = strchr (templ->name_template, '%'))
-            && strncmp (templ->name_template, name,
-                str - templ->name_template) == 0
-            && strlen (name) > str - templ->name_template) {
-          data = name + (str - templ->name_template);
-          if (*(str + 1) == 'd') {
-            glong tmp;
-
-            /* it's an int */
-            tmp = strtol (data, &endptr, 10);
-            if (tmp != G_MINLONG && tmp != G_MAXLONG && endptr &&
-                *endptr == '\0') {
-              templ_found = TRUE;
-              req_name = name;
-              break;
-            }
-          } else if (*(str + 1) == 'u') {
-            gulong tmp;
-
-            /* it's an int */
-            tmp = strtoul (data, &endptr, 10);
-            if (tmp != G_MAXULONG && endptr && *endptr == '\0') {
-              templ_found = TRUE;
-              req_name = name;
-              break;
-            }
-          } else {
-            /* it's a string */
-            templ_found = TRUE;
-            req_name = name;
-            break;
-          }
         }
       }
       list = list->next;

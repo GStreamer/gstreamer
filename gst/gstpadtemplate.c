@@ -221,14 +221,14 @@ gst_pad_template_dispose (GObject * object)
  * since it doesn't make sense.
  * SOMETIMES padtemplates can do whatever they want, they are provided by the
  * element.
- * REQUEST padtemplates can be reverse-parsed (the user asks for 'sink1', the
- * 'sink%d' template is automatically selected), so we need to restrict their
- * naming.
+ * REQUEST padtemplates can have multiple specifiers in case of %d and %u, like
+ * src_%u_%u, but %s only can be used once in the template.
  */
 static gboolean
 name_is_valid (const gchar * name, GstPadPresence presence)
 {
-  const gchar *str;
+  const gchar *str, *underscore = NULL;
+  gboolean has_s = FALSE;
 
   if (presence == GST_PAD_ALWAYS) {
     if (strchr (name, '%')) {
@@ -237,20 +237,38 @@ name_is_valid (const gchar * name, GstPadPresence presence)
       return FALSE;
     }
   } else if (presence == GST_PAD_REQUEST) {
-    if ((str = strchr (name, '%')) && strchr (str + 1, '%')) {
-      g_warning ("invalid name template %s: only one conversion specification"
-          " allowed in GST_PAD_REQUEST padtemplate", name);
-      return FALSE;
-    }
-    if (str && (*(str + 1) != 's' && *(str + 1) != 'd' && *(str + 1) != 'u')) {
-      g_warning ("invalid name template %s: conversion specification must be of"
-          " type '%%d', '%%u' or '%%s' for GST_PAD_REQUEST padtemplate", name);
-      return FALSE;
-    }
-    if (str && (*(str + 2) != '\0')) {
-      g_warning ("invalid name template %s: conversion specification must"
-          " appear at the end of the GST_PAD_REQUEST padtemplate name", name);
-      return FALSE;
+    str = strchr (name, '%');
+
+    while (str) {
+      if (*(str + 1) != 's' && *(str + 1) != 'd' && *(str + 1) != 'u') {
+        g_warning
+            ("invalid name template %s: conversion specification must be of"
+            " type '%%d', '%%u' or '%%s' for GST_PAD_REQUEST padtemplate",
+            name);
+        return FALSE;
+      }
+
+      if (*(str + 1) == 's' && (*(str + 2) != '\0' || has_s)) {
+        g_warning
+            ("invalid name template %s: conversion specification of type '%%s'"
+            "only can be used once in the GST_PAD_REQUEST padtemplate at the "
+            "very end and not allowed any other characters with '%%s'", name);
+        return FALSE;
+      }
+
+      if (*(str + 1) == 's') {
+        has_s = TRUE;
+      }
+
+      underscore = strchr (str, '_');
+      str = strchr (str + 1, '%');
+
+      if (str && (!underscore || (underscore && str < underscore))) {
+        g_warning
+            ("invalid name template %s: each of conversion specifications "
+            "must be separated by an underscore", name);
+        return FALSE;
+      }
     }
   }
 
