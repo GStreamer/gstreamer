@@ -62,6 +62,21 @@
  *  <entry role="property_name"><link linkend="GESVideoSource--height">height</link></entry>
  *  <entry>The desired height for that source. Set to 0 if size is not mandatory, will be set to height of the current track.</entry>
  * </row>
+ * <row>
+ *  <entry role="property_type"><link linkend="GstDeinterlaceModes"><type>GstDeinterlaceModes</type></link></entry>
+ *  <entry role="property_name"><link linkend="GESVideoSource--deinterlace-mode">deinterlace-mode</link></entry>
+ *  <entry>Deinterlace Mode</entry>
+ * </row>
+ * <row>
+ *  <entry role="property_type"><link linkend="GstDeinterlaceFields"><type>GstDeinterlaceFields</type></link></entry>
+ *  <entry role="property_name"><link linkend="GESVideoSource--deinterlace-fields">deinterlace-fields</link></entry>
+ *  <entry>Fields to use for deinterlacing</entry>
+ * </row>
+ * <row>
+ *  <entry role="property_type"><link linkend="GstDeinterlaceFieldLayout"><type>GstDeinterlaceFieldLayout</type></link></entry>
+ *  <entry role="property_name"><link linkend="GESVideoSource--deinterlace-tff">deinterlace-tff</link></entry>
+ *  <entry>Deinterlace top field first</entry>
+ * </row>
  * </tbody>
  * </tgroup>
  * </informaltable>
@@ -123,7 +138,9 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   GESVideoSource *self;
   GstElement *positionner, *videoscale, *videorate, *capsfilter, *videoconvert,
       *deinterlace;
-  const gchar *props[] = { "alpha", "posx", "posy", "width", "height", NULL };
+  const gchar *positioner_props[] =
+      { "alpha", "posx", "posy", "width", "height", NULL };
+  const gchar *deinterlace_props[] = { "mode", "fields", "tff", NULL };
 
   if (!source_class->create_source)
     return NULL;
@@ -150,7 +167,8 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   ges_frame_positionner_set_source_and_filter (GST_FRAME_POSITIONNER
       (positionner), trksrc, capsfilter);
 
-  ges_track_element_add_children_props (trksrc, positionner, NULL, NULL, props);
+  ges_track_element_add_children_props (trksrc, positionner, NULL, NULL,
+      positioner_props);
 
   if (deinterlace == NULL) {
     post_missing_element_message (sub_element, "deinterlace");
@@ -162,6 +180,8 @@ ges_video_source_create_element (GESTrackElement * trksrc)
         ges_source_create_topbin ("videosrcbin", sub_element, queue,
         videoconvert, positionner, videoscale, videorate, capsfilter, NULL);
   } else {
+    ges_track_element_add_children_props (trksrc, deinterlace, NULL, NULL,
+        deinterlace_props);
     topbin =
         ges_source_create_topbin ("videosrcbin", sub_element, queue,
         videoconvert, deinterlace, positionner, videoscale, videorate,
@@ -176,19 +196,51 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   return topbin;
 }
 
+static gboolean
+_lookup_child (GESTimelineElement * object,
+    const gchar * prop_name, GObject ** element, GParamSpec ** pspec)
+{
+  gboolean res;
+
+  gchar *clean_name;
+
+  if (!g_strcmp0 (prop_name, "deinterlace-fields"))
+    clean_name = g_strdup ("GstDeinterlace::fields");
+  else if (!g_strcmp0 (prop_name, "deinterlace-mode"))
+    clean_name = g_strdup ("GstDeinterlace::mode");
+  else if (!g_strcmp0 (prop_name, "deinterlace-tff"))
+    clean_name = g_strdup ("GstDeinterlace::tff");
+  else if (!g_strcmp0 (prop_name, "tff") ||
+      !g_strcmp0 (prop_name, "fields") || !g_strcmp0 (prop_name, "mode")) {
+    GST_DEBUG_OBJECT (object, "Not allowed to use GstDeinterlace %s"
+        " property without prefixing its name", prop_name);
+    return FALSE;
+  } else
+    clean_name = g_strdup (prop_name);
+
+  res =
+      GES_TIMELINE_ELEMENT_CLASS (ges_video_source_parent_class)->lookup_child
+      (object, clean_name, element, pspec);
+
+  g_free (clean_name);
+
+  return res;
+}
+
 static void
 ges_video_source_class_init (GESVideoSourceClass * klass)
 {
-  GESTrackElementClass *track_class = GES_TRACK_ELEMENT_CLASS (klass);
+  GESTrackElementClass *track_element_class = GES_TRACK_ELEMENT_CLASS (klass);
   GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
   GESVideoSourceClass *video_source_class = GES_VIDEO_SOURCE_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESVideoSourcePrivate));
 
   element_class->set_priority = _set_priority;
+  element_class->lookup_child = _lookup_child;
 
-  track_class->nleobject_factorytype = "nlesource";
-  track_class->create_element = ges_video_source_create_element;
+  track_element_class->nleobject_factorytype = "nlesource";
+  track_element_class->create_element = ges_video_source_create_element;
   video_source_class->create_source = NULL;
 }
 
