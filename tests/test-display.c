@@ -268,8 +268,14 @@ dump_info (GstVaapiDisplay * display)
 int
 main (int argc, char *argv[])
 {
-  GstVaapiDisplay *display, *display2;
-  guint width, height, par_n, par_d;
+  GstVaapiDisplay *display;
+#if USE_X11
+  GstVaapiDisplay *display2;
+#endif
+#if USE_X11 || USE_WAYLAND
+  guint width, height;
+  guint par_n, par_d;
+#endif
 
   gst_init (&argc, &argv);
 
