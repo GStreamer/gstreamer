@@ -2279,19 +2279,11 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   }
 
   g_signal_emit (object, gst_dvbsrc_signals[SIGNAL_TUNING_START], 0);
-
-  LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_READ_STATUS, &status));
-  if (err) {
-    GST_WARNING_OBJECT (object, "Failed querying frontend for tuning status:"
-        " %s (%d)", g_strerror (errno), errno);
-    goto fail_with_signal;
-  }
-
-  /* signal locking loop */
   elapsed_time = 0;
   start = gst_util_get_timestamp ();
 
-  while (!(status & FE_HAS_LOCK) && elapsed_time <= object->tuning_timeout) {
+  /* signal locking loop */
+  do {
     LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_READ_STATUS,
             &status));
     if (err) {
@@ -2306,7 +2298,7 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
     GST_LOG_OBJECT (object,
         "Tuning. Time elapsed %" GST_STIME_FORMAT " Limit %" GST_TIME_FORMAT,
         GST_STIME_ARGS (elapsed_time), GST_TIME_ARGS (object->tuning_timeout));
-  }
+  } while (!(status & FE_HAS_LOCK) && elapsed_time <= object->tuning_timeout);
 
   if (!(status & FE_HAS_LOCK)) {
     GST_WARNING_OBJECT (object,
