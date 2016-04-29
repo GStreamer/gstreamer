@@ -203,6 +203,7 @@ struct _GstAdaptiveDemuxPrivate
 
 typedef struct _GstAdaptiveDemuxTimer
 {
+  volatile gint ref_count;
   GCond *cond;
   GMutex *mutex;
   GstClockID clock_id;
@@ -284,7 +285,6 @@ gst_adaptive_demux_wait_until (GstClock * clock, GCond * cond, GMutex * mutex,
     GstClockTime end_time);
 static gboolean gst_adaptive_demux_clock_callback (GstClock * clock,
     GstClockTime time, GstClockID id, gpointer user_data);
-
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
@@ -3501,11 +3501,51 @@ gst_adaptive_demux_get_client_now_utc (GstAdaptiveDemux * demux)
   return g_date_time_new_from_timeval_utc (&gtv);
 }
 
+static GstAdaptiveDemuxTimer *
+gst_adaptive_demux_timer_new (GCond * cond, GMutex * mutex)
+{
+  GstAdaptiveDemuxTimer *timer;
+
+  timer = g_slice_new (GstAdaptiveDemuxTimer);
+  timer->fired = FALSE;
+  timer->cond = cond;
+  timer->mutex = mutex;
+  timer->ref_count = 1;
+  return timer;
+}
+
+static GstAdaptiveDemuxTimer *
+gst_adaptive_demux_timer_ref (GstAdaptiveDemuxTimer * timer)
+{
+  g_return_val_if_fail (timer != NULL, NULL);
+  g_atomic_int_inc (&timer->ref_count);
+  return timer;
+}
+
+static void
+gst_adaptive_demux_timer_unref (GstAdaptiveDemuxTimer * timer)
+{
+  g_return_if_fail (timer != NULL);
+  if (g_atomic_int_dec_and_test (&timer->ref_count)) {
+    g_slice_free (GstAdaptiveDemuxTimer, timer);
+  }
+}
+
+/* gst_adaptive_demux_wait_until:
+ * A replacement for g_cond_wait_until that uses the clock rather
+ * than system time to control the duration of the sleep. Typically
+ * clock is actually a #GstSystemClock, in which case this function
+ * behaves exactly like g_cond_wait_until. Inside unit tests,
+ * the clock is typically a #GstTestClock, which allows tests to run
+ * in non-realtime.
+ * This function must be called with mutex held.
+ */
 static gboolean
 gst_adaptive_demux_wait_until (GstClock * clock, GCond * cond, GMutex * mutex,
     GstClockTime end_time)
 {
-  GstAdaptiveDemuxTimer timer;
+  GstAdaptiveDemuxTimer *timer;
+  gboolean fired;
   GstClockReturn res;
 
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (end_time))) {
@@ -3516,23 +3556,32 @@ gst_adaptive_demux_wait_until (GstClock * clock, GCond * cond, GMutex * mutex,
      */
     return FALSE;
   }
-  timer.fired = FALSE;
-  timer.cond = cond;
-  timer.mutex = mutex;
-  timer.clock_id = gst_clock_new_single_shot_id (clock, end_time);
+  timer = gst_adaptive_demux_timer_new (cond, mutex);
+  timer->clock_id = gst_clock_new_single_shot_id (clock, end_time);
   res =
-      gst_clock_id_wait_async (timer.clock_id,
-      gst_adaptive_demux_clock_callback, &timer, NULL);
+      gst_clock_id_wait_async (timer->clock_id,
+      gst_adaptive_demux_clock_callback, gst_adaptive_demux_timer_ref (timer),
+      (GDestroyNotify) gst_adaptive_demux_timer_unref);
   /* clock does not support asynchronously wait. Assert and return */
   if (res == GST_CLOCK_UNSUPPORTED) {
-    gst_clock_id_unref (timer.clock_id);
+    gst_clock_id_unref (timer->clock_id);
+    gst_adaptive_demux_timer_unref (timer);
     g_return_val_if_reached (TRUE);
   }
-  /* the gst_adaptive_demux_clock_callback will signal the
-     cond when the clock's single shot timer fires */
+  g_assert (!timer->fired);
+  /* the gst_adaptive_demux_clock_callback() will signal the
+   * cond when the clock's single shot timer fires, or the cond will be
+   * signalled by another thread that wants to cause this wait to finish
+   * early (e.g. to terminate the waiting thread).
+   * There is no need for a while loop here, because that logic is
+   * implemented by the function calling gst_adaptive_demux_wait_until() */
   g_cond_wait (cond, mutex);
-  gst_clock_id_unref (timer.clock_id);
-  return !timer.fired;
+  fired = timer->fired;
+  if (!fired)
+    gst_clock_id_unschedule (timer->clock_id);
+  gst_clock_id_unref (timer->clock_id);
+  gst_adaptive_demux_timer_unref (timer);
+  return !fired;
 }
 
 static gboolean
