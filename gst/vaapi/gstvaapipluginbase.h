@@ -31,7 +31,7 @@
 #include <gst/video/gstvideosink.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 
-#ifdef USE_GST_GL_HELPERS
+#if USE_GST_GL_HELPERS
 # include <gst/gl/gstglcontext.h>
 #endif
 
