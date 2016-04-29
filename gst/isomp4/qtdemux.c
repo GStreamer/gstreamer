@@ -314,7 +314,6 @@ struct _QtDemuxStream
 
   /* the Gst segment we are processing out, used for clipping */
   GstSegment segment;
-  guint32 segment_seqnum;       /* segment event seqnum obtained from seek */
 
   /* quicktime segments */
   guint32 n_segments;
@@ -1496,6 +1495,7 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
 
   /* and set all streams to the final position */
   gst_flow_combiner_reset (qtdemux->flowcombiner);
+  qtdemux->segment_seqnum = seqnum;
   for (n = 0; n < qtdemux->n_streams; n++) {
     QtDemuxStream *stream = qtdemux->streams[n];
 
@@ -1505,7 +1505,6 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
     stream->offset_in_sample = 0;
     stream->segment_index = -1;
     stream->sent_eos = FALSE;
-    stream->segment_seqnum = seqnum;
 
     if (segment->flags & GST_SEEK_FLAG_FLUSH)
       gst_segment_init (&stream->segment, GST_FORMAT_TIME);
@@ -1979,6 +1978,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
   qtdemux->offset = 0;
   gst_adapter_clear (qtdemux->adapter);
   gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
+  qtdemux->segment_seqnum = 0;
 
   if (hard) {
     for (n = 0; n < qtdemux->n_streams; n++) {
@@ -2007,7 +2007,6 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     gst_flow_combiner_reset (qtdemux->flowcombiner);
     for (n = 0; n < qtdemux->n_streams; n++) {
       qtdemux->streams[n]->sent_eos = FALSE;
-      qtdemux->streams[n]->segment_seqnum = 0;
       qtdemux->streams[n]->time_position = 0;
       qtdemux->streams[n]->accumulated_base = 0;
     }
@@ -4483,8 +4482,8 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* now prepare and send the segment */
   if (stream->pad) {
     event = gst_event_new_segment (&stream->segment);
-    if (stream->segment_seqnum) {
-      gst_event_set_seqnum (event, stream->segment_seqnum);
+    if (qtdemux->segment_seqnum) {
+      gst_event_set_seqnum (event, qtdemux->segment_seqnum);
     }
     gst_pad_push_event (stream->pad, event);
     /* assume we can send more data now */
@@ -4810,10 +4809,15 @@ gst_qtdemux_sync_streams (GstQTDemux * demux)
         GST_TIME_ARGS (demux->segment.position), GST_TIME_ARGS (end_time));
     if (GST_CLOCK_TIME_IS_VALID (end_time)
         && (end_time + 2 * GST_SECOND < demux->segment.position)) {
+      GstEvent *event;
+
       GST_DEBUG_OBJECT (demux, "sending EOS for stream %s",
           GST_PAD_NAME (stream->pad));
       stream->sent_eos = TRUE;
-      gst_pad_push_event (stream->pad, gst_event_new_eos ());
+      event = gst_event_new_eos ();
+      if (demux->segment_seqnum)
+        gst_event_set_seqnum (event, demux->segment_seqnum);
+      gst_pad_push_event (stream->pad, event);
     }
   }
 }
@@ -5590,25 +5594,44 @@ pause:
           stop = qtdemux->segment.duration;
 
         if (qtdemux->segment.rate >= 0) {
+          GstMessage *message;
+          GstEvent *event;
+
           GST_LOG_OBJECT (qtdemux, "Sending segment done, at end of segment");
-          gst_element_post_message (GST_ELEMENT_CAST (qtdemux),
-              gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
-                  GST_FORMAT_TIME, stop));
-          gst_qtdemux_push_event (qtdemux,
-              gst_event_new_segment_done (GST_FORMAT_TIME, stop));
+          message = gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
+              GST_FORMAT_TIME, stop);
+          event = gst_event_new_segment_done (GST_FORMAT_TIME, stop);
+          if (qtdemux->segment_seqnum) {
+            gst_message_set_seqnum (message, qtdemux->segment_seqnum);
+            gst_event_set_seqnum (event, qtdemux->segment_seqnum);
+          }
+          gst_element_post_message (GST_ELEMENT_CAST (qtdemux), message);
+          gst_qtdemux_push_event (qtdemux, event);
         } else {
+          GstMessage *message;
+          GstEvent *event;
+
           /*  For Reverse Playback */
           GST_LOG_OBJECT (qtdemux, "Sending segment done, at start of segment");
-          gst_element_post_message (GST_ELEMENT_CAST (qtdemux),
-              gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
-                  GST_FORMAT_TIME, qtdemux->segment.start));
-          gst_qtdemux_push_event (qtdemux,
-              gst_event_new_segment_done (GST_FORMAT_TIME,
-                  qtdemux->segment.start));
+          message = gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
+              GST_FORMAT_TIME, qtdemux->segment.start);
+          event = gst_event_new_segment_done (GST_FORMAT_TIME,
+              qtdemux->segment.start);
+          if (qtdemux->segment_seqnum) {
+            gst_message_set_seqnum (message, qtdemux->segment_seqnum);
+            gst_event_set_seqnum (event, qtdemux->segment_seqnum);
+          }
+          gst_element_post_message (GST_ELEMENT_CAST (qtdemux), message);
+          gst_qtdemux_push_event (qtdemux, event);
         }
       } else {
+        GstEvent *event;
+
         GST_LOG_OBJECT (qtdemux, "Sending EOS at end of segment");
-        gst_qtdemux_push_event (qtdemux, gst_event_new_eos ());
+        event = gst_event_new_eos ();
+        if (qtdemux->segment_seqnum)
+          gst_event_set_seqnum (event, qtdemux->segment_seqnum);
+        gst_qtdemux_push_event (qtdemux, event);
       }
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (qtdemux, STREAM, FAILED,
@@ -10849,8 +10872,13 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
 
   for (iter = oldpads; iter; iter = g_slist_next (iter)) {
     GstPad *oldpad = iter->data;
+    GstEvent *event;
 
-    gst_pad_push_event (oldpad, gst_event_new_eos ());
+    event = gst_event_new_eos ();
+    if (qtdemux->segment_seqnum)
+      gst_event_set_seqnum (event, qtdemux->segment_seqnum);
+
+    gst_pad_push_event (oldpad, event);
     gst_pad_set_active (oldpad, FALSE);
     gst_element_remove_pad (GST_ELEMENT (qtdemux), oldpad);
     gst_flow_combiner_remove_pad (qtdemux->flowcombiner, oldpad);
