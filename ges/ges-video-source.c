@@ -143,9 +143,6 @@ ges_video_source_create_element (GESTrackElement * trksrc)
       gst_element_factory_make ("videoconvert", "track-element-videoconvert");
   videorate = gst_element_factory_make ("videorate", "track-element-videorate");
   deinterlace = gst_element_factory_make ("deinterlace", "deinterlace");
-  if (deinterlace == NULL) {
-    deinterlace = gst_element_factory_make ("avdeinterlace", "deinterlace");
-  }
   capsfilter =
       gst_element_factory_make ("capsfilter", "track-element-capsfilter");
 
