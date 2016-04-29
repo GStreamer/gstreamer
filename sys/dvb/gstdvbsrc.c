@@ -2066,7 +2066,7 @@ static void
 gst_dvbsrc_output_frontend_stats (GstDvbSrc * src)
 {
   fe_status_t status;
-  guint16 snr, _signal;
+  guint16 snr, signal;
   guint32 ber, bad_blks;
   GstMessage *message;
   GstStructure *structure;
@@ -2084,9 +2084,9 @@ gst_dvbsrc_output_frontend_stats (GstDvbSrc * src)
     return;
   }
 
-  LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_SIGNAL_STRENGTH, &_signal));
+  LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_SIGNAL_STRENGTH, &signal));
   if (!err)
-    gst_structure_set (structure, "signal", G_TYPE_INT, _signal, NULL);
+    gst_structure_set (structure, "signal", G_TYPE_INT, signal, NULL);
 
   LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_SNR, &snr));
   if (!err)
