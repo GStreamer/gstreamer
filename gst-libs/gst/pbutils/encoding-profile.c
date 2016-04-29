@@ -1530,6 +1530,7 @@ add_stream_to_profile (GstEncodingContainerProfile * profile,
         n_streams++;
     }
     gst_discoverer_stream_info_list_free (streams);
+    gst_caps_unref (caps);
 
     return n_streams != 0;
   } else {
