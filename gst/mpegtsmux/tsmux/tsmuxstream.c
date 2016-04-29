@@ -737,7 +737,7 @@ tsmux_stream_get_es_descrs (TsMuxStream * stream,
   g_return_if_fail (stream != NULL);
   g_return_if_fail (pmt_stream != NULL);
 
-  if (stream->is_audio && stream->language) {
+  if (stream->is_audio && stream->language[0] != '\0') {
     descriptor = gst_mpegts_descriptor_from_iso_639_language (stream->language);
     g_ptr_array_add (pmt_stream->descriptors, descriptor);
     descriptor = NULL;
