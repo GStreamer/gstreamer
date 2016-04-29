@@ -2074,36 +2074,40 @@ gst_dvbsrc_output_frontend_stats (GstDvbSrc * src)
   gint err;
 
   LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_STATUS, &status));
-  if (err)
-    goto error_out;
+  if (!err) {
+    structure = gst_structure_new ("dvb-frontend-stats",
+        "status", G_TYPE_INT, status,
+        "lock", G_TYPE_BOOLEAN, status & FE_HAS_LOCK, NULL);
+  } else {
+    GST_ERROR_OBJECT (src, "Error getting frontend status: '%s'",
+        g_strerror (errno));
+    return;
+  }
 
   LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_SIGNAL_STRENGTH, &_signal));
-  if (err)
-    goto error_out;
+  if (!err)
+    gst_structure_set (structure, "signal", G_TYPE_INT, _signal, NULL);
 
   LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_SNR, &snr));
-  if (err)
-    goto error_out;
+  if (!err)
+    gst_structure_set (structure, "snr", G_TYPE_INT, snr, NULL);
 
   LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_BER, &ber));
-  if (err)
-    goto error_out;
+  if (!err)
+    gst_structure_set (structure, "ber", G_TYPE_INT, ber, NULL);
 
   LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_UNCORRECTED_BLOCKS, &bad_blks));
-  if (err)
-    goto error_out;
+  if (!err)
+    gst_structure_set (structure, "unc", G_TYPE_INT, bad_blks, NULL);
 
-  structure = gst_structure_new ("dvb-frontend-stats", "status", G_TYPE_INT,
-      status, "signal", G_TYPE_INT, _signal, "snr", G_TYPE_INT, snr,
-      "ber", G_TYPE_INT, ber, "unc", G_TYPE_INT, bad_blks,
-      "lock", G_TYPE_BOOLEAN, status & FE_HAS_LOCK, NULL);
+  if (err)
+    GST_WARNING_OBJECT (src,
+        "There were errors getting frontend status information: '%s'",
+        g_strerror (errno));
+
   message = gst_message_new_element (GST_OBJECT (src), structure);
   gst_element_post_message (GST_ELEMENT (src), message);
-  return;
-
-error_out:
-  GST_WARNING_OBJECT (src, "Failed to get statistics from the device: %s",
-      g_strerror (errno));
+  GST_INFO_OBJECT (src, "Frontend stats: %" GST_PTR_FORMAT, structure);
 }
 
 struct diseqc_cmd
