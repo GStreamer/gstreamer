@@ -2202,7 +2202,7 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   fe_status_t status;
   struct dtv_properties props;
   struct dtv_property dvb_prop[NUM_DTV_PROPS];
-  GstClockTimeDiff elapsed_time, timeout_step = 500 * GST_MSECOND;
+  GstClockTimeDiff elapsed_time;
   GstClockTime start;
   gint err;
 
@@ -2292,8 +2292,6 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   start = gst_util_get_timestamp ();
 
   while (!(status & FE_HAS_LOCK) && elapsed_time <= object->tuning_timeout) {
-    if (gst_poll_wait (poll_set, timeout_step) == -1)
-      goto fail_with_signal;
     LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_READ_STATUS,
             &status));
     if (err) {
