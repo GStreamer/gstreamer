@@ -819,6 +819,9 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     ret =
         gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec),
         ffmpegdec->outbuf, 1);
+  else if (len < 0)
+    ret =
+        gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), NULL, 1);
   ffmpegdec->outbuf = NULL;
 
   if (bsize > 0) {
