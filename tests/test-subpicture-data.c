@@ -1421,7 +1421,8 @@ static const guint32 text[] = {
   0x00000000, 0x00000000, 0x00000000, 0x00000000
 };
 
-void subpicture_get_info(VideoSubpictureInfo *info)
+void
+subpicture_get_info (VideoSubpictureInfo * info)
 {
   info->width = SUBPICTURE_WIDTH;
   info->height = SUBPICTURE_HEIGHT;

@@ -29,78 +29,78 @@
 #define MAX_SURFACES 4
 
 int
-main(int argc, char *argv[])
+main (int argc, char *argv[])
 {
-    GstVaapiDisplay    *display;
-    GstVaapiSurface    *surface;
-    GstVaapiID          surface_id;
-    GstVaapiSurface    *surfaces[MAX_SURFACES];
-    GstVaapiVideoPool  *pool;
-    gint                i;
+  GstVaapiDisplay *display;
+  GstVaapiSurface *surface;
+  GstVaapiID surface_id;
+  GstVaapiSurface *surfaces[MAX_SURFACES];
+  GstVaapiVideoPool *pool;
+  gint i;
 
-    static const GstVaapiChromaType chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
-    static const guint              width       = 320;
-    static const guint              height      = 240;
+  static const GstVaapiChromaType chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
+  static const guint width = 320;
+  static const guint height = 240;
 
-    if (!video_output_init(&argc, argv, NULL))
-        g_error("failed to initialize video output subsystem");
+  if (!video_output_init (&argc, argv, NULL))
+    g_error ("failed to initialize video output subsystem");
 
-    display = video_output_create_display(NULL);
-    if (!display)
-        g_error("could not create Gst/VA display");
+  display = video_output_create_display (NULL);
+  if (!display)
+    g_error ("could not create Gst/VA display");
 
-    surface = gst_vaapi_surface_new(display, chroma_type, width, height);
+  surface = gst_vaapi_surface_new (display, chroma_type, width, height);
+  if (!surface)
+    g_error ("could not create Gst/VA surface");
+
+  surface_id = gst_vaapi_surface_get_id (surface);
+  g_print ("created surface %" GST_VAAPI_ID_FORMAT "\n",
+      GST_VAAPI_ID_ARGS (surface_id));
+
+  gst_vaapi_object_unref (surface);
+
+  pool = gst_vaapi_surface_pool_new (display, GST_VIDEO_FORMAT_ENCODED,
+      width, height);
+  if (!pool)
+    g_error ("could not create Gst/VA surface pool");
+
+  for (i = 0; i < MAX_SURFACES; i++) {
+    surface = gst_vaapi_video_pool_get_object (pool);
     if (!surface)
-        g_error("could not create Gst/VA surface");
+      g_error ("could not allocate Gst/VA surface from pool");
+    g_print ("created surface %" GST_VAAPI_ID_FORMAT " from pool\n",
+        GST_VAAPI_ID_ARGS (gst_vaapi_surface_get_id (surface)));
+    surfaces[i] = surface;
+  }
 
-    surface_id = gst_vaapi_surface_get_id(surface);
-    g_print("created surface %" GST_VAAPI_ID_FORMAT "\n",
-            GST_VAAPI_ID_ARGS(surface_id));
+  /* Check the pool doesn't return the last free'd surface */
+  surface = gst_vaapi_object_ref (surfaces[1]);
 
-    gst_vaapi_object_unref(surface);
+  for (i = 0; i < 2; i++)
+    gst_vaapi_video_pool_put_object (pool, surfaces[i]);
 
-    pool = gst_vaapi_surface_pool_new(display, GST_VIDEO_FORMAT_ENCODED,
-        width, height);
-    if (!pool)
-        g_error("could not create Gst/VA surface pool");
+  for (i = 0; i < 2; i++) {
+    surfaces[i] = gst_vaapi_video_pool_get_object (pool);
+    if (!surfaces[i])
+      g_error ("could not re-allocate Gst/VA surface%d from pool", i);
+    g_print ("created surface %" GST_VAAPI_ID_FORMAT " from pool (realloc)\n",
+        GST_VAAPI_ID_ARGS (gst_vaapi_surface_get_id (surfaces[i])));
+  }
 
-    for (i = 0; i < MAX_SURFACES; i++) {
-        surface = gst_vaapi_video_pool_get_object(pool);
-        if (!surface)
-            g_error("could not allocate Gst/VA surface from pool");
-        g_print("created surface %" GST_VAAPI_ID_FORMAT " from pool\n",
-                GST_VAAPI_ID_ARGS(gst_vaapi_surface_get_id(surface)));
-        surfaces[i] = surface;
-    }
+  if (surface == surfaces[0])
+    g_error ("Gst/VA pool doesn't queue free surfaces");
 
-    /* Check the pool doesn't return the last free'd surface */
-    surface = gst_vaapi_object_ref(surfaces[1]);
+  for (i = MAX_SURFACES - 1; i >= 0; i--) {
+    if (!surfaces[i])
+      continue;
+    gst_vaapi_video_pool_put_object (pool, surfaces[i]);
+    surfaces[i] = NULL;
+  }
 
-    for (i = 0; i < 2; i++)
-        gst_vaapi_video_pool_put_object(pool, surfaces[i]);
-
-    for (i = 0; i < 2; i++) {
-        surfaces[i] = gst_vaapi_video_pool_get_object(pool);
-        if (!surfaces[i])
-            g_error("could not re-allocate Gst/VA surface%d from pool", i);
-        g_print("created surface %" GST_VAAPI_ID_FORMAT " from pool (realloc)\n",
-                GST_VAAPI_ID_ARGS(gst_vaapi_surface_get_id(surfaces[i])));
-    }
-
-    if (surface == surfaces[0])
-        g_error("Gst/VA pool doesn't queue free surfaces");
-
-    for (i = MAX_SURFACES - 1; i >= 0; i--) {
-        if (!surfaces[i])
-            continue;
-        gst_vaapi_video_pool_put_object(pool, surfaces[i]);
-        surfaces[i] = NULL;
-    }
-
-    /* Unref in random order to check objects are correctly refcounted */
-    gst_vaapi_display_unref(display);
-    gst_vaapi_video_pool_unref(pool);
-    gst_vaapi_object_unref(surface);
-    video_output_exit();
-    return 0;
+  /* Unref in random order to check objects are correctly refcounted */
+  gst_vaapi_display_unref (display);
+  gst_vaapi_video_pool_unref (pool);
+  gst_vaapi_object_unref (surface);
+  video_output_exit ();
+  return 0;
 }

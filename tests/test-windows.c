@@ -44,199 +44,195 @@
 #include "image.h"
 
 static inline void
-pause(void)
+pause (void)
 {
-    g_print("Press any key to continue...\n");
-    getchar();
+  g_print ("Press any key to continue...\n");
+  getchar ();
 }
 
 static GstVaapiSurface *
-create_test_surface(GstVaapiDisplay *display, guint width, guint height)
+create_test_surface (GstVaapiDisplay * display, guint width, guint height)
 {
-    GstVaapiImage *image = NULL;
-    GstVaapiSurface *surface;
-    guint i;
+  GstVaapiImage *image = NULL;
+  GstVaapiSurface *surface;
+  guint i;
 
-    static const GstVaapiChromaType  chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
-    static const GstVideoFormat image_formats[] = {
-        GST_VIDEO_FORMAT_NV12,
-        GST_VIDEO_FORMAT_YV12,
-        GST_VIDEO_FORMAT_I420,
-        GST_VIDEO_FORMAT_AYUV,
-        GST_VIDEO_FORMAT_ARGB,
-        GST_VIDEO_FORMAT_BGRA,
-        GST_VIDEO_FORMAT_RGBA,
-        GST_VIDEO_FORMAT_ABGR,
-        GST_VIDEO_FORMAT_UNKNOWN
-    };
+  static const GstVaapiChromaType chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
+  static const GstVideoFormat image_formats[] = {
+    GST_VIDEO_FORMAT_NV12,
+    GST_VIDEO_FORMAT_YV12,
+    GST_VIDEO_FORMAT_I420,
+    GST_VIDEO_FORMAT_AYUV,
+    GST_VIDEO_FORMAT_ARGB,
+    GST_VIDEO_FORMAT_BGRA,
+    GST_VIDEO_FORMAT_RGBA,
+    GST_VIDEO_FORMAT_ABGR,
+    GST_VIDEO_FORMAT_UNKNOWN
+  };
 
-    surface = gst_vaapi_surface_new(display, chroma_type, width, height);
-    if (!surface)
-        g_error("could not create Gst/VA surface");
+  surface = gst_vaapi_surface_new (display, chroma_type, width, height);
+  if (!surface)
+    g_error ("could not create Gst/VA surface");
 
-    for (i = 0; image_formats[i] != GST_VIDEO_FORMAT_UNKNOWN; i++) {
-        const GstVideoFormat format = image_formats[i];
+  for (i = 0; image_formats[i] != GST_VIDEO_FORMAT_UNKNOWN; i++) {
+    const GstVideoFormat format = image_formats[i];
 
-        image = image_generate(display, format, width, height);
-        if (!image)
-            break;
-        if (image_upload(image, surface))
-            break;
-    }
+    image = image_generate (display, format, width, height);
     if (!image)
-        g_error("could not create Gst/VA image");
+      break;
+    if (image_upload (image, surface))
+      break;
+  }
+  if (!image)
+    g_error ("could not create Gst/VA image");
 
-    if (!gst_vaapi_surface_sync(surface))
-        g_error("could not complete image upload");
+  if (!gst_vaapi_surface_sync (surface))
+    g_error ("could not complete image upload");
 
-    gst_vaapi_object_unref(image);
-    return surface;
+  gst_vaapi_object_unref (image);
+  return surface;
 }
 
 int
-main(int argc, char *argv[])
+main (int argc, char *argv[])
 {
-    GstVaapiDisplay *display;
-    GstVaapiWindow *window;
-    GstVaapiSurface *surface;
-    guint flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+  GstVaapiDisplay *display;
+  GstVaapiWindow *window;
+  GstVaapiSurface *surface;
+  guint flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
 
-    static const guint width       = 320;
-    static const guint height      = 240;
-    static const guint win_width   = 640;
-    static const guint win_height  = 480;
+  static const guint width = 320;
+  static const guint height = 240;
+  static const guint win_width = 640;
+  static const guint win_height = 480;
 
-    gst_init(&argc, &argv);
+  gst_init (&argc, &argv);
 
 #if USE_DRM
-    display = gst_vaapi_display_drm_new(NULL);
-    if (!display)
-        g_error("could not create Gst/VA (DRM) display");
+  display = gst_vaapi_display_drm_new (NULL);
+  if (!display)
+    g_error ("could not create Gst/VA (DRM) display");
 
-    surface = create_test_surface(display, width, height);
-    if (!surface)
-        g_error("could not create Gst/VA surface");
+  surface = create_test_surface (display, width, height);
+  if (!surface)
+    g_error ("could not create Gst/VA surface");
 
-    g_print("#\n");
-    g_print("# Create window with gst_vaapi_window_drm_new()\n");
-    g_print("#\n");
-    {
-        window = gst_vaapi_window_drm_new(display, win_width, win_height);
-        if (!window)
-            g_error("could not create dummy window");
+  g_print ("#\n");
+  g_print ("# Create window with gst_vaapi_window_drm_new()\n");
+  g_print ("#\n");
+  {
+    window = gst_vaapi_window_drm_new (display, win_width, win_height);
+    if (!window)
+      g_error ("could not create dummy window");
 
-        gst_vaapi_window_show(window);
+    gst_vaapi_window_show (window);
 
-        if (!gst_vaapi_window_put_surface(window, surface, NULL, NULL, flags))
-            g_error("could not render surface");
+    if (!gst_vaapi_window_put_surface (window, surface, NULL, NULL, flags))
+      g_error ("could not render surface");
 
-        pause();
-        gst_vaapi_window_unref(window);
-    }
+    pause ();
+    gst_vaapi_window_unref (window);
+  }
 
-    gst_vaapi_object_unref(surface);
-    gst_vaapi_display_unref(display);
+  gst_vaapi_object_unref (surface);
+  gst_vaapi_display_unref (display);
 #endif
 
 #if USE_X11
-    display = gst_vaapi_display_x11_new(NULL);
-    if (!display)
-        g_error("could not create Gst/VA display");
+  display = gst_vaapi_display_x11_new (NULL);
+  if (!display)
+    g_error ("could not create Gst/VA display");
 
-    surface = create_test_surface(display, width, height);
-    if (!surface)
-        g_error("could not create Gst/VA surface");
+  surface = create_test_surface (display, width, height);
+  if (!surface)
+    g_error ("could not create Gst/VA surface");
 
-    g_print("#\n");
-    g_print("# Create window with gst_vaapi_window_x11_new()\n");
-    g_print("#\n");
-    {
-        window = gst_vaapi_window_x11_new(display, win_width, win_height);
-        if (!window)
-            g_error("could not create window");
+  g_print ("#\n");
+  g_print ("# Create window with gst_vaapi_window_x11_new()\n");
+  g_print ("#\n");
+  {
+    window = gst_vaapi_window_x11_new (display, win_width, win_height);
+    if (!window)
+      g_error ("could not create window");
 
-        gst_vaapi_window_show(window);
+    gst_vaapi_window_show (window);
 
-        if (!gst_vaapi_window_put_surface(window, surface, NULL, NULL, flags))
-            g_error("could not render surface");
+    if (!gst_vaapi_window_put_surface (window, surface, NULL, NULL, flags))
+      g_error ("could not render surface");
 
-        pause();
-        gst_vaapi_window_unref(window);
-    }
+    pause ();
+    gst_vaapi_window_unref (window);
+  }
 
-    g_print("#\n");
-    g_print("# Create window with gst_vaapi_window_x11_new_with_xid()\n");
-    g_print("#\n");
-    {
-        Display * const dpy = gst_vaapi_display_x11_get_display(GST_VAAPI_DISPLAY_X11(display));
-        Window rootwin, win;
-        int screen;
-        unsigned long white_pixel, black_pixel;
+  g_print ("#\n");
+  g_print ("# Create window with gst_vaapi_window_x11_new_with_xid()\n");
+  g_print ("#\n");
+  {
+    Display *const dpy =
+        gst_vaapi_display_x11_get_display (GST_VAAPI_DISPLAY_X11 (display));
+    Window rootwin, win;
+    int screen;
+    unsigned long white_pixel, black_pixel;
 
-        screen      = DefaultScreen(dpy);
-        rootwin     = RootWindow(dpy, screen);
-        white_pixel = WhitePixel(dpy, screen);
-        black_pixel = BlackPixel(dpy, screen);
+    screen = DefaultScreen (dpy);
+    rootwin = RootWindow (dpy, screen);
+    white_pixel = WhitePixel (dpy, screen);
+    black_pixel = BlackPixel (dpy, screen);
 
-        win = XCreateSimpleWindow(
-            dpy,
-            rootwin,
-            0, 0, win_width, win_height,
-            0, black_pixel,
-            white_pixel
-        );
-        if (!win)
-            g_error("could not create X window");
+    win = XCreateSimpleWindow (dpy,
+        rootwin, 0, 0, win_width, win_height, 0, black_pixel, white_pixel);
+    if (!win)
+      g_error ("could not create X window");
 
-        window = gst_vaapi_window_x11_new_with_xid(display, win);
-        if (!window)
-            g_error("could not create window");
+    window = gst_vaapi_window_x11_new_with_xid (display, win);
+    if (!window)
+      g_error ("could not create window");
 
-        gst_vaapi_window_show(window);
+    gst_vaapi_window_show (window);
 
-        if (!gst_vaapi_window_put_surface(window, surface, NULL, NULL, flags))
-            g_error("could not render surface");
+    if (!gst_vaapi_window_put_surface (window, surface, NULL, NULL, flags))
+      g_error ("could not render surface");
 
-        pause();
-        gst_vaapi_window_unref(window);
-        XUnmapWindow(dpy, win);
-        XDestroyWindow(dpy, win);
-    }
+    pause ();
+    gst_vaapi_window_unref (window);
+    XUnmapWindow (dpy, win);
+    XDestroyWindow (dpy, win);
+  }
 
-    gst_vaapi_object_unref(surface);
-    gst_vaapi_display_unref(display);
+  gst_vaapi_object_unref (surface);
+  gst_vaapi_display_unref (display);
 #endif
 
 #if USE_WAYLAND
-    display = gst_vaapi_display_wayland_new(NULL);
-    if (!display)
-        g_error("could not create Gst/VA (Wayland) display");
+  display = gst_vaapi_display_wayland_new (NULL);
+  if (!display)
+    g_error ("could not create Gst/VA (Wayland) display");
 
-    surface = create_test_surface(display, width, height);
-    if (!surface)
-        g_error("could not create Gst/VA surface");
+  surface = create_test_surface (display, width, height);
+  if (!surface)
+    g_error ("could not create Gst/VA surface");
 
-    g_print("#\n");
-    g_print("# Create window with gst_vaapi_window_wayland_new()\n");
-    g_print("#\n");
-    {
-        window = gst_vaapi_window_wayland_new(display, win_width, win_height);
-        if (!window)
-            g_error("could not create window");
+  g_print ("#\n");
+  g_print ("# Create window with gst_vaapi_window_wayland_new()\n");
+  g_print ("#\n");
+  {
+    window = gst_vaapi_window_wayland_new (display, win_width, win_height);
+    if (!window)
+      g_error ("could not create window");
 
-        gst_vaapi_window_show(window);
+    gst_vaapi_window_show (window);
 
-        if (!gst_vaapi_window_put_surface(window, surface, NULL, NULL, flags))
-            g_error("could not render surface");
+    if (!gst_vaapi_window_put_surface (window, surface, NULL, NULL, flags))
+      g_error ("could not render surface");
 
-        pause();
-        gst_vaapi_window_unref(window);
-    }
+    pause ();
+    gst_vaapi_window_unref (window);
+  }
 
-    gst_vaapi_object_unref(surface);
-    gst_vaapi_display_unref(display);
+  gst_vaapi_object_unref (surface);
+  gst_vaapi_display_unref (display);
 #endif
 
-    gst_deinit();
-    return 0;
+  gst_deinit ();
+  return 0;
 }

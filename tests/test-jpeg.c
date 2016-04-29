@@ -2071,11 +2071,12 @@ static const guchar jpeg_clip[JPEG_CLIP_DATA_SIZE] = {
   0xd9
 };
 
-void jpeg_get_video_info(VideoDecodeInfo *info)
+void
+jpeg_get_video_info (VideoDecodeInfo * info)
 {
-    info->profile   = GST_VAAPI_PROFILE_JPEG_BASELINE;
-    info->width     = JPEG_CLIP_WIDTH;
-    info->height    = JPEG_CLIP_HEIGHT;
-    info->data      = jpeg_clip;
-    info->data_size = JPEG_CLIP_DATA_SIZE;
+  info->profile = GST_VAAPI_PROFILE_JPEG_BASELINE;
+  info->width = JPEG_CLIP_WIDTH;
+  info->height = JPEG_CLIP_HEIGHT;
+  info->data = jpeg_clip;
+  info->data_size = JPEG_CLIP_DATA_SIZE;
 }
