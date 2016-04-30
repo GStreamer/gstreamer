@@ -2157,6 +2157,14 @@ timeline_add_group (GESTimeline * timeline, GESGroup * group)
   g_signal_emit (timeline, ges_timeline_signals[GROUP_ADDED], 0, group);
 }
 
+/**
+ * ges_timeline_emit_group_removed:
+ * @timeline: a #GESTimeline
+ * @group: group that was removed
+ * @array: (element-type GESTimelineElement): children that were removed
+ *
+ * Emit group-removed signal.
+ */
 void
 ges_timeline_emit_group_removed (GESTimeline * timeline, GESGroup * group,
     GPtrArray * array)

@@ -82,7 +82,7 @@ GESEffect*
 ges_effect_new (const gchar * bin_description);
 
 gboolean
-ges_effect_class_register_rate_property (GESEffectClass *klass, const gchar *element, const gchar *property_name);
+ges_effect_class_register_rate_property (GESEffectClass *klass, const gchar *element_name, const gchar *property_name);
 
 G_END_DECLS
 #endif /* _GES_EFFECT */
