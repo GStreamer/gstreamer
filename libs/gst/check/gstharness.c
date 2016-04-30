@@ -2016,10 +2016,6 @@ gst_harness_query_latency (GstHarness * h)
  *
  * Sets the min latency reported by #GstHarness when receiving a latency-query
  *
- * MT safe.
- *
- * Returns: a #GstClockTime with min latency
- *
  * Since: 1.6
  */
 void
