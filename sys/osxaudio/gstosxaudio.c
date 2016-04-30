@@ -30,6 +30,9 @@
 #include "gstosxaudioelement.h"
 #include "gstosxaudiosink.h"
 #include "gstosxaudiosrc.h"
+#ifndef HAVE_IOS
+#include "gstosxaudiodeviceprovider.h"
+#endif
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -42,6 +45,11 @@ plugin_init (GstPlugin * plugin)
           GST_TYPE_OSX_AUDIO_SRC)) {
     return FALSE;
   }
+#ifndef HAVE_IOS
+  if (!gst_device_provider_register (plugin, "osxaudiodeviceprovider",
+          GST_RANK_PRIMARY, GST_TYPE_OSX_AUDIO_DEVICE_PROVIDER))
+    return FALSE;
+#endif
 
   return TRUE;
 }

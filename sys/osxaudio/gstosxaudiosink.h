@@ -57,6 +57,14 @@
 
 G_BEGIN_DECLS
 
+#define GST_OSX_AUDIO_SINK_CAPS "audio/x-raw, " \
+        "format = (string) " GST_AUDIO_FORMATS_ALL ", " \
+        "layout = (string) interleaved, " \
+        "rate = (int) [1, MAX], " \
+        "channels = (int) [1, 9];" \
+        "audio/x-ac3, framed = (boolean) true;" \
+        "audio/x-dts, framed = (boolean) true"
+
 #define GST_TYPE_OSX_AUDIO_SINK \
   (gst_osx_audio_sink_get_type())
 #define GST_OSX_AUDIO_SINK(obj) \

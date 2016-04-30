@@ -51,6 +51,11 @@
 
 G_BEGIN_DECLS
 
+#define GST_OSX_AUDIO_SRC_CAPS "audio/x-raw, " \
+        "format = (string) " GST_AUDIO_FORMATS_ALL ", " \
+        "layout = (string) interleaved, " \
+        "rate = (int) [1, MAX], " "channels = (int) [1, MAX]"
+
 #define GST_TYPE_OSX_AUDIO_SRC \
   (gst_osx_audio_src_get_type())
 #define GST_OSX_AUDIO_SRC(obj) \

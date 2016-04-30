@@ -19,6 +19,7 @@ libgstosxaudio_la_LIBADD = 			  \
 libgstosxaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -Wl,-framework,CoreAudio  -Wl,-framework,AudioToolbox
 
 if !HAVE_IOS
+libgstosxaudio_la_SOURCES += gstosxaudiodeviceprovider.c
 libgstosxaudio_la_LDFLAGS += -Wl,-framework,AudioUnit -Wl,-framework,CoreServices
 endif
 
