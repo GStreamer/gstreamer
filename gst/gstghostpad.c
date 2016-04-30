@@ -819,7 +819,7 @@ gst_ghost_pad_get_target (GstGhostPad * gpad)
  * is unlinked and links to the new target are established. if @newtarget is
  * %NULL the target will be cleared.
  *
- * Returns: (transfer full): %TRUE if the new target could be set. This function
+ * Returns: %TRUE if the new target could be set. This function
  *     can return %FALSE when the internal pads could not be linked.
  */
 gboolean

@@ -902,7 +902,7 @@ gst_buffer_new_wrapped (gpointer data, gsize size)
  * Get the amount of memory blocks that this buffer has. This amount is never
  * larger than what gst_buffer_get_max_memory() returns.
  *
- * Returns: (transfer full): the amount of memory block in this buffer.
+ * Returns: the number of memory blocks this buffer is made of.
  */
 guint
 gst_buffer_n_memory (GstBuffer * buffer)
