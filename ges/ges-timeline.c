@@ -625,8 +625,8 @@ ges_timeline_class_init (GESTimelineClass * klass)
   /**
    * GESTimeline::select-tracks-for-object:
    * @timeline: the #GESTimeline
-   * @clip: The #GESClip on which @track-element will land
-   * @track-element: The #GESTrackElement for which to choose the tracks it should land into
+   * @clip: The #GESClip on which @track_element will land
+   * @track_element: The #GESTrackElement for which to choose the tracks it should land into
    *
    * Returns: (transfer full) (element-type GESTrack): a #GPtrArray of #GESTrack-s where that object should be added
    */
