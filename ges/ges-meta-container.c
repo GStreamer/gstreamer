@@ -282,7 +282,7 @@ ges_meta_container_set_ ## name (GESMetaContainer *container,      \
  * ges_meta_container_set_boolean:
  * @container: Target container
  * @meta_item: Name of the meta item to set
- * @value: (allow-none): Value to set
+ * @value: Value to set
  *
  * Sets the value of a given meta item
  *
@@ -443,13 +443,12 @@ ges_meta_container_metas_to_string (GESMetaContainer * container)
 
 /**
  * ges_meta_container_add_metas_from_string:
- * @str: a string created with ges_meta_container_metas_to_string()
  * @container: Target container
+ * @str: a string created with ges_meta_container_metas_to_string()
  *
  * Deserializes a meta container.
  *
- * Returns: (transfer full): a new #GESMetaContainer, or NULL in case of an
- * error.
+ * Returns: TRUE on success, FALSE if there was an error.
  */
 gboolean
 ges_meta_container_add_metas_from_string (GESMetaContainer * container,
@@ -515,7 +514,7 @@ CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  * @container: Target container
  * @flags: The #GESMetaFlag to be used
  * @meta_item: Name of the meta item to set
- * @value: (allow-none): Value to set
+ * @value: Value to set
  *
  * Sets a static meta on @container. This method lets you define static
  * metadatas, which means that the type of the registered will be the only
@@ -530,7 +529,7 @@ CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  * @container: Target container
  * @flags: The #GESMetaFlag to be used
  * @meta_item: Name of the meta item to set
- * @value: (allow-none): Value to set
+ * @value: Value to set
  *
  * Sets a static meta on @container. This method lets you define static
  * metadatas, which means that the type of the registered will be the only
@@ -545,7 +544,7 @@ CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  * @container: Target container
  * @flags: The #GESMetaFlag to be used
  * @meta_item: Name of the meta item to set
- * @value: (allow-none): Value to set
+ * @value: Value to set
  *
  * Sets a static meta on @container. This method lets you define static
  * metadatas, which means that the type of the registered will be the only
@@ -560,7 +559,7 @@ CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  * @container: Target container
  * @flags: The #GESMetaFlag to be used
  * @meta_item: Name of the meta item to set
- * @value: (allow-none): Value to set
+ * @value: Value to set
  *
  * Sets a static meta on @container. This method lets you define static
  * metadatas, which means that the type of the registered will be the only
@@ -575,7 +574,7 @@ CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  * @container: Target container
  * @flags: The #GESMetaFlag to be used
  * @meta_item: Name of the meta item to set
- * @value: (allow-none): Value to set
+ * @value: Value to set
  *
  * Sets a static meta on @container. This method lets you define static
  * metadatas, which means that the type of the registered will be the only
@@ -590,7 +589,7 @@ CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  * @container: Target container
  * @flags: The #GESMetaFlag to be used
  * @meta_item: Name of the meta item to set
- * @value: (allow-none): Value to set
+ * @value: Value to set
  *
  * Sets a static meta on @container. This method lets you define static
  * metadatas, which means that the type of the registered will be the only
