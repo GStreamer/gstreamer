@@ -2105,9 +2105,9 @@ gst_dvbsrc_output_frontend_stats (GstDvbSrc * src)
         "There were errors getting frontend status information: '%s'",
         g_strerror (errno));
 
+  GST_INFO_OBJECT (src, "Frontend stats: %" GST_PTR_FORMAT, structure);
   message = gst_message_new_element (GST_OBJECT (src), structure);
   gst_element_post_message (GST_ELEMENT (src), message);
-  GST_INFO_OBJECT (src, "Frontend stats: %" GST_PTR_FORMAT, structure);
 }
 
 struct diseqc_cmd
