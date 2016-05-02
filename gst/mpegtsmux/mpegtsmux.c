@@ -1523,20 +1523,33 @@ mpegtsmux_push_packets (MpegTsMux * mux, gboolean force)
 
   GST_LOG_OBJECT (mux, "aligning to %d bytes", align);
   while (align <= av) {
-    gst_buffer_list_add (buffer_list,
-        gst_adapter_take_buffer (mux->out_adapter, align));
+    GstBuffer *buf;
+    GstClockTime pts;
+
+    pts = gst_adapter_prev_pts (mux->out_adapter, NULL);
+    buf = gst_adapter_take_buffer (mux->out_adapter, align);
+
+    GST_BUFFER_PTS (buf) = pts;
+
+    gst_buffer_list_add (buffer_list, buf);
     av -= align;
   }
 
   if (av > 0 && force) {
     GstBuffer *buf;
+    GstClockTime pts;
     guint8 *data;
     guint32 header;
     gint dummy;
     GstMapInfo map;
 
     GST_LOG_OBJECT (mux, "handling %d leftover bytes", av);
+
+    pts = gst_adapter_prev_pts (mux->out_adapter, NULL);
     buf = gst_buffer_new_and_alloc (align);
+
+    GST_BUFFER_PTS (buf) = pts;
+
     gst_buffer_map (buf, &map, GST_MAP_READ);
     data = map.data;
 
