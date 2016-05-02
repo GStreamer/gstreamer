@@ -325,12 +325,10 @@ opus_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-#define X if (0)
   tcase_add_test (tc_chain, test_opus_encode_nothing);
   tcase_add_test (tc_chain, test_opus_decode_nothing);
   tcase_add_test (tc_chain, test_opus_encode_samples);
   tcase_add_test (tc_chain, test_opus_encode_properties);
-#undef X
 
   return s;
 }
