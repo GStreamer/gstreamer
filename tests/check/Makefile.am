@@ -41,7 +41,7 @@ check_assrender =
 endif
 
 if USE_DASH
-check_dash = elements/dash_mpd
+check_dash = elements/dash_mpd elements/dash_isoff
 check_dash_demux = elements/dash_demux
 else
 check_dash =
@@ -464,6 +464,10 @@ elements_dash_mpd_CFLAGS = $(AM_CFLAGS) $(GST_PLUGINS_BAD_CFLAGS) $(LIBXML2_CFLA
 elements_dash_mpd_LDADD = $(LDADD) $(LIBXML2_LIBS) \
 	$(top_builddir)/gst-libs/gst/uridownloader/libgsturidownloader-@GST_API_VERSION@.la
 elements_dash_mpd_SOURCES = elements/dash_mpd.c
+
+elements_dash_isoff_CFLAGS = $(AM_CFLAGS) $(GST_BASE_CFLAGS)
+elements_dash_isoff_LDADD = $(LDADD) $(GST_BASE_LIBS)
+elements_dash_isoff_SOURCES = elements/dash_isoff.c
 
 elements_dash_demux_CFLAGS = $(AM_CFLAGS) $(LIBXML2_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_PLUGINS_BAD_CFLAGS)
 elements_dash_demux_LDADD = \
