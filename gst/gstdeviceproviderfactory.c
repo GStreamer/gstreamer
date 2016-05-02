@@ -275,8 +275,10 @@ gst_device_provider_factory_get (GstDeviceProviderFactory * factory)
     goto no_type;
 
   device_provider = g_atomic_pointer_get (&newfactory->provider);
-  if (device_provider)
+  if (device_provider) {
+    gst_object_unref (factory);
     return gst_object_ref (device_provider);
+  }
 
   /* create an instance of the device provider, cast so we don't assert on NULL
    * also set name as early as we can
