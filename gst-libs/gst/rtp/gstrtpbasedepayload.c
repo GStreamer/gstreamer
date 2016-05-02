@@ -611,8 +611,16 @@ gst_rtp_base_depayload_handle_event (GstRTPBaseDepayload * filter,
     }
     case GST_EVENT_SEGMENT:
     {
+      GstSegment segment;
+
       GST_OBJECT_LOCK (filter);
-      gst_event_copy_segment (event, &filter->segment);
+      gst_event_copy_segment (event, &segment);
+
+      if (segment.format != GST_FORMAT_TIME) {
+        GST_ERROR_OBJECT (filter, "Segment with non-TIME format not supported");
+        res = FALSE;
+      }
+      filter->segment = segment;
       GST_OBJECT_UNLOCK (filter);
 
       /* don't pass the event downstream, we generate our own segment including
