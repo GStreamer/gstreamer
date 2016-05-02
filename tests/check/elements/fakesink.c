@@ -1071,6 +1071,8 @@ GST_START_TEST (test_last_message_notify)
 
   fail_unless_equals_int (counter1, NUM_BUFFERS);
   fail_unless_equals_int (counter2, NUM_BUFFERS);
+
+  gst_object_unref (pipe);
 }
 
 GST_END_TEST;
