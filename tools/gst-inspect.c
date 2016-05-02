@@ -1561,6 +1561,9 @@ main (int argc, char *argv[])
         } else {
           exit_code = 1;
         }
+
+        if (feature)
+          gst_object_unref (feature);
       } else {
         /* FIXME: support checking for plugins too */
         g_printerr ("Checking for plugins is not supported yet\n");
