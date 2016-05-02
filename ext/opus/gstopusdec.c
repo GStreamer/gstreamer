@@ -863,45 +863,42 @@ gst_opus_dec_set_property (GObject * object, guint prop_id,
   }
 }
 
+/* caps must be writable */
+static void
+gst_opus_dec_caps_extend_channels_options (GstCaps * caps)
+{
+  unsigned n;
+  int channels;
+
+  for (n = 0; n < gst_caps_get_size (caps); ++n) {
+    GstStructure *s = gst_caps_get_structure (caps, n);
+    if (gst_structure_get_int (s, "channels", &channels)) {
+      if (channels == 1 || channels == 2) {
+        GValue v = { 0 };
+        g_value_init (&v, GST_TYPE_INT_RANGE);
+        gst_value_set_int_range (&v, 1, 2);
+        gst_structure_set_value (s, "channels", &v);
+        g_value_unset (&v);
+      }
+    }
+  }
+}
+
 GstCaps *
 gst_opus_dec_getcaps (GstAudioDecoder * dec, GstCaps * filter)
 {
   GstCaps *caps;
-  unsigned n;
-  int channels;
 
   if (filter) {
     filter = gst_caps_copy (filter);
-    for (n = 0; n < gst_caps_get_size (filter); ++n) {
-      GstStructure *s = gst_caps_get_structure (filter, n);
-      if (gst_structure_get_int (s, "channels", &channels)) {
-        if (channels == 1 || channels == 2) {
-          GValue v = { 0 };
-          g_value_init (&v, GST_TYPE_INT_RANGE);
-          gst_value_set_int_range (&v, 1, 2);
-          gst_structure_set_value (s, "channels", &v);
-          g_value_unset (&v);
-        }
-      }
-    }
+    gst_opus_dec_caps_extend_channels_options (filter);
   }
   caps = gst_audio_decoder_proxy_getcaps (dec, NULL, filter);
   if (filter)
     gst_caps_unref (filter);
   if (caps) {
     caps = gst_caps_make_writable (caps);
-    for (n = 0; n < gst_caps_get_size (caps); ++n) {
-      GstStructure *s = gst_caps_get_structure (caps, n);
-      if (gst_structure_get_int (s, "channels", &channels)) {
-        if (channels == 1 || channels == 2) {
-          GValue v = { 0 };
-          g_value_init (&v, GST_TYPE_INT_RANGE);
-          gst_value_set_int_range (&v, 1, 2);
-          gst_structure_set_value (s, "channels", &v);
-          g_value_unset (&v);
-        }
-      }
-    }
+    gst_opus_dec_caps_extend_channels_options (caps);
   }
   return caps;
 }
