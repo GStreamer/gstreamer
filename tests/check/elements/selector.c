@@ -470,6 +470,8 @@ teardown_input_selector_with_2_streams (void)
   gst_pad_set_active (output_pad, FALSE);
   gst_check_teardown_sink_pad (selector);
   gst_check_teardown_element (selector);
+  gst_object_unref (stream1_pad);
+  gst_object_unref (stream2_pad);
 
   g_mutex_clear (&eos_probe_lock);
   g_cond_clear (&eos_probe_cond);
