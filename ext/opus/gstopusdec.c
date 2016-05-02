@@ -237,22 +237,6 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
     GstCaps *constraint, *inter;
 
     constraint = gst_caps_from_string ("audio/x-raw");
-    if (dec->sample_rate == 0 || dec->sample_rate == 48000) {
-      gst_caps_set_simple (constraint, "rate", G_TYPE_INT, 48000, NULL);
-    } else {
-      GValue v = { 0 }
-      , l = {
-      0};
-      g_value_init (&l, GST_TYPE_LIST);
-      g_value_init (&v, G_TYPE_INT);
-      g_value_set_int (&v, dec->sample_rate);
-      gst_value_list_append_value (&l, &v);
-      g_value_set_int (&v, 48000);
-      gst_value_list_append_value (&l, &v);
-      gst_caps_set_value (constraint, "rate", &l);
-      g_value_unset (&v);
-      g_value_unset (&l);
-    }
     if (dec->n_channels <= 2) { /* including 0 */
       gst_caps_set_simple (constraint, "channels", GST_TYPE_INT_RANGE, 1, 2,
           NULL);
