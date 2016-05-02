@@ -904,20 +904,27 @@ gst_opus_dec_caps_extend_rate_options (GstCaps * caps)
 GstCaps *
 gst_opus_dec_getcaps (GstAudioDecoder * dec, GstCaps * filter)
 {
-  GstCaps *caps;
+  GstCaps *caps, *proxy_filter = NULL, *ret;
 
   if (filter) {
-    filter = gst_caps_copy (filter);
-    gst_opus_dec_caps_extend_channels_options (filter);
-    gst_opus_dec_caps_extend_rate_options (filter);
+    proxy_filter = gst_caps_copy (filter);
+    gst_opus_dec_caps_extend_channels_options (proxy_filter);
+    gst_opus_dec_caps_extend_rate_options (proxy_filter);
   }
-  caps = gst_audio_decoder_proxy_getcaps (dec, NULL, filter);
-  if (filter)
-    gst_caps_unref (filter);
+  caps = gst_audio_decoder_proxy_getcaps (dec, NULL, proxy_filter);
+  if (proxy_filter)
+    gst_caps_unref (proxy_filter);
   if (caps) {
     caps = gst_caps_make_writable (caps);
     gst_opus_dec_caps_extend_channels_options (caps);
     gst_opus_dec_caps_extend_rate_options (caps);
   }
-  return caps;
+
+  if (filter) {
+    ret = gst_caps_intersect (caps, filter);
+    gst_caps_unref (caps);
+  } else {
+    ret = caps;
+  }
+  return ret;
 }

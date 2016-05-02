@@ -402,6 +402,20 @@ GST_START_TEST (test_opusdec_getcaps)
       "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,2]");
   run_getcaps_check_from_strings (NULL, "audio/x-raw, channels=(int)5000",
       "EMPTY");
+
+  /* Now add filters */
+
+  /* Formats not acceptable */
+  run_getcaps_check_from_strings ("audio/x-opus, rate=(int)1000", NULL,
+      "EMPTY");
+  run_getcaps_check_from_strings ("audio/x-opus, channels=(int)200", NULL,
+      "EMPTY");
+
+  /* Should restrict the result of the caps query to the selected rate/channels */
+  run_getcaps_check_from_strings ("audio/x-opus, rate=(int)8000", NULL,
+      "audio/x-opus, rate=(int)8000, channels=(int)[1,8]");
+  run_getcaps_check_from_strings ("audio/x-opus, channels=(int)2", NULL,
+      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)2");
 }
 
 GST_END_TEST;
