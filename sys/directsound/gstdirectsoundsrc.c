@@ -339,19 +339,34 @@ gst_directsound_enum_callback (GUID * pGUID, TCHAR * strDesc,
     TCHAR * strDrvName, VOID * pContext)
 {
   GstDirectSoundSrc *dsoundsrc = GST_DIRECTSOUND_SRC (pContext);
+  gchar *driver, *description;
+
+  description = g_locale_to_utf8 (strDesc, -1, NULL, NULL, NULL);
+  if (!description) {
+    GST_ERROR_OBJECT (dsoundsrc,
+        "Failed to convert description from locale encoding to UTF8");
+    return TRUE;
+  }
+
+  driver = g_locale_to_utf8 (strDrvName, -1, NULL, NULL, NULL);
 
   if (pGUID && dsoundsrc && dsoundsrc->device_name &&
-      !g_strcmp0 (dsoundsrc->device_name, strDesc)) {
+      !g_strcmp0 (dsoundsrc->device_name, description)) {
     g_free (dsoundsrc->device_guid);
     dsoundsrc->device_guid = (GUID *) g_malloc0 (sizeof (GUID));
     memcpy (dsoundsrc->device_guid, pGUID, sizeof (GUID));
     GST_INFO_OBJECT (dsoundsrc, "found the requested audio device :%s",
         dsoundsrc->device_name);
+    g_free (description);
+    g_free (driver);
     return FALSE;
   }
 
   GST_INFO_OBJECT (dsoundsrc, "sound device names: %s, %s, requested device:%s",
-      strDesc, strDrvName, dsoundsrc->device_name);
+      description, driver, dsoundsrc->device_name);
+
+  g_free (description);
+  g_free (driver);
 
   return TRUE;
 }
