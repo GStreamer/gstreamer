@@ -869,6 +869,38 @@ gst_opus_dec_caps_extend_channels_options (GstCaps * caps)
   }
 }
 
+static void
+gst_opus_dec_value_list_append_int (GValue * list, gint i)
+{
+  GValue v = { 0 };
+
+  g_value_init (&v, G_TYPE_INT);
+  g_value_set_int (&v, i);
+  gst_value_list_append_value (list, &v);
+  g_value_unset (&v);
+}
+
+static void
+gst_opus_dec_caps_extend_rate_options (GstCaps * caps)
+{
+  unsigned n;
+  GValue v = { 0 };
+
+  g_value_init (&v, GST_TYPE_LIST);
+  gst_opus_dec_value_list_append_int (&v, 48000);
+  gst_opus_dec_value_list_append_int (&v, 24000);
+  gst_opus_dec_value_list_append_int (&v, 16000);
+  gst_opus_dec_value_list_append_int (&v, 12000);
+  gst_opus_dec_value_list_append_int (&v, 8000);
+
+  for (n = 0; n < gst_caps_get_size (caps); ++n) {
+    GstStructure *s = gst_caps_get_structure (caps, n);
+
+    gst_structure_set_value (s, "rate", &v);
+  }
+  g_value_unset (&v);
+}
+
 GstCaps *
 gst_opus_dec_getcaps (GstAudioDecoder * dec, GstCaps * filter)
 {
@@ -877,6 +909,7 @@ gst_opus_dec_getcaps (GstAudioDecoder * dec, GstCaps * filter)
   if (filter) {
     filter = gst_caps_copy (filter);
     gst_opus_dec_caps_extend_channels_options (filter);
+    gst_opus_dec_caps_extend_rate_options (filter);
   }
   caps = gst_audio_decoder_proxy_getcaps (dec, NULL, filter);
   if (filter)
@@ -884,6 +917,7 @@ gst_opus_dec_getcaps (GstAudioDecoder * dec, GstCaps * filter)
   if (caps) {
     caps = gst_caps_make_writable (caps);
     gst_opus_dec_caps_extend_channels_options (caps);
+    gst_opus_dec_caps_extend_rate_options (caps);
   }
   return caps;
 }

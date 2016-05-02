@@ -317,6 +317,95 @@ GST_START_TEST (test_opus_encode_properties)
 
 GST_END_TEST;
 
+/* removes fields that do not interest our tests to
+ * allow using gst_caps_is_equal for comparison */
+static GstCaps *
+remove_extra_caps_fields (GstCaps * caps)
+{
+  gint i;
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *s = gst_caps_get_structure (caps, i);
+
+    gst_structure_remove_field (s, "channel-mapping-family");
+    gst_structure_remove_field (s, "coupled-count");
+    gst_structure_remove_field (s, "stream-count");
+  }
+  return gst_caps_simplify (caps);
+}
+
+static void
+run_getcaps_check (GstCaps * filter, GstCaps * downstream_caps,
+    GstCaps * expected_result)
+{
+  GstElement *opusdec;
+  GstElement *capsfilter;
+  GstPad *sinkpad;
+  GstCaps *result;
+
+  opusdec = gst_element_factory_make ("opusdec", NULL);
+  capsfilter = gst_element_factory_make ("capsfilter", NULL);
+  sinkpad = gst_element_get_static_pad (opusdec, "sink");
+  fail_unless (gst_element_link (opusdec, capsfilter));
+
+  if (downstream_caps)
+    g_object_set (capsfilter, "caps", downstream_caps, NULL);
+  result = gst_pad_query_caps (sinkpad, filter);
+  result = remove_extra_caps_fields (result);
+  fail_unless (gst_caps_is_equal (expected_result, result),
+      "Unexpected output caps: %s", gst_caps_to_string (result));
+
+  if (filter)
+    gst_caps_unref (filter);
+  gst_caps_unref (result);
+  gst_caps_unref (expected_result);
+  if (downstream_caps)
+    gst_caps_unref (downstream_caps);
+  gst_object_unref (sinkpad);
+  gst_object_unref (opusdec);
+  gst_object_unref (capsfilter);
+}
+
+static void
+run_getcaps_check_from_strings (const gchar * filter,
+    const gchar * downstream_caps, const gchar * expected_result)
+{
+  run_getcaps_check (filter ? gst_caps_from_string (filter) : NULL,
+      downstream_caps ? gst_caps_from_string (downstream_caps) : NULL,
+      gst_caps_from_string (expected_result));
+}
+
+GST_START_TEST (test_opusdec_getcaps)
+{
+  /* default result */
+  run_getcaps_check_from_strings (NULL, NULL,
+      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,8]");
+
+  /* A single supported rate downstream - should accept any upstream anyway */
+  run_getcaps_check_from_strings (NULL, "audio/x-raw, rate=(int)8000",
+      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,8]");
+
+  /* Two supported rates (fields as a array, not as a single int) */
+  run_getcaps_check_from_strings (NULL, "audio/x-raw, rate=(int){24000, 8000}",
+      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,8]");
+
+  /* One supported and one unsupported rate */
+  run_getcaps_check_from_strings (NULL, "audio/x-raw, rate=(int){24000, 1000}",
+      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,8]");
+
+  /* Unsupported rate */
+  run_getcaps_check_from_strings (NULL, "audio/x-raw, rate=(int)1000", "EMPTY");
+
+  /* same tests for channels */
+  run_getcaps_check_from_strings (NULL, "audio/x-raw, channels=(int)2",
+      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,2]");
+  run_getcaps_check_from_strings (NULL, "audio/x-raw, channels=(int)[1, 2]",
+      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,2]");
+  run_getcaps_check_from_strings (NULL, "audio/x-raw, channels=(int)5000",
+      "EMPTY");
+}
+
+GST_END_TEST;
+
 static Suite *
 opus_suite (void)
 {
@@ -329,6 +418,7 @@ opus_suite (void)
   tcase_add_test (tc_chain, test_opus_decode_nothing);
   tcase_add_test (tc_chain, test_opus_encode_samples);
   tcase_add_test (tc_chain, test_opus_encode_properties);
+  tcase_add_test (tc_chain, test_opusdec_getcaps);
 
   return s;
 }
