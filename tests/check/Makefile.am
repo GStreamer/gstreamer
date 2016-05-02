@@ -300,7 +300,7 @@ check_PROGRAMS = \
 	$(check_player) \
 	$(EXPERIMENTAL_CHECKS)
 
-noinst_HEADERS = elements/mxfdemux.h
+noinst_HEADERS = elements/mxfdemux.h elements/dash_isoff.h
 
 TESTS = $(check_PROGRAMS)
 
