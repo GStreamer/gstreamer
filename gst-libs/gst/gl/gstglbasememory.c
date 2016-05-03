@@ -606,7 +606,7 @@ gst_gl_allocation_params_init (GstGLAllocationParams * params,
     gsize struct_size, guint alloc_flags, GstGLAllocationParamsCopyFunc copy,
     GstGLAllocationParamsFreeFunc free, GstGLContext * context,
     gsize alloc_size, GstAllocationParams * alloc_params,
-    gpointer wrapped_data, guint gl_handle, gpointer user_data,
+    gpointer wrapped_data, gpointer gl_handle, gpointer user_data,
     GDestroyNotify notify)
 {
   memset (params, 0, sizeof (*params));
