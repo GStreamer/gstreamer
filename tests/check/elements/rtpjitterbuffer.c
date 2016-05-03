@@ -459,7 +459,7 @@ get_rtp_seq_num (GstBuffer * buf)
 }
 
 static void
-verify_lost_event (GstEvent * event, guint32 expected_seqnum,
+verify_lost_event (GstEvent * event, guint16 expected_seqnum,
     GstClockTime expected_timestamp, GstClockTime expected_duration)
 {
   const GstStructure *s = gst_event_get_structure (event);
@@ -1407,6 +1407,87 @@ GST_START_TEST (test_push_big_gap)
 
 GST_END_TEST;
 
+typedef struct
+{
+  guint seqnum_offset;
+  guint late_buffer;
+} TestLateArrivalInput;
+
+static const TestLateArrivalInput
+    test_considered_lost_packet_in_large_gap_arrives_input[] = {
+  {0, 1}, {0, 2}, {65535, 1}, {65535, 2}, {65534, 1}, {65534, 2}
+};
+
+GST_START_TEST (test_considered_lost_packet_in_large_gap_arrives)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  GstTestClock *testclock;
+  GstClockID id;
+  GstBuffer *buffer;
+  gint jb_latency_ms = 20;
+  GstEvent *event;
+  const TestLateArrivalInput *test_input =
+      &test_considered_lost_packet_in_large_gap_arrives_input[__i__];
+  guint seq_offset = test_input->seqnum_offset;
+  guint late_buffer = test_input->late_buffer;
+
+  gst_harness_set_src_caps (h, generate_caps ());
+  testclock = gst_harness_get_testclock (h);
+  g_object_set (h->element, "do-lost", TRUE, "latency", jb_latency_ms, NULL);
+
+  /* first push buffer 0 */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, generate_test_buffer_full (0 * PCMU_BUF_DURATION,
+              TRUE, 0 + seq_offset, 0 * PCMU_RTP_TS_DURATION)));
+  fail_unless (gst_harness_crank_single_clock_wait (h));
+  gst_buffer_unref (gst_harness_pull (h));
+
+  /* drop GstEventStreamStart & GstEventCaps & GstEventSegment */
+  for (gint i = 0; i < 3; i++)
+    gst_event_unref (gst_harness_pull_event (h));
+
+  /* hop over 3 packets, and push buffer 4 (gap of 3) */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, generate_test_buffer_full (4 * PCMU_BUF_DURATION,
+              TRUE, 4 + seq_offset, 4 * PCMU_RTP_TS_DURATION)));
+
+  /* the jitterbuffer should be waiting for the timeout of a "large gap timer"
+   * for buffer 1 and 2 */
+  gst_test_clock_wait_for_next_pending_id (testclock, &id);
+  fail_unless_equals_uint64 (1 * PCMU_BUF_DURATION +
+      jb_latency_ms * GST_MSECOND, gst_clock_id_get_time (id));
+  gst_clock_id_unref (id);
+
+  /* now buffer 1 sneaks in before the lost event for buffer 1 and 2 is
+   * processed */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h,
+          generate_test_buffer_full (late_buffer * PCMU_BUF_DURATION, TRUE,
+              late_buffer + seq_offset, late_buffer * PCMU_RTP_TS_DURATION)));
+
+  /* time out for lost packets 1 and 2 (one event, double duration) */
+  fail_unless (gst_harness_crank_single_clock_wait (h));
+  event = gst_harness_pull_event (h);
+  verify_lost_event (event, 1 + seq_offset, 1 * PCMU_BUF_DURATION,
+      2 * PCMU_BUF_DURATION);
+
+  /* time out for lost packets 3 */
+  fail_unless (gst_harness_crank_single_clock_wait (h));
+  event = gst_harness_pull_event (h);
+  verify_lost_event (event, 3 + seq_offset, 3 * PCMU_BUF_DURATION,
+      1 * PCMU_BUF_DURATION);
+
+  /* buffer 4 is pushed as normal */
+  buffer = gst_harness_pull (h);
+  fail_unless_equals_int ((4 + seq_offset) & 0xffff, get_rtp_seq_num (buffer));
+  gst_buffer_unref (buffer);
+
+  gst_object_unref (testclock);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpjitterbuffer_suite (void)
 {
@@ -1430,6 +1511,10 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_deadline_ts_offset);
   tcase_add_test (tc_chain, test_dts_gap_larger_than_latency);
   tcase_add_test (tc_chain, test_push_big_gap);
+
+  tcase_add_loop_test (tc_chain,
+      test_considered_lost_packet_in_large_gap_arrives, 0,
+      G_N_ELEMENTS (test_considered_lost_packet_in_large_gap_arrives_input));
 
   return s;
 }
