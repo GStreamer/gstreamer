@@ -674,7 +674,7 @@ _gl_mem_pbo_alloc (GstGLBaseMemoryAllocator * allocator,
   mem = g_new0 (GstGLMemoryPBO, 1);
 
   if (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) {
-    mem->mem.tex_id = params->parent.gl_handle;
+    mem->mem.tex_id = GPOINTER_TO_UINT (params->parent.gl_handle);
     mem->mem.texture_wrapped = TRUE;
   }
 

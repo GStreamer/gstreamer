@@ -173,7 +173,7 @@ struct _GstGLAllocationParams
   /* GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM only */
   gpointer                          wrapped_data;
   /* GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE only */
-  guint                             gl_handle;
+  gpointer                          gl_handle;
 };
 
 gboolean                gst_gl_allocation_params_init       (GstGLAllocationParams * params,
@@ -185,7 +185,7 @@ gboolean                gst_gl_allocation_params_init       (GstGLAllocationPara
                                                              gsize alloc_size,
                                                              GstAllocationParams * alloc_params,
                                                              gpointer wrapped_data,
-                                                             guint gl_handle,
+                                                             gpointer gl_handle,
                                                              gpointer user_data,
                                                              GDestroyNotify notify);
 

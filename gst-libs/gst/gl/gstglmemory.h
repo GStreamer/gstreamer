@@ -106,7 +106,7 @@ gboolean        gst_gl_video_allocation_params_init_full        (GstGLVideoAlloc
                                                                  GstVideoAlignment * valign,
                                                                  GstGLTextureTarget target,
                                                                  gpointer wrapped_data,
-                                                                 guint gl_handle,
+                                                                 gpointer gl_handle,
                                                                  gpointer user_data,
                                                                  GDestroyNotify notify);
 GstGLVideoAllocationParams * gst_gl_video_allocation_params_new (GstGLContext * context,
@@ -132,6 +132,16 @@ GstGLVideoAllocationParams * gst_gl_video_allocation_params_new_wrapped_texture 
                                                                                  GstVideoAlignment * valign,
                                                                                  GstGLTextureTarget target,
                                                                                  guint tex_id,
+                                                                                 gpointer user_data,
+                                                                                 GDestroyNotify notify);
+
+GstGLVideoAllocationParams * gst_gl_video_allocation_params_new_wrapped_gl_handle (GstGLContext * context,
+                                                                                 GstAllocationParams * alloc_params,
+                                                                                 GstVideoInfo * v_info,
+                                                                                 guint plane,
+                                                                                 GstVideoAlignment * valign,
+                                                                                 GstGLTextureTarget target,
+                                                                                 gpointer gl_handle,
                                                                                  gpointer user_data,
                                                                                  GDestroyNotify notify);
 
