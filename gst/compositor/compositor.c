@@ -954,17 +954,25 @@ _fixate_caps (GstVideoAggregator * vagg, GstCaps * caps)
       best_fps_d);
   ret = gst_caps_fixate (ret);
 
-  if (best_width > 0 && best_height > 0) {
-    GstVideoInfo v_info;
+  return ret;
+}
 
-    gst_video_info_from_caps (&v_info, ret);
-    if (!set_functions (GST_COMPOSITOR (vagg), &v_info)) {
-      GST_ERROR_OBJECT (vagg, "Failed to setup vfuncs");
-      return NULL;
-    }
+static gboolean
+_negotiated_caps (GstVideoAggregator * vagg, GstCaps * caps)
+{
+  GstVideoInfo v_info;
+
+  GST_DEBUG_OBJECT (vagg, "Negotiated caps %" GST_PTR_FORMAT, caps);
+
+  if (!gst_video_info_from_caps (&v_info, caps))
+    return FALSE;
+
+  if (!set_functions (GST_COMPOSITOR (vagg), &v_info)) {
+    GST_ERROR_OBJECT (vagg, "Failed to setup vfuncs");
+    return FALSE;
   }
 
-  return ret;
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -1096,6 +1104,7 @@ gst_compositor_class_init (GstCompositorClass * klass)
   agg_class->sinkpads_type = GST_TYPE_COMPOSITOR_PAD;
   agg_class->sink_query = _sink_query;
   videoaggregator_class->fixate_caps = _fixate_caps;
+  videoaggregator_class->negotiated_caps = _negotiated_caps;
   videoaggregator_class->aggregate_frames = gst_compositor_aggregate_frames;
 
   g_object_class_install_property (gobject_class, PROP_BACKGROUND,
