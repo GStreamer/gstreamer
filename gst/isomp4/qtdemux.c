@@ -1272,7 +1272,7 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
 
     /* get segment and time in the segment */
     seg = &str->segments[seg_idx];
-    seg_time = desired_time - seg->time;
+    seg_time = (desired_time - seg->time) * seg->rate;
 
     while (QTSEGMENT_IS_EMPTY (seg)) {
       seg_time = 0;
@@ -4400,7 +4400,7 @@ gst_qtdemux_stream_segment_get_boundaries (GstQTDemux * qtdemux,
   segment = &stream->segments[stream->segment_index];
 
   /* get time in this segment */
-  seg_time = offset - segment->time;
+  seg_time = (offset - segment->time) * segment->rate;
 
   GST_LOG_OBJECT (stream->pad, "seg_time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (seg_time));
