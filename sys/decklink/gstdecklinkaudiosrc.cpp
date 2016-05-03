@@ -491,8 +491,10 @@ retry:
   sample_count = p->packet->GetSampleFrameCount ();
   data_size = self->info.bpf * sample_count;
 
-  if (p->capture_time == GST_CLOCK_TIME_NONE && self->next_offset == (guint64) - 1) {
-    GST_DEBUG_OBJECT (self, "Got packet without timestamp before initial "
+  if (p->capture_time == GST_CLOCK_TIME_NONE
+      && self->next_offset == (guint64) - 1) {
+    GST_DEBUG_OBJECT (self,
+        "Got packet without timestamp before initial "
         "timestamp after discont - dropping");
     capture_packet_free (p);
     goto retry;

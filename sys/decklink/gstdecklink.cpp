@@ -323,29 +323,30 @@ gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f)
       "width", G_TYPE_INT, mode->width,
       "height", G_TYPE_INT, mode->height,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, mode->par_n, mode->par_d,
-      "interlace-mode", G_TYPE_STRING, mode->interlaced ? "interleaved" : "progressive",
+      "interlace-mode", G_TYPE_STRING,
+      mode->interlaced ? "interleaved" : "progressive",
       "framerate", GST_TYPE_FRACTION, mode->fps_n, mode->fps_d, NULL);
 
   switch (f) {
-    case bmdFormat8BitYUV: /* '2vuy' */
+    case bmdFormat8BitYUV:     /* '2vuy' */
       gst_structure_set (s, "format", G_TYPE_STRING, "UYVY",
           "colorimetry", G_TYPE_STRING, mode->colorimetry,
           "chroma-site", G_TYPE_STRING, "mpeg2", NULL);
       break;
-    case bmdFormat10BitYUV: /* 'v210' */
+    case bmdFormat10BitYUV:    /* 'v210' */
       gst_structure_set (s, "format", G_TYPE_STRING, "v210", NULL);
       break;
-    case bmdFormat8BitARGB: /* 'ARGB' */
+    case bmdFormat8BitARGB:    /* 'ARGB' */
       gst_structure_set (s, "format", G_TYPE_STRING, "ARGB", NULL);
       break;
-    case bmdFormat8BitBGRA: /* 'BGRA' */
+    case bmdFormat8BitBGRA:    /* 'BGRA' */
       gst_structure_set (s, "format", G_TYPE_STRING, "BGRA", NULL);
       break;
-    case bmdFormat10BitRGB: /* 'r210' Big-endian RGB 10-bit per component with SMPTE video levels (64-960). Packed as 2:10:10:10 */
-    case bmdFormat12BitRGB: /* 'R12B' Big-endian RGB 12-bit per component with full range (0-4095). Packed as 12-bit per component */
-    case bmdFormat12BitRGBLE: /* 'R12L' Little-endian RGB 12-bit per component with full range (0-4095). Packed as 12-bit per component */
+    case bmdFormat10BitRGB:    /* 'r210' Big-endian RGB 10-bit per component with SMPTE video levels (64-960). Packed as 2:10:10:10 */
+    case bmdFormat12BitRGB:    /* 'R12B' Big-endian RGB 12-bit per component with full range (0-4095). Packed as 12-bit per component */
+    case bmdFormat12BitRGBLE:  /* 'R12L' Little-endian RGB 12-bit per component with full range (0-4095). Packed as 12-bit per component */
     case bmdFormat10BitRGBXLE: /* 'R10l' Little-endian 10-bit RGB with SMPTE video levels (64-940) */
-    case bmdFormat10BitRGBX: /* 'R10b' Big-endian 10-bit RGB with SMPTE video levels (64-940) */
+    case bmdFormat10BitRGBX:   /* 'R10b' Big-endian 10-bit RGB with SMPTE video levels (64-940) */
     default:
       GST_WARNING ("format not supported %d", f);
       gst_structure_free (s);
@@ -376,9 +377,11 @@ gst_decklink_mode_get_template_caps (void)
 
   caps = gst_caps_new_empty ();
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
-    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i, bmdFormat8BitYUV);
+    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i,
+        bmdFormat8BitYUV);
     gst_caps_append_structure (caps, s);
-    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i, bmdFormat8BitARGB);
+    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i,
+        bmdFormat8BitARGB);
     gst_caps_append_structure (caps, s);
   }
 
@@ -392,7 +395,8 @@ gst_decklink_find_mode_for_caps (GstCaps * caps)
   GstCaps *mode_caps;
 
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
-    mode_caps = gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, bmdFormat8BitYUV);
+    mode_caps =
+        gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, bmdFormat8BitYUV);
     if (gst_caps_can_intersect (caps, mode_caps)) {
       gst_caps_unref (mode_caps);
       return gst_decklink_get_mode ((GstDecklinkModeEnum) i);
@@ -530,9 +534,11 @@ public:
         IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
         GstClockTime capture_time, GstClockTime capture_duration) = NULL;
     void (*got_audio_packet) (GstElement * videosrc,
-        IDeckLinkAudioInputPacket * packet, GstClockTime capture_time, gboolean discont) = NULL;
+        IDeckLinkAudioInputPacket * packet, GstClockTime capture_time,
+        gboolean discont) = NULL;
     GstDecklinkModeEnum mode;
-    BMDTimeValue capture_time = GST_CLOCK_TIME_NONE, capture_duration = GST_CLOCK_TIME_NONE;
+    BMDTimeValue capture_time = GST_CLOCK_TIME_NONE, capture_duration =
+        GST_CLOCK_TIME_NONE;
     HRESULT res;
 
     if (video_frame == NULL)
@@ -576,14 +582,16 @@ public:
           capture_duration);
     }
 
-no_video_frame:
+  no_video_frame:
     if (got_audio_packet && audiosrc && audio_packet) {
-      m_input->got_audio_packet (audiosrc, audio_packet, capture_time, m_input->audio_discont);
+      m_input->got_audio_packet (audiosrc, audio_packet, capture_time,
+          m_input->audio_discont);
       m_input->audio_discont = FALSE;
     } else {
       m_input->audio_discont = TRUE;
       if (!audio_packet)
-        GST_DEBUG ("Received no audio packet at %" GST_TIME_FORMAT, GST_TIME_ARGS (capture_time));
+        GST_DEBUG ("Received no audio packet at %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (capture_time));
     }
 
     gst_object_replace ((GstObject **) & videosrc, NULL);
