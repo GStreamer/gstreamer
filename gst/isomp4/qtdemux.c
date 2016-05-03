@@ -530,6 +530,8 @@ static gboolean gst_qtdemux_activate_segment (GstQTDemux * qtdemux,
 static gboolean gst_qtdemux_stream_update_segment (GstQTDemux * qtdemux,
     QtDemuxStream * stream, gint seg_idx, GstClockTime offset,
     GstClockTime * _start, GstClockTime * _stop);
+static void gst_qtdemux_send_gap_for_segment (GstQTDemux * demux,
+    QtDemuxStream * stream, gint segment_index, GstClockTime pos);
 
 static gboolean qtdemux_pull_mfro_mfra (GstQTDemux * qtdemux);
 static void check_update_duration (GstQTDemux * qtdemux, GstClockTime duration);
@@ -2021,6 +2023,44 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
   }
 }
 
+
+/* Maps the @segment to the qt edts internal segments and pushes
+ * the correspnding segment event.
+ *
+ * If it ends up being at a empty segment, a gap will be pushed and the next
+ * edts segment will be activated in sequence.
+ *
+ * To be used in push-mode only */
+static void
+gst_qtdemux_map_and_push_segments (GstQTDemux * qtdemux, GstSegment * segment)
+{
+  gint n, i;
+
+  for (n = 0; n < qtdemux->n_streams; n++) {
+    QtDemuxStream *stream = qtdemux->streams[n];
+
+    stream->time_position = segment->start;
+
+    /* in push mode we should be guaranteed that we will have empty segments
+     * at the beginning and then one segment after, other scenarios are not
+     * supported and are discarded when parsing the edts */
+    for (i = 0; i < stream->n_segments; i++) {
+      if (stream->segments[i].stop_time > segment->start) {
+        gst_qtdemux_activate_segment (qtdemux, stream, i,
+            stream->time_position);
+        if (QTSEGMENT_IS_EMPTY (&stream->segments[i])) {
+          /* push the empty segment and move to the next one */
+          gst_qtdemux_send_gap_for_segment (qtdemux, stream, i,
+              stream->time_position);
+          continue;
+        }
+
+        g_assert (i == stream->n_segments - 1);
+      }
+    }
+  }
+}
+
 static gboolean
 gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
     GstEvent * event)
@@ -2116,11 +2156,19 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
 
       gst_segment_copy_into (&segment, &demux->segment);
       GST_DEBUG_OBJECT (demux, "Pushing newseg %" GST_SEGMENT_FORMAT, &segment);
-      segment_event = gst_event_new_segment (&segment);
-      gst_event_set_seqnum (segment_event, gst_event_get_seqnum (event));
       /* erase any previously set segment */
       gst_event_replace (&demux->pending_newsegment, NULL);
-      gst_qtdemux_push_event (demux, segment_event);
+
+      /* For pull mode, segment activation will be handled in the looping task
+       * For push mode, need to do it here */
+      if (demux->pullbased) {
+        segment_event = gst_event_new_segment (&segment);
+        gst_event_set_seqnum (segment_event, gst_event_get_seqnum (event));
+        gst_qtdemux_push_event (demux, segment_event);
+      } else {
+        /* map segment to internal qt segments and push on each stream */
+        gst_qtdemux_map_and_push_segments (demux, &segment);
+      }
 
       /* clear leftover in current segment, if any */
       gst_adapter_clear (demux->adapter);
@@ -5921,6 +5969,25 @@ gst_qtdemux_check_send_pending_segment (GstQTDemux * demux)
 }
 
 static void
+gst_qtdemux_send_gap_for_segment (GstQTDemux * demux,
+    QtDemuxStream * stream, gint segment_index, GstClockTime pos)
+{
+  GstClockTime ts, dur;
+  GstEvent *gap;
+
+  ts = pos;
+  dur =
+      stream->segments[segment_index].duration - (pos -
+      stream->segments[segment_index].time);
+  gap = gst_event_new_gap (ts, dur);
+  stream->time_position += dur;
+
+  GST_DEBUG_OBJECT (stream->pad, "Pushing gap for empty "
+      "segment: %" GST_PTR_FORMAT, gap);
+  gst_pad_push_event (stream->pad, gap);
+}
+
+static void
 gst_qtdemux_stream_send_initial_gap_segments (GstQTDemux * demux,
     QtDemuxStream * stream)
 {
@@ -5932,19 +5999,8 @@ gst_qtdemux_stream_send_initial_gap_segments (GstQTDemux * demux,
     gst_qtdemux_activate_segment (demux, stream, i, stream->time_position);
 
     if (QTSEGMENT_IS_EMPTY (&stream->segments[i])) {
-      GstClockTime ts, dur;
-      GstEvent *gap;
-
-      ts = stream->time_position;
-      dur =
-          stream->segments[i].duration - (stream->time_position -
-          stream->segments[i].time);
-      gap = gst_event_new_gap (ts, dur);
-      stream->time_position += dur;
-
-      GST_DEBUG_OBJECT (stream->pad, "Pushing gap for empty "
-          "segment: %" GST_PTR_FORMAT, gap);
-      gst_pad_push_event (stream->pad, gap);
+      gst_qtdemux_send_gap_for_segment (demux, stream, i,
+          stream->time_position);
     } else {
       /* Only support empty segment at the beginning followed by
        * one non-empty segment, this was checked when parsing the
