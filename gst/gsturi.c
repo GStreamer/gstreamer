@@ -1556,7 +1556,7 @@ gst_uri_from_string (const gchar * uri)
         if (eoh == NULL || eoh > eoa) {
           GST_DEBUG ("Unable to parse the host part of the URI '%s'.",
               orig_uri);
-          _gst_uri_free (uri_obj);
+          gst_uri_unref (uri_obj);
           return NULL;
         }
         reoh = eoh + 1;
@@ -1576,7 +1576,7 @@ gst_uri_from_string (const gchar * uri)
         if (uri[0] != ':' || strspn (uri + 1, "0123456789") != eoa - uri - 1) {
           GST_DEBUG ("Unable to parse host/port part of the URI '%s'.",
               orig_uri);
-          _gst_uri_free (uri_obj);
+          gst_uri_unref (uri_obj);
           return NULL;
         }
         /* otherwise treat port as unsigned decimal number */
