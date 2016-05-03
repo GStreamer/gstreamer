@@ -315,8 +315,8 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
     gst_allocation_params_init (&params);
 
     allocator =
-        GST_ALLOCATOR (gst_gl_memory_allocator_get_default (upload->
-            upload->context));
+        GST_ALLOCATOR (gst_gl_memory_allocator_get_default (upload->upload->
+            context));
     gst_query_add_allocation_param (query, allocator, &params);
     gst_object_unref (allocator);
   }
@@ -585,7 +585,8 @@ _egl_image_upload_perform_gl_thread (GstGLContext * context,
   *image->outbuf = gst_buffer_new ();
   gst_buffer_add_parent_buffer_meta (*image->outbuf, image->buffer);
 
-  gst_gl_memory_setup_buffer (allocator, *image->outbuf, image->params);
+  gst_gl_memory_setup_buffer (allocator, *image->outbuf, image->params, NULL,
+      0);
   gst_object_unref (allocator);
 
   n = gst_buffer_n_memory (image->buffer);
@@ -856,7 +857,8 @@ _dma_buf_upload_perform_gl_thread (GstGLContext * context,
 
   /* FIXME: buffer pool */
   dmabuf->outbuf = gst_buffer_new ();
-  gst_gl_memory_setup_buffer (allocator, dmabuf->outbuf, dmabuf->params);
+  gst_gl_memory_setup_buffer (allocator, dmabuf->outbuf, dmabuf->params, NULL,
+      0);
   gst_object_unref (allocator);
 
   n = gst_buffer_n_memory (dmabuf->outbuf);
@@ -1042,11 +1044,11 @@ _upload_meta_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
   gpointer handle;
 
   gl_apis =
-      gst_gl_api_to_string (gst_gl_context_get_gl_api (upload->upload->
-          context));
-  platform =
-      gst_gl_platform_to_string (gst_gl_context_get_gl_platform (upload->
+      gst_gl_api_to_string (gst_gl_context_get_gl_api (upload->
           upload->context));
+  platform =
+      gst_gl_platform_to_string (gst_gl_context_get_gl_platform
+      (upload->upload->context));
   handle = (gpointer) gst_gl_context_get_gl_context (upload->upload->context);
 
   gl_context =
@@ -1101,7 +1103,7 @@ _upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
 
   /* FIXME: buffer pool */
   *outbuf = gst_buffer_new ();
-  gst_gl_memory_setup_buffer (allocator, *outbuf, upload->params);
+  gst_gl_memory_setup_buffer (allocator, *outbuf, upload->params, NULL, 0);
   gst_object_unref (allocator);
 
   for (i = 0; i < GST_GL_UPLOAD_MAX_PLANES; i++) {

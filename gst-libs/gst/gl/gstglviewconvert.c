@@ -1955,7 +1955,7 @@ _gen_buffer (GstGLViewConvert * viewconvert, GstBuffer ** target)
   params = gst_gl_video_allocation_params_new (viewconvert->context, NULL,
       &viewconvert->out_info, 0, NULL, viewconvert->to_texture_target);
 
-  if (!gst_gl_memory_setup_buffer (mem_allocator, *target, params)) {
+  if (!gst_gl_memory_setup_buffer (mem_allocator, *target, params, NULL, 0)) {
     gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
     gst_object_unref (allocator);
     return FALSE;

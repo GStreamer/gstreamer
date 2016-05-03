@@ -1320,18 +1320,14 @@ gst_gl_video_allocation_params_copy_data (GstGLVideoAllocationParams * src_vid,
  */
 gboolean
 gst_gl_memory_setup_buffer (GstGLMemoryAllocator * allocator,
-    GstBuffer * buffer, GstGLVideoAllocationParams * params)
+    GstBuffer * buffer, GstGLVideoAllocationParams * params,
+    gpointer * wrapped_data, gsize n_wrapped_pointers)
 {
   GstGLBaseMemoryAllocator *base_allocator;
   guint n_mem, i, v, views;
   guint alloc_flags = params->parent.alloc_flags;
 
   g_return_val_if_fail (params != NULL, FALSE);
-  g_return_val_if_fail ((alloc_flags &
-          GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM)
-      == 0, FALSE);
-  g_return_val_if_fail ((params->parent.alloc_flags &
-          GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) == 0, FALSE);
   g_return_val_if_fail (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO,
       FALSE);
 
@@ -1344,11 +1340,22 @@ gst_gl_memory_setup_buffer (GstGLMemoryAllocator * allocator,
   else
     views = 1;
 
+  g_return_val_if_fail (!wrapped_data
+      || views * n_mem != n_wrapped_pointers, FALSE);
+
   for (v = 0; v < views; v++) {
     for (i = 0; i < n_mem; i++) {
       GstGLMemory *gl_mem;
 
       params->plane = i;
+      if (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM) {
+        g_return_val_if_fail (wrapped_data != NULL, FALSE);
+        params->parent.wrapped_data = wrapped_data[i];
+      } else if (alloc_flags &
+          GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) {
+        g_return_val_if_fail (wrapped_data != NULL, FALSE);
+        params->parent.gl_handle = wrapped_data[i];
+      }
 
       if (!(gl_mem = (GstGLMemory *) gst_gl_base_memory_alloc (base_allocator,
                   (GstGLAllocationParams *) params)))
