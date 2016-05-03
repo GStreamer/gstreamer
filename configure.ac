@@ -860,6 +860,10 @@ fi
 
 dnl check if we can include both GL and GLES2 at the same time
 if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
+  GLES3_H_DEFINE=0
+  if test "x$HAVE_GLES3_H" == "xyes"; then
+    GLES3_H_DEFINE=1
+  fi
   GL_INCLUDES="
 #ifdef __GNUC__
 #  pragma GCC diagnostic push
@@ -872,11 +876,12 @@ if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
 #  include <OpenGLES/ES2/gl.h>
 #  include <OpenGLES/ES2/glext.h>
 # else
-#  include <GLES2/gl2.h>
-#  include <GLES2/gl2ext.h>
-#  if $HAVE_GLES3_H
+#  if $GLES3_H_DEFINE
 #   include <GLES3/gl3.h>
 #   include <GLES3/gl3ext.h>
+#  else
+#   include <GLES2/gl2.h>
+#   include <GLES2/gl2ext.h>
 #  endif
 # endif
 # ifdef __APPLE__
@@ -1329,11 +1334,12 @@ if test "x$USE_GLES2" = "xyes"; then
 #  include <OpenGLES/ES2/gl.h>
 #  include <OpenGLES/ES2/glext.h>
 # else
-#  include <GLES2/gl2.h>
-#  include <GLES2/gl2ext.h>
-#  if GST_GL_HAVE_GLES3
+#  if $GST_GL_HAVE_GLES3
 #   include <GLES3/gl3.h>
 #   include <GLES3/gl3ext.h>
+#  else
+#   include <GLES2/gl2.h>
+#   include <GLES2/gl2ext.h>
 #  endif
 # endif
 "

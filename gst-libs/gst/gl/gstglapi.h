@@ -39,11 +39,12 @@
 #  include <OpenGLES/ES2/gl.h>
 #  include <OpenGLES/ES2/glext.h>
 # else
-#  include <GLES2/gl2.h>
-#  include <GLES2/gl2ext.h>
 #  if GST_GL_HAVE_GLES3
 #   include <GLES3/gl3.h>
 #   include <GLES3/gl3ext.h>
+#  else
+#   include <GLES2/gl2.h>
+#   include <GLES2/gl2ext.h>
 #  endif
 # endif
 # if !GST_GL_HAVE_OPENGL
