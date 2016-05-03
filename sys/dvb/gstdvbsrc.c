@@ -2201,8 +2201,6 @@ set_prop (struct dtv_property *props, int *n, guint32 cmd, guint32 data)
 static gboolean
 gst_dvbsrc_tune_fe (GstDvbSrc * object)
 {
-  GstPoll *poll_set;
-  GstPollFD fe_fd;
   fe_status_t status;
   struct dtv_properties props;
   struct dtv_property dvb_prop[NUM_DTV_PROPS];
@@ -2246,17 +2244,6 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   gst_dvbsrc_unset_pes_filters (object);
 
   g_mutex_lock (&object->tune_mutex);
-
-  gst_poll_fd_init (&fe_fd);
-  fe_fd.fd = object->fd_frontend;
-  poll_set = gst_poll_new (TRUE);
-
-  if (!gst_poll_add_fd (poll_set, &fe_fd)) {
-    GST_WARNING_OBJECT (object, "Could not add frontend fd to poll set");
-    goto fail;
-  }
-
-  gst_poll_fd_ctl_read (poll_set, &fe_fd, TRUE);
 
   memset (dvb_prop, 0, sizeof (dvb_prop));
   dvb_prop[0].cmd = DTV_CLEAR;
@@ -2315,7 +2302,6 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   g_signal_emit (object, gst_dvbsrc_signals[SIGNAL_TUNING_DONE], 0);
   GST_DEBUG_OBJECT (object, "Successfully set frontend tuning params");
 
-  gst_poll_free (poll_set);
   g_mutex_unlock (&object->tune_mutex);
   return TRUE;
 
@@ -2323,7 +2309,6 @@ fail_with_signal:
   g_signal_emit (object, gst_dvbsrc_signals[SIGNAL_TUNING_FAIL], 0);
 fail:
   GST_WARNING_OBJECT (object, "Could not tune to desired frequency");
-  gst_poll_free (poll_set);
   g_mutex_unlock (&object->tune_mutex);
   return FALSE;
 }
