@@ -226,8 +226,9 @@ guint                   gst_gl_memory_get_texture_id        (GstGLMemory * gl_me
 
 gboolean                gst_gl_memory_setup_buffer          (GstGLMemoryAllocator * allocator,
                                                              GstBuffer * buffer,
-                                                             GstGLVideoAllocationParams * params);
-
+                                                             GstGLVideoAllocationParams * params,
+                                                             gpointer *wrapped_data,
+                                                             gsize n_wrapped_pointers);
 
 GstGLMemoryAllocator *  gst_gl_memory_allocator_get_default (GstGLContext *context);
 
