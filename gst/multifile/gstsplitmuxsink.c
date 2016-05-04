@@ -942,6 +942,11 @@ check_completed_gop (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
     }
   }
 
+  /* If upstream reached EOS we are not expecting more data, no need to wait
+   * here. */
+  if (ctx->in_eos)
+    return;
+
   /* Some pad is not yet ready, or GOP is being pushed
    * either way, sleep and wait to get woken */
   current_max_in_running_time = splitmux->max_in_running_time;
