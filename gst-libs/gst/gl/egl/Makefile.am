@@ -6,7 +6,7 @@ libgstgl_egl_la_SOURCES = \
 	gstgldisplay_egl.c \
 	gstglcontext_egl.c \
 	gstglmemoryegl.c \
-	gsteglimagememory.c
+	gsteglimage.c
 
 noinst_HEADERS =
 
@@ -15,7 +15,7 @@ libgstgl_eglinclude_HEADERS = \
 	gstgldisplay_egl.h \
 	gstglcontext_egl.h \
 	gstglmemoryegl.h \
-	gsteglimagememory.h \
+	gsteglimage.h \
 	gstegl.h
 
 libgstgl_egl_la_CFLAGS = \

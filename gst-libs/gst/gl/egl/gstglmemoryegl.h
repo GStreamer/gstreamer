@@ -29,7 +29,8 @@
 #include <gst/video/video.h>
 
 #include <gst/gl/gl.h>
-#include "gstglcontext_egl.h"
+#include <gst/gl/egl/gstglcontext_egl.h>
+#include <gst/gl/egl/gsteglimage.h>
 
 #include <gst/gl/gstglmemory.h>
 
@@ -45,12 +46,6 @@ GType gst_gl_memory_egl_allocator_get_type(void);
 #define GST_GL_MEMORY_EGL_ALLOCATOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GL_MEMORY_EGL_ALLOCATOR, GstGLAllocatorClass))
 #define GST_GL_MEMORY_EGL_ALLOCATOR_CAST(obj)            ((GstGLMemoryEGLAllocator *)(obj))
 
-typedef void (*GstEGLImageDestroyNotify) (GstGLContextEGL * context,
-    gpointer data);
-
-typedef struct _GstEGLImageMemory GstEGLImageMemory;
-
-
 /**
  * GstGLMemoryEGL:
  *
@@ -60,8 +55,7 @@ struct _GstGLMemoryEGL
 {
   GstGLMemory mem;
 
-  EGLImageKHR image;
-  GstVideoGLTextureOrientation orientation;
+  GstEGLImage *image;
 };
 
 /**
@@ -79,9 +73,6 @@ EGLDisplay    gst_gl_memory_egl_get_display             (GstGLMemoryEGL * mem);
 
 GstVideoGLTextureOrientation gst_gl_memory_egl_get_orientation
                                                         (GstGLMemoryEGL * mem);
-
-void          gst_gl_memory_egl_set_orientation         (GstGLMemoryEGL * mem,
-                                      GstVideoGLTextureOrientation orientation);
 
 /**
  * GstGLAllocator

@@ -26,10 +26,6 @@
 #include "gstglbufferpool.h"
 #include "gstglutils.h"
 
-#if GST_GL_HAVE_PLATFORM_EGL
-#include <gst/gl/egl/gsteglimagememory.h>
-#endif
-
 /**
  * SECTION:gstglbufferpool
  * @short_description: buffer pool for #GstGLMemory objects
@@ -51,8 +47,6 @@ struct _GstGLBufferPoolPrivate
   GstCaps *caps;
   gboolean add_videometa;
   gboolean add_glsyncmeta;
-  gboolean want_eglimage;
-  GstBuffer *last_buffer;
 };
 
 static void gst_gl_buffer_pool_finalize (GObject * object);
@@ -131,16 +125,6 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       GST_BUFFER_POOL_OPTION_VIDEO_META);
   priv->add_glsyncmeta = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_GL_SYNC_META);
-
-#if GST_GL_HAVE_PLATFORM_EGL
-  if (priv->allocator) {
-    priv->want_eglimage =
-        (g_strcmp0 (priv->allocator->mem_type, GST_EGL_IMAGE_MEMORY_TYPE) == 0);
-  } else
-#endif
-  {
-    priv->want_eglimage = FALSE;
-  }
 
   if (priv->gl_params)
     gst_gl_allocation_params_free ((GstGLAllocationParams *) priv->gl_params);
@@ -276,19 +260,6 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   if (!(buf = gst_buffer_new ())) {
     goto no_buffer;
   }
-#if GST_GL_HAVE_PLATFORM_EGL
-  if (priv->want_eglimage) {
-    /* alloc and append memories, also add video_meta and
-     * texture_upload_meta */
-    if (!gst_egl_image_memory_setup_buffer (glpool->context,
-            priv->gl_params->v_info, buf))
-      goto egl_image_mem_create_failed;
-
-    *buffer = buf;
-
-    return GST_FLOW_OK;
-  }
-#endif
 
   alloc = GST_GL_MEMORY_ALLOCATOR (priv->allocator);
   if (!gst_gl_memory_setup_buffer (alloc, buf, priv->gl_params, NULL, 0))
@@ -312,48 +283,6 @@ mem_create_failed:
     GST_WARNING_OBJECT (pool, "Could not create GL Memory");
     return GST_FLOW_ERROR;
   }
-
-#if GST_GL_HAVE_PLATFORM_EGL
-egl_image_mem_create_failed:
-  {
-    GST_WARNING_OBJECT (pool, "Could not create EGLImage Memory");
-    return GST_FLOW_ERROR;
-  }
-#endif
-}
-
-
-static GstFlowReturn
-gst_gl_buffer_pool_acquire_buffer (GstBufferPool * bpool,
-    GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstGLBufferPool *glpool = NULL;
-
-  ret =
-      GST_BUFFER_POOL_CLASS
-      (gst_gl_buffer_pool_parent_class)->acquire_buffer (bpool, buffer, params);
-  if (ret != GST_FLOW_OK || !*buffer)
-    return ret;
-
-  glpool = GST_GL_BUFFER_POOL (bpool);
-
-  /* XXX: Don't return the memory we just rendered, glEGLImageTargetTexture2DOES()
-   * keeps the EGLImage unmappable until the next one is uploaded
-   */
-  if (glpool->priv->want_eglimage && *buffer
-      && *buffer == glpool->priv->last_buffer) {
-    GstBuffer *oldbuf = *buffer;
-
-    ret =
-        GST_BUFFER_POOL_CLASS
-        (gst_gl_buffer_pool_parent_class)->acquire_buffer (bpool,
-        buffer, params);
-    gst_object_replace ((GstObject **) & oldbuf->pool, (GstObject *) glpool);
-    gst_buffer_unref (oldbuf);
-  }
-
-  return ret;
 }
 
 /**
@@ -376,24 +305,6 @@ gst_gl_buffer_pool_new (GstGLContext * context)
   return GST_BUFFER_POOL_CAST (pool);
 }
 
-/**
- * gst_gl_buffer_pool_replace_last_buffer:
- * @pool: a #GstGLBufferPool
- * @buffer: a #GstBuffer
- *
- * Set @pool<--  -->s last buffer to @buffer for #GstGLPlatform<--  -->s that
- * require it.
- */
-void
-gst_gl_buffer_pool_replace_last_buffer (GstGLBufferPool * pool,
-    GstBuffer * buffer)
-{
-  g_return_if_fail (pool != NULL);
-  g_return_if_fail (buffer != NULL);
-
-  gst_buffer_replace (&pool->priv->last_buffer, buffer);
-}
-
 static void
 gst_gl_buffer_pool_class_init (GstGLBufferPoolClass * klass)
 {
@@ -407,7 +318,6 @@ gst_gl_buffer_pool_class_init (GstGLBufferPoolClass * klass)
   gstbufferpool_class->get_options = gst_gl_buffer_pool_get_options;
   gstbufferpool_class->set_config = gst_gl_buffer_pool_set_config;
   gstbufferpool_class->alloc_buffer = gst_gl_buffer_pool_alloc;
-  gstbufferpool_class->acquire_buffer = gst_gl_buffer_pool_acquire_buffer;
   gstbufferpool_class->start = gst_gl_buffer_pool_start;
 }
 
@@ -423,8 +333,6 @@ gst_gl_buffer_pool_init (GstGLBufferPool * pool)
   priv->caps = NULL;
   priv->add_videometa = TRUE;
   priv->add_glsyncmeta = FALSE;
-  priv->want_eglimage = FALSE;
-  priv->last_buffer = FALSE;
 }
 
 static void
@@ -434,8 +342,6 @@ gst_gl_buffer_pool_finalize (GObject * object)
   GstGLBufferPoolPrivate *priv = pool->priv;
 
   GST_LOG_OBJECT (pool, "finalize GL buffer pool %p", pool);
-
-  gst_buffer_replace (&pool->priv->last_buffer, NULL);
 
   if (priv->caps)
     gst_caps_unref (priv->caps);

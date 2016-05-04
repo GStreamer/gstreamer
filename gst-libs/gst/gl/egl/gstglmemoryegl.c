@@ -59,7 +59,7 @@ gst_gl_memory_egl_get_image (GstGLMemoryEGL * mem)
 {
   g_return_val_if_fail (gst_is_gl_memory_egl (GST_MEMORY_CAST (mem)),
       EGL_NO_IMAGE_KHR);
-  return _gl_mem_get_parent (mem)->image;
+  return gst_egl_image_get_image (_gl_mem_get_parent (mem)->image);
 }
 
 EGLDisplay
@@ -76,16 +76,7 @@ gst_gl_memory_egl_get_orientation (GstGLMemoryEGL * mem)
   g_return_val_if_fail (gst_is_gl_memory_egl (GST_MEMORY_CAST (mem)),
       GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL);
 
-  return _gl_mem_get_parent (mem)->orientation;
-}
-
-void
-gst_gl_memory_egl_set_orientation (GstGLMemoryEGL * mem,
-    GstVideoGLTextureOrientation orientation)
-{
-  g_return_if_fail (gst_is_gl_memory_egl (GST_MEMORY_CAST (mem)));
-
-  _gl_mem_get_parent (mem)->orientation = orientation;
+  return gst_egl_image_get_orientation (_gl_mem_get_parent (mem)->image);
 }
 
 static GstMemory *
@@ -101,11 +92,8 @@ _gl_mem_alloc (GstAllocator * allocator, gsize size,
 static void
 _gl_mem_destroy (GstGLMemoryEGL * mem)
 {
-  /* Shared memory should not destroy all the data */
-  if (!mem->mem.mem.mem.parent) {
-    GstGLContextEGL *context = GST_GL_CONTEXT_EGL (mem->mem.mem.context);
-    context->eglDestroyImage (context->egl_display, mem->image);
-  }
+  if (mem->image)
+    gst_egl_image_unref (mem->image);
 
   GST_GL_BASE_MEMORY_ALLOCATOR_CLASS (parent_class)->destroy ((GstGLBaseMemory
           *) mem);
@@ -132,12 +120,21 @@ _gl_mem_egl_alloc (GstGLBaseMemoryAllocator * allocator,
   g_return_val_if_fail (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO,
       NULL);
   g_return_val_if_fail ((alloc_flags &
-          GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) == 0, NULL);
-  g_return_val_if_fail ((alloc_flags &
           GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM) == 0, NULL);
+  if (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) {
+    g_return_val_if_fail (GST_IS_EGL_IMAGE (params->parent.gl_handle), NULL);
+  }
 
   mem = g_new0 (GstGLMemoryEGL, 1);
-  mem->image = EGL_NO_IMAGE_KHR;
+  if (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) {
+    if (params->target != GST_GL_TEXTURE_TARGET_2D) {
+      g_free (mem);
+      GST_CAT_ERROR (GST_CAT_GL_MEMORY, "GstGLMemoryEGL only supports wrapping "
+          "2D textures");
+      return NULL;
+    }
+    mem->image = gst_egl_image_ref (params->parent.gl_handle);
+  }
 
   _gl_mem_init (mem, GST_ALLOCATOR_CAST (allocator), NULL,
       params->parent.context, params->target, params->parent.alloc_params,
@@ -147,10 +144,18 @@ _gl_mem_egl_alloc (GstGLBaseMemoryAllocator * allocator,
   return mem;
 }
 
+static void
+_destroy_egl_image (GstEGLImage * image, gpointer user_data)
+{
+  image->context->eglDestroyImage (image->context->egl_display, image->image);
+}
+
 static gboolean
 _gl_mem_create (GstGLMemoryEGL * gl_mem, GError ** error)
 {
-  GstGLContextEGL *context = GST_GL_CONTEXT_EGL (gl_mem->mem.mem.context);
+  GstGLContext *context = gl_mem->mem.mem.context;
+  GstGLContextEGL *ctx_egl = GST_GL_CONTEXT_EGL (context);
+  const GstGLFuncs *gl = context->gl_vtable;
   GstGLBaseMemoryAllocatorClass *alloc_class;
 
   if (!gst_gl_context_check_feature (GST_GL_CONTEXT (context),
@@ -164,17 +169,27 @@ _gl_mem_create (GstGLMemoryEGL * gl_mem, GError ** error)
   if (!alloc_class->create ((GstGLBaseMemory *) gl_mem, error))
     return FALSE;
 
-  gl_mem->image = context->eglCreateImage (context->egl_display,
-      context->egl_context, EGL_GL_TEXTURE_2D_KHR,
-      (EGLClientBuffer) gl_mem->mem.tex_id, NULL);
+  if (gl_mem->image == NULL) {
+    EGLImageKHR image = ctx_egl->eglCreateImage (ctx_egl->egl_display,
+        ctx_egl->egl_context, EGL_GL_TEXTURE_2D_KHR,
+        (EGLClientBuffer) (guintptr) gl_mem->mem.tex_id, NULL);
 
-  GST_TRACE ("Generating EGLImage handle:%p from a texture:%u",
-      gl_mem->image, gl_mem->mem.tex_id);
+    GST_TRACE ("Generating EGLImage handle:%p from a texture:%u",
+        gl_mem->image, gl_mem->mem.tex_id);
 
-  if (eglGetError () != EGL_SUCCESS) {
-    g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
-        "Failed to create EGLImage");
-    return FALSE;
+    if (eglGetError () != EGL_SUCCESS) {
+      g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
+          "Failed to create EGLImage");
+      return FALSE;
+    }
+
+    gl_mem->image = gst_egl_image_new_wrapped (context, image, 0, 0,
+        (GstEGLImageDestroyNotify) _destroy_egl_image, NULL);
+  } else {
+    gl->ActiveTexture (GL_TEXTURE0 + gl_mem->mem.plane);
+    gl->BindTexture (GL_TEXTURE_2D, gl_mem->mem.tex_id);
+    gl->EGLImageTargetTexture2D (GL_TEXTURE_2D,
+        gst_egl_image_get_image (GST_EGL_IMAGE (gl_mem->image)));
   }
 
   return TRUE;
