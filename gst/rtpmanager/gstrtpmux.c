@@ -602,6 +602,9 @@ gst_rtp_mux_setcaps (GstPad * pad, GstRTPMux * rtp_mux, GstCaps * caps)
   GstRTPMuxPadPrivate *padpriv;
   GstCaps *peercaps;
 
+  if (caps == NULL)
+    return FALSE;
+
   if (!gst_caps_is_fixed (caps))
     return FALSE;
 
