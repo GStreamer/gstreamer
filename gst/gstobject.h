@@ -41,12 +41,16 @@ G_BEGIN_DECLS
 
 /**
  * GstObjectFlags:
+ * @GST_OBJECT_FLAG_MAY_BE_LEAKED: the object is expected to stay alive even
+ * after gst_deinit() has been called and so should be ignored by leak
+ * detection tools. (Since 1.10)
  * @GST_OBJECT_FLAG_LAST: subclasses can add additional flags starting from this flag
  *
  * The standard flags that an gstobject may have.
  */
 typedef enum
 {
+  GST_OBJECT_FLAG_MAY_BE_LEAKED = (1 << 0),
   /* padding */
   GST_OBJECT_FLAG_LAST = (1<<4)
 } GstObjectFlags;
