@@ -52,6 +52,7 @@ setup_pipeline (const gchar * pipe_descr)
   fail_unless (pipeline != NULL, "Failed to create pipeline %s", pipe_descr);
   /* Newly returned object should be floating reffed */
   fail_unless (g_object_is_floating (pipeline));
+  g_assert_cmpuint (G_OBJECT (pipeline)->ref_count, ==, 1);
   return pipeline;
 }
 
