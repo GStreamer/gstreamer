@@ -64,8 +64,8 @@ struct _GstDvbSrc
   GMutex tune_mutex;
   gboolean need_tune;
 
+  GList * supported_delsys;
   guchar delsys;
-  guchar best_guess_delsys;
 
   int adapter_number;
   int frontend_number;

@@ -551,6 +551,7 @@ static void gst_dvbsrc_do_tune (GstDvbSrc * src);
 static gboolean gst_dvbsrc_tune (GstDvbSrc * object);
 static gboolean gst_dvbsrc_set_fe_params (GstDvbSrc * object,
     struct dtv_properties *props);
+static void gst_dvbsrc_guess_delsys (GstDvbSrc * object);
 static gboolean gst_dvbsrc_tune_fe (GstDvbSrc * object);
 
 static void gst_dvbsrc_set_pes_filters (GstDvbSrc * object);
@@ -1024,6 +1025,7 @@ gst_dvbsrc_init (GstDvbSrc * object)
 
   object->fd_frontend = -1;
   object->fd_dvr = -1;
+  object->supported_delsys = NULL;
 
   for (i = 0; i < MAX_FILTERS; i++) {
     object->pids[i] = G_MAXUINT16;
@@ -1049,7 +1051,6 @@ gst_dvbsrc_init (GstDvbSrc * object)
   object->inversion = DEFAULT_INVERSION;
   object->stats_interval = DEFAULT_STATS_REPORTING_INTERVAL;
   object->delsys = DEFAULT_DELSYS;
-  object->best_guess_delsys = DEFAULT_DELSYS;
   object->pilot = DEFAULT_PILOT;
   object->rolloff = DEFAULT_ROLLOFF;
   object->stream_id = DEFAULT_STREAM_ID;
@@ -1574,8 +1575,8 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
     return FALSE;
   }
 
-  if (object->best_guess_delsys != DEFAULT_DELSYS)
-    goto delsys_already_autodetected;
+  if (object->supported_delsys)
+    goto delsys_detection_done;
 
   /* Perform delivery system autodetection */
 
@@ -1626,107 +1627,125 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
 
   /* Capability delivery systems */
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_DVBC_ANNEX_A)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_DVBC_ANNEX_A));
     gst_structure_set (adapter_structure, "dvb-c-a", G_TYPE_STRING,
         "DVB-C ANNEX A", NULL);
-    object->best_guess_delsys = SYS_DVBC_ANNEX_A;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_DVBC_ANNEX_B)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_DVBC_ANNEX_B));
     gst_structure_set (adapter_structure, "dvb-c-b", G_TYPE_STRING,
         "DVB-C ANNEX C", NULL);
-    object->best_guess_delsys = SYS_DVBC_ANNEX_B;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_DVBT)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_DVBT));
     gst_structure_set (adapter_structure, "dvb-t", G_TYPE_STRING, "DVB-T",
         NULL);
-    object->best_guess_delsys = SYS_DVBT;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_DSS)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_DSS));
     gst_structure_set (adapter_structure, "dss", G_TYPE_STRING, "DSS", NULL);
-    object->best_guess_delsys = SYS_DSS;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_DVBS)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_DVBS));
     gst_structure_set (adapter_structure, "dvb-s", G_TYPE_STRING, "DVB-S",
         NULL);
-    object->best_guess_delsys = SYS_DVBS;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_DVBS2)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_DVBS2));
     gst_structure_set (adapter_structure, "dvb-s2", G_TYPE_STRING, "DVB-S2",
         NULL);
-    object->best_guess_delsys = SYS_DVBS2;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_DVBH)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_DVBH));
     gst_structure_set (adapter_structure, "dvb-h", G_TYPE_STRING, "DVB-H",
         NULL);
-    object->best_guess_delsys = SYS_DVBH;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_ISDBT)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_ISDBT));
     gst_structure_set (adapter_structure, "isdb-t", G_TYPE_STRING, "ISDB-T",
         NULL);
-    object->best_guess_delsys = SYS_ISDBT;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_ISDBS)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_ISDBS));
     gst_structure_set (adapter_structure, "isdb-s", G_TYPE_STRING, "ISDB-S",
         NULL);
-    object->best_guess_delsys = SYS_ISDBS;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_ISDBC)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_ISDBC));
     gst_structure_set (adapter_structure, "isdb-c", G_TYPE_STRING, "ISDB-C",
         NULL);
-    object->best_guess_delsys = SYS_ISDBC;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_ATSC)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_ATSC));
     gst_structure_set (adapter_structure, "atsc", G_TYPE_STRING, "ATSC", NULL);
-    object->best_guess_delsys = SYS_ATSC;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_ATSCMH)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_ATSCMH));
     gst_structure_set (adapter_structure, "atsc-mh", G_TYPE_STRING, "ATSC-MH",
         NULL);
-    object->best_guess_delsys = SYS_ATSCMH;
   }
 #if HAVE_V5_MINOR(7)
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_DTMB)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_DTMB));
     gst_structure_set (adapter_structure, "dtmb", G_TYPE_STRING, "DTMB", NULL);
-    object->best_guess_delsys = SYS_DTMB;
   }
 #endif
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_CMMB)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_CMMB));
     gst_structure_set (adapter_structure, "cmmb", G_TYPE_STRING, "CMMB", NULL);
-    object->best_guess_delsys = SYS_CMMB;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_DAB)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_DAB));
     gst_structure_set (adapter_structure, "dab", G_TYPE_STRING, "DAB", NULL);
-    object->best_guess_delsys = SYS_DAB;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_DVBT2)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_DVBT2));
     gst_structure_set (adapter_structure, "dvb-t2", G_TYPE_STRING, "DVB-T2",
         NULL);
-    object->best_guess_delsys = SYS_DVBT2;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_TURBO)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_TURBO));
     gst_structure_set (adapter_structure, "turbo", G_TYPE_STRING, "TURBO",
         NULL);
-    object->best_guess_delsys = SYS_TURBO;
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_DVBC_ANNEX_C)) {
+    object->supported_delsys = g_list_append (object->supported_delsys,
+        GINT_TO_POINTER (SYS_DVBC_ANNEX_C));
     gst_structure_set (adapter_structure, "dvb-c-c", G_TYPE_STRING,
         "DVB-C ANNEX C", NULL);
-    object->best_guess_delsys = SYS_DVBC_ANNEX_C;
   }
 
   GST_INFO_OBJECT (object, "DVB card: %s ", adapter_name);
@@ -1736,7 +1755,7 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
       (GST_OBJECT (object), adapter_structure));
   g_free (adapter_name);
 
-delsys_already_autodetected:
+delsys_detection_done:
   g_free (frontend_dev);
 
   return TRUE;
@@ -1993,6 +2012,8 @@ gst_dvbsrc_stop (GstBaseSrc * bsrc)
   GstDvbSrc *src = GST_DVBSRC (bsrc);
 
   gst_dvbsrc_close_devices (src);
+  g_list_free (src->supported_delsys);
+  src->supported_delsys = NULL;
   if (src->poll) {
     gst_poll_free (src->poll);
     src->poll = NULL;
@@ -2215,26 +2236,13 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
     return FALSE;
   }
 
-  /* If there's no delivery system set yet, proceed with the autodetected
-   * one, otherwise confirm the one set is supported */
-  if (object->delsys == SYS_UNDEFINED)
-    object->delsys = object->best_guess_delsys;
-  else {
+  /* If set, confirm the choosen delivery system is actually
+   * supported by the hardware */
+  if (object->delsys != SYS_UNDEFINED) {
     GST_DEBUG_OBJECT (object, "Confirming delsys '%u' is supported",
         object->delsys);
-
-    dvb_prop[0].cmd = DTV_ENUM_DELSYS;
-    props.num = 1;
-    props.props = dvb_prop;
-
-    LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend,
-            FE_GET_PROPERTY, &props));
-    if (err) {
-      GST_WARNING_OBJECT (object, "Error enumerating delsys: %s",
-          g_strerror (errno));
-      return FALSE;
-    }
-    if (!gst_dvbsrc_check_delsys (&dvb_prop[0], object->delsys)) {
+    if (!g_list_find (object->supported_delsys,
+            GINT_TO_POINTER (object->delsys))) {
       GST_WARNING_OBJECT (object, "Adapter does not support delsys '%u'",
           object->delsys);
       return FALSE;
@@ -2247,6 +2255,8 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
 
   memset (dvb_prop, 0, sizeof (dvb_prop));
   dvb_prop[0].cmd = DTV_CLEAR;
+  props.num = 1;
+  props.props = dvb_prop;
 
   LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_SET_PROPERTY, &props));
   if (err) {
@@ -2313,6 +2323,35 @@ fail:
   return FALSE;
 }
 
+static void
+gst_dvbsrc_guess_delsys (GstDvbSrc * object)
+{
+  GList *delsys;
+
+  /* If adapter only supports one delivery system, there's no real choice */
+  if (g_list_length (object->supported_delsys) == 1)
+    goto go_with_default;
+
+  /* Add delivery system specific rules here */
+
+  /* DVB-T/T2 on QAM_256 channel? has to be DVB-T2 */
+  if (object->modulation == QAM_256 &&
+      g_list_find (object->supported_delsys, GINT_TO_POINTER (SYS_DVBT2))) {
+    object->delsys = SYS_DVBT2;
+    goto autoselection_done;
+  }
+
+  /* No rule provided a match so we default to the last device-reported
+   * supported delivery system */
+go_with_default:
+  delsys = g_list_last (object->supported_delsys);
+  object->delsys = *(guchar *) delsys->data;
+
+autoselection_done:
+  GST_INFO_OBJECT (object, "Automatically selecting delivery system '%u'",
+      object->delsys);
+}
+
 static gboolean
 gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
 {
@@ -2322,6 +2361,10 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
   int inversion = object->inversion;
   int n;
   gint err;
+
+  /* If delsys hasn't been set, ask for it to be automatically selected */
+  if (object->delsys == SYS_UNDEFINED)
+    gst_dvbsrc_guess_delsys (object);
 
   /* first 3 entries are reserved */
   n = 3;
