@@ -34,6 +34,9 @@ GST_START_TEST (test_copy)
   fail_if (copy == NULL, "Copy of buffer returned NULL");
   fail_unless (gst_buffer_get_size (copy) == 4,
       "Copy of buffer has different size");
+
+  gst_buffer_unref (buffer);
+  gst_buffer_unref (copy);
 }
 
 GST_END_TEST;
@@ -53,6 +56,9 @@ GST_START_TEST (test_is_writable)
 
   fail_if (gst_mini_object_is_writable (mobj),
       "A buffer with two refs should not be writable");
+
+  gst_buffer_unref (buffer);
+  gst_mini_object_unref (mobj);
 }
 
 GST_END_TEST;
@@ -84,6 +90,8 @@ GST_START_TEST (test_make_writable)
   fail_unless (mobj == mobj2,
       "make_writable returned a copy for a buffer with refcount 1");
 
+  gst_buffer_unref (buffer);
+  gst_mini_object_unref (mobj3);
 }
 
 GST_END_TEST;
@@ -124,6 +132,9 @@ GST_START_TEST (test_ref_threaded)
 
   expected = num_threads * refs_per_thread + 1;
   ASSERT_MINI_OBJECT_REFCOUNT (mobj, "miniobject", expected);
+
+  while (expected-- != 0)
+    gst_buffer_unref (buffer);
 }
 
 GST_END_TEST;
