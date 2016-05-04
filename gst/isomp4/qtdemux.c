@@ -4171,48 +4171,20 @@ eos:
   return GST_FLOW_EOS;
 }
 
-/* activate the given segment number @seg_idx of @stream at time @offset.
- * @offset is an absolute global position over all the segments.
- *
- * This will push out a NEWSEGMENT event with the right values and
- * position the stream index to the first decodable sample before
- * @offset.
+/*
+ * Gets the current qt segment start, stop and position for the
+ * given time offset. This is used in update_segment()
  */
-static gboolean
-gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    guint32 seg_idx, GstClockTime offset)
+static void
+gst_qtdemux_stream_segment_get_boundaries (GstQTDemux * qtdemux,
+    QtDemuxStream * stream, GstClockTime offset,
+    GstClockTime * _start, GstClockTime * _stop, GstClockTime * _time)
 {
-  GstEvent *event;
-  QtDemuxSegment *segment;
-  guint32 index, kf_index;
   GstClockTime seg_time;
   GstClockTime start, stop, time;
-  gdouble rate;
+  QtDemuxSegment *segment;
 
-  GST_LOG_OBJECT (stream->pad, "activate segment %d, offset %" GST_TIME_FORMAT,
-      seg_idx, GST_TIME_ARGS (offset));
-
-  /* update the current segment */
-  stream->segment_index = seg_idx;
-
-  /* get the segment */
-  segment = &stream->segments[seg_idx];
-
-  if (G_UNLIKELY (offset < segment->time)) {
-    GST_WARNING_OBJECT (stream->pad, "offset < segment->time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (segment->time));
-    return FALSE;
-  }
-
-  /* segment lies beyond total indicated duration */
-  if (G_UNLIKELY (qtdemux->segment.duration != GST_CLOCK_TIME_NONE &&
-          segment->time > qtdemux->segment.duration)) {
-    GST_WARNING_OBJECT (stream->pad, "file duration %" GST_TIME_FORMAT
-        " < segment->time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (qtdemux->segment.duration),
-        GST_TIME_ARGS (segment->time));
-    return FALSE;
-  }
+  segment = &stream->segments[stream->segment_index];
 
   /* get time in this segment */
   seg_time = offset - segment->time;
@@ -4231,7 +4203,9 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
    * segment->media_stop is in track-time-realm.
    *
    * In order to compare the two, we need to bring segment.stop
-   * into the track-time-realm */
+   * into the track-time-realm
+   *
+   * FIXME - does this comment still hold? Don't see any conversion here */
 
   stop = qtdemux->segment.stop;
   if (stop == GST_CLOCK_TIME_NONE)
@@ -4259,6 +4233,50 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     start = MAX (segment->media_start, qtdemux->segment.start);
     stop = MIN (segment->media_start + seg_time, stop);
   }
+
+  *_start = start;
+  *_stop = stop;
+  *_time = time;
+}
+
+/*
+ * Updates the qt segment used for the stream and pushes a new segment event
+ * downstream on this stream's pad.
+ */
+static gboolean
+gst_qtdemux_stream_update_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    gint seg_idx, GstClockTime offset, GstClockTime * _start,
+    GstClockTime * _stop)
+{
+  QtDemuxSegment *segment;
+  GstClockTime start = 0, stop = GST_CLOCK_TIME_NONE, time = 0;
+  gdouble rate;
+  GstEvent *event;
+
+  /* update the current segment */
+  stream->segment_index = seg_idx;
+
+  /* get the segment */
+  segment = &stream->segments[seg_idx];
+
+  if (G_UNLIKELY (offset < segment->time)) {
+    GST_WARNING_OBJECT (stream->pad, "offset < segment->time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (segment->time));
+    return FALSE;
+  }
+
+  /* segment lies beyond total indicated duration */
+  if (G_UNLIKELY (qtdemux->segment.duration != GST_CLOCK_TIME_NONE &&
+          segment->time > qtdemux->segment.duration)) {
+    GST_WARNING_OBJECT (stream->pad, "file duration %" GST_TIME_FORMAT
+        " < segment->time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (qtdemux->segment.duration),
+        GST_TIME_ARGS (segment->time));
+    return FALSE;
+  }
+
+  gst_qtdemux_stream_segment_get_boundaries (qtdemux, stream, offset,
+      &start, &stop, &time);
 
   GST_DEBUG_OBJECT (stream->pad, "new segment %d from %" GST_TIME_FORMAT
       " to %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT, seg_idx,
@@ -4297,6 +4315,38 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     /* clear to send tags on this pad now */
     gst_qtdemux_push_tags (qtdemux, stream);
   }
+
+  if (_start)
+    *_start = start;
+  if (_stop)
+    *_stop = stop;
+
+  return TRUE;
+}
+
+/* activate the given segment number @seg_idx of @stream at time @offset.
+ * @offset is an absolute global position over all the segments.
+ *
+ * This will push out a NEWSEGMENT event with the right values and
+ * position the stream index to the first decodable sample before
+ * @offset.
+ */
+static gboolean
+gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    guint32 seg_idx, GstClockTime offset)
+{
+  QtDemuxSegment *segment;
+  guint32 index, kf_index;
+  GstClockTime start = 0, stop = GST_CLOCK_TIME_NONE;
+
+  GST_LOG_OBJECT (stream->pad, "activate segment %d, offset %" GST_TIME_FORMAT,
+      seg_idx, GST_TIME_ARGS (offset));
+
+  if (!gst_qtdemux_stream_update_segment (qtdemux, stream, seg_idx, offset,
+          &start, &stop))
+    return FALSE;
+
+  segment = &stream->segments[stream->segment_index];
 
   /* in the fragmented case, we pick a fragment that starts before our
    * desired position and rely on downstream to wait for a keyframe
