@@ -172,7 +172,7 @@ static GstCaps
 /* stream methods */
 static void gst_matroska_demux_reset (GstElement * element);
 static gboolean perform_seek_to_offset (GstMatroskaDemux * demux,
-    gdouble rate, guint64 offset, guint32 seqnum);
+    gdouble rate, guint64 offset, guint32 seqnum, GstSeekFlags flags);
 
 /* gobject functions */
 static void gst_matroska_demux_set_property (GObject * object,
@@ -2184,7 +2184,7 @@ finish:
     /* upstream takes care of flushing and all that
      * ... and newsegment event handling takes care of the rest */
     return perform_seek_to_offset (demux, rate,
-        entry->pos + demux->common.ebml_segment_start, seqnum);
+        entry->pos + demux->common.ebml_segment_start, seqnum, flags);
   }
 
 exit:
@@ -2326,7 +2326,7 @@ gst_matroska_demux_handle_seek_push (GstMatroskaDemux * demux, GstPad * pad,
       /* seek to the first subindex or legacy index */
       GST_INFO_OBJECT (demux, "Seeking to Cues at %" G_GUINT64_FORMAT, offset);
       return perform_seek_to_offset (demux, rate, offset,
-          gst_event_get_seqnum (event));
+          gst_event_get_seqnum (event), GST_SEEK_FLAG_NONE);
     }
 
     /* well, we are handling it already */
@@ -4783,7 +4783,7 @@ pause:
  */
 static gboolean
 perform_seek_to_offset (GstMatroskaDemux * demux, gdouble rate, guint64 offset,
-    guint32 seqnum)
+    guint32 seqnum, GstSeekFlags flags)
 {
   GstEvent *event;
   gboolean res = 0;
@@ -4792,8 +4792,8 @@ perform_seek_to_offset (GstMatroskaDemux * demux, gdouble rate, guint64 offset,
 
   event =
       gst_event_new_seek (rate, GST_FORMAT_BYTES,
-      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET, offset,
-      GST_SEEK_TYPE_NONE, -1);
+      flags | GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
+      GST_SEEK_TYPE_SET, offset, GST_SEEK_TYPE_NONE, -1);
   gst_event_set_seqnum (event, seqnum);
 
   res = gst_pad_push_event (demux->common.sinkpad, event);
@@ -4907,6 +4907,7 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstObject * parent,
       demux->segment_seqnum = gst_event_get_seqnum (event);
       /* but keep some of the upstream segment */
       demux->common.segment.rate = segment->rate;
+      demux->common.segment.flags = segment->flags;
       /* also check if need to keep some of the requested seek position */
       if (demux->seek_offset == segment->start) {
         GST_DEBUG_OBJECT (demux, "position matches requested seek");
