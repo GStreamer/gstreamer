@@ -93,15 +93,15 @@
 #define PAL_FRAMERATE_NUMERATOR 25
 #define PAL_FRAMERATE_DENOMINATOR 1
 
-#define PAL_NORMAL_PAR_X        59
-#define PAL_NORMAL_PAR_Y        54
-#define PAL_WIDE_PAR_X          118
-#define PAL_WIDE_PAR_Y          81
+#define PAL_NORMAL_PAR_X        16
+#define PAL_NORMAL_PAR_Y        15
+#define PAL_WIDE_PAR_X          64
+#define PAL_WIDE_PAR_Y          45
 
-#define NTSC_NORMAL_PAR_X       10
-#define NTSC_NORMAL_PAR_Y       11
-#define NTSC_WIDE_PAR_X         40
-#define NTSC_WIDE_PAR_Y         33
+#define NTSC_NORMAL_PAR_X       8
+#define NTSC_NORMAL_PAR_Y       9
+#define NTSC_WIDE_PAR_X         32
+#define NTSC_WIDE_PAR_Y         27
 
 GST_DEBUG_CATEGORY_STATIC (dvdemux_debug);
 #define GST_CAT_DEFAULT dvdemux_debug
