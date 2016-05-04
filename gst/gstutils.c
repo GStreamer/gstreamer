@@ -1363,11 +1363,13 @@ find_common_root (GstObject * o1, GstObject * o2)
       gst_object_unref (kid2);
       return root;
     }
+    gst_object_unref (root);
     root = kid2;
     if (!object_has_ancestor (o2, kid1, &kid2)) {
       gst_object_unref (kid1);
       return root;
     }
+    gst_object_unref (root);
     root = kid1;
   }
 }
