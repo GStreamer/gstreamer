@@ -525,6 +525,11 @@ static void gst_qtdemux_remove_stream (GstQTDemux * qtdemux, int index);
 static GstFlowReturn qtdemux_prepare_streams (GstQTDemux * qtdemux);
 static void qtdemux_do_allocation (GstQTDemux * qtdemux,
     QtDemuxStream * stream);
+static gboolean gst_qtdemux_activate_segment (GstQTDemux * qtdemux,
+    QtDemuxStream * stream, guint32 seg_idx, GstClockTime offset);
+static gboolean gst_qtdemux_stream_update_segment (GstQTDemux * qtdemux,
+    QtDemuxStream * stream, gint seg_idx, GstClockTime offset,
+    GstClockTime * _start, GstClockTime * _stop);
 
 static gboolean qtdemux_pull_mfro_mfra (GstQTDemux * qtdemux);
 static void check_update_duration (GstQTDemux * qtdemux, GstClockTime duration);
@@ -2690,6 +2695,20 @@ check_update_duration (GstQTDemux * qtdemux, GstClockTime duration)
           stream->segments[0].stop_time = duration;
           stream->segments[0].duration = duration;
           stream->segments[0].media_stop = duration;
+
+          /* let downstream know we possibly have a new stop time */
+          if (stream->segment_index != -1) {
+            GstClockTime pos;
+
+            if (qtdemux->segment.rate >= 0) {
+              pos = stream->segment.start;
+            } else {
+              pos = stream->segment.stop;
+            }
+
+            gst_qtdemux_stream_update_segment (qtdemux, stream,
+                stream->segment_index, pos, NULL, NULL);
+          }
         }
       }
     }
