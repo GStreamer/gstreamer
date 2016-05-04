@@ -94,10 +94,6 @@
 #include "gstglimagesink.h"
 #include "gstglsinkbin.h"
 
-#if GST_GL_HAVE_PLATFORM_EGL
-#include <gst/gl/egl/gsteglimagememory.h>
-#endif
-
 #include <gst/gl/gstglviewconvert.h>
 
 GST_DEBUG_CATEGORY (gst_debug_glimage_sink);

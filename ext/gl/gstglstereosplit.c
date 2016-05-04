@@ -38,10 +38,6 @@
 
 #include "gstglstereosplit.h"
 
-#if GST_GL_HAVE_PLATFORM_EGL
-#include <gst/gl/egl/gsteglimagememory.h>
-#endif
-
 #define GST_CAT_DEFAULT gst_gl_stereosplit_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
