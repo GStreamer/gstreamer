@@ -110,10 +110,10 @@ CFSTR ("RequireHardwareAcceleratedVideoDecoder");
 #endif
 
 #define VIDEO_SRC_CAPS \
+    GST_VIDEO_CAPS_MAKE("NV12") ";"                                     \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_GL_MEMORY,\
         "NV12") ", "                                                    \
-    "texture-target = (string) rectangle;"                              \
-    GST_VIDEO_CAPS_MAKE("NV12") ";"
+    "texture-target = (string) rectangle;"
 
 G_DEFINE_TYPE (GstVtdec, gst_vtdec, GST_TYPE_VIDEO_DECODER);
 
