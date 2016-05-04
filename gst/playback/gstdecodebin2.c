@@ -553,6 +553,7 @@ static void gst_decode_pad_unblock (GstDecodePad * dpad);
 static void gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked);
 static gboolean gst_decode_pad_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
+static gboolean gst_decode_pad_is_exposable (GstDecodePad * endpad);
 
 static void gst_pending_pad_free (GstPendingPad * ppad);
 static GstPadProbeReturn pad_event_cb (GstPad * pad, GstPadProbeInfo * info,
@@ -3940,7 +3941,7 @@ gst_decode_chain_is_complete (GstDecodeChain * chain)
     goto out;
   }
 
-  if (chain->endpad && (chain->endpad->blocked || chain->endpad->exposed)) {
+  if (chain->endpad && gst_decode_pad_is_exposable (chain->endpad)) {
     complete = TRUE;
     goto out;
   }
@@ -4746,7 +4747,7 @@ gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads,
   }
 
   if (chain->endpad) {
-    if (!chain->endpad->blocked && !chain->endpad->exposed)
+    if (!gst_decode_pad_is_exposable (chain->endpad) && !chain->endpad->exposed)
       return FALSE;
     *endpads = g_list_prepend (*endpads, gst_object_ref (chain->endpad));
     return TRUE;
@@ -5050,6 +5051,15 @@ gst_decode_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
     ret = gst_pad_query_default (pad, parent, query);
 
   return ret;
+}
+
+static gboolean
+gst_decode_pad_is_exposable (GstDecodePad * endpad)
+{
+  if (endpad->blocked || endpad->exposed)
+    return TRUE;
+
+  return gst_pad_has_current_caps (GST_PAD_CAST (endpad));
 }
 
 /*gst_decode_pad_new:
