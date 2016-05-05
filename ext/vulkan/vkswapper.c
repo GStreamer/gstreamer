@@ -831,25 +831,25 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
 
   {
     VkBufferImageCopy region = { 0, };
-    guint32 dst_width = gst_vulkan_image_memory_get_width (swap_mem);
-    guint32 dst_height = gst_vulkan_image_memory_get_height (swap_mem);
-    guint src_width = GST_VIDEO_INFO_WIDTH (&swapper->v_info);
-    guint src_height = GST_VIDEO_INFO_HEIGHT (&swapper->v_info);
-    guint x, y;
+    GstVideoRectangle src, dst, rslt;
 
-    if (src_width != dst_width || src_height != dst_height) {
-/* FIXME: broken with LunarG's driver
-      x = (src_width - dst_width) / 2;
-      y = (src_height - dst_height) / 2;*/
-      x = y = 0;
-    } else {
-      x = y = 0;
-    }
-    /* FIXME: scale rect */
-    GST_VK_BUFFER_IMAGE_COPY (region, 0, src_width, src_height,
+    src.x = src.y = 0;
+    src.w = GST_VIDEO_INFO_WIDTH (&swapper->v_info);
+    src.h = GST_VIDEO_INFO_HEIGHT (&swapper->v_info);
+
+    dst.x = dst.y = 0;
+    dst.w = gst_vulkan_image_memory_get_width (swap_mem);
+    dst.h = gst_vulkan_image_memory_get_height (swap_mem);
+
+    gst_video_sink_center_rect (src, dst, &rslt, FALSE);
+
+    GST_TRACE_OBJECT (swapper, "rendering into result rectangle %ux%u+%u,%u "
+        "src %ux%u dst %ux%u", rslt.w, rslt.h, rslt.x, rslt.y, src.w, src.h,
+        dst.w, dst.h);
+    GST_VK_BUFFER_IMAGE_COPY (region, 0, src.w, src.h,
         GST_VK_IMAGE_SUBRESOURCE_LAYERS_INIT (VK_IMAGE_ASPECT_COLOR_BIT, 0, 0,
-            1), GST_VK_OFFSET3D_INIT (x, y, 0), GST_VK_EXTENT3D_INIT (src_width,
-            src_height, 1));
+            1), GST_VK_OFFSET3D_INIT (rslt.x, rslt.y, 0),
+        GST_VK_EXTENT3D_INIT (rslt.w, rslt.h, 1));
 
     vkCmdCopyBufferToImage (cmd, buf_mem->buffer, swap_mem->image,
         swap_mem->image_layout, 1, &region);
