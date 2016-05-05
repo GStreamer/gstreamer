@@ -74,9 +74,14 @@ struct _GstFlowCombiner
 static GstFlowCombiner *gst_flow_combiner_ref (GstFlowCombiner * combiner);
 static void gst_flow_combiner_unref (GstFlowCombiner * combiner);
 
-G_DEFINE_BOXED_TYPE (GstFlowCombiner, gst_flow_combiner,
+GST_DEBUG_CATEGORY_STATIC (flowcombiner_dbg);
+#define GST_CAT_DEFAULT flowcombiner_dbg
+
+G_DEFINE_BOXED_TYPE_WITH_CODE (GstFlowCombiner, gst_flow_combiner,
     (GBoxedCopyFunc) gst_flow_combiner_ref,
-    (GBoxedFreeFunc) gst_flow_combiner_unref);
+    (GBoxedFreeFunc) gst_flow_combiner_unref,
+    GST_DEBUG_CATEGORY_INIT (flowcombiner_dbg, "flowcombiner", 0,
+        "Flow Combiner"));
 
 /**
  * gst_flow_combiner_new:
@@ -94,6 +99,9 @@ gst_flow_combiner_new (void)
   g_queue_init (&combiner->pads);
   combiner->last_ret = GST_FLOW_OK;
   combiner->ref_count = 1;
+
+  /* Make sure debug category is initialised */
+  gst_flow_combiner_get_type ();
 
   return combiner;
 }
