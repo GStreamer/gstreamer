@@ -39,6 +39,7 @@
 #include <gst/video/video.h>
 
 #include "gstvaapipostproc.h"
+#include "gstvaapipostprocutil.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideobuffer.h"
 #include "gstvaapivideobufferpool.h"
@@ -117,10 +118,6 @@ enum
   PROP_SCALE_METHOD,
   PROP_SKIN_TONE_ENHANCEMENT,
 };
-
-#define DEFAULT_FORMAT                  GST_VIDEO_FORMAT_ENCODED
-#define DEFAULT_DEINTERLACE_MODE        GST_VAAPI_DEINTERLACE_MODE_AUTO
-#define DEFAULT_DEINTERLACE_METHOD      GST_VAAPI_DEINTERLACE_METHOD_BOB
 
 #define GST_VAAPI_TYPE_DEINTERLACE_MODE \
     gst_vaapi_deinterlace_mode_get_type()
@@ -1076,7 +1073,7 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
   if (!gst_caps_is_fixed (caps)) {
     if (!ensure_allowed_srcpad_caps (postproc))
       return NULL;
-    return gst_caps_ref (postproc->allowed_srcpad_caps);
+    return gst_vaapipostproc_transform_srccaps (postproc);
   }
 
   /* Generate the expected src pad caps, from the current fixated
