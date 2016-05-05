@@ -1123,19 +1123,12 @@ gst_vaapipostproc_fixate_srccaps (GstVaapiPostproc * postproc,
   find_best_size (postproc, &vi, &width, &height);
 
   // Update format from user-specified parameters
-  /* XXX: this is a workaround until auto-plugging is fixed when
-   * format=ENCODED + memory:VASurface caps feature are provided.
-   * use the downstream negotiated video format as the output format
-   * if the user didn't explicitly ask for colorspace conversion.
-   * Use a filter caps which contain all raw video formats, (excluding
-   * GST_VIDEO_FORMAT_ENCODED) */
-  out_format = GST_VIDEO_FORMAT_UNKNOWN;
-  if (postproc->format != DEFAULT_FORMAT)
-    out_format = postproc->format;
-
   srcpad = GST_BASE_TRANSFORM_SRC_PAD (postproc);
   feature = gst_vaapi_find_preferred_caps_feature (srcpad, srccaps,
-      (out_format == GST_VIDEO_FORMAT_UNKNOWN) ? &out_format : NULL);
+      &out_format);
+
+  if (postproc->format != DEFAULT_FORMAT)
+    out_format = postproc->format;
 
   if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
     return NULL;
