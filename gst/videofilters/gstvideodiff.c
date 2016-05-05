@@ -48,10 +48,10 @@ static GstFlowReturn gst_video_diff_transform_frame (GstVideoFilter * filter,
     GstVideoFrame * inframe, GstVideoFrame * outframe);
 
 #define VIDEO_SRC_CAPS \
-    GST_VIDEO_CAPS_MAKE("{ I420, Y444, Y42B, UYVY, RGBA }")
+    GST_VIDEO_CAPS_MAKE("{ I420, Y444, Y42B, Y41B }")
 
 #define VIDEO_SINK_CAPS \
-    GST_VIDEO_CAPS_MAKE("{ I420, Y444, Y42B, UYVY, RGBA }")
+    GST_VIDEO_CAPS_MAKE("{ I420, Y444, Y42B, Y41B }")
 
 
 G_DEFINE_TYPE_WITH_CODE (GstVideoDiff, gst_video_diff, GST_TYPE_VIDEO_FILTER,
