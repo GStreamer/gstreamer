@@ -1054,12 +1054,6 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
-  GstVideoInfo vi;
-  GstVideoFormat out_format;
-  GstCaps *out_caps;
-  GstVaapiCapsFeature feature;
-  const gchar *feature_str;
-  guint width, height;
 
   /* Generate the sink pad caps, that could be fixated afterwards */
   if (direction == GST_PAD_SRC) {
@@ -1068,17 +1062,49 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
     return gst_caps_ref (postproc->allowed_sinkpad_caps);
   }
 
-  /* Generate complete set of src pad caps if non-fixated sink pad
-     caps are provided */
-  if (!gst_caps_is_fixed (caps)) {
-    if (!ensure_allowed_srcpad_caps (postproc))
-      return NULL;
-    return gst_vaapipostproc_transform_srccaps (postproc);
+  /* Generate complete set of src pad caps */
+  if (!ensure_allowed_srcpad_caps (postproc))
+    return NULL;
+  return gst_vaapipostproc_transform_srccaps (postproc);
+}
+
+static GstCaps *
+gst_vaapipostproc_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+{
+  GstCaps *out_caps;
+
+  GST_DEBUG_OBJECT (trans,
+      "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
+      (direction == GST_PAD_SINK) ? "sink" : "src");
+
+  caps = gst_vaapipostproc_transform_caps_impl (trans, direction, caps);
+  if (caps && filter) {
+    out_caps = gst_caps_intersect_full (caps, filter, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = out_caps;
   }
 
-  /* Generate the expected src pad caps, from the current fixated
-     sink pad caps */
-  if (!gst_video_info_from_caps (&vi, caps))
+  GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, caps);
+
+  return caps;
+}
+
+static GstCaps *
+gst_vaapipostproc_fixate_srccaps (GstVaapiPostproc * postproc,
+    GstCaps * sinkcaps)
+{
+  GstVideoInfo vi;
+  GstVideoFormat out_format;
+  GstCaps *out_caps;
+  GstVaapiCapsFeature feature;
+  const gchar *feature_str;
+  guint width, height;
+  GstPad *srcpad;
+
+  /* Generate the expected src pad caps, from the current fixated sink
+     pad caps */
+  if (!gst_video_info_from_caps (&vi, sinkcaps))
     return NULL;
 
   // Set double framerate in interlaced mode
@@ -1107,14 +1133,13 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
   if (postproc->format != DEFAULT_FORMAT)
     out_format = postproc->format;
 
-  feature =
-      gst_vaapi_find_preferred_caps_feature (GST_BASE_TRANSFORM_SRC_PAD (trans),
+  srcpad = GST_BASE_TRANSFORM_SRC_PAD (postproc);
+  feature = gst_vaapi_find_preferred_caps_feature (srcpad,
       postproc->allowed_srcpad_caps,
       (out_format == GST_VIDEO_FORMAT_UNKNOWN) ? &out_format : NULL);
 
   if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
-    return gst_pad_peer_query_caps (GST_BASE_TRANSFORM_SRC_PAD (trans),
-        postproc->allowed_srcpad_caps);
+    return NULL;
 
   gst_video_info_change_format (&vi, out_format, width, height);
   out_caps = gst_video_info_to_caps (&vi);
@@ -1138,25 +1163,29 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
 }
 
 static GstCaps *
-gst_vaapipostproc_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+gst_vaapipostproc_fixate_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
-  GstCaps *out_caps;
+  GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
+  GstCaps *outcaps;
 
-  GST_DEBUG_OBJECT (trans,
-      "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
+  GST_DEBUG_OBJECT (trans, "trying to fixate othercaps %" GST_PTR_FORMAT
+      " based on caps %" GST_PTR_FORMAT " in direction %s", othercaps, caps,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
-  caps = gst_vaapipostproc_transform_caps_impl (trans, direction, caps);
-  if (caps && filter) {
-    out_caps = gst_caps_intersect_full (caps, filter, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (caps);
-    caps = out_caps;
+  if (direction == GST_PAD_SRC) {
+    /* @TODO: we can do better */
+    othercaps = gst_caps_fixate (othercaps);
+    goto done;
   }
 
-  GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, caps);
+  if ((outcaps = gst_vaapipostproc_fixate_srccaps (postproc, caps)))
+    gst_caps_replace (&othercaps, outcaps);
 
-  return caps;
+done:
+  GST_DEBUG_OBJECT (trans, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
+
+  return othercaps;
 }
 
 static gboolean
@@ -1517,6 +1546,7 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
   object_class->get_property = gst_vaapipostproc_get_property;
   trans_class->start = gst_vaapipostproc_start;
   trans_class->stop = gst_vaapipostproc_stop;
+  trans_class->fixate_caps = gst_vaapipostproc_fixate_caps;
   trans_class->transform_caps = gst_vaapipostproc_transform_caps;
   trans_class->transform_size = gst_vaapipostproc_transform_size;
   trans_class->transform = gst_vaapipostproc_transform;
