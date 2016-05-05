@@ -749,10 +749,12 @@ rtp_session_create_stats (RTPSession * sess)
       "sent-nack-count", G_TYPE_UINT, sess->stats.nacks_sent,
       "recv-nack-count", G_TYPE_UINT, sess->stats.nacks_received, NULL);
 
+  RTP_SESSION_LOCK (sess);
   size = g_hash_table_size (sess->ssrcs[sess->mask_idx]);
   source_stats = g_value_array_new (size);
   g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
       (GHFunc) create_source_stats, source_stats);
+  RTP_SESSION_UNLOCK (sess);
 
   g_value_init (&source_stats_v, G_TYPE_VALUE_ARRAY);
   g_value_take_boxed (&source_stats_v, source_stats);
