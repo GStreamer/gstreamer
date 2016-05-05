@@ -162,7 +162,7 @@ gst_flow_combiner_clear (GstFlowCombiner * combiner)
  * gst_flow_combiner_reset:
  * @combiner: the #GstFlowCombiner to clear
  *
- * Removes all pads from a #GstFlowCombiner and resets it to its initial state.
+ * Reset flow combiner and all pads to their initial state without removing pads.
  *
  * Since: 1.6
  */
