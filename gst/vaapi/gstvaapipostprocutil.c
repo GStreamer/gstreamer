@@ -1,6 +1,8 @@
 /*
  *  gstvaapipostprocutil.h - VA-API video post processing utilities
  *
+ *  Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ *  Copyright (C) 2005-2012 David Schleef <ds@schleef.org>
  *  Copyright (C) 2016 Intel Corporation
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *    Author: Victor Jaquez <victorx.jaquez@intel.com>
@@ -146,47 +148,380 @@ is_deinterlace_enabled (GstVaapiPostproc * postproc, GstVideoInfo * vip)
   return deinterlace;
 }
 
-static void
-find_best_size (GstVaapiPostproc * postproc, GstVideoInfo * vip,
-    guint * width_ptr, guint * height_ptr)
-{
-  guint width, height;
-
-  width = GST_VIDEO_INFO_WIDTH (vip);
-  height = GST_VIDEO_INFO_HEIGHT (vip);
-  if (postproc->width && postproc->height) {
-    width = postproc->width;
-    height = postproc->height;
-  } else if (postproc->keep_aspect) {
-    const gdouble ratio = (gdouble) width / height;
-    if (postproc->width) {
-      width = postproc->width;
-      height = postproc->width / ratio;
-    } else if (postproc->height) {
-      height = postproc->height;
-      width = postproc->height * ratio;
-    }
-  } else if (postproc->width)
-    width = postproc->width;
-  else if (postproc->height)
-    height = postproc->height;
-
-  *width_ptr = width;
-  *height_ptr = height;
-}
-
 static gboolean
 _fixate_frame_size (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
     GstStructure * outs)
 {
-  guint width, height, par_n, par_d;
+  const GValue *to_par;
+  GValue tpar = G_VALUE_INIT;
+  gboolean ret;
 
-  par_n = GST_VIDEO_INFO_PAR_N (vinfo);
-  par_d = GST_VIDEO_INFO_PAR_D (vinfo);
-  find_best_size (postproc, vinfo, &width, &height);
-  gst_structure_set (outs, "width", G_TYPE_INT, width, "height", G_TYPE_INT,
-      height, "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
-  return TRUE;
+  ret = TRUE;
+  to_par = gst_structure_get_value (outs, "pixel-aspect-ratio");
+  if (!to_par) {
+    g_value_init (&tpar, GST_TYPE_FRACTION);
+    gst_value_set_fraction (&tpar, 1, 1);
+    to_par = &tpar;
+
+    gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+        NULL);
+  }
+
+  /* we have both PAR but they might not be fixated */
+  {
+    gint from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d;
+    gint w = 0, h = 0;
+    gint from_dar_n, from_dar_d;
+    gint num, den;
+
+    from_par_n = GST_VIDEO_INFO_PAR_N (vinfo);
+    from_par_d = GST_VIDEO_INFO_PAR_D (vinfo);
+    from_w = GST_VIDEO_INFO_WIDTH (vinfo);
+    from_h = GST_VIDEO_INFO_HEIGHT (vinfo);
+
+    gst_structure_get_int (outs, "width", &w);
+    gst_structure_get_int (outs, "height", &h);
+
+    /* if both width and height are already fixed, we can't do anything
+     * about it anymore */
+    if (w && h) {
+      guint n, d;
+
+      GST_DEBUG_OBJECT (postproc,
+          "dimensions already set to %dx%d, not fixating", w, h);
+
+      if (!gst_value_is_fixed (to_par)) {
+        if (gst_video_calculate_display_ratio (&n, &d, from_w, from_h,
+                from_par_n, from_par_d, w, h)) {
+          GST_DEBUG_OBJECT (postproc, "fixating to_par to %dx%d", n, d);
+          if (gst_structure_has_field (outs, "pixel-aspect-ratio"))
+            gst_structure_fixate_field_nearest_fraction (outs,
+                "pixel-aspect-ratio", n, d);
+          else if (n != d)
+            gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+                n, d, NULL);
+        }
+      }
+
+      goto done;
+    }
+
+    /* Calculate input DAR */
+    if (!gst_util_fraction_multiply (from_w, from_h, from_par_n, from_par_d,
+            &from_dar_n, &from_dar_d))
+      goto overflow_error;
+
+    GST_DEBUG_OBJECT (postproc, "Input DAR is %d/%d", from_dar_n, from_dar_d);
+
+    /* If either width or height are fixed there's not much we
+     * can do either except choosing a height or width and PAR
+     * that matches the DAR as good as possible
+     */
+    if (h) {
+      GstStructure *tmp;
+      gint set_w, set_par_n, set_par_d;
+
+      GST_DEBUG_OBJECT (postproc, "height is fixed (%d)", h);
+
+      /* If the PAR is fixed too, there's not much to do
+       * except choosing the width that is nearest to the
+       * width with the same DAR */
+      if (gst_value_is_fixed (to_par)) {
+        to_par_n = gst_value_get_fraction_numerator (to_par);
+        to_par_d = gst_value_get_fraction_denominator (to_par);
+
+        GST_DEBUG_OBJECT (postproc, "PAR is fixed %d/%d", to_par_n, to_par_d);
+
+        if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, to_par_d,
+                to_par_n, &num, &den))
+          goto overflow_error;
+
+        w = (guint) gst_util_uint64_scale_int (h, num, den);
+        gst_structure_fixate_field_nearest_int (outs, "width", w);
+
+        goto done;
+      }
+
+      /* The PAR is not fixed and it's quite likely that we can set
+       * an arbitrary PAR. */
+
+      /* Check if we can keep the input width */
+      tmp = gst_structure_copy (outs);
+      gst_structure_fixate_field_nearest_int (tmp, "width", from_w);
+      gst_structure_get_int (tmp, "width", &set_w);
+
+      /* Might have failed but try to keep the DAR nonetheless by
+       * adjusting the PAR */
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, h, set_w,
+              &to_par_n, &to_par_d))
+        goto overflow_error;
+
+      if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
+        gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
+      gst_structure_fixate_field_nearest_fraction (tmp, "pixel-aspect-ratio",
+          to_par_n, to_par_d);
+      gst_structure_get_fraction (tmp, "pixel-aspect-ratio", &set_par_n,
+          &set_par_d);
+      gst_structure_free (tmp);
+
+      /* Check if the adjusted PAR is accepted */
+      if (set_par_n == to_par_n && set_par_d == to_par_d) {
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "width", G_TYPE_INT, set_w,
+              "pixel-aspect-ratio", GST_TYPE_FRACTION, set_par_n, set_par_d,
+              NULL);
+        goto done;
+      }
+
+      /* Otherwise scale the width to the new PAR and check if the
+       * adjusted with is accepted. If all that fails we can't keep
+       * the DAR */
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_par_d,
+              set_par_n, &num, &den))
+        goto overflow_error;
+
+      w = (guint) gst_util_uint64_scale_int (h, num, den);
+      gst_structure_fixate_field_nearest_int (outs, "width", w);
+      if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+          set_par_n != set_par_d)
+        gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+            set_par_n, set_par_d, NULL);
+
+      goto done;
+    } else if (w) {
+      GstStructure *tmp;
+      gint set_h, set_par_n, set_par_d;
+
+      GST_DEBUG_OBJECT (postproc, "width is fixed (%d)", w);
+
+      /* If the PAR is fixed too, there's not much to do
+       * except choosing the height that is nearest to the
+       * height with the same DAR */
+      if (gst_value_is_fixed (to_par)) {
+        to_par_n = gst_value_get_fraction_numerator (to_par);
+        to_par_d = gst_value_get_fraction_denominator (to_par);
+
+        GST_DEBUG_OBJECT (postproc, "PAR is fixed %d/%d", to_par_n, to_par_d);
+
+        if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, to_par_d,
+                to_par_n, &num, &den))
+          goto overflow_error;
+
+        h = (guint) gst_util_uint64_scale_int (w, den, num);
+        gst_structure_fixate_field_nearest_int (outs, "height", h);
+
+        goto done;
+      }
+
+      /* The PAR is not fixed and it's quite likely that we can set
+       * an arbitrary PAR. */
+
+      /* Check if we can keep the input height */
+      tmp = gst_structure_copy (outs);
+      gst_structure_fixate_field_nearest_int (tmp, "height", from_h);
+      gst_structure_get_int (tmp, "height", &set_h);
+
+      /* Might have failed but try to keep the DAR nonetheless by
+       * adjusting the PAR */
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_h, w,
+              &to_par_n, &to_par_d))
+        goto overflow_error;
+
+      if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
+        gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
+      gst_structure_fixate_field_nearest_fraction (tmp, "pixel-aspect-ratio",
+          to_par_n, to_par_d);
+      gst_structure_get_fraction (tmp, "pixel-aspect-ratio", &set_par_n,
+          &set_par_d);
+      gst_structure_free (tmp);
+
+      /* Check if the adjusted PAR is accepted */
+      if (set_par_n == to_par_n && set_par_d == to_par_d) {
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "height", G_TYPE_INT, set_h,
+              "pixel-aspect-ratio", GST_TYPE_FRACTION, set_par_n, set_par_d,
+              NULL);
+        goto done;
+      }
+
+      /* Otherwise scale the height to the new PAR and check if the
+       * adjusted with is accepted. If all that fails we can't keep
+       * the DAR */
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_par_d,
+              set_par_n, &num, &den))
+        goto overflow_error;
+
+      h = (guint) gst_util_uint64_scale_int (w, den, num);
+      gst_structure_fixate_field_nearest_int (outs, "height", h);
+      if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+          set_par_n != set_par_d)
+        gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+            set_par_n, set_par_d, NULL);
+
+      goto done;
+    } else if (gst_value_is_fixed (to_par)) {
+      GstStructure *tmp;
+      gint set_h, set_w, f_h, f_w;
+
+      to_par_n = gst_value_get_fraction_numerator (to_par);
+      to_par_d = gst_value_get_fraction_denominator (to_par);
+
+      /* Calculate scale factor for the PAR change */
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, to_par_n,
+              to_par_d, &num, &den))
+        goto overflow_error;
+
+      /* Try to keep the input height (because of interlacing) */
+      tmp = gst_structure_copy (outs);
+      gst_structure_fixate_field_nearest_int (tmp, "height", from_h);
+      gst_structure_get_int (tmp, "height", &set_h);
+
+      /* This might have failed but try to scale the width
+       * to keep the DAR nonetheless */
+      w = (guint) gst_util_uint64_scale_int (set_h, num, den);
+      gst_structure_fixate_field_nearest_int (tmp, "width", w);
+      gst_structure_get_int (tmp, "width", &set_w);
+      gst_structure_free (tmp);
+
+      /* We kept the DAR and the height is nearest to the original height */
+      if (set_w == w) {
+        gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
+            G_TYPE_INT, set_h, NULL);
+        goto done;
+      }
+
+      f_h = set_h;
+      f_w = set_w;
+
+      /* If the former failed, try to keep the input width at least */
+      tmp = gst_structure_copy (outs);
+      gst_structure_fixate_field_nearest_int (tmp, "width", from_w);
+      gst_structure_get_int (tmp, "width", &set_w);
+
+      /* This might have failed but try to scale the width
+       * to keep the DAR nonetheless */
+      h = (guint) gst_util_uint64_scale_int (set_w, den, num);
+      gst_structure_fixate_field_nearest_int (tmp, "height", h);
+      gst_structure_get_int (tmp, "height", &set_h);
+      gst_structure_free (tmp);
+
+      /* We kept the DAR and the width is nearest to the original width */
+      if (set_h == h) {
+        gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
+            G_TYPE_INT, set_h, NULL);
+        goto done;
+      }
+
+      /* If all this failed, keep the height that was nearest to the orignal
+       * height and the nearest possible width. This changes the DAR but
+       * there's not much else to do here.
+       */
+      gst_structure_set (outs, "width", G_TYPE_INT, f_w, "height", G_TYPE_INT,
+          f_h, NULL);
+      goto done;
+    } else {
+      GstStructure *tmp;
+      gint set_h, set_w, set_par_n, set_par_d, tmp2;
+
+      /* width, height and PAR are not fixed but passthrough is not possible */
+
+      /* First try to keep the height and width as good as possible
+       * and scale PAR */
+      tmp = gst_structure_copy (outs);
+      gst_structure_fixate_field_nearest_int (tmp, "height", from_h);
+      gst_structure_get_int (tmp, "height", &set_h);
+      gst_structure_fixate_field_nearest_int (tmp, "width", from_w);
+      gst_structure_get_int (tmp, "width", &set_w);
+
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_h, set_w,
+              &to_par_n, &to_par_d))
+        goto overflow_error;
+
+      if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
+        gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
+      gst_structure_fixate_field_nearest_fraction (tmp, "pixel-aspect-ratio",
+          to_par_n, to_par_d);
+      gst_structure_get_fraction (tmp, "pixel-aspect-ratio", &set_par_n,
+          &set_par_d);
+      gst_structure_free (tmp);
+
+      if (set_par_n == to_par_n && set_par_d == to_par_d) {
+        gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
+            G_TYPE_INT, set_h, NULL);
+
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+              set_par_n, set_par_d, NULL);
+        goto done;
+      }
+
+      /* Otherwise try to scale width to keep the DAR with the set
+       * PAR and height */
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_par_d,
+              set_par_n, &num, &den))
+        goto overflow_error;
+
+      w = (guint) gst_util_uint64_scale_int (set_h, num, den);
+      tmp = gst_structure_copy (outs);
+      gst_structure_fixate_field_nearest_int (tmp, "width", w);
+      gst_structure_get_int (tmp, "width", &tmp2);
+      gst_structure_free (tmp);
+
+      if (tmp2 == w) {
+        gst_structure_set (outs, "width", G_TYPE_INT, tmp2, "height",
+            G_TYPE_INT, set_h, NULL);
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+              set_par_n, set_par_d, NULL);
+        goto done;
+      }
+
+      /* ... or try the same with the height */
+      h = (guint) gst_util_uint64_scale_int (set_w, den, num);
+      tmp = gst_structure_copy (outs);
+      gst_structure_fixate_field_nearest_int (tmp, "height", h);
+      gst_structure_get_int (tmp, "height", &tmp2);
+      gst_structure_free (tmp);
+
+      if (tmp2 == h) {
+        gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
+            G_TYPE_INT, tmp2, NULL);
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+              set_par_n, set_par_d, NULL);
+        goto done;
+      }
+
+      /* If all fails we can't keep the DAR and take the nearest values
+       * for everything from the first try */
+      gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
+          G_TYPE_INT, set_h, NULL);
+      if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+          set_par_n != set_par_d)
+        gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+            set_par_n, set_par_d, NULL);
+    }
+  }
+
+done:
+  if (to_par == &tpar)
+    g_value_unset (&tpar);
+
+  return ret;
+
+  /* ERRORS */
+overflow_error:
+  {
+    ret = FALSE;
+    GST_ELEMENT_ERROR (postproc, CORE, NEGOTIATION, (NULL),
+        ("Error calculating the output scaled size - integer overflow"));
+    goto done;
+  }
 }
 
 static gboolean
