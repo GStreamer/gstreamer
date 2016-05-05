@@ -1092,7 +1092,7 @@ gst_vaapipostproc_transform_caps (GstBaseTransform * trans,
 
 static GstCaps *
 gst_vaapipostproc_fixate_srccaps (GstVaapiPostproc * postproc,
-    GstCaps * sinkcaps)
+    GstCaps * sinkcaps, GstCaps * srccaps)
 {
   GstVideoInfo vi;
   GstVideoFormat out_format;
@@ -1134,8 +1134,7 @@ gst_vaapipostproc_fixate_srccaps (GstVaapiPostproc * postproc,
     out_format = postproc->format;
 
   srcpad = GST_BASE_TRANSFORM_SRC_PAD (postproc);
-  feature = gst_vaapi_find_preferred_caps_feature (srcpad,
-      postproc->allowed_srcpad_caps,
+  feature = gst_vaapi_find_preferred_caps_feature (srcpad, srccaps,
       (out_format == GST_VIDEO_FORMAT_UNKNOWN) ? &out_format : NULL);
 
   if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
@@ -1179,7 +1178,7 @@ gst_vaapipostproc_fixate_caps (GstBaseTransform * trans,
     goto done;
   }
 
-  if ((outcaps = gst_vaapipostproc_fixate_srccaps (postproc, caps)))
+  if ((outcaps = gst_vaapipostproc_fixate_srccaps (postproc, caps, othercaps)))
     gst_caps_replace (&othercaps, outcaps);
 
 done:
