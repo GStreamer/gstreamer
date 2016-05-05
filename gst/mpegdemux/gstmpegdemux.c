@@ -228,7 +228,7 @@ gst_ps_demux_base_init (GstPsDemuxClass * klass)
   gst_element_class_add_pad_template (element_class, klass->sink_template);
 
   gst_element_class_set_static_metadata (element_class,
-      "The Fluendo MPEG Program Stream Demuxer", "Codec/Demuxer",
+      "MPEG Program Stream Demuxer", "Codec/Demuxer",
       "Demultiplexes MPEG Program Streams", "Wim Taymans <wim@fluendo.com>");
 }
 
