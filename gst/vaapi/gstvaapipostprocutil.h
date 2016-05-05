@@ -34,6 +34,12 @@ G_BEGIN_DECLS
 
 GstCaps *gst_vaapipostproc_transform_srccaps (GstVaapiPostproc * postproc);
 
+GstCaps *gst_vaapipostproc_fixate_srccaps (GstVaapiPostproc * postproc,
+    GstCaps * sinkcaps, GstCaps * srccaps);
+
+gboolean is_deinterlace_enabled (GstVaapiPostproc * postproc,
+    GstVideoInfo * vip);
+
 G_END_DECLS
 
 #endif /* GST_VAAPIPOSTPROCUTIL_H */

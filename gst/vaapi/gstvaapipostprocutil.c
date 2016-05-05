@@ -124,3 +124,126 @@ gst_vaapipostproc_transform_srccaps (GstVaapiPostproc * postproc)
 
   return out_caps;
 }
+
+gboolean
+is_deinterlace_enabled (GstVaapiPostproc * postproc, GstVideoInfo * vip)
+{
+  gboolean deinterlace;
+
+  switch (postproc->deinterlace_mode) {
+    case GST_VAAPI_DEINTERLACE_MODE_AUTO:
+      deinterlace = GST_VIDEO_INFO_IS_INTERLACED (vip);
+      break;
+    case GST_VAAPI_DEINTERLACE_MODE_INTERLACED:
+      deinterlace = TRUE;
+      break;
+    default:
+      deinterlace = FALSE;
+      break;
+  }
+  return deinterlace;
+}
+
+static void
+find_best_size (GstVaapiPostproc * postproc, GstVideoInfo * vip,
+    guint * width_ptr, guint * height_ptr)
+{
+  guint width, height;
+
+  width = GST_VIDEO_INFO_WIDTH (vip);
+  height = GST_VIDEO_INFO_HEIGHT (vip);
+  if (postproc->width && postproc->height) {
+    width = postproc->width;
+    height = postproc->height;
+  } else if (postproc->keep_aspect) {
+    const gdouble ratio = (gdouble) width / height;
+    if (postproc->width) {
+      width = postproc->width;
+      height = postproc->width / ratio;
+    } else if (postproc->height) {
+      height = postproc->height;
+      width = postproc->height * ratio;
+    }
+  } else if (postproc->width)
+    width = postproc->width;
+  else if (postproc->height)
+    height = postproc->height;
+
+  *width_ptr = width;
+  *height_ptr = height;
+}
+
+/**
+ * gst_vaapipostproc_fixate_srccaps:
+ * @postproc: a #GstVaapiPostproc instance
+ * @sinkcaps: fixed #GstCaps from sink pad
+ * @srccaps: #GstCaps from src pad to fixate
+ *
+ * Given @srccaps and @sinkcaps returns a new allocated #GstCaps with
+ * the fixated caps for the src pad.
+ *
+ * Returns: A new allocated #GstCaps
+ **/
+GstCaps *
+gst_vaapipostproc_fixate_srccaps (GstVaapiPostproc * postproc,
+    GstCaps * sinkcaps, GstCaps * srccaps)
+{
+  GstVideoInfo vi;
+  GstVideoFormat out_format;
+  GstCaps *out_caps;
+  GstVaapiCapsFeature feature;
+  const gchar *feature_str;
+  guint width, height;
+  GstPad *srcpad;
+
+  /* Generate the expected src pad caps, from the current fixated sink
+     pad caps */
+  if (!gst_video_info_from_caps (&vi, sinkcaps))
+    return NULL;
+
+  // Set double framerate in interlaced mode
+  if (is_deinterlace_enabled (postproc, &vi)) {
+    gint fps_n = GST_VIDEO_INFO_FPS_N (&vi);
+    gint fps_d = GST_VIDEO_INFO_FPS_D (&vi);
+    if (!gst_util_fraction_multiply (fps_n, fps_d, 2, 1, &fps_n, &fps_d))
+      return NULL;
+    GST_VIDEO_INFO_FPS_N (&vi) = fps_n;
+    GST_VIDEO_INFO_FPS_D (&vi) = fps_d;
+  }
+  // Signal the other pad that we only generate progressive frames
+  GST_VIDEO_INFO_INTERLACE_MODE (&vi) = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+
+  // Update size from user-specified parameters
+  find_best_size (postproc, &vi, &width, &height);
+
+  // Update format from user-specified parameters
+  srcpad = GST_BASE_TRANSFORM_SRC_PAD (postproc);
+  feature = gst_vaapi_find_preferred_caps_feature (srcpad, srccaps,
+      &out_format);
+
+  if (postproc->format != DEFAULT_FORMAT)
+    out_format = postproc->format;
+
+  if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
+    return NULL;
+
+  gst_video_info_change_format (&vi, out_format, width, height);
+  out_caps = gst_video_info_to_caps (&vi);
+  if (!out_caps)
+    return NULL;
+
+  if (feature) {
+    feature_str = gst_vaapi_caps_feature_to_string (feature);
+    if (feature_str)
+      gst_caps_set_features (out_caps, 0,
+          gst_caps_features_new (feature_str, NULL));
+  }
+
+  /* we don't need to do format conversion if GL_TEXTURE_UPLOAD_META
+   * is negotiated */
+  if (feature != GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META &&
+      postproc->format != out_format) {
+    postproc->format = out_format;
+  }
+  return out_caps;
+}
