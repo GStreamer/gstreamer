@@ -454,6 +454,7 @@ gst_vulkan_swapper_get_supported_caps (GstVulkanSwapper * swapper,
     gst_structure_set_value (s, "format", &list);
     g_value_unset (&list);
   }
+
   {
     guint32 max_dim = swapper->device->gpu_props.limits.maxImageDimension2D;
 
@@ -798,7 +799,6 @@ gst_vulkan_swapper_set_caps (GstVulkanSwapper * swapper, GstCaps * caps,
 struct cmd_data
 {
   VkCommandBuffer cmd;
-  VkFence fence;
   GDestroyNotify notify;
   gpointer data;
 };
@@ -888,10 +888,6 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   cmd_data->cmd = cmd;
   cmd_data->notify = NULL;
 
-  if (!_new_fence (swapper->device, &cmd_data->fence, error)) {
-    return FALSE;
-  }
-
   return TRUE;
 }
 
@@ -899,7 +895,8 @@ static gboolean
 _render_buffer_unlocked (GstVulkanSwapper * swapper,
     GstBuffer * buffer, GError ** error)
 {
-  VkSemaphore semaphore = { 0, };
+  VkSemaphore acquire_semaphore = { 0, };
+  VkSemaphore present_semaphore = { 0, };
   VkSemaphoreCreateInfo semaphore_info = { 0, };
   VkPresentInfoKHR present;
   struct cmd_data cmd_data = { 0, };
@@ -926,18 +923,18 @@ _render_buffer_unlocked (GstVulkanSwapper * swapper,
 
 reacquire:
   err = vkCreateSemaphore (swapper->device->device, &semaphore_info,
-      NULL, &semaphore);
+      NULL, &acquire_semaphore);
   if (gst_vulkan_error_to_g_error (err, error, "vkCreateSemaphore") < 0)
     goto error;
 
   err =
       swapper->AcquireNextImageKHR (swapper->device->device,
-      swapper->swap_chain, -1, semaphore, VK_NULL_HANDLE, &swap_idx);
+      swapper->swap_chain, -1, acquire_semaphore, VK_NULL_HANDLE, &swap_idx);
   /* TODO: Deal with the VK_SUBOPTIMAL_KHR and VK_ERROR_OUT_OF_DATE_KHR */
   if (err == VK_ERROR_OUT_OF_DATE_KHR) {
     GST_DEBUG_OBJECT (swapper, "out of date frame acquired");
 
-    vkDestroySemaphore (swapper->device->device, semaphore, NULL);
+    vkDestroySemaphore (swapper->device->device, acquire_semaphore, NULL);
     if (!_swapchain_resize (swapper, error))
       goto error;
     goto reacquire;
@@ -949,6 +946,11 @@ reacquire:
   if (!_build_render_buffer_cmd (swapper, swap_idx, buffer, &cmd_data, error))
     goto error;
 
+  err = vkCreateSemaphore (swapper->device->device, &semaphore_info,
+      NULL, &present_semaphore);
+  if (gst_vulkan_error_to_g_error (err, error, "vkCreateSemaphore") < 0)
+    goto error;
+
   {
     VkSubmitInfo submit_info = { 0, };
     VkPipelineStageFlags stages = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
@@ -956,24 +958,23 @@ reacquire:
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.pNext = NULL;
     submit_info.waitSemaphoreCount = 1;
-    submit_info.pWaitSemaphores = &semaphore;
+    submit_info.pWaitSemaphores = &acquire_semaphore;
     submit_info.pWaitDstStageMask = &stages;
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &cmd_data.cmd;
-    submit_info.signalSemaphoreCount = 0;
-    submit_info.pSignalSemaphores = NULL;
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores = &present_semaphore;
 
-    err =
-        vkQueueSubmit (swapper->queue->queue, 1, &submit_info, cmd_data.fence);
+    err = vkQueueSubmit (swapper->queue->queue, 1, &submit_info, NULL);
     if (gst_vulkan_error_to_g_error (err, error, "vkQueueSubmit") < 0) {
-      return FALSE;
+      goto error;
     }
   }
 
   present.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
   present.pNext = NULL;
-  present.waitSemaphoreCount = 0;
-  present.pWaitSemaphores = NULL;
+  present.waitSemaphoreCount = 1;
+  present.pWaitSemaphores = &present_semaphore;
   present.swapchainCount = 1;
   present.pSwapchains = &swapper->swap_chain;
   present.pImageIndices = &swap_idx;
@@ -988,30 +989,30 @@ reacquire:
   } else if (gst_vulkan_error_to_g_error (err, error, "vkQueuePresentKHR") < 0)
     goto error;
 
-  err = vkWaitForFences (swapper->device->device, 1, &cmd_data.fence, TRUE, -1);
-  if (gst_vulkan_error_to_g_error (err, error, "vkWaitForFences") < 0)
+  err = vkDeviceWaitIdle (swapper->device->device);
+  if (gst_vulkan_error_to_g_error (err, error, "vkDeviceWaitIdle") < 0)
     goto error;
 
-  if (semaphore)
-    vkDestroySemaphore (swapper->device->device, semaphore, NULL);
+  if (acquire_semaphore)
+    vkDestroySemaphore (swapper->device->device, acquire_semaphore, NULL);
+  if (present_semaphore)
+    vkDestroySemaphore (swapper->device->device, present_semaphore, NULL);
   if (cmd_data.cmd)
     vkFreeCommandBuffers (swapper->device->device, swapper->device->cmd_pool,
         1, &cmd_data.cmd);
-  if (cmd_data.fence)
-    vkDestroyFence (swapper->device->device, cmd_data.fence, NULL);
   if (cmd_data.notify)
     cmd_data.notify (cmd_data.data);
   return TRUE;
 
 error:
   {
-    if (semaphore)
-      vkDestroySemaphore (swapper->device->device, semaphore, NULL);
+    if (acquire_semaphore)
+      vkDestroySemaphore (swapper->device->device, acquire_semaphore, NULL);
+    if (present_semaphore)
+      vkDestroySemaphore (swapper->device->device, present_semaphore, NULL);
     if (cmd_data.cmd)
       vkFreeCommandBuffers (swapper->device->device, swapper->device->cmd_pool,
           1, &cmd_data.cmd);
-    if (cmd_data.fence)
-      vkDestroyFence (swapper->device->device, cmd_data.fence, NULL);
     if (cmd_data.notify)
       cmd_data.notify (cmd_data.data);
     return FALSE;
