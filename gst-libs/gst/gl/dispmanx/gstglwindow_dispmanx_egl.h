@@ -67,6 +67,7 @@ struct _GstGLWindowDispmanxEGL {
 
   gint preferred_width;
   gint preferred_height;
+  GstVideoRectangle render_rect;
 
   gboolean visible;
 
