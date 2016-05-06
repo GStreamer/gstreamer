@@ -74,6 +74,7 @@ struct _GstRtpBin {
   guint32         max_dropout_time;
   guint32         max_misorder_time;
   gboolean        rfc7273_sync;
+  guint           max_streams;
 
   /* a list of session */
   GSList         *sessions;

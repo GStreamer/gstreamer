@@ -299,6 +299,7 @@ enum
 #define DEFAULT_MAX_DROPOUT_TIME     60000
 #define DEFAULT_MAX_MISORDER_TIME    2000
 #define DEFAULT_RFC7273_SYNC         FALSE
+#define DEFAULT_MAX_STREAMS          G_MAXUINT
 
 enum
 {
@@ -322,7 +323,8 @@ enum
   PROP_MAX_RTCP_RTP_TIME_DIFF,
   PROP_MAX_DROPOUT_TIME,
   PROP_MAX_MISORDER_TIME,
-  PROP_RFC7273_SYNC
+  PROP_RFC7273_SYNC,
+  PROP_MAX_STREAMS
 };
 
 #define GST_RTP_BIN_RTCP_SYNC_TYPE (gst_rtp_bin_rtcp_sync_get_type())
@@ -1583,6 +1585,9 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
 
   rtpbin = session->bin;
 
+  if (g_slist_length (session->streams) >= rtpbin->max_streams)
+    goto max_streams;
+
   if (!(buffer = gst_element_factory_make ("rtpjitterbuffer", NULL)))
     goto no_jitterbuffer;
 
@@ -1659,6 +1664,12 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   return stream;
 
   /* ERRORS */
+max_streams:
+  {
+    GST_WARNING_OBJECT (rtpbin, "stream exeeds maximum (%d)",
+        rtpbin->max_streams);
+    return NULL;
+  }
 no_jitterbuffer:
   {
     g_warning ("rtpbin: could not create rtpjitterbuffer element");
@@ -2323,6 +2334,12 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           "(requires clock and offset to be provided)", DEFAULT_RFC7273_SYNC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MAX_STREAMS,
+      g_param_spec_uint ("max-streams", "Max Streams",
+          "The maximum number of streams to create for one session",
+          0, G_MAXUINT, DEFAULT_MAX_STREAMS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -2393,6 +2410,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   rtpbin->max_dropout_time = DEFAULT_MAX_DROPOUT_TIME;
   rtpbin->max_misorder_time = DEFAULT_MAX_MISORDER_TIME;
   rtpbin->rfc7273_sync = DEFAULT_RFC7273_SYNC;
+  rtpbin->max_streams = DEFAULT_MAX_STREAMS;
 
   /* some default SDES entries */
   cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
@@ -2614,6 +2632,9 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin,
           "rfc7273-sync", value);
       break;
+    case PROP_MAX_STREAMS:
+      rtpbin->max_streams = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2698,6 +2719,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_RFC7273_SYNC:
       g_value_set_boolean (value, rtpbin->rfc7273_sync);
+      break;
+    case PROP_MAX_STREAMS:
+      g_value_set_uint (value, rtpbin->max_streams);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
