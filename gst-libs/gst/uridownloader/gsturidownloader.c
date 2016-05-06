@@ -58,6 +58,10 @@ static gboolean gst_uri_downloader_sink_event (GstPad * pad, GstObject * parent,
 static GstBusSyncReply gst_uri_downloader_bus_handler (GstBus * bus,
     GstMessage * message, gpointer data);
 
+static gboolean gst_uri_downloader_ensure_src (GstUriDownloader * downloader,
+    const gchar * uri);
+static void gst_uri_downloader_destroy_src (GstUriDownloader * downloader);
+
 static GstStaticPadTemplate sinkpadtemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -112,11 +116,7 @@ gst_uri_downloader_dispose (GObject * object)
 {
   GstUriDownloader *downloader = GST_URI_DOWNLOADER (object);
 
-  if (downloader->priv->urisrc != NULL) {
-    gst_element_set_state (downloader->priv->urisrc, GST_STATE_NULL);
-    gst_object_unref (downloader->priv->urisrc);
-    downloader->priv->urisrc = NULL;
-  }
+  gst_uri_downloader_destroy_src (downloader);
 
   if (downloader->priv->bus != NULL) {
     gst_object_unref (downloader->priv->bus);
@@ -347,16 +347,8 @@ gst_uri_downloader_set_range (GstUriDownloader * downloader,
 }
 
 static gboolean
-gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri,
-    const gchar * referer, gboolean compress, gboolean refresh,
-    gboolean allow_cache)
+gst_uri_downloader_ensure_src (GstUriDownloader * downloader, const gchar * uri)
 {
-  GstPad *pad;
-  GObjectClass *gobject_class;
-
-  if (!gst_uri_is_valid (uri))
-    return FALSE;
-
   if (downloader->priv->urisrc) {
     gchar *old_protocol, *new_protocol;
     gchar *old_uri;
@@ -367,22 +359,18 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri,
     new_protocol = gst_uri_get_protocol (uri);
 
     if (!g_str_equal (old_protocol, new_protocol)) {
-      gst_element_set_state (downloader->priv->urisrc, GST_STATE_NULL);
-      gst_object_unref (downloader->priv->urisrc);
-      downloader->priv->urisrc = NULL;
+      gst_uri_downloader_destroy_src (downloader);
       GST_DEBUG_OBJECT (downloader, "Can't re-use old source element");
     } else {
       GError *err = NULL;
 
       GST_DEBUG_OBJECT (downloader, "Re-using old source element");
-      if (!gst_uri_handler_set_uri (GST_URI_HANDLER (downloader->priv->urisrc),
-              uri, &err)) {
-        GST_DEBUG_OBJECT (downloader, "Failed to re-use old source element: %s",
-            err->message);
+      if (!gst_uri_handler_set_uri
+          (GST_URI_HANDLER (downloader->priv->urisrc), uri, &err)) {
+        GST_DEBUG_OBJECT (downloader,
+            "Failed to re-use old source element: %s", err->message);
         g_clear_error (&err);
-        gst_element_set_state (downloader->priv->urisrc, GST_STATE_NULL);
-        gst_object_unref (downloader->priv->urisrc);
-        downloader->priv->urisrc = NULL;
+        gst_uri_downloader_destroy_src (downloader);
       }
     }
     g_free (old_uri);
@@ -395,9 +383,42 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri,
         uri);
     downloader->priv->urisrc =
         gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
-    if (!downloader->priv->urisrc)
-      return FALSE;
+    if (downloader->priv->urisrc) {
+      /* gst_element_make_from_uri returns a floating reference
+       * and we are not going to transfer the ownership, so we
+       * should take it.
+       */
+      gst_object_ref_sink (downloader->priv->urisrc);
+    }
   }
+
+  return downloader->priv->urisrc != NULL;
+}
+
+static void
+gst_uri_downloader_destroy_src (GstUriDownloader * downloader)
+{
+  if (!downloader->priv->urisrc)
+    return;
+
+  gst_element_set_state (downloader->priv->urisrc, GST_STATE_NULL);
+  gst_object_unref (downloader->priv->urisrc);
+  downloader->priv->urisrc = NULL;
+}
+
+static gboolean
+gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri,
+    const gchar * referer, gboolean compress,
+    gboolean refresh, gboolean allow_cache)
+{
+  GstPad *pad;
+  GObjectClass *gobject_class;
+
+  if (!gst_uri_is_valid (uri))
+    return FALSE;
+
+  if (!gst_uri_downloader_ensure_src (downloader, uri))
+    return FALSE;
 
   gobject_class = G_OBJECT_GET_CLASS (downloader->priv->urisrc);
   if (g_object_class_find_property (gobject_class, "compress"))
