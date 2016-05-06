@@ -24,6 +24,8 @@
 #include "gstvaapipostprocutil.h"
 #include "gstvaapipluginutil.h"
 
+#define GST_CAT_DEFAULT (GST_VAAPI_PLUGIN_BASE (postproc)->debug_category)
+
 /* if format property is set */
 static void
 _transform_format (GstVaapiPostproc * postproc, GstCapsFeatures * features,
@@ -173,6 +175,131 @@ find_best_size (GstVaapiPostproc * postproc, GstVideoInfo * vip,
   *height_ptr = height;
 }
 
+static gboolean
+_fixate_frame_size (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
+    GstStructure * outs)
+{
+  guint width, height, par_n, par_d;
+
+  par_n = GST_VIDEO_INFO_PAR_N (vinfo);
+  par_d = GST_VIDEO_INFO_PAR_D (vinfo);
+  find_best_size (postproc, vinfo, &width, &height);
+  gst_structure_set (outs, "width", G_TYPE_INT, width, "height", G_TYPE_INT,
+      height, "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
+  return TRUE;
+}
+
+static gboolean
+_fixate_frame_rate (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
+    GstStructure * outs)
+{
+  gint fps_n, fps_d;
+
+  fps_n = GST_VIDEO_INFO_FPS_N (vinfo);
+  fps_d = GST_VIDEO_INFO_FPS_D (vinfo);
+  if (is_deinterlace_enabled (postproc, vinfo)) {
+    if (!gst_util_fraction_multiply (fps_n, fps_d, 2, 1, &fps_n, &fps_d))
+      goto overflow_error;
+  }
+  gst_structure_set (outs, "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+  return TRUE;
+
+  /* ERRORS */
+overflow_error:
+  {
+    GST_ELEMENT_ERROR (postproc, CORE, NEGOTIATION, (NULL),
+        ("Error calculating the output framerate - integer overflow"));
+    return FALSE;
+  }
+}
+
+static gboolean
+_set_preferred_format (GstStructure * outs, GstVideoFormat format)
+{
+  GValue value = G_VALUE_INIT;
+
+  if (format == GST_VIDEO_FORMAT_UNKNOWN || format == GST_VIDEO_FORMAT_ENCODED)
+    return FALSE;
+
+  if (gst_vaapi_value_set_format (&value, format)) {
+    gst_structure_set_value (outs, "format", &value);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+static GstCaps *
+_get_preferred_caps (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
+    GstCaps * srccaps)
+{
+  GstPad *srcpad;
+  GstVideoFormat format;
+  GstVaapiCapsFeature f;
+  const gchar *feature;
+  GstStructure *structure;
+  GstCapsFeatures *features;
+  GstCaps *outcaps;
+  gint i, n;
+
+  format = GST_VIDEO_FORMAT_UNKNOWN;
+  srcpad = GST_BASE_TRANSFORM_SRC_PAD (postproc);
+  f = gst_vaapi_find_preferred_caps_feature (srcpad, srccaps, &format);
+  if (f == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
+    return NULL;
+
+  feature = gst_vaapi_caps_feature_to_string (f);
+  if (!feature)
+    feature = GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY;
+
+  n = gst_caps_get_size (srccaps);
+  for (i = 0; i < n; i++) {
+    structure = gst_caps_get_structure (srccaps, i);
+    features = gst_caps_get_features (srccaps, i);
+
+    if (!gst_caps_features_is_any (features)
+        && gst_caps_features_contains (features, feature))
+      break;
+  }
+
+  if (i >= n)
+    goto invalid_caps;
+
+  /* make copy */
+  structure = gst_structure_copy (structure);
+
+  if (!_set_preferred_format (structure, format))
+    goto fixate_failed;
+  if (!_fixate_frame_size (postproc, vinfo, structure))
+    goto fixate_failed;
+  if (!_fixate_frame_rate (postproc, vinfo, structure))
+    goto fixate_failed;
+
+  outcaps = gst_caps_new_empty ();
+  gst_caps_append_structure_full (outcaps, structure,
+      gst_caps_features_copy (features));
+
+  /* we don't need to do format conversion if GL_TEXTURE_UPLOAD_META
+   * is negotiated */
+  if (f != GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META
+      && postproc->format != format)
+    postproc->format = format;
+
+  return outcaps;
+
+  /* ERRORS */
+fixate_failed:
+  {
+    GST_WARNING_OBJECT (postproc, "Could not fixate src caps");
+    gst_structure_free (structure);
+    return NULL;
+  }
+invalid_caps:
+  {
+    GST_WARNING_OBJECT (postproc, "No valid src caps found");
+    return NULL;
+  }
+}
+
 /**
  * gst_vaapipostproc_fixate_srccaps:
  * @postproc: a #GstVaapiPostproc instance
@@ -189,61 +316,8 @@ gst_vaapipostproc_fixate_srccaps (GstVaapiPostproc * postproc,
     GstCaps * sinkcaps, GstCaps * srccaps)
 {
   GstVideoInfo vi;
-  GstVideoFormat out_format;
-  GstCaps *out_caps;
-  GstVaapiCapsFeature feature;
-  const gchar *feature_str;
-  guint width, height;
-  GstPad *srcpad;
 
-  /* Generate the expected src pad caps, from the current fixated sink
-     pad caps */
   if (!gst_video_info_from_caps (&vi, sinkcaps))
     return NULL;
-
-  // Set double framerate in interlaced mode
-  if (is_deinterlace_enabled (postproc, &vi)) {
-    gint fps_n = GST_VIDEO_INFO_FPS_N (&vi);
-    gint fps_d = GST_VIDEO_INFO_FPS_D (&vi);
-    if (!gst_util_fraction_multiply (fps_n, fps_d, 2, 1, &fps_n, &fps_d))
-      return NULL;
-    GST_VIDEO_INFO_FPS_N (&vi) = fps_n;
-    GST_VIDEO_INFO_FPS_D (&vi) = fps_d;
-  }
-  // Signal the other pad that we only generate progressive frames
-  GST_VIDEO_INFO_INTERLACE_MODE (&vi) = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
-
-  // Update size from user-specified parameters
-  find_best_size (postproc, &vi, &width, &height);
-
-  // Update format from user-specified parameters
-  srcpad = GST_BASE_TRANSFORM_SRC_PAD (postproc);
-  feature = gst_vaapi_find_preferred_caps_feature (srcpad, srccaps,
-      &out_format);
-
-  if (postproc->format != DEFAULT_FORMAT)
-    out_format = postproc->format;
-
-  if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
-    return NULL;
-
-  gst_video_info_change_format (&vi, out_format, width, height);
-  out_caps = gst_video_info_to_caps (&vi);
-  if (!out_caps)
-    return NULL;
-
-  if (feature) {
-    feature_str = gst_vaapi_caps_feature_to_string (feature);
-    if (feature_str)
-      gst_caps_set_features (out_caps, 0,
-          gst_caps_features_new (feature_str, NULL));
-  }
-
-  /* we don't need to do format conversion if GL_TEXTURE_UPLOAD_META
-   * is negotiated */
-  if (feature != GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META &&
-      postproc->format != out_format) {
-    postproc->format = out_format;
-  }
-  return out_caps;
+  return _get_preferred_caps (postproc, &vi, srccaps);
 }
