@@ -43,7 +43,7 @@ typedef struct _GstRTPMuxClass GstRTPMuxClass;
 typedef struct
 {
   gboolean have_timestamp_offset;
-  guint timestamp_offset;
+  guint32 timestamp_offset;
 
   GstSegment segment;
 
@@ -66,8 +66,9 @@ struct _GstRTPMux
   guint32 ts_base;
   guint16 seqnum_base;
 
-  gint32 ts_offset;
-  gint16 seqnum_offset;
+  gint64 ts_offset;
+  gint seqnum_offset;
+
   guint16 seqnum;               /* protected by object lock */
   guint ssrc;
   guint current_ssrc;
