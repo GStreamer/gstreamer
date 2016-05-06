@@ -121,6 +121,9 @@ timeline_fill_gaps            (GESTimeline *timeline);
 G_GNUC_INTERNAL GList *
 timeline_get_groups           (GESTimeline * timeline);
 
+G_GNUC_INTERNAL void
+timeline_emit_group_removed  (GESTimeline * timeline,
+                               GESGroup * group, GPtrArray * array);
 G_GNUC_INTERNAL
 void
 track_resort_and_fill_gaps    (GESTrack *track);

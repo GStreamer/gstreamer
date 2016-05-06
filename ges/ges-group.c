@@ -573,8 +573,7 @@ _ungroup (GESContainer * group, gboolean recursive)
   }
 
   if (timeline)
-    ges_timeline_emit_group_removed (timeline, (GESGroup *) group,
-        children_array);
+    timeline_emit_group_removed (timeline, (GESGroup *) group, children_array);
   g_ptr_array_free (children_array, TRUE);
   g_list_free_full (children, gst_object_unref);
 

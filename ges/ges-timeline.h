@@ -131,7 +131,6 @@ GstClockTime ges_timeline_get_snapping_distance (GESTimeline * timeline);
 void ges_timeline_set_snapping_distance (GESTimeline * timeline, GstClockTime snapping_distance);
 GESTimelineElement * ges_timeline_get_element (GESTimeline * timeline, const gchar *name);
 gboolean ges_timeline_is_empty (GESTimeline * timeline);
-void ges_timeline_emit_group_removed (GESTimeline * timeline, GESGroup * group, GPtrArray * array);
 
 G_END_DECLS
 

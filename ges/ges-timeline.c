@@ -2176,7 +2176,7 @@ timeline_add_group (GESTimeline * timeline, GESGroup * group)
  * Emit group-removed signal.
  */
 void
-ges_timeline_emit_group_removed (GESTimeline * timeline, GESGroup * group,
+timeline_emit_group_removed (GESTimeline * timeline, GESGroup * group,
     GPtrArray * array)
 {
   g_signal_emit (timeline, ges_timeline_signals[GROUP_REMOVED], 0, group,
