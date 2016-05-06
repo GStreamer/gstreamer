@@ -210,27 +210,28 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   /* ERRORS */
 error_invalid_config:
   {
-    GST_ERROR ("invalid config");
+    GST_ERROR_OBJECT (pool, "invalid config");
     return FALSE;
   }
 error_no_caps:
   {
-    GST_ERROR ("no valid caps in config");
+    GST_ERROR_OBJECT (pool, "no valid caps in config");
     return FALSE;
   }
 error_create_allocator:
   {
-    GST_ERROR ("failed to create GstVaapiVideoAllocator object");
+    GST_ERROR_OBJECT (pool, "failed to create GstVaapiVideoAllocator object");
     return FALSE;
   }
 error_create_allocator_info:
   {
-    GST_ERROR ("failed to create GstVaapiVideoAllocator `video-info'");
+    GST_ERROR_OBJECT (pool,
+        "failed to create GstVaapiVideoAllocator `video-info'");
     return FALSE;
   }
 error_no_vaapi_video_meta_option:
   {
-    GST_ERROR ("no GstVaapiVideoMeta option");
+    GST_ERROR_OBJECT (pool, "no GstVaapiVideoMeta option");
     return FALSE;
   }
 }
@@ -299,23 +300,23 @@ gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
   /* ERRORS */
 error_no_allocator:
   {
-    GST_ERROR ("no GstAllocator in buffer pool");
+    GST_ERROR_OBJECT (pool, "no GstAllocator in buffer pool");
     return GST_FLOW_ERROR;
   }
 error_create_meta:
   {
-    GST_ERROR ("failed to allocate vaapi video meta");
+    GST_ERROR_OBJECT (pool, "failed to allocate vaapi video meta");
     return GST_FLOW_ERROR;
   }
 error_create_buffer:
   {
-    GST_ERROR ("failed to create video buffer");
+    GST_ERROR_OBJECT (pool, "failed to create video buffer");
     gst_vaapi_video_meta_unref (meta);
     return GST_FLOW_ERROR;
   }
 error_create_memory:
   {
-    GST_ERROR ("failed to create video memory");
+    GST_ERROR_OBJECT (pool, "failed to create video memory");
     gst_buffer_unref (buffer);
     gst_vaapi_video_meta_unref (meta);
     return GST_FLOW_ERROR;
