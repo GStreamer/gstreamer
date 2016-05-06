@@ -27,6 +27,10 @@
   "application/x-rtp,media=video,encoding-name=H263,clock-rate=90000,"  \
   "payload=" G_STRINGIFY(p)
 
+#define H263P_RTP_CAPS_STR(p)                                           \
+  "application/x-rtp,media=video,encoding-name=H263-1998,clock-rate=90000," \
+  "payload="G_STRINGIFY(p)
+
 static gboolean
 have_element (const gchar * element_name)
 {
@@ -242,6 +246,33 @@ GST_START_TEST (test_h263pdepay_fragmented_memory_non_writable_buffer_split_fram
 }
 GST_END_TEST;
 
+GST_START_TEST (test_h263pdepay_dont_push_empty_frame)
+{
+  GstHarness *h = gst_harness_new ("rtph263pdepay");
+
+  /* Packet that only contains header information and an extra picture header
+   * (PLEN > 0). Partly handcrafted packet. Originally this packet did not
+   * have P=1 (hence it was not start of a picture). With both P=1 and M=1 we
+   * only need one packet to reproduce the issue where trying to push an empty
+   * frame when PLEN is set */
+  guint8 packet[] = {
+    0x80, 0xe8, 0xbc, 0xaa, 0x14, 0x12, 0x16, 0x5c, 0xb8, 0x4e, 0x39, 0x04,
+    0x25, 0x00, 0x54, 0x39, 0xd0, 0x12, 0x06, 0x9e, 0xb5, 0x0a, 0xf5, 0xe8,
+    0x32, 0xeb, 0xd0, 0x6b, 0xd6, 0xa2, 0xfa, 0xd4, 0x3d, 0xd7, 0xa0, 0x2b,
+    0x24, 0x97, 0xc3, 0xbf, 0xc0, 0xbb, 0xd7, 0xa0,
+  };
+
+  gst_harness_set_src_caps_str (h, H263P_RTP_CAPS_STR (100));
+
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h,
+          create_rtp_buffer (packet, sizeof (packet), 0, 0)));
+
+  fail_unless_equals_int (gst_harness_buffers_received (h), 0);
+
+  gst_harness_teardown (h);
+}
+GST_END_TEST;
+
 static Suite *
 rtph263_suite (void)
 {
@@ -259,6 +290,7 @@ rtph263_suite (void)
   suite_add_tcase (s, (tc_chain = tcase_create ("h263pdepay")));
   tcase_add_test (tc_chain, test_h263pdepay_fragmented_memory_non_writable_buffer);
   tcase_add_test (tc_chain, test_h263pdepay_fragmented_memory_non_writable_buffer_split_frame);
+  tcase_add_test (tc_chain, test_h263pdepay_dont_push_empty_frame);
 
   return s;
 }

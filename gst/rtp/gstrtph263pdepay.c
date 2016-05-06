@@ -321,6 +321,9 @@ gst_rtp_h263p_depay_process (GstRTPBaseDepayload * depayload,
     len = avail + payload_len;
     padlen = (len % 4) + 4;
 
+    if (avail == 0)
+      goto empty_frame;
+
     outbuf = gst_adapter_take_buffer (rtph263pdepay->adapter, avail);
     if (padlen) {
       padbuf = gst_buffer_new_and_alloc (padlen);
@@ -353,6 +356,11 @@ too_small:
 waiting_start:
   {
     GST_DEBUG_OBJECT (rtph263pdepay, "waiting for picture start");
+    return NULL;
+  }
+empty_frame:
+  {
+    GST_WARNING_OBJECT (rtph263pdepay, "Depayloaded frame is empty, dropping");
     return NULL;
   }
 }
