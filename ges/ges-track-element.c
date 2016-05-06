@@ -967,7 +967,7 @@ ges_track_element_lookup_child (GESTrackElement * object,
 }
 
 /**
- * ges_track_element_set_child_property_by_pspec:
+ * ges_track_element_set_child_property_by_pspec: (skip):
  * @object: a #GESTrackElement
  * @pspec: The #GParamSpec that specifies the property you want to set
  * @value: the value
@@ -989,7 +989,7 @@ ges_track_element_set_child_property_by_pspec (GESTrackElement * object,
 }
 
 /**
- * ges_track_element_set_child_property_valist:
+ * ges_track_element_set_child_property_valist: (skip):
  * @object: The #GESTrackElement parent object
  * @first_property_name: The name of the first property to set
  * @var_args: value for the first property, followed optionally by more
@@ -1011,7 +1011,7 @@ ges_track_element_set_child_property_valist (GESTrackElement * object,
 }
 
 /**
- * ges_track_element_set_child_properties:
+ * ges_track_element_set_child_properties: (skip):
  * @object: The #GESTrackElement parent object
  * @first_property_name: The name of the first property to set
  * @...: value for the first property, followed optionally by more
@@ -1039,7 +1039,7 @@ ges_track_element_set_child_properties (GESTrackElement * object,
 }
 
 /**
- * ges_track_element_get_child_property_valist:
+ * ges_track_element_get_child_property_valist: (skip):
  * @object: The #GESTrackElement parent object
  * @first_property_name: The name of the first property to get
  * @var_args: value for the first property, followed optionally by more
@@ -1083,7 +1083,7 @@ ges_track_element_list_children_properties (GESTrackElement * object,
 }
 
 /**
- * ges_track_element_get_child_properties:
+ * ges_track_element_get_child_properties: (skip):
  * @object: The origin #GESTrackElement
  * @first_property_name: The name of the first property to get
  * @...: return location for the first property, followed optionally by more
@@ -1108,7 +1108,7 @@ ges_track_element_get_child_properties (GESTrackElement * object,
 }
 
 /**
- * ges_track_element_get_child_property_by_pspec:
+ * ges_track_element_get_child_property_by_pspec: (skip):
  * @object: a #GESTrackElement
  * @pspec: The #GParamSpec that specifies the property you want to get
  * @value: (out): return location for the value
@@ -1126,7 +1126,7 @@ ges_track_element_get_child_property_by_pspec (GESTrackElement * object,
 }
 
 /**
- * ges_track_element_set_child_property:
+ * ges_track_element_set_child_property: (skip):
  * @object: The origin #GESTrackElement
  * @property_name: The name of the property
  * @value: the value
@@ -1150,7 +1150,7 @@ ges_track_element_set_child_property (GESTrackElement * object,
 }
 
 /**
- * ges_track_element_get_child_property:
+ * ges_track_element_get_child_property: (skip):
  * @object: The origin #GESTrackElement
  * @property_name: The name of the property
  * @value: (out): return location for the property value, it will
