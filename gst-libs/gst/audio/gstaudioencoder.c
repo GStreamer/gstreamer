@@ -789,6 +789,8 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
         ret = GST_FLOW_FLUSHING;
       else
         ret = GST_FLOW_NOT_NEGOTIATED;
+      if (buf)
+        gst_buffer_unref (buf);
       goto exit;
     }
   }
