@@ -124,6 +124,8 @@ _lookup_child (GESTimelineElement * self, const gchar * prop_name,
       ChildPropHandler *handler = (ChildPropHandler *) value;
       if (classename == NULL ||
           g_strcmp0 (G_OBJECT_TYPE_NAME (G_OBJECT (handler->child)),
+              classename) == 0 ||
+          g_strcmp0 (g_type_name (G_PARAM_SPEC (key)->owner_type),
               classename) == 0) {
         GST_DEBUG_OBJECT (self, "The %s property from %s has been found", name,
             classename);
