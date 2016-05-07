@@ -815,6 +815,12 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             ('(?i)validate.*.playback.reverse_playback.*(?:_|.)(?:|m)ts$',
              "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
 
+            # Fragmented MP4 disabled tests:
+            ('validate.file.playback..*seek.*.fragmented_nonseekable_sink_mp4',
+             "Seeking on fragmented files without indexes isn't implemented"),
+            ('validate.file.playback.reverse_playback.fragmented_nonseekable_sink_mp4',
+             "Seeking on fragmented files without indexes isn't implemented"),
+
             # HTTP known issues:
             ("validate.http.*scrub_forward_seeking.*",
              "This is not stable enough for now."),
