@@ -584,7 +584,9 @@ _process_pending_entries (NleComposition * comp)
 
       _nle_composition_remove_object (comp, object);
     } else {
-      _nle_composition_add_object (comp, object);
+      /* take a new ref on object as the current one will be released when
+       * object is removed from pending_io */
+      _nle_composition_add_object (comp, gst_object_ref (object));
     }
   }
 
@@ -688,7 +690,7 @@ _remove_object_func (NleComposition * comp, ChildIOData * childio)
     return;
   }
 
-  g_hash_table_add (priv->pending_io, object);
+  g_hash_table_add (priv->pending_io, gst_object_ref (object));
 
   return;
 }
@@ -738,7 +740,9 @@ _add_object_func (NleComposition * comp, ChildIOData * childio)
     return;
   }
 
-  g_hash_table_add (priv->pending_io, object);
+  /* current reference is hold by the action and will be released with it,
+   * so take a new one */
+  g_hash_table_add (priv->pending_io, gst_object_ref (object));
 }
 
 static void
@@ -765,8 +769,12 @@ _free_action (gpointer udata, Action * action)
 
     gst_event_unref (seekd->event);
     g_slice_free (SeekData, seekd);
-  } else if (ACTION_CALLBACK (action) == _remove_object_func ||
-      ACTION_CALLBACK (action) == _add_object_func) {
+  } else if (ACTION_CALLBACK (action) == _add_object_func) {
+    ChildIOData *iodata = (ChildIOData *) udata;
+
+    gst_object_unref (iodata->object);
+    g_slice_free (ChildIOData, iodata);
+  } else if (ACTION_CALLBACK (action) == _remove_object_func) {
     g_slice_free (ChildIOData, udata);
   } else if (ACTION_CALLBACK (action) == _update_pipeline_func ||
       ACTION_CALLBACK (action) == _commit_func ||
@@ -974,7 +982,8 @@ nle_composition_init (NleComposition * comp)
   g_mutex_init (&priv->actions_lock);
   g_cond_init (&priv->actions_cond);
 
-  priv->pending_io = g_hash_table_new (g_direct_hash, g_direct_equal);
+  priv->pending_io = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+      gst_object_unref, NULL);
 
   comp->priv = priv;
 
