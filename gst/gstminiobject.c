@@ -129,6 +129,7 @@ gst_mini_object_init (GstMiniObject * mini_object, guint flags, GType type,
   mini_object->n_qdata = 0;
   mini_object->qdata = NULL;
 
+  GST_TRACER_MINI_OBJECT_CREATED (mini_object);
 #ifndef GST_DISABLE_TRACE
   _gst_alloc_trace_new (_gst_mini_object_trace, mini_object);
 #endif
@@ -460,6 +461,7 @@ gst_mini_object_unref (GstMiniObject * mini_object)
         call_finalize_notify (mini_object);
         g_free (mini_object->qdata);
       }
+      GST_TRACER_MINI_OBJECT_DESTROYED (mini_object);
 #ifndef GST_DISABLE_TRACE
       _gst_alloc_trace_free (_gst_mini_object_trace, mini_object);
 #endif

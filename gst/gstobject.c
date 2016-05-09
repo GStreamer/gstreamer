@@ -154,6 +154,14 @@ static GParamSpec *properties[PROP_LAST];
 G_DEFINE_ABSTRACT_TYPE (GstObject, gst_object, G_TYPE_INITIALLY_UNOWNED);
 
 static void
+gst_object_constructed (GObject * object)
+{
+  GST_TRACER_OBJECT_CREATED (GST_OBJECT_CAST (object));
+
+  ((GObjectClass *) gst_object_parent_class)->constructed (object);
+}
+
+static void
 gst_object_class_init (GstObjectClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
@@ -208,6 +216,7 @@ gst_object_class_init (GstObjectClass * klass)
   gobject_class->dispatch_properties_changed
       = GST_DEBUG_FUNCPTR (gst_object_dispatch_properties_changed);
 
+  gobject_class->constructed = gst_object_constructed;
   gobject_class->dispose = gst_object_dispose;
   gobject_class->finalize = gst_object_finalize;
 }
@@ -415,6 +424,7 @@ gst_object_finalize (GObject * object)
   g_free (gstobject->name);
   g_mutex_clear (&gstobject->lock);
 
+  GST_TRACER_OBJECT_DESTROYED (gstobject);
 #ifndef GST_DISABLE_TRACE
   _gst_alloc_trace_free (_gst_object_trace, object);
 #endif

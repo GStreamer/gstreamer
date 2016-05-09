@@ -27,6 +27,7 @@
 #include <glib-object.h>
 #include <gst/gstconfig.h>
 #include <gst/gstbin.h>
+#include <gst/gstutils.h>
 
 G_BEGIN_DECLS
 
@@ -70,6 +71,10 @@ typedef enum /*< skip >*/
   GST_TRACER_QUARK_HOOK_PAD_UNLINK_POST,
   GST_TRACER_QUARK_HOOK_ELEMENT_CHANGE_STATE_PRE,
   GST_TRACER_QUARK_HOOK_ELEMENT_CHANGE_STATE_POST,
+  GST_TRACER_QUARK_HOOK_MINI_OBJECT_CREATED,
+  GST_TRACER_QUARK_HOOK_MINI_OBJECT_DESTROYED,
+  GST_TRACER_QUARK_HOOK_OBJECT_CREATED,
+  GST_TRACER_QUARK_HOOK_OBJECT_DESTROYED,
   GST_TRACER_QUARK_MAX
 } GstTracerQuarkId;
 
@@ -555,6 +560,69 @@ typedef void (*GstTracerHookPadUnlinkPost) (GObject *self, GstClockTime ts,
     GstTracerHookPadUnlinkPost, (GST_TRACER_ARGS, srcpad, sinkpad, result)); \
 }G_STMT_END
 
+/**
+ * GstTracerHookMiniObjectCreated:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @object: the mini object being created
+ *
+ * Hook called when a #GstMiniObject is created named "mini-object-created".
+ */
+typedef void (*GstTracerHookMiniObjectCreated) (GObject *self, GstClockTime ts,
+    GstMiniObject *object);
+#define GST_TRACER_MINI_OBJECT_CREATED(object) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_MINI_OBJECT_CREATED), \
+    GstTracerHookMiniObjectCreated, (GST_TRACER_ARGS, object)); \
+}G_STMT_END
+
+/**
+ * GstTracerHookMiniObjectDestroyed:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @object: the mini object being destroyed
+ *
+ * Hook called when a #GstMiniObject is being destroyed named
+ * "mini-object-destroyed".
+ */
+typedef void (*GstTracerHookMiniObjectDestroyed) (GObject *self, GstClockTime ts,
+    GstMiniObject *object);
+#define GST_TRACER_MINI_OBJECT_DESTROYED(object) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_MINI_OBJECT_DESTROYED), \
+    GstTracerHookMiniObjectDestroyed, (GST_TRACER_ARGS, object)); \
+}G_STMT_END
+
+/**
+ * GstTracerHookObjectCreated:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @object: the object being created
+ *
+ * Hook called when a #GstObject is created named "object-created".
+ */
+typedef void (*GstTracerHookObjectCreated) (GObject *self, GstClockTime ts,
+    GstObject *object);
+#define GST_TRACER_OBJECT_CREATED(object) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_OBJECT_CREATED), \
+    GstTracerHookObjectCreated, (GST_TRACER_ARGS, object)); \
+}G_STMT_END
+
+/**
+ * GstTracerHookObjectDestroyed:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @object: the object being destroyed
+ *
+ * Hook called when a #GstObject is being destroyed named
+ * "object-destroyed".
+ */
+typedef void (*GstTracerHookObjectDestroyed) (GObject *self, GstClockTime ts,
+    GstObject *object);
+#define GST_TRACER_OBJECT_DESTROYED(object) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_OBJECT_DESTROYED), \
+    GstTracerHookObjectDestroyed, (GST_TRACER_ARGS, object)); \
+}G_STMT_END
+
+
 #else /* !GST_DISABLE_GST_TRACER_HOOKS */
 
 #define GST_TRACER_PAD_PUSH_PRE(pad, buffer)
@@ -584,6 +652,10 @@ typedef void (*GstTracerHookPadUnlinkPost) (GObject *self, GstClockTime ts,
 #define GST_TRACER_PAD_LINK_POST(srcpad, sinkpad, res)
 #define GST_TRACER_PAD_UNLINK_PRE(srcpad, sinkpad)
 #define GST_TRACER_PAD_UNLINK_POST(srcpad, sinkpad, res)
+#define GST_TRACER_MINI_OBJECT_CREATED(object)
+#define GST_TRACER_MINI_OBJECT_DESTROYED(object)
+#define GST_TRACER_OBJECT_CREATED(object)
+#define GST_TRACER_OBJECT_DESTROYED(object)
 
 #endif /* GST_DISABLE_GST_TRACER_HOOKS */
 
