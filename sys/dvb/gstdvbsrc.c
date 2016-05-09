@@ -1957,7 +1957,10 @@ gst_dvbsrc_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       /* open frontend then close it again, just so caps sent */
-      gst_dvbsrc_open_frontend (src, FALSE);
+      if (!gst_dvbsrc_open_frontend (src, FALSE)) {
+        GST_ERROR_OBJECT (src, "Could not open frontend device");
+        ret = GST_STATE_CHANGE_FAILURE;
+      }
       if (src->fd_frontend) {
         close (src->fd_frontend);
       }
@@ -1975,7 +1978,10 @@ gst_dvbsrc_start (GstBaseSrc * bsrc)
 {
   GstDvbSrc *src = GST_DVBSRC (bsrc);
 
-  gst_dvbsrc_open_frontend (src, TRUE);
+  if (!gst_dvbsrc_open_frontend (src, TRUE)) {
+    GST_ERROR_OBJECT (src, "Could not open frontend device");
+    return FALSE;
+  }
   if (!gst_dvbsrc_tune (src)) {
     GST_ERROR_OBJECT (src, "Not able to lock on to the dvb channel");
     gst_dvbsrc_unset_pes_filters (src);
