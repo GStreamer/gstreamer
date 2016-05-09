@@ -996,10 +996,6 @@ gst_deinit (void)
     GST_DEBUG ("already deinitialized");
     return;
   }
-#ifndef GST_DISABLE_GST_DEBUG
-  _priv_gst_tracing_deinit ();
-#endif
-
   g_thread_pool_set_max_unused_threads (0);
   bin_class = GST_BIN_CLASS (g_type_class_peek (gst_bin_get_type ()));
   if (bin_class->pool != NULL) {
@@ -1024,6 +1020,14 @@ gst_deinit (void)
 
   _priv_gst_registry_cleanup ();
   _priv_gst_allocator_cleanup ();
+
+  /* We want to destroy tracers as late as possible for the leaks tracer
+   * but still need to keep the caps system alive as it may have to use
+   * gst_caps_to_string() to display leaked caps. */
+#ifndef GST_DISABLE_GST_DEBUG
+  _priv_gst_tracing_deinit ();
+#endif
+
   _priv_gst_caps_features_cleanup ();
   _priv_gst_caps_cleanup ();
 
