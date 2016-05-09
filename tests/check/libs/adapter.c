@@ -641,6 +641,135 @@ GST_START_TEST (test_timestamp)
   fail_unless (timestamp == 5 * GST_SECOND);
   fail_unless (dist == 50);
 
+  /* clearing to start a new test */
+  gst_adapter_clear (adapter);
+
+  buffer = gst_buffer_new_and_alloc (100);
+
+  /* push the buffer without timestamp in the adapter */
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless_equals_int (avail, 100);
+
+  /* timestamp is now undefined */
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 0, &dist);
+  fail_unless (timestamp == GST_CLOCK_TIME_NONE);
+  fail_unless_equals_int (dist, 0);
+
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless_equals_int (avail, 50);
+
+  /* still undefined, dist changed, though */
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 0, &dist);
+  fail_unless (timestamp == GST_CLOCK_TIME_NONE);
+  fail_unless_equals_int (dist, 50);
+
+  /* alloc first buffer with timestamp */
+  buffer = gst_buffer_new_and_alloc (100);
+  GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
+
+  /* push in the adapter */
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless_equals_int (avail, 150);
+
+  /* timestamp is still undefined at offset 0 */
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 0, &dist);
+  fail_unless (timestamp == GST_CLOCK_TIME_NONE);
+  fail_unless_equals_int (dist, 50);
+
+  /* timestamp is still undefined at offset 50 */
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 50, &dist);
+  fail_unless (timestamp == GST_CLOCK_TIME_NONE);
+  fail_unless_equals_int (dist, 100);
+
+  /* timestamp is 1 second at offset 51 */
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 51, &dist);
+  fail_unless (timestamp == 1 * GST_SECOND);
+  fail_unless_equals_int (dist, 1);
+
+  /* timestamp is still 1 second at offset 100 */
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 100, &dist);
+  fail_unless (timestamp == 1 * GST_SECOND);
+  fail_unless_equals_int (dist, 50);
+
+  /* flush out the last 50 bytes of the buffer with undefined timestamp */
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless_equals_int (avail, 100);
+
+  /* alloc second buffer with timestamp */
+  buffer = gst_buffer_new_and_alloc (100);
+  GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
+
+  /* push in the adapter */
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless_equals_int (avail, 200);
+
+  /* alloc third buffer with timestamp */
+  buffer = gst_buffer_new_and_alloc (100);
+  GST_BUFFER_TIMESTAMP (buffer) = 3 * GST_SECOND;
+
+  /* push in the adapter */
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless_equals_int (avail, 300);
+
+  /* alloc fourth buffer with timestamp */
+  buffer = gst_buffer_new_and_alloc (100);
+  GST_BUFFER_TIMESTAMP (buffer) = 4 * GST_SECOND;
+
+  /* push in the adapter */
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless_equals_int (avail, 400);
+
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 0, &dist);
+  fail_unless (timestamp == 1 * GST_SECOND);
+  fail_unless_equals_int (dist, 0);
+
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 100, &dist);
+  fail_unless (timestamp == 1 * GST_SECOND);
+  fail_unless_equals_int (dist, 100);
+
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 200, &dist);
+  fail_unless (timestamp == 2 * GST_SECOND);
+  fail_unless_equals_int (dist, 100);
+
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 300, &dist);
+  fail_unless (timestamp == 3 * GST_SECOND);
+  fail_unless_equals_int (dist, 100);
+
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 400, &dist);
+  fail_unless (timestamp == 4 * GST_SECOND);
+  fail_unless_equals_int (dist, 100);
+
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless_equals_int (avail, 350);
+
+  /* We flushed 50 bytes, we are still on the first buffer */
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 0, &dist);
+  fail_unless (timestamp == 1 * GST_SECOND);
+  fail_unless_equals_int (dist, 50);
+
+  /* As we flushed 50 bytes, offset 100 is on the second buffer */
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 100, &dist);
+  fail_unless (timestamp == 2 * GST_SECOND);
+  fail_unless_equals_int (dist, 50);
+
+  /* Third buffer */
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 200, &dist);
+  fail_unless (timestamp == 3 * GST_SECOND);
+  fail_unless_equals_int (dist, 50);
+
+  /* Fourth buffer */
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 300, &dist);
+  fail_unless (timestamp == 4 * GST_SECOND);
+  fail_unless_equals_int (dist, 50);
+
   g_object_unref (adapter);
 }
 
