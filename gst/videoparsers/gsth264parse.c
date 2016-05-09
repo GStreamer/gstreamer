@@ -1086,7 +1086,9 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
     GST_LOG_OBJECT (h264parse, "resuming frame parsing");
   }
 
-  drain = GST_BASE_PARSE_DRAINING (parse);
+  /* Always consume the entire input buffer when in_align == ALIGN_AU */
+  drain = GST_BASE_PARSE_DRAINING (parse)
+      || h264parse->in_align == GST_H264_PARSE_ALIGN_AU;
   nonext = FALSE;
 
   current_off = h264parse->current_off;
@@ -1918,6 +1920,8 @@ gst_h264_parse_get_timestamp (GstH264Parse * h264parse,
   g_return_if_fail (out_ts != NULL);
 
   upstream = *out_ts;
+  GST_LOG_OBJECT (h264parse, "Upstream ts %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (upstream));
 
   if (!frame) {
     GST_LOG_OBJECT (h264parse, "no frame data ->  0 duration");
@@ -2610,6 +2614,8 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       h264parse->split_packetized = TRUE;
     h264parse->packetized = TRUE;
   }
+
+  h264parse->in_align = align;
 
   return TRUE;
 

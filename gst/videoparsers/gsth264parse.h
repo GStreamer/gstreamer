@@ -71,6 +71,7 @@ struct _GstH264Parse
   /* state */
   GstH264NalParser *nalparser;
   guint state;
+  guint in_align;
   guint align;
   guint format;
   gint current_off;
