@@ -72,9 +72,11 @@ noinst_HEADERS =				\
 	vtutil.h				\
 	corevideobuffer.h			\
 	coremediabuffer.h			\
+	corevideomemory.h			\
 	videotexturecache.h			\
 	atdec.h 				\
 	iosassetsrc.h				\
+	iosurfacememory.h			\
 	avfassetsrc.h  				\
 	glcontexthelper.h
 
