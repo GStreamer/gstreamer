@@ -23,7 +23,7 @@ def getNdkCommandLine(ndkRoot, target) {
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    buildToolsVersion "23.0.3"
 
     sourceSets {
         main {
@@ -36,7 +36,7 @@ android {
     defaultConfig {
         applicationId "org.freedesktop.gstreamer.play"
         minSdkVersion 15
-        targetSdkVersion 22
+        targetSdkVersion 15
         versionCode 1
         versionName "1.0"
     }
