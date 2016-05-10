@@ -2715,20 +2715,15 @@ dnl *** OpenJPEG ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENJPEG, true)
 AG_GST_CHECK_FEATURE(OPENJPEG, [openjpeg library], openjpeg, [
   HAVE_OPENJPEG="no"
-
-  save_LIBS="$LIBS"
-  save_CFLAGS="$CFLAGS"
-  OPENJPEG_LIBS="-lopenjp2"
-  LIBS="$LIBS $OPENJPEG_LIBS"
-  CFLAGS="$CFLAGS $OPENJPEG_CFLAGS"
-  AC_LINK_IFELSE([
-    AC_LANG_PROGRAM([#include <openjpeg-2.0/openjpeg.h>],
-                    [return (int) *opj_version ();])
-                 ], [HAVE_OPENJPEG=yes], [HAVE_OPENJPEG=no])
-  LIBS="$save_LIBS"
-  CFLAGS="$save_CFLAGS"
-
-  if test x"$HAVE_OPENJPEG" = x"no"; then
+  AG_GST_PKG_CHECK_MODULES(OPENJPEG, libopenjp2 >= 2.0)
+  if test x"$HAVE_OPENJPEG" = x"yes"; then
+    dnl minor API changes in v2.1
+    AG_GST_PKG_CHECK_MODULES(OPENJPEG_2_1, libopenjp2 >= 2.1)
+    if test x"$HAVE_OPENJPEG" = x"yes"; then
+      AC_DEFINE([HAVE_OPENJPEG_2_1], 1, [Define if OpenJPEG 2.1 is used])
+    fi
+  else
+    # Fallback to v1.5
     OPENJPEG_LIBS=""
     PKG_CHECK_MODULES(OPENJPEG, libopenjpeg1,
       HAVE_OPENJPEG="yes",
