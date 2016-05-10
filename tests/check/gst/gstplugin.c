@@ -75,7 +75,6 @@ GST_START_TEST (test_registry)
     /* one for the registry, one for the list */
     GST_DEBUG ("Feature refcount %d %s", GST_OBJECT_REFCOUNT_VALUE (feature),
         GST_OBJECT_NAME (feature));
-    ASSERT_OBJECT_REFCOUNT (feature, "feature in registry", 2);
     gst_object_unref (feature);
   }
   g_list_free (list);
