@@ -3743,17 +3743,13 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
         qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_tfdt,
         &tfdt_data);
     if (tfdt_node) {
-      GstClockTime decode_time_ts;
-
       /* We'll use decode_time to interpolate timestamps
        * in case the input timestamps are missing */
       qtdemux_parse_tfdt (qtdemux, &tfdt_data, &decode_time);
 
-      decode_time_ts = QTSTREAMTIME_TO_GSTTIME (stream, decode_time);
-
       GST_DEBUG_OBJECT (qtdemux, "decode time %" G_GINT64_FORMAT
           " (%" GST_TIME_FORMAT ")", decode_time,
-          GST_TIME_ARGS (decode_time_ts));
+          GST_TIME_ARGS (QTSTREAMTIME_TO_GSTTIME (stream, decode_time)));
 
       /* Discard the fragment buffer timestamp info to avoid using it.
        * Rely on tfdt instead as it is more accurate than the timestamp
