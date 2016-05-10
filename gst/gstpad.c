@@ -1137,6 +1137,7 @@ activate_mode_internal (GstPad * pad, GstObject * parent, GstPadMode mode,
 
     if (G_UNLIKELY (!activate_mode_internal (pad, parent, old, FALSE)))
       goto deactivate_failed;
+    old = GST_PAD_MODE_NONE;
   }
 
   switch (mode) {
