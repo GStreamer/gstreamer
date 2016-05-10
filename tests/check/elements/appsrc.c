@@ -60,6 +60,7 @@ cleanup_appsrc (GstElement * appsrc)
 {
   GST_DEBUG ("cleanup_appsrc");
 
+  gst_check_drop_buffers ();
   gst_check_teardown_sink_pad (appsrc);
   gst_check_teardown_element (appsrc);
 }
