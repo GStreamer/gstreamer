@@ -219,7 +219,10 @@ struct _QtDemuxStream
   guint32 fourcc;
   gboolean sparse;
 
-  gboolean new_caps;
+  gboolean new_caps;            /* If TRUE, caps need to be generated (by
+                                 * calling _configure_stream()) This happens
+                                 * for MSS and fragmented streams */
+
   gboolean new_stream;          /* signals that a stream_start is required */
   gboolean on_keyframe;         /* if this stream last pushed buffer was a
                                  * keyframe. This is important to identify
@@ -233,7 +236,7 @@ struct _QtDemuxStream
   guint track_id;
 
   /* duration/scale */
-  guint64 duration;             /* in timescale */
+  guint64 duration;             /* in timescale units */
   guint32 timescale;
 
   /* language */
@@ -244,12 +247,17 @@ struct _QtDemuxStream
   QtDemuxSample *samples;
   gboolean all_keyframe;        /* TRUE when all samples are keyframes (no stss) */
   guint32 first_duration;       /* duration in timescale of first sample, used for figuring out
-                                   the framerate, in timescale units */
+                                   the framerate */
   guint32 n_samples_moof;       /* sample count in a moof */
   guint64 duration_moof;        /* duration in timescale of a moof, used for figure out
                                  * the framerate of fragmented format stream */
-  guint32 offset_in_sample;
-  guint32 max_buffer_size;
+
+  guint32 offset_in_sample;     /* Offset in the current sample, used for
+                                 * streams which have got exceedingly big
+                                 * sample size (such as 24s of raw audio).
+                                 * Only used when max_buffer_size is non-NULL */
+  guint32 max_buffer_size;      /* Maximum allowed size for output buffers.
+                                 * Currently only set for raw audio streams*/
 
   /* if we use chunks or samples */
   gboolean sampled;
@@ -9173,7 +9181,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     /* HACK:
      * some of those trailers, nowadays, have prologue images that are
-     * themselves vide tracks as well. I haven't really found a way to
+     * themselves video tracks as well. I haven't really found a way to
      * identify those yet, except for just looking at their duration. */
     if (tdur1 != 0 && (tdur2 * 10 / tdur1) < 2) {
       GST_WARNING_OBJECT (qtdemux,
@@ -12212,7 +12220,7 @@ qtdemux_add_container_format (GstQTDemux * qtdemux, GstTagList * tags)
   return tags;
 }
 
-/* we have read th complete moov node now.
+/* we have read the complete moov node now.
  * This function parses all of the relevant info, creates the traks and
  * prepares all data structures for playback
  */
