@@ -85,7 +85,7 @@ gst_core_video_meta_get_info (void)
   if (g_once_init_enter (&core_video_meta_info)) {
     const GstMetaInfo *meta = gst_meta_register (GST_CORE_VIDEO_META_API_TYPE,
         "GstCoreVideoMeta", sizeof (GstCoreVideoMeta),
-        (GstMetaInitFunction) NULL,
+        (GstMetaInitFunction) gst_core_video_meta_init,
         (GstMetaFreeFunction) gst_core_video_meta_free,
         (GstMetaTransformFunction) gst_core_video_meta_transform);
     g_once_init_leave (&core_video_meta_info, meta);
