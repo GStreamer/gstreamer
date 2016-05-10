@@ -17,6 +17,7 @@ EXPORTS
 	gst_app_src_end_of_stream
 	gst_app_src_get_caps
 	gst_app_src_get_current_level_bytes
+	gst_app_src_get_duration
 	gst_app_src_get_emit_signals
 	gst_app_src_get_latency
 	gst_app_src_get_max_bytes
@@ -27,6 +28,7 @@ EXPORTS
 	gst_app_src_push_sample
 	gst_app_src_set_callbacks
 	gst_app_src_set_caps
+	gst_app_src_set_duration
 	gst_app_src_set_emit_signals
 	gst_app_src_set_latency
 	gst_app_src_set_max_bytes

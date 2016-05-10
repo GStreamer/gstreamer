@@ -127,6 +127,9 @@ GstCaps*         gst_app_src_get_caps                (GstAppSrc *appsrc);
 void             gst_app_src_set_size                (GstAppSrc *appsrc, gint64 size);
 gint64           gst_app_src_get_size                (GstAppSrc *appsrc);
 
+void             gst_app_src_set_duration            (GstAppSrc *appsrc, GstClockTime duration);
+GstClockTime     gst_app_src_get_duration            (GstAppSrc *appsrc);
+
 void             gst_app_src_set_stream_type         (GstAppSrc *appsrc, GstAppStreamType type);
 GstAppStreamType gst_app_src_get_stream_type         (GstAppSrc *appsrc);
 

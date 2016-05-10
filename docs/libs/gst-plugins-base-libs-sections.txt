@@ -49,6 +49,8 @@ gst_app_src_get_latency
 gst_app_src_set_latency
 gst_app_src_set_size
 gst_app_src_get_size
+gst_app_src_set_duration
+gst_app_src_get_duration
 gst_app_src_set_stream_type
 gst_app_src_get_stream_type
 gst_app_src_set_max_bytes
