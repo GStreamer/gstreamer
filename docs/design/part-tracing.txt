@@ -260,6 +260,10 @@ memory (not yet implemented)
 - use an atexit handler to dump leaked instance
 https://bugzilla.gnome.org/show_bug.cgi?id=756760#c6
 
+leaks
+-----
+- track creation/destruction of GstObject and GstMiniObject
+- log those which are still alive when app is exiting and raise an error if any
 
 User interfaces
 ===============
@@ -348,6 +352,12 @@ eog trace.log.*.png
 
 GST_DEBUG="GST_TRACER:7" GST_TRACERS=latency gst-launch-1.0 audiotestsrc num-buffers=10 ! audioconvert ! volume volume=0.7 ! autoaudiosink
 - print processing latencies
+
+GST_TRACERS="leaks" gst-launch-1.0 videotestsrc num-buffers=10 ! fakesink
+- Raise a warning if a leak is detected
+
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="leaks(GstEvent,GstMessage)" gst-launch-1.0 videotestsrc num-buffers=10 ! fakesink
+- check if any GstEvent or GstMessage is leaked and raise a warning
 
 Performance
 ===========
