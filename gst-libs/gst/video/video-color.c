@@ -66,9 +66,9 @@ typedef struct
 #define DEFAULT_YUV_SD  0
 #define DEFAULT_YUV_HD  1
 #define DEFAULT_RGB     3
-#define DEFAULT_GRAY    4
-#define DEFAULT_UNKNOWN 5
-#define DEFAULT_YUV_UHD 6
+#define DEFAULT_YUV_UHD 4
+#define DEFAULT_GRAY    5
+#define DEFAULT_UNKNOWN 6
 
 static const ColorimetryInfo colorimetry[] = {
   MAKE_COLORIMETRY (BT601, _16_235, BT601, BT709, SMPTE170M),
