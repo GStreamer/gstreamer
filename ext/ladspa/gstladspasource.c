@@ -256,15 +256,13 @@ static GstFlowReturn
 gst_ladspa_source_type_fill (GstBaseSrc * base, guint64 offset,
     guint length, GstBuffer * buffer)
 {
-  GstLADSPASource *ladspa;
+  GstLADSPASource *ladspa = GST_LADSPA_SOURCE (base);
   GstClockTime next_time;
   gint64 next_sample, next_byte;
   gint bytes, samples;
   GstElementClass *eclass;
   GstMapInfo map;
   gint samplerate, bpf;
-
-  ladspa = GST_LADSPA_SOURCE (base);
 
   /* example for tagging generated data */
   if (!ladspa->tags_pushed) {

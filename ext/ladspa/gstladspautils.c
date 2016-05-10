@@ -1,4 +1,4 @@
-/* GStreamer LADSPA utils 
+/* GStreamer LADSPA utils
  * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
  *               2001 Steve Baker <stevebaker_org@yahoo.co.uk>
  *               2003 Andy Wingo <wingo at pobox.com>
@@ -21,7 +21,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/* 
+/*
  * This module is smartly shared between the source, transform and
  * sink elements. Handling any specific LADSPA <-> gstreamer interaction.
  *
@@ -65,7 +65,7 @@
 GST_DEBUG_CATEGORY_EXTERN (ladspa_debug);
 #define GST_CAT_DEFAULT ladspa_debug
 
-/* 
+/*
  * Interleaved buffer: (c1c2c1c2...)
  * De-interleaved buffer: (c1c1...c2c2...)
  */
@@ -81,7 +81,7 @@ gst_ladspa_ladspa_deinterleave_data (GstLADSPA * ladspa, LADSPA_Data * outdata,
       outdata[i * samples + j] = ((LADSPA_Data *) indata)[j * audio_in + i];
 }
 
-/* 
+/*
  * Interleaved buffer: (c1c2c1c2...)
  * De-interleaved buffer: (c1c1...c2c2...)
  */
@@ -573,7 +573,7 @@ gst_ladspa_element_class_set_metadata (GstLADSPAClass * ladspa_class,
     GST_DEBUG ("LADSPA uri (id=%lu) : %s", desc->UniqueID, uri);
 
     /* we can take this directly from 'desc', keep this example for future
-       attributes. 
+       attributes.
 
        if ((str = lrdf_get_setting_metadata (uri, "title"))) {
        GST_DEBUG ("LADSPA title : %s", str);
@@ -726,15 +726,14 @@ gst_ladspa_init (GstLADSPA * ladspa, GstLADSPAClass * ladspa_class)
   ladspa->activated = FALSE;
   ladspa->rate = 0;
 
-  ladspa->ports.audio.in =
-      g_new0 (LADSPA_Data *, ladspa->klass->count.audio.in);
+  ladspa->ports.audio.in = g_new0 (LADSPA_Data *, ladspa_class->count.audio.in);
   ladspa->ports.audio.out =
-      g_new0 (LADSPA_Data *, ladspa->klass->count.audio.out);
+      g_new0 (LADSPA_Data *, ladspa_class->count.audio.out);
 
   ladspa->ports.control.in =
-      g_new0 (LADSPA_Data, ladspa->klass->count.control.in);
+      g_new0 (LADSPA_Data, ladspa_class->count.control.in);
   ladspa->ports.control.out =
-      g_new0 (LADSPA_Data, ladspa->klass->count.control.out);
+      g_new0 (LADSPA_Data, ladspa_class->count.control.out);
 }
 
 void
@@ -836,7 +835,7 @@ gst_ladspa_class_finalize (GstLADSPAClass * ladspa_class)
   ladspa_class->plugin = NULL;
 }
 
-/* 
+/*
  * Create the type & register the element.
  */
 void
