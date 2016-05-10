@@ -38,7 +38,11 @@
 #define OPJ_CPRL CPRL
 #else
 #include <stdio.h>
-#include <openjpeg-2.0/openjpeg.h>
+# ifdef HAVE_OPENJPEG_2_1
+#  include <openjpeg-2.1/openjpeg.h>
+# else
+#  include <openjpeg-2.0/openjpeg.h>
+# endif
 #endif
 
 #endif /* __GST_OPENJPEG_H__ */

@@ -901,7 +901,11 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
   opj_stream_set_write_function (stream, write_fn);
   opj_stream_set_skip_function (stream, skip_fn);
   opj_stream_set_seek_function (stream, seek_fn);
+#ifdef HAVE_OPENJPEG_2_1
+  opj_stream_set_user_data (stream, &mstream, NULL);
+#else
   opj_stream_set_user_data (stream, &mstream);
+#endif
   opj_stream_set_user_data_length (stream, mstream.size);
 
   if (!opj_start_compress (enc, image, stream))
