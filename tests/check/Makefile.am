@@ -133,7 +133,9 @@ check_flv =
 endif
 
 if USE_PLUGIN_ISOMP4
-check_isomp4 = elements/qtmux
+check_isomp4 = \
+	elements/qtmux \
+	elements/qtdemux
 else
 check_isomp4 =
 endif
@@ -613,4 +615,6 @@ orc/videobox.c: $(top_srcdir)/gst/videobox/gstvideoboxorc.orc
 distclean-local-orc:
 	rm -rf orc
 
-EXTRA_DIST = gst-plugins-good.supp
+EXTRA_DIST = \
+	gst-plugins-good.supp	\
+	elements/qtdemux.h

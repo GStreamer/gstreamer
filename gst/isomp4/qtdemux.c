@@ -2977,6 +2977,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   guint entry_size, dur_offset, size_offset, flags_offset = 0, ct_offset = 0;
   QtDemuxSample *sample;
   gboolean ismv = FALSE;
+  gint64 initial_offset;
 
   GST_LOG_OBJECT (qtdemux, "parsing trun stream %d; "
       "default dur %d, size %d, flags 0x%x, base offset %" G_GINT64_FORMAT ", "
@@ -3129,6 +3130,8 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     }
   }
 
+  initial_offset = *running_offset;
+
   sample = stream->samples + stream->n_samples;
   for (i = 0; i < samples_count; i++) {
     guint32 dur, size, sflags, ct;
@@ -3180,6 +3183,12 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
 
   /* Update total duration if needed */
   check_update_duration (qtdemux, QTSTREAMTIME_TO_GSTTIME (stream, timestamp));
+
+  /* Pre-emptively figure out size of mdat based on trun information.
+   * If the [mdat] atom is effectivelly read, it will be replaced by the actual
+   * size, else we will still be able to use this when dealing with gap'ed
+   * input */
+  qtdemux->mdatleft = *running_offset - initial_offset;
 
   stream->n_samples += samples_count;
   stream->n_samples_moof += samples_count;
@@ -6031,12 +6040,13 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
 
   GST_DEBUG_OBJECT (demux,
       "Received buffer pts:%" GST_TIME_FORMAT " dts:%" GST_TIME_FORMAT
-      " offset:%" G_GUINT64_FORMAT " size:%" G_GSIZE_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_PTS (inbuf)),
+      " offset:%" G_GUINT64_FORMAT " size:%" G_GSIZE_FORMAT " demux offset:%"
+      G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (inbuf)),
       GST_TIME_ARGS (GST_BUFFER_DTS (inbuf)), GST_BUFFER_OFFSET (inbuf),
-      gst_buffer_get_size (inbuf));
+      gst_buffer_get_size (inbuf), demux->offset);
 
   if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DISCONT)) {
+    gboolean is_gap_input = FALSE;
     gint i;
 
     GST_DEBUG_OBJECT (demux, "Got DISCONT, marking all streams as DISCONT");
@@ -6045,13 +6055,55 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
       demux->streams[i]->discont = TRUE;
     }
 
+    /* Check if we can land back on our feet in the case where upstream is
+     * handling the seeking/pushing of samples with gaps in between (like
+     * in the case of trick-mode DASH for example) */
+    if (demux->upstream_format_is_time
+        && GST_BUFFER_OFFSET (inbuf) != GST_BUFFER_OFFSET_NONE) {
+      gint i;
+      for (i = 0; i < demux->n_streams; i++) {
+        guint32 res;
+        GST_LOG_OBJECT (demux,
+            "Stream #%d , checking if offset %" G_GUINT64_FORMAT
+            " is a sample start", i, GST_BUFFER_OFFSET (inbuf));
+        res =
+            gst_qtdemux_find_index_for_given_media_offset_linear (demux,
+            demux->streams[i], GST_BUFFER_OFFSET (inbuf));
+        if (res != -1) {
+          QtDemuxSample *sample = &demux->streams[i]->samples[res];
+          GST_LOG_OBJECT (demux,
+              "Checking if sample %d from stream %d is valid (offset:%"
+              G_GUINT64_FORMAT " size:%" G_GUINT32_FORMAT ")", res, i,
+              sample->offset, sample->size);
+          if (sample->offset == GST_BUFFER_OFFSET (inbuf)) {
+            GST_LOG_OBJECT (demux,
+                "new buffer corresponds to a valid sample : %" G_GUINT32_FORMAT,
+                res);
+            is_gap_input = TRUE;
+            /* We can go back to standard playback mode */
+            demux->state = QTDEMUX_STATE_MOVIE;
+            /* Remember which sample this stream is at */
+            demux->streams[i]->sample_index = res;
+            /* Finally update all push-based values to the expected values */
+            demux->neededbytes = demux->streams[i]->samples[res].size;
+            demux->todrop = 0;
+            demux->offset = GST_BUFFER_OFFSET (inbuf);
+          }
+        }
+      }
+      if (!is_gap_input) {
+        /* Reset state if it's a real discont */
+        demux->neededbytes = 16;
+        demux->state = QTDEMUX_STATE_INITIAL;
+      }
+    }
     /* Reverse fragmented playback, need to flush all we have before
      * consuming a new fragment.
      * The samples array have the timestamps calculated by accumulating the
      * durations but this won't work for reverse playback of fragments as
      * the timestamps of a subsequent fragment should be smaller than the
      * previously received one. */
-    if (demux->fragmented && demux->segment.rate < 0) {
+    if (!is_gap_input && demux->fragmented && demux->segment.rate < 0) {
       gst_qtdemux_process_adapter (demux, TRUE);
       for (i = 0; i < demux->n_streams; i++)
         gst_qtdemux_stream_flush_samples_data (demux, demux->streams[i]);
@@ -6080,10 +6132,21 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
   while (((gst_adapter_available (demux->adapter)) >= demux->neededbytes) &&
       (ret == GST_FLOW_OK || (ret == GST_FLOW_NOT_LINKED && force))) {
 
-    GST_DEBUG_OBJECT (demux,
-        "state:%s , demux->neededbytes:%d, demux->offset:%" G_GUINT64_FORMAT,
-        qt_demux_state_string (demux->state), demux->neededbytes,
-        demux->offset);
+#ifndef GST_DISABLE_GST_DEBUG
+    {
+      guint64 discont_offset, distance_from_discont;
+
+      discont_offset = gst_adapter_offset_at_discont (demux->adapter);
+      distance_from_discont =
+          gst_adapter_distance_from_discont (demux->adapter);
+
+      GST_DEBUG_OBJECT (demux,
+          "state:%s , demux->neededbytes:%d, demux->offset:%" G_GUINT64_FORMAT
+          " adapter offset :%" G_GUINT64_FORMAT " (+ %" G_GUINT64_FORMAT
+          " bytes)", qt_demux_state_string (demux->state), demux->neededbytes,
+          demux->offset, discont_offset, distance_from_discont);
+    }
+#endif
 
     switch (demux->state) {
       case QTDEMUX_STATE_INITIAL:{
@@ -6266,6 +6329,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             guint64 dist = 0;
             GstClockTime prev_pts;
             guint64 prev_offset;
+            guint64 adapter_discont_offset, adapter_discont_dist;
 
             GST_DEBUG_OBJECT (demux, "Parsing [moof]");
 
@@ -6292,9 +6356,42 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
                   GST_TIME_ARGS (demux->fragment_start));
             }
 
-            demux->moof_offset = demux->offset;
+            /* We can't use prev_offset() here because this would require
+             * upstream to set consistent and correct offsets on all buffers
+             * since the discont. Nothing ever did that in the past and we
+             * would break backwards compatibility here then.
+             * Instead take the offset we had at the last discont and count
+             * the bytes from there. This works with old code as there would
+             * be no discont between moov and moof, and also works with
+             * adaptivedemux which correctly sets offset and will set the
+             * DISCONT flag accordingly when needed.
+             *
+             * We also only do this for upstream TIME segments as otherwise
+             * there are potential backwards compatibility problems with
+             * seeking in PUSH mode and upstream providing inconsistent
+             * timestamps. */
+            adapter_discont_offset =
+                gst_adapter_offset_at_discont (demux->adapter);
+            adapter_discont_dist =
+                gst_adapter_distance_from_discont (demux->adapter);
+
+            GST_DEBUG_OBJECT (demux,
+                "demux offset %" G_GUINT64_FORMAT " adapter offset %"
+                G_GUINT64_FORMAT " (+ %" G_GUINT64_FORMAT " bytes)",
+                demux->offset, adapter_discont_offset, adapter_discont_dist);
+
+            if (demux->upstream_format_is_time) {
+              demux->moof_offset = adapter_discont_offset;
+              if (demux->moof_offset != GST_BUFFER_OFFSET_NONE)
+                demux->moof_offset += adapter_discont_dist;
+              if (demux->moof_offset == GST_BUFFER_OFFSET_NONE)
+                demux->moof_offset = demux->offset;
+            } else {
+              demux->moof_offset = demux->offset;
+            }
+
             if (!qtdemux_parse_moof (demux, data, demux->neededbytes,
-                    demux->offset, NULL)) {
+                    demux->moof_offset, NULL)) {
               gst_adapter_unmap (demux->adapter);
               ret = GST_FLOW_ERROR;
               goto done;
