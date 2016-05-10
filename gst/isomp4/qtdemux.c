@@ -97,18 +97,10 @@
 
 GST_DEBUG_CATEGORY (qtdemux_debug);
 
-/*typedef struct _QtNode QtNode; */
 typedef struct _QtDemuxSegment QtDemuxSegment;
 typedef struct _QtDemuxSample QtDemuxSample;
 
 typedef struct _QtDemuxCencSampleSetInfo QtDemuxCencSampleSetInfo;
-
-/*struct _QtNode
-{
-  guint32 type;
-  guint8 *data;
-  gint len;
-};*/
 
 struct _QtDemuxSample
 {
