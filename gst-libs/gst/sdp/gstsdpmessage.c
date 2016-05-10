@@ -3782,12 +3782,17 @@ gst_sdp_message_attributes_to_caps (const GstSDPMessage * msg, GstCaps * caps)
 
   res = gst_sdp_message_parse_keymgmt (msg, &mikey);
   if (mikey) {
-    res = GST_SDP_EINVAL;
-    if (gst_mikey_message_to_caps (mikey, caps))
-      res = sdp_add_attributes_to_caps (msg->attributes, caps);
-    gst_mikey_message_unref (mikey);
+    if (gst_mikey_message_to_caps (mikey, caps)) {
+      res = GST_SDP_EINVAL;
+      goto done;
+    }
   }
 
+  res = sdp_add_attributes_to_caps (msg->attributes, caps);
+
+done:
+  if (mikey)
+    gst_mikey_message_unref (mikey);
   return res;
 }
 
@@ -3813,11 +3818,16 @@ gst_sdp_media_attributes_to_caps (const GstSDPMedia * media, GstCaps * caps)
 
   res = gst_sdp_media_parse_keymgmt (media, &mikey);
   if (mikey) {
-    res = GST_SDP_EINVAL;
-    if (gst_mikey_message_to_caps (mikey, caps))
-      res = sdp_add_attributes_to_caps (media->attributes, caps);
-    gst_mikey_message_unref (mikey);
+    if (!gst_mikey_message_to_caps (mikey, caps)) {
+      res = GST_SDP_EINVAL;
+      goto done;
+    }
   }
 
+  res = sdp_add_attributes_to_caps (media->attributes, caps);
+
+done:
+  if (mikey)
+    gst_mikey_message_unref (mikey);
   return res;
 }
