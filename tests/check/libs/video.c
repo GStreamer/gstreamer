@@ -848,6 +848,62 @@ GST_START_TEST (test_parse_caps_multiview)
 
 GST_END_TEST;
 
+typedef struct
+{
+  const gchar *string_from;
+  const gchar *string_to;
+  const gchar *name;
+  GstVideoColorimetry color;
+} ColorimetryTest;
+
+#define MAKE_COLORIMETRY_TEST(s1,s2,n,r,m,t,p) { s1, s2, n,         \
+    { GST_VIDEO_COLOR_RANGE ##r, GST_VIDEO_COLOR_MATRIX_ ##m,       \
+    GST_VIDEO_TRANSFER_ ##t, GST_VIDEO_COLOR_PRIMARIES_ ##p } }
+
+GST_START_TEST (test_parse_colorimetry)
+{
+  ColorimetryTest tests[] = {
+    MAKE_COLORIMETRY_TEST ("bt601", "bt601", "bt601",
+        _16_235, BT601, BT709, SMPTE170M),
+    MAKE_COLORIMETRY_TEST ("2:4:5:4", "bt601", "bt601",
+        _16_235, BT601, BT709, SMPTE170M),
+    MAKE_COLORIMETRY_TEST ("bt709", "bt709", "bt709",
+        _16_235, BT709, BT709, BT709),
+    MAKE_COLORIMETRY_TEST ("smpte240m", "smpte240m", "smpte240m",
+        _16_235, SMPTE240M, SMPTE240M, SMPTE240M),
+    MAKE_COLORIMETRY_TEST ("sRGB", "sRGB", "sRGB",
+        _0_255, RGB, SRGB, BT709),
+    MAKE_COLORIMETRY_TEST ("bt2020" , "bt2020", "bt2020",
+        _16_235, BT2020, BT2020_12, BT2020),
+    MAKE_COLORIMETRY_TEST ("1:4:0:0", "1:4:0:0", NULL,
+        _0_255, BT601, UNKNOWN, UNKNOWN),
+  };
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (tests); i++) {
+    const ColorimetryTest *test = &tests[i];
+    GstVideoColorimetry color;
+    gchar *string;
+
+    fail_unless (gst_video_colorimetry_from_string (&color, test->string_from));
+    fail_unless_equals_int (color.range, test->color.range);
+    fail_unless_equals_int (color.matrix, test->color.matrix);
+    fail_unless_equals_int (color.transfer, test->color.transfer);
+    fail_unless_equals_int (color.primaries, test->color.primaries);
+
+    string = gst_video_colorimetry_to_string (&color);
+    fail_unless_equals_string (string, test->string_to);
+    g_free (string);
+
+    fail_unless (gst_video_colorimetry_is_equal (&color, &test->color));
+
+    if (test->name)
+      fail_unless (gst_video_colorimetry_matches (&color, test->name));
+  }
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_events)
 {
   GstEvent *e;
@@ -2707,6 +2763,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_dar_calc);
   tcase_add_test (tc_chain, test_parse_caps_rgb);
   tcase_add_test (tc_chain, test_parse_caps_multiview);
+  tcase_add_test (tc_chain, test_parse_colorimetry);
   tcase_add_test (tc_chain, test_events);
   tcase_add_test (tc_chain, test_convert_frame);
   tcase_add_test (tc_chain, test_convert_frame_async);
