@@ -517,24 +517,20 @@ gst_ladspa_object_class_install_properties (GstLADSPAClass * ladspa_class,
     GObjectClass * object_class, guint offset)
 {
   GParamSpec *p;
-  gint i, ix;
+  gint i;
 
   ladspa_class->properties = offset;
 
-  /* properties have an offset */
-  ix = ladspa_class->properties;
-
   /* register properties */
-
-  for (i = 0; i < ladspa_class->count.control.in; i++, ix++) {
+  for (i = 0; i < ladspa_class->count.control.in; i++, offset++) {
     p = gst_ladspa_object_class_get_param_spec (ladspa_class, object_class,
         ladspa_class->map.control.in[i]);
-    g_object_class_install_property (object_class, ix, p);
+    g_object_class_install_property (object_class, offset, p);
   }
-  for (i = 0; i < ladspa_class->count.control.out; i++, ix++) {
+  for (i = 0; i < ladspa_class->count.control.out; i++, offset++) {
     p = gst_ladspa_object_class_get_param_spec (ladspa_class, object_class,
         ladspa_class->map.control.out[i]);
-    g_object_class_install_property (object_class, ix, p);
+    g_object_class_install_property (object_class, offset, p);
   }
 }
 
