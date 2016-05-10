@@ -1,16 +1,22 @@
+plugin_LTLIBRARIES = \
+    libgstdc1394.la
 
-plugin_LTLIBRARIES =	libgstdc1394.la
+libgstdc1394_la_SOURCES = \
+    gstdc1394.c
+libgstdc1394_la_CFLAGS = \
+    $(LIBDC1394_CFLAGS) \
+    $(GST_PLUGINS_BASE_CFLAGS) \
+    $(GST_BASE_CFLAGS) \
+    $(GST_CFLAGS)
+libgstdc1394_la_LIBADD = \
+    $(LIBDC1394_LIBS) \
+    $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
+    $(GST_BASE_LIBS) \
+    $(GST_LIBS)
+libgstdc1394_la_LDFLAGS = \
+    $(GST_PLUGIN_LDFLAGS)
+libgstdc1394_la_LIBTOOLFLAGS = \
+    $(GST_PLUGIN_LIBTOOLFLAGS)
 
-libgstdc1394_la_SOURCES =	gstdc1394.c 
-
-
-libgstdc1394_la_CFLAGS = 	$(GST_CFLAGS) \
-				$(LIBDC1394_CFLAGS)
-
-libgstdc1394_la_LDFLAGS = 	$(GST_PLUGIN_LDFLAGS)
-libgstdc1394_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
-
-libgstdc1394_la_LIBADD = 	$(GST_BASE_LIBS) \
-				$(LIBDC1394_LIBS) 
-
-noinst_HEADERS = gstdc1394.h
+noinst_HEADERS = \
+    gstdc1394.h

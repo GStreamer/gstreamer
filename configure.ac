@@ -450,7 +450,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  sdi tta \
  videomeasure \
  linsys \
- apexsink dc1394 \
+ apexsink \
  musepack nas sdl timidity \
  wininet \
  xvid sndio libvisual"

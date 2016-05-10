@@ -19,16 +19,28 @@
  */
 
 /**
- * SECTION:element-dc1394
+ * SECTION:element-dc1394src
  *
  * Source for IIDC (Instrumentation & Industrial Digital Camera) firewire
- * cameras.
- * 
+ * cameras. If several cameras are connected to the system, the desired one
+ * can be selected by its GUID and an optional unit number (most cameras are
+ * single unit and do not require it). The frame size, rate and format are set
+ * from capabilities. Although the IIDC specification includes a raw video
+ * mode, many cameras use mono video modes to capture in Bayer format.
+ * Thus, for each mono video mode supported by a camera, both gray raw and Bayer
+ * corresponding video formats are exposed in the capabilities.
+ * The Bayer pattern is left unspecified.
+ *
  * <refsect2>
- * <title>Example launch line</title>
+ * <title>Example launch lines</title>
  * |[
- * gst-launch -v dc1394 camera-number=0 ! xvimagesink
- * ]|
+ * gst-launch-1.0 -v dc1394src ! videoconvert ! autovideosink
+ * ]| Capture and display frames from the first camera available in the system.
+ * |[
+ * gst-launch-1.0 dc1394src guid=00074813004DF937 \
+ *     ! "video/x-bayer,format=gbrg,width=1280,height=960,framerate=15/2" \
+ *     ! bayer2rgb ! videoconvert ! autovideosink
+ * ]| Capture and display frames from a specific camera in the desired format.
  * </refsect2>
  */
 
@@ -36,284 +48,176 @@
 #include "config.h"
 #endif
 #include "gstdc1394.h"
-#include <sys/time.h>
-#include <time.h>
-#include <string.h>
+#include <gst/video/video.h>
 
-GST_DEBUG_CATEGORY (dc1394_debug);
+GST_DEBUG_CATEGORY_STATIC (dc1394_debug);
 #define GST_CAT_DEFAULT dc1394_debug
+
 
 enum
 {
   PROP_0,
-  PROP_TIMESTAMP_OFFSET,
-  PROP_CAMNUM,
-  PROP_BUFSIZE,
-  PROP_ISO_SPEED
-      /* FILL ME */
+  PROP_CAMERA_GUID,
+  PROP_CAMERA_UNIT,
+  PROP_ISO_SPEED,
+  PROP_DMA_BUFFER_SIZE
 };
 
 
-GST_BOILERPLATE (GstDc1394, gst_dc1394, GstPushSrc, GST_TYPE_PUSH_SRC);
+#define GST_TYPE_DC1394_ISO_SPEED (gst_dc1394_iso_speed_get_type ())
+static GType
+gst_dc1394_iso_speed_get_type (void)
+{
+  static const GEnumValue iso_speeds[] = {
+    {100, "DC1394 ISO speed 100", "100"},
+    {200, "DC1394 ISO speed 200", "200"},
+    {400, "DC1394 ISO speed 400", "400"},
+    {800, "DC1394 ISO speed 800", "800"},
+    {1600, "DC1394 ISO speed 1600", "1600"},
+    {3200, "DC1394 ISO speed 3200", "3200"},
+    {0, NULL, NULL}
+  };
+  static GType type = 0;
+
+  if (!type) {
+    type = g_enum_register_static ("GstDC1394ISOSpeed", iso_speeds);
+  }
+  return type;
+}
+
+
+#define gst_dc1394_parent_class parent_class
+G_DEFINE_TYPE (GstDc1394, gst_dc1394, GST_TYPE_PUSH_SRC);
 
 static void gst_dc1394_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_dc1394_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-
-static GstCaps *gst_dc1394_getcaps (GstBaseSrc * bsrc);
-static gboolean gst_dc1394_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
-static void gst_dc1394_src_fixate (GstPad * pad, GstCaps * caps);
-
-static void gst_dc1394_get_times (GstBaseSrc * basesrc,
-    GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
-
+static gboolean gst_dc1394_start (GstBaseSrc * bsrc);
+static gboolean gst_dc1394_stop (GstBaseSrc * bsrc);
+static gboolean gst_dc1394_set_caps (GstBaseSrc * bsrc, GstCaps * caps);
+static GstCaps *gst_dc1394_get_caps (GstBaseSrc * bsrc, GstCaps * filter);
 static GstFlowReturn gst_dc1394_create (GstPushSrc * psrc, GstBuffer ** buffer);
 
-static GstStateChangeReturn
-gst_dc1394_change_state (GstElement * element, GstStateChange transition);
-
-static gboolean gst_dc1394_parse_caps (const GstCaps * caps,
-    gint * width,
-    gint * height,
-    gint * rate_numerator, gint * rate_denominator, gint * vmode, gint * bpp);
-
-static gint gst_dc1394_caps_set_format_vmode_caps (GstStructure * st,
-    gint mode);
-static gboolean gst_dc1394_set_caps_color (GstStructure * gs, gint mc);
-static void gst_dc1394_set_caps_framesize (GstStructure * gs, gint width,
-    gint height);
-static void gst_dc1394_set_caps_framesize_range (GstStructure * gs,
-    gint minwidth, gint maxwidth, gint incwidth,
-    gint minheight, gint maxheight, gint incheight);
-
-static gint gst_dc1394_caps_set_framerate_list (GstStructure * gs,
-    dc1394framerates_t * framerates);
-
-static GstCaps *gst_dc1394_get_all_dc1394_caps (void);
+static void gst_dc1394_set_prop_camera_guid (GstDc1394 * src,
+    const gchar * guid);
+static gchar *gst_dc1394_get_prop_camera_guid (GstDc1394 * src);
+static void gst_dc1394_set_prop_camera_unit (GstDc1394 * src, gint unit);
+static gint gst_dc1394_get_prop_camera_unit (GstDc1394 * src);
+static void gst_dc1394_set_prop_iso_speed (GstDc1394 * src, guint speed);
+static guint gst_dc1394_get_prop_iso_speed (GstDc1394 * src);
+static void gst_dc1394_set_prop_dma_buffer_size (GstDc1394 * src, guint size);
+static guint gst_dc1394_get_prop_dma_buffer_size (GstDc1394 * src);
+static gboolean gst_dc1394_open_cam (GstDc1394 * src);
+static void gst_dc1394_close_cam (GstDc1394 * src);
+static gboolean gst_dc1394_start_cam (GstDc1394 * src);
+static gboolean gst_dc1394_stop_cam (GstDc1394 * src);
+static gboolean gst_dc1394_set_cam_caps (GstDc1394 * src, GstCaps * caps);
 static GstCaps *gst_dc1394_get_cam_caps (GstDc1394 * src);
-static gboolean gst_dc1394_open_cam_with_best_caps (GstDc1394 * src);
-static gint gst_dc1394_framerate_frac_to_const (gint num, gint denom);
-static void gst_dc1394_framerate_const_to_frac (gint framerateconst,
-    GValue * framefrac);
-static gboolean
-gst_dc1394_change_camera_transmission (GstDc1394 * src, gboolean on);
-static gboolean gst_dc1394_query (GstBaseSrc * bsrc, GstQuery * query);
+static GstCaps *gst_dc1394_get_all_caps (void);
 
-static void
-gst_dc1394_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_static_metadata (element_class,
-      "1394 IIDC Video Source", "Source/Video",
-      "libdc1394 based source, supports 1394 IIDC cameras",
-      "Antoine Tremblay <hexa00@gmail.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_dc1394_get_all_dc1394_caps ()));
-
-}
+static GstCaps *gst_dc1394_build_caps (const dc1394color_codings_t *
+    supported_codings, const dc1394framerates_t * supported_rates,
+    guint width_min, guint width_max, guint width_step, guint height_min,
+    guint height_max, guint height_step);
+static gboolean gst_dc1394_parse_caps (const GstCaps * caps,
+    dc1394color_codings_t * color_codings, dc1394framerate_t * rate,
+    gdouble * rate_decimal, guint * width, guint * height);
 
 static void
 gst_dc1394_class_init (GstDc1394Class * klass)
 {
   GObjectClass *gobject_class;
-  GstBaseSrcClass *gstbasesrc_class;
-  GstPushSrcClass *gstpushsrc_class;
-  GstElementClass *gstelement_class;
+  GstElementClass *element_class;
+  GstBaseSrcClass *basesrc_class;
+  GstPushSrcClass *pushsrc_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstbasesrc_class = (GstBaseSrcClass *) klass;
-  gstpushsrc_class = (GstPushSrcClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
+  element_class = GST_ELEMENT_CLASS (klass);
+  basesrc_class = GST_BASE_SRC_CLASS (klass);
+  pushsrc_class = GST_PUSH_SRC_CLASS (klass);
 
   gobject_class->set_property = gst_dc1394_set_property;
   gobject_class->get_property = gst_dc1394_get_property;
+  g_object_class_install_property (gobject_class, PROP_CAMERA_GUID,
+      g_param_spec_string ("guid", "Camera GUID",
+          "The hexadecimal representation of the GUID of the camera"
+          " (use first camera available if null)",
+          NULL,
+          G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE |
+          GST_PARAM_MUTABLE_READY));
+  g_object_class_install_property (gobject_class, PROP_CAMERA_UNIT,
+      g_param_spec_int ("unit", "Camera unit",
+          "The unit number of the camera (-1 if no unit number is used)",
+          -1, G_MAXINT, -1,
+          G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE |
+          GST_PARAM_MUTABLE_READY));
+  g_object_class_install_property (gobject_class, PROP_ISO_SPEED,
+      g_param_spec_enum ("iso", "ISO bandwidth",
+          "The ISO bandwidth in Mbps",
+          GST_TYPE_DC1394_ISO_SPEED, 400,
+          G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE |
+          GST_PARAM_MUTABLE_READY));
+  g_object_class_install_property (gobject_class, PROP_DMA_BUFFER_SIZE,
+      g_param_spec_uint ("dma", "DMA ring buffer size",
+          "The number of frames in the Direct Memory Access ring buffer",
+          1, G_MAXUINT, 10,
+          G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE |
+          GST_PARAM_MUTABLE_READY));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_TIMESTAMP_OFFSET, g_param_spec_int64 ("timestamp-offset",
-          "Timestamp offset",
-          "An offset added to timestamps set on buffers (in ns)", G_MININT64,
-          G_MAXINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  gst_element_class_set_static_metadata (element_class,
+      "1394 IIDC Video Source", "Source/Video",
+      "libdc1394 based source for IIDC cameras",
+      "Antoine Tremblay <hexa00@gmail.com>");
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          gst_dc1394_get_all_caps ()));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_CAMNUM, g_param_spec_int ("camera-number",
-          "The number of the camera on the firewire bus",
-          "The number of the camera on the firewire bus", 0,
-          G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  basesrc_class->start = GST_DEBUG_FUNCPTR (gst_dc1394_start);
+  basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_dc1394_stop);
+  basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_dc1394_set_caps);
+  basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_dc1394_get_caps);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_BUFSIZE, g_param_spec_int ("buffer-size",
-          "The number of frames in the dma ringbuffer",
-          "The number of frames in the dma ringbuffer", 1,
-          G_MAXINT, 10, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_ISO_SPEED, g_param_spec_int ("iso-speed",
-          "The iso bandwidth in Mbps (100, 200, 400, 800, 1600, 3200)",
-          "The iso bandwidth in Mbps (100, 200, 400, 800, 1600, 3200)", 100,
-          3200, 400, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  gstbasesrc_class->get_caps = gst_dc1394_getcaps;
-  gstbasesrc_class->set_caps = gst_dc1394_setcaps;
-  gstbasesrc_class->query = gst_dc1394_query;
-
-  gstbasesrc_class->get_times = gst_dc1394_get_times;
-  gstpushsrc_class->create = gst_dc1394_create;
-
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_dc1394_change_state);
+  pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_dc1394_create);
 }
 
+
 static void
-gst_dc1394_init (GstDc1394 * src, GstDc1394Class * g_class)
+gst_dc1394_init (GstDc1394 * src)
 {
-
-  src->segment_start_frame = -1;
-  src->segment_end_frame = -1;
-  src->timestamp_offset = 0;
-  src->caps = gst_dc1394_get_all_dc1394_caps ();
-  src->bufsize = 10;
-  src->iso_speed = 400;
-  src->camnum = 0;
-  src->n_frames = 0;
-
-  gst_pad_set_fixatecaps_function (GST_BASE_SRC_PAD (src),
-      gst_dc1394_src_fixate);
+  src->guid = -1;
+  src->unit = -1;
+  src->iso_speed = DC1394_ISO_SPEED_400;
+  src->dma_buffer_size = 10;
+  src->dc1394 = NULL;
+  src->camera = NULL;
+  src->caps = NULL;
 
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
+  gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
+  gst_base_src_set_do_timestamp (GST_BASE_SRC (src), TRUE);
 }
 
-static void
-gst_dc1394_src_fixate (GstPad * pad, GstCaps * caps)
-{
-
-  GstDc1394 *src = GST_DC1394 (gst_pad_get_parent (pad));
-  GstStructure *structure;
-  int i;
-
-  GST_LOG_OBJECT (src, " fixating caps to closest to 320x240 , 30 fps");
-
-  for (i = 0; i < gst_caps_get_size (caps); ++i) {
-    structure = gst_caps_get_structure (caps, i);
-
-    gst_structure_fixate_field_nearest_int (structure, "width", 320);
-    gst_structure_fixate_field_nearest_int (structure, "height", 240);
-    gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
-  }
-  gst_object_unref (GST_OBJECT (src));
-}
-
-static gboolean
-gst_dc1394_query (GstBaseSrc * bsrc, GstQuery * query)
-{
-  gboolean res = TRUE;
-  GstDc1394 *src = GST_DC1394 (bsrc);
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_LATENCY:
-    {
-      GstClockTime min_latency, max_latency;
-
-      if (!src->camera) {
-        GST_WARNING_OBJECT (src,
-            "Can't give latency since device isn't open !");
-        res = FALSE;
-        goto done;
-      }
-
-      if (src->rate_denominator <= 0 || src->rate_numerator <= 0) {
-        GST_WARNING_OBJECT (bsrc,
-            "Can't give latency since framerate isn't fixated !");
-        res = FALSE;
-        goto done;
-      }
-
-      /* min latency is the time to capture one frame */
-      min_latency = gst_util_uint64_scale (GST_SECOND,
-          src->rate_denominator, src->rate_numerator);
-
-      /* max latency is total duration of the frame buffer */
-      max_latency = gst_util_uint64_scale (src->bufsize,
-          GST_SECOND * src->rate_denominator, src->rate_numerator);
-
-      GST_DEBUG_OBJECT (bsrc,
-          "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
-
-      /* we are always live, the min latency is 1 frame and the max latency is
-       * the complete buffer of frames. */
-      gst_query_set_latency (query, TRUE, min_latency, max_latency);
-
-      res = TRUE;
-      break;
-    }
-    default:
-      res = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
-      break;
-  }
-
-done:
-  return res;
-}
-
-static void
-gst_dc1394_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstDc1394 *src = GST_DC1394 (object);
-
-  switch (prop_id) {
-    case PROP_TIMESTAMP_OFFSET:
-      src->timestamp_offset = g_value_get_int64 (value);
-      break;
-    case PROP_CAMNUM:
-      src->camnum = g_value_get_int (value);
-      break;
-    case PROP_BUFSIZE:
-      src->bufsize = g_value_get_int (value);
-      break;
-    case PROP_ISO_SPEED:
-      switch (g_value_get_int (value)) {
-        case 100:
-        case 200:
-        case 300:
-        case 400:
-        case 800:
-        case 1600:
-        case 3200:
-          // fallthrough
-          src->iso_speed = g_value_get_int (value);
-          break;
-        default:
-          g_warning ("%s: Invalid iso speed %d, ignoring",
-              GST_ELEMENT_NAME (src), g_value_get_int (value));
-          break;
-      }
-    default:
-      break;
-  }
-}
 
 static void
 gst_dc1394_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstDc1394 *src = GST_DC1394 (object);
+  GstDc1394 *src;
 
+  src = GST_DC1394 (object);
   switch (prop_id) {
-    case PROP_TIMESTAMP_OFFSET:
-      g_value_set_int64 (value, src->timestamp_offset);
+    case PROP_CAMERA_GUID:
+      g_value_take_string (value, gst_dc1394_get_prop_camera_guid (src));
       break;
-    case PROP_CAMNUM:
-      g_value_set_int (value, src->camnum);
-      break;
-    case PROP_BUFSIZE:
-      g_value_set_int (value, src->bufsize);
+    case PROP_CAMERA_UNIT:
+      g_value_set_int (value, gst_dc1394_get_prop_camera_unit (src));
       break;
     case PROP_ISO_SPEED:
-      g_value_set_int (value, src->iso_speed);
+      g_value_set_enum (value, gst_dc1394_get_prop_iso_speed (src));
+      break;
+    case PROP_DMA_BUFFER_SIZE:
+      g_value_set_uint (value, gst_dc1394_get_prop_dma_buffer_size (src));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -321,999 +225,983 @@ gst_dc1394_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstCaps *
-gst_dc1394_getcaps (GstBaseSrc * bsrc)
-{
-  GstDc1394 *gsrc;
-
-  gsrc = GST_DC1394 (bsrc);
-
-  g_return_val_if_fail (gsrc->caps, NULL);
-
-  return gst_caps_copy (gsrc->caps);
-}
-
-static gboolean
-gst_dc1394_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
-{
-  gboolean res = TRUE;
-  GstDc1394 *dc1394;
-  gint width, height, rate_denominator, rate_numerator;
-  gint bpp, vmode;
-
-  dc1394 = GST_DC1394 (bsrc);
-
-  if (dc1394->caps) {
-    gst_caps_unref (dc1394->caps);
-  }
-
-  dc1394->caps = gst_caps_copy (caps);
-
-  res = gst_dc1394_parse_caps (caps, &width, &height,
-      &rate_numerator, &rate_denominator, &vmode, &bpp);
-
-  if (res) {
-    /* looks ok here */
-    dc1394->width = width;
-    dc1394->height = height;
-    dc1394->vmode = vmode;
-    dc1394->rate_numerator = rate_numerator;
-    dc1394->rate_denominator = rate_denominator;
-    dc1394->bpp = bpp;
-  }
-
-  return res;
-}
 
 static void
-gst_dc1394_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end)
+gst_dc1394_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  /* for live sources, sync on the timestamp of the buffer */
-  if (gst_base_src_is_live (basesrc)) {
-    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  GstDc1394 *src;
 
-    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-      /* get duration to calculate end time */
-      GstClockTime duration = GST_BUFFER_DURATION (buffer);
-
-      if (GST_CLOCK_TIME_IS_VALID (duration)) {
-        *end = timestamp + duration;
-      }
-      *start = timestamp;
-    }
-  } else {
-    *start = -1;
-    *end = -1;
+  src = GST_DC1394 (object);
+  switch (prop_id) {
+    case PROP_CAMERA_GUID:
+      gst_dc1394_set_prop_camera_guid (src, g_value_get_string (value));
+      break;
+    case PROP_CAMERA_UNIT:
+      gst_dc1394_set_prop_camera_unit (src, g_value_get_int (value));
+      break;
+    case PROP_ISO_SPEED:
+      gst_dc1394_set_prop_iso_speed (src, g_value_get_enum (value));
+      break;
+    case PROP_DMA_BUFFER_SIZE:
+      gst_dc1394_set_prop_dma_buffer_size (src, g_value_get_uint (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
   }
 }
 
-static GstFlowReturn
-gst_dc1394_create (GstPushSrc * psrc, GstBuffer ** buffer)
+
+static gboolean
+gst_dc1394_start (GstBaseSrc * bsrc)
 {
   GstDc1394 *src;
-  GstBuffer *outbuf;
-  GstCaps *caps;
-  dc1394video_frame_t *frame[1];
-  GstFlowReturn res = GST_FLOW_OK;
-  dc1394error_t err;
+
+  src = GST_DC1394 (bsrc);
+  return gst_dc1394_open_cam (src);
+}
+
+
+static gboolean
+gst_dc1394_stop (GstBaseSrc * bsrc)
+{
+  GstDc1394 *src;
+
+  src = GST_DC1394 (bsrc);
+  if (!gst_dc1394_stop_cam (src))
+    return FALSE;
+  gst_dc1394_close_cam (src);
+  return TRUE;
+}
+
+
+static GstCaps *
+gst_dc1394_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
+{
+  GstDc1394 *src;
+  GstCaps *caps, *ret;
+
+  src = GST_DC1394 (bsrc);
+  if (src->camera) {
+    caps = gst_dc1394_get_cam_caps (src);
+  } else {
+    caps = gst_dc1394_get_all_caps ();
+  }
+  if (caps && filter) {
+    ret = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+  } else {
+    ret = caps;
+  }
+  return ret;
+}
+
+
+static gboolean
+gst_dc1394_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
+{
+  GstDc1394 *src;
+
+  src = GST_DC1394 (bsrc);
+  return gst_dc1394_stop_cam (src)
+      && gst_dc1394_set_cam_caps (src, caps)
+      && gst_dc1394_start_cam (src);
+}
+
+
+static GstFlowReturn
+gst_dc1394_create (GstPushSrc * psrc, GstBuffer ** obuf)
+{
+  GstDc1394 *src;
+  GstBuffer *buffer;
+  dc1394video_frame_t *frame;
+  dc1394error_t ret;
 
   src = GST_DC1394 (psrc);
-
-  err = dc1394_capture_dequeue (src->camera, DC1394_CAPTURE_POLICY_WAIT, frame);
-
-  if (err != DC1394_SUCCESS) {
-    GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
-        ("failed to dequeue frame"), ("failed to dequeue frame"));
+  buffer = NULL;
+  ret = dc1394_capture_dequeue (src->camera, DC1394_CAPTURE_POLICY_WAIT,
+      &frame);
+  if (ret != DC1394_SUCCESS) {
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+        ("Could not dequeue frame: %s.", dc1394_error_get_string (ret)));
     goto error;
   }
-
-  outbuf = gst_buffer_new_and_alloc (frame[0]->image_bytes);
-
-  memcpy (GST_BUFFER_MALLOCDATA (outbuf), (guchar *) frame[0]->image,
-      frame[0]->image_bytes * sizeof (guchar));
-
-  GST_BUFFER_DATA (outbuf) = GST_BUFFER_MALLOCDATA (outbuf);
-
-  caps = gst_pad_get_caps (GST_BASE_SRC_PAD (psrc));
-  gst_buffer_set_caps (outbuf, caps);
-  gst_caps_unref (caps);
-
-  GST_BUFFER_TIMESTAMP (outbuf) = src->timestamp_offset + src->running_time;
-  if (src->rate_numerator != 0) {
-    GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale_int (GST_SECOND,
-        src->rate_denominator, src->rate_numerator);
+  /*
+   * TODO: We could create the buffer by wrapping the image bytes in the frame
+   * (enqueing the frame in the notify function) to save the copy operation.
+   * It will only work if all the buffers are disposed before closing the camera
+   * when state changes from PAUSED to READY.
+   */
+  buffer = gst_buffer_new_allocate (NULL, frame->image_bytes, NULL);
+  gst_buffer_fill (buffer, 0, frame->image, frame->image_bytes);
+  /*
+   * TODO: There is a field timestamp in the frame structure,
+   * It is not sure if it could be used as PTS or DTS:
+   * we are not sure if it comes from a monotonic clock,
+   * and it seems to be left undefined under MS Windows.
+   */
+  ret = dc1394_capture_enqueue (src->camera, frame);
+  if (ret != DC1394_SUCCESS) {
+    GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
+        ("Could not enqueue frame: %s.", dc1394_error_get_string (ret)));
   }
-
-  src->n_frames++;
-  if (src->rate_numerator != 0) {
-    src->running_time = gst_util_uint64_scale_int (src->n_frames * GST_SECOND,
-        src->rate_denominator, src->rate_numerator);
-  }
-
-  if (dc1394_capture_enqueue (src->camera, frame[0]) != DC1394_SUCCESS) {
-    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("failed to enqueue frame"),
-        ("failed to enqueue frame"));
-    goto error;
-  }
-
-  *buffer = outbuf;
-
-  return res;
+  *obuf = buffer;
+  return GST_FLOW_OK;
 
 error:
-  {
-    return GST_FLOW_ERROR;
+  if (buffer)
+    gst_buffer_unref (buffer);
+  return GST_FLOW_ERROR;
+}
+
+
+static void
+gst_dc1394_set_prop_camera_guid (GstDc1394 * src, const gchar * guid)
+{
+  gchar *end;
+
+  if (!guid) {
+    GST_DEBUG_OBJECT (src, "Null camera GUID value: %s.",
+        "first camera available will be used");
+    src->guid = -1;
+    return;
   }
+  errno = 0;
+  src->guid = g_ascii_strtoull (guid, &end, 16);
+  if (errno == ERANGE || end == guid || *end != '\0') {
+    GST_ERROR_OBJECT (src, "Invalid camera GUID value: %s.", guid);
+    return;
+  }
+}
+
+
+static gchar *
+gst_dc1394_get_prop_camera_guid (GstDc1394 * src)
+{
+  if (src->guid == -1) {
+    return NULL;
+  }
+  return g_strdup_printf ("%016" G_GINT64_MODIFIER "X", src->guid);
+}
+
+
+static void
+gst_dc1394_set_prop_camera_unit (GstDc1394 * src, gint unit)
+{
+  src->unit = unit;
+}
+
+
+static gint
+gst_dc1394_get_prop_camera_unit (GstDc1394 * src)
+{
+  return src->unit;
+}
+
+
+static void
+gst_dc1394_set_prop_iso_speed (GstDc1394 * src, guint speed)
+{
+  switch (speed) {
+    case 100:
+      src->iso_speed = DC1394_ISO_SPEED_100;
+      break;
+    case 200:
+      src->iso_speed = DC1394_ISO_SPEED_200;
+      break;
+    case 400:
+      src->iso_speed = DC1394_ISO_SPEED_400;
+      break;
+    case 800:
+      src->iso_speed = DC1394_ISO_SPEED_800;
+      break;
+    case 1600:
+      src->iso_speed = DC1394_ISO_SPEED_1600;
+      break;
+    case 3200:
+      src->iso_speed = DC1394_ISO_SPEED_3200;
+      break;
+    default:
+      GST_ERROR_OBJECT (src, "Invalid ISO speed value: %d.", speed);
+  }
+}
+
+
+static guint
+gst_dc1394_get_prop_iso_speed (GstDc1394 * src)
+{
+  switch (src->iso_speed) {
+    case DC1394_ISO_SPEED_100:
+      return 100;
+    case DC1394_ISO_SPEED_200:
+      return 200;
+    case DC1394_ISO_SPEED_400:
+      return 400;
+    case DC1394_ISO_SPEED_800:
+      return 800;
+    case DC1394_ISO_SPEED_1600:
+      return 1600;
+    case DC1394_ISO_SPEED_3200:
+      return 3200;
+    default:                   /* never reached */
+      return DC1394_ISO_SPEED_MIN - 1;
+  }
+}
+
+
+static void
+gst_dc1394_set_prop_dma_buffer_size (GstDc1394 * src, guint size)
+{
+  src->dma_buffer_size = size;
+}
+
+
+static guint
+gst_dc1394_get_prop_dma_buffer_size (GstDc1394 * src)
+{
+  return src->dma_buffer_size;
+}
+
+
+static gboolean
+gst_dc1394_open_cam (GstDc1394 * src)
+{
+  dc1394camera_list_t *cameras;
+  dc1394error_t ret;
+  int number;
+  uint64_t guid;
+  int unit;
+
+  src->dc1394 = dc1394_new ();
+  if (!src->dc1394) {
+    GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
+        ("Could not initialize dc1394 library."));
+    goto error;
+  }
+
+  number = -1;
+  guid = -1;
+  unit = -1;
+  ret = dc1394_camera_enumerate (src->dc1394, &cameras);
+  if (ret != DC1394_SUCCESS) {
+    GST_ELEMENT_ERROR (src, LIBRARY, FAILED, (NULL),
+        ("Could not enumerate cameras: %s.", dc1394_error_get_string (ret)));
+    goto error;
+  }
+  for (int i = 0; i < cameras->num; i++) {
+    GST_DEBUG_OBJECT (src, "Camera %2d is %016" G_GINT64_MODIFIER "X %d.",
+        i, cameras->ids[i].guid, cameras->ids[i].unit);
+    if ((src->guid == -1 || src->guid == cameras->ids[i].guid) &&
+        (src->unit == -1 || src->unit == cameras->ids[i].unit)) {
+      number = i;
+      guid = cameras->ids[i].guid;
+      unit = cameras->ids[i].unit;
+    }
+  }
+  dc1394_camera_free_list (cameras);
+  if (number < 0) {
+    if (src->guid == -1) {
+      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
+          ("No cameras found."));
+    } else {
+      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
+          ("Camera %016" G_GINT64_MODIFIER "X %d not found.",
+              src->guid, src->unit));
+    }
+    goto error;
+  }
+
+  GST_DEBUG_OBJECT (src, "Open camera %016" G_GINT64_MODIFIER "X %d.",
+      guid, unit);
+  src->camera = dc1394_camera_new_unit (src->dc1394, guid, unit);
+  if (!src->camera) {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
+        ("Could not open camera %016" G_GINT64_MODIFIER "X %d.", guid, unit));
+    goto error;
+  }
+  GST_DEBUG_OBJECT (src,
+      "Camera %016" G_GINT64_MODIFIER "X %d opened: \"%s %s\".",
+      src->camera->guid, src->camera->unit,
+      src->camera->vendor, src->camera->model);
+
+  if (src->iso_speed > DC1394_ISO_SPEED_400) {
+    ret = dc1394_video_set_operation_mode (src->camera,
+        DC1394_OPERATION_MODE_1394B);
+    if (ret != DC1394_SUCCESS) {
+      GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+          ("Could not set 1394B operation mode: %s.",
+              dc1394_error_get_string (ret)));
+      goto error;
+    }
+  }
+  ret = dc1394_video_set_iso_speed (src->camera, src->iso_speed);
+  if (ret != DC1394_SUCCESS) {
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("Could not set ISO speed %d: %s.", src->iso_speed,
+            dc1394_error_get_string (ret)));
+    goto error;
+  }
+
+  return TRUE;
+
+error:
+  if (src->camera) {
+    dc1394_camera_free (src->camera);
+    src->camera = NULL;
+  }
+  if (src->dc1394) {
+    dc1394_free (src->dc1394);
+    src->dc1394 = NULL;
+  }
+  return FALSE;
+}
+
+
+static void
+gst_dc1394_close_cam (GstDc1394 * src)
+{
+  GST_DEBUG_OBJECT (src,
+      "Close camera %016" G_GINT64_MODIFIER "X %d: \"%s %s\".",
+      src->camera->guid, src->camera->unit,
+      src->camera->vendor, src->camera->model);
+  if (src->caps) {
+    gst_caps_unref (src->caps);
+    src->caps = NULL;
+  }
+  dc1394_camera_free (src->camera);
+  src->camera = NULL;
+  dc1394_free (src->dc1394);
+  src->dc1394 = NULL;
+  GST_DEBUG_OBJECT (src, "Camera closed.");
+}
+
+
+static gboolean
+gst_dc1394_start_cam (GstDc1394 * src)
+{
+  dc1394error_t ret;
+  dc1394switch_t status;
+
+  GST_DEBUG_OBJECT (src, "Setup capture with a DMA buffer of %d frames",
+      src->dma_buffer_size);
+  ret = dc1394_capture_setup (src->camera, src->dma_buffer_size,
+      DC1394_CAPTURE_FLAGS_DEFAULT);
+  if (ret == DC1394_NO_BANDWIDTH) {
+    GST_DEBUG_OBJECT (src,
+        "Could not setup capture with available ISO bandwidth,"
+        "releasing channels and bandwidth and retrying...");
+    ret = dc1394_iso_release_all (src->camera);
+    if (ret != DC1394_SUCCESS) {
+      GST_ELEMENT_WARNING (src, RESOURCE, FAILED, (NULL),
+          ("Could not release ISO channels and bandwidth: %s",
+              dc1394_error_get_string (ret)));
+    }
+    ret = dc1394_capture_setup (src->camera, src->dma_buffer_size,
+        DC1394_CAPTURE_FLAGS_DEFAULT);
+  }
+  if (ret != DC1394_SUCCESS) {
+    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, (NULL),
+        ("Could not setup capture: %s", dc1394_error_get_string (ret)));
+    goto error_capture;
+  }
+
+  /*
+   * TODO: dc1394_capture_setup/stop can start/stop the transmission
+   * when called with DC1394_CAPTURE_FLAGS_AUTO_ISO in the flags.
+   * The repeated trials check is a leftover of the original code,
+   * and might not be needed.
+   */
+  GST_DEBUG_OBJECT (src, "Enable camera transmission.");
+  ret = dc1394_video_set_transmission (src->camera, DC1394_ON);
+  if (ret != DC1394_SUCCESS) {
+    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, (NULL),
+        ("Could not set transmission status: %s.",
+            dc1394_error_get_string (ret)));
+    goto error_transmission;
+  }
+  ret = dc1394_video_get_transmission (src->camera, &status);
+  for (guint trials = 10;
+      (trials > 0) && !(ret == DC1394_SUCCESS && status == DC1394_ON);
+      trials--) {
+    GST_DEBUG_OBJECT (src,
+        "Wait for camera to start transmission (%d trials left).", trials);
+    g_usleep (50000);
+    ret = dc1394_video_get_transmission (src->camera, &status);
+  }
+  if (!(ret == DC1394_SUCCESS && status == DC1394_ON)) {
+    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, (NULL),
+        ("Could not get positive transmission status: %s.",
+            dc1394_error_get_string (ret)));
+    goto error_transmission;
+  }
+
+  GST_DEBUG_OBJECT (src, "Capture successfully started.");
+  return TRUE;
+
+error_transmission:
+  ret = dc1394_capture_stop (src->camera);
+  if (ret != DC1394_SUCCESS) {
+    GST_ELEMENT_WARNING (src, RESOURCE, FAILED, (NULL),
+        ("Could not stop capture: %s.", dc1394_error_get_string (ret)));
+  }
+error_capture:
+  return FALSE;
+}
+
+
+static gboolean
+gst_dc1394_stop_cam (GstDc1394 * src)
+{
+  dc1394error_t ret;
+
+  GST_DEBUG_OBJECT (src, "Disable camera transmission.");
+  ret = dc1394_video_set_transmission (src->camera, DC1394_OFF);
+  if (ret != DC1394_SUCCESS) {
+    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, (NULL),
+        ("Could not set transmission status: %s.",
+            dc1394_error_get_string (ret)));
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (src, "Clear capture resources.");
+  ret = dc1394_capture_stop (src->camera);
+  if (ret != DC1394_SUCCESS && ret != DC1394_CAPTURE_IS_NOT_SET) {
+    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, (NULL),
+        ("Could not clear capture: %s.", dc1394_error_get_string (ret)));
+    return FALSE;
+  }
+
+  switch (ret) {
+    case DC1394_CAPTURE_IS_NOT_SET:
+      GST_DEBUG_OBJECT (src, "Capture was not set up.");
+      break;
+    case DC1394_SUCCESS:
+      GST_DEBUG_OBJECT (src, "Capture successfully stopped.");
+      break;
+    default:
+      break;
+  }
+
+  return TRUE;
+}
+
+
+static gboolean
+gst_dc1394_set_cam_caps (GstDc1394 * src, GstCaps * caps)
+{
+  GstCaps *mode_caps;
+  gboolean ok, supported;
+  dc1394video_modes_t supported_modes;
+  dc1394video_mode_t mode;
+  dc1394color_codings_t supported_codings;
+  dc1394color_coding_t coding;
+  dc1394framerates_t supported_rates;
+  dc1394framerate_t rate;
+  double rate_decimal;
+  uint64_t total_bytes;
+  uint32_t width, width_step, height, height_step;
+
+  ok = dc1394_video_get_supported_modes (src->camera,
+      &supported_modes) == DC1394_SUCCESS;
+  if (!ok) {
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("Could not get supported modes."));
+    goto error;
+  }
+  supported = FALSE;
+  for (guint m = 0; m < supported_modes.num && !supported; m++) {
+    mode = supported_modes.modes[m];
+    mode_caps = gst_caps_new_empty ();
+    if (dc1394_is_video_mode_scalable (mode)) {
+      ok &= dc1394_format7_get_color_codings (src->camera, mode,
+          &supported_codings) == DC1394_SUCCESS;
+      ok &= dc1394_format7_get_max_image_size (src->camera, mode,
+          &width, &height) == DC1394_SUCCESS;
+      ok &= dc1394_format7_get_unit_size (src->camera, mode,
+          &width_step, &height_step) == DC1394_SUCCESS;
+    } else {
+      ok &= dc1394_get_color_coding_from_video_mode (src->camera, mode,
+          &coding) == DC1394_SUCCESS;
+      ok &= dc1394_get_image_size_from_video_mode (src->camera, mode,
+          &width, &height) == DC1394_SUCCESS;
+      ok &= dc1394_video_get_supported_framerates (src->camera, mode,
+          &supported_rates) == DC1394_SUCCESS;
+    }
+    if (!ok) {
+      GST_ELEMENT_WARNING (src, RESOURCE, SETTINGS, (NULL),
+          ("Could not get video mode %d parameters.", mode));
+    } else if (dc1394_is_video_mode_scalable (mode)) {
+      gst_caps_append (mode_caps, gst_dc1394_build_caps (&supported_codings,
+              NULL, width_step, width, width_step, height_step, height,
+              height_step));
+    } else {
+      supported_codings.num = 1;
+      supported_codings.codings[0] = coding;
+      gst_caps_append (mode_caps, gst_dc1394_build_caps (&supported_codings,
+              &supported_rates, width, width, 1, height, height, 1));
+    }
+    supported = gst_caps_can_intersect (caps, mode_caps);
+    gst_caps_unref (mode_caps);
+  }
+  ok = supported && gst_dc1394_parse_caps (caps, &supported_codings,
+      &rate, &rate_decimal, &width, &height);
+  if (!ok) {
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("Unsupported caps %" GST_PTR_FORMAT, caps));
+    goto error;
+  }
+  GST_DEBUG_OBJECT (src, "Set video mode %d.", mode);
+  ok = dc1394_video_set_mode (src->camera, mode) == DC1394_SUCCESS;
+  if (!ok) {
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("Could not set video mode %d.", mode));
+    goto error;
+  }
+  if (dc1394_is_video_mode_scalable (mode)) {
+    ok = FALSE;
+    for (guint c = 0; c < supported_codings.num && !ok; c++) {
+      coding = supported_codings.codings[c];
+      GST_DEBUG_OBJECT (src,
+          "Try format7 video mode %d with coding %d, size %d %d, and rate %.4f Hz.",
+          mode, coding, width, height, rate_decimal);
+      ok = (dc1394_format7_set_color_coding (src->camera, mode,
+              coding) == DC1394_SUCCESS)
+          && (dc1394_format7_set_image_size (src->camera, mode,
+              width, height) == DC1394_SUCCESS)
+          && (dc1394_format7_get_total_bytes (src->camera, mode,
+              &total_bytes) == DC1394_SUCCESS)
+          && (dc1394_format7_set_packet_size (src->camera, mode,
+              total_bytes * rate_decimal * 0.000125) == DC1394_SUCCESS);
+    }
+  } else {
+    GST_DEBUG_OBJECT (src, "Set fixed video mode %d rate %.4f Hz (%d).",
+        mode, rate_decimal, rate);
+    ok = dc1394_video_set_framerate (src->camera, rate) == DC1394_SUCCESS;
+  }
+  /* TODO: check feature framerate */
+  if (!ok) {
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("Could not set video mode %d parameters.", mode));
+    goto error;
+  }
+  return TRUE;
+
+error:
+  return FALSE;
+}
+
+
+GstCaps *
+gst_dc1394_get_cam_caps (GstDc1394 * src)
+{
+  gboolean ok;
+  dc1394video_modes_t supported_modes;
+  dc1394video_mode_t mode;
+  dc1394color_codings_t supported_codings;
+  dc1394color_coding_t coding;
+  dc1394framerates_t supported_rates;
+  uint32_t width, width_step, height, height_step;
+
+  if (src->caps)
+    return gst_caps_ref (src->caps);
+
+  ok = dc1394_video_get_supported_modes (src->camera,
+      &supported_modes) == DC1394_SUCCESS;
+  if (!ok) {
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("Could not get supported modes."));
+    return NULL;
+  }
+
+  src->caps = gst_caps_new_empty ();
+  for (guint m = 0; m < supported_modes.num; m++) {
+    mode = supported_modes.modes[m];
+    if (dc1394_is_video_mode_scalable (mode)) {
+      ok &= dc1394_format7_get_color_codings (src->camera, mode,
+          &supported_codings) == DC1394_SUCCESS;
+      ok &= dc1394_format7_get_max_image_size (src->camera, mode,
+          &width, &height) == DC1394_SUCCESS;
+      ok &= dc1394_format7_get_unit_size (src->camera, mode,
+          &width_step, &height_step) == DC1394_SUCCESS;
+      if (!ok) {
+        GST_ELEMENT_WARNING (src, RESOURCE, SETTINGS, (NULL),
+            ("Could not get format7 video mode %d parameters.", mode));
+      } else {
+        gst_caps_append (src->caps, gst_dc1394_build_caps (&supported_codings,
+                NULL, width_step, width, width_step, height_step, height,
+                height_step));
+      }
+    } else {
+      ok &= dc1394_get_image_size_from_video_mode (src->camera, mode,
+          &width, &height) == DC1394_SUCCESS;
+      ok &= dc1394_video_get_supported_framerates (src->camera, mode,
+          &supported_rates) == DC1394_SUCCESS;
+      ok &= dc1394_get_color_coding_from_video_mode (src->camera, mode,
+          &coding) == DC1394_SUCCESS;
+      if (!ok) {
+        GST_ELEMENT_WARNING (src, RESOURCE, SETTINGS, (NULL),
+            ("Could not get fixed video mode %d parameters.", mode));
+      } else {
+        supported_codings.num = 1;
+        supported_codings.codings[0] = coding;
+        gst_caps_append (src->caps, gst_dc1394_build_caps (&supported_codings,
+                &supported_rates, width, width, 1, height, height, 1));
+      }
+    }
+  }
+  GST_DEBUG_OBJECT (src, "Camera capabilities: \"%" GST_PTR_FORMAT "\".",
+      src->caps);
+  return gst_caps_ref (src->caps);
+}
+
+
+static GstCaps *
+gst_dc1394_get_all_caps (void)
+{
+  GstCaps *caps;
+  dc1394color_coding_t coding;
+  dc1394color_codings_t video_codings;
+  uint32_t width, height;
+
+  const dc1394color_codings_t supported_codings = { 7, {
+          /* DC1394_COLOR_CODING_RGB16S, DC1394_COLOR_CODING_RGB16, */
+          DC1394_COLOR_CODING_RGB8, DC1394_COLOR_CODING_YUV444,
+          DC1394_COLOR_CODING_YUV422, DC1394_COLOR_CODING_YUV411,
+          /* DC1394_COLOR_CODING_RAW16, DC1394_COLOR_CODING_MONO16S */
+          DC1394_COLOR_CODING_MONO16, DC1394_COLOR_CODING_RAW8,
+      DC1394_COLOR_CODING_MONO8}
+  };
+  const dc1394framerates_t all_rates = { 8, {
+          DC1394_FRAMERATE_1_875, DC1394_FRAMERATE_3_75, DC1394_FRAMERATE_7_5,
+          DC1394_FRAMERATE_15, DC1394_FRAMERATE_30, DC1394_FRAMERATE_60,
+      DC1394_FRAMERATE_120, DC1394_FRAMERATE_240}
+  };
+
+  caps = gst_caps_new_empty ();
+  /* First caps for fixed video modes */
+  for (dc1394video_mode_t mode = DC1394_VIDEO_MODE_MIN;
+      mode < DC1394_VIDEO_MODE_EXIF; mode++) {
+    dc1394_get_image_size_from_video_mode (NULL, mode, &width, &height);
+    dc1394_get_color_coding_from_video_mode (NULL, mode, &coding);
+    video_codings.codings[0] = coding;
+    video_codings.num = 1;
+    gst_caps_append (caps, gst_dc1394_build_caps (&video_codings,
+            &all_rates, width, width, 1, height, height, 1));
+  }
+  /* Then caps for Format 7 modes */
+  gst_caps_append (caps, gst_dc1394_build_caps (&supported_codings,
+          NULL, 1, G_MAXINT, 1, 1, G_MAXINT, 1));
+  return caps;
+}
+
+
+static GstCaps *
+gst_dc1394_build_caps (const dc1394color_codings_t * supported_codings,
+    const dc1394framerates_t * supported_rates,
+    uint32_t width_min, uint32_t width_max, uint32_t width_step,
+    uint32_t height_min, uint32_t height_max, uint32_t height_step)
+{
+  GstCaps *caps;
+  GstStructure *structure;
+  GstVideoFormat video_format;
+  dc1394color_coding_t coding;
+  dc1394framerate_t rate;
+  GValue format = { 0 };
+  GValue formats = { 0 };
+  GValue width = { 0 };
+  GValue widths = { 0 };
+  GValue height = { 0 };
+  GValue heights = { 0 };
+  GValue framerate = { 0 };
+  GValue framerates = { 0 };
+
+  caps = gst_caps_new_empty ();
+  for (guint c = 0; c < supported_codings->num; c++) {
+    coding = supported_codings->codings[c];
+    switch (coding) {
+      case DC1394_COLOR_CODING_MONO8:
+        video_format = GST_VIDEO_FORMAT_GRAY8;
+        break;
+      case DC1394_COLOR_CODING_YUV411:
+        video_format = GST_VIDEO_FORMAT_IYU1;
+        break;
+      case DC1394_COLOR_CODING_YUV422:
+        video_format = GST_VIDEO_FORMAT_UYVY;
+        break;
+      case DC1394_COLOR_CODING_YUV444:
+        video_format = GST_VIDEO_FORMAT_IYU2;
+        break;
+      case DC1394_COLOR_CODING_RGB8:
+        video_format = GST_VIDEO_FORMAT_RGB;
+        break;
+      case DC1394_COLOR_CODING_RAW8:
+        video_format = GST_VIDEO_FORMAT_UNKNOWN;        /* GST_BAYER_FORMAT_XXXX8 */
+        break;
+      case DC1394_COLOR_CODING_MONO16:
+        video_format = GST_VIDEO_FORMAT_GRAY16_BE;
+        break;
+        /*
+         * The following formats do not exist in Gstreamer:
+         *case DC1394_COLOR_CODING_RGB16: // Unsigned RGB 16 bits per channel
+         *  video_format = GST_VIDEO_FORMAT_RGB48;
+         *  break;
+         *case DC1394_COLOR_CODING_MONO16S: // Signed grayscale 16 bits
+         *  video_format = GST_VIDEO_FORMAT_GRAY16_BE_SIGNED;
+         *  break;
+         *case DC1394_COLOR_CODING_RGB16S: // Signed RGB 16 bits per channel
+         *  video_format = GST_VIDEO_FORMAT_RGB48_SIGNED;
+         *  break;
+         *case DC1394_COLOR_CODING_RAW16: // Raw sensor output (bayer) 16 bits
+         *  video_format = GST_VIDEO_FORMAT_UNKNOWN; // GST_BAYER_FORMAT_XXXX16_BE
+         *  break;
+         */
+      default:
+        video_format = GST_VIDEO_FORMAT_UNKNOWN;
+        GST_DEBUG ("unsupported dc1394 video coding %d", coding);
+    }
+    if (video_format != GST_VIDEO_FORMAT_UNKNOWN) {
+      g_value_init (&formats, G_TYPE_STRING);
+      g_value_set_string (&formats, gst_video_format_to_string (video_format));
+      structure = gst_structure_new_empty ("video/x-raw");
+      gst_structure_set_value (structure, "format", &formats);
+      gst_caps_append_structure (caps, structure);
+      g_value_unset (&formats);
+    }
+    if (coding == DC1394_COLOR_CODING_MONO8 ||
+        coding == DC1394_COLOR_CODING_RAW8) {
+      g_value_init (&formats, GST_TYPE_LIST);
+      g_value_init (&format, G_TYPE_STRING);
+      g_value_set_static_string (&format, "bggr");
+      gst_value_list_append_value (&formats, &format);
+      g_value_set_static_string (&format, "rggb");
+      gst_value_list_append_value (&formats, &format);
+      g_value_set_static_string (&format, "grbg");
+      gst_value_list_append_value (&formats, &format);
+      g_value_set_static_string (&format, "gbrg");
+      gst_value_list_append_value (&formats, &format);
+      structure = gst_structure_new_empty ("video/x-bayer");
+      gst_structure_set_value (structure, "format", &formats);
+      gst_caps_append_structure (caps, structure);
+      g_value_unset (&format);
+      g_value_unset (&formats);
+    }
+  }
+
+  if (width_min == width_max) {
+    g_value_init (&widths, G_TYPE_INT);
+    g_value_set_int (&widths, width_min);
+  } else if (width_step == 1) {
+    g_value_init (&widths, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (&widths, width_min, width_max);
+  } else {
+    g_value_init (&widths, GST_TYPE_LIST);
+    g_value_init (&width, G_TYPE_INT);
+    for (uint32_t w = width_min; w <= width_max; w += width_step) {
+      g_value_set_int (&width, w);
+      gst_value_list_append_value (&widths, &width);
+    }
+    g_value_unset (&width);
+  }
+  if (height_min == height_max) {
+    g_value_init (&heights, G_TYPE_INT);
+    g_value_set_int (&heights, height_min);
+  } else if (height_step == 1) {
+    g_value_init (&heights, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (&heights, height_min, height_max);
+  } else {
+    g_value_init (&heights, GST_TYPE_LIST);
+    g_value_init (&height, G_TYPE_INT);
+    for (uint32_t h = height_min; h <= height_max; h += height_step) {
+      g_value_set_int (&height, h);
+      gst_value_list_append_value (&heights, &height);
+    }
+    g_value_unset (&height);
+  }
+  gst_caps_set_value (caps, "width", &widths);
+  gst_caps_set_value (caps, "height", &heights);
+  g_value_unset (&widths);
+  g_value_unset (&heights);
+
+  if (supported_rates) {
+    g_value_init (&framerates, GST_TYPE_LIST);
+    g_value_init (&framerate, GST_TYPE_FRACTION);
+    for (guint r = 0; r < supported_rates->num; r++) {
+      rate = supported_rates->framerates[r];
+      switch (rate) {
+        case DC1394_FRAMERATE_1_875:
+          gst_value_set_fraction (&framerate, 240, 128);
+          break;
+        case DC1394_FRAMERATE_3_75:
+          gst_value_set_fraction (&framerate, 240, 64);
+          break;
+        case DC1394_FRAMERATE_7_5:
+          gst_value_set_fraction (&framerate, 240, 32);
+          break;
+        case DC1394_FRAMERATE_15:
+          gst_value_set_fraction (&framerate, 240, 16);
+          break;
+        case DC1394_FRAMERATE_30:
+          gst_value_set_fraction (&framerate, 240, 8);
+          break;
+        case DC1394_FRAMERATE_60:
+          gst_value_set_fraction (&framerate, 240, 4);
+          break;
+        case DC1394_FRAMERATE_120:
+          gst_value_set_fraction (&framerate, 240, 2);
+          break;
+        case DC1394_FRAMERATE_240:
+          gst_value_set_fraction (&framerate, 240, 1);
+          break;
+      }
+      gst_value_list_append_value (&framerates, &framerate);
+    }
+    g_value_unset (&framerate);
+  } else {
+    g_value_init (&framerates, GST_TYPE_FRACTION_RANGE);
+    gst_value_set_fraction_range_full (&framerates, 1, G_MAXINT, G_MAXINT, 1);
+  }
+  gst_caps_set_value (caps, "framerate", &framerates);
+  g_value_unset (&framerates);
+  return caps;
 }
 
 
 static gboolean
 gst_dc1394_parse_caps (const GstCaps * caps,
-    gint * width,
-    gint * height,
-    gint * rate_numerator, gint * rate_denominator, gint * vmode, gint * bpp)
+    dc1394color_codings_t * color_codings,
+    dc1394framerate_t * rate, double *rate_decimal,
+    uint32_t * width, uint32_t * height)
 {
   const GstStructure *structure;
-  GstPadLinkReturn ret;
-  const GValue *framerate;
-
-  if (gst_caps_get_size (caps) < 1)
-    return FALSE;
+  const gchar *format;
+  gint w, h, num, den;
+  gdouble dec;
 
   structure = gst_caps_get_structure (caps, 0);
+  if (!structure)
+    goto error;
 
-  ret = gst_structure_get_int (structure, "width", width);
-  ret &= gst_structure_get_int (structure, "height", height);
-
-  framerate = gst_structure_get_value (structure, "framerate");
-
-  ret &= gst_structure_get_int (structure, "vmode", vmode);
-
-  ret &= gst_structure_get_int (structure, "bpp", bpp);
-
-
-  if (framerate) {
-    *rate_numerator = gst_value_get_fraction_numerator (framerate);
-    *rate_denominator = gst_value_get_fraction_denominator (framerate);
+  if (!width) {
+  } else if (!gst_structure_get_int (structure, "width", &w)) {
+    goto error;
   } else {
-    ret = FALSE;
+    *width = w;
   }
 
-  return ret;
-}
-
-static GstStateChangeReturn
-gst_dc1394_change_state (GstElement * element, GstStateChange transition)
-{
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstDc1394 *src = GST_DC1394 (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      GST_LOG_OBJECT (src, "State change null to ready");
-      src->dc1394 = dc1394_new ();
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_LOG_OBJECT (src, "State ready to paused");
-
-      if (src->caps) {
-        gst_caps_unref (src->caps);
-        src->caps = NULL;
-      }
-      src->caps = gst_dc1394_get_cam_caps (src);
-      if (src->caps == NULL) {
-        GST_LOG_OBJECT (src,
-            "Error : Set property  could not get cam caps ! , reverting to default");
-        src->caps = gst_dc1394_get_all_dc1394_caps ();
-        ret = GST_STATE_CHANGE_FAILURE;
-      }
-
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      GST_LOG_OBJECT (src, "State change paused to playing");
-
-      if (!gst_dc1394_open_cam_with_best_caps (src)) {
-        ret = GST_STATE_CHANGE_FAILURE;
-      }
-
-      if (src->camera && !gst_dc1394_change_camera_transmission (src, TRUE)) {
-        ret = GST_STATE_CHANGE_FAILURE;
-      }
-
-      break;
-    default:
-      break;
-  }
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      GST_LOG_OBJECT (src, "State change playing to paused");
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      GST_LOG_OBJECT (src, "State change paused to ready");
-
-      if (src->camera && !gst_dc1394_change_camera_transmission (src, FALSE)) {
-
-        if (src->camera) {
-          dc1394_camera_free (src->camera);
-        }
-        src->camera = NULL;
-
-        if (src->caps) {
-          gst_caps_unref (src->caps);
-          src->caps = NULL;
-        }
-
-        ret = GST_STATE_CHANGE_FAILURE;
-      }
-
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      GST_LOG_OBJECT (src, "State change ready to null");
-      if (src->camera) {
-        dc1394_camera_free (src->camera);
-      }
-      src->camera = NULL;
-
-      if (src->dc1394) {
-        dc1394_free (src->dc1394);
-      }
-      src->dc1394 = NULL;
-
-      if (src->caps) {
-        gst_caps_unref (src->caps);
-        src->caps = NULL;
-      }
-      break;
-    default:
-      break;
-  }
-
-  return ret;
-}
-
-
-static gint
-gst_dc1394_caps_set_format_vmode_caps (GstStructure * gs, gint mode)
-{
-  gint retval = 0;
-
-  switch (mode) {
-    case DC1394_VIDEO_MODE_160x120_YUV444:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_YUV444);
-      gst_dc1394_set_caps_framesize (gs, 160, 120);
-      break;
-    case DC1394_VIDEO_MODE_320x240_YUV422:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_YUV422);
-      gst_dc1394_set_caps_framesize (gs, 320, 240);
-      break;
-    case DC1394_VIDEO_MODE_640x480_YUV411:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_YUV411);
-      gst_dc1394_set_caps_framesize (gs, 640, 480);
-      break;
-    case DC1394_VIDEO_MODE_640x480_YUV422:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_YUV422);
-      gst_dc1394_set_caps_framesize (gs, 640, 480);
-      break;
-    case DC1394_VIDEO_MODE_640x480_RGB8:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_RGB8);
-      gst_dc1394_set_caps_framesize (gs, 640, 480);
-      break;
-    case DC1394_VIDEO_MODE_640x480_MONO8:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_MONO8);
-      gst_dc1394_set_caps_framesize (gs, 640, 480);
-      break;
-    case DC1394_VIDEO_MODE_640x480_MONO16:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_MONO16);
-      gst_dc1394_set_caps_framesize (gs, 640, 480);
-      break;
-    case DC1394_VIDEO_MODE_800x600_YUV422:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_YUV422);
-      gst_dc1394_set_caps_framesize (gs, 800, 600);
-      break;
-    case DC1394_VIDEO_MODE_800x600_RGB8:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_RGB8);
-      gst_dc1394_set_caps_framesize (gs, 800, 600);
-      break;
-    case DC1394_VIDEO_MODE_800x600_MONO8:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_MONO8);
-      gst_dc1394_set_caps_framesize (gs, 800, 600);
-      break;
-    case DC1394_VIDEO_MODE_1024x768_YUV422:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_YUV422);
-      gst_dc1394_set_caps_framesize (gs, 1024, 768);
-      break;
-    case DC1394_VIDEO_MODE_1024x768_RGB8:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_RGB8);
-      gst_dc1394_set_caps_framesize (gs, 1024, 768);
-      break;
-    case DC1394_VIDEO_MODE_1024x768_MONO8:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_MONO8);
-      gst_dc1394_set_caps_framesize (gs, 1024, 768);
-      break;
-    case DC1394_VIDEO_MODE_800x600_MONO16:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_MONO16);
-      gst_dc1394_set_caps_framesize (gs, 800, 600);
-      break;
-    case DC1394_VIDEO_MODE_1024x768_MONO16:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_MONO16);
-      gst_dc1394_set_caps_framesize (gs, 1024, 768);
-      break;
-    case DC1394_VIDEO_MODE_1280x960_YUV422:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_YUV422);
-      gst_dc1394_set_caps_framesize (gs, 1280, 960);
-      break;
-    case DC1394_VIDEO_MODE_1280x960_RGB8:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_RGB8);
-      gst_dc1394_set_caps_framesize (gs, 1280, 960);
-      break;
-    case DC1394_VIDEO_MODE_1280x960_MONO8:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_MONO8);
-      gst_dc1394_set_caps_framesize (gs, 1280, 960);
-      break;
-    case DC1394_VIDEO_MODE_1600x1200_YUV422:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_YUV422);
-      gst_dc1394_set_caps_framesize (gs, 1600, 1200);
-      break;
-    case DC1394_VIDEO_MODE_1600x1200_RGB8:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_RGB8);
-      gst_dc1394_set_caps_framesize (gs, 1600, 1200);
-      break;
-    case DC1394_VIDEO_MODE_1600x1200_MONO8:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_MONO8);
-      gst_dc1394_set_caps_framesize (gs, 1600, 1200);
-      break;
-    case DC1394_VIDEO_MODE_1280x960_MONO16:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_MONO16);
-      gst_dc1394_set_caps_framesize (gs, 1280, 960);
-      break;
-    case DC1394_VIDEO_MODE_1600x1200_MONO16:
-      gst_dc1394_set_caps_color (gs, DC1394_COLOR_CODING_MONO8);
-      gst_dc1394_set_caps_framesize (gs, 1600, 1200);
-      break;
-
-    default:
-      retval = -1;
-  }
-
-  return retval;
-
-}
-
-
-static gboolean
-gst_dc1394_set_caps_color (GstStructure * gs, gint mc)
-{
-  gboolean ret = TRUE;
-  gint fourcc;
-
-  switch (mc) {
-    case DC1394_COLOR_CODING_YUV444:
-      gst_structure_set_name (gs, "video/x-raw-yuv");
-
-      fourcc = GST_MAKE_FOURCC ('I', 'Y', 'U', '2');
-      gst_structure_set (gs,
-          "format", GST_TYPE_FOURCC, fourcc, "bpp", G_TYPE_INT, 16, NULL);
-      break;
-
-    case DC1394_COLOR_CODING_YUV422:
-      gst_structure_set_name (gs, "video/x-raw-yuv");
-      fourcc = GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y');
-      gst_structure_set (gs,
-          "format", GST_TYPE_FOURCC, fourcc, "bpp", G_TYPE_INT, 16, NULL);
-      break;
-
-    case DC1394_COLOR_CODING_YUV411:
-      gst_structure_set_name (gs, "video/x-raw-yuv");
-      fourcc = GST_MAKE_FOURCC ('I', 'Y', 'U', '1');
-      gst_structure_set (gs,
-          "format", GST_TYPE_FOURCC, fourcc, "bpp", G_TYPE_INT, 12, NULL);
-      break;
-    case DC1394_COLOR_CODING_RGB8:
-      gst_structure_set_name (gs, "video/x-raw-rgb");
-      gst_structure_set (gs,
-          "bpp", G_TYPE_INT, 24,
-          "depth", G_TYPE_INT, 24,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-          "red_mask", G_TYPE_INT, 0xFF0000,
-          "green_mask", G_TYPE_INT, 0x00FF00,
-          "blue_mask", G_TYPE_INT, 0x0000FF, NULL);
-      break;
-    case DC1394_COLOR_CODING_MONO8:
-      gst_structure_set_name (gs, "video/x-raw-gray");
-      gst_structure_set (gs,
-          "bpp", G_TYPE_INT, 8, "depth", G_TYPE_INT, 8, NULL);
-
-      break;
-    case DC1394_COLOR_CODING_MONO16:
-      gst_structure_set_name (gs, "video/x-raw-gray");
-      gst_structure_set (gs,
-          "bpp", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
-      // there is no fourcc for this format
-      break;
-    default:
-      GST_DEBUG ("Ignoring unsupported color format %d", mc);
-      ret = FALSE;
-      break;
-  }
-  return ret;
-}
-
-
-static void
-gst_dc1394_set_caps_framesize (GstStructure * gs, gint width, gint height)
-{
-  gst_structure_set (gs,
-      "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
-}
-
-static void
-gst_dc1394_set_caps_framesize_range (GstStructure * gs,
-    gint minwidth,
-    gint maxwidth,
-    gint incwidth, gint minheight, gint maxheight, gint incheight)
-{
-  /* 
-     Format 7 cameras allow you to change the camera width/height in multiples
-     of incwidth/incheight up to some max. This sets the necessary
-     list structure in the gst caps structure
-   */
-
-  GValue widthlist = { 0 };
-  GValue widthval = { 0 };
-  GValue heightlist = { 0 };
-  GValue heightval = { 0 };
-  gint x = 0;
-
-  g_value_init (&widthlist, GST_TYPE_LIST);
-  g_value_init (&widthval, G_TYPE_INT);
-  for (x = minwidth; x <= maxwidth; x += incwidth) {
-    g_value_set_int (&widthval, x);
-    gst_value_list_append_value (&widthlist, &widthval);
-  }
-  gst_structure_set_value (gs, "width", &widthlist);
-
-  g_value_unset (&widthlist);
-  g_value_unset (&widthval);
-
-  g_value_init (&heightlist, GST_TYPE_LIST);
-  g_value_init (&heightval, G_TYPE_INT);
-  for (x = minheight; x <= maxheight; x += incheight) {
-    g_value_set_int (&heightval, x);
-    gst_value_list_append_value (&heightlist, &heightval);
-  }
-
-  gst_structure_set_value (gs, "height", &heightlist);
-
-  g_value_unset (&heightlist);
-  g_value_unset (&heightval);
-}
-
-
-static gint
-gst_dc1394_caps_set_framerate_list (GstStructure * gs,
-    dc1394framerates_t * framerates)
-{
-  GValue framefrac = { 0 };
-  GValue frameratelist = { 0 };
-  gint f;
-
-  g_value_init (&frameratelist, GST_TYPE_LIST);
-  g_value_init (&framefrac, GST_TYPE_FRACTION);
-
-  // figure out the frame rate
-  for (f = framerates->num - 1; f >= 0; f--) {
-    /* reverse order so we place the faster frame rates higher in 
-       the sequence */
-    if (framerates->framerates[f]) {
-      gst_dc1394_framerate_const_to_frac (framerates->framerates[f],
-          &framefrac);
-
-      gst_value_list_append_value (&frameratelist, &framefrac);
-    }
-  }
-  gst_structure_set_value (gs, "framerate", &frameratelist);
-
-  g_value_unset (&framefrac);
-  g_value_unset (&frameratelist);
-  return 0;
-}
-
-
-
-static void
-gst_dc1394_framerate_const_to_frac (gint framerateconst, GValue * framefrac)
-{
-
-  // frac must have been already initialized
-
-  switch (framerateconst) {
-    case DC1394_FRAMERATE_1_875:
-      gst_value_set_fraction (framefrac, 15, 8);
-      break;
-    case DC1394_FRAMERATE_3_75:
-      gst_value_set_fraction (framefrac, 15, 4);
-      break;
-    case DC1394_FRAMERATE_7_5:
-      gst_value_set_fraction (framefrac, 15, 2);
-      break;
-    case DC1394_FRAMERATE_15:
-      gst_value_set_fraction (framefrac, 15, 1);
-      break;
-    case DC1394_FRAMERATE_30:
-      gst_value_set_fraction (framefrac, 30, 1);
-      break;
-    case DC1394_FRAMERATE_60:
-      gst_value_set_fraction (framefrac, 60, 1);
-      break;
-    case DC1394_FRAMERATE_120:
-      gst_value_set_fraction (framefrac, 120, 1);
-      break;
-    case DC1394_FRAMERATE_240:
-      gst_value_set_fraction (framefrac, 240, 1);
-      break;
-  }
-}
-
-static GstCaps *
-gst_dc1394_get_all_dc1394_caps (void)
-{
-  /* 
-     generate all possible caps
-
-   */
-
-  GstCaps *gcaps;
-  gint i = 0;
-
-  gcaps = gst_caps_new_empty ();
-  // first, the fixed mode caps
-  for (i = DC1394_VIDEO_MODE_MIN; i < DC1394_VIDEO_MODE_EXIF; i++) {
-    GstStructure *gs = gst_structure_empty_new ("video");
-    gint ret = gst_dc1394_caps_set_format_vmode_caps (gs, i);
-
-    gst_structure_set (gs,
-        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-    gst_structure_set (gs, "vmode", G_TYPE_INT, i, NULL);
-    if (ret >= 0) {
-      gst_caps_append_structure (gcaps, gs);
-    }
-  }
-
-  // then Format 7 options
-
-  for (i = DC1394_COLOR_CODING_MIN; i <= DC1394_COLOR_CODING_MAX; i++) {
-    GstStructure *gs = gst_structure_empty_new ("video");
-
-    //int ret =  gst_dc1394_caps_set_format_vmode_caps(gs, i); 
-
-    gst_structure_set (gs, "vmode", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-
-    gst_structure_set (gs,
-        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-    gst_structure_set (gs,
-        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-
-    if (gst_dc1394_set_caps_color (gs, i)) {
-      gst_caps_append_structure (gcaps, gs);
-    }
-  }
-  return gcaps;
-
-}
-
-GstCaps *
-gst_dc1394_get_cam_caps (GstDc1394 * src)
-{
-
-  dc1394camera_t *camera = NULL;
-  dc1394camera_list_t *cameras = NULL;
-  dc1394error_t camerr;
-  gint i, j;
-  dc1394video_modes_t modes;
-  dc1394framerates_t framerates;
-  GstCaps *gcaps = NULL;
-
-  gcaps = gst_caps_new_empty ();
-
-  camerr = dc1394_camera_enumerate (src->dc1394, &cameras);
-
-  if (camerr != DC1394_SUCCESS || cameras == NULL) {
-    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-        ("Can't find cameras error : %d", camerr),
-        ("Can't find cameras error : %d", camerr));
+  if (!height) {
+  } else if (!gst_structure_get_int (structure, "height", &h)) {
     goto error;
+  } else {
+    *height = h;
   }
 
-  if (cameras->num == 0) {
-    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, ("There were no cameras"),
-        ("There were no cameras"));
+  if (!(rate || rate_decimal)) {
+  } else if (!gst_structure_get_fraction (structure, "framerate", &num, &den)) {
     goto error;
+  } else if (gst_util_fraction_compare (num, den, 240, 128) <= 0) {
+    *rate = DC1394_FRAMERATE_1_875;
+  } else if (gst_util_fraction_compare (num, den, 240, 64) <= 0) {
+    *rate = DC1394_FRAMERATE_3_75;
+  } else if (gst_util_fraction_compare (num, den, 240, 32) <= 0) {
+    *rate = DC1394_FRAMERATE_7_5;
+  } else if (gst_util_fraction_compare (num, den, 240, 16) <= 0) {
+    *rate = DC1394_FRAMERATE_15;
+  } else if (gst_util_fraction_compare (num, den, 240, 8) <= 0) {
+    *rate = DC1394_FRAMERATE_30;
+  } else if (gst_util_fraction_compare (num, den, 240, 4) <= 0) {
+    *rate = DC1394_FRAMERATE_60;
+  } else if (gst_util_fraction_compare (num, den, 240, 2) <= 0) {
+    *rate = DC1394_FRAMERATE_120;
+  } else if (gst_util_fraction_compare (num, den, 240, 1) <= 0) {
+    *rate = DC1394_FRAMERATE_240;
+  } else {
+    *rate = DC1394_FRAMERATE_240;
+  }
+  if (rate_decimal) {
+    gst_util_fraction_to_double (num, den, &dec);
+    *rate_decimal = dec;
   }
 
-  if (src->camnum > (cameras->num - 1)) {
-    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Invalid camera number"),
-        ("Invalid camera number %d", src->camnum));
-    goto error;
-  }
-
-  camera =
-      dc1394_camera_new_unit (src->dc1394, cameras->ids[src->camnum].guid,
-      cameras->ids[src->camnum].unit);
-
-  dc1394_camera_free_list (cameras);
-  cameras = NULL;
-
-  camerr = dc1394_video_get_supported_modes (camera, &modes);
-  if (camerr != DC1394_SUCCESS) {
-    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Error getting supported modes"),
-        ("Error getting supported modes"));
-    goto error;
-  }
-
-  for (i = modes.num - 1; i >= 0; i--) {
-    int m = modes.modes[i];
-
-    if (m < DC1394_VIDEO_MODE_EXIF) {
-
-      GstStructure *gs = gst_structure_empty_new ("video");
-
-      gst_structure_set (gs, "vmode", G_TYPE_INT, m, NULL);
-
-      if (gst_dc1394_caps_set_format_vmode_caps (gs, m) < 0) {
-        GST_ELEMENT_ERROR (src, STREAM, FAILED,
-            ("attempt to set mode to %d failed", m),
-            ("attempt to set mode to %d failed", m));
+  if (!color_codings) {
+  } else if (gst_structure_has_name (structure, "video/x-raw")) {
+    format = gst_structure_get_string (structure, "format");
+    switch (gst_video_format_from_string (format)) {
+      case GST_VIDEO_FORMAT_GRAY8:
+        color_codings->num = 1;
+        color_codings->codings[0] = DC1394_COLOR_CODING_MONO8;
+        break;
+      case GST_VIDEO_FORMAT_IYU1:
+        color_codings->num = 1;
+        color_codings->codings[0] = DC1394_COLOR_CODING_YUV411;
+        break;
+      case GST_VIDEO_FORMAT_UYVY:
+        color_codings->num = 1;
+        color_codings->codings[0] = DC1394_COLOR_CODING_YUV422;
+        break;
+      case GST_VIDEO_FORMAT_IYU2:
+        color_codings->num = 1;
+        color_codings->codings[0] = DC1394_COLOR_CODING_YUV444;
+        break;
+      case GST_VIDEO_FORMAT_RGB:
+        color_codings->num = 1;
+        color_codings->codings[0] = DC1394_COLOR_CODING_RGB8;
+        break;
+      case GST_VIDEO_FORMAT_GRAY16_BE:
+        color_codings->num = 1;
+        color_codings->codings[0] = DC1394_COLOR_CODING_MONO16;
+        break;
+        /*
+         * The following formats do not exist in Gstreamer:
+         *case GST_VIDEO_FORMAT_RGB48: // Unsigned RGB format 16 bits per channel
+         *  color_codings->num = 1
+         *  color_codings->codings[0] = DC1394_COLOR_CODING_RGB16;
+         *  break;
+         *case GST_VIDEO_FORMAT_GRAY16_BE_SIGNED: // Signed grayscale format 16 bits
+         *  color_codings->num = 1
+         *  color_codings->codings[0] = DC1394_COLOR_CODING_MONO16S;
+         *  break;
+         *case GST_VIDEO_FORMAT_RGB48_SIGNED: // Signed RGB format 16 bits per channel
+         *  color_codings->num = 1
+         *  color_codings->codings[0] = DC1394_COLOR_CODING_RGB16S;
+         *  break;
+         */
+      default:
+        GST_ERROR ("unsupported raw video format %s", format);
         goto error;
-      } else {
-
-        camerr = dc1394_video_get_supported_framerates (camera, m, &framerates);
-        gst_dc1394_caps_set_framerate_list (gs, &framerates);
-        gst_caps_append_structure (gcaps, gs);
-
-      }
-    } else {
-      // FORMAT 7
-      guint maxx, maxy;
-      GstStructure *gs = gst_structure_empty_new ("video");
-      dc1394color_codings_t colormodes;
-      guint xunit, yunit;
-
-      gst_structure_set (gs, "vmode", G_TYPE_INT, m, NULL);
-
-      // Get the maximum frame size
-      camerr = dc1394_format7_get_max_image_size (camera, m, &maxx, &maxy);
-      if (camerr != DC1394_SUCCESS) {
-        GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
-            ("Error getting format 7 max image size"),
-            ("Error getting format 7 max image size"));
-        goto error;
-      }
-      GST_LOG_OBJECT (src, "Format 7 maxx=%d maxy=%d", maxx, maxy);
-
-      camerr = dc1394_format7_get_unit_size (camera, m, &xunit, &yunit);
-      if (camerr != DC1394_SUCCESS) {
-        GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
-            ("Error getting format 7 image unit size"),
-            ("Error getting format 7 image unit size"));
-        goto error;
-      }
-      GST_LOG_OBJECT (src, "Format 7 unitx=%d unity=%d", xunit, yunit);
-
-      gst_dc1394_set_caps_framesize_range (gs, xunit, maxx, xunit,
-          yunit, maxy, yunit);
-
-      // note that format 7 has no concept of a framerate, so we pass the 
-      // full range
-      gst_structure_set (gs,
-          "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-
-      // get the available color codings
-      camerr = dc1394_format7_get_color_codings (camera, m, &colormodes);
-      if (camerr != DC1394_SUCCESS) {
-        GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
-            ("Error getting format 7 color modes"),
-            ("Error getting format 7 color modes"));
-        goto error;
-      }
-
-      for (j = 0; j < colormodes.num; j++) {
-        GstStructure *newgs = gst_structure_copy (gs);
-
-        gst_dc1394_set_caps_color (newgs, colormodes.codings[j]);
-        GST_LOG_OBJECT (src, "Format 7 colormode set : %d",
-            colormodes.codings[j]);
-        // note that since there are multiple color modes, we append
-        // multiple structures.
-        gst_caps_append_structure (gcaps, newgs);
-      }
     }
-  }
-
-  if (camera) {
-    dc1394_camera_free (camera);
-  }
-
-  return gcaps;
-
-error:
-
-  if (gcaps) {
-    gst_caps_unref (gcaps);
-  }
-
-  if (cameras) {
-    dc1394_camera_free_list (cameras);
-    cameras = NULL;
-  }
-
-  if (camera) {
-    dc1394_camera_free (camera);
-    camera = NULL;
-  }
-
-  return NULL;
-}
-
-static gint
-gst_dc1394_framerate_frac_to_const (gint num, gint denom)
-{
-  // frac must have been already initialized
-  int retvalue = -1;
-
-  if (num == 15 && denom == 8)
-    retvalue = DC1394_FRAMERATE_1_875;
-
-  if (num == 15 && denom == 4)
-    retvalue = DC1394_FRAMERATE_3_75;
-
-  if (num == 15 && denom == 2)
-    retvalue = DC1394_FRAMERATE_7_5;
-
-  if (num == 15 && denom == 1)
-    retvalue = DC1394_FRAMERATE_15;
-
-
-  if (num == 30 && denom == 1)
-    retvalue = DC1394_FRAMERATE_30;
-
-  if (num == 60 && denom == 1)
-    retvalue = DC1394_FRAMERATE_60;
-
-  return retvalue;
-}
-
-
-static gboolean
-gst_dc1394_open_cam_with_best_caps (GstDc1394 * src)
-{
-  dc1394camera_list_t *cameras = NULL;
-  gint err = 0;
-  int framerateconst;
-
-  GST_LOG_OBJECT (src, "Opening the camera!!!");
-
-
-  if (dc1394_camera_enumerate (src->dc1394, &cameras) != DC1394_SUCCESS) {
-    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Can't find cameras"),
-        ("Can't find cameras"));
+  } else if (gst_structure_has_name (structure, "video/x-bayer")) {
+    /*
+     * The following formats do not exist in Gstreamer:
+     *switch (gst_bayer_format_from_string(format)) {
+     *  case GST_BAYER_FORMAT_BGGR8:
+     *  case GST_BAYER_FORMAT_GBRG8:
+     *  case GST_BAYER_FORMAT_GRBG8:
+     *  case GST_BAYER_FORMAT_BGGR8:
+     *    *coding = DC1394_COLOR_CODING_RAW8;
+     *    break;
+     *  case GST_BAYER_FORMAT_BGGR16_BE:
+     *  case GST_BAYER_FORMAT_GBRG16_BE:
+     *  case GST_BAYER_FORMAT_GRBG16_BE:
+     *  case GST_BAYER_FORMAT_BGGR16_BE:
+     *    *coding = DC1394_COLOR_CODING_RAW16;
+     *    break;
+     *  default:
+     *    GST_ERROR("unsupported raw video format %s", format);
+     *    goto error;
+     *}
+     */
+    color_codings->num = 2;
+    color_codings->codings[0] = DC1394_COLOR_CODING_RAW8;
+    color_codings->codings[1] = DC1394_COLOR_CODING_MONO8;
+  } else {
     goto error;
   }
-
-  GST_LOG_OBJECT (src, "Found  %d  cameras", cameras->num);
-
-  if (src->camnum > (cameras->num - 1)) {
-    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Invalid camera number"),
-        ("Invalid camera number"));
-    goto error;
-  }
-
-  GST_LOG_OBJECT (src, "Opening camera : %d", src->camnum);
-
-  src->camera =
-      dc1394_camera_new_unit (src->dc1394, cameras->ids[src->camnum].guid,
-      cameras->ids[src->camnum].unit);
-
-  dc1394_camera_free_list (cameras);
-  cameras = NULL;
-
-  // figure out mode
-  framerateconst = gst_dc1394_framerate_frac_to_const (src->rate_numerator,
-      src->rate_denominator);
-
-  GST_LOG_OBJECT (src, "The dma buffer queue size is %d  buffers",
-      src->bufsize);
-
-  switch (src->iso_speed) {
-    case 100:
-      err = dc1394_video_set_iso_speed (src->camera, DC1394_ISO_SPEED_100);
-      break;
-    case 200:
-      err = dc1394_video_set_iso_speed (src->camera, DC1394_ISO_SPEED_200);
-      break;
-    case 400:
-      err = dc1394_video_set_iso_speed (src->camera, DC1394_ISO_SPEED_400);
-      break;
-    case 800:
-      if (src->camera->bmode_capable > 0) {
-        dc1394_video_set_operation_mode (src->camera,
-            DC1394_OPERATION_MODE_1394B);
-        err = dc1394_video_set_iso_speed (src->camera, DC1394_ISO_SPEED_800);
-      }
-      break;
-    case 1600:
-      if (src->camera->bmode_capable > 0) {
-        dc1394_video_set_operation_mode (src->camera,
-            DC1394_OPERATION_MODE_1394B);
-        err = dc1394_video_set_iso_speed (src->camera, DC1394_ISO_SPEED_1600);
-      }
-      break;
-    case 3200:
-      if (src->camera->bmode_capable > 0) {
-        dc1394_video_set_operation_mode (src->camera,
-            DC1394_OPERATION_MODE_1394B);
-        err = dc1394_video_set_iso_speed (src->camera, DC1394_ISO_SPEED_3200);
-      }
-      break;
-    default:
-      GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Invalid ISO speed"),
-          ("Invalid ISO speed"));
-      goto error;
-      break;
-  }
-
-  if (err != DC1394_SUCCESS) {
-    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Could not set ISO speed"),
-        ("Could not set ISO speed"));
-    goto error;
-  }
-
-  GST_LOG_OBJECT (src, "Setting mode :  %d", src->vmode);
-  err = dc1394_video_set_mode (src->camera, src->vmode);
-
-  if (err != DC1394_SUCCESS) {
-    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Could not set video mode %d",
-            src->vmode), ("Could not set video mode %d", src->vmode));
-    goto error;
-  }
-
-  GST_LOG_OBJECT (src, "Setting framerate :  %d", framerateconst);
-  dc1394_video_set_framerate (src->camera, framerateconst);
-
-  if (err != DC1394_SUCCESS) {
-    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Could not set framerate to %d",
-            framerateconst), ("Could not set framerate to %d", framerateconst));
-    goto error;
-  }
-  // set any format-7 parameters if this is a format-7 mode
-  if (src->vmode >= DC1394_VIDEO_MODE_FORMAT7_MIN &&
-      src->vmode <= DC1394_VIDEO_MODE_FORMAT7_MAX) {
-    // the big thing we care about right now is frame size
-    err = dc1394_format7_set_image_size (src->camera, src->vmode,
-        src->width, src->height);
-    if (err != DC1394_SUCCESS) {
-      GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
-          ("Could not set format 7 image size to %d x %d", src->width,
-              src->height), ("Could not set format 7 image size to %d x %d",
-              src->width, src->height));
-
-      goto error;
-    }
-
-  }
-  err = dc1394_capture_setup (src->camera, src->bufsize,
-      DC1394_CAPTURE_FLAGS_DEFAULT);
-  if (err != DC1394_SUCCESS) {
-    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Error setting capture mode"),
-        ("Error setting capture mode"));
-  }
-  if (err != DC1394_SUCCESS) {
-    if (err == DC1394_NO_BANDWIDTH) {
-      GST_LOG_OBJECT (src, "Capture setup_dma failed."
-          "Trying to cleanup the iso_channels_and_bandwidth and retrying");
-
-      // try to cleanup the bandwidth and retry 
-      err = dc1394_iso_release_all (src->camera);
-      if (err != DC1394_SUCCESS) {
-        GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
-            ("Could not cleanup bandwidth"), ("Could not cleanup bandwidth"));
-        goto error;
-      } else {
-        err =
-            dc1394_capture_setup (src->camera, src->bufsize,
-            DC1394_CAPTURE_FLAGS_DEFAULT);
-        if (err != DC1394_SUCCESS) {
-          GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
-              ("unable to setup camera error %d", err),
-              ("unable to setup camera error %d", err));
-          goto error;
-        }
-      }
-    } else {
-      GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
-          ("unable to setup camera error %d", err),
-          ("unable to setup camera error %d", err));
-      goto error;
-
-    }
-  }
-
 
   return TRUE;
 
 error:
-
-  if (src->camera) {
-    dc1394_camera_free (src->camera);
-    src->camera = NULL;
-  }
-
   return FALSE;
-
-}
-
-
-gboolean
-gst_dc1394_change_camera_transmission (GstDc1394 * src, gboolean on)
-{
-  dc1394switch_t status = DC1394_OFF;
-  dc1394error_t err = DC1394_FAILURE;
-  gint i = 0;
-
-  g_return_val_if_fail (src->camera, FALSE);
-
-  if (on) {
-
-    status = dc1394_video_set_transmission (src->camera, DC1394_ON);
-
-    i = 0;
-    while (status == DC1394_OFF && i++ < 5) {
-      g_usleep (50000);
-      if (dc1394_video_get_transmission (src->camera,
-              &status) != DC1394_SUCCESS) {
-        if (status == DC1394_OFF) {
-          GST_LOG_OBJECT (src, "camera is still off , retrying");
-        }
-      }
-    }
-
-    if (i == 5) {
-      GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
-          ("Camera doesn't seem to want to turn on!"),
-          ("Camera doesn't seem to want to turn on!"));
-      return FALSE;
-    }
-
-    GST_LOG_OBJECT (src, "got transmision status ON");
-
-  } else {
-
-    if (dc1394_video_set_transmission (src->camera,
-            DC1394_OFF) != DC1394_SUCCESS) {
-      GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Unable to stop transmision"),
-          ("Unable to stop transmision"));
-      return FALSE;
-    }
-
-    GST_LOG_OBJECT (src, "Stopping capture");
-
-    err = dc1394_capture_stop (src->camera);
-    if (err > 0) {
-      GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Capture stop error : %d ",
-              err), ("Capture stop error : %d ", err));
-      return FALSE;
-    } else {
-      GST_LOG_OBJECT (src, "Capture stoped successfully");
-    }
-  }
-
-  return TRUE;
 }
 
 
@@ -1324,12 +1212,11 @@ plugin_init (GstPlugin * plugin)
 
   return gst_element_register (plugin, "dc1394src", GST_RANK_NONE,
       GST_TYPE_DC1394);
-
 }
 
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     dc1394,
-    "1394 IIDC Video Source",
+    "1394 IIDC video source",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
