@@ -442,6 +442,7 @@ GST_START_TEST (test_large_discont)
   gst_element_set_state (audiorate, GST_STATE_NULL);
   gst_caps_unref (caps);
 
+  gst_check_drop_buffers ();
   gst_check_teardown_sink_pad (audiorate);
   gst_check_teardown_src_pad (audiorate);
 
