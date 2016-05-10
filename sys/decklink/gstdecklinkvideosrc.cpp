@@ -567,10 +567,10 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
       self->caps_mode = f->mode;
     } else {
       g_mutex_unlock (&self->lock);
-      capture_frame_free (f);
       GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
           ("Invalid mode in captured frame"),
           ("Mode set to %d but captured %d", self->caps_mode, f->mode));
+      capture_frame_free (f);
       return GST_FLOW_NOT_NEGOTIATED;
     }
   }
@@ -582,10 +582,10 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
       self->caps_format = f->format;
     } else {
       g_mutex_unlock (&self->lock);
-      capture_frame_free (f);
       GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
           ("Invalid pixel format in captured frame"),
           ("Format set to %d but captured %d", self->caps_format, f->format));
+      capture_frame_free (f);
       return GST_FLOW_NOT_NEGOTIATED;
     }
   }
