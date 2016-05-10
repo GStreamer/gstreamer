@@ -623,17 +623,6 @@ error_pool_config:
   }
 }
 
-static inline gboolean
-gst_vaapi_plugin_base_set_pool_config (GstBufferPool * pool,
-    const gchar * option)
-{
-  GstStructure *config;
-
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_add_option (config, option);
-  return gst_buffer_pool_set_config (pool, config);
-}
-
 /**
  * gst_vaapi_plugin_base_decide_allocation:
  * @plugin: a #GstVaapiPluginBase
@@ -746,25 +735,27 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
       goto config_failed;
   }
 
+  config = gst_buffer_pool_get_config (pool);
+
   /* Check whether GstVideoMeta, or GstVideoAlignment, is needed (raw video) */
   if (has_video_meta) {
-    if (!gst_vaapi_plugin_base_set_pool_config (pool,
-            GST_BUFFER_POOL_OPTION_VIDEO_META))
-      goto config_failed;
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
   } else if (has_video_alignment) {
-    if (!gst_vaapi_plugin_base_set_pool_config (pool,
-            GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT))
-      goto config_failed;
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
   }
 
   /* GstVideoGLTextureUploadMeta (OpenGL) */
 #if (USE_GLX || USE_EGL)
   if (has_texture_upload_meta) {
-    if (!gst_vaapi_plugin_base_set_pool_config (pool,
-            GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META))
-      goto config_failed;
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
   }
 #endif
+
+  if (!gst_buffer_pool_set_config (pool, config))
+    goto config_failed;
 
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
