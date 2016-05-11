@@ -64,6 +64,7 @@ lv2_plugin_discover (GstPlugin * plugin)
       i = lilv_plugins_next (plugins, i)) {
     const LilvPlugin *lv2plugin = lilv_plugins_get (plugins, i);
     const gchar *plugin_uri, *p;
+    LilvNodes *required_features;
     gchar *type_name;
     GHashTable *port_groups = g_hash_table_new_full (g_str_hash, g_str_equal,
         g_free, NULL);
@@ -81,6 +82,15 @@ lv2_plugin_discover (GstPlugin * plugin)
     /* if it's already registered, drop it */
     if (g_type_from_name (type_name))
       goto next;
+
+    /* check if we support the required host features */
+    required_features = lilv_plugin_get_required_features (lv2plugin);
+    if (required_features) {
+      GST_FIXME ("lv2 plugin %s needs host features", plugin_uri);
+      // TODO: implement host features, will be passed to
+      // lilv_plugin_instantiate()
+      goto next;
+    }
 
     /* check if this has any audio ports */
     num_sink_pads = num_src_pads = 0;
