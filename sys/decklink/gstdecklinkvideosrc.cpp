@@ -550,13 +550,15 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   f = (CaptureFrame *) g_queue_pop_head (&self->current_frames);
   g_mutex_unlock (&self->lock);
 
-  g_assert (f != NULL);
-
   if (self->flushing) {
-    capture_frame_free (f);
+    if (f)
+      capture_frame_free (f);
     GST_DEBUG_OBJECT (self, "Flushing");
     return GST_FLOW_FLUSHING;
   }
+
+  // If we're not flushing, we should have a valid frame from the queue
+  g_assert (f != NULL);
 
   g_mutex_lock (&self->lock);
   if (self->caps_mode != f->mode) {
