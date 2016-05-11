@@ -513,18 +513,14 @@ get_config_attribute (GstVaapiEncoder * encoder, VAConfigAttribType type,
   GstVaapiProfile profile;
   VAProfile va_profile;
   VAEntrypoint va_entrypoint;
-  const GstVaapiEncoderClassData *const cdata =
-      GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
 
   profile = get_profile (encoder);
   if (!profile)
     return FALSE;
   va_profile = gst_vaapi_profile_get_va_profile (profile);
 
-  if (cdata->codec != GST_VAAPI_CODEC_JPEG)
-    va_entrypoint = VAEntrypointEncSlice;
-  else
-    va_entrypoint = VAEntrypointEncPicture;
+  va_entrypoint =
+      gst_vaapi_entrypoint_get_va_entrypoint (encoder->context_info.entrypoint);
 
   return gst_vaapi_get_config_attribute (encoder->display, va_profile,
       va_entrypoint, type, out_value_ptr);
