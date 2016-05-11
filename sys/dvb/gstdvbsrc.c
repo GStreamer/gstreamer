@@ -2351,7 +2351,7 @@ gst_dvbsrc_guess_delsys (GstDvbSrc * object)
    * supported delivery system */
 go_with_default:
   delsys = g_list_last (object->supported_delsys);
-  object->delsys = *(guchar *) delsys->data;
+  object->delsys = GPOINTER_TO_INT (delsys->data);
 
 autoselection_done:
   GST_INFO_OBJECT (object, "Automatically selecting delivery system '%u'",
