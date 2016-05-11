@@ -17,6 +17,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
+
+ /**
+ * SECTION:element-rtpj2kdepay
+ *
+ * Depayload an RTP-payloaded JPEG 2000 image into RTP packets according to RFC 5371
+ * and RFC 5372.
+ * For detailed information see: https://datatracker.ietf.org/doc/rfc5371/
+ * and https://datatracker.ietf.org/doc/rfc5372/
+ */
+
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif

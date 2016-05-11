@@ -17,15 +17,20 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/**
+ /**
  * SECTION:element-rtpj2kpay
  *
- * Payload encode JPEG 2000 pictures into RTP packets according to RFC 5371.
- * For detailed information see: http://www.rfc-editor.org/rfc/rfc5371.txt
+ * Payload encode JPEG 2000 images into RTP packets according to RFC 5371
+ * and RFC 5372.
+ * For detailed information see: https://datatracker.ietf.org/doc/rfc5371/
+ * and https://datatracker.ietf.org/doc/rfc5372/
  *
- * The payloader takes a JPEG 2000 picture, scans the header for packetization
- * units and constructs the RTP packet header followed by the actual JPEG 2000
- * codestream.
+ * The payloader takes a JPEG 2000 image, scans it for "packetization
+ * units" and constructs the RTP packet header followed by the JPEG 2000
+ * codestream. A "packetization unit" is defined as either a JPEG 2000 main header,
+ * a JPEG 2000 tile-part header, or a JPEG 2000 packet.
+ *
+ *
  */
 
 #ifdef HAVE_CONFIG_H
