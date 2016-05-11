@@ -3388,7 +3388,8 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
         tmp = gst_structure_new ("audio/x-raw",
             "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
             "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            "format", G_TYPE_STRING, GST_AUDIO_NE (S16), NULL);
+            "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
+            "layout", G_TYPE_STRING, "interleaved", NULL);
 
         raw_ret = gst_caps_merge_structure (raw_ret, tmp);
       }
