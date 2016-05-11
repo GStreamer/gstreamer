@@ -179,6 +179,10 @@ gst_type_find_element_have_type (GstTypeFindElement * typefind,
   GST_INFO_OBJECT (typefind, "found caps %" GST_PTR_FORMAT ", probability=%u",
       caps, probability);
 
+  /* Do nothing if downstream is pulling from us */
+  if (GST_PAD_MODE (typefind->src) == GST_PAD_MODE_PULL)
+    return;
+
   GST_OBJECT_LOCK (typefind);
 
   /* Now actually send the CAPS event downstream.
