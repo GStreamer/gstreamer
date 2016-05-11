@@ -188,6 +188,8 @@ typedef enum {
  * @GST_VAAPI_ENTRYPOINT_MOCO: Motion Compensation
  * @GST_VAAPI_ENTRYPOINT_SLICE_ENCODE: Encode Slice
  * @GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE: Encode Picture
+ * @GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP: Encode Slice low power/
+ *                                        high performace varient
  *
  * The set of all entrypoints for #GstVaapiEntrypoint
  */
@@ -196,7 +198,8 @@ typedef enum {
     GST_VAAPI_ENTRYPOINT_IDCT,
     GST_VAAPI_ENTRYPOINT_MOCO,
     GST_VAAPI_ENTRYPOINT_SLICE_ENCODE,
-    GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE
+    GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE,
+    GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP
 } GstVaapiEntrypoint;
 
 const gchar *

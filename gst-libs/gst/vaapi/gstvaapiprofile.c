@@ -155,6 +155,9 @@ static const GstVaapiEntrypointMap gst_vaapi_entrypoints[] = {
   {GST_VAAPI_ENTRYPOINT_SLICE_ENCODE, VAEntrypointEncSlice},
   {GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE, VAEntrypointEncPicture},
 #endif
+#if VA_CHECK_VERSION(0,39,1)
+  {GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP, VAEntrypointEncSliceLP},
+#endif
   {0,}
 };
 
