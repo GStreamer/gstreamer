@@ -4029,9 +4029,6 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   /* update point-to-point status */
   session_update_ptp (sess);
 
-  /* notify about updated statistics */
-  g_object_notify (G_OBJECT (sess), "stats");
-
   /* see if we need to generate SR or RR packets */
   if (!is_rtcp_time (sess, current_time, &data))
     goto done;
@@ -4070,6 +4067,9 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 
 done:
   RTP_SESSION_UNLOCK (sess);
+
+  /* notify about updated statistics */
+  g_object_notify (G_OBJECT (sess), "stats");
 
   /* push out the RTCP packets */
   while ((output = g_queue_pop_head (&data.output))) {
