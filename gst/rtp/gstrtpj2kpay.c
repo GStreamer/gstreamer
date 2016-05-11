@@ -40,7 +40,7 @@
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/video/video.h>
-
+#include "gstrtpj2kcommon.h"
 #include "gstrtpj2kpay.h"
 #include "gstrtputils.h"
 
@@ -65,25 +65,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (rtpj2kpay_debug);
 #define GST_CAT_DEFAULT (rtpj2kpay_debug)
 
-/*
- * RtpJ2KMarker:
- * @J2K_MARKER: Prefix for JPEG 2000 marker
- * @J2K_MARKER_SOC: Start of Codestream
- * @J2K_MARKER_SOT: Start of tile
- * @J2K_MARKER_EOC: End of Codestream
- *
- * Identifers for markers in JPEG 2000 codestreams
- */
-typedef enum
-{
-  J2K_MARKER = 0xFF,
-  J2K_MARKER_SOC = 0x4F,
-  J2K_MARKER_SOT = 0x90,
-  J2K_MARKER_SOP = 0x91,
-  J2K_MARKER_EPH = 0x92,
-  J2K_MARKER_SOD = 0x93,
-  J2K_MARKER_EOC = 0xD9
-} RtpJ2KMarker;
 
 enum
 {
@@ -101,8 +82,6 @@ typedef struct
   guint tile:16;
   guint offset:24;
 } RtpJ2KHeader;
-
-#define HEADER_SIZE 8
 
 static void gst_rtp_j2k_pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -186,16 +165,17 @@ gst_rtp_j2k_pay_header_size (const guint8 * data, guint offset)
   return data[offset] << 8 | data[offset + 1];
 }
 
-static RtpJ2KMarker
+
+static GstRtpJ2KMarker
 gst_rtp_j2k_pay_scan_marker (const guint8 * data, guint size, guint * offset)
 {
-  while ((data[(*offset)++] != J2K_MARKER) && ((*offset) < size));
+  while ((data[(*offset)++] != GST_J2K_MARKER) && ((*offset) < size));
 
   if (G_UNLIKELY ((*offset) >= size)) {
-    return J2K_MARKER_EOC;
+    return GST_J2K_MARKER_EOC;
   } else {
     guint8 marker = data[(*offset)++];
-    return marker;
+    return (GstRtpJ2KMarker) marker;
   }
 }
 
@@ -213,7 +193,7 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
     guint offset, RtpJ2KState * state)
 {
   gboolean cut_sop = FALSE;
-  RtpJ2KMarker marker;
+  GstRtpJ2KMarker marker;
 
   /* parse the j2k header for 'start of codestream' */
   GST_LOG_OBJECT (pay, "checking from offset %u", offset);
@@ -223,13 +203,13 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
     if (state->bitstream) {
       /* parsing bitstream, only look for SOP */
       switch (marker) {
-        case J2K_MARKER_SOP:
+        case GST_J2K_MARKER_SOP:
           GST_LOG_OBJECT (pay, "found SOP at %u", offset);
           if (cut_sop)
             return offset - 2;
           cut_sop = TRUE;
           break;
-        case J2K_MARKER_EPH:
+        case GST_J2K_MARKER_EPH:
           /* just skip over EPH */
           GST_LOG_OBJECT (pay, "found EPH at %u", offset);
           break;
@@ -238,7 +218,7 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
             GST_LOG_OBJECT (pay, "reached next SOT at %u", offset);
             state->bitstream = FALSE;
             state->force_packet = TRUE;
-            if (marker == J2K_MARKER_EOC && state->next_sot + 2 <= size)
+            if (marker == GST_J2K_MARKER_EOC && state->next_sot + 2 <= size)
               /* include EOC but never go past the max size */
               return state->next_sot + 2;
             else
@@ -248,11 +228,11 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
       }
     } else {
       switch (marker) {
-        case J2K_MARKER_SOC:
+        case GST_J2K_MARKER_SOC:
           GST_LOG_OBJECT (pay, "found SOC at %u", offset);
           state->header.MHF = 1;
           break;
-        case J2K_MARKER_SOT:
+        case GST_J2K_MARKER_SOT:
         {
           guint len, Psot;
 
@@ -293,7 +273,7 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
               Psot, state->next_sot);
           break;
         }
-        case J2K_MARKER_SOD:
+        case GST_J2K_MARKER_SOD:
           GST_LOG_OBJECT (pay, "found SOD at %u", offset);
           /* can't have more tiles now */
           state->n_tiles = 0;
@@ -305,7 +285,7 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
            * spec recommends packing headers separately */
           state->force_packet = TRUE;
           break;
-        case J2K_MARKER_EOC:
+        case GST_J2K_MARKER_EOC:
           GST_LOG_OBJECT (pay, "found EOC at %u", offset);
           return offset;
         default:
@@ -361,7 +341,8 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
   state.force_packet = FALSE;
 
   /* get max packet length */
-  max_size = gst_rtp_buffer_calc_payload_len (mtu - HEADER_SIZE, 0, 0);
+  max_size =
+      gst_rtp_buffer_calc_payload_len (mtu - GST_RTP_J2K_HEADER_SIZE, 0, 0);
 
   list = gst_buffer_list_new_sized ((mtu / max_size) + 1);
 
@@ -416,7 +397,8 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
       /* calculate the packet size */
       packet_size =
-          gst_rtp_buffer_calc_packet_len (pu_size + HEADER_SIZE, 0, 0);
+          gst_rtp_buffer_calc_packet_len (pu_size + GST_RTP_J2K_HEADER_SIZE, 0,
+          0);
 
       if (packet_size > mtu) {
         GST_DEBUG_OBJECT (pay, "needed packet size %u clamped to MTU %u",
@@ -429,10 +411,10 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
       /* get total payload size and data size */
       payload_size = gst_rtp_buffer_calc_payload_len (packet_size, 0, 0);
-      data_size = payload_size - HEADER_SIZE;
+      data_size = payload_size - GST_RTP_J2K_HEADER_SIZE;
 
       /* make buffer for header */
-      outbuf = gst_rtp_buffer_new_allocate (HEADER_SIZE, 0, 0);
+      outbuf = gst_rtp_buffer_new_allocate (GST_RTP_J2K_HEADER_SIZE, 0, 0);
 
       GST_BUFFER_PTS (outbuf) = timestamp;
 
