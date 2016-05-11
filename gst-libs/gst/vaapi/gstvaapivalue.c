@@ -143,6 +143,8 @@ gst_vaapi_rate_control_get_type (void)
         "Variable bitrate", "vbr"},
     {GST_VAAPI_RATECONTROL_VBR_CONSTRAINED,
         "Variable bitrate - Constrained", "vbr_constrained"},
+    {GST_VAAPI_RATECONTROL_MB,
+        "Macroblock based rate control", "mb"},
     {0, NULL, NULL},
   };
 

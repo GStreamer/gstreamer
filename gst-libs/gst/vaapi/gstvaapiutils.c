@@ -544,6 +544,10 @@ from_GstVaapiRateControl (guint value)
     case GST_VAAPI_RATECONTROL_VBR_CONSTRAINED:
       return VA_RC_VBR_CONSTRAINED;
 #endif
+#ifdef VA_RC_MB
+    case GST_VAAPI_RATECONTROL_MB:
+      return VA_RC_MB;
+#endif
   }
   GST_ERROR ("unsupported GstVaapiRateControl value %u", value);
   return VA_RC_NONE;
@@ -568,6 +572,10 @@ to_GstVaapiRateControl (guint value)
 #ifdef VA_RC_VBR_CONSTRAINED
     case VA_RC_VBR_CONSTRAINED:
       return GST_VAAPI_RATECONTROL_VBR_CONSTRAINED;
+#endif
+#ifdef VA_RC_MB
+    case VA_RC_MB:
+      return GST_VAAPI_RATECONTROL_MB;
 #endif
   }
   GST_ERROR ("unsupported VA-API Rate Control value %u", value);

@@ -146,6 +146,7 @@ typedef enum {
  * @GST_VAAPI_RATECONTROL_VBR: Variable bitrate
  * @GST_VAAPI_RATECONTROL_VBR_CONSTRAINED: Variable bitrate with peak
  *   rate higher than average bitrate
+ * @GST_VAAPI_RATECONTROL_MB: Macroblock based rate control
  *
  * The set of allowed rate control values for #GstVaapiRateControl.
  * Note: this is only valid for encoders.
@@ -157,6 +158,7 @@ typedef enum {
     GST_VAAPI_RATECONTROL_VCM,
     GST_VAAPI_RATECONTROL_VBR,
     GST_VAAPI_RATECONTROL_VBR_CONSTRAINED,
+    GST_VAAPI_RATECONTROL_MB,
 } GstVaapiRateControl;
 
 /* Define a mask for GstVaapiRateControl */
