@@ -1593,7 +1593,7 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
     return FALSE;
   }
 
-  GST_DEBUG_OBJECT (object, "check delivery systems");
+  GST_DEBUG_OBJECT (object, "Get list of supported delivery systems");
 
   dvb_prop[0].cmd = DTV_ENUM_DELSYS;
   props.num = 1;
@@ -1610,7 +1610,7 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
     return FALSE;
   }
 
-  GST_DEBUG_OBJECT (object, "Got information about adapter : %s", fe_info.name);
+  GST_INFO_OBJECT (object, "Got information about adapter: %s", fe_info.name);
 
   adapter_name = g_strdup (fe_info.name);
 
@@ -1748,7 +1748,6 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
         "DVB-C ANNEX C", NULL);
   }
 
-  GST_INFO_OBJECT (object, "DVB card: %s ", adapter_name);
   GST_TRACE_OBJECT (object, "%s description: %" GST_PTR_FORMAT, adapter_name,
       adapter_structure);
   gst_element_post_message (GST_ELEMENT_CAST (object), gst_message_new_element
