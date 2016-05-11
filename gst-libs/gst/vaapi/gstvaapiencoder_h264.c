@@ -745,6 +745,7 @@ struct _GstVaapiEncoderH264
 
   GstVaapiProfile profile;
   GstVaapiLevelH264 level;
+  GstVaapiEntrypoint entrypoint;
   guint8 profile_idc;
   guint8 max_profile_idc;
   guint8 hw_max_profile_idc;
@@ -758,6 +759,7 @@ struct _GstVaapiEncoderH264
   guint32 mb_height;
   gboolean use_cabac;
   gboolean use_dct8x8;
+  gboolean enable_lp;
   GstClockTime cts_offset;
   gboolean config_changed;
 
@@ -1070,6 +1072,11 @@ ensure_hw_profile (GstVaapiEncoderH264 * encoder)
   GstVaapiEntrypoint entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
   GstVaapiProfile profile, profiles[4];
   guint i, num_profiles = 0;
+
+  if (encoder->enable_lp)
+    entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP;
+
+  encoder->entrypoint = entrypoint;
 
   profiles[num_profiles++] = encoder->profile;
   switch (encoder->profile) {
@@ -2777,6 +2784,8 @@ set_context_info (GstVaapiEncoder * base_encoder)
   base_encoder->codedbuf_size += encoder->num_slices * (4 +
       GST_ROUND_UP_8 (MAX_SLICE_HDR_SIZE) / 8);
 
+  base_encoder->context_info.entrypoint = encoder->entrypoint;
+
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
@@ -2938,6 +2947,9 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
       }
       break;
     }
+    case GST_VAAPI_ENCODER_H264_PROP_LP_MODE:
+      encoder->enable_lp = g_value_get_boolean (value);
+      break;
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
   }
@@ -3102,6 +3114,17 @@ gst_vaapi_encoder_h264_get_default_properties (void)
               "view id values used for mvc encoding", 0, MAX_VIEW_ID, 0,
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstVaapiEncoderH264:enable_lp:
+   *
+   * Enable low power/high performace encoding mode.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_LP_MODE,
+      g_param_spec_boolean ("low-power-enc",
+          "Enable Low Power Encode",
+          "Enable Low Power/High Performace encoding",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
 }

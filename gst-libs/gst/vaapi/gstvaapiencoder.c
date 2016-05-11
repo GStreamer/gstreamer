@@ -604,10 +604,10 @@ set_context_info (GstVaapiEncoder * encoder)
 
   cip->usage = GST_VAAPI_CONTEXT_USAGE_ENCODE;
   cip->profile = encoder->profile;
-  cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
-  if (cdata->codec != GST_VAAPI_CODEC_JPEG)
-    cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
-  else
+  if (cdata->codec != GST_VAAPI_CODEC_JPEG) {
+    if (cip->entrypoint != GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP)
+      cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+  } else
     cip->entrypoint = GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE;
   cip->chroma_type = gst_vaapi_video_format_get_chroma_type (format);
   cip->width = GST_VAAPI_ENCODER_WIDTH (encoder);
