@@ -311,7 +311,9 @@ gst_lv2_element_class_set_metadata (GstLV2Class * lv2_class,
 {
   LilvPlugin *lv2plugin = lv2_class->plugin;
   LilvNode *val;
-  gchar *longname, *author;
+  const LilvPluginClass *lv2plugin_class;
+  const LilvNode *cval;
+  gchar *longname, *author, *class_tags = NULL;
 
   val = lilv_plugin_get_name (lv2plugin);
   if (val) {
@@ -328,10 +330,18 @@ gst_lv2_element_class_set_metadata (GstLV2Class * lv2_class,
     author = g_strdup ("no author available");
   }
 
-  gst_element_class_set_metadata (elem_class, longname, lv2_class_tags,
-      longname, author);
+  lv2plugin_class = lilv_plugin_get_class (lv2plugin);
+  cval = lilv_plugin_class_get_label (lv2plugin_class);
+  if (cval) {
+    class_tags = g_strconcat (lv2_class_tags, "/", lilv_node_as_string (cval),
+        NULL);
+  }
+
+  gst_element_class_set_metadata (elem_class, longname,
+      (class_tags ? class_tags : lv2_class_tags), longname, author);
   g_free (longname);
   g_free (author);
+  g_free (class_tags);
 }
 
 
