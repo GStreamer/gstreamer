@@ -150,8 +150,10 @@ debug_dump_get_object_params (GObject * object,
               break;
             }
           }
-          if (tmp == NULL)
+          if (tmp == NULL) {
+            g_value_unset (&value);
             continue;
+          }
         } else if (G_VALUE_HOLDS_FLAGS (&value)) {
           GFlagsClass *f_class = g_type_class_ref (G_VALUE_TYPE (&value));
           GFlagsValue *vals = f_class->values;
