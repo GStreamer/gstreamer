@@ -1011,6 +1011,7 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   GstVideoInfo *in_info, *out_info;
   GstVideoCodecState *output_state;
   gint fps_n, fps_d;
+  GstClockTime latency;
 
   if (!update_video_context (ffmpegdec, context, picture))
     return TRUE;
@@ -1092,6 +1093,13 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
 
   if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (ffmpegdec)))
     goto negotiate_failed;
+
+  /* The decoder is configured, we now know the true latency */
+  latency =
+      gst_util_uint64_scale_ceil (ffmpegdec->context->has_b_frames * GST_SECOND,
+      fps_d, fps_n);
+  gst_video_decoder_set_latency (GST_VIDEO_DECODER (ffmpegdec), latency,
+      latency);
 
   return TRUE;
 
