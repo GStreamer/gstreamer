@@ -8423,16 +8423,20 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
   if ((edts = qtdemux_tree_get_child_by_type (trak, FOURCC_edts))) {
     GNode *elst;
     gint n_segments;
-    gint i, count;
+    gint i, count, entry_size;
     guint64 time;
     GstClockTime stime;
     guint8 *buffer;
+    guint8 version;
 
     GST_DEBUG_OBJECT (qtdemux, "looking for edit list");
     if (!(elst = qtdemux_tree_get_child_by_type (edts, FOURCC_elst)))
       goto done;
 
     buffer = elst->data;
+
+    version = QT_UINT8 (buffer + 8);
+    entry_size = (version == 1) ? 20 : 12;
 
     n_segments = QT_UINT32 (buffer + 12);
 
@@ -8446,14 +8450,24 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
     for (i = 0; i < n_segments; i++) {
       guint64 duration;
       guint64 media_time;
+      gboolean time_valid = TRUE;
       QtDemuxSegment *segment;
       guint32 rate_int;
       GstClockTime media_start = GST_CLOCK_TIME_NONE;
 
-      media_time = QT_UINT32 (buffer + 20 + i * 12);
-      duration = QT_UINT32 (buffer + 16 + i * 12);
+      if (version == 1) {
+        media_time = QT_UINT64 (buffer + 24 + i * entry_size);
+        duration = QT_UINT64 (buffer + 16 + i * entry_size);
+        if (media_time == G_MAXUINT64)
+          time_valid = FALSE;
+      } else {
+        media_time = QT_UINT32 (buffer + 20 + i * entry_size);
+        duration = QT_UINT32 (buffer + 16 + i * entry_size);
+        if (media_time == G_MAXUINT32)
+          time_valid = FALSE;
+      }
 
-      if (media_time != G_MAXUINT32)
+      if (time_valid)
         media_start = QTSTREAMTIME_TO_GSTTIME (stream, media_time);
 
       segment = &stream->segments[count++];
@@ -8469,7 +8483,7 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
         /* zero duration does not imply media_start == media_stop
          * but, only specify media_start.*/
         stime = QTTIME_TO_GSTTIME (qtdemux, qtdemux->duration);
-        if (GST_CLOCK_TIME_IS_VALID (stime) && media_time != G_MAXUINT32
+        if (GST_CLOCK_TIME_IS_VALID (stime) && time_valid
             && stime >= media_start) {
           segment->duration = stime - media_start;
         } else {
@@ -8480,7 +8494,7 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
       segment->trak_media_start = media_time;
       /* media_time expressed in stream timescale */
-      if (media_time != G_MAXUINT32) {
+      if (time_valid) {
         segment->media_start = media_start;
         segment->media_stop = segment->media_start + segment->duration;
         media_segments_count++;
@@ -8488,7 +8502,8 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
         segment->media_start = GST_CLOCK_TIME_NONE;
         segment->media_stop = GST_CLOCK_TIME_NONE;
       }
-      rate_int = GST_READ_UINT32_BE (buffer + 24 + i * 12);
+      rate_int =
+          QT_UINT32 (buffer + ((version == 1) ? 32 : 24) + i * entry_size);
 
       if (rate_int <= 1) {
         /* 0 is not allowed, some programs write 1 instead of the floating point
