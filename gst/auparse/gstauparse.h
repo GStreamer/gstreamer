@@ -53,7 +53,8 @@ struct _GstAuParse {
 
   GstAdapter *adapter;
 
-  /* GstSegment  segment; */
+  GstSegment  segment;
+  gboolean    need_segment;
 
   gint64      offset;        /* where sample data starts */
   gint64      buffer_offset;
