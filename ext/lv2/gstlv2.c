@@ -96,10 +96,11 @@ lv2_plugin_discover (GstPlugin * plugin)
     num_sink_pads = num_src_pads = 0;
     for (j = 0; j < lilv_plugin_get_num_ports (lv2plugin); j++) {
       const LilvPort *port = lilv_plugin_get_port_by_index (lv2plugin, j);
-      const gboolean is_input = lilv_port_is_a (lv2plugin, port, input_class);
 
       if (lilv_port_is_a (lv2plugin, port, audio_class)) {
+        const gboolean is_input = lilv_port_is_a (lv2plugin, port, input_class);
         LilvNodes *lv2group = lilv_port_get (lv2plugin, port, group_pred);
+
         if (lv2group) {
           const gchar *uri = lilv_node_as_uri (lv2group);
 
@@ -110,21 +111,32 @@ lv2_plugin_discover (GstPlugin * plugin)
           lilv_node_free (lv2group);
         }
 
-
         if (is_input)
           num_sink_pads++;
         else
           num_src_pads++;
       }
-
     }
-    if (num_sink_pads != 1 || num_src_pads != 1) {
-      GST_FIXME ("plugin %s is not a GstAudioFilter (num_sink_pads: %d"
+    if (num_sink_pads == 0 && num_src_pads == 0) {
+      GST_FIXME ("plugin %s has no pads", type_name);
+    } else if (num_sink_pads == 0) {
+      if (num_src_pads != 1) {
+        GST_FIXME ("plugin %s is not a GstBaseSrc (num_src_pads: %d)",
+            type_name, num_src_pads);
+        goto next;
+      }
+      gst_lv2_source_register_element (plugin, type_name, (gpointer) lv2plugin);
+    } else if (num_src_pads == 0) {
+      GST_FIXME ("plugin %s is a sink element (num_sink_pads: %d"
           " num_src_pads: %d)", type_name, num_sink_pads, num_src_pads);
-      goto next;
+    } else {
+      if (num_sink_pads != 1 || num_src_pads != 1) {
+        GST_FIXME ("plugin %s is not a GstAudioFilter (num_sink_pads: %d"
+            " num_src_pads: %d)", type_name, num_sink_pads, num_src_pads);
+        goto next;
+      }
+      gst_lv2_filter_register_element (plugin, type_name, (gpointer) lv2plugin);
     }
-
-    gst_lv2_filter_register_element (plugin, type_name, (gpointer) lv2plugin);
 
   next:
     g_free (type_name);

@@ -55,4 +55,7 @@ GQuark descriptor_quark;
 gboolean gst_lv2_filter_register_element (GstPlugin *plugin,
                                           const gchar *type_name,
                                           gpointer *lv2plugin);
+gboolean gst_lv2_source_register_element (GstPlugin *plugin,
+                                          const gchar *type_name,
+                                          gpointer *lv2plugin);
 #endif /* __GST_LV2_H__ */

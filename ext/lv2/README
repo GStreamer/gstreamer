@@ -5,14 +5,23 @@ Dependencies:
 Lilv 0.6.6 <http://drobilla.net/software/lilv/>
 
 
+Features:
+
+The plugin wrapper support the following plugin features:
+http://lv2plug.in/ns/lv2core
+http://lv2plug.in/ns/ext/port-groups
+
+and these host features:
+http://lv2plug.in/ns/ext/log/
+
 Example Pipeline:
 
 Requires swh-lv2 <http://plugin.org.uk/releases/>
 
 gst-launch-1.0 -v filesrc location=/usr/share/sounds/login.wav ! wavparse ! audioconvert ! plugin-org-uk-swh-plugins-djFlanger ! audioconvert ! autoaudiosink
-
 (A longer wav will be a better example)
 
+gst-launch-1.0 plugin-org-uk-swh-plugins-analogueOsc num-buffers=100 wave=1 ! wavenc ! filesink location="/tmp/lv2.wav"
 
 Requires calf <http://calf.sourceforge.net/>
 
@@ -21,3 +30,15 @@ gst-launch-1.0 calf-sourceforge-net-plugins-Monosynth event-in="C-3" ! autoaudio
 gst-launch-1.0 calf-sourceforge-net-plugins-Monosynth event-in="C-3" name=ms ! autoaudiosink ms. ! fakesink
 gst-launch-1.0 calf-sourceforge-net-plugins-Organ event-in="C-3" name=s ! interleave name=i ! autoaudiosink s. ! i.
 
+
+TODO
+* registry cache
+* support http://lv2plug.in/ns/lv2core/#CVPort
+  - these ports need a buffer with the property value
+  - we should sync, then fill the buffer and connect the port
+* support presets
+* support more host features
+
+* samples sources:
+  http://svn.drobilla.net/lad/trunk/lilv/utils/lv2info.c
+  http://svn.drobilla.net/lad/trunk/jalv/src/jalv.c
