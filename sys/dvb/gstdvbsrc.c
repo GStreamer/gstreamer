@@ -2339,26 +2339,47 @@ fail:
 static void
 gst_dvbsrc_guess_delsys (GstDvbSrc * object)
 {
-  GList *delsys;
+  GList *valid, *candidate;
+  guint alternatives;
 
-  /* If adapter only supports one delivery system, there's no real choice */
-  if (g_list_length (object->supported_delsys) == 1)
-    goto go_with_default;
-
-  /* Add delivery system specific rules here */
-
-  /* DVB-T/T2 on QAM_256 channel? has to be DVB-T2 */
-  if (object->modulation == QAM_256 &&
-      g_list_find (object->supported_delsys, GINT_TO_POINTER (SYS_DVBT2))) {
-    object->delsys = SYS_DVBT2;
+  if (g_list_length (object->supported_delsys) == 1) {
+    object->delsys = GPOINTER_TO_INT (object->supported_delsys->data);
+    GST_DEBUG_OBJECT (object, "Adapter supports a single delsys: '%u'",
+        object->delsys);
     goto autoselection_done;
   }
 
-  /* No rule provided a match so we default to the last device-reported
-   * supported delivery system */
-go_with_default:
-  delsys = g_list_last (object->supported_delsys);
-  object->delsys = GPOINTER_TO_INT (delsys->data);
+  /* Automatic delivery system selection based on known-correct
+   * parameter combinations */
+
+  valid = g_list_copy (object->supported_delsys);
+
+  candidate = valid;
+  while (candidate) {
+    GList *next = candidate->next;
+    if (!gst_dvbsrc_is_valid_modulation (GPOINTER_TO_INT (candidate->data),
+            object->modulation)) {
+      valid = g_list_delete_link (valid, candidate);
+    }
+    candidate = next;
+  }
+
+  alternatives = g_list_length (valid);
+
+  if (!alternatives) {
+    GST_WARNING_OBJECT (object, "Delivery system autodetection provided no "
+        "valid alternative");
+    candidate = g_list_last (object->supported_delsys);
+  } else {
+    if (alternatives > 1) {
+      GST_WARNING_OBJECT (object, "Delivery system autodetection provided more "
+          "than one valid alternative");
+    }
+    candidate = g_list_last (valid);
+  }
+
+  object->delsys = GPOINTER_TO_INT (candidate->data);
+  g_list_free (valid);
 
 autoselection_done:
   GST_INFO_OBJECT (object, "Automatically selecting delivery system '%u'",
