@@ -188,6 +188,13 @@ typedef struct
   gboolean force_packet;
 } RtpJ2KState;
 
+
+/* Note: The standard recommends that headers be put in their own RTP packets, so we follow
+ * this recommendation in the code. Also, this method groups together all J2K packets
+ * for a tile part and treats this group as a packetization unit. According to the RFC,
+ * only an individual J2K packet is considered a packetization unit.
+ */
+
 static guint
 find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
     guint offset, RtpJ2KState * state)
@@ -230,14 +237,18 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
       switch (marker) {
         case GST_J2K_MARKER_SOC:
           GST_LOG_OBJECT (pay, "found SOC at %u", offset);
-          state->header.MHF = 1;
+          /* start off by assuming that we will fit the entire header
+             into the RTP payload */
+          state->header.MHF = 3;
           break;
         case GST_J2K_MARKER_SOT:
         {
           guint len, Psot;
 
           GST_LOG_OBJECT (pay, "found SOT at %u", offset);
-          /* we found SOT but also had a header first */
+          /* SOT for first tile part in code stream:
+             force close of current RTP packet, so that it
+             only contains main header  */
           if (state->header.MHF) {
             state->force_packet = TRUE;
             return offset - 2;
@@ -424,18 +435,26 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
       header = gst_rtp_buffer_get_payload (&rtp);
 
       pu_size -= data_size;
-      if (pu_size == 0) {
-        /* reached the end of a packetization unit */
-        if (state.header.MHF) {
-          /* we were doing a header, see if all fit in one packet or if
-           * we had to fragment it */
-          if (offset == 0)
-            state.header.MHF = 3;
-          else
-            state.header.MHF = 2;
+
+      /* reached the end of a packetization unit */
+      if (pu_size == 0 && end >= map.size) {
+        gst_rtp_buffer_set_marker (&rtp, TRUE);
+      }
+      /* If we were processing a header, see if all fits in one RTP packet
+         or if we have to fragment it */
+      if (state.header.MHF) {
+        switch (state.header.MHF) {
+          case 3:
+            if (pu_size > 0)
+              state.header.MHF = 1;
+            break;
+          case 1:
+            if (pu_size == 0)
+              state.header.MHF = 2;
+            break;
+          default:
+            break;
         }
-        if (end >= map.size)
-          gst_rtp_buffer_set_marker (&rtp, TRUE);
       }
 
       /*
@@ -478,10 +497,12 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
       gst_buffer_list_add (list, outbuf);
 
-      /* reset header for next round */
-      state.header.MHF = 0;
       state.header.T = 1;
       state.header.tile = 0;
+
+      /* set MHF to zero if there is no more main header to process */
+      if (state.header.MHF & 2)
+        state.header.MHF = 0;
 
       offset += data_size;
       state.header.offset = offset;
