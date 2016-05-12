@@ -25,8 +25,49 @@
 #include "gstlv2.h"
 #include "gstlv2utils.h"
 
+#include <lv2/lv2plug.in/ns/ext/log/log.h>
+
 GST_DEBUG_CATEGORY_EXTERN (lv2_debug);
 #define GST_CAT_DEFAULT lv2_debug
+
+/* host features */
+
+/* - log extension */
+
+static int
+lv2_log_printf (LV2_Log_Handle handle, LV2_URID type, const char *fmt, ...)
+{
+  va_list ap;
+
+  va_start (ap, fmt);
+  gst_debug_log_valist (lv2_debug, GST_LEVEL_INFO, "", "", 0, NULL, fmt, ap);
+  va_end (ap);
+  return 1;
+}
+
+static int
+lv2_log_vprintf (LV2_Log_Handle handle, LV2_URID type,
+    const char *fmt, va_list ap)
+{
+  gst_debug_log_valist (lv2_debug, GST_LEVEL_INFO, "", "", 0, NULL, fmt, ap);
+  return 1;
+}
+
+static LV2_Log_Log lv2_log = {
+  NULL,                         /* handle */
+  lv2_log_printf, lv2_log_vprintf,
+};
+
+static const LV2_Feature lv2_log_feature = { LV2_LOG__log, &lv2_log };
+
+/* feature list */
+
+static const LV2_Feature *lv2_features[] = {
+  &lv2_log_feature,
+  NULL
+};
+
+/* api helpers */
 
 void
 gst_lv2_init (GstLV2 * lv2, GstLV2Class * lv2_class)
@@ -57,7 +98,7 @@ gst_lv2_setup (GstLV2 * lv2, unsigned long rate)
     lilv_instance_free (lv2->instance);
 
   if (!(lv2->instance =
-          lilv_plugin_instantiate (lv2_class->plugin, rate, NULL)))
+          lilv_plugin_instantiate (lv2_class->plugin, rate, lv2_features)))
     return FALSE;
 
   /* connect the control ports */
