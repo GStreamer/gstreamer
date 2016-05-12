@@ -182,8 +182,8 @@ gst_rtp_j2k_pay_scan_marker (const guint8 * data, guint size, guint * offset)
 typedef struct
 {
   RtpJ2KHeader header;
+  gboolean multi_tile_part;
   gboolean bitstream;
-  guint n_tiles;
   guint next_sot;
   gboolean force_packet;
 } RtpJ2KState;
@@ -243,7 +243,7 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
           break;
         case GST_J2K_MARKER_SOT:
         {
-          guint len, Psot;
+          guint len, Psot, tile;
 
           GST_LOG_OBJECT (pay, "found SOT at %u", offset);
           /* SOT for first tile part in code stream:
@@ -262,17 +262,30 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
           if (offset + len >= size)
             return size;
 
-          if (state->n_tiles == 0)
-            /* first tile, T is valid */
-            state->header.T = 0;
-          else
-            /* more tiles, T becomes invalid */
-            state->header.T = 1;
-          state->header.tile = GST_READ_UINT16_BE (&data[offset + 2]);
-          state->n_tiles++;
+          /* Isot */
+          tile = GST_READ_UINT16_BE (&data[offset + 2]);
 
-          /* get offset of next tile, if it's 0, it goes all the way to the end of
-           * the data */
+          if (!state->multi_tile_part) {
+
+            /* tile is marked as valid */
+            state->header.T = 0;
+
+            /* we have detected multiple tile parts in this rtp packet : tile bit is now invalid */
+            if (state->header.tile != tile) {
+              state->header.T = 1;
+              state->multi_tile_part = TRUE;
+            }
+          }
+          state->header.tile = tile;
+
+          /* Note: Tile parts from multiple tiles in single RTP packet 
+             will make T invalid.
+             This cannot happen in our case since we always
+             send tile headers in their own RTP packets, so we cannot mix
+             tile parts in a single RTP packet  */
+
+          /* Psot: offset of next tile. If it's 0, next tile goes all the way
+             to the end of the data */
           Psot = GST_READ_UINT32_BE (&data[offset + 4]);
           if (Psot == 0)
             state->next_sot = size;
@@ -286,8 +299,6 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
         }
         case GST_J2K_MARKER_SOD:
           GST_LOG_OBJECT (pay, "found SOD at %u", offset);
-          /* can't have more tiles now */
-          state->n_tiles = 0;
           /* go to bitstream parsing */
           state->bitstream = TRUE;
           /* cut at the next SOP or else include all data */
@@ -342,12 +353,12 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
   state.header.tp = 0;          /* only progressive scan */
   state.header.MHF = 0;         /* no header */
   state.header.mh_id = 0;       /* always 0 for now */
-  state.header.T = 1;           /* invalid tile */
+  state.header.T = 1;           /* invalid tile, because we always begin with the main header */
   state.header.priority = 255;  /* always 255 for now */
-  state.header.tile = 0;        /* no tile number */
+  state.header.tile = -1;       /* no tile number */
   state.header.offset = 0;      /* offset of 0 */
+  state.multi_tile_part = FALSE;
   state.bitstream = FALSE;
-  state.n_tiles = 0;
   state.next_sot = 0;
   state.force_packet = FALSE;
 
@@ -497,12 +508,18 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
       gst_buffer_list_add (list, outbuf);
 
-      state.header.T = 1;
-      state.header.tile = 0;
+      /* reset multi_tile */
+      state.multi_tile_part = FALSE;
+
 
       /* set MHF to zero if there is no more main header to process */
       if (state.header.MHF & 2)
         state.header.MHF = 0;
+
+      /* tile is valid, if there is no more header to process */
+      if (!state.header.MHF)
+        state.header.T = 0;
+
 
       offset += data_size;
       state.header.offset = offset;
