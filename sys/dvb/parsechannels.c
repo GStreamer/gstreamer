@@ -202,6 +202,17 @@ set_properties_for_channel (GstElement * dvbbasebin,
   gchar *type;
   const gchar *adapter;
 
+  /**
+   * Assumptions are made here about a format that is loosely
+   * defined. Particularly, we assume a given delivery system
+   * out of counting the number of fields per line. dvbsrc has
+   * smarter code to auto-detect a delivery system based on
+   * known-correct combinations of parameters so if you ever
+   * encounter cases where the delivery system is being
+   * wrongly set here, just remove the offending
+   * g_object_set line and let dvbsrc work his magic out.
+   */
+
   filename = g_strdup (g_getenv ("GST_DVB_CHANNELS_CONF"));
   if (filename == NULL) {
     filename = g_build_filename (g_get_user_config_dir (),
@@ -229,8 +240,6 @@ set_properties_for_channel (GstElement * dvbbasebin,
   type = g_hash_table_lookup (params, "type");
   if (strcmp (type, "terrestrial") == 0) {
     gchar *val;
-
-    g_object_set (dvbbasebin, "delsys", SYS_DVBT, NULL);
 
     val = g_hash_table_lookup (params, "inversion");
     if (strcmp (val, "INVERSION_OFF") == 0)
