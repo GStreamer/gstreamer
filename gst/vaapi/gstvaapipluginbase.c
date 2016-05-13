@@ -719,6 +719,14 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
          not provide a correct propose_allocation() implementation */
       has_video_alignment = gst_buffer_pool_has_option (pool,
           GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+
+      /* GstVaapiVideoMeta is mandatory, and this implies VA surface memory */
+      if (!gst_buffer_pool_has_option (pool,
+              GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META)) {
+        GST_INFO_OBJECT (plugin, "ignoring non-VAAPI pool: %" GST_PTR_FORMAT,
+            pool);
+        g_clear_object (&pool);
+      }
     }
   } else {
     pool = NULL;
@@ -726,13 +734,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     min = max = 0;
   }
 
-  /* GstVaapiVideoMeta is mandatory, and this implies VA surface memory */
-  if (!pool || !gst_buffer_pool_has_option (pool,
-          GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META)) {
-    GST_INFO_OBJECT (plugin, "%s. Making a new pool", pool == NULL ? "No pool" :
-        "Pool hasn't GstVaapiVideoMeta");
-    if (pool)
-      gst_object_unref (pool);
+  if (!pool) {
     pool = gst_vaapi_video_buffer_pool_new (plugin->display);
     if (!pool)
       goto error_create_pool;
