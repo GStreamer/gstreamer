@@ -1274,7 +1274,7 @@ gst_ps_demux_handle_seek_pull (GstPsDemux * demux, GstEvent * event)
   }
 
   /* check the limits */
-  if (seeksegment.rate > 0.0) {
+  if (seeksegment.rate > 0.0 && first_pts != G_MAXUINT64) {
     if (seeksegment.start < first_pts - demux->base_time) {
       seeksegment.start = first_pts - demux->base_time;
       seeksegment.position = seeksegment.start;
