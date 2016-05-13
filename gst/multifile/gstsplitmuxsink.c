@@ -590,7 +590,7 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
   GstSplitMuxSink *splitmux = ctx->splitmux;
   MqStreamBuf *buf_info = NULL;
 
-  GST_LOG_OBJECT (pad, "Fired probe type 0x%x\n", info->type);
+  GST_LOG_OBJECT (pad, "Fired probe type 0x%x", info->type);
 
   /* FIXME: Handle buffer lists, until then make it clear they won't work */
   if (info->type & GST_PAD_PROBE_TYPE_BUFFER_LIST) {
