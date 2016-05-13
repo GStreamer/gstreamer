@@ -74,7 +74,8 @@
 /* Supported set of tuning options, within this implementation */
 #define SUPPORTED_TUNE_OPTIONS                          \
   (GST_VAAPI_ENCODER_TUNE_MASK (NONE) |                 \
-   GST_VAAPI_ENCODER_TUNE_MASK (HIGH_COMPRESSION))
+   GST_VAAPI_ENCODER_TUNE_MASK (HIGH_COMPRESSION) |     \
+   GST_VAAPI_ENCODER_TUNE_MASK (LOW_POWER))
 
 /* Supported set of VA packed headers, within this implementation */
 #define SUPPORTED_PACKED_HEADERS                \
@@ -759,7 +760,6 @@ struct _GstVaapiEncoderH264
   guint32 mb_height;
   gboolean use_cabac;
   gboolean use_dct8x8;
-  gboolean enable_lp;
   GstClockTime cts_offset;
   gboolean config_changed;
 
@@ -1069,14 +1069,9 @@ static gboolean
 ensure_hw_profile (GstVaapiEncoderH264 * encoder)
 {
   GstVaapiDisplay *const display = GST_VAAPI_ENCODER_DISPLAY (encoder);
-  GstVaapiEntrypoint entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+  GstVaapiEntrypoint entrypoint = encoder->entrypoint;
   GstVaapiProfile profile, profiles[4];
   guint i, num_profiles = 0;
-
-  if (encoder->enable_lp)
-    entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP;
-
-  encoder->entrypoint = entrypoint;
 
   profiles[num_profiles++] = encoder->profile;
   switch (encoder->profile) {
@@ -1250,6 +1245,14 @@ ensure_tuning (GstVaapiEncoderH264 * encoder)
   switch (GST_VAAPI_ENCODER_TUNE (encoder)) {
     case GST_VAAPI_ENCODER_TUNE_HIGH_COMPRESSION:
       success = ensure_tuning_high_compression (encoder);
+      break;
+    case GST_VAAPI_ENCODER_TUNE_LOW_POWER:
+      /* Set low-power encode entry point. If hardware doesn't have
+       * support, it will fail in ensure_hw_profile() in later stage.
+       * So not duplicating the profile/entrypont query mechanism
+       * here as a part of optimization */
+      encoder->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP;
+      success = TRUE;
       break;
     default:
       success = TRUE;
@@ -2398,7 +2401,8 @@ ensure_profile_and_level (GstVaapiEncoderH264 * encoder)
   const GstVaapiProfile profile = encoder->profile;
   const GstVaapiLevelH264 level = encoder->level;
 
-  ensure_tuning (encoder);
+  if (!ensure_tuning (encoder))
+    GST_WARNING ("Failed to set some of the tuning option as expected! ");
 
   if (!ensure_profile (encoder) || !ensure_profile_limits (encoder))
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
@@ -2832,6 +2836,9 @@ gst_vaapi_encoder_h264_init (GstVaapiEncoder * base_encoder)
       GST_VAAPI_ENCODER_H264_CAST (base_encoder);
   guint32 i;
 
+  /* Default encoding entrypoint */
+  encoder->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+
   /* Multi-view coding information */
   encoder->is_mvc = FALSE;
   encoder->num_views = 1;
@@ -2947,9 +2954,6 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
       }
       break;
     }
-    case GST_VAAPI_ENCODER_H264_PROP_LP_MODE:
-      encoder->enable_lp = g_value_get_boolean (value);
-      break;
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
   }
@@ -3114,17 +3118,6 @@ gst_vaapi_encoder_h264_get_default_properties (void)
               "view id values used for mvc encoding", 0, MAX_VIEW_ID, 0,
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  /**
-   * GstVaapiEncoderH264:enable_lp:
-   *
-   * Enable low power/high performace encoding mode.
-   */
-  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
-      GST_VAAPI_ENCODER_H264_PROP_LP_MODE,
-      g_param_spec_boolean ("low-power-enc",
-          "Enable Low Power Encode",
-          "Enable Low Power/High Performace encoding",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
 }
