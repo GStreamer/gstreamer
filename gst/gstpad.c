@@ -3175,6 +3175,7 @@ done:
 /* Default latency implementation */
 typedef struct
 {
+  guint count;
   gboolean live;
   GstClockTime min, max;
 } LatencyFoldData;
@@ -3206,7 +3207,8 @@ query_latency_default_fold (const GValue * item, GValue * ret,
     GST_LOG_OBJECT (pad, "got latency live:%s min:%" G_GINT64_FORMAT
         " max:%" G_GINT64_FORMAT, live ? "true" : "false", min, max);
 
-    if (live) {
+    /* FIXME : Why do we only take values into account if it's live ? */
+    if (live || fold_data->count == 0) {
       if (min > fold_data->min)
         fold_data->min = min;
 
@@ -3215,8 +3217,9 @@ query_latency_default_fold (const GValue * item, GValue * ret,
       else if (max < fold_data->max)
         fold_data->max = max;
 
-      fold_data->live = TRUE;
+      fold_data->live = live;
     }
+    fold_data->count += 1;
   } else if (peer) {
     GST_DEBUG_OBJECT (pad, "latency query failed");
     g_value_set_boolean (ret, FALSE);
@@ -3247,6 +3250,7 @@ gst_pad_query_latency_default (GstPad * pad, GstQuery * query)
   g_value_init (&ret, G_TYPE_BOOLEAN);
 
 retry:
+  fold_data.count = 0;
   fold_data.live = FALSE;
   fold_data.min = 0;
   fold_data.max = GST_CLOCK_TIME_NONE;
