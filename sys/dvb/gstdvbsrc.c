@@ -557,6 +557,7 @@ static gboolean gst_dvbsrc_tune_fe (GstDvbSrc * object);
 static void gst_dvbsrc_set_pes_filters (GstDvbSrc * object);
 static void gst_dvbsrc_unset_pes_filters (GstDvbSrc * object);
 static gboolean gst_dvbsrc_is_valid_modulation (guint delsys, guint mod);
+static gboolean gst_dvbsrc_is_valid_trans_mode (guint delsys, guint mode);
 
 /**
  * This loop should be safe enough considering:
@@ -2052,6 +2053,33 @@ gst_dvbsrc_is_seekable (GstBaseSrc * bsrc)
 }
 
 static gboolean
+gst_dvbsrc_is_valid_trans_mode (guint delsys, guint mode)
+{
+  /* FIXME: check valid transmission modes for other broadcast standards */
+  switch (delsys) {
+    case SYS_DVBT:
+      if (mode == TRANSMISSION_MODE_AUTO || mode == TRANSMISSION_MODE_2K ||
+          mode == TRANSMISSION_MODE_8K) {
+        return TRUE;
+      }
+      break;
+    case SYS_DVBT2:
+      if (mode == TRANSMISSION_MODE_AUTO || mode == TRANSMISSION_MODE_1K ||
+          mode == TRANSMISSION_MODE_2K || mode == TRANSMISSION_MODE_4K ||
+          mode == TRANSMISSION_MODE_8K || mode == TRANSMISSION_MODE_16K ||
+          mode == TRANSMISSION_MODE_32K) {
+        return TRUE;
+      }
+      break;
+    default:
+      GST_FIXME ("No delsys/transmission-mode sanity checks implemented for "
+          "this delivery system");
+      return TRUE;
+  }
+  return FALSE;
+}
+
+static gboolean
 gst_dvbsrc_is_valid_modulation (guint delsys, guint mod)
 {
   /* FIXME: check valid modulations for other broadcast standards */
@@ -2469,29 +2497,12 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
     case SYS_DVBT:
     case SYS_DVBT2:
       if (object->delsys == SYS_DVBT) {
-        if (object->transmission_mode != TRANSMISSION_MODE_AUTO &&
-            object->transmission_mode != TRANSMISSION_MODE_2K &&
-            object->transmission_mode != TRANSMISSION_MODE_8K) {
-          GST_WARNING_OBJECT (object, "Wrong DVB-T parameter combination: "
-              "transmission mode should be either AUTO, 2K or 8K");
-        }
         if (object->bandwidth != 6000000 && object->bandwidth != 7000000 &&
             object->bandwidth != 8000000) {
           GST_WARNING_OBJECT (object, "Wrong DVB-T parameter value: bandwidth "
               "is %d but only 6, 7 and 8 MHz are allowed", object->bandwidth);
         }
       } else if (object->delsys == SYS_DVBT2) {
-        if (object->transmission_mode != TRANSMISSION_MODE_AUTO &&
-            object->transmission_mode != TRANSMISSION_MODE_1K &&
-            object->transmission_mode != TRANSMISSION_MODE_2K &&
-            object->transmission_mode != TRANSMISSION_MODE_4K &&
-            object->transmission_mode != TRANSMISSION_MODE_8K &&
-            object->transmission_mode != TRANSMISSION_MODE_16K &&
-            object->transmission_mode != TRANSMISSION_MODE_32K) {
-          GST_WARNING_OBJECT (object, "Wrong DVB-T2 parameter combination: "
-              "transmission mode should be either AUTO, 1K, 2K, 4K, 8K, 16K "
-              "or 32K");
-        }
         if (object->stream_id > 255) {
           GST_WARNING_OBJECT (object, "Wrong DVB-T2 stream ID '%d'. Value "
               "can't be greater than 255", object->stream_id);
@@ -2632,6 +2643,12 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
     GST_WARNING_OBJECT (object,
         "Attempting invalid modulation '%u' for delivery system '%u'",
         object->modulation, object->delsys);
+  }
+  if (!gst_dvbsrc_is_valid_trans_mode (object->delsys,
+          object->transmission_mode)) {
+    GST_WARNING_OBJECT (object,
+        "Attempting invalid transmission mode '%u' for delivery system '%u'",
+        object->transmission_mode, object->delsys);
   }
 
   set_prop (props->props, &n, DTV_TUNE, 0);
