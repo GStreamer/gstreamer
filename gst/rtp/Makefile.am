@@ -163,6 +163,7 @@ noinst_HEADERS =			\
 	gstrtph265types.h \
 	gstrtpj2kdepay.h \
 	gstrtpj2kpay.h \
+	gstrtpj2kcommon.h \
 	gstrtpjpegdepay.h \
 	gstrtpjpegpay.h \
 	gstrtpklvdepay.h \
