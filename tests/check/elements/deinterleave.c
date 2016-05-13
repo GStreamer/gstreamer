@@ -191,8 +191,10 @@ GST_START_TEST (test_2_channels)
   mysinkpads = NULL;
 
   g_object_unref (deinterleave);
+  gst_bus_set_flushing (bus, TRUE);
   g_object_unref (bus);
   gst_caps_unref (caps);
+  gst_object_unref (mysrcpad);
 }
 
 GST_END_TEST;
@@ -262,8 +264,10 @@ GST_START_TEST (test_2_channels_1_linked)
   mysinkpads = NULL;
 
   g_object_unref (deinterleave);
+  gst_bus_set_flushing (bus, TRUE);
   g_object_unref (bus);
   gst_caps_unref (caps);
+  gst_object_unref (mysrcpad);
 }
 
 GST_END_TEST;
@@ -399,9 +403,11 @@ GST_START_TEST (test_2_channels_caps_change)
   mysinkpads = NULL;
 
   g_object_unref (deinterleave);
+  gst_bus_set_flushing (bus, TRUE);
   g_object_unref (bus);
   gst_caps_unref (caps);
   gst_caps_unref (caps2);
+  gst_object_unref (mysrcpad);
 }
 
 GST_END_TEST;
