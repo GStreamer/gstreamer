@@ -981,7 +981,10 @@ reacquire:
   present.pResults = &present_err;
 
   err = swapper->QueuePresentKHR (swapper->queue->queue, &present);
-  if (err == VK_ERROR_OUT_OF_DATE_KHR) {
+  if (gst_vulkan_error_to_g_error (err, error, "vkQueuePresentKHR") < 0)
+    goto error;
+
+  if (present_err == VK_ERROR_OUT_OF_DATE_KHR) {
     GST_DEBUG_OBJECT (swapper, "out of date frame submitted");
 
     if (!_swapchain_resize (swapper, error))
