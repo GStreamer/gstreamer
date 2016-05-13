@@ -243,11 +243,11 @@ set_properties_for_channel (GstElement * dvbbasebin,
 
     val = g_hash_table_lookup (params, "inversion");
     if (strcmp (val, "INVERSION_OFF") == 0)
-      g_object_set (dvbbasebin, "inversion", 0, NULL);
+      g_object_set (dvbbasebin, "inversion", INVERSION_OFF, NULL);
     else if (strcmp (val, "INVERSION_ON") == 0)
-      g_object_set (dvbbasebin, "inversion", 1, NULL);
+      g_object_set (dvbbasebin, "inversion", INVERSION_ON, NULL);
     else
-      g_object_set (dvbbasebin, "inversion", 2, NULL);
+      g_object_set (dvbbasebin, "inversion", INVERSION_AUTO, NULL);
 
     val = g_hash_table_lookup (params, "bandwidth");
     if (strcmp (val, "BANDWIDTH_8_MHZ") == 0)
