@@ -2508,6 +2508,7 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
         if (object->stream_id > 255) {
           GST_WARNING_OBJECT (object, "Wrong DVB-T2 stream ID '%d'. Value "
               "can't be greater than 255", object->stream_id);
+          object->stream_id = NO_STREAM_ID_FILTER;
         }
         if (object->bandwidth != 6000000 && object->bandwidth != 7000000 &&
             object->bandwidth != 8000000 && object->bandwidth != 1172000 &&
