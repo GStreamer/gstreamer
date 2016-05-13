@@ -2451,6 +2451,20 @@ reset_properties (GstVaapiEncoderH264 * encoder)
   if (encoder->num_bframes > (base_encoder->keyframe_period + 1) / 2)
     encoder->num_bframes = (base_encoder->keyframe_period + 1) / 2;
 
+  /* Workaround : vaapi-intel-driver doesn't have support for
+   * B-frame encode when utilizing low-power encode hardware block.
+   * So Disabling b-frame encoding in low-pwer encode.
+   *
+   * Fixme :We should query the VAConfigAttribEncMaxRefFrames
+   * instead of blindly disabling b-frame support and set b/p frame count,
+   * buffer pool size etc based on that.*/
+  if ((encoder->num_bframes > 0)
+      && (encoder->entrypoint == GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP)) {
+    GST_WARNING
+        ("Disabling b-frame since the driver doesn't supporting it in low-power encode");
+    encoder->num_bframes = 0;
+  }
+
   if (encoder->num_bframes)
     encoder->cts_offset = GST_SECOND * GST_VAAPI_ENCODER_FPS_D (encoder) /
         GST_VAAPI_ENCODER_FPS_N (encoder);
