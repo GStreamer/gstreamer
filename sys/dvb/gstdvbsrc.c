@@ -2386,7 +2386,9 @@ gst_dvbsrc_guess_delsys (GstDvbSrc * object)
   while (candidate) {
     GList *next = candidate->next;
     if (!gst_dvbsrc_is_valid_modulation (GPOINTER_TO_INT (candidate->data),
-            object->modulation)) {
+            object->modulation) ||
+        !gst_dvbsrc_is_valid_trans_mode (GPOINTER_TO_INT (candidate->data),
+            object->transmission_mode)) {
       valid = g_list_delete_link (valid, candidate);
     }
     candidate = next;
