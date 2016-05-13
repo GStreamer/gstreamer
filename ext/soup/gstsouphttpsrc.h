@@ -59,16 +59,9 @@ struct _GstSoupHTTPSrc {
   gchar *proxy_id;             /* Authentication user id for proxy URI. */
   gchar *proxy_pw;             /* Authentication user password for proxy URI. */
   gchar **cookies;             /* HTTP request cookies. */
-  GMainContext *context;       /* I/O context. */
-  GMainLoop *loop;             /* Event loop. */
   SoupSession *session;        /* Async context. */
-  GstSoupHTTPSrcSessionIOStatus session_io_status;
-                               /* Async I/O status. */
   SoupMessage *msg;            /* Request message. */
   GstFlowReturn ret;           /* Return code from callback. */
-  GstBuffer **outbuf;          /* Return buffer allocated by callback. */
-  gboolean interrupted;        /* Signal unlock(). */
-  gboolean retry;              /* Should attempt to reconnect. */
   gint retry_count;            /* Number of retries since we received data */
   gint max_retries;            /* Maximum number of retries */
   gchar *method;               /* HTTP method */
@@ -94,6 +87,9 @@ struct _GstSoupHTTPSrc {
   GTlsDatabase *tls_database;
   GTlsInteraction *tls_interaction;
 
+  GCancellable *cancellable;
+  GInputStream *input_stream;
+
   /* Shoutcast/icecast metadata extraction handling. */
   gboolean iradio_mode;
   GstCaps *src_caps;
@@ -110,7 +106,7 @@ struct _GstSoupHTTPSrc {
   guint timeout;
 
   GMutex mutex;
-  GCond request_finished_cond;
+  GCond have_headers_cond;
 
   GstEvent *http_headers_event;
 };
