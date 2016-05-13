@@ -441,6 +441,33 @@ gst_v4l2_video_dec_loop_stopped (GstV4l2VideoDec * self)
       gst_flow_get_name (self->output_flow));
 }
 
+static gboolean
+gst_v4l2_video_remove_padding(GstCapsFeatures * features,
+    GstStructure * structure, gpointer user_data)
+{
+  GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (user_data);
+  GstVideoAlignment *align = &self->v4l2capture->align;
+  GstVideoInfo *info = &self->v4l2capture->info;
+  int width, height;
+
+  if (!gst_structure_get_int(structure, "width", &width))
+    return TRUE;
+
+  if (!gst_structure_get_int(structure, "height", &height))
+    return TRUE;
+
+  if (align->padding_left != 0 || align->padding_top != 0 ||
+      width != info->width + align->padding_right ||
+      height != info->height + align->padding_bottom)
+    return TRUE;
+
+  gst_structure_set(structure,
+      "width", G_TYPE_INT, width - align->padding_right,
+      "height", G_TYPE_INT, height - align->padding_bottom, NULL);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)
@@ -465,7 +492,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoInfo info;
     GstVideoCodecState *output_state;
     GstBuffer *codec_data;
-    GstCaps *acquired_caps, *caps, *filter;
+    GstCaps *acquired_caps, *available_caps, *caps, *filter;
     GstStructure *st;
 
     GST_DEBUG_OBJECT (self, "Sending header");
@@ -505,6 +532,10 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
 
     gst_buffer_unref (codec_data);
 
+    /* For decoders G_FMT returns coded size, G_SELECTION returns visible size
+     * in the compose rectangle. gst_v4l2_object_acquire_format() checks both
+     * and returns the visible size as with/height and the coded size as
+     * padding. */
     if (!gst_v4l2_object_acquire_format (self->v4l2capture, &info))
       goto not_negotiated;
 
@@ -514,8 +545,17 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     gst_structure_remove_field (st, "format");
 
     /* Probe currently available pixel formats */
-    filter = gst_v4l2_object_probe_caps (self->v4l2capture, acquired_caps);
+    available_caps = gst_v4l2_object_probe_caps (self->v4l2capture, NULL);
+    available_caps = gst_caps_make_writable (available_caps);
+
+    /* Replace coded size with visible size, we want to negotiate visible size
+     * with downstream, not coded size. */
+    gst_caps_map_in_place (available_caps, gst_v4l2_video_remove_padding, self);
+
+    filter = gst_caps_intersect_full (available_caps, acquired_caps,
+        GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (acquired_caps);
+    gst_caps_unref (available_caps);
     caps = gst_pad_peer_query_caps (decoder->srcpad, filter);
     gst_caps_unref (filter);
 
