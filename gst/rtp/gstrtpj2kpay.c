@@ -48,8 +48,9 @@ static GstStaticPadTemplate gst_rtp_j2k_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/x-jpc")
+    GST_STATIC_CAPS ("image/x-jpc, " GST_RTP_J2K_SAMPLING_LIST)
     );
+
 
 static GstStaticPadTemplate gst_rtp_j2k_pay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -59,7 +60,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "  media = (string) \"video\", "
         "  payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "  clock-rate = (int) 90000, "
-        "  encoding-name = (string) \"JPEG2000\"")
+        GST_RTP_J2K_SAMPLING_LIST "," "  encoding-name = (string) \"JPEG2000\"")
     );
 
 GST_DEBUG_CATEGORY_STATIC (rtpj2kpay_debug);
@@ -137,24 +138,29 @@ static gboolean
 gst_rtp_j2k_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 {
   GstStructure *caps_structure = gst_caps_get_structure (caps, 0);
-  GstRtpJ2KPay *pay;
-  gint width = 0, height = 0;
   gboolean res;
+  gint width = 0, height = 0;
+  const gchar *sampling = NULL;
 
-  pay = GST_RTP_J2K_PAY (basepayload);
+  gboolean has_width = gst_structure_get_int (caps_structure, "width", &width);
+  gboolean has_height =
+      gst_structure_get_int (caps_structure, "height", &height);
 
-  /* these properties are not mandatory, we can get them from the stream */
-  if (gst_structure_get_int (caps_structure, "height", &height)) {
-    pay->height = height;
-  }
-  if (gst_structure_get_int (caps_structure, "width", &width)) {
-    pay->width = width;
-  }
+
+  /* sampling is a required field */
+  sampling = gst_structure_get_string (caps_structure, "sampling");
 
   gst_rtp_base_payload_set_options (basepayload, "video", TRUE, "JPEG2000",
       90000);
-  res = gst_rtp_base_payload_set_outcaps (basepayload, NULL);
 
+  if (has_width && has_height)
+    res = gst_rtp_base_payload_set_outcaps (basepayload,
+        "sampling", G_TYPE_STRING, sampling, "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height, NULL);
+  else
+    res =
+        gst_rtp_base_payload_set_outcaps (basepayload, "sampling",
+        G_TYPE_STRING, sampling, NULL);
   return res;
 }
 

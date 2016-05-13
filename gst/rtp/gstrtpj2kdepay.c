@@ -47,16 +47,22 @@ static GstStaticPadTemplate gst_rtp_j2k_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/x-jpc")
+    GST_STATIC_CAPS ("image/x-jpc, "
+        "colorspace = (string) { sRGB, sYUV, GRAY }")
     );
 
 static GstStaticPadTemplate gst_rtp_j2k_depay_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
-        "media = (string) \"video\", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"JPEG2000\"")
+        "media = (string) \"video\", " "clock-rate = (int) 90000, "
+        GST_RTP_J2K_SAMPLING_LIST ","
+        "encoding-name = (string) \"JPEG2000\";"
+        "application/x-rtp, "
+        "media = (string) \"video\", " "clock-rate = (int) 90000, "
+        "colorspace = (string) { sRGB, sYUV, GRAY }, "
+        "encoding-name = (string) \"JPEG2000\";")
     );
 
 enum
@@ -177,10 +183,12 @@ gst_rtp_j2k_depay_finalize (GObject * object)
 static gboolean
 gst_rtp_j2k_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
-  GstStructure *structure;
+  GstStructure *structure = NULL;
   gint clock_rate;
-  GstCaps *outcaps;
-  gboolean res;
+  GstCaps *outcaps = NULL;
+  gboolean res = FALSE;
+  const gchar *colorspace = NULL;
+  const gchar *sampling = NULL;
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -188,10 +196,35 @@ gst_rtp_j2k_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     clock_rate = 90000;
   depayload->clock_rate = clock_rate;
 
-  outcaps =
-      gst_caps_new_simple ("image/x-jpc", "framerate", GST_TYPE_FRACTION, 0, 1,
-      "fields", G_TYPE_INT, 1, "colorspace", G_TYPE_STRING, "sYUV", NULL);
+  sampling = gst_structure_get_string (structure, "sampling");
+  if (sampling) {
+    if (!strcmp (sampling, GST_RTP_J2K_RGB) ||
+        !strcmp (sampling, GST_RTP_J2K_RGBA) ||
+        !strcmp (sampling, GST_RTP_J2K_BGR) ||
+        !strcmp (sampling, GST_RTP_J2K_BGRA))
+      colorspace = "sRGB";
+    else if (!strcmp (sampling, GST_RTP_J2K_GRAYSCALE))
+      colorspace = "GRAY";
+    else
+      colorspace = "sYUV";
+  } else {
+    GST_ELEMENT_WARNING (depayload, STREAM, DEMUX, NULL,
+        ("Non-compliant stream: sampling field missing. Frames my appear incorrect"));
+    colorspace = gst_structure_get_string (structure, "colorspace");
+    if (!strcmp (colorspace, "GRAY")) {
+      sampling = GST_RTP_J2K_GRAYSCALE;
+    }
+  }
+
+  outcaps = gst_caps_new_simple ("image/x-jpc",
+      "framerate", GST_TYPE_FRACTION, 0, 1,
+      "fields", G_TYPE_INT, 1, "colorspace", G_TYPE_STRING, colorspace, NULL);
+
+  if (sampling)
+    gst_caps_set_simple (outcaps, "sampling", G_TYPE_STRING, sampling, NULL);
+
   res = gst_pad_set_caps (depayload->srcpad, outcaps);
+
   gst_caps_unref (outcaps);
 
   return res;
