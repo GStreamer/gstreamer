@@ -3680,6 +3680,8 @@ gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
       goto unsupported_field;
   }
 
+  gst_v4l2_object_get_colorspace (&fmt, &info->colorimetry);
+
   gst_v4l2_object_save_format (v4l2object, fmtdesc, &fmt, info, &align);
 
   /* Shall we setup the pool ? */
