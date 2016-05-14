@@ -563,6 +563,20 @@ server_callback (SoupServer * server, SoupMessage * msg,
   GST_DEBUG ("  -> %d %s", msg->status_code, msg->reason_phrase);
 }
 
+static guint
+get_port_from_server (SoupServer * server)
+{
+  GSList *uris;
+  guint port;
+
+  uris = soup_server_get_uris (server);
+  g_assert (g_slist_length (uris) == 1);
+  port = soup_uri_get_port (uris->data);
+  g_slist_free_full (uris, (GDestroyNotify) soup_uri_free);
+
+  return port;
+}
+
 static gboolean
 run_server (guint * http_port, guint * https_port)
 {
@@ -571,6 +585,8 @@ run_server (guint * http_port, guint * https_port)
   const char *ssl_cert_file = GST_TEST_FILES_PATH "/test-cert.pem";
   const char *ssl_key_file = GST_TEST_FILES_PATH "/test-key.pem";
   static int server_running = 0;
+  GSocketAddress *address;
+  GError *err = NULL;
 
   SoupAuthDomain *domain = NULL;
 
@@ -581,18 +597,11 @@ run_server (guint * http_port, guint * https_port)
 
   *http_port = *https_port = 0;
 
-  /* The G_ENABLE_DIAGNOSTIC is temporarily overriden to avoid
-   * property deprecation warnings (for the SOUP_SERVER_PORT
-   * property) */
-  g_setenv ("G_ENABLE_DIAGNOSTIC", "0", TRUE);
-  server = soup_server_new (SOUP_SERVER_PORT, port, NULL);
-  g_setenv ("G_ENABLE_DIAGNOSTIC", "1", TRUE);
+  server = soup_server_new (NULL, NULL);
   if (!server) {
-    GST_DEBUG ("Unable to bind to server port %u", port);
+    GST_DEBUG ("Unable to create server");
     return FALSE;
   }
-  *http_port = soup_server_get_port (server);
-  GST_INFO ("HTTP server listening on port %u", *http_port);
   soup_server_add_handler (server, NULL, server_callback, NULL, NULL);
   domain = soup_auth_domain_basic_new (SOUP_AUTH_DOMAIN_REALM, realm,
       SOUP_AUTH_DOMAIN_BASIC_AUTH_CALLBACK, basic_auth_cb,
@@ -604,24 +613,45 @@ run_server (guint * http_port, guint * https_port)
       SOUP_AUTH_DOMAIN_ADD_PATH, digest_auth_path, NULL);
   soup_server_add_auth_domain (server, domain);
   g_object_unref (domain);
-  soup_server_run_async (server);
+
+  address = g_inet_socket_address_new_from_string ("0.0.0.0", port);
+  soup_server_listen (server, address, 0, &err);
+  g_object_unref (address);
+  if (err) {
+    stop_server ();
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  *http_port = get_port_from_server (server);
+  GST_DEBUG ("HTTP server listening on port %u", *http_port);
 
   if (ssl_cert_file && ssl_key_file) {
     GTlsBackend *backend = g_tls_backend_get_default ();
 
     if (backend != NULL && g_tls_backend_supports_tls (backend)) {
-      ssl_server = soup_server_new (SOUP_SERVER_PORT, ssl_port,
-          SOUP_SERVER_SSL_CERT_FILE, ssl_cert_file,
+      ssl_server = soup_server_new (SOUP_SERVER_SSL_CERT_FILE, ssl_cert_file,
           SOUP_SERVER_SSL_KEY_FILE, ssl_key_file, NULL);
     } else {
       GST_INFO ("No TLS support");
     }
 
     if (ssl_server) {
-      *https_port = soup_server_get_port (ssl_server);
       GST_INFO ("HTTPS server listening on port %u", *https_port);
       soup_server_add_handler (ssl_server, NULL, server_callback, NULL, NULL);
-      soup_server_run_async (ssl_server);
+      address = g_inet_socket_address_new_from_string ("0.0.0.0", ssl_port);
+      soup_server_listen (ssl_server, address, SOUP_SERVER_LISTEN_HTTPS, &err);
+      g_object_unref (address);
+
+      if (err) {
+        GST_ERROR ("Failed to start HTTPS server: %s", err->message);
+        stop_server ();
+        g_clear_error (&err);
+        return FALSE;
+      }
+
+      *https_port = get_port_from_server (ssl_server);
+      GST_DEBUG ("HTTPS server listening on port %u", *https_port);
     }
   }
 
