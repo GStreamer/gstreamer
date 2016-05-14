@@ -123,6 +123,131 @@ _default_propose_allocation (GstGLBaseMixer * mix, GstGLBaseMixerPad * pad,
 }
 
 static gboolean
+gst_gl_base_mixer_sink_event (GstAggregator * agg, GstAggregatorPad * bpad,
+    GstEvent * event)
+{
+  GstGLBaseMixerPad *pad = GST_GL_BASE_MIXER_PAD (bpad);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+      if (!GST_AGGREGATOR_CLASS (parent_class)->sink_event (agg, bpad, event))
+        return FALSE;
+
+      pad->negotiated = TRUE;
+      return TRUE;
+    default:
+      break;
+  }
+
+  return GST_AGGREGATOR_CLASS (parent_class)->sink_event (agg, bpad, event);
+}
+
+static gboolean
+_find_local_gl_context (GstGLBaseMixer * mix)
+{
+  GstQuery *query;
+  GstContext *context;
+  const GstStructure *s;
+
+  if (mix->context)
+    return TRUE;
+
+  query = gst_query_new_context ("gst.gl.local_context");
+  if (!mix->context && gst_gl_run_query (GST_ELEMENT (mix), query, GST_PAD_SRC)) {
+    gst_query_parse_context (query, &context);
+    if (context) {
+      s = gst_context_get_structure (context);
+      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &mix->context,
+          NULL);
+    }
+  }
+  if (!mix->context
+      && gst_gl_run_query (GST_ELEMENT (mix), query, GST_PAD_SINK)) {
+    gst_query_parse_context (query, &context);
+    if (context) {
+      s = gst_context_get_structure (context);
+      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &mix->context,
+          NULL);
+    }
+  }
+
+  GST_DEBUG_OBJECT (mix, "found local context %p", mix->context);
+
+  gst_query_unref (query);
+
+  if (mix->context)
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
+_get_gl_context (GstGLBaseMixer * mix)
+{
+  GstGLBaseMixerClass *mix_class = GST_GL_BASE_MIXER_GET_CLASS (mix);
+  GError *error = NULL;
+
+  if (!gst_gl_ensure_element_data (mix, &mix->display,
+          &mix->priv->other_context))
+    return FALSE;
+
+  gst_gl_display_filter_gl_api (mix->display, mix_class->supported_gl_api);
+
+  _find_local_gl_context (mix);
+
+  if (!mix->context) {
+    GST_OBJECT_LOCK (mix->display);
+    do {
+      if (mix->context) {
+        gst_object_unref (mix->context);
+        mix->context = NULL;
+      }
+      /* just get a GL context.  we don't care */
+      mix->context =
+          gst_gl_display_get_gl_context_for_thread (mix->display, NULL);
+      if (!mix->context) {
+        if (!gst_gl_display_create_context (mix->display,
+                mix->priv->other_context, &mix->context, &error)) {
+          GST_OBJECT_UNLOCK (mix->display);
+          goto context_error;
+        }
+      }
+    } while (!gst_gl_display_add_context (mix->display, mix->context));
+    GST_OBJECT_UNLOCK (mix->display);
+  }
+
+  {
+    GstGLAPI current_gl_api = gst_gl_context_get_gl_api (mix->context);
+    if ((current_gl_api & mix_class->supported_gl_api) == 0)
+      goto unsupported_gl_api;
+  }
+
+  return TRUE;
+
+unsupported_gl_api:
+  {
+    GstGLAPI gl_api = gst_gl_context_get_gl_api (mix->context);
+    gchar *gl_api_str = gst_gl_api_to_string (gl_api);
+    gchar *supported_gl_api_str =
+        gst_gl_api_to_string (mix_class->supported_gl_api);
+    GST_ELEMENT_ERROR (mix, RESOURCE, BUSY,
+        ("GL API's not compatible context: %s supported: %s", gl_api_str,
+            supported_gl_api_str), (NULL));
+
+    g_free (supported_gl_api_str);
+    g_free (gl_api_str);
+    return FALSE;
+  }
+context_error:
+  {
+    GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("%s", error->message),
+        (NULL));
+    g_clear_error (&error);
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_gl_base_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
     GstQuery * query)
 {
@@ -139,15 +264,19 @@ gst_gl_base_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
       GstQuery *decide_query = NULL;
 
       GST_OBJECT_LOCK (mix);
-      if (G_UNLIKELY (!mix->priv->negotiated)) {
+      if (G_UNLIKELY (!pad->negotiated)) {
         GST_DEBUG_OBJECT (mix,
             "not negotiated yet, can't answer ALLOCATION query");
         GST_OBJECT_UNLOCK (mix);
         return FALSE;
       }
+
       if ((decide_query = mix->priv->query))
         gst_query_ref (decide_query);
       GST_OBJECT_UNLOCK (mix);
+
+      if (!_get_gl_context (mix))
+        return FALSE;
 
       GST_DEBUG_OBJECT (mix,
           "calling propose allocation with query %" GST_PTR_FORMAT,
@@ -273,6 +402,7 @@ gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
 
   agg_class->sinkpads_type = GST_TYPE_GL_BASE_MIXER_PAD;
   agg_class->sink_query = gst_gl_base_mixer_sink_query;
+  agg_class->sink_event = gst_gl_base_mixer_sink_event;
   agg_class->src_query = gst_gl_base_mixer_src_query;
   agg_class->src_activate = gst_gl_base_mixer_src_activate_mode;
   agg_class->stop = gst_gl_base_mixer_stop;
@@ -294,11 +424,24 @@ gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
   klass->supported_gl_api = GST_GL_API_ANY;
 }
 
+static gboolean
+_reset_pad (GstAggregator * self, GstAggregatorPad * base_pad,
+    gpointer user_data)
+{
+  GstGLBaseMixerPad *mix_pad = GST_GL_BASE_MIXER_PAD (base_pad);
+
+  mix_pad->negotiated = FALSE;
+
+  return TRUE;
+}
+
 static void
 gst_gl_base_mixer_reset (GstGLBaseMixer * mix)
 {
   /* clean up collect data */
-  mix->priv->negotiated = FALSE;
+
+  gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (mix),
+      (GstAggregatorPadForeachFunc) _reset_pad, NULL);
 }
 
 static void
@@ -415,112 +558,18 @@ gst_gl_base_mixer_src_query (GstAggregator * agg, GstQuery * query)
 }
 
 static gboolean
-_find_local_gl_context (GstGLBaseMixer * mix)
-{
-  GstQuery *query;
-  GstContext *context;
-  const GstStructure *s;
-
-  if (mix->context)
-    return TRUE;
-
-  query = gst_query_new_context ("gst.gl.local_context");
-  if (!mix->context && gst_gl_run_query (GST_ELEMENT (mix), query, GST_PAD_SRC)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &mix->context,
-          NULL);
-    }
-  }
-  if (!mix->context
-      && gst_gl_run_query (GST_ELEMENT (mix), query, GST_PAD_SINK)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &mix->context,
-          NULL);
-    }
-  }
-
-  GST_DEBUG_OBJECT (mix, "found local context %p", mix->context);
-
-  gst_query_unref (query);
-
-  if (mix->context)
-    return TRUE;
-
-  return FALSE;
-}
-
-static gboolean
 gst_gl_base_mixer_decide_allocation (GstGLBaseMixer * mix, GstQuery * query)
 {
   GstGLBaseMixerClass *mix_class = GST_GL_BASE_MIXER_GET_CLASS (mix);
-  GError *error = NULL;
-  gboolean ret = TRUE;
 
-  if (!gst_gl_ensure_element_data (mix, &mix->display,
-          &mix->priv->other_context))
+  if (!_get_gl_context (mix))
     return FALSE;
-
-  gst_gl_display_filter_gl_api (mix->display, mix_class->supported_gl_api);
-
-  _find_local_gl_context (mix);
-
-  if (!mix->context) {
-    GST_OBJECT_LOCK (mix->display);
-    do {
-      if (mix->context) {
-        gst_object_unref (mix->context);
-        mix->context = NULL;
-      }
-      /* just get a GL context.  we don't care */
-      mix->context =
-          gst_gl_display_get_gl_context_for_thread (mix->display, NULL);
-      if (!mix->context) {
-        if (!gst_gl_display_create_context (mix->display,
-                mix->priv->other_context, &mix->context, &error)) {
-          GST_OBJECT_UNLOCK (mix->display);
-          goto context_error;
-        }
-      }
-    } while (!gst_gl_display_add_context (mix->display, mix->context));
-    GST_OBJECT_UNLOCK (mix->display);
-  }
-
-  {
-    GstGLAPI current_gl_api = gst_gl_context_get_gl_api (mix->context);
-    if ((current_gl_api & mix_class->supported_gl_api) == 0)
-      goto unsupported_gl_api;
-  }
 
   if (mix_class->decide_allocation)
-    ret = mix_class->decide_allocation (mix, query);
+    if (!mix_class->decide_allocation (mix, query))
+      return FALSE;
 
-  return ret;
-
-unsupported_gl_api:
-  {
-    GstGLAPI gl_api = gst_gl_context_get_gl_api (mix->context);
-    gchar *gl_api_str = gst_gl_api_to_string (gl_api);
-    gchar *supported_gl_api_str =
-        gst_gl_api_to_string (mix_class->supported_gl_api);
-    GST_ELEMENT_ERROR (mix, RESOURCE, BUSY,
-        ("GL API's not compatible context: %s supported: %s", gl_api_str,
-            supported_gl_api_str), (NULL));
-
-    g_free (supported_gl_api_str);
-    g_free (gl_api_str);
-    return FALSE;
-  }
-context_error:
-  {
-    GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("%s", error->message),
-        (NULL));
-    g_clear_error (&error);
-    return FALSE;
-  }
+  return TRUE;
 }
 
 /* takes ownership of the pool, allocator and query */
