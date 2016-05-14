@@ -1689,7 +1689,7 @@ queue_event (GstRtpJitterBuffer * jitterbuffer, GstEvent * event)
   /* ERRORS */
 newseg_wrong_format:
   {
-    GST_DEBUG_OBJECT (jitterbuffer, "received non TIME newsegment");
+    GST_ERROR_OBJECT (jitterbuffer, "rejecting non-TIME newsegment");
     gst_event_unref (event);
     return FALSE;
   }
