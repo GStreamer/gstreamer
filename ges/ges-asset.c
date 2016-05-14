@@ -669,8 +669,7 @@ _lookup_proxied_asset (const gchar * id, GESAssetCacheEntry * entry,
  * of the same file) as proxy. Note that when an asset is proxied, calling
  * #ges_asset_request will actually return the proxy asset.
  *
- * Returns: The list of proxies @asset has. Note that the default asset to be
- * used is always the first in that list.
+ * Returns: %TRUE if @proxy has been set on @asset, %FALSE otherwise.
  */
 gboolean
 ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
