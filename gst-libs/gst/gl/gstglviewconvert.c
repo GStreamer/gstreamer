@@ -1742,7 +1742,7 @@ _init_view_convert (GstGLViewConvert * viewconvert)
 
     tmp =
         _gst_glsl_mangle_shader
-        (gst_gl_shader_string_vertex_mat4_texture_transform, GL_VERTEX_SHADER,
+        (gst_gl_shader_string_vertex_mat4_vertex_transform, GL_VERTEX_SHADER,
         GST_GL_TEXTURE_TARGET_2D, viewconvert->from_texture_target, gl_api,
         gl_major, gl_minor, &version, &profile);
 
@@ -1869,7 +1869,6 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
   GstVideoMultiviewMode out_mode = priv->output_mode;
   guint from_gl_target =
       gst_gl_texture_target_to_gl (viewconvert->from_texture_target);
-  GstVideoAffineTransformationMeta *af_meta;
 
   gl = context->gl_vtable;
   out_width = GST_VIDEO_INFO_WIDTH (&viewconvert->out_info);
@@ -1883,10 +1882,16 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
   }
 
   /* FIXME: the auxillary buffer could have a different transform matrix */
-  af_meta = gst_buffer_get_video_affine_transformation_meta (priv->primary_in);
-  if (af_meta)
+  {
+    GstVideoAffineTransformationMeta *af_meta;
+    gfloat matrix[16];
+
+    af_meta =
+        gst_buffer_get_video_affine_transformation_meta (priv->primary_in);
+    gst_gl_get_affine_transformation_meta_as_ndc (af_meta, matrix);
     gst_gl_shader_set_uniform_matrix_4fv (viewconvert->shader,
-        "u_transformation", 1, FALSE, af_meta->matrix);
+        "u_transformation", 1, FALSE, matrix);
+  }
 
   /* attach the texture to the FBO to renderer to */
   for (i = 0; i < out_views; i++) {
