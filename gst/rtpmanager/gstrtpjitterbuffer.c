@@ -897,6 +897,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   g_cond_init (&priv->jbuf_event);
   g_cond_init (&priv->jbuf_query);
   g_queue_init (&priv->gap_packets);
+  gst_segment_init (&priv->segment, GST_FORMAT_TIME);
 
   /* reset skew detection initialy */
   rtp_jitter_buffer_reset_skew (priv->jbuf);
@@ -1660,15 +1661,22 @@ queue_event (GstRtpJitterBuffer * jitterbuffer, GstEvent * event)
       break;
     }
     case GST_EVENT_SEGMENT:
-      gst_event_copy_segment (event, &priv->segment);
+    {
+      GstSegment segment;
+      gst_event_copy_segment (event, &segment);
 
       /* we need time for now */
-      if (priv->segment.format != GST_FORMAT_TIME)
-        goto newseg_wrong_format;
+      if (segment.format != GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (jitterbuffer, "ignoring non-TIME newsegment");
+        gst_event_unref (event);
 
-      GST_DEBUG_OBJECT (jitterbuffer,
-          "segment:  %" GST_SEGMENT_FORMAT, &priv->segment);
+        gst_segment_init (&segment, GST_FORMAT_TIME);
+        event = gst_event_new_segment (&segment);
+      }
+
+      priv->segment = segment;
       break;
+    }
     case GST_EVENT_EOS:
       priv->eos = TRUE;
       rtp_jitter_buffer_disable_buffering (priv->jbuf, TRUE);
@@ -1685,14 +1693,6 @@ queue_event (GstRtpJitterBuffer * jitterbuffer, GstEvent * event)
     JBUF_SIGNAL_EVENT (priv);
 
   return TRUE;
-
-  /* ERRORS */
-newseg_wrong_format:
-  {
-    GST_ERROR_OBJECT (jitterbuffer, "rejecting non-TIME newsegment");
-    gst_event_unref (event);
-    return FALSE;
-  }
 }
 
 static gboolean
