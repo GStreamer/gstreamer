@@ -181,7 +181,7 @@ ges_image_source_init (GESImageSource * self)
  *
  * Creates a new #GESImageSource for the provided @uri.
  *
- * Returns: A new #GESImageSource.
+ * Returns: (transfer floating): A new #GESImageSource.
  */
 GESImageSource *
 ges_image_source_new (gchar * uri)

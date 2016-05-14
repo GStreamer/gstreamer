@@ -176,7 +176,7 @@ _create_track_element (GESClip * self, GESTrackType type)
  *
  * Creates a new #GESEffectClip from the description of the bin.
  *
- * Returns: a newly created #GESEffectClip, or
+ * Returns: (transfer floating) (nullable): a newly created #GESEffectClip, or
  * %NULL if something went wrong.
  */
 GESEffectClip *

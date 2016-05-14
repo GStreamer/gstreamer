@@ -186,8 +186,8 @@ ges_video_uri_source_init (GESVideoUriSource * self)
  *
  * Creates a new #GESVideoUriSource for the provided @uri.
  *
- * Returns: The newly created #GESVideoUriSource, or %NULL if there was an
- * error.
+ * Returns: (transfer floating) (nullable): The newly created #GESVideoUriSource,
+ * or %NULL if there was an error.
  */
 GESVideoUriSource *
 ges_video_uri_source_new (gchar * uri)

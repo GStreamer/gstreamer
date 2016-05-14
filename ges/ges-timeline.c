@@ -2786,7 +2786,7 @@ timeline_fill_gaps (GESTimeline * timeline)
  *
  * Creates a new empty #GESTimeline.
  *
- * Returns: The new timeline.
+ * Returns: (transfer floating): The new timeline.
  */
 
 GESTimeline *
@@ -2808,8 +2808,8 @@ ges_timeline_new (void)
  *
  * Creates a timeline from the given URI.
  *
- * Returns: A new timeline if the uri was loaded successfully, or NULL if the
- * uri could not be loaded
+ * Returns (transfer floating) (nullable): A new timeline if the uri was loaded
+ * successfully, or NULL if the uri could not be loaded.
  */
 GESTimeline *
 ges_timeline_new_from_uri (const gchar * uri, GError ** error)
@@ -2831,7 +2831,7 @@ ges_timeline_new_from_uri (const gchar * uri, GError ** error)
  *
  * Loads the contents of URI into the given timeline.
  *
- * Returns: TRUE if the timeline was loaded successfully, or FALSE if the uri
+ * Returns: %TRUE if the timeline was loaded successfully, or %FALSE if the uri
  * could not be loaded.
  */
 gboolean
@@ -2864,8 +2864,8 @@ ges_timeline_load_from_uri (GESTimeline * timeline, const gchar * uri,
  *
  * Saves the timeline to the given location
  *
- * Returns: TRUE if the timeline was successfully saved to the given location,
- * else FALSE.
+ * Returns: %TRUE if the timeline was successfully saved to the given location,
+ * else %FALSE.
  */
 gboolean
 ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
@@ -2921,12 +2921,12 @@ ges_timeline_append_layer (GESTimeline * timeline)
 /**
  * ges_timeline_add_layer:
  * @timeline: a #GESTimeline
- * @layer: the #GESLayer to add
+ * @layer: (transfer full): the #GESLayer to add
  *
  * Add the layer to the timeline. The reference to the @layer will be stolen
  * by the @timeline.
  *
- * Returns: TRUE if the layer was properly added, else FALSE.
+ * Returns: %TRUE if the layer was properly added, else %FALSE.
  */
 gboolean
 ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
@@ -3001,7 +3001,7 @@ ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
  * the layer will be dropped. If you wish to use the @layer after calling this
  * method, you need to take a reference before calling.
  *
- * Returns: TRUE if the layer was properly removed, else FALSE.
+ * Returns: %TRUE if the layer was properly removed, else %FALSE.
  */
 
 gboolean
@@ -3051,12 +3051,12 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESLayer * layer)
 /**
  * ges_timeline_add_track:
  * @timeline: a #GESTimeline
- * @track: the #GESTrack to add
+ * @track: (transfer full): the #GESTrack to add
  *
  * Add a track to the timeline. The reference to the track will be stolen by the
  * pipeline.
  *
- * Returns: TRUE if the track was properly added, else FALSE.
+ * Returns: %TRUE if the track was properly added, else %FALSE.
  */
 
 /* FIXME: create track elements for clips which have already been
@@ -3143,7 +3143,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
  * @track will be removed. If you wish to use the @track after calling this
  * function you must ensure that you have a reference to it.
  *
- * Returns: TRUE if the @track was properly removed, else FALSE.
+ * Returns: %TRUE if the @track was properly removed, else %FALSE.
  */
 
 /* FIXME: release any track elements associated with this layer. currenly this
@@ -3222,8 +3222,8 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
  *
  * Search the #GESTrack corresponding to the given @timeline's @pad.
  *
- * Returns: (transfer none): The corresponding #GESTrack if it is found,
- * or %NULL if there is an error.
+ * Returns: (transfer none) (nullable): The corresponding #GESTrack if it is
+ * found, or %NULL if there is an error.
  */
 
 GESTrack *
@@ -3251,8 +3251,8 @@ ges_timeline_get_track_for_pad (GESTimeline * timeline, GstPad * pad)
  *
  * Search the #GstPad corresponding to the given @timeline's @track.
  *
- * Returns: (transfer none): The corresponding #GstPad if it is found,
- * or %NULL if there is an error.
+ * Returns: (transfer none) (nullable): The corresponding #GstPad if it is
+ * found, or %NULL if there is an error.
  */
 
 GstPad *
@@ -3573,7 +3573,7 @@ ges_timeline_set_snapping_distance (GESTimeline * timeline,
  *
  * Gets a #GESTimelineElement contained in the timeline
  *
- * Returns: (transfer full): The #GESTimelineElement or %NULL if
+ * Returns: (transfer full) (nullable): The #GESTimelineElement or %NULL if
  * not found.
  */
 GESTimelineElement *
@@ -3641,7 +3641,8 @@ ges_timeline_is_empty (GESTimeline * timeline)
  *
  * Retrieve the layer with @priority as a priority
  *
- * Returns: (transfer full): A #GESLayer or %NULL if no layer with @priority was found
+ * Returns: (transfer full) (nullable): A #GESLayer or %NULL if no layer with
+ * @priority was found
  *
  * Since 1.6
  */

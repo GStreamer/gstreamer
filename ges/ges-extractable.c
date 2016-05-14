@@ -83,7 +83,8 @@ ges_extractable_default_init (GESExtractableInterface * iface)
  *
  * Method for getting an asset from a #GESExtractable
  *
- * Returns: (transfer none): The #GESAsset or %NULL if none has been set
+ * Returns: (transfer none) (nullable): The #GESAsset or %NULL if none has
+ * been set
  */
 GESAsset *
 ges_extractable_get_asset (GESExtractable * self)
@@ -212,8 +213,8 @@ ges_extractable_type_get_asset_type (GType type)
  *
  * Check if @id is valid for @type
  *
- * Returns: (transfer full): A newly allocated string containing the actuall
- * ID (after some processing) or %NULL if the ID is wrong.
+ * Returns: (transfer full) (nullable): A newly allocated string containing
+ * the actual ID (after some processing) or %NULL if the ID is wrong.
  */
 gchar *
 ges_extractable_type_check_id (GType type, const gchar * id, GError ** error)

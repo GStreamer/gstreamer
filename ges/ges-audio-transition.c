@@ -287,7 +287,7 @@ ges_audio_transition_duration_changed (GESTrackElement * track_element,
  *
  * Creates a new #GESAudioTransition.
  *
- * Returns: The newly created #GESAudioTransition.
+ * Returns: (transfer floating): The newly created #GESAudioTransition.
  */
 GESAudioTransition *
 ges_audio_transition_new (void)

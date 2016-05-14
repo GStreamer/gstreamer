@@ -257,7 +257,7 @@ ges_effect_create_element (GESTrackElement * object)
  * #ges_asset_request (GES_TYPE_EFFECT, "audio your ! bin ! description", NULL);
  * and extract that asset to be in full control.
  *
- * Returns: a newly created #GESEffect, or %NULL if something went
+ * Returns: (nullable): a newly created #GESEffect, or %NULL if something went
  * wrong.
  */
 GESEffect *

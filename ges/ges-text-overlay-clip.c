@@ -38,7 +38,6 @@ G_DEFINE_TYPE (GESTextOverlayClip, ges_text_overlay_clip,
 #define DEFAULT_PROP_FONT_DESC "Serif 36"
 #define DEFAULT_PROP_VALIGNMENT GES_TEXT_VALIGN_BASELINE
 #define DEFAULT_PROP_HALIGNMENT GES_TEXT_HALIGN_CENTER
-#
 
 struct _GESTextOverlayClipPrivate
 {
@@ -583,8 +582,8 @@ ges_text_overlay_clip_create_track_element (GESClip * clip, GESTrackType type)
  *
  * Creates a new #GESTextOverlayClip
  *
- * Returns: The newly created #GESTextOverlayClip, or NULL if there was an
- * error.
+ * Returns: (transfer floating) (nullable): The newly created
+ * #GESTextOverlayClip, or %NULL if there was an error.
  */
 GESTextOverlayClip *
 ges_text_overlay_clip_new (void)

@@ -824,8 +824,8 @@ ges_clip_init (GESClip * self)
  * keep a reference to the newly created trackelement, you therefore need to
  * call @ges_container_remove when you are done with it.
  *
- * Returns: (transfer none): A #GESTrackElement. Returns NULL if the #GESTrackElement could not
- * be created.
+ * Returns: (transfer none) (nullable): A #GESTrackElement. Returns NULL if
+ * the #GESTrackElement could not be created.
  */
 GESTrackElement *
 ges_clip_create_track_element (GESClip * clip, GESTrackType type)
@@ -1053,8 +1053,8 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
  * Note: If many objects match, then the one with the highest priority will be
  * returned.
  *
- * Returns: (transfer full): The #GESTrackElement used by @track, else %NULL,
- * Unref after usage
+ * Returns: (transfer full) (nullable): The #GESTrackElement used by @track,
+ * else %NULL. Unref after usage
  */
 
 GESTrackElement *
@@ -1090,7 +1090,7 @@ ges_clip_find_track_element (GESClip * clip, GESTrack * track, GType type)
  *
  * Get the #GESLayer to which this clip belongs.
  *
- * Returns: (transfer full): The #GESLayer where this @clip is being
+ * Returns: (transfer full) (nullable): The #GESLayer where this @clip is being
  * used, or %NULL if it is not used on any layer. The caller should unref it
  * usage.
  */
@@ -1265,8 +1265,8 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
  * property must be registered using @ges_effect_class_register_rate_property;
  * for the 'pitch' plugin, this is already done.
  *
- * Returns: (transfer none): The newly created #GESClip resulting from the
- * splitting
+ * Returns: (transfer none) (nullable): The newly created #GESClip resulting
+ * from the splitting or %NULL if the clip can't be split.
  */
 GESClip *
 ges_clip_split (GESClip * clip, guint64 position)

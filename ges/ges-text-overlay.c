@@ -425,8 +425,8 @@ ges_text_overlay_get_ypos (GESTextOverlay * self)
  *
  * Creates a new #GESTextOverlay.
  *
- * Returns: The newly created #GESTextOverlay or %NULL if something went
- * wrong.
+ * Returns: (transfer floating) (nullable): The newly created #GESTextOverlay or
+ * %NULL if something went wrong.
  */
 GESTextOverlay *
 ges_text_overlay_new (void)

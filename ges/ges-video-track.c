@@ -133,7 +133,7 @@ ges_video_track_class_init (GESVideoTrackClass * klass)
  * Creates a new #GESVideoTrack of type #GES_TRACK_TYPE_VIDEO and with generic
  * raw video caps ("video/x-raw");
  *
- * Returns: A new #GESTrack.
+ * Returns: (transfer floating): A new #GESTrack.
  */
 GESVideoTrack *
 ges_video_track_new (void)

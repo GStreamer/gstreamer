@@ -791,7 +791,7 @@ ges_group_init (GESGroup * self)
  * together, it is recommanded to use the #ges_container_group method so the
  * proper subclass is selected.
  *
- * Returns: The new empty group.
+ * Returns: (transfer floating): The new empty group.
  */
 GESGroup *
 ges_group_new (void)

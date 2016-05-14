@@ -183,7 +183,7 @@ ges_audio_test_source_get_freq (GESAudioTestSource * self)
 /**
  * ges_audio_test_source_get_volume:
  * @self: a #GESAudioTestSource
- * 
+ *
  * Get the current volume of @self.
  *
  * Returns: The current volume of @self
@@ -203,7 +203,7 @@ ges_audio_test_source_get_volume (GESAudioTestSource * self)
  *
  * Creates a new #GESAudioTestSource.
  *
- * Returns: The newly created #GESAudioTestSource.
+ * Returns: (transfer floating) (nullable): The newly created #GESAudioTestSource.
  */
 GESAudioTestSource *
 ges_audio_test_source_new (void)
