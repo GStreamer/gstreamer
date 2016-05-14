@@ -476,7 +476,8 @@ ges_uri_clip_asset_new (const gchar * uri, GCancellable * cancellable,
  * Creates a #GESUriClipAsset for @uri syncronously. You should avoid
  * to use it in application, and rather create #GESUriClipAsset asynchronously
  *
- * Returns: (transfer none): A reference to the requested asset or %NULL if an error happend
+ * Returns: (transfer none) (nullable): A reference to the requested asset or
+ * %NULL if an error happened
  */
 GESUriClipAsset *
 ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)

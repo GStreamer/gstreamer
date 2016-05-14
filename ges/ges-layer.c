@@ -502,7 +502,7 @@ ges_layer_is_empty (GESLayer * layer)
  * are constructed, you should connect to the container::child-added signal which
  * is emited right after those elements are ready to be used.
  *
- * Returns: TRUE if the clip was properly added to the layer, or FALSE
+ * Returns: %TRUE if the clip was properly added to the layer, or %FALSE
  * if the @layer refuses to add the clip.
  */
 gboolean
@@ -662,7 +662,7 @@ ges_layer_add_asset (GESLayer * layer,
  *
  * Creates a new #GESLayer.
  *
- * Returns: A new #GESLayer
+ * Returns: (transfer floating): A new #GESLayer
  */
 GESLayer *
 ges_layer_new (void)
@@ -676,7 +676,7 @@ ges_layer_new (void)
  *
  * Get the #GESTimeline in which #GESLayer currently is.
  *
- * Returns: (transfer none):  the #GESTimeline in which #GESLayer
+ * Returns: (transfer none) (nullable): the #GESTimeline in which #GESLayer
  * currently is or %NULL if not in any timeline yet.
  */
 GESTimeline *

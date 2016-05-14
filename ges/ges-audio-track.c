@@ -114,7 +114,7 @@ ges_audio_track_class_init (GESAudioTrackClass * klass)
  * Creates a new #GESAudioTrack of type #GES_TRACK_TYPE_AUDIO and with generic
  * raw audio caps ("audio/x-raw");
  *
- * Returns: A new #GESTrack
+ * Returns: (transfer floating): A new #GESTrack
  */
 GESAudioTrack *
 ges_audio_track_new (void)

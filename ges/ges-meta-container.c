@@ -435,8 +435,8 @@ ges_meta_container_set_meta (GESMetaContainer * container,
  *
  * Serializes a meta container to a string.
  *
- * Returns: a newly-allocated string, or NULL in case of an error. The
- *    string must be freed with g_free() when no longer needed.
+ * Returns: (nullable): a newly-allocated string, or NULL in case of an error.
+ * The string must be freed with g_free() when no longer needed.
  */
 gchar *
 ges_meta_container_metas_to_string (GESMetaContainer * container)

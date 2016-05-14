@@ -477,7 +477,7 @@ _gtask_return_true (GTask * task, gpointer udata)
  *
  * Looks for asset with specified id in cache and it's completely loaded.
  *
- * Returns: (transfer none): The #GESAsset found or %NULL
+ * Returns: (transfer none) (nullable): The #GESAsset found or %NULL
  */
 GESAsset *
 ges_asset_cache_lookup (GType extractable_type, const gchar * id)
@@ -771,7 +771,7 @@ ges_asset_list_proxies (GESAsset * asset)
  * ges_asset_get_proxy:
  * @asset: The #GESAsset to get currenlty used proxy
  *
- * Returns: (transfer none): The proxy in use for @asset
+ * Returns: (transfer none) (nullable): The proxy in use for @asset
  */
 GESAsset *
 ges_asset_get_proxy (GESAsset * asset)
@@ -789,7 +789,7 @@ ges_asset_get_proxy (GESAsset * asset)
  * ges_asset_get_proxy_target:
  * @proxy: The #GESAsset from which to get the the asset it proxies.
  *
- * Returns: (transfer none): The #GESAsset that is proxied by @proxy
+ * Returns: (transfer none) (nullable): The #GESAsset that is proxied by @proxy
  */
 GESAsset *
 ges_asset_get_proxy_target (GESAsset * proxy)
@@ -1284,8 +1284,8 @@ ges_list_assets (GType filter)
  * ges_asset_get_error:
  * @self: The asset to retrieve the error from
  *
- * Returns: (transfer none): The #GError of the asset or %NULL if the asset was
- * loaded without issue
+ * Returns: (transfer none) (nullable): The #GError of the asset or %NULL if
+ * the asset was loaded without issue
  *
  * Since: 1.8
  */

@@ -711,7 +711,7 @@ ges_track_init (GESTrack * self)
  * The newly created track will steal a reference to the caps. If you wish to
  * use those caps elsewhere, you will have to take an extra reference.
  *
- * Returns: A new #GESTrack.
+ * Returns: (transfer floating): A new #GESTrack.
  */
 GESTrack *
 ges_track_new (GESTrackType type, GstCaps * caps)
@@ -1059,7 +1059,7 @@ ges_track_get_caps (GESTrack * track)
  *
  * Get the #GESTimeline this track belongs to. Can be %NULL.
  *
- * Returns: The #GESTimeline this track belongs to. Can be %NULL.
+ * Returns: (nullable): The #GESTimeline this track belongs to. Can be %NULL.
  */
 const GESTimeline *
 ges_track_get_timeline (GESTrack * track)

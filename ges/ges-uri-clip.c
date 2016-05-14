@@ -517,8 +517,8 @@ ges_uri_clip_create_track_element (GESClip * clip, GESTrackType type)
  *
  * Creates a new #GESUriClip for the provided @uri.
  *
- * Returns: The newly created #GESUriClip, or NULL if there was an
- * error.
+ * Returns: (transfer floating) (nullable): The newly created #GESUriClip, or
+ * %NULL if there was an error.
  */
 GESUriClip *
 ges_uri_clip_new (const gchar * uri)

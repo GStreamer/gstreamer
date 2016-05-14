@@ -853,8 +853,8 @@ _ges_track_element_get_layer_priority (GESTrackElement * element)
  *
  * Get the #GESTrack to which this object belongs.
  *
- * Returns: (transfer none): The #GESTrack to which this object belongs. Can be %NULL if it
- * is not in any track
+ * Returns: (transfer none) (nullable): The #GESTrack to which this object
+ * belongs. Can be %NULL if it is not in any track
  */
 GESTrack *
 ges_track_element_get_track (GESTrackElement * object)
@@ -1525,8 +1525,8 @@ ges_track_element_set_control_source (GESTrackElement * object,
  * Looks up the various controlled properties for that #GESTrackElement,
  * and returns the #GstControlBinding which controls @property_name.
  *
- * Returns: (transfer none): the #GstControlBinding associated with @property_name, or %NULL
- * if that property is not controlled.
+ * Returns: (transfer none) (nullable): the #GstControlBinding associated with
+ * @property_name, or %NULL if that property is not controlled.
  */
 GstControlBinding *
 ges_track_element_get_control_binding (GESTrackElement * object,

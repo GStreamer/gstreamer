@@ -601,8 +601,8 @@ ges_title_source_get_ypos (GESTitleSource * source)
  *
  * Creates a new #GESTitleSource.
  *
- * Returns: The newly created #GESTitleSource, or %NULL if there was an
- * error.
+ * Returns: (transfer floating) (nullable): The newly created #GESTitleSource,
+ * or %NULL if there was an error.
  */
 GESTitleSource *
 ges_title_source_new (void)

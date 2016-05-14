@@ -401,7 +401,7 @@ no_encodebin:
  *
  * Creates a new conveninence #GESPipeline.
  *
- * Returns: the new #GESPipeline.
+ * Returns: (transfer floating): the new #GESPipeline.
  */
 GESPipeline *
 ges_pipeline_new (void)
@@ -921,7 +921,7 @@ _unlink_track (GESPipeline * self, GESTrack * track)
 /**
  * ges_pipeline_set_timeline:
  * @pipeline: a #GESPipeline
- * @timeline: the #GESTimeline to set on the @pipeline.
+ * @timeline: (transfer full): the #GESTimeline to set on the @pipeline.
  *
  * Sets the timeline to use in this pipeline.
  *
@@ -1196,7 +1196,7 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
  * is currently used by the sink. This information can be retrieve from caps
  * associated with the buffer.
  *
- * Returns: (transfer full): a #GstSample or %NULL
+ * Returns: (transfer full) (nullable): a #GstSample or %NULL
  */
 
 GstSample *
@@ -1284,11 +1284,11 @@ ges_pipeline_save_thumbnail (GESPipeline * self, int width, int
  * and height. If -1 is specified for either dimension, it will be left at
  * native size. You can retreive this information from the caps associated
  * with the buffer.
- * 
+ *
  * The caller is responsible for unreffing the returned sample with
  * #gst_sample_unref.
  *
- * Returns: (transfer full): a #GstSample or %NULL
+ * Returns: (transfer full) (nullable): a #GstSample or %NULL
  */
 
 GstSample *

@@ -650,8 +650,8 @@ ges_video_transition_get_transition_type (GESVideoTransition * trans)
  *
  * Creates a new #GESVideoTransition.
  *
- * Returns: The newly created #GESVideoTransition, or %NULL if there was an
- * error.
+ * Returns: (transfer floating) (nullable): The newly created
+ * #GESVideoTransition, or %NULL if there was an error.
  */
 GESVideoTransition *
 ges_video_transition_new (void)

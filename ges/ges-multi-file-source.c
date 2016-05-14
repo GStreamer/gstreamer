@@ -261,7 +261,7 @@ ges_multi_file_source_init (GESMultiFileSource * self)
  *
  * Creates a new #GESMultiFileSource for the provided @uri.
  *
- * Returns: A new #GESMultiFileSource.
+ * Returns: (transfer floating): A new #GESMultiFileSource.
  */
 GESMultiFileSource *
 ges_multi_file_source_new (gchar * uri)

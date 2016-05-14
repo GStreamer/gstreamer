@@ -551,8 +551,8 @@ had_parent:
  * Returns the parent of @self. This function increases the refcount
  * of the parent object so you should gst_object_unref() it after usage.
  *
- * Returns: (transfer full): parent of @self, this can be %NULL if @self
- *   has no parent. unref after usage.
+ * Returns: (transfer full) (nullable): parent of @self, this can be %NULL if
+ * @self has no parent. unref after usage.
  */
 GESTimelineElement *
 ges_timeline_element_get_parent (GESTimelineElement * self)
@@ -627,8 +627,8 @@ had_timeline:
  * Returns the timeline of @self. This function increases the refcount
  * of the timeline so you should gst_object_unref() it after usage.
  *
- * Returns: (transfer full): timeline of @self, this can be %NULL if @self
- *   has no timeline. unref after usage.
+ * Returns: (transfer full) (nullable): timeline of @self, this can be %NULL if
+ * @self has no timeline. unref after usage.
  */
 GESTimeline *
 ges_timeline_element_get_timeline (GESTimelineElement * self)

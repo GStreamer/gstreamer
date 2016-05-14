@@ -358,8 +358,8 @@ ges_test_clip_create_track_element (GESClip * clip, GESTrackType type)
  *
  * Creates a new #GESTestClip.
  *
- * Returns: The newly created #GESTestClip, or NULL if there was an
- * error.
+ * Returns: (transfer floating) (nullable): The newly created #GESTestClip,
+ * or %NULL if there was an error.
  */
 GESTestClip *
 ges_test_clip_new (void)
@@ -379,8 +379,8 @@ ges_test_clip_new (void)
  *
  * Creates a new #GESTestClip for the provided @nick.
  *
- * Returns: The newly created #GESTestClip, or NULL if there was an
- * error.
+ * Returns: (transfer floating) (nullable): The newly created #GESTestClip,
+ * or %NULL if there was an error.
  */
 GESTestClip *
 ges_test_clip_new_for_nick (gchar * nick)

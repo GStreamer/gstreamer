@@ -688,8 +688,8 @@ ges_title_clip_create_track_element (GESClip * clip, GESTrackType type)
  *
  * Creates a new #GESTitleClip
  *
- * Returns: The newly created #GESTitleClip, or NULL if there was an
- * error.
+ * Returns: (transfer floating) (nullable): The newly created #GESTitleClip,
+ * or %NULL if there was an error.
  */
 GESTitleClip *
 ges_title_clip_new (void)

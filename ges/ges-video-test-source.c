@@ -130,8 +130,8 @@ ges_video_test_source_get_pattern (GESVideoTestSource * source)
  *
  * Creates a new #GESVideoTestSource.
  *
- * Returns: The newly created #GESVideoTestSource, or %NULL if there was an
- * error.
+ * Returns: (transfer floating) (nullable): The newly created
+ * #GESVideoTestSource, or %NULL if there was an error.
  */
 GESVideoTestSource *
 ges_video_test_source_new (void)

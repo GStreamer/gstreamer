@@ -185,8 +185,8 @@ ges_audio_uri_source_init (GESAudioUriSource * self)
  *
  * Creates a new #GESAudioUriSource for the provided @uri.
  *
- * Returns: The newly created #GESAudioUriSource, or %NULL if there was an
- * error.
+ * Returns: (transfer floating) (nullable): The newly created
+ * #GESAudioUriSource, or %NULL if there was an error.
  */
 GESAudioUriSource *
 ges_audio_uri_source_new (gchar * uri)

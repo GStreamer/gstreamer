@@ -337,8 +337,8 @@ _create_track_element (GESClip * clip, GESTrackType type)
  *
  * Creates a new #GESTransitionClip.
  *
- * Returns: a newly created #GESTransitionClip, or %NULL if something
- * went wrong.
+ * Returns: (transfer floating) (nullable): a newly created #GESTransitionClip,
+ * or %NULL if something went wrong.
  */
 GESTransitionClip *
 ges_transition_clip_new (GESVideoStandardTransitionType vtype)
@@ -372,8 +372,8 @@ ges_transition_clip_new (GESVideoStandardTransitionType vtype)
  *
  * Creates a new #GESTransitionClip for the provided @nick.
  *
- * Returns: The newly created #GESTransitionClip, or %NULL if something
- * went wrong
+ * Returns: (transfer floating) (nullable): The newly created #GESTransitionClip,
+ * or %NULL if something went wrong
  */
 
 GESTransitionClip *
