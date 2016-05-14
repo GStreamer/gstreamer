@@ -3347,7 +3347,10 @@ was_started:
 could_not_start:
   {
     GST_DEBUG_OBJECT (basesrc, "could not start");
-    /* subclass is supposed to post a message. We don't have to call _stop. */
+    /* subclass is supposed to post a message but we post one as a fallback
+     * just in case. We don't have to call _stop. */
+    GST_ELEMENT_ERROR (basesrc, CORE, STATE_CHANGE, (NULL),
+        ("Failed to start"));
     gst_base_src_start_complete (basesrc, GST_FLOW_ERROR);
     return FALSE;
   }
