@@ -1392,6 +1392,10 @@ gst_soup_http_src_send_message (GstSoupHTTPSrc * src)
   /* FIXME We are ignoring the GError here, might be useful to debug */
   src->input_stream =
       soup_session_send (src->session, src->msg, src->cancellable, NULL);
+
+  if (g_cancellable_is_cancelled (src->cancellable))
+    return GST_FLOW_FLUSHING;
+
   gst_soup_http_src_got_headers (src, src->msg);
   if (src->ret != GST_FLOW_OK) {
     return src->ret;
