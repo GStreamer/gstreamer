@@ -2341,8 +2341,7 @@ gst_aggregator_pad_event_func (GstPad * pad, GstObject * parent,
       GST_OBJECT_UNLOCK (aggpad);
     }
 
-    if (!gst_aggregator_pad_queue_is_empty (aggpad) &&
-        GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_STOP) {
+    if (GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_STOP) {
       GST_DEBUG_OBJECT (aggpad, "Store event in queue: %" GST_PTR_FORMAT,
           event);
       g_queue_push_head (&aggpad->priv->buffers, event);
