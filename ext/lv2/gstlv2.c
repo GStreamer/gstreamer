@@ -39,6 +39,7 @@
 
 #include <string.h>
 #include "gstlv2.h"
+#include "gstlv2utils.h"
 
 #include <gst/audio/audio-channels.h>
 #include <lv2/lv2plug.in/ns/ext/port-groups/port-groups.h>
@@ -64,7 +65,6 @@ lv2_plugin_discover (GstPlugin * plugin)
       i = lilv_plugins_next (plugins, i)) {
     const LilvPlugin *lv2plugin = lilv_plugins_get (plugins, i);
     const gchar *plugin_uri, *p;
-    LilvNodes *required_features;
     gchar *type_name;
     GHashTable *port_groups = g_hash_table_new_full (g_str_hash, g_str_equal,
         g_free, NULL);
@@ -84,11 +84,8 @@ lv2_plugin_discover (GstPlugin * plugin)
       goto next;
 
     /* check if we support the required host features */
-    required_features = lilv_plugin_get_required_features (lv2plugin);
-    if (required_features) {
+    if (!gst_lv2_check_required_features (lv2plugin)) {
       GST_FIXME ("lv2 plugin %s needs host features", plugin_uri);
-      // TODO: implement host features, will be passed to
-      // lilv_plugin_instantiate()
       goto next;
     }
 

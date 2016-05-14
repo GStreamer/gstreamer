@@ -22,6 +22,8 @@
 #include "config.h"
 #endif
 
+#include "string.h"
+
 #include "gstlv2.h"
 #include "gstlv2utils.h"
 
@@ -66,6 +68,41 @@ static const LV2_Feature *lv2_features[] = {
   &lv2_log_feature,
   NULL
 };
+
+gboolean
+gst_lv2_check_required_features (const LilvPlugin * lv2plugin)
+{
+  LilvNodes *required_features = lilv_plugin_get_required_features (lv2plugin);
+  if (required_features) {
+    LilvIter *i;
+    gint j;
+    gboolean missing = FALSE;
+
+    for (i = lilv_nodes_begin (required_features);
+        !lilv_nodes_is_end (required_features, i);
+        i = lilv_nodes_next (required_features, i)) {
+      const LilvNode *required_feature = lilv_nodes_get (required_features, i);
+      const char *required_feature_uri = lilv_node_as_uri (required_feature);
+      missing = TRUE;
+
+      for (j = 0; lv2_features[j]; j++) {
+        if (!strcmp (lv2_features[j]->URI, required_feature_uri)) {
+          missing = FALSE;
+          break;
+        }
+      }
+      if (missing) {
+        GST_FIXME ("lv2 plugin %s needs host feature: %s",
+            lilv_node_as_uri (lilv_plugin_get_uri (lv2plugin)),
+            required_feature_uri);
+        break;
+      }
+    }
+    lilv_nodes_free (required_features);
+    return (!missing);
+  }
+  return TRUE;
+}
 
 /* api helpers */
 

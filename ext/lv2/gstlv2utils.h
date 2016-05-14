@@ -85,13 +85,13 @@ struct _GstLV2Class
   GArray *control_out_ports; /**< Array of GstLV2Port */
 };
 
+gboolean gst_lv2_check_required_features (const LilvPlugin *lv2plugin);
 
 void gst_lv2_init (GstLV2 * lv2, GstLV2Class * lv2_class);
 void gst_lv2_finalize (GstLV2 * lv2);
 
 gboolean gst_lv2_setup (GstLV2 * lv2, unsigned long rate);
 gboolean gst_lv2_cleanup (GstLV2 * lv2, GstObject *obj);
-
 
 void gst_lv2_object_set_property (GstLV2 * lv2, GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
