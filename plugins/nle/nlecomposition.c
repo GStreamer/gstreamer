@@ -3064,7 +3064,7 @@ nle_composition_remove_object (GstBin * bin, GstElement * element)
   NleComposition *comp = (NleComposition *) bin;
 
   if (element == comp->priv->current_bin) {
-    GST_INFO_OBJECT (comp, "Adding internal bin");
+    GST_INFO_OBJECT (comp, "Removing internal bin");
     return GST_BIN_CLASS (parent_class)->remove_element (bin, element);
   }
 
