@@ -28,6 +28,7 @@
 #include "gstlv2utils.h"
 
 #include <lv2/lv2plug.in/ns/ext/log/log.h>
+#include <lv2/lv2plug.in/ns/ext/urid/urid.h>
 
 GST_DEBUG_CATEGORY_EXTERN (lv2_debug);
 #define GST_CAT_DEFAULT lv2_debug
@@ -56,16 +57,43 @@ lv2_log_vprintf (LV2_Log_Handle handle, LV2_URID type,
 }
 
 static LV2_Log_Log lv2_log = {
-  NULL,                         /* handle */
-  lv2_log_printf, lv2_log_vprintf,
+  /* handle = */ NULL, lv2_log_printf, lv2_log_vprintf
 };
 
+
 static const LV2_Feature lv2_log_feature = { LV2_LOG__log, &lv2_log };
+
+/* - urid map/unmap extension */
+
+static LV2_URID
+lv2_urid_map (LV2_URID_Map_Handle handle, const char *uri)
+{
+  return (LV2_URID) g_quark_from_string (uri);
+}
+
+static const char *
+lv2_urid_unmap (LV2_URID_Unmap_Handle handle, LV2_URID urid)
+{
+  return g_quark_to_string ((GQuark) urid);
+}
+
+static LV2_URID_Map lv2_map = {
+  /* handle = */ NULL, lv2_urid_map
+};
+
+static LV2_URID_Unmap lv2_unmap = {
+  /* handle = */ NULL, lv2_urid_unmap
+};
+
+static const LV2_Feature lv2_map_feature = { LV2_URID__map, &lv2_map };
+static const LV2_Feature lv2_unmap_feature = { LV2_URID__unmap, &lv2_unmap };
 
 /* feature list */
 
 static const LV2_Feature *lv2_features[] = {
   &lv2_log_feature,
+  &lv2_map_feature,
+  &lv2_unmap_feature,
   NULL
 };
 

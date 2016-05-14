@@ -12,7 +12,8 @@ http://lv2plug.in/ns/lv2core
 http://lv2plug.in/ns/ext/port-groups
 
 and these host features:
-http://lv2plug.in/ns/ext/log/
+http://lv2plug.in/ns/ext/log
+http://lv2plug.in/ns/ext/urid
 
 Example Pipeline:
 
@@ -38,6 +39,8 @@ TODO
   - we should sync, then fill the buffer and connect the port
 * support presets
 * support more host features
+  GST_DEBUG="lv2:4" GST_DEBUG_FILE=/tmp/gst.log gst-inspect lv2
+  grep -o "needs host feature: .*$" /tmp/gst.log  | sort | uniq -c | sort -n
 
 * samples sources:
   http://svn.drobilla.net/lad/trunk/lilv/utils/lv2info.c
