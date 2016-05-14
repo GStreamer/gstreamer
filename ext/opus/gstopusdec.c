@@ -554,9 +554,12 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     gst_buffer_unmap (buf, &map);
 
   if (n < 0) {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Decoding error: %d", n), (NULL));
+    GstFlowReturn ret = GST_FLOW_ERROR;
+
     gst_buffer_unref (outbuf);
-    return GST_FLOW_ERROR;
+    GST_AUDIO_DECODER_ERROR (dec, 1, STREAM, DECODE, ("Error decoding stream"),
+        ("Decoding error (%d): %s", n, opus_strerror (n)), ret);
+    return ret;
   }
   GST_DEBUG_OBJECT (dec, "decoded %d samples", n);
   gst_buffer_set_size (outbuf, n * 2 * dec->n_channels);
