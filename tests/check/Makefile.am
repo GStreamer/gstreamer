@@ -217,6 +217,7 @@ check_PROGRAMS = \
 	libs/video \
 	libs/videodecoder \
 	libs/videoencoder \
+	libs/videotimecode \
 	libs/xmpwriter \
 	pipelines/simple-launch-lines \
 	pipelines/basetime \
@@ -617,6 +618,16 @@ libs_videoencoder_CFLAGS = \
 	$(AM_CFLAGS)
 
 libs_videoencoder_LDADD = \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) \
+	$(LDADD)
+
+libs_videotimecode_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
+libs_videotimecode_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
