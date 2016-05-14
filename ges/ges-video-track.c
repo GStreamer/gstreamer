@@ -42,14 +42,15 @@ _sync_capsfilter_with_track (GESTrack * track, GstElement * capsfilter)
   GstStructure *structure;
 
   g_object_get (track, "restriction-caps", &restriction, NULL);
-  if (restriction && gst_caps_get_size (restriction) > 0) {
-
-    structure = gst_caps_get_structure (restriction, 0);
-    if (!gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d))
-      return;
-  } else {
+  if (restriction == NULL)
     return;
-  }
+
+  if (gst_caps_get_size (restriction) == 0)
+    goto done;
+
+  structure = gst_caps_get_structure (restriction, 0);
+  if (!gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d))
+    goto done;
 
   caps =
       gst_caps_new_simple ("video/x-raw", "framerate", GST_TYPE_FRACTION, fps_n,
@@ -57,6 +58,9 @@ _sync_capsfilter_with_track (GESTrack * track, GstElement * capsfilter)
 
   g_object_set (capsfilter, "caps", caps, NULL);
   gst_caps_unref (caps);
+
+done:
+  gst_caps_unref (restriction);
 }
 
 static void
