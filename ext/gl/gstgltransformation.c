@@ -89,6 +89,10 @@ static gboolean gst_gl_transformation_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
 static gboolean gst_gl_transformation_src_event (GstBaseTransform * trans,
     GstEvent * event);
+static gboolean gst_gl_transformation_filter_meta (GstBaseTransform * trans,
+    GstQuery * query, GType api, const GstStructure * params);
+static gboolean gst_gl_transformation_decide_allocation (GstBaseTransform *
+    trans, GstQuery * query);
 
 static void gst_gl_transformation_reset_gl (GstGLFilter * filter);
 static gboolean gst_gl_transformation_stop (GstBaseTransform * trans);
@@ -97,32 +101,13 @@ static void gst_gl_transformation_callback (gpointer stuff);
 static void gst_gl_transformation_build_mvp (GstGLTransformation *
     transformation);
 
+static GstFlowReturn
+gst_gl_transformation_prepare_output_buffer (GstBaseTransform * trans,
+    GstBuffer * inbuf, GstBuffer ** outbuf);
+static gboolean gst_gl_transformation_filter (GstGLFilter * filter,
+    GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_gl_transformation_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
-
-/* vertex source */
-static const gchar *cube_v_src =
-    "attribute vec4 position;                     \n"
-    "attribute vec2 uv;                           \n"
-    "uniform mat4 mvp;                            \n"
-    "varying vec2 out_uv;                         \n"
-    "void main()                                  \n"
-    "{                                            \n"
-    "   gl_Position = mvp * position;             \n"
-    "   out_uv = uv;                              \n"
-    "}                                            \n";
-
-/* fragment source */
-static const gchar *cube_f_src =
-    "#ifdef GL_ES                                 \n"
-    "  precision mediump float;                   \n"
-    "#endif                                       \n"
-    "varying vec2 out_uv;                         \n"
-    "uniform sampler2D texture;                   \n"
-    "void main()                                  \n"
-    "{                                            \n"
-    "  gl_FragColor = texture2D (texture, out_uv);\n"
-    "}                                            \n";
 
 static void
 gst_gl_transformation_class_init (GstGLTransformationClass * klass)
@@ -139,14 +124,20 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
   gobject_class->get_property = gst_gl_transformation_get_property;
 
   base_transform_class->src_event = gst_gl_transformation_src_event;
+  base_transform_class->decide_allocation =
+      gst_gl_transformation_decide_allocation;
+  base_transform_class->filter_meta = gst_gl_transformation_filter_meta;
 
   GST_GL_FILTER_CLASS (klass)->init_fbo = gst_gl_transformation_init_shader;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
       gst_gl_transformation_reset_gl;
   GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_transformation_set_caps;
+  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_transformation_filter;
   GST_GL_FILTER_CLASS (klass)->filter_texture =
       gst_gl_transformation_filter_texture;
   GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_transformation_stop;
+  GST_BASE_TRANSFORM_CLASS (klass)->prepare_output_buffer =
+      gst_gl_transformation_prepare_output_buffer;
 
   g_object_class_install_property (gobject_class, PROP_FOV,
       g_param_spec_float ("fov", "Fov", "Field of view angle in degrees",
@@ -627,6 +618,39 @@ gst_gl_transformation_src_event (GstBaseTransform * trans, GstEvent * event)
   return ret;
 }
 
+static gboolean
+gst_gl_transformation_filter_meta (GstBaseTransform * trans, GstQuery * query,
+    GType api, const GstStructure * params)
+{
+  if (api == GST_VIDEO_AFFINE_TRANSFORMATION_META_API_TYPE)
+    return TRUE;
+
+  if (api == GST_GL_SYNC_META_API_TYPE)
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
+gst_gl_transformation_decide_allocation (GstBaseTransform * trans,
+    GstQuery * query)
+{
+  GstGLTransformation *transformation = GST_GL_TRANSFORMATION (trans);
+
+  if (!GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
+          query))
+    return FALSE;
+
+  if (gst_query_find_allocation_meta (query,
+          GST_VIDEO_AFFINE_TRANSFORMATION_META_API_TYPE, NULL)) {
+    transformation->downstream_supports_affine_meta = TRUE;
+  } else {
+    transformation->downstream_supports_affine_meta = FALSE;
+  }
+
+  return TRUE;
+}
+
 static void
 gst_gl_transformation_reset_gl (GstGLFilter * filter)
 {
@@ -682,9 +706,79 @@ gst_gl_transformation_init_shader (GstGLFilter * filter)
   if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context)) {
     /* blocking call, wait until the opengl thread has compiled the shader */
     return gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context,
-        cube_v_src, cube_f_src, &transformation->shader);
+        gst_gl_shader_string_vertex_mat4_vertex_transform,
+        gst_gl_shader_string_fragment_default, &transformation->shader);
   }
   return TRUE;
+}
+
+static const gfloat from_ndc_matrix[] = {
+  0.5f, 0.0f, 0.0, 0.5f,
+  0.0f, 0.5f, 0.0, 0.5f,
+  0.0f, 0.0f, 0.5, 0.5f,
+  0.0f, 0.0f, 0.0, 1.0f,
+};
+
+static const gfloat to_ndc_matrix[] = {
+  2.0f, 0.0f, 0.0, -1.0f,
+  0.0f, 2.0f, 0.0, -1.0f,
+  0.0f, 0.0f, 2.0, -1.0f,
+  0.0f, 0.0f, 0.0, 1.0f,
+};
+
+static GstFlowReturn
+gst_gl_transformation_prepare_output_buffer (GstBaseTransform * trans,
+    GstBuffer * inbuf, GstBuffer ** outbuf)
+{
+  GstGLTransformation *transformation = GST_GL_TRANSFORMATION (trans);
+  GstGLFilter *filter = GST_GL_FILTER (trans);
+
+  if (transformation->downstream_supports_affine_meta &&
+      gst_video_info_is_equal (&filter->in_info, &filter->out_info)) {
+    GstVideoAffineTransformationMeta *af_meta;
+    graphene_matrix_t upstream_matrix, from_ndc, to_ndc, tmp, tmp2, inv_aspect;
+
+    *outbuf = gst_buffer_make_writable (inbuf);
+
+    af_meta = gst_buffer_get_video_affine_transformation_meta (inbuf);
+    if (!af_meta)
+      af_meta = gst_buffer_add_video_affine_transformation_meta (*outbuf);
+
+    GST_LOG_OBJECT (trans, "applying transformation to existing affine "
+        "transformation meta");
+
+    /* apply the transformation to the existing affine meta */
+    graphene_matrix_init_from_float (&from_ndc, from_ndc_matrix);
+    graphene_matrix_init_from_float (&to_ndc, to_ndc_matrix);
+    graphene_matrix_init_from_float (&upstream_matrix, af_meta->matrix);
+
+    graphene_matrix_init_scale (&inv_aspect, transformation->aspect, 1., 1.);
+
+    graphene_matrix_multiply (&from_ndc, &upstream_matrix, &tmp);
+    graphene_matrix_multiply (&tmp, &transformation->mvp_matrix, &tmp2);
+    graphene_matrix_multiply (&tmp2, &inv_aspect, &tmp);
+    graphene_matrix_multiply (&tmp, &to_ndc, &tmp2);
+
+    graphene_matrix_to_float (&tmp2, af_meta->matrix);
+    return GST_FLOW_OK;
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->prepare_output_buffer (trans,
+      inbuf, outbuf);
+}
+
+static gboolean
+gst_gl_transformation_filter (GstGLFilter * filter,
+    GstBuffer * inbuf, GstBuffer * outbuf)
+{
+  GstGLTransformation *transformation = GST_GL_TRANSFORMATION (filter);
+
+  if (transformation->downstream_supports_affine_meta &&
+      gst_video_info_is_equal (&filter->in_info, &filter->out_info)) {
+    return TRUE;
+  } else {
+    return gst_gl_filter_filter_texture (filter, inbuf, outbuf);
+  }
 }
 
 static gboolean
@@ -784,16 +878,17 @@ gst_gl_transformation_callback (gpointer stuff)
   gst_gl_shader_set_uniform_1i (transformation->shader, "texture", 0);
 
   graphene_matrix_to_float (&transformation->mvp_matrix, temp_matrix);
-  gst_gl_shader_set_uniform_matrix_4fv (transformation->shader, "mvp",
-      1, GL_FALSE, temp_matrix);
+  gst_gl_shader_set_uniform_matrix_4fv (transformation->shader,
+      "u_transformation", 1, GL_FALSE, temp_matrix);
 
   if (!transformation->vertex_buffer) {
     transformation->attr_position =
         gst_gl_shader_get_attribute_location (transformation->shader,
-        "position");
+        "a_position");
 
     transformation->attr_texture =
-        gst_gl_shader_get_attribute_location (transformation->shader, "uv");
+        gst_gl_shader_get_attribute_location (transformation->shader,
+        "a_texcoord");
 
     if (gl->GenVertexArrays) {
       gl->GenVertexArrays (1, &transformation->vao);

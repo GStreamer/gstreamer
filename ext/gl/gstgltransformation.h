@@ -76,6 +76,7 @@ struct _GstGLTransformation
     graphene_matrix_t projection_matrix;
     graphene_matrix_t mvp_matrix;
 
+    gboolean downstream_supports_affine_meta;
     gboolean caps_change;
 };
 
