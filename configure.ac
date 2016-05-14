@@ -1793,6 +1793,9 @@ AG_GST_CHECK_FEATURE(SHM, [POSIX shared memory source and sink], shm, [
             AC_DEFINE(HAVE_OSX,[1],[Apple Mac OS X operating system detected])
             HAVE_SHM=yes
             ;;
+        *-*-OpenBSD*)
+            HAVE_SHM=yes
+            ;;
         *)
             AC_CHECK_LIB([rt], [shm_open],
                 AC_CHECK_DECL([MSG_NOSIGNAL], HAVE_SHM=yes, HAVE_SHM=no, [
