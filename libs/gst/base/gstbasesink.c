@@ -5238,6 +5238,10 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
 start_failed:
   {
     GST_DEBUG_OBJECT (basesink, "failed to start");
+    /* subclass is supposed to post a message but we post one as a fallback
+     * just in case */
+    GST_ELEMENT_ERROR (basesink, CORE, STATE_CHANGE, (NULL),
+        ("Failed to start"));
     return GST_STATE_CHANGE_FAILURE;
   }
 activate_failed:
