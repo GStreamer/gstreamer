@@ -45,6 +45,13 @@ typedef gboolean (*GstVideoAffineTransformationGetMatrix) (GstVideoAffineTransfo
  * matrix. The transformation matrix can be composed with
  * gst_video_affine_transformation_meta_apply_matrix().
  *
+ * The vertices operated on are all in the range 0 to 1, not in
+ * Normalized Device Coordinates (-1 to +1). Transforming points in this space
+ * are assumed to have an origin at (0.5, 0.5, 0.5) in a left-handed coordinate
+ * system with the x-axis moving horizontally (positive values to the right),
+ * the y-axis moving vertically (positive values up the screen) and the z-axis
+ * perpendicular to the screen (positive values into the screen).
+ *
  * Since: 1.8
  */
 
