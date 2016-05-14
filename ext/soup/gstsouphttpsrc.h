@@ -89,6 +89,10 @@ struct _GstSoupHTTPSrc {
 
   GCancellable *cancellable;
   GInputStream *input_stream;
+  gboolean has_pollable_interface;
+  gboolean have_data;
+  GMainContext *poll_context;
+  GSource *poll_source;
 
   /* Shoutcast/icecast metadata extraction handling. */
   gboolean iradio_mode;
