@@ -3319,10 +3319,12 @@ bin_do_eos (GstBin * bin)
 
   GST_OBJECT_LOCK (bin);
   /* If all sinks are EOS, we're in PLAYING and no state change is pending
-   * we forward the EOS message to the parent bin or application
+   * (or we're doing playing to playing and noone else will trigger posting
+   * EOS for us) we forward the EOS message to the parent bin or application
    */
   eos = GST_STATE (bin) == GST_STATE_PLAYING
-      && GST_STATE_PENDING (bin) == GST_STATE_VOID_PENDING
+      && (GST_STATE_PENDING (bin) == GST_STATE_VOID_PENDING ||
+      GST_STATE_PENDING (bin) == GST_STATE_PLAYING)
       && bin->priv->posted_playing && is_eos (bin, &seqnum);
   GST_OBJECT_UNLOCK (bin);
 
@@ -3345,6 +3347,9 @@ bin_do_eos (GstBin * bin)
     GST_DEBUG_OBJECT (bin,
         "all sinks posted EOS, posting seqnum #%" G_GUINT32_FORMAT, seqnum);
     gst_element_post_message (GST_ELEMENT_CAST (bin), tmessage);
+  } else {
+    GST_LOG_OBJECT (bin, "Not forwarding EOS due to in progress state change, "
+        " or already posted, or waiting for more EOS");
   }
 }
 
