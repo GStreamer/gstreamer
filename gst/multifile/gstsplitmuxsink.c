@@ -248,6 +248,7 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
   splitmux->max_files = DEFAULT_MAX_FILES;
 
   GST_OBJECT_FLAG_SET (splitmux, GST_ELEMENT_FLAG_SINK);
+  g_object_set (splitmux, "async-handling", TRUE, NULL);
 }
 
 static void
@@ -755,8 +756,6 @@ static void
 start_next_fragment (GstSplitMuxSink * splitmux)
 {
   /* 1 change to new file */
-  splitmux->switching_fragment = TRUE;
-
   gst_element_set_locked_state (splitmux->muxer, TRUE);
   gst_element_set_locked_state (splitmux->active_sink, TRUE);
   gst_element_set_state (splitmux->muxer, GST_STATE_NULL);
@@ -768,8 +767,6 @@ start_next_fragment (GstSplitMuxSink * splitmux)
   gst_element_set_state (splitmux->muxer, GST_STATE_TARGET (splitmux));
   gst_element_set_locked_state (splitmux->muxer, FALSE);
   gst_element_set_locked_state (splitmux->active_sink, FALSE);
-
-  splitmux->switching_fragment = FALSE;
 
   g_list_foreach (splitmux->contexts, (GFunc) restart_context, splitmux);
 
@@ -821,20 +818,6 @@ bus_handler (GstBin * bin, GstMessage * message)
         return;
       }
       GST_SPLITMUX_UNLOCK (splitmux);
-      break;
-    case GST_MESSAGE_ASYNC_START:
-    case GST_MESSAGE_ASYNC_DONE:
-      /* Ignore state changes from our children while switching */
-      if (splitmux->switching_fragment) {
-        if (GST_MESSAGE_SRC (message) == (GstObject *) splitmux->active_sink ||
-            GST_MESSAGE_SRC (message) == (GstObject *) splitmux->muxer) {
-          GST_LOG_OBJECT (splitmux,
-              "Ignoring state change from child %" GST_PTR_FORMAT
-              " while switching", GST_MESSAGE_SRC (message));
-          gst_message_unref (message);
-          return;
-        }
-      }
       break;
     default:
       break;
