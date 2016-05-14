@@ -1315,6 +1315,8 @@ ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
     goto not_found;
 
   g_object_set_property (child, pspec->name, value);
+  gst_object_unref (child);
+  g_param_spec_unref (pspec);
 
   return;
 
@@ -1493,6 +1495,7 @@ ges_timeline_element_set_child_property_valist (GESTimelineElement * self,
     g_object_set_property (child, pspec->name, &value);
 
     gst_object_unref (child);
+    g_param_spec_unref (pspec);
     g_value_unset (&value);
 
     name = va_arg (var_args, gchar *);
@@ -1509,6 +1512,8 @@ cant_copy:
     GST_WARNING_OBJECT (self, "error copying value %s in %p: %s", pspec->name,
         self, error);
 
+    gst_object_unref (child);
+    g_param_spec_unref (pspec);
     g_value_unset (&value);
     return;
   }
@@ -1574,6 +1579,7 @@ ges_timeline_element_get_child_property_valist (GESTimelineElement * self,
     g_value_init (&value, pspec->value_type);
     g_object_get_property (child, pspec->name, &value);
     gst_object_unref (child);
+    g_param_spec_unref (pspec);
 
     G_VALUE_LCOPY (&value, var_args, 0, &error);
     if (error)

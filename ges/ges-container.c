@@ -220,6 +220,8 @@ _ges_container_add_child_properties (GESContainer * container,
     if (ges_timeline_element_lookup_child (child, prop_name, &prop_child, NULL)) {
       ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT (container),
           child_props[i], prop_child);
+      gst_object_unref (prop_child);
+
     }
     g_free (prop_name);
     g_param_spec_unref (child_props[i]);
@@ -247,6 +249,7 @@ _ges_container_remove_child_properties (GESContainer * container,
     if (ges_timeline_element_lookup_child (child, prop_name, &prop_child, NULL)) {
       ges_timeline_element_remove_child_property (GES_TIMELINE_ELEMENT
           (container), child_props[i]);
+      gst_object_unref (prop_child);
 
     }
 
