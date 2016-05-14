@@ -1545,7 +1545,84 @@ GST_START_TEST (test_duration_unknown_overrides)
 
 GST_END_TEST;
 
+static gboolean
+element_in_list (GList ** list, GstElement * element)
+{
+  GList *l = g_list_find (*list, element);
 
+  if (l == NULL)
+    return FALSE;
+
+  *list = g_list_delete_link (*list, l);
+  return TRUE;
+}
+
+#define element_was_added(e) element_in_list(&added,e)
+#define element_was_removed(e) element_in_list(&removed,e)
+
+static void
+add_cb (GstBin * pipeline, GstBin * bin, GstElement * element, GList ** list)
+{
+  fail_unless (GST_OBJECT_PARENT (element) == GST_OBJECT_CAST (bin));
+
+  *list = g_list_prepend (*list, element);
+}
+
+static void
+remove_cb (GstBin * pipeline, GstBin * bin, GstElement * element, GList ** list)
+{
+  fail_unless (GST_OBJECT_PARENT (element) == NULL);
+
+  *list = g_list_prepend (*list, element);
+}
+
+GST_START_TEST (test_deep_added_removed)
+{
+  GstElement *pipe, *e, *bin0, *bin1;
+  gulong id_removed, id_added;
+  GList *removed = NULL;
+  GList *added = NULL;
+
+  pipe = gst_pipeline_new (NULL);
+
+  id_added = g_signal_connect (pipe, "deep-element-added",
+      G_CALLBACK (add_cb), &added);
+  id_removed = g_signal_connect (pipe, "deep-element-removed",
+      G_CALLBACK (remove_cb), &removed);
+
+  /* simple add/remove */
+  e = gst_element_factory_make ("identity", NULL);
+  gst_bin_add (GST_BIN (pipe), e);
+  fail_unless (element_was_added (e));
+  gst_bin_remove (GST_BIN (pipe), e);
+  fail_unless (element_was_removed (e));
+
+  /* let's try with a deeper hierarchy */
+  bin0 = gst_bin_new (NULL);
+  gst_bin_add (GST_BIN (pipe), bin0);
+  bin1 = gst_bin_new (NULL);
+  gst_bin_add (GST_BIN (bin0), bin1);
+  e = gst_element_factory_make ("identity", NULL);
+  gst_bin_add (GST_BIN (bin1), e);
+  fail_unless (element_was_added (bin0));
+  fail_unless (element_was_added (bin1));
+  fail_unless (element_was_added (e));
+  fail_unless (added == NULL);
+  fail_unless (removed == NULL);
+
+  gst_bin_remove (GST_BIN (bin1), e);
+  fail_unless (element_was_removed (e));
+  fail_unless (added == NULL);
+  fail_unless (removed == NULL);
+
+  /* disconnect signals, unref will trigger remove callbacks otherwise */
+  g_signal_handler_disconnect (pipe, id_added);
+  g_signal_handler_disconnect (pipe, id_removed);
+
+  gst_object_unref (pipe);
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_bin_suite (void)
@@ -1576,6 +1653,7 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_state_change_skip);
   tcase_add_test (tc_chain, test_duration_is_max);
   tcase_add_test (tc_chain, test_duration_unknown_overrides);
+  tcase_add_test (tc_chain, test_deep_added_removed);
 
   /* fails on OSX build bot for some reason, and is a bit silly anyway */
   if (0)

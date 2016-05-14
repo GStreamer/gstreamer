@@ -225,6 +225,10 @@ static void bin_do_eos (GstBin * bin);
 
 static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
 static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
+static void gst_bin_deep_element_added_func (GstBin * bin, GstBin * sub_bin,
+    GstElement * element);
+static void gst_bin_deep_element_removed_func (GstBin * bin, GstBin * sub_bin,
+    GstElement * element);
 static void gst_bin_update_context (GstBin * bin, GstContext * context);
 static void gst_bin_update_context_unlocked (GstBin * bin,
     GstContext * context);
@@ -260,6 +264,8 @@ enum
   ELEMENT_ADDED,
   ELEMENT_REMOVED,
   DO_LATENCY,
+  DEEP_ELEMENT_ADDED,
+  DEEP_ELEMENT_REMOVED,
   LAST_SIGNAL
 };
 
@@ -401,6 +407,36 @@ gst_bin_class_init (GstBinClass * klass)
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstBinClass, element_removed), NULL,
       NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
   /**
+   * GstBin::deep-element-added:
+   * @bin: the #GstBin
+   * @sub_bin: the #GstBin the element was added to
+   * @element: the #GstElement that was added to @sub_bin
+   *
+   * Will be emitted after the element was added to sub_bin.
+   *
+   * Since: 1.10
+   */
+  gst_bin_signals[DEEP_ELEMENT_ADDED] =
+      g_signal_new ("deep-element-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstBinClass, deep_element_added),
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, GST_TYPE_BIN,
+      GST_TYPE_ELEMENT);
+  /**
+   * GstBin::deep-element-removed:
+   * @bin: the #GstBin
+   * @sub_bin: the #GstBin the element was removed from
+   * @element: the #GstElement that was removed from @sub_bin
+   *
+   * Will be emitted after the element was removed from sub_bin.
+   *
+   * Since: 1.10
+   */
+  gst_bin_signals[DEEP_ELEMENT_REMOVED] =
+      g_signal_new ("deep-element-removed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstBinClass, deep_element_removed),
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, GST_TYPE_BIN,
+      GST_TYPE_ELEMENT);
+  /**
    * GstBin::do-latency:
    * @bin: the #GstBin
    *
@@ -466,6 +502,9 @@ gst_bin_class_init (GstBinClass * klass)
   klass->add_element = GST_DEBUG_FUNCPTR (gst_bin_add_func);
   klass->remove_element = GST_DEBUG_FUNCPTR (gst_bin_remove_func);
   klass->handle_message = GST_DEBUG_FUNCPTR (gst_bin_handle_message_func);
+
+  klass->deep_element_added = gst_bin_deep_element_added_func;
+  klass->deep_element_removed = gst_bin_deep_element_removed_func;
 
   klass->do_latency = GST_DEBUG_FUNCPTR (gst_bin_do_latency_func);
 }
@@ -1288,6 +1327,8 @@ no_state_recalc:
   gst_child_proxy_child_added ((GstChildProxy *) bin, (GObject *) element,
       elem_name);
 
+  g_signal_emit (bin, gst_bin_signals[DEEP_ELEMENT_ADDED], 0, bin, element);
+
   g_free (elem_name);
 
   return TRUE;
@@ -1315,6 +1356,52 @@ had_parent:
     g_free (elem_name);
     return FALSE;
   }
+}
+
+/* signal vfunc, will be called when a new element was added */
+static void
+gst_bin_deep_element_added_func (GstBin * bin, GstBin * sub_bin,
+    GstElement * child)
+{
+  GstBin *parent_bin;
+
+  parent_bin = (GstBin *) gst_object_get_parent (GST_OBJECT_CAST (bin));
+  if (parent_bin == NULL) {
+    GST_LOG_OBJECT (bin, "no parent, reached top-level");
+    return;
+  }
+
+  GST_LOG_OBJECT (parent_bin, "emitting deep-element-added for element "
+      "%" GST_PTR_FORMAT " which has just been added to %" GST_PTR_FORMAT,
+      sub_bin, child);
+
+  g_signal_emit (parent_bin, gst_bin_signals[DEEP_ELEMENT_ADDED], 0, sub_bin,
+      child);
+
+  gst_object_unref (parent_bin);
+}
+
+/* signal vfunc, will be called when an element was removed */
+static void
+gst_bin_deep_element_removed_func (GstBin * bin, GstBin * sub_bin,
+    GstElement * child)
+{
+  GstBin *parent_bin;
+
+  parent_bin = (GstBin *) gst_object_get_parent (GST_OBJECT_CAST (bin));
+  if (parent_bin == NULL) {
+    GST_LOG_OBJECT (bin, "no parent, reached top-level");
+    return;
+  }
+
+  GST_LOG_OBJECT (parent_bin, "emitting deep-element-removed for element "
+      "%" GST_PTR_FORMAT " which has just been removed from %" GST_PTR_FORMAT,
+      sub_bin, child);
+
+  g_signal_emit (parent_bin, gst_bin_signals[DEEP_ELEMENT_REMOVED], 0, sub_bin,
+      child);
+
+  gst_object_unref (parent_bin);
 }
 
 /**
@@ -1622,6 +1709,8 @@ no_state_recalc:
   g_signal_emit (bin, gst_bin_signals[ELEMENT_REMOVED], 0, element);
   gst_child_proxy_child_removed ((GstChildProxy *) bin, (GObject *) element,
       elem_name);
+
+  g_signal_emit (bin, gst_bin_signals[DEEP_ELEMENT_REMOVED], 0, bin, element);
 
   g_free (elem_name);
   /* element is really out of our control now */
