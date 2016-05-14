@@ -1698,6 +1698,8 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
   gst_query_add_allocation_meta (query,
       GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, allocation_meta);
+  gst_query_add_allocation_meta (query,
+      GST_VIDEO_AFFINE_TRANSFORMATION_META_API_TYPE, 0);
 
   if (allocation_meta)
     gst_structure_free (allocation_meta);
@@ -1776,7 +1778,7 @@ gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
   vert_stage = gst_glsl_stage_new_with_string (gl_sink->context,
       GL_VERTEX_SHADER, GST_GLSL_VERSION_NONE,
       GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-      gst_gl_shader_string_vertex_mat4_texture_transform);
+      gst_gl_shader_string_vertex_mat4_vertex_transform);
   if (gl_sink->texture_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES) {
     frag_stage = gst_glsl_stage_new_with_string (gl_sink->context,
         GL_FRAGMENT_SHADER, GST_GLSL_VERSION_NONE,
@@ -1939,13 +1941,6 @@ gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
   GST_GLIMAGE_SINK_UNLOCK (gl_sink);
 }
 
-static const gfloat identity_matrix[] = {
-  1.0f, 0.0f, 0.0, 0.0f,
-  0.0f, 1.0f, 0.0, 0.0f,
-  0.0f, 0.0f, 1.0, 0.0f,
-  0.0f, 0.0f, 0.0, 1.0f,
-};
-
 static void
 gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 {
@@ -2028,16 +2023,15 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
     gst_gl_shader_set_uniform_1i (gl_sink->redisplay_shader, "tex", 0);
     {
       GstVideoAffineTransformationMeta *af_meta;
+      gfloat matrix[16];
 
       af_meta =
           gst_buffer_get_video_affine_transformation_meta
           (gl_sink->stored_buffer[0]);
-      if (af_meta)
-        gst_gl_shader_set_uniform_matrix_4fv (gl_sink->redisplay_shader,
-            "u_transformation", 1, FALSE, af_meta->matrix);
-      else
-        gst_gl_shader_set_uniform_matrix_4fv (gl_sink->redisplay_shader,
-            "u_transformation", 1, FALSE, identity_matrix);
+
+      gst_gl_get_affine_transformation_meta_as_ndc (af_meta, matrix);
+      gst_gl_shader_set_uniform_matrix_4fv (gl_sink->redisplay_shader,
+          "u_transformation", 1, FALSE, matrix);
     }
 
     gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);

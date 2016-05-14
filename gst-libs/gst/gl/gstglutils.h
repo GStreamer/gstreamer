@@ -22,6 +22,7 @@
 #define __GST_GL_UTILS_H__
 
 #include <gst/video/video.h>
+#include <gst/video/gstvideoaffinetransformationmeta.h>
 
 #include <gst/gl/gstgl_fwd.h>
 
@@ -115,6 +116,8 @@ gboolean gst_gl_value_set_texture_target_from_mask (GValue * value,
     GstGLTextureTarget target_mask);
 gboolean gst_gl_value_set_texture_target (GValue * value, GstGLTextureTarget target);
 GstGLTextureTarget gst_gl_value_get_texture_target_mask (const GValue * value);
+
+void gst_gl_get_affine_transformation_meta_as_ndc (GstVideoAffineTransformationMeta * meta, gfloat * matrix);
 
 G_END_DECLS
 

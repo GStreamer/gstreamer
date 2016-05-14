@@ -454,6 +454,7 @@ enum
 #define DEBUG_INIT \
     GST_DEBUG_CATEGORY_INIT (gst_gl_video_mixer_debug, "glvideomixer", 0, "glvideomixer element");
 
+#define gst_gl_video_mixer_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLVideoMixer, gst_gl_video_mixer, GST_TYPE_GL_MIXER,
     DEBUG_INIT);
 
@@ -465,6 +466,9 @@ static void gst_gl_video_mixer_get_property (GObject * object, guint prop_id,
 static GstCaps *_update_caps (GstVideoAggregator * vagg, GstCaps * caps,
     GstCaps * filter);
 static GstCaps *_fixate_caps (GstVideoAggregator * vagg, GstCaps * caps);
+static gboolean gst_gl_video_mixer_propose_allocation (GstGLBaseMixer *
+    base_mix, GstGLBaseMixerPad * base_pad, GstQuery * decide_query,
+    GstQuery * query);
 static void gst_gl_video_mixer_reset (GstGLMixer * mixer);
 static gboolean gst_gl_video_mixer_init_shader (GstGLMixer * mixer,
     GstCaps * outcaps);
@@ -856,6 +860,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
   GstElementClass *element_class;
   GstAggregatorClass *agg_class = (GstAggregatorClass *) klass;
   GstVideoAggregatorClass *vagg_class = (GstVideoAggregatorClass *) klass;
+  GstGLBaseMixerClass *mix_class = GST_GL_BASE_MIXER_CLASS (klass);
 
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
@@ -882,6 +887,8 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
   vagg_class->fixate_caps = _fixate_caps;
 
   agg_class->sinkpads_type = GST_TYPE_GL_VIDEO_MIXER_PAD;
+
+  mix_class->propose_allocation = gst_gl_video_mixer_propose_allocation;
 
   GST_GL_BASE_MIXER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;
@@ -924,6 +931,20 @@ gst_gl_video_mixer_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+gst_gl_video_mixer_propose_allocation (GstGLBaseMixer * base_mix,
+    GstGLBaseMixerPad * base_pad, GstQuery * decide_query, GstQuery * query)
+{
+  if (!GST_GL_BASE_MIXER_CLASS (parent_class)->propose_allocation (base_mix,
+          base_pad, decide_query, query))
+    return FALSE;
+
+  gst_query_add_allocation_meta (query,
+      GST_VIDEO_AFFINE_TRANSFORMATION_META_API_TYPE, 0);
+
+  return TRUE;
 }
 
 static void
@@ -1130,7 +1151,7 @@ gst_gl_video_mixer_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
         video_mixer->shader);
 
   return gst_gl_context_gen_shader (GST_GL_BASE_MIXER (mixer)->context,
-      gst_gl_shader_string_vertex_mat4_texture_transform,
+      gst_gl_shader_string_vertex_mat4_vertex_transform,
       video_mixer_f_src, &video_mixer->shader);
 }
 
@@ -1361,13 +1382,6 @@ _set_blend_state (GstGLVideoMixer * video_mixer, GstGLVideoMixerPad * mix_pad)
   return TRUE;
 }
 
-static const gfloat identity_matrix[] = {
-  1.0f, 0.0f, 0.0f, 0.0f,
-  0.0f, 1.0f, 0.0f, 0.0f,
-  0.0f, 0.0f, 1.0f, 0.0f,
-  0.0f, 0.0f, 0.0f, 1.0f,
-};
-
 /* opengl scene, params: input texture (not the output mixer->texture) */
 static void
 gst_gl_video_mixer_callback (gpointer stuff)
@@ -1495,15 +1509,13 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
     {
       GstVideoAffineTransformationMeta *af_meta;
+      gfloat matrix[16];
 
       af_meta =
           gst_buffer_get_video_affine_transformation_meta (vagg_pad->buffer);
-      if (af_meta)
-        gst_gl_shader_set_uniform_matrix_4fv (video_mixer->shader,
-            "u_transformation", 1, FALSE, af_meta->matrix);
-      else
-        gst_gl_shader_set_uniform_matrix_4fv (video_mixer->shader,
-            "u_transformation", 1, FALSE, identity_matrix);
+      gst_gl_get_affine_transformation_meta_as_ndc (af_meta, matrix);
+      gst_gl_shader_set_uniform_matrix_4fv (video_mixer->shader,
+          "u_transformation", 1, FALSE, matrix);
     }
 
     gl->EnableVertexAttribArray (attr_position_loc);

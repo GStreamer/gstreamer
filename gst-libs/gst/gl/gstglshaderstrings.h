@@ -29,6 +29,7 @@ extern const gchar *gst_gl_shader_string_vertex_default;
 extern const gchar *gst_gl_shader_string_fragment_default;
 
 extern const gchar *gst_gl_shader_string_vertex_mat4_texture_transform;
+extern const gchar *gst_gl_shader_string_vertex_mat4_vertex_transform;
 extern const gchar *gst_gl_shader_string_fragment_external_oes_default;
 
 G_END_DECLS
