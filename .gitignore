@@ -55,7 +55,6 @@ gst*orc.h
 /tests/check/pipelines/simple-launch-lines
 /tests/examples/codecparsers/parse-jpeg
 /tests/examples/codecparsers/parse-vp8
-/tests/examples/gl/gtk/gtkvideooverlay/
 /tests/examples/gtk/gtkglsink
 /tests/examples/gtk/gtksink
 /tests/examples/gtk/glliveshader
