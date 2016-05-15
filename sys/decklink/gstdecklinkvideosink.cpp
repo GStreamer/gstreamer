@@ -119,7 +119,8 @@ enum
   PROP_0,
   PROP_MODE,
   PROP_DEVICE_NUMBER,
-  PROP_VIDEO_FORMAT
+  PROP_VIDEO_FORMAT,
+  PROP_TIMECODE_FORMAT
 };
 
 static void gst_decklink_video_sink_set_property (GObject * object,
@@ -213,6 +214,14 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  g_object_class_install_property (gobject_class, PROP_TIMECODE_FORMAT,
+      g_param_spec_enum ("timecode-format", "Timecode format",
+          "Timecode format type to use for playback",
+          GST_TYPE_DECKLINK_TIMECODE_FORMAT,
+          GST_DECKLINK_TIMECODE_FORMAT_RP188ANY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
   templ_caps = gst_decklink_mode_get_template_caps ();
   templ_caps = gst_caps_make_writable (templ_caps);
   /* For output we support any framerate and only really care about timestamps */
@@ -235,6 +244,8 @@ gst_decklink_video_sink_init (GstDecklinkVideoSink * self)
   self->mode = GST_DECKLINK_MODE_NTSC;
   self->device_number = 0;
   self->video_format = GST_DECKLINK_VIDEO_FORMAT_8BIT_YUV;
+  /* VITC is legacy, we should expect RP188 in modern use cases */
+  self->timecode_format = bmdTimecodeRP188Any;
 
   gst_base_sink_set_max_lateness (GST_BASE_SINK_CAST (self), 20 * GST_MSECOND);
   gst_base_sink_set_qos_enabled (GST_BASE_SINK_CAST (self), TRUE);
@@ -268,6 +279,11 @@ gst_decklink_video_sink_set_property (GObject * object, guint property_id,
           break;
       }
       break;
+    case PROP_TIMECODE_FORMAT:
+      self->timecode_format =
+          gst_decklink_timecode_format_from_enum ((GstDecklinkTimecodeFormat)
+          g_value_get_enum (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -290,6 +306,10 @@ gst_decklink_video_sink_get_property (GObject * object, guint property_id,
     case PROP_VIDEO_FORMAT:
       g_value_set_enum (value, self->video_format);
       break;
+    case PROP_TIMECODE_FORMAT:
+      g_value_set_enum (value,
+          gst_decklink_timecode_format_to_enum (self->timecode_format));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -310,6 +330,7 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (bsink);
   const GstDecklinkMode *mode;
   HRESULT ret;
+  BMDVideoOutputFlags flags;
 
   GST_DEBUG_OBJECT (self, "Setting caps %" GST_PTR_FORMAT, caps);
 
@@ -341,8 +362,21 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     g_assert (mode != NULL);
   };
 
-  ret = self->output->output->EnableVideoOutput (mode->mode,
-      bmdVideoOutputFlagDefault);
+  /* The timecode_format itself is used when we embed the actual timecode data
+   * into the frame. Now we only need to know which of the two standards the
+   * timecode format will adhere to: VITC or RP188, and send the appropriate
+   * flag to EnableVideoOutput. The exact format is specified later.
+   *
+   * Note that this flag will have no effect in practice if the video stream
+   * does not contain timecode metadata.
+   */
+  if (self->timecode_format == GST_DECKLINK_TIMECODE_FORMAT_VITC ||
+      self->timecode_format == GST_DECKLINK_TIMECODE_FORMAT_VITCFIELD2)
+    flags = bmdVideoOutputVITC;
+  else
+    flags = bmdVideoOutputRP188;
+
+  ret = self->output->output->EnableVideoOutput (mode->mode, flags);
   if (ret != S_OK) {
     GST_WARNING_OBJECT (self, "Failed to enable video output");
     return FALSE;
@@ -503,6 +537,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   GstDecklinkVideoFormat caps_format;
   BMDPixelFormat format;
   gint bpp;
+  GstVideoTimeCodeMeta *tc_meta;
 
   GST_DEBUG_OBJECT (self, "Preparing buffer %p", buffer);
 
@@ -574,6 +609,35 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
     outdata += frame->GetRowBytes ();
   }
   gst_video_frame_unmap (&vframe);
+
+  tc_meta = gst_buffer_get_video_time_code_meta (buffer);
+  if (tc_meta) {
+    BMDTimecodeFlags bflags = (BMDTimecodeFlags) 0;
+    gchar *tc_str;
+
+    if (((GstVideoTimeCodeFlags) (tc_meta->tc.
+                config.flags)) & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME)
+      bflags = (BMDTimecodeFlags) (bflags | bmdTimecodeIsDropFrame);
+    else
+      bflags = (BMDTimecodeFlags) (bflags | bmdTimecodeFlagDefault);
+    if (tc_meta->tc.field_count == 2)
+      bflags = (BMDTimecodeFlags) (bflags | bmdTimecodeFieldMark);
+
+    tc_str = gst_video_time_code_to_string (&tc_meta->tc);
+    ret = frame->SetTimecodeFromComponents (self->timecode_format,
+        (uint8_t) tc_meta->tc.hours,
+        (uint8_t) tc_meta->tc.minutes,
+        (uint8_t) tc_meta->tc.seconds, (uint8_t) tc_meta->tc.frames, bflags);
+    if (ret != S_OK) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set timecode %s to video frame: 0x%08x", tc_str, ret);
+      flow_ret = GST_FLOW_ERROR;
+      g_free (tc_str);
+      goto out;
+    }
+    GST_DEBUG_OBJECT (self, "Set frame timecode to %s", tc_str);
+    g_free (tc_str);
+  }
 
   convert_to_internal_clock (self, &running_time, &running_time_duration);
 
