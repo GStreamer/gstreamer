@@ -2401,13 +2401,14 @@ gst_ps_demux_is_pes_sync (guint32 sync)
 
 static inline gboolean
 gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
-    SCAN_MODE mode, guint64 * rts)
+    SCAN_MODE mode, guint64 * rts, const guint8 * end)
 {
   gboolean ret = FALSE;
   guint32 scr1, scr2;
   guint64 scr;
   guint64 pts, dts;
   guint32 code;
+  guint16 len;
 
   /* read the 4 bytes for the sync code */
   code = GST_READ_UINT32_BE (data);
@@ -2422,6 +2423,7 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
 
   /* start parsing the stream */
   if ((*data & 0xc0) == 0x40) {
+    /* MPEG-2 PACK header */
     guint32 scr_ext;
     guint32 next32;
     guint8 stuffing_bytes;
@@ -2461,6 +2463,7 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
         goto beach;
     }
   } else {
+    /* MPEG-1 pack header */
     /* check markers */
     if ((scr1 & 0xf1000100) != 0x21000100)
       goto beach;
@@ -2482,8 +2485,27 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
     goto beach;
   }
 
-  /* read the 4 bytes for the PES sync code */
+  /* Possible optional System header here */
   code = GST_READ_UINT32_BE (data);
+  len = GST_READ_UINT16_BE (data + 4);
+
+  if (code == ID_PS_SYSTEM_HEADER_START_CODE) {
+    /* Found a system header, skip it */
+    /* Check for sufficient data - system header, plus enough
+     * left over for the PES packet header */
+    if (data + 6 + len + 6 > end)
+      return FALSE;
+    data += len + 6;
+
+    /* read the 4 bytes for the PES sync code */
+    code = GST_READ_UINT32_BE (data);
+    len = GST_READ_UINT16_BE (data + 4);
+  }
+
+  /* Check we have enough data left for reading the PES packet */
+  if (data + 6 + len > end)
+    return FALSE;
+
   if (!gst_ps_demux_is_pes_sync (code))
     goto beach;
 
@@ -2626,7 +2648,8 @@ gst_ps_demux_scan_forward_ts (GstPsDemux * demux, guint64 * pos,
 
     /* scan the block */
     for (cursor = 0; !found && cursor <= end_scan; cursor++) {
-      found = gst_ps_demux_scan_ts (demux, map.data + cursor, mode, &ts);
+      found = gst_ps_demux_scan_ts (demux, map.data + cursor, mode, &ts,
+          map.data + map.size);
     }
 
     /* done with the buffer, unref it */
@@ -2694,7 +2717,8 @@ gst_ps_demux_scan_backward_ts (GstPsDemux * demux, guint64 * pos,
 
     /* scan the block */
     for (cursor = (start_scan + 1); !found && cursor > 0; cursor--) {
-      found = gst_ps_demux_scan_ts (demux, data--, mode, &ts);
+      found = gst_ps_demux_scan_ts (demux, data--, mode, &ts,
+          map.data + map.size);
     }
 
     /* done with the buffer, unref it */
