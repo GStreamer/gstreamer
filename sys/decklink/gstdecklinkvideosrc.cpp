@@ -40,7 +40,8 @@ enum
   PROP_CONNECTION,
   PROP_DEVICE_NUMBER,
   PROP_BUFFER_SIZE,
-  PROP_VIDEO_FORMAT
+  PROP_VIDEO_FORMAT,
+  PROP_TIMECODE_FORMAT
 };
 
 typedef struct
@@ -49,6 +50,7 @@ typedef struct
   GstClockTime capture_time, capture_duration;
   GstDecklinkModeEnum mode;
   BMDPixelFormat format;
+  GstVideoTimeCode *tc;
 } CaptureFrame;
 
 static void
@@ -169,6 +171,14 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  g_object_class_install_property (gobject_class, PROP_TIMECODE_FORMAT,
+      g_param_spec_enum ("timecode-format", "Timecode format",
+          "Timecode format type to use for input",
+          GST_TYPE_DECKLINK_TIMECODE_FORMAT,
+          GST_DECKLINK_TIMECODE_FORMAT_RP188ANY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
   templ_caps = gst_decklink_mode_get_template_caps ();
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, templ_caps));
@@ -192,6 +202,7 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
   self->device_number = 0;
   self->buffer_size = DEFAULT_BUFFER_SIZE;
   self->video_format = GST_DECKLINK_VIDEO_FORMAT_AUTO;
+  self->timecode_format = bmdTimecodeRP188Any;
 
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
@@ -245,6 +256,11 @@ gst_decklink_video_src_set_property (GObject * object, guint property_id,
           break;
       }
       break;
+    case PROP_TIMECODE_FORMAT:
+      self->timecode_format =
+          gst_decklink_timecode_format_from_enum ((GstDecklinkTimecodeFormat)
+          g_value_get_enum (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -272,6 +288,10 @@ gst_decklink_video_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_VIDEO_FORMAT:
       g_value_set_enum (value, self->video_format);
+      break;
+    case PROP_TIMECODE_FORMAT:
+      g_value_set_enum (value,
+          gst_decklink_timecode_format_to_enum (self->timecode_format));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -493,7 +513,8 @@ gst_decklink_video_src_convert_to_external_clock (GstDecklinkVideoSrc * self,
 static void
 gst_decklink_video_src_got_frame (GstElement * element,
     IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
-    GstClockTime capture_time, GstClockTime capture_duration)
+    GstClockTime capture_time, GstClockTime capture_duration, guint hours,
+    guint minutes, guint seconds, guint frames, BMDTimecodeFlags bflags)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (element);
 
@@ -509,6 +530,9 @@ gst_decklink_video_src_got_frame (GstElement * element,
   g_mutex_lock (&self->lock);
   if (!self->flushing) {
     CaptureFrame *f;
+    const GstDecklinkMode *bmode;
+    GstVideoTimeCodeFlags flags = GST_VIDEO_TIME_CODE_FLAGS_NONE;
+    guint field_count = 0;
 
     while (g_queue_get_length (&self->current_frames) >= self->buffer_size) {
       f = (CaptureFrame *) g_queue_pop_head (&self->current_frames);
@@ -523,6 +547,24 @@ gst_decklink_video_src_got_frame (GstElement * element,
     f->capture_duration = capture_duration;
     f->mode = mode;
     f->format = frame->GetPixelFormat ();
+    bmode = gst_decklink_get_mode (mode);
+    if (bmode->interlaced) {
+      flags =
+          (GstVideoTimeCodeFlags) (flags |
+          GST_VIDEO_TIME_CODE_FLAGS_INTERLACED);
+      if (bflags & bmdTimecodeFieldMark)
+        field_count = 2;
+      else
+        field_count = 1;
+    }
+    if (bflags & bmdTimecodeIsDropFrame)
+      flags =
+          (GstVideoTimeCodeFlags) (flags |
+          GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME);
+    f->tc =
+        gst_video_time_code_new (bmode->fps_n, bmode->fps_d, NULL, flags, hours,
+        minutes, seconds, frames, field_count);
+
     frame->AddRef ();
     g_queue_push_tail (&self->current_frames, f);
     g_cond_signal (&self->cond);
@@ -556,7 +598,6 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
     GST_DEBUG_OBJECT (self, "Flushing");
     return GST_FLOW_FLUSHING;
   }
-
   // If we're not flushing, we should have a valid frame from the queue
   g_assert (f != NULL);
 
@@ -620,6 +661,7 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
 
   GST_BUFFER_TIMESTAMP (*buffer) = f->capture_time;
   GST_BUFFER_DURATION (*buffer) = f->capture_duration;
+  gst_buffer_add_video_time_code_meta (*buffer, f->tc);
 
   GST_DEBUG_OBJECT (self,
       "Outputting buffer %p with timestamp %" GST_TIME_FORMAT " and duration %"

@@ -125,9 +125,23 @@ typedef enum {
 #define GST_TYPE_DECKLINK_VIDEO_FORMAT (gst_decklink_video_format_get_type ())
 GType gst_decklink_video_format_get_type (void);
 
+typedef enum {
+  GST_DECKLINK_TIMECODE_FORMAT_RP188VITC1, /*bmdTimecodeRP188VITC1 */
+  GST_DECKLINK_TIMECODE_FORMAT_RP188VITC2, /*bmdTimecodeRP188VITC2 */
+  GST_DECKLINK_TIMECODE_FORMAT_RP188LTC, /*bmdTimecodeRP188LTC */
+  GST_DECKLINK_TIMECODE_FORMAT_RP188ANY, /*bmdTimecodeRP188Any */
+  GST_DECKLINK_TIMECODE_FORMAT_VITC, /*bmdTimecodeVITC */
+  GST_DECKLINK_TIMECODE_FORMAT_VITCFIELD2, /*bmdTimecodeVITCField2 */
+  GST_DECKLINK_TIMECODE_FORMAT_SERIAL /* bmdTimecodeSerial */
+} GstDecklinkTimecodeFormat;
+#define GST_TYPE_DECKLINK_TIMECODE_FORMAT (gst_decklink_timecode_format_get_type ())
+GType gst_decklink_timecode_format_get_type (void);
+
 const BMDPixelFormat gst_decklink_pixel_format_from_type (GstDecklinkVideoFormat t);
 const gint gst_decklink_bpp_from_type (GstDecklinkVideoFormat t);
 const GstDecklinkVideoFormat gst_decklink_type_from_video_format (GstVideoFormat f);
+const BMDTimecodeFormat gst_decklink_timecode_format_from_enum (GstDecklinkTimecodeFormat f);
+const GstDecklinkTimecodeFormat gst_decklink_timecode_format_to_enum (BMDTimecodeFormat f);
 
 typedef struct _GstDecklinkMode GstDecklinkMode;
 struct _GstDecklinkMode {
@@ -189,7 +203,7 @@ struct _GstDecklinkInput {
   GMutex lock;
 
   /* Set by the video source */
-  void (*got_video_frame) (GstElement *videosrc, IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode, GstClockTime capture_time, GstClockTime capture_duration);
+  void (*got_video_frame) (GstElement *videosrc, IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode, GstClockTime capture_time, GstClockTime capture_duration, guint hours, guint minutes, guint seconds, guint frames, BMDTimecodeFlags bflags);
   /* Configured mode or NULL */
   const GstDecklinkMode *mode;
   BMDPixelFormat format;

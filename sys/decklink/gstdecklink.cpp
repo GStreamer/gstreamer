@@ -140,6 +140,33 @@ gst_decklink_video_format_get_type (void)
 }
 
 GType
+gst_decklink_timecode_format_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue timecodeformats[] = {
+    {GST_DECKLINK_TIMECODE_FORMAT_RP188VITC1, "bmdTimecodeRP188VITC1",
+        "rp188vitc1"},
+    {GST_DECKLINK_TIMECODE_FORMAT_RP188VITC2, "bmdTimecodeRP188VITC2",
+        "rp188vitc2"},
+    {GST_DECKLINK_TIMECODE_FORMAT_RP188LTC, "bmdTimecodeRP188LTC", "rp188ltc"},
+    {GST_DECKLINK_TIMECODE_FORMAT_RP188ANY, "bmdTimecodeRP188Any", "rp188any"},
+    {GST_DECKLINK_TIMECODE_FORMAT_VITC, "bmdTimecodeVITC", "vitc"},
+    {GST_DECKLINK_TIMECODE_FORMAT_VITCFIELD2, "bmdTimecodeVITCField2",
+        "vitcfield2"},
+    {GST_DECKLINK_TIMECODE_FORMAT_SERIAL, "bmdTimecodeSerial", "serial"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp =
+        g_enum_register_static ("GstDecklinkTimecodeFormat", timecodeformats);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
+GType
 gst_decklink_audio_connection_get_type (void)
 {
   static gsize id = 0;
@@ -229,6 +256,22 @@ static const struct
   {bmdFormat12BitRGBLE, FIXME, FIXME},
   {bmdFormat10BitRGBXLE, FIXME, FIXME},
   {bmdFormat10BitRGBX, FIXME, FIXME} */
+  /* *INDENT-ON* */
+};
+
+static const struct
+{
+  BMDTimecodeFormat format;
+  GstDecklinkTimecodeFormat gstformat;
+} tcformats[] = {
+  /* *INDENT-OFF* */
+  {bmdTimecodeRP188VITC1, GST_DECKLINK_TIMECODE_FORMAT_RP188VITC1},
+  {bmdTimecodeRP188VITC2, GST_DECKLINK_TIMECODE_FORMAT_RP188VITC2},
+  {bmdTimecodeRP188LTC, GST_DECKLINK_TIMECODE_FORMAT_RP188LTC},
+  {bmdTimecodeRP188Any, GST_DECKLINK_TIMECODE_FORMAT_RP188ANY},
+  {bmdTimecodeVITC, GST_DECKLINK_TIMECODE_FORMAT_VITC},
+  {bmdTimecodeVITCField2, GST_DECKLINK_TIMECODE_FORMAT_VITCFIELD2},
+  {bmdTimecodeSerial, GST_DECKLINK_TIMECODE_FORMAT_SERIAL}
   /* *INDENT-ON* */
 };
 
@@ -365,6 +408,25 @@ gst_decklink_type_from_video_format (GstVideoFormat f)
   }
   g_assert_not_reached ();
   return GST_DECKLINK_VIDEO_FORMAT_AUTO;
+}
+
+const BMDTimecodeFormat
+gst_decklink_timecode_format_from_enum (GstDecklinkTimecodeFormat f)
+{
+  return tcformats[f].format;
+}
+
+const GstDecklinkTimecodeFormat
+gst_decklink_timecode_format_to_enum (BMDTimecodeFormat f)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (tcformats); i++) {
+    if (tcformats[i].format == f)
+      return (GstDecklinkTimecodeFormat) i;
+  }
+  g_assert_not_reached ();
+  return GST_DECKLINK_TIMECODE_FORMAT_RP188ANY;
 }
 
 static const BMDVideoConnection connections[] = {
@@ -660,7 +722,9 @@ public:
     GstElement *videosrc = NULL, *audiosrc = NULL;
     void (*got_video_frame) (GstElement * videosrc,
         IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
-        GstClockTime capture_time, GstClockTime capture_duration) = NULL;
+        GstClockTime capture_time, GstClockTime capture_duration, guint hours,
+        guint minutes, guint seconds, guint frames, BMDTimecodeFlags bflags) =
+        NULL;
     void (*got_audio_packet) (GstElement * videosrc,
         IDeckLinkAudioInputPacket * packet, GstClockTime capture_time,
         gboolean discont) = NULL;
@@ -668,7 +732,11 @@ public:
     BMDTimeValue capture_time = GST_CLOCK_TIME_NONE, capture_duration =
         GST_CLOCK_TIME_NONE;
     HRESULT res;
+    IDeckLinkTimecode *dtc;
+    uint8_t hours, minutes, seconds, frames;
+    BMDTimecodeFlags bflags;
 
+    hours = minutes = seconds = frames = bflags = 0;
     if (video_frame == NULL)
       goto no_video_frame;
 
@@ -679,6 +747,35 @@ public:
       GST_ERROR ("Failed to get capture time: 0x%08x", res);
       capture_time = GST_CLOCK_TIME_NONE;
       capture_duration = GST_CLOCK_TIME_NONE;
+    }
+
+    if (m_input->videosrc) {
+      /* FIXME: Avoid circularity between gstdecklink.cpp and
+       * gstdecklinkvideosrc.cpp */
+      videosrc = GST_ELEMENT_CAST (gst_object_ref (m_input->videosrc));
+      res =
+          video_frame->
+          GetTimecode (GST_DECKLINK_VIDEO_SRC (videosrc)->timecode_format,
+          &dtc);
+
+      if (res != S_OK) {
+        GST_DEBUG_OBJECT (videosrc, "Failed to get timecode: 0x%08x", res);
+        dtc = NULL;
+      } else {
+        res = dtc->GetComponents (&hours, &minutes, &seconds, &frames);
+        if (res != S_OK) {
+          GST_ERROR ("Could not get components for timecode %p", dtc);
+          hours = 0;
+          minutes = 0;
+          seconds = 0;
+          frames = 0;
+          bflags = 0;
+        } else {
+          GST_DEBUG_OBJECT (videosrc, "Got timecode %02d:%02d:%02d:%02d", hours,
+              minutes, seconds, frames);
+          bflags = dtc->GetFlags ();
+        }
+      }
     }
 
     g_mutex_lock (&m_input->lock);
@@ -694,7 +791,6 @@ public:
       capture_time = 0;
 
     if (m_input->videosrc) {
-      videosrc = GST_ELEMENT_CAST (gst_object_ref (m_input->videosrc));
       got_video_frame = m_input->got_video_frame;
     }
     mode = gst_decklink_get_mode_enum_from_bmd (m_input->mode->mode);
@@ -707,7 +803,8 @@ public:
 
     if (got_video_frame && videosrc) {
       got_video_frame (videosrc, video_frame, mode, capture_time,
-          capture_duration);
+          capture_duration, (guint8) hours, (guint8) minutes, (guint8) seconds,
+          (guint8) frames, bflags);
     }
 
   no_video_frame:

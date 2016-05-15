@@ -58,6 +58,7 @@ struct _GstDecklinkVideoSrc
 
   GstVideoInfo info;
   GstDecklinkVideoFormat video_format;
+  BMDTimecodeFormat timecode_format;
 
   GstDecklinkInput *input;
 
