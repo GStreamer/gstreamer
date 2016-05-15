@@ -134,7 +134,6 @@ gst_rtp_mp4g_pay_reset (GstRtpMP4GPay * rtpmp4gpay)
   GST_DEBUG_OBJECT (rtpmp4gpay, "reset");
 
   gst_adapter_clear (rtpmp4gpay->adapter);
-  rtpmp4gpay->offset = 0;
 }
 
 static void
@@ -540,10 +539,7 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
     GST_BUFFER_PTS (outbuf) = rtpmp4gpay->first_timestamp;
     GST_BUFFER_DURATION (outbuf) = rtpmp4gpay->first_duration;
 
-    if (rtpmp4gpay->frame_len) {
-      GST_BUFFER_OFFSET (outbuf) = rtpmp4gpay->offset;
-      rtpmp4gpay->offset += rtpmp4gpay->frame_len;
-    }
+    GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
 
     if (rtpmp4gpay->discont) {
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
