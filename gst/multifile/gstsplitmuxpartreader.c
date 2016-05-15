@@ -737,8 +737,11 @@ new_decoded_pad_added_cb (GstElement * element, GstPad * pad,
   /* Look up or create the output pad */
   if (reader->get_pad_cb)
     out_pad = reader->get_pad_cb (reader, pad, reader->cb_data);
-  if (out_pad == NULL)
+  if (out_pad == NULL) {
+    GST_DEBUG_OBJECT (reader,
+        "No output pad for %" GST_PTR_FORMAT ". Ignoring", pad);
     return;
+  }
 
   /* Create our proxy pad to interact with this new pad */
   proxy_pad = gst_splitmux_part_reader_new_proxy_pad (reader, out_pad);
@@ -911,16 +914,16 @@ type_found (GstElement * typefind, guint probability,
     return;
   }
 
-  gst_element_set_locked_state (demux, TRUE);
-  gst_bin_add (GST_BIN_CAST (reader), demux);
-  gst_element_link_pads (reader->typefind, "src", demux, NULL);
-  gst_element_sync_state_with_parent (reader->demux);
-  gst_element_set_locked_state (demux, FALSE);
-
   /* Connect to demux signals */
   g_signal_connect (demux,
       "pad-added", G_CALLBACK (new_decoded_pad_added_cb), reader);
   g_signal_connect (demux, "no-more-pads", G_CALLBACK (no_more_pads), reader);
+
+  gst_element_set_locked_state (demux, TRUE);
+  gst_bin_add (GST_BIN_CAST (reader), demux);
+  gst_element_link_pads (reader->typefind, "src", demux, NULL);
+  gst_element_set_state (reader->demux, GST_STATE_TARGET (reader));
+  gst_element_set_locked_state (demux, FALSE);
 }
 
 static void
