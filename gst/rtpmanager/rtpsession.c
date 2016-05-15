@@ -726,12 +726,12 @@ rtp_session_create_stats (RTPSession * sess)
   GValue source_stats_v = G_VALUE_INIT;
   guint size;
 
+  RTP_SESSION_LOCK (sess);
   s = gst_structure_new ("application/x-rtp-session-stats",
       "rtx-drop-count", G_TYPE_UINT, sess->stats.nacks_dropped,
       "sent-nack-count", G_TYPE_UINT, sess->stats.nacks_sent,
       "recv-nack-count", G_TYPE_UINT, sess->stats.nacks_received, NULL);
 
-  RTP_SESSION_LOCK (sess);
   size = g_hash_table_size (sess->ssrcs[sess->mask_idx]);
   source_stats = g_value_array_new (size);
   g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
