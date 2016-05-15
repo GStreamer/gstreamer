@@ -69,7 +69,6 @@
 
 #include <string.h>
 
-#include "gstapp-marshal.h"
 #include "gstappsink.h"
 
 struct _GstAppSinkPrivate
@@ -259,8 +258,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
   gst_app_sink_signals[SIGNAL_NEW_PREROLL] =
       g_signal_new ("new-preroll", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstAppSinkClass, new_preroll),
-      NULL, NULL, __gst_app_marshal_ENUM__VOID, GST_TYPE_FLOW_RETURN, 0,
-      G_TYPE_NONE);
+      NULL, NULL, NULL, GST_TYPE_FLOW_RETURN, 0, G_TYPE_NONE);
   /**
    * GstAppSink::new-sample:
    * @appsink: the appsink element that emited the signal
@@ -280,8 +278,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
   gst_app_sink_signals[SIGNAL_NEW_SAMPLE] =
       g_signal_new ("new-sample", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstAppSinkClass, new_sample),
-      NULL, NULL, __gst_app_marshal_ENUM__VOID, GST_TYPE_FLOW_RETURN, 0,
-      G_TYPE_NONE);
+      NULL, NULL, NULL, GST_TYPE_FLOW_RETURN, 0, G_TYPE_NONE);
 
   /**
    * GstAppSink::pull-preroll:
@@ -309,8 +306,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
   gst_app_sink_signals[SIGNAL_PULL_PREROLL] =
       g_signal_new ("pull-preroll", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstAppSinkClass,
-          pull_preroll), NULL, NULL, __gst_app_marshal_BOXED__VOID,
-      GST_TYPE_SAMPLE, 0, G_TYPE_NONE);
+          pull_preroll), NULL, NULL, NULL, GST_TYPE_SAMPLE, 0, G_TYPE_NONE);
   /**
    * GstAppSink::pull-sample:
    * @appsink: the appsink element to emit this signal on
@@ -335,8 +331,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
   gst_app_sink_signals[SIGNAL_PULL_SAMPLE] =
       g_signal_new ("pull-sample", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstAppSinkClass,
-          pull_sample), NULL, NULL, __gst_app_marshal_BOXED__VOID,
-      GST_TYPE_SAMPLE, 0, G_TYPE_NONE);
+          pull_sample), NULL, NULL, NULL, GST_TYPE_SAMPLE, 0, G_TYPE_NONE);
 
   gst_element_class_set_static_metadata (element_class, "AppSink",
       "Generic/Sink", "Allow the application to get access to raw buffer",

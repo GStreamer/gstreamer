@@ -6,14 +6,6 @@ glib_gen_basename = gstapp
 
 include $(top_srcdir)/common/gst-glib-gen.mak
 
-built_sources = gstapp-marshal.c
-built_headers = gstapp-marshal.h
-
-BUILT_SOURCES = $(built_sources) $(built_headers)
-
-nodist_libgstapp_@GST_API_VERSION@_la_SOURCES = \
-             $(built_sources)
-
 libgstapp_@GST_API_VERSION@_la_SOURCES = gstappsrc.c gstappsink.c 
 libgstapp_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
@@ -25,10 +17,6 @@ libgstapp_@GST_API_VERSION@include_HEADERS = \
 	app.h \
 	gstappsrc.h \
 	gstappsink.h
-
-CLEANFILES = $(BUILT_SOURCES)
-
-EXTRA_DIST = gstapp-marshal.list
 
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstApp-@GST_API_VERSION@.gir
@@ -80,5 +68,5 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		--includedir=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
-CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
+CLEANFILES = $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
