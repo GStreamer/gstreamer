@@ -2319,6 +2319,7 @@ gst_ogg_demux_reset_streams (GstOggDemux * ogg)
     stream->start_time = -1;
     stream->map.accumulated_granule = 0;
     stream->current_granule = -1;
+    stream->keyframe_granule = -1;
   }
   ogg->building_chain = chain;
   GST_DEBUG_OBJECT (ogg, "Resetting current chain");
