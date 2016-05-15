@@ -1075,7 +1075,7 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   if (fb_id == 0)
     goto buffer_invalid;
 
-  GST_DEBUG_OBJECT (self, "displaying fb %d", fb_id);
+  GST_TRACE_OBJECT (self, "displaying fb %d", fb_id);
 
   {
     if ((crop = gst_buffer_get_video_crop_meta (buffer))) {
