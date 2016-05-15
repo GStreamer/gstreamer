@@ -870,12 +870,32 @@
 
 <ARG>
 <NAME>GstAudioResample::sinc-filter-mode</NAME>
-<TYPE>SpeexResamplerSincFilterMode</TYPE>
+<TYPE>GstAudioResamplerFilterMode</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sinc filter table mode</NICK>
 <BLURB>What sinc filter table mode to use.</BLURB>
-<DEFAULT>Use full table if table size below threshold</DEFAULT>
+<DEFAULT>GST_AUDIO_RESAMPLER_FILTER_MODE_AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioResample::resample-method</NAME>
+<TYPE>GstAudioResamplerMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Resample method to use</NICK>
+<BLURB>What resample method to use.</BLURB>
+<DEFAULT>GST_AUDIO_RESAMPLER_METHOD_KAISER</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioResample::sinc-filter-interpolation</NAME>
+<TYPE>GstAudioResamplerFilterInterpolation</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sinc filter interpolation</NICK>
+<BLURB>How to interpolate the sinc filter table.</BLURB>
+<DEFAULT>GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1296,6 +1316,16 @@
 <NICK>Stream Type</NICK>
 <BLURB>the type of the stream.</BLURB>
 <DEFAULT>GST_APP_STREAM_TYPE_STREAM</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::duration</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Duration</NICK>
+<BLURB>The duration of the data stream in nanoseconds (GST_CLOCK_TIME_NONE if unknown).</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
 </ARG>
 
 <ARG>
