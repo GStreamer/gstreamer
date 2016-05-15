@@ -1571,8 +1571,6 @@ add_cb (GstBin * pipeline, GstBin * bin, GstElement * element, GList ** list)
 static void
 remove_cb (GstBin * pipeline, GstBin * bin, GstElement * element, GList ** list)
 {
-  fail_unless (GST_OBJECT_PARENT (element) == NULL);
-
   *list = g_list_prepend (*list, element);
 }
 
@@ -1597,7 +1595,7 @@ GST_START_TEST (test_deep_added_removed)
   gst_bin_remove (GST_BIN (pipe), e);
   fail_unless (element_was_removed (e));
 
-  /* let's try with a deeper hierarchy */
+  /* let's try with a deeper hierarchy, construct it from top-level down */
   bin0 = gst_bin_new (NULL);
   gst_bin_add (GST_BIN (pipe), bin0);
   bin1 = gst_bin_new (NULL);
@@ -1610,10 +1608,33 @@ GST_START_TEST (test_deep_added_removed)
   fail_unless (added == NULL);
   fail_unless (removed == NULL);
 
+  gst_object_ref (e);           /* keep e alive */
   gst_bin_remove (GST_BIN (bin1), e);
   fail_unless (element_was_removed (e));
   fail_unless (added == NULL);
   fail_unless (removed == NULL);
+
+  /* now add existing bin hierarchy to pipeline (first remove it so we can re-add it) */
+  gst_object_ref (bin0);        /* keep bin0 alive */
+  gst_bin_remove (GST_BIN (pipe), bin0);
+  fail_unless (element_was_removed (bin0));
+  fail_unless (element_was_removed (bin1));
+  fail_unless (added == NULL);
+  fail_unless (removed == NULL);
+
+  /* re-adding element to removed bin should not trigger our callbacks */
+  gst_bin_add (GST_BIN (bin1), e);
+  fail_unless (added == NULL);
+  fail_unless (removed == NULL);
+
+  gst_bin_add (GST_BIN (pipe), bin0);
+  fail_unless (element_was_added (bin0));
+  fail_unless (element_was_added (bin1));
+  fail_unless (element_was_added (e));
+  fail_unless (added == NULL);
+  fail_unless (removed == NULL);
+  gst_object_unref (bin0);
+  gst_object_unref (e);
 
   /* disconnect signals, unref will trigger remove callbacks otherwise */
   g_signal_handler_disconnect (pipe, id_added);

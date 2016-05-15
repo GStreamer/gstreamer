@@ -1112,6 +1112,53 @@ unlink_pads (const GValue * item, gpointer user_data)
   }
 }
 
+static void
+bin_deep_iterator_foreach (const GValue * item, gpointer user_data)
+{
+  GQueue *queue = user_data;
+
+  g_queue_push_tail (queue, g_value_dup_object (item));
+}
+
+static void
+gst_bin_do_deep_add_remove (GstBin * bin, gint sig_id, const gchar * sig_name,
+    GstElement * element)
+{
+  g_signal_emit (bin, sig_id, 0, bin, element);
+
+  /* When removing a bin, emit deep-element-* for everything in the bin too */
+  if (GST_IS_BIN (element)) {
+    GstIterator *it;
+    GstIteratorResult ires;
+    GQueue elements = G_QUEUE_INIT;
+
+    GST_LOG_OBJECT (bin, "Recursing into bin %" GST_PTR_FORMAT " for %s",
+        element, sig_name);
+    it = gst_bin_iterate_recurse (GST_BIN_CAST (element));
+    do {
+      ires = gst_iterator_foreach (it, bin_deep_iterator_foreach, &elements);
+      if (ires != GST_ITERATOR_DONE) {
+        g_queue_foreach (&elements, (GFunc) g_object_unref, NULL);
+        g_queue_clear (&elements);
+      }
+    } while (ires == GST_ITERATOR_RESYNC);
+    if (ires != GST_ITERATOR_ERROR) {
+      GstElement *e;
+
+      while ((e = g_queue_pop_head (&elements))) {
+        GstObject *parent = gst_object_get_parent (GST_OBJECT_CAST (e));
+
+        GST_LOG_OBJECT (bin, "calling %s for element %" GST_PTR_FORMAT
+            " in bin %" GST_PTR_FORMAT, sig_name, e, parent);
+        g_signal_emit (bin, sig_id, 0, parent, e);
+        gst_object_unref (parent);
+        g_object_unref (e);
+      }
+    }
+    gst_iterator_free (it);
+  }
+}
+
 /* vmethod that adds an element to a bin
  *
  * MT safe
@@ -1327,7 +1374,8 @@ no_state_recalc:
   gst_child_proxy_child_added ((GstChildProxy *) bin, (GObject *) element,
       elem_name);
 
-  g_signal_emit (bin, gst_bin_signals[DEEP_ELEMENT_ADDED], 0, bin, element);
+  gst_bin_do_deep_add_remove (bin, gst_bin_signals[DEEP_ELEMENT_ADDED],
+      "deep-element-added", element);
 
   g_free (elem_name);
 
@@ -1710,7 +1758,8 @@ no_state_recalc:
   gst_child_proxy_child_removed ((GstChildProxy *) bin, (GObject *) element,
       elem_name);
 
-  g_signal_emit (bin, gst_bin_signals[DEEP_ELEMENT_REMOVED], 0, bin, element);
+  gst_bin_do_deep_add_remove (bin, gst_bin_signals[DEEP_ELEMENT_REMOVED],
+      "deep-element-removed", element);
 
   g_free (elem_name);
   /* element is really out of our control now */
