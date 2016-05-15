@@ -553,6 +553,12 @@ Note that all testsuite should be inside python modules, so the directory should
         print("Running HTTP server only")
         return
 
+    # There seems to be some issue with forking, dconf and some gtype
+    # initialization that deadlocks occasionally, setting the
+    # GSettings backend make it go away.
+    # Also happened here: https://cgit.freedesktop.org/gstreamer/gst-plugins-good/commit/tests/check/Makefile.am?id=8e2c1d1de56bddbff22170f8b17473882e0e63f9
+    os.environ['GSETTINGS_BACKEND'] = "memory"
+
     e = None
     try:
         tests_launcher.run_tests()
