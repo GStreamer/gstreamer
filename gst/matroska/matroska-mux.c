@@ -3541,14 +3541,13 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   }
 
   /* for dirac we have to queue up everything up to a picture unit */
-  if (collect_pad->track->codec_id != NULL &&
-      strcmp (collect_pad->track->codec_id,
-          GST_MATROSKA_CODEC_ID_VIDEO_DIRAC) == 0) {
+  if (!g_strcmp0 (collect_pad->track->codec_id,
+          GST_MATROSKA_CODEC_ID_VIDEO_DIRAC)) {
     buf = gst_matroska_mux_handle_dirac_packet (mux, collect_pad, buf);
     if (!buf)
       return GST_FLOW_OK;
-  } else if (strcmp (collect_pad->track->codec_id,
-          GST_MATROSKA_CODEC_ID_VIDEO_PRORES) == 0) {
+  } else if (!g_strcmp0 (collect_pad->track->codec_id,
+          GST_MATROSKA_CODEC_ID_VIDEO_PRORES)) {
     /* Remove the 'Frame container atom' header' */
     buf = gst_buffer_make_writable (buf);
     gst_buffer_resize (buf, 8, gst_buffer_get_size (buf) - 8);
