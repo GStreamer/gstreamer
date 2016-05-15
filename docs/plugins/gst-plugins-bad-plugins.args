@@ -46409,6 +46409,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTMPSrc::timeout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTMP Timeout</NICK>
+<BLURB>Time without receiving any data from the server to wait before to timeout the session.</BLURB>
+<DEFAULT>120</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstFliteTestSrc::samplesperbuffer</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 1</RANGE>
@@ -58865,7 +58875,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Eyes profile</NICK>
 <BLURB>Location of Haar cascade file to use for eye-pair detection.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_eyepair_small.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_eyepair_small.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58915,7 +58925,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Mouth profile</NICK>
 <BLURB>Location of Haar cascade file to use for mouth detection.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_mouth.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_mouth.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58925,7 +58935,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Nose profile</NICK>
 <BLURB>Location of Haar cascade file to use for nose detection.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_nose.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_nose.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58935,7 +58945,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Face profile</NICK>
 <BLURB>Location of Haar cascade file to use for face detection.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58975,7 +58985,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Profile</NICK>
 <BLURB>Location of Haar cascade file to use for face blurion.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -67632,11 +67642,11 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 
 <ARG>
 <NAME>GstRtpH265Pay::config-interval</NAME>
-<TYPE>guint</TYPE>
-<RANGE><= 3600</RANGE>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,3600]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>VPS SPS PPS Send Interval</NICK>
-<BLURB>Send VPS, SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
+<BLURB>Send VPS, SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled, -1 = send with every IDR frame).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -67697,7 +67707,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rwx</FLAGS>
 <NICK>Connection</NICK>
 <BLURB>Video input connection to use.</BLURB>
-<DEFAULT>auto</DEFAULT>
+<DEFAULT>Auto</DEFAULT>
 </ARG>
 
 <ARG>
@@ -67717,7 +67727,17 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rwx</FLAGS>
 <NICK>Playback Mode</NICK>
 <BLURB>Video Mode to use for playback.</BLURB>
-<DEFAULT>auto</DEFAULT>
+<DEFAULT>Automatic detection</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSrc::video-format</NAME>
+<TYPE>GstDecklinkVideoFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Video format</NICK>
+<BLURB>Video format type to use for input (Only use auto for mode=auto).</BLURB>
+<DEFAULT>Auto</DEFAULT>
 </ARG>
 
 <ARG>
@@ -67737,7 +67757,17 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rwx</FLAGS>
 <NICK>Playback Mode</NICK>
 <BLURB>Video Mode to use for playback.</BLURB>
-<DEFAULT>ntsc</DEFAULT>
+<DEFAULT>NTSC SD 60i</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSink::video-format</NAME>
+<TYPE>GstDecklinkVideoFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Video format</NICK>
+<BLURB>Video format type to use for playback.</BLURB>
+<DEFAULT>bmdFormat8BitYUV</DEFAULT>
 </ARG>
 
 <ARG>
@@ -67767,7 +67797,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rwx</FLAGS>
 <NICK>Connection</NICK>
 <BLURB>Audio input connection to use.</BLURB>
-<DEFAULT>auto</DEFAULT>
+<DEFAULT>Automatic</DEFAULT>
 </ARG>
 
 <ARG>
@@ -68168,6 +68198,26 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>GL mixer element</NICK>
 <BLURB>The GL mixer chain to use.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLMixerBin::start-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start Time</NICK>
+<BLURB>Start time to use if start-time-selection=set.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLMixerBin::start-time-selection</NAME>
+<TYPE>GstGLMixerBinStartTimeSelection</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start Time Selection</NICK>
+<BLURB>Decides which start time is output.</BLURB>
+<DEFAULT>Start at 0 running time (default)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -69318,5 +69368,45 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Volume2</NICK>
 <BLURB>Volume of second tone signal.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstChecksumSink::hash</NAME>
+<TYPE>GstChecksumSinkHash</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Hash</NICK>
+<BLURB>Checksum type.</BLURB>
+<DEFAULT>SHA-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSdpSrc::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>URI to SDP file (sdp:///path/to/file).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSdpSrc::sdp</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDP</NICK>
+<BLURB>SDP description used instead of location.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLDeinterlace::method</NAME>
+<TYPE>GstGLDeinterlaceMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Deinterlace Method</NICK>
+<BLURB>Select which deinterlace method apply to GL video texture.</BLURB>
+<DEFAULT>Blur Vertical</DEFAULT>
 </ARG>
 

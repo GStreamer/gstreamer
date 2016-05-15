@@ -3,10 +3,10 @@
   <description>configure streaming sessions using SDP</description>
   <filename>../../gst/sdp/.libs/libgstsdpelem.so</filename>
   <basename>libgstsdpelem.so</basename>
-  <version>1.8.0</version>
+  <version>1.9.0.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -22,6 +22,21 @@
           <presence>always</presence>
           <details>application/sdp</details>
         </caps>
+        <caps>
+          <name>stream_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>sdpsrc</name>
+      <longname>SDP Source</longname>
+      <class>Source/Network/RTP</class>
+      <description>Stream RTP based on an SDP</description>
+      <author>Sebastian Dröge &lt;sebastian@centricular.com&gt;</author>
+      <pads>
         <caps>
           <name>stream_%u</name>
           <direction>source</direction>

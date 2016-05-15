@@ -3,15 +3,15 @@
   <description>MPEG-PS demuxer</description>
   <filename>../../gst/mpegdemux/.libs/libgstmpegpsdemux.so</filename>
   <basename>libgstmpegpsdemux.so</basename>
-  <version>1.8.0</version>
+  <version>1.9.0.1</version>
   <license>unknown</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>mpegpsdemux</name>
-      <longname>The Fluendo MPEG Program Stream Demuxer</longname>
+      <longname>MPEG Program Stream Demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>Demultiplexes MPEG Program Streams</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>

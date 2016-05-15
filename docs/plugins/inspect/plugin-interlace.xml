@@ -3,10 +3,10 @@
   <description>Create an interlaced video stream</description>
   <filename>../../gst/interlace/.libs/libgstinterlace.so</filename>
   <basename>libgstinterlace.so</basename>
-  <version>1.8.0</version>
+  <version>1.9.0.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ AYUV, YUY2, UYVY, I420, YV12, Y42B, Y444, NV12, NV21 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], interlace-mode=(string)progressive</details>
+          <details>video/x-raw, format=(string){ AYUV, YUY2, UYVY, I420, YV12, Y42B, Y444, NV12, NV21 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>src</name>
