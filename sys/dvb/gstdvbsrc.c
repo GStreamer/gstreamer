@@ -2404,16 +2404,32 @@ gst_dvbsrc_guess_delsys (GstDvbSrc * object)
 
   alternatives = g_list_length (valid);
 
-  if (!alternatives) {
-    GST_WARNING_OBJECT (object, "Delivery system autodetection provided no "
-        "valid alternative");
-    candidate = g_list_last (object->supported_delsys);
-  } else {
-    if (alternatives > 1) {
-      GST_WARNING_OBJECT (object, "Delivery system autodetection provided more "
-          "than one valid alternative");
-    }
-    candidate = g_list_last (valid);
+  switch (alternatives) {
+    case 0:
+      GST_WARNING_OBJECT (object, "Delivery system autodetection provided no "
+          "valid alternative");
+      candidate = g_list_last (object->supported_delsys);
+      break;
+    case 1:
+      candidate = g_list_last (valid);
+      GST_DEBUG_OBJECT (object, "Delivery system autodetection provided only "
+          "one valid alternative: '%d'", GPOINTER_TO_INT (candidate->data));
+      break;
+    default:
+      /* More than one alternative. Selection based on best guess */
+      if (g_list_find (valid, GINT_TO_POINTER (SYS_DVBT)) &&
+          g_list_find (valid, GINT_TO_POINTER (SYS_DVBT2))) {
+        /* There is no way to tell one over the other when parameters seem valid
+         * for DVB-T and DVB-T2 and the adapter supports both. Reason to go with
+         * the former here is that, from experience, most DVB-T2 channels out
+         * there seem to use parameters that are not valid for DVB-T, like
+         * QAM_256 */
+        GST_WARNING_OBJECT (object, "Channel parameters valid for DVB-T and "
+            "DVB-T2. Choosing DVB-T");
+        candidate = g_list_find (valid, GINT_TO_POINTER (SYS_DVBT));
+      } else {
+        candidate = g_list_last (valid);
+      }
   }
 
   object->delsys = GPOINTER_TO_INT (candidate->data);
