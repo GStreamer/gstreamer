@@ -81,6 +81,8 @@ CRUFT_FILES = \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
 	$(top_builddir)/gst-libs/gst/audio/testchannels \
+        $(top_builddir)/gst-libs/gst/app/gstapp-marshal.c \
+        $(top_builddir)/gst-libs/gst/app/gstapp-marshal.h \
 	$(top_builddir)/tests/check/elements/gdppay \
 	$(top_builddir)/tests/check/elements/gdpdepay \
 	$(top_builddir)/tests/check/pipelines/streamheader \
