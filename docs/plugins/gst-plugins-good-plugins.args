@@ -619,6 +619,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstUDPSrc::retrieve-sender-address</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Retrieve Sender Address</NICK>
+<BLURB>Whether to retrieve the sender address and add it to buffers as meta. Disabling this might result in minor performance improvements in certain scenarios.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSMPTE::border</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -1005,7 +1015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.8.0"</DEFAULT>
+<DEFAULT>"GStreamer/1.9.0.1"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1016,6 +1026,16 @@
 <NICK>Max RTCP RTP Time Diff</NICK>
 <BLURB>Maximum amount of time in ms that the RTP time in RTCP SRs is allowed to be ahead (-1 disabled).</BLURB>
 <DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::rfc7273-sync</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync on RFC7273 clock</NICK>
+<BLURB>Synchronize received streams to the RFC7273 clock (requires clock and offset to be provided).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1976,6 +1996,16 @@
 <NICK>Determines whether output should be streamable</NICK>
 <BLURB>If set to true, the output should be as if it is to be streamed and hence no indexes written or duration written.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMatroskaMux::timecodescale</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>[1,1000000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timecode Scale</NICK>
+<BLURB>TimecodeScale used to calculate the Raw Timecode of a Block.</BLURB>
+<DEFAULT>1000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20135,7 +20165,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Method</NICK>
 <BLURB>Deinterlace Method.</BLURB>
-<DEFAULT>Television: Full resolution</DEFAULT>
+<DEFAULT>Linear</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20519,6 +20549,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpBin::rfc7273-sync</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync on RFC7273 clock</NICK>
+<BLURB>Synchronize received streams to the RFC7273 clock (requires clock and offset to be provided).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRtpJitterBuffer::do-lost</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -20706,6 +20746,16 @@
 <NICK>Max RTCP RTP Time Diff</NICK>
 <BLURB>Maximum amount of time in ms that the RTP time in RTCP SRs is allowed to be ahead (-1 disabled).</BLURB>
 <DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::rfc7273-sync</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync on RFC7273 clock</NICK>
+<BLURB>Synchronize received streams to the RFC7273 clock (requires clock and offset to be provided).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -23826,6 +23876,16 @@
 <NICK>Sink</NICK>
 <BLURB>The sink element (or element chain) to use (NULL = default filesink).</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::max-files</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max files</NICK>
+<BLURB>Maximum number of files to keep on disk. Once the maximum is reached,old files start to be deleted to make room for new ones.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>

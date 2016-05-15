@@ -651,3 +651,10 @@ GstSplitMuxSink *gstsplitmuxsink
 guint  arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstSplitMuxSrc::format-location</NAME>
+<RETURNS>GStrv</RETURNS>
+<FLAGS>l</FLAGS>
+GstSplitMuxSrc *gstsplitmuxsrc
+</SIGNAL>
+
