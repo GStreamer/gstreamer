@@ -104,6 +104,7 @@ enum
 
 enum
 {
+  SIGNAL_URI_LOADED,
   SIGNAL_POSITION_UPDATED,
   SIGNAL_DURATION_CHANGED,
   SIGNAL_STATE_CHANGED,
@@ -351,6 +352,11 @@ gst_player_class_init (GstPlayerClass * klass)
 
   g_object_class_install_properties (gobject_class, PROP_LAST, param_specs);
 
+  signals[SIGNAL_URI_LOADED] =
+      g_signal_new ("uri-loaded", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS, 0, NULL,
+      NULL, NULL, G_TYPE_NONE, 1, G_TYPE_STRING);
+
   signals[SIGNAL_POSITION_UPDATED] =
       g_signal_new ("position-updated", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS, 0, NULL,
@@ -474,6 +480,28 @@ gst_player_constructed (GObject * object)
   G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 
+typedef struct
+{
+  GstPlayer *player;
+  gchar *uri;
+} UriLoadedSignalData;
+
+static void
+uri_loaded_dispatch (gpointer user_data)
+{
+  UriLoadedSignalData *data = user_data;
+
+  g_signal_emit (data->player, signals[SIGNAL_URI_LOADED], 0, data->uri);
+}
+
+static void
+uri_loaded_signal_data_free (UriLoadedSignalData * data)
+{
+  g_object_unref (data->player);
+  g_free (data->uri);
+  g_free (data);
+}
+
 static gboolean
 gst_player_set_uri_internal (gpointer user_data)
 {
@@ -486,6 +514,17 @@ gst_player_set_uri_internal (gpointer user_data)
   GST_DEBUG_OBJECT (self, "Changing URI to '%s'", GST_STR_NULL (self->uri));
 
   g_object_set (self->playbin, "uri", self->uri, NULL);
+
+  if (g_signal_handler_find (self, G_SIGNAL_MATCH_ID,
+          signals[SIGNAL_URI_LOADED], 0, NULL, NULL, NULL) != 0) {
+    UriLoadedSignalData *data = g_new (UriLoadedSignalData, 1);
+
+    data->player = g_object_ref (self);
+    data->uri = g_strdup (self->uri);
+    gst_player_signal_dispatcher_dispatch (self->signal_dispatcher, self,
+        uri_loaded_dispatch, data,
+        (GDestroyNotify) uri_loaded_signal_data_free);
+  }
 
   /* if have suburi from previous playback then free it */
   if (self->suburi) {
