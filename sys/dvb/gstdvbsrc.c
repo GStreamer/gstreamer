@@ -2071,6 +2071,14 @@ gst_dvbsrc_is_valid_trans_mode (guint delsys, guint mode)
         return TRUE;
       }
       break;
+#if HAVE_V5_MINOR(7)
+    case SYS_DTMB:
+      if (mode == TRANSMISSION_MODE_AUTO || mode == TRANSMISSION_MODE_C1 ||
+          mode == TRANSMISSION_MODE_C3780) {
+        return TRUE;
+      }
+      break;
+#endif
     default:
       GST_FIXME ("No delsys/transmission-mode sanity checks implemented for "
           "this delivery system");
