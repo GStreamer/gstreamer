@@ -2597,9 +2597,11 @@ gst_ps_demux_scan_forward_ts (GstPsDemux * demux, guint64 * pos,
   GstMapInfo map;
 
   do {
+    /* Check we can get at least scan_sz bytes */
     if (offset + scan_sz > demux->sink_segment.stop)
       return FALSE;
 
+    /* Don't go further than 'limit' bytes */
     if (limit && offset > *pos + limit)
       return FALSE;
 
@@ -2658,10 +2660,12 @@ gst_ps_demux_scan_backward_ts (GstPsDemux * demux, guint64 * pos,
   GstMapInfo map;
 
   do {
+    /* Check we have at least scan_sz bytes available */
     if (offset < scan_sz - 1)
       return FALSE;
 
-    if (limit && offset < *pos - limit)
+    /* Don't go backward past the start or 'limit' bytes */
+    if (limit && offset + limit < *pos)
       return FALSE;
 
     if (offset > BLOCK_SZ)
@@ -2750,7 +2754,8 @@ gst_ps_sink_get_duration (GstPsDemux * demux)
   demux->first_scr_offset = offset;
   /* scan for last SCR in the stream */
   offset = demux->sink_segment.stop;
-  gst_ps_demux_scan_backward_ts (demux, &offset, SCAN_SCR, &demux->last_scr, 0);
+  gst_ps_demux_scan_backward_ts (demux, &offset, SCAN_SCR, &demux->last_scr,
+      DURATION_SCAN_LIMIT);
   GST_DEBUG_OBJECT (demux, "Last SCR: %" G_GINT64_FORMAT " %" GST_TIME_FORMAT
       " in packet starting at %" G_GUINT64_FORMAT,
       demux->last_scr, GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->last_scr)),
