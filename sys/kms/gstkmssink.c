@@ -60,12 +60,14 @@
 #define GST_PLUGIN_DESC "Video sink using the Linux kernel mode setting API"
 
 GST_DEBUG_CATEGORY_STATIC (gst_kms_sink_debug);
+GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 #define GST_CAT_DEFAULT gst_kms_sink_debug
 
 #define parent_class gst_kms_sink_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstKMSSink, gst_kms_sink, GST_TYPE_VIDEO_SINK,
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, GST_PLUGIN_NAME, 0,
-        GST_PLUGIN_DESC));
+        GST_PLUGIN_DESC);
+    GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE"));
 
 enum
 {
@@ -991,7 +993,7 @@ gst_kms_sink_get_input_buffer (GstKMSSink * self, GstBuffer * inbuf)
   if (gst_kms_sink_import_dmabuf (self, inbuf, &buf))
     return buf;
 
-  GST_LOG_OBJECT (self, "frame copy");
+  GST_CAT_INFO_OBJECT (CAT_PERFORMANCE, self, "frame copy");
 
   if (!gst_buffer_pool_set_active (self->pool, TRUE))
     goto activate_pool_failed;
