@@ -113,6 +113,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst-libs/gst/baseparse \
 	$(top_srcdir)/gst-libs/gst/egl \
 	$(top_srcdir)/gst-libs/gst/signalprocessor \
+	$(top_srcdir)/tests/examples/gl/gtk/gtkvideooverlay \
 	$(top_srcdir)/tests/examples/scaletempo \
 	$(top_srcdir)/tests/examples/shapewipe \
 	$(top_srcdir)/tests/examples/switch \
