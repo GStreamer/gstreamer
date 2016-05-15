@@ -324,7 +324,6 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   guint8 *data;
   guint todo;
   gsize bsize;
-  int read;
   int size;
 
   src = GST_RTMP_SRC (pushsrc);
@@ -342,20 +341,19 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
     return GST_FLOW_ERROR;
   }
 
-  bsize = todo = size;
+  todo = size;
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
   data = map.data;
-  read = bsize = 0;
+  bsize = 0;
 
   while (todo > 0) {
-    read = RTMP_Read (src->rtmp, (char *) data, todo);
+    int read = RTMP_Read (src->rtmp, (char *) data, todo);
 
-    if (G_UNLIKELY (read == 0 && todo == size)) {
+    if (G_UNLIKELY (read == 0 && todo == size))
       goto eos;
-    } else if (G_UNLIKELY (read == 0)) {
-      todo = 0;
+
+    if (G_UNLIKELY (read == 0))
       break;
-    }
 
     if (G_UNLIKELY (read < 0))
       goto read_failed;
