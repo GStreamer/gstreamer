@@ -39,7 +39,6 @@
 
 #include <string.h>
 #include "gstlv2.h"
-#include "gstlv2utils.h"
 
 #include <gst/audio/audio-channels.h>
 #include <lv2/lv2plug.in/ns/ext/port-groups/port-groups.h>
@@ -52,24 +51,82 @@ GST_DEBUG_CATEGORY (lv2_debug);
   "/usr/local/lib/lv2" G_SEARCHPATH_SEPARATOR_S \
   LIBDIR "/lv2"
 
-/* search the plugin path
- */
+GstStructure *lv2_meta_all = NULL;
+
+static void
+lv2_plugin_register_element (GstPlugin * plugin, GstStructure * lv2_meta)
+{
+  guint audio_in, audio_out;
+
+  gst_structure_get_uint (lv2_meta, "audio-in", &audio_in);
+  gst_structure_get_uint (lv2_meta, "audio-out", &audio_out);
+
+  if (audio_in == 0) {
+    gst_lv2_source_register_element (plugin, lv2_meta);
+  } else {
+    gst_lv2_filter_register_element (plugin, lv2_meta);
+  }
+}
+
+static void
+lv2_count_ports (const LilvPlugin * lv2plugin, guint * audio_in,
+    guint * audio_out)
+{
+  GHashTable *port_groups = g_hash_table_new_full (g_str_hash, g_str_equal,
+      g_free, NULL);
+  guint i;
+
+  *audio_in = *audio_out = 0;
+  for (i = 0; i < lilv_plugin_get_num_ports (lv2plugin); i++) {
+    const LilvPort *port = lilv_plugin_get_port_by_index (lv2plugin, i);
+
+    if (lilv_port_is_a (lv2plugin, port, audio_class)) {
+      const gboolean is_input = lilv_port_is_a (lv2plugin, port, input_class);
+      LilvNodes *lv2group = lilv_port_get (lv2plugin, port, group_pred);
+
+      if (lv2group) {
+        const gchar *uri = lilv_node_as_uri (lv2group);
+
+        if (g_hash_table_contains (port_groups, uri))
+          continue;
+
+        g_hash_table_add (port_groups, g_strdup (uri));
+        lilv_node_free (lv2group);
+      }
+
+      if (is_input)
+        (*audio_in)++;
+      else
+        (*audio_out)++;
+    }
+  }
+  g_hash_table_unref (port_groups);
+}
+
+/* search the plugin path */
 static gboolean
 lv2_plugin_discover (GstPlugin * plugin)
 {
-  guint j, num_sink_pads, num_src_pads;
+  guint audio_in, audio_out;
   LilvIter *i;
   const LilvPlugins *plugins = lilv_world_get_all_plugins (world);
 
   for (i = lilv_plugins_begin (plugins); !lilv_plugins_is_end (plugins, i);
       i = lilv_plugins_next (plugins, i)) {
+    GstStructure *lv2_meta = NULL;
+    GValue value = { 0, };
     const LilvPlugin *lv2plugin = lilv_plugins_get (plugins, i);
     const gchar *plugin_uri, *p;
     gchar *type_name;
-    GHashTable *port_groups = g_hash_table_new_full (g_str_hash, g_str_equal,
-        g_free, NULL);
 
     plugin_uri = lilv_node_as_uri (lilv_plugin_get_uri (lv2plugin));
+
+    /* check if we support the required host features */
+    if (!gst_lv2_check_required_features (lv2plugin)) {
+      GST_FIXME ("lv2 plugin %s needs host features", plugin_uri);
+      continue;
+    }
+
     /* construct the type name from plugin URI */
     if ((p = strstr (plugin_uri, "://"))) {
       /* cut off the protocol (e.g. http://) */
@@ -83,61 +140,47 @@ lv2_plugin_discover (GstPlugin * plugin)
     if (g_type_from_name (type_name))
       goto next;
 
-    /* check if we support the required host features */
-    if (!gst_lv2_check_required_features (lv2plugin)) {
-      GST_FIXME ("lv2 plugin %s needs host features", plugin_uri);
-      goto next;
-    }
-
     /* check if this has any audio ports */
-    num_sink_pads = num_src_pads = 0;
-    for (j = 0; j < lilv_plugin_get_num_ports (lv2plugin); j++) {
-      const LilvPort *port = lilv_plugin_get_port_by_index (lv2plugin, j);
+    lv2_count_ports (lv2plugin, &audio_in, &audio_out);
 
-      if (lilv_port_is_a (lv2plugin, port, audio_class)) {
-        const gboolean is_input = lilv_port_is_a (lv2plugin, port, input_class);
-        LilvNodes *lv2group = lilv_port_get (lv2plugin, port, group_pred);
-
-        if (lv2group) {
-          const gchar *uri = lilv_node_as_uri (lv2group);
-
-          if (g_hash_table_contains (port_groups, uri))
-            continue;
-
-          g_hash_table_add (port_groups, g_strdup (uri));
-          lilv_node_free (lv2group);
-        }
-
-        if (is_input)
-          num_sink_pads++;
-        else
-          num_src_pads++;
-      }
-    }
-    if (num_sink_pads == 0 && num_src_pads == 0) {
-      GST_FIXME ("plugin %s has no pads", type_name);
-    } else if (num_sink_pads == 0) {
-      if (num_src_pads != 1) {
+    if (audio_in == 0 && audio_out == 0) {
+      GST_FIXME ("plugin %s has no audio pads", type_name);
+      goto next;
+    } else if (audio_in == 0) {
+      if (audio_out != 1) {
         GST_FIXME ("plugin %s is not a GstBaseSrc (num_src_pads: %d)",
-            type_name, num_src_pads);
+            type_name, audio_out);
         goto next;
       }
-      gst_lv2_source_register_element (plugin, type_name, (gpointer) lv2plugin);
-    } else if (num_src_pads == 0) {
+    } else if (audio_out == 0) {
       GST_FIXME ("plugin %s is a sink element (num_sink_pads: %d"
-          " num_src_pads: %d)", type_name, num_sink_pads, num_src_pads);
+          " num_src_pads: %d)", type_name, audio_in, audio_out);
+      goto next;
     } else {
-      if (num_sink_pads != 1 || num_src_pads != 1) {
+      if (audio_in != 1 || audio_out != 1) {
         GST_FIXME ("plugin %s is not a GstAudioFilter (num_sink_pads: %d"
-            " num_src_pads: %d)", type_name, num_sink_pads, num_src_pads);
+            " num_src_pads: %d)", type_name, audio_in, audio_out);
         goto next;
       }
-      gst_lv2_filter_register_element (plugin, type_name, (gpointer) lv2plugin);
     }
+
+    lv2_meta = gst_structure_new_empty ("lv2");
+    gst_structure_set (lv2_meta,
+        "element-uri", G_TYPE_STRING, plugin_uri,
+        "element-type-name", G_TYPE_STRING, type_name,
+        "audio-in", G_TYPE_UINT, audio_in,
+        "audio-out", G_TYPE_UINT, audio_out, NULL);
+
+    g_value_init (&value, GST_TYPE_STRUCTURE);
+    g_value_set_boxed (&value, lv2_meta);
+    gst_structure_set_value (lv2_meta_all, type_name, &value);
+    g_value_unset (&value);
+
+    // don't free type_name
+    continue;
 
   next:
     g_free (type_name);
-    g_hash_table_unref (port_groups);
   }
 
   return TRUE;
@@ -146,6 +189,9 @@ lv2_plugin_discover (GstPlugin * plugin)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gboolean res = FALSE;
+  gint n = 0;
+
   GST_DEBUG_CATEGORY_INIT (lv2_debug, "lv2",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_BLACK | GST_DEBUG_BOLD, "LV2");
 
@@ -184,17 +230,47 @@ plugin_init (GstPlugin * plugin)
   gst_plugin_add_dependency_simple (plugin,
       "LV2_PATH", GST_LV2_DEFAULT_PATH, NULL, GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 
-  descriptor_quark = g_quark_from_static_string ("lilv-plugin");
-
   /* ensure GstAudioChannelPosition type is registered */
   if (!gst_audio_channel_position_get_type ())
     return FALSE;
 
-  if (!lv2_plugin_discover (plugin)) {
-    GST_WARNING ("no lv2 plugins found, check LV2_PATH");
+  lv2_meta_all = (GstStructure *) gst_plugin_get_cache_data (plugin);
+  if (lv2_meta_all) {
+    n = gst_structure_n_fields (lv2_meta_all);
+  }
+  GST_INFO_OBJECT (plugin, "%d entries in cache", n);
+  if (!n) {
+    lv2_meta_all = gst_structure_new_empty ("lv2");
+    if ((res = lv2_plugin_discover (plugin))) {
+      n = gst_structure_n_fields (lv2_meta_all);
+      GST_INFO_OBJECT (plugin, "%d entries after scanning", n);
+      gst_plugin_set_cache_data (plugin, lv2_meta_all);
+    }
+  } else {
+    res = TRUE;
   }
 
+  if (n) {
+    gint i;
+    const gchar *name;
+    const GValue *value;
 
+    GST_INFO_OBJECT (plugin, "register types");
+
+    for (i = 0; i < n; i++) {
+      name = gst_structure_nth_field_name (lv2_meta_all, i);
+      value = gst_structure_get_value (lv2_meta_all, name);
+      if (G_VALUE_TYPE (value) == GST_TYPE_STRUCTURE) {
+        GstStructure *lv2_meta = g_value_get_boxed (value);
+
+        lv2_plugin_register_element (plugin, lv2_meta);
+      }
+    }
+  }
+
+  if (!res) {
+    GST_WARNING_OBJECT (plugin, "no lv2 plugins found, check LV2_PATH");
+  }
 
   /* we don't want to fail, even if there are no elements registered */
   return TRUE;

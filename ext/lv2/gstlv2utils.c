@@ -279,7 +279,7 @@ static gchar *
 gst_lv2_class_get_param_name (GstLV2Class * klass, GObjectClass * object_class,
     const LilvPort * port)
 {
-  LilvPlugin *lv2plugin = klass->plugin;
+  const LilvPlugin *lv2plugin = klass->plugin;
   gchar *ret;
 
   ret = g_strdup (lilv_node_as_string (lilv_port_get_symbol (lv2plugin, port)));
@@ -316,7 +316,7 @@ gst_lv2_class_get_param_name (GstLV2Class * klass, GObjectClass * object_class,
 static gchar *
 gst_lv2_class_get_param_nick (GstLV2Class * klass, const LilvPort * port)
 {
-  LilvPlugin *lv2plugin = klass->plugin;
+  const LilvPlugin *lv2plugin = klass->plugin;
 
   return g_strdup (lilv_node_as_string (lilv_port_get_name (lv2plugin, port)));
 }
@@ -325,7 +325,7 @@ static GParamSpec *
 gst_lv2_class_get_param_spec (GstLV2Class * klass, GObjectClass * object_class,
     gint portnum)
 {
-  LilvPlugin *lv2plugin = klass->plugin;
+  const LilvPlugin *lv2plugin = klass->plugin;
   const LilvPort *port = lilv_plugin_get_port_by_index (lv2plugin, portnum);
   LilvNode *lv2def, *lv2min, *lv2max;
   GParamSpec *ret;
@@ -415,7 +415,7 @@ void
 gst_lv2_element_class_set_metadata (GstLV2Class * lv2_class,
     GstElementClass * elem_class, const gchar * lv2_class_tags)
 {
-  LilvPlugin *lv2plugin = lv2_class->plugin;
+  const LilvPlugin *lv2plugin = lv2_class->plugin;
   LilvNode *val;
   const LilvPluginClass *lv2plugin_class;
   const LilvNode *cval;
@@ -454,16 +454,26 @@ gst_lv2_element_class_set_metadata (GstLV2Class * lv2_class,
 void
 gst_lv2_class_init (GstLV2Class * lv2_class, GType type)
 {
-  LilvPlugin *lv2plugin;
+  const GValue *value =
+      gst_structure_get_value (lv2_meta_all, g_type_name (type));
+  GstStructure *lv2_meta = g_value_get_boxed (value);
+  const LilvPlugin *lv2plugin;
   /* FIXME Handle channels positionning
    * GstAudioChannelPosition position = GST_AUDIO_CHANNEL_POSITION_INVALID; */
   guint j, in_pad_index = 0, out_pad_index = 0;
+  const LilvPlugins *plugins = lilv_world_get_all_plugins (world);
+  LilvNode *plugin_uri;
+  const gchar *element_uri;
 
   GST_DEBUG ("LV2 initializing class");
 
-  lv2plugin = (LilvPlugin *) g_type_get_qdata (type, descriptor_quark);
+  element_uri = gst_structure_get_string (lv2_meta, "element-uri");
+  plugin_uri = lilv_new_uri (world, element_uri);
+  g_assert (plugin_uri);
+  lv2plugin = lilv_plugins_get_by_uri (plugins, plugin_uri);
   g_assert (lv2plugin);
   lv2_class->plugin = lv2plugin;
+  lilv_node_free (plugin_uri);
 
   lv2_class->in_group.ports = g_array_new (FALSE, TRUE, sizeof (GstLV2Port));
   lv2_class->out_group.ports = g_array_new (FALSE, TRUE, sizeof (GstLV2Port));
@@ -540,4 +550,15 @@ gst_lv2_class_finalize (GstLV2Class * lv2_class)
   lv2_class->control_in_ports = NULL;
   g_array_free (lv2_class->control_out_ports, TRUE);
   lv2_class->control_out_ports = NULL;
+}
+
+void
+gst_lv2_register_element (GstPlugin * plugin, GType parent_type,
+    const GTypeInfo * info, GstStructure * lv2_meta)
+{
+  const gchar *type_name =
+      gst_structure_get_string (lv2_meta, "element-type-name");
+
+  gst_element_register (plugin, type_name, GST_RANK_NONE,
+      g_type_register_static (parent_type, type_name, info, 0));
 }

@@ -33,7 +33,6 @@ gst-launch-1.0 calf-sourceforge-net-plugins-Organ event-in="C-3" name=s ! interl
 
 
 TODO
-* registry cache
 * support http://lv2plug.in/ns/lv2core/#CVPort
   - these ports need a buffer with the property value
   - we should sync, then fill the buffer and connect the port

@@ -26,6 +26,8 @@
 #include <lilv/lilv.h>
 #include <gst/gst.h>
 
+#include "gstlv2utils.h"
+
 LilvWorld *world;
 LilvNode *audio_class;
 LilvNode *control_class;
@@ -50,12 +52,10 @@ LilvNode *center_right_role;
 LilvNode *side_left_role;
 LilvNode *side_right_role;
 
-GQuark descriptor_quark;
+GstStructure *lv2_meta_all;
 
-gboolean gst_lv2_filter_register_element (GstPlugin *plugin,
-                                          const gchar *type_name,
-                                          gpointer *lv2plugin);
-gboolean gst_lv2_source_register_element (GstPlugin *plugin,
-                                          const gchar *type_name,
-                                          gpointer *lv2plugin);
+void gst_lv2_filter_register_element (GstPlugin *plugin,
+                                      GstStructure * lv2_meta);
+void gst_lv2_source_register_element (GstPlugin *plugin,
+                                      GstStructure * lv2_meta);
 #endif /* __GST_LV2_H__ */

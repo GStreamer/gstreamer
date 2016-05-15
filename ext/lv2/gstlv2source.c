@@ -557,9 +557,8 @@ gst_lv2_source_base_finalize (GstLV2SourceClass * lv2_class)
   gst_lv2_class_finalize (&lv2_class->lv2);
 }
 
-
 static void
-gst_lv2_source_class_init (GstLV2SourceClass * klass, LilvPlugin * lv2plugin)
+gst_lv2_source_class_init (GstLV2SourceClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBaseSrcClass *src_class = (GstBaseSrcClass *) klass;
@@ -580,8 +579,6 @@ gst_lv2_source_class_init (GstLV2SourceClass * klass, LilvPlugin * lv2plugin)
   src_class->start = gst_lv2_source_start;
   src_class->stop = gst_lv2_source_stop;
   src_class->fill = gst_lv2_source_fill;
-
-  klass->lv2.plugin = lv2plugin;
 
   g_object_class_install_property (gobject_class,
       GST_LV2_SOURCE_PROP_SAMPLES_PER_BUFFER,
@@ -629,33 +626,23 @@ gst_lv2_source_init (GstLV2Source * self, GstLV2SourceClass * klass)
   self->generate_samples_per_buffer = self->samples_per_buffer;
 }
 
-gboolean
-gst_lv2_source_register_element (GstPlugin * plugin, const gchar * type_name,
-    gpointer * lv2plugin)
+void
+gst_lv2_source_register_element (GstPlugin * plugin, GstStructure * lv2_meta)
 {
-  GType type;
-  GTypeInfo typeinfo = {
+  GTypeInfo info = {
     sizeof (GstLV2SourceClass),
     (GBaseInitFunc) gst_lv2_source_base_init,
     (GBaseFinalizeFunc) gst_lv2_source_base_finalize,
     (GClassInitFunc) gst_lv2_source_class_init,
     NULL,
-    lv2plugin,
+    NULL,
     sizeof (GstLV2Source),
     0,
     (GInstanceInitFunc) gst_lv2_source_init,
   };
 
-  /* create the type */
-  type = g_type_register_static (GST_TYPE_BASE_SRC, type_name, &typeinfo, 0);
+  gst_lv2_register_element (plugin, GST_TYPE_BASE_SRC, &info, lv2_meta);
 
   if (!parent_class)
     parent_class = g_type_class_ref (GST_TYPE_BASE_SRC);
-
-
-  /* FIXME: not needed anymore when we can add pad templates, etc in class_init
-   * as class_data contains the Descriptor too */
-  g_type_set_qdata (type, descriptor_quark, lv2plugin);
-
-  return gst_element_register (plugin, type_name, GST_RANK_NONE, type);
 }

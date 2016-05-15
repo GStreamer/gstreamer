@@ -410,7 +410,7 @@ gst_lv2_filter_base_finalize (GstLV2FilterClass * lv2_class)
 }
 
 static void
-gst_lv2_filter_class_init (GstLV2FilterClass * klass, LilvPlugin * lv2plugin)
+gst_lv2_filter_class_init (GstLV2FilterClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBaseTransformClass *transform_class = GST_BASE_TRANSFORM_CLASS (klass);
@@ -428,8 +428,6 @@ gst_lv2_filter_class_init (GstLV2FilterClass * klass, LilvPlugin * lv2plugin)
   transform_class->transform = gst_lv2_filter_transform;
   transform_class->transform_ip = gst_lv2_filter_transform_ip;
 
-  klass->lv2.plugin = lv2plugin;
-
   gst_lv2_class_install_properties (&klass->lv2, gobject_class, 1);
 }
 
@@ -442,34 +440,24 @@ gst_lv2_filter_init (GstLV2Filter * self, GstLV2FilterClass * klass)
     gst_base_transform_set_in_place (GST_BASE_TRANSFORM (self), TRUE);
 }
 
-gboolean
-gst_lv2_filter_register_element (GstPlugin * plugin, const gchar * type_name,
-    gpointer * lv2plugin)
+void
+gst_lv2_filter_register_element (GstPlugin * plugin, GstStructure * lv2_meta)
 {
-  GType type;
-  GTypeInfo typeinfo = {
+  GTypeInfo info = {
     sizeof (GstLV2FilterClass),
     (GBaseInitFunc) gst_lv2_filter_base_init,
     (GBaseFinalizeFunc) gst_lv2_filter_base_finalize,
     (GClassInitFunc) gst_lv2_filter_class_init,
     NULL,
-    lv2plugin,
+    NULL,
     sizeof (GstLV2Filter),
     0,
     (GInstanceInitFunc) gst_lv2_filter_init,
   };
 
   /* create the type */
-  type =
-      g_type_register_static (GST_TYPE_AUDIO_FILTER, type_name, &typeinfo, 0);
+  gst_lv2_register_element (plugin, GST_TYPE_AUDIO_FILTER, &info, lv2_meta);
 
   if (!parent_class)
     parent_class = g_type_class_ref (GST_TYPE_AUDIO_FILTER);
-
-
-  /* FIXME: not needed anymore when we can add pad templates, etc in class_init
-   * as class_data contains the Descriptor too */
-  g_type_set_qdata (type, descriptor_quark, lv2plugin);
-
-  return gst_element_register (plugin, type_name, GST_RANK_NONE, type);
 }

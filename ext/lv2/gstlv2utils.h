@@ -77,7 +77,7 @@ struct _GstLV2Class
 {
   guint properties;
 
-  LilvPlugin *plugin;
+  const LilvPlugin *plugin;
 
   GstLV2Group in_group; /**< Array of GstLV2Group */
   GstLV2Group out_group; /**< Array of GstLV2Group */
@@ -106,6 +106,8 @@ void gst_lv2_element_class_set_metadata (GstLV2Class * lv2_class,
 void gst_lv2_class_init (GstLV2Class * lv2_class, GType type);
 void gst_lv2_class_finalize (GstLV2Class * lv2_class);
 
+void gst_lv2_register_element (GstPlugin * plugin, GType parent_type,
+    const GTypeInfo * info, GstStructure * lv2_meta);
 G_END_DECLS
 
 #endif /* __GST_LV2_UTILS_H__ */
