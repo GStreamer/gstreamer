@@ -212,8 +212,7 @@ gst_gl_display_new (void)
     display = GST_GL_DISPLAY (gst_gl_display_egl_new ());
 #endif
   if (!display) {
-    /* subclass returned a NULL window */
-    GST_WARNING ("Could not create display. user specified %s "
+    GST_INFO ("Could not create platform/winsys display. user specified %s "
         "(platform: %s), creating dummy",
         GST_STR_NULL (user_choice), GST_STR_NULL (platform_choice));
 
