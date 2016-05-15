@@ -24,21 +24,21 @@
  * SECTION:element-ladspa
  * @short_description: bridge for LADSPA (Linux Audio Developer's Simple Plugin API)
  * @see_also: #GstAudioConvert #GstAudioResample, #GstAudioTestSrc, #GstAutoAudioSink
- * 
+ *
  * The LADSPA (Linux Audio Developer's Simple Plugin API) element is a bridge
  * for plugins using the <ulink url="http://www.ladspa.org/">LADSPA</ulink> API.
  * It scans all installed LADSPA plugins and registers them as gstreamer
  * elements. If available it can also parse LRDF files and use the metadata for
  * element classification. The functionality you get depends on the LADSPA plugins
  * you have installed.
- * 
+ *
  * <refsect2>
  * <title>Example LADSPA line without this plugins</title>
  * |[
  * (padsp) listplugins
  * (padsp) analyseplugin cmt.so amp_mono
  * gst-launch-1.0 -e filesrc location="$myfile" ! decodebin ! audioconvert ! audioresample ! "audio/x-raw,format=S16LE,rate=48000,channels=1" ! wavenc ! filesink location="testin.wav"
- * (padsp) applyplugin testin.wav testout.wav cmt.so amp_mono 2 
+ * (padsp) applyplugin testin.wav testout.wav cmt.so amp_mono 2
  * gst-launch-1.0 playbin uri=file://"$PWD"/testout.wav
  * ]| Decode any audio file into wav with the format expected for the specific ladspa plugin to be applied, apply the ladspa filter and play it.
  * </refsect2>
@@ -76,7 +76,7 @@
  * ]| List details of the plugin, parameters, range and defaults included.
  * </refsect2>
  *
- * The elements categorize in: 
+ * The elements categorize in:
  * <itemizedlist>
  * <listitem><para>Filter/Effect/Audio/LADSPA:</para>
  * <refsect2>
@@ -86,7 +86,7 @@
  * ]| Decode any audio file, filter it through Calf Reverb LADSPA then TAP Stereo Echo, and play it.
  * </refsect2>
  * </listitem>
- * <listitem><para>Source/Audio/LADSPA:</para> 
+ * <listitem><para>Source/Audio/LADSPA:</para>
  * <refsect2>
  * <title>Example Source/Audio/LADSPA line with this plugins</title>
  * |[
@@ -360,7 +360,7 @@ ladspa_plugin_path_search (GstPlugin * plugin)
     }
     if (skip)
       break;
-    /* 
+    /*
      * transform path: /usr/lib/ladspa -> /usr/share/ladspa/rdf/
      * yes, this is ugly, but lrdf has not searchpath
      */
@@ -402,8 +402,8 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (ladspa_debug, "ladspa", 0, "LADSPA plugins");
 
 #ifdef ENABLE_NLS
-  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
-      LOCALEDIR);
+  GST_DEBUG_OBJECT (plugin, "binding text domain %s to locale dir %s",
+      GETTEXT_PACKAGE, LOCALEDIR);
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
@@ -420,13 +420,12 @@ plugin_init (GstPlugin * plugin)
   if (ladspa_meta_all) {
     n = gst_structure_n_fields (ladspa_meta_all);
   }
-  GST_INFO ("%d entries in cache", n);
+  GST_INFO_OBJECT (plugin, "%d entries in cache", n);
   if (!n) {
     ladspa_meta_all = gst_structure_new_empty ("ladspa");
-    res = ladspa_plugin_path_search (plugin);
-    if (res) {
+    if ((res = ladspa_plugin_path_search (plugin))) {
       n = gst_structure_n_fields (ladspa_meta_all);
-      GST_INFO ("%d entries after scanning", n);
+      GST_INFO_OBJECT (plugin, "%d entries after scanning", n);
       gst_plugin_set_cache_data (plugin, ladspa_meta_all);
     }
   } else {
@@ -438,7 +437,7 @@ plugin_init (GstPlugin * plugin)
     const gchar *name;
     const GValue *value;
 
-    GST_INFO ("register types");
+    GST_INFO_OBJECT (plugin, "register types");
 
     for (i = 0; i < n; i++) {
       name = gst_structure_nth_field_name (ladspa_meta_all, i);
@@ -452,7 +451,7 @@ plugin_init (GstPlugin * plugin)
   }
 
   if (!res) {
-    GST_WARNING ("no LADSPA plugins found, check LADSPA_PATH");
+    GST_WARNING_OBJECT (plugin, "no LADSPA plugins found, check LADSPA_PATH");
   }
 
   /* we don't want to fail, even if there are no elements registered */
