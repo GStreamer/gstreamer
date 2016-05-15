@@ -461,7 +461,7 @@ typedef gboolean		(*GstPadForwardFunction)	(GstPad *pad, gpointer user_data);
 /**
  * GstPadProbeType:
  * @GST_PAD_PROBE_TYPE_INVALID: invalid probe type
- * @GST_PAD_PROBE_TYPE_IDLE: probe idle pads and block
+ * @GST_PAD_PROBE_TYPE_IDLE: probe idle pads and block while the callback is called
  * @GST_PAD_PROBE_TYPE_BLOCK: probe and block pads
  * @GST_PAD_PROBE_TYPE_BUFFER: probe buffers
  * @GST_PAD_PROBE_TYPE_BUFFER_LIST: probe buffer lists
