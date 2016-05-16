@@ -81,6 +81,7 @@ cleanup_jpegenc (GstElement * jpegenc)
   GST_DEBUG ("cleanup_jpegenc");
   gst_element_set_state (jpegenc, GST_STATE_NULL);
 
+  gst_check_drop_buffers ();
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_sink_pad (jpegenc);

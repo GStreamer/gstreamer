@@ -125,6 +125,7 @@ no_socket:
 
   gst_element_set_state (udpsrc, GST_STATE_NULL);
 
+  gst_check_drop_buffers ();
   gst_check_teardown_pad_by_name (udpsrc, "src");
   gst_check_teardown_element (udpsrc);
 
@@ -222,6 +223,7 @@ send_failure:
 
   gst_element_set_state (udpsrc, GST_STATE_NULL);
 
+  gst_check_drop_buffers ();
   gst_check_teardown_pad_by_name (udpsrc, "src");
   gst_check_teardown_element (udpsrc);
 

@@ -61,6 +61,7 @@ cleanup_capssetter (GstElement * capssetter)
 {
   GST_DEBUG ("cleanup_capssetter");
 
+  gst_check_drop_buffers ();
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (capssetter);

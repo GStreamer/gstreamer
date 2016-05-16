@@ -138,6 +138,7 @@ cleanup_rtprtx (GstElement * rtprtxsend, GstElement * rtprtxreceive)
   g_list_free (inbuffers);
   inbuffers = NULL;
 
+  gst_check_drop_buffers ();
   gst_pad_set_active (srcpad, FALSE);
   gst_check_teardown_src_pad (rtprtxsend);
   gst_check_teardown_element (rtprtxsend);

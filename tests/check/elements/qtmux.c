@@ -577,6 +577,7 @@ GST_START_TEST (test_reuse)
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()) == TRUE);
 
   cleanup_qtmux (qtmux, "video_%u");
+  gst_check_drop_buffers ();
 }
 
 GST_END_TEST;
@@ -879,6 +880,7 @@ test_average_bitrate_custom (const gchar * elementname,
   gst_element_set_state (qtmux, GST_STATE_NULL);
   gst_element_set_state (filesink, GST_STATE_NULL);
 
+  gst_check_drop_buffers ();
   gst_pad_set_active (mysrcpad, FALSE);
   teardown_src_pad (mysrcpad);
   gst_object_unref (filesink);

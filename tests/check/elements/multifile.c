@@ -371,6 +371,7 @@ GST_START_TEST (test_multifilesrc_stop_index)
 
   gst_element_set_state (src, GST_STATE_NULL);
 
+  gst_check_drop_buffers ();
   gst_check_teardown_pad_by_name (src, "src");
   gst_check_teardown_element (src);
 }

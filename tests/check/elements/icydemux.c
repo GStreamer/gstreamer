@@ -148,6 +148,7 @@ cleanup_icydemux (void)
   gst_object_unref (bus);
   bus = NULL;
 
+  gst_check_drop_buffers ();
   gst_check_teardown_src_pad (icydemux);
   if (sinkpad)
     gst_check_teardown_sink_pad (icydemux);

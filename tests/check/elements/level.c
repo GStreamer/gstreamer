@@ -241,6 +241,7 @@ GST_START_TEST (test_message_is_valid)
   gst_object_unref (bus);
   gst_element_set_state (level, GST_STATE_NULL);
   cleanup_level (level);
+  gst_check_drop_buffers ();
 }
 
 GST_END_TEST;
