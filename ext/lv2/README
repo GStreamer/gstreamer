@@ -9,6 +9,7 @@ Features:
 
 The plugin wrapper support the following plugin features:
 http://lv2plug.in/ns/lv2core
+http://lv2plug.in/ns/ext/event
 http://lv2plug.in/ns/ext/port-groups
 
 and these host features:
@@ -37,10 +38,11 @@ TODO
   - these ports need a buffer with the property value
   - we should sync, then fill the buffer and connect the port
 * support presets
+  for pl in $(lv2ls); do if test "$(lv2info "$pl" | grep -A1 "Presets:" | tail -n1)" != ""; then echo "$pl"; fi; done
 * support more host features
   GST_DEBUG="lv2:4" GST_DEBUG_FILE=/tmp/gst.log gst-inspect lv2
   grep -o "needs host feature: .*$" /tmp/gst.log  | sort | uniq -c | sort -n
 
-* samples sources:
+* example sources:
   http://svn.drobilla.net/lad/trunk/lilv/utils/lv2info.c
   http://svn.drobilla.net/lad/trunk/jalv/src/jalv.c

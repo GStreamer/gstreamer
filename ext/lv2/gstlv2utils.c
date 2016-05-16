@@ -23,6 +23,7 @@
 #endif
 
 #include "string.h"
+#include "stdlib.h"
 
 #include "gstlv2.h"
 #include "gstlv2utils.h"
@@ -212,14 +213,18 @@ void
 gst_lv2_object_set_property (GstLV2 * lv2, GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
+  GType base, type = pspec->value_type;
   /* remember, properties have an offset */
   prop_id -= lv2->klass->properties;
 
   /* only input ports */
   g_return_if_fail (prop_id < lv2->klass->control_in_ports->len);
 
+  while ((base = g_type_parent (type)))
+    type = base;
+
   /* now see what type it is */
-  switch (pspec->value_type) {
+  switch (type) {
     case G_TYPE_BOOLEAN:
       lv2->ports.control.in[prop_id] =
           g_value_get_boolean (value) ? 0.0f : 1.0f;
@@ -229,6 +234,9 @@ gst_lv2_object_set_property (GstLV2 * lv2, GObject * object,
       break;
     case G_TYPE_FLOAT:
       lv2->ports.control.in[prop_id] = g_value_get_float (value);
+      break;
+    case G_TYPE_ENUM:
+      lv2->ports.control.in[prop_id] = g_value_get_enum (value);
       break;
     default:
       GST_WARNING_OBJECT (object, "unhandled type: %s",
@@ -241,6 +249,7 @@ void
 gst_lv2_object_get_property (GstLV2 * lv2, GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
+  GType base, type = pspec->value_type;
   gfloat *controls;
 
   /* remember, properties have an offset */
@@ -256,8 +265,11 @@ gst_lv2_object_get_property (GstLV2 * lv2, GObject * object,
     g_return_if_reached ();
   }
 
+  while ((base = g_type_parent (type)))
+    type = base;
+
   /* now see what type it is */
-  switch (pspec->value_type) {
+  switch (type) {
     case G_TYPE_BOOLEAN:
       g_value_set_boolean (value, controls[prop_id] > 0.0f);
       break;
@@ -266,6 +278,9 @@ gst_lv2_object_get_property (GstLV2 * lv2, GObject * object,
       break;
     case G_TYPE_FLOAT:
       g_value_set_float (value, controls[prop_id]);
+      break;
+    case G_TYPE_ENUM:
+      g_value_set_enum (value, (gint) controls[prop_id]);
       break;
     default:
       GST_WARNING_OBJECT (object, "unhandled type: %s",
@@ -321,6 +336,12 @@ gst_lv2_class_get_param_nick (GstLV2Class * klass, const LilvPort * port)
   return g_strdup (lilv_node_as_string (lilv_port_get_name (lv2plugin, port)));
 }
 
+static int
+enum_val_cmp (GEnumValue * p1, GEnumValue * p2)
+{
+  return p1->value - p2->value;
+}
+
 static GParamSpec *
 gst_lv2_class_get_param_spec (GstLV2Class * klass, GObjectClass * object_class,
     gint portnum)
@@ -328,10 +349,12 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, GObjectClass * object_class,
   const LilvPlugin *lv2plugin = klass->plugin;
   const LilvPort *port = lilv_plugin_get_port_by_index (lv2plugin, portnum);
   LilvNode *lv2def, *lv2min, *lv2max;
+  LilvScalePoints *points;
   GParamSpec *ret;
   gchar *name, *nick;
   gint perms;
   gfloat lower = 0.0f, upper = 1.0f, def = 0.0f;
+  GType enum_type = G_TYPE_INVALID;
 
   nick = gst_lv2_class_get_param_nick (klass, port);
   name = gst_lv2_class_get_param_name (klass, object_class, port);
@@ -365,21 +388,82 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, GObjectClass * object_class,
 
   if (def < lower) {
     if (lv2def && lv2min) {
-      GST_WARNING ("%s has lower bound %f > default %f",
-          lilv_node_as_string (lilv_plugin_get_uri (lv2plugin)), lower, def);
+      GST_WARNING ("%s:%s has lower bound %f > default %f",
+          lilv_node_as_string (lilv_plugin_get_uri (lv2plugin)), name, lower,
+          def);
     }
     lower = def;
   }
 
   if (def > upper) {
     if (lv2def && lv2max) {
-      GST_WARNING ("%s has upper bound %f < default %f",
-          lilv_node_as_string (lilv_plugin_get_uri (lv2plugin)), upper, def);
+      GST_WARNING ("%s:%s has upper bound %f < default %f",
+          lilv_node_as_string (lilv_plugin_get_uri (lv2plugin)), name, upper,
+          def);
     }
     upper = def;
   }
 
-  if (lilv_port_has_property (lv2plugin, port, integer_prop))
+  if ((points = lilv_port_get_scale_points (lv2plugin, port))) {
+    GEnumValue *enums;
+    LilvIter *i;
+    gint j = 0, n, def_ix = -1;
+
+    n = lilv_scale_points_size (points);
+    enums = g_new (GEnumValue, n + 1);
+
+    for (i = lilv_scale_points_begin (points);
+        !lilv_scale_points_is_end (points, i);
+        i = lilv_scale_points_next (points, i)) {
+      const LilvScalePoint *point = lilv_scale_points_get (points, i);
+      gfloat v = lilv_node_as_float (lilv_scale_point_get_value (point));
+      const gchar *l = lilv_node_as_string (lilv_scale_point_get_label (point));
+
+      /* check if value can be safely converted to int */
+      if (v != (gint) v) {
+        GST_DEBUG ("non integer scale point %lf, %s", v, l);
+        break;
+      }
+      if (v == def) {
+        def_ix = j;
+      }
+      enums[j].value = (gint) v;
+      enums[j].value_nick = enums[j].value_name = l;
+      GST_DEBUG ("%s:%s enum: %lf, %s",
+          lilv_node_as_string (lilv_plugin_get_uri (lv2plugin)), name, v, l);
+      j++;
+    }
+    if (j == n) {
+      gchar *type_name;
+
+      /* scalepoints are not sorted */
+      qsort (enums, n, sizeof (GEnumValue),
+          (int (*)(const void *, const void *)) enum_val_cmp);
+
+      if (def_ix == -1) {
+        if (lv2def) {
+          GST_WARNING ("%s:%s has default %f outside of scalepoints",
+              lilv_node_as_string (lilv_plugin_get_uri (lv2plugin)), name, def);
+        }
+        def = enums[0].value;
+      }
+      /* terminator */
+      enums[j].value = 0;
+      enums[j].value_name = enums[j].value_nick = NULL;
+
+      type_name = g_strdup_printf ("%s%s",
+          g_type_name (G_TYPE_FROM_CLASS (object_class)), name);
+      enum_type = g_enum_register_static (type_name, enums);
+      g_free (type_name);
+    } else {
+      g_free (enums);
+    }
+    lilv_scale_points_free (points);
+  }
+
+  if (enum_type != G_TYPE_INVALID) {
+    ret = g_param_spec_enum (name, nick, nick, enum_type, def, perms);
+  } else if (lilv_port_has_property (lv2plugin, port, integer_prop))
     ret = g_param_spec_int (name, nick, nick, lower, upper, def, perms);
   else
     ret = g_param_spec_float (name, nick, nick, lower, upper, def, perms);
