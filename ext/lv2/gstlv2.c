@@ -212,9 +212,6 @@ plugin_init (GstPlugin * plugin)
   group_pred = lilv_new_uri (world, LV2_PORT_GROUPS__group);
   has_role_pred = lilv_new_uri (world, NS_PG "role");
 
-  /* FIXME Verify what should be used here */
-  lv2_symbol_pred = lilv_new_uri (world, LILV_NS_LV2 "symbol");
-
   center_role = lilv_new_uri (world, LV2_PORT_GROUPS__center);
   left_role = lilv_new_uri (world, LV2_PORT_GROUPS__left);
   right_role = lilv_new_uri (world, LV2_PORT_GROUPS__right);
@@ -291,7 +288,6 @@ __attribute__ ((destructor))
   lilv_node_free (in_place_broken_pred);
   lilv_node_free (group_pred);
   lilv_node_free (has_role_pred);
-  lilv_node_free (lv2_symbol_pred);
 
   lilv_node_free (center_role);
   lilv_node_free (left_role);

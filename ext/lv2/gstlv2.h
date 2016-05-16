@@ -38,7 +38,6 @@ LilvNode *toggled_prop;
 LilvNode *in_place_broken_pred;
 LilvNode *group_pred;
 LilvNode *has_role_pred;
-LilvNode *lv2_symbol_pred;
 
 LilvNode *center_role;
 LilvNode *left_role;
