@@ -569,7 +569,6 @@ gst_lv2_source_class_init (GstLV2SourceClass * klass)
   gobject_class->get_property = gst_lv2_source_get_property;
   gobject_class->finalize = gst_lv2_source_finalize;
 
-  // FIXME: basesrc methods
   src_class->set_caps = gst_lv2_source_set_caps;
   src_class->fixate = gst_lv2_source_fixate;
   src_class->is_seekable = gst_lv2_source_is_seekable;
