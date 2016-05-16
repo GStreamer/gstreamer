@@ -167,13 +167,28 @@ ges_audio_source_create_element (GESTrackElement * trksrc)
 }
 
 static void
+ges_audio_source_dispose (GObject * object)
+{
+  GESAudioSource *self = GES_AUDIO_SOURCE (object);
+
+  if (self->priv->capsfilter) {
+    gst_object_unref (self->priv->capsfilter);
+    self->priv->capsfilter = NULL;
+  }
+
+  G_OBJECT_CLASS (ges_audio_source_parent_class)->dispose (object);
+}
+
+static void
 ges_audio_source_class_init (GESAudioSourceClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GESTrackElementClass *track_class = GES_TRACK_ELEMENT_CLASS (klass);
   GESAudioSourceClass *audio_source_class = GES_AUDIO_SOURCE_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESAudioSourcePrivate));
 
+  gobject_class->dispose = ges_audio_source_dispose;
   track_class->nleobject_factorytype = "nlesource";
   track_class->create_element = ges_audio_source_create_element;
   audio_source_class->create_source = NULL;
