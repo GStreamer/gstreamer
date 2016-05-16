@@ -521,7 +521,7 @@ ges_uri_clip_create_track_element (GESClip * clip, GESTrackType type)
  * %NULL if there was an error.
  */
 GESUriClip *
-ges_uri_clip_new (gchar * uri)
+ges_uri_clip_new (const gchar * uri)
 {
   GESAsset *asset = GES_ASSET (ges_uri_clip_asset_request_sync (uri, NULL));
   GESUriClip *res = NULL;
