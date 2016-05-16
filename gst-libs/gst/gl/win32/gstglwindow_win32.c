@@ -135,6 +135,8 @@ gst_gl_window_win32_close (GstGLWindow * window)
 
   if (window_win32->internal_win_id) {
     RemoveProp (window_win32->internal_win_id, "gl_window");
+    ShowWindow (window_win32->internal_win_id, SW_HIDE);
+    SetParent (window_win32->internal_win_id, NULL);
     if (!DestroyWindow (window_win32->internal_win_id))
       GST_WARNING ("failed to destroy window %" G_GUINTPTR_FORMAT
           ", 0x%x", (guintptr) window_win32->internal_win_id,
