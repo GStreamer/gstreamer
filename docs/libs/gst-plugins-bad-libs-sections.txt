@@ -1661,7 +1661,7 @@ GST_TYPE_VIDEO_AGGREGATOR
 GST_VIDEO_AGGREGATOR
 GST_VIDEO_AGGREGATOR_CLASS
 GST_VIDEO_AGGREGATOR_GET_CLASS
-gst_videoaggregator_get_type
+gst_video_aggregator_get_type
 GstVideoAggregatorPrivate
 </SECTION>
 
@@ -1677,7 +1677,7 @@ GST_TYPE_VIDEO_AGGREGATOR_PAD
 GST_VIDEO_AGGREGATOR_PAD
 GST_VIDEO_AGGREGATOR_PAD_CLASS
 GST_VIDEO_AGGREGATOR_PAD_GET_CLASS
-gst_videoaggregator_pad_get_type
+gst_video_aggregator_pad_get_type
 </SECTION>
 
 <SECTION>

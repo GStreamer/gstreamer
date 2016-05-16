@@ -32,7 +32,7 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VIDEO_AGGREGATOR (gst_videoaggregator_get_type())
+#define GST_TYPE_VIDEO_AGGREGATOR (gst_video_aggregator_get_type())
 #define GST_VIDEO_AGGREGATOR(obj) \
         (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_AGGREGATOR, GstVideoAggregator))
 #define GST_VIDEO_AGGREGATOR_CLASS(klass) \
@@ -118,7 +118,7 @@ struct _GstVideoAggregatorClass
   gpointer            _gst_reserved[GST_PADDING_LARGE];
 };
 
-GType gst_videoaggregator_get_type       (void);
+GType gst_video_aggregator_get_type       (void);
 
 G_END_DECLS
 #endif /* __GST_VIDEO_AGGREGATOR_H__ */

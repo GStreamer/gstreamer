@@ -29,7 +29,7 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VIDEO_AGGREGATOR_PAD (gst_videoaggregator_pad_get_type())
+#define GST_TYPE_VIDEO_AGGREGATOR_PAD (gst_video_aggregator_pad_get_type())
 #define GST_VIDEO_AGGREGATOR_PAD(obj) \
         (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_AGGREGATOR_PAD, GstVideoAggregatorPad))
 #define GST_VIDEO_AGGREGATOR_PAD_CLASS(klass) \
@@ -106,7 +106,7 @@ struct _GstVideoAggregatorPadClass
   gpointer          _gst_reserved[GST_PADDING_LARGE];
 };
 
-GType gst_videoaggregator_pad_get_type (void);
+GType gst_video_aggregator_pad_get_type (void);
 
 G_END_DECLS
 #endif /* __GST_VIDEO_AGGREGATOR_PAD_H__ */
