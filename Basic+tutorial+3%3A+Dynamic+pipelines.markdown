@@ -1,0 +1,566 @@
+#  GStreamer SDK documentation : Basic tutorial 3: Dynamic pipelines 
+
+This page last changed on May 30, 2012 by xartigas.
+
+# Goal
+
+This tutorial shows the rest of the basic concepts required to use
+GStreamer, which allow building the pipeline "on the fly", as
+information becomes available, instead of having a monolithic pipeline
+defined at the beginning of your application.
+
+After this tutorial, you will have the necessary knowledge to start the
+[Playback tutorials](Playback%2Btutorials.html). The points reviewed
+here will be:
+
+  - How to attain finer control when linking elements.
+
+  - How to be notified of interesting events so you can react in time.
+
+  - The various states in which an element can be.
+
+# Introduction
+
+As you are about to see, the pipeline in this tutorial is not completely
+built before it is set to the playing state. This is OK. If we did not
+take further action, data would reach the end of the pipeline and just
+get discarded. But we are going to take further action...
+
+In this example we are opening a file which is multiplexed (or *muxed)*,
+this is, audio and video are stored together inside a *container* file.
+The elements responsible for opening such containers are called
+*demuxers*, and some examples of container formats are Matroska (MKV),
+Quick Time (QT, MOV), Ogg, or Advanced Systems Format (ASF, WMV, WMA).
+
+If a container embeds multiple streams (one video and two audio tracks,
+for example), the demuxer will separate them and expose them through
+different output ports. In this way, different branches can be created
+in the pipeline, dealing with different types of data.
+
+The ports through which GStreamer elements communicate with each other
+are called pads (`GstPad`). There exists sink pads, through which data
+enters an element, and source pads, through which data exits an element.
+It follows naturally that source elements only contain source pads, sink
+elements only contain sink pads, and filter elements contain
+both.
+
+![](attachments/327784/1540098.png) ![](attachments/327784/1540099.png) ![](attachments/327784/1540100.png)
+
+**Figure 1**. GStreamer elements with their pads.
+
+A demuxer contains one sink pad, through which the muxed data arrives,
+and multiple source pads, one for each stream found in the container:
+
+![](attachments/327784/1540101.png)
+
+**Figure 2**. A demuxer with two source pads.
+
+For completeness, here you have a simplified pipeline containing a
+demuxer and two branches, one for audio and one for video. This is
+**NOT** the pipeline that will be built in this example:
+
+![](attachments/327784/1540102.png)
+
+**Figure 3**. Example pipeline with two branches.
+
+ 
+
+The main complexity when dealing with demuxers is that they cannot
+produce any information until they have received some data and have had
+a chance to look at the container to see what is inside. This is,
+demuxers start with no source pads to which other elements can link, and
+thus the pipeline must necessarily terminate at them.
+
+The solution is to build the pipeline from the source down to the
+demuxer, and set it to run (play). When the demuxer has received enough
+information to know about the number and kind of streams in the
+container, it will start creating source pads. This is the right time
+for us to finish building the pipeline and attach it to the newly added
+demuxer pads.
+
+For simplicity, in this example, we will only link to the audio pad and
+ignore the video.
+
+# Dyamic Hello World
+
+Copy this code into a text file named `basic-tutorial-3.c` (or find it
+in the SDK installation).
+
+**basic-tutorial-3.c**
+
+``` theme: Default; brush: cpp; gutter: true
+#include <gst/gst.h>
+  
+/* Structure to contain all our information, so we can pass it to callbacks */
+typedef struct _CustomData {
+  GstElement *pipeline;
+  GstElement *source;
+  GstElement *convert;
+  GstElement *sink;
+} CustomData;
+  
+/* Handler for the pad-added signal */
+static void pad_added_handler (GstElement *src, GstPad *pad, CustomData *data);
+  
+int main(int argc, char *argv[]) {
+  CustomData data;
+  GstBus *bus;
+  GstMessage *msg;
+  GstStateChangeReturn ret;
+  gboolean terminate = FALSE;
+  
+  /* Initialize GStreamer */
+  gst_init (&argc, &argv);
+   
+  /* Create the elements */
+  data.source = gst_element_factory_make ("uridecodebin", "source");
+  data.convert = gst_element_factory_make ("audioconvert", "convert");
+  data.sink = gst_element_factory_make ("autoaudiosink", "sink");
+  
+  /* Create the empty pipeline */
+  data.pipeline = gst_pipeline_new ("test-pipeline");
+   
+  if (!data.pipeline || !data.source || !data.convert || !data.sink) {
+    g_printerr ("Not all elements could be created.\n");
+    return -1;
+  }
+  
+  /* Build the pipeline. Note that we are NOT linking the source at this
+   * point. We will do it later. */
+  gst_bin_add_many (GST_BIN (data.pipeline), data.source, data.convert , data.sink, NULL);
+  if (!gst_element_link (data.convert, data.sink)) {
+    g_printerr ("Elements could not be linked.\n");
+    gst_object_unref (data.pipeline);
+    return -1;
+  }
+  
+  /* Set the URI to play */
+  g_object_set (data.source, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  
+  /* Connect to the pad-added signal */
+  g_signal_connect (data.source, "pad-added", G_CALLBACK (pad_added_handler), &data);
+  
+  /* Start playing */
+  ret = gst_element_set_state (data.pipeline, GST_STATE_PLAYING);
+  if (ret == GST_STATE_CHANGE_FAILURE) {
+    g_printerr ("Unable to set the pipeline to the playing state.\n");
+    gst_object_unref (data.pipeline);
+    return -1;
+  }
+  
+  /* Listen to the bus */
+  bus = gst_element_get_bus (data.pipeline);
+  do {
+    msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+        GST_MESSAGE_STATE_CHANGED | GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+  
+    /* Parse message */
+    if (msg != NULL) {
+      GError *err;
+      gchar *debug_info;
+      
+      switch (GST_MESSAGE_TYPE (msg)) {
+        case GST_MESSAGE_ERROR:
+          gst_message_parse_error (msg, &err, &debug_info);
+          g_printerr ("Error received from element %s: %s\n", GST_OBJECT_NAME (msg->src), err->message);
+          g_printerr ("Debugging information: %s\n", debug_info ? debug_info : "none");
+          g_clear_error (&err);
+          g_free (debug_info);
+          terminate = TRUE;
+          break;
+        case GST_MESSAGE_EOS:
+          g_print ("End-Of-Stream reached.\n");
+          terminate = TRUE;
+          break;
+        case GST_MESSAGE_STATE_CHANGED:
+          /* We are only interested in state-changed messages from the pipeline */
+          if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data.pipeline)) {
+            GstState old_state, new_state, pending_state;
+            gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
+            g_print ("Pipeline state changed from %s to %s:\n",
+                gst_element_state_get_name (old_state), gst_element_state_get_name (new_state));
+          }
+          break;
+        default:
+          /* We should not reach here */
+          g_printerr ("Unexpected message received.\n");
+          break;
+      }
+      gst_message_unref (msg);
+    }
+  } while (!terminate);
+  
+  /* Free resources */
+  gst_object_unref (bus);
+  gst_element_set_state (data.pipeline, GST_STATE_NULL);
+  gst_object_unref (data.pipeline);
+  return 0;
+}
+  
+/* This function will be called by the pad-added signal */
+static void pad_added_handler (GstElement *src, GstPad *new_pad, CustomData *data) {
+  GstPad *sink_pad = gst_element_get_static_pad (data->convert, "sink");
+  GstPadLinkReturn ret;
+  GstCaps *new_pad_caps = NULL;
+  GstStructure *new_pad_struct = NULL;
+  const gchar *new_pad_type = NULL;
+  
+  g_print ("Received new pad '%s' from '%s':\n", GST_PAD_NAME (new_pad), GST_ELEMENT_NAME (src));
+  
+  /* If our converter is already linked, we have nothing to do here */
+  if (gst_pad_is_linked (sink_pad)) {
+    g_print ("  We are already linked. Ignoring.\n");
+    goto exit;
+  }
+  
+  /* Check the new pad's type */
+  new_pad_caps = gst_pad_get_caps (new_pad);
+  new_pad_struct = gst_caps_get_structure (new_pad_caps, 0);
+  new_pad_type = gst_structure_get_name (new_pad_struct);
+  if (!g_str_has_prefix (new_pad_type, "audio/x-raw")) {
+    g_print ("  It has type '%s' which is not raw audio. Ignoring.\n", new_pad_type);
+    goto exit;
+  }
+  
+  /* Attempt the link */
+  ret = gst_pad_link (new_pad, sink_pad);
+  if (GST_PAD_LINK_FAILED (ret)) {
+    g_print ("  Type is '%s' but link failed.\n", new_pad_type);
+  } else {
+    g_print ("  Link succeeded (type '%s').\n", new_pad_type);
+  }
+  
+exit:
+  /* Unreference the new pad's caps, if we got them */
+  if (new_pad_caps != NULL)
+    gst_caps_unref (new_pad_caps);
+  
+  /* Unreference the sink pad */
+  gst_object_unref (sink_pad);
+}
+```
+
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
+<td><div id="expander-1093416675" class="expand-container">
+<div id="expander-control-1093416675" class="expand-control">
+<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
+</div>
+<div id="expander-content-1093416675" class="expand-content">
+<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
+<div class="panel" style="border-width: 1px;">
+<div class="panelContent">
+<p><code>gcc basic-tutorial-3.c -o basic-tutorial-3 `pkg-config --cflags --libs gstreamer-0.10`</code></p>
+</div>
+</div>
+<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
+<p><span>This tutorial only plays audio. The media is fetched from the Internet, so it might take a few seconds to start, depending on your connection speed.</span></p>
+<p>Required libraries: <code>gstreamer-0.10</code></p>
+</div>
+</div></td>
+</tr>
+</tbody>
+</table>
+
+# Walkthrough
+
+``` first-line: 3; theme: Default; brush: cpp; gutter: true
+/* Structure to contain all our information, so we can pass it to callbacks */
+typedef struct _CustomData {
+  GstElement *pipeline;
+  GstElement *source;
+  GstElement *convert;
+  GstElement *sink;
+} CustomData;
+```
+
+So far we have kept all the information we needed (pointers
+to `GstElement`s, basically) as local variables. Since this tutorial
+(and most real applications) involves callbacks, we will group all our
+data in a structure for easier handling.
+
+``` first-line: 11; theme: Default; brush: cpp; gutter: true
+/* Handler for the pad-added signal */
+static void pad_added_handler (GstElement *src, GstPad *pad, CustomData *data);
+```
+
+This is a forward reference, to be used later.
+
+``` first-line: 24; theme: Default; brush: cpp; gutter: true
+/* Create the elements */
+data.source = gst_element_factory_make ("uridecodebin", "source");
+data.convert = gst_element_factory_make ("audioconvert", "convert");
+data.sink = gst_element_factory_make ("autoaudiosink", "sink");
+```
+
+We create the elements as usual. `uridecodebin` will internally
+instantiate all the necessary elements (sources, demuxers and decoders)
+to turn a URI into raw audio and/or video streams. It does half the work
+that `playbin2` does. Since it contains demuxers, its source pads are
+not initially available and we will need to link to them on the fly.
+
+`audioconvert` is useful for converting between different audio formats,
+making sure that this example will work on any platform, since the
+format produced by the audio decoder might not be the same that the
+audio sink expects.
+
+The `autoaudiosink` is the equivalent of `autovideosink` seen in the
+previous tutorial, for audio. It will render the audio stream to the
+audio card.
+
+``` first-line: 40; theme: Default; brush: cpp; gutter: true
+if (!gst_element_link (data.convert, data.sink)) {
+  g_printerr ("Elements could not be linked.\n");
+  gst_object_unref (data.pipeline);
+  return -1;
+}
+```
+
+Here we link the converter element to the sink, but we **DO NOT** link
+them with the source, since at this point it contains no source pads. We
+just leave this branch (converter + sink) unlinked, until later on.
+
+``` first-line: 46; theme: Default; brush: cpp; gutter: true
+/* Set the URI to play */
+g_object_set (data.source, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+```
+
+We set the URI of the file to play via a property, just like we did in
+the previous tutorial.
+
+### Signals
+
+``` first-line: 49; theme: Default; brush: cpp; gutter: true
+/* Connect to the pad-added signal */
+g_signal_connect (data.source, "pad-added", G_CALLBACK (pad_added_handler), &data);
+```
+
+`GSignals` are a crucial point in GStreamer. They allow you to be
+notified (by means of a callback) when something interesting has
+happened. Signals are identified by a name, and each `GObject` has its
+own signals.
+
+In this line, we are *attaching* to the “pad-added” signal of our source
+(an `uridecodebin` element). To do so, we use `g_signal_connect()` and
+provide the callback function to be used (`pad_added_handler`) and a
+data pointer. GStreamer does nothing with this data pointer, it just
+forwards it to the callback so we can share information with it. In this
+case, we pass a pointer to the `CustomData` structure we built specially
+for this purpose.
+
+The signals that a `GstElement` generates can be found in its
+documentation or using the `gst-inspect` tool as described in [Basic
+tutorial 10: GStreamer
+tools](Basic%2Btutorial%2B10%253A%2BGStreamer%2Btools.html).
+
+We are now ready to go\! Just set the pipeline to the PLAYING state and
+start listening to the bus for interesting messages (like ERROR or EOS),
+just like in the previous tutorials.
+
+### The callback
+
+When our source element finally has enough information to start
+producing data, it will create source pads, and trigger the “pad-added”
+signal. At this point our callback will be
+called:
+
+``` first-line: 110; theme: Default; brush: cpp; gutter: true
+static void pad_added_handler (GstElement *src, GstPad *new_pad, CustomData *data) {
+```
+
+`src` is the `GstElement` which triggered the signal. In this example,
+it can only be the `uridecodebin`, since it is the only signal to which
+we have attached.
+
+`new_pad` is the `GstPad` that has just been added to the `src` element.
+This is usually the pad to which we want to link.
+
+`data` is the pointer we provided when attaching to the signal. In this
+example, we use it to pass the `CustomData` pointer.
+
+``` first-line: 111; theme: Default; brush: cpp; gutter: true
+GstPad *sink_pad = gst_element_get_static_pad (data->convert, "sink");
+```
+
+From `CustomData` we extract the converter element, and then retrieve
+its sink pad using `gst_element_get_static_pad ()`. This is the pad to
+which we want to link `new_pad`. In the previous tutorial we linked
+element against element, and let GStreamer choose the appropriate pads.
+Now we are going to link the pads directly.
+
+``` first-line: 119; theme: Default; brush: cpp; gutter: true
+/* If our converter is already linked, we have nothing to do here */
+if (gst_pad_is_linked (sink_pad)) {
+  g_print ("  We are already linked. Ignoring.\n");
+  goto exit;
+}
+```
+
+`uridecodebin` can create as many pads as it sees fit, and for each one,
+this callback will be called. These lines of code will prevent us from
+trying to link to a new pad once we are already linked.
+
+``` first-line: 125; theme: Default; brush: cpp; gutter: true
+/* Check the new pad's type */
+new_pad_caps = gst_pad_get_caps (new_pad);
+new_pad_struct = gst_caps_get_structure (new_pad_caps, 0);
+new_pad_type = gst_structure_get_name (new_pad_struct);
+if (!g_str_has_prefix (new_pad_type, "audio/x-raw")) {
+  g_print ("  It has type '%s' which is not raw audio. Ignoring.\n", new_pad_type);
+  goto exit;
+}
+```
+
+Now we will check the type of data this new pad is going to output,
+because we are only interested in pads producing audio. We have
+previously created a piece of pipeline which deals with audio (an
+`audioconvert` linked with an `autoaudiosink`), and we will not be able
+to link it to a pad producing video, for example.
+
+`gst_pad_get_caps()` retrieves the *capabilities* of the pad (this is,
+the kind of data it supports), wrapped in a `GstCaps` structure. A pad
+can offer many capabilities, and hence `GstCaps` can contain many
+`GstStructure`, each representing a different capability.
+
+Since, in this case, we know that the pad we want only had one
+capability (audio), we retrieve the first `GstStructure` with
+`gst_caps_get_structure()`.
+
+Finally, with `gst_structure_get_name()` we recover the name of the
+structure, which contains the main description of the format (its MIME
+type, actually).
+
+If the name does not start with `audio/x-raw`, this is not a decoded
+audio pad, and we are not interested in it.
+
+Otherwise, attempt the link:
+
+``` first-line: 134; theme: Default; brush: cpp; gutter: true
+/* Attempt the link */
+ret = gst_pad_link (new_pad, sink_pad);
+if (GST_PAD_LINK_FAILED (ret)) {
+  g_print ("  Type is '%s' but link failed.\n", new_pad_type);
+} else {
+  g_print ("  Link succeeded (type '%s').\n", new_pad_type);
+}
+```
+
+`gst_pad_link()` tries to link two pads. As it was the case
+with `gst_element_link()`, the link must be specified from source to
+sink, and both pads must be owned by elements residing in the same bin
+(or pipeline).
+
+And we are done\! When a pad of the right kind appears, it will be
+linked to the rest of the audio-processing pipeline and execution will
+continue until ERROR or EOS. However, we will squeeze a bit more content
+from this tutorial by also introducing the concept of State.
+
+#### GStreamer States
+
+We already talked a bit about states when we said that playback does not
+start until you bring the pipeline to the PLAYING state. We will
+introduce here the rest of states and their meaning. There are 4 states
+in GStreamer:
+
+<table>
+<tbody>
+<tr class="odd">
+<td><p><code class="western">NULL</code></p></td>
+<td><p>the NULL state or initial state of an element.</p></td>
+</tr>
+<tr class="even">
+<td><p><code class="western">READY</code></p></td>
+<td><p>the element is ready to go to PAUSED.</p></td>
+</tr>
+<tr class="odd">
+<td><p><code class="western">PAUSED</code></p></td>
+<td><p>the element is PAUSED, it is ready to accept and process data. Sink elements however only accept one buffer and then block.</p></td>
+</tr>
+<tr class="even">
+<td><p><code class="western">PLAYING</code></p></td>
+<td><p>the element is PLAYING, the c<span style="text-decoration: none;">lock</span> is running and the data is flowing.</p></td>
+</tr>
+</tbody>
+</table>
+
+You can only move between adjacent ones, this is, you can't go from NULL
+to PLAYING, you have to go through the intermediate READY and PAUSED
+states. If you set the pipeline to PLAYING, though, GStreamer will make
+the intermediate transitions for you.
+
+``` theme: Default; brush: cpp; gutter: false
+case GST_MESSAGE_STATE_CHANGED:
+  /* We are only interested in state-changed messages from the pipeline */
+  if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data.pipeline)) {
+    GstState old_state, new_state, pending_state;
+    gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
+    g_print ("Pipeline state changed from %s to %s:\n",
+        gst_element_state_get_name (old_state), gst_element_state_get_name (new_state));
+  }
+  break;
+```
+
+We added this piece of code that listens to bus messages regarding state
+changes and prints them on screen to help you understand the
+transitions. Every element puts messages on the bus regarding its
+current state, so we filter them out and only listen to messages coming
+from the pipeline.
+
+Most applications only need to worry about going to PLAYING to start
+playback, then to PAUSE to perform a pause, and then back to NULL at
+program exit to free all resources.
+
+# Exercise
+
+Dynamic pad linking has traditionally been a difficult topic for a lot
+of programmers. Prove that you have achieved its mastery by
+instantiating an `autovideosink` (probably with an `ffmpegcolorspace` in
+front) and link it to the demuxer when the right pad appears. Hint: You
+are already printing on screen the type of the video pads.
+
+You should now see (and hear) the same movie as in [Basic tutorial 1:
+Hello world\!](Basic%2Btutorial%2B1%253A%2BHello%2Bworld%2521.html). In
+that tutorial you used `playbin2`, which is a handy element that
+automatically takes care of all the demuxing and pad linking for you.
+Most of the [Playback tutorials](Playback%2Btutorials.html) are devoted
+to `playbin2`.
+
+# Conclusion
+
+In this tutorial, you learned:
+
+  - How to be notified of events using `GSignals`
+  - How to connect `GstPad`s directly instead of their parent elements.
+  - The various states of a GStreamer element.
+
+You also combined these items to build a dynamic pipeline, which was not
+defined at program start, but was created as information regarding the
+media was available.
+
+You can now continue with the basic tutorials and learn about performing
+seeks and time-related queries in [Basic tutorial 4: Time
+management](Basic%2Btutorial%2B4%253A%2BTime%2Bmanagement.html) or move
+to the [Playback tutorials](Playback%2Btutorials.html), and gain more
+insight about the `playbin2` element.
+
+Remember that attached to this page you should find the complete source
+code of the tutorial and any accessory files needed to build it.  
+It has been a pleasure having you here, and see you soon\!
+
+## Attachments:
+
+![](images/icons/bullet_blue.gif)
+[src-element.png](attachments/327784/1540098.png) (image/png)  
+![](images/icons/bullet_blue.gif)
+[filter-element.png](attachments/327784/1540099.png) (image/png)  
+![](images/icons/bullet_blue.gif)
+[sink-element.png](attachments/327784/1540100.png) (image/png)  
+![](images/icons/bullet_blue.gif)
+[filter-element-multi.png](attachments/327784/1540101.png) (image/png)  
+![](images/icons/bullet_blue.gif)
+[simple-player.png](attachments/327784/1540102.png) (image/png)  
+
+Document generated by Confluence on Oct 08, 2015 10:27
+

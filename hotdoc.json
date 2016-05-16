@@ -1,0 +1,7 @@
+{
+    "index": "index.markdown",
+    "add_anchors": true,
+    "output": "built_doc",
+    "project_name": "gstdotcom",
+    "sitemap": "sitemap.txt"
+}
