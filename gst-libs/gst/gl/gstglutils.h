@@ -117,7 +117,9 @@ gboolean gst_gl_value_set_texture_target_from_mask (GValue * value,
 gboolean gst_gl_value_set_texture_target (GValue * value, GstGLTextureTarget target);
 GstGLTextureTarget gst_gl_value_get_texture_target_mask (const GValue * value);
 
-void gst_gl_get_affine_transformation_meta_as_ndc (GstVideoAffineTransformationMeta * meta, gfloat * matrix);
+void gst_gl_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * result);
+void gst_gl_get_affine_transformation_meta_as_ndc (GstVideoAffineTransformationMeta *
+    meta, gfloat * matrix);
 
 G_END_DECLS
 

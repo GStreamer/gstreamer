@@ -1089,21 +1089,25 @@ static const gfloat to_ndc_matrix[] = {
   0.0f, 0.0f, 0.0, 1.0f,
 };
 
-static void
-_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * result)
+void
+gst_gl_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * result)
 {
   int i, j, k;
+  gfloat tmp[16] = { 0.0f };
 
-  for (i = 0; i < 16; i++)
-    result[i] = 0.0f;
+  if (!a || !b || !result)
+    return;
 
   for (i = 0; i < 4; i++) {
     for (j = 0; j < 4; j++) {
       for (k = 0; k < 4; k++) {
-        result[i + (j * 4)] += a[i + (k * 4)] * b[k + (j * 4)];
+        tmp[i + (j * 4)] += a[i + (k * 4)] * b[k + (j * 4)];
       }
     }
   }
+
+  for (i = 0; i < 16; i++)
+    result[i] = tmp[i];
 }
 
 void
@@ -1119,7 +1123,7 @@ gst_gl_get_affine_transformation_meta_as_ndc (GstVideoAffineTransformationMeta *
   } else {
     gfloat tmp[16] = { 0.0f };
 
-    _multiply_matrix4 (from_ndc_matrix, meta->matrix, tmp);
-    _multiply_matrix4 (tmp, to_ndc_matrix, matrix);
+    gst_gl_multiply_matrix4 (from_ndc_matrix, meta->matrix, tmp);
+    gst_gl_multiply_matrix4 (tmp, to_ndc_matrix, matrix);
   }
 }
