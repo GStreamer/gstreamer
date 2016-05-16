@@ -285,7 +285,12 @@ gst_gl_window_win32_create_window (GstGLWindowWin32 * window_win32,
 
   GST_LOG ("Created a win32 window");
 
-  set_parent_win_id (window_win32);
+  /* The window has been created as if it had no parent, so there is nothing
+   * else to do in that case. Even if user has already set a window,
+   * parent_win_id could still be 0 at this point, and in that case calling
+   * set_parent_win_id() here would steal focus from the parent window. */
+  if (window_win32->parent_win_id)
+    set_parent_win_id (window_win32);
 
   return TRUE;
 
