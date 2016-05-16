@@ -35,9 +35,9 @@ LilvNode *input_class;
 LilvNode *output_class;
 LilvNode *integer_prop;
 LilvNode *toggled_prop;
+LilvNode *designation_pred;
 LilvNode *in_place_broken_pred;
 LilvNode *group_pred;
-LilvNode *has_role_pred;
 
 LilvNode *center_role;
 LilvNode *left_role;

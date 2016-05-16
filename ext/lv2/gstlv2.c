@@ -203,14 +203,11 @@ plugin_init (GstPlugin * plugin)
   input_class = lilv_new_uri (world, LILV_URI_INPUT_PORT);
   output_class = lilv_new_uri (world, LILV_URI_OUTPUT_PORT);
 
-#define NS_LV2 "http://lv2plug.in/ns/lv2core#"
-#define NS_PG  "http://lv2plug.in/ns/ext/port-groups#"
-
-  integer_prop = lilv_new_uri (world, NS_LV2 "integer");
-  toggled_prop = lilv_new_uri (world, NS_LV2 "toggled");
-  in_place_broken_pred = lilv_new_uri (world, NS_LV2 "inPlaceBroken");
+  integer_prop = lilv_new_uri (world, LV2_CORE__integer);
+  toggled_prop = lilv_new_uri (world, LV2_CORE__toggled);
+  designation_pred = lilv_new_uri (world, LV2_CORE__designation);
+  in_place_broken_pred = lilv_new_uri (world, LV2_CORE__inPlaceBroken);
   group_pred = lilv_new_uri (world, LV2_PORT_GROUPS__group);
-  has_role_pred = lilv_new_uri (world, NS_PG "role");
 
   center_role = lilv_new_uri (world, LV2_PORT_GROUPS__center);
   left_role = lilv_new_uri (world, LV2_PORT_GROUPS__left);
@@ -285,9 +282,9 @@ __attribute__ ((destructor))
 
   lilv_node_free (integer_prop);
   lilv_node_free (toggled_prop);
+  lilv_node_free (designation_pred);
   lilv_node_free (in_place_broken_pred);
   lilv_node_free (group_pred);
-  lilv_node_free (has_role_pred);
 
   lilv_node_free (center_role);
   lilv_node_free (left_role);
