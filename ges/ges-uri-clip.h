@@ -82,7 +82,7 @@ gboolean ges_uri_clip_is_muted (GESUriClip * self);
 gboolean ges_uri_clip_is_image (GESUriClip * self);
 const gchar *ges_uri_clip_get_uri (GESUriClip * self);
 
-GESUriClip* ges_uri_clip_new (gchar *uri);
+GESUriClip* ges_uri_clip_new (const gchar *uri);
 
 G_END_DECLS
 
