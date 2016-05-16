@@ -72,9 +72,9 @@ _sync_element_to_layer_property_float (GESTrackElement * trksrc,
 
   parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
   if (!parent) {
-      GST_DEBUG_OBJECT (trksrc, "Not in a clip... doing nothing");
+    GST_DEBUG_OBJECT (trksrc, "Not in a clip... doing nothing");
 
-      return;
+    return;
   }
 
   layer = ges_clip_get_layer (GES_CLIP (parent));
