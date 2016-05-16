@@ -421,7 +421,8 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, GObjectClass * object_class,
 
       /* check if value can be safely converted to int */
       if (v != (gint) v) {
-        GST_DEBUG ("non integer scale point %lf, %s", v, l);
+        GST_INFO ("%s:%s non integer scale point %lf, %s",
+            lilv_node_as_string (lilv_plugin_get_uri (lv2plugin)), name, v, l);
         break;
       }
       if (v == def) {
@@ -429,7 +430,7 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, GObjectClass * object_class,
       }
       enums[j].value = (gint) v;
       enums[j].value_nick = enums[j].value_name = l;
-      GST_DEBUG ("%s:%s enum: %lf, %s",
+      GST_LOG ("%s:%s enum: %lf, %s",
           lilv_node_as_string (lilv_plugin_get_uri (lv2plugin)), name, v, l);
       j++;
     }
