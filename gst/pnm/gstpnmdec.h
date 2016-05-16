@@ -44,7 +44,7 @@ struct _GstPnmdec
   GstVideoCodecState *input_state;
   guint size, last_byte, current_size ;
   GstBuffer *buf;
-  GstVideoFormat gray16format;
+  GstVideoFormat out_format;
 };
 
 struct _GstPnmdecClass
