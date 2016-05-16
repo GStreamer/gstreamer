@@ -1,5 +1,5 @@
 {
-    "index": "index.markdown",
+    "index": "Home.markdown",
     "add_anchors": true,
     "output": "built_doc",
     "project_name": "gstdotcom",
