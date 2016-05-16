@@ -364,14 +364,18 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, GObjectClass * object_class,
   lilv_node_free (lv2max);
 
   if (def < lower) {
-    GST_WARNING ("%s has lower bound %f > default %f",
-        lilv_node_as_string (lilv_plugin_get_uri (lv2plugin)), lower, def);
+    if (lv2def && lv2min) {
+      GST_WARNING ("%s has lower bound %f > default %f",
+          lilv_node_as_string (lilv_plugin_get_uri (lv2plugin)), lower, def);
+    }
     lower = def;
   }
 
   if (def > upper) {
-    GST_WARNING ("%s has upper bound %f < default %f",
-        lilv_node_as_string (lilv_plugin_get_uri (lv2plugin)), upper, def);
+    if (lv2def && lv2max) {
+      GST_WARNING ("%s has upper bound %f < default %f",
+          lilv_node_as_string (lilv_plugin_get_uri (lv2plugin)), upper, def);
+    }
     upper = def;
   }
 
