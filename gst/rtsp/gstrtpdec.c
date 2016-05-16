@@ -357,6 +357,7 @@ gst_rtp_dec_finalize (GObject * object)
 
   rtpdec = GST_RTP_DEC (object);
 
+  gst_object_unref (rtpdec->provided_clock);
   g_slist_foreach (rtpdec->sessions, (GFunc) free_session, NULL);
   g_slist_free (rtpdec->sessions);
 
