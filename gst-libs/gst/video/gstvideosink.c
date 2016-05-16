@@ -40,6 +40,8 @@
 
 #include "gstvideosink.h"
 
+G_DEFINE_TYPE (GstVideoSink, gst_video_sink, GST_TYPE_BASE_SINK);
+
 enum
 {
   PROP_SHOW_PREROLL_FRAME = 1
@@ -52,8 +54,25 @@ struct _GstVideoSinkPrivate
   gboolean show_preroll_frame;  /* ATOMIC */
 };
 
-GST_DEBUG_CATEGORY_STATIC (video_sink_debug);
-#define GST_CAT_DEFAULT video_sink_debug
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT gst_video_sink_ensure_debug_category()
+
+static GstDebugCategory *
+gst_video_sink_ensure_debug_category (void)
+{
+  static gsize cat_gonce = 0;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    GstDebugCategory *cat = NULL;
+
+    GST_DEBUG_CATEGORY_INIT (cat, "videosink", 0, "GstVideoSink");
+
+    g_once_init_leave (&cat_gonce, (gsize) cat);
+  }
+
+  return (GstDebugCategory *) cat_gonce;
+}
+#endif /* GST_DISABLE_GST_DEBUG */
 
 static GstBaseSinkClass *parent_class = NULL;
 
@@ -163,12 +182,6 @@ gst_video_sink_class_init (GstVideoSinkClass * klass)
   g_type_class_add_private (klass, sizeof (GstVideoSinkPrivate));
 }
 
-static void
-gst_video_sink_base_init (gpointer g_class)
-{
-  GST_DEBUG_CATEGORY_INIT (video_sink_debug, "videosink", 0, "GstVideoSink");
-}
-
 static GstFlowReturn
 gst_video_sink_show_preroll_frame (GstBaseSink * bsink, GstBuffer * buf)
 {
@@ -256,31 +269,4 @@ gst_video_sink_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-/* Public methods */
-
-GType
-gst_video_sink_get_type (void)
-{
-  static GType videosink_type = 0;
-
-  if (!videosink_type) {
-    static const GTypeInfo videosink_info = {
-      sizeof (GstVideoSinkClass),
-      gst_video_sink_base_init,
-      NULL,
-      (GClassInitFunc) gst_video_sink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstVideoSink),
-      0,
-      (GInstanceInitFunc) gst_video_sink_init,
-    };
-
-    videosink_type = g_type_register_static (GST_TYPE_BASE_SINK,
-        "GstVideoSink", &videosink_info, 0);
-  }
-
-  return videosink_type;
 }
