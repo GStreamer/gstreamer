@@ -2,7 +2,6 @@ Home.markdown
         Installing+the+SDK.markdown
 	        Installing+for+Android+development.markdown
 	        Installing+for+iOS+development.markdown
-	        Installing+on+Linux.markdown
 	        Installing+on+Mac+OS+X.markdown
 	        Installing+on+Windows.markdown
 	        Building+from+source+using+Cerbero.markdown

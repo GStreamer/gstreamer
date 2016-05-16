@@ -59,8 +59,7 @@ Commercial support, bug reporting...</td>
 
 ## Attachments:
 
-![](images/icons/bullet_blue.gif)
-[download.png](attachments/327688/2424858.png) (image/png)  
+[download.png](attachments/2424858.png)
 ![](images/icons/bullet_blue.gif)
 [tutorials.png](attachments/327688/2424859.png) (image/png)  
 ![](images/icons/bullet_blue.gif)

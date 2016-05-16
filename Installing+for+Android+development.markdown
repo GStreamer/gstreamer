@@ -1,8 +1,6 @@
-#  GStreamer SDK documentation : Installing for Android development 
+#  Installing for Android development 
 
-This page last changed on May 24, 2013 by xartigas.
-
-# Prerequisites
+## Prerequisites
 
 The development machine is where you will develop your Android
 application, which then you will deploy on the target machine, which
@@ -20,17 +18,10 @@ needs to have installed:
     you have at least one Android SDK platform installed with API
     version 9 or higher.
 
-Optionally, you can use the [Eclipse
-IDE](http://www.eclipse.org/eclipse/). As stated in the Android
-documentation, *developing in Eclipse with ADT is highly recommended and
-is the fastest way to get started*. If you plan to use the Eclipse IDE:
+Optionally, you can use the [Android Studio] (FIX LINK). As stated in the Android
+documentation, *developing in Android Studio is highly recommended and
+is the fastest way to get started*.
 
-  - Install the [Android ADT
-    plugin](http://developer.android.com/sdk/installing/installing-adt.html) for
-    Eclipse
-  - Install the [Android NDK
-    plugin](http://tools.android.com/recent/usingthendkplugin) for
-    Eclipse
 
 Before continuing, make sure you can compile and run the samples
 included in the Android NDK, and that you understand how the integration
@@ -41,9 +32,9 @@ NDK](http://developer.android.com/tools/sdk/ndk/index.html)
 documentation, you can find some useful [Android JNI tips
 here](http://developer.android.com/guide/practices/jni.html).
 
-# Download and install the SDK
+## Download and install the SDK
 
-The SDK has two variants: **Debug** and **Release**. The Debug variant
+The SDK has two variants: **Debug** and **Release**. The Debug variant
 produces lots of debug output and is useful while developing your
 application. The Release variant is what you will use to produce the
 final version of your application, since GStreamer code runs slightly
@@ -53,45 +44,14 @@ Get the compressed file below and just unzip it into any folder of your
 choice (Choose your preferred file format; both files have exactly the
 same content)
 
-<table>
-<colgroup>
-<col width="100%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>Debug variant</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><ul>
-<li><a href="http://cdn.gstreamer.com/android/arm/gstreamer-sdk-android-arm-debug-2013.6.tar.bz2" class="external-link">GStreamer SDK 2013.6 (Congo) for Android ARM (Debug, tar.bz2)</a> - <a href="http://www.freedesktop.org/software/gstreamer-sdk/data/packages/android/arm/gstreamer-sdk-android-arm-debug-2013.6.tar.bz2" class="external-link">mirror</a> - <a href="http://cdn.gstreamer.com/android/arm/gstreamer-sdk-android-arm-debug-2013.6.tar.bz2.md5" class="external-link">md5</a> - <a href="http://cdn.gstreamer.com/android/arm/gstreamer-sdk-android-arm-debug-2013.6.tar.bz2.sha1" class="external-link">sha1</a></li>
-<li><a href="http://cdn.gstreamer.com/android/arm/gstreamer-sdk-android-arm-debug-2013.6.zip" class="external-link">GStreamer SDK 2013.6 (Congo) for Android ARM (Debug, zip)</a> - <a href="http://www.freedesktop.org/software/gstreamer-sdk/data/packages/android/arm/gstreamer-sdk-android-arm-debug-2013.6.zip" class="external-link">mirror</a> - <a href="http://cdn.gstreamer.com/android/arm/gstreamer-sdk-android-arm-debug-2013.6.zip.md5" class="external-link">md5</a> - <a href="http://cdn.gstreamer.com/android/arm/gstreamer-sdk-android-arm-debug-2013.6.zip.sha1" class="external-link">sha1</a></li>
-</ul></td>
-</tr>
-<tr class="even">
-<td><span style="color: rgb(0,0,0);">Release variant</span></td>
-</tr>
-<tr class="odd">
-<td><ul>
-<li><a href="http://cdn.gstreamer.com/android/arm/gstreamer-sdk-android-arm-release-2013.6.tar.bz2" class="external-link">GStreamer SDK 2013.6 (Congo) for Android ARM (Release, tar.bz2)</a> - <a href="http://www.freedesktop.org/software/gstreamer-sdk/data/packages/android/arm/gstreamer-sdk-android-arm-release-2013.6.tar.bz2" class="external-link">mirror</a> - <a href="http://cdn.gstreamer.com/android/arm/gstreamer-sdk-android-arm-release-2013.6.tar.bz2.md5" class="external-link">md5</a> - <a href="http://cdn.gstreamer.com/android/arm/gstreamer-sdk-android-arm-release-2013.6.tar.bz2.sha1" class="external-link">sha1</a></li>
-<li><a href="http://cdn.gstreamer.com/android/arm/gstreamer-sdk-android-arm-debug-2013.6.zip" class="external-link">GStreamer SDK 2013.6 (Congo) for Android ARM (Release, zip)</a> - <a href="http://www.freedesktop.org/software/gstreamer-sdk/data/packages/android/arm/gstreamer-sdk-android-arm-debug-2013.6.zip" class="external-link">mirror</a> - <a href="http://cdn.gstreamer.com/android/arm/gstreamer-sdk-android-arm-debug-2013.6.zip.md5" class="external-link">md5</a> - <a href="http://cdn.gstreamer.com/android/arm/gstreamer-sdk-android-arm-debug-2013.6.zip.sha1" class="external-link">sha1</a></li>
-</ul></td>
-</tr>
-</tbody>
-</table>
+### Debug variant
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/warning.png" width="16" height="16" /></td>
-<td><p>Due to the size of these files, usage of a <a href="http://en.wikipedia.org/wiki/Download_manager" class="external-link">Download Manager</a> is <strong>highly recommended</strong>. Take a look at <a href="http://en.wikipedia.org/wiki/Comparison_of_download_managers" class="external-link">this list</a> if you do not have one installed. If, after downloading, the installer reports itself as corrupt, chances are that the connection ended before the file was complete. A Download Manager will typically re-start the process and fetch the missing parts.</p></td>
-</tr>
-</tbody>
-</table>
+ FIXME: Link to download files
 
 If you intend to build the tutorials in this same folder, make sure you
 have writing permissions.
+
+ FIXME: Is this all TRUE ?
 
 In the process of building GStreamer-enabled Android applications, some
 tools will need to know where you installed the SDK. You must define an
@@ -105,16 +65,9 @@ Windows).
   - Point `GSTREAMER_SDK_ROOT_ANDROID` to the folder where you unzipped
     the SDK.
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><p>If you plan to use Eclipse and do not want to define this environment variable globally, you can set it inside Eclipse. Go to Window → Preferences → C/C++ → Build → Build Variables and define <code>GSTREAMER_SDK_ROOT_ANDROID</code> there.</p></td>
-</tr>
-</tbody>
-</table>
+> ![](images/icons/emoticons/information.png) If you plan to use Eclipse and do not want to define this environment variable globally, you can set it inside Eclipse. Go to Window → Preferences → C/C++ → Build → Build Variables and define `GSTREAMER_SDK_ROOT_ANDROID` there.
 
-# Configure your development environment
+## Configure your development environment
 
 There are two routes to use GStreamer in an Android application: Either
 writing your GStreamer code in Java or in C.
@@ -143,7 +96,7 @@ Android NDK projects, so the instructions at the [Android
 NDK](http://developer.android.com/tools/sdk/ndk/index.html) home can be
 followed:
 
-![](images/icons/grey_arrow_down.gif)Using Eclipse (Click to expand)
+#### Using Eclipse
 
 Make sure you have installed the ADT and NDK plugins listed in the
 prerequisites section, and that they are both aware of the location of
@@ -154,13 +107,12 @@ File → New → Project… → Android Project from Existing
 Code, and select the folder called `android-tutorial-1`.
 
 After reading in the project and generating some extra files and
-folders, Eclipse might complain about missing files. **This is normal**,
+folders, Eclipse might complain about missing files. **This is normal**,
 we are not finished yet.
 
 Provide native development support by activating the NDK plugin:
 Right-click on the project in the Project Explorer (this should be the
-top-most folder,
-called `com.gst_sdk_tutorials.tutorial_1.Tutorial1`) → Android
+top-most folder, called `com.gst_sdk_tutorials.tutorial_1.Tutorial1`) → Android
 tools → Add Native Support… Here the NDK plugin asks for a library name.
 This is irrelevant and any valid file name will do. Accept.
 
@@ -179,21 +131,13 @@ tutorial in an Android Virtual Device (AVD), make sure to create the
 device with support for audio playback and GPU Emulation (to enable
 OpenGL ES).
 
-![](images/icons/grey_arrow_down.gif)Using the command line (Click to
-expand)
+#### Using the command line
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/warning.png" width="16" height="16" /></td>
-<td><p>Note that, on Windows, this procedure requires a working Cygwin shell, as explained in the <a href="http://developer.android.com/tools/sdk/ndk/index.html#Reqs" class="external-link">Android NDK System Requirements</a>.</p></td>
-</tr>
-</tbody>
-</table>
+> ![](images/icons/emoticons/warning.png) Note that, on Windows, this procedure requires a working Cygwin shell, as explained in the [Android NDK System Requirements](http://developer.android.com/tools/sdk/ndk/index.html#Reqs)
 
 For each tutorial, move to its folder and run:
 
-``` theme: Default; brush: plain; gutter: false
+```
 android update project -p . -s --target X
 ```
 
@@ -204,7 +148,7 @@ API level 9.
 To get a list of all available targets in your system issue this
 command:
 
-``` theme: Default; brush: plain; gutter: false
+```
 android list
 ```
 
@@ -213,7 +157,7 @@ the build system. You only need to perform this action once per project.
 
 To build the C part, just call:
 
-``` theme: Default; brush: plain; gutter: false
+```
 ndk-build
 ```
 
@@ -224,13 +168,13 @@ methods.
 
 Finally, compile the Java code with:
 
-``` theme: Default; brush: plain; gutter: false
+```
 ant debug
 ```
 
 And install on the device with:
 
-``` theme: Default; brush: plain; gutter: false
+```
 adb install -r bin/Tutorial1-debug.apk
 ```
 
@@ -244,17 +188,12 @@ tutorial in an Android Virtual Device (AVD), make sure to create the
 device with support for audio playback and GPU Emulation (to enable
 OpenGL ES).
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/warning.png" width="16" height="16" /></td>
-<td><strong>Windows linkage problems</strong><br />
 
-<p>Due to problems related to the standard linker, Google’s <a href="http://en.wikipedia.org/wiki/Gold_(linker)" class="external-link">Gold Linker</a> is used to build GStreamer applications.  Unfortunately, the Android NDK toolchain for Windows does not include the gold linker and the standard one has to be used.</p>
-<p>If you observe linkage problems, you can replace the linker in your Android NDK with the gold one from <a href="http://code.google.com/p/mingw-and-ndk/downloads/detail?name=android-ndk-r8b-ma-windows.7z&amp;can=2&amp;q=" class="external-link">this project</a>. Download the <code>android-ndk-r8b-ma-windows.7z</code> file, extract <code>\android-ndk-r8b\toolchains\arm-linux-androideabi-4.6\prebuilt\windows\arm-linux-androideabi\bin\ld.exe</code> (only this file is needed) and overwrite the one in the same folder in your Android NDK installation. You might need the free <a href="http://www.7-zip.org/" class="external-link">7-Zip archiving utility</a>.</p></td>
-</tr>
-</tbody>
-</table>
+> ![](images/icons/emoticons/warning.png) Windows linkage problems
+>
+> Due to problems related to the standard linker, Google’s <a href="http://en.wikipedia.org/wiki/Gold_(linker)" class="external-link">Gold Linker</a> is used to build GStreamer applications.  Unfortunately, the Android NDK toolchain for Windows does not include the gold linker and the standard one has to be used.
+>
+> If you observe linkage problems, you can replace the linker in your Android NDK with the gold one from [this project](http://code.google.com/p/mingw-and-ndk/downloads/detail?name=android-ndk-r8b-ma-windows.7z&amp;can=2&amp;q=). Download the `android-ndk-r8b-ma-windows.7z` file, extract `\android-ndk-r8b\toolchains\arm-linux-androideabi-4.6\prebuilt\windows\arm-linux-androideabi\bin\ld.exe` (only this file is needed) and overwrite the one in the same folder in your Android NDK installation. You might need the free [7-Zip archiving utility](http://www.7-zip.org/)
 
 ### Creating new projects
 
@@ -271,7 +210,7 @@ project, and its barebones structure (as auto-generated by Eclipse) is:
 
 **Android.mk**
 
-``` theme: Default; brush: plain; gutter: true
+```
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
@@ -290,7 +229,7 @@ Adding GStreamer support only requires adding these lines:
 
 **Android.mk with GStreamer support**
 
-``` theme: Default; brush: plain; gutter: true
+```
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
@@ -336,59 +275,54 @@ Listing all desired plugins can be cumbersome, so they have been grouped
 into categories, which can be used by including the `plugins.mk` file,
 and used as follows:
 
-``` theme: Default; brush: plain; gutter: false
+```
 include $(GSTREAMER_NDK_BUILD_PATH)/plugins.mk
 GSTREAMER_PLUGINS  := $(GSTREAMER_PLUGINS_CORE) $(GSTREAMER_PLUGINS_CODECS) playbin souphttpsrc
 ```
 
-![](images/icons/grey_arrow_down.gif)List of categories and included
-plugins (Click to expand)
+#### List of categories and included plugins
 
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Category</th>
 <th>Included plugins</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>GSTREAMER_PLUGINS_CORE</code></td>
-<td><code>coreelements coreindexers adder app audioconvert audiorate audioresample audiotestsrc</code> <code>ffmpegcolorspace gdp gio pango typefindfunctions videorate videoscale videotestsrc</code> <code>volume autodetect videofilter</code></td>
+<td>coreelements coreindexers adder app audioconvert audiorate audioresample audiotestsrc ffmpegcolorspace gdp gio pango typefindfunctions videorate videoscale videotestsrc volume autodetect videofilter</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>GSTREAMER_PLUGINS_PLAYBACK</code></td>
-<td><code>decodebin2 playbin</code></td>
+<td>decodebin playbin</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>GSTREAMER_PLUGINS_CODECS</code></td>
-<td><code>subparse ogg theora vorbis alaw annodex apetag audioparsers auparse avi flac flv flxdec</code> <code>icydemux id3demux isomp4 jpeg matroska mulaw multipart png speex taglib wavenc wavpack</code> <code>wavparse y4menc adpcmdec adpcmenc aiff cdxaparse dtmf dvbsuboverlay dvdspu fragmented</code> <code>hdvparse id3tag ivfparse jp2k kate mve mxf nsf nuvdemux opus pcapparse pnm schro siren</code> <code>subenc tta videoparsersbad vmnc vp8 y4mdec</code></td>
+<td>subparse ogg theora vorbis alaw annodex apetag audioparsers auparse avi flac flv flxdec icydemux id3demux isomp4 jpeg matroska mulaw multipart png speex taglib wavenc wavpack wavparse y4menc adpcmdec adpcmenc aiff cdxaparse dtmf dvbsuboverlay dvdspu fragmented hdvparse id3tag ivfparse jp2k kate mve mxf nsf nuvdemux opus pcapparse pnm schro siren subenc tta videoparsersbad vmnc vp8 y4mdec</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>GSTREAMER_PLUGINS_VIS</code></td>
-<td><code>libvisual goom goom2k1 audiovisualizers</code></td>
+<td>libvisual goom goom2k1 audiovisualizers</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>GSTREAMER_PLUGINS_EFFECTS</code></td>
-<td><code>alpha alphacolor audiofx cutter debug deinterlace effectv equalizer gdkpixbuf imagefreeze</code> <code>interleave level multifile replaygain shapewipe smpte spectrum videobox videocrop videomixer</code> <code>autoconvert bayer coloreffects faceoverlay fieldanalysis freeverb frei0r gaudieffects</code> <code>geometrictransform interlace jp2kdecimator liveadder rawparse removesilence scaletempoplugin</code> <code>segmentclip smooth speed stereo videofiltersbad videomeasure videosignal</code></td>
+<td>alpha alphacolor audiofx cutter debug deinterlace effectv equalizer gdkpixbuf imagefreeze interleave level multifile replaygain shapewipe smpte spectrum videobox videocrop videomixer autoconvert bayer coloreffects faceoverlay fieldanalysis freeverb frei0r gaudieffects geometrictransform interlace jp2kdecimator liveadder rawparse removesilence scaletempoplugin segmentclip smooth speed stereo videofiltersbad videomeasure videosignal</td>
 </tr>
 <tr class="even">
 <td><code>GSTREAMER_PLUGINS_NET</code></td>
-<td><code>rtsp rtp rtpmanager souphttpsrc udp dataurisrc rtpmux rtpvp8 sdpelem</code></td>
+<td>rtsp rtp rtpmanager souphttpsrc udp dataurisrc rtpmux rtpvp8 sdpelem</td>
 </tr>
 <tr class="odd">
 <td><code>GSTREAMER_PLUGINS_CODECS_GPL</code></td>
-<td><code>assrender</code></td>
+<td>assrender</td>
 </tr>
 <tr class="even">
 <td><code>GSTREAMER_PLUGINS_SYS</code></td>
-<td><code>eglglessink opensles amc</code></td>
+<td>eglglessink opensles amc</td>
 </tr>
 </tbody>
 </table>
 
-Build and run your application as explained in the **Building the
-tutorials** section.
-
-Document generated by Confluence on Oct 08, 2015 10:27
-
+Build and run your application as explained in the **Building the tutorials** section.
