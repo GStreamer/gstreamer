@@ -2991,6 +2991,7 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
         gst_object_ref (group->suburidecodebin);
         gst_bin_remove (bin, group->suburidecodebin);
         gst_element_set_locked_state (group->suburidecodebin, FALSE);
+        gst_object_unref (group->suburidecodebin);
 
         GST_SOURCE_GROUP_LOCK (group);
         g_free (group->suburi);
