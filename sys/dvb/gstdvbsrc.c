@@ -2137,6 +2137,10 @@ gst_dvbsrc_is_valid_bandwidth (guint delsys, guint bw)
         return TRUE;
       }
       break;
+    case SYS_ISDBT:
+      if (bw == 6000000 || bw == 0)
+        return TRUE;
+      break;
     default:
       GST_FIXME ("No bandwidth sanity checks implemented for this "
           "delivery system");
@@ -2608,11 +2612,6 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
           object->isdbt_layerb_modulation != DQPSK) {
         GST_WARNING_OBJECT (object, "Wrong ISDB-T parameter combination: "
             "layer C modulation is DQPSK but layer B modulation is different");
-      }
-
-      if (object->bandwidth != 6000000) {
-        GST_WARNING_OBJECT (object, "Wrong ISDB-T parameter value: bandwidth "
-            "is %d but only 6 MHz is allowed", object->bandwidth);
       }
 
       GST_INFO_OBJECT (object, "Tuning ISDB-T to %d", freq);
