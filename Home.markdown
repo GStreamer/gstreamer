@@ -1,4 +1,4 @@
-# ![Home Page](images/icons/contenttypes/home_page_16.png)  GStreamer SDK documentation : Home 
+# GStreamer SDK documentation
 
 This page last changed on Jun 14, 2013 by xartigas.
 
