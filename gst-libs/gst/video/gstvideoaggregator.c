@@ -2230,6 +2230,10 @@ gst_video_aggregator_init (GstVideoAggregator * vagg,
   g_mutex_lock (&sink_caps_mutex);
   if (klass->sink_non_alpha_caps == NULL) {
     klass->sink_non_alpha_caps = _get_non_alpha_caps_from_template (klass);
+
+    /* The caps is cached */
+    GST_MINI_OBJECT_FLAG_SET (klass->sink_non_alpha_caps,
+        GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
   }
   g_mutex_unlock (&sink_caps_mutex);
 
