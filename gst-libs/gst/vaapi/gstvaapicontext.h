@@ -108,6 +108,7 @@ struct _GstVaapiContext
   GstVaapiVideoPool *surfaces_pool;
   GPtrArray *overlays[2];
   guint overlay_id;
+  gboolean reset_on_resize;
 };
 
 /**
@@ -142,6 +143,11 @@ gst_vaapi_context_get_surface_proxy (GstVaapiContext * context);
 G_GNUC_INTERNAL
 guint
 gst_vaapi_context_get_surface_count (GstVaapiContext * context);
+
+G_GNUC_INTERNAL
+void
+gst_vaapi_context_reset_on_resize (GstVaapiContext * context,
+    gboolean reset_on_resize);
 
 G_END_DECLS
 

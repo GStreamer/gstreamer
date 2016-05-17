@@ -220,6 +220,9 @@ ensure_context (GstVaapiDecoderVp9 * decoder)
 
     if (!reset_context)
       return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+
+    gst_vaapi_context_reset_on_resize (GST_VAAPI_DECODER_CONTEXT (decoder),
+        FALSE);
   }
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }

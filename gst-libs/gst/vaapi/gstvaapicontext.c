@@ -323,6 +323,7 @@ gst_vaapi_context_init (GstVaapiContext * context,
     cip->chroma_type = DEFAULT_CHROMA_TYPE;
 
   context->va_config = VA_INVALID_ID;
+  context->reset_on_resize = TRUE;
   gst_vaapi_context_overlay_init (context);
 }
 
@@ -425,7 +426,7 @@ gst_vaapi_context_reset (GstVaapiContext * context,
     if (context_update_config_encoder (context, &new_cip->config.encoder))
       reset_config = TRUE;
   } else if (new_cip->usage == GST_VAAPI_CONTEXT_USAGE_DECODE) {
-    if (reset_surfaces || grow_surfaces)
+    if ((reset_surfaces && context->reset_on_resize) || grow_surfaces)
       reset_config = TRUE;
   }
 
@@ -498,4 +499,21 @@ gst_vaapi_context_get_surface_count (GstVaapiContext * context)
   g_return_val_if_fail (context != NULL, 0);
 
   return gst_vaapi_video_pool_get_size (context->surfaces_pool);
+}
+
+/**
+ * gst_vaapi_context_reset_on_resize:
+ * @context: a #GstVaapiContext
+ * @reset_on_resize: Should the context be reset on size change
+ *
+ * Sets whether the underlying context should be reset when a size change
+ * happens. The proper setting for this is codec dependent.
+ */
+void
+gst_vaapi_context_reset_on_resize (GstVaapiContext * context,
+    gboolean reset_on_resize)
+{
+  g_return_if_fail (context != NULL);
+
+  context->reset_on_resize = reset_on_resize;
 }
