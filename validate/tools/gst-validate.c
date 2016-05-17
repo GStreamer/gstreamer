@@ -564,7 +564,7 @@ main (int argc, gchar ** argv)
       g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
 #endif
 
-  if (_is_playbin_pipeline (argc, argv + 1)) {
+  if (_is_playbin_pipeline (argc - 1, argv + 1)) {
     _register_playbin_actions ();
   }
 
