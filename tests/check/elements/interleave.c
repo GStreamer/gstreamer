@@ -251,6 +251,7 @@ GST_START_TEST (test_interleave_2ch)
 
   fail_unless (have_data == 2);
 
+  gst_bus_set_flushing (bus, TRUE);
   gst_element_set_state (interleave, GST_STATE_NULL);
   gst_element_set_state (queue, GST_STATE_NULL);
 
@@ -377,6 +378,7 @@ GST_START_TEST (test_interleave_2ch_1eos)
 
   fail_unless (have_data == 2);
 
+  gst_bus_set_flushing (bus, TRUE);
   gst_element_set_state (interleave, GST_STATE_NULL);
   gst_element_set_state (queue, GST_STATE_NULL);
 
