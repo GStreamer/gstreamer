@@ -2122,13 +2122,17 @@ static gboolean
 gst_dvbsrc_is_valid_bandwidth (guint delsys, guint bw)
 {
   /* FIXME: check valid bandwidth values for other broadcast standards */
+
+  /* Bandwidth == 0 means auto, this should be valid for every delivery system
+   * for which the bandwidth parameter makes sense */
+
   switch (delsys) {
     case SYS_DVBT:
-      if (bw == 6000000 || bw == 7000000 || bw == 8000000)
+      if (bw == 6000000 || bw == 7000000 || bw == 8000000 || bw == 0)
         return TRUE;
       break;
     case SYS_DVBT2:
-      if (bw == 1172000 || bw == 5000000 || bw == 6000000 ||
+      if (bw == 1172000 || bw == 5000000 || bw == 6000000 || bw == 0 ||
           bw == 7000000 || bw == 8000000 || bw == 10000000) {
         return TRUE;
       }
