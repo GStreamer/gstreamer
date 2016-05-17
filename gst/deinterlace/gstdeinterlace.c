@@ -2532,6 +2532,7 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
       return TRUE;
     }
     gst_deinterlace_reset_history (self, FALSE);
+    gst_caps_unref (current_caps);
   }
   peercaps = gst_pad_peer_query_caps (self->srcpad, NULL);
 
