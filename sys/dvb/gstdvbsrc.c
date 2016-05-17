@@ -558,6 +558,7 @@ static void gst_dvbsrc_set_pes_filters (GstDvbSrc * object);
 static void gst_dvbsrc_unset_pes_filters (GstDvbSrc * object);
 static gboolean gst_dvbsrc_is_valid_modulation (guint delsys, guint mod);
 static gboolean gst_dvbsrc_is_valid_trans_mode (guint delsys, guint mode);
+static gboolean gst_dvbsrc_is_valid_bandwidth (guint delsys, guint bw);
 
 /**
  * This loop should be safe enough considering:
@@ -2118,6 +2119,29 @@ gst_dvbsrc_is_valid_modulation (guint delsys, guint mod)
 }
 
 static gboolean
+gst_dvbsrc_is_valid_bandwidth (guint delsys, guint bw)
+{
+  /* FIXME: check valid bandwidth values for other broadcast standards */
+  switch (delsys) {
+    case SYS_DVBT:
+      if (bw == 6000000 || bw == 7000000 || bw == 8000000)
+        return TRUE;
+      break;
+    case SYS_DVBT2:
+      if (bw == 1172000 || bw == 5000000 || bw == 6000000 ||
+          bw == 7000000 || bw == 8000000 || bw == 10000000) {
+        return TRUE;
+      }
+      break;
+    default:
+      GST_FIXME ("No bandwidth sanity checks implemented for this "
+          "delivery system");
+      return TRUE;
+  }
+  return FALSE;
+}
+
+static gboolean
 gst_dvbsrc_get_size (GstBaseSrc * src, guint64 * size)
 {
   return FALSE;
@@ -2396,7 +2420,9 @@ gst_dvbsrc_guess_delsys (GstDvbSrc * object)
     if (!gst_dvbsrc_is_valid_modulation (GPOINTER_TO_INT (candidate->data),
             object->modulation) ||
         !gst_dvbsrc_is_valid_trans_mode (GPOINTER_TO_INT (candidate->data),
-            object->transmission_mode)) {
+            object->transmission_mode) ||
+        !gst_dvbsrc_is_valid_bandwidth (GPOINTER_TO_INT (candidate->data),
+            object->bandwidth)) {
       valid = g_list_delete_link (valid, candidate);
     }
     candidate = next;
@@ -2522,25 +2548,10 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
       break;
     case SYS_DVBT:
     case SYS_DVBT2:
-      if (object->delsys == SYS_DVBT) {
-        if (object->bandwidth != 6000000 && object->bandwidth != 7000000 &&
-            object->bandwidth != 8000000) {
-          GST_WARNING_OBJECT (object, "Wrong DVB-T parameter value: bandwidth "
-              "is %d but only 6, 7 and 8 MHz are allowed", object->bandwidth);
-        }
-      } else if (object->delsys == SYS_DVBT2) {
-        if (object->stream_id > 255) {
-          GST_WARNING_OBJECT (object, "Wrong DVB-T2 stream ID '%d'. Value "
-              "can't be greater than 255", object->stream_id);
-          object->stream_id = NO_STREAM_ID_FILTER;
-        }
-        if (object->bandwidth != 6000000 && object->bandwidth != 7000000 &&
-            object->bandwidth != 8000000 && object->bandwidth != 1172000 &&
-            object->bandwidth != 5000000 && object->bandwidth != 10000000) {
-          GST_WARNING_OBJECT (object, "Wrong DVB-T2 parameter value: bandwidth "
-              "is '%d' but only 1.172, 5, 6, 7, 8 and 10 MHz are allowed",
-              object->bandwidth);
-        }
+      if (object->delsys == SYS_DVBT2 && object->stream_id > 255) {
+        GST_WARNING_OBJECT (object, "Wrong DVB-T2 stream ID '%d'. Value "
+            "can't be greater than 255", object->stream_id);
+        object->stream_id = NO_STREAM_ID_FILTER;
       }
       set_prop (props->props, &n, DTV_BANDWIDTH_HZ, object->bandwidth);
       set_prop (props->props, &n, DTV_CODE_RATE_HP, object->code_rate_hp);
@@ -2666,6 +2677,7 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
       return FALSE;
   }
 
+  /* Informative checks */
   if (!gst_dvbsrc_is_valid_modulation (object->delsys, object->modulation)) {
     GST_WARNING_OBJECT (object,
         "Attempting invalid modulation '%u' for delivery system '%u'",
@@ -2676,6 +2688,11 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
     GST_WARNING_OBJECT (object,
         "Attempting invalid transmission mode '%u' for delivery system '%u'",
         object->transmission_mode, object->delsys);
+  }
+  if (!gst_dvbsrc_is_valid_bandwidth (object->delsys, object->bandwidth)) {
+    GST_WARNING_OBJECT (object,
+        "Attempting invalid bandwidth '%u' for delivery system '%u'",
+        object->bandwidth, object->delsys);
   }
 
   set_prop (props->props, &n, DTV_TUNE, 0);
