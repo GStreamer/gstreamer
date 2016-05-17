@@ -864,6 +864,8 @@ gst_gl_memory_pbo_init_once (void)
     GST_DEBUG_CATEGORY_INIT (GST_CAT_GL_MEMORY, "glmemory", 0, "OpenGL Memory");
 
     _gl_allocator = g_object_new (GST_TYPE_GL_MEMORY_PBO_ALLOCATOR, NULL);
+    /* The allocator is never unreffed */
+    GST_OBJECT_FLAG_SET (_gl_allocator, GST_OBJECT_FLAG_MAY_BE_LEAKED);
 
     gst_allocator_register (GST_GL_MEMORY_PBO_ALLOCATOR_NAME,
         gst_object_ref (_gl_allocator));

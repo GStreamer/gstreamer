@@ -456,6 +456,9 @@ gst_gl_buffer_init_once (void)
     _gl_buffer_allocator =
         g_object_new (gst_gl_buffer_allocator_get_type (), NULL);
 
+    /* The allocator is never unreffed */
+    GST_OBJECT_FLAG_SET (_gl_buffer_allocator, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+
     gst_allocator_register (GST_GL_BUFFER_ALLOCATOR_NAME,
         gst_object_ref (_gl_buffer_allocator));
     g_once_init_leave (&_init, 1);
