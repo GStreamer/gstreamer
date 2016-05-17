@@ -256,6 +256,12 @@ set_properties_for_channel (GstElement * dvbbasebin,
       g_object_set (dvbbasebin, "bandwidth", 1, NULL);
     else if (strcmp (val, "BANDWIDTH_6_MHZ") == 0)
       g_object_set (dvbbasebin, "bandwidth", 2, NULL);
+    else if (strcmp (val, "BANDWIDTH_5_MHZ") == 0)
+      g_object_set (dvbbasebin, "bandwidth", 4, NULL);
+    else if (strcmp (val, "BANDWIDTH_10_MHZ") == 0)
+      g_object_set (dvbbasebin, "bandwidth", 5, NULL);
+    else if (strcmp (val, "BANDWIDTH_1_712_MHZ") == 0)
+      g_object_set (dvbbasebin, "bandwidth", 6, NULL);
     else
       g_object_set (dvbbasebin, "bandwidth", 3, NULL);
 
