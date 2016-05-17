@@ -1,8 +1,6 @@
-#  GStreamer SDK documentation : Basic tutorial 6: Media formats and Pad Capabilities 
+#  Basic tutorial 6: Media formats and Pad Capabilities 
 
-This page last changed on Dec 03, 2012 by xartigas.
-
-# Goal
+## Goal
 
 Pad Capabilities are a fundamental element of GStreamer, although most
 of the time they are invisible because the framework handles them
@@ -16,19 +14,19 @@ automatically. This somewhat theoretical tutorial shows:
 
   - Why you need to know about them.
 
-# Introduction
+## Introduction
 
 ### Pads
 
 As it has already been shown, Pads allow information to enter and leave
-an element. The *Capabilities* (or *Caps*, for short) of a Pad, then,
+an element. The *Capabilities* (or *Caps*, for short) of a Pad, then,
 specify what kind of information can travel through the Pad. For
 example, “RGB video with a resolution of 320x200 pixels and 30 frames
 per second”, or “16-bits per sample audio, 5.1 channels at 44100 samples
 per second”, or even compressed formats like mp3 or h264.
 
 Pads can support multiple Capabilities (for example, a video sink can
-support video in the RGB or YUV formats) and Capabilities can be
+support video in different types of RGB or YUV formats) and Capabilities can be
 specified as *ranges* (for example, an audio sink can support samples
 rates from 1 to 48000 samples per second). However, the actual
 information traveling from Pad to Pad must have only one well-specified
@@ -51,10 +49,10 @@ error.
 ### Pad templates
 
 Pads are created from *Pad Templates*, which indicate all possible
-Capabilities a Pad could have. Templates are useful to create several
+Capabilities a Pad could ever have. Templates are useful to create several
 similar Pads, and also allow early refusal of connections between
 elements: If the Capabilities of their Pad Templates do not have a
-common subset (their *intersection *is empty), there is no need to
+common subset (their *intersection* is empty), there is no need to
 negotiate further.
 
 Pad Templates can be viewed as the first step in the negotiation
@@ -63,51 +61,46 @@ Capabilities refined until they are fixed (or negotiation fails).
 
 ### Capabilities examples
 
-``` theme: Default; brush: plain; gutter: false
+```
 SINK template: 'sink'
   Availability: Always
   Capabilities:
-    audio/x-raw-int
-               signed: true
-                width: 16
-                depth: 16
+    audio/x-raw
+               format: S16LE
                  rate: [ 1, 2147483647 ]
              channels: [ 1, 2 ]
-    audio/x-raw-int
-               signed: false
-                width: 8
-                depth: 8
+    audio/x-raw
+               format: U8
                  rate: [ 1, 2147483647 ]
              channels: [ 1, 2 ]
 ```
 
 This pad is a sink which is always available on the element (we will not
 talk about availability for now). It supports two kinds of media, both
-raw audio in integer format (`audio/x-raw-int`): signed,16-bit and
+raw audio in integer format (`audio/x-raw`): signed, 16-bit little endian and
 unsigned 8-bit. The square brackets indicate a range: for instance, the
 number of channels varies from 1 to 2.
 
-``` theme: Default; brush: plain; gutter: false
+```
 SRC template: 'src'
   Availability: Always
   Capabilities:
-    video/x-raw-yuv
+    video/x-raw
                 width: [ 1, 2147483647 ]
                height: [ 1, 2147483647 ]
             framerate: [ 0/1, 2147483647/1 ]
-               format: { I420, NV12, NV21, YV12, YUY2, Y42B, Y444, YUV9, YVU9, Y41B, Y800, Y8  , GREY, Y16 , UYVY, YVYU, IYU1, v308, AYUV, A420 } 
+               format: { I420, NV12, NV21, YV12, YUY2, Y42B, Y444, YUV9, YVU9, Y41B, Y800, Y8, GREY, Y16 , UYVY, YVYU, IYU1, v308, AYUV, A420 } 
 ```
 
-`video/x-raw-yuv` indicates that this source pad outputs video in YUV
-format (1 Luminance + 2 Chrominance planes). It supports a wide range of
-dimensions and framerates, and a set of YUV formats (The curly braces
-indicate a *list*). All these formats indicate different packing and
-subsampling of the image planes.
+`video/x-raw` indicates that this source pad outputs raw video. It
+supports a wide range of dimensions and framerates, and a set of YUV
+formats (The curly braces indicate a *list*). All these formats
+indicate different packing and subsampling of the image planes.
 
 ### Last remarks
 
-You can use the `gst-inspect-0.10` tool described in [Basic tutorial 10:
-GStreamer tools](Basic%2Btutorial%2B10%253A%2BGStreamer%2Btools.html) to
+You can use the `gst-inspect-1.0` tool described in [Basic tutorial 10:
+GStreamer tools](Basic+tutorial+10+GStreamer+tools.markdown) to
 learn about the Caps of any GStreamer element.
 
 Bear in mind that some elements query the underlying hardware for
@@ -122,14 +115,14 @@ to play. On each state change, the Capabilities of the sink element's
 Pad are shown, so you can observe how the negotiation proceeds until the
 Pad Caps are fixed.
 
-# A trivial Pad Capabilities Example
+## A trivial Pad Capabilities Example
 
-Copy this code into a text file named `basic-tutorial-6.c` (or find it
+Copy this code into a text file named `basic-tutorial-6.c` (or find it
 in the SDK installation).
 
 **basic-tutorial-6.c**
 
-``` theme: Default; brush: cpp; gutter: true
+```
 #include <gst/gst.h>
   
 /* Functions below print the Capabilities in a human-friendly format */
@@ -169,14 +162,14 @@ static void print_pad_templates_information (GstElementFactory * factory) {
   GstStaticPadTemplate *padtemplate;
   
   g_print ("Pad Templates for %s:\n", gst_element_factory_get_longname (factory));
-  if (!factory->numpadtemplates) {
+  if (!gst_element_factory_get_num_pad_templates (factory)) {
     g_print ("  none\n");
     return;
   }
   
-  pads = factory->staticpadtemplates;
+  pads = gst_element_factory_get_static_pad_templates (factory);
   while (pads) {
-    padtemplate = (GstStaticPadTemplate *) (pads->data);
+    padtemplate = pads->data
     pads = g_list_next (pads);
     
     if (padtemplate->direction == GST_PAD_SRC)
@@ -196,8 +189,12 @@ static void print_pad_templates_information (GstElementFactory * factory) {
       g_print ("    Availability: UNKNOWN!!!\n");
     
     if (padtemplate->static_caps.string) {
+      GstCaps *caps;
       g_print ("    Capabilities:\n");
-      print_caps (gst_static_caps_get (&padtemplate->static_caps), "      ");
+      caps = gst_static_caps_get (&padtemplate->static_caps);
+      print_caps (caps, "      ");
+      gst_caps_unref (caps);
+
     }
     
     g_print ("\n");
@@ -217,9 +214,9 @@ static void print_pad_capabilities (GstElement *element, gchar *pad_name) {
   }
   
   /* Retrieve negotiated caps (or acceptable caps if negotiation is not finished yet) */
-  caps = gst_pad_get_negotiated_caps (pad);
+  caps = gst_pad_get_current_caps (pad);
   if (!caps)
-    caps = gst_pad_get_caps_reffed (pad);
+    caps = gst_pad_query_caps (pad, NULL);
   
   /* Print and free */
   g_print ("Caps for the %s pad:\n", pad_name);
@@ -335,39 +332,29 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-775303622" class="expand-container">
-<div id="expander-control-775303622" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-775303622" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc basic-tutorial-6.c -o basic-tutorial-6 `pkg-config --cflags --libs gstreamer-0.10`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
-<p><span>This tutorial simply displays information regarding the Pad Capabilities in different time instants.</span></p>
-<p>Required libraries: <code>gstreamer-0.10</code></p>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
 
-# Walkthrough
+> ![Information](images/icons/emoticons/information.png)
+> Need help?
+>
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Build), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Build) or [Windows](Installing+on+Windows.markdownb#InstallingonWindows-Build), or use this specific command on Linux:
+>
+> `` gcc basic-tutorial-6.c -o basic-tutorial-6 `pkg-config --cflags --libs gstreamer-0.10` ``
+>
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Run), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Run) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Run).
+>
+> This tutorial simply displays information regarding the Pad Capabilities in different time instants.
+>
+> Required libraries: `gstreamer-1.0`
 
-The `print_field`, `print_caps` and `print_pad_templates` simply
+## Walkthrough
+
+The `print_field`, `print_caps` and `print_pad_templates` simply
 display, in a human-friendly format, the capabilities structures. If you
 want to learn about the internal organization of the
-`GstCaps` structure, read  the `GStreamer Documentation` regarding Pad
+`GstCaps` structure, read  the `GStreamer Documentation` regarding Pad
 Caps.
 
-``` first-line: 75; theme: Default; brush: cpp; gutter: true
+```
 /* Shows the CURRENT capabilities of the requested pad in the given element */
 static void print_pad_capabilities (GstElement *element, gchar *pad_name) {
   GstPad *pad = NULL;
@@ -381,9 +368,9 @@ static void print_pad_capabilities (GstElement *element, gchar *pad_name) {
   }
   
   /* Retrieve negotiated caps (or acceptable caps if negotiation is not finished yet) */
-  caps = gst_pad_get_negotiated_caps (pad);
+  caps = gst_pad_get_current_caps (pad);
   if (!caps)
-    caps = gst_pad_get_caps_reffed (pad);
+    caps = gst_pad_query_caps (pad, NULL);
   
   /* Print and free */
   g_print ("Caps for the %s pad:\n", pad_name);
@@ -393,25 +380,22 @@ static void print_pad_capabilities (GstElement *element, gchar *pad_name) {
 }
 ```
 
-`gst_element_get_static_pad()` retrieves the named Pad from the given
-element. This Pad is *static* because it is always present in the
-element. To know more about Pad availability read the `GStreamer
-documentation` about Pads.
+`gst_element_get_static_pad()` retrieves the named Pad from the given
+element. This Pad is *static* because it is always present in the
+element. To know more about Pad availability read the `GStreamer
+documentation` about Pads.
 
-Then we call `gst_pad_get_negotiated_caps()` to retrieve the Pad's
+Then we call `gst_pad_get_current_caps()` to retrieve the Pad's
 current Capabilities, which can be fixed or not, depending on the state
 of the negotiation process. They could even be non-existent, in which
-case, we call `gst_pad_get_caps_reffed()` to retrieve the currently
+case, we call `gst_pad_query_caps()` to retrieve the currently
 acceptable Pad Capabilities. The currently acceptable Caps will be the
 Pad Template's Caps in the NULL state, but might change in later states,
 as the actual hardware Capabilities might be queried.
 
-`gst_pad_get_caps_reffed()` is usually faster than `gst_pad_get_caps()`,
-and is enough if the retrieved Caps do not need to be modified.
-
 We then print these Capabilities.
 
-``` first-line: 110; theme: Default; brush: cpp; gutter: true
+```
 /* Create the element factories */
 source_factory = gst_element_factory_find ("audiotestsrc");
 sink_factory = gst_element_factory_find ("autoaudiosink");
@@ -430,14 +414,14 @@ sink = gst_element_factory_create (sink_factory, "sink");
 ```
 
 In the previous tutorials we created the elements directly using
-`gst_element_factory_make()` and skipped talking about factories, but we
-will do now. A `GstElementFactory` is in charge of instantiating a
+`gst_element_factory_make()` and skipped talking about factories, but we
+will do now. A `GstElementFactory` is in charge of instantiating a
 particular type of element, identified by its factory name.
 
-You can use `gst_element_factory_find()` to create a factory of type
+You can use `gst_element_factory_find()` to create a factory of type
 “videotestsrc”, and then use it to instantiate multiple “videotestsrc”
 elements using `gst_element_factory_create()`.
-`gst_element_factory_make()` is really a shortcut for
+`gst_element_factory_make()` is really a shortcut for
 `gst_element_factory_find()`+ `gst_element_factory_create()`.
 
 The Pad Templates can already be accessed through the factories, so they
@@ -446,7 +430,7 @@ are printed as soon as the factories are created.
 We skip the pipeline creation and start, and go to the State-Changed
 message handling:
 
-``` theme: Default; brush: cpp; gutter: false
+```
 case GST_MESSAGE_STATE_CHANGED:
   /* We are only interested in state-changed messages from the pipeline */
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (pipeline)) {
@@ -465,14 +449,14 @@ pipeline changes. You should see, in the output, how the initial caps
 (the Pad Template's Caps) are progressively refined until they are
 completely fixed (they contain a single type with no ranges).
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown:
 
   - What are Pad Capabilities and Pad Template Capabilities.
 
   - How to retrieve them
-    with `gst_pad_get_negotiated_caps()` or `gst_pad_get_caps_reffed()`.
+    with `gst_pad_get_current_caps()` or `gst_pad_query_caps()`.
 
   - That they have different meaning depending on the state of the
     pipeline (initially they indicate all the possible Capabilities,
@@ -481,16 +465,14 @@ This tutorial has shown:
   - That Pad Caps are important to know beforehand if two elements can
     be linked together.
 
-  - That Pad Caps can be found using the `gst-inspect` tool described
-    in [Basic tutorial 10: GStreamer
-    tools](Basic%2Btutorial%2B10%253A%2BGStreamer%2Btools.html).
+  - That Pad Caps can be found using the `gst-inspect` tool described
+    in [Basic tutorial 10: GStreamer
+    tools](Basic+tutorial+10+GStreamer+tools.markdown).
 
 Next tutorial shows how data can be manually injected into and extracted
 from the GStreamer pipeline.
 
 Remember that attached to this page you should find the complete source
 code of the tutorial and any accessory files needed to build it.  
-It has been a pleasure having you here, and see you soon\!
-
-Document generated by Confluence on Oct 08, 2015 10:27
+It has been a pleasure having you here, and see you soon!
 

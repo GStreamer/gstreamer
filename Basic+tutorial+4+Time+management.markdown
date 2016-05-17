@@ -1,8 +1,6 @@
-#  GStreamer SDK documentation : Basic tutorial 4: Time management 
+#  Basic tutorial 4: Time management 
 
-This page last changed on Jun 15, 2012 by xartigas.
-
-# Goal
+## Goal
 
 This tutorial shows how to use GStreamer time-related facilities. In
 particular:
@@ -13,9 +11,9 @@ particular:
   - How to seek (jump) to a different position (time instant) inside the
     stream.
 
-# Introduction
+## Introduction
 
-`GstQuery` is a mechanism that allows asking an element or pad for a
+`GstQuery` is a mechanism that allows asking an element or pad for a
 piece of information. In this example we ask the pipeline if seeking is
 allowed (some sources, like live streams, do not allow seeking). If it
 is allowed, then, once the movie has been running for ten seconds, we
@@ -30,9 +28,9 @@ User Interface on a periodic basis.
 
 Finally, the stream duration is queried and updated whenever it changes.
 
-# Seeking example
+## Seeking example
 
-Copy this code into a text file named `basic-tutorial-4.c` (or find it
+Copy this code into a text file named `basic-tutorial-4.c` (or find it
 in the SDK installation).
 
 **basic-tutorial-4.c**
@@ -42,7 +40,7 @@ in the SDK installation).
   
 /* Structure to contain all our information, so we can pass it around */
 typedef struct _CustomData {
-  GstElement *playbin2;  /* Our one and only element */
+  GstElement *playbin;  /* Our one and only element */
   gboolean playing;      /* Are we in the PLAYING state? */
   gboolean terminate;    /* Should we terminate execution? */
   gboolean seek_enabled; /* Is seeking enabled for this media? */
@@ -69,26 +67,26 @@ int main(int argc, char *argv[]) {
   gst_init (&argc, &argv);
    
   /* Create the elements */
-  data.playbin2 = gst_element_factory_make ("playbin2", "playbin2");
+  data.playbin = gst_element_factory_make ("playbin", "playbin");
   
-  if (!data.playbin2) {
+  if (!data.playbin) {
     g_printerr ("Not all elements could be created.\n");
     return -1;
   }
   
   /* Set the URI to play */
-  g_object_set (data.playbin2, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  g_object_set (data.playbin, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
   
   /* Start playing */
-  ret = gst_element_set_state (data.playbin2, GST_STATE_PLAYING);
+  ret = gst_element_set_state (data.playbin, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
     g_printerr ("Unable to set the pipeline to the playing state.\n");
-    gst_object_unref (data.playbin2);
+    gst_object_unref (data.playbin);
     return -1;
   }
   
   /* Listen to the bus */
-  bus = gst_element_get_bus (data.playbin2);
+  bus = gst_element_get_bus (data.playbin);
   do {
     msg = gst_bus_timed_pop_filtered (bus, 100 * GST_MSECOND,
         GST_MESSAGE_STATE_CHANGED | GST_MESSAGE_ERROR | GST_MESSAGE_EOS | GST_MESSAGE_DURATION);
@@ -99,17 +97,16 @@ int main(int argc, char *argv[]) {
     } else {
       /* We got no message, this means the timeout expired */
       if (data.playing) {
-        GstFormat fmt = GST_FORMAT_TIME;
         gint64 current = -1;
         
         /* Query the current position of the stream */
-        if (!gst_element_query_position (data.playbin2, &fmt, &current)) {
+        if (!gst_element_query_position (data.playbin, GST_TIME_FORMAT, &current)) {
           g_printerr ("Could not query current position.\n");
         }
         
         /* If we didn't know it yet, query the stream duration */
         if (!GST_CLOCK_TIME_IS_VALID (data.duration)) {
-          if (!gst_element_query_duration (data.playbin2, &fmt, &data.duration)) {
+          if (!gst_element_query_duration (data.playbin, GST_TIME_FORMAT, &data.duration)) {
             g_printerr ("Could not query current duration.\n");
           }
         }
@@ -121,7 +118,7 @@ int main(int argc, char *argv[]) {
         /* If seeking is enabled, we have not done it yet, and the time is right, seek */
         if (data.seek_enabled && !data.seek_done && current > 10 * GST_SECOND) {
           g_print ("\nReached 10s, performing seek...\n");
-          gst_element_seek_simple (data.playbin2, GST_FORMAT_TIME,
+          gst_element_seek_simple (data.playbin, GST_FORMAT_TIME,
               GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, 30 * GST_SECOND);
           data.seek_done = TRUE;
         }
@@ -131,8 +128,8 @@ int main(int argc, char *argv[]) {
   
   /* Free resources */
   gst_object_unref (bus);
-  gst_element_set_state (data.playbin2, GST_STATE_NULL);
-  gst_object_unref (data.playbin2);
+  gst_element_set_state (data.playbin, GST_STATE_NULL);
+  gst_object_unref (data.playbin);
   return 0;
 }
   
@@ -160,7 +157,7 @@ static void handle_message (CustomData *data, GstMessage *msg) {
     case GST_MESSAGE_STATE_CHANGED: {
       GstState old_state, new_state, pending_state;
       gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
-      if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->playbin2)) {
+      if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->playbin)) {
         g_print ("Pipeline state changed from %s to %s:\n",
             gst_element_state_get_name (old_state), gst_element_state_get_name (new_state));
         
@@ -172,7 +169,7 @@ static void handle_message (CustomData *data, GstMessage *msg) {
           GstQuery *query;
           gint64 start, end;
           query = gst_query_new_seeking (GST_FORMAT_TIME);
-          if (gst_element_query (data->playbin2, query)) {
+          if (gst_element_query (data->playbin, query)) {
             gst_query_parse_seeking (query, NULL, &data->seek_enabled, &start, &end);
             if (data->seek_enabled) {
               g_print ("Seeking is ENABLED from %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT "\n",
@@ -197,36 +194,25 @@ static void handle_message (CustomData *data, GstMessage *msg) {
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-1441912910" class="expand-container">
-<div id="expander-control-1441912910" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-1441912910" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc basic-tutorial-4.c -o basic-tutorial-4 `pkg-config --cflags --libs gstreamer-0.10`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>  or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
-<p><span>This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. 10 seconds into the movie it skips to a new position.</span></p>
-<p><span><span>Required libraries: </span><span> </span><code>gstreamer-0.10</code></span></p>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
+> ![Information](images/icons/emoticons/information.png)
+> Need help?
+>
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Build), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Build) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Build), or use this specific command on Linux:
+>
+> ``gcc basic-tutorial-4.c -o basic-tutorial-4 `pkg-config --cflags --libs gstreamer-1.0` ``
+>
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Run), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Run) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Run).
+>
+> This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. 10 seconds into the movie it skips to a new position
+>
+>Required libraries: `gstreamer-1.0`
 
-# Walkthrough
+## Walkthrough
 
-``` first-line: 3; theme: Default; brush: cpp; gutter: true
+```
 /* Structure to contain all our information, so we can pass it around */
 typedef struct _CustomData {
-  GstElement *playbin2;  /* Our one and only element */
+  GstElement *playbin;  /* Our one and only element */
   gboolean playing;      /* Are we in the PLAYING state? */
   gboolean terminate;    /* Should we terminate execution? */
   gboolean seek_enabled; /* Is seeking enabled for this media? */
@@ -241,17 +227,17 @@ static void handle_message (CustomData *data, GstMessage *msg);
 We start by defining a structure to contain all our information, so we
 can pass it around to other functions. In particular, in this example we
 move the message handling code to its own function
-`handle_message` because it is growing a bit too big.
+`handle_message` because it is growing a bit too big.
 
 We would then build a pipeline composed of a single element, a
-`playbin2`, which we already saw in [Basic tutorial 1: Hello
-world\!](Basic%2Btutorial%2B1%253A%2BHello%2Bworld%2521.html). However,
-`playbin2` is in itself a pipeline, and in this case it is the only
-element in the pipeline, so we use directly the `playbin2` element. We
-will skip the details: the URI of the clip is given to `playbin2` via
+`playbin`, which we already saw in [Basic tutorial 1: Hello
+world!](Basic+tutorial+1+Hello+world.markdown). However,
+`playbin` is in itself a pipeline, and in this case it is the only
+element in the pipeline, so we use directly the `playbin` element. We
+will skip the details: the URI of the clip is given to `playbin` via
 the URI property and the pipeline is set to the playing state.
 
-``` first-line: 53; theme: Default; brush: cpp; gutter: true
+```
 msg = gst_bus_timed_pop_filtered (bus, 100 * GST_MSECOND,
     GST_MESSAGE_STATE_CHANGED | GST_MESSAGE_ERROR | GST_MESSAGE_EOS | GST_MESSAGE_DURATION);
 ```
@@ -261,16 +247,16 @@ Previously we did not provide a timeout to
 message was received. Now we use a timeout of 100 milliseconds, so, if
 no message is received, 10 times per second the function will return
 with a NULL instead of a `GstMessage`. We are going to use this to
-update our “UI”. Note that the timeout period is specified in
-nanoseconds, so usage of the `GST_SECOND` or `GST_MSECOND` macros is
+update our “UI”. Note that the timeout period is specified in
+nanoseconds, so usage of the `GST_SECOND` or `GST_MSECOND` macros is
 highly recommended.
 
-If we got a message, we process it in the `handle_message`` `function
+If we got a message, we process it in the `handle_message`` `function
 (next subsection), otherwise:
 
-#### User interface resfreshing
+### User interface resfreshing
 
-``` first-line: 60; theme: Default; brush: cpp; gutter: true
+```
 /* We got no message, this means the timeout expired */
 if (data.playing) {
 ```
@@ -280,45 +266,45 @@ anything here, since most queries would fail. Otherwise, it is time to
 refresh the screen.
 
 We get here approximately 10 times per second, a good enough refresh
-rate for our UI. We are going to print on screen the current media
+rate for our UI. We are going to print on screen the current media
 position, which we can learn be querying the pipeline. This involves a
 few steps that will be shown in the next subsection, but, since position
-and duration are common enough queries, `GstElement` offers easier,
+and duration are common enough queries, `GstElement` offers easier,
 ready-made alternatives:
 
-``` first-line: 65; theme: Default; brush: cpp; gutter: true
+```
 /* Query the current position of the stream */
-if (!gst_element_query_position (data.pipeline, &fmt, &current)) {
+if (!gst_element_query_position (data.pipeline, GST_FORMAT_TIME, &current)) {
   g_printerr ("Could not query current position.\n");
 }
 ```
 
-`gst_element_query_position()` hides the management of the query object
+`gst_element_query_position()` hides the management of the query object
 and directly provides us with the result.
 
-``` first-line: 70; theme: Default; brush: cpp; gutter: true
+```
 /* If we didn't know it yet, query the stream duration */
 if (!GST_CLOCK_TIME_IS_VALID (data.duration)) {
-  if (!gst_element_query_duration (data.pipeline, &fmt, &data.duration)) {
+  if (!gst_element_query_duration (data.pipeline, GST_TIME_FORMAT, &data.duration)) {
      g_printerr ("Could not query current duration.\n");
   }
 }
 ```
 
 Now is a good moment to know the length of the stream, with
-another `GstElement` helper function: `gst_element_query_duration()`
+another `GstElement` helper function: `gst_element_query_duration()`
 
-``` first-line: 77; theme: Default; brush: cpp; gutter: true
+```
 /* Print current position and total duration */
 g_print ("Position %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "\r",
     GST_TIME_ARGS (current), GST_TIME_ARGS (data.duration));
 ```
 
-Note the usage of the `GST_TIME_FORMAT` and `GST_TIME_ARGS` macros to
+Note the usage of the `GST_TIME_FORMAT` and `GST_TIME_ARGS` macros to
 provide user-friendly representation of GStreamer
 times.
 
-``` first-line: 81; theme: Default; brush: cpp; gutter: true
+```
 /* If seeking is enabled, we have not done it yet, and the time is right, seek */
 if (data.seek_enabled && !data.seek_done && current > 10 * GST_SECOND) {
   g_print ("\nReached 10s, performing seek...\n");
@@ -329,13 +315,13 @@ if (data.seek_enabled && !data.seek_done && current > 10 * GST_SECOND) {
 ```
 
 Now we perform the seek, “simply” by
-calling `gst_element_seek_simple()` on the pipeline. A lot of the
+calling `gst_element_seek_simple()` on the pipeline. A lot of the
 intricacies of seeking are hidden in this method, which is a good
-thing\!
+thing!
 
 Let's review the parameters:
 
-`GST_FORMAT_TIME` indicates that we are specifying the destination in
+`GST_FORMAT_TIME` indicates that we are specifying the destination in
 time, as opposite to bytes (and other more obscure mechanisms).
 
 Then come the GstSeekFlags, let's review the most common:
@@ -365,16 +351,16 @@ asked for), then provide this flag. Be warned that it might take longer
 to calculate the seeking position (very long, on some files).
 
 And finally we provide the position to seek to. Since we asked
-for `GST_FORMAT_TIME` , this position is in nanoseconds, so we use
-the `GST_SECOND` macro for simplicity.
+for `GST_FORMAT_TIME` , this position is in nanoseconds, so we use
+the `GST_SECOND` macro for simplicity.
 
-#### Message Pump
+### Message Pump
 
-The `handle_message` function processes all messages received through
+The `handle_message` function processes all messages received through
 the pipeline's bus. ERROR and EOS handling is the same as in previous
 tutorials, so we skip to the interesting part:
 
-``` first-line: 116; theme: Default; brush: cpp; gutter: true
+```
 case GST_MESSAGE_DURATION:
   /* The duration has changed, mark the current one as invalid */
   data->duration = GST_CLOCK_TIME_NONE;
@@ -385,7 +371,7 @@ This message is posted on the bus whenever the duration of the stream
 changes. Here we simply mark the current duration as invalid, so it gets
 re-queried later.
 
-``` first-line: 120; theme: Default; brush: cpp; gutter: true
+```
 case GST_MESSAGE_STATE_CHANGED: {
   GstState old_state, new_state, pending_state;
   gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
@@ -397,15 +383,16 @@ case GST_MESSAGE_STATE_CHANGED: {
     data->playing = (new_state == GST_STATE_PLAYING);
 ```
 
-Seeks and time queries work better when in the PAUSED or PLAYING state,
-since all elements have had a chance to receive information and
-configure themselves. Here we take note of whether we are in the PLAYING
-state or not with the `playing` variable.
+Seeks and time queries generally only get a valid reply when in the
+PAUSED or PLAYING state, since all elements have had a chance to
+receive information and configure themselves. Here we take note of
+whether we are in the PLAYING state or not with the `playing`
+variable.
 
 Also, if we have just entered the PLAYING state, we do our first query.
 We ask the pipeline if seeking is allowed on this stream:
 
-``` first-line: 130; theme: Default; brush: cpp; gutter: true
+```
 if (data->playing) {
   /* We just moved to PLAYING. Check if seeking is possible */
   GstQuery *query;
@@ -428,36 +415,36 @@ if (data->playing) {
 ```
 
   
-`gst_query_new_seeking()` creates a new query object of the "seeking"
-type, with `GST_FORMAT_TIME` format. This indicates that we are
+`gst_query_new_seeking()` creates a new query object of the "seeking"
+type, with `GST_FORMAT_TIME` format. This indicates that we are
 interested in seeking by specifying the new time to which we want to
 move. We could also ask for `GST_FORMAT_BYTES`, and then seek to a
 particular byte position inside the source file, but this is normally
 less useful.
 
 This query object is then passed to the pipeline with
-`gst_element_query()`. The result is stored in the same query, and can
-be easily retrieved with `gst_query_parse_seeking()`. It extracts a
+`gst_element_query()`. The result is stored in the same query, and can
+be easily retrieved with `gst_query_parse_seeking()`. It extracts a
 boolean indicating if seeking is allowed, and the range in which seeking
 is possible.
 
 Don't forget to unref the query object when you are done with it.
 
-And that's it\! With this knowledge a media player can be built which
+And that's it! With this knowledge a media player can be built which
 periodically updates a slider based on the current stream position and
-allows seeking by moving the slider\!
+allows seeking by moving the slider!
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown:
 
-  - How to query the pipeline for information using `GstQuery`
+  - How to query the pipeline for information using `GstQuery`
 
   - How to obtain common information like position and duration
-    using `gst_element_query_position()` and `gst_element_query_duration()`
+    using `gst_element_query_position()` and `gst_element_query_duration()`
 
   - How to seek to an arbitrary position in the stream
-    using `gst_element_seek_simple()`
+    using `gst_element_seek_simple()`
 
   - In which states all these operations can be performed.
 
@@ -467,7 +454,5 @@ Interface toolkit.
 Remember that attached to this page you should find the complete source
 code of the tutorial and any accessory files needed to build it.
 
-It has been a pleasure having you here, and see you soon\!
-
-Document generated by Confluence on Oct 08, 2015 10:27
+It has been a pleasure having you here, and see you soon!
 

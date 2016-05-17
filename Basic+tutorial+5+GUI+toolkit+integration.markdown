@@ -1,8 +1,6 @@
-#  GStreamer SDK documentation : Basic tutorial 5: GUI toolkit integration 
+#  Basic tutorial 5: GUI toolkit integration 
 
-This page last changed on Dec 03, 2012 by xartigas.
-
-# Goal
+## Goal
 
 This tutorial shows how to integrate GStreamer in a Graphical User
 Interface (GUI) toolkit like [GTK+](http://www.gtk.org). Basically,
@@ -24,65 +22,60 @@ In particular, you will learn:
   - A mechanism to subscribe only to the messages you are interested in,
     instead of being notified of all of them.
 
-# Introduction
+## Introduction
 
 We are going to build a media player using the
-[GTK+](http://www.gtk.org/) toolkit, but the concepts apply to other
+[GTK+](http://www.gtk.org/) toolkit, but the concepts apply to other
 toolkits like [QT](http://qt-project.org/), for example. A minimum
-knowledge of [GTK+](http://www.gtk.org/) will help understand this
+knowledge of [GTK+](http://www.gtk.org/) will help understand this
 tutorial.
 
 The main point is telling GStreamer to output the video to a window of
 our choice. The specific mechanism depends on the operating system (or
 rather, on the windowing system), but GStreamer provides a layer of
 abstraction for the sake of platform independence. This independence
-comes through the `XOverlay` interface, that allows the application to
+comes through the `GstVideoOverlay` interface, that allows the application to
 tell a video sink the handler of the window that should receive the
 rendering.
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><strong>GObject interfaces</strong><br />
+> ![Information](images/icons/emoticons/information.png)
+> **GObject interfaces**
+>
+> A GObject *interface* (which GStreamer uses) is a set of functions that an element can implement. If it does, then it is said to support that particular interface. For example, video sinks usually create their own windows to display video, but, if they are also capable of rendering to an external window, they can choose to implement the `GstVideoOverlay` interface and provide functions to specify this external window. From the application developer point of view, if a certain interface is supported, you can use it and forget about which kind of element is implementing it. Moreover, if you are using `playbin`, it will automatically expose some of the interfaces supported by its internal elements: You can use your interface functions directly on `playbin` without knowing who is implementing them!
 
-<p>A GObject <code>interface</code> (which GStreamer uses) is a set of functions that an element can implement. If it does, then it is said to support that particular interface. For example, video sinks usually create their own windows to display video, but, if they are also capable of rendering to an external window, they can choose to implement the <code>XOverlay</code> interface and provide functions to specify this external window. From the application developer point of view, if a certain interface is supported, you can use it and forget about which kind of element is implementing it. Moreover, if you are using <code>playbin2</code>, it will automatically expose some of the interfaces supported by its internal elements: You can use your interface functions directly on <code>playbin2</code> without knowing who is implementing them!</p></td>
-</tr>
-</tbody>
-</table>
 
 Another issue is that GUI toolkits usually only allow manipulation of
 the graphical “widgets” through the main (or application) thread,
 whereas GStreamer usually spawns multiple threads to take care of
-different tasks. Calling [GTK+](http://www.gtk.org/) functions from
+different tasks. Calling [GTK+](http://www.gtk.org/) functions from
 within callbacks will usually fail, because callbacks execute in the
 calling thread, which does not need to be the main thread. This problem
 can be solved by posting a message on the GStreamer bus in the callback:
 The messages will be received by the main thread which will then react
 accordingly.
 
-Finally, so far we have registered a `handle_message` function that got
+Finally, so far we have registered a `handle_message` function that got
 called every time a message appeared on the bus, which forced us to
 parse every message to see if it was of interest to us. In this tutorial
 a different method is used that registers a callback for each kind of
 message, so there is less parsing and less code overall.
 
-# A media player in GTK+
+## A media player in GTK+
 
-Let's write a very simple media player based on playbin2, this time,
-with a GUI\!
+Let's write a very simple media player based on playbin, this time,
+with a GUI!
 
-Copy this code into a text file named `basic-tutorial-5.c` (or find it
+Copy this code into a text file named `basic-tutorial-5.c` (or find it
 in the SDK installation).
 
 **basic-tutorial-5.c**
 
-``` theme: Default; brush: cpp; gutter: true
+```
 #include <string.h>
   
 #include <gtk/gtk.h>
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/video/videooverlay.h>
   
 #include <gdk/gdk.h>
 #if defined (GDK_WINDOWING_X11)
@@ -95,7 +88,7 @@ in the SDK installation).
   
 /* Structure to contain all our information, so we can pass it around */
 typedef struct _CustomData {
-  GstElement *playbin2;           /* Our one and only pipeline */
+  GstElement *playbin;           /* Our one and only pipeline */
   
   GtkWidget *slider;              /* Slider widget to keep track of current position */
   GtkWidget *streams_list;        /* Text widget to display info about the streams */
@@ -107,13 +100,13 @@ typedef struct _CustomData {
   
 /* This function is called when the GUI toolkit creates the physical window that will hold the video.
  * At this point we can retrieve its handler (which has a different meaning depending on the windowing system)
- * and pass it to GStreamer through the XOverlay interface. */
+ * and pass it to GStreamer through the GstVideoOverlay interface. */
 static void realize_cb (GtkWidget *widget, CustomData *data) {
   GdkWindow *window = gtk_widget_get_window (widget);
   guintptr window_handle;
   
   if (!gdk_window_ensure_native (window))
-    g_error ("Couldn't create native window needed for GstXOverlay!");
+    g_error ("Couldn't create native window needed for GstVideoOverlay!");
   
   /* Retrieve window handler from GDK */
 #if defined (GDK_WINDOWING_WIN32)
@@ -123,23 +116,23 @@ static void realize_cb (GtkWidget *widget, CustomData *data) {
 #elif defined (GDK_WINDOWING_X11)
   window_handle = GDK_WINDOW_XID (window);
 #endif
-  /* Pass it to playbin2, which implements XOverlay and will forward it to the video sink */
-  gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->playbin2), window_handle);
+  /* Pass it to playbin, which implements GstVideoOverlay and will forward it to the video sink */
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (data->playbin), window_handle);
 }
   
 /* This function is called when the PLAY button is clicked */
 static void play_cb (GtkButton *button, CustomData *data) {
-  gst_element_set_state (data->playbin2, GST_STATE_PLAYING);
+  gst_element_set_state (data->playbin, GST_STATE_PLAYING);
 }
   
 /* This function is called when the PAUSE button is clicked */
 static void pause_cb (GtkButton *button, CustomData *data) {
-  gst_element_set_state (data->playbin2, GST_STATE_PAUSED);
+  gst_element_set_state (data->playbin, GST_STATE_PAUSED);
 }
   
 /* This function is called when the STOP button is clicked */
 static void stop_cb (GtkButton *button, CustomData *data) {
-  gst_element_set_state (data->playbin2, GST_STATE_READY);
+  gst_element_set_state (data->playbin, GST_STATE_READY);
 }
   
 /* This function is called when the main window is closed */
@@ -151,16 +144,13 @@ static void delete_event_cb (GtkWidget *widget, GdkEvent *event, CustomData *dat
 /* This function is called everytime the video window needs to be redrawn (due to damage/exposure,
  * rescaling, etc). GStreamer takes care of this in the PAUSED and PLAYING states, otherwise,
  * we simply draw a black rectangle to avoid garbage showing up. */
-static gboolean expose_cb (GtkWidget *widget, GdkEventExpose *event, CustomData *data) {
+static gboolean draw_cb (GtkWidget *widget, cairo_t *cr, CustomData *data) {
   if (data->state < GST_STATE_PAUSED) {
     GtkAllocation allocation;
-    GdkWindow *window = gtk_widget_get_window (widget);
-    cairo_t *cr;
     
     /* Cairo is a 2D graphics library which we use here to clean the video window.
      * It is used by GStreamer for other reasons, so it will always be available to us. */
     gtk_widget_get_allocation (widget, &allocation);
-    cr = gdk_cairo_create (window);
     cairo_set_source_rgb (cr, 0, 0, 0);
     cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
     cairo_fill (cr);
@@ -174,7 +164,7 @@ static gboolean expose_cb (GtkWidget *widget, GdkEventExpose *event, CustomData 
  * new position here. */
 static void slider_cb (GtkRange *range, CustomData *data) {
   gdouble value = gtk_range_get_value (GTK_RANGE (data->slider));
-  gst_element_seek_simple (data->playbin2, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT,
+  gst_element_seek_simple (data->playbin, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT,
       (gint64)(value * GST_SECOND));
 }
   
@@ -193,7 +183,7 @@ static void create_ui (CustomData *data) {
   video_window = gtk_drawing_area_new ();
   gtk_widget_set_double_buffered (video_window, FALSE);
   g_signal_connect (video_window, "realize", G_CALLBACK (realize_cb), data);
-  g_signal_connect (video_window, "expose_event", G_CALLBACK (expose_cb), data);
+  g_signal_connect (video_window, "draw", G_CALLBACK (draw_cb), data);
   
   play_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_PLAY);
   g_signal_connect (G_OBJECT (play_button), "clicked", G_CALLBACK (play_cb), data);
@@ -211,17 +201,17 @@ static void create_ui (CustomData *data) {
   data->streams_list = gtk_text_view_new ();
   gtk_text_view_set_editable (GTK_TEXT_VIEW (data->streams_list), FALSE);
   
-  controls = gtk_hbox_new (FALSE, 0);
+  controls = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,, 0);
   gtk_box_pack_start (GTK_BOX (controls), play_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), pause_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), stop_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), data->slider, TRUE, TRUE, 2);
   
-  main_hbox = gtk_hbox_new (FALSE, 0);
+  main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,, 0);
   gtk_box_pack_start (GTK_BOX (main_hbox), video_window, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (main_hbox), data->streams_list, FALSE, FALSE, 2);
   
-  main_box = gtk_vbox_new (FALSE, 0);
+  main_box = gtk_box_new (GTK_ORIENTATION_VERTICAL,, 0);
   gtk_box_pack_start (GTK_BOX (main_box), main_hbox, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (main_box), controls, FALSE, FALSE, 0);
   gtk_container_add (GTK_CONTAINER (main_window), main_box);
@@ -232,7 +222,6 @@ static void create_ui (CustomData *data) {
   
 /* This function is called periodically to refresh the GUI */
 static gboolean refresh_ui (CustomData *data) {
-  GstFormat fmt = GST_FORMAT_TIME;
   gint64 current = -1;
   
   /* We do not want to update anything unless we are in the PAUSED or PLAYING states */
@@ -241,7 +230,7 @@ static gboolean refresh_ui (CustomData *data) {
   
   /* If we didn't know it yet, query the stream duration */
   if (!GST_CLOCK_TIME_IS_VALID (data->duration)) {
-    if (!gst_element_query_duration (data->playbin2, &fmt, &data->duration)) {
+    if (!gst_element_query_duration (data->playbin, GST_FORMAT_TIME, &data->duration)) {
       g_printerr ("Could not query current duration.\n");
     } else {
       /* Set the range of the slider to the clip duration, in SECONDS */
@@ -249,7 +238,7 @@ static gboolean refresh_ui (CustomData *data) {
     }
   }
   
-  if (gst_element_query_position (data->playbin2, &fmt, &current)) {
+  if (gst_element_query_position (data->playbin, GST_FORMAT_TIME, &current)) {
     /* Block the "value-changed" signal, so the slider_cb function is not called
      * (which would trigger a seek the user has not requested) */
     g_signal_handler_block (data->slider, data->slider_update_signal_id);
@@ -262,11 +251,11 @@ static gboolean refresh_ui (CustomData *data) {
 }
   
 /* This function is called when new metadata is discovered in the stream */
-static void tags_cb (GstElement *playbin2, gint stream, CustomData *data) {
+static void tags_cb (GstElement *playbin, gint stream, CustomData *data) {
   /* We are possibly in a GStreamer working thread, so we notify the main
    * thread of this event through a message in the bus */
-  gst_element_post_message (playbin2,
-    gst_message_new_application (GST_OBJECT (playbin2),
+  gst_element_post_message (playbin,
+    gst_message_new_application (GST_OBJECT (playbin),
       gst_structure_new ("tags-changed", NULL)));
 }
   
@@ -283,14 +272,14 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   g_free (debug_info);
   
   /* Set the pipeline to READY (which stops playback) */
-  gst_element_set_state (data->playbin2, GST_STATE_READY);
+  gst_element_set_state (data->playbin, GST_STATE_READY);
 }
   
 /* This function is called when an End-Of-Stream message is posted on the bus.
  * We just set the pipeline to READY (which stops playback) */
 static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   g_print ("End-Of-Stream reached.\n");
-  gst_element_set_state (data->playbin2, GST_STATE_READY);
+  gst_element_set_state (data->playbin, GST_STATE_READY);
 }
   
 /* This function is called when the pipeline changes states. We use it to
@@ -298,7 +287,7 @@ static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
 static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   GstState old_state, new_state, pending_state;
   gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
-  if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->playbin2)) {
+  if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->playbin)) {
     data->state = new_state;
     g_print ("State set to %s\n", gst_element_state_get_name (new_state));
     if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED) {
@@ -322,14 +311,14 @@ static void analyze_streams (CustomData *data) {
   gtk_text_buffer_set_text (text, "", -1);
   
   /* Read some properties */
-  g_object_get (data->playbin2, "n-video", &n_video, NULL);
-  g_object_get (data->playbin2, "n-audio", &n_audio, NULL);
-  g_object_get (data->playbin2, "n-text", &n_text, NULL);
+  g_object_get (data->playbin, "n-video", &n_video, NULL);
+  g_object_get (data->playbin, "n-audio", &n_audio, NULL);
+  g_object_get (data->playbin, "n-text", &n_text, NULL);
   
   for (i = 0; i < n_video; i++) {
     tags = NULL;
     /* Retrieve the stream's video tags */
-    g_signal_emit_by_name (data->playbin2, "get-video-tags", i, &tags);
+    g_signal_emit_by_name (data->playbin, "get-video-tags", i, &tags);
     if (tags) {
       total_str = g_strdup_printf ("video stream %d:\n", i);
       gtk_text_buffer_insert_at_cursor (text, total_str, -1);
@@ -346,7 +335,7 @@ static void analyze_streams (CustomData *data) {
   for (i = 0; i < n_audio; i++) {
     tags = NULL;
     /* Retrieve the stream's audio tags */
-    g_signal_emit_by_name (data->playbin2, "get-audio-tags", i, &tags);
+    g_signal_emit_by_name (data->playbin, "get-audio-tags", i, &tags);
     if (tags) {
       total_str = g_strdup_printf ("\naudio stream %d:\n", i);
       gtk_text_buffer_insert_at_cursor (text, total_str, -1);
@@ -375,7 +364,7 @@ static void analyze_streams (CustomData *data) {
   for (i = 0; i < n_text; i++) {
     tags = NULL;
     /* Retrieve the stream's subtitle tags */
-    g_signal_emit_by_name (data->playbin2, "get-text-tags", i, &tags);
+    g_signal_emit_by_name (data->playbin, "get-text-tags", i, &tags);
     if (tags) {
       total_str = g_strdup_printf ("\nsubtitle stream %d:\n", i);
       gtk_text_buffer_insert_at_cursor (text, total_str, -1);
@@ -394,7 +383,7 @@ static void analyze_streams (CustomData *data) {
 /* This function is called when an "application" message is posted on the bus.
  * Here we retrieve the message posted by the tags_cb callback */
 static void application_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
-  if (g_strcmp0 (gst_structure_get_name (msg->structure), "tags-changed") == 0) {
+  if (g_strcmp0 (gst_structure_get_name (gst_message_get_structure(msg)), "tags-changed") == 0) {
     /* If the message is the "tags-changed" (only one we are currently issuing), update
      * the stream info GUI */
     analyze_streams (data);
@@ -417,26 +406,26 @@ int main(int argc, char *argv[]) {
   data.duration = GST_CLOCK_TIME_NONE;
   
   /* Create the elements */
-  data.playbin2 = gst_element_factory_make ("playbin2", "playbin2");
+  data.playbin = gst_element_factory_make ("playbin", "playbin");
    
-  if (!data.playbin2) {
+  if (!data.playbin) {
     g_printerr ("Not all elements could be created.\n");
     return -1;
   }
   
   /* Set the URI to play */
-  g_object_set (data.playbin2, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  g_object_set (data.playbin, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
   
-  /* Connect to interesting signals in playbin2 */
-  g_signal_connect (G_OBJECT (data.playbin2), "video-tags-changed", (GCallback) tags_cb, &data);
-  g_signal_connect (G_OBJECT (data.playbin2), "audio-tags-changed", (GCallback) tags_cb, &data);
-  g_signal_connect (G_OBJECT (data.playbin2), "text-tags-changed", (GCallback) tags_cb, &data);
+  /* Connect to interesting signals in playbin */
+  g_signal_connect (G_OBJECT (data.playbin), "video-tags-changed", (GCallback) tags_cb, &data);
+  g_signal_connect (G_OBJECT (data.playbin), "audio-tags-changed", (GCallback) tags_cb, &data);
+  g_signal_connect (G_OBJECT (data.playbin), "text-tags-changed", (GCallback) tags_cb, &data);
   
   /* Create the GUI */
   create_ui (&data);
   
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
-  bus = gst_element_get_bus (data.playbin2);
+  bus = gst_element_get_bus (data.playbin);
   gst_bus_add_signal_watch (bus);
   g_signal_connect (G_OBJECT (bus), "message::error", (GCallback)error_cb, &data);
   g_signal_connect (G_OBJECT (bus), "message::eos", (GCallback)eos_cb, &data);
@@ -445,10 +434,10 @@ int main(int argc, char *argv[]) {
   gst_object_unref (bus);
   
   /* Start playing */
-  ret = gst_element_set_state (data.playbin2, GST_STATE_PLAYING);
+  ret = gst_element_set_state (data.playbin, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
     g_printerr ("Unable to set the pipeline to the playing state.\n");
-    gst_object_unref (data.playbin2);
+    gst_object_unref (data.playbin);
     return -1;
   }
   
@@ -459,48 +448,37 @@ int main(int argc, char *argv[]) {
   gtk_main ();
   
   /* Free resources */
-  gst_element_set_state (data.playbin2, GST_STATE_NULL);
-  gst_object_unref (data.playbin2);
+  gst_element_set_state (data.playbin, GST_STATE_NULL);
+  gst_object_unref (data.playbin);
   return 0;
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-700857978" class="expand-container">
-<div id="expander-control-700857978" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-700857978" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc basic-tutorial-5.c -o basic-tutorial-5 `pkg-config --cflags --libs  gstreamer-interfaces-0.10 gtk+-2.0 gstreamer-0.10`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
-<p></p>
-<p><span>This tutorial opens a GTK+ window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. The Window has some GTK+ buttons to Pause, Stop and Play the movie, and a slider to show the current position of the stream, which can be dragged to change it. Also, information about the stream is shown on a column at the right edge of the window.</span></p>
-<p><span><span>Bear in mind that there is no latency management (buffering), so on slow connections, the movie might stop after a few seconds. See how <a href="Basic%2Btutorial%2B12%253A%2BStreaming.html">Basic tutorial 12: Streaming</a> </span><span>solves this issue.</span></span></p>
-<p></p>
-<p>Required libraries: <code> gstreamer-interfaces-0.10 gtk+-2.0 gstreamer-0.10</code></p>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
+> ![Information](images/icons/emoticons/information.png)
+> Need help?
+>
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](Installing+on+Linux.html#InstallingonLinux-Build), [Mac OS X](Installing+on+Mac+OS+X.html#InstallingonMacOSX-Build) or [Windows](Installing+on+Windows.html#InstallingonWindows-Build), or use this specific command on Linux:
+>
+> ``gcc basic-tutorial-5.c -o basic-tutorial-5 `pkg-config --cflags --libs  gstreamer-interfaces-0.10 gtk+-3.0 gstreamer-1.0``
+>
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](Installing+on+Linux.html#InstallingonLinux-Run), [Mac OS X](Installing+on+Mac+OS+X.html#InstallingonMacOSX-Run) or [Windows](Installing+on+Windows.html#InstallingonWindows-Run).
+>
+> This tutorial opens a GTK+ window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. The Window has some GTK+ buttons to Pause, Stop and Play the movie, and a slider to show the current position of the stream, which can be dragged to change it. Also, information about the stream is shown on a column at the right edge of the window.
+>
+>
+> Bear in mind that there is no latency management (buffering), so on slow connections, the movie might stop after a few seconds. See how [Basic tutorial 12: Streaming](Basic+tutorial+12+Streaming.markdown) solves this issue.
+>
+> Required libraries: `gstreamer-video-1.0 gtk+-3.0 gstreamer-1.0`
 
-# Walkthrough
+## Walkthrough
 
 Regarding this tutorial's structure, we are not going to use forward
 function definitions anymore: Functions will be defined before they are
 used. Also, for clarity of explanation, the order in which the snippets
-of code are presented will not always match the program order. Use the
+of code are presented will not always match the program order. Use the
 line numbers to locate the snippets in the complete code.
 
-``` first-line: 7; theme: Default; brush: cpp; gutter: true
+```
 #include <gdk/gdk.h>
 #if defined (GDK_WINDOWING_X11)
 #include <gdk/gdkx.h>
@@ -518,10 +496,10 @@ that many supported windowing systems, so these three lines often
 suffice: X11 for Linux, Win32 for Windows and Quartz for Mac OSX.
 
 This tutorial is composed mostly of callback functions, which will be
-called from GStreamer or GTK+, so let's review the `main` function,
+called from GStreamer or GTK+, so let's review the `main` function,
 which registers all these callbacks.
 
-``` first-line: 324; theme: Default; brush: cpp; gutter: true
+```
 int main(int argc, char *argv[]) {
   CustomData data;
   GstStateChangeReturn ret;
@@ -538,45 +516,45 @@ int main(int argc, char *argv[]) {
   data.duration = GST_CLOCK_TIME_NONE;
   
   /* Create the elements */
-  data.playbin2 = gst_element_factory_make ("playbin2", "playbin2");
+  data.playbin = gst_element_factory_make ("playbin", "playbin");
    
-  if (!data.playbin2) {
+  if (!data.playbin) {
     g_printerr ("Not all elements could be created.\n");
     return -1;
   }
   
   /* Set the URI to play */
-  g_object_set (data.playbin2, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  g_object_set (data.playbin, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
 ```
 
-Standard GStreamer initialization and playbin2 pipeline creation, along
+Standard GStreamer initialization and playbin pipeline creation, along
 with GTK+ initialization. Not much new.
 
-``` first-line: 350; theme: Default; brush: cpp; gutter: true
-/* Connect to interesting signals in playbin2 */
-g_signal_connect (G_OBJECT (data.playbin2), "video-tags-changed", (GCallback) tags_cb, &data);
-g_signal_connect (G_OBJECT (data.playbin2), "audio-tags-changed", (GCallback) tags_cb, &data);
-g_signal_connect (G_OBJECT (data.playbin2), "text-tags-changed", (GCallback) tags_cb, &data);
+```
+/* Connect to interesting signals in playbin */
+g_signal_connect (G_OBJECT (data.playbin), "video-tags-changed", (GCallback) tags_cb, &data);
+g_signal_connect (G_OBJECT (data.playbin), "audio-tags-changed", (GCallback) tags_cb, &data);
+g_signal_connect (G_OBJECT (data.playbin), "text-tags-changed", (GCallback) tags_cb, &data);
 ```
 
 We are interested in being notified when new tags (metadata) appears on
 the stream. For simplicity, we are going to handle all kinds of tags
 (video, audio and text) from the same callback `tags_cb`.
 
-``` first-line: 355; theme: Default; brush: cpp; gutter: true
+```
 /* Create the GUI */
 create_ui (&data);
 ```
 
 All GTK+ widget creation and signal registration happens in this
-function. It contains only GTK-related function calls, so we will skip
+function. It contains only GTK-related function calls, so we will skip
 over its definition. The signals to which it registers convey user
 commands, as shown below when reviewing the
 callbacks.
 
-``` first-line: 359; theme: Default; brush: cpp; gutter: true
+```
 /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
-bus = gst_element_get_bus (data.playbin2);
+bus = gst_element_get_bus (data.playbin);
 gst_bus_add_signal_watch (bus);
 g_signal_connect (G_OBJECT (bus), "message::error", (GCallback)error_cb, &data);
 g_signal_connect (G_OBJECT (bus), "message::eos", (GCallback)eos_cb, &data);
@@ -585,55 +563,54 @@ g_signal_connect (G_OBJECT (bus), "message::application", (GCallback)application
 gst_object_unref (bus);
 ```
 
-In [Playback tutorial 1: Playbin2
-usage](Playback%2Btutorial%2B1%253A%2BPlaybin2%2Busage.html), `gst_bus_add_watch()` is
+In [Playback tutorial 1: Playbin
+usage](Playback+tutorial+1+Playbin+usage.markdown), `gst_bus_add_watch()` is
 used to register a function that receives every message posted to the
 GStreamer bus. We can achieve a finer granularity by using signals
 instead, which allow us to register only to the messages we are
-interested in. By calling `gst_bus_add_signal_watch()` we instruct the
+interested in. By calling `gst_bus_add_signal_watch()` we instruct the
 bus to emit a signal every time it receives a message. This signal has
-the name `message::detail` where *`detail`* is the message that
+the name `message::detail` where *`detail`* is the message that
 triggered the signal emission. For example, when the bus receives the
-EOS message, it emits a signal with the name `message::eos`.
+EOS message, it emits a signal with the name `message::eos`.
 
-This tutorial is using the `Signals`'s details to register only to the
-messages we care about. If we had registered to the `message` signal, we
+This tutorial is using the `Signals`'s details to register only to the
+messages we care about. If we had registered to the `message` signal, we
 would be notified of every single message, just like
-`gst_bus_add_watch()` would do.
+`gst_bus_add_watch()` would do.
 
 Keep in mind that, in order for the bus watches to work (be it a
-`gst_bus_add_watch()` or a `gst_bus_add_signal_watch()`), there must be
-GLib `Main Loop` running. In this case, it is hidden inside the
-[GTK+](http://www.gtk.org/) main loop.
+`gst_bus_add_watch()` or a `gst_bus_add_signal_watch()`), there must be
+GLib `Main Loop` running. In this case, it is hidden inside the
+[GTK+](http://www.gtk.org/) main loop.
 
-``` first-line: 374; theme: Default; brush: cpp; gutter: true
+```
 /* Register a function that GLib will call every second */
 g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, &data);
 ```
 
 Before transferring control to GTK+, we use `g_timeout_add_seconds
-()` to register yet another callback, this time with a timeout, so it
+()` to register yet another callback, this time with a timeout, so it
 gets called every second. We are going to use it to refresh the GUI from
-the `refresh_ui` function.
+the `refresh_ui` function.
 
 After this, we are done with the setup and can start the GTK+ main loop.
 We will regain control from our callbacks when interesting things
-happen. Let's review the callbacks. Each callback has a different
+happen. Let's review the callbacks. Each callback has a different
 signature, depending on who will call it. You can look up the signature
 (the meaning of the parameters and the return value) in the
-documentation of the
-signal.
+documentation of the signal.
 
-``` first-line: 28; theme: Default; brush: cpp; gutter: true
+```
 /* This function is called when the GUI toolkit creates the physical window that will hold the video.
  * At this point we can retrieve its handler (which has a different meaning depending on the windowing system)
- * and pass it to GStreamer through the XOverlay interface. */
+ * and pass it to GStreamer through the GstVideoOverlay interface. */
 static void realize_cb (GtkWidget *widget, CustomData *data) {
   GdkWindow *window = gtk_widget_get_window (widget);
   guintptr window_handle;
   
   if (!gdk_window_ensure_native (window))
-    g_error ("Couldn't create native window needed for GstXOverlay!");
+    g_error ("Couldn't create native window needed for GstVideoOverlay!");
   
   /* Retrieve window handler from GDK */
 #if defined (GDK_WINDOWING_WIN32)
@@ -643,37 +620,37 @@ static void realize_cb (GtkWidget *widget, CustomData *data) {
 #elif defined (GDK_WINDOWING_X11)
   window_handle = GDK_WINDOW_XID (window);
 #endif
-  /* Pass it to playbin2, which implements XOverlay and will forward it to the video sink */
-  gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->playbin2), window_handle);
+  /* Pass it to playbin, which implements GstVideoOverlay and will forward it to the video sink */
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (data->playbin), window_handle);
 }
 ```
 
 The code comments talks by itself. At this point in the life cycle of
 the application, we know the handle (be it an X11's `XID`, a Window's
-`HWND` or a Quartz's `NSView`) of the window where GStreamer should
+`HWND` or a Quartz's `NSView`) of the window where GStreamer should
 render the video. We simply retrieve it from the windowing system and
-pass it to `playbin2` through the `XOverlay` interface using
-`gst_x_overlay_set_window_handle()`. `playbin2` will locate the video
+pass it to `playbin` through the `GstVideoOverlay` interface using
+`gst_video_overlay_set_window_handle()`. `playbin` will locate the video
 sink and pass the handler to it, so it does not create its own window
 and uses this one.
 
-Not much more to see here; `playbin2` and the `XOverlay` really simplify
-this process a lot\!
+Not much more to see here; `playbin` and the `GstVideoOverlay` really simplify
+this process a lot!
 
-``` first-line: 50; theme: Default; brush: cpp; gutter: true
+```
 /* This function is called when the PLAY button is clicked */
 static void play_cb (GtkButton *button, CustomData *data) {
-  gst_element_set_state (data->playbin2, GST_STATE_PLAYING);
+  gst_element_set_state (data->playbin, GST_STATE_PLAYING);
 }
   
 /* This function is called when the PAUSE button is clicked */
 static void pause_cb (GtkButton *button, CustomData *data) {
-  gst_element_set_state (data->playbin2, GST_STATE_PAUSED);
+  gst_element_set_state (data->playbin, GST_STATE_PAUSED);
 }
   
 /* This function is called when the STOP button is clicked */
 static void stop_cb (GtkButton *button, CustomData *data) {
-  gst_element_set_state (data->playbin2, GST_STATE_READY);
+  gst_element_set_state (data->playbin, GST_STATE_READY);
 }
 ```
 
@@ -681,11 +658,11 @@ These three little callbacks are associated with the PLAY, PAUSE and
 STOP buttons in the GUI. They simply set the pipeline to the
 corresponding state. Note that in the STOP state we set the pipeline to
 `READY`. We could have brought the pipeline all the way down to the
-`NULL` state, but, the transition would then be slower, since some
+`NULL` state, but, the transition would then be a little slower, since some
 resources (like the audio device) would need to be released and
 re-acquired.
 
-``` first-line: 65; theme: Default; brush: cpp; gutter: true
+```
 /* This function is called when the main window is closed */
 static void delete_event_cb (GtkWidget *widget, GdkEvent *event, CustomData *data) {
   stop_cb (NULL, data);
@@ -693,13 +670,12 @@ static void delete_event_cb (GtkWidget *widget, GdkEvent *event, CustomData *dat
 }
 ```
 
-gtk\_main\_quit() will eventually make the call to to gtk\_main\_run()
+gtk_main_quit() will eventually make the call to to gtk_main_run()
 in `main` to terminate, which, in this case, finishes the program. Here,
 we call it when the main window is closed, after stopping the pipeline
-(just for the sake of
-tidiness).
+(just for the sake of tidiness).
 
-``` first-line: 71; theme: Default; brush: cpp; gutter: true
+```
 /* This function is called everytime the video window needs to be redrawn (due to damage/exposure,
  * rescaling, etc). GStreamer takes care of this in the PAUSED and PLAYING states, otherwise,
  * we simply draw a black rectangle to avoid garbage showing up. */
@@ -723,18 +699,18 @@ static gboolean expose_cb (GtkWidget *widget, GdkEventExpose *event, CustomData 
 }
 ```
 
-When there is data flow (in the `PAUSED` and `PLAYING` states) the video
+When there is data flow (in the `PAUSED` and `PLAYING` states) the video
 sink takes care of refreshing the content of the video window. In the
 other cases, however, it will not, so we have to do it. In this example,
 we just fill the window with a black
 rectangle.
 
-``` first-line: 93; theme: Default; brush: cpp; gutter: true
+```
 /* This function is called when the slider changes its position. We perform a seek to the
  * new position here. */
 static void slider_cb (GtkRange *range, CustomData *data) {
   gdouble value = gtk_range_get_value (GTK_RANGE (data->slider));
-  gst_element_seek_simple (data->playbin2, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT,
+  gst_element_seek_simple (data->playbin, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT,
       (gint64)(value * GST_SECOND));
 }
 ```
@@ -743,8 +719,8 @@ This is an example of how a complex GUI element like a seeker bar (or
 slider that allows seeking) can be very easily implemented thanks to
 GStreamer and GTK+ collaborating. If the slider has been dragged to a
 new position, tell GStreamer to seek to that position
-with `gst_element_seek_simple()` (as seen in [Basic tutorial 4: Time
-management](Basic%2Btutorial%2B4%253A%2BTime%2Bmanagement.html)). The
+with `gst_element_seek_simple()` (as seen in [Basic tutorial 4: Time
+management](Basic+tutorial+4+Time+management.html)). The
 slider has been setup so its value represents seconds.
 
 It is worth mentioning that some performance (and responsiveness) can be
@@ -755,10 +731,9 @@ before allowing another one. Otherwise, the application might look
 unresponsive if the user drags the slider frantically, which would not
 allow any seek to complete before a new one is queued.
 
-``` first-line: 153; theme: Default; brush: cpp; gutter: true
+```
 /* This function is called periodically to refresh the GUI */
 static gboolean refresh_ui (CustomData *data) {
-  GstFormat fmt = GST_FORMAT_TIME;
   gint64 current = -1;
   
   /* We do not want to update anything unless we are in the PAUSED or PLAYING states */
@@ -767,14 +742,14 @@ static gboolean refresh_ui (CustomData *data) {
 ```
 
 This function will move the slider to reflect the current position of
-the media. First off, if we are not in the `PLAYING` state, we have
+the media. First off, if we are not in the `PLAYING` state, we have
 nothing to do here (plus, position and duration queries will normally
 fail).
 
-``` first-line: 162; theme: Default; brush: cpp; gutter: true
+```
 /* If we didn't know it yet, query the stream duration */
 if (!GST_CLOCK_TIME_IS_VALID (data->duration)) {
-  if (!gst_element_query_duration (data->playbin2, &fmt, &data->duration)) {
+  if (!gst_element_query_duration (data->playbin, GST_FORMAT_TIME, &data->duration)) {
     g_printerr ("Could not query current duration.\n");
   } else {
     /* Set the range of the slider to the clip duration, in SECONDS */
@@ -786,8 +761,8 @@ if (!GST_CLOCK_TIME_IS_VALID (data->duration)) {
 We recover the duration of the clip if we didn't know it, so we can set
 the range for the slider.
 
-``` first-line: 172; theme: Default; brush: cpp; gutter: true
-if (gst_element_query_position (data->playbin2, &fmt, &current)) {
+```
+if (gst_element_query_position (data->playbin, GST_FORMAT_TIME, &current)) {
   /* Block the "value-changed" signal, so the slider_cb function is not called
    * (which would trigger a seek the user has not requested) */
   g_signal_handler_block (data->slider, data->slider_update_signal_id);
@@ -801,23 +776,23 @@ return TRUE;
 
 We query the current pipeline position, and set the position of the
 slider accordingly. This would trigger the emission of the
-`value-changed` signal, which we use to know when the user is dragging
+`value-changed` signal, which we use to know when the user is dragging
 the slider. Since we do not want seeks happening unless the user
-requested them, we disable the `value-changed` signal emission during
-this operation with `g_signal_handler_block()` and
+requested them, we disable the `value-changed` signal emission during
+this operation with `g_signal_handler_block()` and
 `g_signal_handler_unblock()`.
 
 Returning TRUE from this function will keep it called in the future. If
 we return FALSE, the timer will be
 removed.
 
-``` first-line: 184; theme: Default; brush: cpp; gutter: true
+```
 /* This function is called when new metadata is discovered in the stream */
-static void tags_cb (GstElement *playbin2, gint stream, CustomData *data) {
+static void tags_cb (GstElement *playbin, gint stream, CustomData *data) {
   /* We are possibly in a GStreamer working thread, so we notify the main
    * thread of this event through a message in the bus */
-  gst_element_post_message (playbin2,
-    gst_message_new_application (GST_OBJECT (playbin2),
+  gst_element_post_message (playbin,
+    gst_message_new_application (GST_OBJECT (playbin),
       gst_structure_new ("tags-changed", NULL)));
 }
 ```
@@ -829,16 +804,16 @@ thread. What we want to do here is to update a GTK+ widget to reflect
 this new information, but **GTK+ does not allow operating from threads
 other than the main one**.
 
-The solution is to make `playbin2` post a message on the bus and return
+The solution is to make `playbin` post a message on the bus and return
 to the calling thread. When appropriate, the main thread will pick up
 this message and update GTK.
 
-`gst_element_post_message()` makes a GStreamer element post the given
-message to the bus. `gst_message_new_application()` creates a new
-message of the `APPLICATION` type. GStreamer messages have different
+`gst_element_post_message()` makes a GStreamer element post the given
+message to the bus. `gst_message_new_application()` creates a new
+message of the `APPLICATION` type. GStreamer messages have different
 types, and this particular type is reserved to the application: it will
 go through the bus unaffected by GStreamer. The list of types can be
-found in the `GstMessageType` documentation.
+found in the `GstMessageType` documentation.
 
 Messages can deliver additional information through their embedded
 `GstStructure`, which is a very flexible data container. Here, we create
@@ -846,14 +821,14 @@ a new structure with `gst_structure_new`, and name it `tags-changed`, to
 avoid confusion in case we wanted to send other application messages.
 
 Later, once in the main thread, the bus will receive this message and
-emit the `message::application` signal, which we have associated to the
-`application_cb` function:
+emit the `message::application` signal, which we have associated to the
+`application_cb` function:
 
-``` first-line: 314; theme: Default; brush: cpp; gutter: true
+```
 /* This function is called when an "application" message is posted on the bus.
  * Here we retrieve the message posted by the tags_cb callback */
 static void application_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
-  if (g_strcmp0 (gst_structure_get_name (msg->structure), "tags-changed") == 0) {
+  if (g_strcmp0 (gst_structure_get_name (gst_message_get_structure (msg)), "tags-changed") == 0) {
     /* If the message is the "tags-changed" (only one we are currently issuing), update
      * the stream info GUI */
     analyze_streams (data);
@@ -861,48 +836,47 @@ static void application_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
 }
 ```
 
-Once me made sure it is the `tags-changed` message, we call the
-`analyze_streams` function, which is also used in [Playback tutorial 1:
-Playbin2
-usage](Playback%2Btutorial%2B1%253A%2BPlaybin2%2Busage.html) and is
+Once me made sure it is the `tags-changed` message, we call the
+`analyze_streams` function, which is also used in [Playback tutorial 1:
+Playbin usage](Playback+tutorial+1+Playbin+usage.html) and is
 more detailed there. It basically recovers the tags from the stream and
 writes them in a text widget in the GUI.
 
-The `error_cb`, `eos_cb` and `state_changed_cb` are not really worth
+The `error_cb`, `eos_cb` and `state_changed_cb` are not really worth
 explaining, since they do the same as in all previous tutorials, but
 from their own function now.
 
-And this is it\! The amount of code in this tutorial might seem daunting
+And this is it! The amount of code in this tutorial might seem daunting
 but the required concepts are few and easy. If you have followed the
 previous tutorials and have a little knowledge of GTK, you probably
-understood this one can now enjoy your very own media player\!
+understood this one can now enjoy your very own media player!
 
-![](attachments/327796/1540121.png)
+![](attachments/basic-tutorial-5.png)
 
-# Exercise
+## Exercise
 
 If this media player is not good enough for you, try to change the text
 widget that displays the information about the streams into a proper
 list view (or tree view). Then, when the user selects a different
-stream, make GStreamer switch streams\! To switch streams, you will need
-to read [Playback tutorial 1: Playbin2
-usage](Playback%2Btutorial%2B1%253A%2BPlaybin2%2Busage.html).
+stream, make GStreamer switch streams! To switch streams, you will need
+to read [Playback tutorial 1: Playbin
+usage](Playback+tutorial+1+Playbin+usage.html).
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown:
 
   - How to output the video to a particular window handle
-    using `gst_x_overlay_set_window_handle()`.
+    using `gst_video_overlay_set_window_handle()`.
 
   - How to refresh the GUI periodically by registering a timeout
-    callback with `g_timeout_add_seconds ()`.
+    callback with `g_timeout_add_seconds ()`.
 
   - How to convey information to the main thread by means of application
-    messages through the bus with `gst_element_post_message()`.
+    messages through the bus with `gst_element_post_message()`.
 
   - How to be notified only of interesting messages by making the bus
-    emit signals with `gst_bus_add_signal_watch()` and discriminating
+    emit signals with `gst_bus_add_signal_watch()` and discriminating
     among all message types using the signal details.
 
 This allows you to build a somewhat complete media player with a proper
@@ -911,16 +885,6 @@ Graphical User Interface.
 The following basic tutorials keep focusing on other individual
 GStreamer topics
 
-It has been a pleasure having you here, and see you soon\!
+It has been a pleasure having you here, and see you soon!
 
-## Attachments:
-
-![](images/icons/bullet_blue.gif)
-[basic-tutorial-5.png](attachments/327796/1540122.png) (image/png)  
-![](images/icons/bullet_blue.gif)
-[basic-tutorial-5.png](attachments/327796/1540123.png) (image/png)  
-![](images/icons/bullet_blue.gif)
-[basic-tutorial-5.png](attachments/327796/1540121.png) (image/png)  
-
-Document generated by Confluence on Oct 08, 2015 10:27
 

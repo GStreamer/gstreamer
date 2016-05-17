@@ -1,8 +1,6 @@
-#  GStreamer SDK documentation : Basic tutorial 7: Multithreading and Pad Availability 
+#  Basic tutorial 7: Multithreading and Pad Availability 
 
-This page last changed on Jul 03, 2012 by xartigas.
-
-# Goal
+## Goal
 
 GStreamer handles multithreading automatically, but, under some
 circumstances, you might need to decouple threads manually. This
@@ -16,7 +14,7 @@ about Pad Availability. More precisely, this document explains:
 
   - How to replicate streams
 
-# Introduction
+## Introduction
 
 ### Multithreading
 
@@ -31,7 +29,7 @@ explicitly that a *branch* (a part of the pipeline) runs on a different
 thread (for example, to have the audio and video decoders executing
 simultaneously).
 
-This is accomplished using the `queue` element, which works as follows.
+This is accomplished using the `queue` element, which works as follows.
 The sink pad just enqueues data and returns control. On a different
 thread, data is dequeued and pushed downstream. This element is also
 used for buffering, as seen later in the streaming tutorials. The size
@@ -41,10 +39,10 @@ of the queue can be controlled through properties.
 
 This example builds the following pipeline:
 
-![](attachments/327812/1540141.png)
+![](attachments/basic-tutorial-7.png)
 
 The source is a synthetic audio signal (a continuous tone) which is
-split using a `tee` element (it sends through its source pads everything
+split using a `tee` element (it sends through its source pads everything
 it receives through its sink pad). One branch then sends the signal to
 the audio card, and the other renders a video of the waveform and sends
 it to the screen.
@@ -58,16 +56,16 @@ there is only one thread, being blocked by the first sink.
 ### Request pads
 
 In [Basic tutorial 3: Dynamic
-pipelines](Basic%2Btutorial%2B3%253A%2BDynamic%2Bpipelines.html) we saw
+pipelines](Basic+tutorial+3+Dynamic+pipelines.markdown) we saw
 an element (`uridecodebin`) which had no pads to begin with, and they
 appeared as data started to flow and the element learned about the
 media. These are called **Sometimes Pads**, and contrast with the
 regular pads which are always available and are called **Always Pads**.
 
 The third kind of pad is the **Request Pad**, which is created on
-demand. The classical example is the `tee` element, which has one sink
+demand. The classical example is the `tee` element, which has one sink
 pad and no initial source pads: they need to be requested and then
-`tee` adds them. In this way, an input stream can be replicated any
+`tee` adds them. In this way, an input stream can be replicated any
 number of times. The disadvantage is that linking elements with Request
 Pads is not as automatic, as linking Always Pads, as the walkthrough for
 this example will show.
@@ -79,9 +77,9 @@ READY states, though.
 
 Without further delay, let's see the code.
 
-# Simple multithreaded example
+## Simple multithreaded example
 
-Copy this code into a text file named `basic-tutorial-7.c` (or find it
+Copy this code into a text file named `basic-tutorial-7.c` (or find it
 in the SDK installation).
 
 **basic-tutorial-7.c**
@@ -110,7 +108,7 @@ int main(int argc, char *argv[]) {
   audio_sink = gst_element_factory_make ("autoaudiosink", "audio_sink");
   video_queue = gst_element_factory_make ("queue", "video_queue");
   visual = gst_element_factory_make ("wavescope", "visual");
-  video_convert = gst_element_factory_make ("ffmpegcolorspace", "csp");
+  video_convert = gst_element_factory_make ("videoconvert", "csp");
   video_sink = gst_element_factory_make ("autovideosink", "video_sink");
   
   /* Create the empty pipeline */
@@ -138,7 +136,7 @@ int main(int argc, char *argv[]) {
   }
   
   /* Manually link the Tee, which has "Request" pads */
-  tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (tee), "src%d");
+  tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (tee), "src_%d");
   tee_audio_pad = gst_element_request_pad (tee, tee_src_pad_template, NULL, NULL);
   g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (tee_audio_pad));
   queue_audio_pad = gst_element_get_static_pad (audio_queue, "sink");
@@ -178,33 +176,22 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-863959374" class="expand-container">
-<div id="expander-control-863959374" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-863959374" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc basic-tutorial-7.c -o basic-tutorial-7 `pkg-config --cflags --libs gstreamer-0.10`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
-<p><span>This tutorial plays an audible tone through the audio card and opens a window with a waveform representation of the tone. The waveform should be a sinusoid, but due to the refreshing of the window might not appear so.</span></p>
-<p>Required libraries: <code>gstreamer-0.10</code></p>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
+> ![Information](images/icons/emoticons/information.png)
+> Need help?
+>
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Build), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Build) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Build), or use this specific command on Linux:
+>
+> ``gcc basic-tutorial-7.c -o basic-tutorial-7 `pkg-config --cflags --libs gstreamer-1.0` ``
+>
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Run), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Run) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Run).
+ >
+> This tutorial plays an audible tone through the audio card and opens a window with a waveform representation of the tone. The waveform should be a sinusoid, but due to the refreshing of the window might not appear so. 
+>
+> Required libraries: `gstreamer-1.0`
 
-# Walkthrough
+## Walkthrough
 
-``` first-line: 15; theme: Default; brush: cpp; gutter: true
+```
 /* Create the elements */
 audio_source = gst_element_factory_make ("audiotestsrc", "audio_source");
 tee = gst_element_factory_make ("tee", "tee");
@@ -214,41 +201,41 @@ audio_convert = gst_element_factory_make ("audioconvert", "audio_convert");
 audio_sink = gst_element_factory_make ("autoaudiosink", "audio_sink");
 video_queue = gst_element_factory_make ("queue", "video_queue");
 visual = gst_element_factory_make ("wavescope", "visual");
-video_convert = gst_element_factory_make ("ffmpegcolorspace", "csp");
+video_convert = gst_element_factory_make ("videoconvert", "video_convert");
 video_sink = gst_element_factory_make ("autovideosink", "video_sink");
 ```
 
 All the elements in the above picture are instantiated here:
 
-`audiotestsrc` produces a synthetic tone. `wavescope` consumes an audio
+`audiotestsrc` produces a synthetic tone. `wavescope` consumes an audio
 signal and renders a waveform as if it was an (admittedly cheap)
-oscilloscope. We have already worked with the `autoaudiosink` and
+oscilloscope. We have already worked with the `autoaudiosink` and
 `autovideosink`.
 
-The conversion elements (`audioconvert`, `audioresample` and
-`ffmpegcolorspace`) are necessary to guarantee that the pipeline can be
+The conversion elements (`audioconvert`, `audioresample` and
+`videoconvert`) are necessary to guarantee that the pipeline can be
 linked. Indeed, the Capabilities of the audio and video sinks depend on
 the hardware, and you do not know at design time if they will match the
-Caps produced by the `audiotestsrc` and `wavescope`. If the Caps
+Caps produced by the `audiotestsrc` and `wavescope`. If the Caps
 matched, though, these elements act in “pass-through” mode and do not
 modify the signal, having negligible impact on performance.
 
-``` first-line: 36; theme: Default; brush: cpp; gutter: true
+```
 /* Configure elements */
 g_object_set (audio_source, "freq", 215.0f, NULL);
 g_object_set (visual, "shader", 0, "style", 1, NULL);
 ```
 
 Small adjustments for better demonstration: The “freq” property of
-`audiotestsrc` controls the frequency of the wave (215Hz makes the wave
+`audiotestsrc` controls the frequency of the wave (215Hz makes the wave
 appear almost stationary in the window), and this style and shader for
-`wavescope` make the wave continuous. Use the `gst-inspect` tool
+`wavescope` make the wave continuous. Use the `gst-inspect-1.0` tool
 described in [Basic tutorial 10: GStreamer
-tools](Basic%2Btutorial%2B10%253A%2BGStreamer%2Btools.html) to learn all
+tools](Basic+tutorial+10+GStreamer+tools.markdown) to learn all
 the properties of these
 elements.
 
-``` first-line: 40; theme: Default; brush: cpp; gutter: true
+```
 /* Link all elements that can be automatically linked because they have "Always" pads */
 gst_bin_add_many (GST_BIN (pipeline), audio_source, tee, audio_queue, audio_convert, audio_sink,
     video_queue, visual, video_convert, video_sink, NULL);
@@ -265,18 +252,12 @@ This code block adds all elements to the pipeline and then links the
 ones that can be automatically linked (the ones with Always Pads, as the
 comment says).
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/warning.png" width="16" height="16" /></td>
-<td><p><code>gst_element_link_many()</code> can actually link elements with Request Pads. It internally requests the Pads so you do not have worry about the elements being linked having Always or Request Pads. Strange as it might seem, this is actually inconvenient, because you still need to release the requested Pads afterwards, and, if the Pad was requested automatically by <code>gst_element_link_many()</code>, it is easy to forget. Stay out of trouble by always requesting Request Pads manually, as shown in the next code block.</p></td>
-</tr>
-</tbody>
-</table>
+> ![Warning](images/icons/emoticons/warning.png)
+> `gst_element_link_many()` can actually link elements with Request Pads. It internally requests the Pads so you do not have worry about the elements being linked having Always or Request Pads. Strange as it might seem, this is actually inconvenient, because you still need to release the requested Pads afterwards, and, if the Pad was requested automatically by `gst_element_link_many()`, it is easy to forget. Stay out of trouble by always requesting Request Pads manually, as shown in the next code block.
 
-``` first-line: 51; theme: Default; brush: cpp; gutter: true
+```
 /* Manually link the Tee, which has "Request" pads */
-tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (tee), "src%d");
+tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (tee), "src_%d");
 tee_audio_pad = gst_element_request_pad (tee, tee_src_pad_template, NULL, NULL);
 g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (tee_audio_pad));
 queue_audio_pad = gst_element_get_static_pad (audio_queue, "sink");
@@ -297,9 +278,9 @@ To link Request Pads, they need to be obtained by “requesting” them to
 the element. An element might be able to produce different kinds of
 Request Pads, so, when requesting them, the desired Pad Template must be
 provided. Pad templates are obtained with
-`gst_element_class_get_pad_template()` and are identified by their name.
-In the documentation for the `tee` element we see that it has two pad
-templates named “sink” (for its sink Pads) and “src%d” (for the Request
+`gst_element_class_get_pad_template()` and are identified by their name.
+In the documentation for the `tee` element we see that it has two pad
+templates named “sink” (for its sink Pads) and “src_%d” (for the Request
 Pads).
 
 Once we have the Pad template, we request two Pads from the tee (for the
@@ -310,7 +291,7 @@ Request Pads need to be linked. These are normal Always Pads, so we
 obtain them with `gst_element_get_static_pad()`.
 
 Finally, we link the pads with `gst_pad_link()`. This is the function
-that `gst_element_link()` and `gst_element_link_many()` use internally.
+that `gst_element_link()` and `gst_element_link_many()` use internally.
 
 The sink Pads we have obtained need to be released with
 `gst_object_unref()`. The Request Pads will be released when we no
@@ -320,7 +301,7 @@ We then set the pipeline to playing as usual, and wait until an error
 message or an EOS is produced. The only thing left to so is cleanup the
 requested Pads:
 
-``` first-line: 75; theme: Default; brush: cpp; gutter: true
+```
 /* Release the request pads from the Tee, and unref them */
 gst_element_release_request_pad (tee, tee_audio_pad);
 gst_element_release_request_pad (tee, tee_video_pad);
@@ -328,36 +309,26 @@ gst_object_unref (tee_audio_pad);
 gst_object_unref (tee_video_pad);
 ```
 
-`gst_element_release_request_pad()` releases the pad from the `tee`, but
-it still needs to be unreferenced (freed) with `gst_object_unref()`.
+`gst_element_release_request_pad()` releases the pad from the `tee`, but
+it still needs to be unreferenced (freed) with `gst_object_unref()`.
 
-# Conclusion
+## Conclusion
 
- This tutorial has shown:
+ This tutorial has shown:
 
   - How to make parts of a pipeline run on a different thread by using
-    `queue` elements.
+    `queue` elements.
 
   - What is a Request Pad and how to link elements with request pads,
-    with `gst_element_class_get_pad_template()`, `gst_element_request_pad()`, `gst_pad_link()` and
-     `gst_element_release_request_pad()`.
+    with `gst_element_class_get_pad_template()`, `gst_element_request_pad()`, `gst_pad_link()` and
+     `gst_element_release_request_pad()`.
 
   - How to have the same stream available in different branches by using
-    `tee` elements.
+    `tee` elements.
 
 The next tutorial builds on top of this one to show how data can be
 manually injected into and extracted from a running pipeline.
 
-It has been a pleasure having you here, and see you soon\!
+It has been a pleasure having you here, and see you soon!
 
-## Attachments:
-
-![](images/icons/bullet_blue.gif)
-[basic-tutorial-7.png](attachments/327812/1540161.png) (image/png)  
-![](images/icons/bullet_blue.gif)
-[basic-tutorial-7.png](attachments/327812/2424839.png) (image/png)  
-![](images/icons/bullet_blue.gif)
-[basic-tutorial-7.png](attachments/327812/1540141.png) (image/png)  
-
-Document generated by Confluence on Oct 08, 2015 10:27
 

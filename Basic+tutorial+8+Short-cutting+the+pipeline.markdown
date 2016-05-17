@@ -1,8 +1,6 @@
-#  GStreamer SDK documentation : Basic tutorial 8: Short-cutting the pipeline 
+#  Basic tutorial 8: Short-cutting the pipeline 
 
-This page last changed on Jun 19, 2012 by xartigas.
-
-# Goal
+## Goal
 
 Pipelines constructed with GStreamer do not need to be completely
 closed. Data can be injected into the pipeline and extracted from it at
@@ -15,10 +13,10 @@ any time, in a variety of ways. This tutorial shows:
   - How to access and manipulate this data.
 
 [Playback tutorial 3: Short-cutting the
-pipeline](Playback%2Btutorial%2B3%253A%2BShort-cutting%2Bthe%2Bpipeline.html) explains
+pipeline](Playback+tutorial+3+Short-cutting+the+pipeline.markdown) explains
 how to achieve the same goals in a playbin2-based pipeline.
 
-# Introduction
+## Introduction
 
 Applications can interact with the data flowing through a GStreamer
 pipeline in several ways. This tutorial describes the easiest one, since
@@ -27,25 +25,25 @@ it uses elements that have been created for this sole purpose.
 The element used to inject application data into a GStreamer pipeline is
 `appsrc`, and its counterpart, used to extract GStreamer data back to
 the application is `appsink`. To avoid confusing the names, think of it
-from GStreamer's point of view: `appsrc` is just a regular source, that
+from GStreamer's point of view: `appsrc` is just a regular source, that
 provides data magically fallen from the sky (provided by the
-application, actually). `appsink` is a regular sink, where the data
+application, actually). `appsink` is a regular sink, where the data
 flowing through a GStreamer pipeline goes to die (it is recovered by the
 application, actually).
 
-`appsrc` and `appsink` are so versatile that they offer their own API
+`appsrc` and `appsink` are so versatile that they offer their own API
 (see their documentation), which can be accessed by linking against the
-`gstreamer-app` library. In this tutorial, however, we will use a
+`gstreamer-app` library. In this tutorial, however, we will use a
 simpler approach and control them through signals.
 
-`appsrc` can work in a variety of modes: in **pull** mode, it requests
+`appsrc` can work in a variety of modes: in **pull** mode, it requests
 data from the application every time it needs it. In **push** mode, the
 application pushes data at its own pace. Furthermore, in push mode, the
 application can choose to be blocked in the push function when enough
 data has already been provided, or it can listen to the
-`enough-data` and `need-data` signals to control flow. This example
+`enough-data` and `need-data` signals to control flow. This example
 implements the latter approach. Information regarding the other methods
-can be found in the `appsrc` documentation.
+can be found in the `appsrc` documentation.
 
 ### Buffers
 
@@ -56,23 +54,23 @@ Since this example produces and consumes data, we need to know about
 Source Pads produce buffers, that are consumed by Sink Pads; GStreamer
 takes these buffers and passes them from element to element.
 
-A buffer simply represents a piece of data, do not assume that all
+A buffer simply represents a unit of data, do not assume that all
 buffers will have the same size, or represent the same amount of time.
 Neither should you assume that if a single buffer enters an element, a
 single buffer will come out. Elements are free to do with the received
-buffers as they please.
+buffers as they please. `GstBuffer`s may also contain more than one
+actual memory buffer. Actual memory buffers are abstracted away using
+`GstMemory` objects, and a `GstBuffer` can contain multiple `GstMemory` objects.
 
-Every buffer has an attached `GstCaps` structure that describes the kind
-of media contained in the buffer. Also, buffers have an attached
-time-stamp and duration, that describe in which moment the content of
-the buffer should be rendered or displayed. Time stamping is a very
-complex and delicate subject, but this simplified vision should suffice
-for now.
+Every buffer has attached time-stamps and duration, that describe in
+which moment the content of the buffer should be decoded, rendered or
+displayed. Time stamping is a very complex and delicate subject, but
+this simplified vision should suffice for now.
 
-As an example, a `filesrc` (a GStreamer element that reads files)
+As an example, a `filesrc` (a GStreamer element that reads files)
 produces buffers with the “ANY” caps and no time-stamping information.
 After demuxing (see [Basic tutorial 3: Dynamic
-pipelines](Basic%2Btutorial%2B3%253A%2BDynamic%2Bpipelines.html))
+pipelines](Basic+tutorial+3+Dynamic+pipelines.markdown))
 buffers can have some specific caps, for example “video/x-h264”. After
 decoding, each buffer will contain a single video frame with raw caps
 (for example, “video/x-raw-yuv”) and very precise time stamps indicating
@@ -81,28 +79,28 @@ when should that frame be displayed.
 ### This tutorial
 
 This tutorial expands [Basic tutorial 7: Multithreading and Pad
-Availability](Basic%2Btutorial%2B7%253A%2BMultithreading%2Band%2BPad%2BAvailability.html) in
-two ways: Firstly, the `audiotestsrc` is replaced by an `appsrc` that
+Availability](Basic+tutorial+7+Multithreading+and+Pad+Availability.markdown) in
+two ways: firstly, the `audiotestsrc` is replaced by an `appsrc` that
 will generate the audio data. Secondly, a new branch is added to the
-`tee` so data going into the audio sink and the wave display is also
-replicated into an `appsink`. The `appsink` uploads the information back
+`tee` so data going into the audio sink and the wave display is also
+replicated into an `appsink`. The `appsink` uploads the information back
 into the application, which then just notifies the user that data has
 been received, but it could obviously perform more complex tasks.
 
-![](attachments/1442189/1540158.png)
+![](attachments/basic-tutorial-8.png.png)
 
-# A crude waveform generator
+## A crude waveform generator
 
-Copy this code into a text file named `basic-tutorial-8.c` (or find it
+Copy this code into a text file named `basic-tutorial-8.c` (or find it
 in the SDK installation).
 
-``` theme: Default; brush: cpp; gutter: true
+```
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <string.h>
   
 #define CHUNK_SIZE 1024   /* Amount of bytes we are sending in each buffer */
 #define SAMPLE_RATE 44100 /* Samples per second we are sending */
-#define AUDIO_CAPS "audio/x-raw-int,channels=1,rate=%d,signed=(boolean)true,width=16,depth=16,endianness=BYTE_ORDER"
   
 /* Structure to contain all our information, so we can pass it to callbacks */
 typedef struct _CustomData {
@@ -126,6 +124,7 @@ static gboolean push_data (CustomData *data) {
   GstBuffer *buffer;
   GstFlowReturn ret;
   int i;
+  GstMapInfo map;
   gint16 *raw;
   gint num_samples = CHUNK_SIZE / 2; /* Because each sample is 16 bits */
   gfloat freq;
@@ -138,7 +137,8 @@ static gboolean push_data (CustomData *data) {
   GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (CHUNK_SIZE, GST_SECOND, SAMPLE_RATE);
   
   /* Generate some psychodelic waveforms */
-  raw = (gint16 *)GST_BUFFER_DATA (buffer);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  raw = (gint16 *)map.data;
   data->c += data->d;
   data->d -= data->c / 1000;
   freq = 1100 + 1000 * data->d;
@@ -147,6 +147,7 @@ static gboolean push_data (CustomData *data) {
     data->b -= data->a / freq;
     raw[i] = (gint16)(500 * data->a);
   }
+  gst_buffer_unmap (buffer, &map);
   data->num_samples += num_samples;
   
   /* Push the buffer into the appsrc */
@@ -183,15 +184,15 @@ static void stop_feed (GstElement *source, CustomData *data) {
 }
   
 /* The appsink has received a buffer */
-static void new_buffer (GstElement *sink, CustomData *data) {
-  GstBuffer *buffer;
+static void new_sample (GstElement *sink, CustomData *data) {
+  GstSample *sample;
   
   /* Retrieve the buffer */
-  g_signal_emit_by_name (sink, "pull-buffer", &buffer);
-  if (buffer) {
+  g_signal_emit_by_name (sink, "pull-sample", &sample);
+  if (sample) {
     /* The only thing we do in this example is print a * to indicate a received buffer */
     g_print ("*");
-    gst_buffer_unref (buffer);
+    gst_buffer_unref (sample);
   }
 }
   
@@ -215,7 +216,7 @@ int main(int argc, char *argv[]) {
   GstPadTemplate *tee_src_pad_template;
   GstPad *tee_audio_pad, *tee_video_pad, *tee_app_pad;
   GstPad *queue_audio_pad, *queue_video_pad, *queue_app_pad;
-  gchar *audio_caps_text;
+  GstAudioInfo info;
   GstCaps *audio_caps;
   GstBus *bus;
   
@@ -237,7 +238,7 @@ int main(int argc, char *argv[]) {
   data.video_queue = gst_element_factory_make ("queue", "video_queue");
   data.audio_convert2 = gst_element_factory_make ("audioconvert", "audio_convert2");
   data.visual = gst_element_factory_make ("wavescope", "visual");
-  data.video_convert = gst_element_factory_make ("ffmpegcolorspace", "csp");
+  data.video_convert = gst_element_factory_make ("videoconvert", "csp");
   data.video_sink = gst_element_factory_make ("autovideosink", "video_sink");
   data.app_queue = gst_element_factory_make ("queue", "app_queue");
   data.app_sink = gst_element_factory_make ("appsink", "app_sink");
@@ -256,15 +257,15 @@ int main(int argc, char *argv[]) {
   g_object_set (data.visual, "shader", 0, "style", 0, NULL);
   
   /* Configure appsrc */
-  audio_caps_text = g_strdup_printf (AUDIO_CAPS, SAMPLE_RATE);
-  audio_caps = gst_caps_from_string (audio_caps_text);
-  g_object_set (data.app_source, "caps", audio_caps, NULL);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16, SAMPLE_RATE, 1, NULL);
+  audio_caps = gst_audio_info_to_caps (&info);
+  g_object_set (data.app_source, "caps", audio_caps, "format", GST_FORMAT_TIME, NULL);
   g_signal_connect (data.app_source, "need-data", G_CALLBACK (start_feed), &data);
   g_signal_connect (data.app_source, "enough-data", G_CALLBACK (stop_feed), &data);
   
   /* Configure appsink */
   g_object_set (data.app_sink, "emit-signals", TRUE, "caps", audio_caps, NULL);
-  g_signal_connect (data.app_sink, "new-buffer", G_CALLBACK (new_buffer), &data);
+  g_signal_connect (data.app_sink, "new-sample", G_CALLBACK (new_sample), &data);
   gst_caps_unref (audio_caps);
   g_free (audio_caps_text);
   
@@ -282,7 +283,7 @@ int main(int argc, char *argv[]) {
   }
   
   /* Manually link the Tee, which has "Request" pads */
-  tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (data.tee), "src%d");
+  tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (data.tee), "src_%d");
   tee_audio_pad = gst_element_request_pad (data.tee, tee_src_pad_template, NULL, NULL);
   g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (tee_audio_pad));
   queue_audio_pad = gst_element_get_static_pad (data.audio_queue, "sink");
@@ -340,13 +341,13 @@ int main(int argc, char *argv[]) {
 <span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
 </div>
 <div id="expander-content-1760171459" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
+<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing+on+Linux.markdown#InstallingonLinux-Build">Linux</a>, <a href="Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing+on+Windows.markdown#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
 <div class="panel" style="border-width: 1px;">
 <div class="panelContent">
-<p><code>gcc basic-tutorial-8.c -o basic-tutorial-8 `pkg-config --cflags --libs gstreamer-0.10`</code></p>
+<p><code>gcc basic-tutorial-8.c -o basic-tutorial-8 `pkg-config --cflags --libs gstreamer-1.0 gst-audio-1.0`</code></p>
 </div>
 </div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
+<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing+on+Linux.markdown#InstallingonLinux-Run">Linux</a>, <a href="Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing+on+Windows.markdown#InstallingonWindows-Run">Windows</a></p>
 <p><span>This tutorial plays an audible tone for varying frequency through the audio card and opens a window with a waveform representation of the tone. The waveform should be a sinusoid, but due to the refreshing of the window might not appear so.</span></p>
 <p>Required libraries: <code>gstreamer-0.10</code></p>
 </div>
@@ -355,15 +356,15 @@ int main(int argc, char *argv[]) {
 </tbody>
 </table>
 
-# Walkthrough
+## Walkthrough
 
-The code to create the pipeline (Lines 131 to 205) is an enlarged
+The code to create the pipeline (Lines 131 to 205) is an enlarged
 version of [Basic tutorial 7: Multithreading and Pad
-Availability](Basic%2Btutorial%2B7%253A%2BMultithreading%2Band%2BPad%2BAvailability.html).
+Availability](Basic+tutorial+7+Multithreading+and+Pad+Availability.markdown).
 It involves instantiating all the elements, link the elements with
-Always Pads, and manually link the Request Pads of the `tee` element.
+Always Pads, and manually link the Request Pads of the `tee` element.
 
-Regarding the configuration of the `appsrc` and `appsink` elements:
+Regarding the configuration of the `appsrc` and `appsink` elements:
 
 ``` first-line: 159; theme: Default; brush: cpp; gutter: true
 /* Configure appsrc */
@@ -374,30 +375,30 @@ g_signal_connect (data.app_source, "need-data", G_CALLBACK (start_feed), &data);
 g_signal_connect (data.app_source, "enough-data", G_CALLBACK (stop_feed), &data);
 ```
 
-The first property that needs to be set on the `appsrc` is `caps`. It
+The first property that needs to be set on the `appsrc` is `caps`. It
 specifies the kind of data that the element is going to produce, so
 GStreamer can check if linking with downstream elements is possible
 (this is, if the downstream elements will understand this kind of data).
-This property must be a `GstCaps` object, which is easily built from a
+This property must be a `GstCaps` object, which is easily built from a
 string with `gst_caps_from_string()`.
 
-We then connect to the `need-data` and `enough-data` signals. These are
-fired by `appsrc` when its internal queue of data is running low or
+We then connect to the `need-data` and `enough-data` signals. These are
+fired by `appsrc` when its internal queue of data is running low or
 almost full, respectively. We will use these signals to start and stop
 (respectively) our signal generation process.
 
 ``` first-line: 166; theme: Default; brush: cpp; gutter: true
 /* Configure appsink */
 g_object_set (data.app_sink, "emit-signals", TRUE, "caps", audio_caps, NULL);
-g_signal_connect (data.app_sink, "new-buffer", G_CALLBACK (new_buffer), &data);
+g_signal_connect (data.app_sink, "new-sample", G_CALLBACK (new_sample), &data);
 gst_caps_unref (audio_caps);
 g_free (audio_caps_text);
 ```
 
-Regarding the `appsink` configuration, we connect to the
-`new-buffer` signal, which is emitted every time the sink receives a
+Regarding the `appsink` configuration, we connect to the
+`new-sample` signal, which is emitted every time the sink receives a
 buffer. Also, the signal emission needs to be enabled through the
-`emit-signals` property, because, by default, it is disabled.
+`emit-signals` property, because, by default, it is disabled.
 
 Starting the pipeline, waiting for messages and final cleanup is done as
 usual. Let's review the callbacks we have just
@@ -414,21 +415,21 @@ static void start_feed (GstElement *source, guint size, CustomData *data) {
 }
 ```
 
-This function is called when the internal queue of `appsrc` is about to
+This function is called when the internal queue of `appsrc` is about to
 starve (run out of data). The only thing we do here is register a GLib
-idle function with `g_idle_add()` that feeds data to `appsrc` until it
+idle function with `g_idle_add()` that feeds data to `appsrc` until it
 is full again. A GLib idle function is a method that GLib will call from
 its main loop whenever it is “idle”, this is, when it has no
-higher-priority tasks to perform. It requires a GLib `GMainLoop` to be
+higher-priority tasks to perform. It requires a GLib `GMainLoop` to be
 instantiated and running, obviously.
 
-This is only one of the multiple approaches that `appsrc` allows. In
-particular, buffers do not need to be fed into `appsrc` from the main
-thread using GLib, and you do not need to use the `need-data` and
-`enough-data` signals to synchronize with `appsrc` (although this is
+This is only one of the multiple approaches that `appsrc` allows. In
+particular, buffers do not need to be fed into `appsrc` from the main
+thread using GLib, and you do not need to use the `need-data` and
+`enough-data` signals to synchronize with `appsrc` (although this is
 allegedly the most convenient).
 
-We take note of the sourceid that `g_idle_add()` returns, so we can
+We take note of the sourceid that `g_idle_add()` returns, so we can
 disable it
 later.
 
@@ -444,9 +445,9 @@ static void stop_feed (GstElement *source, CustomData *data) {
 }
 ```
 
-This function is called when the internal queue of `appsrc` is full
+This function is called when the internal queue of `appsrc` is full
 enough so we stop pushing data. Here we simply remove the idle function
-by using `g_source_remove()` (The idle function is implemented as a
+by using `g_source_remove()` (The idle function is implemented as a
 `GSource`).
 
 ``` first-line: 22; theme: Default; brush: cpp; gutter: true
@@ -475,24 +476,24 @@ static gboolean push_data (CustomData *data) {
 
 This is the function that feeds `appsrc`. It will be called by GLib at
 times and rates which are out of our control, but we know that we will
-disable it when its job is done (when the queue in `appsrc` is full).
+disable it when its job is done (when the queue in `appsrc` is full).
 
 Its first task is to create a new buffer with a given size (in this
 example, it is arbitrarily set to 1024 bytes) with
 `gst_buffer_new_and_alloc()`.
 
 We count the number of samples that we have generated so far with the
-`CustomData.num_samples` variable, so we can time-stamp this buffer
-using the `GST_BUFFER_TIMESTAMP` macro in `GstBuffer`.
+`CustomData.num_samples` variable, so we can time-stamp this buffer
+using the `GST_BUFFER_TIMESTAMP` macro in `GstBuffer`.
 
 Since we are producing buffers of the same size, their duration is the
 same and is set using the `GST_BUFFER_DURATION` in `GstBuffer`.
 
-`gst_util_uint64_scale()` is a utility function that scales (multiply
+`gst_util_uint64_scale()` is a utility function that scales (multiply
 and divide) numbers which can be large, without fear of overflows.
 
 The bytes that for the buffer can be accessed with GST\_BUFFER\_DATA in
-`GstBuffer` (Be careful not to write past the end of the buffer: you
+`GstBuffer` (Be careful not to write past the end of the buffer: you
 allocated it, so you know its size).
 
 We will skip over the waveform generation, since it is outside the scope
@@ -507,11 +508,11 @@ g_signal_emit_by_name (data->app_source, "push-buffer", buffer, &ret);
 gst_buffer_unref (buffer);
 ```
 
-Once we have the buffer ready, we pass it to `appsrc` with the
-`push-buffer` action signal (see information box at the end of [Playback
+Once we have the buffer ready, we pass it to `appsrc` with the
+`push-buffer` action signal (see information box at the end of [Playback
 tutorial 1: Playbin2
-usage](Playback%2Btutorial%2B1%253A%2BPlaybin2%2Busage.html)), and then
-`gst_buffer_unref()` it since we no longer need it.
+usage](Playback+tutorial+1+Playbin2+usage.markdown)), and then
+`gst_buffer_unref()` it since we no longer need it.
 
 ``` first-line: 86; theme: Default; brush: cpp; gutter: true
 /* The appsink has received a buffer */
@@ -529,41 +530,29 @@ static void new_buffer (GstElement *sink, CustomData *data) {
 ```
 
 Finally, this is the function that gets called when the
-`appsink` receives a buffer. We use the `pull-buffer` action signal to
+`appsink` receives a buffer. We use the `pull-buffer` action signal to
 retrieve the buffer and then just print some indicator on the screen. We
-can retrieve the data pointer using the `GST_BUFFER_DATA` macro and the
-data size using the `GST_BUFFER_SIZE` macro in `GstBuffer`. Remember
+can retrieve the data pointer using the `GST_BUFFER_DATA` macro and the
+data size using the `GST_BUFFER_SIZE` macro in `GstBuffer`. Remember
 that this buffer does not have to match the buffer that we produced in
-the `push_data` function, any element in the path could have altered the
-buffers in any way (Not in this example: there is only a `tee` in the
-path between `appsrc` and `appsink`, and it does not change the content
+the `push_data` function, any element in the path could have altered the
+buffers in any way (Not in this example: there is only a `tee` in the
+path between `appsrc` and `appsink`, and it does not change the content
 of the buffers).
 
-We then `gst_buffer_unref()` the buffer, and this tutorial is done.
+We then `gst_buffer_unref()` the buffer, and this tutorial is done.
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown how applications can:
 
   - Inject data into a pipeline using the `appsrc`element.
-  - Retrieve data from a pipeline using the `appsink` element.
+  - Retrieve data from a pipeline using the `appsink` element.
   - Manipulate this data by accessing the `GstBuffer`.
 
-In a playbin2-based pipeline, the same goals are achieved in a slightly
-different way. [Playback tutorial 3: Short-cutting the
-pipeline](Playback%2Btutorial%2B3%253A%2BShort-cutting%2Bthe%2Bpipeline.html) shows
+In a playbin2-based pipeline, the same goals are achieved in a slightly
+different way. [Playback tutorial 3: Short-cutting the
+pipeline](Playback+tutorial+3+Short-cutting+the+pipeline.markdown) shows
 how to do it.
 
 It has been a pleasure having you here, and see you soon\!
-
-## Attachments:
-
-![](images/icons/bullet_blue.gif)
-[basic-tutorial-8.png](attachments/1442189/1540159.png) (image/png)  
-![](images/icons/bullet_blue.gif)
-[basic-tutorial-8.png](attachments/1442189/1540160.png) (image/png)  
-![](images/icons/bullet_blue.gif)
-[basic-tutorial-8.png](attachments/1442189/1540158.png) (image/png)  
-
-Document generated by Confluence on Oct 08, 2015 10:27
-
