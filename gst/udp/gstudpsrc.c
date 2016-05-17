@@ -270,6 +270,13 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
           "Address to receive packets for. This is equivalent to the "
           "multicast-group property for now", UDP_DEFAULT_MULTICAST_GROUP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstUDPSrc::loop:
+   *
+   * Can be used to disable multicast loopback.
+   *
+   * Since: 1.10
+   */
   g_object_class_install_property (gobject_class, PROP_LOOP,
       g_param_spec_boolean ("loop", "Multicast Loopback",
           "Used for setting the multicast loop parameter. TRUE = enable,"
