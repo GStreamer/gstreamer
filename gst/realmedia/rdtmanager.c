@@ -552,6 +552,7 @@ gst_rdt_manager_finalize (GObject * object)
 
   g_slist_foreach (rdtmanager->sessions, (GFunc) free_session, NULL);
   g_slist_free (rdtmanager->sessions);
+  g_clear_object (&rdtmanager->provided_clock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
