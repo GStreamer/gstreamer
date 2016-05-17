@@ -34,24 +34,9 @@ here](http://developer.android.com/guide/practices/jni.html).
 
 ## Download and install the SDK
 
-The SDK has two variants: **Debug** and **Release**. The Debug variant
-produces lots of debug output and is useful while developing your
-application. The Release variant is what you will use to produce the
-final version of your application, since GStreamer code runs slightly
-faster and the libraries are smaller.
-
-Get the compressed file below and just unzip it into any folder of your
-choice (Choose your preferred file format; both files have exactly the
-same content)
-
-### Debug variant
-
- FIXME: Link to download files
-
-If you intend to build the tutorials in this same folder, make sure you
-have writing permissions.
-
- FIXME: Is this all TRUE ?
+The GStreamer project provides [prebuilt binaries](https://gstreamer.freedesktop.org/data/pkg/android/)
+you should download the latest version and unzip it into any folder of your
+choice.
 
 In the process of building GStreamer-enabled Android applications, some
 tools will need to know where you installed the SDK. You must define an
@@ -62,10 +47,12 @@ system-wide by adding it to your `~/.profile` file (on Linux and Mac) or
 to the Environment Variables in the System Properties dialog (on
 Windows).
 
-  - Point `GSTREAMER_SDK_ROOT_ANDROID` to the folder where you unzipped
-    the SDK.
+Point `GSTREAMER_SDK_ROOT_ANDROID` to the folder where you unzipped the SDK.
 
-> ![](images/icons/emoticons/information.png) If you plan to use Eclipse and do not want to define this environment variable globally, you can set it inside Eclipse. Go to Window → Preferences → C/C++ → Build → Build Variables and define `GSTREAMER_SDK_ROOT_ANDROID` there.
+> ![](images/icons/emoticons/information.png) If you plan to use Android Studio and
+> do not want to define this environment variable globally, you can set
+> it inside Eclipse. Go to Window → Preferences → C/C++ → Build → Build Variables
+> and define `GSTREAMER_SDK_ROOT_ANDROID` there.
 
 ## Configure your development environment
 
@@ -133,7 +120,9 @@ OpenGL ES).
 
 #### Using the command line
 
-> ![](images/icons/emoticons/warning.png) Note that, on Windows, this procedure requires a working Cygwin shell, as explained in the [Android NDK System Requirements](http://developer.android.com/tools/sdk/ndk/index.html#Reqs)
+> ![](images/icons/emoticons/warning.png) Note that, on Windows,
+> this procedure requires a working Cygwin shell, as explained in
+> the [Android NDK System Requirements](http://developer.android.com/tools/sdk/ndk/index.html#Reqs)
 
 For each tutorial, move to its folder and run:
 
