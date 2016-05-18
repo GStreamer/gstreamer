@@ -3780,9 +3780,11 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
   }
 
   if (filter) {
+    GstCaps *tmp;
+
+    tmp = ret;
     ret = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
-  } else {
-    ret = gst_caps_ref (ret);
+    gst_caps_unref (tmp);
   }
 
   return ret;
