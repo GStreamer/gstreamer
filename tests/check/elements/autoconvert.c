@@ -78,7 +78,7 @@ set_autoconvert_factories (GstElement * autoconvert)
 
   g_object_set (G_OBJECT (autoconvert), "factories", factories, NULL);
 
-  g_list_free (factories);
+  g_list_free_full (factories, gst_object_unref);
 }
 
 GST_START_TEST (test_autoconvert_simple)
