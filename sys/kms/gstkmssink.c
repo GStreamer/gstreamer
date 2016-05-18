@@ -62,6 +62,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_kms_sink_debug);
 #define GST_CAT_DEFAULT gst_kms_sink_debug
 
+#define parent_class gst_kms_sink_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstKMSSink, gst_kms_sink, GST_TYPE_VIDEO_SINK,
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, GST_PLUGIN_NAME, 0,
         GST_PLUGIN_DESC));
@@ -1185,6 +1186,8 @@ gst_kms_sink_finalize (GObject * object)
   sink = GST_KMS_SINK (object);
   g_clear_pointer (&sink->devname, g_free);
   gst_poll_free (sink->poll);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
