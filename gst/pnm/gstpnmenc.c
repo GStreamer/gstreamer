@@ -136,6 +136,7 @@ gst_pnmenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   gboolean ret = TRUE;
   GstVideoInfo *info;
   GstVideoCodecState *output_state;
+  const gchar *mime_type = NULL;
 
   pnmenc = GST_PNMENC (encoder);
   info = &state->info;
@@ -144,15 +145,18 @@ gst_pnmenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
     case GST_VIDEO_FORMAT_RGB:
       pnmenc->info.max = 255;
       pnmenc->info.type = GST_PNM_TYPE_PIXMAP;
+      mime_type = MIME_PM;
       break;
     case GST_VIDEO_FORMAT_GRAY8:
       pnmenc->info.max = 255;
       pnmenc->info.type = GST_PNM_TYPE_GRAYMAP;
+      mime_type = MIME_GM;
       break;
     case GST_VIDEO_FORMAT_GRAY16_BE:
     case GST_VIDEO_FORMAT_GRAY16_LE:
       pnmenc->info.max = 65535;
       pnmenc->info.type = GST_PNM_TYPE_GRAYMAP;
+      mime_type = MIME_GM;
       break;
     default:
       ret = FALSE;
@@ -168,7 +172,7 @@ gst_pnmenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
 
   output_state =
       gst_video_encoder_set_output_state (encoder,
-      gst_caps_new_empty_simple ("image/pnm"), state);
+      gst_caps_new_empty_simple (mime_type), state);
   gst_video_codec_state_unref (output_state);
 
 done:
