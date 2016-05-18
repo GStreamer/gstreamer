@@ -273,6 +273,7 @@ check_PROGRAMS = \
 	elements/mxfmux \
 	elements/netsim \
 	elements/pcapparse \
+	elements/pnm \
 	elements/rtponvifparse \
 	elements/rtponviftimestamp \
 	elements/id3mux \
@@ -316,6 +317,12 @@ elements_audiomixer_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST
 elements_audiointerleave_LDADD = $(GST_BASE_LIBS) -lgstbase-@GST_API_VERSION@ -lgstaudio-@GST_API_VERSION@ $(LDADD)
 elements_audiointerleave_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
+elements_pnm_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS)
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+elements_pnm_LDADD = \
+	$(GST_PLUGINS_BASE_LIBS) -lgstapp-$(GST_API_VERSION) $(GST_BASE_LIBS) $(LDADD)
+#
 # parser unit test convenience lib
 noinst_LTLIBRARIES = libparser.la
 libparser_la_SOURCES = elements/parser.c elements/parser.h
