@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2012 Andol Li <andol@andol.info>
  *
- *  gsthanddetect_test: gsteramer handdetect plugin demo application,
+ *  gsthanddetect_test: gstreamer handdetect plugin demo application,
  *  part work of GSoc 2012 project
  *
  * This library is free software; you can redistribute it and/or

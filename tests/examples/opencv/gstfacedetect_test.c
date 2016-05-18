@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2015 Vanessa Chipirrás <vchipirras6@gmail.com>
  *
- *  gstfacedetect_test: gsteramer facedetect plugin demo application,
+ *  gstfacedetect_test: gstreamer facedetect plugin demo application,
  *  part work of Outreachy 2015 project
  *
  * This library is free software; you can redistribute it and/or
