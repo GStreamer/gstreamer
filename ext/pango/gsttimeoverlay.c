@@ -74,6 +74,7 @@ gst_time_overlay_time_line_type (void)
     {GST_TIME_OVERLAY_TIME_LINE_BUFFER_TIME, "buffer-time", "buffer-time"},
     {GST_TIME_OVERLAY_TIME_LINE_STREAM_TIME, "stream-time", "stream-time"},
     {GST_TIME_OVERLAY_TIME_LINE_RUNNING_TIME, "running-time", "running-time"},
+    {GST_TIME_OVERLAY_TIME_LINE_TIME_CODE, "time-code", "time-code"},
     {0, NULL, NULL},
   };
 
@@ -105,39 +106,51 @@ gst_time_overlay_get_text (GstBaseTextOverlay * overlay,
     GstBuffer * video_frame)
 {
   GstTimeOverlayTimeLine time_line;
-  GstClockTime ts, ts_buffer;
-  GstSegment *segment = &overlay->segment;
   gchar *time_str, *txt, *ret;
 
   overlay->need_render = TRUE;
 
-  ts_buffer = GST_BUFFER_TIMESTAMP (video_frame);
-
-  if (!GST_CLOCK_TIME_IS_VALID (ts_buffer)) {
-    GST_DEBUG ("buffer without valid timestamp");
-    return g_strdup ("");
-  }
-
-  GST_DEBUG ("buffer with timestamp %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (ts_buffer));
-
   time_line = g_atomic_int_get (&GST_TIME_OVERLAY_CAST (overlay)->time_line);
-  switch (time_line) {
-    case GST_TIME_OVERLAY_TIME_LINE_STREAM_TIME:
-      ts = gst_segment_to_stream_time (segment, GST_FORMAT_TIME, ts_buffer);
-      break;
-    case GST_TIME_OVERLAY_TIME_LINE_RUNNING_TIME:
-      ts = gst_segment_to_running_time (segment, GST_FORMAT_TIME, ts_buffer);
-      break;
-    case GST_TIME_OVERLAY_TIME_LINE_BUFFER_TIME:
-    default:
-      ts = ts_buffer;
-      break;
-  }
+  if (time_line == GST_TIME_OVERLAY_TIME_LINE_TIME_CODE) {
+    GstVideoTimeCodeMeta *tc_meta =
+        gst_buffer_get_video_time_code_meta (video_frame);
+    if (!tc_meta) {
+      GST_DEBUG ("buffer without valid timecode");
+      return g_strdup ("00:00:00:00");
+    }
+    time_str = gst_video_time_code_to_string (&tc_meta->tc);
+    GST_DEBUG ("buffer with timecode %s", time_str);
+  } else {
+    GstClockTime ts, ts_buffer;
+    GstSegment *segment = &overlay->segment;
 
+    ts_buffer = GST_BUFFER_TIMESTAMP (video_frame);
+
+    if (!GST_CLOCK_TIME_IS_VALID (ts_buffer)) {
+      GST_DEBUG ("buffer without valid timestamp");
+      return g_strdup ("");
+    }
+
+    GST_DEBUG ("buffer with timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (ts_buffer));
+
+    switch (time_line) {
+      case GST_TIME_OVERLAY_TIME_LINE_STREAM_TIME:
+        ts = gst_segment_to_stream_time (segment, GST_FORMAT_TIME, ts_buffer);
+        break;
+      case GST_TIME_OVERLAY_TIME_LINE_RUNNING_TIME:
+        ts = gst_segment_to_running_time (segment, GST_FORMAT_TIME, ts_buffer);
+        break;
+      case GST_TIME_OVERLAY_TIME_LINE_BUFFER_TIME:
+      default:
+        ts = ts_buffer;
+        break;
+    }
+
+    time_str = gst_time_overlay_render_time (GST_TIME_OVERLAY (overlay), ts);
+  }
   txt = g_strdup (overlay->default_text);
 
-  time_str = gst_time_overlay_render_time (GST_TIME_OVERLAY (overlay), ts);
   if (txt != NULL && *txt != '\0') {
     ret = g_strdup_printf ("%s %s", txt, time_str);
   } else {
