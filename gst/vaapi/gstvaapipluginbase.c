@@ -806,7 +806,7 @@ config_failed:
 /**
  * gst_vaapi_plugin_base_get_input_buffer:
  * @plugin: a #GstVaapiPluginBase
- * @incaps: the sink pad (input) buffer
+ * @inbuf: the sink pad (input) buffer
  * @outbuf_ptr: the pointer to location to the VA surface backed buffer
  *
  * Acquires the sink pad (input) buffer as a VA surface backed
