@@ -275,7 +275,7 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
    *
    * Can be used to disable multicast loopback.
    *
-   * Since: 1.10
+   * Since: 1.8
    */
   g_object_class_install_property (gobject_class, PROP_LOOP,
       g_param_spec_boolean ("loop", "Multicast Loopback",
