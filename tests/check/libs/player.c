@@ -1485,7 +1485,7 @@ main (int argc, char **argv)
   Suite *s;
   SRunner *sr;
 
-  gst_init (NULL, NULL);
+  gst_check_init (&argc, &argv);
 
   s = player_suite ();
   sr = srunner_create (s);
