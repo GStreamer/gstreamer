@@ -1176,6 +1176,8 @@ gst_adaptive_demux_stream_free (GstAdaptiveDemuxStream * stream)
   if (stream->pending_caps)
     gst_caps_unref (stream->pending_caps);
 
+  g_clear_pointer (&stream->pending_tags, gst_tag_list_unref);
+
   g_object_unref (stream->adapter);
 
   g_free (stream);
