@@ -488,7 +488,7 @@ gst_rtsp_session_get_header (GstRTSPSession * session)
 
   g_mutex_lock (&priv->lock);
   if (priv->timeout_always_visible || priv->timeout != 60)
-    result = g_strdup_printf ("%s; timeout=%d", priv->sessionid, priv->timeout);
+    result = g_strdup_printf ("%s;timeout=%d", priv->sessionid, priv->timeout);
   else
     result = g_strdup (priv->sessionid);
   g_mutex_unlock (&priv->lock);
