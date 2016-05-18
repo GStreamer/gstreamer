@@ -288,6 +288,9 @@ gst_a2dp_sink_change_state (GstElement * element, GstStateChange transition)
           self->autoconnect, NULL);
 
       ret = gst_element_set_state (GST_ELEMENT (self->sink), GST_STATE_READY);
+      if (ret == GST_STATE_CHANGE_FAILURE) {
+        g_clear_object (&self->sink);
+      }
       break;
     default:
       break;
