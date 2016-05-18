@@ -1887,11 +1887,27 @@ gst_v4l2_object_get_interlace_mode (enum v4l2_field field,
 }
 
 static gboolean
-gst_v4l2_object_get_colorspace (enum v4l2_colorspace colorspace,
-    enum v4l2_quantization range, enum v4l2_ycbcr_encoding matrix,
-    enum v4l2_xfer_func transfer, gboolean is_rgb, GstVideoColorimetry * cinfo)
+gst_v4l2_object_get_colorspace(struct v4l2_format * fmt,
+    GstVideoColorimetry * cinfo)
 {
+  gboolean is_rgb = gst_v4l2_object_v4l2fourcc_is_rgb (fmt->fmt.pix.pixelformat);
+  enum v4l2_colorspace colorspace;
+  enum v4l2_quantization range;
+  enum v4l2_ycbcr_encoding matrix;
+  enum v4l2_xfer_func transfer;
   gboolean ret = TRUE;
+
+  if (V4L2_TYPE_IS_MULTIPLANAR (fmt->type)) {
+    colorspace = fmt->fmt.pix_mp.colorspace;
+    range = fmt->fmt.pix_mp.quantization;
+    matrix = fmt->fmt.pix_mp.ycbcr_enc;
+    transfer = fmt->fmt.pix_mp.xfer_func;
+  } else {
+    colorspace = fmt->fmt.pix.colorspace;
+    range = fmt->fmt.pix.quantization;
+    matrix = fmt->fmt.pix.ycbcr_enc;
+    transfer = fmt->fmt.pix.xfer_func;
+  }
 
   /* First step, set the defaults for each primaries */
   switch (colorspace) {
@@ -2016,6 +2032,12 @@ gst_v4l2_object_get_colorspace (enum v4l2_colorspace colorspace,
       cinfo->matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
       break;
   }
+
+  /* Set identity matrix for R'G'B' formats to avoid creating
+   * confusion. This though is cosmetic as it's now properly ignored by
+   * the video info API and videoconvert. */
+  if (is_rgb)
+    cinfo->matrix = GST_VIDEO_COLOR_MATRIX_RGB;
 
   switch (transfer) {
     case V4L2_XFER_FUNC_709:
@@ -2176,7 +2198,6 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
   GValue list = G_VALUE_INIT;
   GstVideoColorimetry cinfo;
   enum v4l2_colorspace req_cspace;
-  gboolean is_rgb = gst_v4l2_object_v4l2fourcc_is_rgb (pixelformat);
 
   memset (&fmt, 0, sizeof (fmt));
   fmt.type = v4l2object->type;
@@ -2189,33 +2210,8 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
   /* step 1: get device default colorspace and insert it first as
    * it should be the preferred one */
   if (gst_v4l2_object_try_fmt (v4l2object, &fmt) == 0) {
-    enum v4l2_colorspace colorspace;
-    enum v4l2_quantization range;
-    enum v4l2_ycbcr_encoding matrix;
-    enum v4l2_xfer_func transfer;
-
-    if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
-      colorspace = fmt.fmt.pix_mp.colorspace;
-      range = fmt.fmt.pix_mp.quantization;
-      matrix = fmt.fmt.pix_mp.ycbcr_enc;
-      transfer = fmt.fmt.pix_mp.xfer_func;
-    } else {
-      colorspace = fmt.fmt.pix.colorspace;
-      range = fmt.fmt.pix.quantization;
-      matrix = fmt.fmt.pix.ycbcr_enc;
-      transfer = fmt.fmt.pix.xfer_func;
-    }
-
-    if (gst_v4l2_object_get_colorspace (colorspace, range, matrix, transfer,
-            is_rgb, &cinfo)) {
-      /* Set identity matrix for R'G'B' formats to avoid creating
-       * confusion. This though is cosmetic as it's now properly ignored by
-       * the video info API and videoconvert. */
-      if (is_rgb)
-        cinfo.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
-
+    if (gst_v4l2_object_get_colorspace(&fmt, &cinfo))
       gst_v4l2_object_fill_colorimetry_list (&list, &cinfo);
-    }
   }
 
   /* step 2: probe all colorspace other than default
@@ -2235,33 +2231,15 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
 
     if (gst_v4l2_object_try_fmt (v4l2object, &fmt) == 0) {
       enum v4l2_colorspace colorspace;
-      enum v4l2_quantization range;
-      enum v4l2_ycbcr_encoding matrix;
-      enum v4l2_xfer_func transfer;
 
-      if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
+      if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type))
         colorspace = fmt.fmt.pix_mp.colorspace;
-        range = fmt.fmt.pix_mp.quantization;
-        matrix = fmt.fmt.pix_mp.ycbcr_enc;
-        transfer = fmt.fmt.pix_mp.xfer_func;
-      } else {
+      else
         colorspace = fmt.fmt.pix.colorspace;
-        range = fmt.fmt.pix.quantization;
-        matrix = fmt.fmt.pix.ycbcr_enc;
-        transfer = fmt.fmt.pix.xfer_func;
-      }
 
       if (colorspace == req_cspace) {
-        if (gst_v4l2_object_get_colorspace (colorspace, range, matrix, transfer,
-                is_rgb, &cinfo)) {
-          /* Set identity matrix for R'G'B' formats to avoid creating
-           * confusion. This though is cosmetic as it's now properly ignored by
-           * the video info API and videoconvert. */
-          if (is_rgb)
-            cinfo.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
-
+        if (gst_v4l2_object_get_colorspace(&fmt, &cinfo))
           gst_v4l2_object_fill_colorimetry_list (&list, &cinfo);
-        }
       }
     }
   }
