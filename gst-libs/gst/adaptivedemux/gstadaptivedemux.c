@@ -881,7 +881,7 @@ gst_adaptive_demux_expose_stream (GstAdaptiveDemux * demux,
     stream->pending_caps = NULL;
   }
 
-  stream->discont = FALSE;
+  stream->discont = TRUE;
 
   gst_object_ref (pad);
 
@@ -1466,6 +1466,8 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
           gst_event_set_seqnum (seg_evt, demux->priv->segment_seqnum);
           gst_event_replace (&stream->pending_segment, seg_evt);
           gst_event_unref (seg_evt);
+          /* Make sure the first buffer after a seek has the discont flag */
+          stream->discont = TRUE;
         }
 
         GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
@@ -2843,6 +2845,7 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
         GST_PTR_FORMAT, seg_event);
     gst_pad_push_event (stream->pad, seg_event);
 
+    stream->discont = TRUE;
     stream->restart_download = FALSE;
   }
 
