@@ -378,7 +378,7 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
       properties[PROP_VERTICAL_VIEW_ANGLE]);
 
   /**
-   * GstAHCSrc:video-stabilizatio:
+   * GstAHCSrc:video-stabilization:
    *
    * Video stabilization reduces the shaking due to the motion of the camera.
    */
