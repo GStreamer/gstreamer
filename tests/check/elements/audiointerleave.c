@@ -269,6 +269,7 @@ GST_START_TEST (test_audiointerleave_2ch)
     g_cond_wait (&data_cond, &data_mutex);
   g_mutex_unlock (&data_mutex);
 
+  gst_bus_set_flushing (bus, TRUE);
   gst_element_set_state (interleave, GST_STATE_NULL);
   gst_element_set_state (queue, GST_STATE_NULL);
 
@@ -410,6 +411,7 @@ GST_START_TEST (test_audiointerleave_2ch_1eos)
     g_cond_wait (&data_cond, &data_mutex);
   g_mutex_unlock (&data_mutex);
 
+  gst_bus_set_flushing (bus, TRUE);
   gst_element_set_state (interleave, GST_STATE_NULL);
   gst_element_set_state (queue, GST_STATE_NULL);
 
