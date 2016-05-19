@@ -133,14 +133,14 @@
  * On Windows, this exports the plugin definition from the DLL.
  * On other platforms, this gets defined as a no-op.
  */
-#ifdef _MSC_VER
+#ifdef _WIN32 /* Both 32-bit and 64-bit; both GCC and MSVC */
 #define GST_PLUGIN_EXPORT __declspec(dllexport) extern
 #ifdef GST_EXPORTS
 #define GST_EXPORT __declspec(dllexport) extern
 #else
 #define GST_EXPORT __declspec(dllimport) extern
 #endif
-#else /* not _MSC_VER */
+#else /* !_WIN32 */
 #define GST_PLUGIN_EXPORT
 #if (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
 #define GST_EXPORT extern __attribute__ ((visibility ("default")))
