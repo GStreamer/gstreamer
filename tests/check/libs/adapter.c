@@ -364,6 +364,7 @@ GST_START_TEST (test_timestamp)
   guint64 dist;
   guint8 *data;
   const guint8 *cdata;
+  guint64 offset;
 
   adapter = gst_adapter_new ();
   fail_unless (adapter != NULL);
@@ -380,6 +381,10 @@ GST_START_TEST (test_timestamp)
   fail_unless (timestamp == GST_CLOCK_TIME_NONE);
   fail_unless (dist == 0);
 
+  /* Offset should be undefined */
+  offset = gst_adapter_get_offset_from_discont (adapter);
+  fail_unless (offset == GST_BUFFER_OFFSET_NONE);
+
   gst_adapter_flush (adapter, 50);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 50);
@@ -388,6 +393,10 @@ GST_START_TEST (test_timestamp)
   timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == GST_CLOCK_TIME_NONE);
   fail_unless (dist == 50);
+
+  /* Offset still undefined */
+  offset = gst_adapter_get_offset_from_discont (adapter);
+  fail_unless (offset == GST_BUFFER_OFFSET_NONE);
 
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
@@ -557,6 +566,161 @@ GST_START_TEST (test_timestamp)
   timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 5 * GST_SECOND);
   fail_unless (dist == 50);
+
+  g_object_unref (adapter);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_offset)
+{
+  GstAdapter *adapter;
+  GstBuffer *buffer;
+  guint avail;
+  guint64 offset;
+  guint64 dist;
+
+  adapter = gst_adapter_new ();
+  fail_unless (adapter != NULL);
+
+  buffer = gst_buffer_new_and_alloc (100);
+
+  /* push in the adapter */
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 100);
+
+  /* Offset should be undefined */
+  offset = gst_adapter_get_offset_from_discont (adapter);
+  fail_unless_equals_uint64 (offset, GST_BUFFER_OFFSET_NONE);
+  offset = gst_adapter_prev_offset (adapter, &dist);
+  fail_unless_equals_uint64 (offset, GST_BUFFER_OFFSET_NONE);
+  fail_unless_equals_int (dist, 0);
+
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 50);
+
+  /* Offset still undefined, dist changed though */
+  offset = gst_adapter_get_offset_from_discont (adapter);
+  fail_unless_equals_uint64 (offset, GST_BUFFER_OFFSET_NONE);
+  offset = gst_adapter_prev_offset (adapter, &dist);
+  fail_unless_equals_uint64 (offset, GST_BUFFER_OFFSET_NONE);
+  fail_unless_equals_int (dist, 50);
+
+  /* Let's push in a discont buffer with a valid offset */
+  buffer = gst_buffer_new_and_alloc (100);
+  GST_BUFFER_OFFSET (buffer) = 10000;
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+
+  /* push in the adapter */
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 150);
+
+  /* offset is still undefined */
+  offset = gst_adapter_get_offset_from_discont (adapter);
+  fail_unless_equals_uint64 (offset, GST_BUFFER_OFFSET_NONE);
+  offset = gst_adapter_prev_offset (adapter, &dist);
+  fail_unless_equals_uint64 (offset, GST_BUFFER_OFFSET_NONE);
+  fail_unless_equals_int (dist, 50);
+
+  /* flush out first buffer we are now at the second buffer offset */
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 100);
+
+  offset = gst_adapter_get_offset_from_discont (adapter);
+  fail_unless_equals_uint64 (offset, 10000);
+  offset = gst_adapter_prev_offset (adapter, &dist);
+  fail_unless_equals_uint64 (offset, 10000);
+  fail_unless_equals_int (dist, 0);
+
+  /* move some more, we should have an updated offset */
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 50);
+
+  offset = gst_adapter_get_offset_from_discont (adapter);
+  fail_unless_equals_uint64 (offset, 10050);
+  offset = gst_adapter_prev_offset (adapter, &dist);
+  fail_unless_equals_uint64 (offset, 10000);
+  fail_unless_equals_int (dist, 50);
+
+  /* push a buffer without offset in the adapter (contiguous with the
+     other) */
+  buffer = gst_buffer_new_and_alloc (100);
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 150);
+
+  /* push a buffer with offset in the adapter (but contiguous with the
+     other), the offset shouldn't be taken into account */
+  buffer = gst_buffer_new_and_alloc (100);
+  GST_BUFFER_OFFSET (buffer) = 50000;
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 250);
+
+  /* offset still as it was before the push */
+  offset = gst_adapter_get_offset_from_discont (adapter);
+  fail_unless_equals_uint64 (offset, 10050);
+  offset = gst_adapter_prev_offset (adapter, &dist);
+  fail_unless_equals_uint64 (offset, 10000);
+  fail_unless_equals_int (dist, 50);
+
+  /* flush away buffer with the offset */
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 200);
+  offset = gst_adapter_get_offset_from_discont (adapter);
+  fail_unless_equals_uint64 (offset, 10100);
+  /* The previous valid offset seen is now 100 bytes away */
+  offset = gst_adapter_prev_offset (adapter, &dist);
+  fail_unless_equals_uint64 (offset, 10000);
+  fail_unless_equals_int (dist, 100);
+
+  /* move into the second buffer */
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 150);
+  offset = gst_adapter_get_offset_from_discont (adapter);
+  fail_unless_equals_uint64 (offset, 10150);
+  offset = gst_adapter_prev_offset (adapter, &dist);
+  fail_unless_equals_uint64 (offset, 10000);
+  fail_unless_equals_int (dist, 150);
+
+  /* move to third buffer, we should still see a continuously increasing
+   * offset and ignore the non-discont offset */
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 100);
+  offset = gst_adapter_get_offset_from_discont (adapter);
+  fail_unless_equals_uint64 (offset, 10200);
+  /* But the prev_offset *does* give us the actual buffer offset value */
+  offset = gst_adapter_prev_offset (adapter, &dist);
+  fail_unless_equals_uint64 (offset, 50000);
+  fail_unless_equals_int (dist, 0);
+
+  /* move everything out, we end up at the last offset */
+  gst_adapter_flush (adapter, 100);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 0);
+  offset = gst_adapter_get_offset_from_discont (adapter);
+  fail_unless_equals_uint64 (offset, 10300);
+  offset = gst_adapter_prev_offset (adapter, &dist);
+  fail_unless_equals_uint64 (offset, 50000);
+  fail_unless_equals_int (dist, 100);
+
+  /* clear everything */
+  gst_adapter_clear (adapter);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 0);
+  offset = gst_adapter_get_offset_from_discont (adapter);
+  fail_unless_equals_uint64 (offset, GST_BUFFER_OFFSET_NONE);
+  offset = gst_adapter_prev_offset (adapter, &dist);
+  fail_unless_equals_uint64 (offset, GST_BUFFER_OFFSET_NONE);
+  fail_unless_equals_int (dist, 0);
 
   g_object_unref (adapter);
 }
@@ -1064,6 +1228,7 @@ gst_adapter_suite (void)
   tcase_add_test (tc_chain, test_get_buffer_list);
   tcase_add_test (tc_chain, test_merge);
   tcase_add_test (tc_chain, test_take_buffer_fast);
+  tcase_add_test (tc_chain, test_offset);
 
   return s;
 }

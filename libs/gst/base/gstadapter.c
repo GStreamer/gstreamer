@@ -92,6 +92,17 @@
  * gst_adapter_prev_pts_at_offset() can be used to determine the last
  * seen timestamp at a particular offset in the adapter.
  *
+ * The adapter will also keep track of the offset of the buffers
+ * (#GST_BUFFER_OFFSET) that were pushed. The last seen offset before the
+ * current position can be queried with gst_adapter_prev_offset(). This function
+ * can optionally return the number of bytes between the start of the buffer
+ * that carried the offset and the current adapter position. If the meaning of
+ * #GST_BUFFER_OFFSET for the stream being handled corresponds to bytes, then
+ * the accumulated offset since the last #GST_BUFFER_FLAG_DISCONT buffer can be
+ * queried with gst_adapter_get_offset_from_discont(). This is useful for
+ * elements that want to track the position of data in the stream based on the
+ * offset of the incoming buffers.
+ *
  * A last thing to note is that while #GstAdapter is pretty optimized,
  * merging buffers still might be an operation that requires a malloc() and
  * memcpy() operation, and these operations are not the fastest. Because of
@@ -118,6 +129,8 @@
 /* default size for the assembled data buffer */
 #define DEFAULT_SIZE 4096
 
+#define INCREASE_OFFSET(a, offs) if ((a)->offset_discont != GST_BUFFER_OFFSET_NONE) { (a)->offset_discont += (offs); }
+
 static void gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush);
 
 GST_DEBUG_CATEGORY_STATIC (gst_adapter_debug);
@@ -143,9 +156,13 @@ struct _GstAdapter
   guint64 pts_distance;
   GstClockTime dts;
   guint64 dts_distance;
+  guint64 offset;
+  guint64 offset_distance;
 
   gsize scan_offset;
   GSList *scan_entry;
+
+  guint64 offset_discont;
 
   GstMapInfo info;
 };
@@ -181,6 +198,9 @@ gst_adapter_init (GstAdapter * adapter)
   adapter->pts_distance = 0;
   adapter->dts = GST_CLOCK_TIME_NONE;
   adapter->dts_distance = 0;
+  adapter->offset = GST_BUFFER_OFFSET_NONE;
+  adapter->offset_distance = 0;
+  adapter->offset_discont = GST_BUFFER_OFFSET_NONE;
 }
 
 static void
@@ -242,14 +262,18 @@ gst_adapter_clear (GstAdapter * adapter)
   adapter->pts_distance = 0;
   adapter->dts = GST_CLOCK_TIME_NONE;
   adapter->dts_distance = 0;
+  adapter->offset = GST_BUFFER_OFFSET_NONE;
+  adapter->offset_distance = 0;
   adapter->scan_offset = 0;
   adapter->scan_entry = NULL;
+  adapter->offset_discont = GST_BUFFER_OFFSET_NONE;
 }
 
 static inline void
-update_timestamps (GstAdapter * adapter, GstBuffer * buf)
+update_timestamps_and_offset (GstAdapter * adapter, GstBuffer * buf)
 {
   GstClockTime pts, dts;
+  guint64 offset;
 
   pts = GST_BUFFER_PTS (buf);
   if (GST_CLOCK_TIME_IS_VALID (pts)) {
@@ -262,6 +286,18 @@ update_timestamps (GstAdapter * adapter, GstBuffer * buf)
     GST_LOG_OBJECT (adapter, "new dts %" GST_TIME_FORMAT, GST_TIME_ARGS (dts));
     adapter->dts = dts;
     adapter->dts_distance = 0;
+  }
+  offset = GST_BUFFER_OFFSET (buf);
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    /* Take offset as-is (might be NONE) */
+    adapter->offset_discont = offset;
+    GST_LOG_OBJECT (adapter, "offset discont now %" G_GUINT64_FORMAT,
+        adapter->offset_discont);
+  }
+  if (offset != GST_BUFFER_OFFSET_NONE) {
+    GST_LOG_OBJECT (adapter, "new offset %" G_GUINT64_FORMAT, offset);
+    adapter->offset = offset;
+    adapter->offset_distance = 0;
   }
 }
 
@@ -340,7 +376,7 @@ gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
     GST_LOG_OBJECT (adapter, "pushing %p first %" G_GSIZE_FORMAT " bytes",
         buf, size);
     adapter->buflist = adapter->buflist_end = g_slist_append (NULL, buf);
-    update_timestamps (adapter, buf);
+    update_timestamps_and_offset (adapter, buf);
   } else {
     /* Otherwise append to the end, and advance our end pointer */
     GST_LOG_OBJECT (adapter, "pushing %p %" G_GSIZE_FORMAT " bytes at end, "
@@ -597,6 +633,8 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
   /* distance is always at least the amount of skipped bytes */
   adapter->pts_distance -= adapter->skip;
   adapter->dts_distance -= adapter->skip;
+  adapter->offset_distance -= adapter->skip;
+  INCREASE_OFFSET (adapter, -adapter->skip);
 
   g = adapter->buflist;
   cur = g->data;
@@ -606,7 +644,9 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
     GST_LOG_OBJECT (adapter, "flushing out head buffer");
     adapter->pts_distance += size;
     adapter->dts_distance += size;
+    adapter->offset_distance += size;
     flush -= size;
+    INCREASE_OFFSET (adapter, size);
 
     gst_buffer_unref (cur);
     g = g_slist_delete_link (g, g);
@@ -619,7 +659,7 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
     }
     /* there is a new head buffer, update the timestamps */
     cur = g->data;
-    update_timestamps (adapter, cur);
+    update_timestamps_and_offset (adapter, cur);
     size = gst_buffer_get_size (cur);
   }
   adapter->buflist = g;
@@ -627,6 +667,8 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
   adapter->skip = flush;
   adapter->pts_distance += flush;
   adapter->dts_distance += flush;
+  adapter->offset_distance += flush;
+  INCREASE_OFFSET (adapter, flush);
   /* invalidate scan position */
   adapter->scan_offset = 0;
   adapter->scan_entry = NULL;
@@ -1309,6 +1351,57 @@ gst_adapter_available_fast (GstAdapter * adapter)
 
   /* we can quickly get the (remaining) data of the first buffer */
   return size - adapter->skip;
+}
+
+/**
+ * gst_adapter_get_offset_from_discont:
+ * @adapter: a #GstAdapter
+ *
+ * Get the offset of the adapter based on the incoming buffer offset.  Will only
+ * return valid values if the incoming buffers have valid offsets set on them.
+ *
+ * The offset will be initially recorded for all buffers with
+ * %GST_BUFFER_FLAG_DISCONT on them, and then calculated for all other following
+ * buffers based on their size.
+ *
+ * Since: 1.10
+ *
+ * Returns: The offset. Can be %GST_BUFFER_OFFSET_NONE.
+ */
+guint64
+gst_adapter_get_offset_from_discont (GstAdapter * adapter)
+{
+  return adapter->offset_discont;
+}
+
+/**
+ * gst_adapter_prev_offset:
+ * @adapter: a #GstAdapter
+ * @distance: (out) (allow-none): pointer to a location for distance, or %NULL
+ *
+ * Get the offset that was before the current byte in the adapter. When
+ * @distance is given, the amount of bytes between the offset and the current
+ * position is returned.
+ *
+ * The offset is reset to GST_BUFFER_OFFSET_NONE and the distance is set to 0
+ * when the adapter is first created or when it is cleared. This also means that
+ * before the first byte with an offset is removed from the adapter, the offset
+ * and distance returned are GST_BUFFER_OFFSET_NONE and 0 respectively.
+ *
+ * Since: 1.10
+ *
+ * Returns: The previous seen offset.
+ */
+guint64
+gst_adapter_prev_offset (GstAdapter * adapter, guint64 * distance)
+{
+  g_return_val_if_fail (GST_IS_ADAPTER (adapter), GST_BUFFER_OFFSET_NONE);
+
+  if (distance)
+    *distance = adapter->offset_distance;
+
+  return adapter->offset;
+
 }
 
 /**
