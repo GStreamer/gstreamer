@@ -292,8 +292,8 @@ gst_lv2_source_fill (GstBaseSrc * base, guint64 offset,
     guint length, GstBuffer * buffer)
 {
   GstLV2Source *lv2 = (GstLV2Source *) base;
-  GstLV2SourceClass *lv2_class =
-      (GstLV2SourceClass *) GST_BASE_SRC_GET_CLASS (lv2);
+  GstLV2SourceClass *klass = (GstLV2SourceClass *) GST_BASE_SRC_GET_CLASS (lv2);
+  GstLV2Class *lv2_class = &klass->lv2;
   GstLV2Group *lv2_group;
   GstLV2Port *lv2_port;
   GstClockTime next_time;
@@ -302,8 +302,9 @@ gst_lv2_source_fill (GstBaseSrc * base, guint64 offset,
   GstElementClass *eclass;
   GstMapInfo map;
   gint samplerate, bpf;
-  guint j;
-  gfloat *out = NULL;
+  guint j, k, l;
+  gfloat *out = NULL, *cv = NULL, *mem;
+  gfloat val;
 
   /* example for tagging generated data */
   if (!lv2->tags_pushed) {
@@ -399,7 +400,7 @@ gst_lv2_source_fill (GstBaseSrc * base, guint64 offset,
   gst_buffer_map (buffer, &map, GST_MAP_WRITE);
 
   /* multi channel outputs */
-  lv2_group = &lv2_class->lv2.out_group;
+  lv2_group = &lv2_class->out_group;
   if (lv2_group->ports->len > 1) {
     out = g_new0 (gfloat, samples * lv2_group->ports->len);
     for (j = 0; j < lv2_group->ports->len; ++j) {
@@ -415,6 +416,22 @@ gst_lv2_source_fill (GstBaseSrc * base, guint64 offset,
     GST_LOG_OBJECT (lv2, "connected port 0");
   }
 
+  /* cv ports */
+  cv = g_new (gfloat, samples * lv2_class->num_cv_in);
+  for (j = k = 0; j < lv2_class->control_in_ports->len; j++) {
+    lv2_port = &g_array_index (lv2_class->control_in_ports, GstLV2Port, j);
+    if (lv2_port->type != GST_LV2_PORT_CV)
+      continue;
+
+    mem = cv + (k * samples);
+    val = lv2->lv2.ports.control.in[j];
+    /* FIXME: use gst_control_binding_get_value_array */
+    for (l = 0; l < samples; l++)
+      mem[l] = val;
+    lilv_instance_connect_port (lv2->lv2.instance, lv2_port->index, mem);
+    k++;
+  }
+
   lilv_instance_run (lv2->lv2.instance, samples);
 
   if (lv2_group->ports->len > 1) {
@@ -422,6 +439,8 @@ gst_lv2_source_fill (GstBaseSrc * base, guint64 offset,
         (gfloat *) map.data, samples, out);
     g_free (out);
   }
+
+  g_free (cv);
 
   gst_buffer_unmap (buffer, &map);
 

@@ -305,18 +305,19 @@ static GstFlowReturn
 gst_lv2_filter_transform_data (GstLV2Filter * self,
     GstMapInfo * in_map, GstMapInfo * out_map)
 {
-  GstLV2FilterClass *lv2_class;
+  GstLV2FilterClass *klass =
+      (GstLV2FilterClass *) GST_AUDIO_FILTER_GET_CLASS (self);
+  GstLV2Class *lv2_class = &klass->lv2;
   GstLV2Group *lv2_group;
   GstLV2Port *lv2_port;
-  guint j, nframes, samples, out_samples;
-  gfloat *in = NULL, *out = NULL;
+  guint j, k, l, nframes, samples, out_samples;
+  gfloat *in = NULL, *out = NULL, *cv = NULL, *mem;
+  gfloat val;
 
   nframes = in_map->size / sizeof (float);
 
-  lv2_class = (GstLV2FilterClass *) GST_AUDIO_FILTER_GET_CLASS (self);
-
   /* multi channel inputs */
-  lv2_group = &lv2_class->lv2.in_group;
+  lv2_group = &lv2_class->in_group;
   samples = nframes / lv2_group->ports->len;
   in = g_new0 (gfloat, nframes);
   GST_LOG_OBJECT (self, "in : samples=%u, nframes=%u, ports=%d", samples,
@@ -333,7 +334,7 @@ gst_lv2_filter_transform_data (GstLV2Filter * self,
   }
 
   /* multi channel outputs */
-  lv2_group = &lv2_class->lv2.out_group;
+  lv2_group = &lv2_class->out_group;
   out_samples = nframes / lv2_group->ports->len;
   out = g_new0 (gfloat, samples * lv2_group->ports->len);
   GST_LOG_OBJECT (self, "out: samples=%u, nframes=%u, ports=%d", out_samples,
@@ -344,6 +345,22 @@ gst_lv2_filter_transform_data (GstLV2Filter * self,
         out + (j * out_samples));
   }
 
+  /* cv ports */
+  cv = g_new (gfloat, samples * lv2_class->num_cv_in);
+  for (j = k = 0; j < lv2_class->control_in_ports->len; j++) {
+    lv2_port = &g_array_index (lv2_class->control_in_ports, GstLV2Port, j);
+    if (lv2_port->type != GST_LV2_PORT_CV)
+      continue;
+
+    mem = cv + (k * samples);
+    val = self->lv2.ports.control.in[j];
+    /* FIXME: use gst_control_binding_get_value_array */
+    for (l = 0; l < samples; l++)
+      mem[l] = val;
+    lilv_instance_connect_port (self->lv2.instance, lv2_port->index, mem);
+    k++;
+  }
+
   lilv_instance_run (self->lv2.instance, samples);
 
   if (lv2_group->ports->len > 1)
@@ -351,6 +368,7 @@ gst_lv2_filter_transform_data (GstLV2Filter * self,
         (gfloat *) out_map->data, out_samples, out);
   g_free (out);
   g_free (in);
+  g_free (cv);
 
   return GST_FLOW_OK;
 }

@@ -158,6 +158,8 @@ gboolean
 gst_lv2_setup (GstLV2 * lv2, unsigned long rate)
 {
   GstLV2Class *lv2_class = lv2->klass;
+  GstLV2Port *port;
+  GArray *ports;
   gint i;
 
   if (lv2->instance)
@@ -168,15 +170,22 @@ gst_lv2_setup (GstLV2 * lv2, unsigned long rate)
     return FALSE;
 
   /* connect the control ports */
-  for (i = 0; i < lv2_class->control_in_ports->len; i++)
-    lilv_instance_connect_port (lv2->instance,
-        g_array_index (lv2_class->control_in_ports, GstLV2Port, i).index,
+  ports = lv2_class->control_in_ports;
+  for (i = 0; i < ports->len; i++) {
+    port = &g_array_index (ports, GstLV2Port, i);
+    if (port->type != GST_LV2_PORT_CONTROL)
+      continue;
+    lilv_instance_connect_port (lv2->instance, port->index,
         &(lv2->ports.control.in[i]));
-
-  for (i = 0; i < lv2_class->control_out_ports->len; i++)
-    lilv_instance_connect_port (lv2->instance,
-        g_array_index (lv2_class->control_out_ports, GstLV2Port, i).index,
+  }
+  ports = lv2_class->control_out_ports;
+  for (i = 0; i < ports->len; i++) {
+    port = &g_array_index (ports, GstLV2Port, i);
+    if (port->type != GST_LV2_PORT_CONTROL)
+      continue;
+    lilv_instance_connect_port (lv2->instance, port->index,
         &(lv2->ports.control.out[i]));
+  }
 
   lilv_instance_activate (lv2->instance);
   lv2->activated = TRUE;
@@ -365,7 +374,8 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, GObjectClass * object_class,
   perms = G_PARAM_READABLE;
   if (lilv_port_is_a (lv2plugin, port, input_class))
     perms |= G_PARAM_WRITABLE | G_PARAM_CONSTRUCT;
-  if (lilv_port_is_a (lv2plugin, port, control_class))
+  if (lilv_port_is_a (lv2plugin, port, control_class) ||
+      lilv_port_is_a (lv2plugin, port, cv_class))
     perms |= GST_PARAM_CONTROLLABLE;
 
   if (lilv_port_has_property (lv2plugin, port, toggled_prop)) {
@@ -547,8 +557,6 @@ gst_lv2_class_init (GstLV2Class * lv2_class, GType type)
       gst_structure_get_value (lv2_meta_all, g_type_name (type));
   GstStructure *lv2_meta = g_value_get_boxed (value);
   const LilvPlugin *lv2plugin;
-  /* FIXME Handle channels positionning
-   * GstAudioChannelPosition position = GST_AUDIO_CHANNEL_POSITION_INVALID; */
   guint j, in_pad_index = 0, out_pad_index = 0;
   const LilvPlugins *plugins = lilv_world_get_all_plugins (world);
   LilvNode *plugin_uri;
@@ -573,8 +581,12 @@ gst_lv2_class_init (GstLV2Class * lv2_class, GType type)
   for (j = 0; j < lilv_plugin_get_num_ports (lv2plugin); j++) {
     const LilvPort *port = lilv_plugin_get_port_by_index (lv2plugin, j);
     const gboolean is_input = lilv_port_is_a (lv2plugin, port, input_class);
-    struct _GstLV2Port desc = { j, 0, };
+    const gboolean is_optional = lilv_port_has_property (lv2plugin, port,
+        optional_pred);
+    GstLV2Port desc = { j, GST_LV2_PORT_AUDIO, -1, };
     LilvNodes *lv2group = lilv_port_get (lv2plugin, port, group_pred);
+    /* FIXME Handle channels positionning
+     * GstAudioChannelPosition position = GST_AUDIO_CHANNEL_POSITION_INVALID; */
 
     if (lv2group) {
       /* port is part of a group */
@@ -590,7 +602,7 @@ gst_lv2_class_init (GstLV2Class * lv2_class, GType type)
 
       /* FIXME Handle channels positionning
          position = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-         sub_values = lilv_port_get_value (lv2plugin, port, has_role_pred);
+         sub_values = lilv_port_get_value (lv2plugin, port, designation_pred);
          if (lilv_nodes_size (sub_values) > 0) {
          LilvNode *role = lilv_nodes_get_at (sub_values, 0);
          position = gst_lv2_filter_role_to_position (role);
@@ -606,21 +618,70 @@ gst_lv2_class_init (GstLV2Class * lv2_class, GType type)
       /* port is not part of a group, or it is part of a group but that group
        * is illegal so we just ignore it */
       if (lilv_port_is_a (lv2plugin, port, audio_class)) {
-        desc.pad = is_input ? in_pad_index++ : out_pad_index++;
-        if (is_input)
+        if (is_input) {
+          desc.pad = in_pad_index++;
           g_array_append_val (lv2_class->in_group.ports, desc);
-        else
+        } else {
+          desc.pad = out_pad_index++;
           g_array_append_val (lv2_class->out_group.ports, desc);
+        }
       } else if (lilv_port_is_a (lv2plugin, port, control_class)) {
-        if (is_input)
+        desc.type = GST_LV2_PORT_CONTROL;
+        if (is_input) {
+          lv2_class->num_control_in++;
           g_array_append_val (lv2_class->control_in_ports, desc);
-        else
+        } else {
+          lv2_class->num_control_out++;
           g_array_append_val (lv2_class->control_out_ports, desc);
+        }
+      } else if (lilv_port_is_a (lv2plugin, port, cv_class)) {
+        desc.type = GST_LV2_PORT_CV;
+        if (is_input) {
+          lv2_class->num_cv_in++;
+          g_array_append_val (lv2_class->control_in_ports, desc);
+        } else {
+          lv2_class->num_cv_out++;
+          g_array_append_val (lv2_class->control_out_ports, desc);
+        }
+      } else if (lilv_port_is_a (lv2plugin, port, event_class)) {
+        LilvNodes *supported = lilv_port_get_value (lv2plugin, port,
+            supports_event_pred);
+
+        GST_INFO ("%s: unhandled event port %d: %s, optional=%d, input=%d",
+            element_uri, j,
+            lilv_node_as_string (lilv_port_get_symbol (lv2plugin, port)),
+            is_optional, is_input);
+
+        if (lilv_nodes_size (supported) > 0) {
+          LilvIter *i;
+
+          for (i = lilv_nodes_begin (supported);
+              !lilv_nodes_is_end (supported, i);
+              i = lilv_nodes_next (supported, i)) {
+            const LilvNode *value = lilv_nodes_get (supported, i);
+            GST_INFO ("  type = %s", lilv_node_as_uri (value));
+          }
+        }
+        lilv_nodes_free (supported);
+        // FIXME: handle them
       } else {
-        /* unknown port type */
-        GST_INFO ("unhandled port %d: %s", j,
-            lilv_node_as_string (lilv_port_get_symbol (lv2plugin, port)));
-        continue;
+        /* unhandled port type */
+        const LilvNodes *classes = lilv_port_get_classes (lv2plugin, port);
+        GST_INFO ("%s: unhandled port %d: %s, optional=%d, input=%d",
+            element_uri, j,
+            lilv_node_as_string (lilv_port_get_symbol (lv2plugin, port)),
+            is_optional, is_input);
+        if (classes && lilv_nodes_size (classes) > 0) {
+          LilvIter *i;
+
+          // FIXME: we getting the same classe multiple times
+          for (i = lilv_nodes_begin (classes);
+              !lilv_nodes_is_end (classes, i);
+              i = lilv_nodes_next (classes, i)) {
+            const LilvNode *value = lilv_nodes_get (classes, i);
+            GST_INFO ("  class = %s", lilv_node_as_uri (value));
+          }
+        }
       }
     }
   }

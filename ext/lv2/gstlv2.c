@@ -42,6 +42,7 @@
 
 #include <gst/audio/audio-channels.h>
 #include <lv2/lv2plug.in/ns/ext/port-groups/port-groups.h>
+#include "lv2/lv2plug.in/ns/ext/event/event.h"
 
 GST_DEBUG_CATEGORY (lv2_debug);
 #define GST_CAT_DEFAULT lv2_debug
@@ -198,8 +199,19 @@ plugin_init (GstPlugin * plugin)
   world = lilv_world_new ();
   lilv_world_load_all (world);
 
+/* have been added after lilv-0.22.0, which is the last release */
+#ifndef LILV_URI_ATOM_PORT
+#define LILV_URI_ATOM_PORT    "http://lv2plug.in/ns/ext/atom#AtomPort"
+#endif
+#ifndef LILV_URI_CV_PORT
+#define LILV_URI_CV_PORT      "http://lv2plug.in/ns/lv2core#CVPort"
+#endif
+
+  atom_class = lilv_new_uri (world, LILV_URI_ATOM_PORT);
   audio_class = lilv_new_uri (world, LILV_URI_AUDIO_PORT);
   control_class = lilv_new_uri (world, LILV_URI_CONTROL_PORT);
+  cv_class = lilv_new_uri (world, LILV_URI_CV_PORT);
+  event_class = lilv_new_uri (world, LILV_URI_EVENT_PORT);
   input_class = lilv_new_uri (world, LILV_URI_INPUT_PORT);
   output_class = lilv_new_uri (world, LILV_URI_OUTPUT_PORT);
 
@@ -207,7 +219,9 @@ plugin_init (GstPlugin * plugin)
   toggled_prop = lilv_new_uri (world, LV2_CORE__toggled);
   designation_pred = lilv_new_uri (world, LV2_CORE__designation);
   in_place_broken_pred = lilv_new_uri (world, LV2_CORE__inPlaceBroken);
+  optional_pred = lilv_new_uri (world, LV2_CORE__optionalFeature);
   group_pred = lilv_new_uri (world, LV2_PORT_GROUPS__group);
+  supports_event_pred = lilv_new_uri (world, LV2_EVENT__supportsEvent);
 
   center_role = lilv_new_uri (world, LV2_PORT_GROUPS__center);
   left_role = lilv_new_uri (world, LV2_PORT_GROUPS__left);
@@ -275,8 +289,11 @@ __attribute__ ((destructor))
 #endif
      static void plugin_cleanup (GstPlugin * plugin)
 {
+  lilv_node_free (atom_class);
   lilv_node_free (audio_class);
   lilv_node_free (control_class);
+  lilv_node_free (cv_class);
+  lilv_node_free (event_class);
   lilv_node_free (input_class);
   lilv_node_free (output_class);
 
@@ -284,7 +301,9 @@ __attribute__ ((destructor))
   lilv_node_free (toggled_prop);
   lilv_node_free (designation_pred);
   lilv_node_free (in_place_broken_pred);
+  lilv_node_free (optional_pred);
   lilv_node_free (group_pred);
+  lilv_node_free (supports_event_pred);
 
   lilv_node_free (center_role);
   lilv_node_free (left_role);

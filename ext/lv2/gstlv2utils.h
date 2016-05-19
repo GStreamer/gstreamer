@@ -43,13 +43,23 @@ struct _GstLV2Group
   guint pad; /**< Gst pad index */
   gchar *symbol; /**< Gst pad name / LV2 group symbol */
   GArray *ports; /**< Array of GstLV2Port */
+  /* FIXME: not set as of now */
   gboolean has_roles; /**< TRUE iff all ports have a known role */
 };
+
+typedef enum {
+  GST_LV2_PORT_AUDIO = 0,
+  GST_LV2_PORT_CONTROL,
+  GST_LV2_PORT_CV
+} GstLV2PortType;
 
 struct _GstLV2Port
 {
   gint index; /**< LV2 port index (on LV2 plugin) */
-  gint pad; /**< Gst pad index (iff not part of a group) */
+  GstLV2PortType type; /**< Port type */
+  /**< Gst pad index (iff not part of a group), only for audio ports */
+  gint pad;
+  /* FIXME: not set as of now */
   LilvNode *role; /**< Channel position / port role */
   GstAudioChannelPosition position; /**< Channel position */
 };
@@ -78,6 +88,9 @@ struct _GstLV2Class
   guint properties;
 
   const LilvPlugin *plugin;
+
+  gint num_control_in, num_control_out;
+  gint num_cv_in, num_cv_out;
 
   GstLV2Group in_group; /**< Array of GstLV2Group */
   GstLV2Group out_group; /**< Array of GstLV2Group */
