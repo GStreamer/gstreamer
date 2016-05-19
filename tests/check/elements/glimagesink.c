@@ -186,6 +186,7 @@ GST_START_TEST (test_query_drain)
    * releases the buffers it currently owns, upon drain query. */
   query = gst_query_new_drain ();
   DO_CALL (do_peer_query_func, query);
+  gst_query_unref (query);
 
   /* Transfer buffers back to the downstream pool to be release
    * properly. This also make sure that all buffers are returned.
