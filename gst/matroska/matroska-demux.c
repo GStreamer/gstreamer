@@ -2753,8 +2753,6 @@ gst_matroska_demux_push_codec_data_all (GstMatroskaDemux * demux)
 {
   gint stream_nr;
 
-  GST_OBJECT_LOCK (demux);
-
   g_assert (demux->common.num_streams == demux->common.src->len);
   for (stream_nr = 0; stream_nr < demux->common.src->len; stream_nr++) {
     GstMatroskaTrackContext *stream;
@@ -2779,7 +2777,6 @@ gst_matroska_demux_push_codec_data_all (GstMatroskaDemux * demux)
     }
   }
 
-  GST_OBJECT_UNLOCK (demux);
 }
 
 static GstFlowReturn
