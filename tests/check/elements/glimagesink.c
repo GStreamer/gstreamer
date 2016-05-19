@@ -116,8 +116,6 @@ GST_START_TEST (test_query_drain)
   loop = g_main_loop_new (NULL, FALSE);
 #endif
 
-  setup_glimagesink ();
-
   /* GstBaseSink handles the drain query as well. */
   g_object_set (sinkelement, "enable-last-sample", TRUE, NULL);
 
@@ -210,8 +208,6 @@ GST_START_TEST (test_query_drain)
   fail_unless (gst_buffer_pool_set_active (pool, FALSE));
   gst_object_unref (pool);
 
-  cleanup_glimagesink ();
-
   if (loop)
     g_main_loop_unref (loop);
 }
@@ -226,7 +222,7 @@ glimagesink_suite (void)
 
   tcase_set_timeout (tc, 5);
 
-  tcase_add_checked_fixture (tc, setup_glimagesink, NULL);
+  tcase_add_checked_fixture (tc, setup_glimagesink, cleanup_glimagesink);
   tcase_add_test (tc, test_query_drain);
   suite_add_tcase (s, tc);
 
