@@ -332,29 +332,18 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-1760171459" class="expand-container">
-<div id="expander-control-1760171459" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-1760171459" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing+on+Linux.markdown#InstallingonLinux-Build">Linux</a>, <a href="Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing+on+Windows.markdown#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc basic-tutorial-8.c -o basic-tutorial-8 `pkg-config --cflags --libs gstreamer-1.0 gst-audio-1.0`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing+on+Linux.markdown#InstallingonLinux-Run">Linux</a>, <a href="Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing+on+Windows.markdown#InstallingonWindows-Run">Windows</a></p>
-<p><span>This tutorial plays an audible tone for varying frequency through the audio card and opens a window with a waveform representation of the tone. The waveform should be a sinusoid, but due to the refreshing of the window might not appear so.</span></p>
-<p>Required libraries: <code>gstreamer-0.10</code></p>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
+> ![Information](images/icons/emoticons/information.png)
+> Need help?
+>
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Build), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Build) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Build), or use this specific command on Linux:
+>
+> `` gcc basic-tutorial-8.c -o basic-tutorial-8 `pkg-config --cflags --libs gstreamer-1.0 gst-audio-1.0` ``
+>
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Run), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Run) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Run).
+>
+> This tutorial plays an audible tone for varying frequency through the audio card and opens a window with a waveform representation of the tone. The waveform should be a sinusoid, but due to the refreshing of the window might not appear so.
+>
+> Required libraries: `gstreamer-1.0`
 
 ## Walkthrough
 
@@ -366,7 +355,7 @@ Always Pads, and manually link the Request Pads of the `tee` element.
 
 Regarding the configuration of the `appsrc` and `appsink` elements:
 
-``` first-line: 159; theme: Default; brush: cpp; gutter: true
+```
 /* Configure appsrc */
 audio_caps_text = g_strdup_printf (AUDIO_CAPS, SAMPLE_RATE);
 audio_caps = gst_caps_from_string (audio_caps_text);
@@ -387,7 +376,7 @@ fired by `appsrc` when its internal queue of data is running low or
 almost full, respectively. We will use these signals to start and stop
 (respectively) our signal generation process.
 
-``` first-line: 166; theme: Default; brush: cpp; gutter: true
+```
 /* Configure appsink */
 g_object_set (data.app_sink, "emit-signals", TRUE, "caps", audio_caps, NULL);
 g_signal_connect (data.app_sink, "new-sample", G_CALLBACK (new_sample), &data);
@@ -404,7 +393,7 @@ Starting the pipeline, waiting for messages and final cleanup is done as
 usual. Let's review the callbacks we have just
 registered:
 
-``` first-line: 67; theme: Default; brush: cpp; gutter: true
+```
 /* This signal callback triggers when appsrc needs data. Here, we add an idle handler
  * to the mainloop to start pushing data into the appsrc */
 static void start_feed (GstElement *source, guint size, CustomData *data) {
@@ -433,7 +422,7 @@ We take note of the sourceid that `g_idle_add()` returns, so we can
 disable it
 later.
 
-``` first-line: 76; theme: Default; brush: cpp; gutter: true
+```
 /* This callback triggers when appsrc has enough data and we can stop sending.
  * We remove the idle handler from the mainloop */
 static void stop_feed (GstElement *source, CustomData *data) {
@@ -450,7 +439,7 @@ enough so we stop pushing data. Here we simply remove the idle function
 by using `g_source_remove()` (The idle function is implemented as a
 `GSource`).
 
-``` first-line: 22; theme: Default; brush: cpp; gutter: true
+```
 /* This method is called by the idle GSource in the mainloop, to feed CHUNK_SIZE bytes into appsrc.
  * The ide handler is added to the mainloop when appsrc requests us to start sending data (need-data signal)
  * and is removed when appsrc has enough data (enough-data signal).
@@ -500,7 +489,7 @@ We will skip over the waveform generation, since it is outside the scope
 of this tutorial (it is simply a funny way of generating a pretty
 psychedelic wave).
 
-``` first-line: 53; theme: Default; brush: cpp; gutter: true
+```
 /* Push the buffer into the appsrc */
 g_signal_emit_by_name (data->app_source, "push-buffer", buffer, &ret);
   
@@ -514,23 +503,23 @@ tutorial 1: Playbin2
 usage](Playback+tutorial+1+Playbin2+usage.markdown)), and then
 `gst_buffer_unref()` it since we no longer need it.
 
-``` first-line: 86; theme: Default; brush: cpp; gutter: true
+```
 /* The appsink has received a buffer */
-static void new_buffer (GstElement *sink, CustomData *data) {
-  GstBuffer *buffer;
+static void new_sample (GstElement *sink, CustomData *data) {
+  GstSample *sample;
   
   /* Retrieve the buffer */
-  g_signal_emit_by_name (sink, "pull-buffer", &buffer);
-  if (buffer) {
+  g_signal_emit_by_name (sink, "pull-sample", &sample);
+  if (sample) {
     /* The only thing we do in this example is print a * to indicate a received buffer */
     g_print ("*");
-    gst_buffer_unref (buffer);
+    gst_sample_unref (sample);
   }
 }
 ```
 
 Finally, this is the function that gets called when the
-`appsink` receives a buffer. We use the `pull-buffer` action signal to
+`appsink` receives a buffer. We use the `pull-sample` action signal to
 retrieve the buffer and then just print some indicator on the screen. We
 can retrieve the data pointer using the `GST_BUFFER_DATA` macro and the
 data size using the `GST_BUFFER_SIZE` macro in `GstBuffer`. Remember

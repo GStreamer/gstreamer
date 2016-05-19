@@ -84,7 +84,7 @@ in the SDK installation).
 
 **basic-tutorial-7.c**
 
-``` theme: Default; brush: cpp; gutter: true
+```
 #include <gst/gst.h>
   
 int main(int argc, char *argv[]) {

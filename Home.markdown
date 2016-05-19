@@ -9,6 +9,16 @@ Feel free to jump straight to the download section, start practicing
 with the tutorials, or read the F.A.Q. if you don’t know what this is
 all about.
 
+
+AA
+
+![](attachments/2424851.png)
+
+| test ![](attachments/2424851.png) bb | test2 |
+|------|-------|
+| aaa  | bbb   |
+|------|-------|
+
 <table>
 <colgroup>
 <col width="25%" />
@@ -18,7 +28,7 @@ all about.
 </colgroup>
 <tbody>
 <tr class="odd">
-<td><a href="Installing%2Bthe%2BSDK.html"><img src="attachments/327688/2424851.png" class="confluence-embedded-image" /></a>
+<td><a href="Installing%2Bthe%2BSDK.html"><img src="attachments/2424851.png" class="confluence-embedded-image" /></a>
 <h3 id="Home-Download" style="text-align: center;margin-top: 0.0px;">Download</h3>
 Download and install the GStreamer SDK</td>
 <td><a href="Tutorials.html"><img src="attachments/327688/2424852.png" class="confluence-embedded-image" /></a>

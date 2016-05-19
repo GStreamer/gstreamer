@@ -282,47 +282,15 @@ GSTREAMER_PLUGINS  := $(GSTREAMER_PLUGINS_CORE) $(GSTREAMER_PLUGINS_CODECS) play
 
 #### List of categories and included plugins
 
-<table>
-<thead>
-<tr>
-<th>Category</th>
-<th>Included plugins</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>GSTREAMER_PLUGINS_CORE</code></td>
-<td>coreelements coreindexers adder app audioconvert audiorate audioresample audiotestsrc ffmpegcolorspace gdp gio pango typefindfunctions videorate videoscale videotestsrc volume autodetect videofilter</td>
-</tr>
-<tr>
-<td><code>GSTREAMER_PLUGINS_PLAYBACK</code></td>
-<td>decodebin playbin</td>
-</tr>
-<tr>
-<td><code>GSTREAMER_PLUGINS_CODECS</code></td>
-<td>subparse ogg theora vorbis alaw annodex apetag audioparsers auparse avi flac flv flxdec icydemux id3demux isomp4 jpeg matroska mulaw multipart png speex taglib wavenc wavpack wavparse y4menc adpcmdec adpcmenc aiff cdxaparse dtmf dvbsuboverlay dvdspu fragmented hdvparse id3tag ivfparse jp2k kate mve mxf nsf nuvdemux opus pcapparse pnm schro siren subenc tta videoparsersbad vmnc vp8 y4mdec</td>
-</tr>
-<tr>
-<td><code>GSTREAMER_PLUGINS_VIS</code></td>
-<td>libvisual goom goom2k1 audiovisualizers</td>
-</tr>
-<tr>
-<td><code>GSTREAMER_PLUGINS_EFFECTS</code></td>
-<td>alpha alphacolor audiofx cutter debug deinterlace effectv equalizer gdkpixbuf imagefreeze interleave level multifile replaygain shapewipe smpte spectrum videobox videocrop videomixer autoconvert bayer coloreffects faceoverlay fieldanalysis freeverb frei0r gaudieffects geometrictransform interlace jp2kdecimator liveadder rawparse removesilence scaletempoplugin segmentclip smooth speed stereo videofiltersbad videomeasure videosignal</td>
-</tr>
-<tr class="even">
-<td><code>GSTREAMER_PLUGINS_NET</code></td>
-<td>rtsp rtp rtpmanager souphttpsrc udp dataurisrc rtpmux rtpvp8 sdpelem</td>
-</tr>
-<tr class="odd">
-<td><code>GSTREAMER_PLUGINS_CODECS_GPL</code></td>
-<td>assrender</td>
-</tr>
-<tr class="even">
-<td><code>GSTREAMER_PLUGINS_SYS</code></td>
-<td>eglglessink opensles amc</td>
-</tr>
-</tbody>
-</table>
+| Category |  Included plugins |
+|--|--|
+| `GSTREAMER_PLUGINS_CORE` | coreelements coreindexers adder app audioconvert audiorate audioresample audiotestsrc ffmpegcolorspace gdp gio pango typefindfunctions videorate videoscale videotestsrc volume autodetect videofilter |
+| `GSTREAMER_PLUGINS_PLAYBACK` | decodebin playbin |
+| `GSTREAMER_PLUGINS_CODECS` | subparse ogg theora vorbis alaw annodex apetag audioparsers auparse avi flac flv flxdec icydemux id3demux isomp4 jpeg matroska mulaw multipart png speex taglib wavenc wavpack wavparse y4menc adpcmdec adpcmenc aiff cdxaparse dtmf dvbsuboverlay dvdspu fragmented hdvparse id3tag ivfparse jp2k kate mve mxf nsf nuvdemux opus pcapparse pnm schro siren subenc tta videoparsersbad vmnc vp8 y4mdec |
+| `GSTREAMER_PLUGINS_VIS` | libvisual goom goom2k1 audiovisualizers |
+| `GSTREAMER_PLUGINS_EFFECTS` | alpha alphacolor audiofx cutter debug deinterlace effectv equalizer gdkpixbuf imagefreeze interleave level multifile replaygain shapewipe smpte spectrum videobox videocrop videomixer autoconvert bayer coloreffects faceoverlay fieldanalysis freeverb frei0r gaudieffects geometrictransform interlace jp2kdecimator liveadder rawparse removesilence scaletempoplugin segmentclip smooth speed stereo videofiltersbad videomeasure videosignal |
+| `GSTREAMER_PLUGINS_NET` | rtsp rtp rtpmanager souphttpsrc udp dataurisrc rtpmux rtpvp8 sdpelem |
+| `GSTREAMER_PLUGINS_CODECS_GPL` | assrender |
+| `GSTREAMER_PLUGINS_SYS` | eglglessink opensles amc |
 
 Build and run your application as explained in the **Building the tutorials** section.

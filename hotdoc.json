@@ -4,5 +4,6 @@
     "index": "Home.markdown", 
     "output": "built_doc", 
     "project_name": "gstdotcom", 
-    "sitemap": "sitemap.txt"
+    "sitemap": "sitemap.txt",
+    "extra_assets": ["attachments", "images"]
 }
