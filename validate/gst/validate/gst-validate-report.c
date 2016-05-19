@@ -199,6 +199,9 @@ gst_validate_report_load_issues (void)
       _("GST_FLOW_ERROR returned without posting an ERROR on the bus"),
       _("Element MUST post a GST_MESSAGE_ERROR with GST_ELEMENT_ERROR before"
           " returning GST_FLOW_ERROR"));
+  REGISTER_VALIDATE_ISSUE (WARNING, BUFFER_MISSING_DISCONT,
+      _("Buffer didn't have expected DISCONT flag"),
+      _("Buffers after SEGMENT and FLUSH must have a DISCONT flag"));
 
   REGISTER_VALIDATE_ISSUE (ISSUE, CAPS_IS_MISSING_FIELD,
       _("caps is missing a required field for its type"),

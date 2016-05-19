@@ -890,6 +890,7 @@ gst_validate_pad_monitor_init (GstValidatePadMonitor * pad_monitor)
   pad_monitor->expired_events = NULL;
   gst_segment_init (&pad_monitor->segment, GST_FORMAT_BYTES);
   pad_monitor->first_buffer = TRUE;
+  pad_monitor->pending_buffer_discont = TRUE;
 
   pad_monitor->timestamp_range_start = GST_CLOCK_TIME_NONE;
   pad_monitor->timestamp_range_end = GST_CLOCK_TIME_NONE;
@@ -1113,6 +1114,18 @@ static void
         "Timestamp %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT
         " is out of range of received input", GST_TIME_ARGS (ts),
         GST_TIME_ARGS (ts_end));
+  }
+}
+
+static void
+gst_validate_pad_monitor_check_discont (GstValidatePadMonitor * pad_monitor,
+    GstBuffer * buffer)
+{
+  if (pad_monitor->pending_buffer_discont) {
+    if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
+      GST_VALIDATE_REPORT (pad_monitor, BUFFER_MISSING_DISCONT,
+          "Buffer is missing a DISCONT flag");
+    pad_monitor->pending_buffer_discont = FALSE;
   }
 }
 
@@ -1569,6 +1582,9 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
       }
       pad_monitor->pending_flush_stop = FALSE;
 
+      /* Buffers following a FLUSH should have the DISCONT flag set */
+      pad_monitor->pending_buffer_discont = TRUE;
+
       /* cleanup our data */
       gst_validate_pad_monitor_flush (pad_monitor);
     }
@@ -1728,6 +1744,8 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
       }
 
       pad_monitor->pending_eos_seqnum = seqnum;
+      /* Buffers following a SEGMENT should have the DISCONT flag set */
+      pad_monitor->pending_buffer_discont = TRUE;
 
       if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
         gst_validate_pad_monitor_add_expected_newsegment (pad_monitor, event);
@@ -2058,6 +2076,7 @@ gst_validate_pad_monitor_chain_func (GstPad * pad, GstObject * parent,
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
 
+  gst_validate_pad_monitor_check_discont (pad_monitor, buffer);
   gst_validate_pad_monitor_check_right_buffer (pad_monitor, buffer);
   gst_validate_pad_monitor_check_first_buffer (pad_monitor, buffer);
   gst_validate_pad_monitor_update_buffer_data (pad_monitor, buffer);
@@ -2246,6 +2265,7 @@ gst_validate_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (monitor);
   GST_VALIDATE_MONITOR_LOCK (monitor);
 
+  gst_validate_pad_monitor_check_discont (monitor, buffer);
   gst_validate_pad_monitor_check_first_buffer (monitor, buffer);
   gst_validate_pad_monitor_update_buffer_data (monitor, buffer);
   gst_validate_pad_monitor_check_eos (monitor, buffer);

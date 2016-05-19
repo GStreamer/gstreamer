@@ -89,6 +89,10 @@ struct _GstValidatePadMonitor {
   guint32 pending_newsegment_seqnum;
   guint32 pending_eos_seqnum;
 
+  /* Whether the next buffer should have a DISCONT flag on it, because
+   * it's the first one, or follows a SEGMENT and/or a FLUSH */
+  gboolean pending_buffer_discont;
+  
   GstClockTime pending_seek_accurate_time;
 
   GstEvent *expected_segment;

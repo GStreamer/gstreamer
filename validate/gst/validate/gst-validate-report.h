@@ -64,6 +64,7 @@ typedef enum {
 #define BUFFER_AFTER_EOS                         _QUARK("buffer::after-eos")
 #define WRONG_BUFFER                             _QUARK("buffer::not-expected-one")
 #define FLOW_ERROR_WITHOUT_ERROR_MESSAGE         _QUARK("buffer::flow-error-without-error-message")
+#define BUFFER_MISSING_DISCONT                   _QUARK("buffer::missing-discont")
 
 #define CAPS_IS_MISSING_FIELD                    _QUARK("caps::is-missing-field")
 #define CAPS_FIELD_HAS_BAD_TYPE                  _QUARK("caps::field-has-bad-type")
