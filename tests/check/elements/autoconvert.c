@@ -140,6 +140,7 @@ GST_START_TEST (test_autoconvert_simple)
   gst_bus_set_flushing (bus, TRUE);
   gst_object_unref (bus);
 
+  gst_check_drop_buffers ();
   gst_pad_set_active (test_src_pad, FALSE);
   gst_pad_set_active (test_sink_pad, FALSE);
   gst_check_teardown_src_pad (autoconvert);
