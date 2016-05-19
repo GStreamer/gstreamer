@@ -86,6 +86,8 @@ teardown (void)
   gst_object_unref (window);
   gst_object_unref (context);
   gst_object_unref (display);
+  if (shader)
+    gst_object_unref (shader);
 }
 
 static void
