@@ -556,16 +556,6 @@ gst_vaapi_video_memory_is_span (GstVaapiVideoMemory * mem1,
 G_DEFINE_TYPE (GstVaapiVideoAllocator,
     gst_vaapi_video_allocator, GST_TYPE_ALLOCATOR);
 
-static GstMemory *
-gst_vaapi_video_allocator_alloc (GstAllocator * allocator, gsize size,
-    GstAllocationParams * params)
-{
-  g_warning ("use gst_vaapi_video_memory_new() to allocate from "
-      "GstVaapiVideoMemory allocator");
-
-  return NULL;
-}
-
 static void
 gst_vaapi_video_allocator_free (GstAllocator * allocator, GstMemory * mem)
 {
@@ -594,7 +584,6 @@ gst_vaapi_video_allocator_class_init (GstVaapiVideoAllocatorClass * klass)
       "vaapivideomemory", 0, "VA-API video memory allocator");
 
   object_class->finalize = gst_vaapi_video_allocator_finalize;
-  allocator_class->alloc = gst_vaapi_video_allocator_alloc;
   allocator_class->free = gst_vaapi_video_allocator_free;
 }
 
@@ -614,6 +603,8 @@ gst_vaapi_video_allocator_init (GstVaapiVideoAllocator * allocator)
       gst_vaapi_video_memory_share;
   base_allocator->mem_is_span = (GstMemoryIsSpanFunction)
       gst_vaapi_video_memory_is_span;
+
+  GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
 
 static gboolean
