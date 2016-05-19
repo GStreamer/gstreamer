@@ -29,6 +29,8 @@ tmp=$tmp/git-update.$(date +%Y%m%d-%H%M-).$RANDOM.$RANDOM.$RANDOM.$$
 ERROR_LOG="$tmp/failures.log"
 ERROR_RETURN=255
 
+CPUCORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu  2>/dev/null || echo "1")
+
 for m in $CORE $MODULES $EXTRA_MODULES; do
   if test -d $m; then
     echo "+ updating $m"
@@ -91,7 +93,7 @@ build()
     fi
 
     echo "+ $1: make"
-    make > "$tmp/$1-make.log" 2>&1
+    MAKEFLAGS="-j$CPUCORES $MAKEFLAGS" make > "$tmp/$1-make.log" 2>&1
     if test $? -ne 0
     then
       echo "$1: make [$tmp/$1-make.log]" >> $ERROR_LOG
