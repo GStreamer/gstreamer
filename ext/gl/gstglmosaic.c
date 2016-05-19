@@ -187,6 +187,7 @@ gst_gl_mosaic_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mixer);
 
+  g_clear_object (&mosaic->shader);
   //blocking call, wait the opengl thread has compiled the shader
   return gst_gl_context_gen_shader (GST_GL_BASE_MIXER (mixer)->context,
       mosaic_v_src, mosaic_f_src, &mosaic->shader);
