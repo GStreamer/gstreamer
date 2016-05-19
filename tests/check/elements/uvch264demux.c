@@ -373,6 +373,7 @@ GST_START_TEST (test_no_data)
   fail_unless (buffer_h264 == NULL && buffer_jpg != NULL);
   fail_unless (buffer_nv12 == NULL && buffer_yuy2 == NULL);
   fail_unless (gerror == NULL && error_debug == NULL);
+  gst_buffer_unref (buffer_jpg);
 
   _teardown_test ();
 }
@@ -644,6 +645,7 @@ GST_START_TEST (test_no_sos_marker)
   fail_unless (gerror == NULL);
   fail_unless (gst_buffer_get_size (buffer_h264) == sizeof (h264_data));
   fail_if (gst_buffer_memcmp (buffer_h264, 0, h264_data, sizeof (h264_data)));
+  gst_buffer_unref (buffer_h264);
 
   _teardown_test ();
 }
