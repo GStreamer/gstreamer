@@ -2,10 +2,6 @@
 
 ### Choose your platform
 
-| | |
-|-|-|
-| aa | bb |
-
 <table>
 <colgroup>
 <col width="33%" />
