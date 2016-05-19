@@ -79,12 +79,24 @@ gst_audio_aggregator_pad_flush_pad (GstAggregatorPad * aggpad,
     GstAggregator * aggregator);
 
 static void
+gst_audio_aggregator_pad_finalize (GObject * object)
+{
+  GstAudioAggregatorPad *pad = (GstAudioAggregatorPad *) object;
+
+  gst_buffer_replace (&pad->priv->buffer, NULL);
+
+  G_OBJECT_CLASS (gst_audio_aggregator_pad_parent_class)->finalize (object);
+}
+
+static void
 gst_audio_aggregator_pad_class_init (GstAudioAggregatorPadClass * klass)
 {
+  GObjectClass *gobject_class = (GObjectClass *) klass;
   GstAggregatorPadClass *aggpadclass = (GstAggregatorPadClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstAudioAggregatorPadPrivate));
 
+  gobject_class->finalize = gst_audio_aggregator_pad_finalize;
   aggpadclass->flush = GST_DEBUG_FUNCPTR (gst_audio_aggregator_pad_flush_pad);
 }
 
