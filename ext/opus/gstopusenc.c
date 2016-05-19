@@ -1044,13 +1044,14 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
   gst_buffer_unmap (outbuf, &omap);
 
   if (outsize < 0) {
-    GST_ERROR_OBJECT (enc, "Encoding failed: %d", outsize);
+    GST_ELEMENT_ERROR (enc, STREAM, ENCODE, ("Encoding failed"),
+        ("Encoding ifailed (%d): %s", outsize, opus_strerror (outsize)));
     ret = GST_FLOW_ERROR;
     goto done;
   } else if (outsize > max_payload_size) {
-    GST_WARNING_OBJECT (enc,
-        "Encoded size %d is higher than max payload size (%d bytes)",
-        outsize, max_payload_size);
+    GST_ELEMENT_ERROR (enc, STREAM, ENCODE, ("Encoder error"),
+        ("Encoded size %d is higher than max payload size (%d bytes)",
+            outsize, max_payload_size));
     ret = GST_FLOW_ERROR;
     goto done;
   }
