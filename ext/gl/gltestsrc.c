@@ -494,7 +494,9 @@ _src_smpte_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
   src->base.attributes[1].offset = 4 * sizeof (gfloat);
   src->base.attributes[1].stride = sizeof (struct XYZWRGB);
 
-  src->base.shader = src->color_shader;
+  if (src->base.shader)
+    gst_object_unref (src->base.shader);
+  src->base.shader = gst_object_ref (src->color_shader);
   src->base.vertices = (gfloat *) coord;
   src->base.vertices_size = sizeof (struct XYZWRGB) * N_QUADS * 4;
   src->base.indices = plane_indices;
@@ -510,7 +512,9 @@ _src_smpte_fill_bound_fbo (gpointer impl)
   gint attr_color_position = -1;
 
   src->base.n_attributes = 2;
-  src->base.shader = src->color_shader;
+  if (src->base.shader)
+    gst_object_unref (src->base.shader);
+  src->base.shader = gst_object_ref (src->color_shader);
   src->base.n_indices = (N_QUADS - 1) * 6;
   src->base.index_offset = 0;
   if (!_src_shader_fill_bound_fbo (impl))
@@ -519,7 +523,9 @@ _src_smpte_fill_bound_fbo (gpointer impl)
 
   src->base.attributes[0].location = src->attr_snow_position;
   src->base.n_attributes = 1;
-  src->base.shader = src->snow_shader;
+  if (src->base.shader)
+    gst_object_unref (src->base.shader);
+  src->base.shader = gst_object_ref (src->snow_shader);
   src->base.n_indices = 6;
   src->base.index_offset = (N_QUADS - 1) * 6 * sizeof (gushort);
   gst_gl_shader_use (src->snow_shader);
@@ -545,6 +551,11 @@ _src_smpte_free (gpointer impl)
 
   g_free ((gpointer) src->base.vertices);
   g_free ((gpointer) src->base.indices);
+
+  if (src->snow_shader)
+    gst_object_unref (src->snow_shader);
+  if (src->color_shader)
+    gst_object_unref (src->color_shader);
 
   g_free (impl);
 }
