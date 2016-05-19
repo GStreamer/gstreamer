@@ -393,7 +393,7 @@ gst_lv2_source_fill (GstBaseSrc * base, guint64 offset,
   lv2->next_sample = next_sample;
   lv2->next_byte = next_byte;
 
-  GST_INFO_OBJECT (lv2, "generating %u samples at ts %" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (lv2, "generating %u samples at ts %" GST_TIME_FORMAT,
       samples, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
 
   gst_buffer_map (buffer, &map, GST_MAP_WRITE);
@@ -406,13 +406,13 @@ gst_lv2_source_fill (GstBaseSrc * base, guint64 offset,
       lv2_port = &g_array_index (lv2_group->ports, GstLV2Port, j);
       lilv_instance_connect_port (lv2->lv2.instance, lv2_port->index,
           out + (j * samples));
-      GST_INFO_OBJECT (lv2, "connected port %d/%d", j, lv2_group->ports->len);
+      GST_LOG_OBJECT (lv2, "connected port %d/%d", j, lv2_group->ports->len);
     }
   } else {
     lv2_port = &g_array_index (lv2_group->ports, GstLV2Port, 0);
     lilv_instance_connect_port (lv2->lv2.instance, lv2_port->index,
         (gfloat *) map.data);
-    GST_INFO_OBJECT (lv2, "connected port 0");
+    GST_LOG_OBJECT (lv2, "connected port 0");
   }
 
   lilv_instance_run (lv2->lv2.instance, samples);

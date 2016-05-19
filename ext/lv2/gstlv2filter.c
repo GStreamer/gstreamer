@@ -319,8 +319,8 @@ gst_lv2_filter_transform_data (GstLV2Filter * self,
   lv2_group = &lv2_class->lv2.in_group;
   samples = nframes / lv2_group->ports->len;
   in = g_new0 (gfloat, nframes);
-  GST_INFO ("in : samples=%u, nframes=%u, ports=%d", samples, nframes,
-      lv2_group->ports->len);
+  GST_LOG_OBJECT (self, "in : samples=%u, nframes=%u, ports=%d", samples,
+      nframes, lv2_group->ports->len);
 
   if (lv2_group->ports->len > 1)
     gst_lv2_filter_deinterleave_data (lv2_group->ports->len, in,
@@ -336,8 +336,8 @@ gst_lv2_filter_transform_data (GstLV2Filter * self,
   lv2_group = &lv2_class->lv2.out_group;
   out_samples = nframes / lv2_group->ports->len;
   out = g_new0 (gfloat, samples * lv2_group->ports->len);
-  GST_INFO ("out: samples=%u, nframes=%u, ports=%d", out_samples, nframes,
-      lv2_group->ports->len);
+  GST_LOG_OBJECT (self, "out: samples=%u, nframes=%u, ports=%d", out_samples,
+      nframes, lv2_group->ports->len);
   for (j = 0; j < lv2_group->ports->len; ++j) {
     lv2_port = &g_array_index (lv2_group->ports, GstLV2Port, j);
     lilv_instance_connect_port (self->lv2.instance, lv2_port->index,
