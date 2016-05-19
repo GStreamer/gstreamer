@@ -1872,6 +1872,7 @@ GST_START_TEST (test_image_location_switching)
     g_free (filenames[i]);
   }
   g_signal_handler_disconnect (src, notify_id);
+  gst_object_unref (src);
 }
 
 GST_END_TEST;
