@@ -2307,16 +2307,19 @@ gst_ah_camera_get_parameters (GstAHCamera * self)
   GstAHCParameters *params = NULL;
 
   object = AHC_CALL (return NULL, Object, getParameters);
-  if (object) {
-    params = g_slice_new0 (GstAHCParameters);
-    params->object = (*env)->NewGlobalRef (env, object);
-    (*env)->DeleteLocalRef (env, object);
-    if (!params->object) {
-      GST_ERROR ("Failed to create global reference");
-      (*env)->ExceptionClear (env);
-      g_slice_free (GstAHCParameters, params);
-      return NULL;
-    }
+  if (!object) {
+    GST_WARNING ("android.hardware.Camera.getParameter is NULL");
+    return NULL;
+  }
+
+  params = g_slice_new0 (GstAHCParameters);
+  params->object = (*env)->NewGlobalRef (env, object);
+  (*env)->DeleteLocalRef (env, object);
+  if (!params->object) {
+    GST_ERROR ("Failed to create global reference");
+    (*env)->ExceptionClear (env);
+    g_slice_free (GstAHCParameters, params);
+    return NULL;
   }
 
   GST_DEBUG ("return parameters %p", params->object);
