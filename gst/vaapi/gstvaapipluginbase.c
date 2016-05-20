@@ -732,7 +732,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META);
     if (!gst_buffer_pool_set_config (pool, config))
-      goto config_failed;
+      goto error_config_failed;
   }
 
   config = gst_buffer_pool_get_config (pool);
@@ -755,7 +755,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 #endif
 
   if (!gst_buffer_pool_set_config (pool, config))
-    goto config_failed;
+    goto error_config_failed;
 
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
@@ -783,7 +783,7 @@ error_create_pool:
     GST_ERROR_OBJECT (plugin, "failed to create buffer pool");
     return FALSE;
   }
-config_failed:
+error_config_failed:
   {
     if (pool)
       gst_object_unref (pool);
