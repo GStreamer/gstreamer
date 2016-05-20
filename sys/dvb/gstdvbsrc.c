@@ -2549,6 +2549,11 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
         set_prop (props->props, &n, DTV_MODULATION, object->modulation);
 
       if (object->delsys == SYS_DVBS2) {
+        if (object->stream_id > 255) {
+          GST_WARNING_OBJECT (object, "Invalid (> 255) DVB-S2 stream ID '%d'. "
+              "Disabling sub-stream filtering", object->stream_id);
+          object->stream_id = NO_STREAM_ID_FILTER;
+        }
         set_prop (props->props, &n, DTV_PILOT, object->pilot);
         set_prop (props->props, &n, DTV_ROLLOFF, object->rolloff);
         set_prop (props->props, &n, DTV_STREAM_ID, object->stream_id);
