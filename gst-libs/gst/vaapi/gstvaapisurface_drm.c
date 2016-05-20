@@ -114,7 +114,6 @@ fill_video_info (GstVideoInfo * vip, GstVideoFormat format, guint width,
 {
   guint i;
 
-  gst_video_info_init (vip);
   gst_video_info_set_format (vip, format, width, height);
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (vip); i++) {
     GST_VIDEO_INFO_PLANE_OFFSET (vip, i) = offset[i];

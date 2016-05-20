@@ -157,7 +157,6 @@ new_codec_state (gint width, gint height, gint fps_n, gint fps_d)
 
   state = g_slice_new0 (GstVideoCodecState);
   state->ref_count = 1;
-  gst_video_info_init (&state->info);
   gst_video_info_set_format (&state->info, GST_VIDEO_FORMAT_ENCODED, width,
       height);
 

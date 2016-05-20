@@ -500,7 +500,6 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
   if (!pool)
     goto error_create_pool;
 
-  gst_video_info_init (&vi);
   gst_video_info_from_caps (&vi, caps);
   if (GST_VIDEO_INFO_FORMAT (&vi) == GST_VIDEO_FORMAT_ENCODED) {
     GST_DEBUG ("assume video buffer pool format is NV12");
@@ -694,7 +693,6 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   if (!gst_vaapi_plugin_base_ensure_display (plugin))
     goto error_ensure_display;
 
-  gst_video_info_init (&vi);
   gst_video_info_from_caps (&vi, caps);
   if (GST_VIDEO_INFO_FORMAT (&vi) == GST_VIDEO_FORMAT_ENCODED)
     gst_video_info_set_format (&vi, GST_VIDEO_FORMAT_NV12,

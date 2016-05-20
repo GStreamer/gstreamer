@@ -1140,7 +1140,6 @@ ensure_srcpad_buffer_pool (GstVaapiPostproc * postproc, GstCaps * caps)
   GstVideoInfo vi;
   GstVaapiVideoPool *pool;
 
-  gst_video_info_init (&vi);
   gst_video_info_from_caps (&vi, caps);
   gst_video_info_change_format (&vi, postproc->format,
       GST_VIDEO_INFO_WIDTH (&vi), GST_VIDEO_INFO_HEIGHT (&vi));
