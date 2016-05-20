@@ -2009,6 +2009,9 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     }
     if (!qtdemux->pending_newsegment) {
       qtdemux->pending_newsegment = gst_event_new_segment (&qtdemux->segment);
+      if (qtdemux->segment_seqnum)
+        gst_event_set_seqnum (qtdemux->pending_newsegment,
+            qtdemux->segment_seqnum);
     }
   }
 }
@@ -5951,9 +5954,13 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
               demux->moov_node_compressed = NULL;
             } else {
               /* prepare newsegment to send when streaming actually starts */
-              if (!demux->pending_newsegment)
+              if (!demux->pending_newsegment) {
                 demux->pending_newsegment =
                     gst_event_new_segment (&demux->segment);
+                if (demux->segment_seqnum)
+                  gst_event_set_seqnum (demux->pending_newsegment,
+                      demux->segment_seqnum);
+              }
             }
 
             demux->last_moov_offset = demux->offset;
@@ -6033,6 +6040,9 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
                 gst_segment_init (&segment, GST_FORMAT_TIME);
                 GST_DEBUG_OBJECT (demux, "new pending_newsegment");
                 demux->pending_newsegment = gst_event_new_segment (&segment);
+                if (demux->segment_seqnum)
+                  gst_event_set_seqnum (demux->pending_newsegment,
+                      demux->segment_seqnum);
               }
               qtdemux_expose_streams (demux);
             }
