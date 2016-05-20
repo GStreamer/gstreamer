@@ -141,6 +141,7 @@ struct _GstDeinterlace
   GstAllocationParams params;
 
   gboolean passthrough;
+  gboolean discont;
 
   GstClockTime field_duration; /* Duration of one field */
 

@@ -832,6 +832,8 @@ gst_deinterlace_reset (GstDeinterlace * self)
   self->need_more = FALSE;
   self->have_eos = FALSE;
 
+  self->discont = TRUE;
+
   gst_deinterlace_set_allocation (self, NULL, NULL, NULL);
 }
 
@@ -1638,6 +1640,10 @@ restart:
         GST_TIME_ARGS (GST_BUFFER_DURATION (field1_buffer)),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (field1_buffer) +
             GST_BUFFER_DURATION (field1_buffer)));
+    if (self->discont) {
+      GST_BUFFER_FLAG_SET (field1_buffer, GST_BUFFER_FLAG_DISCONT);
+      self->discont = FALSE;
+    }
     return gst_pad_push (self->srcpad, field1_buffer);
   } else if (IS_TELECINE (interlacing_mode)
       && GST_VIDEO_FRAME_IS_INTERLACED (field1->frame) && !same_buffer) {
@@ -1805,6 +1811,10 @@ restart:
             GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
             GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf) +
                 GST_BUFFER_DURATION (outbuf)));
+        if (self->discont) {
+          GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+          self->discont = FALSE;
+        }
         ret = gst_pad_push (self->srcpad, outbuf);
       } else {
         ret = GST_FLOW_OK;
@@ -2067,6 +2077,7 @@ gst_deinterlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
     GST_DEBUG_OBJECT (self, "DISCONT buffer, resetting history");
     gst_deinterlace_reset_history (self, FALSE);
+    self->discont = TRUE;
   }
 
   gst_deinterlace_push_history (self, buf);
