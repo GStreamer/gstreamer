@@ -856,6 +856,9 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
     goto fill_image_error;
   gst_video_frame_unmap (&vframe);
 
+  if (vframe.info.finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB) {
+    self->params.tcp_mct = 1;
+  }
   opj_setup_encoder (enc, &self->params, image);
 
 #ifdef HAVE_OPENJPEG_1
