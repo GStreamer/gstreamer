@@ -671,6 +671,28 @@ gst_video_info_change_format (GstVideoInfo * vip, GstVideoFormat format,
 }
 
 /**
+ * gst_video_info_changed:
+ * @old: old #GstVideoInfo
+ * @new: new #GstVideoInfo
+ *
+ * Compares @old and @new
+ *
+ * Returns: %TRUE if @old has different format/width/height than
+ * @new. Otherwise, %FALSE.
+ **/
+gboolean
+gst_video_info_changed (GstVideoInfo * old, GstVideoInfo * new)
+{
+  if (GST_VIDEO_INFO_FORMAT (old) != GST_VIDEO_INFO_FORMAT (new))
+    return TRUE;
+  if (GST_VIDEO_INFO_WIDTH (old) != GST_VIDEO_INFO_WIDTH (new))
+    return TRUE;
+  if (GST_VIDEO_INFO_HEIGHT (old) != GST_VIDEO_INFO_HEIGHT (new))
+    return TRUE;
+  return FALSE;
+}
+
+/**
  * gst_vaapi_create_test_display:
  *
  * Creates a temporal #GstVaapiDisplay instance, just for testing the

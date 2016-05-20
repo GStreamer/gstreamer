@@ -24,6 +24,7 @@
 #include "gstvaapivideobufferpool.h"
 #include "gstvaapivideobuffer.h"
 #include "gstvaapivideomemory.h"
+#include "gstvaapipluginutil.h"
 #if (USE_GLX || USE_EGL)
 #include "gstvaapivideometa_texture.h"
 #endif
@@ -157,11 +158,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
     g_clear_object (&priv->allocator);
   }
 
-  changed_caps = !priv->allocator ||
-      GST_VIDEO_INFO_FORMAT (cur_vip) != GST_VIDEO_INFO_FORMAT (new_vip) ||
-      GST_VIDEO_INFO_WIDTH (cur_vip) != GST_VIDEO_INFO_WIDTH (new_vip) ||
-      GST_VIDEO_INFO_HEIGHT (cur_vip) != GST_VIDEO_INFO_HEIGHT (new_vip);
-
+  changed_caps = !priv->allocator || gst_video_info_changed (cur_vip, new_vip);
   if (changed_caps) {
     const GstVideoInfo *alloc_vip;
     guint flags = 0;

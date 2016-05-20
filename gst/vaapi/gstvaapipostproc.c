@@ -833,14 +833,10 @@ error_invalid_buffer:
 static gboolean
 video_info_changed (GstVideoInfo * old_vip, GstVideoInfo * new_vip)
 {
-  if (GST_VIDEO_INFO_FORMAT (old_vip) != GST_VIDEO_INFO_FORMAT (new_vip))
+  if (gst_video_info_changed (old_vip, new_vip))
     return TRUE;
   if (GST_VIDEO_INFO_INTERLACE_MODE (old_vip) !=
       GST_VIDEO_INFO_INTERLACE_MODE (new_vip))
-    return TRUE;
-  if (GST_VIDEO_INFO_WIDTH (old_vip) != GST_VIDEO_INFO_WIDTH (new_vip))
-    return TRUE;
-  if (GST_VIDEO_INFO_HEIGHT (old_vip) != GST_VIDEO_INFO_HEIGHT (new_vip))
     return TRUE;
   return FALSE;
 }

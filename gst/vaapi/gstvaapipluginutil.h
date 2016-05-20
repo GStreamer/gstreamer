@@ -124,6 +124,10 @@ gst_video_info_change_format (GstVideoInfo * vip, GstVideoFormat format,
     guint width, guint height);
 
 G_GNUC_INTERNAL
+gboolean
+gst_video_info_changed (GstVideoInfo * old, GstVideoInfo * new);
+
+G_GNUC_INTERNAL
 GstVaapiDisplay *
 gst_vaapi_create_test_display (void);
 
