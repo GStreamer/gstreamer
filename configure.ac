@@ -524,6 +524,7 @@ AG_GST_CHECK_PLUGIN(smooth)
 AG_GST_CHECK_PLUGIN(speed)
 AG_GST_CHECK_PLUGIN(subenc)
 AG_GST_CHECK_PLUGIN(stereo)
+AG_GST_CHECK_PLUGIN(timecode)
 AG_GST_CHECK_PLUGIN(tta)
 AG_GST_CHECK_PLUGIN(videofilters)
 AG_GST_CHECK_PLUGIN(videomeasure)
@@ -3642,6 +3643,7 @@ gst/speed/Makefile
 gst/subenc/Makefile
 gst/stereo/Makefile
 gst/tta/Makefile
+gst/timecode/Makefile
 gst/videofilters/Makefile
 gst/videomeasure/Makefile
 gst/videoparsers/Makefile
