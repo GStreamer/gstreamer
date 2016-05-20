@@ -44,8 +44,7 @@ enum
 
 struct _GstVaapiVideoBufferPoolPrivate
 {
-  GstVideoInfo video_info[2];
-  guint video_info_index;
+  GstVideoInfo video_info;
   GstAllocator *allocator;
   GstVideoInfo alloc_info;
   GstVaapiDisplay *display;
@@ -138,8 +137,8 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   GstVaapiVideoBufferPoolPrivate *const priv =
       GST_VAAPI_VIDEO_BUFFER_POOL (pool)->priv;
   GstCaps *caps = NULL;
-  GstVideoInfo *const cur_vip = &priv->video_info[priv->video_info_index];
-  GstVideoInfo *const new_vip = &priv->video_info[!priv->video_info_index];
+  GstVideoInfo *const cur_vip = &priv->video_info;
+  GstVideoInfo new_vip;
   GstVideoAlignment align;
   GstAllocator *allocator;
   gboolean changed_caps, use_dmabuf_memory;
@@ -148,7 +147,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
     goto error_invalid_config;
   if (!caps)
     goto error_no_caps;
-  if (!gst_video_info_from_caps (new_vip, caps))
+  if (!gst_video_info_from_caps (&new_vip, caps))
     goto error_invalid_caps;
 
   use_dmabuf_memory = gst_buffer_pool_config_has_option (config,
@@ -158,7 +157,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
     g_clear_object (&priv->allocator);
   }
 
-  changed_caps = !priv->allocator || gst_video_info_changed (cur_vip, new_vip);
+  changed_caps = !priv->allocator || gst_video_info_changed (cur_vip, &new_vip);
   if (changed_caps) {
     const GstVideoInfo *alloc_vip;
     guint flags = 0;
@@ -167,16 +166,16 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
       /* XXX: also needs fixed strides/offsets */
       flags |= GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE;
       allocator =
-          gst_vaapi_dmabuf_allocator_new (priv->display, new_vip, flags);
+          gst_vaapi_dmabuf_allocator_new (priv->display, &new_vip, flags);
     } else {
-      allocator = gst_vaapi_video_allocator_new (priv->display, new_vip, 0);
+      allocator = gst_vaapi_video_allocator_new (priv->display, &new_vip, 0);
     }
     if (!allocator)
       goto error_create_allocator;
     gst_object_replace ((GstObject **) & priv->allocator,
         GST_OBJECT_CAST (allocator));
     gst_object_unref (allocator);
-    priv->video_info_index ^= 1;
+    priv->video_info = new_vip;
 
     alloc_vip = gst_allocator_get_vaapi_video_info (allocator, NULL);
     if (!alloc_vip)
@@ -382,9 +381,7 @@ gst_vaapi_video_buffer_pool_init (GstVaapiVideoBufferPool * pool)
 
   pool->priv = priv;
 
-  gst_video_info_init (&priv->video_info[0]);
-  gst_video_info_init (&priv->video_info[1]);
-  gst_video_info_init (&priv->alloc_info);
+  gst_video_info_init (&priv->video_info);
 }
 
 GstBufferPool *
