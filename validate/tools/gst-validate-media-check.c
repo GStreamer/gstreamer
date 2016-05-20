@@ -165,8 +165,8 @@ out:
   }
   if (runner)
     gst_object_unref (runner);
-  gst_deinit ();
   gst_validate_deinit ();
+  gst_deinit ();
 
   g_print ("\n=======> Test %s (Return value: %i)\n\n",
       ret == 0 ? "PASSED" : "FAILED", ret);
