@@ -1308,7 +1308,7 @@ gst_vaapisink_set_caps (GstBaseSink * base_sink, GstCaps * caps)
   GST_DEBUG ("video pixel-aspect-ratio %d/%d",
       sink->video_par_n, sink->video_par_d);
 
-  update_colorimetry (sink, &vip->colorimetry);
+  update_colorimetry (sink, &GST_VIDEO_INFO_COLORIMETRY (vip));
   gst_caps_replace (&sink->caps, caps);
 
   gst_vaapisink_ensure_colorbalance (sink);

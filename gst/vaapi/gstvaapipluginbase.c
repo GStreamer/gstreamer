@@ -506,7 +506,7 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
     gst_video_info_set_format (&vi, GST_VIDEO_FORMAT_NV12,
         GST_VIDEO_INFO_WIDTH (&vi), GST_VIDEO_INFO_HEIGHT (&vi));
   }
-  plugin->sinkpad_buffer_size = vi.size;
+  plugin->sinkpad_buffer_size = GST_VIDEO_INFO_SIZE (&vi);
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps,
@@ -701,7 +701,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
     update_pool = TRUE;
-    size = MAX (size, vi.size);
+    size = MAX (size, GST_VIDEO_INFO_SIZE (&vi));
     if (pool) {
       /* Check whether downstream element proposed a bufferpool but did
          not provide a correct propose_allocation() implementation */
@@ -710,7 +710,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     }
   } else {
     pool = NULL;
-    size = vi.size;
+    size = GST_VIDEO_INFO_SIZE (&vi);
     min = max = 0;
   }
 

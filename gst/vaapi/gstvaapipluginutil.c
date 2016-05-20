@@ -659,14 +659,13 @@ gst_video_info_change_format (GstVideoInfo * vip, GstVideoFormat format,
 
   gst_video_info_set_format (vip, format, width, height);
 
-  vip->interlace_mode = vi.interlace_mode;
-  vip->flags = vi.flags;
-  vip->views = vi.views;
-  vip->par_n = vi.par_n;
-  vip->par_d = vi.par_d;
-  vip->fps_n = vi.fps_n;
-  vip->fps_d = vi.fps_d;
-
+  GST_VIDEO_INFO_INTERLACE_MODE (vip) = GST_VIDEO_INFO_INTERLACE_MODE (&vi);
+  GST_VIDEO_FORMAT_INFO_FLAGS (vip) = GST_VIDEO_FORMAT_INFO_FLAGS (&vi);
+  GST_VIDEO_INFO_VIEWS (vip) = GST_VIDEO_INFO_VIEWS (&vi);
+  GST_VIDEO_INFO_PAR_N (vip) = GST_VIDEO_INFO_PAR_N (&vi);
+  GST_VIDEO_INFO_PAR_D (vip) = GST_VIDEO_INFO_PAR_D (&vi);
+  GST_VIDEO_INFO_FPS_N (vip) = GST_VIDEO_INFO_FPS_N (&vi);
+  GST_VIDEO_INFO_FPS_D (vip) = GST_VIDEO_INFO_FPS_D (&vi);
   GST_VIDEO_INFO_MULTIVIEW_MODE (vip) = GST_VIDEO_INFO_MULTIVIEW_MODE (&vi);
   GST_VIDEO_INFO_MULTIVIEW_FLAGS (vip) = GST_VIDEO_INFO_MULTIVIEW_FLAGS (&vi);
 }
