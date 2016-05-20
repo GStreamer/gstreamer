@@ -2557,8 +2557,8 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
     case SYS_DVBT:
     case SYS_DVBT2:
       if (object->delsys == SYS_DVBT2 && object->stream_id > 255) {
-        GST_WARNING_OBJECT (object, "Wrong DVB-T2 stream ID '%d'. Value "
-            "can't be greater than 255", object->stream_id);
+        GST_WARNING_OBJECT (object, "Invalid (> 255) DVB-T2 stream ID '%d'. "
+            "Disabling sub-stream filtering", object->stream_id);
         object->stream_id = NO_STREAM_ID_FILTER;
       }
       set_prop (props->props, &n, DTV_BANDWIDTH_HZ, object->bandwidth);
