@@ -66,8 +66,6 @@ struct _GstCAOpenGLLayerSink
     volatile gint to_quit;
     gboolean keep_aspect_ratio;
 
-    GstBufferPool *pool;
-
     /* avoid replacing the stored_buffer while drawing */
     GMutex drawing_lock;
     GstBuffer *stored_buffer;
