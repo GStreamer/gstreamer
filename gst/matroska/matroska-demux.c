@@ -2227,6 +2227,7 @@ exit:
     demux->to_time = demux->common.segment.position;
   else
     demux->to_time = GST_CLOCK_TIME_NONE;
+  demux->segment_seqnum = seqnum;
   GST_OBJECT_UNLOCK (demux);
 
   /* restart our task since it might have been stopped when we did the
@@ -4730,6 +4731,8 @@ pause:
       }
 
       if (demux->common.segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        GstEvent *event;
+        GstMessage *msg;
         gint64 stop;
 
         /* for segment playback we need to post when (in stream time)
@@ -4738,11 +4741,16 @@ pause:
           stop = demux->last_stop_end;
 
         GST_LOG_OBJECT (demux, "Sending segment done, at end of segment");
-        gst_element_post_message (GST_ELEMENT (demux),
-            gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
-                stop));
-        gst_matroska_demux_send_event (demux,
-            gst_event_new_segment_done (GST_FORMAT_TIME, stop));
+        msg = gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
+            stop);
+        if (demux->segment_seqnum)
+          gst_message_set_seqnum (msg, demux->segment_seqnum);
+        gst_element_post_message (GST_ELEMENT (demux), msg);
+
+        event = gst_event_new_segment_done (GST_FORMAT_TIME, stop);
+        if (demux->segment_seqnum)
+          gst_event_set_seqnum (event, demux->segment_seqnum);
+        gst_matroska_demux_send_event (demux, event);
       } else {
         push_eos = TRUE;
       }
@@ -4753,9 +4761,14 @@ pause:
       push_eos = TRUE;
     }
     if (push_eos) {
+      GstEvent *event;
+
       /* send EOS, and prevent hanging if no streams yet */
       GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
-      if (!gst_matroska_demux_send_event (demux, gst_event_new_eos ()) &&
+      event = gst_event_new_eos ();
+      if (demux->segment_seqnum)
+        gst_event_set_seqnum (event, demux->segment_seqnum);
+      if (!gst_matroska_demux_send_event (demux, event) &&
           (ret == GST_FLOW_EOS)) {
         GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
             (NULL), ("got eos but no streams (yet)"));
