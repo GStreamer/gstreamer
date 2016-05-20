@@ -300,6 +300,7 @@ gst_avi_demux_reset (GstAviDemux * avi)
   gst_adapter_clear (avi->adapter);
 
   gst_segment_init (&avi->segment, GST_FORMAT_TIME);
+  avi->segment_seqnum = 0;
 }
 
 
@@ -846,6 +847,7 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstObject * parent,
       gst_segment_copy_into (&segment, &avi->segment);
 
       GST_DEBUG_OBJECT (avi, "Pushing newseg %" GST_SEGMENT_FORMAT, &segment);
+      avi->segment_seqnum = gst_event_get_seqnum (event);
       segment_event = gst_event_new_segment (&segment);
       gst_event_set_seqnum (segment_event, gst_event_get_seqnum (event));
       gst_avi_demux_push_event (avi, segment_event);
@@ -1618,7 +1620,7 @@ out_of_mem:
  * Create and push a flushing seek event upstream
  */
 static gboolean
-perform_seek_to_offset (GstAviDemux * demux, guint64 offset)
+perform_seek_to_offset (GstAviDemux * demux, guint64 offset, guint32 seqnum)
 {
   GstEvent *event;
   gboolean res = 0;
@@ -1629,7 +1631,7 @@ perform_seek_to_offset (GstAviDemux * demux, guint64 offset)
       gst_event_new_seek (1.0, GST_FORMAT_BYTES,
       GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET, offset,
       GST_SEEK_TYPE_NONE, -1);
-
+  gst_event_set_seqnum (event, seqnum);
   res = gst_pad_push_event (demux->sinkpad, event);
 
   if (res)
@@ -1696,7 +1698,8 @@ gst_avi_demux_read_subindexes_push (GstAviDemux * avi)
   }
 
   /* seek to next index */
-  return perform_seek_to_offset (avi, avi->odml_subidxs[avi->odml_subidx]);
+  return perform_seek_to_offset (avi, avi->odml_subidxs[avi->odml_subidx],
+      avi->segment_seqnum);
 }
 
 /*
@@ -2949,7 +2952,7 @@ gst_avi_demux_stream_index_push (GstAviDemux * avi)
         (8 + GST_ROUND_UP_2 (size)));
     avi->idx1_offset = offset + 8 + GST_ROUND_UP_2 (size);
     /* issue seek to allow chain function to handle it and return! */
-    perform_seek_to_offset (avi, avi->idx1_offset);
+    perform_seek_to_offset (avi, avi->idx1_offset, avi->segment_seqnum);
     return;
   }
 
@@ -3537,6 +3540,8 @@ skipping_done:
   if (avi->seg_event)
     gst_event_unref (avi->seg_event);
   avi->seg_event = gst_event_new_segment (&avi->segment);
+  if (avi->segment_seqnum)
+    gst_event_set_seqnum (avi->seg_event, avi->segment_seqnum);
 
   gst_avi_demux_check_seekability (avi);
 
@@ -4307,6 +4312,8 @@ skipping_done:
   if (avi->seg_event)
     gst_event_unref (avi->seg_event);
   avi->seg_event = gst_event_new_segment (&avi->segment);
+  if (avi->segment_seqnum)
+    gst_event_set_seqnum (avi->seg_event, avi->segment_seqnum);
 
   stamp = gst_util_get_timestamp () - stamp;
   GST_DEBUG_OBJECT (avi, "pulling header took %" GST_TIME_FORMAT,
@@ -4638,6 +4645,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   avi->seg_event = gst_event_new_segment (&avi->segment);
   if (seqnum)
     gst_event_set_seqnum (avi->seg_event, seqnum);
+  avi->segment_seqnum = seqnum;
 
   if (!avi->streaming) {
     gst_pad_start_task (avi->sinkpad, (GstTaskFunction) gst_avi_demux_loop,
@@ -4837,7 +4845,7 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (avi, "seeking to chunk at offset %" G_GUINT64_FORMAT,
       min_offset);
 
-  if (!perform_seek_to_offset (avi, min_offset)) {
+  if (!perform_seek_to_offset (avi, min_offset, gst_event_get_seqnum (event))) {
     GST_DEBUG_OBJECT (avi, "seek event failed!");
     return FALSE;
   }
@@ -4887,7 +4895,7 @@ gst_avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad,
       GST_INFO_OBJECT (avi,
           "Seeking to legacy index/first subindex at %" G_GUINT64_FORMAT,
           offset);
-      return perform_seek_to_offset (avi, offset);
+      return perform_seek_to_offset (avi, offset, gst_event_get_seqnum (event));
     }
 
     /* FIXME: we have to always return true so that we don't block the seek
@@ -5667,18 +5675,25 @@ pause:{
         avi->segment.position = avi->segment.start;
       if (avi->segment.flags & GST_SEEK_FLAG_SEGMENT) {
         gint64 stop;
+        GstEvent *event;
+        GstMessage *msg;
 
         if ((stop = avi->segment.stop) == -1)
           stop = avi->segment.duration;
 
         GST_INFO_OBJECT (avi, "sending segment_done");
 
-        gst_element_post_message
-            (GST_ELEMENT_CAST (avi),
+        msg =
             gst_message_new_segment_done (GST_OBJECT_CAST (avi),
-                GST_FORMAT_TIME, stop));
-        gst_avi_demux_push_event (avi,
-            gst_event_new_segment_done (GST_FORMAT_TIME, stop));
+            GST_FORMAT_TIME, stop);
+        if (avi->segment_seqnum)
+          gst_message_set_seqnum (msg, avi->segment_seqnum);
+        gst_element_post_message (GST_ELEMENT_CAST (avi), msg);
+
+        event = gst_event_new_segment_done (GST_FORMAT_TIME, stop);
+        if (avi->segment_seqnum)
+          gst_event_set_seqnum (event, avi->segment_seqnum);
+        gst_avi_demux_push_event (avi, event);
       } else {
         push_eos = TRUE;
       }
@@ -5692,9 +5707,13 @@ pause:{
       push_eos = TRUE;
     }
     if (push_eos) {
+      GstEvent *event;
+
       GST_INFO_OBJECT (avi, "sending eos");
-      if (!gst_avi_demux_push_event (avi, gst_event_new_eos ()) &&
-          (res == GST_FLOW_EOS)) {
+      event = gst_event_new_eos ();
+      if (avi->segment_seqnum)
+        gst_event_set_seqnum (event, avi->segment_seqnum);
+      if (!gst_avi_demux_push_event (avi, event) && (res == GST_FLOW_EOS)) {
         GST_ELEMENT_ERROR (avi, STREAM, DEMUX,
             (NULL), ("got eos but no streams (yet)"));
       }

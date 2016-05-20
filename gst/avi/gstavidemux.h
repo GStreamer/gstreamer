@@ -182,6 +182,7 @@ typedef struct _GstAviDemux {
 
   /* segment in TIME */
   GstSegment     segment;
+  guint32        segment_seqnum;
 
   /* pending tags/events */
   GstEvent      *seg_event;
