@@ -250,7 +250,6 @@ gst_ca_opengl_layer_sink_init (GstCAOpenGLLayerSink * ca_sink)
 {
   ca_sink->display = NULL;
   ca_sink->keep_aspect_ratio = TRUE;
-  ca_sink->pool = NULL;
   ca_sink->stored_buffer = NULL;
   ca_sink->redisplay_texture = 0;
 
@@ -456,11 +455,6 @@ gst_ca_opengl_layer_sink_stop (GstBaseSink * bsink)
 {
   GstCAOpenGLLayerSink *ca_sink = GST_CA_OPENGL_LAYER_SINK (bsink);
 
-  if (ca_sink->pool) {
-    gst_object_unref (ca_sink->pool);
-    ca_sink->pool = NULL;
-  }
-
   if (ca_sink->gl_caps) {
     gst_caps_unref (ca_sink->gl_caps);
     ca_sink->gl_caps = NULL;
@@ -532,12 +526,6 @@ gst_ca_opengl_layer_sink_change_state (GstElement * element, GstStateChange tran
       gst_buffer_replace (&ca_sink->next_buffer, NULL);
       gst_buffer_replace (&ca_sink->next_sync, NULL);
       GST_CA_OPENGL_LAYER_SINK_UNLOCK (ca_sink);
-
-      if (ca_sink->pool) {
-        gst_buffer_pool_set_active (ca_sink->pool, FALSE);
-        gst_object_unref (ca_sink->pool);
-        ca_sink->pool = NULL;
-      }
 
       GST_VIDEO_SINK_WIDTH (ca_sink) = 1;
       GST_VIDEO_SINK_HEIGHT (ca_sink) = 1;
@@ -767,6 +755,7 @@ static gboolean
 gst_ca_opengl_layer_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
   GstCAOpenGLLayerSink *ca_sink = GST_CA_OPENGL_LAYER_SINK (bsink);
+  GstBufferPool *pool = NULL;
   GstStructure *config;
   GstCaps *caps;
   guint size;
@@ -789,36 +778,18 @@ gst_ca_opengl_layer_sink_propose_allocation (GstBaseSink * bsink, GstQuery * que
     /* the normal size of a frame */
     size = info.size;
 
-    if (ca_sink->pool) {
-      GstCaps *pcaps;
+    GST_DEBUG_OBJECT (ca_sink, "create new pool");
 
-      /* we had a pool, check caps */
-      GST_DEBUG_OBJECT (ca_sink, "check existing pool caps");
-      config = gst_buffer_pool_get_config (ca_sink->pool);
-      gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
+    pool = gst_gl_buffer_pool_new (ca_sink->context);
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
 
-      if (!gst_caps_is_equal (caps, pcaps)) {
-        GST_DEBUG_OBJECT (ca_sink, "pool has different caps");
-        /* different caps, we can't use this pool */
-        gst_object_unref (ca_sink->pool);
-        ca_sink->pool = NULL;
-      }
-      gst_structure_free (config);
-    }
-
-    if (ca_sink->pool == NULL) {
-      GST_DEBUG_OBJECT (ca_sink, "create new pool");
-
-      ca_sink->pool = gst_gl_buffer_pool_new (ca_sink->context);
-      config = gst_buffer_pool_get_config (ca_sink->pool);
-      gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-
-      if (!gst_buffer_pool_set_config (ca_sink->pool, config))
+    if (!gst_buffer_pool_set_config (pool, config))
         goto config_failed;
-    }
 
     /* we need at least 2 buffer because we hold on to the last one */
-    gst_query_add_allocation_pool (query, ca_sink->pool, size, 2, 0);
+    gst_query_add_allocation_pool (query, pool, size, 2, 0);
+    gst_object_unref (pool);
   }
 
   if (ca_sink->context->gl_vtable->FenceSync)
