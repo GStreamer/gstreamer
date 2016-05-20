@@ -687,9 +687,11 @@ gst_v4l2_transform_fixate_caps (GstBaseTransform * trans,
       to_par_n = gst_value_get_fraction_numerator (to_par);
       to_par_d = gst_value_get_fraction_denominator (to_par);
 
+      GST_DEBUG_OBJECT (trans, "PAR is fixed %d/%d", to_par_n, to_par_d);
+
       /* Calculate scale factor for the PAR change */
-      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, to_par_n,
-              to_par_d, &num, &den)) {
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, to_par_d,
+              to_par_n, &num, &den)) {
         GST_ELEMENT_ERROR (trans, CORE, NEGOTIATION, (NULL),
             ("Error calculating the output scaled size - integer overflow"));
         goto done;
