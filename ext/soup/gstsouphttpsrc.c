@@ -1570,6 +1570,8 @@ gst_soup_http_src_read_buffer (GstSoupHTTPSrc * src, GstBuffer ** outbuf)
 
   g_mutex_lock (&src->mutex);
   if (g_cancellable_is_cancelled (src->cancellable)) {
+    gst_buffer_unmap (*outbuf, &mapinfo);
+    gst_buffer_unref (*outbuf);
     g_mutex_unlock (&src->mutex);
     return GST_FLOW_FLUSHING;
   }
