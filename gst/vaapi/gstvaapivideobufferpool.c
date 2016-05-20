@@ -136,13 +136,15 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
 {
   GstVaapiVideoBufferPoolPrivate *const priv =
       GST_VAAPI_VIDEO_BUFFER_POOL (pool)->priv;
-  GstCaps *caps = NULL;
-  GstVideoInfo *const cur_vip = &priv->video_info;
+  GstCaps *caps;
   GstVideoInfo new_vip;
+  const GstVideoInfo *alloc_vip;
   GstVideoAlignment align;
   GstAllocator *allocator;
-  gboolean changed_caps, use_dmabuf_memory;
 
+  GST_DEBUG_OBJECT (pool, "config %" GST_PTR_FORMAT, config);
+
+  caps = NULL;
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL))
     goto error_invalid_config;
   if (!caps)
@@ -150,42 +152,35 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   if (!gst_video_info_from_caps (&new_vip, caps))
     goto error_invalid_caps;
 
-  use_dmabuf_memory = gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_DMABUF_MEMORY);
-  if (priv->use_dmabuf_memory != use_dmabuf_memory) {
-    priv->use_dmabuf_memory = use_dmabuf_memory;
-    g_clear_object (&priv->allocator);
-  }
+  allocator = NULL;
+  if (!gst_buffer_pool_config_get_allocator (config, &allocator, NULL))
+    goto error_invalid_allocator;
 
-  changed_caps = !priv->allocator || gst_video_info_changed (cur_vip, &new_vip);
-  if (changed_caps) {
-    const GstVideoInfo *alloc_vip;
-    guint flags = 0;
-
-    if (use_dmabuf_memory) {
-      /* XXX: also needs fixed strides/offsets */
-      flags |= GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE;
-      allocator =
-          gst_vaapi_dmabuf_allocator_new (priv->display, &new_vip, flags);
-    } else {
-      allocator = gst_vaapi_video_allocator_new (priv->display, &new_vip, 0);
-    }
-    if (!allocator)
-      goto error_create_allocator;
-    gst_object_replace ((GstObject **) & priv->allocator,
-        GST_OBJECT_CAST (allocator));
-    gst_object_unref (allocator);
-    priv->video_info = new_vip;
-
-    alloc_vip = gst_allocator_get_vaapi_video_info (allocator, NULL);
-    if (!alloc_vip)
-      goto error_create_allocator_info;
-    priv->alloc_info = *alloc_vip;
-  }
+  if (gst_video_info_changed (&priv->video_info, &new_vip))
+    gst_object_replace ((GstObject **) & priv->allocator, NULL);
+  priv->video_info = new_vip;
 
   if (!gst_buffer_pool_config_has_option (config,
           GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META))
     goto error_no_vaapi_video_meta_option;
+
+  /* not our allocator, not our buffers */
+  if (allocator) {
+    priv->use_dmabuf_memory = gst_vaapi_is_dmabuf_allocator (allocator);
+    if (priv->use_dmabuf_memory ||
+        g_strcmp0 (allocator->mem_type, GST_VAAPI_VIDEO_MEMORY_NAME) == 0) {
+      if (priv->allocator)
+        gst_object_unref (priv->allocator);
+      if ((priv->allocator = allocator))
+        gst_object_ref (allocator);
+      alloc_vip = gst_allocator_get_vaapi_video_info (priv->allocator, NULL);
+      if (!alloc_vip)
+        goto error_create_allocator_info;
+      priv->alloc_info = *alloc_vip;
+    }
+  }
+  if (!priv->allocator)
+    goto error_no_allocator;
 
   priv->has_video_meta = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -213,7 +208,7 @@ error_invalid_config:
   }
 error_no_caps:
   {
-    GST_ERROR_OBJECT (pool, "no valid caps in config");
+    GST_ERROR_OBJECT (pool, "no caps in config");
     return FALSE;
   }
 error_invalid_caps:
@@ -221,9 +216,14 @@ error_invalid_caps:
     GST_ERROR_OBJECT (pool, "invalid caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
-error_create_allocator:
+error_invalid_allocator:
   {
-    GST_ERROR_OBJECT (pool, "failed to create GstVaapiVideoAllocator object");
+    GST_ERROR_OBJECT (pool, "no allocator in config");
+    return FALSE;
+  }
+error_no_vaapi_video_meta_option:
+  {
+    GST_ERROR_OBJECT (pool, "no GstVaapiVideoMeta option in config");
     return FALSE;
   }
 error_create_allocator_info:
@@ -232,9 +232,9 @@ error_create_allocator_info:
         "failed to create GstVaapiVideoAllocator `video-info'");
     return FALSE;
   }
-error_no_vaapi_video_meta_option:
+error_no_allocator:
   {
-    GST_ERROR_OBJECT (pool, "no GstVaapiVideoMeta option");
+    GST_ERROR_OBJECT (pool, "no allocator defined");
     return FALSE;
   }
 }

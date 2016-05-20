@@ -470,6 +470,28 @@ has_dmabuf_capable_peer (GstVaapiPluginBase * plugin, GstPad * pad)
 }
 
 static gboolean
+set_dmabuf_allocator (GstVaapiPluginBase * plugin, GstBufferPool * pool,
+    GstCaps * caps)
+{
+  GstStructure *config;
+  GstAllocator *allocator;
+  GstVideoInfo vi;
+  gboolean ret;
+
+  if (!gst_video_info_from_caps (&vi, caps))
+    return FALSE;
+  config = gst_buffer_pool_get_config (pool);
+  allocator = gst_vaapi_dmabuf_allocator_new (plugin->display, &vi,
+      GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE);
+  if (!allocator)
+    return FALSE;
+  gst_buffer_pool_config_set_allocator (config, allocator, NULL);
+  ret = gst_buffer_pool_set_config (pool, config);
+  gst_object_unref (allocator);
+  return ret;
+}
+
+static gboolean
 gst_vaapi_buffer_pool_caps_is_equal (GstBufferPool * pool, GstCaps * newcaps)
 {
   GstStructure *config;
@@ -502,6 +524,8 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
   GstBufferPool *pool;
   GstStructure *config;
   GstVideoInfo vi;
+  GstAllocator *allocator;
+  gboolean configured;
 
   /* video decoders don't use a buffer pool in the sink pad */
   if (GST_IS_VIDEO_DECODER (plugin))
@@ -527,13 +551,20 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
   gst_video_info_force_nv12_if_encoded (&vi);
   plugin->sinkpad_buffer_size = GST_VIDEO_INFO_SIZE (&vi);
 
+  allocator = gst_vaapi_video_allocator_new (plugin->display, &vi, 0);
+  if (!allocator)
+    goto error_create_allocator;
+
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps,
       plugin->sinkpad_buffer_size, 0, 0);
+  gst_buffer_pool_config_set_allocator (config, allocator, NULL);
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-  if (!gst_buffer_pool_set_config (pool, config))
+  configured = gst_buffer_pool_set_config (pool, config);
+  gst_object_unref (allocator);
+  if (!configured)
     goto error_pool_config;
   plugin->sinkpad_buffer_pool = pool;
   return TRUE;
@@ -542,6 +573,12 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
 error_invalid_caps:
   {
     GST_ERROR_OBJECT (plugin, "invalid caps %" GST_PTR_FORMAT, caps);
+    gst_object_unref (pool);
+    return FALSE;
+  }
+error_create_allocator:
+  {
+    GST_ERROR_OBJECT (plugin, "failed to create allocator");
     gst_object_unref (pool);
     return FALSE;
   }
@@ -618,12 +655,7 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
         plugin->sinkpad_buffer_size, 0, 0);
 
     if (has_dmabuf_capable_peer (plugin, plugin->sinkpad)) {
-      GstStructure *const config =
-          gst_buffer_pool_get_config (plugin->sinkpad_buffer_pool);
-
-      gst_buffer_pool_config_add_option (config,
-          GST_BUFFER_POOL_OPTION_DMABUF_MEMORY);
-      if (!gst_buffer_pool_set_config (plugin->sinkpad_buffer_pool, config))
+      if (!set_dmabuf_allocator (plugin, plugin->sinkpad_buffer_pool, caps))
         goto error_pool_config;
     }
   }
@@ -668,6 +700,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   gboolean update_pool = FALSE;
   gboolean has_video_meta = FALSE;
   gboolean has_video_alignment = FALSE;
+  GstAllocator *allocator;
 #if (USE_GLX || USE_EGL)
   gboolean has_texture_upload_meta = FALSE;
   guint idx;
@@ -749,10 +782,17 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     if (!pool)
       goto error_create_pool;
 
+    allocator = gst_vaapi_video_allocator_new (plugin->display, &vi, 0);
+    if (!allocator)
+      goto error_create_allocator;
+
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (config, caps, size, min, max);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META);
+    gst_buffer_pool_config_set_allocator (config, allocator, NULL);
+
+    gst_object_unref (allocator);
   }
 
   if (!config)
@@ -807,6 +847,12 @@ error_ensure_display:
 error_create_pool:
   {
     GST_ERROR_OBJECT (plugin, "failed to create buffer pool");
+    return FALSE;
+  }
+error_create_allocator:
+  {
+    GST_ERROR_OBJECT (plugin, "failed to create allocator");
+    gst_object_unref (pool);
     return FALSE;
   }
 error_config_failed:

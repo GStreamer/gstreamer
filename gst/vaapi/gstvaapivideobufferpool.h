@@ -55,17 +55,6 @@ typedef struct _GstVaapiVideoBufferPoolPrivate GstVaapiVideoBufferPoolPrivate;
   "GstBufferPoolOptionVaapiVideoMeta"
 
 /**
- * GST_BUFFER_POOL_OPTION_DMABUF_MEMORY:
- *
- * An option that can be activated on bufferpool to request dmabuf
- * handles on buffers from the pool.
- */
-#ifndef GST_BUFFER_POOL_OPTION_DMABUF_MEMORY
-#define GST_BUFFER_POOL_OPTION_DMABUF_MEMORY \
-  "GstBufferPoolOptionDMABUFMemory"
-#endif
-
-/**
  * GstVaapiVideoBufferPoolAcquireFlags:
  * @GST_VAAPI_VIDEO_BUFFER_POOL_ACQUIRE_FLAG_NO_ALLOC: option to
  *   request that vaapi video metadata are not initially allocated,

@@ -214,6 +214,9 @@ gboolean
 gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
     const GstVideoInfo * vip, guint flags);
 
+gboolean
+gst_vaapi_is_dmabuf_allocator (GstAllocator * allocator);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_VIDEO_MEMORY_H */

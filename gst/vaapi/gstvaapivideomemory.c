@@ -1035,3 +1035,16 @@ gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
 
   return TRUE;
 }
+
+gboolean
+gst_vaapi_is_dmabuf_allocator (GstAllocator * allocator)
+{
+  GstStructure *st;
+
+  g_return_val_if_fail (GST_IS_ALLOCATOR (allocator), FALSE);
+
+  if (g_strcmp0 (allocator->mem_type, GST_ALLOCATOR_DMABUF) != 0)
+    return FALSE;
+  st = g_object_get_qdata (G_OBJECT (allocator), GST_VAAPI_VIDEO_INFO_QUARK);
+  return (st != NULL);
+}
