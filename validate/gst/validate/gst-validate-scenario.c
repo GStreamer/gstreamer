@@ -333,6 +333,8 @@ gst_validate_action_type_new (void)
 
   gst_validate_action_type_init (type);
 
+  /* action types are never freed */
+  GST_MINI_OBJECT_FLAG_SET (type, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
   return type;
 }
 
