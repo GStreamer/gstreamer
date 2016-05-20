@@ -1703,6 +1703,31 @@ gst_validate_monitor_find_next_buffer (GstValidatePadMonitor * pad_monitor)
     pad_monitor->current_buf = tmp;
 }
 
+/* Checks whether a segment is just an update of another,
+ * That is to say that only the base and offset field differ and all
+ * other fields are identical */
+static gboolean
+is_segment_update (GstSegment * a, const GstSegment * b)
+{
+  /* Note : We never care about the position field, it is only
+   * used for internal usage by elements */
+  if (a->rate == b->rate &&
+      a->applied_rate == b->applied_rate &&
+      a->format == b->format && a->time == b->time) {
+    /* Changes in base/offset are considered updates */
+    /* Updating the end position of a segment is an update */
+    /* Updating the duration of a segment is an update */
+    if (a->rate > 0.0) {
+      if (a->start == b->start)
+        return TRUE;
+    } else {
+      if (a->stop == b->stop)
+        return TRUE;
+    }
+  }
+  return FALSE;
+}
+
 static GstFlowReturn
 gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
     pad_monitor, GstObject * parent, GstEvent * event,
@@ -1717,6 +1742,10 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
 
   /* pre checks */
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:
+      /* Buffers following a STREAM_START should have the DISCONT flag set */
+      pad_monitor->pending_buffer_discont = TRUE;
+      break;
     case GST_EVENT_SEGMENT:
       /* parse segment data to be used if event is handled */
       gst_event_parse_segment (event, &segment);
@@ -1744,8 +1773,6 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
       }
 
       pad_monitor->pending_eos_seqnum = seqnum;
-      /* Buffers following a SEGMENT should have the DISCONT flag set */
-      pad_monitor->pending_buffer_discont = TRUE;
 
       if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
         gst_validate_pad_monitor_add_expected_newsegment (pad_monitor, event);
@@ -1839,6 +1866,10 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
       if (ret == GST_FLOW_OK) {
+        /* If the new segment is not an update of the previous one, then
+         * the following buffer should have the DISCONT flag set */
+        if (!is_segment_update (&pad_monitor->segment, segment))
+          pad_monitor->pending_buffer_discont = TRUE;
         if (!pad_monitor->has_segment
             && pad_monitor->segment.format != segment->format) {
           gst_segment_init (&pad_monitor->segment, segment->format);
