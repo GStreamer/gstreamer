@@ -85,13 +85,14 @@ gst_kms_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   gst_buffer_pool_config_get_allocator (config, &allocator, &params);
 
   /* not our allocator, not our buffers */
-  if (!allocator || !GST_IS_KMS_ALLOCATOR (allocator))
-    goto wrong_allocator;
-
-  if (priv->allocator)
-    gst_object_unref (priv->allocator);
-  if ((priv->allocator = allocator))
-    gst_object_ref (allocator);
+  if (allocator && GST_IS_KMS_ALLOCATOR (allocator)) {
+    if (priv->allocator)
+      gst_object_unref (priv->allocator);
+    if ((priv->allocator = allocator))
+      gst_object_ref (allocator);
+  }
+  if (!priv->allocator)
+    goto no_allocator;
 
   priv->vinfo = vinfo;
 
@@ -118,9 +119,9 @@ wrong_caps:
         "failed getting geometry from caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
-wrong_allocator:
+no_allocator:
   {
-    GST_WARNING_OBJECT (pool, "invalid allocator: %" GST_PTR_FORMAT, allocator);
+    GST_WARNING_OBJECT (pool, "no valid allocator in pool");
     return FALSE;
   }
 }
