@@ -2202,6 +2202,12 @@ gst_base_parse_handle_buffer (GstBaseParse * parse, GstBuffer * buffer,
     gst_adapter_clear (parse->priv->adapter);
   }
 
+  if (*skip == 0 && *flushed == 0) {
+    /* Carry over discont if we need more data */
+    if (GST_BUFFER_IS_DISCONT (frame->buffer))
+      parse->priv->discont = TRUE;
+  }
+
   gst_base_parse_frame_free (frame);
 
   return ret;
@@ -2503,6 +2509,8 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   if (ret == GST_BASE_PARSE_FLOW_DROPPED) {
     GST_LOG_OBJECT (parse, "frame (%" G_GSIZE_FORMAT " bytes) dropped", size);
+    if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
+      parse->priv->discont = TRUE;
     gst_buffer_unref (buffer);
     ret = GST_FLOW_OK;
   } else if (ret == GST_FLOW_OK) {
