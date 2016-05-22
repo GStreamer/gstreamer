@@ -180,19 +180,23 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
   g_object_class_install_property (gobject_class, PROP_LEFT,
       g_param_spec_int ("left", "Left",
           "Pixels to crop at left (-1 to auto-crop)", -1, G_MAXINT, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_RIGHT,
       g_param_spec_int ("right", "Right",
           "Pixels to crop at right (-1 to auto-crop)", -1, G_MAXINT, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_TOP,
-      g_param_spec_int ("top", "Top",
-          "Pixels to crop at top (-1 to auto-crop)", -1, G_MAXINT, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("top", "Top", "Pixels to crop at top (-1 to auto-crop)",
+          -1, G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_BOTTOM,
       g_param_spec_int ("bottom", "Bottom",
           "Pixels to crop at bottom (-1 to auto-crop)", -1, G_MAXINT, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);
