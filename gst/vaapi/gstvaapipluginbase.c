@@ -226,14 +226,23 @@ plugin_bind_dma_to_vaapi_buffer (GstVaapiPluginBase * plugin,
 
   /* ERRORS */
 error_update_sinkpad_info:
-  GST_ERROR ("failed to update sink pad video info from video meta");
-  return FALSE;
+  {
+    GST_ERROR_OBJECT (plugin,
+        "failed to update sink pad video info from video meta");
+    return FALSE;
+  }
 error_create_surface:
-  GST_ERROR ("failed to create VA surface from dma_buf handle");
-  return FALSE;
+  {
+    GST_ERROR_OBJECT (plugin,
+        "failed to create VA surface from dma_buf handle");
+    return FALSE;
+  }
 error_create_proxy:
-  GST_ERROR ("failed to create VA surface proxy from wrapped VA surface");
-  return FALSE;
+  {
+    GST_ERROR_OBJECT (plugin,
+        "failed to create VA surface proxy from wrapped VA surface");
+    return FALSE;
+  }
 }
 
 void
@@ -522,12 +531,12 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
   /* ERRORS */
 error_create_pool:
   {
-    GST_ERROR ("failed to create buffer pool");
+    GST_ERROR_OBJECT (plugin, "failed to create buffer pool");
     return FALSE;
   }
 error_pool_config:
   {
-    GST_ERROR ("failed to reset buffer pool config");
+    GST_ERROR_OBJECT (plugin, "failed to reset buffer pool config");
     gst_object_unref (pool);
     return FALSE;
   }
@@ -911,7 +920,7 @@ error_bind_dma_buffer:
   }
 error_copy_buffer:
   {
-    GST_WARNING ("failed to upload buffer to VA surface");
+    GST_WARNING_OBJECT (plugin, "failed to upload buffer to VA surface");
     gst_buffer_unref (outbuf);
     return GST_FLOW_NOT_SUPPORTED;
   }
