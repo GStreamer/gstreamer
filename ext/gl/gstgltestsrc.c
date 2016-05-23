@@ -568,6 +568,11 @@ gst_gl_test_src_stop (GstBaseSrc * basesrc)
     src->context = NULL;
   }
 
+  if (src->src_impl) {
+    src->src_funcs->free (src->src_impl);
+    src->src_impl = NULL;
+  }
+
   return TRUE;
 }
 
