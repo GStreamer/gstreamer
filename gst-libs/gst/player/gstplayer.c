@@ -592,8 +592,8 @@ gst_player_get_property (GObject * object, guint prop_id,
       g_mutex_lock (&self->lock);
       g_value_set_string (value, self->suburi);
       g_mutex_unlock (&self->lock);
-      GST_DEBUG_OBJECT (self, "Returning has-suburi=%d",
-          g_value_get_boolean (value));
+      GST_DEBUG_OBJECT (self, "Returning suburi=%s",
+          g_value_get_string (value));
       break;
     case PROP_POSITION:{
       gint64 position = 0;
