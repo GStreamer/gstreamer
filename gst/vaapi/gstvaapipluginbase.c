@@ -470,6 +470,23 @@ has_dmabuf_capable_peer (GstVaapiPluginBase * plugin, GstPad * pad)
   return is_dmabuf_capable;
 }
 
+static gboolean
+gst_vaapi_buffer_pool_caps_is_equal (GstBufferPool * pool, GstCaps * newcaps)
+{
+  GstStructure *config;
+  GstCaps *caps;
+  gboolean ret;
+
+  caps = NULL;
+  ret = FALSE;
+  config = gst_buffer_pool_get_config (pool);
+  if (gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL))
+    ret = gst_caps_is_equal (newcaps, caps);
+  gst_structure_free (config);
+
+  return ret;
+}
+
 /**
  * ensure_sinkpad_buffer_pool:
  * @plugin: a #GstVaapiPluginBase
@@ -484,10 +501,8 @@ static gboolean
 ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
 {
   GstBufferPool *pool;
-  GstCaps *pool_caps;
   GstStructure *config;
   GstVideoInfo vi;
-  gboolean need_pool;
 
   /* video decoders don't use a buffer pool in the sink pad */
   if (GST_IS_VIDEO_DECODER (plugin))
@@ -497,11 +512,7 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
     return FALSE;
 
   if (plugin->sinkpad_buffer_pool) {
-    config = gst_buffer_pool_get_config (plugin->sinkpad_buffer_pool);
-    gst_buffer_pool_config_get_params (config, &pool_caps, NULL, NULL, NULL);
-    need_pool = !gst_caps_is_equal (caps, pool_caps);
-    gst_structure_free (config);
-    if (!need_pool)
+    if (gst_vaapi_buffer_pool_caps_is_equal (plugin->sinkpad_buffer_pool, caps))
       return TRUE;
     gst_buffer_pool_set_active (plugin->sinkpad_buffer_pool, FALSE);
     g_clear_object (&plugin->sinkpad_buffer_pool);
