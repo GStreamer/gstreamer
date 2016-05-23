@@ -65,23 +65,25 @@
 #define EGL_DMA_BUF_PLANE0_PITCH_EXT 0x3274
 #endif
 
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_EGL_IMAGE);
-#define GST_CAT_DEFAULT GST_CAT_EGL_IMAGE
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT gst_egl_image_ensure_debug_category()
 
-GST_DEFINE_MINI_OBJECT_TYPE (GstEGLImage, gst_egl_image);
-
-static void
-_init_debug (void)
+static GstDebugCategory *
+gst_egl_image_ensure_debug_category (void)
 {
-  static volatile gsize _init = 0;
+  static gsize cat_gonce = 0;
 
-  if (g_once_init_enter (&_init)) {
-    GST_DEBUG_CATEGORY_INIT (GST_CAT_EGL_IMAGE, "gleglimage", 0,
-        "EGLImage wrapper");
+  if (g_once_init_enter (&cat_gonce)) {
+    GstDebugCategory *cat = NULL;
 
-    g_once_init_leave (&_init, 1);
+    GST_DEBUG_CATEGORY_INIT (cat, "gleglimage", 0, "EGLImage wrapper");
+
+    g_once_init_leave (&cat_gonce, (gsize) cat);
   }
+
+  return (GstDebugCategory *) cat_gonce;
 }
+#endif /* GST_DISABLE_GST_DEBUG */
 
 EGLImageKHR
 gst_egl_image_get_image (GstEGLImage * image)
@@ -173,8 +175,6 @@ _drm_fourcc_from_info (GstVideoInfo * info, int plane)
   const gint rgb_fourcc = DRM_FORMAT_RGB888;
   const gint rg_fourcc = DRM_FORMAT_RG88;
 #endif
-
-  _init_debug ();
 
   GST_DEBUG ("Getting DRM fourcc for %s plane %i",
       gst_video_format_to_string (format), plane);
