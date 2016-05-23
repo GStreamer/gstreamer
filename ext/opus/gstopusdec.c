@@ -316,8 +316,8 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
   const GstAudioChannelPosition *posn = NULL;
 
   if (!gst_opus_header_is_id_header (buf)) {
-    GST_ELEMENT_ERROR (dec, STREAM, FORMAT, ("Header is not an Opus ID header"),
-        (NULL));
+    GST_ELEMENT_ERROR (dec, STREAM, FORMAT, (NULL),
+        ("Header is not an Opus ID header"));
     return GST_FLOW_ERROR;
   }
 
@@ -328,8 +328,8 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
           &dec->n_streams,
           &dec->n_stereo_streams,
           dec->channel_mapping, &dec->pre_skip, &dec->r128_gain)) {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Failed to parse Opus ID header"),
-        (NULL));
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
+        ("Failed to parse Opus ID header"));
     return GST_FLOW_ERROR;
   }
   dec->r128_gain_volume = gst_opus_dec_get_r128_volume (dec->r128_gain);
@@ -653,8 +653,8 @@ creation_failed:
   return GST_FLOW_ERROR;
 
 buffer_failed:
-  GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-      ("Failed to create %u byte buffer", packet_size), (NULL));
+  GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
+      ("Failed to create %u byte buffer", packet_size));
   return GST_FLOW_ERROR;
 }
 
