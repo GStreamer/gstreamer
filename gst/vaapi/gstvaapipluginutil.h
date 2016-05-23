@@ -128,6 +128,10 @@ gboolean
 gst_video_info_changed (GstVideoInfo * old, GstVideoInfo * new);
 
 G_GNUC_INTERNAL
+void
+gst_video_info_force_nv12_if_encoded (GstVideoInfo * vinfo);
+
+G_GNUC_INTERNAL
 GstVaapiDisplay *
 gst_vaapi_create_test_display (void);
 

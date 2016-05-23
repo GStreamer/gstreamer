@@ -693,6 +693,22 @@ gst_video_info_changed (GstVideoInfo * old, GstVideoInfo * new)
 }
 
 /**
+ * gst_video_info_force_nv12_if_encoded:
+ * @vinfo: a #GstVideoInfo
+ *
+ * If the format of @vinfo is %GST_VIDEO_FORMAT_ENCODED it is changed
+ * to %GST_VIDEO_FORMAT_NV12.
+ **/
+void
+gst_video_info_force_nv12_if_encoded (GstVideoInfo * vinfo)
+{
+  if (GST_VIDEO_INFO_FORMAT (vinfo) != GST_VIDEO_FORMAT_ENCODED)
+    return;
+  gst_video_info_set_format (vinfo, GST_VIDEO_FORMAT_NV12,
+      GST_VIDEO_INFO_WIDTH (vinfo), GST_VIDEO_INFO_HEIGHT (vinfo));
+}
+
+/**
  * gst_vaapi_create_test_display:
  *
  * Creates a temporal #GstVaapiDisplay instance, just for testing the

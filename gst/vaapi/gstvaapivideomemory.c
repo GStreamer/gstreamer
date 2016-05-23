@@ -26,6 +26,7 @@
 #include <gst/vaapi/gstvaapisurfacepool.h>
 #include <gst/vaapi/gstvaapiimagepool.h>
 #include "gstvaapivideomemory.h"
+#include "gstvaapipluginutil.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapivideomemory);
 #define GST_CAT_DEFAULT gst_debug_vaapivideomemory
@@ -705,12 +706,8 @@ allocator_configure_image_info (GstVaapiDisplay * display,
   }
 
   vinfo = &allocator->video_info;
-
-  if (GST_VIDEO_INFO_FORMAT (vinfo) == GST_VIDEO_FORMAT_ENCODED)
-    gst_video_info_set_format (&allocator->image_info, GST_VIDEO_FORMAT_NV12,
-        GST_VIDEO_INFO_WIDTH (vinfo), GST_VIDEO_INFO_HEIGHT (vinfo));
-  else
-    allocator->image_info = *vinfo;
+  allocator->image_info = *vinfo;
+  gst_video_info_force_nv12_if_encoded (&allocator->image_info);
 
   image = new_image (display, &allocator->image_info);
   if (!image)
