@@ -597,10 +597,10 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
   gboolean need_pool;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
+  if (!caps)
+    goto error_no_caps;
 
   if (need_pool) {
-    if (!caps)
-      goto error_no_caps;
     if (!ensure_sinkpad_buffer_pool (plugin, caps))
       return FALSE;
     gst_query_add_allocation_pool (query, plugin->sinkpad_buffer_pool,
@@ -665,13 +665,12 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   g_return_val_if_fail (plugin->display != NULL, FALSE);
 
   gst_query_parse_allocation (query, &caps, NULL);
+  if (!caps)
+    goto error_no_caps;
 
   /* We don't need any GL context beyond this point if not requested
      so explicitly through GstVideoGLTextureUploadMeta */
   gst_object_replace (&plugin->gl_context, NULL);
-
-  if (!caps)
-    goto error_no_caps;
 
   has_video_meta = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);

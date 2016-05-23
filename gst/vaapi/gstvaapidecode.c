@@ -732,11 +732,10 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
   GstCaps *caps = NULL;
 
   gst_query_parse_allocation (query, &caps, NULL);
-
-  decode->has_texture_upload_meta = FALSE;
-
   if (!caps)
     goto error_no_caps;
+
+  decode->has_texture_upload_meta = FALSE;
 
 #if (USE_GLX || USE_EGL)
   decode->has_texture_upload_meta =
