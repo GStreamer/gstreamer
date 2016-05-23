@@ -1129,10 +1129,10 @@ gst_dvbsrc_set_pids (GstDvbSrc * dvbsrc, const gchar * pid_string)
     g_strfreev (tmp);
   }
   /* if we are in playing or paused, then set filters now */
-  GST_INFO_OBJECT (dvbsrc, "checking if playing for setting pes filters");
+  GST_INFO_OBJECT (dvbsrc, "checking if playing for setting PES filters");
   if (GST_ELEMENT (dvbsrc)->current_state == GST_STATE_PLAYING ||
       GST_ELEMENT (dvbsrc)->current_state == GST_STATE_PAUSED) {
-    GST_INFO_OBJECT (dvbsrc, "Setting pes filters now");
+    GST_INFO_OBJECT (dvbsrc, "Setting PES filters now");
     gst_dvbsrc_set_pes_filters (dvbsrc);
   }
 }
@@ -1770,7 +1770,7 @@ gst_dvbsrc_open_dvr (GstDvbSrc * object)
 
   dvr_dev = g_strdup_printf ("/dev/dvb/adapter%d/dvr%d",
       object->adapter_number, object->frontend_number);
-  GST_INFO_OBJECT (object, "Using dvr device: %s", dvr_dev);
+  GST_INFO_OBJECT (object, "Using DVR device: %s", dvr_dev);
 
   /* open DVR */
   if ((object->fd_dvr = open (dvr_dev, O_RDONLY | O_NONBLOCK)) < 0) {
@@ -1990,7 +1990,7 @@ gst_dvbsrc_start (GstBaseSrc * bsrc)
     return FALSE;
   }
   if (!gst_dvbsrc_open_dvr (src)) {
-    GST_ERROR_OBJECT (src, "Not able to open dvr_device");
+    GST_ERROR_OBJECT (src, "Not able to open DVR device");
     /* unset filters also */
     gst_dvbsrc_unset_pes_filters (src);
     close (src->fd_frontend);
@@ -1998,7 +1998,7 @@ gst_dvbsrc_start (GstBaseSrc * bsrc)
   }
   if (!(src->poll = gst_poll_new (TRUE))) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
-        ("could not create an fdset: %s (%d)", g_strerror (errno), errno));
+        ("Could not create an fd set: %s (%d)", g_strerror (errno), errno));
     /* unset filters also */
     gst_dvbsrc_unset_pes_filters (src);
     close (src->fd_frontend);
@@ -2785,7 +2785,7 @@ gst_dvbsrc_set_pes_filters (GstDvbSrc * object)
     pes_filter.pes_type = DMX_PES_OTHER;
     pes_filter.flags = DMX_IMMEDIATE_START;
 
-    GST_INFO_OBJECT (object, "Setting pes-filter, pid = %d, type = %d",
+    GST_INFO_OBJECT (object, "Setting PES filter: pid = %d, type = %d",
         pes_filter.pid, pes_filter.pes_type);
 
     LOOP_WHILE_EINTR (err, ioctl (*fd, DMX_SET_PES_FILTER, &pes_filter));
