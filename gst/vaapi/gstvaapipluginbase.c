@@ -533,6 +533,7 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
 error_invalid_caps:
   {
     GST_ERROR_OBJECT (plugin, "invalid caps %" GST_PTR_FORMAT, caps);
+    gst_object_unref (pool);
     return FALSE;
   }
 error_create_pool:
