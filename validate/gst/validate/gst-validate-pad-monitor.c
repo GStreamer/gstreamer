@@ -2289,14 +2289,15 @@ gst_validate_pad_get_range_func (GstPad * pad, GstObject * parent,
 
 static gboolean
 gst_validate_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
-    gpointer udata)
+    gpointer udata, gboolean pull_mode)
 {
   GstValidatePadMonitor *monitor = udata;
 
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (monitor);
   GST_VALIDATE_MONITOR_LOCK (monitor);
 
-  gst_validate_pad_monitor_check_discont (monitor, buffer);
+  if (!pull_mode)
+    gst_validate_pad_monitor_check_discont (monitor, buffer);
   gst_validate_pad_monitor_check_first_buffer (monitor, buffer);
   gst_validate_pad_monitor_update_buffer_data (monitor, buffer);
   gst_validate_pad_monitor_check_eos (monitor, buffer);
@@ -2451,7 +2452,8 @@ gst_validate_pad_monitor_pad_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer udata)
 {
   if (info->type & GST_PAD_PROBE_TYPE_BUFFER)
-    gst_validate_pad_monitor_buffer_probe (pad, info->data, udata);
+    gst_validate_pad_monitor_buffer_probe (pad, info->data, udata,
+        GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_PULL);
   else if (info->type & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM)
     gst_validate_pad_monitor_event_probe (pad, info->data, udata);
 
