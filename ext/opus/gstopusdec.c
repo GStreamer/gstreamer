@@ -559,7 +559,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     GstFlowReturn ret = GST_FLOW_ERROR;
 
     gst_buffer_unref (outbuf);
-    GST_AUDIO_DECODER_ERROR (dec, 1, STREAM, DECODE, ("Error decoding stream"),
+    GST_AUDIO_DECODER_ERROR (dec, 1, STREAM, DECODE, (NULL),
         ("Decoding error (%d): %s", n, opus_strerror (n)), ret);
     return ret;
   }
