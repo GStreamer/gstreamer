@@ -1140,7 +1140,8 @@ ensure_srcpad_buffer_pool (GstVaapiPostproc * postproc, GstCaps * caps)
   GstVideoInfo vi;
   GstVaapiVideoPool *pool;
 
-  gst_video_info_from_caps (&vi, caps);
+  if (!gst_video_info_from_caps (&vi, caps))
+    return FALSE;
   gst_video_info_change_format (&vi, postproc->format,
       GST_VIDEO_INFO_WIDTH (&vi), GST_VIDEO_INFO_HEIGHT (&vi));
 
@@ -1184,7 +1185,8 @@ gst_vaapipostproc_set_caps (GstBaseTransform * trans, GstCaps * caps,
    * formats while doing advanced deinterlacing. The format of reference surfaces must
    * be same as the format used by the driver internally for motion adaptive
    * deinterlacing and motion compensated deinterlacing */
-  gst_video_info_from_caps (&vinfo, caps);
+  if (!gst_video_info_from_caps (&vinfo, caps))
+    return FALSE;
   if (deint_method_is_advanced (postproc->deinterlace_method)
       && !is_native_video_format (GST_VIDEO_INFO_FORMAT (&vinfo))) {
     GST_WARNING_OBJECT (postproc,
