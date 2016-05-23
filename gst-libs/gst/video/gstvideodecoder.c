@@ -3071,7 +3071,6 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
 
   if (priv->discont) {
     GST_BUFFER_FLAG_SET (output_buffer, GST_BUFFER_FLAG_DISCONT);
-    priv->discont = FALSE;
   }
 
   if (decoder_class->transform_meta) {
@@ -3187,6 +3186,13 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
     }
     gst_buffer_unref (buf);
     goto done;
+  }
+
+  /* Set DISCONT flag here ! */
+  if (priv->discont) {
+    GST_DEBUG_OBJECT (decoder, "Setting discont on output buffer");
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+    priv->discont = FALSE;
   }
 
   /* update rate estimate */
