@@ -683,11 +683,9 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
           "DiSEqC switch. Otherwise leave at -1 (disabled)", -1, 7,
           DEFAULT_DISEQC_SRC, GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
-  /* DVB-T, additional properties */
-
   g_object_class_install_property (gobject_class, ARG_DVBSRC_BANDWIDTH_HZ,
       g_param_spec_uint ("bandwidth-hz", "bandwidth-hz",
-          "(DVB-T) Bandwidth in Hz", 0, G_MAXUINT, DEFAULT_BANDWIDTH_HZ,
+          "Channel bandwidth in Hz", 0, G_MAXUINT, DEFAULT_BANDWIDTH_HZ,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
 #ifndef GST_REMOVE_DEPRECATED
