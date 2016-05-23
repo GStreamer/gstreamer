@@ -145,8 +145,10 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL))
     goto error_invalid_config;
-  if (!caps || !gst_video_info_from_caps (new_vip, caps))
+  if (!caps)
     goto error_no_caps;
+  if (!gst_video_info_from_caps (new_vip, caps))
+    goto error_invalid_caps;
 
   use_dmabuf_memory = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_DMABUF_MEMORY);
@@ -216,6 +218,11 @@ error_invalid_config:
 error_no_caps:
   {
     GST_ERROR_OBJECT (pool, "no valid caps in config");
+    return FALSE;
+  }
+error_invalid_caps:
+  {
+    GST_ERROR_OBJECT (pool, "invalid caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 error_create_allocator:
