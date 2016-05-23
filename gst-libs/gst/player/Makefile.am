@@ -57,7 +57,9 @@ gir_headers=$(patsubst %,$(srcdir)/%, $(libgstplayer_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstplayer_@GST_API_VERSION@_la_SOURCES))
 
 GstPlayer-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstplayer-@GST_API_VERSION@.la
-	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
+	$(AM_V_GEN)GST_PLUGIN_SYSTEM_PATH_1_0="" GST_PLUGIN_PATH_1_0="" GST_REGISTRY_UPDATE=no GI_SCANNER_DISABLE_CACHE=yes \
+		CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" DLLTOOL="$(DLLTOOL)" \
+		PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
 		$(INTROSPECTION_SCANNER) -v --namespace GstPlayer \
 		--nsversion=@GST_API_VERSION@ \
 		--warn-all \
