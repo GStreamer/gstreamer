@@ -197,8 +197,10 @@ gst_player_video_info_get_height (const GstPlayerVideoInfo * info)
 }
 
 /**
- * gst_player_video_info_get_framerate_num:
+ * gst_player_video_info_get_framerate:
  * @info: a #GstPlayerVideoInfo
+ * @fps_n: (out): Numerator of frame rate
+ * @fps_d: (out): Denominator of frame rate
  *
  */
 void
