@@ -509,7 +509,8 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
   if (!pool)
     goto error_create_pool;
 
-  gst_video_info_from_caps (&vi, caps);
+  if (!gst_video_info_from_caps (&vi, caps))
+    goto error_invalid_caps;
   if (GST_VIDEO_INFO_FORMAT (&vi) == GST_VIDEO_FORMAT_ENCODED) {
     GST_DEBUG ("assume video buffer pool format is NV12");
     gst_video_info_set_format (&vi, GST_VIDEO_FORMAT_NV12,
@@ -529,6 +530,11 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
   return TRUE;
 
   /* ERRORS */
+error_invalid_caps:
+  {
+    GST_ERROR_OBJECT (plugin, "invalid caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
 error_create_pool:
   {
     GST_ERROR_OBJECT (plugin, "failed to create buffer pool");
@@ -702,7 +708,8 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   if (!gst_vaapi_plugin_base_ensure_display (plugin))
     goto error_ensure_display;
 
-  gst_video_info_from_caps (&vi, caps);
+  if (!gst_video_info_from_caps (&vi, caps))
+    goto error_invalid_caps;
   if (GST_VIDEO_INFO_FORMAT (&vi) == GST_VIDEO_FORMAT_ENCODED)
     gst_video_info_set_format (&vi, GST_VIDEO_FORMAT_NV12,
         GST_VIDEO_INFO_WIDTH (&vi), GST_VIDEO_INFO_HEIGHT (&vi));
@@ -777,6 +784,11 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 error_no_caps:
   {
     GST_ERROR_OBJECT (plugin, "no caps specified");
+    return FALSE;
+  }
+error_invalid_caps:
+  {
+    GST_ERROR_OBJECT (plugin, "invalid caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 error_ensure_display:
