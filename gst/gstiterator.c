@@ -607,6 +607,8 @@ gst_iterator_fold (GstIterator * it, GstIteratorFoldFunction func,
   GValue item = { 0, };
   GstIteratorResult result;
 
+  g_return_val_if_fail (it != NULL, GST_ITERATOR_ERROR);
+
   while (1) {
     result = gst_iterator_next (it, &item);
     switch (result) {
@@ -625,7 +627,13 @@ gst_iterator_fold (GstIterator * it, GstIteratorFoldFunction func,
   }
 
 fold_done:
+
+#if GLIB_CHECK_VERSION (2, 48, 0)
   g_value_unset (&item);
+#else
+  if (item.g_type != 0)
+    g_value_unset (&item);
+#endif
 
   return result;
 }
