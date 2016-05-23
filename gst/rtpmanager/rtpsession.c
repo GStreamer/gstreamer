@@ -4046,9 +4046,9 @@ done:
       result =
           sess->callbacks.send_rtcp (sess, source, buffer, output->is_bye,
           sess->send_rtcp_user_data);
-      sess->stats.nacks_sent += data.nacked_seqnums;
 
       RTP_SESSION_LOCK (sess);
+      sess->stats.nacks_sent += data.nacked_seqnums;
       on_sender_ssrc_active (sess, source);
       RTP_SESSION_UNLOCK (sess);
     } else {
@@ -4056,8 +4056,11 @@ done:
           " empty_buffer: %d, "
           " do_not_suppress: %d may_suppress: %d", sess->callbacks.send_rtcp,
           empty_buffer, do_not_suppress, data.may_suppress);
-      if (!empty_buffer)
+      if (!empty_buffer) {
+        RTP_SESSION_LOCK (sess);
         sess->stats.nacks_dropped += data.nacked_seqnums;
+        RTP_SESSION_UNLOCK (sess);
+      }
       gst_buffer_unref (buffer);
     }
     g_object_unref (source);
