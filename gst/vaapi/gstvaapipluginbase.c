@@ -310,7 +310,6 @@ gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
   gst_object_replace (&plugin->gl_context, NULL);
 
   gst_caps_replace (&plugin->sinkpad_caps, NULL);
-  plugin->sinkpad_caps_changed = FALSE;
   gst_video_info_init (&plugin->sinkpad_info);
   if (plugin->sinkpad_buffer_pool) {
     gst_object_unref (plugin->sinkpad_buffer_pool);
@@ -319,7 +318,6 @@ gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
   g_clear_object (&plugin->srcpad_buffer_pool);
 
   gst_caps_replace (&plugin->srcpad_caps, NULL);
-  plugin->srcpad_caps_changed = FALSE;
   gst_video_info_init (&plugin->srcpad_info);
   gst_caps_replace (&plugin->allowed_raw_caps, NULL);
 }
@@ -568,7 +566,6 @@ gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
     gst_caps_replace (&plugin->sinkpad_caps, incaps);
     if (!gst_video_info_from_caps (&plugin->sinkpad_info, incaps))
       return FALSE;
-    plugin->sinkpad_caps_changed = TRUE;
     plugin->sinkpad_caps_is_raw = !gst_caps_has_vaapi_surface (incaps);
   }
 
@@ -576,7 +573,6 @@ gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
     gst_caps_replace (&plugin->srcpad_caps, outcaps);
     if (!gst_video_info_from_caps (&plugin->srcpad_info, outcaps))
       return FALSE;
-    plugin->srcpad_caps_changed = TRUE;
   }
 
   if (!ensure_sinkpad_buffer_pool (plugin, plugin->sinkpad_caps))

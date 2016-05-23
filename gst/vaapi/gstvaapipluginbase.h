@@ -157,7 +157,6 @@ struct _GstVaapiPluginBase
 
   GstPad *sinkpad;
   GstCaps *sinkpad_caps;
-  gboolean sinkpad_caps_changed;
   gboolean sinkpad_caps_is_raw;
   GstVideoInfo sinkpad_info;
   GstBufferPool *sinkpad_buffer_pool;
@@ -165,7 +164,6 @@ struct _GstVaapiPluginBase
 
   GstPad *srcpad;
   GstCaps *srcpad_caps;
-  gboolean srcpad_caps_changed;
   GstVideoInfo srcpad_info;
   GstBufferPool *srcpad_buffer_pool;
 
