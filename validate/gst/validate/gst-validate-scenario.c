@@ -741,12 +741,12 @@ find_input_selector (GValue * velement, const gchar * type)
               || g_str_has_prefix (mime, "subtitle/")
               || g_str_has_prefix (mime, "video/x-dvd-subpicture");
 
-        gst_object_unref (srcpad);
         if (found)
           result = 0;
       }
 
       gst_caps_unref (caps);
+      gst_object_unref (srcpad);
     }
   }
   return result;
