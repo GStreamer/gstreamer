@@ -513,7 +513,7 @@ gst_validate_report_new (GstValidateIssue * issue,
 
   report->refcount = 1;
   report->issue = issue;
-  report->reporter = reporter;  /* TODO should we ref? */
+  report->reporter = g_object_ref (reporter);
   report->message = g_strdup (message);
   g_mutex_init (&report->shadow_reports_lock);
   report->timestamp =
@@ -530,6 +530,7 @@ gst_validate_report_unref (GstValidateReport * report)
   g_return_if_fail (report != NULL);
 
   if (G_UNLIKELY (g_atomic_int_dec_and_test (&report->refcount))) {
+    g_object_unref (report->reporter);
     g_free (report->message);
     g_list_free_full (report->shadow_reports,
         (GDestroyNotify) gst_validate_report_unref);
