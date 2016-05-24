@@ -134,7 +134,7 @@ gst_validate_override_register_by_name (const gchar * name,
 
   GST_VALIDATE_OVERRIDE_REGISTRY_LOCK (registry);
   entry->name = g_strdup (name);
-  entry->override = override;
+  entry->override = g_object_ref (override);
   g_queue_push_tail (&registry->name_overrides, entry);
   GST_VALIDATE_OVERRIDE_REGISTRY_UNLOCK (registry);
 }
@@ -149,7 +149,7 @@ gst_validate_override_register_by_type (GType gtype,
 
   GST_VALIDATE_OVERRIDE_REGISTRY_LOCK (registry);
   entry->gtype = gtype;
-  entry->override = override;
+  entry->override = g_object_ref (override);
   g_queue_push_tail (&registry->gtype_overrides, entry);
   GST_VALIDATE_OVERRIDE_REGISTRY_UNLOCK (registry);
 }
@@ -164,7 +164,7 @@ gst_validate_override_register_by_klass (const gchar * klass,
 
   GST_VALIDATE_OVERRIDE_REGISTRY_LOCK (registry);
   entry->name = g_strdup (klass);
-  entry->override = override;
+  entry->override = g_object_ref (override);
   g_queue_push_tail (&registry->klass_overrides, entry);
   GST_VALIDATE_OVERRIDE_REGISTRY_UNLOCK (registry);
 }
@@ -334,12 +334,14 @@ _add_override_from_struct (GstStructure * soverride)
 
     if (!issue) {
 
+      g_object_unref (override);
       return FALSE;
     }
 
     gst_validate_issue_set_default_level (issue, level);
   }
 
+  g_object_unref (override);
   return TRUE;
 }
 

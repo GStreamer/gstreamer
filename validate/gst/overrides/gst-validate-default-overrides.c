@@ -43,5 +43,6 @@ gst_validate_create_overrides (void)
       g_quark_from_string ("caps::is-missing-field"),
       GST_VALIDATE_REPORT_LEVEL_CRITICAL);
   gst_validate_override_register_by_name ("capsfilter0", o);
+  g_object_unref (o);
   return 1;
 }

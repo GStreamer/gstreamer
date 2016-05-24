@@ -787,6 +787,7 @@ gst_validate_ssim_init (GstPlugin * plugin)
       else
         g_assert_not_reached ();
 
+      g_object_unref (override);
     } else {
       GST_ERROR ("Wrong configuration '%" GST_PTR_FORMAT
           "'element-classification' and output-dir are mandatory fields",
