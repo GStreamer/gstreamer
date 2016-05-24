@@ -503,6 +503,7 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
     gst_structure_free (config);
     if (!need_pool)
       return TRUE;
+    gst_buffer_pool_set_active (plugin->sinkpad_buffer_pool, FALSE);
     g_clear_object (&plugin->sinkpad_buffer_pool);
     plugin->sinkpad_buffer_size = 0;
   }
