@@ -203,14 +203,14 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
   g_object_class_install_property (gobject_class, PROP_PIVOT_X,
       g_param_spec_float ("pivot-x", "X Pivot",
           "Rotation pivot point X coordinate, where 0 is the center,"
-          " -1 the lef +1 the right boarder and <-1, >1 outside.",
+          " -1 the left border, +1 the right border and <-1, >1 outside.",
           -G_MAXFLOAT, G_MAXFLOAT, 0.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PIVOT_Y,
       g_param_spec_float ("pivot-y", "Y Pivot",
           "Rotation pivot point X coordinate, where 0 is the center,"
-          " -1 the lef +1 the right boarder and <-1, >1 outside.",
+          " -1 the left border, +1 the right border and <-1, >1 outside.",
           -G_MAXFLOAT, G_MAXFLOAT, 0.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -218,7 +218,7 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
       g_param_spec_float ("pivot-z", "Z Pivot",
           "Relevant for rotation in 3D space. You look into the negative Z axis direction",
           -G_MAXFLOAT, G_MAXFLOAT, 0.0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* MVP */
   g_object_class_install_property (gobject_class, PROP_MVP,
