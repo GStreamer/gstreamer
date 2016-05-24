@@ -489,6 +489,10 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
   GstVideoInfo vi;
   gboolean need_pool;
 
+  /* video decoders don't use a buffer pool in the sink pad */
+  if (GST_IS_VIDEO_DECODER (plugin))
+    return TRUE;
+
   if (!gst_vaapi_plugin_base_ensure_display (plugin))
     return FALSE;
 
