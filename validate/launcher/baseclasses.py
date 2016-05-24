@@ -335,6 +335,7 @@ class Test(Loggable):
             ('num-callers', '20'),
             ('log-file', '"' + vglogsfile + '"'),
             ('error-exitcode', str(VALGRIND_ERROR_CODE)),
+            ('gen-suppressions', 'all'),
         ]
 
         for supp in self.get_valgrind_suppressions():
