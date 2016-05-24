@@ -269,6 +269,8 @@ gst_validate_deinit (void)
   _free_plugin_config (core_config);
   gst_validate_deinit_runner ();
 
+  gst_validate_scenario_deinit ();
+
   g_clear_object (&_gst_validate_registry_default);
 
   _priv_validate_override_registry_deinit ();

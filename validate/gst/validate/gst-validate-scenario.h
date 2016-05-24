@@ -308,6 +308,8 @@ gst_validate_execute_action                 (GstValidateActionType * action_type
 GstState
 gst_validate_scenario_get_target_state     (GstValidateScenario *scenario);
 
+void gst_validate_scenario_deinit          (void);
+
 G_END_DECLS
 
 #endif /* __GST_VALIDATE_SCENARIOS__ */

@@ -3638,3 +3638,10 @@ init_scenarios (void)
   /*  *INDENT-ON* */
 
 }
+
+void
+gst_validate_scenario_deinit (void)
+{
+  _free_action_types (action_types);
+  action_types = NULL;
+}
