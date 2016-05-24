@@ -437,8 +437,11 @@ _get_gl_context_for_thread_unlocked (GstGLDisplay * display, GThread * thread)
       continue;
     }
 
-    if (thread == NULL)
+    if (thread == NULL) {
+      GST_DEBUG_OBJECT (display, "Returning GL context %" GST_PTR_FORMAT " for "
+          "NULL thread", context);
       return context;
+    }
 
     context_thread = gst_gl_context_get_thread (context);
     if (thread != context_thread) {
@@ -451,9 +454,13 @@ _get_gl_context_for_thread_unlocked (GstGLDisplay * display, GThread * thread)
 
     if (context_thread)
       g_thread_unref (context_thread);
+
+    GST_DEBUG_OBJECT (display, "Returning GL context %" GST_PTR_FORMAT " for "
+        "thread %p", context, thread);
     return context;
   }
 
+  GST_DEBUG_OBJECT (display, "No GL context for thread %p", thread);
   return NULL;
 }
 
@@ -549,11 +556,16 @@ gst_gl_display_add_context (GstGLDisplay * display, GstGLContext * context)
 
     /* adding the same context is a no-op */
     if (context == collision) {
+      GST_LOG_OBJECT (display, "Attempting to add the same GL context %"
+          GST_PTR_FORMAT ". Ignoring", context);
+      collision = NULL;
       ret = TRUE;
       goto out;
     }
 
     if (_check_collision (context, collision)) {
+      GST_DEBUG_OBJECT (display, "Collision detected adding GL context "
+          "%" GST_PTR_FORMAT, context);
       ret = FALSE;
       goto out;
     }
@@ -562,6 +574,7 @@ gst_gl_display_add_context (GstGLDisplay * display, GstGLContext * context)
   ref = g_new0 (GWeakRef, 1);
   g_weak_ref_init (ref, context);
 
+  GST_DEBUG_OBJECT (display, "Adding GL context %" GST_PTR_FORMAT, context);
   display->priv->contexts = g_list_prepend (display->priv->contexts, ref);
 
 out:
