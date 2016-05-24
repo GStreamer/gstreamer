@@ -159,3 +159,45 @@
    Memcheck:Value8
    fun:oc_enc_tokenize_ac
 }
+
+# FIXED
+{
+   Fixed with mesa master
+   Memcheck:Cond
+   fun:lp_build_blend_factor_unswizzled
+   ...
+   fun:gst_glimage_sink_on_draw
+}
+
+# FIXED
+{
+   Fixed with mesa master
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   ...
+   fun:_do_convert_draw
+   fun:_do_convert_one_view
+}
+
+# FIXED
+{
+   Fixed with mesa master
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   ...
+   fun:gst_gl_shader_compile
+}
+
+# FIXED
+{
+   Fixed with mesa master
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   ...
+   fun:_draw_checker_background
+   fun:_draw_background
+   fun:gst_gl_video_mixer_callback
+}
