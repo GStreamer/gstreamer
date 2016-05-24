@@ -48,7 +48,6 @@ static GstElement *pipeline, *encodebin;
 static GstEncodingProfile *encoding_profile = NULL;
 static gboolean eos_on_shutdown = FALSE;
 static gboolean force_reencoding = FALSE;
-static GList *all_raw_caps = NULL;
 
 static gboolean buffering = FALSE;
 static gboolean is_live = FALSE;
@@ -682,7 +681,6 @@ _parse_encoding_profile (const gchar * option_name, const gchar * value,
       return FALSE;
     }
 
-    all_raw_caps = g_list_append (all_raw_caps, gst_caps_copy (caps));
     if (g_str_has_prefix (strcaps_v[i], "audio/")) {
       profile = GST_ENCODING_PROFILE (gst_encoding_audio_profile_new (caps,
               preset_name, restrictioncaps, presence));
