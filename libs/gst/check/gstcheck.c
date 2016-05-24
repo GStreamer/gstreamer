@@ -61,11 +61,204 @@ gboolean _gst_check_raised_critical = FALSE;
 gboolean _gst_check_raised_warning = FALSE;
 gboolean _gst_check_expecting_log = FALSE;
 gboolean _gst_check_list_tests = FALSE;
+static GQueue _gst_check_log_filters = G_QUEUE_INIT;
+static GMutex _gst_check_log_filters_mutex;
+
+struct _GstCheckLogFilter {
+  gchar *log_domain;
+  GLogLevelFlags log_level;
+  GRegex *regex;
+  GstCheckLogFilterFunc func;
+  gpointer user_data;
+  GDestroyNotify destroy;
+};
+
+
+static gboolean
+gst_check_match_log_filter (const GstCheckLogFilter * filter,
+    const gchar * log_domain, GLogLevelFlags log_level, const gchar * message)
+{
+  if (g_strcmp0 (log_domain, filter->log_domain) != 0)
+    return FALSE;
+
+  if ((log_level & filter->log_level) == 0)
+    return FALSE;
+
+  if (!g_regex_match (filter->regex, message, 0, NULL))
+    return FALSE;
+
+  return TRUE;
+}
+
+static GstCheckLogFilter *
+gst_check_alloc_log_filter (const gchar * log_domain, GLogLevelFlags log_level,
+    GRegex * regex, GstCheckLogFilterFunc func, gpointer user_data,
+    GDestroyNotify destroy_data)
+{
+  GstCheckLogFilter *filter;
+
+  filter = g_slice_new (GstCheckLogFilter);
+  filter->log_domain = g_strdup (log_domain);
+  filter->log_level = log_level;
+  filter->regex = regex;
+  filter->func = func;
+  filter->user_data = user_data;
+  filter->destroy = destroy_data;
+
+  return filter;
+}
+
+static void
+gst_check_free_log_filter (GstCheckLogFilter * filter)
+{
+  if (!filter)
+    return;
+
+  g_free (filter->log_domain);
+  g_regex_unref (filter->regex);
+  if (filter->destroy)
+    filter->destroy (filter->user_data);
+  g_slice_free (GstCheckLogFilter, filter);
+}
+
+
+/**
+ * gst_check_add_log_filter:
+ * @log_domain: the log domain of the message
+ * @log_level: the log level of the message
+ * @regex: (transfer full): a #GRegex to match the message
+ * @func: the function to call for matching messages
+ * @user_data: the user data to pass to @func
+ * @destroy_data: #GDestroyNotify for @user_data
+ *
+ * Add a callback @func to be called for all log messages that matches
+ * @log_domain, @log_level and @regex. If @func is NULL the
+ * matching logs will be silently discarded by GstCheck.
+ *
+ * MT safe.
+ *
+ * Returns: A filter that can be passed to @gst_check_remove_log_filter.
+ *
+ * Since: 1.12
+ **/
+GstCheckLogFilter *
+gst_check_add_log_filter (const gchar * log_domain, GLogLevelFlags log_level,
+    GRegex * regex, GstCheckLogFilterFunc func, gpointer user_data,
+    GDestroyNotify destroy_data)
+{
+  GstCheckLogFilter *filter;
+
+  g_return_val_if_fail (regex != NULL, NULL);
+
+  filter = gst_check_alloc_log_filter (log_domain, log_level, regex,
+      func, user_data, destroy_data);
+  g_mutex_lock (&_gst_check_log_filters_mutex);
+  g_queue_push_tail (&_gst_check_log_filters, filter);
+  g_mutex_unlock (&_gst_check_log_filters_mutex);
+
+  return filter;
+}
+
+/**
+ * gst_check_remove_log_filter:
+ * @filter: Filter returned by @gst_check_add_log_filter
+ *
+ * Remove a filter that has been added by @gst_check_add_log_filter.
+ *
+ * MT safe.
+ *
+ * Since: 1.12
+ **/
+void
+gst_check_remove_log_filter (GstCheckLogFilter * filter)
+{
+  g_mutex_lock (&_gst_check_log_filters_mutex);
+  g_queue_remove (&_gst_check_log_filters, filter);
+  gst_check_free_log_filter (filter);
+  g_mutex_unlock (&_gst_check_log_filters_mutex);
+}
+
+/**
+ * gst_check_clear_log_filter:
+ *
+ * Clear all filters added by @gst_check_add_log_filter.
+ *
+ * MT safe.
+ *
+ * Since: 1.12
+ **/
+void
+gst_check_clear_log_filter (void)
+{
+  g_mutex_lock (&_gst_check_log_filters_mutex);
+  g_queue_foreach (&_gst_check_log_filters,
+      (GFunc) gst_check_free_log_filter, NULL);
+  g_queue_clear (&_gst_check_log_filters);
+  g_mutex_unlock (&_gst_check_log_filters_mutex);
+}
+
+typedef struct
+{
+  const gchar * domain;
+  const gchar * message;
+  GLogLevelFlags level;
+  gboolean discard;
+} LogFilterApplyData;
+
+static void
+gst_check_apply_log_filter (GstCheckLogFilter * filter,
+    LogFilterApplyData * data)
+{
+  if (gst_check_match_log_filter (filter, data->domain, data->level,
+          data->message)) {
+    if (filter->func)
+      data->discard |= filter->func (data->domain, data->level,
+          data->message, filter->user_data);
+    else
+      data->discard = TRUE;
+  }
+}
+
+static gboolean
+gst_check_filter_log_filter (const gchar * log_domain,
+    GLogLevelFlags log_level, const gchar * message)
+{
+  LogFilterApplyData data;
+
+  data.domain = log_domain;
+  data.level = log_level;
+  data.message = message;
+  data.discard = FALSE;
+
+  g_mutex_lock (&_gst_check_log_filters_mutex);
+  g_queue_foreach (&_gst_check_log_filters, (GFunc) gst_check_apply_log_filter,
+      &data);
+  g_mutex_unlock (&_gst_check_log_filters_mutex);
+
+  if (data.discard)
+    GST_DEBUG ("Discarding message: %s", message);
+
+  return data.discard;
+}
+
+static gboolean
+gst_check_log_fatal_func (const gchar * log_domain, GLogLevelFlags log_level,
+    const gchar *message, gpointer user_data)
+{
+  if (gst_check_filter_log_filter (log_domain, log_level, message))
+    return FALSE;
+
+  return TRUE;
+}
+
 
 static void gst_check_log_message_func
     (const gchar * log_domain, GLogLevelFlags log_level,
     const gchar * message, gpointer user_data)
 {
+  if (gst_check_filter_log_filter (log_domain, log_level, message))
+    return;
+
   if (_gst_check_debug) {
     g_print ("%s\n", message);
   }
@@ -75,6 +268,9 @@ static void gst_check_log_critical_func
     (const gchar * log_domain, GLogLevelFlags log_level,
     const gchar * message, gpointer user_data)
 {
+  if (gst_check_filter_log_filter (log_domain, log_level, message))
+    return;
+
   if (!_gst_check_expecting_log) {
     g_print ("\n\nUnexpected critical/warning: %s\n", message);
     fail ("Unexpected critical/warning: %s", message);
@@ -119,6 +315,13 @@ print_plugins (void)
   gst_plugin_list_free (plugins);
 }
 
+static void
+gst_check_deinit (void)
+{
+  gst_deinit ();
+  gst_check_clear_log_filter ();
+}
+
 /* gst_check_init:
  * @argc: (inout) (allow-none): pointer to application's argc
  * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
@@ -155,8 +358,8 @@ gst_check_init (int *argc, char **argv[])
 
   GST_DEBUG_CATEGORY_INIT (check_debug, "check", 0, "check regression tests");
 
-  if (atexit (gst_deinit) != 0) {
-    GST_ERROR ("failed to set gst_deinit as exit function");
+  if (atexit (gst_check_deinit) != 0) {
+    GST_ERROR ("failed to set gst_check_deinit as exit function");
   }
 
   if (g_getenv ("GST_TEST_DEBUG"))
@@ -174,6 +377,7 @@ gst_check_init (int *argc, char **argv[])
       gst_check_log_critical_func, NULL);
   g_log_set_handler ("GLib", G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
       gst_check_log_critical_func, NULL);
+  g_test_log_set_fatal_handler (gst_check_log_fatal_func, NULL);
 
   print_plugins ();
 
