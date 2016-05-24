@@ -355,7 +355,7 @@ msg_window_message_proc (HWND window_handle, UINT message,
                 entry->path);
 
             if ((source == NULL) &&
-                (strcasecmp (entry->path, bcdi->dbcc_name) == 0))
+                (g_ascii_strcasecmp (entry->path, bcdi->dbcc_name) == 0))
               source = new_video_source (entry);
 
             ks_device_entry_free (entry);
@@ -377,7 +377,7 @@ msg_window_message_proc (HWND window_handle, UINT message,
           for (item = provider->devices; item; item = item->next) {
             dev = item->data;
 
-            if (strcasecmp (dev->path, bcdi->dbcc_name) == 0) {
+            if (g_ascii_strcasecmp (dev->path, bcdi->dbcc_name) == 0) {
               guid_str = gst_device_get_display_name (GST_DEVICE (dev));
               GST_INFO_OBJECT (self, "Device matches to %s", guid_str);
               g_free (guid_str);

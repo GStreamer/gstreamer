@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <windows.h>
+#include <mmsystem.h>
 #include <ks.h>
 
 G_BEGIN_DECLS
