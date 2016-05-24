@@ -62,7 +62,7 @@ static void
     (GstValidateOverrideRegistryNameEntry * entry)
 {
   g_free (entry->name);
-  gst_object_unref (entry->override);
+  g_object_unref (entry->override);
 
   g_slice_free (GstValidateOverrideRegistryNameEntry, entry);
 }
@@ -71,7 +71,7 @@ static void
     gst_validate_override_registry_type_entry_free
     (GstValidateOverrideRegistryGTypeEntry * entry)
 {
-  gst_object_unref (entry->override);
+  g_object_unref (entry->override);
 
   g_slice_free (GstValidateOverrideRegistryGTypeEntry, entry);
 }
