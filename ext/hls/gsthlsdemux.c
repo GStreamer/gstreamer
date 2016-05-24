@@ -299,7 +299,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   GstSeekType start_type, stop_type;
   gint64 start, stop;
   gdouble rate, old_rate;
-  GList *walk, *current_file = NULL;
+  GList *walk;
   GstClockTime current_pos, target_pos;
   gint64 current_sequence;
   GstM3U8MediaFile *file;
@@ -368,7 +368,6 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     file = walk->data;
 
     current_sequence = file->sequence;
-    current_file = walk;
     if ((!reverse && snap_after) || snap_nearest) {
       if (current_pos >= target_pos)
         break;
@@ -398,8 +397,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   for (walk = demux->streams; walk != NULL; walk = walk->next)
     GST_HLS_DEMUX_STREAM_CAST (walk->data)->reset_pts = TRUE;
   hlsdemux->current_variant->m3u8->sequence = current_sequence;
-  hlsdemux->current_variant->m3u8->current_file =
-      current_file ? current_file : hlsdemux->current_variant->m3u8->files;
+  hlsdemux->current_variant->m3u8->current_file = walk;
   hlsdemux->current_variant->m3u8->sequence_position = current_pos;
   GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
 
