@@ -976,6 +976,7 @@ exit:
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   g_main_loop_unref (mainloop);
+  g_clear_object (&encoding_profile);
   g_object_unref (pipeline);
   g_object_unref (monitor);
   g_object_unref (runner);
