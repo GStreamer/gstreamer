@@ -421,16 +421,18 @@ pad_added_cb (GstElement * decodebin, GstPad * pad,
     gst_bin_add (GST_BIN (writer->priv->pipeline), parser);
     gst_element_sync_state_with_parent (parser);
     gst_pad_link (pad, sinkpad);
+    gst_object_unref (sinkpad);
 
     srcpad = gst_element_get_static_pad (parser, "src");
   } else {
-    srcpad = pad;
+    srcpad = gst_object_ref (pad);
   }
 
   sinkpad = gst_element_get_static_pad (fakesink, "sink");
   gst_bin_add (GST_BIN (writer->priv->pipeline), fakesink);
   gst_element_sync_state_with_parent (fakesink);
   gst_pad_link (srcpad, sinkpad);
+  gst_object_unref (sinkpad);
   gst_pad_sticky_events_foreach (pad,
       (GstPadStickyEventsForeachFunction) _find_stream_id, writer);
 
@@ -440,7 +442,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad,
         (GstValidateMediaDescriptor *)
         writer, pad);
     if (snode) {
-      gst_object_unref (pad);
+      gst_object_unref (snode->pad);
       snode->pad = gst_object_ref (srcpad);
     }
   }
@@ -448,6 +450,8 @@ pad_added_cb (GstElement * decodebin, GstPad * pad,
   gst_pad_add_probe (srcpad,
       GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       (GstPadProbeCallback) _uridecodebin_probe, writer, NULL);
+
+  gst_object_unref (srcpad);
 }
 
 static gboolean
