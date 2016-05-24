@@ -195,8 +195,8 @@ _get_gl_context (GstGLBaseMixer * mix)
 
   _find_local_gl_context (mix);
 
+  GST_OBJECT_LOCK (mix->display);
   if (!mix->context) {
-    GST_OBJECT_LOCK (mix->display);
     do {
       if (mix->context) {
         gst_object_unref (mix->context);
@@ -213,8 +213,8 @@ _get_gl_context (GstGLBaseMixer * mix)
         }
       }
     } while (!gst_gl_display_add_context (mix->display, mix->context));
-    GST_OBJECT_UNLOCK (mix->display);
   }
+  GST_OBJECT_UNLOCK (mix->display);
 
   {
     GstGLAPI current_gl_api = gst_gl_context_get_gl_api (mix->context);
