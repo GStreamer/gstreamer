@@ -36,6 +36,10 @@
 #include "gst-validate-override-registry.h"
 #include "gst-validate-runner.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_validate_runner_debug);
+#undef GST_CAT_DEFAULT
+#define GST_CAT_DEFAULT gst_validate_runner_debug
+
 static gboolean element_created = FALSE;
 
 /* We create a GstValidateRunner on _init ()
@@ -425,6 +429,9 @@ gst_validate_runner_class_init (GstValidateRunnerClass * klass)
   _signals[STOPPING_SIGNAL] =
       g_signal_new ("stopping", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0,
       NULL, NULL, NULL, G_TYPE_NONE, 0);
+
+  GST_DEBUG_CATEGORY_INIT (gst_validate_runner_debug, "gstvalidaterunner",
+      GST_DEBUG_FG_YELLOW, "Gst validate runner");
 }
 
 static void
