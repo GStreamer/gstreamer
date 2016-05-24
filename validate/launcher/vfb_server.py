@@ -95,7 +95,7 @@ class Xvfb(VirtualFrameBufferServer):
                 self._process = None
         except Exception as ex:
             return (False, "Could not launch %s %s\n"
-                    "Make sure Xvbf is installed" % (self._command, ex))
+                    "Make sure Xvfb is installed" % (self._command, ex))
 
     def stop(self):
         """ Stop the xvfb subprocess if running. """
