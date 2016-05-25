@@ -30,7 +30,6 @@
 #include "gstvaapivideocontext.h"
 #include "gstvaapivideometa.h"
 #include "gstvaapivideobufferpool.h"
-#include <gst/allocators/allocators.h>
 
 /* Default debug category is from the subclass */
 #define GST_CAT_DEFAULT (plugin->debug_category)
