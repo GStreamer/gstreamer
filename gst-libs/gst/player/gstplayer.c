@@ -3410,12 +3410,7 @@ gst_player_set_subtitle_uri (GstPlayer * self, const gchar * suburi)
 {
   g_return_val_if_fail (GST_IS_PLAYER (self), FALSE);
 
-  g_mutex_lock (&self->lock);
-  g_free (self->suburi);
-  self->suburi = g_strdup (suburi);
-  g_mutex_unlock (&self->lock);
-
-  gst_player_set_suburi_internal (self);
+  g_object_set (self, "suburi", suburi, NULL);
 
   return TRUE;
 }
