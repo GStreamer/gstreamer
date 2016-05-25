@@ -157,10 +157,8 @@ enum
   PROP_LAST
 };
 
-enum GstAdaptiveDemuxFlowReturn
-{
-  GST_ADAPTIVE_DEMUX_FLOW_SWITCH = GST_FLOW_CUSTOM_SUCCESS_2 + 1
-};
+/* Internal, so not using GST_FLOW_CUSTOM_SUCCESS_N */
+#define GST_ADAPTIVE_DEMUX_FLOW_SWITCH (GST_FLOW_CUSTOM_SUCCESS_2 + 1)
 
 struct _GstAdaptiveDemuxPrivate
 {
@@ -2136,6 +2134,8 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       GST_TIME_AS_USECONDS (gst_adaptive_demux_get_monotonic_time (demux));
 
   if (ret != GST_FLOW_OK) {
+    gboolean finished = FALSE;
+
     if (ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (demux, STREAM, FAILED, (NULL),
           ("stream stopped, reason %s", gst_flow_get_name (ret)));
@@ -2147,9 +2147,22 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           gst_flow_get_name (ret));
     }
 
-    gst_adaptive_demux_stream_fragment_download_finish (stream, ret, NULL);
-    if (ret == (GstFlowReturn) GST_ADAPTIVE_DEMUX_FLOW_SWITCH)
+    if (ret == (GstFlowReturn) GST_ADAPTIVE_DEMUX_FLOW_SWITCH) {
       ret = GST_FLOW_EOS;       /* return EOS to make the source stop */
+    } else if (ret == GST_ADAPTIVE_DEMUX_FLOW_END_OF_FRAGMENT) {
+      /* Behaves like an EOS event from upstream */
+      ret = klass->finish_fragment (demux, stream);
+      if (ret == (GstFlowReturn) GST_ADAPTIVE_DEMUX_FLOW_SWITCH) {
+        ret = GST_FLOW_EOS;     /* return EOS to make the source stop */
+      } else if (ret != GST_FLOW_OK) {
+        goto error;
+      }
+      finished = TRUE;
+    }
+
+    gst_adaptive_demux_stream_fragment_download_finish (stream, ret, NULL);
+    if (finished)
+      ret = GST_FLOW_EOS;
   }
 
 error:
