@@ -38,6 +38,9 @@ extern const char             g_log_domain_gstreamer[];
 #include <stdlib.h>
 #include <string.h>
 
+/* Needed for GST_EXPORT */
+#include "gstconfig.h"
+
 /* Needed for GstRegistry * */
 #include "gstregistry.h"
 #include "gststructure.h"
