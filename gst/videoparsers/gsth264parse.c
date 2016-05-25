@@ -129,7 +129,7 @@ gst_h264_parse_class_init (GstH264ParseClass * klass)
   gobject_class->get_property = gst_h264_parse_get_property;
 
   g_object_class_install_property (gobject_class, PROP_CONFIG_INTERVAL,
-      g_param_spec_uint ("config-interval",
+      g_param_spec_int ("config-interval",
           "SPS PPS Send Interval",
           "Send SPS and PPS Insertion Interval in seconds (sprop parameter sets "
           "will be multiplexed in the data stream when detected.) (0 = disabled)",
@@ -2799,7 +2799,7 @@ gst_h264_parse_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_CONFIG_INTERVAL:
-      parse->interval = g_value_get_uint (value);
+      parse->interval = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2817,7 +2817,7 @@ gst_h264_parse_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_CONFIG_INTERVAL:
-      g_value_set_uint (value, parse->interval);
+      g_value_set_int (value, parse->interval);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
