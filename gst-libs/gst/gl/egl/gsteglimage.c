@@ -65,6 +65,8 @@
 #define EGL_DMA_BUF_PLANE0_PITCH_EXT 0x3274
 #endif
 
+GST_DEFINE_MINI_OBJECT_TYPE (GstEGLImage, gst_egl_image);
+
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_egl_image_ensure_debug_category()
 
