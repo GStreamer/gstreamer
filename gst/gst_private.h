@@ -39,7 +39,7 @@ extern const char             g_log_domain_gstreamer[];
 #include <string.h>
 
 /* Needed for GST_EXPORT */
-#include "gstconfig.h"
+#include "gst/gstconfig.h"
 
 /* Needed for GstRegistry * */
 #include "gstregistry.h"
