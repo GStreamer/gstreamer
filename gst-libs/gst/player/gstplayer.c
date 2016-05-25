@@ -166,6 +166,10 @@ struct _GstPlayer
   GstClockTime last_seek_time;  /* Only set from main context */
   GSource *seek_source;
   GstClockTime seek_position;
+  /* If TRUE, all signals are inhibited except the
+   * state-changed:GST_PLAYER_STATE_STOPPED/PAUSED. This ensures that no signal
+   * is emitted after gst_player_stop/pause() has been called by the user. */
+  gboolean inhibit_sigs;
 };
 
 struct _GstPlayerClass
@@ -243,6 +247,7 @@ gst_player_init (GstPlayer * self)
   self->seek_pending = FALSE;
   self->seek_position = GST_CLOCK_TIME_NONE;
   self->last_seek_time = GST_CLOCK_TIME_NONE;
+  self->inhibit_sigs = FALSE;
 
   GST_TRACE_OBJECT (self, "Initialized");
 }
@@ -788,6 +793,10 @@ state_changed_dispatch (gpointer user_data)
 {
   StateChangedSignalData *data = user_data;
 
+  if (data->player->inhibit_sigs && data->state != GST_PLAYER_STATE_STOPPED
+      && data->state != GST_PLAYER_STATE_PAUSED)
+    return;
+
   g_signal_emit (data->player, signals[SIGNAL_STATE_CHANGED], 0, data->state);
 }
 
@@ -831,6 +840,9 @@ static void
 position_updated_dispatch (gpointer user_data)
 {
   PositionUpdatedSignalData *data = user_data;
+
+  if (data->player->inhibit_sigs)
+    return;
 
   if (data->player->target_state >= GST_STATE_PAUSED) {
     g_signal_emit (data->player, signals[SIGNAL_POSITION_UPDATED], 0,
@@ -948,6 +960,9 @@ error_dispatch (gpointer user_data)
 {
   ErrorSignalData *data = user_data;
 
+  if (data->player->inhibit_sigs)
+    return;
+
   g_signal_emit (data->player, signals[SIGNAL_ERROR], 0, data->err);
 }
 
@@ -1033,6 +1048,9 @@ static void
 warning_dispatch (gpointer user_data)
 {
   WarningSignalData *data = user_data;
+
+  if (data->player->inhibit_sigs)
+    return;
 
   g_signal_emit (data->player, signals[SIGNAL_WARNING], 0, data->err);
 }
@@ -1146,7 +1164,12 @@ warning_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg, gpointer user_data)
 static void
 eos_dispatch (gpointer user_data)
 {
-  g_signal_emit (user_data, signals[SIGNAL_END_OF_STREAM], 0);
+  GstPlayer *player = user_data;
+
+  if (player->inhibit_sigs)
+    return;
+
+  g_signal_emit (player, signals[SIGNAL_END_OF_STREAM], 0);
 }
 
 static void
@@ -1180,6 +1203,9 @@ static void
 buffering_dispatch (gpointer user_data)
 {
   BufferingSignalData *data = user_data;
+
+  if (data->player->inhibit_sigs)
+    return;
 
   if (data->player->target_state >= GST_STATE_PAUSED) {
     g_signal_emit (data->player, signals[SIGNAL_BUFFERING], 0, data->percent);
@@ -1296,6 +1322,9 @@ video_dimensions_changed_dispatch (gpointer user_data)
 {
   VideoDimensionsChangedSignalData *data = user_data;
 
+  if (data->player->inhibit_sigs)
+    return;
+
   if (data->player->target_state >= GST_STATE_PAUSED) {
     g_signal_emit (data->player, signals[SIGNAL_VIDEO_DIMENSIONS_CHANGED], 0,
         data->width, data->height);
@@ -1381,6 +1410,9 @@ duration_changed_dispatch (gpointer user_data)
 {
   DurationChangedSignalData *data = user_data;
 
+  if (data->player->inhibit_sigs)
+    return;
+
   if (data->player->target_state >= GST_STATE_PAUSED) {
     g_signal_emit (data->player, signals[SIGNAL_DURATION_CHANGED], 0,
         data->duration);
@@ -1424,6 +1456,9 @@ static void
 seek_done_dispatch (gpointer user_data)
 {
   SeekDoneSignalData *data = user_data;
+
+  if (data->player->inhibit_sigs)
+    return;
 
   g_signal_emit (data->player, signals[SIGNAL_SEEK_DONE], 0, data->position);
 }
@@ -1766,6 +1801,9 @@ static void
 media_info_updated_dispatch (gpointer user_data)
 {
   MediaInfoUpdatedSignalData *data = user_data;
+
+  if (data->player->inhibit_sigs)
+    return;
 
   if (data->player->target_state >= GST_STATE_PAUSED) {
     g_signal_emit (data->player, signals[SIGNAL_MEDIA_INFO_UPDATED], 0,
@@ -2405,8 +2443,13 @@ subtitle_tags_changed_cb (G_GNUC_UNUSED GstElement * playbin, gint stream_index,
 static void
 volume_changed_dispatch (gpointer user_data)
 {
-  g_signal_emit (user_data, signals[SIGNAL_VOLUME_CHANGED], 0);
-  g_object_notify_by_pspec (G_OBJECT (user_data), param_specs[PROP_VOLUME]);
+  GstPlayer *player = user_data;
+
+  if (player->inhibit_sigs)
+    return;
+
+  g_signal_emit (player, signals[SIGNAL_VOLUME_CHANGED], 0);
+  g_object_notify_by_pspec (G_OBJECT (player), param_specs[PROP_VOLUME]);
 }
 
 static void
@@ -2424,8 +2467,13 @@ volume_notify_cb (G_GNUC_UNUSED GObject * obj, G_GNUC_UNUSED GParamSpec * pspec,
 static void
 mute_changed_dispatch (gpointer user_data)
 {
-  g_signal_emit (user_data, signals[SIGNAL_MUTE_CHANGED], 0);
-  g_object_notify_by_pspec (G_OBJECT (user_data), param_specs[PROP_MUTE]);
+  GstPlayer *player = user_data;
+
+  if (player->inhibit_sigs)
+    return;
+
+  g_signal_emit (player, signals[SIGNAL_MUTE_CHANGED], 0);
+  g_object_notify_by_pspec (G_OBJECT (player), param_specs[PROP_MUTE]);
 }
 
 static void
@@ -2692,6 +2740,10 @@ gst_player_play (GstPlayer * self)
 {
   g_return_if_fail (GST_IS_PLAYER (self));
 
+  g_mutex_lock (&self->lock);
+  self->inhibit_sigs = FALSE;
+  g_mutex_unlock (&self->lock);
+
   g_main_context_invoke_full (self->context, G_PRIORITY_DEFAULT,
       gst_player_play_internal, self, NULL);
 }
@@ -2759,6 +2811,10 @@ gst_player_pause (GstPlayer * self)
 {
   g_return_if_fail (GST_IS_PLAYER (self));
 
+  g_mutex_lock (&self->lock);
+  self->inhibit_sigs = TRUE;
+  g_mutex_unlock (&self->lock);
+
   g_main_context_invoke_full (self->context, G_PRIORITY_DEFAULT,
       gst_player_pause_internal, self, NULL);
 }
@@ -2818,6 +2874,10 @@ void
 gst_player_stop (GstPlayer * self)
 {
   g_return_if_fail (GST_IS_PLAYER (self));
+
+  g_mutex_lock (&self->lock);
+  self->inhibit_sigs = TRUE;
+  g_mutex_unlock (&self->lock);
 
   g_main_context_invoke_full (self->context, G_PRIORITY_DEFAULT,
       gst_player_stop_internal, self, NULL);
