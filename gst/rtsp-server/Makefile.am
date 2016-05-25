@@ -72,6 +72,7 @@ gir_sources=$(patsubst %,$(srcdir)/%, $(libgstrtspserver_@GST_API_VERSION@_la_SO
 
 GstRtspServer-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtspserver-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
+		CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" DLLTOOL="$(DLLTOOL)" \
 		$(INTROSPECTION_SCANNER) -v --namespace GstRtspServer \
 		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
