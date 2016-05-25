@@ -48,9 +48,7 @@ struct _GstVaapiVideoBufferPoolPrivate
   GstAllocator *allocator;
   GstVideoInfo alloc_info;
   GstVaapiDisplay *display;
-  guint has_video_meta:1;
-  guint has_video_alignment:1;
-  guint has_texture_upload_meta:1;
+  guint options;
   guint use_dmabuf_memory:1;
 };
 
@@ -182,19 +180,20 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   if (!priv->allocator)
     goto error_no_allocator;
 
-  priv->has_video_meta = gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_VIDEO_META);
+  priv->options = 0;
+  if (gst_buffer_pool_config_has_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_META))
+    priv->options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
 
-  priv->has_video_alignment = gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-  if (priv->has_video_alignment) {
+  if (gst_buffer_pool_config_has_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
     fill_video_alignment (GST_VAAPI_VIDEO_BUFFER_POOL (pool), &align);
     gst_buffer_pool_config_set_video_alignment (config, &align);
   }
 
-  priv->has_texture_upload_meta = !priv->use_dmabuf_memory
-      && gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
+  if (!priv->use_dmabuf_memory && gst_buffer_pool_config_has_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META))
+    priv->options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD;
 
   return
       GST_BUFFER_POOL_CLASS
@@ -277,7 +276,7 @@ gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
   gst_vaapi_video_meta_replace (&meta, NULL);
   gst_buffer_append_memory (buffer, mem);
 
-  if (priv->has_video_meta) {
+  if (priv->options & GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META) {
     GstVideoInfo *const vip = &priv->alloc_info;
     GstVideoMeta *vmeta;
 
@@ -293,7 +292,7 @@ gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
     }
   }
 #if (USE_GLX || USE_EGL)
-  if (priv->has_texture_upload_meta)
+  if (priv->options & GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD)
     gst_buffer_add_texture_upload_meta (buffer);
 #endif
 

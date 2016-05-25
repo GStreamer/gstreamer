@@ -69,6 +69,21 @@ typedef enum {
 } GstVaapiVideoBufferPoolAcquireFlags;
 
 /**
+ * GstVaapiVideoBufferPoolOption:
+ * @GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META:
+ * @GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT:
+ * @GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD:
+ *
+ * Helper enum to handle the buffer pool options using bit operation.
+ **/
+typedef enum
+{
+  GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META = (1u << 0),
+  GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT = (1u << 1),
+  GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD = (1u << 2),
+} GstVaapiVideoBufferPoolOption;
+
+/**
  * GstVaapiVideoBufferPool:
  *
  * A VA video buffer pool object.

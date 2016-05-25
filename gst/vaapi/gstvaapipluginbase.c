@@ -37,13 +37,6 @@
 /* Environment variable for disable driver white-list */
 #define GST_VAAPI_ALL_DRIVERS_ENV "GST_VAAPI_ALL_DRIVERS"
 
-enum
-{
-  GST_VAAPI_OPTION_VIDEO_META = (1u << 0),
-  GST_VAAPI_OPTION_VIDEO_ALIGNMENT = (1u << 1),
-  GST_VAAPI_OPTION_GL_TEXTURE_UPLOAD = (1u << 2),
-};
-
 /* GstVideoContext interface */
 static void
 plugin_set_display (GstVaapiPluginBase * plugin, GstVaapiDisplay * display)
@@ -520,7 +513,7 @@ gst_vaapi_buffer_pool_caps_is_equal (GstBufferPool * pool, GstCaps * newcaps)
  * @plugin: a #GstVaapiPluginBase
  * @caps: the initial #GstCaps for the resulting buffer pool
  * @size: the size of each buffer, not including prefix and padding
- * @options: #GstBufferPool options encoded as bit-wise flags
+ * @options: a set of #GstVaapiVideoBufferPoolOption encoded as bit-wise
  * @allocator: (allow-none): the #GstAllocator to use or %NULL
  *
  * Create an instance of #GstVaapiVideoBufferPool
@@ -543,16 +536,16 @@ gst_vaapi_plugin_base_create_pool (GstVaapiPluginBase * plugin, GstCaps * caps,
       max_buffers);
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META);
-  if (options & GST_VAAPI_OPTION_VIDEO_META) {
+  if (options & GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
   }
-  if (options & GST_VAAPI_OPTION_VIDEO_ALIGNMENT) {
+  if (options & GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
   }
 #if (USE_GLX || USE_EGL)
-  if (options & GST_VAAPI_OPTION_GL_TEXTURE_UPLOAD) {
+  if (options & GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
   }
@@ -620,7 +613,8 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
     goto error_create_allocator;
 
   pool = gst_vaapi_plugin_base_create_pool (plugin, caps,
-      GST_VIDEO_INFO_SIZE (&vi), 0, 0, GST_VAAPI_OPTION_VIDEO_META, allocator);
+      GST_VIDEO_INFO_SIZE (&vi), 0, 0,
+      GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META, allocator);
   gst_object_unref (allocator);
   if (!pool)
     goto error_create_pool;
@@ -766,17 +760,17 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
   pool_options = 0;
   if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL))
-    pool_options |= GST_VAAPI_OPTION_VIDEO_META;
+    pool_options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
 
 #if (USE_GLX || USE_EGL)
   if (gst_query_find_allocation_meta (query,
           GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx) &&
       gst_vaapi_caps_feature_contains (caps,
           GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META))
-    pool_options |= GST_VAAPI_OPTION_GL_TEXTURE_UPLOAD;
+    pool_options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD;
 
 #if USE_GST_GL_HELPERS
-  if (pool_options & GST_VAAPI_OPTION_GL_TEXTURE_UPLOAD) {
+  if (pool_options & GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD) {
     const GstStructure *params;
     GstObject *gl_context;
 
@@ -811,7 +805,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
          not provide a correct propose_allocation() implementation */
       if (gst_buffer_pool_has_option (pool,
               GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT))
-        pool_options |= GST_VAAPI_OPTION_VIDEO_ALIGNMENT;
+        pool_options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT;
 
       /* GstVaapiVideoMeta is mandatory, and this implies VA surface memory */
       if (!gst_buffer_pool_has_option (pool,
