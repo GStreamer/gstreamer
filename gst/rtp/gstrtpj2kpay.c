@@ -502,6 +502,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
     offset = pos;
   } while (offset < map.size);
 
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
   /* push the whole buffer list at once */
