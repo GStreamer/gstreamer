@@ -316,6 +316,9 @@ gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
   }
   g_clear_object (&plugin->srcpad_buffer_pool);
 
+  g_clear_object (&plugin->sinkpad_allocator);
+  g_clear_object (&plugin->srcpad_allocator);
+
   gst_caps_replace (&plugin->srcpad_caps, NULL);
   gst_video_info_init (&plugin->srcpad_info);
   gst_caps_replace (&plugin->allowed_raw_caps, NULL);
@@ -487,7 +490,9 @@ set_dmabuf_allocator (GstVaapiPluginBase * plugin, GstBufferPool * pool,
     return FALSE;
   gst_buffer_pool_config_set_allocator (config, allocator, NULL);
   ret = gst_buffer_pool_set_config (pool, config);
-  gst_object_unref (allocator);
+  if (plugin->sinkpad_allocator)
+    gst_object_unref (plugin->sinkpad_allocator);
+  plugin->sinkpad_allocator = allocator;
   return ret;
 }
 
@@ -506,6 +511,28 @@ gst_vaapi_buffer_pool_caps_is_equal (GstBufferPool * pool, GstCaps * newcaps)
   gst_structure_free (config);
 
   return ret;
+}
+
+static gboolean
+ensure_sinkpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo)
+{
+  if (plugin->sinkpad_allocator)
+    return TRUE;
+
+  plugin->sinkpad_allocator =
+      gst_vaapi_video_allocator_new (plugin->display, vinfo, 0);
+  return plugin->sinkpad_allocator != NULL;
+}
+
+static gboolean
+ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo)
+{
+  if (plugin->srcpad_allocator)
+    return TRUE;
+
+  plugin->srcpad_allocator =
+      gst_vaapi_video_allocator_new (plugin->display, vinfo, 0);
+  return plugin->srcpad_allocator != NULL;
 }
 
 /**
@@ -587,7 +614,6 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
 {
   GstBufferPool *pool;
   GstVideoInfo vi;
-  GstAllocator *allocator;
 
   /* video decoders don't use a buffer pool in the sink pad */
   if (GST_IS_VIDEO_DECODER (plugin))
@@ -608,14 +634,11 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
     goto error_invalid_caps;
   gst_video_info_force_nv12_if_encoded (&vi);
 
-  allocator = gst_vaapi_video_allocator_new (plugin->display, &vi, 0);
-  if (!allocator)
+  if (!ensure_sinkpad_allocator (plugin, &vi))
     goto error_create_allocator;
-
   pool = gst_vaapi_plugin_base_create_pool (plugin, caps,
       GST_VIDEO_INFO_SIZE (&vi), 0, 0,
-      GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META, allocator);
-  gst_object_unref (allocator);
+      GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META, plugin->sinkpad_allocator);
   if (!pool)
     goto error_create_pool;
   plugin->sinkpad_buffer_pool = pool;
@@ -656,6 +679,7 @@ gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
     GstCaps * outcaps)
 {
   if (incaps && incaps != plugin->sinkpad_caps) {
+    g_clear_object (&plugin->sinkpad_allocator);
     gst_caps_replace (&plugin->sinkpad_caps, incaps);
     if (!gst_video_info_from_caps (&plugin->sinkpad_info, incaps))
       return FALSE;
@@ -663,6 +687,7 @@ gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
   }
 
   if (outcaps && outcaps != plugin->srcpad_caps) {
+    g_clear_object (&plugin->srcpad_allocator);
     gst_caps_replace (&plugin->srcpad_caps, outcaps);
     if (!gst_video_info_from_caps (&plugin->srcpad_info, outcaps))
       return FALSE;
@@ -743,7 +768,6 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   guint size, min, max;
   gboolean update_pool = FALSE;
   guint pool_options;
-  GstAllocator *allocator;
 #if (USE_GLX || USE_EGL)
   guint idx;
 #endif
@@ -822,12 +846,10 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   }
 
   if (!pool) {
-    allocator = gst_vaapi_video_allocator_new (plugin->display, &vi, 0);
-    if (!allocator)
+    if (!ensure_srcpad_allocator (plugin, &vi))
       goto error_create_allocator;
     pool = gst_vaapi_plugin_base_create_pool (plugin, caps, size, min, max,
-        pool_options, allocator);
-    gst_object_unref (allocator);
+        pool_options, plugin->srcpad_allocator);
     if (!pool)
       goto error_create_pool;
   }

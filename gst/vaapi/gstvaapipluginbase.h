@@ -175,6 +175,8 @@ struct _GstVaapiPluginBase
   GstObject *gl_context;
 
   GstCaps *allowed_raw_caps;
+  GstAllocator *sinkpad_allocator;
+  GstAllocator *srcpad_allocator;
 };
 
 struct _GstVaapiPluginBaseClass
