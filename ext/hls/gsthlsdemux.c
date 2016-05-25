@@ -349,9 +349,8 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     /* TODO why not continue using the same? that was being used up to now? */
     gst_hls_demux_change_playlist (hlsdemux, bitrate, NULL);
   }
-  GST_M3U8_CLIENT_LOCK (hlsdemux->client);
-  file = GST_M3U8_MEDIA_FILE (hlsdemux->current_variant->m3u8->files->data);
-  current_sequence = file->sequence;
+
+  current_sequence = 0;
   current_pos = 0;
   reverse = rate < 0;
   target_pos = reverse ? stop : start;
@@ -363,6 +362,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   snap_before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
   snap_after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
 
+  GST_M3U8_CLIENT_LOCK (hlsdemux->client);
   /* FIXME: Here we need proper discont handling */
   for (walk = hlsdemux->current_variant->m3u8->files; walk; walk = walk->next) {
     file = walk->data;
