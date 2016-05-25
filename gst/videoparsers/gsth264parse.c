@@ -132,8 +132,9 @@ gst_h264_parse_class_init (GstH264ParseClass * klass)
       g_param_spec_int ("config-interval",
           "SPS PPS Send Interval",
           "Send SPS and PPS Insertion Interval in seconds (sprop parameter sets "
-          "will be multiplexed in the data stream when detected.) (0 = disabled)",
-          0, 3600, DEFAULT_CONFIG_INTERVAL,
+          "will be multiplexed in the data stream when detected.) "
+          "(0 = disabled, -1 = send with every IDR frame)",
+          -1, 3600, DEFAULT_CONFIG_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /* Override BaseParse vfuncs */
@@ -2370,6 +2371,18 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           h264parse->last_report = new_ts;
         }
       }
+      /* we pushed whatever we had */
+      h264parse->push_codec = FALSE;
+      h264parse->have_sps = FALSE;
+      h264parse->have_pps = FALSE;
+      h264parse->state &= GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS;
+    }
+  } else if (h264parse->interval == -1) {
+    if (h264parse->idr_pos >= 0) {
+      GST_LOG_OBJECT (h264parse, "IDR nal at offset %d", h264parse->idr_pos);
+
+      gst_h264_parse_handle_sps_pps_nals (h264parse, buffer, frame);
+
       /* we pushed whatever we had */
       h264parse->push_codec = FALSE;
       h264parse->have_sps = FALSE;
