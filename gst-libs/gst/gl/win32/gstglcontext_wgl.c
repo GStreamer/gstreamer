@@ -40,6 +40,8 @@ struct _GstGLContextWGLPrivate
   GstGLAPI context_api;
 };
 
+#define GST_CAT_DEFAULT gst_gl_context_debug
+
 #define gst_gl_context_wgl_parent_class parent_class
 G_DEFINE_TYPE (GstGLContextWGL, gst_gl_context_wgl, GST_GL_TYPE_CONTEXT);
 #define GST_GL_CONTEXT_WGL_GET_PRIVATE(o) \
