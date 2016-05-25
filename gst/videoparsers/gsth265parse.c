@@ -1144,7 +1144,7 @@ gst_h265_parse_make_codec_data (GstH265Parse * h265parse)
     GST_WRITE_UINT16_BE (data, num_vps);
     data += 2;
 
-    for (i = 0; i < num_vps; i++) {
+    for (i = 0; i < GST_H265_MAX_VPS_COUNT; i++) {
       if ((nal = h265parse->vps_nals[i])) {
         gsize nal_size = gst_buffer_get_size (nal);
         GST_WRITE_UINT16_BE (data, nal_size);
@@ -1163,7 +1163,7 @@ gst_h265_parse_make_codec_data (GstH265Parse * h265parse)
     GST_WRITE_UINT16_BE (data, num_sps);
     data += 2;
 
-    for (i = 0; i < num_sps; i++) {
+    for (i = 0; i < GST_H265_MAX_SPS_COUNT; i++) {
       if ((nal = h265parse->sps_nals[i])) {
         gsize nal_size = gst_buffer_get_size (nal);
         GST_WRITE_UINT16_BE (data, nal_size);
@@ -1182,7 +1182,7 @@ gst_h265_parse_make_codec_data (GstH265Parse * h265parse)
     GST_WRITE_UINT16_BE (data, num_pps);
     data += 2;
 
-    for (i = 0; i < num_pps; i++) {
+    for (i = 0; i < GST_H265_MAX_PPS_COUNT; i++) {
       if ((nal = h265parse->pps_nals[i])) {
         gsize nal_size = gst_buffer_get_size (nal);
         GST_WRITE_UINT16_BE (data, nal_size);
