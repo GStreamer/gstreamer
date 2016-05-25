@@ -569,8 +569,13 @@ _gst_mss_stream_add_h264_codec_data (GstCaps * caps, const gchar * codecdatastr)
 
   parseres = gst_h264_parse_sps (&nalu, &sps_struct, TRUE);
   if (parseres == GST_H264_PARSER_OK) {
+    gint fps_num, fps_den;
+
+    /* MSS apparently only supports non-interlaced/progressive H.264 content */
+    gst_h264_video_calculate_framerate (&sps_struct, 0, 0, &fps_num, &fps_den);
+
     gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION,
-        sps_struct.fps_num, sps_struct.fps_den, NULL);
+        fps_num, fps_den, NULL);
   }
 
   buffer = _make_h264_codec_data (sps, pps);
