@@ -1028,11 +1028,12 @@ gst_dvbsrc_init (GstDvbSrc * object)
   object->supported_delsys = NULL;
 
   for (i = 0; i < MAX_FILTERS; i++) {
-    object->pids[i] = G_MAXUINT16;
     object->fd_filters[i] = -1;
   }
+
   /* PID 8192 on DVB gets the whole transport stream */
   object->pids[0] = 8192;
+  object->pids[1] = G_MAXUINT16;
   object->dvb_buffer_size = DEFAULT_DVB_BUFFER_SIZE;
   object->adapter_number = DEFAULT_ADAPTER;
   object->frontend_number = DEFAULT_FRONTEND;
@@ -1092,12 +1093,9 @@ static void
 gst_dvbsrc_set_pids (GstDvbSrc * dvbsrc, const gchar * pid_string)
 {
   if (!strcmp (pid_string, "8192")) {
-    /* get the whole ts */
-    int pid_count = 1;
+    /* get the whole TS */
     dvbsrc->pids[0] = 8192;
-    while (pid_count < MAX_FILTERS) {
-      dvbsrc->pids[pid_count++] = G_MAXUINT16;
-    }
+    dvbsrc->pids[1] = G_MAXUINT16;
   } else {
     int pid = 0;
     int pid_count;
@@ -1120,10 +1118,8 @@ gst_dvbsrc_set_pids (GstDvbSrc * dvbsrc, const gchar * pid_string)
       }
       pids++;
     }
-    while (pid_count < MAX_FILTERS) {
-      dvbsrc->pids[pid_count++] = G_MAXUINT16;
-    }
 
+    dvbsrc->pids[pid_count] = G_MAXUINT16;
     g_strfreev (tmp);
   }
   /* if we are in playing or paused, then set filters now */
