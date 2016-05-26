@@ -95,7 +95,7 @@ notify_name (GObject * object, GParamSpec * pspec, gint * out_count)
 /* GstFakeObject name tests */
 GST_START_TEST (test_fake_object_name)
 {
-  GstObject *object;
+  GstObject *object, *parent;
   gint count = 0;
   gchar *name;
   gchar *name2;
@@ -135,7 +135,13 @@ GST_START_TEST (test_fake_object_name)
   g_free (name);
   g_free (name2);
 
-  gst_object_unref (object);
+  /* add a parent and ensure name cannot be changed */
+  parent = g_object_new (gst_fake_object_get_type (), NULL);
+  gst_object_set_parent (object, parent);
+  fail_if (gst_object_set_name (object, "broken"),
+      "Could set name on parented object");
+
+  gst_object_unref (parent);
 }
 
 GST_END_TEST;
