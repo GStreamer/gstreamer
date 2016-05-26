@@ -159,7 +159,7 @@ gst_vaapi_surface_new_with_dma_buf_handle (GstVaapiDisplay * display,
 }
 
 /**
- * gst_vaapi_surface_new_with_dma_buf_handle:
+ * gst_vaapi_surface_new_with_gem_buf_handle:
  * @display: a #GstVaapiDisplay
  * @name: the DRM GEM buffer name
  * @size: the underlying DRM buffer size
@@ -174,7 +174,7 @@ gst_vaapi_surface_new_with_dma_buf_handle (GstVaapiDisplay * display,
  * handle.
  *
  * Return value: the newly allocated #GstVaapiSurface object, or %NULL
- *   if creation from DRM PRIME fd failed, or is not supported
+ *   if creation from GEM @name failed, or is not supported
  */
 GstVaapiSurface *
 gst_vaapi_surface_new_with_gem_buf_handle (GstVaapiDisplay * display,
