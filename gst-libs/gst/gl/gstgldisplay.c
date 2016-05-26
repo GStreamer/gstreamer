@@ -558,7 +558,6 @@ gst_gl_display_add_context (GstGLDisplay * display, GstGLContext * context)
     if (context == collision) {
       GST_LOG_OBJECT (display, "Attempting to add the same GL context %"
           GST_PTR_FORMAT ". Ignoring", context);
-      collision = NULL;
       ret = TRUE;
       goto out;
     }
