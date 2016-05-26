@@ -43,6 +43,8 @@ static GstValidateDebugFlags _gst_validate_flags = 0;
 static GHashTable *_gst_validate_issues = NULL;
 static FILE **log_files = NULL;
 
+GType _gst_validate_report_type;
+GST_DEFINE_MINI_OBJECT_TYPE (GstValidateReport, gst_validate_report);
 
 GRegex *newline_regex = NULL;
 
@@ -59,10 +61,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_validate_report_debug);
   G_STMT_START {					\
   (g_mutex_unlock (&((GstValidateReport *) r)->shadow_reports_lock));		\
   } G_STMT_END
-
-G_DEFINE_BOXED_TYPE (GstValidateReport, gst_validate_report,
-    (GBoxedCopyFunc) gst_validate_report_ref,
-    (GBoxedFreeFunc) gst_validate_report_unref);
 
 static GstValidateIssue *
 gst_validate_issue_ref (GstValidateIssue * issue)
@@ -363,6 +361,8 @@ gst_validate_report_init (void)
   GST_DEBUG_CATEGORY_INIT (gst_validate_report_debug, "gstvalidatereport",
       GST_DEBUG_FG_YELLOW, "Gst validate reporting");
 
+  _gst_validate_report_type = gst_validate_report_get_type ();
+
   if (_gst_validate_report_start_time == 0) {
     _gst_validate_report_start_time = gst_util_get_timestamp ();
 
@@ -505,13 +505,29 @@ gst_validate_report_get_issue_id (GstValidateReport * report)
   return gst_validate_issue_get_id (report->issue);
 }
 
+static void
+_report_free (GstValidateReport * report)
+{
+  g_object_unref (report->reporter);
+  g_free (report->message);
+  g_list_free_full (report->shadow_reports,
+      (GDestroyNotify) gst_validate_report_unref);
+  g_list_free_full (report->repeated_reports,
+      (GDestroyNotify) gst_validate_report_unref);
+  g_mutex_clear (&report->shadow_reports_lock);
+  g_slice_free (GstValidateReport, report);
+}
+
 GstValidateReport *
 gst_validate_report_new (GstValidateIssue * issue,
     GstValidateReporter * reporter, const gchar * message)
 {
   GstValidateReport *report = g_slice_new0 (GstValidateReport);
 
-  report->refcount = 1;
+  gst_mini_object_init (((GstMiniObject *) report), 0,
+      _gst_validate_report_type, NULL, NULL,
+      (GstMiniObjectFreeFunction) _report_free);
+
   report->issue = issue;
   report->reporter = g_object_ref (reporter);
   report->message = g_strdup (message);
@@ -527,28 +543,13 @@ gst_validate_report_new (GstValidateIssue * issue,
 void
 gst_validate_report_unref (GstValidateReport * report)
 {
-  g_return_if_fail (report != NULL);
-
-  if (G_UNLIKELY (g_atomic_int_dec_and_test (&report->refcount))) {
-    g_object_unref (report->reporter);
-    g_free (report->message);
-    g_list_free_full (report->shadow_reports,
-        (GDestroyNotify) gst_validate_report_unref);
-    g_list_free_full (report->repeated_reports,
-        (GDestroyNotify) gst_validate_report_unref);
-    g_mutex_clear (&report->shadow_reports_lock);
-    g_slice_free (GstValidateReport, report);
-  }
+  gst_mini_object_unref (GST_MINI_OBJECT (report));
 }
 
 GstValidateReport *
 gst_validate_report_ref (GstValidateReport * report)
 {
-  g_return_val_if_fail (report != NULL, NULL);
-
-  g_atomic_int_inc (&report->refcount);
-
-  return report;
+  return (GstValidateReport *) gst_mini_object_ref (GST_MINI_OBJECT (report));
 }
 
 void

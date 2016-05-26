@@ -151,7 +151,7 @@ typedef struct {
 GType           gst_validate_issue_get_type (void);
 
 struct _GstValidateReport {
-  gint    refcount;
+  GstMiniObject mini_object;
 
   /* issue: The issue this report corresponds to (to get description, summary,...) */
   GstValidateIssue *issue;

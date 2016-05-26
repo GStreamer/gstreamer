@@ -78,8 +78,7 @@ _check_reports_refcount (GstPad * pad, gint refcount)
   refcount += 1;
 
   for (tmp = reports; tmp; tmp = tmp->next)
-    fail_unless_equals_int (((GstValidateReport *) tmp->data)->refcount,
-        refcount);
+    fail_unless_equals_int (((GstMiniObject *) tmp->data)->refcount, refcount);
 
   g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
 }
