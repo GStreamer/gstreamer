@@ -227,7 +227,7 @@ struct _GstValidateActionParameter
 
 struct _GstValidateScenarioClass
 {
-  GObjectClass parent_class;
+  GstObjectClass parent_class;
 
   /*< public >*/
   /*< private >*/
@@ -240,7 +240,7 @@ struct _GstValidateScenarioClass
  */
 struct _GstValidateScenario
 {
-  GObject parent;
+  GstObject parent;
 
   /*< public >*/
   GstElement *pipeline;

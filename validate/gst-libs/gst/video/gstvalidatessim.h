@@ -38,13 +38,13 @@ G_BEGIN_DECLS
 typedef struct _GstValidateSsimPriv GstValidateSsimPriv;
 
 typedef struct {
-  GObject parent;
+  GstObject parent;
 
   GstValidateSsimPriv *priv;
 } GstValidateSsim;
 
 typedef struct {
-  GObjectClass parent;
+  GstObjectClass parent;
 } GstValidateSsimClass;
 
 #define GST_VALIDATE_SSIM_TYPE (gst_validate_ssim_get_type ())

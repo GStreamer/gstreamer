@@ -40,7 +40,7 @@ typedef struct _SSimWindowCache
 } SSimWindowCache;
 
 /*  *INDENT-OFF* */
-G_DEFINE_TYPE (Gssim, gssim, G_TYPE_OBJECT)
+G_DEFINE_TYPE (Gssim, gssim, GST_TYPE_OBJECT)
 /*  *INDENT-ON* */
 
 enum

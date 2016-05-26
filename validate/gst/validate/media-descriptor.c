@@ -24,7 +24,7 @@
 #include "media-descriptor.h"
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstValidateMediaDescriptor,
-    gst_validate_media_descriptor, G_TYPE_OBJECT,
+    gst_validate_media_descriptor, GST_TYPE_OBJECT,
     G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, NULL));
 
 #define GST_VALIDATE_MEDIA_DESCRIPTOR_GET_PRIVATE(o)\

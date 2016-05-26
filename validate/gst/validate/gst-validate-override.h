@@ -49,7 +49,7 @@ typedef void (*GstValidateOverrideSetCapsHandler)(GstValidateOverride * override
 struct _GstValidateOverrideClass
 {
   /*<private>*/
-  GObjectClass parent_class;
+  GstObjectClass parent_class;
 
   gboolean (*can_attach)(GstValidateOverride * override,
       GstValidateMonitor * monitor);
@@ -58,7 +58,7 @@ struct _GstValidateOverrideClass
 
 struct _GstValidateOverride
 {
-  GObject parent;
+  GstObject parent;
 
   GstValidateOverrideBufferHandler buffer_handler;
   GstValidateOverrideEventHandler event_handler;

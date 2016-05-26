@@ -81,7 +81,7 @@ G_BEGIN_DECLS
  * Class that wraps a #GObject for Validate checks
  */
 struct _GstValidateMonitor {
-  GObject 	 object;
+  GstObject 	 object;
 
   GstObject     *target;
   GMutex         mutex;
@@ -106,7 +106,7 @@ struct _GstValidateMonitor {
  * GStreamer Validate Monitor object class.
  */
 struct _GstValidateMonitorClass {
-  GObjectClass	parent_class;
+  GstObjectClass	parent_class;
 
   gboolean (* setup) (GstValidateMonitor * monitor);
   GstElement *(* get_element) (GstValidateMonitor * monitor);

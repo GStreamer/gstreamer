@@ -135,7 +135,7 @@ typedef struct _GstValidateMediaDescriptorPrivate
 
 typedef struct
 {
-  GObject parent;
+  GstObject parent;
 
   GstValidateMediaFileNode *filenode;
 
@@ -146,7 +146,7 @@ typedef struct
 
 typedef struct
 {
-  GObjectClass parent;
+  GstObjectClass parent;
 
 } GstValidateMediaDescriptorClass;
 

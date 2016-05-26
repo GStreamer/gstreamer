@@ -176,7 +176,7 @@ _reporter_iface_init (GstValidateReporterInterface * iface)
 }
 
 G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
-    G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER,
+    GST_TYPE_OBJECT, G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER,
         _reporter_iface_init));
 
 /* GstValidateAction implementation */

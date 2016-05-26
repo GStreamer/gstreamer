@@ -33,13 +33,13 @@ G_BEGIN_DECLS
 typedef struct _GssimPriv GssimPriv;
 
 typedef struct {
-  GObject parent;
+  GstObject parent;
 
   GssimPriv *priv;
 } Gssim;
 
 typedef struct {
-  GObjectClass parent;
+  GstObjectClass parent;
 } GssimClass;
 
 #define GSSIM_TYPE (gssim_get_type ())

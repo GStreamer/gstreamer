@@ -78,7 +78,7 @@ _reporter_iface_init (GstValidateReporterInterface * iface)
 
 #define gst_validate_monitor_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstValidateMonitor, gst_validate_monitor,
-    G_TYPE_OBJECT, _do_init);
+    GST_TYPE_OBJECT, _do_init);
 
 static void
 _target_freed_cb (GstValidateMonitor * monitor, GObject * where_the_object_was)
