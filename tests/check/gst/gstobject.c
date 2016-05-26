@@ -86,14 +86,22 @@ GST_START_TEST (test_fake_object_new)
 
 GST_END_TEST;
 
+static void
+notify_name (GObject * object, GParamSpec * pspec, gint * out_count)
+{
+  *out_count += 1;
+}
+
 /* GstFakeObject name tests */
 GST_START_TEST (test_fake_object_name)
 {
   GstObject *object;
+  gint count = 0;
   gchar *name;
   gchar *name2;
 
   object = g_object_new (gst_fake_object_get_type (), NULL);
+  g_signal_connect (object, "notify::name", G_CALLBACK (notify_name), &count);
 
   name = gst_object_get_name (object);
   fail_if (name == NULL, "Newly created object has no name");
@@ -103,17 +111,21 @@ GST_START_TEST (test_fake_object_name)
 
   /* give a random name by setting with NULL;
    * GstFakeObject class -> fakeobject%d */
-  gst_object_set_name (object, NULL);
+  fail_unless (gst_object_set_name (object, NULL), "Could not set name");
   name = gst_object_get_name (object);
   fail_if (name == NULL, "Random name was not assigned");
   fail_if (strncmp (name, "fakeobject", 10) != 0,
       "Random name %s does not start with Gst", name);
   g_free (name);
+  fail_unless (count == 1, "Name change was not notified");
 
-  gst_object_set_name (object, "fake");
+  /* also test the property code path */
+  g_object_set (object, "name", "fake", NULL);
   name = gst_object_get_name (object);
   fail_if (name == NULL, "Failed to get name of GstFakeObject");
   fail_if (strcmp (name, "fake") != 0, "Name of GstFakeObject is not 'fake'");
+  fail_if (count > 2, "Name change was notified multiple time");
+  fail_unless (count == 2, "Name change was not notified");
 
   /* change the gotten name to see that it's a copy and not the original */
   name[0] = 'm';
