@@ -1,4 +1,4 @@
-#  Building from source using Cerbero 
+#  Building from source using Cerbero
 
 > ![Warning](images/icons/emoticons/warning.png)
 > This section is intended for advanced users.</p></td>
@@ -39,12 +39,10 @@ platforms, but it still needs a minimum base to bootstrap:
 >
 > (Note that inside the shell, / is mapped to c:\Mingw\msys\1.0\ )
 
-
 > ![Information](images/icons/emoticons/information.png)
 > **OS X users**
 >
 >To use cerbero on OS X you need to install the "Command Line Tools" from XCode. They are available from the "Preferences" dialog under "Downloads".
-
 
 > ![Information](images/icons/emoticons/information.png)
 > **iOS developers**

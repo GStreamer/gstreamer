@@ -1,4 +1,4 @@
-#  GStreamer SDK documentation : Basic tutorial 13: Playback speed 
+# Basic tutorial 13: Playback speed
 
 This page last changed on Jul 06, 2012 by xartigas.
 
@@ -72,28 +72,28 @@ Copy this code into a text file named `basic-tutorial-13.c`.
 ``` theme: Default; brush: cpp; gutter: true
 #include <string.h>
 #include <gst/gst.h>
-  
+
 typedef struct _CustomData {
   GstElement *pipeline;
   GstElement *video_sink;
   GMainLoop *loop;
-  
+
   gboolean playing;  /* Playing or Paused */
   gdouble rate;      /* Current playback rate (can be negative) */
 } CustomData;
-  
+
 /* Send seek event to change rate */
 static void send_seek_event (CustomData *data) {
   gint64 position;
   GstFormat format = GST_FORMAT_TIME;
   GstEvent *seek_event;
-  
+
   /* Obtain the current position, needed for the seek event */
   if (!gst_element_query_position (data->pipeline, &format, &position)) {
     g_printerr ("Unable to retrieve current position.\n");
     return;
   }
-  
+
   /* Create the seek event */
   if (data->rate > 0) {
     seek_event = gst_event_new_seek (data->rate, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
@@ -102,26 +102,26 @@ static void send_seek_event (CustomData *data) {
     seek_event = gst_event_new_seek (data->rate, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
         GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, position);
   }
-  
+
   if (data->video_sink == NULL) {
     /* If we have not done so, obtain the sink through which we will send the seek events */
     g_object_get (data->pipeline, "video-sink", &data->video_sink, NULL);
   }
-  
+
   /* Send the event */
   gst_element_send_event (data->video_sink, seek_event);
-  
+
   g_print ("Current rate: %g\n", data->rate);
 }
-  
+
 /* Process keyboard input */
 static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data) {
   gchar *str = NULL;
-  
+
   if (g_io_channel_read_line (source, &str, NULL, NULL, NULL) != G_IO_STATUS_NORMAL) {
     return TRUE;
   }
-  
+
   switch (g_ascii_tolower (str[0])) {
   case 'p':
     data->playing = !data->playing;
@@ -145,7 +145,7 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
       /* If we have not done so, obtain the sink through which we will send the step events */
       g_object_get (data->pipeline, "video-sink", &data->video_sink, NULL);
     }
-    
+
     gst_element_send_event (data->video_sink,
         gst_event_new_step (GST_FORMAT_BUFFERS, 1, data->rate, TRUE, FALSE));
     g_print ("Stepping one frame\n");
@@ -156,23 +156,23 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
   default:
     break;
   }
-  
+
   g_free (str);
-  
+
   return TRUE;
 }
-  
+
 int main(int argc, char *argv[]) {
   CustomData data;
   GstStateChangeReturn ret;
   GIOChannel *io_stdin;
-  
+
   /* Initialize GStreamer */
   gst_init (&argc, &argv);
-  
+
   /* Initialize our data structure */
   memset (&data, 0, sizeof (data));
-  
+
   /* Print usage map */
   g_print (
     "USAGE: Choose one of the following options, then press enter:\n"
@@ -181,10 +181,10 @@ int main(int argc, char *argv[]) {
     " 'D' to toggle playback direction\n"
     " 'N' to move to next frame (in the current direction, better in PAUSE)\n"
     " 'Q' to quit\n");
-  
+
   /* Build the pipeline */
   data.pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
-  
+
   /* Add a keyboard watch so we get notified of keystrokes */
 #ifdef _WIN32
   io_stdin = g_io_channel_win32_new_fd (fileno (stdin));
@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
   io_stdin = g_io_channel_unix_new (fileno (stdin));
 #endif
   g_io_add_watch (io_stdin, G_IO_IN, (GIOFunc)handle_keyboard, &data);
-  
+
   /* Start playing */
   ret = gst_element_set_state (data.pipeline, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -202,11 +202,11 @@ int main(int argc, char *argv[]) {
   }
   data.playing = TRUE;
   data.rate = 1.0;
-  
+
   /* Create a GLib Main Loop and set it to run */
   data.loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (data.loop);
-  
+
   /* Free resources */
   g_main_loop_unref (data.loop);
   g_io_channel_unref (io_stdin);
@@ -254,11 +254,11 @@ Then, in the keyboard handler function:
 /* Process keyboard input */
 static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data) {
   gchar *str = NULL;
-  
+
   if (g_io_channel_read_line (source, &str, NULL, NULL, NULL) != G_IO_STATUS_NORMAL) {
     return TRUE;
   }
-  
+
   switch (g_ascii_tolower (str[0])) {
   case 'p':
     data->playing = !data->playing;
@@ -296,7 +296,7 @@ static void send_seek_event (CustomData *data) {
   gint64 position;
   GstFormat format = GST_FORMAT_TIME;
   GstEvent *seek_event;
-  
+
   /* Obtain the current position, needed for the seek event */
   if (!gst_element_query_position (data->pipeline, &format, &position)) {
     g_printerr ("Unable to retrieve current position.\n");
@@ -360,7 +360,7 @@ case 'n':
     /* If we have not done so, obtain the sink through which we will send the step events */
     g_object_get (data->pipeline, "video-sink", &data->video_sink, NULL);
   }
-  
+
   gst_element_send_event (data->video_sink,
       gst_event_new_step (GST_FORMAT_BUFFERS, 1, data->rate, TRUE, FALSE));
   g_print ("Stepping one frame\n");
@@ -401,9 +401,8 @@ It has been a pleasure having you here, and see you soon\!
 ## Attachments:
 
 ![](images/icons/bullet_blue.gif)
-[basic-tutorial-13.c](attachments/327800/2424883.c) (text/plain)  
+[basic-tutorial-13.c](attachments/327800/2424883.c) (text/plain)
 ![](images/icons/bullet_blue.gif)
-[vs2010.zip](attachments/327800/2424884.zip) (application/zip)  
+[vs2010.zip](attachments/327800/2424884.zip) (application/zip)
 
 Document generated by Confluence on Oct 08, 2015 10:27
-

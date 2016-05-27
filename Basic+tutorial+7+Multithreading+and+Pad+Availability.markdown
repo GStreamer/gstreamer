@@ -1,4 +1,4 @@
-#  Basic tutorial 7: Multithreading and Pad Availability 
+#  Basic tutorial 7: Multithreading and Pad Availability
 
 ## Goal
 
@@ -86,7 +86,7 @@ in the SDK installation).
 
 ``` theme: Default; brush: cpp; gutter: true
 #include <gst/gst.h>
-  
+
 int main(int argc, char *argv[]) {
   GstElement *pipeline, *audio_source, *tee, *audio_queue, *audio_convert, *audio_resample, *audio_sink;
   GstElement *video_queue, *visual, *video_convert, *video_sink;
@@ -95,10 +95,10 @@ int main(int argc, char *argv[]) {
   GstPadTemplate *tee_src_pad_template;
   GstPad *tee_audio_pad, *tee_video_pad;
   GstPad *queue_audio_pad, *queue_video_pad;
-  
+
   /* Initialize GStreamer */
   gst_init (&argc, &argv);
-  
+
   /* Create the elements */
   audio_source = gst_element_factory_make ("audiotestsrc", "audio_source");
   tee = gst_element_factory_make ("tee", "tee");
@@ -110,20 +110,20 @@ int main(int argc, char *argv[]) {
   visual = gst_element_factory_make ("wavescope", "visual");
   video_convert = gst_element_factory_make ("videoconvert", "csp");
   video_sink = gst_element_factory_make ("autovideosink", "video_sink");
-  
+
   /* Create the empty pipeline */
   pipeline = gst_pipeline_new ("test-pipeline");
-  
+
   if (!pipeline || !audio_source || !tee || !audio_queue || !audio_convert || !audio_resample || !audio_sink ||
       !video_queue || !visual || !video_convert || !video_sink) {
     g_printerr ("Not all elements could be created.\n");
     return -1;
   }
-  
+
   /* Configure elements */
   g_object_set (audio_source, "freq", 215.0f, NULL);
   g_object_set (visual, "shader", 0, "style", 1, NULL);
-  
+
   /* Link all elements that can be automatically linked because they have "Always" pads */
   gst_bin_add_many (GST_BIN (pipeline), audio_source, tee, audio_queue, audio_convert, audio_resample, audio_sink,
       video_queue, visual, video_convert, video_sink, NULL);
@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
     gst_object_unref (pipeline);
     return -1;
   }
-  
+
   /* Manually link the Tee, which has "Request" pads */
   tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (tee), "src_%d");
   tee_audio_pad = gst_element_request_pad (tee, tee_src_pad_template, NULL, NULL);
@@ -151,26 +151,26 @@ int main(int argc, char *argv[]) {
   }
   gst_object_unref (queue_audio_pad);
   gst_object_unref (queue_video_pad);
-  
+
   /* Start playing the pipeline */
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  
+
   /* Wait until error or EOS */
   bus = gst_element_get_bus (pipeline);
   msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
-  
+
   /* Release the request pads from the Tee, and unref them */
   gst_element_release_request_pad (tee, tee_audio_pad);
   gst_element_release_request_pad (tee, tee_video_pad);
   gst_object_unref (tee_audio_pad);
   gst_object_unref (tee_video_pad);
-  
+
   /* Free resources */
   if (msg != NULL)
     gst_message_unref (msg);
   gst_object_unref (bus);
   gst_element_set_state (pipeline, GST_STATE_NULL);
-  
+
   gst_object_unref (pipeline);
   return 0;
 }
@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
 >
 >If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Run), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Run) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Run).
  >
-> This tutorial plays an audible tone through the audio card and opens a window with a waveform representation of the tone. The waveform should be a sinusoid, but due to the refreshing of the window might not appear so. 
+> This tutorial plays an audible tone through the audio card and opens a window with a waveform representation of the tone. The waveform should be a sinusoid, but due to the refreshing of the window might not appear so.
 >
 > Required libraries: `gstreamer-1.0`
 
@@ -330,5 +330,3 @@ The next tutorial builds on top of this one to show how data can be
 manually injected into and extracted from a running pipeline.
 
 It has been a pleasure having you here, and see you soon!
-
-

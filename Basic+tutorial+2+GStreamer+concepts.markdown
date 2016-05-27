@@ -1,4 +1,4 @@
-# Basic tutorial 2: GStreamer concepts 
+# Basic tutorial 2: GStreamer concepts
 
 ## Goal
 
@@ -24,28 +24,28 @@ in the SDK installation).
 
 ```
 #include <gst/gst.h>
- 
+
 int main(int argc, char *argv[]) {
   GstElement *pipeline, *source, *sink;
   GstBus *bus;
   GstMessage *msg;
   GstStateChangeReturn ret;
-  
+
   /* Initialize GStreamer */
   gst_init (&argc, &argv);
-   
+
   /* Create the elements */
   source = gst_element_factory_make ("videotestsrc", "source");
   sink = gst_element_factory_make ("autovideosink", "sink");
-   
+
   /* Create the empty pipeline */
   pipeline = gst_pipeline_new ("test-pipeline");
-   
+
   if (!pipeline || !source || !sink) {
     g_printerr ("Not all elements could be created.\n");
     return -1;
   }
-  
+
   /* Build the pipeline */
   gst_bin_add_many (GST_BIN (pipeline), source, sink, NULL);
   if (gst_element_link (source, sink) != TRUE) {
@@ -53,10 +53,10 @@ int main(int argc, char *argv[]) {
     gst_object_unref (pipeline);
     return -1;
   }
-  
+
   /* Modify the source's properties */
   g_object_set (source, "pattern", 0, NULL);
-  
+
   /* Start playing */
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -64,16 +64,16 @@ int main(int argc, char *argv[]) {
     gst_object_unref (pipeline);
     return -1;
   }
-  
+
   /* Wait until error or EOS */
   bus = gst_element_get_bus (pipeline);
   msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
-  
+
   /* Parse message */
   if (msg != NULL) {
     GError *err;
     gchar *debug_info;
-    
+
     switch (GST_MESSAGE_TYPE (msg)) {
       case GST_MESSAGE_ERROR:
         gst_message_parse_error (msg, &err, &debug_info);
@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
     }
     gst_message_unref (msg);
   }
-  
+
   /* Free resources */
   gst_object_unref (bus);
   gst_element_set_state (pipeline, GST_STATE_NULL);
@@ -100,7 +100,6 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 ```
-
 
 > ![Information](images/icons/emoticons/information.png)
 > Need help?
@@ -253,12 +252,12 @@ pipelines](Basic+tutorial+3+Dynamic+pipelines.markdown).
 /* Wait until error or EOS */
 bus = gst_element_get_bus (pipeline);
 msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
-  
+
 /* Parse message */
 if (msg != NULL) {
   GError *err;
   gchar *debug_info;
-  
+
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ERROR:
       gst_message_parse_error (msg, &err, &debug_info);
@@ -294,7 +293,7 @@ In this case, once we know the message contains an error (by using the
 `GST_MESSAGE_TYPE()` macro), we can use
 `gst_message_parse_error()` which returns a GLib `GError` error
 structure and a string useful for debugging. Examine the code to see how
-these are used and freed afterward. 
+these are used and freed afterward.
 
 ### The GStreamer bus
 

@@ -1,4 +1,4 @@
-# Tutorials 
+# Tutorials
 
 ## Welcome to the GStreamer SDK Tutorials!
 
