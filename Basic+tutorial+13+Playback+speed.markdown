@@ -42,10 +42,10 @@ so Seek Events are used in this tutorial instead.
 
 To use these events, they are created and then passed onto the pipeline,
 where they propagate upstream until they reach an element that can
-handle them. If an event is passed onto a bin element like `playbin2`,
+handle them. If an event is passed onto a bin element like `playbin`,
 it will simply feed the event to all its sinks, which will result in
 multiple seeks being performed. The common approach is to retrieve one
-of `playbin2`’s sinks through the `video-sink` or
+of `playbin`’s sinks through the `video-sink` or
 `audio-sink` properties and feed the event directly into the sink.
 
 Frame stepping is a technique that allows playing a video frame by
@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {
     " 'Q' to quit\n");
 
   /* Build the pipeline */
-  data.pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  data.pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
 
   /* Add a keyboard watch so we get notified of keystrokes */
 #ifdef _WIN32
@@ -243,7 +243,7 @@ int main(int argc, char *argv[]) {
 # Walkthrough
 
 There is nothing new in the initialization code in the main function:  a
-`playbin2` pipeline is instantiated, an I/O watch is installed to track
+`playbin` pipeline is instantiated, an I/O watch is installed to track
 keystrokes and a GLib main loop is executed.
 
 Then, in the keyboard handler function:
@@ -336,7 +336,7 @@ if (data->video_sink == NULL) {
 
 As explained in the Introduction, to avoid performing multiple Seeks,
 the Event is sent to only one sink, in this case, the video sink. It is
-obtained from `playbin2` through the `video-sink` property. It is read
+obtained from `playbin` through the `video-sink` property. It is read
 at this time instead at initialization time because the actual sink may
 change depending on the media contents, and this won’t be known until
 the pipeline is PLAYING and some media has been read.
@@ -369,7 +369,7 @@ A new Step Event is created with `gst_event_new_step()`, whose
 parameters basically specify the amount to skip (1 frame in the example)
 and the new rate (which we do not change).
 
-The video sink is grabbed from `playbin2` in case we didn’t have it yet,
+The video sink is grabbed from `playbin` in case we didn’t have it yet,
 just like before.
 
 And with this we are done. When testing this tutorial, keep in mind that
@@ -379,7 +379,7 @@ backward playback is not optimal in many elements.
 <tbody>
 <tr class="odd">
 <td><img src="images/icons/emoticons/warning.png" width="16" height="16" /></td>
-<td><p>Changing the playback rate might only work with local files. If you cannot modify it, try changing the URI passed to <code>playbin2</code> in line 114 to a local URI, starting with <code>file:///</code></p></td>
+<td><p>Changing the playback rate might only work with local files. If you cannot modify it, try changing the URI passed to <code>playbin</code> in line 114 to a local URI, starting with <code>file:///</code></p></td>
 </tr>
 </tbody>
 </table>

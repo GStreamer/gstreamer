@@ -274,9 +274,9 @@ element (here: textoverlay) has multiple sink or source pads.
 ffmpegcolorspace \! overlay.video\_sink filesrc location=movie.srt \!
 subparse \! overlay.text\_sink**
 
-Play an AVI movie with an external text subtitle stream using playbin2
+Play an AVI movie with an external text subtitle stream using playbin
 
-**gst-launch-1.0 playbin2 uri=<file:///path/to/movie.avi>
+**gst-launch-1.0 playbin uri=<file:///path/to/movie.avi>
 suburi=<file:///path/to/movie.srt>**
 
 **Network streaming**

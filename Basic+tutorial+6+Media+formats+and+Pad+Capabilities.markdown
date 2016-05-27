@@ -41,7 +41,7 @@ understand each other). This is the main goal of Capabilities.
 
 As an application developer, you will usually build pipelines by linking
 elements together (to a lesser extent if you use all-in-all elements
-like `playbin2`). In this case, you need to know the *Pad Caps* (as they
+like `playbin`). In this case, you need to know the *Pad Caps* (as they
 are familiarly referred to) of your elements, or, at least, know what
 they are when GStreamer refuses to link two elements with a negotiation
 error.

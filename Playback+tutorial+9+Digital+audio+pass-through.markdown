@@ -39,7 +39,7 @@ data. For example, these elements typically accept `audio/x-raw-int` or
 system, they may also accept `audio/mpeg`, `audio/x-ac3`,
 `audio/x-eac3` or `audio/x-dts`.
 
-Then, when `playbin2` builds the decoding pipeline, it realizes that the
+Then, when `playbin` builds the decoding pipeline, it realizes that the
 audio sink can be directly connected to the encoded data (typically
 coming out of a demuxer), so there is no need for a decoder. This
 process is automatic and does not need any action from the application.
@@ -78,8 +78,8 @@ enabled, but, unfortunately, this option is not available in all audio
 drivers.
 
 Another solution involves, using a custom sinkbin (see [Playback
-tutorial 7: Custom playbin2
-sinks](Playback%2Btutorial%2B7%253A%2BCustom%2Bplaybin2%2Bsinks.html))
+tutorial 7: Custom playbin
+sinks](Playback%2Btutorial%2B7%253A%2BCustom%2Bplaybin%2Bsinks.html))
 which includes a `capsfilter` element (see [Basic tutorial 14: Handy
 elements](Basic%2Btutorial%2B14%253A%2BHandy%2Belements.html)) and an
 audio sink. The caps that the external decoder supports are then set in
@@ -97,7 +97,7 @@ only supports raw audio, and will ignore any compressed format.
 This tutorial has shown a bit of how GStreamer deals with digital audio.
 In particular, it has shown that:
 
-  - Applications using `playbin2` do not need to do anything special to
+  - Applications using `playbin` do not need to do anything special to
     enable digital audio output: it is managed from the audio control
     panel of the operating system.
 

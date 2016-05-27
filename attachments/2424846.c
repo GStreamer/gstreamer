@@ -3,7 +3,7 @@
   
 #define GRAPH_LENGTH 80
   
-/* playbin2 flags */
+/* playbin flags */
 typedef enum {
   GST_PLAY_FLAG_DOWNLOAD      = (1 << 7) /* Enable progressive download (on selected formats) */
 } GstPlayFlags;
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
   data.buffering_level = 100;
   
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
   bus = gst_element_get_bus (pipeline);
   
   /* Set the download flag */

@@ -1,26 +1,26 @@
-# Playback tutorial 7: Custom playbin2 sinks
+# Playback tutorial 7: Custom playbin sinks
 
 # Goal
 
-`playbin2` can be further customized by manually selecting its audio and
-video sinks. This allows applications to rely on `playbin2` to retrieve
+`playbin` can be further customized by manually selecting its audio and
+video sinks. This allows applications to rely on `playbin` to retrieve
 and decode the media and then manage the final render/display
 themselves. This tutorial shows:
 
-  - How to replace the sinks selected by `playbin2`.
+  - How to replace the sinks selected by `playbin`.
   - How to use a complex pipeline as a sink.
 
 # Introduction
 
-Two properties of `playbin2` allow selecting the desired audio and video
+Two properties of `playbin` allow selecting the desired audio and video
 sinks: `audio-sink` and `video-sink` (respectively). The application
 only needs to instantiate the appropriate `GstElement` and pass it to
-`playbin2` through these properties.
+`playbin` through these properties.
 
 This method, though, only allows using a single Element as sink. If a
 more complex pipeline is required, for example, an equalizer plus an
 audio sink, it needs to be wrapped in a Bin, so it looks to
-`playbin2` as if it was a single Element.
+`playbin` as if it was a single Element.
 
 A Bin (`GstBin`) is a container that encapsulates partial pipelines so
 they can be managed as single elements. As an example, the
@@ -35,7 +35,7 @@ forward data from an external Pad to a given Pad on an internal Element.
 **Figure 1:** A Bin with two Elements and one Ghost Pad.
 
 `GstBin`s are also a type of `GstElement`, so they can be used wherever
-an Element is required, in particular, as sinks for `playbin2` (and they
+an Element is required, in particular, as sinks for `playbin` (and they
 are then known as **sink-bins**).
 
 # An equalized player
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
   gst_init (&argc, &argv);
 
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
 
   /* Create the elements inside the sink bin */
   equalizer = gst_element_factory_make ("equalizer-3bands", "equalizer");
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
   g_object_set (G_OBJECT (equalizer), "band1", (gdouble)-24.0, NULL);
   g_object_set (G_OBJECT (equalizer), "band2", (gdouble)-24.0, NULL);
 
-  /* Set playbin2's audio sink to be our sink bin */
+  /* Set playbin's audio sink to be our sink bin */
   g_object_set (GST_OBJECT (pipeline), "audio-sink", bin, NULL);
 
   /* Start playing */
@@ -190,14 +190,14 @@ Finally, the sink Pad we obtained from the equalizer needs to be release
 with `gst_object_unref()`.
 
 At this point, we have a functional sink-bin, which we can use as the
-audio sink in `playbin2`. We just need to instruct `playbin2` to use it:
+audio sink in `playbin`. We just need to instruct `playbin` to use it:
 
 ``` lang=c
-/* Set playbin2's audio sink to be our sink bin */
+/* Set playbin's audio sink to be our sink bin */
 g_object_set (GST_OBJECT (pipeline), "audio-sink", bin, NULL);
 ```
 
-It is as simple as setting the `audio-sink` property on `playbin2` to
+It is as simple as setting the `audio-sink` property on `playbin` to
 the newly created sink.
 
 ``` lang=c
@@ -224,10 +224,10 @@ pipeline fails to link due to incompatible caps.
 
 This tutorial has shown:
 
-  - How to set your own sinks to `playbin2` using the audio-sink and
+  - How to set your own sinks to `playbin` using the audio-sink and
     video-sink properties.
   - How to wrap a piece of pipeline into a `GstBin` so it can be used as
-    a **sink-bin** by `playbin2`.
+    a **sink-bin** by `playbin`.
 
 It has been a pleasure having you here, and see you soon\!
 

@@ -154,18 +154,18 @@ after a VAAPI decoder, a VAAPI sink is the only element that fits.
 
 This all means that, if a particular hardware acceleration API is
 present in the system, and the corresponding GStreamer plugin is also
-available, auto-plugging elements like `playbin2` are free to use
+available, auto-plugging elements like `playbin` are free to use
 hardware acceleration to build their pipelines; the application does not
 need to do anything special to enable it. Almost:
 
-When `playbin2` has to choose among different equally valid elements,
+When `playbin` has to choose among different equally valid elements,
 like conventional software decoding (through `vp8dec`, for example) or
 hardware accelerated decoding (through `vaapidecode`, for example), it
 uses their *rank* to decide. The rank is a property of each element that
-indicates its priority; `playbin2` will simply select the element that
+indicates its priority; `playbin` will simply select the element that
 is able to build a complete pipeline and has the highest rank.
 
-So, whether `playbin2` will use hardware acceleration or not will depend
+So, whether `playbin` will use hardware acceleration or not will depend
 on the relative ranks of all elements capable of dealing with that media
 type. Therefore, the easiest way to make sure hardware acceleration is
 enabled or disabled is by changing the rank of the associated element,
@@ -263,7 +263,7 @@ these plugins.
   - Can interface directly with Clutter (See [Basic tutorial 15: Clutter
     integration](Basic%2Btutorial%2B15%253A%2BClutter%2Bintegration.html)),
     so frames do not need to leave the GPU.
-  - Compatible with `playbin2`.
+  - Compatible with `playbin`.
 
 ### gst-omx
 
@@ -330,7 +330,7 @@ these plugins.
   - Can interface directly with Clutter (See [Basic tutorial 15: Clutter
     integration](Basic%2Btutorial%2B15%253A%2BClutter%2Bintegration.html)),
     so frames do not need to leave the GPU.
-  - Compatible with `playbin2`.
+  - Compatible with `playbin`.
 
 # Conclusion
 

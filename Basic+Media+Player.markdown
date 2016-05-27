@@ -408,7 +408,7 @@ void Player::setUri(const QString & uri)
         realUri = QUrl::fromLocalFile(realUri).toEncoded();
     }
     if (!m_pipeline) {
-        m_pipeline = QGst::ElementFactory::make("playbin2").dynamicCast<QGst::Pipeline>();
+        m_pipeline = QGst::ElementFactory::make("playbin").dynamicCast<QGst::Pipeline>();
         if (m_pipeline) {
             //let the video widget watch the pipeline for new video sinks
             watchPipeline(m_pipeline);
@@ -617,7 +617,7 @@ void Player::setUri(const QString & uri)
         realUri = QUrl::fromLocalFile(realUri).toEncoded();
     }
     if (!m_pipeline) {
-        m_pipeline = QGst::ElementFactory::make("playbin2").dynamicCast<QGst::Pipeline>();
+        m_pipeline = QGst::ElementFactory::make("playbin").dynamicCast<QGst::Pipeline>();
         if (m_pipeline) {
             //let the video widget watch the pipeline for new video sinks
             watchPipeline(m_pipeline);
@@ -637,7 +637,7 @@ void Player::setUri(const QString & uri)
 
 Here, we first ensure that the pipeline will receive a proper URI. If
 `Player::setUri()` is called with `/home/user/some/file.mp3`, the path
-is modified to `file:///home/user/some/file.mp3`. `playbin2` only
+is modified to `file:///home/user/some/file.mp3`. `playbin` only
 accepts complete URIs.
 
 The pipeline is created via `QGst::ElementFactory::make()`. The
@@ -704,7 +704,7 @@ void Player::handlePipelineStateChange(const QGst::StateChangedMessagePtr & scm)
 }
 ```
 
-Finally, we tell `playbin2` what to play by setting the `uri` property:
+Finally, we tell `playbin` what to play by setting the `uri` property:
 
 ``` lang=c
 m_pipeline->setProperty("uri", realUri);

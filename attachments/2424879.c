@@ -1,6 +1,6 @@
 #include <gst/gst.h>
   
-/* playbin2 flags */
+/* playbin flags */
 typedef enum {
   GST_PLAY_FLAG_VIS           = (1 << 3) /* Enable rendering of visualizations when there is no video stream. */
 } GstPlayFlags;
@@ -61,14 +61,14 @@ int main(int argc, char *argv[]) {
     return -1;
   
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin2 uri=http://radio.hbr1.com:19800/ambient.ogg", NULL);
+  pipeline = gst_parse_launch ("playbin uri=http://radio.hbr1.com:19800/ambient.ogg", NULL);
   
   /* Set the visualization flag */
   g_object_get (pipeline, "flags", &flags, NULL);
   flags |= GST_PLAY_FLAG_VIS;
   g_object_set (pipeline, "flags", flags, NULL);
   
-  /* set vis plugin for playbin2 */
+  /* set vis plugin for playbin */
   g_object_set (pipeline, "vis-plugin", vis_plugin, NULL);
   
   /* Start playing */

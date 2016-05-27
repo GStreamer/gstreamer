@@ -6,16 +6,16 @@
 pipeline](Basic%2Btutorial%2B8%253A%2BShort-cutting%2Bthe%2Bpipeline.html) showed
 how an application can manually extract or inject data into a pipeline
 by using two special elements called `appsrc` and `appsink`.
-`playbin2` allows using these elements too, but the method to connect
-them is different. To connect an `appsink` to `playbin2` see [Playback
-tutorial 7: Custom playbin2
-sinks](Playback%2Btutorial%2B7%253A%2BCustom%2Bplaybin2%2Bsinks.html).
+`playbin` allows using these elements too, but the method to connect
+them is different. To connect an `appsink` to `playbin` see [Playback
+tutorial 7: Custom playbin
+sinks](Playback%2Btutorial%2B7%253A%2BCustom%2Bplaybin%2Bsinks.html).
 This tutorial shows:
 
-  - How to connect `appsrc` with `playbin2`
+  - How to connect `appsrc` with `playbin`
   - How to configure the `appsrc`
 
-# A playbin2 waveform generator
+# A playbin waveform generator
 
 Copy this code into a text file named `playback-tutorial-3.c`.
 
@@ -130,7 +130,7 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   g_main_loop_quit (data->main_loop);
 }
 
-/* This function is called when playbin2 has created the appsrc element, so we have
+/* This function is called when playbin has created the appsrc element, so we have
  * a chance to configure it. */
 static void source_setup (GstElement *pipeline, GstElement *source, CustomData *data) {
   gchar *audio_caps_text;
@@ -161,8 +161,8 @@ int main(int argc, char *argv[]) {
   /* Initialize GStreamer */
   gst_init (&argc, &argv);
 
-  /* Create the playbin2 element */
-  data.pipeline = gst_parse_launch ("playbin2 uri=appsrc://", NULL);
+  /* Create the playbin element */
+  data.pipeline = gst_parse_launch ("playbin uri=appsrc://", NULL);
   g_signal_connect (data.pipeline, "source-setup", G_CALLBACK (source_setup), &data);
 
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
@@ -186,14 +186,14 @@ int main(int argc, char *argv[]) {
 ```
 
 To use an `appsrc` as the source for the pipeline, simply instantiate a
-`playbin2` and set its URI to `appsrc://`
+`playbin` and set its URI to `appsrc://`
 
 ``` lang=c
-/* Create the playbin2 element */
-data.pipeline = gst_parse_launch ("playbin2 uri=appsrc://", NULL);
+/* Create the playbin element */
+data.pipeline = gst_parse_launch ("playbin uri=appsrc://", NULL);
 ```
 
-`playbin2` will create an internal `appsrc` element and fire the
+`playbin` will create an internal `appsrc` element and fire the
 `source-setup` signal to allow the application to configure
 it:
 
@@ -202,12 +202,12 @@ g_signal_connect (data.pipeline, "source-setup", G_CALLBACK (source_setup), &dat
 ```
 
 In particular, it is important to set the caps property of `appsrc`,
-since, once the signal handler returns, `playbin2` will instantiate the
+since, once the signal handler returns, `playbin` will instantiate the
 next element in the pipeline according to these
 caps:
 
 ``` lang=c
-/* This function is called when playbin2 has created the appsrc element, so we have
+/* This function is called when playbin has created the appsrc element, so we have
  * a chance to configure it. */
 static void source_setup (GstElement *pipeline, GstElement *source, CustomData *data) {
   gchar *audio_caps_text;
@@ -236,22 +236,22 @@ pushing data. See [Basic tutorial 8: Short-cutting the
 pipeline](Basic%2Btutorial%2B8%253A%2BShort-cutting%2Bthe%2Bpipeline.html)
 for more details.
 
-From this point onwards, `playbin2` takes care of the rest of the
+From this point onwards, `playbin` takes care of the rest of the
 pipeline, and the application only needs to worry about generating more
 data when told so.
 
-To learn how data can be extracted from `playbin2` using the
-`appsink` element, see [Playback tutorial 7: Custom playbin2
-sinks](Playback%2Btutorial%2B7%253A%2BCustom%2Bplaybin2%2Bsinks.html).
+To learn how data can be extracted from `playbin` using the
+`appsink` element, see [Playback tutorial 7: Custom playbin
+sinks](Playback%2Btutorial%2B7%253A%2BCustom%2Bplaybin%2Bsinks.html).
 
 # Conclusion
 
 This tutorial applies the concepts shown in [Basic tutorial 8:
 Short-cutting the
 pipeline](Basic%2Btutorial%2B8%253A%2BShort-cutting%2Bthe%2Bpipeline.html) to
-`playbin2`. In particular, it has shown:
+`playbin`. In particular, it has shown:
 
-  - How to connect `appsrc` with `playbin2` using the special
+  - How to connect `appsrc` with `playbin` using the special
     URI `appsrc://`
   - How to configure the `appsrc` using the `source-setup` signal
 

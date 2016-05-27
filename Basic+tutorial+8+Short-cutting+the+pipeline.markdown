@@ -14,7 +14,7 @@ any time, in a variety of ways. This tutorial shows:
 
 [Playback tutorial 3: Short-cutting the
 pipeline](Playback+tutorial+3+Short-cutting+the+pipeline.markdown) explains
-how to achieve the same goals in a playbin2-based pipeline.
+how to achieve the same goals in a playbin-based pipeline.
 
 ## Introduction
 
@@ -499,8 +499,8 @@ gst_buffer_unref (buffer);
 
 Once we have the buffer ready, we pass it to `appsrc` with the
 `push-buffer` action signal (see information box at the end of [Playback
-tutorial 1: Playbin2
-usage](Playback+tutorial+1+Playbin2+usage.markdown)), and then
+tutorial 1: Playbin
+usage](Playback+tutorial+1+Playbin+usage.markdown)), and then
 `gst_buffer_unref()` it since we no longer need it.
 
 ``` lang=c
@@ -538,7 +538,7 @@ This tutorial has shown how applications can:
   - Retrieve data from a pipeline using the `appsink` element.
   - Manipulate this data by accessing the `GstBuffer`.
 
-In a playbin2-based pipeline, the same goals are achieved in a slightly
+In a playbin-based pipeline, the same goals are achieved in a slightly
 different way. [Playback tutorial 3: Short-cutting the
 pipeline](Playback+tutorial+3+Short-cutting+the+pipeline.markdown) shows
 how to do it.

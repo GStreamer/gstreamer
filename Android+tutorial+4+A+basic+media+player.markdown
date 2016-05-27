@@ -15,7 +15,7 @@ Android device. It shows:
 It also uses the knowledge gathered in the [Basic
 tutorials](Basic%2Btutorials.html) regarding:
 
-  - How to use `playbin2` to play any kind of media
+  - How to use `playbin` to play any kind of media
   - How to handle network resilience problems
 
 # Introduction
@@ -23,10 +23,10 @@ tutorials](Basic%2Btutorials.html) regarding:
 From the previous tutorials, we already have almost all necessary pieces
 to build a media player. The most complex part is assembling a pipeline
 which retrieves, decodes and displays the media, but we already know
-that the `playbin2` element can take care of all that for us. We only
+that the `playbin` element can take care of all that for us. We only
 need to replace the manual pipeline we used in [Android tutorial 3:
 Video](Android%2Btutorial%2B3%253A%2BVideo.html) with a single-element
-`playbin2` pipeline and we are good to go\!
+`playbin` pipeline and we are good to go\!
 
 However, we can do better than. We will add a [Seek
 Bar](http://developer.android.com/reference/android/widget/SeekBar.html),
@@ -303,7 +303,7 @@ public class Tutorial4 extends Activity implements SurfaceHolder.Callback, OnSee
 ### Supporting arbitrary media URIs
 
 The C code provides the `nativeSetUri()` method so we can indicate the
-URI of the media to play. Since `playbin2` will be taking care of
+URI of the media to play. Since `playbin` will be taking care of
 retrieving the media, we can use local or remote URIs indistinctly
 (`file://` or `http://`, for example). From Java, though, we want to
 keep track of whether the file is local or remote, because we will not
@@ -536,7 +536,7 @@ typedef struct _CustomData {
   gboolean is_live;             /* Live streams do not use buffering */
 } CustomData;
 
-/* playbin2 flags */
+/* playbin flags */
 typedef enum {
   GST_PLAY_FLAG_TEXT = (1 << 2)  /* We want subtitle output */
 } GstPlayFlags;
@@ -834,7 +834,7 @@ static void *app_function (void *userdata) {
   g_main_context_push_thread_default(data->context);
 
   /* Build pipeline */
-  data->pipeline = gst_parse_launch("playbin2", &error);
+  data->pipeline = gst_parse_launch("playbin", &error);
   if (error) {
     gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
     g_clear_error (&error);
@@ -925,7 +925,7 @@ static void gst_native_finalize (JNIEnv* env, jobject thiz) {
   GST_DEBUG ("Done finalizing");
 }
 
-/* Set playbin2's URI */
+/* Set playbin's URI */
 void gst_native_set_uri (JNIEnv* env, jobject thiz, jstring uri) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data || !data->pipeline) return;
@@ -1090,14 +1090,14 @@ GStreamer with
 and
 [ReleaseStringUTFChars()](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/functions.html#wp17294).
 
-`playbin2` will only care about URI changes in the READY to PAUSED state
+`playbin` will only care about URI changes in the READY to PAUSED state
 change, because the new URI might need a completely different playback
 pipeline (think about switching from a local Matroska file to a remote
 OGG file: this would require, at least, different source and demuxing
-elements). Thus, before passing the new URI to `playbin2` we set its
+elements). Thus, before passing the new URI to `playbin` we set its
 state to READY (if we were in PAUSED or PLAYING).
 
-`playbin2`’s URI is exposed as a common GObject property, so we simply
+`playbin`’s URI is exposed as a common GObject property, so we simply
 set it with `g_object_set()`.
 
 We then reset the clip duration, so it is re-queried later, and bring
@@ -1150,7 +1150,7 @@ static void check_media_size (CustomData *data) {
 ```
 
 We first retrieve the video sink element from the pipeline, using the
-`video-sink` property of `playbin2`, and then its sink Pad. The
+`video-sink` property of `playbin`, and then its sink Pad. The
 negotiated Caps of this Pad, which we recover using
 `gst_pad_get_negotiated_caps()`,  are the Caps of the decoded media.
 
@@ -1404,7 +1404,7 @@ in this tutorial the URI does not change, but it will in the next one).
 
 # Conclusion
 
-This tutorial has shown how to embed a `playbin2` pipeline into an
+This tutorial has shown how to embed a `playbin` pipeline into an
 Android application. This, effectively, turns such application into a
 basic media player, capable of streaming and decoding all the formats
 GStreamer understands. More particularly, it has shown:

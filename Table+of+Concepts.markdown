@@ -29,7 +29,7 @@ concepts is discussed.
 -   Tools: [Basic tutorial 10: GStreamer tools]
 -   Threads: [Basic tutorial 7: Multithreading and Pad Availability]
 
-  [Playback tutorial 1: Playbin usage]: Playback+tutorial+1+Playbin2+usage.markdown
+  [Playback tutorial 1: Playbin usage]: Playback+tutorial+1+Playbin+usage.markdown
   [Basic tutorial 8: Short-cutting the pipeline]: Basic+tutorial+8+Short-cutting+the+pipeline.markdown
   [Basic tutorial 2: GStreamer concepts]: Basic+tutorial+2+GStreamer+concepts.markdown
   [Basic tutorial 6: Media formats and Pad Capabilities]: Basic+tutorial+6+Media+formats+and+Pad+Capabilities.markdown

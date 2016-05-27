@@ -494,10 +494,10 @@ are already printing on screen the type of the video pads.
 
 You should now see (and hear) the same movie as in [Basic tutorial 1:
 Hello world!](Basic+tutorial+1+Hello+world.markdown). In
-that tutorial you used `playbin2`, which is a handy element that
+that tutorial you used `playbin`, which is a handy element that
 automatically takes care of all the demuxing and pad linking for you.
 Most of the [Playback tutorials](Playback+tutorials.markdown) are devoted
-to `playbin2`.
+to `playbin`.
 
 ## Conclusion
 
@@ -515,7 +515,7 @@ You can now continue with the basic tutorials and learn about performing
 seeks and time-related queries in [Basic tutorial 4: Time
 management](Basic+tutorial+4+Time+management.markdown) or move
 to the [Playback tutorials](Playback+tutorials.markdown), and gain more
-insight about the `playbin2` element.
+insight about the `playbin` element.
 
 Remember that attached to this page you should find the complete source
 code of the tutorial and any accessory files needed to build it.

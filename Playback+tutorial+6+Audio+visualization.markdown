@@ -11,18 +11,18 @@ player, for example. This tutorial shows:
 
 # Introduction
 
-Enabling audio visualization in `playbin2` is actually very easy. Just
-set the appropriate `playbin2` flag and, when an audio-only stream is
+Enabling audio visualization in `playbin` is actually very easy. Just
+set the appropriate `playbin` flag and, when an audio-only stream is
 found, it will instantiate the necessary elements to create and display
 the visualization.
 
 If you want to specify the actual element that you want to use to
 generate the visualization, you instantiate it yourself and then tell
-`playbin2` about it through the `vis-plugin` property.
+`playbin` about it through the `vis-plugin` property.
 
 This tutorial searches the GStreamer registry for all the elements of
 the Visualization class, tries to select `goom` (or another one if it is
-not available) and passes it to `playbin2`.
+not available) and passes it to `playbin`.
 
 # A fancy music player
 
@@ -42,7 +42,7 @@ Copy this code into a text file named `playback-tutorial-6.c`.
 ``` lang=c
 #include <gst/gst.h>
 
-/* playbin2 flags */
+/* playbin flags */
 typedef enum {
   GST_PLAY_FLAG_VIS           = (1 << 3) /* Enable rendering of visualizations when there is no video stream. */
 } GstPlayFlags;
@@ -103,14 +103,14 @@ int main(int argc, char *argv[]) {
     return -1;
 
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin2 uri=http://radio.hbr1.com:19800/ambient.ogg", NULL);
+  pipeline = gst_parse_launch ("playbin uri=http://radio.hbr1.com:19800/ambient.ogg", NULL);
 
   /* Set the visualization flag */
   g_object_get (pipeline, "flags", &flags, NULL);
   flags |= GST_PLAY_FLAG_VIS;
   g_object_set (pipeline, "flags", flags, NULL);
 
-  /* set vis plugin for playbin2 */
+  /* set vis plugin for playbin */
   g_object_set (pipeline, "vis-plugin", vis_plugin, NULL);
 
   /* Start playing */
@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
 
 # Walkthrough
 
-First off, we indicate `playbin2` that we want an audio visualization by
+First off, we indicate `playbin` that we want an audio visualization by
 setting the `GST_PLAY_FLAG_VIS` flag. If the media already contains
 video, this flag has no effect.
 
@@ -168,10 +168,10 @@ flags |= GST_PLAY_FLAG_VIS;
 g_object_set (pipeline, "flags", flags, NULL);
 ```
 
-If no visualization plugin is enforced by the user, `playbin2` will use
+If no visualization plugin is enforced by the user, `playbin` will use
 `goom` (audio visualization will be disabled if `goom` is not
 available). The rest of the tutorial shows how to find out the available
-visualization elements and enforce one to `playbin2`.
+visualization elements and enforce one to `playbin`.
 
 ``` lang=c
 /* Get a list of all visualization plugins */
@@ -243,10 +243,10 @@ if (!vis_plugin)
 ```
 
 The selected factory is used to instantiate an actual `GstElement` which
-is then passed to `playbin2` through the `vis-plugin` property:
+is then passed to `playbin` through the `vis-plugin` property:
 
 ``` lang=c
-/* set vis plugin for playbin2 */
+/* set vis plugin for playbin */
 g_object_set (pipeline, "vis-plugin", vis_plugin, NULL);
 ```
 
@@ -256,10 +256,10 @@ And we are done.
 
 This tutorial has shown:
 
-  - How to enable Audio Visualization in `playbin2` with the
+  - How to enable Audio Visualization in `playbin` with the
     `GST_PLAY_FLAG_VIS` flag
   - How to enforce one particular visualization element with the
-    `vis-plugin` `playbin2` property 
+    `vis-plugin` `playbin` property 
 
 It has been a pleasure having you here, and see you soon\!
 

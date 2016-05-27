@@ -182,7 +182,7 @@ to output graph files. These are `.dot` files, readable with free
 programs like [GraphViz](http://www.graphviz.org), that describe the
 topology of your pipeline, along with the caps negotiated in each link.
 
-This is also very handy when using all-in-one elements like `playbin2`
+This is also very handy when using all-in-one elements like `playbin`
  or `uridecodebin`, which instantiate several elements inside them. Use
 the `.dot` files to learn what pipeline they have created inside (and
 learn a bit of GStreamer along the way).
@@ -197,11 +197,11 @@ within your application, you can use the
 `GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS()` macros to generate `.dot` files
 at your convenience.
 
-Here you have an example of the kind of pipelines that playbin2
-generates. It is very complex because `playbin2` can handle many
+Here you have an example of the kind of pipelines that playbin
+generates. It is very complex because `playbin` can handle many
 different cases: Your manual pipelines normally do not need to be this
 long. If your manual pipeline is starting to get very big, consider
-using `playbin2`.
+using `playbin`.
 
 ![](attachments/327830/2424840.png)
 
@@ -224,4 +224,4 @@ It has been a pleasure having you here, and see you soon\!
 ## Attachments:
 
 ![](images/icons/bullet_blue.gif)
-[playbin2.png](attachments/327830/2424840.png) (image/png)
+[playbin.png](attachments/327830/2424840.png) (image/png)

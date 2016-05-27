@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
   gst_init (&argc, &argv);
   
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
   
   /* Create the elements inside the sink bin */
   equalizer = gst_element_factory_make ("equalizer-3bands", "equalizer");
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
   g_object_set (G_OBJECT (equalizer), "band1", (gdouble)-24.0, NULL);
   g_object_set (G_OBJECT (equalizer), "band2", (gdouble)-24.0, NULL);
   
-  /* Set playbin2's audio sink to be our sink bin */
+  /* Set playbin's audio sink to be our sink bin */
   g_object_set (GST_OBJECT (pipeline), "audio-sink", bin, NULL);
   
   /* Start playing */

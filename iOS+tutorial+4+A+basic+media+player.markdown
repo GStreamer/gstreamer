@@ -15,7 +15,7 @@ iOS device. It shows:
 It also uses the knowledge gathered in the [Basic
 tutorials](Basic%2Btutorials.html) regarding:
 
-  - How to use `playbin2` to play any kind of media
+  - How to use `playbin` to play any kind of media
   - How to handle network resilience problems
 
 # Introduction
@@ -23,10 +23,10 @@ tutorials](Basic%2Btutorials.html) regarding:
 From the previous tutorials, we already have almost all necessary pieces
 to build a media player. The most complex part is assembling a pipeline
 which retrieves, decodes and displays the media, but we already know
-that the `playbin2` element can take care of all that for us. We only
+that the `playbin` element can take care of all that for us. We only
 need to replace the manual pipeline we used in [iOS tutorial 3:
 Video](iOS%2Btutorial%2B3%253A%2BVideo.html) with a
-single-element `playbin2` pipeline and we are good to go\!
+single-element `playbin` pipeline and we are good to go\!
 
 However, we can do better than. We will add a [Time
 Slider](http://developer.apple.com/library/ios/#documentation/UIKit/Reference/UISlider_Class/Reference/Reference.html),
@@ -301,7 +301,7 @@ this view is collapsed by default. Click here to expand…
 Supporting arbitrary media URIs
 
 The `GStreamerBackend`  provides the `setUri()` method so we can
-indicate the URI of the media to play. Since `playbin2` will be taking
+indicate the URI of the media to play. Since `playbin` will be taking
 care of retrieving the media, we can use local or remote URIs
 indistinctly (`file://` or `http://`, for example). From the UI code,
 though, we want to keep track of whether the file is local or remote,
@@ -839,7 +839,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     g_main_context_push_thread_default(context);
 
     /* Build pipeline */
-    pipeline = gst_parse_launch("playbin2", &error);
+    pipeline = gst_parse_launch("playbin", &error);
     if (error) {
         gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
         g_clear_error (&error);
@@ -921,7 +921,7 @@ one):
 We first need to obtain a plain `char *` from within the `NSString *` we
 get, using the `UTF8String` method.
 
-`playbin2`’s URI is exposed as a common GObject property, so we simply
+`playbin`’s URI is exposed as a common GObject property, so we simply
 set it with `g_object_set()`.
 
 ### Reporting media size
@@ -971,7 +971,7 @@ static void check_media_size (GStreamerBackend *self) {
 ```
 
 We first retrieve the video sink element from the pipeline, using
-the `video-sink` property of `playbin2`, and then its sink Pad. The
+the `video-sink` property of `playbin`, and then its sink Pad. The
 negotiated Caps of this Pad, which we recover using
 `gst_pad_get_negotiated_caps()`,  are the Caps of the decoded media.
 
@@ -1214,7 +1214,7 @@ the pipeline to the `target_state`.
 
 ### Conclusion
 
-This tutorial has shown how to embed a `playbin2` pipeline into an iOS
+This tutorial has shown how to embed a `playbin` pipeline into an iOS
 application. This, effectively, turns such application into a basic
 media player, capable of streaming and decoding all the formats
 GStreamer understands. More particularly, it has shown:

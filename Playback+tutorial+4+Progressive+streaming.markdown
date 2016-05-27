@@ -30,7 +30,7 @@ downloaded data stored locally for this contingency. A graphical widget
 is also normally used to show how much of the file has already been
 downloaded.
 
-`playbin2` offers similar functionalities through the `DOWNLOAD` flag
+`playbin` offers similar functionalities through the `DOWNLOAD` flag
 which stores the media in a local temporary file for faster playback of
 already-downloaded chunks.
 
@@ -58,7 +58,7 @@ Copy this code into a text file named `playback-tutorial-4.c`.
 
 #define GRAPH_LENGTH 80
 
-/* playbin2 flags */
+/* playbin flags */
 typedef enum {
   GST_PLAY_FLAG_DOWNLOAD      = (1 << 7) /* Enable progressive download (on selected formats) */
 } GstPlayFlags;
@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
   data.buffering_level = 100;
 
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
   bus = gst_element_get_bus (pipeline);
 
   /* Set the download flag */
@@ -265,7 +265,7 @@ flags |= GST_PLAY_FLAG_DOWNLOAD;
 g_object_set (pipeline, "flags", flags, NULL);
 ```
 
-By setting this flag, `playbin2` instructs its internal queue (a
+By setting this flag, `playbin` instructs its internal queue (a
 `queue2` element, actually) to store all downloaded
 data.
 
@@ -274,7 +274,7 @@ g_signal_connect (pipeline, "deep-notify::temp-location", G_CALLBACK (got_locati
 ```
 
 `deep-notify` signals are emitted by `GstObject` elements (like
-`playbin2`) when the properties of any of their children elements
+`playbin`) when the properties of any of their children elements
 change. In this case we want to know when the `temp-location` property
 changes, indicating that the `queue2` has decided where to store the
 downloaded
@@ -340,7 +340,7 @@ static gboolean refresh_ui (CustomData *data) {
 
 The first thing we do in `refresh_ui` is construct a new Buffering
 `GstQuery` with `gst_query_new_buffering()` and pass it to the pipeline
-(`playbin2`) with `gst_element_query()`. In [Basic tutorial 4: Time
+(`playbin`) with `gst_element_query()`. In [Basic tutorial 4: Time
 management](Basic%2Btutorial%2B4%253A%2BTime%2Bmanagement.html) we have
 already seen how to perform simple queries like Position and Duration
 using specific methods. More complex queries, like Buffering, need to
@@ -428,12 +428,12 @@ file.
 This tutorial has shown:
 
   - How to enable progressive downloading with the
-    `GST_PLAY_FLAG_DOWNLOAD` `playbin2` flag
+    `GST_PLAY_FLAG_DOWNLOAD` `playbin` flag
   - How to know what has been downloaded using a Buffering `GstQuery`
   - How to know where it has been downloaded with the
     `deep-notify::temp-location` signal
   - How to limit the size of the temporary file with
-    the `ring-buffer-max-size` property of `playbin2`.
+    the `ring-buffer-max-size` property of `playbin`.
 
 It has been a pleasure having you here, and see you soon\!
 

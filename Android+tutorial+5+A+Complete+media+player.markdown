@@ -74,7 +74,7 @@ allows you to choose a local media file, no matter what extension or
 MIME type it has.
 
 If a new media is selected, it is passed onto the native code (which
-will set the pipeline to READY, pass the URI onto `playbin2`, and bring
+will set the pipeline to READY, pass the URI onto `playbin`, and bring
 the pipeline back to the previous state). The current position is also
 reset, so the new clip does not start in the previous position.
 

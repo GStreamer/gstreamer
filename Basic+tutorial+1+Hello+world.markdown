@@ -228,7 +228,7 @@ Let's recap a bit. Today we have learned:
   - How to quickly build a pipeline from a textual description using
     `gst_parse_launch()`.
 
-  - How to create an automatic playback pipeline using `playbin2`.
+  - How to create an automatic playback pipeline using `playbin`.
 
   - How to signal GStreamer to start playback using
     `gst_element_set_state()`.

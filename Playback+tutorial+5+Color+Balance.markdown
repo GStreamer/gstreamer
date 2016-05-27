@@ -17,10 +17,10 @@ already explained the concept of GObject interfaces: applications use
 them to find out if certain functionality is available, regardless of
 the actual element which implements it.
 
-`playbin2` implements the Color Balance interface (`gstcolorbalance`),
+`playbin` implements the Color Balance interface (`gstcolorbalance`),
 which allows access to the color balance settings. If any of the
-elements in the `playbin2` pipeline support this interface,
-`playbin2` simply forwards it to the application, otherwise, a
+elements in the `playbin` pipeline support this interface,
+`playbin` simply forwards it to the application, otherwise, a
 colorbalance element is inserted in the pipeline.
 
 This interface allows querying for the available color balance channels
@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
     " 'Q' to quit\n");
 
   /* Build the pipeline */
-  data.pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  data.pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
 
   /* Add a keyboard watch so we get notified of keystrokes */
 #ifdef _WIN32
@@ -219,7 +219,7 @@ int main(int argc, char *argv[]) {
 
 # Walkthrough
 
-The `main()` function is fairly simple. A `playbin2` pipeline is
+The `main()` function is fairly simple. A `playbin` pipeline is
 instantiated and set to run, and a keyboard watch is installed so
 keystrokes can be monitored.
 

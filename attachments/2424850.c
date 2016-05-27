@@ -97,7 +97,7 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   g_main_loop_quit (data->main_loop);
 }
   
-/* This function is called when playbin2 has created the appsrc element, so we have
+/* This function is called when playbin has created the appsrc element, so we have
  * a chance to configure it. */
 static void source_setup (GstElement *pipeline, GstElement *source, CustomData *data) {
   gchar *audio_caps_text;
@@ -128,8 +128,8 @@ int main(int argc, char *argv[]) {
   /* Initialize GStreamer */
   gst_init (&argc, &argv);
   
-  /* Create the playbin2 element */
-  data.pipeline = gst_parse_launch ("playbin2 uri=appsrc://", NULL);
+  /* Create the playbin element */
+  data.pipeline = gst_parse_launch ("playbin uri=appsrc://", NULL);
   g_signal_connect (data.pipeline, "source-setup", G_CALLBACK (source_setup), &data);
   
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */

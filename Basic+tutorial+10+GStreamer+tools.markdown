@@ -225,15 +225,15 @@ producing for a particular pipeline, run `gst-launch-1.0` as usual, with the
 
 #### Examples
 
-Play a media file using `playbin2` (as in [Basic tutorial 1: Hello
+Play a media file using `playbin` (as in [Basic tutorial 1: Hello
 world\!](Basic%2Btutorial%2B1%253A%2BHello%2Bworld%2521.html)):
 
 ```
-gst-launch-1.0 playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm
+gst-launch-1.0 playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm
 ```
 
 A fully operation playback pipeline, with audio and video (more or less
-the same pipeline that `playbin2` will create
+the same pipeline that `playbin` will create
 internally):
 
 ```

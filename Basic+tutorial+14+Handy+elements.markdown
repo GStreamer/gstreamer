@@ -4,7 +4,7 @@
 
 This tutorial gives a list of handy GStreamer elements that are worth
 knowing. They range from powerful all-in-one elements that allow you to
-build complex pipelines easily (like `playbin2`), to little helper
+build complex pipelines easily (like `playbin`), to little helper
 elements which are extremely useful when debugging.
 
 For simplicity, the following examples are given using the
@@ -19,7 +19,7 @@ These are Bin elements which you treat as a single element and they take
 care of instantiating all the necessary internal pipeline to accomplish
 their task.
 
-### `playbin2`
+### `playbin`
 
 This element has been extensively used throughout the tutorials. It
 manages all aspects of media playback, from source to display, passing
@@ -263,7 +263,7 @@ tutorial 12: Streaming](Basic%2Btutorial%2B12%253A%2BStreaming.html).
 As a rule of thumb, prefer `queue2` over `queue` whenever network
 buffering is a concern to you. See [Basic tutorial 12:
 Streaming](Basic%2Btutorial%2B12%253A%2BStreaming.html) for an example
-(`queue2` is hidden inside `playbin2`).
+(`queue2` is hidden inside `playbin`).
 
 ### `multiqueue`
 

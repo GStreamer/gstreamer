@@ -26,7 +26,7 @@ waiting.
 
 As it turns out, this solution is already implemented in GStreamer, but
 the previous tutorials have not been benefiting from it. Some elements,
-like the `queue2` and `multiqueue` found inside `playbin2`, are capable
+like the `queue2` and `multiqueue` found inside `playbin`, are capable
 of building this buffer and post bus messages regarding the buffer level
 (the state of the queue). An application wanting to have more network
 resilience, then, should listen to these messages and pause playback if
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
   memset (&data, 0, sizeof (data));
 
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
   bus = gst_element_get_bus (pipeline);
 
   /* Start playing */

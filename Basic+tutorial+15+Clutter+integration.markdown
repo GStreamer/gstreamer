@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
   g_signal_connect (texture, "size-change", G_CALLBACK (size_change), NULL);
 
   /* Build the GStreamer pipeline */
-  pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
 
   /* Instantiate the Clutter sink */
   sink = gst_element_factory_make ("autocluttersink", NULL);
@@ -226,7 +226,7 @@ This texture is everything GStreamer needs to know about Clutter.
 g_object_set (pipeline, "video-sink", sink, NULL);
 ```
 
-Finally, tell `playbin2` to use the sink we created instead of the
+Finally, tell `playbin` to use the sink we created instead of the
 default one.
 
 Then the GStreamer pipeline and the Clutter timeline are started and the

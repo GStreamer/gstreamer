@@ -103,6 +103,6 @@ QtGStreamer provides access to the underlying C objects, in case you
 need them. This is accessible with a simple cast:
 
 ``` lang=c
-ElementPtr qgstElement = QGst::ElementFactory::make("playbin2");
+ElementPtr qgstElement = QGst::ElementFactory::make("playbin");
 GstElement* gstElement = GST_ELEMENT(qgstElement);
 ```
