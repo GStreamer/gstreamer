@@ -61,6 +61,9 @@ gst_validate_reporter_default_init (GstValidateReporterInterface * iface)
 static void
 _free_priv (GstValidateReporterPrivate * priv)
 {
+  if (priv->runner)
+    g_object_remove_weak_pointer (G_OBJECT (priv->runner),
+        (gpointer) & priv->runner);
 
   if (g_log_handler == priv) {
     g_log_set_default_handler (g_log_default_handler, NULL);
@@ -334,6 +337,13 @@ gst_validate_reporter_set_runner (GstValidateReporter * reporter,
   GstValidateReporterPrivate *priv = gst_validate_reporter_get_priv (reporter);
 
   priv->runner = runner;
+
+  /* The runner is supposed to stay alive during the whole scenario but if
+   * we are using another tracer we may have messages catched after it has been
+   * destroyed. This may happen if the 'leaks' tracer detected leaks for
+   * example. */
+  if (runner)
+    g_object_add_weak_pointer (G_OBJECT (runner), (gpointer) & priv->runner);
 
   g_object_notify (G_OBJECT (reporter), "validate-runner");
 }
