@@ -34,7 +34,7 @@ element.
 **PLUGIN**
 
 Name of a plugin. This is a file name
-like `%GSTREAMER_SDK_ROOT_X86%\lib\gstreamer-0.10\libgstaudiotestsrc.dll`
+like `%GSTREAMER_SDK_ROOT_X86%\lib\gstreamer-1.0\libgstaudiotestsrc.dll`
 for example.
 
 **ELEMENT**
@@ -95,7 +95,7 @@ Factory Details:
 Plugin Details:
   Name:                 audiotestsrc
   Description:          Creates audio test signals of given frequency and volume
-  Filename:             I:\gstreamer-sdk\2012.5\x86\lib\gstreamer-0.10\libgstaudiotestsrc.dll
+  Filename:             I:\gstreamer-sdk\2012.5\x86\lib\gstreamer-1.0\libgstaudiotestsrc.dll
   Version:              0.10.36
   License:              LGPL
   Source module:        gst-plugins-base

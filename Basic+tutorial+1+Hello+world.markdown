@@ -66,7 +66,7 @@ Internet, along with audio. Congratulations!
 > tutorials** section for your platform: [Linux], [Mac OS X] or
 > [Windows], or use this specific command on Linux:
 >
-> `` gcc basic-tutorial-1.c -o basic-tutorial-1 `pkg-config --cflags --libs gstreamer-0.10` ``
+> `` gcc basic-tutorial-1.c -o basic-tutorial-1 `pkg-config --cflags --libs gstreamer-1.0` ``
 >
 > If you need help to run this code, refer to the **Running the
 > tutorials** section for your platform: [Linux][1], [Mac OS X][2] or

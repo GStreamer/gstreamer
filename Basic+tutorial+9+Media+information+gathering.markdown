@@ -310,12 +310,12 @@ int main (int argc, char **argv) {
 <p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
 <div class="panel" style="border-width: 1px;">
 <div class="panelContent">
-<p><code>gcc basic-tutorial-9.c -o basic-tutorial-9 `pkg-config --cflags --libs gstreamer-pbutils-0.10 gstreamer-0.10`</code></p>
+<p><code>gcc basic-tutorial-9.c -o basic-tutorial-9 `pkg-config --cflags --libs gstreamer-pbutils-1.0 gstreamer-1.0`</code></p>
 </div>
 </div>
 <p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
 <p><span>This tutorial opens the URI passed as the first parameter in the command line (or a default URI if none is provided) and outputs information about it on the screen. If the media is located on the Internet, the application might take a bit to react depending on your connection speed.</span></p>
-<p>Required libraries: <code>gstreamer-pbutils-0.10 gstreamer-0.10</code></p>
+<p>Required libraries: <code>gstreamer-pbutils-1.0 gstreamer-1.0</code></p>
 </div>
 </div></td>
 </tr>

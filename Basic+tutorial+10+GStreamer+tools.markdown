@@ -289,7 +289,7 @@ Factory Details:
 Plugin Details:
   Name:                 vp8
   Description:          VP8 plugin
-  Filename:             I:\gstreamer-sdk\2012.5\x86\lib\gstreamer-0.10\libgstvp8.dll
+  Filename:             I:\gstreamer-sdk\2012.5\x86\lib\gstreamer-1.0\libgstvp8.dll
   Version:              0.10.23
   License:              LGPL
   Source module:        gst-plugins-bad

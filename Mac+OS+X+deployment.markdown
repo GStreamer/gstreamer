@@ -276,15 +276,15 @@ using [otool](https://developer.apple.com/library/mac/#documentation/darwin/ref
 $ otool -L /Library/Frameworks/GStreamer.framework/Commands/gst-launch-1.0
 /Library/Frameworks/GStreamer.framework/Commands/gst-launch-1.0:
  /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation (compatibility version 150.0.0, current version 550.43.0)
- /Library/Frameworks/GStreamer.framework/Versions/0.10/x86/lib/libgstreamer-0.10.0.dylib (compatibility version 31.0.0, current version 31.0.0)
+ /Library/Frameworks/GStreamer.framework/Versions/0.10/x86/lib/libgstreamer-1.0.0.dylib (compatibility version 31.0.0, current version 31.0.0)
  /Library/Frameworks/GStreamer.framework/Versions/0.10/x86/lib/libxml2.2.dylib (compatibility version 10.0.0, current version 10.8.0)
 ...
 ```
 
 As you might have already noticed, if we move the SDK to a different
 folder, it will stop working because the runtime linker won't be able to
-find `gstreamer-0.10` in the previous location
-`/Library/Frameworks/GStreamer.framework/Versions/0.10/x86/lib/libgstreamer-0.10.0.dylib`.
+find `gstreamer-1.0` in the previous location
+`/Library/Frameworks/GStreamer.framework/Versions/0.10/x86/lib/libgstreamer-1.0.0.dylib`.
 
 This full path is extracted from the dynamic library  ***install name***
 , a path that is used by the linker to determine its location. The
@@ -292,14 +292,14 @@ install name of a library can be retrieved with
 [otool](https://developer.apple.com/library/mac/#documentation/darwin/reference/manpages/man1/otool.1.html) too:
 
 ``` lang=bash
-$ otool -D /Library/Frameworks/GStreamer.framework/Libraries/libgstreamer-0.10.dylib
-/Library/Frameworks/GStreamer.framework/Libraries/libgstreamer-0.10.dylib:
-/Library/Frameworks/GStreamer.framework/Versions/0.10/x86/lib/libgstreamer-0.10.0.dylib
+$ otool -D /Library/Frameworks/GStreamer.framework/Libraries/libgstreamer-1.0.dylib
+/Library/Frameworks/GStreamer.framework/Libraries/libgstreamer-1.0.dylib:
+/Library/Frameworks/GStreamer.framework/Versions/0.10/x86/lib/libgstreamer-1.0.0.dylib
 ```
 
-Any object file that links to the dynamic library `gstreamer-0.10` will
+Any object file that links to the dynamic library `gstreamer-1.0` will
 use the
-path `/Library/Frameworks/GStreamer.framework/Versions/0.10/x86/lib/libgstreamer-0.10.0.dylib` to
+path `/Library/Frameworks/GStreamer.framework/Versions/0.10/x86/lib/libgstreamer-1.0.0.dylib` to
 locate it, as we saw previously with `gst-launch-1.0`.
 
 Since working exclusively with full paths wouldn't let us install our
@@ -359,8 +359,8 @@ The application also needs to set the following environment variables to
 help other libraries finding resources in the new
     path:
 
-  - `GST_PLUGIN_SYSTEM_PATH=/Applications/MyApp.app/Contents/Frameworks/GStreamer.framework/Versions/Current/lib/gstreamer-0.10`
-  - `GST_PLUGIN_SCANNER=/Applications/MyApp.app/Contents/Frameworks/GStreamer.framework/Versions/Current/libexec/gstreamer-0.10/gst-plugin-scanner`
+  - `GST_PLUGIN_SYSTEM_PATH=/Applications/MyApp.app/Contents/Frameworks/GStreamer.framework/Versions/Current/lib/gstreamer-1.0`
+  - `GST_PLUGIN_SCANNER=/Applications/MyApp.app/Contents/Frameworks/GStreamer.framework/Versions/Current/libexec/gstreamer-1.0/gst-plugin-scanner`
   - `GTK_PATH=/Applications/MyApp.app/Contents/Frameworks/GStreamer.framework/Versions/Current/`
   - `GIO_EXTRA_MODULES=/Applications/MyApp.app/Contents/Frameworks/GStreamer.framework/Versions/Current/lib/gio/modules`
 

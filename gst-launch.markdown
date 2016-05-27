@@ -359,7 +359,7 @@ When set to a filesystem path, store dot files of pipeline graphs there.
 **GST\_REGISTRY**
 
 Path of the plugin registry file. Default is
-~/.gstreamer-0.10/registry-CPU.xml where CPU is the machine/cpu type
+~/.gstreamer-1.0/registry-CPU.xml where CPU is the machine/cpu type
 GStreamer was compiled for, e.g. 'i486', 'i686', 'x86-64', 'ppc', etc.
 (check the output of "uname -i" and "uname -m" for details).
 

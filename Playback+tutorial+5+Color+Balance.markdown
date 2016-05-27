@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
 <p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
 <div class="panel" style="border-width: 1px;">
 <div class="panelContent">
-<p><code>gcc playback-tutorial-5.c -o playback-tutorial-5 `pkg-config --cflags --libs gstreamer-interfaces-0.10 gstreamer-0.10`</code></p>
+<p><code>gcc playback-tutorial-5.c -o playback-tutorial-5 `pkg-config --cflags --libs gstreamer-interfaces-1.0 gstreamer-1.0`</code></p>
 </div>
 </div>
 <p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
 <p><span>This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed.</span></p>
 <p>The console should print all commands (Each command is a single upper-case or lower-case letter) and list all available Color Balance channels, typically, CONTRAST, BRIGHTNESS, HUE and SATURATION. Type each command (letter) followed by the Enter key.</p>
 <p></p>
-<p>Required libraries: <code>gstreamer-interfaces-0.10 gstreamer-0.10</code></p>
+<p>Required libraries: <code>gstreamer-interfaces-1.0 gstreamer-1.0</code></p>
 </div>
 </div></td>
 </tr>

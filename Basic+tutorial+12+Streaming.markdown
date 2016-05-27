@@ -174,12 +174,12 @@ int main(int argc, char *argv[]) {
 <p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
 <div class="panel" style="border-width: 1px;">
 <div class="panelContent">
-<p><code>gcc basic-tutorial-10.c -o basic-tutorial-10 `pkg-config --cflags --libs gstreamer-0.10`</code></p>
+<p><code>gcc basic-tutorial-10.c -o basic-tutorial-10 `pkg-config --cflags --libs gstreamer-1.0`</code></p>
 </div>
 </div>
 <p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
 <p>This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. In the console window, you should see a buffering message, and playback should only start when the buffering reaches 100%. This percentage might not change at all if your connection is fast enough and buffering is not required.</p>
-<p>Required libraries: <code>gstreamer-0.10</code></p>
+<p>Required libraries: <code>gstreamer-1.0</code></p>
 </div>
 </div></td>
 </tr>

@@ -274,7 +274,7 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
 <p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
 <div class="panel" style="border-width: 1px;">
 <div class="panelContent">
-<p><code>gcc playback-tutorial-2.c -o playback-tutorial-2 `pkg-config --cflags --libs gstreamer-0.10`</code></p>
+<p><code>gcc playback-tutorial-2.c -o playback-tutorial-2 `pkg-config --cflags --libs gstreamer-1.0`</code></p>
 </div>
 </div>
 <p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
@@ -282,7 +282,7 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
 <p><span>This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. The number of subtitle streams is shown in the terminal, and the user can switch from one to another by entering a number and pressing enter. A small delay is to be expected. </span><strong>Please read the note at the bottom of this page</strong><span>.</span></p>
 <p><span><span>Bear in mind that there is no latency management (buffering), so on slow connections, the movie might stop after a few seconds. See how </span><a href="http://docs.gstreamer.com/display/GstSDK/Tutorial+12%3A+Live+streaming">Tutorial 12: Live streaming</a><span> solves this issue.</span></span></p>
 <p></p>
-<p>Required libraries: <code>gstreamer-0.10</code></p>
+<p>Required libraries: <code>gstreamer-1.0</code></p>
 </div>
 </div></td>
 </tr>

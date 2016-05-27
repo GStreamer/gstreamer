@@ -458,7 +458,7 @@ int main(int argc, char *argv[]) {
 >
 > If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](Installing+on+Linux.html#InstallingonLinux-Build), [Mac OS X](Installing+on+Mac+OS+X.html#InstallingonMacOSX-Build) or [Windows](Installing+on+Windows.html#InstallingonWindows-Build), or use this specific command on Linux:
 >
-> ``gcc basic-tutorial-5.c -o basic-tutorial-5 `pkg-config --cflags --libs  gstreamer-interfaces-0.10 gtk+-3.0 gstreamer-1.0``
+> ``gcc basic-tutorial-5.c -o basic-tutorial-5 `pkg-config --cflags --libs  gstreamer-interfaces-1.0 gtk+-3.0 gstreamer-1.0``
 >
 >If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](Installing+on+Linux.html#InstallingonLinux-Run), [Mac OS X](Installing+on+Mac+OS+X.html#InstallingonMacOSX-Run) or [Windows](Installing+on+Windows.html#InstallingonWindows-Run).
 >

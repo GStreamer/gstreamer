@@ -882,7 +882,7 @@ endif
 GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_SDK_ROOT)/share/gst-android/ndk-build/
 include $(GSTREAMER_NDK_BUILD_PATH)/plugins.mk
 GSTREAMER_PLUGINS         := $(GSTREAMER_PLUGINS_CORE) $(GSTREAMER_PLUGINS_SYS) $(GSTREAMER_PLUGINS_EFFECTS)
-GSTREAMER_EXTRA_DEPS      := gstreamer-interfaces-0.10 gstreamer-video-0.10
+GSTREAMER_EXTRA_DEPS      := gstreamer-interfaces-1.0 gstreamer-video-1.0
 include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer.mk
 ```
 

@@ -178,12 +178,12 @@ requires the GStreamer SDK and uses the GStreamer core library, remember
 to add this string to your `gcc` command:
 
 ```
-`pkg-config --cflags --libs gstreamer-0.10`
+`pkg-config --cflags --libs gstreamer-1.0`
 ```
 
 If you're using other GStreamer libraries, e.g. the video library, you
-have to add additional packages after gstreamer-0.10 in the above string
-(gstreamer-video-0.10 for the video library, for example).
+have to add additional packages after gstreamer-1.0 in the above string
+(gstreamer-video-1.0 for the video library, for example).
 
 If your application is built with the help of libtool, e.g. when using
 automake/autoconf as a build system, you have to run
@@ -196,7 +196,7 @@ the `configure `script from inside the `gst-sdk-shell` environment.
 <td><p>You have also the option to embed the SDK's path into your binaries so they do not need to be executed from within the <code>gst-sdk-shell</code>. To do so, add these options to gcc:</p>
 <div class="code panel" style="border-width: 1px;">
 <div class="codeContent panelContent">
-<pre class="theme: Default; brush: plain; gutter: false" style="font-size:12px;"><code>-Wl,-rpath=/opt/gstreamer-sdk/lib `pkg-config --cflags --libs gstreamer-0.10`</code></pre>
+<pre class="theme: Default; brush: plain; gutter: false" style="font-size:12px;"><code>-Wl,-rpath=/opt/gstreamer-sdk/lib `pkg-config --cflags --libs gstreamer-1.0`</code></pre>
 </div>
 </div>
 <p>In case you are using libtool, it will automatically add the <code>-Wl </code>and<code> -rpath</code> options and you do not need to worry about it.</p></td>
@@ -230,7 +230,7 @@ Then go to the folder where you copied/cloned the tutorials and
 write:
 
 ```
-gcc basic-tutorial-1.c -o basic-tutorial-1 `pkg-config --cflags --libs gstreamer-0.10`
+gcc basic-tutorial-1.c -o basic-tutorial-1 `pkg-config --cflags --libs gstreamer-1.0`
 ```
 
 Using the file name of the tutorial you are interested in
@@ -240,7 +240,7 @@ Using the file name of the tutorial you are interested in
 <tbody>
 <tr class="odd">
 <td><img src="images/icons/emoticons/warning.png" width="16" height="16" /></td>
-<td><p><strong>Depending on the GStreamer libraries you need to use, you will have to add more packages to the <code class="western">pkg-config </code>command, besides <code class="western">gstreamer-0.10</code></strong></p>
+<td><p><strong>Depending on the GStreamer libraries you need to use, you will have to add more packages to the <code class="western">pkg-config </code>command, besides <code class="western">gstreamer-1.0</code></strong></p>
 <p>At the bottom of each tutorial's source code you will find the command for that specific tutorial, including the required libraries, in the required order.</p>
 <p>When developing your own applications, the GStreamer documentation will tell you what library a function belongs to.</p></td>
 </tr>

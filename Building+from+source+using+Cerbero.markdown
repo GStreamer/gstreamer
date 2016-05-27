@@ -187,7 +187,7 @@ command:
 Once you are in Cerbero's shell you can compile new projects targeting
 the SDK using the regular build process:
 
-    $ git clone -b sdk-0.10.31 git://anongit.freedesktop.org/gstreamer-sdk/gst-plugins-good; cd gst-plugins-good
+    $ git clone -b sdk-1.0.31 git://anongit.freedesktop.org/gstreamer-sdk/gst-plugins-good; cd gst-plugins-good
     $ sh autogen.sh --disable-gtk-doc --prefix=<prefix>
     $ make -C gst/isomp4
 

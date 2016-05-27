@@ -300,7 +300,7 @@ Bear in mind that there is no latency management (buffering), so on slow
 connections, the movie might stop after a few seconds. See how [Tutorial
 12: Live streaming] solves this issue.
 
-Required libraries: `gstreamer-0.10`
+Required libraries: `gstreamer-1.0`
 
 # Walkthrough
 
