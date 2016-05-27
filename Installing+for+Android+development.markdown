@@ -253,7 +253,6 @@ and used as follows:
     include $(GSTREAMER_NDK_BUILD_PATH)/plugins.mk
     GSTREAMER_PLUGINS  := $(GSTREAMER_PLUGINS_CORE) $(GSTREAMER_PLUGINS_CODECS) playbin souphttpsrc
 
-
 #### List of categories and included plugins
 
 | Category                       | Included plugins                                                                                                                                                                                                                                                                                                                                                                                                                                   |

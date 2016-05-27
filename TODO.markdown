@@ -48,8 +48,6 @@ Pages to review:
    - Multiplatform+deployment+using+Cerbero.markdown
  - Legal+information.markdown
  - GStreamer+reference.markdown
-   - gst-inspect.markdown
-   - gst-launch.markdown
 
 
 Screenshots:
@@ -74,6 +72,8 @@ Reviewed pages:
  - GStreamer+reference.markdown
  - Playback+tutorial+1+Playbin+usage.markdown
  - Basic+tutorial+1+Hello+world.markdown
+ - gst-inspect.markdown
+ - gst-launch.markdown
 
 For-later pages:
  - Qt+tutorials.markdown [tpm: this should all be rewritten from scratch with qmlglsink; QtGStreamer is outdated and unmaintained, we should not promote it]
