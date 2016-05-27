@@ -74,7 +74,7 @@ In simple form, a PIPELINE-DESCRIPTION is a list of element types
 separated by exclamation marks (\!). Go ahead and type in the following
 command:
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10 videotestsrc ! ffmpegcolorspace ! autovideosink
 ```
 
@@ -98,7 +98,7 @@ spaces). Use the `gst-inspect` tool (explained next) to find out the
 available properties for an
 element.
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10 videotestsrc pattern=11 ! ffmpegcolorspace ! autovideosink
 ```
 
@@ -115,7 +115,7 @@ example.
 Named elements are referred to using their name followed by a
 dot.
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10 videotestsrc ! ffmpegcolorspace ! tee name=t ! queue ! autovideosink t. ! queue ! autovideosink
 ```
 
@@ -149,7 +149,7 @@ This is useful, for example, when you want to retrieve one particular
 stream out of a
 demuxer:
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10.exe souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux name=d d.video_00 ! matroskamux ! filesink location=sintel_video.mkv
 ```
 
@@ -169,7 +169,7 @@ All in all, we took a webm file, stripped it of audio, and generated a
 new matroska file with the video. If we wanted to keep only the
 audio:
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10.exe souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux name=d d.audio_00 ! vorbisparse ! matroskamux ! filesink location=sintel_audio.mka
 ```
 
@@ -195,7 +195,7 @@ saying that GStreamer will choose one output pad at random.
 Consider the following
 pipeline:
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! filesink location=test
 ```
 
@@ -209,7 +209,7 @@ You can remove this ambiguity, though, by using named pads, as in the
 previous sub-section, or by using **Caps
 Filters**:
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! video/x-vp8 ! matroskamux ! filesink location=sintel_video.mkv
 ```
 
@@ -230,7 +230,7 @@ producing for a particular pipeline, run `gst-launch` as usual, with the
 Play a media file using `playbin2` (as in [Basic tutorial 1: Hello
 world\!](Basic%2Btutorial%2B1%253A%2BHello%2Bworld%2521.html)):
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10 playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm
 ```
 
@@ -238,7 +238,7 @@ A fully operation playback pipeline, with audio and video (more or less
 the same pipeline that `playbin2` will create
 internally):
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux name=d ! queue ! vp8dec ! ffmpegcolorspace ! autovideosink d. ! queue ! vorbisdec ! audioconvert ! audioresample ! autoaudiosink
 ```
 
@@ -248,7 +248,7 @@ with a different codec, and puts them back together in an Ogg container
 (just for the sake of
 it).
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm name=d ! queue ! theoraenc ! oggmux name=m ! filesink location=sintel.ogg d. ! queue ! audioconvert ! audioresample ! flacenc ! m.
 ```
 
@@ -257,7 +257,7 @@ operation whenever the frame size is different in the input and the
 output caps. The output caps are set by the Caps Filter to
 320x200.
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! queue ! videoscale ! video/x-raw-yuv,width=320,height=200 ! ffmpegcolorspace ! autovideosink
 ```
 
@@ -279,7 +279,7 @@ This tool has three modes of operation:
 
 Let's see an example of the third mode:
 
-``` theme: Default; brush: plain; gutter: true
+```
 gst-inspect-0.10 vp8dec
  
 Factory Details:
@@ -400,7 +400,7 @@ which basically control the amount of verbosity of the output.
 Let's see an
 example:
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-discoverer-0.10 http://docs.gstreamer.com/media/sintel_trailer-480p.webm -v
 
 Analyzing http://docs.gstreamer.com/media/sintel_trailer-480p.webm

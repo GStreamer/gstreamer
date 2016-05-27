@@ -69,7 +69,7 @@ Copy this code into a text file named `basic-tutorial-13.c`.
 
 **basic-tutorial-13.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <string.h>
 #include <gst/gst.h>
 
@@ -250,7 +250,7 @@ keystrokes and a GLib main loop is executed.
 
 Then, in the keyboard handler function:
 
-``` first-line: 45; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Process keyboard input */
 static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data) {
   gchar *str = NULL;
@@ -270,7 +270,7 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
 Pause / Playing toggle is handled with `gst_element_set_state()` as in
 previous tutorials.
 
-``` first-line: 59; theme: Default; brush: cpp; gutter: true
+``` lang=c
 case 's':
   if (g_ascii_isupper (str[0])) {
     data->rate *= 2.0;
@@ -290,7 +290,7 @@ reverse the current playback direction. In both cases, the
 `rate` variable is updated and `send_seek_event` is called. Let’s
 review this function.
 
-``` first-line: 13; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Send seek event to change rate */
 static void send_seek_event (CustomData *data) {
   gint64 position;
@@ -312,7 +312,7 @@ want to move, we jump to the current position. Using a Step Event would
 be simpler, but this event is not currently fully functional, as
 explained in the Introduction.
 
-``` first-line: 25; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Create the seek event */
 if (data->rate > 0) {
   seek_event = gst_event_new_seek (data->rate, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
@@ -329,7 +329,7 @@ position. Regardless of the playback direction, the start position must
 be smaller than the stop position, so the two playback directions are
 treated differently.
 
-``` first-line: 34; theme: Default; brush: cpp; gutter: true
+``` lang=c
 if (data->video_sink == NULL) {
   /* If we have not done so, obtain the sink through which we will send the seek events */
   g_object_get (data->pipeline, "video-sink", &data->video_sink, NULL);
@@ -343,7 +343,7 @@ at this time instead at initialization time because the actual sink may
 change depending on the media contents, and this won’t be known until
 the pipeline is PLAYING and some media has been read.
 
-``` first-line: 39; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Send the event */
 gst_element_send_event (data->video_sink, seek_event);
 ```
@@ -354,7 +354,7 @@ The new Event is finally sent to the selected sink with
 Back to the keyboard handler, we still miss the frame stepping code,
 which is really simple:
 
-``` first-line: 71; theme: Default; brush: cpp; gutter: true
+``` lang=c
 case 'n':
   if (data->video_sink == NULL) {
     /* If we have not done so, obtain the sink through which we will send the step events */

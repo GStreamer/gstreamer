@@ -35,7 +35,7 @@ in the SDK installation).
 
 **basic-tutorial-4.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <gst/gst.h>
 
 /* Structure to contain all our information, so we can pass it around */

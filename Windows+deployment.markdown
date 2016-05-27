@@ -24,7 +24,7 @@ the Windows Installer functionality and offers a number of options to
 suit your needs. You can review these options by
 executing `msiexec` without parameters. For example:
 
-``` theme: Default; brush: plain; gutter: false
+```
 msiexec /i gstreamer-sdk-2012.9-x86.msi
 ```
 
@@ -40,7 +40,7 @@ installer to deploy to your application’s folder (or a
 subfolder). Again, use the `msiexec` parameters that suit you best. For
 example:
 
-``` theme: Default; brush: plain; gutter: false
+```
 msiexec /passive INSTALLDIR=C:\Desired\Folder /i gstreamer-sdk-2012.9-x86.msi
 ```
 

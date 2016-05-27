@@ -64,7 +64,7 @@ it in the SDK installation).
 
 **playback-tutorial-1.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <gst/gst.h>
 
 /* Structure to contain all our information, so we can pass it around */
@@ -314,7 +314,7 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
 
 # Walkthrough
 
-``` first-line: 3; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Structure to contain all our information, so we can pass it around */
 typedef struct _CustomData {
   GstElement *playbin2;  /* Our one and only element */
@@ -337,7 +337,7 @@ streams of each type, and the currently playing one. Also, we are going
 to use a different mechanism to wait for messages that allows
 interactivity, so we need a GLib's main loop object.
 
-``` first-line: 18; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* playbin2 flags */
 typedef enum {
   GST_PLAY_FLAG_VIDEO         = (1 << 0), /* We want video output */
@@ -356,7 +356,7 @@ be retrieved at runtime without using this trick, but in a far more
 cumbersome
 way.
 
-``` first-line: 25; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Forward definition for the message and keyboard processing functions */
 static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data);
 static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data);
@@ -375,7 +375,7 @@ the pipeline, and use directly the  `playbin2` element.
 
 We focus on some of the other properties of `playbin2`, though:
 
-``` first-line: 50; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Set flags to show Audio and Video but ignore Subtitles */
 g_object_get (data.playbin2, "flags", &flags, NULL);
 flags |= GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_AUDIO;
@@ -419,7 +419,7 @@ values (this is why we read the current value of the flags with
 `g_object_get()` before overwriting it with
 `g_object_set()`).
 
-``` first-line: 56; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Set connection speed. This will affect some internal decisions of playbin2 */
 g_object_set (data.playbin2, "connection-speed", 56, NULL);
 ```
@@ -435,13 +435,13 @@ We have set all these properties one by one, but we could have all of
 them with a single call to
 `g_object_set()`:
 
-``` theme: Default; brush: cpp; gutter: false
+``` lang=c
 g_object_set (data.playbin2, "uri", "http://docs.gstreamer.com/media/sintel_cropped_multilingual.webm", "flags", flags, "connection-speed", 56, NULL);
 ```
 
 This is why `g_object_set()` requires a NULL as the last parameter.
 
-``` first-line: 63; theme: Default; brush: cpp; gutter: true
+``` lang=c
   /* Add a keyboard watch so we get notified of keystrokes */
 #ifdef _WIN32
   io_stdin = g_io_channel_win32_new_fd (fileno (stdin));
@@ -459,7 +459,7 @@ GStreamer has little to do with it besides the Navigation interface
 discussed briefly in [Tutorial 17: DVD
 playback](http://docs.gstreamer.com/display/GstSDK/Tutorial+17%3A+DVD+playback).
 
-``` first-line: 79; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Create a GLib Main Loop and set it to run */
 data.main_loop = g_main_loop_new (NULL, FALSE);
 g_main_loop_run (data.main_loop);
@@ -476,7 +476,7 @@ times: `handle_message` when a message appears on the bus, and
 There is nothing new in handle\_message, except that when the pipeline
 moves to the PLAYING state, it will call the `analyze_streams` function:
 
-``` first-line: 92; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Extract some metadata from the streams and print it on the screen */
 static void analyze_streams (CustomData *data) {
   gint i;
@@ -495,7 +495,7 @@ media and prints it on the screen. The number of video, audio and
 subtitle streams is directly available through the `n-video`,
 `n-audio` and `n-text` properties.
 
-``` first-line: 108; theme: Default; brush: cpp; gutter: true
+``` lang=c
 for (i = 0; i < data->n_video; i++) {
   tags = NULL;
   /* Retrieve the stream's video tags */
@@ -534,7 +534,7 @@ name if the tags is standardized, and the list can be found in the
 `GST_TAG_*_CODEC` (audio, video or
 text).
 
-``` first-line: 158; theme: Default; brush: cpp; gutter: true
+``` lang=c
 g_object_get (data->playbin2, "current-video", &data->current_video, NULL);
 g_object_get (data->playbin2, "current-audio", &data->current_audio, NULL);
 g_object_get (data->playbin2, "current-text", &data->current_text, NULL);
@@ -550,7 +550,7 @@ never make any assumption. Multiple internal conditions can make
 in which the streams are listed can change from one run to another, so
 checking the metadata to identify one particular stream becomes crucial.
 
-``` first-line: 202; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Process keyboard input */
 static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data) {
   gchar *str = NULL;

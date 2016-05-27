@@ -65,13 +65,13 @@ with the g\[st\]\_\<class\> prefix removed and converted to camel case.
 
 For example,
 
-``` theme: Default; brush: cpp; gutter: false
+``` lang=c
 gboolean gst_caps_is_emtpy(const GstCaps *caps);
 ```
 
 becomes:
 
-``` theme: Default; brush: cpp; gutter: false
+``` lang=c
 namespace QGst {
     class Caps {
         bool isEmpty() const;
@@ -104,7 +104,7 @@ to call `g_object_ref()`` and g_object_unref()`.
 QtGStreamer provides access to the underlying C objects, in case you
 need them. This is accessible with a simple cast:
 
-``` theme: Default; brush: cpp; gutter: false
+``` lang=c
 ElementPtr qgstElement = QGst::ElementFactory::make("playbin2");
 GstElement* gstElement = GST_ELEMENT(qgstElement);
 ```

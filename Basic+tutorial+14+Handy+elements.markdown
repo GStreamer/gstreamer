@@ -37,11 +37,11 @@ a `decodebin2` element. It acts like a demuxer, so it offers as many
 source pads as streams are found in the
 media.
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 gst-launch-0.10 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! ffmpegcolorspace ! autovideosink
 ```
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 gst-launch-0.10 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! audioconvert ! autoaudiosink
 ```
 
@@ -55,7 +55,7 @@ replaces the old `decodebin` element. It acts like a demuxer, so it
 offers as many source pads as streams are found in the
 media.
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 gst-launch-0.10 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! decodebin2 ! autovideosink
 ```
 
@@ -69,7 +69,7 @@ using a `typefind` element or by setting the `typefind` property
 of `filesrc` to
 `TRUE`.
 
-``` theme: Default; brush: cpp; gutter: false
+``` lang=c
 gst-launch-0.10 filesrc location=f:\\media\\sintel\\sintel_trailer-480p.webm ! decodebin2 ! autovideosink
 ```
 
@@ -79,7 +79,7 @@ This element writes to a file all the media it receives. Use the
 `location` property to specify the file
 name.
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10 audiotestsrc ! vorbisenc ! oggmux ! filesink location=test.ogg
 ```
 
@@ -91,7 +91,7 @@ This element receives data as a client over the network via HTTP using
 the SOUP library. Set the URL to retrieve through the `location`
 property.
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 gst-launch-0.10 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! decodebin2 ! autovideosink
 ```
 
@@ -106,7 +106,7 @@ are “guaranteed” to work.
 This element produces a video pattern (selectable among many different
 options with the `pattern` property). Use it to test video pipelines.
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 gst-launch-0.10 videotestsrc ! ffmpegcolorspace ! autovideosink
 ```
 
@@ -115,7 +115,7 @@ gst-launch-0.10 videotestsrc ! ffmpegcolorspace ! autovideosink
 This element produces an audio wave (selectable among many different
 options with the `wave` property). Use it to test video pipelines.
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 gst-launch-0.10 audiotestsrc ! audioconvert ! autoaudiosink
 ```
 
@@ -137,7 +137,7 @@ elements whose Caps are unknown at design time, like `autovideosink`, or
 that can vary depending on external factors, like decoding a
 user-provided file.
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 gst-launch-0.10 videotestsrc ! ffmpegcolorspace ! autovideosink
 ```
 
@@ -157,7 +157,7 @@ It is therefore a good idea to always use it whenever the actual frame
 rate is unknown at design time, just in
 case.
 
-``` theme: Default; brush: cpp; gutter: false
+``` lang=c
 gst-launch-0.10 videotestsrc ! video/x-raw-rgb,framerate=30/1 ! videorate ! video/x-raw-rgb,framerate=1/1 ! ffmpegcolorspace ! autovideosink
 ```
 
@@ -178,7 +178,7 @@ user, it is a good idea to use a `videoscale` element, since not all
 video sinks are capable of performing scaling
 operations.
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 gst-launch-0.10 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! videoscale ! video/x-raw-yuv,width=178,height=100 ! ffmpegcolorspace ! autovideosink
 ```
 
@@ -195,7 +195,7 @@ Like `ffmpegcolorspace` does for video, you use this to solve
 negotiation problems with audio, and it is generally safe to use it
 liberally, since this element does nothing if it is not needed.
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 gst-launch-0.10 audiotestsrc ! audioconvert ! autoaudiosink
 ```
 
@@ -208,7 +208,7 @@ Again, use it to solve negotiation problems regarding sampling rates and
 do not fear to use it
 generously.
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 gst-launch-0.10 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! audioresample ! audio/x-raw-float,rate=4000 ! audioconvert ! autoaudiosink
 ```
 
@@ -295,7 +295,7 @@ separate threads for each branch. Otherwise a blocked dataflow in one
 branch would stall the other
 branches.
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10 audiotestsrc ! tee name=t ! queue ! audioconvert ! autoaudiosink t. ! queue ! wavescope ! ffmpegcolorspace ! autovideosink
 ```
 
@@ -311,7 +311,7 @@ the `capsfilter` element. This element does not modify data as such,
 but enforces limitations on the data
 format.
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 gst-launch-0.10 videotestsrc ! video/x-raw-gray ! ffmpegcolorspace ! autovideosink
 ```
 
@@ -338,7 +338,7 @@ equation. It can be very verbose when combined with the `-v` switch
 of `gst-launch`, so use the `silent` property to remove any unwanted
 noise.
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10 audiotestsrc num-buffers=1000 ! fakesink sync=false
 ```
 
@@ -350,7 +350,7 @@ checking, or buffer dropping. Read its documentation to learn all the
 things this seemingly harmless element can
 do.
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-launch-0.10 audiotestsrc ! identity drop-probability=0.1 ! audioconvert ! autoaudiosink
 ```
 

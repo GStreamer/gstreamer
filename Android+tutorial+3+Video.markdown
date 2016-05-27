@@ -38,7 +38,7 @@ until a main loop is running and a drawing surface has been received.
 
 **src/com/gst\_sdk\_tutorials/tutorial\_3/Tutorial3.java**
 
-``` theme: Default; brush: java; gutter: true
+``` lang=java
 package com.gst_sdk_tutorials.tutorial_3;
 
 import android.app.Activity;
@@ -189,7 +189,7 @@ surface to the layout and changing the GStreamer pipeline to produce
 video instead of audio. Only the parts of the code that are new will be
 discussed.
 
-``` first-line: 22; theme: Default; brush: java; gutter: true
+``` lang=java
 private native void nativeSurfaceInit(Object surface);
 private native void nativeSurfaceFinalize();
 ```
@@ -199,7 +199,7 @@ Two new entry points to the C code are defined,
 when the video surface becomes available and when it is about to be
 destroyed, respectively.
 
-``` first-line: 61; theme: Default; brush: java; gutter: true
+``` lang=java
 SurfaceView sv = (SurfaceView) this.findViewById(R.id.surface_video);
 SurfaceHolder sh = sv.getHolder();
 sh.addCallback(this);
@@ -214,7 +214,7 @@ interface. This is why we declared this Activity as implementing the
 [SurfaceHolder.Callback](http://developer.android.com/reference/android/view/SurfaceHolder.Callback.html)
 interface in line 16.
 
-``` first-line: 127; theme: Default; brush: java; gutter: true
+``` lang=java
 public void surfaceChanged(SurfaceHolder holder, int format, int width,
         int height) {
     Log.d("GStreamer", "Surface changed to format " + format + " width "
@@ -245,7 +245,7 @@ Let’s review the C code to see what these functions do.
 
 **jni/tutorial-3.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <string.h>
 #include <jni.h>
 #include <android/log.h>
@@ -589,7 +589,7 @@ First, our `CustomData` structure is augmented to keep a pointer to the
 video sink element and the native window
 handle:
 
-``` first-line: 33; theme: Default; brush: cpp; gutter: true
+``` lang=c
 GstElement *video_sink; /* The video sink element which receives XOverlay commands */
 ANativeWindow *native_window; /* The Android native window where video will be rendered */
 ```
@@ -598,7 +598,7 @@ The `check_initialization_complete()` method is also augmented so that
 it requires a native window before considering GStreamer to be
 initialized:
 
-``` first-line: 127; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static void check_initialization_complete (CustomData *data) {
   JNIEnv *env = get_jni_env ();
   if (!data->initialized && data->native_window && data->main_loop) {
@@ -627,14 +627,14 @@ effects in the `GSTREAMER_PLUGINS_EFFECTS` package), and an
 `autovideosink` which will instantiate the adequate video sink for the
 platform:
 
-``` first-line: 159; theme: Default; brush: cpp; gutter: true
+``` lang=c
 data->pipeline = gst_parse_launch("videotestsrc ! warptv ! ffmpegcolorspace ! autovideosink ", &error);
 ```
 
 Here things start to get more
 interesting:
 
-``` first-line: 168; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Set the pipeline to READY, so it can already accept a window handle, if we have one */
 gst_element_set_state(data->pipeline, GST_STATE_READY);
 
@@ -662,7 +662,7 @@ Now we will implement the two native functions called by the Java code
 when the drawing surface becomes available or is about to be
 destroyed:
 
-``` first-line: 270; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data) return;
@@ -719,7 +719,7 @@ We finally store the new window handle and call
 `check_initialization_complete()` to inform the Java code that
 everything is set up, if that is the case.
 
-``` first-line: 295; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data) return;
@@ -772,7 +772,7 @@ surface.
 
 **src/com/gst\_sdk\_tutorials/tutorial\_3/GStreamerSurfaceView.java**
 
-``` theme: Default; brush: java; gutter: true
+``` lang=java
 package com.gst_sdk_tutorials.tutorial_3;
 
 import android.content.Context;
@@ -864,7 +864,7 @@ public class GStreamerSurfaceView extends SurfaceView {
 
 **/jni/Android.mk**
 
-``` theme: Default; brush: ruby; gutter: true
+``` lang=ruby
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)

@@ -41,7 +41,7 @@ outlets):
 
 **ViewController.h**
 
-``` theme: Default; brush: plain; gutter: true
+```
 #import <UIKit/UIKit.h>
 #import "GStreamerBackendDelegate.h"
 
@@ -73,7 +73,7 @@ behalf:
 
 **ViewController.m**
 
-``` theme: Default; brush: plain; gutter: true
+```
 #import "ViewController.h"
 #import "GStreamerBackend.h"
 #import <UIKit/UIKit.h>
@@ -167,7 +167,7 @@ behalf:
 We expand the class to remember the width and height of the media we are
 currently playing:
 
-``` first-line: 5; theme: Default; brush: plain; gutter: true
+```
 @interface ViewController () {
     GStreamerBackend *gst_backend;
     int media_width;
@@ -179,7 +179,7 @@ In later tutorials this data is retrieved from the GStreamer pipeline,
 but in this tutorial, for simplicity’s sake, the width and height of the
 media is constant and initialized in `viewDidLoad`:
 
-``` first-line: 19; theme: Default; brush: plain; gutter: true
+```
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -203,7 +203,7 @@ The rest of the `ViewController `code is the same as the previous
 tutorial, except for the code that adapts the `video_view` size to the
 media size, respecting its aspect ratio:
 
-``` first-line: 51; theme: Default; brush: plain; gutter: true
+```
 - (void)viewDidLayoutSubviews
 {
     CGFloat view_width = video_container_view.bounds.size.width;
@@ -250,7 +250,7 @@ the `GStreamerBackendDelegate` protocol:
 
 **GStreamerBackend.m**
 
-``` theme: Default; brush: plain; gutter: true
+```
 #import "GStreamerBackend.h"
 
 #include <gst/gst.h>
@@ -446,7 +446,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
 The main differences with the previous tutorial are related to the
 handling of the `XOverlay` interface:
 
-``` first-line: 15; theme: Default; brush: plain; gutter: true
+```
 @implementation GStreamerBackend {
     id ui_delegate;        /* Class that we use to interact with the user interface */
     GstElement *pipeline;  /* The running pipeline */
@@ -461,7 +461,7 @@ handling of the `XOverlay` interface:
 The class is expanded to keep track of the video sink element in the
 pipeline and the `UIView *` onto which rendering is to occur.
 
-``` first-line: 29; theme: Default; brush: plain; gutter: true
+```
 -(id) init:(id) uiDelegate videoView:(UIView *)video_view
 {
     if (self = [super init])
@@ -485,7 +485,7 @@ pipeline and the `UIView *` onto which rendering is to occur.
 The constructor accepts the `UIView *` as a new parameter, which, at
 this point, is simply remembered in `ui_video_view`.
 
-``` first-line: 142; theme: Default; brush: plain; gutter: true
+```
 /* Build pipeline */
 pipeline = gst_parse_launch("videotestsrc ! warptv ! ffmpegcolorspace ! autovideosink", &error);
 ```
@@ -497,7 +497,7 @@ choses the appropriate sink for the platform (currently,
 `eglglessink` is the only option for
 iOS).
 
-``` first-line: 152; theme: Default; brush: plain; gutter: true
+```
 /* Set the pipeline to READY, so it can already accept a window handle */
 gst_element_set_state(pipeline, GST_STATE_READY);
 
@@ -541,7 +541,7 @@ To this avail, we create the `EaglUIView` class, derived from
 
 **EaglUIView.m**
 
-``` theme: Default; brush: plain; gutter: true
+```
 #import "EaglUIVIew.h"
 
 #import <QuartzCore/QuartzCore.h>

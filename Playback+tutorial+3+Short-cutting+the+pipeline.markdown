@@ -32,7 +32,7 @@ Copy this code into a text file named `playback-tutorial-3.c`.
 
 **playback-tutorial-3.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <gst/gst.h>
 #include <string.h>
 
@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
 To use an `appsrc` as the source for the pipeline, simply instantiate a
 `playbin2` and set its URI to `appsrc://`
 
-``` first-line: 131; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Create the playbin2 element */
 data.pipeline = gst_parse_launch ("playbin2 uri=appsrc://", NULL);
 ```
@@ -199,7 +199,7 @@ data.pipeline = gst_parse_launch ("playbin2 uri=appsrc://", NULL);
 `source-setup` signal to allow the application to configure
 it:
 
-``` first-line: 133; theme: Default; brush: cpp; gutter: true
+``` lang=c
 g_signal_connect (data.pipeline, "source-setup", G_CALLBACK (source_setup), &data);
 ```
 
@@ -208,7 +208,7 @@ since, once the signal handler returns, `playbin2` will instantiate the
 next element in the pipeline according to these
 caps:
 
-``` first-line: 100; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* This function is called when playbin2 has created the appsrc element, so we have
  * a chance to configure it. */
 static void source_setup (GstElement *pipeline, GstElement *source, CustomData *data) {

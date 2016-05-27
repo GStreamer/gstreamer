@@ -24,7 +24,7 @@ The UI uses storyboards and contains a single `View` with a centered
 
 **ViewController.h**
 
-``` theme: Default; brush: plain; gutter: true
+```
 #import <UIKit/UIKit.h>
  
 @interface ViewController : UIViewController {
@@ -51,7 +51,7 @@ the [Android tutorials](Android%2Btutorials.html).
 
 **GStreamerBackend.m**
 
-``` theme: Default; brush: plain; gutter: true
+```
 #import "GStreamerBackend.h"
 
 #include <gst/gst.h>
@@ -85,7 +85,7 @@ GStreamer version to display at the label. That's it\!
 
 **ViewController.m**
 
-``` theme: Default; brush: plain; gutter: true
+```
 #import "ViewController.h"
 #import "GStreamerBackend.h"
 

@@ -366,7 +366,7 @@ Always Pads, and manually link the Request Pads of the `tee` element.
 
 Regarding the configuration of the `appsrc` and `appsink` elements:
 
-``` first-line: 159; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Configure appsrc */
 audio_caps_text = g_strdup_printf (AUDIO_CAPS, SAMPLE_RATE);
 audio_caps = gst_caps_from_string (audio_caps_text);
@@ -387,7 +387,7 @@ fired by `appsrc` when its internal queue of data is running low or
 almost full, respectively. We will use these signals to start and stop
 (respectively) our signal generation process.
 
-``` first-line: 166; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Configure appsink */
 g_object_set (data.app_sink, "emit-signals", TRUE, "caps", audio_caps, NULL);
 g_signal_connect (data.app_sink, "new-sample", G_CALLBACK (new_sample), &data);
@@ -404,7 +404,7 @@ Starting the pipeline, waiting for messages and final cleanup is done as
 usual. Let's review the callbacks we have just
 registered:
 
-``` first-line: 67; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* This signal callback triggers when appsrc needs data. Here, we add an idle handler
  * to the mainloop to start pushing data into the appsrc */
 static void start_feed (GstElement *source, guint size, CustomData *data) {
@@ -433,7 +433,7 @@ We take note of the sourceid that `g_idle_add()` returns, so we can
 disable it
 later.
 
-``` first-line: 76; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* This callback triggers when appsrc has enough data and we can stop sending.
  * We remove the idle handler from the mainloop */
 static void stop_feed (GstElement *source, CustomData *data) {
@@ -450,7 +450,7 @@ enough so we stop pushing data. Here we simply remove the idle function
 by using `g_source_remove()` (The idle function is implemented as a
 `GSource`).
 
-``` first-line: 22; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* This method is called by the idle GSource in the mainloop, to feed CHUNK_SIZE bytes into appsrc.
  * The ide handler is added to the mainloop when appsrc requests us to start sending data (need-data signal)
  * and is removed when appsrc has enough data (enough-data signal).
@@ -500,7 +500,7 @@ We will skip over the waveform generation, since it is outside the scope
 of this tutorial (it is simply a funny way of generating a pretty
 psychedelic wave).
 
-``` first-line: 53; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Push the buffer into the appsrc */
 g_signal_emit_by_name (data->app_source, "push-buffer", buffer, &ret);
 
@@ -514,7 +514,7 @@ tutorial 1: Playbin2
 usage](Playback+tutorial+1+Playbin2+usage.markdown)), and then
 `gst_buffer_unref()` it since we no longer need it.
 
-``` first-line: 86; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* The appsink has received a buffer */
 static void new_buffer (GstElement *sink, CustomData *data) {
   GstBuffer *buffer;

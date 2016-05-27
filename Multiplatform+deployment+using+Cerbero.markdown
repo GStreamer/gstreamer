@@ -28,7 +28,7 @@ In the Cerbero installation directory you will find the
 `cerbero-uninstalled` script. Execute it without parameters to see the
 list of commands it accepts:
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 ./cerbero-uninstalled
 ```
 
@@ -37,7 +37,7 @@ list of commands it accepts:
 The first step is to create an empty recipe that you can then tailor to
 your needs:
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 ./cerbero-uninstalled add-recipe my-app 1.0
 ```
 
@@ -204,7 +204,7 @@ Alternatively, you can pass some options to cerbero-uninstalled so some
 of these attributes are already set for you. For
 example:
 
-``` theme: Default; brush: python; gutter: false
+```
 ./cerbero-uninstalled add-recipe --licenses "LGPL" --deps "glib,gtk+" --origin "git://git.my-app.com" --commit "git-commit-to-use" my-app 1.0
 ```
 
@@ -212,7 +212,7 @@ See `./cerbero-uninstalled add-recipe -h` for help.
 
 As an example, this is the recipe used to build the Snappy media player:
 
-``` theme: Default; brush: python; gutter: false
+```
 class Recipe(recipe.Recipe):
     name = 'snappy'
     version = '0.2+git'
@@ -242,7 +242,7 @@ Snappy.
 
 Once the recipe is ready, instruct Cerbero to build it:
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 ./cerbero-uninstalled build my-app
 ```
 
@@ -257,7 +257,7 @@ files in `cerbero/packages`.
 
 Now, to create an empty package, do:
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 ./cerbero-uninstalled add-package my-app 1.0
 ```
 
@@ -410,7 +410,7 @@ Alternatively you can also pass some options to `cerbero-uninstalled`,
 for
 example:
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 ./cerbero-uninstalled add-package my-app 1.0 --license "LGPL" --codename MyApp --vendor MyAppVendor --url "http://www.my-app.com" --files=my-app:bins:libs --files-devel=my-app:devel --platform-files=linux:my-app:linux_specific --platform-files-devel=linux:my-app:linux_specific_devel,windows:my-app:windows_specific_devel --deps base-system --includes gstreamer-core
 ```
 
@@ -419,7 +419,7 @@ See `./cerbero-uninstalled add-package -h` for help.
 As an example, this is the package file that is used for packaging the
 `gstreamer-core` package:
 
-``` theme: Default; brush: python; gutter: false
+```
 class Package(package.Package):
     name = 'gstreamer-codecs'
     shortdesc = 'GStreamer codecs'
@@ -472,7 +472,7 @@ packages\_prefix as the ones in your Cerbero configuration file.
 
 Finally, build your package by using:
 
-``` theme: Default; brush: bash; gutter: false
+``` lang=bash
 ./cerbero-uninstalled package your-package 
 ```
 

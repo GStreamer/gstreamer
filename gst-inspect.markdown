@@ -81,13 +81,13 @@ Add directories separated with ':' to the plugin search path
 
 ## Example
 
-``` theme: Default; brush: plain; gutter: false
+```
 gst-inspect-0.10 audiotestsrc
 ```
 
 should produce:
 
-``` theme: Default; brush: plain; gutter: false
+```
 Factory Details:
   Long name:    Audio test source
   Class:        Source/Audio

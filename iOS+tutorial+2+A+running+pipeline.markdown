@@ -60,7 +60,7 @@ behalf:
 
 **ViewController.m**
 
-``` theme: Default; brush: plain; gutter: true
+```
 #import "ViewController.h"
 #import "GStreamerBackend.h"
 #import <UIKit/UIKit.h>
@@ -130,7 +130,7 @@ behalf:
 
 An instance of the `GStreamerBackend` in stored inside the class:
 
-``` first-line: 5; theme: Default; brush: plain; gutter: true
+```
 @interface ViewController () {
     GStreamerBackend *gst_backend;
 }
@@ -139,7 +139,7 @@ An instance of the `GStreamerBackend` in stored inside the class:
 This instance is created in the `viewDidLoad` function through a custom
 `init:` method in the `GStreamerBackend`:
 
-``` first-line: 17; theme: Default; brush: plain; gutter: true
+```
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -158,7 +158,7 @@ The Play and Pause buttons are also disabled in the
 `viewDidLoad` function, and they are not re-enabled until the
 `GStreamerBackend` reports that it is initialized and ready.
 
-``` first-line: 33; theme: Default; brush: plain; gutter: true
+```
 /* Called when the Play button is pressed */
 -(IBAction) play:(id)sender
 {
@@ -176,7 +176,7 @@ These two methods are called when the user presses the Play or Pause
 buttons, and simply forward the call to the appropriate method in the
 `GStreamerBackend`.
 
-``` first-line: 49; theme: Default; brush: plain; gutter: true
+```
 -(void) gstreamerInitialized
 {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -196,7 +196,7 @@ the
 [dispatch\_async()](https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man3/dispatch_async.3.html) call
 wrapping all UI code.
 
-``` first-line: 58; theme: Default; brush: plain; gutter: true
+```
 -(void) gstreamerSetUIMessage:(NSString *)message
 {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -221,7 +221,7 @@ the `GStreamerBackendDelegate` protocol:
 
 **GStreamerBackend.m**
 
-``` theme: Default; brush: plain; gutter: true
+```
 #import "GStreamerBackend.h"
 
 #include <gst/gst.h>
@@ -404,7 +404,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
 
 #### Interface methods:
 
-``` first-line: 26; theme: Default; brush: plain; gutter: true
+```
 -(id) init:(id) uiDelegate
 {
     if (self = [super init])
@@ -434,7 +434,7 @@ warns the application when interesting things happen.
 threshold, so we can see the debug output from within Xcode and keep
 track of our application progress.
 
-``` first-line: 44; theme: Default; brush: plain; gutter: true
+```
 -(void) dealloc
 {
     if (pipeline) {
@@ -449,7 +449,7 @@ track of our application progress.
 The `dealloc` method takes care of bringing the pipeline to the NULL
 state and releasing it.
 
-``` first-line: 54; theme: Default; brush: plain; gutter: true
+```
 -(void) play
 {
     if(gst_element_set_state(pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
@@ -470,7 +470,7 @@ desired state and warn the application if something fails.
 
 #### Private methods:
 
-``` first-line: 72; theme: Default; brush: plain; gutter: true
+```
 /* Change the message on the UI through the UI delegate */
 -(void)setUIMessage:(gchar*) message
 {
@@ -488,7 +488,7 @@ into `NSString *` and displays them through the
 implementation of this method is marked as `@optional`, and hence the
 check for its existence in the delegate with `respondsToSelector:`
 
-``` first-line: 82; theme: Default; brush: plain; gutter: true
+```
 /* Retrieve errors from the bus and show them on the UI */
 static void error_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *self)
 {
@@ -534,7 +534,7 @@ through the `userdata` pointer of the callbacks (the `self` pointer in
 these implementations). This is discussed below when registering the
 callbacks in the `app_function`.
 
-``` first-line: 111; theme: Default; brush: plain; gutter: true
+```
 /* Check if all conditions are met to report GStreamer as initialized.
  * These conditions will change depending on the application */
 -(void) check_initialization_complete
@@ -562,7 +562,7 @@ It exists with almost identical content in the Android tutorial, which
 exemplifies how the same code can run on both platforms with little
 change.
 
-``` first-line: 134; theme: Default; brush: plain; gutter: true
+```
     /* Create our own GLib Main Context and make it the default one */
     context = g_main_context_new ();
     g_main_context_push_thread_default(context);
@@ -574,7 +574,7 @@ libraries which might not have been properly disposed of. A new context
 is created with `g_main_context_new()` and then it is made the default
 one for the thread with `g_main_context_push_thread_default()`.
 
-``` first-line: 138; theme: Default; brush: plain; gutter: true
+```
     /* Build pipeline */
     pipeline = gst_parse_launch("audiotestsrc ! audioconvert ! audioresample ! autoaudiosink", &error);
     if (error) {
@@ -591,7 +591,7 @@ this case, it is simply an  `audiotestsrc` (which produces a continuous
 tone) and an `autoaudiosink`, with accompanying adapter
 elements.
 
-``` first-line: 148; theme: Default; brush: plain; gutter: true
+```
     /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
     bus = gst_element_get_bus (pipeline);
     bus_source = gst_bus_create_watch (bus);
@@ -616,7 +616,7 @@ because it travels through C-land untouched. It re-emerges at the
 different callbacks through the userdata pointer and cast again to a
 `GStreamerBackend *`.
 
-``` first-line: 158; theme: Default; brush: plain; gutter: true
+```
     /* Create a GLib Main Loop and set it to run */
     GST_DEBUG ("Entering main loop...");
     main_loop = g_main_loop_new (context, FALSE);

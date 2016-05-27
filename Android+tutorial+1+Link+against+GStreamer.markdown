@@ -26,7 +26,7 @@ makefile that allows GStreamer integration.
 
 **src/com/gst\_sdk\_tutorials/tutorial\_1/Tutorial1.java**
 
-``` theme: Default; brush: java; gutter: true
+``` lang=java
 package com.gst_sdk_tutorials.tutorial_1;
 
 import android.app.Activity;
@@ -70,7 +70,7 @@ public class Tutorial1 extends Activity {
 Calls from Java to C happen through native methods, like the one
 declared here:
 
-``` first-line: 11; theme: Default; brush: java; gutter: true
+``` lang=java
 private native String nativeGetGStreamerInfo();
 ```
 
@@ -82,7 +82,7 @@ shown later.
 The first bit of code that gets actually executed is the static
 initializer of the class:
 
-``` first-line: 33; theme: Default; brush: java; gutter: true
+``` lang=java
 static {
     System.loadLibrary("gstreamer_android");
     System.loadLibrary("tutorial-1");
@@ -99,7 +99,7 @@ expose. The GStreamer library only exposes a `init()` method, which
 initializes GStreamer and registers all plugins (The tutorial library is
 explained later below).
 
-``` first-line: 19; theme: Default; brush: java; gutter: true
+``` lang=java
 try {
     GStreamer.init(this);
 } catch (Exception e) {
@@ -122,7 +122,7 @@ Should initialization fail, the `init()` method would throw an
 [Exception](http://developer.android.com/reference/java/lang/Exception.html)
 with the details provided by the GStreamer library.
 
-``` first-line: 29; theme: Default; brush: java; gutter: true
+``` lang=java
 TextView tv = (TextView)findViewById(R.id.textview_info);
 tv.setText("Welcome to " + nativeGetGStreamerInfo() + " !");
 ```
@@ -139,7 +139,7 @@ code:
 
 **jni/tutorial-1.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <string.h>
 #include <jni.h>
 #include <android/log.h>
@@ -179,7 +179,7 @@ Machine (VM) loads a library.
 Here, we retrieve the JNI environment needed to make calls that interact
 with Java:
 
-``` first-line: 21; theme: Default; brush: cpp; gutter: true
+``` lang=c
 JNIEnv *env = NULL;
 
 if ((*vm)->GetEnv(vm, (void**) &env, JNI_VERSION_1_4) != JNI_OK) {
@@ -192,7 +192,7 @@ And then locate the class containing the UI part of this tutorial using
 `
 FindClass()`:
 
-``` first-line: 27; theme: Default; brush: cpp; gutter: true
+``` lang=c
 jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_1/Tutorial1");
 ```
 
@@ -201,7 +201,7 @@ is, we provide the code for the methods we advertised in Java using the
 **`native`**
  keyword:
 
-``` first-line: 28; theme: Default; brush: cpp; gutter: true
+``` lang=c
 (*env)->RegisterNatives (env, klass, native_methods, G_N_ELEMENTS(native_methods));
 ```
 
@@ -211,7 +211,7 @@ name, its [type
 signature](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/types.html#wp276)
 and a pointer to the C function implementing it:
 
-``` first-line: 16; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static JNINativeMethod native_methods[] = {
   { "nativeGetGStreamerInfo", "()Ljava/lang/String;", (void *) gst_native_get_gstreamer_info}
 };
@@ -220,7 +220,7 @@ static JNINativeMethod native_methods[] = {
 The only native method used in this tutorial
 is `nativeGetGStreamerInfo()`:
 
-``` first-line: 9; theme: Default; brush: cpp; gutter: true
+``` lang=c
 jstring gst_native_get_gstreamer_info (JNIEnv* env, jobject thiz) {
   char *version_utf8 = gst_version_string();
   jstring *version_jstring = (*env)->NewStringUTF(env, version_utf8);
@@ -241,7 +241,7 @@ must free the `char *` returned by `gst_version_string()`.
 
 **jni/Android.mk**
 
-``` theme: Default; brush: ruby; gutter: true
+``` lang=ruby
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)

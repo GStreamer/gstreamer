@@ -81,7 +81,7 @@ in the SDK installation).
 
 **basic-tutorial-9.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <string.h>
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
@@ -328,7 +328,7 @@ int main (int argc, char **argv) {
 
 These are the main steps to use the `GstDiscoverer`:
 
-``` first-line: 182; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Instantiate the Discoverer */
 data.discoverer = gst_discoverer_new (5 * GST_SECOND, &err);
 if (!data.discoverer) {
@@ -342,7 +342,7 @@ if (!data.discoverer) {
 parameter is the timeout per file, in nanoseconds (use the
 `GST_SECOND` macro for simplicity).
 
-``` first-line: 190; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Connect to the interesting signals */
 g_signal_connect (data.discoverer, "discovered", G_CALLBACK (on_discovered_cb), &data);
 g_signal_connect (data.discoverer, "finished", G_CALLBACK (on_finished_cb), &data);
@@ -351,7 +351,7 @@ g_signal_connect (data.discoverer, "finished", G_CALLBACK (on_finished_cb), &dat
 Connect to the interesting signals, as usual. We discuss them in the
 snippet for their callbacks.
 
-``` first-line: 194; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Start the discoverer process (nothing to do yet) */
 gst_discoverer_start (data.discoverer);
 ```
@@ -360,7 +360,7 @@ gst_discoverer_start (data.discoverer);
 not provided any URI to discover yet. This is done
 next:
 
-``` first-line: 197; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Add a request to process asynchronously the URI passed through the command line */
 if (!gst_discoverer_discover_uri_async (data.discoverer, uri)) {
   g_print ("Failed to start discovering URI '%s'\n", uri);
@@ -375,7 +375,7 @@ discovery process for each of them finishes, the registered callback
 functions will be fired
 up.
 
-``` first-line: 204; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Create a GLib Main Loop and set it to run, so we can wait for the signals */
 data.loop = g_main_loop_new (NULL, FALSE);
 g_main_loop_run (data.loop);
@@ -385,7 +385,7 @@ The usual GLib main loop is instantiated and executed. We will get out
 of it when `g_main_loop_quit()` is called from the
 `on_finished_cb` callback.
 
-``` first-line: 208; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Stop the discoverer process */
 gst_discoverer_stop (data.discoverer);
 ```
@@ -396,7 +396,7 @@ Once we are done with the discoverer, we stop it with
 Let's review now the callbacks we have
 registered:
 
-``` first-line: 85; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* This function is called every time the discoverer has information regarding
  * one of the URIs we provided.*/
 static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info, GError *err, CustomData *data) {
@@ -417,7 +417,7 @@ case we had multiple discover process running, which is not the case in
 this example) with `gst_discoverer_info_get_uri()` and the discovery
 result with `gst_discoverer_info_get_result()`.
 
-``` first-line: 95; theme: Default; brush: cpp; gutter: true
+``` lang=c
 switch (result) {
   case GST_DISCOVERER_URI_INVALID:
     g_print ("Invalid URI '%s'\n", uri);
@@ -467,7 +467,7 @@ If no error happened, information can be retrieved from the
 Bits of information which are made of lists, like tags and stream info,
 needs some extra parsing:
 
-``` first-line: 133; theme: Default; brush: cpp; gutter: true
+``` lang=c
 tags = gst_discoverer_info_get_tags (info);
 if (tags) {
   g_print ("Tags:\n");
@@ -482,7 +482,7 @@ or a specific tag could be searched for with
 `gst_tag_list_get_string()`). The code for `print_tag_foreach` is pretty
 much self-explicative.
 
-``` first-line: 143; theme: Default; brush: cpp; gutter: false
+``` lang=c
 sinfo = gst_discoverer_info_get_stream_info (info);
 if (!sinfo)
   return;
@@ -499,7 +499,7 @@ a `GstDiscovererStreamInfo` structure that is parsed in
 the `print_topology` function, and then discarded
 with `gst_discoverer_stream_info_unref()`.
 
-``` first-line: 60; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Print information regarding a stream and its substreams, if any */
 static void print_topology (GstDiscovererStreamInfo *info, gint depth) {
   GstDiscovererStreamInfo *next;

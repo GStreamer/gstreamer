@@ -28,7 +28,7 @@ The debug output is controlled with the `GST_DEBUG` environment
 variable. Here’s an example with
 `GST_DEBUG=2`:
 
-``` theme: Default; brush: plain; gutter: false
+```
 0:00:00.868050000  1592   09F62420 WARN                 filesrc gstfilesrc.c:1044:gst_file_src_start:<filesrc0> error: No such file "non-existing-file.webm"
 ```
 
@@ -97,7 +97,7 @@ specific messages.
 The content of each line in the debug output
 is:
 
-``` theme: Default; brush: plain; gutter: false
+```
 0:00:00.868050000  1592   09F62420 WARN                 filesrc gstfilesrc.c:1044:gst_file_src_start:<filesrc0> error: No such file "non-existing-file.webm"
 ```
 
@@ -159,7 +159,7 @@ as the Debug category in the output log).
 To change the category to something more meaningful, add these two lines
 at the top of your code:
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 GST_DEBUG_CATEGORY_STATIC (my_category);
 #define GST_CAT_DEFAULT my_category
 ```
@@ -167,7 +167,7 @@ GST_DEBUG_CATEGORY_STATIC (my_category);
 And then this one after you have initialized GStreamer with
 `gst_init()`:
 
-``` theme: Default; brush: cpp; gutter: false
+``` lang=c
 GST_DEBUG_CATEGORY_INIT (my_category, "my category", 0, "This is my very own");
 ```
 

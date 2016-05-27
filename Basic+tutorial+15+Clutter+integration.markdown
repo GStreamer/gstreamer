@@ -36,7 +36,7 @@ Copy this code into a text file named `basic-tutorial-15.c`..
 
 **basic-tutorial-15.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <clutter-gst/clutter-gst.h>
 
 /* Setup the video texture once its size is known */
@@ -165,7 +165,7 @@ how to integrate GStreamer with it. This is accomplished through the
 clutter-gst library, so its header must be included (and the program
 must link against it):
 
-``` first-line: 1; theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <clutter-gst/clutter-gst.h>
 ```
 
@@ -173,7 +173,7 @@ The first thing this library does is initialize both GStreamer and
 Clutter, so you must call ` clutter-gst-init()` instead of initializing
 these libraries yourself.
 
-``` first-line: 43; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* clutter-gst takes care of initializing Clutter and GStreamer */
 if (clutter_gst_init (&argc, &argv) != CLUTTER_INIT_SUCCESS) {
   g_error ("Failed to initialize clutter\n");
@@ -186,7 +186,7 @@ create a texture. Just remember to disable texture slicing to allow for
 proper
 integration:
 
-``` first-line: 55; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Create new texture and disable slicing so the video is properly mapped onto it */
 texture = CLUTTER_ACTOR (g_object_new (CLUTTER_TYPE_TEXTURE, "disable-slicing", TRUE, NULL));
 g_signal_connect (texture, "size-change", G_CALLBACK (size_change), NULL);
@@ -195,7 +195,7 @@ g_signal_connect (texture, "size-change", G_CALLBACK (size_change), NULL);
 We connect to the size-change signal so we can perform final setup once
 the video size is known.
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Instantiate the Clutter sink */
 sink = gst_element_factory_make ("autocluttersink", NULL);
 if (sink == NULL) {
@@ -216,14 +216,14 @@ release of the SDK, so, if it cannot be found, the
 simpler `cluttersink` element is created
 instead.
 
-``` first-line: 73; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Link GStreamer with Clutter by passing the Clutter texture to the Clutter sink*/
 g_object_set (sink, "texture", texture, NULL);
 ```
 
 This texture is everything GStreamer needs to know about Clutter.
 
-``` first-line: 76; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Add the Clutter sink to the pipeline */
 g_object_set (pipeline, "video-sink", sink, NULL);
 ```

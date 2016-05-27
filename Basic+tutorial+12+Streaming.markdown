@@ -62,7 +62,7 @@ Copy this code into a text file named `basic-tutorial-12.c`.
 
 **basic-tutorial-12.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <gst/gst.h>
 #include <string.h>
 
@@ -195,7 +195,7 @@ therefore, the initialization code is very simple and should be
 self-explanative by now. The only new bit is the detection of live
 streams:
 
-``` first-line: 74; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Start playing */
 ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
 if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -221,7 +221,7 @@ them, so we take note of the result of `gst_element_set_state()` in the
 
 Let’s now review the interesting parts of the message parsing callback:
 
-``` first-line: 31; theme: Default; brush: cpp; gutter: true
+``` lang=c
 case GST_MESSAGE_BUFFERING: {
   gint percent = 0;
 
@@ -254,7 +254,7 @@ network becomes slow or unresponsive and our buffer depletes, we will
 receive new buffering messages with levels below 100% so we will pause
 the pipeline again until enough buffer has been built up.
 
-``` theme: Default; brush: cpp; gutter: false
+``` lang=c
 case GST_MESSAGE_CLOCK_LOST:
   /* Get a new clock */
   gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
