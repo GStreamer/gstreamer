@@ -55,7 +55,6 @@ Pages to review:
  - Basic+tutorial+14+Handy+elements.markdown
  - Releases.markdown
  - Basic+tutorial+15+Clutter+integration.markdown
- - Table+of+Concepts.markdown
  - Basic+tutorial+16+Platform-specific+elements.markdown
  - Basic+tutorial+1+Hello+world.markdown
  - iOS+tutorial+1+Link+against+GStreamer.markdown
@@ -75,3 +74,4 @@ Reviewed pages:
  - Installing+the+SDK.markdown
  - Installing+for+Android+development.markdown
  - Building+from+source+using+Cerbero.markdown
+ - Table+of+Concepts.markdown
