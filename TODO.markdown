@@ -5,7 +5,6 @@ gstreamer.com content to hotdoc
 
 Pages to review:
  - Basic+tutorials.markdown
-   - Basic+tutorial+1+Hello+world.markdown
    - Basic+tutorial+2+GStreamer+concepts.markdown
    - Basic+tutorial+3+Dynamic+pipelines.markdown
    - Basic+tutorial+4+Time+management.markdown
@@ -74,6 +73,7 @@ Reviewed pages:
  - Android+tutorial+2+A+running+pipeline.markdown
  - GStreamer+reference.markdown
  - Playback+tutorial+1+Playbin+usage.markdown
+ - Basic+tutorial+1+Hello+world.markdown
 
 For-later pages:
  - Qt+tutorials.markdown [tpm: this should all be rewritten from scratch with qmlglsink; QtGStreamer is outdated and unmaintained, we should not promote it]
