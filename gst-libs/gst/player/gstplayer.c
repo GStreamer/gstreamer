@@ -3765,10 +3765,10 @@ gst_player_get_color_balance (GstPlayer * self, GstPlayerColorBalanceType type)
 GstVideoMultiviewMode
 gst_player_get_multiview_mode (GstPlayer * self)
 {
-  GstVideoMultiviewMode val = GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE;
+  GstVideoMultiviewMode val = GST_VIDEO_MULTIVIEW_MODE_NONE;
 
   g_return_val_if_fail (GST_IS_PLAYER (self),
-      GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE);
+      GST_VIDEO_MULTIVIEW_MODE_NONE);
 
   g_object_get (self, "video-multiview-mode", &val, NULL);
 
