@@ -213,6 +213,32 @@ GST_START_TEST (test_rtp_payloaders)
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN, target_state);
 
+#define J2K_TEST_FILE_PATH GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "gradient.j2k"
+#define J2KCAPS "image/x-jpc,colorspace=sYUV,num-components=3,width=720,height=576,pixel-aspect-ratio=1/1,framerate=30/1"
+  {
+    GstElement *pipeline, *src;
+    GstFlowReturn flow = GST_FLOW_OK;
+    GstBuffer *buf;
+    gchar *data;
+    gsize len;
+
+    s = "appsrc caps=" J2KCAPS " name=src ! rtpj2kpay ! rtpj2kdepay ! fakesink";
+
+    fail_unless (g_file_get_contents (J2K_TEST_FILE_PATH, &data, &len, NULL));
+    buf = gst_buffer_new_wrapped (data, len);
+    pipeline = setup_pipeline (s);
+    src = gst_bin_get_by_name (GST_BIN (pipeline), "src");
+    g_object_set (src, "format", GST_FORMAT_TIME, NULL);
+    g_signal_emit_by_name (src, "push-buffer", buf, &flow);
+    gst_buffer_unref (buf);
+    fail_unless_equals_int (flow, GST_FLOW_OK);
+    g_signal_emit_by_name (src, "end-of-stream", &flow);
+    gst_object_unref (src);
+    run_pipeline (pipeline, s,
+        GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+        GST_MESSAGE_UNKNOWN, target_state);
+  }
+
   /*s = FAKESRC " ! ! rtpac3depay ! " FAKESINK */
   /*s = FAKESRC " ! ! asteriskh263 ! " FAKESINK; */
   /*s = FAKESRC " ! ! rtpmpvdepay ! " FAKESINK; */
