@@ -267,7 +267,7 @@ and used as follows:
 | `GSTREAMER_PLUGINS_CODECS_GPL` | assrender                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `GSTREAMER_PLUGINS_SYS`        | glimagesink opensles amc                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
-Build and run your application as explained in the **Building the tutorials** section.
+Build and run your application as explained in the [Building the tutorial](Installing+for+Android+development.markdown#building-the-tutorials) section.
 
   [information]: images/icons/emoticons/information.png
   [Android SDK]: http://developer.android.com/sdk/index.html

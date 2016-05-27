@@ -73,6 +73,7 @@ Reviewed pages:
  - Tutorials.markdown
  - Android+tutorial+1+Link+against+GStreamer.markdown
  - Android+tutorial+2+A+running+pipeline.markdown
+ - GStreamer+reference.markdown
 
 For-later pages:
  - Qt+tutorials.markdown [tpm: this should all be rewritten from scratch with qmlglsink; QtGStreamer is outdated and unmaintained, we should not promote it]
