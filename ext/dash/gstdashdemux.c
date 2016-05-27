@@ -1096,9 +1096,7 @@ gst_dash_demux_stream_sidx_seek (GstDashDemuxStream * dashstream,
   gint idx = sidx->entries_count;
 
   /* check whether ts is already past the last element or not */
-  if (sidx->entries[idx - 1].pts + sidx->entries[idx - 1].duration < ts) {
-    dashstream->sidx_current_remaining = 0;
-  } else {
+  if (sidx->entries[idx - 1].pts + sidx->entries[idx - 1].duration >= ts) {
     GstSearchMode mode = GST_SEARCH_MODE_BEFORE;
 
     if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
@@ -1126,8 +1124,6 @@ gst_dash_demux_stream_sidx_seek (GstDashDemuxStream * dashstream,
           ABS (sidx->entries[idx].pts - ts))
         idx += 1;
     }
-
-    dashstream->sidx_current_remaining = sidx->entries[idx].size;
   }
 
   sidx->entry_index = idx;
@@ -1208,9 +1204,6 @@ gst_dash_demux_stream_advance_subfragment (GstAdaptiveDemuxStream * stream)
       "Finished fragment: %d", sidx->entry_index, sidx->entries_count,
       fragment_finished);
 
-  if (!fragment_finished) {
-    dashstream->sidx_current_remaining = sidx->entries[sidx->entry_index].size;
-  }
   return !fragment_finished;
 }
 
@@ -1719,8 +1712,6 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
           } else {
             SIDX (dash_stream)->entry_index = dash_stream->sidx_index;
           }
-          dash_stream->sidx_current_remaining =
-              SIDX_CURRENT_ENTRY (dash_stream)->size;
         } else if (consumed < available) {
           GstBuffer *pending;
           /* we still need to keep some data around for the next parsing round
@@ -1742,15 +1733,17 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
         && ((available =
                 gst_adapter_available (dash_stream->sidx_adapter)) > 0)) {
       gboolean advance = FALSE;
+      guint64 sidx_end_offset =
+          dash_stream->sidx_base_offset +
+          SIDX_CURRENT_ENTRY (dash_stream)->offset +
+          SIDX_CURRENT_ENTRY (dash_stream)->size;
 
-      if (available < dash_stream->sidx_current_remaining) {
+      if (dash_stream->sidx_current_offset + available < sidx_end_offset) {
         buffer = gst_adapter_take_buffer (dash_stream->sidx_adapter, available);
-        dash_stream->sidx_current_remaining -= available;
       } else {
         buffer =
             gst_adapter_take_buffer (dash_stream->sidx_adapter,
-            dash_stream->sidx_current_remaining);
-        dash_stream->sidx_current_remaining = 0;
+            sidx_end_offset - dash_stream->sidx_current_offset);
         advance = TRUE;
       }
       GST_BUFFER_OFFSET (buffer) = dash_stream->sidx_current_offset;

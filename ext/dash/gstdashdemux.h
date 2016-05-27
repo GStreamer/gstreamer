@@ -69,7 +69,6 @@ struct _GstDashDemuxStream
   /* index parsing */
   GstAdapter *sidx_adapter;
   GstSidxParser sidx_parser;
-  gsize sidx_current_remaining;
   gint sidx_index;
   gint64 sidx_base_offset;
   GstClockTime pending_seek_ts;
