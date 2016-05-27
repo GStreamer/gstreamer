@@ -1,6 +1,4 @@
-# Playback tutorial 1: Playbin2 usage
-
-This page last changed on Jun 26, 2012 by xartigas.
+# Playback tutorial 1: Playbin usage
 
 # Goal
 
@@ -43,15 +41,14 @@ Finally, multiple video streams can also be found in a single file, for
 example, in DVD with multiple angles of the same scene, but they are
 somewhat rare.
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><p>Embedding multiple streams inside a single file is called “multiplexing” or “muxing”, and such file is then known as a “container”. Common container formats are Matroska (.mkv), Quicktime (.qt, .mov, .mp4), Ogg (.ogg) or Webm (.webm).</p>
-<p>Retrieving the individual streams from within the container is called “demultiplexing” or “demuxing”.</p></td>
-</tr>
-</tbody>
-</table>
+> ![](images/icons/emoticons/information.png) Embedding multiple streams
+> inside a single file is called “multiplexing” or “muxing”, and such file
+> is then known as a “container”. Common container formats are Matroska
+> (.mkv), Quicktime (.qt, .mov, .mp4), Ogg (.ogg) or Webm (.webm).
+>
+>
+> Retrieving the individual streams from within the container is called
+> “demultiplexing” or “demuxing”.
 
 The following code recovers the amount of streams in the file, their
 associated metadata, and allows switching the audio stream while the
@@ -285,31 +282,52 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-1972852059" class="expand-container">
-<div id="expander-control-1972852059" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-1972852059" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc playback-tutorial-1.c -o playback-tutorial-1 `pkg-config --cflags --libs gstreamer-0.10`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
-<p></p>
-<p><span>This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. The number of audio streams is shown in the terminal, and the user can switch from one to another by entering a number and pressing enter. A small delay is to be expected.</span></p>
-<p><span><span>Bear in mind that there is no latency management (buffering), so on slow connections, the movie might stop after a few seconds. See how </span><a href="http://docs.gstreamer.com/display/GstSDK/Tutorial+12%3A+Live+streaming">Tutorial 12: Live streaming</a><span> solves this issue.</span></span></p>
-<p></p>
-<p>Required libraries: <code>gstreamer-0.10</code></p>
-</div>
-</div></td>
+> ![](images/icons/emoticons/information.png) If you need help to compile this code, refer to the **Building the
+> tutorials** section for your platform: [Mac](Installing+on+Mac+OS+X.markdown) or [Windows](Installing+on+Windows)
+> or use this specific command on Linux:
+> ```gcc playback-tutorial-1.c -o playback-tutorial-1 `pkg-config --cflags --libs gstreamer-1.0` ```
+
+If you need help to run this code, refer to the **Running the
+tutorials** section for your platform:
+[Mac OS X](Installing+on+Mac+OS+X.markdown#building-the-tutorials),
+[Windows](Installing+on+Windows.markdown#running-the-tutorials), for
+[iOS](Installing+for+iOS+development.markdown#building-the-tutorials) or for
+[android](Installing+for+Android+development.markdown#building-the-tutorials).
+
+This tutorial opens a window and displays a movie, with accompanying
+audio. The media is fetched from the Internet, so the window might take
+a few seconds to appear, depending on your connection speed. The number
+of audio streams is shown in the terminal, and the user can switch from
+one to another by entering a number and pressing enter. A small delay is
+to be expected.
+
+</p>
+
+<p>
+
+Bear in mind that there is no latency management (buffering), so on slow
+connections, the movie might stop after a few seconds. See
+how <a href="http://docs.gstreamer.com/display/GstSDK/Tutorial+12%3A+Live+streaming">Tutorial
+12: Live streaming</a> solves this issue.
+
+</p>
+
+<p>
+
+</p>
+
+<p>
+
+Required libraries: <code>gstreamer-0.10</code>
+
+</p>
+
+</td>
+
 </tr>
+
 </tbody>
+
 </table>
 
 # Walkthrough
@@ -387,31 +405,15 @@ g_object_set (data.playbin2, "flags", flags, NULL);
 can have any combination of `GstPlayFlags`. The most interesting values
 are:
 
-<table>
-<tbody>
-<tr class="odd">
-<td><p><a href=""></a><span class="term"><code class="literal">GST_PLAY_FLAG_VIDEO</code></span></p></td>
-</tr>
-<tr class="even">
-<td><p><a href=""></a><span class="term"><code class="literal">GST_PLAY_FLAG_AUDIO</code></span></p></td>
-</tr>
-<tr class="odd">
-<td><p><a href=""></a><span class="term"><code class="literal">GST_PLAY_FLAG_TEXT</code></span></p></td>
-</tr>
-<tr class="even">
-<td><p><a href=""></a><span class="term"><code class="literal">GST_PLAY_FLAG_VIS</code></span></p></td>
-</tr>
-<tr class="odd">
-<td><p><a href=""></a><span class="term"><code class="literal">GST_PLAY_FLAG_DOWNLOAD</code></span></p></td>
-</tr>
-<tr class="even">
-<td><p><a href=""></a><span class="term"><code class="literal">GST_PLAY_FLAG_BUFFERING</code></span></p></td>
-</tr>
-<tr class="odd">
-<td><p><a href=""></a><span class="term"><code class="literal">GST_PLAY_FLAG_DEINTERLACE</code></span></p></td>
-</tr>
-</tbody>
-</table>
+|                           |                                                                                                                                    |
+|---------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| GST_PLAY_FLAG_VIDEO       | Enable video rendering. If this flag is not set, there will be no video output.                                                    |
+| GST_PLAY_FLAG_AUDIO       | Enable audio rendering. If this flag is not set, there will be no audio output.                                                    |
+| GST_PLAY_FLAG_TEXT        | Enable subtitle rendering. If this flag is not set, subtitles will not be shown in the video output.                               |
+| GST_PLAY_FLAG_VIS         | Enable rendering of visualisations when there is no video stream. Playback tutorial 6: Audio visualization goes into more details. |
+| GST_PLAY_FLAG_DOWNLOAD    | See Basic tutorial 12: Streaming  and Playback tutorial 4: Progressive streaming.                                                  |
+| GST_PLAY_FLAG_BUFFERING   | See Basic tutorial 12: Streaming  and Playback tutorial 4: Progressive streaming.                                                  |
+| GST_PLAY_FLAG_DEINTERLACE | If the video content was interlaced, this flag instructs playbin2 to deinterlace it before displaying it.                          |
 
 In our case, for demonstration purposes, we are enabling audio and video
 and disabling subtitles, leaving the rest of flags to their default
@@ -515,15 +517,42 @@ stored as tags in a `GstTagList` structure, which is a list of data
 pieces identified by a name. The `GstTagList` associated with a stream
 can be recovered with `g_signal_emit_by_name()`, and then individual
 tags are extracted with the `gst_tag_list_get_*` functions
-like `gst_tag_list_get_string()` for example.
+like `gst_tag_list_get_string()` for
+example.
 
 <table>
+
 <tbody>
+
 <tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><p>This rather unintuitive way of retrieving the tag list is called an Action Signal. Action signals are emitted by the application to a specific element, which then performs an action and returns a result. They behave like a dynamic function call, in which methods of a class are identified by their name (the signal's name) instead of their memory address. These signals are listed In the documentation along with the regular signals, and are tagged “Action”. See <code>playbin2</code>, for example.</p></td>
+
+<td>
+
+<img src="images/icons/emoticons/information.png" width="16" height="16" />
+
+</td>
+
+<td>
+
+<p>
+
+This rather unintuitive way of retrieving the tag list is called an
+Action Signal. Action signals are emitted by the application to a
+specific element, which then performs an action and returns a result.
+They behave like a dynamic function call, in which methods of a class
+are identified by their name (the signal's name) instead of their memory
+address. These signals are listed In the documentation along with the
+regular signals, and are tagged “Action”. See <code>playbin2</code>, for
+example.
+
+</p>
+
+</td>
+
 </tr>
+
 </tbody>
+
 </table>
 
 `playbin2` defines 3 action signals to retrieve
@@ -611,5 +640,3 @@ Remember that attached to this page you should find the complete source
 code of the tutorial and any accessory files needed to build it.
 
 It has been a pleasure having you here, and see you soon\!
-
-Document generated by Confluence on Oct 08, 2015 10:27
