@@ -21,7 +21,6 @@ Pages to review:
    - Basic+tutorial+15+Clutter+integration.markdown
    - Basic+tutorial+16+Platform-specific+elements.markdown
  - Playback+tutorials.markdown
-   - Playback+tutorial+1+Playbin+usage.markdown
    - Playback+tutorial+2+Subtitle+management.markdown
    - Playback+tutorial+3+Short-cutting+the+pipeline.markdown
    - Playback+tutorial+4+Progressive+streaming.markdown
@@ -74,6 +73,7 @@ Reviewed pages:
  - Android+tutorial+1+Link+against+GStreamer.markdown
  - Android+tutorial+2+A+running+pipeline.markdown
  - GStreamer+reference.markdown
+ - Playback+tutorial+1+Playbin+usage.markdown
 
 For-later pages:
  - Qt+tutorials.markdown [tpm: this should all be rewritten from scratch with qmlglsink; QtGStreamer is outdated and unmaintained, we should not promote it]

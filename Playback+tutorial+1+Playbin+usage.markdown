@@ -9,10 +9,10 @@ default values do not suit our particular needs.
 
 We will learn:
 
-  - How to find out how many streams a file contains, and how to switch
+-   How to find out how many streams a file contains, and how to switch
     among them.
 
-  - How to gather information regarding each stream.
+-   How to gather information regarding each stream.
 
 As a side note, even though its name is `playbin`, you can pronounce it
 “playbin”, since the original `playbin` element is deprecated and nobody
@@ -36,16 +36,14 @@ information is embedded in the streams in the form of “metadata”
 
 Subtitles can also be embedded in a file, along with audio and video,
 but they are dealt with in more detail in [Playback tutorial 2: Subtitle
-management](Playback%2Btutorial%2B2%253A%2BSubtitle%2Bmanagement.html).
-Finally, multiple video streams can also be found in a single file, for
-example, in DVD with multiple angles of the same scene, but they are
-somewhat rare.
+management]. Finally, multiple video streams can also be found in a
+single file, for example, in DVD with multiple angles of the same scene,
+but they are somewhat rare.
 
-> ![](images/icons/emoticons/information.png) Embedding multiple streams
-> inside a single file is called “multiplexing” or “muxing”, and such file
-> is then known as a “container”. Common container formats are Matroska
-> (.mkv), Quicktime (.qt, .mov, .mp4), Ogg (.ogg) or Webm (.webm).
->
+> ![information] Embedding multiple streams inside a single file is
+> called “multiplexing” or “muxing”, and such file is then known as a
+> “container”. Common container formats are Matroska (.mkv), Quicktime
+> (.qt, .mov, .mp4), Ogg (.ogg) or Webm (.webm).
 >
 > Retrieving the individual streams from within the container is called
 > “demultiplexing” or “demuxing”.
@@ -282,17 +280,14 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
 }
 ```
 
-> ![](images/icons/emoticons/information.png) If you need help to compile this code, refer to the **Building the
-> tutorials** section for your platform: [Mac](Installing+on+Mac+OS+X.markdown) or [Windows](Installing+on+Windows)
-> or use this specific command on Linux:
-> ```gcc playback-tutorial-1.c -o playback-tutorial-1 `pkg-config --cflags --libs gstreamer-1.0` ```
+> ![information] If you need help to compile this code, refer to the
+> **Building the tutorials** section for your platform: [Mac] or
+> [Windows] or use this specific command on Linux:
+> `` gcc playback-tutorial-1.c -o playback-tutorial-1 `pkg-config --cflags --libs gstreamer-1.0` ``
 
 If you need help to run this code, refer to the **Running the
-tutorials** section for your platform:
-[Mac OS X](Installing+on+Mac+OS+X.markdown#building-the-tutorials),
-[Windows](Installing+on+Windows.markdown#running-the-tutorials), for
-[iOS](Installing+for+iOS+development.markdown#building-the-tutorials) or for
-[android](Installing+for+Android+development.markdown#building-the-tutorials).
+tutorials** section for your platform: [Mac OS X], [Windows][1], for
+[iOS] or for [android].
 
 This tutorial opens a window and displays a movie, with accompanying
 audio. The media is fetched from the Internet, so the window might take
@@ -301,34 +296,11 @@ of audio streams is shown in the terminal, and the user can switch from
 one to another by entering a number and pressing enter. A small delay is
 to be expected.
 
-</p>
-
-<p>
-
 Bear in mind that there is no latency management (buffering), so on slow
-connections, the movie might stop after a few seconds. See
-how <a href="http://docs.gstreamer.com/display/GstSDK/Tutorial+12%3A+Live+streaming">Tutorial
-12: Live streaming</a> solves this issue.
+connections, the movie might stop after a few seconds. See how [Tutorial
+12: Live streaming] solves this issue.
 
-</p>
-
-<p>
-
-</p>
-
-<p>
-
-Required libraries: <code>gstreamer-0.10</code>
-
-</p>
-
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
+Required libraries: `gstreamer-0.10`
 
 # Walkthrough
 
@@ -371,8 +343,7 @@ is not available to us. The “trick” is simply to declare this enum in
 our code, as it appears in the `playbin` documentation: `GstPlayFlags`.
 GObject allows introspection, so the possible values for these flags can
 be retrieved at runtime without using this trick, but in a far more
-cumbersome
-way.
+cumbersome way.
 
 ``` lang=c
 /* Forward definition for the message and keyboard processing functions */
@@ -387,9 +358,9 @@ introducing a limited amount of interactivity.
 
 We skip over the creation of the pipeline, the instantiation of
 `playbin` and pointing it to our test media through the `uri`
-property. `playbin` is in itself a pipeline, and in this case it is
-the only element in the pipeline, so we skip completely the creation of
-the pipeline, and use directly the  `playbin` element.
+property. `playbin` is in itself a pipeline, and in this case it is the
+only element in the pipeline, so we skip completely the creation of the
+pipeline, and use directly the  `playbin` element.
 
 We focus on some of the other properties of `playbin`, though:
 
@@ -405,7 +376,7 @@ g_object_set (data.playbin, "flags", flags, NULL);
 can have any combination of `GstPlayFlags`. The most interesting values
 are:
 
-|                           |                                                                                                                                    |
+| Flag                      | Description                                                                                                                        |
 |---------------------------|------------------------------------------------------------------------------------------------------------------------------------|
 | GST_PLAY_FLAG_VIDEO       | Enable video rendering. If this flag is not set, there will be no video output.                                                    |
 | GST_PLAY_FLAG_AUDIO       | Enable audio rendering. If this flag is not set, there will be no audio output.                                                    |
@@ -413,13 +384,12 @@ are:
 | GST_PLAY_FLAG_VIS         | Enable rendering of visualisations when there is no video stream. Playback tutorial 6: Audio visualization goes into more details. |
 | GST_PLAY_FLAG_DOWNLOAD    | See Basic tutorial 12: Streaming  and Playback tutorial 4: Progressive streaming.                                                  |
 | GST_PLAY_FLAG_BUFFERING   | See Basic tutorial 12: Streaming  and Playback tutorial 4: Progressive streaming.                                                  |
-| GST_PLAY_FLAG_DEINTERLACE | If the video content was interlaced, this flag instructs playbin to deinterlace it before displaying it.                          |
+| GST_PLAY_FLAG_DEINTERLACE | If the video content was interlaced, this flag instructs playbin to deinterlace it before displaying it.                           |
 
 In our case, for demonstration purposes, we are enabling audio and video
 and disabling subtitles, leaving the rest of flags to their default
 values (this is why we read the current value of the flags with
-`g_object_get()` before overwriting it with
-`g_object_set()`).
+`g_object_get()` before overwriting it with `g_object_set()`).
 
 ``` lang=c
 /* Set connection speed. This will affect some internal decisions of playbin */
@@ -427,15 +397,14 @@ g_object_set (data.playbin, "connection-speed", 56, NULL);
 ```
 
 This property is not really useful in this example.
-`connection-speed` informs `playbin` of the maximum speed of our
-network connection, so, in case multiple versions of the requested media
-are available in the server, `playbin` chooses the most
-appropriate. This is mostly used in combination with streaming
-protocols like `mms` or `rtsp`.
+`connection-speed` informs `playbin` of the maximum speed of our network
+connection, so, in case multiple versions of the requested media are
+available in the server, `playbin` chooses the most appropriate. This is
+mostly used in combination with streaming protocols like `mms` or
+`rtsp`.
 
 We have set all these properties one by one, but we could have all of
-them with a single call to
-`g_object_set()`:
+them with a single call to `g_object_set()`:
 
 ``` lang=c
 g_object_set (data.playbin, "uri", "http://docs.gstreamer.com/media/sintel_cropped_multilingual.webm", "flags", flags, "connection-speed", 56, NULL);
@@ -458,8 +427,7 @@ keyboard). The mechanism shown here is specific to GLib, and not really
 related to GStreamer, so there is no point in going into much depth.
 Applications normally have their own way of handling user input, and
 GStreamer has little to do with it besides the Navigation interface
-discussed briefly in [Tutorial 17: DVD
-playback](http://docs.gstreamer.com/display/GstSDK/Tutorial+17%3A+DVD+playback).
+discussed briefly in [Tutorial 17: DVD playback].
 
 ``` lang=c
 /* Create a GLib Main Loop and set it to run */
@@ -517,51 +485,23 @@ stored as tags in a `GstTagList` structure, which is a list of data
 pieces identified by a name. The `GstTagList` associated with a stream
 can be recovered with `g_signal_emit_by_name()`, and then individual
 tags are extracted with the `gst_tag_list_get_*` functions
-like `gst_tag_list_get_string()` for
-example.
+like `gst_tag_list_get_string()` for example.
 
-<table>
+> ![information] This rather unintuitive way of retrieving the tag list
+> is called an Action Signal. Action signals are emitted by the
+> application to a specific element, which then performs an action and
+> returns a result. They behave like a dynamic function call, in which
+> methods of a class are identified by their name (the signal's name)
+> instead of their memory address. These signals are listed In the
+> documentation along with the regular signals, and are tagged “Action”.
+> See `playbin`, for example.
 
-<tbody>
-
-<tr class="odd">
-
-<td>
-
-<img src="images/icons/emoticons/information.png" width="16" height="16" />
-
-</td>
-
-<td>
-
-<p>
-
-This rather unintuitive way of retrieving the tag list is called an
-Action Signal. Action signals are emitted by the application to a
-specific element, which then performs an action and returns a result.
-They behave like a dynamic function call, in which methods of a class
-are identified by their name (the signal's name) instead of their memory
-address. These signals are listed In the documentation along with the
-regular signals, and are tagged “Action”. See <code>playbin</code>, for
-example.
-
-</p>
-
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
-
-`playbin` defines 3 action signals to retrieve
-metadata: `get-video-tags`, `get-audio-tags` and `get-text-tags`.  The
-name if the tags is standardized, and the list can be found in the
-`GstTagList` documentation. In this example we are interested in the
-`GST_TAG_LANGUAGE_CODE` of the streams and their
-`GST_TAG_*_CODEC` (audio, video or
-text).
+`playbin` defines 3 action signals to retrieve metadata:
+`get-video-tags`, `get-audio-tags` and `get-text-tags`. The name if the
+tags is standardized, and the list can be found in the `GstTagList`
+documentation. In this example we are interested in the
+`GST_TAG_LANGUAGE_CODE` of the streams and their `GST_TAG_*_CODEC`
+(audio, video or text).
 
 ``` lang=c
 g_object_get (data->playbin, "current-video", &data->current_video, NULL);
@@ -575,8 +515,8 @@ are currently selected through 3 more properties of `playbin`:
 
 It is interesting to always check the currently selected streams and
 never make any assumption. Multiple internal conditions can make
-`playbin` behave differently in different executions. Also, the order
-in which the streams are listed can change from one run to another, so
+`playbin` behave differently in different executions. Also, the order in
+which the streams are listed can change from one run to another, so
 checking the metadata to identify one particular stream becomes crucial.
 
 ``` lang=c
@@ -616,21 +556,23 @@ If you execute the tutorial, you will be able to switch from one
 language to another while the movie is running by pressing 0, 1 or 2
 (and ENTER). This concludes this tutorial.
 
+_________________________________________________________________________
+
 # Conclusion
 
 This tutorial has shown:
 
-  - A few more of `playbin`'s properties: `flags`, `connection-speed`,
+-   A few more of `playbin`'s properties: `flags`, `connection-speed`,
     `n-video`, `n-audio`, `n-text`, `current-video`, `current-audio` and
     `current-text`.
 
-  - How to retrieve the list of tags associated with a stream
+-   How to retrieve the list of tags associated with a stream
     with `g_signal_emit_by_name()`.
 
-  - How to retrieve a particular tag from the list with
+-   How to retrieve a particular tag from the list with
     `gst_tag_list_get_string()`or `gst_tag_list_get_uint()`
 
-  - How to switch the current audio simply by writing to the
+-   How to switch the current audio simply by writing to the
     `current-audio` property.
 
 The next playback tutorial shows how to handle subtitles, either
@@ -639,4 +581,16 @@ embedded in the container or in an external file.
 Remember that attached to this page you should find the complete source
 code of the tutorial and any accessory files needed to build it.
 
-It has been a pleasure having you here, and see you soon\!
+It has been a pleasure having you here, and see you soon!
+
+  [Playback tutorial 2: Subtitle management]: Playback%2Btutorial%2B2%253A%2BSubtitle%2Bmanagement.html
+  [information]: images/icons/emoticons/information.png
+  [Mac]: Installing+on+Mac+OS+X.markdown
+  [Windows]: Installing+on+Windows
+  [Mac OS X]: Installing+on+Mac+OS+X.markdown#building-the-tutorials
+  [1]: Installing+on+Windows.markdown#running-the-tutorials
+  [iOS]: Installing+for+iOS+development.markdown#building-the-tutorials
+  [android]: Installing+for+Android+development.markdown#building-the-tutorials
+  [Tutorial 12: Live streaming]: http://docs.gstreamer.com/display/GstSDK/Tutorial+12%3A+Live+streaming
+  [Tutorial 17: DVD playback]: http://docs.gstreamer.com/display/GstSDK/Tutorial+17%3A+DVD+playback
+  [information]: images/icons/emoticons/information.png
