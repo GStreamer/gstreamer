@@ -1,5 +1,4 @@
 # Table of Concepts
-This page last changed on Jun 06, 2012 by xartigas.
 
 This table shows in which tutorial each of the following key GStreamer
 concepts is discussed.

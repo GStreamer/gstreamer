@@ -7,7 +7,6 @@ Feel free to jump straight to the download section, start practicing
 with the tutorials, or read the F.A.Q. if you don’t know what this is
 all about.
 
-
 | Section | |
 |--|--|
 | [![](attachments/download.png)](Installing+the+SDK.markdown) | [Download and install GStreamer](Installing+the+SDK.markdown) |
