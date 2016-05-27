@@ -18,30 +18,30 @@ all about.
 </colgroup>
 <tbody>
 <tr class="odd">
-<td><a href="Installing%2Bthe%2BSDK.html"><img src="attachments/327688/2424851.png" class="confluence-embedded-image" /></a>
+<td><a href="Installing%2Bthe%2BSDK.html"><img src="attachments/2424851.png" class="confluence-embedded-image" /></a>
 <h3 id="Home-Download" style="text-align: center;margin-top: 0.0px;">Download</h3>
 Download and install the GStreamer SDK</td>
-<td><a href="Tutorials.html"><img src="attachments/327688/2424852.png" class="confluence-embedded-image" /></a>
+<td><a href="Tutorials.html"><img src="attachments/2424852.png" class="confluence-embedded-image" /></a>
 <h3 id="Home-Tutorials" style="text-align: center;margin-top: 0.0px;">Tutorials</h3>
 Learn how to use the GStreamer SDK</td>
-<td><a href="Deploying%2Byour%2Bapplication.html"><img src="attachments/327688/2424853.png" class="confluence-embedded-image" /></a>
+<td><a href="Deploying%2Byour%2Bapplication.html"><img src="attachments/2424853.png" class="confluence-embedded-image" /></a>
 <h3 id="Home-Deploymentinstructions" style="text-align: center;margin-top: 0.0px;">Deployment instructions</h3>
 Deploy the SDK with your application</td>
-<td><a href="GStreamer%2Breference.html"><img src="attachments/327688/2424870.png" class="confluence-embedded-image" /></a>
+<td><a href="GStreamer%2Breference.html"><img src="attachments/2424870.png" class="confluence-embedded-image" /></a>
 <h3 id="Home-Referenceguide" style="text-align: center;margin-top: 0.0px;">Reference guide</h3>
 GStreamer API reference</td>
 </tr>
 <tr class="even">
-<td><a href="Frequently%2BAsked%2BQuestions.html"><img src="attachments/327688/2424855.png" class="confluence-embedded-image" /></a>
+<td><a href="Frequently%2BAsked%2BQuestions.html"><img src="attachments/2424855.png" class="confluence-embedded-image" /></a>
 <h3 id="Home-FAQ" style="text-align: center;margin-top: 0.0px;">F.A.Q.</h3>
 Frequently Asked Questions</td>
-<td><a href="Legal%2Binformation.html"><img src="attachments/327688/2424856.png" class="confluence-embedded-image" /></a>
+<td><a href="Legal%2Binformation.html"><img src="attachments/2424856.png" class="confluence-embedded-image" /></a>
 <h3 id="Home-Legalinformation" style="text-align: center;margin-top: 0.0px;">Legal information</h3>
 Patents, Licenses and legal F.A.Q.</td>
-<td><a href="Releases.html"><img src="attachments/327688/2424871.png" class="confluence-embedded-image" /></a>
+<td><a href="Releases.html"><img src="attachments/2424871.png" class="confluence-embedded-image" /></a>
 <h3 id="Home-Releases" style="text-align: center;margin-top: 0.0px;">Releases</h3>
 Version details</td>
-<td><a href="Contact.html"><img src="attachments/327688/2424857.png" class="confluence-embedded-image" /></a>
+<td><a href="Contact.html"><img src="attachments/2424857.png" class="confluence-embedded-image" /></a>
 <h3 id="Home-Contact" style="text-align: center;margin-top: 0.0px;">Contact</h3>
 Commercial support, bug reporting...</td>
 </tr>
@@ -61,45 +61,44 @@ Commercial support, bug reporting...</td>
 
 [download.png](attachments/2424858.png)
 ![](images/icons/bullet_blue.gif)
-[tutorials.png](attachments/327688/2424859.png) (image/png)  
+[tutorials.png](attachments/2424859.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[deploy.png](attachments/327688/2424860.png) (image/png)  
+[deploy.png](attachments/2424860.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[faq.png](attachments/327688/2424862.png) (image/png)  
+[faq.png](attachments/2424862.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[legal.png](attachments/327688/2424863.png) (image/png)  
+[legal.png](attachments/2424863.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[contact.png](attachments/327688/2424864.png) (image/png)  
+[contact.png](attachments/2424864.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[download.png](attachments/327688/2424865.png) (image/png)  
+[download.png](attachments/2424865.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[tutorials.png](attachments/327688/2424872.png) (image/png)  
+[tutorials.png](attachments/2424872.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[deploy.png](attachments/327688/2424867.png) (image/png)  
+[deploy.png](attachments/2424867.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[faq.png](attachments/327688/2424868.png) (image/png)  
+[faq.png](attachments/2424868.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[legal.png](attachments/327688/2424869.png) (image/png)  
+[legal.png](attachments/2424869.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[contact.png](attachments/327688/2424866.png) (image/png)  
+[contact.png](attachments/2424866.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[download.png](attachments/327688/2424851.png) (image/png)  
+[download.png](attachments/2424851.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[contact.png](attachments/327688/2424857.png) (image/png)  
+[contact.png](attachments/2424857.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[deploy.png](attachments/327688/2424853.png) (image/png)  
+[deploy.png](attachments/2424853.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[faq.png](attachments/327688/2424855.png) (image/png)  
+[faq.png](attachments/2424855.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[legal.png](attachments/327688/2424856.png) (image/png)  
+[legal.png](attachments/2424856.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[reference.png](attachments/327688/2424870.png) (image/png)  
+[reference.png](attachments/2424870.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[releases.png](attachments/327688/2424873.png) (image/png)  
+[releases.png](attachments/2424873.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[tutorials.png](attachments/327688/2424852.png) (image/png)  
+[tutorials.png](attachments/2424852.png) (image/png)
 ![](images/icons/bullet_blue.gif)
-[releases.png](attachments/327688/2424871.png) (image/png)  
+[releases.png](attachments/2424871.png) (image/png)
 
 Document generated by Confluence on Oct 08, 2015 10:27
-
