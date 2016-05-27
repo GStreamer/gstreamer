@@ -1,4 +1,4 @@
-#  GStreamer SDK documentation : Playback tutorial 4: Progressive streaming 
+# Playback tutorial 4: Progressive streaming
 
 This page last changed on Sep 13, 2012 by xartigas.
 
@@ -54,24 +54,24 @@ Copy this code into a text file named `playback-tutorial-4.c`.
 
 **playback-tutorial-4.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <gst/gst.h>
 #include <string.h>
-  
+
 #define GRAPH_LENGTH 80
-  
+
 /* playbin2 flags */
 typedef enum {
   GST_PLAY_FLAG_DOWNLOAD      = (1 << 7) /* Enable progressive download (on selected formats) */
 } GstPlayFlags;
-  
+
 typedef struct _CustomData {
   gboolean is_live;
   GstElement *pipeline;
   GMainLoop *loop;
   gint buffering_level;
 } CustomData;
-  
+
 static void got_location (GstObject *gstobject, GstObject *prop_object, GParamSpec *prop, gpointer data) {
   gchar *location;
   g_object_get (G_OBJECT (prop_object), "temp-location", &location, NULL);
@@ -79,19 +79,19 @@ static void got_location (GstObject *gstobject, GstObject *prop_object, GParamSp
   /* Uncomment this line to keep the temporary file after the program exits */
   /* g_object_set (G_OBJECT (prop_object), "temp-remove", FALSE, NULL); */
 }
-  
+
 static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
-  
+
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ERROR: {
       GError *err;
       gchar *debug;
-      
+
       gst_message_parse_error (msg, &err, &debug);
       g_print ("Error: %s\n", err->message);
       g_error_free (err);
       g_free (debug);
-      
+
       gst_element_set_state (data->pipeline, GST_STATE_READY);
       g_main_loop_quit (data->loop);
       break;
@@ -104,9 +104,9 @@ static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
     case GST_MESSAGE_BUFFERING:
       /* If the stream is live, we do not care about buffering. */
       if (data->is_live) break;
-      
+
       gst_message_parse_buffering (msg, &data->buffering_level);
-      
+
       /* Wait until buffering is complete before start/resume playing */
       if (data->buffering_level < 100)
         gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
@@ -123,11 +123,11 @@ static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
       break;
     }
 }
-  
+
 static gboolean refresh_ui (CustomData *data) {
   GstQuery *query;
   gboolean result;
-  
+
   query = gst_query_new_buffering (GST_FORMAT_PERCENT);
   result = gst_element_query (data->pipeline, query);
   if (result) {
@@ -135,10 +135,10 @@ static gboolean refresh_ui (CustomData *data) {
     gchar graph[GRAPH_LENGTH + 1];
     GstFormat format = GST_FORMAT_TIME;
     gint64 position = 0, duration = 0;
-    
+
     memset (graph, ' ', GRAPH_LENGTH);
     graph[GRAPH_LENGTH] = '\0';
-    
+
     n_ranges = gst_query_get_n_buffering_ranges (query);
     for (range = 0; range < n_ranges; range++) {
       gint64 start, stop;
@@ -163,11 +163,11 @@ static gboolean refresh_ui (CustomData *data) {
     }
     g_print ("\r");
   }
-  
+
   return TRUE;
-  
+
 }
-  
+
 int main(int argc, char *argv[]) {
   GstElement *pipeline;
   GstBus *bus;
@@ -175,26 +175,26 @@ int main(int argc, char *argv[]) {
   GMainLoop *main_loop;
   CustomData data;
   guint flags;
-  
+
   /* Initialize GStreamer */
   gst_init (&argc, &argv);
-  
+
   /* Initialize our data structure */
   memset (&data, 0, sizeof (data));
   data.buffering_level = 100;
-  
+
   /* Build the pipeline */
   pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
   bus = gst_element_get_bus (pipeline);
-  
+
   /* Set the download flag */
   g_object_get (pipeline, "flags", &flags, NULL);
   flags |= GST_PLAY_FLAG_DOWNLOAD;
   g_object_set (pipeline, "flags", flags, NULL);
-  
+
   /* Uncomment this line to limit the amount of downloaded data */
   /* g_object_set (pipeline, "ring-buffer-max-size", (guint64)4000000, NULL); */
-  
+
   /* Start playing */
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -204,20 +204,20 @@ int main(int argc, char *argv[]) {
   } else if (ret == GST_STATE_CHANGE_NO_PREROLL) {
     data.is_live = TRUE;
   }
-  
+
   main_loop = g_main_loop_new (NULL, FALSE);
   data.loop = main_loop;
   data.pipeline = pipeline;
-  
+
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", G_CALLBACK (cb_message), &data);
   g_signal_connect (pipeline, "deep-notify::temp-location", G_CALLBACK (got_location), NULL);
-  
+
   /* Register a function that GLib will call every second */
   g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, &data);
-  
+
   g_main_loop_run (main_loop);
-  
+
   /* Free resources */
   g_main_loop_unref (main_loop);
   gst_object_unref (bus);
@@ -260,7 +260,7 @@ only the differences.
 
 #### Setup
 
-``` first-line: 133; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Set the download flag */
 g_object_get (pipeline, "flags", &flags, NULL);
 flags |= GST_PLAY_FLAG_DOWNLOAD;
@@ -271,7 +271,7 @@ By setting this flag, `playbin2` instructs its internal queue (a
 `queue2` element, actually) to store all downloaded
 data.
 
-``` first-line: 157; theme: Default; brush: cpp; gutter: true
+``` lang=c
 g_signal_connect (pipeline, "deep-notify::temp-location", G_CALLBACK (got_location), NULL);
 ```
 
@@ -282,7 +282,7 @@ changes, indicating that the `queue2` has decided where to store the
 downloaded
 data.
 
-``` first-line: 18; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static void got_location (GstObject *gstobject, GstObject *prop_object, GParamSpec *prop, gpointer data) {
   gchar *location;
   g_object_get (G_OBJECT (prop_object), "temp-location", &location, NULL);
@@ -313,7 +313,7 @@ removed. As the comment reads, you can keep it by setting the
 In `main` we also install a timer which we use to refresh the UI every
 second.
 
-``` first-line: 159; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Register a function that GLib will call every second */
 g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, &data);
 ```
@@ -332,7 +332,7 @@ pipeline is paused). Keep in mind that if your network is fast enough,
 you will not see the download bar (the dashes) advance at all; it will
 be completely full from the beginning.
 
-``` first-line: 70; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static gboolean refresh_ui (CustomData *data) {
   GstQuery *query;
   gboolean result;
@@ -356,7 +356,7 @@ succeeded. The answer to the query is contained in the same
 `GstQuery` structure we created, and can be retrieved using multiple
 parse methods:
 
-``` first-line: 85; theme: Default; brush: cpp; gutter: true
+``` lang=c
 n_ranges = gst_query_get_n_buffering_ranges (query);
 for (range = 0; range < n_ranges; range++) {
   gint64 start, stop;
@@ -380,7 +380,7 @@ range) depends on what we requested in the
 `gst_query_new_buffering()` call. In this case, PERCENTAGE. These
 values are used to generate the graph.
 
-``` first-line: 94; theme: Default; brush: cpp; gutter: true
+``` lang=c
 if (gst_element_query_position (data->pipeline, &format, &position) &&
     GST_CLOCK_TIME_IS_VALID (position) &&
     gst_element_query_duration (data->pipeline, &format, &duration) &&
@@ -402,7 +402,7 @@ depending on the buffering level. If it is below 100%, the code in the
 an ‘`X`’. If the buffering level is 100% the pipeline is in the
 `PLAYING` state and we print a ‘`>`’.
 
-``` first-line: 102; theme: Default; brush: cpp; gutter: true
+``` lang=c
 if (data->buffering_level < 100) {
   g_print (" Buffering: %3d%%", data->buffering_level);
 } else {
@@ -415,7 +415,7 @@ information (and delete it otherwise).
 
 #### Limiting the size of the downloaded file
 
-``` first-line: 138; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Uncomment this line to limit the amount of downloaded data */
 /* g_object_set (pipeline, "ring-buffer-max-size", (guint64)4000000, NULL); */
 ```
@@ -442,9 +442,8 @@ It has been a pleasure having you here, and see you soon\!
 ## Attachments:
 
 ![](images/icons/bullet_blue.gif)
-[playback-tutorial-4.c](attachments/327808/2424846.c) (text/plain)  
+[playback-tutorial-4.c](attachments/327808/2424846.c) (text/plain)
 ![](images/icons/bullet_blue.gif)
-[vs2010.zip](attachments/327808/2424847.zip) (application/zip)  
+[vs2010.zip](attachments/327808/2424847.zip) (application/zip)
 
 Document generated by Confluence on Oct 08, 2015 10:27
-

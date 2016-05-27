@@ -1,4 +1,11 @@
-# Installing on Windows 
+# Installing on Windows
+
+## Supported platforms
+
+* Windows XP
+* Windows Vista
+* Windows 7
+* Windows 8
 
 ## Prerequisites
 
@@ -48,7 +55,6 @@ There are 3 sets of files in the SDK:
 Get  **the Runtime and Development files** installers appropriate for
 your architecture from here:
 
-
 **FIXME: Add links **
 
 > ![Warning](images/icons/emoticons/warning.png)
@@ -59,7 +65,6 @@ default is usually OK.
 
 > ![Warning](images/icons/emoticons/warning.png)
 >`If you plan to use Visual Studio, **close it before installing the GStreamer SDK**. The installer will define new environment variables which will not be picked up by Visual Studio if it is open.
-
 
 > On **Windows 8** and **Windows 10**, it might be necessary to log out and log back in to your account after the installation for the newly defined environment variables to be picked up by Visual Studio.
 
@@ -140,7 +145,6 @@ from within Visual Studio. You use the `%...%` notation from Windows
 Explorer)
 
 You should now be able to run the tutorials.
- 
 
 ### Creating new projects manually
 
@@ -161,14 +165,13 @@ load `gstreamer-1.0.props `
 This property sheet contains the directories where the headers and
 libraries are located, and the necessary options for the compiler and
 linker, so you do not need to change anything else in your project.
- 
+
 If you cannot find the Property Manager, you might need to enable Expert
 Settings. Go to Tools → Settings → Expert Settings. Upon first
 installation of Visual Studio, Expert Settings are disabled by
 default.
 
 ![](attachments/WindowsInstall10.png)
-
 
 > ![Warning](images/icons/emoticons/warning.png)
 > **Depending on the GStreamer libraries you need to use, you will have to add more property pages, besides `gstreamer-1.0`**  (each property page corresponds to one GStreamer library).

@@ -1,4 +1,4 @@
-#  GStreamer SDK documentation : iOS tutorial 4: A basic media player 
+# iOS tutorial 4: A basic media player
 
 This page last changed on May 21, 2013 by xartigas.
 
@@ -52,7 +52,7 @@ duration.
 
 **VideoViewController.h**
 
-``` theme: Default; brush: plain; gutter: true
+```
 #import <UIKit/UIKit.h>
 #import "GStreamerBackendDelegate.h"
 
@@ -101,7 +101,7 @@ this view is collapsed by default. Click here to expand…
 
 **VideoViewController.m**
 
-``` theme: Default; brush: plain; gutter: true
+```
 #import "VideoViewController.h"
 #import "GStreamerBackend.h"
 #import <UIKit/UIKit.h>
@@ -162,10 +162,10 @@ this view is collapsed by default. Click here to expand…
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+
     play_button.enabled = FALSE;
     pause_button.enabled = FALSE;
-    
+
     /* As soon as the GStreamer backend knows the real values, these ones will be replaced */
     media_width = 320;
     media_height = 240;
@@ -311,7 +311,7 @@ because we will not offer the same functionalities. We keep track of
 this in the `is_local_media` variable, which is set when the URI is set,
 in the `gstreamerInitialized` method:
 
-``` first-line: 154; theme: Default; brush: plain; gutter: true
+```
 -(void) gstreamerInitialized
 {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -331,7 +331,7 @@ Every time the size of the media changes (which could happen mid-stream,
 for some kind of streams), or when it is first detected,
 `GStreamerBackend`  calls our `mediaSizeChanged()` callback:
 
-``` first-line: 173; theme: Default; brush: plain; gutter: true
+```
 -(void) mediaSizeChanged:(NSInteger)width height:(NSInteger)height
 {
     media_width = width;
@@ -370,7 +370,7 @@ call our `setCurrentPosition` method so we can update the position of
 the thumb in the Seek Bar. Again we do so from the UI thread, using
 `dispatch_async()`.
 
-``` first-line: 184; theme: Default; brush: plain; gutter: true
+```
 -(void) setCurrentPosition:(NSInteger)position duration:(NSInteger)duration
 {
     /* Ignore messages from the pipeline if the time sliders is being dragged */
@@ -397,7 +397,7 @@ which we will use to display the current position and duration in
 takes care of it, and must be called every time the Seek Bar is
 updated:
 
-``` first-line: 24; theme: Default; brush: plain; gutter: true
+```
 /* The text widget acts as an slave for the seek bar, so it reflects what the seek bar shows, whether
  * it is an actual pipeline position or the position the user is currently dragging to. */
 - (void) updateTimeWidget
@@ -438,7 +438,7 @@ outlets are connected. We will be notified when the user starts dragging
 the Slider, when the Slider position changes and when the users releases
 the Slider.
 
-``` first-line: 112; theme: Default; brush: plain; gutter: true
+```
 /* Called when the user starts to drag the time slider */
 - (IBAction)sliderTouchDown:(id)sender {
     [gst_backend pause];
@@ -452,7 +452,7 @@ do not want it to keep moving. We also mark that a drag operation is in
 progress in the
 `dragging_slider` variable.
 
-``` first-line: 102; theme: Default; brush: plain; gutter: true
+```
 /* Called when the time slider position has changed, either because the user dragged it or
  * we programmatically changed its position. dragging_slider tells us which one happened */
 - (IBAction)sliderValueChanged:(id)sender {
@@ -475,7 +475,7 @@ Otherwise, the seek operation will be performed when the thumb is
 released, and the only thing we do here is update the textual time
 widget.
 
-``` first-line: 118; theme: Default; brush: plain; gutter: true
+```
 /* Called when the user stops dragging the time slider */
 - (IBAction)sliderTouchUp:(id)sender {
     dragging_slider = NO;
@@ -509,7 +509,7 @@ this view is collapsed by default. Click here to expand…
 
 **GStreamerBackend.m**
 
-``` theme: Default; brush: plain; gutter: true
+```
 #import "GStreamerBackend.h"
 
 #include <gst/gst.h>
@@ -702,7 +702,7 @@ static void error_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *self)
     GError *err;
     gchar *debug_info;
     gchar *message_string;
-    
+
     gst_message_parse_error (msg, &err, &debug_info);
     message_string = g_strdup_printf ("Error received from element %s: %s", GST_OBJECT_NAME (msg->src), err->message);
     g_clear_error (&err);
@@ -839,7 +839,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     /* Create our own GLib Main Context and make it the default one */
     context = g_main_context_new ();
     g_main_context_push_thread_default(context);
-    
+
     /* Build pipeline */
     pipeline = gst_parse_launch("playbin2", &error);
     if (error) {
@@ -852,7 +852,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
 
     /* Set the pipeline to READY, so it can already accept a window handle */
     gst_element_set_state(pipeline, GST_STATE_READY);
-    
+
     video_sink = gst_bin_get_by_interface(GST_BIN(pipeline), GST_TYPE_X_OVERLAY);
     if (!video_sink) {
         GST_ERROR ("Could not retrieve video sink");
@@ -888,14 +888,14 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     GST_DEBUG ("Exited main loop");
     g_main_loop_unref (main_loop);
     main_loop = NULL;
-    
+
     /* Free resources */
     g_main_context_pop_thread_default(context);
     g_main_context_unref (context);
     gst_element_set_state (pipeline, GST_STATE_NULL);
     gst_object_unref (pipeline);
     pipeline = NULL;
-    
+
     ui_delegate = NULL;
     ui_video_view = NULL;
 
@@ -911,7 +911,7 @@ The UI code will call `setUri` whenever it wants to change the playing
 URI (in this tutorial the URI never changes, but it does in the next
 one):
 
-``` first-line: 79; theme: Default; brush: plain; gutter: true
+```
 -(void) setUri:(NSString*)uri
 {
     const char *char_uri = [uri UTF8String];
@@ -934,7 +934,7 @@ do not. Therefore, in the READY to PAUSED state change, once the Caps of
 the decoded media are known, we inspect them
 in `check_media_size()`:
 
-``` first-line: 244; theme: Default; brush: plain; gutter: true
+```
 /* Retrieve the video sink's Caps and tell the application about the media size */
 static void check_media_size (GStreamerBackend *self) {
     GstElement *video_sink;
@@ -988,7 +988,7 @@ To keep the UI updated, a GLib timer is installed in
 the `app_function` that fires 4 times per second (or every 250ms),
 right before entering the main loop:
 
-``` first-line: 365; theme: Default; brush: plain; gutter: true
+```
     /* Register a function that GLib will call 4 times per second */
     timeout_source = g_timeout_source_new (250);
     g_source_set_callback (timeout_source, (GSourceFunc)refresh_ui, (__bridge void *)self, NULL);
@@ -999,7 +999,7 @@ right before entering the main loop:
 Then, in the refresh\_ui
 method:
 
-``` first-line: 120; theme: Default; brush: plain; gutter: true
+```
 /* If we have pipeline and it is running, query the current position and clip duration and inform
  * the application */
 static gboolean refresh_ui (GStreamerBackend *self) {
@@ -1051,7 +1051,7 @@ see how to overcome these problems.
 
 In `setPosition`:
 
-``` first-line: 86; theme: Default; brush: plain; gutter: true
+```
 -(void) setPosition:(NSInteger)milliseconds
 {
     gint64 position = (gint64)(milliseconds * GST_MSECOND);
@@ -1069,7 +1069,7 @@ away; otherwise, store the desired position in
 the `desired_position` variable. Then, in
 the `state_changed_cb()` callback:
 
-``` first-line: 292; theme: Default; brush: plain; gutter: true
+```
         if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED)
         {
             check_media_size(self);
@@ -1105,7 +1105,7 @@ once this period elapses.
 To achieve this, all seek requests are routed through
 the `execute_seek()` method:
 
-``` first-line: 145; theme: Default; brush: plain; gutter: true
+```
 /* Perform seek, if we are not too close to the previous seek. Otherwise, schedule the seek for
  * some time in the future. */
 static void execute_seek (gint64 position, GStreamerBackend *self) {
@@ -1176,7 +1176,7 @@ using buffering. The same procedure is used here, by listening to the
 buffering
 messages:
 
-``` first-line: 361; theme: Default; brush: plain; gutter: true
+```
 g_signal_connect (G_OBJECT (bus), "message::buffering", (GCallback)buffering_cb, (__bridge void *)self);
 ```
 
@@ -1186,7 +1186,7 @@ source):
 
  
 
-``` first-line: 215; theme: Default; brush: plain; gutter: true
+```
 /* Called when buffering messages are received. We inform the UI about the current buffering level and
  * keep the pipeline paused until 100% buffering is reached. At that point, set the desired state. */
 static void buffering_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *self) {
@@ -1236,7 +1236,6 @@ here into an acceptable iOS media player.
 
 ![](images/icons/bullet_blue.gif)
 [ios-tutorial4-screenshot.png](attachments/3571758/3539044.png)
-(image/png)  
+(image/png)
 
 Document generated by Confluence on Oct 08, 2015 10:27
-

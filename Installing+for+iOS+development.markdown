@@ -1,4 +1,6 @@
-# Installing for iOS development 
+# Installing for iOS development
+
+![](images/icons/emoticons/information.png) All versions starting form iOS 6 are supported
 
 ## Prerequisites
 
@@ -86,4 +88,3 @@ Once a project has been created using a GStreamer SDK Template, it is
 ready to build and run. All necessary infrastructure is already in
 place. To understand what files have been created and how they interact,
 take a look at the [iOS tutorials](iOS+tutorials.markdown).
-

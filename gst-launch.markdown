@@ -1,4 +1,4 @@
-#  GStreamer SDK documentation : gst-launch 
+# gst-launch
 
 This page last changed on May 30, 2012 by xartigas.
 
@@ -97,7 +97,7 @@ Creates an element of type ELEMENTTYPE and sets the PROPERTIES.
 PROPERTY=VALUE ...
 
 Sets the property to the specified value. You can use **gst-inspect**(1)
-to find out about properties and allowed values of different elements.  
+to find out about properties and allowed values of different elements.
 Enumeration properties can be set by name, nick or value.
 
 **Bins**
@@ -126,7 +126,7 @@ used. This works across bins. If a padname is given, the link is done
 with these pads. If no pad names are given all possibilities are tried
 and a matching pad is used. If multiple padnames are given, both sides
 must have the same number of pads specified and multiple links are done
-in the given order.  
+in the given order.
 So the simplest link is a simple exclamation mark, that links the
 element to the left of it to the element right of it.
 
@@ -140,25 +140,25 @@ chain caps, you can add more caps in the same format afterwards.
 
 **Properties**
 
-NAME=*\[(TYPE)\]*VALUE  
+NAME=*\[(TYPE)\]*VALUE
 in lists and ranges: *\[(TYPE)\]*VALUE
 
 Sets the requested property in capabilities. The name is an alphanumeric
-value and the type can have the following case-insensitive values:  
-\- **i** or **int** for integer values or ranges  
-\- **f** or **float** for float values or ranges  
-\- **4** or **fourcc** for FOURCC values  
-\- **b**, **bool** or **boolean** for boolean values  
-\- **s**, **str** or **string** for strings  
-\- **fraction** for fractions (framerate, pixel-aspect-ratio)  
-\- **l** or **list** for lists  
+value and the type can have the following case-insensitive values:
+\- **i** or **int** for integer values or ranges
+\- **f** or **float** for float values or ranges
+\- **4** or **fourcc** for FOURCC values
+\- **b**, **bool** or **boolean** for boolean values
+\- **s**, **str** or **string** for strings
+\- **fraction** for fractions (framerate, pixel-aspect-ratio)
+\- **l** or **list** for lists
 If no type was given, the following order is tried: integer, float,
-boolean, string.  
+boolean, string.
 Integer values must be parsable by **strtol()**, floats by **strtod()**.
 FOURCC values may either be integers or strings. Boolean values are
 (case insensitive) *yes*, *no*, *true* or *false* and may like strings
-be escaped with " or '.  
-Ranges are in this format: \[ VALUE, VALUE \]  
+be escaped with " or '.
+Ranges are in this format: \[ VALUE, VALUE \]
 Lists use this format: ( VALUE *\[, VALUE ...\]* )
 
 ## Pipeline Control
@@ -166,7 +166,7 @@ Lists use this format: ( VALUE *\[, VALUE ...\]* )
 A pipeline can be controlled by signals. SIGUSR2 will stop the pipeline
 (GST\_STATE\_NULL); SIGUSR1 will put it back to play
 (GST\_STATE\_PLAYING). By default, the pipeline will start in the
-playing state.  
+playing state.
 There are currently no signals defined to go into the ready or pause
 (GST\_STATE\_READY and GST\_STATE\_PAUSED) state explicitely.
 
@@ -186,53 +186,53 @@ ffmpegcolorspace (for video) in front of the sink to make things work.
 **Audio playback**
 
 **gst-launch filesrc location=music.mp3 \! mad \! audioconvert \!
-audioresample \! osssink**  
+audioresample \! osssink**
 Play the mp3 music file "music.mp3" using a libmad-based plug-in and
 output to an OSS device
 
 **gst-launch filesrc location=music.ogg \! oggdemux \! vorbisdec \!
-audioconvert \! audioresample \! osssink**  
+audioconvert \! audioresample \! osssink**
 Play an Ogg Vorbis format file
 
-**gst-launch gnomevfssrc location=music.mp3 \! mad \! osssink  
+**gst-launch gnomevfssrc location=music.mp3 \! mad \! osssink
 gst-launch gnomevfssrc location=<http://domain.com/music.mp3> \! mad \!
-audioconvert \! audioresample \! osssink**  
+audioconvert \! audioresample \! osssink**
 Play an mp3 file or an http stream using GNOME-VFS
 
 **gst-launch gnomevfssrc location=<smb://computer/music.mp3> \! mad \!
-audioconvert \! audioresample \! osssink**  
+audioconvert \! audioresample \! osssink**
 Use GNOME-VFS to play an mp3 file located on an SMB server
 
 **Format conversion**
 
 **gst-launch filesrc location=music.mp3 \! mad \! audioconvert \!
-vorbisenc \! oggmux \! filesink location=music.ogg**  
+vorbisenc \! oggmux \! filesink location=music.ogg**
 Convert an mp3 music file to an Ogg Vorbis file
 
 **gst-launch filesrc location=music.mp3 \! mad \! audioconvert \!
-flacenc \! filesink location=test.flac**  
+flacenc \! filesink location=test.flac**
 Convert to the FLAC format
 
 **Other**
 
 **gst-launch filesrc location=music.wav \! wavparse \! audioconvert \!
-audioresample \! osssink**  
+audioresample \! osssink**
 Plays a .WAV file that contains raw audio data (PCM).
 
 **gst-launch filesrc location=music.wav \! wavparse \! audioconvert \!
-vorbisenc \! oggmux \! filesink location=music.ogg  
+vorbisenc \! oggmux \! filesink location=music.ogg
 gst-launch filesrc location=music.wav \! wavparse \! audioconvert \!
-lame \! filesink location=music.mp3**  
+lame \! filesink location=music.mp3**
 Convert a .WAV file containing raw audio data into an Ogg Vorbis or mp3
 file
 
 **gst-launch cdparanoiasrc mode=continuous \! audioconvert \! lame \!
-id3v2mux \! filesink location=cd.mp3**  
+id3v2mux \! filesink location=cd.mp3**
 rips all tracks from compact disc and convert them into a single mp3
 file
 
 **gst-launch cdparanoiasrc track=5 \! audioconvert \! lame \! id3v2mux
-\! filesink location=track5.mp3**  
+\! filesink location=track5.mp3**
 rips track 5 from the CD and converts it into a single mp3 file
 
 Using **gst-inspect**(1), it is possible to discover settings like the
@@ -243,29 +243,29 @@ you, e.g.: **gst-launch [cdda://5]() \! lame vbr=new vbr-quality=6 \!
 filesink location=track5.mp3**
 
 **gst-launch osssrc \! audioconvert \! vorbisenc \! oggmux \! filesink
-location=input.ogg**  
+location=input.ogg**
 records sound from your audio input and encodes it into an ogg file
 
 **Video**
 
 **gst-launch filesrc location=JB\_FF9\_TheGravityOfLove.mpg \! dvddemux
-\! mpeg2dec \! xvimagesink**  
+\! mpeg2dec \! xvimagesink**
 Display only the video portion of an MPEG-1 video file, outputting to an
 X display window
 
 **gst-launch filesrc location=/flflfj.vob \! dvddemux \! mpeg2dec \!
-sdlvideosink**  
+sdlvideosink**
 Display the video portion of a .vob file (used on DVDs), outputting to
 an SDL window
 
 **gst-launch filesrc location=movie.mpg \! dvddemux name=demuxer
 demuxer. \! queue \! mpeg2dec \! sdlvideosink demuxer. \! queue \! mad
-\! audioconvert \! audioresample \! osssink**  
+\! audioconvert \! audioresample \! osssink**
 Play both video and audio portions of an MPEG movie
 
 **gst-launch filesrc location=movie.mpg \! mpegdemux name=demuxer
 demuxer. \! queue \! mpeg2dec \! ffmpegcolorspace \! sdlvideosink
-demuxer. \! queue \! mad \! audioconvert \! audioresample \! osssink**  
+demuxer. \! queue \! mad \! audioconvert \! audioresample \! osssink**
 Play an AVI movie with an external text subtitle stream
 
 This example also shows how to refer to specific pads by name if an
@@ -288,25 +288,25 @@ Stream video using RTP and network elements.
 **gst-launch v4l2src \!
 video/x-raw-yuv,width=128,height=96,format='(fourcc)'UYVY \!
 ffmpegcolorspace \! ffenc\_h263 \! video/x-h263 \! rtph263ppay pt=96 \!
-udpsink host=192.168.1.1 port=5000 sync=false**  
+udpsink host=192.168.1.1 port=5000 sync=false**
 Use this command on the receiver
 
 **gst-launch udpsrc port=5000 \! application/x-rtp,
 clock-rate=90000,payload=96 \! rtph263pdepay queue-delay=0 \!
-ffdec\_h263 \! xvimagesink**  
+ffdec\_h263 \! xvimagesink**
 This command would be run on the transmitter
 
 **Diagnostic**
 
-**gst-launch -v fakesrc num-buffers=16 \! fakesink**  
+**gst-launch -v fakesrc num-buffers=16 \! fakesink**
 Generate a null stream and ignore it (and print out details).
 
 **gst-launch audiotestsrc \! audioconvert \! audioresample \!
-osssink**  
+osssink**
 Generate a pure sine tone to test the audio output
 
-**gst-launch videotestsrc \! xvimagesink  
-gst-launch videotestsrc \! ximagesink**  
+**gst-launch videotestsrc \! xvimagesink
+gst-launch videotestsrc \! ximagesink**
 Generate a familiar test pattern to test the video output
 
 **Automatic linking**
@@ -315,12 +315,12 @@ You can use the decodebin element to automatically select the right
 elements to get a working pipeline.
 
 **gst-launch filesrc location=musicfile \! decodebin \! audioconvert \!
-audioresample \! osssink**  
+audioresample \! osssink**
 Play any supported audio format
 
 **gst-launch filesrc location=videofile \! decodebin name=decoder
 decoder. \! queue \! audioconvert \! audioresample \! osssink decoder.
-\! ffmpegcolorspace \! xvimagesink**  
+\! ffmpegcolorspace \! xvimagesink**
 Play any supported video format with video and audio output. Threads are
 used automatically. To make this even easier, you can use the playbin
 element:
@@ -333,12 +333,12 @@ These examples show you how to use filtered caps.
 
 **gst-launch videotestsrc \!
 'video/x-raw-yuv,format=(fourcc)YUY2;video/x-raw-yuv,format=(fourcc)YV12'
-\! xvimagesink**  
+\! xvimagesink**
 Show a test image and use the YUY2 or YV12 video format for this.
 
 **gst-launch osssrc \!
 'audio/x-raw-int,rate=\[32000,64000\],width=\[16,32\],depth={16,24,32},signed=(boolean)true'
-\! wavenc \! filesink location=recording.wav**  
+\! wavenc \! filesink location=recording.wav**
 record audio and write it to a .wav file. Force usage of signed 16 to 32
 bit samples and a sample rate between 32kHz and 64KHz.
 
@@ -403,4 +403,3 @@ let it core dump). Then get a stack trace in the usual way
 <!-- end list -->
 
 Document generated by Confluence on Oct 08, 2015 10:28
-

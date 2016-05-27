@@ -1,4 +1,4 @@
-# GStreamer SDK
+# GStreamer SDK documentation
 
 ## Welcome to the GStreamer SDK documentation!
 
@@ -17,4 +17,3 @@ all about.
 | [![](attachments/faq.png)](Frequently+Asked+Questions.markdown) | [Frequently Asked Questions](Frequently+Asked+Questions.markdown) |
 |  [![](attachments/legal.png)](Legal+information.markdown) | [Patents, Licenses and legal F.A.Q.](Legal+information.markdown) |
 |  [![](attachments/contact.png)](Contact.markdown) | [Community support, bug reporting...](Contact.markdown) |
-

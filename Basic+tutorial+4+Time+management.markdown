@@ -1,4 +1,4 @@
-#  Basic tutorial 4: Time management 
+#  Basic tutorial 4: Time management
 
 ## Goal
 
@@ -35,9 +35,9 @@ in the SDK installation).
 
 **basic-tutorial-4.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <gst/gst.h>
-  
+
 /* Structure to contain all our information, so we can pass it around */
 typedef struct _CustomData {
   GstElement *playbin;  /* Our one and only element */
@@ -47,36 +47,36 @@ typedef struct _CustomData {
   gboolean seek_done;    /* Have we performed the seek already? */
   gint64 duration;       /* How long does this media last, in nanoseconds */
 } CustomData;
-  
+
 /* Forward definition of the message processing function */
 static void handle_message (CustomData *data, GstMessage *msg);
-  
+
 int main(int argc, char *argv[]) {
   CustomData data;
   GstBus *bus;
   GstMessage *msg;
   GstStateChangeReturn ret;
-  
+
   data.playing = FALSE;
   data.terminate = FALSE;
   data.seek_enabled = FALSE;
   data.seek_done = FALSE;
   data.duration = GST_CLOCK_TIME_NONE;
-  
+
   /* Initialize GStreamer */
   gst_init (&argc, &argv);
-   
+
   /* Create the elements */
   data.playbin = gst_element_factory_make ("playbin", "playbin");
-  
+
   if (!data.playbin) {
     g_printerr ("Not all elements could be created.\n");
     return -1;
   }
-  
+
   /* Set the URI to play */
   g_object_set (data.playbin, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
-  
+
   /* Start playing */
   ret = gst_element_set_state (data.playbin, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -84,13 +84,13 @@ int main(int argc, char *argv[]) {
     gst_object_unref (data.playbin);
     return -1;
   }
-  
+
   /* Listen to the bus */
   bus = gst_element_get_bus (data.playbin);
   do {
     msg = gst_bus_timed_pop_filtered (bus, 100 * GST_MSECOND,
         GST_MESSAGE_STATE_CHANGED | GST_MESSAGE_ERROR | GST_MESSAGE_EOS | GST_MESSAGE_DURATION);
-  
+
     /* Parse message */
     if (msg != NULL) {
       handle_message (&data, msg);
@@ -98,23 +98,23 @@ int main(int argc, char *argv[]) {
       /* We got no message, this means the timeout expired */
       if (data.playing) {
         gint64 current = -1;
-        
+
         /* Query the current position of the stream */
         if (!gst_element_query_position (data.playbin, GST_TIME_FORMAT, &current)) {
           g_printerr ("Could not query current position.\n");
         }
-        
+
         /* If we didn't know it yet, query the stream duration */
         if (!GST_CLOCK_TIME_IS_VALID (data.duration)) {
           if (!gst_element_query_duration (data.playbin, GST_TIME_FORMAT, &data.duration)) {
             g_printerr ("Could not query current duration.\n");
           }
         }
-        
+
         /* Print current position and total duration */
         g_print ("Position %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "\r",
             GST_TIME_ARGS (current), GST_TIME_ARGS (data.duration));
-        
+
         /* If seeking is enabled, we have not done it yet, and the time is right, seek */
         if (data.seek_enabled && !data.seek_done && current > 10 * GST_SECOND) {
           g_print ("\nReached 10s, performing seek...\n");
@@ -125,18 +125,18 @@ int main(int argc, char *argv[]) {
       }
     }
   } while (!data.terminate);
-  
+
   /* Free resources */
   gst_object_unref (bus);
   gst_element_set_state (data.playbin, GST_STATE_NULL);
   gst_object_unref (data.playbin);
   return 0;
 }
-  
+
 static void handle_message (CustomData *data, GstMessage *msg) {
   GError *err;
   gchar *debug_info;
-  
+
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ERROR:
       gst_message_parse_error (msg, &err, &debug_info);
@@ -160,10 +160,10 @@ static void handle_message (CustomData *data, GstMessage *msg) {
       if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->playbin)) {
         g_print ("Pipeline state changed from %s to %s:\n",
             gst_element_state_get_name (old_state), gst_element_state_get_name (new_state));
-        
+
         /* Remember whether we are in the PLAYING state or not */
         data->playing = (new_state == GST_STATE_PLAYING);
-        
+
         if (data->playing) {
           /* We just moved to PLAYING. Check if seeking is possible */
           GstQuery *query;
@@ -219,7 +219,7 @@ typedef struct _CustomData {
   gboolean seek_done;    /* Have we performed the seek already? */
   gint64 duration;       /* How long does this media last, in nanoseconds */
 } CustomData;
-    
+
 /* Forward definition of the message processing function */
 static void handle_message (CustomData *data, GstMessage *msg);
 ```
@@ -378,7 +378,7 @@ case GST_MESSAGE_STATE_CHANGED: {
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
     g_print ("Pipeline state changed from %s to %s:\n",
         gst_element_state_get_name (old_state), gst_element_state_get_name (new_state));
-    
+
     /* Remember whether we are in the PLAYING state or not */
     data->playing = (new_state == GST_STATE_PLAYING);
 ```
@@ -414,7 +414,6 @@ if (data->playing) {
 }
 ```
 
-  
 `gst_query_new_seeking()` creates a new query object of the "seeking"
 type, with `GST_FORMAT_TIME` format. This indicates that we are
 interested in seeking by specifying the new time to which we want to
@@ -455,4 +454,3 @@ Remember that attached to this page you should find the complete source
 code of the tutorial and any accessory files needed to build it.
 
 It has been a pleasure having you here, and see you soon!
-

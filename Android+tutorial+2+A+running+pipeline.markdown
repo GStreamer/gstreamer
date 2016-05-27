@@ -1,4 +1,4 @@
-#  GStreamer SDK documentation : Android tutorial 2: A running pipeline 
+# Android tutorial 2: A running pipeline
 
 This page last changed on May 07, 2013 by xartigas.
 
@@ -56,7 +56,7 @@ messages sent from the C code (for errors and state changes).
 
 **src/com/gst\_sdk\_tutorials/tutorial\_2/Tutorial2.java**
 
-``` theme: Default; brush: java; gutter: true
+``` lang=java
 package com.gst_sdk_tutorials.tutorial_2;
 
 import android.app.Activity;
@@ -91,7 +91,7 @@ public class Tutorial2 extends Activity {
             GStreamer.init(this);
         } catch (Exception e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-            finish(); 
+            finish();
             return;
         }
 
@@ -181,7 +181,7 @@ public class Tutorial2 extends Activity {
 As usual, the first bit that gets executed is the static initializer of
 the class:
 
-``` first-line: 113; theme: Default; brush: java; gutter: true
+``` lang=java
 static {
     System.loadLibrary("gstreamer_android");
     System.loadLibrary("tutorial-2");
@@ -198,7 +198,7 @@ In the `onCreate()` method GStreamer is initialized as in the previous
 tutorial with `GStreamer.init(this)`, and then the layout is inflated
 and listeners are setup for the two UI buttons:
 
-``` first-line: 41; theme: Default; brush: java; gutter: true
+``` lang=java
 ImageButton play = (ImageButton) this.findViewById(R.id.button_play);
 play.setOnClickListener(new OnClickListener() {
     public void onClick(View v) {
@@ -224,7 +224,7 @@ and safer than tracking the actual pipeline state, because orientation
 changes can happen before the pipeline has moved to the desired state,
 for example.
 
-``` first-line: 57; theme: Default; brush: java; gutter: true
+``` lang=java
 if (savedInstanceState != null) {
     is_playing_desired = savedInstanceState.getBoolean("playing");
     Log.i ("GStreamer", "Activity created. Saved state is playing:" + is_playing_desired);
@@ -239,7 +239,7 @@ We will first build the GStreamer pipeline (below) and only when the
 native code reports itself as initialized we will use
 `is_playing_desired`.
 
-``` first-line: 69; theme: Default; brush: java; gutter: true
+``` lang=java
 nativeInit();
 ```
 
@@ -252,7 +252,7 @@ This finishes the `onCreate()` method and the Java initialization. The
 UI buttons are disabled, so nothing will happen until native code is
 ready and `onGStreamerInitialized()` is called:
 
-``` first-line: 94; theme: Default; brush: java; gutter: true
+``` lang=java
 private void onGStreamerInitialized () {
     Log.i ("GStreamer", "Gst initialized. Restoring state, playing:" + is_playing_desired);
 ```
@@ -261,7 +261,7 @@ This is called by the native code when its main loop is finally running.
 We first retrieve the desired playing state from `is_playing_desired`,
 and then set that state:
 
-``` first-line: 96; theme: Default; brush: java; gutter: true
+``` lang=java
 // Restore previous playing state
 if (is_playing_desired) {
     nativePlay();
@@ -272,7 +272,7 @@ if (is_playing_desired) {
 
 Here comes the first caveat, when re-enabling the UI buttons:
 
-``` first-line: 103; theme: Default; brush: java; gutter: true
+``` lang=java
 // Re-enable buttons, now that GStreamer is initialized
 final Activity activity = this;
 runOnUiThread(new Runnable() {
@@ -300,7 +300,7 @@ The same problem exists when the native code wants to output a string in
 our TextView using the `setMessage()` method: it has to be done from the
 UI thread. The solution is the same:
 
-``` first-line: 83; theme: Default; brush: java; gutter: true
+``` lang=java
 private void setMessage(final String message) {
     final TextView tv = (TextView) this.findViewById(R.id.textview_message);
     runOnUiThread (new Runnable() {
@@ -313,7 +313,7 @@ private void setMessage(final String message) {
 
 Finally, a few remaining bits:
 
-``` first-line: 72; theme: Default; brush: java; gutter: true
+``` lang=java
 protected void onSaveInstanceState (Bundle outState) {
     Log.d ("GStreamer", "Saving state, playing:" + is_playing_desired);
     outState.putBoolean("playing", is_playing_desired);
@@ -324,7 +324,7 @@ This method stores the currently desired playing state when Android is
 about to shut us down, so next time it restarts (after an orientation
 change, for example), it can restore the same state.
 
-``` first-line: 77; theme: Default; brush: java; gutter: true
+``` lang=java
 protected void onDestroy() {
     nativeFinalize();
     super.onDestroy();
@@ -341,7 +341,7 @@ This concludes the UI part of the tutorial.
 
 **jni/tutorial-2.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <string.h>
 #include <jni.h>
 #include <android/log.h>
@@ -624,7 +624,7 @@ the basic tutorials, and it is used to hold all our information in one
 place, so we can easily pass it around to
 callbacks:
 
-``` first-line: 22; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Structure to contain all our information, so we can pass it to callbacks */
 typedef struct _CustomData {
   jobject app;           /* Application instance, used to call its methods. A global reference is kept. */
@@ -651,7 +651,7 @@ the `long` type used in Java is always 64 bits wide, but the pointer
 used in C can be either 32 or 64 bits wide. The macros take care of the
 conversion without warnings.
 
-``` first-line: 259; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Library initializer */
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   JNIEnv *env = NULL;
@@ -678,13 +678,13 @@ uses [pthread\_key\_create()](http://pubs.opengroup.org/onlinepubs/9699919799/f
 to be able to store per-thread information, which is crucial to properly
 manage the JNI Environment, as shown later.
 
-``` first-line: 234; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Static class initializer: retrieve method and field IDs */
 static jboolean gst_native_class_init (JNIEnv* env, jclass klass) {
   custom_data_field_id = (*env)->GetFieldID (env, klass, "native_custom_data", "J");
   set_message_method_id = (*env)->GetMethodID (env, klass, "setMessage", "(Ljava/lang/String;)V");
   on_gstreamer_initialized_method_id = (*env)->GetMethodID (env, klass, "onGStreamerInitialized", "()V");
- 
+
   if (!custom_data_field_id || !set_message_method_id || !on_gstreamer_initialized_method_id) {
     /* We emit this message through the Android log instead of the GStreamer log because the later
      * has not been initialized yet.
@@ -716,7 +716,7 @@ from Java:
 
 This method is called at the end of Java's `onCreate()`.
 
-``` first-line: 191; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static void gst_native_init (JNIEnv* env, jobject thiz) {
   CustomData *data = g_new0 (CustomData, 1);
   SET_CUSTOM_DATA (env, thiz, custom_data_field_id, data);
@@ -725,7 +725,7 @@ static void gst_native_init (JNIEnv* env, jobject thiz) {
 It first allocates memory for the `CustomData` structure and passes the
 pointer to the Java class with `SET_CUSTOM_DATA`, so it is remembered.
 
-``` first-line: 197; theme: Default; brush: cpp; gutter: true
+``` lang=c
 data->app = (*env)->NewGlobalRef (env, thiz);
 ```
 
@@ -734,16 +734,16 @@ in `CustomData` (a [Global
 Reference](http://developer.android.com/guide/practices/jni.html#local_and_global_references)
 is used) so its methods can be called later.
 
-``` first-line: 199; theme: Default; brush: cpp; gutter: true
+``` lang=c
 pthread_create (&gst_app_thread, NULL, &app_function, data);
 ```
 
 Finally, a thread is created and it starts running the
 `app_function()` method.
 
-###  `app_function()` 
+###  `app_function()`
 
-``` first-line: 134; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Main method for the native code. This is executed on its own thread. */
 static void *app_function (void *userdata) {
   JavaVMAttachArgs args;
@@ -751,9 +751,9 @@ static void *app_function (void *userdata) {
   CustomData *data = (CustomData *)userdata;
   GSource *bus_source;
   GError *error = NULL;
- 
+
   GST_DEBUG ("Creating pipeline in CustomData at %p", data);
- 
+
   /* Create our own GLib Main Context and make it the default one */
   data->context = g_main_context_new ();
   g_main_context_push_thread_default(data->context);
@@ -766,7 +766,7 @@ is created with `g_main_context_new()` and then it is made the default
 one for the thread with
 `g_main_context_push_thread_default()`.
 
-``` first-line: 149; theme: Default; brush: cpp; gutter: true
+``` lang=c
 data->pipeline = gst_parse_launch("audiotestsrc ! audioconvert ! audioresample ! autoaudiosink", &error);
 if (error) {
   gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
@@ -781,7 +781,7 @@ It then creates a pipeline the easy way, with `gst-parse-launch()`. In
 this case, it is simply an `audiotestsrc` (which produces a continuous
 tone) and an `autoaudiosink`, with accompanying adapter elements.
 
-``` first-line: 159; theme: Default; brush: cpp; gutter: true
+``` lang=c
 bus = gst_element_get_bus (data->pipeline);
 bus_source = gst_bus_create_watch (bus);
 g_source_set_callback (bus_source, (GSourceFunc) gst_bus_async_signal_func, NULL, NULL);
@@ -798,7 +798,7 @@ creation of the watch is done step by step instead of using
 `gst_bus_add_signal_watch()` to exemplify how to use a custom GLib
 context.
 
-``` first-line: 169; theme: Default; brush: cpp; gutter: true
+``` lang=c
 GST_DEBUG ("Entering main loop... (CustomData:%p)", data);
 data->main_loop = g_main_loop_new (data->context, FALSE);
 check_initialization_complete (data);
@@ -822,7 +822,7 @@ Once the main loop has quit, all resources are freed in lines 178 to
 
 ### `check_initialization_complete()`
 
-``` first-line: 121; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static void check_initialization_complete (CustomData *data) {
   JNIEnv *env = get_jni_env ();
   if (!data->initialized && data->main_loop) {
@@ -866,7 +866,7 @@ see how it works, step by step:
 
 ### `get_jni_env()`
 
-``` first-line: 68; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static JNIEnv *get_jni_env (void) {
   JNIEnv *env;
   if ((env = pthread_getspecific (current_jni_env)) == NULL) {
@@ -903,7 +903,7 @@ Let's now review the rest of the native methods accessible from Java:
 
 ### `gst_native_finalize()` (`nativeFinalize()` from Java)
 
-``` first-line: 203; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static void gst_native_finalize (JNIEnv* env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data) return;
@@ -952,7 +952,7 @@ error or state changed message and display a message in the UI using the
 
 ### `set_ui_message()`
 
-``` first-line: 80; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static void set_ui_message (const gchar *message, CustomData *data) {
   JNIEnv *env = get_jni_env ();
   GST_DEBUG ("Setting message to: %s", message);
@@ -997,7 +997,7 @@ method and free the UTF16 message with
 
 **jni/Android.mk**
 
-``` theme: Default; brush: ruby; gutter: true
+``` lang=ruby
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
@@ -1051,16 +1051,15 @@ As usual, it has been a pleasure having you here, and see you soon\!
 
 ![](images/icons/bullet_blue.gif)
 [tutorial2-screenshot.png](attachments/2687063/2654325.png)
-(image/png)  
+(image/png)
 ![](images/icons/bullet_blue.gif)
 [tutorial2-screenshot.png](attachments/2687063/2654412.png)
-(image/png)  
+(image/png)
 ![](images/icons/bullet_blue.gif)
 [tutorial2-screenshot.png](attachments/2687063/2654417.png)
-(image/png)  
+(image/png)
 ![](images/icons/bullet_blue.gif)
 [tutorial2-screenshot.png](attachments/2687063/2654324.png)
-(image/png)  
+(image/png)
 
 Document generated by Confluence on Oct 08, 2015 10:27
-

@@ -1,4 +1,4 @@
-#  GStreamer SDK documentation : Playback tutorial 6: Audio visualization 
+# Playback tutorial 6: Audio visualization
 
 This page last changed on Jun 26, 2012 by xartigas.
 
@@ -41,27 +41,27 @@ Copy this code into a text file named `playback-tutorial-6.c`.
 
 **playback-tutorial-6.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <gst/gst.h>
-  
+
 /* playbin2 flags */
 typedef enum {
   GST_PLAY_FLAG_VIS           = (1 << 3) /* Enable rendering of visualizations when there is no video stream. */
 } GstPlayFlags;
-  
+
 /* Return TRUE if this is a Visualization element */
 static gboolean filter_vis_features (GstPluginFeature *feature, gpointer data) {
   GstElementFactory *factory;
-  
+
   if (!GST_IS_ELEMENT_FACTORY (feature))
     return FALSE;
   factory = GST_ELEMENT_FACTORY (feature);
   if (!g_strrstr (gst_element_factory_get_klass (factory), "Visualization"))
     return FALSE;
-  
+
   return TRUE;
 }
-  
+
 int main(int argc, char *argv[]) {
   GstElement *pipeline, *vis_plugin;
   GstBus *bus;
@@ -69,59 +69,59 @@ int main(int argc, char *argv[]) {
   GList *list, *walk;
   GstElementFactory *selected_factory = NULL;
   guint flags;
-  
+
   /* Initialize GStreamer */
   gst_init (&argc, &argv);
-  
+
   /* Get a list of all visualization plugins */
   list = gst_registry_feature_filter (gst_registry_get_default (), filter_vis_features, FALSE, NULL);
-  
+
   /* Print their names */
   g_print("Available visualization plugins:\n");
   for (walk = list; walk != NULL; walk = g_list_next (walk)) {
     const gchar *name;
     GstElementFactory *factory;
-    
+
     factory = GST_ELEMENT_FACTORY (walk->data);
     name = gst_element_factory_get_longname (factory);
     g_print("  %s\n", name);
-    
+
     if (selected_factory == NULL || g_str_has_prefix (name, "GOOM")) {
       selected_factory = factory;
     }
   }
-  
+
   /* Don't use the factory if it's still empty */
   /* e.g. no visualization plugins found */
   if (!selected_factory) {
     g_print ("No visualization plugins found!\n");
     return -1;
   }
-  
+
   /* We have now selected a factory for the visualization element */
   g_print ("Selected '%s'\n", gst_element_factory_get_longname (selected_factory));
   vis_plugin = gst_element_factory_create (selected_factory, NULL);
   if (!vis_plugin)
     return -1;
-  
+
   /* Build the pipeline */
   pipeline = gst_parse_launch ("playbin2 uri=http://radio.hbr1.com:19800/ambient.ogg", NULL);
-  
+
   /* Set the visualization flag */
   g_object_get (pipeline, "flags", &flags, NULL);
   flags |= GST_PLAY_FLAG_VIS;
   g_object_set (pipeline, "flags", flags, NULL);
-  
+
   /* set vis plugin for playbin2 */
   g_object_set (pipeline, "vis-plugin", vis_plugin, NULL);
-  
+
   /* Start playing */
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  
+
   /* Wait until error or EOS */
   bus = gst_element_get_bus (pipeline);
   msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
-  
+
   /* Free resources */
   if (msg != NULL)
     gst_message_unref (msg);
@@ -163,7 +163,7 @@ First off, we indicate `playbin2` that we want an audio visualization by
 setting the `GST_PLAY_FLAG_VIS` flag. If the media already contains
 video, this flag has no effect.
 
-``` first-line: 66; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Set the visualization flag */
 g_object_get (pipeline, "flags", &flags, NULL);
 flags |= GST_PLAY_FLAG_VIS;
@@ -175,7 +175,7 @@ If no visualization plugin is enforced by the user, `playbin2` will use
 available). The rest of the tutorial shows how to find out the available
 visualization elements and enforce one to `playbin2`.
 
-``` first-line: 32; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Get a list of all visualization plugins */
 list = gst_registry_feature_filter (gst_registry_get_default (), filter_vis_features, FALSE, NULL);
 ```
@@ -185,17 +185,17 @@ GStreamer registry and selects those for which
 the `filter_vis_features` function returns TRUE. This function selects
 only the Visualization plugins:
 
-``` first-line: 8; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Return TRUE if this is a Visualization element */
 static gboolean filter_vis_features (GstPluginFeature *feature, gpointer data) {
   GstElementFactory *factory;
-  
+
   if (!GST_IS_ELEMENT_FACTORY (feature))
     return FALSE;
   factory = GST_ELEMENT_FACTORY (feature);
   if (!g_strrstr (gst_element_factory_get_klass (factory), "Visualization"))
     return FALSE;
-  
+
   return TRUE;
 }
 ```
@@ -215,17 +215,17 @@ is a “string describing the type of element, as an unordered list
 separated with slashes (/)”. Examples of classes are “Source/Network”,
 “Codec/Decoder/Video”, “Codec/Encoder/Audio” or “Visualization”.
 
-``` first-line: 35; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Print their names */
 g_print("Available visualization plugins:\n");
 for (walk = list; walk != NULL; walk = g_list_next (walk)) {
   const gchar *name;
   GstElementFactory *factory;
-  
+
   factory = GST_ELEMENT_FACTORY (walk->data);
   name = gst_element_factory_get_longname (factory);
   g_print("  %s\n", name);
-  
+
   if (selected_factory == NULL || g_str_has_prefix (name, "GOOM")) {
     selected_factory = factory;
   }
@@ -236,7 +236,7 @@ Once we have the list of Visualization plugins, we print their names
 (`gst_element_factory_get_longname()`) and choose one (in this case,
 GOOM).
 
-``` first-line: 57; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* We have now selected a factory for the visualization element */
 g_print ("Selected '%s'\n", gst_element_factory_get_longname (selected_factory));
 vis_plugin = gst_element_factory_create (selected_factory, NULL);
@@ -247,7 +247,7 @@ if (!vis_plugin)
 The selected factory is used to instantiate an actual `GstElement` which
 is then passed to `playbin2` through the `vis-plugin` property:
 
-``` first-line: 71; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* set vis plugin for playbin2 */
 g_object_set (pipeline, "vis-plugin", vis_plugin, NULL);
 ```
@@ -268,9 +268,8 @@ It has been a pleasure having you here, and see you soon\!
 ## Attachments:
 
 ![](images/icons/bullet_blue.gif)
-[vs2010.zip](attachments/327802/2424878.zip) (application/zip)  
+[vs2010.zip](attachments/327802/2424878.zip) (application/zip)
 ![](images/icons/bullet_blue.gif)
-[playback-tutorial-6.c](attachments/327802/2424879.c) (text/plain)  
+[playback-tutorial-6.c](attachments/327802/2424879.c) (text/plain)
 
 Document generated by Confluence on Oct 08, 2015 10:27
-

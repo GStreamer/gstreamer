@@ -1,4 +1,4 @@
-#  GStreamer SDK documentation : Android tutorial 4: A basic media player 
+# Android tutorial 4: A basic media player
 
 This page last changed on May 21, 2013 by xartigas.
 
@@ -49,7 +49,7 @@ this view is collapsed by default. Click here to expand…
 
 **src/com/gst\_sdk\_tutorials/tutorial\_4/Tutorial4.java**
 
-``` theme: Default; brush: java; gutter: true
+``` lang=java
 package com.gst_sdk_tutorials.tutorial_4;
 
 import java.text.SimpleDateFormat;
@@ -103,7 +103,7 @@ public class Tutorial4 extends Activity implements SurfaceHolder.Callback, OnSee
             GStreamer.init(this);
         } catch (Exception e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-            finish(); 
+            finish();
             return;
         }
 
@@ -313,7 +313,7 @@ offer the same functionalities. We keep track of this in the
 `is_local_media` variable, and update it every time we change the media
 URI:
 
-``` first-line: 132; theme: Default; brush: java; gutter: true
+``` lang=java
 private void setMediaUri() {
     nativeSetUri (mediaUri);
     is_local_media = mediaUri.startsWith("file://");
@@ -329,7 +329,7 @@ Every time the size of the media changes (which could happen mid-stream,
 for some kind of streams), or when it is first detected, C code calls
 our `onMediaSizeChanged()` callback:
 
-``` first-line: 217; theme: Default; brush: java; gutter: true
+``` lang=java
 private void onMediaSizeChanged (int width, int height) {
     Log.i ("GStreamer", "Media size changed to " + width + "x" + height);
     final GStreamerSurfaceView gsv = (GStreamerSurfaceView) this.findViewById(R.id.surface_video);
@@ -371,7 +371,7 @@ To realize the first function, C code will periodically call our
 in the Seek Bar. Again we do so from the UI thread, using
 `RunOnUiThread()`.
 
-``` first-line: 176; theme: Default; brush: java; gutter: true
+``` lang=java
 private void setCurrentPosition(final int position, final int duration) {
     final SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
 
@@ -397,12 +397,12 @@ widget which we will use to display the current position and duration in
 `HH:mm:ss / HH:mm:ss` textual format. The `updateTimeWidget()` method
 takes care of it, and must be called every time the Seek Bar is updated:
 
-``` first-line: 164; theme: Default; brush: java; gutter: true
+``` lang=java
 private void updateTimeWidget () {
     final TextView tv = (TextView) this.findViewById(R.id.textview_time);
     final SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
     final int pos = sb.getProgress();
- 
+
     SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
     df.setTimeZone(TimeZone.getTimeZone("UTC"));
     final String message = df.format(new Date (pos)) + " / " + df.format(new Date (duration));
@@ -419,7 +419,7 @@ the user to seek by dragging the thumb), we implement the
 interface in the
 Activity:
 
-``` first-line: 22; theme: Default; brush: java; gutter: true
+``` lang=java
 public class Tutorial4 extends Activity implements SurfaceHolder.Callback, OnSeekBarChangeListener {
 ```
 
@@ -427,7 +427,7 @@ And we register the Activity as the listener for the [Seek
 Bar](http://developer.android.com/reference/android/widget/SeekBar.html)’s
 events in the `onCreate()` method:
 
-``` first-line: 80; theme: Default; brush: java; gutter: true
+``` lang=java
 SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
 sb.setOnSeekBarChangeListener(this);
 ```
@@ -436,7 +436,7 @@ We will now be notified of three events: When the user starts dragging
 the thumb, every time the thumb moves and when the thumb is released by
 the user:
 
-``` first-line: 239; theme: Default; brush: java; gutter: true
+``` lang=java
 public void onStartTrackingTouch(SeekBar sb) {
     nativePause();
 } 
@@ -448,7 +448,7 @@ pause the pipeline. If the user is searching for a particular scene, we
 do not want it to keep
 moving.
 
-``` first-line: 230; theme: Default; brush: java; gutter: true
+``` lang=java
 public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
     if (fromUser == false) return;
     desired_position = progress;
@@ -468,7 +468,7 @@ this is, we jump to the indicated position as soon as the thumb moves.
 Otherwise, the seek will be performed when the thumb is released, and
 the only thing we do here is update the textual time widget.
 
-``` first-line: 244; theme: Default; brush: java; gutter: true
+``` lang=java
 public void onStopTrackingTouch(SeekBar sb) {
     // If this is a remote file, scrub seeking is probably not going to work smoothly enough.
     // Therefore, perform only the seek when the slider is released.
@@ -492,7 +492,7 @@ this view is collapsed by default. Click here to expand…
 
 **jni/tutorial-4.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <string.h>
 #include <jni.h>
 #include <android/log.h>
@@ -1068,7 +1068,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 Java code will call `gst_native_set_uri()` whenever it wants to change
 the playing URI (in this tutorial the URI never changes, but it could):
 
-``` first-line: 436; theme: Default; brush: cpp; gutter: true
+``` lang=c
 void gst_native_set_uri (JNIEnv* env, jobject thiz, jstring uri) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data || !data->pipeline) return;
@@ -1116,7 +1116,7 @@ change during playback. For simplicity, this tutorial assumes that they
 do not. Therefore, in the READY to PAUSED state change, once the Caps of
 the decoded media are known, we inspect them in `check_media_size()`:
 
-``` first-line: 252; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static void check_media_size (CustomData *data) {
   JNIEnv *env = get_jni_env ();
   GstElement *video_sink;
@@ -1167,7 +1167,7 @@ To keep the UI updated, a GLib timer is installed in the
 `app_function()` that fires 4 times per second (or every 250ms), right
 before entering the main loop:
 
-``` first-line: 377; theme: Default; brush: cpp; gutter: true
+``` lang=c
 timeout_source = g_timeout_source_new (250);
 g_source_set_callback (timeout_source, (GSourceFunc)refresh_ui, data, NULL);
 g_source_attach (timeout_source, data->context);
@@ -1176,7 +1176,7 @@ g_source_unref (timeout_source); 
 
 Then, in the refresh\_ui method:
 
-``` first-line: 126; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static gboolean refresh_ui (CustomData *data) {
   GstFormat fmt = GST_FORMAT_TIME;
   gint64 current = -1;
@@ -1230,7 +1230,7 @@ see how to overcome these problems.
 In
 `gst_native_set_position()`:
 
-``` first-line: 468; theme: Default; brush: cpp; gutter: true
+``` lang=c
 void gst_native_set_position (JNIEnv* env, jobject thiz, int milliseconds) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data) return;
@@ -1249,7 +1249,7 @@ away; otherwise, store the desired position in the
 `desired_position` variable. Then, in the
 `state_changed_cb()` callback:
 
-``` first-line: 297; theme: Default; brush: cpp; gutter: true
+``` lang=c
 if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED) {
   /* By now the sink already knows the media size */
   check_media_size(data);
@@ -1286,7 +1286,7 @@ once this period elapses.
 To achieve this, all seek requests are routed through the
 `execute_seek()` method:
 
-``` first-line: 154; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static void execute_seek (gint64 desired_position, CustomData *data) {
   gint64 diff;
 
@@ -1355,7 +1355,7 @@ using buffering. The same procedure is used here, by listening to the
 buffering
 messages:
 
-``` first-line: 372; theme: Default; brush: cpp; gutter: true
+``` lang=c
 g_signal_connect (G_OBJECT (bus), "message::buffering", (GCallback)buffering_cb, data);
 ```
 
@@ -1363,7 +1363,7 @@ And pausing the pipeline until buffering is complete (unless this is a
 live
 source):
 
-``` first-line: 224; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static void buffering_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   gint percent;
 
@@ -1396,7 +1396,7 @@ is `GSTREAMER_PLUGINS`:
 
 **jni/Android.mk**
 
-``` first-line: 19; theme: Default; brush: plain; gutter: true
+```
 GSTREAMER_PLUGINS         := $(GSTREAMER_PLUGINS_CORE) $(GSTREAMER_PLUGINS_PLAYBACK) $(GSTREAMER_PLUGINS_CODECS) $(GSTREAMER_PLUGINS_NET) $(GSTREAMER_PLUGINS_SYS)
 ```
 
@@ -1428,7 +1428,6 @@ As usual, it has been a pleasure having you here, and see you soon\!
 
 ![](images/icons/bullet_blue.gif)
 [tutorial4-screenshot.png](attachments/2687067/2654419.png)
-(image/png)  
+(image/png)
 
 Document generated by Confluence on Oct 08, 2015 10:27
-

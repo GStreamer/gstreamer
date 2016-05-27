@@ -1,6 +1,4 @@
-#  GStreamer SDK documentation : Playback tutorial 1: Playbin2 usage 
-
-This page last changed on Jun 26, 2012 by xartigas.
+# Playback tutorial 1: Playbin usage
 
 # Goal
 
@@ -43,15 +41,14 @@ Finally, multiple video streams can also be found in a single file, for
 example, in DVD with multiple angles of the same scene, but they are
 somewhat rare.
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><p>Embedding multiple streams inside a single file is called “multiplexing” or “muxing”, and such file is then known as a “container”. Common container formats are Matroska (.mkv), Quicktime (.qt, .mov, .mp4), Ogg (.ogg) or Webm (.webm).</p>
-<p>Retrieving the individual streams from within the container is called “demultiplexing” or “demuxing”.</p></td>
-</tr>
-</tbody>
-</table>
+> ![](images/icons/emoticons/information.png) Embedding multiple streams
+> inside a single file is called “multiplexing” or “muxing”, and such file
+> is then known as a “container”. Common container formats are Matroska
+> (.mkv), Quicktime (.qt, .mov, .mp4), Ogg (.ogg) or Webm (.webm).
+>
+>
+> Retrieving the individual streams from within the container is called
+> “demultiplexing” or “demuxing”.
 
 The following code recovers the amount of streams in the file, their
 associated metadata, and allows switching the audio stream while the
@@ -64,69 +61,69 @@ it in the SDK installation).
 
 **playback-tutorial-1.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <gst/gst.h>
-  
+
 /* Structure to contain all our information, so we can pass it around */
 typedef struct _CustomData {
   GstElement *playbin2;  /* Our one and only element */
-  
+
   gint n_video;          /* Number of embedded video streams */
   gint n_audio;          /* Number of embedded audio streams */
   gint n_text;           /* Number of embedded subtitle streams */
-  
+
   gint current_video;    /* Currently playing video stream */
   gint current_audio;    /* Currently playing audio stream */
   gint current_text;     /* Currently playing subtitle stream */
-  
+
   GMainLoop *main_loop;  /* GLib's Main Loop */
 } CustomData;
-  
+
 /* playbin2 flags */
 typedef enum {
   GST_PLAY_FLAG_VIDEO         = (1 << 0), /* We want video output */
   GST_PLAY_FLAG_AUDIO         = (1 << 1), /* We want audio output */
   GST_PLAY_FLAG_TEXT          = (1 << 2)  /* We want subtitle output */
 } GstPlayFlags;
-  
+
 /* Forward definition for the message and keyboard processing functions */
 static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data);
 static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data);
-  
+
 int main(int argc, char *argv[]) {
   CustomData data;
   GstBus *bus;
   GstStateChangeReturn ret;
   gint flags;
   GIOChannel *io_stdin;
-  
+
   /* Initialize GStreamer */
   gst_init (&argc, &argv);
-   
+
   /* Create the elements */
   data.playbin2 = gst_element_factory_make ("playbin2", "playbin2");
-  
+
   if (!data.playbin2) {
     g_printerr ("Not all elements could be created.\n");
     return -1;
   }
-  
+
   /* Set the URI to play */
   g_object_set (data.playbin2, "uri", "http://docs.gstreamer.com/media/sintel_cropped_multilingual.webm", NULL);
-  
+
   /* Set flags to show Audio and Video but ignore Subtitles */
   g_object_get (data.playbin2, "flags", &flags, NULL);
   flags |= GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_AUDIO;
   flags &= ~GST_PLAY_FLAG_TEXT;
   g_object_set (data.playbin2, "flags", flags, NULL);
-  
+
   /* Set connection speed. This will affect some internal decisions of playbin2 */
   g_object_set (data.playbin2, "connection-speed", 56, NULL);
-  
+
   /* Add a bus watch, so we get notified when a message arrives */
   bus = gst_element_get_bus (data.playbin2);
   gst_bus_add_watch (bus, (GstBusFunc)handle_message, &data);
-  
+
   /* Add a keyboard watch so we get notified of keystrokes */
 #ifdef _WIN32
   io_stdin = g_io_channel_win32_new_fd (fileno (stdin));
@@ -134,7 +131,7 @@ int main(int argc, char *argv[]) {
   io_stdin = g_io_channel_unix_new (fileno (stdin));
 #endif
   g_io_add_watch (io_stdin, G_IO_IN, (GIOFunc)handle_keyboard, &data);
-  
+
   /* Start playing */
   ret = gst_element_set_state (data.playbin2, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -142,11 +139,11 @@ int main(int argc, char *argv[]) {
     gst_object_unref (data.playbin2);
     return -1;
   }
-  
+
   /* Create a GLib Main Loop and set it to run */
   data.main_loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (data.main_loop);
-  
+
   /* Free resources */
   g_main_loop_unref (data.main_loop);
   g_io_channel_unref (io_stdin);
@@ -155,22 +152,22 @@ int main(int argc, char *argv[]) {
   gst_object_unref (data.playbin2);
   return 0;
 }
-  
+
 /* Extract some metadata from the streams and print it on the screen */
 static void analyze_streams (CustomData *data) {
   gint i;
   GstTagList *tags;
   gchar *str;
   guint rate;
-  
+
   /* Read some properties */
   g_object_get (data->playbin2, "n-video", &data->n_video, NULL);
   g_object_get (data->playbin2, "n-audio", &data->n_audio, NULL);
   g_object_get (data->playbin2, "n-text", &data->n_text, NULL);
-  
+
   g_print ("%d video stream(s), %d audio stream(s), %d text stream(s)\n",
     data->n_video, data->n_audio, data->n_text);
-  
+
   g_print ("\n");
   for (i = 0; i < data->n_video; i++) {
     tags = NULL;
@@ -184,7 +181,7 @@ static void analyze_streams (CustomData *data) {
       gst_tag_list_free (tags);
     }
   }
-  
+
   g_print ("\n");
   for (i = 0; i < data->n_audio; i++) {
     tags = NULL;
@@ -206,7 +203,7 @@ static void analyze_streams (CustomData *data) {
       gst_tag_list_free (tags);
     }
   }
-  
+
   g_print ("\n");
   for (i = 0; i < data->n_text; i++) {
     tags = NULL;
@@ -221,22 +218,22 @@ static void analyze_streams (CustomData *data) {
       gst_tag_list_free (tags);
     }
   }
-  
+
   g_object_get (data->playbin2, "current-video", &data->current_video, NULL);
   g_object_get (data->playbin2, "current-audio", &data->current_audio, NULL);
   g_object_get (data->playbin2, "current-text", &data->current_text, NULL);
-  
+
   g_print ("\n");
   g_print ("Currently playing video stream %d, audio stream %d and text stream %d\n",
     data->current_video, data->current_audio, data->current_text);
   g_print ("Type any number and hit ENTER to select a different audio stream\n");
 }
-  
+
 /* Process messages from GStreamer */
 static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data) {
   GError *err;
   gchar *debug_info;
-  
+
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ERROR:
       gst_message_parse_error (msg, &err, &debug_info);
@@ -261,15 +258,15 @@ static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data) 
       }
     } break;
   }
-  
+
   /* We want to keep receiving messages */
   return TRUE;
 }
-  
+
 /* Process keyboard input */
 static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data) {
   gchar *str = NULL;
-  
+
   if (g_io_channel_read_line (source, &str, NULL, NULL, NULL) == G_IO_STATUS_NORMAL) {
     int index = atoi (str);
     if (index < 0 || index >= data->n_audio) {
@@ -285,48 +282,69 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-1972852059" class="expand-container">
-<div id="expander-control-1972852059" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-1972852059" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc playback-tutorial-1.c -o playback-tutorial-1 `pkg-config --cflags --libs gstreamer-0.10`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
-<p></p>
-<p><span>This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. The number of audio streams is shown in the terminal, and the user can switch from one to another by entering a number and pressing enter. A small delay is to be expected.</span></p>
-<p><span><span>Bear in mind that there is no latency management (buffering), so on slow connections, the movie might stop after a few seconds. See how </span><a href="http://docs.gstreamer.com/display/GstSDK/Tutorial+12%3A+Live+streaming">Tutorial 12: Live streaming</a><span> solves this issue.</span></span></p>
-<p></p>
-<p>Required libraries: <code>gstreamer-0.10</code></p>
-</div>
-</div></td>
+> ![](images/icons/emoticons/information.png) If you need help to compile this code, refer to the **Building the
+> tutorials** section for your platform: [Mac](Installing+on+Mac+OS+X.markdown) or [Windows](Installing+on+Windows)
+> or use this specific command on Linux:
+> ```gcc playback-tutorial-1.c -o playback-tutorial-1 `pkg-config --cflags --libs gstreamer-1.0` ```
+
+If you need help to run this code, refer to the **Running the
+tutorials** section for your platform:
+[Mac OS X](Installing+on+Mac+OS+X.markdown#building-the-tutorials),
+[Windows](Installing+on+Windows.markdown#running-the-tutorials), for
+[iOS](Installing+for+iOS+development.markdown#building-the-tutorials) or for
+[android](Installing+for+Android+development.markdown#building-the-tutorials).
+
+This tutorial opens a window and displays a movie, with accompanying
+audio. The media is fetched from the Internet, so the window might take
+a few seconds to appear, depending on your connection speed. The number
+of audio streams is shown in the terminal, and the user can switch from
+one to another by entering a number and pressing enter. A small delay is
+to be expected.
+
+</p>
+
+<p>
+
+Bear in mind that there is no latency management (buffering), so on slow
+connections, the movie might stop after a few seconds. See
+how <a href="http://docs.gstreamer.com/display/GstSDK/Tutorial+12%3A+Live+streaming">Tutorial
+12: Live streaming</a> solves this issue.
+
+</p>
+
+<p>
+
+</p>
+
+<p>
+
+Required libraries: <code>gstreamer-0.10</code>
+
+</p>
+
+</td>
+
 </tr>
+
 </tbody>
+
 </table>
 
 # Walkthrough
 
-``` first-line: 3; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Structure to contain all our information, so we can pass it around */
 typedef struct _CustomData {
   GstElement *playbin2;  /* Our one and only element */
-  
+
   gint n_video;          /* Number of embedded video streams */
   gint n_audio;          /* Number of embedded audio streams */
   gint n_text;           /* Number of embedded subtitle streams */
-  
+
   gint current_video;    /* Currently playing video stream */
   gint current_audio;    /* Currently playing audio stream */
   gint current_text;     /* Currently playing subtitle stream */
-  
+
   GMainLoop *main_loop;  /* GLib's Main Loop */
 } CustomData;
 ```
@@ -337,7 +355,7 @@ streams of each type, and the currently playing one. Also, we are going
 to use a different mechanism to wait for messages that allows
 interactivity, so we need a GLib's main loop object.
 
-``` first-line: 18; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* playbin2 flags */
 typedef enum {
   GST_PLAY_FLAG_VIDEO         = (1 << 0), /* We want video output */
@@ -356,7 +374,7 @@ be retrieved at runtime without using this trick, but in a far more
 cumbersome
 way.
 
-``` first-line: 25; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Forward definition for the message and keyboard processing functions */
 static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data);
 static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data);
@@ -375,7 +393,7 @@ the pipeline, and use directly the  `playbin2` element.
 
 We focus on some of the other properties of `playbin2`, though:
 
-``` first-line: 50; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Set flags to show Audio and Video but ignore Subtitles */
 g_object_get (data.playbin2, "flags", &flags, NULL);
 flags |= GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_AUDIO;
@@ -387,31 +405,15 @@ g_object_set (data.playbin2, "flags", flags, NULL);
 can have any combination of `GstPlayFlags`. The most interesting values
 are:
 
-<table>
-<tbody>
-<tr class="odd">
-<td><p><a href=""></a><span class="term"><code class="literal">GST_PLAY_FLAG_VIDEO</code></span></p></td>
-</tr>
-<tr class="even">
-<td><p><a href=""></a><span class="term"><code class="literal">GST_PLAY_FLAG_AUDIO</code></span></p></td>
-</tr>
-<tr class="odd">
-<td><p><a href=""></a><span class="term"><code class="literal">GST_PLAY_FLAG_TEXT</code></span></p></td>
-</tr>
-<tr class="even">
-<td><p><a href=""></a><span class="term"><code class="literal">GST_PLAY_FLAG_VIS</code></span></p></td>
-</tr>
-<tr class="odd">
-<td><p><a href=""></a><span class="term"><code class="literal">GST_PLAY_FLAG_DOWNLOAD</code></span></p></td>
-</tr>
-<tr class="even">
-<td><p><a href=""></a><span class="term"><code class="literal">GST_PLAY_FLAG_BUFFERING</code></span></p></td>
-</tr>
-<tr class="odd">
-<td><p><a href=""></a><span class="term"><code class="literal">GST_PLAY_FLAG_DEINTERLACE</code></span></p></td>
-</tr>
-</tbody>
-</table>
+|                           |                                                                                                                                    |
+|---------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| GST_PLAY_FLAG_VIDEO       | Enable video rendering. If this flag is not set, there will be no video output.                                                    |
+| GST_PLAY_FLAG_AUDIO       | Enable audio rendering. If this flag is not set, there will be no audio output.                                                    |
+| GST_PLAY_FLAG_TEXT        | Enable subtitle rendering. If this flag is not set, subtitles will not be shown in the video output.                               |
+| GST_PLAY_FLAG_VIS         | Enable rendering of visualisations when there is no video stream. Playback tutorial 6: Audio visualization goes into more details. |
+| GST_PLAY_FLAG_DOWNLOAD    | See Basic tutorial 12: Streaming  and Playback tutorial 4: Progressive streaming.                                                  |
+| GST_PLAY_FLAG_BUFFERING   | See Basic tutorial 12: Streaming  and Playback tutorial 4: Progressive streaming.                                                  |
+| GST_PLAY_FLAG_DEINTERLACE | If the video content was interlaced, this flag instructs playbin2 to deinterlace it before displaying it.                          |
 
 In our case, for demonstration purposes, we are enabling audio and video
 and disabling subtitles, leaving the rest of flags to their default
@@ -419,7 +421,7 @@ values (this is why we read the current value of the flags with
 `g_object_get()` before overwriting it with
 `g_object_set()`).
 
-``` first-line: 56; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Set connection speed. This will affect some internal decisions of playbin2 */
 g_object_set (data.playbin2, "connection-speed", 56, NULL);
 ```
@@ -435,13 +437,13 @@ We have set all these properties one by one, but we could have all of
 them with a single call to
 `g_object_set()`:
 
-``` theme: Default; brush: cpp; gutter: false
+``` lang=c
 g_object_set (data.playbin2, "uri", "http://docs.gstreamer.com/media/sintel_cropped_multilingual.webm", "flags", flags, "connection-speed", 56, NULL);
 ```
 
 This is why `g_object_set()` requires a NULL as the last parameter.
 
-``` first-line: 63; theme: Default; brush: cpp; gutter: true
+``` lang=c
   /* Add a keyboard watch so we get notified of keystrokes */
 #ifdef _WIN32
   io_stdin = g_io_channel_win32_new_fd (fileno (stdin));
@@ -459,7 +461,7 @@ GStreamer has little to do with it besides the Navigation interface
 discussed briefly in [Tutorial 17: DVD
 playback](http://docs.gstreamer.com/display/GstSDK/Tutorial+17%3A+DVD+playback).
 
-``` first-line: 79; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Create a GLib Main Loop and set it to run */
 data.main_loop = g_main_loop_new (NULL, FALSE);
 g_main_loop_run (data.main_loop);
@@ -476,14 +478,14 @@ times: `handle_message` when a message appears on the bus, and
 There is nothing new in handle\_message, except that when the pipeline
 moves to the PLAYING state, it will call the `analyze_streams` function:
 
-``` first-line: 92; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Extract some metadata from the streams and print it on the screen */
 static void analyze_streams (CustomData *data) {
   gint i;
   GstTagList *tags;
   gchar *str;
   guint rate;
-  
+
   /* Read some properties */
   g_object_get (data->playbin2, "n-video", &data->n_video, NULL);
   g_object_get (data->playbin2, "n-audio", &data->n_audio, NULL);
@@ -495,7 +497,7 @@ media and prints it on the screen. The number of video, audio and
 subtitle streams is directly available through the `n-video`,
 `n-audio` and `n-text` properties.
 
-``` first-line: 108; theme: Default; brush: cpp; gutter: true
+``` lang=c
 for (i = 0; i < data->n_video; i++) {
   tags = NULL;
   /* Retrieve the stream's video tags */
@@ -515,15 +517,42 @@ stored as tags in a `GstTagList` structure, which is a list of data
 pieces identified by a name. The `GstTagList` associated with a stream
 can be recovered with `g_signal_emit_by_name()`, and then individual
 tags are extracted with the `gst_tag_list_get_*` functions
-like `gst_tag_list_get_string()` for example.
+like `gst_tag_list_get_string()` for
+example.
 
 <table>
+
 <tbody>
+
 <tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><p>This rather unintuitive way of retrieving the tag list is called an Action Signal. Action signals are emitted by the application to a specific element, which then performs an action and returns a result. They behave like a dynamic function call, in which methods of a class are identified by their name (the signal's name) instead of their memory address. These signals are listed In the documentation along with the regular signals, and are tagged “Action”. See <code>playbin2</code>, for example.</p></td>
+
+<td>
+
+<img src="images/icons/emoticons/information.png" width="16" height="16" />
+
+</td>
+
+<td>
+
+<p>
+
+This rather unintuitive way of retrieving the tag list is called an
+Action Signal. Action signals are emitted by the application to a
+specific element, which then performs an action and returns a result.
+They behave like a dynamic function call, in which methods of a class
+are identified by their name (the signal's name) instead of their memory
+address. These signals are listed In the documentation along with the
+regular signals, and are tagged “Action”. See <code>playbin2</code>, for
+example.
+
+</p>
+
+</td>
+
 </tr>
+
 </tbody>
+
 </table>
 
 `playbin2` defines 3 action signals to retrieve
@@ -534,7 +563,7 @@ name if the tags is standardized, and the list can be found in the
 `GST_TAG_*_CODEC` (audio, video or
 text).
 
-``` first-line: 158; theme: Default; brush: cpp; gutter: true
+``` lang=c
 g_object_get (data->playbin2, "current-video", &data->current_video, NULL);
 g_object_get (data->playbin2, "current-audio", &data->current_audio, NULL);
 g_object_get (data->playbin2, "current-text", &data->current_text, NULL);
@@ -550,11 +579,11 @@ never make any assumption. Multiple internal conditions can make
 in which the streams are listed can change from one run to another, so
 checking the metadata to identify one particular stream becomes crucial.
 
-``` first-line: 202; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Process keyboard input */
 static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data) {
   gchar *str = NULL;
-  
+
   if (g_io_channel_read_line (source, &str, NULL, NULL, NULL) == G_IO_STATUS_NORMAL) {
     int index = atoi (str);
     if (index < 0 || index >= data->n_audio) {
@@ -611,6 +640,3 @@ Remember that attached to this page you should find the complete source
 code of the tutorial and any accessory files needed to build it.
 
 It has been a pleasure having you here, and see you soon\!
-
-Document generated by Confluence on Oct 08, 2015 10:27
-

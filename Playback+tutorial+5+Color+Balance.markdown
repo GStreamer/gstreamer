@@ -1,4 +1,4 @@
-#  GStreamer SDK documentation : Playback tutorial 5: Color Balance 
+# Playback tutorial 5: Color Balance
 
 This page last changed on Jun 25, 2012 by xartigas.
 
@@ -44,28 +44,28 @@ Copy this code into a text file named `playback-tutorial-5.c`.
 
 **playback-tutorial-5.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <string.h>
 #include <gst/gst.h>
 #include <gst/interfaces/colorbalance.h>
-  
+
 typedef struct _CustomData {
   GstElement *pipeline;
   GMainLoop *loop;
 } CustomData;
-  
+
 /* Process a color balance command */
 static void update_color_channel (const gchar *channel_name, gboolean increase, GstColorBalance *cb) {
   gdouble step;
   gint value;
   GstColorBalanceChannel *channel = NULL;
   const GList *channels, *l;
-  
+
   /* Retrieve the list of channels and locate the requested one */
   channels = gst_color_balance_list_channels (cb);
   for (l = channels; l != NULL; l = l->next) {
     GstColorBalanceChannel *tmp = (GstColorBalanceChannel *)l->data;
-    
+
     if (g_strrstr (tmp->label, channel_name)) {
       channel = tmp;
       break;
@@ -73,7 +73,7 @@ static void update_color_channel (const gchar *channel_name, gboolean increase, 
   }
   if (!channel)
     return;
-  
+
   /* Change the channel's value */
   step = 0.1 * (channel->max_value - channel->min_value);
   value = gst_color_balance_get_value (cb, channel);
@@ -88,11 +88,11 @@ static void update_color_channel (const gchar *channel_name, gboolean increase, 
   }
   gst_color_balance_set_value (cb, channel, value);
 }
-  
+
 /* Output the current values of all Color Balance channels */
 static void print_current_values (GstElement *pipeline) {
   const GList *channels, *l;
-  
+
   /* Output Color Balance values */
   channels = gst_color_balance_list_channels (GST_COLOR_BALANCE (pipeline));
   for (l = channels; l != NULL; l = l->next) {
@@ -103,15 +103,15 @@ static void print_current_values (GstElement *pipeline) {
   }
   g_print ("\n");
 }
-  
+
 /* Process keyboard input */
 static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data) {
   gchar *str = NULL;
-  
+
   if (g_io_channel_read_line (source, &str, NULL, NULL, NULL) != G_IO_STATUS_NORMAL) {
     return TRUE;
   }
-  
+
   switch (g_ascii_tolower (str[0])) {
   case 'c':
     update_color_channel ("CONTRAST", g_ascii_isupper (str[0]), GST_COLOR_BALANCE (data->pipeline));
@@ -131,25 +131,25 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
   default:
     break;
   }
-  
+
   g_free (str);
-  
+
   print_current_values (data->pipeline);
-  
+
   return TRUE;
 }
-  
+
 int main(int argc, char *argv[]) {
   CustomData data;
   GstStateChangeReturn ret;
   GIOChannel *io_stdin;
-   
+
   /* Initialize GStreamer */
   gst_init (&argc, &argv);
-  
+
   /* Initialize our data structure */
   memset (&data, 0, sizeof (data));
-  
+
   /* Print usage map */
   g_print (
     "USAGE: Choose one of the following options, then press enter:\n"
@@ -158,10 +158,10 @@ int main(int argc, char *argv[]) {
     " 'H' to increase hue, 'h' to decrease hue\n"
     " 'S' to increase saturation, 's' to decrease saturation\n"
     " 'Q' to quit\n");
-  
+
   /* Build the pipeline */
   data.pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
-  
+
   /* Add a keyboard watch so we get notified of keystrokes */
 #ifdef _WIN32
   io_stdin = g_io_channel_win32_new_fd (fileno (stdin));
@@ -169,7 +169,7 @@ int main(int argc, char *argv[]) {
   io_stdin = g_io_channel_unix_new (fileno (stdin));
 #endif
   g_io_add_watch (io_stdin, G_IO_IN, (GIOFunc)handle_keyboard, &data);
-  
+
   /* Start playing */
   ret = gst_element_set_state (data.pipeline, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -178,11 +178,11 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   print_current_values (data.pipeline);
-   
+
   /* Create a GLib Main Loop and set it to run */
   data.loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (data.loop);
-  
+
   /* Free resources */
   g_main_loop_unref (data.loop);
   g_io_channel_unref (io_stdin);
@@ -225,11 +225,11 @@ The `main()` function is fairly simple. A `playbin2` pipeline is
 instantiated and set to run, and a keyboard watch is installed so
 keystrokes can be monitored.
 
-``` first-line: 45; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Output the current values of all Color Balance channels */
 static void print_current_values (GstElement *pipeline) {
   const GList *channels, *l;
-  
+
   /* Output Color Balance values */
   channels = gst_color_balance_list_channels (GST_COLOR_BALANCE (pipeline));
   for (l = channels; l != NULL; l = l->next) {
@@ -255,19 +255,19 @@ retrieve the current value.
 In this example, the minimum and maximum values are used to output the
 current value as a percentage.
 
-``` first-line: 10; theme: Default; brush: cpp; gutter: true
+``` lang=c
 /* Process a color balance command */
 static void update_color_channel (const gchar *channel_name, gboolean increase, GstColorBalance *cb) {
   gdouble step;
   gint value;
   GstColorBalanceChannel *channel = NULL;
   const GList *channels, *l;
-  
+
   /* Retrieve the list of channels and locate the requested one */
   channels = gst_color_balance_list_channels (cb);
   for (l = channels; l != NULL; l = l->next) {
     GstColorBalanceChannel *tmp = (GstColorBalanceChannel *)l->data;
-    
+
     if (g_strrstr (tmp->label, channel_name)) {
       channel = tmp;
       break;
@@ -283,7 +283,7 @@ parsed looking for the channel with the specified name. Obviously, this
 list could be parsed only once and the pointers to the channels be
 stored and indexed by something more efficient than a string.
 
-``` first-line: 30; theme: Default; brush: cpp; gutter: true
+``` lang=c
   /* Change the channel's value */
   step = 0.1 * (channel->max_value - channel->min_value);
   value = gst_color_balance_get_value (cb, channel);
@@ -322,9 +322,8 @@ It has been a pleasure having you here, and see you soon\!
 ## Attachments:
 
 ![](images/icons/bullet_blue.gif)
-[playback-tutorial-5.c](attachments/327804/2424874.c) (text/plain)  
+[playback-tutorial-5.c](attachments/327804/2424874.c) (text/plain)
 ![](images/icons/bullet_blue.gif)
-[vs2010.zip](attachments/327804/2424875.zip) (application/zip)  
+[vs2010.zip](attachments/327804/2424875.zip) (application/zip)
 
 Document generated by Confluence on Oct 08, 2015 10:27
-

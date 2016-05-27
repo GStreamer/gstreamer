@@ -1,81 +1,16 @@
-#  Installing the SDK 
+#  Installing the SDK
 
-### Choose your platform
+## Choose your platform by clicking on the corresponding logo
 
-<table>
-<colgroup>
-<col width="33%" />
-<col width="33%" />
-<col width="33%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td><p><a href="Installing%2Bon%2BLinux.html"><img src="attachments/linux.png" class="confluence-embedded-image image-center" /></a></p>
-<h3 id="InstallingtheSDK-Linux" style="text-align: center;">Linux</h3>
-<ul>
-<li>Ubuntu 12.04 (Precise Pangolin)</li>
-<li>Ubuntu 12.10 (Quantal <span style="color: rgb(0,0,0);">Quetzal</span>)</li>
-<li>Debian 6.0 (Squeeze)</li>
-<li>Debian 7.0 (Wheezy)</li>
-<li>Fedora 16</li>
-<li>Fedora 17</li>
-</ul>
-<p><span style="color: rgb(255,255,255);">______________________________________</span></p></td>
-<td><p><a href="Installing%2Bon%2BMac%2BOS%2BX.html"><img src="attachments/mac.png" class="confluence-embedded-image image-center" /></a></p>
-<h3 id="InstallingtheSDK-MacOSX" style="text-align: center;">Mac OS X</h3>
-<ul>
-<li>10.6 (Snow Leopard)</li>
-<li>10.7 (Lion)</li>
-<li>10.8 (Mountain Lion)</li>
-</ul>
-<p><span style="color: rgb(255,255,255);">______________________________________</span></p></td>
-<td><p><a href="Installing%2Bon%2BWindows.html"><img src="attachments/windows.png" class="confluence-embedded-image image-center" /></a></p>
-<h3 id="InstallingtheSDK-MicrosoftWindows" style="text-align: center;">Microsoft Windows</h3>
-<ul>
-<li>Windows XP</li>
-<li>Windows Vista</li>
-<li>Windows 7</li>
-<li>Windows 8</li>
-</ul>
-<p><span style="color: rgb(255,255,255);">______________________________________</span></p>
-<div>
-<span style="color: rgb(255,255,255);"><br />
-</span>
-</div></td>
-</tr>
-</tbody>
-</table>
+[![](attachments/1540163.png)](Installing+on+Mac+OS+X.markdown)     [![](attachments/1540164.png)](Installing+on+Windows.markdown)      [![](attachments/2654239.png)](Installing+for+Android+development.markdown)     [![](attachments/3539150.jpeg)](Installing+for+iOS+development.markdown)
 
-<table>
-<colgroup>
-<col width="50%" />
-<col width="50%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td><p><a href="Installing%2Bfor%2BAndroid%2Bdevelopment.html"><img src="attachments/android.png" class="confluence-embedded-image image-center" /></a></p>
-<h3 id="InstallingtheSDK-Android" style="text-align: center;">Android</h3>
-<ul>
-<li>2.3.1 Gingerbread and above</li>
-</ul>
-<p><span style="color: rgb(255,255,255);">______________________________________</span></p>
-<div>
-<span style="color: rgb(255,255,255);"><br />
-</span>
-</div></td>
-<td><p><a href="Installing%2Bfor%2BiOS%2Bdevelopment.html"><img src="attachments/ios.jpeg" class="confluence-embedded-image image-center" /></a></p>
-<h3 id="InstallingtheSDK-iOS" style="text-align: center;">iOS</h3>
-<ul>
-<li>iOS 6 and above</li>
-</ul>
-<p><span style="color: rgb(255,255,255);">______________________________________</span></p>
-<div>
-<span style="color: rgb(255,255,255);"><br />
-</span>
-</div></td>
-</tr>
-</tbody>
-</table>
+## Linux
 
-The installation instructions are different depending on your platform.
-Please select the appropriate one by clicking on its logo.
+The GStreamer community does not provide the SDK for GNU/Linux platforms
+as it will always be available through  package managers on all
+distribution. It is also always installed by default on desktop
+environments, you will just need to make sure you have the development
+packages installed (refer to your distribution documentation for more
+information). If you really want to run the Sdk on Linux, you can
+always follow the instructions to
+[build from source using cerbero](Building+from+source+using+Cerbero.markdown).

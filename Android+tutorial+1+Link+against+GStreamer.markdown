@@ -1,4 +1,4 @@
-#  GStreamer SDK documentation : Android tutorial 1: Link against GStreamer 
+# Android tutorial 1: Link against GStreamer
 
 This page last changed on May 02, 2013 by xartigas.
 
@@ -26,51 +26,51 @@ makefile that allows GStreamer integration.
 
 **src/com/gst\_sdk\_tutorials/tutorial\_1/Tutorial1.java**
 
-``` theme: Default; brush: java; gutter: true
+``` lang=java
 package com.gst_sdk_tutorials.tutorial_1;
- 
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.TextView;
 import android.widget.Toast;
- 
+
 import com.gstreamer.GStreamer;
- 
+
 public class Tutorial1 extends Activity {
     private native String nativeGetGStreamerInfo();
- 
+
     // Called when the activity is first created.
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
- 
+
         try {
             GStreamer.init(this);
         } catch (Exception e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-            finish(); 
+            finish();
             return;
         }
- 
+
         setContentView(R.layout.main);
- 
+
         TextView tv = (TextView)findViewById(R.id.textview_info);
         tv.setText("Welcome to " + nativeGetGStreamerInfo() + " !");
     }
- 
+
     static {
         System.loadLibrary("gstreamer_android");
         System.loadLibrary("tutorial-1");
     }
- 
+
 }
 ```
 
 Calls from Java to C happen through native methods, like the one
 declared here:
 
-``` first-line: 11; theme: Default; brush: java; gutter: true
+``` lang=java
 private native String nativeGetGStreamerInfo();
 ```
 
@@ -82,7 +82,7 @@ shown later.
 The first bit of code that gets actually executed is the static
 initializer of the class:
 
-``` first-line: 33; theme: Default; brush: java; gutter: true
+``` lang=java
 static {
     System.loadLibrary("gstreamer_android");
     System.loadLibrary("tutorial-1");
@@ -99,14 +99,14 @@ expose. The GStreamer library only exposes a `init()` method, which
 initializes GStreamer and registers all plugins (The tutorial library is
 explained later below).
 
-``` first-line: 19; theme: Default; brush: java; gutter: true
-try {                                                              
-    GStreamer.init(this);                                          
-} catch (Exception e) {                                            
+``` lang=java
+try {
+    GStreamer.init(this);
+} catch (Exception e) {
     Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-    finish();                                                      
-    return;                                                        
-}                                                                  
+    finish();
+    return;
+}
 ```
 
 Next, in the `OnCreate()` method of the
@@ -122,9 +122,9 @@ Should initialization fail, the `init()` method would throw an
 [Exception](http://developer.android.com/reference/java/lang/Exception.html)
 with the details provided by the GStreamer library.
 
-``` first-line: 29; theme: Default; brush: java; gutter: true
-TextView tv = (TextView)findViewById(R.id.textview_info);    
-tv.setText("Welcome to " + nativeGetGStreamerInfo() + " !"); 
+``` lang=java
+TextView tv = (TextView)findViewById(R.id.textview_info);
+tv.setText("Welcome to " + nativeGetGStreamerInfo() + " !");
 ```
 
 Then, the native method `nativeGetGStreamerInfo()` is called and a
@@ -139,7 +139,7 @@ code:
 
 **jni/tutorial-1.c**
 
-``` theme: Default; brush: cpp; gutter: true
+``` lang=c
 #include <string.h>
 #include <jni.h>
 #include <android/log.h>
@@ -179,9 +179,9 @@ Machine (VM) loads a library.
 Here, we retrieve the JNI environment needed to make calls that interact
 with Java:
 
-``` first-line: 21; theme: Default; brush: cpp; gutter: true
+``` lang=c
 JNIEnv *env = NULL;
- 
+
 if ((*vm)->GetEnv(vm, (void**) &env, JNI_VERSION_1_4) != JNI_OK) {
   __android_log_print (ANDROID_LOG_ERROR, "tutorial-1", "Could not retrieve JNIEnv");
   return 0;
@@ -192,7 +192,7 @@ And then locate the class containing the UI part of this tutorial using
 `
 FindClass()`:
 
-``` first-line: 27; theme: Default; brush: cpp; gutter: true
+``` lang=c
 jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_1/Tutorial1");
 ```
 
@@ -201,7 +201,7 @@ is, we provide the code for the methods we advertised in Java using the
 **`native`**
  keyword:
 
-``` first-line: 28; theme: Default; brush: cpp; gutter: true
+``` lang=c
 (*env)->RegisterNatives (env, klass, native_methods, G_N_ELEMENTS(native_methods));
 ```
 
@@ -211,7 +211,7 @@ name, its [type
 signature](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/types.html#wp276)
 and a pointer to the C function implementing it:
 
-``` first-line: 16; theme: Default; brush: cpp; gutter: true
+``` lang=c
 static JNINativeMethod native_methods[] = {
   { "nativeGetGStreamerInfo", "()Ljava/lang/String;", (void *) gst_native_get_gstreamer_info}
 };
@@ -220,7 +220,7 @@ static JNINativeMethod native_methods[] = {
 The only native method used in this tutorial
 is `nativeGetGStreamerInfo()`:
 
-``` first-line: 9; theme: Default; brush: cpp; gutter: true
+``` lang=c
 jstring gst_native_get_gstreamer_info (JNIEnv* env, jobject thiz) {
   char *version_utf8 = gst_version_string();
   jstring *version_jstring = (*env)->NewStringUTF(env, version_utf8);
@@ -241,7 +241,7 @@ must free the `char *` returned by `gst_version_string()`.
 
 **jni/Android.mk**
 
-``` theme: Default; brush: ruby; gutter: true
+``` lang=ruby
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
@@ -285,13 +285,12 @@ As usual, it has been a pleasure having you here, and see you soon\!
 
 ![](images/icons/bullet_blue.gif)
 [tutorial1-screenshot.png](attachments/2687057/2654411.png)
-(image/png)  
+(image/png)
 ![](images/icons/bullet_blue.gif)
 [tutorial1-screenshot.png](attachments/2687057/2654416.png)
-(image/png)  
+(image/png)
 ![](images/icons/bullet_blue.gif)
 [tutorial1-screenshot.png](attachments/2687057/2654326.png)
-(image/png)  
+(image/png)
 
 Document generated by Confluence on Oct 08, 2015 10:27
-
