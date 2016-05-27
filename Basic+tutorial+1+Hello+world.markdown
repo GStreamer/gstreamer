@@ -125,7 +125,7 @@ into an actual pipeline, which is very handy. In fact, this function is
 so handy there is a tool built completely around it which you will get
 very acquainted with (see [Basic tutorial 10: GStreamer
 tools](Basic+tutorial+10+GStreamer+tools.markdown) to
-learn about `gst-launch` and the `gst-launch` syntax).
+learn about `gst-launch-1.0` and the `gst-launch-1.0` syntax).
 
 ### playbin
 

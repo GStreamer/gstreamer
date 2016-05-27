@@ -1,25 +1,25 @@
-# gst-launch
+# gst-launch-1.0
 
 <table>
 <tbody>
 <tr class="odd">
 <td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><p>This is the Linux man page for the <code>gst-launch</code> tool. As such, it is very Linux-centric regarding path specification and plugin names. Please be patient while it is rewritten to be more generic.</p></td>
+<td><p>This is the Linux man page for the <code>gst-launch-1.0</code> tool. As such, it is very Linux-centric regarding path specification and plugin names. Please be patient while it is rewritten to be more generic.</p></td>
 </tr>
 </tbody>
 </table>
 
 ## Name
 
-gst-launch - build and run a GStreamer pipeline
+gst-launch-1.0 - build and run a GStreamer pipeline
 
 ## Synopsis
 
-**gst-launch** *\[OPTION...\]* PIPELINE-DESCRIPTION
+**gst-launch-1.0** *\[OPTION...\]* PIPELINE-DESCRIPTION
 
 ## Description
 
-*gst-launch* is a tool that builds and runs basic *GStreamer* pipelines.
+*gst-launch-1.0* is a tool that builds and runs basic *GStreamer* pipelines.
 
 In simple form, a PIPELINE-DESCRIPTION is a list of elements separated
 by exclamation marks (\!). Properties may be appended to elements, in
@@ -29,14 +29,14 @@ For a complete description of possible PIPELINE-DESCRIPTIONS see the
 section*pipeline description* below or consult the GStreamer
 documentation.
 
-Please note that *gst-launch* is primarily a debugging tool for
+Please note that *gst-launch-1.0* is primarily a debugging tool for
 developers and users. You should not build applications on top of it.
 For applications, use the gst\_parse\_launch() function of the GStreamer
 API as an easy way to construct pipelines from pipeline descriptions.
 
 ## Options
 
-*gst-launch* accepts the following options:
+*gst-launch-1.0* accepts the following options:
 
 **--help**
 
@@ -75,7 +75,7 @@ time to work.
 
 ## Gstreamer Options
 
-*gst-launch* also accepts the following options that are common to all
+*gst-launch-1.0* also accepts the following options that are common to all
 GStreamer applications:
 
 ## Pipeline Description
@@ -94,7 +94,7 @@ Creates an element of type ELEMENTTYPE and sets the PROPERTIES.
 
 PROPERTY=VALUE ...
 
-Sets the property to the specified value. You can use **gst-inspect**(1)
+Sets the property to the specified value. You can use **gst-inspect-1.0**(1)
 to find out about properties and allowed values of different elements.
 Enumeration properties can be set by name, nick or value.
 
@@ -183,85 +183,85 @@ ffmpegcolorspace (for video) in front of the sink to make things work.
 
 **Audio playback**
 
-**gst-launch filesrc location=music.mp3 \! mad \! audioconvert \!
+**gst-launch-1.0 filesrc location=music.mp3 \! mad \! audioconvert \!
 audioresample \! osssink**
 Play the mp3 music file "music.mp3" using a libmad-based plug-in and
 output to an OSS device
 
-**gst-launch filesrc location=music.ogg \! oggdemux \! vorbisdec \!
+**gst-launch-1.0 filesrc location=music.ogg \! oggdemux \! vorbisdec \!
 audioconvert \! audioresample \! osssink**
 Play an Ogg Vorbis format file
 
-**gst-launch gnomevfssrc location=music.mp3 \! mad \! osssink
-gst-launch gnomevfssrc location=<http://domain.com/music.mp3> \! mad \!
+**gst-launch-1.0 gnomevfssrc location=music.mp3 \! mad \! osssink
+gst-launch-1.0 gnomevfssrc location=<http://domain.com/music.mp3> \! mad \!
 audioconvert \! audioresample \! osssink**
 Play an mp3 file or an http stream using GNOME-VFS
 
-**gst-launch gnomevfssrc location=<smb://computer/music.mp3> \! mad \!
+**gst-launch-1.0 gnomevfssrc location=<smb://computer/music.mp3> \! mad \!
 audioconvert \! audioresample \! osssink**
 Use GNOME-VFS to play an mp3 file located on an SMB server
 
 **Format conversion**
 
-**gst-launch filesrc location=music.mp3 \! mad \! audioconvert \!
+**gst-launch-1.0 filesrc location=music.mp3 \! mad \! audioconvert \!
 vorbisenc \! oggmux \! filesink location=music.ogg**
 Convert an mp3 music file to an Ogg Vorbis file
 
-**gst-launch filesrc location=music.mp3 \! mad \! audioconvert \!
+**gst-launch-1.0 filesrc location=music.mp3 \! mad \! audioconvert \!
 flacenc \! filesink location=test.flac**
 Convert to the FLAC format
 
 **Other**
 
-**gst-launch filesrc location=music.wav \! wavparse \! audioconvert \!
+**gst-launch-1.0 filesrc location=music.wav \! wavparse \! audioconvert \!
 audioresample \! osssink**
 Plays a .WAV file that contains raw audio data (PCM).
 
-**gst-launch filesrc location=music.wav \! wavparse \! audioconvert \!
+**gst-launch-1.0 filesrc location=music.wav \! wavparse \! audioconvert \!
 vorbisenc \! oggmux \! filesink location=music.ogg
-gst-launch filesrc location=music.wav \! wavparse \! audioconvert \!
+gst-launch-1.0 filesrc location=music.wav \! wavparse \! audioconvert \!
 lame \! filesink location=music.mp3**
 Convert a .WAV file containing raw audio data into an Ogg Vorbis or mp3
 file
 
-**gst-launch cdparanoiasrc mode=continuous \! audioconvert \! lame \!
+**gst-launch-1.0 cdparanoiasrc mode=continuous \! audioconvert \! lame \!
 id3v2mux \! filesink location=cd.mp3**
 rips all tracks from compact disc and convert them into a single mp3
 file
 
-**gst-launch cdparanoiasrc track=5 \! audioconvert \! lame \! id3v2mux
+**gst-launch-1.0 cdparanoiasrc track=5 \! audioconvert \! lame \! id3v2mux
 \! filesink location=track5.mp3**
 rips track 5 from the CD and converts it into a single mp3 file
 
-Using **gst-inspect**(1), it is possible to discover settings like the
+Using **gst-inspect-1.0**(1), it is possible to discover settings like the
 above for cdparanoiasrc that will tell it to rip the entire cd or only
-tracks of it. Alternatively, you can use an URI and gst-launch-0.10 will
+tracks of it. Alternatively, you can use an URI and gst-launch-1.0 will
 find an element (such as cdparanoia) that supports that protocol for
-you, e.g.: **gst-launch [cdda://5]() \! lame vbr=new vbr-quality=6 \!
+you, e.g.: **gst-launch-1.0 [cdda://5]() \! lame vbr=new vbr-quality=6 \!
 filesink location=track5.mp3**
 
-**gst-launch osssrc \! audioconvert \! vorbisenc \! oggmux \! filesink
+**gst-launch-1.0 osssrc \! audioconvert \! vorbisenc \! oggmux \! filesink
 location=input.ogg**
 records sound from your audio input and encodes it into an ogg file
 
 **Video**
 
-**gst-launch filesrc location=JB\_FF9\_TheGravityOfLove.mpg \! dvddemux
+**gst-launch-1.0 filesrc location=JB\_FF9\_TheGravityOfLove.mpg \! dvddemux
 \! mpeg2dec \! xvimagesink**
 Display only the video portion of an MPEG-1 video file, outputting to an
 X display window
 
-**gst-launch filesrc location=/flflfj.vob \! dvddemux \! mpeg2dec \!
+**gst-launch-1.0 filesrc location=/flflfj.vob \! dvddemux \! mpeg2dec \!
 sdlvideosink**
 Display the video portion of a .vob file (used on DVDs), outputting to
 an SDL window
 
-**gst-launch filesrc location=movie.mpg \! dvddemux name=demuxer
+**gst-launch-1.0 filesrc location=movie.mpg \! dvddemux name=demuxer
 demuxer. \! queue \! mpeg2dec \! sdlvideosink demuxer. \! queue \! mad
 \! audioconvert \! audioresample \! osssink**
 Play both video and audio portions of an MPEG movie
 
-**gst-launch filesrc location=movie.mpg \! mpegdemux name=demuxer
+**gst-launch-1.0 filesrc location=movie.mpg \! mpegdemux name=demuxer
 demuxer. \! queue \! mpeg2dec \! ffmpegcolorspace \! sdlvideosink
 demuxer. \! queue \! mad \! audioconvert \! audioresample \! osssink**
 Play an AVI movie with an external text subtitle stream
@@ -269,42 +269,42 @@ Play an AVI movie with an external text subtitle stream
 This example also shows how to refer to specific pads by name if an
 element (here: textoverlay) has multiple sink or source pads.
 
-**gst-launch textoverlay name=overlay \! ffmpegcolorspace \! videoscale
+**gst-launch-1.0 textoverlay name=overlay \! ffmpegcolorspace \! videoscale
 \! autovideosink filesrc location=movie.avi \! decodebin2 \!
 ffmpegcolorspace \! overlay.video\_sink filesrc location=movie.srt \!
 subparse \! overlay.text\_sink**
 
 Play an AVI movie with an external text subtitle stream using playbin2
 
-**gst-launch playbin2 uri=<file:///path/to/movie.avi>
+**gst-launch-1.0 playbin2 uri=<file:///path/to/movie.avi>
 suburi=<file:///path/to/movie.srt>**
 
 **Network streaming**
 
 Stream video using RTP and network elements.
 
-**gst-launch v4l2src \!
+**gst-launch-1.0 v4l2src \!
 video/x-raw-yuv,width=128,height=96,format='(fourcc)'UYVY \!
 ffmpegcolorspace \! ffenc\_h263 \! video/x-h263 \! rtph263ppay pt=96 \!
 udpsink host=192.168.1.1 port=5000 sync=false**
 Use this command on the receiver
 
-**gst-launch udpsrc port=5000 \! application/x-rtp,
+**gst-launch-1.0 udpsrc port=5000 \! application/x-rtp,
 clock-rate=90000,payload=96 \! rtph263pdepay queue-delay=0 \!
 ffdec\_h263 \! xvimagesink**
 This command would be run on the transmitter
 
 **Diagnostic**
 
-**gst-launch -v fakesrc num-buffers=16 \! fakesink**
+**gst-launch-1.0 -v fakesrc num-buffers=16 \! fakesink**
 Generate a null stream and ignore it (and print out details).
 
-**gst-launch audiotestsrc \! audioconvert \! audioresample \!
+**gst-launch-1.0 audiotestsrc \! audioconvert \! audioresample \!
 osssink**
 Generate a pure sine tone to test the audio output
 
-**gst-launch videotestsrc \! xvimagesink
-gst-launch videotestsrc \! ximagesink**
+**gst-launch-1.0 videotestsrc \! xvimagesink
+gst-launch-1.0 videotestsrc \! ximagesink**
 Generate a familiar test pattern to test the video output
 
 **Automatic linking**
@@ -312,29 +312,29 @@ Generate a familiar test pattern to test the video output
 You can use the decodebin element to automatically select the right
 elements to get a working pipeline.
 
-**gst-launch filesrc location=musicfile \! decodebin \! audioconvert \!
+**gst-launch-1.0 filesrc location=musicfile \! decodebin \! audioconvert \!
 audioresample \! osssink**
 Play any supported audio format
 
-**gst-launch filesrc location=videofile \! decodebin name=decoder
+**gst-launch-1.0 filesrc location=videofile \! decodebin name=decoder
 decoder. \! queue \! audioconvert \! audioresample \! osssink decoder.
 \! ffmpegcolorspace \! xvimagesink**
 Play any supported video format with video and audio output. Threads are
 used automatically. To make this even easier, you can use the playbin
 element:
 
-**gst-launch playbin uri=<file:///home/joe/foo.avi>**
+**gst-launch-1.0 playbin uri=<file:///home/joe/foo.avi>**
 
 **Filtered connections**
 
 These examples show you how to use filtered caps.
 
-**gst-launch videotestsrc \!
+**gst-launch-1.0 videotestsrc \!
 'video/x-raw-yuv,format=(fourcc)YUY2;video/x-raw-yuv,format=(fourcc)YV12'
 \! xvimagesink**
 Show a test image and use the YUY2 or YV12 video format for this.
 
-**gst-launch osssrc \!
+**gst-launch-1.0 osssrc \!
 'audio/x-raw-int,rate=\[32000,64000\],width=\[16,32\],depth={16,24,32},signed=(boolean)true'
 \! wavenc \! filesink location=recording.wav**
 record audio and write it to a .wav file. Force usage of signed 16 to 32

@@ -35,10 +35,10 @@ and you are ready to start typing the commands given in this tutorial.
 In order to allow for multiple versions of GStreamer to coexists in the
 same system, these tools are versioned, this is, a GStreamer version
 number is appended to their name. This version of the SDK is based on
-GStreamer 0.10, so the tools are called `gst-launch-0.10`,
-`gst-inspect-0.10` and `gst-discoverer-0.10`
+GStreamer 1.0, so the tools are called `gst-launch-1.0`,
+`gst-inspect-1.0` and `gst-discoverer-1.0`
 
-# `gst-launch`
+# `gst-launch-1.0`
 
 This tool accepts a textual description of a pipeline, instantiates it,
 and sets it to the PLAYING state. It allows you to quickly check if a
@@ -51,7 +51,7 @@ up to a certain level. In any case, it is extremely handy to test
 pipelines quickly, and is used by GStreamer developers around the world
 on a daily basis.
 
-Please note that `gst-launch` is primarily a debugging tool for
+Please note that `gst-launch-1.0` is primarily a debugging tool for
 developers. You should not build applications on top of it. Instead, use
 the `gst_parse_launch()` function of the GStreamer API as an easy way to
 construct pipelines from pipeline descriptions.
@@ -59,12 +59,12 @@ construct pipelines from pipeline descriptions.
 Although the rules to construct pipeline descriptions are very simple,
 the concatenation of multiple elements can quickly make such
 descriptions resemble black magic. Fear not, for everyone learns the
-`gst-launch` syntax, eventually.
+`gst-launch-1.0` syntax, eventually.
 
-The command line for gst-launch consists of a list of options followed
+The command line for gst-launch-1.0 consists of a list of options followed
 by a PIPELINE-DESCRIPTION. Some simplified instructions are given next,
-se the complete documentation at [the reference page](gst-launch.html)
-for `gst-launch`.
+se the complete documentation at [the reference page](gst-launch-1.0.html)
+for `gst-launch-1.0`.
 
 #### Elements
 
@@ -73,7 +73,7 @@ separated by exclamation marks (\!). Go ahead and type in the following
 command:
 
 ```
-gst-launch-0.10 videotestsrc ! ffmpegcolorspace ! autovideosink
+gst-launch-1.0 videotestsrc ! ffmpegcolorspace ! autovideosink
 ```
 
 You should see a windows with an animated video pattern. Use CTRL+C on
@@ -92,12 +92,12 @@ to find two compatible Pads.
 
 Properties may be appended to elements, in the form
 *property=value *(multiple properties can be specified, separated by
-spaces). Use the `gst-inspect` tool (explained next) to find out the
+spaces). Use the `gst-inspect-1.0` tool (explained next) to find out the
 available properties for an
 element.
 
 ```
-gst-launch-0.10 videotestsrc pattern=11 ! ffmpegcolorspace ! autovideosink
+gst-launch-1.0 videotestsrc pattern=11 ! ffmpegcolorspace ! autovideosink
 ```
 
 You should see a static video pattern, made of circles.
@@ -114,7 +114,7 @@ Named elements are referred to using their name followed by a
 dot.
 
 ```
-gst-launch-0.10 videotestsrc ! ffmpegcolorspace ! tee name=t ! queue ! autovideosink t. ! queue ! autovideosink
+gst-launch-1.0 videotestsrc ! ffmpegcolorspace ! tee name=t ! queue ! autovideosink t. ! queue ! autovideosink
 ```
 
 You should see two video windows, showing the same sample video pattern.
@@ -141,14 +141,14 @@ Instead of letting GStreamer choose which Pad to use when linking two
 elements, you may want to specify the Pads directly. You can do this by
 adding a dot plus the Pad name after the name of the element (it must be
 a named element). Learn the names of the Pads of an element by using
-the `gst-inspect` tool.
+the `gst-inspect-1.0` tool.
 
 This is useful, for example, when you want to retrieve one particular
 stream out of a
 demuxer:
 
 ```
-gst-launch-0.10.exe souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux name=d d.video_00 ! matroskamux ! filesink location=sintel_video.mkv
+gst-launch-1.0.exe souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux name=d d.video_00 ! matroskamux ! filesink location=sintel_video.mkv
 ```
 
 This fetches a media file from the internet using `souphttpsrc`, which
@@ -168,7 +168,7 @@ new matroska file with the video. If we wanted to keep only the
 audio:
 
 ```
-gst-launch-0.10.exe souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux name=d d.audio_00 ! vorbisparse ! matroskamux ! filesink location=sintel_audio.mka
+gst-launch-1.0.exe souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux name=d d.audio_00 ! vorbisparse ! matroskamux ! filesink location=sintel_audio.mka
 ```
 
 The `vorbisparse` element is required to extract some information from
@@ -194,7 +194,7 @@ Consider the following
 pipeline:
 
 ```
-gst-launch-0.10 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! filesink location=test
+gst-launch-1.0 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! filesink location=test
 ```
 
 This is the same media file and demuxer as in the previous example. The
@@ -208,7 +208,7 @@ previous sub-section, or by using **Caps
 Filters**:
 
 ```
-gst-launch-0.10 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! video/x-vp8 ! matroskamux ! filesink location=sintel_video.mkv
+gst-launch-1.0 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! video/x-vp8 ! matroskamux ! filesink location=sintel_video.mkv
 ```
 
 A Caps Filter behaves like a pass-through element which does nothing and
@@ -218,9 +218,9 @@ added a `video/x-vp8` Caps Filter to specify that we are interested in
 the output pad of `matroskademux` which can produce this kind of video.
 
 To find out the Caps an element accepts and produces, use the
-`gst-inspect` tool. To find out the Caps contained in a particular file,
-use the `gst-discoverer` tool. To find out the Caps an element is
-producing for a particular pipeline, run `gst-launch` as usual, with the
+`gst-inspect-1.0` tool. To find out the Caps contained in a particular file,
+use the `gst-discoverer-1.0` tool. To find out the Caps an element is
+producing for a particular pipeline, run `gst-launch-1.0` as usual, with the
 `–v` option to print Caps information.
 
 #### Examples
@@ -229,7 +229,7 @@ Play a media file using `playbin2` (as in [Basic tutorial 1: Hello
 world\!](Basic%2Btutorial%2B1%253A%2BHello%2Bworld%2521.html)):
 
 ```
-gst-launch-0.10 playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm
+gst-launch-1.0 playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm
 ```
 
 A fully operation playback pipeline, with audio and video (more or less
@@ -237,7 +237,7 @@ the same pipeline that `playbin2` will create
 internally):
 
 ```
-gst-launch-0.10 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux name=d ! queue ! vp8dec ! ffmpegcolorspace ! autovideosink d. ! queue ! vorbisdec ! audioconvert ! audioresample ! autoaudiosink
+gst-launch-1.0 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux name=d ! queue ! vp8dec ! ffmpegcolorspace ! autovideosink d. ! queue ! vorbisdec ! audioconvert ! audioresample ! autoaudiosink
 ```
 
 A transcoding pipeline, which opens the webm container and decodes both
@@ -247,7 +247,7 @@ with a different codec, and puts them back together in an Ogg container
 it).
 
 ```
-gst-launch-0.10 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm name=d ! queue ! theoraenc ! oggmux name=m ! filesink location=sintel.ogg d. ! queue ! audioconvert ! audioresample ! flacenc ! m.
+gst-launch-1.0 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm name=d ! queue ! theoraenc ! oggmux name=m ! filesink location=sintel.ogg d. ! queue ! audioconvert ! audioresample ! flacenc ! m.
 ```
 
 A rescaling pipeline. The `videoscale` element performs a rescaling
@@ -256,14 +256,14 @@ output caps. The output caps are set by the Caps Filter to
 320x200.
 
 ```
-gst-launch-0.10 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! queue ! videoscale ! video/x-raw-yuv,width=320,height=200 ! ffmpegcolorspace ! autovideosink
+gst-launch-1.0 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! queue ! videoscale ! video/x-raw-yuv,width=320,height=200 ! ffmpegcolorspace ! autovideosink
 ```
 
-This short description of `gst-launch` should be enough to get you
+This short description of `gst-launch-1.0` should be enough to get you
 started. Remember that you have the [complete documentation available
-here](gst-launch.html).
+here](gst-launch-1.0.html).
 
-# `gst-inspect`
+# `gst-inspect-1.0`
 
 This tool has three modes of operation:
 
@@ -278,7 +278,7 @@ This tool has three modes of operation:
 Let's see an example of the third mode:
 
 ```
-gst-inspect-0.10 vp8dec
+gst-inspect-1.0 vp8dec
  
 Factory Details:
   Long name:    On2 VP8 Decoder
@@ -380,9 +380,9 @@ The most relevant sections are:
     element, along with their type and accepted values.
 
 For more information, you can check the [documentation
-page](http://gst-inspect) of `gst-inspect`.
+page](http://gst-inspect-1.0) of `gst-inspect-1.0`.
 
-# `gst-discoverer`
+# `gst-discoverer-1.0`
 
 This tool is a wrapper around the `GstDiscoverer` object shown in [Basic
 tutorial 9: Media information
@@ -392,14 +392,14 @@ regarding the media that GStreamer can extract. It is useful to find out
 what container and codecs have been used to produce the media, and
 therefore what elements you need to put in a pipeline to play it.
 
-Use `gst-discoverer --help` to obtain the list of available options,
+Use `gst-discoverer-1.0 --help` to obtain the list of available options,
 which basically control the amount of verbosity of the output.
 
 Let's see an
 example:
 
 ```
-gst-discoverer-0.10 http://docs.gstreamer.com/media/sintel_trailer-480p.webm -v
+gst-discoverer-1.0 http://docs.gstreamer.com/media/sintel_trailer-480p.webm -v
 
 Analyzing http://docs.gstreamer.com/media/sintel_trailer-480p.webm
 Done discovering http://docs.gstreamer.com/media/sintel_trailer-480p.webm
@@ -454,10 +454,10 @@ Properties:
 This tutorial has shown:
 
   - How to build and run GStreamer pipelines from the command line using
-    the `gst-launch` tool.
+    the `gst-launch-1.0` tool.
   - How to find out what GStreamer elements you have available and their
-    capabilities, using the `gst-inspect` tool.
+    capabilities, using the `gst-inspect-1.0` tool.
   - How to discover the internal structure of media files, using
-    `gst-discoverer`.
+    `gst-discoverer-1.0`.
 
 It has been a pleasure having you here, and see you soon\!

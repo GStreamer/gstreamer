@@ -273,8 +273,8 @@ dependent dynamic libraries
 using [otool](https://developer.apple.com/library/mac/#documentation/darwin/reference/manpages/man1/otool.1.html):
 
 ``` lang=bash
-$ otool -L /Library/Frameworks/GStreamer.framework/Commands/gst-launch-0.10
-/Library/Frameworks/GStreamer.framework/Commands/gst-launch-0.10:
+$ otool -L /Library/Frameworks/GStreamer.framework/Commands/gst-launch-1.0
+/Library/Frameworks/GStreamer.framework/Commands/gst-launch-1.0:
  /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation (compatibility version 150.0.0, current version 550.43.0)
  /Library/Frameworks/GStreamer.framework/Versions/0.10/x86/lib/libgstreamer-0.10.0.dylib (compatibility version 31.0.0, current version 31.0.0)
  /Library/Frameworks/GStreamer.framework/Versions/0.10/x86/lib/libxml2.2.dylib (compatibility version 10.0.0, current version 10.8.0)
@@ -300,7 +300,7 @@ $ otool -D /Library/Frameworks/GStreamer.framework/Libraries/libgstreamer-0.10.d
 Any object file that links to the dynamic library `gstreamer-0.10` will
 use the
 path `/Library/Frameworks/GStreamer.framework/Versions/0.10/x86/lib/libgstreamer-0.10.0.dylib` to
-locate it, as we saw previously with `gst-launch-0.10`.
+locate it, as we saw previously with `gst-launch-1.0`.
 
 Since working exclusively with full paths wouldn't let us install our
 binaries anywhere in the path, the linker provides a mechanism of string

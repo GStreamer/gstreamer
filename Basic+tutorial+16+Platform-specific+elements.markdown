@@ -137,7 +137,7 @@ framework similar to GStreamer. They are different enough, though, so
 that their pipelines cannot be interconnected. However, through this
 element, GStreamer can benefit from the decoding elements present in
 Direct Show. `dshowdecwrapper` wraps multiple Direct Show decoders so
-they can be embedded in a GStreamer pipeline. Use the `gst-inspect` tool
+they can be embedded in a GStreamer pipeline. Use the `gst-inspect-1.0` tool
 (see [Basic tutorial 10: GStreamer
 tools](Basic%2Btutorial%2B10%253A%2BGStreamer%2Btools.html)) to see the
 available decoders.

@@ -82,7 +82,7 @@ The `'*'` wildcard is also available. For example
 starting with the word `audio`. `GST_DEBUG=*:2` is equivalent to
 `GST_DEBUG=2`.
 
-Use `gst-launch-0.10 --gst-debug-help` to obtain the list of all
+Use `gst-launch-1.0 --gst-debug-help` to obtain the list of all
 registered categories. Bear in mind that each plugin registers its own
 categories, so, when installing or removing plugins, this list can
 change.
@@ -189,7 +189,7 @@ learn a bit of GStreamer along the way).
 
 To obtain `.dot` files, simply set
 the `GST_DEBUG_DUMP_DOT_DIR` environment variable to point to the
-folder where you want the files to be placed. `gst-launch` will create
+folder where you want the files to be placed. `gst-launch-1.0` will create
 a `.dot` file at each state change, so you can see the evolution of the
 caps negotiation. Unset the variable to disable this facility. From
 within your application, you can use the

@@ -66,7 +66,7 @@ The following code tries to discover the URI provided through the
 command line, and outputs the retrieved information (If no URI is
 provided it uses a default one).
 
-This is a simplified version of what the `gst-discoverer` tool does
+This is a simplified version of what the `gst-discoverer-1.0` tool does
 ([Basic tutorial 10: GStreamer
 tools](Basic%2Btutorial%2B10%253A%2BGStreamer%2Btools.html)), which is
 an application that only displays data, but does not perform any
