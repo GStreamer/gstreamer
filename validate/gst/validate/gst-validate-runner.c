@@ -621,6 +621,9 @@ _do_report_synthesis (GstValidateRunner * runner)
   gpointer key, value;
   GList *criticals = NULL;
 
+  /* Take the lock so the hash table won't be modified while we are iterating
+   * over it */
+  GST_VALIDATE_RUNNER_LOCK (runner);
   g_hash_table_iter_init (&iter, runner->priv->reports_by_type);
   while (g_hash_table_iter_next (&iter, &key, &value)) {
     GstValidateReport *report;
@@ -647,6 +650,7 @@ _do_report_synthesis (GstValidateRunner * runner)
     gst_validate_report_print_description (report);
     gst_validate_printf (NULL, "\n");
   }
+  GST_VALIDATE_RUNNER_UNLOCK (runner);
 
   return criticals;
 }
