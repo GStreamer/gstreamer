@@ -1,4 +1,10 @@
-#  Installing on Mac OS X 
+#  Installing on Mac OS X
+
+## Supported platforms
+
+ *  10.6 (Snow Leopard)
+ *  10.7 (Lion)
+ *  10.8 (Mountain Lion)
 
 ## Prerequisites
 
@@ -51,7 +57,7 @@ click in the installer to start the installation process.
 These are some paths of the GStreamer framework that you might find
 useful:
 
-  - /Library/Frameworks/GStreamer.framework/: Framework's root path 
+  - /Library/Frameworks/GStreamer.framework/: Framework's root path
   - /Library/Frameworks/GStreamer.framework/Versions: path with all the
     versions of the framework
   - /Library/Frameworks/GStreamer.framework/Versions/Current: link to
@@ -81,7 +87,7 @@ folder `/Library/Frameworks/GStreamer.framework/Current/share/gst-sdk/tutorials`
 You can fire up XCode and load the project file.
 
 Press the **Run **button to build and run the first tutorial. You can
-switch the tutorial to build selecting one of the available schemes. 
+switch the tutorial to build selecting one of the available schemes.
 
 ### Creating new projects
 

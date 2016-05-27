@@ -1,4 +1,6 @@
-#  Installing for Android development 
+#  Installing for Android development
+
+![](images/icons/emoticons/information.png) All versions starting from 2.3.1 Gingerbread are supported
 
 ## Prerequisites
 
@@ -21,7 +23,6 @@ needs to have installed:
 Optionally, you can use the [Android Studio] (FIX LINK). As stated in the Android
 documentation, *developing in Android Studio is highly recommended and
 is the fastest way to get started*.
-
 
 Before continuing, make sure you can compile and run the samples
 included in the Android NDK, and that you understand how the integration
@@ -176,7 +177,6 @@ your device, with the GStreamer SDK logo. If you want to run the
 tutorial in an Android Virtual Device (AVD), make sure to create the
 device with support for audio playback and GPU Emulation (to enable
 OpenGL ES).
-
 
 > ![](images/icons/emoticons/warning.png) Windows linkage problems
 >
