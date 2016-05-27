@@ -115,5 +115,7 @@ GList * gst_validate_reporter_get_reports (GstValidateReporter * reporter);
 gint gst_validate_reporter_get_reports_count (GstValidateReporter *reporter);
 GstValidateReportingDetails gst_validate_reporter_get_reporting_level (GstValidateReporter *reporter);
 
+void gst_validate_reporter_purge_reports (GstValidateReporter * reporter);
+
 G_END_DECLS
 #endif /* _GST_VALIDATE_REPORTER_ */

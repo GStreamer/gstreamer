@@ -98,6 +98,14 @@ gst_validate_element_set_media_descriptor (GstValidateMonitor * monitor,
   gst_iterator_free (iterator);
 }
 
+static void
+purge_and_unref_reporter (gpointer data)
+{
+  GstValidateReporter *reporter = data;
+
+  gst_validate_reporter_purge_reports (reporter);
+  g_object_unref (reporter);
+}
 
 static void
 gst_validate_element_monitor_dispose (GObject * object)
@@ -109,7 +117,7 @@ gst_validate_element_monitor_dispose (GObject * object)
     g_signal_handler_disconnect (GST_VALIDATE_MONITOR_GET_OBJECT (monitor),
         monitor->pad_added_id);
 
-  g_list_free_full (monitor->pad_monitors, g_object_unref);
+  g_list_free_full (monitor->pad_monitors, purge_and_unref_reporter);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }

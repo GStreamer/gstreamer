@@ -155,10 +155,14 @@ out:
   g_free (output_file);
   g_free (expected_file);
 
-  if (reference)
+  if (reference) {
+    gst_validate_reporter_purge_reports (GST_VALIDATE_REPORTER (reference));
     gst_object_unref (reference);
-  if (writer)
+  }
+  if (writer) {
+    gst_validate_reporter_purge_reports (GST_VALIDATE_REPORTER (writer));
     gst_object_unref (writer);
+  }
   if (runner)
     gst_object_unref (runner);
   gst_deinit ();

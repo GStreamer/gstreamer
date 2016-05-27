@@ -557,6 +557,7 @@ _run_frame_analysis (GstValidateMediaDescriptorWriter * writer,
   writer->priv->loop = NULL;
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
+  gst_validate_reporter_purge_reports (GST_VALIDATE_REPORTER (monitor));
   g_object_unref (monitor);
 
   return TRUE;

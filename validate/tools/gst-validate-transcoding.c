@@ -978,6 +978,7 @@ exit:
   g_main_loop_unref (mainloop);
   g_clear_object (&encoding_profile);
   g_object_unref (pipeline);
+  gst_validate_reporter_purge_reports (GST_VALIDATE_REPORTER (monitor));
   g_object_unref (monitor);
   g_object_unref (runner);
 

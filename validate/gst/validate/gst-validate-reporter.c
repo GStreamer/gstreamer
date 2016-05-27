@@ -436,3 +436,22 @@ gst_validate_reporter_get_reports_count (GstValidateReporter * reporter)
 
   return ret;
 }
+
+/**
+ * gst_validate_reporter_purge_reports:
+ * @reporter: a #GstValidateReporter
+ *
+ * Remove all the #GstValidateReport from @reporter. This should be called
+ * before unreffing the reporter to break cyclic references.
+ */
+void
+gst_validate_reporter_purge_reports (GstValidateReporter * reporter)
+{
+  GstValidateReporterPrivate *priv;
+
+  priv = g_object_get_data (G_OBJECT (reporter), REPORTER_PRIVATE);
+
+  GST_VALIDATE_REPORTER_REPORTS_LOCK (reporter);
+  g_hash_table_remove_all (priv->reports);
+  GST_VALIDATE_REPORTER_REPORTS_UNLOCK (reporter);
+}

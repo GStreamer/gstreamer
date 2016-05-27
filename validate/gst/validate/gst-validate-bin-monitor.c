@@ -117,6 +117,15 @@ gst_validate_bin_monitor_get_property (GObject * object, guint prop_id,
 }
 
 static void
+purge_and_unref_reporter (gpointer data)
+{
+  GstValidateReporter *reporter = data;
+
+  gst_validate_reporter_purge_reports (reporter);
+  g_object_unref (reporter);
+}
+
+static void
 gst_validate_bin_monitor_dispose (GObject * object)
 {
   GstValidateBinMonitor *monitor = GST_VALIDATE_BIN_MONITOR_CAST (object);
@@ -125,10 +134,13 @@ gst_validate_bin_monitor_dispose (GObject * object)
   if (bin && monitor->element_added_id)
     g_signal_handler_disconnect (bin, monitor->element_added_id);
 
-  if (monitor->scenario)
+  if (monitor->scenario) {
+    gst_validate_reporter_purge_reports (GST_VALIDATE_REPORTER
+        (monitor->scenario));
     g_object_unref (monitor->scenario);
+  }
 
-  g_list_free_full (monitor->element_monitors, g_object_unref);
+  g_list_free_full (monitor->element_monitors, purge_and_unref_reporter);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }

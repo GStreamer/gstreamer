@@ -657,6 +657,7 @@ exit:
   g_main_loop_unref (mainloop);
   g_object_unref (pipeline);
   g_object_unref (runner);
+  gst_validate_reporter_purge_reports (GST_VALIDATE_REPORTER (monitor));
   g_object_unref (monitor);
   g_clear_error (&err);
 #ifdef G_OS_UNIX
