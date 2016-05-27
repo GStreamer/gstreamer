@@ -9,11 +9,8 @@ open-source, media streaming framework.
 ### Prerequisites
 
 Before following these tutorials, you need to set up your development
-environment according to your platform. If you have not done so yet,
-follow the appropriate link for [Linux](Installing+on+Linux.markdown),
-[Mac OS X](Installing+on+Mac+OS+X.markdown) or
-[Windows](Installing+on+Windows.markdown) and come back here
-afterwards.
+environment according to your platform. If you have not done so yet, go
+to the [installing the SDK] page and come back here afterwards.
 
 The tutorials are currently written only in the C programming language,
 so you need to be comfortable with it. Even though C is not an
@@ -46,27 +43,25 @@ GObject use `g_`.
 ### Sources of documentation
 
 You have the `GObject` and `GLib` reference guides, and, of course the
-upstream [GStreamer
-documentation](http://gstreamer.freedesktop.org/documentation/).
+upstream [GStreamer documentation].
 
 ### Structure
 
 The tutorials are organized in sections, revolving about a common theme:
 
-  - [Basic tutorials](Basic+tutorials.markdown): Describe general topics
-    required to understand the rest of tutorials in the GStreamer SDK.
-  - [Playback tutorials](Playback+tutorials.markdown): Explain everything
-    you need to know to produce a media playback application using
-    GStreamer.
-  - [Android tutorials](Android+tutorials.markdown): Tutorials dealing
-    with the few Android-specific topics you need to know.
-  - [iOS tutorials](iOS+tutorials.markdown): Tutorials dealing with the
-    few iOS-specific topics you need to know.
+-   [Basic tutorials]: Describe general topics required to understand
+    the rest of tutorials in the GStreamer SDK.
+-   [Playback tutorials]: Explain everything you need to know to produce
+    a media playback application using GStreamer.
+-   [Android tutorials]: Tutorials dealing with the few Android-specific
+    topics you need to know.
+-   [iOS tutorials]: Tutorials dealing with the few iOS-specific topics
+    you need to know.
 
 If you cannot remember in which tutorial a certain GStreamer concept is
 explained, use the following:
 
-  - [Table of Concepts](Table+of+Concepts.markdown)
+-   [Table of Concepts]
 
 ### Sample media
 
@@ -75,4 +70,13 @@ publicly available and the copyright remains with their respective
 authors. In some cases they have been re-encoded for demonstration
 purposes.
 
-  - [Sintel, the Durian Open Movie Project](http://www.sintel.org/)
+-   [Sintel, the Durian Open Movie Project]
+
+  [installing the SDK]: Installing+the+SDK.markdown
+  [GStreamer documentation]: http://gstreamer.freedesktop.org/documentation/
+  [Basic tutorials]: Basic+tutorials.markdown
+  [Playback tutorials]: Playback+tutorials.markdown
+  [Android tutorials]: Android+tutorials.markdown
+  [iOS tutorials]: iOS+tutorials.markdown
+  [Table of Concepts]: Table+of+Concepts.markdown
+  [Sintel, the Durian Open Movie Project]: http://www.sintel.org/

@@ -58,7 +58,6 @@ Pages to review:
  - Basic+tutorial+16+Platform-specific+elements.markdown
  - Basic+tutorial+1+Hello+world.markdown
  - iOS+tutorial+1+Link+against+GStreamer.markdown
- - Tutorials.markdown
  - Basic+tutorial+2+GStreamer+concepts.markdown
  - iOS+tutorial+2+A+running+pipeline.markdown
  - Upcoming+tutorials.markdown
@@ -75,3 +74,4 @@ Reviewed pages:
  - Installing+for+Android+development.markdown
  - Building+from+source+using+Cerbero.markdown
  - Table+of+Concepts.markdown
+ - Tutorials.markdown
