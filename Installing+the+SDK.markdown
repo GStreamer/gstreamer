@@ -2,7 +2,10 @@
 
 ## Choose your platform by clicking on the corresponding logo
 
-[![](attachments/1540163.png)](Installing+on+Mac+OS+X.markdown)     [![](attachments/1540164.png)](Installing+on+Windows.markdown)      [![](attachments/2654239.png)](Installing+for+Android+development.markdown)     [![](attachments/3539150.jpeg)](Installing+for+iOS+development.markdown)
+[![](attachments/1540163.png)](Installing+on+Mac+OS+X.markdown)
+[![](attachments/1540164.png)](Installing+on+Windows.markdown)
+[![](attachments/2654239.png)](Installing+for+Android+development.markdown)
+[![](attachments/3539150.jpeg)](Installing+for+iOS+development.markdown)
 
 ## Linux
 
