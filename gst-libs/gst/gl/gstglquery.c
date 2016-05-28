@@ -254,7 +254,8 @@ gst_gl_query_result (GstGLQuery * query)
 
   gl = query->context->gl_vtable;
   if (gl->GetQueryObjectui64v) {
-    gl->GetQueryObjectui64v (query->query_id, GL_QUERY_RESULT, &ret);
+    gl->GetQueryObjectui64v (query->query_id, GL_QUERY_RESULT,
+        (GLuint64 *) & ret);
   } else {
     guint tmp;
     gl->GetQueryObjectuiv (query->query_id, GL_QUERY_RESULT, &tmp);
