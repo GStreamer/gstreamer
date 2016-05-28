@@ -43,7 +43,6 @@ G_BEGIN_DECLS
 #define GST_IS_GL_TEST_SRC_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GL_TEST_SRC))
 
-typedef struct _GstGLTestSrc GstGLTestSrc;
 typedef struct _GstGLTestSrcClass GstGLTestSrcClass;
 
 /**
