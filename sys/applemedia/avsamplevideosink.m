@@ -748,7 +748,10 @@ gst_av_sample_video_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     _request_data (av_sink);
   g_mutex_unlock (&av_sink->render_lock);
 
-#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 1010
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && \
+    MAC_OS_X_VERSION_MAX_ALLOWED >= 1010 && \
+    defined(MAC_OS_X_VERSION_MIN_REQUIRED) && \
+    MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_4
   if ([av_sink->layer status] == AVQueuedSampleBufferRenderingStatusFailed) {
     GST_ERROR_OBJECT (av_sink, "failed to enqueue buffer on layer, %s",
         [[[av_sink->layer error] description] UTF8String]);
