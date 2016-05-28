@@ -1630,6 +1630,9 @@ gst_h264_parse_sps_data (NalReader * nr, GstH264SPS * sps,
         sps->crop_rect_y, width, height);
   }
 
+  sps->fps_num_removed = 0;
+  sps->fps_den_removed = 1;
+
   return TRUE;
 
 error:
