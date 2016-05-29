@@ -3525,6 +3525,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   guint64 block_duration, duration_diff = 0;
   gboolean is_video_keyframe = FALSE;
   gboolean is_video_invisible = FALSE;
+  gboolean is_audio_only = FALSE;
   GstMatroskamuxPad *pad;
   gint flags = 0;
   GstClockTime buffer_timestamp;
@@ -3597,12 +3598,15 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
     }
   }
 
+  is_audio_only = (collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_AUDIO) &&
+      (mux->num_streams == 1);
+
   if (mux->cluster) {
     /* start a new cluster at every keyframe, at every GstForceKeyUnit event,
      * or when we may be reaching the limit of the relative timestamp */
     if (mux->cluster_time +
         mux->max_cluster_duration < buffer_timestamp
-        || is_video_keyframe || mux->force_key_unit_event) {
+        || is_video_keyframe || mux->force_key_unit_event || is_audio_only) {
       if (!mux->ebml_write->streamable)
         gst_ebml_write_master_finish (ebml, mux->cluster);
 
@@ -3646,10 +3650,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
    * the block in the cluster which contains the timestamp, should also work
    * for files with multiple audio tracks.
    */
-  if (!mux->ebml_write->streamable &&
-      (is_video_keyframe ||
-          ((collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_AUDIO) &&
-              (mux->num_streams == 1)))) {
+  if (!mux->ebml_write->streamable && (is_video_keyframe || is_audio_only)) {
     gint last_idx = -1;
 
     if (mux->min_index_interval != 0) {
