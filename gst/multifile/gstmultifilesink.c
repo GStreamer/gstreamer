@@ -1098,8 +1098,14 @@ gst_multi_file_sink_open_next_file (GstMultiFileSink * multifilesink)
   }
 
   GST_INFO_OBJECT (multifilesink, "opening file %s", filename);
-  multifilesink->files = g_slist_append (multifilesink->files, filename);
-  multifilesink->n_files += 1;
+
+  /* Only add file to the list if max_files > 0, otherwise this leaks memory */
+  if (multifilesink->max_files) {
+    multifilesink->files = g_slist_append (multifilesink->files, filename);
+    multifilesink->n_files += 1;
+  } else {
+    g_free (filename);
+  }
 
   multifilesink->cur_file_size = 0;
   return TRUE;
