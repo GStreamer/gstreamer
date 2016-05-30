@@ -232,6 +232,13 @@ libgstvaapi_source_c += $(libgstvaapi_h265enc_source_c)
 libgstvaapi_source_h += $(libgstvaapi_h265enc_source_h)
 endif
 
+libgstvaapi_vp9enc_source_c = gstvaapiencoder_vp9.c
+libgstvaapi_vp9enc_source_h = gstvaapiencoder_vp9.h
+if USE_VP9_ENCODER
+libgstvaapi_source_c += $(libgstvaapi_vp9enc_source_c)
+libgstvaapi_source_h += $(libgstvaapi_vp9enc_source_h)
+endif
+
 libgstvaapi_drm_source_c =			\
 	gstvaapidisplay_drm.c			\
 	gstvaapiwindow_drm.c			\
@@ -549,6 +556,8 @@ EXTRA_DIST += \
 	$(libgstvaapi_vp8enc_source_c)		\
 	$(libgstvaapi_h265enc_source_h)		\
 	$(libgstvaapi_h265enc_source_c)		\
+	$(libgstvaapi_vp9enc_source_h)		\
+	$(libgstvaapi_vp9enc_source_c)		\
 	$(libgstvaapi_egl_source_c)		\
 	$(libgstvaapi_egl_source_h)		\
 	$(libgstvaapi_egl_source_priv_h)	\
