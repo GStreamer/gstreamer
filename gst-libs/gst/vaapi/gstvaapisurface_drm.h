@@ -35,9 +35,8 @@ GstVaapiBufferProxy *
 gst_vaapi_surface_get_gem_buf_handle (GstVaapiSurface * surface);
 
 GstVaapiSurface *
-gst_vaapi_surface_new_with_dma_buf_handle (GstVaapiDisplay * display,
-    gint fd, guint size, GstVideoFormat format, guint width, guint height,
-    gsize offset[GST_VIDEO_MAX_PLANES], gint stride[GST_VIDEO_MAX_PLANES]);
+gst_vaapi_surface_new_with_dma_buf_handle (GstVaapiDisplay * display, gint fd,
+    GstVideoInfo * vi);
 
 GstVaapiSurface *
 gst_vaapi_surface_new_with_gem_buf_handle (GstVaapiDisplay * display,

@@ -139,21 +139,19 @@ fill_video_info (GstVideoInfo * vip, GstVideoFormat format, guint width,
  *   if creation from DRM PRIME fd failed, or is not supported
  */
 GstVaapiSurface *
-gst_vaapi_surface_new_with_dma_buf_handle (GstVaapiDisplay * display,
-    gint fd, guint size, GstVideoFormat format, guint width, guint height,
-    gsize offset[GST_VIDEO_MAX_PLANES], gint stride[GST_VIDEO_MAX_PLANES])
+gst_vaapi_surface_new_with_dma_buf_handle (GstVaapiDisplay * display, gint fd,
+    GstVideoInfo * vi)
 {
   GstVaapiBufferProxy *proxy;
   GstVaapiSurface *surface;
-  GstVideoInfo vi;
 
   proxy = gst_vaapi_buffer_proxy_new ((gintptr) fd,
-      GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF, size, NULL, NULL);
+      GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF, GST_VIDEO_INFO_SIZE (vi), NULL,
+      NULL);
   if (!proxy)
     return NULL;
 
-  fill_video_info (&vi, format, width, height, offset, stride);
-  surface = gst_vaapi_surface_new_from_buffer_proxy (display, proxy, &vi);
+  surface = gst_vaapi_surface_new_from_buffer_proxy (display, proxy, vi);
   gst_vaapi_buffer_proxy_unref (proxy);
   return surface;
 }

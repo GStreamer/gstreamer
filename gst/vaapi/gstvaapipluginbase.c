@@ -205,10 +205,8 @@ plugin_bind_dma_to_vaapi_buffer (GstVaapiPluginBase * plugin,
   meta = gst_buffer_get_vaapi_video_meta (outbuf);
   g_return_val_if_fail (meta != NULL, FALSE);
 
-  surface = gst_vaapi_surface_new_with_dma_buf_handle (plugin->display, fd,
-      GST_VIDEO_INFO_SIZE (vip), GST_VIDEO_INFO_FORMAT (vip),
-      GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip),
-      vip->offset, vip->stride);
+  surface =
+      gst_vaapi_surface_new_with_dma_buf_handle (plugin->display, fd, vip);
   if (!surface)
     goto error_create_surface;
 
