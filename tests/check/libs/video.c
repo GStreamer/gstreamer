@@ -343,6 +343,7 @@ video_format_is_packed (GstVideoFormat fmt)
     case GST_VIDEO_FORMAT_YVU9:
       return FALSE;
     case GST_VIDEO_FORMAT_IYU1:
+    case GST_VIDEO_FORMAT_IYU2:
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:

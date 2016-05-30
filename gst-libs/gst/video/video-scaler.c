@@ -1212,6 +1212,7 @@ get_functions (GstVideoScaler * hscale, GstVideoScaler * vscale,
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
     case GST_VIDEO_FORMAT_v308:
+    case GST_VIDEO_FORMAT_IYU2:
       bits = 8;
       *n_elems = 3;
       break;

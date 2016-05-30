@@ -4052,6 +4052,7 @@ get_scale_format (GstVideoFormat format, gint plane)
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
     case GST_VIDEO_FORMAT_v308:
+    case GST_VIDEO_FORMAT_IYU2:
     case GST_VIDEO_FORMAT_ARGB64:
     case GST_VIDEO_FORMAT_AYUV64:
       res = format;
@@ -4778,6 +4779,8 @@ static const VideoTransform transforms[] = {
   {GST_VIDEO_FORMAT_BGR, GST_VIDEO_FORMAT_BGR, TRUE, FALSE, FALSE, TRUE, TRUE,
       FALSE, FALSE, FALSE, 0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_v308, GST_VIDEO_FORMAT_v308, TRUE, FALSE, FALSE, TRUE, TRUE,
+      FALSE, FALSE, FALSE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_IYU2, GST_VIDEO_FORMAT_IYU2, TRUE, FALSE, FALSE, TRUE, TRUE,
       FALSE, FALSE, FALSE, 0, 0, convert_scale_planes},
 
   {GST_VIDEO_FORMAT_ARGB, GST_VIDEO_FORMAT_ARGB, TRUE, FALSE, FALSE, TRUE, TRUE,

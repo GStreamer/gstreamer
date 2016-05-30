@@ -416,6 +416,43 @@ pack_v308 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
+#define PACK_IYU2 GST_VIDEO_FORMAT_AYUV, unpack_IYU2, 1, pack_IYU2
+static void
+unpack_IYU2 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  int i;
+  const guint8 *restrict s = GET_LINE (y);
+  guint8 *restrict d = dest;
+
+  s += x * 3;
+
+  for (i = 0; i < width; i++) {
+    d[i * 4 + 0] = 0xff;
+    d[i * 4 + 1] = s[i * 3 + 1];
+    d[i * 4 + 2] = s[i * 3 + 0];
+    d[i * 4 + 3] = s[i * 3 + 2];
+  }
+}
+
+static void
+pack_IYU2 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  int i;
+  guint8 *restrict d = GET_LINE (y);
+  const guint8 *restrict s = src;
+
+  for (i = 0; i < width; i++) {
+    d[i * 3 + 0] = s[i * 4 + 2];
+    d[i * 3 + 1] = s[i * 4 + 1];
+    d[i * 3 + 2] = s[i * 4 + 3];
+  }
+}
+
 #define PACK_AYUV GST_VIDEO_FORMAT_AYUV, unpack_copy4, 1, pack_copy4
 #define PACK_ARGB GST_VIDEO_FORMAT_ARGB, unpack_copy4, 1, pack_copy4
 static void
@@ -3825,6 +3862,8 @@ static const VideoFormat formats[] = {
       PSTR244, PLANE011, OFFS001, SUB420, PACK_P010_10BE),
   MAKE_YUV_LE_FORMAT (P010_10LE, "raw video", 0x00000000, DPTH10_10_10_HI,
       PSTR244, PLANE011, OFFS001, SUB420, PACK_P010_10LE),
+  MAKE_YUV_FORMAT (IYU2, "raw video", GST_MAKE_FOURCC ('I', 'Y', 'U', '2'),
+      DPTH888, PSTR333, PLANE0, OFFS102, SUB444, PACK_IYU2),
 };
 
 static GstVideoFormat
@@ -4035,6 +4074,8 @@ gst_video_format_from_fourcc (guint32 fourcc)
       return GST_VIDEO_FORMAT_NV24;
     case GST_MAKE_FOURCC ('v', '3', '0', '8'):
       return GST_VIDEO_FORMAT_v308;
+    case GST_MAKE_FOURCC ('I', 'Y', 'U', '2'):
+      return GST_VIDEO_FORMAT_IYU2;
     case GST_MAKE_FOURCC ('Y', '8', '0', '0'):
     case GST_MAKE_FOURCC ('Y', '8', ' ', ' '):
     case GST_MAKE_FOURCC ('G', 'R', 'E', 'Y'):
