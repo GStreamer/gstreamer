@@ -37,13 +37,15 @@ typedef struct _GstVaapiEncoderVP9 GstVaapiEncoderVP9;
  * @GST_VAAPI_ENCODER_VP9_PROP_LOOP_FILTER_LEVEL: Loop Filter Level(uint).
  * @GST_VAAPI_ENCODER_VP9_PROP_LOOP_SHARPNESS_LEVEL: Sharpness Level(uint).
  * @GST_VAAPI_ENCODER_VP9_PROP_YAC_Q_INDEX: Quantization table index for luma AC
+ * @GST_VAAPI_ENCODER_VP9_PROP_REF_PIC_MODE: Reference picute selection modes
  *
  * The set of VP9 encoder specific configurable properties.
  */
 typedef enum {
   GST_VAAPI_ENCODER_VP9_PROP_LOOP_FILTER_LEVEL = -1,
   GST_VAAPI_ENCODER_VP9_PROP_SHARPNESS_LEVEL = -2,
-  GST_VAAPI_ENCODER_VP9_PROP_YAC_Q_INDEX = -3
+  GST_VAAPI_ENCODER_VP9_PROP_YAC_Q_INDEX = -3,
+  GST_VAAPI_ENCODER_VP9_PROP_REF_PIC_MODE = -4
 } GstVaapiEncoderVP9Prop;
 
 GstVaapiEncoder *

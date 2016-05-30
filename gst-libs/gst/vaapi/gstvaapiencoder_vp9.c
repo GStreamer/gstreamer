@@ -56,6 +56,33 @@
 #define MAX_FRAME_WIDTH 4096
 #define MAX_FRAME_HEIGHT 4096
 
+typedef enum
+{
+  GST_VAAPI_ENCODER_VP9_REF_PIC_MODE_0 = 0,
+  GST_VAAPI_ENCODER_VP9_REF_PIC_MODE_1 = 1
+} GstVaapiEnoderVP9RefPicMode;
+
+static GType
+gst_vaapi_encoder_vp9_ref_pic_mode_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {GST_VAAPI_ENCODER_VP9_REF_PIC_MODE_0,
+            "Use Keyframe(Alt & Gold) and Previousframe(Last) for prediction ",
+          "mode-0"},
+      {GST_VAAPI_ENCODER_VP9_REF_PIC_MODE_1,
+            "Use last three frames for prediction (n:Last n-1:Gold n-2:Alt)",
+          "mode-1"}
+    };
+
+    gtype = g_enum_register_static ("GstVaapiEncoderVP9RefPicMode", values);
+  }
+  return gtype;
+}
+
+
 /* ------------------------------------------------------------------------- */
 /* --- VP9 Encoder                                                      --- */
 /* ------------------------------------------------------------------------- */
@@ -70,9 +97,10 @@ struct _GstVaapiEncoderVP9
   guint loop_filter_level;
   guint sharpness_level;
   guint yac_qi;
+  guint ref_pic_mode;
   guint frame_num;
-  /* reference list */
-  GstVaapiSurfaceProxy *ref_list[GST_VP9_REF_FRAMES];
+  GstVaapiSurfaceProxy *ref_list[GST_VP9_REF_FRAMES];   /* reference list */
+  guint ref_list_idx;           /* next free slot in ref_list */
 };
 
 /* Derives the profile that suits best to the configuration */
@@ -122,13 +150,14 @@ set_context_info (GstVaapiEncoder * base_encoder)
 {
   GstVaapiEncoderVP9 *encoder = GST_VAAPI_ENCODER_VP9_CAST (base_encoder);
   GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
+  const guint DEFAULT_SURFACES_COUNT = 2;
 
   /*Fixme:  Maximum sizes for common headers (in bytes) */
 
   if (!ensure_hw_profile (encoder))
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
 
-  base_encoder->num_ref_frames = 3;
+  base_encoder->num_ref_frames = 3 + DEFAULT_SURFACES_COUNT;
 
   /* Only YUV 4:2:0 formats are supported for now. */
   base_encoder->codedbuf_size = GST_ROUND_UP_16 (vip->width) *
@@ -183,13 +212,38 @@ error:
   return FALSE;
 }
 
+static void
+get_ref_indices (guint ref_pic_mode, guint ref_list_idx, guint * last_idx,
+    guint * gf_idx, guint * arf_idx, guint8 * refresh_frame_flags)
+{
+  if (ref_pic_mode == GST_VAAPI_ENCODER_VP9_REF_PIC_MODE_0) {
+    *last_idx = ref_list_idx - 1;
+    *gf_idx = 1;
+    *arf_idx = 2;
+    *refresh_frame_flags = 0x01;
+  } else if (ref_pic_mode == GST_VAAPI_ENCODER_VP9_REF_PIC_MODE_1) {
+    gint last_filled_idx = (ref_list_idx - 1) & (GST_VP9_REF_FRAMES - 1);
+
+    *last_idx = last_filled_idx;
+    *gf_idx = (last_filled_idx - 1) & (GST_VP9_REF_FRAMES - 1);
+    *arf_idx = (last_filled_idx - 2) & (GST_VP9_REF_FRAMES - 1);
+
+    *refresh_frame_flags = 1 << (*last_idx + 1);
+  }
+
+  GST_LOG
+      ("last_ref_idx:%d gold_ref_idx:%d alt_reff_idx:%d refesh_frame_flag:%x",
+      *last_idx, *gf_idx, *arf_idx, *refresh_frame_flags);
+}
+
 static gboolean
 fill_picture (GstVaapiEncoderVP9 * encoder,
     GstVaapiEncPicture * picture,
     GstVaapiCodedBuffer * codedbuf, GstVaapiSurfaceProxy * surface)
 {
   VAEncPictureParameterBufferVP9 *const pic_param = picture->param;
-  guint i;
+  guint i, last_idx = 0, gf_idx = 0, arf_idx = 0;
+  guint8 refresh_frame_flags = 0;
 
   memset (pic_param, 0, sizeof (VAEncPictureParameterBufferVP9));
 
@@ -224,12 +278,13 @@ fill_picture (GstVaapiEncoderVP9 * encoder,
      * for prediction */
     pic_param->ref_flags.bits.ref_frame_ctrl_l0 = 0x7;
 
-    pic_param->ref_flags.bits.ref_last_idx = 0;
-    pic_param->ref_flags.bits.ref_gf_idx = 1;
-    pic_param->ref_flags.bits.ref_arf_idx = 2;
+    get_ref_indices (encoder->ref_pic_mode, encoder->ref_list_idx, &last_idx,
+        &gf_idx, &arf_idx, &refresh_frame_flags);
 
-    /* updating the ref_slot[0] with current frame */
-    pic_param->refresh_frame_flags = 0x01;
+    pic_param->ref_flags.bits.ref_last_idx = last_idx;
+    pic_param->ref_flags.bits.ref_gf_idx = gf_idx;
+    pic_param->ref_flags.bits.ref_arf_idx = arf_idx;
+    pic_param->refresh_frame_flags = refresh_frame_flags;
   }
 
   pic_param->luma_ac_qindex = encoder->yac_qi;
@@ -262,17 +317,29 @@ update_ref_list (GstVaapiEncoderVP9 * encoder, GstVaapiEncPicture * picture,
   guint i;
 
   if (picture->type == GST_VAAPI_PICTURE_TYPE_I) {
-    for (i = 0; i < G_N_ELEMENTS (encoder->ref_list); i++) {
-      if (encoder->ref_list[i])
-        gst_vaapi_surface_proxy_unref (encoder->ref_list[i]);
-      encoder->ref_list[i] = gst_vaapi_surface_proxy_ref (ref);
-    }
+    for (i = 0; i < G_N_ELEMENTS (encoder->ref_list); i++)
+      gst_vaapi_surface_proxy_replace (&encoder->ref_list[i], ref);
     gst_vaapi_surface_proxy_unref (ref);
+    /* set next free slot index */
+    encoder->ref_list_idx = 1;
     return;
   }
 
-  gst_vaapi_surface_proxy_unref (encoder->ref_list[0]);
-  encoder->ref_list[0] = ref;
+  switch (encoder->ref_pic_mode) {
+    case GST_VAAPI_ENCODER_VP9_REF_PIC_MODE_0:
+      gst_vaapi_surface_proxy_replace (&encoder->ref_list[0], ref);
+      gst_vaapi_surface_proxy_unref (ref);
+      break;
+    case GST_VAAPI_ENCODER_VP9_REF_PIC_MODE_1:
+      gst_vaapi_surface_proxy_replace (&encoder->
+          ref_list[encoder->ref_list_idx], ref);
+      gst_vaapi_surface_proxy_unref (ref);
+      encoder->ref_list_idx = (encoder->ref_list_idx + 1) % GST_VP9_REF_FRAMES;
+      break;
+    default:
+      g_assert ("Code shouldn't reach here");
+      break;
+  }
 }
 
 static GstVaapiEncoderStatus
@@ -365,7 +432,10 @@ gst_vaapi_encoder_vp9_init (GstVaapiEncoder * base_encoder)
   encoder->loop_filter_level = DEFAULT_LOOP_FILTER_LEVEL;
   encoder->sharpness_level = DEFAULT_SHARPNESS_LEVEL;
   encoder->yac_qi = DEFAULT_YAC_QINDEX;
+
   memset (encoder->ref_list, 0, G_N_ELEMENTS (encoder->ref_list));
+  encoder->ref_list_idx = 0;
+
   return TRUE;
 }
 
@@ -389,6 +459,9 @@ gst_vaapi_encoder_vp9_set_property (GstVaapiEncoder * base_encoder,
       break;
     case GST_VAAPI_ENCODER_VP9_PROP_YAC_Q_INDEX:
       encoder->yac_qi = g_value_get_uint (value);
+      break;
+    case GST_VAAPI_ENCODER_VP9_PROP_REF_PIC_MODE:
+      encoder->ref_pic_mode = g_value_get_enum (value);
       break;
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
@@ -465,6 +538,15 @@ gst_vaapi_encoder_vp9_get_default_properties (void)
           "Luma AC Quant Table index",
           "Quantization Table index for Luma AC Coefficients",
           0, 255, DEFAULT_YAC_QINDEX,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_VP9_PROP_REF_PIC_MODE,
+      g_param_spec_enum ("ref-pic-mode",
+          "RefPic Selection",
+          "Reference Picture Selection Modes",
+          gst_vaapi_encoder_vp9_ref_pic_mode_type (),
+          GST_VAAPI_ENCODER_VP9_REF_PIC_MODE_0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 
