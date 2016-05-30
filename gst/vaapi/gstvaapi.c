@@ -46,6 +46,10 @@
 #include "gstvaapiencode_h265.h"
 #endif
 
+#if USE_VP9_ENCODER
+#include "gstvaapiencode_vp9.h"
+#endif
+
 #define PLUGIN_NAME     "vaapi"
 #define PLUGIN_DESC     "VA-API based elements"
 #define PLUGIN_LICENSE  "LGPL"
@@ -73,10 +77,13 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin, "vaapivp8enc",
       GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_VP8);
 #endif
-
 #if USE_H265_ENCODER
   gst_element_register (plugin, "vaapih265enc",
       GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_H265);
+#endif
+#if USE_VP9_ENCODER
+  gst_element_register (plugin, "vaapivp9enc",
+      GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_VP9);
 #endif
 
   gst_element_register (plugin, "vaapidecodebin",
