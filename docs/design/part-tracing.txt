@@ -142,7 +142,7 @@ _tracer_class_init() function (except in the log tracer).
 
 // the name is the value name + ".class"
 // the content describes a single log record
-gst_structure_new ("thread-rusage.class",
+gst_tracer_record_new ("thread-rusage.class",
     // value in the log record (order does not matter)
     // 'thread-id' is a 'key' to related the record to something as indicated
     // by 'scope' substructure
@@ -180,15 +180,10 @@ A few ideas that are not yet in the above spec:
     - they add a unique 'ix' to each instance as the memory ptr can be reused
       for new instances, the data is attached to the objects as qdata
     - the latency tracer would like to also reference this metadata
-- enums and flags are logged as comma separated string to not require the front-
-  ends to know the flag values (is that okay?)
 - right now we log the classes as structures
   - this is important so that the log is self contained
   - it would be nice to add them to the registry, so that gst-inspect can show
     them
-
-In addition to the above spec, each log event will contain a "ts" field as a
-G_TYPE_UINT64 to specify the time of the event.
 
 We could also consider to add each value as a READABLE gobject property. The
 property has name/description. We could use qdata for scope and flags (or have
