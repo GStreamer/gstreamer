@@ -402,7 +402,7 @@ CREATE_SETTER (string, const gchar *, G_TYPE_STRING, string)
  * ges_meta_container_set_meta:
  * @container: Target container
  * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @value: (allow-none): Value to set
  * Sets the value of a given meta item
  *
  * Return: %TRUE if the meta could be added, %FALSE otherwize
@@ -413,6 +413,13 @@ ges_meta_container_set_meta (GESMetaContainer * container,
 {
   g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
   g_return_val_if_fail (meta_item != NULL, FALSE);
+
+  if (value == NULL) {
+    GstStructure *structure = _meta_container_get_structure (container);
+    gst_structure_remove_field (structure, meta_item);
+
+    return TRUE;
+  }
 
   if (_can_write_value (container, meta_item, G_VALUE_TYPE (value)) == FALSE)
     return FALSE;
