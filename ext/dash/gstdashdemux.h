@@ -92,6 +92,7 @@ struct _GstDashDemuxStream
   GstMoofBox *moof;
   guint64 moof_offset;
   GArray *moof_sync_samples;
+  guint current_sync_sample;
 };
 
 /**

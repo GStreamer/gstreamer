@@ -1070,6 +1070,24 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
     }
   }
 
+  if (dashstream->moof && dashstream->moof_sync_samples
+      /*&& GST_ADAPTIVE_DEMUX (dashdemux)->
+         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */ ) {
+    GstDashStreamSyncSample *sync_sample =
+        &g_array_index (dashstream->moof_sync_samples, GstDashStreamSyncSample,
+        dashstream->current_sync_sample);
+
+    gst_mpd_client_get_next_fragment (dashdemux->client, dashstream->index,
+        &fragment);
+    stream->fragment.uri = fragment.uri;
+    stream->fragment.timestamp = GST_CLOCK_TIME_NONE;
+    stream->fragment.duration = GST_CLOCK_TIME_NONE;
+    stream->fragment.range_start = sync_sample->start_offset;
+    stream->fragment.range_end = sync_sample->end_offset;
+
+    return GST_FLOW_OK;
+  }
+
   if (gst_mpd_client_get_next_fragment_timestamp (dashdemux->client,
           dashstream->index, &ts)) {
     if (GST_ADAPTIVE_DEMUX_STREAM_NEED_HEADER (stream)) {
@@ -1184,6 +1202,7 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
   if (dashstream->moof_sync_samples)
     g_array_free (dashstream->moof_sync_samples, TRUE);
   dashstream->moof_sync_samples = NULL;
+  dashstream->current_sync_sample = -1;
 
   if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
     if (dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
@@ -1202,6 +1221,26 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
 }
 
 static gboolean
+gst_dash_demux_stream_has_next_sync_sample (GstAdaptiveDemuxStream * stream)
+{
+  GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
+
+  if (dashstream->moof && dashstream->moof_sync_samples
+      /*&& GST_ADAPTIVE_DEMUX (stream->demux)->
+         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */ ) {
+    if (stream->demux->segment.rate > 0.0) {
+      if (dashstream->current_sync_sample + 1 <
+          dashstream->moof_sync_samples->len)
+        return TRUE;
+    } else {
+      if (dashstream->current_sync_sample >= 1)
+        return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+static gboolean
 gst_dash_demux_stream_has_next_subfragment (GstAdaptiveDemuxStream * stream)
 {
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
@@ -1217,6 +1256,42 @@ gst_dash_demux_stream_has_next_subfragment (GstAdaptiveDemuxStream * stream)
     }
   }
   return FALSE;
+}
+
+static gboolean
+gst_dash_demux_stream_advance_sync_sample (GstAdaptiveDemuxStream * stream)
+{
+  GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
+  gboolean fragment_finished = FALSE;
+
+  if (dashstream->moof && dashstream->moof_sync_samples
+      /*&& GST_ADAPTIVE_DEMUX (stream->demux)->
+         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */ ) {
+    if (stream->demux->segment.rate > 0.0) {
+      dashstream->current_sync_sample++;
+      if (dashstream->current_sync_sample >= dashstream->moof_sync_samples->len) {
+        fragment_finished = TRUE;
+      }
+    } else {
+      if (dashstream->current_sync_sample == -1)
+        dashstream->current_sync_sample =
+            dashstream->moof_sync_samples->len - 1;
+      else if (dashstream->current_sync_sample == 0) {
+        dashstream->current_sync_sample = -1;
+        fragment_finished = TRUE;
+      } else
+        dashstream->current_sync_sample--;
+    }
+  }
+
+  GST_DEBUG_OBJECT (stream->pad,
+      "Advancing sync sample #%d fragment_finished:%d",
+      dashstream->current_sync_sample, fragment_finished);
+
+  if (!fragment_finished)
+    stream->discont = TRUE;
+
+  return !fragment_finished;
 }
 
 static gboolean
@@ -1254,6 +1329,13 @@ gst_dash_demux_stream_has_next_fragment (GstAdaptiveDemuxStream * stream)
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
 
+  if (dashstream->moof_sync_samples
+      /*&& GST_ADAPTIVE_DEMUX (dashdemux)->
+         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */ ) {
+    if (gst_dash_demux_stream_has_next_sync_sample (stream))
+      return TRUE;
+  }
+
   if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
     if (gst_dash_demux_stream_has_next_subfragment (stream))
       return TRUE;
@@ -1286,6 +1368,7 @@ gst_dash_demux_clear_pending_stream_data (GstDashDemux * dashdemux,
   if (dashstream->moof_sync_samples)
     g_array_free (dashstream->moof_sync_samples, TRUE);
   dashstream->moof_sync_samples = NULL;
+  dashstream->current_sync_sample = -1;
 }
 
 static GstFlowReturn
@@ -1295,6 +1378,14 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
 
   GST_DEBUG_OBJECT (stream->pad, "Advance fragment");
+
+  /* If downloading only keyframes, switch to the next one or fall through */
+  if (dashstream->moof_sync_samples
+      /*&& GST_ADAPTIVE_DEMUX (dashdemux)->
+         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */ ) {
+    if (gst_dash_demux_stream_advance_sync_sample (stream))
+      return GST_FLOW_OK;
+  }
 
   if (dashstream->isobmff_adapter)
     gst_adapter_clear (dashstream->isobmff_adapter);
@@ -1309,6 +1400,7 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
   if (dashstream->moof_sync_samples)
     g_array_free (dashstream->moof_sync_samples, TRUE);
   dashstream->moof_sync_samples = NULL;
+  dashstream->current_sync_sample = -1;
 
   if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
     if (gst_dash_demux_stream_advance_subfragment (stream))
@@ -1709,14 +1801,17 @@ gst_dash_demux_stream_fragment_start (GstAdaptiveDemux * demux,
   dashstream->sidx_index_header_or_data = 0;
   dashstream->sidx_current_offset = -1;
 
-  /* Reset ISOBMFF box parsing state */
-  dashstream->isobmff_parser.current_fourcc = 0;
-  dashstream->isobmff_parser.current_start_offset = 0;
-  dashstream->isobmff_parser.current_offset = -1;
-  dashstream->isobmff_parser.current_size = 0;
   dashstream->isobmff_parser.index_header_or_data = 0;
-  if (dashstream->isobmff_adapter)
-    gst_adapter_clear (dashstream->isobmff_adapter);
+  dashstream->isobmff_parser.current_offset = -1;
+
+#if 0
+  /* FIXME: qtdemux requires us to also set the discont flag
+   * on the very first moof buffer */
+  if (dashstream->moof && dashstream->moof_sync_samples
+      /*&& GST_ADAPTIVE_DEMUX (dashdemux)->
+         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */ )
+#endif
+    stream->discont = TRUE;
 
   return TRUE;
 }
@@ -1728,8 +1823,17 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
 
-  if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
-      dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
+#if 0
+  /* FIXME: qtdemux requires us to also set the discont flag
+   * on the very first moof buffer */
+  if (dashstream->moof && dashstream->moof_sync_samples
+      /*&& GST_ADAPTIVE_DEMUX (dashdemux)->
+         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */ )
+#endif
+    stream->discont = TRUE;
+
+  if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)
+      && dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
     /* fragment is advanced on data_received when byte limits are reached */
     if (gst_dash_demux_stream_has_next_fragment (stream))
       return GST_FLOW_OK;
@@ -1849,6 +1953,7 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
       dash_stream->moof = gst_isoff_moof_box_parse (&sub_reader);
       dash_stream->moof_offset =
           dash_stream->isobmff_parser.current_start_offset;
+      dash_stream->current_sync_sample = -1;
     } else {
       gst_byte_reader_skip (&reader, size - header_size);
     }
@@ -1921,6 +2026,7 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
   if (!dash_stream->moof)
     return FALSE;
 
+  dash_stream->current_sync_sample = -1;
   dash_stream->moof_sync_samples =
       g_array_new (FALSE, FALSE, sizeof (GstDashStreamSyncSample));
 
@@ -1985,7 +2091,8 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
             tfhd.flags & GST_TFHD_FLAGS_DEFAULT_SAMPLE_FLAGS_PRESENT) {
           sample_flags = traf->tfhd.default_sample_flags;
         } else {
-          GST_ERROR_OBJECT (stream->pad, "Sample flags given by trex");
+          GST_FIXME_OBJECT (stream->pad,
+              "Sample flags given by trex - can't download only keyframes");
           g_array_free (dash_stream->moof_sync_samples, TRUE);
           dash_stream->moof_sync_samples = NULL;
           return FALSE;
@@ -1998,7 +2105,8 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
             tfhd.flags & GST_TFHD_FLAGS_DEFAULT_SAMPLE_DURATION_PRESENT) {
           sample_duration = traf->tfhd.default_sample_duration;
         } else {
-          GST_ERROR_OBJECT (stream->pad, "Sample duration given by trex");
+          GST_FIXME_OBJECT (stream->pad,
+              "Sample duration given by trex - can't download only keyframes");
           g_array_free (dash_stream->moof_sync_samples, TRUE);
           dash_stream->moof_sync_samples = NULL;
           return FALSE;
@@ -2011,7 +2119,8 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
             tfhd.flags & GST_TFHD_FLAGS_DEFAULT_SAMPLE_SIZE_PRESENT) {
           prev_sample_end += traf->tfhd.default_sample_size;
         } else {
-          GST_ERROR_OBJECT (stream->pad, "Sample size given by trex");
+          GST_FIXME_OBJECT (stream->pad,
+              "Sample size given by trex - can't download only keyframes");
           g_array_free (dash_stream->moof_sync_samples, TRUE);
           dash_stream->moof_sync_samples = NULL;
           return FALSE;
@@ -2056,7 +2165,12 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
           return ret;
 
         if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT) {
-          gst_dash_demux_find_sync_samples (demux, stream);
+          /* Jump to the next sync sample */
+          if (gst_dash_demux_find_sync_samples (demux, stream)  /*&&
+                                                                   GST_ADAPTIVE_DEMUX (stream->demux)-> segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */
+              )
+            return GST_ADAPTIVE_DEMUX_FLOW_END_OF_FRAGMENT;
+
           if (gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
             buffer =
                 gst_adapter_take_buffer (dash_stream->isobmff_adapter,
@@ -2174,10 +2288,25 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
         if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
           buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
 
+          /* If the buffer we passed to the parser was the last data of the
+           * sidx fragment, we must have gotten an output buffer from the
+           * parser.
+           */
+          g_assert (buffer || !advance);
+
           /* Leftover in the adapter is actual mdat data if any */
           if (dash_stream->isobmff_parser.current_fourcc ==
               GST_ISOFF_FOURCC_MDAT) {
-            gst_dash_demux_find_sync_samples (demux, stream);
+
+            /* Jump to the next sync sample */
+            if (gst_dash_demux_find_sync_samples (demux, stream)        /*&&
+                                                                           GST_ADAPTIVE_DEMUX (stream->demux)-> segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */
+                ) {
+              if (buffer)
+                gst_buffer_unref (buffer);
+              return GST_ADAPTIVE_DEMUX_FLOW_END_OF_FRAGMENT;
+            }
+
             if (gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
               GstBuffer *buffer2 =
                   gst_adapter_take_buffer (dash_stream->isobmff_adapter,
@@ -2189,8 +2318,6 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
                 buffer = buffer2;
             }
           }
-
-          g_assert (buffer || !advance);
         }
       }
 
