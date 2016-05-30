@@ -358,6 +358,9 @@ _execute_switch_track (GstValidateScenario * scenario,
         res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
     }
 
+    if (oldpad)
+      gst_object_unref (oldpad);
+    gst_object_unref (newpad);
   } else {
     gst_validate_printf (action, "Disabling track type %s", type);
   }
