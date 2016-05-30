@@ -36,7 +36,7 @@ typedef struct _GstVaapiEncoderVP9 GstVaapiEncoderVP9;
  * GstVaapiEncoderVP9Prop:
  * @GST_VAAPI_ENCODER_VP9_PROP_LOOP_FILTER_LEVEL: Loop Filter Level(uint).
  * @GST_VAAPI_ENCODER_VP9_PROP_LOOP_SHARPNESS_LEVEL: Sharpness Level(uint).
- * @GST_VAAPI_ENCODER_VP9_PROP_YAC_Q_INDEX: Quantization table index for luma AC(uint).
+ * @GST_VAAPI_ENCODER_VP9_PROP_YAC_Q_INDEX: Quantization table index for luma AC
  *
  * The set of VP9 encoder specific configurable properties.
  */

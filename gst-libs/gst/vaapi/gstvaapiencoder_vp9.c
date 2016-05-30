@@ -49,9 +49,9 @@
 #define SUPPORTED_PACKED_HEADERS                \
   (VA_ENC_PACKED_HEADER_NONE)
 
-#define DEFAULT_LOOP_FILTER_LEVEL 0
+#define DEFAULT_LOOP_FILTER_LEVEL 10
 #define DEFAULT_SHARPNESS_LEVEL 0
-#define DEFAULT_YAC_QI 40
+#define DEFAULT_YAC_QINDEX 60
 
 /* ------------------------------------------------------------------------- */
 /* --- VP9 Encoder                                                      --- */
@@ -64,6 +64,9 @@ struct _GstVaapiEncoderVP9
 {
   GstVaapiEncoder parent_instance;
   GstVaapiProfile profile;
+  guint loop_filter_level;
+  guint sharpness_level;
+  guint yac_qi;
   guint frame_num;
   /* reference list */
   GstVaapiSurfaceProxy *ref_list[GST_VP9_REF_FRAMES];
@@ -227,15 +230,12 @@ fill_picture (GstVaapiEncoderVP9 * encoder,
     pic_param->refresh_frame_flags = 0x01;
   }
 
-  /* Fixme: Add tuning options for ac/dc qindex */
-  /* Assiging some default values for now */
-  pic_param->luma_ac_qindex = 60;
+  pic_param->luma_ac_qindex = encoder->yac_qi;
   pic_param->luma_dc_qindex_delta = 1;
   pic_param->chroma_ac_qindex_delta = 1;
   pic_param->chroma_dc_qindex_delta = 1;
-  /* Fixme: Add properties to control sharness and loopfilter level */
-  pic_param->filter_level = 0;
-  pic_param->sharpness_level = 0;
+  pic_param->filter_level = encoder->loop_filter_level;
+  pic_param->sharpness_level = encoder->sharpness_level;
 
   return TRUE;
 }
@@ -360,6 +360,9 @@ gst_vaapi_encoder_vp9_init (GstVaapiEncoder * base_encoder)
   GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9_CAST (base_encoder);
 
   encoder->frame_num = 0;
+  encoder->loop_filter_level = DEFAULT_LOOP_FILTER_LEVEL;
+  encoder->sharpness_level = DEFAULT_SHARPNESS_LEVEL;
+  encoder->yac_qi = DEFAULT_YAC_QINDEX;
   memset (encoder->ref_list, 0, G_N_ELEMENTS (encoder->ref_list));
   return TRUE;
 }
@@ -373,7 +376,18 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_vp9_set_property (GstVaapiEncoder * base_encoder,
     gint prop_id, const GValue * value)
 {
+  GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9_CAST (base_encoder);
+
   switch (prop_id) {
+    case GST_VAAPI_ENCODER_VP9_PROP_LOOP_FILTER_LEVEL:
+      encoder->loop_filter_level = g_value_get_uint (value);
+      break;
+    case GST_VAAPI_ENCODER_VP9_PROP_SHARPNESS_LEVEL:
+      encoder->sharpness_level = g_value_get_uint (value);
+      break;
+    case GST_VAAPI_ENCODER_VP9_PROP_YAC_Q_INDEX:
+      encoder->yac_qi = g_value_get_uint (value);
+      break;
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
   }
@@ -426,6 +440,31 @@ gst_vaapi_encoder_vp9_get_default_properties (void)
   props = gst_vaapi_encoder_properties_get_default (klass);
   if (!props)
     return NULL;
+
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_VP9_PROP_LOOP_FILTER_LEVEL,
+      g_param_spec_uint ("loop-filter-level",
+          "Loop Filter Level",
+          "Controls the deblocking filter strength",
+          0, 63, DEFAULT_LOOP_FILTER_LEVEL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_VP9_PROP_SHARPNESS_LEVEL,
+      g_param_spec_uint ("sharpness-level",
+          "Sharpness Level",
+          "Controls the deblocking filter sensitivity",
+          0, 7, DEFAULT_SHARPNESS_LEVEL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_VP9_PROP_YAC_Q_INDEX,
+      g_param_spec_uint ("yac-qi",
+          "Luma AC Quant Table index",
+          "Quantization Table index for Luma AC Coefficients",
+          0, 255, DEFAULT_YAC_QINDEX,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 
   return props;
 }
