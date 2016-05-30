@@ -93,21 +93,33 @@ notify_name (GObject * object, GParamSpec * pspec, gint * out_count)
 }
 
 /* GstFakeObject name tests */
-GST_START_TEST (test_fake_object_name)
+GST_START_TEST (test_fake_object_initial_name)
 {
-  GstObject *object, *parent;
-  gint count = 0;
+  GstObject *object;
   gchar *name;
-  gchar *name2;
 
   object = g_object_new (gst_fake_object_get_type (), NULL);
-  g_signal_connect (object, "notify::name", G_CALLBACK (notify_name), &count);
 
   name = gst_object_get_name (object);
   fail_if (name == NULL, "Newly created object has no name");
   fail_if (strncmp (name, "fakeobject", 10) != 0,
-      "Random name %s does not start with Gst", name);
+      "Random name %s does not start with 'fakeobject'", name);
   g_free (name);
+
+  gst_object_unref (object);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_fake_object_reset_name)
+{
+  GstObject *object;
+  gchar *name;
+  gint count = 0;
+
+  object = g_object_new (gst_fake_object_get_type (), NULL);
+  g_signal_connect (object, "notify::name", G_CALLBACK (notify_name), &count);
 
   /* give a random name by setting with NULL;
    * GstFakeObject class -> fakeobject%d */
@@ -115,25 +127,67 @@ GST_START_TEST (test_fake_object_name)
   name = gst_object_get_name (object);
   fail_if (name == NULL, "Random name was not assigned");
   fail_if (strncmp (name, "fakeobject", 10) != 0,
-      "Random name %s does not start with Gst", name);
+      "Random name %s does not start with 'fakeobject'", name);
   g_free (name);
   fail_unless (count == 1, "Name change was not notified");
+
+  gst_object_unref (object);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_fake_object_set_name_via_property)
+{
+  GstObject *object;
+  gchar *name;
+  gint count = 0;
+
+  object = g_object_new (gst_fake_object_get_type (), NULL);
+  g_signal_connect (object, "notify::name", G_CALLBACK (notify_name), &count);
 
   /* also test the property code path */
   g_object_set (object, "name", "fake", NULL);
   name = gst_object_get_name (object);
   fail_if (name == NULL, "Failed to get name of GstFakeObject");
   fail_if (strcmp (name, "fake") != 0, "Name of GstFakeObject is not 'fake'");
-  fail_if (count > 2, "Name change was notified multiple time");
-  fail_unless (count == 2, "Name change was not notified");
+  g_free (name);
+  fail_if (count > 1, "Name change was notified multiple time");
+  fail_unless (count == 1, "Name change was not notified");
+
+  gst_object_unref (object);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_fake_object_get_name_retuns_copy)
+{
+  GstObject *object;
+  gchar *name1, *name2;
+
+  object = g_object_new (gst_fake_object_get_type (), NULL);
 
   /* change the gotten name to see that it's a copy and not the original */
-  name[0] = 'm';
+  name1 = gst_object_get_name (object);
+  name1[0] = 'm';
   name2 = gst_object_get_name (object);
-  fail_if (strcmp (name2, "fake") != 0,
+  fail_if (strncmp (name2, "fakeobject", 10) != 0,
       "Copy of object name affected actual object name");
-  g_free (name);
+  g_free (name1);
   g_free (name2);
+
+  gst_object_unref (object);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_fake_object_set_name_when_parented)
+{
+  GstObject *object, *parent;
+
+  object = g_object_new (gst_fake_object_get_type (), NULL);
 
   /* add a parent and ensure name cannot be changed */
   parent = g_object_new (gst_fake_object_get_type (), NULL);
@@ -141,6 +195,7 @@ GST_START_TEST (test_fake_object_name)
   fail_if (gst_object_set_name (object, "broken"),
       "Could set name on parented object");
 
+  gst_object_unparent (object);
   gst_object_unref (parent);
 }
 
@@ -567,7 +622,11 @@ gst_object_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_fake_object_new);
-  tcase_add_test (tc_chain, test_fake_object_name);
+  tcase_add_test (tc_chain, test_fake_object_initial_name);
+  tcase_add_test (tc_chain, test_fake_object_reset_name);
+  tcase_add_test (tc_chain, test_fake_object_set_name_via_property);
+  tcase_add_test (tc_chain, test_fake_object_get_name_retuns_copy);
+  tcase_add_test (tc_chain, test_fake_object_set_name_when_parented);
 #if 0
   tcase_add_test (tc_chain, test_fake_object_name_threaded_wrong);
 #endif
