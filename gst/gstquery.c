@@ -221,7 +221,7 @@ _gst_query_copy (GstQuery * query)
  * when done with it. A position query is used to query the current position
  * of playback in the streams, in some format.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a new #GstQuery
  */
@@ -300,7 +300,7 @@ gst_query_parse_position (GstQuery * query, GstFormat * format, gint64 * cur)
  * Use gst_query_unref() when done with it. A duration query will give the
  * total length of the stream.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a new #GstQuery
  */
@@ -377,7 +377,7 @@ gst_query_parse_duration (GstQuery * query, GstFormat * format,
  * by sinks to compensate for additional latency introduced by elements in the
  * pipeline.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a #GstQuery
  */
@@ -462,7 +462,7 @@ gst_query_parse_latency (GstQuery * query, gboolean * live,
  * when done with it. A convert query is used to ask for a conversion between
  * one format and another.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a #GstQuery
  */
@@ -557,7 +557,7 @@ gst_query_parse_convert (GstQuery * query, GstFormat * src_format,
  * when done with it. A segment query is used to discover information about the
  * currently configured segment for playback.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a new #GstQuery
  */
@@ -660,7 +660,7 @@ gst_query_parse_segment (GstQuery * query, gdouble * rate, GstFormat * format,
  * Constructs a new custom query object. Use gst_query_unref()
  * when done with it.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a new #GstQuery
  */
@@ -743,7 +743,7 @@ gst_query_writable_structure (GstQuery * query)
  * Constructs a new query object for querying seeking properties of
  * the stream.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a new #GstQuery
  */
@@ -859,7 +859,7 @@ ensure_array (GstStructure * s, GQuark quark, gsize element_size,
  * Constructs a new query object for querying formats of
  * the stream.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a new #GstQuery
  */
@@ -1019,7 +1019,7 @@ gst_query_parse_nth_format (GstQuery * query, guint nth, GstFormat * format)
  * Constructs a new query object for querying the buffering status of
  * a stream.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a new #GstQuery
  */
@@ -1351,7 +1351,7 @@ gst_query_parse_nth_buffering_range (GstQuery * query, guint index,
  * when done with it. An URI query is used to query the current URI
  * that is used by the source or sink.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a new #GstQuery
  */
@@ -1521,7 +1521,7 @@ gst_query_parse_uri_redirection_permanent (GstQuery * query,
  *
  * Constructs a new query object for querying the allocation properties.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a new #GstQuery
  */
@@ -1549,6 +1549,9 @@ gst_query_new_allocation (GstCaps * caps, gboolean need_pool)
  * Parse an allocation query, writing the requested caps in @caps and
  * whether a pool is needed in @need_pool, if the respective parameters
  * are non-%NULL.
+ *
+ * Pool details can be retrieved using gst_query_get_n_allocation_pools() and
+ * gst_query_parse_nth_allocation_pool().
  */
 void
 gst_query_parse_allocation (GstQuery * query, GstCaps ** caps,
@@ -1586,7 +1589,7 @@ allocation_pool_free (AllocationPool * ap)
  * gst_query_add_allocation_pool:
  * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
  * @pool: (transfer none) (allow-none): the #GstBufferPool
- * @size: the size
+ * @size: the buffer size
  * @min_buffers: the min buffers
  * @max_buffers: the max buffers
  *
@@ -1615,7 +1618,6 @@ gst_query_add_allocation_pool (GstQuery * query, GstBufferPool * pool,
 
   g_array_append_val (array, ap);
 }
-
 
 /**
  * gst_query_get_n_allocation_pools:
@@ -1646,7 +1648,7 @@ gst_query_get_n_allocation_pools (GstQuery * query)
  * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
  * @index: index to parse
  * @pool: (out) (allow-none) (transfer full): the #GstBufferPool
- * @size: (out) (allow-none): the size
+ * @size: (out) (allow-none): the buffer size
  * @min_buffers: (out) (allow-none): the min buffers
  * @max_buffers: (out) (allow-none): the max buffers
  *
@@ -2096,7 +2098,7 @@ gst_query_remove_nth_allocation_param (GstQuery * query, guint index)
  *
  * Constructs a new query object for querying the scheduling properties.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a new #GstQuery
  */
@@ -2315,7 +2317,7 @@ gst_query_has_scheduling_mode_with_flags (GstQuery * query, GstPadMode mode,
  *
  * Constructs a new query object for querying if @caps are accepted.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a new #GstQuery
  */
@@ -2418,7 +2420,7 @@ gst_query_parse_accept_caps_result (GstQuery * query, gboolean * result)
  * @filter should be returned from the CAPS query. Specifying a filter might
  * greatly reduce the amount of processing an element needs to do.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a new #GstQuery
  */
@@ -2516,7 +2518,7 @@ gst_query_intersect_caps_result (GstQuery * query, GstCaps * filter,
  *
  * Constructs a new query object for querying the drain state.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a new #GstQuery
  */
@@ -2538,7 +2540,7 @@ gst_query_new_drain (void)
  *
  * Constructs a new query object for querying the pipeline-local context.
  *
- * Free-function: gst_query_unref
+ * Free-function: gst_query_unref()
  *
  * Returns: (transfer full): a new #GstQuery
  *
