@@ -88,6 +88,10 @@ struct _GstDashDemuxStream
     guint64 current_offset;
     guint64 current_size;
   } isobmff_parser;
+
+  GstMoofBox *moof;
+  guint64 moof_offset;
+  GArray *moof_sync_samples;
 };
 
 /**

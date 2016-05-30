@@ -216,6 +216,12 @@ struct _GstDashDemuxClockDrift
   GstClock *ntp_clock;
 };
 
+typedef struct
+{
+  guint64 start_offset, end_offset;
+  /* TODO: Timestamp and duration */
+} GstDashStreamSyncSample;
+
 /* GObject */
 static void gst_dash_demux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -1172,6 +1178,13 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
 
+  if (dashstream->moof)
+    gst_isoff_moof_box_free (dashstream->moof);
+  dashstream->moof = NULL;
+  if (dashstream->moof_sync_samples)
+    g_array_free (dashstream->moof_sync_samples, TRUE);
+  dashstream->moof_sync_samples = NULL;
+
   if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
     if (dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
       gst_dash_demux_stream_sidx_seek (dashstream, forward, flags, ts,
@@ -1266,6 +1279,13 @@ gst_dash_demux_clear_pending_stream_data (GstDashDemux * dashdemux,
   dashstream->isobmff_parser.current_start_offset = 0;
   dashstream->isobmff_parser.current_offset = 0;
   dashstream->isobmff_parser.current_size = 0;
+
+  if (dashstream->moof)
+    gst_isoff_moof_box_free (dashstream->moof);
+  dashstream->moof = NULL;
+  if (dashstream->moof_sync_samples)
+    g_array_free (dashstream->moof_sync_samples, TRUE);
+  dashstream->moof_sync_samples = NULL;
 }
 
 static GstFlowReturn
@@ -1276,12 +1296,29 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
 
   GST_DEBUG_OBJECT (stream->pad, "Advance fragment");
 
+  if (dashstream->isobmff_adapter)
+    gst_adapter_clear (dashstream->isobmff_adapter);
+  dashstream->isobmff_parser.current_fourcc = 0;
+  dashstream->isobmff_parser.current_start_offset = 0;
+  dashstream->isobmff_parser.current_offset = 0;
+  dashstream->isobmff_parser.current_size = 0;
+
+  if (dashstream->moof)
+    gst_isoff_moof_box_free (dashstream->moof);
+  dashstream->moof = NULL;
+  if (dashstream->moof_sync_samples)
+    g_array_free (dashstream->moof_sync_samples, TRUE);
+  dashstream->moof_sync_samples = NULL;
+
   if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
     if (gst_dash_demux_stream_advance_subfragment (stream))
       return GST_FLOW_OK;
   }
 
-  gst_dash_demux_clear_pending_stream_data (dashdemux, dashstream);
+  gst_isoff_sidx_parser_clear (&dashstream->sidx_parser);
+  gst_isoff_sidx_parser_init (&dashstream->sidx_parser);
+  if (dashstream->sidx_adapter)
+    gst_adapter_clear (dashstream->sidx_adapter);
 
   return gst_mpd_client_advance_segment (dashdemux->client,
       dashstream->active_stream, stream->demux->segment.rate > 0.0);
@@ -1805,12 +1842,13 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
 
     if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MOOF) {
       GstByteReader sub_reader;
-      GstMoofBox *moof;
 
+      g_assert (dash_stream->moof == NULL);
+      g_assert (dash_stream->moof_sync_samples == NULL);
       gst_byte_reader_get_sub_reader (&reader, &sub_reader, size - header_size);
-      moof = gst_isoff_moof_box_parse (&sub_reader);
-      /* TODO: Do something with this */
-      gst_isoff_moof_box_free (moof);
+      dash_stream->moof = gst_isoff_moof_box_parse (&sub_reader);
+      dash_stream->moof_offset =
+          dash_stream->isobmff_parser.current_start_offset;
     } else {
       gst_byte_reader_skip (&reader, size - header_size);
     }
@@ -1871,6 +1909,132 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
   return NULL;
 }
 
+static gboolean
+gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
+    GstAdaptiveDemuxStream * stream)
+{
+  GstDashDemuxStream *dash_stream = (GstDashDemuxStream *) stream;
+  guint i;
+  guint32 track_id = 0;
+  guint64 prev_traf_end;
+
+  if (!dash_stream->moof)
+    return FALSE;
+
+  dash_stream->moof_sync_samples =
+      g_array_new (FALSE, FALSE, sizeof (GstDashStreamSyncSample));
+
+  prev_traf_end = dash_stream->moof_offset;
+
+  /* generate table of keyframes and offsets */
+  for (i = 0; i < dash_stream->moof->traf->len; i++) {
+    GstTrafBox *traf = &g_array_index (dash_stream->moof->traf, GstTrafBox, i);
+    guint64 traf_offset = 0, prev_trun_end;
+    guint j;
+
+    if (i == 0) {
+      track_id = traf->tfhd.track_id;
+    } else if (track_id != traf->tfhd.track_id) {
+      GST_ERROR_OBJECT (stream->pad,
+          "moof with trafs of different track ids (%u != %u)", track_id,
+          traf->tfhd.track_id);
+      g_array_free (dash_stream->moof_sync_samples, TRUE);
+      dash_stream->moof_sync_samples = NULL;
+      return FALSE;
+    }
+
+    if (traf->tfhd.flags & GST_TFHD_FLAGS_BASE_DATA_OFFSET_PRESENT) {
+      traf_offset = traf->tfhd.base_data_offset;
+    } else if (traf->tfhd.flags & GST_TFHD_FLAGS_DEFAULT_BASE_IS_MOOF) {
+      traf_offset = dash_stream->moof_offset;
+    } else {
+      traf_offset = prev_traf_end;
+    }
+
+    prev_trun_end = traf_offset;
+
+    for (j = 0; j < traf->trun->len; j++) {
+      GstTrunBox *trun = &g_array_index (traf->trun, GstTrunBox, j);
+      guint64 trun_offset, prev_sample_end;
+      guint k;
+
+      if (trun->flags & GST_TRUN_FLAGS_DATA_OFFSET_PRESENT) {
+        trun_offset = traf_offset + trun->data_offset;
+      } else {
+        trun_offset = prev_trun_end;
+      }
+
+      prev_sample_end = trun_offset;
+      for (k = 0; k < trun->samples->len; k++) {
+        GstTrunSample *sample =
+            &g_array_index (trun->samples, GstTrunSample, k);
+        guint64 sample_offset;
+        guint32 sample_flags;
+#if 0
+        guint32 sample_duration;
+#endif
+
+        sample_offset = prev_sample_end;
+
+        if (trun->flags & GST_TRUN_FLAGS_SAMPLE_FLAGS_PRESENT) {
+          sample_flags = sample->sample_flags;
+        } else if ((trun->flags & GST_TRUN_FLAGS_FIRST_SAMPLE_FLAGS_PRESENT)
+            && k == 0) {
+          sample_flags = trun->first_sample_flags;
+        } else if (traf->
+            tfhd.flags & GST_TFHD_FLAGS_DEFAULT_SAMPLE_FLAGS_PRESENT) {
+          sample_flags = traf->tfhd.default_sample_flags;
+        } else {
+          GST_ERROR_OBJECT (stream->pad, "Sample flags given by trex");
+          g_array_free (dash_stream->moof_sync_samples, TRUE);
+          dash_stream->moof_sync_samples = NULL;
+          return FALSE;
+        }
+
+#if 0
+        if (trun->flags & GST_TRUN_FLAGS_SAMPLE_DURATION_PRESENT) {
+          sample_duration = sample->sample_duration;
+        } else if (traf->
+            tfhd.flags & GST_TFHD_FLAGS_DEFAULT_SAMPLE_DURATION_PRESENT) {
+          sample_duration = traf->tfhd.default_sample_duration;
+        } else {
+          GST_ERROR_OBJECT (stream->pad, "Sample duration given by trex");
+          g_array_free (dash_stream->moof_sync_samples, TRUE);
+          dash_stream->moof_sync_samples = NULL;
+          return FALSE;
+        }
+#endif
+
+        if (trun->flags & GST_TRUN_FLAGS_SAMPLE_SIZE_PRESENT) {
+          prev_sample_end += sample->sample_size;
+        } else if (traf->
+            tfhd.flags & GST_TFHD_FLAGS_DEFAULT_SAMPLE_SIZE_PRESENT) {
+          prev_sample_end += traf->tfhd.default_sample_size;
+        } else {
+          GST_ERROR_OBJECT (stream->pad, "Sample size given by trex");
+          g_array_free (dash_stream->moof_sync_samples, TRUE);
+          dash_stream->moof_sync_samples = NULL;
+          return FALSE;
+        }
+
+        /* Non-non-sync sample aka sync sample */
+        if (!GST_ISOFF_SAMPLE_FLAGS_SAMPLE_IS_NON_SYNC_SAMPLE (sample_flags)) {
+          GstDashStreamSyncSample sync_sample =
+              { sample_offset, prev_sample_end - 1 };
+          /* TODO: need timestamps so we can decide to download or not */
+          g_array_append_val (dash_stream->moof_sync_samples, sync_sample);
+        }
+      }
+
+      prev_trun_end = prev_sample_end;
+    }
+
+    prev_traf_end = prev_trun_end;
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_dash_demux_data_received (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, GstBuffer * buffer)
@@ -1891,12 +2055,20 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
                     buffer)) != GST_FLOW_OK)
           return ret;
 
-        if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT
-            && gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
-          buffer =
-              gst_adapter_take_buffer (dash_stream->isobmff_adapter,
-              gst_adapter_available (dash_stream->isobmff_adapter));
-          ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
+        if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT) {
+          gst_dash_demux_find_sync_samples (demux, stream);
+          if (gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
+            buffer =
+                gst_adapter_take_buffer (dash_stream->isobmff_adapter,
+                gst_adapter_available (dash_stream->isobmff_adapter));
+            GST_BUFFER_OFFSET (buffer) =
+                dash_stream->isobmff_parser.current_offset;
+            dash_stream->isobmff_parser.current_offset +=
+                gst_buffer_get_size (buffer);
+            GST_BUFFER_OFFSET_END (buffer) =
+                dash_stream->isobmff_parser.current_offset;
+            ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
+          }
         }
 
         return ret;
@@ -2004,16 +2176,18 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
 
           /* Leftover in the adapter is actual mdat data if any */
           if (dash_stream->isobmff_parser.current_fourcc ==
-              GST_ISOFF_FOURCC_MDAT
-              && gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
-            GstBuffer *buffer2 =
-                gst_adapter_take_buffer (dash_stream->isobmff_adapter,
-                gst_adapter_available (dash_stream->isobmff_adapter));
+              GST_ISOFF_FOURCC_MDAT) {
+            gst_dash_demux_find_sync_samples (demux, stream);
+            if (gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
+              GstBuffer *buffer2 =
+                  gst_adapter_take_buffer (dash_stream->isobmff_adapter,
+                  gst_adapter_available (dash_stream->isobmff_adapter));
 
-            if (buffer)
-              buffer = gst_buffer_append (buffer, buffer2);
-            else
-              buffer = buffer2;
+              if (buffer)
+                buffer = gst_buffer_append (buffer, buffer2);
+              else
+                buffer = buffer2;
+            }
           }
 
           g_assert (buffer || !advance);
@@ -2054,12 +2228,21 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
                     buffer)) != GST_FLOW_OK)
           return ret;
 
-        if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT
-            && gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
-          buffer =
-              gst_adapter_take_buffer (dash_stream->isobmff_adapter,
-              gst_adapter_available (dash_stream->isobmff_adapter));
-          ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
+        if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT) {
+          gst_dash_demux_find_sync_samples (demux, stream);
+
+          if (gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
+            buffer =
+                gst_adapter_take_buffer (dash_stream->isobmff_adapter,
+                gst_adapter_available (dash_stream->isobmff_adapter));
+            GST_BUFFER_OFFSET (buffer) =
+                dash_stream->isobmff_parser.current_offset;
+            dash_stream->isobmff_parser.current_offset +=
+                gst_buffer_get_size (buffer);
+            GST_BUFFER_OFFSET_END (buffer) =
+                dash_stream->isobmff_parser.current_offset;
+            ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
+          }
         }
 
         return ret;
