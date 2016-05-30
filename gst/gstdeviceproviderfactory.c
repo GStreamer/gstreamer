@@ -294,8 +294,12 @@ gst_device_provider_factory_get (GstDeviceProviderFactory * factory)
    * an device provider at the same moment
    */
   oclass = GST_DEVICE_PROVIDER_GET_CLASS (device_provider);
-  if (!g_atomic_pointer_compare_and_exchange (&oclass->factory, NULL, factory))
+  if (!g_atomic_pointer_compare_and_exchange (&oclass->factory, NULL, factory)) {
     gst_object_unref (factory);
+  } else {
+    /* This ref will never be dropped as the class is never destroyed */
+    GST_OBJECT_FLAG_SET (factory, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  }
 
   gst_object_ref_sink (device_provider);
 

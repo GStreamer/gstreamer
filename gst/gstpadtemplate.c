@@ -200,6 +200,8 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
 static void
 gst_pad_template_init (GstPadTemplate * templ)
 {
+  /* GstPadTemplate objects are usually leaked */
+  GST_OBJECT_FLAG_SET (templ, GST_OBJECT_FLAG_MAY_BE_LEAKED);
 }
 
 static void
@@ -395,6 +397,9 @@ gst_pad_template_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CAPS:
       GST_PAD_TEMPLATE_CAPS (object) = g_value_dup_boxed (value);
+      /* GstPadTemplate are usually leaked so are their caps */
+      GST_MINI_OBJECT_FLAG_SET (GST_PAD_TEMPLATE_CAPS (object),
+          GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

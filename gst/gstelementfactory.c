@@ -386,6 +386,9 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
   if (!g_atomic_pointer_compare_and_exchange (&oclass->elementfactory, NULL,
           factory))
     gst_object_unref (factory);
+  else
+    /* This ref will never be dropped as the class is never destroyed */
+    GST_OBJECT_FLAG_SET (factory, GST_OBJECT_FLAG_MAY_BE_LEAKED);
 
   GST_DEBUG ("created element \"%s\"", GST_OBJECT_NAME (factory));
 

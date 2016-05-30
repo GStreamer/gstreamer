@@ -1332,6 +1332,11 @@ gst_net_client_clock_constructed (GObject * object)
         self->priv->address, "port", self->priv->port, "is-ntp",
         self->priv->is_ntp, NULL);
     clocks = g_list_prepend (clocks, cache);
+
+    /* Not actually leaked but is cached for a while before being disposed,
+     * see gst_net_client_clock_finalize, so pretend it is to not confuse
+     * tests. */
+    GST_OBJECT_FLAG_SET (cache->clock, GST_OBJECT_FLAG_MAY_BE_LEAKED);
   }
 
   cache->clocks = g_list_prepend (cache->clocks, self);
