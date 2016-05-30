@@ -53,6 +53,9 @@
 #define DEFAULT_SHARPNESS_LEVEL 0
 #define DEFAULT_YAC_QINDEX 60
 
+#define MAX_FRAME_WIDTH 4096
+#define MAX_FRAME_HEIGHT 4096
+
 /* ------------------------------------------------------------------------- */
 /* --- VP9 Encoder                                                      --- */
 /* ------------------------------------------------------------------------- */
@@ -142,9 +145,8 @@ fill_sequence (GstVaapiEncoderVP9 * encoder, GstVaapiEncSequence * sequence)
 
   memset (seq_param, 0, sizeof (VAEncSequenceParameterBufferVP9));
 
-  /* Fixme: check the requirement of 64 byte alignment ? */
-  seq_param->max_frame_width = 8192;
-  seq_param->max_frame_height = 8192;
+  seq_param->max_frame_width = MAX_FRAME_WIDTH;
+  seq_param->max_frame_height = MAX_FRAME_HEIGHT;
 
   /* keyframe minimum interval */
   seq_param->kf_min_dist = 1;
