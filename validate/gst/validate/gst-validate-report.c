@@ -508,8 +508,8 @@ gst_validate_report_get_issue_id (GstValidateReport * report)
 static void
 _report_free (GstValidateReport * report)
 {
-  g_object_unref (report->reporter);
   g_free (report->message);
+  g_free (report->reporter_name);
   g_list_free_full (report->shadow_reports,
       (GDestroyNotify) gst_validate_report_unref);
   g_list_free_full (report->repeated_reports,
@@ -529,7 +529,14 @@ gst_validate_report_new (GstValidateIssue * issue,
       (GstMiniObjectFreeFunction) _report_free);
 
   report->issue = issue;
-  report->reporter = g_object_ref (reporter);
+  /* The reporter is owning a ref on the report so it doesn't keep a ref to
+   * avoid reference cycles. But the report can also be used by
+   * GstValidateRunner *after* that the reporter has been destroyed, so we
+   * cache the reporter name to avoid crashing in
+   * gst_validate_report_print_detected_on if the reporter has been destroyed.
+   */
+  report->reporter = reporter;
+  report->reporter_name = g_strdup (gst_validate_reporter_get_name (reporter));
   report->message = g_strdup (message);
   g_mutex_init (&report->shadow_reports_lock);
   report->timestamp =
@@ -849,11 +856,10 @@ gst_validate_report_print_detected_on (GstValidateReport * report)
   GList *tmp;
 
   gst_validate_printf (NULL, "%*s Detected on <%s",
-      12, "", gst_validate_reporter_get_name (report->reporter));
+      12, "", report->reporter_name);
   for (tmp = report->shadow_reports; tmp; tmp = tmp->next) {
     GstValidateReport *shadow_report = (GstValidateReport *) tmp->data;
-    gst_validate_printf (NULL, ", %s",
-        gst_validate_reporter_get_name (shadow_report->reporter));
+    gst_validate_printf (NULL, ", %s", shadow_report->reporter_name);
   }
   gst_validate_printf (NULL, ">\n");
 }

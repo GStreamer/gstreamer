@@ -180,6 +180,7 @@ struct _GstValidateReport {
   GList *repeated_reports;
 
   GstValidateReportingDetails reporting_level;
+  gchar *reporter_name;
 
   gpointer _gst_reserved[GST_PADDING];
 };
