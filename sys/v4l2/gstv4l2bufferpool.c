@@ -1725,12 +1725,21 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
 
           if ((*buf)->pool == bpool) {
             guint num_queued;
+            gsize size = gst_buffer_get_size (*buf);
 
-            if (gst_buffer_get_size (*buf) == 0) {
+            if (size == 0) {
               if (GST_BUFFER_FLAG_IS_SET (*buf, GST_BUFFER_FLAG_CORRUPTED))
                 goto buffer_corrupted;
               else
                 goto eos;
+            }
+
+            /* verify that buffer contains a full frame for raw video */
+            if (GST_VIDEO_INFO_FORMAT (&obj->info) != GST_VIDEO_FORMAT_ENCODED
+                && size < GST_VIDEO_INFO_SIZE (&obj->info)) {
+              GST_WARNING_OBJECT (pool, "Invalid buffer size, this is likely "
+                  "due to a bug in your driver, dropping");
+              goto buffer_corrupted;
             }
 
             num_queued = g_atomic_int_get (&pool->num_queued);
