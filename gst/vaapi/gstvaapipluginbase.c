@@ -145,6 +145,21 @@ default_display_changed (GstVaapiPluginBase * plugin)
 {
 }
 
+static GstVaapiSurface *
+_get_cached_surface (GstBuffer * buf)
+{
+  return gst_mini_object_get_qdata (GST_MINI_OBJECT (buf),
+      g_quark_from_static_string ("GstVaapiDMABufSurface"));
+}
+
+static void
+_set_cached_surface (GstBuffer * buf, GstVaapiSurface * surface)
+{
+  return gst_mini_object_set_qdata (GST_MINI_OBJECT (buf),
+      g_quark_from_static_string ("GstVaapiDMABufSurface"), surface,
+      (GDestroyNotify) gst_vaapi_object_unref);
+}
+
 static gboolean
 plugin_update_sinkpad_info_from_buffer (GstVaapiPluginBase * plugin,
     GstBuffer * buf)
@@ -205,13 +220,18 @@ plugin_bind_dma_to_vaapi_buffer (GstVaapiPluginBase * plugin,
   meta = gst_buffer_get_vaapi_video_meta (outbuf);
   g_return_val_if_fail (meta != NULL, FALSE);
 
-  surface =
-      gst_vaapi_surface_new_with_dma_buf_handle (plugin->display, fd, vip);
-  if (!surface)
-    goto error_create_surface;
+  /* Check for a VASurface cached in the buffer */
+  surface = _get_cached_surface (inbuf);
+  if (!surface) {
+    /* otherwise create one and cache it */
+    surface =
+        gst_vaapi_surface_new_with_dma_buf_handle (plugin->display, fd, vip);
+    if (!surface)
+      goto error_create_surface;
+    _set_cached_surface (inbuf, surface);
+  }
 
   proxy = gst_vaapi_surface_proxy_new (surface);
-  gst_vaapi_object_unref (surface);
   if (!proxy)
     goto error_create_proxy;
 
