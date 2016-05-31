@@ -1070,9 +1070,9 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
     }
   }
 
-  if (dashstream->moof && dashstream->moof_sync_samples
-      /*&& GST_ADAPTIVE_DEMUX (dashdemux)->
-         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */ ) {
+  if (dashstream->moof_sync_samples
+      && GST_ADAPTIVE_DEMUX (dashdemux)->
+      segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
     GstDashStreamSyncSample *sync_sample =
         &g_array_index (dashstream->moof_sync_samples, GstDashStreamSyncSample,
         dashstream->current_sync_sample);
@@ -1225,9 +1225,9 @@ gst_dash_demux_stream_has_next_sync_sample (GstAdaptiveDemuxStream * stream)
 {
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
 
-  if (dashstream->moof && dashstream->moof_sync_samples
-      /*&& GST_ADAPTIVE_DEMUX (stream->demux)->
-         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */ ) {
+  if (dashstream->moof_sync_samples
+      && GST_ADAPTIVE_DEMUX (stream->demux)->
+      segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
     if (stream->demux->segment.rate > 0.0) {
       if (dashstream->current_sync_sample + 1 <
           dashstream->moof_sync_samples->len)
@@ -1264,9 +1264,9 @@ gst_dash_demux_stream_advance_sync_sample (GstAdaptiveDemuxStream * stream)
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
   gboolean fragment_finished = FALSE;
 
-  if (dashstream->moof && dashstream->moof_sync_samples
-      /*&& GST_ADAPTIVE_DEMUX (stream->demux)->
-         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */ ) {
+  if (dashstream->moof_sync_samples
+      && GST_ADAPTIVE_DEMUX (stream->demux)->
+      segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
     if (stream->demux->segment.rate > 0.0) {
       dashstream->current_sync_sample++;
       if (dashstream->current_sync_sample >= dashstream->moof_sync_samples->len) {
@@ -1330,8 +1330,8 @@ gst_dash_demux_stream_has_next_fragment (GstAdaptiveDemuxStream * stream)
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
 
   if (dashstream->moof_sync_samples
-      /*&& GST_ADAPTIVE_DEMUX (dashdemux)->
-         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */ ) {
+      && GST_ADAPTIVE_DEMUX (dashdemux)->
+      segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
     if (gst_dash_demux_stream_has_next_sync_sample (stream))
       return TRUE;
   }
@@ -1381,8 +1381,8 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
 
   /* If downloading only keyframes, switch to the next one or fall through */
   if (dashstream->moof_sync_samples
-      /*&& GST_ADAPTIVE_DEMUX (dashdemux)->
-         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */ ) {
+      && GST_ADAPTIVE_DEMUX (dashdemux)->
+      segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
     if (gst_dash_demux_stream_advance_sync_sample (stream))
       return GST_FLOW_OK;
   }
@@ -1804,13 +1804,8 @@ gst_dash_demux_stream_fragment_start (GstAdaptiveDemux * demux,
   dashstream->isobmff_parser.index_header_or_data = 0;
   dashstream->isobmff_parser.current_offset = -1;
 
-#if 0
-  /* FIXME: qtdemux requires us to also set the discont flag
-   * on the very first moof buffer */
   if (dashstream->moof && dashstream->moof_sync_samples
-      /*&& GST_ADAPTIVE_DEMUX (dashdemux)->
-         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */ )
-#endif
+      && demux->segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
     stream->discont = TRUE;
 
   return TRUE;
@@ -1823,13 +1818,8 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
 
-#if 0
-  /* FIXME: qtdemux requires us to also set the discont flag
-   * on the very first moof buffer */
   if (dashstream->moof && dashstream->moof_sync_samples
-      /*&& GST_ADAPTIVE_DEMUX (dashdemux)->
-         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */ )
-#endif
+      && demux->segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
     stream->discont = TRUE;
 
   if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)
@@ -2166,9 +2156,9 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
 
         if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT) {
           /* Jump to the next sync sample */
-          if (gst_dash_demux_find_sync_samples (demux, stream)  /*&&
-                                                                   GST_ADAPTIVE_DEMUX (stream->demux)-> segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */
-              )
+          if (gst_dash_demux_find_sync_samples (demux, stream) &&
+              GST_ADAPTIVE_DEMUX (stream->demux)->
+              segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
             return GST_ADAPTIVE_DEMUX_FLOW_END_OF_FRAGMENT;
 
           if (gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
@@ -2299,9 +2289,9 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
               GST_ISOFF_FOURCC_MDAT) {
 
             /* Jump to the next sync sample */
-            if (gst_dash_demux_find_sync_samples (demux, stream)        /*&&
-                                                                           GST_ADAPTIVE_DEMUX (stream->demux)-> segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS */
-                ) {
+            if (gst_dash_demux_find_sync_samples (demux, stream) &&
+                GST_ADAPTIVE_DEMUX (stream->demux)->
+                segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
               if (buffer)
                 gst_buffer_unref (buffer);
               return GST_ADAPTIVE_DEMUX_FLOW_END_OF_FRAGMENT;
