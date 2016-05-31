@@ -2163,7 +2163,10 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       GST_DEBUG_OBJECT (demux, "Pushing newseg %" GST_SEGMENT_FORMAT, &segment);
 
       /* map segment to internal qt segments and push on each stream */
-      gst_qtdemux_map_and_push_segments (demux, &segment);
+      if (demux->n_streams) {
+        gst_event_replace (&demux->pending_newsegment, NULL);
+        gst_qtdemux_map_and_push_segments (demux, &segment);
+      }
 
       /* clear leftover in current segment, if any */
       gst_adapter_clear (demux->adapter);
