@@ -25,12 +25,20 @@
 #endif
 
 #include "gsttimecodestamper.h"
+#include "gsttimecodewait.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "timecodestamper", GST_RANK_NONE,
+  gboolean ret;
+
+  ret = gst_element_register (plugin, "timecodestamper", GST_RANK_NONE,
       GST_TYPE_TIME_CODE_STAMPER);
+
+  ret &= gst_element_register (plugin, "timecodewait", GST_RANK_NONE,
+      GST_TYPE_TIMECODEWAIT);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
