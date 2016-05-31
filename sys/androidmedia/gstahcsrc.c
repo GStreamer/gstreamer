@@ -81,7 +81,7 @@ static void gst_ahc_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_ahc_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_ahc_src_dispose (GObject * object);
+static void gst_ahc_src_finalize (GObject * object);
 
 /* GstElement */
 static GstStateChangeReturn gst_ahc_src_change_state (GstElement * element,
@@ -272,7 +272,7 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
 
   gobject_class->set_property = gst_ahc_src_set_property;
   gobject_class->get_property = gst_ahc_src_get_property;
-  gobject_class->dispose = gst_ahc_src_dispose;
+  gobject_class->finalize = gst_ahc_src_finalize;
 
   element_class->change_state = gst_ahc_src_change_state;
 
@@ -558,17 +558,14 @@ gst_ahc_src_init (GstAHCSrc * self)
 }
 
 static void
-gst_ahc_src_dispose (GObject * object)
+gst_ahc_src_finalize (GObject * object)
 {
   GstAHCSrc *self = GST_AHC_SRC (object);
 
-  if (self->queue)
-    g_object_unref (self->queue);
-  self->queue = NULL;
-
+  g_clear_object (&self->queue);
   g_mutex_clear (&self->mutex);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
