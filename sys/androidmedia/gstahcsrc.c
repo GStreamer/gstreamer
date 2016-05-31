@@ -2192,13 +2192,13 @@ gst_ahc_src_open (GstAHCSrc * self)
     gint num_cams = gst_ah_camera_get_number_of_cameras ();
     if (num_cams > 0 && self->device < num_cams) {
       GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-          ("Unable to open device '%d'.", self->device), GST_ERROR_SYSTEM);
+          ("Unable to open device '%d'.", self->device), (NULL));
     } else if (num_cams > 0) {
       GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-          ("Device '%d' does not exist.", self->device), GST_ERROR_SYSTEM);
+          ("Device '%d' does not exist.", self->device), (NULL));
     } else {
       GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-          ("There are no cameras available on this device."), GST_ERROR_SYSTEM);
+          ("There are no cameras available on this device."), (NULL));
     }
   }
 
