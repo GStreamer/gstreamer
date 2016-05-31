@@ -6281,10 +6281,9 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             /* in MSS we need to expose the pads after the first moof as we won't get a moov */
             if (demux->mss_mode && !demux->exposed) {
               if (!demux->pending_newsegment) {
-                GstSegment segment;
-                gst_segment_init (&segment, GST_FORMAT_TIME);
                 GST_DEBUG_OBJECT (demux, "new pending_newsegment");
-                demux->pending_newsegment = gst_event_new_segment (&segment);
+                demux->pending_newsegment =
+                    gst_event_new_segment (&demux->segment);
                 if (demux->segment_seqnum)
                   gst_event_set_seqnum (demux->pending_newsegment,
                       demux->segment_seqnum);
