@@ -34,6 +34,10 @@
 
 #include "gstleaks.h"
 
+#ifdef HAVE_POSIX_SIGNALS
+#include <signal.h>
+#endif /* HAVE_POSIX_SIGNALS */
+
 GST_DEBUG_CATEGORY_STATIC (gst_leaks_debug);
 #define GST_CAT_DEFAULT gst_leaks_debug
 
@@ -44,6 +48,7 @@ G_DEFINE_TYPE_WITH_CODE (GstLeaksTracer, gst_leaks_tracer,
     GST_TYPE_TRACER, _do_init);
 
 static GstTracerRecord *tr_alive;
+static GQueue instances = G_QUEUE_INIT;
 
 static void
 set_filtering (GstLeaksTracer * self)
@@ -162,6 +167,8 @@ static void
 gst_leaks_tracer_init (GstLeaksTracer * self)
 {
   self->objects = g_hash_table_new (NULL, NULL);
+
+  g_queue_push_tail (&instances, self);
 }
 
 static void
@@ -304,6 +311,8 @@ gst_leaks_tracer_finalize (GObject * object)
   if (self->filter)
     g_array_free (self->filter, TRUE);
 
+  g_queue_remove (&instances, self);
+
   if (leaks)
     g_warning ("Leaks detected");
 
@@ -332,6 +341,32 @@ gst_leaks_tracer_finalize (GObject * object)
         "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PROCESS, \
         NULL)
 
+#ifdef HAVE_POSIX_SIGNALS
+static void
+sig_usr1_handler_foreach (gpointer data, gpointer user_data)
+{
+  GstLeaksTracer *tracer = data;
+
+  GST_OBJECT_LOCK (tracer);
+  GST_TRACE_OBJECT (tracer, "start listing currently alive objects");
+  log_leaked (tracer);
+  GST_TRACE_OBJECT (tracer, "done listing currently alive objects");
+  GST_OBJECT_UNLOCK (tracer);
+}
+
+static void
+sig_usr1_handler (G_GNUC_UNUSED int signal)
+{
+  g_queue_foreach (&instances, sig_usr1_handler_foreach, NULL);
+}
+
+static void
+setup_signals (void)
+{
+  signal (SIGUSR1, sig_usr1_handler);
+}
+#endif /* HAVE_POSIX_SIGNALS */
+
 static void
 gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
 {
@@ -344,4 +379,12 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
       RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS, RECORD_FIELD_DESC,
       RECORD_FIELD_REF_COUNT, NULL);
   GST_OBJECT_FLAG_SET (tr_alive, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  if (g_getenv ("GST_LEAKS_TRACER_SIG")) {
+#ifdef HAVE_POSIX_SIGNALS
+    setup_signals ();
+#else
+    g_warning ("System doesn't support POSIX signals");
+#endif /* HAVE_POSIX_SIGNALS */
+  }
 }
