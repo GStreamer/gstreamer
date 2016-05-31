@@ -1558,13 +1558,23 @@ nle_composition_event_handler (GstPad * ghostpad, GstObject * parent,
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
-      if (!priv->seeking_itself) {
+      /* Queue up a seek action if this seek event does not come from
+       * ourselves. Due to a possible race condition around the
+       * seeking_itself flag, we also check if the seek comes from
+       * our task thread. The seeking_itself flag only works as an
+       * optimization */
+      GST_OBJECT_LOCK (comp);
+      if (!priv->seeking_itself || (comp->task
+              && gst_task_get_state (comp->task) != GST_TASK_STOPPED
+              && g_thread_self () != comp->task->thread)) {
+        GST_OBJECT_UNLOCK (comp);
         _add_seek_action (comp, event);
         event = NULL;
         GST_FIXME_OBJECT (comp, "HANDLE seeking errors!");
 
         return TRUE;
       }
+      GST_OBJECT_UNLOCK (comp);
       break;
     }
     case GST_EVENT_QOS:
