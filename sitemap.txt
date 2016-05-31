@@ -54,9 +54,4 @@ Home.markdown
 		Mac+OS+X+deployment.markdown
 		Windows+deployment.markdown
 		Multiplatform+deployment+using+Cerbero.markdown
-	GStreamer+reference.markdown
-		gst-inspect.markdown
-		gst-launch.markdown
 	Legal+information.markdown
-	Frequently+Asked+Questions.markdown
-	Contact.markdown
