@@ -557,6 +557,7 @@ void
 mpegts_packetizer_clear (MpegTSPacketizer2 * packetizer)
 {
   guint i;
+  MpegTSPCR *pcrtable;
 
   packetizer->packet_size = 0;
 
@@ -579,6 +580,10 @@ mpegts_packetizer_clear (MpegTSPacketizer2 * packetizer)
   packetizer->map_offset = 0;
   packetizer->last_in_time = GST_CLOCK_TIME_NONE;
 
+  pcrtable = packetizer->observations[packetizer->pcrtablelut[0x1fff]];
+  if (pcrtable)
+    pcrtable->base_time = GST_CLOCK_TIME_NONE;
+
   /* Close current PCR group */
   PACKETIZER_GROUP_LOCK (packetizer);
 
@@ -595,6 +600,7 @@ void
 mpegts_packetizer_flush (MpegTSPacketizer2 * packetizer, gboolean hard)
 {
   guint i;
+  MpegTSPCR *pcrtable;
   GST_DEBUG ("Flushing");
 
   if (packetizer->streams) {
@@ -613,6 +619,10 @@ mpegts_packetizer_flush (MpegTSPacketizer2 * packetizer, gboolean hard)
   packetizer->map_size = 0;
   packetizer->map_offset = 0;
   packetizer->last_in_time = GST_CLOCK_TIME_NONE;
+
+  pcrtable = packetizer->observations[packetizer->pcrtablelut[0x1fff]];
+  if (pcrtable)
+    pcrtable->base_time = GST_CLOCK_TIME_NONE;
 
   /* Close current PCR group */
   PACKETIZER_GROUP_LOCK (packetizer);
@@ -2189,6 +2199,12 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
   PACKETIZER_GROUP_LOCK (packetizer);
   pcrtable = get_pcr_table (packetizer, pcr_pid);
 
+  if (!GST_CLOCK_TIME_IS_VALID (pcrtable->base_time) && pcr_pid == 0x1fff &&
+      GST_CLOCK_TIME_IS_VALID (packetizer->last_in_time)) {
+    pcrtable->base_time = packetizer->last_in_time;
+    pcrtable->base_pcrtime = pts;
+  }
+
   /* Use clock skew if present */
   if (packetizer->calculate_skew
       && GST_CLOCK_TIME_IS_VALID (pcrtable->base_time)) {
@@ -2206,7 +2222,8 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
      * That being said, this will only happen for the small interval of time
      * where PTS/DTS are wrapping just before we see the first reset/wrap PCR
      */
-    if (G_UNLIKELY (ABSDIFF (res, pcrtable->last_pcrtime) > 15 * GST_SECOND))
+    if (G_UNLIKELY (pcr_pid != 0x1fff &&
+            ABSDIFF (res, pcrtable->last_pcrtime) > 15 * GST_SECOND))
       res = GST_CLOCK_TIME_NONE;
     else {
       GstClockTime tmp = pcrtable->base_time + pcrtable->skew;
