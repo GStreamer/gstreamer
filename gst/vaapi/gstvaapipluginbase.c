@@ -234,11 +234,9 @@ plugin_bind_dma_to_vaapi_buffer (GstVaapiPluginBase * plugin,
   proxy = gst_vaapi_surface_proxy_new (surface);
   if (!proxy)
     goto error_create_proxy;
-
-  gst_vaapi_surface_proxy_set_destroy_notify (proxy,
-      (GDestroyNotify) gst_buffer_unref, (gpointer) gst_buffer_ref (inbuf));
   gst_vaapi_video_meta_set_surface_proxy (meta, proxy);
   gst_vaapi_surface_proxy_unref (proxy);
+  gst_buffer_add_parent_buffer_meta (outbuf, inbuf);
   return TRUE;
 
   /* ERRORS */
