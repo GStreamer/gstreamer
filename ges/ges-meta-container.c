@@ -418,6 +418,8 @@ ges_meta_container_set_meta (GESMetaContainer * container,
     GstStructure *structure = _meta_container_get_structure (container);
     gst_structure_remove_field (structure, meta_item);
 
+    g_signal_emit (container, _signals[NOTIFY_SIGNAL], 0, meta_item, value);
+
     return TRUE;
   }
 
