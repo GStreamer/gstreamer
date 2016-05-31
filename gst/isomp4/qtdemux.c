@@ -2087,6 +2087,9 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       GST_DEBUG_OBJECT (demux, "received newsegment %" GST_SEGMENT_FORMAT,
           &segment);
 
+      /* erase any previously set segment */
+      gst_event_replace (&demux->pending_newsegment, NULL);
+
       if (segment.format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (demux, "new pending_newsegment");
         gst_event_replace (&demux->pending_newsegment, event);
@@ -2159,8 +2162,6 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
 
       gst_segment_copy_into (&segment, &demux->segment);
       GST_DEBUG_OBJECT (demux, "Pushing newseg %" GST_SEGMENT_FORMAT, &segment);
-      /* erase any previously set segment */
-      gst_event_replace (&demux->pending_newsegment, NULL);
 
       /* For pull mode, segment activation will be handled in the looping task
        * For push mode, need to do it here */
