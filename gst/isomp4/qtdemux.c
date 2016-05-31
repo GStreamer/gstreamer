@@ -2080,7 +2080,6 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       QtDemuxStream *stream;
       gint idx;
       GstSegment segment;
-      GstEvent *segment_event;
 
       /* some debug output */
       gst_event_copy_segment (event, &segment);
@@ -2163,16 +2162,8 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       gst_segment_copy_into (&segment, &demux->segment);
       GST_DEBUG_OBJECT (demux, "Pushing newseg %" GST_SEGMENT_FORMAT, &segment);
 
-      /* For pull mode, segment activation will be handled in the looping task
-       * For push mode, need to do it here */
-      if (demux->pullbased) {
-        segment_event = gst_event_new_segment (&segment);
-        gst_event_set_seqnum (segment_event, gst_event_get_seqnum (event));
-        gst_qtdemux_push_event (demux, segment_event);
-      } else {
-        /* map segment to internal qt segments and push on each stream */
-        gst_qtdemux_map_and_push_segments (demux, &segment);
-      }
+      /* map segment to internal qt segments and push on each stream */
+      gst_qtdemux_map_and_push_segments (demux, &segment);
 
       /* clear leftover in current segment, if any */
       gst_adapter_clear (demux->adapter);
