@@ -1,7 +1,5 @@
 # Basic tutorial 14: Handy elements
 
-This page last changed on May 13, 2014 by xartigas.
-
 # Goal
 
 This tutorial gives a list of handy GStreamer elements that are worth
@@ -10,7 +8,7 @@ build complex pipelines easily (like `playbin2`), to little helper
 elements which are extremely useful when debugging.
 
 For simplicity, the following examples are given using the
-`gst-launch` tool (Learn about it in [Basic tutorial 10: GStreamer
+`gst-launch-1.0` tool (Learn about it in [Basic tutorial 10: GStreamer
 tools](Basic%2Btutorial%2B10%253A%2BGStreamer%2Btools.html)). Use the
 `-v` command line parameter if you want to see the Pad Caps that are
 being negotiated.
@@ -38,11 +36,11 @@ source pads as streams are found in the
 media.
 
 ``` lang=bash
-gst-launch-0.10 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! ffmpegcolorspace ! autovideosink
+gst-launch-1.0 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! ffmpegcolorspace ! autovideosink
 ```
 
 ``` lang=bash
-gst-launch-0.10 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! audioconvert ! autoaudiosink
+gst-launch-1.0 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! audioconvert ! autoaudiosink
 ```
 
 ### `decodebin2`
@@ -56,7 +54,7 @@ offers as many source pads as streams are found in the
 media.
 
 ``` lang=bash
-gst-launch-0.10 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! decodebin2 ! autovideosink
+gst-launch-1.0 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! decodebin2 ! autovideosink
 ```
 
 # File input/output
@@ -70,7 +68,7 @@ of `filesrc` to
 `TRUE`.
 
 ``` lang=c
-gst-launch-0.10 filesrc location=f:\\media\\sintel\\sintel_trailer-480p.webm ! decodebin2 ! autovideosink
+gst-launch-1.0 filesrc location=f:\\media\\sintel\\sintel_trailer-480p.webm ! decodebin2 ! autovideosink
 ```
 
 ### `filesink`
@@ -80,7 +78,7 @@ This element writes to a file all the media it receives. Use the
 name.
 
 ```
-gst-launch-0.10 audiotestsrc ! vorbisenc ! oggmux ! filesink location=test.ogg
+gst-launch-1.0 audiotestsrc ! vorbisenc ! oggmux ! filesink location=test.ogg
 ```
 
 # Network
@@ -92,7 +90,7 @@ the SOUP library. Set the URL to retrieve through the `location`
 property.
 
 ``` lang=bash
-gst-launch-0.10 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! decodebin2 ! autovideosink
+gst-launch-1.0 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! decodebin2 ! autovideosink
 ```
 
 # Test media generation
@@ -107,7 +105,7 @@ This element produces a video pattern (selectable among many different
 options with the `pattern` property). Use it to test video pipelines.
 
 ``` lang=bash
-gst-launch-0.10 videotestsrc ! ffmpegcolorspace ! autovideosink
+gst-launch-1.0 videotestsrc ! ffmpegcolorspace ! autovideosink
 ```
 
 ### `audiotestsrc`
@@ -116,7 +114,7 @@ This element produces an audio wave (selectable among many different
 options with the `wave` property). Use it to test video pipelines.
 
 ``` lang=bash
-gst-launch-0.10 audiotestsrc ! audioconvert ! autoaudiosink
+gst-launch-1.0 audiotestsrc ! audioconvert ! autoaudiosink
 ```
 
 # Video adapters
@@ -138,7 +136,7 @@ that can vary depending on external factors, like decoding a
 user-provided file.
 
 ``` lang=bash
-gst-launch-0.10 videotestsrc ! ffmpegcolorspace ! autovideosink
+gst-launch-1.0 videotestsrc ! ffmpegcolorspace ! autovideosink
 ```
 
 ### `videorate`
@@ -158,7 +156,7 @@ rate is unknown at design time, just in
 case.
 
 ``` lang=c
-gst-launch-0.10 videotestsrc ! video/x-raw-rgb,framerate=30/1 ! videorate ! video/x-raw-rgb,framerate=1/1 ! ffmpegcolorspace ! autovideosink
+gst-launch-1.0 videotestsrc ! video/x-raw-rgb,framerate=30/1 ! videorate ! video/x-raw-rgb,framerate=1/1 ! ffmpegcolorspace ! autovideosink
 ```
 
 ### `videoscale`
@@ -179,7 +177,7 @@ video sinks are capable of performing scaling
 operations.
 
 ``` lang=bash
-gst-launch-0.10 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! videoscale ! video/x-raw-yuv,width=178,height=100 ! ffmpegcolorspace ! autovideosink
+gst-launch-1.0 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! videoscale ! video/x-raw-yuv,width=178,height=100 ! ffmpegcolorspace ! autovideosink
 ```
 
 # Audio adapters
@@ -196,7 +194,7 @@ negotiation problems with audio, and it is generally safe to use it
 liberally, since this element does nothing if it is not needed.
 
 ``` lang=bash
-gst-launch-0.10 audiotestsrc ! audioconvert ! autoaudiosink
+gst-launch-1.0 audiotestsrc ! audioconvert ! autoaudiosink
 ```
 
 ### `audioresample`
@@ -209,7 +207,7 @@ do not fear to use it
 generously.
 
 ``` lang=bash
-gst-launch-0.10 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! audioresample ! audio/x-raw-float,rate=4000 ! audioconvert ! autoaudiosink
+gst-launch-1.0 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! audioresample ! audio/x-raw-float,rate=4000 ! audioconvert ! autoaudiosink
 ```
 
 ### `audiorate`
@@ -296,7 +294,7 @@ branch would stall the other
 branches.
 
 ```
-gst-launch-0.10 audiotestsrc ! tee name=t ! queue ! audioconvert ! autoaudiosink t. ! queue ! wavescope ! ffmpegcolorspace ! autovideosink
+gst-launch-1.0 audiotestsrc ! tee name=t ! queue ! audioconvert ! autoaudiosink t. ! queue ! wavescope ! ffmpegcolorspace ! autovideosink
 ```
 
 # Capabilities
@@ -305,14 +303,14 @@ gst-launch-0.10 audiotestsrc ! tee name=t ! queue ! audioconvert ! autoaudiosink
 
 [Basic tutorial 10: GStreamer
 tools](Basic%2Btutorial%2B10%253A%2BGStreamer%2Btools.html) already
-explained how to use Caps filters with `gst-launch`. When building a
+explained how to use Caps filters with `gst-launch-1.0`. When building a
 pipeline programmatically, Caps filters are implemented with
 the `capsfilter` element. This element does not modify data as such,
 but enforces limitations on the data
 format.
 
 ``` lang=bash
-gst-launch-0.10 videotestsrc ! video/x-raw-gray ! ffmpegcolorspace ! autovideosink
+gst-launch-1.0 videotestsrc ! video/x-raw-gray ! ffmpegcolorspace ! autovideosink
 ```
 
 ### `typefind`
@@ -335,11 +333,11 @@ gathering](Basic%2Btutorial%2B9%253A%2BMedia%2Binformation%2Bgathering.html)).
 This sink element simply swallows any data fed to it. It is useful when
 debugging, to replace your normal sinks and rule them out of the
 equation. It can be very verbose when combined with the `-v` switch
-of `gst-launch`, so use the `silent` property to remove any unwanted
+of `gst-launch-1.0`, so use the `silent` property to remove any unwanted
 noise.
 
 ```
-gst-launch-0.10 audiotestsrc num-buffers=1000 ! fakesink sync=false
+gst-launch-1.0 audiotestsrc num-buffers=1000 ! fakesink sync=false
 ```
 
 ### `identity`
@@ -351,7 +349,7 @@ things this seemingly harmless element can
 do.
 
 ```
-gst-launch-0.10 audiotestsrc ! identity drop-probability=0.1 ! audioconvert ! autoaudiosink
+gst-launch-1.0 audiotestsrc ! identity drop-probability=0.1 ! audioconvert ! autoaudiosink
 ```
 
 # Conclusion
@@ -362,5 +360,3 @@ valuable for production pipelines, whereas others are only needed for
 debugging purposes.
 
 It has been a pleasure having you here, and see you soon\!
-
-Document generated by Confluence on Oct 08, 2015 10:27

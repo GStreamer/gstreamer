@@ -1,6 +1,5 @@
 # Todo
 
-
 This is just a simple TODO list to follow progress of the port from
 gstreamer.com content to hotdoc
 

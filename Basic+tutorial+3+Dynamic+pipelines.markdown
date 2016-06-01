@@ -336,7 +336,7 @@ case, we pass a pointer to the `CustomData` structure we built specially
 for this purpose.
 
 The signals that a `GstElement` generates can be found in its
-documentation or using the `gst-inspect` tool as described in [Basic
+documentation or using the `gst-inspect-1.0` tool as described in [Basic
 tutorial 10: GStreamer
 tools](Basic+tutorial+10+GStreamer+tools.markdown).
 

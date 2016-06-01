@@ -65,8 +65,8 @@ useful:
   - /Library/Frameworks/GStreamer.framework/Headers: path with the
     development headers
   - /Library/Frameworks/GStreamer.framework/Commands: link to the
-    commands provided by the framework, such as gst-inspect-0.10 or
-    gst-launch-0.10
+    commands provided by the framework, such as gst-inspect-1.0 or
+    gst-launch-1.0
 
 For more information on OS X Frameworks anatomy, you can consult the
 following [link](https://developer.apple.com/library/mac/#documentation/MacOSX/Conceptual/BPFrameworks/Concepts/FrameworkAnatomy.html)

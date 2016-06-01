@@ -1,5 +1,4 @@
 # Table of Concepts
-This page last changed on Jun 06, 2012 by xartigas.
 
 This table shows in which tutorial each of the following key GStreamer
 concepts is discussed.
@@ -12,9 +11,9 @@ concepts is discussed.
 -   Debugging: [Basic tutorial 11: Debugging tools]
 -   Discoverer: [Basic tutorial 9: Media information gathering]
 -   Elements: [Basic tutorial 2: GStreamer concepts]
--   gst-discoverer: [Basic tutorial 10: GStreamer tools]
--   gst-inspect: [Basic tutorial 10: GStreamer tools], [gst-inspect]
--   gst-launch: [Basic tutorial 10: GStreamer tools], [gst-launch]
+-   gst-discoverer-1.0: [Basic tutorial 10: GStreamer tools]
+-   gst-inspect-1.0: [Basic tutorial 10: GStreamer tools], [gst-inspect-1.0]
+-   gst-launch-1.0: [Basic tutorial 10: GStreamer tools], [gst-launch-1.0]
 -   GUI: [Basic tutorial 5: GUI toolkit integration]
 -   Links: [Basic tutorial 2: GStreamer concepts]
 -   Pads: [Basic tutorial 3: Dynamic pipelines]
@@ -37,8 +36,8 @@ concepts is discussed.
   [Basic tutorial 11: Debugging tools]: Basic+tutorial+11+Debugging+tools.markdown
   [Basic tutorial 9: Media information gathering]: Basic+tutorial+9+Media+information+gathering.markdown
   [Basic tutorial 10: GStreamer tools]: Basic+tutorial+10+GStreamer+tools.markdown
-  [gst-inspect]: gst-inspect.markdown
-  [gst-launch]: gst-launch.markdown
+  [gst-inspect-1.0]: gst-inspect.markdown
+  [gst-launch-1.0]: gst-launch.markdown
   [Basic tutorial 5: GUI toolkit integration]: Basic+tutorial+5+GUI+toolkit+integration.markdown
   [Basic tutorial 3: Dynamic pipelines]: Basic+tutorial+3+Dynamic+pipelines.markdown
   [Basic tutorial 7: Multithreading and Pad Availability]: Basic+tutorial+7+Multithreading+and+Pad+Availability.markdown

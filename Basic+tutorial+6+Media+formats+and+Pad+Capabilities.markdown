@@ -464,7 +464,7 @@ This tutorial has shown:
   - That Pad Caps are important to know beforehand if two elements can
     be linked together.
 
-  - That Pad Caps can be found using the `gst-inspect` tool described
+  - That Pad Caps can be found using the `gst-inspect-1.0` tool described
     in [Basic tutorial 10: GStreamer
     tools](Basic+tutorial+10+GStreamer+tools.markdown).
 
