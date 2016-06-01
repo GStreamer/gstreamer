@@ -2160,6 +2160,7 @@ gst_base_text_overlay_shade_background (GstBaseTextOverlay * overlay,
     case GST_VIDEO_FORMAT_UYVY:
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_v308:
+    case GST_VIDEO_FORMAT_IYU2:
       gst_base_text_overlay_shade_packed_Y (overlay, frame, x0, x1, y0, y1);
       break;
     case GST_VIDEO_FORMAT_xRGB:
