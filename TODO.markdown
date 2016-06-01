@@ -55,10 +55,6 @@ Pages to review:
  - GStreamer+reference.markdown
    - gst-inspect.markdown
    - gst-launch.markdown
- - Qt+tutorials.markdown
-   - Basic+Media+Player.markdown
-   - QtGStreamer+vs+C+GStreamer.markdown
-   - Using+appsink%2Fappsrc+in+Qt.markdown
 
 Reviewed pages:
  - Home.markdown
@@ -67,6 +63,13 @@ Reviewed pages:
  - Building+from+source+using+Cerbero.markdown
  - Table+of+Concepts.markdown
  - Tutorials.markdown
+
+For-later pages:
+ - Qt+tutorials.markdown [tpm: this should all be rewritten from scratch with qmlglsink; QtGStreamer is outdated and unmaintained, we should not promote it]
+   - Basic+Media+Player.markdown
+   - QtGStreamer+vs+C+GStreamer.markdown
+   - Using+appsink%2Fappsrc+in+Qt.markdown
+
 
 Deleted pages:
  - 2012.11+Brahmaputra.markdown

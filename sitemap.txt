@@ -45,10 +45,6 @@ Home.markdown
 			iOS+tutorial+3+Video.markdown
 			iOS+tutorial+4+A+basic+media+player.markdown
 			iOS+tutorial+5+A+Complete+media+player.markdown
-	        Qt+tutorials.markdown
-		        Basic+Media+Player.markdown
-			QtGStreamer+vs+C+GStreamer.markdown
-			Using+appsink%2Fappsrc+in+Qt.markdown
 		Table+of+Concepts.markdown
 	Deploying+your+application.markdown
 		Mac+OS+X+deployment.markdown
