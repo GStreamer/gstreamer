@@ -1122,7 +1122,9 @@ gst_dvbsrc_set_pids (GstDvbSrc * dvbsrc, const gchar * pid_string)
       pids++;
     }
 
-    dvbsrc->pids[pid_count] = G_MAXUINT16;
+    if (pid_count < MAX_FILTERS)
+      dvbsrc->pids[pid_count] = G_MAXUINT16;
+
     g_strfreev (tmp);
   }
   /* if we are in playing or paused, then set filters now */
