@@ -5,6 +5,7 @@ libgstvideoparsersbad_la_SOURCES = plugin.c \
 	gstdiracparse.c dirac_parse.c \
 	gsth264parse.c gstmpegvideoparse.c \
 	gstmpeg4videoparse.c \
+	gstjpeg2000parse.c \
 	gstpngparse.c \
 	gstvc1parse.c \
 	gsth265parse.c
@@ -29,6 +30,7 @@ noinst_HEADERS = gsth263parse.h h263parse.h \
 	gstdiracparse.h dirac_parse.h \
 	gsth264parse.h gstmpegvideoparse.h \
 	gstmpeg4videoparse.h \
+	gstjpeg2000parse.h \
 	gstjpeg2000sampling.h \
 	gstpngparse.h \
 	gstvc1parse.h \

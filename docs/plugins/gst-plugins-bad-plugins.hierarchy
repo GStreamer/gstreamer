@@ -66,6 +66,7 @@ GObject
           GstMpegvParse
           GstOpusParse
           GstPngParse
+          GstJPEG2000Parse
           GstVC1Parse
         GstBaseSink
           GstAudioBaseSink

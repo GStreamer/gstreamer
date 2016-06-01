@@ -28,6 +28,7 @@
 #include "gstmpegvideoparse.h"
 #include "gstmpeg4videoparse.h"
 #include "gstpngparse.h"
+#include "gstjpeg2000parse.h"
 #include "gstvc1parse.h"
 #include "gsth265parse.h"
 
@@ -48,6 +49,8 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_PRIMARY + 1, GST_TYPE_MPEG4VIDEO_PARSE);
   ret |= gst_element_register (plugin, "pngparse",
       GST_RANK_PRIMARY, GST_TYPE_PNG_PARSE);
+  ret |= gst_element_register (plugin, "jpeg2000parse",
+      GST_RANK_PRIMARY, GST_TYPE_JPEG2000_PARSE);
   ret |= gst_element_register (plugin, "h265parse",
       GST_RANK_SECONDARY, GST_TYPE_H265_PARSE);
   ret |= gst_element_register (plugin, "vc1parse",

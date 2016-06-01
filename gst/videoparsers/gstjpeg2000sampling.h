@@ -58,6 +58,22 @@ GRAYSCALE:  basically, a single component image of just multilevels of grey.
 
 #define GST_RTP_J2K_SAMPLING_LIST "sampling = (string) {\"RGB\", \"BGR\", \"RGBA\", \"BGRA\", \"YCbCrA\", \"YCbCr-4:4:4\", \"YCbCr-4:2:2\", \"YCbCr-4:2:0\", \"YCbCr-4:1:1\", \"GRAYSCALE\"}"
 
+typedef enum
+{
+
+  GST_RTP_SAMPLING_NONE,
+  GST_RTP_SAMPLING_RGB,
+  GST_RTP_SAMPLING_BGR,
+  GST_RTP_SAMPLING_RGBA,
+  GST_RTP_SAMPLING_BGRA,
+  GST_RTP_SAMPLING_YBRA,
+  GST_RTP_SAMPLING_YBR444,
+  GST_RTP_SAMPLING_YBR422,
+  GST_RTP_SAMPLING_YBR420,
+  GST_RTP_SAMPLING_YBR410,
+  GST_RTP_SAMPLING_GRAYSCALE
+} GstRtpSampling;
+
 
 /*
 * GstJ2KMarker:
