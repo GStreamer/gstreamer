@@ -1796,6 +1796,7 @@ static gboolean
 gst_dash_demux_stream_fragment_start (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream)
 {
+  GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
 
   dashstream->sidx_index_header_or_data = 0;
@@ -1804,8 +1805,15 @@ gst_dash_demux_stream_fragment_start (GstAdaptiveDemux * demux,
   dashstream->isobmff_parser.index_header_or_data = 0;
   dashstream->isobmff_parser.current_offset = -1;
 
-  if (dashstream->moof && dashstream->moof_sync_samples
-      && demux->segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
+  /* We need to mark every first buffer of a key unit as discont,
+   * and also every first buffer of a moov and moof. This ensures
+   * that qtdemux takes note of our buffer offsets for each of those
+   * buffers instead of keeping track of them itself from the first
+   * buffer. We need offsets to be consistent between moof and mdat
+   */
+  if (dashstream->is_isobmff && dashdemux->allow_trickmode_key_units
+      && (demux->segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
+      && dashstream->active_stream->mimeType == GST_STREAM_VIDEO)
     stream->discont = TRUE;
 
   return TRUE;
@@ -1818,8 +1826,15 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
 
-  if (dashstream->moof && dashstream->moof_sync_samples
-      && demux->segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
+  /* We need to mark every first buffer of a key unit as discont,
+   * and also every first buffer of a moov and moof. This ensures
+   * that qtdemux takes note of our buffer offsets for each of those
+   * buffers instead of keeping track of them itself from the first
+   * buffer. We need offsets to be consistent between moof and mdat
+   */
+  if (dashstream->is_isobmff && dashdemux->allow_trickmode_key_units
+      && (demux->segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
+      && dashstream->active_stream->mimeType == GST_STREAM_VIDEO)
     stream->discont = TRUE;
 
   if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)
