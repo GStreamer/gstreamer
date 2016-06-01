@@ -2164,8 +2164,16 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
 
       /* map segment to internal qt segments and push on each stream */
       if (demux->n_streams) {
-        gst_event_replace (&demux->pending_newsegment, NULL);
-        gst_qtdemux_map_and_push_segments (demux, &segment);
+        if (demux->fragmented) {
+          GstEvent *segment_event = gst_event_new_segment (&segment);
+
+          gst_event_replace (&demux->pending_newsegment, NULL);
+          gst_event_set_seqnum (segment_event, demux->segment_seqnum);
+          gst_qtdemux_push_event (demux, segment_event);
+        } else {
+          gst_event_replace (&demux->pending_newsegment, NULL);
+          gst_qtdemux_map_and_push_segments (demux, &segment);
+        }
       }
 
       /* clear leftover in current segment, if any */
