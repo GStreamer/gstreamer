@@ -1127,7 +1127,7 @@ gst_dvbsrc_set_pids (GstDvbSrc * dvbsrc, const gchar * pid_string)
 
     g_strfreev (tmp);
   }
-  /* if we are in playing or paused, then set filters now */
+
   GST_INFO_OBJECT (dvbsrc, "checking if playing for setting PES filters");
   if (GST_ELEMENT (dvbsrc)->current_state == GST_STATE_PLAYING ||
       GST_ELEMENT (dvbsrc)->current_state == GST_STATE_PAUSED) {
