@@ -754,6 +754,30 @@ Formats
           default rstride: RU4 (width * 3)
           default size:    rstride (image) * height
 
+ "IYU2" packed 4:4:4 YUV, U-Y-V order
+
+       +--+--+--+ +--+--+--+
+       |U0|Y0|V0| |U1|Y1|V1| ...
+       +--+--+--+ +--+--+--+
+
+        Component 0: Y
+          depth:           8
+          pstride:         3
+          offset:          1
+
+        Component 1: U
+          depth            8
+          pstride:         3
+          offset:          0
+
+        Component 2: V
+          depth:           8
+          pstride:         3
+          offset:          2
+
+        Image
+          default rstride: RU4 (width * 3)
+          default size:    rstride (image) * height
 
  "RGB16" rgb 5-6-5 bits per component
 
