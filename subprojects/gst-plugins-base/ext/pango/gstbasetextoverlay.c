@@ -430,7 +430,7 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TEXT_Y,
       g_param_spec_int ("text-y", "vertical position",
-          "Resulting X position of font rendering.", -G_MAXINT,
+          "Resulting Y position of font rendering.", -G_MAXINT,
           G_MAXINT, DEFAULT_PROP_TEXT_Y, G_PARAM_READABLE));
 
   /**
