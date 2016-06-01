@@ -1740,11 +1740,9 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   if (is_parser_converter) {
     GstCaps *filter_caps;
     gint i;
+    GstElement *capsfilter;
     GstPad *p;
     GstDecodeElement *delem;
-
-    g_assert (chain->elements != NULL);
-    delem = (GstDecodeElement *) chain->elements->data;
 
     filter_caps = gst_caps_new_empty ();
     for (i = 0; i < factories->n_values; i++) {
@@ -1779,17 +1777,28 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     /* Append the parser caps to prevent any not-negotiated errors */
     filter_caps = gst_caps_merge (filter_caps, gst_caps_ref (caps));
 
-    delem->capsfilter = gst_element_factory_make ("capsfilter", NULL);
-    g_object_set (G_OBJECT (delem->capsfilter), "caps", filter_caps, NULL);
+    if (chain->elements) {
+      delem = (GstDecodeElement *) chain->elements->data;
+      capsfilter = delem->capsfilter =
+          gst_element_factory_make ("capsfilter", NULL);
+    } else {
+      delem = g_slice_new0 (GstDecodeElement);
+      capsfilter = delem->element =
+          gst_element_factory_make ("capsfilter", NULL);
+      delem->capsfilter = NULL;
+      chain->elements = g_list_prepend (chain->elements, delem);
+    }
+
+    g_object_set (G_OBJECT (capsfilter), "caps", filter_caps, NULL);
     gst_caps_unref (filter_caps);
-    gst_element_set_state (delem->capsfilter, GST_STATE_PAUSED);
-    gst_bin_add (GST_BIN_CAST (dbin), gst_object_ref (delem->capsfilter));
+    gst_element_set_state (capsfilter, GST_STATE_PAUSED);
+    gst_bin_add (GST_BIN_CAST (dbin), gst_object_ref (capsfilter));
 
     decode_pad_set_target (dpad, NULL);
-    p = gst_element_get_static_pad (delem->capsfilter, "sink");
+    p = gst_element_get_static_pad (capsfilter, "sink");
     gst_pad_link_full (pad, p, GST_PAD_LINK_CHECK_NOTHING);
     gst_object_unref (p);
-    p = gst_element_get_static_pad (delem->capsfilter, "src");
+    p = gst_element_get_static_pad (capsfilter, "src");
     decode_pad_set_target (dpad, p);
     pad = p;
 
