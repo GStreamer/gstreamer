@@ -44,6 +44,7 @@ struct _GstVTEncoderDetails
   const gchar * element_name;
   const gchar * mimetype;
   CMVideoCodecType format_id;
+  gboolean require_hardware;
 };
 
 struct _GstVTEncClass
