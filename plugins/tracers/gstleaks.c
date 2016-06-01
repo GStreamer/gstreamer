@@ -48,6 +48,10 @@ G_DEFINE_TYPE_WITH_CODE (GstLeaksTracer, gst_leaks_tracer,
     GST_TYPE_TRACER, _do_init);
 
 static GstTracerRecord *tr_alive;
+#ifdef HAVE_POSIX_SIGNALS
+static GstTracerRecord *tr_added = NULL;
+static GstTracerRecord *tr_removed = NULL;
+#endif
 static GQueue instances = G_QUEUE_INIT;
 
 static void
@@ -103,14 +107,55 @@ should_handle_object_type (GstLeaksTracer * self, GType object_type)
   return FALSE;
 }
 
+#ifdef HAVE_POSIX_SIGNALS
+/* The object may be destroyed when we log it using the checkpointing system so
+ * we have to save its type name */
+typedef struct
+{
+  gpointer object;
+  const gchar *type_name;
+} ObjectLog;
+
+static ObjectLog *
+object_log_new (gpointer obj)
+{
+  ObjectLog *o = g_slice_new (ObjectLog);
+
+  o->object = obj;
+
+  if (G_IS_OBJECT (obj))
+    o->type_name = G_OBJECT_TYPE_NAME (obj);
+  else
+    o->type_name = g_type_name (GST_MINI_OBJECT_TYPE (obj));
+
+  return o;
+}
+
+static void
+object_log_free (ObjectLog * obj)
+{
+  g_slice_free (ObjectLog, obj);
+}
+#endif /* HAVE_POSIX_SIGNALS */
+
+static void
+handle_object_destroyed (GstLeaksTracer * self, gpointer object)
+{
+  GST_OBJECT_LOCK (self);
+  g_hash_table_remove (self->objects, object);
+#ifdef HAVE_POSIX_SIGNALS
+  if (self->removed)
+    g_hash_table_add (self->removed, object_log_new (object));
+#endif /* HAVE_POSIX_SIGNALS */
+  GST_OBJECT_UNLOCK (self);
+}
+
 static void
 object_weak_cb (gpointer data, GObject * object)
 {
   GstLeaksTracer *self = data;
 
-  GST_OBJECT_LOCK (self);
-  g_hash_table_remove (self->objects, object);
-  GST_OBJECT_UNLOCK (self);
+  handle_object_destroyed (self, object);
 }
 
 static void
@@ -118,9 +163,7 @@ mini_object_weak_cb (gpointer data, GstMiniObject * object)
 {
   GstLeaksTracer *self = data;
 
-  GST_OBJECT_LOCK (self);
-  g_hash_table_remove (self->objects, object);
-  GST_OBJECT_UNLOCK (self);
+  handle_object_destroyed (self, object);
 }
 
 static void
@@ -138,6 +181,10 @@ handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
 
   GST_OBJECT_LOCK (self);
   g_hash_table_add (self->objects, object);
+#ifdef HAVE_POSIX_SIGNALS
+  if (self->added)
+    g_hash_table_add (self->added, object_log_new (object));
+#endif /* HAVE_POSIX_SIGNALS */
   GST_OBJECT_UNLOCK (self);
 }
 
@@ -310,6 +357,8 @@ gst_leaks_tracer_finalize (GObject * object)
   g_clear_pointer (&self->objects, g_hash_table_unref);
   if (self->filter)
     g_array_free (self->filter, TRUE);
+  g_clear_pointer (&self->added, g_hash_table_unref);
+  g_clear_pointer (&self->removed, g_hash_table_unref);
 
   g_queue_remove (&instances, self);
 
@@ -361,9 +410,71 @@ sig_usr1_handler (G_GNUC_UNUSED int signal)
 }
 
 static void
+log_checkpoint (GHashTable * hash, GstTracerRecord * record)
+{
+  GHashTableIter iter;
+  gpointer o;
+
+  g_hash_table_iter_init (&iter, hash);
+  while (g_hash_table_iter_next (&iter, &o, NULL)) {
+    ObjectLog *obj = o;
+
+    gst_tracer_record_log (record, obj->type_name, obj->object);
+  }
+}
+
+static void
+do_checkpoint (GstLeaksTracer * self)
+{
+  GST_TRACE_OBJECT (self, "listing objects created since last checkpoint");
+  log_checkpoint (self->added, tr_added);
+  GST_TRACE_OBJECT (self, "listing objects removed since last checkpoint");
+  log_checkpoint (self->removed, tr_removed);
+
+  g_hash_table_remove_all (self->added);
+  g_hash_table_remove_all (self->removed);
+}
+
+static void
+sig_usr2_handler_foreach (gpointer data, gpointer user_data)
+{
+  GstLeaksTracer *tracer = data;
+
+  GST_OBJECT_LOCK (tracer);
+
+  if (!tracer->added) {
+    GST_TRACE_OBJECT (tracer, "First checkpoint, start tracking objects");
+
+    tracer->added = g_hash_table_new_full (NULL, NULL,
+        (GDestroyNotify) object_log_free, NULL);
+    tracer->removed = g_hash_table_new_full (NULL, NULL,
+        (GDestroyNotify) object_log_free, NULL);
+  } else {
+    do_checkpoint (tracer);
+  }
+
+  GST_OBJECT_UNLOCK (tracer);
+}
+
+static void
+sig_usr2_handler (G_GNUC_UNUSED int signal)
+{
+  g_queue_foreach (&instances, sig_usr2_handler_foreach, NULL);
+}
+
+static void
 setup_signals (void)
 {
+  tr_added = gst_tracer_record_new ("object-added.class",
+      RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS, NULL);
+  GST_OBJECT_FLAG_SET (tr_added, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  tr_removed = gst_tracer_record_new ("object-removed.class",
+      RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS, NULL);
+  GST_OBJECT_FLAG_SET (tr_removed, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+
   signal (SIGUSR1, sig_usr1_handler);
+  signal (SIGUSR2, sig_usr2_handler);
 }
 #endif /* HAVE_POSIX_SIGNALS */
 

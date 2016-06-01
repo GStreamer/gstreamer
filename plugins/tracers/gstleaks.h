@@ -55,6 +55,10 @@ struct _GstLeaksTracer {
   GHashTable *objects;
   /* array of GType used as filtering */
   GArray *filter;
+  /* Set of owned ObjectLog.  Protected by object lock */
+  GHashTable *added;
+  /* Set of owned ObjectLog.  Protected by object lock */
+  GHashTable *removed;
 };
 
 struct _GstLeaksTracerClass {
