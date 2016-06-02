@@ -917,6 +917,23 @@ done:
   return res;
 }
 
+static void
+gst_dvdemux_update_frame_offsets (GstDVDemux * dvdemux, GstClockTime timestamp)
+{
+  /* calculate current frame number */
+  gst_dvdemux_src_convert (dvdemux, dvdemux->videosrcpad,
+      dvdemux->time_segment.format, timestamp,
+      GST_FORMAT_DEFAULT, &dvdemux->video_offset);
+
+  /* calculate current audio number */
+  gst_dvdemux_src_convert (dvdemux, dvdemux->audiosrcpad,
+      dvdemux->time_segment.format, timestamp,
+      GST_FORMAT_DEFAULT, &dvdemux->audio_offset);
+
+  /* every DV frame corresponts with one video frame */
+  dvdemux->frame_offset = dvdemux->video_offset;
+}
+
 /* position ourselves to the configured segment, used in pull mode.
  * The input segment is in TIME format. We convert the time values
  * to bytes values into our byte_segment which we use to pull data from
@@ -953,18 +970,7 @@ gst_dvdemux_do_seek (GstDVDemux * demux, GstSegment * segment)
       segment->format, segment->time, format,
       (gint64 *) & demux->byte_segment.time);
 
-  /* calculate current frame number */
-  format = GST_FORMAT_DEFAULT;
-  gst_dvdemux_src_convert (demux, demux->videosrcpad,
-      segment->format, segment->start, format, &demux->video_offset);
-
-  /* calculate current audio number */
-  format = GST_FORMAT_DEFAULT;
-  gst_dvdemux_src_convert (demux, demux->audiosrcpad,
-      segment->format, segment->start, format, &demux->audio_offset);
-
-  /* every DV frame corresponts with one video frame */
-  demux->frame_offset = demux->video_offset;
+  gst_dvdemux_update_frame_offsets (demux, segment->start);
 
   demux->discont = TRUE;
 
@@ -1442,12 +1448,7 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
     dvdemux->time_segment.rate = dvdemux->byte_segment.rate;
     dvdemux->time_segment.position = dvdemux->time_segment.start;
 
-    /* calculate current frame number */
-    format = GST_FORMAT_DEFAULT;
-    if (!(gst_dvdemux_src_convert (dvdemux, dvdemux->videosrcpad,
-                GST_FORMAT_TIME, dvdemux->time_segment.start,
-                format, &dvdemux->frame_offset)))
-      goto segment_error;
+    gst_dvdemux_update_frame_offsets (dvdemux, dvdemux->time_segment.position);
 
     GST_DEBUG_OBJECT (dvdemux, "sending segment start: %" GST_TIME_FORMAT
         ", stop: %" GST_TIME_FORMAT ", time: %" GST_TIME_FORMAT,
@@ -1606,7 +1607,10 @@ gst_dvdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
     dvdemux->time_segment.position = timestamp;
-    /* FIXME, adjust frame_offset and other counters */
+
+    if (dvdemux->discont)
+      gst_dvdemux_update_frame_offsets (dvdemux,
+          dvdemux->time_segment.position);
   }
 
   gst_adapter_push (dvdemux->adapter, buffer);
