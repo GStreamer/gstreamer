@@ -206,6 +206,17 @@ error_create_proxy:
   }
 }
 
+static void
+gst_vaapi_plugin_base_find_gl_context (GstVaapiPluginBase * plugin)
+{
+  GstObject *gl_context;
+
+  if (!gst_vaapi_find_gl_local_context (GST_ELEMENT_CAST (plugin), &gl_context))
+    return;
+  gst_vaapi_plugin_base_set_gl_context (plugin, gl_context);
+  gst_object_unref (gl_context);
+}
+
 void
 gst_vaapi_plugin_base_class_init (GstVaapiPluginBaseClass * klass)
 {
@@ -362,6 +373,10 @@ gst_vaapi_plugin_base_ensure_display (GstVaapiPluginBase * plugin)
   if (gst_vaapi_plugin_base_has_display_type (plugin, plugin->display_type_req))
     return TRUE;
   gst_vaapi_display_replace (&plugin->display, NULL);
+
+  /* Query for a local GstGL context. If it's found, it will be used
+   * to create the VA display */
+  gst_vaapi_plugin_base_find_gl_context (plugin);
 
   if (!gst_vaapi_ensure_display (GST_ELEMENT (plugin),
           plugin->display_type_req))
@@ -750,10 +765,6 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   if (!caps)
     goto error_no_caps;
 
-  /* We don't need any GL context beyond this point if not requested
-     so explicitly through GstVideoGLTextureUploadMeta */
-  gst_object_replace (&plugin->gl_context, NULL);
-
   pool_options = 0;
   if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL))
     pool_options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
@@ -766,7 +777,8 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     pool_options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD;
 
 #if USE_GST_GL_HELPERS
-  if (pool_options & GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD) {
+  if (!plugin->gl_context &&
+      (pool_options & GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD)) {
     const GstStructure *params;
     GstObject *gl_context;
 
@@ -1007,6 +1019,9 @@ gst_vaapi_plugin_base_set_gl_context (GstVaapiPluginBase * plugin,
   GstGLContext *const gl_context = GST_GL_CONTEXT (object);
   GstVaapiDisplayType display_type;
 
+  if (plugin->gl_context == object)
+    return;
+
   gst_object_replace (&plugin->gl_context, object);
 
   switch (gst_gl_context_get_gl_platform (gl_context)) {
@@ -1024,6 +1039,7 @@ gst_vaapi_plugin_base_set_gl_context (GstVaapiPluginBase * plugin,
       display_type = plugin->display_type;
       break;
   }
+  GST_INFO_OBJECT (plugin, "GL context: %" GST_PTR_FORMAT, plugin->gl_context);
   gst_vaapi_plugin_base_set_display_type (plugin, display_type);
 #endif
 }

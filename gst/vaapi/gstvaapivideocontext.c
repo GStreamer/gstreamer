@@ -25,6 +25,9 @@
 
 #include "gstcompat.h"
 #include "gstvaapivideocontext.h"
+#if USE_GST_GL_HELPERS
+# include <gst/gl/gl.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
@@ -232,4 +235,41 @@ gst_vaapi_video_context_propagate (GstElement * element,
       context, display);
   msg = gst_message_new_have_context (GST_OBJECT_CAST (element), context);
   gst_element_post_message (GST_ELEMENT_CAST (element), msg);
+}
+
+gboolean
+gst_vaapi_find_gl_local_context (GstElement * element,
+    GstObject ** gl_context_ptr)
+{
+#if USE_GST_GL_HELPERS
+  GstQuery *query;
+  GstContext *context;
+  const GstStructure *s;
+  GstObject *gl_context;
+
+  g_return_val_if_fail (gl_context_ptr, FALSE);
+
+  gl_context = NULL;
+  query = gst_query_new_context ("gst.gl.local_context");
+  if (_gst_context_run_query (element, query, GST_PAD_SRC)) {
+    gst_query_parse_context (query, &context);
+    if (context) {
+      s = gst_context_get_structure (context);
+      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &gl_context, NULL);
+    }
+  }
+  if (!gl_context && _gst_context_run_query (element, query, GST_PAD_SINK)) {
+    gst_query_parse_context (query, &context);
+    if (context) {
+      s = gst_context_get_structure (context);
+      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &gl_context, NULL);
+    }
+  }
+  gst_query_unref (query);
+  if (gl_context) {
+    *gl_context_ptr = gl_context;
+    return TRUE;
+  }
+#endif
+  return FALSE;
 }
