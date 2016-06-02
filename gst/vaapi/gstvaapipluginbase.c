@@ -790,8 +790,6 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   guint idx;
 #endif
 
-  g_return_val_if_fail (plugin->display != NULL, FALSE);
-
   gst_query_parse_allocation (query, &caps, NULL);
   if (!caps)
     goto error_no_caps;
