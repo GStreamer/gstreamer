@@ -60,6 +60,7 @@ static GstStaticPadTemplate srctemplate_wb = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (SRC_CAPS_WB)
     );
 
+static GstCaps *input_caps = NULL;
 
 /* some data */
 
@@ -86,6 +87,33 @@ static guint8 garbage_frame[] = {
   0xff, 0xff, 0xff, 0xff, 0xff
 };
 
+static void
+setup_amrnb (void)
+{
+  ctx_factory = "amrparse";
+  ctx_sink_template = &sinktemplate_nb;
+  ctx_src_template = &srctemplate_nb;
+  input_caps = gst_caps_from_string (SRC_CAPS_NB);
+  g_assert (input_caps);
+  ctx_input_caps = input_caps;
+}
+
+static void
+setup_amrwb (void)
+{
+  ctx_factory = "amrparse";
+  ctx_sink_template = &sinktemplate_wb;
+  ctx_src_template = &srctemplate_wb;
+  input_caps = gst_caps_from_string (SRC_CAPS_WB);
+  g_assert (input_caps);
+  ctx_input_caps = input_caps;
+}
+
+static void
+teardown (void)
+{
+  gst_caps_unref (input_caps);
+}
 
 GST_START_TEST (test_parse_nb_normal)
 {
@@ -238,53 +266,13 @@ GST_START_TEST (test_parse_wb_detect_stream)
 
 GST_END_TEST;
 
-
-
-/*
- * Create test suite.
- */
-static Suite *
-amrnb_parse_suite (void)
-{
-  Suite *s = suite_create ("amrwb_parse");
-  TCase *tc_chain = tcase_create ("general");
-
-  suite_add_tcase (s, tc_chain);
-  /* AMR-NB tests */
-  tcase_add_test (tc_chain, test_parse_nb_normal);
-  tcase_add_test (tc_chain, test_parse_nb_drain_single);
-  tcase_add_test (tc_chain, test_parse_nb_drain_garbage);
-  tcase_add_test (tc_chain, test_parse_nb_split);
-  tcase_add_test (tc_chain, test_parse_nb_detect_stream);
-  tcase_add_test (tc_chain, test_parse_nb_skip_garbage);
-
-  return s;
-}
-
-static Suite *
-amrwb_parse_suite (void)
-{
-  Suite *s = suite_create ("amrnb_parse");
-  TCase *tc_chain = tcase_create ("general");
-
-  suite_add_tcase (s, tc_chain);
-  /* AMR-WB tests */
-  tcase_add_test (tc_chain, test_parse_wb_normal);
-  tcase_add_test (tc_chain, test_parse_wb_drain_single);
-  tcase_add_test (tc_chain, test_parse_wb_drain_garbage);
-  tcase_add_test (tc_chain, test_parse_wb_split);
-  tcase_add_test (tc_chain, test_parse_wb_detect_stream);
-  tcase_add_test (tc_chain, test_parse_wb_skip_garbage);
-
-  return s;
-}
-
 /*
  * TODO:
  *   - Both push- and pull-modes need to be tested
  *      * Pull-mode & EOS
  */
 
+#if 0
 int
 main (int argc, char **argv)
 {
@@ -297,12 +285,6 @@ main (int argc, char **argv)
   gst_check_init (&argc, &argv);
 
   /* init test context */
-  ctx_factory = "amrparse";
-  ctx_sink_template = &sinktemplate_nb;
-  ctx_src_template = &srctemplate_nb;
-  caps = gst_caps_from_string (SRC_CAPS_NB);
-  g_assert (caps);
-  ctx_input_caps = caps;
 
   srunner_run_all (sr, CK_NORMAL);
   nf = srunner_ntests_failed (sr);
@@ -312,12 +294,6 @@ main (int argc, char **argv)
   s = amrwb_parse_suite ();
   sr = srunner_create (s);
 
-  ctx_sink_template = &sinktemplate_wb;
-  ctx_src_template = &srctemplate_wb;
-  caps = gst_caps_from_string (SRC_CAPS_WB);
-  g_assert (caps);
-  ctx_input_caps = caps;
-
   srunner_run_all (sr, CK_NORMAL);
   nf += srunner_ntests_failed (sr);
   srunner_free (sr);
@@ -325,3 +301,37 @@ main (int argc, char **argv)
 
   return nf;
 }
+#endif
+
+static Suite *
+amrparse_suite (void)
+{
+  Suite *s = suite_create ("amrparse");
+  TCase *tc_chain;
+
+  /* AMR-NB tests */
+  tc_chain = tcase_create ("amrnb");
+  tcase_add_checked_fixture (tc_chain, setup_amrnb, teardown);
+  tcase_add_test (tc_chain, test_parse_nb_normal);
+  tcase_add_test (tc_chain, test_parse_nb_drain_single);
+  tcase_add_test (tc_chain, test_parse_nb_drain_garbage);
+  tcase_add_test (tc_chain, test_parse_nb_split);
+  tcase_add_test (tc_chain, test_parse_nb_detect_stream);
+  tcase_add_test (tc_chain, test_parse_nb_skip_garbage);
+  suite_add_tcase (s, tc_chain);
+
+  /* AMR-WB tests */
+  tc_chain = tcase_create ("amrwb");
+  tcase_add_checked_fixture (tc_chain, setup_amrwb, teardown);
+  tcase_add_test (tc_chain, test_parse_wb_normal);
+  tcase_add_test (tc_chain, test_parse_wb_drain_single);
+  tcase_add_test (tc_chain, test_parse_wb_drain_garbage);
+  tcase_add_test (tc_chain, test_parse_wb_split);
+  tcase_add_test (tc_chain, test_parse_wb_detect_stream);
+  tcase_add_test (tc_chain, test_parse_wb_skip_garbage);
+  suite_add_tcase (s, tc_chain);
+
+  return s;
+}
+
+GST_CHECK_MAIN (amrparse)
