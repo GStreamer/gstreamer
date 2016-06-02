@@ -144,6 +144,7 @@ GST_START_TEST (test_match_blue_square)
   gst_bus_set_flushing (bus, TRUE);
   gst_object_unref (bus);
   gst_caps_unref (caps);
+  gst_check_drop_buffers ();
   gst_pad_set_active (srcpad, FALSE);
   gst_pad_set_active (sinkpad, FALSE);
   gst_object_unref (srcpad);
