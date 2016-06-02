@@ -430,6 +430,10 @@ gst_subtitle_overlay_create_factory_caps (void)
       gst_caps_unref (_factory_caps);
     _factory_caps = gst_caps_new_empty ();
 
+    /* The caps is cached */
+    GST_MINI_OBJECT_FLAG_SET (_factory_caps,
+        GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
     factories = gst_registry_feature_filter (registry,
         (GstPluginFeatureFilter) _factory_filter, FALSE, &_factory_caps);
     GST_DEBUG ("Created factory caps: %" GST_PTR_FORMAT, _factory_caps);

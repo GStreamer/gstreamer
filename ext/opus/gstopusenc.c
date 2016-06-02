@@ -812,6 +812,9 @@ gst_opus_enc_get_sink_template_caps (void)
 
     caps = gst_caps_new_empty ();
 
+    /* The caps is cached */
+    GST_MINI_OBJECT_FLAG_SET (caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
     /* Generate our two template structures */
     g_value_init (&rate_array, GST_TYPE_LIST);
     g_value_init (&v, G_TYPE_INT);
