@@ -166,7 +166,12 @@ gst_rtp_vp9_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
   }
 
   /* flexible-mode not implemented */
-  g_assert (!f_bit);
+  if (f_bit) {
+    GST_ELEMENT_WARNING (depay, STREAM, NOT_IMPLEMENTED,
+        ("Stream type not supported"),
+        ("Depayloader does not implement flexible mode"));
+    return NULL;
+  }
 
   /* Check L optional header layer indices */
   if (l_bit) {
