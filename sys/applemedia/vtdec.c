@@ -67,8 +67,8 @@ static GstFlowReturn gst_vtdec_finish (GstVideoDecoder * decoder);
 static GstFlowReturn gst_vtdec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 
-static gboolean gst_vtdec_create_session (GstVtdec * vtdec,
-    GstVideoFormat format);
+static OSStatus gst_vtdec_create_session (GstVtdec * vtdec,
+    GstVideoFormat format, gboolean enable_hardware);
 static void gst_vtdec_invalidate_session (GstVtdec * vtdec);
 static CMSampleBufferRef cm_sample_buffer_from_gst_buffer (GstVtdec * vtdec,
     GstBuffer * buf);
@@ -225,7 +225,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   GstStructure *structure;
   const gchar *s;
   GstVtdec *vtdec;
-  gboolean ret = TRUE;
+  OSStatus err = noErr;
   GstCapsFeatures *features = NULL;
   gboolean output_textures;
 
@@ -272,6 +272,8 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   gst_caps_unref (caps);
 
   if (!prevcaps || !gst_caps_is_equal (prevcaps, output_state->caps)) {
+    gboolean renegotiating = vtdec->session != NULL;
+
     GST_INFO_OBJECT (vtdec,
         "negotiated output format %" GST_PTR_FORMAT " previous %"
         GST_PTR_FORMAT, output_state->caps, prevcaps);
@@ -281,7 +283,18 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
       gst_vtdec_invalidate_session (vtdec);
     }
 
-    ret = gst_vtdec_create_session (vtdec, format);
+    err = gst_vtdec_create_session (vtdec, format, TRUE);
+    if (err == noErr) {
+      GST_INFO_OBJECT (vtdec, "using hardware decoder");
+    } else if (err == kVTVideoDecoderNotAvailableNowErr && renegotiating) {
+      GST_WARNING_OBJECT (vtdec, "hw decoder not available anymore");
+      err = gst_vtdec_create_session (vtdec, format, FALSE);
+    }
+
+    if (err != noErr) {
+      GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
+          ("VTDecompressionSessionCreate returned %d", (int) err));
+    }
   }
 
   if (vtdec->texture_cache != NULL && !output_textures) {
@@ -289,7 +302,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
     vtdec->texture_cache = NULL;
   }
 
-  if (ret && output_textures) {
+  if (err == noErr && output_textures) {
     /* call this regardless of whether caps have changed or not since a new
      * local context could have become available
      */
@@ -311,8 +324,8 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   if (prevcaps)
     gst_caps_unref (prevcaps);
 
-  if (!ret)
-    return ret;
+  if (err != noErr)
+    return FALSE;
 
   return GST_VIDEO_DECODER_CLASS (gst_vtdec_parent_class)->negotiate (decoder);
 }
@@ -343,10 +356,8 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     return TRUE;
   }
 
-  if (vtdec->session) {
+  if (vtdec->session)
     gst_vtdec_push_frames_if_needed (vtdec, TRUE, FALSE);
-    gst_vtdec_invalidate_session (vtdec);
-  }
 
   gst_video_info_from_caps (&vtdec->video_info, state->caps);
 
@@ -455,8 +466,9 @@ gst_vtdec_invalidate_session (GstVtdec * vtdec)
   vtdec->session = NULL;
 }
 
-static gboolean
-gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format)
+static OSStatus
+gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format,
+    gboolean enable_hardware)
 {
   CFMutableDictionaryRef output_image_buffer_attrs;
   VTDecompressionOutputCallbackRecord callback;
@@ -488,8 +500,9 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format)
   /* This is the default on iOS and the key does not exist there */
 #ifndef HAVE_IOS
   gst_vtutil_dict_set_boolean (videoDecoderSpecification,
-      kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder, TRUE);
-  if (vtdec->require_hardware)
+      kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder,
+      enable_hardware);
+  if (enable_hardware && vtdec->require_hardware)
     gst_vtutil_dict_set_boolean (videoDecoderSpecification,
         kVTVideoDecoderSpecification_RequireHardwareAcceleratedVideoDecoder,
         TRUE);
@@ -514,13 +527,7 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format)
 
   CFRelease (output_image_buffer_attrs);
 
-  if (status != noErr) {
-    GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
-        ("VTDecompressionSessionCreate returned %d", (int) status));
-    return FALSE;
-  }
-
-  return TRUE;
+  return status;
 }
 
 static CMFormatDescriptionRef
