@@ -1103,8 +1103,14 @@ gst_vaapi_plugin_base_set_gl_context (GstVaapiPluginBase * plugin,
       display_type = GST_VAAPI_DISPLAY_TYPE_GLX;
       break;
 #endif
-#if USE_EGL
     case GST_GL_PLATFORM_EGL:
+#if VA_CHECK_VERSION (0,36,0) && USE_GST_GL_HELPERS
+      plugin->srcpad_can_dmabuf =
+          (!(gst_gl_context_get_gl_api (gl_context) & GST_GL_API_GLES1)
+          && gst_gl_context_check_feature (gl_context,
+              "EGL_EXT_image_dma_buf_import"));
+#endif
+#if USE_EGL
       display_type = GST_VAAPI_DISPLAY_TYPE_EGL;
       break;
 #endif

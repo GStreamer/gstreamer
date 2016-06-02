@@ -87,6 +87,8 @@ typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
   (GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_caps)
 #define GST_VAAPI_PLUGIN_BASE_SRC_PAD_INFO(plugin) \
   (&GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_info)
+#define GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF(plugin) \
+  (GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_can_dmabuf)
 
 #define GST_VAAPI_PLUGIN_BASE_DISPLAY(plugin) \
   (GST_VAAPI_PLUGIN_BASE(plugin)->display)
@@ -146,6 +148,7 @@ struct _GstVaapiPluginBase
   GstCaps *allowed_raw_caps;
   GstAllocator *sinkpad_allocator;
   GstAllocator *srcpad_allocator;
+  gboolean srcpad_can_dmabuf;
 };
 
 struct _GstVaapiPluginBaseClass
