@@ -284,6 +284,11 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
     ret = gst_vtdec_create_session (vtdec, format);
   }
 
+  if (vtdec->texture_cache != NULL && !output_textures) {
+    gst_video_texture_cache_free (vtdec->texture_cache);
+    vtdec->texture_cache = NULL;
+  }
+
   if (ret && output_textures) {
     /* call this regardless of whether caps have changed or not since a new
      * local context could have become available
