@@ -255,6 +255,7 @@ gst_dvdemux_reset (GstDVDemux * dvdemux)
   dvdemux->frame_offset = 0;
   dvdemux->audio_offset = 0;
   dvdemux->video_offset = 0;
+  dvdemux->discont = TRUE;
   g_atomic_int_set (&dvdemux->found_header, 0);
   dvdemux->frame_len = -1;
   dvdemux->need_segment = FALSE;
@@ -728,6 +729,7 @@ gst_dvdemux_handle_sink_event (GstPad * pad, GstObject * parent,
       GST_DEBUG ("cleared adapter");
       gst_segment_init (&dvdemux->byte_segment, GST_FORMAT_BYTES);
       gst_segment_init (&dvdemux->time_segment, GST_FORMAT_TIME);
+      dvdemux->discont = TRUE;
       res = gst_dvdemux_push_event (dvdemux, event);
       break;
     case GST_EVENT_SEGMENT:
@@ -963,6 +965,8 @@ gst_dvdemux_do_seek (GstDVDemux * demux, GstSegment * segment)
 
   /* every DV frame corresponts with one video frame */
   demux->frame_offset = demux->video_offset;
+
+  demux->discont = TRUE;
 
 done:
   return res;
@@ -1241,7 +1245,7 @@ gst_dvdemux_demux_audio (GstDVDemux * dvdemux, GstBuffer * buffer,
     dvdemux->audio_offset += num_samples;
     GST_BUFFER_OFFSET_END (outbuf) = dvdemux->audio_offset;
 
-    if (dvdemux->new_media)
+    if (dvdemux->new_media || dvdemux->discont)
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
 
     ret = gst_pad_push (dvdemux->audiosrcpad, outbuf);
@@ -1321,7 +1325,7 @@ gst_dvdemux_demux_video (GstDVDemux * dvdemux, GstBuffer * buffer,
   GST_BUFFER_OFFSET_END (outbuf) = dvdemux->video_offset + 1;
   GST_BUFFER_DURATION (outbuf) = duration;
 
-  if (dvdemux->new_media)
+  if (dvdemux->new_media || dvdemux->discont)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
 
   GST_DEBUG ("pushing video %" GST_TIME_FORMAT,
@@ -1497,6 +1501,7 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
     goto done;
   }
 
+  dvdemux->discont = FALSE;
   dvdemux->time_segment.position = next_ts;
   dvdemux->frame_offset++;
 
@@ -1592,8 +1597,10 @@ gst_dvdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   /* a discontinuity in the stream, we need to get rid of
    * accumulated data in the adapter and assume a new frame
    * starts after the discontinuity */
-  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)))
+  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
     gst_adapter_clear (dvdemux->adapter);
+    dvdemux->discont = TRUE;
+  }
 
   /* a timestamp always should be respected */
   timestamp = GST_BUFFER_TIMESTAMP (buffer);

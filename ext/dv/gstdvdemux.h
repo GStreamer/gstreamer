@@ -69,6 +69,7 @@ struct _GstDVDemux {
   gint           frequency;
   gint           channels;
 
+  gboolean       discont;
   gint64         frame_offset;
   gint64         audio_offset;
   gint64         video_offset;
