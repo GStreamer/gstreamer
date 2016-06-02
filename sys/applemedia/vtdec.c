@@ -245,6 +245,12 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   if (features)
     features = gst_caps_features_copy (features);
 
+  output_state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (vtdec));
+  if (output_state) {
+    prevcaps = gst_caps_ref (output_state->caps);
+    gst_video_codec_state_unref (output_state);
+  }
+
   output_state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (vtdec),
       format, vtdec->video_info.width, vtdec->video_info.height,
       vtdec->input_state);
@@ -265,10 +271,10 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   }
   gst_caps_unref (caps);
 
-  prevcaps = gst_pad_get_current_caps (decoder->srcpad);
   if (!prevcaps || !gst_caps_is_equal (prevcaps, output_state->caps)) {
-    GST_INFO_OBJECT (vtdec, "negotiated output format %" GST_PTR_FORMAT,
-        output_state->caps);
+    GST_INFO_OBJECT (vtdec,
+        "negotiated output format %" GST_PTR_FORMAT " previous %"
+        GST_PTR_FORMAT, output_state->caps, prevcaps);
 
     if (vtdec->session) {
       gst_vtdec_push_frames_if_needed (vtdec, TRUE, FALSE);
