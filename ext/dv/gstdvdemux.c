@@ -268,6 +268,7 @@ gst_dvdemux_reset (GstDVDemux * dvdemux)
   dvdemux->wide = FALSE;
   gst_segment_init (&dvdemux->byte_segment, GST_FORMAT_BYTES);
   gst_segment_init (&dvdemux->time_segment, GST_FORMAT_TIME);
+  dvdemux->segment_seqnum = 0;
   dvdemux->upstream_time_segment = FALSE;
   dvdemux->have_group_id = FALSE;
   dvdemux->group_id = G_MAXUINT;
@@ -793,12 +794,14 @@ gst_dvdemux_handle_sink_event (GstPad * pad, GstObject * parent,
         case GST_FORMAT_BYTES:
           gst_segment_copy_into (segment, &dvdemux->byte_segment);
           dvdemux->need_segment = TRUE;
+          dvdemux->segment_seqnum = gst_event_get_seqnum (event);
           gst_event_unref (event);
           break;
         case GST_FORMAT_TIME:
           gst_segment_copy_into (segment, &dvdemux->time_segment);
 
           dvdemux->upstream_time_segment = TRUE;
+          dvdemux->segment_seqnum = gst_event_get_seqnum (event);
 
           /* and we can just forward this time event */
           res = gst_dvdemux_push_event (dvdemux, event);
@@ -964,6 +967,7 @@ gst_dvdemux_handle_push_seek (GstDVDemux * dvdemux, GstPad * pad,
     /* now this is the updated seek event on bytes */
     newevent = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
         cur_type, start_position, stop_type, end_position);
+    gst_event_set_seqnum (newevent, gst_event_get_seqnum (event));
 
     res = gst_pad_push_event (dvdemux->sinkpad, newevent);
   }
@@ -1049,6 +1053,7 @@ gst_dvdemux_handle_pull_seek (GstDVDemux * demux, GstPad * pad,
   gboolean flush;
   gboolean update;
   GstSegment seeksegment;
+  GstEvent *new_event;
 
   GST_DEBUG_OBJECT (demux, "doing seek");
 
@@ -1075,13 +1080,18 @@ gst_dvdemux_handle_pull_seek (GstDVDemux * demux, GstPad * pad,
     flags = 0;
   }
 
+  demux->segment_seqnum = gst_event_get_seqnum (event);
+
   flush = flags & GST_SEEK_FLAG_FLUSH;
 
   /* send flush start */
-  if (flush)
-    gst_dvdemux_push_event (demux, gst_event_new_flush_start ());
-  else
+  if (flush) {
+    new_event = gst_event_new_flush_start ();
+    gst_event_set_seqnum (new_event, demux->segment_seqnum);
+    gst_dvdemux_push_event (demux, new_event);
+  } else {
     gst_pad_pause_task (demux->sinkpad);
+  }
 
   /* grab streaming lock, this should eventually be possible, either
    * because the task is paused or our streaming thread stopped
@@ -1109,7 +1119,9 @@ gst_dvdemux_handle_pull_seek (GstDVDemux * demux, GstPad * pad,
   if (flush) {
     /* send flush stop, peer will accept data and events again. We
      * are not yet providing data as we still have the STREAM_LOCK. */
-    gst_dvdemux_push_event (demux, gst_event_new_flush_stop (TRUE));
+    new_event = gst_event_new_flush_stop (TRUE);
+    gst_event_set_seqnum (new_event, demux->segment_seqnum);
+    gst_dvdemux_push_event (demux, new_event);
   }
 
   /* if successfull seek, we update our real segment and push
@@ -1118,9 +1130,12 @@ gst_dvdemux_handle_pull_seek (GstDVDemux * demux, GstPad * pad,
     memcpy (&demux->time_segment, &seeksegment, sizeof (GstSegment));
 
     if (demux->time_segment.flags & GST_SEEK_FLAG_SEGMENT) {
-      gst_element_post_message (GST_ELEMENT_CAST (demux),
-          gst_message_new_segment_start (GST_OBJECT_CAST (demux),
-              demux->time_segment.format, demux->time_segment.position));
+      GstMessage *message;
+
+      message = gst_message_new_segment_start (GST_OBJECT_CAST (demux),
+          demux->time_segment.format, demux->time_segment.position);
+      gst_message_set_seqnum (message, demux->segment_seqnum);
+      gst_element_post_message (GST_ELEMENT_CAST (demux), message);
     }
     if ((stop = demux->time_segment.stop) == -1)
       stop = demux->time_segment.duration;
@@ -1132,6 +1147,7 @@ gst_dvdemux_handle_pull_seek (GstDVDemux * demux, GstPad * pad,
       gst_event_unref (demux->pending_segment);
 
     demux->pending_segment = gst_event_new_segment (&demux->time_segment);
+    gst_event_set_seqnum (demux->pending_segment, demux->segment_seqnum);
 
     demux->need_segment = FALSE;
   }
@@ -1489,6 +1505,7 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
 
   if (dvdemux->need_segment) {
     GstFormat format;
+    GstEvent *event;
 
     g_assert (!dvdemux->upstream_time_segment);
 
@@ -1516,8 +1533,10 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
         GST_TIME_ARGS (dvdemux->time_segment.stop),
         GST_TIME_ARGS (dvdemux->time_segment.start));
 
-    gst_dvdemux_push_event (dvdemux,
-        gst_event_new_segment (&dvdemux->time_segment));
+    event = gst_event_new_segment (&dvdemux->time_segment);
+    if (dvdemux->segment_seqnum)
+      gst_event_set_seqnum (event, dvdemux->segment_seqnum);
+    gst_dvdemux_push_event (dvdemux, event);
 
     dvdemux->need_segment = FALSE;
   }
@@ -1822,20 +1841,30 @@ done:
   /* ERRORS */
 parse_header_error:
   {
+    GstEvent *event;
+
     GST_ELEMENT_ERROR (dvdemux, STREAM, DECODE,
         (NULL), ("Error parsing DV header"));
     gst_buffer_unref (buffer);
     gst_pad_pause_task (dvdemux->sinkpad);
-    gst_dvdemux_push_event (dvdemux, gst_event_new_eos ());
+    event = gst_event_new_eos ();
+    if (dvdemux->segment_seqnum)
+      gst_event_set_seqnum (event, dvdemux->segment_seqnum);
+    gst_dvdemux_push_event (dvdemux, event);
     goto done;
   }
 small_buffer:
   {
+    GstEvent *event;
+
     GST_ELEMENT_ERROR (dvdemux, STREAM, DECODE,
         (NULL), ("Error reading buffer"));
     gst_buffer_unref (buffer);
     gst_pad_pause_task (dvdemux->sinkpad);
-    gst_dvdemux_push_event (dvdemux, gst_event_new_eos ());
+    event = gst_event_new_eos ();
+    if (dvdemux->segment_seqnum)
+      gst_event_set_seqnum (event, dvdemux->segment_seqnum);
+    gst_dvdemux_push_event (dvdemux, event);
     goto done;
   }
 pause:
@@ -1853,20 +1882,35 @@ pause:
         dvdemux->time_segment.position = dvdemux->time_segment.start;
       /* perform EOS logic */
       if (dvdemux->time_segment.flags & GST_SEEK_FLAG_SEGMENT) {
-        gst_element_post_message (GST_ELEMENT (dvdemux),
-            gst_message_new_segment_done (GST_OBJECT_CAST (dvdemux),
-                dvdemux->time_segment.format, dvdemux->time_segment.position));
-        gst_dvdemux_push_event (dvdemux,
-            gst_event_new_segment_done (dvdemux->time_segment.format,
-                dvdemux->time_segment.position));
+        GstMessage *message;
+        GstEvent *event;
+
+        event = gst_event_new_segment_done (dvdemux->time_segment.format,
+            dvdemux->time_segment.position);
+        if (dvdemux->segment_seqnum)
+          gst_event_set_seqnum (event, dvdemux->segment_seqnum);
+
+        message = gst_message_new_segment_done (GST_OBJECT_CAST (dvdemux),
+            dvdemux->time_segment.format, dvdemux->time_segment.position);
+        if (dvdemux->segment_seqnum)
+          gst_message_set_seqnum (message, dvdemux->segment_seqnum);
+
+        gst_element_post_message (GST_ELEMENT (dvdemux), message);
+        gst_dvdemux_push_event (dvdemux, event);
       } else {
-        gst_dvdemux_push_event (dvdemux, gst_event_new_eos ());
+        GstEvent *event = gst_event_new_eos ();
+        if (dvdemux->segment_seqnum)
+          gst_event_set_seqnum (event, dvdemux->segment_seqnum);
+        gst_dvdemux_push_event (dvdemux, event);
       }
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
+      GstEvent *event = gst_event_new_eos ();
       /* for fatal errors or not-linked we post an error message */
       GST_ELEMENT_ERROR (dvdemux, STREAM, FAILED,
           (NULL), ("streaming stopped, reason %s", gst_flow_get_name (ret)));
-      gst_dvdemux_push_event (dvdemux, gst_event_new_eos ());
+      if (dvdemux->segment_seqnum)
+        gst_event_set_seqnum (event, dvdemux->segment_seqnum);
+      gst_dvdemux_push_event (dvdemux, event);
     }
     goto done;
   }

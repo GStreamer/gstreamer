@@ -79,6 +79,7 @@ struct _GstDVDemux {
   gboolean       upstream_time_segment;
   GstSegment     time_segment;
   gboolean       need_segment;
+  guint32        segment_seqnum;
   gboolean       new_media;
   int            frames_since_new_media;
   
