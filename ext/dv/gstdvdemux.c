@@ -268,6 +268,7 @@ gst_dvdemux_reset (GstDVDemux * dvdemux)
   dvdemux->wide = FALSE;
   gst_segment_init (&dvdemux->byte_segment, GST_FORMAT_BYTES);
   gst_segment_init (&dvdemux->time_segment, GST_FORMAT_TIME);
+  dvdemux->upstream_time_segment = FALSE;
   dvdemux->have_group_id = FALSE;
   dvdemux->group_id = G_MAXUINT;
 }
@@ -796,6 +797,8 @@ gst_dvdemux_handle_sink_event (GstPad * pad, GstObject * parent,
           break;
         case GST_FORMAT_TIME:
           gst_segment_copy_into (segment, &dvdemux->time_segment);
+
+          dvdemux->upstream_time_segment = TRUE;
 
           /* and we can just forward this time event */
           res = gst_dvdemux_push_event (dvdemux, event);
@@ -1484,8 +1487,10 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
   GstSMPTETimeCode timecode;
   int frame_number;
 
-  if (G_UNLIKELY (dvdemux->need_segment)) {
+  if (dvdemux->need_segment) {
     GstFormat format;
+
+    g_assert (!dvdemux->upstream_time_segment);
 
     /* convert to time and store as start/end_timestamp */
     format = GST_FORMAT_TIME;
@@ -1496,8 +1501,12 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
                 (gint64 *) & dvdemux->time_segment.stop)))
       goto segment_error;
 
+    dvdemux->time_segment.time = dvdemux->time_segment.start;
     dvdemux->time_segment.rate = dvdemux->byte_segment.rate;
-    dvdemux->time_segment.position = dvdemux->time_segment.start;
+
+    gst_dvdemux_sink_convert (dvdemux,
+        GST_FORMAT_BYTES, dvdemux->byte_segment.position,
+        GST_FORMAT_TIME, (gint64 *) & dvdemux->time_segment.position);
 
     gst_dvdemux_update_frame_offsets (dvdemux, dvdemux->time_segment.position);
 
@@ -1652,6 +1661,10 @@ gst_dvdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
     gst_adapter_clear (dvdemux->adapter);
     dvdemux->discont = TRUE;
+
+    /* Should recheck where we are */
+    if (!dvdemux->upstream_time_segment)
+      dvdemux->need_segment = TRUE;
   }
 
   /* a timestamp always should be respected */
@@ -1662,6 +1675,11 @@ gst_dvdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     if (dvdemux->discont)
       gst_dvdemux_update_frame_offsets (dvdemux,
           dvdemux->time_segment.position);
+  } else if (dvdemux->upstream_time_segment && dvdemux->discont) {
+    /* This will probably fail later to provide correct
+     * timestamps and/or durations but also should not happen */
+    GST_ERROR_OBJECT (dvdemux,
+        "Upstream provides TIME segment but no PTS after discont");
   }
 
   gst_adapter_push (dvdemux->adapter, buffer);
