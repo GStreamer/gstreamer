@@ -665,7 +665,9 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_PIDS,
       g_param_spec_string ("pids", "pids",
-          "Colon seperated list of pids (eg. 110:120)",
+          "Colon-separated list of PIDs (eg. 110:120) to capture. ACT and CAT "
+          "are automatically included but PMT should be added explicitly. "
+          "Special value 8192 gets full MPEG-TS",
           DEFAULT_PIDS, GST_PARAM_MUTABLE_PLAYING | G_PARAM_WRITABLE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_SYM_RATE,
