@@ -1201,10 +1201,9 @@ gst_dvdemux_send_event (GstElement * element, GstEvent * event)
       } else {
         GST_OBJECT_UNLOCK (dvdemux);
 
-        if (dvdemux->seek_handler) {
+        if (dvdemux->seek_handler)
           res = dvdemux->seek_handler (dvdemux, dvdemux->videosrcpad, event);
-          gst_event_unref (event);
-        }
+        gst_event_unref (event);
       }
       break;
     }
