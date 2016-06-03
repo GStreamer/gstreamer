@@ -637,6 +637,57 @@ gst_dvdemux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
     }
+    case GST_QUERY_SEEKING:
+    {
+      GstFormat fmt;
+      GstQuery *peerquery;
+      gboolean seekable;
+
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+
+      /* We can only handle TIME seeks really */
+      if (fmt != GST_FORMAT_TIME) {
+        gst_query_set_seeking (query, fmt, FALSE, -1, -1);
+        break;
+      }
+
+      /* First ask upstream */
+      if (gst_pad_peer_query (dvdemux->sinkpad, query)) {
+        gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
+        if (seekable) {
+          res = TRUE;
+          break;
+        }
+      }
+
+      res = TRUE;
+
+      peerquery = gst_query_new_seeking (GST_FORMAT_BYTES);
+      seekable = gst_pad_peer_query (dvdemux->sinkpad, peerquery);
+
+      if (seekable)
+        gst_query_parse_seeking (peerquery, NULL, &seekable, NULL, NULL);
+      gst_query_unref (peerquery);
+
+      if (seekable) {
+        peerquery = gst_query_new_duration (GST_FORMAT_TIME);
+        seekable = gst_dvdemux_src_query (pad, parent, peerquery);
+
+        if (seekable) {
+          gint64 duration;
+
+          gst_query_parse_duration (peerquery, NULL, &duration);
+          gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, 0, duration);
+        } else {
+          gst_query_set_seeking (query, GST_FORMAT_TIME, FALSE, -1, -1);
+        }
+
+        gst_query_unref (peerquery);
+      } else {
+        gst_query_set_seeking (query, GST_FORMAT_TIME, FALSE, -1, -1);
+      }
+      break;
+    }
     default:
       res = gst_pad_query_default (pad, parent, query);
       break;
