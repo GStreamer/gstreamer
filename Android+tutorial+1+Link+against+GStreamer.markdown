@@ -22,17 +22,17 @@ easily see how all the pieces fit together.
 Let’s first introduce the Java code, then the C code and finally the
 makefile that allows GStreamer integration.
 
-**src/com/gst\_sdk\_tutorials/tutorial\_1/Tutorial1.java**
+**src/org/freedesktop/gstreamer/tutorials/tutorial\_1/Tutorial1.java**
 
 ``` lang=java
-package com.gst_sdk_tutorials.tutorial_1;
+package org.freedesktop.gstreamer.tutorials.tutorial_1;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.gstreamer.GStreamer;
+import org.freedesktop.gstreamer.GStreamer;
 
 public class Tutorial1 extends Activity {
     private native String nativeGetGStreamerInfo();
@@ -146,7 +146,7 @@ code:
 /*
  * Java Bindings
  */
-jstring gst_native_get_gstreamer_info (JNIEnv* env, jobject thiz) {
+static jstring gst_native_get_gstreamer_info (JNIEnv* env, jobject thiz) {
   char *version_utf8 = gst_version_string();
   jstring *version_jstring = (*env)->NewStringUTF(env, version_utf8);
   g_free (version_utf8);
@@ -164,7 +164,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     __android_log_print (ANDROID_LOG_ERROR, "tutorial-1", "Could not retrieve JNIEnv");
     return 0;
   }
-  jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_1/Tutorial1");
+  jclass klass = (*env)->FindClass (env, "org/freedesktop/gstreamer/tutorials/tutorial_1/Tutorial1");
   (*env)->RegisterNatives (env, klass, native_methods, G_N_ELEMENTS(native_methods));
 
   return JNI_VERSION_1_4;
@@ -191,7 +191,7 @@ And then locate the class containing the UI part of this tutorial using
 FindClass()`:
 
 ``` lang=c
-jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_1/Tutorial1");
+jclass klass = (*env)->FindClass (env, "org/freedesktop/gstreamer/tutorials/tutorial_1/Tutorial1");
 ```
 
 Finally, we register our native methods with `RegisterNatives()`, this
@@ -250,15 +250,15 @@ LOCAL_SHARED_LIBRARIES := gstreamer_android
 LOCAL_LDLIBS := -llog
 include $(BUILD_SHARED_LIBRARY)
 
-ifndef GSTREAMER_SDK_ROOT
-ifndef GSTREAMER_SDK_ROOT_ANDROID
-$(error GSTREAMER_SDK_ROOT_ANDROID is not defined!)
+ifndef GSTREAMER_ROOT
+ifndef GSTREAMER_ROOT_ANDROID
+$(error GSTREAMER_ROOT_ANDROID is not defined!)
 endif
-GSTREAMER_SDK_ROOT        := $(GSTREAMER_SDK_ROOT_ANDROID)
+GSTREAMER_ROOT        := $(GSTREAMER_ROOT_ANDROID)
 endif
-GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_SDK_ROOT)/share/gst-android/ndk-build/
+GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_ROOT)/share/gst-android/ndk-build/
 GSTREAMER_PLUGINS         := coreelements
-include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer.mk
+include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer-1.0.mk
 ```
 
 This is a barebones makefile for a project with GStreamer support. It

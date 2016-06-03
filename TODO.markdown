@@ -31,7 +31,6 @@ Pages to review:
    - Playback+tutorial+8+Hardware-accelerated+video+decoding.markdown
    - Playback+tutorial+9+Digital+audio+pass-through.markdown
  - Android+tutorials.markdown
-   - Android+tutorial+1+Link+against+GStreamer.markdown
    - Android+tutorial+2+A+running+pipeline.markdown
    - Android+tutorial+3+Video.markdown
    - Android+tutorial+4+A+basic+media+player.markdown
@@ -55,6 +54,15 @@ Pages to review:
    - gst-inspect.markdown
    - gst-launch.markdown
 
+
+Screenshots:
+ - Create new ones with the official GStreamer logo and not saying "0.10.36". Affected:
+   - Android tutorial 1: attachments/2654326.png
+
+Code:
+ - Change namespace from com.gst\* to org.freedesktop.gstreamer
+ - Change logos to the official gstreamer logo
+
 Reviewed pages:
  - Home.markdown
  - Installing+the+SDK.markdown
@@ -62,6 +70,7 @@ Reviewed pages:
  - Building+from+source+using+Cerbero.markdown
  - Table+of+Concepts.markdown
  - Tutorials.markdown
+ - Android+tutorial+1+Link+against+GStreamer.markdown
 
 For-later pages:
  - Qt+tutorials.markdown [tpm: this should all be rewritten from scratch with qmlglsink; QtGStreamer is outdated and unmaintained, we should not promote it]
