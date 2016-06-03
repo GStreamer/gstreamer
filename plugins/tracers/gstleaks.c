@@ -79,20 +79,16 @@ set_filtering (GstLeaksTracer * self)
 }
 
 static gboolean
-should_handle_object (GstLeaksTracer * self, gpointer object, GType object_type)
+should_handle_object_type (GstLeaksTracer * self, GType object_type)
 {
-  guint i;
-
-  if (GST_IS_TRACER (object))
-    /* We can't track tracers as they may be disposed after the leak tracer
-     * itself */
-    return FALSE;
+  guint i, len;
 
   if (!self->filter)
     /* No filtering, handle all types */
     return TRUE;
 
-  for (i = 0; i < self->filter->len; i++) {
+  len = self->filter->len;
+  for (i = 0; i < len; i++) {
     GType type = g_array_index (self->filter, GType, i);
 
     if (g_type_is_a (object_type, type))
@@ -126,7 +122,7 @@ static void
 handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
     gboolean gobject)
 {
-  if (!should_handle_object (self, object, type))
+  if (!should_handle_object_type (self, type))
     return;
 
   if (gobject)
@@ -144,7 +140,7 @@ static void
 mini_object_created_cb (GstTracer * tracer, GstClockTime ts,
     GstMiniObject * object)
 {
-  GstLeaksTracer *self = GST_LEAKS_TRACER (tracer);
+  GstLeaksTracer *self = GST_LEAKS_TRACER_CAST (tracer);
 
   handle_object_created (self, object, GST_MINI_OBJECT_TYPE (object), FALSE);
 }
@@ -152,9 +148,14 @@ mini_object_created_cb (GstTracer * tracer, GstClockTime ts,
 static void
 object_created_cb (GstTracer * tracer, GstClockTime ts, GstObject * object)
 {
-  GstLeaksTracer *self = GST_LEAKS_TRACER (tracer);
+  GstLeaksTracer *self = GST_LEAKS_TRACER_CAST (tracer);
+  GType object_type = G_OBJECT_TYPE (object);
 
-  handle_object_created (self, object, G_OBJECT_TYPE (object), TRUE);
+  /* Can't track tracers as they may be disposed after the leak tracer itself */
+  if (g_type_is_a (object_type, GST_TYPE_TRACER))
+    return;
+
+  handle_object_created (self, object, object_type, TRUE);
 }
 
 static void
