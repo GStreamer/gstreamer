@@ -61,7 +61,6 @@ libgstapplemedia_la_LDFLAGS =			\
 	-Wl,-framework -Wl,CoreFoundation	\
 	-Wl,-framework -Wl,CoreMedia		\
 	-Wl,-framework -Wl,CoreVideo 		\
-	-Wl,-framework -Wl,OpenGL 		\
 	-Wl,-framework -Wl,AudioToolbox
 
 noinst_HEADERS =				\
@@ -99,6 +98,7 @@ libgstapplemedia_la_SOURCES +=			\
 libgstapplemedia_la_LDFLAGS +=			\
 	-Wl,-framework -Wl,Cocoa		\
 	-Wl,-framework -Wl,QTKit		\
+	-Wl,-framework -Wl,OpenGL 		\
 	-Wl,-framework -Wl,IOSurface
 
 endif
