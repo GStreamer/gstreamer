@@ -52,10 +52,10 @@ messages sent from the C code (for errors and state changes).
 
 # A pipeline on Android \[Java code\]
 
-**src/com/gst\_sdk\_tutorials/tutorial\_2/Tutorial2.java**
+**src/org/freedesktop/gstreamer/tutorials/tutorial\_2/Tutorial2.java**
 
 ``` lang=java
-package com.gst_sdk_tutorials.tutorial_2;
+package org.freedesktop.gstreamer.tutorials.tutorial_2;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -608,7 +608,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     __android_log_print (ANDROID_LOG_ERROR, "tutorial-2", "Could not retrieve JNIEnv");
     return 0;
   }
-  jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_2/Tutorial2");
+  jclass klass = (*env)->FindClass (env, "org/freedesktop/gstreamer/tutorials/tutorial_2/Tutorial2");
   (*env)->RegisterNatives (env, klass, native_methods, G_N_ELEMENTS(native_methods));
 
   pthread_key_create (&current_jni_env, detach_current_thread);
@@ -660,7 +660,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     __android_log_print (ANDROID_LOG_ERROR, "tutorial-2", "Could not retrieve JNIEnv");
     return 0;
   }
-  jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_2/Tutorial2");
+  jclass klass = (*env)->FindClass (env, "org/freedesktop/gstreamer/tutorials/tutorial_2/Tutorial2");
   (*env)->RegisterNatives (env, klass, native_methods, G_N_ELEMENTS(native_methods));
 
   pthread_key_create (&current_jni_env, detach_current_thread);
@@ -1006,16 +1006,16 @@ LOCAL_SHARED_LIBRARIES := gstreamer_android
 LOCAL_LDLIBS := -llog
 include $(BUILD_SHARED_LIBRARY)
 
-ifndef GSTREAMER_SDK_ROOT
-ifndef GSTREAMER_SDK_ROOT_ANDROID
-$(error GSTREAMER_SDK_ROOT_ANDROID is not defined!)
+ifndef GSTREAMER_ROOT
+ifndef GSTREAMER_ROOT_ANDROID
+$(error GSTREAMER_ROOT_ANDROID is not defined!)
 endif
-GSTREAMER_SDK_ROOT        := $(GSTREAMER_SDK_ROOT_ANDROID)
+GSTREAMER_ROOT        := $(GSTREAMER_ROOT_ANDROID)
 endif
-GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_SDK_ROOT)/share/gst-android/ndk-build/
+GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_ROOT)/share/gst-android/ndk-build/
 include $(GSTREAMER_NDK_BUILD_PATH)/plugins.mk
 GSTREAMER_PLUGINS         := $(GSTREAMER_PLUGINS_CORE) $(GSTREAMER_PLUGINS_SYS)
-include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer.mk
+include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer-1.0.mk
 ```
 
 Notice how the required `GSTREAMER_PLUGINS` are now
