@@ -1,4 +1,4 @@
-package com.gst_sdk_tutorials.tutorial_1;
+package org.freedesktop.gstreamer.tutorials.tutorial_1;
 
 import android.app.Activity;
 import android.os.Bundle;
