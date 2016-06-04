@@ -2179,6 +2179,9 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
 
   g_return_val_if_fail (priv->packetized || klass->parse, GST_FLOW_ERROR);
 
+  if (GST_BUFFER_IS_DISCONT (buf))
+    ret = gst_video_decoder_drain_out (decoder, FALSE);
+
   if (priv->current_frame == NULL)
     priv->current_frame = gst_video_decoder_new_frame (decoder);
 
