@@ -118,7 +118,6 @@ enum
 static void gst_element_class_init (GstElementClass * klass);
 static void gst_element_init (GstElement * element);
 static void gst_element_base_class_init (gpointer g_class);
-static void gst_element_base_class_finalize (gpointer g_class);
 
 static void gst_element_constructed (GObject * object);
 static void gst_element_dispose (GObject * object);
@@ -167,7 +166,7 @@ gst_element_get_type (void)
     static const GTypeInfo element_info = {
       sizeof (GstElementClass),
       gst_element_base_class_init,
-      gst_element_base_class_finalize,
+      NULL,                     /* base_class_finalize */
       (GClassInitFunc) gst_element_class_init,
       NULL,
       NULL,
@@ -293,17 +292,6 @@ gst_element_base_class_init (gpointer g_class)
       __gst_elementclass_factory);
   GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "type %s : factory %p",
       G_OBJECT_CLASS_NAME (element_class), element_class->elementfactory);
-}
-
-static void
-gst_element_base_class_finalize (gpointer g_class)
-{
-  GstElementClass *klass = GST_ELEMENT_CLASS (g_class);
-
-  g_list_foreach (klass->padtemplates, (GFunc) gst_object_unref, NULL);
-  g_list_free (klass->padtemplates);
-
-  gst_structure_free (klass->metadata);
 }
 
 static void
