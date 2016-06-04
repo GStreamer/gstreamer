@@ -50,4 +50,43 @@ Home.markdown
 		Mac+OS+X+deployment.markdown
 		Windows+deployment.markdown
 		Multiplatform+deployment+using+Cerbero.markdown
+	GStreamer+reference.markdown
+		gst-inspect.markdown
+		gst-launch.markdown
+	pwg-index.md
+		part-introduction.md
+			pwg-intro-preface.md
+			pwg-intro-basics.md
+		part-building.md
+			pwg-building-boiler.md
+			pwg-building-pads.md
+			pwg-building-chainfn.md
+			pwg-building-eventfn.md
+			pwg-building-queryfn.md
+			pwg-statemanage-states.md
+			pwg-building-args.md
+			pwg-building-signals.md
+			pwg-building-testapp.md
+		part-advanced.md
+			pwg-advanced-request.md
+			pwg-scheduling.md
+			pwg-negotiation.md
+			pwg-allocation.md
+			pwg-building-types.md
+			pwg-advanced-events.md
+			pwg-advanced-clock.md
+			pwg-advanced-qos.md
+			pwg-dparams.md
+			pwg-advanced-interfaces.md
+			pwg-advanced-tagging.md
+		part-other.md
+			pwg-other-base.md
+			pwg-other-oneton.md
+			pwg-other-ntoone.md
+			pwg-other-manager.md
+		part-appendix.md
+			pwg-checklist-element.md
+			pwg-porting.md
+			pwg-porting-1_0.md
+			pwg-licensing-advisory.md
 	Legal+information.markdown
