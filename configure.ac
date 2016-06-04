@@ -312,12 +312,6 @@ dnl *** plug-ins to include ***
 dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(omx)
 
-dnl check for gstreamer core features (subsystems)
-dnl FIXME: this assumes srcdir == builddir for uninstalled setups
-GST_CONFIGPATH=`$PKG_CONFIG --variable=includedir gstreamer-$GST_API_VERSION`"/gst/gstconfig.h"
-AG_GST_PARSE_SUBSYSTEM_DISABLES($GST_CONFIGPATH)
-dnl AM_CONDITIONAL(USE_FOO, test $GST_DISABLE_FOO != "1")
-
 dnl *** finalize CFLAGS, LDFLAGS, LIBS
 
 dnl Overview:
