@@ -123,26 +123,7 @@ the stream, it can simply request a new output pad from the tee element.
 The following piece of code shows how you can request a new output pad
 from a “tee” element:
 
-``` 
-static void
-some_function (GstElement *tee)
-{
-  GstPad * pad;
-  gchar *name;
-
-  pad = gst_element_get_request_pad (tee, "src%d");
-  name = gst_pad_get_name (pad);
-  g_print ("A new pad %s was created\n", name);
-  g_free (name);
-
-  /* here, you would link the pad */
-[..]
-
-  /* and, after doing that, free our reference */
-  gst_object_unref (GST_OBJECT (pad));
-}
-      
-```
+{{ examples/snippets.c#some_function }}
 
 The `gst_element_get_request_pad ()` method can be used to get a pad
 from the element based on the name of the pad template. It is also
@@ -153,26 +134,7 @@ element and you need to request a pad that is compatible. The method
 pad, as shown in the next example. It will request a compatible pad from
 an Ogg multiplexer from any input.
 
-``` 
-static void
-link_to_multiplexer (GstPad     *tolink_pad,
-             GstElement *mux)
-{
-  GstPad *pad;
-  gchar *srcname, *sinkname;
-
-  srcname = gst_pad_get_name (tolink_pad);
-  pad = gst_element_get_compatible_pad (mux, tolink_pad);
-  gst_pad_link (tolinkpad, pad);
-  sinkname = gst_pad_get_name (pad);
-  gst_object_unref (GST_OBJECT (pad));
-
-  g_print ("A new pad %s was created and linked to %s\n", sinkname, srcname);
-  g_free (sinkname);
-  g_free (srcname);
-}
-      
-```
+{{ examples/snippets.c#link_to_multiplexer }}
 
 # Capabilities of a pad
 

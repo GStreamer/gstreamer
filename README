@@ -24,6 +24,9 @@ for *stable* automatic formatting.
 * Follow [hotdoc's installation guide](https://people.collabora.com/~meh/hotdoc_hotdoc/html/installing.html),
   preferably in a virtualenv.
 
+* We *experimentally* use the hotdoc C extension to include functions by
+  name, follow the steps outlined [here](https://github.com/hotdoc/hotdoc_c_extension)
+
 * Optionally install the `hotdoc_search_extension`:
 
 ```

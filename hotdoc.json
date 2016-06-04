@@ -5,5 +5,6 @@
     "output": "built_doc", 
     "project_name": "gstdotcom", 
     "sitemap": "sitemap.txt",
-    "extra_assets": ["attachments", "images"]
+    "extra_assets": ["attachments", "images"],
+    "pkg_config_packages": ["gstreamer-1.0"]
 }
