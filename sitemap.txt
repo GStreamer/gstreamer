@@ -53,6 +53,40 @@ Home.markdown
 	GStreamer+reference.markdown
 		gst-inspect.markdown
 		gst-launch.markdown
+	manual-index.md
+		manual-introduction.md
+			manual-gstreamer.md
+			manual-motivation.md
+			manual-intro-basics.md
+		manual-building.md
+			manual-init.md
+			manual-elements.md
+			manual-bins.md
+			manual-bus.md
+			manual-pads.md
+			manual-data.md
+			manual-helloworld.md
+		manual-advanced.md
+			manual-queryevents.md
+			manual-metadata.md
+			manual-interfaces.md
+			manual-clocks.md
+			manual-buffering.md
+			manual-dparams.md
+			manual-threads.md
+			manual-autoplugging.md
+			manual-dataaccess.md
+		manual-highlevel.md
+			manual-playback-components.md
+		manual-appendices.md
+			manual-programs.md
+			manual-compiling.md
+			manual-checklist-element.md
+			manual-porting.md
+			manual-porting-1.0.md
+			manual-intgration.md
+			manual-licensing.md
+			manual-quotes.md
 	pwg-index.md
 		pwg-introduction.md
 			pwg-intro-preface.md
