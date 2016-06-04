@@ -1,3 +1,7 @@
+---
+short-description: Learn how to use the GStreamer SDK
+...
+
 # Tutorials
 
 ## Welcome to the GStreamer SDK Tutorials!

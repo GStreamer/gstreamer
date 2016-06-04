@@ -1,3 +1,7 @@
+---
+short-description: Patents, Licenses and legal F.A.Q.
+...
+
 # Legal information
 
 # Installer, default installation

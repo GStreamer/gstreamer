@@ -1,3 +1,7 @@
+---
+short-description: Deploy the SDK with your application
+...
+
 # Deploying your application
 
 Once the development of your application is finished, you will need to

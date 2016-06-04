@@ -1,3 +1,7 @@
+---
+short-description: Download and install GStreamer
+...
+
 #  Installing the SDK
 
 ## Choose your platform by clicking on the corresponding logo

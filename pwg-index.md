@@ -1,8 +1,6 @@
 ---
-title: GStreamer Plugin Writer's Guide (1.9.0.1)
+title: GStreamer Plugin Writer's Guide
+short-description: Complete walkthrough for writing your very own GStreamer plugin
 ...
 
-# GStreamer Plugin Writer's Guide (1.9.0.1)
-
-
-
+# GStreamer Plugin Writer's Guide

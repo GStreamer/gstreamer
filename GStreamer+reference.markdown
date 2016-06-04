@@ -1,3 +1,7 @@
+---
+short-description: GStreamer API reference
+...
+
 # GStreamer reference
 
 This is the complete documentation for the GStreamer API, automatically
