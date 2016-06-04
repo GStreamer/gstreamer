@@ -389,7 +389,7 @@ It has been a pleasure having you here, and see you soon\!
 <tbody>
 <tr class="odd">
 <td><img src="images/icons/emoticons/warning.png" width="16" height="16" /></td>
-<td><p>There is a bug in the current version of the sdk <a href="https://bugzilla.gnome.org/show_bug.cgi?id=638168" class="uri" class="external-link">https://bugzilla.gnome.org/show_bug.cgi?id=638168</a>:</p>
+<td><p>There is a bug in the current version of the sdk <a href="https://bugzilla.gnome.org/show_bug.cgi?id=638168">https://bugzilla.gnome.org/show_bug.cgi?id=638168</a>:</p>
 <p>Switching subtitle tracks while there is a subtitle on the screen gives this warning:</p>
 <p><code>WARN                 katedec gstkatedec.c:309:gst_kate_dec_chain:&lt;katedec1&gt; failed to push buffer: wrong-state</code></p>
 <p>And after a while it freezes.</p></td>

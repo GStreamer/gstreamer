@@ -1,8 +1,6 @@
 # Building from source using Cerbero
 
 > ![Warning] This section is intended for advanced users.
-> </p>
-> </td>
 
 ## Build requirements
 
