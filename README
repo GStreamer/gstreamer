@@ -1,0 +1,43 @@
+# Introduction
+
+This is a collection of design documents, formerly maintained in various
+different locations and formats, now grouped together and converted
+to commonmark.
+
+# Contributing
+
+## Style
+
+We will follow the commonmark specification.
+
+We *should* try to follow this
+[style guide](http://www.cirosantilli.com/markdown-style-guide/#about),
+but are still [evaluating solutions](https://github.com/jgm/cmark/issues/131)
+for *stable* automatic formatting.
+
+80 columns line width is thus not yet enforced, but strongly suggested.
+
+# Build a web portal from the sources
+
+## Install dependencies
+
+* Follow [hotdoc's installation guide](https://people.collabora.com/~meh/hotdoc_hotdoc/html/installing.html),
+  preferably in a virtualenv.
+
+* Optionally install the `hotdoc_search_extension`:
+
+```
+pip install hotdoc-search-extension
+```
+
+* Build the portal:
+
+```
+hotdoc run
+```
+
+* And browse it:
+
+```
+xdg-open build/html/index.html
+```
