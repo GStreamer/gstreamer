@@ -74,7 +74,6 @@ GQuark __gst_deviceproviderclass_factory = 0;
 static void gst_device_provider_class_init (GstDeviceProviderClass * klass);
 static void gst_device_provider_init (GstDeviceProvider * element);
 static void gst_device_provider_base_class_init (gpointer g_class);
-static void gst_device_provider_base_class_finalize (gpointer g_class);
 static void gst_device_provider_dispose (GObject * object);
 static void gst_device_provider_finalize (GObject * object);
 
@@ -90,7 +89,7 @@ gst_device_provider_get_type (void)
     static const GTypeInfo element_info = {
       sizeof (GstDeviceProviderClass),
       gst_device_provider_base_class_init,
-      gst_device_provider_base_class_finalize,
+      NULL,                     /* base_class_finalize */
       (GClassInitFunc) gst_device_provider_class_init,
       NULL,
       NULL,
@@ -124,14 +123,6 @@ gst_device_provider_base_class_init (gpointer g_class)
 
   klass->factory = g_type_get_qdata (G_TYPE_FROM_CLASS (klass),
       __gst_deviceproviderclass_factory);
-}
-
-static void
-gst_device_provider_base_class_finalize (gpointer g_class)
-{
-  GstDeviceProviderClass *klass = GST_DEVICE_PROVIDER_CLASS (g_class);
-
-  gst_structure_free (klass->metadata);
 }
 
 static void
