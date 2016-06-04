@@ -54,10 +54,10 @@ Home.markdown
 		gst-inspect.markdown
 		gst-launch.markdown
 	pwg-index.md
-		part-introduction.md
+		pwg-introduction.md
 			pwg-intro-preface.md
 			pwg-intro-basics.md
-		part-building.md
+		pwg-building.md
 			pwg-building-boiler.md
 			pwg-building-pads.md
 			pwg-building-chainfn.md
@@ -67,7 +67,7 @@ Home.markdown
 			pwg-building-args.md
 			pwg-building-signals.md
 			pwg-building-testapp.md
-		part-advanced.md
+		pwg-advanced.md
 			pwg-advanced-request.md
 			pwg-scheduling.md
 			pwg-negotiation.md
@@ -79,12 +79,12 @@ Home.markdown
 			pwg-dparams.md
 			pwg-advanced-interfaces.md
 			pwg-advanced-tagging.md
-		part-other.md
+		pwg-other.md
 			pwg-other-base.md
 			pwg-other-oneton.md
 			pwg-other-ntoone.md
 			pwg-other-manager.md
-		part-appendix.md
+		pwg-appendix.md
 			pwg-checklist-element.md
 			pwg-porting.md
 			pwg-porting-1_0.md
