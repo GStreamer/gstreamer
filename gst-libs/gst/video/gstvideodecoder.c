@@ -2191,7 +2191,9 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
   priv->input_offset += gst_buffer_get_size (buf);
 
   if (priv->packetized) {
+    gboolean was_keyframe = FALSE;
     if (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
+      was_keyframe = TRUE;
       GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (priv->current_frame);
     }
 
@@ -2204,6 +2206,11 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
       ret = gst_video_decoder_decode_frame (decoder, priv->current_frame);
     }
     priv->current_frame = NULL;
+    /* If in trick mode and it was a keyframe, drain decoder to avoid extra
+     * latency */
+    if (was_keyframe
+        && (decoder->output_segment.flags & GST_SEEK_FLAG_TRICKMODE_KEY_UNITS))
+      gst_video_decoder_drain_out (decoder, FALSE);
   } else {
     gst_adapter_push (priv->input_adapter, buf);
 
