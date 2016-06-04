@@ -1,9 +1,9 @@
 ---
-title: GStreamer Application Development Manual
+title: Application Development Manual
 short-description: Complete walkthrough for building an application using GStreamer
 ...
 
-# GStreamer Application Development Manual
+# Application Development Manual
 
 # Foreword
 
