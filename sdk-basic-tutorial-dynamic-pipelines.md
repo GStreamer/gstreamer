@@ -240,10 +240,10 @@ exit:
 > ![Information](images/icons/emoticons/information.png)
 > Need help?
 >
-> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Build), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Build) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Build), or use this specific command on Linux:
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Build), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Build) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Build), or use this specific command on Linux:
 > ``gcc basic-tutorial-3.c -o basic-tutorial-3 `pkg-config --cflags --libs gstreamer-1.0` ``
 >
->If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Run), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Run) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Run).
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Run), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Run) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Run).
 >
 > This tutorial only plays audio. The media is fetched from the Internet, so it might take a few seconds to start, depending on your connection speed.
 >
@@ -338,7 +338,7 @@ for this purpose.
 The signals that a `GstElement` generates can be found in its
 documentation or using the `gst-inspect-1.0` tool as described in [Basic
 tutorial 10: GStreamer
-tools](Basic+tutorial+10+GStreamer+tools.markdown).
+tools](sdk-basic-tutorial-gstreamer-tools.md).
 
 We are now ready to go! Just set the pipeline to the PLAYING state and
 start listening to the bus for interesting messages (like ERROR or EOS),
@@ -493,10 +493,10 @@ front) and link it to the demuxer when the right pad appears. Hint: You
 are already printing on screen the type of the video pads.
 
 You should now see (and hear) the same movie as in [Basic tutorial 1:
-Hello world!](Basic+tutorial+1+Hello+world.markdown). In
+Hello world!](sdk-basic-tutorial-hello-world.md). In
 that tutorial you used `playbin`, which is a handy element that
 automatically takes care of all the demuxing and pad linking for you.
-Most of the [Playback tutorials](Playback+tutorials.markdown) are devoted
+Most of the [Playback tutorials](sdk-playback-tutorials.md) are devoted
 to `playbin`.
 
 ## Conclusion
@@ -513,8 +513,8 @@ media was available.
 
 You can now continue with the basic tutorials and learn about performing
 seeks and time-related queries in [Basic tutorial 4: Time
-management](Basic+tutorial+4+Time+management.markdown) or move
-to the [Playback tutorials](Playback+tutorials.markdown), and gain more
+management](sdk-basic-tutorial-time-management.md) or move
+to the [Playback tutorials](sdk-playback-tutorials.md), and gain more
 insight about the `playbin` element.
 
 Remember that attached to this page you should find the complete source

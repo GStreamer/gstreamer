@@ -465,7 +465,7 @@ int main(int argc, char *argv[]) {
 > This tutorial opens a GTK+ window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. The Window has some GTK+ buttons to Pause, Stop and Play the movie, and a slider to show the current position of the stream, which can be dragged to change it. Also, information about the stream is shown on a column at the right edge of the window.
 >
 >
-> Bear in mind that there is no latency management (buffering), so on slow connections, the movie might stop after a few seconds. See how [Basic tutorial 12: Streaming](Basic+tutorial+12+Streaming.markdown) solves this issue.
+> Bear in mind that there is no latency management (buffering), so on slow connections, the movie might stop after a few seconds. See how [Basic tutorial 12: Streaming](sdk-basic-tutorial-streaming.md) solves this issue.
 >
 > Required libraries: `gstreamer-video-1.0 gtk+-3.0 gstreamer-1.0`
 
@@ -563,7 +563,7 @@ gst_object_unref (bus);
 ```
 
 In [Playback tutorial 1: Playbin
-usage](Playback+tutorial+1+Playbin+usage.markdown), `gst_bus_add_watch()` is
+usage](sdk-playback-tutorial-playbin-usage.md), `gst_bus_add_watch()` is
 used to register a function that receives every message posted to the
 GStreamer bus. We can achieve a finer granularity by using signals
 instead, which allow us to register only to the messages we are

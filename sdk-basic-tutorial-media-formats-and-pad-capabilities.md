@@ -100,7 +100,7 @@ indicate different packing and subsampling of the image planes.
 ### Last remarks
 
 You can use the `gst-inspect-1.0` tool described in [Basic tutorial 10:
-GStreamer tools](Basic+tutorial+10+GStreamer+tools.markdown) to
+GStreamer tools](sdk-basic-tutorial-gstreamer-tools.md) to
 learn about the Caps of any GStreamer element.
 
 Bear in mind that some elements query the underlying hardware for
@@ -335,11 +335,11 @@ int main(int argc, char *argv[]) {
 > ![Information](images/icons/emoticons/information.png)
 > Need help?
 >
-> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Build), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Build) or [Windows](Installing+on+Windows.markdownb#InstallingonWindows-Build), or use this specific command on Linux:
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Build), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Build) or [Windows](sdk-installing-on-windows.mdb#InstallingonWindows-Build), or use this specific command on Linux:
 >
 > `` gcc basic-tutorial-6.c -o basic-tutorial-6 `pkg-config --cflags --libs gstreamer-1.0` ``
 >
->If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Run), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Run) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Run).
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Run), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Run) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Run).
 >
 > This tutorial simply displays information regarding the Pad Capabilities in different time instants.
 >
@@ -466,7 +466,7 @@ This tutorial has shown:
 
   - That Pad Caps can be found using the `gst-inspect-1.0` tool described
     in [Basic tutorial 10: GStreamer
-    tools](Basic+tutorial+10+GStreamer+tools.markdown).
+    tools](sdk-basic-tutorial-gstreamer-tools.md).
 
 Next tutorial shows how data can be manually injected into and extracted
 from the GStreamer pipeline.

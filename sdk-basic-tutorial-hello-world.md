@@ -220,17 +220,17 @@ and show you how to build a pipeline manually.
 
 It has been a pleasure having you here, and see you soon!
 
-  [Installing on Linux]: Installing+on+Linux.markdown
-  [Installing on Mac OS X]: Installing+on+Mac+OS+X.markdown
-  [Installing on Windows]: Installing+on+Windows.markdown
+  [Installing on Linux]: sdk-installing-on-linux.md
+  [Installing on Mac OS X]: sdk-installing-on-mac-osx.md
+  [Installing on Windows]: sdk-installing-on-windows.md
   [Information]: images/icons/emoticons/information.png
-  [Linux]: Installing+on+Linux.markdown#InstallingonLinux-Build
-  [Mac OS X]: Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Build
-  [Windows]: Installing+on+Windows.markdown#InstallingonWindows-Build
-  [1]: Installing+on+Linux.markdown#InstallingonLinux-Run
-  [2]: Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Run
-  [3]: Installing+on+Windows.markdown#InstallingonWindows-Run
-  [Basic tutorial 12: Streaming]: Basic+tutorial+12+Streaming.markdown
-  [Basic tutorial 10: GStreamer tools]: Basic+tutorial+10+GStreamer+tools.markdown
-  [Basic tutorial 2: GStreamer concepts]: Basic+tutorial+2+GStreamer+concepts.markdown
-  [Basic tutorial 3: Dynamic pipelines]: Basic+tutorial+3+Dynamic+pipelines.markdown
+  [Linux]: sdk-installing-on-linux.md#InstallingonLinux-Build
+  [Mac OS X]: sdk-installing-on-mac-osx.md#InstallingonMacOSX-Build
+  [Windows]: sdk-installing-on-windows.md#InstallingonWindows-Build
+  [1]: sdk-installing-on-linux.md#InstallingonLinux-Run
+  [2]: sdk-installing-on-mac-osx.md#InstallingonMacOSX-Run
+  [3]: sdk-installing-on-windows.md#InstallingonWindows-Run
+  [Basic tutorial 12: Streaming]: sdk-basic-tutorial-streaming.md
+  [Basic tutorial 10: GStreamer tools]: sdk-basic-tutorial-gstreamer-tools.md
+  [Basic tutorial 2: GStreamer concepts]: sdk-basic-tutorial-concepts.md
+  [Basic tutorial 3: Dynamic pipelines]: sdk-basic-tutorial-dynamic-pipelines.md

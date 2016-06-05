@@ -29,17 +29,17 @@ concepts is discussed.
 -   Tools: [Basic tutorial 10: GStreamer tools]
 -   Threads: [Basic tutorial 7: Multithreading and Pad Availability]
 
-  [Playback tutorial 1: Playbin usage]: Playback+tutorial+1+Playbin+usage.markdown
-  [Basic tutorial 8: Short-cutting the pipeline]: Basic+tutorial+8+Short-cutting+the+pipeline.markdown
-  [Basic tutorial 2: GStreamer concepts]: Basic+tutorial+2+GStreamer+concepts.markdown
-  [Basic tutorial 6: Media formats and Pad Capabilities]: Basic+tutorial+6+Media+formats+and+Pad+Capabilities.markdown
-  [Basic tutorial 11: Debugging tools]: Basic+tutorial+11+Debugging+tools.markdown
-  [Basic tutorial 9: Media information gathering]: Basic+tutorial+9+Media+information+gathering.markdown
-  [Basic tutorial 10: GStreamer tools]: Basic+tutorial+10+GStreamer+tools.markdown
-  [gst-inspect-1.0]: gst-inspect.markdown
-  [gst-launch-1.0]: gst-launch.markdown
-  [Basic tutorial 5: GUI toolkit integration]: Basic+tutorial+5+GUI+toolkit+integration.markdown
-  [Basic tutorial 3: Dynamic pipelines]: Basic+tutorial+3+Dynamic+pipelines.markdown
-  [Basic tutorial 7: Multithreading and Pad Availability]: Basic+tutorial+7+Multithreading+and+Pad+Availability.markdown
-  [Basic tutorial 4: Time management]: Basic+tutorial+4+Time+management.markdown
-  [Playback tutorial 2: Subtitle management]: Playback+tutorial+2+Subtitle+management.markdown
+  [Playback tutorial 1: Playbin usage]: sdk-playback-tutorial-playbin-usage.md
+  [Basic tutorial 8: Short-cutting the pipeline]: sdk-basic-tutorial-short-cutting-the-pipeline.md
+  [Basic tutorial 2: GStreamer concepts]: sdk-basic-tutorial-concepts.md
+  [Basic tutorial 6: Media formats and Pad Capabilities]: sdk-basic-tutorial-media-formats-and-pad-capabilities.md
+  [Basic tutorial 11: Debugging tools]: sdk-basic-tutorial-debugging-tools.md
+  [Basic tutorial 9: Media information gathering]: sdk-basic-tutorial-media-information-gathering.md
+  [Basic tutorial 10: GStreamer tools]: sdk-basic-tutorial-gstreamer-tools.md
+  [gst-inspect-1.0]: sdk-gst-inspect.md
+  [gst-launch-1.0]: gst-launch.md
+  [Basic tutorial 5: GUI toolkit integration]: sdk-basic-tutorial-toolkit-integration.md
+  [Basic tutorial 3: Dynamic pipelines]: sdk-basic-tutorial-dynamic-pipelines.md
+  [Basic tutorial 7: Multithreading and Pad Availability]: sdk-basic-tutorial-multithreading-and-pad-availability.md
+  [Basic tutorial 4: Time management]: sdk-basic-tutorial-time-management.md
+  [Playback tutorial 2: Subtitle management]: sdk-playback-tutorial-subtitle-management.md

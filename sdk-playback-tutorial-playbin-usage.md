@@ -585,12 +585,12 @@ It has been a pleasure having you here, and see you soon!
 
   [Playback tutorial 2: Subtitle management]: Playback%2Btutorial%2B2%253A%2BSubtitle%2Bmanagement.html
   [information]: images/icons/emoticons/information.png
-  [Mac]: Installing+on+Mac+OS+X.markdown
+  [Mac]: sdk-installing-on-mac-osx.md
   [Windows]: Installing+on+Windows
-  [Mac OS X]: Installing+on+Mac+OS+X.markdown#building-the-tutorials
-  [1]: Installing+on+Windows.markdown#running-the-tutorials
-  [iOS]: Installing+for+iOS+development.markdown#building-the-tutorials
-  [android]: Installing+for+Android+development.markdown#building-the-tutorials
+  [Mac OS X]: sdk-installing-on-mac-osx.md#building-the-tutorials
+  [1]: sdk-installing-on-windows.md#running-the-tutorials
+  [iOS]: sdk-installing-for-ios-development.md#building-the-tutorials
+  [android]: sdk-installing-for-android-development.md#building-the-tutorials
   [Tutorial 12: Live streaming]: http://docs.gstreamer.com/display/GstSDK/Tutorial+12%3A+Live+streaming
   [Tutorial 17: DVD playback]: http://docs.gstreamer.com/display/GstSDK/Tutorial+17%3A+DVD+playback
   [information]: images/icons/emoticons/information.png

@@ -104,11 +104,11 @@ int main(int argc, char *argv[]) {
 > ![Information](images/icons/emoticons/information.png)
 > Need help?
 >
-> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Build), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Build) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Build), or use this specific command on Linux:
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Build), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Build) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Build), or use this specific command on Linux:
 >
 > `` gcc basic-tutorial-2.c -o basic-tutorial-2 `pkg-config --cflags --libs gstreamer-1.0` ``
 >
->If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Run), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Run) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Run).
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Run), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Run) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Run).
 >
 >This tutorial opens a window and displays a test pattern, without audio
 >
@@ -139,9 +139,9 @@ sink = gst_element_factory_make ("autovideosink", "sink");
 As seen in this code, new elements can be created
 with `gst_element_factory_make()`. The first parameter is the type of
 element to create ([Basic tutorial 14: Handy
-elements](Basic+tutorial+14+Handy+elements.markdown) shows a
+elements](sdk-basic-tutorial-handy-elements.md) shows a
 few common types, and [Basic tutorial 10: GStreamer
-tools](Basic+tutorial+10+GStreamer+tools.markdown) shows how to
+tools](sdk-basic-tutorial-gstreamer-tools.md) shows how to
 obtain the list of all available types). The second parameter is the
 name we want to give to this particular instance. Naming your elements
 is useful to retrieve them later if you didn't keep a pointer (and for
@@ -225,7 +225,7 @@ values!
 
 The names and possible values of all the properties an element exposes
 can be found using the gst-inspect-1.0 tool described in [Basic tutorial 10:
-GStreamer tools](Basic+tutorial+10+GStreamer+tools.markdown).
+GStreamer tools](sdk-basic-tutorial-gstreamer-tools.md).
 
 ### Error checking
 
@@ -246,7 +246,7 @@ if (ret == GST_STATE_CHANGE_FAILURE) {
 We call `gst_element_set_state()`, but this time we check its return
 value for errors. Changing states is a delicate process and a few more
 details are given in [Basic tutorial 3: Dynamic
-pipelines](Basic+tutorial+3+Dynamic+pipelines.markdown).
+pipelines](sdk-basic-tutorial-dynamic-pipelines.md).
 
 ```
 /* Wait until error or EOS */
@@ -311,7 +311,7 @@ playback-related issues.
 
 The rest of the code is the cleanup sequence, which is the same as
 in [Basic tutorial 1: Hello
-world!](Basic+tutorial+1+Hello+world.markdown).
+world!](sdk-basic-tutorial-hello-world.md).
 
 ## Exercise
 
@@ -324,11 +324,11 @@ Depending on your platform and available plugins, you might get a
 “negotiation” error, because the sink does not understand what the
 filter is producing (more about negotiation in [Basic tutorial 6: Media
 formats and Pad
-Capabilities](Basic+tutorial+6+Media+formats+and+Pad+Capabilities.markdown)).
+Capabilities](sdk-basic-tutorial-media-formats-and-pad-capabilities.md)).
 In this case, try to add an element called `videoconvert` after the
 filter (this is, build a pipeline of 4 elements. More on
 `videoconvert` in [Basic tutorial 14: Handy
-elements](Basic+tutorial+14+Handy+elements.markdown)).
+elements](sdk-basic-tutorial-handy-elements.md)).
 
 ## Conclusion
 

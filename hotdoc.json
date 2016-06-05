@@ -1,7 +1,7 @@
 {
     "add_anchors": true, 
     "command": "conf", 
-    "index": "Home.markdown", 
+    "index": "index.md", 
     "output": "built_doc", 
     "project_name": "gstdotcom", 
     "sitemap": "sitemap.txt",

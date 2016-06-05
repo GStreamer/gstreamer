@@ -6,10 +6,10 @@ short-description: Download and install GStreamer
 
 ## Choose your platform by clicking on the corresponding logo
 
-[![](attachments/1540163.png)](Installing+on+Mac+OS+X.markdown)
-[![](attachments/1540164.png)](Installing+on+Windows.markdown)
-[![](attachments/2654239.png)](Installing+for+Android+development.markdown)
-[![](attachments/3539150.jpeg)](Installing+for+iOS+development.markdown)
+[![](attachments/1540163.png)](sdk-installing-on-mac-osx.md)
+[![](attachments/1540164.png)](sdk-installing-on-windows.md)
+[![](attachments/2654239.png)](sdk-installing-for-android-development.md)
+[![](attachments/3539150.jpeg)](sdk-installing-for-ios-development.md)
 
 ## Linux
 
@@ -20,4 +20,4 @@ environments, you will just need to make sure you have the development
 packages installed (refer to your distribution documentation for more
 information). If you really want to run the Sdk on Linux, you can
 always follow the instructions to
-[build from source using cerbero](Building+from+source+using+Cerbero.markdown).
+[build from source using cerbero](sdk-building-from-source-using-cerbero.md).

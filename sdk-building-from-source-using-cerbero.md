@@ -238,4 +238,4 @@ To cross compile for iOS from OS X, use the configuration file
   [Windows Driver Kit 7.1.0]: http://msdn.microsoft.com/en-us/windows/hardware/hh852365
   [XCode]: https://developer.apple.com/devcenter/ios/index.action#downloads
   [here]: http://www.freedesktop.org/software/gstreamer-sdk/cerbero.cbc.template
-  [Installing the SDK]: Installing+the+SDK.markdown
+  [Installing the SDK]: sdk-installing.md

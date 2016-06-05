@@ -197,11 +197,11 @@ static void handle_message (CustomData *data, GstMessage *msg) {
 > ![Information](images/icons/emoticons/information.png)
 > Need help?
 >
-> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Build), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Build) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Build), or use this specific command on Linux:
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Build), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Build) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Build), or use this specific command on Linux:
 >
 > ``gcc basic-tutorial-4.c -o basic-tutorial-4 `pkg-config --cflags --libs gstreamer-1.0` ``
 >
->If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Run), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Run) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Run).
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Run), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Run) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Run).
 >
 > This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. 10 seconds into the movie it skips to a new position
 >
@@ -231,7 +231,7 @@ move the message handling code to its own function
 
 We would then build a pipeline composed of a single element, a
 `playbin`, which we already saw in [Basic tutorial 1: Hello
-world!](Basic+tutorial+1+Hello+world.markdown). However,
+world!](sdk-basic-tutorial-hello-world.md). However,
 `playbin` is in itself a pipeline, and in this case it is the only
 element in the pipeline, so we use directly the `playbin` element. We
 will skip the details: the URI of the clip is given to `playbin` via

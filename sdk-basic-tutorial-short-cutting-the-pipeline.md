@@ -13,7 +13,7 @@ any time, in a variety of ways. This tutorial shows:
   - How to access and manipulate this data.
 
 [Playback tutorial 3: Short-cutting the
-pipeline](Playback+tutorial+3+Short-cutting+the+pipeline.markdown) explains
+pipeline](sdk-playback-tutorial-short-cutting-the-pipeline.md) explains
 how to achieve the same goals in a playbin-based pipeline.
 
 ## Introduction
@@ -70,7 +70,7 @@ this simplified vision should suffice for now.
 As an example, a `filesrc` (a GStreamer element that reads files)
 produces buffers with the “ANY” caps and no time-stamping information.
 After demuxing (see [Basic tutorial 3: Dynamic
-pipelines](Basic+tutorial+3+Dynamic+pipelines.markdown))
+pipelines](sdk-basic-tutorial-dynamic-pipelines.md))
 buffers can have some specific caps, for example “video/x-h264”. After
 decoding, each buffer will contain a single video frame with raw caps
 (for example, “video/x-raw-yuv”) and very precise time stamps indicating
@@ -79,7 +79,7 @@ when should that frame be displayed.
 ### This tutorial
 
 This tutorial expands [Basic tutorial 7: Multithreading and Pad
-Availability](Basic+tutorial+7+Multithreading+and+Pad+Availability.markdown) in
+Availability](sdk-basic-tutorial-multithreading-and-pad-availability.md) in
 two ways: firstly, the `audiotestsrc` is replaced by an `appsrc` that
 will generate the audio data. Secondly, a new branch is added to the
 `tee` so data going into the audio sink and the wave display is also
@@ -335,11 +335,11 @@ int main(int argc, char *argv[]) {
 > ![Information](images/icons/emoticons/information.png)
 > Need help?
 >
-> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Build), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Build) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Build), or use this specific command on Linux:
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Build), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Build) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Build), or use this specific command on Linux:
 >
 > `` gcc basic-tutorial-8.c -o basic-tutorial-8 `pkg-config --cflags --libs gstreamer-1.0 gst-audio-1.0` ``
 >
->If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Run), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Run) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Run).
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Run), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Run) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Run).
 >
 > This tutorial plays an audible tone for varying frequency through the audio card and opens a window with a waveform representation of the tone. The waveform should be a sinusoid, but due to the refreshing of the window might not appear so.
 >
@@ -349,7 +349,7 @@ int main(int argc, char *argv[]) {
 
 The code to create the pipeline (Lines 131 to 205) is an enlarged
 version of [Basic tutorial 7: Multithreading and Pad
-Availability](Basic+tutorial+7+Multithreading+and+Pad+Availability.markdown).
+Availability](sdk-basic-tutorial-multithreading-and-pad-availability.md).
 It involves instantiating all the elements, link the elements with
 Always Pads, and manually link the Request Pads of the `tee` element.
 
@@ -500,7 +500,7 @@ gst_buffer_unref (buffer);
 Once we have the buffer ready, we pass it to `appsrc` with the
 `push-buffer` action signal (see information box at the end of [Playback
 tutorial 1: Playbin
-usage](Playback+tutorial+1+Playbin+usage.markdown)), and then
+usage](sdk-playback-tutorial-playbin-usage.md)), and then
 `gst_buffer_unref()` it since we no longer need it.
 
 ``` lang=c
@@ -540,7 +540,7 @@ This tutorial has shown how applications can:
 
 In a playbin-based pipeline, the same goals are achieved in a slightly
 different way. [Playback tutorial 3: Short-cutting the
-pipeline](Playback+tutorial+3+Short-cutting+the+pipeline.markdown) shows
+pipeline](sdk-playback-tutorial-short-cutting-the-pipeline.md) shows
 how to do it.
 
 It has been a pleasure having you here, and see you soon\!

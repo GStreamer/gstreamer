@@ -76,11 +76,11 @@ purposes.
 
 -   [Sintel, the Durian Open Movie Project]
 
-  [installing the SDK]: Installing+the+SDK.markdown
+  [installing the SDK]: sdk-installing.md
   [GStreamer documentation]: http://gstreamer.freedesktop.org/documentation/
-  [Basic tutorials]: Basic+tutorials.markdown
-  [Playback tutorials]: Playback+tutorials.markdown
-  [Android tutorials]: Android+tutorials.markdown
-  [iOS tutorials]: iOS+tutorials.markdown
-  [Table of Concepts]: Table+of+Concepts.markdown
+  [Basic tutorials]: sdk-basic-tutorials.md
+  [Playback tutorials]: sdk-playback-tutorials.md
+  [Android tutorials]: sdk-android-tutorials.md
+  [iOS tutorials]: sdk-ios-tutorials.md
+  [Table of Concepts]: sdk-table-of-concepts.md
   [Sintel, the Durian Open Movie Project]: http://www.sintel.org/

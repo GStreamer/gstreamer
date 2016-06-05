@@ -56,7 +56,7 @@ there is only one thread, being blocked by the first sink.
 ### Request pads
 
 In [Basic tutorial 3: Dynamic
-pipelines](Basic+tutorial+3+Dynamic+pipelines.markdown) we saw
+pipelines](sdk-basic-tutorial-dynamic-pipelines.md) we saw
 an element (`uridecodebin`) which had no pads to begin with, and they
 appeared as data started to flow and the element learned about the
 media. These are called **Sometimes Pads**, and contrast with the
@@ -179,11 +179,11 @@ int main(int argc, char *argv[]) {
 > ![Information](images/icons/emoticons/information.png)
 > Need help?
 >
-> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Build), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Build) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Build), or use this specific command on Linux:
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Build), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Build) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Build), or use this specific command on Linux:
 >
 > ``gcc basic-tutorial-7.c -o basic-tutorial-7 `pkg-config --cflags --libs gstreamer-1.0` ``
 >
->If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](Installing+on+Linux.markdown#InstallingonLinux-Run), [Mac OS X](Installing+on+Mac+OS+X.markdown#InstallingonMacOSX-Run) or [Windows](Installing+on+Windows.markdown#InstallingonWindows-Run).
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Run), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Run) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Run).
  >
 > This tutorial plays an audible tone through the audio card and opens a window with a waveform representation of the tone. The waveform should be a sinusoid, but due to the refreshing of the window might not appear so.
 >
@@ -231,7 +231,7 @@ Small adjustments for better demonstration: The “freq” property of
 appear almost stationary in the window), and this style and shader for
 `wavescope` make the wave continuous. Use the `gst-inspect-1.0` tool
 described in [Basic tutorial 10: GStreamer
-tools](Basic+tutorial+10+GStreamer+tools.markdown) to learn all
+tools](sdk-basic-tutorial-gstreamer-tools.md) to learn all
 the properties of these
 elements.
 
