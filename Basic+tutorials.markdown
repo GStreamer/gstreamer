@@ -1,6 +1,8 @@
-#  Basic tutorials
+---
+short-description: General topics required to understand the rest of the tutorials
+...
 
-## Welcome to the GStreamer SDK Basic tutorials
+#  Basic tutorials
 
 These tutorials describe general topics required to understand the rest
 of tutorials in the GStreamer SDK.

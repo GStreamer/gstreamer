@@ -4,7 +4,6 @@ This is just a simple TODO list to follow progress of the port from
 gstreamer.com content to hotdoc
 
 Pages to review:
- - Basic+tutorials.markdown
    - Basic+tutorial+2+GStreamer+concepts.markdown
    - Basic+tutorial+3+Dynamic+pipelines.markdown
    - Basic+tutorial+4+Time+management.markdown
@@ -62,6 +61,7 @@ Code:
 
 Reviewed pages:
  - Home.markdown
+ - Basic+tutorials.markdown
  - Installing+the+SDK.markdown
  - Installing+for+Android+development.markdown
  - Building+from+source+using+Cerbero.markdown
