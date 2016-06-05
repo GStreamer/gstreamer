@@ -6,5 +6,6 @@
     "project_name": "gstdotcom", 
     "sitemap": "sitemap.txt",
     "extra_assets": ["attachments", "images"],
-    "pkg_config_packages": ["gstreamer-1.0"]
+    "pkg_config_packages": ["gstreamer-1.0"],
+    "syntax_highlighting_activate": true
 }

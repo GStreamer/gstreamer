@@ -27,6 +27,12 @@ for *stable* automatic formatting.
 * We *experimentally* use the hotdoc C extension to include functions by
   name, follow the steps outlined [here](https://github.com/hotdoc/hotdoc_c_extension)
 
+* Optionally install the `hotdoc_syntax_highlighting_extension`:
+
+```
+pip install hotdoc-syntax-highlighting-extension
+```
+
 * Optionally install the `hotdoc_search_extension`:
 
 ```
