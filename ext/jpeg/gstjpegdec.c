@@ -104,6 +104,8 @@ static GstFlowReturn gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec,
     GstVideoCodecFrame * frame);
 static gboolean gst_jpeg_dec_decide_allocation (GstVideoDecoder * bdec,
     GstQuery * query);
+static gboolean gst_jpeg_dec_sink_event (GstVideoDecoder * bdec,
+    GstEvent * event);
 
 #define gst_jpeg_dec_parent_class parent_class
 G_DEFINE_TYPE (GstJpegDec, gst_jpeg_dec, GST_TYPE_VIDEO_DECODER);
@@ -175,6 +177,7 @@ gst_jpeg_dec_class_init (GstJpegDecClass * klass)
   vdec_class->set_format = gst_jpeg_dec_set_format;
   vdec_class->handle_frame = gst_jpeg_dec_handle_frame;
   vdec_class->decide_allocation = gst_jpeg_dec_decide_allocation;
+  vdec_class->sink_event = gst_jpeg_dec_sink_event;
 
   GST_DEBUG_CATEGORY_INIT (jpeg_dec_debug, "jpegdec", 0, "JPEG decoder");
   GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
@@ -591,11 +594,6 @@ static gboolean
 gst_jpeg_dec_set_format (GstVideoDecoder * dec, GstVideoCodecState * state)
 {
   GstJpegDec *jpeg = GST_JPEG_DEC (dec);
-
-  if (dec->input_segment.format == GST_FORMAT_TIME)
-    gst_video_decoder_set_packetized (dec, TRUE);
-  else
-    gst_video_decoder_set_packetized (dec, FALSE);
 
   if (jpeg->input_state)
     gst_video_codec_state_unref (jpeg->input_state);
@@ -1278,6 +1276,25 @@ gst_jpeg_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
   gst_object_unref (pool);
 
   return TRUE;
+}
+
+static gboolean
+gst_jpeg_dec_sink_event (GstVideoDecoder * bdec, GstEvent * event)
+{
+  const GstSegment *segment;
+
+  if (GST_EVENT_TYPE (event) != GST_EVENT_SEGMENT)
+    goto done;
+
+  gst_event_parse_segment (event, &segment);
+
+  if (segment->format == GST_FORMAT_TIME)
+    gst_video_decoder_set_packetized (bdec, TRUE);
+  else
+    gst_video_decoder_set_packetized (bdec, FALSE);
+
+done:
+  return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (bdec, event);
 }
 
 static gboolean
