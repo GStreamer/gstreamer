@@ -2812,7 +2812,7 @@ gst_player_pause (GstPlayer * self)
   g_return_if_fail (GST_IS_PLAYER (self));
 
   g_mutex_lock (&self->lock);
-  self->inhibit_sigs = TRUE;
+  self->inhibit_sigs = FALSE;
   g_mutex_unlock (&self->lock);
 
   g_main_context_invoke_full (self->context, G_PRIORITY_DEFAULT,
@@ -3827,8 +3827,7 @@ gst_player_get_multiview_mode (GstPlayer * self)
 {
   GstVideoMultiviewMode val = GST_VIDEO_MULTIVIEW_MODE_NONE;
 
-  g_return_val_if_fail (GST_IS_PLAYER (self),
-      GST_VIDEO_MULTIVIEW_MODE_NONE);
+  g_return_val_if_fail (GST_IS_PLAYER (self), GST_VIDEO_MULTIVIEW_MODE_NONE);
 
   g_object_get (self, "video-multiview-mode", &val, NULL);
 
