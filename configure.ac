@@ -3355,6 +3355,19 @@ AG_GST_CHECK_FEATURE(X265, [x265 plug-in], x265, [
   AG_GST_PKG_CHECK_MODULES(X265, x265)
 ])
 
+dnl *** WebRTC Audio Processing ***
+dnl Note: We test for a specific version as there is no API stability
+translit(dnm, m, l) AM_CONDITIONAL(USE_WEBRTCDSP, true)
+AG_GST_CHECK_FEATURE(WEBRTCDSP, [WebRTC Audio Processing], webrtcdsp, [
+  AC_LANG_PUSH([C++])
+  old_CPPFLAGS=$CPPFLAGS
+  CPPFLAGS=-std=c++11 $CPPFLAGS
+  AG_GST_PKG_CHECK_MODULES(WEBRTCDSP, webrtc-audio-processing = 0.2)
+  AC_CHECK_HEADER([typeindex],[],[HAVE_WEBRTCDSP=no])
+  CPPFLAGS=$old_CPPFLAGS
+  AC_LANG_POP([C++])
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -3751,6 +3764,7 @@ ext/x265/Makefile
 ext/xvid/Makefile
 ext/zbar/Makefile
 ext/dtls/Makefile
+ext/webrtcdsp/Makefile
 po/Makefile.in
 docs/Makefile
 docs/plugins/Makefile
