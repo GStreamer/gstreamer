@@ -2763,6 +2763,12 @@ gst_dvbsrc_set_pes_filters (GstDvbSrc * object)
 
   GST_INFO_OBJECT (object, "Setting PES filter");
 
+  /* Set common params for all filters */
+  pes_filter.input = DMX_IN_FRONTEND;
+  pes_filter.output = DMX_OUT_TS_TAP;
+  pes_filter.pes_type = DMX_PES_OTHER;
+  pes_filter.flags = DMX_IMMEDIATE_START;
+
   for (i = 0; i < MAX_FILTERS; i++) {
     if (object->pids[i] == G_MAXUINT16)
       break;
@@ -2780,10 +2786,6 @@ gst_dvbsrc_set_pes_filters (GstDvbSrc * object)
     g_return_if_fail (*fd != -1);
 
     pes_filter.pid = pid;
-    pes_filter.input = DMX_IN_FRONTEND;
-    pes_filter.output = DMX_OUT_TS_TAP;
-    pes_filter.pes_type = DMX_PES_OTHER;
-    pes_filter.flags = DMX_IMMEDIATE_START;
 
     GST_INFO_OBJECT (object, "Setting PES filter: pid = %d, type = %d",
         pes_filter.pid, pes_filter.pes_type);
