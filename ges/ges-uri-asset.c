@@ -519,12 +519,24 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
     info = gst_discoverer_discover_uri (discoverer, uri, &lerror);
   }
 
+  /* We might get a discoverer info but it might have a non-OK result. We
+   * should consider that an error */
+  if (!lerror && info
+      && gst_discoverer_info_get_result (info) != GST_DISCOVERER_OK) {
+    lerror =
+        g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        "Stream %s discovering failed (error code: %d)", uri,
+        gst_discoverer_info_get_result (info));
+  }
+
   ges_asset_cache_put (gst_object_ref (asset), NULL);
   ges_uri_clip_asset_set_info (asset, info);
   ges_asset_cache_set_loaded (GES_TYPE_URI_CLIP, uri, lerror);
 
   if (info == NULL || lerror != NULL) {
     gst_object_unref (asset);
+    if (info)
+      gst_discoverer_info_unref (info);
     if (lerror)
       g_propagate_error (error, lerror);
 
