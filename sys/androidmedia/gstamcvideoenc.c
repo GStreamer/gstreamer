@@ -409,14 +409,14 @@ caps_from_amc_format (GstAmcFormat * amc_format)
 unsupported_profile:
   GST_ERROR ("Unsupport amc profile id %d", amc_profile);
   g_free (mime);
-  gst_object_unref (caps);
+  gst_caps_unref (caps);
 
   return NULL;
 
 unsupported_level:
   GST_ERROR ("Unsupport amc level id %d", amc_level);
   g_free (mime);
-  gst_object_unref (caps);
+  gst_caps_unref (caps);
 
   return NULL;
 }
@@ -1337,7 +1337,7 @@ gst_amc_video_enc_set_format (GstVideoEncoder * encoder,
 
 quit:
   if (allowed_caps)
-    gst_object_unref (allowed_caps);
+    gst_caps_unref (allowed_caps);
 
   if (format)
     gst_amc_format_free (format);
