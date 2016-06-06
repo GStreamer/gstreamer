@@ -1117,7 +1117,7 @@ gst_dvbsrc_set_pids (GstDvbSrc * dvbsrc, const gchar * pid_string)
     while (*pids != NULL && pid_count < MAX_FILTERS) {
       pid = strtol (*pids, NULL, 0);
       if (pid > 1 && pid <= 8192) {
-        GST_INFO_OBJECT (dvbsrc, "\tParsed Pid: %d", pid);
+        GST_INFO_OBJECT (dvbsrc, "Parsed PID: %d", pid);
         dvbsrc->pids[pid_count] = pid;
         pid_count++;
       }
