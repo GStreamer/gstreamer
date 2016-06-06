@@ -63,13 +63,13 @@ with the g\[st\]\_\<class\> prefix removed and converted to camel case.
 
 For example,
 
-``` lang=c
+``` c
 gboolean gst_caps_is_emtpy(const GstCaps *caps);
 ```
 
 becomes:
 
-``` lang=c
+``` c
 namespace QGst {
     class Caps {
         bool isEmpty() const;
@@ -102,7 +102,7 @@ to call `g_object_ref()`` and g_object_unref()`.
 QtGStreamer provides access to the underlying C objects, in case you
 need them. This is accessible with a simple cast:
 
-``` lang=c
+``` c
 ElementPtr qgstElement = QGst::ElementFactory::make("playbin");
 GstElement* gstElement = GST_ELEMENT(qgstElement);
 ```

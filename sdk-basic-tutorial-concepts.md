@@ -22,7 +22,7 @@ in the SDK installation).
 
 **basic-tutorial-2.c**
 
-```
+``` c
 #include <gst/gst.h>
 
 int main(int argc, char *argv[]) {
@@ -130,7 +130,7 @@ through filter elements.
 We will skip GStreamer initialization, since it is the same as the
 previous tutorial:
 
-```
+``` c
 /* Create the elements */
 source = gst_element_factory_make ("videotestsrc", "source");
 sink = gst_element_factory_make ("autovideosink", "sink");
@@ -164,7 +164,7 @@ platform-independent.
 
 ### Pipeline creation
 
-```
+``` c
 /* Create the empty pipeline */
 pipeline = gst_pipeline_new ("test-pipeline");
 ```
@@ -173,7 +173,7 @@ All elements in GStreamer must typically be contained inside a pipeline
 before they can be used, because it takes care of some clocking and
 messaging functions. We create the pipeline with `gst_pipeline_new()`.
 
-```
+``` c
 /* Build the pipeline */
 gst_bin_add_many (GST_BIN (pipeline), source, sink, NULL);
 if (gst_element_link (source, sink) != TRUE) {
@@ -200,7 +200,7 @@ trying to link them!
 
 ### Properties
 
-```
+``` c
 /* Modify the source's properties */
 g_object_set (source, "pattern", 0, NULL);
 ```
@@ -233,7 +233,7 @@ At this point, we have the whole pipeline built and setup, and the rest
 of the tutorial is very similar to the previous one, but we are going to
 add more error checking:
 
-```
+``` c
 /* Start playing */
 ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
 if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -248,7 +248,7 @@ value for errors. Changing states is a delicate process and a few more
 details are given in [Basic tutorial 3: Dynamic
 pipelines](sdk-basic-tutorial-dynamic-pipelines.md).
 
-```
+``` c
 /* Wait until error or EOS */
 bus = gst_element_get_bus (pipeline);
 msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);

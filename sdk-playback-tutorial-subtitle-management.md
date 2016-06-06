@@ -39,7 +39,7 @@ it in the SDK installation).
 
 **playback-tutorial-2.c**
 
-``` lang=c
+``` c
 #include <gst/gst.h>
 
 /* Structure to contain all our information, so we can pass it around */
@@ -295,7 +295,7 @@ This tutorial is copied from [Playback tutorial 1: Playbin
 usage](Playback%2Btutorial%2B1%253A%2BPlaybin%2Busage.html) with some
 changes, so let's review only the changes.
 
-``` lang=c
+``` c
 /* Set the subtitle URI to play and some font description */
 g_object_set (data.playbin, "suburi", "http://docs.gstreamer.com/media/sintel_trailer_gr.srt", NULL);
 g_object_set (data.playbin, "subtitle-font-desc", "Sans, 18", NULL);
@@ -349,7 +349,7 @@ Extra-Expanded, Ultra-Expanded
 
  
 
-``` lang=c
+``` c
 /* Set flags to show Audio, Video and Subtitles */
 g_object_get (data.playbin, "flags", &flags, NULL);
 flags |= GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_TEXT;

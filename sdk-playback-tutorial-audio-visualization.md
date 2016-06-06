@@ -39,7 +39,7 @@ Copy this code into a text file named `playback-tutorial-6.c`.
 
 **playback-tutorial-6.c**
 
-``` lang=c
+``` c
 #include <gst/gst.h>
 
 /* playbin flags */
@@ -161,7 +161,7 @@ First off, we indicate `playbin` that we want an audio visualization by
 setting the `GST_PLAY_FLAG_VIS` flag. If the media already contains
 video, this flag has no effect.
 
-``` lang=c
+``` c
 /* Set the visualization flag */
 g_object_get (pipeline, "flags", &flags, NULL);
 flags |= GST_PLAY_FLAG_VIS;
@@ -173,7 +173,7 @@ If no visualization plugin is enforced by the user, `playbin` will use
 available). The rest of the tutorial shows how to find out the available
 visualization elements and enforce one to `playbin`.
 
-``` lang=c
+``` c
 /* Get a list of all visualization plugins */
 list = gst_registry_feature_filter (gst_registry_get_default (), filter_vis_features, FALSE, NULL);
 ```
@@ -183,7 +183,7 @@ GStreamer registry and selects those for which
 the `filter_vis_features` function returns TRUE. This function selects
 only the Visualization plugins:
 
-``` lang=c
+``` c
 /* Return TRUE if this is a Visualization element */
 static gboolean filter_vis_features (GstPluginFeature *feature, gpointer data) {
   GstElementFactory *factory;
@@ -213,7 +213,7 @@ is a “string describing the type of element, as an unordered list
 separated with slashes (/)”. Examples of classes are “Source/Network”,
 “Codec/Decoder/Video”, “Codec/Encoder/Audio” or “Visualization”.
 
-``` lang=c
+``` c
 /* Print their names */
 g_print("Available visualization plugins:\n");
 for (walk = list; walk != NULL; walk = g_list_next (walk)) {
@@ -234,7 +234,7 @@ Once we have the list of Visualization plugins, we print their names
 (`gst_element_factory_get_longname()`) and choose one (in this case,
 GOOM).
 
-``` lang=c
+``` c
 /* We have now selected a factory for the visualization element */
 g_print ("Selected '%s'\n", gst_element_factory_get_longname (selected_factory));
 vis_plugin = gst_element_factory_create (selected_factory, NULL);
@@ -245,7 +245,7 @@ if (!vis_plugin)
 The selected factory is used to instantiate an actual `GstElement` which
 is then passed to `playbin` through the `vis-plugin` property:
 
-``` lang=c
+``` c
 /* set vis plugin for playbin */
 g_object_set (pipeline, "vis-plugin", vis_plugin, NULL);
 ```

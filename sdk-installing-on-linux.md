@@ -168,7 +168,7 @@ installed in a non-standard location `/opt/gstreamer-sdk`. The shell
 script `gst-sdk-shell` sets the required environment variables for
 building applications with the GStreamer SDK:
 
-``` lang=bash
+``` bash
 /opt/gstreamer-sdk/bin/gst-sdk-shell
 ```
 
@@ -252,7 +252,7 @@ Using the file name of the tutorial you are interested in
 To run the tutorials, simply execute the desired tutorial (**from within
 the `gst-sdk-shell`**):
 
-``` lang=c
+``` c
 ./basic-tutorial-1
 ```
 

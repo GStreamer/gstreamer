@@ -42,7 +42,7 @@ Copy this code into a text file named `playback-tutorial-5.c`.
 
 **playback-tutorial-5.c**
 
-``` lang=c
+``` c
 #include <string.h>
 #include <gst/gst.h>
 #include <gst/interfaces/colorbalance.h>
@@ -223,7 +223,7 @@ The `main()` function is fairly simple. A `playbin` pipeline is
 instantiated and set to run, and a keyboard watch is installed so
 keystrokes can be monitored.
 
-``` lang=c
+``` c
 /* Output the current values of all Color Balance channels */
 static void print_current_values (GstElement *pipeline) {
   const GList *channels, *l;
@@ -253,7 +253,7 @@ retrieve the current value.
 In this example, the minimum and maximum values are used to output the
 current value as a percentage.
 
-``` lang=c
+``` c
 /* Process a color balance command */
 static void update_color_channel (const gchar *channel_name, gboolean increase, GstColorBalance *cb) {
   gdouble step;
@@ -281,7 +281,7 @@ parsed looking for the channel with the specified name. Obviously, this
 list could be parsed only once and the pointers to the channels be
 stored and indexed by something more efficient than a string.
 
-``` lang=c
+``` c
   /* Change the channel's value */
   step = 0.1 * (channel->max_value - channel->min_value);
   value = gst_color_balance_get_value (cb, channel);

@@ -69,7 +69,7 @@ in the SDK installation).
 
 **basic-tutorial-5.c**
 
-```
+``` c
 #include <string.h>
 
 #include <gtk/gtk.h>
@@ -477,7 +477,7 @@ used. Also, for clarity of explanation, the order in which the snippets
 of code are presented will not always match the program order. Use the
 line numbers to locate the snippets in the complete code.
 
-```
+``` c
 #include <gdk/gdk.h>
 #if defined (GDK_WINDOWING_X11)
 #include <gdk/gdkx.h>
@@ -498,7 +498,7 @@ This tutorial is composed mostly of callback functions, which will be
 called from GStreamer or GTK+, so let's review the `main` function,
 which registers all these callbacks.
 
-```
+``` c
 int main(int argc, char *argv[]) {
   CustomData data;
   GstStateChangeReturn ret;
@@ -529,7 +529,7 @@ int main(int argc, char *argv[]) {
 Standard GStreamer initialization and playbin pipeline creation, along
 with GTK+ initialization. Not much new.
 
-```
+``` c
 /* Connect to interesting signals in playbin */
 g_signal_connect (G_OBJECT (data.playbin), "video-tags-changed", (GCallback) tags_cb, &data);
 g_signal_connect (G_OBJECT (data.playbin), "audio-tags-changed", (GCallback) tags_cb, &data);
@@ -540,7 +540,7 @@ We are interested in being notified when new tags (metadata) appears on
 the stream. For simplicity, we are going to handle all kinds of tags
 (video, audio and text) from the same callback `tags_cb`.
 
-```
+``` c
 /* Create the GUI */
 create_ui (&data);
 ```
@@ -551,7 +551,7 @@ over its definition. The signals to which it registers convey user
 commands, as shown below when reviewing the
 callbacks.
 
-```
+``` c
 /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
 bus = gst_element_get_bus (data.playbin);
 gst_bus_add_signal_watch (bus);
@@ -583,7 +583,7 @@ Keep in mind that, in order for the bus watches to work (be it a
 GLib `Main Loop` running. In this case, it is hidden inside the
 [GTK+](http://www.gtk.org/) main loop.
 
-```
+``` c
 /* Register a function that GLib will call every second */
 g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, &data);
 ```
@@ -600,7 +600,7 @@ signature, depending on who will call it. You can look up the signature
 (the meaning of the parameters and the return value) in the
 documentation of the signal.
 
-```
+``` c
 /* This function is called when the GUI toolkit creates the physical window that will hold the video.
  * At this point we can retrieve its handler (which has a different meaning depending on the windowing system)
  * and pass it to GStreamer through the GstVideoOverlay interface. */
@@ -636,7 +636,7 @@ and uses this one.
 Not much more to see here; `playbin` and the `GstVideoOverlay` really simplify
 this process a lot!
 
-```
+``` c
 /* This function is called when the PLAY button is clicked */
 static void play_cb (GtkButton *button, CustomData *data) {
   gst_element_set_state (data->playbin, GST_STATE_PLAYING);
@@ -661,7 +661,7 @@ corresponding state. Note that in the STOP state we set the pipeline to
 resources (like the audio device) would need to be released and
 re-acquired.
 
-```
+``` c
 /* This function is called when the main window is closed */
 static void delete_event_cb (GtkWidget *widget, GdkEvent *event, CustomData *data) {
   stop_cb (NULL, data);
@@ -674,7 +674,7 @@ in `main` to terminate, which, in this case, finishes the program. Here,
 we call it when the main window is closed, after stopping the pipeline
 (just for the sake of tidiness).
 
-```
+``` c
 /* This function is called everytime the video window needs to be redrawn (due to damage/exposure,
  * rescaling, etc). GStreamer takes care of this in the PAUSED and PLAYING states, otherwise,
  * we simply draw a black rectangle to avoid garbage showing up. */
@@ -704,7 +704,7 @@ other cases, however, it will not, so we have to do it. In this example,
 we just fill the window with a black
 rectangle.
 
-```
+``` c
 /* This function is called when the slider changes its position. We perform a seek to the
  * new position here. */
 static void slider_cb (GtkRange *range, CustomData *data) {
@@ -730,7 +730,7 @@ before allowing another one. Otherwise, the application might look
 unresponsive if the user drags the slider frantically, which would not
 allow any seek to complete before a new one is queued.
 
-```
+``` c
 /* This function is called periodically to refresh the GUI */
 static gboolean refresh_ui (CustomData *data) {
   gint64 current = -1;
@@ -745,7 +745,7 @@ the media. First off, if we are not in the `PLAYING` state, we have
 nothing to do here (plus, position and duration queries will normally
 fail).
 
-```
+``` c
 /* If we didn't know it yet, query the stream duration */
 if (!GST_CLOCK_TIME_IS_VALID (data->duration)) {
   if (!gst_element_query_duration (data->playbin, GST_FORMAT_TIME, &data->duration)) {
@@ -760,7 +760,7 @@ if (!GST_CLOCK_TIME_IS_VALID (data->duration)) {
 We recover the duration of the clip if we didn't know it, so we can set
 the range for the slider.
 
-```
+``` c
 if (gst_element_query_position (data->playbin, GST_FORMAT_TIME, &current)) {
   /* Block the "value-changed" signal, so the slider_cb function is not called
    * (which would trigger a seek the user has not requested) */
@@ -785,7 +785,7 @@ Returning TRUE from this function will keep it called in the future. If
 we return FALSE, the timer will be
 removed.
 
-```
+``` c
 /* This function is called when new metadata is discovered in the stream */
 static void tags_cb (GstElement *playbin, gint stream, CustomData *data) {
   /* We are possibly in a GStreamer working thread, so we notify the main
@@ -823,7 +823,7 @@ Later, once in the main thread, the bus will receive this message and
 emit the `message::application` signal, which we have associated to the
 `application_cb` function:
 
-```
+``` c
 /* This function is called when an "application" message is posted on the bus.
  * Here we retrieve the message posted by the tags_cb callback */
 static void application_cb (GstBus *bus, GstMessage *msg, CustomData *data) {

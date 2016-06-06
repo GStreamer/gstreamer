@@ -24,7 +24,7 @@ makefile that allows GStreamer integration.
 
 **src/org/freedesktop/gstreamer/tutorials/tutorial\_1/Tutorial1.java**
 
-``` lang=java
+``` java
 package org.freedesktop.gstreamer.tutorials.tutorial_1;
 
 import android.app.Activity;
@@ -68,7 +68,7 @@ public class Tutorial1 extends Activity {
 Calls from Java to C happen through native methods, like the one
 declared here:
 
-``` lang=java
+``` java
 private native String nativeGetGStreamerInfo();
 ```
 
@@ -80,7 +80,7 @@ shown later.
 The first bit of code that gets actually executed is the static
 initializer of the class:
 
-``` lang=java
+``` java
 static {
     System.loadLibrary("gstreamer_android");
     System.loadLibrary("tutorial-1");
@@ -97,7 +97,7 @@ expose. The GStreamer library only exposes a `init()` method, which
 initializes GStreamer and registers all plugins (The tutorial library is
 explained later below).
 
-``` lang=java
+``` java
 try {
     GStreamer.init(this);
 } catch (Exception e) {
@@ -120,7 +120,7 @@ Should initialization fail, the `init()` method would throw an
 [Exception](http://developer.android.com/reference/java/lang/Exception.html)
 with the details provided by the GStreamer library.
 
-``` lang=java
+``` java
 TextView tv = (TextView)findViewById(R.id.textview_info);
 tv.setText("Welcome to " + nativeGetGStreamerInfo() + " !");
 ```
@@ -137,7 +137,7 @@ code:
 
 **jni/tutorial-1.c**
 
-``` lang=c
+``` c
 #include <string.h>
 #include <jni.h>
 #include <android/log.h>
@@ -177,7 +177,7 @@ Machine (VM) loads a library.
 Here, we retrieve the JNI environment needed to make calls that interact
 with Java:
 
-``` lang=c
+``` c
 JNIEnv *env = NULL;
 
 if ((*vm)->GetEnv(vm, (void**) &env, JNI_VERSION_1_4) != JNI_OK) {
@@ -190,7 +190,7 @@ And then locate the class containing the UI part of this tutorial using
 `
 FindClass()`:
 
-``` lang=c
+``` c
 jclass klass = (*env)->FindClass (env, "org/freedesktop/gstreamer/tutorials/tutorial_1/Tutorial1");
 ```
 
@@ -199,7 +199,7 @@ is, we provide the code for the methods we advertised in Java using the
 **`native`**
  keyword:
 
-``` lang=c
+``` c
 (*env)->RegisterNatives (env, klass, native_methods, G_N_ELEMENTS(native_methods));
 ```
 
@@ -209,7 +209,7 @@ name, its [type
 signature](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/types.html#wp276)
 and a pointer to the C function implementing it:
 
-``` lang=c
+``` c
 static JNINativeMethod native_methods[] = {
   { "nativeGetGStreamerInfo", "()Ljava/lang/String;", (void *) gst_native_get_gstreamer_info}
 };
@@ -218,7 +218,7 @@ static JNINativeMethod native_methods[] = {
 The only native method used in this tutorial
 is `nativeGetGStreamerInfo()`:
 
-``` lang=c
+``` c
 jstring gst_native_get_gstreamer_info (JNIEnv* env, jobject thiz) {
   char *version_utf8 = gst_version_string();
   jstring *version_jstring = (*env)->NewStringUTF(env, version_utf8);
@@ -239,7 +239,7 @@ must free the `char *` returned by `gst_version_string()`.
 
 **jni/Android.mk**
 
-``` lang=ruby
+``` ruby
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)

@@ -26,7 +26,7 @@ In the Cerbero installation directory you will find the
 `cerbero-uninstalled` script. Execute it without parameters to see the
 list of commands it accepts:
 
-``` lang=bash
+``` bash
 ./cerbero-uninstalled
 ```
 
@@ -35,7 +35,7 @@ list of commands it accepts:
 The first step is to create an empty recipe that you can then tailor to
 your needs:
 
-``` lang=bash
+``` bash
 ./cerbero-uninstalled add-recipe my-app 1.0
 ```
 
@@ -240,7 +240,7 @@ Snappy.
 
 Once the recipe is ready, instruct Cerbero to build it:
 
-``` lang=bash
+``` bash
 ./cerbero-uninstalled build my-app
 ```
 
@@ -255,7 +255,7 @@ files in `cerbero/packages`.
 
 Now, to create an empty package, do:
 
-``` lang=bash
+``` bash
 ./cerbero-uninstalled add-package my-app 1.0
 ```
 
@@ -408,7 +408,7 @@ Alternatively you can also pass some options to `cerbero-uninstalled`,
 for
 example:
 
-``` lang=bash
+``` bash
 ./cerbero-uninstalled add-package my-app 1.0 --license "LGPL" --codename MyApp --vendor MyAppVendor --url "http://www.my-app.com" --files=my-app:bins:libs --files-devel=my-app:devel --platform-files=linux:my-app:linux_specific --platform-files-devel=linux:my-app:linux_specific_devel,windows:my-app:windows_specific_devel --deps base-system --includes gstreamer-core
 ```
 
@@ -470,7 +470,7 @@ packages\_prefix as the ones in your Cerbero configuration file.
 
 Finally, build your package by using:
 
-``` lang=bash
+``` bash
 ./cerbero-uninstalled package your-package 
 ```
 

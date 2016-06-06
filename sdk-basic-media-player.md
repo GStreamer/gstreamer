@@ -50,7 +50,7 @@ target_link_libraries(player ${QTGSTREAMER_UI_LIBRARIES} ${QT_QTOPENGL_LIBRARIES
 
 **main.cpp**
 
-``` lang=c
+``` c
 #include "mediaapp.h"
 #include <QtWidgets/QApplication>
 #include <QGst/Init>
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 
 **mediaapp.h**
 
-``` lang=c
+``` c
 #ifndef MEDIAAPP_H
 #define MEDIAAPP_H
 #include <QtCore/QTimer>
@@ -124,7 +124,7 @@ private:
 
 **mediaapp.cpp**
 
-``` lang=c
+``` c
 #include "mediaapp.h"
 #include "player.h"
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
@@ -324,7 +324,7 @@ void MediaApp::createUI(QBoxLayout *appLayout)
 
 **player.h**
 
-``` lang=c
+``` c
 #ifndef PLAYER_H
 #define PLAYER_H
 #include <QtCore/QTimer>
@@ -372,7 +372,7 @@ private:
 
 **player.cpp**
 
-``` lang=c
+``` c
 #include "player.h"
 #include <QtCore/QDir>
 #include <QtCore/QUrl>
@@ -553,7 +553,7 @@ We begin by looking at `main()`:
 
 **main.cpp**
 
-``` lang=c
+``` c
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
@@ -582,7 +582,7 @@ the UI:
 
 **MediaApp::MediaApp()**
 
-``` lang=c
+``` c
     //create the player
     m_player = new Player(this);
     connect(m_player, SIGNAL(positionChanged()), this, SLOT(onPositionChanged()));
@@ -594,7 +594,7 @@ line, if any:
 
 **MediaApp::openFile()**
 
-``` lang=c
+``` c
 void MediaApp::openFile(const QString & fileName)
 {
     m_baseDir = QFileInfo(fileName).path();
@@ -608,7 +608,7 @@ This in turn instructs the `Player` to construct our GStreamer pipeline:
 
 **Player::setUri()**
 
-``` lang=c
+``` c
 void Player::setUri(const QString & uri)
 {
     QString realUri = uri;
@@ -648,7 +648,7 @@ rendering. For clarity, here is a portion of the implementation:
 
 **prepare-xwindow-id handling**
 
-``` lang=c
+``` c
     QGlib::connect(pipeline->bus(), "sync-message",
                   this, &PipelineWatch::onBusSyncMessage);
 ...
@@ -664,7 +664,7 @@ void PipelineWatch::onBusSyncMessage(const MessagePtr & msg)
 Once the pipeline is created, we connect to the bus' message signal (via
 `QGlib::connect()`) to dispatch state change signals:
 
-``` lang=c
+``` c
 void Player::onBusMessage(const QGst::MessagePtr & message)
 {
     switch (message->type()) {
@@ -706,7 +706,7 @@ void Player::handlePipelineStateChange(const QGst::StateChangedMessagePtr & scm)
 
 Finally, we tell `playbin` what to play by setting the `uri` property:
 
-``` lang=c
+``` c
 m_pipeline->setProperty("uri", realUri);
 ```
 
@@ -717,7 +717,7 @@ After `Player::setUri()` is called, `MediaApp::openFile()` calls
 
 **Player::play()**
 
-``` lang=c
+``` c
 void Player::play()
 {
     if (m_pipeline) {
@@ -730,7 +730,7 @@ The other state control methods are equally simple:
 
 **Player state functions**
 
-``` lang=c
+``` c
 void Player::pause()
 {
     if (m_pipeline) {
@@ -754,7 +754,7 @@ is emitted on the GStreamer bus which gets picked up by the `Player`:
 
 **Player::onBusMessage()**
 
-``` lang=c
+``` c
 void Player::onBusMessage(const QGst::MessagePtr & message)
 {
     switch (message->type()) {
@@ -781,7 +781,7 @@ handled:
 
 **MediaApp::onStateChanged()**
 
-``` lang=c
+``` c
 void MediaApp::onStateChanged()
 {
     QGst::State newState = m_player->state();
@@ -810,7 +810,7 @@ UI to handle:
 
 **MediaApp::onPositionChanged()**
 
-``` lang=c
+``` c
 void MediaApp::onPositionChanged()
 {
     QTime length(0,0);
@@ -842,7 +842,7 @@ to `gst_element_query_position()`:
 
 **Player::position()**
 
-``` lang=c
+``` c
 QTime Player::position() const
 {
     if (m_pipeline) {

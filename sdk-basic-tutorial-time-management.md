@@ -35,7 +35,7 @@ in the SDK installation).
 
 **basic-tutorial-4.c**
 
-``` lang=c
+``` c
 #include <gst/gst.h>
 
 /* Structure to contain all our information, so we can pass it around */

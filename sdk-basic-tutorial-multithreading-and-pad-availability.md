@@ -84,7 +84,7 @@ in the SDK installation).
 
 **basic-tutorial-7.c**
 
-``` lang=c
+``` c
 #include <gst/gst.h>
 
 int main(int argc, char *argv[]) {
@@ -191,7 +191,7 @@ int main(int argc, char *argv[]) {
 
 ## Walkthrough
 
-```
+``` c
 /* Create the elements */
 audio_source = gst_element_factory_make ("audiotestsrc", "audio_source");
 tee = gst_element_factory_make ("tee", "tee");
@@ -220,7 +220,7 @@ Caps produced by the `audiotestsrc` and `wavescope`. If the Caps
 matched, though, these elements act in “pass-through” mode and do not
 modify the signal, having negligible impact on performance.
 
-```
+``` c
 /* Configure elements */
 g_object_set (audio_source, "freq", 215.0f, NULL);
 g_object_set (visual, "shader", 0, "style", 1, NULL);
@@ -235,7 +235,7 @@ tools](sdk-basic-tutorial-gstreamer-tools.md) to learn all
 the properties of these
 elements.
 
-```
+``` c
 /* Link all elements that can be automatically linked because they have "Always" pads */
 gst_bin_add_many (GST_BIN (pipeline), audio_source, tee, audio_queue, audio_convert, audio_sink,
     video_queue, visual, video_convert, video_sink, NULL);
@@ -255,7 +255,7 @@ comment says).
 > ![Warning](images/icons/emoticons/warning.png)
 > `gst_element_link_many()` can actually link elements with Request Pads. It internally requests the Pads so you do not have worry about the elements being linked having Always or Request Pads. Strange as it might seem, this is actually inconvenient, because you still need to release the requested Pads afterwards, and, if the Pad was requested automatically by `gst_element_link_many()`, it is easy to forget. Stay out of trouble by always requesting Request Pads manually, as shown in the next code block.
 
-```
+``` c
 /* Manually link the Tee, which has "Request" pads */
 tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (tee), "src_%d");
 tee_audio_pad = gst_element_request_pad (tee, tee_src_pad_template, NULL, NULL);
@@ -301,7 +301,7 @@ We then set the pipeline to playing as usual, and wait until an error
 message or an EOS is produced. The only thing left to so is cleanup the
 requested Pads:
 
-```
+``` c
 /* Release the request pads from the Tee, and unref them */
 gst_element_release_request_pad (tee, tee_audio_pad);
 gst_element_release_request_pad (tee, tee_video_pad);

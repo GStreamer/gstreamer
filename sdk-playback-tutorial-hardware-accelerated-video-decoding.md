@@ -171,7 +171,7 @@ type. Therefore, the easiest way to make sure hardware acceleration is
 enabled or disabled is by changing the rank of the associated element,
 as shown in this code:
 
-``` lang=c
+``` c
 static void enable_factory (const gchar *name, gboolean enable) {
     GstRegistry *registry = NULL;
     GstElementFactory *factory = NULL;

@@ -35,7 +35,7 @@ target_link_libraries(appsink-src ${QTGSTREAMER_UTILS_LIBRARIES} ${QT_QTCORE_LIB
 
 **main.cpp**
 
-``` lang=c
+``` c
 #include <iostream>
 #include <QtCore/QCoreApplication>
 #include <QGlib/Error>
@@ -144,7 +144,7 @@ As this is a very simple example, most of the action happens in the
 
 **GStreamer Initialization**
 
-``` lang=c
+``` c
     QGst::init(&argc, &argv);
 ```
 
@@ -152,7 +152,7 @@ Now we can construct the first half of the pipeline:
 
 **Pipeline Setup**
 
-``` lang=c
+``` c
     const char *caps = "audio/x-raw-int,channels=1,rate=8000,"
                        "signed=(boolean)true,width=16,depth=16,endianness=1234";
  
@@ -186,7 +186,7 @@ The second half of the pipeline is created similarly:
 
 **Second Pipeline**
 
-``` lang=c
+``` c
     /* sink pipeline */
     QString pipe2Descr = QString("appsrc name=\"mysrc\" caps=\"%1\" ! autoaudiosink").arg(caps);
     pipeline2 = QGst::Parse::launch(pipe2Descr).dynamicCast<QGst::Pipeline>();
@@ -199,7 +199,7 @@ Finally, the pipeline is started:
 
 **Starting the pipeline**
 
-``` lang=c
+``` c
  /* start playing */
     pipeline1->setState(QGst::StatePlaying);
     pipeline2->setState(QGst::StatePlaying);
@@ -212,7 +212,7 @@ ready for processing:
 
 **MySink::newBuffer()**
 
-``` lang=c
+``` c
     virtual QGst::FlowReturn newBuffer()
     {
         m_src->pushBuffer(pullBuffer());
@@ -225,7 +225,7 @@ Our implementation takes the new buffer and pushes it into the
 
 **Player::Player()**
 
-``` lang=c
+``` c
 Player::Player(int argc, char **argv)
     : QCoreApplication(argc, argv), m_sink(&m_src)
 ```

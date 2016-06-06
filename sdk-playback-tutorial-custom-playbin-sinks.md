@@ -53,7 +53,7 @@ Copy this code into a text file named `playback-tutorial-7.c`.
 
 **playback-tutorial7.c**
 
-``` lang=c
+``` c
 #include <gst/gst.h>
 
 int main(int argc, char *argv[]) {
@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
 
 # Walkthrough
 
-``` lang=c
+``` c
 /* Create the elements inside the sink bin */
 equalizer = gst_element_factory_make ("equalizer-3bands", "equalizer");
 convert = gst_element_factory_make ("audioconvert", "convert");
@@ -153,7 +153,7 @@ All the Elements that compose our sink-bin are instantiated. We use an
 between, because we are not sure of the capabilities of the audio sink
 (since they are hardware-dependant).
 
-``` lang=c
+``` c
 /* Create the sink bin, add the elements and link them */
 bin = gst_bin_new ("audio_sink_bin");
 gst_bin_add_many (GST_BIN (bin), equalizer, convert, sink, NULL);
@@ -163,7 +163,7 @@ gst_element_link_many (equalizer, convert, sink, NULL);
 This adds the new Elements to the Bin and links them just as we would do
 if this was a pipeline.
 
-``` lang=c
+``` c
 pad = gst_element_get_static_pad (equalizer, "sink");
 ghost_pad = gst_ghost_pad_new ("sink", pad);
 gst_pad_set_active (ghost_pad, TRUE);
@@ -192,7 +192,7 @@ with `gst_object_unref()`.
 At this point, we have a functional sink-bin, which we can use as the
 audio sink in `playbin`. We just need to instruct `playbin` to use it:
 
-``` lang=c
+``` c
 /* Set playbin's audio sink to be our sink bin */
 g_object_set (GST_OBJECT (pipeline), "audio-sink", bin, NULL);
 ```
@@ -200,7 +200,7 @@ g_object_set (GST_OBJECT (pipeline), "audio-sink", bin, NULL);
 It is as simple as setting the `audio-sink` property on `playbin` to
 the newly created sink.
 
-``` lang=c
+``` c
 /* Configure the equalizer */
 g_object_set (G_OBJECT (equalizer), "band1", (gdouble)-24.0, NULL);
 g_object_set (G_OBJECT (equalizer), "band2", (gdouble)-24.0, NULL);

@@ -29,7 +29,7 @@ should replace `$INSTALL_PATH` with the path where your installer copied
 the SDK's disk image files (the `/tmp` directory is good place to
 install it as it will be removed at the end of the installation):
 
-``` lang=bash
+``` bash
 hdiutil attach $INSTALL_PATH/gstreamer-sdk-2012.7-x86.dmg
 cd /Volumes/gstreamer-sdk-2012.7-x86/
 installer -pkg gstreamer-sdk-2012.7-x86.pkg -target "/"
@@ -45,7 +45,7 @@ simply copy the framework to the application's Frameworks folder as
 defined in the [bundle programming
 guide](https://developer.apple.com/library/mac/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/10000123i-CH101-SW19):
 
-``` lang=bash
+``` bash
 cp -r /Library/Frameworks/GStreamer.framework ~/MyApp.app/Contents/Frameworks
 ```
 
@@ -54,7 +54,7 @@ different architectures, installed in the system. Make sure you only
 copy the version you need and that you update accordingly the link
 `GStreamer.framework/Version/Current`:
 
-``` lang=bash
+``` bash
 $ ls -l Frameworks/GStreamer.framework/Version/Current
 lrwxr-xr-x 1 fluendo staff 21 Jun 5 18:46 Frameworks/GStreamer.framework/Versions/Current -> ../Versions/0.10/x86
 ```
@@ -272,7 +272,7 @@ We can get the list of paths used by an object file to locate its
 dependent dynamic libraries
 using [otool](https://developer.apple.com/library/mac/#documentation/darwin/reference/manpages/man1/otool.1.html):
 
-``` lang=bash
+``` bash
 $ otool -L /Library/Frameworks/GStreamer.framework/Commands/gst-launch-1.0
 /Library/Frameworks/GStreamer.framework/Commands/gst-launch-1.0:
  /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation (compatibility version 150.0.0, current version 550.43.0)
@@ -291,7 +291,7 @@ This full path is extracted from the dynamic library  ***install name***
 install name of a library can be retrieved with
 [otool](https://developer.apple.com/library/mac/#documentation/darwin/reference/manpages/man1/otool.1.html) too:
 
-``` lang=bash
+``` bash
 $ otool -D /Library/Frameworks/GStreamer.framework/Libraries/libgstreamer-1.0.dylib
 /Library/Frameworks/GStreamer.framework/Libraries/libgstreamer-1.0.dylib:
 /Library/Frameworks/GStreamer.framework/Versions/0.10/x86/lib/libgstreamer-1.0.0.dylib
@@ -346,7 +346,7 @@ When looking for binaries to fix, we will run the script in the
 following
 directories:
 
-``` lang=bash
+``` bash
 $ osxrelocator.py MyApp.app/Contents/Frameworks/GStreamer.framework/Versions/Current/lib /Library/Frameworks/GStreamer.framework/ @executable_path/../Frameworks/GStreamer.framework/ -r
 $ osxrelocator.py MyApp.app/Contents/Frameworks/GStreamer.framework/Versions/Current/libexec /Library/Frameworks/GStreamer.framework/ @executable_path/../Frameworks/GStreamer.framework/ -r
 $ osxrelocator.py MyApp.app/Contents/Frameworks/GStreamer.framework/Versions/Current/bin /Library/Frameworks/GStreamer.framework/ @executable_path/../Frameworks/GStreamer.framework/ -r

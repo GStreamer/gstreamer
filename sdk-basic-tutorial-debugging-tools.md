@@ -157,7 +157,7 @@ as the Debug category in the output log).
 To change the category to something more meaningful, add these two lines
 at the top of your code:
 
-``` lang=c
+``` c
 GST_DEBUG_CATEGORY_STATIC (my_category);
 #define GST_CAT_DEFAULT my_category
 ```
@@ -165,7 +165,7 @@ GST_DEBUG_CATEGORY_STATIC (my_category);
 And then this one after you have initialized GStreamer with
 `gst_init()`:
 
-``` lang=c
+``` c
 GST_DEBUG_CATEGORY_INIT (my_category, "my category", 0, "This is my very own");
 ```
 

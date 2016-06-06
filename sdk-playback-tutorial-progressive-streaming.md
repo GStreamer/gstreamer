@@ -52,7 +52,7 @@ Copy this code into a text file named `playback-tutorial-4.c`.
 
 **playback-tutorial-4.c**
 
-``` lang=c
+``` c
 #include <gst/gst.h>
 #include <string.h>
 
@@ -258,7 +258,7 @@ only the differences.
 
 #### Setup
 
-``` lang=c
+``` c
 /* Set the download flag */
 g_object_get (pipeline, "flags", &flags, NULL);
 flags |= GST_PLAY_FLAG_DOWNLOAD;
@@ -269,7 +269,7 @@ By setting this flag, `playbin` instructs its internal queue (a
 `queue2` element, actually) to store all downloaded
 data.
 
-``` lang=c
+``` c
 g_signal_connect (pipeline, "deep-notify::temp-location", G_CALLBACK (got_location), NULL);
 ```
 
@@ -280,7 +280,7 @@ changes, indicating that the `queue2` has decided where to store the
 downloaded
 data.
 
-``` lang=c
+``` c
 static void got_location (GstObject *gstobject, GstObject *prop_object, GParamSpec *prop, gpointer data) {
   gchar *location;
   g_object_get (G_OBJECT (prop_object), "temp-location", &location, NULL);
@@ -311,7 +311,7 @@ removed. As the comment reads, you can keep it by setting the
 In `main` we also install a timer which we use to refresh the UI every
 second.
 
-``` lang=c
+``` c
 /* Register a function that GLib will call every second */
 g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, &data);
 ```
@@ -330,7 +330,7 @@ pipeline is paused). Keep in mind that if your network is fast enough,
 you will not see the download bar (the dashes) advance at all; it will
 be completely full from the beginning.
 
-``` lang=c
+``` c
 static gboolean refresh_ui (CustomData *data) {
   GstQuery *query;
   gboolean result;
@@ -354,7 +354,7 @@ succeeded. The answer to the query is contained in the same
 `GstQuery` structure we created, and can be retrieved using multiple
 parse methods:
 
-``` lang=c
+``` c
 n_ranges = gst_query_get_n_buffering_ranges (query);
 for (range = 0; range < n_ranges; range++) {
   gint64 start, stop;
@@ -378,7 +378,7 @@ range) depends on what we requested in the
 `gst_query_new_buffering()` call. In this case, PERCENTAGE. These
 values are used to generate the graph.
 
-``` lang=c
+``` c
 if (gst_element_query_position (data->pipeline, &format, &position) &&
     GST_CLOCK_TIME_IS_VALID (position) &&
     gst_element_query_duration (data->pipeline, &format, &duration) &&
@@ -400,7 +400,7 @@ depending on the buffering level. If it is below 100%, the code in the
 an ‘`X`’. If the buffering level is 100% the pipeline is in the
 `PLAYING` state and we print a ‘`>`’.
 
-``` lang=c
+``` c
 if (data->buffering_level < 100) {
   g_print (" Buffering: %3d%%", data->buffering_level);
 } else {
@@ -413,7 +413,7 @@ information (and delete it otherwise).
 
 #### Limiting the size of the downloaded file
 
-``` lang=c
+``` c
 /* Uncomment this line to limit the amount of downloaded data */
 /* g_object_set (pipeline, "ring-buffer-max-size", (guint64)4000000, NULL); */
 ```

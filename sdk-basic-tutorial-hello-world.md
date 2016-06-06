@@ -60,7 +60,7 @@ Internet, along with audio. Congratulations!
 
 Let's review these lines of code and see what they do:
 
-``` lang=c
+``` c
     /* Initialize GStreamer */
     gst_init (&argc, &argv);
 ```
@@ -79,7 +79,7 @@ If you always pass your command-line parameters
 benefit from the GStreamer standard command-line options (more on this
 in [Basic tutorial 10: GStreamer tools])
 
-``` lang=c
+``` c
     /* Build the pipeline */
     pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
 ```
@@ -132,7 +132,7 @@ plug-in, GStreamer provides several notification mechanisms, but the
 only thing we are doing in this example is exiting on error, so do not
 expect much feedback.
 
-``` lang=c
+``` c
     /* Start playing */
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
@@ -146,7 +146,7 @@ In this line, `gst_element_set_state()` is setting `pipeline` (our only
 element, remember) to the PLAYING state, thus initiating playback.
 ```
 
-``` lang=c
+``` c
     /* Wait until error or EOS */
     bus = gst_element_get_bus (pipeline);
     gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
@@ -170,7 +170,7 @@ control-C in the console.
 Before terminating the application, though, there is a couple of things
 we need to do to tidy up correctly after ourselves.
 
-``` lang=c
+``` c
     /* Free resources */
     if (msg != NULL)
       gst_message_unref (msg);

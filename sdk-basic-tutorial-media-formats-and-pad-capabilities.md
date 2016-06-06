@@ -122,7 +122,7 @@ in the SDK installation).
 
 **basic-tutorial-6.c**
 
-```
+``` c
 #include <gst/gst.h>
 
 /* Functions below print the Capabilities in a human-friendly format */
@@ -353,7 +353,7 @@ want to learn about the internal organization of the
 `GstCaps` structure, read  the `GStreamer Documentation` regarding Pad
 Caps.
 
-```
+``` c
 /* Shows the CURRENT capabilities of the requested pad in the given element */
 static void print_pad_capabilities (GstElement *element, gchar *pad_name) {
   GstPad *pad = NULL;
@@ -394,7 +394,7 @@ as the actual hardware Capabilities might be queried.
 
 We then print these Capabilities.
 
-```
+``` c
 /* Create the element factories */
 source_factory = gst_element_factory_find ("audiotestsrc");
 sink_factory = gst_element_factory_find ("autoaudiosink");
@@ -429,7 +429,7 @@ are printed as soon as the factories are created.
 We skip the pipeline creation and start, and go to the State-Changed
 message handling:
 
-```
+``` c
 case GST_MESSAGE_STATE_CHANGED:
   /* We are only interested in state-changed messages from the pipeline */
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (pipeline)) {

@@ -47,7 +47,7 @@ this view is collapsed by default. Click here to expand…
 
 **src/com/gst\_sdk\_tutorials/tutorial\_4/Tutorial4.java**
 
-``` lang=java
+``` java
 package com.gst_sdk_tutorials.tutorial_4;
 
 import java.text.SimpleDateFormat;
@@ -311,7 +311,7 @@ offer the same functionalities. We keep track of this in the
 `is_local_media` variable, and update it every time we change the media
 URI:
 
-``` lang=java
+``` java
 private void setMediaUri() {
     nativeSetUri (mediaUri);
     is_local_media = mediaUri.startsWith("file://");
@@ -327,7 +327,7 @@ Every time the size of the media changes (which could happen mid-stream,
 for some kind of streams), or when it is first detected, C code calls
 our `onMediaSizeChanged()` callback:
 
-``` lang=java
+``` java
 private void onMediaSizeChanged (int width, int height) {
     Log.i ("GStreamer", "Media size changed to " + width + "x" + height);
     final GStreamerSurfaceView gsv = (GStreamerSurfaceView) this.findViewById(R.id.surface_video);
@@ -369,7 +369,7 @@ To realize the first function, C code will periodically call our
 in the Seek Bar. Again we do so from the UI thread, using
 `RunOnUiThread()`.
 
-``` lang=java
+``` java
 private void setCurrentPosition(final int position, final int duration) {
     final SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
 
@@ -395,7 +395,7 @@ widget which we will use to display the current position and duration in
 `HH:mm:ss / HH:mm:ss` textual format. The `updateTimeWidget()` method
 takes care of it, and must be called every time the Seek Bar is updated:
 
-``` lang=java
+``` java
 private void updateTimeWidget () {
     final TextView tv = (TextView) this.findViewById(R.id.textview_time);
     final SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
@@ -417,7 +417,7 @@ the user to seek by dragging the thumb), we implement the
 interface in the
 Activity:
 
-``` lang=java
+``` java
 public class Tutorial4 extends Activity implements SurfaceHolder.Callback, OnSeekBarChangeListener {
 ```
 
@@ -425,7 +425,7 @@ And we register the Activity as the listener for the [Seek
 Bar](http://developer.android.com/reference/android/widget/SeekBar.html)’s
 events in the `onCreate()` method:
 
-``` lang=java
+``` java
 SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
 sb.setOnSeekBarChangeListener(this);
 ```
@@ -434,7 +434,7 @@ We will now be notified of three events: When the user starts dragging
 the thumb, every time the thumb moves and when the thumb is released by
 the user:
 
-``` lang=java
+``` java
 public void onStartTrackingTouch(SeekBar sb) {
     nativePause();
 } 
@@ -446,7 +446,7 @@ pause the pipeline. If the user is searching for a particular scene, we
 do not want it to keep
 moving.
 
-``` lang=java
+``` java
 public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
     if (fromUser == false) return;
     desired_position = progress;
@@ -466,7 +466,7 @@ this is, we jump to the indicated position as soon as the thumb moves.
 Otherwise, the seek will be performed when the thumb is released, and
 the only thing we do here is update the textual time widget.
 
-``` lang=java
+``` java
 public void onStopTrackingTouch(SeekBar sb) {
     // If this is a remote file, scrub seeking is probably not going to work smoothly enough.
     // Therefore, perform only the seek when the slider is released.
@@ -490,7 +490,7 @@ this view is collapsed by default. Click here to expand…
 
 **jni/tutorial-4.c**
 
-``` lang=c
+``` c
 #include <string.h>
 #include <jni.h>
 #include <android/log.h>
@@ -1066,7 +1066,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 Java code will call `gst_native_set_uri()` whenever it wants to change
 the playing URI (in this tutorial the URI never changes, but it could):
 
-``` lang=c
+``` c
 void gst_native_set_uri (JNIEnv* env, jobject thiz, jstring uri) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data || !data->pipeline) return;
@@ -1114,7 +1114,7 @@ change during playback. For simplicity, this tutorial assumes that they
 do not. Therefore, in the READY to PAUSED state change, once the Caps of
 the decoded media are known, we inspect them in `check_media_size()`:
 
-``` lang=c
+``` c
 static void check_media_size (CustomData *data) {
   JNIEnv *env = get_jni_env ();
   GstElement *video_sink;
@@ -1165,7 +1165,7 @@ To keep the UI updated, a GLib timer is installed in the
 `app_function()` that fires 4 times per second (or every 250ms), right
 before entering the main loop:
 
-``` lang=c
+``` c
 timeout_source = g_timeout_source_new (250);
 g_source_set_callback (timeout_source, (GSourceFunc)refresh_ui, data, NULL);
 g_source_attach (timeout_source, data->context);
@@ -1174,7 +1174,7 @@ g_source_unref (timeout_source); 
 
 Then, in the refresh\_ui method:
 
-``` lang=c
+``` c
 static gboolean refresh_ui (CustomData *data) {
   GstFormat fmt = GST_FORMAT_TIME;
   gint64 current = -1;
@@ -1228,7 +1228,7 @@ see how to overcome these problems.
 In
 `gst_native_set_position()`:
 
-``` lang=c
+``` c
 void gst_native_set_position (JNIEnv* env, jobject thiz, int milliseconds) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data) return;
@@ -1247,7 +1247,7 @@ away; otherwise, store the desired position in the
 `desired_position` variable. Then, in the
 `state_changed_cb()` callback:
 
-``` lang=c
+``` c
 if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED) {
   /* By now the sink already knows the media size */
   check_media_size(data);
@@ -1284,7 +1284,7 @@ once this period elapses.
 To achieve this, all seek requests are routed through the
 `execute_seek()` method:
 
-``` lang=c
+``` c
 static void execute_seek (gint64 desired_position, CustomData *data) {
   gint64 diff;
 
@@ -1353,7 +1353,7 @@ using buffering. The same procedure is used here, by listening to the
 buffering
 messages:
 
-``` lang=c
+``` c
 g_signal_connect (G_OBJECT (bus), "message::buffering", (GCallback)buffering_cb, data);
 ```
 
@@ -1361,7 +1361,7 @@ And pausing the pipeline until buffering is complete (unless this is a
 live
 source):
 
-``` lang=c
+``` c
 static void buffering_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   gint percent;
 

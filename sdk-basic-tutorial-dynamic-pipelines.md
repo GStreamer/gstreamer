@@ -85,7 +85,7 @@ in the SDK installation).
 
 **basic-tutorial-3.c**
 
-```
+``` c
 #include <gst/gst.h>
 
 /* Structure to contain all our information, so we can pass it to callbacks */
@@ -251,7 +251,7 @@ exit:
 
 ## Walkthrough
 
-```
+``` c
 /* Structure to contain all our information, so we can pass it to callbacks */
 typedef struct _CustomData {
   GstElement *pipeline;
@@ -266,14 +266,14 @@ to `GstElement`s, basically) as local variables. Since this tutorial
 (and most real applications) involves callbacks, we will group all our
 data in a structure for easier handling.
 
-```
+``` c
 /* Handler for the pad-added signal */
 static void pad_added_handler (GstElement *src, GstPad *pad, CustomData *data);
 ```
 
 This is a forward reference, to be used later.
 
-```
+``` c
 /* Create the elements */
 data.source = gst_element_factory_make ("uridecodebin", "source");
 data.convert = gst_element_factory_make ("audioconvert", "convert");
@@ -295,7 +295,7 @@ The `autoaudiosink` is the equivalent of `autovideosink` seen in the
 previous tutorial, for audio. It will render the audio stream to the
 audio card.
 
-```
+``` c
 if (!gst_element_link (data.convert, data.sink)) {
   g_printerr ("Elements could not be linked.\n");
   gst_object_unref (data.pipeline);
@@ -307,7 +307,7 @@ Here we link the converter element to the sink, but we **DO NOT** link
 them with the source, since at this point it contains no source pads. We
 just leave this branch (converter + sink) unlinked, until later on.
 
-```
+``` c
 /* Set the URI to play */
 g_object_set (data.source, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
 ```
@@ -317,7 +317,7 @@ the previous tutorial.
 
 ### Signals
 
-```
+``` c
 /* Connect to the pad-added signal */
 g_signal_connect (data.source, "pad-added", G_CALLBACK (pad_added_handler), &data);
 ```
@@ -351,7 +351,7 @@ producing data, it will create source pads, and trigger the “pad-added”
 signal. At this point our callback will be
 called:
 
-```
+``` c
 static void pad_added_handler (GstElement *src, GstPad *new_pad, CustomData *data) {
 ```
 
@@ -366,7 +366,7 @@ This is usually the pad to which we want to link.
 `data` is the pointer we provided when attaching to the signal. In this
 example, we use it to pass the `CustomData` pointer.
 
-```
+``` c
 GstPad *sink_pad = gst_element_get_static_pad (data->convert, "sink");
 ```
 
@@ -376,7 +376,7 @@ which we want to link `new_pad`. In the previous tutorial we linked
 element against element, and let GStreamer choose the appropriate pads.
 Now we are going to link the pads directly.
 
-```
+``` c
 /* If our converter is already linked, we have nothing to do here */
 if (gst_pad_is_linked (sink_pad)) {
   g_print ("  We are already linked. Ignoring.\n");
@@ -388,7 +388,7 @@ if (gst_pad_is_linked (sink_pad)) {
 this callback will be called. These lines of code will prevent us from
 trying to link to a new pad once we are already linked.
 
-```
+``` c
 /* Check the new pad's type */
 new_pad_caps = gst_pad_query_caps (new_pad, NULL);
 new_pad_struct = gst_caps_get_structure (new_pad_caps, 0);
@@ -423,7 +423,7 @@ audio pad, and we are not interested in it.
 
 Otherwise, attempt the link:
 
-```
+``` c
 /* Attempt the link */
 ret = gst_pad_link (new_pad, sink_pad);
 if (GST_PAD_LINK_FAILED (ret)) {
@@ -462,7 +462,7 @@ to PLAYING, you have to go through the intermediate READY and PAUSED
 states. If you set the pipeline to PLAYING, though, GStreamer will make
 the intermediate transitions for you.
 
-```
+``` c
 case GST_MESSAGE_STATE_CHANGED:
   /* We are only interested in state-changed messages from the pipeline */
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data.pipeline)) {

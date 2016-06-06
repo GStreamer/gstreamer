@@ -59,7 +59,7 @@ it in the SDK installation).
 
 **playback-tutorial-1.c**
 
-``` lang=c
+``` c
 #include <gst/gst.h>
 
 /* Structure to contain all our information, so we can pass it around */
@@ -304,7 +304,7 @@ Required libraries: `gstreamer-1.0`
 
 # Walkthrough
 
-``` lang=c
+``` c
 /* Structure to contain all our information, so we can pass it around */
 typedef struct _CustomData {
   GstElement *playbin;  /* Our one and only element */
@@ -327,7 +327,7 @@ streams of each type, and the currently playing one. Also, we are going
 to use a different mechanism to wait for messages that allows
 interactivity, so we need a GLib's main loop object.
 
-``` lang=c
+``` c
 /* playbin flags */
 typedef enum {
   GST_PLAY_FLAG_VIDEO         = (1 << 0), /* We want video output */
@@ -345,7 +345,7 @@ GObject allows introspection, so the possible values for these flags can
 be retrieved at runtime without using this trick, but in a far more
 cumbersome way.
 
-``` lang=c
+``` c
 /* Forward definition for the message and keyboard processing functions */
 static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data);
 static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data);
@@ -364,7 +364,7 @@ pipeline, and use directly the  `playbin` element.
 
 We focus on some of the other properties of `playbin`, though:
 
-``` lang=c
+``` c
 /* Set flags to show Audio and Video but ignore Subtitles */
 g_object_get (data.playbin, "flags", &flags, NULL);
 flags |= GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_AUDIO;
@@ -391,7 +391,7 @@ and disabling subtitles, leaving the rest of flags to their default
 values (this is why we read the current value of the flags with
 `g_object_get()` before overwriting it with `g_object_set()`).
 
-``` lang=c
+``` c
 /* Set connection speed. This will affect some internal decisions of playbin */
 g_object_set (data.playbin, "connection-speed", 56, NULL);
 ```
@@ -406,13 +406,13 @@ mostly used in combination with streaming protocols like `mms` or
 We have set all these properties one by one, but we could have all of
 them with a single call to `g_object_set()`:
 
-``` lang=c
+``` c
 g_object_set (data.playbin, "uri", "http://docs.gstreamer.com/media/sintel_cropped_multilingual.webm", "flags", flags, "connection-speed", 56, NULL);
 ```
 
 This is why `g_object_set()` requires a NULL as the last parameter.
 
-``` lang=c
+``` c
   /* Add a keyboard watch so we get notified of keystrokes */
 #ifdef _WIN32
   io_stdin = g_io_channel_win32_new_fd (fileno (stdin));
@@ -429,7 +429,7 @@ Applications normally have their own way of handling user input, and
 GStreamer has little to do with it besides the Navigation interface
 discussed briefly in [Tutorial 17: DVD playback].
 
-``` lang=c
+``` c
 /* Create a GLib Main Loop and set it to run */
 data.main_loop = g_main_loop_new (NULL, FALSE);
 g_main_loop_run (data.main_loop);
@@ -446,7 +446,7 @@ times: `handle_message` when a message appears on the bus, and
 There is nothing new in handle\_message, except that when the pipeline
 moves to the PLAYING state, it will call the `analyze_streams` function:
 
-``` lang=c
+``` c
 /* Extract some metadata from the streams and print it on the screen */
 static void analyze_streams (CustomData *data) {
   gint i;
@@ -465,7 +465,7 @@ media and prints it on the screen. The number of video, audio and
 subtitle streams is directly available through the `n-video`,
 `n-audio` and `n-text` properties.
 
-``` lang=c
+``` c
 for (i = 0; i < data->n_video; i++) {
   tags = NULL;
   /* Retrieve the stream's video tags */
@@ -503,7 +503,7 @@ documentation. In this example we are interested in the
 `GST_TAG_LANGUAGE_CODE` of the streams and their `GST_TAG_*_CODEC`
 (audio, video or text).
 
-``` lang=c
+``` c
 g_object_get (data->playbin, "current-video", &data->current_video, NULL);
 g_object_get (data->playbin, "current-audio", &data->current_audio, NULL);
 g_object_get (data->playbin, "current-text", &data->current_text, NULL);
@@ -519,7 +519,7 @@ never make any assumption. Multiple internal conditions can make
 which the streams are listed can change from one run to another, so
 checking the metadata to identify one particular stream becomes crucial.
 
-``` lang=c
+``` c
 /* Process keyboard input */
 static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data) {
   gchar *str = NULL;
