@@ -2114,7 +2114,7 @@ gst_ahc_src_setcaps (GstBaseSrc * src, GstCaps * caps)
       }
     }
     gst_ahc_parameters_supported_preview_fps_range_free (ranges);
-    if (self->fps_max == 0) {
+    if (self->fps_max == 0 || self->fps_min == 0) {
       GST_ERROR_OBJECT (self, "Couldn't find an applicable FPS range");
       goto end;
     }
@@ -2493,6 +2493,10 @@ gst_ahc_src_query (GstBaseSrc * bsrc, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:{
       GstClockTime min;
+
+      /* Cannot query latency before setcaps() */
+      if (self->fps_min == 0)
+        return FALSE;
 
       /* Allow of 1 frame latency base on the longer frame duration */
       gst_query_parse_latency (query, NULL, &min, NULL);
