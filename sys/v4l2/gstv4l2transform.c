@@ -861,6 +861,12 @@ done:
   /* fixate remaining fields */
   othercaps = gst_caps_fixate (othercaps);
 
+  if (direction == GST_PAD_SINK) {
+    if (gst_caps_is_subset (caps, othercaps)) {
+      gst_caps_replace (&othercaps, caps);
+    }
+  }
+
   return othercaps;
 }
 
