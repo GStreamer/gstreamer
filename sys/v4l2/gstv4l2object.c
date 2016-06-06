@@ -1661,6 +1661,7 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
         break;
       case GST_VIDEO_FORMAT_RGB15:
         fourcc = V4L2_PIX_FMT_RGB555;
+        fourcc_nc = V4L2_PIX_FMT_XRGB555;
         break;
       case GST_VIDEO_FORMAT_RGB16:
         fourcc = V4L2_PIX_FMT_RGB565;
