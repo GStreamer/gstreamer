@@ -235,9 +235,17 @@ gst_vp9_enc_handle_invisible_frame_buffer (GstVPXEnc * enc, void *user_data,
 }
 
 static void
+gst_vp9_enc_user_data_free (vpx_image_t * image)
+{
+  g_slice_free (vpx_image_t, image);
+}
+
+static void
 gst_vp9_enc_set_frame_user_data (GstVPXEnc * enc, GstVideoCodecFrame * frame,
     vpx_image_t * image)
 {
+  gst_video_codec_frame_set_user_data (frame, image,
+      (GDestroyNotify) gst_vp9_enc_user_data_free);
   return;
 }
 
