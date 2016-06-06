@@ -1985,32 +1985,29 @@ gst_dvbsrc_start (GstBaseSrc * bsrc)
   }
   if (!gst_dvbsrc_tune (src)) {
     GST_ERROR_OBJECT (src, "Not able to lock on to the dvb channel");
-    gst_dvbsrc_unset_pes_filters (src);
-    close (src->fd_frontend);
-    return FALSE;
+    goto fail;
   }
   if (!gst_dvbsrc_open_dvr (src)) {
     GST_ERROR_OBJECT (src, "Not able to open DVR device");
-    /* unset filters also */
-    gst_dvbsrc_unset_pes_filters (src);
-    close (src->fd_frontend);
-    return FALSE;
+    goto fail;
   }
   if (!(src->poll = gst_poll_new (TRUE))) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
         ("Could not create an fd set: %s (%d)", g_strerror (errno), errno));
-    /* unset filters also */
-    gst_dvbsrc_unset_pes_filters (src);
-    close (src->fd_frontend);
-    return FALSE;
-  } else {
-    gst_poll_fd_init (&src->poll_fd_dvr);
-    src->poll_fd_dvr.fd = src->fd_dvr;
-    gst_poll_add_fd (src->poll, &src->poll_fd_dvr);
-    gst_poll_fd_ctl_read (src->poll, &src->poll_fd_dvr, TRUE);
+    goto fail;
   }
 
+  gst_poll_fd_init (&src->poll_fd_dvr);
+  src->poll_fd_dvr.fd = src->fd_dvr;
+  gst_poll_add_fd (src->poll, &src->poll_fd_dvr);
+  gst_poll_fd_ctl_read (src->poll, &src->poll_fd_dvr, TRUE);
+
   return TRUE;
+
+fail:
+  gst_dvbsrc_unset_pes_filters (src);
+  close (src->fd_frontend);
+  return FALSE;
 }
 
 static gboolean
