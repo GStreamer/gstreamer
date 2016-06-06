@@ -45,7 +45,7 @@ the number of the source pad over which the data should be sent.
 The code to parse this file and create the dynamic “sometimes” pads,
 looks like this:
 
-``` 
+``` c
 
 typedef struct _GstMyFilter {
 [..]
@@ -216,7 +216,7 @@ GST\_PAD\_REQUEST presence and implement the `request_new_pad` virtual
 method in `GstElement`. To clean up, you will need to implement the
 `release_pad` virtual method.
 
-``` 
+``` c
 
 static GstPad * gst_my_filter_request_new_pad   (GstElement     *element,
                          GstPadTemplate *templ,

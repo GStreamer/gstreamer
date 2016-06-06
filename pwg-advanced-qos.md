@@ -71,7 +71,7 @@ value of the QOS event and use them in the data processing function. The
 element will need to use a lock to protect these QoS values as shown in
 the example below. Also make sure to pass the QoS event upstream.
 
-``` 
+``` c
 
     [...]
 
@@ -115,7 +115,7 @@ timestamp as: timestamp + 2 \* jitter + duration.
 
 A possible algorithm typically looks like this:
 
-``` 
+``` c
 
   [...]
 

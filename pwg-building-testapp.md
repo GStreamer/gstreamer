@@ -55,7 +55,7 @@ memory and caches. Also, it should close down any references held to
 possible support libraries. Your application should `unref ()` the
 pipeline and make sure it doesn't crash.
 
-``` 
+``` c
 #include <gst/gst.h>
 
 static gboolean

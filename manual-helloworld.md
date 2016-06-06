@@ -49,7 +49,7 @@ and detect the end-of-stream.
 
 Let's now add all the code together to get our very first audio player:
 
-``` 
+``` c
 
 #include <gst/gst.h>
 #include <glib.h>

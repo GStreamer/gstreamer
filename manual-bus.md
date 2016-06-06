@@ -63,7 +63,7 @@ the next section for an explanation of message types).
 
 The above snippet could then also be written as:
 
-``` 
+``` c
 GstBus *bus;
 
 [..]

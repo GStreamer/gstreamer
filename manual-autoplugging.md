@@ -97,7 +97,7 @@ will print the detected media type, or tell that the media type was not
 found. The next section will introduce more useful behaviours, such as
 plugging together a decoding pipeline.
 
-``` 
+```  c
 #include <gst/gst.h>
 
 [.. my_bus_callback goes here ..]

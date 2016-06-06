@@ -38,7 +38,7 @@ display.
 
 The following example will extract tags from a file and print them:
 
-``` 
+``` c
 /* compile with:
  * gcc -o tags tags.c `pkg-config --cflags --libs gstreamer-1.0` */
 #include <gst/gst.h>

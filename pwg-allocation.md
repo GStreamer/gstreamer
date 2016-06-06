@@ -57,7 +57,7 @@ accessed according to the requested access mode.
 Below is an example of making a `GstMemory` object and using the
 `gst_memory_map()` to access the memory region.
 
-``` 
+``` c
 
 [...]
 
@@ -135,7 +135,7 @@ pointer to this block.
 
 Below is an example of how to create a buffer and access its memory.
 
-``` 
+``` c
 
 [...]
   GstBuffer *buffer;
@@ -195,7 +195,7 @@ to configure the metadata structure for you.
 Let's have a look at the metadata that is used to specify a cropping
 region for video frames.
 
-``` 
+``` c
 
 #include <gst/video/gstvideometa.h>
 
@@ -218,7 +218,7 @@ region for video frames.
 An element can then use the metadata on the buffer when rendering the
 frame like this:
 
-``` 
+``` c
 
 #include <gst/video/gstvideometa.h>
 
@@ -261,7 +261,7 @@ this step and move on to the implementation step.
 First we start with making the `my-example-meta.h` header file that will
 contain the definition of the API and structure for our metadata.
 
-``` 
+``` c
 
 #include <gst/gst.h>
 
@@ -295,7 +295,7 @@ metadata with our new API.
 Next let's have a look at how the `my_example_meta_api_get_type ()`
 function is implemented in the `my-example-meta.c` file.
 
-``` 
+``` c
 
 #include "my-example-meta.h"
 
@@ -329,7 +329,7 @@ convenience `MY_EXAMPLE_META_INFO` macro. You will also make a method to
 add your metadata implementation to a `GstBuffer`. Your
 `my-example-meta.h` header file will need these additions:
 
-``` 
+``` c
 
 [...]
 
@@ -347,7 +347,7 @@ MyExampleMeta * gst_buffer_add_my_example_meta (GstBuffer      *buffer,
 Let's have a look at how these functions are implemented in the
 `my-example-meta.c` file.
 
-``` 
+``` c
 
 [...]
 
@@ -466,7 +466,7 @@ configure it. Trying to configure a bufferpool that is not in the
 inactive state will fail. Likewise, trying to activate a bufferpool that
 is not configured will fail.
 
-``` 
+``` c
 
   GstStructure *config;
 
@@ -526,7 +526,7 @@ activated with `gst_buffer_pool_set_active (pool, TRUE)`. From that
 point on you can use `gst_buffer_pool_acquire_buffer ()` to retrieve a
 buffer from the pool, like this:
 
-``` 
+``` c
 
   [...]
 
@@ -593,7 +593,7 @@ buffers.
 
 Below is an example of the ALLOCATION query.
 
-``` 
+``` c
 
 #include <gst/video/video.h>
 #include <gst/video/gstvideometa.h>

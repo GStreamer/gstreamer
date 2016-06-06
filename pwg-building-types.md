@@ -81,7 +81,7 @@ be loaded in order to detect a stream's type. Below is an example that
 will recognize AVI files, which start with a “RIFF” tag, then the size
 of the file and then an “AVI” tag:
 
-``` 
+``` c
 static void
 gst_my_typefind_function (GstTypeFind *tf,
               gpointer     data)

@@ -30,7 +30,7 @@ be dynamically loadable libraries. In the example below, you would be
 able to call `gst_element_factory_make
 ("my-element-name", "some-name")` to create an instance of the element.
 
-``` 
+``` c
 
 /*
  * Here, you would write the actual plugin code.

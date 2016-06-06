@@ -39,7 +39,7 @@ What follows is an example of how the message handler could deal with
 the BUFFERING messages. We will see more advanced methods in [Buffering
 strategies](#buffering-strategies).
 
-``` 
+``` c
 
   [...]
 
@@ -225,7 +225,7 @@ buffering](#download-buffering)).
 
 This is what the code would look like:
 
-``` 
+``` c
 
 
 #include <gst/gst.h>

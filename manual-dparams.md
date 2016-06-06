@@ -26,7 +26,7 @@ in the core library. The existing implementations are contained within
 the `gstcontroller` library. You need to include the header in your
 application's source file:
 
-``` 
+``` c
 ...
 #include <gst/gst.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
@@ -45,7 +45,7 @@ If we have our pipeline set up and want to control some parameters, we
 first need to create a control-source. Lets use an interpolation
 control-source:
 
-``` 
+``` c
   csource = gst_interpolation_control_source_new ();
   g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
     
@@ -56,7 +56,7 @@ is done with a control-binding. One control source can be attached to
 several object properties (even in different objects) using separate
 control-bindings.
 
-``` 
+``` c
       gst_object_add_control_binding (object, gst_direct_control_binding_new (object, "prop1", csource));
     
 ```
@@ -77,7 +77,7 @@ in the list. If e.g. the pipeline runs a loop (using a segmented seek),
 the control-curve gets repeated as
 well.
 
-``` 
+``` c
   GstTimedValueControlSource *tv_csource = (GstTimedValueControlSource *)csource;
   gst_timed_value_control_source_set (tv_csource, 0 * GST_SECOND, 0.0);
   gst_timed_value_control_source_set (tv_csource, 1 * GST_SECOND, 1.0);

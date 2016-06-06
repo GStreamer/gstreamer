@@ -123,7 +123,7 @@ file (although since the interface to the code is entirely defined by
 the plugin system, and doesn't depend on reading a header file, this is
 not crucial.)
 
-``` 
+``` c
 #include <gst/gst.h>
 
 /* Definition of structure storing data for this element. */
@@ -163,7 +163,7 @@ Using this header file, you can use the following macro to setup the
 `GObject` basics in your source file so that all functions will be
 called appropriately:
 
-``` 
+``` c
 #include "filter.h"
 
 G_DEFINE_TYPE (GstMyFilter, gst_my_filter, GST_TYPE_ELEMENT);
@@ -189,7 +189,7 @@ parameters:
 
 For example:
 
-``` 
+``` c
 gst_element_class_set_static_metadata (klass,
   "An example plugin",
   "Example/FirstExample",
@@ -203,7 +203,7 @@ The element details are registered with the plugin during the
 `_class_init ()` function should be set for this GObject in the function
 where you register the type with GLib.
 
-``` 
+``` c
 static void
 gst_my_filter_class_init (GstMyFilterClass * klass)
 {
@@ -237,7 +237,7 @@ A GstStaticPadTemplate is a description of a pad that the element will
 
 For example:
 
-``` 
+``` c
 static GstStaticPadTemplate sink_factory =
 GST_STATIC_PAD_TEMPLATE (
   "sink",
@@ -287,7 +287,7 @@ supported values. In case of an audio filter that supports raw integer
 16-bit audio, mono or stereo at any samplerate, the correct template
 would look like this:
 
-``` 
+``` c
 
 static GstStaticPadTemplate sink_factory =
 GST_STATIC_PAD_TEMPLATE (
@@ -329,7 +329,7 @@ FALSE depending on whether it loaded initialized any dependencies
 correctly. Also, in this function, any supported element type in the
 plugin should be registered.
 
-``` 
+``` c
 
 
 static gboolean

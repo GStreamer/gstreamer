@@ -30,7 +30,7 @@ function gst\_parse\_launch () that you can use to construct a pipeline.
 The following program lets you create an MP3 pipeline using the
 gst\_parse\_launch () function:
 
-``` 
+``` c
 #include <gst/gst.h>
 
 int

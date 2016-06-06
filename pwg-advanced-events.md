@@ -25,7 +25,7 @@ processed or queued in the pipeline). The most common downstream events
 
 Here is a typical event function:
 
-``` 
+``` c
 static gboolean
 gst_my_filter_sink_event (GstPad  *pad, GstObject * parent, GstEvent * event)
 {

@@ -44,7 +44,7 @@ though:
 Sink elements can derive from `GstBaseSink` using the usual `GObject`
 convenience macro `G_DEFINE_TYPE ()`:
 
-``` 
+``` c
 G_DEFINE_TYPE (GstMySink, gst_my_sink, GST_TYPE_BASE_SINK);
 
 [..]

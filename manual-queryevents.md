@@ -32,7 +32,7 @@ backwards until one element can handle it; that result will be sent back
 to the function caller. Usually, that is the demuxer, although with live
 sources (from a webcam), it is the source itself.
 
-``` 
+``` c
 
 #include <gst/gst.h>
 
@@ -91,7 +91,7 @@ fine to just specify GST\_SEEK\_TYPE\_NONE and -1 as end\_method and end
 offset. The behaviour of a seek is also wrapped in the `gst_element_seek
 ()`.
 
-``` 
+``` c
 static void
 seek_to_time (GstElement *pipeline,
           gint64      time_nanoseconds)

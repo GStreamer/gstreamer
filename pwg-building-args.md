@@ -18,7 +18,7 @@ set functions. Note that `GObject` will not automatically set your
 instance variable to the default value, you will have to do that in the
 `_init ()` function of your element.
 
-``` 
+``` c
 
 /* properties */
 enum {
@@ -105,7 +105,7 @@ we'll give a short example of where this is useful. Note that using
 integers here would probably completely confuse the user, because they
 make no sense in this context. The example is stolen from videotestsrc.
 
-``` 
+``` c
 typedef enum {
   GST_VIDEOTESTSRC_SMPTE,
   GST_VIDEOTESTSRC_SNOW,

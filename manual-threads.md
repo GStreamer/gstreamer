@@ -97,12 +97,7 @@ configure on the task. Below is the implementation of a `GstTaskPool`
 subclass that uses pthreads to create a SCHED\_RR real-time thread. Note
 that creating real-time threads might require extra priveleges.
 
-``` 
-
-
-
-
-
+``` c
 #include <pthread.h>
 
 typedef struct
@@ -210,7 +205,7 @@ In a next step we need to actually configure the custom taskpool when
 the fakesrc needs it. For this we intercept the STREAM\_STATUS messages
 with a sync handler.
 
-``` 
+``` c
 
 
 static GMainLoop* loop;
@@ -328,7 +323,7 @@ main (int argc, char *argv[])
 
 
       
-```
+``` c
 
 Note that this program likely needs root permissions in order to create
 real-time threads. When the thread can't be created, the state change

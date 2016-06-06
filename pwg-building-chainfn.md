@@ -9,7 +9,7 @@ place. In the case of a simple filter, `_chain ()` functions are mostly
 linear functions - so for each incoming buffer, one buffer will go out,
 too. Below is a very simple implementation of a chain function:
 
-``` 
+``` c
 
 static GstFlowReturn gst_my_filter_chain (GstPad    *pad,
                                           GstObject *parent,

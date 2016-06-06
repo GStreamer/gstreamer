@@ -49,7 +49,7 @@ to inform you when the element has created a new pad from one of its
 “sometimes” pad templates. The following piece of code is an example
 of how to do this:
 
-``` 
+``` c
 #include <gst/gst.h>
 
 static void
@@ -325,7 +325,7 @@ types of caps are *ANY caps* and *empty caps*.
 Here is an example of how to extract the width and height from a set of
 fixed video caps:
 
-``` 
+``` c
 static void
 read_video_props (GstCaps *caps)
 {
@@ -359,7 +359,7 @@ do this using a `capsfilter` element in your pipeline. In order to do
 this, you also need to create your own `GstCaps`. The easiest way to do
 this is by using the convenience function `gst_caps_new_simple ()`:
 
-``` 
+``` c
 static gboolean
 link_elements_with_filter (GstElement *element1, GstElement *element2)
 {
@@ -399,7 +399,7 @@ In some cases, you will want to create a more elaborate set of
 capabilities to filter a link between two pads. Then, this function is
 too simplistic and you'll want to use the method `gst_caps_new_full ()`:
 
-``` 
+``` c
 static gboolean
 link_elements_with_filter (GstElement *element1, GstElement *element2)
 {
@@ -464,7 +464,7 @@ like ordinary pads.
 
 A ghostpad is created using the function `gst_ghost_pad_new ()`:
 
-``` 
+``` c
 #include <gst/gst.h>
 
 int

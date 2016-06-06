@@ -23,7 +23,7 @@ operate in looping mode, which means that they can pull data themselves.
 More on this topic later. After that, you have to register the pad with
 the element. This happens like this:
 
-``` 
+``` c
 
 
 

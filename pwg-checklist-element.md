@@ -44,7 +44,7 @@ we will try to explain why those requirements are set.
   - Ideally, elements should use their own debugging category. Most
     elements use the following code to do that:
     
-    ``` 
+    ``` c
     GST_DEBUG_CATEGORY_STATIC (myelement_debug);
     #define GST_CAT_DEFAULT myelement_debug
     
@@ -66,7 +66,7 @@ we will try to explain why those requirements are set.
   - Elements should use GST\_DEBUG\_FUNCPTR when setting pad functions
     or overriding element class methods, for example:
     
-    ``` 
+    ``` c
     gst_pad_set_event_func (myelement->srcpad,
         GST_DEBUG_FUNCPTR (my_element_src_event));
               

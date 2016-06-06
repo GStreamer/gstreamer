@@ -71,7 +71,7 @@ a good idea to add it to `gsttag.c` instead. That's up to you to decide.
 If you want to do it in your own element, it's easiest to register the
 tag in one of your class init functions, preferably `_class_init ()`.
 
-``` 
+``` c
 
 static void
 gst_my_filter_class_init (GstMyFilterClass *klass)
@@ -111,7 +111,7 @@ incoming events.
 Warning, this example is outdated and doesn't work with the 1.0 version
 of GStreamer anymore.
 
-``` 
+``` c
 
 GType
 gst_my_filter_get_type (void)

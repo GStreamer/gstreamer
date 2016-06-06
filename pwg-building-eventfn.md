@@ -12,7 +12,7 @@ pads as well as source pads.
 Below follows a very simple event function that we install on the sink
 pad of our element.
 
-``` 
+``` c
 
 static gboolean gst_my_filter_sink_event (GstPad    *pad,
                                           GstObject *parent,

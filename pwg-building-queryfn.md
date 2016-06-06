@@ -13,7 +13,7 @@ on sink pads as well as source pads.
 Below follows a very simple query function that we install on the source
 pad of our element.
 
-``` 
+``` c
 
 static gboolean gst_my_filter_src_query (GstPad    *pad,
                                          GstObject *parent,

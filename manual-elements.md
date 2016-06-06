@@ -101,7 +101,7 @@ The following example \[1\] shows how to create an element named
 *source* from the element factory named *fakesrc*. It checks if the
 creation succeeded. After checking, it unrefs the element.
 
-``` 
+``` c
 #include <gst/gst.h>
 
 int
@@ -143,7 +143,7 @@ create the *fakesrc* element, a fake data source. The function
 ()`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/GstElementFactory.html#gst-element-factory-create)
 will use the element factory to create an element with the given name.
 
-``` 
+``` c
 #include <gst/gst.h>
 
 int
@@ -190,7 +190,7 @@ functions `gst_element_factory_make ()` or `gst_element_factory_create
 `gst_object_set_name` and `gst_object_get_name` or use the `GObject`
 property mechanism as shown below.
 
-``` 
+``` c
 #include <gst/gst.h>
 
 int
@@ -264,7 +264,7 @@ and a whole lot more. `gst-inspect` will give a list of all factories,
 and `gst-inspect <factory-name>` will list all of the above information,
 and a lot more.
 
-``` 
+``` c
 #include <gst/gst.h>
 
 int
@@ -335,7 +335,7 @@ an Ogg/Vorbis player later in this manual.
 
 In code, the above graph is written like this:
 
-``` 
+``` c
 #include <gst/gst.h>
 
 int

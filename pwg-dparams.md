@@ -17,7 +17,7 @@ property values over time.
 The controller subsystem is contained within the `gstcontroller`
 library. You need to include the header in your element's source file:
 
-``` 
+``` c
 ...
 #include <gst/gst.h>
 #include <gst/controller/gstcontroller.h>
@@ -29,7 +29,7 @@ Even though the `gstcontroller` library may be linked into the host
 application, you should make sure it is initialized in your
 `plugin_init` function:
 
-``` 
+``` c
   static gboolean
   plugin_init (GstPlugin *plugin)
   {
@@ -46,7 +46,7 @@ Therefore the next step is to mark controllable parameters. This is done
 by using the special flag `GST_PARAM_CONTROLLABLE`. when setting up
 GObject params in the `_class_init` method.
 
-``` 
+``` c
   g_object_class_install_property (gobject_class, PROP_FREQ,
       g_param_spec_double ("freq", "Frequency", "Frequency of test signal",
           0.0, 20000.0, 440.0,
@@ -62,7 +62,7 @@ for these parameters. The approach the controller subsystem takes is to
 make plugins responsible for pulling the changes in. This requires just
 one action:
 
-``` 
+``` c
     gst_object_sync_values(element,timestamp);
   
 ```

@@ -92,7 +92,7 @@ the caps presented in the padtemplate. As soon as the pad is negotiated,
 the CAPS query will return the negotiated caps (and nothing else). These
 are the relevant code snippets for fixed caps source pads.
 
-``` 
+``` c
 
 [..]
   pad = gst_pad_new_from_static_template (..);
@@ -105,7 +105,7 @@ are the relevant code snippets for fixed caps source pads.
 The fixed caps can then be set on the pad by calling `gst_pad_set_caps
 ()`.
 
-``` 
+``` c
 
 [..]
     caps = gst_caps_new_simple ("audio/x-raw",
@@ -162,7 +162,7 @@ Below is an example of a negotiation steps of a typical transform
 element. In the sink pad CAPS event handler, we compute the caps for the
 source pad and set those.
 
-``` 
+``` c
 
   [...]
 
@@ -265,7 +265,7 @@ Let's look at the example of an element that can convert between
 samplerates, so where input and output samplerate don't have to be the
 same:
 
-``` 
+``` c
 
 static gboolean
 gst_my_filter_setcaps (GstMyFilter *filter,
@@ -402,7 +402,7 @@ that this elements supports, taking into account limitations of peer
 elements further downstream or upstream, sorted by order of preference,
 highest preference first.
 
-``` 
+``` c
 
 static gboolean
 gst_my_filter_query (GstPad *pad, GstObject * parent, GstQuery * query)

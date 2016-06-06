@@ -55,7 +55,7 @@ for the interface that you're wanting to support. The example below
 explains how to add support for a simple interface with no further
 dependencies.
 
-``` 
+``` c
 static void gst_my_filter_some_interface_init   (GstSomeInterface *iface);
 
 GType
@@ -104,7 +104,7 @@ gst_my_filter_some_interface_init (GstSomeInterface *iface)
 Or more
 conveniently:
 
-``` 
+``` c
 static void gst_my_filter_some_interface_init   (GstSomeInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE (GstMyFilter, gst_my_filter,GST_TYPE_ELEMENT,
@@ -158,7 +158,7 @@ plugin implementing this interface has to handle all cases. There are
 only 2 methods that plugins writers have to implement and they most
 probably look like that :
 
-``` 
+``` c
 static void
 gst_my_filter_set_window_handle (GstVideoOverlay *overlay, guintptr handle)
 {
@@ -182,7 +182,7 @@ You will also need to use the interface methods to post messages when
 needed such as when receiving a CAPS event where you will know the video
 geometry and maybe create the window.
 
-``` 
+``` c
 static MyFilterWindow *
 gst_my_filter_window_create (GstMyFilter *my_filter, gint width, gint height)
 {

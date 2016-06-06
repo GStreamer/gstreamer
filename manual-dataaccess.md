@@ -115,7 +115,7 @@ In any case, most common buffer operations that elements can do in
 `_chain ()` functions, can be done in probe callbacks as well. The
 example below gives a short impression on how to use them.
 
-``` 
+``` c
 
 
 #include <gst/gst.h>
@@ -281,7 +281,7 @@ sink before it goes to EOS.
 What follows is an example application that loosly follows this
 algorithm.
 
-``` 
+``` c
 
 
 #include <gst/gst.h>
@@ -620,7 +620,7 @@ on the outgoing buffers in such a way that we play 2 frames per second.
 Note how we use the pull mode method of pushing new buffers into appsrc
 although appsrc is running in push mode.
 
-``` 
+``` c
 
 
 #include <gst/gst.h>
@@ -766,7 +766,7 @@ Consider configuring the following properties in the appsink:
 What follows is an example on how to capture a snapshot of a video
 stream using appsink.
 
-``` 
+``` c
 
 
 #include <gst/gst.h>
@@ -937,7 +937,7 @@ caps on the source pad.
 Below is an example of how you can change the caps of a pipeline while
 in the PLAYING state:
 
-``` 
+``` c
 
 
 #include <stdlib.h>
@@ -1181,7 +1181,7 @@ be used in the PAUSED state as well.
 Let show you how this works with an example. This example changes the
 video effect on a simple pipeline every second.
 
-``` 
+``` c
 
 
 #include <gst/gst.h>

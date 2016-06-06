@@ -58,7 +58,7 @@ to get a more complete picture of the data concept.
 Since most applications seek in time units, our example below does so
 too:
 
-``` 
+``` c
 static void
 seek_to_time (GstElement *element,
           guint64     time_ns)

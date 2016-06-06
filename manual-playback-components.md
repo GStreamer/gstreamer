@@ -38,7 +38,7 @@ e.g. file:///tmp/my.ogg or http://www.example.org/stream.ogg).
 Internally, playbin will set up a pipeline to playback the media
 location.
 
-``` 
+``` c
 #include <gst/gst.h>
 
 [.. my_bus_callback goes here ..]
@@ -121,7 +121,7 @@ about the newly found decoded stream. For unknown streams (which might
 be the whole stream), it will emit the “unknown-type” signal. The
 application is then responsible for reporting the error to the user.
 
-``` 
+``` c
 
 #include <gst/gst.h>
 
@@ -305,7 +305,7 @@ element to decode into raw audio and video streams which we then link to
 the playsink request pads. We only link the first audio and video pads,
 you could use an input-selector to link all pads.
 
-``` 
+``` c
 
 
 #include <gst/gst.h>

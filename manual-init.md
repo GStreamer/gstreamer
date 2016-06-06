@@ -18,7 +18,7 @@ command line options.
 A typical program \[1\] would have code to initialize GStreamer that
 looks like this:
 
-``` 
+``` c
 
 #include <stdio.h>
 #include <gst/gst.h>
@@ -65,7 +65,7 @@ GStreamer.
 You can also use a GOption table to initialize your own parameters as
 shown in the next example:
 
-``` 
+``` c
 
 #include <gst/gst.h>
 

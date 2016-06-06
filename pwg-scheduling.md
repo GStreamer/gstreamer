@@ -111,7 +111,7 @@ element(s) support pull-mode scheduling. If that is possible, you can
 activate the sinkpad in pull-mode. Inside the activate\_mode function
 you can then start the task.
 
-``` 
+``` c
 #include "filter.h"
 #include <string.h>
 
@@ -213,6 +213,7 @@ over its source pad. It's not all that useful, but provides some more
 flexibility than the old push-mode case that we've been looking at so
 far.
 
+``` c
     #define BLOCKSIZE 2048
     
     static void
@@ -261,6 +262,7 @@ far.
       GST_DEBUG_OBJECT (filter, "pausing task");
       gst_pad_pause_task (filter->sinkpad);
     }
+```
 
 # Providing random access
 
