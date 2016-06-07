@@ -155,6 +155,25 @@ static const GstVaapiDecoderMap vaapi_decode_map[] = {
 #if USE_JPEG_DECODER
   {GST_VAAPI_CODEC_JPEG, GST_RANK_MARGINAL, "jpeg", "image/jpeg"},
 #endif
+  {GST_VAAPI_CODEC_MPEG2, GST_RANK_PRIMARY, "mpeg2",
+      "video/mpeg, mpegversion=2, systemstream=(boolean)false"},
+  {GST_VAAPI_CODEC_MPEG4, GST_RANK_PRIMARY, "mpeg4",
+      "video/mpeg, mpegversion=4"},
+  {GST_VAAPI_CODEC_H263, GST_RANK_PRIMARY, "h263", "video/x-h263"},
+  {GST_VAAPI_CODEC_H264, GST_RANK_PRIMARY, "h264", "video/x-h264"},
+  {GST_VAAPI_CODEC_WMV3, GST_RANK_PRIMARY, "wmv3",
+      "video/x-wmv, wmvversion=3, format=WMV3"},
+  {GST_VAAPI_CODEC_VC1, GST_RANK_PRIMARY, "vc1",
+      "video/x-wmv, wmvversion=3, format={WVC1,WMVA}"},
+#if USE_VP8_DECODER
+  {GST_VAAPI_CODEC_VP8, GST_RANK_PRIMARY, "vp8", "video/x-vp8"},
+#endif
+#if USE_VP9_DECODER
+  {GST_VAAPI_CODEC_VP9, GST_RANK_PRIMARY, "vp9", "video/x-vp9"},
+#endif
+#if USE_HEVC_DECODER
+  {GST_VAAPI_CODEC_H265, GST_RANK_PRIMARY, "h265", "video/x-h265"},
+#endif
   {0 /* the rest */ , GST_RANK_PRIMARY + 1, NULL,
       gst_vaapidecode_sink_caps_str},
 };
@@ -1393,7 +1412,11 @@ gst_vaapidecode_register (GstPlugin * plugin)
           (gpointer) & vaapi_decode_map[i]);
     }
 
-    ret |= gst_element_register (plugin, element_name, rank, type);
+    /* Register GstVaapiDecode as GObject type, but not in GStreamer, so
+     * vaapidecodebin can use it internally, but no exposed as a plugin
+     * feature */
+    if (codec)
+      ret |= gst_element_register (plugin, element_name, rank, type);
 
     g_free (element_name);
     g_free (type_name);
