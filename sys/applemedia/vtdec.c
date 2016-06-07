@@ -230,6 +230,8 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   gboolean output_textures;
 
   vtdec = GST_VTDEC (decoder);
+  if (vtdec->session)
+    gst_vtdec_push_frames_if_needed (vtdec, TRUE, FALSE);
   templcaps =
       gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SRC_PAD (decoder));
   peercaps = gst_pad_peer_query_caps (GST_VIDEO_DECODER_SRC_PAD (vtdec), NULL);
@@ -279,10 +281,8 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
         "negotiated output format %" GST_PTR_FORMAT " previous %"
         GST_PTR_FORMAT, output_state->caps, prevcaps);
 
-    if (vtdec->session) {
-      gst_vtdec_push_frames_if_needed (vtdec, TRUE, FALSE);
+    if (vtdec->session)
       gst_vtdec_invalidate_session (vtdec);
-    }
 
     err = gst_vtdec_create_session (vtdec, format, TRUE);
     if (err == noErr) {
@@ -356,9 +356,6 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     GST_INFO_OBJECT (vtdec, "no codec data, wait for one");
     return TRUE;
   }
-
-  if (vtdec->session)
-    gst_vtdec_push_frames_if_needed (vtdec, TRUE, FALSE);
 
   gst_video_info_from_caps (&vtdec->video_info, state->caps);
 
