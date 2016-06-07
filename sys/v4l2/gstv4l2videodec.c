@@ -229,6 +229,7 @@ static gboolean
 gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state)
 {
+  GstV4l2Error error = GST_V4L2_ERROR_INIT;
   gboolean ret = TRUE;
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
 
@@ -245,10 +246,12 @@ gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
     /* FIXME we probably need to do more work if pools are active */
   }
 
-  ret = gst_v4l2_object_set_format (self->v4l2output, state->caps);
+  ret = gst_v4l2_object_set_format (self->v4l2output, state->caps, &error);
 
   if (ret)
     self->input_state = gst_video_codec_state_ref (state);
+  else
+    gst_v4l2_error (self, &error);
 
 done:
   return ret;
@@ -516,6 +519,7 @@ static GstFlowReturn
 gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)
 {
+  GstV4l2Error error = GST_V4L2_ERROR_INIT;
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -527,7 +531,8 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
   if (G_UNLIKELY (!GST_V4L2_IS_ACTIVE (self->v4l2output))) {
     if (!self->input_state)
       goto not_negotiated;
-    if (!gst_v4l2_object_set_format (self->v4l2output, self->input_state->caps))
+    if (!gst_v4l2_object_set_format (self->v4l2output, self->input_state->caps,
+          &error))
       goto not_negotiated;
   }
 
@@ -615,8 +620,10 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     GST_DEBUG_OBJECT (self, "Chosen decoded caps: %" GST_PTR_FORMAT, caps);
 
     /* Try to set negotiated format, on success replace acquired format */
-    if (gst_v4l2_object_set_format (self->v4l2capture, caps))
+    if (gst_v4l2_object_set_format (self->v4l2capture, caps, &error))
       gst_video_info_from_caps (&info, caps);
+    else
+      gst_v4l2_clear_error (&error);
     gst_caps_unref (caps);
 
     output_state = gst_video_decoder_set_output_state (decoder,
@@ -686,6 +693,7 @@ not_negotiated:
   {
     GST_ERROR_OBJECT (self, "not negotiated");
     ret = GST_FLOW_NOT_NEGOTIATED;
+    gst_v4l2_error (self, &error);
     goto drop;
   }
 activate_failed:
