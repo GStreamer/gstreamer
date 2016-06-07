@@ -3198,7 +3198,25 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
     goto done;
   }
 
+  /* Is buffer too late (QoS) ? */
+  if (GST_CLOCK_TIME_IS_VALID (priv->earliest_time)
+      && GST_CLOCK_TIME_IS_VALID (cstart)) {
+    GstClockTime deadline =
+        gst_segment_to_running_time (segment, GST_FORMAT_TIME, cstart);
+    if (GST_CLOCK_TIME_IS_VALID (deadline) && deadline < priv->earliest_time) {
+      GST_DEBUG_OBJECT (decoder,
+          "Dropping frame due to QoS. start:%" GST_TIME_FORMAT " deadline:%"
+          GST_TIME_FORMAT " earliest_time:%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (start), GST_TIME_ARGS (deadline),
+          GST_TIME_ARGS (priv->earliest_time));
+      gst_buffer_unref (buf);
+      priv->discont = TRUE;
+      goto done;
+    }
+  }
+
   /* Set DISCONT flag here ! */
+
   if (priv->discont) {
     GST_DEBUG_OBJECT (decoder, "Setting discont on output buffer");
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
