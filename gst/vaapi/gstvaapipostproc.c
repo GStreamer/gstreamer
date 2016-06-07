@@ -1024,13 +1024,16 @@ static GstCaps *
 gst_vaapipostproc_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
+  GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
   GstCaps *out_caps;
 
   GST_DEBUG_OBJECT (trans,
       "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
+  g_mutex_lock (&postproc->postproc_lock);
   caps = gst_vaapipostproc_transform_caps_impl (trans, direction, caps);
+  g_mutex_unlock (&postproc->postproc_lock);
   if (caps && filter) {
     out_caps = gst_caps_intersect_full (caps, filter, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (caps);
@@ -1059,8 +1062,10 @@ gst_vaapipostproc_fixate_caps (GstBaseTransform * trans,
     goto done;
   }
 
+  g_mutex_lock (&postproc->postproc_lock);
   if ((outcaps = gst_vaapipostproc_fixate_srccaps (postproc, caps, othercaps)))
     gst_caps_replace (&othercaps, outcaps);
+  g_mutex_unlock (&postproc->postproc_lock);
 
 done:
   GST_DEBUG_OBJECT (trans, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
@@ -1178,36 +1183,43 @@ gst_vaapipostproc_set_caps (GstBaseTransform * trans, GstCaps * caps,
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
   gboolean caps_changed = FALSE;
   GstVideoInfo vinfo;
+  gboolean ret = FALSE;
 
+  g_mutex_lock (&postproc->postproc_lock);
   if (!gst_vaapipostproc_update_sink_caps (postproc, caps, &caps_changed))
-    return FALSE;
+    goto done;
   /* HACK: This is a workaround to deal with the va-intel-driver for non-native
    * formats while doing advanced deinterlacing. The format of reference surfaces must
    * be same as the format used by the driver internally for motion adaptive
    * deinterlacing and motion compensated deinterlacing */
   if (!gst_video_info_from_caps (&vinfo, caps))
-    return FALSE;
+    goto done;
   if (deint_method_is_advanced (postproc->deinterlace_method)
       && !is_native_video_format (GST_VIDEO_INFO_FORMAT (&vinfo))) {
     GST_WARNING_OBJECT (postproc,
         "Advanced deinterlacing requires the native video formats used by the driver internally");
-    return FALSE;
+    goto done;
   }
   if (!gst_vaapipostproc_update_src_caps (postproc, out_caps, &caps_changed))
-    return FALSE;
+    goto done;
 
   if (caps_changed) {
     gst_vaapipostproc_destroy (postproc);
     if (!gst_vaapipostproc_create (postproc))
-      return FALSE;
+      goto done;
     if (!gst_vaapi_plugin_base_set_caps (GST_VAAPI_PLUGIN_BASE (trans),
             caps, out_caps))
-      return FALSE;
+      goto done;
   }
 
   if (!ensure_srcpad_buffer_pool (postproc, out_caps))
-    return FALSE;
-  return TRUE;
+    goto done;
+
+  ret = TRUE;
+
+done:
+  g_mutex_unlock (&postproc->postproc_lock);
+  return ret;
 }
 
 static gboolean
@@ -1285,6 +1297,7 @@ gst_vaapipostproc_finalize (GObject * object)
 
   gst_vaapipostproc_destroy (postproc);
 
+  g_mutex_clear (&postproc->postproc_lock);
   gst_vaapi_plugin_base_finalize (GST_VAAPI_PLUGIN_BASE (postproc));
   G_OBJECT_CLASS (gst_vaapipostproc_parent_class)->finalize (object);
 }
@@ -1295,6 +1308,7 @@ gst_vaapipostproc_set_property (GObject * object,
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (object);
 
+  g_mutex_lock (&postproc->postproc_lock);
   switch (prop_id) {
     case PROP_FORMAT:
       postproc->format = g_value_get_enum (value);
@@ -1350,6 +1364,7 @@ gst_vaapipostproc_set_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  g_mutex_unlock (&postproc->postproc_lock);
 }
 
 static void
@@ -1358,6 +1373,7 @@ gst_vaapipostproc_get_property (GObject * object,
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (object);
 
+  g_mutex_lock (&postproc->postproc_lock);
   switch (prop_id) {
     case PROP_FORMAT:
       g_value_set_enum (value, postproc->format);
@@ -1405,6 +1421,7 @@ gst_vaapipostproc_get_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  g_mutex_unlock (&postproc->postproc_lock);
 }
 
 static void
@@ -1675,6 +1692,7 @@ gst_vaapipostproc_init (GstVaapiPostproc * postproc)
   gst_vaapi_plugin_base_init (GST_VAAPI_PLUGIN_BASE (postproc),
       GST_CAT_DEFAULT);
 
+  g_mutex_init (&postproc->postproc_lock);
   postproc->format = DEFAULT_FORMAT;
   postproc->deinterlace_mode = DEFAULT_DEINTERLACE_MODE;
   postproc->deinterlace_method = DEFAULT_DEINTERLACE_METHOD;

@@ -134,6 +134,7 @@ struct _GstVaapiPostproc
   /*< private >*/
   GstVaapiPluginBase parent_instance;
 
+  GMutex postproc_lock;
   GstVaapiFilter *filter;
   GPtrArray *filter_ops;
   GstVaapiVideoPool *filter_pool;
