@@ -1887,10 +1887,11 @@ gst_v4l2_object_get_interlace_mode (enum v4l2_field field,
 }
 
 static gboolean
-gst_v4l2_object_get_colorspace(struct v4l2_format * fmt,
+gst_v4l2_object_get_colorspace (struct v4l2_format *fmt,
     GstVideoColorimetry * cinfo)
 {
-  gboolean is_rgb = gst_v4l2_object_v4l2fourcc_is_rgb (fmt->fmt.pix.pixelformat);
+  gboolean is_rgb =
+      gst_v4l2_object_v4l2fourcc_is_rgb (fmt->fmt.pix.pixelformat);
   enum v4l2_colorspace colorspace;
   enum v4l2_quantization range;
   enum v4l2_ycbcr_encoding matrix;
@@ -2210,7 +2211,7 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
   /* step 1: get device default colorspace and insert it first as
    * it should be the preferred one */
   if (gst_v4l2_object_try_fmt (v4l2object, &fmt) == 0) {
-    if (gst_v4l2_object_get_colorspace(&fmt, &cinfo))
+    if (gst_v4l2_object_get_colorspace (&fmt, &cinfo))
       gst_v4l2_object_fill_colorimetry_list (&list, &cinfo);
   }
 
@@ -2238,7 +2239,7 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
         colorspace = fmt.fmt.pix.colorspace;
 
       if (colorspace == req_cspace) {
-        if (gst_v4l2_object_get_colorspace(&fmt, &cinfo))
+        if (gst_v4l2_object_get_colorspace (&fmt, &cinfo))
           gst_v4l2_object_fill_colorimetry_list (&list, &cinfo);
       }
     }
