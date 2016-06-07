@@ -164,3 +164,38 @@ gst_v4l2_iterator_free (GstV4l2Iterator * _it)
 }
 
 #endif
+
+void
+gst_v4l2_clear_error (GstV4l2Error * v4l2err)
+{
+  if (v4l2err) {
+    g_clear_error (&v4l2err->error);
+    g_free (v4l2err->dbg_message);
+  }
+}
+
+void
+gst_v4l2_error (gpointer element, GstV4l2Error * v4l2err)
+{
+  GError *error;
+
+  if (!v4l2err || !v4l2err->error)
+    return;
+
+  error = v4l2err->error;
+
+  if (error->message)
+    GST_WARNING_OBJECT (element, "error: %s", error->message);
+
+  if (v4l2err->dbg_message)
+    GST_WARNING_OBJECT (element, "error: %s", v4l2err->dbg_message);
+
+  gst_element_message_full (GST_ELEMENT (element), GST_MESSAGE_ERROR,
+      error->domain, error->code, error->message, v4l2err->dbg_message,
+      v4l2err->file, v4l2err->func, v4l2err->line);
+
+  error->message = NULL;
+  v4l2err->dbg_message = NULL;
+
+  gst_v4l2_clear_error (v4l2err);
+}
