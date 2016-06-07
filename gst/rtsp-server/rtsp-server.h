@@ -77,7 +77,7 @@ struct _GstRTSPServer {
  *          object that handles the new connection on @socket. The default
  *          implementation will create a GstRTSPClient and will configure the
  *          mount-points, auth, session-pool and thread-pool on the client.
- * @client_connected: emited when a new client connected.
+ * @client_connected: emitted when a new client connected.
  *
  * The RTSP server class structure
  */

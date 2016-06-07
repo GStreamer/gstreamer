@@ -74,8 +74,8 @@ struct _GstRTSPMediaFactory {
  *       add the #GstRTSPMedia's element created by @construct to the pipeline.
  * @configure: configure the media created with @construct. The default
  *       implementation will configure the 'shared' property of the media.
- * @media_constructed: signal emited when a media was constructed
- * @media_configure: signal emited when a media should be configured
+ * @media_constructed: signal emitted when a media was constructed
+ * @media_configure: signal emitted when a media should be configured
  *
  * The #GstRTSPMediaFactory class structure.
  */
