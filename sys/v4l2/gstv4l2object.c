@@ -3025,7 +3025,7 @@ gst_v4l2_object_extrapolate_stride (const GstVideoFormatInfo * finfo,
 
 static gboolean
 gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
-    gboolean try_only)
+    gboolean try_only, GstV4l2Error * error)
 {
   gint fd = v4l2object->video_fd;
   struct v4l2_format format;
@@ -3433,7 +3433,7 @@ invalid_caps:
 try_fmt_failed:
   {
     if (errno == EBUSY) {
-      GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, BUSY,
+      GST_V4L2_ERROR (error, RESOURCE, BUSY,
           (_("Device '%s' is busy"), v4l2object->videodev),
           ("Call to TRY_FMT failed for %" GST_FOURCC_FORMAT " @ %dx%d: %s",
               GST_FOURCC_ARGS (pixelformat), width, height,
@@ -3444,13 +3444,13 @@ try_fmt_failed:
 set_fmt_failed:
   {
     if (errno == EBUSY) {
-      GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, BUSY,
+      GST_V4L2_ERROR (error, RESOURCE, BUSY,
           (_("Device '%s' is busy"), v4l2object->videodev),
           ("Call to S_FMT failed for %" GST_FOURCC_FORMAT " @ %dx%d: %s",
               GST_FOURCC_ARGS (pixelformat), width, height,
               g_strerror (errno)));
     } else {
-      GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+      GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
           (_("Device '%s' cannot capture at %dx%d"),
               v4l2object->videodev, width, height),
           ("Call to S_FMT failed for %" GST_FOURCC_FORMAT " @ %dx%d: %s",
@@ -3462,7 +3462,7 @@ set_fmt_failed:
 invalid_dimensions:
   {
     if (!try_only) {
-      GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+      GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
           (_("Device '%s' cannot capture at %dx%d"),
               v4l2object->videodev, width, height),
           ("Tried to capture at %dx%d, but device returned size %dx%d",
@@ -3473,7 +3473,7 @@ invalid_dimensions:
 invalid_pixelformat:
   {
     if (!try_only) {
-      GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+      GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
           (_("Device '%s' cannot capture in the specified format"),
               v4l2object->videodev),
           ("Tried to capture in %" GST_FOURCC_FORMAT
@@ -3486,7 +3486,7 @@ invalid_pixelformat:
 invalid_planes:
   {
     if (!try_only) {
-      GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+      GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
           (_("Device '%s' does support non-contiguous planes"),
               v4l2object->videodev),
           ("Device wants %d planes", format.fmt.pix_mp.num_planes));
@@ -3497,7 +3497,7 @@ get_parm_failed:
   {
     /* it's possible that this call is not supported */
     if (errno != EINVAL && errno != ENOTTY) {
-      GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
+      GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
           (_("Could not get parameters on device '%s'"),
               v4l2object->videodev), GST_ERROR_SYSTEM);
     }
@@ -3505,7 +3505,7 @@ get_parm_failed:
   }
 set_parm_failed:
   {
-    GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
+    GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
         (_("Video device did not accept new frame rate setting.")),
         GST_ERROR_SYSTEM);
     goto done;
@@ -3518,15 +3518,17 @@ pool_failed:
 }
 
 gboolean
-gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
+gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps,
+    GstV4l2Error * error)
 {
-  return gst_v4l2_object_set_format_full (v4l2object, caps, FALSE);
+  return gst_v4l2_object_set_format_full (v4l2object, caps, FALSE, error);
 }
 
 gboolean
-gst_v4l2_object_try_format (GstV4l2Object * v4l2object, GstCaps * caps)
+gst_v4l2_object_try_format (GstV4l2Object * v4l2object, GstCaps * caps,
+    GstV4l2Error * error)
 {
-  return gst_v4l2_object_set_format_full (v4l2object, caps, TRUE);
+  return gst_v4l2_object_set_format_full (v4l2object, caps, TRUE, error);
 }
 
 /**

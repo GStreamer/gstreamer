@@ -493,6 +493,7 @@ gst_v4l2sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 static gboolean
 gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
+  GstV4l2Error error = GST_V4L2_ERROR_INIT;
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
   GstV4l2Object *obj = v4l2sink->v4l2object;
 
@@ -510,7 +511,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_v4l2_object_stop (obj))
     goto stop_failed;
 
-  if (!gst_v4l2_object_set_format (obj, caps))
+  if (!gst_v4l2_object_set_format (obj, caps, &error))
     goto invalid_format;
 
   gst_v4l2sink_sync_overlay_fields (v4l2sink);
@@ -538,6 +539,7 @@ stop_failed:
 invalid_format:
   {
     /* error already posted */
+    gst_v4l2_error (v4l2sink, &error);
     GST_DEBUG_OBJECT (v4l2sink, "can't set format");
     return FALSE;
   }

@@ -195,6 +195,7 @@ static gboolean
 gst_v4l2_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
+  GstV4l2Error error = GST_V4L2_ERROR_INIT;
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (trans);
 
   if (self->incaps && self->outcaps) {
@@ -212,10 +213,10 @@ gst_v4l2_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   gst_caps_replace (&self->incaps, incaps);
   gst_caps_replace (&self->outcaps, outcaps);
 
-  if (!gst_v4l2_object_set_format (self->v4l2output, incaps))
+  if (!gst_v4l2_object_set_format (self->v4l2output, incaps, &error))
     goto incaps_failed;
 
-  if (!gst_v4l2_object_set_format (self->v4l2capture, outcaps))
+  if (!gst_v4l2_object_set_format (self->v4l2capture, outcaps, &error))
     goto outcaps_failed;
 
   /* FIXME implement fallback if crop not supported */
@@ -231,6 +232,7 @@ incaps_failed:
   {
     GST_ERROR_OBJECT (self, "failed to set input caps: %" GST_PTR_FORMAT,
         incaps);
+    gst_v4l2_error (self, &error);
     goto failed;
   }
 outcaps_failed:
@@ -238,6 +240,7 @@ outcaps_failed:
     gst_v4l2_object_stop (self->v4l2output);
     GST_ERROR_OBJECT (self, "failed to set output caps: %" GST_PTR_FORMAT,
         outcaps);
+    gst_v4l2_error (self, &error);
     goto failed;
   }
 failed:

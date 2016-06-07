@@ -425,6 +425,7 @@ gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter)
 static gboolean
 gst_v4l2src_set_format (GstV4l2Src * v4l2src, GstCaps * caps)
 {
+  GstV4l2Error error = GST_V4L2_ERROR_INIT;
   GstV4l2Object *obj;
 
   obj = v4l2src->v4l2object;
@@ -432,9 +433,10 @@ gst_v4l2src_set_format (GstV4l2Src * v4l2src, GstCaps * caps)
   g_signal_emit (v4l2src, gst_v4l2_signals[SIGNAL_PRE_SET_FORMAT], 0,
       v4l2src->v4l2object->video_fd, caps);
 
-  if (!gst_v4l2_object_set_format (obj, caps))
-    /* error already posted */
+  if (!gst_v4l2_object_set_format (obj, caps, &error)) {
+    gst_v4l2_error (v4l2src, &error);
     return FALSE;
+  }
 
   return TRUE;
 }
@@ -453,17 +455,20 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
     return TRUE;
 
   if (GST_V4L2_IS_ACTIVE (obj)) {
+    GstV4l2Error error = GST_V4L2_ERROR_INIT;
     /* Just check if the format is acceptable, once we know
      * no buffers should be outstanding we try S_FMT.
      *
      * Basesrc will do an allocation query that
      * should indirectly reclaim buffers, after that we can
      * set the format and then configure our pool */
-    if (gst_v4l2_object_try_format (obj, caps)) {
+    if (gst_v4l2_object_try_format (obj, caps, &error)) {
       v4l2src->renegotiation_adjust = v4l2src->offset + 1;
       v4l2src->pending_set_fmt = TRUE;
-    } else
+    } else {
+      gst_v4l2_error (v4l2src, &error);
       return FALSE;
+    }
   } else {
     /* make sure we stop capturing and dealloc buffers */
     if (!gst_v4l2_object_stop (obj))
