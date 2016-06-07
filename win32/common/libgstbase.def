@@ -4,22 +4,25 @@ EXPORTS
 	gst_adapter_clear
 	gst_adapter_copy
 	gst_adapter_copy_bytes
+	gst_adapter_distance_from_discont
+	gst_adapter_dts_at_discont
 	gst_adapter_flush
 	gst_adapter_get_buffer
 	gst_adapter_get_buffer_fast
 	gst_adapter_get_buffer_list
 	gst_adapter_get_list
-	gst_adapter_get_offset_from_discont
 	gst_adapter_get_type
 	gst_adapter_map
 	gst_adapter_masked_scan_uint32
 	gst_adapter_masked_scan_uint32_peek
 	gst_adapter_new
+	gst_adapter_offset_at_discont
 	gst_adapter_prev_dts
 	gst_adapter_prev_dts_at_offset
 	gst_adapter_prev_offset
 	gst_adapter_prev_pts
 	gst_adapter_prev_pts_at_offset
+	gst_adapter_pts_at_discont
 	gst_adapter_push
 	gst_adapter_take
 	gst_adapter_take_buffer
