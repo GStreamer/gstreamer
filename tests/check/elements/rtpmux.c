@@ -511,6 +511,51 @@ GST_START_TEST (test_rtpmux_ssrc_property_overrules_downstream)
 }
 GST_END_TEST;
 
+GST_START_TEST (test_rtpmux_ssrc_property_survive_statechange)
+{
+  GstHarness * h = gst_harness_new_with_padnames ("rtpmux", NULL, "src");
+  GstHarness * h0 = gst_harness_new_with_element (
+      h->element, "sink_0", NULL);
+  GstHarness * h1 = gst_harness_new_with_element (
+      h->element, "sink_1", NULL);
+  GstBuffer * buf0;
+  GstBuffer * buf1;
+
+  gst_element_set_state (h->element, GST_STATE_NULL);
+  /* rtpmux ssrc is set to 111111 */
+  g_object_set (h->element, "ssrc", 111111, NULL);
+  gst_element_set_state (h->element, GST_STATE_PLAYING);
+
+  /* upstream ssrc is 222222 and 333333 */
+  gst_harness_set_src_caps_str (h0, "application/x-rtp, ssrc=(uint)222222");
+  gst_harness_set_src_caps_str (h1, "application/x-rtp, ssrc=(uint)333333");
+
+  /* downstream is specifying 444444 as ssrc */
+  gst_harness_set_sink_caps_str (h, "application/x-rtp, ssrc=(uint)444444");
+  gst_harness_set_sink_caps_str (h, "application/x-rtp");
+
+  /* push*/
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h0, generate_test_buffer (0, 222222)));
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h1, generate_test_buffer (0, 333333)));
+
+  buf0 = gst_harness_pull (h);
+  buf1 = gst_harness_pull (h);
+
+  /* we expect the ssrc to be property ssrc */
+  fail_unless_equals_int (111111, _rtp_buffer_get_ssrc (buf0));
+  fail_unless_equals_int (111111, _rtp_buffer_get_ssrc (buf1));
+
+  gst_buffer_unref (buf0);
+  gst_buffer_unref (buf1);
+
+  gst_harness_teardown (h0);
+  gst_harness_teardown (h1);
+  gst_harness_teardown (h);
+}
+GST_END_TEST;
+
 GST_START_TEST (test_rtpmux_ssrc_downstream_dynamic)
 {
   GstHarness *h = gst_harness_new_parse ("rtpmux ! capsfilter");
@@ -586,6 +631,7 @@ rtpmux_suite (void)
 
   tcase_add_test (tc_chain, test_rtpmux_ssrc_downstream_overrules_upstream);
   tcase_add_test (tc_chain, test_rtpmux_ssrc_property_overrules_downstream);
+  tcase_add_test (tc_chain, test_rtpmux_ssrc_property_survive_statechange);
 
   tcase_add_test (tc_chain, test_rtpmux_ssrc_downstream_dynamic);
 
