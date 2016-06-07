@@ -27,16 +27,16 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_DC1394            (gst_dc1394_get_type())
-#define GST_DC1394(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DC1394,GstDc1394))
-#define GST_DC1394_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DC1394,GstDc1394))
-#define GST_IS_DC1394(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DC1394))
-#define GST_IS_DC1394_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DC1394))
+#define GST_TYPE_DC1394_SRC            (gst_dc1394_src_get_type())
+#define GST_DC1394_SRC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DC1394_SRC,GstDC1394Src))
+#define GST_DC1394_SRC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DC1394_SRC,GstDC1394SrcClass))
+#define GST_IS_DC1394_SRC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DC1394_SRC))
+#define GST_IS_DC1394_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DC1394_SRC))
 
-typedef struct _GstDc1394 GstDc1394;
-typedef struct _GstDc1394Class GstDc1394Class;
+typedef struct _GstDC1394Src GstDC1394Src;
+typedef struct _GstDC1394SrcClass GstDC1394SrcClass;
 
-struct _GstDc1394 {
+struct _GstDC1394Src {
   GstPushSrc pushsrc;
 
   GstCaps * caps;
@@ -49,11 +49,11 @@ struct _GstDc1394 {
   dc1394_t * dc1394;
 };
 
-struct _GstDc1394Class {
+struct _GstDC1394SrcClass {
   GstPushSrcClass parent_class;
 };
 
-GType gst_dc1394_get_type (void);
+GType gst_dc1394_src_get_type (void);
 
 G_END_DECLS
 

@@ -2,7 +2,7 @@ plugin_LTLIBRARIES = \
     libgstdc1394.la
 
 libgstdc1394_la_SOURCES = \
-    gstdc1394.c
+    gstdc1394src.c
 libgstdc1394_la_CFLAGS = \
     $(LIBDC1394_CFLAGS) \
     $(GST_PLUGINS_BASE_CFLAGS) \
@@ -19,4 +19,4 @@ libgstdc1394_la_LIBTOOLFLAGS = \
     $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
-    gstdc1394.h
+    gstdc1394src.h
