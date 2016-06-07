@@ -522,6 +522,8 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
   GstV4l2Error error = GST_V4L2_ERROR_INIT;
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
   GstFlowReturn ret = GST_FLOW_OK;
+  gboolean processed = FALSE;
+  GstBuffer *tmp;
 
   GST_DEBUG_OBJECT (self, "Handling frame %d", frame->system_frame_number);
 
@@ -555,8 +557,8 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     if (codec_data) {
       gst_buffer_ref (codec_data);
     } else {
-      codec_data = frame->input_buffer;
-      frame->input_buffer = NULL;
+      codec_data = gst_buffer_ref (frame->input_buffer);
+      processed = TRUE;
     }
 
     /* Ensure input internal pool is active */
@@ -666,7 +668,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
       goto start_task_failed;
   }
 
-  if (frame->input_buffer) {
+  if (!processed) {
     GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
     ret =
         gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (self->v4l2output->
@@ -680,10 +682,15 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     } else if (ret != GST_FLOW_OK) {
       goto process_failed;
     }
-
-    /* No need to keep input arround */
-    gst_buffer_replace (&frame->input_buffer, NULL);
   }
+
+  /* No need to keep input arround */
+  tmp = frame->input_buffer;
+  frame->input_buffer = gst_buffer_new ();
+  gst_buffer_copy_into (frame->input_buffer, tmp,
+      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS |
+      GST_BUFFER_COPY_META, 0, 0);
+  gst_buffer_unref (tmp);
 
   gst_video_codec_frame_unref (frame);
   return ret;
