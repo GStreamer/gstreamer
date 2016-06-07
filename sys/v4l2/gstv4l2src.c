@@ -489,6 +489,34 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     ret = gst_v4l2src_set_format (src, caps);
     gst_caps_unref (caps);
     src->pending_set_fmt = FALSE;
+  } else if (gst_buffer_pool_is_active (src->v4l2object->pool)) {
+    /* Trick basesrc into not deactivating the active pool. Renegotiating here
+     * would otherwise turn off and on the camera. */
+    GstAllocator *allocator;
+    GstAllocationParams params;
+    GstBufferPool *pool;
+
+    gst_base_src_get_allocator (bsrc, &allocator, &params);
+    pool = gst_base_src_get_buffer_pool (bsrc);
+
+    if (gst_query_get_n_allocation_params (query))
+      gst_query_set_nth_allocation_param (query, 0, allocator, &params);
+    else
+      gst_query_add_allocation_param (query, allocator, &params);
+
+    if (gst_query_get_n_allocation_pools (query))
+      gst_query_set_nth_allocation_pool (query, 0, pool,
+          src->v4l2object->info.size, 1, 0);
+    else
+      gst_query_add_allocation_pool (query, pool, src->v4l2object->info.size, 1,
+          0);
+
+    if (pool)
+      gst_object_unref (pool);
+    if (allocator)
+      gst_object_unref (allocator);
+
+    return GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
   }
 
   if (ret) {
