@@ -489,7 +489,7 @@ gst_v4l2_video_dec_loop_stopped (GstV4l2VideoDec * self)
 }
 
 static gboolean
-gst_v4l2_video_remove_padding(GstCapsFeatures * features,
+gst_v4l2_video_remove_padding (GstCapsFeatures * features,
     GstStructure * structure, gpointer user_data)
 {
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (user_data);
@@ -497,10 +497,10 @@ gst_v4l2_video_remove_padding(GstCapsFeatures * features,
   GstVideoInfo *info = &self->v4l2capture->info;
   int width, height;
 
-  if (!gst_structure_get_int(structure, "width", &width))
+  if (!gst_structure_get_int (structure, "width", &width))
     return TRUE;
 
-  if (!gst_structure_get_int(structure, "height", &height))
+  if (!gst_structure_get_int (structure, "height", &height))
     return TRUE;
 
   if (align->padding_left != 0 || align->padding_top != 0 ||
@@ -508,7 +508,7 @@ gst_v4l2_video_remove_padding(GstCapsFeatures * features,
       height != info->height + align->padding_bottom)
     return TRUE;
 
-  gst_structure_set(structure,
+  gst_structure_set (structure,
       "width", G_TYPE_INT, width - align->padding_right,
       "height", G_TYPE_INT, height - align->padding_bottom, NULL);
 
@@ -532,7 +532,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     if (!self->input_state)
       goto not_negotiated;
     if (!gst_v4l2_object_set_format (self->v4l2output, self->input_state->caps,
-          &error))
+            &error))
       goto not_negotiated;
   }
 
