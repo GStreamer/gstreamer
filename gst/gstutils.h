@@ -924,6 +924,8 @@ gboolean                gst_pad_query_convert           (GstPad *pad, GstFormat 
 GstCaps *               gst_pad_query_caps              (GstPad *pad, GstCaps *filter);
 gboolean                gst_pad_query_accept_caps       (GstPad *pad, GstCaps *caps);
 
+gboolean                gst_pad_link_maybe_ghosting      (GstPad            *src,
+                                                          GstPad            *sink);
 gboolean                gst_pad_link_maybe_ghosting_full (GstPad            *src,
                                                           GstPad            *sink,
                                                           GstPadLinkCheck   flags);
