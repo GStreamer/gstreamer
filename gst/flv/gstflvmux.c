@@ -152,6 +152,20 @@ _gst_buffer_new_and_alloc (gsize size, GstBuffer ** buffer, guint8 ** data)
   *buffer = _gst_buffer_new_wrapped (*data, size, g_free);
 }
 
+static GstFlowReturn
+gst_flv_mux_clip_running_time (GstCollectPads * pads,
+    GstCollectData * cdata, GstBuffer * buf, GstBuffer ** outbuf,
+    gpointer user_data)
+{
+  buf = gst_buffer_make_writable (buf);
+
+  if (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buf)))
+    GST_BUFFER_PTS (buf) = GST_BUFFER_DTS (buf);
+
+  return gst_collect_pads_clip_running_time (pads, cdata, buf, outbuf,
+      user_data);
+}
+
 static void
 gst_flv_mux_class_init (GstFlvMuxClass * klass)
 {
@@ -217,7 +231,7 @@ gst_flv_mux_init (GstFlvMux * mux)
   gst_collect_pads_set_event_function (mux->collect,
       GST_DEBUG_FUNCPTR (gst_flv_mux_handle_sink_event), mux);
   gst_collect_pads_set_clip_function (mux->collect,
-      GST_DEBUG_FUNCPTR (gst_collect_pads_clip_running_time), mux);
+      GST_DEBUG_FUNCPTR (gst_flv_mux_clip_running_time), mux);
 
   gst_flv_mux_reset (GST_ELEMENT (mux));
 }
