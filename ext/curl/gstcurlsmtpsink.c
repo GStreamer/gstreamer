@@ -202,21 +202,16 @@ gst_curl_smtp_sink_event (GstBaseSink * bsink, GstEvent * event)
 
       GST_OBJECT_LOCK (sink);
       sink->eos = TRUE;
-      GST_OBJECT_UNLOCK (sink);
-
-      if (sink->base64_chunk != NULL && !sink->final_boundary_added) {
+      if (bcsink->flow_ret == GST_FLOW_OK && sink->base64_chunk != NULL
+          && !sink->final_boundary_added) {
         add_final_boundary_unlocked (sink);
-
         gst_curl_base_sink_transfer_thread_notify_unlocked (bcsink);
-
-        GST_OBJECT_LOCK (sink);
-        if (sink->base64_chunk != NULL && bcsink->flow_ret == GST_FLOW_OK) {
-          gst_curl_smtp_sink_wait_for_transfer_end_unlocked (sink);
-        }
-        GST_OBJECT_UNLOCK (sink);
+        GST_FIXME_OBJECT (sink, "if gstpoll errors in transfer thread, then "
+            "this wait will never timeout because the transfer thread does "
+            "not signal it upon errors");
+        gst_curl_smtp_sink_wait_for_transfer_end_unlocked (sink);
       }
-      gst_curl_base_sink_transfer_thread_close (bcsink);
-
+      GST_OBJECT_UNLOCK (sink);
       break;
 
     default:
