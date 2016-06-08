@@ -41,6 +41,8 @@ static GstFlowReturn gst_vmnc_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static GstFlowReturn gst_vmnc_dec_parse (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos);
+static gboolean gst_vmnc_dec_sink_event (GstVideoDecoder * bdec,
+    GstEvent * event);
 
 #define GST_CAT_DEFAULT vmnc_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -89,6 +91,7 @@ gst_vmnc_dec_class_init (GstVMncDecClass * klass)
   decoder_class->parse = gst_vmnc_dec_parse;
   decoder_class->handle_frame = gst_vmnc_dec_handle_frame;
   decoder_class->set_format = gst_vmnc_dec_set_format;
+  decoder_class->sink_event = gst_vmnc_dec_sink_event;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&vmnc_dec_src_factory));
@@ -851,16 +854,31 @@ gst_vmnc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   /* We require a format descriptor in-stream, so we ignore the info from the
    * container here. We just use the framerate */
 
-  if (decoder->input_segment.format == GST_FORMAT_TIME)
-    gst_video_decoder_set_packetized (decoder, TRUE);
-  else
-    gst_video_decoder_set_packetized (decoder, FALSE);
-
   if (dec->input_state)
     gst_video_codec_state_unref (dec->input_state);
   dec->input_state = gst_video_codec_state_ref (state);
 
   return TRUE;
+}
+
+static gboolean
+gst_vmnc_dec_sink_event (GstVideoDecoder * bdec, GstEvent * event)
+{
+  const GstSegment *segment;
+
+  if (GST_EVENT_TYPE (event) != GST_EVENT_SEGMENT)
+    goto done;
+
+  gst_event_parse_segment (event, &segment);
+
+  if (segment->format == GST_FORMAT_TIME)
+    gst_video_decoder_set_packetized (bdec, TRUE);
+  else
+    gst_video_decoder_set_packetized (bdec, FALSE);
+
+done:
+  return GST_VIDEO_DECODER_CLASS (gst_vmnc_dec_parent_class)->sink_event (bdec,
+      event);
 }
 
 static GstFlowReturn
