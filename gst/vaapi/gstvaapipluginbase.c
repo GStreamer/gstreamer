@@ -495,21 +495,23 @@ set_dmabuf_allocator (GstVaapiPluginBase * plugin, GstBufferPool * pool,
   GstStructure *config;
   GstAllocator *allocator;
   GstVideoInfo vi;
-  gboolean ret;
 
   if (!gst_video_info_from_caps (&vi, caps))
     return FALSE;
-  config = gst_buffer_pool_get_config (pool);
   allocator = gst_vaapi_dmabuf_allocator_new (plugin->display, &vi,
       GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE);
   if (!allocator)
     return FALSE;
+
+  config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_allocator (config, allocator, NULL);
-  ret = gst_buffer_pool_set_config (pool, config);
+  if (!gst_buffer_pool_set_config (pool, config))
+    return FALSE;
+
   if (plugin->sinkpad_allocator)
     gst_object_unref (plugin->sinkpad_allocator);
   plugin->sinkpad_allocator = allocator;
-  return ret;
+  return TRUE;
 }
 
 static gboolean
