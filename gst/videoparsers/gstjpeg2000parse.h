@@ -48,19 +48,22 @@ struct _GstJPEG2000Parse
 {
   GstBaseParse baseparse;
 
+
   guint width;
   guint height;
 
-  guint8 dx[GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS];
-  guint8 dy[GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS];       /* subsampling factors */
+  const gchar *sampling;
+  const gchar *colorspace;
 
-  GstRtpSampling sampling;
 };
 
 struct _GstJPEG2000ParseClass
 {
   GstBaseParseClass parent_class;
+
+
 };
+
 
 G_END_DECLS
 #endif

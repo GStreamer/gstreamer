@@ -25,6 +25,50 @@
 #include "gstjpeg2000parse.h"
 #include <gst/base/base.h>
 
+
+/* convenience methods */
+static gboolean
+gst_jpeg2000_parse_is_rgb (const gchar * sampling)
+{
+  return (!g_strcmp0 (sampling, GST_RTP_J2K_RGB) ||
+      !g_strcmp0 (sampling, GST_RTP_J2K_RGBA) ||
+      !g_strcmp0 (sampling, GST_RTP_J2K_BGR) ||
+      !g_strcmp0 (sampling, GST_RTP_J2K_BGRA));
+}
+
+static gboolean
+gst_jpeg2000_parse_is_yuv (const gchar * sampling)
+{
+  return (!g_strcmp0 (sampling, GST_RTP_J2K_YBRA) ||
+      !g_strcmp0 (sampling, GST_RTP_J2K_YBR444) ||
+      !g_strcmp0 (sampling, GST_RTP_J2K_YBR422) ||
+      !g_strcmp0 (sampling, GST_RTP_J2K_YBR420) ||
+      !g_strcmp0 (sampling, GST_RTP_J2K_YBR410));
+}
+
+static gboolean
+gst_jpeg2000_parse_is_mono (const gchar * sampling)
+{
+  return !g_strcmp0 (sampling, GST_RTP_J2K_GRAYSCALE);
+}
+
+static void
+gst_jpeg2000_parse_get_subsampling (const gchar * sampling, guint8 * dx,
+    guint8 * dy)
+{
+  *dx = 1;
+  *dy = 1;
+  if (!g_strcmp0 (sampling, GST_RTP_J2K_YBR422)) {
+    *dx = 2;
+  } else if (!g_strcmp0 (sampling, GST_RTP_J2K_YBR420)) {
+    *dx = 2;
+    *dy = 2;
+  } else if (!g_strcmp0 (sampling, GST_RTP_J2K_YBR410)) {
+    *dx = 4;
+    *dy = 2;
+  }
+}
+
 /* SOC marker plus minimum size of SIZ marker */
 #define GST_JPEG2000_PARSE_MIN_FRAME_SIZE (4+36)
 #define GST_JPEG2000_PARSE_J2K_MAGIC 0xFF4FFF51
@@ -38,14 +82,17 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/x-jpc,"
         " width = (int)[1, MAX], height = (int)[1, MAX],"
-        "colorspace = (string) { sRGB, sYUV, GRAY }," "parsed = (boolean) true")
+        GST_RTP_J2K_SAMPLING_LIST ","
+        "colorspace = (string) { sRGB, sYUV, GRAY }, "
+        " parsed = (boolean) true")
     );
 
 static GstStaticPadTemplate sinktemplate =
-GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
+    GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/x-jpc,"
-        "colorspace = (string) { sRGB, sYUV, GRAY }")
+        GST_RTP_J2K_SAMPLING_LIST ";"
+        "image/x-jpc, " "colorspace = (string) { sRGB, sYUV, GRAY }")
     );
 
 #define parent_class gst_jpeg2000_parse_parent_class
@@ -79,31 +126,27 @@ gst_jpeg2000_parse_class_init (GstJPEG2000ParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_jpeg2000_parse_handle_frame);
 }
 
-static void
-gst_jpeg2000_parse_init (GstJPEG2000Parse * jpeg2000parse)
-{
-  GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (jpeg2000parse));
-  GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (jpeg2000parse));
-}
-
 static gboolean
 gst_jpeg2000_parse_start (GstBaseParse * parse)
 {
   GstJPEG2000Parse *jpeg2000parse = GST_JPEG2000_PARSE (parse);
-  guint i;
   GST_DEBUG_OBJECT (jpeg2000parse, "start");
   gst_base_parse_set_min_frame_size (parse, GST_JPEG2000_PARSE_MIN_FRAME_SIZE);
 
   jpeg2000parse->width = 0;
   jpeg2000parse->height = 0;
 
-  for (i = 0; i < GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS; ++i) {
-    jpeg2000parse->dx[i] = 0;
-    jpeg2000parse->dy[i] = 0;
-  }
-
-  jpeg2000parse->sampling = GST_RTP_SAMPLING_NONE;
+  jpeg2000parse->sampling = NULL;
+  jpeg2000parse->colorspace = NULL;
   return TRUE;
+}
+
+
+static void
+gst_jpeg2000_parse_init (GstJPEG2000Parse * jpeg2000parse)
+{
+  GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (jpeg2000parse));
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (jpeg2000parse));
 }
 
 static gboolean
@@ -135,16 +178,16 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   GstStructure *current_caps_struct = NULL;
   const gchar *colorspace = NULL;
   guint x0, y0, x1, y1;
-  guint width, height;
-  gboolean dimensions_changed = FALSE;
+  guint width = 0, height = 0;
   guint8 dx[GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS];
-  guint8 dy[GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS];       /* sub-sampling factors */
-  gboolean subsampling_changed = FALSE;
+  guint8 dy[GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS];
   guint16 numcomps;
   guint16 compno;
-  const char *sampling = NULL;
-  GstRtpSampling samplingEnum = GST_RTP_SAMPLING_NONE;
+  const char *parsed_sampling = NULL;
+  const char *sink_sampling = NULL;
+  const char *source_sampling = NULL;
   guint magic_offset = 0;
+  GstCaps *src_caps = NULL;
 
   if (!gst_buffer_map (frame->buffer, &map, GST_MAP_READ)) {
     GST_ERROR_OBJECT (jpeg2000parse, "Unable to map buffer");
@@ -210,7 +253,7 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   if (!gst_byte_reader_get_uint16_be (&reader, &numcomps))
     goto beach;
 
-  if (numcomps > GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS) {
+  if (numcomps == 2 || numcomps > GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS) {
     GST_ELEMENT_ERROR (jpeg2000parse, STREAM, DECODE, NULL,
         ("Unsupported number of components %d", numcomps));
     ret = GST_FLOW_NOT_NEGOTIATED;
@@ -231,13 +274,8 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     goto beach;
   }
 
-  /* colorspace is a required field */
   colorspace = gst_structure_get_string (current_caps_struct, "colorspace");
-  if (!colorspace) {
-    GST_ERROR_OBJECT (jpeg2000parse, "Missing color space");
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    goto beach;
-  }
+  sink_sampling = gst_structure_get_string (current_caps_struct, "sampling");
 
   for (compno = 0; compno < numcomps; ++compno) {
 
@@ -254,106 +292,119 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     GST_DEBUG_OBJECT (jpeg2000parse,
         "Parsed sub-sampling %d,%d for component %d", dx[compno], dy[compno],
         compno);
-
   }
 
-  /* now we can set the dimensions and sub-sampling */
-  if (width != jpeg2000parse->width || height != jpeg2000parse->height) {
-    dimensions_changed = TRUE;
+
+  /*** sanity check on sub-sampling *****/
+  if (dx[0] != 1 || dy[0] != 1) {
+    GST_WARNING_OBJECT (jpeg2000parse, "Sub-sampled luma channel");
   }
-  jpeg2000parse->width = width;
-  jpeg2000parse->height = height;
-
-  for (compno = 0; compno < numcomps; ++compno) {
-    if (dx[compno] != jpeg2000parse->dx[compno]
-        || dy[compno] != jpeg2000parse->dy[compno]) {
-      subsampling_changed = TRUE;
-    }
-    jpeg2000parse->dx[compno] = dx[compno];
-    jpeg2000parse->dx[compno] = dy[compno];
-  }
-
-  /* we do not set sampling field for sub-sampled RGB or monochrome */
-  for (compno = 0; compno < numcomps; ++compno) {
-    if (strcmp (colorspace, "sYUV") && (dx[compno] > 1 || dy[compno] > 1)) {
-      GST_WARNING_OBJECT (jpeg2000parse,
-          "Unable to set sampling field for sub-sampled RGB or monochrome color spaces");
-      goto set_caps;
-    }
-
-  }
-
-  /* sanity check on sub-sampling */
   if (dx[1] != dx[2] || dy[1] != dy[2]) {
     GST_WARNING_OBJECT (jpeg2000parse,
-        "Unable to set sampling field because chroma channel sub-sampling factors are not equal");
-    goto set_caps;
+        "Chroma channel sub-sampling factors are not equal");
   }
-
-  if (!strcmp (colorspace, "sYUV")) {
-    /* reject sub-sampled YUVA image */
-    if (numcomps == 4) {
-      guint i;
-      for (i = 0; i < 4; ++i) {
-        if (dx[i] > 1 || dy[i] > 1) {
-          GST_WARNING_OBJECT (jpeg2000parse,
-              "Unable to set sampling field for sub-sampled YUVA images");
-          goto set_caps;
+  for (compno = 0; compno < numcomps; ++compno) {
+    if (colorspace && g_strcmp0 (colorspace, "sYUV") && (dx[compno] > 1
+            || dy[compno] > 1)) {
+      GST_WARNING_OBJECT (jpeg2000parse,
+          "Sub-sampled RGB or monochrome color spaces");
+    }
+    if (sink_sampling) {
+      guint8 dx_caps, dy_caps;
+      gst_jpeg2000_parse_get_subsampling (sink_sampling, &dx_caps, &dy_caps);
+      if (dx_caps != dx[compno] || dy_caps != dy[compno]) {
+        const gchar *inferred_colorspace = NULL;
+        GST_WARNING_OBJECT (jpeg2000parse,
+            "Sink caps sub-sampling %d,%d for channel %d does not match stream sub-sampling %d,%d",
+            dx_caps, dy_caps, compno, dx[compno], dy[compno]);
+        /* try to guess correct color space */
+        if (gst_jpeg2000_parse_is_mono (sink_sampling))
+          inferred_colorspace = "GRAY";
+        else if (gst_jpeg2000_parse_is_rgb (sink_sampling))
+          inferred_colorspace = "sRGB";
+        else if (gst_jpeg2000_parse_is_yuv (sink_sampling))
+          inferred_colorspace = "sYUV";
+        else if (colorspace)
+          inferred_colorspace = colorspace;
+        if (inferred_colorspace) {
+          sink_sampling = NULL;
+          colorspace = inferred_colorspace;
+          break;
+        } else {
+          /* unrecognized sink_sampling and no colorspace */
+          GST_ERROR_OBJECT (jpeg2000parse,
+              "Unrecognized sink sampling field and no sink colorspace field");
+          ret = GST_FLOW_NOT_NEGOTIATED;
+          goto beach;
         }
       }
-
-      sampling = GST_RTP_J2K_YBRA;
-      samplingEnum = GST_RTP_SAMPLING_YBRA;
-
-    } else if (numcomps == 3) {
-      /* use sub-sampling from U chroma channel */
-      if (dx[1] == 1 && dy[1] == 1) {
-        sampling = GST_RTP_J2K_YBR444;
-        samplingEnum = GST_RTP_SAMPLING_YBR444;
-      } else if (dx[1] == 2 && dy[1] == 2) {
-        sampling = GST_RTP_J2K_YBR420;
-        samplingEnum = GST_RTP_SAMPLING_YBR420;
-      } else if (dx[1] == 4 && dy[1] == 2) {
-        sampling = GST_RTP_J2K_YBR410;
-        samplingEnum = GST_RTP_SAMPLING_YBR410;
-      } else if (dx[1] == 2 && dy[1] == 1) {
-        sampling = GST_RTP_J2K_YBR422;
-        samplingEnum = GST_RTP_SAMPLING_YBR422;
-      } else {
-        GST_WARNING_OBJECT (jpeg2000parse,
-            "Unable to set sampling field for sub-sampling factors %d,%d",
-            dx[1], dy[1]);
-        goto set_caps;
-      }
     }
-  } else if (!strcmp (colorspace, "GRAY")) {
-    sampling = GST_RTP_J2K_GRAYSCALE;
-    samplingEnum = GST_RTP_SAMPLING_GRAYSCALE;
-  } else {
-    if (numcomps == 4) {
-      sampling = GST_RTP_J2K_RGBA;
-      samplingEnum = GST_RTP_SAMPLING_RGBA;
+  }
+  /*************************************/
+
+  /* if colorspace is present, we can work out the parsed_sampling field */
+  if (colorspace) {
+    if (!g_strcmp0 (colorspace, "sYUV")) {
+      if (numcomps == 4) {
+        guint i;
+        parsed_sampling = GST_RTP_J2K_YBRA;
+        for (i = 0; i < 4; ++i) {
+          if (dx[i] > 1 || dy[i] > 1) {
+            GST_WARNING_OBJECT (jpeg2000parse, "Sub-sampled YUVA images");
+          }
+        }
+      } else if (numcomps == 3) {
+        /* use sub-sampling from U chroma channel */
+        if (dx[1] == 1 && dy[1] == 1) {
+          parsed_sampling = GST_RTP_J2K_YBR444;
+        } else if (dx[1] == 2 && dy[1] == 2) {
+          parsed_sampling = GST_RTP_J2K_YBR420;
+        } else if (dx[1] == 4 && dy[1] == 2) {
+          parsed_sampling = GST_RTP_J2K_YBR410;
+        } else if (dx[1] == 2 && dy[1] == 1) {
+          parsed_sampling = GST_RTP_J2K_YBR422;
+        } else {
+          GST_WARNING_OBJECT (jpeg2000parse,
+              "Unsupported sub-sampling factors %d,%d", dx[1], dy[1]);
+          /* best effort */
+          parsed_sampling = GST_RTP_J2K_YBR444;
+        }
+      }
+    } else if (!g_strcmp0 (colorspace, "GRAY")) {
+      parsed_sampling = GST_RTP_J2K_GRAYSCALE;
     } else {
-      sampling = GST_RTP_J2K_RGB;
-      samplingEnum = GST_RTP_SAMPLING_RGB;
+      parsed_sampling = (numcomps == 4) ? GST_RTP_J2K_RGBA : GST_RTP_J2K_RGB;
+    }
+  } else {
+    if (gst_jpeg2000_parse_is_mono (sink_sampling)) {
+      colorspace = "GRAY";
+    } else if (gst_jpeg2000_parse_is_rgb (sink_sampling)) {
+      colorspace = "sRGB";
+    } else {
+      /* best effort */
+      colorspace = "sYUV";
     }
   }
 
-set_caps:
+  source_sampling = sink_sampling ? sink_sampling : parsed_sampling;
 
-  if (dimensions_changed || subsampling_changed) {
-    GstCaps *src_caps = NULL;
-    gint fr_num, fr_denom;
+  /* now we can set the source caps, if something has changed */
+  if (width != jpeg2000parse->width ||
+      height != jpeg2000parse->height ||
+      g_strcmp0 (jpeg2000parse->sampling, source_sampling) ||
+      g_strcmp0 (jpeg2000parse->colorspace, colorspace)) {
+    gint fr_num = 0, fr_denom = 0;
+
+    jpeg2000parse->width = width;
+    jpeg2000parse->height = height;
+    jpeg2000parse->sampling = source_sampling;
+    jpeg2000parse->colorspace = colorspace;
 
     src_caps =
         gst_caps_new_simple (gst_structure_get_name (current_caps_struct),
-        "width", G_TYPE_INT, jpeg2000parse->width, "height", G_TYPE_INT,
-        jpeg2000parse->height, "colorspace", G_TYPE_STRING, colorspace, NULL);
-
-
-    if (sampling) {
-      gst_caps_set_simple (src_caps, "sampling", G_TYPE_STRING, sampling, NULL);
-    }
+        "width", G_TYPE_INT, width, "height", G_TYPE_INT, height,
+        "colorspace", G_TYPE_STRING, colorspace,
+        "sampling", G_TYPE_STRING, source_sampling, NULL);
 
     if (gst_structure_get_fraction (current_caps_struct, "framerate", &fr_num,
             &fr_denom)) {
@@ -363,7 +414,6 @@ set_caps:
       GST_WARNING_OBJECT (jpeg2000parse, "No framerate set");
     }
 
-
     if (!gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), src_caps)) {
       GST_ERROR_OBJECT (jpeg2000parse, "Unable to set source caps");
       ret = GST_FLOW_NOT_NEGOTIATED;
@@ -372,7 +422,6 @@ set_caps:
     }
 
     gst_caps_unref (src_caps);
-    jpeg2000parse->sampling = samplingEnum;
   }
 
   /* look for EOC end of codestream marker  */
@@ -398,5 +447,4 @@ beach:
     gst_caps_unref (current_caps);
   gst_buffer_unmap (frame->buffer, &map);
   return ret;
-
 }
