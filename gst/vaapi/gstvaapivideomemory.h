@@ -291,6 +291,10 @@ G_GNUC_INTERNAL
 gboolean
 gst_vaapi_is_dmabuf_allocator (GstAllocator * allocator);
 
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_dmabuf_can_map (GstVaapiDisplay * display, GstAllocator * allocator);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_VIDEO_MEMORY_H */

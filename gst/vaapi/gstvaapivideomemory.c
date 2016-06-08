@@ -1327,3 +1327,50 @@ gst_vaapi_is_dmabuf_allocator (GstAllocator * allocator)
   st = g_object_get_qdata (G_OBJECT (allocator), GST_VAAPI_VIDEO_INFO_QUARK);
   return (st != NULL);
 }
+
+/**
+ * gst_vaapi_dmabuf_can_map:
+ * @display: a #GstVaapiDisplay
+ * @allocator: a #GstAllocator
+ *
+ * It will create a dmabuf-based buffer using @allocator, and it will
+ * try to map it using gst_memory_map().
+ *
+ * Returns: %TRUE if the internal dummy buffer can be
+ * mapped. Otherwise %FALSE.
+ **/
+gboolean
+gst_vaapi_dmabuf_can_map (GstVaapiDisplay * display, GstAllocator * allocator)
+{
+  GstVaapiVideoMeta *meta;
+  GstMemory *mem;
+  GstMapInfo info;
+  gboolean ret;
+
+  g_return_val_if_fail (display != NULL, FALSE);
+
+  ret = FALSE;
+  mem = NULL;
+  meta = NULL;
+  if (!gst_vaapi_is_dmabuf_allocator (allocator))
+    return FALSE;
+  meta = gst_vaapi_video_meta_new (display);
+  if (!meta)
+    return FALSE;
+  mem = gst_vaapi_dmabuf_memory_new (allocator, meta);
+  if (!mem)
+    goto bail;
+
+  if (!gst_memory_map (mem, &info, GST_MAP_READWRITE) || info.size == 0)
+    goto bail;
+
+  gst_memory_unmap (mem, &info);
+  ret = TRUE;
+
+bail:
+  if (mem)
+    gst_memory_unref (mem);
+  if (meta)
+    gst_vaapi_video_meta_unref (meta);
+  return ret;
+}
