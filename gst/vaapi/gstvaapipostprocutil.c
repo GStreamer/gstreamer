@@ -549,6 +549,43 @@ overflow_error:
 }
 
 static gboolean
+_set_colorimetry (GstVaapiPostproc * postproc, GstVideoFormat format,
+    GstStructure * outs)
+{
+  GstVideoInfo vinfo;
+  GstVideoColorimetry colorimetry;
+  gchar *color;
+  gint width, height;
+
+  if (!gst_structure_get_int (outs, "width", &width)
+      || !gst_structure_get_int (outs, "height", &height))
+    return FALSE;
+
+  gst_video_info_set_format (&vinfo, format, width, height);
+
+  if (GST_VIDEO_INFO_CHROMA_SITE (&vinfo) != GST_VIDEO_CHROMA_SITE_UNKNOWN) {
+    gst_structure_set (outs, "chroma-site", G_TYPE_STRING,
+        gst_video_chroma_to_string (GST_VIDEO_INFO_CHROMA_SITE (&vinfo)), NULL);
+  }
+
+  /* make sure we set the RGB matrix for RGB formats */
+  colorimetry = GST_VIDEO_INFO_COLORIMETRY (&vinfo);
+  if (GST_VIDEO_FORMAT_INFO_IS_RGB (vinfo.finfo) &&
+      colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_RGB) {
+    GST_WARNING ("invalid matrix %d for RGB format, using RGB",
+        colorimetry.matrix);
+    colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+  }
+
+  if ((color = gst_video_colorimetry_to_string (&colorimetry))) {
+    gst_structure_set (outs, "colorimetry", G_TYPE_STRING, color, NULL);
+    g_free (color);
+  }
+
+  return TRUE;
+}
+
+static gboolean
 _set_preferred_format (GstStructure * outs, GstVideoFormat format)
 {
   GValue value = G_VALUE_INIT;
@@ -608,6 +645,9 @@ _get_preferred_caps (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
     goto fixate_failed;
   if (!_fixate_frame_rate (postproc, vinfo, structure))
     goto fixate_failed;
+
+  if (f == GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY)
+    _set_colorimetry (postproc, format, structure);
 
   outcaps = gst_caps_new_empty ();
   gst_caps_append_structure_full (outcaps, structure,
