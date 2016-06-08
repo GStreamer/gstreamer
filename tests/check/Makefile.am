@@ -222,7 +222,8 @@ if USE_PLUGIN_RTP
 check_rtp = \
 	elements/rtp-payloading \
 	elements/rtph261 \
-	elements/rtph263
+	elements/rtph263 \
+	elements/rtpvp9
 else
 check_rtp =
 endif
