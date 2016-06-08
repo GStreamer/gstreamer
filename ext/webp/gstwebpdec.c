@@ -72,6 +72,8 @@ static GstFlowReturn gst_webp_dec_handle_frame (GstVideoDecoder * bdec,
     GstVideoCodecFrame * frame);
 static gboolean gst_webp_dec_decide_allocation (GstVideoDecoder * bdec,
     GstQuery * query);
+static gboolean gst_webp_dec_sink_event (GstVideoDecoder * bdec,
+    GstEvent * event);
 
 static gboolean gst_webp_dec_reset_frame (GstWebPDec * webpdec);
 
@@ -124,6 +126,7 @@ gst_webp_dec_class_init (GstWebPDecClass * klass)
   vdec_class->set_format = gst_webp_dec_set_format;
   vdec_class->handle_frame = gst_webp_dec_handle_frame;
   vdec_class->decide_allocation = gst_webp_dec_decide_allocation;
+  vdec_class->sink_event = gst_webp_dec_sink_event;
 
   GST_DEBUG_CATEGORY_INIT (webp_dec_debug, "webpdec", 0, "WebP decoder");
 }
@@ -214,8 +217,6 @@ gst_webp_dec_start (GstVideoDecoder * decoder)
 {
   GstWebPDec *webpdec = (GstWebPDec *) decoder;
 
-  gst_video_decoder_set_packetized (GST_VIDEO_DECODER (webpdec), FALSE);
-
   return gst_webp_dec_reset_frame (webpdec);
 }
 
@@ -244,11 +245,6 @@ gst_webp_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     gst_video_codec_state_unref (webpdec->input_state);
   webpdec->input_state = gst_video_codec_state_ref (state);
 
-  if (decoder->input_segment.format == GST_FORMAT_TIME)
-    gst_video_decoder_set_packetized (decoder, TRUE);
-  else
-    gst_video_decoder_set_packetized (decoder, FALSE);
-
   return TRUE;
 }
 
@@ -276,6 +272,25 @@ gst_webp_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
   gst_object_unref (pool);
 
   return TRUE;
+}
+
+static gboolean
+gst_webp_dec_sink_event (GstVideoDecoder * bdec, GstEvent * event)
+{
+  const GstSegment *segment;
+
+  if (GST_EVENT_TYPE (event) != GST_EVENT_SEGMENT)
+    goto done;
+
+  gst_event_parse_segment (event, &segment);
+
+  if (segment->format == GST_FORMAT_TIME)
+    gst_video_decoder_set_packetized (bdec, TRUE);
+  else
+    gst_video_decoder_set_packetized (bdec, FALSE);
+
+done:
+  return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (bdec, event);
 }
 
 static GstFlowReturn
