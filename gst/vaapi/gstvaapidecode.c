@@ -302,6 +302,14 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   switch (feature) {
     case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
     case GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE:{
+      GstStructure *structure = gst_caps_get_structure (state->caps, 0);
+
+      /* Remove chroma-site and colorimetry from src caps,
+       * which is unnecessary on downstream if using VASurface
+       */
+      gst_structure_remove_fields (structure, "chroma-site", "colorimetry",
+          NULL);
+
       feature_str = gst_vaapi_caps_feature_to_string (feature);
       features = gst_caps_features_new (feature_str, NULL);
       gst_caps_set_features (state->caps, 0, features);
