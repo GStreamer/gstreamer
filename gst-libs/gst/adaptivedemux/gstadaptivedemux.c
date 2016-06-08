@@ -1262,224 +1262,227 @@ gst_adaptive_demux_can_seek (GstAdaptiveDemux * demux)
                               GST_SEEK_FLAG_SNAP_NEAREST))
 
 static gboolean
+gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
+    GstEvent * event)
+{
+  GstAdaptiveDemuxClass *demux_class = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
+  gdouble rate;
+  GstFormat format;
+  GstSeekFlags flags;
+  GstSeekType start_type, stop_type;
+  gint64 start, stop;
+  guint32 seqnum;
+  gboolean update;
+  gboolean ret;
+  GstSegment oldsegment;
+  GstAdaptiveDemuxStream *stream = NULL;
+
+  GST_INFO_OBJECT (demux, "Received seek event");
+
+  GST_API_LOCK (demux);
+  GST_MANIFEST_LOCK (demux);
+
+  if (!gst_adaptive_demux_can_seek (demux)) {
+    GST_MANIFEST_UNLOCK (demux);
+    GST_API_UNLOCK (demux);
+    gst_event_unref (event);
+    return FALSE;
+  }
+
+  gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
+      &stop_type, &stop);
+
+  if (format != GST_FORMAT_TIME) {
+    GST_MANIFEST_UNLOCK (demux);
+    GST_API_UNLOCK (demux);
+    gst_event_unref (event);
+    return FALSE;
+  }
+
+  if (gst_adaptive_demux_is_live (demux)) {
+    gint64 range_start, range_stop;
+    if (!gst_adaptive_demux_get_live_seek_range (demux, &range_start,
+            &range_stop)) {
+      GST_MANIFEST_UNLOCK (demux);
+      GST_API_UNLOCK (demux);
+      gst_event_unref (event);
+      return FALSE;
+    }
+    if (start < range_start || start >= range_stop) {
+      GST_MANIFEST_UNLOCK (demux);
+      GST_API_UNLOCK (demux);
+      GST_WARNING_OBJECT (demux, "Seek to invalid position");
+      gst_event_unref (event);
+      return FALSE;
+    }
+  }
+
+  seqnum = gst_event_get_seqnum (event);
+
+  GST_DEBUG_OBJECT (demux, "seek event, %" GST_PTR_FORMAT, event);
+
+  /* have a backup in case seek fails */
+  gst_segment_copy_into (&demux->segment, &oldsegment);
+
+  if (flags & GST_SEEK_FLAG_FLUSH) {
+    GstEvent *fevent;
+
+    GST_DEBUG_OBJECT (demux, "sending flush start");
+    fevent = gst_event_new_flush_start ();
+    gst_event_set_seqnum (fevent, seqnum);
+    gst_adaptive_demux_push_src_event (demux, fevent);
+
+    gst_adaptive_demux_stop_tasks (demux);
+  } else if ((rate > 0 && start_type != GST_SEEK_TYPE_NONE) ||
+      (rate < 0 && stop_type != GST_SEEK_TYPE_NONE)) {
+
+    gst_adaptive_demux_stop_tasks (demux);
+  }
+
+  GST_ADAPTIVE_DEMUX_SEGMENT_LOCK (demux);
+
+  /*
+   * Handle snap seeks as follows:
+   * 1) do the snap seeking on the stream that received
+   *    the event
+   * 2) use the final position on this stream to seek
+   *    on the other streams to the same position
+   *
+   * We can't snap at all streams at the same time as
+   * they might end in different positions, so just
+   * use the one that received the event as the 'leading'
+   * one to do the snap seek.
+   */
+  if (IS_SNAP_SEEK (flags) && demux_class->stream_seek && (stream =
+          gst_adaptive_demux_find_stream_for_pad (demux, pad))) {
+    GstClockTime ts;
+    GstSeekFlags stream_seek_flags = flags;
+
+    /* snap-seek on the stream that received the event and then
+     * use the resulting position to seek on all streams */
+
+    if (rate >= 0) {
+      if (start_type != GST_SEEK_TYPE_NONE)
+        ts = start;
+      else {
+        ts = stream->segment.position;
+        start_type = GST_SEEK_TYPE_SET;
+      }
+    } else {
+      if (stop_type != GST_SEEK_TYPE_NONE)
+        ts = stop;
+      else {
+        stop_type = GST_SEEK_TYPE_SET;
+        ts = stream->segment.position;
+      }
+    }
+
+    demux_class->stream_seek (stream, rate >= 0, stream_seek_flags, ts, &ts);
+
+    /* replace event with a new one without snaping to seek on all streams */
+    gst_event_unref (event);
+    if (rate >= 0) {
+      start = ts;
+    } else {
+      stop = ts;
+    }
+    event =
+        gst_event_new_seek (rate, format, REMOVE_SNAP_FLAGS (flags),
+        start_type, start, stop_type, stop);
+    GST_DEBUG_OBJECT (demux, "Adapted snap seek to %" GST_PTR_FORMAT, event);
+  }
+  stream = NULL;
+
+  gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
+      start, stop_type, stop, &update);
+
+  /* FIXME - this seems unatural, do_seek() is updating base when we
+   * only want the start/stop position to change, maybe do_seek() needs
+   * some fixing? */
+  if (!(flags & GST_SEEK_FLAG_FLUSH) && ((rate > 0
+              && start_type == GST_SEEK_TYPE_NONE) || (rate < 0
+              && stop_type == GST_SEEK_TYPE_NONE))) {
+    demux->segment.base = oldsegment.base;
+  }
+
+  GST_DEBUG_OBJECT (demux, "Calling subclass seek: %" GST_PTR_FORMAT, event);
+
+  ret = demux_class->seek (demux, event);
+
+  if (!ret) {
+    /* Is there anything else we can do if it fails? */
+    gst_segment_copy_into (&oldsegment, &demux->segment);
+  } else {
+    demux->priv->segment_seqnum = seqnum;
+  }
+  GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
+
+  if (flags & GST_SEEK_FLAG_FLUSH) {
+    GstEvent *fevent;
+
+    GST_DEBUG_OBJECT (demux, "Sending flush stop on all pad");
+    fevent = gst_event_new_flush_stop (TRUE);
+    gst_event_set_seqnum (fevent, seqnum);
+    gst_adaptive_demux_push_src_event (demux, fevent);
+  }
+
+  if (demux->next_streams) {
+    gst_adaptive_demux_expose_streams (demux, FALSE);
+  } else {
+    GList *iter;
+    GstClockTime period_start =
+        gst_adaptive_demux_get_period_start_time (demux);
+
+    GST_ADAPTIVE_DEMUX_SEGMENT_LOCK (demux);
+    for (iter = demux->streams; iter; iter = g_list_next (iter)) {
+      GstAdaptiveDemuxStream *stream = iter->data;
+      GstEvent *seg_evt;
+      GstClockTime offset;
+
+      /* See comments in gst_adaptive_demux_get_period_start_time() for
+       * an explanation of the segment modifications */
+      stream->segment = demux->segment;
+      offset =
+          gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
+      stream->segment.start += offset - period_start;
+      if (demux->segment.rate > 0 && start_type != GST_SEEK_TYPE_NONE)
+        stream->segment.position = stream->segment.start;
+      else if (demux->segment.rate < 0 && stop_type != GST_SEEK_TYPE_NONE)
+        stream->segment.position = stream->segment.stop;
+      seg_evt = gst_event_new_segment (&stream->segment);
+      gst_event_set_seqnum (seg_evt, demux->priv->segment_seqnum);
+      gst_event_replace (&stream->pending_segment, seg_evt);
+      gst_event_unref (seg_evt);
+      /* Make sure the first buffer after a seek has the discont flag */
+      stream->discont = TRUE;
+    }
+
+    GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
+  }
+
+  /* Restart the demux */
+  gst_adaptive_demux_start_tasks (demux);
+  GST_MANIFEST_UNLOCK (demux);
+  GST_API_UNLOCK (demux);
+  gst_event_unref (event);
+
+  return ret;
+}
+
+static gboolean
 gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
   GstAdaptiveDemux *demux;
-  GstAdaptiveDemuxClass *demux_class;
 
   demux = GST_ADAPTIVE_DEMUX_CAST (parent);
-  demux_class = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
 
   /* FIXME handle events received on pads that are to be removed */
 
   switch (event->type) {
     case GST_EVENT_SEEK:
     {
-      gdouble rate;
-      GstFormat format;
-      GstSeekFlags flags;
-      GstSeekType start_type, stop_type;
-      gint64 start, stop;
-      guint32 seqnum;
-      gboolean update;
-      gboolean ret = TRUE;
-      GstSegment oldsegment;
-      GstAdaptiveDemuxStream *stream = NULL;
-
-      GST_INFO_OBJECT (demux, "Received seek event");
-
-      GST_API_LOCK (demux);
-      GST_MANIFEST_LOCK (demux);
-
-      if (!gst_adaptive_demux_can_seek (demux)) {
-        GST_MANIFEST_UNLOCK (demux);
-        GST_API_UNLOCK (demux);
-        gst_event_unref (event);
-        return FALSE;
-      }
-
-      gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
-          &stop_type, &stop);
-
-      if (format != GST_FORMAT_TIME) {
-        GST_MANIFEST_UNLOCK (demux);
-        GST_API_UNLOCK (demux);
-        gst_event_unref (event);
-        return FALSE;
-      }
-
-      if (gst_adaptive_demux_is_live (demux)) {
-        gint64 range_start, range_stop;
-        if (!gst_adaptive_demux_get_live_seek_range (demux, &range_start,
-                &range_stop)) {
-          GST_MANIFEST_UNLOCK (demux);
-          GST_API_UNLOCK (demux);
-          gst_event_unref (event);
-          return FALSE;
-        }
-        if (start < range_start || start >= range_stop) {
-          GST_MANIFEST_UNLOCK (demux);
-          GST_API_UNLOCK (demux);
-          GST_WARNING_OBJECT (demux, "Seek to invalid position");
-          gst_event_unref (event);
-          return FALSE;
-        }
-      }
-
-      seqnum = gst_event_get_seqnum (event);
-
-      GST_DEBUG_OBJECT (demux, "seek event, %" GST_PTR_FORMAT, event);
-
-      /* have a backup in case seek fails */
-      gst_segment_copy_into (&demux->segment, &oldsegment);
-
-      if (flags & GST_SEEK_FLAG_FLUSH) {
-        GstEvent *fevent;
-
-        GST_DEBUG_OBJECT (demux, "sending flush start");
-        fevent = gst_event_new_flush_start ();
-        gst_event_set_seqnum (fevent, seqnum);
-        gst_adaptive_demux_push_src_event (demux, fevent);
-
-        gst_adaptive_demux_stop_tasks (demux);
-      } else if ((rate > 0 && start_type != GST_SEEK_TYPE_NONE) ||
-          (rate < 0 && stop_type != GST_SEEK_TYPE_NONE)) {
-
-        gst_adaptive_demux_stop_tasks (demux);
-      }
-
-      GST_ADAPTIVE_DEMUX_SEGMENT_LOCK (demux);
-
-      /*
-       * Handle snap seeks as follows:
-       * 1) do the snap seeking on the stream that received
-       *    the event
-       * 2) use the final position on this stream to seek
-       *    on the other streams to the same position
-       *
-       * We can't snap at all streams at the same time as
-       * they might end in different positions, so just
-       * use the one that received the event as the 'leading'
-       * one to do the snap seek.
-       */
-      if (IS_SNAP_SEEK (flags) && demux_class->stream_seek && (stream =
-              gst_adaptive_demux_find_stream_for_pad (demux, pad))) {
-        GstClockTime ts;
-        GstSeekFlags stream_seek_flags = flags;
-
-        /* snap-seek on the stream that received the event and then
-         * use the resulting position to seek on all streams */
-
-        if (rate >= 0) {
-          if (start_type != GST_SEEK_TYPE_NONE)
-            ts = start;
-          else {
-            ts = stream->segment.position;
-            start_type = GST_SEEK_TYPE_SET;
-          }
-        } else {
-          if (stop_type != GST_SEEK_TYPE_NONE)
-            ts = stop;
-          else {
-            stop_type = GST_SEEK_TYPE_SET;
-            ts = stream->segment.position;
-          }
-        }
-
-        demux_class->stream_seek (stream, rate >= 0, stream_seek_flags, ts,
-            &ts);
-
-        /* replace event with a new one without snaping to seek on all streams */
-        gst_event_unref (event);
-        if (rate >= 0) {
-          start = ts;
-        } else {
-          stop = ts;
-        }
-        event =
-            gst_event_new_seek (rate, format, REMOVE_SNAP_FLAGS (flags),
-            start_type, start, stop_type, stop);
-        GST_DEBUG_OBJECT (demux, "Adapted snap seek to %" GST_PTR_FORMAT,
-            event);
-      }
-      stream = NULL;
-
-      gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
-          start, stop_type, stop, &update);
-
-      /* FIXME - this seems unatural, do_seek() is updating base when we
-       * only want the start/stop position to change, maybe do_seek() needs
-       * some fixing? */
-      if (!(flags & GST_SEEK_FLAG_FLUSH) && ((rate > 0
-                  && start_type == GST_SEEK_TYPE_NONE) || (rate < 0
-                  && stop_type == GST_SEEK_TYPE_NONE))) {
-        demux->segment.base = oldsegment.base;
-      }
-
-      GST_DEBUG_OBJECT (demux, "Calling subclass seek: %" GST_PTR_FORMAT,
-          event);
-
-      ret = demux_class->seek (demux, event);
-
-      if (!ret) {
-        /* Is there anything else we can do if it fails? */
-        gst_segment_copy_into (&oldsegment, &demux->segment);
-      } else {
-        demux->priv->segment_seqnum = seqnum;
-      }
-      GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
-
-      if (flags & GST_SEEK_FLAG_FLUSH) {
-        GstEvent *fevent;
-
-        GST_DEBUG_OBJECT (demux, "Sending flush stop on all pad");
-        fevent = gst_event_new_flush_stop (TRUE);
-        gst_event_set_seqnum (fevent, seqnum);
-        gst_adaptive_demux_push_src_event (demux, fevent);
-      }
-
-      if (demux->next_streams) {
-        gst_adaptive_demux_expose_streams (demux, FALSE);
-      } else {
-        GList *iter;
-        GstClockTime period_start =
-            gst_adaptive_demux_get_period_start_time (demux);
-
-        GST_ADAPTIVE_DEMUX_SEGMENT_LOCK (demux);
-        for (iter = demux->streams; iter; iter = g_list_next (iter)) {
-          GstAdaptiveDemuxStream *stream = iter->data;
-          GstEvent *seg_evt;
-          GstClockTime offset;
-
-          /* See comments in gst_adaptive_demux_get_period_start_time() for
-           * an explanation of the segment modifications */
-          stream->segment = demux->segment;
-          offset =
-              gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
-          stream->segment.start += offset - period_start;
-          if (demux->segment.rate > 0 && start_type != GST_SEEK_TYPE_NONE)
-            stream->segment.position = stream->segment.start;
-          else if (demux->segment.rate < 0 && stop_type != GST_SEEK_TYPE_NONE)
-            stream->segment.position = stream->segment.stop;
-          seg_evt = gst_event_new_segment (&stream->segment);
-          gst_event_set_seqnum (seg_evt, demux->priv->segment_seqnum);
-          gst_event_replace (&stream->pending_segment, seg_evt);
-          gst_event_unref (seg_evt);
-          /* Make sure the first buffer after a seek has the discont flag */
-          stream->discont = TRUE;
-        }
-
-        GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
-      }
-
-      /* Restart the demux */
-      gst_adaptive_demux_start_tasks (demux);
-      GST_MANIFEST_UNLOCK (demux);
-      GST_API_UNLOCK (demux);
-
-      gst_event_unref (event);
-      return ret;
+      return gst_adaptive_demux_handle_seek_event (demux, pad, event);
     }
     case GST_EVENT_RECONFIGURE:{
       GstAdaptiveDemuxStream *stream;
