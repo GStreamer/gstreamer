@@ -1005,7 +1005,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.8.1"</DEFAULT>
+<DEFAULT>"GStreamer/1.8.2"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20135,7 +20135,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Method</NICK>
 <BLURB>Deinterlace Method.</BLURB>
-<DEFAULT>Television: Full resolution</DEFAULT>
+<DEFAULT>Linear</DEFAULT>
 </ARG>
 
 <ARG>

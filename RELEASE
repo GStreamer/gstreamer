@@ -1,11 +1,11 @@
 
-Release notes for GStreamer Good Plugins 1.8.1
+Release notes for GStreamer Good Plugins 1.8.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.8 release series of your favourite cross-platform multimedia framework!
 
 
-This release only contains bugfixes and it is safe to update from 1.8.0. For a
+This release only contains bugfixes and it is safe to update from 1.8.1. For a
 full list of bugfixes see Bugzilla.
 
 
@@ -55,21 +55,42 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
+      * 766025 : rtpsession: race condition accessing ssrcs hash table
+      * 733864 : v4l2videodec: Implement EOS handling through V4L2_DEC_CMD_STOP
+      * 736252 : gdkpixbufdec: packetized mode logic
+      * 748700 : avimux: stopping file without index fails
+      * 754042 : v4l2src: Asserts on renegotiation with USERPTR
+      * 758424 : v4l2videodec: Keep the input buffers, they are needed to copy metadata
+      * 758703 : v4l2src: gst_v4l2_set_attribute warning messages cause infinite loop with .dot dump
+      * 761165 : Setting overlay parameters on v4l2sink fails
+      * 761787 : qtdemux: seek fails with CENC encrypted streams
+      * 762219 : rtpsession: don't act on suspicious BYE RTCP
+      * 764679 : IPv6 UDP stream to site-local multicast address
       * 764733 : qtdemux: Regression in YouTube TV tests in WebKit MSE after fix for #760779
-      * 763711 : splitmuxsink: deadlock when one streams doesn't have regular buffers
-      * 730540 : rtspsrc: parse crypto sessions to support rollover counters
-      * 744612 : splitmuxsink: add property for specifing maximum number of files to store
-      * 757569 : rtspsrc: avoid potentially overflowing expression
-      * 761345 : rtpjpegpay: Allow different quantization tables for components 2 and 3
-      * 762893 : splitmuxsink critical assertion when changing  from null to ready
-      * 763780 : flvdemux: don't emit pad-added until caps are ready
-      * 763973 : qtdemux: Fix qtdemux memory leak
-      * 764169 : vp9dec: Dogslow VP9 4k playback with libvpx, works fine with avdec_vp9
-      * 764798 : rtspsrc Critical errors when connecting with TLS / rtsps
-      * 764870 : qtdemux: Fix parsing segment duration of empty edit list box
-      * 764889 : rtpjitterbuffer: Drops wrong number of packets with drop-on-latency=true
+      * 764897 : Using non IPv6-socket in IPv6 scope
       * 765072 : splitmuxsink: Sometimes creates a small one-frame file after EOS
-      * 765116 : scaletempo: memory corruption
+      * 765320 : flvmux: segfault when no buffers have arrived before EOS
+      * 765391 : vpxenc: Handle frames with too low duration correctly
+      * 765689 : rtspsrc: Various problems related to seeking causing scrub seeking to fail
+      * 765725 : qtmux: Allow MPEG-1 Layer 1 and 2 in addition to 3 in MP4
+      * 765805 : qtdemux: Only first fragment played for fragmented mp4 files recorded with non-seekable sink
+      * 765806 : qtdemux: Store the segment sequence number in the EOS events and STREAM_DONE events/message
+      * 765933 : rtpjitterbuffer: Fix stall when receiving already lost packet
+      * 765946 : dv: Uses different pixel-aspect-ratio than gst-libav
+      * 766172 : v4l2videodec: [Regressions] Should not fail if S_FMT(CAPTURE) fail after STREAMON(CAPTURE)
+      * 766359 : auparse: sticky event misordering, got 'segment' before 'caps'
+      * 766382 : v4l2videodec: use visible size, not coded size, for downstream negotiation filter
+      * 766558 : deinterlace: fix caps leak
+      * 766610 : v4l2object: fix caps leak
+      * 766645 : matroskademux: don't hold object lock whilst pushing out headers, might lead to query deadlock
+      * 766711 : v4l2transform: scaling is broken in case of fixed pixel aspect  ratio
+      * 766712 : v4l2transform should allow to change pixel aspect ratio
+      * 766719 : v4l2transform: Does not fully fixate the caps
+      * 766868 : qtdemux: Segments start at 0 on live MSS time-based streams, ignoring the start time configured upstream
+      * 766870 : rtpj2kpay: leaks input buffer
+      * 767300 : v4l2object uses deprecated RGB15 V4L2 format code
+      * 767424 : flvdemux: Fix unref assertion failure
+      * 767086 : v4l2src: pushes incomplete raw video buffers
 
 ==== Download ====
 
@@ -106,16 +127,31 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * Damian Ziobro
+      * Alex Ashley
+      * Andreas Naumann
+      * Dimitrios Katsaros
+      * Enrico Jorns
+      * Guillaume Desmottes
       * Havard Graff
       * Jan Schmidt
-      * Jihae Yi
-      * Jimmy Ohn
+      * Jesper Larsen
+      * Josep Torra
+      * Kieran Bingham
+      * Mario Sanchez Prada
+      * Mark Nauwelaerts
+      * Mats Lindestam
+      * Miguel París Díaz
+      * Mikhail Fludkov
       * Nicolas Dufresne
-      * Paolo Pettinato
+      * Nirbheek Chauhan
+      * Patricia Muscalu
+      * Peter Seiderer
+      * Philipp Zabel
+      * Pierre Lamot
       * Sebastian Dröge
       * Seungha Yang
       * Thiago Santos
+      * Thibault Saunier
+      * Tim-Philipp Müller
       * Xavier Claessens
  
