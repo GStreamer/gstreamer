@@ -3,13 +3,13 @@
 # Copyright (C) 2004, 2005 gstreamer's COPYRIGHT HOLDER
 # This file is put in the public domain.
 #
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014, 2016.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.2.1\n"
+"Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-04-20 15:26+0300\n"
-"PO-Revision-Date: 2014-01-30 10:24+0100\n"
+"POT-Creation-Date: 2016-06-09 10:04+0300\n"
+"PO-Revision-Date: 2016-05-20 11:32+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "Language: sk\n"
@@ -18,9 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: KBabel 1.11.4\n"
-"X-Poedit-Language: Slovak\n"
-"X-Poedit-Country: SLOVAKIA\n"
+"X-Generator: Poedit 1.6.10\n"
 
 msgid "Print the GStreamer version"
 msgstr "Vypísať verziu GStreamer"
@@ -207,9 +205,8 @@ msgstr "Nepodarilo sa získať/upraviť nastavenia zdroja."
 msgid "No space left on the resource."
 msgstr "Na zdroji už nezostalo miesto."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "Na zdroji už nezostalo miesto."
+msgstr "Nedostatočné práva na prístup k tomuto zdroju."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer narazil na všeobecnú chybu prúdu údajov."
@@ -448,7 +445,7 @@ msgid "URI to the license of the data"
 msgstr "URI ku licencii týchto údajov"
 
 msgid "performer"
-msgstr "výkonný umelec"
+msgstr "interpret"
 
 msgid "person(s) performing"
 msgstr "vystupujúce osoby "
@@ -460,10 +457,10 @@ msgid "person(s) who composed the recording"
 msgstr "osoby zodpovedné za skladbu nahrávky"
 
 msgid "conductor"
-msgstr ""
+msgstr "dirigent"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "upresnenie dirigenta/interpreta"
 
 msgid "duration"
 msgstr "trvanie"
@@ -584,7 +581,7 @@ msgid "language name"
 msgstr "názov jazyku"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "názov reči tohto prúdu údajov"
 
 msgid "image"
 msgstr "obrázok"
@@ -812,7 +809,7 @@ msgid "publisher"
 msgstr "vydavateľ"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Meno titulu alebo vydavateľa"
 
 msgid "interpreted-by"
 msgstr "interpret"
@@ -827,10 +824,10 @@ msgid "Midi note number of the audio track."
 msgstr ""
 
 msgid "private-data"
-msgstr ""
+msgstr "súkromné-dáta"
 
 msgid "Private data"
-msgstr ""
+msgstr "Súkromné dáta"
 
 msgid ", "
 msgstr ", "
@@ -857,11 +854,11 @@ msgstr ""
 
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "odkaz nemá zdroj [sink=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "odkaz nemá sink  [source=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -872,7 +869,7 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "nepodarilo sa nastaviť vlastnosť \"%s\" v prvku \"%s\" na \"%s\""
 
 msgid "Delayed linking failed."
-msgstr ""
+msgstr "Oneskorené odkazovanie zlyhalo."
 
 #, c-format
 msgid "could not link %s to %s"
@@ -884,7 +881,7 @@ msgstr "prvok \"%s\" neexistuje"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "nečakaný odkaz \"%s\" - ignorujem"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
@@ -903,18 +900,18 @@ msgid "no source element for URI \"%s\""
 msgstr "neexistuje zdrojový prvok pre URI \"%s\""
 
 msgid "syntax error"
-msgstr ""
+msgstr "chyba syntaxe"
 
 msgid "bin"
-msgstr ""
+msgstr "zásobník"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "bol zadaný prázdny zásobník \"%s\", čo nie je dovolené"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "neexistuje zásobník \"%s\", preskakujem"
+msgstr "neexistuje zásobník \"%s\", rozbaľujem prvky"
 
 msgid "empty pipeline not allowed"
 msgstr "prázdna rúra sa nepripúšťa"
@@ -1019,9 +1016,8 @@ msgstr "vynútiť veľké písmená"
 msgid "force caps without doing a typefind"
 msgstr "vynútiť veľké písmená bez kontroly"
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
-msgstr "Prúd neobsahuje údaje."
+msgstr "Prúd neobsahuje dostatok údajov."
 
 msgid "Stream contains no data."
 msgstr "Prúd neobsahuje údaje."
@@ -1036,7 +1032,7 @@ msgid "writable"
 msgstr "zapisovateľné"
 
 msgid "deprecated"
-msgstr ""
+msgstr "zastaralé"
 
 msgid "controllable"
 msgstr "ovládateľné"
@@ -1243,9 +1239,11 @@ msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
+"Neposkytnúť do výstupu informácie o vybranom vlastníctve ak je povolený "
+"podrobný výstup )dá sa použiť niekoľkokrát)"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "Meno vlastníctva"
 
 msgid "Do not install a fault handler"
 msgstr "Neinštalovať obsluhu výnimiek"
@@ -1327,12 +1325,6 @@ msgstr "Nastavujem rúru na NULOVÚ ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Uvoľňujem rúru ...\n"
 
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Nevypisovať informácie o stave TYPU"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TYP1,TYP2,..."
-
 #~ msgid "link without source element"
 #~ msgstr "pripojenie bez zdrojového prvku"
 
@@ -1344,6 +1336,12 @@ msgstr "Uvoľňujem rúru ...\n"
 
 #~ msgid "could not link sink element for URI \"%s\""
 #~ msgstr "nepodarilo sa pripojiť prvok sink pre URI \"%s\""
+
+#~ msgid "Do not output status information of TYPE"
+#~ msgstr "Nevypisovať informácie o stave TYPU"
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "TYP1,TYP2,..."
 
 #~ msgid "maximum"
 #~ msgstr "maximum"

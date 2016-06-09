@@ -1,7 +1,7 @@
 # Brazilian Portuguese translation of GStreamer.
-# Copyright (C) 2008-2013 Free Software Foundation, Inc.
+# Copyright (C) 2008-2016 Free Software Foundation, Inc.
 # This file is distributed under the same license as the GStreamer package.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2015.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2016.
 #
 # pipeline -> fila de processamento
 # sink -> consumidor
@@ -15,10 +15,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.7.1\n"
+"Project-Id-Version: gstreamer-1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-04-20 15:26+0300\n"
-"PO-Revision-Date: 2015-12-28 20:54-0200\n"
+"POT-Creation-Date: 2016-06-09 10:04+0300\n"
+"PO-Revision-Date: 2016-05-06 18:23-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -470,10 +470,10 @@ msgid "person(s) who composed the recording"
 msgstr "pessoa(s) que compôs(useram) a gravação"
 
 msgid "conductor"
-msgstr ""
+msgstr "maestro"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "maestro/músico de afinação"
 
 msgid "duration"
 msgstr "duração"
@@ -888,7 +888,7 @@ msgstr ""
 "valor \"%s\""
 
 msgid "Delayed linking failed."
-msgstr ""
+msgstr "Falha no vínculo postergado."
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1035,7 +1035,6 @@ msgstr "forçar Caps"
 msgid "force caps without doing a typefind"
 msgstr "forçar Caps sem usar o typefind"
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
 msgstr "O fluxo não contém dados suficientes."
 
