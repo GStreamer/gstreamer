@@ -2748,3 +2748,43 @@
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstTheoraDec::visualize-bit-usage</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Visualize bitstream usage breakdown</NICK>
+<BLURB>Sets the bitstream breakdown visualization mode. Values influence the width of the bit usage bars to show.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraDec::visualize-macroblock-modes</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Visualize macroblock modes</NICK>
+<BLURB>Show macroblock mode selection overlaid on image. Value gives a mask for macroblock (MB) modes to show.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraDec::visualize-motion-vectors</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Visualize motion vectors</NICK>
+<BLURB>Show motion vector selection overlaid on image. Value gives a mask for motion vector (MV) modes to show.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraDec::visualize-quantization-modes</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Visualize adaptive quantization modes</NICK>
+<BLURB>Show adaptive quantization mode selection overlaid on image. Value gives a mask for quantization (QI) modes to show.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+

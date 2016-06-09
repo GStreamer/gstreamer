@@ -1,11 +1,11 @@
 
-Release notes for GStreamer Base Plugins 1.8.1
+Release notes for GStreamer Base Plugins 1.8.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.8 release series of your favourite cross-platform multimedia framework!
 
 
-This release only contains bugfixes and it is safe to update from 1.8.0. For a
+This release only contains bugfixes and it is safe to update from 1.8.1. For a
 full list of bugfixes see Bugzilla.
 
 
@@ -58,10 +58,17 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 764020 : adaptivedemux: Deadlock on HLS and DASH streams when scrub seeking
-      * 764865 : audiosrc, audiosink: race in gstaudiosrc audioringbuffer thread
-      * 765027 : critical warning in rtspsrc when doing srtp
-      * 765082 : mikey: add new function gst_mikey_message_to_caps
+      * 765534 : encoding-profile: Remove codec_data and streamheader fields from constraint caps
+      * 765538 : codec-utils: Don't put level=0 into the caps
+      * 765541 : smartencoder: Only accept TIME segments for real
+      * 765684 : opusdec: Won't negotiate sampling rate anymore
+      * 765706 : opusdec: caps leak in gst_opus_dec_negotiate()
+      * 765708 : encoding-profile: Make creation of encoding profile from discoverer info more robust
+      * 766204 : sdp: rtpjpegdepay regression: Does not extract frame dimensions from SDP anymore
+      * 766265 : opusdec with FEC breaks when packet sizes change
+      * 766510 : videosink: test_video_center_rect raise a warning when turning on debug
+      * 766515 : playbin: fix suburidecodebin leak
+      * 767163 : video-color: Fix colorimetry IS_UNKNOWN
 
 ==== Download ====
 
@@ -98,10 +105,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * Fabrice Bellet
-      * Jan Schmidt
-      * Josep Torra
+      * Guillaume Desmottes
+      * Hyunjun Ko
+      * Olivier Crête
       * Sebastian Dröge
-      * Tim-Philipp Müller
+      * Stian Selnes
+      * Thiago Santos
  

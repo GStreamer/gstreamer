@@ -1,24 +1,26 @@
-### 1.8.1
+### 1.8.2
 
-The first 1.8 bug-fix release (1.8.1) was released on 20 April 2016.
+The first 1.8 bug-fix release (1.8.2) was released on 9 June 2016.
 This release only contains bugfixes and it should be safe to update from 1.8.0.
 
-#### Major bugfixes in 1.8.1
+#### Major bugfixes in 1.8.2
 
- - Fix app compilation with Android NDK r11 and newer
- - Fix compilation of nvenc plugin against latest NVIDIA SDK 6.0
- - Fix regression in avdeinterlace
- - Fix memory corruption in scaletempo element with S16 input
- - Fix regression in qtdemux with MSE streams
- - Fix glitches at the start with all audio sinks except for pulsesink
- - Fix regression with encrypted HLS streams
- - Fix automatic multithreaded decoding of VP8/9 video
- - Fix deadlock in HTTP adaptive streams when scrub-seeking
- - Fix regression in RTSP source with SRTP
- - Add support for SRTP rollover counters in the RTSP source
- - Add support for HiDPI ("Retina") screens in caopengllayersink
- - ... and many more!
+ - Fix vp8enc and flacenc segmentation faults on Windows
+ - Fix Android build failure due to BSD sed on OS X
+ - Fix Android build failure with applications targetting API > 20
+ - Fix playback of live MS SmoothStreaming streams
+ - Fix various issues with vtdec and caopengllayersink on OS X
+ - Fix severe performance degradation in various image decoders
+ - Fix sample rate negotiation in opusdec
+ - Fix regression in typefind, causing deadlocks in some situations
+ - Fix mpegtsmux to set PTS on all output buffers again
+ - Fix extraction of frame dimensions from SDP in RTP JPEG depayloader
+ - Fix failure in v4l2videodec when setting of format fails after starting
+ - ... and many, many more!
 
-For a full list of bugfixes see [Bugzilla][buglist-1.8.1].
+For a full list of bugfixes see [Bugzilla][buglist-1.8.2]. Note that this is
+not the full list of changes. For the full list of changes please refer to the
+GIT logs or ChangeLogs of the particular modules.
 
-[buglist-1.8.1]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=117422&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.8.1
+[buglist-1.8.2]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=130196&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.8.2
+
