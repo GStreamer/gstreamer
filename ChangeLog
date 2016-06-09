@@ -1,9 +1,46 @@
-=== release 1.8.1 ===
+=== release 1.8.2 ===
 
-2016-04-20  Sebastian Dröge <slomo@coaxion.net>
+2016-06-09  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.1
+	  releasing 1.8.2
+
+2016-05-18 16:48:44 +0100  Ian <ian.arkver.dev@gmail.com>
+
+	* gst/rtsp-server/rtsp-session.c:
+	  rtsp-session: RFC2326 does not allow a space between ; and timeout in the Session header
+	  This works with rtspsrc and live555, but fails with e.g. ffmpeg.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766619
+
+2016-04-25 08:55:25 -0400  Jake Foytik <jake.foytik@ipconfigure.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/rtspserver.c:
+	* tests/check/gst/stream.c:
+	  rtsp-stream: Fix crash on cleanup with shared media and multiple udpsrc
+	  - Unicast udpsrcs are now managed in a hash table. This allows for proper cleanup in with shared streams and fixes a memory leak.
+	  - Unicast udpsrcs are now properly cleaned up when shared connections exit. See the update_transport() function.
+	  - Create unit test for shared media.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764744
+
+2016-04-11 10:55:23 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Always bind to ANY when address is a multicast address and not only on Windows
+	  For IPv6 addresses, binding to a multicast group does not work on Linux
+	  either. Always bind to ANY and then later join the multicast group.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764679
+
+=== release 1.8.1 ===
+
+2016-04-20 18:33:39 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.8.1
 
 === release 1.8.0 ===
 

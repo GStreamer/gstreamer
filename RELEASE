@@ -1,17 +1,22 @@
 
-Release notes for GStreamer RTSP Server Library 1.8.1
+Release notes for GStreamer RTSP Server Library 1.8.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.8 release series of your favourite cross-platform multimedia framework!
 
 
-This release only contains bugfixes and it is safe to update from 1.8.0. For a
+This release only contains bugfixes and it is safe to update from 1.8.1. For a
 full list of bugfixes see Bugzilla.
 
 
 See /releases/1.8/ for the full release notes.
 
   
+
+Bugs fixed in this release
+     
+      * 764744 : Crashes when multiple udpsrc are created for each client on a shared media, misses tracking and cleanup
+      * 766619 : Space between ; and timeout= in session header is not RFC2326 compliant.
 
 ==== Download ====
 
@@ -48,5 +53,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Ian
+      * Jake Foytik
       * Sebastian Dröge
  
