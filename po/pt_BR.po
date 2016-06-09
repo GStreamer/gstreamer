@@ -1,7 +1,7 @@
 # Brazilian Portuguese translation of gst-plugins-base.
-# Copyright (C) 2008-2015 Free Software Foundation, Inc.
+# Copyright (C) 2008-2016 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2015.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2016.
 #
 # PCM -> PCM
 # buffering -> preenchendo buffer
@@ -9,10 +9,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.7.1\n"
+"Project-Id-Version: gst-plugins-base-1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-04-20 15:29+0300\n"
-"PO-Revision-Date: 2015-12-28 18:04-0200\n"
+"POT-Creation-Date: 2016-06-09 10:04+0300\n"
+"PO-Revision-Date: 2016-05-06 16:47-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -573,13 +573,13 @@ msgid "quit"
 msgstr "sair"
 
 msgid "> or n"
-msgstr ""
+msgstr "> ou n"
 
 msgid "play next"
 msgstr "reproduzir próxima"
 
 msgid "< or b"
-msgstr ""
+msgstr "< ou b"
 
 msgid "play previous"
 msgstr "reproduzir anterior"
@@ -609,13 +609,13 @@ msgid "enable/disable trick modes"
 msgstr "ativar/desativar modos avançados"
 
 msgid "change audio track"
-msgstr "alterar trilha de áudio"
+msgstr "alterar a trilha de áudio"
 
 msgid "change video track"
-msgstr "alterar trilha de vídeo"
+msgstr "alterar a trilha de vídeo"
 
 msgid "change subtitle track"
-msgstr "alterar trilha de legenda"
+msgstr "alterar a trilha de legenda"
 
 msgid "seek to beginning"
 msgstr "pular para o começo"
@@ -626,35 +626,45 @@ msgstr "exibir atalhos de teclado"
 msgid "Interactive mode - keyboard controls:"
 msgstr "Modo interativo - teclas de comando:"
 
+#  Flag: verbose
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Exibe informações de status e notificações de propriedade"
 
+#  Flag: flags
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr ""
+"Controla o comportamento de reprodução definindo a propriedade \"flags\" do "
+"Playbin"
 
+#  Flag: videosink
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
-"Elemento consumidor de vídeo utilizado (predefinido para autovideosink)"
+msgstr "Define o elemento consumidor de vídeo (predefinido para autovideosink)"
 
+#  Flag: audiosink
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
-"Elemento consumidor de áudio utilizado (predefinido para autoaudiosink)"
+msgstr "Define o elemento consumidor de áudio (predefinido para autoaudiosink)"
 
+#  Flag: gapless
 msgid "Enable gapless playback"
 msgstr "Ativar reprodução sem intervalos"
 
+#  Flag: shuffle
 msgid "Shuffle playlist"
 msgstr "Embaralhar lista de reprodução"
 
+#  Flag: no-interactive
 msgid "Disable interactive control via the keyboard"
 msgstr "Desativar controle interativo via teclado"
 
+#  Flag: volume
 msgid "Volume"
 msgstr "Volume"
 
+#  Flag: playlist
 msgid "Playlist file containing input media files"
 msgstr "Arquivo de lista de reprodução que contém arquivos de mídia de entrada"
 
+#  Flag: quiet
 msgid "Do not print any output (apart from errors)"
 msgstr "Não exibir nenhuma saída (além dos erros)"
 
