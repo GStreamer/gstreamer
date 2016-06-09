@@ -1,16 +1,15 @@
 
-Release notes for GStreamer Bad Plugins 1.8.1
+Release notes for GStreamer Bad Plugins 1.8.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.8 release series of your favourite cross-platform multimedia framework!
 
 
-This release only contains bugfixes and it is safe to update from 1.8.0. For a
+This release only contains bugfixes and it is safe to update from 1.8.1. For a
 full list of bugfixes see Bugzilla.
 
 
 See /releases/1.8/ for the full release notes.
-
 
 
 "That an accusation?"
@@ -61,23 +60,22 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 760473 : OpenCV face detection does not work with OpenCV newer than 2.4.11
-      * 747633 : decklinkvideosrc: crash in ::VideoInputFrameArrived() callback with video_frame=NULL
-      * 762924 : interlace: negotiation fails unexpectedly
-      * 763324 : nvenc fails to compile with Nvidia video SDK 6.0
-      * 763403 : bad: video sink: Post un-handled keyboard/mouse events as message to application
-      * 763862 : mxfmux: Instead of releasing request pads on stop(), clear them only
-      * 764148 : gtkglsink doesn't fail to create on incompatible hardware
-      * 764339 : ahcsrc: g_object_class_install_property: assertion 'pspec- > flags & G_PARAM_WRITABLE' during initialization
-      * 764363 : videoaggregator: Does not take into account the best output format that is computed
-      * 764404 : hlsdemux: Assertion with AES encrypted stream
-      * 764448 : h264parse: constrained-baseline is a subset of baseline
-      * 764523 : -lole32 is missing for libgstdirectsoundsrc
-      * 764545 : Crash when trying to use vulkan sink
-      * 765005 : mpegtsmux: memory leak caused by pad_data- > language
-      * 765194 : caopengllayersink: renders blurry content on HiDPI screens because contentsScale is ignored
-      * 765241 : glimagesink: need to clean window_id when state change form READY to NULL
-      * 765079 : srtpdec request-key is not signaled if roc is missing
+      * 756948 : directsoundsrc - Audio Device not found on Windows (string encoding not honored)
+      * 764758 : vulkan didn't build out of tree due to vkconfig.h
+      * 765324 : compositor: crashes on NULL pointer in _aggregate_frames()
+      * 765456 : vtdec: Strange bug re-encoding video with GST 1.8.1 on Mac OS 10.10
+      * 765926 : mpegtsmux: Set PTS on aligned buffers
+      * 766190 : vtdec: corrupted rendering on OSX
+      * 766213 : openjpeg plugin needs to be ported to libopenjp2 v2.1
+      * 766289 : amc: cannot play some files on android
+      * 766422 : videoaggregator: rtspsrc ! compositor produces no output
+      * 766441 : OpenBSD does not use librt, but provides the needed functions in libc
+      * 766520 : gl: win32: race when handling window messages while creating the internal window
+      * 766611 : gl: buffer pool configuration error with caopengllayersink
+      * 766638 : ahc: fix possible NULL deref
+      * 766732 : openjpegenc: Doesn't manage MCT switch for RGB and YUV frames
+      * 767298 : amc: gst_object_unref on caps
+      * 767302 : ahcsrc: div by 0 warning
 
 ==== Download ====
 
@@ -114,18 +112,17 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * Damian Ziobro
-      * Haihua Hu
-      * Heinrich Fink
-      * Jan Schmidt
-      * Kouhei Sutou
+      * Aaron Boxer
+      * Alessandro Decina
+      * Alex-P. Natsios
+      * Arun Raghavan
+      * Guillaume Desmottes
+      * Jan Alexander Steffens (heftig)
+      * Martin Kelly
       * Matthew Waters
+      * Nicolas Dufresne
       * Nirbheek Chauhan
-      * Patricia Muscalu
+      * Olivier Crête
       * Sebastian Dröge
-      * Thiago Santos
-      * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Vineeth TM
+      * Xavier Claessens
  

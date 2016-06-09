@@ -41,6 +41,7 @@ GObject
           GstSirenDec
         GstAudioEncoder
           ADPCMEnc
+          GstFaac
           GstGSMEnc
           GstSbcEnc
           GstSirenEnc
