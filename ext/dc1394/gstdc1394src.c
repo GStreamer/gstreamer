@@ -1094,24 +1094,17 @@ gst_dc1394_src_parse_caps (const GstCaps * caps,
   if (!structure)
     goto error;
 
-  if (!width) {
-  } else if (!gst_structure_get_int (structure, "width", &w)) {
+  if (!gst_structure_get_int (structure, "width", &w)
+      || !gst_structure_get_int (structure, "height", &h))
     goto error;
-  } else {
-    *width = w;
-  }
 
-  if (!height) {
-  } else if (!gst_structure_get_int (structure, "height", &h)) {
-    goto error;
-  } else {
-    *height = h;
-  }
+  *width = w;
+  *height = h;
 
-  if (!(rate || rate_decimal)) {
-  } else if (!gst_structure_get_fraction (structure, "framerate", &num, &den)) {
+  if (!gst_structure_get_fraction (structure, "framerate", &num, &den))
     goto error;
-  } else if (gst_util_fraction_compare (num, den, 240, 128) <= 0) {
+
+  if (gst_util_fraction_compare (num, den, 240, 128) <= 0) {
     *rate = DC1394_FRAMERATE_1_875;
   } else if (gst_util_fraction_compare (num, den, 240, 64) <= 0) {
     *rate = DC1394_FRAMERATE_3_75;
@@ -1130,13 +1123,11 @@ gst_dc1394_src_parse_caps (const GstCaps * caps,
   } else {
     *rate = DC1394_FRAMERATE_240;
   }
-  if (rate_decimal) {
-    gst_util_fraction_to_double (num, den, &dec);
-    *rate_decimal = dec;
-  }
 
-  if (!color_codings) {
-  } else if (gst_structure_has_name (structure, "video/x-raw")) {
+  gst_util_fraction_to_double (num, den, &dec);
+  *rate_decimal = dec;
+
+  if (gst_structure_has_name (structure, "video/x-raw")) {
     format = gst_structure_get_string (structure, "format");
     switch (gst_video_format_from_string (format)) {
       case GST_VIDEO_FORMAT_GRAY8:
