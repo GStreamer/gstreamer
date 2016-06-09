@@ -74,7 +74,7 @@ you will need that tool to get started.
 ---------------------------
 
 To implement new tests, you will just need to set the media path using the
---medias-paths argument. If you want to run all avalaible scenarios on all the
+--medias-paths argument. If you want to run all available scenarios on all the
 file present in that folder, you should run the first time:
 
 .    $gst-validate-launcher --medias-paths /path/to/media/files --generate-media-info
@@ -240,7 +240,7 @@ class LauncherConfig(Loggable):
             try:
                 subprocess.check_output("gdb --help", shell=True)
             except subprocess.CalledProcessError:
-                printc("Want to use gdb, but not avalaible on the system",
+                printc("Want to use gdb, but not available on the system",
                        Colors.FAIL)
                 return False
 
@@ -303,7 +303,7 @@ class LauncherConfig(Loggable):
             try:
                 subprocess.check_output("valgrind --help", shell=True)
             except subprocess.CalledProcessError:
-                printc("Want to use valgrind, but not avalaible on the system",
+                printc("Want to use valgrind, but not available on the system",
                        Colors.FAIL)
                 return False
 
@@ -355,7 +355,7 @@ if it succeeded loading the tests, False otherwise.
 You will be able to configure the TestManager with its various methods. This
 function will be called with each TestManager usable, for example you will be
 passed the 'validate' TestManager in case the GstValidateManager launcher is
-avalaible. You should configure it using:
+available. You should configure it using:
 
    * test_manager.add_scenarios: which allows you to register a list of scenario names to be run
    * test_manager.set_default_blacklist: Lets you set a list of tuple of the form:

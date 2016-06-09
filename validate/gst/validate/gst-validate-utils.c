@@ -699,7 +699,7 @@ done:
  * for the value, if it is a double, it considers the value to be in second
  * it can be a gint, gint64 a guint, a gint64.
  *
- * Return: %TRUE in case of success, %FALSE otherwize.
+ * Return: %TRUE in case of success, %FALSE otherwise.
  */
 gboolean
 gst_validate_utils_get_clocktime (GstStructure * structure, const gchar * name,

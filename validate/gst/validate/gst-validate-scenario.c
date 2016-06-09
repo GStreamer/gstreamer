@@ -96,7 +96,7 @@ static GstValidateActionType *_find_action_type (const gchar * type_name);
 
 /* GstValidateScenario is not really thread safe and
  * everything should be done from the thread GstValidate
- * was inited from, unless stated otherwize.
+ * was inited from, unless stated otherwise.
  */
 struct _GstValidateScenarioPrivate
 {
@@ -449,7 +449,7 @@ _check_scenario_is_done (GstValidateScenario * scenario)
  * the 'position' and 'duration' variables. And it will always convert that
  * value to a GstClockTime.
  *
- * Returns: %TRUE if the time value could be retrieved/computed or %FALSE otherwize
+ * Returns: %TRUE if the time value could be retrieved/computed or %FALSE otherwise
  */
 gboolean
 gst_validate_action_get_clocktime (GstValidateScenario * scenario,
@@ -504,7 +504,7 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
  *
  * For more information you should have a look at #gst_event_new_seek
  *
- * Returns: %TRUE if the seek could be executed, %FALSE otherwize
+ * Returns: %TRUE if the seek could be executed, %FALSE otherwise
  */
 gboolean
 gst_validate_scenario_execute_seek (GstValidateScenario * scenario,
@@ -2937,7 +2937,7 @@ gst_validate_list_scenarios (gchar ** scenarios, gint num_scenarios,
 
 done:
   result = g_key_file_to_data (kf, &datalength, &err);
-  g_print ("All scenarios avalaible:\n%s", result);
+  g_print ("All scenarios available:\n%s", result);
 
   if (output_file && !err)
     g_file_set_contents (output_file, result, datalength, &err);
