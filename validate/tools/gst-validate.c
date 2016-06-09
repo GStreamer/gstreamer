@@ -440,15 +440,15 @@ main (int argc, gchar ** argv)
           " or the name of the scenario (name of the file without the"
           " '.scenario' extension).", NULL},
     {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
-        "List the avalaible scenarios that can be run", NULL},
+        "List the available scenarios that can be run", NULL},
     {"scenarios-defs-output-file", '\0', 0, G_OPTION_ARG_FILENAME,
           &output_file, "The output file to store scenarios details. "
           "Implies --list-scenario",
         NULL},
     {"inspect-action-type", 't', 0, G_OPTION_ARG_NONE, &inspect_action_type,
-          "Inspect the avalaible action types with which to write scenarios"
-          " if no parameter passed, it will list all avalaible action types"
-          " otherwize will print the full description of the wanted types",
+          "Inspect the available action types with which to write scenarios."
+          " Specify an action type if you want its full description."
+          " If no action type is given the full list of available ones gets printed.",
         NULL},
     {"set-media-info", '\0', 0, G_OPTION_ARG_FILENAME, &media_info,
           "Set a media_info XML file descriptor to share information about the"
