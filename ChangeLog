@@ -1,9 +1,33 @@
-=== release 1.8.1 ===
+=== release 1.8.2 ===
 
-2016-04-20  Sebastian Dröge <slomo@coaxion.net>
+2016-06-09  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.1
+	  releasing 1.8.2
+
+2016-04-29 13:11:48 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.h:
+	  plugin: fix macro processor check
+	  Instead of #ifdef it should be used #if becasuse USE_GST_GL_HELPERS is always
+	  defined in config.h, but it would be 0 or 1 depending on the configure output.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765702
+
+2016-04-29 12:53:06 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* tests/test-display.c:
+	  tests: display: guard possible unused variables
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765702
+
+=== release 1.8.1 ===
+
+2016-04-20 18:39:46 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	  Release 1.8.1
 
 2016-04-13 20:33:32 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
 

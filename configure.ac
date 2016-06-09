@@ -1,7 +1,7 @@
 # gstreamer-vaapi package version number
 m4_define([gst_vaapi_major_version], [1])
 m4_define([gst_vaapi_minor_version], [8])
-m4_define([gst_vaapi_micro_version], [1])
+m4_define([gst_vaapi_micro_version], [2])
 m4_define([gst_vaapi_nano_version],  [0])
 m4_define([gst_vaapi_version],
           [gst_vaapi_major_version.gst_vaapi_minor_version.gst_vaapi_micro_version])
@@ -16,9 +16,9 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 # gstreamer-vaapi library (libtool) version number
-m4_define([gst_vaapi_lt_current],       [801])
+m4_define([gst_vaapi_lt_current],       [802])
 m4_define([gst_vaapi_lt_revision],      [0])
-m4_define([gst_vaapi_lt_age],           [801])
+m4_define([gst_vaapi_lt_age],           [802])
 
 # glib version number
 m4_define([glib_version], [2.32])
