@@ -474,7 +474,7 @@ gst_dc1394_src_open_cam (GstDC1394Src * src)
   dc1394error_t ret;
   int number;
   uint64_t guid;
-  int unit;
+  int unit, i;
 
   src->dc1394 = dc1394_new ();
   if (!src->dc1394) {
@@ -492,7 +492,7 @@ gst_dc1394_src_open_cam (GstDC1394Src * src)
         ("Could not enumerate cameras: %s.", dc1394_error_get_string (ret)));
     goto error;
   }
-  for (int i = 0; i < cameras->num; i++) {
+  for (i = 0; i < cameras->num; i++) {
     GST_DEBUG_OBJECT (src, "Camera %2d is %016" G_GINT64_MODIFIER "X %d.",
         i, cameras->ids[i].guid, cameras->ids[i].unit);
     if ((src->guid == -1 || src->guid == cameras->ids[i].guid) &&
@@ -585,6 +585,7 @@ gst_dc1394_src_start_cam (GstDC1394Src * src)
 {
   dc1394error_t ret;
   dc1394switch_t status;
+  guint trials;
 
   GST_DEBUG_OBJECT (src, "Setup capture with a DMA buffer of %d frames",
       src->dma_buffer_size);
@@ -624,7 +625,7 @@ gst_dc1394_src_start_cam (GstDC1394Src * src)
     goto error_transmission;
   }
   ret = dc1394_video_get_transmission (src->camera, &status);
-  for (guint trials = 10;
+  for (trials = 10;
       (trials > 0) && !(ret == DC1394_SUCCESS && status == DC1394_ON);
       trials--) {
     GST_DEBUG_OBJECT (src,
@@ -704,6 +705,7 @@ gst_dc1394_src_set_cam_caps (GstDC1394Src * src, GstCaps * caps)
   double rate_decimal;
   uint64_t total_bytes;
   uint32_t width, width_step, height, height_step;
+  guint m, c;
 
   ok = dc1394_video_get_supported_modes (src->camera,
       &supported_modes) == DC1394_SUCCESS;
@@ -713,7 +715,7 @@ gst_dc1394_src_set_cam_caps (GstDC1394Src * src, GstCaps * caps)
     goto error;
   }
   supported = FALSE;
-  for (guint m = 0; m < supported_modes.num && !supported; m++) {
+  for (m = 0; m < supported_modes.num && !supported; m++) {
     mode = supported_modes.modes[m];
     mode_caps = gst_caps_new_empty ();
     if (dc1394_is_video_mode_scalable (mode)) {
@@ -764,7 +766,7 @@ gst_dc1394_src_set_cam_caps (GstDC1394Src * src, GstCaps * caps)
   }
   if (dc1394_is_video_mode_scalable (mode)) {
     ok = FALSE;
-    for (guint c = 0; c < supported_codings.num && !ok; c++) {
+    for (c = 0; c < supported_codings.num && !ok; c++) {
       coding = supported_codings.codings[c];
       GST_DEBUG_OBJECT (src,
           "Try format7 video mode %d with coding %d, size %d %d, and rate %.4f Hz.",
@@ -783,7 +785,7 @@ gst_dc1394_src_set_cam_caps (GstDC1394Src * src, GstCaps * caps)
         mode, rate_decimal, rate);
     ok = dc1394_video_set_framerate (src->camera, rate) == DC1394_SUCCESS;
   }
-  // TODO: check feature framerate
+  /* TODO: check feature framerate */
   if (!ok) {
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("Could not set video mode %d parameters.", mode));
@@ -806,6 +808,7 @@ gst_dc1394_src_get_cam_caps (GstDC1394Src * src)
   dc1394color_coding_t coding;
   dc1394framerates_t supported_rates;
   uint32_t width, width_step, height, height_step;
+  guint m;
 
   if (src->caps)
     return gst_caps_ref (src->caps);
@@ -819,7 +822,7 @@ gst_dc1394_src_get_cam_caps (GstDC1394Src * src)
   }
 
   src->caps = gst_caps_new_empty ();
-  for (guint m = 0; m < supported_modes.num; m++) {
+  for (m = 0; m < supported_modes.num; m++) {
     mode = supported_modes.modes[m];
     if (dc1394_is_video_mode_scalable (mode)) {
       ok &= dc1394_format7_get_color_codings (src->camera, mode,
@@ -883,11 +886,11 @@ gst_dc1394_src_get_all_caps (void)
           DC1394_FRAMERATE_15, DC1394_FRAMERATE_30, DC1394_FRAMERATE_60,
       DC1394_FRAMERATE_120, DC1394_FRAMERATE_240}
   };
+  dc1394video_mode_t mode;
 
   caps = gst_caps_new_empty ();
   /* First caps for fixed video modes */
-  for (dc1394video_mode_t mode = DC1394_VIDEO_MODE_MIN;
-      mode < DC1394_VIDEO_MODE_EXIF; mode++) {
+  for (mode = DC1394_VIDEO_MODE_MIN; mode < DC1394_VIDEO_MODE_EXIF; mode++) {
     dc1394_get_image_size_from_video_mode (NULL, mode, &width, &height);
     dc1394_get_color_coding_from_video_mode (NULL, mode, &coding);
     video_codings.codings[0] = coding;
@@ -923,9 +926,10 @@ gst_dc1394_src_build_caps (const dc1394color_codings_t * supported_codings,
   GValue heights = { 0 };
   GValue framerate = { 0 };
   GValue framerates = { 0 };
+  guint c, w, h, r;
 
   caps = gst_caps_new_empty ();
-  for (guint c = 0; c < supported_codings->num; c++) {
+  for (c = 0; c < supported_codings->num; c++) {
     coding = supported_codings->codings[c];
     switch (coding) {
       case DC1394_COLOR_CODING_MONO8:
@@ -1005,7 +1009,7 @@ gst_dc1394_src_build_caps (const dc1394color_codings_t * supported_codings,
   } else {
     g_value_init (&widths, GST_TYPE_LIST);
     g_value_init (&width, G_TYPE_INT);
-    for (uint32_t w = width_min; w <= width_max; w += width_step) {
+    for (w = width_min; w <= width_max; w += width_step) {
       g_value_set_int (&width, w);
       gst_value_list_append_value (&widths, &width);
     }
@@ -1020,7 +1024,7 @@ gst_dc1394_src_build_caps (const dc1394color_codings_t * supported_codings,
   } else {
     g_value_init (&heights, GST_TYPE_LIST);
     g_value_init (&height, G_TYPE_INT);
-    for (uint32_t h = height_min; h <= height_max; h += height_step) {
+    for (h = height_min; h <= height_max; h += height_step) {
       g_value_set_int (&height, h);
       gst_value_list_append_value (&heights, &height);
     }
@@ -1034,7 +1038,7 @@ gst_dc1394_src_build_caps (const dc1394color_codings_t * supported_codings,
   if (supported_rates) {
     g_value_init (&framerates, GST_TYPE_LIST);
     g_value_init (&framerate, GST_TYPE_FRACTION);
-    for (guint r = 0; r < supported_rates->num; r++) {
+    for (r = 0; r < supported_rates->num; r++) {
       rate = supported_rates->framerates[r];
       switch (rate) {
         case DC1394_FRAMERATE_1_875:
