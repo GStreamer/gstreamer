@@ -535,7 +535,7 @@ struct _GstH265ShortTermRefPicSet
  * @aspect_ratio_idc specifies the value of the sample aspect ratio of the luma samples
  * @sar_width indicates the horizontal size of the sample aspect ratio
  * @sar_height indicates the vertical size of the sample aspect ratio
- * @overscan_info_present_flag: %TRUE overscan_appropriate_flag is present %FALSE otherwize
+ * @overscan_info_present_flag: %TRUE overscan_appropriate_flag is present %FALSE otherwise
  * @overscan_appropriate_flag: %TRUE indicates that the cropped decoded pictures
  *  output are suitable for display using overscan. %FALSE the cropped decoded pictures
  *  output contain visually important information
@@ -549,7 +549,7 @@ struct _GstH265ShortTermRefPicSet
  * @transfer_characteristics: indicates the opto-electronic transfer characteristic
  * @matrix_coefficients: describes the matrix coefficients used in deriving luma and chroma signals
  * @chroma_loc_info_present_flag: %TRUE specifies that chroma_sample_loc_type_top_field and
- *  chroma_sample_loc_type_bottom_field are present, %FALSE otherwize
+ *  chroma_sample_loc_type_bottom_field are present, %FALSE otherwise
  * @chroma_sample_loc_type_top_field: specify the location of chroma for top field
  * @chroma_sample_loc_type_bottom_field specify the location of chroma for bottom field
  * @neutral_chroma_indication_flag: %TRUE indicate that the value of chroma samples is equla

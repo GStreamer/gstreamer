@@ -399,7 +399,7 @@ struct _GstMpegVideoPictureHdr
  * @alternate_scan: Alternate Scan
  * @repeat_first_field: Repeat First Field
  * @chroma_420_type: Chroma 420 Type
- * @progressive_frame: %TRUE if the frame is progressive %FALSE otherwize
+ * @progressive_frame: %TRUE if the frame is progressive %FALSE otherwise
  *
  * The Mpeg2 Video Picture Extension structure.
  */

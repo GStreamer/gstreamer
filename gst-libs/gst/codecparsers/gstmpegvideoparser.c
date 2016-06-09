@@ -286,7 +286,7 @@ failed:
  * Parses the @seqhdr MPEG Video Sequence Header structure members
  * from video @packet
  *
- * Returns: %TRUE if the seqhdr could be parsed correctly, %FALSE otherwize.
+ * Returns: %TRUE if the seqhdr could be parsed correctly, %FALSE otherwise.
  *
  * Since: 1.2
  */
@@ -381,7 +381,7 @@ failed:
  * Parses the @seqext MPEG Video Sequence Extension structure members
  * from video @packet
  *
- * Returns: %TRUE if the seqext could be parsed correctly, %FALSE otherwize.
+ * Returns: %TRUE if the seqext could be parsed correctly, %FALSE otherwise.
  *
  * Since: 1.2
  */
@@ -448,7 +448,7 @@ gst_mpeg_video_packet_parse_sequence_extension (const GstMpegVideoPacket *
  * Parses the @seqext MPEG Video Sequence Display Extension structure
  * members from video @packet
  *
- * Returns: %TRUE if the seqext could be parsed correctly, %FALSE otherwize.
+ * Returns: %TRUE if the seqext could be parsed correctly, %FALSE otherwise.
  *
  * Since: 1.2
  */
@@ -510,7 +510,7 @@ gst_mpeg_video_packet_parse_sequence_display_extension (const GstMpegVideoPacket
  * Parses the @seqscaleext MPEG Video Sequence Scalable Extension structure
  * members from video @packet
  *
- * Returns: %TRUE if the seqext could be parsed correctly, %FALSE otherwize.
+ * Returns: %TRUE if the seqext could be parsed correctly, %FALSE otherwise.
  *
  * Since: 1.2
  */
@@ -632,7 +632,7 @@ gst_mpeg_video_finalise_mpeg2_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
  * structure members from video @packet
  *
  * Returns: %TRUE if the quant matrix extension could be parsed correctly,
- * %FALSE otherwize.
+ * %FALSE otherwise.
  *
  * Since: 1.2
  */
@@ -702,7 +702,7 @@ failed:
  * video @packet
  *
  * Returns: %TRUE if the picture extension could be parsed correctly,
- * %FALSE otherwize.
+ * %FALSE otherwise.
  *
  * Since: 1.2
  */
@@ -802,7 +802,7 @@ failed:
  * from video @packet
  *
  * Returns: %TRUE if the picture sequence could be parsed correctly, %FALSE
- * otherwize.
+ * otherwise.
  *
  * Since: 1.2
  */
@@ -879,7 +879,7 @@ failed:
  * Parses the @gop MPEG Video Group of Picture structure members from
  * video @packet
  *
- * Returns: %TRUE if the gop could be parsed correctly, %FALSE otherwize.
+ * Returns: %TRUE if the gop could be parsed correctly, %FALSE otherwise.
  *
  * Since: 1.2
  */
@@ -930,7 +930,7 @@ failed:
  *
  * Parses the @GstMpegVideoSliceHdr  structure members from @data
  *
- * Returns: %TRUE if the slice could be parsed correctly, %FALSE otherwize.
+ * Returns: %TRUE if the slice could be parsed correctly, %FALSE otherwise.
  *
  * Since: 1.2
  */
@@ -1074,7 +1074,7 @@ gst_mpeg_video_quant_matrix_get_zigzag_from_raster (guint8 out_quant[64],
  *
  * Parses the @seqhdr Mpeg Video Sequence Header structure members from @data
  *
- * Returns: %TRUE if the seqhdr could be parsed correctly, %FALSE otherwize.
+ * Returns: %TRUE if the seqhdr could be parsed correctly, %FALSE otherwise.
  *
  * Deprecated: Use gst_mpeg_video_packet_parse_sequence_header() instead.
  */
@@ -1107,7 +1107,7 @@ gst_mpeg_video_parse_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
  *
  * Parses the @seqext Mpeg Video Sequence Extension structure members from @data
  *
- * Returns: %TRUE if the seqext could be parsed correctly, %FALSE otherwize.
+ * Returns: %TRUE if the seqext could be parsed correctly, %FALSE otherwise.
  *
  * Deprecated: Use gst_mpeg_video_packet_parse_sequence_extension() instead.
  */
@@ -1163,7 +1163,7 @@ gst_mpeg_video_parse_sequence_display_extension (GstMpegVideoSequenceDisplayExt
  * @data
  *
  * Returns: %TRUE if the quant matrix extension could be parsed correctly,
- * %FALSE otherwize.
+ * %FALSE otherwise.
  *
  * Deprecated: Use gst_mpeg_video_packet_parse_quant_matrix_extension() instead.
  */
@@ -1197,7 +1197,7 @@ gst_mpeg_video_parse_quant_matrix_extension (GstMpegVideoQuantMatrixExt * quant,
  * Parsers the @hdr Mpeg Video Picture Header structure members from @data
  *
  * Returns: %TRUE if the picture sequence could be parsed correctly, %FALSE
- * otherwize.
+ * otherwise.
  *
  * Deprecated: Use gst_mpeg_video_packet_parse_picture_header() instead.
  */
@@ -1231,7 +1231,7 @@ gst_mpeg_video_parse_picture_header (GstMpegVideoPictureHdr * hdr,
  * Parse the @ext Mpeg Video Picture Extension structure members from @data
  *
  * Returns: %TRUE if the picture extension could be parsed correctly,
- * %FALSE otherwize.
+ * %FALSE otherwise.
  *
  * Deprecated: Use gst_mpeg_video_packet_parse_picture_extension() instead.
  */
@@ -1264,7 +1264,7 @@ gst_mpeg_video_parse_picture_extension (GstMpegVideoPictureExt * ext,
  *
  * Parses the @gop Mpeg Video Group of Picture structure members from @data
  *
- * Returns: %TRUE if the gop could be parsed correctly, %FALSE otherwize.
+ * Returns: %TRUE if the gop could be parsed correctly, %FALSE otherwise.
  *
  * Deprecated: Use gst_mpeg_video_packet_parse_gop() instead.
  */

@@ -437,7 +437,7 @@ struct _GstH264HRDParams
  * @aspect_ratio_idc specifies the value of the sample aspect ratio of the luma samples
  * @sar_width indicates the horizontal size of the sample aspect ratio
  * @sar_height indicates the vertical size of the sample aspect ratio
- * @overscan_info_present_flag: %TRUE overscan_appropriate_flag is present %FALSE otherwize
+ * @overscan_info_present_flag: %TRUE overscan_appropriate_flag is present %FALSE otherwise
  * @overscan_appropriate_flag: %TRUE indicates that the cropped decoded pictures
  *  output are suitable for display using overscan. %FALSE the cropped decoded pictures
  *  output contain visually important information
@@ -451,7 +451,7 @@ struct _GstH264HRDParams
  * @transfer_characteristics: indicates the opto-electronic transfer characteristic
  * @matrix_coefficients: describes the matrix coefficients used in deriving luma and chroma signals
  * @chroma_loc_info_present_flag: %TRUE specifies that chroma_sample_loc_type_top_field and
- *  chroma_sample_loc_type_bottom_field are present, %FALSE otherwize
+ *  chroma_sample_loc_type_bottom_field are present, %FALSE otherwise
  * @chroma_sample_loc_type_top_field: specify the location of chroma for top field
  * @chroma_sample_loc_type_bottom_field specify the location of chroma for bottom field
  * @timing_info_present_flag: %TRUE specifies that num_units_in_tick,
@@ -460,7 +460,7 @@ struct _GstH264HRDParams
  * time_scale: is the number of time units that pass in one second
  * @fixed_frame_rate_flag: %TRUE indicates that the temporal distance between the HRD output times
  *  of any two consecutive pictures in output order is constrained as specified in the spec, %FALSE
- *  otherwize.
+ *  otherwise.
  * @nal_hrd_parameters_present_flag: %TRUE if nal hrd parameters present in the bitstream
  * @vcl_hrd_parameters_present_flag: %TRUE if nal vlc hrd parameters present in the bitstream
  * @low_delay_hrd_flag: specifies the HRD operational mode
