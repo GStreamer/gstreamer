@@ -1,15 +1,15 @@
 # Brazilian Portuguese translation of gst-plugins-bad.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Copyright (C) 2007-2015 Free Software Foundation, Inc.
+# Copyright (C) 2007-2016 Free Software Foundation, Inc.
 # Raphael Higino <In memorian>, 2007.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2015.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.7.1\n"
+"Project-Id-Version: gst-plugins-bad-1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2016-04-20 15:31+0300\n"
-"PO-Revision-Date: 2015-12-28 17:03-0200\n"
+"PO-Revision-Date: 2016-05-06 16:02-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
