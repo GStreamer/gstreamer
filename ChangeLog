@@ -1,9 +1,153 @@
-=== release 1.8.1 ===
+=== release 1.8.2 ===
 
-2016-04-20  Sebastian Dröge <slomo@coaxion.net>
+2016-06-09  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.1
+	  releasing 1.8.2
+
+2016-06-09 10:04:18 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/hr.po:
+	* po/pt_BR.po:
+	* po/sk.po:
+	  po: Update translations
+
+2016-03-11 16:04:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	* plugins/elements/gstqueue2.c:
+	  queue: Only unblock upstream waiting for the query once downstream is finished
+	  ... when flushing and deactivating pads. Otherwise downstream might have a
+	  query that was already unreffed by upstream, causing crashes or other
+	  interesting effects.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763496
+
+2016-05-15 15:02:49 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpad.h:
+	  pad: Improve IDLE probe docs
+	  Make it explicit that the pad is only blocked while the callback is running,
+	  and the pad will be unblocked again once the callback returned.
+	  If BLOCK and IDLE behaviour is needed, both need to be used.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766002
+
+2016-05-14 17:31:51 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesrc.c:
+	  basesink/src: Post an error message if ::start() fails
+	  The subclass should do that already, but just in case do it ourselves too as a
+	  fallback. Without this, e.g. playbin will just wait forever if this fails
+	  because it is triggered as part of an ASYNC state change.
+
+2016-05-14 23:36:43 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstbin.c:
+	  bin: Fix EOS forwarding on PLAYING->PLAYING
+	  When doing a transition from PLAYING to PLAYING, we will fail
+	  to forward an EOS message on the bus, and noone else will ever
+	  send it because there'll be no actual state changed message.
+	  Allow EOS through directly in that case.
+
+2016-05-11 15:06:39 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Only push a CAPS event downstream if the sinkpad is not in PULL mode
+	  The other signal handlers of the type-found signal might have reactivated
+	  typefind in PULL mode already, pushing a CAPS event at that point would cause
+	  deadlocks and is in general unexpected by elements that are in PULL mode.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765906
+
+2016-05-10 15:01:42 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstpad.c:
+	  pad: Fix pad state when deactivating from one mode and then trying to activate another and failing
+	  When activating a pad in PULL mode, it might already be in PUSH mode. We now
+	  first try to deactivate it from PUSH mode and then try to activate it in PULL
+	  mode. If the activation fails, we would set the pad to flushing and set it
+	  back to its old mode. However the old mode is wrong, the pad is not in PUSH
+	  mode anymore but in NONE mode.
+	  This fixes e.g. typefind in decodebin reactivating PUSH/PULL mode if upstream
+	  actually fails to go into PULL mode after first PUSHING data to typefind.
+
+2016-05-04 09:53:32 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/gstutils.c:
+	* tests/check/pipelines/parse-launch.c:
+	  utils: fix element leak in find_common_root()
+	  The root element was not unreffed when iterating over ancestors.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765961
+
+2016-04-27 09:21:31 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/manual/advanced-dataaccess.xml:
+	  manual: Fix buffer memory leak in appsrc example
+	  g_signal_emit_by_name() is not like gst_app_src_push_buffer() due to reference
+	  counting limitations of signals, it does *not* take ownership of the buffer.
+
+2016-04-21 13:49:32 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstdatetime.c:
+	  datetime: Sanity check year, month and day when parsing ISO-8601 strings
+	  Passing years > 9999, months > 12 or days > 31 to gst_date_time_new() will
+	  cause an assertion and generally does not make much sense. Instead consider it
+	  as a parsing error like hours > 24 and return NULL.
+
+=== release 1.8.1 ===
+
+2016-04-20 18:09:16 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.8.1
+
+2016-04-20 17:52:31 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2016-04-20 15:29:15 +0300  Sebastian Dröge <sebastian@centricular.com>
 

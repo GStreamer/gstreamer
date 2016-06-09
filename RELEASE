@@ -1,16 +1,15 @@
 
-Release notes for GStreamer 1.8.1
+Release notes for GStreamer 1.8.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.8 release series of your favourite cross-platform multimedia framework!
 
 
-This release only contains bugfixes and it is safe to update from 1.8.0. For a
+This release only contains bugfixes and it is safe to update from 1.8.1. For a
 full list of bugfixes see Bugzilla.
 
 
-See /releases/1.8/
-for the full release notes.
+See /releases/1.8/ for the full release notes.
 
 
 This module, gstreamer, only contains core functionality.
@@ -38,12 +37,10 @@ Bugs fixed in this release
      
       * 727105 : doc: Drop reference to osssink / esdsink / etc, from gst-launch-1.0 man page
       * 741001 : GST_DEBUG categories are missing when using --gst-debug-help
-      * 761912 : gstpad: Fix race between gst_element_remove_pad and state change
-      * 762995 : queue: Use full running time for level calculation
-      * 763753 : valve: don't send sticky events as a direct response to upstream events
-      * 763757 : multiqueue: Make sure mq- > percent remains valid after modifying high-percent value
-      * 765096 : baseparse: When initializing DTS from PTS, remember that we did so
-      * 765260 : baseparse: regression with aac streams
+      * 763496 : queue: Can release serialized (ALLOCATION) query before downstream returned it
+      * 765906 : typefind: Regression due to fix for 763491
+      * 765961 : Fix element leak in gstutils.c:find_common_root()
+      * 766002 : pad: IDLE probes don't block when returning GST_PAD_PROBE_OK
 
 ==== Download ====
 
@@ -80,9 +77,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Carlos Rafael Giani
-      * Edward Hervey
-      * Havard Graff
+      * Guillaume Desmottes
+      * Jan Schmidt
       * Sebastian Dröge
-      * Stian Selnes
  
