@@ -825,11 +825,11 @@ main (int argc, gchar ** argv)
           "will allow the transcoding to finish the files properly before "
           "exiting.", NULL},
     {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
-        "List the avalaible scenarios that can be run", NULL},
+        "List the available scenarios that can be run", NULL},
     {"inspect-action-type", 't', 0, G_OPTION_ARG_NONE, &inspect_action_type,
-          "Inspect the avalaible action types with which to write scenarios"
-          " if no parameter passed, it will list all avalaible action types"
-          " otherwize will print the full description of the wanted types",
+          "Inspect the available action types with which to write scenarios"
+          " if no parameter passed, it will list all available action types"
+          " otherwise will print the full description of the wanted types",
         NULL},
     {"scenarios-defs-output-file", '\0', 0, G_OPTION_ARG_FILENAME,
           &output_file, "The output file to store scenarios details. "
