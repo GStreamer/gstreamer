@@ -1284,9 +1284,27 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
 
   if (str_playback_time == NULL) {
     GstValidateActionType *type = _find_action_type (action->type);
+    gboolean can_execute_on_addition =
+        type->flags & GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION
+        && !GST_CLOCK_TIME_IS_VALID (action->playback_time);
 
-    if (type->flags & GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION
-        && !GST_CLOCK_TIME_IS_VALID (action->playback_time)) {
+    if (priv->needs_parsing)
+      can_execute_on_addition = FALSE;
+
+    if (can_execute_on_addition) {
+      GList *tmp;
+
+      for (tmp = priv->actions; tmp; tmp = tmp->next) {
+        if (GST_CLOCK_TIME_IS_VALID (((GstValidateAction *) tmp->
+                    data)->playback_time)) {
+          can_execute_on_addition = FALSE;
+          break;
+        }
+      }
+
+    }
+
+    if (can_execute_on_addition) {
       SCENARIO_LOCK (scenario);
       priv->on_addition_actions = g_list_append (priv->on_addition_actions,
           action);
