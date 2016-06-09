@@ -2179,6 +2179,9 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
 
   g_return_val_if_fail (priv->packetized || klass->parse, GST_FLOW_ERROR);
 
+  /* Draining on DISCONT is handled in chain_reverse() for reverse playback,
+   * and this function would only be called to get everything collected GOP
+   * by GOP in the parse_gather list */
   if (decoder->input_segment.rate > 0.0 && GST_BUFFER_IS_DISCONT (buf))
     ret = gst_video_decoder_drain_out (decoder, FALSE);
 
@@ -2207,8 +2210,13 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
     }
     priv->current_frame = NULL;
     /* If in trick mode and it was a keyframe, drain decoder to avoid extra
-     * latency */
-    if (was_keyframe
+     * latency. Only do this for forwards playback as reverse playback handles
+     * draining on keyframes in flush_parse(), and would otherwise call back
+     * from drain_out() to here causing an infinite loop.
+     * Also this function is only called for reverse playback to gather frames
+     * GOP by GOP, and does not do any actual decoding. That would be done by
+     * flush_decode() */
+    if (was_keyframe && decoder->output_segment.rate > 0.0
         && (decoder->output_segment.flags & GST_SEEK_FLAG_TRICKMODE_KEY_UNITS))
       gst_video_decoder_drain_out (decoder, FALSE);
   } else {
