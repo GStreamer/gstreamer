@@ -402,8 +402,8 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
         } else {
           gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
               GST_TAG_DATE_TIME, dt, NULL);
+          gst_date_time_unref (dt);
         }
-        gst_date_time_unref (dt);
       } else if (!strcmp (tag_name, "creator")) {
         gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
             GST_TAG_ARTIST, s, NULL);
