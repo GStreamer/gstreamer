@@ -1141,7 +1141,7 @@ _should_execute_action (GstValidateScenario * scenario, GstValidateAction * act,
 
     return FALSE;
   } else if (rate < 0 && (GstClockTime) position > act->playback_time) {
-    GST_DEBUG_OBJECT (scenario, "negativ rate and position %" GST_TIME_FORMAT
+    GST_DEBUG_OBJECT (scenario, "negative rate and position %" GST_TIME_FORMAT
         " < playback_time %" GST_TIME_FORMAT, GST_TIME_ARGS (position),
         GST_TIME_ARGS (act->playback_time));
 
