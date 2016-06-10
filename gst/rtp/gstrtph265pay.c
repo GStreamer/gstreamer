@@ -813,16 +813,15 @@ static gboolean
 gst_rtp_h265_pay_decode_nal (GstRtpH265Pay * payloader,
     const guint8 * data, guint size, GstClockTime dts, GstClockTime pts)
 {
-  guint8 header, type;
+  guint8 type;
   gboolean updated;
 
   /* default is no update */
   updated = FALSE;
 
-  GST_DEBUG ("NAL payload len=%u", size);
+  GST_DEBUG_OBJECT (payloader, "NAL payload size %u", size);
 
-  header = data[0];
-  type = (header & 0x7e) >> 1;
+  type = (data[0] >> 1) & 0x3f;
 
   /* We record the timestamp of the last SPS/PPS so
    * that we can insert them at regular intervals and when needed. */
@@ -831,10 +830,9 @@ gst_rtp_h265_pay_decode_nal (GstRtpH265Pay * payloader,
     GstBuffer *nal;
 
     /* encode the entire NAL in base64 */
-    GST_DEBUG ("Found %s %x %x %x Len=%u",
-        type == GST_H265_NAL_VPS ? "VPS" : type ==
-        GST_H265_NAL_SPS ? "SPS" : "PPS", (header >> 7), (header >> 5) & 3,
-        type, size);
+    GST_DEBUG_OBJECT (payloader, "found %s (type 0x%x), size %u",
+        type == GST_H265_NAL_VPS ? "VPS" : type == GST_H265_NAL_SPS ?
+            "SPS" : "PPS", type, size);
 
     nal = gst_buffer_new_allocate (NULL, size, NULL);
     gst_buffer_fill (nal, 0, data, size);
@@ -846,8 +844,7 @@ gst_rtp_h265_pay_decode_nal (GstRtpH265Pay * payloader,
     if (updated && pts != -1)
       payloader->last_vps_sps_pps = pts;
   } else {
-    GST_DEBUG ("NAL: %x %x %x Len = %u", (header >> 7),
-        (header >> 5) & 3, type, size);
+    GST_DEBUG_OBJECT (payloader, "NALU type 0x%x, size %u", type, size);
   }
 
   return updated;
