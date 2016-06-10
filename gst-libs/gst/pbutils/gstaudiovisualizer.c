@@ -1144,7 +1144,7 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     if (GST_CLOCK_TIME_IS_VALID (ts))
       gst_object_sync_values (GST_OBJECT (scope), ts);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = ts;
+    GST_BUFFER_PTS (outbuf) = ts;
     GST_BUFFER_DURATION (outbuf) = scope->priv->frame_duration;
 
     /* this can fail as the data size we need could have changed */
