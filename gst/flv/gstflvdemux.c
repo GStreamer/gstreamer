@@ -255,13 +255,17 @@ parse_flv_demux_parse_date_string (const gchar * s)
   GstDateTime *dt = NULL;
   gchar **tokens;
   guint64 d;
-  gchar *endptr;
+  gchar *endptr, *stripped;
   gint i, hh, mm, ss;
   gint year = -1, month = -1, day = -1;
   gint hour = -1, minute = -1, seconds = -1;
 
+  stripped = g_strstrip (g_strdup (s));
+
   /* "Fri Oct 15 15:13:16 2004" needs to be parsed */
-  tokens = g_strsplit (s, " ", -1);
+  tokens = g_strsplit (stripped, " ", -1);
+
+  g_free (stripped);
 
   if (g_strv_length (tokens) != 5)
     goto out;
