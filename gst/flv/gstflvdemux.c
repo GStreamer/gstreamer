@@ -1058,12 +1058,14 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
         if (demux->audio_codec_data) {
           gst_buffer_unref (demux->audio_codec_data);
         }
-        demux->audio_codec_data = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY,
+        demux->audio_codec_data =
+            gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY,
             7 + codec_data, demux->tag_data_size - codec_data);
 
         /* Use that buffer data in the caps */
         if (demux->audio_pad)
-          gst_flv_demux_audio_negotiate (demux, codec_tag, rate, channels, width);
+          gst_flv_demux_audio_negotiate (demux, codec_tag, rate, channels,
+              width);
         goto beach;
       }
       case 1:
