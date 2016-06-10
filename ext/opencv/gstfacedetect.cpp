@@ -76,9 +76,9 @@
 #  include <config.h>
 #endif
 
-using namespace std;
-
 #include <vector>
+
+using namespace std;
 
 #include "gstfacedetect.h"
 #if (CV_MAJOR_VERSION >= 3)
