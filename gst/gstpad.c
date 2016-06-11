@@ -643,8 +643,8 @@ _apply_pad_offset (GstPad * pad, GstEvent * event, gboolean upstream)
 {
   gint64 offset;
 
-  GST_DEBUG_OBJECT (pad, "apply pad offset %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (pad->offset));
+  GST_DEBUG_OBJECT (pad, "apply pad offset %" GST_STIME_FORMAT,
+      GST_STIME_ARGS (pad->offset));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     GstSegment segment;
@@ -3747,7 +3747,8 @@ gst_pad_set_offset (GstPad * pad, gint64 offset)
     goto done;
 
   pad->offset = offset;
-  GST_DEBUG_OBJECT (pad, "changed offset to %" G_GINT64_FORMAT, offset);
+  GST_DEBUG_OBJECT (pad, "changed offset to %" GST_STIME_FORMAT,
+      GST_STIME_ARGS (offset));
 
   /* resend all sticky events with updated offset on next buffer push */
   events_foreach (pad, mark_event_not_received, NULL);
