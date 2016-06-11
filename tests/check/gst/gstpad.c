@@ -2965,6 +2965,7 @@ GST_START_TEST (test_proxy_accept_caps_with_incompatible_proxy)
 GST_END_TEST;
 
 static GstSegment sink_segment;
+static gint sink_segment_counter;
 
 static gboolean
 segment_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
@@ -2972,6 +2973,7 @@ segment_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
       gst_event_copy_segment (event, &sink_segment);
+      sink_segment_counter++;
       break;
     default:
       break;
@@ -2987,6 +2989,7 @@ test_pad_offset (gboolean on_srcpad)
   GstPad *srcpad, *sinkpad, *offset_pad;
   GstSegment segment;
   GstBuffer *buffer;
+  GstQuery *query;
 
   srcpad = gst_pad_new ("src", GST_PAD_SRC);
   fail_unless (srcpad != NULL);
@@ -2995,6 +2998,7 @@ test_pad_offset (gboolean on_srcpad)
   offset_pad = on_srcpad ? srcpad : sinkpad;
 
   gst_segment_init (&sink_segment, GST_FORMAT_UNDEFINED);
+  sink_segment_counter = 0;
   gst_pad_set_chain_function (sinkpad, gst_check_chain_func);
   gst_pad_set_event_function (sinkpad, segment_event_func);
 
@@ -3013,6 +3017,7 @@ test_pad_offset (gboolean on_srcpad)
           gst_event_new_stream_start ("test")) == TRUE);
   /* We should have no segment event yet */
   fail_if (sink_segment.format != GST_FORMAT_UNDEFINED);
+  fail_unless_equals_int (sink_segment_counter, 0);
 
   /* Send segment event, expect it to arrive with a modified start running time */
   gst_segment_init (&segment, GST_FORMAT_TIME);
@@ -3024,6 +3029,8 @@ test_pad_offset (gboolean on_srcpad)
   fail_unless_equals_uint64 (gst_segment_to_stream_time (&sink_segment,
           GST_FORMAT_TIME, sink_segment.start), 0 * GST_SECOND);
   fail_unless_equals_uint64 (sink_segment.start, 0 * GST_SECOND);
+
+  fail_unless_equals_int (sink_segment_counter, 1);
 
   /* Send a buffer and check if all timestamps are as expected, and especially
    * if the buffer timestamp was not changed */
@@ -3041,6 +3048,8 @@ test_pad_offset (gboolean on_srcpad)
   fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0 * GST_SECOND);
   gst_buffer_unref (buffer);
 
+  fail_unless_equals_int (sink_segment_counter, 1);
+
   /* Set a negative offset of -5s, meaning:
    * segment position 5s gives running time 0s, stream time 5s
    * segment start would have a negative running time!
@@ -3055,6 +3064,8 @@ test_pad_offset (gboolean on_srcpad)
           GST_FORMAT_TIME, sink_segment.start), 0 * GST_SECOND);
   fail_unless_equals_uint64 (sink_segment.start, 0 * GST_SECOND);
 
+  fail_unless_equals_int (sink_segment_counter, 1);
+
   /* Send segment event, expect it to arrive with a modified start running time */
   gst_segment_init (&segment, GST_FORMAT_TIME);
   fail_unless (gst_pad_push_event (srcpad,
@@ -3067,6 +3078,8 @@ test_pad_offset (gboolean on_srcpad)
           GST_FORMAT_TIME, sink_segment.start + 5 * GST_SECOND),
       5 * GST_SECOND);
   fail_unless_equals_uint64 (sink_segment.start, 0 * GST_SECOND);
+
+  fail_unless_equals_int (sink_segment_counter, 2);
 
   /* Send a buffer and check if all timestamps are as expected, and especially
    * if the buffer timestamp was not changed */
@@ -3084,6 +3097,8 @@ test_pad_offset (gboolean on_srcpad)
   fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 5 * GST_SECOND);
   gst_buffer_unref (buffer);
 
+  fail_unless_equals_int (sink_segment_counter, 2);
+
   /* Set offset to 5s again, same situation as above but don't send a new
    * segment event. The segment should be adjusted *before* the buffer comes
    * out of the srcpad */
@@ -3099,6 +3114,8 @@ test_pad_offset (gboolean on_srcpad)
       5 * GST_SECOND);
   fail_unless_equals_uint64 (sink_segment.start, 0 * GST_SECOND);
 
+  fail_unless_equals_int (sink_segment_counter, 2);
+
   /* Send a buffer and check if a new segment event was sent and all buffer
    * timestamps are as expected */
   buffer = gst_buffer_new ();
@@ -3112,6 +3129,8 @@ test_pad_offset (gboolean on_srcpad)
           GST_FORMAT_TIME, sink_segment.start), 0 * GST_SECOND);
   fail_unless_equals_uint64 (sink_segment.start, 0 * GST_SECOND);
 
+  fail_unless_equals_int (sink_segment_counter, 3);
+
   fail_unless_equals_int (g_list_length (buffers), 1);
   buffer = buffers->data;
   buffers = g_list_delete_link (buffers, buffers);
@@ -3121,6 +3140,61 @@ test_pad_offset (gboolean on_srcpad)
           GST_FORMAT_TIME, GST_BUFFER_PTS (buffer)), 0 * GST_SECOND);
   fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0 * GST_SECOND);
   gst_buffer_unref (buffer);
+
+  fail_unless_equals_int (sink_segment_counter, 3);
+
+  /* Set offset to 10s and send another sticky event. In between a new
+   * segment event should've been sent */
+  gst_pad_set_offset (offset_pad, 10 * GST_SECOND);
+
+  /* Segment should still be the same as before */
+  fail_if (sink_segment.format == GST_FORMAT_UNDEFINED);
+  fail_unless_equals_uint64 (gst_segment_to_running_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start), 5 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_segment_to_stream_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start), 0 * GST_SECOND);
+  fail_unless_equals_uint64 (sink_segment.start, 0 * GST_SECOND);
+  fail_unless_equals_int (sink_segment_counter, 3);
+
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_tag (gst_tag_list_new_empty ())) == TRUE);
+
+  /* Segment should be updated */
+  fail_if (sink_segment.format == GST_FORMAT_UNDEFINED);
+  fail_unless_equals_uint64 (gst_segment_to_running_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start), 10 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_segment_to_stream_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start), 0 * GST_SECOND);
+  fail_unless_equals_uint64 (sink_segment.start, 0 * GST_SECOND);
+
+  fail_unless_equals_int (sink_segment_counter, 4);
+
+  /* Set offset to 15s and do a serialized query. In between a new
+   * segment event should've been sent */
+  gst_pad_set_offset (offset_pad, 15 * GST_SECOND);
+
+  /* Segment should still be the same as before */
+  fail_if (sink_segment.format == GST_FORMAT_UNDEFINED);
+  fail_unless_equals_uint64 (gst_segment_to_running_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start), 10 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_segment_to_stream_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start), 0 * GST_SECOND);
+  fail_unless_equals_uint64 (sink_segment.start, 0 * GST_SECOND);
+  fail_unless_equals_int (sink_segment_counter, 4);
+
+  query = gst_query_new_drain ();
+  gst_pad_peer_query (srcpad, query);
+  gst_query_unref (query);
+
+  /* Segment should be updated */
+  fail_if (sink_segment.format == GST_FORMAT_UNDEFINED);
+  fail_unless_equals_uint64 (gst_segment_to_running_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start), 15 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_segment_to_stream_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start), 0 * GST_SECOND);
+  fail_unless_equals_uint64 (sink_segment.start, 0 * GST_SECOND);
+
+  fail_unless_equals_int (sink_segment_counter, 5);
 
   gst_check_drop_buffers ();
 
