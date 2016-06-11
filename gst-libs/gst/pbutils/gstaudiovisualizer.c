@@ -1036,7 +1036,7 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
   guint64 dist, ts;
   guint avail, sbpf;
   gpointer adata;
-  gint bps, channels, rate;
+  gint bpf, channels, rate;
 
   scope = GST_AUDIO_VISUALIZER (parent);
   klass = GST_AUDIO_VISUALIZER_CLASS (G_OBJECT_GET_CLASS (scope));
@@ -1058,9 +1058,9 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
 
   channels = GST_AUDIO_INFO_CHANNELS (&scope->ainfo);
   rate = GST_AUDIO_INFO_RATE (&scope->ainfo);
-  bps = GST_AUDIO_INFO_BPS (&scope->ainfo);
+  bpf = GST_AUDIO_INFO_BPF (&scope->ainfo);
 
-  if (bps == 0) {
+  if (bpf == 0) {
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto beach;
   }
@@ -1087,8 +1087,7 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     ts = gst_adapter_prev_pts (scope->priv->adapter, &dist);
     if (GST_CLOCK_TIME_IS_VALID (ts)) {
       /* convert bytes to time */
-      dist /= bps;
-      ts += gst_util_uint64_scale_int (dist, GST_SECOND, rate);
+      ts += gst_util_uint64_scale_int (dist, GST_SECOND, rate * bpf);
     }
 
     /* check for QoS, don't compute buffers that are known to be late */
