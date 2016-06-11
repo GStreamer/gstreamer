@@ -2964,6 +2964,179 @@ GST_START_TEST (test_proxy_accept_caps_with_incompatible_proxy)
 
 GST_END_TEST;
 
+static GstSegment sink_segment;
+
+static gboolean
+segment_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEGMENT:
+      gst_event_copy_segment (event, &sink_segment);
+      break;
+    default:
+      break;
+  }
+
+  gst_event_unref (event);
+  return TRUE;
+}
+
+static void
+test_pad_offset (gboolean on_srcpad)
+{
+  GstPad *srcpad, *sinkpad, *offset_pad;
+  GstSegment segment;
+  GstBuffer *buffer;
+
+  srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+  sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+
+  offset_pad = on_srcpad ? srcpad : sinkpad;
+
+  gst_segment_init (&sink_segment, GST_FORMAT_UNDEFINED);
+  gst_pad_set_chain_function (sinkpad, gst_check_chain_func);
+  gst_pad_set_event_function (sinkpad, segment_event_func);
+
+  fail_unless (sinkpad != NULL);
+  fail_unless_equals_int (gst_pad_link (srcpad, sinkpad), GST_PAD_LINK_OK);
+  fail_unless (gst_pad_set_active (sinkpad, TRUE));
+  fail_unless (gst_pad_set_active (srcpad, TRUE));
+
+  /* Set an offset of 5s, meaning:
+   * segment position 0 gives running time 5s, stream time 0s
+   * segment start of 0 should stay 0
+   */
+  gst_pad_set_offset (offset_pad, 5 * GST_SECOND);
+
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_stream_start ("test")) == TRUE);
+  /* We should have no segment event yet */
+  fail_if (sink_segment.format != GST_FORMAT_UNDEFINED);
+
+  /* Send segment event, expect it to arrive with a modified start running time */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_segment (&segment)) == TRUE);
+  fail_if (sink_segment.format == GST_FORMAT_UNDEFINED);
+  fail_unless_equals_uint64 (gst_segment_to_running_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start), 5 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_segment_to_stream_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start), 0 * GST_SECOND);
+  fail_unless_equals_uint64 (sink_segment.start, 0 * GST_SECOND);
+
+  /* Send a buffer and check if all timestamps are as expected, and especially
+   * if the buffer timestamp was not changed */
+  buffer = gst_buffer_new ();
+  GST_BUFFER_PTS (buffer) = 0 * GST_SECOND;
+  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
+
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  buffer = buffers->data;
+  buffers = g_list_delete_link (buffers, buffers);
+  fail_unless_equals_uint64 (gst_segment_to_running_time (&sink_segment,
+          GST_FORMAT_TIME, GST_BUFFER_PTS (buffer)), 5 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_segment_to_stream_time (&sink_segment,
+          GST_FORMAT_TIME, GST_BUFFER_PTS (buffer)), 0 * GST_SECOND);
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0 * GST_SECOND);
+  gst_buffer_unref (buffer);
+
+  /* Set a negative offset of -5s, meaning:
+   * segment position 5s gives running time 0s, stream time 5s
+   * segment start would have a negative running time!
+   */
+  gst_pad_set_offset (offset_pad, -5 * GST_SECOND);
+
+  /* Segment should still be the same as before */
+  fail_if (sink_segment.format == GST_FORMAT_UNDEFINED);
+  fail_unless_equals_uint64 (gst_segment_to_running_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start), 5 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_segment_to_stream_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start), 0 * GST_SECOND);
+  fail_unless_equals_uint64 (sink_segment.start, 0 * GST_SECOND);
+
+  /* Send segment event, expect it to arrive with a modified start running time */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_segment (&segment)) == TRUE);
+  fail_if (sink_segment.format == GST_FORMAT_UNDEFINED);
+  fail_unless_equals_uint64 (gst_segment_to_running_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start + 5 * GST_SECOND),
+      0 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_segment_to_stream_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start + 5 * GST_SECOND),
+      5 * GST_SECOND);
+  fail_unless_equals_uint64 (sink_segment.start, 0 * GST_SECOND);
+
+  /* Send a buffer and check if all timestamps are as expected, and especially
+   * if the buffer timestamp was not changed */
+  buffer = gst_buffer_new ();
+  GST_BUFFER_PTS (buffer) = 5 * GST_SECOND;
+  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
+
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  buffer = buffers->data;
+  buffers = g_list_delete_link (buffers, buffers);
+  fail_unless_equals_uint64 (gst_segment_to_running_time (&sink_segment,
+          GST_FORMAT_TIME, GST_BUFFER_PTS (buffer)), 0 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_segment_to_stream_time (&sink_segment,
+          GST_FORMAT_TIME, GST_BUFFER_PTS (buffer)), 5 * GST_SECOND);
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 5 * GST_SECOND);
+  gst_buffer_unref (buffer);
+
+  /* Set offset to 5s again, same situation as above but don't send a new
+   * segment event. The segment should be adjusted *before* the buffer comes
+   * out of the srcpad */
+  gst_pad_set_offset (offset_pad, 5 * GST_SECOND);
+
+  /* Segment should still be the same as before */
+  fail_if (sink_segment.format == GST_FORMAT_UNDEFINED);
+  fail_unless_equals_uint64 (gst_segment_to_running_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start + 5 * GST_SECOND),
+      0 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_segment_to_stream_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start + 5 * GST_SECOND),
+      5 * GST_SECOND);
+  fail_unless_equals_uint64 (sink_segment.start, 0 * GST_SECOND);
+
+  /* Send a buffer and check if a new segment event was sent and all buffer
+   * timestamps are as expected */
+  buffer = gst_buffer_new ();
+  GST_BUFFER_PTS (buffer) = 0 * GST_SECOND;
+  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
+
+  fail_if (sink_segment.format == GST_FORMAT_UNDEFINED);
+  fail_unless_equals_uint64 (gst_segment_to_running_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start), 5 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_segment_to_stream_time (&sink_segment,
+          GST_FORMAT_TIME, sink_segment.start), 0 * GST_SECOND);
+  fail_unless_equals_uint64 (sink_segment.start, 0 * GST_SECOND);
+
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  buffer = buffers->data;
+  buffers = g_list_delete_link (buffers, buffers);
+  fail_unless_equals_uint64 (gst_segment_to_running_time (&sink_segment,
+          GST_FORMAT_TIME, GST_BUFFER_PTS (buffer)), 5 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_segment_to_stream_time (&sink_segment,
+          GST_FORMAT_TIME, GST_BUFFER_PTS (buffer)), 0 * GST_SECOND);
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0 * GST_SECOND);
+  gst_buffer_unref (buffer);
+
+  gst_check_drop_buffers ();
+
+  fail_unless (gst_pad_set_active (sinkpad, FALSE));
+  fail_unless (gst_pad_set_active (srcpad, FALSE));
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+}
+
+GST_START_TEST (test_pad_offset_src)
+{
+  test_pad_offset (TRUE);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_pad_suite (void)
 {
@@ -3022,6 +3195,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_proxy_accept_caps_no_proxy);
   tcase_add_test (tc_chain, test_proxy_accept_caps_with_proxy);
   tcase_add_test (tc_chain, test_proxy_accept_caps_with_incompatible_proxy);
+  tcase_add_test (tc_chain, test_pad_offset_src);
 
   return s;
 }
