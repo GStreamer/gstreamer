@@ -2090,9 +2090,9 @@ serialize_geo_coordinate (GstExifWriter * writer, const GstTagList * taglist,
 {
   gboolean latitude;
   gdouble value;
-  gint degrees;
-  gint minutes;
-  gint seconds;
+  guint32 degrees;
+  guint32 minutes;
+  guint32 seconds_numerator, seconds_denominator;
   guint32 offset;
 
   latitude = exiftag->exif_tag == EXIF_TAG_GPS_LATITUDE;        /* exif tag for latitude */
@@ -2120,21 +2120,24 @@ serialize_geo_coordinate (GstExifWriter * writer, const GstTagList * taglist,
   }
 
   /* now write the degrees stuff */
-  GST_LOG ("Converting geo location %lf to degrees", value);
-  degrees = (gint) value;
+  GST_DEBUG ("Converting %lf degrees geo location to HMS", value);
+  degrees = (guint32) value;
   value -= degrees;
-  minutes = (gint) (value * 60);
+  minutes = (guint32) (value * 60);
   value = (value * 60) - minutes;
-  seconds = (gint) (value * 60);
-  GST_LOG ("Converted geo location to %d.%d'%d'' degrees", degrees,
-      minutes, seconds);
+  seconds_denominator = 10000000UL;
+  seconds_numerator = (guint32) (value * 60 * seconds_denominator);
+
+  GST_DEBUG ("Converted rational geo location to %u/%u %u/%u %u/%u degrees ",
+      degrees, 1U, minutes, 1U, seconds_numerator, seconds_denominator);
 
   offset = gst_byte_writer_get_size (&writer->datawriter);
   gst_exif_writer_write_tag_header (writer, exiftag->exif_tag,
       EXIF_TYPE_RATIONAL, 3, offset, NULL);
   gst_exif_writer_write_rational_data (writer, degrees, 1);
   gst_exif_writer_write_rational_data (writer, minutes, 1);
-  gst_exif_writer_write_rational_data (writer, seconds, 1);
+  gst_exif_writer_write_rational_data (writer, seconds_numerator,
+      seconds_denominator);
 }
 
 static gint
@@ -2251,12 +2254,11 @@ deserialize_geo_coordinate (GstExifReader * exif_reader,
   gst_util_fraction_to_double (degrees_n, degrees_d, &degrees);
   gst_util_fraction_to_double (minutes_n, minutes_d, &minutes);
   gst_util_fraction_to_double (seconds_n, seconds_d, &seconds);
-
   minutes += seconds / 60;
   degrees += minutes / 60;
   degrees *= multiplier;
 
-  GST_DEBUG ("Adding %s tag: %lf", exiftag->gst_tag, degrees);
+  GST_DEBUG ("Adding %s tag: %lf degrees", exiftag->gst_tag, degrees);
   gst_tag_list_add (exif_reader->taglist, GST_TAG_MERGE_REPLACE,
       exiftag->gst_tag, degrees, NULL);
 

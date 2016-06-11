@@ -1676,10 +1676,11 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   g_value_unset (&value);
 
   g_value_init (&value, G_TYPE_DOUBLE);
-  g_value_set_double (&value, 30.5);
+  g_value_set_double (&value, 40.3456784);
   do_simple_exif_tag_serialization_deserialization
       (GST_TAG_GEO_LOCATION_LATITUDE, &value);
-  g_value_set_double (&value, -12.125);
+  g_value_set_double (&value, -12.1250865);
+
   do_simple_exif_tag_serialization_deserialization
       (GST_TAG_GEO_LOCATION_LATITUDE, &value);
   g_value_set_double (&value, 0);
