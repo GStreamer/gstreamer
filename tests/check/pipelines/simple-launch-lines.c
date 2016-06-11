@@ -214,7 +214,7 @@ GST_START_TEST (test_rtp_payloaders)
       GST_MESSAGE_UNKNOWN, target_state);
 
 #define J2K_TEST_FILE_PATH GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "gradient.j2k"
-#define J2KCAPS "image/x-jpc,colorspace=sYUV,num-components=3,width=720,height=576,pixel-aspect-ratio=1/1,framerate=30/1"
+#define J2KCAPS "image/x-jpc,sampling=YCbCr-4:2:0,width=720,height=576,pixel-aspect-ratio=1/1,framerate=30/1"
   {
     GstElement *pipeline, *src;
     GstFlowReturn flow = GST_FLOW_OK;
