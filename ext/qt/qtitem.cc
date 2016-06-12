@@ -32,6 +32,7 @@
 #include <QtGui/QGuiApplication>
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/QSGSimpleTextureNode>
+#include <qpa/qplatformnativeinterface.h>
 
 #if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (HAVE_QT_X11)
 #include <QX11Info>
@@ -146,6 +147,17 @@ QtGLVideoItem::QtGLVideoItem()
   if (QString::fromUtf8 ("xcb") == app->platformName())
     this->priv->display = (GstGLDisplay *)
         gst_gl_display_x11_new_with_display (QX11Info::display ());
+#endif
+#if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_WAYLAND)
+  if (QString::fromUtf8 ("wayland") == app->platformName()){
+    struct wl_display * wayland_display;
+    QPlatformNativeInterface *native =
+        QGuiApplication::platformNativeInterface();
+    wayland_display = (struct wl_display *)
+        native->nativeResourceForWindow("display", NULL);
+    this->priv->display = (GstGLDisplay *)
+        gst_gl_display_wayland_new_with_display (wayland_display);
+  }
 #endif
 #if GST_GL_HAVE_WINDOW_ANDROID && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_ANDROID)
   if (QString::fromUtf8 ("android") == app->platformName())
