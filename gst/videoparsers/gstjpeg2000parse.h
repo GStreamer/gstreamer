@@ -44,6 +44,16 @@ typedef struct _GstJPEG2000ParseClass GstJPEG2000ParseClass;
 
 #define GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS 4
 
+typedef enum
+{
+  GST_JPEG2000_PARSE_NO_CODEC,
+  GST_JPEG2000_PARSE_JPC,       /* jpeg 2000 code stream */
+  GST_JPEG2000_PARSE_J2C,       /* jpeg 2000 contiguous code stream box plus code stream */
+  GST_JPEG2000_PARSE_JP2,       /* jpeg 2000 part I file format */
+
+} GstJPEG2000ParseFormats;
+
+
 struct _GstJPEG2000Parse
 {
   GstBaseParse baseparse;
@@ -54,7 +64,7 @@ struct _GstJPEG2000Parse
 
   const gchar *sampling;
   const gchar *colorspace;
-
+  GstJPEG2000ParseFormats codec_format;
 };
 
 struct _GstJPEG2000ParseClass
