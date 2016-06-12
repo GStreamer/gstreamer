@@ -26,6 +26,7 @@ libgstqtsink_la_SOURCES = \
 libgstqtsink_la_CXXFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_builddir)/gst-libs \
+	-I$(QPA_INCLUDE_PATH) \
 	$(GST_CXXFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
