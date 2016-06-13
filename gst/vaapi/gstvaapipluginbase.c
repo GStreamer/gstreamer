@@ -692,8 +692,18 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     gst_buffer_pool_config_set_params (config, caps, size, min, max);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META);
-    if (!gst_buffer_pool_set_config (pool, config))
-      goto config_failed;
+    if (!gst_buffer_pool_set_config (pool, config)) {
+      config = gst_buffer_pool_get_config (pool);
+
+      if (!gst_buffer_pool_config_validate_params (config, caps, size, min,
+              max)) {
+        gst_structure_free (config);
+        goto config_failed;
+      }
+
+      if (!gst_buffer_pool_set_config (pool, config))
+        goto config_failed;
+    }
   }
 
   /* Check whether GstVideoMeta, or GstVideoAlignment, is needed (raw video) */
