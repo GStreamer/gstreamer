@@ -2925,7 +2925,8 @@ gst_base_sink_update_start_time (GstBaseSink * basesink)
   GstClock *clock;
 
   GST_OBJECT_LOCK (basesink);
-  if ((clock = GST_ELEMENT_CLOCK (basesink))) {
+  if (GST_STATE (basesink) == GST_STATE_PLAYING
+      && (clock = GST_ELEMENT_CLOCK (basesink))) {
     GstClockTime now;
 
     gst_object_ref (clock);
