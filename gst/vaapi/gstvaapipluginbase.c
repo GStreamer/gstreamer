@@ -597,8 +597,18 @@ gst_vaapi_plugin_base_create_pool (GstVaapiPluginBase * plugin, GstCaps * caps,
 #endif
   if (allocator)
     gst_buffer_pool_config_set_allocator (config, allocator, NULL);
-  if (!gst_buffer_pool_set_config (pool, config))
-    goto error_pool_config;
+  if (!gst_buffer_pool_set_config (pool, config)) {
+    config = gst_buffer_pool_get_config (pool);
+
+    if (!gst_buffer_pool_config_validate_params (config, caps, size,
+            min_buffers, max_buffers)) {
+      gst_structure_free (config);
+      goto error_pool_config;
+    }
+
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto error_pool_config;
+  }
   return pool;
 
   /* ERRORS */
