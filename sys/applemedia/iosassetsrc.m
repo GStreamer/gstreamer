@@ -207,9 +207,9 @@ gst_ios_asset_src_set_uri (GstIOSAssetSrc * src, const gchar * uri, GError **err
   url = [[NSURL alloc] initWithString:nsuristr];
 
   if (url == NULL) {
-    GST_ERROR_OBJECT (src, "Invalid URI: %s", src->uri);
+    GST_ERROR_OBJECT (src, "Invalid URI: %s", uri);
     g_set_error (err, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
-        "Invalid URI: %s", src->uri);
+        "Invalid URI: %s", uri);
     return FALSE;
   }
 
