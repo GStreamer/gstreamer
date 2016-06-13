@@ -806,15 +806,12 @@ gst_avf_asset_src_uri_set_uri (GstURIHandler * handler, const gchar * uri, GErro
   NSString *str;
   NSURL *url;
   AVAsset *asset;
-  gchar *escaped_uri;
   gboolean ret = FALSE;
 
   OBJC_CALLOUT_BEGIN ();
-  escaped_uri = g_uri_escape_string (uri, ":/", TRUE);
-  str = [NSString stringWithUTF8String: escaped_uri];
+  str = [NSString stringWithUTF8String: uri];
   url = [[NSURL alloc] initWithString: str];
   asset = [AVAsset assetWithURL: url];
-  g_free (escaped_uri);
 
   if (asset.playable) {
     ret = TRUE;
@@ -822,7 +819,7 @@ gst_avf_asset_src_uri_set_uri (GstURIHandler * handler, const gchar * uri, GErro
     self->uri = g_strdup (uri);
   } else {
     g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
-        "Invalid URI '%s' for avfassetsrc", self->uri);
+        "Invalid URI '%s' for avfassetsrc", uri);
   }
   OBJC_CALLOUT_END ();
   return ret;
