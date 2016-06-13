@@ -224,7 +224,7 @@ gst_validate_init_plugins (void)
       g_free (base_dir);
     }
 #else
-    gst_registry_scan_path (registry, PLUGINDIR);
+    gst_registry_scan_path (registry, VALIDATEPLUGINDIR);
 #endif
   }
   gst_registry_fork_set_enabled (TRUE);
