@@ -262,7 +262,15 @@ struct _GstDebugCategory {
 /**
  * GST_PTR_FORMAT:
  *
- * printf format type used to debug GStreamer types.
+ * printf format type used to debug GStreamer types. You can use this in
+ * combination with GStreamer's debug logging system as well as the functions
+ * gst_info_vasprintf(), gst_info_strdup_vprintf() and gst_info_strdup_printf()
+ * to pretty-print the following types: #GstCaps, #GstStructure,
+ * #GstCapsFeatures, #GstTagList, #GstDateTime, #GstBuffer, #GstBufferList,
+ * #GstMessage, #GstEvent, #GstQuery, #GstContext, #GstPad, #GstObject. All
+ * #GObject types will be printed as typename plus pointer, and everything
+ * else will simply be printed as pointer address.
+ *
  * This can only be used on types whose size is >= sizeof(gpointer).
  */
 #define GST_PTR_FORMAT     "p\aA"
@@ -270,7 +278,10 @@ struct _GstDebugCategory {
 /**
  * GST_SEGMENT_FORMAT:
  *
- * printf format type used to debug GStreamer segments.
+ * printf format type used to debug GStreamer segments. You can use this in
+ * combination with GStreamer's debug logging system as well as the functions
+ * gst_info_vasprintf(), gst_info_strdup_vprintf() and gst_info_strdup_printf()
+ * to pretty-print #GstSegment structures.
  * This can only be used on pointers to GstSegment structures.
  */
 #define GST_SEGMENT_FORMAT "p\aB"
