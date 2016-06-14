@@ -25,6 +25,7 @@
 #endif
 
 #include "gstopenjpegdec.h"
+#include "../../gst/videoparsers/gstjpeg2000sampling.h"
 
 #include <string.h>
 
@@ -48,14 +49,41 @@ static gboolean gst_openjpeg_dec_decide_allocation (GstVideoDecoder * decoder,
 #define YUV10 "Y444_10BE, I422_10BE, I420_10BE"
 #endif
 
+
+/* convenience methods */
+static gboolean
+gst_openjpeg_dec_is_rgb (const gchar * sampling)
+{
+  return (!g_strcmp0 (sampling, GST_RTP_J2K_RGB) ||
+      !g_strcmp0 (sampling, GST_RTP_J2K_RGBA) ||
+      !g_strcmp0 (sampling, GST_RTP_J2K_BGR) ||
+      !g_strcmp0 (sampling, GST_RTP_J2K_BGRA));
+}
+
+static gboolean
+gst_openjpeg_dec_is_yuv (const gchar * sampling)
+{
+  return (!g_strcmp0 (sampling, GST_RTP_J2K_YBRA) ||
+      !g_strcmp0 (sampling, GST_RTP_J2K_YBR444) ||
+      !g_strcmp0 (sampling, GST_RTP_J2K_YBR422) ||
+      !g_strcmp0 (sampling, GST_RTP_J2K_YBR420) ||
+      !g_strcmp0 (sampling, GST_RTP_J2K_YBR410));
+}
+
+static gboolean
+gst_openjpeg_dec_is_mono (const gchar * sampling)
+{
+  return !g_strcmp0 (sampling, GST_RTP_J2K_GRAYSCALE);
+}
+
+
 static GstStaticPadTemplate gst_openjpeg_dec_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/x-j2c, "
-        "colorspace = (string) { sRGB, sYUV, GRAY }; "
-        "image/x-jpc, "
-        "colorspace = (string) { sRGB, sYUV, GRAY }; " "image/jp2")
+        GST_RTP_J2K_SAMPLING_LIST "; "
+        "image/x-jpc, " GST_RTP_J2K_SAMPLING_LIST "; " "image/jp2")
     );
 
 static GstStaticPadTemplate gst_openjpeg_dec_src_template =
@@ -116,6 +144,7 @@ gst_openjpeg_dec_init (GstOpenJPEGDec * self)
 #ifdef HAVE_OPENJPEG_1
   self->params.cp_limit_decoding = NO_LIMITATION;
 #endif
+  self->sampling = NULL;
 }
 
 static gboolean
@@ -145,6 +174,11 @@ gst_openjpeg_dec_stop (GstVideoDecoder * video_decoder)
     self->input_state = NULL;
   }
 
+  if (self->sampling) {
+    g_free (self->sampling);
+    self->sampling = NULL;
+  }
+
   GST_DEBUG_OBJECT (self, "Stopped");
 
   return TRUE;
@@ -156,7 +190,6 @@ gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
 {
   GstOpenJPEGDec *self = GST_OPENJPEG_DEC (decoder);
   GstStructure *s;
-  const gchar *color_space;
 
   GST_DEBUG_OBJECT (self, "Setting format: %" GST_PTR_FORMAT, state->caps);
 
@@ -177,15 +210,18 @@ gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
     g_return_val_if_reached (FALSE);
   }
 
-  if ((color_space = gst_structure_get_string (s, "colorspace"))) {
-    if (g_str_equal (color_space, "sRGB"))
+  if (self->sampling)
+    g_free (self->sampling);
+  self->sampling = g_strdup (gst_structure_get_string (s, "sampling"));
+  /* note: self->sampling may be NULL, for case of JP2 */
+  if (self->sampling) {
+    if (gst_openjpeg_dec_is_rgb (self->sampling))
       self->color_space = OPJ_CLRSPC_SRGB;
-    else if (g_str_equal (color_space, "GRAY"))
+    else if (gst_openjpeg_dec_is_mono (self->sampling))
       self->color_space = OPJ_CLRSPC_GRAY;
-    else if (g_str_equal (color_space, "sYUV"))
+    else if (gst_openjpeg_dec_is_yuv (self->sampling))
       self->color_space = OPJ_CLRSPC_SYCC;
   }
-
   self->ncomps = 0;
   gst_structure_get_int (s, "num-components", &self->ncomps);
 
@@ -194,6 +230,13 @@ gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
   self->input_state = gst_video_codec_state_ref (state);
 
   return TRUE;
+}
+
+static gboolean
+reverse_rgb_channels (const gchar * sampling)
+{
+  return (!g_strcmp0 (sampling, GST_RTP_J2K_BGR)
+      || !g_strcmp0 (sampling, GST_RTP_J2K_BGRA));
 }
 
 static void
@@ -675,7 +718,10 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
 
         if (get_highest_prec (image) == 8) {
           self->fill_frame = fill_frame_packed8_4;
-          format = GST_VIDEO_FORMAT_ARGB;
+          format =
+              reverse_rgb_channels (self->sampling) ? GST_VIDEO_FORMAT_BGRA :
+              GST_VIDEO_FORMAT_RGBA;
+
         } else if (get_highest_prec (image) <= 16) {
           self->fill_frame = fill_frame_packed16_4;
           format = GST_VIDEO_FORMAT_ARGB64;
@@ -693,7 +739,9 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
 
         if (get_highest_prec (image) == 8) {
           self->fill_frame = fill_frame_packed8_3;
-          format = GST_VIDEO_FORMAT_ARGB;
+          format =
+              reverse_rgb_channels (self->sampling) ? GST_VIDEO_FORMAT_BGR :
+              GST_VIDEO_FORMAT_RGB;
         } else if (get_highest_prec (image) <= 16) {
           self->fill_frame = fill_frame_packed16_3;
           format = GST_VIDEO_FORMAT_ARGB64;

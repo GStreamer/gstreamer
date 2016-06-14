@@ -54,6 +54,7 @@ struct _GstOpenJPEGDec
   OPJ_CODEC_FORMAT codec_format;
   gboolean is_jp2c;
   OPJ_COLOR_SPACE color_space;
+  gchar *sampling;
   gint ncomps;
 
   void (*fill_frame) (GstVideoFrame *frame, opj_image_t * image);
