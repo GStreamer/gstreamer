@@ -141,7 +141,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   GstVideoInfo *const new_vip = &priv->video_info[!priv->video_info_index];
   GstVideoAlignment align;
   GstAllocator *allocator;
-  gboolean changed_caps, use_dmabuf_memory;
+  gboolean changed_caps, use_dmabuf_memory, ret, updated = FALSE;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL))
     goto error_invalid_config;
@@ -191,6 +191,21 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
 
   priv->has_video_meta = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
+  if (!priv->has_video_meta) {
+    gint i;
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (new_vip); i++) {
+      if (GST_VIDEO_INFO_PLANE_OFFSET (new_vip, i) !=
+          GST_VIDEO_INFO_PLANE_OFFSET (&priv->alloc_info, i) ||
+          GST_VIDEO_INFO_PLANE_STRIDE (new_vip, i) !=
+          GST_VIDEO_INFO_PLANE_STRIDE (&priv->alloc_info, i)) {
+        priv->has_video_meta = TRUE;
+        gst_buffer_pool_config_add_option (config,
+            GST_BUFFER_POOL_OPTION_VIDEO_META);
+        updated = TRUE;
+        break;
+      }
+    }
+  }
 
   priv->has_video_alignment = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
@@ -202,9 +217,10 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   priv->has_texture_upload_meta = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
 
-  return
+  ret =
       GST_BUFFER_POOL_CLASS
       (gst_vaapi_video_buffer_pool_parent_class)->set_config (pool, config);
+  return !updated && ret;
 
   /* ERRORS */
 error_invalid_config:
