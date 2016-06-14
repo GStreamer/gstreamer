@@ -1018,7 +1018,6 @@ gst_dvbsrc_init (GstDvbSrc * object)
 {
   int i = 0;
 
-  GST_INFO_OBJECT (object, "gst_dvbsrc_init");
   GST_DEBUG_OBJECT (object, "Kernel DVB API version %d.%d", DVB_API_VERSION,
       DVB_API_VERSION_MINOR);
 
