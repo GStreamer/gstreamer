@@ -161,8 +161,9 @@ registry_handle_global (void *data, struct wl_registry *registry,
   } else if (g_strcmp0 (interface, "wl_shm") == 0) {
     self->shm = wl_registry_bind (registry, id, &wl_shm_interface, 1);
     wl_shm_add_listener (self->shm, &shm_listener, self);
-  } else if (g_strcmp0 (interface, "wl_scaler") == 0) {
-    self->scaler = wl_registry_bind (registry, id, &wl_scaler_interface, 2);
+  } else if (g_strcmp0 (interface, "wp_viewporter") == 0) {
+    self->viewporter =
+        wl_registry_bind (registry, id, &wp_viewporter_interface, 1);
   }
 }
 
@@ -266,7 +267,7 @@ gst_wl_display_new_existing (struct wl_display * display,
   VERIFY_INTERFACE_EXISTS (subcompositor, "wl_subcompositor");
   VERIFY_INTERFACE_EXISTS (shell, "wl_shell");
   VERIFY_INTERFACE_EXISTS (shm, "wl_shm");
-  VERIFY_INTERFACE_EXISTS (scaler, "wl_scaler");
+  VERIFY_INTERFACE_EXISTS (viewporter, "wp_viewporter");
 
 #undef VERIFY_INTERFACE_EXISTS
 

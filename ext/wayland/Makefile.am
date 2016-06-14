@@ -7,7 +7,7 @@ libgstwaylandsink_la_SOURCES =  \
 	wldisplay.c \
 	wlwindow.c \
 	wlvideoformat.c \
-	scaler-protocol.c
+	viewporter-protocol.c
 
 libgstwaylandsink_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
                                $(WAYLAND_CFLAGS) $(GST_PLUGINS_BAD_CFLAGS)
@@ -27,23 +27,32 @@ noinst_HEADERS = \
 	wldisplay.h \
 	wlwindow.h \
 	wlvideoformat.h \
-	scaler-client-protocol.h
+	viewporter-client-protocol.h
 
-EXTRA_DIST = scaler.xml
-CLEANFILES = scaler-protocol.c scaler-client-protocol.h
+CLEANFILES = viewporter-protocol.c viewporter-client-protocol.h
 
-%-protocol.c : %.xml
-	$(wayland_scanner) code < $< > $@
+gstwaylandsink.c: viewporter-client-protocol.h
 
-%-client-protocol.h : %.xml
-	$(wayland_scanner) client-header < $< > $@
+wlshmallocator.c: viewporter-client-protocol.h
 
-gstwaylandsink.c: scaler-client-protocol.h
+wlbuffer.c: viewporter-client-protocol.h
 
-wlshmallocator.c: scaler-client-protocol.h
+wldisplay.c: viewporter-client-protocol.h
 
-wlbuffer.c: scaler-client-protocol.h
+wlwindow.c: viewporter-client-protocol.h
 
-wldisplay.c: scaler-client-protocol.h
+.SECONDEXPANSION:
 
-wlwindow.c: scaler-client-protocol.h
+define protostability
+$(if $(findstring unstable,$1),unstable,stable)
+endef
+
+define protoname
+$(shell echo $1 | sed 's/\([a-z\-]\+\)-[a-z]\+-v[0-9]\+/\1/')
+endef
+
+%-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/$$(call protostability,$$*)/$$(call protoname,$$*)/$$*.xml
+	$(AM_V_GEN)$(wayland_scanner) code < $< > $@
+
+%-client-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/$$(call protostability,$$*)/$$(call protoname,$$*)/$$*.xml
+	$(AM_V_GEN)$(wayland_scanner) client-header < $< > $@

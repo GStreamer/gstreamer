@@ -2219,13 +2219,17 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_WAYLAND, true)
 AC_PATH_PROG([wayland_scanner], [wayland-scanner])
 AG_GST_CHECK_FEATURE(WAYLAND, [wayland sink], wayland , [
   PKG_CHECK_MODULES(WAYLAND, wayland-client >= 1.4.0, [
-    if test "x$wayland_scanner" != "x"; then
-      HAVE_WAYLAND="yes"
-    else
-      AC_MSG_RESULT([wayland-scanner is required to build the wayland plugin])
-      HAVE_WAYLAND="no"
-    fi
-    ],
+    PKG_CHECK_MODULES(WAYLAND_PROTOCOLS, wayland-protocols >= 1.4, [
+      if test "x$wayland_scanner" != "x"; then
+        HAVE_WAYLAND="yes"
+        AC_SUBST(WAYLAND_PROTOCOLS_DATADIR, `$PKG_CONFIG --variable=pkgdatadir wayland-protocols`)
+      else
+        AC_MSG_RESULT([wayland-scanner is required to build the wayland plugin])
+        HAVE_WAYLAND="no"
+      fi
+      ],
+      [ HAVE_WAYLAND="no"
+    ])],
     [ HAVE_WAYLAND="no"
   ])
 ])

@@ -44,10 +44,10 @@ struct _GstWlWindow
   GstWlDisplay *display;
   struct wl_surface *area_surface;
   struct wl_subsurface *area_subsurface;
-  struct wl_viewport *area_viewport;
+  struct wp_viewport *area_viewport;
   struct wl_surface *video_surface;
   struct wl_subsurface *video_subsurface;
-  struct wl_viewport *video_viewport;
+  struct wp_viewport *video_viewport;
   struct wl_shell_surface *shell_surface;
 
   /* the size and position of the area_(sub)surface */

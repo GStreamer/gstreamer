@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 #include <wayland-client.h>
-#include "scaler-client-protocol.h"
+#include "viewporter-client-protocol.h"
 
 G_BEGIN_DECLS
 
@@ -51,7 +51,7 @@ struct _GstWlDisplay
   struct wl_subcompositor *subcompositor;
   struct wl_shell *shell;
   struct wl_shm *shm;
-  struct wl_scaler *scaler;
+  struct wp_viewporter *viewporter;
   GArray *shm_formats;
 
   /* private */
