@@ -139,6 +139,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   const GstVideoInfo *alloc_vip;
   GstVideoAlignment align;
   GstAllocator *allocator;
+  gboolean ret, updated = FALSE;
 
   GST_DEBUG_OBJECT (pool, "config %" GST_PTR_FORMAT, config);
 
@@ -184,6 +185,21 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   if (gst_buffer_pool_config_has_option (config,
           GST_BUFFER_POOL_OPTION_VIDEO_META))
     priv->options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
+  else {
+    gint i;
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->video_info); i++) {
+      if (GST_VIDEO_INFO_PLANE_OFFSET (&priv->video_info, i) !=
+          GST_VIDEO_INFO_PLANE_OFFSET (&priv->alloc_info, i) ||
+          GST_VIDEO_INFO_PLANE_STRIDE (&priv->video_info, i) !=
+          GST_VIDEO_INFO_PLANE_STRIDE (&priv->alloc_info, i)) {
+        priv->options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
+        gst_buffer_pool_config_add_option (config,
+            GST_BUFFER_POOL_OPTION_VIDEO_META);
+        updated = TRUE;
+        break;
+      }
+    }
+  }
 
   if (gst_buffer_pool_config_has_option (config,
           GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
@@ -195,9 +211,10 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
           GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META))
     priv->options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD;
 
-  return
+  ret =
       GST_BUFFER_POOL_CLASS
       (gst_vaapi_video_buffer_pool_parent_class)->set_config (pool, config);
+  return !updated && ret;
 
   /* ERRORS */
 error_invalid_config:
