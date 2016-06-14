@@ -1096,45 +1096,46 @@ gst_dvbsrc_init (GstDvbSrc * object)
 static void
 gst_dvbsrc_set_pids (GstDvbSrc * dvbsrc, const gchar * pid_string)
 {
+  int pid = 0;
+  int pid_count;
+  gchar **pids;
+  char **tmp;
+
   if (!strcmp (pid_string, "8192")) {
     /* get the whole TS */
     dvbsrc->pids[0] = 8192;
     dvbsrc->pids[1] = G_MAXUINT16;
-  } else {
-    int pid = 0;
-    int pid_count;
-    gchar **pids;
-    char **tmp;
-
-    tmp = pids = g_strsplit (pid_string, ":", MAX_FILTERS);
-
-    /* always add the PAT and CAT pids */
-    dvbsrc->pids[0] = 0;
-    dvbsrc->pids[1] = 1;
-
-    pid_count = 2;
-    while (*pids != NULL && pid_count < MAX_FILTERS) {
-      pid = strtol (*pids, NULL, 0);
-      if (pid > 1 && pid <= 8192) {
-        GST_INFO_OBJECT (dvbsrc, "Parsed PID: %d", pid);
-        dvbsrc->pids[pid_count] = pid;
-        pid_count++;
-      }
-      pids++;
-    }
-
-    if (pid_count < MAX_FILTERS)
-      dvbsrc->pids[pid_count] = G_MAXUINT16;
-
-    g_strfreev (tmp);
+    goto done;
   }
 
-  GST_INFO_OBJECT (dvbsrc, "checking if playing for setting PES filters");
-  if (GST_ELEMENT (dvbsrc)->current_state == GST_STATE_PLAYING ||
-      GST_ELEMENT (dvbsrc)->current_state == GST_STATE_PAUSED) {
+  /* always add the PAT and CAT pids */
+  dvbsrc->pids[0] = 0;
+  dvbsrc->pids[1] = 1;
+  pid_count = 2;
+
+  tmp = pids = g_strsplit (pid_string, ":", MAX_FILTERS);
+
+  while (*pids != NULL && pid_count < MAX_FILTERS) {
+    pid = strtol (*pids, NULL, 0);
+    if (pid > 1 && pid <= 8192) {
+      GST_INFO_OBJECT (dvbsrc, "Parsed PID: %d", pid);
+      dvbsrc->pids[pid_count] = pid;
+      pid_count++;
+    }
+    pids++;
+  }
+
+  g_strfreev (tmp);
+
+  if (pid_count < MAX_FILTERS)
+    dvbsrc->pids[pid_count] = G_MAXUINT16;
+
+done:
+  if (GST_ELEMENT (dvbsrc)->current_state > GST_STATE_READY) {
     GST_INFO_OBJECT (dvbsrc, "Setting PES filters now");
     gst_dvbsrc_set_pes_filters (dvbsrc);
-  }
+  } else
+    GST_INFO_OBJECT (dvbsrc, "Not setting PES filters because state < PAUSED");
 }
 
 static void
