@@ -100,7 +100,8 @@ const gchar *squeeze_fragment_source_gles2 =
   "void main () {"
   "  vec2 texturecoord = v_texcoord.xy;"
   "  vec2 normcoord = texturecoord - 0.5;"
-  "  float r = length (normcoord);"
+  /* Add a very small value to length otherwise it could be 0 */
+  "  float r = length (normcoord)+0.01;"
   "  r = pow(r, 0.40)*1.3;"
   "  normcoord = normcoord / r;"
   "  texturecoord = (normcoord + 0.5);"
@@ -136,7 +137,8 @@ const gchar *tunnel_fragment_source_gles2 =
    * rect textures */
   "  normcoord = (texturecoord - 0.5);"
   "  float r = length(normcoord);"
-  "  normcoord *= clamp (r, 0.0, 0.275) / r;"
+  "  if (r > 0.0)"
+  "    normcoord *= clamp (r, 0.0, 0.275) / r;"
   "  texturecoord = normcoord + 0.5;"
   "  gl_FragColor = texture2D (tex, texturecoord);"
   "}";
