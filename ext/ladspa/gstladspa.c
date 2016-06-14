@@ -236,8 +236,7 @@ ladspa_describe_plugin (const gchar * file_name, const gchar * entry_name,
       continue;
     }
 
-    ladspa_meta = gst_structure_new_empty ("ladspa");
-    gst_structure_set (ladspa_meta,
+    ladspa_meta = gst_structure_new ("ladspa",
         "plugin-filename", G_TYPE_STRING, file_name,
         "element-ix", G_TYPE_UINT, i,
         "element-type-name", G_TYPE_STRING, type_name,
