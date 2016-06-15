@@ -594,10 +594,51 @@ _gst_glsl_funcs_fill (GstGLSLFuncs * vtable, GstGLContext * context)
   return TRUE;
 }
 
+static gchar *
+_mangle_external_image_extension (const gchar * str, GstGLContext * context,
+    GstGLTextureTarget from, GstGLTextureTarget to, GstGLSLVersion version,
+    GstGLSLProfile profile)
+{
+  GST_DEBUG ("is oes? %d, profile == ES? %d, version >= 300? %d, "
+      "have essl3? %d", to == GST_GL_TEXTURE_TARGET_EXTERNAL_OES,
+      profile == GST_GLSL_PROFILE_ES, version >= GST_GLSL_VERSION_300,
+      gst_gl_context_check_feature (context,
+          "GL_OES_EGL_image_external_essl3"));
+
+  /* replace GL_OES_EGL_image_external with GL_OES_EGL_image_external_essl3 where supported */
+  if (to == GST_GL_TEXTURE_TARGET_EXTERNAL_OES && profile == GST_GLSL_PROFILE_ES
+      && version >= GST_GLSL_VERSION_300) {
+    if (gst_gl_context_check_feature (context,
+            "GL_OES_EGL_image_external_essl3")) {
+      GRegex *regex = g_regex_new (
+          /* '#extension ' with optional spacing */
+          "(#[ \\t]*extension[ \\t]+)"
+          /* what we're looking to replace */
+          "GL_OES_EGL_image_external"
+          /* ':' with optional spacing */
+          "([ \\t]*:[ \\t]*"
+          /* some word like require, disable, etc followed by spacing and a newline */
+          "\\S+[ \\t]*\\R)",
+          0, 0, NULL);
+      gchar *tmp = g_regex_replace (regex, str, -1, 0,
+          "\\1GL_OES_EGL_image_external_essl3\\2", 0, NULL);
+      g_regex_unref (regex);
+      return tmp;
+    } else {
+      GST_FIXME ("Undefined situation detected. GLES3 supported but "
+          "GL_OES_EGL_image_external_essl3 not supported.  Falling back to the "
+          "older GL_OES_EGL_image_external extension");
+      return g_strdup (str);
+    }
+  } else {
+    return g_strdup (str);
+  }
+}
 
 static gchar *
-_mangle_texture_access (const gchar * str, GstGLTextureTarget from,
-    GstGLTextureTarget to, GstGLAPI gl_api, guint gl_major, guint gl_minor)
+_mangle_texture_access (const gchar * str, GstGLContext * context,
+    GstGLTextureTarget from, GstGLTextureTarget to, GstGLSLVersion version,
+    GstGLSLProfile profile)
 {
   const gchar *from_str = NULL, *to_str = NULL;
   gchar *ret, *tmp;
@@ -611,8 +652,12 @@ _mangle_texture_access (const gchar * str, GstGLTextureTarget from,
   if (from == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
     from_str = "texture2D";
 
-  if ((gl_api & GST_GL_API_OPENGL3) || (gl_api & GST_GL_API_GLES2
-          && gl_major >= 3)) {
+  /* GL3 || gles3 but not when external-oes unless the image_external_essl3 extension is supported */
+  if (profile == GST_GLSL_PROFILE_CORE || (profile == GST_GLSL_PROFILE_ES
+          && version >= GST_GLSL_VERSION_300
+          && (to != GST_GL_TEXTURE_TARGET_EXTERNAL_OES
+              || gst_gl_context_check_feature (context,
+                  "GL_OES_EGL_image_external_essl3")))) {
     to_str = "texture";
   } else {
     if (to == GST_GL_TEXTURE_TARGET_2D)
@@ -684,11 +729,11 @@ _mangle_sampler_type (const gchar * str, GstGLTextureTarget from,
 
 static gchar *
 _mangle_varying_attribute (const gchar * str, guint shader_type,
-    GstGLAPI gl_api, guint gl_major, guint gl_minor)
+    GstGLSLVersion version, GstGLSLProfile profile)
 {
   if (shader_type == GL_VERTEX_SHADER) {
-    if ((gl_api & GST_GL_API_OPENGL3) || (gl_api & GST_GL_API_GLES2
-            && gl_major >= 3)) {
+    if (profile == GST_GLSL_PROFILE_CORE || (profile == GST_GLSL_PROFILE_ES
+            && version >= GST_GLSL_VERSION_300)) {
       gchar *tmp, *tmp2;
       GRegex *regex;
 
@@ -706,8 +751,8 @@ _mangle_varying_attribute (const gchar * str, guint shader_type,
       return tmp2;
     }
   } else if (shader_type == GL_FRAGMENT_SHADER) {
-    if ((gl_api & GST_GL_API_OPENGL3) || (gl_api & GST_GL_API_GLES2
-            && gl_major > 3)) {
+    if (profile == GST_GLSL_PROFILE_CORE || (profile == GST_GLSL_PROFILE_ES
+            && version >= GST_GLSL_VERSION_300)) {
       gchar *tmp;
       GRegex *regex;
 
@@ -743,9 +788,16 @@ _mangle_frag_color_data (const gchar * str)
 }
 
 static void
-_mangle_version_profile_from_gl_api (GstGLAPI gl_api, gint gl_major,
-    gint gl_minor, GstGLSLVersion * version, GstGLSLProfile * profile)
+_mangle_version_profile_from_gl_api (GstGLContext * context,
+    GstGLTextureTarget from, GstGLTextureTarget to, GstGLSLVersion * version,
+    GstGLSLProfile * profile)
 {
+  GstGLAPI gl_api;
+  gint gl_major, gl_minor;
+
+  gl_api = gst_gl_context_get_gl_api (context);
+  gst_gl_context_get_gl_version (context, &gl_major, &gl_minor);
+
   *version = GST_GLSL_VERSION_NONE;
   *profile = GST_GLSL_PROFILE_NONE;
 
@@ -758,7 +810,11 @@ _mangle_version_profile_from_gl_api (GstGLAPI gl_api, gint gl_major,
       *profile = GST_GLSL_PROFILE_NONE;
     }
   } else if (gl_api & GST_GL_API_GLES2) {
-    if (gl_major >= 3) {
+    /* We don't know which texture function to use if we have GLES3 and
+     * don't have the essl3 extension */
+    if (gl_major >= 3 && (to != GST_GL_TEXTURE_TARGET_EXTERNAL_OES
+            || gst_gl_context_check_feature (context,
+                "GL_OES_EGL_image_external_essl3"))) {
       *version = GST_GLSL_VERSION_300;
       *profile = GST_GLSL_PROFILE_ES;
     } else if (gl_major >= 2) {
@@ -773,21 +829,24 @@ _mangle_version_profile_from_gl_api (GstGLAPI gl_api, gint gl_major,
 
 gchar *
 _gst_glsl_mangle_shader (const gchar * str, guint shader_type,
-    GstGLTextureTarget from, GstGLTextureTarget to, GstGLAPI gl_api,
-    gint gl_major, gint gl_minor, GstGLSLVersion * version,
-    GstGLSLProfile * profile)
+    GstGLTextureTarget from, GstGLTextureTarget to, GstGLContext * context,
+    GstGLSLVersion * version, GstGLSLProfile * profile)
 {
   gchar *tmp, *tmp2;
 
   _init_debug ();
 
-  _mangle_version_profile_from_gl_api (gl_api, gl_major, gl_minor, version,
-      profile);
-  tmp = _mangle_texture_access (str, from, to, gl_api, gl_major, gl_minor);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
+
+  _mangle_version_profile_from_gl_api (context, from, to, version, profile);
+  tmp2 =
+      _mangle_external_image_extension (str, context, from, to, *version,
+      *profile);
+  tmp = _mangle_texture_access (tmp2, context, from, to, *version, *profile);
+  g_free (tmp2);
   tmp2 = _mangle_sampler_type (tmp, from, to);
   g_free (tmp);
-  tmp =
-      _mangle_varying_attribute (tmp2, shader_type, gl_api, gl_major, gl_minor);
+  tmp = _mangle_varying_attribute (tmp2, shader_type, *version, *profile);
   g_free (tmp2);
   if (shader_type == GL_FRAGMENT_SHADER) {
     if ((*profile == GST_GLSL_PROFILE_ES && *version >= GST_GLSL_VERSION_300)

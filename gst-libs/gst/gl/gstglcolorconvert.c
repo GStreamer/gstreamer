@@ -1723,19 +1723,14 @@ _create_shader (GstGLColorConvert * convert)
   gchar *version_str, *tmp, *tmp1;
   const gchar *strings[2];
   GError *error = NULL;
-  GstGLAPI gl_api;
-  gint gl_major, gl_minor;
   int i;
-
-  gl_api = gst_gl_context_get_gl_api (convert->context);
-  gst_gl_context_get_gl_version (convert->context, &gl_major, &gl_minor);
 
   ret = gst_gl_shader_new (convert->context);
 
   tmp =
       _gst_glsl_mangle_shader (text_vertex_shader, GL_VERTEX_SHADER,
-      info->templ->target, convert->priv->from_texture_target, gl_api, gl_major,
-      gl_minor, &version, &profile);
+      info->templ->target, convert->priv->from_texture_target, convert->context,
+      &version, &profile);
 
   tmp1 = gst_glsl_version_profile_to_string (version, profile);
   version_str = g_strdup_printf ("#version %s\n", tmp1);
@@ -1842,8 +1837,8 @@ _create_shader (GstGLColorConvert * convert)
   g_string_append (str, "\n}");
   tmp = g_string_free (str, FALSE);
   info->frag_prog = _gst_glsl_mangle_shader (tmp, GL_FRAGMENT_SHADER,
-      info->templ->target, convert->priv->from_texture_target, gl_api,
-      gl_major, gl_minor, &version, &profile);
+      info->templ->target, convert->priv->from_texture_target, convert->context,
+      &version, &profile);
   g_free (tmp);
 
   strings[1] = info->frag_prog;
