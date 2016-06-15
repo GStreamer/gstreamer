@@ -414,6 +414,8 @@ QtGLVideoItem::onSceneGraphInvalidated ()
 gboolean
 qt_item_init_winsys (QtGLVideoItem * widget)
 {
+  GError *error = NULL;
+
   g_return_val_if_fail (widget != NULL, FALSE);
 
   g_mutex_lock (&widget->priv->lock);
@@ -446,8 +448,12 @@ qt_item_init_winsys (QtGLVideoItem * widget)
     return FALSE;
   }
 
-  gst_gl_context_create (widget->priv->context, widget->priv->other_context,
-      NULL);
+  if (!gst_gl_context_create (widget->priv->context, widget->priv->other_context,
+        &error)) {
+    GST_ERROR ("%s", error->message);
+    g_mutex_unlock (&widget->priv->lock);
+    return FALSE;
+  }
 
   g_mutex_unlock (&widget->priv->lock);
   return TRUE;
