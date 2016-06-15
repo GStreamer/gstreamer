@@ -910,15 +910,8 @@ static void
 _upload_meta_upload_free (gpointer impl)
 {
   struct GLUploadMeta *upload = impl;
-  gint i;
 
   g_return_if_fail (impl != NULL);
-
-  for (i = 0; i < GST_GL_UPLOAD_MAX_PLANES; i++) {
-    if (upload->texture_ids[i])
-      gst_gl_context_del_texture (upload->upload->context,
-          &upload->texture_ids[i]);
-  }
 
   if (upload->params)
     gst_gl_allocation_params_free ((GstGLAllocationParams *) upload->params);
