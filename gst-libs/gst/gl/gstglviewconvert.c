@@ -1457,7 +1457,6 @@ _init_view_convert_fbo (GstGLViewConvert * viewconvert)
 static gchar *
 _get_shader_string (GstGLViewConvert * viewconvert, GstGLShader * shader,
     GstVideoMultiviewMode in_mode, GstVideoMultiviewMode out_mode,
-    GstGLAPI gl_api, gint gl_major, gint gl_minor,
     GstGLSLVersion version, GstGLSLProfile profile)
 {
   const gchar *input_str, *output_str;
@@ -1574,8 +1573,8 @@ _get_shader_string (GstGLViewConvert * viewconvert, GstGLShader * shader,
 
   tmp2 =
       _gst_glsl_mangle_shader (tmp, GL_FRAGMENT_SHADER,
-      GST_GL_TEXTURE_TARGET_2D, viewconvert->from_texture_target, gl_api,
-      gl_major, gl_minor, &version, &profile);
+      GST_GL_TEXTURE_TARGET_2D, viewconvert->from_texture_target,
+      viewconvert->context, &version, &profile);
 
   return tmp2;
 }
@@ -1730,21 +1729,16 @@ _init_view_convert (GstGLViewConvert * viewconvert)
   {
     GstGLSLVersion version;
     GstGLSLProfile profile;
-    GstGLAPI gl_api;
-    gint gl_major, gl_minor;
     GstGLSLStage *vert, *frag;
     gchar *tmp, *tmp1, *version_str;
     const gchar *strings[2];
     GError *error = NULL;
 
-    gl_api = gst_gl_context_get_gl_api (viewconvert->context);
-    gst_gl_context_get_gl_version (viewconvert->context, &gl_major, &gl_minor);
-
     tmp =
         _gst_glsl_mangle_shader
         (gst_gl_shader_string_vertex_mat4_vertex_transform, GL_VERTEX_SHADER,
-        GST_GL_TEXTURE_TARGET_2D, viewconvert->from_texture_target, gl_api,
-        gl_major, gl_minor, &version, &profile);
+        GST_GL_TEXTURE_TARGET_2D, viewconvert->from_texture_target,
+        viewconvert->context, &version, &profile);
 
     tmp1 = gst_glsl_version_profile_to_string (version, profile);
     version_str = g_strdup_printf ("#version %s\n", tmp1);
@@ -1767,7 +1761,7 @@ _init_view_convert (GstGLViewConvert * viewconvert)
     }
 
     fragment_source_str = _get_shader_string (viewconvert, viewconvert->shader,
-        in_mode, out_mode, gl_api, gl_major, gl_minor, version, profile);
+        in_mode, out_mode, version, profile);
     strings[1] = fragment_source_str;
 
     frag =

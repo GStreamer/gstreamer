@@ -60,8 +60,7 @@ G_GNUC_INTERNAL const gchar * _gst_glsl_shader_string_find_version (const gchar 
 
 G_GNUC_INTERNAL gchar *
 _gst_glsl_mangle_shader (const gchar * str, guint shader_type, GstGLTextureTarget from,
-    GstGLTextureTarget to, GstGLAPI gl_api, gint gl_major, gint gl_minor,
-    GstGLSLVersion * version, GstGLSLProfile * profile);
+    GstGLTextureTarget to, GstGLContext * context, GstGLSLVersion * version, GstGLSLProfile * profile);
 
 G_END_DECLS
 
