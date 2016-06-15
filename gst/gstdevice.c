@@ -195,7 +195,7 @@ gst_device_set_property (GObject * object, guint prop_id,
  * @name: (allow-none): name of new element, or %NULL to automatically
  * create a unique name.
  *
- * Creates the element with all of the required paramaters set to use
+ * Creates the element with all of the required parameters set to use
  * this device.
  *
  * Returns: (transfer full): a new #GstElement configured to use this device
