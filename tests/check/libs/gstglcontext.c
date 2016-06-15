@@ -42,7 +42,8 @@ teardown (void)
   gst_object_unref (display);
 }
 
-static GLuint vbo, vbo_indices, vao, fbo_id, rbo, tex;
+static GstGLMemory *gl_tex;
+static GLuint vbo, vbo_indices, vao, fbo_id, rbo;
 static GstGLFramebuffer *fbo;
 static GstGLShader *shader;
 static GLint shader_attr_position_loc;
@@ -63,6 +64,15 @@ init (gpointer data)
 {
   GstGLContext *context = data;
   GError *error = NULL;
+  GstVideoInfo v_info;
+  GstGLMemoryAllocator *allocator;
+  GstGLVideoAllocationParams *params;
+
+  gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 320, 240);
+  allocator = gst_gl_memory_allocator_get_default (context);
+  params =
+      gst_gl_video_allocation_params_new (context, NULL, &v_info, 0, NULL,
+      GST_GL_TEXTURE_TARGET_2D);
 
   /* has to be called in the thread that is going to use the framebuffer */
   fbo = gst_gl_framebuffer_new (context);
@@ -70,8 +80,12 @@ init (gpointer data)
   gst_gl_framebuffer_generate (fbo, 320, 240, &fbo_id, &rbo);
   fail_if (fbo == NULL || fbo_id == 0, "failed to create framebuffer object");
 
-  gst_gl_context_gen_texture (context, &tex, GST_VIDEO_FORMAT_RGBA, 320, 240);
-  fail_if (tex == 0, "failed to create texture");
+  gl_tex =
+      (GstGLMemory *) gst_gl_base_memory_alloc ((GstGLBaseMemoryAllocator *)
+      allocator, (GstGLAllocationParams *) params);
+  gst_object_unref (allocator);
+  gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
+  fail_if (gl_tex == NULL, "failed to create texture");
 
   shader = gst_gl_shader_new_default (context, &error);
   fail_if (shader == NULL, "failed to create shader object: %s",
@@ -88,11 +102,11 @@ deinit (gpointer data)
 {
   GstGLContext *context = data;
   GstGLFuncs *gl = context->gl_vtable;
-  gl->DeleteTextures (1, &tex);
   if (vao)
     gl->DeleteVertexArrays (1, &vao);
   gst_object_unref (fbo);
   gst_object_unref (shader);
+  gst_memory_unref (GST_MEMORY_CAST (gl_tex));
 }
 
 static void
@@ -113,8 +127,8 @@ clear_tex (gpointer data)
 static void
 draw_tex (gpointer data)
 {
-  gst_gl_framebuffer_use_v2 (fbo, 320, 240, fbo_id, rbo, tex,
-      (GLCB_V2) clear_tex, data);
+  gst_gl_framebuffer_use_v2 (fbo, 320, 240, fbo_id, rbo,
+      gst_gl_memory_get_texture_id (gl_tex), (GLCB_V2) clear_tex, data);
 }
 
 static void
@@ -210,7 +224,7 @@ draw_render (gpointer data)
   gst_gl_shader_use (shader);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (GL_TEXTURE_2D, tex);
+  gl->BindTexture (GL_TEXTURE_2D, gst_gl_memory_get_texture_id (gl_tex));
   gst_gl_shader_set_uniform_1i (shader, "s_texture", 0);
 
   if (gl->GenVertexArrays)
