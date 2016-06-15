@@ -600,9 +600,10 @@ parse_frame_header (GstVaapiDecoderVp9 * decoder, const guchar * buf,
     return get_status (result);
 
   /* Unlike other decoders, vp9 decoder doesn't need to reset the
-   * whole context and surfaces for each resolution change. context
-   * reset only needed if resolution of any frame is greater than
-   * what actullay configured. There are streams where a bigger
+   * whole context and surfaces for each resolution change. Calling
+   * ensure_context() again is only needed if the resolution of any frame
+   * is greater than what was previously configured, so that new, larger
+   * surfaces can be allocated. There are streams where a bigger
    * resolution set in ivf header or webm header but actual resolution
    * of all frames are less. Also it is possible to have inter-prediction
    * between these multi resolution frames */
