@@ -1215,34 +1215,31 @@ static GstCaps *
 gst_vaapisink_get_caps_impl (GstBaseSink * base_sink)
 {
   GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
-  GstCaps *out_caps, *raw_caps;
+  GstCaps *out_caps, *raw_caps, *feature_caps;
   static const char surface_caps_str[] =
       GST_VAAPI_MAKE_SURFACE_CAPS ";"
       GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE
       "," GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
       "{ ENCODED, NV12, I420, YV12 }");
+  GstCapsFeatures *const features = gst_caps_features_new
+      (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, NULL);
+
+  if (!GST_VAAPI_PLUGIN_BASE_DISPLAY (sink))
+    return gst_static_pad_template_get_caps (&gst_vaapisink_sink_factory);
 
   out_caps = gst_caps_from_string (surface_caps_str);
+  raw_caps =
+      gst_vaapi_plugin_base_get_allowed_raw_caps (GST_VAAPI_PLUGIN_BASE (sink));
+  if (!raw_caps)
+    return out_caps;
 
-  if (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink)) {
-    raw_caps =
-        gst_vaapi_plugin_base_get_allowed_raw_caps (GST_VAAPI_PLUGIN_BASE
-        (sink));
-    if (raw_caps) {
-      GstCaps *feature_caps;
-      GstCapsFeatures *const features =
-          gst_caps_features_new
-          (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, NULL);
+  out_caps = gst_caps_make_writable (out_caps);
+  gst_caps_append (out_caps, gst_caps_copy (raw_caps));
 
-      out_caps = gst_caps_make_writable (out_caps);
+  feature_caps = gst_caps_copy (raw_caps);
+  gst_caps_set_features (feature_caps, 0, features);
+  gst_caps_append (out_caps, feature_caps);
 
-      gst_caps_append (out_caps, gst_caps_copy (raw_caps));
-
-      feature_caps = gst_caps_copy (raw_caps);
-      gst_caps_set_features (feature_caps, 0, features);
-      gst_caps_append (out_caps, feature_caps);
-    }
-  }
   return out_caps;
 }
 
