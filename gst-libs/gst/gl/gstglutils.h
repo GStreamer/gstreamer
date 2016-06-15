@@ -68,16 +68,6 @@ typedef void (*GLCB) (gint, gint, guint, gpointer stuff);
  */
 typedef void (*GLCB_V2) (gpointer stuff);
 
-/* deprecated. replaced by GstGLMemory */
-void gst_gl_context_gen_texture (GstGLContext * context, GLuint * pTexture,
-    GstVideoFormat v_format, GLint width, GLint height);
-/* deprecated. replaced by GstGLMemory */
-void gst_gl_context_del_texture (GstGLContext * context, GLuint * pTexture);
-
-/* deprecated. replaced by GstGLMemory */
-void gst_gl_generate_texture_full (GstGLContext * context, const GstVideoInfo * info,
-    const guint comp, gint stride[], gsize offset[], gsize size[], GLuint * pTexture);
-
 gboolean gst_gl_context_gen_fbo (GstGLContext * context, gint width, gint height,
     GLuint * fbo, GLuint * depthbuffer);
 gboolean gst_gl_context_use_fbo_v2 (GstGLContext * context, gint texture_fbo_width,
