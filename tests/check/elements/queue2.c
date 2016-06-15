@@ -333,6 +333,45 @@ GST_START_TEST (test_percent_overflow)
 
 GST_END_TEST;
 
+GST_START_TEST (test_small_ring_buffer)
+{
+  GstElement *pipeline;
+  GstElement *queue2;
+  const gchar *desc;
+  GstBus *bus;
+  GstMessage *msg;
+
+  /* buffer too small to seek used to crash, test for regression */
+  desc = "fakesrc sizetype=2 sizemax=4096 num-buffers=100 datarate=1000 ! "
+      "queue2 ring-buffer-max-size=1000 name=q2 ! fakesink sync=true";
+
+  pipeline = gst_parse_launch (desc, NULL);
+  fail_if (pipeline == NULL);
+
+  queue2 = gst_bin_get_by_name (GST_BIN (pipeline), "q2");
+  fail_if (queue2 == NULL);
+
+  /* bring the pipeline to PLAYING, then start switching */
+  bus = gst_element_get_bus (pipeline);
+  fail_if (bus == NULL);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  /* Wait for the pipeline to hit playing */
+  gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+
+  /* now wait for completion or error */
+  msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
+  fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR,
+      "Expected EOS message, got ERROR message");
+  gst_message_unref (msg);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (queue2);
+  gst_object_unref (bus);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 queue2_suite (void)
 {
@@ -347,6 +386,7 @@ queue2_suite (void)
   tcase_add_test (tc_chain, test_simple_shutdown_while_running_ringbuffer);
   tcase_add_test (tc_chain, test_filled_read);
   tcase_add_test (tc_chain, test_percent_overflow);
+  tcase_add_test (tc_chain, test_small_ring_buffer);
 
   return s;
 }
