@@ -469,7 +469,6 @@ gst_gl_deinterlace_greedyh_callback (gint width, gint height, guint texture,
   GstGLDeinterlace *deinterlace_filter = GST_GL_DEINTERLACE (filter);
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
-  guint temp;
 
   shader =
       gst_gl_deinterlace_get_fragment_shader (filter, "greedhy",
@@ -487,13 +486,7 @@ gst_gl_deinterlace_greedyh_callback (gint width, gint height, guint texture,
 
   gst_gl_shader_use (shader);
 
-  if (G_UNLIKELY (deinterlace_filter->prev_tex == 0)) {
-    gst_gl_context_gen_texture (GST_GL_BASE_FILTER (filter)->context,
-        &deinterlace_filter->prev_tex,
-        GST_VIDEO_INFO_FORMAT (&filter->out_info),
-        GST_VIDEO_INFO_WIDTH (&filter->out_info),
-        GST_VIDEO_INFO_HEIGHT (&filter->out_info));
-  } else {
+  if (G_LIKELY (deinterlace_filter->prev_tex != 0)) {
     gl->ActiveTexture (GL_TEXTURE1);
     gst_gl_shader_set_uniform_1i (shader, "tex_prev", 1);
     gl->BindTexture (GL_TEXTURE_2D, deinterlace_filter->prev_tex);
@@ -514,11 +507,6 @@ gst_gl_deinterlace_greedyh_callback (gint width, gint height, guint texture,
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 
-  if (texture == filter->in_tex_id) {
-    temp = filter->in_tex_id;
-    filter->in_tex_id = deinterlace_filter->prev_tex;
-    deinterlace_filter->prev_tex = temp;
-  } else {
-    deinterlace_filter->prev_tex = texture;
-  }
+  /* we keep the previous buffer around so this is safe */
+  deinterlace_filter->prev_tex = texture;
 }
