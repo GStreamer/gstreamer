@@ -67,9 +67,6 @@ struct _GstGLFilter
   GLuint             fbo;
   GLuint             depthbuffer;
 
-  GLuint             in_tex_id;
-  GLuint             out_tex_id;
-
   GstGLShader       *default_shader;
   gboolean           valid_attributes;
 
