@@ -822,7 +822,7 @@ gst_rtp_h265_pay_decode_nal (GstRtpH265Pay * payloader,
   GST_DEBUG ("NAL payload len=%u", size);
 
   header = data[0];
-  type = header & 0x3f;
+  type = (header & 0x7e) >> 1;
 
   /* We record the timestamp of the last SPS/PPS so
    * that we can insert them at regular intervals and when needed. */
