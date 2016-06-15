@@ -34,8 +34,7 @@ gst-launch-1.0 calf-sourceforge-net-plugins-Organ event-in="C-3" name=s ! interl
 
 
 TODO
-* support presets
-  for pl in $(lv2ls); do if test "$(lv2info "$pl" | grep -A1 "Presets:" | tail -n1)" != ""; then echo "$pl"; fi; done
+* make filters gap-aware
 * support more host features
   GST_DEBUG="lv2:4" GST_DEBUG_FILE=/tmp/gst.log gst-inspect lv2
   grep -o "needs host feature: .*$" /tmp/gst.log  | sort | uniq -c | sort -n

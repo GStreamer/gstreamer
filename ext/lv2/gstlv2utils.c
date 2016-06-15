@@ -28,7 +28,10 @@
 #include "gstlv2.h"
 #include "gstlv2utils.h"
 
+#include "lv2/lv2plug.in/ns/ext/atom/atom.h"
+#include "lv2/lv2plug.in/ns/ext/atom/forge.h"
 #include <lv2/lv2plug.in/ns/ext/log/log.h>
+#include <lv2/lv2plug.in/ns/ext/state/state.h>
 #include <lv2/lv2plug.in/ns/ext/urid/urid.h>
 
 GST_DEBUG_CATEGORY_EXTERN (lv2_debug);
@@ -133,6 +136,134 @@ gst_lv2_check_required_features (const LilvPlugin * lv2plugin)
   return TRUE;
 }
 
+static LV2_Atom_Forge forge;
+
+void
+gst_lv2_host_init (void)
+{
+  lv2_atom_forge_init (&forge, &lv2_map);
+}
+
+/* preset interface */
+
+gchar **
+gst_lv2_get_preset_names (GstLV2 * lv2, GstObject * obj)
+{
+  /* lazily scan for presets when first called */
+  if (!lv2->presets) {
+    LilvNodes *presets;
+
+    if ((presets = lilv_plugin_get_related (lv2->klass->plugin, preset_class))) {
+      LilvIter *j;
+
+      lv2->presets = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+          (GDestroyNotify) lilv_node_free);
+
+      for (j = lilv_nodes_begin (presets);
+          !lilv_nodes_is_end (presets, j); j = lilv_nodes_next (presets, j)) {
+        const LilvNode *preset = lilv_nodes_get (presets, j);
+        LilvNodes *titles;
+
+        lilv_world_load_resource (world, preset);
+        titles = lilv_world_find_nodes (world, preset, label_pred, NULL);
+        if (titles) {
+          const LilvNode *title = lilv_nodes_get_first (titles);
+          g_hash_table_insert (lv2->presets,
+              g_strdup (lilv_node_as_string (title)),
+              lilv_node_duplicate (preset));
+          lilv_nodes_free (titles);
+        } else {
+          GST_WARNING_OBJECT (obj, "plugin has preset '%s' without rdfs:label",
+              lilv_node_as_string (preset));
+        }
+      }
+      lilv_nodes_free (presets);
+    }
+  }
+  if (lv2->presets) {
+    GList *node, *keys = g_hash_table_get_keys (lv2->presets);
+    gchar **names = g_new0 (gchar *, g_hash_table_size (lv2->presets) + 1);
+    gint i = 0;
+
+    for (node = keys; node; node = g_list_next (node)) {
+      names[i++] = g_strdup (node->data);
+    }
+    g_list_free (keys);
+    return names;
+  }
+  return NULL;
+}
+
+static void
+set_port_value (const char *port_symbol, void *data, const void *value,
+    uint32_t size, uint32_t type)
+{
+  gpointer *user_data = (gpointer *) data;
+  GstLV2Class *klass = user_data[0];
+  GstObject *obj = user_data[1];
+  gchar *prop_name = g_hash_table_lookup (klass->sym_to_name, port_symbol);
+  gfloat fvalue;
+
+  if (!prop_name) {
+    GST_WARNING_OBJECT (obj, "Preset port '%s' is missing", port_symbol);
+    return;
+  }
+
+  if (type == forge.Float) {
+    fvalue = *(const gfloat *) value;
+  } else if (type == forge.Double) {
+    fvalue = *(const gdouble *) value;
+  } else if (type == forge.Int) {
+    fvalue = *(const gint32 *) value;
+  } else if (type == forge.Long) {
+    fvalue = *(const gint64 *) value;
+  } else {
+    GST_WARNING_OBJECT (obj, "Preset '%s' value has bad type '%s'",
+        port_symbol, lv2_unmap.unmap (lv2_unmap.handle, type));
+    return;
+  }
+  g_object_set (obj, prop_name, fvalue, NULL);
+}
+
+
+gboolean
+gst_lv2_load_preset (GstLV2 * lv2, GstObject * obj, const gchar * name)
+{
+  LilvNode *preset = g_hash_table_lookup (lv2->presets, name);
+  LilvState *state = lilv_state_new_from_world (world, &lv2_map, preset);
+  gpointer user_data[] = { lv2->klass, obj };
+
+  GST_INFO_OBJECT (obj, "loading preset <%s>", lilv_node_as_string (preset));
+
+  lilv_state_restore (state, lv2->instance, set_port_value,
+      (gpointer) user_data, 0, NULL);
+
+  lilv_state_free (state);
+  return FALSE;
+}
+
+#if 0
+gboolean
+gst_lv2_save_preset (GstLV2 * lv2, GstObject * obj, const gchar * name)
+{
+  return FALSE;
+}
+
+gboolean
+gst_lv2_rename_preset (GstLV2 * lv2, GstObject * obj,
+    const gchar * old_name, const gchar * new_name)
+{
+  return FALSE;
+}
+
+gboolean
+gst_lv2_delete_preset (GstLV2 * lv2, GstObject * obj, const gchar * name)
+{
+  return FALSE;
+}
+#endif
+
+
 /* api helpers */
 
 void
@@ -150,6 +281,9 @@ gst_lv2_init (GstLV2 * lv2, GstLV2Class * lv2_class)
 void
 gst_lv2_finalize (GstLV2 * lv2)
 {
+  if (lv2->presets) {
+    g_hash_table_destroy (lv2->presets);
+  }
   g_free (lv2->ports.control.in);
   g_free (lv2->ports.control.out);
 }
@@ -301,12 +435,9 @@ gst_lv2_object_get_property (GstLV2 * lv2, GObject * object,
 
 static gchar *
 gst_lv2_class_get_param_name (GstLV2Class * klass, GObjectClass * object_class,
-    const LilvPort * port)
+    const gchar * port_symbol)
 {
-  const LilvPlugin *lv2plugin = klass->plugin;
-  gchar *ret;
-
-  ret = g_strdup (lilv_node_as_string (lilv_port_get_symbol (lv2plugin, port)));
+  gchar *ret = g_strdup (port_symbol);
 
   /* this is the same thing that param_spec_* will do */
   g_strcanon (ret, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
@@ -331,9 +462,7 @@ gst_lv2_class_get_param_name (GstLV2Class * klass, GObjectClass * object_class,
     ret = nret;
   }
 
-  GST_DEBUG ("built property name '%s' from port name '%s'", ret,
-      lilv_node_as_string (lilv_port_get_symbol (lv2plugin, port)));
-
+  GST_DEBUG ("built property name '%s' from port name '%s'", ret, port_symbol);
   return ret;
 }
 
@@ -364,9 +493,11 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, GObjectClass * object_class,
   gint perms;
   gfloat lower = 0.0f, upper = 1.0f, def = 0.0f;
   GType enum_type = G_TYPE_INVALID;
+  const gchar *port_symbol =
+      lilv_node_as_string (lilv_port_get_symbol (lv2plugin, port));
 
   nick = gst_lv2_class_get_param_nick (klass, port);
-  name = gst_lv2_class_get_param_name (klass, object_class, port);
+  name = gst_lv2_class_get_param_name (klass, object_class, port_symbol);
 
   GST_DEBUG ("%s trying port %s : %s",
       lilv_node_as_string (lilv_plugin_get_uri (lv2plugin)), name, nick);
@@ -480,6 +611,10 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, GObjectClass * object_class,
     ret = g_param_spec_float (name, nick, nick, lower, upper, def, perms);
 
 done:
+  // build a map of (port_symbol to ret->name) for extensions
+  g_hash_table_insert (klass->sym_to_name, (gchar *) port_symbol,
+      (gchar *) ret->name);
+
   g_free (name);
   g_free (nick);
 
@@ -571,6 +706,8 @@ gst_lv2_class_init (GstLV2Class * lv2_class, GType type)
   g_assert (lv2plugin);
   lv2_class->plugin = lv2plugin;
   lilv_node_free (plugin_uri);
+
+  lv2_class->sym_to_name = g_hash_table_new (g_str_hash, g_str_equal);
 
   lv2_class->in_group.ports = g_array_new (FALSE, TRUE, sizeof (GstLV2Port));
   lv2_class->out_group.ports = g_array_new (FALSE, TRUE, sizeof (GstLV2Port));
@@ -692,6 +829,8 @@ gst_lv2_class_finalize (GstLV2Class * lv2_class)
 {
   GST_DEBUG ("LV2 finalizing class");
 
+  g_hash_table_destroy (lv2_class->sym_to_name);
+
   g_array_free (lv2_class->in_group.ports, TRUE);
   lv2_class->in_group.ports = NULL;
   g_array_free (lv2_class->out_group.ports, TRUE);
@@ -700,15 +839,4 @@ gst_lv2_class_finalize (GstLV2Class * lv2_class)
   lv2_class->control_in_ports = NULL;
   g_array_free (lv2_class->control_out_ports, TRUE);
   lv2_class->control_out_ports = NULL;
-}
-
-void
-gst_lv2_register_element (GstPlugin * plugin, GType parent_type,
-    const GTypeInfo * info, GstStructure * lv2_meta)
-{
-  const gchar *type_name =
-      gst_structure_get_string (lv2_meta, "element-type-name");
-
-  gst_element_register (plugin, type_name, GST_RANK_NONE,
-      g_type_register_static (parent_type, type_name, info, 0));
 }

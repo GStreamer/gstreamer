@@ -43,6 +43,8 @@
 #include <gst/audio/audio-channels.h>
 #include <lv2/lv2plug.in/ns/ext/port-groups/port-groups.h>
 #include "lv2/lv2plug.in/ns/ext/event/event.h"
+#include "lv2/lv2plug.in/ns/ext/presets/presets.h"
+#include "lv2/lv2plug.in/ns/ext/state/state.h"
 
 GST_DEBUG_CATEGORY (lv2_debug);
 #define GST_CAT_DEFAULT lv2_debug
@@ -71,13 +73,13 @@ lv2_plugin_register_element (GstPlugin * plugin, GstStructure * lv2_meta)
 
 static void
 lv2_count_ports (const LilvPlugin * lv2plugin, guint * audio_in,
-    guint * audio_out)
+    guint * audio_out, guint * control)
 {
   GHashTable *port_groups = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, NULL);
   guint i;
 
-  *audio_in = *audio_out = 0;
+  *audio_in = *audio_out = *control = 0;
   for (i = 0; i < lilv_plugin_get_num_ports (lv2plugin); i++) {
     const LilvPort *port = lilv_plugin_get_port_by_index (lv2plugin, i);
 
@@ -99,6 +101,9 @@ lv2_count_ports (const LilvPlugin * lv2plugin, guint * audio_in,
         (*audio_in)++;
       else
         (*audio_out)++;
+    } else if (lilv_port_is_a (lv2plugin, port, control_class) ||
+        lilv_port_is_a (lv2plugin, port, cv_class)) {
+      (*control)++;
     }
   }
   g_hash_table_unref (port_groups);
@@ -108,7 +113,7 @@ lv2_count_ports (const LilvPlugin * lv2plugin, guint * audio_in,
 static gboolean
 lv2_plugin_discover (GstPlugin * plugin)
 {
-  guint audio_in, audio_out;
+  guint audio_in, audio_out, control;
   LilvIter *i;
   const LilvPlugins *plugins = lilv_world_get_all_plugins (world);
 
@@ -119,6 +124,7 @@ lv2_plugin_discover (GstPlugin * plugin)
     const LilvPlugin *lv2plugin = lilv_plugins_get (plugins, i);
     const gchar *plugin_uri, *p;
     gchar *type_name;
+    gboolean can_do_presets;
 
     plugin_uri = lilv_node_as_uri (lilv_plugin_get_uri (lv2plugin));
 
@@ -142,7 +148,7 @@ lv2_plugin_discover (GstPlugin * plugin)
       goto next;
 
     /* check if this has any audio ports */
-    lv2_count_ports (lv2plugin, &audio_in, &audio_out);
+    lv2_count_ports (lv2plugin, &audio_in, &audio_out, &control);
 
     if (audio_in == 0 && audio_out == 0) {
       GST_FIXME ("plugin %s has no audio pads", type_name);
@@ -165,12 +171,19 @@ lv2_plugin_discover (GstPlugin * plugin)
       }
     }
 
-    lv2_meta = gst_structure_new_empty ("lv2");
-    gst_structure_set (lv2_meta,
+    /* check supported extensions */
+    can_do_presets = lilv_plugin_has_extension_data (lv2plugin, state_iface)
+        || lilv_plugin_has_feature (lv2plugin, state_uri)
+        || (control > 0);
+    GST_INFO ("plugin %s can%s do presets", type_name,
+        (can_do_presets ? "" : "'t"));
+
+    lv2_meta = gst_structure_new ("lv2",
         "element-uri", G_TYPE_STRING, plugin_uri,
         "element-type-name", G_TYPE_STRING, type_name,
         "audio-in", G_TYPE_UINT, audio_in,
-        "audio-out", G_TYPE_UINT, audio_out, NULL);
+        "audio-out", G_TYPE_UINT, audio_out,
+        "can-do-presets", G_TYPE_BOOLEAN, can_do_presets, NULL);
 
     g_value_init (&value, GST_TYPE_STRUCTURE);
     g_value_set_boxed (&value, lv2_meta);
@@ -198,6 +211,7 @@ plugin_init (GstPlugin * plugin)
 
   world = lilv_world_new ();
   lilv_world_load_all (world);
+  gst_lv2_host_init ();
 
 /* have been added after lilv-0.22.0, which is the last release */
 #ifndef LILV_URI_ATOM_PORT
@@ -214,6 +228,9 @@ plugin_init (GstPlugin * plugin)
   event_class = lilv_new_uri (world, LILV_URI_EVENT_PORT);
   input_class = lilv_new_uri (world, LILV_URI_INPUT_PORT);
   output_class = lilv_new_uri (world, LILV_URI_OUTPUT_PORT);
+  preset_class = lilv_new_uri (world, LV2_PRESETS__Preset);
+  state_iface = lilv_new_uri (world, LV2_STATE__interface);
+  state_uri = lilv_new_uri (world, LV2_STATE_URI);
 
   integer_prop = lilv_new_uri (world, LV2_CORE__integer);
   toggled_prop = lilv_new_uri (world, LV2_CORE__toggled);
@@ -222,6 +239,7 @@ plugin_init (GstPlugin * plugin)
   optional_pred = lilv_new_uri (world, LV2_CORE__optionalFeature);
   group_pred = lilv_new_uri (world, LV2_PORT_GROUPS__group);
   supports_event_pred = lilv_new_uri (world, LV2_EVENT__supportsEvent);
+  label_pred = lilv_new_uri (world, LILV_NS_RDFS "label");
 
   center_role = lilv_new_uri (world, LV2_PORT_GROUPS__center);
   left_role = lilv_new_uri (world, LV2_PORT_GROUPS__left);
@@ -296,6 +314,9 @@ __attribute__ ((destructor))
   lilv_node_free (event_class);
   lilv_node_free (input_class);
   lilv_node_free (output_class);
+  lilv_node_free (preset_class);
+  lilv_node_free (state_iface);
+  lilv_node_free (state_uri);
 
   lilv_node_free (integer_prop);
   lilv_node_free (toggled_prop);
@@ -304,6 +325,7 @@ __attribute__ ((destructor))
   lilv_node_free (optional_pred);
   lilv_node_free (group_pred);
   lilv_node_free (supports_event_pred);
+  lilv_node_free (label_pred);
 
   lilv_node_free (center_role);
   lilv_node_free (left_role);

@@ -36,6 +36,10 @@ LilvNode *cv_class;
 LilvNode *event_class;
 LilvNode *input_class;
 LilvNode *output_class;
+LilvNode *preset_class;
+LilvNode *state_iface;
+LilvNode *state_uri;
+
 LilvNode *integer_prop;
 LilvNode *toggled_prop;
 LilvNode *designation_pred;
@@ -43,6 +47,7 @@ LilvNode *in_place_broken_pred;
 LilvNode *optional_pred;
 LilvNode *group_pred;
 LilvNode *supports_event_pred;
+LilvNode *label_pred;
 
 LilvNode *center_role;
 LilvNode *left_role;

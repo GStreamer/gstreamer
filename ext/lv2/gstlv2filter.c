@@ -70,6 +70,73 @@ struct _GstLV2FilterClass
 
 static GstAudioFilter *parent_class = NULL;
 
+/* preset interface */
+
+static gchar **
+gst_lv2_filter_get_preset_names (GstPreset * preset)
+{
+  GstLV2Filter *self = (GstLV2Filter *) preset;
+
+  return gst_lv2_get_preset_names (&self->lv2, (GstObject *) self);
+}
+
+static gboolean
+gst_lv2_filter_load_preset (GstPreset * preset, const gchar * name)
+{
+  GstLV2Filter *self = (GstLV2Filter *) preset;
+
+  return gst_lv2_load_preset (&self->lv2, (GstObject *) self, name);
+}
+
+static gboolean
+gst_lv2_filter_save_preset (GstPreset * preset, const gchar * name)
+{
+  return FALSE;
+}
+
+static gboolean
+gst_lv2_filter_rename_preset (GstPreset * preset, const gchar * old_name,
+    const gchar * new_name)
+{
+  return FALSE;
+}
+
+static gboolean
+gst_lv2_filter_delete_preset (GstPreset * preset, const gchar * name)
+{
+  return FALSE;
+}
+
+static gboolean
+gst_lv2_filter_set_meta (GstPreset * preset, const gchar * name,
+    const gchar * tag, const gchar * value)
+{
+  return FALSE;
+}
+
+static gboolean
+gst_lv2_filter_get_meta (GstPreset * preset, const gchar * name,
+    const gchar * tag, gchar ** value)
+{
+  *value = NULL;
+  return FALSE;
+}
+
+static void
+gst_lv2_filter_preset_interface_init (gpointer g_iface, gpointer iface_data)
+{
+  GstPresetInterface *iface = g_iface;
+
+  iface->get_preset_names = gst_lv2_filter_get_preset_names;
+  iface->load_preset = gst_lv2_filter_load_preset;
+  iface->save_preset = gst_lv2_filter_save_preset;
+  iface->rename_preset = gst_lv2_filter_rename_preset;
+  iface->delete_preset = gst_lv2_filter_delete_preset;
+  iface->set_meta = gst_lv2_filter_set_meta;
+  iface->get_meta = gst_lv2_filter_get_meta;
+}
+
+
 /* GObject vmethods implementation */
 static void
 gst_lv2_filter_set_property (GObject * object, guint prop_id,
@@ -472,9 +539,25 @@ gst_lv2_filter_register_element (GstPlugin * plugin, GstStructure * lv2_meta)
     0,
     (GInstanceInitFunc) gst_lv2_filter_init,
   };
+  const gchar *type_name =
+      gst_structure_get_string (lv2_meta, "element-type-name");
+  GType element_type =
+      g_type_register_static (GST_TYPE_AUDIO_FILTER, type_name, &info, 0);
+  gboolean can_do_presets;
 
-  /* create the type */
-  gst_lv2_register_element (plugin, GST_TYPE_AUDIO_FILTER, &info, lv2_meta);
+  /* register interfaces */
+  gst_structure_get_boolean (lv2_meta, "can-do-presets", &can_do_presets);
+  if (can_do_presets) {
+    const GInterfaceInfo preset_interface_info = {
+      (GInterfaceInitFunc) gst_lv2_filter_preset_interface_init,
+      NULL,
+      NULL
+    };
+    g_type_add_interface_static (element_type, GST_TYPE_PRESET,
+        &preset_interface_info);
+  }
+
+  gst_element_register (plugin, type_name, GST_RANK_NONE, element_type);
 
   if (!parent_class)
     parent_class = g_type_class_ref (GST_TYPE_AUDIO_FILTER);
