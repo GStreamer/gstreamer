@@ -143,13 +143,16 @@ QtGLVideoItem::QtGLVideoItem()
 
   g_mutex_init (&this->priv->lock);
 
+  GST_INFO ("QGuiApplication::instance()->platformName() %s", app->platformName().toUtf8().data());
+
 #if GST_GL_HAVE_WINDOW_X11 && defined (HAVE_QT_X11)
   if (QString::fromUtf8 ("xcb") == app->platformName())
     this->priv->display = (GstGLDisplay *)
         gst_gl_display_x11_new_with_display (QX11Info::display ());
 #endif
 #if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_WAYLAND)
-  if (QString::fromUtf8 ("wayland") == app->platformName()){
+  if (QString::fromUtf8 ("wayland") == app->platformName()
+        || QString::fromUtf8 ("wayland-egl") == app->platformName()){
     struct wl_display * wayland_display;
     QPlatformNativeInterface *native =
         QGuiApplication::platformNativeInterface();
