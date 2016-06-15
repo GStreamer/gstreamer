@@ -1844,6 +1844,9 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
         guint64 range_data_start, range_data_end;
         GstQueue2Range *range_to_destroy = NULL;
 
+        if (range == queue->current)
+          goto next_range;
+
         range_data_start = range->rb_offset;
         range_data_end = range->rb_writing_pos;
 
