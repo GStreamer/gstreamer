@@ -53,6 +53,7 @@ index.md
 	sdk-api-reference.md
 		sdk-gst-inspect.md
 		gst-launch.md
+		ges-launch.md
 	manual-index.md
 		manual-introduction.md
 			manual-gstreamer.md
