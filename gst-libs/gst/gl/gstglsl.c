@@ -33,6 +33,21 @@
  * @see_also: #GstGLSLStage, #GstGLShader
  */
 
+#define GST_CAT_DEFAULT gst_glsl_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+
+static void
+_init_debug (void)
+{
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "glsl", 0,
+        "OpenGL Shading Language");
+    g_once_init_leave (&_init, 1);
+  }
+}
+
 GQuark
 gst_glsl_error_quark (void)
 {
@@ -255,6 +270,8 @@ gst_glsl_version_profile_from_string (const gchar * string,
   GstGLSLProfile profile = GST_GLSL_PROFILE_NONE;
   gint i;
 
+  _init_debug ();
+
   if (!string)
     goto error;
 
@@ -265,6 +282,7 @@ gst_glsl_version_profile_from_string (const gchar * string,
   if (str[0] == '#') {
     if (!(version_s =
             (gchar *) _check_valid_version_preprocessor_string (version_s))) {
+      GST_WARNING ("Invalid preprocesser directive detected: %s", version_s);
       g_free (str);
       goto error;
     }
@@ -277,6 +295,8 @@ gst_glsl_version_profile_from_string (const gchar * string,
     i++;
   /* wrong version length */
   if (i != 3) {
+    GST_WARNING ("version number has the wrong number of digits: %s",
+        version_s);
     g_free (str);
     goto error;
   }
@@ -293,13 +313,24 @@ gst_glsl_version_profile_from_string (const gchar * string,
   g_free (str);
 
   /* check whether the parsed data is valid */
-  if (!version)
+  if (!version) {
+    GST_WARNING ("Could not map the version number to a valid GLSL version:");
     goto error;
-  if (!_is_valid_version_profile (version, profile))
+  }
+  if (!_is_valid_version_profile (version, profile)) {
+    GST_WARNING ("Invalid version/profile combination specified: %s %s",
+        gst_glsl_version_to_string (version),
+        gst_glsl_profile_to_string (profile));
     goto error;
+  }
   /* got a profile when none was expected */
-  if (version <= GST_GLSL_VERSION_150 && profile != GST_GLSL_PROFILE_NONE)
+  if (version <= GST_GLSL_VERSION_150 && profile != GST_GLSL_PROFILE_NONE) {
+    GST_WARNING
+        ("Found a profile (%s) with a version (%s) that does not support "
+        "profiles", gst_glsl_version_to_string (version),
+        gst_glsl_profile_to_string (profile));
     goto error;
+  }
 
   _fixup_version_profile (&version, &profile);
 
@@ -328,6 +359,8 @@ _gst_glsl_shader_string_find_version (const gchar * str)
   gboolean ml_comment = FALSE;
   gboolean newline = TRUE;
   gint i = 0;
+
+  _init_debug ();
 
   /* search for #version while allowing for preceeding comments/whitespace as
    * permitted by the GLSL specification */
@@ -366,8 +399,10 @@ _gst_glsl_shader_string_find_version (const gchar * str)
     }
 
     if (str[i] == '#') {
-      if (newline && _check_valid_version_preprocessor_string (&str[i]))
+      if (newline && _check_valid_version_preprocessor_string (&str[i])) {
+        GST_DEBUG ("found #version declaration at index %i", i);
         return &str[i];
+      }
       break;
     }
 
@@ -375,6 +410,8 @@ _gst_glsl_shader_string_find_version (const gchar * str)
     newline = FALSE;
     i++;
   }
+
+  GST_DEBUG ("no #version declaration found in the first 1K");
 
   return NULL;
 }
@@ -410,6 +447,8 @@ gst_gl_version_to_glsl_version (GstGLAPI gl_api, gint maj, gint min)
 {
   g_return_val_if_fail (gl_api != GST_GL_API_NONE, 0);
 
+  _init_debug ();
+
   if (gl_api & GST_GL_API_GLES2) {
     if (maj == 2 && min == 0)
       return 100;
@@ -417,6 +456,7 @@ gst_gl_version_to_glsl_version (GstGLAPI gl_api, gint maj, gint min)
     if (maj == 3 && min >= 0 && min <= 2)
       return maj * 100 + min * 10;
 
+    GST_WARNING ("unknown GLES version");
     return 0;
   }
 
@@ -436,9 +476,11 @@ gst_gl_version_to_glsl_version (GstGLAPI gl_api, gint maj, gint min)
     if (maj == 2 && min == 0)
       return 110;
 
+    GST_WARNING ("unknown GL version");
     return 0;
   }
 
+  GST_WARNING ("unknown GL API");
   return 0;
 }
 
@@ -736,6 +778,8 @@ _gst_glsl_mangle_shader (const gchar * str, guint shader_type,
     GstGLSLProfile * profile)
 {
   gchar *tmp, *tmp2;
+
+  _init_debug ();
 
   _mangle_version_profile_from_gl_api (gl_api, gl_major, gl_minor, version,
       profile);
