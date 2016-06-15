@@ -1,3 +1,7 @@
+---
+short-description: The GStreamer Editing Services prototyping tool
+...
+
 # ges-launch-1.0
 
 **ges-launch-1.0** creates a multimedia [timeline](https://phabricator.freedesktop.org/w/gstreamer/gst-editing-services/ges-timeline/) and plays it back, or renders it to the specified format.

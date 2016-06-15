@@ -50,8 +50,8 @@ index.md
 		sdk-mac-osx-deployment.md
 		sdk-windows-deployment.md
 		sdk-multiplatform-deployment-using-cerbero.md
-	sdk-api-reference.md
-		sdk-gst-inspect.md
+	gstreamer-command-line-tools.md
+		gst-inspect.md
 		gst-launch.md
 		ges-launch.md
 	manual-index.md
