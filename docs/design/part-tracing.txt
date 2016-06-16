@@ -110,7 +110,7 @@ class init
 Here the tracers describe the data the will emit.
 
 instance init
-Tracers attach handlers to one or more hooks using gst_tracer_register_hook().
+Tracers attach handlers to one or more hooks using gst_tracing_register_hook().
 In case the are configurable, they can read the options from the 'params'
 property. This is the extra detail from the environment var.
 
