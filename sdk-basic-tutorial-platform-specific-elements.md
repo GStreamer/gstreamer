@@ -16,7 +16,7 @@ you some of their peculiarities.
 ### `glimagesink`
 
 This video sink is based on
-[OpenGL](http://en.wikipedia.org/wiki/OpenGL) or [OpenGL ES](http://en.wikipedia.org/wiki/OpenGL ES). It supports rescaling
+[OpenGL](http://en.wikipedia.org/wiki/OpenGL) or [OpenGL ES](https://en.wikipedia.org/wiki/OpenGL_ES). It supports rescaling
 and filtering of the scaled image to alleviate aliasing. It implements
 the VideoOverlay interface, so the video window can be re-parented
 (embedded inside other windows). This is the video sink recommended on

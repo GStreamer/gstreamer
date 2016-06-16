@@ -18,7 +18,7 @@ needs to have installed:
     you have at least one Android SDK platform installed with API
     version 9 or higher.
 
-Optionally, you can use the \[Android Studio\] (FIX LINK). As stated in
+Optionally, you can use the [Android Studio] (https://developer.android.com/studio/index.html). As stated in
 the Android documentation, *developing in Android Studio is highly
 recommended and is the fastest way to get started*.
 
