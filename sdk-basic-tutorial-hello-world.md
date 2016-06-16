@@ -2,7 +2,7 @@
 short-description: The mandatory 'Hello world' example
 ...
 
-# Hello world!
+# Basic tutorial 1: Hello world!
 
 ## Goal
 
