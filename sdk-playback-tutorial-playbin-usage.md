@@ -1,10 +1,10 @@
 # Playback tutorial 1: Playbin usage
 
-# Goal
+## Goal
 
-We have already worked with the `playbin` element, which is capable of
+We have already worked with the `playbin` element, which is capable of
 building a complete playback pipeline without much work on our side.
-This tutorial shows how to further customize `playbin` in case its
+This tutorial shows how to further customize `playbin` in case its
 default values do not suit our particular needs.
 
 We will learn:
@@ -15,10 +15,10 @@ We will learn:
 -   How to gather information regarding each stream.
 
 As a side note, even though its name is `playbin`, you can pronounce it
-“playbin”, since the original `playbin` element is deprecated and nobody
+“playbin”, since the original `playbin` element is deprecated and nobody
 should be using it.
 
-# Introduction
+## Introduction
 
 More often than not, multiple audio, video and subtitle streams can be
 found embedded in a single file. The most common case are regular
@@ -52,9 +52,9 @@ The following code recovers the amount of streams in the file, their
 associated metadata, and allows switching the audio stream while the
 media is playing.
 
-# The multilingual player
+## The multilingual player
 
-Copy this code into a text file named `playback-tutorial-1.c` (or find
+Copy this code into a text file named `playback-tutorial-1.c` (or find
 it in the SDK installation).
 
 **playback-tutorial-1.c**
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
   gst_bus_add_watch (bus, (GstBusFunc)handle_message, &data);
 
   /* Add a keyboard watch so we get notified of keystrokes */
-#ifdef _WIN32
+#ifdef G_OS_WIN32
   io_stdin = g_io_channel_win32_new_fd (fileno (stdin));
 #else
   io_stdin = g_io_channel_unix_new (fileno (stdin));
@@ -266,7 +266,7 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
   gchar *str = NULL;
 
   if (g_io_channel_read_line (source, &str, NULL, NULL, NULL) == G_IO_STATUS_NORMAL) {
-    int index = atoi (str);
+    int index = g_ascii_strtoull (str, NULL, 0);
     if (index < 0 || index >= data->n_audio) {
       g_printerr ("Index out of bounds\n");
     } else {
@@ -283,26 +283,27 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
 > ![information] If you need help to compile this code, refer to the
 > **Building the tutorials** section for your platform: [Mac] or
 > [Windows] or use this specific command on Linux:
+>
 > `` gcc playback-tutorial-1.c -o playback-tutorial-1 `pkg-config --cflags --libs gstreamer-1.0` ``
+>
+> If you need help to run this code, refer to the **Running the
+> tutorials** section for your platform: [Mac OS X], [Windows][1], for
+> [iOS] or for [android].
+>
+> This tutorial opens a window and displays a movie, with accompanying
+> audio. The media is fetched from the Internet, so the window might take
+> a few seconds to appear, depending on your connection speed. The number
+> of audio streams is shown in the terminal, and the user can switch from
+> one to another by entering a number and pressing enter. A small delay is
+> to be expected.
+>
+> Bear in mind that there is no latency management (buffering), so on slow
+> connections, the movie might stop after a few seconds. See how [Tutorial
+> 12: Live streaming] solves this issue.
+>
+> Required libraries: `gstreamer-1.0`
 
-If you need help to run this code, refer to the **Running the
-tutorials** section for your platform: [Mac OS X], [Windows][1], for
-[iOS] or for [android].
-
-This tutorial opens a window and displays a movie, with accompanying
-audio. The media is fetched from the Internet, so the window might take
-a few seconds to appear, depending on your connection speed. The number
-of audio streams is shown in the terminal, and the user can switch from
-one to another by entering a number and pressing enter. A small delay is
-to be expected.
-
-Bear in mind that there is no latency management (buffering), so on slow
-connections, the movie might stop after a few seconds. See how [Tutorial
-12: Live streaming] solves this issue.
-
-Required libraries: `gstreamer-1.0`
-
-# Walkthrough
+## Walkthrough
 
 ``` c
 /* Structure to contain all our information, so we can pass it around */
@@ -338,9 +339,9 @@ typedef enum {
 
 Later we are going to set some of `playbin`'s flags. We would like to
 have a handy enum that allows manipulating these flags easily, but since
-`playbin` is a plug-in and not a part of the GStreamer core, this enum
+`playbin` is a plug-in and not a part of the GStreamer core, this enum
 is not available to us. The “trick” is simply to declare this enum in
-our code, as it appears in the `playbin` documentation: `GstPlayFlags`.
+our code, as it appears in the `playbin` documentation: `GstPlayFlags`.
 GObject allows introspection, so the possible values for these flags can
 be retrieved at runtime without using this trick, but in a far more
 cumbersome way.
@@ -352,17 +353,17 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
 ```
 
 Forward declarations for the two callbacks we will be using.
-`handle_message` for the GStreamer messages, as we have already seen,
-and `handle_keyboard` for key strokes, since this tutorial is
+`handle_message` for the GStreamer messages, as we have already seen,
+and `handle_keyboard` for key strokes, since this tutorial is
 introducing a limited amount of interactivity.
 
 We skip over the creation of the pipeline, the instantiation of
-`playbin` and pointing it to our test media through the `uri`
-property. `playbin` is in itself a pipeline, and in this case it is the
+`playbin` and pointing it to our test media through the `uri`
+property. `playbin` is in itself a pipeline, and in this case it is the
 only element in the pipeline, so we skip completely the creation of the
-pipeline, and use directly the  `playbin` element.
+pipeline, and use directly the  `playbin` element.
 
-We focus on some of the other properties of `playbin`, though:
+We focus on some of the other properties of `playbin`, though:
 
 ``` c
 /* Set flags to show Audio and Video but ignore Subtitles */
@@ -372,8 +373,8 @@ flags &= ~GST_PLAY_FLAG_TEXT;
 g_object_set (data.playbin, "flags", flags, NULL);
 ```
 
-`playbin`'s behavior can be changed through its `flags` property, which
-can have any combination of `GstPlayFlags`. The most interesting values
+`playbin`'s behavior can be changed through its `flags` property, which
+can have any combination of `GstPlayFlags`. The most interesting values
 are:
 
 | Flag                      | Description                                                                                                                        |
@@ -389,7 +390,7 @@ are:
 In our case, for demonstration purposes, we are enabling audio and video
 and disabling subtitles, leaving the rest of flags to their default
 values (this is why we read the current value of the flags with
-`g_object_get()` before overwriting it with `g_object_set()`).
+`g_object_get()` before overwriting it with `g_object_set()`).
 
 ``` c
 /* Set connection speed. This will affect some internal decisions of playbin */
@@ -397,10 +398,10 @@ g_object_set (data.playbin, "connection-speed", 56, NULL);
 ```
 
 This property is not really useful in this example.
-`connection-speed` informs `playbin` of the maximum speed of our network
+`connection-speed` informs `playbin` of the maximum speed of our network
 connection, so, in case multiple versions of the requested media are
-available in the server, `playbin` chooses the most appropriate. This is
-mostly used in combination with streaming protocols like `mms` or
+available in the server, `playbin` chooses the most appropriate. This is
+mostly used in combination with streaming protocols like `mms` or
 `rtsp`.
 
 We have set all these properties one by one, but we could have all of
@@ -410,7 +411,7 @@ them with a single call to `g_object_set()`:
 g_object_set (data.playbin, "uri", "http://docs.gstreamer.com/media/sintel_cropped_multilingual.webm", "flags", flags, "connection-speed", 56, NULL);
 ```
 
-This is why `g_object_set()` requires a NULL as the last parameter.
+This is why `g_object_set()` requires a NULL as the last parameter.
 
 ``` c
   /* Add a keyboard watch so we get notified of keystrokes */
@@ -438,13 +439,13 @@ g_main_loop_run (data.main_loop);
 To allow interactivity, we will no longer poll the GStreamer bus
 manually. Instead, we create a `GMainLoop`(GLib main loop) and set it
 running with `g_main_loop_run()`. This function blocks and will not
-return until `g_main_loop_quit()` is issued. In the meantime, it will
+return until `g_main_loop_quit()` is issued. In the meantime, it will
 call the callbacks we have registered at the appropriate
-times: `handle_message` when a message appears on the bus, and
-`handle_keyboard` when the user presses any key.
+times: `handle_message` when a message appears on the bus, and
+`handle_keyboard` when the user presses any key.
 
 There is nothing new in handle\_message, except that when the pipeline
-moves to the PLAYING state, it will call the `analyze_streams` function:
+moves to the PLAYING state, it will call the `analyze_streams` function:
 
 ``` c
 /* Extract some metadata from the streams and print it on the screen */
@@ -461,9 +462,9 @@ static void analyze_streams (CustomData *data) {
 ```
 
 As the comment says, this function just gathers information from the
-media and prints it on the screen. The number of video, audio and
+media and prints it on the screen. The number of video, audio and
 subtitle streams is directly available through the `n-video`,
-`n-audio` and `n-text` properties.
+`n-audio` and `n-text` properties.
 
 ``` c
 for (i = 0; i < data->n_video; i++) {
@@ -481,13 +482,14 @@ for (i = 0; i < data->n_video; i++) {
 ```
 
 Now, for each stream, we want to retrieve its metadata. Metadata is
-stored as tags in a `GstTagList` structure, which is a list of data
-pieces identified by a name. The `GstTagList` associated with a stream
-can be recovered with `g_signal_emit_by_name()`, and then individual
-tags are extracted with the `gst_tag_list_get_*` functions
-like `gst_tag_list_get_string()` for example.
+stored as tags in a `GstTagList` structure, which is a list of data
+pieces identified by a name. The `GstTagList` associated with a stream
+can be recovered with `g_signal_emit_by_name()`, and then individual
+tags are extracted with the `gst_tag_list_get_*` functions
+like `gst_tag_list_get_string()` for example.
 
-> ![information] This rather unintuitive way of retrieving the tag list
+> ![information]
+> This rather unintuitive way of retrieving the tag list
 > is called an Action Signal. Action signals are emitted by the
 > application to a specific element, which then performs an action and
 > returns a result. They behave like a dynamic function call, in which
@@ -496,7 +498,7 @@ like `gst_tag_list_get_string()` for example.
 > documentation along with the regular signals, and are tagged “Action”.
 > See `playbin`, for example.
 
-`playbin` defines 3 action signals to retrieve metadata:
+`playbin` defines 3 action signals to retrieve metadata:
 `get-video-tags`, `get-audio-tags` and `get-text-tags`. The name if the
 tags is standardized, and the list can be found in the `GstTagList`
 documentation. In this example we are interested in the
@@ -511,11 +513,11 @@ g_object_get (data->playbin, "current-text", &data->current_text, NULL);
 
 Once we have extracted all the metadata we want, we get the streams that
 are currently selected through 3 more properties of `playbin`:
-`current-video`, `current-audio` and `current-text`. 
+`current-video`, `current-audio` and `current-text`. 
 
 It is interesting to always check the currently selected streams and
 never make any assumption. Multiple internal conditions can make
-`playbin` behave differently in different executions. Also, the order in
+`playbin` behave differently in different executions. Also, the order in
 which the streams are listed can change from one run to another, so
 checking the metadata to identify one particular stream becomes crucial.
 
@@ -525,7 +527,7 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
   gchar *str = NULL;
 
   if (g_io_channel_read_line (source, &str, NULL, NULL, NULL) == G_IO_STATUS_NORMAL) {
-    int index = atoi (str);
+    int index = g_ascii_strtoull (str, NULL, 0);
     if (index < 0 || index >= data->n_audio) {
       g_printerr ("Index out of bounds\n");
     } else {
@@ -542,38 +544,36 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
 Finally, we allow the user to switch the running audio stream. This very
 basic function just reads a string from the standard input (the
 keyboard), interprets it as a number, and tries to set the
-`current-audio` property of `playbin` (which previously we have only
+`current-audio` property of `playbin` (which previously we have only
 read).
 
 Bear in mind that the switch is not immediate. Some of the previously
 decoded audio will still be flowing through the pipeline, while the new
 stream becomes active and is decoded. The delay depends on the
 particular multiplexing of the streams in the container, and the length
-`playbin` has selected for its internal queues (which depends on the
+`playbin` has selected for its internal queues (which depends on the
 network conditions).
 
 If you execute the tutorial, you will be able to switch from one
 language to another while the movie is running by pressing 0, 1 or 2
 (and ENTER). This concludes this tutorial.
 
-_________________________________________________________________________
-
-# Conclusion
+## Conclusion
 
 This tutorial has shown:
 
 -   A few more of `playbin`'s properties: `flags`, `connection-speed`,
-    `n-video`, `n-audio`, `n-text`, `current-video`, `current-audio` and
+    `n-video`, `n-audio`, `n-text`, `current-video`, `current-audio` and
     `current-text`.
 
 -   How to retrieve the list of tags associated with a stream
-    with `g_signal_emit_by_name()`.
+    with `g_signal_emit_by_name()`.
 
 -   How to retrieve a particular tag from the list with
-    `gst_tag_list_get_string()`or `gst_tag_list_get_uint()`
+    `gst_tag_list_get_string()`or `gst_tag_list_get_uint()`
 
 -   How to switch the current audio simply by writing to the
-    `current-audio` property.
+    `current-audio` property.
 
 The next playback tutorial shows how to handle subtitles, either
 embedded in the container or in an external file.
@@ -583,7 +583,7 @@ code of the tutorial and any accessory files needed to build it.
 
 It has been a pleasure having you here, and see you soon!
 
-  [Playback tutorial 2: Subtitle management]: Playback%2Btutorial%2B2%253A%2BSubtitle%2Bmanagement.html
+  [Playback tutorial 2: Subtitle management]: sdk-playback-tutorial-subtitle-management.md
   [information]: images/icons/emoticons/information.png
   [Mac]: sdk-installing-on-mac-osx.md
   [Windows]: Installing+on+Windows
@@ -591,6 +591,3 @@ It has been a pleasure having you here, and see you soon!
   [1]: sdk-installing-on-windows.md#running-the-tutorials
   [iOS]: sdk-installing-for-ios-development.md#building-the-tutorials
   [android]: sdk-installing-for-android-development.md#building-the-tutorials
-  [Tutorial 12: Live streaming]: http://docs.gstreamer.com/display/GstSDK/Tutorial+12%3A+Live+streaming
-  [Tutorial 17: DVD playback]: http://docs.gstreamer.com/display/GstSDK/Tutorial+17%3A+DVD+playback
-  [information]: images/icons/emoticons/information.png

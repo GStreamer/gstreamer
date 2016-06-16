@@ -1,6 +1,6 @@
 # Playback tutorial 6: Audio visualization
 
-# Goal
+## Goal
 
 GStreamer comes with a set of elements that turn audio into video. They
 can be used for scientific visualization or to spice up your music
@@ -9,33 +9,24 @@ player, for example. This tutorial shows:
   - How to enable audio visualization
   - How to select the visualization element
 
-# Introduction
+## Introduction
 
-Enabling audio visualization in `playbin` is actually very easy. Just
-set the appropriate `playbin` flag and, when an audio-only stream is
+Enabling audio visualization in `playbin` is actually very easy. Just
+set the appropriate `playbin` flag and, when an audio-only stream is
 found, it will instantiate the necessary elements to create and display
 the visualization.
 
 If you want to specify the actual element that you want to use to
 generate the visualization, you instantiate it yourself and then tell
-`playbin` about it through the `vis-plugin` property.
+`playbin` about it through the `vis-plugin` property.
 
 This tutorial searches the GStreamer registry for all the elements of
-the Visualization class, tries to select `goom` (or another one if it is
+the Visualization class, tries to select `goom` (or another one if it is
 not available) and passes it to `playbin`.
 
-# A fancy music player
+## A fancy music player
 
-Copy this code into a text file named `playback-tutorial-6.c`.
-
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><p>This tutorial is included in the SDK since release 2012.7. If you cannot find it in the downloaded code, please install the latest release of the GStreamer SDK.</p></td>
-</tr>
-</tbody>
-</table>
+Copy this code into a text file named `playback-tutorial-6.c`.
 
 **playback-tutorial-6.c**
 
@@ -72,7 +63,7 @@ int main(int argc, char *argv[]) {
   gst_init (&argc, &argv);
 
   /* Get a list of all visualization plugins */
-  list = gst_registry_feature_filter (gst_registry_get_default (), filter_vis_features, FALSE, NULL);
+  list = gst_registry_feature_filter (gst_registry_get (), filter_vis_features, FALSE, NULL);
 
   /* Print their names */
   g_print("Available visualization plugins:\n");
@@ -131,34 +122,24 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-2064723206" class="expand-container">
-<div id="expander-control-2064723206" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-2064723206" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc playback-tutorial-6.c -o playback-tutorial-6 `pkg-config --cflags --libs gstreamer-1.0`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
-<p>This tutorial plays music streamed from the <a href="http://www.hbr1.com/" class="external-link">HBR1</a> Internet radio station. A window should open displaying somewhat psychedelic color patterns moving with the music. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed.</p>
-<p>Required libraries: <code>gstreamer-1.0</code></p>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
+> ![information] If you need help to compile this code, refer to the
+> **Building the tutorials** section for your platform: [Mac] or
+> [Windows] or use this specific command on Linux:
+>
+> `` gcc playback-tutorial-6.c -o playback-tutorial-6 `pkg-config --cflags --libs gstreamer-1.0` ``
+>
+> If you need help to run this code, refer to the **Running the
+> tutorials** section for your platform: [Mac OS X], [Windows][1], for
+> [iOS] or for [android].
+>
+> This tutorial plays music streamed from the [HBR1](http://www.hbr1.com/) Internet radio station. A window should open displaying somewhat psychedelic color patterns moving with the music. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed.
+>
+> Required libraries: `gstreamer-1.0`
 
-# Walkthrough
+## Walkthrough
 
-First off, we indicate `playbin` that we want an audio visualization by
-setting the `GST_PLAY_FLAG_VIS` flag. If the media already contains
+First off, we indicate `playbin` that we want an audio visualization by
+setting the `GST_PLAY_FLAG_VIS` flag. If the media already contains
 video, this flag has no effect.
 
 ``` c
@@ -168,19 +149,19 @@ flags |= GST_PLAY_FLAG_VIS;
 g_object_set (pipeline, "flags", flags, NULL);
 ```
 
-If no visualization plugin is enforced by the user, `playbin` will use
-`goom` (audio visualization will be disabled if `goom` is not
+If no visualization plugin is enforced by the user, `playbin` will use
+`goom` (audio visualization will be disabled if `goom` is not
 available). The rest of the tutorial shows how to find out the available
 visualization elements and enforce one to `playbin`.
 
 ``` c
 /* Get a list of all visualization plugins */
-list = gst_registry_feature_filter (gst_registry_get_default (), filter_vis_features, FALSE, NULL);
+list = gst_registry_feature_filter (gst_registry_get (), filter_vis_features, FALSE, NULL);
 ```
 
-`gst_registry_feature_filter()` examines all elements currently in the
+`gst_registry_feature_filter()` examines all elements currently in the
 GStreamer registry and selects those for which
-the `filter_vis_features` function returns TRUE. This function selects
+the `filter_vis_features` function returns TRUE. This function selects
 only the Visualization plugins:
 
 ``` c
@@ -199,15 +180,15 @@ static gboolean filter_vis_features (GstPluginFeature *feature, gpointer data) {
 ```
 
 A bit of theory regarding the organization of GStreamer elements is in
-place: Each of the files that GStreamer loads at runtime is known as a
+place: Each of the files that GStreamer loads at runtime is known as a
 Plugin (`GstPlugin`). A Plugin can contain many Features
 (`GstPluginFeature`). There are different kinds of Features, among them,
-the Element Factories (`GstElementFactory`) that we have been using to
+the Element Factories (`GstElementFactory`) that we have been using to
 build Elements (`GstElement`).
 
 This function simply disregards all Features which are not Factories,
 and then all Factories whose class (obtained with
-`gst_element_factory_get_klass()`) does not include “Visualization”.  As
+`gst_element_factory_get_klass()`) does not include “Visualization”.  As
 stated in the documentation for `GstElementFactory`, a Factory’s class
 is a “string describing the type of element, as an unordered list
 separated with slashes (/)”. Examples of classes are “Source/Network”,
@@ -231,7 +212,7 @@ for (walk = list; walk != NULL; walk = g_list_next (walk)) {
 ```
 
 Once we have the list of Visualization plugins, we print their names
-(`gst_element_factory_get_longname()`) and choose one (in this case,
+(`gst_element_factory_get_longname()`) and choose one (in this case,
 GOOM).
 
 ``` c
@@ -242,8 +223,8 @@ if (!vis_plugin)
   return -1;
 ```
 
-The selected factory is used to instantiate an actual `GstElement` which
-is then passed to `playbin` through the `vis-plugin` property:
+The selected factory is used to instantiate an actual `GstElement` which
+is then passed to `playbin` through the `vis-plugin` property:
 
 ``` c
 /* set vis plugin for playbin */
@@ -252,20 +233,22 @@ g_object_set (pipeline, "vis-plugin", vis_plugin, NULL);
 
 And we are done.
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown:
 
-  - How to enable Audio Visualization in `playbin` with the
-    `GST_PLAY_FLAG_VIS` flag
+  - How to enable Audio Visualization in `playbin` with the
+    `GST_PLAY_FLAG_VIS` flag
   - How to enforce one particular visualization element with the
-    `vis-plugin` `playbin` property 
+    `vis-plugin` `playbin` property 
 
 It has been a pleasure having you here, and see you soon\!
 
-## Attachments:
-
-![](images/icons/bullet_blue.gif)
-[vs2010.zip](attachments/327802/2424878.zip) (application/zip)
-![](images/icons/bullet_blue.gif)
-[playback-tutorial-6.c](attachments/327802/2424879.c) (text/plain)
+  [information]: images/icons/emoticons/information.png
+  [Mac]: sdk-installing-on-mac-osx.md
+  [Windows]: Installing+on+Windows
+  [Mac OS X]: sdk-installing-on-mac-osx.md#building-the-tutorials
+  [1]: sdk-installing-on-windows.md#running-the-tutorials
+  [iOS]: sdk-installing-for-ios-development.md#building-the-tutorials
+  [android]: sdk-installing-for-android-development.md#building-the-tutorials
+  [warning]: images/icons/emoticons/warning.png

@@ -1,42 +1,30 @@
 # Playback tutorial 3: Short-cutting the pipeline
 
-# Goal
+## Goal
 
-[Basic tutorial 8: Short-cutting the
-pipeline](Basic%2Btutorial%2B8%253A%2BShort-cutting%2Bthe%2Bpipeline.html) showed
+[](sdk-basic-tutorial-short-cutting-the-pipeline.md) showed
 how an application can manually extract or inject data into a pipeline
-by using two special elements called `appsrc` and `appsink`.
-`playbin` allows using these elements too, but the method to connect
-them is different. To connect an `appsink` to `playbin` see [Playback
-tutorial 7: Custom playbin
-sinks](Playback%2Btutorial%2B7%253A%2BCustom%2Bplaybin%2Bsinks.html).
+by using two special elements called `appsrc` and `appsink`.
+`playbin` allows using these elements too, but the method to connect
+them is different. To connect an `appsink` to `playbin` see [](sdk-playback-tutorial-custom-playbin-sinks.md).
 This tutorial shows:
 
-  - How to connect `appsrc` with `playbin`
-  - How to configure the `appsrc`
+  - How to connect `appsrc` with `playbin`
+  - How to configure the `appsrc`
 
-# A playbin waveform generator
+## A playbin waveform generator
 
-Copy this code into a text file named `playback-tutorial-3.c`.
-
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><p>This tutorial is included in the SDK since release 2012.7. If you cannot find it in the downloaded code, please install the latest release of the GStreamer SDK.</p></td>
-</tr>
-</tbody>
-</table>
+Copy this code into a text file named `playback-tutorial-3.c`.
 
 **playback-tutorial-3.c**
 
 ``` c
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <string.h>
 
 #define CHUNK_SIZE 1024   /* Amount of bytes we are sending in each buffer */
 #define SAMPLE_RATE 44100 /* Samples per second we are sending */
-#define AUDIO_CAPS "audio/x-raw-int,channels=1,rate=%d,signed=(boolean)true,width=16,depth=16,endianness=BYTE_ORDER"
 
 /* Structure to contain all our information, so we can pass it to callbacks */
 typedef struct _CustomData {
@@ -59,6 +47,7 @@ static gboolean push_data (CustomData *data) {
   GstBuffer *buffer;
   GstFlowReturn ret;
   int i;
+  GstMapInfo map;
   gint16 *raw;
   gint num_samples = CHUNK_SIZE / 2; /* Because each sample is 16 bits */
   gfloat freq;
@@ -71,7 +60,8 @@ static gboolean push_data (CustomData *data) {
   GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (CHUNK_SIZE, GST_SECOND, SAMPLE_RATE);
 
   /* Generate some psychodelic waveforms */
-  raw = (gint16 *)GST_BUFFER_DATA (buffer);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  raw = (gint16 *)map.data;
   data->c += data->d;
   data->d -= data->c / 1000;
   freq = 1100 + 1000 * data->d;
@@ -80,6 +70,7 @@ static gboolean push_data (CustomData *data) {
     data->b -= data->a / freq;
     raw[i] = (gint16)(500 * data->a);
   }
+  gst_buffer_unmap (buffer, &map);
   data->num_samples += num_samples;
 
   /* Push the buffer into the appsrc */
@@ -133,16 +124,16 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
 /* This function is called when playbin has created the appsrc element, so we have
  * a chance to configure it. */
 static void source_setup (GstElement *pipeline, GstElement *source, CustomData *data) {
-  gchar *audio_caps_text;
+  GstAudioInfo info;
   GstCaps *audio_caps;
 
   g_print ("Source has been created. Configuring.\n");
   data->app_source = source;
 
   /* Configure appsrc */
-  audio_caps_text = g_strdup_printf (AUDIO_CAPS, SAMPLE_RATE);
-  audio_caps = gst_caps_from_string (audio_caps_text);
-  g_object_set (source, "caps", audio_caps, NULL);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16, SAMPLE_RATE, 1, NULL);
+  audio_caps = gst_audio_info_to_caps (&info);
+  g_object_set (source, "caps", audio_caps, "format", GST_FORMAT_TIME, NULL);
   g_signal_connect (source, "need-data", G_CALLBACK (start_feed), data);
   g_signal_connect (source, "enough-data", G_CALLBACK (stop_feed), data);
   gst_caps_unref (audio_caps);
@@ -185,16 +176,16 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-To use an `appsrc` as the source for the pipeline, simply instantiate a
-`playbin` and set its URI to `appsrc://`
+To use an `appsrc` as the source for the pipeline, simply instantiate a
+`playbin` and set its URI to `appsrc://`
 
 ``` c
 /* Create the playbin element */
 data.pipeline = gst_parse_launch ("playbin uri=appsrc://", NULL);
 ```
 
-`playbin` will create an internal `appsrc` element and fire the
-`source-setup` signal to allow the application to configure
+`playbin` will create an internal `appsrc` element and fire the
+`source-setup` signal to allow the application to configure
 it:
 
 ``` c
@@ -202,7 +193,7 @@ g_signal_connect (data.pipeline, "source-setup", G_CALLBACK (source_setup), &dat
 ```
 
 In particular, it is important to set the caps property of `appsrc`,
-since, once the signal handler returns, `playbin` will instantiate the
+since, once the signal handler returns, `playbin` will instantiate the
 next element in the pipeline according to these
 caps:
 
@@ -210,16 +201,16 @@ caps:
 /* This function is called when playbin has created the appsrc element, so we have
  * a chance to configure it. */
 static void source_setup (GstElement *pipeline, GstElement *source, CustomData *data) {
-  gchar *audio_caps_text;
+  GstAudioInfo info;
   GstCaps *audio_caps;
 
   g_print ("Source has been created. Configuring.\n");
   data->app_source = source;
 
   /* Configure appsrc */
-  audio_caps_text = g_strdup_printf (AUDIO_CAPS, SAMPLE_RATE);
-  audio_caps = gst_caps_from_string (audio_caps_text);
-  g_object_set (source, "caps", audio_caps, NULL);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16, SAMPLE_RATE, 1, NULL);
+  audio_caps = gst_audio_info_to_caps (&info);
+  g_object_set (source, "caps", audio_caps, "format", GST_FORMAT_TIME, NULL);
   g_signal_connect (source, "need-data", G_CALLBACK (start_feed), data);
   g_signal_connect (source, "enough-data", G_CALLBACK (stop_feed), data);
   gst_caps_unref (audio_caps);
@@ -227,41 +218,28 @@ static void source_setup (GstElement *pipeline, GstElement *source, CustomData *
 }
 ```
 
-The configuration of the `appsrc` is exactly the same as in [Basic
-tutorial 8: Short-cutting the
-pipeline](Basic%2Btutorial%2B8%253A%2BShort-cutting%2Bthe%2Bpipeline.html):
-the caps are set to `audio/x-raw-int`, and two callbacks are registered,
+The configuration of the `appsrc` is exactly the same as in
+[](sdk-basic-tutorial-short-cutting-the-pipeline.md):
+the caps are set to `audio/x-raw`, and two callbacks are registered,
 so the element can tell the application when it needs to start and stop
-pushing data. See [Basic tutorial 8: Short-cutting the
-pipeline](Basic%2Btutorial%2B8%253A%2BShort-cutting%2Bthe%2Bpipeline.html)
+pushing data. See [](sdk-basic-tutorial-short-cutting-the-pipeline.md)
 for more details.
 
-From this point onwards, `playbin` takes care of the rest of the
+From this point onwards, `playbin` takes care of the rest of the
 pipeline, and the application only needs to worry about generating more
 data when told so.
 
-To learn how data can be extracted from `playbin` using the
-`appsink` element, see [Playback tutorial 7: Custom playbin
-sinks](Playback%2Btutorial%2B7%253A%2BCustom%2Bplaybin%2Bsinks.html).
+To learn how data can be extracted from `playbin` using the
+`appsink` element, see [](sdk-playback-tutorial-custom-playbin-sinks.md).
 
-# Conclusion
+## Conclusion
 
-This tutorial applies the concepts shown in [Basic tutorial 8:
-Short-cutting the
-pipeline](Basic%2Btutorial%2B8%253A%2BShort-cutting%2Bthe%2Bpipeline.html) to
+This tutorial applies the concepts shown in
+[](sdk-basic-tutorial-short-cutting-the-pipeline.md) to
 `playbin`. In particular, it has shown:
 
-  - How to connect `appsrc` with `playbin` using the special
-    URI `appsrc://`
-  - How to configure the `appsrc` using the `source-setup` signal
+  - How to connect `appsrc` with `playbin` using the special
+    URI `appsrc://`
+  - How to configure the `appsrc` using the `source-setup` signal
 
-It has been a pleasure having you here, and see you soon\!
-
-## Attachments:
-
-![](images/icons/bullet_blue.gif)
-[playback-tutorial-3.c](attachments/1442200/2424850.c) (text/plain)
-![](images/icons/bullet_blue.gif)
-[vs2010.zip](attachments/1442200/2424849.zip) (application/zip)
-![](images/icons/bullet_blue.gif)
-[playback-tutorial-3.c](attachments/1442200/2424848.c) (text/plain)
+It has been a pleasure having you here, and see you soon!

@@ -1,55 +1,46 @@
 # Playback tutorial 7: Custom playbin sinks
 
-# Goal
+## Goal
 
-`playbin` can be further customized by manually selecting its audio and
-video sinks. This allows applications to rely on `playbin` to retrieve
+`playbin` can be further customized by manually selecting its audio and
+video sinks. This allows applications to rely on `playbin` to retrieve
 and decode the media and then manage the final render/display
 themselves. This tutorial shows:
 
   - How to replace the sinks selected by `playbin`.
   - How to use a complex pipeline as a sink.
 
-# Introduction
+## Introduction
 
-Two properties of `playbin` allow selecting the desired audio and video
-sinks: `audio-sink` and `video-sink` (respectively). The application
-only needs to instantiate the appropriate `GstElement` and pass it to
-`playbin` through these properties.
+Two properties of `playbin` allow selecting the desired audio and video
+sinks: `audio-sink` and `video-sink` (respectively). The application
+only needs to instantiate the appropriate `GstElement` and pass it to
+`playbin` through these properties.
 
 This method, though, only allows using a single Element as sink. If a
 more complex pipeline is required, for example, an equalizer plus an
 audio sink, it needs to be wrapped in a Bin, so it looks to
-`playbin` as if it was a single Element.
+`playbin` as if it was a single Element.
 
 A Bin (`GstBin`) is a container that encapsulates partial pipelines so
 they can be managed as single elements. As an example, the
-`GstPipeline` we have been using in all tutorials is a type of
+`GstPipeline` we have been using in all tutorials is a type of
 `GstBin`, which does not interact with external Elements. Elements
 inside a Bin connect to external elements through Ghost Pads
 (`GstGhostPad`), this is, Pads on the surface of the Bin which simply
 forward data from an external Pad to a given Pad on an internal Element.
 
-![](attachments/1441842/2424880.png)
+![](images/bin-element-ghost.png)
 
 **Figure 1:** A Bin with two Elements and one Ghost Pad.
 
-`GstBin`s are also a type of `GstElement`, so they can be used wherever
-an Element is required, in particular, as sinks for `playbin` (and they
+`GstBin`s are also a type of `GstElement`, so they can be used wherever
+an Element is required, in particular, as sinks for `playbin` (and they
 are then known as **sink-bins**).
 
-# An equalized player
+## An equalized player
 
-Copy this code into a text file named `playback-tutorial-7.c`.
-
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><p>This tutorial is included in the SDK since release 2012.7. If you cannot find it in the downloaded code, please install the latest release of the GStreamer SDK.</p></td>
-</tr>
-</tbody>
-</table>
+Copy this code into a text file named `playback-tutorial-7.c`.
 
 **playback-tutorial7.c**
 
@@ -111,31 +102,21 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-1371267928" class="expand-container">
-<div id="expander-control-1371267928" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-1371267928" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc playback-tutorial-7.c -o playback-tutorial-7 `pkg-config --cflags --libs gstreamer-1.0`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
-<p><span>This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. The higher frequency bands have been attenuated, so the movie sound should have a more powerful bass component.</span></p>
-<p>Required libraries: <code>gstreamer-1.0</code></p>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
+> ![information] If you need help to compile this code, refer to the
+> **Building the tutorials** section for your platform: [Mac] or
+> [Windows] or use this specific command on Linux:
+>
+> `` gcc playback-tutorial-7.c -o playback-tutorial-7 `pkg-config --cflags --libs gstreamer-1.0` ``
+>
+> If you need help to run this code, refer to the **Running the
+> tutorials** section for your platform: [Mac OS X], [Windows][1], for
+> [iOS] or for [android].
+>
+> This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. The higher frequency bands have been attenuated, so the movie sound should have a more powerful bass component.<
+>
+> Required libraries: `gstreamer-1.0`
 
-# Walkthrough
+## Walkthrough
 
 ``` c
 /* Create the elements inside the sink bin */
@@ -149,7 +130,7 @@ if (!equalizer || !convert || !sink) {
 ```
 
 All the Elements that compose our sink-bin are instantiated. We use an
-`equalizer-3bands` and an `autoaudiosink`, with an `audioconvert` in
+`equalizer-3bands` and an `autoaudiosink`, with an `audioconvert` in
 between, because we are not sure of the capabilities of the audio sink
 (since they are hardware-dependant).
 
@@ -175,14 +156,13 @@ Now we need to create a Ghost Pad so this partial pipeline inside the
 Bin can be connected to the outside. This Ghost Pad will be connected to
 a Pad in one of the internal Elements (the sink pad of the equalizer),
 so we retrieve this Pad with `gst_element_get_static_pad()`. Remember
-from [Basic tutorial 7: Multithreading and Pad
-Availability](Basic%2Btutorial%2B7%253A%2BMultithreading%2Band%2BPad%2BAvailability.html) that
+from [](sdk-basic-tutorial-multithreading-and-pad-availability.md) that
 if this was a Request Pad instead of an Always Pad, we would need to use
 `gst_element_request_pad()`.
 
-The Ghost Pad is created with `gst_ghost_pad_new()` (pointing to the
+The Ghost Pad is created with `gst_ghost_pad_new()` (pointing to the
 inner Pad we just acquired), and activated with `gst_pad_set_active()`.
-It is then added to the Bin with `gst_element_add_pad()`, transferring
+It is then added to the Bin with `gst_element_add_pad()`, transferring
 ownership of the Ghost Pad to the bin, so we do not have to worry about
 releasing it.
 
@@ -190,14 +170,14 @@ Finally, the sink Pad we obtained from the equalizer needs to be release
 with `gst_object_unref()`.
 
 At this point, we have a functional sink-bin, which we can use as the
-audio sink in `playbin`. We just need to instruct `playbin` to use it:
+audio sink in `playbin`. We just need to instruct `playbin` to use it:
 
 ``` c
 /* Set playbin's audio sink to be our sink bin */
 g_object_set (GST_OBJECT (pipeline), "audio-sink", bin, NULL);
 ```
 
-It is as simple as setting the `audio-sink` property on `playbin` to
+It is as simple as setting the `audio-sink` property on `playbin` to
 the newly created sink.
 
 ``` c
@@ -209,33 +189,33 @@ g_object_set (G_OBJECT (equalizer), "band2", (gdouble)-24.0, NULL);
 The only bit remaining is to configure the equalizer. For this example,
 the two higher frequency bands are set to the maximum attenuation so the
 bass is boosted. Play a bit with the values to feel the difference (Look
-at the documentation for the `equalizer-3bands` element for the allowed
+at the documentation for the `equalizer-3bands` element for the allowed
 range of values).
 
-# Exercise
+## Exercise
 
 Build a video bin instead of an audio bin, using one of the many
 interesting video filters GStreamer offers, like `solarize`,
-`vertigotv` or any of the Elements in the `effectv` plugin. Remember to
-use the color space conversion element `ffmpegcolorspace` if your
+`vertigotv` or any of the Elements in the `effectv` plugin. Remember to
+use the color space conversion element `videoconvert` if your
 pipeline fails to link due to incompatible caps.
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown:
 
-  - How to set your own sinks to `playbin` using the audio-sink and
+  - How to set your own sinks to `playbin` using the audio-sink and
     video-sink properties.
-  - How to wrap a piece of pipeline into a `GstBin` so it can be used as
-    a **sink-bin** by `playbin`.
+  - How to wrap a piece of pipeline into a `GstBin` so it can be used as
+    a **sink-bin** by `playbin`.
 
 It has been a pleasure having you here, and see you soon\!
 
-## Attachments:
-
-![](images/icons/bullet_blue.gif)
-[bin-element-ghost.png](attachments/1441842/2424880.png) (image/png)
-![](images/icons/bullet_blue.gif)
-[playback-tutorial-7.c](attachments/1441842/2424881.c) (text/plain)
-![](images/icons/bullet_blue.gif)
-[vs2010.zip](attachments/1441842/2424882.zip) (application/zip)
+  [information]: images/icons/emoticons/information.png
+  [Mac]: sdk-installing-on-mac-osx.md
+  [Windows]: Installing+on+Windows
+  [Mac OS X]: sdk-installing-on-mac-osx.md#building-the-tutorials
+  [1]: sdk-installing-on-windows.md#running-the-tutorials
+  [iOS]: sdk-installing-for-ios-development.md#building-the-tutorials
+  [android]: sdk-installing-for-android-development.md#building-the-tutorials
+  [warning]: images/icons/emoticons/warning.png

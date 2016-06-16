@@ -1,12 +1,11 @@
 # Playback tutorial 4: Progressive streaming
 
-# Goal
+## Goal
 
-[Basic tutorial 12:
-Streaming](Basic%2Btutorial%2B12%253A%2BStreaming.html) showed how to
+[](sdk-basic-tutorial-streaming.md) showed how to
 enhance the user experience in poor network conditions, by taking
-buffering into account. This tutorial further expands [Basic tutorial
-12: Streaming](Basic%2Btutorial%2B12%253A%2BStreaming.html) by enabling
+buffering into account. This tutorial further expands
+[](sdk-basic-tutorial-streaming.md) by enabling
 the local storage of the streamed media, and describes the advantages of
 this technique. In particular, it shows:
 
@@ -15,11 +14,11 @@ this technique. In particular, it shows:
   - How to know where it has been downloaded
   - How to limit the amount of downloaded data that is kept
 
-# Introduction
+## Introduction
 
 When streaming, data is fetched from the network and a small buffer of
-future-data is kept to ensure smooth playback (see [Basic tutorial 12:
-Streaming](Basic%2Btutorial%2B12%253A%2BStreaming.html)). However, data
+future-data is kept to ensure smooth playback (see
+[](sdk-basic-tutorial-streaming.md)). However, data
 is discarded as soon as it is displayed or rendered (there is no
 past-data buffer). This means, that if a user wants to jump back and
 continue playback from a point in the past, data needs to be
@@ -30,25 +29,16 @@ downloaded data stored locally for this contingency. A graphical widget
 is also normally used to show how much of the file has already been
 downloaded.
 
-`playbin` offers similar functionalities through the `DOWNLOAD` flag
+`playbin` offers similar functionalities through the `DOWNLOAD` flag
 which stores the media in a local temporary file for faster playback of
 already-downloaded chunks.
 
 This code also shows how to use the Buffering Query, which allows
 knowing what parts of the file are available.
 
-# A network-resilient example with local storage
+## A network-resilient example with local storage
 
-Copy this code into a text file named `playback-tutorial-4.c`.
-
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><p>This tutorial is included in the SDK since release 2012.7. If you cannot find it in the downloaded code, please install the latest release of the GStreamer SDK.</p></td>
-</tr>
-</tbody>
-</table>
+Copy this code into a text file named `playback-tutorial-4.c`.
 
 **playback-tutorial-4.c**
 
@@ -56,7 +46,7 @@ Copy this code into a text file named `playback-tutorial-4.c`.
 #include <gst/gst.h>
 #include <string.h>
 
-#define GRAPH_LENGTH 80
+#define GRAPH_LENGTH 78
 
 /* playbin flags */
 typedef enum {
@@ -74,6 +64,7 @@ static void got_location (GstObject *gstobject, GstObject *prop_object, GParamSp
   gchar *location;
   g_object_get (G_OBJECT (prop_object), "temp-location", &location, NULL);
   g_print ("Temporary file: %s\n", location);
+  g_free (location);
   /* Uncomment this line to keep the temporary file after the program exits */
   /* g_object_set (G_OBJECT (prop_object), "temp-remove", FALSE, NULL); */
 }
@@ -131,7 +122,6 @@ static gboolean refresh_ui (CustomData *data) {
   if (result) {
     gint n_ranges, range, i;
     gchar graph[GRAPH_LENGTH + 1];
-    GstFormat format = GST_FORMAT_TIME;
     gint64 position = 0, duration = 0;
 
     memset (graph, ' ', GRAPH_LENGTH);
@@ -141,14 +131,14 @@ static gboolean refresh_ui (CustomData *data) {
     for (range = 0; range < n_ranges; range++) {
       gint64 start, stop;
       gst_query_parse_nth_buffering_range (query, range, &start, &stop);
-      start = start * GRAPH_LENGTH / 100;
-      stop = stop * GRAPH_LENGTH / 100;
+      start = start * GRAPH_LENGTH / (stop - start);
+      stop = stop * GRAPH_LENGTH / (stop - start);
       for (i = (gint)start; i < stop; i++)
         graph [i] = '-';
     }
-    if (gst_element_query_position (data->pipeline, &format, &position) &&
+    if (gst_element_query_position (data->pipeline, GST_TIME_FORMAT, &position) &&
         GST_CLOCK_TIME_IS_VALID (position) &&
-        gst_element_query_duration (data->pipeline, &format, &duration) &&
+        gst_element_query_duration (data->pipeline, GST_TIME_FORMAT, &duration) &&
         GST_CLOCK_TIME_IS_VALID (duration)) {
       i = (gint)(GRAPH_LENGTH * (double)position / (double)(duration + 1));
       graph [i] = data->buffering_level < 100 ? 'X' : '>';
@@ -226,37 +216,34 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-1295673640" class="expand-container">
-<div id="expander-control-1295673640" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-1295673640" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc playback-tutorial-3.c -o playback-tutorial-3 `pkg-config --cflags --libs gstreamer-1.0`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
-<p>This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. In the console window, you should see a message indicating where the media is being stored, and a text graph representing the downloaded portions and the current position. A buffering message appears whenever buffering is required, which might never happen is your network connection is fast enough</p>
-<p>Required libraries: <code>gstreamer-1.0</code></p>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
+> ![information] If you need help to compile this code, refer to the
+> **Building the tutorials** section for your platform: [Mac] or
+> [Windows] or use this specific command on Linux:
+>
+> `` gcc playback-tutorial-4.c -o playback-tutorial-4 `pkg-config --cflags --libs gstreamer-1.0` ``
+>
+> If you need help to run this code, refer to the **Running the
+> tutorials** section for your platform: [Mac OS X], [Windows][1], for
+> [iOS] or for [android].
+>
+> This tutorial opens a window and displays a movie, with accompanying
+> audio. The media is fetched from the Internet, so the window might
+> take a few seconds to appear, depending on your connection
+> speed. In the console window, you should see a message indicating
+> where the media is being stored, and a text graph representing the
+> downloaded portions and the current position. A buffering message
+> appears whenever buffering is required, which might never happen is
+> your network connection is fast enough
+>
+> Required libraries: `gstreamer-1.0`
 
-# Walkthrough
 
-This code is based on that of [Basic tutorial 12:
-Streaming](Basic%2Btutorial%2B12%253A%2BStreaming.html). Let’s review
+## Walkthrough
+
+This code is based on that of [](sdk-basic-tutorial-streaming.md). Let’s review
 only the differences.
 
-#### Setup
+### Setup
 
 ``` c
 /* Set the download flag */
@@ -265,18 +252,18 @@ flags |= GST_PLAY_FLAG_DOWNLOAD;
 g_object_set (pipeline, "flags", flags, NULL);
 ```
 
-By setting this flag, `playbin` instructs its internal queue (a
-`queue2` element, actually) to store all downloaded
+By setting this flag, `playbin` instructs its internal queue (a
+`queue2` element, actually) to store all downloaded
 data.
 
 ``` c
 g_signal_connect (pipeline, "deep-notify::temp-location", G_CALLBACK (got_location), NULL);
 ```
 
-`deep-notify` signals are emitted by `GstObject` elements (like
+`deep-notify` signals are emitted by `GstObject` elements (like
 `playbin`) when the properties of any of their children elements
-change. In this case we want to know when the `temp-location` property
-changes, indicating that the `queue2` has decided where to store the
+change. In this case we want to know when the `temp-location` property
+changes, indicating that the `queue2` has decided where to store the
 downloaded
 data.
 
@@ -285,30 +272,25 @@ static void got_location (GstObject *gstobject, GstObject *prop_object, GParamSp
   gchar *location;
   g_object_get (G_OBJECT (prop_object), "temp-location", &location, NULL);
   g_print ("Temporary file: %s\n", location);
+  g_free (location);
   /* Uncomment this line to keep the temporary file after the program exits */
   /* g_object_set (G_OBJECT (prop_object), "temp-remove", FALSE, NULL); */
 }
 ```
 
-The `temp-location` property is read from the element that triggered the
+The `temp-location` property is read from the element that triggered the
 signal (the `queue2`) and printed on screen.
 
-When the pipeline state changes from `PAUSED` to `READY`, this file is
+When the pipeline state changes from `PAUSED` to `READY`, this file is
 removed. As the comment reads, you can keep it by setting the
-`temp-remove` property of the `queue2` to `FALSE`.
+`temp-remove` property of the `queue2` to `FALSE`.
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/warning.png" width="16" height="16" /></td>
-<td><p>On Windows this file is usually created inside the <code>Temporary Internet Files</code> folder, which might hide it from Windows Explorer. If you cannot find the downloaded files, try to use the console.</p></td>
-</tr>
-</tbody>
-</table>
+> ![warning]
+> On Windows this file is usually created inside the `Temporary Internet Files` folder, which might hide it from Windows Explorer. If you cannot find the downloaded files, try to use the console.
 
-#### User Interface
+### User Interface
 
-In `main` we also install a timer which we use to refresh the UI every
+In `main` we also install a timer which we use to refresh the UI every
 second.
 
 ``` c
@@ -316,7 +298,7 @@ second.
 g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, &data);
 ```
 
-The `refresh_ui` method queries the pipeline to find out which parts of
+The `refresh_ui` method queries the pipeline to find out which parts of
 the file have been downloaded and what the currently playing position
 is. It builds a graph to display this information (sort of a text-mode
 user interface) and prints it on screen, overwriting the previous one so
@@ -324,9 +306,9 @@ it looks like it is animated:
 
     [---->-------                ]
 
-The dashes ‘`-`’ indicate the downloaded parts, and the greater-than
+The dashes ‘`-`’ indicate the downloaded parts, and the greater-than
 sign ‘`>`’ shows the current position (turning into an ‘`X`’ when the
-pipeline is paused). Keep in mind that if your network is fast enough,
+pipeline is paused). Keep in mind that if your network is fast enough,
 you will not see the download bar (the dashes) advance at all; it will
 be completely full from the beginning.
 
@@ -339,19 +321,18 @@ static gboolean refresh_ui (CustomData *data) {
 ```
 
 The first thing we do in `refresh_ui` is construct a new Buffering
-`GstQuery` with `gst_query_new_buffering()` and pass it to the pipeline
-(`playbin`) with `gst_element_query()`. In [Basic tutorial 4: Time
-management](Basic%2Btutorial%2B4%253A%2BTime%2Bmanagement.html) we have
+`GstQuery` with `gst_query_new_buffering()` and pass it to the pipeline
+(`playbin`) with `gst_element_query()`. In [](sdk-basic-tutorial-time-management.md) we have
 already seen how to perform simple queries like Position and Duration
 using specific methods. More complex queries, like Buffering, need to
 use the more general `gst_element_query()`.
 
-The Buffering query can be made in different `GstFormat` (TIME, BYTES,
+The Buffering query can be made in different `GstFormat` (TIME, BYTES,
 PERCENTAGE and a few more). Not all elements can answer the query in all
 the formats, so you need to check which ones are supported in your
-particular pipeline. If `gst_element_query()` returns `TRUE`, the query
-succeeded. The answer to the query is contained in the same
-`GstQuery` structure we created, and can be retrieved using multiple
+particular pipeline. If `gst_element_query()` returns `TRUE`, the query
+succeeded. The answer to the query is contained in the same
+`GstQuery` structure we created, and can be retrieved using multiple
 parse methods:
 
 ``` c
@@ -359,8 +340,8 @@ n_ranges = gst_query_get_n_buffering_ranges (query);
 for (range = 0; range < n_ranges; range++) {
   gint64 start, stop;
   gst_query_parse_nth_buffering_range (query, range, &start, &stop);
-  start = start * GRAPH_LENGTH / 100;
-  stop = stop * GRAPH_LENGTH / 100;
+  start = start * GRAPH_LENGTH / (stop - start);
+  stop = stop * GRAPH_LENGTH / (stop - start);
   for (i = (gint)start; i < stop; i++)
     graph [i] = '-';
 }
@@ -369,13 +350,13 @@ for (range = 0; range < n_ranges; range++) {
 Data does not need to be downloaded in consecutive pieces from the
 beginning of the file: Seeking, for example, might force to start
 downloading from a new position and leave a downloaded chunk behind.
-Therefore, `gst_query_get_n_buffering_ranges()` returns the number of
+Therefore, `gst_query_get_n_buffering_ranges()` returns the number of
 chunks, or *ranges* of downloaded data, and then, the position and size
 of each range is retrieved with `gst_query_parse_nth_buffering_range()`.
 
 The format of the returned values (start and stop position for each
 range) depends on what we requested in the
-`gst_query_new_buffering()` call. In this case, PERCENTAGE. These
+`gst_query_new_buffering()` call. In this case, PERCENTAGE. These
 values are used to generate the graph.
 
 ``` c
@@ -396,7 +377,7 @@ percentage.
 
 The current position is indicated with either a ‘`>`’ or an ‘`X`’
 depending on the buffering level. If it is below 100%, the code in the
-`cb_message` method will have set the pipeline to `PAUSED`, so we print
+`cb_message` method will have set the pipeline to `PAUSED`, so we print
 an ‘`X`’. If the buffering level is 100% the pipeline is in the
 `PLAYING` state and we print a ‘`>`’.
 
@@ -411,7 +392,7 @@ if (data->buffering_level < 100) {
 Finally, if the buffering level is below 100%, we report this
 information (and delete it otherwise).
 
-#### Limiting the size of the downloaded file
+### Limiting the size of the downloaded file
 
 ``` c
 /* Uncomment this line to limit the amount of downloaded data */
@@ -423,23 +404,25 @@ size of the temporary file, by overwriting already played regions.
 Observe the download bar to see which regions are kept available in the
 file.
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown:
 
   - How to enable progressive downloading with the
-    `GST_PLAY_FLAG_DOWNLOAD` `playbin` flag
-  - How to know what has been downloaded using a Buffering `GstQuery`
+    `GST_PLAY_FLAG_DOWNLOAD` `playbin` flag
+  - How to know what has been downloaded using a Buffering `GstQuery`
   - How to know where it has been downloaded with the
     `deep-notify::temp-location` signal
   - How to limit the size of the temporary file with
-    the `ring-buffer-max-size` property of `playbin`.
+    the `ring-buffer-max-size` property of `playbin`.
 
-It has been a pleasure having you here, and see you soon\!
+It has been a pleasure having you here, and see you soon!
 
-## Attachments:
-
-![](images/icons/bullet_blue.gif)
-[playback-tutorial-4.c](attachments/327808/2424846.c) (text/plain)
-![](images/icons/bullet_blue.gif)
-[vs2010.zip](attachments/327808/2424847.zip) (application/zip)
+  [information]: images/icons/emoticons/information.png
+  [Mac]: sdk-installing-on-mac-osx.md
+  [Windows]: Installing+on+Windows
+  [Mac OS X]: sdk-installing-on-mac-osx.md#building-the-tutorials
+  [1]: sdk-installing-on-windows.md#running-the-tutorials
+  [iOS]: sdk-installing-for-ios-development.md#building-the-tutorials
+  [android]: sdk-installing-for-android-development.md#building-the-tutorials
+  [warning]: images/icons/emoticons/warning.png

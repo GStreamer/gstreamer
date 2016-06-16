@@ -1,6 +1,6 @@
 # Playback tutorial 5: Color Balance
 
-# Goal
+## Goal
 
 Brightness, Contrast, Hue and Saturation are common video adjustments,
 which are collectively known as Color Balance settings in GStreamer.
@@ -9,43 +9,33 @@ This tutorial shows:
   - How to find out the available color balance channels
   - How to change them
 
-# Introduction
-
-[Basic tutorial 5: GUI toolkit
-integration](Basic%2Btutorial%2B5%253A%2BGUI%2Btoolkit%2Bintegration.html) has
+## Introduction
+[](sdk-basic-tutorial-toolkit-integration.md) has
 already explained the concept of GObject interfaces: applications use
 them to find out if certain functionality is available, regardless of
 the actual element which implements it.
 
-`playbin` implements the Color Balance interface (`gstcolorbalance`),
+`playbin` implements the Color Balance interface (`GstColorBalance`),
 which allows access to the color balance settings. If any of the
-elements in the `playbin` pipeline support this interface,
-`playbin` simply forwards it to the application, otherwise, a
+elements in the `playbin` pipeline support this interface,
+`playbin` simply forwards it to the application, otherwise, a
 colorbalance element is inserted in the pipeline.
 
 This interface allows querying for the available color balance channels
-(`gstcolorbalancechannel`), along with their name and valid range of
+(`GstColorBalanceChannel`), along with their name and valid range of
 values, and then modify the current value of any of them.
 
-# Color balance example
+## Color balance example
 
-Copy this code into a text file named `playback-tutorial-5.c`.
-
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><p>This tutorial is included in the SDK since release 2012.7. If you cannot find it in the downloaded code, please install the latest release of the GStreamer SDK.</p></td>
-</tr>
-</tbody>
-</table>
+Copy this code into a text file named `playback-tutorial-5.c`.
 
 **playback-tutorial-5.c**
 
 ``` c
 #include <string.h>
+#include <stdio.h>
 #include <gst/gst.h>
-#include <gst/interfaces/colorbalance.h>
+#include <gst/video/colorbalance.h>
 
 typedef struct _CustomData {
   GstElement *pipeline;
@@ -161,7 +151,7 @@ int main(int argc, char *argv[]) {
   data.pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
 
   /* Add a keyboard watch so we get notified of keystrokes */
-#ifdef _WIN32
+#ifdef G_OS_WIN32
   io_stdin = g_io_channel_win32_new_fd (fileno (stdin));
 #else
   io_stdin = g_io_channel_unix_new (fileno (stdin));
@@ -190,36 +180,25 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-1909648074" class="expand-container">
-<div id="expander-control-1909648074" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-1909648074" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc playback-tutorial-5.c -o playback-tutorial-5 `pkg-config --cflags --libs gstreamer-interfaces-1.0 gstreamer-1.0`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
-<p></p>
-<p><span>This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed.</span></p>
-<p>The console should print all commands (Each command is a single upper-case or lower-case letter) and list all available Color Balance channels, typically, CONTRAST, BRIGHTNESS, HUE and SATURATION. Type each command (letter) followed by the Enter key.</p>
-<p></p>
-<p>Required libraries: <code>gstreamer-interfaces-1.0 gstreamer-1.0</code></p>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
+> ![information] If you need help to compile this code, refer to the
+> **Building the tutorials** section for your platform: [Mac] or
+> [Windows] or use this specific command on Linux:
+>
+> `` gcc playback-tutorial-5.c -o playback-tutorial-5 `pkg-config --cflags --libs gstreamer-1.0 gstreamer-video-1.0` ``
+>
+> If you need help to run this code, refer to the **Running the
+> tutorials** section for your platform: [Mac OS X], [Windows][1], for
+> [iOS] or for [android].
+>
+> This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed.
+>
+>The console should print all commands (Each command is a single upper-case or lower-case letter) and list all available Color Balance channels, typically, CONTRAST, BRIGHTNESS, HUE and SATURATION. Type each command (letter) followed by the Enter key.
+>
+> Required libraries: `gstreamer-1.0 gstreamer-video-1.0`
 
-# Walkthrough
+## Walkthrough
 
-The `main()` function is fairly simple. A `playbin` pipeline is
+The `main()` function is fairly simple. A `playbin` pipeline is
 instantiated and set to run, and a keyboard watch is installed so
 keystrokes can be monitored.
 
@@ -242,12 +221,12 @@ static void print_current_values (GstElement *pipeline) {
 
 This method prints the current value for all channels, and exemplifies
 how to retrieve the list of channels. This is accomplished through the
-`gst_color_balance_list_channels()` method. It returns a `GList` which
+`gst_color_balance_list_channels()` method. It returns a `GList` which
 needs to be traversed.
 
-Each element in the list is a `GstColorBalanceChannel` structure,
+Each element in the list is a `GstColorBalanceChannel` structure,
 informing of the channel’s name, minimum value and maximum value.
-`gst_color_balance_get_value()` can then be called on each channel to
+`gst_color_balance_get_value()` can then be called on each channel to
 retrieve the current value.
 
 In this example, the minimum and maximum values are used to output the
@@ -300,26 +279,29 @@ stored and indexed by something more efficient than a string.
 
 The current value for the channel is then retrieved, changed (the
 increment is proportional to its dynamic range), clamped (to avoid
-out-of-range values) and set using `gst_color_balance_set_value()`.
+out-of-range values) and set using `gst_color_balance_set_value()`.
 
 And there is not much more to it. Run the program and observe the effect
 of changing each of the channels in real time.
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown how to use the color balance interface.
 Particularly, it has shown:
 
   - How to retrieve the list of color available balance channels
-    with `gst_color_balance_list_channels()`
+    with `gst_color_balance_list_channels()`
   - How to manipulate the current value of each channel using
-    `gst_color_balance_get_value()` and `gst_color_balance_set_value()`
+    `gst_color_balance_get_value()` and `gst_color_balance_set_value()`
 
 It has been a pleasure having you here, and see you soon\!
 
-## Attachments:
 
-![](images/icons/bullet_blue.gif)
-[playback-tutorial-5.c](attachments/327804/2424874.c) (text/plain)
-![](images/icons/bullet_blue.gif)
-[vs2010.zip](attachments/327804/2424875.zip) (application/zip)
+  [information]: images/icons/emoticons/information.png
+  [Mac]: sdk-installing-on-mac-osx.md
+  [Windows]: Installing+on+Windows
+  [Mac OS X]: sdk-installing-on-mac-osx.md#building-the-tutorials
+  [1]: sdk-installing-on-windows.md#running-the-tutorials
+  [iOS]: sdk-installing-for-ios-development.md#building-the-tutorials
+  [android]: sdk-installing-for-android-development.md#building-the-tutorials
+  [warning]: images/icons/emoticons/warning.png

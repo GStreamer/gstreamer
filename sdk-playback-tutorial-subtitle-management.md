@@ -1,6 +1,6 @@
 # Playback tutorial 2: Subtitle management
 
-# Goal
+## Goal
 
 This tutorial is very similar to the previous one, but instead of
 switching among different audio streams, we will use subtitle streams.
@@ -12,34 +12,35 @@ This will allow us to learn:
 
   - How to customize the font used for the subtitles
 
-# Introduction
+## Introduction
 
 We already know (from the previous tutorial) that container files can
 hold multiple audio and video streams, and that we can very easily
-choose among them by changing the `current-audio` or
-`current-video` `playbin` property. Switching subtitles is just as
+choose among them by changing the `current-audio` or
+`current-video` `playbin` property. Switching subtitles is just as
 easy.
 
 It is worth noting that, just like it happens with audio and video,
-`playbin` takes care of choosing the right decoder for the subtitles,
+`playbin` takes care of choosing the right decoder for the subtitles,
 and that the plugin structure of GStreamer allows adding support for new
 formats as easily as copying a file. Everything is invisible to the
 application developer.
 
-Besides subtitles embedded in the container, `playbin` offers the
+Besides subtitles embedded in the container, `playbin` offers the
 possibility to add an extra subtitle stream from an external URI.
 
 This tutorial opens a file which already contains 5 subtitle streams,
 and adds another one from another file (for the Greek language).
 
-# The multilingual player with subtitles
+## The multilingual player with subtitles
 
-Copy this code into a text file named `playback-tutorial-2.c` (or find
+Copy this code into a text file named `playback-tutorial-2.c` (or find
 it in the SDK installation).
 
 **playback-tutorial-2.c**
 
 ``` c
+#include <stdio.h>
 #include <gst/gst.h>
 
 /* Structure to contain all our information, so we can pass it around */
@@ -103,7 +104,7 @@ int main(int argc, char *argv[]) {
   gst_bus_add_watch (bus, (GstBusFunc)handle_message, &data);
 
   /* Add a keyboard watch so we get notified of keystrokes */
-#ifdef _WIN32
+#ifdef G_OS_WIN32
   io_stdin = g_io_channel_win32_new_fd (fileno (stdin));
 #else
   io_stdin = g_io_channel_unix_new (fileno (stdin));
@@ -262,38 +263,38 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-513883844" class="expand-container">
-<div id="expander-control-513883844" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-513883844" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc playback-tutorial-2.c -o playback-tutorial-2 `pkg-config --cflags --libs gstreamer-1.0`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
-<p></p>
-<p><span>This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. The number of subtitle streams is shown in the terminal, and the user can switch from one to another by entering a number and pressing enter. A small delay is to be expected. </span><strong>Please read the note at the bottom of this page</strong><span>.</span></p>
-<p><span><span>Bear in mind that there is no latency management (buffering), so on slow connections, the movie might stop after a few seconds. See how </span><a href="http://docs.gstreamer.com/display/GstSDK/Tutorial+12%3A+Live+streaming">Tutorial 12: Live streaming</a><span> solves this issue.</span></span></p>
-<p></p>
-<p>Required libraries: <code>gstreamer-1.0</code></p>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
 
-# Walkthrough
+> ![information] Need help?
+>
+> If you need help to compile this code, refer to the **Building the
+> tutorials** section for your platform: [Linux], [Mac OS X] or
+> [Windows], or use this specific command on Linux:
+>
+> `` gcc playback-tutorial-2.c -o playback-tutorial-2 `pkg-config --cflags --libs gstreamer-1.0` ``
+>
+> If you need help to run this code, refer to the **Running the
+> tutorials** section for your platform: [Linux][1], [Mac OS X][2] or
+> [Windows][3].
+>
+> This tutorial opens a window and displays a movie, with accompanying
+> audio. The media is fetched from the Internet, so the window might
+> take a few seconds to appear, depending on your connection
+> speed. The number of subtitle streams is shown in the terminal, and
+> the user can switch from one to another by entering a number and
+> pressing enter. A small delay is to be
+> expected. _Please read the note at the bottom of this
+> page._ Bear in mind that
+> there is no latency management (buffering), so on slow connections,
+> the movie might stop after a few seconds. See how
+> [](sdk-basic-tutorial-streaming.md) solves this issue.
+>
+> Required libraries: `gstreamer-1.0`
 
-This tutorial is copied from [Playback tutorial 1: Playbin
-usage](Playback%2Btutorial%2B1%253A%2BPlaybin%2Busage.html) with some
-changes, so let's review only the changes.
+## Walkthrough
+
+This tutorial is copied from
+[](sdk-playback-tutorial-playbin-usage.md) with some changes, so let's
+review only the changes.
 
 ``` c
 /* Set the subtitle URI to play and some font description */
@@ -301,8 +302,8 @@ g_object_set (data.playbin, "suburi", "http://docs.gstreamer.com/media/sintel_tr
 g_object_set (data.playbin, "subtitle-font-desc", "Sans, 18", NULL);
 ```
 
-After setting the media URI, we set the `suburi` property, which points
-`playbin` to a file containing a subtitle stream. In this case, the
+After setting the media URI, we set the `suburi` property, which points
+`playbin` to a file containing a subtitle stream. In this case, the
 media file already contains multiple subtitle streams, so the one
 provided in the `suburi` is added to the list, and will be the currently
 selected one.
@@ -312,17 +313,17 @@ resides in the container file, therefore, subtitles not embedded in a
 container will not have metadata. When running this tutorial you will
 find that the first subtitle stream does not have a language tag.
 
-The `subtitle-font-desc` property allows specifying the font to render
-the subtitles. Since [Pango](http://www.pango.org/) is the library used
+The `subtitle-font-desc` property allows specifying the font to render
+the subtitles. Since [Pango](http://www.pango.org/) is the library used
 to render fonts, you can check its documentation to see how this font
 should be specified, in particular, the
-[pango-font-description-from-string](http://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string) function.
+[pango-font-description-from-string](http://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string) function.
 
 In a nutshell, the format of the string representation is `[FAMILY-LIST]
-[STYLE-OPTIONS] [SIZE]` where `FAMILY-LIST` is a comma separated list of
-families optionally terminated by a comma, `STYLE_OPTIONS` is a
+[STYLE-OPTIONS] [SIZE]` where `FAMILY-LIST` is a comma separated list of
+families optionally terminated by a comma, `STYLE_OPTIONS` is a
 whitespace separated list of words where each word describes one of
-style, variant, weight, or stretch, and `SIZE` is an decimal number
+style, variant, weight, or stretch, and `SIZE` is an decimal number
 (size in points). For example the following are all valid string
 representations:
 
@@ -333,7 +334,7 @@ representations:
 The commonly available font families are: Normal, Sans, Serif and
 Monospace.
 
-The available styles are: Normal (the font is upright), Oblique (the
+The available styles are: Normal (the font is upright), Oblique (the
 font is slanted, but in a roman style), Italic (the font is slanted in
 an italic style).
 
@@ -344,10 +345,10 @@ The available variants are: Normal, Small\_Caps (A font with the lower
 case characters replaced by smaller variants of the capital characters)
 
 The available stretch styles
-are: Ultra-Condensed, Extra-Condensed, Condensed, Semi-Condensed, Normal, Semi-Expanded, Expanded,
+are: Ultra-Condensed, Extra-Condensed, Condensed, Semi-Condensed, Normal, Semi-Expanded, Expanded,
 Extra-Expanded, Ultra-Expanded
 
- 
+ 
 
 ``` c
 /* Set flags to show Audio, Video and Subtitles */
@@ -356,17 +357,16 @@ flags |= GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_TEXT;
 g_object_set (data.playbin, "flags", flags, NULL);
 ```
 
-We set the `flags` property to allow Audio, Video and Text (Subtitles).
+We set the `flags` property to allow Audio, Video and Text (Subtitles).
 
-The rest of the tutorial is the same as [Playback tutorial 1: Playbin
-usage](Playback%2Btutorial%2B1%253A%2BPlaybin%2Busage.html), except
-that the keyboard input changes the `current-text` property instead of
+The rest of the tutorial is the same as [](sdk-playback-tutorial-playbin-usage.md), except
+that the keyboard input changes the `current-text` property instead of
 the `current-audio`. As before, keep in mind that stream changes are not
 immediate, since there is a lot of information flowing through the
 pipeline that needs to reach the end of it before the new stream shows
 up.
 
-# Conclusion
+## Conclusion
 
 This tutorial showed how to handle subtitles from `playbin`, whether
 they are embedded in the container or in a different file:
@@ -374,10 +374,10 @@ they are embedded in the container or in a different file:
   - Subtitles are chosen using the `current-tex`t and `n-tex`t
     properties of `playbin`.
 
-  - External subtitle files can be selected using the `suburi` property.
+  - External subtitle files can be selected using the `suburi` property.
 
   - Subtitle appearance can be customized with the
-    `subtitle-font-desc` property.
+    `subtitle-font-desc` property.
 
 The next playback tutorial shows how to change the playback speed.
 
@@ -385,14 +385,4 @@ Remember that attached to this page you should find the complete source
 code of the tutorial and any accessory files needed to build it.
 It has been a pleasure having you here, and see you soon\!
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/warning.png" width="16" height="16" /></td>
-<td><p>There is a bug in the current version of the sdk <a href="https://bugzilla.gnome.org/show_bug.cgi?id=638168">https://bugzilla.gnome.org/show_bug.cgi?id=638168</a>:</p>
-<p>Switching subtitle tracks while there is a subtitle on the screen gives this warning:</p>
-<p><code>WARN                 katedec gstkatedec.c:309:gst_kate_dec_chain:&lt;katedec1&gt; failed to push buffer: wrong-state</code></p>
-<p>And after a while it freezes.</p></td>
-</tr>
-</tbody>
-</table>
+  [information]: images/icons/emoticons/information.png
