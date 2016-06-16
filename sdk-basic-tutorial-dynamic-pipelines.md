@@ -78,7 +78,7 @@ demuxer pads.
 For simplicity, in this example, we will only link to the audio pad and
 ignore the video.
 
-## Dyamic Hello World
+## Dynamic Hello World
 
 Copy this code into a text file named `basic-tutorial-3.c` (or find it
 in the SDK installation).
