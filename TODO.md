@@ -4,19 +4,6 @@ This is just a simple TODO list to follow progress of the port from
 gstreamer.com content to hotdoc
 
 Pages to review:
-   - sdk-basic-tutorial-concepts.md
-   - sdk-basic-tutorial-dynamic-pipelines.md
-   - sdk-basic-tutorial-time-management.md
-   - sdk-basic-tutorial-media-formats-and-pad-capabilities.md
-   - sdk-basic-tutorial-multithreading-and-pad-availability.md
-   - sdk-basic-tutorial-short-cutting-the-pipeline.md
-   - sdk-basic-tutorial-media-information-gathering.md
-   - sdk-basic-tutorial-gstreamer-tools.md
-   - sdk-basic-tutorial-debugging-tools.md
-   - sdk-basic-tutorial-streaming.md
-   - sdk-basic-tutorial-playback-speed.md
-   - sdk-basic-tutorial-handy-elements.md
-   - sdk-basic-tutorial-platform-specific-elements.md
  - sdk-playback-tutorials.md
    - sdk-playback-tutorial-subtitle-management.md
    - sdk-playback-tutorial-short-cutting-the-pipeline.md
@@ -73,6 +60,19 @@ Reviewed pages:
  - sdk-basic-tutorial-hello-world.md
  - sdk-gst-inspect.md
  - gst-launch.md
+ - sdk-basic-tutorial-concepts.md
+ - sdk-basic-tutorial-dynamic-pipelines.md
+ - sdk-basic-tutorial-time-management.md
+ - sdk-basic-tutorial-media-formats-and-pad-capabilities.md
+ - sdk-basic-tutorial-multithreading-and-pad-availability.md
+ - sdk-basic-tutorial-short-cutting-the-pipeline.md
+ - sdk-basic-tutorial-media-information-gathering.md
+ - sdk-basic-tutorial-gstreamer-tools.md
+ - sdk-basic-tutorial-debugging-tools.md
+ - sdk-basic-tutorial-streaming.md
+ - sdk-basic-tutorial-playback-speed.md
+ - sdk-basic-tutorial-handy-elements.md
+ - sdk-basic-tutorial-platform-specific-elements.md
 
 For-later pages:
  - sdk-qt-tutorials.md [tpm: this should all be rewritten from scratch with qmlglsink; QtGStreamer is outdated and unmaintained, we should not promote it]
