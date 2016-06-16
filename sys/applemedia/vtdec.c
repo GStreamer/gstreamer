@@ -232,12 +232,30 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   vtdec = GST_VTDEC (decoder);
   if (vtdec->session)
     gst_vtdec_push_frames_if_needed (vtdec, TRUE, FALSE);
-  templcaps =
-      gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SRC_PAD (decoder));
+
+  output_state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (vtdec));
+  if (output_state) {
+    prevcaps = gst_caps_ref (output_state->caps);
+    gst_video_codec_state_unref (output_state);
+  }
+
   peercaps = gst_pad_peer_query_caps (GST_VIDEO_DECODER_SRC_PAD (vtdec), NULL);
-  caps =
-      gst_caps_intersect_full (peercaps, templcaps, GST_CAPS_INTERSECT_FIRST);
-  gst_caps_unref (templcaps);
+  if (prevcaps && gst_caps_can_intersect (prevcaps, peercaps)) {
+    /* The hardware decoder can become (temporarily) unavailable across
+     * VTDecompressionSessionCreate/Destroy calls. So if the currently configured
+     * caps are still accepted by downstream we keep them so we don't have to
+     * destroy and recreate the session.
+     */
+    GST_INFO_OBJECT (vtdec,
+        "current and peer caps are compatible, keeping current caps");
+    caps = gst_caps_ref (prevcaps);
+  } else {
+    templcaps =
+        gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SRC_PAD (decoder));
+    caps =
+        gst_caps_intersect_full (peercaps, templcaps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (templcaps);
+  }
   gst_caps_unref (peercaps);
 
   caps = gst_caps_truncate (gst_caps_make_writable (caps));
@@ -247,12 +265,6 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   features = gst_caps_get_features (caps, 0);
   if (features)
     features = gst_caps_features_copy (features);
-
-  output_state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (vtdec));
-  if (output_state) {
-    prevcaps = gst_caps_ref (output_state->caps);
-    gst_video_codec_state_unref (output_state);
-  }
 
   output_state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (vtdec),
       format, vtdec->video_info.width, vtdec->video_info.height,
