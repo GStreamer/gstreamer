@@ -50,9 +50,6 @@
 /* we hope we get a granpos within this many bytes off the end */
 #define DURATION_CHUNK_OFFSET (64*1024)
 
-/* stop duration checks within this much of EOS */
-#define EOS_AVOIDANCE_THRESHOLD 8192
-
 /* An Ogg page can not be larger than 255 segments of 255 bytes, plus
    26 bytes of header */
 #define MAX_OGG_PAGE_SIZE (255 * 255 + 26)
@@ -1654,8 +1651,7 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
          event and there is a queue2 upstream (such as when using playbin),
          it will pause the task *after* we come back from the EOS handler,
          so we cannot prevent the pausing by issuing a seek. */
-      if (ogg->push_byte_offset + EOS_AVOIDANCE_THRESHOLD >=
-          ogg->push_byte_length) {
+      if (ogg->push_byte_offset >= ogg->push_byte_length) {
         GstMessage *message;
         GstFlowReturn res;
 
@@ -2421,13 +2417,6 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_EOS:
     {
       GST_DEBUG_OBJECT (ogg, "got an EOS event");
-#if 0
-      /* This would be what is needed (recover from EOS by going on to
-         the next step (issue the delayed seek)), but it does not work
-         if there is a queue2 upstream - see more details comment in
-         gst_ogg_pad_submit_page.
-         If I could find a way to bypass queue2 behavior, this should
-         be enabled. */
       GST_PUSH_LOCK (ogg);
       if (ogg->push_state == PUSH_DURATION) {
         GST_DEBUG_OBJECT (ogg, "Got EOS while determining length");
@@ -2439,7 +2428,6 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         break;
       }
       GST_PUSH_UNLOCK (ogg);
-#endif
       res = gst_ogg_demux_send_event (ogg, event);
       if (ogg->current_chain == NULL) {
         GST_WARNING_OBJECT (ogg,
@@ -3663,8 +3651,7 @@ gst_ogg_demux_get_duration_push (GstOggDemux * ogg, int flags)
 
   /* A full Ogg page can be almost 64 KB. There's no guarantee that there'll be a
      granpos there, but it's fairly likely */
-  position =
-      ogg->push_byte_length - DURATION_CHUNK_OFFSET - EOS_AVOIDANCE_THRESHOLD;
+  position = ogg->push_byte_length - DURATION_CHUNK_OFFSET;
   if (position < 0)
     position = 0;
 
