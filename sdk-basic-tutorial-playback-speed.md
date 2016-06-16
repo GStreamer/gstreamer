@@ -1,6 +1,6 @@
 # Basic tutorial 13: Playback speed
 
-# Goal
+## Goal
 
 Fast-forward, reverse-playback and slow-motion are all techniques
 collectively known as *trick modes* and they all have in common that
@@ -12,7 +12,7 @@ shows:
     forward and backwards.
   - How to advance a video frame-by-frame
 
-# Introduction
+## Introduction
 
 Fast-forward is the technique that plays a media at a speed higher than
 its normal (intended) speed; whereas slow-motion uses a speed lower than
@@ -30,45 +30,37 @@ media besides changing the subsequent playback rate (only to positive
 values). Seek Events, additionally, allow jumping to any position in the
 stream and set positive and negative playback rates.
 
-In [Basic tutorial 4: Time
-management](Basic%2Btutorial%2B4%253A%2BTime%2Bmanagement.html) seek
+In [](sdk-basic-tutorial-time-management.md) seek
 events have already been shown, using a helper function to hide their
 complexity. This tutorial explains a bit more how to use these events.
 
 Step Events are a more convenient way of changing the playback rate, due
 to the reduced number of parameters needed to create them; however,
 their implementation in GStreamer still needs a bit more polishing
-so Seek Events are used in this tutorial instead.
+so Seek Events are used in this tutorial instead.
+**FIXME: Is that even true ???**
 
 To use these events, they are created and then passed onto the pipeline,
 where they propagate upstream until they reach an element that can
 handle them. If an event is passed onto a bin element like `playbin`,
 it will simply feed the event to all its sinks, which will result in
 multiple seeks being performed. The common approach is to retrieve one
-of `playbin`’s sinks through the `video-sink` or
-`audio-sink` properties and feed the event directly into the sink.
+of `playbin`’s sinks through the `video-sink` or
+`audio-sink` properties and feed the event directly into the sink.
 
 Frame stepping is a technique that allows playing a video frame by
 frame. It is implemented by pausing the pipeline, and then sending Step
 Events to skip one frame each time.
 
-# A trick mode player
+## A trick mode player
 
-Copy this code into a text file named `basic-tutorial-13.c`.
-
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><p>This tutorial is included in the SDK since release 2012.7. If you cannot find it in the downloaded code, please install the latest release of the GStreamer SDK.</p></td>
-</tr>
-</tbody>
-</table>
+Copy this code into a text file named `basic-tutorial-13.c`.
 
 **basic-tutorial-13.c**
 
 ``` c
 #include <string.h>
+#include <stdio.h>
 #include <gst/gst.h>
 
 typedef struct _CustomData {
@@ -184,7 +176,7 @@ int main(int argc, char *argv[]) {
   data.pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
 
   /* Add a keyboard watch so we get notified of keystrokes */
-#ifdef _WIN32
+#ifdef G_OS_WIN32
   io_stdin = g_io_channel_win32_new_fd (fileno (stdin));
 #else
   io_stdin = g_io_channel_unix_new (fileno (stdin));
@@ -216,34 +208,24 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-1662010270" class="expand-container">
-<div id="expander-control-1662010270" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-1662010270" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc basic-tutorial-13.c -o basic-tutorial-13 `pkg-config --cflags --libs gstreamer-1.0`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
-<p><span>This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. The console shows the available commands, composed of a single upper-case or lower-case letter, which you should input followed by the Enter key.</span></p>
-<p>Required libraries: <code>gstreamer-1.0</code></p>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
 
-# Walkthrough
+> ![Information](images/icons/emoticons/information.png)
+> Need help?
+>
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Build), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Build) or [Windows](sdk-installing-on-windows.mdb#InstallingonWindows-Build), or use this specific command on Linux:
+>
+> `` gcc basic-tutorial-13.c -o basic-tutorial-13 `pkg-config --cflags --libs gstreamer-1.0` ``
+>
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Run), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Run) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Run).
+>
+> This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. The console shows the available commands, composed of a single upper-case or lower-case letter, which you should input followed by the Enter key.
+>
+> Required libraries: `gstreamer-1.0`
 
-There is nothing new in the initialization code in the main function:  a
-`playbin` pipeline is instantiated, an I/O watch is installed to track
+## Walkthrough
+
+There is nothing new in the initialization code in the main function:  a
+`playbin` pipeline is instantiated, an I/O watch is installed to track
 keystrokes and a GLib main loop is executed.
 
 Then, in the keyboard handler function:
@@ -265,7 +247,7 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
     break;
 ```
 
-Pause / Playing toggle is handled with `gst_element_set_state()` as in
+Pause / Playing toggle is handled with `gst_element_set_state()` as in
 previous tutorials.
 
 ``` c
@@ -285,18 +267,17 @@ case 'd':
 
 Use ‘S’ and ‘s’ to double or halve the current playback rate, and ‘d’ to
 reverse the current playback direction. In both cases, the
-`rate` variable is updated and `send_seek_event` is called. Let’s
+`rate` variable is updated and `send_seek_event` is called. Let’s
 review this function.
 
 ``` c
 /* Send seek event to change rate */
 static void send_seek_event (CustomData *data) {
   gint64 position;
-  GstFormat format = GST_FORMAT_TIME;
   GstEvent *seek_event;
 
   /* Obtain the current position, needed for the seek event */
-  if (!gst_element_query_position (data->pipeline, &format, &position)) {
+  if (!gst_element_query_position (data->pipeline, GST_FORMAT_TIME, &position)) {
     g_printerr ("Unable to retrieve current position.\n");
     return;
   }
@@ -336,7 +317,7 @@ if (data->video_sink == NULL) {
 
 As explained in the Introduction, to avoid performing multiple Seeks,
 the Event is sent to only one sink, in this case, the video sink. It is
-obtained from `playbin` through the `video-sink` property. It is read
+obtained from `playbin` through the `video-sink` property. It is read
 at this time instead at initialization time because the actual sink may
 change depending on the media contents, and this won’t be known until
 the pipeline is PLAYING and some media has been read.
@@ -369,36 +350,25 @@ A new Step Event is created with `gst_event_new_step()`, whose
 parameters basically specify the amount to skip (1 frame in the example)
 and the new rate (which we do not change).
 
-The video sink is grabbed from `playbin` in case we didn’t have it yet,
+The video sink is grabbed from `playbin` in case we didn’t have it yet,
 just like before.
 
 And with this we are done. When testing this tutorial, keep in mind that
 backward playback is not optimal in many elements.
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/warning.png" width="16" height="16" /></td>
-<td><p>Changing the playback rate might only work with local files. If you cannot modify it, try changing the URI passed to <code>playbin</code> in line 114 to a local URI, starting with <code>file:///</code></p></td>
-</tr>
-</tbody>
+> ![Warning](images/icons/emoticons/warning.png)
+>
+>Changing the playback rate might only work with local files. If you cannot modify it, try changing the URI passed to `playbin` in line 114 to a local URI, starting with `file:///`
 </table>
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown:
 
   - How to change the playback rate using a Seek Event, created with
-    `gst_event_new_seek()` and fed to the pipeline
-    with `gst_element_send_event()`.
+    `gst_event_new_seek()` and fed to the pipeline
+    with `gst_element_send_event()`.
   - How to advance a video frame-by-frame by using Step Events, created
-    with `gst_event_new_step()`.
+    with `gst_event_new_step()`.
 
-It has been a pleasure having you here, and see you soon\!
-
-## Attachments:
-
-![](images/icons/bullet_blue.gif)
-[basic-tutorial-13.c](attachments/327800/2424883.c) (text/plain)
-![](images/icons/bullet_blue.gif)
-[vs2010.zip](attachments/327800/2424884.zip) (application/zip)
+It has been a pleasure having you here, and see you soon!

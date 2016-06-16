@@ -1,5 +1,10 @@
 # Basic tutorial 15: Clutter integration
 
+> ![Warning](images/icons/emoticons/warning.png)
+>
+> **THIS TUTORIAL HAS NOT BEEN UPDATED, CLUTTER IS DEPRECATED, DON'T USE IT**
+
+
 # Goal
 
 “[Clutter](https://clutter-project.org/) is an open source software

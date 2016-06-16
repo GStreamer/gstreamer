@@ -12,8 +12,7 @@ any time, in a variety of ways. This tutorial shows:
 
   - How to access and manipulate this data.
 
-[Playback tutorial 3: Short-cutting the
-pipeline](sdk-playback-tutorial-short-cutting-the-pipeline.md) explains
+[](sdk-playback-tutorial-short-cutting-the-pipeline.md) explains
 how to achieve the same goals in a playbin-based pipeline.
 
 ## Introduction
@@ -69,8 +68,7 @@ this simplified vision should suffice for now.
 
 As an example, a `filesrc` (a GStreamer element that reads files)
 produces buffers with the “ANY” caps and no time-stamping information.
-After demuxing (see [Basic tutorial 3: Dynamic
-pipelines](sdk-basic-tutorial-dynamic-pipelines.md))
+After demuxing (see [](sdk-basic-tutorial-dynamic-pipelines.md))
 buffers can have some specific caps, for example “video/x-h264”. After
 decoding, each buffer will contain a single video frame with raw caps
 (for example, “video/x-raw-yuv”) and very precise time stamps indicating
@@ -78,8 +76,7 @@ when should that frame be displayed.
 
 ### This tutorial
 
-This tutorial expands [Basic tutorial 7: Multithreading and Pad
-Availability](sdk-basic-tutorial-multithreading-and-pad-availability.md) in
+This tutorial expands [](sdk-basic-tutorial-multithreading-and-pad-availability.md) in
 two ways: firstly, the `audiotestsrc` is replaced by an `appsrc` that
 will generate the audio data. Secondly, a new branch is added to the
 `tee` so data going into the audio sink and the wave display is also
@@ -498,9 +495,7 @@ gst_buffer_unref (buffer);
 ```
 
 Once we have the buffer ready, we pass it to `appsrc` with the
-`push-buffer` action signal (see information box at the end of [Playback
-tutorial 1: Playbin
-usage](sdk-playback-tutorial-playbin-usage.md)), and then
+`push-buffer` action signal (see information box at the end of [](sdk-playback-tutorial-playbin-usage.md)), and then
 `gst_buffer_unref()` it since we no longer need it.
 
 ``` c
@@ -539,8 +534,7 @@ This tutorial has shown how applications can:
   - Manipulate this data by accessing the `GstBuffer`.
 
 In a playbin-based pipeline, the same goals are achieved in a slightly
-different way. [Playback tutorial 3: Short-cutting the
-pipeline](sdk-playback-tutorial-short-cutting-the-pipeline.md) shows
+different way. [](sdk-playback-tutorial-short-cutting-the-pipeline.md) shows
 how to do it.
 
 It has been a pleasure having you here, and see you soon\!

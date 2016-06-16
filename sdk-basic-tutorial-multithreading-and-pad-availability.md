@@ -1,4 +1,4 @@
-#  Basic tutorial 7: Multithreading and Pad Availability
+# Basic tutorial 7: Multithreading and Pad Availability
 
 ## Goal
 
@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
 > ``gcc basic-tutorial-7.c -o basic-tutorial-7 `pkg-config --cflags --libs gstreamer-1.0` ``
 >
 >If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Run), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Run) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Run).
- >
+>
 > This tutorial plays an audible tone through the audio card and opens a window with a waveform representation of the tone. The waveform should be a sinusoid, but due to the refreshing of the window might not appear so.
 >
 > Required libraries: `gstreamer-1.0`

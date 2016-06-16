@@ -1,6 +1,6 @@
 # Basic tutorial 9: Media information gathering
 
-# Goal
+## Goal
 
 Sometimes you might want to quickly find out what kind of media a file
 (or URI) contains, or if you will be able to play the media at all. You
@@ -12,9 +12,9 @@ shows:
 
   - How to find out if a URI is playable
 
-# Introduction
+## Introduction
 
-`GstDiscoverer` is a utility object found in the `pbutils` library
+`GstDiscoverer` is a utility object found in the `pbutils` library
 (Plug-in Base utilities) that accepts a URI or list of URIs, and returns
 information about them. It can work in synchronous or asynchronous
 modes.
@@ -29,9 +29,8 @@ The recovered information includes codec descriptions, stream topology
 (number of streams and sub-streams) and available metadata (like the
 audio language).
 
-![](images/icons/grey_arrow_down.gif)As an example, this is the result
+As an example, this is the result
 of discovering http://docs.gstreamer.com/media/sintel\_trailer-480p.webm
-(Click to expand)
 
     Duration: 0:00:52.250000000
     Tags:
@@ -66,15 +65,14 @@ The following code tries to discover the URI provided through the
 command line, and outputs the retrieved information (If no URI is
 provided it uses a default one).
 
-This is a simplified version of what the `gst-discoverer-1.0` tool does
-([Basic tutorial 10: GStreamer
-tools](Basic%2Btutorial%2B10%253A%2BGStreamer%2Btools.html)), which is
+This is a simplified version of what the `gst-discoverer-1.0` tool does
+([](sdk-basic-tutorial-gstreamer-tools.md)), which is
 an application that only displays data, but does not perform any
 playback.
 
-# The GStreamer Discoverer
+## The GStreamer Discoverer
 
-Copy this code into a text file named `basic-tutorial-9.c` (or find it
+Copy this code into a text file named `basic-tutorial-9.c` (or find it
 in the SDK installation).
 
 **basic-tutorial-9.c**
@@ -298,31 +296,22 @@ int main (int argc, char **argv) {
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-2049220294" class="expand-container">
-<div id="expander-control-2049220294" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-2049220294" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc basic-tutorial-9.c -o basic-tutorial-9 `pkg-config --cflags --libs gstreamer-pbutils-1.0 gstreamer-1.0`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
-<p><span>This tutorial opens the URI passed as the first parameter in the command line (or a default URI if none is provided) and outputs information about it on the screen. If the media is located on the Internet, the application might take a bit to react depending on your connection speed.</span></p>
-<p>Required libraries: <code>gstreamer-pbutils-1.0 gstreamer-1.0</code></p>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
 
-# Walkthrough
+> ![Information](images/icons/emoticons/information.png)
+> Need help?
+>
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Build), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Build) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Build), or use this specific command on Linux:
+>
+> ``gcc basic-tutorial-9.c -o basic-tutorial-9 `pkg-config --cflags --libs gstreamer-1.0 gstreamer-pbutils-1.0` ``
+>
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Run), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Run) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Run).
+>
+> This tutorial opens the URI passed as the first parameter in the command line (or a default URI if none is provided) and outputs information about it on the screen. If the media is located on the Internet, the application might take a bit to react depending on your connection speed.
+>
+> Required libraries: `gstreamer-pbutils-1.0` `gstreamer-1.0`
+
+
+## Walkthrough
 
 These are the main steps to use the `GstDiscoverer`:
 
@@ -336,9 +325,9 @@ if (!data.discoverer) {
 }
 ```
 
-`gst_discoverer_new()` creates a new Discoverer object. The first
+`gst_discoverer_new()` creates a new Discoverer object. The first
 parameter is the timeout per file, in nanoseconds (use the
-`GST_SECOND` macro for simplicity).
+`GST_SECOND` macro for simplicity).
 
 ``` c
 /* Connect to the interesting signals */
@@ -354,7 +343,7 @@ snippet for their callbacks.
 gst_discoverer_start (data.discoverer);
 ```
 
-`gst_discoverer_start()` launches the discovering process, but we have
+`gst_discoverer_start()` launches the discovering process, but we have
 not provided any URI to discover yet. This is done
 next:
 
@@ -367,7 +356,7 @@ if (!gst_discoverer_discover_uri_async (data.discoverer, uri)) {
 }
 ```
 
-`gst_discoverer_discover_uri_async()` enqueues the provided URI for
+`gst_discoverer_discover_uri_async()` enqueues the provided URI for
 discovery. Multiple URIs can be enqueued with this function. As the
 discovery process for each of them finishes, the registered callback
 functions will be fired
@@ -380,8 +369,8 @@ g_main_loop_run (data.loop);
 ```
 
 The usual GLib main loop is instantiated and executed. We will get out
-of it when `g_main_loop_quit()` is called from the
-`on_finished_cb` callback.
+of it when `g_main_loop_quit()` is called from the
+`on_finished_cb` callback.
 
 ``` c
 /* Stop the discoverer process */
@@ -389,7 +378,7 @@ gst_discoverer_stop (data.discoverer);
 ```
 
 Once we are done with the discoverer, we stop it with
-`gst_discoverer_stop()` and unref it with `g_object_unref()`.
+`gst_discoverer_stop()` and unref it with `g_object_unref()`.
 
 Let's review now the callbacks we have
 registered:
@@ -408,11 +397,11 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 ```
 
 We got here because the Discoverer has finished working on one URI, and
-provides us a `GstDiscovererInfo` structure with all the information.
+provides us a `GstDiscovererInfo` structure with all the information.
 
 The first step is to retrieve the particular URI this call refers to (in
 case we had multiple discover process running, which is not the case in
-this example) with `gst_discoverer_info_get_uri()` and the discovery
+this example) with `gst_discoverer_info_get_uri()` and the discovery
 result with `gst_discoverer_info_get_result()`.
 
 ``` c
@@ -451,15 +440,15 @@ if (result != GST_DISCOVERER_OK) {
 }
 ```
 
-As the code shows, any result other than `GST_DISCOVERER_OK` means that
+As the code shows, any result other than `GST_DISCOVERER_OK` means that
 there has been some kind of problem, and this URI cannot be played. The
 reasons can vary, but the enum values are quite explicit
-(`GST_DISCOVERER_BUSY` can only happen when in synchronous mode, which
+(`GST_DISCOVERER_BUSY` can only happen when in synchronous mode, which
 is not used in this example).
 
 If no error happened, information can be retrieved from the
-`GstDiscovererInfo` structure with the different
-`gst_discoverer_info_get_*` methods (like,
+`GstDiscovererInfo` structure with the different
+`gst_discoverer_info_get_*` methods (like,
 `gst_discoverer_info_get_duration()`, for example).
 
 Bits of information which are made of lists, like tags and stream info,
@@ -474,10 +463,10 @@ if (tags) {
 ```
 
 Tags are metadata (labels) attached to the media. They can be examined
-with `gst_tag_list_foreach()`, which will call `print_tag_foreach` for
+with `gst_tag_list_foreach()`, which will call `print_tag_foreach` for
 each tag found (the list could also be traversed manually, for example,
 or a specific tag could be searched for with
-`gst_tag_list_get_string()`). The code for `print_tag_foreach` is pretty
+`gst_tag_list_get_string()`). The code for `print_tag_foreach` is pretty
 much self-explicative.
 
 ``` c
@@ -492,10 +481,10 @@ print_topology (sinfo, 1);
 gst_discoverer_stream_info_unref (sinfo);
 ```
 
-`gst_discoverer_info_get_stream_info()` returns
-a `GstDiscovererStreamInfo` structure that is parsed in
-the `print_topology` function, and then discarded
-with `gst_discoverer_stream_info_unref()`.
+`gst_discoverer_info_get_stream_info()` returns
+a `GstDiscovererStreamInfo` structure that is parsed in
+the `print_topology` function, and then discarded
+with `gst_discoverer_stream_info_unref()`.
 
 ``` c
 /* Print information regarding a stream and its substreams, if any */
@@ -524,25 +513,25 @@ static void print_topology (GstDiscovererStreamInfo *info, gint depth) {
 }
 ```
 
-The `print_stream_info` function's code is also pretty much
-self-explicative: it prints the stream's capabilities and then the
-associated caps, using `print_tag_foreach` too.
+The `print_stream_info` function's code is also pretty much
+self-explicative: it prints the stream's capabilities and then the
+associated caps, using `print_tag_foreach` too.
 
-Then, `print_topology` looks for the next element to display. If
-`gst_discoverer_stream_info_get_next()` returns a non-NULL stream info,
+Then, `print_topology` looks for the next element to display. If
+`gst_discoverer_stream_info_get_next()` returns a non-NULL stream info,
 it refers to our descendant and that should be displayed. Otherwise, if
-we are a container, recursively call `print_topology` on each of our
+we are a container, recursively call `print_topology` on each of our
 children obatined with `gst_discoverer_container_info_get_streams()`.
 Otherwise, we are a final stream, and do not need to recurse (This part
 of the Discoverer API is admittedly a bit obscure).
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown:
 
-  - How to recover information regarding a URI using the `GstDiscoverer`
+  - How to recover information regarding a URI using the `GstDiscoverer`
 
   - How to find out if a URI is playable by looking at the return code
-    obtained with `gst_discoverer_info_get_result()`.
+    obtained with `gst_discoverer_info_get_result()`.
 
-It has been a pleasure having you here, and see you soon\!
+It has been a pleasure having you here, and see you soon!

@@ -1,6 +1,6 @@
 # Basic tutorial 12: Streaming
 
-# Goal
+## Goal
 
 Playing media straight from the Internet without storing it locally is
 known as Streaming. We have been doing it throughout the tutorials
@@ -11,7 +11,7 @@ particular:
   - How to enable buffering (to alleviate network problems)
   - How to recover from interruptions (lost clock)
 
-# Introduction
+## Introduction
 
 When streaming, media chunks are decoded and queued for presentation as
 soon as they arrive form the network. This means that if a chunk is
@@ -26,7 +26,7 @@ waiting.
 
 As it turns out, this solution is already implemented in GStreamer, but
 the previous tutorials have not been benefiting from it. Some elements,
-like the `queue2` and `multiqueue` found inside `playbin`, are capable
+like the `queue2` and `multiqueue` found inside `playbin`, are capable
 of building this buffer and post bus messages regarding the buffer level
 (the state of the queue). An application wanting to have more network
 resilience, then, should listen to these messages and pause playback if
@@ -45,18 +45,9 @@ When the clock is lost, the application receives a message on the bus;
 to select a new one, the application just needs to set the pipeline to
 PAUSED and then to PLAYING again.
 
-# A network-resilient example
+## A network-resilient example
 
-Copy this code into a text file named `basic-tutorial-12.c`.
-
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><p>This tutorial is included in the SDK since release 2012.7. If you cannot find it in the downloaded code, please install the latest release of the GStreamer SDK.</p></td>
-</tr>
-</tbody>
-</table>
+Copy this code into a text file named `basic-tutorial-12.c`.
 
 **basic-tutorial-12.c**
 
@@ -162,35 +153,24 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><div id="expander-8150053" class="expand-container">
-<div id="expander-control-8150053" class="expand-control">
-<span class="expand-control-icon"><img src="images/icons/grey_arrow_down.gif" class="expand-control-image" /></span><span class="expand-control-text">Need help? (Click to expand)</span>
-</div>
-<div id="expander-content-8150053" class="expand-content">
-<p>If you need help to compile this code, refer to the <strong>Building the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Build">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Build">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Build">Windows</a>, or use this specific command on Linux:</p>
-<div class="panel" style="border-width: 1px;">
-<div class="panelContent">
-<p><code>gcc basic-tutorial-10.c -o basic-tutorial-10 `pkg-config --cflags --libs gstreamer-1.0`</code></p>
-</div>
-</div>
-<p>If you need help to run this code, refer to the <strong>Running the tutorials</strong> section for your platform: <a href="Installing%2Bon%2BLinux.html#InstallingonLinux-Run">Linux</a>, <a href="Installing%2Bon%2BMac%2BOS%2BX.html#InstallingonMacOSX-Run">Mac OS X</a> or <a href="Installing%2Bon%2BWindows.html#InstallingonWindows-Run">Windows</a></p>
-<p>This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. In the console window, you should see a buffering message, and playback should only start when the buffering reaches 100%. This percentage might not change at all if your connection is fast enough and buffering is not required.</p>
-<p>Required libraries: <code>gstreamer-1.0</code></p>
-</div>
-</div></td>
-</tr>
-</tbody>
-</table>
+> ![Information](images/icons/emoticons/information.png)
+> Need help?
+>
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Build), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Build) or [Windows](sdk-installing-on-windows.mdb#InstallingonWindows-Build), or use this specific command on Linux:
+>
+> `` gcc basic-tutorial-12.c -o basic-tutorial-12 `pkg-config --cflags --libs gstreamer-1.0` ``
+>
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Run), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Run) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Run).
+>
+> This tutorial opens a window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. In the console window, you should see a buffering message, and playback should only start when the buffering reaches 100%. This percentage might not change at all if your connection is fast enough and buffering is not required.
+>
+> Required libraries: `gstreamer-1.0`
 
-# Walkthrough
+## Walkthrough
 
 The only special thing this tutorial does is react to certain messages;
 therefore, the initialization code is very simple and should be
-self-explanative by now. The only new bit is the detection of live
+self-explanative by now. The only new bit is the detection of live
 streams:
 
 ``` c
@@ -208,14 +188,14 @@ if (ret == GST_STATE_CHANGE_FAILURE) {
 Live streams cannot be paused, so they behave in PAUSED state as if they
 were in the PLAYING state. Setting live streams to PAUSED succeeds, but
 returns `GST_STATE_CHANGE_NO_PREROLL`, instead of
-`GST_STATE_CHANGE_SUCCESS` to indicate that this is a live stream. We
+`GST_STATE_CHANGE_SUCCESS` to indicate that this is a live stream. We
 are receiving the NO\_PROROLL return code even though we are trying to
 set the pipeline to PLAYING, because state changes happen progressively
 (from NULL to READY, to PAUSED and then to PLAYING).
 
 We care about live streams because we want to disable buffering for
-them, so we take note of the result of `gst_element_set_state()` in the
-`is_live` variable.
+them, so we take note of the result of `gst_element_set_state()` in the
+`is_live` variable.
 
 Let’s now review the interesting parts of the message parsing callback:
 
@@ -239,7 +219,7 @@ case GST_MESSAGE_BUFFERING: {
 
 First, if this is a live source, ignore buffering messages.
 
-We parse the buffering message with `gst_message_parse_buffering()` to
+We parse the buffering message with `gst_message_parse_buffering()` to
 retrieve the buffering level.
 
 Then, we print the buffering level on the console and set the pipeline
@@ -264,7 +244,7 @@ For the second network issue, the loss of clock, we simply set the
 pipeline to PAUSED and back to PLAYING, so a new clock is selected,
 waiting for new media chunks to be received if necessary.
 
-# Conclusion
+## Conclusion
 
 This tutorial has described how to add network resilience to your
 application with two very simple precautions:
@@ -275,11 +255,4 @@ application with two very simple precautions:
 Handling these messages improves the application’s response to network
 problems, increasing the overall playback smoothness.
 
-It has been a pleasure having you here, and see you soon\!
-
-## Attachments:
-
-![](images/icons/bullet_blue.gif)
-[basic-tutorial-12.c](attachments/327806/2424843.c) (text/plain)
-![](images/icons/bullet_blue.gif)
-[vs2010.zip](attachments/327806/2424844.zip) (application/zip)
+It has been a pleasure having you here, and see you soon!
