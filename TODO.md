@@ -16,7 +16,6 @@ Pages to review:
    - sdk-basic-tutorial-streaming.md
    - sdk-basic-tutorial-playback-speed.md
    - sdk-basic-tutorial-handy-elements.md
-   - sdk-basic-tutorial-clutter-integration.md
    - sdk-basic-tutorial-platform-specific-elements.md
  - sdk-playback-tutorials.md
    - sdk-playback-tutorial-subtitle-management.md
