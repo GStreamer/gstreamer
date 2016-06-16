@@ -22,8 +22,6 @@ Pages to review:
    - sdk-windows-deployment.md
    - sdk-mac-osx-deployment.md
    - sdk-multiplatform-deployment-using-cerbero.md
- - sdk-legal-information.md
- - sdk-api-reference.md
 
 
 Screenshots:
@@ -59,7 +57,6 @@ Reviewed pages:
  - sdk-tutorials.md
  - sdk-android-tutorial-link-against-gstreamer.md
  - sdk-android-tutorial-a-running-pipeline.md
- - sdk-api-reference.md
  - sdk-playback-tutorials.md
    - sdk-playback-tutorial-playbin-usage.md
    - sdk-playback-tutorial-subtitle-management.md

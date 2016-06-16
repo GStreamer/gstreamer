@@ -66,7 +66,7 @@ GStreamer plug-ins could be classified into
 
   - sinks: for audio and video (involves protocol plugins)
 
-![Gstreamer overview](images/gstreamer-overview.png "fig:")
+![GStreamer overview](images/gstreamer-overview.png "fig:")
 
 GStreamer is packaged into
 
