@@ -45,9 +45,6 @@ Get **both the runtime and the development installers** from here:
 > ![Warning](images/icons/emoticons/warning.png)
 > On Mac OS X 10.6 (Snow Leopard) you have to install Python 2.7 manually. It is included in later versions of OS X already. You can get it from [here](http://www.python.org/getit).
 
-> ![Warning](images/icons/emoticons/warning.png)
-> Due to the size of these files, usage of a [Download Manager](http://en.wikipedia.org/wiki/Download_manager) is **highly recommended**. Take a look at [this list](http://en.wikipedia.org/wiki/Comparison_of_download_managers) if you do not have one installed. If, after downloading, the installer reports itself as corrupt, chances are that the connection ended before the file was complete. A Download Manager will typically re-start the process and fetch the missing parts.
-
 The downloads are [Apple Disk Images
 (.dmg)](http://en.wikipedia.org/wiki/Apple_Disk_Image) containing an
 [Installer Package
@@ -91,7 +88,7 @@ switch the tutorial to build selecting one of the available schemes.
 
 ### Creating new projects
 
-The GStreamer SDK provides a
+The GStreamer binaries provides a
 [framework](https://developer.apple.com/library/mac/#documentation/MacOSX/Conceptual/BPFrameworks/Tasks/IncludingFrameworks.html)
 that you can drag and drop to XCode to start using it, or using the
 linker option ***-framework GStreamer****.*

@@ -55,7 +55,7 @@ media is playing.
 ## The multilingual player
 
 Copy this code into a text file named `playback-tutorial-1.c` (or find
-it in the SDK installation).
+it in the GStreamer installation).
 
 **playback-tutorial-1.c**
 

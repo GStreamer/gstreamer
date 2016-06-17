@@ -1,6 +1,6 @@
 # iOS tutorials
 
-## Welcome to the GStreamer SDK iOS tutorials
+## Welcome to the GStreamer iOS tutorials
 
 These tutorials describe iOS-specific topics. General GStreamer
 concepts will not be explained in these tutorials, so the

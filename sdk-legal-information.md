@@ -13,9 +13,9 @@ components is also possible, but read on for certain legal cautions you
 might want to take. All downloads are from the
 [gstreamer.freedesktop.org](http://gstreamer.freedesktop.org) website.
 
-# Licensing of SDK
+# Licensing of GStreamer
 
-GStreamer SDK minimal default installation only contains packages which
+GStreamer minimal default installation only contains packages which
 are licensed under the [GNU LGPL license
 v2.1](http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). This
 license gives you the Freedom to use, modify, make copies of the
@@ -26,10 +26,10 @@ but you are free to link the LGPL software as a library used by other
 software under whichever license. In other words, it is a weak copyleft
 license.
 
-Therefore, it is possible to use the SDK to build applications that are
+Therefore, it is possible to use GStreamer to build applications that are
 then distributed under a different license, including a proprietary one,
 provided that reverse engineering is not prohibited for debugging
-modifications purposes. Only the pieces of the SDK that are under the
+modifications purposes. Only the pieces of GStreamer that are under the
 LGPL need to be kept under the LGPL, and the corresponding source code
 must be distributed along with the application (or an irrevocable offer
 to do so for at least three years from distribution). Please consult
@@ -71,9 +71,9 @@ as in the United States). In certain others, patents on pure software
 solutions are formally prohibited, but granted (this is the case in many
 European countries), and in others again are neither allowed nor granted.
 
-It is up to you to make sure that in the countries where the SDK is
+It is up to you to make sure that in the countries where GStreamer is
 used, products are made using it and product are distributed, a license
-from the applicable patent holders is required or not. Receiving the SDK
+from the applicable patent holders is required or not. Receiving GStreamer
 – or links to other downloadable software – does not provide any license
 expressed or implied over these patents, except in very limited
 conditions where the license so provides. No representation is made.
@@ -86,7 +86,7 @@ patents.
 
 # Software is as-is
 
-All software and the entire GStreamer SDK is provided as-is, without any
+All software and the entire GStreamer binaries areprovided as-is, without any
 warranty whatsoever. The individual licenses have particular language
 disclaiming liability: we invite you to read all of them. Should you
 need a warranty on the fact that software works as intended or have any
@@ -106,7 +106,7 @@ and on an aggregate basis only.
 
 #### What licenses are there?
 
-The SDK containst software under various licenses. See above.
+GStreamer binaries containst software under various licenses. See above.
 
 #### How does this relate to the packaging system?
 
@@ -119,16 +119,16 @@ download, should you elect to do so. You could do the same by finding
 and downloading the same packages for your own platform. So it is
 entirely up to you to decide what to do.
 
-Also, we note that SDK elements are divided into different packages,
+Also, we note that GStreamer elements are divided into different packages,
 roughly following the licensing conditions attached to the same. For
 instance, the codecs-gpl package contains GPL licensed codecs. All the
 packages installed by default, conversely, are licensed under the LGPL
 or a more liberal license. This division is provided only for ease of
 reference, but we cannot guarantee that our selection is 100% correct,
 so it is up to the user to verify the actual licensing conditions before
-distributing works that utilize the SDK.
+distributing works that utilize GStreamer.
 
-#### Can I / must I distribute the SDK along with my application?
+#### Can I / must I distribute GStreamer along with my application?
 
 You surely can. All software is Free/Open Source software, and can be
 distributed freely. You are not **required** to distribute it. Only,
@@ -137,12 +137,12 @@ certain licenses to make a work containing such software, is that you
 also distribute the complete source code of the original code (or of
 the modified code, if you have modified it). There are alternative
 ways to comply with this obligation, some of them do not require any
-actual distribution of source code, but since the SDK contains the
+actual distribution of source code, but since GStreamer contains the
 entire source code, you might want to include it (or the directories
 containing the source code) with your application as a safe way to
 comply with this requirement of the license.
 
-#### What happens when I modify the GStreamer SDK's source code?
+#### What happens when I modify the GStreamer's source code?
 
 You are invited to do so, as the licenses (unless you are dealing with
 proprietary bits, but in that case you will not find the corresponding
@@ -203,7 +203,7 @@ designed to be loaded into a particular kind of software, even through
 API,  requires permission by the copyright holder of the library when
 the two pieces are distributed together.
 
-In all cases, since most of the software we include in the SDK is under
+In all cases, since most of the software we include in GStreamer is under
 the LGPL, this permission is granted once for all, subject to compliance
 with the conditions set out by it. Therefore, the problem only arises
 when you want to use GPL libraries to make non-GPL applications, and you

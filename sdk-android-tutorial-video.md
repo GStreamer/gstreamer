@@ -703,7 +703,7 @@ changed, and simply instruct the video sink to redraw itself, via the
 size from the surface itself, so we do not need to bother about it
 here. We need to call `gst_video_overlay_expose()` twice because of the way
 the surface changes propagate down the OpenGL ES / EGL pipeline (The
-only video sink available for Android in the GStreamer SDK uses OpenGL
+only video sink available for Android in GStreamer uses OpenGL
 ES). By the time we call the first expose, the surface that the sink
 will pick up still contains the old size.
 
@@ -872,13 +872,13 @@ LOCAL_SHARED_LIBRARIES := gstreamer_android
 LOCAL_LDLIBS := -llog -landroid
 include $(BUILD_SHARED_LIBRARY)
 
-ifndef GSTREAMER_SDK_ROOT
-ifndef GSTREAMER_SDK_ROOT_ANDROID
-$(error GSTREAMER_SDK_ROOT_ANDROID is not defined!)
+ifndef GSTREAMER_ROOT
+ifndef GSTREAMER_ROOT_ANDROID
+$(error GSTREAMER_ROOT_ANDROID is not defined!)
 endif
-GSTREAMER_SDK_ROOT        := $(GSTREAMER_SDK_ROOT_ANDROID)
+GSTREAMER_ROOT        := $(GSTREAMER_ROOT_ANDROID)
 endif
-GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_SDK_ROOT)/share/gst-android/ndk-build/
+GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_ROOT)/share/gst-android/ndk-build/
 include $(GSTREAMER_NDK_BUILD_PATH)/plugins.mk
 GSTREAMER_PLUGINS         := $(GSTREAMER_PLUGINS_CORE) $(GSTREAMER_PLUGINS_SYS) $(GSTREAMER_PLUGINS_EFFECTS)
 GSTREAMER_EXTRA_DEPS      := gstreamer-video-1.0

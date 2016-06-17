@@ -35,7 +35,7 @@ and adds another one from another file (for the Greek language).
 ## The multilingual player with subtitles
 
 Copy this code into a text file named `playback-tutorial-2.c` (or find
-it in the SDK installation).
+it in the GStreamer installation).
 
 **playback-tutorial-2.c**
 

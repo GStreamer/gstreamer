@@ -129,7 +129,7 @@ Once the recipe is ready, instruct Cerbero to build it:
 
 ## Adding a package for you software
 
-To distribute your software with the SDK it is necessary to put it into
+To distribute your software with GStreamer it is necessary to put it into
 a package or installer, depending on the target platform. This is done
 by selecting the files that should be included. To add a package you
 have to create a package file in `cerbero/packages`. The package files
@@ -215,20 +215,20 @@ class Package(package.Package):
 
 At this point you have two main options: you could either have a single
 package that contains everything your software needs, or depend on a
-shared version of the SDK.
+shared version of GStreamer.
 
-### Having a private version of the SDK
+### Having a private version of GStreamer
 
-To have a private version of the SDK included in a single package you
+To have a private version of GStreamer included in a single package you
 don't have to add the `deps` variable to the package file but instead
 list all files you need in the `files` variables. If you decide to go
-this road you must make sure that you use a different prefix than the
-GStreamer SDK in the Cerbero configuration file, otherwise your package
+this road you must make sure that you use a different prefix than
+GStreamer in the Cerbero configuration file, otherwise your package
 will have file conflicts with GStreamer.
 
-### Having a shared version of the SDK
+### Having a shared version of GStreamer
 
-If you decide to use a shared version of the SDK you can create a
+If you decide to use a shared version of GStreamer you can create a
 package file like the other package files in GStreamer. Just
 list all packages you need in the `deps` variable and put the files your
 software needs inside the `files` variables. When building a package

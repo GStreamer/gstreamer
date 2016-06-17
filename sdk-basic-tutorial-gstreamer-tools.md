@@ -14,13 +14,14 @@ and relax, and we will teach you:
 
 ## Introduction
 
-These tools are available in the bin directory of the SDK. You need to
-move to this directory to execute them, because it is not added to the
-system’s `PATH` environment variable (to avoid polluting it too much).
+These tools are available in the bin directory of the GStreamer
+binaries. You need to move to this directory to execute them, because
+it is not added to the system’s `PATH` environment variable (to avoid
+polluting it too much).
 
 Just open a terminal (or console window) and go to the `bin` directory
-of your GStreamer SDK installation (Read again the [Installing the
-SDK](sdk-installing.html) section to find our where this is),
+of your GStreamer installation (Read again the [Installing
+GStreamer](sdk-installing.html) section to find our where this is),
 and you are ready to start typing the commands given in this tutorial.
 
 
@@ -36,7 +37,7 @@ and you are ready to start typing the commands given in this tutorial.
 
 In order to allow for multiple versions of GStreamer to coexists in the
 same system, these tools are versioned, this is, a GStreamer version
-number is appended to their name. This version of the SDK is based on
+number is appended to their name. This version is based on
 GStreamer 1.0, so the tools are called `gst-launch-1.0`,
 `gst-inspect-1.0` and `gst-discoverer-1.0`
 

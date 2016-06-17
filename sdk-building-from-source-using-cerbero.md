@@ -4,10 +4,10 @@
 
 ## Build requirements
 
-The GStreamer SDK build system provides bootstrapping facilities for all
+The GStreamer build system provides bootstrapping facilities for all
 platforms, but it still needs a minimum base to bootstrap:
 
--   python &gt;= 2.6 and python's `argparse` module, which is already
+-   python > 2.6 and python's `argparse` module, which is already
     included in python2.7.
 -   git
 
@@ -60,13 +60,13 @@ XCode. They are available from the "Preferences" dialog under
 
 ### iOS developers
 
-If you want to build the GStreamer-SDK for iOS, you also need the iOS
+If you want to build GStreamer for iOS, you also need the iOS
 SDK. The minimum required iOS SDK version is 6.0 and is included in
 [XCode] since version 4.
 
 ## Download the sources
 
-To build the GStreamer SDK, you first need to download **Cerbero**.
+To build GStreamer, you first need to download **Cerbero**.
 Cerbero is a multi-platform build system for Open Source projects that
 builds and creates native packages for different platforms,
 architectures and distributions.
@@ -106,15 +106,15 @@ cloned/unpacked Cerbero and type:
 Enter the superuser/root password when prompted.
 
 The bootstrap process will then install all packages required to build
-the GStreamer SDK.
+GStreamer.
 
-## Build the SDK
+## Build GSTreamer
 
-To generate the SDK, use the following command:
+To generate GStreamer binaries, use the following command:
 
     cerbero package gstreamer-1.0
 
-This should build all required SDK components and create packages for
+This should build all required GStreamer components and create packages for
 your distribution at the Cerbero source directory.
 
 A list of supported packages to build can be retrieved using:
@@ -144,17 +144,17 @@ Once built, the output of the recipes will be installed at the prefix
 defined in the Cerbero configuration file `$HOME/.cerbero/cerbero.cbc`
 or at `$HOME/cerbero/dist` if no prefix is defined.
 
-### Build a single project with the SDK
+### Build a single project with GStreamer
 
-Rebuilding the whole SDK is relatively fast on Linux and OS X, but it
+Rebuilding the whole GStreamer is relatively fast on Linux and OS X, but it
 can be very slow on Windows, so if you only need to rebuild a single
 project (eg: gst-plugins-good to patch qtdemux) there is a much faster
 way of doing it. You will need to follow the steps detailed in this
-page, but skipping the step "**Build the SDK**", and installing the
-SDK's development files as explained in [Installing the SDK].
+page, but skipping the step "**Build GStreamer**", and installing the
+GStreamer's development files as explained in [Installing GStreamer].
 
 By default, Cerbero uses as prefix a folder in the user directory with
-the following schema \~/cerbero/dist/$platform\_$arch, but for the SDK
+the following schema \~/cerbero/dist/$platform\_$arch, but for GStreamer
 we must change this prefix to use its installation directory. This can
 be done with a custom configuration file named *custom.cbc*:
 
@@ -176,22 +176,22 @@ you fix it before, for instance with:
     $ sudo chown -R <username> /Library/Frameworks/GStreamer.framework/
 
 Cerbero has a shell command that starts a new shell with all the
-environment set up to target the SDK. You can start a new shell using
+environment set up to target GStreamer. You can start a new shell using
 the installation prefix defined in *custom.cbc *with the following
 command:
 
     $ cerbero -c custom.cbc shell
 
 Once you are in Cerbero's shell you can compile new projects targeting
-the SDK using the regular build process:
+GStreamer using the regular build process:
 
-    $ git clone -b sdk-1.0.31 git://anongit.freedesktop.org/gstreamer-sdk/gst-plugins-good; cd gst-plugins-good
+    $ git clone git://anongit.freedesktop.org/gstreamer/gst-plugins-good; cd gst-plugins-good
     $ sh autogen.sh --disable-gtk-doc --prefix=<prefix>
     $ make -C gst/isomp4
 
-### Cross-compilation of the SDK
+### Cross-compilation of GStreamer
 
-Cerbero can be used to cross-compile the SDK to other platforms like
+Cerbero can be used to cross-compile GStreamer to other platforms like
 Android or Windows. You only need to use a configuration file that sets
 the target platform, but we also provide a set of of pre-defined
 configuration files for the supported platforms (you will find them in
@@ -199,7 +199,7 @@ the `config` folder with the `.cbc` extension
 
 #### Android
 
-You can cross-compile the SDK for Android from a Linux host using the
+You can cross-compile GStreamer for Android from a Linux host using the
 configuration file `config/cross-android.cbc`. Replace all the previous
 commands with:
 
@@ -207,7 +207,7 @@ commands with:
 
 #### Windows
 
-The SDK can also be cross-compiled to Windows from Linux, but you should
+GStreamer can also be cross-compiled to Windows from Linux, but you should
 only use it for testing purpose. The DirectShow plugins cannot be
 cross-compiled yet and WiX can't be used with Wine yet, so packages can
 only be created from Windows.
@@ -238,4 +238,4 @@ To cross compile for iOS from OS X, use the configuration file
   [Windows Driver Kit 7.1.0]: http://msdn.microsoft.com/en-us/windows/hardware/hh852365
   [XCode]: https://developer.apple.com/devcenter/ios/index.action#downloads
   [here]: http://www.freedesktop.org/software/gstreamer-sdk/cerbero.cbc.template
-  [Installing the SDK]: sdk-installing.md
+  [Installing GStreamer]: sdk-installing.md

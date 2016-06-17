@@ -17,13 +17,11 @@ recommend taking a look at the available documentation at Apple's
 website.
 [This](http://developer.apple.com/library/ios/#DOCUMENTATION/iPhone/Conceptual/iPhone101/Articles/00_Introduction.html) can be a good starting point.
 
-# Download and install the SDK
+# Download and install GStreamer binaries
 
-The GStreamer SDK installer can be found at:
+GStreamer binary installer can be found at:
 
-**FIXME: Add links**
-
-> ![Warning](images/icons/emoticons/warning.png) Due to the size of these files, usage of a [Download Manager](http://en.wikipedia.org/wiki/Download_manager) is **highly recommended**. Take a look at [this list](http://en.wikipedia.org/wiki/Comparison_of_download_managers) if you do not have one installed. If, after downloading, the installer reports itself as corrupt, chances are that the connection ended before the file was complete. A Download Manager will typically re-start the process and fetch the missing parts.
+[https://gstreamer.freedesktop.org/data/pkg/ios/](https://gstreamer.freedesktop.org/data/pkg/ios/)
 
 Double click the package file and follow the instructions presented by
 the install wizard. In case the system complains about the package not

@@ -13,7 +13,7 @@ needs to have installed:
 
 -   The latest version of the [Android SDK]
 -   The latest version of the [Android NDK]
--   The GStreamer SDK for Android is targeted at API version 9 (Android
+-   GStreamer for Android is targeted at API version 9 (Android
     2.3.1, Gingerbread) or higher. Use the SDK Manager tool to make sure
     you have at least one Android SDK platform installed with API
     version 9 or higher.
@@ -28,27 +28,26 @@ of C and Java works via the [Java Native Interface] (JNI). Besides the
 [Android NDK] documentation, you can find some useful [Android JNI tips
 here].
 
-## Download and install the SDK
+## Download and install GStreamer binaries
 
 The GStreamer project provides [prebuilt binaries] you should download
 the latest version and unzip it into any folder of your choice.
 
-In the process of building GStreamer-enabled Android applications, some
-tools will need to know where you installed the SDK. You must define an
-environment variable called `GSTREAMER_SDK_ROOT_ANDROID` and point it to
-the folder where you extracted the SDK. This environment variable must
-be available at build time, so maybe you want to make it available
-system-wide by adding it to your `~/.profile` file (on Linux and Mac) or
-to the Environment Variables in the System Properties dialog (on
-Windows).
+In the process of building GStreamer-enabled Android applications,
+some tools will need to know where you installed the GStreamer
+binaries. You must define an environment variable called
+`GSTREAMER_ROOT_ANDROID` and point it to the folder where you
+extracted the GStreamer binaries. This environment variable must be available at
+build time, so maybe you want to make it available system-wide by
+adding it to your `~/.profile` file (on Linux and Mac) or to the
+Environment Variables in the System Properties dialog (on Windows).
 
-Point `GSTREAMER_SDK_ROOT_ANDROID` to the folder where you unzipped the
-SDK.
+Point `GSTREAMER_ROOT_ANDROID` to the folder where you unzipped the binaries.
 
 > ![information] If you plan to use Android Studio and do not want to define this
 > environment variable globally, you can set it inside Eclipse. Go to
 > Window → Preferences → C/C++ → Build → Build Variables and define
-> `GSTREAMER_SDK_ROOT_ANDROID` there.
+> `GSTREAMER_ROOT_ANDROID` there.
 
 ## Configure your development environment
 
@@ -65,11 +64,11 @@ interact through [JNI][Java Native Interface].
 ### Building the tutorials
 
 There are a few Android-specific tutorials in the
-`$GSTREAMER_SDK_ROOT_ANDROID\share\gst-sdk\tutorials` folder. Each
+`$GSTREAMER_ROOT_ANDROID\share\gst-sdk\tutorials` folder. Each
 tutorial is a folder containing source code (in Java and C) and the
 resource files required to build a complete Android application.
 
-The rest of the GStreamer SDK tutorials (basic and playback tutorials)
+The rest of the GStreamer tutorials (basic and playback tutorials)
 cannot be run on Android without modification.
 
 Android projects with GStreamer support are built like conventional
@@ -107,7 +106,7 @@ missing files will appear and all error messages should be gone. The
 project is now ready to run. Hit Run → Run.
 
 A new application called “Android tutorial 1” should now be available on
-your device, with the GStreamer SDK logo. If you want to run the
+your device, with the GStreamer logo. If you want to run the
 tutorial in an Android Virtual Device (AVD), make sure to create the
 device with support for audio playback and GPU Emulation (to enable
 OpenGL ES).
@@ -155,7 +154,7 @@ Otherwise, you need to manually uninstall previous versions of your
 application.
 
 A new application called “Android tutorial 1” should now be available on
-your device, with the GStreamer SDK logo. If you want to run the
+your device, with the GStreamer logo. If you want to run the
 tutorial in an Android Virtual Device (AVD), make sure to create the
 device with support for audio playback and GPU Emulation (to enable
 OpenGL ES).
@@ -217,8 +216,8 @@ Adding GStreamer support only requires adding these lines:
 
     include $(BUILD_SHARED_LIBRARY)
 
-    GSTREAMER_SDK_ROOT        := $(GSTREAMER_SDK_ROOT_ANDROID)
-    GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_SDK_ROOT)/share/gst-android/ndk-build/
+    GSTREAMER_ROOT            := $(GSTREAMER__ROOT_ANDROID)
+    GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_ROOT)/share/gst-android/ndk-build/
     GSTREAMER_PLUGINS         := coreelements ogg theora vorbis ffmpegcolorspace playback eglglessink soup opensles
     G_IO_MODULES              := gnutls
     GSTREAMER_EXTRA_DEPS      := gstreamer-interfaces-1.0 gstreamer-video-1.0

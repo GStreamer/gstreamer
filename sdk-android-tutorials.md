@@ -1,6 +1,6 @@
 # Android tutorials
 
-## Welcome to the GStreamer SDK Android tutorials
+## Welcome to the GStreamer Android tutorials
 
 These tutorials describe Android-specific topics. General GStreamer
 concepts will not be explained in these tutorials, so the

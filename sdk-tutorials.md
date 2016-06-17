@@ -1,10 +1,10 @@
 ---
-short-description: Learn how to use the GStreamer SDK
+short-description: Learn how to use GStreamer
 ...
 
 # Tutorials
 
-## Welcome to the GStreamer SDK Tutorials!
+## Welcome to the GStreamer Tutorials!
 
 The following sections introduce a series of tutorials designed to help
 you learn how to use GStreamer, the multi-platform, modular,
@@ -14,7 +14,7 @@ open-source, media streaming framework.
 
 Before following these tutorials, you need to set up your development
 environment according to your platform. If you have not done so yet, go
-to the [installing the SDK] page and come back here afterwards.
+to the [installing GStreamer] page and come back here afterwards.
 
 The tutorials are currently written only in the C programming language,
 so you need to be comfortable with it. Even though C is not an
@@ -26,10 +26,11 @@ will make the trip easier.
 ### Source code
 
 Every tutorial represents a self-contained project, with full source
-code in C (and eventually in other languages too). Source code snippets
-are introduced alongside the text, and the full code (with any other
-required files like makefiles or project files) is distributed with the
-SDK, as explained in the installation instructions.
+code in C (and eventually in other languages too). Source code
+snippets are introduced alongside the text, and the full code (with
+any other required files like makefiles or project files) is
+distributed with GStreamer, as explained in the installation
+instructions.
 
 ### A short note on GObject and GLib
 
@@ -54,7 +55,7 @@ upstream [GStreamer documentation].
 The tutorials are organized in sections, revolving about a common theme:
 
 -   [Basic tutorials]: Describe general topics required to understand
-    the rest of tutorials in the GStreamer SDK.
+    the rest of tutorials in GStreamer.
 -   [Playback tutorials]: Explain everything you need to know to produce
     a media playback application using GStreamer.
 -   [Android tutorials]: Tutorials dealing with the few Android-specific
@@ -76,7 +77,7 @@ purposes.
 
 -   [Sintel, the Durian Open Movie Project]
 
-  [installing the SDK]: sdk-installing.md
+  [installing GStreamer]: sdk-installing.md
   [GStreamer documentation]: http://gstreamer.freedesktop.org/documentation/
   [Basic tutorials]: sdk-basic-tutorials.md
   [Playback tutorials]: sdk-playback-tutorials.md
