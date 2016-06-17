@@ -23,7 +23,6 @@
  */
 
 #include "gstcompat.h"
-#include <gst/gst.h>
 #include "gstvaapidecode.h"
 #include "gstvaapipostproc.h"
 #include "gstvaapisink.h"
