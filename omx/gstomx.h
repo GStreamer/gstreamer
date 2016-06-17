@@ -71,6 +71,19 @@ G_BEGIN_DECLS
   (st)->nVersion.s.nStep = OMX_VERSION_STEP; \
 } G_STMT_END
 
+#ifdef OMX_SKIP64BIT
+#define GST_OMX_GET_TICKS(ticks) ((((guint64) (ticks).nHighPart) << 32) | ((ticks).nLowPart))
+#define GST_OMX_SET_TICKS(ticks, i) G_STMT_START { \
+  ticks.nLowPart = ((guint64) (i)) & 0xffffffff; \
+  ticks.nHighPart = ((guint64) (i)) >> 32; \
+} G_STMT_END
+#else
+#define GST_OMX_GET_TICKS(ticks) (ticks)
+#define GST_OMX_SET_TICKS(ticks, i) G_STMT_START { \
+  ticks = i; \
+} G_STMT_END
+#endif
+
 /* Different hacks that are required to work around
  * bugs in different OpenMAX implementations
  */

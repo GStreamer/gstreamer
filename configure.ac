@@ -232,6 +232,7 @@ case "${ac_cv_omx_target}" in
     ;;
   rpi)
     AC_DEFINE(USE_OMX_TARGET_RPI, 1, [Use RPi OpenMAX IL target])
+    AC_DEFINE(OMX_SKIP64BIT, 1, [Required by the RPi implementation])
     ac_cv_omx_target_struct_packing=4
     ;;
   bellagio)

@@ -596,8 +596,8 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
     }
 
     GST_BUFFER_TIMESTAMP (outbuf) =
-        gst_util_uint64_scale (buf->omx_buf->nTimeStamp, GST_SECOND,
-        OMX_TICKS_PER_SECOND);
+        gst_util_uint64_scale (GST_OMX_GET_TICKS (buf->omx_buf->nTimeStamp),
+        GST_SECOND, OMX_TICKS_PER_SECOND);
     if (buf->omx_buf->nTickCount != 0)
       GST_BUFFER_DURATION (outbuf) =
           gst_util_uint64_scale (buf->omx_buf->nTickCount, GST_SECOND,
@@ -747,7 +747,8 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
   }
 
   GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08x %" G_GUINT64_FORMAT,
-      (guint) buf->omx_buf->nFlags, (guint64) buf->omx_buf->nTimeStamp);
+      (guint) buf->omx_buf->nFlags,
+      (guint64) GST_OMX_GET_TICKS (buf->omx_buf->nTimeStamp));
 
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
   frame = gst_omx_video_find_nearest_frame (buf,
@@ -1587,8 +1588,8 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
 
     timestamp = frame->pts;
     if (timestamp != GST_CLOCK_TIME_NONE) {
-      buf->omx_buf->nTimeStamp =
-          gst_util_uint64_scale (timestamp, OMX_TICKS_PER_SECOND, GST_SECOND);
+      GST_OMX_SET_TICKS (buf->omx_buf->nTimeStamp,
+          gst_util_uint64_scale (timestamp, OMX_TICKS_PER_SECOND, GST_SECOND));
       self->last_upstream_ts = timestamp;
     }
 
@@ -1720,9 +1721,9 @@ gst_omx_video_enc_drain (GstOMXVideoEnc * self)
   g_mutex_lock (&self->drain_lock);
   self->draining = TRUE;
   buf->omx_buf->nFilledLen = 0;
-  buf->omx_buf->nTimeStamp =
+  GST_OMX_SET_TICKS (buf->omx_buf->nTimeStamp,
       gst_util_uint64_scale (self->last_upstream_ts, OMX_TICKS_PER_SECOND,
-      GST_SECOND);
+          GST_SECOND));
   buf->omx_buf->nTickCount = 0;
   buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
   err = gst_omx_port_release_buffer (self->enc_in_port, buf);

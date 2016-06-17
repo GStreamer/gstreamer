@@ -172,8 +172,8 @@ gst_omx_video_find_nearest_frame (GstOMXBuffer * buf, GList * frames)
   GList *l;
 
   timestamp =
-      gst_util_uint64_scale (buf->omx_buf->nTimeStamp, GST_SECOND,
-      OMX_TICKS_PER_SECOND);
+      gst_util_uint64_scale (GST_OMX_GET_TICKS (buf->omx_buf->nTimeStamp),
+      GST_SECOND, OMX_TICKS_PER_SECOND);
 
   for (l = frames; l; l = l->next) {
     GstVideoCodecFrame *tmp = l->data;
