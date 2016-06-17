@@ -1,6 +1,6 @@
 # iOS tutorial 3: Video
 
-# Goal
+## Goal
 
 ![screenshot]
 
@@ -14,7 +14,7 @@ shows:
   - How to allocate a drawing surface on the Xcode Interface Builder and
     pass it to GStreamer
 
-# Introduction
+## Introduction
 
 Since iOS does not provide a windowing system, a GStreamer video sink
 cannot create pop-up windows as it would do on a Desktop platform.
@@ -27,7 +27,7 @@ placed on the main storyboard. In the `viewDidLoad` method of the
 `ViewController`, we pass a pointer to this `UIView `to the instance of
 the `GStreamerBackend`, so it can tell the video sink where to draw.
 
-# The User Interface
+## The User Interface
 
 The storyboard from the previous tutorial is expanded: A `UIView `is
 added over the toolbar and pinned to all sides so it takes up all
@@ -63,7 +63,7 @@ outlets):
 @end
 ```
 
-# The View Controller
+## The View Controller
 
 The `ViewController `class manages the UI, instantiates
 the `GStreamerBackend` and also performs some UI-related tasks on its
@@ -238,7 +238,7 @@ The final size is reported to the layout engine by changing the
 are accessible to the `ViewController `through IBOutlets, as is usually
 done with other widgets.
 
-# The GStreamer Backend
+## The GStreamer Backend
 
 The `GStreamerBackend` class performs all GStreamer-related tasks and
 offers a simplified interface to the application, which does not need to
@@ -524,7 +524,7 @@ only element in this pipeline implementing it, so it will be returned.
 Once we have the video sink, we inform it of the `UIView` to use for
 rendering, through the `gst_video_overlay_set_window_handle()` method.
 
-# EaglUIView
+## EaglUIView
 
 One last detail remains. In order for `glimagesink` to be able to draw
 on the
@@ -561,7 +561,7 @@ tutorial storyboard to see how to achieve this.
 And this is it, using GStreamer to output video onto an iOS application
 is as simple as it seems.
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown:
 

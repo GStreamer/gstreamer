@@ -11,7 +11,7 @@ notifiers. All this will flow through the pipeline automatically when
 it's running. This chapter is mostly meant to explain the concept to
 you; you don't need to do anything for this.
 
-# Buffers
+## Buffers
 
 Buffers contain the data that will flow through the pipeline you have
 created. A source element will typically create a new buffer and pass it
@@ -44,7 +44,7 @@ in-place, i.e. without allocating a new one. Elements can also write to
 hardware memory (such as from video-capture sources) or memory allocated
 from the X-server (using XShm). Buffers can be read-only, and so on.
 
-# Events
+## Events
 
 Events are control particles that are sent both up- and downstream in a
 pipeline along with buffers. Downstream events notify fellow elements of

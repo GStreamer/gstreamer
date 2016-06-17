@@ -1,6 +1,6 @@
 # Installing on Linux
 
-# Prerequisites
+## Prerequisites
 
 To develop applications using the GStreamer SDK on Linux you will need
 one of the following supported distributions:
@@ -28,7 +28,7 @@ a terminal.
 </tbody>
 </table>
 
-# Download and install the SDK
+## Download and install the SDK
 
 The GStreamer SDK provides a set of binary packages for supported Linux
 distributions. Detailed instructions on how to install the packages for
@@ -159,7 +159,7 @@ su -c 'yum install gstreamer-sdk-devel'
 
 Enter the superuser/root password when prompted.
 
-# Configure your development environment
+## Configure your development environment
 
 When building applications using GStreamer, the compiler must be able to
 locate its libraries. However, in order to prevent possible collisions
@@ -204,7 +204,7 @@ the `configure `script from inside the `gst-sdk-shell` environment.
 </tbody>
 </table>
 
-### Getting the tutorial's source code
+#### Getting the tutorial's source code
 
 The source code for the tutorials can be copied and pasted from the
 tutorial pages into a text file, but, for convenience, it is also
@@ -220,7 +220,7 @@ Or you can locate the source code in
 `/opt/gstreamer-sdk/share/gst-sdk/tutorials`, and copy it to a working
 folder of your choice.
 
-### Building the tutorials
+#### Building the tutorials
 
 You need to enter the GStreamer SDK shell in order for the compiler to
 use the right libraries (and avoid conflicts with the system libraries).
@@ -247,7 +247,7 @@ Using the file name of the tutorial you are interested in
 </tbody>
 </table>
 
-### Running the tutorials
+#### Running the tutorials
 
 To run the tutorials, simply execute the desired tutorial (**from within
 the `gst-sdk-shell`**):
@@ -256,7 +256,7 @@ the `gst-sdk-shell`**):
 ./basic-tutorial-1
 ```
 
-### Deploying your application
+#### Deploying your application
 
 Your application built with the GStreamer SDK must be able locate the
 GStreamer libraries when deployed in the target machine. You have at

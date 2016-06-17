@@ -14,7 +14,7 @@ task is done. GStreamer has built-in support for doing all this using a
 concept known as *querying*. Since seeking is very similar, it will be
 discussed here as well. Seeking is done using the concept of *events*.
 
-# Querying: getting the position or length of a stream
+## Querying: getting the position or length of a stream
 
 Querying is defined as requesting a specific stream property related to
 progress tracking. This includes getting the length of a stream (if
@@ -72,7 +72,7 @@ main (gint   argc,
     
 ```
 
-# Events: seeking (and more)
+## Events: seeking (and more)
 
 Events work in a very similar way as queries. Dispatching, for example,
 works exactly the same for events (and also has the same limitations),

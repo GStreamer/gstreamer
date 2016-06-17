@@ -13,7 +13,7 @@ document.
 It should be possible to port simple applications to GStreamer-1.0 in
 less than a day.
 
-# List of changes
+## List of changes
 
   - All deprecated methods were removed. Recompile against 0.10 with
     GST\_DISABLE\_DEPRECATED defined (such as by adding

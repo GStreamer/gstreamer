@@ -12,7 +12,7 @@ case you can mark these parameters as being Controllable. Aware
 applications can use the controller subsystem to dynamically adjust the
 property values over time.
 
-# Getting Started
+## Getting Started
 
 The controller subsystem is contained within the `gstcontroller`
 library. You need to include the header in your element's source file:
@@ -54,7 +54,7 @@ GObject params in the `_class_init` method.
   
 ```
 
-# The Data Processing Loop
+## The Data Processing Loop
 
 In the last section we learned how to mark GObject params as
 controllable. Application developers can then queue parameter changes
@@ -71,14 +71,14 @@ This call makes all parameter-changes for the given timestamp active by
 adjusting the GObject properties of the element. Its up to the element
 to determine the synchronisation rate.
 
-## The Data Processing Loop for Video Elements
+### The Data Processing Loop for Video Elements
 
 For video processing elements it is the best to synchronise for every
 frame. That means one would add the `gst_object_sync_values()` call
 described in the previous section to the data processing function of the
 element.
 
-## The Data Processing Loop for Audio Elements
+### The Data Processing Loop for Audio Elements
 
 For audio processing elements the case is not as easy as for video
 processing elements. The problem here is that audio has a much higher

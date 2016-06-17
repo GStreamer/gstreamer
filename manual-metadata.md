@@ -14,7 +14,7 @@ video size, audio samplerate, codecs used and so on. Tags are handled
 using the GStreamer tagging system. Stream-info can be retrieved from a
 `GstPad` by getting the current (negotiated) `GstCaps` for that pad.
 
-# Metadata reading
+## Metadata reading
 
 Stream information can most easily be read by reading it from a
 `GstPad`. This has already been discussed before in [Using capabilities
@@ -162,7 +162,7 @@ main (int argc, char ** argv)
     
 ```
 
-# Tag writing
+## Tag writing
 
 Tag writing is done using the
 [`GstTagSetter`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/GstTagSetter.html)

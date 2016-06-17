@@ -1,6 +1,6 @@
 # Qt tutorials
 
-# Welcome to the GStreamer SDK Qt tutorials
+## Welcome to the GStreamer SDK Qt tutorials
 
 These tutorials describe Qt-specific topics. General GStreamer concepts
 will not be explained in these tutorials, so the [Basic

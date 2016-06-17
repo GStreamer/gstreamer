@@ -25,7 +25,7 @@ For efficiently managing buffers of the same size, we take a look at
 GST\_QUERY\_ALLOCATION query that is used to negotiate memory management
 options between elements.
 
-# GstMemory
+## GstMemory
 
 `GstMemory` is an object that manages a region of memory. The memory
 object points to a region of memory of “maxsize”. The area in this
@@ -34,7 +34,7 @@ region in the memory. the maxsize of the memory can never be changed
 after the object is created, however, the offset and size can be
 changed.
 
-## GstAllocator
+### GstAllocator
 
 `GstMemory` objects are created by a `GstAllocator` object. Most
 allocators implement the default `gst_allocator_alloc()` method but some
@@ -46,7 +46,7 @@ memory and memory backed by a DMAbuf file descriptor. To implement
 support for a new kind of memory type, you must implement a new
 allocator object as shown below.
 
-## GstMemory API example
+### GstMemory API example
 
 Data access to the memory wrapped by the `GstMemory` object is always
 protected with a `gst_memory_map()` and `gst_memory_unmap()` pair. An
@@ -83,11 +83,11 @@ Below is an example of making a `GstMemory` object and using the
       
 ```
 
-## Implementing a GstAllocator
+### Implementing a GstAllocator
 
 WRITEME
 
-# GstBuffer
+## GstBuffer
 
 A `GstBuffer` is an lightweight object that is passed from an upstream
 to a downstream element and contains memory and metadata. It represents
@@ -112,7 +112,7 @@ Metadata in the buffer consists of:
 
   - Arbitrary structures via `GstMeta`, see below.
 
-## GstBuffer writability
+### GstBuffer writability
 
 A buffer is writable when the refcount of the object is exactly 1,
 meaning that only one object is holding a ref to the buffer. You can
@@ -120,7 +120,7 @@ only modify anything in the buffer when the buffer is writable. This
 means that you need to call `gst_buffer_make_writable()` before changing
 the timestamps, offsets, metadata or adding and removing memory blocks.
 
-## GstBuffer API examples
+### GstBuffer API examples
 
 You can create a buffer with `gst_buffer_new ()` and then add memory
 objects to it or you can use a convenience function
@@ -168,7 +168,7 @@ Below is an example of how to create a buffer and access its memory.
       
 ```
 
-# GstMeta
+## GstMeta
 
 With the `GstMeta` system you can add arbitrary structures on buffers.
 These structures describe extra properties of the buffer such as
@@ -179,7 +179,7 @@ its API look like) and the implementation (how it works). This makes it
 possible to make different implementations of the same API, for example,
 depending on the hardware you are running on.
 
-## GstMeta API example
+### GstMeta API example
 
 After allocating a new buffer, you can add metadata to the buffer with
 the metadata specific API. This means that you will need to link to the
@@ -241,12 +241,12 @@ frame like this:
       
 ```
 
-## Implementing new GstMeta
+### Implementing new GstMeta
 
 In the next sections we show how you can add new metadata to the system
 and use it on buffers.
 
-### Define the metadata API
+#### Define the metadata API
 
 First we need to define what our API will look like and we will have to
 register this API to the system. This is important because this API
@@ -319,7 +319,7 @@ As you can see, it simply uses the `gst_meta_api_type_register ()`
 function to register a name for the api and some tags. The result is a
 new pointer GType that defines the newly registered API.
 
-### Implementing a metadata API
+#### Implementing a metadata API
 
 Next we can make an implementation for a registered metadata API GType.
 The implementation detail of a metadata API are kept in a `GstMetaInfo`
@@ -431,7 +431,7 @@ buffer.
 Lastly, you implement a `gst_buffer_add_*_meta()` that adds the metadata
 implementation to a buffer and sets the values of the metadata.
 
-# GstBufferPool
+## GstBufferPool
 
 The `GstBufferPool` object provides a convenient base class for managing
 lists of reusable buffers. Essential for this object is that all the
@@ -453,7 +453,7 @@ the pool.
 In the following sections we take a look at how you can use a
 bufferpool.
 
-## GstBufferPool API example
+### GstBufferPool API example
 
 Many different bufferpool implementations can exist; they are all
 subclasses of the base class `GstBufferPool`. For this example, we will
@@ -554,11 +554,11 @@ buffer, GStreamer will automatically call
 pool. You (or any other downstream element) don't need to know if a
 buffer came from a pool, you can just unref it.
 
-## Implementing a new GstBufferPool
+### Implementing a new GstBufferPool
 
 WRITEME
 
-# GST\_QUERY\_ALLOCATION
+## GST\_QUERY\_ALLOCATION
 
 The ALLOCATION query is used to negotiate `GstMeta`, `GstBufferPool` and
 `GstAllocator` between elements. Negotiation of the allocation strategy
@@ -589,7 +589,7 @@ When the GST\_QUERY\_ALLOCATION returns, the source pad will select from
 the available bufferpools, allocators and metadata how it will allocate
 buffers.
 
-## ALLOCATION query example
+### ALLOCATION query example
 
 Below is an example of the ALLOCATION query.
 
@@ -648,7 +648,7 @@ enable the pool to put `GstVideoMeta` metadata on the buffers from the
 pool doing `gst_buffer_pool_config_add_option (config,
 GST_BUFFER_POOL_OPTION_VIDEO_META)`.
 
-## The ALLOCATION query in base classes
+### The ALLOCATION query in base classes
 
 In many baseclasses you will see the following virtual methods for
 influencing the allocation strategy:

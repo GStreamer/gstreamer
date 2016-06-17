@@ -12,7 +12,7 @@ the different high-level components you will use are derived from
 `GstElement`. Every decoder, encoder, demuxer, video or audio output is
 in fact a `GstElement`
 
-# What are elements?
+## What are elements?
 
 For the application programmer, elements are best visualized as black
 boxes. On the one end, you might put something in, the element does
@@ -22,7 +22,7 @@ would output decoded data. In the next chapter (see [Pads and
 capabilities](manual-pads.md)), you will learn more about data input
 and output in elements, and how you can set that up in your application.
 
-## Source elements
+### Source elements
 
 Source elements generate data for use by a pipeline, for example reading
 from disk or from a sound card. [Visualisation of a source
@@ -36,7 +36,7 @@ Source elements do not accept data, they only generate data. You can see
 this in the figure because it only has a source pad (on the right). A
 source pad can only generate data.
 
-## Filters, convertors, demuxers, muxers and codecs
+### Filters, convertors, demuxers, muxers and codecs
 
 Filters and filter-like elements have both input and outputs pads. They
 operate on data that they receive on their input (sink) pads, and will
@@ -70,7 +70,7 @@ contain the elementary audio stream. Demuxers will generally fire
 signals when a new pad is created. The application programmer can then
 handle the new elementary stream in the signal handler.
 
-## Sink elements
+### Sink elements
 
 Sink elements are end points in a media pipeline. They accept data but
 do not produce anything. Disk writing, soundcard playback, and video
@@ -79,7 +79,7 @@ sink element](#visualisation-of-a-sink-element) shows a sink element.
 
 ![Visualisation of a sink element](images/sink-element.png "fig:")
 
-# Creating a `GstElement`
+## Creating a `GstElement`
 
 The simplest way to create an element is to use
 [`gst_element_factory_make
@@ -175,7 +175,7 @@ main (int   argc,
     
 ```
 
-# Using an element as a `GObject`
+## Using an element as a `GObject`
 
 A
 [`GstElement`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/GstElement.html)
@@ -239,7 +239,7 @@ callback mechanism. Here, too, you can use `gst-inspect` to see which
 signals a specific element supports. Together, signals and properties
 are the most basic way in which elements and applications interact.
 
-# More about element factories
+## More about element factories
 
 In the previous section, we briefly introduced the
 [`GstElementFactory`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/GstElementFactory.html)
@@ -250,7 +250,7 @@ plugins and elements that GStreamer can create. This means that element
 factories are useful for automated element instancing, such as what
 autopluggers do, and for creating lists of available elements.
 
-## Getting information about an element using a factory
+### Getting information about an element using a factory
 
 Tools like `gst-inspect` will provide some generic information about an
 element, such as the person that wrote the plugin, a descriptive name
@@ -298,7 +298,7 @@ main (int   argc,
 You can use `gst_registry_pool_feature_list (GST_TYPE_ELEMENT_FACTORY)`
 to get a list of all the element factories that GStreamer knows about.
 
-## Finding out what pads an element can contain
+### Finding out what pads an element can contain
 
 Perhaps the most powerful feature of element factories is that they
 contain a full description of the pads that the element can generate,
@@ -311,7 +311,7 @@ this way. We'll look closer at these features as we learn about `GstPad`
 and `GstCaps` in the next chapter: [Pads and
 capabilities](manual-pads.md)
 
-# Linking elements
+## Linking elements
 
 By linking a source element with zero or more filter-like elements and
 finally a sink element, you set up a media pipeline. Data will flow
@@ -382,7 +382,7 @@ the same bin or pipeline; if you want to link elements or pads at
 different hierarchy levels, you will need to use ghost pads (more about
 ghost pads later, see [Ghost pads](manual-pads.md#ghost-pads)).
 
-# Element States
+## Element States
 
 After being created, an element will not actually perform any actions
 yet. You need to change elements state to make it do something.

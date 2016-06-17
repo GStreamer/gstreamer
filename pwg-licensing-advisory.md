@@ -4,7 +4,7 @@ title: GStreamer licensing
 
 # GStreamer licensing
 
-# How to license the code you write for GStreamer
+## How to license the code you write for GStreamer
 
 GStreamer is a plugin-based framework licensed under the LGPL. The
 reason for this choice in licensing is to ensure that everyone can use

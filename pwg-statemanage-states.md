@@ -49,7 +49,7 @@ differentiate between PAUSED and PLAYING state. In PLAYING state, sink
 elements actually render incoming data, e.g. output audio to a sound
 card or render video pictures to an image sink.
 
-# Managing filter state
+## Managing filter state
 
 If at all possible, your element should derive from one of the new base
 classes ([Pre-made base classes](pwg-other-base.md)). There are

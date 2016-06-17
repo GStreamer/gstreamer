@@ -37,7 +37,7 @@ GStreamer uses a `GstClock` object, buffer timestamps and a SEGMENT
 event to synchronize streams in a pipeline as we will see in the next
 sections.
 
-# Clock running-time
+## Clock running-time
 
 In a typical computer, there are many sources that can be used as a time
 source, e.g., the system time, soundcards, CPU performance counters, ...
@@ -66,7 +66,7 @@ Because all objects in the pipeline have the same clock and base-time,
 they can thus all calculate the running-time according to the pipeline
 clock.
 
-# Buffer running-time
+## Buffer running-time
 
 To calculate a buffer running-time, we need a buffer timestamp and the
 SEGMENT event that preceeded the buffer. First we can convert the
@@ -87,7 +87,7 @@ running-time of 0.
 Live sources need to timestamp buffers with a running-time matching the
 pipeline running-time when the first byte of the buffer was captured.
 
-# Buffer stream-time
+## Buffer stream-time
 
 The buffer stream-time, also known as the position in the stream, is
 calculated from the buffer timestamps and the preceding SEGMENT event.
@@ -105,7 +105,7 @@ The stream-time is used in:
 The stream-time is never used to synchronize streams, this is only done
 with the running-time.
 
-# Time overview
+## Time overview
 
 Here is an overview of the various timelines used in GStreamer.
 
@@ -120,7 +120,7 @@ running-time is equal to the clock-time - base-time. The stream-time
 represents the position in the stream and jumps backwards when
 repeating.
 
-# Clock providers
+## Clock providers
 
 A clock provider is an element in the pipeline that can provide a
 `GstClock` object. The clock object needs to report an absolute-time
@@ -160,7 +160,7 @@ provider is removed from the pipeline, a CLOCK\_LOST message is posted
 and the application should go to PAUSED and back to PLAYING to select a
 new clock.
 
-# Latency
+## Latency
 
 The latency is the time it takes for a sample captured at timestamp X to
 reach the sink. This time is measured against the clock in the pipeline.
@@ -177,7 +177,7 @@ clock is now \>= 1 second, the sink will drop this buffer because it is
 too late. Without any latency compensation in the sink, all buffers will
 be dropped.
 
-## Latency compensation
+### Latency compensation
 
 Before the pipeline goes to the PLAYING state, it will, in addition to
 selecting a clock and calculating a base-time, calculate the latency in
@@ -189,7 +189,7 @@ All sink elements will delay playback by the value in the LATENCY event.
 Since all sinks delay with the same amount of time, they will be
 relative in sync.
 
-## Dynamic Latency
+### Dynamic Latency
 
 Adding/removing elements to/from a pipeline or changing element
 properties can change the latency in a pipeline. An element can request

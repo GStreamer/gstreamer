@@ -4,7 +4,7 @@ short-description: Patents, Licenses and legal F.A.Q.
 
 # Legal information
 
-# Installer, default installation
+## Installer, default installation
 
 The installer (Microsoft Windows and MacOSX) and the default
 installation (GNU/Linux) contain and install the minimal default
@@ -13,7 +13,7 @@ components is also possible, but read on for certain legal cautions you
 might want to take. All downloads are from the
 [gstreamer.freedesktop.org](http://gstreamer.freedesktop.org) website.
 
-# Licensing of GStreamer
+## Licensing of GStreamer
 
 GStreamer minimal default installation only contains packages which
 are licensed under the [GNU LGPL license
@@ -42,13 +42,13 @@ different licenses, which are both more liberal than the LGPL (they are
 less strict conditions for granting the license) and compatible with the
 LGPL. This is advised locally.
 
-# Optional packages
+## Optional packages
 
 There are two types of optional packages (GPL and Patented), which are
 under a different license or have other issues concerning patentability
 (or both).
 
-### GPL code
+#### GPL code
 
 Part of the optional packages are under the GNU GPL
 [v2](http://www.gnu.org/licenses/old-licenses/gpl-2.0.html) or
@@ -60,7 +60,7 @@ this works in your precise case and design choices. GPL is called
 license has the largest possible scope and extends to all derivative
 works.
 
-### Patents
+#### Patents
 
 Certain software, and in particular software that implements
 multimedia standard formats such as MP3, MPEG 2 video and audio, h.264,
@@ -84,7 +84,7 @@ circumstances compiling the same code for a given platform or
 distributing the object code is not an act that infringes one or more
 patents.
 
-# Software is as-is
+## Software is as-is
 
 All software and the entire GStreamer binaries areprovided as-is, without any
 warranty whatsoever. The individual licenses have particular language
@@ -97,18 +97,18 @@ maintenance agreements under certain conditions, you are invited to
 contact them in order to receive further details and discuss of the
 commercial terms.
 
-# Data protection
+## Data protection
 
 This website might use cookies and HTTP logs for statistical analysis
 and on an aggregate basis only.
 
-# Frequently Asked Questions
+## Frequently Asked Questions
 
-#### What licenses are there?
+##### What licenses are there?
 
 GStreamer binaries containst software under various licenses. See above.
 
-#### How does this relate to the packaging system?
+##### How does this relate to the packaging system?
 
 The packaging is only a more convenient way to install software and
 decide what's good for you. GStreamer is meant to be modular, making use
@@ -128,7 +128,7 @@ reference, but we cannot guarantee that our selection is 100% correct,
 so it is up to the user to verify the actual licensing conditions before
 distributing works that utilize GStreamer.
 
-#### Can I / must I distribute GStreamer along with my application?
+##### Can I / must I distribute GStreamer along with my application?
 
 You surely can. All software is Free/Open Source software, and can be
 distributed freely. You are not **required** to distribute it. Only,
@@ -142,7 +142,7 @@ entire source code, you might want to include it (or the directories
 containing the source code) with your application as a safe way to
 comply with this requirement of the license.
 
-#### What happens when I modify the GStreamer's source code?
+##### What happens when I modify the GStreamer's source code?
 
 You are invited to do so, as the licenses (unless you are dealing with
 proprietary bits, but in that case you will not find the corresponding
@@ -157,7 +157,7 @@ to fork the code, if at all possible.  he Cerbero build system has a
 containing all of the complete corresponding machine readable source
 code that you are required to provide.
 
-#### How does licensing relate to software patents? What about software patents in general?
+##### How does licensing relate to software patents? What about software patents in general?
 
 This is a tricky question. We believe software patents should not exist,
 so that by distributing and using software on a general purpose machine
@@ -185,7 +185,7 @@ This is why GStreamer has taken a modular approach, so that you can use
 a Free plugins or a proprietary, patent royalty bearing, plugin for a
 given standard.
 
-#### What about static vs. dynamic linking and copyleft?
+##### What about static vs. dynamic linking and copyleft?
 
 We cannot provide one single answer to that question. Since copyright in
 software works as copyright in literature, static linking means

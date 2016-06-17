@@ -12,7 +12,7 @@ applications. Also, we will touch upon how to acquire knowledge about
 plugins and elements and how to test simple pipelines before building
 applications around them.
 
-# Good programming habits
+## Good programming habits
 
   - Always add a `GstBus` handler to your pipeline. Always report errors
     in your application, and try to do something with warnings and
@@ -36,7 +36,7 @@ applications around them.
   - Report all bugs that you find in GStreamer bugzilla at
     [http://bugzilla.gnome.org/](http://bugzilla.gnome.org).
 
-# Debugging
+## Debugging
 
 Applications can make use of the extensive GStreamer debugging system to
 debug pipeline problems. Elements will write output to this system to
@@ -85,7 +85,7 @@ a list of all available options:
   - `--gst-plugin-spew` enables printout of errors while loading
     GStreamer plugins.
 
-# Conversion plugins
+## Conversion plugins
 
 GStreamer contains a bunch of conversion plugins that most applications
 will find useful. Specifically, those are videoscalers (videoscale),
@@ -96,13 +96,13 @@ they will act in passthrough mode. They will activate when the hardware
 doesn't support a specific request, though. All applications are
 recommended to use those elements.
 
-# Utility applications provided with GStreamer
+## Utility applications provided with GStreamer
 
 GStreamer comes with a default set of command-line utilities that can
 help in application development. We will discuss only `gst-launch` and
 `gst-inspect` here.
 
-## `gst-launch`
+### `gst-launch`
 
 `gst-launch` is a simple script-like commandline application that can be
 used to test pipelines. For example, the command `gst-launch
@@ -121,7 +121,7 @@ d. ! queue ! vorbisdec ! audioconvert ! audioresample ! alsasink
 audio-stream. You can also use autopluggers such as decodebin on the
 commandline. See the manual page of `gst-launch` for more information.
 
-## `gst-inspect`
+### `gst-inspect`
 
 `gst-inspect` can be used to inspect all properties, signals, dynamic
 parameters and the object hierarchy of an element. This can be very

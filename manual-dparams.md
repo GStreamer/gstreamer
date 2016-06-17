@@ -4,7 +4,7 @@ title: Dynamic Controllable Parameters
 
 # Dynamic Controllable Parameters
 
-# Getting Started
+## Getting Started
 
 The controller subsystem offers a lightweight way to adjust gobject
 properties over stream-time. Normally these properties are changed using
@@ -39,7 +39,7 @@ Your application should link to the shared library
 `gstreamer-controller`. One can get the required flag for compiler and
 linker by using pkg-config for gstreamer-controller-1.0.
 
-# Setting up parameter control
+## Setting up parameter control
 
 If we have our pipeline set up and want to control some parameters, we
 first need to create a control-source. Lets use an interpolation

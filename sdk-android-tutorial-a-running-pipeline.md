@@ -1,6 +1,6 @@
 # Android tutorial 2: A running pipeline
 
-## Goal
+### Goal
 
 ![screenshot]
 
@@ -20,7 +20,7 @@ learn:
   - How to allocate a `CustomData` structure from C and have Java host
     it
 
-## Introduction
+### Introduction
 
 When using a Graphical User Interface (UI), if the application waits for
 GStreamer calls to complete the user experience will suffer. The usual
@@ -52,7 +52,7 @@ The code below builds a pipeline with an `audiotestsrc` and an
 setting the pipeline to PLAYING or PAUSED. A TextView in the UI shows
 messages sent from the C code (for errors and state changes).
 
-## A pipeline on Android \[Java code\]
+### A pipeline on Android \[Java code\]
 
 **src/org/freedesktop/gstreamer/tutorials/tutorial\_2/Tutorial2.java**
 
@@ -337,7 +337,7 @@ all allocated resources.
 
 This concludes the UI part of the tutorial.
 
-## A pipeline on Android \[C code\]
+### A pipeline on Android \[C code\]
 
 **jni/tutorial-2.c**
 
@@ -356,11 +356,11 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
  * a jlong, which is always 64 bits, without warnings.
  */
 #if GLIB_SIZEOF_VOID_P == 8
-# define GET_CUSTOM_DATA(env, thiz, fieldID) (CustomData *)(*env)->GetLongField (env, thiz, fieldID)
-# define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)data)
+## define GET_CUSTOM_DATA(env, thiz, fieldID) (CustomData *)(*env)->GetLongField (env, thiz, fieldID)
+## define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)data)
 #else
-# define GET_CUSTOM_DATA(env, thiz, fieldID) (CustomData *)(jint)(*env)->GetLongField (env, thiz, fieldID)
-# define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)(jint)data)
+## define GET_CUSTOM_DATA(env, thiz, fieldID) (CustomData *)(jint)(*env)->GetLongField (env, thiz, fieldID)
+## define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)(jint)data)
 #endif
 
 /* Structure to contain all our information, so we can pass it to callbacks */
@@ -712,7 +712,7 @@ done for simplicity).
 Let’s review now the first native method which can be directly called
 from Java:
 
-### `gst_native_init()` (`nativeInit()` from Java)
+#### `gst_native_init()` (`nativeInit()` from Java)
 
 This method is called at the end of Java's `onCreate()`.
 
@@ -741,7 +741,7 @@ pthread_create (&gst_app_thread, NULL, &app_function, data);
 Finally, a thread is created and it starts running the
 `app_function()` method.
 
-###  `app_function()`
+####  `app_function()`
 
 ``` c
 /* Main method for the native code. This is executed on its own thread. */
@@ -820,7 +820,7 @@ reviewed below.
 Once the main loop has quit, all resources are freed in lines 178 to
 181.
 
-### `check_initialization_complete()`
+#### `check_initialization_complete()`
 
 ``` c
 static void check_initialization_complete (CustomData *data) {
@@ -864,7 +864,7 @@ This behavior is implemented in the `get_jni_env()` method, used for
 example in `check_initialization_complete()` as we have just seen. Let’s
 see how it works, step by step:
 
-### `get_jni_env()`
+#### `get_jni_env()`
 
 ``` c
 static JNIEnv *get_jni_env (void) {
@@ -886,13 +886,13 @@ If it returns NULL, we never attached this thread, so we do now with
 with
 [pthread\_setspecific()](http://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_setspecific.html).
 
-### `attach_current_thread()`
+#### `attach_current_thread()`
 
 This method is simply a convenience wrapper around
 [AttachCurrentThread()](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/invocation.html#attach_current_thread)
 to deal with its parameters.
 
-### `detach_current_thread()`
+#### `detach_current_thread()`
 
 This method is called by the pthreads library when a TLS key is deleted,
 meaning that the thread is about to be destroyed. We simply detach the
@@ -901,7 +901,7 @@ thread from the JavaVM with
 
 Let's now review the rest of the native methods accessible from Java:
 
-### `gst_native_finalize()` (`nativeFinalize()` from Java)
+#### `gst_native_finalize()` (`nativeFinalize()` from Java)
 
 ``` c
 static void gst_native_finalize (JNIEnv* env, jobject thiz) {
@@ -936,7 +936,7 @@ about to be destroyed. Here, we:
     `Tutorial2` class to NULL with
 `SET_CUSTOM_DATA()`.
 
-### `gst_native_play` and `gst_native_pause()` (`nativePlay` and `nativePause()` from Java)
+#### `gst_native_play` and `gst_native_pause()` (`nativePlay` and `nativePause()` from Java)
 
 These two simple methods retrieve `CustomData` from the passed-in object
 with `GET_CUSTOM_DATA()` and set the pipeline found inside `CustomData`
@@ -944,13 +944,13 @@ to the desired state, returning immediately.
 
 Finally, let’s see how the GStreamer callbacks are handled:
 
-### `error_cb` and `state_changed_cb`
+#### `error_cb` and `state_changed_cb`
 
 This tutorial does not do much in these callbacks. They simply parse the
 error or state changed message and display a message in the UI using the
 `set_ui_message()` method:
 
-### `set_ui_message()`
+#### `set_ui_message()`
 
 ``` c
 static void set_ui_message (const gchar *message, CustomData *data) {
@@ -993,7 +993,7 @@ We check for exceptions with the JNI
 method and free the UTF16 message with
 [DeleteLocalRef()](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/functions.html#DeleteLocalRef).
 
-## A pipeline on Android \[Android.mk\]
+### A pipeline on Android \[Android.mk\]
 
 **jni/Android.mk**
 
@@ -1028,7 +1028,7 @@ And this is it\! This has been a rather long tutorial, but we covered a
 lot of territory. Building on top of this one, the following ones are
 shorter and focus only on the new topics.
 
-## Conclusion
+### Conclusion
 
 This tutorial has shown:
 

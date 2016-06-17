@@ -32,7 +32,7 @@ It is also possible for the application to artificially introduce delay
 between synchronized buffers, this is called throttling. It can be used
 to limit or reduce the framerate, for example.
 
-# Measuring QoS
+## Measuring QoS
 
 Elements that synchronize buffers on the pipeline clock will usually
 measure the current QoS. They will also need to keep some statistics in
@@ -63,7 +63,7 @@ These measurements are used to construct a QOS event that is sent
 upstream. Note that a QoS event is sent for each buffer that arrives in
 the sink.
 
-# Handling QoS
+## Handling QoS
 
 An element will have to install an event function on its source pads in
 order to receive QOS events. Usually, the element will need to store the
@@ -102,7 +102,7 @@ the example below. Also make sure to pass the QoS event upstream.
 With the QoS values, there are two types of corrections that an element
 can do:
 
-## Short term correction
+### Short term correction
 
 The timestamp and the jitter value in the QOS event can be used to
 perform a short term correction. If the jitter is positive, the previous
@@ -145,7 +145,7 @@ A possible algorithm typically looks like this:
       
 ```
 
-## Long term correction
+### Long term correction
 
 Long term corrections are a bit more difficult to perform. They rely on
 the value of the proportion in the QOS event. Elements should reduce the
@@ -171,7 +171,7 @@ In all cases, elements should be prepared to go back to their normal
 processing rate when the proportion member in the QOS event approaches
 the ideal proportion of 1.0 again.
 
-# Throttling
+## Throttling
 
 Elements synchronizing to the clock should expose a property to
 configure them in throttle mode. In throttle mode, the time distance
@@ -194,7 +194,7 @@ The default sink base class, has the “throttle-time” property for this
 feature. You can test this with: `gst-launch-1.0 videotestsrc !
 xvimagesink throttle-time=500000000`
 
-# QoS Messages
+## QoS Messages
 
 In addition to the QOS events that are sent between elements in the
 pipeline, there are also QOS messages posted on the pipeline bus to

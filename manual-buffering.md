@@ -76,7 +76,7 @@ strategies](#buffering-strategies).
   
 ```
 
-# Stream buffering
+## Stream buffering
 
 ``` 
       +---------+     +---------+     +-------+
@@ -144,7 +144,7 @@ Another advantage of doing the buffering at a later stage is that you
 can let the demuxer operate in pull mode. When reading data from a slow
 network drive (with filesrc) this can be an interesting way to buffer.
 
-# Download buffering
+## Download buffering
 
 ``` 
       +---------+     +---------+     +-------+
@@ -172,7 +172,7 @@ application control the buffering in a more intelligent way, using the
 BUFFERING query, for example. See [Buffering
 strategies](#buffering-strategies).
 
-# Timeshift buffering
+## Timeshift buffering
 
 ``` 
       +---------+     +---------+     +-------+
@@ -192,7 +192,7 @@ This mode is suitable for all live streams. As with the incremental
 download mode, buffering messages are emitted along with an indication
 that timeshifting download is in progress.
 
-# Live buffering
+## Live buffering
 
 In live pipelines we usually introduce some fixed latency between the
 capture and the playback elements. This latency can be introduced by a
@@ -203,12 +203,12 @@ serve as an indication to the user of the latency buffering. The
 application usually does not react to these buffering messages with a
 state change.
 
-# Buffering strategies
+## Buffering strategies
 
 What follows are some ideas for implementing different buffering
 strategies based on the buffering messages and buffering query.
 
-## No-rebuffer strategy
+### No-rebuffer strategy
 
 We would like to buffer enough data in the pipeline so that playback
 continues without interruptions. What we need to know to implement this

@@ -12,7 +12,7 @@ pad (always, sometimes or request) can be seen in a pad's template. This
 chapter will discuss when each of the two is useful, how they are
 created and when they should be disposed.
 
-# Sometimes pads
+## Sometimes pads
 
 A “sometimes” pad is a pad that is created under certain conditions, but
 not in all cases. This mostly depends on stream content: demuxers will
@@ -201,7 +201,7 @@ used maliciously to cause undefined behaviour in the plugin, which might
 lead to security issues. *Always* assume that the file could be used to
 do bad things.
 
-# Request pads
+## Request pads
 
 “Request” pads are similar to sometimes pads, except that request are
 created on demand of something outside of the element rather than

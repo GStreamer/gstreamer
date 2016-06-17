@@ -17,7 +17,7 @@ elements requiring the deprecated bytestream interface, which should
 take 1-2 days with random access. The scheduling parts of muxers will
 also need a rewrite, which will take about the same amount of time.
 
-# List of changes
+## List of changes
 
   - Discont events have been replaced by newsegment events. In 0.10, it
     is essential that you send a newsegment event downstream before you

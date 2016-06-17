@@ -1,6 +1,6 @@
 # Android tutorial 3: Video
 
-## Goal
+### Goal
 
 ![screenshot]
 
@@ -15,7 +15,7 @@ shows:
     to GStreamer
   - How to keep GStreamer posted on changes to the surface
 
-## Introduction
+### Introduction
 
 Since Android does not provide a windowing system, a GStreamer video
 sink cannot create pop-up windows as it would do on a Desktop platform.
@@ -32,7 +32,7 @@ widget, we pass it to the C code which stores it. The
 tutorial is extended so that GStreamer is not considered initialized
 until a main loop is running and a drawing surface has been received.
 
-## A video surface on Android \[Java code\]
+### A video surface on Android \[Java code\]
 
 **src/com/gst\_sdk\_tutorials/tutorial\_3/Tutorial3.java**
 
@@ -239,7 +239,7 @@ to notify GStreamer about the new surface. We use
 
 Let’s review the C code to see what these functions do.
 
-## A video surface on Android \[C code\]
+### A video surface on Android \[C code\]
 
 **jni/tutorial-3.c**
 
@@ -262,11 +262,11 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
  * a jlong, which is always 64 bits, without warnings.
  */
 #if GLIB_SIZEOF_VOID_P == 8
-# define GET_CUSTOM_DATA(env, thiz, fieldID) (CustomData *)(*env)->GetLongField (env, thiz, fieldID)
-# define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)data)
+## define GET_CUSTOM_DATA(env, thiz, fieldID) (CustomData *)(*env)->GetLongField (env, thiz, fieldID)
+## define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)data)
 #else
-# define GET_CUSTOM_DATA(env, thiz, fieldID) (CustomData *)(jint)(*env)->GetLongField (env, thiz, fieldID)
-# define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)(jint)data)
+## define GET_CUSTOM_DATA(env, thiz, fieldID) (CustomData *)(jint)(*env)->GetLongField (env, thiz, fieldID)
+## define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)(jint)data)
 #endif
 
 /* Structure to contain all our information, so we can pass it to callbacks */
@@ -744,7 +744,7 @@ And this is all there is to it, regarding the main code. Only a couple
 of details remain, the subclass we made for SurfaceView and the
 `Android.mk` file.
 
-## GStreamerSurfaceView, a convenient SurfaceView wrapper \[Java code\]
+### GStreamerSurfaceView, a convenient SurfaceView wrapper \[Java code\]
 
 By default,
 [SurfaceView](http://developer.android.com/reference/android/view/SurfaceView.html) does
@@ -857,7 +857,7 @@ public class GStreamerSurfaceView extends SurfaceView {
 }
 ```
 
-## A video surface on Android \[Android.mk\]
+### A video surface on Android \[Android.mk\]
 
 **/jni/Android.mk**
 
@@ -892,7 +892,7 @@ and `GSTREAMER_PLUGINS_EFFECTS` for the `warptv` element. This tutorial
 requires the `gstreamer-video` library to use the
 `VideoOverlay` interface and the video helper methods.
 
-## Conclusion
+### Conclusion
 
 This tutorial has shown:
 

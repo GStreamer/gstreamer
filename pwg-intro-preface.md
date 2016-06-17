@@ -4,7 +4,7 @@ title: Preface
 
 # Preface
 
-# What is GStreamer?
+## What is GStreamer?
 
 GStreamer is a framework for creating streaming media applications. The
 fundamental design comes from the video pipeline at Oregon Graduate
@@ -36,7 +36,7 @@ The GStreamer core function is to provide a framework for plugins, data
 flow, synchronization and media type handling/negotiation. It also
 provides an API to write applications using the various plugins.
 
-# Who Should Read This Guide?
+## Who Should Read This Guide?
 
 This guide explains how to write new modules for GStreamer. The guide is
 relevant to several groups of people:
@@ -66,7 +66,7 @@ Development Manual*. If you are just trying to get help with a GStreamer
 application, then you should check with the user manual for that
 particular application.
 
-# Preliminary Reading
+## Preliminary Reading
 
 This guide assumes that you are somewhat familiar with the basic
 workings of GStreamer. For a gentle introduction to programming concepts
@@ -82,7 +82,7 @@ basics of [GObject](http://developer.gnome.org/gobject/stable/pt01.html)
 programming. You may also want to have a look at Eric Harlow's book
 *Developing Linux Applications with GTK+ and GDK*.
 
-# Structure of This Guide
+## Structure of This Guide
 
 To help you navigate through this guide, it is divided into several
 large parts. Each part addresses a particular broad topic concerning

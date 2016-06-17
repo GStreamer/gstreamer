@@ -11,7 +11,7 @@ element and hope for it to be included in the mainstream GStreamer
 distribution, it *has to* meet those requirements. As far as possible,
 we will try to explain why those requirements are set.
 
-# About states
+## About states
 
   - Make sure the state of an element gets reset when going to `NULL`.
     Ideally, this should set all object properties to their original
@@ -29,7 +29,7 @@ we will try to explain why those requirements are set.
     tools such as `valgrind`. Elements have to be reusable in a pipeline
     after having been reset.
 
-# Debugging
+## Debugging
 
   - Elements should *never* use their standard output for debugging
     (using functions such as `printf
@@ -83,7 +83,7 @@ we will try to explain why those requirements are set.
     it should be GstFooDec and gst\_foo\_dec, and not GstFoodec and
     gst\_foodec.
 
-# Querying, events and the like
+## Querying, events and the like
 
   - All elements to which it applies (sources, sinks, demuxers) should
     implement query functions on their pads, so that applications and
@@ -99,7 +99,7 @@ we will try to explain why those requirements are set.
     with gst\_pad\_query\_default (pad, parent, query) instead of just
     dropping them.
 
-# Testing your element
+## Testing your element
 
   - `gst-launch` is *not* a good tool to show that your element is
     finished. Applications such as Rhythmbox and Totem (for GNOME) or

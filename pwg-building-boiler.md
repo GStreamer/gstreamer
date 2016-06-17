@@ -12,7 +12,7 @@ you follow the examples here, then by the end of this chapter you will
 have a functional audio filter plugin that you can compile and use in
 GStreamer applications.
 
-# Getting the GStreamer Plugin Templates
+## Getting the GStreamer Plugin Templates
 
 There are currently two ways to develop a new plugin for GStreamer: You
 can write the entire plugin by hand, or you can copy an existing plugin
@@ -49,7 +49,7 @@ If for some reason you can't access the git repository, you can also
 revision](http://cgit.freedesktop.org/gstreamer/gst-template/commit/)
 via the cgit web interface.
 
-# Using the Project Stamp
+## Using the Project Stamp
 
 The first thing to do when making a new element is to specify some basic
 details about it: what its name is, who wrote it, what version number it
@@ -116,7 +116,7 @@ the well known `make && sudo make install` commands.
 > creating elements the tool gst-element-maker from gst-plugins-bad is
 > recommended these days.
 
-# Examining the Basic Code
+## Examining the Basic Code
 
 First we will examine the code you would be likely to place in a header
 file (although since the interface to the code is entirely defined by
@@ -170,7 +170,7 @@ G_DEFINE_TYPE (GstMyFilter, gst_my_filter, GST_TYPE_ELEMENT);
     
 ```
 
-# Element metadata
+## Element metadata
 
 The Element metadata provides extra element information. It is
 configured with `gst_element_class_set_metadata` or
@@ -220,7 +220,7 @@ gst_my_filter_class_init (GstMyFilterClass * klass)
     
 ```
 
-# GstStaticPadTemplate
+## GstStaticPadTemplate
 
 A GstStaticPadTemplate is a description of a pad that the element will
 (or might) create and use. It contains:
@@ -312,7 +312,7 @@ of types are supported too, and should be separated by a semicolon
 to know the exact format of a stream: [Specifying the
 pads](pwg-building-pads.md).
 
-# Constructor Functions
+## Constructor Functions
 
 Each element has two functions which are used for construction of an
 element. The `_class_init()` function, which is used to initialise the
@@ -320,7 +320,7 @@ class only once (specifying what signals, arguments and virtual
 functions the class has and setting up global state); and the `_init()`
 function, which is used to initialise a specific instance of this type.
 
-# The plugin\_init function
+## The plugin\_init function
 
 Once we have written code defining all the parts of the plugin, we need
 to write the plugin\_init() function. This is a special function, which

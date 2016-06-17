@@ -42,7 +42,7 @@ reasons for this. First of all, properties can be more easily
 introspected. Second, properties can be specified on the commandline
 (`gst-launch`).
 
-# How to Implement Interfaces
+## How to Implement Interfaces
 
 Implementing interfaces is initiated in the `_get_type ()` of your
 element. You can register one or more interfaces after having registered
@@ -114,15 +114,15 @@ G_DEFINE_TYPE_WITH_CODE (GstMyFilter, gst_my_filter,GST_TYPE_ELEMENT,
     
 ```
 
-# URI interface
+## URI interface
 
 WRITEME
 
-# Color Balance Interface
+## Color Balance Interface
 
 WRITEME
 
-# Video Overlay Interface
+## Video Overlay Interface
 
 The \#GstVideoOverlay interface is used for 2 main purposes :
 
@@ -212,7 +212,7 @@ gst_my_filter_sink_set_caps (GstMyFilter *my_filter, GstCaps *caps)
     
 ```
 
-# Navigation Interface
+## Navigation Interface
 
 WRITEME
 

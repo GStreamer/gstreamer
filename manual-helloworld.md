@@ -10,7 +10,7 @@ including initializing libraries, creating elements, packing elements
 together in a pipeline and playing this pipeline. By doing all this, you
 will be able to build a simple Ogg/Vorbis audio player.
 
-# Hello world
+## Hello world
 
 We're going to create a simple first application, a simple Ogg/Vorbis
 command-line audio player. For this, we will use only standard GStreamer
@@ -205,7 +205,7 @@ as follows:
 
 ![The "hello world" pipeline](images/hello-world.png "fig:")
 
-# Compiling and Running helloworld.c
+## Compiling and Running helloworld.c
 
 To compile the helloworld example, use: `gcc -Wall
 helloworld.c -o helloworld
@@ -227,7 +227,7 @@ $(pkg-config --cflags --libs gstreamer-1.0)`.
 You can run this example application with `./helloworld
 file.ogg`. Substitute `file.ogg` with your favourite Ogg/Vorbis file.
 
-# Conclusion
+## Conclusion
 
 This concludes our first example. As you see, setting up a pipeline is
 very low-level but powerful. You will see later in this manual how you

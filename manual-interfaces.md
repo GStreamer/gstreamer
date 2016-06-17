@@ -18,7 +18,7 @@ Most of the interfaces handled here will not contain any example code.
 See the API references for details. Here, we will just describe the
 scope and purpose of each interface.
 
-# The URI interface
+## The URI interface
 
 In all examples so far, we have only supported local files through the
 “filesrc” element. GStreamer, obviously, supports many more location
@@ -40,7 +40,7 @@ element.
 You can convert filenames to and from URIs using GLib's
 `g_filename_to_uri ()` and `g_uri_to_filename ()`.
 
-# The Color Balance interface
+## The Color Balance interface
 
 The colorbalance interface is a way to control video-related properties
 on an element, such as brightness, contrast and so on. It's sole reason
@@ -50,7 +50,7 @@ dynamically register properties using `GObject`.
 The colorbalance interface is implemented by several plugins, including
 xvimagesink and the Video4linux2 elements.
 
-# The Video Overlay interface
+## The Video Overlay interface
 
 The Video Overlay interface was created to solve the problem of
 embedding video streams in an application window. The application

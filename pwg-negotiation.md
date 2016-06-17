@@ -9,7 +9,7 @@ elements that they can handle. This process in GStreamer can in most
 cases find an optimal solution for the complete pipeline. In this
 section we explain how this works.
 
-# Caps negotiation basics
+## Caps negotiation basics
 
 In GStreamer, negotiation of the media format always follows the
 following simple rules:
@@ -38,7 +38,7 @@ accepted by an element.
 All negotiation follows these simple rules. Let's take a look at some
 typical uses cases and how negotiation happens.
 
-# Caps negotiation use cases
+## Caps negotiation use cases
 
 In what follows we will look at some use cases for push-mode scheduling.
 The pull-mode scheduling negotiation phase is discussed in [Pull-mode
@@ -62,7 +62,7 @@ identify 3 caps negotiation use cases for the source pads:
   - Dynamic negotiation. An element can output many formats. See
     [Dynamic negotiation](#dynamic-negotiation).
 
-## Fixed negotiation
+### Fixed negotiation
 
 In this case, the source pad can only produce a fixed format. Usually
 this format is encoded inside the media. No downstream element can ask
@@ -130,7 +130,7 @@ All other elements that need to be configured for the format should
 implement full caps negotiation, which will be explained in the next few
 sections.
 
-## Transform negotiation
+### Transform negotiation
 
 In this negotiation technique, there is a fixed transform between the
 element input caps and the output caps. This transformation could be
@@ -220,7 +220,7 @@ gst_my_filter_sink_event (GstPad    *pad,
       
 ```
 
-## Dynamic negotiation
+### Dynamic negotiation
 
 A last negotiation method is the most complex and powerful dynamic
 negotiation.
@@ -348,7 +348,7 @@ gst_my_filter_chain (GstPad    *pad,
       
 ```
 
-# Upstream caps (re)negotiation
+## Upstream caps (re)negotiation
 
 Upstream negotiation's primary use is to renegotiate (part of) an
 already-negotiated pipeline to a new format. Some practical examples
@@ -393,7 +393,7 @@ different responsibilities here:
     NEED\_RECONFIGURE flag with `gst_pad_check_reconfigure ()` and it
     should start renegotiation when the function returns TRUE.
 
-# Implementing a CAPS query function
+## Implementing a CAPS query function
 
 A `_query ()`-function with the GST\_QUERY\_CAPS query type is called
 when a peer element would like to know which formats this pad supports,
@@ -461,7 +461,7 @@ gst_my_filter_query (GstPad *pad, GstObject * parent, GstQuery * query)
     
 ```
 
-# Pull-mode Caps negotiation
+## Pull-mode Caps negotiation
 
 WRITEME, the mechanism of pull-mode negotiation is not yet fully
 understood.

@@ -4,7 +4,7 @@ title: Design principles
 
 # Design principles
 
-# Clean and powerful
+## Clean and powerful
 
 GStreamer provides a clean interface to:
 
@@ -18,7 +18,7 @@ GStreamer provides a clean interface to:
     and tracing mechanism has been integrated. GStreamer also comes with
     an extensive set of real-life plugins that serve as examples too.
 
-# Object oriented
+## Object oriented
 
 GStreamer adheres to GObject, the GLib 2.0 object model. A programmer
 familiar with GLib 2.0 or GTK+ will be comfortable with GStreamer.
@@ -32,7 +32,7 @@ GStreamer intends to be similar in programming methodology to GTK+. This
 applies to the object model, ownership of objects, reference counting,
 etc.
 
-# Extensible
+## Extensible
 
 All GStreamer Objects can be extended using the GObject inheritance
 methods.
@@ -40,7 +40,7 @@ methods.
 All plugins are loaded dynamically and can be extended and upgraded
 independently.
 
-# Allow binary-only plugins
+## Allow binary-only plugins
 
 Plugins are shared libraries that are loaded at runtime. Since all the
 properties of the plugin can be set using the GObject properties, there
@@ -50,7 +50,7 @@ the plugins.
 Special care has been taken to make plugins completely self-contained.
 All relevant aspects of plugins can be queried at run-time.
 
-# High performance
+## High performance
 
 High performance is obtained by:
 
@@ -76,7 +76,7 @@ High performance is obtained by:
     that the plugin loading can be delayed until the plugin is actually
     used.
 
-# Clean core/plugins separation
+## Clean core/plugins separation
 
 The core of GStreamer is essentially media-agnostic. It only knows about
 bytes and blocks, and only contains basic elements. The core of
@@ -86,7 +86,7 @@ like cp.
 All of the media handling functionality is provided by plugins external
 to the core. These tell the core how to handle specific types of media.
 
-# Provide a framework for codec experimentation
+## Provide a framework for codec experimentation
 
 GStreamer also wants to be an easy framework where codec developers can
 experiment with different algorithms, speeding up the development of

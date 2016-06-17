@@ -2,7 +2,7 @@
 
 ![](images/icons/emoticons/information.png) All versions starting form iOS 6 are supported
 
-## Prerequisites
+### Prerequisites
 
 For iOS development you need to download Xcode and the iOS SDK. Xcode
 can be found at the App Store or
@@ -17,7 +17,7 @@ recommend taking a look at the available documentation at Apple's
 website.
 [This](http://developer.apple.com/library/ios/#DOCUMENTATION/iPhone/Conceptual/iPhone101/Articles/00_Introduction.html) can be a good starting point.
 
-# Download and install GStreamer binaries
+## Download and install GStreamer binaries
 
 GStreamer binary installer can be found at:
 
@@ -40,14 +40,14 @@ Xcode application templates for GStreamer development. Those templates
 are also copied to `~/Library/Developer/Xcode/Templates` during
 installation so that Xcode can find them.
 
-## Configure your development environment
+### Configure your development environment
 
 GStreamer is written in C, and the iOS API uses mostly Objective-C (and
 C for some parts), but this should cause no problems as those languages
 interoperate freely. You can mix both in the same source code, for
 example.
 
-### Building the tutorials
+#### Building the tutorials
 
 The GStreamer SDK ships a few tutorials in the `xcode iOS` folder inside
 the `.dmg` file. Copy them out of the package and into a more suitable
@@ -56,7 +56,7 @@ at the sources and build them. This should confirm that the installation
 works and give some insight on how simple it is to mix Objective-C and C
 code.
 
-### Creating new projects
+#### Creating new projects
 
 After installation, when creating a new Xcode project, you should see
 the GStreamer project templates under the `Templates` category. OS X and

@@ -4,7 +4,7 @@ title: Licensing advisory
 
 # Licensing advisory
 
-# How to license the applications you build with GStreamer
+## How to license the applications you build with GStreamer
 
 The licensing of GStreamer is no different from a lot of other libraries
 out there like GTK+ or glibc: we use the LGPL. What complicates things

@@ -17,7 +17,7 @@ object. When the mainloop is running, the bus will periodically be
 checked for new messages, and the callback will be called when any
 message is available.
 
-# How to use a bus
+## How to use a bus
 
 There are two different ways to use a bus:
 
@@ -84,7 +84,7 @@ handler that wakes up the custom mainloop and that uses
 [documentation](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/GstBus.html)
 for details)
 
-# Message types
+## Message types
 
 GStreamer has a few pre-defined message types that can be passed over
 the bus. The messages are extensible, however. Plug-ins can define

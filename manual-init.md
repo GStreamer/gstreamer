@@ -8,7 +8,7 @@ When writing a GStreamer application, you can simply include `gst/gst.h`
 to get access to the library functions. Besides that, you will also need
 to initialize the GStreamer library.
 
-# Simple initialization
+## Simple initialization
 
 Before the GStreamer libraries can be used, `gst_init` has to be called
 from the main application. This call will perform the necessary
@@ -60,7 +60,7 @@ It is also possible to call the `gst_init` function with two `NULL`
 arguments, in which case no command line options will be parsed by
 GStreamer.
 
-# The GOption interface
+## The GOption interface
 
 You can also use a GOption table to initialize your own parameters as
 shown in the next example:

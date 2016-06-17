@@ -8,7 +8,7 @@ When playing complex media, each sound and video sample must be played
 in a specific order at a specific time. For this purpose, GStreamer
 provides a synchronization mechanism.
 
-# Clocks
+## Clocks
 
 Time in GStreamer is defined as the value returned from a particular
 `GstClock` object from the method `gst_clock_get_time ()`.
@@ -24,7 +24,7 @@ As clocks return an absolute measure of time, they are not usually used
 directly. Instead, differences between two clock times are used to
 measure elapsed time according to a clock.
 
-# Clock running-time
+## Clock running-time
 
 A clock returns the **absolute-time** according to that clock with
 `gst_clock_get_time ()`. From the absolute-time is a **running-time**
@@ -45,7 +45,7 @@ Because all objects in the pipeline have the same clock and base-time,
 they can thus all calculate the running-time according to the pipeline
 clock.
 
-# Buffer running-time
+## Buffer running-time
 
 To calculate a buffer running-time, we need a buffer timestamp and the
 SEGMENT event that preceded the buffer. First we can convert the SEGMENT
@@ -59,12 +59,12 @@ running-time. Usually this task is done by sink elements. Sink also have
 to take into account the latency configured in the pipeline and add this
 to the buffer running-time before synchronizing to the pipeline clock.
 
-# Obligations of each element.
+## Obligations of each element.
 
 Let us clarify the contract between GStreamer and each element in the
 pipeline.
 
-## Non-live source elements
+### Non-live source elements
 
 Non-live source elements must place a timestamp in each buffer that they
 deliver when this is possible. They must choose the timestamps and the
@@ -78,7 +78,7 @@ buffers. It can and must however create a timestamp on the first buffer
 The source then pushes out the SEGMENT event followed by the timestamped
 buffers.
 
-## Live source elements
+### Live source elements
 
 Live source elements must place a timestamp in each buffer that they
 deliver. They must choose the timestamps and the values of the SEGMENT
@@ -86,13 +86,13 @@ event in such a way that the running-time of the buffer matches exactly
 the running-time of the pipeline clock when the first byte in the buffer
 was captured.
 
-## Parser/Decoder/Encoder elements
+### Parser/Decoder/Encoder elements
 
 Parser/Decoder elements must use the incoming timestamps and transfer
 those to the resulting output buffers. They are allowed to interpolate
 or reconstruct timestamps on missing input buffers when they can.
 
-## Demuxer elements
+### Demuxer elements
 
 Demuxer elements can usually set the timestamps stored inside the media
 file onto the outgoing buffers. They need to make sure that outgoing
@@ -101,13 +101,13 @@ running-time. Demuxers also need to take into account the incoming
 timestamps on buffers and use that to calculate an offset on the
 outgoing buffer timestamps.
 
-## Muxer elements
+### Muxer elements
 
 Muxer elements should use the incoming buffer running-time to mux the
 different streams together. They should copy the incoming running-time
 to the outgoing buffers.
 
-## Sink elements
+### Sink elements
 
 If the element is intended to emit samples at a specific time (real time
 playing), the element should require a clock, and thus implement the

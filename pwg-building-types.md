@@ -37,7 +37,7 @@ For now, the policy is simple:
     and get it added to the list of known types so that other developers
     can use the type correctly when writing their elements.
 
-# Building a Simple Format for Testing
+## Building a Simple Format for Testing
 
 If you need a new format that has not yet been defined in our [List of
 Defined Types](#list-of-defined-types), you will want to have some
@@ -58,7 +58,7 @@ Make sure that your property names do not clash with similar properties
 used in other types. If they match, make sure they mean the same thing;
 properties with different types but the same names are *not* allowed.
 
-# Typefind Functions and Autoplugging
+## Typefind Functions and Autoplugging
 
 With only *defining* the types, we're not yet there. In order for a
 random data file to be recognized and played back as such, we need a way
@@ -116,7 +116,7 @@ functions.
 Autoplugging has been discussed in great detail in the Application
 Development Manual.
 
-# List of Defined Types
+## List of Defined Types
 
 Below is a list of all the defined types in GStreamer. They are split up
 in separate tables for audio, video, container, subtitle and other

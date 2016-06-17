@@ -5,7 +5,7 @@ short-description: Complete walkthrough for building an application using GStrea
 
 # Application Development Manual
 
-# Foreword
+## Foreword
 
 GStreamer is an extremely powerful and versatile framework for creating
 streaming media applications. Many of the virtues of the GStreamer
@@ -20,9 +20,9 @@ effort going into helping you understand GStreamer concepts. Later
 chapters will go into more advanced topics related to media playback,
 but also at other forms of media processing (capture, editing, etc.).
 
-# Introduction
+## Introduction
 
-## Who should read this manual?
+### Who should read this manual?
 
 This book is about GStreamer from an application developer's point of
 view; it describes how to write a GStreamer application using the
@@ -32,7 +32,7 @@ we suggest the [Plugin Writers Guide](pwg-index.md).
 Also check out the other documentation available on the [GStreamer web
 site](http://gstreamer.freedesktop.org/documentation/).
 
-## Preliminary reading
+### Preliminary reading
 
 In order to understand this manual, you need to have a basic
 understanding of the *C language*.
@@ -57,7 +57,7 @@ Especially,
 
   - glib main loop
 
-## Structure of this manual
+### Structure of this manual
 
 To help you navigate through this guide, it is divided into several
 large parts. Each part addresses a particular broad topic concerning

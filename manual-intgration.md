@@ -10,7 +10,7 @@ environments (such as GNOME or KDE). In this chapter, we'll mention some
 specific techniques to integrate your application with your operating
 system or desktop environment of choice.
 
-# Linux and UNIX-like operating systems
+## Linux and UNIX-like operating systems
 
 GStreamer provides a basic set of elements that are useful when
 integrating with Linux or a UNIX-like operating system.
@@ -29,7 +29,7 @@ integrating with Linux or a UNIX-like operating system.
     hardware-accelerated video), direct-framebuffer (dfbimagesink) and
     openGL image contexts (glsink).
 
-# GNOME desktop
+## GNOME desktop
 
 GStreamer has been the media backend of the
 [GNOME](http://www.gnome.org/) desktop since GNOME-2.2 onwards.
@@ -131,7 +131,7 @@ integrate as closely as possible with the GNOME desktop:
     deprecated GNOME-VFS system is supported too but shouldn't be used
     for any new applications.
 
-# KDE desktop
+## KDE desktop
 
 GStreamer has been proposed for inclusion in KDE-4.0. Currently,
 GStreamer is included as an optional component, and it's used by several
@@ -146,12 +146,12 @@ probably grow as GStreamer starts to be used in KDE-4.0:
   - AmaroK contains a kiosrc element, which is a source element that
     integrates with the KDE VFS subsystem KIO.
 
-# OS X
+## OS X
 
 GStreamer provides native video and audio output elements for OS X. It
 builds using the standard development tools for OS X.
 
-# Windows
+## Windows
 
 > **Warning**
 > 
@@ -165,7 +165,7 @@ builds using the standard development tools for OS X.
 
 GStreamer builds using Microsoft Visual C .NET 2003 and using Cygwin.
 
-## Building GStreamer under Win32
+### Building GStreamer under Win32
 
 There are different makefiles that can be used to build GStreamer with
 the usual Microsoft compiling tools.
@@ -215,7 +215,7 @@ latest developments in this respect.
 > separately on the net for convenience (people who don't want to
 > install GNU tools).
 
-## Installation on the system
+### Installation on the system
 
 FIXME: This section needs be updated for GStreamer-1.0.
 

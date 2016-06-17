@@ -1,6 +1,6 @@
 # Playback tutorial 8: Hardware-accelerated video decoding
 
-## Goal
+### Goal
 
 Hardware-accelerated video decoding has rapidly become a necessity, as
 low-power devices grow more common. This tutorial (more of a lecture,
@@ -11,7 +11,7 @@ Sneak peek: if properly setup, you do not need to do anything special to
 activate hardware acceleration; GStreamer automatically takes advantage
 of it.
 
-## Introduction
+### Introduction
 
 Video decoding can be an extremely CPU-intensive task, especially for
 higher resolutions like 1080p HDTV. Fortunately, modern graphics cards,
@@ -85,7 +85,7 @@ the [gstreamer-ducati](https://github.com/robclark/gst-ducati) plugin.
    `v4l2` plugin in `gst-plugins-good`. This can support both decoding
    and encoding depending on the platform.
 
-## Inner workings of hardware-accelerated video decoding plugins
+### Inner workings of hardware-accelerated video decoding plugins
 
 These APIs generally offer a number of functionalities, like video
 decoding, post-processing, or presentation of the decoded
@@ -170,7 +170,7 @@ the auto-plugging mechanism to never select it.
 > ![warning] The GStreamer developers often rank hardware decoders lower than
 > the software ones when they are defective. This should act as a warning.
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown a bit how GStreamer internally manages hardware
 accelerated video decoding. Particularly,

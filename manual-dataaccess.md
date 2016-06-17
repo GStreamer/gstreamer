@@ -14,7 +14,7 @@ a pipeline from your application, how to read data from a pipeline, how
 to manipulate the pipeline's speed, length, starting point and how to
 listen to a pipeline's data processing.
 
-# Using probes
+## Using probes
 
 Probing is best envisioned as a pad listener. Technically, a probe is
 nothing more than a callback that can be attached to a pad. You can
@@ -96,7 +96,7 @@ The probe can notify you of the following activity on pads:
     [Dynamically changing the
     pipeline](#dynamically-changing-the-pipeline).
 
-## Data probes
+### Data probes
 
 Data probes allow you to be notified when there is data passing on a
 pad. When adding the probe, specify the GST\_PAD\_PROBE\_TYPE\_BUFFER
@@ -258,7 +258,7 @@ The identity element also provides a few useful debugging tools like the
 passing the '-v' switch to gst-launch and by setting the silent property
 on the identity to FALSE).
 
-## Play a region of a media file
+### Play a region of a media file
 
 In this example we will show you how to play back a region of a media
 file. The goal is to only play the part of a file from 2 seconds to 5
@@ -481,7 +481,7 @@ this second block to remove the probes. Then we set the pipeline to
 PLAYING and it should play from 2 to 5 seconds, then EOS and exit the
 application.
 
-# Manually adding or removing data from/to a pipeline
+## Manually adding or removing data from/to a pipeline
 
 Many people have expressed the wish to use their own sources to inject
 data into a pipeline. Some people have also expressed the wish to grab
@@ -508,7 +508,7 @@ GObject (action) signals and properties. The same API is also available
 as a regular C api. The C api is more performant but requires you to
 link to the app library in order to use the elements.
 
-## Inserting data with appsrc
+### Inserting data with appsrc
 
 First we look at some examples for appsrc, which lets you insert data
 into the pipeline from the application. Appsrc has some configuration
@@ -582,7 +582,7 @@ When the last byte is pushed into appsrc, you must call
 These signals allow the application to operate appsrc in push and pull
 mode as will be explained next.
 
-### Using appsrc in push mode
+#### Using appsrc in push mode
 
 When appsrc is configured in push mode (stream-type is stream or
 seekable), the application repeatedly calls the push-buffer method with
@@ -599,7 +599,7 @@ seek-data callback.
 Use this model when implementing various network protocols or hardware
 devices.
 
-### Using appsrc in pull mode
+#### Using appsrc in pull mode
 
 In the pull model, data is fed to appsrc from the need-data signal
 handler. You should push exactly the amount of bytes requested in the
@@ -608,7 +608,7 @@ at the end of the stream.
 
 Use this model for file access or other randomly accessable sources.
 
-### Appsrc example
+#### Appsrc example
 
 This example application will generate black/white (it switches every
 second) video to an Xv-window output by using appsrc as a source with
@@ -710,7 +710,7 @@ main (gint   argc,
         
 ```
 
-## Grabbing data with appsink
+### Grabbing data with appsink
 
 Unlike appsrc, appsink is a little easier to use. It also supports a
 pull and push based model of getting data from the pipeline.
@@ -761,7 +761,7 @@ Consider configuring the following properties in the appsink:
     caps on appsink. You must still check the `GstSample` to get the
     actual caps of the buffer.
 
-### Appsink example
+#### Appsink example
 
 What follows is an example on how to capture a snapshot of a video
 stream using appsink.
@@ -913,7 +913,7 @@ main (int argc, char *argv[])
 
 ```
 
-# Forcing a format
+## Forcing a format
 
 Sometimes you'll want to set a specific format, for example a video size
 and format or an audio bitsize and number of channels. You can do this
@@ -925,7 +925,7 @@ types matching that specified capability set for negotiation. See also
 [Creating capabilities for
 filtering](manual-pads.md#creating-capabilities-for-filtering).
 
-## Changing format in a PLAYING pipeline
+### Changing format in a PLAYING pipeline
 
 It is also possible to dynamically change the format in a pipeline while
 PLAYING. This can simply be done by changing the caps property on a
@@ -1027,7 +1027,7 @@ It is possible to set multiple caps for the capsfilter separated with a
 ;. The capsfilter will try to renegotiate to the first possible format
 from the list.
 
-# Dynamically changing the pipeline
+## Dynamically changing the pipeline
 
 In this section we talk about some techniques for dynamically modifying
 the pipeline. We are talking specifically about changing the pipeline
@@ -1116,7 +1116,7 @@ modification but it requires you to know a bit of details before you can
 do this without causing pipeline errors. In the following sections we
 will demonstrate a couple of typical use-cases.
 
-## Changing elements in a pipeline
+### Changing elements in a pipeline
 
 In the next example we look at the following chain of elements:
 

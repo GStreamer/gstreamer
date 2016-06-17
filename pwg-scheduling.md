@@ -23,7 +23,7 @@ called in turn.
 Before we explain pull-mode scheduling, let's first understand how the
 different scheduling modes are selected and activated on a pad.
 
-# The pad activation stage
+## The pad activation stage
 
 During the element state change of READY-\>PAUSED, the pads of an
 element will be activated. This happens first on the source pads and
@@ -88,7 +88,7 @@ In the next two sections, we will go closer into pull-mode scheduling
 (elements/pads driving the pipeline, and elements/pads providing random
 access), and some specific use cases will be given.
 
-# Pads driving the pipeline
+## Pads driving the pipeline
 
 Sinkpads operating in pull-mode, with the sourcepads operating in
 push-mode (or it has no sourcepads when it is a sink), can start a task
@@ -264,7 +264,7 @@ far.
     }
 ```
 
-# Providing random access
+## Providing random access
 
 In the previous section, we have talked about how elements (or pads)
 that are activated to drive the pipeline using their own task, must use

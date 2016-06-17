@@ -14,7 +14,7 @@ and doing complex caps negotiation. For this purpose, GStreamer provides
 base classes that simplify some types of elements. Those base classes
 will be discussed in this chapter.
 
-# Writing a sink
+## Writing a sink
 
 Sinks are special elements in GStreamer. This is because sink elements
 have to take care of *preroll*, which is the process that takes care
@@ -71,7 +71,7 @@ The advantages of deriving from `GstBaseSink` are numerous:
 There are also specialized base classes for audio and video, let's look
 at those a bit.
 
-## Writing an audio sink
+### Writing an audio sink
 
 Essentially, audio sink implementations are just a special case of a
 general sink. An audio sink has the added complexity that it needs to
@@ -117,7 +117,7 @@ In addition to implementing the audio base-class virtual functions,
 derived classes can (should) also implement the `GstBaseSink` `set_caps
 ()` and `get_caps ()` virtual functions for negotiation.
 
-## Writing a video sink
+### Writing a video sink
 
 Writing a videosink can be done using the `GstVideoSink` base-class,
 which derives from `GstBaseSink` internally. Currently, it does nothing
@@ -134,7 +134,7 @@ videosink:
     extensions to videosinks that affect all of them, but only need to
     be coded once, which is a huge maintenance benefit.
 
-# Writing a source
+## Writing a source
 
 In the previous part, particularly [Providing random
 access](pwg-scheduling.md#providing-random-access), we have learned
@@ -169,7 +169,7 @@ It is possible to use special memory, such as X server memory pointers
 or `mmap ()`'ed memory areas, as data pointers in buffers returned from
 the `create()` virtual function.
 
-## Writing an audio source
+### Writing an audio source
 
 An audio source is nothing more but a special case of a pushsource.
 Audio sources would be anything that reads audio, such as a source
@@ -192,7 +192,7 @@ on:
   - New features can be added to it and will apply to all derived
     classes automatically.
 
-# Writing a transformation element
+## Writing a transformation element
 
 A third base-class that GStreamer provides is the `GstBaseTransform`.
 This is a base class for elements with one sourcepad and one sinkpad

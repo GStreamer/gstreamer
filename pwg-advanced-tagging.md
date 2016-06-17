@@ -4,7 +4,7 @@ title: Tagging (Metadata and Streaminfo)
 
 # Tagging (Metadata and Streaminfo)
 
-# Overview
+## Overview
 
 Tags are pieces of information stored in a stream that are not the
 content itself, but they rather *describe* the content. Most media
@@ -46,7 +46,7 @@ supporting both can be used in a tag editor for quick tag changing
 writing and usually requires tag extraction/stripping and remuxing of
 the stream with new tags).
 
-# Reading Tags from Streams
+## Reading Tags from Streams
 
 The basic object for tags is a [`GstTagList
 `](../../gstreamer/html/GstTagList.html). An element that is reading
@@ -88,7 +88,7 @@ gst_my_filter_class_init (GstMyFilterClass *klass)
     
 ```
 
-# Writing Tags to Streams
+## Writing Tags to Streams
 
 Tag writers are the opposite of tag readers. Tag writers only take
 metadata tags into account, since that's the only type of tags that have

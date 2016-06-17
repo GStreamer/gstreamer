@@ -17,7 +17,7 @@ configure things such as the thread priority or the threadpool to use.
 See [Configuring Threads in
 GStreamer](#configuring-threads-in-gstreamer).
 
-# Scheduling in GStreamer
+## Scheduling in GStreamer
 
 Each element in the GStreamer pipeline decides how it is going to be
 scheduled. Elements can choose if their pads are to be scheduled
@@ -34,7 +34,7 @@ threads, or `GstTask` objects, are created from a `GstTaskPool` when the
 element needs to make a streaming thread. In the next section we see how
 we can receive notifications of the tasks and pools.
 
-# Configuring Threads in GStreamer
+## Configuring Threads in GStreamer
 
 A STREAM\_STATUS message is posted on the bus to inform you about the
 status of the streaming threads. You will get the following information
@@ -61,7 +61,7 @@ from the message:
 
 We will now look at some examples in the next sections.
 
-## Boost priority of a thread
+### Boost priority of a thread
 
 ``` 
         .----------.    .----------.
@@ -335,7 +335,7 @@ message, which is likely the pad or the element that starts the thread,
 to figure out what the function of this thread is in the context of the
 application.
 
-# When would you want to force a thread?
+## When would you want to force a thread?
 
 We have seen that threads are created by elements but it is also
 possible to insert elements in the pipeline for the sole purpose of

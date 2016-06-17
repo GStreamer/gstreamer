@@ -7,7 +7,7 @@ title: Compiling
 This section talks about the different things you can do when building
 and shipping your applications and plugins.
 
-# Embedding static elements in your application
+## Embedding static elements in your application
 
 The [Plugin Writer's
 Guide](http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/index.html)

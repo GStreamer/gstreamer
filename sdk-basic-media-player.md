@@ -1,6 +1,6 @@
 # Basic Media Player
 
-# Goal
+## Goal
 
 This tutorial shows how to create a basic media player with
 [Qt](http://qt-project.org/) and
@@ -15,7 +15,7 @@ In particular, you will learn:
   - How to create a video output
   - Updating the GUI based on playback time
 
-# A media player with Qt
+## A media player with Qt
 
 These files are located in the qt-gstreamer SDK's `examples/` directory.
 
@@ -29,7 +29,7 @@ each file to expand.
 ```
 project(qtgst-example-player)
 find_package(QtGStreamer REQUIRED)
-# automoc is now a built-in tool since CMake 2.8.6.
+## automoc is now a built-in tool since CMake 2.8.6.
 if (${CMAKE_VERSION} VERSION_LESS "2.8.6")
     find_package(Automoc4 REQUIRED)
 else()
@@ -545,9 +545,9 @@ void Player::handlePipelineStateChange(const QGst::StateChangedMessagePtr & scm)
 #include "moc_player.cpp"
 ```
 
-# Walkthrough
+## Walkthrough
 
-## Setting up GStreamer
+### Setting up GStreamer
 
 We begin by looking at `main()`:
 
@@ -710,7 +710,7 @@ Finally, we tell `playbin` what to play by setting the `uri` property:
 m_pipeline->setProperty("uri", realUri);
 ```
 
-## Starting Playback
+### Starting Playback
 
 After `Player::setUri()` is called, `MediaApp::openFile()` calls
 `play()` on the `Player` object:
@@ -861,7 +861,7 @@ Due to the way Qt handles signals that cross threads, there is no need
 to worry about calling UI functions from outside the UI thread in this
 example.
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown:
 

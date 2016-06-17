@@ -4,7 +4,7 @@ QtGStreamer is designed to mirror the C GStreamer API as closely as
 possible. There are, of course, minor differences. They are documented
 here.
 
-# Common Functions
+## Common Functions
 
 <table>
 <colgroup>
@@ -37,12 +37,12 @@ here.
 </tbody>
 </table>
 
-# Naming Convention
+## Naming Convention
 
 QtGStreamer follows a strict naming policy to help make cross
 referencing easier:
 
-### Namespaces
+#### Namespaces
 
 The "G" namespace (`GObject`, `GValue`, etc...) is referred to as
 "QGlib".
@@ -50,13 +50,13 @@ The "G" namespace (`GObject`, `GValue`, etc...) is referred to as
 The "Gst" namespace (`GstObject`, `GstElement`, etc...) is referred to
 as "QGst".
 
-### Class Names
+#### Class Names
 
 Class names should be the same as their G\* equivalents, with the
 namespace prefix removed. For example, "`GstObject`" becomes
 "`QGst::Object`", "`GParamSpec`" becomes "`QGlib::ParamSpec`", etc...
 
-### Method Names
+#### Method Names
 
 In general the method names should be the same as the GStreamer ones,
 with the g\[st\]\_\<class\> prefix removed and converted to camel case.
@@ -92,12 +92,12 @@ There are cases where this may not be followed:
     make sense in english, as "sate" is the subject and should go before
     the verb "is". So, it becomes `stateIsLocked()`.
 
-# Reference Counting
+## Reference Counting
 
 Reference counting is handled the same way as Qt does. There is no need
 to call `g_object_ref()`` and g_object_unref()`.
 
-# Access to GStreamer Elements
+## Access to GStreamer Elements
 
 QtGStreamer provides access to the underlying C objects, in case you
 need them. This is accessible with a simple cast:

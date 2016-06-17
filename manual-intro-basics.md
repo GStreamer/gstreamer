@@ -9,7 +9,7 @@ Understanding these concepts will be important in reading any of the
 rest of this guide, all of them assume understanding of these basic
 concepts.
 
-# Elements
+## Elements
 
 An *element* is the most important class of objects in GStreamer. You
 will usually create a chain of elements linked together and let data
@@ -23,7 +23,7 @@ development of a large variety of media applications possible. If
 needed, you can also write new elements. That topic is explained in
 great deal in the *GStreamer Plugin Writer's Guide*.
 
-# Pads
+## Pads
 
 *Pads* are element's input and output, where you can connect other
 elements. They are used to negotiate links and data flow between
@@ -56,7 +56,7 @@ object) and events (described by the
 [`GstEvent`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/gstreamer-GstEvent.html)
 object).
 
-# Bins and pipelines
+## Bins and pipelines
 
 A *bin* is a container for a collection of elements. Since bins are
 subclasses of elements themselves, you can mostly control a bin as if it
@@ -75,7 +75,7 @@ you stop them or the end of the data stream is reached.
 ![GStreamer pipeline for a simple ogg player](images/simple-player.png
 "fig:")
 
-# Communication
+## Communication
 
 GStreamer provides several mechanisms for communication and data
 exchange between the *application* and the *pipeline*.

@@ -29,7 +29,7 @@ Lastly, we will explain how autoplugging and the GStreamer registry can
 be used to setup a pipeline that will convert media from one mediatype
 to another, for example for media decoding.
 
-# Media types as a way to identify streams
+## Media types as a way to identify streams
 
 We have previously introduced the concept of capabilities as a way for
 elements (or, rather, pads) to agree on a media type when streaming data
@@ -62,7 +62,7 @@ Now that we have an idea how GStreamer identifies known media streams,
 we can look at methods GStreamer uses to setup pipelines for media
 handling and for media type detection.
 
-# Media stream type detection
+## Media stream type detection
 
 Usually, when loading a media stream, the type of the stream is not
 known. This means that before we can choose a pipeline to decode the
@@ -181,7 +181,7 @@ Once a media type has been detected, you can plug an element (e.g. a
 demuxer or decoder) to the source pad of the typefind element, and
 decoding of the media stream will start right after.
 
-# Dynamically autoplugging a pipeline
+## Dynamically autoplugging a pipeline
 
 See [Playback Components](manual-playback-components.md) for using the
 high level object that you can use to dynamically construct pipelines.

@@ -11,7 +11,7 @@ media that the element can handle will be exposed by the pad's
 capabilities. We will talk more on capabilities later in this chapter
 (see [Capabilities of a pad](#capabilities-of-a-pad)).
 
-# Pads
+## Pads
 
 A pad type is defined by two properties: its direction and its
 availability. As we've mentioned before, GStreamer defines two pad
@@ -29,7 +29,7 @@ exist, sometimes pad exist only in certain cases (and can disappear
 randomly), and on-request pads appear only if explicitly requested by
 applications.
 
-## Dynamic (or sometimes) pads
+### Dynamic (or sometimes) pads
 
 Some elements might not have all of their pads when the element is
 created. This can happen, for example, with an Ogg demuxer element. The
@@ -109,7 +109,7 @@ It is not uncommon to add elements to the pipeline only from within the
 the newly-added elements to the target state of the pipeline using
 `gst_element_set_state ()` or `gst_element_sync_state_with_parent ()`.
 
-## Request pads
+### Request pads
 
 An element can also have request pads. These pads are not created
 automatically but are only created on demand. This is very useful for
@@ -136,7 +136,7 @@ an Ogg multiplexer from any input.
 
 {{ examples/snippets.c#link_to_multiplexer }}
 
-# Capabilities of a pad
+## Capabilities of a pad
 
 Since the pads play a very important role in how the element is viewed
 by the outside world, a mechanism is implemented to describe the data
@@ -155,7 +155,7 @@ which case the pad is not yet negotiated, or it is the type of media
 that currently streams over this pad, in which case the pad has been
 negotiated already.
 
-## Dissecting capabilities
+### Dissecting capabilities
 
 A pad's capabilities are described in a `GstCaps` object. Internally, a
 [`GstCaps`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/gstreamer-GstCaps.html)
@@ -195,7 +195,7 @@ Pad Templates:
       
 ```
 
-## Properties and values
+### Properties and values
 
 Properties are used to describe extra information for capabilities. A
 property consists of a key (a string) and a value. There are different
@@ -261,7 +261,7 @@ possible value types that can be used:
     Unlike a `GST_TYPE_LIST`, the values in an array will be interpreted
     as a whole.
 
-# What capabilities are used for
+## What capabilities are used for
 
 Capabilities (short: caps) describe the type of data that is streamed
 between two pads, or that one pad (template) supports. This makes them
@@ -295,7 +295,7 @@ very useful for various purposes:
     to convert data to a specific output format at a certain point in a
     stream.
 
-## Using capabilities for metadata
+### Using capabilities for metadata
 
 A pad can have a set (i.e. one or more) of capabilities attached to it.
 Capabilities (`GstCaps`) are represented as an array of one or more
@@ -347,7 +347,7 @@ read_video_props (GstCaps *caps)
       
 ```
 
-## Creating capabilities for filtering
+### Creating capabilities for filtering
 
 While capabilities are mainly used inside a plugin to describe the media
 type of the pads, the application programmer often also has to have
@@ -436,7 +436,7 @@ See the API references for the full API of
 and
 [`GstCaps`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/gstreamer-GstCaps.html).
 
-# Ghost pads
+## Ghost pads
 
 You can see from [Visualisation of a GstBin element without ghost
 pads](#visualisation-of-a-gstbin-------element-without-ghost-pads) how a

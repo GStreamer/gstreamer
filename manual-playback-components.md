@@ -21,7 +21,7 @@ advanced features, such as playlist support, crossfading of audio tracks
 and so on. Its programming interface is more low-level than that of
 playbin, though.
 
-# Playbin
+## Playbin
 
 Playbin is an element that can be created using the standard GStreamer
 API (e.g. `gst_element_factory_make ()`). The factory is conveniently
@@ -109,7 +109,7 @@ Playbin has several features that have been discussed previously:
 For convenience, it is possible to test “playbin” on the commandline,
 using the command “gst-launch-1.0 playbin uri=file:///path/to/file”.
 
-# Decodebin
+## Decodebin
 
 Decodebin is the actual autoplugger backend of playbin, which was
 discussed in the previous section. Decodebin will, in short, accept
@@ -246,7 +246,7 @@ Decodebin can be easily tested on the commandline, e.g. by using the
 command `gst-launch-1.0 filesrc location=file.ogg ! decodebin
 ! audioconvert ! audioresample ! autoaudiosink`.
 
-# URIDecodebin
+## URIDecodebin
 
 The uridecodebin element is very similar to decodebin, only that it
 automatically plugs a source plugin based on the protocol of the URI
@@ -279,7 +279,7 @@ URIDecodebin can be easily tested on the commandline, e.g. by using the
 command `gst-launch-1.0 uridecodebin uri=file:///file.ogg !
 ! audioconvert ! audioresample ! autoaudiosink`.
 
-# Playsink
+## Playsink
 
 The playsink element is a powerful sink element. It has request pads for
 raw decoded audio, video and text and it will configure itself to play

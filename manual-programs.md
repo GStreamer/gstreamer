@@ -4,7 +4,7 @@ title: Programs
 
 # Programs
 
-# `gst-launch`
+## `gst-launch`
 
 This is a tool that will construct pipelines based on a command-line
 syntax.
@@ -106,13 +106,13 @@ main (int argc, char *argv[])
 Note how we can retrieve the filesrc element from the constructed bin
 using the element name.
 
-## Grammar Reference
+### Grammar Reference
 
 The `gst-launch` syntax is processed by a flex/bison parser. This
 section is intended to provide a full specification of the grammar; any
 deviations from this specification is considered a bug.
 
-### Elements
+#### Elements
 
 ``` 
           ... mad ...
@@ -124,7 +124,7 @@ letters, numbers, dashes, underscores, percent signs, or colons) will
 create an element from a given element factory. In this example, an
 instance of the "mad" MP3 decoding plugin will be created.
 
-### Links
+#### Links
 
 ``` 
           ... !sink ...
@@ -140,7 +140,7 @@ constructed will be chosen. An attempt will be made to find compatible
 pads. Pad names may be preceded by an element name, as in
 `my_element_name.sink_pad`.
 
-### Properties
+#### Properties
 
 ``` 
           ... location="http://gstreamer.net" ...
@@ -161,7 +161,7 @@ guaranteed to work, it relies on the g\_value\_convert routines. No
 error message will be displayed on an invalid conversion, due to
 limitations in the value convert API.
 
-### Bins, Threads, and Pipelines
+#### Bins, Threads, and Pipelines
 
 ``` 
           ( ... )
@@ -175,7 +175,7 @@ curly braces make threads. The default toplevel bin type is a pipeline,
 although putting the whole description within parentheses or braces can
 override this default.
 
-# `gst-inspect`
+## `gst-inspect`
 
 This is a tool to query a plugin or an element about its properties.
 

@@ -11,7 +11,7 @@ the relevant sections in this Application Development Manual where
 needed. With this list, it should be possible to port simple
 applications to GStreamer-0.10 in less than a day.
 
-# List of changes
+## List of changes
 
   - Most functions returning an object or an object property have been
     changed to return its own reference rather than a constant reference

@@ -10,7 +10,7 @@ extending GStreamer. Many of these concepts are explained in greater
 detail in the *GStreamer Application Development Manual*; the basic
 concepts presented here serve mainly to refresh your memory.
 
-# Elements and Plugins
+## Elements and Plugins
 
 Elements are at the core of GStreamer. In the context of plugin
 development, an *element* is an object derived from the [`
@@ -51,7 +51,7 @@ See the *GStreamer Library Reference* for the current implementation
 details of [`GstElement`](../../gstreamer/html/GstElement.html) and
 [`GstPlugin`](../../gstreamer/html/GstPlugin.html).
 
-# Pads
+## Pads
 
 *Pads* are used to negotiate links and data flow between elements in
 GStreamer. A pad can be viewed as a “place” or “port” on an element
@@ -80,7 +80,7 @@ respectively.
 See the *GStreamer Library Reference* for the current implementation
 details of a [`GstPad`](../../gstreamer/html/GstPad.html).
 
-# GstMiniObject, Buffers and Events
+## GstMiniObject, Buffers and Events
 
 All streams of data in GStreamer are chopped up into chunks that are
 passed from a source pad on one element to a sink pad on another
@@ -136,7 +136,7 @@ details of a
 [`GstBuffer`](../../gstreamer/html/GstBuffer.html) and
 [`GstEvent`](../../gstreamer/html/GstEvent.html).
 
-## Buffer Allocation
+### Buffer Allocation
 
 Buffers are able to store chunks of memory of several different types.
 The most generic type of buffer contains memory allocated by malloc().
@@ -175,7 +175,7 @@ framework can choose the fastest algorithm as appropriate. Naturally,
 this only makes sense for strict filters -- elements that have exactly
 the same format on source and sink pads.
 
-# Media types and Properties
+## Media types and Properties
 
 GStreamer uses a type system to ensure that the data passed between
 elements is in a recognized format. The type system is also important
@@ -185,7 +185,7 @@ made between elements has a specified type and optionally a set of
 properties. See more about caps negotiation in [Caps
 negotiation](pwg-negotiation.md).
 
-## The Basic Types
+### The Basic Types
 
 GStreamer already supports many basic media types. Following is a table
 of a few of the basic types used for buffers in GStreamer. The table

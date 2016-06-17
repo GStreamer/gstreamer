@@ -1,6 +1,6 @@
 # Using appsink/appsrc in Qt
 
-# Goal
+## Goal
 
 For those times when you need to stream data into or out of GStreamer
 through your application, GStreamer includes two helpful elements:
@@ -15,7 +15,7 @@ pipeline to decode an audio file, stream it into an application's code,
 then stream it back into your audio output device. All this, using
 QtGStreamer.
 
-# Steps
+## Steps
 
 First, the files. These are also available in the
 `examples/appsink-src` directory of the QGstreamer SDK.
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 }
 ```
 
-## Walkthrough
+### Walkthrough
 
 As this is a very simple example, most of the action happens in the
 `Player`'s constructor. First, GStreamer is initialized through
@@ -233,7 +233,7 @@ Player::Player(int argc, char **argv)
 From there, buffers flow into the `autoaudiosink` element, which
 automatically figures out a way to send it to your speakers.
 
-# Conclusion
+## Conclusion
 
 You should now have an understanding of how to push and pull arbitrary
 data into and out of a GStreamer pipeline.

@@ -9,7 +9,7 @@ is an element itself, a bin can be handled in the same way as any other
 element. Therefore, the whole previous chapter
 ([Elements](manual-elements.md)) applies to bins as well.
 
-# What are bins
+## What are bins
 
 Bins allow you to combine a group of linked elements into one logical
 element. You do not deal with the individual elements anymore but with
@@ -31,7 +31,7 @@ programmer:
     bus messages of the contained elements. The toplevel bin has to be a
     pipeline, every application thus needs at least one of these.
 
-# Creating a bin
+## Creating a bin
 
 Bins are created in the same way that other elements are created, i.e.
 using an element factory. There are also convenience functions available
@@ -81,7 +81,7 @@ the function `gst_bin_iterate_elements ()`. See the API references of
 [`GstBin`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/GstBin.html)
 for details.
 
-# Custom bins
+## Custom bins
 
 The application programmer can create custom bins packed with elements
 to perform a specific task. This allows you, for example, to write an
@@ -121,7 +121,7 @@ Guide](http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/index.h
 Examples of such custom bins are the playbin and uridecodebin elements
 from[gst-plugins-base](http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/index.html).
 
-# Bins manage states of their children
+## Bins manage states of their children
 
 Bins manage the state of all elements contained in them. If you set a
 bin (or a pipeline, which is a special top-level type of bin) to a
