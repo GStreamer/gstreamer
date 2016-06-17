@@ -99,6 +99,9 @@ static const char gst_vaapi_decode_bin_sink_caps_str[] =
 #if USE_VP8_DECODER
     GST_CAPS_CODEC("video/x-vp8")
 #endif
+#if USE_VP9_DECODER
+    GST_CAPS_CODEC("video/x-vp9")
+#endif
     ;
 /* *INDENT-ON* */
 
