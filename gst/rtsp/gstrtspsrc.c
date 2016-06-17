@@ -2843,6 +2843,10 @@ request_rtcp_encoder (GstElement * rtpbin, guint session,
       gst_value_deserialize (&rtcp_auth, str);
       gst_structure_get (s, "srtp-key", GST_TYPE_BUFFER, &buf, NULL);
 
+      g_object_set_property (G_OBJECT (stream->srtpenc), "rtp-cipher",
+          &rtcp_cipher);
+      g_object_set_property (G_OBJECT (stream->srtpenc), "rtp-auth",
+          &rtcp_auth);
       g_object_set_property (G_OBJECT (stream->srtpenc), "rtcp-cipher",
           &rtcp_cipher);
       g_object_set_property (G_OBJECT (stream->srtpenc), "rtcp-auth",
@@ -5971,8 +5975,10 @@ default_srtcp_params (void)
 
   buf = gst_buffer_new_wrapped (key_data, KEY_SIZE);
 
-  caps = gst_caps_new_simple ("application/x-srtp",
+  caps = gst_caps_new_simple ("application/x-srtcp",
       "srtp-key", GST_TYPE_BUFFER, buf,
+      "srtp-cipher", G_TYPE_STRING, "aes-128-icm",
+      "srtp-auth", G_TYPE_STRING, "hmac-sha1-80",
       "srtcp-cipher", G_TYPE_STRING, "aes-128-icm",
       "srtcp-auth", G_TYPE_STRING, "hmac-sha1-80", NULL);
 
