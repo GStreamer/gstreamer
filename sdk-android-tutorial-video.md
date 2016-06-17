@@ -1,9 +1,10 @@
 # Android tutorial 3: Video
 
-# Goal ![](attachments/thumbnails/2687065/2654413)
+## Goal
 
-Except for [Basic tutorial 5: GUI toolkit
-integration](Basic%2Btutorial%2B5%253A%2BGUI%2Btoolkit%2Bintegration.html),
+![screenshot]
+
+Except for [](sdk-basic-tutorial-toolkit-integration.md),
 which embedded a video window on a GTK application, all tutorials so far
 relied on GStreamer video sinks to create a window to display their
 contents. The video sink on Android is not capable of creating its own
@@ -14,25 +15,24 @@ shows:
     to GStreamer
   - How to keep GStreamer posted on changes to the surface
 
-# Introduction
+## Introduction
 
 Since Android does not provide a windowing system, a GStreamer video
 sink cannot create pop-up windows as it would do on a Desktop platform.
-Fortunately, the `XOverlay` interface allows providing video sinks with
+Fortunately, the `VideoOverlay` interface allows providing video sinks with
 an already created window onto which they can draw, as we have seen in
-[Basic tutorial 5: GUI toolkit
-integration](Basic%2Btutorial%2B5%253A%2BGUI%2Btoolkit%2Bintegration.html).
+[](sdk-basic-tutorial-toolkit-integration).
 
 In this tutorial, a
 [SurfaceView](http://developer.android.com/reference/android/view/SurfaceView.html)
 widget (actually, a subclass of it) is placed on the main layout. When
 Android informs the application that a surface has been created for this
 widget, we pass it to the C code which stores it. The
-`check_initialization_complete()` method explained in the previous
+`check_initialization_complete()` method explained in the previous
 tutorial is extended so that GStreamer is not considered initialized
 until a main loop is running and a drawing surface has been received.
 
-# A video surface on Android \[Java code\]
+## A video surface on Android \[Java code\]
 
 **src/com/gst\_sdk\_tutorials/tutorial\_3/Tutorial3.java**
 
@@ -50,7 +50,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.gstreamer.GStreamer;
+import org.freedesktop.gstreamer.GStreamer;
 
 public class Tutorial3 extends Activity implements SurfaceHolder.Callback {
     private native void nativeInit();     // Initialize native code, build pipeline, etc
@@ -193,7 +193,7 @@ private native void nativeSurfaceFinalize();
 ```
 
 Two new entry points to the C code are defined,
-`nativeSurfaceInit()` and `nativeSurfaceFinalize()`, which we will call
+`nativeSurfaceInit()` and `nativeSurfaceFinalize()`, which we will call
 when the video surface becomes available and when it is about to be
 destroyed, respectively.
 
@@ -232,25 +232,25 @@ public void surfaceDestroyed(SurfaceHolder holder) {
 
 This interface is composed of the three methods above, which get called
 when the geometry of the surface changes, when the surface is created
-and when it is about to be destroyed. `surfaceChanged()` always gets
+and when it is about to be destroyed. `surfaceChanged()` always gets
 called at least once, right after `surfaceCreated()`, so we will use it
 to notify GStreamer about the new surface. We use
-`surfaceDestroyed()` to tell GStreamer to stop using this surface.
+`surfaceDestroyed()` to tell GStreamer to stop using this surface.
 
 Let’s review the C code to see what these functions do.
 
-# A video surface on Android \[C code\]
+## A video surface on Android \[C code\]
 
 **jni/tutorial-3.c**
 
 ``` c
 #include <string.h>
+#include <stdint.h>
 #include <jni.h>
 #include <android/log.h>
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
 #include <gst/video/video.h>
 #include <pthread.h>
 
@@ -276,7 +276,7 @@ typedef struct _CustomData {
   GMainContext *context;  /* GLib context used to run the main loop */
   GMainLoop *main_loop;   /* GLib main loop */
   gboolean initialized;   /* To avoid informing the UI multiple times about the initialization */
-  GstElement *video_sink; /* The video sink element which receives XOverlay commands */
+  GstElement *video_sink; /* The video sink element which receives VideoOverlay commands */
   ANativeWindow *native_window; /* The Android native window where video will be rendered */
 } CustomData;
 
@@ -376,7 +376,7 @@ static void check_initialization_complete (CustomData *data) {
     GST_DEBUG ("Initialization complete, notifying application. native_window:%p main_loop:%p", data->native_window, data->main_loop);
 
     /* The main loop is running and we received a native window, inform the sink about it */
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->video_sink), (guintptr)data->native_window);
+    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (data->video_sink), (guintptr)data->native_window);
 
     (*env)->CallVoidMethod (env, data->app, on_gstreamer_initialized_method_id);
     if ((*env)->ExceptionCheck (env)) {
@@ -414,7 +414,7 @@ static void *app_function (void *userdata) {
   /* Set the pipeline to READY, so it can already accept a window handle, if we have one */
   gst_element_set_state(data->pipeline, GST_STATE_READY);
 
-  data->video_sink = gst_bin_get_by_interface(GST_BIN(data->pipeline), GST_TYPE_X_OVERLAY);
+  data->video_sink = gst_bin_get_by_interface(GST_BIN(data->pipeline), GST_TYPE_VIDEO_OVERLAY);
   if (!data->video_sink) {
     GST_ERROR ("Could not retrieve video sink");
     return NULL;
@@ -524,8 +524,8 @@ static void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface)
     if (data->native_window == new_native_window) {
       GST_DEBUG ("New native window is the same as the previous one", data->native_window);
       if (data->video_sink) {
-        gst_x_overlay_expose(GST_X_OVERLAY (data->video_sink));
-        gst_x_overlay_expose(GST_X_OVERLAY (data->video_sink));
+        gst_video_overlay_expose(GST_VIDEO_OVERLAY (data->video_sink));
+        gst_video_overlay_expose(GST_VIDEO_OVERLAY (data->video_sink));
       }
       return;
     } else {
@@ -544,7 +544,7 @@ static void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
   GST_DEBUG ("Releasing Native Window %p", data->native_window);
 
   if (data->video_sink) {
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->video_sink), (guintptr)NULL);
+    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (data->video_sink), (guintptr)NULL);
     gst_element_set_state (data->pipeline, GST_STATE_READY);
   }
 
@@ -583,16 +583,16 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 }
 ```
 
-First, our `CustomData` structure is augmented to keep a pointer to the
+First, our `CustomData` structure is augmented to keep a pointer to the
 video sink element and the native window
 handle:
 
 ``` c
-GstElement *video_sink; /* The video sink element which receives XOverlay commands */
+GstElement *video_sink; /* The video sink element which receives VideoOverlay commands */
 ANativeWindow *native_window; /* The Android native window where video will be rendered */
 ```
 
-The `check_initialization_complete()` method is also augmented so that
+The `check_initialization_complete()` method is also augmented so that
 it requires a native window before considering GStreamer to be
 initialized:
 
@@ -603,7 +603,7 @@ static void check_initialization_complete (CustomData *data) {
     GST_DEBUG ("Initialization complete, notifying application. native_window:%p main_loop:%p", data->native_window, data->main_loop);
 
     /* The main loop is running and we received a native window, inform the sink about it */
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->video_sink), (guintptr)data->native_window);
+    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (data->video_sink), (guintptr)data->native_window);
 
     (*env)->CallVoidMethod (env, data->app, on_gstreamer_initialized_method_id);
     if ((*env)->ExceptionCheck (env)) {
@@ -617,12 +617,12 @@ static void check_initialization_complete (CustomData *data) {
 
 Also, once the pipeline has been built and a native window has been
 received, we inform the video sink of the window handle to use via the
-`gst_x_overlay_set_window_handle()` method.
+`gst_video_overlay_set_window_handle()` method.
 
 The GStreamer pipeline for this tutorial involves a `videotestsrc`, a
-`warptv` psychedelic distorter effect (check out other cool video
-effects in the `GSTREAMER_PLUGINS_EFFECTS` package), and an
-`autovideosink` which will instantiate the adequate video sink for the
+`warptv` psychedelic distorter effect (check out other cool video
+effects in the `GSTREAMER_PLUGINS_EFFECTS` package), and an
+`autovideosink` which will instantiate the adequate video sink for the
 platform:
 
 ``` c
@@ -636,7 +636,7 @@ interesting:
 /* Set the pipeline to READY, so it can already accept a window handle, if we have one */
 gst_element_set_state(data->pipeline, GST_STATE_READY);
 
-data->video_sink = gst_bin_get_by_interface(GST_BIN(data->pipeline), GST_TYPE_X_OVERLAY);
+data->video_sink = gst_bin_get_by_interface(GST_BIN(data->pipeline), GST_TYPE_VIDEO_OVERLAY);
 if (!data->video_sink) {
   GST_ERROR ("Could not retrieve video sink");
   return NULL;
@@ -644,16 +644,15 @@ if (!data->video_sink) {
 ```
 
 We start by setting the pipeline to the READY state. No data flow occurs
-yet, but the `autovideosink` will instantiate the actual sink so we can
+yet, but the `autovideosink` will instantiate the actual sink so we can
 ask for it immediately.
 
-The `gst_bin_get_by_interface()` method will examine the whole pipeline
+The `gst_bin_get_by_interface()` method will examine the whole pipeline
 and return a pointer to an element which supports the requested
-interface. We are asking for the `XOverlay` interface, explained in
-[Basic tutorial 5: GUI toolkit
-integration](Basic%2Btutorial%2B5%253A%2BGUI%2Btoolkit%2Bintegration.html),
+interface. We are asking for the `VideoOverlay` interface, explained in
+[](sdk-basic-tutorial-toolkit-integration.md),
 which controls how to perform rendering into foreign (non-GStreamer)
-windows. The internal video sink instantiated by `autovideosink` is the
+windows. The internal video sink instantiated by `autovideosink` is the
 only element in this pipeline implementing it, so it will be returned.
 
 Now we will implement the two native functions called by the Java code
@@ -672,8 +671,8 @@ static void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface)
     if (data->native_window == new_native_window) {
       GST_DEBUG ("New native window is the same as the previous one", data->native_window);
       if (data->video_sink) {
-        gst_x_overlay_expose(GST_X_OVERLAY (data->video_sink));
-        gst_x_overlay_expose(GST_X_OVERLAY (data->video_sink));
+        gst_video_overlay_expose(GST_VIDEO_OVERLAY (data->video_sink));
+        gst_video_overlay_expose(GST_VIDEO_OVERLAY (data->video_sink));
       }
       return;
     } else {
@@ -690,20 +689,20 @@ static void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface)
 This method is responsible for providing the video sink with the window
 handle coming from the Java code. We are passed a
 [Surface](http://developer.android.com/reference/android/view/Surface.html)
-object, and we use `ANativeWindow_fromSurface()` to obtain the
+object, and we use `ANativeWindow_fromSurface()` to obtain the
 underlying native window pointer. There is no official online
 documentation for the NDK, but fortunately the header files are well
-commented. Native window management functions can be found in
-`$(ANDROID_NDK_ROOT)\platforms\android-9\arch-arm\usr\include\android\native_window.h` and `native_window_jni.h`
+commented. Native window management functions can be found in
+`$(ANDROID_NDK_ROOT)\platforms\android-9\arch-arm\usr\include\android\native_window.h` and `native_window_jni.h`
 
 If we had already stored a native window, the one we just received can
 either be a new one, or just an update of the one we have. If the
 pointers are the same, we assume the geometry of the surface has
 changed, and simply instruct the video sink to redraw itself, via the
-`gst_x_overlay_expose()` method. The video sink will recover the new
+`gst_video_overlay_expose()` method. The video sink will recover the new
 size from the surface itself, so we do not need to bother about it
-here. We need to call `gst_x_overlay_expose()` twice because of the way
-the surface changes propagate down the OpenGL ES / EGL pipeline (The
+here. We need to call `gst_video_overlay_expose()` twice because of the way
+the surface changes propagate down the OpenGL ES / EGL pipeline (The
 only video sink available for Android in the GStreamer SDK uses OpenGL
 ES). By the time we call the first expose, the surface that the sink
 will pick up still contains the old size.
@@ -714,7 +713,7 @@ not being initialized. Next time we call
 the new window handle.
 
 We finally store the new window handle and call
-`check_initialization_complete()` to inform the Java code that
+`check_initialization_complete()` to inform the Java code that
 everything is set up, if that is the case.
 
 ``` c
@@ -724,7 +723,7 @@ static void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
   GST_DEBUG ("Releasing Native Window %p", data->native_window);
 
   if (data->video_sink) {
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->video_sink), (guintptr)NULL);
+    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (data->video_sink), (guintptr)NULL);
     gst_element_set_state (data->pipeline, GST_STATE_READY);
   }
 
@@ -734,21 +733,21 @@ static void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
 }
 ```
 
-The complementary function, `gst_native_surface_finalize()` is called
+The complementary function, `gst_native_surface_finalize()` is called
 when a surface is about to be destroyed and should not be used anymore.
 Here, we simply instruct the video sink to stop using the window handle
 and set the pipeline to READY so no rendering occurs. We release the
-window pointer we had stored with `ANativeWindow_release()`, and mark
+window pointer we had stored with `ANativeWindow_release()`, and mark
 GStreamer as not being initialized anymore.
 
 And this is all there is to it, regarding the main code. Only a couple
 of details remain, the subclass we made for SurfaceView and the
-`Android.mk` file.
+`Android.mk` file.
 
-# GStreamerSurfaceView, a convenient SurfaceView wrapper \[Java code\]
+## GStreamerSurfaceView, a convenient SurfaceView wrapper \[Java code\]
 
 By default,
-[SurfaceView](http://developer.android.com/reference/android/view/SurfaceView.html) does
+[SurfaceView](http://developer.android.com/reference/android/view/SurfaceView.html) does
 not have any particular size, so it expands to use all the space the
 layout can give it. While this might be convenient sometimes, it does
 not allow a great deal of control. In particular, when the surface does
@@ -757,9 +756,9 @@ borders (the known “letterbox” or “pillarbox” effect), which is an
 unnecessary work (and a waste of battery).
 
 The subclass of
-[SurfaceView](http://developer.android.com/reference/android/view/SurfaceView.html) presented
+[SurfaceView](http://developer.android.com/reference/android/view/SurfaceView.html) presented
 here overrides the
-[onMeasure()](http://developer.android.com/reference/android/view/SurfaceView.html#onMeasure\(int,%20int\)) method
+[onMeasure()](http://developer.android.com/reference/android/view/SurfaceView.html#onMeasure\(int,%20int\)) method
 to report the actual media size, so the surface can adapt to any layout
 while preserving the media aspect ratio.
 
@@ -858,7 +857,7 @@ public class GStreamerSurfaceView extends SurfaceView {
 }
 ```
 
-# A video surface on Android \[Android.mk\]
+## A video surface on Android \[Android.mk\]
 
 **/jni/Android.mk**
 
@@ -882,25 +881,24 @@ endif
 GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_SDK_ROOT)/share/gst-android/ndk-build/
 include $(GSTREAMER_NDK_BUILD_PATH)/plugins.mk
 GSTREAMER_PLUGINS         := $(GSTREAMER_PLUGINS_CORE) $(GSTREAMER_PLUGINS_SYS) $(GSTREAMER_PLUGINS_EFFECTS)
-GSTREAMER_EXTRA_DEPS      := gstreamer-interfaces-1.0 gstreamer-video-1.0
+GSTREAMER_EXTRA_DEPS      := gstreamer-video-1.0
 include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer.mk
 ```
 
-Worth mentioning is the `-landroid` library being used to allow
+Worth mentioning is the `-landroid` library being used to allow
 interaction with the native windows, and the different plugin
-packages: `GSTREAMER_PLUGINS_SYS` for the system-dependent video sink
-and `GSTREAMER_PLUGINS_EFFECTS` for the `warptv` element. This tutorial
-requires the `gstreamer-interfaces` library to use the
-`XOverlay` interface, and the `gstreamer-video` library to use the
-video helper methods.
+packages: `GSTREAMER_PLUGINS_SYS` for the system-dependent video sink
+and `GSTREAMER_PLUGINS_EFFECTS` for the `warptv` element. This tutorial
+requires the `gstreamer-video` library to use the
+`VideoOverlay` interface and the video helper methods.
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown:
 
   - How to display video on Android using a
-    [SurfaceView](http://developer.android.com/reference/android/view/SurfaceView.html) and
-    the `XOverlay` interface.
+    [SurfaceView](http://developer.android.com/reference/android/view/SurfaceView.html) and
+    the `VideoOverlay` interface.
   - How to be aware of changes in the surface’s size using
     [SurfaceView](http://developer.android.com/reference/android/view/SurfaceView.html)’s
     callbacks.
@@ -911,17 +909,5 @@ to this tutorial in order to build a simple media player.
 
 It has been a pleasure having you here, and see you soon\!
 
-## Attachments:
 
-![](images/icons/bullet_blue.gif)
-[tutorial3-screenshot.png](attachments/2687065/2654414.png)
-(image/png)
-![](images/icons/bullet_blue.gif)
-[tutorial3-screenshot.png](attachments/2687065/2654415.png)
-(image/png)
-![](images/icons/bullet_blue.gif)
-[tutorial3-screenshot.png](attachments/2687065/2654418.png)
-(image/png)
-![](images/icons/bullet_blue.gif)
-[tutorial3-screenshot.png](attachments/2687065/2654413.png)
-(image/png)
+ [screenshot]: images/sdk-android-tutorial-video-screenshot.png

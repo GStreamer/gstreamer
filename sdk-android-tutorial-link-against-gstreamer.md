@@ -1,28 +1,28 @@
 # Android tutorial 1: Link against GStreamer
 
-# Goal![](attachments/thumbnails/2687057/2654326)
+## Goal!
+
+![screenshot]
 
 This first Android tutorial is extremely simple: it just retrieves the
 GStreamer version and displays it on the screen. It exemplifies how to
 access GStreamer C code from Java and verifies that there have been no
-linkage problems. 
+linkage problems. 
 
-# Hello GStreamer \[Java code\]
+## Hello GStreamer \[Java code\]
 
-In the `share/gst-sdk/tutorials` folder of your GStreamer SDK
-installation path you should find an `android-tutorial-1` directory,
-with the usual Android NDK structure: a `src` folder for the Java code,
-a `jni` folder for the C code and a `res` folder for UI resources.
+At **FIXME: add path** folder you should find an `android-tutorial-1` directory,
+with the usual Android NDK structure: a `src` folder for the Java code,
+a `jni` folder for the C code and a `res` folder for UI resources.
 
 We recommend that you open this project in Eclipse (as explained
-in [Installing for Android
-development](Installing%2Bfor%2BAndroid%2Bdevelopment.html)) so you can
+in [](sdk-installing-for-android-development.md)) so you can
 easily see how all the pieces fit together.
 
 Let’s first introduce the Java code, then the C code and finally the
 makefile that allows GStreamer integration.
 
-**src/org/freedesktop/gstreamer/tutorials/tutorial\_1/Tutorial1.java**
+**src/org/freedesktop/gstreamer/tutorials/tutorial_1/Tutorial1.java**
 
 ``` java
 package org.freedesktop.gstreamer.tutorials.tutorial_1;
@@ -91,9 +91,9 @@ It loads `libgstreamer_android.so`, which contains all GStreamer
 methods, and `libtutorial-1.so`, which contains the C part of this
 tutorial, explained below.
 
-Upon loading, each of these libraries’ `JNI_OnLoad()` method is
+Upon loading, each of these libraries’ `JNI_OnLoad()` method is
 executed. It basically registers the native methods that these libraries
-expose. The GStreamer library only exposes a `init()` method, which
+expose. The GStreamer library only exposes a `init()` method, which
 initializes GStreamer and registers all plugins (The tutorial library is
 explained later below).
 
@@ -107,7 +107,7 @@ try {
 }
 ```
 
-Next, in the `OnCreate()` method of the
+Next, in the `OnCreate()` method of the
 [Activity](http://developer.android.com/reference/android/app/Activity.html)
 we actually initialize GStreamer by calling `GStreamer.init()`. This
 method requires a
@@ -116,7 +116,7 @@ so it cannot be called from the static initializer, but there is no
 danger in calling it multiple times, as all but the first time the calls
 will be ignored.
 
-Should initialization fail, the `init()` method would throw an
+Should initialization fail, the `init()` method would throw an
 [Exception](http://developer.android.com/reference/java/lang/Exception.html)
 with the details provided by the GStreamer library.
 
@@ -133,7 +133,7 @@ in the UI.
 This finishes the UI part of this tutorial. Let’s take a look at the C
 code:
 
-# Hello GStreamer \[C code\]
+## Hello GStreamer \[C code\]
 
 **jni/tutorial-1.c**
 
@@ -171,7 +171,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 }
 ```
 
-The `JNI_OnLoad()` method is executed every time the Java Virtual
+The `JNI_OnLoad()` method is executed every time the Java Virtual
 Machine (VM) loads a library.
 
 Here, we retrieve the JNI environment needed to make calls that interact
@@ -183,7 +183,7 @@ JNIEnv *env = NULL;
 if ((*vm)->GetEnv(vm, (void**) &env, JNI_VERSION_1_4) != JNI_OK) {
   __android_log_print (ANDROID_LOG_ERROR, "tutorial-1", "Could not retrieve JNIEnv");
   return 0;
-} 
+} 
 ```
 
 And then locate the class containing the UI part of this tutorial using
@@ -194,17 +194,17 @@ FindClass()`:
 jclass klass = (*env)->FindClass (env, "org/freedesktop/gstreamer/tutorials/tutorial_1/Tutorial1");
 ```
 
-Finally, we register our native methods with `RegisterNatives()`, this
+Finally, we register our native methods with `RegisterNatives()`, this
 is, we provide the code for the methods we advertised in Java using the
 **`native`**
- keyword:
+ keyword:
 
 ``` c
 (*env)->RegisterNatives (env, klass, native_methods, G_N_ELEMENTS(native_methods));
 ```
 
-The `native_methods` array describes each one of the methods to register
-(only one in this tutorial).  For each method, it provides its Java
+The `native_methods` array describes each one of the methods to register
+(only one in this tutorial).  For each method, it provides its Java
 name, its [type
 signature](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/types.html#wp276)
 and a pointer to the C function implementing it:
@@ -216,7 +216,7 @@ static JNINativeMethod native_methods[] = {
 ```
 
 The only native method used in this tutorial
-is `nativeGetGStreamerInfo()`:
+is `nativeGetGStreamerInfo()`:
 
 ``` c
 jstring gst_native_get_gstreamer_info (JNIEnv* env, jobject thiz) {
@@ -227,15 +227,15 @@ jstring gst_native_get_gstreamer_info (JNIEnv* env, jobject thiz) {
 }
 ```
 
-It simply calls `gst_version_string()` to obtain a string describing
+It simply calls `gst_version_string()` to obtain a string describing
 this version of GStreamer. This [Modified
 UTF8](http://en.wikipedia.org/wiki/UTF-8#Modified_UTF-8) string is then
 converted to [UTF16](http://en.wikipedia.org/wiki/UTF-16) by `
-NewStringUTF()` as required by Java and returned. Java will be
+NewStringUTF()` as required by Java and returned. Java will be
 responsible for freeing the memory used by the new UTF16 String, but we
 must free the `char *` returned by `gst_version_string()`.
 
-# Hello GStreamer \[Android.mk\]
+## Hello GStreamer \[Android.mk\]
 
 **jni/Android.mk**
 
@@ -262,12 +262,12 @@ include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer-1.0.mk
 ```
 
 This is a barebones makefile for a project with GStreamer support. It
-simply states that it depends on the `libgstreamer_android.so` library
-(line 7), and requires the `coreelements` plugin (line 18). More complex
+simply states that it depends on the `libgstreamer_android.so` library
+(line 7), and requires the `coreelements` plugin (line 18). More complex
 applications will probably add more libraries and plugins
-to `Android.mk`
+to `Android.mk`
 
-# Conclusion
+## Conclusion
 
 This ends the first Android tutorial. It has shown that, besides the
 interconnection between Java and C (which abides to the standard JNI
@@ -279,14 +279,4 @@ taken when developing specifically for the Android platform.
 
 As usual, it has been a pleasure having you here, and see you soon\!
 
-## Attachments:
-
-![](images/icons/bullet_blue.gif)
-[tutorial1-screenshot.png](attachments/2687057/2654411.png)
-(image/png)
-![](images/icons/bullet_blue.gif)
-[tutorial1-screenshot.png](attachments/2687057/2654416.png)
-(image/png)
-![](images/icons/bullet_blue.gif)
-[tutorial1-screenshot.png](attachments/2687057/2654326.png)
-(image/png)
+  [screenshot]: images/sdk-android-tutorial-link-against-gstreamer-screenshot.png

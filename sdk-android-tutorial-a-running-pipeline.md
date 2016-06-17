@@ -1,9 +1,11 @@
 # Android tutorial 2: A running pipeline
 
-# Goal ![](attachments/thumbnails/2687063/2654324)
+## Goal
 
-The tutorials seen in the [Basic](Basic%2Btutorials.html) and
-[Playback](Playback%2Btutorials.html) sections are intended for Desktop
+![screenshot]
+
+The tutorials seen in the [Basic](sdk-basic-tutorials.md) and
+[Playback](sdk-playback-tutorials.md) sections are intended for Desktop
 platforms and, therefore, their main thread is allowed to block (using
 `gst_bus_pop_filtered()`) or relinquish control to a GLib main loop. On
 Android this would lead to the application being tagged as
@@ -15,15 +17,15 @@ learn:
   - How to move the native code to its own thread
   - How to allow threads created from C code to communicate with Java
   - How to access Java code from C
-  - How to allocate a `CustomData` structure from C and have Java host
+  - How to allocate a `CustomData` structure from C and have Java host
     it
 
-# Introduction
+## Introduction
 
 When using a Graphical User Interface (UI), if the application waits for
 GStreamer calls to complete the user experience will suffer. The usual
 approach, with the [GTK+ toolkit](http://www.gtk.org) for example, is to
-relinquish control to a GLib `GMainLoop` and let it control the events
+relinquish control to a GLib `GMainLoop` and let it control the events
 coming from the UI or GStreamer.
 
 This approach can be very cumbersome when GStreamer and the Android UI
@@ -45,12 +47,12 @@ code, which involves locating the desired method’s ID in the class.
 These IDs never change, so they are cached as global variables in the C
 code and obtained in the static initializer of the class.
 
-The code below builds a pipeline with an `audiotestsrc` and an
-`autoaudiosink` (it plays an audible tone). Two buttons in the UI allow
+The code below builds a pipeline with an `audiotestsrc` and an
+`autoaudiosink` (it plays an audible tone). Two buttons in the UI allow
 setting the pipeline to PLAYING or PAUSED. A TextView in the UI shows
 messages sent from the C code (for errors and state changes).
 
-# A pipeline on Android \[Java code\]
+## A pipeline on Android \[Java code\]
 
 **src/org/freedesktop/gstreamer/tutorials/tutorial\_2/Tutorial2.java**
 
@@ -188,11 +190,11 @@ static {
 ```
 
 As explained in the previous tutorial, the two native libraries are
-loaded and their `JNI_OnLoad()` methods are executed. Here, we also call
+loaded and their `JNI_OnLoad()` methods are executed. Here, we also call
 the native method `nativeClassInit()`, previously declared with the
-`native` keyword in line 19. We will later see what its purpose is
+`native` keyword in line 19. We will later see what its purpose is
 
-In the `onCreate()` method GStreamer is initialized as in the previous
+In the `onCreate()` method GStreamer is initialized as in the previous
 tutorial with `GStreamer.init(this)`, and then the layout is inflated
 and listeners are setup for the two UI buttons:
 
@@ -215,7 +217,7 @@ pause.setOnClickListener(new OnClickListener() {
 
 Each button instructs the native code to set the pipeline to the desired
 state, and also remembers this state in the
-`is_playing_desired` variable.  This is required so, when the
+`is_playing_desired` variable.  This is required so, when the
 application is restarted (for example, due to an orientation change), it
 can set the pipeline again to the desired state. This approach is easier
 and safer than tracking the actual pipeline state, because orientation
@@ -241,14 +243,14 @@ native code reports itself as initialized we will use
 nativeInit();
 ```
 
-As will be shown in the C code, `nativeInit()` creates a dedicated
+As will be shown in the C code, `nativeInit()` creates a dedicated
 thread, a GStreamer pipeline, a GLib main loop, and, right before
-calling `g_main_loop_run()` and going to sleep, it warns the Java code
+calling `g_main_loop_run()` and going to sleep, it warns the Java code
 that the native code is initialized and ready to accept commands.
 
-This finishes the `onCreate()` method and the Java initialization. The
+This finishes the `onCreate()` method and the Java initialization. The
 UI buttons are disabled, so nothing will happen until native code is
-ready and `onGStreamerInitialized()` is called:
+ready and `onGStreamerInitialized()` is called:
 
 ``` java
 private void onGStreamerInitialized () {
@@ -291,11 +293,11 @@ method which lets bits of code to be executed from the correct thread. A
 instance has to be constructed and any parameter can be passed either by
 sub-classing
 [Runnable](http://developer.android.com/reference/java/lang/Runnable.html)
-and adding a dedicated constructor, or by using the `final` modifier, as
+and adding a dedicated constructor, or by using the `final` modifier, as
 shown in the above snippet.
 
 The same problem exists when the native code wants to output a string in
-our TextView using the `setMessage()` method: it has to be done from the
+our TextView using the `setMessage()` method: it has to be done from the
 UI thread. The solution is the same:
 
 ``` java
@@ -309,7 +311,7 @@ private void setMessage(final String message) {
 }
 ```
 
-Finally, a few remaining bits:
+Finally, a few remaining bits:
 
 ``` java
 protected void onSaveInstanceState (Bundle outState) {
@@ -335,7 +337,7 @@ all allocated resources.
 
 This concludes the UI part of the tutorial.
 
-# A pipeline on Android \[C code\]
+## A pipeline on Android \[C code\]
 
 **jni/tutorial-2.c**
 
@@ -617,7 +619,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 }
 ```
 
-Let’s start with the `CustomData` structure. We have seen it in most of
+Let’s start with the `CustomData` structure. We have seen it in most of
 the basic tutorials, and it is used to hold all our information in one
 place, so we can easily pass it around to
 callbacks:
@@ -634,9 +636,9 @@ typedef struct _CustomData {
 ```
 
 We will see the meaning of each member as we go. What is interesting now
-is that `CustomData` belongs to the application, so a pointer is kept in
+is that `CustomData` belongs to the application, so a pointer is kept in
 the Tutorial2 Java class in the `private long
-native_custom_data` attribute. Java only holds this pointer for us; it
+native_custom_data` attribute. Java only holds this pointer for us; it
 is completely handled in C code.
 
 From C, this pointer can be set and retrieved with the
@@ -644,8 +646,8 @@ From C, this pointer can be set and retrieved with the
 and
 [GetLongField()](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/functions.html#wp16572)
 JNI functions, but two convenience macros have been defined,
-`SET_CUSTOM_DATA` and `GET_CUSTOM_DATA`. These macros are handy because
-the `long` type used in Java is always 64 bits wide, but the pointer
+`SET_CUSTOM_DATA` and `GET_CUSTOM_DATA`. These macros are handy because
+the `long` type used in Java is always 64 bits wide, but the pointer
 used in C can be either 32 or 64 bits wide. The macros take care of the
 conversion without warnings.
 
@@ -669,10 +671,10 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 }
 ```
 
-The `JNI_OnLoad` function is almost the same as the previous tutorial.
+The `JNI_OnLoad` function is almost the same as the previous tutorial.
 It registers the list of native methods (which is longer in this
 tutorial). It also
-uses [pthread\_key\_create()](http://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_key_create.html)
+uses [pthread\_key\_create()](http://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_key_create.html)
 to be able to store per-thread information, which is crucial to properly
 manage the JNI Environment, as shown later.
 
@@ -701,7 +703,7 @@ order for C code to be able to call a Java method, it needs to know the
 method’s
 [MethodID](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/types.html#wp1064).
 This ID is obtained from the method’s name and signature and can be
-cached. The purpose of the `gst_native_class_init()` function is to
+cached. The purpose of the `gst_native_class_init()` function is to
 obtain the IDs of all the methods and fields that the C code will need.
 If some ID cannot be retrieved, the calling Java class does not offer
 the expected interface and execution should halt (which is not currently
@@ -720,15 +722,15 @@ static void gst_native_init (JNIEnv* env, jobject thiz) {
   SET_CUSTOM_DATA (env, thiz, custom_data_field_id, data);
 ```
 
-It first allocates memory for the `CustomData` structure and passes the
+It first allocates memory for the `CustomData` structure and passes the
 pointer to the Java class with `SET_CUSTOM_DATA`, so it is remembered.
 
 ``` c
 data->app = (*env)->NewGlobalRef (env, thiz);
 ```
 
-A pointer to the application class (the `Tutorial2` class) is also kept
-in `CustomData` (a [Global
+A pointer to the application class (the `Tutorial2` class) is also kept
+in `CustomData` (a [Global
 Reference](http://developer.android.com/guide/practices/jni.html#local_and_global_references)
 is used) so its methods can be called later.
 
@@ -737,7 +739,7 @@ pthread_create (&gst_app_thread, NULL, &app_function, data);
 ```
 
 Finally, a thread is created and it starts running the
-`app_function()` method.
+`app_function()` method.
 
 ###  `app_function()`
 
@@ -757,10 +759,10 @@ static void *app_function (void *userdata) {
   g_main_context_push_thread_default(data->context);
 ```
 
-It first creates a GLib context so all `GSource` are kept in the same
+It first creates a GLib context so all `GSource` are kept in the same
 place. This also helps cleaning after GSources created by other
 libraries which might not have been properly disposed of. A new context
-is created with `g_main_context_new()` and then it is made the default
+is created with `g_main_context_new()` and then it is made the default
 one for the thread with
 `g_main_context_push_thread_default()`.
 
@@ -776,7 +778,7 @@ if (error) {
 ```
 
 It then creates a pipeline the easy way, with `gst-parse-launch()`. In
-this case, it is simply an `audiotestsrc` (which produces a continuous
+this case, it is simply an `audiotestsrc` (which produces a continuous
 tone) and an `autoaudiosink`, with accompanying adapter elements.
 
 ``` c
@@ -793,7 +795,7 @@ gst_object_unref (bus);
 These lines create a bus signal watch and connect to some interesting
 signals, just like we have been doing in the basic tutorials. The
 creation of the watch is done step by step instead of using
-`gst_bus_add_signal_watch()` to exemplify how to use a custom GLib
+`gst_bus_add_signal_watch()` to exemplify how to use a custom GLib
 context.
 
 ``` c
@@ -809,10 +811,10 @@ data->main_loop = NULL;
 Finally, the main loop is created and set to run. When it exits (because
 somebody else calls `g_main_loop_quit()`) the main loop is disposed of.
 Before entering the main loop, though,
-`check_initialization_complete()` is called. This method checks if all
+`check_initialization_complete()` is called. This method checks if all
 conditions are met to consider the native code “ready” to accept
 commands. Since having a running main loop is one of the conditions,
-`check_initialization_complete()` is called here. This method is
+`check_initialization_complete()` is called here. This method is
 reviewed below.
 
 Once the main loop has quit, all resources are freed in lines 178 to
@@ -842,24 +844,24 @@ if so, notify the UI code.
 
 In tutorial 2, the only conditions are 1) the code is not already
 initialized and 2) the main loop is running. If these two are met, the
-Java `onGStreamerInitialized()` method is called via the
+Java `onGStreamerInitialized()` method is called via the
 [CallVoidMethod()](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/functions.html#wp4256)
 JNI call.
 
 Here comes a tricky bit. JNI calls require a JNI Environment, **which is
 different for every thread**. C methods called from Java receive a
-`JNIEnv` pointer as a parameter, but this is not the situation with
+`JNIEnv` pointer as a parameter, but this is not the situation with
 `check_initialization_complete()`. Here, we are in a thread which has
 never been called from Java, so we have no `JNIEnv`. We need to use the
-`JavaVM` pointer (passed to us in the `JNI_OnLoad()` method, and shared
+`JavaVM` pointer (passed to us in the `JNI_OnLoad()` method, and shared
 among all threads) to attach this thread to the Java Virtual Machine and
-obtain a `JNIEnv`. This `JNIEnv` is stored in the [Thread-Local
-Storage](http://en.wikipedia.org/wiki/Thread-local_storage) (TLS) using
+obtain a `JNIEnv`. This `JNIEnv` is stored in the [Thread-Local
+Storage](http://en.wikipedia.org/wiki/Thread-local_storage) (TLS) using
 the pthread key we created in `JNI_OnLoad()`, so we do not need to
 attach the thread anymore.
 
-This behavior is implemented in the `get_jni_env()` method, used for
-example in `check_initialization_complete()` as we have just seen. Let’s
+This behavior is implemented in the `get_jni_env()` method, used for
+example in `check_initialization_complete()` as we have just seen. Let’s
 see how it works, step by step:
 
 ### `get_jni_env()`
@@ -875,12 +877,12 @@ static JNIEnv *get_jni_env (void) {
 }
 ```
 
-It first retrieves the current `JNIEnv` from the TLS using
+It first retrieves the current `JNIEnv` from the TLS using
 [pthread\_getspecific()](http://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_getspecific.html)
 and the key we obtained from
 [pthread\_key\_create()](http://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_key_create.html).
 If it returns NULL, we never attached this thread, so we do now with
-`attach_current_thread()` and then store the new `JNIEnv` into the TLS
+`attach_current_thread()` and then store the new `JNIEnv` into the TLS
 with
 [pthread\_setspecific()](http://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_setspecific.html).
 
@@ -926,27 +928,27 @@ about to be destroyed. Here, we:
     earliest convenience.
   - Wait for the thread to finish with
     [pthread\_join()](http://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_join.html).
-    This call blocks until the `app_function()` method returns, meaning
+    This call blocks until the `app_function()` method returns, meaning
     that the main loop has exited, and the thread has been destroyed.
   - Dispose of the global reference we kept for the Java application
     class (`Tutorial2`) in `CustomData`.
-  - Free `CustomData` and set the Java pointer inside the
-    `Tutorial2` class to NULL with
+  - Free `CustomData` and set the Java pointer inside the
+    `Tutorial2` class to NULL with
 `SET_CUSTOM_DATA()`.
 
-### `gst_native_play` and `gst_native_pause()` (`nativePlay` and `nativePause()` from Java)
+### `gst_native_play` and `gst_native_pause()` (`nativePlay` and `nativePause()` from Java)
 
-These two simple methods retrieve `CustomData` from the passed-in object
-with `GET_CUSTOM_DATA()` and set the pipeline found inside `CustomData`
+These two simple methods retrieve `CustomData` from the passed-in object
+with `GET_CUSTOM_DATA()` and set the pipeline found inside `CustomData`
 to the desired state, returning immediately.
 
 Finally, let’s see how the GStreamer callbacks are handled:
 
-### `error_cb` and `state_changed_cb`
+### `error_cb` and `state_changed_cb`
 
 This tutorial does not do much in these callbacks. They simply parse the
 error or state changed message and display a message in the UI using the
-`set_ui_message()` method:
+`set_ui_message()` method:
 
 ### `set_ui_message()`
 
@@ -964,11 +966,11 @@ static void set_ui_message (const gchar *message, CustomData *data) {
 }
 ```
 
- 
+ 
 
-This is the other method (besides `check_initialization_complete()`) 
+This is the other method (besides `check_initialization_complete()`) 
 that needs to call a Java function from a thread which never received an
-`JNIEnv` pointer directly. Notice how all the complexities of attaching
+`JNIEnv` pointer directly. Notice how all the complexities of attaching
 the thread to the JavaVM and storing the JNI environment in the TLS are
 hidden in the simple call to `get_jni_env()`.
 
@@ -980,10 +982,10 @@ Java using the
 [NewStringUTF()](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/functions.html#wp17220)
 JNI call.
 
-The `setMessage()` Java method is called via the JNI
+The `setMessage()` Java method is called via the JNI
 [CallVoidMethod()](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/functions.html#wp4256)
 using the global reference to the class we are keeping in
-`CustomData` (`data->app`) and the `set_message_method_id` we cached in
+`CustomData` (`data->app`) and the `set_message_method_id` we cached in
 `gst_native_class_init()`.
 
 We check for exceptions with the JNI
@@ -991,7 +993,7 @@ We check for exceptions with the JNI
 method and free the UTF16 message with
 [DeleteLocalRef()](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/functions.html#DeleteLocalRef).
 
-# A pipeline on Android \[Android.mk\]
+## A pipeline on Android \[Android.mk\]
 
 **jni/Android.mk**
 
@@ -1018,44 +1020,29 @@ GSTREAMER_PLUGINS         := $(GSTREAMER_PLUGINS_CORE) $(GSTREAMER_PLUGINS_SYS)
 include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer-1.0.mk
 ```
 
-Notice how the required `GSTREAMER_PLUGINS` are now
-`$(GSTREAMER_PLUGINS_CORE)` (For the test source and converter elements)
-and `$(GSTREAMER_PLUGINS_SYS)` (for the audio sink).
+Notice how the required `GSTREAMER_PLUGINS` are now
+`$(GSTREAMER_PLUGINS_CORE)` (For the test source and converter elements)
+and `$(GSTREAMER_PLUGINS_SYS)` (for the audio sink).
 
 And this is it\! This has been a rather long tutorial, but we covered a
 lot of territory. Building on top of this one, the following ones are
 shorter and focus only on the new topics.
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown:
 
   - How to manage multiple threads from C code and have them interact
     with java.
   - How to access Java code from any C thread
-    using [AttachCurrentThread()](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/invocation.html#attach_current_thread).
+    using [AttachCurrentThread()](http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/invocation.html#attach_current_thread).
   - How to allocate a CustomData structure from C and have Java host it,
     so it is available to all threads.
 
 Most of the methods introduced in this tutorial, like `get_jni_env()`,
-`check_initialization_complete()`, `app_function()` and the API methods
-`gst_native_init()`, `gst_native_finalize()` and
-`gst_native_class_init()` will continue to be used in the following
+`check_initialization_complete()`, `app_function()` and the API methods
+`gst_native_init()`, `gst_native_finalize()` and
+`gst_native_class_init()` will continue to be used in the following
 tutorials with minimal modifications, so better get used to them\!
 
 As usual, it has been a pleasure having you here, and see you soon\!
-
-## Attachments:
-
-![](images/icons/bullet_blue.gif)
-[tutorial2-screenshot.png](attachments/2687063/2654325.png)
-(image/png)
-![](images/icons/bullet_blue.gif)
-[tutorial2-screenshot.png](attachments/2687063/2654412.png)
-(image/png)
-![](images/icons/bullet_blue.gif)
-[tutorial2-screenshot.png](attachments/2687063/2654417.png)
-(image/png)
-![](images/icons/bullet_blue.gif)
-[tutorial2-screenshot.png](attachments/2687063/2654324.png)
-(image/png)

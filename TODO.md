@@ -4,10 +4,6 @@ This is just a simple TODO list to follow progress of the port from
 gstreamer.com content to hotdoc
 
 Pages to review:
- - sdk-android-tutorials.md
-   - sdk-android-tutorial-video.md
-   - sdk-android-tutorial-media-player.md
-   - sdk-android-tutorial-a-complete-media-player.md
  - sdk-ios-tutorials.md
    - sdk-ios-tutorial-link-against-gstreamer.md
    - sdk-ios-tutorial-a-running-pipeline.md
@@ -55,8 +51,12 @@ Reviewed pages:
  - sdk-building-from-source-using-cerbero.md
  - sdk-table-of-concepts.md
  - sdk-tutorials.md
- - sdk-android-tutorial-link-against-gstreamer.md
- - sdk-android-tutorial-a-running-pipeline.md
+ - sdk-android-tutorials.md
+   - sdk-android-tutorial-link-against-gstreamer.md
+   - sdk-android-tutorial-a-running-pipeline.md
+   - sdk-android-tutorial-video.md
+   - sdk-android-tutorial-a-complete-media-player.md
+   - sdk-android-tutorial-media-player.md
  - sdk-playback-tutorials.md
    - sdk-playback-tutorial-playbin-usage.md
    - sdk-playback-tutorial-subtitle-management.md
