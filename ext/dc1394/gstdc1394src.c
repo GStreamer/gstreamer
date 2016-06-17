@@ -658,7 +658,15 @@ static gboolean
 gst_dc1394_src_stop_cam (GstDC1394Src * src)
 {
   dc1394error_t ret;
+  dc1394switch_t status;
+  guint trials;
 
+  /*
+   * TODO: dc1394_capture_setup/stop can start/stop the transmission
+   * when called with DC1394_CAPTURE_FLAGS_AUTO_ISO in the flags.
+   * The repeated trials check is a leftover of the original code,
+   * and might not be needed.
+   */
   GST_DEBUG_OBJECT (src, "Disable camera transmission.");
   ret = dc1394_video_set_transmission (src->camera, DC1394_OFF);
   if (ret != DC1394_SUCCESS) {
@@ -666,6 +674,20 @@ gst_dc1394_src_stop_cam (GstDC1394Src * src)
         ("Could not set transmission status: %s.",
             dc1394_error_get_string (ret)));
     return FALSE;
+  }
+  ret = dc1394_video_get_transmission (src->camera, &status);
+  for (trials = 10;
+      (trials > 0) && !(ret == DC1394_SUCCESS && status == DC1394_OFF);
+      trials--) {
+    GST_DEBUG_OBJECT (src,
+        "Wait for camera to stop transmission (%d trials left).", trials);
+    g_usleep (50000);
+    ret = dc1394_video_get_transmission (src->camera, &status);
+  }
+  if (!(ret == DC1394_SUCCESS && status == DC1394_OFF)) {
+    GST_WARNING_OBJECT (src,
+        "Could not get negative transmission status: %s.",
+        dc1394_error_get_string (ret));
   }
 
   GST_DEBUG_OBJECT (src, "Clear capture resources.");
