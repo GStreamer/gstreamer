@@ -2183,6 +2183,7 @@ gst_dvbsrc_output_frontend_stats (GstDvbSrc * src)
     return;
   }
 
+  errno = 0;
   LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_SIGNAL_STRENGTH, &signal));
   if (!err)
     gst_structure_set (structure, "signal", G_TYPE_INT, signal, NULL);
@@ -2199,7 +2200,7 @@ gst_dvbsrc_output_frontend_stats (GstDvbSrc * src)
   if (!err)
     gst_structure_set (structure, "unc", G_TYPE_INT, bad_blks, NULL);
 
-  if (err)
+  if (errno)
     GST_WARNING_OBJECT (src,
         "There were errors getting frontend status information: '%s'",
         g_strerror (errno));
