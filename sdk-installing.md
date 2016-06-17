@@ -6,10 +6,10 @@ short-description: Download and install GStreamer
 
 ## Choose your platform by clicking on the corresponding logo
 
-[![](attachments/1540163.png)](sdk-installing-on-mac-osx.md)
-[![](attachments/1540164.png)](sdk-installing-on-windows.md)
-[![](attachments/2654239.png)](sdk-installing-for-android-development.md)
-[![](attachments/3539150.jpeg)](sdk-installing-for-ios-development.md)
+[![](attachments/mac.png)](sdk-installing-on-mac-osx.md)
+[![](attachments/windows.png)](sdk-installing-on-windows.md)
+[![](attachments/android.png)](sdk-installing-for-android-development.md)
+[![](attachments/ios.jpeg)](sdk-installing-for-ios-development.md)
 
 ## Linux
 

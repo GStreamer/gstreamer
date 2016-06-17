@@ -9,10 +9,6 @@ Pages to review:
    - sdk-installing-on-linux.md
    - sdk-installing-on-mac-osx.md
    - sdk-installing-on-windows.md
- - sdk-deploying-your-application.md
-   - sdk-windows-deployment.md
-   - sdk-mac-osx-deployment.md
-   - sdk-multiplatform-deployment-using-cerbero.md
 
 
 Screenshots:
@@ -71,6 +67,10 @@ Reviewed pages:
  - sdk-basic-tutorial-hello-world.md
  - sdk-gst-inspect.md
  - gst-launch.md
+ - sdk-deploying-your-application.md
+   - sdk-windows-deployment.md
+   - sdk-mac-osx-deployment.md
+   - sdk-multiplatform-deployment-using-cerbero.md
 
 For-later pages:
  - sdk-qt-tutorials.md [tpm: this should all be rewritten from scratch with qmlglsink; QtGStreamer is outdated and unmaintained, we should not promote it]
