@@ -75,7 +75,7 @@ static GstFlowReturn gst_omx_video_dec_finish (GstVideoDecoder * decoder);
 static gboolean gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec,
     GstQuery * query);
 
-static GstFlowReturn gst_omx_video_dec_drain (GstOMXVideoDec * self);
+static GstFlowReturn gst_omx_video_dec_drain (GstVideoDecoder * decoder);
 
 static OMX_ERRORTYPE gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec *
     self);
@@ -119,6 +119,7 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
   video_decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_omx_video_dec_handle_frame);
   video_decoder_class->finish = GST_DEBUG_FUNCPTR (gst_omx_video_dec_finish);
+  video_decoder_class->drain = GST_DEBUG_FUNCPTR (gst_omx_video_dec_drain);
   video_decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_omx_video_dec_decide_allocation);
 
@@ -1875,7 +1876,7 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
 
     GST_DEBUG_OBJECT (self, "Need to disable and drain decoder");
 
-    gst_omx_video_dec_drain (self);
+    gst_omx_video_dec_drain (decoder);
     gst_omx_video_dec_flush (decoder);
     gst_omx_port_set_flushing (out_port, 5 * GST_SECOND, TRUE);
 
@@ -2436,20 +2437,19 @@ release_error:
 static GstFlowReturn
 gst_omx_video_dec_finish (GstVideoDecoder * decoder)
 {
-  GstOMXVideoDec *self;
-
-  self = GST_OMX_VIDEO_DEC (decoder);
-
-  return gst_omx_video_dec_drain (self);
+  return gst_omx_video_dec_drain (decoder);
 }
 
 static GstFlowReturn
-gst_omx_video_dec_drain (GstOMXVideoDec * self)
+gst_omx_video_dec_drain (GstVideoDecoder * decoder)
 {
+  GstOMXVideoDec *self;
   GstOMXVideoDecClass *klass;
   GstOMXBuffer *buf;
   GstOMXAcquireBufferReturn acq_ret;
   OMX_ERRORTYPE err;
+
+  self = GST_OMX_VIDEO_DEC (decoder);
 
   GST_DEBUG_OBJECT (self, "Draining component");
 
