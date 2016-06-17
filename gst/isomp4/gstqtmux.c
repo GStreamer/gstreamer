@@ -4084,7 +4084,7 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   } else if (strcmp (mimetype, "video/x-prores") == 0) {
     const gchar *variant;
 
-    variant = gst_structure_get_string (structure, "format");
+    variant = gst_structure_get_string (structure, "variant");
     if (!variant || !g_strcmp0 (variant, "standard"))
       entry.fourcc = FOURCC_apcn;
     else if (!g_strcmp0 (variant, "lt"))
