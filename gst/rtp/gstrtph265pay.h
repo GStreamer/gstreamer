@@ -59,9 +59,6 @@ struct _GstRtpH265Pay
   guint nal_length_size;
   GArray *queue;
 
-  gchar *sprop_parameter_sets;
-  gboolean update_caps;
-
   GstAdapter *adapter;
 
   gint vps_sps_pps_interval;
