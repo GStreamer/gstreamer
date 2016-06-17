@@ -162,7 +162,7 @@ different cases: Your manual pipelines normally do not need to be this
 long. If your manual pipeline is starting to get very big, consider
 using `playbin`.
 
-![](attachments/327830/2424840.png)
+![](images/playbin.png)
 
 To download the full-size picture, use the attachments link at the top
 of this page (It's the paperclip icon).
