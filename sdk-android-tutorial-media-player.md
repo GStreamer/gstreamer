@@ -1192,11 +1192,10 @@ static gboolean refresh_ui (CustomData *data) {
 }
 ```
 
-If it is unknown, the clip duration is retrieved, as explained in [Basic
-tutorial 4: Time
-management](Basic%2Btutorial%2B4%253A%2BTime%2Bmanagement.html). The
-current position is retrieved next, and the UI is informed of both
-through its `setCurrentPosition()` callback.
+If it is unknown, the clip duration is retrieved, as explained in
+[](sdk-basic-tutorial-time-management.md). The current position is
+retrieved next, and the UI is informed of both through its
+`setCurrentPosition()` callback.
 
 Bear in mind that all time-related measures returned by GStreamer are in
 nanoseconds, whereas, for simplicity, we decided to make the UI code
