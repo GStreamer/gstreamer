@@ -30,7 +30,7 @@ element.
 **PLUGIN**
 
 Name of a plugin. This is a file name
-like `%GSTREAMER_SDK_ROOT_X86%\lib\gstreamer-1.0\libgstaudiotestsrc.dll`
+like `%GSTREAMER_ROOT_X86%\lib\gstreamer-1.0\libgstaudiotestsrc.dll`
 for example.
 
 **ELEMENT**
