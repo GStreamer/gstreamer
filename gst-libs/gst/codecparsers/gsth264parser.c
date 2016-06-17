@@ -947,7 +947,7 @@ gst_h264_parse_clock_timestamp (GstH264ClockTimestamp * tim,
     }
   }
 
-  time_offset_length = 0;
+  time_offset_length = 24;
   if (vui->nal_hrd_parameters_present_flag)
     time_offset_length = vui->nal_hrd_parameters.time_offset_length;
   else if (vui->vcl_hrd_parameters_present_flag)
