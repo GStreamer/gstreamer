@@ -1,9 +1,11 @@
 # iOS tutorial 2: A running pipeline
 
-# Goal![](attachments/3571718/3538953.png)
+## Goal
 
-As seen in the [Basic](Basic%2Btutorials.html) and
-[Playback](Playback%2Btutorials.html) tutorials, GStreamer integrates
+![screenshot]
+
+As seen in the [Basic](sdk-basic-tutorials.md) and
+[Playback](sdk-playback-tutorials.md) tutorials, GStreamer integrates
 nicely with GLib’s main loops, so pipeline operation and user interface
 can be monitored simultaneously in a very simple way. However, platforms
 like iOS or Android do not use GLib and therefore extra care must be
@@ -17,18 +19,18 @@ This tutorial shows:
   - How to communicate between the Objective-C UI code and the C
     GStreamer code
 
-# Introduction
+## Introduction
 
 When using a Graphical User Interface (UI), if the application waits for
 GStreamer calls to complete the user experience will suffer. The usual
-approach, with the [GTK+ toolkit](http://www.gtk.org/) for example, is
-to relinquish control to a GLib `GMainLoop` and let it control the
+approach, with the [GTK+ toolkit](http://www.gtk.org/) for example, is
+to relinquish control to a GLib `GMainLoop` and let it control the
 events coming from the UI or GStreamer.
 
 Other graphical toolkits that are not based on GLib, like the [Cocoa
-Touch](https://developer.apple.com/technologies/ios/cocoa-touch.html)
+Touch](https://developer.apple.com/library/ios/documentation/General/Conceptual/DevPedia-CocoaCore/Cocoa.html)
 framework used on iOS devices, cannot use this option, though. The
-solution used in this tutorial uses a GLib `GMainLoop` for its
+solution used in this tutorial uses a GLib `GMainLoop` for its
 simplicity, but moves it to a separate thread (a [Dispatch
 Queue](http://developer.apple.com/library/ios/#documentation/General/Conceptual/ConcurrencyProgrammingGuide/OperationQueues/OperationQueues.html)
 different than the main one) so it does not block the user interface
@@ -37,12 +39,12 @@ operation.
 Additionally, this tutorial shows a few places where caution has to be
 taken when calling from Objective-C to C and vice versa.
 
-The code below builds a pipeline with an `audiotestsrc` and
-an `autoaudiosink` (it plays an audible tone). Two buttons in the UI
+The code below builds a pipeline with an `audiotestsrc` and
+an `autoaudiosink` (it plays an audible tone). Two buttons in the UI
 allow setting the pipeline to PLAYING or PAUSED. A Label in the UI shows
 messages sent from the C code (for errors and state changes).
 
-# The User Interface
+## The User Interface
 
 A toolbar at the bottom of the screen contains a Play and a Pause
 button. Over the toolbar there is a Label used to display messages from
@@ -50,10 +52,10 @@ GStreamer. This tutorial does not require more elements, but the
 following lessons will build their User Interfaces on top of this one,
 adding more components.
 
-# The View Controller
+## The View Controller
 
-The `ViewController` class manages the UI, instantiates
-the `GStreamerBackend` and also performs some UI-related tasks on its
+The `ViewController` class manages the UI, instantiates
+the `GStreamerBackend` and also performs some UI-related tasks on its
 behalf:
 
 **ViewController.m**
@@ -126,7 +128,7 @@ behalf:
 @end
 ```
 
-An instance of the `GStreamerBackend` in stored inside the class:
+An instance of the `GStreamerBackend` in stored inside the class:
 
 ```
 @interface ViewController () {
@@ -134,8 +136,8 @@ An instance of the `GStreamerBackend` in stored inside the class:
 }
 ```
 
-This instance is created in the `viewDidLoad` function through a custom
-`init:` method in the `GStreamerBackend`:
+This instance is created in the `viewDidLoad` function through a custom
+`init:` method in the `GStreamerBackend`:
 
 ```
 - (void)viewDidLoad
@@ -150,11 +152,11 @@ This instance is created in the `viewDidLoad` function through a custom
 ```
 
 This custom method is required to pass the object that has to be used as
-the UI delegate (in this case, ourselves, the `ViewController`).
+the UI delegate (in this case, ourselves, the `ViewController`).
 
 The Play and Pause buttons are also disabled in the
-`viewDidLoad` function, and they are not re-enabled until the
-`GStreamerBackend` reports that it is initialized and ready.
+`viewDidLoad` function, and they are not re-enabled until the
+`GStreamerBackend` reports that it is initialized and ready.
 
 ```
 /* Called when the Play button is pressed */
@@ -185,13 +187,13 @@ buttons, and simply forward the call to the appropriate method in the
 }
 ```
 
-The `gstreamerInitialized` method is defined in the
-`GStreamerBackendDelegate` protocol and indicates that the backend is
+The `gstreamerInitialized` method is defined in the
+`GStreamerBackendDelegate` protocol and indicates that the backend is
 ready to accept commands. In this case, the Play and Pause buttons are
 re-enabled and the Label text is set to “Ready”. This method is called
 from a Dispatch Queue other than the Main one; therefore the need for
 the
-[dispatch\_async()](https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man3/dispatch_async.3.html) call
+[dispatch_async()](https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man3/dispatch_async.3.html) call
 wrapping all UI code.
 
 ```
@@ -203,19 +205,19 @@ wrapping all UI code.
 }
 ```
 
-The `gstreamerSetUIMessage:` method also belongs to the
-`GStreamerBackendDelegate` protocol. It is called when the backend wants
+The `gstreamerSetUIMessage:` method also belongs to the
+`GStreamerBackendDelegate` protocol. It is called when the backend wants
 to report some message to the user. In this case, the message is copied
 onto the Label in the UI, again, from within a
-[dispatch\_async()](https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man3/dispatch_async.3.html) call.
+[dispatch_async()](https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man3/dispatch_async.3.html) call.
 
-# The GStreamer Backend
+## The GStreamer Backend
 
-The `GStreamerBackend` class performs all GStreamer-related tasks and
+The `GStreamerBackend` class performs all GStreamer-related tasks and
 offers a simplified interface to the application, which does not need to
 deal with all the GStreamer details. When it needs to perform any UI
 action, it does so through a delegate, which is expected to adhere to
-the `GStreamerBackendDelegate` protocol:
+the `GStreamerBackendDelegate` protocol:
 
 **GStreamerBackend.m**
 
@@ -398,7 +400,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
 @end
 ```
 
- 
+ 
 
 #### Interface methods:
 
@@ -422,13 +424,13 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
 }
 ```
 
-The `init:` method creates the instance by calling `[super init]`,
+The `init:` method creates the instance by calling `[super init]`,
 stores the delegate object that will handle the UI interaction and
 launches the `app_function`, from a separate, concurrent, Dispatch
-Queue. The `app_function` monitors the GStreamer bus for messages and
+Queue. The `app_function` monitors the GStreamer bus for messages and
 warns the application when interesting things happen.
 
-`init:` also registers a new GStreamer debug category and sets its
+`init:` also registers a new GStreamer debug category and sets its
 threshold, so we can see the debug output from within Xcode and keep
 track of our application progress.
 
@@ -444,7 +446,7 @@ track of our application progress.
 }
 ```
 
-The `dealloc` method takes care of bringing the pipeline to the NULL
+The `dealloc` method takes care of bringing the pipeline to the NULL
 state and releasing it.
 
 ```
@@ -463,7 +465,7 @@ state and releasing it.
 }
 ```
 
-The `play` and `pause` methods simply try to set the pipeline to the
+The `play` and `pause` methods simply try to set the pipeline to the
 desired state and warn the application if something fails.
 
 #### Private methods:
@@ -480,11 +482,11 @@ desired state and warn the application if something fails.
 }
 ```
 
-`setUIMessage:` turns the C strings that GStreamer uses (UTF8 `char *`)
-into `NSString *` and displays them through the
-`gstreamerSetUIMessage` method of the `GStreamerBackendDelegate`. The
+`setUIMessage:` turns the C strings that GStreamer uses (UTF8 `char *`)
+into `NSString *` and displays them through the
+`gstreamerSetUIMessage` method of the `GStreamerBackendDelegate`. The
 implementation of this method is marked as `@optional`, and hence the
-check for its existence in the delegate with `respondsToSelector:`
+check for its existence in the delegate with `respondsToSelector:`
 
 ```
 /* Retrieve errors from the bus and show them on the UI */
@@ -517,18 +519,18 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
 }
 ```
 
-The `error_cb()` and `state_changed_cb()` are callbacks registered to
-the `error` and `state-changed` events in GStreamer, and their goal is
+The `error_cb()` and `state_changed_cb()` are callbacks registered to
+the `error` and `state-changed` events in GStreamer, and their goal is
 to inform the user about these events. These callbacks have been widely
-used in the [Basic tutorials](Basic%2Btutorials.html) and their
+used in the [Basic tutorials](sdk-basic-tutorials.md) and their
 implementation is very similar, except for two points:
 
 Firstly, the messages are conveyed to the user through the
-`setUIMessage:` private method discussed above.
+`setUIMessage:` private method discussed above.
 
-Secondly, they require an instance of a `GStreamerBackend` object in
+Secondly, they require an instance of a `GStreamerBackend` object in
 order to call its instance method `setUIMessage:`, which is passed
-through the `userdata` pointer of the callbacks (the `self` pointer in
+through the `userdata` pointer of the callbacks (the `self` pointer in
 these implementations). This is discussed below when registering the
 callbacks in the `app_function`.
 
@@ -548,14 +550,14 @@ callbacks in the `app_function`.
 }
 ```
 
-`check_initialization_complete()` verifies that all conditions are met
+`check_initialization_complete()` verifies that all conditions are met
 to consider the backend ready to accept commands and tell the
 application if so. In this simple tutorial the only conditions are that
 the main loop exists and that we have not already told the application
 about this fact. Later (more complex) tutorials include additional
 conditions.
 
-Finally, most of the GStreamer work is performed in the app\_function.
+Finally, most of the GStreamer work is performed in the app_function.
 It exists with almost identical content in the Android tutorial, which
 exemplifies how the same code can run on both platforms with little
 change.
@@ -566,11 +568,11 @@ change.
     g_main_context_push_thread_default(context);
 ```
 
-It first creates a GLib context so all `GSource`s are kept in the same
+It first creates a GLib context so all `GSource`s are kept in the same
 place. This also helps cleaning after GSources created by other
 libraries which might not have been properly disposed of. A new context
-is created with `g_main_context_new()` and then it is made the default
-one for the thread with `g_main_context_push_thread_default()`.
+is created with `g_main_context_new()` and then it is made the default
+one for the thread with `g_main_context_push_thread_default()`.
 
 ```
     /* Build pipeline */
@@ -584,9 +586,9 @@ one for the thread with `g_main_context_push_thread_default()`.
     }
 ```
 
-It then creates a pipeline the easy way, with `gst_parse_launch()`. In
-this case, it is simply an  `audiotestsrc` (which produces a continuous
-tone) and an `autoaudiosink`, with accompanying adapter
+It then creates a pipeline the easy way, with `gst_parse_launch()`. In
+this case, it is simply an  `audiotestsrc` (which produces a continuous
+tone) and an `autoaudiosink`, with accompanying adapter
 elements.
 
 ```
@@ -603,11 +605,11 @@ elements.
 
 These lines create a bus signal watch and connect to some interesting
 signals, just like we have been doing in the [Basic
-tutorials](Basic%2Btutorials.html). The creation of the watch is done
-step by step instead of using `gst_bus_add_signal_watch()` to exemplify
+tutorials](sdk-basic-tutorials.md). The creation of the watch is done
+step by step instead of using `gst_bus_add_signal_watch()` to exemplify
 how to use a custom GLib context. The interesting bit here is the usage
 of a
-[\_\_bridge](http://clang.llvm.org/docs/AutomaticReferenceCounting.html#bridged-casts)
+[__bridge](http://clang.llvm.org/docs/AutomaticReferenceCounting.html#bridged-casts)
 cast to convert an Objective-C object into a plain C pointer. In this
 case we do not worry much about transferal of ownership of the object,
 because it travels through C-land untouched. It re-emerges at the
@@ -626,38 +628,32 @@ different callbacks through the userdata pointer and cast again to a
 ```
 
 Finally, the main loop is created and set to run. Before entering the
-main loop, though, `check_initialization_complete()` is called. Upon
+main loop, though, `check_initialization_complete()` is called. Upon
 exit, the main loop is disposed of.
 
-And this is it\! This has been a rather long tutorial, but we covered a
+And this is it! This has been a rather long tutorial, but we covered a
 lot of territory. Building on top of this one, the following ones are
 shorter and focus only on the new topics.
 
-# Conclusion
+## Conclusion
 
 This tutorial has shown:
 
   - How to handle GStreamer code from a separate thread using a
     [Dispatch
-    Queue](http://developer.apple.com/library/ios/#documentation/General/Conceptual/ConcurrencyProgrammingGuide/OperationQueues/OperationQueues.html) other
+    Queue](http://developer.apple.com/library/ios/#documentation/General/Conceptual/ConcurrencyProgrammingGuide/OperationQueues/OperationQueues.html) other
     than the Main one.
   - How to pass objects between the Objective-C UI code and the C
     GStreamer code.
 
 Most of the methods introduced in this tutorial,
-like `check_initialization_complete()`and `app_function()`, and the
-interface methods `init:`, `play:`, `pause:`,
-`gstreamerInitialized:` and `setUIMessage:` will continue to be used in
+like `check_initialization_complete()`and `app_function()`, and the
+interface methods `init:`, `play:`, `pause:`,
+`gstreamerInitialized:` and `setUIMessage:` will continue to be used in
 the following tutorials with minimal modifications, so better get used
-to them\!
+to them!
 
-It has been a pleasure having you here, and see you soon\!
+It has been a pleasure having you here, and see you soon!
 
-## Attachments:
 
-![](images/icons/bullet_blue.gif)
-[ios-tutorial2-screenshot.png](attachments/3571718/3538954.png)
-(image/png)
-![](images/icons/bullet_blue.gif)
-[ios-tutorial2-screenshot.png](attachments/3571718/3538953.png)
-(image/png)
+  [screenshot]: images/sdk-ios-tutorial-a-running-pipeline-screenshot.png

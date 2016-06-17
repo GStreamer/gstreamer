@@ -1,9 +1,10 @@
 # iOS tutorial 3: Video
 
-# Goal![](attachments/3571736/3538955.png)
+# Goal
 
-Except for [Basic tutorial 5: GUI toolkit
-integration](Basic%2Btutorial%2B5%253A%2BGUI%2Btoolkit%2Bintegration.html),
+![screenshot]
+
+Except for [](sdk-basic-tutorial-toolkit-integration.md),
 which embedded a video window on a GTK application, all tutorials so far
 relied on GStreamer video sinks to create a window to display their
 contents. The video sink on iOS is not capable of creating its own
@@ -17,24 +18,23 @@ shows:
 
 Since iOS does not provide a windowing system, a GStreamer video sink
 cannot create pop-up windows as it would do on a Desktop platform.
-Fortunately, the `XOverlay` interface allows providing video sinks with
+Fortunately, the `VideoOverlay` interface allows providing video sinks with
 an already created window onto which they can draw, as we have seen
-in [Basic tutorial 5: GUI toolkit
-integration](Basic%2Btutorial%2B5%253A%2BGUI%2Btoolkit%2Bintegration.html).
+in [](sdk-basic-tutorial-toolkit-integration.md).
 
-In this tutorial, a `UIView` widget (actually, a subclass of it) is
-placed on the main storyboard. In the `viewDidLoad` method of the
-`ViewController`, we pass a pointer to this `UIView `to the instance of
+In this tutorial, a `UIView` widget (actually, a subclass of it) is
+placed on the main storyboard. In the `viewDidLoad` method of the
+`ViewController`, we pass a pointer to this `UIView `to the instance of
 the `GStreamerBackend`, so it can tell the video sink where to draw.
 
 # The User Interface
 
-The storyboard from the previous tutorial is expanded: A `UIView `is
+The storyboard from the previous tutorial is expanded: A `UIView `is
 added over the toolbar and pinned to all sides so it takes up all
 available space (`video_container_view` outlet). Inside it, another
-`UIView `is added (`video_view` outlet) which contains the actual video,
+`UIView `is added (`video_view` outlet) which contains the actual video,
 centered to its parent, and with a size that adapts to the media size
-(through the `video_width_constraint` and `video_height_constraint`
+(through the `video_width_constraint` and `video_height_constraint`
 outlets):
 
 **ViewController.h**
@@ -65,8 +65,8 @@ outlets):
 
 # The View Controller
 
-The `ViewController `class manages the UI, instantiates
-the `GStreamerBackend` and also performs some UI-related tasks on its
+The `ViewController `class manages the UI, instantiates
+the `GStreamerBackend` and also performs some UI-related tasks on its
 behalf:
 
 **ViewController.m**
@@ -193,12 +193,12 @@ media is constant and initialized in `viewDidLoad`:
 }
 ```
 
-As shown below, the `GStreamerBackend` constructor has also been
-expanded to accept another parameter: the `UIView *` where the video
+As shown below, the `GStreamerBackend` constructor has also been
+expanded to accept another parameter: the `UIView *` where the video
 sink should draw.
 
-The rest of the `ViewController `code is the same as the previous
-tutorial, except for the code that adapts the `video_view` size to the
+The rest of the `ViewController `code is the same as the previous
+tutorial, except for the code that adapts the `video_view` size to the
 media size, respecting its aspect ratio:
 
 ```
@@ -220,11 +220,11 @@ media size, respecting its aspect ratio:
 }
 ```
 
-The `viewDidLayoutSubviews` method is called every time the main view
+The `viewDidLayoutSubviews` method is called every time the main view
 size has changed (for example, due to a device orientation change) and
 the entire layout has been recalculated. At this point, we can access
-the `bounds` property of the `video_container_view` to retrieve its new
-size and change the `video_view` size accordingly.
+the `bounds` property of the `video_container_view` to retrieve its new
+size and change the `video_view` size accordingly.
 
 The simple algorithm above maximizes either the width or the height of
 the `video_view`, while changing the other axis so the aspect ratio of
@@ -233,18 +233,18 @@ with a surface of the correct proportions, so it does not need to add
 black borders (*letterboxing*), which is a waste of processing power.
 
 The final size is reported to the layout engine by changing the
-`constant` field in the width and height `Constraints` of the
+`constant` field in the width and height `Constraints` of the
 `video_view`. These constraints have been created in the storyboard and
-are accessible to the `ViewController `through IBOutlets, as is usually
+are accessible to the `ViewController `through IBOutlets, as is usually
 done with other widgets.
 
 # The GStreamer Backend
 
-The `GStreamerBackend` class performs all GStreamer-related tasks and
+The `GStreamerBackend` class performs all GStreamer-related tasks and
 offers a simplified interface to the application, which does not need to
 deal with all the GStreamer details. When it needs to perform any UI
 action, it does so through a delegate, which is expected to adhere to
-the `GStreamerBackendDelegate` protocol:
+the `GStreamerBackendDelegate` protocol:
 
 **GStreamerBackend.m**
 
@@ -252,7 +252,7 @@ the `GStreamerBackendDelegate` protocol:
 #import "GStreamerBackend.h"
 
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/video/video.h>
 
 GST_DEBUG_CATEGORY_STATIC (debug_category);
 #define GST_CAT_DEFAULT debug_category
@@ -266,7 +266,7 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 @implementation GStreamerBackend {
     id ui_delegate;        /* Class that we use to interact with the user interface */
     GstElement *pipeline;  /* The running pipeline */
-    GstElement *video_sink;/* The video sink element which receives XOverlay commands */
+    GstElement *video_sink;/* The video sink element which receives VideoOverlay commands */
     GMainContext *context; /* GLib context used to run the main loop */
     GMainLoop *main_loop;  /* GLib main loop */
     gboolean initialized;  /* To avoid informing the UI multiple times about the initialization */
@@ -391,7 +391,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     g_main_context_push_thread_default(context);
 
     /* Build pipeline */
-    pipeline = gst_parse_launch("videotestsrc ! warptv ! ffmpegcolorspace ! autovideosink", &error);
+    pipeline = gst_parse_launch("videotestsrc ! warptv ! videoconvert ! autovideosink", &error);
     if (error) {
         gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
         g_clear_error (&error);
@@ -403,12 +403,12 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     /* Set the pipeline to READY, so it can already accept a window handle */
     gst_element_set_state(pipeline, GST_STATE_READY);
 
-    video_sink = gst_bin_get_by_interface(GST_BIN(pipeline), GST_TYPE_X_OVERLAY);
+    video_sink = gst_bin_get_by_interface(GST_BIN(pipeline), GST_TYPE_VIDEO_OVERLAY);
     if (!video_sink) {
         GST_ERROR ("Could not retrieve video sink");
         return;
     }
-    gst_x_overlay_set_window_handle(GST_X_OVERLAY(video_sink), (guintptr) (id) ui_video_view);
+    gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(video_sink), (guintptr) (id) ui_video_view);
 
     /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
     bus = gst_element_get_bus (pipeline);
@@ -442,13 +442,13 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
 ```
 
 The main differences with the previous tutorial are related to the
-handling of the `XOverlay` interface:
+handling of the `VideoOverlay` interface:
 
 ```
 @implementation GStreamerBackend {
     id ui_delegate;        /* Class that we use to interact with the user interface */
     GstElement *pipeline;  /* The running pipeline */
-    GstElement *video_sink;/* The video sink element which receives XOverlay commands */
+    GstElement *video_sink;/* The video sink element which receives VideoOverlay commands */
     GMainContext *context; /* GLib context used to run the main loop */
     GMainLoop *main_loop;  /* GLib main loop */
     gboolean initialized;  /* To avoid informing the UI multiple times about the initialization */
@@ -457,7 +457,7 @@ handling of the `XOverlay` interface:
 ```
 
 The class is expanded to keep track of the video sink element in the
-pipeline and the `UIView *` onto which rendering is to occur.
+pipeline and the `UIView *` onto which rendering is to occur.
 
 ```
 -(id) init:(id) uiDelegate videoView:(UIView *)video_view
@@ -480,62 +480,61 @@ pipeline and the `UIView *` onto which rendering is to occur.
 }
 ```
 
-The constructor accepts the `UIView *` as a new parameter, which, at
+The constructor accepts the `UIView *` as a new parameter, which, at
 this point, is simply remembered in `ui_video_view`.
 
 ```
 /* Build pipeline */
-pipeline = gst_parse_launch("videotestsrc ! warptv ! ffmpegcolorspace ! autovideosink", &error);
+pipeline = gst_parse_launch("videotestsrc ! warptv ! videoconvert ! autovideosink", &error);
 ```
 
 Then, in the `app_function`, the pipeline is constructed. This time we
-build a video pipeline using a simple `videotestsrc` element with a
-`warptv` to add some spice. The video sink is `autovideosink`, which
+build a video pipeline using a simple `videotestsrc` element with a
+`warptv` to add some spice. The video sink is `autovideosink`, which
 choses the appropriate sink for the platform (currently,
-`eglglessink` is the only option for
+`glimagesink` is the only option for
 iOS).
 
 ```
 /* Set the pipeline to READY, so it can already accept a window handle */
 gst_element_set_state(pipeline, GST_STATE_READY);
 
-video_sink = gst_bin_get_by_interface(GST_BIN(pipeline), GST_TYPE_X_OVERLAY);
+video_sink = gst_bin_get_by_interface(GST_BIN(pipeline), GST_TYPE_VIDEO_OVERLAY);
 if (!video_sink) {
     GST_ERROR ("Could not retrieve video sink");
     return;
 }
-gst_x_overlay_set_window_handle(GST_X_OVERLAY(video_sink), (guintptr) (id) ui_video_view);
+gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(video_sink), (guintptr) (id) ui_video_view);
 ```
 
 Once the pipeline is built, we set it to READY. In this state, dataflow
 has not started yet, but the caps of adjacent elements have been
 verified to be compatible and their pads have been linked. Also, the
-`autovideosink` has already instantiated the actual video sink so we can
+`autovideosink` has already instantiated the actual video sink so we can
 ask for it immediately.
 
-The `gst_bin_get_by_interface()` method will examine the whole pipeline
+The `gst_bin_get_by_interface()` method will examine the whole pipeline
 and return a pointer to an element which supports the requested
-interface. We are asking for the `XOverlay` interface, explained in
-[Basic tutorial 5: GUI toolkit
-integration](Basic%2Btutorial%2B5%253A%2BGUI%2Btoolkit%2Bintegration.html),
+interface. We are asking for the `VideoOverlay` interface, explained in
+[](sdk-basic-tutorial-toolkit-integration.md),
 which controls how to perform rendering into foreign (non-GStreamer)
-windows. The internal video sink instantiated by `autovideosink` is the
+windows. The internal video sink instantiated by `autovideosink` is the
 only element in this pipeline implementing it, so it will be returned.
 
-Once we have the video sink, we inform it of the `UIView` to use for
-rendering, through the `gst_x_overlay_set_window_handle()` method.
+Once we have the video sink, we inform it of the `UIView` to use for
+rendering, through the `gst_video_overlay_set_window_handle()` method.
 
 # EaglUIView
 
-One last detail remains. In order for `eglglessink` to be able to draw
+One last detail remains. In order for `glimagesink` to be able to draw
 on the
 [`UIView`](http://developer.apple.com/library/ios/#documentation/UIKit/Reference/UIView_Class/UIView/UIView.html),
 the
-[`Layer`](http://developer.apple.com/library/ios/#documentation/GraphicsImaging/Reference/CALayer_class/Introduction/Introduction.html#//apple_ref/occ/cl/CALayer) associated
+[`Layer`](http://developer.apple.com/library/ios/#documentation/GraphicsImaging/Reference/CALayer_class/Introduction/Introduction.html#//apple_ref/occ/cl/CALayer) associated
 with this view must be of the
-[`CAEAGLLayer`](http://developer.apple.com/library/ios/#documentation/QuartzCore/Reference/CAEAGLLayer_Class/CAEGLLayer/CAEGLLayer.html#//apple_ref/occ/cl/CAEAGLLayer) class.
-To this avail, we create the `EaglUIView` class, derived from
-`UIView `and overriding the `layerClass` method:
+[`CAEAGLLayer`](http://developer.apple.com/library/ios/#documentation/QuartzCore/Reference/CAEAGLLayer_Class/CAEGLLayer/CAEGLLayer.html#//apple_ref/occ/cl/CAEAGLLayer) class.
+To this avail, we create the `EaglUIView` class, derived from
+`UIView `and overriding the `layerClass` method:
 
 **EaglUIView.m**
 
@@ -554,9 +553,9 @@ To this avail, we create the `EaglUIView` class, derived from
 @end
 ```
 
-When creating storyboards, bear in mind that the `UIView `which should
-contain the video must have `EaglUIView` as its custom class. This is
-easy to setup from the Xcode interface builder. Take a look at the
+When creating storyboards, bear in mind that the `UIView `which should
+contain the video must have `EaglUIView` as its custom class. This is
+easy to setup from the Xcode interface builder. Take a look at the
 tutorial storyboard to see how to achieve this.
 
 And this is it, using GStreamer to output video onto an iOS application
@@ -566,18 +565,14 @@ is as simple as it seems.
 
 This tutorial has shown:
 
-  - How to display video on iOS using a `UIView `and
-    the `XOverlay` interface.
+  - How to display video on iOS using a `UIView `and
+    the `VideoOverlay` interface.
   - How to report the media size to the iOS layout engine through
     runtime manipulation of width and height constraints.
 
 The following tutorial plays an actual clip and adds a few more controls
 to this tutorial in order to build a simple media player.
 
-It has been a pleasure having you here, and see you soon\!
+It has been a pleasure having you here, and see you soon!
 
-## Attachments:
-
-![](images/icons/bullet_blue.gif)
-[ios-tutorial3-screenshot.png](attachments/3571736/3538955.png)
-(image/png)
+  [screenshot]: images/sdk-ios-tutorial-video-screenshot.png

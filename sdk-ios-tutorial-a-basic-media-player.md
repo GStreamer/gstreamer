@@ -1,46 +1,47 @@
 # iOS tutorial 4: A basic media player
 
-# Goal![](attachments/3571758/3539044.png)
+## Goal
 
-Enough testing with synthetic images and audio tones\! This tutorial
+![screenshot]
+
+Enough testing with synthetic images and audio tones! This tutorial
 finally plays actual media, streamed directly from the Internet, in your
 iOS device. It shows:
 
   - How to keep the User Interface regularly updated with the current
     playback position and duration
-  - How to implement a [Time
+  - How to implement a [Time
     Slider](http://developer.apple.com/library/ios/#documentation/UIKit/Reference/UISlider_Class/Reference/Reference.html)
   - How to report the media size to adapt the display surface
 
-It also uses the knowledge gathered in the [Basic
-tutorials](Basic%2Btutorials.html) regarding:
+It also uses the knowledge gathered in the [](sdk-basic-tutorials.md) regarding:
 
-  - How to use `playbin` to play any kind of media
+  - How to use `playbin` to play any kind of media
   - How to handle network resilience problems
 
-# Introduction
+## Introduction
 
-From the previous tutorials, we already have almost all necessary pieces
-to build a media player. The most complex part is assembling a pipeline
-which retrieves, decodes and displays the media, but we already know
-that the `playbin` element can take care of all that for us. We only
-need to replace the manual pipeline we used in [iOS tutorial 3:
-Video](iOS%2Btutorial%2B3%253A%2BVideo.html) with a
-single-element `playbin` pipeline and we are good to go\!
+From the previous tutorials, we already have almost all necessary
+pieces to build a media player. The most complex part is assembling a
+pipeline which retrieves, decodes and displays the media, but we
+already know that the `playbin` element can take care of all that for
+us. We only need to replace the manual pipeline we used in
+[](sdk-ios-tutorial-video.md) with a single-element `playbin` pipeline
+and we are good to go!
 
-However, we can do better than. We will add a [Time
+However, we can do better than. We will add a [Time
 Slider](http://developer.apple.com/library/ios/#documentation/UIKit/Reference/UISlider_Class/Reference/Reference.html),
 with a moving thumb that will advance as our current position in the
 media advances. We will also allow the user to drag the thumb, to jump
-(or *seek*) to a different position.
+(or *seek*) to a different position.
 
 And finally, we will make the video surface adapt to the media size, so
 the video sink is not forced to draw black borders around the clip.
- This also allows the iOS layout to adapt more nicely to the actual
+ This also allows the iOS layout to adapt more nicely to the actual
 media content. You can still force the video surface to have a specific
 size if you really want to.
 
-# The User Interface
+## The User Interface
 
 The User Interface from the previous tutorial is expanded again. A
 `UISlider` has been added to the toolbar, to keep track of the current
@@ -83,15 +84,15 @@ duration.
 ```
 
 Note how we register callbacks for some of the Actions the
-[UISlider](http://developer.apple.com/library/ios/#documentation/UIKit/Reference/UISlider_Class/Reference/Reference.html) generates.
-Also note that the class has been renamed from `ViewController` to
+[UISlider](http://developer.apple.com/library/ios/#documentation/UIKit/Reference/UISlider_Class/Reference/Reference.html) generates.
+Also note that the class has been renamed from `ViewController` to
 `VideoViewController`, since the next tutorial adds another
 `ViewController` and we will need to differentiate.
 
-# The Video View Controller
+## The Video View Controller
 
-The `ViewController `class manages the UI, instantiates
-the `GStreamerBackend` and also performs some UI-related tasks on its
+The `ViewController `class manages the UI, instantiates
+the `GStreamerBackend` and also performs some UI-related tasks on its
 behalf:
 
 ![](images/icons/grey_arrow_down.gif)Due to the extension of this code,
@@ -300,14 +301,14 @@ this view is collapsed by default. Click here to expand…
 
 Supporting arbitrary media URIs
 
-The `GStreamerBackend`  provides the `setUri()` method so we can
-indicate the URI of the media to play. Since `playbin` will be taking
+The `GStreamerBackend`  provides the `setUri()` method so we can
+indicate the URI of the media to play. Since `playbin` will be taking
 care of retrieving the media, we can use local or remote URIs
-indistinctly (`file://` or `http://`, for example). From the UI code,
+indistinctly (`file://` or `http://`, for example). From the UI code,
 though, we want to keep track of whether the file is local or remote,
 because we will not offer the same functionalities. We keep track of
-this in the `is_local_media` variable, which is set when the URI is set,
-in the `gstreamerInitialized` method:
+this in the `is_local_media` variable, which is set when the URI is set,
+in the `gstreamerInitialized` method:
 
 ```
 -(void) gstreamerInitialized
@@ -327,7 +328,7 @@ Reporting media size
 
 Every time the size of the media changes (which could happen mid-stream,
 for some kind of streams), or when it is first detected,
-`GStreamerBackend`  calls our `mediaSizeChanged()` callback:
+`GStreamerBackend`  calls our `mediaSizeChanged()` callback:
 
 ```
 -(void) mediaSizeChanged:(NSInteger)width height:(NSInteger)height
@@ -343,18 +344,16 @@ for some kind of streams), or when it is first detected,
 ```
 
 Here we simply store the new size and ask the layout to be recalculated.
-As we have already seen in [iOS tutorial 2: A running
-pipeline](iOS%2Btutorial%2B2%253A%2BA%2Brunning%2Bpipeline.html),
+As we have already seen in [](sdk-ios-tutorial-a-running-pipeline.md),
 methods which change the UI must be called from the main thread, and we
 are now in a callback from some GStreamer internal thread. Hence, the
 usage
-of `dispatch_async()`[.](http://developer.android.com/reference/android/app/Activity.html#runOnUiThread\(java.lang.Runnable\))
+of `dispatch_async()`[.](http://developer.android.com/reference/android/app/Activity.html#runOnUiThread\(java.lang.Runnable\))
 
 ### Refreshing the Time Slider
 
-[Basic tutorial 5: GUI toolkit
-integration](Basic%2Btutorial%2B5%253A%2BGUI%2Btoolkit%2Bintegration.html) has
-already shown how to implement a Seek Bar (or [Time
+[](sdk-basic-tutorial-toolkit-integration.md) has
+already shown how to implement a Seek Bar (or [Time
 Slider](http://developer.apple.com/library/ios/#documentation/UIKit/Reference/UISlider_Class/Reference/Reference.html)
 in this tutorial) using the GTK+ toolkit. The implementation on iOS is
 very similar.
@@ -363,8 +362,8 @@ The Seek Bar accomplishes to functions: First, it moves on its own to
 reflect the current playback position in the media. Second, it can be
 dragged by the user to seek to a different position.
 
-To realize the first function, `GStreamerBackend`  will periodically
-call our `setCurrentPosition` method so we can update the position of
+To realize the first function, `GStreamerBackend`  will periodically
+call our `setCurrentPosition` method so we can update the position of
 the thumb in the Seek Bar. Again we do so from the UI thread, using
 `dispatch_async()`.
 
@@ -383,15 +382,15 @@ the thumb in the Seek Bar. Again we do so from the UI thread, using
 ```
 
 Also note that if the user is currently dragging the slider (the
-`dragging_slider` variable is explained below) we ignore
-`setCurrentPosition` calls from `GStreamerBackend`, as they would
+`dragging_slider` variable is explained below) we ignore
+`setCurrentPosition` calls from `GStreamerBackend`, as they would
 interfere with the user’s actions.
 
 To the left of the Seek Bar (refer to the screenshot at the top of this
 page), there is
-a [TextField](https://developer.apple.com/library/ios/#documentation/UIKit/Reference/UITextField_Class/Reference/UITextField.html) widget
+a [TextField](https://developer.apple.com/library/ios/#documentation/UIKit/Reference/UITextField_Class/Reference/UITextField.html) widget
 which we will use to display the current position and duration in
-"`HH:mm:ss / HH:mm:ss"` textual format. The `updateTimeWidget` method
+"`HH:mm:ss / HH:mm:ss"` textual format. The `updateTimeWidget` method
 takes care of it, and must be called every time the Seek Bar is
 updated:
 
@@ -429,7 +428,7 @@ updated:
 
 Seeking with the Seek Bar
 
-To perform the second function of the Seek Bar (allowing the user to
+To perform the second function of the Seek Bar (allowing the user to
 seek by dragging the thumb), we register some callbacks through IBAction
 outlets. Refer to the storyboard in this tutorial’s project to see which
 outlets are connected. We will be notified when the user starts dragging
@@ -444,11 +443,11 @@ the Slider.
 }
 ```
 
-`sliderTouchDown` is called when the user starts dragging. Here we pause
+`sliderTouchDown` is called when the user starts dragging. Here we pause
 the pipeline because if the user is searching for a particular scene, we
 do not want it to keep moving. We also mark that a drag operation is in
 progress in the
-`dragging_slider` variable.
+`dragging_slider` variable.
 
 ```
 /* Called when the time slider position has changed, either because the user dragged it or
@@ -462,10 +461,10 @@ progress in the
 }
 ```
 
-`sliderValueChanged` is called every time the Slider’s thumb moves, be
+`sliderValueChanged` is called every time the Slider’s thumb moves, be
 it because the user dragged it, or because we changed its value form the
 program. We discard the latter case using the
-`dragging_slider` variable.
+`dragging_slider` variable.
 
 As the comment says, if this is a local media, we allow scrub seeking,
 this is, we jump to the indicated position as soon as the thumb moves.
@@ -486,24 +485,21 @@ widget.
 }
 ```
 
-Finally, `sliderTouchUp` is called when the thumb is released. We
+Finally, `sliderTouchUp` is called when the thumb is released. We
 perform the seek operation if the file was non-local, restore the
 pipeline to the desired playing state and end the dragging operation by
 setting `dragging_slider` to NO.
 
 This concludes the User interface part of this tutorial. Let’s review
-now the `GStreamerBackend`  class that allows this to work.
+now the `GStreamerBackend`  class that allows this to work.
 
-# The GStreamer Backend
+## The GStreamer Backend
 
-The `GStreamerBackend` class performs all GStreamer-related tasks and
+The `GStreamerBackend` class performs all GStreamer-related tasks and
 offers a simplified interface to the application, which does not need to
 deal with all the GStreamer details. When it needs to perform any UI
 action, it does so through a delegate, which is expected to adhere to
-the `GStreamerBackendDelegate` protocol.
-
-![](images/icons/grey_arrow_down.gif)Due to the extension of this code,
-this view is collapsed by default. Click here to expand…
+the `GStreamerBackendDelegate` protocol.
 
 **GStreamerBackend.m**
 
@@ -511,7 +507,6 @@ this view is collapsed by default. Click here to expand…
 #import "GStreamerBackend.h"
 
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
 #include <gst/video/video.h>
 
 GST_DEBUG_CATEGORY_STATIC (debug_category);
@@ -530,7 +525,7 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 @implementation GStreamerBackend {
     id ui_delegate;              /* Class that we use to interact with the user interface */
     GstElement *pipeline;        /* The running pipeline */
-    GstElement *video_sink;      /* The video sink element which receives XOverlay commands */
+    GstElement *video_sink;      /* The video sink element which receives VideoOverlay commands */
     GMainContext *context;       /* GLib context used to run the main loop */
     GMainLoop *main_loop;        /* GLib main loop */
     gboolean initialized;        /* To avoid informing the UI multiple times about the initialization */
@@ -630,7 +625,6 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 /* If we have pipeline and it is running, query the current position and clip duration and inform
  * the application */
 static gboolean refresh_ui (GStreamerBackend *self) {
-    GstFormat fmt = GST_FORMAT_TIME;
     gint64 position;
 
     /* We do not want to update anything unless we have a working pipeline in the PAUSED or PLAYING state */
@@ -639,10 +633,10 @@ static gboolean refresh_ui (GStreamerBackend *self) {
 
     /* If we didn't know it yet, query the stream duration */
     if (!GST_CLOCK_TIME_IS_VALID (self->duration)) {
-        gst_element_query_duration (self->pipeline, &fmt, &self->duration);
+        gst_element_query_duration (self->pipeline, GST_FORMAT_TIME, &self->duration);
     }
 
-    if (gst_element_query_position (self->pipeline, &fmt, &position)) {
+    if (gst_element_query_position (self->pipeline, GST_FORMAT_TIME, &position)) {
         /* The UI expects these values in milliseconds, and GStreamer provides nanoseconds */
         [self setCurrentUIPosition:position / GST_MSECOND duration:self->duration / GST_MSECOND];
     }
@@ -756,9 +750,7 @@ static void check_media_size (GStreamerBackend *self) {
     GstElement *video_sink;
     GstPad *video_sink_pad;
     GstCaps *caps;
-    GstVideoFormat fmt;
-    int width;
-    int height;
+    GstVideoInfo info;
 
     /* Retrieve the Caps at the entrance of the video sink */
     g_object_get (self->pipeline, "video-sink", &video_sink, NULL);
@@ -767,18 +759,15 @@ static void check_media_size (GStreamerBackend *self) {
     if (!video_sink) return;
 
     video_sink_pad = gst_element_get_static_pad (video_sink, "sink");
-    caps = gst_pad_get_negotiated_caps (video_sink_pad);
+    caps = gst_pad_get_current_caps (video_sink_pad);
 
-    if (gst_video_format_parse_caps(caps, &fmt, &width, &height)) {
-        int par_n, par_d;
-        if (gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d)) {
-            width = width * par_n / par_d;
-        }
-        GST_DEBUG ("Media size is %dx%d, notifying application", width, height);
+    if (gst_video_info_from_caps(&info, caps)) {
+        info.width = info.width * info.par_n / info.par_d
+        GST_DEBUG ("Media size is %dx%d, notifying application", info.width, info.height);
 
-        if (self->ui_delegate && [self->ui_delegate respondsToSelector:@selector(mediaSizeChanged:height:)])
+        if (self->ui_delegate && [self->ui_delegate respondsToSelector:@selector(mediaSizeChanged:info.height:)])
         {
-            [self->ui_delegate mediaSizeChanged:width height:height];
+            [self->ui_delegate mediaSizeChanged:info.width height:info.height];
         }
     }
 
@@ -851,12 +840,12 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     /* Set the pipeline to READY, so it can already accept a window handle */
     gst_element_set_state(pipeline, GST_STATE_READY);
 
-    video_sink = gst_bin_get_by_interface(GST_BIN(pipeline), GST_TYPE_X_OVERLAY);
+    video_sink = gst_bin_get_by_interface(GST_BIN(pipeline), GST_TYPE_VIDEO_OVERLAY);
     if (!video_sink) {
         GST_ERROR ("Could not retrieve video sink");
         return;
     }
-    gst_x_overlay_set_window_handle(GST_X_OVERLAY(video_sink), (guintptr) (id) ui_video_view);
+    gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(video_sink), (guintptr) (id) ui_video_view);
 
     /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
     bus = gst_element_get_bus (pipeline);
@@ -905,7 +894,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
 
 Supporting arbitrary media URIs
 
-The UI code will call `setUri` whenever it wants to change the playing
+The UI code will call `setUri` whenever it wants to change the playing
 URI (in this tutorial the URI never changes, but it does in the next
 one):
 
@@ -918,11 +907,11 @@ one):
 }
 ```
 
-We first need to obtain a plain `char *` from within the `NSString *` we
-get, using the `UTF8String` method.
+We first need to obtain a plain `char *` from within the `NSString *` we
+get, using the `UTF8String` method.
 
 `playbin`’s URI is exposed as a common GObject property, so we simply
-set it with `g_object_set()`.
+set it with `g_object_set()`.
 
 ### Reporting media size
 
@@ -930,7 +919,7 @@ Some codecs allow the media size (width and height of the video) to
 change during playback. For simplicity, this tutorial assumes that they
 do not. Therefore, in the READY to PAUSED state change, once the Caps of
 the decoded media are known, we inspect them
-in `check_media_size()`:
+in `check_media_size()`:
 
 ```
 /* Retrieve the video sink's Caps and tell the application about the media size */
@@ -938,9 +927,7 @@ static void check_media_size (GStreamerBackend *self) {
     GstElement *video_sink;
     GstPad *video_sink_pad;
     GstCaps *caps;
-    GstVideoFormat fmt;
-    int width;
-    int height;
+    GstVideoInfo info;
 
     /* Retrieve the Caps at the entrance of the video sink */
     g_object_get (self->pipeline, "video-sink", &video_sink, NULL);
@@ -949,18 +936,15 @@ static void check_media_size (GStreamerBackend *self) {
     if (!video_sink) return;
 
     video_sink_pad = gst_element_get_static_pad (video_sink, "sink");
-    caps = gst_pad_get_negotiated_caps (video_sink_pad);
+    caps = gst_pad_get_current_caps (video_sink_pad);
 
-    if (gst_video_format_parse_caps(caps, &fmt, &width, &height)) {
-        int par_n, par_d;
-        if (gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d)) {
-            width = width * par_n / par_d;
-        }
-        GST_DEBUG ("Media size is %dx%d, notifying application", width, height);
+    if (gst_video_info_from_caps(&info, caps)) {
+        info.width = info.width * info.par_n / info.par_d;
+        GST_DEBUG ("Media size is %dx%d, notifying application", info.width, info.height);
 
-        if (self->ui_delegate && [self->ui_delegate respondsToSelector:@selector(mediaSizeChanged:height:)])
+        if (self->ui_delegate && [self->ui_delegate respondsToSelector:@selector(mediaSizeChanged:info.height:)])
         {
-            [self->ui_delegate mediaSizeChanged:width height:height];
+            [self->ui_delegate mediaSizeChanged:info.width height:info.height];
         }
     }
 
@@ -971,19 +955,19 @@ static void check_media_size (GStreamerBackend *self) {
 ```
 
 We first retrieve the video sink element from the pipeline, using
-the `video-sink` property of `playbin`, and then its sink Pad. The
+the `video-sink` property of `playbin`, and then its sink Pad. The
 negotiated Caps of this Pad, which we recover using
-`gst_pad_get_negotiated_caps()`,  are the Caps of the decoded media.
+`gst_pad_get_current_caps()`,  are the Caps of the decoded media.
 
-The helper functions `gst_video_format_parse_caps()` and
-`gst_video_parse_caps_pixel_aspect_ratio()` turn the Caps into
+The helper functions `gst_video_format_parse_caps()` and
+`gst_video_parse_caps_pixel_aspect_ratio()` turn the Caps into
 manageable integers, which we pass to the application through
-its `mediaSizeChanged` callback.
+its `mediaSizeChanged` callback.
 
 ### Refreshing the Seek Bar
 
 To keep the UI updated, a GLib timer is installed in
-the `app_function` that fires 4 times per second (or every 250ms),
+the `app_function` that fires 4 times per second (or every 250ms),
 right before entering the main loop:
 
 ```
@@ -1001,7 +985,6 @@ method:
 /* If we have pipeline and it is running, query the current position and clip duration and inform
  * the application */
 static gboolean refresh_ui (GStreamerBackend *self) {
-    GstFormat fmt = GST_FORMAT_TIME;
     gint64 position;
 
     /* We do not want to update anything unless we have a working pipeline in the PAUSED or PLAYING state */
@@ -1010,10 +993,10 @@ static gboolean refresh_ui (GStreamerBackend *self) {
 
     /* If we didn't know it yet, query the stream duration */
     if (!GST_CLOCK_TIME_IS_VALID (self->duration)) {
-        gst_element_query_duration (self->pipeline, &fmt, &self->duration);
+        gst_element_query_duration (self->pipeline, GST_FORMAT_TIME, &self->duration);
     }
 
-    if (gst_element_query_position (self->pipeline, &fmt, &position)) {
+    if (gst_element_query_position (self->pipeline, GST_FORMAT_TIME, &position)) {
         /* The UI expects these values in milliseconds, and GStreamer provides nanoseconds */
         [self setCurrentUIPosition:position / GST_MSECOND duration:self->duration / GST_MSECOND];
     }
@@ -1021,21 +1004,20 @@ static gboolean refresh_ui (GStreamerBackend *self) {
 }
 ```
 
-If it is unknown, the clip duration is retrieved, as explained in [Basic
-tutorial 4: Time
-management](Basic%2Btutorial%2B4%253A%2BTime%2Bmanagement.html). The
-current position is retrieved next, and the UI is informed of both
-through its `setCurrentUIPosition` callback.
+If it is unknown, the clip duration is retrieved, as explained in
+[](sdk-basic-tutorial-time-management.md). The current position is
+retrieved next, and the UI is informed of both through its
+`setCurrentUIPosition` callback.
 
 Bear in mind that all time-related measures returned by GStreamer are in
 nanoseconds, whereas, for simplicity, we decided to make the UI code
-work in milliseconds. 
+work in milliseconds. 
 
 ### Seeking with the Seek Bar
 
 The UI code already takes care of most of the complexity of seeking by
 dragging the thumb of the Seek Bar. From the `GStreamerBackend`, we just
-need to honor the calls to `setPosition` and instruct the pipeline to
+need to honor the calls to `setPosition` and instruct the pipeline to
 jump to the indicated position.
 
 There are, though, a couple of caveats. Firstly, seeks are only possible
@@ -1047,7 +1029,7 @@ see how to overcome these problems.
 
 #### Delayed seeks
 
-In `setPosition`:
+In `setPosition`:
 
 ```
 -(void) setPosition:(NSInteger)milliseconds
@@ -1064,8 +1046,8 @@ In `setPosition`:
 
 If we are already in the correct state for seeking, execute it right
 away; otherwise, store the desired position in
-the `desired_position` variable. Then, in
-the `state_changed_cb()` callback:
+the `desired_position` variable. Then, in
+the `state_changed_cb()` callback:
 
 ```
         if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED)
@@ -1080,7 +1062,7 @@ the `state_changed_cb()` callback:
 
 Once the pipeline moves from the READY to the PAUSED state, we check if
 there is a pending seek operation and execute it.
-The `desired_position` variable is reset inside `execute_seek()`.
+The `desired_position` variable is reset inside `execute_seek()`.
 
 #### Seek throttling
 
@@ -1097,11 +1079,11 @@ second one, it is up to it to finish the first one, start the second one
 or abort both, which is a bad thing. A simple method to avoid this issue
 is *throttling*, which means that we will only allow one seek every half
 a second (for example): after performing a seek, only the last seek
-request received during the next 500ms is stored, and will be honored
+request received during the next 500ms is stored, and will be honored
 once this period elapses.
 
-To achieve this, all seek requests are routed through
-the `execute_seek()` method:
+To achieve this, all seek requests are routed through
+the `execute_seek()` method:
 
 ```
 /* Perform seek, if we are not too close to the previous seek. Otherwise, schedule the seek for
@@ -1141,34 +1123,28 @@ static void execute_seek (gint64 position, GStreamerBackend *self) {
 ```
 
 The time at which the last seek was performed is stored in
-the `last_seek_time` variable. This is wall clock time, not to be
+the `last_seek_time` variable. This is wall clock time, not to be
 confused with the stream time carried in the media time stamps, and is
 obtained with `gst_util_get_timestamp()`.
 
 If enough time has passed since the last seek operation, the new one is
-directly executed and `last_seek_time` is updated. Otherwise, the new
+directly executed and `last_seek_time` is updated. Otherwise, the new
 seek is scheduled for later. If there is no previously scheduled seek, a
 one-shot timer is setup to trigger 500ms after the last seek operation.
 If another seek was already scheduled, its desired position is simply
 updated with the new one.
 
-The one-shot timer calls `delayed_seek_cb()`, which simply
-calls `execute_seek()` again.
+The one-shot timer calls `delayed_seek_cb()`, which simply
+calls `execute_seek()` again.
 
-<table>
-<tbody>
-<tr class="odd">
-<td><img src="images/icons/emoticons/information.png" width="16" height="16" /></td>
-<td><p><span>Ideally, </span><code>execute_seek()</code><span> will now find that enough time has indeed passed since the last seek and the scheduled one will proceed. It might happen, though, that after 500ms of the previous seek, and before the timer wakes up, yet another seek comes through and is executed. </span><code>delayed_seek_cb()</code><span> needs to check for this condition to avoid performing two very close seeks, and therefore calls </span><code>execute_seek()</code><span> instead of performing the seek itself.</span></p>
-<p>This is not a complete solution: the scheduled seek will still be executed, even though a more-recent seek has already been executed that should have cancelled it. However, it is a good tradeoff between functionality and simplicity.</p></td>
-</tr>
-</tbody>
-</table>
+> ![information]
+> Ideally, `execute_seek()` will now find that enough time has indeed passed since the last seek and the scheduled one will proceed. It might happen, though, that after 500ms of the previous seek, and before the timer wakes up, yet another seek comes through and is executed. `delayed_seek_cb()` needs to check for this condition to avoid performing two very close seeks, and therefore calls `execute_seek()` instead of performing the seek itself.
+>
+>This is not a complete solution: the scheduled seek will still be executed, even though a more-recent seek has already been executed that should have cancelled it. However, it is a good tradeoff between functionality and simplicity.
 
-Network resilience
+###  Network resilience
 
-[Basic tutorial 12:
-Streaming](Basic%2Btutorial%2B12%253A%2BStreaming.html) has already
+[](sdk-basic-tutorial-streaming.md) has already
 shown how to adapt to the variable nature of the network bandwidth by
 using buffering. The same procedure is used here, by listening to the
 buffering
@@ -1182,7 +1158,7 @@ And pausing the pipeline until buffering is complete (unless this is a
 live
 source):
 
- 
+ 
 
 ```
 /* Called when buffering messages are received. We inform the UI about the current buffering level and
@@ -1207,14 +1183,14 @@ static void buffering_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *self) 
 }
 ```
 
-`target_state` is the state in which we have been instructed to set the
+`target_state` is the state in which we have been instructed to set the
 pipeline, which might be different to the current state, because
 buffering forces us to go to PAUSED. Once buffering is complete we set
-the pipeline to the `target_state`.
+the pipeline to the `target_state`.
 
-### Conclusion
+## Conclusion
 
-This tutorial has shown how to embed a `playbin` pipeline into an iOS
+This tutorial has shown how to embed a `playbin` pipeline into an iOS
 application. This, effectively, turns such application into a basic
 media player, capable of streaming and decoding all the formats
 GStreamer understands. More particularly, it has shown:
@@ -1230,8 +1206,5 @@ GStreamer understands. More particularly, it has shown:
 The next tutorial adds the missing bits to turn the application built
 here into an acceptable iOS media player.
 
-## Attachments:
-
-![](images/icons/bullet_blue.gif)
-[ios-tutorial4-screenshot.png](attachments/3571758/3539044.png)
-(image/png)
+  [information]: images/icons/emoticons/information.png
+  [screenshot]: images/sdk-ios-tutorial-a-basic-media-player-screenshot.png
