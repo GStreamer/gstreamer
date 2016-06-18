@@ -869,7 +869,7 @@ ges_clip_create_track_element (GESClip * clip, GESTrackType type)
 GList *
 ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
 {
-  GList *result, *tmp;
+  GList *result = NULL, *tmp, *children;
   GESClipClass *klass;
   guint max_prio, min_prio;
 
@@ -884,7 +884,23 @@ ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
 
   GST_DEBUG_OBJECT (clip, "Creating TrackElements for type: %s",
       ges_track_type_name (type));
-  result = klass->create_track_elements (clip, type);
+  children = ges_container_get_children (GES_CONTAINER (clip), TRUE);
+  for (tmp = children; tmp; tmp = tmp->next) {
+    GESTrackElement *child = GES_TRACK_ELEMENT (tmp->data);
+
+    if (!GES_IS_BASE_EFFECT (child) && !ges_track_element_get_track (child) &&
+        ges_track_element_get_track_type (child) & type) {
+
+      GST_DEBUG_OBJECT (clip, "Removing for reusage: %" GST_PTR_FORMAT, child);
+      result = g_list_prepend (result, g_object_ref (child));
+      ges_container_remove (GES_CONTAINER (clip), tmp->data);
+    }
+  }
+  g_list_free_full (children, gst_object_unref);
+
+  if (!result) {
+    result = klass->create_track_elements (clip, type);
+  }
 
   _get_priority_range (GES_CONTAINER (clip), &min_prio, &max_prio);
   for (tmp = result; tmp; tmp = tmp->next) {
