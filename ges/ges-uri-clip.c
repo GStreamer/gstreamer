@@ -293,7 +293,9 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
   GES_TIMELINE_ELEMENT (uriclip)->asset = asset;
 
   if (layer) {
-    for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
+    GList *children = ges_container_get_children (GES_CONTAINER (self), TRUE);
+
+    for (tmp = children; tmp; tmp = tmp->next) {
       if (GES_IS_SOURCE (tmp->data)) {
         GESTrack *track = ges_track_element_get_track (tmp->data);
 
@@ -303,10 +305,13 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
           video_source = gst_object_ref (tmp->data);
 
         ges_track_remove_element (track, tmp->data);
+        ges_container_remove (GES_CONTAINER (self), tmp->data);
       }
     }
+    g_list_free_full (children, g_object_unref);
 
     gst_object_ref (clip);
+
     ges_layer_remove_clip (layer, clip);
     res = ges_layer_add_clip (layer, clip);
 
@@ -314,9 +319,9 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
       if (GES_IS_SOURCE (tmp->data)) {
         GESTrack *track = ges_track_element_get_track (tmp->data);
 
-        if (track->type == GES_TRACK_TYPE_AUDIO)
+        if (track->type == GES_TRACK_TYPE_AUDIO && audio_source)
           ges_track_element_copy_properties (audio_source, tmp->data);
-        else if (track->type == GES_TRACK_TYPE_VIDEO)
+        else if (track->type == GES_TRACK_TYPE_VIDEO && video_source)
           ges_track_element_copy_properties (video_source, tmp->data);
       }
     }

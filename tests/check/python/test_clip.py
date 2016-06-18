@@ -98,3 +98,31 @@ class TestTitleClip(unittest.TestCase):
         children2 = clip2.get_children(True)
         self.assertNotEqual(children2[0].props.priority,
                             children2[1].props.priority)
+class TestTrackElements(unittest.TestCase):
+    def test_add_to_layer_with_effect_remove_add(self):
+        timeline = GES.Timeline.new_audio_video()
+        self.assertEqual(len(timeline.get_tracks()), 2)
+        layer = timeline.append_layer()
+
+        test_clip = GES.TestClip()
+        self.assertEqual(test_clip.get_children(True), [])
+        self.assertTrue(layer.add_clip(test_clip))
+        audio_source = test_clip.find_track_element(None, GES.AudioSource)
+        self.assertIsNotNone(audio_source)
+
+        self.assertTrue(test_clip.set_child_property("volume", 0.0))
+        self.assertEqual(audio_source.get_child_property("volume")[1], 0.0)
+
+        effect = GES.Effect.new("agingtv")
+        test_clip.add(effect)
+
+        children = test_clip.get_children(True)
+        layer.remove_clip(test_clip)
+        self.assertEqual(test_clip.get_children(True), children)
+
+        self.assertTrue(layer.add_clip(test_clip))
+        self.assertEqual(test_clip.get_children(True), children)
+
+        audio_source = test_clip.find_track_element(None, GES.AudioSource)
+        self.assertFalse(audio_source is None)
+        self.assertEqual(audio_source.get_child_property("volume")[1], 0.0)

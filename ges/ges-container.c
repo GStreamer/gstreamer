@@ -355,9 +355,15 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
 static void
 _dispose (GObject * object)
 {
+  GList *tmp;
   GESContainer *self = GES_CONTAINER (object);
+  GList *children = ges_container_get_children (self, FALSE);
 
-  g_hash_table_unref (self->priv->mappings);
+  for (tmp = children; tmp; tmp = tmp->next)
+    ges_container_remove (self, tmp->data);
+
+  g_list_free_full (children, gst_object_unref);
+  self->children = NULL;
 
   G_OBJECT_CLASS (ges_container_parent_class)->dispose (object);
 }

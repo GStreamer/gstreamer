@@ -2511,6 +2511,9 @@ layer_object_removed_cb (GESLayer * layer, GESClip * clip,
     GESTrackElement *track_element = (GESTrackElement *) tmp->data;
     GESTrack *track = ges_track_element_get_track (track_element);
 
+    if (!track)
+      continue;
+
     GST_DEBUG_OBJECT (timeline, "Trying to remove TrackElement %p",
         track_element);
 
@@ -2521,8 +2524,7 @@ layer_object_removed_cb (GESLayer * layer, GESClip * clip,
                 (GCompareFunc) custom_find_track) || track == NULL)) {
       GST_DEBUG ("Belongs to one of the tracks we control");
 
-      ges_container_remove (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (track_element));
+      ges_track_remove_element (track, track_element);
     }
     UNLOCK_DYN (timeline);
   }
