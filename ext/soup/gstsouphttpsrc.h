@@ -94,6 +94,10 @@ struct _GstSoupHTTPSrc {
   GMainContext *poll_context;
   GSource *poll_source;
 
+  gint reduce_blocksize_count;
+  gint increase_blocksize_count;
+  guint minimum_blocksize;
+
   /* Shoutcast/icecast metadata extraction handling. */
   gboolean iradio_mode;
   GstCaps *src_caps;

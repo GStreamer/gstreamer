@@ -134,6 +134,13 @@ enum
 #define DEFAULT_RETRIES              3
 #define DEFAULT_SOUP_METHOD          NULL
 
+#define GROW_BLOCKSIZE_LIMIT 1
+#define GROW_BLOCKSIZE_COUNT 1
+#define GROW_BLOCKSIZE_FACTOR 2
+#define REDUCE_BLOCKSIZE_LIMIT 0.20
+#define REDUCE_BLOCKSIZE_COUNT 2
+#define REDUCE_BLOCKSIZE_FACTOR 0.5
+
 static void gst_soup_http_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 static void gst_soup_http_src_finalize (GObject * gobject);
@@ -439,6 +446,9 @@ gst_soup_http_src_reset (GstSoupHTTPSrc * src)
   src->content_size = 0;
   src->have_body = FALSE;
 
+  src->reduce_blocksize_count = 0;
+  src->increase_blocksize_count = 0;
+
   src->ret = GST_FLOW_OK;
   g_cancellable_reset (src->cancellable);
   gst_soup_http_src_destroy_input_stream (src);
@@ -481,6 +491,7 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src)
   src->tls_interaction = DEFAULT_TLS_INTERACTION;
   src->max_retries = DEFAULT_RETRIES;
   src->method = DEFAULT_SOUP_METHOD;
+  src->minimum_blocksize = gst_base_src_get_blocksize (GST_BASE_SRC_CAST (src));
   proxy = g_getenv ("http_proxy");
   if (!gst_soup_http_src_set_proxy (src, proxy)) {
     GST_WARNING_OBJECT (src,
@@ -1457,6 +1468,46 @@ done:
   return src->ret;
 }
 
+/*
+ * Check if the bytes_read is above a certain threshold of the blocksize, if
+ * that happens a few times in a row, increase the blocksize; Do the same in
+ * the opposite direction to reduce the blocksize.
+ */
+static void
+gst_soup_http_src_check_update_blocksize (GstSoupHTTPSrc * src,
+    gint64 bytes_read)
+{
+  guint blocksize = gst_base_src_get_blocksize (GST_BASE_SRC_CAST (src));
+
+  GST_LOG_OBJECT (src, "Checking to update blocksize. Read:%" G_GINT64_FORMAT
+      " blocksize:%u", bytes_read, blocksize);
+
+  if (bytes_read >= blocksize * GROW_BLOCKSIZE_LIMIT) {
+    src->reduce_blocksize_count = 0;
+    src->increase_blocksize_count++;
+
+    if (src->increase_blocksize_count >= GROW_BLOCKSIZE_COUNT) {
+      blocksize *= GROW_BLOCKSIZE_FACTOR;
+      GST_DEBUG_OBJECT (src, "Increased blocksize to %u", blocksize);
+      gst_base_src_set_blocksize (GST_BASE_SRC_CAST (src), blocksize);
+      src->increase_blocksize_count = 0;
+    }
+  } else if (bytes_read < blocksize * REDUCE_BLOCKSIZE_LIMIT) {
+    src->reduce_blocksize_count++;
+    src->increase_blocksize_count = 0;
+
+    if (src->reduce_blocksize_count >= REDUCE_BLOCKSIZE_COUNT) {
+      blocksize *= REDUCE_BLOCKSIZE_FACTOR;
+      blocksize = MAX (blocksize, src->minimum_blocksize);
+      GST_DEBUG_OBJECT (src, "Decreased blocksize to %u", blocksize);
+      gst_base_src_set_blocksize (GST_BASE_SRC_CAST (src), blocksize);
+      src->reduce_blocksize_count = 0;
+    }
+  } else {
+    src->reduce_blocksize_count = src->increase_blocksize_count = 0;
+  }
+}
+
 static void
 gst_soup_http_src_update_position (GstSoupHTTPSrc * src, gint64 bytes_read)
 {
@@ -1586,6 +1637,8 @@ gst_soup_http_src_read_buffer (GstSoupHTTPSrc * src, GstBuffer ** outbuf)
 
     /* Got some data, reset retry counter */
     src->retry_count = 0;
+
+    gst_soup_http_src_check_update_blocksize (src, read_bytes);
   } else {
     gst_buffer_unref (*outbuf);
     if (read_bytes < 0) {
