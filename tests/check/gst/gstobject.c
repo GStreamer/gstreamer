@@ -161,7 +161,7 @@ GST_START_TEST (test_fake_object_set_name_via_property)
 GST_END_TEST;
 
 
-GST_START_TEST (test_fake_object_get_name_retuns_copy)
+GST_START_TEST (test_fake_object_get_name_returns_copy)
 {
   GstObject *object;
   gchar *name1, *name2;
@@ -625,7 +625,7 @@ gst_object_suite (void)
   tcase_add_test (tc_chain, test_fake_object_initial_name);
   tcase_add_test (tc_chain, test_fake_object_reset_name);
   tcase_add_test (tc_chain, test_fake_object_set_name_via_property);
-  tcase_add_test (tc_chain, test_fake_object_get_name_retuns_copy);
+  tcase_add_test (tc_chain, test_fake_object_get_name_returns_copy);
   tcase_add_test (tc_chain, test_fake_object_set_name_when_parented);
 #if 0
   tcase_add_test (tc_chain, test_fake_object_name_threaded_wrong);
