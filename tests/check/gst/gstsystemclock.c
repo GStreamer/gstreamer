@@ -130,6 +130,7 @@ GST_START_TEST (test_set_default)
   /* set a new default clock to a different instance which should replace the
    * static clock with this one, and unref the static clock */
   clock = g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", "TestClock", NULL);
+  gst_object_ref_sink (clock);
   gst_system_clock_set_default (clock);
   g_assert_cmpint (GST_OBJECT_REFCOUNT (static_clock), ==, 1);
   g_object_unref (static_clock);
@@ -680,7 +681,9 @@ GST_START_TEST (test_async_full)
   /* create master and slave */
   master =
       g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", "TestClockMaster", NULL);
+  gst_object_ref_sink (master);
   slave = g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", "TestClockMaster", NULL);
+  gst_object_ref_sink (slave);
   GST_OBJECT_FLAG_SET (slave, GST_CLOCK_FLAG_CAN_SET_MASTER);
   g_object_set (slave, "timeout", 50 * GST_MSECOND, NULL);
 
