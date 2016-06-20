@@ -40,6 +40,23 @@ neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
     GESAutoTransition * self)
 {
   gint64 new_duration;
+  GESTimelineElement *parent =
+      ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT (clip));
+
+  if (!g_strcmp0 (g_param_spec_get_name (arg), "priority") && parent) {
+    GESTimelineElement *prev_topparent =
+        ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT
+        (self->next_source));
+    GESTimelineElement *next_topparent =
+        ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT
+        (self->previous_source));
+
+    if (parent == prev_topparent && parent == next_topparent) {
+      GST_DEBUG_OBJECT (self,
+          "Moving all inside the same group, nothing to do");
+      return;
+    }
+  }
 
   if (_ges_track_element_get_layer_priority (self->next_source) !=
       _ges_track_element_get_layer_priority (self->previous_source)) {
@@ -150,7 +167,7 @@ ges_auto_transition_new (GESTrackElement * transition,
 
   g_signal_connect (previous_source, "notify::start",
       G_CALLBACK (neighbour_changed_cb), self);
-  g_signal_connect (previous_source, "notify::priority",
+  g_signal_connect_after (previous_source, "notify::priority",
       G_CALLBACK (neighbour_changed_cb), self);
   g_signal_connect (next_source, "notify::start",
       G_CALLBACK (neighbour_changed_cb), self);
