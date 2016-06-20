@@ -73,6 +73,8 @@ struct _GstOpusDec {
   gboolean primed;
 
   guint64 leftover_plc_duration;
+
+  GstClockTime last_known_buffer_duration;
 };
 
 struct _GstOpusDecClass {

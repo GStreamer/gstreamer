@@ -166,6 +166,7 @@ gst_opus_dec_reset (GstOpusDec * dec)
   dec->sample_rate = 0;
   dec->n_channels = 0;
   dec->leftover_plc_duration = 0;
+  dec->last_known_buffer_duration = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -383,6 +384,66 @@ gst_opus_dec_parse_comments (GstOpusDec * dec, GstBuffer * buf)
   return GST_FLOW_OK;
 }
 
+/* adapted from ext/ogg/gstoggstream.c */
+static gint64
+packet_duration_opus (const unsigned char *data, size_t bytes)
+{
+  static const guint64 durations[32] = {
+    480, 960, 1920, 2880,       /* Silk NB */
+    480, 960, 1920, 2880,       /* Silk MB */
+    480, 960, 1920, 2880,       /* Silk WB */
+    480, 960,                   /* Hybrid SWB */
+    480, 960,                   /* Hybrid FB */
+    120, 240, 480, 960,         /* CELT NB */
+    120, 240, 480, 960,         /* CELT NB */
+    120, 240, 480, 960,         /* CELT NB */
+    120, 240, 480, 960,         /* CELT NB */
+  };
+
+  gint64 duration;
+  gint64 frame_duration;
+  gint nframes = 0;
+  guint8 toc;
+
+  if (bytes < 1)
+    return 0;
+
+  /* headers */
+  if (bytes >= 8 && !memcmp (data, "Opus", 4))
+    return 0;
+
+  toc = data[0];
+
+  frame_duration = durations[toc >> 3];
+  switch (toc & 3) {
+    case 0:
+      nframes = 1;
+      break;
+    case 1:
+      nframes = 2;
+      break;
+    case 2:
+      nframes = 2;
+      break;
+    case 3:
+      if (bytes < 2) {
+        GST_WARNING ("Code 3 Opus packet has less than 2 bytes");
+        return 0;
+      }
+      nframes = data[1] & 63;
+      break;
+  }
+
+  duration = nframes * frame_duration;
+  if (duration > 5760) {
+    GST_WARNING ("Opus packet duration > 120 ms, invalid");
+    return 0;
+  }
+  GST_LOG ("Opus packet: frame size %.1f ms, %d frames, duration %.1f ms",
+      frame_duration / 48.f, nframes, duration / 48.f);
+  return duration / 48.f * 1000000;
+}
+
 static GstFlowReturn
 opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
 {
@@ -479,6 +540,19 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     GstClockTime aligned_missing_duration;
     GstClockTime missing_duration = GST_BUFFER_DURATION (bufd);
 
+    if (!GST_CLOCK_TIME_IS_VALID (missing_duration)) {
+      if (GST_CLOCK_TIME_IS_VALID (dec->last_known_buffer_duration)) {
+        missing_duration = dec->last_known_buffer_duration;
+        GST_WARNING_OBJECT (dec,
+            "Missing duration, using last duration %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (missing_duration));
+      } else {
+        GST_WARNING_OBJECT (dec,
+            "Missing buffer, but unknown duration, and no previously known duration, assuming 20 ms");
+        missing_duration = 20 * GST_MSECOND;
+      }
+    }
+
     GST_DEBUG_OBJECT (dec,
         "missing buffer, doing PLC duration %" GST_TIME_FORMAT
         " plus leftover %" GST_TIME_FORMAT, GST_TIME_ARGS (missing_duration),
@@ -530,6 +604,9 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   if (!outbuf) {
     goto buffer_failed;
   }
+
+  if (size > 0)
+    dec->last_known_buffer_duration = packet_duration_opus (data, size);
 
   gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
   out_data = (gint16 *) omap.data;
