@@ -1,0 +1,97 @@
+<plugin>
+  <name>kate</name>
+  <description>Kate plugin</description>
+  <filename>../../ext/kate/.libs/libgstkate.so</filename>
+  <basename>libgstkate.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>katedec</name>
+      <longname>Kate stream text decoder</longname>
+      <class>Codec/Decoder/Subtitle</class>
+      <description>Decodes Kate text streams</description>
+      <author>Vincent Penquerc&apos;h &lt;ogg.k.ogg.k@googlemail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>subtitle/x-kate</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>text/x-raw, format=(string){ pango-markup, utf8 }; subpicture/x-dvd</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>kateenc</name>
+      <longname>Kate stream encoder</longname>
+      <class>Codec/Encoder/Subtitle</class>
+      <description>Encodes Kate streams from text or subpictures</description>
+      <author>Vincent Penquerc&apos;h &lt;ogg.k.ogg.k@googlemail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>text/x-raw, format=(string){ pango-markup, utf8 }; subpicture/x-dvd</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>subtitle/x-kate; application/x-kate</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>kateparse</name>
+      <longname>Kate stream parser</longname>
+      <class>Codec/Parser/Subtitle</class>
+      <description>parse raw kate streams</description>
+      <author>Vincent Penquerc&apos;h &lt;ogg.k.ogg.k at googlemail dot com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>subtitle/x-kate; application/x-kate</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>subtitle/x-kate; application/x-kate</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>katetag</name>
+      <longname>Kate stream tagger</longname>
+      <class>Formatter/Metadata</class>
+      <description>Retags kate streams</description>
+      <author>Vincent Penquerc&apos;h &lt;ogg.k.ogg.k@googlemail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>subtitle/x-kate; application/x-kate</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>subtitle/x-kate; application/x-kate</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

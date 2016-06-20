@@ -24,25 +24,25 @@ Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;</author>
           <details>video/mpegts, systemstream=(boolean)true</details>
         </caps>
         <caps>
-          <name>audio_%04x</name>
+          <name>audio_%01x_%05x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>audio/mpeg, mpegversion=(int)1; audio/mpeg, mpegversion=(int)2, stream-format=(string)adts; audio/mpeg, mpegversion=(int)4, stream-format=(string)loas; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-eac3; audio/x-dts; audio/x-opus; audio/x-private-ts-lpcm</details>
         </caps>
         <caps>
-          <name>private_%04x</name>
+          <name>private_%01x_%05x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
         </caps>
         <caps>
-          <name>subpicture_%04x</name>
+          <name>subpicture_%01x_%05x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>subpicture/x-pgs; subpicture/x-dvd; subpicture/x-dvb</details>
         </caps>
         <caps>
-          <name>video_%04x</name>
+          <name>video_%01x_%05x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false; video/x-h264, stream-format=(string)byte-stream, alignment=(string)nal; video/x-h265, stream-format=(string)byte-stream, alignment=(string)nal; video/x-dirac; video/x-cavs; video/x-wmv, wmvversion=(int)3, format=(string)WVC1</details>

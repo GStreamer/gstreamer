@@ -1,14 +1,80 @@
 <SECTION>
+<FILE>element-adpcmdec</FILE>
+<TITLE>adpcmdec</TITLE>
+GstCMDec
+<SUBSECTION Standard>
+GstCMDecClass
+GST_CM_DEC
+GST_CM_DEC_CAST
+GST_IS_CM_DEC
+GST_CM_DEC_CLASS
+GST_IS_CM_DEC_CLASS
+GST_TYPE_CM_DEC
+<SUBSECTION Private>
+gst_cm_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-adpcmenc</FILE>
+<TITLE>adpcmenc</TITLE>
+GstCMEnc
+<SUBSECTION Standard>
+GstCMEncClass
+GST_CM_ENC
+GST_CM_ENC_CAST
+GST_IS_CM_ENC
+GST_CM_ENC_CLASS
+GST_IS_CM_ENC_CLASS
+GST_TYPE_CM_ENC
+<SUBSECTION Private>
+gst_cm_enc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-dvbbasebin</FILE>
+<TITLE>dvbbasebin</TITLE>
+GstBaseBin
+<SUBSECTION Standard>
+GstBaseBinClass
+GST_BASE_BIN
+GST_BASE_BIN_CAST
+GST_IS_BASE_BIN
+GST_BASE_BIN_CLASS
+GST_IS_BASE_BIN_CLASS
+GST_TYPE_BASE_BIN
+<SUBSECTION Private>
+gst_base_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-a2dpsink</FILE>
+<TITLE>a2dpsink</TITLE>
+GstA2dpSink
+<SUBSECTION Standard>
+GstA2dpSinkClass
+GST_A2DP_SINK
+GST_A2DP_SINK_CAST
+GST_IS_A2DP_SINK
+GST_A2DP_SINK_CLASS
+GST_IS_A2DP_SINK_CLASS
+GST_TYPE_A2DP_SINK
+<SUBSECTION Private>
+gst_a2dp_sink_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-accurip</FILE>
 <TITLE>accurip</TITLE>
 GstAccurip
 <SUBSECTION Standard>
+GstAccuripClass
 GST_ACCURIP
-GST_ACCURIP_CLASS
+GST_ACCURIP_CAST
 GST_IS_ACCURIP
+GST_ACCURIP_CLASS
 GST_IS_ACCURIP_CLASS
 GST_TYPE_ACCURIP
-GstAccuripClass
+<SUBSECTION Private>
 gst_accurip_get_type
 </SECTION>
 
@@ -17,12 +83,14 @@ gst_accurip_get_type
 <TITLE>aiffmux</TITLE>
 GstAiffMux
 <SUBSECTION Standard>
+GstAiffMuxClass
 GST_AIFF_MUX
-GST_AIFF_MUX_CLASS
+GST_AIFF_MUX_CAST
 GST_IS_AIFF_MUX
+GST_AIFF_MUX_CLASS
 GST_IS_AIFF_MUX_CLASS
 GST_TYPE_AIFF_MUX
-GstAiffMuxClass
+<SUBSECTION Private>
 gst_aiff_mux_get_type
 </SECTION>
 
@@ -31,14 +99,47 @@ gst_aiff_mux_get_type
 <TITLE>aiffparse</TITLE>
 GstAiffParse
 <SUBSECTION Standard>
+GstAiffParseClass
 GST_AIFF_PARSE
-GST_AIFF_PARSE_CLASS
+GST_AIFF_PARSE_CAST
 GST_IS_AIFF_PARSE
+GST_AIFF_PARSE_CLASS
 GST_IS_AIFF_PARSE_CLASS
 GST_TYPE_AIFF_PARSE
-GstAiffParseClass
-GstAiffParseState
+<SUBSECTION Private>
 gst_aiff_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-asfmux</FILE>
+<TITLE>asfmux</TITLE>
+GstAsfMux
+<SUBSECTION Standard>
+GstAsfMuxClass
+GST_ASF_MUX
+GST_ASF_MUX_CAST
+GST_IS_ASF_MUX
+GST_ASF_MUX_CLASS
+GST_IS_ASF_MUX_CLASS
+GST_TYPE_ASF_MUX
+<SUBSECTION Private>
+gst_asf_mux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-asfparse</FILE>
+<TITLE>asfparse</TITLE>
+GstAsfParse
+<SUBSECTION Standard>
+GstAsfParseClass
+GST_ASF_PARSE
+GST_ASF_PARSE_CAST
+GST_IS_ASF_PARSE
+GST_ASF_PARSE_CLASS
+GST_IS_ASF_PARSE_CLASS
+GST_TYPE_ASF_PARSE
+<SUBSECTION Private>
+gst_asf_parse_get_type
 </SECTION>
 
 <SECTION>
@@ -46,13 +147,31 @@ gst_aiff_parse_get_type
 <TITLE>assrender</TITLE>
 GstAssRender
 <SUBSECTION Standard>
-GstAssRenderBlitFunction
 GstAssRenderClass
 GST_ASS_RENDER
-GST_ASS_RENDER_CLASS
+GST_ASS_RENDER_CAST
 GST_IS_ASS_RENDER
+GST_ASS_RENDER_CLASS
 GST_IS_ASS_RENDER_CLASS
+GST_TYPE_ASS_RENDER
+<SUBSECTION Private>
 gst_ass_render_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-audiochannelmix</FILE>
+<TITLE>audiochannelmix</TITLE>
+GstAudioChannelMix
+<SUBSECTION Standard>
+GstAudioChannelMixClass
+GST_AUDIO_CHANNEL_MIX
+GST_AUDIO_CHANNEL_MIX_CAST
+GST_IS_AUDIO_CHANNEL_MIX
+GST_AUDIO_CHANNEL_MIX_CLASS
+GST_IS_AUDIO_CHANNEL_MIX_CLASS
+GST_TYPE_AUDIO_CHANNEL_MIX
+<SUBSECTION Private>
+gst_audio_channel_mix_get_type
 </SECTION>
 
 <SECTION>
@@ -62,10 +181,12 @@ GstAudioInterleave
 <SUBSECTION Standard>
 GstAudioInterleaveClass
 GST_AUDIO_INTERLEAVE
-GST_AUDIO_INTERLEAVE_CLASS
+GST_AUDIO_INTERLEAVE_CAST
 GST_IS_AUDIO_INTERLEAVE
+GST_AUDIO_INTERLEAVE_CLASS
 GST_IS_AUDIO_INTERLEAVE_CLASS
 GST_TYPE_AUDIO_INTERLEAVE
+<SUBSECTION Private>
 gst_audio_interleave_get_type
 </SECTION>
 
@@ -76,10 +197,12 @@ GstAudioMixer
 <SUBSECTION Standard>
 GstAudioMixerClass
 GST_AUDIO_MIXER
-GST_AUDIO_MIXER_CLASS
+GST_AUDIO_MIXER_CAST
 GST_IS_AUDIO_MIXER
+GST_AUDIO_MIXER_CLASS
 GST_IS_AUDIO_MIXER_CLASS
 GST_TYPE_AUDIO_MIXER
+<SUBSECTION Private>
 gst_audio_mixer_get_type
 </SECTION>
 
@@ -87,14 +210,33 @@ gst_audio_mixer_get_type
 <FILE>element-audioparse</FILE>
 <TITLE>audioparse</TITLE>
 GstAudioParse
+GstAudioParseFormat
 <SUBSECTION Standard>
 GstAudioParseClass
 GST_AUDIO_PARSE
-GST_AUDIO_PARSE_CLASS
+GST_AUDIO_PARSE_CAST
 GST_IS_AUDIO_PARSE
+GST_AUDIO_PARSE_CLASS
 GST_IS_AUDIO_PARSE_CLASS
 GST_TYPE_AUDIO_PARSE
+<SUBSECTION Private>
 gst_audio_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-audiosegmentclip</FILE>
+<TITLE>audiosegmentclip</TITLE>
+GstAudioSegmentClip
+<SUBSECTION Standard>
+GstAudioSegmentClipClass
+GST_AUDIO_SEGMENT_CLIP
+GST_AUDIO_SEGMENT_CLIP_CAST
+GST_IS_AUDIO_SEGMENT_CLIP
+GST_AUDIO_SEGMENT_CLIP_CLASS
+GST_IS_AUDIO_SEGMENT_CLIP_CLASS
+GST_TYPE_AUDIO_SEGMENT_CLIP
+<SUBSECTION Private>
+gst_audio_segment_clip_get_type
 </SECTION>
 
 <SECTION>
@@ -103,11 +245,94 @@ gst_audio_parse_get_type
 GstAutoConvert
 <SUBSECTION Standard>
 GstAutoConvertClass
-GST_TYPE_AUTO_CONVERT
 GST_AUTO_CONVERT
-GST_AUTO_CONVERT_CLASS
+GST_AUTO_CONVERT_CAST
 GST_IS_AUTO_CONVERT
+GST_AUTO_CONVERT_CLASS
 GST_IS_AUTO_CONVERT_CLASS
+GST_TYPE_AUTO_CONVERT
+<SUBSECTION Private>
+gst_auto_convert_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-autovideoconvert</FILE>
+<TITLE>autovideoconvert</TITLE>
+GstAutoVideoConvert
+<SUBSECTION Standard>
+GstAutoVideoConvertClass
+GST_AUTO_VIDEO_CONVERT
+GST_AUTO_VIDEO_CONVERT_CAST
+GST_IS_AUTO_VIDEO_CONVERT
+GST_AUTO_VIDEO_CONVERT_CLASS
+GST_IS_AUTO_VIDEO_CONVERT_CLASS
+GST_TYPE_AUTO_VIDEO_CONVERT
+<SUBSECTION Private>
+gst_auto_video_convert_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-avdtpsink</FILE>
+<TITLE>avdtpsink</TITLE>
+GstAvdtpSink
+<SUBSECTION Standard>
+GstAvdtpSinkClass
+GST_AVDTP_SINK
+GST_AVDTP_SINK_CAST
+GST_IS_AVDTP_SINK
+GST_AVDTP_SINK_CLASS
+GST_IS_AVDTP_SINK_CLASS
+GST_TYPE_AVDTP_SINK
+<SUBSECTION Private>
+gst_avdtp_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-avdtpsrc</FILE>
+<TITLE>avdtpsrc</TITLE>
+GstAvdtpSrc
+<SUBSECTION Standard>
+GstAvdtpSrcClass
+GST_AVDTP_SRC
+GST_AVDTP_SRC_CAST
+GST_IS_AVDTP_SRC
+GST_AVDTP_SRC_CLASS
+GST_IS_AVDTP_SRC_CLASS
+GST_TYPE_AVDTP_SRC
+<SUBSECTION Private>
+gst_avdtp_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-bpmdetect</FILE>
+<TITLE>bpmdetect</TITLE>
+GstBPMDetect
+<SUBSECTION Standard>
+GstBPMDetectClass
+GST_BPM_DETECT
+GST_BPM_DETECT_CAST
+GST_IS_BPM_DETECT
+GST_BPM_DETECT_CLASS
+GST_IS_BPM_DETECT_CLASS
+GST_TYPE_BPM_DETECT
+<SUBSECTION Private>
+gst_bpm_detect_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-bayer2rgb</FILE>
+<TITLE>bayer2rgb</TITLE>
+GstBayer2RGB
+<SUBSECTION Standard>
+GstBayer2RGBClass
+GST_BAYER2_RGB
+GST_BAYER2_RGB_CAST
+GST_IS_BAYER2_RGB
+GST_BAYER2_RGB_CLASS
+GST_IS_BAYER2_RGB_CLASS
+GST_TYPE_BAYER2_RGB
+<SUBSECTION Private>
+gst_bayer2_rgb_get_type
 </SECTION>
 
 <SECTION>
@@ -118,12 +343,12 @@ GstBs2b
 GstBs2bClass
 GST_BS2B
 GST_BS2B_CAST
-GST_BS2B_CLASS
 GST_IS_BS2B
+GST_BS2B_CLASS
 GST_IS_BS2B_CLASS
 GST_TYPE_BS2B
+<SUBSECTION Private>
 gst_bs2b_get_type
-gst_bs2b_plugin_init
 </SECTION>
 
 <SECTION>
@@ -134,12 +359,12 @@ GstBulge
 GstBulgeClass
 GST_BULGE
 GST_BULGE_CAST
-GST_BULGE_CLASS
 GST_IS_BULGE
+GST_BULGE_CLASS
 GST_IS_BULGE_CLASS
 GST_TYPE_BULGE
+<SUBSECTION Private>
 gst_bulge_get_type
-gst_bulge_plugin_init
 </SECTION>
 
 <SECTION>
@@ -149,42 +374,143 @@ GstBurn
 <SUBSECTION Standard>
 GstBurnClass
 GST_BURN
-GST_BURN_CLASS
+GST_BURN_CAST
 GST_IS_BURN
+GST_BURN_CLASS
 GST_IS_BURN_CLASS
 GST_TYPE_BURN
+<SUBSECTION Private>
 gst_burn_get_type
-gst_burn_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-bz2dec</FILE>
+<TITLE>bz2dec</TITLE>
+GstBz2dec
+<SUBSECTION Standard>
+GstBz2decClass
+GST_BZ2DEC
+GST_BZ2DEC_CAST
+GST_IS_BZ2DEC
+GST_BZ2DEC_CLASS
+GST_IS_BZ2DEC_CLASS
+GST_TYPE_BZ2DEC
+<SUBSECTION Private>
+gst_bz2dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-bz2enc</FILE>
+<TITLE>bz2enc</TITLE>
+GstBz2enc
+<SUBSECTION Standard>
+GstBz2encClass
+GST_BZ2ENC
+GST_BZ2ENC_CAST
+GST_IS_BZ2ENC
+GST_BZ2ENC_CLASS
+GST_IS_BZ2ENC_CLASS
+GST_TYPE_BZ2ENC
+<SUBSECTION Private>
+gst_bz2enc_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-camerabin</FILE>
 <TITLE>camerabin</TITLE>
 GstCameraBin
+GstCameraBin2Mode
 <SUBSECTION Standard>
 GstCameraBinClass
 GST_CAMERA_BIN
+GST_CAMERA_BIN_CAST
 GST_IS_CAMERA_BIN
-GST_TYPE_CAMERA_BIN
 GST_CAMERA_BIN_CLASS
 GST_IS_CAMERA_BIN_CLASS
+GST_TYPE_CAMERA_BIN
+<SUBSECTION Private>
 gst_camera_bin_get_type
 </SECTION>
 
+<SECTION>
+<FILE>element-checksumsink</FILE>
+<TITLE>checksumsink</TITLE>
+GstChecksumSink
+GstChecksumSinkHash
+<SUBSECTION Standard>
+GstChecksumSinkClass
+GST_CHECKSUM_SINK
+GST_CHECKSUM_SINK_CAST
+GST_IS_CHECKSUM_SINK
+GST_CHECKSUM_SINK_CLASS
+GST_IS_CHECKSUM_SINK_CLASS
+GST_TYPE_CHECKSUM_SINK
+<SUBSECTION Private>
+gst_checksum_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-chopmydata</FILE>
+<TITLE>chopmydata</TITLE>
+GstChopMyData
+<SUBSECTION Standard>
+GstChopMyDataClass
+GST_CHOP_MY_DATA
+GST_CHOP_MY_DATA_CAST
+GST_IS_CHOP_MY_DATA
+GST_CHOP_MY_DATA_CLASS
+GST_IS_CHOP_MY_DATA_CLASS
+GST_TYPE_CHOP_MY_DATA
+<SUBSECTION Private>
+gst_chop_my_data_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-chromahold</FILE>
+<TITLE>chromahold</TITLE>
+GstChromaHold
+<SUBSECTION Standard>
+GstChromaHoldClass
+GST_CHROMA_HOLD
+GST_CHROMA_HOLD_CAST
+GST_IS_CHROMA_HOLD
+GST_CHROMA_HOLD_CLASS
+GST_IS_CHROMA_HOLD_CLASS
+GST_TYPE_CHROMA_HOLD
+<SUBSECTION Private>
+gst_chroma_hold_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-chromaprint</FILE>
+<TITLE>chromaprint</TITLE>
+GstChromaprint
+<SUBSECTION Standard>
+GstChromaprintClass
+GST_CHROMAPRINT
+GST_CHROMAPRINT_CAST
+GST_IS_CHROMAPRINT
+GST_CHROMAPRINT_CLASS
+GST_IS_CHROMAPRINT_CLASS
+GST_TYPE_CHROMAPRINT
+<SUBSECTION Private>
+gst_chromaprint_get_type
+</SECTION>
 
 <SECTION>
 <FILE>element-chromium</FILE>
 <TITLE>chromium</TITLE>
-<SUBSECTION Standard>
 GstChromium
+<SUBSECTION Standard>
 GstChromiumClass
 GST_CHROMIUM
-GST_CHROMIUM_CLASS
+GST_CHROMIUM_CAST
 GST_IS_CHROMIUM
+GST_CHROMIUM_CLASS
 GST_IS_CHROMIUM_CLASS
 GST_TYPE_CHROMIUM
+<SUBSECTION Private>
 gst_chromium_get_type
-gst_chromium_plugin_init
 </SECTION>
 
 <SECTION>
@@ -195,40 +521,143 @@ GstCircle
 GstCircleClass
 GST_CIRCLE
 GST_CIRCLE_CAST
-GST_CIRCLE_CLASS
 GST_IS_CIRCLE
+GST_CIRCLE_CLASS
 GST_IS_CIRCLE_CLASS
 GST_TYPE_CIRCLE
+<SUBSECTION Private>
 gst_circle_get_type
-gst_circle_plugin_init
 </SECTION>
 
 <SECTION>
 <FILE>element-coloreffects</FILE>
 <TITLE>coloreffects</TITLE>
 GstColorEffects
+GstColorEffectsPreset
 <SUBSECTION Standard>
 GstColorEffectsClass
 GST_COLOR_EFFECTS
-GST_COLOR_EFFECTS_CLASS
+GST_COLOR_EFFECTS_CAST
 GST_IS_COLOR_EFFECTS
+GST_COLOR_EFFECTS_CLASS
 GST_IS_COLOR_EFFECTS_CLASS
 GST_TYPE_COLOR_EFFECTS
+<SUBSECTION Private>
 gst_color_effects_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-curlsink</FILE>
-<TITLE>curlsink</TITLE>
-GstCurlSink
+<FILE>element-combdetect</FILE>
+<TITLE>combdetect</TITLE>
+GstCombDetect
 <SUBSECTION Standard>
-GstCurlSinkClass
-GST_CURL_SINK
-GST_CURL_SINK_CLASS
-GST_IS_CURL_SINK
-GST_IS_CURL_SINK_CLASS
-GST_TYPE_CURL_SINK
-gst_curl_sink_get_type
+GstCombDetectClass
+GST_COMB_DETECT
+GST_COMB_DETECT_CAST
+GST_IS_COMB_DETECT
+GST_COMB_DETECT_CLASS
+GST_IS_COMB_DETECT_CLASS
+GST_TYPE_COMB_DETECT
+<SUBSECTION Private>
+gst_comb_detect_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-compare</FILE>
+<TITLE>compare</TITLE>
+GstCompare
+GstCompareMethod
+<SUBSECTION Standard>
+GstCompareClass
+GST_COMPARE
+GST_COMPARE_CAST
+GST_IS_COMPARE
+GST_COMPARE_CLASS
+GST_IS_COMPARE_CLASS
+GST_TYPE_COMPARE
+<SUBSECTION Private>
+gst_compare_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-compositor</FILE>
+<TITLE>compositor</TITLE>
+GstCompositor
+GstCompositorBackground
+<SUBSECTION Standard>
+GstCompositorClass
+GST_COMPOSITOR
+GST_COMPOSITOR_CAST
+GST_IS_COMPOSITOR
+GST_COMPOSITOR_CLASS
+GST_IS_COMPOSITOR_CLASS
+GST_TYPE_COMPOSITOR
+<SUBSECTION Private>
+gst_compositor_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-curlfilesink</FILE>
+<TITLE>curlfilesink</TITLE>
+GstCurlFileSink
+<SUBSECTION Standard>
+GstCurlFileSinkClass
+GST_CURL_FILE_SINK
+GST_CURL_FILE_SINK_CAST
+GST_IS_CURL_FILE_SINK
+GST_CURL_FILE_SINK_CLASS
+GST_IS_CURL_FILE_SINK_CLASS
+GST_TYPE_CURL_FILE_SINK
+<SUBSECTION Private>
+gst_curl_file_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-curlftpsink</FILE>
+<TITLE>curlftpsink</TITLE>
+GstCurlFtpSink
+<SUBSECTION Standard>
+GstCurlFtpSinkClass
+GST_CURL_FTP_SINK
+GST_CURL_FTP_SINK_CAST
+GST_IS_CURL_FTP_SINK
+GST_CURL_FTP_SINK_CLASS
+GST_IS_CURL_FTP_SINK_CLASS
+GST_TYPE_CURL_FTP_SINK
+<SUBSECTION Private>
+gst_curl_ftp_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-curlhttpsink</FILE>
+<TITLE>curlhttpsink</TITLE>
+GstCurlHttpSink
+<SUBSECTION Standard>
+GstCurlHttpSinkClass
+GST_CURL_HTTP_SINK
+GST_CURL_HTTP_SINK_CAST
+GST_IS_CURL_HTTP_SINK
+GST_CURL_HTTP_SINK_CLASS
+GST_IS_CURL_HTTP_SINK_CLASS
+GST_TYPE_CURL_HTTP_SINK
+<SUBSECTION Private>
+gst_curl_http_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-curlsmtpsink</FILE>
+<TITLE>curlsmtpsink</TITLE>
+GstCurlSmtpSink
+<SUBSECTION Standard>
+GstCurlSmtpSinkClass
+GST_CURL_SMTP_SINK
+GST_CURL_SMTP_SINK_CAST
+GST_IS_CURL_SMTP_SINK
+GST_CURL_SMTP_SINK_CLASS
+GST_IS_CURL_SMTP_SINK_CLASS
+GST_TYPE_CURL_SMTP_SINK
+<SUBSECTION Private>
+gst_curl_smtp_sink_get_type
 </SECTION>
 
 <SECTION>
@@ -238,27 +667,13 @@ GstCvDilate
 <SUBSECTION Standard>
 GstCvDilateClass
 GST_CV_DILATE
-GST_CV_DILATE_CLASS
+GST_CV_DILATE_CAST
 GST_IS_CV_DILATE
+GST_CV_DILATE_CLASS
 GST_IS_CV_DILATE_CLASS
 GST_TYPE_CV_DILATE
+<SUBSECTION Private>
 gst_cv_dilate_get_type
-gst_cv_dilate_plugin_init
-</SECTION>
-
-<SECTION>
-<FILE>element-cverode</FILE>
-<TITLE>cverode</TITLE>
-GstCvErode
-<SUBSECTION Standard>
-GstCvErodeClass
-GST_CV_ERODE
-GST_CV_ERODE_CLASS
-GST_IS_CV_ERODE
-GST_IS_CV_ERODE_CLASS
-GST_TYPE_CV_ERODE
-gst_cv_erode_get_type
-gst_cv_erode_plugin_init
 </SECTION>
 
 <SECTION>
@@ -268,12 +683,29 @@ GstCvEqualizeHist
 <SUBSECTION Standard>
 GstCvEqualizeHistClass
 GST_CV_EQUALIZE_HIST
-GST_CV_EQUALIZE_HIST_CLASS
+GST_CV_EQUALIZE_HIST_CAST
 GST_IS_CV_EQUALIZE_HIST
+GST_CV_EQUALIZE_HIST_CLASS
 GST_IS_CV_EQUALIZE_HIST_CLASS
 GST_TYPE_CV_EQUALIZE_HIST
+<SUBSECTION Private>
 gst_cv_equalize_hist_get_type
-gst_cv_equalize_hist_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-cverode</FILE>
+<TITLE>cverode</TITLE>
+GstCvErode
+<SUBSECTION Standard>
+GstCvErodeClass
+GST_CV_ERODE
+GST_CV_ERODE_CAST
+GST_IS_CV_ERODE
+GST_CV_ERODE_CLASS
+GST_IS_CV_ERODE_CLASS
+GST_TYPE_CV_ERODE
+<SUBSECTION Private>
+gst_cv_erode_get_type
 </SECTION>
 
 <SECTION>
@@ -283,27 +715,30 @@ GstCvLaplace
 <SUBSECTION Standard>
 GstCvLaplaceClass
 GST_CV_LAPLACE
-GST_CV_LAPLACE_CLASS
+GST_CV_LAPLACE_CAST
 GST_IS_CV_LAPLACE
+GST_CV_LAPLACE_CLASS
 GST_IS_CV_LAPLACE_CLASS
 GST_TYPE_CV_LAPLACE
+<SUBSECTION Private>
 gst_cv_laplace_get_type
-gst_cv_laplace_plugin_init
 </SECTION>
 
 <SECTION>
 <FILE>element-cvsmooth</FILE>
 <TITLE>cvsmooth</TITLE>
 GstCvSmooth
+GstCvSmoothTypeType
 <SUBSECTION Standard>
 GstCvSmoothClass
 GST_CV_SMOOTH
-GST_CV_SMOOTH_CLASS
+GST_CV_SMOOTH_CAST
 GST_IS_CV_SMOOTH
+GST_CV_SMOOTH_CLASS
 GST_IS_CV_SMOOTH_CLASS
 GST_TYPE_CV_SMOOTH
+<SUBSECTION Private>
 gst_cv_smooth_get_type
-gst_cv_smooth_plugin_init
 </SECTION>
 
 <SECTION>
@@ -313,12 +748,61 @@ GstCvSobel
 <SUBSECTION Standard>
 GstCvSobelClass
 GST_CV_SOBEL
-GST_CV_SOBEL_CLASS
+GST_CV_SOBEL_CAST
 GST_IS_CV_SOBEL
+GST_CV_SOBEL_CLASS
 GST_IS_CV_SOBEL_CLASS
 GST_TYPE_CV_SOBEL
+<SUBSECTION Private>
 gst_cv_sobel_get_type
-gst_cv_sobel_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-dvbsuboverlay</FILE>
+<TITLE>dvbsuboverlay</TITLE>
+GstDVBSubOverlay
+<SUBSECTION Standard>
+GstDVBSubOverlayClass
+GST_DVB_SUB_OVERLAY
+GST_DVB_SUB_OVERLAY_CAST
+GST_IS_DVB_SUB_OVERLAY
+GST_DVB_SUB_OVERLAY_CLASS
+GST_IS_DVB_SUB_OVERLAY_CLASS
+GST_TYPE_DVB_SUB_OVERLAY
+<SUBSECTION Private>
+gst_dvb_sub_overlay_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-dvdspu</FILE>
+<TITLE>dvdspu</TITLE>
+GstDVDSpu
+<SUBSECTION Standard>
+GstDVDSpuClass
+GST_DVD_SPU
+GST_DVD_SPU_CAST
+GST_IS_DVD_SPU
+GST_DVD_SPU_CLASS
+GST_IS_DVD_SPU_CLASS
+GST_TYPE_DVD_SPU
+<SUBSECTION Private>
+gst_dvd_spu_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-dashdemux</FILE>
+<TITLE>dashdemux</TITLE>
+GstDashDemux
+<SUBSECTION Standard>
+GstDashDemuxClass
+GST_DASH_DEMUX
+GST_DASH_DEMUX_CAST
+GST_IS_DASH_DEMUX
+GST_DASH_DEMUX_CLASS
+GST_IS_DASH_DEMUX_CLASS
+GST_TYPE_DASH_DEMUX
+<SUBSECTION Private>
+gst_dash_demux_get_type
 </SECTION>
 
 <SECTION>
@@ -328,13 +812,14 @@ GstDataURISrc
 <SUBSECTION Standard>
 GstDataURISrcClass
 GST_DATA_URI_SRC
-GST_DATA_URI_SRC_CLASS
+GST_DATA_URI_SRC_CAST
 GST_IS_DATA_URI_SRC
+GST_DATA_URI_SRC_CLASS
 GST_IS_DATA_URI_SRC_CLASS
 GST_TYPE_DATA_URI_SRC
+<SUBSECTION Private>
 gst_data_uri_src_get_type
 </SECTION>
-
 
 <SECTION>
 <FILE>element-dc1394</FILE>
@@ -407,6 +892,86 @@ gst_dccp_server_src_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-debugspy</FILE>
+<TITLE>debugspy</TITLE>
+GstDebugSpy
+<SUBSECTION Standard>
+GstDebugSpyClass
+GST_DEBUG_SPY
+GST_DEBUG_SPY_CAST
+GST_IS_DEBUG_SPY
+GST_DEBUG_SPY_CLASS
+GST_IS_DEBUG_SPY_CLASS
+GST_TYPE_DEBUG_SPY
+<SUBSECTION Private>
+gst_debug_spy_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-decklinkaudiosink</FILE>
+<TITLE>decklinkaudiosink</TITLE>
+GstDecklinkAudioSink
+<SUBSECTION Standard>
+GstDecklinkAudioSinkClass
+GST_DECKLINK_AUDIO_SINK
+GST_DECKLINK_AUDIO_SINK_CAST
+GST_IS_DECKLINK_AUDIO_SINK
+GST_DECKLINK_AUDIO_SINK_CLASS
+GST_IS_DECKLINK_AUDIO_SINK_CLASS
+GST_TYPE_DECKLINK_AUDIO_SINK
+<SUBSECTION Private>
+gst_decklink_audio_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-decklinkaudiosrc</FILE>
+<TITLE>decklinkaudiosrc</TITLE>
+GstDecklinkAudioSrc
+<SUBSECTION Standard>
+GstDecklinkAudioSrcClass
+GST_DECKLINK_AUDIO_SRC
+GST_DECKLINK_AUDIO_SRC_CAST
+GST_IS_DECKLINK_AUDIO_SRC
+GST_DECKLINK_AUDIO_SRC_CLASS
+GST_IS_DECKLINK_AUDIO_SRC_CLASS
+GST_TYPE_DECKLINK_AUDIO_SRC
+<SUBSECTION Private>
+gst_decklink_audio_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-decklinkvideosink</FILE>
+<TITLE>decklinkvideosink</TITLE>
+GstDecklinkVideoSink
+<SUBSECTION Standard>
+GstDecklinkVideoSinkClass
+GST_DECKLINK_VIDEO_SINK
+GST_DECKLINK_VIDEO_SINK_CAST
+GST_IS_DECKLINK_VIDEO_SINK
+GST_DECKLINK_VIDEO_SINK_CLASS
+GST_IS_DECKLINK_VIDEO_SINK_CLASS
+GST_TYPE_DECKLINK_VIDEO_SINK
+<SUBSECTION Private>
+gst_decklink_video_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-decklinkvideosrc</FILE>
+<TITLE>decklinkvideosrc</TITLE>
+GstDecklinkVideoSrc
+<SUBSECTION Standard>
+GstDecklinkVideoSrcClass
+GST_DECKLINK_VIDEO_SRC
+GST_DECKLINK_VIDEO_SRC_CAST
+GST_IS_DECKLINK_VIDEO_SRC
+GST_DECKLINK_VIDEO_SRC_CLASS
+GST_IS_DECKLINK_VIDEO_SRC_CLASS
+GST_TYPE_DECKLINK_VIDEO_SRC
+<SUBSECTION Private>
+gst_decklink_video_src_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-dfbvideosink</FILE>
 <TITLE>dfbvideosink</TITLE>
 GstDfbVideoSink
@@ -434,12 +999,12 @@ GstDiffuse
 GstDiffuseClass
 GST_DIFFUSE
 GST_DIFFUSE_CAST
-GST_DIFFUSE_CLASS
 GST_IS_DIFFUSE
+GST_DIFFUSE_CLASS
 GST_IS_DIFFUSE_CLASS
 GST_TYPE_DIFFUSE
+<SUBSECTION Private>
 gst_diffuse_get_type
-gst_diffuse_plugin_init
 </SECTION>
 
 <SECTION>
@@ -449,12 +1014,46 @@ GstDilate
 <SUBSECTION Standard>
 GstDilateClass
 GST_DILATE
-GST_DILATE_CLASS
+GST_DILATE_CAST
 GST_IS_DILATE
+GST_DILATE_CLASS
 GST_IS_DILATE_CLASS
 GST_TYPE_DILATE
+<SUBSECTION Private>
 gst_dilate_get_type
-gst_dilate_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-diracparse</FILE>
+<TITLE>diracparse</TITLE>
+GstDiracParse
+<SUBSECTION Standard>
+GstDiracParseClass
+GST_DIRAC_PARSE
+GST_DIRAC_PARSE_CAST
+GST_IS_DIRAC_PARSE
+GST_DIRAC_PARSE_CLASS
+GST_IS_DIRAC_PARSE_CLASS
+GST_TYPE_DIRAC_PARSE
+<SUBSECTION Private>
+gst_dirac_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-disparity</FILE>
+<TITLE>disparity</TITLE>
+GstDisparity
+GstDisparityMethod
+<SUBSECTION Standard>
+GstDisparityClass
+GST_DISPARITY
+GST_DISPARITY_CAST
+GST_IS_DISPARITY
+GST_DISPARITY_CLASS
+GST_IS_DISPARITY_CLASS
+GST_TYPE_DISPARITY
+<SUBSECTION Private>
+gst_disparity_get_type
 </SECTION>
 
 <SECTION>
@@ -464,12 +1063,93 @@ GstDodge
 <SUBSECTION Standard>
 GstDodgeClass
 GST_DODGE
-GST_DODGE_CLASS
+GST_DODGE_CAST
 GST_IS_DODGE
+GST_DODGE_CLASS
 GST_IS_DODGE_CLASS
 GST_TYPE_DODGE
+<SUBSECTION Private>
 gst_dodge_get_type
-gst_dodge_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-dtlsdec</FILE>
+<TITLE>dtlsdec</TITLE>
+GstDtlsDec
+<SUBSECTION Standard>
+GstDtlsDecClass
+GST_DTLS_DEC
+GST_DTLS_DEC_CAST
+GST_IS_DTLS_DEC
+GST_DTLS_DEC_CLASS
+GST_IS_DTLS_DEC_CLASS
+GST_TYPE_DTLS_DEC
+<SUBSECTION Private>
+gst_dtls_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-dtlsenc</FILE>
+<TITLE>dtlsenc</TITLE>
+GstDtlsEnc
+<SUBSECTION Standard>
+GstDtlsEncClass
+GST_DTLS_ENC
+GST_DTLS_ENC_CAST
+GST_IS_DTLS_ENC
+GST_DTLS_ENC_CLASS
+GST_IS_DTLS_ENC_CLASS
+GST_TYPE_DTLS_ENC
+<SUBSECTION Private>
+gst_dtls_enc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-dtlssrtpdec</FILE>
+<TITLE>dtlssrtpdec</TITLE>
+GstDtlsSrtpDec
+<SUBSECTION Standard>
+GstDtlsSrtpDecClass
+GST_DTLS_SRTP_DEC
+GST_DTLS_SRTP_DEC_CAST
+GST_IS_DTLS_SRTP_DEC
+GST_DTLS_SRTP_DEC_CLASS
+GST_IS_DTLS_SRTP_DEC_CLASS
+GST_TYPE_DTLS_SRTP_DEC
+<SUBSECTION Private>
+gst_dtls_srtp_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-dtlssrtpdemux</FILE>
+<TITLE>dtlssrtpdemux</TITLE>
+GstDtlsSrtpDemux
+<SUBSECTION Standard>
+GstDtlsSrtpDemuxClass
+GST_DTLS_SRTP_DEMUX
+GST_DTLS_SRTP_DEMUX_CAST
+GST_IS_DTLS_SRTP_DEMUX
+GST_DTLS_SRTP_DEMUX_CLASS
+GST_IS_DTLS_SRTP_DEMUX_CLASS
+GST_TYPE_DTLS_SRTP_DEMUX
+<SUBSECTION Private>
+gst_dtls_srtp_demux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-dtlssrtpenc</FILE>
+<TITLE>dtlssrtpenc</TITLE>
+GstDtlsSrtpEnc
+<SUBSECTION Standard>
+GstDtlsSrtpEncClass
+GST_DTLS_SRTP_ENC
+GST_DTLS_SRTP_ENC_CAST
+GST_IS_DTLS_SRTP_ENC
+GST_DTLS_SRTP_ENC_CLASS
+GST_IS_DTLS_SRTP_ENC_CLASS
+GST_TYPE_DTLS_SRTP_ENC
+<SUBSECTION Private>
+gst_dtls_srtp_enc_get_type
 </SECTION>
 
 <SECTION>
@@ -478,16 +1158,14 @@ gst_dodge_plugin_init
 GstDtmfDetect
 <SUBSECTION Standard>
 GstDtmfDetectClass
-GstDtmfDetectPrivate
-GST_TYPE_DTMF_DETECT
 GST_DTMF_DETECT
 GST_DTMF_DETECT_CAST
-GST_DTMF_DETECT_CLASS
-GST_DTMF_DETECT_GET_CLASS
 GST_IS_DTMF_DETECT
+GST_DTMF_DETECT_CLASS
 GST_IS_DTMF_DETECT_CLASS
+GST_TYPE_DTMF_DETECT
+<SUBSECTION Private>
 gst_dtmf_detect_get_type
-gst_dtmf_detect_plugin_init
 </SECTION>
 
 <SECTION>
@@ -496,75 +1174,80 @@ gst_dtmf_detect_plugin_init
 GstDtsDec
 <SUBSECTION Standard>
 GstDtsDecClass
-gst_dtsdec_get_type
-GST_TYPE_DTSDEC
-GST_DTSDEC
-GST_DTSDEC_CLASS
-GST_IS_DTSDEC
-GST_IS_DTSDEC_CLASS
+GST_DTS_DEC
+GST_DTS_DEC_CAST
+GST_IS_DTS_DEC
+GST_DTS_DEC_CLASS
+GST_IS_DTS_DEC_CLASS
+GST_TYPE_DTS_DEC
+<SUBSECTION Private>
+gst_dts_dec_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-dvbsrc</FILE>
 <TITLE>dvbsrc</TITLE>
 GstDvbSrc
+GstDvbSrcBandwidth
+GstDvbSrcCode_Rate
+GstDvbSrcCode_Rate
+GstDvbSrcDelsys
+GstDvbSrcGuard
+GstDvbSrcHierarchy
+GstDvbSrcInterleaving
+GstDvbSrcInversion
+GstDvbSrcCode_Rate
+GstDvbSrcModulation
+GstDvbSrcCode_Rate
+GstDvbSrcModulation
+GstDvbSrcCode_Rate
+GstDvbSrcModulation
+GstDvbSrcModulation
+GstDvbSrcPilot
+GstDvbSrcRolloff
+GstDvbSrcTransmission_Mode
 <SUBSECTION Standard>
 GstDvbSrcClass
-GstDvbSrcParam
-GstDvbSrcPol
-GST_DVBSRC
-GST_DVBSRC_CLASS
-GST_IS_DVBSRC
-GST_IS_DVBSRC_CLASS
-GST_TYPE_DVBSRC
-gst_dvbsrc_get_type
-gst_dvbsrc_plugin_init
-DEFAULT_BUFFER_SIZE
-DEFAULT_DEVICE
-DEFAULT_DISEQC_SRC
-DEFAULT_SYMBOL_RATE
-MAX_FILTERS
-IPACKS
-IN_SIZE
-TS_SIZE
-</SECTION>
-
-<SECTION>
-<FILE>element-dvdspu</FILE>
-<TITLE>dvdspu</TITLE>
-GstDVDSpu
-<SUBSECTION Standard>
-GstDVDSpuClass
-GST_DVD_SPU
-GST_DVD_SPU_CLASS
-GST_IS_DVD_SPU
-GST_IS_DVD_SPU_CLASS
-GST_TYPE_DVD_SPU
-gst_dvd_spu_get_type
-SpuColour
-SpuLineCtrlI
-SpuPacket
-SpuPixCtrlI
-SpuRect
-SpuState
-DVD_SPU_LOCK
-DVD_SPU_UNLOCK
-SPU_STATE_FLAGS_MASK
+GST_DVB_SRC
+GST_DVB_SRC_CAST
+GST_IS_DVB_SRC
+GST_DVB_SRC_CLASS
+GST_IS_DVB_SRC_CLASS
+GST_TYPE_DVB_SRC
+<SUBSECTION Private>
+gst_dvb_src_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-edgedetect</FILE>
 <TITLE>edgedetect</TITLE>
-Gstedgedetect
+GstEdgeDetect
 <SUBSECTION Standard>
-GstedgedetectClass
-GST_EDGEDETECT
-GST_EDGEDETECT_CLASS
-GST_IS_EDGEDETECT
-GST_IS_EDGEDETECT_CLASS
-GST_TYPE_EDGEDETECT
-gst_edgedetect_get_type
-gst_edgedetect_plugin_init
+GstEdgeDetectClass
+GST_EDGE_DETECT
+GST_EDGE_DETECT_CAST
+GST_IS_EDGE_DETECT
+GST_EDGE_DETECT_CLASS
+GST_IS_EDGE_DETECT_CLASS
+GST_TYPE_EDGE_DETECT
+<SUBSECTION Private>
+gst_edge_detect_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-errorignore</FILE>
+<TITLE>errorignore</TITLE>
+GstErrorIgnore
+<SUBSECTION Standard>
+GstErrorIgnoreClass
+GST_ERROR_IGNORE
+GST_ERROR_IGNORE_CAST
+GST_IS_ERROR_IGNORE
+GST_ERROR_IGNORE_CLASS
+GST_IS_ERROR_IGNORE_CLASS
+GST_TYPE_ERROR_IGNORE
+<SUBSECTION Private>
+gst_error_ignore_get_type
 </SECTION>
 
 <SECTION>
@@ -574,25 +1257,62 @@ GstExclusion
 <SUBSECTION Standard>
 GstExclusionClass
 GST_EXCLUSION
-GST_EXCLUSION_CLASS
+GST_EXCLUSION_CAST
 GST_IS_EXCLUSION
+GST_EXCLUSION_CLASS
 GST_IS_EXCLUSION_CLASS
 GST_TYPE_EXCLUSION
+<SUBSECTION Private>
 gst_exclusion_get_type
-gst_exclusion_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-fbdevsink</FILE>
+<TITLE>fbdevsink</TITLE>
+GstFBDEVSink
+<SUBSECTION Standard>
+GstFBDEVSinkClass
+GST_FBDEV_SINK
+GST_FBDEV_SINK_CAST
+GST_IS_FBDEV_SINK
+GST_FBDEV_SINK_CLASS
+GST_IS_FBDEV_SINK_CLASS
+GST_TYPE_FBDEV_SINK
+<SUBSECTION Private>
+gst_fbdev_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-fpsdisplaysink</FILE>
+<TITLE>fpsdisplaysink</TITLE>
+GstFPSDisplaySink
+<SUBSECTION Standard>
+GstFPSDisplaySinkClass
+GST_FPS_DISPLAY_SINK
+GST_FPS_DISPLAY_SINK_CAST
+GST_IS_FPS_DISPLAY_SINK
+GST_FPS_DISPLAY_SINK_CLASS
+GST_IS_FPS_DISPLAY_SINK_CLASS
+GST_TYPE_FPS_DISPLAY_SINK
+<SUBSECTION Private>
+gst_fps_display_sink_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-faac</FILE>
 <TITLE>faac</TITLE>
 GstFaac
+GstFaacBrtype
+GstFaacShortCtl
 <SUBSECTION Standard>
 GstFaacClass
-GST_TYPE_FAAC
 GST_FAAC
+GST_FAAC_CAST
 GST_IS_FAAC
 GST_FAAC_CLASS
 GST_IS_FAAC_CLASS
+GST_TYPE_FAAC
+<SUBSECTION Private>
 gst_faac_get_type
 </SECTION>
 
@@ -602,41 +1322,47 @@ gst_faac_get_type
 GstFaad
 <SUBSECTION Standard>
 GstFaadClass
-GST_TYPE_FAAD
 GST_FAAD
+GST_FAAD_CAST
 GST_IS_FAAD
 GST_FAAD_CLASS
 GST_IS_FAAD_CLASS
+GST_TYPE_FAAD
+<SUBSECTION Private>
 gst_faad_get_type
 </SECTION>
-<SECTION>
 
+<SECTION>
 <FILE>element-faceblur</FILE>
 <TITLE>faceblur</TITLE>
-Gstfaceblur
+GstFaceBlur
 <SUBSECTION Standard>
-GstfaceblurClass
-GST_FACEBLUR
-GST_FACEBLUR_CLASS
-GST_TYPE_FACEBLUR
-GST_IS_FACEBLUR
-GST_IS_FACEBLUR_CLASS
-gst_faceblur_get_type
-gst_faceblur_plugin_init
+GstFaceBlurClass
+GST_FACE_BLUR
+GST_FACE_BLUR_CAST
+GST_IS_FACE_BLUR
+GST_FACE_BLUR_CLASS
+GST_IS_FACE_BLUR_CLASS
+GST_TYPE_FACE_BLUR
+<SUBSECTION Private>
+gst_face_blur_get_type
 </SECTION>
 
+<SECTION>
 <FILE>element-facedetect</FILE>
 <TITLE>facedetect</TITLE>
-Gstfacedetect
+GstFaceDetect
+GstFaceDetectUpdates
 <SUBSECTION Standard>
-GstfacedetectClass
-GST_FACEDETECT
-GST_FACEDETECT_CLASS
-GST_TYPE_FACEDETECT
-GST_IS_FACEDETECT
-GST_IS_FACEDETECT_CLASS
-gst_facedetect_get_type
-gst_facedetect_plugin_init
+GstFaceDetectClass
+GST_FACE_DETECT
+GST_FACE_DETECT_CAST
+GST_IS_FACE_DETECT
+GST_FACE_DETECT_CLASS
+GST_IS_FACE_DETECT_CLASS
+GST_TYPE_FACE_DETECT
+<SUBSECTION Private>
+gst_face_detect_get_type
 </SECTION>
 
 <SECTION>
@@ -645,16 +1371,32 @@ gst_facedetect_plugin_init
 GstFestival
 <SUBSECTION Standard>
 GstFestivalClass
-GstFestivalFlags
 GST_FESTIVAL
-GST_FESTIVAL_CLASS
+GST_FESTIVAL_CAST
 GST_IS_FESTIVAL
+GST_FESTIVAL_CLASS
 GST_IS_FESTIVAL_CLASS
 GST_TYPE_FESTIVAL
+<SUBSECTION Private>
 gst_festival_get_type
-FESTIVAL_DEFAULT_SERVER_HOST
-FESTIVAL_DEFAULT_SERVER_PORT
-FESTIVAL_DEFAULT_TEXT_MODE
+</SECTION>
+
+<SECTION>
+<FILE>element-fieldanalysis</FILE>
+<TITLE>fieldanalysis</TITLE>
+GstFieldAnalysis
+GstFieldAnalysisFieldMetric
+GstFieldAnalysisFrameMetric
+<SUBSECTION Standard>
+GstFieldAnalysisClass
+GST_FIELD_ANALYSIS
+GST_FIELD_ANALYSIS_CAST
+GST_IS_FIELD_ANALYSIS
+GST_FIELD_ANALYSIS_CLASS
+GST_IS_FIELD_ANALYSIS_CLASS
+GST_TYPE_FIELD_ANALYSIS
+<SUBSECTION Private>
+gst_field_analysis_get_type
 </SECTION>
 
 <SECTION>
@@ -665,38 +1407,862 @@ GstFisheye
 GstFisheyeClass
 GST_FISHEYE
 GST_FISHEYE_CAST
-GST_FISHEYE_CLASS
 GST_IS_FISHEYE
+GST_FISHEYE_CLASS
 GST_IS_FISHEYE_CLASS
 GST_TYPE_FISHEYE
+<SUBSECTION Private>
 gst_fisheye_get_type
-gst_fisheye_plugin_init
 </SECTION>
 
 <SECTION>
-<FILE>element-fpsdisplaysink</FILE>
-<TITLE>fpsdisplaysink</TITLE>
-GstFPSDisplaySink
+<FILE>element-fluiddec</FILE>
+<TITLE>fluiddec</TITLE>
+GstFluidDec
 <SUBSECTION Standard>
-GstFPSDisplaySinkClass
-GST_TYPE_FPS_DISPLAY_SINK
-GST_FPS_DISPLAY_SINK
-GST_IS_FPS_DISPLAY_SINK
-GST_FPS_DISPLAY_SINK_CLASS
-GST_IS_FPS_DISPLAY_SINK_CLASS
-fps_display_sink_get_type
+GstFluidDecClass
+GST_FLUID_DEC
+GST_FLUID_DEC_CAST
+GST_IS_FLUID_DEC
+GST_FLUID_DEC_CLASS
+GST_IS_FLUID_DEC_CLASS
+GST_TYPE_FLUID_DEC
+<SUBSECTION Private>
+gst_fluid_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-freeverb</FILE>
+<TITLE>freeverb</TITLE>
+GstFreeverb
+<SUBSECTION Standard>
+GstFreeverbClass
+GST_FREEVERB
+GST_FREEVERB_CAST
+GST_IS_FREEVERB
+GST_FREEVERB_CLASS
+GST_IS_FREEVERB_CLASS
+GST_TYPE_FREEVERB
+<SUBSECTION Private>
+gst_freeverb_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gdpdepay</FILE>
+<TITLE>gdpdepay</TITLE>
+GstGDPDepay
+<SUBSECTION Standard>
+GstGDPDepayClass
+GST_GDP_DEPAY
+GST_GDP_DEPAY_CAST
+GST_IS_GDP_DEPAY
+GST_GDP_DEPAY_CLASS
+GST_IS_GDP_DEPAY_CLASS
+GST_TYPE_GDP_DEPAY
+<SUBSECTION Private>
+gst_gdp_depay_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gdppay</FILE>
+<TITLE>gdppay</TITLE>
+GstGDPPay
+<SUBSECTION Standard>
+GstGDPPayClass
+GST_GDP_PAY
+GST_GDP_PAY_CAST
+GST_IS_GDP_PAY
+GST_GDP_PAY_CLASS
+GST_IS_GDP_PAY_CLASS
+GST_TYPE_GDP_PAY
+<SUBSECTION Private>
+gst_gdp_pay_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glcolorbalance</FILE>
+<TITLE>glcolorbalance</TITLE>
+GstGLColorBalance
+<SUBSECTION Standard>
+GstGLColorBalanceClass
+GST_GL_COLOR_BALANCE
+GST_GL_COLOR_BALANCE_CAST
+GST_IS_GL_COLOR_BALANCE
+GST_GL_COLOR_BALANCE_CLASS
+GST_IS_GL_COLOR_BALANCE_CLASS
+GST_TYPE_GL_COLOR_BALANCE
+<SUBSECTION Private>
+gst_gl_color_balance_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glcolorconvert</FILE>
+<TITLE>glcolorconvert</TITLE>
+GstGLColorConvertElement
+<SUBSECTION Standard>
+GstGLColorConvertElementClass
+GST_GL_COLOR_CONVERT_ELEMENT
+GST_GL_COLOR_CONVERT_ELEMENT_CAST
+GST_IS_GL_COLOR_CONVERT_ELEMENT
+GST_GL_COLOR_CONVERT_ELEMENT_CLASS
+GST_IS_GL_COLOR_CONVERT_ELEMENT_CLASS
+GST_TYPE_GL_COLOR_CONVERT_ELEMENT
+<SUBSECTION Private>
+gst_gl_color_convert_element_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glcolorscale</FILE>
+<TITLE>glcolorscale</TITLE>
+GstGLColorscale
+<SUBSECTION Standard>
+GstGLColorscaleClass
+GST_GL_COLORSCALE
+GST_GL_COLORSCALE_CAST
+GST_IS_GL_COLORSCALE
+GST_GL_COLORSCALE_CLASS
+GST_IS_GL_COLORSCALE_CLASS
+GST_TYPE_GL_COLORSCALE
+<SUBSECTION Private>
+gst_gl_colorscale_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gldeinterlace</FILE>
+<TITLE>gldeinterlace</TITLE>
+GstGLDeinterlace
+GstGLDeinterlaceMethod
+<SUBSECTION Standard>
+GstGLDeinterlaceClass
+GST_GL_DEINTERLACE
+GST_GL_DEINTERLACE_CAST
+GST_IS_GL_DEINTERLACE
+GST_GL_DEINTERLACE_CLASS
+GST_IS_GL_DEINTERLACE_CLASS
+GST_TYPE_GL_DEINTERLACE
+<SUBSECTION Private>
+gst_gl_deinterlace_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gldifferencematte</FILE>
+<TITLE>gldifferencematte</TITLE>
+GstGLDifferenceMatte
+<SUBSECTION Standard>
+GstGLDifferenceMatteClass
+GST_GL_DIFFERENCE_MATTE
+GST_GL_DIFFERENCE_MATTE_CAST
+GST_IS_GL_DIFFERENCE_MATTE
+GST_GL_DIFFERENCE_MATTE_CLASS
+GST_IS_GL_DIFFERENCE_MATTE_CLASS
+GST_TYPE_GL_DIFFERENCE_MATTE
+<SUBSECTION Private>
+gst_gl_difference_matte_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gldownload</FILE>
+<TITLE>gldownload</TITLE>
+GstGLDownloadElement
+<SUBSECTION Standard>
+GstGLDownloadElementClass
+GST_GL_DOWNLOAD_ELEMENT
+GST_GL_DOWNLOAD_ELEMENT_CAST
+GST_IS_GL_DOWNLOAD_ELEMENT
+GST_GL_DOWNLOAD_ELEMENT_CLASS
+GST_IS_GL_DOWNLOAD_ELEMENT_CLASS
+GST_TYPE_GL_DOWNLOAD_ELEMENT
+<SUBSECTION Private>
+gst_gl_download_element_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects</FILE>
+<TITLE>gleffects</TITLE>
+GstGLEffectsGeneric
+<SUBSECTION Standard>
+GstGLEffectsGenericClass
+GST_GL_EFFECTS_GENERIC
+GST_GL_EFFECTS_GENERIC_CAST
+GST_IS_GL_EFFECTS_GENERIC
+GST_GL_EFFECTS_GENERIC_CLASS
+GST_IS_GL_EFFECTS_GENERIC_CLASS
+GST_TYPE_GL_EFFECTS_GENERIC
+<SUBSECTION Private>
+gst_gl_effects_generic_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glfilterapp</FILE>
+<TITLE>glfilterapp</TITLE>
+GstGLFilterApp
+<SUBSECTION Standard>
+GstGLFilterAppClass
+GST_GL_FILTER_APP
+GST_GL_FILTER_APP_CAST
+GST_IS_GL_FILTER_APP
+GST_GL_FILTER_APP_CLASS
+GST_IS_GL_FILTER_APP_CLASS
+GST_TYPE_GL_FILTER_APP
+<SUBSECTION Private>
+gst_gl_filter_app_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glfilterbin</FILE>
+<TITLE>glfilterbin</TITLE>
+GstGLFilterBin
+<SUBSECTION Standard>
+GstGLFilterBinClass
+GST_GL_FILTER_BIN
+GST_GL_FILTER_BIN_CAST
+GST_IS_GL_FILTER_BIN
+GST_GL_FILTER_BIN_CLASS
+GST_IS_GL_FILTER_BIN_CLASS
+GST_TYPE_GL_FILTER_BIN
+<SUBSECTION Private>
+gst_gl_filter_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glfiltercube</FILE>
+<TITLE>glfiltercube</TITLE>
+GstGLFilterCube
+<SUBSECTION Standard>
+GstGLFilterCubeClass
+GST_GL_FILTER_CUBE
+GST_GL_FILTER_CUBE_CAST
+GST_IS_GL_FILTER_CUBE
+GST_GL_FILTER_CUBE_CLASS
+GST_IS_GL_FILTER_CUBE_CLASS
+GST_TYPE_GL_FILTER_CUBE
+<SUBSECTION Private>
+gst_gl_filter_cube_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glfilterglass</FILE>
+<TITLE>glfilterglass</TITLE>
+GstGLFilterGlass
+<SUBSECTION Standard>
+GstGLFilterGlassClass
+GST_GL_FILTER_GLASS
+GST_GL_FILTER_GLASS_CAST
+GST_IS_GL_FILTER_GLASS
+GST_GL_FILTER_GLASS_CLASS
+GST_IS_GL_FILTER_GLASS_CLASS
+GST_TYPE_GL_FILTER_GLASS
+<SUBSECTION Private>
+gst_gl_filter_glass_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glshader</FILE>
+<TITLE>glshader</TITLE>
+GstGLFilterShader
+<SUBSECTION Standard>
+GstGLFilterShaderClass
+GST_GL_FILTER_SHADER
+GST_GL_FILTER_SHADER_CAST
+GST_IS_GL_FILTER_SHADER
+GST_GL_FILTER_SHADER_CLASS
+GST_IS_GL_FILTER_SHADER_CLASS
+GST_TYPE_GL_FILTER_SHADER
+<SUBSECTION Private>
+gst_gl_filter_shader_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glimagesinkelement</FILE>
+<TITLE>glimagesinkelement</TITLE>
+GstGLImageSink
+<SUBSECTION Standard>
+GstGLImageSinkClass
+GST_GL_IMAGE_SINK
+GST_GL_IMAGE_SINK_CAST
+GST_IS_GL_IMAGE_SINK
+GST_GL_IMAGE_SINK_CLASS
+GST_IS_GL_IMAGE_SINK_CLASS
+GST_TYPE_GL_IMAGE_SINK
+<SUBSECTION Private>
+gst_gl_image_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glimagesink</FILE>
+<TITLE>glimagesink</TITLE>
+GstGLImageSinkBin
+<SUBSECTION Standard>
+GstGLImageSinkBinClass
+GST_GL_IMAGE_SINK_BIN
+GST_GL_IMAGE_SINK_BIN_CAST
+GST_IS_GL_IMAGE_SINK_BIN
+GST_GL_IMAGE_SINK_BIN_CLASS
+GST_IS_GL_IMAGE_SINK_BIN_CLASS
+GST_TYPE_GL_IMAGE_SINK_BIN
+<SUBSECTION Private>
+gst_gl_image_sink_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glmixerbin</FILE>
+<TITLE>glmixerbin</TITLE>
+GstGLMixerBin
+GstGLMixerBinStartTimeSelection
+<SUBSECTION Standard>
+GstGLMixerBinClass
+GST_GL_MIXER_BIN
+GST_GL_MIXER_BIN_CAST
+GST_IS_GL_MIXER_BIN
+GST_GL_MIXER_BIN_CLASS
+GST_IS_GL_MIXER_BIN_CLASS
+GST_TYPE_GL_MIXER_BIN
+<SUBSECTION Private>
+gst_gl_mixer_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glmosaic</FILE>
+<TITLE>glmosaic</TITLE>
+GstGLMosaic
+<SUBSECTION Standard>
+GstGLMosaicClass
+GST_GL_MOSAIC
+GST_GL_MOSAIC_CAST
+GST_IS_GL_MOSAIC
+GST_GL_MOSAIC_CLASS
+GST_IS_GL_MOSAIC_CLASS
+GST_TYPE_GL_MOSAIC
+<SUBSECTION Private>
+gst_gl_mosaic_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gloverlay</FILE>
+<TITLE>gloverlay</TITLE>
+GstGLOverlay
+<SUBSECTION Standard>
+GstGLOverlayClass
+GST_GL_OVERLAY
+GST_GL_OVERLAY_CAST
+GST_IS_GL_OVERLAY
+GST_GL_OVERLAY_CLASS
+GST_IS_GL_OVERLAY_CLASS
+GST_TYPE_GL_OVERLAY
+<SUBSECTION Private>
+gst_gl_overlay_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glsinkbin</FILE>
+<TITLE>glsinkbin</TITLE>
+GstGLSinkBin
+<SUBSECTION Standard>
+GstGLSinkBinClass
+GST_GL_SINK_BIN
+GST_GL_SINK_BIN_CAST
+GST_IS_GL_SINK_BIN
+GST_GL_SINK_BIN_CLASS
+GST_IS_GL_SINK_BIN_CLASS
+GST_TYPE_GL_SINK_BIN
+<SUBSECTION Private>
+gst_gl_sink_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glsrcbin</FILE>
+<TITLE>glsrcbin</TITLE>
+GstGLSrcBin
+<SUBSECTION Standard>
+GstGLSrcBinClass
+GST_GL_SRC_BIN
+GST_GL_SRC_BIN_CAST
+GST_IS_GL_SRC_BIN
+GST_GL_SRC_BIN_CLASS
+GST_IS_GL_SRC_BIN_CLASS
+GST_TYPE_GL_SRC_BIN
+<SUBSECTION Private>
+gst_gl_src_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glstereomix</FILE>
+<TITLE>glstereomix</TITLE>
+GstGLStereoMix
+<SUBSECTION Standard>
+GstGLStereoMixClass
+GST_GL_STEREO_MIX
+GST_GL_STEREO_MIX_CAST
+GST_IS_GL_STEREO_MIX
+GST_GL_STEREO_MIX_CLASS
+GST_IS_GL_STEREO_MIX_CLASS
+GST_TYPE_GL_STEREO_MIX
+<SUBSECTION Private>
+gst_gl_stereo_mix_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glstereosplit</FILE>
+<TITLE>glstereosplit</TITLE>
+GstGLStereoSplit
+<SUBSECTION Standard>
+GstGLStereoSplitClass
+GST_GL_STEREO_SPLIT
+GST_GL_STEREO_SPLIT_CAST
+GST_IS_GL_STEREO_SPLIT
+GST_GL_STEREO_SPLIT_CLASS
+GST_IS_GL_STEREO_SPLIT_CLASS
+GST_TYPE_GL_STEREO_SPLIT
+<SUBSECTION Private>
+gst_gl_stereo_split_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gltestsrc</FILE>
+<TITLE>gltestsrc</TITLE>
+GstGLTestSrc
+GstGLTestSrcPattern
+<SUBSECTION Standard>
+GstGLTestSrcClass
+GST_GL_TEST_SRC
+GST_GL_TEST_SRC_CAST
+GST_IS_GL_TEST_SRC
+GST_GL_TEST_SRC_CLASS
+GST_IS_GL_TEST_SRC_CLASS
+GST_TYPE_GL_TEST_SRC
+<SUBSECTION Private>
+gst_gl_test_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gltransformation</FILE>
+<TITLE>gltransformation</TITLE>
+GstGLTransformation
+<SUBSECTION Standard>
+GstGLTransformationClass
+GST_GL_TRANSFORMATION
+GST_GL_TRANSFORMATION_CLASS
+GST_IS_GL_TRANSFORMATION
+GST_IS_GL_TRANSFORMATION_CLASS
+GST_TYPE_GL_TRANSFORMATION
+</SECTION>
+
+<SECTION>
+<FILE>element-glupload</FILE>
+<TITLE>glupload</TITLE>
+GstGLUploadElement
+<SUBSECTION Standard>
+GstGLUploadElementClass
+GST_GL_UPLOAD_ELEMENT
+GST_GL_UPLOAD_ELEMENT_CAST
+GST_IS_GL_UPLOAD_ELEMENT
+GST_GL_UPLOAD_ELEMENT_CLASS
+GST_IS_GL_UPLOAD_ELEMENT_CLASS
+GST_TYPE_GL_UPLOAD_ELEMENT
+<SUBSECTION Private>
+gst_gl_upload_element_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glvideomixerelement</FILE>
+<TITLE>glvideomixerelement</TITLE>
+GstGLVideoMixer
+GstGLVideoMixerBackground
+<SUBSECTION Standard>
+GstGLVideoMixerClass
+GST_GL_VIDEO_MIXER
+GST_GL_VIDEO_MIXER_CAST
+GST_IS_GL_VIDEO_MIXER
+GST_GL_VIDEO_MIXER_CLASS
+GST_IS_GL_VIDEO_MIXER_CLASS
+GST_TYPE_GL_VIDEO_MIXER
+<SUBSECTION Private>
+gst_gl_video_mixer_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glvideomixer</FILE>
+<TITLE>glvideomixer</TITLE>
+GstGLVideoMixerBin
+<SUBSECTION Standard>
+GstGLVideoMixerBinClass
+GST_GL_VIDEO_MIXER_BIN
+GST_GL_VIDEO_MIXER_BIN_CAST
+GST_IS_GL_VIDEO_MIXER_BIN
+GST_GL_VIDEO_MIXER_BIN_CLASS
+GST_IS_GL_VIDEO_MIXER_BIN_CLASS
+GST_TYPE_GL_VIDEO_MIXER_BIN
+<SUBSECTION Private>
+gst_gl_video_mixer_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glviewconvert</FILE>
+<TITLE>glviewconvert</TITLE>
+GstGLViewConvertElement
+<SUBSECTION Standard>
+GstGLViewConvertElementClass
+GST_GL_VIEW_CONVERT_ELEMENT
+GST_GL_VIEW_CONVERT_ELEMENT_CAST
+GST_IS_GL_VIEW_CONVERT_ELEMENT
+GST_GL_VIEW_CONVERT_ELEMENT_CLASS
+GST_IS_GL_VIEW_CONVERT_ELEMENT_CLASS
+GST_TYPE_GL_VIEW_CONVERT_ELEMENT
+<SUBSECTION Private>
+gst_gl_view_convert_element_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gsmdec</FILE>
+<TITLE>gsmdec</TITLE>
+GstGSMDec
+<SUBSECTION Standard>
+GstGSMDecClass
+GST_GSM_DEC
+GST_GSM_DEC_CAST
+GST_IS_GSM_DEC
+GST_GSM_DEC_CLASS
+GST_IS_GSM_DEC_CLASS
+GST_TYPE_GSM_DEC
+<SUBSECTION Private>
+gst_gsm_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gsmenc</FILE>
+<TITLE>gsmenc</TITLE>
+GstGSMEnc
+<SUBSECTION Standard>
+GstGSMEncClass
+GST_GSM_ENC
+GST_GSM_ENC_CAST
+GST_IS_GSM_ENC
+GST_GSM_ENC_CLASS
+GST_IS_GSM_ENC_CLASS
+GST_TYPE_GSM_ENC
+<SUBSECTION Private>
+gst_gsm_enc_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-gaussianblur</FILE>
 <TITLE>gaussianblur</TITLE>
-GaussBlur
+GstGaussianBlur
 <SUBSECTION Standard>
-GaussBlurClass
-GAUSS_BLUR
-GST_TYPE_GAUSS_BLUR
-gauss_blur_get_type
-gst_gauss_blur_plugin_init
+GstGaussianBlurClass
+GST_GAUSSIAN_BLUR
+GST_GAUSSIAN_BLUR_CAST
+GST_IS_GAUSSIAN_BLUR
+GST_GAUSSIAN_BLUR_CLASS
+GST_IS_GAUSSIAN_BLUR_CLASS
+GST_TYPE_GAUSSIAN_BLUR
+<SUBSECTION Private>
+gst_gaussian_blur_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gmedec</FILE>
+<TITLE>gmedec</TITLE>
+GstGmeDec
+<SUBSECTION Standard>
+GstGmeDecClass
+GST_GME_DEC
+GST_GME_DEC_CAST
+GST_IS_GME_DEC
+GST_GME_DEC_CLASS
+GST_IS_GME_DEC_CLASS
+GST_TYPE_GME_DEC
+<SUBSECTION Private>
+gst_gme_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-grabcut</FILE>
+<TITLE>grabcut</TITLE>
+GstGrabcut
+<SUBSECTION Standard>
+GstGrabcutClass
+GST_GRABCUT
+GST_GRABCUT_CAST
+GST_IS_GRABCUT
+GST_GRABCUT_CLASS
+GST_IS_GRABCUT_CLASS
+GST_TYPE_GRABCUT
+<SUBSECTION Private>
+gst_grabcut_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gtkglsink</FILE>
+<TITLE>gtkglsink</TITLE>
+GstGtkGLSink
+<SUBSECTION Standard>
+GstGtkGLSinkClass
+GST_GTK_GL_SINK
+GST_GTK_GL_SINK_CAST
+GST_IS_GTK_GL_SINK
+GST_GTK_GL_SINK_CLASS
+GST_IS_GTK_GL_SINK_CLASS
+GST_TYPE_GTK_GL_SINK
+<SUBSECTION Private>
+gst_gtk_gl_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gtksink</FILE>
+<TITLE>gtksink</TITLE>
+GstGtkSink
+<SUBSECTION Standard>
+GstGtkSinkClass
+GST_GTK_SINK
+GST_GTK_SINK_CAST
+GST_IS_GTK_SINK
+GST_GTK_SINK_CLASS
+GST_IS_GTK_SINK_CLASS
+GST_TYPE_GTK_SINK
+<SUBSECTION Private>
+gst_gtk_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-h263parse</FILE>
+<TITLE>h263parse</TITLE>
+GstH263Parse
+<SUBSECTION Standard>
+GstH263ParseClass
+GST_H263_PARSE
+GST_H263_PARSE_CAST
+GST_IS_H263_PARSE
+GST_H263_PARSE_CLASS
+GST_IS_H263_PARSE_CLASS
+GST_TYPE_H263_PARSE
+<SUBSECTION Private>
+gst_h263_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-h264parse</FILE>
+<TITLE>h264parse</TITLE>
+GstH264Parse
+<SUBSECTION Standard>
+GstH264ParseClass
+GST_H264_PARSE
+GST_H264_PARSE_CAST
+GST_IS_H264_PARSE
+GST_H264_PARSE_CLASS
+GST_IS_H264_PARSE_CLASS
+GST_TYPE_H264_PARSE
+<SUBSECTION Private>
+gst_h264_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-h265parse</FILE>
+<TITLE>h265parse</TITLE>
+GstH265Parse
+<SUBSECTION Standard>
+GstH265ParseClass
+GST_H265_PARSE
+GST_H265_PARSE_CAST
+GST_IS_H265_PARSE
+GST_H265_PARSE_CLASS
+GST_IS_H265_PARSE_CLASS
+GST_TYPE_H265_PARSE
+<SUBSECTION Private>
+gst_h265_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-hlsdemux</FILE>
+<TITLE>hlsdemux</TITLE>
+GstHLSDemux
+<SUBSECTION Standard>
+GstHLSDemuxClass
+GST_HLS_DEMUX
+GST_HLS_DEMUX_CAST
+GST_IS_HLS_DEMUX
+GST_HLS_DEMUX_CLASS
+GST_IS_HLS_DEMUX_CLASS
+GST_TYPE_HLS_DEMUX
+<SUBSECTION Private>
+gst_hls_demux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-handdetect</FILE>
+<TITLE>handdetect</TITLE>
+GstHanddetect
+<SUBSECTION Standard>
+GstHanddetectClass
+GST_HANDDETECT
+GST_HANDDETECT_CAST
+GST_IS_HANDDETECT
+GST_HANDDETECT_CLASS
+GST_IS_HANDDETECT_CLASS
+GST_TYPE_HANDDETECT
+<SUBSECTION Private>
+gst_handdetect_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-hlssink</FILE>
+<TITLE>hlssink</TITLE>
+GstHlsSink
+<SUBSECTION Standard>
+GstHlsSinkClass
+GST_HLS_SINK
+GST_HLS_SINK_CAST
+GST_IS_HLS_SINK
+GST_HLS_SINK_CLASS
+GST_IS_HLS_SINK_CLASS
+GST_TYPE_HLS_SINK
+<SUBSECTION Private>
+gst_hls_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-irtspparse</FILE>
+<TITLE>irtspparse</TITLE>
+GstIRTSPParse
+<SUBSECTION Standard>
+GstIRTSPParseClass
+GST_IRTSP_PARSE
+GST_IRTSP_PARSE_CAST
+GST_IS_IRTSP_PARSE
+GST_IRTSP_PARSE_CLASS
+GST_IS_IRTSP_PARSE_CLASS
+GST_TYPE_IRTSP_PARSE
+<SUBSECTION Private>
+gst_irtsp_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-id3mux</FILE>
+<TITLE>id3mux</TITLE>
+GstId3Mux
+<SUBSECTION Standard>
+GstId3MuxClass
+GST_ID3_MUX
+GST_ID3_MUX_CAST
+GST_IS_ID3_MUX
+GST_ID3_MUX_CLASS
+GST_IS_ID3_MUX_CLASS
+GST_TYPE_ID3_MUX
+<SUBSECTION Private>
+gst_id3_mux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-interaudiosink</FILE>
+<TITLE>interaudiosink</TITLE>
+GstInterAudioSink
+<SUBSECTION Standard>
+GstInterAudioSinkClass
+GST_INTER_AUDIO_SINK
+GST_INTER_AUDIO_SINK_CAST
+GST_IS_INTER_AUDIO_SINK
+GST_INTER_AUDIO_SINK_CLASS
+GST_IS_INTER_AUDIO_SINK_CLASS
+GST_TYPE_INTER_AUDIO_SINK
+<SUBSECTION Private>
+gst_inter_audio_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-interaudiosrc</FILE>
+<TITLE>interaudiosrc</TITLE>
+GstInterAudioSrc
+<SUBSECTION Standard>
+GstInterAudioSrcClass
+GST_INTER_AUDIO_SRC
+GST_INTER_AUDIO_SRC_CAST
+GST_IS_INTER_AUDIO_SRC
+GST_INTER_AUDIO_SRC_CLASS
+GST_IS_INTER_AUDIO_SRC_CLASS
+GST_TYPE_INTER_AUDIO_SRC
+<SUBSECTION Private>
+gst_inter_audio_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-intersubsink</FILE>
+<TITLE>intersubsink</TITLE>
+GstInterSubSink
+<SUBSECTION Standard>
+GstInterSubSinkClass
+GST_INTER_SUB_SINK
+GST_INTER_SUB_SINK_CAST
+GST_IS_INTER_SUB_SINK
+GST_INTER_SUB_SINK_CLASS
+GST_IS_INTER_SUB_SINK_CLASS
+GST_TYPE_INTER_SUB_SINK
+<SUBSECTION Private>
+gst_inter_sub_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-intersubsrc</FILE>
+<TITLE>intersubsrc</TITLE>
+GstInterSubSrc
+<SUBSECTION Standard>
+GstInterSubSrcClass
+GST_INTER_SUB_SRC
+GST_INTER_SUB_SRC_CAST
+GST_IS_INTER_SUB_SRC
+GST_INTER_SUB_SRC_CLASS
+GST_IS_INTER_SUB_SRC_CLASS
+GST_TYPE_INTER_SUB_SRC
+<SUBSECTION Private>
+gst_inter_sub_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-intervideosink</FILE>
+<TITLE>intervideosink</TITLE>
+GstInterVideoSink
+<SUBSECTION Standard>
+GstInterVideoSinkClass
+GST_INTER_VIDEO_SINK
+GST_INTER_VIDEO_SINK_CAST
+GST_IS_INTER_VIDEO_SINK
+GST_INTER_VIDEO_SINK_CLASS
+GST_IS_INTER_VIDEO_SINK_CLASS
+GST_TYPE_INTER_VIDEO_SINK
+<SUBSECTION Private>
+gst_inter_video_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-intervideosrc</FILE>
+<TITLE>intervideosrc</TITLE>
+GstInterVideoSrc
+<SUBSECTION Standard>
+GstInterVideoSrcClass
+GST_INTER_VIDEO_SRC
+GST_INTER_VIDEO_SRC_CAST
+GST_IS_INTER_VIDEO_SRC
+GST_INTER_VIDEO_SRC_CLASS
+GST_IS_INTER_VIDEO_SRC_CLASS
+GST_TYPE_INTER_VIDEO_SRC
+<SUBSECTION Private>
+gst_inter_video_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-interlace</FILE>
+<TITLE>interlace</TITLE>
+GstInterlace
+GstInterlacePattern
+<SUBSECTION Standard>
+GstInterlaceClass
+GST_INTERLACE
+GST_INTERLACE_CAST
+GST_IS_INTERLACE
+GST_INTERLACE_CLASS
+GST_IS_INTERLACE_CLASS
+GST_TYPE_INTERLACE
+<SUBSECTION Private>
+gst_interlace_get_type
 </SECTION>
 
 <SECTION>
@@ -704,38 +2270,111 @@ gst_gauss_blur_plugin_init
 <TITLE>ivfparse</TITLE>
 GstIvfParse
 <SUBSECTION Standard>
-GstIvfParseState
 GstIvfParseClass
 GST_IVF_PARSE
-GST_IVF_PARSE_CLASS
+GST_IVF_PARSE_CAST
 GST_IS_IVF_PARSE
+GST_IVF_PARSE_CLASS
 GST_IS_IVF_PARSE_CLASS
 GST_TYPE_IVF_PARSE
+<SUBSECTION Private>
 gst_ivf_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-ivtc</FILE>
+<TITLE>ivtc</TITLE>
+GstIvtc
+<SUBSECTION Standard>
+GstIvtcClass
+GST_IVTC
+GST_IVTC_CAST
+GST_IS_IVTC
+GST_IVTC_CLASS
+GST_IS_IVTC_CLASS
+GST_TYPE_IVTC
+<SUBSECTION Private>
+gst_ivtc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-jp2kdecimator</FILE>
+<TITLE>jp2kdecimator</TITLE>
+GstJP2kDecimator
+<SUBSECTION Standard>
+GstJP2kDecimatorClass
+GST_J_P2K_DECIMATOR
+GST_J_P2K_DECIMATOR_CAST
+GST_IS_J_P2K_DECIMATOR
+GST_J_P2K_DECIMATOR_CLASS
+GST_IS_J_P2K_DECIMATOR_CLASS
+GST_TYPE_J_P2K_DECIMATOR
+<SUBSECTION Private>
+gst_j_p2k_decimator_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-jpeg2000parse</FILE>
+<TITLE>jpeg2000parse</TITLE>
+GstJPEG2000Parse
+<SUBSECTION Standard>
+GstJPEG2000ParseClass
+GST_JPE_G2000_PARSE
+GST_JPE_G2000_PARSE_CAST
+GST_IS_JPE_G2000_PARSE
+GST_JPE_G2000_PARSE_CLASS
+GST_IS_JPE_G2000_PARSE_CLASS
+GST_TYPE_JPE_G2000_PARSE
+<SUBSECTION Private>
+gst_jpe_g2000_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-jifmux</FILE>
+<TITLE>jifmux</TITLE>
+GstJifMux
+<SUBSECTION Standard>
+GstJifMuxClass
+GST_JIF_MUX
+GST_JIF_MUX_CAST
+GST_IS_JIF_MUX
+GST_JIF_MUX_CLASS
+GST_IS_JIF_MUX_CLASS
+GST_TYPE_JIF_MUX
+<SUBSECTION Private>
+gst_jif_mux_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-jpegparse</FILE>
 <TITLE>jpegparse</TITLE>
 GstJpegParse
-<SUBSECTION Starndard>
+<SUBSECTION Standard>
 GstJpegParseClass
 GST_JPEG_PARSE
-GST_JPEG_PARSE_CLASS
+GST_JPEG_PARSE_CAST
 GST_IS_JPEG_PARSE
+GST_JPEG_PARSE_CLASS
 GST_IS_JPEG_PARSE_CLASS
 GST_TYPE_JPEG_PARSE
+<SUBSECTION Private>
 gst_jpeg_parse_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-liveadder</FILE>
-<TITLE>liveadder</TITLE>
-GstLiveAdder
+<FILE>element-kmssink</FILE>
+<TITLE>kmssink</TITLE>
+GstKMSSink
 <SUBSECTION Standard>
-GstLiveAdderClass
-GST_TYPE_LIVE_ADDER
-gst_live_adder_get_type
+GstKMSSinkClass
+GST_KMS_SINK
+GST_KMS_SINK_CAST
+GST_IS_KMS_SINK
+GST_KMS_SINK_CLASS
+GST_IS_KMS_SINK_CLASS
+GST_TYPE_KMS_SINK
+<SUBSECTION Private>
+gst_kms_sink_get_type
 </SECTION>
 
 <SECTION>
@@ -746,12 +2385,12 @@ GstKaleidoscope
 GstKaleidoscopeClass
 GST_KALEIDOSCOPE
 GST_KALEIDOSCOPE_CAST
-GST_KALEIDOSCOPE_CLASS
 GST_IS_KALEIDOSCOPE
+GST_KALEIDOSCOPE_CLASS
 GST_IS_KALEIDOSCOPE_CLASS
 GST_TYPE_KALEIDOSCOPE
+<SUBSECTION Private>
 gst_kaleidoscope_get_type
-gst_kaleidoscope_plugin_init
 </SECTION>
 
 <SECTION>
@@ -761,10 +2400,12 @@ GstKateDec
 <SUBSECTION Standard>
 GstKateDecClass
 GST_KATE_DEC
-GST_KATE_DEC_CLASS
+GST_KATE_DEC_CAST
 GST_IS_KATE_DEC
+GST_KATE_DEC_CLASS
 GST_IS_KATE_DEC_CLASS
 GST_TYPE_KATE_DEC
+<SUBSECTION Private>
 gst_kate_dec_get_type
 </SECTION>
 
@@ -775,10 +2416,12 @@ GstKateEnc
 <SUBSECTION Standard>
 GstKateEncClass
 GST_KATE_ENC
-GST_KATE_ENC_CLASS
+GST_KATE_ENC_CAST
 GST_IS_KATE_ENC
+GST_KATE_ENC_CLASS
 GST_IS_KATE_ENC_CLASS
 GST_TYPE_KATE_ENC
+<SUBSECTION Private>
 gst_kate_enc_get_type
 </SECTION>
 
@@ -789,10 +2432,12 @@ GstKateParse
 <SUBSECTION Standard>
 GstKateParseClass
 GST_KATE_PARSE
-GST_KATE_PARSE_CLASS
+GST_KATE_PARSE_CAST
 GST_IS_KATE_PARSE
+GST_KATE_PARSE_CLASS
 GST_IS_KATE_PARSE_CLASS
 GST_TYPE_KATE_PARSE
+<SUBSECTION Private>
 gst_kate_parse_get_type
 </SECTION>
 
@@ -803,10 +2448,12 @@ GstKateTag
 <SUBSECTION Standard>
 GstKateTagClass
 GST_KATE_TAG
-GST_KATE_TAG_CLASS
+GST_KATE_TAG_CAST
 GST_IS_KATE_TAG
+GST_KATE_TAG_CLASS
 GST_IS_KATE_TAG_CLASS
 GST_TYPE_KATE_TAG
+<SUBSECTION Private>
 gst_kate_tag_get_type
 </SECTION>
 
@@ -825,11 +2472,75 @@ gst_kate_tiger_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-liveadder</FILE>
+<TITLE>liveadder</TITLE>
+GstLiveAdder
+<SUBSECTION Standard>
+GstLiveAdderClass
+GST_LIVE_ADDER
+GST_LIVE_ADDER_CAST
+GST_IS_LIVE_ADDER
+GST_LIVE_ADDER_CLASS
+GST_IS_LIVE_ADDER_CLASS
+GST_TYPE_LIVE_ADDER
+<SUBSECTION Private>
+gst_live_adder_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-ladspa</FILE>
 <TITLE>ladspa</TITLE>
 GstLADSPA
 <SUBSECTION Standard>
 GstLADSPAClass
+</SECTION>
+
+<SECTION>
+<FILE>element-mmssrc</FILE>
+<TITLE>mmssrc</TITLE>
+GstMMS
+<SUBSECTION Standard>
+GstMMSClass
+GST_MMS
+GST_MMS_CAST
+GST_IS_MMS
+GST_MMS_CLASS
+GST_IS_MMS_CLASS
+GST_TYPE_MMS
+<SUBSECTION Private>
+gst_mms_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-mxfdemux</FILE>
+<TITLE>mxfdemux</TITLE>
+GstMXFDemux
+<SUBSECTION Standard>
+GstMXFDemuxClass
+GST_MXF_DEMUX
+GST_MXF_DEMUX_CAST
+GST_IS_MXF_DEMUX
+GST_MXF_DEMUX_CLASS
+GST_IS_MXF_DEMUX_CLASS
+GST_TYPE_MXF_DEMUX
+<SUBSECTION Private>
+gst_mxf_demux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-mxfmux</FILE>
+<TITLE>mxfmux</TITLE>
+GstMXFMux
+<SUBSECTION Standard>
+GstMXFMuxClass
+GST_MXF_MUX
+GST_MXF_MUX_CAST
+GST_IS_MXF_MUX
+GST_MXF_MUX_CLASS
+GST_IS_MXF_MUX_CLASS
+GST_TYPE_MXF_MUX
+<SUBSECTION Private>
+gst_mxf_mux_get_type
 </SECTION>
 
 <SECTION>
@@ -840,12 +2551,28 @@ GstMarble
 GstMarbleClass
 GST_MARBLE
 GST_MARBLE_CAST
-GST_MARBLE_CLASS
 GST_IS_MARBLE
+GST_MARBLE_CLASS
 GST_IS_MARBLE_CLASS
 GST_TYPE_MARBLE
+<SUBSECTION Private>
 gst_marble_get_type
-gst_marble_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-midiparse</FILE>
+<TITLE>midiparse</TITLE>
+GstMidiParse
+<SUBSECTION Standard>
+GstMidiParseClass
+GST_MIDI_PARSE
+GST_MIDI_PARSE_CAST
+GST_IS_MIDI_PARSE
+GST_MIDI_PARSE_CLASS
+GST_IS_MIDI_PARSE_CLASS
+GST_TYPE_MIDI_PARSE
+<SUBSECTION Private>
+gst_midi_parse_get_type
 </SECTION>
 
 <SECTION>
@@ -854,12 +2581,14 @@ gst_marble_plugin_init
 GstMimDec
 <SUBSECTION Standard>
 GstMimDecClass
-GST_IS_MIMDEC
-GST_IS_MIMDEC_CLASS
-GST_MIMDEC
-GST_MIMDEC_CLASS
-GST_TYPE_MIMDEC
-gst_mimdec_get_type
+GST_MIM_DEC
+GST_MIM_DEC_CAST
+GST_IS_MIM_DEC
+GST_MIM_DEC_CLASS
+GST_IS_MIM_DEC_CLASS
+GST_TYPE_MIM_DEC
+<SUBSECTION Private>
+gst_mim_dec_get_type
 </SECTION>
 
 <SECTION>
@@ -868,28 +2597,31 @@ gst_mimdec_get_type
 GstMimEnc
 <SUBSECTION Standard>
 GstMimEncClass
-GST_IS_MIMENC
-GST_IS_MIMENC_CLASS
-GST_MIMENC
-GST_MIMENC_CLASS
-GST_TYPE_MIMENC
-gst_mimenc_get_type
+GST_MIM_ENC
+GST_MIM_ENC_CAST
+GST_IS_MIM_ENC
+GST_MIM_ENC_CLASS
+GST_IS_MIM_ENC_CLASS
+GST_TYPE_MIM_ENC
+<SUBSECTION Private>
+gst_mim_enc_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-mirror</FILE>
 <TITLE>mirror</TITLE>
 GstMirror
+GstMirrorMode
 <SUBSECTION Standard>
 GstMirrorClass
 GST_MIRROR
 GST_MIRROR_CAST
-GST_MIRROR_CLASS
 GST_IS_MIRROR
+GST_MIRROR_CLASS
 GST_IS_MIRROR_CLASS
 GST_TYPE_MIRROR
+<SUBSECTION Private>
 gst_mirror_get_type
-gst_mirror_plugin_init
 </SECTION>
 
 <SECTION>
@@ -898,94 +2630,134 @@ gst_mirror_plugin_init
 GstModPlug
 <SUBSECTION Standard>
 GstModPlugClass
-GST_MODPLUG
-GST_MODPLUG_CLASS
-GST_IS_MODPLUG
-GST_IS_MODPLUG_CLASS
-GST_TYPE_MODPLUG
-gst_modplug_get_type
+GST_MOD_PLUG
+GST_MOD_PLUG_CAST
+GST_IS_MOD_PLUG
+GST_MOD_PLUG_CLASS
+GST_IS_MOD_PLUG_CLASS
+GST_TYPE_MOD_PLUG
+<SUBSECTION Private>
+gst_mod_plug_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-motioncells</FILE>
+<TITLE>motioncells</TITLE>
+GstMotioncells
+<SUBSECTION Standard>
+GstMotioncellsClass
+GST_MOTIONCELLS
+GST_MOTIONCELLS_CAST
+GST_IS_MOTIONCELLS
+GST_MOTIONCELLS_CLASS
+GST_IS_MOTIONCELLS_CLASS
+GST_TYPE_MOTIONCELLS
+<SUBSECTION Private>
+gst_motioncells_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-mpeg2enc</FILE>
 <TITLE>mpeg2enc</TITLE>
 GstMpeg2enc
+GstMpeg2encAspect
+GstMpeg2encFormat
+GstMpeg2encFramerate
+GstMpeg2encInterlaceMode
+GstMpeg2encVideoNorm
+GstMpeg2encPlaybackFieldOrders
+GstMpeg2encQuantisationMatrix
 <SUBSECTION Standard>
 GstMpeg2encClass
 GST_MPEG2ENC
-GST_MPEG2ENC_CLASS
+GST_MPEG2ENC_CAST
 GST_IS_MPEG2ENC
+GST_MPEG2ENC_CLASS
 GST_IS_MPEG2ENC_CLASS
 GST_TYPE_MPEG2ENC
-GST_MPEG2ENC_MUTEX_LOCK
-GST_MPEG2ENC_MUTEX_UNLOCK
-GST_MPEG2ENC_SIGNAL
-GST_MPEG2ENC_WAIT
+<SUBSECTION Private>
 gst_mpeg2enc_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-mpegpsmux</FILE>
-<TITLE>mpegpsmux</TITLE>
+<FILE>element-mpeg4videoparse</FILE>
+<TITLE>mpeg4videoparse</TITLE>
+GstMpeg4VParse
 <SUBSECTION Standard>
-MpegPsMux
-GST_MPEG_PSMUX
-GST_TYPE_MPEG_PSMUX
-MpegPsMuxClass
-mpegpsmux_get_type
+GstMpeg4VParseClass
+GST_MPEG4_V_PARSE
+GST_MPEG4_V_PARSE_CAST
+GST_IS_MPEG4_V_PARSE
+GST_MPEG4_V_PARSE_CLASS
+GST_IS_MPEG4_V_PARSE_CLASS
+GST_TYPE_MPEG4_V_PARSE
 <SUBSECTION Private>
-MpegPsPadData
-MpegPsPadDataPrepareFunction
-CLOCK_BASE
-CLOCK_FREQ
-GSTTIME_TO_MPEGTIME
-NORMAL_TS_PACKET_LENGTH
-M2TS_PACKET_LENGTH
-STANDARD_TIME_CLOCK
-TWO_POW_33_MINUS1
+gst_mpeg4_v_parse_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-mpegtsmux</FILE>
-<TITLE>mpegtsmux</TITLE>
+<FILE>element-mpegpsdemux</FILE>
+<TITLE>mpegpsdemux</TITLE>
+GstMpegPSDemux
 <SUBSECTION Standard>
-MpegTsMux
-GST_MPEG_TSMUX
-GST_TYPE_MPEG_TSMUX
-MpegTsMuxClass
-mpegtsmux_get_type
+GstMpegPSDemuxClass
+GST_MPEG_PS_DEMUX
+GST_MPEG_PS_DEMUX_CAST
+GST_IS_MPEG_PS_DEMUX
+GST_MPEG_PS_DEMUX_CLASS
+GST_IS_MPEG_PS_DEMUX_CLASS
+GST_TYPE_MPEG_PS_DEMUX
 <SUBSECTION Private>
-MpegTsPadData
-CLOCK_BASE
-CLOCK_FREQ
-CLOCK_FREQ_SCR
-MPEGTIME_TO_GSTTIME
-GSTTIME_TO_MPEGTIME
-MPEG_SYS_TIME_TO_GSTTIME
-GSTTIME_TO_MPEG_SYS_TIME
-NORMAL_TS_PACKET_LENGTH
-M2TS_PACKET_LENGTH
-MAX_PROG_NUMBER
-DEFAULT_PROG_ID
+gst_mpeg_ps_demux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-mpegvideoparse</FILE>
+<TITLE>mpegvideoparse</TITLE>
+GstMpegvParse
+<SUBSECTION Standard>
+GstMpegvParseClass
+GST_MPEGV_PARSE
+GST_MPEGV_PARSE_CAST
+GST_IS_MPEGV_PARSE
+GST_MPEGV_PARSE_CLASS
+GST_IS_MPEGV_PARSE_CLASS
+GST_TYPE_MPEGV_PARSE
+<SUBSECTION Private>
+gst_mpegv_parse_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-mplex</FILE>
 <TITLE>mplex</TITLE>
 GstMplex
+GstMplexFormat
 <SUBSECTION Standard>
 GstMplexClass
 GST_MPLEX
-GST_MPLEX_CLASS
+GST_MPLEX_CAST
 GST_IS_MPLEX
+GST_MPLEX_CLASS
 GST_IS_MPLEX_CLASS
 GST_TYPE_MPLEX
-GST_MPLEX_MUTEX_LOCK
-GST_MPLEX_MUTEX_UNLOCK
-GST_MPLEX_SIGNAL
-GST_MPLEX_SIGNAL_ALL
-GST_MPLEX_WAIT
+<SUBSECTION Private>
 gst_mplex_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-mssdemux</FILE>
+<TITLE>mssdemux</TITLE>
+GstMssDemux
+<SUBSECTION Standard>
+GstMssDemuxClass
+GST_MSS_DEMUX
+GST_MSS_DEMUX_CAST
+GST_IS_MSS_DEMUX
+GST_MSS_DEMUX_CLASS
+GST_IS_MSS_DEMUX_CLASS
+GST_TYPE_MSS_DEMUX
+<SUBSECTION Private>
+gst_mss_demux_get_type
 </SECTION>
 
 <SECTION>
@@ -1015,6 +2787,22 @@ GST_MXF_MUX
 GST_MXF_MUX_CLASS
 GST_TYPE_MXF_MUX
 gst_mxf_mux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-netsim</FILE>
+<TITLE>netsim</TITLE>
+GstNetSim
+<SUBSECTION Standard>
+GstNetSimClass
+GST_NET_SIM
+GST_NET_SIM_CAST
+GST_IS_NET_SIM
+GST_NET_SIM_CLASS
+GST_IS_NET_SIM_CLASS
+GST_TYPE_NET_SIM
+<SUBSECTION Private>
+gst_net_sim_get_type
 </SECTION>
 
 <SECTION>
@@ -1053,25 +2841,78 @@ GstOFA
 <SUBSECTION Standard>
 GstOFAClass
 GST_OFA
-GST_OFA_CLASS
+GST_OFA_CAST
 GST_IS_OFA
+GST_OFA_CLASS
 GST_IS_OFA_CLASS
 GST_TYPE_OFA
+<SUBSECTION Private>
 gst_ofa_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-openalsink</FILE>
 <TITLE>openalsink</TITLE>
-GstOpenalSink
+GstOpenALSink
 <SUBSECTION Standard>
-GstOpenalSinkClass
-GST_OPENAL_SINK
-GST_OPENAL_SINK_CLASS
-GST_IS_OPENAL_SINK
-GST_IS_OPENAL_SINK_CLASS
-GST_TYPE_OPENAL_SINK
-gst_openal_sink_get_type
+GstOpenALSinkClass
+GST_OPEN_AL_SINK
+GST_OPEN_AL_SINK_CAST
+GST_IS_OPEN_AL_SINK
+GST_OPEN_AL_SINK_CLASS
+GST_IS_OPEN_AL_SINK_CLASS
+GST_TYPE_OPEN_AL_SINK
+<SUBSECTION Private>
+gst_open_al_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-openexrdec</FILE>
+<TITLE>openexrdec</TITLE>
+GstOpenEXRDec
+<SUBSECTION Standard>
+GstOpenEXRDecClass
+GST_OPEN_EXR_DEC
+GST_OPEN_EXR_DEC_CAST
+GST_IS_OPEN_EXR_DEC
+GST_OPEN_EXR_DEC_CLASS
+GST_IS_OPEN_EXR_DEC_CLASS
+GST_TYPE_OPEN_EXR_DEC
+<SUBSECTION Private>
+gst_open_exr_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-openjpegdec</FILE>
+<TITLE>openjpegdec</TITLE>
+GstOpenJPEGDec
+<SUBSECTION Standard>
+GstOpenJPEGDecClass
+GST_OPEN_JPEG_DEC
+GST_OPEN_JPEG_DEC_CAST
+GST_IS_OPEN_JPEG_DEC
+GST_OPEN_JPEG_DEC_CLASS
+GST_IS_OPEN_JPEG_DEC_CLASS
+GST_TYPE_OPEN_JPEG_DEC
+<SUBSECTION Private>
+gst_open_jpeg_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-openjpegenc</FILE>
+<TITLE>openjpegenc</TITLE>
+GstOpenJPEGEnc
+GstOpenJPEGEncProgressionOrder
+<SUBSECTION Standard>
+GstOpenJPEGEncClass
+GST_OPEN_JPEG_ENC
+GST_OPEN_JPEG_ENC_CAST
+GST_IS_OPEN_JPEG_ENC
+GST_OPEN_JPEG_ENC_CLASS
+GST_IS_OPEN_JPEG_ENC_CLASS
+GST_TYPE_OPEN_JPEG_ENC
+<SUBSECTION Private>
+gst_open_jpeg_enc_get_type
 </SECTION>
 
 <SECTION>
@@ -1081,25 +2922,45 @@ GstOpenalSrc
 <SUBSECTION Standard>
 GstOpenalSrcClass
 GST_OPENAL_SRC
-GST_OPENAL_SRC_CLASS
+GST_OPENAL_SRC_CAST
 GST_IS_OPENAL_SRC
+GST_OPENAL_SRC_CLASS
 GST_IS_OPENAL_SRC_CLASS
 GST_TYPE_OPENAL_SRC
+<SUBSECTION Private>
 gst_openal_src_get_type
 </SECTION>
 
+<SECTION>
 <FILE>element-opencvtextoverlay</FILE>
 <TITLE>opencvtextoverlay</TITLE>
 GstOpencvTextOverlay
 <SUBSECTION Standard>
 GstOpencvTextOverlayClass
 GST_OPENCV_TEXT_OVERLAY
-GST_OPENCV_TEXT_OVERLAY_CLASS
-GST_TYPE_OPENCV_TEXT_OVERLAY
+GST_OPENCV_TEXT_OVERLAY_CAST
 GST_IS_OPENCV_TEXT_OVERLAY
+GST_OPENCV_TEXT_OVERLAY_CLASS
 GST_IS_OPENCV_TEXT_OVERLAY_CLASS
+GST_TYPE_OPENCV_TEXT_OVERLAY
+<SUBSECTION Private>
 gst_opencv_text_overlay_get_type
-gst_opencv_text_overlay_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-opusparse</FILE>
+<TITLE>opusparse</TITLE>
+GstOpusParse
+<SUBSECTION Standard>
+GstOpusParseClass
+GST_OPUS_PARSE
+GST_OPUS_PARSE_CAST
+GST_IS_OPUS_PARSE
+GST_OPUS_PARSE_CLASS
+GST_IS_OPUS_PARSE_CLASS
+GST_TYPE_OPUS_PARSE
+<SUBSECTION Private>
+gst_opus_parse_get_type
 </SECTION>
 
 <SECTION>
@@ -1109,12 +2970,29 @@ GstPcapParse
 <SUBSECTION Standard>
 GstPcapParseClass
 GST_PCAP_PARSE
-GST_PCAP_PARSE_CLASS
+GST_PCAP_PARSE_CAST
 GST_IS_PCAP_PARSE
+GST_PCAP_PARSE_CLASS
 GST_IS_PCAP_PARSE_CLASS
 GST_TYPE_PCAP_PARSE
-GstPcapParseState
+<SUBSECTION Private>
 gst_pcap_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-perspective</FILE>
+<TITLE>perspective</TITLE>
+GstPerspective
+<SUBSECTION Standard>
+GstPerspectiveClass
+GST_PERSPECTIVE
+GST_PERSPECTIVE_CAST
+GST_IS_PERSPECTIVE
+GST_PERSPECTIVE_CLASS
+GST_IS_PERSPECTIVE_CLASS
+GST_TYPE_PERSPECTIVE
+<SUBSECTION Private>
+gst_perspective_get_type
 </SECTION>
 
 <SECTION>
@@ -1125,54 +3003,108 @@ GstPinch
 GstPinchClass
 GST_PINCH
 GST_PINCH_CAST
-GST_PINCH_CLASS
 GST_IS_PINCH
+GST_PINCH_CLASS
 GST_IS_PINCH_CLASS
 GST_TYPE_PINCH
+<SUBSECTION Private>
 gst_pinch_get_type
-gst_pinch_plugin_init
 </SECTION>
 
 <SECTION>
-<FILE>element-rfbsrc</FILE>
-<TITLE>rfbsrc</TITLE>
-GstRfbSrc
+<FILE>element-pitch</FILE>
+<TITLE>pitch</TITLE>
+GstPitch
 <SUBSECTION Standard>
-GstRfbSrcClass
-GST_RFB_SRC
-GST_RFB_SRC_CLASS
-GST_IS_RFB_SRC
-GST_IS_RFB_SRC_CLASS
-GST_TYPE_RFB_SRC
-gst_rfb_src_get_type
+GstPitchClass
+GST_PITCH
+GST_PITCH_CAST
+GST_IS_PITCH
+GST_PITCH_CLASS
+GST_IS_PITCH_CLASS
+GST_TYPE_PITCH
+<SUBSECTION Private>
+gst_pitch_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-rsvgoverlay</FILE>
-<TITLE>rsvgoverlay</TITLE>
-GstRsvgOverlay
+<FILE>element-pngparse</FILE>
+<TITLE>pngparse</TITLE>
+GstPngParse
 <SUBSECTION Standard>
-GstRsvgOverlayClass
-GST_RSVG_OVERLAY
-GST_RSVG_OVERLAY_CLASS
-GST_IS_RSVG_OVERLAY
-GST_IS_RSVG_OVERLAY_CLASS
-GST_TYPE_RSVG_OVERLAY
-gst_rsvg_overlay_get_type
+GstPngParseClass
+GST_PNG_PARSE
+GST_PNG_PARSE_CAST
+GST_IS_PNG_PARSE
+GST_PNG_PARSE_CLASS
+GST_IS_PNG_PARSE_CLASS
+GST_TYPE_PNG_PARSE
+<SUBSECTION Private>
+gst_png_parse_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-rsvgdec</FILE>
-<TITLE>rsvgdec</TITLE>
-GstRsvgDec
+<FILE>element-pnmdec</FILE>
+<TITLE>pnmdec</TITLE>
+GstPnmdec
 <SUBSECTION Standard>
-GstRsvgDecClass
-GST_RSVG_DEC
-GST_RSVG_DEC_CLASS
-GST_IS_RSVG_DEC
-GST_IS_RSVG_DEC_CLASS
-GST_TYPE_RSVG_DEC
-gst_rsvg_dec_get_type
+GstPnmdecClass
+GST_PNMDEC
+GST_PNMDEC_CAST
+GST_IS_PNMDEC
+GST_PNMDEC_CLASS
+GST_IS_PNMDEC_CLASS
+GST_TYPE_PNMDEC
+<SUBSECTION Private>
+gst_pnmdec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-pnmenc</FILE>
+<TITLE>pnmenc</TITLE>
+GstPnmenc
+<SUBSECTION Standard>
+GstPnmencClass
+GST_PNMENC
+GST_PNMENC_CAST
+GST_IS_PNMENC
+GST_PNMENC_CLASS
+GST_IS_PNMENC_CLASS
+GST_TYPE_PNMENC
+<SUBSECTION Private>
+gst_pnmenc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-qmlglsink</FILE>
+<TITLE>qmlglsink</TITLE>
+GstQtSink
+<SUBSECTION Standard>
+GstQtSinkClass
+GST_QT_SINK
+GST_QT_SINK_CAST
+GST_IS_QT_SINK
+GST_QT_SINK_CLASS
+GST_IS_QT_SINK_CLASS
+GST_TYPE_QT_SINK
+<SUBSECTION Private>
+gst_qt_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rgb2bayer</FILE>
+<TITLE>rgb2bayer</TITLE>
+GstRGB2Bayer
+<SUBSECTION Standard>
+GstRGB2BayerClass
+GST_RG_B2_BAYER
+GST_RG_B2_BAYER_CAST
+GST_IS_RG_B2_BAYER
+GST_RG_B2_BAYER_CLASS
+GST_IS_RG_B2_BAYER_CLASS
+GST_TYPE_RG_B2_BAYER
+<SUBSECTION Private>
+gst_rg_b2_bayer_get_type
 </SECTION>
 
 <SECTION>
@@ -1182,11 +3114,13 @@ GstRTMPSink
 <SUBSECTION Standard>
 GstRTMPSinkClass
 GST_RTMP_SINK
+GST_RTMP_SINK_CAST
 GST_IS_RTMP_SINK
-GST_TYPE_RTMP_SINK
-gst_rtmp_sink_get_type
 GST_RTMP_SINK_CLASS
 GST_IS_RTMP_SINK_CLASS
+GST_TYPE_RTMP_SINK
+<SUBSECTION Private>
+gst_rtmp_sink_get_type
 </SECTION>
 
 <SECTION>
@@ -1196,11 +3130,158 @@ GstRTMPSrc
 <SUBSECTION Standard>
 GstRTMPSrcClass
 GST_RTMP_SRC
+GST_RTMP_SRC_CAST
 GST_IS_RTMP_SRC
-GST_TYPE_RTMP_SRC
-gst_rtmp_src_get_type
 GST_RTMP_SRC_CLASS
 GST_IS_RTMP_SRC_CLASS
+GST_TYPE_RTMP_SRC
+<SUBSECTION Private>
+gst_rtmp_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-removesilence</FILE>
+<TITLE>removesilence</TITLE>
+GstRemoveSilence
+<SUBSECTION Standard>
+GstRemoveSilenceClass
+GST_REMOVE_SILENCE
+GST_REMOVE_SILENCE_CAST
+GST_IS_REMOVE_SILENCE
+GST_REMOVE_SILENCE_CLASS
+GST_IS_REMOVE_SILENCE_CLASS
+GST_TYPE_REMOVE_SILENCE
+<SUBSECTION Private>
+gst_remove_silence_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-retinex</FILE>
+<TITLE>retinex</TITLE>
+GstRetinex
+GstRetinexMethod
+<SUBSECTION Standard>
+GstRetinexClass
+GST_RETINEX
+GST_RETINEX_CAST
+GST_IS_RETINEX
+GST_RETINEX_CLASS
+GST_IS_RETINEX_CLASS
+GST_TYPE_RETINEX
+<SUBSECTION Private>
+gst_retinex_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rfbsrc</FILE>
+<TITLE>rfbsrc</TITLE>
+GstRfbSrc
+<SUBSECTION Standard>
+GstRfbSrcClass
+GST_RFB_SRC
+GST_RFB_SRC_CAST
+GST_IS_RFB_SRC
+GST_RFB_SRC_CLASS
+GST_IS_RFB_SRC_CLASS
+GST_TYPE_RFB_SRC
+<SUBSECTION Private>
+gst_rfb_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rotate</FILE>
+<TITLE>rotate</TITLE>
+GstRotate
+<SUBSECTION Standard>
+GstRotateClass
+GST_ROTATE
+GST_ROTATE_CAST
+GST_IS_ROTATE
+GST_ROTATE_CLASS
+GST_IS_ROTATE_CLASS
+GST_TYPE_ROTATE
+<SUBSECTION Private>
+gst_rotate_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rsvgdec</FILE>
+<TITLE>rsvgdec</TITLE>
+GstRsvgDec
+<SUBSECTION Standard>
+GstRsvgDecClass
+GST_RSVG_DEC
+GST_RSVG_DEC_CAST
+GST_IS_RSVG_DEC
+GST_RSVG_DEC_CLASS
+GST_IS_RSVG_DEC_CLASS
+GST_TYPE_RSVG_DEC
+<SUBSECTION Private>
+gst_rsvg_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rsvgoverlay</FILE>
+<TITLE>rsvgoverlay</TITLE>
+GstRsvgOverlay
+<SUBSECTION Standard>
+GstRsvgOverlayClass
+GST_RSVG_OVERLAY
+GST_RSVG_OVERLAY_CAST
+GST_IS_RSVG_OVERLAY
+GST_RSVG_OVERLAY_CLASS
+GST_IS_RSVG_OVERLAY_CLASS
+GST_TYPE_RSVG_OVERLAY
+<SUBSECTION Private>
+gst_rsvg_overlay_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rtpasfpay</FILE>
+<TITLE>rtpasfpay</TITLE>
+GstRtpAsfPay
+<SUBSECTION Standard>
+GstRtpAsfPayClass
+GST_RTP_ASF_PAY
+GST_RTP_ASF_PAY_CAST
+GST_IS_RTP_ASF_PAY
+GST_RTP_ASF_PAY_CLASS
+GST_IS_RTP_ASF_PAY_CLASS
+GST_TYPE_RTP_ASF_PAY
+<SUBSECTION Private>
+gst_rtp_asf_pay_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rtponvifparse</FILE>
+<TITLE>rtponvifparse</TITLE>
+GstRtpOnvifParse
+<SUBSECTION Standard>
+GstRtpOnvifParseClass
+GST_RTP_ONVIF_PARSE
+GST_RTP_ONVIF_PARSE_CAST
+GST_IS_RTP_ONVIF_PARSE
+GST_RTP_ONVIF_PARSE_CLASS
+GST_IS_RTP_ONVIF_PARSE_CLASS
+GST_TYPE_RTP_ONVIF_PARSE
+<SUBSECTION Private>
+gst_rtp_onvif_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rtponviftimestamp</FILE>
+<TITLE>rtponviftimestamp</TITLE>
+GstRtpOnvifTimestamp
+<SUBSECTION Standard>
+GstRtpOnvifTimestampClass
+GST_RTP_ONVIF_TIMESTAMP
+GST_RTP_ONVIF_TIMESTAMP_CAST
+GST_IS_RTP_ONVIF_TIMESTAMP
+GST_RTP_ONVIF_TIMESTAMP_CLASS
+GST_IS_RTP_ONVIF_TIMESTAMP_CLASS
+GST_TYPE_RTP_ONVIF_TIMESTAMP
+<SUBSECTION Private>
+gst_rtp_onvif_timestamp_get_type
 </SECTION>
 
 <SECTION>
@@ -1240,17 +3321,111 @@ gst_sdlvideosink_get_type
 GstSDPDemux
 <SUBSECTION Standard>
 GstSDPDemuxClass
-GstSDPStream
 GST_SDP_DEMUX
-GST_SDP_DEMUX_CLASS
+GST_SDP_DEMUX_CAST
 GST_IS_SDP_DEMUX
+GST_SDP_DEMUX_CLASS
 GST_IS_SDP_DEMUX_CLASS
 GST_TYPE_SDP_DEMUX
+<SUBSECTION Private>
 gst_sdp_demux_get_type
-GST_SDP_DEMUX_CAST
-GST_SDP_STREAM_GET_LOCK
-GST_SDP_STREAM_LOCK
-GST_SDP_STREAM_UNLOCK
+</SECTION>
+
+<SECTION>
+<FILE>element-sfdec</FILE>
+<TITLE>sfdec</TITLE>
+GstSFDec
+<SUBSECTION Standard>
+GstSFDecClass
+GST_SF_DEC
+GST_SF_DEC_CAST
+GST_IS_SF_DEC
+GST_SF_DEC_CLASS
+GST_IS_SF_DEC_CLASS
+GST_TYPE_SF_DEC
+<SUBSECTION Private>
+gst_sf_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-scenechange</FILE>
+<TITLE>scenechange</TITLE>
+GstSceneChange
+<SUBSECTION Standard>
+GstSceneChangeClass
+GST_SCENE_CHANGE
+GST_SCENE_CHANGE_CAST
+GST_IS_SCENE_CHANGE
+GST_SCENE_CHANGE_CLASS
+GST_IS_SCENE_CHANGE_CLASS
+GST_TYPE_SCENE_CHANGE
+<SUBSECTION Private>
+gst_scene_change_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-schrodec</FILE>
+<TITLE>schrodec</TITLE>
+GstSchroDec
+<SUBSECTION Standard>
+GstSchroDecClass
+GST_SCHRO_DEC
+GST_SCHRO_DEC_CAST
+GST_IS_SCHRO_DEC
+GST_SCHRO_DEC_CLASS
+GST_IS_SCHRO_DEC_CLASS
+GST_TYPE_SCHRO_DEC
+<SUBSECTION Private>
+gst_schro_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-schroenc</FILE>
+<TITLE>schroenc</TITLE>
+GstSchroEnc
+<SUBSECTION Standard>
+GstSchroEncClass
+GST_SCHRO_ENC
+GST_SCHRO_ENC_CAST
+GST_IS_SCHRO_ENC
+GST_SCHRO_ENC_CLASS
+GST_IS_SCHRO_ENC_CLASS
+GST_TYPE_SCHRO_ENC
+<SUBSECTION Private>
+gst_schro_enc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-sdpsrc</FILE>
+<TITLE>sdpsrc</TITLE>
+GstSdpSrc
+<SUBSECTION Standard>
+GstSdpSrcClass
+GST_SDP_SRC
+GST_SDP_SRC_CAST
+GST_IS_SDP_SRC
+GST_SDP_SRC_CLASS
+GST_IS_SDP_SRC_CLASS
+GST_TYPE_SDP_SRC
+<SUBSECTION Private>
+gst_sdp_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-segmentation</FILE>
+<TITLE>segmentation</TITLE>
+GstSegmentation
+GstSegmentationMethod
+<SUBSECTION Standard>
+GstSegmentationClass
+GST_SEGMENTATION
+GST_SEGMENTATION_CAST
+GST_IS_SEGMENTATION
+GST_SEGMENTATION_CLASS
+GST_IS_SEGMENTATION_CLASS
+GST_TYPE_SEGMENTATION
+<SUBSECTION Private>
+gst_segmentation_get_type
 </SECTION>
 
 <SECTION>
@@ -1259,11 +3434,13 @@ GST_SDP_STREAM_UNLOCK
 GstShmSink
 <SUBSECTION Standard>
 GstShmSinkClass
-GST_IS_SHM_SINK
-GST_IS_SHM_SINK_CLASS
 GST_SHM_SINK
+GST_SHM_SINK_CAST
+GST_IS_SHM_SINK
 GST_SHM_SINK_CLASS
+GST_IS_SHM_SINK_CLASS
 GST_TYPE_SHM_SINK
+<SUBSECTION Private>
 gst_shm_sink_get_type
 </SECTION>
 
@@ -1273,12 +3450,110 @@ gst_shm_sink_get_type
 GstShmSrc
 <SUBSECTION Standard>
 GstShmSrcClass
-GST_IS_SHM_SRC
-GST_IS_SHM_SRC_CLASS
 GST_SHM_SRC
+GST_SHM_SRC_CAST
+GST_IS_SHM_SRC
 GST_SHM_SRC_CLASS
+GST_IS_SHM_SRC_CLASS
 GST_TYPE_SHM_SRC
+<SUBSECTION Private>
 gst_shm_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-simplevideomark</FILE>
+<TITLE>simplevideomark</TITLE>
+GstSimpleVideoMark
+<SUBSECTION Standard>
+GstSimpleVideoMarkClass
+GST_SIMPLE_VIDEO_MARK
+GST_SIMPLE_VIDEO_MARK_CAST
+GST_IS_SIMPLE_VIDEO_MARK
+GST_SIMPLE_VIDEO_MARK_CLASS
+GST_IS_SIMPLE_VIDEO_MARK_CLASS
+GST_TYPE_SIMPLE_VIDEO_MARK
+<SUBSECTION Private>
+gst_simple_video_mark_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-simplevideomarkdetect</FILE>
+<TITLE>simplevideomarkdetect</TITLE>
+GstSimpleVideoMarkDetect
+<SUBSECTION Standard>
+GstSimpleVideoMarkDetectClass
+GST_SIMPLE_VIDEO_MARK_DETECT
+GST_SIMPLE_VIDEO_MARK_DETECT_CAST
+GST_IS_SIMPLE_VIDEO_MARK_DETECT
+GST_SIMPLE_VIDEO_MARK_DETECT_CLASS
+GST_IS_SIMPLE_VIDEO_MARK_DETECT_CLASS
+GST_TYPE_SIMPLE_VIDEO_MARK_DETECT
+<SUBSECTION Private>
+gst_simple_video_mark_detect_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-sirendec</FILE>
+<TITLE>sirendec</TITLE>
+GstSirenDec
+<SUBSECTION Standard>
+GstSirenDecClass
+GST_SIREN_DEC
+GST_SIREN_DEC_CAST
+GST_IS_SIREN_DEC
+GST_SIREN_DEC_CLASS
+GST_IS_SIREN_DEC_CLASS
+GST_TYPE_SIREN_DEC
+<SUBSECTION Private>
+gst_siren_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-sirenenc</FILE>
+<TITLE>sirenenc</TITLE>
+GstSirenEnc
+<SUBSECTION Standard>
+GstSirenEncClass
+GST_SIREN_ENC
+GST_SIREN_ENC_CAST
+GST_IS_SIREN_ENC
+GST_SIREN_ENC_CLASS
+GST_IS_SIREN_ENC_CLASS
+GST_TYPE_SIREN_ENC
+<SUBSECTION Private>
+gst_siren_enc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-skindetect</FILE>
+<TITLE>skindetect</TITLE>
+GstSkinDetect
+<SUBSECTION Standard>
+GstSkinDetectClass
+GST_SKIN_DETECT
+GST_SKIN_DETECT_CAST
+GST_IS_SKIN_DETECT
+GST_SKIN_DETECT_CLASS
+GST_IS_SKIN_DETECT_CLASS
+GST_TYPE_SKIN_DETECT
+<SUBSECTION Private>
+gst_skin_detect_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-smooth</FILE>
+<TITLE>smooth</TITLE>
+GstSmooth
+<SUBSECTION Standard>
+GstSmoothClass
+GST_SMOOTH
+GST_SMOOTH_CAST
+GST_IS_SMOOTH
+GST_SMOOTH_CLASS
+GST_IS_SMOOTH_CLASS
+GST_TYPE_SMOOTH
+<SUBSECTION Private>
+gst_smooth_get_type
 </SECTION>
 
 <SECTION>
@@ -1288,26 +3563,46 @@ GstSolarize
 <SUBSECTION Standard>
 GstSolarizeClass
 GST_SOLARIZE
-GST_SOLARIZE_CLASS
+GST_SOLARIZE_CAST
 GST_IS_SOLARIZE
+GST_SOLARIZE_CLASS
 GST_IS_SOLARIZE_CLASS
 GST_TYPE_SOLARIZE
+<SUBSECTION Private>
 gst_solarize_get_type
-gst_solarize_plugin_init
 </SECTION>
 
 <SECTION>
 <FILE>element-spacescope</FILE>
 <TITLE>spacescope</TITLE>
 GstSpaceScope
+GstSpaceScopeStyle
 <SUBSECTION Standard>
 GstSpaceScopeClass
 GST_SPACE_SCOPE
-GST_SPACE_SCOPE_CLASS
+GST_SPACE_SCOPE_CAST
 GST_IS_SPACE_SCOPE
+GST_SPACE_SCOPE_CLASS
 GST_IS_SPACE_SCOPE_CLASS
 GST_TYPE_SPACE_SCOPE
+<SUBSECTION Private>
 gst_space_scope_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-spanplc</FILE>
+<TITLE>spanplc</TITLE>
+GstSpanPlc
+<SUBSECTION Standard>
+GstSpanPlcClass
+GST_SPAN_PLC
+GST_SPAN_PLC_CAST
+GST_IS_SPAN_PLC
+GST_SPAN_PLC_CLASS
+GST_IS_SPAN_PLC_CLASS
+GST_TYPE_SPAN_PLC
+<SUBSECTION Private>
+gst_span_plc_get_type
 </SECTION>
 
 <SECTION>
@@ -1317,10 +3612,12 @@ GstSpectraScope
 <SUBSECTION Standard>
 GstSpectraScopeClass
 GST_SPECTRA_SCOPE
-GST_SPECTRA_SCOPE_CLASS
+GST_SPECTRA_SCOPE_CAST
 GST_IS_SPECTRA_SCOPE
+GST_SPECTRA_SCOPE_CLASS
 GST_IS_SPECTRA_SCOPE_CLASS
 GST_TYPE_SPECTRA_SCOPE
+<SUBSECTION Private>
 gst_spectra_scope_get_type
 </SECTION>
 
@@ -1330,12 +3627,13 @@ gst_spectra_scope_get_type
 GstSpeed
 <SUBSECTION Standard>
 GstSpeedClass
-GstSpeedFormat
 GST_SPEED
-GST_SPEED_CLASS
+GST_SPEED_CAST
 GST_IS_SPEED
+GST_SPEED_CLASS
 GST_IS_SPEED_CLASS
 GST_TYPE_SPEED
+<SUBSECTION Private>
 gst_speed_get_type
 </SECTION>
 
@@ -1347,12 +3645,12 @@ GstSphere
 GstSphereClass
 GST_SPHERE
 GST_SPHERE_CAST
-GST_SPHERE_CLASS
 GST_IS_SPHERE
+GST_SPHERE_CLASS
 GST_IS_SPHERE_CLASS
 GST_TYPE_SPHERE
+<SUBSECTION Private>
 gst_sphere_get_type
-gst_sphere_plugin_init
 </SECTION>
 
 <SECTION>
@@ -1363,12 +3661,60 @@ GstSquare
 GstSquareClass
 GST_SQUARE
 GST_SQUARE_CAST
-GST_SQUARE_CLASS
 GST_IS_SQUARE
+GST_SQUARE_CLASS
 GST_IS_SQUARE_CLASS
 GST_TYPE_SQUARE
+<SUBSECTION Private>
 gst_square_get_type
-gst_square_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-srtenc</FILE>
+<TITLE>srtenc</TITLE>
+GstSrtEnc
+<SUBSECTION Standard>
+GstSrtEncClass
+GST_SRT_ENC
+GST_SRT_ENC_CAST
+GST_IS_SRT_ENC
+GST_SRT_ENC_CLASS
+GST_IS_SRT_ENC_CLASS
+GST_TYPE_SRT_ENC
+<SUBSECTION Private>
+gst_srt_enc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-srtpdec</FILE>
+<TITLE>srtpdec</TITLE>
+GstSrtpDec
+<SUBSECTION Standard>
+GstSrtpDecClass
+GST_SRTP_DEC
+GST_SRTP_DEC_CAST
+GST_IS_SRTP_DEC
+GST_SRTP_DEC_CLASS
+GST_IS_SRTP_DEC_CLASS
+GST_TYPE_SRTP_DEC
+<SUBSECTION Private>
+gst_srtp_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-srtpenc</FILE>
+<TITLE>srtpenc</TITLE>
+GstSrtpEnc
+<SUBSECTION Standard>
+GstSrtpEncClass
+GST_SRTP_ENC
+GST_SRTP_ENC_CAST
+GST_IS_SRTP_ENC
+GST_SRTP_ENC_CLASS
+GST_IS_SRTP_ENC_CLASS
+GST_TYPE_SRTP_ENC
+<SUBSECTION Private>
+gst_srtp_enc_get_type
 </SECTION>
 
 <SECTION>
@@ -1378,10 +3724,12 @@ GstStereo
 <SUBSECTION Standard>
 GstStereoClass
 GST_STEREO
-GST_STEREO_CLASS
+GST_STEREO_CAST
 GST_IS_STEREO
+GST_STEREO_CLASS
 GST_IS_STEREO_CLASS
 GST_TYPE_STEREO
+<SUBSECTION Private>
 gst_stereo_get_type
 </SECTION>
 
@@ -1393,12 +3741,12 @@ GstStretch
 GstStretchClass
 GST_STRETCH
 GST_STRETCH_CAST
-GST_STRETCH_CLASS
 GST_IS_STRETCH
+GST_STRETCH_CLASS
 GST_IS_STRETCH_CLASS
 GST_TYPE_STRETCH
+<SUBSECTION Private>
 gst_stretch_get_type
-gst_stretch_plugin_init
 </SECTION>
 
 <SECTION>
@@ -1408,25 +3756,77 @@ GstSynaeScope
 <SUBSECTION Standard>
 GstSynaeScopeClass
 GST_SYNAE_SCOPE
-GST_SYNAE_SCOPE_CLASS
+GST_SYNAE_SCOPE_CAST
 GST_IS_SYNAE_SCOPE
+GST_SYNAE_SCOPE_CLASS
 GST_IS_SYNAE_SCOPE_CLASS
 GST_TYPE_SYNAE_SCOPE
+<SUBSECTION Private>
 gst_synae_scope_get_type
 </SECTION>
 
+<SECTION>
+<FILE>element-tsdemux</FILE>
+<TITLE>tsdemux</TITLE>
+GstTSDemux
+<SUBSECTION Standard>
+GstTSDemuxClass
+GST_TS_DEMUX
+GST_TS_DEMUX_CAST
+GST_IS_TS_DEMUX
+GST_TS_DEMUX_CLASS
+GST_IS_TS_DEMUX_CLASS
+GST_TYPE_TS_DEMUX
+<SUBSECTION Private>
+gst_ts_demux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-teletextdec</FILE>
+<TITLE>teletextdec</TITLE>
+GstTeletextDec
+<SUBSECTION Standard>
+GstTeletextDecClass
+GST_TELETEXT_DEC
+GST_TELETEXT_DEC_CAST
+GST_IS_TELETEXT_DEC
+GST_TELETEXT_DEC_CLASS
+GST_IS_TELETEXT_DEC_CLASS
+GST_TYPE_TELETEXT_DEC
+<SUBSECTION Private>
+gst_teletext_dec_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-templatematch</FILE>
 <TITLE>templatematch</TITLE>
 GstTemplateMatch
 <SUBSECTION Standard>
 GstTemplateMatchClass
-GST_TEMPLATEMATCH
-GST_TEMPLATEMATCH_CLASS
-GST_TYPE_TEMPLATEMATCH
-GST_IS_TEMPLATEMATCH
-GST_IS_TEMPLATEMATCH_CLASS
-gst_templatematch_get_type
-gst_templatematch_plugin_init
+GST_TEMPLATE_MATCH
+GST_TEMPLATE_MATCH_CAST
+GST_IS_TEMPLATE_MATCH
+GST_TEMPLATE_MATCH_CLASS
+GST_IS_TEMPLATE_MATCH_CLASS
+GST_TYPE_TEMPLATE_MATCH
+<SUBSECTION Private>
+gst_template_match_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-tonegeneratesrc</FILE>
+<TITLE>tonegeneratesrc</TITLE>
+GstToneGenerateSrc
+<SUBSECTION Standard>
+GstToneGenerateSrcClass
+GST_TONE_GENERATE_SRC
+GST_TONE_GENERATE_SRC_CAST
+GST_IS_TONE_GENERATE_SRC
+GST_TONE_GENERATE_SRC_CLASS
+GST_IS_TONE_GENERATE_SRC_CLASS
+GST_TYPE_TONE_GENERATE_SRC
+<SUBSECTION Private>
+gst_tone_generate_src_get_type
 </SECTION>
 
 <SECTION>
@@ -1451,12 +3851,12 @@ GstTunnel
 GstTunnelClass
 GST_TUNNEL
 GST_TUNNEL_CAST
-GST_TUNNEL_CLASS
 GST_IS_TUNNEL
+GST_TUNNEL_CLASS
 GST_IS_TUNNEL_CLASS
 GST_TYPE_TUNNEL
+<SUBSECTION Private>
 gst_tunnel_get_type
-gst_tunnel_plugin_init
 </SECTION>
 
 <SECTION>
@@ -1467,12 +3867,124 @@ GstTwirl
 GstTwirlClass
 GST_TWIRL
 GST_TWIRL_CAST
-GST_TWIRL_CLASS
 GST_IS_TWIRL
+GST_TWIRL_CLASS
 GST_IS_TWIRL_CLASS
 GST_TYPE_TWIRL
+<SUBSECTION Private>
 gst_twirl_get_type
-gst_twirl_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-unalignedaudioparse</FILE>
+<TITLE>unalignedaudioparse</TITLE>
+GstUnalignedAudioParse
+<SUBSECTION Standard>
+GstUnalignedAudioParseClass
+GST_UNALIGNED_AUDIO_PARSE
+GST_UNALIGNED_AUDIO_PARSE_CAST
+GST_IS_UNALIGNED_AUDIO_PARSE
+GST_UNALIGNED_AUDIO_PARSE_CLASS
+GST_IS_UNALIGNED_AUDIO_PARSE_CLASS
+GST_TYPE_UNALIGNED_AUDIO_PARSE
+<SUBSECTION Private>
+gst_unaligned_audio_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-uvch264mjpgdemux</FILE>
+<TITLE>uvch264mjpgdemux</TITLE>
+GstUvcH264MjpgDemux
+<SUBSECTION Standard>
+GstUvcH264MjpgDemuxClass
+GST_UVC_H264_MJPG_DEMUX
+GST_UVC_H264_MJPG_DEMUX_CAST
+GST_IS_UVC_H264_MJPG_DEMUX
+GST_UVC_H264_MJPG_DEMUX_CLASS
+GST_IS_UVC_H264_MJPG_DEMUX_CLASS
+GST_TYPE_UVC_H264_MJPG_DEMUX
+<SUBSECTION Private>
+gst_uvc_h264_mjpg_demux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-uvch264src</FILE>
+<TITLE>uvch264src</TITLE>
+GstUvcH264Src
+<SUBSECTION Standard>
+GstUvcH264SrcClass
+GST_UVC_H264_SRC
+GST_UVC_H264_SRC_CAST
+GST_IS_UVC_H264_SRC
+GST_UVC_H264_SRC_CLASS
+GST_IS_UVC_H264_SRC_CLASS
+GST_TYPE_UVC_H264_SRC
+<SUBSECTION Private>
+gst_uvc_h264_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-vc1parse</FILE>
+<TITLE>vc1parse</TITLE>
+GstVC1Parse
+<SUBSECTION Standard>
+GstVC1ParseClass
+GST_V_C1_PARSE
+GST_V_C1_PARSE_CAST
+GST_IS_V_C1_PARSE
+GST_V_C1_PARSE_CLASS
+GST_IS_V_C1_PARSE_CLASS
+GST_TYPE_V_C1_PARSE
+<SUBSECTION Private>
+gst_v_c1_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-vcdsrc</FILE>
+<TITLE>vcdsrc</TITLE>
+GstVCDSrc
+<SUBSECTION Standard>
+GstVCDSrcClass
+GST_VCD_SRC
+GST_VCD_SRC_CAST
+GST_IS_VCD_SRC
+GST_VCD_SRC_CLASS
+GST_IS_VCD_SRC_CLASS
+GST_TYPE_VCD_SRC
+<SUBSECTION Private>
+gst_vcd_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-vmncdec</FILE>
+<TITLE>vmncdec</TITLE>
+GstVMncDec
+<SUBSECTION Standard>
+GstVMncDecClass
+GST_V_MNC_DEC
+GST_V_MNC_DEC_CAST
+GST_IS_V_MNC_DEC
+GST_V_MNC_DEC_CLASS
+GST_IS_V_MNC_DEC_CLASS
+GST_TYPE_V_MNC_DEC
+<SUBSECTION Private>
+gst_v_mnc_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-vdpaumpegdec</FILE>
+<TITLE>vdpaumpegdec</TITLE>
+GstVdpMpegDec
+<SUBSECTION Standard>
+GstVdpMpegDecClass
+GST_VDP_MPEG_DEC
+GST_VDP_MPEG_DEC_CAST
+GST_IS_VDP_MPEG_DEC
+GST_VDP_MPEG_DEC_CLASS
+GST_IS_VDP_MPEG_DEC_CLASS
+GST_TYPE_VDP_MPEG_DEC
+<SUBSECTION Private>
+gst_vdp_mpeg_dec_get_type
 </SECTION>
 
 <SECTION>
@@ -1482,40 +3994,45 @@ GstVideoAnalyse
 <SUBSECTION Standard>
 GstVideoAnalyseClass
 GST_VIDEO_ANALYSE
+GST_VIDEO_ANALYSE_CAST
 GST_IS_VIDEO_ANALYSE
-GST_TYPE_VIDEO_ANALYSE
-gst_video_analyse_get_type
 GST_VIDEO_ANALYSE_CLASS
 GST_IS_VIDEO_ANALYSE_CLASS
-gst_wildmidi_get_type
+GST_TYPE_VIDEO_ANALYSE
+<SUBSECTION Private>
+gst_video_analyse_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-videodetect</FILE>
-<TITLE>videodetect</TITLE>
-GstVideoDetect
+<FILE>element-videodiff</FILE>
+<TITLE>videodiff</TITLE>
+GstVideoDiff
 <SUBSECTION Standard>
-GstVideoDetectClass
-GST_VIDEO_DETECT
-GST_IS_VIDEO_DETECT
-GST_TYPE_VIDEO_DETECT
-gst_video_detect_get_type
-GST_VIDEO_DETECT_CLASS
-GST_IS_VIDEO_DETECT_CLASS
+GstVideoDiffClass
+GST_VIDEO_DIFF
+GST_VIDEO_DIFF_CAST
+GST_IS_VIDEO_DIFF
+GST_VIDEO_DIFF_CLASS
+GST_IS_VIDEO_DIFF_CLASS
+GST_TYPE_VIDEO_DIFF
+<SUBSECTION Private>
+gst_video_diff_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-videomark</FILE>
-<TITLE>videomark</TITLE>
-GstVideoMark
+<FILE>element-videoframe-audiolevel</FILE>
+<TITLE>videoframe-audiolevel</TITLE>
+GstVideoFrameAudioLevel
 <SUBSECTION Standard>
-GstVideoMarkClass
-GST_VIDEO_MARK
-GST_IS_VIDEO_MARK
-GST_TYPE_VIDEO_MARK
-gst_video_mark_get_type
-GST_VIDEO_MARK_CLASS
-GST_IS_VIDEO_MARK_CLASS
+GstVideoFrameAudioLevelClass
+GST_VIDEO_FRAME_AUDIO_LEVEL
+GST_VIDEO_FRAME_AUDIO_LEVEL_CAST
+GST_IS_VIDEO_FRAME_AUDIO_LEVEL
+GST_VIDEO_FRAME_AUDIO_LEVEL_CLASS
+GST_IS_VIDEO_FRAME_AUDIO_LEVEL_CLASS
+GST_TYPE_VIDEO_FRAME_AUDIO_LEVEL
+<SUBSECTION Private>
+gst_video_frame_audio_level_get_type
 </SECTION>
 
 <SECTION>
@@ -1525,11 +4042,78 @@ GstVideoParse
 <SUBSECTION Standard>
 GstVideoParseClass
 GST_VIDEO_PARSE
-GST_VIDEO_PARSE_CLASS
+GST_VIDEO_PARSE_CAST
 GST_IS_VIDEO_PARSE
+GST_VIDEO_PARSE_CLASS
 GST_IS_VIDEO_PARSE_CLASS
 GST_TYPE_VIDEO_PARSE
+<SUBSECTION Private>
 gst_video_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-videosegmentclip</FILE>
+<TITLE>videosegmentclip</TITLE>
+GstVideoSegmentClip
+<SUBSECTION Standard>
+GstVideoSegmentClipClass
+GST_VIDEO_SEGMENT_CLIP
+GST_VIDEO_SEGMENT_CLIP_CAST
+GST_IS_VIDEO_SEGMENT_CLIP
+GST_VIDEO_SEGMENT_CLIP_CLASS
+GST_IS_VIDEO_SEGMENT_CLIP_CLASS
+GST_TYPE_VIDEO_SEGMENT_CLIP
+<SUBSECTION Private>
+gst_video_segment_clip_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-viewfinderbin</FILE>
+<TITLE>viewfinderbin</TITLE>
+GstViewfinderBin
+<SUBSECTION Standard>
+GstViewfinderBinClass
+GST_VIEWFINDER_BIN
+GST_VIEWFINDER_BIN_CAST
+GST_IS_VIEWFINDER_BIN
+GST_VIEWFINDER_BIN_CLASS
+GST_IS_VIEWFINDER_BIN_CLASS
+GST_TYPE_VIEWFINDER_BIN
+<SUBSECTION Private>
+gst_viewfinder_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-voamrwbenc</FILE>
+<TITLE>voamrwbenc</TITLE>
+GstVoAmrWbEnc
+GstVoAmrWbEncBandMode
+<SUBSECTION Standard>
+GstVoAmrWbEncClass
+GST_VO_AMR_WB_ENC
+GST_VO_AMR_WB_ENC_CAST
+GST_IS_VO_AMR_WB_ENC
+GST_VO_AMR_WB_ENC_CLASS
+GST_IS_VO_AMR_WB_ENC_CLASS
+GST_TYPE_VO_AMR_WB_ENC
+<SUBSECTION Private>
+gst_vo_amr_wb_enc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-watchdog</FILE>
+<TITLE>watchdog</TITLE>
+GstWatchdog
+<SUBSECTION Standard>
+GstWatchdogClass
+GST_WATCHDOG
+GST_WATCHDOG_CAST
+GST_IS_WATCHDOG
+GST_WATCHDOG_CLASS
+GST_IS_WATCHDOG_CLASS
+GST_TYPE_WATCHDOG
+<SUBSECTION Private>
+gst_watchdog_get_type
 </SECTION>
 
 <SECTION>
@@ -1540,26 +4124,126 @@ GstWaterRipple
 GstWaterRippleClass
 GST_WATER_RIPPLE
 GST_WATER_RIPPLE_CAST
-GST_WATER_RIPPLE_CLASS
 GST_IS_WATER_RIPPLE
+GST_WATER_RIPPLE_CLASS
 GST_IS_WATER_RIPPLE_CLASS
 GST_TYPE_WATER_RIPPLE
+<SUBSECTION Private>
 gst_water_ripple_get_type
-gst_water_ripple_plugin_init
 </SECTION>
 
 <SECTION>
 <FILE>element-wavescope</FILE>
 <TITLE>wavescope</TITLE>
 GstWaveScope
+GstWaveScopeStyle
 <SUBSECTION Standard>
 GstWaveScopeClass
 GST_WAVE_SCOPE
-GST_WAVE_SCOPE_CLASS
+GST_WAVE_SCOPE_CAST
 GST_IS_WAVE_SCOPE
+GST_WAVE_SCOPE_CLASS
 GST_IS_WAVE_SCOPE_CLASS
 GST_TYPE_WAVE_SCOPE
+<SUBSECTION Private>
 gst_wave_scope_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-waylandsink</FILE>
+<TITLE>waylandsink</TITLE>
+GstWaylandSink
+<SUBSECTION Standard>
+GstWaylandSinkClass
+GST_WAYLAND_SINK
+GST_WAYLAND_SINK_CAST
+GST_IS_WAYLAND_SINK
+GST_WAYLAND_SINK_CLASS
+GST_IS_WAYLAND_SINK_CLASS
+GST_TYPE_WAYLAND_SINK
+<SUBSECTION Private>
+gst_wayland_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-webpdec</FILE>
+<TITLE>webpdec</TITLE>
+GstWebPDec
+<SUBSECTION Standard>
+GstWebPDecClass
+GST_WEB_P_DEC
+GST_WEB_P_DEC_CAST
+GST_IS_WEB_P_DEC
+GST_WEB_P_DEC_CLASS
+GST_IS_WEB_P_DEC_CLASS
+GST_TYPE_WEB_P_DEC
+<SUBSECTION Private>
+gst_web_p_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-webpenc</FILE>
+<TITLE>webpenc</TITLE>
+GstWebpEnc
+GstWebpEncPreset
+<SUBSECTION Standard>
+GstWebpEncClass
+GST_WEBP_ENC
+GST_WEBP_ENC_CAST
+GST_IS_WEBP_ENC
+GST_WEBP_ENC_CLASS
+GST_IS_WEBP_ENC_CLASS
+GST_TYPE_WEBP_ENC
+<SUBSECTION Private>
+gst_webp_enc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-webrtcdsp</FILE>
+<TITLE>webrtcdsp</TITLE>
+GstWebrtcDsp
+<SUBSECTION Standard>
+GstWebrtcDspClass
+GST_WEBRTC_DSP
+GST_WEBRTC_DSP_CAST
+GST_IS_WEBRTC_DSP
+GST_WEBRTC_DSP_CLASS
+GST_IS_WEBRTC_DSP_CLASS
+GST_TYPE_WEBRTC_DSP
+<SUBSECTION Private>
+gst_webrtc_dsp_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-webrtcechoprobe</FILE>
+<TITLE>webrtcechoprobe</TITLE>
+GstWebrtcEchoProbe
+<SUBSECTION Standard>
+GstWebrtcEchoProbeClass
+GST_WEBRTC_ECHO_PROBE
+GST_WEBRTC_ECHO_PROBE_CAST
+GST_IS_WEBRTC_ECHO_PROBE
+GST_WEBRTC_ECHO_PROBE_CLASS
+GST_IS_WEBRTC_ECHO_PROBE_CLASS
+GST_TYPE_WEBRTC_ECHO_PROBE
+<SUBSECTION Private>
+gst_webrtc_echo_probe_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-webvttenc</FILE>
+<TITLE>webvttenc</TITLE>
+GstWebvttEnc
+<SUBSECTION Standard>
+GstWebvttEncClass
+GST_WEBVTT_ENC
+GST_WEBVTT_ENC_CAST
+GST_IS_WEBVTT_ENC
+GST_WEBVTT_ENC_CLASS
+GST_IS_WEBVTT_ENC_CLASS
+GST_TYPE_WEBVTT_ENC
+<SUBSECTION Private>
+gst_webvtt_enc_get_type
 </SECTION>
 
 <SECTION>
@@ -1569,10 +4253,29 @@ GstWildmidi
 <SUBSECTION Standard>
 GstWildmidiClass
 GST_WILDMIDI
-GST_WILDMIDI_CLASS
+GST_WILDMIDI_CAST
 GST_IS_WILDMIDI
+GST_WILDMIDI_CLASS
 GST_IS_WILDMIDI_CLASS
 GST_TYPE_WILDMIDI
+<SUBSECTION Private>
+gst_wildmidi_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-wrappercamerabinsrc</FILE>
+<TITLE>wrappercamerabinsrc</TITLE>
+GstWrapperCameraBinSrc
+<SUBSECTION Standard>
+GstWrapperCameraBinSrcClass
+GST_WRAPPER_CAMERA_BIN_SRC
+GST_WRAPPER_CAMERA_BIN_SRC_CAST
+GST_IS_WRAPPER_CAMERA_BIN_SRC
+GST_WRAPPER_CAMERA_BIN_SRC_CLASS
+GST_IS_WRAPPER_CAMERA_BIN_SRC_CLASS
+GST_TYPE_WRAPPER_CAMERA_BIN_SRC
+<SUBSECTION Private>
+gst_wrapper_camera_bin_src_get_type
 </SECTION>
 
 <SECTION>
@@ -1590,17 +4293,52 @@ gst_voaacenc_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-voamrwbenc</FILE>
-<TITLE>voamrwbenc</TITLE>
-GstVoAmrwbEnc
+<FILE>element-x265enc</FILE>
+<TITLE>x265enc</TITLE>
+GstX265Enc
 <SUBSECTION Standard>
-GstVoAmrwbEncClass
-GST_VOAMRWBENC
-GST_VOAMRWBENC_CLASS
-GST_IS_VOAMRWBENC
-GST_IS_VOAMRWBENC_CLASS
-GST_TYPE_VOAMRWBENC
-gst_voamrwbenc_get_type
+GstX265EncClass
+GST_X265_ENC
+GST_X265_ENC_CAST
+GST_IS_X265_ENC
+GST_X265_ENC_CLASS
+GST_IS_X265_ENC_CLASS
+GST_TYPE_X265_ENC
+<SUBSECTION Private>
+gst_x265_enc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-y4mdec</FILE>
+<TITLE>y4mdec</TITLE>
+GstY4mDec
+<SUBSECTION Standard>
+GstY4mDecClass
+GST_Y4M_DEC
+GST_Y4M_DEC_CAST
+GST_IS_Y4M_DEC
+GST_Y4M_DEC_CLASS
+GST_IS_Y4M_DEC_CLASS
+GST_TYPE_Y4M_DEC
+<SUBSECTION Private>
+gst_y4m_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-yadif</FILE>
+<TITLE>yadif</TITLE>
+GstYadif
+GstYadifModes
+<SUBSECTION Standard>
+GstYadifClass
+GST_YADIF
+GST_YADIF_CAST
+GST_IS_YADIF
+GST_YADIF_CLASS
+GST_IS_YADIF_CLASS
+GST_TYPE_YADIF
+<SUBSECTION Private>
+gst_yadif_get_type
 </SECTION>
 
 <SECTION>
@@ -1609,42 +4347,397 @@ gst_voamrwbenc_get_type
 GstZBar
 <SUBSECTION Standard>
 GstZBarClass
-GST_ZBAR
-GST_ZBAR_CLASS
-GST_IS_ZBAR
-GST_IS_ZBAR_CLASS
-GST_TYPE_ZBAR
+GST_Z_BAR
+GST_Z_BAR_CAST
+GST_IS_Z_BAR
+GST_Z_BAR_CLASS
+GST_IS_Z_BAR_CLASS
+GST_TYPE_Z_BAR
+<SUBSECTION Private>
+gst_z_bar_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-gltransformation</FILE>
-<TITLE>gltransformation</TITLE>
-GstGLTransformation
+<FILE>element-zebrastripe</FILE>
+<TITLE>zebrastripe</TITLE>
+GstZebraStripe
 <SUBSECTION Standard>
-GstGLTransformationClass
-GST_GL_TRANSFORMATION
-GST_GL_TRANSFORMATION_CLASS
-GST_IS_GL_TRANSFORMATION
-GST_IS_GL_TRANSFORMATION_CLASS
-GST_TYPE_GL_TRANSFORMATION
+GstZebraStripeClass
+GST_ZEBRA_STRIPE
+GST_ZEBRA_STRIPE_CAST
+GST_IS_ZEBRA_STRIPE
+GST_ZEBRA_STRIPE_CLASS
+GST_IS_ZEBRA_STRIPE_CLASS
+GST_TYPE_ZEBRA_STRIPE
+<SUBSECTION Private>
+gst_zebra_stripe_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-compositor</FILE>
-<TITLE>compositor</TITLE>
+<FILE>element-mpegpsmux</FILE>
+<TITLE>mpegpsmux</TITLE>
+GstgPsMux
 <SUBSECTION Standard>
-GstCompositorClass
-GstCompositor
-GST_COMPOSITOR
-GST_COMPOSITOR_CLASS
-GST_IS_COMPOSITOR
-GST_IS_COMPOSITOR_CLASS
-GST_TYPE_COMPOSITOR
-GstCompositorPad
-GstCompositorPadClass
-GST_COMPOSITOR_PAD
-GST_COMPOSITOR_PAD_CLASS
-GST_IS_COMPOSITOR_PAD
-GST_IS_COMPOSITOR_PAD_CLASS
-GST_TYPE_COMPOSITOR_PAD
+GstgPsMuxClass
+GST_G_PS_MUX
+GST_G_PS_MUX_CAST
+GST_IS_G_PS_MUX
+GST_G_PS_MUX_CLASS
+GST_IS_G_PS_MUX_CLASS
+GST_TYPE_G_PS_MUX
+<SUBSECTION Private>
+gst_g_ps_mux_get_type
 </SECTION>
+
+<SECTION>
+<FILE>element-tsparse</FILE>
+<TITLE>tsparse</TITLE>
+GstgTSParse2
+<SUBSECTION Standard>
+GstgTSParse2Class
+GST_G_TS_PARSE2
+GST_G_TS_PARSE2_CAST
+GST_IS_G_TS_PARSE2
+GST_G_TS_PARSE2_CLASS
+GST_IS_G_TS_PARSE2_CLASS
+GST_TYPE_G_TS_PARSE2
+<SUBSECTION Private>
+gst_g_ts_parse2_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-mpegtsmux</FILE>
+<TITLE>mpegtsmux</TITLE>
+GstgTsMux
+<SUBSECTION Standard>
+GstgTsMuxClass
+GST_G_TS_MUX
+GST_G_TS_MUX_CAST
+GST_IS_G_TS_MUX
+GST_G_TS_MUX_CLASS
+GST_IS_G_TS_MUX_CLASS
+GST_TYPE_G_TS_MUX
+<SUBSECTION Private>
+gst_g_ts_mux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rsndvdbin</FILE>
+<TITLE>rsndvdbin</TITLE>
+GstDvdBin
+<SUBSECTION Standard>
+GstDvdBinClass
+GST_DVD_BIN
+GST_DVD_BIN_CAST
+GST_IS_DVD_BIN
+GST_DVD_BIN_CLASS
+GST_IS_DVD_BIN_CLASS
+GST_TYPE_DVD_BIN
+<SUBSECTION Private>
+gst_dvd_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_blur</FILE>
+<TITLE>gleffects_blur</TITLE>
+Gstffects_blur
+<SUBSECTION Standard>
+Gstffects_blurClass
+GST_FFECTS_BLUR
+GST_FFECTS_BLUR_CAST
+GST_IS_FFECTS_BLUR
+GST_FFECTS_BLUR_CLASS
+GST_IS_FFECTS_BLUR_CLASS
+GST_TYPE_FFECTS_BLUR
+<SUBSECTION Private>
+gst_ffects_blur_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_bulge</FILE>
+<TITLE>gleffects_bulge</TITLE>
+Gstffects_bulge
+<SUBSECTION Standard>
+Gstffects_bulgeClass
+GST_FFECTS_BULGE
+GST_FFECTS_BULGE_CAST
+GST_IS_FFECTS_BULGE
+GST_FFECTS_BULGE_CLASS
+GST_IS_FFECTS_BULGE_CLASS
+GST_TYPE_FFECTS_BULGE
+<SUBSECTION Private>
+gst_ffects_bulge_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_fisheye</FILE>
+<TITLE>gleffects_fisheye</TITLE>
+Gstffects_fisheye
+<SUBSECTION Standard>
+Gstffects_fisheyeClass
+GST_FFECTS_FISHEYE
+GST_FFECTS_FISHEYE_CAST
+GST_IS_FFECTS_FISHEYE
+GST_FFECTS_FISHEYE_CLASS
+GST_IS_FFECTS_FISHEYE_CLASS
+GST_TYPE_FFECTS_FISHEYE
+<SUBSECTION Private>
+gst_ffects_fisheye_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_glow</FILE>
+<TITLE>gleffects_glow</TITLE>
+Gstffects_glow
+<SUBSECTION Standard>
+Gstffects_glowClass
+GST_FFECTS_GLOW
+GST_FFECTS_GLOW_CAST
+GST_IS_FFECTS_GLOW
+GST_FFECTS_GLOW_CLASS
+GST_IS_FFECTS_GLOW_CLASS
+GST_TYPE_FFECTS_GLOW
+<SUBSECTION Private>
+gst_ffects_glow_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_heat</FILE>
+<TITLE>gleffects_heat</TITLE>
+Gstffects_heat
+<SUBSECTION Standard>
+Gstffects_heatClass
+GST_FFECTS_HEAT
+GST_FFECTS_HEAT_CAST
+GST_IS_FFECTS_HEAT
+GST_FFECTS_HEAT_CLASS
+GST_IS_FFECTS_HEAT_CLASS
+GST_TYPE_FFECTS_HEAT
+<SUBSECTION Private>
+gst_ffects_heat_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_identity</FILE>
+<TITLE>gleffects_identity</TITLE>
+Gstffects_identity
+<SUBSECTION Standard>
+Gstffects_identityClass
+GST_FFECTS_IDENTITY
+GST_FFECTS_IDENTITY_CAST
+GST_IS_FFECTS_IDENTITY
+GST_FFECTS_IDENTITY_CLASS
+GST_IS_FFECTS_IDENTITY_CLASS
+GST_TYPE_FFECTS_IDENTITY
+<SUBSECTION Private>
+gst_ffects_identity_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_laplacian</FILE>
+<TITLE>gleffects_laplacian</TITLE>
+Gstffects_laplacian
+<SUBSECTION Standard>
+Gstffects_laplacianClass
+GST_FFECTS_LAPLACIAN
+GST_FFECTS_LAPLACIAN_CAST
+GST_IS_FFECTS_LAPLACIAN
+GST_FFECTS_LAPLACIAN_CLASS
+GST_IS_FFECTS_LAPLACIAN_CLASS
+GST_TYPE_FFECTS_LAPLACIAN
+<SUBSECTION Private>
+gst_ffects_laplacian_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_lumaxpro</FILE>
+<TITLE>gleffects_lumaxpro</TITLE>
+Gstffects_lumaxpro
+<SUBSECTION Standard>
+Gstffects_lumaxproClass
+GST_FFECTS_LUMAXPRO
+GST_FFECTS_LUMAXPRO_CAST
+GST_IS_FFECTS_LUMAXPRO
+GST_FFECTS_LUMAXPRO_CLASS
+GST_IS_FFECTS_LUMAXPRO_CLASS
+GST_TYPE_FFECTS_LUMAXPRO
+<SUBSECTION Private>
+gst_ffects_lumaxpro_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_mirror</FILE>
+<TITLE>gleffects_mirror</TITLE>
+Gstffects_mirror
+<SUBSECTION Standard>
+Gstffects_mirrorClass
+GST_FFECTS_MIRROR
+GST_FFECTS_MIRROR_CAST
+GST_IS_FFECTS_MIRROR
+GST_FFECTS_MIRROR_CLASS
+GST_IS_FFECTS_MIRROR_CLASS
+GST_TYPE_FFECTS_MIRROR
+<SUBSECTION Private>
+gst_ffects_mirror_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_sepia</FILE>
+<TITLE>gleffects_sepia</TITLE>
+Gstffects_sepia
+<SUBSECTION Standard>
+Gstffects_sepiaClass
+GST_FFECTS_SEPIA
+GST_FFECTS_SEPIA_CAST
+GST_IS_FFECTS_SEPIA
+GST_FFECTS_SEPIA_CLASS
+GST_IS_FFECTS_SEPIA_CLASS
+GST_TYPE_FFECTS_SEPIA
+<SUBSECTION Private>
+gst_ffects_sepia_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_sin</FILE>
+<TITLE>gleffects_sin</TITLE>
+Gstffects_sin
+<SUBSECTION Standard>
+Gstffects_sinClass
+GST_FFECTS_SIN
+GST_FFECTS_SIN_CAST
+GST_IS_FFECTS_SIN
+GST_FFECTS_SIN_CLASS
+GST_IS_FFECTS_SIN_CLASS
+GST_TYPE_FFECTS_SIN
+<SUBSECTION Private>
+gst_ffects_sin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_sobel</FILE>
+<TITLE>gleffects_sobel</TITLE>
+Gstffects_sobel
+<SUBSECTION Standard>
+Gstffects_sobelClass
+GST_FFECTS_SOBEL
+GST_FFECTS_SOBEL_CAST
+GST_IS_FFECTS_SOBEL
+GST_FFECTS_SOBEL_CLASS
+GST_IS_FFECTS_SOBEL_CLASS
+GST_TYPE_FFECTS_SOBEL
+<SUBSECTION Private>
+gst_ffects_sobel_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_square</FILE>
+<TITLE>gleffects_square</TITLE>
+Gstffects_square
+<SUBSECTION Standard>
+Gstffects_squareClass
+GST_FFECTS_SQUARE
+GST_FFECTS_SQUARE_CAST
+GST_IS_FFECTS_SQUARE
+GST_FFECTS_SQUARE_CLASS
+GST_IS_FFECTS_SQUARE_CLASS
+GST_TYPE_FFECTS_SQUARE
+<SUBSECTION Private>
+gst_ffects_square_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_squeeze</FILE>
+<TITLE>gleffects_squeeze</TITLE>
+Gstffects_squeeze
+<SUBSECTION Standard>
+Gstffects_squeezeClass
+GST_FFECTS_SQUEEZE
+GST_FFECTS_SQUEEZE_CAST
+GST_IS_FFECTS_SQUEEZE
+GST_FFECTS_SQUEEZE_CLASS
+GST_IS_FFECTS_SQUEEZE_CLASS
+GST_TYPE_FFECTS_SQUEEZE
+<SUBSECTION Private>
+gst_ffects_squeeze_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_stretch</FILE>
+<TITLE>gleffects_stretch</TITLE>
+Gstffects_stretch
+<SUBSECTION Standard>
+Gstffects_stretchClass
+GST_FFECTS_STRETCH
+GST_FFECTS_STRETCH_CAST
+GST_IS_FFECTS_STRETCH
+GST_FFECTS_STRETCH_CLASS
+GST_IS_FFECTS_STRETCH_CLASS
+GST_TYPE_FFECTS_STRETCH
+<SUBSECTION Private>
+gst_ffects_stretch_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_tunnel</FILE>
+<TITLE>gleffects_tunnel</TITLE>
+Gstffects_tunnel
+<SUBSECTION Standard>
+Gstffects_tunnelClass
+GST_FFECTS_TUNNEL
+GST_FFECTS_TUNNEL_CAST
+GST_IS_FFECTS_TUNNEL
+GST_FFECTS_TUNNEL_CLASS
+GST_IS_FFECTS_TUNNEL_CLASS
+GST_TYPE_FFECTS_TUNNEL
+<SUBSECTION Private>
+gst_ffects_tunnel_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_twirl</FILE>
+<TITLE>gleffects_twirl</TITLE>
+Gstffects_twirl
+<SUBSECTION Standard>
+Gstffects_twirlClass
+GST_FFECTS_TWIRL
+GST_FFECTS_TWIRL_CAST
+GST_IS_FFECTS_TWIRL
+GST_FFECTS_TWIRL_CLASS
+GST_IS_FFECTS_TWIRL_CLASS
+GST_TYPE_FFECTS_TWIRL
+<SUBSECTION Private>
+gst_ffects_twirl_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_xpro</FILE>
+<TITLE>gleffects_xpro</TITLE>
+Gstffects_xpro
+<SUBSECTION Standard>
+Gstffects_xproClass
+GST_FFECTS_XPRO
+GST_FFECTS_XPRO_CAST
+GST_IS_FFECTS_XPRO
+GST_FFECTS_XPRO_CLASS
+GST_IS_FFECTS_XPRO_CLASS
+GST_TYPE_FFECTS_XPRO
+<SUBSECTION Private>
+gst_ffects_xpro_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_xray</FILE>
+<TITLE>gleffects_xray</TITLE>
+Gstffects_xray
+<SUBSECTION Standard>
+Gstffects_xrayClass
+GST_FFECTS_XRAY
+GST_FFECTS_XRAY_CAST
+GST_IS_FFECTS_XRAY
+GST_FFECTS_XRAY_CLASS
+GST_IS_FFECTS_XRAY_CLASS
+GST_TYPE_FFECTS_XRAY
+<SUBSECTION Private>
+gst_ffects_xray_get_type
+</SECTION>
+

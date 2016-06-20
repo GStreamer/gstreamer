@@ -1,0 +1,34 @@
+<plugin>
+  <name>freeverb</name>
+  <description>Reverberation/room effect</description>
+  <filename>../../gst/freeverb/.libs/libgstfreeverb.so</filename>
+  <basename>libgstfreeverb.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>freeverb</name>
+      <longname>Reverberation/room effect</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Add reverberation to audio streams</description>
+      <author>Stefan Sauer &lt;ensonic@users.sf.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ F32LE, S16LE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ F32LE, S16LE }, rate=(int)[ 1, 2147483647 ], channels=(int)2, layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

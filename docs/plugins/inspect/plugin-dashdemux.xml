@@ -1,0 +1,48 @@
+<plugin>
+  <name>dashdemux</name>
+  <description>DASH demuxer plugin</description>
+  <filename>../../ext/dash/.libs/libgstdashdemux.so</filename>
+  <basename>libgstdashdemux.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>dashdemux</name>
+      <longname>DASH Demuxer</longname>
+      <class>Codec/Demuxer/Adaptive</class>
+      <description>Dynamic Adaptive Streaming over HTTP demuxer</description>
+      <author>David Corvoysier &lt;david.corvoysier@orange.com&gt;
+                Hamid Zakari &lt;hamid.zakari@gmail.com&gt;
+                Gianluca Gennari &lt;gennarone@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/dash+xml</details>
+        </caps>
+        <caps>
+          <name>audio_%02u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>subtitle_%02u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_%02u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

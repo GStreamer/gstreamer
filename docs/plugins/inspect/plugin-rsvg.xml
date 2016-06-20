@@ -1,0 +1,61 @@
+<plugin>
+  <name>rsvg</name>
+  <description>RSVG plugin library</description>
+  <filename>../../ext/rsvg/.libs/libgstrsvg.so</filename>
+  <basename>libgstrsvg.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>rsvgdec</name>
+      <longname>SVG image decoder</longname>
+      <class>Codec/Decoder/Image</class>
+      <description>Uses librsvg to decode SVG images</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>image/svg+xml; image/svg</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)BGRA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rsvgoverlay</name>
+      <longname>RSVG overlay</longname>
+      <class>Filter/Editor/Video</class>
+      <description>Overlays SVG graphics over a video stream</description>
+      <author>Olivier Aubert &lt;olivier.aubert@liris.cnrs.fr&gt;</author>
+      <pads>
+        <caps>
+          <name>data_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>image/svg+xml; image/svg; text/plain</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)BGRA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)BGRA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

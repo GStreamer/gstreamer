@@ -94,6 +94,27 @@
       </pads>
     </element>
     <element>
+      <name>jpeg2000parse</name>
+      <longname>JPEG 2000 parser</longname>
+      <class>Codec/Parser/Video/Image</class>
+      <description>Parses JPEG 2000 files</description>
+      <author>Aaron Boxer &lt;boxerab@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>image/x-jpc, sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCrA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE }; image/x-jpc, colorspace=(string){ sRGB, sYUV, GRAY }; image/x-j2c, sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCrA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE }; image/x-j2c, colorspace=(string){ sRGB, sYUV, GRAY }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>image/x-jpc, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCrA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE }, colorspace=(string){ sRGB, sYUV, GRAY }, parsed=(boolean)true; image/x-j2c, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCrA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE }, colorspace=(string){ sRGB, sYUV, GRAY }, parsed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>mpeg4videoparse</name>
       <longname>MPEG 4 video elementary stream parser</longname>
       <class>Codec/Parser/Video</class>
@@ -156,27 +177,6 @@
         </caps>
       </pads>
     </element>
-    <element>
-      <name>jpeg2000parse</name>
-      <longname>JPEG 2000 parser</longname>
-      <class>Codec/Parser/Video/Image</class>
-      <description>Parses JPEG 2000 files</description>
-      <author>Aaron Boxer &lt;boxerab@gmail.com&gt;</author>
-      <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>image/x-jpc</details>
-        </caps>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>image/x-jpc, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], parsed=(boolean)true</details>
-        </caps>
-      </pads>
-    </element>    
     <element>
       <name>vc1parse</name>
       <longname>VC1 parser</longname>

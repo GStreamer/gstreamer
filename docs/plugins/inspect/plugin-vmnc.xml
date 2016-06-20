@@ -1,0 +1,34 @@
+<plugin>
+  <name>vmnc</name>
+  <description>VmWare Video Codec plugins</description>
+  <filename>../../gst/vmnc/.libs/libgstvmnc.so</filename>
+  <basename>libgstvmnc.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>vmncdec</name>
+      <longname>VMnc video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>Decode VmWare video to raw (RGB) video</description>
+      <author>Michael Smith &lt;msmith@xiph.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-vmnc, version=(int)1, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 0, 2147483647 ], height=(int)[ 0, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ RGBx, BGRx, xRGB, xBGR, RGB15, BGR15, RGB16, BGR16, GRAY8 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

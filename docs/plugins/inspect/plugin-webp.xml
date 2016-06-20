@@ -1,0 +1,55 @@
+<plugin>
+  <name>webp</name>
+  <description>WebP plugin</description>
+  <filename>../../ext/webp/.libs/libgstwebp.so</filename>
+  <basename>libgstwebp.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>webpdec</name>
+      <longname>WebP image decoder</longname>
+      <class>Codec/Decoder/Image</class>
+      <description>Decode images from WebP format</description>
+      <author>Sreerenj Balachandran &lt;sreerenj.balachandrn@intel.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>image/webp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ RGB, RGBA, BGR, BGRA, ARGB, RGB16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>webpenc</name>
+      <longname>WEBP image encoder</longname>
+      <class>Codec/Encoder/Image</class>
+      <description>Encode images in WEBP format</description>
+      <author>Sreerenj Balachandran &lt;sreerenjb@gnome.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YV12, RGB, RGBA }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>image/webp, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 16, 16383 ], height=(int)[ 16, 16383 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

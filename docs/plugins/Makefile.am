@@ -100,6 +100,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/openni2/gstopenni2src.h \
 	$(top_srcdir)/ext/rsvg/gstrsvgdec.h \
 	$(top_srcdir)/ext/rsvg/gstrsvgoverlay.h \
+	$(top_srcdir)/ext/rtmp/gstrtmpsrc.h \
+	$(top_srcdir)/ext/rtmp/gstrtmpsink.h \
 	$(top_srcdir)/ext/spandsp/gstspanplc.h \
 	$(top_srcdir)/ext/spandsp/gstdtmfdetect.h \
 	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
@@ -108,6 +110,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/timidity/gstwildmidi.h \
 	$(top_srcdir)/ext/voaacenc/gstvoaacenc.h \
 	$(top_srcdir)/ext/voamrwbenc/gstvoamrwbenc.h \
+	$(top_srcdir)/ext/webrtcdsp/gstwebrtcdsp.h \
+	$(top_srcdir)/ext/webrtcdsp/gstwebrtcechoprobe.h \
 	$(top_srcdir)/ext/zbar/gstzbar.h \
 	$(top_srcdir)/gst/aiff/aiffparse.h \
 	$(top_srcdir)/gst/aiff/aiffmux.h \
@@ -150,6 +154,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/geometrictransform/gstwaterripple.h \
 	$(top_srcdir)/gst/ivfparse/gstivfparse.h \
 	$(top_srcdir)/gst/jpegformat/gstjpegparse.h \
+	$(top_srcdir)/gst/mpegtsdemux/tsdemux.h \
+	$(top_srcdir)/gst/mpegtsmux/mpegtsmux.h \
 	$(top_srcdir)/gst/mxf/mxfdemux.h \
 	$(top_srcdir)/gst/mxf/mxfmux.h \
 	$(top_srcdir)/gst/nuvdemux/gstnuvdemux.h \

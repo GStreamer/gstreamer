@@ -1,0 +1,55 @@
+<plugin>
+  <name>openjpeg</name>
+  <description>OpenJPEG-based JPEG2000 image decoder/encoder</description>
+  <filename>../../ext/openjpeg/.libs/libgstopenjpeg.so</filename>
+  <basename>libgstopenjpeg.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>openjpegdec</name>
+      <longname>OpenJPEG JPEG2000 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>Decode JPEG2000 streams</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>image/x-j2c, colorspace=(string){ sRGB, sYUV, GRAY }; image/x-jpc, colorspace=(string){ sRGB, sYUV, GRAY }; image/jp2</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ ARGB64, ARGB, xRGB, AYUV64, Y444_10LE, I422_10LE, I420_10LE, AYUV, Y444, Y42B, I420, Y41B, YUV9, GRAY8, GRAY16_LE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>openjpegenc</name>
+      <longname>OpenJPEG JPEG2000 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>Encode JPEG2000 streams</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ ARGB64, ARGB, xRGB, AYUV64, Y444_10LE, I422_10LE, I420_10LE, AYUV, Y444, Y42B, I420, Y41B, YUV9, GRAY8, GRAY16_LE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>image/x-j2c, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], num-components=(int)[ 1, 4 ], sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCrA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE }, colorspace=(string){ sRGB, sYUV, GRAY }; image/x-jpc, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], num-components=(int)[ 1, 4 ], sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCrA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE }, colorspace=(string){ sRGB, sYUV, GRAY }; image/jp2, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

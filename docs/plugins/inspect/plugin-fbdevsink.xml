@@ -1,0 +1,28 @@
+<plugin>
+  <name>fbdevsink</name>
+  <description>Linux framebuffer video sink</description>
+  <filename>../../sys/fbdev/.libs/libgstfbdevsink.so</filename>
+  <basename>libgstfbdevsink.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>fbdevsink</name>
+      <longname>fbdev video sink</longname>
+      <class>Sink/Video</class>
+      <description>Linux framebuffer videosink</description>
+      <author>Sean D&apos;Epagnier &lt;sean@depagnier.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ RGB, BGR, BGRx, xBGR, RGB, RGBx, xRGB, RGB15, RGB16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

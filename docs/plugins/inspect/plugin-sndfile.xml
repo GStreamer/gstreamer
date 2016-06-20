@@ -1,0 +1,34 @@
+<plugin>
+  <name>sndfile</name>
+  <description>use libsndfile to read and write various audio formats</description>
+  <filename>../../ext/sndfile/.libs/libgstsndfile.so</filename>
+  <basename>libgstsndfile.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>sfdec</name>
+      <longname>Sndfile decoder</longname>
+      <class>Decoder/Audio</class>
+      <description>Read audio streams using libsndfile</description>
+      <author>Stefan Sauer &lt;ensonic@user.sf.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-ircam; audio/x-nist; audio/x-paris; audio/x-rf64; audio/x-sds; audio/x-svx; audio/x-voc; audio/x-w64; audio/x-xi</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ F32LE, S32LE, S16LE }, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

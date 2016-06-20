@@ -99,6 +99,8 @@
     <xi:include href="xml/element-voaacenc.xml" />
     <xi:include href="xml/element-voamrwbenc.xml" />
     <xi:include href="xml/element-wavescope.xml" />
+    <xi:include href="xml/element-webrtcdsp.xml" />
+    <xi:include href="xml/element-webrtcechoprobe.xml" />
   </chapter>
 
   <chapter>
@@ -147,6 +149,7 @@
     <xi:include href="xml/plugin-speed.xml" />
     <xi:include href="xml/plugin-voaacenc.xml" />
     <xi:include href="xml/plugin-voamrwbenc.xml" />
+    <xi:include href="xml/plugin-webrtcdsp.xml" />
     <xi:include href="xml/plugin-zbar.xml" />
   </chapter>
 </book>

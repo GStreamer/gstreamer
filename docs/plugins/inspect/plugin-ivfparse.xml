@@ -1,0 +1,34 @@
+<plugin>
+  <name>ivfparse</name>
+  <description>IVF parser</description>
+  <filename>../../gst/ivfparse/.libs/libgstivfparse.so</filename>
+  <basename>libgstivfparse.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>ivfparse</name>
+      <longname>IVF parser</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demuxes a IVF stream</description>
+      <author>Philip Jägenstedt &lt;philipj@opera.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-ivf</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

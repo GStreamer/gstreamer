@@ -1,0 +1,34 @@
+<plugin>
+  <name>openexr</name>
+  <description>OpenEXR image plugin</description>
+  <filename>../../ext/openexr/.libs/libgstopenexr.so</filename>
+  <basename>libgstopenexr.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>openexrdec</name>
+      <longname>OpenEXR decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>Decode EXR streams</description>
+      <author>Sebastian Dröge &lt;sebastian@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>image/x-exr</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)ARGB64, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

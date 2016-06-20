@@ -1,0 +1,40 @@
+<plugin>
+  <name>smoothstreaming</name>
+  <description>Microsoft&apos;s Smooth Streaming format support </description>
+  <filename>../../ext/smoothstreaming/.libs/libgstsmoothstreaming.so</filename>
+  <basename>libgstsmoothstreaming.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>mssdemux</name>
+      <longname>Smooth Streaming demuxer</longname>
+      <class>Codec/Demuxer/Adaptive</class>
+      <description>Parse and demultiplex a Smooth Streaming manifest into audio and video streams</description>
+      <author>Thiago Santos &lt;thiago.sousa.santos@collabora.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/vnd.ms-sstr+xml</details>
+        </caps>
+        <caps>
+          <name>audio_%02u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_%02u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

@@ -1,0 +1,55 @@
+<plugin>
+  <name>rtponvif</name>
+  <description>ONVIF Streaming features</description>
+  <filename>../../gst/onvif/.libs/libgstrtponvif.so</filename>
+  <basename>libgstrtponvif.so</basename>
+  <version>1.9.0.1</version>
+  <license>unknown</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>rtponvifparse</name>
+      <longname>ONVIF NTP timestamps RTP extension</longname>
+      <class>Effect/RTP</class>
+      <description>Add absolute timestamps and flags of recorded data in a playback session</description>
+      <author>Guillaume Desmottes &lt;guillaume.desmottes@collabora.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtponviftimestamp</name>
+      <longname>ONVIF NTP timestamps RTP extension</longname>
+      <class>Effect/RTP</class>
+      <description>Add absolute timestamps and flags of recorded data in a playback session</description>
+      <author>Guillaume Desmottes &lt;guillaume.desmottes@collabora.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

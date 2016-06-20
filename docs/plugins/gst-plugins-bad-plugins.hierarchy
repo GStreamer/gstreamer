@@ -5,6 +5,7 @@ GObject
         GstAllocatorSysmem
         GstFdAllocator
           GstWlShmAllocator
+        GstVdpVideoAllocator
       GstAudioRingBuffer
         GstAudioSinkRingBuffer
         GstAudioSrcRingBuffer
@@ -61,18 +62,19 @@ GObject
           GstH265Parse
           GstIRTSPParse
           GstIvfParse
+          GstJPEG2000Parse
           GstJpegParse
           GstMpeg4VParse
           GstMpegvParse
           GstOpusParse
           GstPngParse
-          GstJPEG2000Parse
           GstVC1Parse
         GstBaseSink
           GstAudioBaseSink
             GstAudioSink
               GstOpenALSink
             GstDecklinkAudioSink
+          GstAvdtpSink
           GstChecksumSink
           GstCurlBaseSink
             GstCurlFileSink
@@ -93,11 +95,12 @@ GObject
               GstGtkGLSink
               GstGtkSink
             GstInterVideoSink
+            GstKMSSink
             GstQtSink
             GstWaylandSink
         GstBaseSrc
+          GstAvdtpSrc
           GstDataURISrc
-          GstFliteTestSrc
           GstInterAudioSrc
           GstInterSubSrc
           GstInterVideoSrc
@@ -124,6 +127,7 @@ GObject
             GstAccurip
             GstAudioChannelMix
             GstBPMDetect
+            GstBs2b
             GstChromaprint
             GstLADSPAFilter
               ladspa-amp-so-amp-mono
@@ -136,6 +140,8 @@ GObject
               ladspa-sine-so-sine-fcaa
             GstOFA
             GstStereo
+            GstWebrtcDsp
+            GstWebrtcEchoProbe
           GstBayer2RGB
           GstDebugSpy
           GstDtmfDetect
@@ -234,11 +240,13 @@ GObject
             GstSolarize
             GstVideoAnalyse
             GstVideoDiff
+            GstZBar
             GstZebraStripe
           GstWatchdog
           GstYadif
         GstBin
           DvbBaseBin
+          GstA2dpSink
           GstAdaptiveDemux
             GstDashDemux
             GstHLSDemux
@@ -263,6 +271,7 @@ GObject
             GstCameraBin
           GstSDPDemux
           GstSdpSrc
+          GstUnalignedAudioParse
           GstViewfinderBin
           RsnDvdBin
         GstBz2dec
@@ -301,16 +310,14 @@ GObject
         GstNetSim
         GstPcapParse
         GstPitch
-        GstRTPBaseDepayload
-          GstRtpH265Depay
         GstRTPBasePayload
           GstRtpAsfPay
-          GstRtpH265Pay
         GstRawParse
           GstAudioParse
           GstVideoParse
         GstRtpOnvifParse
         GstRtpOnvifTimestamp
+        GstSFDec
         GstSegmentClip
           GstAudioSegmentClip
           GstVideoSegmentClip
@@ -332,6 +339,8 @@ GObject
           GstRsvgDec
           GstSchroDec
           GstVMncDec
+          GstVdpDecoder
+            GstVdpMpegDec
           GstWebPDec
         GstVideoEncoder
           GstOpenJPEGEnc
@@ -376,6 +385,7 @@ GObject
     GtkWidget
   GstColorBalanceChannel
   GstEncodingProfile
+  GstVdpDevice
   MXFMetadataBase
     MXFDescriptiveMetadata
       MXFDMS1

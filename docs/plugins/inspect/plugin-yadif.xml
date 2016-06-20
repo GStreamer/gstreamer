@@ -1,0 +1,34 @@
+<plugin>
+  <name>yadif</name>
+  <description>YADIF deinterlacing filter</description>
+  <filename>../../gst/yadif/.libs/libgstyadif.so</filename>
+  <basename>libgstyadif.so</basename>
+  <version>1.9.0.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>yadif</name>
+      <longname>YADIF deinterlacer</longname>
+      <class>Video/Filter</class>
+      <description>Deinterlace video using YADIF filter</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ Y42B, I420, Y444 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], interlace-mode=(string){ interleaved, mixed, progressive }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ Y42B, I420, Y444 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], interlace-mode=(string)progressive</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

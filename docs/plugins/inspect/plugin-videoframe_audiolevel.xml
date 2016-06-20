@@ -1,0 +1,46 @@
+<plugin>
+  <name>videoframe_audiolevel</name>
+  <description>Video frame-synchronized audio level</description>
+  <filename>../../gst/videoframe_audiolevel/.libs/libgstvideoframe_audiolevel.so</filename>
+  <basename>libgstvideoframe_audiolevel.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>videoframe-audiolevel</name>
+      <longname>Video-frame audio level</longname>
+      <class>Filter/Analyzer/Audio</class>
+      <description>Synchronized audio/video RMS Level messenger for audio/raw</description>
+      <author>Vivia Nikolaidou &lt;vivia@toolsonair.com&gt;</author>
+      <pads>
+        <caps>
+          <name>asink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S8, S16LE, S32LE, F32LE, F64LE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>vsink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw</details>
+        </caps>
+        <caps>
+          <name>asrc</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S8, S16LE, S32LE, F32LE, F64LE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>vsrc</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

@@ -1,0 +1,34 @@
+<plugin>
+  <name>teletext</name>
+  <description>Teletext plugin</description>
+  <filename>../../ext/teletextdec/.libs/libgstteletextdec.so</filename>
+  <basename>libgstteletextdec.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer</package>
+  <origin>http://gstreamer.net/</origin>
+  <elements>
+    <element>
+      <name>teletextdec</name>
+      <longname>Teletext decoder</longname>
+      <class>Decoder</class>
+      <description>Decode a raw VBI stream containing teletext information to RGBA and text</description>
+      <author>Sebastian Pölsterl &lt;sebp@k-d-w.org&gt;, Andoni Morales Alastruey &lt;ylatuya@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-teletext</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; text/x-raw, format=(string){ utf-8, pango-markup }</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

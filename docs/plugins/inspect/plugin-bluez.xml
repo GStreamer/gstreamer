@@ -1,0 +1,58 @@
+<plugin>
+  <name>bluez</name>
+  <description>Bluez-based bluetooth support</description>
+  <filename>../../sys/bluez/.libs/libgstbluez.so</filename>
+  <basename>libgstbluez.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>a2dpsink</name>
+      <longname>Bluetooth A2DP sink</longname>
+      <class>Sink/Audio</class>
+      <description>Plays audio to an A2DP device</description>
+      <author>Marcel Holtmann &lt;marcel@holtmann.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-sbc, rate=(int){ 16000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ], channel-mode=(string){ mono, dual, stereo, joint }, blocks=(int){ 4, 8, 12, 16 }, subbands=(int){ 4, 8 }, allocation-method=(string){ snr, loudness }, bitpool=(int)[ 2, 64 ]; audio/mpeg</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdtpsink</name>
+      <longname>Bluetooth AVDTP sink</longname>
+      <class>Sink/Audio</class>
+      <description>Plays audio to an A2DP device</description>
+      <author>Marcel Holtmann &lt;marcel@holtmann.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int){ 16000, 32000, 44100, 48000 }, encoding-name=(string)SBC; application/x-rtp, media=(string)audio, payload=(int)14, clock-rate=(int)90000; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)MPA</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdtpsrc</name>
+      <longname>Bluetooth AVDTP Source</longname>
+      <class>Source/Audio/Network/RTP</class>
+      <description>Receives audio from an A2DP device</description>
+      <author>Arun Raghavan &lt;arun.raghavan@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int){ 16000, 32000, 44100, 48000 }, encoding-name=(string)SBC; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int){ 8000, 11025, 12000, 16000, 22050, 2400, 32000, 44100, 48000, 64000, 88200, 96000 }, encoding-name=(string)MP4A-LATM</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

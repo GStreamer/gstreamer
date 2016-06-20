@@ -1,0 +1,34 @@
+<plugin>
+  <name>jp2kdecimator</name>
+  <description>JPEG2000 decimator</description>
+  <filename>../../gst/jp2kdecimator/.libs/libgstjp2kdecimator.so</filename>
+  <basename>libgstjp2kdecimator.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>jp2kdecimator</name>
+      <longname>JPEG2000 decimator</longname>
+      <class>Filter/Image</class>
+      <description>Removes information from JPEG2000 streams without recompression</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>image/x-jpc</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>image/x-jpc</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

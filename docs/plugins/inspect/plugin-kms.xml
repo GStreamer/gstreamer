@@ -1,0 +1,28 @@
+<plugin>
+  <name>kms</name>
+  <description>Video sink using the Linux kernel mode setting API</description>
+  <filename>../../sys/kms/.libs/libgstkmssink.so</filename>
+  <basename>libgstkmssink.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>kmssink</name>
+      <longname>KMS video sink</longname>
+      <class>Sink/Video</class>
+      <description>Video sink using the Linux kernel mode setting API</description>
+      <author>Víctor Jáquez &lt;vjaquez@igalia.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRA, BGRx, RGBA, RGBx, UYVY, YUY2, YVYU, I420, YV12, Y42B, NV12, NV21, NV16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

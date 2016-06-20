@@ -1,0 +1,34 @@
+<plugin>
+  <name>vdpau</name>
+  <description>Various elements utilizing VDPAU</description>
+  <filename>../../sys/vdpau/.libs/libgstvdpau.so</filename>
+  <basename>libgstvdpau.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer</package>
+  <origin>http://gstreamer.net/</origin>
+  <elements>
+    <element>
+      <name>vdpaumpegdec</name>
+      <longname>VDPAU Mpeg Decoder</longname>
+      <class>Decoder</class>
+      <description>Decode mpeg stream with vdpau</description>
+      <author>Carl-Anton Ingmarsson &lt;ca.ingmarsson@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)[ 1, 2 ], systemstream=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw(memory:VdpVideoSurface), format=(string){ YV12 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw, format=(string){ YV12 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

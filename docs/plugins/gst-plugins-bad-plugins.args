@@ -1399,6 +1399,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstGLImageSink::rotate-method</NAME>
+<TYPE>GstGLRotateMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rotate method</NICK>
+<BLURB>rotate method.</BLURB>
+<DEFAULT>Identity (no rotation)</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRgAnalysis::forced</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -1704,7 +1714,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bandwidth-hz</NICK>
-<BLURB>(DVB-T) Bandwidth in Hz.</BLURB>
+<BLURB>Channel bandwidth in Hz.</BLURB>
 <DEFAULT>8000000</DEFAULT>
 </ARG>
 
@@ -1814,7 +1824,7 @@
 <RANGE></RANGE>
 <FLAGS>w</FLAGS>
 <NICK>pids</NICK>
-<BLURB>Colon seperated list of pids (eg. 110:120).</BLURB>
+<BLURB>Colon-separated list of PIDs (eg. 110:120) to capture. ACT and CAT are automatically included but PMT should be added explicitly. Special value 8192 gets full MPEG-TS.</BLURB>
 <DEFAULT>"8192"</DEFAULT>
 </ARG>
 
@@ -18174,7 +18184,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bandwidth-hz</NICK>
-<BLURB>(DVB-T) Bandwidth in Hz.</BLURB>
+<BLURB>Channel bandwidth in Hz.</BLURB>
 <DEFAULT>8000000</DEFAULT>
 </ARG>
 
@@ -18900,11 +18910,11 @@
 
 <ARG>
 <NAME>GstH264Parse::config-interval</NAME>
-<TYPE>guint</TYPE>
-<RANGE><= 3600</RANGE>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,3600]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>SPS PPS Send Interval</NICK>
-<BLURB>Send SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
+<BLURB>Send SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled, -1 = send with every IDR frame).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -27264,8 +27274,8 @@
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diffspace</NICK>
-<BLURB>difference space: a value from 0 to 256.</BLURB>
-<DEFAULT>1</DEFAULT>
+<BLURB>difference space: a value from 0 to 256 (mapped to [0,1]).</BLURB>
+<DEFAULT>0.00390625</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27274,8 +27284,8 @@
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>triplevel</NICK>
-<BLURB>level of trip: use high numbers, incremented by 100.</BLURB>
-<DEFAULT>0</DEFAULT>
+<BLURB>level of trip: mapped to [0,1] asymptotical.</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27313,7 +27323,7 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>brightness</NICK>
+<NICK>Brightness</NICK>
 <BLURB></BLURB>
 <DEFAULT>0.5</DEFAULT>
 </ARG>
@@ -27354,6 +27364,46 @@
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>ycenter</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-lens-correction::correction-near-center</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Correction near center</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-lens-correction::correction-near-edges</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Correction near edges</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-lens-correction::x-center</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X center</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-lens-correction::y-center</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y center</NICK>
 <BLURB></BLURB>
 <DEFAULT>0.5</DEFAULT>
 </ARG>
@@ -27426,6 +27476,26 @@
 <NICK>BlockSizeY</NICK>
 <BLURB>Vertical size of one "pixel".</BLURB>
 <DEFAULT>0.0291667</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pixeliz0r::block-height</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Block height</NICK>
+<BLURB>Vertical size of one "pixel".</BLURB>
+<DEFAULT>0.0291667</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pixeliz0r::block-width</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Block width</NICK>
+<BLURB>Horizontal size of one "pixel".</BLURB>
+<DEFAULT>0.021875</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27605,7 +27675,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Saturation</NICK>
 <BLURB>The saturation value.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>0.125</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27635,7 +27705,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>5.48413e-322</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27645,7 +27715,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lthresh</NICK>
 <BLURB>threshold for edge lightening.</BLURB>
-<DEFAULT>8.00386e-321</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27655,7 +27725,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>7.93469e-321</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27685,7 +27755,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Green Tint</NICK>
 <BLURB>Adjust the level of green.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>0.133333</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27825,7 +27895,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>7.49023e-11</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28015,7 +28085,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>2.11543e-316</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33995,7 +34065,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Histogram position</NICK>
 <BLURB>Histogram position.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>0.3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34125,7 +34195,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color (G)</NICK>
 <BLURB>The color to make transparent (B G R).</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>0.94</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34145,7 +34215,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Distance</NICK>
 <BLURB>Distance to Color (127 is good).</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>0.288</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34345,7 +34415,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Zoomrate</NICK>
 <BLURB>Zoomrate.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>0.202</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34354,8 +34424,8 @@
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Channel</NICK>
-<BLURB>Channel to adjust levels (1 = RED; 2 = GREEN; 3 = BLUE; 4 = LUMA).</BLURB>
-<DEFAULT>0</DEFAULT>
+<BLURB>Channel to adjust (0 = red, 0.1 = green, 0.2 = blue, 0.3 = alpha, 0.4 = luma, 0.5 = rgb, 0.6 = hue, 0.7 = saturation).</BLURB>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34364,8 +34434,8 @@
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Curve point number</NICK>
-<BLURB>Number of point to use to build curve.</BLURB>
-<DEFAULT>0</DEFAULT>
+<BLURB>Number of points to use to build curve (/10 to fit [0,1] parameter range). Minimum 2 (0.2), Maximum 5 (0.5). Not relevant for Bézier spline.</BLURB>
+<DEFAULT>0.2</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34374,8 +34444,8 @@
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Graph position</NICK>
-<BLURB>Output image corner where curve graph will be drawn (1 = TOP,LEFT; 2 = TOP,RIGHT; 3 = BOTTOM,LEFT; 4 = BOTTOM, RIGHT).</BLURB>
-<DEFAULT>0</DEFAULT>
+<BLURB>Output image corner where curve graph will be drawn (0.1 = TOP,LEFT; 0.2 = TOP,RIGHT; 0.3 = BOTTOM,LEFT; 0.4 = BOTTOM, RIGHT).</BLURB>
+<DEFAULT>0.3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34385,7 +34455,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 1 input value</NICK>
 <BLURB>Point 1 input value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34395,7 +34465,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 1 output value</NICK>
 <BLURB>Point 1 output value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34425,7 +34495,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 3 input value</NICK>
 <BLURB>Point 3 input value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34435,7 +34505,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 3 output value</NICK>
 <BLURB>Point 3 output value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34445,7 +34515,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 4 input value</NICK>
 <BLURB>Point 4 input value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34455,7 +34525,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 4 output value</NICK>
 <BLURB>Point 4 output value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34465,7 +34535,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 5 input value</NICK>
 <BLURB>Point 5 input value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34475,7 +34545,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Point 5 output value</NICK>
 <BLURB>Point 5 output value.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -34485,6 +34555,26 @@
 <FLAGS>rw</FLAGS>
 <NICK>Show curves</NICK>
 <BLURB>Draw curve graph on output image.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::b--zier-spline</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bézier spline</NICK>
+<BLURB>Use cubic Bézier spline. Has to be a sorted list of points in the format "handle1x;handle1y#pointx;pointy#handle2x;handle2y"(pointx = in, pointy = out). Points are separated by a "|".The values can have "double" precision. x, y for points should be in the range 0-1. x,y for handles might also be out of this range.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::luma-formula</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luma formula</NICK>
+<BLURB>Use Rec. 601 (false) or Rec. 709 (true).</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -58875,7 +58965,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Eyes profile</NICK>
 <BLURB>Location of Haar cascade file to use for eye-pair detection.</BLURB>
-<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_eyepair_small.xml"</DEFAULT>
+<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_eyepair_small.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58925,7 +59015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Mouth profile</NICK>
 <BLURB>Location of Haar cascade file to use for mouth detection.</BLURB>
-<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_mouth.xml"</DEFAULT>
+<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_mouth.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58935,7 +59025,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Nose profile</NICK>
 <BLURB>Location of Haar cascade file to use for nose detection.</BLURB>
-<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_nose.xml"</DEFAULT>
+<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_nose.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58945,7 +59035,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Face profile</NICK>
 <BLURB>Location of Haar cascade file to use for face detection.</BLURB>
-<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58985,7 +59075,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Profile</NICK>
 <BLURB>Location of Haar cascade file to use for face blurion.</BLURB>
-<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -60079,7 +60169,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rw</FLAGS>
 <NICK>Profile_fist</NICK>
 <BLURB>Location of HAAR cascade file (fist gesture).</BLURB>
-<DEFAULT>"/usr/local/share/gst-plugins-bad/1.0/opencv_haarcascades/fist.xml"</DEFAULT>
+<DEFAULT>"/home/nicolas/Sources/prefix/share/gst-plugins-bad/1.0/opencv_haarcascades/fist.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -60089,7 +60179,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rw</FLAGS>
 <NICK>Profile_palm</NICK>
 <BLURB>Location of HAAR cascade file (palm gesture).</BLURB>
-<DEFAULT>"/usr/local/share/gst-plugins-bad/1.0/opencv_haarcascades/palm.xml"</DEFAULT>
+<DEFAULT>"/home/nicolas/Sources/prefix/share/gst-plugins-bad/1.0/opencv_haarcascades/palm.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -66713,6 +66803,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstSrtpEnc::stats</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Statistics</NICK>
+<BLURB>Various statistics.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSegmentation::learning-rate</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
@@ -68421,6 +68521,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstGLImageSinkBin::rotate-method</NAME>
+<TYPE>GstGLRotateMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rotate method</NICK>
+<BLURB>rotate method.</BLURB>
+<DEFAULT>Identity (no rotation)</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstGLFilterBin::filter</NAME>
 <TYPE>GstElement*</TYPE>
 <RANGE></RANGE>
@@ -69410,3 +69520,2662 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <DEFAULT>Blur Vertical</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>frei0r-src-test-pat-r::amplitude</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Amplitude</NICK>
+<BLURB>Amplitude (contrast) of the pattern.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::aspect-type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aspect type</NICK>
+<BLURB>Pixel aspect ratio presets.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::channel</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Into which color channel to draw.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::freq-1</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Freq 1</NICK>
+<BLURB>Pattern 7 H frequency.</BLURB>
+<DEFAULT>0.03</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::freq-2</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Freq 2</NICK>
+<BLURB>Pattern 7 V frequency.</BLURB>
+<DEFAULT>0.03</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::lin-p-swp</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Lin P swp</NICK>
+<BLURB>Use linear period sweep.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::manual-aspect</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Manual aspect</NICK>
+<BLURB>Manual pixel aspect ratio.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-r::type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>Type of test pattern.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-l::channel</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Into which color channel to draw.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-l::type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>Type of test pattern.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-i::amplitude</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Amplitude</NICK>
+<BLURB>Amplitude (contrast) of the pattern.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-i::channel</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Into which color channel to draw.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-i::negative</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Negative</NICK>
+<BLURB>Change polarity of impulse/step.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-i::tilt</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tilt</NICK>
+<BLURB>Angle of step function.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-i::type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>Type of test pattern.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-i::width</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Width</NICK>
+<BLURB>Width of impulse.</BLURB>
+<DEFAULT>0.040404</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-g::aspect-type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aspect type</NICK>
+<BLURB>Pixel aspect ratio presets.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-g::manual-aspect</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Manual Aspect</NICK>
+<BLURB>Manual pixel aspect ratio.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-g::negative</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Negative</NICK>
+<BLURB>Polarity of image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-g::size-1</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size 1</NICK>
+<BLURB>Size of major features.</BLURB>
+<DEFAULT>0.28125</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-g::size-2</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size 2</NICK>
+<BLURB>Size of minor features.</BLURB>
+<DEFAULT>0.0625</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-g::type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>Type of test pattern.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-c::color-space</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color space</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-c::cross-section</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Cross section</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-c::fullscreen</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Fullscreen</NICK>
+<BLURB></BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-c::third-axis-value</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Third axis value</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-b::aspect-type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aspect type</NICK>
+<BLURB>7 choices, pixel aspect ratio.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-b::manual-aspect</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Manual Aspect</NICK>
+<BLURB>Manual pixel aspect ratio (Aspect type 6).</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-test-pat-b::type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>8 choices, select test pattern.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-mixer-cairoblend::blend-mode</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>blend mode</NICK>
+<BLURB>Blend mode used to compose image. Accepted values: 'normal', 'add', 'saturate', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'colordodge', 'colorburn', 'hardlight', 'softlight', 'difference', 'exclusion', 'hslhue', 'hslsaturation', 'hslcolor', 'hslluminosity'.</BLURB>
+<DEFAULT>"normal"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-mixer-cairoblend::opacity</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>opacity</NICK>
+<BLURB>Opacity of composited image.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-mixer-cairoaffineblend::anchor-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>anchor x</NICK>
+<BLURB>X position of rotation center within the second input.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-mixer-cairoaffineblend::anchor-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>anchor y</NICK>
+<BLURB>Y position of rotation center within the second input.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-mixer-cairoaffineblend::blend-mode</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>blend mode</NICK>
+<BLURB>Blend mode used to compose image. Accepted values: 'normal', 'add', 'saturate', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'colordodge', 'colorburn', 'hardlight', 'softlight', 'difference', 'exclusion', 'hslhue', 'hslsaturation', 'hslcolor', 'hslluminosity'.</BLURB>
+<DEFAULT>"normal"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-mixer-cairoaffineblend::opacity</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>opacity</NICK>
+<BLURB>Opacity of second input.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-mixer-cairoaffineblend::rotation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rotation</NICK>
+<BLURB>Rotation of second input, value interperted as range 0 - 360.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-mixer-cairoaffineblend::x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>x</NICK>
+<BLURB>X position of second input, value interperted as range -2*width - 3*width.</BLURB>
+<DEFAULT>0.4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-mixer-cairoaffineblend::x-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>x scale</NICK>
+<BLURB>X scale of second input, value interperted as range 0 - 5.</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-mixer-cairoaffineblend::y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>y</NICK>
+<BLURB>Y position of second input, value interperted as range -2*height - 3*height.</BLURB>
+<DEFAULT>0.4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-mixer-cairoaffineblend::y-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>y scale</NICK>
+<BLURB>Y scale of second input, value interperted as range 0 - 5.</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-white-balance--lms-space-::color-temperature</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color Temperature</NICK>
+<BLURB>Choose an output color temperature, if different from 6500 K.</BLURB>
+<DEFAULT>0.433333</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-white-balance--lms-space-::neutral-color-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Neutral Color (B)</NICK>
+<BLURB>Choose a color from the source image that should be white.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-white-balance--lms-space-::neutral-color-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Neutral Color (G)</NICK>
+<BLURB>Choose a color from the source image that should be white.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-white-balance--lms-space-::neutral-color-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Neutral Color (R)</NICK>
+<BLURB>Choose a color from the source image that should be white.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-vignette::aspect</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>aspect</NICK>
+<BLURB>Aspect ratio.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-vignette::clearcenter</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>clearCenter</NICK>
+<BLURB>Size of the unaffected center.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-vignette::soft</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>soft</NICK>
+<BLURB>Softness.</BLURB>
+<DEFAULT>0.6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-vectorscope::mix</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>mix</NICK>
+<BLURB>The amount of source image mixed into background of display.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-vectorscope::overlay-sides</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>overlay sides</NICK>
+<BLURB>If false, the sides of image are shown without overlay.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-timeout-indicator::color-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>color (B)</NICK>
+<BLURB>Indicator colour.</BLURB>
+<DEFAULT>6.44597e-44</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-timeout-indicator::color-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>color (G)</NICK>
+<BLURB>Indicator colour.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-timeout-indicator::color-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>color (R)</NICK>
+<BLURB>Indicator colour.</BLURB>
+<DEFAULT>1.28487e-37</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-timeout-indicator::time</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>time</NICK>
+<BLURB>Current time.</BLURB>
+<DEFAULT>1.80984e-316</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-timeout-indicator::transparency</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>transparency</NICK>
+<BLURB>Indicator transparency.</BLURB>
+<DEFAULT>1.80984e-316</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-spillsupress::supresstype</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>supresstype</NICK>
+<BLURB>Defines if green or blue screen spill supress is applied.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::aoffset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>aOffset</NICK>
+<BLURB>Offset of the alpha component.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::apower</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>aPower</NICK>
+<BLURB>Power (Gamma) of the alpha component.</BLURB>
+<DEFAULT>0.05</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::aslope</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>aSlope</NICK>
+<BLURB>Slope of the alpha component.</BLURB>
+<DEFAULT>0.05</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::boffset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>bOffset</NICK>
+<BLURB>Offset of the blue color component.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::bpower</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>bPower</NICK>
+<BLURB>Power (Gamma) of the blue color component.</BLURB>
+<DEFAULT>0.05</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::bslope</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>bSlope</NICK>
+<BLURB>Slope of the blue color component.</BLURB>
+<DEFAULT>0.05</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::goffset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>gOffset</NICK>
+<BLURB>Offset of the green color component.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::gpower</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>gPower</NICK>
+<BLURB>Power (Gamma) of the green color component.</BLURB>
+<DEFAULT>0.05</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::gslope</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>gSlope</NICK>
+<BLURB>Slope of the green color component.</BLURB>
+<DEFAULT>0.05</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::roffset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rOffset</NICK>
+<BLURB>Offset of the red color component.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::rpower</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rPower</NICK>
+<BLURB>Power (Gamma) of the red color component.</BLURB>
+<DEFAULT>0.05</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::rslope</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rSlope</NICK>
+<BLURB>Slope of the red color component.</BLURB>
+<DEFAULT>0.05</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sop-sat::saturation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>saturation</NICK>
+<BLURB>Overall saturation.</BLURB>
+<DEFAULT>0.1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-softglow::blur</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>blur</NICK>
+<BLURB>Blur of the glow.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-softglow::blurblend</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>blurblend</NICK>
+<BLURB>Blend mode used to blend highlight blur with input image.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-softglow::brightness</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>brightness</NICK>
+<BLURB>Brightness of highlight areas.</BLURB>
+<DEFAULT>0.75</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-softglow::sharpness</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>sharpness</NICK>
+<BLURB>Sharpness of highlight areas.</BLURB>
+<DEFAULT>0.85</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sigmoidaltransfer::brightness</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>brightness</NICK>
+<BLURB>Brightnesss of image.</BLURB>
+<DEFAULT>0.75</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sigmoidaltransfer::sharpness</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>sharpness</NICK>
+<BLURB>Sharpness of transfer.</BLURB>
+<DEFAULT>0.85</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sharpness::amount</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Amount</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-sharpness::size</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::color-to-select-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color to select (B)</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::color-to-select-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color to select (G)</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::color-to-select-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color to select (R)</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::delta-b---i---i</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Delta B / I / I</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::delta-g---b---chroma</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Delta G / B / Chroma</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::delta-r---a---hue</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Delta R / A / Hue</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::edge-mode</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Edge mode</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::invert-selection</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Invert selection</NICK>
+<BLURB></BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::operation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Operation</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::selection-subspace</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Selection subspace</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::slope</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Slope</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-select0r::subspace-shape</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Subspace shape</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-rgbnoise::noise</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>noise</NICK>
+<BLURB>Amount of noise added.</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-rgb-parade::mix</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>mix</NICK>
+<BLURB>The amount of source image mixed into background of display.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-rgb-parade::overlay-sides</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>overlay sides</NICK>
+<BLURB>If false, the sides of image are shown without overlay.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::alpha-trace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alpha trace</NICK>
+<BLURB>Show Alpha trace on scope.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::b-trace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B trace</NICK>
+<BLURB>Show B trace on scope.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::channel</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Channel to numerically display.</BLURB>
+<DEFAULT>0.375005</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::color</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color</NICK>
+<BLURB>rec 601 or rec 709.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::crosshair-color</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Crosshair color</NICK>
+<BLURB>Color of the profile marker.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::display-average</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display average</NICK>
+<BLURB>e.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::display-maximum</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display maximum</NICK>
+<BLURB></BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::display-minimum</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display minimum</NICK>
+<BLURB></BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::display-rms</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display RMS</NICK>
+<BLURB></BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::g-trace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>G trace</NICK>
+<BLURB>Show G trace on scope.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::length</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Length</NICK>
+<BLURB>Length of profile.</BLURB>
+<DEFAULT>0.589744</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::marker-1</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Marker 1</NICK>
+<BLURB>Position of marker 1.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::marker-2</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Marker 2</NICK>
+<BLURB>Position of marker 2.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::param-256-scale</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>256 scale</NICK>
+<BLURB>use 0-255 instead of 0.0-1.0.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::pb-trace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pb trace</NICK>
+<BLURB>Show Pb trace on scope.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::pr-trace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pr trace</NICK>
+<BLURB>Show Pr trace on scope.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::r-trace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>R trace</NICK>
+<BLURB>Show R trace on scope.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::tilt</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tilt</NICK>
+<BLURB>Tilt of profile.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X</NICK>
+<BLURB>X position of profile.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y</NICK>
+<BLURB>Y position of profile.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0file::y-trace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y trace</NICK>
+<BLURB>Show Y' trace on scope.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::big-window</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Big window</NICK>
+<BLURB>Display more data.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::measurement</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Measurement</NICK>
+<BLURB>What measurement to display.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::param-256-scale</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>256 scale</NICK>
+<BLURB>use 0-255 instead of 0.0-1.0.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::show-alpha</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Show alpha</NICK>
+<BLURB>Display alpha value too.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X</NICK>
+<BLURB>X position of probe.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::x-size</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X size</NICK>
+<BLURB>X size of probe.</BLURB>
+<DEFAULT>0.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y</NICK>
+<BLURB>Y position of probe.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pr0be::y-size</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y size</NICK>
+<BLURB>Y size of probe.</BLURB>
+<DEFAULT>0.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-posterize::levels</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>levels</NICK>
+<BLURB>Number of values per channel.</BLURB>
+<DEFAULT>0.104167</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-ndvi-filter::color-map</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color Map</NICK>
+<BLURB>The color map to use. One of 'earth', 'grayscale', 'heat' or 'rainbow'.</BLURB>
+<DEFAULT>"grayscale"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-ndvi-filter::index-calculation</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Index Calculation</NICK>
+<BLURB>The index calculation to use. One of 'ndvi' or 'vi'.</BLURB>
+<DEFAULT>"ndvi"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-ndvi-filter::legend</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Legend</NICK>
+<BLURB>Control legend display. One of 'off' or 'bottom'.</BLURB>
+<DEFAULT>"off"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-ndvi-filter::levels</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Levels</NICK>
+<BLURB>The number of color levels to use in the false image (divided by 1000).</BLURB>
+<DEFAULT>0.256</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-ndvi-filter::nir-channel</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>NIR Channel</NICK>
+<BLURB>The channel to use for the near-infrared component. One of 'r', 'g', or 'b'.</BLURB>
+<DEFAULT>"r"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-ndvi-filter::nir-offset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>NIR Offset</NICK>
+<BLURB>An offset to be applied to the near-infrared component (mapped to [-100%, 100%].</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-ndvi-filter::nir-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>NIR Scale</NICK>
+<BLURB>A scaling factor to be applied to the near-infrared component (divided by 10).</BLURB>
+<DEFAULT>0.1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-ndvi-filter::vis-offset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VIS Offset</NICK>
+<BLURB>An offset to be applied to the visible component (mapped to [-100%, 100%].</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-ndvi-filter::vis-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VIS Scale</NICK>
+<BLURB>A scaling factor to be applied to the visible component (divided by 10).</BLURB>
+<DEFAULT>0.1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-ndvi-filter::visible-channel</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Visible Channel</NICK>
+<BLURB>The channel to use for the visible component. One of 'r', 'g', or 'b'.</BLURB>
+<DEFAULT>"b"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-medians::size</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size</NICK>
+<BLURB>Size for 'var size' type filter.</BLURB>
+<DEFAULT>0.1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-medians::type</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>Choose type of median: Cross5, Square3x3, Bilevel, Diamond3x3, Square5x5, Temp3, Temp5, ArceBI, ML3D, ML3dEX, VarSize.</BLURB>
+<DEFAULT>"Square3x3"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::backgroundweight</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>backgroundWeight</NICK>
+<BLURB>Describes how strong the (accumulated) background should shine through.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::blackreference</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>blackReference</NICK>
+<BLURB>Uses black as background image instead of the first frame.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::dim</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>dim</NICK>
+<BLURB>Dimming of the light mask.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::longalpha</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>longAlpha</NICK>
+<BLURB>Alpha value for moving average.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::loweroverexposure</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>lowerOverexposure</NICK>
+<BLURB>Prevents some overexposure if the light source stays steady too long (varying speed).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::nonlineardim</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>nonlinearDim</NICK>
+<BLURB>Nonlinear dimming (may look more natural).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::reset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>reset</NICK>
+<BLURB>Reset filter masks.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::saturation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>saturation</NICK>
+<BLURB>Saturation of lights.</BLURB>
+<DEFAULT>0.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::sensitivity</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>sensitivity</NICK>
+<BLURB>Sensitivity of the effect for light (higher sensitivity will lead to brighter lights).</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::statsbrightness</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>statsBrightness</NICK>
+<BLURB>Display the brightness and threshold, for adjusting the brightness threshold parameter.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::statsdifference</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>statsDifference</NICK>
+<BLURB>Display the background difference and threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::statsdiffsum</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>statsDiffSum</NICK>
+<BLURB>Display the sum of the background difference and the threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::thresholdbrightness</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>thresholdBrightness</NICK>
+<BLURB>Brightness threshold to distinguish between foreground and background.</BLURB>
+<DEFAULT>0.588235</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::thresholddifference</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>thresholdDifference</NICK>
+<BLURB>Threshold: Difference to background to distinguish between fore- and background.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::thresholddiffsum</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>thresholdDiffSum</NICK>
+<BLURB>Threshold for sum of differences. Can in most cases be ignored (set to 0).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-light-graffiti::transparentbackground</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>transparentBackground</NICK>
+<BLURB>Make the background transparent.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::amount-1</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Amount 1</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.55</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::amount-2</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Amount 2</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::hue-gate</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Hue gate</NICK>
+<BLURB>Restrict mask to hues close to key.</BLURB>
+<DEFAULT>0.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::key-color-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Key color (B)</NICK>
+<BLURB>Key color that was used for chroma keying.</BLURB>
+<DEFAULT>0.1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::key-color-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Key color (G)</NICK>
+<BLURB>Key color that was used for chroma keying.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::key-color-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Key color (R)</NICK>
+<BLURB>Key color that was used for chroma keying.</BLURB>
+<DEFAULT>0.1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::mask-to-alpha</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mask to Alpha</NICK>
+<BLURB>Replace alpha channel with the mask.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::mask-type</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mask type</NICK>
+<BLURB>Which mask to apply [0,1,2,3].</BLURB>
+<DEFAULT>"0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::operation-1</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Operation 1</NICK>
+<BLURB>First operation 1 [0,1,2].</BLURB>
+<DEFAULT>"1"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::operation-2</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Operation 2</NICK>
+<BLURB>Second operation 2 [0,1,2].</BLURB>
+<DEFAULT>"0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::saturation-threshold</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Saturation threshold</NICK>
+<BLURB>Restrict mask to saturated colors.</BLURB>
+<DEFAULT>0.15</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::show-mask</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Show mask</NICK>
+<BLURB>Replace image with the mask.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::slope</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Slope</NICK>
+<BLURB>Range of colors around the key where effect gradually decreases.</BLURB>
+<DEFAULT>0.4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::target-color-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target color (B)</NICK>
+<BLURB>Desired color to replace key residue with.</BLURB>
+<DEFAULT>0.4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::target-color-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target color (G)</NICK>
+<BLURB>Desired color to replace key residue with.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::target-color-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target color (R)</NICK>
+<BLURB>Desired color to replace key residue with.</BLURB>
+<DEFAULT>0.78</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-keyspillm0pup::tolerance</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tolerance</NICK>
+<BLURB>Range of colors around the key, where effect is full strength.</BLURB>
+<DEFAULT>0.24</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-iir-blur::amount</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Amount</NICK>
+<BLURB>Amount of blur.</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-iir-blur::edge</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Edge</NICK>
+<BLURB>Edge compensation.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-iir-blur::type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>Blur type.</BLURB>
+<DEFAULT>0.333344</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-hqdn3d::spatial</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Spatial</NICK>
+<BLURB>Amount of spatial filtering.</BLURB>
+<DEFAULT>0.04</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-hqdn3d::temporal</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Temporal</NICK>
+<BLURB>Amount of temporal filtering.</BLURB>
+<DEFAULT>0.06</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-emboss::azimuth</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>azimuth</NICK>
+<BLURB>Light direction.</BLURB>
+<DEFAULT>0.375</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-emboss::elevation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>elevation</NICK>
+<BLURB>Background lightness.</BLURB>
+<DEFAULT>0.333333</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-emboss::width45</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>width45</NICK>
+<BLURB>Bump height.</BLURB>
+<DEFAULT>0.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-dither::levels</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>levels</NICK>
+<BLURB>Number of values per channel.</BLURB>
+<DEFAULT>0.104167</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-dither::matrixid</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>matrixid</NICK>
+<BLURB>Id of matrix used for dithering.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::amount</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Amount</NICK>
+<BLURB>Focal Ratio.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::aspect-type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aspect type</NICK>
+<BLURB>Pixel aspect ratio presets.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::defish</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DeFish</NICK>
+<BLURB>Fish or Defish.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::interpolator</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interpolator</NICK>
+<BLURB>Quality of interpolation.</BLURB>
+<DEFAULT>0.166667</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::manual-aspect</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Manual Aspect</NICK>
+<BLURB>Manual Pixel Aspect ratio.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::manual-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Manual Scale</NICK>
+<BLURB>Manual Scale.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::scaling</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scaling</NICK>
+<BLURB>Scaling method.</BLURB>
+<DEFAULT>0.666667</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-defish0r::type</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>Mapping function.</BLURB>
+<DEFAULT>0.666667</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-colortap::table</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>table</NICK>
+<BLURB>Lookup table used to filter colors. One of: xpro, sepia, heat, red_green, old_photo, xray, esses, yellow_blue.</BLURB>
+<DEFAULT>"esses"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-colorize::hue</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>hue</NICK>
+<BLURB>Color shade of the colorized image.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-colorize::lightness</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>lightness</NICK>
+<BLURB>Lightness of the colorized image.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-colorize::saturation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>saturation</NICK>
+<BLURB>Amount of color in the colorized image.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-colorhalftone::cyan-angle</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>cyan angle</NICK>
+<BLURB>Cyan dots angle.</BLURB>
+<DEFAULT>0.3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-colorhalftone::dot-radius</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>dot radius</NICK>
+<BLURB>Halftone pattern dot size.</BLURB>
+<DEFAULT>0.4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-colorhalftone::magenta-angle</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magenta angle</NICK>
+<BLURB>Magenta dots angle.</BLURB>
+<DEFAULT>0.45</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-colorhalftone::yellow-angle</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>yellow angle</NICK>
+<BLURB>Yellow dots angle.</BLURB>
+<DEFAULT>0.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-coloradj-rgb::action</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Action</NICK>
+<BLURB>Type of color adjustment.</BLURB>
+<DEFAULT>0.333344</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-coloradj-rgb::alpha-controlled</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alpha controlled</NICK>
+<BLURB>Adjust only areas with nonzero alpha.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-coloradj-rgb::b</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B</NICK>
+<BLURB>Amount of blue.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-coloradj-rgb::g</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>G</NICK>
+<BLURB>Amount of green.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-coloradj-rgb::keep-luma</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keep luma</NICK>
+<BLURB>Don't change brightness.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-coloradj-rgb::luma-formula</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luma formula</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.500025</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-coloradj-rgb::r</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>R</NICK>
+<BLURB>Amount of red.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairoimagegrid::columns</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>columns</NICK>
+<BLURB>Number of columns in the image grid. Input range 0 - 1 is interpreted as range 1 - 20.</BLURB>
+<DEFAULT>0.105263</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairoimagegrid::rows</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rows</NICK>
+<BLURB>Number of rows in the image grid. Input range 0 - 1 is interpreted as range 1 - 20.</BLURB>
+<DEFAULT>0.105263</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::blend-mode</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>blend mode</NICK>
+<BLURB>Blend mode used to compose gradient on image. Accepted values: 'normal', 'add', 'saturate', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'colordodge', 'colorburn', 'hardlight', 'softlight', 'difference', 'exclusion', 'hslhue', 'hslsaturation', 'hslcolor', 'hslluminosity'.</BLURB>
+<DEFAULT>"normal"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::end-color-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>end color (B)</NICK>
+<BLURB>Second color of the gradient.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::end-color-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>end color (G)</NICK>
+<BLURB>Second color of the gradient.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::end-color-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>end color (R)</NICK>
+<BLURB>Second color of the gradient.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::end-opacity</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>end opacity</NICK>
+<BLURB>Opacity of the second color of the gradient.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::end-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>end x</NICK>
+<BLURB>X position of the end point of the gradient.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::end-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>end y</NICK>
+<BLURB>Y position of the end point of the gradient.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::offset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>offset</NICK>
+<BLURB>Position of first color in the line connecting gradient ends, really useful only for radial gradient.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::pattern</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>pattern</NICK>
+<BLURB>Linear or radial gradient.</BLURB>
+<DEFAULT>"gradient_linear"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::start-color-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>start color (B)</NICK>
+<BLURB>First color of the gradient.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::start-color-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>start color (G)</NICK>
+<BLURB>First color of the gradient.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::start-color-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>start color (R)</NICK>
+<BLURB>First color of the gradient.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::start-opacity</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>start opacity</NICK>
+<BLURB>Opacity of the first color of the gradient.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::start-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>start x</NICK>
+<BLURB>X position of the start point of the gradient.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cairogradient::start-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>start y</NICK>
+<BLURB>Y position of the start point of the gradient.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::alpha-operation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alpha operation</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-1-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 1 X</NICK>
+<BLURB>X coordinate of corner 1.</BLURB>
+<DEFAULT>0.333333</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-1-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 1 Y</NICK>
+<BLURB>Y coordinate of corner 1.</BLURB>
+<DEFAULT>0.333333</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-2-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 2 X</NICK>
+<BLURB>X coordinate of corner 2.</BLURB>
+<DEFAULT>0.666666</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-2-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 2 Y</NICK>
+<BLURB>Y coordinate of corner 2.</BLURB>
+<DEFAULT>0.333333</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-3-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 3 X</NICK>
+<BLURB>X coordinate of corner 3.</BLURB>
+<DEFAULT>0.666666</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-3-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 3 Y</NICK>
+<BLURB>Y coordinate of corner 3.</BLURB>
+<DEFAULT>0.666666</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-4-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 4 X</NICK>
+<BLURB>X coordinate of corner 4.</BLURB>
+<DEFAULT>0.333333</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::corner-4-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner 4 Y</NICK>
+<BLURB>Y coordinate of corner 4.</BLURB>
+<DEFAULT>0.666666</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::enable-stretch</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Enable Stretch</NICK>
+<BLURB>Enable stretching.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::feather-alpha</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Feather Alpha</NICK>
+<BLURB>Makes smooth transition into transparent.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::interpolator</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interpolator</NICK>
+<BLURB>Quality of interpolation.</BLURB>
+<DEFAULT>0.166667</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::stretch-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stretch X</NICK>
+<BLURB>Amount of stretching in X direction.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::stretch-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stretch Y</NICK>
+<BLURB>Amount of stretching in Y direction.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-c0rners::transparent-background</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transparent Background</NICK>
+<BLURB>Makes background transparent.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::max</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max</NICK>
+<BLURB></BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::min</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::operation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Operation</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::position-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Position X</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::position-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Position Y</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::shape</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Shape</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::size-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size X</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::size-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size Y</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::tilt</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tilt</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphaspot::transition-width</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transition width</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphagrad::max</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max</NICK>
+<BLURB></BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphagrad::min</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphagrad::operation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Operation</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphagrad::position</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Position</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphagrad::tilt</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tilt</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alphagrad::transition-width</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transition width</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alpha0ps::display</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alpha0ps::display-input-alpha</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display input alpha</NICK>
+<BLURB></BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alpha0ps::invert</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Invert</NICK>
+<BLURB></BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alpha0ps::operation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Operation</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alpha0ps::shrink-grow-blur-amount</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Shrink/Grow/Blur amount</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.333344</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-alpha0ps::threshold</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKMSSink::connector-id</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Connector ID</NICK>
+<BLURB>DRM connector id.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKMSSink::driver-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>device name</NICK>
+<BLURB>DRM device driver name.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBs2b::fcut</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[300,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frequency cut</NICK>
+<BLURB>Low-pass filter cut frequency (Hz).</BLURB>
+<DEFAULT>700</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBs2b::feed</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[10,150]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Feed level</NICK>
+<BLURB>Feed Level (dB/10).</BLURB>
+<DEFAULT>45</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebrtcDsp::echo-cancel</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Echo Cancel</NICK>
+<BLURB>Enable or disable echo canceller, note that it will be disabled if no webrtcechoprobe has been found.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebrtcDsp::experimental-agc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Experimental AGC</NICK>
+<BLURB>Enable or disable experimental automatic gain control.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebrtcDsp::extended-filter</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Extended Filter</NICK>
+<BLURB>Enable or disable the extended filter.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebrtcDsp::gain-control</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Gain Control</NICK>
+<BLURB>Enable or disable automatic digital gain control.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebrtcDsp::high-pass-filter</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>High Pass Filter</NICK>
+<BLURB>Enable or disable high pass filtering.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebrtcDsp::noise-suppression</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Noise Suppression</NICK>
+<BLURB>Enable or disable noise suppression.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebrtcDsp::probe</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Echo Probe</NICK>
+<BLURB>The name of the webrtcechoprobe element that record the audio being played through loud speakers. Must be set before PAUSED state.</BLURB>
+<DEFAULT>"webrtcechoprobe0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebrtcDsp::echo-suppression-level</NAME>
+<TYPE>GstWebrtcEchoSuppressionLevel</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Echo Suppression Level</NICK>
+<BLURB>Controls the aggressiveness of the suppressor. A higher level trades off double-talk performance for increased echo suppression.</BLURB>
+<DEFAULT>Moderate Suppression</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebrtcDsp::noise-suppression-level</NAME>
+<TYPE>GstWebrtcNoiseSuppressionLevel</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Noise Suppression Level</NICK>
+<BLURB>Controls the aggressiveness of the suppression. Increasing the level will reduce the noise level at the expense of a higher speech distortion.</BLURB>
+<DEFAULT>Moderate Suppression</DEFAULT>
+</ARG>

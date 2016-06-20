@@ -1,0 +1,34 @@
+<plugin>
+  <name>audiofxbad</name>
+  <description>Audio filters from gst-plugins-bad</description>
+  <filename>../../gst/audiofxbad/.libs/libgstaudiofxbad.so</filename>
+  <basename>libgstaudiofxbad.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>audiochannelmix</name>
+      <longname>Simple stereo audio mixer</longname>
+      <class>Audio/Mixer</class>
+      <description>Mixes left/right channels of stereo audio</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)[ 1, 2147483647 ], channels=(int)2, layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)[ 1, 2147483647 ], channels=(int)2, layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

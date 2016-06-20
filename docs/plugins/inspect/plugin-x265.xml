@@ -1,0 +1,34 @@
+<plugin>
+  <name>x265</name>
+  <description>x265-based H265 plugins</description>
+  <filename>../../ext/x265/.libs/libgstx265.so</filename>
+  <basename>libgstx265.so</basename>
+  <version>1.9.0.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>x265enc</name>
+      <longname>x265enc</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>H265 Encoder</description>
+      <author>Thijs Vermeir &lt;thijs.vermeir@barco.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, Y444, I420_10LE, Y444_10LE }, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 4, 2147483647 ], height=(int)[ 4, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-h265, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 4, 2147483647 ], height=(int)[ 4, 2147483647 ], stream-format=(string)byte-stream, alignment=(string)au, profile=(string){ main }</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

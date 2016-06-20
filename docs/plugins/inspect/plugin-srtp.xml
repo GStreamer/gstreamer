@@ -1,0 +1,79 @@
+<plugin>
+  <name>srtp</name>
+  <description>GStreamer SRTP</description>
+  <filename>../../ext/srtp/.libs/libgstsrtp.so</filename>
+  <basename>libgstsrtp.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer</package>
+  <origin>http://gstreamer.net/</origin>
+  <elements>
+    <element>
+      <name>srtpdec</name>
+      <longname>SRTP decoder</longname>
+      <class>Filter/Network/SRTP</class>
+      <description>A SRTP and SRTCP decoder</description>
+      <author>Gabriel Millaire &lt;millaire.gabriel@collabora.com&gt;</author>
+      <pads>
+        <caps>
+          <name>rtcp_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-srtcp</details>
+        </caps>
+        <caps>
+          <name>rtp_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-srtp</details>
+        </caps>
+        <caps>
+          <name>rtcp_src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtcp</details>
+        </caps>
+        <caps>
+          <name>rtp_src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>srtpenc</name>
+      <longname>SRTP encoder</longname>
+      <class>Filter/Network/SRTP</class>
+      <description>A SRTP and SRTCP encoder</description>
+      <author>Gabriel Millaire &lt;millaire.gabriel@collabora.com&gt;</author>
+      <pads>
+        <caps>
+          <name>rtcp_sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rtcp</details>
+        </caps>
+        <caps>
+          <name>rtp_sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>rtcp_src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>application/x-srtcp</details>
+        </caps>
+        <caps>
+          <name>rtp_src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>application/x-srtp</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

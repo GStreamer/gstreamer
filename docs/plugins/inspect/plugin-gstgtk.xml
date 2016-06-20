@@ -1,0 +1,43 @@
+<plugin>
+  <name>gstgtk</name>
+  <description>Gtk+ sink</description>
+  <filename>../../ext/gtk/.libs/libgstgtksink.so</filename>
+  <basename>libgstgtksink.so</basename>
+  <version>1.9.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>gtkglsink</name>
+      <longname>Gtk GL Video Sink</longname>
+      <class>Sink/Video</class>
+      <description>A video sink that renders to a GtkWidget using OpenGL</description>
+      <author>Matthew Waters &lt;matthew@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw(memory:GLMemory), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>gtksink</name>
+      <longname>Gtk Video Sink</longname>
+      <class>Sink/Video</class>
+      <description>A video sink that renders to a GtkWidget</description>
+      <author>Matthew Waters &lt;matthew@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, BGRA }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
