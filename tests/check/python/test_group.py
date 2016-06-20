@@ -30,7 +30,7 @@ Gst.init(None)
 GES.init()
 
 
-class TestCopyPaste(unittest.TestCase):
+class TestGroup(unittest.TestCase):
 
     def setUp(self):
         self.timeline = GES.Timeline.new_audio_video()
@@ -121,3 +121,31 @@ class TestCopyPaste(unittest.TestCase):
         clips = self.layer.get_clips()
         self.assertEqual(len(clips), 3)
         self.assertEqual(clips[1].props.start, 10)
+
+    def test_move_clips_between_layers_with_auto_transition(self):
+        self.timeline.props.auto_transition = True
+        layer2 = self.timeline.append_layer()
+        clip1 = GES.TestClip.new()
+        clip1.props.start = 0
+        clip1.props.duration = 30
+
+        clip2 = GES.TestClip.new()
+        clip2.props.start = 20
+        clip2.props.duration = 20
+
+        self.layer.add_clip(clip1)
+        self.layer.add_clip(clip2)
+
+        clips = self.layer.get_clips()
+        self.assertEqual(len(clips), 4)
+        self.assertEqual(layer2.get_clips(), [])
+
+        group = GES.Container.group(clips)
+        self.assertIsNotNone(group)
+
+        self.assertTrue(clip1.edit(
+            self.timeline.get_layers(), 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 0))
+        self.assertEqual(self.layer.get_clips(), [])
+
+        clips = layer2.get_clips()
+        self.assertEqual(len(clips), 4)
