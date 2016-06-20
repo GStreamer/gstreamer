@@ -1046,7 +1046,7 @@ gst_vaapipostproc_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
-  GstCaps *outcaps;
+  GstCaps *outcaps = NULL;
 
   GST_DEBUG_OBJECT (trans, "trying to fixate othercaps %" GST_PTR_FORMAT
       " based on caps %" GST_PTR_FORMAT " in direction %s", othercaps, caps,
@@ -1065,6 +1065,8 @@ gst_vaapipostproc_fixate_caps (GstBaseTransform * trans,
 
 done:
   GST_DEBUG_OBJECT (trans, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
+  if (outcaps)
+    gst_caps_unref (outcaps);
 
   return othercaps;
 }

@@ -333,6 +333,8 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
         allocation_caps);
   }
   gst_caps_replace (&state->allocation_caps, allocation_caps);
+  if (allocation_caps)
+    gst_caps_unref (allocation_caps);
 
   GST_INFO_OBJECT (decode, "new src caps = %" GST_PTR_FORMAT, state->caps);
   gst_caps_replace (&decode->srcpad_caps, state->caps);
