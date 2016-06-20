@@ -31,8 +31,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "glibcompat.h"
-
 #include <gst/gst.h>
 
 #endif /* SYSDEPS_H */

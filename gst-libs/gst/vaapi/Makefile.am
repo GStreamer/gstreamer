@@ -116,7 +116,6 @@ libgstvaapi_source_h =				\
 	$(NULL)
 
 libgstvaapi_source_priv_h =			\
-	glibcompat.h				\
 	gstvaapibufferproxy_priv.h		\
 	gstvaapicodec_objects.h			\
 	gstvaapicompat.h			\
