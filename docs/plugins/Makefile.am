@@ -25,7 +25,7 @@ DOC_SOURCE_DIR = $(top_srcdir)/gst $(top_srcdir)/ext $(top_srcdir)/sys
 SCAN_OPTIONS=
 
 # Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS=--sgml-mode --source-suffixes=c,h,cc,m
+MKDB_OPTIONS=--sgml-mode --source-suffixes=c,h,cc,cpp,m
 
 # Extra options to supply to gtkdoc-fixref.
 FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html \
@@ -38,7 +38,8 @@ HFILE_GLOB= \
   $(top_srcdir)/ext/*/*.hh
 CFILE_GLOB= \
   $(top_srcdir)/gst/*/*.c $(top_srcdir)/ext/*/*.c $(top_srcdir)/sys/*/*.c \
-  $(top_srcdir)/ext/*/*.cc $(top_srcdir)/sys/*/*.m
+  $(top_srcdir)/ext/*/*.cc $(top_srcdir)/ext/*/*.cpp  $(top_srcdir)/sys/*/*.cpp \
+  $(top_srcdir)/ext/*/*.m $(top_srcdir)/sys/*/*.m
 
 # Header files to ignore when scanning.
 IGNORE_HFILES =
