@@ -655,6 +655,9 @@ _child_removed (GESContainer * container, GESTimelineElement * element)
     priv->track_titles = g_slist_remove (priv->track_titles, element);
     gst_object_unref (element);
   }
+
+  GES_CONTAINER_CLASS (ges_title_clip_parent_class)->child_removed (container,
+      element);
 }
 
 static void
@@ -667,6 +670,9 @@ _child_added (GESContainer * container, GESTimelineElement * element)
     priv->track_titles = g_slist_prepend (priv->track_titles,
         gst_object_ref (element));
   }
+
+  GES_CONTAINER_CLASS (ges_title_clip_parent_class)->child_added (container,
+      element);
 }
 
 static GESTrackElement *

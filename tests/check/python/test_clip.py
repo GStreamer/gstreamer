@@ -72,3 +72,29 @@ class TestTitleClip(unittest.TestCase):
         title_clip = GES.TitleClip.new()
         self.assertEqual(title_clip.props.text, "")
         self.assertEqual(title_clip.props.font_desc, "Serif 36")
+
+    def test_split_effect(self):
+        timeline = GES.Timeline.new()
+        timeline.add_track(GES.VideoTrack.new())
+        layer = timeline.append_layer()
+
+        clip1 = GES.TitleClip.new()
+        clip1.props.duration = Gst.SECOND
+        self.assertTrue(layer.add_clip(clip1))
+
+        effect = GES.Effect.new("agingtv")
+        self.assertTrue(clip1.add(effect))
+
+        children1 = clip1.get_children(True)
+        self.assertNotEqual(children1[0].props.priority,
+                            children1[1].props.priority)
+
+        clip2 = clip1.split(Gst.SECOND / 2)
+
+        children1 = clip1.get_children(True)
+        self.assertNotEqual(children1[0].props.priority,
+                            children1[1].props.priority)
+
+        children2 = clip2.get_children(True)
+        self.assertNotEqual(children2[0].props.priority,
+                            children2[1].props.priority)
