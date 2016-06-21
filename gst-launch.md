@@ -171,7 +171,7 @@ substituted with "d3dvideosink", "ximagesink", "sdlvideosink",
 might accept different formats and even the same sink might accept
 different formats on different machines, so you might need to add
 converter elements like audioconvert and audioresample (for audio) or
-ffmpegcolorspace (for video) in front of the sink to make things work.
+videoconvert (for video) in front of the sink to make things work.
 
 **Audio playback**
 
@@ -247,16 +247,16 @@ audioconvert ! audioresample ! osssink** Play both video and audio
 portions of an MPEG movie
 
 **gst-launch-1.0 filesrc location=movie.mpg ! mpegdemux name=demuxer
-demuxer. ! queue ! mpeg2dec ! ffmpegcolorspace ! sdlvideosink demuxer. !
+demuxer. ! queue ! mpeg2dec ! videoconvert ! sdlvideosink demuxer. !
 queue ! mad ! audioconvert ! audioresample ! osssink** Play an AVI movie
 with an external text subtitle stream
 
 This example also shows how to refer to specific pads by name if an
 element (here: textoverlay) has multiple sink or source pads.
 
-**gst-launch-1.0 textoverlay name=overlay ! ffmpegcolorspace !
+**gst-launch-1.0 textoverlay name=overlay ! videoconvert !
 videoscale ! autovideosink filesrc location=movie.avi ! decodebin2 !
-ffmpegcolorspace ! overlay.video\_sink filesrc location=movie.srt !
+videoconvert ! overlay.video\_sink filesrc location=movie.srt !
 subparse ! overlay.text\_sink**
 
 Play an AVI movie with an external text subtitle stream using playbin
@@ -270,7 +270,7 @@ Stream video using RTP and network elements.
 
 **gst-launch-1.0 v4l2src !
 video/x-raw-yuv,width=128,height=96,format='(fourcc)'UYVY !
-ffmpegcolorspace ! ffenc\_h263 ! video/x-h263 ! rtph263ppay pt=96 !
+videoconvert ! ffenc\_h263 ! video/x-h263 ! rtph263ppay pt=96 !
 udpsink host=192.168.1.1 port=5000 sync=false** Use this command on the
 receiver
 
@@ -299,7 +299,7 @@ audioresample ! osssink** Play any supported audio format
 
 **gst-launch-1.0 filesrc location=videofile ! decodebin name=decoder
 decoder. ! queue ! audioconvert ! audioresample ! osssink decoder. !
-ffmpegcolorspace ! xvimagesink** Play any supported video format with
+videoconvert ! xvimagesink** Play any supported video format with
 video and audio output. Threads are used automatically. To make this
 even easier, you can use the playbin element:
 
