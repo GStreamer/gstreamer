@@ -5,16 +5,13 @@ GstAdder
 <SUBSECTION Standard>
 GstAdderClass
 GST_ADDER
+GST_ADDER_CAST
 GST_IS_ADDER
 GST_ADDER_CLASS
 GST_IS_ADDER_CLASS
 GST_TYPE_ADDER
 <SUBSECTION Private>
 gst_adder_get_type
-GstAdderClass
-GstAdderFormat
-GstAdderFunction
-GstAdderInputChannel
 </SECTION>
 
 <SECTION>
@@ -24,11 +21,12 @@ GstAlsaMidiSrc
 <SUBSECTION Standard>
 GstAlsaMidiSrcClass
 GST_ALSA_MIDI_SRC
-GST_ALSA_MIDI_SRC_CLASS
+GST_ALSA_MIDI_SRC_CAST
 GST_IS_ALSA_MIDI_SRC
+GST_ALSA_MIDI_SRC_CLASS
 GST_IS_ALSA_MIDI_SRC_CLASS
 GST_TYPE_ALSA_MIDI_SRC
-SUBSECTION Private>
+<SUBSECTION Private>
 gst_alsa_midi_src_get_type
 </SECTION>
 
@@ -44,9 +42,6 @@ GST_IS_ALSA_SINK
 GST_ALSA_SINK_CLASS
 GST_IS_ALSA_SINK_CLASS
 GST_TYPE_ALSA_SINK
-GST_ALSA_SINK_GET_LOCK
-GST_ALSA_SINK_LOCK
-GST_ALSA_SINK_UNLOCK
 <SUBSECTION Private>
 gst_alsa_sink_get_type
 </SECTION>
@@ -63,9 +58,6 @@ GST_IS_ALSA_SRC
 GST_ALSA_SRC_CLASS
 GST_IS_ALSA_SRC_CLASS
 GST_TYPE_ALSA_SRC
-GST_ALSA_SRC_GET_LOCK
-GST_ALSA_SRC_LOCK
-GST_ALSA_SRC_UNLOCK
 <SUBSECTION Private>
 gst_alsa_src_get_type
 </SECTION>
@@ -75,22 +67,9 @@ gst_alsa_src_get_type
 <TITLE>appsink</TITLE>
 GstAppSink
 <SUBSECTION Standard>
-gst_app_sink_set_caps
-gst_app_sink_get_caps
-gst_app_sink_is_eos
-gst_app_sink_set_emit_signals
-gst_app_sink_get_emit_signals
-gst_app_sink_set_max_buffers
-gst_app_sink_get_max_buffers
-gst_app_sink_set_drop
-gst_app_sink_get_drop
-gst_app_sink_pull_preroll
-gst_app_sink_pull_buffer
-gst_app_sink_set_callbacks
 GstAppSinkClass
-GstAppSinkPrivate
-GstAppSinkCallbacks
 GST_APP_SINK
+GST_APP_SINK_CAST
 GST_IS_APP_SINK
 GST_APP_SINK_CLASS
 GST_IS_APP_SINK_CLASS
@@ -104,26 +83,9 @@ gst_app_sink_get_type
 <TITLE>appsrc</TITLE>
 GstAppSrc
 <SUBSECTION Standard>
-gst_app_src_set_caps
-gst_app_src_get_caps
-gst_app_src_set_size
-gst_app_src_get_size
-gst_app_src_set_stream_type
-gst_app_src_get_stream_type
-gst_app_src_set_max_bytes
-gst_app_src_get_max_bytes
-gst_app_src_set_latency
-gst_app_src_get_latency
-gst_app_src_set_emit_signals
-gst_app_src_get_emit_signals
-gst_app_src_push_buffer
-gst_app_src_end_of_stream
-GstAppSrcCallbacks
-gst_app_src_set_callbacks
 GstAppSrcClass
-GstAppSrcPrivate
-GstAppStreamType
 GST_APP_SRC
+GST_APP_SRC_CAST
 GST_IS_APP_SRC
 GST_APP_SRC_CLASS
 GST_IS_APP_SRC_CLASS
@@ -136,26 +98,14 @@ gst_app_src_get_type
 <FILE>element-audioconvert</FILE>
 <TITLE>audioconvert</TITLE>
 GstAudioConvert
-GstAudioConvertDithering
-GstAudioConvertNoiseShaping
 <SUBSECTION Standard>
 GstAudioConvertClass
 GST_AUDIO_CONVERT
+GST_AUDIO_CONVERT_CAST
 GST_IS_AUDIO_CONVERT
 GST_AUDIO_CONVERT_CLASS
 GST_IS_AUDIO_CONVERT_CLASS
 GST_TYPE_AUDIO_CONVERT
-AudioConvertCtx
-AudioConvertFmt
-AudioConvertMix
-AudioConvertPack
-AudioConvertQuantize
-AudioConvertUnpack
-audio_convert_clean_context
-audio_convert_clean_fmt
-audio_convert_convert
-audio_convert_get_sizes
-audio_convert_prepare_context
 <SUBSECTION Private>
 gst_audio_convert_get_type
 </SECTION>
@@ -167,6 +117,7 @@ GstAudioRate
 <SUBSECTION Standard>
 GstAudioRateClass
 GST_AUDIO_RATE
+GST_AUDIO_RATE_CAST
 GST_IS_AUDIO_RATE
 GST_AUDIO_RATE_CLASS
 GST_IS_AUDIO_RATE_CLASS
@@ -179,9 +130,13 @@ gst_audio_rate_get_type
 <FILE>element-audioresample</FILE>
 <TITLE>audioresample</TITLE>
 GstAudioResample
+GstAudioResamplerMethod
+GstAudioResamplerFilterInterpolation
+GstAudioResamplerFilterMode
 <SUBSECTION Standard>
 GstAudioResampleClass
 GST_AUDIO_RESAMPLE
+GST_AUDIO_RESAMPLE_CAST
 GST_IS_AUDIO_RESAMPLE
 GST_AUDIO_RESAMPLE_CLASS
 GST_IS_AUDIO_RESAMPLE_CLASS
@@ -198,6 +153,7 @@ GstAudioTestSrcWave
 <SUBSECTION Standard>
 GstAudioTestSrcClass
 GST_AUDIO_TEST_SRC
+GST_AUDIO_TEST_SRC_CAST
 GST_IS_AUDIO_TEST_SRC
 GST_AUDIO_TEST_SRC_CLASS
 GST_IS_AUDIO_TEST_SRC_CLASS
@@ -213,6 +169,7 @@ GstCdParanoiaSrc
 <SUBSECTION Standard>
 GstCdParanoiaSrcClass
 GST_CD_PARANOIA_SRC
+GST_CD_PARANOIA_SRC_CAST
 GST_IS_CD_PARANOIA_SRC
 GST_CD_PARANOIA_SRC_CLASS
 GST_IS_CD_PARANOIA_SRC_CLASS
@@ -228,6 +185,7 @@ GstClockOverlay
 <SUBSECTION Standard>
 GstClockOverlayClass
 GST_CLOCK_OVERLAY
+GST_CLOCK_OVERLAY_CAST
 GST_IS_CLOCK_OVERLAY
 GST_CLOCK_OVERLAY_CLASS
 GST_IS_CLOCK_OVERLAY_CLASS
@@ -260,6 +218,7 @@ GstEncodeBinFlags
 <SUBSECTION Standard>
 GstEncodeBinClass
 GST_ENCODE_BIN
+GST_ENCODE_BIN_CAST
 GST_IS_ENCODE_BIN
 GST_ENCODE_BIN_CLASS
 GST_IS_ENCODE_BIN_CLASS
@@ -275,6 +234,7 @@ GstGioSink
 <SUBSECTION Standard>
 GstGioSinkClass
 GST_GIO_SINK
+GST_GIO_SINK_CAST
 GST_IS_GIO_SINK
 GST_GIO_SINK_CLASS
 GST_IS_GIO_SINK_CLASS
@@ -290,6 +250,7 @@ GstGioSrc
 <SUBSECTION Standard>
 GstGioSrcClass
 GST_GIO_SRC
+GST_GIO_SRC_CAST
 GST_IS_GIO_SRC
 GST_GIO_SRC_CLASS
 GST_IS_GIO_SRC_CLASS
@@ -305,6 +266,7 @@ GstGioStreamSink
 <SUBSECTION Standard>
 GstGioStreamSinkClass
 GST_GIO_STREAM_SINK
+GST_GIO_STREAM_SINK_CAST
 GST_IS_GIO_STREAM_SINK
 GST_GIO_STREAM_SINK_CLASS
 GST_IS_GIO_STREAM_SINK_CLASS
@@ -320,6 +282,7 @@ GstGioStreamSrc
 <SUBSECTION Standard>
 GstGioStreamSrcClass
 GST_GIO_STREAM_SRC
+GST_GIO_STREAM_SRC_CAST
 GST_IS_GIO_STREAM_SRC
 GST_GIO_STREAM_SRC_CLASS
 GST_IS_GIO_STREAM_SRC_CLASS
@@ -332,19 +295,14 @@ gst_gio_stream_src_get_type
 <FILE>element-multifdsink</FILE>
 <TITLE>multifdsink</TITLE>
 GstMultiFdSink
-GstRecoverPolicy
-GstSyncMethod
-GstClientStatus
-GstTCPProtocol
-GstTCPUnitType
 <SUBSECTION Standard>
 GstMultiFdSinkClass
 GST_MULTI_FD_SINK
+GST_MULTI_FD_SINK_CAST
 GST_IS_MULTI_FD_SINK
 GST_MULTI_FD_SINK_CLASS
 GST_IS_MULTI_FD_SINK_CLASS
 GST_TYPE_MULTI_FD_SINK
-GstTCPClient
 <SUBSECTION Private>
 gst_multi_fd_sink_get_type
 </SECTION>
@@ -353,19 +311,14 @@ gst_multi_fd_sink_get_type
 <FILE>element-multisocketsink</FILE>
 <TITLE>multisocketsink</TITLE>
 GstMultiSocketSink
-GstRecoverPolicy
-GstSyncMethod
-GstClientStatus
-GstTCPProtocol
-GstTCPUnitType
 <SUBSECTION Standard>
 GstMultiSocketSinkClass
 GST_MULTI_SOCKET_SINK
+GST_MULTI_SOCKET_SINK_CAST
 GST_IS_MULTI_SOCKET_SINK
 GST_MULTI_SOCKET_SINK_CLASS
 GST_IS_MULTI_SOCKET_SINK_CLASS
 GST_TYPE_MULTI_SOCKET_SINK
-GstTCPClient
 <SUBSECTION Private>
 gst_multi_socket_sink_get_type
 </SECTION>
@@ -393,20 +346,11 @@ GstOggDemux
 <SUBSECTION Standard>
 GstOggDemuxClass
 GST_OGG_DEMUX
+GST_OGG_DEMUX_CAST
 GST_IS_OGG_DEMUX
 GST_OGG_DEMUX_CLASS
 GST_IS_OGG_DEMUX_CLASS
 GST_TYPE_OGG_DEMUX
-GST_IS_OGG_PAD
-GST_IS_OGG_PAD_CLASS
-GST_OGG_PAD
-GST_OGG_PAD_CLASS
-GST_TYPE_OGG_PAD
-GstOggChain
-GstOggPad
-GstOggPadClass
-GstOggPadMode
-GstOggPadState
 <SUBSECTION Private>
 gst_ogg_demux_get_type
 </SECTION>
@@ -418,6 +362,7 @@ GstOggMux
 <SUBSECTION Standard>
 GstOggMuxClass
 GST_OGG_MUX
+GST_OGG_MUX_CAST
 GST_IS_OGG_MUX
 GST_OGG_MUX_CLASS
 GST_IS_OGG_MUX_CLASS
@@ -490,37 +435,46 @@ GST_TYPE_OGM_VIDEO_PARSE
 gst_ogm_video_parse_get_type
 </SECTION>
 
+<SECTION>
 <FILE>element-opusdec</FILE>
 <TITLE>opusdec</TITLE>
 GstOpusDec
 <SUBSECTION Standard>
 GstOpusDecClass
-gst_opus_dec_get_type
-GST_TYPE_OPUS_DEC
 GST_OPUS_DEC
-GST_OPUS_DEC_CLASS
+GST_OPUS_DEC_CAST
 GST_IS_OPUS_DEC
+GST_OPUS_DEC_CLASS
 GST_IS_OPUS_DEC_CLASS
+GST_TYPE_OPUS_DEC
+<SUBSECTION Private>
+gst_opus_dec_get_type
 </SECTION>
 
+<SECTION>
 <FILE>element-opusenc</FILE>
 <TITLE>opusenc</TITLE>
 GstOpusEnc
+GstOpusEncAudioType
+GstOpusEncBandwidth
+GstOpusEncBitrateType
+GstOpusEncFrameSize
 <SUBSECTION Standard>
 GstOpusEncClass
-gst_opus_enc_get_type
-GST_TYPE_OPUS_ENC
 GST_OPUS_ENC
-GST_OPUS_ENC_CLASS
+GST_OPUS_ENC_CAST
 GST_IS_OPUS_ENC
+GST_OPUS_ENC_CLASS
 GST_IS_OPUS_ENC_CLASS
+GST_TYPE_OPUS_ENC
+<SUBSECTION Private>
+gst_opus_enc_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-playbin</FILE>
 <TITLE>playbin</TITLE>
 GstPlayBin
-GstPlayFlags
 <SUBSECTION Standard>
 GstPlayBinClass
 GST_PLAY_BIN
@@ -529,8 +483,6 @@ GST_IS_PLAY_BIN
 GST_PLAY_BIN_CLASS
 GST_IS_PLAY_BIN_CLASS
 GST_TYPE_PLAY_BIN
-gst_play_flags_get_type
-GST_TYPE_PLAY_FLAGS
 <SUBSECTION Private>
 gst_play_bin_get_type
 </SECTION>
@@ -543,35 +495,10 @@ GstPlaySinkSendEventMode
 <SUBSECTION Standard>
 GstPlaySinkClass
 GST_PLAY_SINK
+GST_PLAY_SINK_CAST
 GST_IS_PLAY_SINK
 GST_PLAY_SINK_CLASS
 GST_IS_PLAY_SINK_CLASS
-GstPlaySinkType
-gst_play_sink_request_pad
-gst_play_sink_release_pad
-gst_play_sink_refresh_pad
-gst_play_sink_set_filter
-gst_play_sink_get_filter
-gst_play_sink_set_sink
-gst_play_sink_get_sink
-gst_play_sink_set_vis_plugin
-gst_play_sink_get_vis_plugin
-gst_play_sink_set_volume
-gst_play_sink_get_volume
-gst_play_sink_set_mute
-gst_play_sink_get_mute
-gst_play_sink_set_flags
-gst_play_sink_get_flags
-gst_play_sink_set_font_desc
-gst_play_sink_get_font_desc
-gst_play_sink_set_subtitle_encoding
-gst_play_sink_get_subtitle_encoding
-gst_play_sink_set_av_offset
-gst_play_sink_get_av_offset
-gst_play_sink_get_last_sample
-gst_play_sink_convert_sample
-gst_play_sink_reconfigure
-gst_play_sink_plugin_init
 GST_TYPE_PLAY_SINK
 <SUBSECTION Private>
 gst_play_sink_get_type
@@ -584,6 +511,7 @@ GstSocketSrc
 <SUBSECTION Standard>
 GstSocketSrcClass
 GST_SOCKET_SRC
+GST_SOCKET_SRC_CAST
 GST_IS_SOCKET_SRC
 GST_SOCKET_SRC_CLASS
 GST_IS_SOCKET_SRC_CLASS
@@ -615,6 +543,7 @@ GstStreamSynchronizer
 <SUBSECTION Standard>
 GstStreamSynchronizerClass
 GST_STREAM_SYNCHRONIZER
+GST_STREAM_SYNCHRONIZER_CAST
 GST_IS_STREAM_SYNCHRONIZER
 GST_STREAM_SYNCHRONIZER_CLASS
 GST_IS_STREAM_SYNCHRONIZER_CLASS
@@ -650,11 +579,8 @@ GST_SUBTITLE_OVERLAY_CAST
 GST_IS_SUBTITLE_OVERLAY
 GST_SUBTITLE_OVERLAY_CLASS
 GST_IS_SUBTITLE_OVERLAY_CLASS
-GST_SUBTITLE_OVERLAY_LOCK
-GST_SUBTITLE_OVERLAY_UNLOCK
 GST_TYPE_SUBTITLE_OVERLAY
 <SUBSECTION Private>
-gst_subtitle_overlay_plugin_init
 gst_subtitle_overlay_get_type
 </SECTION>
 
@@ -664,8 +590,8 @@ gst_subtitle_overlay_get_type
 GstTCPClientSink
 <SUBSECTION Standard>
 GstTCPClientSinkClass
-GstTCPClientSinkFlags
 GST_TCP_CLIENT_SINK
+GST_TCP_CLIENT_SINK_CAST
 GST_IS_TCP_CLIENT_SINK
 GST_TCP_CLIENT_SINK_CLASS
 GST_IS_TCP_CLIENT_SINK_CLASS
@@ -680,12 +606,13 @@ gst_tcp_client_sink_get_type
 GstTCPClientSrc
 <SUBSECTION Standard>
 GstTCPClientSrcClass
-GstTCPClientSrcFlags
 GST_TCP_CLIENT_SRC
+GST_TCP_CLIENT_SRC_CAST
 GST_IS_TCP_CLIENT_SRC
 GST_TCP_CLIENT_SRC_CLASS
 GST_IS_TCP_CLIENT_SRC_CLASS
 GST_TYPE_TCP_CLIENT_SRC
+<SUBSECTION Private>
 gst_tcp_client_src_get_type
 </SECTION>
 
@@ -695,8 +622,8 @@ gst_tcp_client_src_get_type
 GstTCPServerSink
 <SUBSECTION Standard>
 GstTCPServerSinkClass
-GstTCPServerSinkFlags
 GST_TCP_SERVER_SINK
+GST_TCP_SERVER_SINK_CAST
 GST_IS_TCP_SERVER_SINK
 GST_TCP_SERVER_SINK_CLASS
 GST_IS_TCP_SERVER_SINK_CLASS
@@ -711,8 +638,8 @@ gst_tcp_server_sink_get_type
 GstTCPServerSrc
 <SUBSECTION Standard>
 GstTCPServerSrcClass
-GstTCPServerSrcFlags
 GST_TCP_SERVER_SRC
+GST_TCP_SERVER_SRC_CAST
 GST_IS_TCP_SERVER_SRC
 GST_TCP_SERVER_SRC_CLASS
 GST_IS_TCP_SERVER_SRC_CLASS
@@ -725,17 +652,13 @@ gst_tcp_server_src_get_type
 <FILE>element-textoverlay</FILE>
 <TITLE>textoverlay</TITLE>
 GstTextOverlay
-GstTextOverlayVAlign
-GstTextOverlayHAlign
-GstTextOverlayWrapMode
 <SUBSECTION Standard>
 GstTextOverlayClass
-GstTextOverlayLineAlign
 GST_TEXT_OVERLAY
+GST_TEXT_OVERLAY_CAST
 GST_IS_TEXT_OVERLAY
 GST_TEXT_OVERLAY_CLASS
 GST_IS_TEXT_OVERLAY_CLASS
-GST_TEXT_OVERLAY_GET_CLASS
 GST_TYPE_TEXT_OVERLAY
 <SUBSECTION Private>
 gst_text_overlay_get_type
@@ -745,13 +668,16 @@ gst_text_overlay_get_type
 <FILE>element-textrender</FILE>
 <TITLE>textrender</TITLE>
 GstTextRender
+GstTextRenderHAlign
+GstTextRenderLineAlign
+GstTextRenderVAlign
 <SUBSECTION Standard>
 GstTextRenderClass
 GST_TEXT_RENDER
+GST_TEXT_RENDER_CAST
 GST_IS_TEXT_RENDER
 GST_TEXT_RENDER_CLASS
 GST_IS_TEXT_RENDER_CLASS
-GST_TEXT_RENDER_GET_CLASS
 GST_TYPE_TEXT_RENDER
 <SUBSECTION Private>
 gst_text_render_get_type
@@ -764,6 +690,7 @@ GstTheoraDec
 <SUBSECTION Standard>
 GstTheoraDecClass
 GST_THEORA_DEC
+GST_THEORA_DEC_CAST
 GST_IS_THEORA_DEC
 GST_THEORA_DEC_CLASS
 GST_IS_THEORA_DEC_CLASS
@@ -780,6 +707,7 @@ GstTheoraEncMultipassMode
 <SUBSECTION Standard>
 GstTheoraEncClass
 GST_THEORA_ENC
+GST_THEORA_ENC_CAST
 GST_IS_THEORA_ENC
 GST_THEORA_ENC_CLASS
 GST_IS_THEORA_ENC_CLASS
@@ -795,6 +723,7 @@ GstTheoraParse
 <SUBSECTION Standard>
 GstTheoraParseClass
 GST_THEORA_PARSE
+GST_THEORA_PARSE_CAST
 GST_IS_THEORA_PARSE
 GST_THEORA_PARSE_CLASS
 GST_IS_THEORA_PARSE_CLASS
@@ -811,6 +740,7 @@ GstTimeOverlayTimeLine
 <SUBSECTION Standard>
 GstTimeOverlayClass
 GST_TIME_OVERLAY
+GST_TIME_OVERLAY_CAST
 GST_IS_TIME_OVERLAY
 GST_TIME_OVERLAY_CLASS
 GST_IS_TIME_OVERLAY_CLASS
@@ -823,7 +753,6 @@ gst_time_overlay_get_type
 <FILE>element-uridecodebin</FILE>
 <TITLE>uridecodebin</TITLE>
 GstURIDecodeBin
-GstAutoplugSelectResult
 <SUBSECTION Standard>
 GstURIDecodeBinClass
 GST_URI_DECODE_BIN
@@ -832,10 +761,8 @@ GST_IS_URI_DECODE_BIN
 GST_URI_DECODE_BIN_CLASS
 GST_IS_URI_DECODE_BIN_CLASS
 GST_TYPE_URI_DECODE_BIN
-GST_TYPE_AUTOPLUG_SELECT_RESULT
 <SUBSECTION Private>
 gst_uri_decode_bin_get_type
-gst_autoplug_select_result_get_type
 </SECTION>
 
 <SECTION>
@@ -845,6 +772,7 @@ GstVideoConvert
 <SUBSECTION Standard>
 GstVideoConvertClass
 GST_VIDEO_CONVERT
+GST_VIDEO_CONVERT_CAST
 GST_IS_VIDEO_CONVERT
 GST_VIDEO_CONVERT_CLASS
 GST_IS_VIDEO_CONVERT_CLASS
@@ -860,6 +788,7 @@ GstVideoRate
 <SUBSECTION Standard>
 GstVideoRateClass
 GST_VIDEO_RATE
+GST_VIDEO_RATE_CAST
 GST_IS_VIDEO_RATE
 GST_VIDEO_RATE_CLASS
 GST_IS_VIDEO_RATE_CLASS
@@ -876,6 +805,7 @@ GstVideoScaleMethod
 <SUBSECTION Standard>
 GstVideoScaleClass
 GST_VIDEO_SCALE
+GST_VIDEO_SCALE_CAST
 GST_IS_VIDEO_SCALE
 GST_VIDEO_SCALE_CLASS
 GST_IS_VIDEO_SCALE_CLASS
@@ -889,10 +819,10 @@ gst_video_scale_get_type
 <TITLE>videotestsrc</TITLE>
 GstVideoTestSrc
 GstVideoTestSrcPattern
-GstVideoTestSrcColorSpec
 <SUBSECTION Standard>
 GstVideoTestSrcClass
 GST_VIDEO_TEST_SRC
+GST_VIDEO_TEST_SRC_CAST
 GST_IS_VIDEO_TEST_SRC
 GST_VIDEO_TEST_SRC_CLASS
 GST_IS_VIDEO_TEST_SRC_CLASS
@@ -908,6 +838,7 @@ GstVolume
 <SUBSECTION Standard>
 GstVolumeClass
 GST_VOLUME
+GST_VOLUME_CAST
 GST_IS_VOLUME
 GST_VOLUME_CLASS
 GST_IS_VOLUME_CLASS
@@ -923,6 +854,7 @@ GstVorbisDec
 <SUBSECTION Standard>
 GstVorbisDecClass
 GST_VORBIS_DEC
+GST_VORBIS_DEC_CAST
 GST_IS_VORBIS_DEC
 GST_VORBIS_DEC_CLASS
 GST_IS_VORBIS_DEC_CLASS
@@ -938,6 +870,7 @@ GstVorbisEnc
 <SUBSECTION Standard>
 GstVorbisEncClass
 GST_VORBIS_ENC
+GST_VORBIS_ENC_CAST
 GST_IS_VORBIS_ENC
 GST_VORBIS_ENC_CLASS
 GST_IS_VORBIS_ENC_CLASS
@@ -953,6 +886,7 @@ GstVorbisParse
 <SUBSECTION Standard>
 GstVorbisParseClass
 GST_VORBIS_PARSE
+GST_VORBIS_PARSE_CAST
 GST_IS_VORBIS_PARSE
 GST_VORBIS_PARSE_CLASS
 GST_IS_VORBIS_PARSE_CLASS
@@ -968,6 +902,7 @@ GstVorbisTag
 <SUBSECTION Standard>
 GstVorbisTagClass
 GST_VORBIS_TAG
+GST_VORBIS_TAG_CAST
 GST_IS_VORBIS_TAG
 GST_VORBIS_TAG_CLASS
 GST_IS_VORBIS_TAG_CLASS
@@ -983,14 +918,11 @@ GstXImageSink
 <SUBSECTION Standard>
 GstXImageSinkClass
 GST_X_IMAGE_SINK
+GST_X_IMAGE_SINK_CAST
 GST_IS_X_IMAGE_SINK
 GST_X_IMAGE_SINK_CLASS
 GST_IS_X_IMAGE_SINK_CLASS
 GST_TYPE_X_IMAGE_SINK
-GstXImageBuffer
-GstXImageBufferClass
-GstXContext
-GstXWindow
 <SUBSECTION Private>
 gst_x_image_sink_get_type
 </SECTION>
@@ -1002,13 +934,12 @@ GstXvImageSink
 <SUBSECTION Standard>
 GstXvImageSinkClass
 GST_XV_IMAGE_SINK
+GST_XV_IMAGE_SINK_CAST
 GST_IS_XV_IMAGE_SINK
 GST_XV_IMAGE_SINK_CLASS
 GST_IS_XV_IMAGE_SINK_CLASS
 GST_TYPE_XV_IMAGE_SINK
-GstXvImageBuffer
-GstXvImageBufferClass
-GstXvImageFormat
 <SUBSECTION Private>
 gst_xv_image_sink_get_type
 </SECTION>
+

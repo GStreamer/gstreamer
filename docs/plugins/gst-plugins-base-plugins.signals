@@ -202,6 +202,14 @@ gint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstPlayBin::element-setup</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin *gstplaybin
+GstElement *arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstDecodeBin::autoplug-continue</NAME>
 <RETURNS>gboolean</RETURNS>
 <FLAGS>l</FLAGS>

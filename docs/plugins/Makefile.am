@@ -55,6 +55,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/cdparanoia/gstcdparanoiasrc.h \
 	$(top_srcdir)/ext/ogg/gstoggdemux.h \
 	$(top_srcdir)/ext/ogg/gstoggmux.h \
+	$(top_srcdir)/ext/opus/gstopusdec.h \
+	$(top_srcdir)/ext/opus/gstopusenc.h \
 	$(top_srcdir)/ext/pango/gstclockoverlay.h \
 	$(top_srcdir)/ext/pango/gsttextoverlay.h \
 	$(top_srcdir)/ext/pango/gsttextrender.h \
@@ -68,6 +70,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/vorbis/gstvorbistag.h \
 	$(top_srcdir)/gst/adder/gstadder.h \
 	$(top_srcdir)/gst/audioconvert/gstaudioconvert.h \
+	$(top_srcdir)/gst/audiorate/gstaudiorate.h \
+	$(top_srcdir)/gst/audioresample/gstaudioresample.h \
 	$(top_srcdir)/gst/audiotestsrc/gstaudiotestsrc.h \
 	$(top_srcdir)/gst/encoding/gstencodebin.h \
 	$(top_srcdir)/gst/gio/gstgiosink.h \
@@ -75,16 +79,23 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/gio/gstgiostreamsink.h \
 	$(top_srcdir)/gst/gio/gstgiostreamsrc.h \
 	$(top_srcdir)/gst/playback/gstplay-enum.h \
+	$(top_srcdir)/gst/playback/gstplaysink.h \
+	$(top_srcdir)/gst/playback/gststreamsynchronizer.h \
 	$(top_srcdir)/gst/playback/gstsubtitleoverlay.h \
 	$(top_srcdir)/gst/audiorate/gstaudiorate.h \
 	$(top_srcdir)/gst/audioresample/gstaudioresample.h \
+	$(top_srcdir)/gst/subparse/gstssaparse.h \
+	$(top_srcdir)/gst/subparse/gstsubparse.h \
+	$(top_srcdir)/gst/tcp/gstmultifdsink.h \
+	$(top_srcdir)/gst/tcp/gstmultihandlesink.h \
 	$(top_srcdir)/gst/tcp/gstmultisocketsink.h \
 	$(top_srcdir)/gst/tcp/gstsocketsrc.h \
-	$(top_srcdir)/gst/tcp/gsttcpclientsrc.h \
 	$(top_srcdir)/gst/tcp/gsttcpclientsink.h \
-	$(top_srcdir)/gst/tcp/gsttcpserversrc.h \
-	$(top_srcdir)/gst/tcp/gsttcpserversink.h \
+	$(top_srcdir)/gst/tcp/gsttcpclientsrc.h \
 	$(top_srcdir)/gst/tcp/gsttcp.h \
+	$(top_srcdir)/gst/tcp/gsttcpserversink.h \
+	$(top_srcdir)/gst/tcp/gsttcpserversrc.h \
+	$(top_srcdir)/gst/videoconvert/gstvideoconvert.h \
 	$(top_srcdir)/gst/videorate/gstvideorate.h \
 	$(top_srcdir)/gst/videoscale/gstvideoscale.h \
 	$(top_srcdir)/gst/videotestsrc/gstvideotestsrc.h \
