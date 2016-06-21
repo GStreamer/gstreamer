@@ -2200,11 +2200,14 @@ gst_discoverer_info_to_variant (GstDiscovererInfo * info,
   /* FIXME: implement TOC support */
   GVariant *stream_variant;
   GVariant *variant;
-  GstDiscovererStreamInfo *sinfo = gst_discoverer_info_get_stream_info (info);
+  GstDiscovererStreamInfo *sinfo;
   GVariant *wrapper;
 
   g_return_val_if_fail (GST_IS_DISCOVERER_INFO (info), NULL);
+  g_return_val_if_fail (gst_discoverer_info_get_result (info) ==
+      GST_DISCOVERER_OK, NULL);
 
+  sinfo = gst_discoverer_info_get_stream_info (info);
   stream_variant = gst_discoverer_info_to_variant_recurse (sinfo, flags);
   variant =
       g_variant_new ("(vv)", _serialize_info (info, flags), stream_variant);

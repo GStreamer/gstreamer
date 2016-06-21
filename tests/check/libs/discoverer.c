@@ -66,6 +66,8 @@ GST_START_TEST (test_disco_serializing)
 
   info = gst_discoverer_discover_uri (dc, uri, &err);
   fail_unless (info);
+  fail_unless_equals_int (gst_discoverer_info_get_result (info),
+      GST_DISCOVERER_OK);
   serialized =
       gst_discoverer_info_to_variant (info, GST_DISCOVERER_SERIALIZE_ALL);
 
