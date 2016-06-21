@@ -34,10 +34,10 @@ until a main loop is running and a drawing surface has been received.
 
 ### A video surface on Android \[Java code\]
 
-**src/com/gst\_sdk\_tutorials/tutorial\_3/Tutorial3.java**
+**src/org/freedesktop/gstreamer/tutorials/tutorial\_3/Tutorial3.java**
 
 ``` java
-package com.gst_sdk_tutorials.tutorial_3;
+package org.freedesktop.gstreamer.tutorials.tutorial_3;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -402,7 +402,7 @@ static void *app_function (void *userdata) {
   g_main_context_push_thread_default(data->context);
 
   /* Build pipeline */
-  data->pipeline = gst_parse_launch("videotestsrc ! warptv ! ffmpegcolorspace ! autovideosink", &error);
+  data->pipeline = gst_parse_launch("videotestsrc ! warptv ! videoconvert ! autovideosink", &error);
   if (error) {
     gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
     g_clear_error (&error);
@@ -574,7 +574,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     __android_log_print (ANDROID_LOG_ERROR, "tutorial-3", "Could not retrieve JNIEnv");
     return 0;
   }
-  jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_3/Tutorial3");
+  jclass klass = (*env)->FindClass (env, "org/freedesktop/gstreamer/tutorials/tutorial_3/Tutorial3");
   (*env)->RegisterNatives (env, klass, native_methods, G_N_ELEMENTS(native_methods));
 
   pthread_key_create (&current_jni_env, detach_current_thread);
@@ -626,7 +626,7 @@ effects in the `GSTREAMER_PLUGINS_EFFECTS` package), and an
 platform:
 
 ``` c
-data->pipeline = gst_parse_launch("videotestsrc ! warptv ! ffmpegcolorspace ! autovideosink ", &error);
+data->pipeline = gst_parse_launch("videotestsrc ! warptv ! videoconvert ! autovideosink ", &error);
 ```
 
 Here things start to get more
@@ -767,10 +767,10 @@ hardcoded in the GStreamerSurfaceView class for simplicity. The next
 tutorial shows how it can be recovered at runtime and passed onto the
 surface.
 
-**src/com/gst\_sdk\_tutorials/tutorial\_3/GStreamerSurfaceView.java**
+**src/org/freedesktop/gstreamer/tutorials/tutorial\_3/GStreamerSurfaceView.java**
 
 ``` java
-package com.gst_sdk_tutorials.tutorial_3;
+package org.freedesktop.gstreamer.tutorials.tutorial_3;
 
 import android.content.Context;
 import android.util.AttributeSet;
