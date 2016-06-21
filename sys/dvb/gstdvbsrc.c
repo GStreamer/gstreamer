@@ -23,7 +23,7 @@
  * SECTION:element-dvbsrc
  *
  * dvbsrc can be used to capture media from DVB cards. Supported DTV
- * broadcasting standards include DVB-T/C/S, ATSC ,ISDB-T and DTMB.
+ * broadcasting standards include DVB-T/C/S, ATSC, ISDB-T and DTMB.
  *
  * <refsect2>
  * <title>Example launch line</title>
