@@ -216,7 +216,7 @@ Adding GStreamer support only requires adding these lines:
 
     include $(BUILD_SHARED_LIBRARY)
 
-    GSTREAMER_ROOT            := $(GSTREAMER__ROOT_ANDROID)
+    GSTREAMER_ROOT            := $(GSTREAMER_ROOT_ANDROID)
     GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_ROOT)/share/gst-android/ndk-build/
     GSTREAMER_PLUGINS         := coreelements ogg theora vorbis ffmpegcolorspace playback eglglessink soup opensles
     G_IO_MODULES              := gnutls
