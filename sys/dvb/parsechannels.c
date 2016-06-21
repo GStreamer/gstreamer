@@ -37,6 +37,12 @@
 
 #include <linux/dvb/frontend.h>
 
+static gboolean parse_and_configure_from_v5_conf_file (GstElement * dvbbasebin,
+    const gchar * filename, const gchar * channel_name, GError ** error);
+static gboolean parse_and_configure_from_zap_conf_file (GstElement * dvbbasebin,
+    const gchar * filename, const gchar * channel_name, GError ** error);
+
+
 GST_DEBUG_CATEGORY_EXTERN (dvb_base_bin_debug);
 #define GST_CAT_DEFAULT dvb_base_bin_debug
 
@@ -265,7 +271,7 @@ GstDvbV5ChannelsConfToPropertyMap dvbv5_prop_map[] = {
 };
 
 static gboolean
-parse_and_configure_from_v5_channels_conf_file (GstElement * dvbbasebin,
+parse_and_configure_from_v5_conf_file (GstElement * dvbbasebin,
     const gchar * filename, const gchar * channel_name, GError ** error)
 {
   GKeyFile *keyfile;
@@ -507,7 +513,7 @@ destroy_channels_hash (GHashTable * channels)
 }
 
 static gboolean
-parse_and_configure_from_channels_conf_file (GstElement * dvbbasebin,
+parse_and_configure_from_zap_conf_file (GstElement * dvbbasebin,
     const gchar * filename, const gchar * channel_name, GError ** error)
 {
   gboolean ret = FALSE;
@@ -790,8 +796,7 @@ set_properties_for_channel (GstElement * dvbbasebin,
   if (adapter)
     g_object_set (dvbbasebin, "adapter", atoi (adapter), NULL);
 
-  if (!(ret =
-          parse_and_configure_from_v5_channels_conf_file (dvbbasebin, filename,
+  if (!(ret = parse_and_configure_from_v5_conf_file (dvbbasebin, filename,
               channel_name, error))) {
     /* TODO only fallback if it was a parsing error */
 
@@ -799,8 +804,7 @@ set_properties_for_channel (GstElement * dvbbasebin,
     GST_DEBUG_OBJECT (dvbbasebin, "Resorting to old ZAP format file parsing");
 
     /* fallback to old format */
-    ret =
-        parse_and_configure_from_channels_conf_file (dvbbasebin, filename,
+    ret = parse_and_configure_from_zap_conf_file (dvbbasebin, filename,
         channel_name, error);
   }
   g_free (filename);
