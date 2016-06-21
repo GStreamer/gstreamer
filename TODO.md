@@ -9,6 +9,8 @@ Pages to review:
    - sdk-installing-on-linux.md
    - sdk-installing-on-mac-osx.md
    - sdk-installing-on-windows.md
+   - sdk-installing-for-android-development.md
+     - Need to update/review the plugins list
 
 
 Screenshots:
@@ -39,7 +41,6 @@ Reviewed pages:
   - sdk-basic-tutorial-handy-elements.md
   - sdk-basic-tutorial-platform-specific-elements.md
  - sdk-installing.md
- - sdk-installing-for-android-development.md
  - sdk-building-from-source-using-cerbero.md
  - sdk-table-of-concepts.md
  - sdk-tutorials.md

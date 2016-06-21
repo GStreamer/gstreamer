@@ -216,13 +216,19 @@ Adding GStreamer support only requires adding these lines:
 
     include $(BUILD_SHARED_LIBRARY)
 
+    ifndef GSTREAMER_ROOT
+    ifndef GSTREAMER_ROOT_ANDROID
+    $(error GSTREAMER_ROOT_ANDROID is not defined!)
+    endif
     GSTREAMER_ROOT            := $(GSTREAMER_ROOT_ANDROID)
-    GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_ROOT)/share/gst-android/ndk-build/
-    GSTREAMER_PLUGINS         := coreelements ogg theora vorbis ffmpegcolorspace playback eglglessink soup opensles
-    G_IO_MODULES              := gnutls
-    GSTREAMER_EXTRA_DEPS      := gstreamer-interfaces-1.0 gstreamer-video-1.0
+    endif
 
-    include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer.mk 
+    GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_ROOT)/share/gst-android/ndk-build/
+    GSTREAMER_PLUGINS         := coreelements ogg theora vorbis videoconvert audioconvert audioresample playback glimagesink soup opensles
+    G_IO_MODULES              := gnutls
+    GSTREAMER_EXTRA_DEPS      := gstreamer-video-1.0
+
+    include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer.mk
 
 Where line 7 specifies an extra library to be included in the project:
 `libgstreamer_android.so`. This library contains all GStreamer code,
@@ -233,16 +239,16 @@ access android-specific functionality.
 
 Lines 12 and 13 simply define some convenient macros.
 
-Line 14 lists the plugins you want statically linked into
+Line 20 lists the plugins you want statically linked into
 `libgstreamer_android.so`. Listing only the ones you need makes your
 application smaller.
 
-Line 15 is required to have internet access from GStreamer, through the
+Line 21 is required to have HTTPS/TLS support from GStreamer, through the
 `souphttpsrc` element.
 
-Line 16 defines which GStreamer libraries your application requires.
+Line 22 defines which GStreamer libraries your application requires.
 
-Finally, line 18 includes the make files which perform the rest of the
+Finally, line 24 includes the make files which perform the rest of the
 magic.
 
 Listing all desired plugins can be cumbersome, so they have been grouped
