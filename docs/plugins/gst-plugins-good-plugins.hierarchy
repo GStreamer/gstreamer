@@ -332,6 +332,8 @@ GObject
   GTlsCertificate
   GTlsDatabase
   GTlsInteraction
+  GUdevClient
+  GUdevDevice
   GdkPixbuf
   GstColorBalanceChannel
   GstTunerChannel
