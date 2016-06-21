@@ -133,7 +133,13 @@
  * On Windows, this exports the plugin definition from the DLL.
  * On other platforms, this gets defined as a no-op.
  */
-#ifdef _WIN32 /* Both 32-bit and 64-bit; both GCC and MSVC */
+/* Macro _WIN32 is defined on 32-bit and 64-bit Windows; by both GCC and MSVC
+ *
+ * NOTE: To link to Windows statically on Windows, you must define
+ * GST_STATIC_COMPILATION or the prototypes will cause the compiler to search
+ * for the symbol inside a DLL
+ */
+#if defined(_WIN32) && !defined(GST_STATIC_COMPILATION)
 # define GST_PLUGIN_EXPORT __declspec(dllexport) extern
 # ifdef GST_EXPORTS
 #  define GST_EXPORT __declspec(dllexport) extern

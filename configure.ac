@@ -188,6 +188,12 @@ fi
 AC_SUBST(GST_PLUGIN_LIBTOOLFLAGS)
 AM_CONDITIONAL(GST_PLUGIN_BUILD_STATIC, test "x$enable_static_plugins" = "xyes")
 
+dnl If only building static libraries, define GST_STATIC_COMPILATION. This is
+dnl needed only on Windows, but it doesn't hurt to have it everywhere.
+if test x$enable_static = xyes -a x$enable_shared = xno; then
+  GST_OBJ_STATIC_CFLAGS="-DGST_STATIC_COMPILATION"
+fi
+
 dnl building of tests
 AC_ARG_ENABLE(tests,
   AS_HELP_STRING([--disable-tests],[disable building test apps]),
@@ -950,8 +956,8 @@ AC_SUBST(GST_LIB_LDFLAGS)
 dnl GST_OBJ_*
 dnl default vars for all internal objects built on libgstreamer
 dnl includes GST_ALL_*
-GST_OBJ_CFLAGS="\$(GST_ALL_CFLAGS)"
-GST_OBJ_CXXFLAGS="\$(GST_ALL_CXXFLAGS)"
+GST_OBJ_CFLAGS="\$(GST_ALL_CFLAGS) $GST_OBJ_STATIC_CFLAGS"
+GST_OBJ_CXXFLAGS="\$(GST_ALL_CXXFLAGS) $GST_OBJ_STATIC_CFLAGS"
 GST_OBJ_LIBS="\$(top_builddir)/gst/libgstreamer-$GST_API_VERSION.la \$(GST_ALL_LIBS)"
 AC_SUBST(GST_OBJ_CFLAGS)
 AC_SUBST(GST_OBJ_CXXFLAGS)
