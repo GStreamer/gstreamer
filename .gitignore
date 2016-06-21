@@ -52,6 +52,7 @@ gst*orc.h
 /tests/check/libs/player
 /tests/check/libs/player_dummy.c
 /tests/check/elements/videoframe-audiolevel
+/tests/check/elements/pnm
 /tests/check/pipelines/simple-launch-lines
 /tests/examples/codecparsers/parse-jpeg
 /tests/examples/codecparsers/parse-vp8
