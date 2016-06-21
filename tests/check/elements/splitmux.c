@@ -287,16 +287,28 @@ splitmux_suite (void)
   Suite *s = suite_create ("splitmux");
   TCase *tc_chain = tcase_create ("general");
   TCase *tc_chain_basic = tcase_create ("basic");
+  gboolean have_theora, have_ogg;
+
+  /* we assume that if encoder/muxer are there, decoder/demuxer will be a well */
+  have_theora = gst_registry_check_feature_version (gst_registry_get (),
+      "theoraenc", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+  have_ogg = gst_registry_check_feature_version (gst_registry_get (),
+      "oggmux", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
 
   suite_add_tcase (s, tc_chain);
   suite_add_tcase (s, tc_chain_basic);
 
   tcase_add_test (tc_chain_basic, test_splitmuxsink_reuse_simple);
 
-  tcase_add_checked_fixture (tc_chain, tempdir_setup, tempdir_cleanup);
-  tcase_add_test (tc_chain, test_splitmuxsrc);
-  tcase_add_test (tc_chain, test_splitmuxsrc_format_location);
-  tcase_add_test (tc_chain, test_splitmuxsink);
+  if (have_theora && have_ogg) {
+    tcase_add_checked_fixture (tc_chain, tempdir_setup, tempdir_cleanup);
+
+    tcase_add_test (tc_chain, test_splitmuxsrc);
+    tcase_add_test (tc_chain, test_splitmuxsrc_format_location);
+    tcase_add_test (tc_chain, test_splitmuxsink);
+  } else {
+    GST_INFO ("Skipping tests, missing plugins: theora and/or ogg");
+  }
 
   return s;
 }
