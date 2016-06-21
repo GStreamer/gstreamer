@@ -188,7 +188,7 @@ gst_rtp_j2k_pay_scan_marker (const guint8 * data, guint size, guint * offset)
 typedef struct
 {
   RtpJ2KHeader header;
-  gboolean multi_tile_part;
+  gboolean multi_tile;
   gboolean bitstream;
   guint next_sot;
   gboolean force_packet;
@@ -271,15 +271,13 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
           /* Isot */
           tile = GST_READ_UINT16_BE (&data[offset + 2]);
 
-          if (!state->multi_tile_part) {
-
-            /* tile is marked as valid */
-            state->header.T = 0;
-
-            /* we have detected multiple tile parts in this rtp packet : tile bit is now invalid */
-            if (state->header.tile != tile) {
+          if (!state->multi_tile) {
+            /* we have detected multiple tiles in this rtp packet : tile bit is now invalid */
+            if (state->header.T == 0 && state->header.tile != tile) {
               state->header.T = 1;
-              state->multi_tile_part = TRUE;
+              state->multi_tile = TRUE;
+            } else {
+              state->header.T = 0;
             }
           }
           state->header.tile = tile;
@@ -363,7 +361,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
   state.header.priority = 255;  /* always 255 for now */
   state.header.tile = 0xffff;   /* no tile number */
   state.header.offset = 0;      /* offset of 0 */
-  state.multi_tile_part = FALSE;
+  state.multi_tile = FALSE;
   state.bitstream = FALSE;
   state.next_sot = 0;
   state.force_packet = FALSE;
@@ -515,7 +513,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
       gst_buffer_list_add (list, outbuf);
 
       /* reset multi_tile */
-      state.multi_tile_part = FALSE;
+      state.multi_tile = FALSE;
 
 
       /* set MHF to zero if there is no more main header to process */
