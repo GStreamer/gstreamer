@@ -839,13 +839,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)JPEG2000</details>
+          <details>application/x-rtp, media=(string)video, clock-rate=(int)90000, sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCrA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE }, encoding-name=(string)JPEG2000; application/x-rtp, media=(string)video, clock-rate=(int)90000, colorspace=(string){ sRGB, sYUV, GRAY }, encoding-name=(string)JPEG2000</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>image/x-jpc</details>
+          <details>image/x-jpc, colorspace=(string){ sRGB, sYUV, GRAY }</details>
         </caps>
       </pads>
     </element>
@@ -860,13 +860,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>image/x-jpc</details>
+          <details>image/x-jpc, sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCrA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE }</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)JPEG2000</details>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCrA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE }, encoding-name=(string)JPEG2000</details>
         </caps>
       </pads>
     </element>

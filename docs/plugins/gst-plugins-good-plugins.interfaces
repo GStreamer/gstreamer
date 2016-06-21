@@ -1,5 +1,8 @@
+GInetSocketAddress GSocketConnectable
+GProxyAddress GSocketConnectable
 GSocket GInitable
 GSocket GInitable GDatagramBased
+GSocketAddress GSocketConnectable
 GdkPixbuf GIcon
 GdkPixbuf GIcon GLoadableIcon
 Gst3GPPMux GstTagSetter GstTagXmpWriter
