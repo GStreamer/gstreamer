@@ -55,13 +55,15 @@ enum
 };
 
 /* class initialization */
-
-#define DEBUG_INIT \
+#define do_init \
+{ \
   GST_DEBUG_CATEGORY_INIT (gst_omx_audio_enc_debug_category, "omxaudioenc", 0, \
-      "debug category for gst-omx audio encoder base class");
+      "debug category for gst-omx audio encoder base class"); \
+  G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL); \
+}
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstOMXAudioEnc, gst_omx_audio_enc,
-    GST_TYPE_AUDIO_ENCODER, DEBUG_INIT);
+    GST_TYPE_AUDIO_ENCODER, do_init);
 
 static void
 gst_omx_audio_enc_class_init (GstOMXAudioEncClass * klass)
