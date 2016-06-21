@@ -20,8 +20,8 @@
     <xi:include href="xml/element-adder.xml" />
     <xi:include href="xml/element-alsamidisrc.xml" />
     <xi:include href="xml/element-alsasink.xml" />
-    <xi:include href="xml/element-alsasrc.xml" />
     <xi:include href="xml/element-appsink.xml" />
+    <xi:include href="xml/element-alsasrc.xml" />
     <xi:include href="xml/element-appsrc.xml" />
     <xi:include href="xml/element-audioconvert.xml" />
     <xi:include href="xml/element-audiorate.xml" />
