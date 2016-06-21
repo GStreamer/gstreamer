@@ -31,7 +31,6 @@ noinst_HEADERS = gsth263parse.h h263parse.h \
 	gsth264parse.h gstmpegvideoparse.h \
 	gstmpeg4videoparse.h \
 	gstjpeg2000parse.h \
-	gstjpeg2000sampling.h \
 	gstpngparse.h \
 	gstvc1parse.h \
 	gsth265parse.h

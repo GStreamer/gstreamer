@@ -25,7 +25,7 @@
 #endif
 
 #include "gstopenjpegenc.h"
-#include "../../gst/videoparsers/gstjpeg2000sampling.h"
+#include <gst-libs/gst/codecparsers/gstjpeg2000sampling.h>
 
 #include <string.h>
 
@@ -116,14 +116,14 @@ static GstStaticPadTemplate gst_openjpeg_enc_src_template =
         "width = (int) [1, MAX], "
         "height = (int) [1, MAX], "
         "num-components = (int) [1, 4], "
-        GST_RTP_J2K_SAMPLING_LIST ","
-        "colorspace = (string) { sRGB, sYUV, GRAY }; "
+        GST_JPEG2000_SAMPLING_LIST ","
+        GST_JPEG2000_COLORSPACE_LIST "; "
         "image/x-jpc, "
         "width = (int) [1, MAX], "
         "height = (int) [1, MAX], "
         "num-components = (int) [1, 4], "
-        GST_RTP_J2K_SAMPLING_LIST ","
-        "colorspace = (string) { sRGB, sYUV, GRAY }; "
+        GST_JPEG2000_SAMPLING_LIST ","
+        GST_JPEG2000_COLORSPACE_LIST "; "
         "image/jp2, " "width = (int) [1, MAX], " "height = (int) [1, MAX]")
     );
 
@@ -561,7 +561,7 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
   GstCaps *allowed_caps, *caps;
   GstStructure *s;
   const gchar *colorspace = NULL;
-  const gchar *sampling = NULL;
+  GstJPEG2000Sampling sampling = GST_JPEG2000_SAMPLING_NONE;
   gint ncomps;
 
   GST_DEBUG_OBJECT (self, "Setting format: %" GST_PTR_FORMAT, state->caps);
@@ -640,38 +640,38 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
   switch (state->info.finfo->format) {
     case GST_VIDEO_FORMAT_ARGB64:
     case GST_VIDEO_FORMAT_ARGB:
-      sampling = GST_RTP_J2K_RGBA;
+      sampling = GST_JPEG2000_SAMPLING_RGBA;
       break;
     case GST_VIDEO_FORMAT_AYUV64:
     case GST_VIDEO_FORMAT_AYUV:
-      sampling = GST_RTP_J2K_YBRA;
+      sampling = GST_JPEG2000_SAMPLING_YBRA4444_EXT;
       break;
     case GST_VIDEO_FORMAT_xRGB:
-      sampling = GST_RTP_J2K_RGB;
+      sampling = GST_JPEG2000_COLORSPACE_RGB;
       break;
     case GST_VIDEO_FORMAT_Y444_10LE:
     case GST_VIDEO_FORMAT_Y444_10BE:
     case GST_VIDEO_FORMAT_Y444:
-      sampling = GST_RTP_J2K_YBR444;
+      sampling = GST_JPEG2000_SAMPLING_YBR444;
       break;
 
     case GST_VIDEO_FORMAT_I422_10LE:
     case GST_VIDEO_FORMAT_I422_10BE:
     case GST_VIDEO_FORMAT_Y42B:
-      sampling = GST_RTP_J2K_YBR422;
+      sampling = GST_JPEG2000_SAMPLING_YBR422;
       break;
     case GST_VIDEO_FORMAT_YUV9:
-      sampling = GST_RTP_J2K_YBR410;
+      sampling = GST_JPEG2000_SAMPLING_YBR410;
       break;
     case GST_VIDEO_FORMAT_I420_10LE:
     case GST_VIDEO_FORMAT_I420_10BE:
     case GST_VIDEO_FORMAT_I420:
-      sampling = GST_RTP_J2K_YBR420;
+      sampling = GST_JPEG2000_SAMPLING_YBR420;
       break;
     case GST_VIDEO_FORMAT_GRAY8:
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_GRAY16_BE:
-      sampling = GST_RTP_J2K_GRAYSCALE;
+      sampling = GST_JPEG2000_SAMPLING_GRAYSCALE;
       break;
     default:
       break;
@@ -688,10 +688,10 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
   } else
     g_return_val_if_reached (FALSE);
 
-  if (sampling) {
+  if (sampling != GST_JPEG2000_SAMPLING_NONE) {
     caps = gst_caps_new_simple (gst_structure_get_name (s),
         "colorspace", G_TYPE_STRING, colorspace,
-        "sampling", G_TYPE_STRING, sampling,
+        "sampling", G_TYPE_STRING, gst_jpeg2000_sampling_to_string (sampling),
         "num-components", G_TYPE_INT, ncomps, NULL);
   } else {
     caps = gst_caps_new_simple (gst_structure_get_name (s),

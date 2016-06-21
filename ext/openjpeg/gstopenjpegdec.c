@@ -25,7 +25,7 @@
 #endif
 
 #include "gstopenjpegdec.h"
-#include "../../gst/videoparsers/gstjpeg2000sampling.h"
+
 
 #include <string.h>
 
@@ -49,41 +49,13 @@ static gboolean gst_openjpeg_dec_decide_allocation (GstVideoDecoder * decoder,
 #define YUV10 "Y444_10BE, I422_10BE, I420_10BE"
 #endif
 
-
-/* convenience methods */
-static gboolean
-gst_openjpeg_dec_is_rgb (const gchar * sampling)
-{
-  return (!g_strcmp0 (sampling, GST_RTP_J2K_RGB) ||
-      !g_strcmp0 (sampling, GST_RTP_J2K_RGBA) ||
-      !g_strcmp0 (sampling, GST_RTP_J2K_BGR) ||
-      !g_strcmp0 (sampling, GST_RTP_J2K_BGRA));
-}
-
-static gboolean
-gst_openjpeg_dec_is_yuv (const gchar * sampling)
-{
-  return (!g_strcmp0 (sampling, GST_RTP_J2K_YBRA) ||
-      !g_strcmp0 (sampling, GST_RTP_J2K_YBR444) ||
-      !g_strcmp0 (sampling, GST_RTP_J2K_YBR422) ||
-      !g_strcmp0 (sampling, GST_RTP_J2K_YBR420) ||
-      !g_strcmp0 (sampling, GST_RTP_J2K_YBR410));
-}
-
-static gboolean
-gst_openjpeg_dec_is_mono (const gchar * sampling)
-{
-  return !g_strcmp0 (sampling, GST_RTP_J2K_GRAYSCALE);
-}
-
-
 static GstStaticPadTemplate gst_openjpeg_dec_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/x-j2c, "
-        GST_RTP_J2K_SAMPLING_LIST "; "
-        "image/x-jpc, " GST_RTP_J2K_SAMPLING_LIST "; " "image/jp2")
+        GST_JPEG2000_SAMPLING_LIST "; "
+        "image/x-jpc, " GST_JPEG2000_SAMPLING_LIST "; " "image/jp2")
     );
 
 static GstStaticPadTemplate gst_openjpeg_dec_src_template =
@@ -144,7 +116,7 @@ gst_openjpeg_dec_init (GstOpenJPEGDec * self)
 #ifdef HAVE_OPENJPEG_1
   self->params.cp_limit_decoding = NO_LIMITATION;
 #endif
-  self->sampling = NULL;
+  self->sampling = GST_JPEG2000_SAMPLING_NONE;
 }
 
 static gboolean
@@ -172,11 +144,6 @@ gst_openjpeg_dec_stop (GstVideoDecoder * video_decoder)
   if (self->input_state) {
     gst_video_codec_state_unref (self->input_state);
     self->input_state = NULL;
-  }
-
-  if (self->sampling) {
-    g_free (self->sampling);
-    self->sampling = NULL;
   }
 
   GST_DEBUG_OBJECT (self, "Stopped");
@@ -210,18 +177,17 @@ gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
     g_return_val_if_reached (FALSE);
   }
 
-  if (self->sampling)
-    g_free (self->sampling);
-  self->sampling = g_strdup (gst_structure_get_string (s, "sampling"));
-  /* note: self->sampling may be NULL, for case of JP2 */
-  if (self->sampling) {
-    if (gst_openjpeg_dec_is_rgb (self->sampling))
-      self->color_space = OPJ_CLRSPC_SRGB;
-    else if (gst_openjpeg_dec_is_mono (self->sampling))
-      self->color_space = OPJ_CLRSPC_GRAY;
-    else if (gst_openjpeg_dec_is_yuv (self->sampling))
-      self->color_space = OPJ_CLRSPC_SYCC;
-  }
+
+  self->sampling =
+      gst_jpeg2000_sampling_from_string (gst_structure_get_string (s,
+          "sampling"));
+  if (gst_jpeg2000_sampling_is_rgb (self->sampling))
+    self->color_space = OPJ_CLRSPC_SRGB;
+  else if (gst_jpeg2000_sampling_is_mono (self->sampling))
+    self->color_space = OPJ_CLRSPC_GRAY;
+  else if (gst_jpeg2000_sampling_is_yuv (self->sampling))
+    self->color_space = OPJ_CLRSPC_SYCC;
+
   self->ncomps = 0;
   gst_structure_get_int (s, "num-components", &self->ncomps);
 
@@ -233,10 +199,10 @@ gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
 }
 
 static gboolean
-reverse_rgb_channels (const gchar * sampling)
+reverse_rgb_channels (GstJPEG2000Sampling sampling)
 {
-  return (!g_strcmp0 (sampling, GST_RTP_J2K_BGR)
-      || !g_strcmp0 (sampling, GST_RTP_J2K_BGRA));
+  return sampling == GST_JPEG2000_SAMPLING_BGR
+      || sampling == GST_JPEG2000_SAMPLING_BGRA;
 }
 
 static void

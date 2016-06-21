@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstbaseparse.h>
-#include "gstjpeg2000sampling.h"
+#include <gst-libs/gst/codecparsers/gstjpeg2000sampling.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_JPEG2000_PARSE \
@@ -62,8 +62,8 @@ struct _GstJPEG2000Parse
   guint width;
   guint height;
 
-  const gchar *sampling;
-  const gchar *colorspace;
+  GstJPEG2000Sampling sampling;
+  GstJPEG2000Colorspace colorspace;
   GstJPEG2000ParseFormats codec_format;
 };
 
