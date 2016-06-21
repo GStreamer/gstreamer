@@ -29,6 +29,7 @@
 #include <glib/gstdio.h>
 #include <glib/gprintf.h>
 
+static gboolean have_theora, have_ogg;
 
 GST_START_TEST (test_disco_init)
 {
@@ -66,8 +67,15 @@ GST_START_TEST (test_disco_serializing)
 
   info = gst_discoverer_discover_uri (dc, uri, &err);
   fail_unless (info);
-  fail_unless_equals_int (gst_discoverer_info_get_result (info),
-      GST_DISCOVERER_OK);
+  if (have_theora && have_ogg) {
+    fail_unless_equals_int (gst_discoverer_info_get_result (info),
+        GST_DISCOVERER_OK);
+  } else {
+    fail_unless_equals_int (gst_discoverer_info_get_result (info),
+        GST_DISCOVERER_MISSING_PLUGINS);
+    g_clear_error (&err);
+    goto missing_plugins;
+  }
   serialized =
       gst_discoverer_info_to_variant (info, GST_DISCOVERER_SERIALIZE_ALL);
 
@@ -85,13 +93,15 @@ GST_START_TEST (test_disco_serializing)
 
   fail_unless (g_variant_equal (serialized, reserialized));
 
-  gst_discoverer_info_unref (info);
   gst_discoverer_info_unref (dinfo);
-  g_free (uri);
   g_variant_unref (serialized);
   g_variant_unref (reserialized);
 
+missing_plugins:
+
+  gst_discoverer_info_unref (info);
   g_object_unref (dc);
+  g_free (uri);
 }
 
 GST_END_TEST;
@@ -238,6 +248,11 @@ discoverer_suite (void)
 {
   Suite *s = suite_create ("discoverer");
   TCase *tc_chain = tcase_create ("general");
+
+  have_theora = gst_registry_check_feature_version (gst_registry_get (),
+      "theoradec", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+  have_ogg = gst_registry_check_feature_version (gst_registry_get (),
+      "oggdemux", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_disco_init);
