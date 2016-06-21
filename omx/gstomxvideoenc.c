@@ -111,13 +111,15 @@ enum
 #define GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT (0xffffffff)
 
 /* class initialization */
-
-#define DEBUG_INIT \
+#define do_init \
+{ \
   GST_DEBUG_CATEGORY_INIT (gst_omx_video_enc_debug_category, "omxvideoenc", 0, \
-      "debug category for gst-omx video encoder base class");
+      "debug category for gst-omx video encoder base class"); \
+  G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL); \
+}
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstOMXVideoEnc, gst_omx_video_enc,
-    GST_TYPE_VIDEO_ENCODER, DEBUG_INIT);
+    GST_TYPE_VIDEO_ENCODER, do_init);
 
 static void
 gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
