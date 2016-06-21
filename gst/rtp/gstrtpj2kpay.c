@@ -361,7 +361,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
   state.header.mh_id = 0;       /* always 0 for now */
   state.header.T = 1;           /* invalid tile, because we always begin with the main header */
   state.header.priority = 255;  /* always 255 for now */
-  state.header.tile = -1;       /* no tile number */
+  state.header.tile = 0xffff;   /* no tile number */
   state.header.offset = 0;      /* offset of 0 */
   state.multi_tile_part = FALSE;
   state.bitstream = FALSE;
