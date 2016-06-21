@@ -411,17 +411,6 @@ dnl substitution for win32/common/config.h
 HOST_CPU=$host_cpu
 AC_SUBST(HOST_CPU)
 
-dnl common/m4/gst-arch.m4
-dnl check for unaligned access
-AG_GST_UNALIGNED_ACCESS
-dnl create a configure variable for gst/gstconfig.h
-if test x${as_cv_unaligned_access} = xyes ; then
-  GST_HAVE_UNALIGNED_ACCESS_DEFINE="#define GST_HAVE_UNALIGNED_ACCESS 1"
-else
-  GST_HAVE_UNALIGNED_ACCESS_DEFINE="#define GST_HAVE_UNALIGNED_ACCESS 0"
-fi
-AC_SUBST(GST_HAVE_UNALIGNED_ACCESS_DEFINE)
-
 dnl check for platform specific settings
 AG_GST_PLATFORM
 
