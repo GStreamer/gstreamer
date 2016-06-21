@@ -802,7 +802,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYER_ENABLED,
       g_param_spec_uint ("isdbt-layer-enabled",
-          "ISB-T layer enabled",
+          "ISDB-T layer enabled",
           "(ISDB-T) Layer Enabled (7 = All layers)", 1, 7,
           DEFAULT_ISDBT_LAYER_ENABLED,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
@@ -810,7 +810,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_PARTIAL_RECEPTION,
       g_param_spec_int ("isdbt-partial-reception",
-          "ISB-T partial reception",
+          "ISDB-T partial reception",
           "(ISDB-T) Partial Reception (-1 = AUTO)", -1, 1,
           DEFAULT_ISDBT_PARTIAL_RECEPTION,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
@@ -818,7 +818,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_SOUND_BROADCASTING,
       g_param_spec_int ("isdbt-sound-broadcasting",
-          "ISB-T sound broadcasting",
+          "ISDB-T sound broadcasting",
           "(ISDB-T) Sound Broadcasting", 0, 1,
           DEFAULT_ISDBT_SOUND_BROADCASTING,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
@@ -826,7 +826,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_SB_SUBCHANNEL_ID,
       g_param_spec_int ("isdbt-sb-subchannel-id",
-          "ISB-T SB subchannel ID",
+          "ISDB-T SB subchannel ID",
           "(ISDB-T) SB Subchannel ID (-1 = AUTO)", -1, 41,
           DEFAULT_ISDBT_SB_SEGMENT_IDX,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
@@ -834,7 +834,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_SB_SEGMENT_IDX,
       g_param_spec_int ("isdbt-sb-segment-idx",
-          "ISB-T SB segment IDX",
+          "ISDB-T SB segment IDX",
           "(ISDB-T) SB segment IDX", 0, 12,
           DEFAULT_ISDBT_SB_SEGMENT_IDX,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
@@ -842,7 +842,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_SB_SEGMENT_COUNT,
       g_param_spec_uint ("isdbt-sb-segment-count",
-          "ISB-T SB segment count",
+          "ISDB-T SB segment count",
           "(ISDB-T) SB segment count", 1, 13,
           DEFAULT_ISDBT_SB_SEGMENT_COUNT,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
@@ -889,7 +889,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERA_SEGMENT_COUNT,
       g_param_spec_int ("isdbt-layera-segment-count",
-          "ISB-T layer A segment count",
+          "ISDB-T layer A segment count",
           "(ISDB-T) Layer A segment count (-1 = AUTO)", -1, 13,
           DEFAULT_ISDBT_LAYERA_SEGMENT_COUNT,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
@@ -897,7 +897,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERB_SEGMENT_COUNT,
       g_param_spec_int ("isdbt-layerb-segment-count",
-          "ISB-T layer B segment count",
+          "ISDB-T layer B segment count",
           "(ISDB-T) Layer B segment count (-1 = AUTO)", -1, 13,
           DEFAULT_ISDBT_LAYERB_SEGMENT_COUNT,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
@@ -905,7 +905,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERC_SEGMENT_COUNT,
       g_param_spec_int ("isdbt-layerc-segment-count",
-          "ISB-T layer C segment count",
+          "ISDB-T layer C segment count",
           "(ISDB-T) Layer C segment count (-1 = AUTO)", -1, 13,
           DEFAULT_ISDBT_LAYERC_SEGMENT_COUNT,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
@@ -913,7 +913,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERA_TIME_INTERLEAVING,
       g_param_spec_int ("isdbt-layera-time-interleaving",
-          "ISB-T layer A time interleaving ",
+          "ISDB-T layer A time interleaving",
           "(ISDB-T) Layer A time interleaving (-1 = AUTO)", -1, 8,
           DEFAULT_ISDBT_LAYERA_TIME_INTERLEAVING,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
@@ -921,7 +921,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERB_TIME_INTERLEAVING,
       g_param_spec_int ("isdbt-layerb-time-interleaving",
-          "ISB-T layer B time interleaving ",
+          "ISDB-T layer B time interleaving",
           "(ISDB-T) Layer B time interleaving (-1 = AUTO)", -1, 8,
           DEFAULT_ISDBT_LAYERB_TIME_INTERLEAVING,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
@@ -929,7 +929,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERC_TIME_INTERLEAVING,
       g_param_spec_int ("isdbt-layerc-time-interleaving",
-          "ISB-T layer C time interleaving ",
+          "ISDB-T layer C time interleaving",
           "(ISDB-T) Layer C time interleaving (-1 = AUTO)", -1, 8,
           DEFAULT_ISDBT_LAYERC_TIME_INTERLEAVING,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
@@ -1790,7 +1790,7 @@ gst_dvbsrc_open_dvr (GstDvbSrc * object)
   }
   g_free (dvr_dev);
 
-  GST_INFO_OBJECT (object, "Setting DVB kernel buffer size to %d ",
+  GST_INFO_OBJECT (object, "Setting DVB kernel buffer size to %d",
       object->dvb_buffer_size);
   LOOP_WHILE_EINTR (err, ioctl (object->fd_dvr, DMX_SET_BUFFER_SIZE,
           object->dvb_buffer_size));
