@@ -541,9 +541,9 @@ GstGLAPI
 gst_gl_context_get_current_gl_api (GstGLPlatform platform, guint * major,
     guint * minor)
 {
-  const GLubyte *(*GetString) (GLenum name);
+  const GLubyte *(GSTGLAPI *GetString) (GLenum name);
 #if GST_GL_HAVE_OPENGL
-  void (*GetIntegerv) (GLenum name, GLuint * n);
+  void (GSTGLAPI *GetIntegerv) (GLenum name, GLuint * n);
 #endif
   const gchar *version;
   gint maj, min, n;
