@@ -284,6 +284,30 @@ GST_START_TEST (test_h263pdepay_dont_push_empty_frame)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h263ppay_non_fixed_caps)
+{
+  GstHarness *h;
+  guint8 frame[] = {
+    0x00, 0x00, 0x80, 0x06, 0x1c, 0xa8, 0x01, 0x04, 0x91, 0xe0, 0x37, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  };
+
+  h = gst_harness_new_parse ("rtph263ppay");
+
+  /* Set non-fixed caps after payloader */
+  gst_harness_set_caps_str (h, "video/x-h263, variant=(string)itu",
+      "application/x-rtp, clock-rate=[1, MAX]");
+
+  gst_harness_push (h, gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+          frame, sizeof (frame), 0, sizeof (frame), NULL, NULL));
+
+  fail_unless_equals_int (1, gst_harness_buffers_received (h));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtph263_suite (void)
 {
@@ -304,6 +328,9 @@ rtph263_suite (void)
   tcase_add_test (tc_chain,
       test_h263pdepay_fragmented_memory_non_writable_buffer_split_frame);
   tcase_add_test (tc_chain, test_h263pdepay_dont_push_empty_frame);
+
+  suite_add_tcase (s, (tc_chain = tcase_create ("h263ppay")));
+  tcase_add_test (tc_chain, test_h263ppay_non_fixed_caps);
 
   return s;
 }
