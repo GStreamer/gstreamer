@@ -410,6 +410,8 @@ gst_video_resampler_init (GstVideoResampler * resampler,
     params.dx = ceil (2.0 * params.envelope / params.fx);
     n_taps = CLAMP (params.dx, 0, max_taps);
   }
+  if (flags & GST_VIDEO_RESAMPLER_FLAG_HALF_TAPS && n_taps > 3)
+    n_taps /= 2;
   params.fx = 2.0 * params.envelope / n_taps;
   params.ex = 2.0 / n_taps;
 

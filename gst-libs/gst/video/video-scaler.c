@@ -185,6 +185,8 @@ scaler_dump (GstVideoScaler * scale)
 #endif
 }
 
+#define INTERLACE_SHIFT 0.5
+
 /**
  * gst_video_scaler_new: (skip)
  * @method: a #GstVideoResamplerMethod
@@ -221,14 +223,18 @@ gst_video_scaler_new (GstVideoResamplerMethod method, GstVideoScalerFlags flags,
 
   if (flags & GST_VIDEO_SCALER_FLAG_INTERLACED) {
     GstVideoResampler tresamp, bresamp;
+    gdouble shift;
 
-    gst_video_resampler_init (&tresamp, method, 0, (out_size + 1) / 2, n_taps,
-        -0.5, (in_size + 1) / 2, (out_size + 1) / 2, options);
+    shift = (INTERLACE_SHIFT * out_size) / in_size;
+
+    gst_video_resampler_init (&tresamp, method,
+        GST_VIDEO_RESAMPLER_FLAG_HALF_TAPS, (out_size + 1) / 2, n_taps, shift,
+        (in_size + 1) / 2, (out_size + 1) / 2, options);
 
     n_taps = tresamp.max_taps;
 
     gst_video_resampler_init (&bresamp, method, 0, out_size - tresamp.out_size,
-        n_taps, 0.5, in_size - tresamp.in_size,
+        n_taps, -shift, in_size - tresamp.in_size,
         out_size - tresamp.out_size, options);
 
     resampler_zip (&scale->resampler, &tresamp, &bresamp);

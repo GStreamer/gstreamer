@@ -395,8 +395,6 @@ gst_line_cache_get_lines (GstLineCache * cache, gint out_line, gint in_line,
       g_ptr_array_remove_range (cache->lines, 0, to_remove);
     }
     cache->first += to_remove;
-    if (cache->first < in_line)
-      cache->first = in_line;
   } else if (in_line < cache->first) {
     gst_line_cache_clear (cache);
     cache->first = in_line;
@@ -1457,7 +1455,7 @@ chain_vscale (GstVideoConverter * convert, GstLineCache * prev)
         taps, convert->in_height, convert->out_height, convert->config);
 
     gst_video_scaler_get_coeff (convert->v_scaler_i, 0, NULL, &taps_i);
-    backlog = BACKLOG;
+    backlog = taps_i;
   }
   convert->v_scaler_p =
       gst_video_scaler_new (method, 0, taps, convert->in_height,
@@ -1909,8 +1907,8 @@ setup_allocators (GstVideoConverter * convert)
     if (!cache->pass_alloc) {
       /* can't pass allocator, make new temp line allocator */
       user_data =
-          converter_alloc_new (sizeof (guint16) * width * 4, n_lines + BACKLOG,
-          convert, NULL);
+          converter_alloc_new (sizeof (guint16) * width * 4,
+          n_lines + cache->backlog, convert, NULL);
       notify = (GDestroyNotify) converter_alloc_free;
       alloc_line = get_temp_line;
       alloc_writable = FALSE;
