@@ -623,6 +623,15 @@ get_max_dec_frame_buffering (GstH265SPS * sps)
 }
 
 static void
+dpb_remove_all (GstVaapiDecoderH265 * decoder)
+{
+  GstVaapiDecoderH265Private *const priv = &decoder->priv;
+
+  while (priv->dpb_count > 0)
+    gst_vaapi_frame_store_replace (&priv->dpb[--priv->dpb_count], NULL);
+}
+
+static void
 dpb_remove_index (GstVaapiDecoderH265 * decoder, gint index)
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
@@ -745,9 +754,7 @@ dpb_clear (GstVaapiDecoderH265 * decoder, gboolean hard_flush)
   guint i;
 
   if (hard_flush) {
-    for (i = 0; i < priv->dpb_count; i++)
-      dpb_remove_index (decoder, i);
-    priv->dpb_count = 0;
+    dpb_remove_all (decoder);
   } else {
     /* Remove unused pictures from DPB */
     i = 0;
