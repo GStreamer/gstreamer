@@ -804,6 +804,20 @@ if test "x$BUILD_EXAMPLES" = "xyes"; then
 fi
 AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 
+dnl libunwind is optionally used by the leaks tracer
+PKG_CHECK_MODULES(UNWIND, libunwind, HAVE_UNWIND=yes, HAVE_UNWIND=no)
+
+dnl Check for backtrace() from libc
+AC_CHECK_FUNC(backtrace, [
+  AC_CHECK_HEADERS([execinfo.h], [
+    AC_DEFINE(HAVE_BACKTRACE,1,[Have backtrace])
+  ], [], [])
+])
+
+if test "x$HAVE_UNWIND" = "xyes"; then
+  AC_DEFINE(HAVE_UNWIND, 1, [libunwind available])
+fi
+
 dnl building of unit test libraries
 AC_ARG_ENABLE(check,
   AS_HELP_STRING([--disable-check],[disable building unit test libraries]),
@@ -1131,6 +1145,7 @@ Configuration
 	Static plugins             : ${enable_static_plugins}
 	Unit testing support       : ${BUILD_CHECK}
 	PTP clock support          : ${HAVE_PTP}
+	libunwind support          : ${HAVE_UNWIND}
 
 	Debug                      : ${USE_DEBUG}
 	Profiling                  : ${USE_PROFILING}

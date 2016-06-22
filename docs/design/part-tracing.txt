@@ -268,6 +268,9 @@ leaks
   - log alive objects when receiving the SIGUSR1 signal.
   - create a checkpoint and print a list of objects created and destroyed since
     the previous checkpoint.
+- If the GST_LEAKS_TRACER_STACK_TRACE env variable is defined log the creation
+  stack trace of leaked objects. This may significantly increase memory
+  consumption.
 
 User interfaces
 ===============

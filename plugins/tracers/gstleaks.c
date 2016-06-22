@@ -32,6 +32,17 @@
 #  include "config.h"
 #endif
 
+#ifdef HAVE_UNWIND
+/* No need for remote debugging so turn on the 'local only' optimizations in
+ * libunwind */
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
+#endif /* HAVE_UNWIND */
+
+#ifdef HAVE_BACKTRACE
+#include <execinfo.h>
+#endif /* HAVE_BACKTRACE */
+
 #include "gstleaks.h"
 
 #ifdef HAVE_POSIX_SIGNALS
@@ -166,10 +177,84 @@ mini_object_weak_cb (gpointer data, GstMiniObject * object)
   handle_object_destroyed (self, object);
 }
 
+#ifdef HAVE_UNWIND
+#define BT_NAME_SIZE 256
+static gchar *
+generate_unwind_trace (void)
+{
+  unw_context_t ctx;
+  unw_cursor_t cursor;
+  GString *trace;
+
+  trace = g_string_new (NULL);
+  unw_getcontext (&ctx);
+  unw_init_local (&cursor, &ctx);
+
+  while (unw_step (&cursor) > 0) {
+    char name[BT_NAME_SIZE];
+    unw_word_t offp;
+    int ret;
+
+    ret = unw_get_proc_name (&cursor, name, BT_NAME_SIZE, &offp);
+    /* -UNW_ENOMEM is returned if name has been truncated */
+    if (ret != 0 && ret != -UNW_ENOMEM)
+      break;
+
+    g_string_append_printf (trace, "%s\n", name);
+  }
+
+  return g_string_free (trace, FALSE);
+}
+#endif /* HAVE_UNWIND */
+
+#ifdef HAVE_BACKTRACE
+#define BT_BUF_SIZE 100
+static gchar *
+generate_backtrace_trace (void)
+{
+  int j, nptrs;
+  void *buffer[BT_BUF_SIZE];
+  char **strings;
+  GString *trace;
+
+  trace = g_string_new (NULL);
+  nptrs = backtrace (buffer, BT_BUF_SIZE);
+
+  strings = backtrace_symbols (buffer, nptrs);
+  if (!strings)
+    return NULL;
+
+  for (j = 0; j < nptrs; j++)
+    g_string_append_printf (trace, "%s\n", strings[j]);
+
+  return g_string_free (trace, FALSE);
+}
+#endif /* HAVE_BACKTRACE */
+
+static gchar *
+generate_trace (void)
+{
+  gchar *trace = NULL;
+
+#ifdef HAVE_UNWIND
+  trace = generate_unwind_trace ();
+  if (trace)
+    return trace;
+#endif /* HAVE_UNWIND */
+
+#ifdef HAVE_BACKTRACE
+  trace = generate_backtrace_trace ();
+#endif /* HAVE_BACKTRACE */
+
+  return trace;
+}
+
 static void
 handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
     gboolean gobject)
 {
+  gchar *trace = NULL;
+
   if (!should_handle_object_type (self, type))
     return;
 
@@ -180,7 +265,12 @@ handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
         mini_object_weak_cb, self);
 
   GST_OBJECT_LOCK (self);
-  g_hash_table_add (self->objects, object);
+  if (self->log_stack_trace) {
+    trace = generate_trace ();
+  }
+
+  g_hash_table_insert (self->objects, object, trace);
+
 #ifdef HAVE_POSIX_SIGNALS
   if (self->added)
     g_hash_table_add (self->added, object_log_new (object));
@@ -213,7 +303,20 @@ object_created_cb (GstTracer * tracer, GstClockTime ts, GstObject * object)
 static void
 gst_leaks_tracer_init (GstLeaksTracer * self)
 {
-  self->objects = g_hash_table_new (NULL, NULL);
+  self->objects = g_hash_table_new_full (NULL, NULL, NULL, g_free);
+
+  if (g_getenv ("GST_LEAKS_TRACER_STACK_TRACE")) {
+    gchar *trace;
+
+    /* Test if we can retrieve backtrace */
+    trace = generate_trace ();
+    if (trace) {
+      self->log_stack_trace = TRUE;
+      g_free (trace);
+    } else {
+      g_warning ("Can't retrieve backtrace on this system");
+    }
+  }
 
   g_queue_push_tail (&instances, self);
 }
@@ -244,10 +347,13 @@ typedef struct
   const gchar *type_name;
   guint ref_count;
   gchar *desc;
+  const gchar *trace;
 } Leak;
 
+/* The content of the returned Leak struct is valid until the self->objects
+ * hash table has been modified. */
 static Leak *
-leak_new (gpointer obj, GType type, guint ref_count)
+leak_new (gpointer obj, GType type, guint ref_count, const gchar * trace)
 {
   Leak *leak = g_slice_new (Leak);
 
@@ -255,6 +361,7 @@ leak_new (gpointer obj, GType type, guint ref_count)
   leak->type_name = g_type_name (type);
   leak->ref_count = ref_count;
   leak->desc = gst_info_strdup_printf ("%" GST_PTR_FORMAT, obj);
+  leak->trace = trace;
 
   return leak;
 }
@@ -279,10 +386,10 @@ create_leaks_list (GstLeaksTracer * self)
 {
   GList *l = NULL;
   GHashTableIter iter;
-  gpointer obj;
+  gpointer obj, trace;
 
   g_hash_table_iter_init (&iter, self->objects);
-  while (g_hash_table_iter_next (&iter, &obj, NULL)) {
+  while (g_hash_table_iter_next (&iter, &obj, &trace)) {
     GType type;
     guint ref_count;
 
@@ -300,7 +407,7 @@ create_leaks_list (GstLeaksTracer * self)
       ref_count = ((GstMiniObject *) obj)->refcount;
     }
 
-    l = g_list_prepend (l, leak_new (obj, type, ref_count));
+    l = g_list_prepend (l, leak_new (obj, type, ref_count, trace));
   }
 
   /* Sort leaks by type name so they are grouped together making the output
@@ -324,7 +431,7 @@ log_leaked (GstLeaksTracer * self)
     Leak *leak = l->data;
 
     gst_tracer_record_log (tr_alive, leak->type_name, leak->obj, leak->desc,
-        leak->ref_count);
+        leak->ref_count, leak->trace ? leak->trace : "");
   }
 
   g_list_free_full (leaks, (GDestroyNotify) leak_free);
@@ -387,6 +494,11 @@ gst_leaks_tracer_finalize (GObject * object)
 #define RECORD_FIELD_REF_COUNT \
     "ref-count", GST_TYPE_STRUCTURE, gst_structure_new ("value", \
         "type", G_TYPE_GTYPE, G_TYPE_UINT, \
+        "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PROCESS, \
+        NULL)
+#define RECORD_FIELD_TRACE \
+    "trace", GST_TYPE_STRUCTURE, gst_structure_new ("value", \
+        "type", G_TYPE_GTYPE, G_TYPE_STRING, \
         "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PROCESS, \
         NULL)
 
@@ -488,7 +600,7 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
 
   tr_alive = gst_tracer_record_new ("object-alive.class",
       RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS, RECORD_FIELD_DESC,
-      RECORD_FIELD_REF_COUNT, NULL);
+      RECORD_FIELD_REF_COUNT, RECORD_FIELD_TRACE, NULL);
   GST_OBJECT_FLAG_SET (tr_alive, GST_OBJECT_FLAG_MAY_BE_LEAKED);
 
   if (g_getenv ("GST_LEAKS_TRACER_SIG")) {
