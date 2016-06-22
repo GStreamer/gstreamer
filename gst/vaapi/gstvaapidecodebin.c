@@ -137,12 +137,13 @@ post_missing_element_message (GstVaapiDecodeBin * vaapidecbin,
 {
   GstMessage *msg;
 
-  GST_ERROR_OBJECT (vaapidecbin, "Failed to create %s element",
-      missing_factory);
-  msg =
-      gst_missing_element_message_new (GST_ELEMENT_CAST (vaapidecbin),
+  msg = gst_missing_element_message_new (GST_ELEMENT_CAST (vaapidecbin),
       missing_factory);
   gst_element_post_message (GST_ELEMENT_CAST (vaapidecbin), msg);
+
+  GST_ELEMENT_WARNING (vaapidecbin, CORE, MISSING_PLUGIN,
+      ("Missing element '%s' - check your GStreamer installation.",
+          missing_factory), ("video decoding might fail"));
 }
 
 static gboolean
