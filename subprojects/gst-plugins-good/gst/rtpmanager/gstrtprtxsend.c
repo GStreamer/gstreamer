@@ -651,7 +651,8 @@ gst_rtp_rtx_send_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
               GUINT_TO_POINTER (payload), NULL, &rtx_payload))
         rtx_payload = GINT_TO_POINTER (-1);
 
-      if (GPOINTER_TO_INT (rtx_payload) == -1 && payload != -1)
+      if (rtx->rtx_pt_map_structure && GPOINTER_TO_INT (rtx_payload) == -1
+          && payload != -1)
         GST_WARNING_OBJECT (rtx, "Payload %d not in rtx-pt-map", payload);
 
       GST_DEBUG_OBJECT (rtx,
@@ -772,7 +773,8 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstFlowReturn ret;
 
   GST_OBJECT_LOCK (rtx);
-  process_buffer (rtx, buffer);
+  if (rtx->rtx_pt_map_structure)
+    process_buffer (rtx, buffer);
   GST_OBJECT_UNLOCK (rtx);
   ret = gst_pad_push (rtx->srcpad, buffer);
 
