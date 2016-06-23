@@ -140,9 +140,9 @@
  * for the symbol inside a DLL
  */
 #if defined(_WIN32) && !defined(GST_STATIC_COMPILATION)
-# define GST_PLUGIN_EXPORT __declspec(dllexport) extern
+# define GST_PLUGIN_EXPORT __declspec(dllexport)
 # ifdef GST_EXPORTS
-#  define GST_EXPORT __declspec(dllexport) extern
+#  define GST_EXPORT __declspec(dllexport)
 # else
 #  define GST_EXPORT __declspec(dllimport) extern
 # endif
