@@ -277,13 +277,11 @@ gst_webrtc_dsp_sync_reverse_stream (GstWebrtcDsp * self,
     return FALSE;
   }
 
-  if (self->info.rate != probe->info.rate
-      || self->info.channels != probe->info.channels) {
+  if (self->info.rate != probe->info.rate) {
     GST_WARNING_OBJECT (self,
-        "Echo Probe has rate %i and %i channels, while "
-        "the DSP is running at rate %i with %i channels, use a caps filter to "
-        "ensure those are the same.", probe->info.rate, probe->info.channels,
-        self->info.rate, self->info.channels);
+        "Echo Probe has rate %i while the DSP is running at rate %i, use a "
+        "caps filter to ensure those are the same.",
+        probe->info.rate, self->info.rate);
     return FALSE;
   }
 
