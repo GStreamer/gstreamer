@@ -175,7 +175,7 @@ struct _GstWebrtcDsp
   /* Protected by the stream lock */
   GstClockTime timestamp;
   GstAdapter *adapter;
-    webrtc::AudioProcessing * apm;
+  webrtc::AudioProcessing * apm;
 
   /* Protected by the object lock */
   gchar *probe_name;
