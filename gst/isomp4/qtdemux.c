@@ -1719,11 +1719,6 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
       }
       gst_event_unref (event);
       break;
-    case GST_EVENT_QOS:
-    case GST_EVENT_NAVIGATION:
-      res = FALSE;
-      gst_event_unref (event);
-      break;
     default:
     upstream:
       res = gst_pad_event_default (pad, parent, event);
