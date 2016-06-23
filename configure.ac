@@ -268,7 +268,7 @@ AC_SUBST(GST_OPTION_CFLAGS)
 dnl FIXME: do we want to rename to GST_ALL_* ?
 dnl prefer internal headers to already installed ones
 dnl add GST_OPTION_CFLAGS, but overridable
-GST_CFLAGS="$GST_CFLAGS \$(GST_OPTION_CFLAGS)"
+GST_CFLAGS="$GST_CFLAGS \$(GST_STATIC_CFLAGS) \$(GST_OPTION_CFLAGS)"
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
 
@@ -329,6 +329,13 @@ else
 fi
 AC_SUBST(GST_PLUGIN_LIBTOOLFLAGS)
 AM_CONDITIONAL(GST_PLUGIN_BUILD_STATIC, test "x$enable_static_plugins" = "xyes")
+
+dnl If only building static libraries, define GST_STATIC_COMPILATION. This is
+dnl needed only on Windows, but it doesn't hurt to have it everywhere.
+if test x$enable_static = xyes -a x$enable_shared = xno; then
+  GST_STATIC_CFLAGS="-DGST_STATIC_COMPILATION"
+fi
+AC_SUBST(GST_STATIC_CFLAGS)
 
 GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_.*' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS)
