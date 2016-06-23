@@ -4563,7 +4563,7 @@ gst_ogg_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   drop = (ogg->seek_event_drop_till > 0);
   GST_PUSH_UNLOCK (ogg);
   if (drop) {
-    GST_ERROR_OBJECT (ogg, "Dropping buffer because we have a pending seek");
+    GST_DEBUG_OBJECT (ogg, "Dropping buffer because we have a pending seek");
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
