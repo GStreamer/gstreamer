@@ -256,6 +256,10 @@ gst_webrtc_dsp_sync_reverse_stream (GstWebrtcDsp * self,
   GstClockTimeDiff diff;
   guint64 distance;
 
+  /* We need to wait for a time reference */
+  if (!GST_CLOCK_TIME_IS_VALID (self->timestamp))
+      return FALSE;
+
   probe_timestamp = gst_adapter_prev_pts (probe->adapter, &distance);
 
   if (!GST_CLOCK_TIME_IS_VALID (probe_timestamp)) {
@@ -359,8 +363,10 @@ gst_webrtc_dsp_process_stream (GstWebrtcDsp * self)
   frame.samples_per_channel_ = self->period_size / self->info.bpf;
 
   timestamp = gst_adapter_prev_pts (self->adapter, &distance);
-  timestamp += gst_util_uint64_scale_int (distance / self->info.bpf,
-      GST_SECOND, self->info.rate);
+
+  if (GST_CLOCK_TIME_IS_VALID (timestamp))
+      timestamp += gst_util_uint64_scale_int (distance / self->info.bpf,
+              GST_SECOND, self->info.rate);
 
   buffer = gst_adapter_take_buffer (self->adapter, self->period_size);
 
@@ -390,7 +396,8 @@ gst_webrtc_dsp_process_stream (GstWebrtcDsp * self)
   else
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
 
-  self->timestamp = timestamp;
+  if (GST_CLOCK_TIME_IS_VALID (timestamp))
+      self->timestamp = timestamp + GST_BUFFER_DURATION (buffer);
 
   return buffer;
 }
@@ -488,6 +495,7 @@ gst_webrtc_dsp_setup (GstAudioFilter * filter, const GstAudioInfo * info)
   GST_OBJECT_LOCK (self);
 
   gst_adapter_clear (self->adapter);
+  self->timestamp = GST_CLOCK_TIME_NONE;
   self->delay_ms = 0;
   self->info = *info;
   apm = self->apm;
