@@ -176,6 +176,7 @@ struct _GstWebrtcDsp
   GstClockTime timestamp;
   GstAdapter *adapter;
   webrtc::AudioProcessing * apm;
+  gint delay_ms;
 
   /* Protected by the object lock */
   gchar *probe_name;
@@ -288,28 +289,11 @@ gst_webrtc_dsp_sync_reverse_stream (GstWebrtcDsp * self,
   probe_timestamp += gst_util_uint64_scale_int (distance / probe->info.bpf,
       GST_SECOND, probe->info.rate);
 
-  probe_timestamp += probe->latency;
-
   diff = GST_CLOCK_DIFF (probe_timestamp, self->timestamp);
-  if (diff < 0) {
-    GST_TRACE_OBJECT (self,
-        "Echo cancellation will start in in %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (-diff));
-    return FALSE;
-  }
-
-  distance = gst_util_uint64_scale_int ((guint64) diff,
-      probe->info.rate * probe->info.bpf, GST_SECOND);
-
-  if (gst_adapter_available (probe->adapter) < distance) {
-    GST_TRACE_OBJECT (self, "Not enough data to synchronize for now.");
-    return FALSE;
-  }
-
-  gst_adapter_flush (probe->adapter, (gsize) distance);
-  probe->synchronized = TRUE;
+  self->delay_ms = (probe->latency - diff) / GST_MSECOND;
 
   GST_DEBUG_OBJECT (probe, "Echo Probe is now synchronized");
+  probe->synchronized = TRUE;
 
   return TRUE;
 }
@@ -387,8 +371,7 @@ gst_webrtc_dsp_process_stream (GstWebrtcDsp * self)
 
   memcpy (frame.data_, info.data, self->period_size);
 
-  /* We synchronize in GStreamer */
-  apm->set_stream_delay_ms (5);
+  apm->set_stream_delay_ms (self->delay_ms);
 
   if ((err = apm->ProcessStream (&frame)) < 0) {
     GST_WARNING_OBJECT (self, "Failed to filter the audio: %s.",
@@ -505,6 +488,7 @@ gst_webrtc_dsp_setup (GstAudioFilter * filter, const GstAudioInfo * info)
   GST_OBJECT_LOCK (self);
 
   gst_adapter_clear (self->adapter);
+  self->delay_ms = 0;
   self->info = *info;
   apm = self->apm;
 
