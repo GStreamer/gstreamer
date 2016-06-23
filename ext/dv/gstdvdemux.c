@@ -1220,7 +1220,7 @@ static gboolean
 gst_dvdemux_handle_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
-  gboolean res = TRUE;
+  gboolean res = FALSE;
   GstDVDemux *dvdemux;
 
   dvdemux = GST_DVDEMUX (parent);
@@ -1230,25 +1230,12 @@ gst_dvdemux_handle_src_event (GstPad * pad, GstObject * parent,
       /* seek handler is installed based on scheduling mode */
       if (dvdemux->seek_handler)
         res = dvdemux->seek_handler (dvdemux, pad, event);
-      else
-        res = FALSE;
-      break;
-    case GST_EVENT_QOS:
-      /* we can't really (yet) do QoS */
-      res = FALSE;
-      break;
-    case GST_EVENT_NAVIGATION:
-    case GST_EVENT_CAPS:
-      /* no navigation or caps either... */
-      res = FALSE;
+      gst_event_unref (event);
       break;
     default:
       res = gst_pad_push_event (dvdemux->sinkpad, event);
-      event = NULL;
       break;
   }
-  if (event)
-    gst_event_unref (event);
 
   return res;
 }
