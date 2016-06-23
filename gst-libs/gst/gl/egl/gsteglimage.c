@@ -67,6 +67,8 @@
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstEGLImage, gst_egl_image);
 
+/* XXX: This is only used currently if dmabuf support is enabled */
+#if GST_GL_HAVE_DMABUF
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_egl_image_ensure_debug_category()
 
@@ -86,6 +88,7 @@ gst_egl_image_ensure_debug_category (void)
   return (GstDebugCategory *) cat_gonce;
 }
 #endif /* GST_DISABLE_GST_DEBUG */
+#endif /* GST_GL_HAVE_DMABUF */
 
 EGLImageKHR
 gst_egl_image_get_image (GstEGLImage * image)
