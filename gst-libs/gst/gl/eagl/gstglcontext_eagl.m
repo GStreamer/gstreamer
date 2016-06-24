@@ -219,17 +219,29 @@ gst_gl_context_eagl_create_context (GstGLContext * context, GstGLAPI gl_api,
 {
   GstGLContextEagl *context_eagl = GST_GL_CONTEXT_EAGL (context);
   GstGLContextEaglPrivate *priv = context_eagl->priv;
+  EAGLSharegroup *share_group;
 
   if (other_context) {
     EAGLContext *external_gl_context = (EAGLContext *)
         gst_gl_context_get_gl_context (other_context);
-    EAGLSharegroup *share_group = [external_gl_context sharegroup];
-
-    priv->eagl_context = [[EAGLContext alloc] initWithAPI: kEAGLRenderingAPIOpenGLES2 sharegroup:share_group];
-    [share_group release];
+    share_group = [external_gl_context sharegroup];
   } else {
-    priv->eagl_context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+    share_group = nil;
   }
+
+  priv->eagl_context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3 sharegroup:share_group];
+  if (!priv->eagl_context) {
+    priv->eagl_context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2 sharegroup:share_group];
+  }
+  if (!priv->eagl_context) {
+    g_set_error_literal (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
+        "Failed to create OpenGL ES context");
+    return FALSE;
+  }
+
+  if (share_group)
+    [share_group release];
 
   priv->eagl_layer = NULL;
   priv->framebuffer = 0;
