@@ -141,6 +141,9 @@ _gst_context_get_from_query (GstElement * element, GstQuery * query,
     return FALSE;
 
   gst_query_parse_context (query, &ctxt);
+  if (!ctxt)
+    return FALSE;
+
   GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
       "found context (%" GST_PTR_FORMAT ") in %s query", ctxt,
       direction == GST_PAD_SRC ? "downstream" : "upstream");
