@@ -24,7 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst-libs/gst/codecparsers/gstjpeg2000sampling.h>
+#include <gst/codecparsers/gstjpeg2000sampling.h>
 
 #include "gstopenjpeg.h"
 

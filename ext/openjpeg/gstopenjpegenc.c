@@ -25,7 +25,7 @@
 #endif
 
 #include "gstopenjpegenc.h"
-#include <gst-libs/gst/codecparsers/gstjpeg2000sampling.h>
+#include <gst/codecparsers/gstjpeg2000sampling.h>
 
 #include <string.h>
 

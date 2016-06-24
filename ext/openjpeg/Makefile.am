@@ -1,7 +1,7 @@
 plugin_LTLIBRARIES = libgstopenjpeg.la
 
 libgstopenjpeg_la_SOURCES = gstopenjpegdec.c gstopenjpegenc.c gstopenjpeg.c
-libgstopenjpeg_la_CFLAGS = \
+libgstopenjpeg_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(OPENJPEG_CFLAGS)
 libgstopenjpeg_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-$(GST_API_VERSION).la \
