@@ -35,16 +35,16 @@ extern GRegex *newline_regex;
 /* If an action type is 1 (TRUE) we also consider it is a config to keep backward compatibility */
 #define IS_CONFIG_ACTION_TYPE(type) (((type) & GST_VALIDATE_ACTION_TYPE_CONFIG) || ((type) == TRUE))
 
-GST_EXPORT GType _gst_validate_action_type_type;
+extern GType _gst_validate_action_type_type;
 
 void init_scenarios (void);
 
 /* FIXME 2.0 Remove that as this is only for backward compatibility
  * as we used to have to print actions in the action execution function
  * and this is done by the scenario itself now */
-GST_EXPORT gboolean _action_check_and_set_printed (GstValidateAction *action);
-GST_EXPORT gboolean gst_validate_action_is_subaction (GstValidateAction *action);
-GST_EXPORT void _priv_validate_override_registry_deinit (void);
+G_GNUC_INTERNAL gboolean _action_check_and_set_printed (GstValidateAction *action);
+G_GNUC_INTERNAL gboolean gst_validate_action_is_subaction (GstValidateAction *action);
+G_GNUC_INTERNAL void _priv_validate_override_registry_deinit (void);
 
 G_GNUC_INTERNAL GstValidateMonitor * gst_validate_get_monitor (GObject *object);
 G_GNUC_INTERNAL void gst_validate_init_runner (void);
