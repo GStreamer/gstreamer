@@ -1303,6 +1303,14 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
           gst_caps_new_simple ("video/x-h264", "stream-format", G_TYPE_STRING,
           "avc", NULL);
       break;
+    case 8:
+      caps = gst_caps_new_empty_simple ("video/x-h263");
+      break;
+    case 9:
+      caps =
+          gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 4,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+      break;
     default:
       GST_WARNING_OBJECT (demux, "unsupported video codec tag %u", codec_tag);
   }
