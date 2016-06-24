@@ -45,6 +45,7 @@
 
 #include <glib.h>
 #include <string.h>
+#include <gst/video/video.h>
 
 #include "descriptors.h"
 #include "properties.h"
@@ -281,6 +282,45 @@ typedef struct _AtomHMHD
   guint32 sliding_avg_bitrate;
 } AtomHMHD;
 
+typedef struct _AtomTCMI
+{
+  AtomFull header;
+
+  guint16 text_font;
+  guint16 text_face;
+  guint16 text_size;
+  guint16 text_color[3];
+  guint16 bg_color[3];
+  gchar *font_name;
+} AtomTCMI;
+
+typedef struct _AtomTMCD
+{
+  Atom header;
+
+  AtomTCMI tcmi;
+} AtomTMCD;
+
+typedef struct _AtomGMIN
+{
+  AtomFull header;
+
+  guint16 graphics_mode;
+  guint16 opcolor[3];
+  guint8 balance;
+  guint8 reserved;
+
+} AtomGMIN;
+
+typedef struct _AtomGMHD
+{
+  Atom header;
+
+  AtomGMIN gmin;
+  AtomTMCD tmcd;
+
+} AtomGMHD;
+
 typedef struct _AtomURL
 {
   AtomFull header;
@@ -342,6 +382,7 @@ typedef enum _SampleEntryKind
   AUDIO,
   VIDEO,
   SUBTITLE,
+  TIMECODE
 } SampleEntryKind;
 
 typedef struct _SampleTableEntry
@@ -415,6 +456,27 @@ typedef struct _SampleTableEntryMP4A
   GList *extension_atoms;
 } SampleTableEntryMP4A;
 
+typedef struct _AtomNAME
+{
+  Atom header;
+
+  guint8 language_code;
+  gchar *name;
+} AtomNAME;
+
+typedef struct _SampleTableEntryTMCD
+{
+  SampleTableEntry se;
+
+  guint32 tc_flags;
+  guint32 timescale;
+  guint32 frame_duration;
+  guint8 n_frames;
+
+  AtomNAME name;
+
+} SampleTableEntryTMCD;
+
 typedef struct _SampleTableEntryTX3G
 {
   SampleTableEntry se;
@@ -463,6 +525,14 @@ typedef struct _AtomSTSC
   ATOM_ARRAY (STSCEntry) entries;
 } AtomSTSC;
 
+/* FIXME: this can support multiple tracks */
+typedef struct _AtomTREF
+{
+  Atom header;
+
+  guint32 reftype;
+  ATOM_ARRAY (guint32) entries;
+} AtomTREF;
 
 /*
  * used for both STCO and CO64
@@ -514,6 +584,7 @@ typedef struct _AtomMINF
   AtomVMHD *vmhd;
   AtomSMHD *smhd;
   AtomHMHD *hmhd;
+  AtomGMHD *gmhd;
 
   AtomHDLR *hdlr;
   AtomDINF dinf;
@@ -616,6 +687,15 @@ enum TfFlags
   TF_DEFAULT_BASE_IS_MOOF     = 0x020000  /* default-base-is-moof */
 };
 
+/* Timecode flags */
+enum TcFlags
+{
+  TC_DROP_FRAME = 0x0001,   /* Drop-frame timecode */
+  TC_24H_MAX = 0x0002,      /* Whether the timecode wraps after 24 hours */
+  TC_NEGATIVE_OK = 0x0004,  /* Whether negative time values are OK */
+  TC_COUNTER = 0x0008       /* Whether the time value corresponds to a tape counter value */
+};
+
 typedef struct _AtomTRAK
 {
   Atom header;
@@ -624,6 +704,7 @@ typedef struct _AtomTRAK
   AtomEDTS *edts;
   AtomMDIA mdia;
   AtomUDTA udta;
+  AtomTREF *tref;
 
   /* some helper info for structural conformity checks */
   gboolean is_video;
@@ -937,6 +1018,9 @@ SampleTableEntryMP4V * atom_trak_set_video_type (AtomTRAK * trak, AtomsContext *
 SampleTableEntryTX3G * atom_trak_set_subtitle_type (AtomTRAK * trak, AtomsContext * context,
                                SubtitleSampleEntry * entry);
 
+SampleTableEntryTMCD *
+atom_trak_set_timecode_type (AtomTRAK * trak, AtomsContext * context, GstVideoTimeCode * tc);
+
 void atom_trak_update_bitrates (AtomTRAK * trak, guint32 avg_bitrate,
                                 guint32 max_bitrate);
 
@@ -996,6 +1080,9 @@ void atom_udta_add_3gp_tag           (AtomUDTA *udta, guint32 fourcc, guint8 * d
                                       guint size);
 
 void atom_udta_add_xmp_tags          (AtomUDTA *udta, GstBuffer * xmp);
+
+AtomTREF * atom_tref_new (guint32 reftype);
+void atom_tref_add_entry (AtomTREF * tref, guint32 sample);
 
 #define GST_QT_MUX_DEFAULT_TAG_LANGUAGE   "und" /* undefined/unknown */
 guint16  language_code               (const char * lang);

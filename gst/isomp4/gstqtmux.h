@@ -123,6 +123,7 @@ struct _GstQTPad
   /* all the atom and chunk book-keeping is delegated here
    * unowned/uncounted reference, parent MOOV owns */
   AtomTRAK *trak;
+  AtomTRAK *tc_trak;
   SampleTableEntry *trak_ste;
   /* fragmented support */
   /* meta data book-keeping delegated here */
@@ -205,6 +206,10 @@ struct _GstQTMux
   /* Set when tags are received, cleared when written to moov */
   gboolean tags_changed;
 
+  /* SMPTE timecode */
+  GstVideoTimeCode *first_tc;
+  GstClockTime first_pts;
+  guint64 tc_pos;
 
   /* fragmented file index */
   AtomMFRA *mfra;
