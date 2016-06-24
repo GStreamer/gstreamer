@@ -48,6 +48,13 @@ EXPORTS
 	gst_h265_sei_free
 	gst_h265_slice_hdr_copy
 	gst_h265_slice_hdr_free
+	gst_jpeg2000_colorspace_from_string
+	gst_jpeg2000_colorspace_to_string
+	gst_jpeg2000_sampling_from_string
+	gst_jpeg2000_sampling_is_mono
+	gst_jpeg2000_sampling_is_rgb
+	gst_jpeg2000_sampling_is_yuv
+	gst_jpeg2000_sampling_to_string
 	gst_jpeg_get_default_huffman_tables
 	gst_jpeg_get_default_quantization_tables
 	gst_jpeg_parse
