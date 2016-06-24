@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstbaseparse.h>
-#include <gst-libs/gst/codecparsers/gstjpeg2000sampling.h>
+#include <gst/codecparsers/gstjpeg2000sampling.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_JPEG2000_PARSE \
