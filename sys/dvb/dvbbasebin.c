@@ -1173,14 +1173,13 @@ dvb_base_bin_uri_set_uri (GstURIHandler * handler, const gchar * uri,
   if (location == NULL)
     goto no_location;
 
+  /* FIXME: here is where we parse channels.conf */
   if (!set_properties_for_channel (GST_ELEMENT (dvbbasebin), location, &err))
     goto set_properties_failed;
 
-  /* FIXME: here is where we parse channels.conf */
-
   g_free (location);
   return TRUE;
-/* ERRORS */
+
 post_error_and_exit:
   {
     gst_element_message_full (GST_ELEMENT (dvbbasebin), GST_MESSAGE_ERROR,
@@ -1198,6 +1197,9 @@ no_location:
 set_properties_failed:
   {
     g_free (location);
+    if (!err)
+      g_set_error (&err, GST_URI_ERROR, GST_URI_ERROR_BAD_REFERENCE,
+          "Could not find information for channel");
     goto post_error_and_exit;
   }
 }
