@@ -530,6 +530,9 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   gboolean is_rtx;
   gboolean drop = FALSE;
 
+  if (rtx->rtx_pt_map_structure == NULL)
+    goto no_map;
+
   /* map current rtp packet to parse its header */
   if (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp))
     goto invalid_buffer;
@@ -679,10 +682,14 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   return ret;
 
+no_map:
+  {
+    GST_DEBUG_OBJECT (pad, "No map set, passthrough");
+    return gst_pad_push (rtx->srcpad, buffer);
+  }
 invalid_buffer:
   {
-    GST_ELEMENT_WARNING (rtx, STREAM, DECODE, (NULL),
-        ("Received invalid RTP payload, dropping"));
+    GST_INFO_OBJECT (pad, "Received invalid RTP payload, dropping");
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
