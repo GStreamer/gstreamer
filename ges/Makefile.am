@@ -174,7 +174,8 @@ include $(top_srcdir)/common/gst-glib-gen.mak
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GES-@GST_API_VERSION@.gir
 
-gir_headers=$(patsubst %,$(srcdir)/%, $(libges_@GST_API_VERSION@include_HEADERS))
+gir_headers_temp=$(patsubst %,$(srcdir)/%, $(libges_@GST_API_VERSION@include_HEADERS))
+gir_headers=$(subst $(srcdir)/ges-version.h,$(builddir)/ges-version.h,$(gir_headers_temp))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libges_@GST_API_VERSION@_la_SOURCES))
 
 GES-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libges-@GST_API_VERSION@.la
