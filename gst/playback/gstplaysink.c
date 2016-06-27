@@ -4630,7 +4630,9 @@ gst_play_sink_handle_message (GstBin * bin, GstMessage * message)
 
       if (format == GST_FORMAT_BUFFERS) {
         /* for the buffer format, we align the other streams */
-        if (playsink->audiochain) {
+        if (playsink->audiochain
+            && !gst_object_has_as_ancestor (GST_MESSAGE_SRC (message),
+                GST_OBJECT (playsink->audiochain->chain.bin))) {
           GstEvent *event;
 
           event =
