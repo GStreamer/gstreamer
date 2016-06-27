@@ -32,7 +32,6 @@
 #include <QtGui/QGuiApplication>
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/QSGSimpleTextureNode>
-#include <qpa/qplatformnativeinterface.h>
 
 #if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (HAVE_QT_X11)
 #include <QX11Info>
@@ -41,6 +40,7 @@
 #endif
 
 #if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_WAYLAND)
+#include <qpa/qplatformnativeinterface.h>
 #include <gst/gl/wayland/gstgldisplay_wayland.h>
 #endif
 
