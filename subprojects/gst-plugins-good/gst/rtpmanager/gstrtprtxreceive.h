@@ -52,6 +52,8 @@ struct _GstRtpRtxReceive
    * as we make sure all ssrc are unique */
   GHashTable *ssrc2_ssrc1_map;
 
+  GstStructure *external_ssrc_map;
+
   /* contains seqnum of request packets of whom their ssrc have
    * not been associated to a rtx stream yet */
   GHashTable *seqnum_ssrc1_map;

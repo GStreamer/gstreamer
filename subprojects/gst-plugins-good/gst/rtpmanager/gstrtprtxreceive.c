@@ -159,6 +159,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_rtx_receive_debug);
 enum
 {
   PROP_0,
+  PROP_SSRC_MAP,
   PROP_PAYLOAD_TYPE_MAP,
   PROP_NUM_RTX_REQUESTS,
   PROP_NUM_RTX_PACKETS,
@@ -209,6 +210,22 @@ gst_rtp_rtx_receive_class_init (GstRtpRtxReceiveClass * klass)
   gobject_class->get_property = gst_rtp_rtx_receive_get_property;
   gobject_class->set_property = gst_rtp_rtx_receive_set_property;
   gobject_class->finalize = gst_rtp_rtx_receive_finalize;
+
+  /**
+   * GstRtpRtxReceive:ssrc-map:
+   *
+   * Map of SSRCs to their retransmission SSRCs for SSRC-multiplexed mode.
+   *
+   * If an application know this information already (WebRTC signals this
+   * in their SDP), it can allow the rtxreceive element to know a packet
+   * is a "valid" RTX packet even if it has not been requested.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_SSRC_MAP,
+      g_param_spec_boxed ("ssrc-map", "SSRC Map",
+          "Map of SSRCs to their retransmission SSRCs for SSRC-multiplexed mode",
+          GST_TYPE_STRUCTURE, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PAYLOAD_TYPE_MAP,
       g_param_spec_boxed ("payload-type-map", "Payload Type Map",
@@ -261,6 +278,8 @@ gst_rtp_rtx_receive_finalize (GObject * object)
   GstRtpRtxReceive *rtx = GST_RTP_RTX_RECEIVE_CAST (object);
 
   g_hash_table_unref (rtx->ssrc2_ssrc1_map);
+  if (rtx->external_ssrc_map)
+    gst_structure_free (rtx->external_ssrc_map);
   g_hash_table_unref (rtx->seqnum_ssrc1_map);
   g_hash_table_unref (rtx->rtx_pt_map);
   if (rtx->rtx_pt_map_structure)
@@ -761,6 +780,16 @@ gst_rtp_rtx_receive_set_property (GObject * object,
   GstRtpRtxReceive *rtx = GST_RTP_RTX_RECEIVE_CAST (object);
 
   switch (prop_id) {
+    case PROP_SSRC_MAP:
+      GST_OBJECT_LOCK (rtx);
+      if (rtx->external_ssrc_map)
+        gst_structure_free (rtx->external_ssrc_map);
+      rtx->external_ssrc_map = g_value_dup_boxed (value);
+      g_hash_table_remove_all (rtx->ssrc2_ssrc1_map);
+      gst_structure_foreach (rtx->external_ssrc_map,
+          structure_to_hash_table_inv, rtx->ssrc2_ssrc1_map);
+      GST_OBJECT_UNLOCK (rtx);
+      break;
     case PROP_PAYLOAD_TYPE_MAP:
       GST_OBJECT_LOCK (rtx);
       if (rtx->rtx_pt_map_structure)

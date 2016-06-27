@@ -18248,6 +18248,17 @@
                         "readable": true,
                         "type": "GstStructure",
                         "writable": true
+                    },
+                    "ssrc-map": {
+                        "blurb": "Map of SSRCs to their retransmission SSRCs for SSRC-multiplexed mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": false,
+                        "type": "GstStructure",
+                        "writable": true
                     }
                 },
                 "rank": "none"
