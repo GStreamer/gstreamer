@@ -4698,10 +4698,11 @@ gst_play_sink_handle_message (GstBin * bin, GstMessage * message)
  * to them in case it's source is different from the a/v stream's source.
  */
 static gboolean
-gst_play_sink_send_event_to_sink (GstPlaySink * playsink, GstEvent * event)
+gst_play_sink_send_event_to_sink (GstPlaySink * playsink, GstEvent * event,
+    gboolean force_video)
 {
   gboolean res = TRUE;
-  if (playsink->send_event_mode == MODE_FIRST) {
+  if (playsink->send_event_mode == MODE_FIRST || force_video) {
     if (playsink->textchain && playsink->textchain->sink) {
       gst_event_ref (event);
       if ((res =
@@ -4722,7 +4723,7 @@ gst_play_sink_send_event_to_sink (GstPlaySink * playsink, GstEvent * event)
       }
       GST_DEBUG_OBJECT (playsink, "Event failed when sent to video sink");
     }
-    if (playsink->audiochain) {
+    if (!force_video && playsink->audiochain) {
       gst_event_ref (event);
       if ((res =
               gst_element_send_event (playsink->audiochain->chain.bin,
@@ -4731,6 +4732,8 @@ gst_play_sink_send_event_to_sink (GstPlaySink * playsink, GstEvent * event)
         goto done;
       }
       GST_DEBUG_OBJECT (playsink, "Event failed when sent to audio sink");
+    } else {
+      res = FALSE;
     }
   } else {
     return
@@ -4756,7 +4759,7 @@ gst_play_sink_send_event (GstElement * element, GstEvent * event)
   switch (event_type) {
     case GST_EVENT_SEEK:
       GST_DEBUG_OBJECT (element, "Sending event to a sink");
-      res = gst_play_sink_send_event_to_sink (playsink, event);
+      res = gst_play_sink_send_event_to_sink (playsink, event, FALSE);
       break;
     case GST_EVENT_STEP:
     {
@@ -4769,7 +4772,7 @@ gst_play_sink_send_event (GstElement * element, GstEvent * event)
       if (format == GST_FORMAT_BUFFERS) {
         /* for buffers, we will try to step video frames, for other formats we
          * send the step to all sinks */
-        res = gst_play_sink_send_event_to_sink (playsink, event);
+        res = gst_play_sink_send_event_to_sink (playsink, event, TRUE);
       } else {
         res =
             GST_ELEMENT_CLASS (gst_play_sink_parent_class)->send_event (element,
