@@ -1303,6 +1303,10 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
           gst_caps_new_simple ("video/x-h264", "stream-format", G_TYPE_STRING,
           "avc", NULL);
       break;
+      /* The following two are non-standard but apparently used, see in ffmpeg
+       * https://git.videolan.org/?p=ffmpeg.git;a=blob;f=libavformat/flvdec.c;h=2bf1e059e1cbeeb79e4af9542da23f4560e1cf59;hb=b18d6c58000beed872d6bb1fe7d0fbe75ae26aef#l254
+       * https://git.videolan.org/?p=ffmpeg.git;a=blob;f=libavformat/flvdec.c;h=2bf1e059e1cbeeb79e4af9542da23f4560e1cf59;hb=b18d6c58000beed872d6bb1fe7d0fbe75ae26aef#l282
+       */
     case 8:
       caps = gst_caps_new_empty_simple ("video/x-h263");
       break;
