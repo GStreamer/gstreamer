@@ -2844,7 +2844,10 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
         HAVE_QT_WINDOWING="no"
         QT_VERSION="`$PKG_CONFIG --modversion Qt5Core`"
         QPA_INCLUDE_PATH=`$PKG_CONFIG --variable=includedir Qt5Core`/QtGui/${QT_VERSION}/QtGui
-        AC_SUBST(QPA_INCLUDE_PATH)
+        AS_IF([test -f "$QPA_INCLUDE_PATH/qpa/qplatformnativeinterface.h"], [
+          AC_SUBST(QPA_INCLUDE_PATH)
+          HAVE_QT_QPA_HEADER="yes"
+        ], [AC_MSG_NOTICE([Cannot find QPA])])
         if test "x$GST_GL_HAVE_WINDOW_X11" = "x1" -a "x$GST_GL_HAVE_PLATFORM_GLX" = "x1"; then
           PKG_CHECK_MODULES(QT_X11, Qt5X11Extras, [
             AC_DEFINE([HAVE_QT_X11], [], [Define if Qt X11 integration is installed])
@@ -2853,7 +2856,7 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
             HAVE_QT_WINDOWING="yes"
           ], [AC_MSG_NOTICE([Could not find Qt X11 integration])])
         fi
-        if test "x$GST_GL_HAVE_WINDOW_WAYLAND" = "x1" -a "x$GST_GL_HAVE_PLATFORM_EGL" = "x1"; then
+        if test "x$GST_GL_HAVE_WINDOW_WAYLAND" = "x1" -a "x$GST_GL_HAVE_PLATFORM_EGL" = "x1" -a "x$HAVE_QT_QPA_HEADER" = "xyes"; then
           PKG_CHECK_MODULES(QT_WAYLAND, Qt5WaylandClient, [
             AC_DEFINE([HAVE_QT_WAYLAND], [],
                 [Define if Qt Wayland integration is installed])
