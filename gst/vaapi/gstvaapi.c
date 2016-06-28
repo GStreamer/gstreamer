@@ -67,7 +67,6 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_H264);
   gst_element_register (plugin, "vaapimpeg2enc",
       GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_MPEG2);
-#endif
 #if USE_JPEG_ENCODER
   gst_element_register (plugin, "vaapijpegenc",
       GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_JPEG);
@@ -83,6 +82,7 @@ plugin_init (GstPlugin * plugin)
 #if USE_VP9_ENCODER
   gst_element_register (plugin, "vaapivp9enc",
       GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_VP9);
+#endif
 #endif
 
   gst_element_register (plugin, "vaapidecodebin",
