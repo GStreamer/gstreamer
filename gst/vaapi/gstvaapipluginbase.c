@@ -75,32 +75,6 @@ gst_vaapi_plugin_base_set_context (GstVaapiPluginBase * plugin,
     plugin_set_display (plugin, display);
 }
 
-/**
- * gst_vaapi_plugin_base_driver_is_whitelisted:
- * @plugin: a #GstVaapiPluginBase instance
- *
- * Looks the VA-API driver vendors in an internal white-list.
- *
- * Returns: %TRUE if driver is in the white-list, otherwise %FALSE
- **/
-gboolean
-gst_vaapi_plugin_base_driver_is_whitelisted (GstVaapiPluginBase * plugin)
-{
-  GstVaapiDisplay *display;
-
-  display = GST_VAAPI_PLUGIN_BASE_DISPLAY (plugin);
-  if (!display)
-    goto no_display;
-  return gst_vaapi_driver_is_whitelisted (display);
-
-  /* ERRORS */
-no_display:
-  {
-    GST_WARNING_OBJECT (plugin, "no VA-API display available");
-    return FALSE;
-  }
-}
-
 void
 gst_vaapi_plugin_base_init_interfaces (GType g_define_type_id)
 {

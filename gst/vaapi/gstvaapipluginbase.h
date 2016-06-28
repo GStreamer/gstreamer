@@ -227,10 +227,6 @@ gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
     GstBuffer * inbuf, GstBuffer ** outbuf_ptr);
 
 G_GNUC_INTERNAL
-gboolean
-gst_vaapi_plugin_base_driver_is_whitelisted (GstVaapiPluginBase * plugin);
-
-G_GNUC_INTERNAL
 void
 gst_vaapi_plugin_base_set_context (GstVaapiPluginBase * plugin,
     GstContext * context);
