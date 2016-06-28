@@ -112,6 +112,8 @@
  * otherwise struct in6_pktinfo is not defined completely
  * due to broken glibc headers */
 #define _GNU_SOURCE
+/* Needed for OSX/iOS to define the IPv6 variants */
+#define __APPLE_USE_RFC_3542
 #include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
