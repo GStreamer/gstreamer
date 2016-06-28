@@ -2234,7 +2234,8 @@ _do_convert_one_view (GstGLContext * context, GstGLColorConvert * convert,
         allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR_NAME);
         base_mem_allocator = GST_GL_BASE_MEMORY_ALLOCATOR (allocator);
         params = gst_gl_video_allocation_params_new (context, NULL, &temp_info,
-            0, NULL, convert->priv->to_texture_target);
+            0, NULL, convert->priv->to_texture_target,
+            GST_VIDEO_GL_TEXTURE_TYPE_RGBA);
 
         convert->priv->out_tex[j] =
             (GstGLMemory *) gst_gl_base_memory_alloc (base_mem_allocator,

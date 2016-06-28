@@ -217,7 +217,8 @@ GST_START_TEST (test_upload_buffer)
   /* create GL buffer */
   buffer = gst_buffer_new ();
   params = gst_gl_video_allocation_params_new_wrapped_data (context, NULL,
-      &in_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, rgba_data, NULL, NULL);
+      &in_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D,
+      GST_VIDEO_GL_TEXTURE_TYPE_RGBA, rgba_data, NULL, NULL);
   gl_mem = (GstGLMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
       (GstGLAllocationParams *) params);
   gst_gl_allocation_params_free ((GstGLAllocationParams *) params);

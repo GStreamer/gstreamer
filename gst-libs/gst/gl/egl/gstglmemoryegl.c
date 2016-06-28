@@ -66,8 +66,8 @@ EGLDisplay
 gst_gl_memory_egl_get_display (GstGLMemoryEGL * mem)
 {
   g_return_val_if_fail (gst_is_gl_memory_egl (GST_MEMORY_CAST (mem)), NULL);
-  return GST_GL_CONTEXT_EGL (_gl_mem_get_parent (mem)->mem.mem.context)->
-      egl_display;
+  return GST_GL_CONTEXT_EGL (_gl_mem_get_parent (mem)->mem.mem.
+      context)->egl_display;
 }
 
 GstVideoGLTextureOrientation
@@ -99,17 +99,6 @@ _gl_mem_destroy (GstGLMemoryEGL * mem)
           *) mem);
 }
 
-static void
-_gl_mem_init (GstGLMemoryEGL * mem, GstAllocator * allocator,
-    GstMemory * parent, GstGLContext * context, GstGLTextureTarget target,
-    GstAllocationParams * params, GstVideoInfo * info,
-    guint plane, GstVideoAlignment * valign, gpointer user_data,
-    GDestroyNotify notify)
-{
-  gst_gl_memory_init ((GstGLMemory *) mem, allocator, parent,
-      context, target, params, info, plane, valign, user_data, notify);
-}
-
 static GstGLMemoryEGL *
 _gl_mem_egl_alloc (GstGLBaseMemoryAllocator * allocator,
     GstGLVideoAllocationParams * params)
@@ -136,10 +125,10 @@ _gl_mem_egl_alloc (GstGLBaseMemoryAllocator * allocator,
     mem->image = gst_egl_image_ref (params->parent.gl_handle);
   }
 
-  _gl_mem_init (mem, GST_ALLOCATOR_CAST (allocator), NULL,
-      params->parent.context, params->target, params->parent.alloc_params,
-      params->v_info, params->plane, params->valign, params->parent.user_data,
-      params->parent.notify);
+  gst_gl_memory_init (GST_GL_MEMORY_CAST (mem), GST_ALLOCATOR_CAST (allocator),
+      NULL, params->parent.context, params->target, params->tex_type,
+      params->parent.alloc_params, params->v_info, params->plane,
+      params->valign, params->parent.user_data, params->parent.notify);
 
   return mem;
 }

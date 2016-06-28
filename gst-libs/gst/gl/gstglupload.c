@@ -315,8 +315,8 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
     gst_allocation_params_init (&params);
 
     allocator =
-        GST_ALLOCATOR (gst_gl_memory_allocator_get_default (upload->upload->
-            context));
+        GST_ALLOCATOR (gst_gl_memory_allocator_get_default (upload->
+            upload->context));
     gst_query_add_allocation_param (query, allocator, &params);
     gst_object_unref (allocator);
 
@@ -582,9 +582,9 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   if (dmabuf->params)
     gst_gl_allocation_params_free ((GstGLAllocationParams *) dmabuf->params);
   if (!(dmabuf->params =
-          gst_gl_video_allocation_params_new_wrapped_gl_handle (dmabuf->upload->
-              context, NULL, &dmabuf->upload->priv->in_info, -1, NULL,
-              GST_GL_TEXTURE_TARGET_2D, NULL, NULL, NULL)))
+          gst_gl_video_allocation_params_new_wrapped_gl_handle (dmabuf->
+              upload->context, NULL, &dmabuf->upload->priv->in_info, -1, NULL,
+              GST_GL_TEXTURE_TARGET_2D, 0, NULL, NULL, NULL)))
     return FALSE;
 
   /* Find and validate all memories */
@@ -649,7 +649,7 @@ _dma_buf_upload_perform_gl_thread (GstGLContext * context,
 
   /* FIXME: buffer pool */
   dmabuf->outbuf = gst_buffer_new ();
-  gst_gl_memory_setup_buffer (allocator, dmabuf->outbuf, dmabuf->params,
+  gst_gl_memory_setup_buffer (allocator, dmabuf->outbuf, dmabuf->params, NULL,
       (gpointer *) dmabuf->eglimage, gst_buffer_n_memory (dmabuf->outbuf));
   gst_object_unref (allocator);
 }
@@ -785,7 +785,7 @@ _upload_meta_upload_accept (gpointer impl, GstBuffer * buffer,
   if (!(upload->params =
           gst_gl_video_allocation_params_new (upload->upload->context, NULL,
               &upload->upload->priv->in_info, -1, NULL,
-              GST_GL_TEXTURE_TARGET_2D)))
+              GST_GL_TEXTURE_TARGET_2D, 0)))
     return FALSE;
 
   if (buffer) {
@@ -817,11 +817,11 @@ _upload_meta_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
   gpointer handle;
 
   gl_apis =
-      gst_gl_api_to_string (gst_gl_context_get_gl_api (upload->
-          upload->context));
+      gst_gl_api_to_string (gst_gl_context_get_gl_api (upload->upload->
+          context));
   platform =
-      gst_gl_platform_to_string (gst_gl_context_get_gl_platform
-      (upload->upload->context));
+      gst_gl_platform_to_string (gst_gl_context_get_gl_platform (upload->
+          upload->context));
   handle = (gpointer) gst_gl_context_get_gl_context (upload->upload->context);
 
   gl_context =
@@ -876,7 +876,8 @@ _upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
 
   /* FIXME: buffer pool */
   *outbuf = gst_buffer_new ();
-  gst_gl_memory_setup_buffer (allocator, *outbuf, upload->params, NULL, 0);
+  gst_gl_memory_setup_buffer (allocator, *outbuf, upload->params, NULL, NULL,
+      0);
   gst_object_unref (allocator);
 
   for (i = 0; i < GST_GL_UPLOAD_MAX_PLANES; i++) {
@@ -1067,7 +1068,7 @@ _raw_data_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   if (!(raw->params =
           gst_gl_video_allocation_params_new_wrapped_data (raw->upload->context,
               NULL, &raw->upload->priv->in_info, -1, NULL,
-              GST_GL_TEXTURE_TARGET_2D, NULL, raw->in_frame,
+              GST_GL_TEXTURE_TARGET_2D, 0, NULL, raw->in_frame,
               (GDestroyNotify) _raw_upload_frame_unref)))
     return FALSE;
 
