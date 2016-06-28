@@ -42,6 +42,9 @@
 #include "gstvaapipluginutil.h"
 #include "gstvaapipluginbase.h"
 
+/* Environment variable for disable driver white-list */
+#define GST_VAAPI_ALL_DRIVERS_ENV "GST_VAAPI_ALL_DRIVERS"
+
 typedef GstVaapiDisplay *(*GstVaapiDisplayCreateFunc) (const gchar *);
 typedef GstVaapiDisplay *(*GstVaapiDisplayCreateFromHandleFunc) (gpointer);
 
@@ -721,4 +724,49 @@ GstVaapiDisplay *
 gst_vaapi_create_test_display (void)
 {
   return gst_vaapi_create_display (GST_VAAPI_DISPLAY_TYPE_ANY, NULL);
+}
+
+/**
+ * gst_vaapi_driver_is_whitelisted:
+ * @display: a #GstVaapiDisplay
+ *
+ * Looks the VA-API driver vendors in an internal white-list.
+ *
+ * Returns: %TRUE if driver is in the white-list, otherwise %FALSE
+ **/
+gboolean
+gst_vaapi_driver_is_whitelisted (GstVaapiDisplay * display)
+{
+  const gchar *vendor;
+  guint i;
+  static const gchar *whitelist[] = {
+    "Intel i965 driver",
+    "mesa gallium vaapi",
+    NULL
+  };
+
+  g_return_val_if_fail (display, FALSE);
+
+  if (g_getenv (GST_VAAPI_ALL_DRIVERS_ENV))
+    return TRUE;
+
+  vendor = gst_vaapi_display_get_vendor_string (display);
+  if (!vendor)
+    goto no_vendor;
+
+  for (i = 0; whitelist[i]; i++) {
+    if (g_ascii_strncasecmp (vendor, whitelist[i], strlen (whitelist[i])) == 0)
+      return TRUE;
+  }
+
+  GST_ERROR ("Unsupported VA driver: %s. Export environment variable "
+      GST_VAAPI_ALL_DRIVERS_ENV " to bypass", vendor);
+  return FALSE;
+
+  /* ERRORS */
+no_vendor:
+  {
+    GST_WARNING ("no VA-API driver vendor description");
+    return FALSE;
+  }
 }

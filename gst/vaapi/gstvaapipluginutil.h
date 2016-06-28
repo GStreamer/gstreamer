@@ -135,4 +135,8 @@ G_GNUC_INTERNAL
 GstVaapiDisplay *
 gst_vaapi_create_test_display (void);
 
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_driver_is_whitelisted (GstVaapiDisplay * display);
+
 #endif /* GST_VAAPI_PLUGIN_UTIL_H */
