@@ -2170,9 +2170,8 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   if ((stop = seeksegment.stop) == -1)
     stop = seeksegment.duration;
 
-  playing = (src->state == GST_RTSP_STATE_PLAYING);
-
   /* if we were playing, pause first */
+  playing = (src->state == GST_RTSP_STATE_PLAYING);
   if (playing) {
     /* obtain current position in case seek fails */
     gst_rtspsrc_get_position (src);
@@ -2185,7 +2184,12 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   /* PLAY will add the range header now. */
   src->need_range = TRUE;
 
-  /* and continue playing */
+  /* and continue playing if needed */
+  GST_OBJECT_LOCK (src);
+  playing = (GST_STATE_PENDING (src) == GST_STATE_VOID_PENDING
+      && GST_STATE (src) == GST_STATE_PLAYING)
+      || (GST_STATE_PENDING (src) == GST_STATE_PLAYING);
+  GST_OBJECT_UNLOCK (src);
   if (playing)
     gst_rtspsrc_play (src, &seeksegment, FALSE);
 
