@@ -537,9 +537,9 @@ GstGLAPI
 gst_gl_context_get_current_gl_api (GstGLPlatform platform, guint * major,
     guint * minor)
 {
-  const GLubyte *(GSTGLAPI *GetString) (GLenum name);
+  const GLubyte *(GSTGLAPI * GetString) (GLenum name);
 #if GST_GL_HAVE_OPENGL
-  void (GSTGLAPI *GetIntegerv) (GLenum name, GLuint * n);
+  void (GSTGLAPI * GetIntegerv) (GLenum name, GLuint * n);
 #endif
   const gchar *version;
   gint maj, min, n;
@@ -1513,7 +1513,7 @@ void
 gst_gl_context_get_gl_version (GstGLContext * context, gint * maj, gint * min)
 {
   g_return_if_fail (GST_IS_GL_CONTEXT (context));
-  g_return_if_fail (maj != NULL && min != NULL);
+  g_return_if_fail (!(maj == NULL && min == NULL));
 
   if (maj)
     *maj = context->priv->gl_major;
