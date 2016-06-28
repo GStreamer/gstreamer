@@ -276,7 +276,6 @@ gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gint video_par_n, video_par_d;        /* video's PAR */
   gint display_par_n = 1, display_par_d = 1;    /* display's PAR */
   guint num, den;
-  gchar *tmp = NULL;
   GstBufferPool *newpool, *oldpool;
   GstBufferPool *newfbpool, *oldfbpool;
   GstStructure *config;
@@ -354,9 +353,7 @@ gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   sink->width = video_width;
   sink->height = video_height;
 
-  GST_DEBUG_OBJECT (bsink, "Selected caps: %s", (tmp =
-          gst_caps_to_string (caps)));
-  g_free (tmp);
+  GST_DEBUG_OBJECT (bsink, "Selected caps: %" GST_PTR_FORMAT, caps);
 
   if (!d3d_set_render_format (sink))
     goto incompatible_caps;
@@ -410,10 +407,8 @@ incompatible_caps:
   }
 invalid_format:
   {
-    gchar *caps_txt = gst_caps_to_string (caps);
     GST_DEBUG_OBJECT (sink,
-        "Could not locate image format from caps %s", caps_txt);
-    g_free (caps_txt);
+        "Could not locate image format from caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 no_disp_ratio:

@@ -810,9 +810,7 @@ d3d_supported_caps (GstD3DVideoSink * sink)
 
 #ifndef GST_DISABLE_GST_DEBUG
   {
-    gchar *tmp = gst_caps_to_string (caps);
-    GST_DEBUG_OBJECT (sink, "Supported caps: %s", tmp);
-    g_free (tmp);
+    GST_DEBUG_OBJECT (sink, "Supported caps: %" GST_PTR_FORMAT, caps);
   }
 #endif
 
