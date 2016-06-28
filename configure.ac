@@ -488,6 +488,9 @@ dnl ---------------------------------------------------------------------------
 dnl Core API
 PKG_CHECK_MODULES([LIBVA], [libva >= $VAAPI_REQ])
 VA_VERSION_STR=`$PKG_CONFIG --modversion libva`
+VA_DRIVERS_PATH=`$PKG_CONFIG --variable=driverdir libva`
+AC_DEFINE_UNQUOTED([VA_DRIVERS_PATH], ["$VA_DRIVERS_PATH"],
+  [VA drivers path])
 
 dnl VA/DRM API
 if test $USE_DRM -eq 1; then

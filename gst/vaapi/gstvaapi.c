@@ -53,9 +53,36 @@
 #define PLUGIN_DESC     "VA-API based elements"
 #define PLUGIN_LICENSE  "LGPL"
 
+static void
+plugin_add_dependencies (GstPlugin * plugin)
+{
+  const gchar *envvars[] = { "GST_VAAPI_ALL_DRIVERS", "LIBVA_DRIVER_NAME",
+    NULL
+  };
+  const gchar *kernel_paths[] = { "/dev/dri", NULL };
+  const gchar *kernel_names[] = { "card", "render" };
+
+  /* features get updated upon changes in /dev/dri/card* */
+  gst_plugin_add_dependency (plugin, NULL, kernel_paths, kernel_names,
+      GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_PREFIX);
+
+  /* features get updated upon changes in VA environment variables */
+  gst_plugin_add_dependency (plugin, envvars, NULL, NULL,
+      GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+
+  /* features get updated upon changes in default VA drivers
+   * directory */
+  gst_plugin_add_dependency_simple (plugin, "LIBVA_DRIVERS_PATH",
+      VA_DRIVERS_PATH, "_drv_video.so",
+      GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX |
+      GST_PLUGIN_DEPENDENCY_FLAG_PATHS_ARE_DEFAULT_ONLY);
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  plugin_add_dependencies (plugin);
+
   gst_vaapidecode_register (plugin);
 
   gst_element_register (plugin, "vaapipostproc",
