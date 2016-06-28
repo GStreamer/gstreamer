@@ -110,8 +110,12 @@
 /* Needed to get struct in6_pktinfo */
 #define _GNU_SOURCE
 #include <sys/types.h>
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#ifndef G_OS_WIN32
 #include <netinet/in.h>
+#endif
 
 #include <string.h>
 #include "gstudpsrc.h"
@@ -363,7 +367,7 @@ gst_ip_recvdstaddr_message_deserialize (gint level,
   addr = data;
 
   message = g_object_new (GST_TYPE_IP_RECVDSTADDR_MESSAGE, NULL);
-  message->addr = g_inet_address_new_from_bytes ((guint8 *) addr, AF_INET);
+  message->addr = *addr;
 
   return G_SOCKET_CONTROL_MESSAGE (message);
 }
