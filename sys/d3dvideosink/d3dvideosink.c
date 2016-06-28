@@ -281,9 +281,7 @@ gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   GstBufferPool *newfbpool, *oldfbpool;
   GstStructure *config;
 
-  GST_DEBUG_OBJECT (bsink, " ");
-
-  GST_DEBUG_OBJECT (bsink, "Caps: %s", (tmp = gst_caps_to_string (caps)));
+  GST_DEBUG_OBJECT (bsink, "Caps: %" GST_PTR_FORMAT, caps);
   sink = GST_D3DVIDEOSINK (bsink);
 
   sink_caps = d3d_supported_caps (sink);
