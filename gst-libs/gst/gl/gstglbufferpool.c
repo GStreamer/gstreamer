@@ -132,7 +132,7 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       gst_buffer_pool_config_get_gl_allocation_params (config);
   if (!priv->gl_params)
     priv->gl_params = gst_gl_video_allocation_params_new (glpool->context,
-        &alloc_params, &info, -1, NULL, 0);
+        &alloc_params, &info, -1, NULL, 0, 0);
 
   max_align = alloc_params.align;
 
@@ -262,7 +262,7 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   }
 
   alloc = GST_GL_MEMORY_ALLOCATOR (priv->allocator);
-  if (!gst_gl_memory_setup_buffer (alloc, buf, priv->gl_params, NULL, 0))
+  if (!gst_gl_memory_setup_buffer (alloc, buf, priv->gl_params, NULL, NULL, 0))
     goto mem_create_failed;
 
   if (priv->add_glsyncmeta)

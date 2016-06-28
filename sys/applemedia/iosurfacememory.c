@@ -160,6 +160,7 @@ static GstIOSurfaceMemory *
 _io_surface_memory_new (GstGLContext * context,
     IOSurfaceRef surface,
     GstGLTextureTarget target,
+    GstVideoGLTextureType tex_type,
     GstVideoInfo * info,
     guint plane,
     GstVideoAlignment * valign, gpointer user_data, GDestroyNotify notify)
@@ -170,7 +171,7 @@ _io_surface_memory_new (GstGLContext * context,
 
   mem = g_new0 (GstIOSurfaceMemory, 1);
   gst_gl_memory_init (&mem->gl_mem, _io_surface_memory_allocator, NULL, context,
-      target, NULL, info, plane, valign, user_data, notify);
+      target, tex_type, NULL, info, plane, valign, user_data, notify);
 
   GST_MINI_OBJECT_FLAG_SET (mem, GST_MEMORY_FLAG_READONLY);
 
@@ -184,11 +185,12 @@ GstIOSurfaceMemory *
 gst_io_surface_memory_wrapped (GstGLContext * context,
     IOSurfaceRef surface,
     GstGLTextureTarget target,
+    GstVideoGLTextureType tex_type,
     GstVideoInfo * info,
     guint plane,
     GstVideoAlignment * valign, gpointer user_data, GDestroyNotify notify)
 {
-  return _io_surface_memory_new (context, surface, target, info,
+  return _io_surface_memory_new (context, surface, target, tex_type, info,
       plane, valign, user_data, notify);
 }
 

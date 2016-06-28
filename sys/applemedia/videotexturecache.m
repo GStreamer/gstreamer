@@ -171,8 +171,8 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
         params = gst_gl_video_allocation_params_new_wrapped_texture (cache->ctx,
             NULL, &cache->input_info, 0, NULL, gl_target,
-            CVOpenGLESTextureGetName (texture), texture,
-            (GDestroyNotify) CFRelease);
+            GST_VIDEO_GL_TEXTURE_TYPE_RGBA, CVOpenGLESTextureGetName (texture),
+            texture, (GDestroyNotify) CFRelease);
 
         gst_buffer_replace_memory (output_buffer, 0,
                 (GstMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
@@ -197,7 +197,7 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
 
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
         params = gst_gl_video_allocation_params_new_wrapped_texture (cache->ctx,
-            NULL, &cache->input_info, 0, NULL, gl_target,
+            NULL, &cache->input_info, 0, NULL, gl_target, textype,
             CVOpenGLESTextureGetName (texture), texture,
             (GDestroyNotify) CFRelease);
 
@@ -219,7 +219,7 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
 
         gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
         params = gst_gl_video_allocation_params_new_wrapped_texture (cache->ctx,
-            NULL, &cache->input_info, 1, NULL, gl_target,
+            NULL, &cache->input_info, 1, NULL, gl_target, textype, 
             CVOpenGLESTextureGetName (texture), texture,
             (GDestroyNotify) CFRelease);
 
@@ -255,11 +255,14 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
   gst_buffer_copy_into (data->output_buffer, data->input_buffer, GST_BUFFER_COPY_ALL, 0, -1);
   for (int i = 0; i < GST_VIDEO_INFO_N_PLANES (&cache->input_info); i++) {
     GstIOSurfaceMemory *mem;
+    GstVideoGLTextureType tex_type =
+        gst_gl_texture_type_from_format (context,
+        GST_VIDEO_INFO_FORMAT (&cache->input_info), i);
 
     CFRetain (pixel_buf);
     mem = gst_io_surface_memory_wrapped (cache->ctx,
-            surface, GST_GL_TEXTURE_TARGET_RECTANGLE, &cache->input_info,
-            i, NULL, pixel_buf, (GDestroyNotify) CFRelease);
+            surface, GST_GL_TEXTURE_TARGET_RECTANGLE, tex_type,
+            &cache->input_info, i, NULL, pixel_buf, (GDestroyNotify) CFRelease);
 
     gst_buffer_replace_memory (data->output_buffer, i, (GstMemory *) mem);
   }
