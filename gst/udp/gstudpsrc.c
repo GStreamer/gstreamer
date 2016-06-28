@@ -157,7 +157,10 @@ struct _GstIPPktinfoMessage
   GSocketControlMessage parent;
 
   guint ifindex;
-  struct in_addr spec_dst, addr;
+#ifndef G_OS_WIN32
+  struct in_addr spec_dst;
+#endif
+  struct in_addr addr;
 };
 
 G_DEFINE_TYPE (GstIPPktinfoMessage, gst_ip_pktinfo_message,
@@ -198,7 +201,9 @@ gst_ip_pktinfo_message_deserialize (gint level,
 
   message = g_object_new (GST_TYPE_IP_PKTINFO_MESSAGE, NULL);
   message->ifindex = pktinfo->ipi_ifindex;
+#ifndef G_OS_WIN32
   message->spec_dst = pktinfo->ipi_spec_dst;
+#endif
   message->addr = pktinfo->ipi_addr;
 
   return G_SOCKET_CONTROL_MESSAGE (message);
