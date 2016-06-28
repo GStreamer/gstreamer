@@ -149,6 +149,8 @@ gst_bus_constructed (GObject * object)
     bus->priv->poll = gst_poll_new_timer ();
     gst_poll_get_read_gpollfd (bus->priv->poll, &bus->priv->pollfd);
   }
+
+  G_OBJECT_CLASS (gst_bus_parent_class)->constructed (object);
 }
 
 static void
