@@ -78,7 +78,7 @@ gst_jpeg2000_sampling_is_rgb (GstJPEG2000Sampling sampling)
 gboolean
 gst_jpeg2000_sampling_is_yuv (GstJPEG2000Sampling sampling)
 {
-  return sampling = GST_JPEG2000_SAMPLING_YBRA4444_EXT ||
+  return sampling == GST_JPEG2000_SAMPLING_YBRA4444_EXT ||
       sampling == GST_JPEG2000_SAMPLING_YBR444 ||
       sampling == GST_JPEG2000_SAMPLING_YBR422 ||
       sampling == GST_JPEG2000_SAMPLING_YBR420
