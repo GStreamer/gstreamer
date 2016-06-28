@@ -352,9 +352,11 @@ gst_kms_sink_start (GstBaseSink * bsink)
   drmModeCrtc *crtc;
   drmModePlaneRes *pres;
   drmModePlane *plane;
+  gboolean universal_planes;
   gboolean ret;
 
   self = GST_KMS_SINK (bsink);
+  universal_planes = FALSE;
   ret = FALSE;
   res = NULL;
   conn = NULL;
@@ -387,6 +389,11 @@ gst_kms_sink_start (GstBaseSink * bsink)
   crtc = find_crtc_for_connector (self->fd, res, conn, &self->pipe);
   if (!crtc)
     goto crtc_failed;
+
+retry_find_plane:
+  if (universal_planes &&
+      drmSetClientCap (self->fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1))
+    goto set_cap_failed;
 
   pres = drmModeGetPlaneResources (self->fd);
   if (!pres)
@@ -472,6 +479,12 @@ crtc_failed:
     goto bail;
   }
 
+set_cap_failed:
+  {
+    GST_ERROR_OBJECT (self, "Could not set universal planes capability bit");
+    goto bail;
+  }
+
 plane_resources_failed:
   {
     GST_ERROR_OBJECT (self, "drmModeGetPlaneResources failed: %s (%d)",
@@ -481,8 +494,13 @@ plane_resources_failed:
 
 plane_failed:
   {
-    GST_ERROR_OBJECT (self, "Could not find a plane for crtc");
-    goto bail;
+    if (universal_planes) {
+      GST_ERROR_OBJECT (self, "Could not find a plane for crtc");
+      goto bail;
+    } else {
+      universal_planes = TRUE;
+      goto retry_find_plane;
+    }
   }
 }
 
