@@ -107,14 +107,14 @@
 #include "config.h"
 #endif
 
-/* Needed to get struct in6_pktinfo */
+/* Needed to get struct in6_pktinfo.
+ * Also all these have to be before glib.h is included as
+ * otherwise struct in6_pktinfo is not defined completely
+ * due to broken glibc headers */
 #define _GNU_SOURCE
 #include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#endif
-#ifndef G_OS_WIN32
-#include <netinet/in.h>
 #endif
 
 #include <string.h>
@@ -123,6 +123,12 @@
 #include <gst/net/gstnetaddressmeta.h>
 
 #include <gio/gnetworking.h>
+
+/* Required for other parts of in_pktinfo / in6_pktinfo but only
+ * on non-Windows and can be included after glib.h */
+#ifndef G_OS_WIN32
+#include <netinet/ip.h>
+#endif
 
 /* Control messages for getting the destination address */
 #ifdef IP_PKTINFO
