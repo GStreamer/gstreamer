@@ -78,6 +78,104 @@ plugin_add_dependencies (GstPlugin * plugin)
       GST_PLUGIN_DEPENDENCY_FLAG_PATHS_ARE_DEFAULT_ONLY);
 }
 
+static GArray *
+profiles_get_codecs (GArray * profiles)
+{
+  guint i;
+  GArray *codecs;
+  GstVaapiProfile profile;
+  GstVaapiCodec codec;
+
+  codecs = g_array_new (FALSE, FALSE, sizeof (GstVaapiCodec));
+  if (!codecs)
+    return NULL;
+
+  for (i = 0; i < profiles->len; i++) {
+    profile = g_array_index (profiles, GstVaapiProfile, i);
+    codec = gst_vaapi_profile_get_codec (profile);
+    if (gst_vaapi_codecs_has_codec (codecs, codec))
+      continue;
+    g_array_append_val (codecs, codec);
+  }
+
+  return codecs;
+}
+
+#if USE_ENCODERS
+static GArray *
+display_get_encoder_codecs (GstVaapiDisplay * display)
+{
+  GArray *profiles, *codecs;
+
+  profiles = gst_vaapi_display_get_encode_profiles (display);
+  if (!profiles)
+    return NULL;
+
+  codecs = profiles_get_codecs (profiles);
+  g_array_unref (profiles);
+  return codecs;
+}
+
+typedef struct _GstVaapiEncoderMap GstVaapiEncoderMap;
+struct _GstVaapiEncoderMap
+{
+  GstVaapiCodec codec;
+  guint rank;
+  const gchar *name;
+    GType (*get_type) (void);
+};
+
+#define DEF_ENC(CODEC,codec)          \
+  {GST_VAAPI_CODEC_##CODEC,           \
+   GST_RANK_PRIMARY,                  \
+   "vaapi" G_STRINGIFY (codec) "enc", \
+   gst_vaapiencode_##codec##_get_type}
+
+static const GstVaapiEncoderMap vaapi_encode_map[] = {
+  DEF_ENC (H264, h264),
+  DEF_ENC (MPEG2, mpeg2),
+#if USE_JPEG_ENCODER
+  DEF_ENC (JPEG, jpeg),
+#endif
+#if USE_VP8_ENCODER
+  DEF_ENC (VP8, vp8),
+#endif
+#if USE_VP9_ENCODER
+  DEF_ENC (VP9, vp9),
+#endif
+#if USE_H265_ENCODER
+  DEF_ENC (H265, h265),
+#endif
+};
+
+#undef DEF_ENC
+
+static void
+gst_vaapiencode_register (GstPlugin * plugin, GstVaapiDisplay * display)
+{
+  guint i, j;
+  GArray *codecs;
+  GstVaapiCodec codec;
+
+  codecs = display_get_encoder_codecs (display);
+  if (!codecs)
+    return;
+
+  for (i = 0; i < codecs->len; i++) {
+    codec = g_array_index (codecs, GstVaapiCodec, i);
+    for (j = 0; j < G_N_ELEMENTS (vaapi_encode_map); j++) {
+      if (vaapi_encode_map[j].codec == codec) {
+        gst_element_register (plugin, vaapi_encode_map[j].name,
+            vaapi_encode_map[j].rank, vaapi_encode_map[j].get_type ());
+        break;
+      }
+    }
+  }
+
+  g_array_unref (codecs);
+}
+#endif
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -104,26 +202,7 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin, "vaapisink",
       GST_RANK_PRIMARY, GST_TYPE_VAAPISINK);
 #if USE_ENCODERS
-  gst_element_register (plugin, "vaapih264enc",
-      GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_H264);
-  gst_element_register (plugin, "vaapimpeg2enc",
-      GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_MPEG2);
-#if USE_JPEG_ENCODER
-  gst_element_register (plugin, "vaapijpegenc",
-      GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_JPEG);
-#endif
-#if USE_VP8_ENCODER
-  gst_element_register (plugin, "vaapivp8enc",
-      GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_VP8);
-#endif
-#if USE_H265_ENCODER
-  gst_element_register (plugin, "vaapih265enc",
-      GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_H265);
-#endif
-#if USE_VP9_ENCODER
-  gst_element_register (plugin, "vaapivp9enc",
-      GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_VP9);
-#endif
+  gst_vaapiencode_register (plugin, display);
 #endif
 
   gst_vaapi_display_unref (display);

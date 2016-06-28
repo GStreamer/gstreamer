@@ -139,4 +139,8 @@ G_GNUC_INTERNAL
 gboolean
 gst_vaapi_driver_is_whitelisted (GstVaapiDisplay * display);
 
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_codecs_has_codec (GArray * codecs, GstVaapiCodec codec);
+
 #endif /* GST_VAAPI_PLUGIN_UTIL_H */

@@ -777,3 +777,26 @@ no_vendor:
     return FALSE;
   }
 }
+
+/**
+ * gst_vaapi_codecs_has_codec:
+ * @codecs: a #GArray of #GstVaapiCodec
+ * @codec: a #GstVaapiCodec to find in @codec
+ *
+ * Returns: %TRUE if @codec is in @codecs
+ **/
+gboolean
+gst_vaapi_codecs_has_codec (GArray * codecs, GstVaapiCodec codec)
+{
+  guint i;
+  GstVaapiCodec c;
+
+  g_return_val_if_fail (codec, FALSE);
+
+  for (i = 0; i < codecs->len; i++) {
+    c = g_array_index (codecs, GstVaapiCodec, i);
+    if (c == codec)
+      return TRUE;
+  }
+  return FALSE;
+}
