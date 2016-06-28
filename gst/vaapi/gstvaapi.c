@@ -31,7 +31,6 @@
 #if USE_ENCODERS
 #include "gstvaapiencode_h264.h"
 #include "gstvaapiencode_mpeg2.h"
-#endif
 
 #if USE_JPEG_ENCODER
 #include "gstvaapiencode_jpeg.h"
@@ -47,6 +46,7 @@
 
 #if USE_VP9_ENCODER
 #include "gstvaapiencode_vp9.h"
+#endif
 #endif
 
 #define PLUGIN_NAME     "vaapi"
