@@ -340,6 +340,13 @@ gst_rtp_h264_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
   caps = icaps;
 
 done:
+  if (filter) {
+    GST_DEBUG_OBJECT (payload, "Intersect %" GST_PTR_FORMAT " and filter %"
+        GST_PTR_FORMAT, caps, filter);
+    icaps = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = icaps;
+  }
 
   gst_caps_unref (template_caps);
   gst_caps_unref (allowed_caps);
