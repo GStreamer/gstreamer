@@ -311,7 +311,7 @@ gst_webrtc_dsp_analyze_reverse_stream (GstWebrtcDsp * self)
   gint err;
 
   GST_OBJECT_LOCK (self);
-  if (self->echo_cancel && self->probe)
+  if (self->echo_cancel)
     probe = GST_WEBRTC_ECHO_PROBE (g_object_ref (self->probe));
   GST_OBJECT_UNLOCK (self);
 
