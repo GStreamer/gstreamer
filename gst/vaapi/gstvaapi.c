@@ -88,6 +88,8 @@ plugin_init (GstPlugin * plugin)
   display = gst_vaapi_create_test_display ();
   if (!display)
     goto error_no_display;
+  if (!gst_vaapi_driver_is_whitelisted (display))
+    goto unsupported_driver;
 
   gst_vaapidecode_register (plugin);
 
@@ -132,6 +134,11 @@ error_no_display:
     /* Avoid blacklisting: failure to create a display could be a
      * transient condition */
     return TRUE;
+  }
+unsupported_driver:
+  {
+    gst_vaapi_display_unref (display);
+    return TRUE;                /* return TRUE to avoid get blacklisted */
   }
 }
 
