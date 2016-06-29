@@ -575,12 +575,12 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
    * one reason or another, so just pick a default layout (we could be smarter
    * and try to add/remove channels from the input layout, or pick a default
    * layout based on LFE-presence in input layout, but let's save that for
-   * another day) */
-  if (out_chans > 0
+   * another day). For mono, no mask is required and the fallback mask is 0 */
+  if (out_chans > 1
       && (out_mask = gst_audio_channel_get_fallback_mask (out_chans))) {
     GST_DEBUG_OBJECT (base, "using default channel layout as fallback");
     gst_structure_set (outs, "channel-mask", GST_TYPE_BITMASK, out_mask, NULL);
-  } else {
+  } else if (out_chans > 1) {
     GST_ERROR_OBJECT (base, "Have no default layout for %d channels",
         out_chans);
   }
