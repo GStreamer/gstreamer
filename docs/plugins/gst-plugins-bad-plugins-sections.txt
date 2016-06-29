@@ -4805,3 +4805,22 @@ GST_TYPE_FFECTS_XRAY
 gst_ffects_xray_get_type
 </SECTION>
 
+<SECTION>
+<FILE>element-ttmlparse</FILE>
+<TITLE>ttmlparse</TITLE>
+GstTtmlParse
+<SUBSECTION Standard>
+GstTtmlParseClass
+GST_TYPE_TTML_PARSE
+gst_ttml_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-ttmlrender</FILE>
+<TITLE>ttmlrender</TITLE>
+GstTtmlRender
+<SUBSECTION Standard>
+GstTtmlRenderClass
+GST_TYPE_TTML_RENDER
+gst_ttml_render_get_type
+</SECTION>

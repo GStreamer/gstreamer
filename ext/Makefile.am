@@ -424,6 +424,12 @@ else
 WEBRTCDSP_DIR=
 endif
 
+if USE_TTML
+TTML_DIR=ttml
+else
+TTML_DIR=
+endif
+
 SUBDIRS=\
 	$(VOAACENC_DIR) \
 	$(ASSRENDER_DIR) \
@@ -495,7 +501,8 @@ SUBDIRS=\
 	$(X265_DIR) \
 	$(DTLS_DIR) \
 	$(VULKAN_DIR) \
-	$(WEBRTCDSP_DIR)
+	$(WEBRTCDSP_DIR) \
+	$(TTML_DIR)
 
 DIST_SUBDIRS = \
 	assrender \
@@ -565,6 +572,7 @@ DIST_SUBDIRS = \
 	x265 \
 	dtls \
 	vulkan \
-	webrtcdsp
+	webrtcdsp \
+	ttml
 
 include $(top_srcdir)/common/parallel-subdirs.mak

@@ -2456,6 +2456,16 @@ AG_GST_CHECK_FEATURE(DTLS, [DTLS plugin], dtls, [
   ])
 ])
 
+dnl *** ttml ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_TTML, true)
+AG_GST_CHECK_FEATURE(TTML, [TTML plugin], ttml, [
+  PKG_CHECK_MODULES(TTML, [ libxml-2.0 pango cairo pangocairo ], [
+    HAVE_TTML="yes"
+  ], [
+    HAVE_TTML="no"
+  ])
+])
+
 dnl *** linsys ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LINSYS, true)
 AG_GST_CHECK_FEATURE(LINSYS, [Linear Systems SDI plugin], linsys, [
@@ -3529,6 +3539,7 @@ AM_CONDITIONAL(USE_OPENH264, false)
 AM_CONDITIONAL(USE_X265, false)
 AM_CONDITIONAL(USE_DTLS, false)
 AM_CONDITIONAL(USE_VULKAN, false)
+AM_CONDITIONAL(USE_TTML, false)
 
 fi dnl of EXT plugins
 
@@ -3841,6 +3852,7 @@ ext/xvid/Makefile
 ext/zbar/Makefile
 ext/dtls/Makefile
 ext/webrtcdsp/Makefile
+ext/ttml/Makefile
 po/Makefile.in
 docs/Makefile
 docs/plugins/Makefile

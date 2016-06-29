@@ -152,6 +152,8 @@
     <xi:include href="xml/element-wavescope.xml" />
     <xi:include href="xml/element-webrtcdsp.xml" />
     <xi:include href="xml/element-webrtcechoprobe.xml" />
+    <xi:include href="xml/element-ttmlparse.xml" />
+    <xi:include href="xml/element-ttmlrender.xml" />
   </chapter>
 
   <chapter>
@@ -203,5 +205,6 @@
     <xi:include href="xml/plugin-voamrwbenc.xml" />
     <xi:include href="xml/plugin-webrtcdsp.xml" />
     <xi:include href="xml/plugin-zbar.xml" />
+    <xi:include href="xml/plugin-ttmlsubs.xml" />
   </chapter>
 </book>
