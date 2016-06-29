@@ -374,14 +374,18 @@ gst_system_clock_remove_wakeup (GstSystemClock * sysclock)
   g_return_if_fail (sysclock->priv->wakeup_count > 0);
 
   sysclock->priv->wakeup_count--;
-  if (sysclock->priv->wakeup_count == 0) {
-    /* read the control socket byte when we removed the last wakeup count */
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "reading control");
-    while (!gst_poll_read_control (sysclock->priv->timer)) {
-      g_warning ("gstsystemclock: read control failed, trying again\n");
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "reading control");
+  while (!gst_poll_read_control (sysclock->priv->timer)) {
+    if (errno == EWOULDBLOCK) {
+      /* Try again and give other threads the chance to do something */
+      g_thread_yield ();
+      continue;
+    } else {
+      /* Critical error, GstPoll will have printed a critical warning already */
+      break;
     }
-    GST_SYSTEM_CLOCK_BROADCAST (sysclock);
   }
+  GST_SYSTEM_CLOCK_BROADCAST (sysclock);
   GST_CAT_DEBUG (GST_CAT_CLOCK, "wakeup count %d",
       sysclock->priv->wakeup_count);
 }
@@ -389,22 +393,8 @@ gst_system_clock_remove_wakeup (GstSystemClock * sysclock)
 static void
 gst_system_clock_add_wakeup (GstSystemClock * sysclock)
 {
-  /* only write the control socket for the first wakeup */
-  if (sysclock->priv->wakeup_count == 0) {
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "writing control");
-    while (!gst_poll_write_control (sysclock->priv->timer)) {
-      if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-        g_warning
-            ("gstsystemclock: write control failed in wakeup_async, trying again: %d:%s\n",
-            errno, g_strerror (errno));
-      } else {
-        g_critical
-            ("gstsystemclock: write control failed in wakeup_async: %d:%s\n",
-            errno, g_strerror (errno));
-        return;
-      }
-    }
-  }
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "writing control");
+  gst_poll_write_control (sysclock->priv->timer);
   sysclock->priv->wakeup_count++;
   GST_CAT_DEBUG (GST_CAT_CLOCK, "wakeup count %d",
       sysclock->priv->wakeup_count);
