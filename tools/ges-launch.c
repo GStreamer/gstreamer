@@ -74,7 +74,11 @@ main (int argc, gchar ** argv)
   launcher = ges_launcher_new ();
 
   ret = g_application_run (G_APPLICATION (launcher), argc, argv);
-  if (ret)
-    return ret;
-  return ges_launcher_get_exit_status (launcher);
+
+  if (!ret)
+    ret = ges_launcher_get_exit_status (launcher);
+
+  g_object_unref (launcher);
+
+  return ret;
 }
