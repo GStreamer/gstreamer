@@ -88,7 +88,7 @@ void            gst_poll_restart          (GstPoll *set);
 void            gst_poll_set_flushing     (GstPoll *set, gboolean flushing);
 
 gboolean        gst_poll_write_control    (GstPoll *set);
-gboolean        gst_poll_read_control     (GstPoll *set);
+gboolean        gst_poll_read_control     (GstPoll *set) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 
