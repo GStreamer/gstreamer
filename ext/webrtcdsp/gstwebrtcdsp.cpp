@@ -173,10 +173,8 @@ struct _GstWebrtcDsp
   guint period_size;
 
   /* Protected by the stream lock */
-  GstClockTime timestamp;
   GstAdapter *adapter;
   webrtc::AudioProcessing * apm;
-  gint delay_ms;
 
   /* Protected by the object lock */
   gchar *probe_name;
@@ -247,137 +245,96 @@ webrtc_error_to_string (gint err)
   return str;
 }
 
-/* with probe object lock */
-static gboolean
-gst_webrtc_dsp_sync_reverse_stream (GstWebrtcDsp * self,
-    GstWebrtcEchoProbe * probe)
+static GstBuffer *
+gst_webrtc_dsp_take_buffer (GstWebrtcDsp * self)
 {
-  GstClockTime probe_timestamp;
-  GstClockTimeDiff diff;
+  GstBuffer *buffer;
+  GstClockTime timestamp;
   guint64 distance;
 
-  /* We need to wait for a time reference */
-  if (!GST_CLOCK_TIME_IS_VALID (self->timestamp))
-      return FALSE;
+  timestamp = gst_adapter_prev_pts (self->adapter, &distance);
+  timestamp += gst_util_uint64_scale_int (distance / self->info.bpf,
+      GST_SECOND, self->info.rate);
 
-  probe_timestamp = gst_adapter_prev_pts (probe->adapter, &distance);
+  buffer = gst_adapter_take_buffer (self->adapter, self->period_size);
 
-  if (!GST_CLOCK_TIME_IS_VALID (probe_timestamp)) {
-    GST_WARNING_OBJECT (self,
-        "Echo Probe is handling buffer without timestamp.");
-    return FALSE;
-  }
+  GST_BUFFER_PTS (buffer) = timestamp;
+  GST_BUFFER_DURATION (buffer) = 10 * GST_MSECOND;
 
-  if (gst_adapter_pts_at_discont (probe->adapter) == probe_timestamp) {
-    if (distance == 0)
-      probe->synchronized = FALSE;
-  }
+  if (gst_adapter_pts_at_discont (self->adapter) == timestamp && distance == 0) {
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+  } else
+    GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
 
-  if (probe->synchronized)
-    return TRUE;
-
-  if (gst_adapter_available (probe->adapter) < probe->period_size
-      || probe->latency == -1) {
-    GST_TRACE_OBJECT (self, "Echo Probe not ready yet");
-    return FALSE;
-  }
-
-  if (self->info.rate != probe->info.rate) {
-    GST_WARNING_OBJECT (self,
-        "Echo Probe has rate %i while the DSP is running at rate %i, use a "
-        "caps filter to ensure those are the same.",
-        probe->info.rate, self->info.rate);
-    return FALSE;
-  }
-
-  probe_timestamp += gst_util_uint64_scale_int (distance / probe->info.bpf,
-      GST_SECOND, probe->info.rate);
-
-  diff = GST_CLOCK_DIFF (probe_timestamp, self->timestamp);
-  self->delay_ms = (probe->latency - diff) / GST_MSECOND;
-
-  GST_DEBUG_OBJECT (probe, "Echo Probe is now synchronized");
-  probe->synchronized = TRUE;
-
-  return TRUE;
+  return buffer;
 }
 
-static void
-gst_webrtc_dsp_analyze_reverse_stream (GstWebrtcDsp * self)
+static GstFlowReturn
+gst_webrtc_dsp_analyze_reverse_stream (GstWebrtcDsp * self,
+    GstClockTime rec_time)
 {
   GstWebrtcEchoProbe *probe = NULL;
   webrtc::AudioProcessing * apm;
   webrtc::AudioFrame frame;
-  gint err;
+  GstFlowReturn ret = GST_FLOW_OK;
+  gint err, delay;
 
   GST_OBJECT_LOCK (self);
   if (self->echo_cancel)
     probe = GST_WEBRTC_ECHO_PROBE (g_object_ref (self->probe));
   GST_OBJECT_UNLOCK (self);
 
+  /* If echo cancellation is disabled */
   if (!probe)
-    return;
+    return GST_FLOW_OK;
 
   apm = self->apm;
 
-  GST_WEBRTC_ECHO_PROBE_LOCK (probe);
+  delay = gst_webrtc_echo_probe_read (probe, rec_time, (gpointer) &frame);
 
-  if (gst_adapter_available (probe->adapter) < probe->period_size) {
-    GST_LOG_OBJECT (self, "No echo data yet...");
-    goto beach;
+  apm->set_stream_delay_ms (delay);
+
+  if (delay < 0)
+    goto done;
+
+  if (frame.sample_rate_hz_ != self->info.rate) {
+    GST_ELEMENT_ERROR (self, STREAM, FORMAT,
+        ("Echo Probe has rate %i , while the DSP is running at rate %i,"
+         " use a caps filter to ensure those are the same.",
+         frame.sample_rate_hz_, self->info.rate), (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
-
-  if (!gst_webrtc_dsp_sync_reverse_stream (self, probe))
-    goto beach;
-
-  frame.num_channels_ = probe->info.channels;
-  frame.sample_rate_hz_ = probe->info.rate;
-  frame.samples_per_channel_ = probe->period_size / probe->info.bpf;
-
-  gst_adapter_copy (probe->adapter, (guint8 *) frame.data_, 0,
-      probe->period_size);
-  gst_adapter_flush (probe->adapter, self->period_size);
 
   if ((err = apm->AnalyzeReverseStream (&frame)) < 0)
     GST_WARNING_OBJECT (self, "Reverse stream analyses failed: %s.",
         webrtc_error_to_string (err));
 
-beach:
-  GST_WEBRTC_ECHO_PROBE_UNLOCK (probe);
+done:
   gst_object_unref (probe);
+
+  return ret;
 }
 
-static GstBuffer *
-gst_webrtc_dsp_process_stream (GstWebrtcDsp * self)
+static GstFlowReturn 
+gst_webrtc_dsp_process_stream (GstWebrtcDsp * self,
+    GstBuffer * buffer)
 {
-  GstBuffer *buffer;
   GstMapInfo info;
   webrtc::AudioProcessing * apm = self->apm;
   webrtc::AudioFrame frame;
-  GstClockTime timestamp;
-  guint64 distance;
   gint err;
 
   frame.num_channels_ = self->info.channels;
   frame.sample_rate_hz_ = self->info.rate;
   frame.samples_per_channel_ = self->period_size / self->info.bpf;
 
-  timestamp = gst_adapter_prev_pts (self->adapter, &distance);
-
-  if (GST_CLOCK_TIME_IS_VALID (timestamp))
-      timestamp += gst_util_uint64_scale_int (distance / self->info.bpf,
-              GST_SECOND, self->info.rate);
-
-  buffer = gst_adapter_take_buffer (self->adapter, self->period_size);
-
   if (!gst_buffer_map (buffer, &info, (GstMapFlags) GST_MAP_READWRITE)) {
     gst_buffer_unref (buffer);
-    return NULL;
+    return GST_FLOW_ERROR;
   }
 
   memcpy (frame.data_, info.data, self->period_size);
-
-  apm->set_stream_delay_ms (self->delay_ms);
 
   if ((err = apm->ProcessStream (&frame)) < 0) {
     GST_WARNING_OBJECT (self, "Failed to filter the audio: %s.",
@@ -388,18 +345,7 @@ gst_webrtc_dsp_process_stream (GstWebrtcDsp * self)
 
   gst_buffer_unmap (buffer, &info);
 
-  GST_BUFFER_PTS (buffer) = timestamp;
-  GST_BUFFER_DURATION (buffer) = 10 * GST_MSECOND;
-
-  if (gst_adapter_pts_at_discont (self->adapter) == timestamp)
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
-  else
-    GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
-
-  if (GST_CLOCK_TIME_IS_VALID (timestamp))
-      self->timestamp = timestamp + GST_BUFFER_DURATION (buffer);
-
-  return buffer;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -412,18 +358,9 @@ gst_webrtc_dsp_submit_input_buffer (GstBaseTransform * btrans,
   GST_BUFFER_PTS (buffer) = gst_segment_to_running_time (&btrans->segment,
       GST_FORMAT_TIME, GST_BUFFER_PTS (buffer));
 
-  if (!GST_CLOCK_TIME_IS_VALID (self->timestamp))
-    self->timestamp = GST_BUFFER_PTS (buffer);
-
   if (is_discont) {
-    GST_OBJECT_LOCK (self);
-    if (self->echo_cancel && self->probe) {
-      GST_WEBRTC_ECHO_PROBE_LOCK (self->probe);
-      self->probe->synchronized = FALSE;
-      GST_WEBRTC_ECHO_PROBE_UNLOCK (self->probe);
-    }
-    GST_OBJECT_UNLOCK (self);
-
+    GST_DEBUG_OBJECT (self,
+        "Received discont, clearing adapter.");
     gst_adapter_clear (self->adapter);
   }
 
@@ -436,15 +373,20 @@ static GstFlowReturn
 gst_webrtc_dsp_generate_output (GstBaseTransform * btrans, GstBuffer ** outbuf)
 {
   GstWebrtcDsp *self = GST_WEBRTC_DSP (btrans);
+  GstFlowReturn ret;
 
-  if (gst_adapter_available (self->adapter) >= self->period_size) {
-    gst_webrtc_dsp_analyze_reverse_stream (self);
-    *outbuf = gst_webrtc_dsp_process_stream (self);
-  } else {
+  if (gst_adapter_available (self->adapter) < self->period_size) {
     *outbuf = NULL;
+    return GST_FLOW_OK;
   }
 
-  return GST_FLOW_OK;
+  *outbuf = gst_webrtc_dsp_take_buffer (self);
+  ret = gst_webrtc_dsp_analyze_reverse_stream (self, GST_BUFFER_PTS (*outbuf));
+
+  if (ret == GST_FLOW_OK)
+    ret = gst_webrtc_dsp_process_stream (self, *outbuf);
+
+  return ret;
 }
 
 static gboolean
@@ -495,8 +437,6 @@ gst_webrtc_dsp_setup (GstAudioFilter * filter, const GstAudioInfo * info)
   GST_OBJECT_LOCK (self);
 
   gst_adapter_clear (self->adapter);
-  self->timestamp = GST_CLOCK_TIME_NONE;
-  self->delay_ms = 0;
   self->info = *info;
   apm = self->apm;
 
@@ -514,8 +454,6 @@ gst_webrtc_dsp_setup (GstAudioFilter * filter, const GstAudioInfo * info)
         goto probe_has_wrong_rate;
       probe_info = self->probe->info;
     }
-
-    self->probe->synchronized = FALSE;
 
     GST_WEBRTC_ECHO_PROBE_UNLOCK (self->probe);
   }
@@ -540,7 +478,7 @@ gst_webrtc_dsp_setup (GstAudioFilter * filter, const GstAudioInfo * info)
     apm->high_pass_filter ()->Enable (true);
   }
 
-  if (self->echo_cancel && self->probe) {
+  if (self->echo_cancel) {
     GST_DEBUG_OBJECT (self, "Enabling Echo Cancellation");
     apm->echo_cancellation ()->enable_drift_compensation (false);
     apm->echo_cancellation ()

@@ -62,8 +62,8 @@ struct _GstWebrtcEchoProbe
   /* Protected by the lock */
   GstAudioInfo info;
   guint period_size;
-  gint latency;
-  gboolean synchronized;
+  GstClockTime latency;
+  gint delay;
 
   GstSegment segment;
   GstAdapter *adapter;
@@ -81,6 +81,8 @@ GType gst_webrtc_echo_probe_get_type (void);
 
 GstWebrtcEchoProbe *gst_webrtc_acquire_echo_probe (const gchar * name);
 void gst_webrtc_release_echo_probe (GstWebrtcEchoProbe * probe);
+gint gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self,
+    GstClockTime rec_time, gpointer frame);
 
 G_END_DECLS
 #endif /* __GST_WEBRTC_ECHO_PROBE_H__ */
