@@ -46,13 +46,26 @@ plugin_init (GstPlugin * plugin)
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
 
-  res = gst_play_bin2_plugin_init (plugin);
+  /* Swap in playbin3 as 'playbin' if USE_PLAYBIN3=1 */
+  {
+    const gchar *env = g_getenv ("USE_PLAYBIN3");
+    if (env && g_str_has_prefix (env, "1"))
+      res = gst_play_bin3_plugin_init (plugin, TRUE);
+    else
+      res = gst_play_bin2_plugin_init (plugin);
+  }
+
+  res &= gst_play_bin3_plugin_init (plugin, FALSE);
   res &= gst_play_sink_plugin_init (plugin);
   res &= gst_subtitle_overlay_plugin_init (plugin);
   res &= gst_stream_synchronizer_plugin_init (plugin);
 
   res &= gst_decode_bin_plugin_init (plugin);
+  res &= gst_decodebin3_plugin_init (plugin);
   res &= gst_uri_decode_bin_plugin_init (plugin);
+  res &= gst_uri_decode_bin3_plugin_init (plugin);
+  res &= gst_uri_source_bin_plugin_init (plugin);
+  res &= gst_parse_bin_plugin_init (plugin);
 
   return res;
 }

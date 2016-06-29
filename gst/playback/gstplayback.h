@@ -24,10 +24,15 @@
 #include <gst/gst.h>
 
 gboolean gst_decode_bin_plugin_init (GstPlugin * plugin);
+gboolean gst_decodebin3_plugin_init (GstPlugin * plugin);
 gboolean gst_uri_decode_bin_plugin_init (GstPlugin * plugin);
+gboolean gst_uri_decode_bin3_plugin_init (GstPlugin * plugin);
+gboolean gst_uri_source_bin_plugin_init (GstPlugin * plugin);
+gboolean gst_parse_bin_plugin_init (GstPlugin * plugin);
 
 gboolean gst_play_bin_plugin_init (GstPlugin * plugin);
 gboolean gst_play_bin2_plugin_init (GstPlugin * plugin);
+gboolean gst_play_bin3_plugin_init (GstPlugin * plugin, gboolean as_playbin);
 
 
 #endif /* __GST_PLAY_BACK_H__ */

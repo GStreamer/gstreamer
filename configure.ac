@@ -918,6 +918,7 @@ tests/check/Makefile
 tests/examples/Makefile
 tests/examples/app/Makefile
 tests/examples/audio/Makefile
+tests/examples/decodebin_next/Makefile
 tests/examples/dynamic/Makefile
 tests/examples/encoding/Makefile
 tests/examples/fft/Makefile
