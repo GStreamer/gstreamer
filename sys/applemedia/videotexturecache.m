@@ -182,15 +182,8 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
       case GST_VIDEO_FORMAT_NV12: {
         GstVideoGLTextureType textype;
         GLenum texifmt, texfmt;
-        gint gl_major;
 
-        gst_gl_context_get_gl_version (context, &gl_major, NULL);
-        if (gl_major >= 3) {
-          /* apple went backwards when choosing a pixel format for this */
-          textype = GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE;
-        } else {
-          textype = gst_gl_texture_type_from_format (cache->ctx, GST_VIDEO_FORMAT_NV12, 0);
-        }
+        textype = GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE;
         texifmt = gst_gl_format_from_gl_texture_type (textype);
         texfmt = gst_gl_sized_gl_format_from_gl_format_type (cache->ctx, texifmt, GL_UNSIGNED_BYTE);
 
@@ -213,12 +206,7 @@ _do_get_gl_buffer (GstGLContext * context, ContextThreadData * data)
                     (GstGLAllocationParams *) params));
         gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
 
-        if (gl_major >= 3) {
-          /* apple went backwards when choosing a pixel format for this */
-          textype = GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA;
-        } else {
-          textype = gst_gl_texture_type_from_format (cache->ctx, GST_VIDEO_FORMAT_NV12, 0);
-        }
+        textype = GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA;
         texifmt = gst_gl_format_from_gl_texture_type (textype);
         texfmt = gst_gl_sized_gl_format_from_gl_format_type (cache->ctx, texifmt, GL_UNSIGNED_BYTE);
 
