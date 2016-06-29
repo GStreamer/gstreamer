@@ -240,7 +240,7 @@ gst_shout2send_init (GstShout2send * shout2send)
 {
   gst_base_sink_set_sync (GST_BASE_SINK (shout2send), FALSE);
 
-  shout2send->timer = gst_poll_new_timer ();
+  shout2send->timer = gst_poll_new (TRUE);
 
   shout2send->ip = g_strdup (DEFAULT_IP);
   shout2send->port = DEFAULT_PORT;
