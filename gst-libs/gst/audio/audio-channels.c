@@ -524,7 +524,7 @@ static const guint64 default_masks[] = {
  * called as a last resort when the specific channel map is unknown.
  *
  * Returns: a fallback channel-mask for @channels or 0 when there is no
- * mask.
+ * mask and mono.
  *
  * Since: 1.8
  */
