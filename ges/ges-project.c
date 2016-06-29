@@ -1059,7 +1059,7 @@ ges_project_load (GESProject * project, GESTimeline * timeline, GError ** error)
  *
  * Retrieve the uri that is currently set on @project
  *
- * Returns: The uri that is set on @project
+ * Returns: (transfer full) (nullable): a newly allocated string representing uri.
  */
 gchar *
 ges_project_get_uri (GESProject * project)
