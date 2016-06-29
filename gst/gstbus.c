@@ -515,8 +515,24 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
         gst_atomic_queue_length (bus->priv->queue));
 
     while ((message = gst_atomic_queue_pop (bus->priv->queue))) {
-      if (bus->priv->poll)
-        gst_poll_read_control (bus->priv->poll);
+      if (bus->priv->poll) {
+        while (!gst_poll_read_control (bus->priv->poll)) {
+          if (errno == EWOULDBLOCK) {
+            /* Retry, this can happen if pushing to the queue has finished,
+             * popping here succeeded but writing control did not finish
+             * before we got to this line. */
+            /* Give other threads the chance to do something */
+            g_thread_yield ();
+            continue;
+          } else {
+            /* This is a real error and means that either the bus is in an
+             * inconsistent state, or the GstPoll is invalid. GstPoll already
+             * prints a critical warning about this, no need to do that again
+             * ourselves */
+            break;
+          }
+        }
+      }
 
       GST_DEBUG_OBJECT (bus, "got message %p, %s from %s, type mask is %u",
           message, GST_MESSAGE_TYPE_NAME (message),
