@@ -1547,12 +1547,16 @@ winsock_error:
  * gst_poll_wait() will be affected by gst_poll_restart() and
  * gst_poll_set_flushing().
  *
+ * This function only works for non-timer #GstPoll objects created with
+ * gst_poll_new().
+ *
  * Returns: %TRUE if the controllability of @set could be updated.
  */
 gboolean
 gst_poll_set_controllable (GstPoll * set, gboolean controllable)
 {
   g_return_val_if_fail (set != NULL, FALSE);
+  g_return_val_if_fail (!set->timer, FALSE);
 
   GST_LOG ("%p: controllable : %d", set, controllable);
 
@@ -1569,11 +1573,15 @@ gst_poll_set_controllable (GstPoll * set, gboolean controllable)
  * used after adding or removing descriptors to @set.
  *
  * If @set is not controllable, then this call will have no effect.
+ *
+ * This function only works for non-timer #GstPoll objects created with
+ * gst_poll_new().
  */
 void
 gst_poll_restart (GstPoll * set)
 {
   g_return_if_fail (set != NULL);
+  g_return_if_fail (!set->timer);
 
   if (set->controllable && GET_WAITING (set) > 0) {
     /* we are controllable and waiting, wake up the waiter. The socket will be
@@ -1591,11 +1599,15 @@ gst_poll_restart (GstPoll * set)
  * to gst_poll_wait() will return -1, with errno set to EBUSY.
  *
  * Unsetting the flushing state will restore normal operation of @set.
+ *
+ * This function only works for non-timer #GstPoll objects created with
+ * gst_poll_new().
  */
 void
 gst_poll_set_flushing (GstPoll * set, gboolean flushing)
 {
   g_return_if_fail (set != NULL);
+  g_return_if_fail (!set->timer);
 
   GST_LOG ("%p: flushing: %d", set, flushing);
 
@@ -1623,6 +1635,9 @@ gst_poll_set_flushing (GstPoll * set, gboolean flushing)
  * gst_poll_read_control() have been performed, calls to gst_poll_wait() will
  * block again until their timeout expired.
  *
+ * This function only works for timer #GstPoll objects created with
+ * gst_poll_new_timer().
+ *
  * Returns: %TRUE on success. %FALSE when @set is not controllable or when the
  * byte could not be written.
  */
@@ -1644,8 +1659,9 @@ gst_poll_write_control (GstPoll * set)
  * @set: a #GstPoll.
  *
  * Read a byte from the control socket of the controllable @set.
- * This function is mostly useful for timer #GstPoll objects created with
- * gst_poll_new_timer(). 
+ *
+ * This function only works for timer #GstPoll objects created with
+ * gst_poll_new_timer().
  *
  * Returns: %TRUE on success. %FALSE when @set is not controllable or when there
  * was no byte to read.
