@@ -1053,6 +1053,7 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
   GstH264NalUnit nalu;
   GstH264ParserResult pres;
   gint framesize;
+  GstFlowReturn ret;
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (frame->buffer,
               GST_BUFFER_FLAG_DISCONT))) {
@@ -1105,6 +1106,22 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
     switch (pres) {
       case GST_H264_PARSER_OK:
         if (nalu.sc_offset > 0) {
+          int i;
+          gboolean is_filler_data = TRUE;
+          /* Handle filler data */
+          for (i = 0; i < nalu.sc_offset; i++) {
+            if (data[i] != 0x00) {
+              is_filler_data = FALSE;
+              break;
+            }
+          }
+          if (is_filler_data) {
+            GST_DEBUG_OBJECT (parse, "Dropping filler data %d", nalu.sc_offset);
+            frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DROP;
+            gst_buffer_unmap (buffer, &map);
+            ret = gst_base_parse_finish_frame (parse, frame, nalu.sc_offset);
+            goto drop;
+          }
           *skipsize = nalu.sc_offset;
           goto skip;
         }
@@ -1239,6 +1256,10 @@ more:
 out:
   gst_buffer_unmap (buffer, &map);
   return GST_FLOW_OK;
+
+drop:
+  GST_DEBUG_OBJECT (h264parse, "Dropped data");
+  return ret;
 
 skip:
   GST_DEBUG_OBJECT (h264parse, "skipping %d", *skipsize);
