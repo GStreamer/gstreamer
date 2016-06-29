@@ -52,7 +52,7 @@
 G_STATIC_ASSERT ((1 << BUFFER_FLAG_SHIFT) == GST_MINI_OBJECT_FLAG_LAST);
 
 /* Returns a newly allocated string describing the flags on this buffer */
-char *
+gchar *
 gst_buffer_get_flags_string (GstBuffer * buffer)
 {
   static const char flag_strings[] =
@@ -82,6 +82,28 @@ gst_buffer_get_flags_string (GstBuffer * buffer)
   }
 
   return flag_str;
+}
+
+/* Returns a newly-allocated string describing the metas on this buffer, or NULL */
+gchar *
+gst_buffer_get_meta_string (GstBuffer * buffer)
+{
+  gpointer state = NULL;
+  GstMeta *meta;
+  GString *s = NULL;
+
+  while ((meta = gst_buffer_iterate_meta (buffer, &state))) {
+    const gchar *desc = g_type_name (meta->info->type);
+
+    if (s == NULL)
+      s = g_string_new (NULL);
+    else
+      g_string_append (s, ", ");
+
+    g_string_append (s, desc);
+  }
+
+  return (s != NULL) ? g_string_free (s, FALSE) : NULL;
 }
 
 /* Define our own iovec structure here, so that we can use it unconditionally

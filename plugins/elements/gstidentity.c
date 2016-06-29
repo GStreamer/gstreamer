@@ -537,23 +537,24 @@ gst_identity_update_last_message_for_buffer (GstIdentity * identity,
     const gchar * action, GstBuffer * buf, gsize size)
 {
   gchar dts_str[64], pts_str[64], dur_str[64];
-  gchar *flag_str;
+  gchar *flag_str, *meta_str;
 
   GST_OBJECT_LOCK (identity);
 
   flag_str = gst_buffer_get_flags_string (buf);
+  meta_str = gst_buffer_get_meta_string (buf);
 
   g_free (identity->last_message);
   identity->last_message = g_strdup_printf ("%s   ******* (%s:%s) "
       "(%" G_GSIZE_FORMAT " bytes, dts: %s, pts: %s, duration: %s, offset: %"
       G_GINT64_FORMAT ", " "offset_end: % " G_GINT64_FORMAT
-      ", flags: %08x %s) %p", action,
+      ", flags: %08x %s, meta: %s) %p", action,
       GST_DEBUG_PAD_NAME (GST_BASE_TRANSFORM_CAST (identity)->sinkpad), size,
       print_pretty_time (dts_str, sizeof (dts_str), GST_BUFFER_DTS (buf)),
       print_pretty_time (pts_str, sizeof (pts_str), GST_BUFFER_PTS (buf)),
       print_pretty_time (dur_str, sizeof (dur_str), GST_BUFFER_DURATION (buf)),
       GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
-      GST_BUFFER_FLAGS (buf), flag_str, buf);
+      GST_BUFFER_FLAGS (buf), flag_str, meta_str ? meta_str : "none", buf);
   g_free (flag_str);
 
   GST_OBJECT_UNLOCK (identity);

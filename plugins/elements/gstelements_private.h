@@ -28,7 +28,10 @@
 G_BEGIN_DECLS
 
 G_GNUC_INTERNAL
-char *    gst_buffer_get_flags_string                   (GstBuffer *buffer);
+gchar *   gst_buffer_get_flags_string (GstBuffer *buffer);
+
+G_GNUC_INTERNAL
+gchar *   gst_buffer_get_meta_string (GstBuffer * buffer);
 
 G_GNUC_INTERNAL
 GstFlowReturn  gst_writev_buffers (GstObject * sink, gint fd, GstPoll * fdset,

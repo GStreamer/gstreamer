@@ -448,7 +448,7 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   if (!sink->silent) {
     gchar dts_str[64], pts_str[64], dur_str[64];
-    gchar *flag_str;
+    gchar *flag_str, *meta_str;
 
     GST_OBJECT_LOCK (sink);
     g_free (sink->last_message);
@@ -475,16 +475,19 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     }
 
     flag_str = gst_buffer_get_flags_string (buf);
+    meta_str = gst_buffer_get_meta_string (buf);
 
     sink->last_message =
         g_strdup_printf ("chain   ******* (%s:%s) (%u bytes, dts: %s, pts: %s"
         ", duration: %s, offset: %" G_GINT64_FORMAT ", offset_end: %"
-        G_GINT64_FORMAT ", flags: %08x %s) %p",
+        G_GINT64_FORMAT ", flags: %08x %s, meta: %s) %p",
         GST_DEBUG_PAD_NAME (GST_BASE_SINK_CAST (sink)->sinkpad),
         (guint) gst_buffer_get_size (buf), dts_str, pts_str,
         dur_str, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
-        GST_MINI_OBJECT_CAST (buf)->flags, flag_str, buf);
+        GST_MINI_OBJECT_CAST (buf)->flags, flag_str,
+        meta_str ? meta_str : "none", buf);
     g_free (flag_str);
+    g_free (meta_str);
     GST_OBJECT_UNLOCK (sink);
 
     gst_fake_sink_notify_last_message (sink);
