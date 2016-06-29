@@ -73,6 +73,7 @@ enum
 {
   PROP_DRIVER_NAME = 1,
   PROP_CONNECTOR_ID,
+  PROP_PLANE_ID,
   PROP_N
 };
 
@@ -391,7 +392,10 @@ gst_kms_sink_start (GstBaseSink * bsink)
   if (!pres)
     goto plane_resources_failed;
 
-  plane = find_plane_for_crtc (self->fd, res, pres, crtc->crtc_id);
+  if (self->plane_id == -1)
+    plane = find_plane_for_crtc (self->fd, res, pres, crtc->crtc_id);
+  else
+    plane = drmModeGetPlane (self->fd, self->plane_id);
   if (!plane)
     goto plane_failed;
 
@@ -1153,6 +1157,9 @@ gst_kms_sink_set_property (GObject * object, guint prop_id,
     case PROP_CONNECTOR_ID:
       sink->conn_id = g_value_get_int (value);
       break;
+    case PROP_PLANE_ID:
+      sink->plane_id = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1173,6 +1180,9 @@ gst_kms_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CONNECTOR_ID:
       g_value_set_int (value, sink->conn_id);
+      break;
+    case PROP_PLANE_ID:
+      g_value_set_int (value, sink->plane_id);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1197,6 +1207,7 @@ gst_kms_sink_init (GstKMSSink * sink)
 {
   sink->fd = -1;
   sink->conn_id = -1;
+  sink->plane_id = -1;
   gst_poll_fd_init (&sink->pollfd);
   sink->poll = gst_poll_new (TRUE);
   gst_video_info_init (&sink->vinfo);
@@ -1257,6 +1268,17 @@ gst_kms_sink_class_init (GstKMSSinkClass * klass)
    */
   g_properties[PROP_CONNECTOR_ID] = g_param_spec_int ("connector-id",
       "Connector ID", "DRM connector id", -1, G_MAXINT32, -1,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
+   /**
+   * kmssink:plane-id:
+   *
+   * There could be several planes associated with a CRTC.
+   * By default the first plane that's possible to use with a given
+   * CRTC is tried.
+   */
+  g_properties[PROP_PLANE_ID] = g_param_spec_int ("plane-id",
+      "Plane ID", "DRM plane id", -1, G_MAXINT32, -1,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   g_object_class_install_properties (gobject_class, PROP_N, g_properties);
