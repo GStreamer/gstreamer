@@ -79,6 +79,12 @@
 #include "gstbus.h"
 #include "glib-compat-private.h"
 
+#ifdef G_OS_WIN32
+#  ifndef EWOULDBLOCK
+#  define EWOULDBLOCK EAGAIN    /* This is just to placate gcc */
+#  endif
+#endif /* G_OS_WIN32 */
+
 #define GST_CAT_DEFAULT GST_CAT_BUS
 /* bus signals */
 enum

@@ -80,6 +80,12 @@
 
 #include "gstbufferpool.h"
 
+#ifdef G_OS_WIN32
+#  ifndef EWOULDBLOCK
+#  define EWOULDBLOCK EAGAIN    /* This is just to placate gcc */
+#  endif
+#endif /* G_OS_WIN32 */
+
 GST_DEBUG_CATEGORY_STATIC (gst_buffer_pool_debug);
 #define GST_CAT_DEFAULT gst_buffer_pool_debug
 

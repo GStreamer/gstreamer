@@ -84,6 +84,12 @@
 #include <sys/socket.h>
 #endif
 
+#ifdef G_OS_WIN32
+#  ifndef EWOULDBLOCK
+#  define EWOULDBLOCK EAGAIN    /* This is just to placate gcc */
+#  endif
+#endif /* G_OS_WIN32 */
+
 /* OS/X needs this because of bad headers */
 #include <string.h>
 
@@ -1666,7 +1672,7 @@ gst_poll_write_control (GstPoll * set)
  *
  * Returns: %TRUE on success. %FALSE when when there was no byte to read or
  * reading the byte failed. If there was no byte to read, and only then, errno
- * will contain EWOULDBLOCK. For all other values of errno this always signals a
+ * will contain EWOULDBLOCK or EAGAIN. For all other values of errno this always signals a
  * critical error.
  */
 gboolean
