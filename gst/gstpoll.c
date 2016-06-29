@@ -1638,8 +1638,9 @@ gst_poll_set_flushing (GstPoll * set, gboolean flushing)
  * This function only works for timer #GstPoll objects created with
  * gst_poll_new_timer().
  *
- * Returns: %TRUE on success. %FALSE when @set is not controllable or when the
- * byte could not be written.
+ * Returns: %TRUE on success. %FALSE when when the byte could not be written.
+ * errno contains the detailed error code but will never be EAGAIN, EINTR or
+ * EWOULDBLOCK. %FALSE always signals a critical error.
  */
 gboolean
 gst_poll_write_control (GstPoll * set)
@@ -1663,8 +1664,10 @@ gst_poll_write_control (GstPoll * set)
  * This function only works for timer #GstPoll objects created with
  * gst_poll_new_timer().
  *
- * Returns: %TRUE on success. %FALSE when @set is not controllable or when there
- * was no byte to read.
+ * Returns: %TRUE on success. %FALSE when when there was no byte to read or
+ * reading the byte failed. If there was no byte to read, and only then, errno
+ * will contain EWOULDBLOCK. For all other values of errno this always signals a
+ * critical error.
  */
 gboolean
 gst_poll_read_control (GstPoll * set)
