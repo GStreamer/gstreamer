@@ -761,8 +761,7 @@ gst_tag_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      /* FIXME, detect this differently */
-      if (demux->priv->srcpad == NULL) {
+      if (!gst_pad_has_current_caps (demux->priv->srcpad)) {
         GST_WARNING_OBJECT (demux, "EOS before we found a type");
         GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
       }
