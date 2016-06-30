@@ -692,7 +692,7 @@ AC_ARG_ENABLE([dispmanx],
        *) AC_MSG_ERROR([bad value ${enableval} for --enable-dispmanx]) ;;
      esac],[NEED_DISPMANX=auto])
 
-AG_GST_PKG_CHECK_MODULES(X, x11)
+AG_GST_PKG_CHECK_MODULES(X11_XCB, x11-xcb)
 save_CPPFLAGS="$CPPFLAGS"
 save_LIBS="$LIBS"
 
@@ -847,7 +847,7 @@ if test "x$HAVE_GLES2" = "xno"; then
 fi
 
 dnl X, GLX and OpenGL
-if test "x$HAVE_X" = "xno"; then
+if test "x$HAVE_X11_XCB" = "xno"; then
   if test "x$NEED_GLX" = "xyes"; then
     AC_MSG_ERROR([Building the GLX backend without X11 is unsupported])
   fi
@@ -1002,7 +1002,7 @@ case $host in
       AC_MSG_ERROR([WGL is not available on unix])
     fi
 
-    if test "x$HAVE_X" = "xno"; then
+    if test "x$HAVE_X11_XCB" = "xno"; then
       if test "x$HAVE_WAYLAND_EGL" = "xno"; then
         AC_MSG_WARN([X or Wayland is required for OpenGL support])
       fi
@@ -1023,10 +1023,10 @@ case $host in
       fi
     fi
 
-    if test "x$HAVE_X" = "xyes" -a "x$HAVE_EGL_RPI" = "xno"; then
+    if test "x$HAVE_X11_XCB" = "xyes" -a "x$HAVE_EGL_RPI" = "xno"; then
       if test "x$NEED_X11" != "xno"; then
-        GL_LIBS="$GL_LIBS $X_LIBS"
-        GL_CFLAGS="$GL_CFLAGS $X_CFLAGS"
+        GL_LIBS="$GL_LIBS $X11_XCB_LIBS"
+        GL_CFLAGS="$GL_CFLAGS $X11_XCB_CFLAGS"
         HAVE_WINDOW_X11=yes
       fi
     fi
@@ -1110,10 +1110,10 @@ case $host in
       fi
 
       if test "x$USE_GLX" = "xyes"; then
-        if test "x$HAVE_X" = "xyes"; then
+        if test "x$HAVE_X11_XCB" = "xyes"; then
           if test "x$NEED_X11" != "xno"; then
-            GL_LIBS="$GL_LIBS $X_LIBS"
-            GL_CFLAGS="$GL_CFLAGS $X_CFLAGS"
+            GL_LIBS="$GL_LIBS $X11_XCB_LIBS"
+            GL_CFLAGS="$GL_CFLAGS $X11_XCB_CFLAGS"
             HAVE_WINDOW_X11=yes
           fi
         fi

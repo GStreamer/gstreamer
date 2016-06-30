@@ -25,36 +25,35 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "x11_event_source.h"
+#include "xcb_event_source.h"
 #include "gstgldisplay_x11.h"
+#include "gstglwindow_x11.h"
 
-extern gboolean gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11);
+extern gboolean gst_gl_display_x11_handle_event (GstGLDisplayX11 * display_x11);
 
-typedef struct _X11EventSource
+typedef struct _XCBEventSource
 {
   GSource source;
   GPollFD pfd;
   uint32_t mask;
-  GstGLWindowX11 *window;
-} X11EventSource;
+  GstGLDisplayX11 *display_x11;
+} XCBEventSource;
 
 static gboolean
-x11_event_source_prepare (GSource * base, gint * timeout)
+xcb_event_source_prepare (GSource * base, gint * timeout)
 {
-  X11EventSource *source = (X11EventSource *) base;
-  gboolean retval;
+  XCBEventSource *source = (XCBEventSource *) base;
+
+  xcb_flush (source->display_x11->xcb_connection);
 
   *timeout = -1;
-
-  retval = XPending (source->window->device);
-
-  return retval;
+  return FALSE;
 }
 
 static gboolean
-x11_event_source_check (GSource * base)
+xcb_event_source_check (GSource * base)
 {
-  X11EventSource *source = (X11EventSource *) base;
+  XCBEventSource *source = (XCBEventSource *) base;
   gboolean retval;
 
   retval = source->pfd.revents;
@@ -63,11 +62,13 @@ x11_event_source_check (GSource * base)
 }
 
 static gboolean
-x11_event_source_dispatch (GSource * base, GSourceFunc callback, gpointer data)
+xcb_event_source_dispatch (GSource * base, GSourceFunc callback, gpointer data)
 {
-  X11EventSource *source = (X11EventSource *) base;
+  XCBEventSource *source = (XCBEventSource *) base;
 
-  gboolean ret = gst_gl_window_x11_handle_event (source->window);
+  gboolean ret = gst_gl_display_x11_handle_event (source->display_x11);
+
+  source->pfd.revents = 0;
 
   if (callback)
     callback (data);
@@ -75,22 +76,26 @@ x11_event_source_dispatch (GSource * base, GSourceFunc callback, gpointer data)
   return ret;
 }
 
-static GSourceFuncs x11_event_source_funcs = {
-  x11_event_source_prepare,
-  x11_event_source_check,
-  x11_event_source_dispatch,
+static GSourceFuncs xcb_event_source_funcs = {
+  xcb_event_source_prepare,
+  xcb_event_source_check,
+  xcb_event_source_dispatch,
   NULL
 };
 
 GSource *
-x11_event_source_new (GstGLWindowX11 * window_x11)
+xcb_event_source_new (GstGLDisplayX11 * display_x11)
 {
-  X11EventSource *source;
+  xcb_connection_t *connection;
+  XCBEventSource *source;
 
-  source = (X11EventSource *)
-      g_source_new (&x11_event_source_funcs, sizeof (X11EventSource));
-  source->window = window_x11;
-  source->pfd.fd = ConnectionNumber (source->window->device);
+  connection = display_x11->xcb_connection;
+  g_return_val_if_fail (connection != NULL, NULL);
+
+  source = (XCBEventSource *)
+      g_source_new (&xcb_event_source_funcs, sizeof (XCBEventSource));
+  source->display_x11 = display_x11;
+  source->pfd.fd = xcb_get_file_descriptor (connection);
   source->pfd.events = G_IO_IN | G_IO_ERR;
   g_source_add_poll (&source->source, &source->pfd);
 

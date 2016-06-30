@@ -23,8 +23,7 @@
 
 #include <gst/gst.h>
 
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
+#include <X11/Xlib-xcb.h>
 
 #include <gst/gl/gstgl_fwd.h>
 #include <gst/gl/gstgldisplay.h>
@@ -56,6 +55,7 @@ struct _GstGLDisplayX11
   /* <private> */
   gchar *name;
   Display *display;
+  xcb_connection_t *xcb_connection;
   gboolean foreign_display;
 
   gpointer _padding[GST_PADDING];
