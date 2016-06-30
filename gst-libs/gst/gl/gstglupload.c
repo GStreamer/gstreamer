@@ -1104,6 +1104,9 @@ _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
 
     raw->params->parent.wrapped_data = raw->in_frame->frame.data[i];
     raw->params->plane = i;
+    raw->params->tex_type =
+        gst_gl_texture_type_from_format (raw->upload->context,
+        GST_VIDEO_INFO_FORMAT (in_info), i);
 
     tex =
         gst_gl_base_memory_alloc (allocator,
