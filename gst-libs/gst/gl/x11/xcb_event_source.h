@@ -18,13 +18,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __X11_EVENT_SOURCE_H__
-#define __X11_EVENT_SOURCE_H__
+#ifndef __XCB_EVENT_SOURCE_H__
+#define __XCB_EVENT_SOURCE_H__
 
 #include <glib-object.h>
-#include "gstglwindow_x11.h"
+#include "gstgldisplay_x11.h"
 
-GSource *
-x11_event_source_new (GstGLWindowX11 *window_x11);
+GSource * xcb_event_source_new (GstGLDisplayX11 *display_x11);
 
-#endif /* __WAYLAND_EVENT_SOURCE_H__ */
+#endif /* __XCB_EVENT_SOURCE_H__ */

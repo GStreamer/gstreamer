@@ -28,7 +28,6 @@
 #include <gst/gst.h>
 #include <locale.h>
 
-#include "x11_event_source.h"
 #include "gstglwindow_x11.h"
 #include "gstgldisplay_x11.h"
 /* for XkbKeycodeToKeysym */
@@ -42,11 +41,12 @@
 #define gst_gl_window_x11_parent_class parent_class
 G_DEFINE_TYPE (GstGLWindowX11, gst_gl_window_x11, GST_TYPE_GL_WINDOW);
 
+gboolean gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11,
+    xcb_generic_event_t * event);
+
 /* X error trap */
 static int TrappedErrorCode = 0;
 static int (*old_error_handler) (Display *, XErrorEvent *);
-
-gboolean gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11);
 
 enum
 {
@@ -139,16 +139,14 @@ gst_gl_window_x11_open (GstGLWindow * window, GError ** error)
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
   GstGLDisplayX11 *display_x11 = (GstGLDisplayX11 *) window->display;
 
-  window_x11->device = XOpenDisplay (display_x11->name);
-//  window_x11->device = display_x11->display;
+  window_x11->device = display_x11->display;
+//  window_x11->device = XOpenDisplay (display_x11->name);
   if (window_x11->device == NULL) {
     g_set_error (error, GST_GL_WINDOW_ERROR,
         GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
         "Failed to connect to X display server");
     goto failure;
   }
-
-  XSynchronize (window_x11->device, FALSE);
 
   GST_LOG ("gl device id: %ld", (gulong) window_x11->device);
 
@@ -168,18 +166,9 @@ gst_gl_window_x11_open (GstGLWindow * window, GError ** error)
   window_x11->device_height =
       DisplayHeight (window_x11->device, window_x11->screen_num);
 
-  if (!GST_GL_WINDOW_CLASS (parent_class)->open (window, error))
-    return FALSE;
-
-  if (!display_x11->foreign_display) {
-    window_x11->x11_source = x11_event_source_new (window_x11);
-    g_source_attach (window_x11->x11_source,
-        g_main_context_get_thread_default ());
-  }
-
   window_x11->allow_extra_expose_events = TRUE;
 
-  return TRUE;
+  return GST_GL_WINDOW_CLASS (parent_class)->open (window, error);
 
 failure:
   return FALSE;
@@ -265,37 +254,16 @@ void
 gst_gl_window_x11_close (GstGLWindow * window)
 {
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
-  GstGLDisplay *display = window->display;
-  XEvent event;
 
   if (window_x11->device) {
-    /* Avoid BadDrawable Errors... */
-    if (gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_X11)
-      XSync (GST_GL_DISPLAY_X11 (display)->display, FALSE);
-
-    if (window_x11->internal_win_id)
+    if (window_x11->internal_win_id) {
       XUnmapWindow (window_x11->device, window_x11->internal_win_id);
 
-    XFree (window_x11->visual_info);
-
-    if (window_x11->internal_win_id) {
-      XReparentWindow (window_x11->device, window_x11->internal_win_id,
-          window_x11->root, 0, 0);
       XDestroyWindow (window_x11->device, window_x11->internal_win_id);
     }
-    XSync (window_x11->device, FALSE);
+    XFree (window_x11->visual_info);
 
-    while (XPending (window_x11->device))
-      XNextEvent (window_x11->device, &event);
-
-    XCloseDisplay (window_x11->device);
     GST_DEBUG ("display receiver closed");
-  }
-
-  if (window_x11->x11_source) {
-    g_source_destroy (window_x11->x11_source);
-    g_source_unref (window_x11->x11_source);
-    window_x11->x11_source = NULL;
   }
 
   window_x11->running = FALSE;
@@ -308,24 +276,25 @@ void
 gst_gl_window_x11_set_window_handle (GstGLWindow * window, guintptr id)
 {
   GstGLWindowX11 *window_x11;
-  XWindowAttributes attr;
+  gint width, height;
 
   window_x11 = GST_GL_WINDOW_X11 (window);
 
   window_x11->parent_win = (Window) id;
 
-  /* XXX: seems to be needed for the difference between gtk videooverlay and
-   * the embedding gl into gtk directly */
-  if (id && !window_x11->x11_source) {
-    window_x11->x11_source = x11_event_source_new (window_x11);
-    g_source_attach (window_x11->x11_source,
-        g_main_context_get_thread_default ());
+  if (window_x11->parent_win) {
+    XWindowAttributes attr;
+
+    XGetWindowAttributes (window_x11->device, window_x11->parent_win, &attr);
+    width = attr.width;
+    height = attr.height;
+  } else {
+    width = window_x11->priv->preferred_width;
+    height = window_x11->priv->preferred_height;
   }
 
-  XGetWindowAttributes (window_x11->device, window_x11->parent_win, &attr);
-
   XResizeWindow (window_x11->device, window_x11->internal_win_id,
-      attr.width, attr.height);
+      width, height);
 
   XReparentWindow (window_x11->device, window_x11->internal_win_id,
       window_x11->parent_win, 0, 0);
@@ -359,21 +328,15 @@ _show_window (GstGLWindow * window)
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
   guint width = window_x11->priv->preferred_width;
   guint height = window_x11->priv->preferred_height;
-  XWindowAttributes attr;
-
-  XGetWindowAttributes (window_x11->device, window_x11->internal_win_id, &attr);
 
   if (!window_x11->visible) {
-
     if (!window_x11->parent_win) {
-      attr.width = width;
-      attr.height = height;
       XResizeWindow (window_x11->device, window_x11->internal_win_id,
-          attr.width, attr.height);
-      XSync (window_x11->device, FALSE);
+          width, height);
     }
 
     XMapWindow (window_x11->device, window_x11->internal_win_id);
+    XSync (window_x11->device, FALSE);
     window_x11->visible = TRUE;
   }
 }
@@ -382,6 +345,17 @@ void
 gst_gl_window_x11_show (GstGLWindow * window)
 {
   gst_gl_window_send_message (window, (GstGLWindowCB) _show_window, window);
+}
+
+static void
+_context_draw (GstGLContext * context, GstGLWindow * window)
+{
+  GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
+
+  window->draw (window->draw_data);
+  context_class->swap_buffers (context);
+
+  gst_object_unref (context);
 }
 
 static void
@@ -396,11 +370,14 @@ draw_cb (gpointer data)
 
     XGetWindowAttributes (window_x11->device, window_x11->internal_win_id,
         &attr);
+    GST_TRACE_OBJECT (window, "window size %ux%u", attr.width, attr.height);
 
     if (window_x11->parent_win) {
       XWindowAttributes attr_parent;
       XGetWindowAttributes (window_x11->device, window_x11->parent_win,
           &attr_parent);
+      GST_TRACE_OBJECT (window, "parent window size %ux%u", attr_parent.width,
+          attr_parent.height);
 
       if (attr.width != attr_parent.width || attr.height != attr_parent.height) {
         XMoveResizeWindow (window_x11->device, window_x11->internal_win_id,
@@ -428,12 +405,8 @@ draw_cb (gpointer data)
 
       if (window->draw) {
         GstGLContext *context = gst_gl_window_get_context (window);
-        GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
 
-        window->draw (window->draw_data);
-        context_class->swap_buffers (context);
-
-        gst_object_unref (context);
+        _context_draw (context, window);
       }
     }
   }
@@ -514,125 +487,105 @@ gst_gl_window_x11_handle_events (GstGLWindow * window, gboolean handle_events)
 }
 
 gboolean
-gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
+gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11,
+    xcb_generic_event_t * event)
 {
-  GstGLContext *context;
-  GstGLContextClass *context_class;
-  GstGLWindow *window;
-  gboolean ret = TRUE;
+  GstGLWindow *window = GST_GL_WINDOW (window_x11);
+  GstGLDisplayX11 *display_x11 = GST_GL_DISPLAY_X11 (window->display);
+  xcb_connection_t *connection = display_x11->xcb_connection;
+  uint8_t event_code = event->response_type & 0x7f;
 
-  window = GST_GL_WINDOW (window_x11);
+  switch (event_code) {
+    case XCB_CLIENT_MESSAGE:{
+      xcb_client_message_event_t *client_event;
+      xcb_intern_atom_cookie_t cookie;
+      xcb_intern_atom_reply_t *reply;
 
-  if (gst_gl_window_is_running (window)
-      && XPending (window_x11->device)) {
-    XEvent event;
+      client_event = (xcb_client_message_event_t *) event;
+      cookie = xcb_intern_atom (connection, 0, 16, "WM_DELETE_WINDOW");
+      reply = xcb_intern_atom_reply (connection, cookie, 0);
 
-    /* XSendEvent (which are called in other threads) are done from another display structure */
-    XNextEvent (window_x11->device, &event);
+      if (client_event->data.data32[0] == reply->atom) {
+        GST_INFO_OBJECT (window_x11, "Close requested");
 
-    window_x11->allow_extra_expose_events = XPending (window_x11->device) <= 2;
+        if (window->close)
+          window->close (window->close_data);
 
-    GST_LOG ("got event %s", event_type_to_string (event.type));
-
-    switch (event.type) {
-      case ClientMessage:
-      {
-        Atom wm_delete =
-            XInternAtom (window_x11->device, "WM_DELETE_WINDOW", True);
-
-        if (wm_delete == None)
-          GST_DEBUG ("Cannot create WM_DELETE_WINDOW");
-
-        /* User clicked on the cross */
-        if (wm_delete != None && (Atom) event.xclient.data.l[0] == wm_delete) {
-          GST_DEBUG ("Close %lud", (gulong) window_x11->internal_win_id);
-
-          if (window->close)
-            window->close (window->close_data);
-
-          ret = FALSE;
-        }
-        break;
+        gst_gl_display_remove_window (GST_GL_DISPLAY (display_x11),
+            GST_GL_WINDOW (window_x11));
       }
 
-      case CreateNotify:
-      case ConfigureNotify:
-      {
-        gst_gl_window_resize (window, event.xconfigure.width,
-            event.xconfigure.height);
-        break;
-      }
+      g_free (reply);
+      break;
+    }
+    case XCB_CONFIGURE_NOTIFY:{
+      xcb_configure_notify_event_t *configure_event;
 
-      case DestroyNotify:
-        break;
+      configure_event = (xcb_configure_notify_event_t *) event;
 
-      case Expose:
-        /* non-zero means that other Expose follows
-         * so just wait for the last one
-         * in theory we should not receive non-zero because
-         * we have no sub areas here but just in case */
-        if (event.xexpose.count != 0) {
-          break;
-        }
+      gst_gl_window_resize (window, configure_event->width,
+          configure_event->height);
 
-        /* We need to redraw on expose */
-        if (window->draw) {
-          context = gst_gl_window_get_context (window);
-          context_class = GST_GL_CONTEXT_GET_CLASS (context);
-
-          window->draw (window->draw_data);
-          context_class->swap_buffers (context);
-
-          gst_object_unref (context);
-        }
+      gst_gl_window_draw (window);
+      break;
+    }
+    case XCB_EXPOSE:{
+      xcb_expose_event_t *expose_event = (xcb_expose_event_t *) event;
+      /* non-zero means that other Expose follows
+       * so just wait for the last one
+       * in theory we should not receive non-zero because
+       * we have no sub areas here but just in case */
+      if (expose_event->count != 0)
         break;
 
-      case VisibilityNotify:
-        /* actually nothing to do here */
-        break;
-      case KeyPress:
-      case KeyRelease:
-      {
-        const char *key_str = NULL, *key_type = NULL;
-        KeySym keysym;
+      gst_gl_window_draw (window);
+      break;
+    }
+    case XCB_KEY_PRESS:
+    case XCB_KEY_RELEASE:{
+      xcb_key_press_event_t *kp = (xcb_key_press_event_t *) event;
+      const gchar *event_type_str;
+      gchar *key_str;
+      KeySym keysym;
 
-        keysym = XkbKeycodeToKeysym (window_x11->device,
-            event.xkey.keycode, 0, 0);
-        key_str = XKeysymToString (keysym);
-        key_type = event.type == KeyPress ? "key-press" : "key-release";
-        GST_DEBUG ("input event key %d %s over window at %d,%d (%s)",
-            event.xkey.keycode, key_type, event.xkey.x, event.xkey.y, key_str);
-        gst_gl_window_send_key_event_async (window, key_type, key_str);
-        break;
-      }
-      case ButtonPress:
-      case ButtonRelease:{
-        const char *mouse_type = NULL;
+      keysym = XkbKeycodeToKeysym (window_x11->device, kp->detail, 0, 0);
+      key_str = XKeysymToString (keysym);
 
-        mouse_type = event.type ==
-            ButtonPress ? "mouse-button-press" : "mouse-button-release";
+      if (event_code == XCB_KEY_PRESS)
+        event_type_str = "key-press";
+      else
+        event_type_str = "key-release";
 
-        GST_DEBUG ("input event mouse button %d %s over window at %d,%d",
-            event.xbutton.button, mouse_type, event.xbutton.x, event.xbutton.y);
+      gst_gl_window_send_key_event (window, event_type_str, key_str);
+      break;
+    }
+    case XCB_BUTTON_PRESS:
+    case XCB_BUTTON_RELEASE:{
+      xcb_button_press_event_t *bp = (xcb_button_press_event_t *) event;
+      const gchar *event_type_str;
 
-        gst_gl_window_send_mouse_event_async (window, mouse_type,
-            event.xbutton.button, event.xbutton.x, event.xbutton.y);
-        break;
-      }
-      case MotionNotify:
-        GST_DEBUG ("input event pointer moved over window at %d,%d",
-            event.xmotion.x, event.xmotion.y);
+      if (event_code == XCB_BUTTON_PRESS)
+        event_type_str = "mouse-button-press";
+      else
+        event_type_str = "mouse-button-release";
 
-        gst_gl_window_send_mouse_event_async (window, "mouse-move", 0,
-            event.xbutton.x, event.xbutton.y);
-        break;
-      default:
-        GST_DEBUG ("unknown XEvent type: %u", event.type);
-        break;
-    }                           // switch
-  }                             // while running
+      gst_gl_window_send_mouse_event (window, event_type_str, bp->detail,
+          (double) bp->event_x, (double) bp->event_y);
+      break;
+    }
+    case XCB_MOTION_NOTIFY:{
+      xcb_motion_notify_event_t *motion = (xcb_motion_notify_event_t *) event;
 
-  return ret;
+      gst_gl_window_send_mouse_event (window, "mouse-move", 0,
+          (double) motion->event_x, (double) motion->event_y);
+      break;
+    }
+    default:
+      GST_TRACE ("unhandled XCB event: %u", event_code);
+      break;
+  }
+
+  return TRUE;
 }
 
 static int
