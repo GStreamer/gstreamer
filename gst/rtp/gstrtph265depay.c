@@ -146,7 +146,7 @@ gst_rtp_h265_depay_init (GstRtpH265Depay * rtph265depay)
   rtph265depay->adapter = gst_adapter_new ();
   rtph265depay->picture_adapter = gst_adapter_new ();
   rtph265depay->byte_stream = DEFAULT_BYTE_STREAM;
-  rtph265depay->stream_format = (gchar *) g_malloc (10);
+  rtph265depay->stream_format = NULL;
   rtph265depay->merge = DEFAULT_ACCESS_UNIT;
   rtph265depay->vps = g_ptr_array_new_with_free_func (
       (GDestroyNotify) gst_buffer_unref);
@@ -212,8 +212,8 @@ gst_rtp_h265_depay_negotiate (GstRtpH265Depay * rtph265depay)
       const gchar *str = NULL;
 
       if ((str = gst_structure_get_string (s, "stream-format"))) {
-
-        strcpy (rtph265depay->stream_format, str);
+        g_free (rtph265depay->stream_format);
+        rtph265depay->stream_format = g_strdup (str);
 
         if (strcmp (str, "hev1") == 0) {
           byte_stream = FALSE;
@@ -246,7 +246,8 @@ gst_rtp_h265_depay_negotiate (GstRtpH265Depay * rtph265depay)
   } else {
     GST_DEBUG_OBJECT (rtph265depay, "defaulting to byte-stream %d",
         DEFAULT_BYTE_STREAM);
-    strcpy (rtph265depay->stream_format, "byte-stream");
+    g_free (rtph265depay->stream_format);
+    rtph265depay->stream_format = g_strdup ("byte-stream");
     rtph265depay->byte_stream = DEFAULT_BYTE_STREAM;
   }
   if (merge != -1) {
@@ -306,12 +307,10 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
     return TRUE;
 
   srccaps = gst_caps_new_simple ("video/x-h265",
-      "stream-format", G_TYPE_STRING,
-      rtph265depay->stream_format,
+      "stream-format", G_TYPE_STRING, rtph265depay->stream_format,
       "alignment", G_TYPE_STRING, rtph265depay->merge ? "au" : "nal", NULL);
 
   if (!rtph265depay->byte_stream) {
-
     GstBuffer *codec_data;
     gint i = 0;
     gint len;
