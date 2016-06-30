@@ -1039,6 +1039,9 @@ gst_gl_display_add_context
 gst_gl_display_get_gl_context_for_thread
 gst_gl_display_get_handle
 gst_gl_display_create_context
+gst_gl_display_create_window
+gst_gl_display_find_window
+gst_gl_display_remove_window
 gst_context_get_gl_display
 gst_context_set_gl_display
 <SUBSECTION Standard>
