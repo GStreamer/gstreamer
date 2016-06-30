@@ -764,7 +764,7 @@ gst_openh264enc_handle_frame (GstVideoEncoder * encoder,
     }
     //fill default src_pic
     src_pic->iColorFormat = videoFormatI420;
-    src_pic->uiTimeStamp = 0;
+    src_pic->uiTimeStamp = frame->pts / GST_MSECOND;
   }
 
   openh264enc->frame_count++;
