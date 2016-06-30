@@ -51,19 +51,30 @@ static const struct wl_callback_listener sync_listener = {
   sync_callback
 };
 
+/* only thread safe iff called on the same thread @queue is being dispatched on */
 gint
 gst_gl_wl_display_roundtrip_queue (struct wl_display *display,
     struct wl_event_queue *queue)
 {
-  struct wl_callback *callback = wl_display_sync (display);
+  struct wl_callback *callback;
   gboolean done = FALSE;
   gint ret = 0;
 
-  if (callback == NULL)
+  if (queue) {
+    /* creating a wl_proxy and setting the queue is racy with the dispatching
+     * of the default queue */
+    while (wl_display_prepare_read_queue (display, queue) != 0) {
+      if ((ret = wl_display_dispatch_queue_pending (display, queue)) < 0)
+        return ret;
+    }
+  }
+  if (!(callback = wl_display_sync (display))) {
     return -1;
+  }
   wl_callback_add_listener (callback, &sync_listener, &done);
   if (queue) {
     wl_proxy_set_queue ((struct wl_proxy *) callback, queue);
+    wl_display_cancel_read (display);
     while (!done && ret >= 0)
       ret = wl_display_dispatch_queue (display, queue);
   } else {
@@ -84,6 +95,7 @@ typedef struct _WaylandEventSource
   uint32_t mask;
   struct wl_display *display;
   struct wl_event_queue *queue;
+  gboolean reading;
 } WaylandEventSource;
 
 static gboolean
@@ -93,10 +105,29 @@ wayland_event_source_prepare (GSource * base, gint * timeout)
 
   *timeout = -1;
 
-  /* We have to add/remove the GPollFD if we want to update our
-   * poll event mask dynamically.  Instead, let's just flush all
-   * writes on idle */
-  wl_display_flush (source->display);
+  /* we may be called multiple times for prepare */
+  if (source->reading)
+    wl_display_cancel_read (source->display);
+
+  if (source->queue) {
+    while (wl_display_prepare_read_queue (source->display, source->queue) != 0) {
+      if (wl_display_dispatch_queue_pending (source->display,
+              source->queue) < 0) {
+        g_critical ("Failed to dispatch pending events\n");
+      }
+    }
+  } else {
+    while (wl_display_prepare_read (source->display) != 0) {
+      if (wl_display_dispatch_pending (source->display) < 0) {
+        g_critical ("Failed to dispatch pending events\n");
+      }
+    }
+  }
+  source->reading = TRUE;
+
+  /* FIXME: this may return EAGAIN if the fd is full */
+  if (wl_display_flush (source->display) < 0)
+    g_critical ("Failed to flush Wayland connection\n");
 
   return FALSE;
 }
@@ -109,6 +140,13 @@ wayland_event_source_check (GSource * base)
 
   retval = source->pfd.revents;
 
+  if (source->pfd.revents & G_IO_IN) {
+    wl_display_read_events (source->display);
+  } else {
+    wl_display_cancel_read (source->display);
+  }
+  source->reading = FALSE;
+
   return retval;
 }
 
@@ -118,13 +156,11 @@ wayland_event_source_dispatch (GSource * base,
 {
   WaylandEventSource *source = (WaylandEventSource *) base;
 
-  if (source->pfd.revents) {
-    if (source->queue)
-      wl_display_dispatch_queue_pending (source->display, source->queue);
-    else
-      wl_display_dispatch_pending (source->display);
-    source->pfd.revents = 0;
-  }
+  if (source->queue)
+    wl_display_dispatch_queue_pending (source->display, source->queue);
+  else
+    wl_display_dispatch_pending (source->display);
+  source->pfd.revents = 0;
 
   if (callback)
     callback (data);
@@ -132,11 +168,22 @@ wayland_event_source_dispatch (GSource * base,
   return TRUE;
 }
 
+static void
+wayland_event_source_finalize (GSource * base)
+{
+  WaylandEventSource *source = (WaylandEventSource *) base;
+
+  if (source->reading) {
+    wl_display_cancel_read (source->display);
+  }
+  source->reading = FALSE;
+}
+
 static GSourceFuncs wayland_event_source_funcs = {
   wayland_event_source_prepare,
   wayland_event_source_check,
   wayland_event_source_dispatch,
-  NULL
+  wayland_event_source_finalize
 };
 
 GSource *
