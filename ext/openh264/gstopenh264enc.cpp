@@ -670,7 +670,7 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
 #if OPENH264_MINOR >= 4
   enc_params.eSpsPpsIdStrategy = CONSTANT_ID;
 #else
-  enc_params.bEnableSpsPpsIdAddition = 1;
+  enc_params.bEnableSpsPpsIdAddition = 0;
 #endif
   enc_params.bPrefixNalAddingCtrl = 0;
   enc_params.fMaxFrameRate = fps_n * 1.0 / fps_d;
