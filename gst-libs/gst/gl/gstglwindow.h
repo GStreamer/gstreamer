@@ -207,17 +207,7 @@ void     gst_gl_window_send_key_event       (GstGLWindow * window,
                                              const char * event_type,
                                              const char * key_str);
 GST_EXPORT
-void     gst_gl_window_send_key_event_async (GstGLWindow * window,
-                                             const char * event_type,
-                                             const char * key_str);
-GST_EXPORT
 void     gst_gl_window_send_mouse_event     (GstGLWindow * window,
-                                             const char * event_type,
-                                             int button,
-                                             double posx,
-                                             double posy);
-GST_EXPORT
-void     gst_gl_window_send_mouse_event_async (GstGLWindow * window,
                                              const char * event_type,
                                              int button,
                                              double posx,
