@@ -1875,18 +1875,6 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
     out_views = 1;
   }
 
-  /* FIXME: the auxillary buffer could have a different transform matrix */
-  {
-    GstVideoAffineTransformationMeta *af_meta;
-    gfloat matrix[16];
-
-    af_meta =
-        gst_buffer_get_video_affine_transformation_meta (priv->primary_in);
-    gst_gl_get_affine_transformation_meta_as_ndc (af_meta, matrix);
-    gst_gl_shader_set_uniform_matrix_4fv (viewconvert->shader,
-        "u_transformation", 1, FALSE, matrix);
-  }
-
   /* attach the texture to the FBO to renderer to */
   for (i = 0; i < out_views; i++) {
     guint gl_target =
@@ -1904,7 +1892,21 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
     gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
   gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
   gl->Viewport (0, 0, out_width, out_height);
+
   gst_gl_shader_use (viewconvert->shader);
+
+  /* FIXME: the auxillary buffer could have a different transform matrix */
+  {
+    GstVideoAffineTransformationMeta *af_meta;
+    gfloat matrix[16];
+
+    af_meta =
+        gst_buffer_get_video_affine_transformation_meta (priv->primary_in);
+    gst_gl_get_affine_transformation_meta_as_ndc (af_meta, matrix);
+    gst_gl_shader_set_uniform_matrix_4fv (viewconvert->shader,
+        "u_transformation", 1, FALSE, matrix);
+  }
+
   if (gl->BindVertexArray)
     gl->BindVertexArray (priv->vao);
   else
