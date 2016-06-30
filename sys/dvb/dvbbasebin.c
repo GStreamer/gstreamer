@@ -537,7 +537,7 @@ dvb_base_bin_init (DvbBaseBin * dvbbasebin)
   dvbbasebin->task =
       gst_task_new ((GstTaskFunction) dvb_base_bin_task, dvbbasebin, NULL);
   gst_task_set_lock (dvbbasebin->task, &dvbbasebin->lock);
-  dvbbasebin->poll = gst_poll_new_timer ();
+  dvbbasebin->poll = gst_poll_new (TRUE);
 }
 
 static void
