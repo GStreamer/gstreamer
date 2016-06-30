@@ -162,6 +162,7 @@ static void gst_openh264enc_set_rate_control (GstOpenh264Enc * openh264enc,
 
 
 #define DEFAULT_BITRATE            (128000)
+#define DEFAULT_MAX_BITRATE        (UNSPECIFIED_BIT_RATE)
 #define DEFAULT_GOP_SIZE           (90)
 #define DEFAULT_MAX_SLICE_SIZE     (1500000)
 #define DROP_BITRATE               20000
@@ -184,6 +185,7 @@ enum
   PROP_0,
   PROP_USAGE_TYPE,
   PROP_BITRATE,
+  PROP_MAX_BITRATE,
   PROP_GOP_SIZE,
   PROP_MAX_SLICE_SIZE,
   PROP_RATE_CONTROL,
@@ -290,6 +292,12 @@ gst_openh264enc_class_init (GstOpenh264EncClass * klass)
           0, G_MAXUINT, DEFAULT_BITRATE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
+      g_param_spec_uint ("max-bitrate", "Max Bitrate",
+          "Maximum Bitrate (in bits per second)",
+          0, G_MAXUINT, DEFAULT_MAX_BITRATE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   g_object_class_install_property (gobject_class, PROP_GOP_SIZE,
       g_param_spec_uint ("gop-size", "GOP size",
           "Number of frames between intra frames",
@@ -350,6 +358,7 @@ gst_openh264enc_init (GstOpenh264Enc * openh264enc)
   openh264enc->multi_thread = DEFAULT_MULTI_THREAD;
   openh264enc->max_slice_size = DEFAULT_MAX_SLICE_SIZE;
   openh264enc->bitrate = DEFAULT_BITRATE;
+  openh264enc->max_bitrate = DEFAULT_MAX_BITRATE;
   openh264enc->framerate = START_FRAMERATE;
   openh264enc->input_state = NULL;
   openh264enc->time_per_frame = GST_SECOND / openh264enc->framerate;
@@ -417,6 +426,10 @@ gst_openh264enc_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_BITRATE:
       openh264enc->bitrate = g_value_get_uint (value);
+      break;
+
+    case PROP_MAX_BITRATE:
+      openh264enc->max_bitrate = g_value_get_uint (value);
       break;
 
     case PROP_MULTI_THREAD:
@@ -501,6 +514,10 @@ gst_openh264enc_get_property (GObject * object, guint property_id,
 
     case PROP_BITRATE:
       g_value_set_uint (value, openh264enc->bitrate);
+      break;
+
+    case PROP_MAX_BITRATE:
+      g_value_set_uint (value, openh264enc->max_bitrate);
       break;
 
     case PROP_ENABLE_DENOISE:
@@ -654,6 +671,7 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   enc_params.iPicWidth = width;
   enc_params.iPicHeight = height;
   enc_params.iTargetBitrate = openh264enc->bitrate;
+  enc_params.iMaxBitrate = openh264enc->max_bitrate;
   enc_params.iRCMode = openh264enc->rate_control;
   enc_params.iTemporalLayerNum = 1;
   enc_params.iSpatialLayerNum = 1;
@@ -676,10 +694,11 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   enc_params.fMaxFrameRate = fps_n * 1.0 / fps_d;
   enc_params.iLoopFilterDisableIdc = openh264enc->deblocking_mode;
   enc_params.sSpatialLayers[0].uiProfileIdc = PRO_BASELINE;
-  enc_params.sSpatialLayers[0].iVideoWidth = width;
-  enc_params.sSpatialLayers[0].iVideoHeight = height;
+  enc_params.sSpatialLayers[0].iVideoWidth = enc_params.iPicWidth;
+  enc_params.sSpatialLayers[0].iVideoHeight = enc_params.iPicHeight;
   enc_params.sSpatialLayers[0].fFrameRate = fps_n * 1.0 / fps_d;
-  enc_params.sSpatialLayers[0].iSpatialBitrate = openh264enc->bitrate;
+  enc_params.sSpatialLayers[0].iSpatialBitrate = enc_params.iTargetBitrate;
+  enc_params.sSpatialLayers[0].iMaxSpatialBitrate = enc_params.iMaxBitrate;
 
   if (openh264enc->slice_mode == SM_FIXEDSLCNUM_SLICE) {
     if (openh264enc->num_slices == 1)

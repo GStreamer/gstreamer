@@ -67,6 +67,7 @@ struct _GstOpenh264Enc
   RC_MODES rate_control;
   guint max_slice_size;
   guint bitrate;
+  guint max_bitrate;
   guint framerate;
   guint multi_thread;
   gboolean enable_denoise;
