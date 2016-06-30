@@ -1969,7 +1969,7 @@ _init_convert (GstGLColorConvert * convert)
   }
 
   /* Requires reading from a RG/LA framebuffer... */
-  if (USING_GLES2 (convert->context) &&
+  if (USING_GLES2 (convert->context) && !USING_GLES3 (convert->context) &&
       (GST_VIDEO_INFO_FORMAT (&convert->out_info) == GST_VIDEO_FORMAT_YUY2 ||
           GST_VIDEO_INFO_FORMAT (&convert->out_info) ==
           GST_VIDEO_FORMAT_UYVY)) {
