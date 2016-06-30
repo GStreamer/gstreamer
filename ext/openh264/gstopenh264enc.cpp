@@ -654,7 +654,7 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   enc_params.iPicWidth = width;
   enc_params.iPicHeight = height;
   enc_params.iTargetBitrate = openh264enc->bitrate;
-  enc_params.iRCMode = RC_QUALITY_MODE;
+  enc_params.iRCMode = openh264enc->rate_control;
   enc_params.iTemporalLayerNum = 1;
   enc_params.iSpatialLayerNum = 1;
   enc_params.iLtrMarkPeriod = 30;
