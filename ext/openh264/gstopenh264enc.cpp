@@ -165,7 +165,6 @@ static void gst_openh264enc_set_rate_control (GstOpenh264Enc * openh264enc,
 #define DEFAULT_MAX_BITRATE        (UNSPECIFIED_BIT_RATE)
 #define DEFAULT_GOP_SIZE           (90)
 #define DEFAULT_MAX_SLICE_SIZE     (1500000)
-#define DROP_BITRATE               20000
 #define START_FRAMERATE            30
 #define DEFAULT_USAGE_TYPE         CAMERA_VIDEO_REAL_TIME
 #define DEFAULT_RATE_CONTROL       RC_QUALITY_MODE
@@ -364,7 +363,6 @@ gst_openh264enc_init (GstOpenh264Enc * openh264enc)
   openh264enc->time_per_frame = GST_SECOND / openh264enc->framerate;
   openh264enc->frame_count = 0;
   openh264enc->previous_timestamp = 0;
-  openh264enc->drop_bitrate = DROP_BITRATE;
   openh264enc->enable_denoise = DEFAULT_ENABLE_DENOISE;
   openh264enc->enable_frame_skip = DEFAULT_ENABLE_FRAME_SKIP;
   openh264enc->deblocking_mode = DEFAULT_DEBLOCKING_MODE;
@@ -784,15 +782,6 @@ gst_openh264enc_handle_frame (GstVideoEncoder * encoder,
         openh264enc->encoder->SetOption (ENCODER_OPTION_FRAME_RATE, &fps);
       }
     }
-  }
-
-  if (openh264enc->bitrate <= openh264enc->drop_bitrate) {
-    GST_LOG_OBJECT (openh264enc, "Dropped frame due to too low bitrate");
-    if (frame) {
-      gst_video_encoder_finish_frame (encoder, frame);
-      delete src_pic;
-    }
-    return GST_FLOW_OK;
   }
 
   if (frame) {

@@ -73,7 +73,6 @@ struct _GstOpenh264Enc
   gboolean enable_denoise;
   gboolean enable_frame_skip;
   GstVideoCodecState *input_state;
-  guint32 drop_bitrate;
   guint64 time_per_frame;
   guint64 frame_count;
   guint64 previous_timestamp;
