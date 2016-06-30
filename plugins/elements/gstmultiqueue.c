@@ -366,6 +366,13 @@ gst_multiqueue_pad_class_init (GstMultiQueuePadClass * klass)
   gobject_class->set_property = gst_multiqueue_pad_set_property;
   gobject_class->get_property = gst_multiqueue_pad_get_property;
 
+  /**
+   * GstMultiQueuePad:group-id:
+   *
+   * Group to which this pad belongs.
+   *
+   * Since: 1.10
+   */
   g_object_class_install_property (gobject_class, PROP_PAD_GROUP_ID,
       g_param_spec_uint ("group-id", "Group ID",
           "Group to which this pad belongs", 0, G_MAXUINT32,
