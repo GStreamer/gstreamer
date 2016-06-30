@@ -255,7 +255,7 @@ _ensure_window (GstGLContext * context)
   if (context->window)
     return;
 
-  window = gst_gl_window_new (context->display);
+  window = gst_gl_display_create_window (context->display);
 
   gst_gl_context_set_window (context, window);
 

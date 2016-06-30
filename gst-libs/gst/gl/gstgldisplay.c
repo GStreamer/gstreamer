@@ -98,6 +98,8 @@ static guint gst_gl_display_signals[LAST_SIGNAL] = { 0 };
 static void gst_gl_display_dispose (GObject * object);
 static void gst_gl_display_finalize (GObject * object);
 static guintptr gst_gl_display_default_get_handle (GstGLDisplay * display);
+static GstGLWindow *gst_gl_display_default_create_window (GstGLDisplay *
+    display);
 
 struct _GstGLDisplayPrivate
 {
@@ -169,6 +171,7 @@ gst_gl_display_class_init (GstGLDisplayClass * klass)
       GST_TYPE_GL_CONTEXT, 1, GST_TYPE_GL_CONTEXT);
 
   klass->get_handle = gst_gl_display_default_get_handle;
+  klass->create_window = gst_gl_display_default_create_window;
 
   G_OBJECT_CLASS (klass)->finalize = gst_gl_display_finalize;
   G_OBJECT_CLASS (klass)->dispose = gst_gl_display_dispose;
@@ -508,6 +511,94 @@ gst_gl_display_create_context (GstGLDisplay * display,
 
   if (ret)
     *p_context = context;
+
+  return ret;
+}
+
+/**
+ * gst_gl_display_create_window:
+ * @display: a #GstGLDisplay
+ *
+ * It requires the display's object lock to be held.
+ *
+ * Returns: a new #GstGLWindow for @display or %NULL.
+ */
+GstGLWindow *
+gst_gl_display_create_window (GstGLDisplay * display)
+{
+  GstGLDisplayClass *klass;
+  GstGLWindow *window;
+
+  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), NULL);
+  klass = GST_GL_DISPLAY_GET_CLASS (display);
+  g_return_val_if_fail (klass->create_window != NULL, NULL);
+
+  window = klass->create_window (display);
+
+  if (window)
+    display->windows = g_list_prepend (display->windows, window);
+
+  return window;
+}
+
+static GstGLWindow *
+gst_gl_display_default_create_window (GstGLDisplay * display)
+{
+  return gst_gl_window_new (display);
+}
+
+/**
+ * gst_gl_display_remove_window:
+ * @display: a #GstGLDisplay
+ * @window: a #GstGLWindow to remove
+ *
+ * Returns: if @window could be removed from @display
+ *
+ * Since: 1.12
+ */
+gboolean
+gst_gl_display_remove_window (GstGLDisplay * display, GstGLWindow * window)
+{
+  gboolean ret = FALSE;
+  GList *l;
+
+  GST_OBJECT_LOCK (display);
+  l = g_list_find (display->windows, window);
+  if (l) {
+    display->windows = g_list_delete_link (display->windows, l);
+    ret = TRUE;
+  }
+  GST_OBJECT_UNLOCK (display);
+
+  return ret;
+}
+
+/**
+ * gst_gl_display_find_window:
+ * @display: a #GstGLDisplay
+ * @data: some data to pass to @compare_func
+ * @compare_func: a comparison function to run
+ *
+ * Execute @compare_func over the list of windows stored by @display.  The
+ * first argment to @compare_func is the #GstGLWindow being checked and the
+ * second argument is @data.
+ *
+ * Returns: The first #GstGLWindow that causes a match from @compare_func
+ *
+ * Since: 1.12
+ */
+GstGLWindow *
+gst_gl_display_find_window (GstGLDisplay * display, gpointer data,
+    GCompareFunc compare_func)
+{
+  GstGLWindow *ret = NULL;
+  GList *l;
+
+  GST_OBJECT_LOCK (display);
+  l = g_list_find_custom (display->windows, data, compare_func);
+  if (l)
+    ret = l->data;
+  GST_OBJECT_UNLOCK (display);
 
   return ret;
 }
