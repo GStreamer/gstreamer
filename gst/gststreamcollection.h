@@ -41,6 +41,7 @@ G_BEGIN_DECLS
 typedef struct _GstStreamCollection GstStreamCollection;
 typedef struct _GstStreamCollectionClass GstStreamCollectionClass;
 typedef struct _GstStreamCollectionPrivate GstStreamCollectionPrivate;
+
 /**
  * GstStreamCollection:
  *
@@ -61,6 +62,7 @@ typedef struct _GstStreamCollectionPrivate GstStreamCollectionPrivate;
  * Applications can activate streams from a collection by using the
  * #GST_EVENT_SELECT_STREAMS event on a pipeline, bin or element.
  *
+ * Since: 1.10
  */
 struct _GstStreamCollection {
   GstObject object;
@@ -99,7 +101,7 @@ guint gst_stream_collection_get_size (GstStreamCollection *collection);
 GstStream *gst_stream_collection_get_stream (GstStreamCollection *collection, guint index);
 
 gboolean gst_stream_collection_add_stream (GstStreamCollection *collection,
-					   GstStream *stream);
+                                           GstStream *stream);
 
 G_END_DECLS
 

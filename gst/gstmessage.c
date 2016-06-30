@@ -2536,7 +2536,7 @@ gst_message_parse_property_notify (GstMessage * message, GstObject ** object,
  *
  * Returns: a newly allocated #GstMessage
  *
- * Since: 1.x
+ * Since: 1.10
  */
 GstMessage *
 gst_message_new_stream_collection (GstObject * src,
@@ -2565,7 +2565,7 @@ gst_message_new_stream_collection (GstObject * src,
  *
  * Parses a stream-collection message. 
  *
- * Since: 1.x
+ * Since: 1.10
  */
 void
 gst_message_parse_stream_collection (GstMessage * message,
@@ -2598,7 +2598,7 @@ gst_message_parse_stream_collection (GstMessage * message,
  *
  * Returns: a newly allocated #GstMessage
  *
- * Since: 1.x
+ * Since: 1.10
  */
 GstMessage *
 gst_message_new_streams_selected (GstObject * src,
@@ -2629,6 +2629,8 @@ gst_message_new_streams_selected (GstObject * src,
  * Returns the number of streams contained in the @message.
  *
  * Returns: The number of streams contained within.
+ *
+ * Since: 1.10
  */
 guint
 gst_message_streams_selected_get_size (GstMessage * msg)
@@ -2651,6 +2653,8 @@ gst_message_streams_selected_get_size (GstMessage * msg)
  * @stream: (transfer none): a #GstStream to add to @message
  *
  * Adds the @stream to the @message.
+ *
+ * Since: 1.10
  */
 void
 gst_message_streams_selected_add (GstMessage * msg, GstStream * stream)
@@ -2678,6 +2682,8 @@ gst_message_streams_selected_add (GstMessage * msg, GstStream * stream)
  * Retrieves the #GstStream with index @index from the @message.
  *
  * Returns: (transfer full): A #GstStream
+ *
+ * Since: 1.10
  */
 GstStream *
 gst_message_streams_selected_get_stream (GstMessage * msg, guint idx)
@@ -2707,7 +2713,7 @@ gst_message_streams_selected_get_stream (GstMessage * msg, guint idx)
  *
  * Parses a streams-selected message. 
  *
- * Since: 1.x
+ * Since: 1.10
  */
 void
 gst_message_parse_streams_selected (GstMessage * message,

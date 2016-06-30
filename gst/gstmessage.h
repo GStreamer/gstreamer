@@ -111,9 +111,9 @@ typedef struct _GstMessage GstMessage;
  * @GST_MESSAGE_PROPERTY_NOTIFY: Message indicating a #GObject property has
  *     changed (Since 1.10)
  * @GST_MESSAGE_STREAM_COLLECTION: Message indicating a new #GstStreamCollection
- *     is available.
+ *     is available (Since 1.10)
  * @GST_MESSAGE_STREAMS_SELECTED: Message indicating the active selection of
- *     #GstStreams has changed.
+ *     #GstStreams has changed (Since 1.10)
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.

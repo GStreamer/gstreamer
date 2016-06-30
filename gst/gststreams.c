@@ -41,6 +41,8 @@
  * Elements that do not modify the nature of the stream can add extra information
  * on it (such as enrich the #GstCaps, or #GstTagList). This is typically done
  * by parsing elements.
+ *
+ * Since: 1.10
  */
 
 #include "gst_private.h"
@@ -208,6 +210,8 @@ gst_stream_finalize (GObject * object)
  * and @flags
  *
  * Returns: The new #GstStream
+ *
+ * Since: 1.10
  */
 GstStream *
 gst_stream_new (const gchar * stream_id, GstCaps * caps, GstStreamType type,
@@ -244,6 +248,8 @@ gst_stream_set_stream_id (GstStream * stream, const gchar * stream_id)
  *
  * Returns: (transfer none) (nullable): the stream ID of @stream. Only valid
  * during the lifetime of @stream.
+ *
+ * Since: 1.10
  */
 const gchar *
 gst_stream_get_stream_id (GstStream * stream)
@@ -257,6 +263,8 @@ gst_stream_get_stream_id (GstStream * stream)
  * @flags: the flags to set on @stream
  *
  * Set the @flags for the @stream.
+ *
+ * Since: 1.10
  */
 void
 gst_stream_set_stream_flags (GstStream * stream, GstStreamFlags flags)
@@ -277,6 +285,7 @@ gst_stream_set_stream_flags (GstStream * stream, GstStreamFlags flags)
  *
  * Returns: The #GstStreamFlags for @stream
  *
+ * Since: 1.10
  */
 GstStreamFlags
 gst_stream_get_stream_flags (GstStream * stream)
@@ -296,6 +305,8 @@ gst_stream_get_stream_flags (GstStream * stream)
  * @stream_type: the type to set on @stream
  *
  * Set the stream type of @stream
+ *
+ * Since: 1.10
  */
 void
 gst_stream_set_stream_type (GstStream * stream, GstStreamType stream_type)
@@ -316,6 +327,7 @@ gst_stream_set_stream_type (GstStream * stream, GstStreamType stream_type)
  *
  * Returns: The #GstStreamType for @stream
  *
+ * Since: 1.10
  */
 GstStreamType
 gst_stream_get_stream_type (GstStream * stream)
@@ -336,6 +348,7 @@ gst_stream_get_stream_type (GstStream * stream)
  *
  * Set the tags for the #GstStream
  *
+ * Since: 1.10
  */
 void
 gst_stream_set_tags (GstStream * stream, GstTagList * tags)
@@ -355,6 +368,7 @@ gst_stream_set_tags (GstStream * stream, GstTagList * tags)
  *
  * Returns: (transfer full) (nullable): The #GstTagList for @stream
  *
+ * Since: 1.10
  */
 GstTagList *
 gst_stream_get_tags (GstStream * stream)
@@ -376,6 +390,7 @@ gst_stream_get_tags (GstStream * stream)
  *
  * Set the caps for the #GstStream
  *
+ * Since: 1.10
  */
 void
 gst_stream_set_caps (GstStream * stream, GstCaps * caps)
@@ -403,6 +418,7 @@ gst_stream_set_caps (GstStream * stream, GstCaps * caps)
  *
  * Returns: (transfer full) (nullable): The #GstCaps for @stream
  *
+ * Since: 1.10
  */
 GstCaps *
 gst_stream_get_caps (GstStream * stream)
@@ -494,6 +510,8 @@ gst_stream_get_property (GObject * object, guint prop_id,
  * Get a descriptive string for a given #GstStreamType
  *
  * Returns: A string describing the stream type
+ *
+ * Since: 1.10
  */
 const gchar *
 gst_stream_type_get_name (GstStreamType stype)

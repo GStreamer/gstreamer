@@ -28,6 +28,7 @@
  * SECTION:gststreamcollection
  * @short_description: Base class for collection of streams
  *
+ * Since: 1.10
  */
 
 #include "gst_private.h"
@@ -171,6 +172,8 @@ gst_stream_collection_dispose (GObject * object)
  * Create a new #GstStreamCollection.
  *
  * Returns: The new #GstStreamCollection.
+ *
+ * Since: 1.10
  */
 GstStreamCollection *
 gst_stream_collection_new (const gchar * upstream_id)
@@ -201,6 +204,8 @@ gst_stream_collection_set_upstream_id (GstStreamCollection * collection,
  * Returns the upstream id of the @collection.
  *
  * Returns: (transfer none): The upstream id
+ *
+ * Since: 1.10
  */
 const gchar *
 gst_stream_collection_get_upstream_id (GstStreamCollection * collection)
@@ -268,6 +273,8 @@ proxy_stream_notify_cb (GstStream * stream, GParamSpec * pspec,
  * Add the given @stream to the @collection.
  *
  * Returns: %TRUE if the @stream was properly added, else %FALSE
+ *
+ * Since: 1.10
  */
 gboolean
 gst_stream_collection_add_stream (GstStreamCollection * collection,
@@ -293,6 +300,8 @@ gst_stream_collection_add_stream (GstStreamCollection * collection,
  * Get the number of streams this collection contains
  *
  * Returns: The number of streams that @collection contains
+ *
+ * Since: 1.10
  */
 guint
 gst_stream_collection_get_size (GstStreamCollection * collection)
@@ -313,6 +322,8 @@ gst_stream_collection_get_size (GstStreamCollection * collection)
  * The caller should not modify the returned #GstStream
  *
  * Returns: (transfer none): A #GstStream
+ *
+ * Since: 1.10
  */
 GstStream *
 gst_stream_collection_get_stream (GstStreamCollection * collection, guint index)

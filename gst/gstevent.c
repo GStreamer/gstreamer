@@ -592,6 +592,8 @@ gst_event_parse_flush_stop (GstEvent * event, gboolean * reset_time)
  * #GST_MESSSAGE_STREAM_COLLECTION.
  *
  * Returns: (transfer full): a new select-streams event.
+ *
+ * Since: 1.10
  */
 GstEvent *
 gst_event_new_select_streams (GList * streams)
@@ -624,6 +626,8 @@ gst_event_new_select_streams (GList * streams)
  * @streams: (out) (element-type gchar) (transfer full): the streams
  *
  * Parse the SELECT_STREAMS event and retrieve the contained streams.
+ *
+ * Since: 1.10
  */
 void
 gst_event_parse_select_streams (GstEvent * event, GList ** streams)
@@ -1586,7 +1590,9 @@ gst_event_parse_stream_start (GstEvent * event, const gchar ** stream_id)
  * @stream: (transfer none): the stream object to set
  *
  * Set the @stream on the stream-start @event 
- **/
+ *
+ * Since: 1.10
+ */
 void
 gst_event_set_stream (GstEvent * event, GstStream * stream)
 {
@@ -1604,7 +1610,9 @@ gst_event_set_stream (GstEvent * event, GstStream * stream)
  * @stream: (out) (transfer full): adress of variable to store the stream
  *
  * Parse a stream-start @event and extract the #GstStream from it.
- **/
+ *
+ * Since: 1.10
+ */
 void
 gst_event_parse_stream (GstEvent * event, GstStream ** stream)
 {
@@ -1720,6 +1728,8 @@ gst_event_parse_group_id (GstEvent * event, guint * group_id)
  * data flow.
  *
  * Returns: (transfer full): the new STREAM_COLLECTION event.
+ *
+ * Since: 1.10
  */
 GstEvent *
 gst_event_new_stream_collection (GstStreamCollection * collection)
@@ -1735,6 +1745,15 @@ gst_event_new_stream_collection (GstStreamCollection * collection)
   return gst_event_new_custom (GST_EVENT_STREAM_COLLECTION, s);
 }
 
+/**
+ * gst_event_parse_stream_collection:
+ * @event: a stream-collection event
+ * @collection: (out): pointer to store the collection
+ *
+ * Retrieve new #GstStreamCollection from STREAM_COLLECTION event @event.
+ *
+ * Since: 1.10
+ */
 void
 gst_event_parse_stream_collection (GstEvent * event,
     GstStreamCollection ** collection)

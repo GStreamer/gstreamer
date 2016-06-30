@@ -79,7 +79,7 @@ typedef enum {
  *                 from the pipeline and unblock all streaming threads.
  * @GST_EVENT_FLUSH_STOP: Stop a flush operation. This event resets the
  *                 running-time of the pipeline.
- * @GST_EVENT_SELECT_STREAMS: A request to select one or more streams.
+ * @GST_EVENT_SELECT_STREAMS: A request to select one or more streams (Since 1.10)
  * @GST_EVENT_STREAM_START: Event to mark the start of a new stream. Sent before any
  *                 other serialized event and only sent at the start of a new stream,
  *                 not after flushing seeks.
@@ -88,7 +88,7 @@ typedef enum {
  *                 segment events contains information for clipping buffers and
  *                 converting buffer timestamps to running-time and
  *                 stream-time.
- * @GST_EVENT_STREAM_COLLECTION: A new #GstStreamCollection is available.
+ * @GST_EVENT_STREAM_COLLECTION: A new #GstStreamCollection is available (Since 1.10)
  * @GST_EVENT_TAG: A new set of metadata tags has been found in the stream.
  * @GST_EVENT_BUFFERSIZE: Notification of buffering requirements. Currently not
  *                 used yet.

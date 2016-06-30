@@ -4006,7 +4006,7 @@ gst_pad_get_stream_id (GstPad * pad)
  * Returns: (nullable) (transfer full): the current #GstStream for @pad, or %NULL.
  *     unref the returned stream when no longer needed.
  *
- * Since: 1.X
+ * Since: 1.10
  */
 GstStream *
 gst_pad_get_stream (GstPad * pad)
