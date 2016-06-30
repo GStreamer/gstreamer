@@ -920,14 +920,13 @@ error_inactive:
   }
 }
 
+/* This function has to be called with the stream lock taken. */
 static GstFlowReturn
 gst_video_decoder_drain_out (GstVideoDecoder * dec, gboolean at_eos)
 {
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_GET_CLASS (dec);
   GstVideoDecoderPrivate *priv = dec->priv;
   GstFlowReturn ret = GST_FLOW_OK;
-
-  GST_VIDEO_DECODER_STREAM_LOCK (dec);
 
   if (dec->input_segment.rate > 0.0) {
     /* Forward mode, if unpacketized, give the child class
@@ -950,8 +949,6 @@ gst_video_decoder_drain_out (GstVideoDecoder * dec, gboolean at_eos)
     /* Reverse playback mode */
     ret = gst_video_decoder_flush_parse (dec, TRUE);
   }
-
-  GST_VIDEO_DECODER_STREAM_UNLOCK (dec);
 
   return ret;
 }
@@ -1104,11 +1101,11 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     {
       GstFlowReturn flow_ret = GST_FLOW_OK;
 
+      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
       ret = (flow_ret == GST_FLOW_OK);
 
       GST_DEBUG_OBJECT (decoder, "received STREAM_START. Clearing taglist");
-      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       /* Flush upstream tags after a STREAM_START */
       if (priv->upstream_tags) {
         gst_tag_list_unref (priv->upstream_tags);
@@ -1138,7 +1135,9 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     {
       GstFlowReturn flow_ret = GST_FLOW_OK;
 
+      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       flow_ret = gst_video_decoder_drain_out (decoder, TRUE);
+      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       ret = (flow_ret == GST_FLOW_OK);
 
       /* Forward SEGMENT_DONE immediately. This is required
@@ -1157,7 +1156,9 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     {
       GstFlowReturn flow_ret = GST_FLOW_OK;
 
+      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       flow_ret = gst_video_decoder_drain_out (decoder, TRUE);
+      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       ret = (flow_ret == GST_FLOW_OK);
 
       /* Error out even if EOS was ok when we had input, but no output */
@@ -1185,11 +1186,11 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       GList *events;
       GList *frame_events;
 
+      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
       ret = (flow_ret == GST_FLOW_OK);
 
       /* Ensure we have caps before forwarding the event */
-      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       if (!decoder->priv->output_state) {
         if (!gst_video_decoder_negotiate_default_caps (decoder)) {
           GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
@@ -1237,7 +1238,9 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       if (gst_video_event_parse_still_frame (event, &in_still)) {
         if (in_still) {
           GST_DEBUG_OBJECT (decoder, "draining current data for still-frame");
+          GST_VIDEO_DECODER_STREAM_LOCK (decoder);
           flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
+          GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
           ret = (flow_ret == GST_FLOW_OK);
         }
         /* Forward STILL_FRAME immediately. Everything is drained after
