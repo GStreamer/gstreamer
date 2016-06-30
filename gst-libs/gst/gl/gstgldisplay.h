@@ -78,6 +78,11 @@ struct _GstGLDisplay
 
   GstGLDisplayType      type;
 
+  /* <protected> */
+  GMainContext             *main_context;
+  GMainLoop                *main_loop;
+  GSource                  *event_source;
+
   GstGLDisplayPrivate  *priv;
 };
 
