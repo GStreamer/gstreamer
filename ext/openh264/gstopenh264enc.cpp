@@ -105,7 +105,7 @@ static GType
 gst_openh264enc_slice_mode_get_type (void)
 {
   static const GEnumValue types[] = {
-    {SM_FIXEDSLCNUM_SLICE, "num-slices slices", "n-slices"},
+    {SM_FIXEDSLCNUM_SLICE, "Fixed number of slices", "n-slices"},
     {SM_AUTO_SLICE, "Number of slices equal to number of threads", "auto"},
     {0, NULL, NULL},
   };
@@ -680,9 +680,16 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   enc_params.sSpatialLayers[0].iVideoHeight = height;
   enc_params.sSpatialLayers[0].fFrameRate = fps_n * 1.0 / fps_d;
   enc_params.sSpatialLayers[0].iSpatialBitrate = openh264enc->bitrate;
-  enc_params.sSpatialLayers[0].sSliceCfg.uiSliceMode = openh264enc->slice_mode;
-  enc_params.sSpatialLayers[0].sSliceCfg.sSliceArgument.uiSliceNum =
-      openh264enc->num_slices;
+
+  if (openh264enc->slice_mode == SM_FIXEDSLCNUM_SLICE) {
+    if (openh264enc->num_slices == 1)
+      enc_params.sSpatialLayers[0].sSliceCfg.uiSliceMode = SM_SINGLE_SLICE;
+    else
+      enc_params.sSpatialLayers[0].sSliceCfg.uiSliceMode = SM_FIXEDSLCNUM_SLICE;
+    enc_params.sSpatialLayers[0].sSliceCfg.sSliceArgument.uiSliceNum = openh264enc->num_slices;
+  } else {
+    enc_params.sSpatialLayers[0].sSliceCfg.uiSliceMode = openh264enc->slice_mode;
+  }
 
   openh264enc->framerate = (1 + fps_n / fps_d);
 
