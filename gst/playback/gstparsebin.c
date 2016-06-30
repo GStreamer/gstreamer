@@ -5,6 +5,9 @@
  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
  * Copyright (C) <2013> Collabora Ltd.
  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) <2015-2016> Centricular Ltd
+ *  @author: Edward Hervey <edward@centricular.com>
+ *  @author: Jan Schmidt <jan@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -852,10 +855,10 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
       gst_static_pad_template_get (&decoder_bin_src_template));
 
   gst_element_class_set_static_metadata (gstelement_klass,
-      "Decoder Bin", "Generic/Bin/Decoder",
-      "Autoplug and decode to raw media",
-      "Edward Hervey <edward.hervey@collabora.co.uk>, "
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+      "Parse Bin", "Generic/Bin/Parser",
+      "Parse and de-multiplex to elementary stream",
+      "Jan Schmidt <jan@centricular.com>, "
+      "Edward Hervey <edward@centricular.com>");
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_parse_bin_change_state);
