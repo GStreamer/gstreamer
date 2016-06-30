@@ -94,6 +94,8 @@ enum
 
 static guint gst_gl_display_signals[LAST_SIGNAL] = { 0 };
 
+
+static void gst_gl_display_dispose (GObject * object);
 static void gst_gl_display_finalize (GObject * object);
 static guintptr gst_gl_display_default_get_handle (GstGLDisplay * display);
 
@@ -102,7 +104,48 @@ struct _GstGLDisplayPrivate
   GstGLAPI gl_api;
 
   GList *contexts;
+
+  GThread *event_thread;
+
+  GMutex thread_lock;
+  GCond thread_cond;
 };
+
+static gboolean
+_unlock_main_thread (GstGLDisplay * display)
+{
+  g_mutex_unlock (&display->priv->thread_lock);
+
+  return G_SOURCE_REMOVE;
+}
+
+static gpointer
+_event_thread_main (GstGLDisplay * display)
+{
+  g_mutex_lock (&display->priv->thread_lock);
+
+  display->main_context = g_main_context_new ();
+  display->main_loop = g_main_loop_new (display->main_context, FALSE);
+
+  g_main_context_invoke (display->main_context,
+      (GSourceFunc) _unlock_main_thread, display);
+
+  g_cond_broadcast (&display->priv->thread_cond);
+
+  g_main_loop_run (display->main_loop);
+
+  g_mutex_lock (&display->priv->thread_lock);
+  g_main_loop_unref (display->main_loop);
+  g_main_context_unref (display->main_context);
+
+  display->main_loop = NULL;
+  display->main_context = NULL;
+
+  g_cond_broadcast (&display->priv->thread_cond);
+  g_mutex_unlock (&display->priv->thread_lock);
+
+  return NULL;
+}
 
 static void
 gst_gl_display_class_init (GstGLDisplayClass * klass)
@@ -128,6 +171,7 @@ gst_gl_display_class_init (GstGLDisplayClass * klass)
   klass->get_handle = gst_gl_display_default_get_handle;
 
   G_OBJECT_CLASS (klass)->finalize = gst_gl_display_finalize;
+  G_OBJECT_CLASS (klass)->dispose = gst_gl_display_dispose;
 }
 
 static void
@@ -138,6 +182,17 @@ gst_gl_display_init (GstGLDisplay * display)
   display->type = GST_GL_DISPLAY_TYPE_ANY;
   display->priv->gl_api = GST_GL_API_ANY;
 
+  g_mutex_init (&display->priv->thread_lock);
+  g_cond_init (&display->priv->thread_cond);
+
+  display->priv->event_thread = g_thread_new ("gldisplay-event",
+      (GThreadFunc) _event_thread_main, display);
+
+  g_mutex_lock (&display->priv->thread_lock);
+  while (!display->main_loop)
+    g_cond_wait (&display->priv->thread_cond, &display->priv->thread_lock);
+  g_mutex_unlock (&display->priv->thread_lock);
+
   GST_TRACE ("init %p", display);
 
   gst_gl_buffer_init_once ();
@@ -147,6 +202,34 @@ gst_gl_display_init (GstGLDisplay * display)
 #if GST_GL_HAVE_PLATFORM_EGL
   gst_gl_memory_egl_init_once ();
 #endif
+}
+
+static void
+gst_gl_display_dispose (GObject * object)
+{
+  GstGLDisplay *display = GST_GL_DISPLAY (object);
+
+  if (display->main_loop)
+    g_main_loop_quit (display->main_loop);
+
+  if (display->priv->event_thread) {
+    /* can't use g_thread_join() as we could lose the last ref from a user
+     * function */
+    g_mutex_lock (&display->priv->thread_lock);
+    while (display->main_loop)
+      g_cond_wait (&display->priv->thread_cond, &display->priv->thread_lock);
+    g_mutex_unlock (&display->priv->thread_lock);
+    g_thread_unref (display->priv->event_thread);
+  }
+  display->priv->event_thread = NULL;
+
+  if (display->event_source) {
+    g_source_destroy (display->event_source);
+    g_source_unref (display->event_source);
+  }
+  display->event_source = NULL;
+
+  G_OBJECT_CLASS (gst_gl_display_parent_class)->dispose (object);
 }
 
 static void
@@ -163,6 +246,9 @@ gst_gl_display_finalize (GObject * object)
   }
 
   g_list_free (display->priv->contexts);
+
+  g_cond_clear (&display->priv->thread_cond);
+  g_mutex_clear (&display->priv->thread_lock);
 
   G_OBJECT_CLASS (gst_gl_display_parent_class)->finalize (object);
 }
