@@ -623,12 +623,10 @@ gst_tag_demux_chain_parse_tag (GstTagDemux * demux)
 }
 
 static GstFlowReturn
-gst_tag_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
+gst_tag_demux_chain_buffer (GstTagDemux * demux, GstBuffer * buf,
+    gboolean at_eos)
 {
-  GstTagDemux *demux;
   gsize size;
-
-  demux = GST_TAG_DEMUX (parent);
 
   size = gst_buffer_get_size (buf);
 
@@ -661,7 +659,7 @@ gst_tag_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
       update_collected (demux);
 
-      if (demux->priv->collect_size <
+      if (!at_eos && demux->priv->collect_size <
           TYPE_FIND_MIN_SIZE + demux->priv->strip_start)
         break;                  /* Go get more data first */
 
@@ -742,13 +740,19 @@ gst_tag_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
           demux->priv->send_tag_event = FALSE;
         }
 
-        GST_LOG_OBJECT (demux, "Pushing buffer %p", outbuf);
+        GST_LOG_OBJECT (demux, "Pushing buffer %" GST_PTR_FORMAT, outbuf);
 
         return gst_pad_push (demux->priv->srcpad, outbuf);
       }
     }
   }
   return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_tag_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
+{
+  return gst_tag_demux_chain_buffer (GST_TAG_DEMUX (parent), buf, FALSE);
 }
 
 static gboolean
@@ -762,8 +766,14 @@ gst_tag_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
       if (!gst_pad_has_current_caps (demux->priv->srcpad)) {
-        GST_WARNING_OBJECT (demux, "EOS before we found a type");
-        GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
+        GST_INFO_OBJECT (demux, "EOS before we found a type");
+
+        /* push final buffer with eos indication to force typefinding */
+        gst_tag_demux_chain_buffer (demux, gst_buffer_new (), TRUE);
+
+        if (!gst_pad_has_current_caps (demux->priv->srcpad)) {
+          GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
+        }
       }
       ret = gst_pad_event_default (pad, parent, event);
       break;
