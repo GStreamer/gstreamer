@@ -40,6 +40,9 @@
 static GstBusSyncReply
 create_window (GstBus * bus, GstMessage * message, GtkWidget * widget)
 {
+  if (gst_gtk_handle_need_context (bus, message, NULL))
+    return GST_BUS_DROP;
+
   /* ignore anything but 'prepare-window-handle' element messages */
   if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
     return GST_BUS_PASS;
@@ -95,6 +98,22 @@ end_stream_cb (GstBus * bus, GstMessage * message, GstElement * pipeline)
     default:
       break;
   }
+}
+
+static gboolean
+resize_cb (GtkWidget * widget, GdkEvent * event, gpointer data)
+{
+  GtkAllocation allocation;
+  GstVideoOverlay *overlay =
+      GST_VIDEO_OVERLAY (gst_bin_get_by_interface (GST_BIN (data),
+          GST_TYPE_VIDEO_OVERLAY));
+
+  gtk_widget_get_allocation (widget, &allocation);
+  gst_video_overlay_set_render_rectangle (overlay, allocation.x, allocation.y,
+      allocation.width, allocation.height);
+  gst_object_unref (overlay);
+
+  return G_SOURCE_CONTINUE;
 }
 
 static gboolean
@@ -330,7 +349,7 @@ main (gint argc, gchar * argv[])
   gtk_container_add (GTK_CONTAINER (window), vbox);
 
   g_signal_connect (screen, "draw", G_CALLBACK (expose_cb), pipeline);
-  g_signal_connect (screen, "configure-event", G_CALLBACK (expose_cb),
+  g_signal_connect (screen, "configure-event", G_CALLBACK (resize_cb),
       pipeline);
   gtk_widget_realize (screen);
 
