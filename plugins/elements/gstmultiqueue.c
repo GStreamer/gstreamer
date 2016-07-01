@@ -1766,12 +1766,13 @@ next:
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
   gst_multi_queue_post_buffering (mq);
 
-  GST_LOG_OBJECT (mq, "sq:%d AFTER PUSHING sq->srcresult: %s", sq->id,
-      gst_flow_get_name (sq->srcresult));
+  GST_LOG_OBJECT (mq, "sq:%d AFTER PUSHING sq->srcresult: %s (is_eos:%d)",
+      sq->id, gst_flow_get_name (sq->srcresult), GST_PAD_IS_EOS (sq->srcpad));
 
   /* Need to make sure wake up any sleeping pads when we exit */
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
-  if (mq->numwaiting > 0 && GST_PAD_IS_EOS (sq->srcpad)) {
+  if (mq->numwaiting > 0 && (GST_PAD_IS_EOS (sq->srcpad)
+          || sq->srcresult == GST_FLOW_EOS)) {
     compute_high_time (mq);
     compute_high_id (mq);
     wake_up_next_non_linked (mq);
@@ -2348,7 +2349,7 @@ compute_high_id (GstMultiQueue * mq)
 
       if (sq->nextid < lowest)
         lowest = sq->nextid;
-    } else if (!GST_PAD_IS_EOS (sq->srcpad)) {
+    } else if (!GST_PAD_IS_EOS (sq->srcpad) && sq->srcresult != GST_FLOW_EOS) {
       /* If we don't have a global highid, or the global highid is lower than
        * this single queue's last outputted id, store the queue's one, 
        * unless the singlequeue output is at EOS */
@@ -2398,7 +2399,7 @@ compute_high_time (GstMultiQueue * mq)
 
       if (lowest == GST_CLOCK_STIME_NONE || sq->next_time < lowest)
         lowest = sq->next_time;
-    } else if (!GST_PAD_IS_EOS (sq->srcpad)) {
+    } else if (!GST_PAD_IS_EOS (sq->srcpad) && sq->srcresult != GST_FLOW_EOS) {
       /* If we don't have a global high time, or the global high time
        * is lower than this single queue's last outputted time, store
        * the queue's one, unless the singlequeue output is at EOS. */
