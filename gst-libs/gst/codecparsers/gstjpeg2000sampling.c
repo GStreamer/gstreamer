@@ -104,8 +104,10 @@ GstJPEG2000Colorspace
 gst_jpeg2000_colorspace_from_string (const gchar * colorspace_string)
 {
   GstJPEG2000Colorspace i;
+
   g_return_val_if_fail (colorspace_string != NULL,
       GST_JPEG2000_COLORSPACE_NONE);
+
   for (i = 0; i < G_N_ELEMENTS (gst_jpeg2000_colorspace_strings); ++i) {
     if (!g_strcmp0 (colorspace_string, gst_jpeg2000_colorspace_strings[i]))
       return (i + 1);
@@ -117,7 +119,8 @@ gst_jpeg2000_colorspace_from_string (const gchar * colorspace_string)
 const gchar *
 gst_jpeg2000_colorspace_to_string (GstJPEG2000Colorspace colorspace)
 {
-  g_return_val_if_fail (colorspace >= 0
+  g_return_val_if_fail (colorspace > GST_JPEG2000_COLORSPACE_NONE
       && colorspace <= G_N_ELEMENTS (gst_jpeg2000_colorspace_strings), NULL);
+
   return gst_jpeg2000_colorspace_strings[colorspace - 1];
 }
