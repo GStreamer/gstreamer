@@ -1162,13 +1162,35 @@ gst_gl_window_queue_resize (GstGLWindow * window)
     window_class->queue_resize (window);
 }
 
+struct resize_data
+{
+  GstGLWindow *window;
+  guint width, height;
+};
+
+static void
+_on_resize (gpointer data)
+{
+  struct resize_data *resize = data;
+
+  resize->window->resize (resize->window->resize_data, resize->width,
+      resize->height);
+}
+
 void
 gst_gl_window_resize (GstGLWindow * window, guint width, guint height)
 {
   g_return_if_fail (GST_IS_GL_WINDOW (window));
 
-  if (window->resize)
-    window->resize (window->resize_data, width, height);
+  if (window->resize) {
+    struct resize_data resize = { 0, };
+
+    resize.window = window;
+    resize.width = width;
+    resize.height = height;
+
+    gst_gl_window_send_message (window, (GstGLWindowCB) _on_resize, &resize);
+  }
 
   window->priv->surface_width = width;
   window->priv->surface_height = height;
