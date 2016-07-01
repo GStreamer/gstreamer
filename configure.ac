@@ -1032,6 +1032,7 @@ AC_CONFIG_FILES([
     gst/Makefile
     gst/vaapi/Makefile
     tests/Makefile
+    tests/elements/Makefile
 ])
 AC_OUTPUT
 

@@ -158,4 +158,6 @@ EXTRA_DIST = \
 	$(test_utils_source_h)		\
 	$(NULL)
 
+SUBDIRS = elements
+
 -include $(top_srcdir)/git.mk
