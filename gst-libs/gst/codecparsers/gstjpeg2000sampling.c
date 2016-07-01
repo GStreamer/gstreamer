@@ -46,7 +46,7 @@ gst_jpeg2000_sampling_from_string (const gchar * sampling_string)
 {
   GstJPEG2000Sampling i;
   g_return_val_if_fail (sampling_string != NULL, GST_JPEG2000_SAMPLING_NONE);
-  for (i = 0; i < sizeof (gst_jpeg2000_sampling_strings); ++i) {
+  for (i = 0; i < G_N_ELEMENTS (gst_jpeg2000_sampling_strings); ++i) {
     if (!g_strcmp0 (sampling_string, gst_jpeg2000_sampling_strings[i]))
       return (i + 1);
   }
@@ -60,7 +60,7 @@ const gchar *
 gst_jpeg2000_sampling_to_string (GstJPEG2000Sampling sampling)
 {
   g_return_val_if_fail (sampling > 0
-      && sampling <= sizeof (gst_jpeg2000_sampling_strings), NULL);
+      && sampling <= G_N_ELEMENTS (gst_jpeg2000_sampling_strings), NULL);
   return gst_jpeg2000_sampling_strings[sampling - 1];
 }
 
@@ -106,7 +106,7 @@ gst_jpeg2000_colorspace_from_string (const gchar * colorspace_string)
   GstJPEG2000Colorspace i;
   g_return_val_if_fail (colorspace_string != NULL,
       GST_JPEG2000_COLORSPACE_NONE);
-  for (i = 0; i < sizeof (gst_jpeg2000_colorspace_strings); ++i) {
+  for (i = 0; i < G_N_ELEMENTS (gst_jpeg2000_colorspace_strings); ++i) {
     if (!g_strcmp0 (colorspace_string, gst_jpeg2000_colorspace_strings[i]))
       return (i + 1);
   }
@@ -118,6 +118,6 @@ const gchar *
 gst_jpeg2000_colorspace_to_string (GstJPEG2000Colorspace colorspace)
 {
   g_return_val_if_fail (colorspace >= 0
-      && colorspace <= sizeof (gst_jpeg2000_colorspace_strings), NULL);
+      && colorspace <= G_N_ELEMENTS (gst_jpeg2000_colorspace_strings), NULL);
   return gst_jpeg2000_colorspace_strings[colorspace - 1];
 }
