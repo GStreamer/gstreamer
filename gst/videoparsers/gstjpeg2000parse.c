@@ -235,49 +235,46 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   if (magic_offset == -1) {
     *skipsize = gst_byte_reader_get_size (&reader) - num_prefix_bytes;
     goto beach;
-  } else {
+  }
 
-    /* see if we need to skip any bytes at beginning of frame */
-    GST_DEBUG_OBJECT (jpeg2000parse, "Found magic at offset = %d",
-        magic_offset);
-    if (magic_offset > 0) {
-      *skipsize = magic_offset;
-      /* J2C has 8 bytes preceding J2K magic */
-      if (is_j2c)
-        *skipsize -= GST_JPEG2000_PARSE_SIZE_OF_J2C_PREFIX_BYTES;
-      if (*skipsize > 0)
-        goto beach;
+  /* see if we need to skip any bytes at beginning of frame */
+  GST_DEBUG_OBJECT (jpeg2000parse, "Found magic at offset = %d", magic_offset);
+  if (magic_offset > 0) {
+    *skipsize = magic_offset;
+    /* J2C has 8 bytes preceding J2K magic */
+    if (is_j2c)
+      *skipsize -= GST_JPEG2000_PARSE_SIZE_OF_J2C_PREFIX_BYTES;
+    if (*skipsize > 0)
+      goto beach;
+  }
+
+  if (is_j2c) {
+    /* sanity check on box id offset */
+    if (j2c_box_id_offset + GST_JPEG2000_JP2_SIZE_OF_BOX_ID != magic_offset) {
+      GST_ELEMENT_ERROR (jpeg2000parse, STREAM, DECODE, NULL,
+          ("Corrupt contiguous code stream box for j2c stream"));
+      ret = GST_FLOW_ERROR;
+      goto beach;
     }
 
-    if (is_j2c) {
-
-      /* sanity check on box id offset */
-      if (j2c_box_id_offset + GST_JPEG2000_JP2_SIZE_OF_BOX_ID != magic_offset) {
-        GST_ELEMENT_ERROR (jpeg2000parse, STREAM, DECODE, NULL,
-            ("Corrupt contiguous code stream box for j2c stream"));
-        ret = GST_FLOW_ERROR;
-        goto beach;
-      }
-
-      /* check that we have enough bytes for the J2C box length */
-      if (j2c_box_id_offset < GST_JPEG2000_JP2_SIZE_OF_BOX_LEN) {
-        *skipsize = gst_byte_reader_get_size (&reader) - num_prefix_bytes;
-        goto beach;
-      }
-
-      if (!gst_byte_reader_skip (&reader,
-              j2c_box_id_offset - GST_JPEG2000_JP2_SIZE_OF_BOX_LEN))
-        goto beach;
-
-      /* read the box length, and adjust num_prefix_bytes accordingly  */
-      if (!gst_byte_reader_get_uint32_be (&reader, &frame_size))
-        goto beach;
-      num_prefix_bytes -= GST_JPEG2000_JP2_SIZE_OF_BOX_LEN;
-
-      /* bail out if not enough data for frame */
-      if ((gst_byte_reader_get_size (&reader) < frame_size))
-        goto beach;
+    /* check that we have enough bytes for the J2C box length */
+    if (j2c_box_id_offset < GST_JPEG2000_JP2_SIZE_OF_BOX_LEN) {
+      *skipsize = gst_byte_reader_get_size (&reader) - num_prefix_bytes;
+      goto beach;
     }
+
+    if (!gst_byte_reader_skip (&reader,
+            j2c_box_id_offset - GST_JPEG2000_JP2_SIZE_OF_BOX_LEN))
+      goto beach;
+
+    /* read the box length, and adjust num_prefix_bytes accordingly  */
+    if (!gst_byte_reader_get_uint32_be (&reader, &frame_size))
+      goto beach;
+    num_prefix_bytes -= GST_JPEG2000_JP2_SIZE_OF_BOX_LEN;
+
+    /* bail out if not enough data for frame */
+    if ((gst_byte_reader_get_size (&reader) < frame_size))
+      goto beach;
   }
 
   /* 2 to skip marker size, and another 2 to skip rsiz field */
