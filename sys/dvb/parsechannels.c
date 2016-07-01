@@ -316,10 +316,8 @@ parse_and_configure_from_v5_conf_file (GstElement * dvbbasebin,
       map_entry++;
     }
 
-    if (!property_found) {
-      GST_DEBUG_OBJECT (dvbbasebin, "Failed to map channels.conf property "
-          "'%s'", k);
-    }
+    if (!property_found)
+      GST_DEBUG_OBJECT (dvbbasebin, "Failed to map property '%s'", k);
 
     keys_p++;
   }
