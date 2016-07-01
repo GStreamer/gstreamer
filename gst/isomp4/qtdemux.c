@@ -7207,6 +7207,8 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
   }
 
   if (stream->pad) {
+    GstCaps *prev_caps = NULL;
+
     GST_PAD_ELEMENT_PRIVATE (stream->pad) = stream;
     gst_pad_set_event_function (stream->pad, gst_qtdemux_handle_src_event);
     gst_pad_set_query_function (stream->pad, gst_qtdemux_handle_src_query);
@@ -7222,7 +7224,6 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       }
     }
 
-    GST_DEBUG_OBJECT (qtdemux, "setting caps %" GST_PTR_FORMAT, stream->caps);
     if (stream->new_stream) {
       gchar *stream_id;
       GstEvent *event;
@@ -7258,7 +7259,18 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       gst_pad_push_event (stream->pad, event);
       g_free (stream_id);
     }
-    gst_pad_set_caps (stream->pad, stream->caps);
+
+    prev_caps = gst_pad_get_current_caps (stream->pad);
+
+    if (!prev_caps || !gst_caps_is_equal_fixed (prev_caps, stream->caps)) {
+      GST_DEBUG_OBJECT (qtdemux, "setting caps %" GST_PTR_FORMAT, stream->caps);
+      gst_pad_set_caps (stream->pad, stream->caps);
+    } else {
+      GST_DEBUG_OBJECT (qtdemux, "ignore duplicated caps");
+    }
+
+    if (prev_caps)
+      gst_caps_unref (prev_caps);
     stream->new_caps = FALSE;
   }
   return TRUE;
