@@ -4856,26 +4856,30 @@ gst_rtspsrc_reconnect (GstRTSPSrc * src, gboolean async)
   if (!restart)
     goto done;
 
-  /* we can try only TCP now */
-  src->cur_protocols = GST_RTSP_LOWER_TRANS_TCP;
+  /* unless redirect, try tcp */
+  if (!src->need_redirect)
+    src->cur_protocols = GST_RTSP_LOWER_TRANS_TCP;
 
   /* close and cleanup our state */
   if ((res = gst_rtspsrc_close (src, async, FALSE)) < 0)
     goto done;
 
-  /* see if we have TCP left to try. Also don't try TCP when we were configured
-   * with an SDP. */
-  if (!(src->protocols & GST_RTSP_LOWER_TRANS_TCP) || src->from_sdp)
+  /* unless redirect, see if we have TCP left to try. Also don't 
+   * try TCP when we were configured with an SDP. */
+  if (!src->need_redirect && (!(src->protocols & GST_RTSP_LOWER_TRANS_TCP)
+          || src->from_sdp))
     goto no_protocols;
 
-  /* We post a warning message now to inform the user
-   * that nothing happened. It's most likely a firewall thing. */
-  GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
-      ("Could not receive any UDP packets for %.4f seconds, maybe your "
-          "firewall is blocking it. Retrying using a TCP connection.",
-          gst_guint64_to_gdouble (src->udp_timeout / 1000000.0)));
+  if (!src->need_redirect) {
+    /* We post a warning message now to inform the user
+     * that nothing happened. It's most likely a firewall thing. */
+    GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
+        ("Could not receive any UDP packets for %.4f seconds, maybe your "
+            "firewall is blocking it. Retrying using a tcp connection.",
+            gst_guint64_to_gdouble (src->udp_timeout / 1000000.0)));
+  }
 
-  /* open new connection using tcp */
+  /* unless redirect, open new connection using tcp */
   if (gst_rtspsrc_open (src, async) < 0)
     goto open_failed;
 
