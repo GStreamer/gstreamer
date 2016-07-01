@@ -94,6 +94,8 @@ struct _GstVaapiSink
   GstVaapiRectangle display_rect;
   GstVaapiRotation rotation;
   GstVaapiRotation rotation_req;
+  GstVaapiRotation rotation_tag;
+  GstVaapiRotation rotation_prop;
   guint color_standard;
   gint32 view_id;
   GThread *event_thread;

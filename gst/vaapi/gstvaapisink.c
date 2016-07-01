@@ -1114,6 +1114,26 @@ gst_vaapisink_ensure_colorbalance (GstVaapiSink * sink)
   return cb_sync_values_to_display (sink, GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
 }
 
+
+static void
+gst_vaapisink_set_rotation (GstVaapiSink * sink, GstVaapiRotation rotation,
+    gboolean from_tag)
+{
+  GST_OBJECT_LOCK (sink);
+
+  if (from_tag)
+    sink->rotation_tag = rotation;
+  else
+    sink->rotation_prop = rotation;
+
+  if (sink->rotation_prop == GST_VAAPI_ROTATION_AUTOMATIC)
+    sink->rotation_req = sink->rotation_tag;
+  else
+    sink->rotation_req = sink->rotation_prop;
+
+  GST_OBJECT_UNLOCK (sink);
+}
+
 static gboolean
 gst_vaapisink_ensure_rotation (GstVaapiSink * sink,
     gboolean recalc_display_rect)
@@ -1533,7 +1553,7 @@ gst_vaapisink_set_property (GObject * object,
       sink->view_id = g_value_get_int (value);
       break;
     case PROP_ROTATION:
-      sink->rotation_req = g_value_get_enum (value);
+      gst_vaapisink_set_rotation (sink, g_value_get_enum (value), FALSE);
       break;
     case PROP_FORCE_ASPECT_RATIO:
       sink->keep_aspect = g_value_get_boolean (value);
@@ -1616,6 +1636,51 @@ gst_vaapisink_unlock_stop (GstBaseSink * base_sink)
   return TRUE;
 }
 
+static gboolean
+gst_vaapisink_event (GstBaseSink * base_sink, GstEvent * event)
+{
+  gboolean res = TRUE;
+  GstTagList *taglist;
+  gchar *orientation;
+
+  GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
+
+  GST_DEBUG_OBJECT (sink, "handling event %s", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:
+      gst_event_parse_tag (event, &taglist);
+
+      if (gst_tag_list_get_string (taglist, GST_TAG_IMAGE_ORIENTATION,
+              &orientation)) {
+        if (!g_strcmp0 ("rotate-0", orientation)) {
+          gst_vaapisink_set_rotation (sink, GST_VAAPI_ROTATION_0, TRUE);
+        } else if (!g_strcmp0 ("rotate-90", orientation)) {
+          gst_vaapisink_set_rotation (sink, GST_VAAPI_ROTATION_90, TRUE);
+        } else if (!g_strcmp0 ("rotate-180", orientation)) {
+          gst_vaapisink_set_rotation (sink, GST_VAAPI_ROTATION_180, TRUE);
+        } else if (!g_strcmp0 ("rotate-270", orientation)) {
+          gst_vaapisink_set_rotation (sink, GST_VAAPI_ROTATION_270, TRUE);
+        }
+
+        /* Do not support for flip yet.
+         * It should be implemented in the near future.
+         * See https://bugs.freedesktop.org/show_bug.cgi?id=90654
+         */
+        g_free (orientation);
+      }
+      break;
+    default:
+      break;
+  }
+
+  res =
+      GST_BASE_SINK_CLASS (gst_vaapisink_parent_class)->event (base_sink,
+      event);
+
+  return res;
+}
+
 static void
 gst_vaapisink_set_bus (GstElement * element, GstBus * bus)
 {
@@ -1659,6 +1724,7 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
   basesink_class->propose_allocation = gst_vaapisink_propose_allocation;
   basesink_class->unlock = gst_vaapisink_unlock;
   basesink_class->unlock_stop = gst_vaapisink_unlock_stop;
+  basesink_class->event = gst_vaapisink_event;
 
   videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_vaapisink_show_frame);
 
@@ -1829,6 +1895,7 @@ gst_vaapisink_init (GstVaapiSink * sink)
   sink->handle_events = TRUE;
   sink->rotation = DEFAULT_ROTATION;
   sink->rotation_req = DEFAULT_ROTATION;
+  sink->rotation_tag = DEFAULT_ROTATION;
   sink->keep_aspect = TRUE;
   sink->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
   gst_video_info_init (&sink->video_info);

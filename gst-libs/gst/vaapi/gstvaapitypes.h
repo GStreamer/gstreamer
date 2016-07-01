@@ -128,12 +128,14 @@ typedef enum {
  * @GST_VAAPI_ROTATION_90: the VA display is rotated by 90°, clockwise.
  * @GST_VAAPI_ROTATION_180: the VA display is rotated by 180°, clockwise.
  * @GST_VAAPI_ROTATION_270: the VA display is rotated by 270°, clockwise.
+ * @GST_VAAPI_ROTATION_AUTOMATIC: the VA display is rotated by image-orientating tag.
  */
 typedef enum {
     GST_VAAPI_ROTATION_0   = 0,
     GST_VAAPI_ROTATION_90  = 90,
     GST_VAAPI_ROTATION_180 = 180,
     GST_VAAPI_ROTATION_270 = 270,
+    GST_VAAPI_ROTATION_AUTOMATIC = 360,
 } GstVaapiRotation;
 
 /**
