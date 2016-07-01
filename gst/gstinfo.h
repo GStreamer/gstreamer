@@ -415,9 +415,11 @@ gchar * gst_info_strdup_printf          (const gchar *format, ...) G_GNUC_PRINTF
 
 #ifndef GST_DISABLE_GST_DEBUG
 
+/* cast to void * avoids a warning with gcc 6
+ * see https://bugzilla.gnome.org/show_bug.cgi?id=764526 */
 #define gst_debug_add_log_function(func,data,notify) \
 G_STMT_START{                                        \
-  if (func == gst_debug_log_default) {               \
+  if (func == (void *) gst_debug_log_default) {               \
     gst_debug_add_log_function(NULL,data,notify);    \
   } else {                                           \
     gst_debug_add_log_function(func,data,notify);    \
@@ -425,7 +427,7 @@ G_STMT_START{                                        \
 }G_STMT_END
 
 #define gst_debug_remove_log_function(func)   \
-    (func == gst_debug_log_default) ?         \
+    (func == (void *) gst_debug_log_default) ?         \
         gst_debug_remove_log_function(NULL) : \
         gst_debug_remove_log_function(func)
 
