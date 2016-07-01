@@ -322,7 +322,8 @@ parse_and_configure_from_v5_conf_file (GstElement * dvbbasebin,
     keys_p++;
   }
 
-  GST_DEBUG_OBJECT (dvbbasebin, "Succesfully parsed channels file");
+  GST_DEBUG_OBJECT (dvbbasebin, "Successfully parsed channel configuration "
+      "file '%s'", filename);
   g_strfreev (keys);
   g_key_file_unref (keyfile);
   return TRUE;
