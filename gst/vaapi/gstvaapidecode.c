@@ -544,6 +544,13 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
 #endif
   }
 
+  if (decode->in_segment.rate < 0.0
+      && !GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (out_frame)) {
+    GST_TRACE_OBJECT (decode, "drop frame in reverse playback");
+    gst_video_decoder_release_frame (GST_VIDEO_DECODER (decode), out_frame);
+    return GST_FLOW_OK;
+  }
+
   ret = gst_video_decoder_finish_frame (vdec, out_frame);
   if (ret != GST_FLOW_OK)
     goto error_commit_buffer;
@@ -994,6 +1001,7 @@ static gboolean
 gst_vaapidecode_flush (GstVideoDecoder * vdec)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
+  gboolean reverse;
 
   if (!decode->decoder)
     return FALSE;
@@ -1002,9 +1010,13 @@ gst_vaapidecode_flush (GstVideoDecoder * vdec)
 
   gst_vaapidecode_purge (decode);
 
+  /* in reverse playback we cannot destroy the decoder at flush, since
+   * it will lost the parsing state */
+  reverse = decode->in_segment.rate < 0;
+
   /* There could be issues if we avoid the reset_full() while doing
    * seeking: we have to reset the internal state */
-  return gst_vaapidecode_reset_full (decode, decode->sinkpad_caps, TRUE);
+  return gst_vaapidecode_reset_full (decode, decode->sinkpad_caps, !reverse);
 }
 
 static gboolean
@@ -1225,6 +1237,27 @@ gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query)
   return ret;
 }
 
+static gboolean
+gst_vaapidecode_sink_event (GstVideoDecoder * vdec, GstEvent * event)
+{
+  GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEGMENT:
+    {
+      /* Keep segment event to refer to rate so that
+       * vaapidecode can handle reverse playback
+       */
+      gst_event_copy_segment (event, &decode->in_segment);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (vdec, event);
+}
+
 static void
 gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
 {
@@ -1259,6 +1292,7 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
   vdec_class->src_query = GST_DEBUG_FUNCPTR (gst_vaapidecode_src_query);
   vdec_class->sink_query = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_query);
   vdec_class->getcaps = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_getcaps);
+  vdec_class->sink_event = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_event);
 
   map = (GstVaapiDecoderMap *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
       GST_VAAPI_DECODE_PARAMS_QDATA);
