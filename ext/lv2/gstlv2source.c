@@ -108,7 +108,9 @@ gst_lv2_source_load_preset (GstPreset * preset, const gchar * name)
 static gboolean
 gst_lv2_source_save_preset (GstPreset * preset, const gchar * name)
 {
-  return FALSE;
+  GstLV2Source *self = (GstLV2Source *) preset;
+
+  return gst_lv2_save_preset (&self->lv2, (GstObject *) self, name);
 }
 
 static gboolean
@@ -121,7 +123,9 @@ gst_lv2_source_rename_preset (GstPreset * preset, const gchar * old_name,
 static gboolean
 gst_lv2_source_delete_preset (GstPreset * preset, const gchar * name)
 {
-  return FALSE;
+  GstLV2Source *self = (GstLV2Source *) preset;
+
+  return gst_lv2_delete_preset (&self->lv2, (GstObject *) self, name);
 }
 
 static gboolean

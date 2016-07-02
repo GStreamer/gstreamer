@@ -225,7 +225,6 @@ set_port_value (const char *port_symbol, void *data, const void *value,
   g_object_set (obj, prop_name, fvalue, NULL);
 }
 
-
 gboolean
 gst_lv2_load_preset (GstLV2 * lv2, GstObject * obj, const gchar * name)
 {
@@ -242,26 +241,120 @@ gst_lv2_load_preset (GstLV2 * lv2, GstObject * obj, const gchar * name)
   return FALSE;
 }
 
-#if 0
+static const void *
+get_port_value (const char *port_symbol, void *data, uint32_t * size,
+    uint32_t * type)
+{
+  gpointer *user_data = (gpointer *) data;
+  GstLV2Class *klass = user_data[0];
+  GstObject *obj = user_data[1];
+  gchar *prop_name = g_hash_table_lookup (klass->sym_to_name, port_symbol);
+  static gfloat fvalue;
+
+  if (!prop_name) {
+    GST_WARNING_OBJECT (obj, "Preset port '%s' is missing", port_symbol);
+    *size = *type = 0;
+    return NULL;
+  }
+
+  *size = sizeof (float);
+  *type = forge.Float;
+  g_object_get (obj, prop_name, &fvalue, NULL);
+  /* FIXME: can we return &lv2->ports.{in,out}[x]; */
+  return &fvalue;
+}
+
 gboolean
 gst_lv2_save_preset (GstLV2 * lv2, GstObject * obj, const gchar * name)
 {
-  return FALSE;
+  gchar *filename, *basename, *bundle, *dir, *tmp_dir, *s;
+  gpointer user_data[] = { lv2->klass, obj };
+  GstElementFactory *factory;
+  LilvState *state;
+  LilvNode *bundle_dir;
+  LilvInstance *instance = lv2->instance;
+  gboolean res;
+
+  factory = gst_element_get_factory ((GstElement *) obj);
+  basename = g_strdup (gst_element_factory_get_metadata (factory,
+          GST_ELEMENT_METADATA_LONGNAME));
+  s = basename;
+  while ((s = strchr (s, ' '))) {
+    *s = '_';
+  }
+
+  filename = g_strjoin (NULL, name, ".ttl", NULL);
+  bundle = g_strjoin (NULL, basename, "_", name, ".preset.lv2", NULL);
+  /* dir needs to end on a dir separator for the lilv_new_file_uri() to work */
+  dir =
+      g_build_filename (g_get_home_dir (), ".lv2", bundle, G_DIR_SEPARATOR_S,
+      NULL);
+  tmp_dir = g_dir_make_tmp ("gstlv2-XXXXXX", NULL);
+  g_mkdir_with_parents (dir, 0750);
+
+  if (!instance) {
+    /* instance is NULL until we play!! */
+    instance = lilv_plugin_instantiate (lv2->klass->plugin, GST_AUDIO_DEF_RATE,
+        lv2_features);
+  }
+
+  state = lilv_state_new_from_instance (lv2->klass->plugin, instance, &lv2_map,
+      tmp_dir, dir, dir, dir, get_port_value, user_data,
+      LV2_STATE_IS_POD | LV2_STATE_IS_PORTABLE, NULL);
+
+  lilv_state_set_label (state, name);
+
+  res = lilv_state_save (world, &lv2_map, &lv2_unmap, state, /*uri */ NULL, dir,
+      filename) != 0;
+
+  /* reload bundle into the world */
+  bundle_dir = lilv_new_file_uri (world, NULL, dir);
+  lilv_world_unload_bundle (world, bundle_dir);
+  lilv_world_load_bundle (world, bundle_dir);
+  lilv_node_free (bundle_dir);
+
+  lilv_world_load_resource (world, lilv_state_get_uri (state));
+  g_hash_table_insert (lv2->presets, g_strdup (name),
+      lilv_node_duplicate (lilv_state_get_uri (state)));
+
+  lilv_state_free (state);
+  if (!lv2->instance) {
+    lilv_instance_free (instance);
+  }
+
+  g_free (tmp_dir);
+  g_free (dir);
+  g_free (bundle);
+  g_free (filename);
+  g_free (basename);
+
+  return res;
 }
 
+#if 0
 gboolean
 gst_lv2_rename_preset (GstLV2 * lv2, GstObject * obj,
     const gchar * old_name, const gchar * new_name)
 {
+  /* need to relabel the preset */
   return FALSE;
 }
+#endif
 
 gboolean
 gst_lv2_delete_preset (GstLV2 * lv2, GstObject * obj, const gchar * name)
 {
+  LilvNode *preset = g_hash_table_lookup (lv2->presets, name);
+  LilvState *state = lilv_state_new_from_world (world, &lv2_map, preset);
+
+  lilv_world_unload_resource (world, lilv_state_get_uri (state));
+  lilv_state_delete (world, state);
+  lilv_state_free (state);
+
+  g_hash_table_remove (lv2->presets, name);
+
   return FALSE;
 }
-#endif
 
 
 /* api helpers */

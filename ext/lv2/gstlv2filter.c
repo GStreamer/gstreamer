@@ -91,7 +91,9 @@ gst_lv2_filter_load_preset (GstPreset * preset, const gchar * name)
 static gboolean
 gst_lv2_filter_save_preset (GstPreset * preset, const gchar * name)
 {
-  return FALSE;
+  GstLV2Filter *self = (GstLV2Filter *) preset;
+
+  return gst_lv2_save_preset (&self->lv2, (GstObject *) self, name);
 }
 
 static gboolean
@@ -104,7 +106,9 @@ gst_lv2_filter_rename_preset (GstPreset * preset, const gchar * old_name,
 static gboolean
 gst_lv2_filter_delete_preset (GstPreset * preset, const gchar * name)
 {
-  return FALSE;
+  GstLV2Filter *self = (GstLV2Filter *) preset;
+
+  return gst_lv2_delete_preset (&self->lv2, (GstObject *) self, name);
 }
 
 static gboolean

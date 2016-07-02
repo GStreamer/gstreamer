@@ -106,6 +106,9 @@ void gst_lv2_host_init (void);
 
 gchar **gst_lv2_get_preset_names (GstLV2 * lv2, GstObject * obj);
 gboolean gst_lv2_load_preset (GstLV2 * lv2, GstObject * obj, const gchar * name);
+gboolean gst_lv2_save_preset (GstLV2 * lv2, GstObject * obj, const gchar * name);
+gboolean gst_lv2_delete_preset (GstLV2 * lv2, GstObject * obj, const gchar * name);
+
 
 void gst_lv2_init (GstLV2 * lv2, GstLV2Class * lv2_class);
 void gst_lv2_finalize (GstLV2 * lv2);
