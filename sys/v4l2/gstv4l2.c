@@ -119,6 +119,7 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
   gint video_fd = -1;
   struct v4l2_capability vcap;
   gboolean ret = TRUE;
+  guint32 device_caps;
 
   it = gst_v4l2_iterator_new ();
 
@@ -143,12 +144,16 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
       continue;
     }
 
-    if (!((vcap.capabilities & (V4L2_CAP_VIDEO_M2M |
-                    V4L2_CAP_VIDEO_M2M_MPLANE)) ||
+    if (vcap.capabilities & V4L2_CAP_DEVICE_CAPS)
+      device_caps = vcap.device_caps;
+    else
+      device_caps = vcap.capabilitites;
+
+    if (!((device_caps & (V4L2_CAP_VIDEO_M2M | V4L2_CAP_VIDEO_M2M_MPLANE)) ||
             /* But legacy driver may expose both CAPTURE and OUTPUT */
-            ((vcap.capabilities &
+            ((device_caps &
                     (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE)) &&
-                (vcap.capabilities &
+                (device_caps &
                     (V4L2_CAP_VIDEO_OUTPUT | V4L2_CAP_VIDEO_OUTPUT_MPLANE)))))
       continue;
 

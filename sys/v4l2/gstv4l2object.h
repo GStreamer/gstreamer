@@ -133,6 +133,8 @@ struct _GstV4l2Object {
 
   /* the video device's capabilities */
   struct v4l2_capability vcap;
+  /* opened device specific capabilities */
+  guint32 device_caps;
 
   /* the video device's window properties */
   struct v4l2_window vwin;

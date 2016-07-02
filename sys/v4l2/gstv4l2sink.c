@@ -250,10 +250,10 @@ gst_v4l2sink_sync_overlay_fields (GstV4l2Sink * v4l2sink)
     struct v4l2_format format;
 
     memset (&format, 0x00, sizeof (struct v4l2_format));
-    if ( v4l2sink->v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT_OVERLAY )
-		format.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_OVERLAY;
-	else
-		format.type = V4L2_BUF_TYPE_VIDEO_OVERLAY;
+    if (v4l2sink->v4l2object->device_caps & V4L2_CAP_VIDEO_OUTPUT_OVERLAY)
+      format.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_OVERLAY;
+    else
+      format.type = V4L2_BUF_TYPE_VIDEO_OVERLAY;
 
     if (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) < 0) {
       GST_WARNING_OBJECT (v4l2sink, "VIDIOC_G_FMT failed");
