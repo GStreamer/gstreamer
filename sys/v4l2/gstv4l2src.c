@@ -308,27 +308,13 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
   peercaps = gst_pad_peer_query_caps (GST_BASE_SRC_PAD (basesrc), NULL);
   GST_DEBUG_OBJECT (basesrc, "caps of peer: %" GST_PTR_FORMAT, peercaps);
   LOG_CAPS (basesrc, peercaps);
+
   if (peercaps && !gst_caps_is_any (peercaps)) {
     GstCaps *icaps = NULL;
-    int i;
 
     /* Prefer the first caps we are compatible with that the peer proposed */
-    for (i = 0; i < gst_caps_get_size (peercaps); i++) {
-      /* get intersection */
-      GstCaps *ipcaps = gst_caps_copy_nth (peercaps, i);
-
-      GST_DEBUG_OBJECT (basesrc, "peer: %" GST_PTR_FORMAT, ipcaps);
-      LOG_CAPS (basesrc, ipcaps);
-
-      icaps = gst_caps_intersect (thiscaps, ipcaps);
-      gst_caps_unref (ipcaps);
-
-      if (!gst_caps_is_empty (icaps))
-        break;
-
-      gst_caps_unref (icaps);
-      icaps = NULL;
-    }
+    icaps = gst_caps_intersect_full (peercaps, thiscaps,
+        GST_CAPS_INTERSECT_FIRST);
 
     GST_DEBUG_OBJECT (basesrc, "intersect: %" GST_PTR_FORMAT, icaps);
     LOG_CAPS (basesrc, icaps);
@@ -343,6 +329,7 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
 
         if (gst_structure_get_int (s, "width", &twidth)
             && gst_structure_get_int (s, "height", &theight)) {
+          int i;
 
           /* Walk the structure backwards to get the first entry of the
            * smallest resolution bigger (or equal to) the preferred resolution)
