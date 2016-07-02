@@ -90,7 +90,12 @@ gst_v4l2radio_fill_channel_list (GstV4l2Radio * radio)
   if (res < 0)
     goto caps_failed;
 
-  if (!(vc.capabilities & V4L2_CAP_TUNER))
+  if (vc.capabilities & V4L2_CAP_DEVICE_CAPS)
+    v4l2object->device_caps = vc.device_caps;
+  else
+    v4l2object->device_caps = vc.capabilities;
+
+  if (!(v4l2object->device_caps & V4L2_CAP_TUNER))
     goto not_a_tuner;
 
   /* getting audio input */

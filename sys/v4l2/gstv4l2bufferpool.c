@@ -716,7 +716,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
        * poll before that will always fail. Doing an empty read, forces the
        * queue to be initialized now. We only do this if we have a streaming
        * driver. */
-      if (obj->vcap.capabilities & V4L2_CAP_STREAMING)
+      if (obj->device_caps & V4L2_CAP_STREAMING)
         v4l2_read (obj->video_fd, NULL, 0);
 #endif
       break;
