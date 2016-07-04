@@ -295,7 +295,6 @@ compare_tags (GstValidateMediaDescriptor * ref,
 static gboolean
 stream_id_is_equal (const gchar * uri, const gchar * rid, const gchar * cid)
 {
-  gboolean is_file = g_str_has_prefix (uri, "file://");
   GChecksum *cs;
   const gchar *stream_id;
 
@@ -303,8 +302,9 @@ stream_id_is_equal (const gchar * uri, const gchar * rid, const gchar * cid)
   if (g_strcmp0 (rid, cid) == 0)
     return TRUE;
 
-  /* If it's not from file, it should have been the same */
-  if (!is_file)
+  /* If it's not from file or from our local http server, it should have been the same */
+  if (!g_str_has_prefix (uri, "file://")
+      && !g_str_has_prefix (uri, "http://127.0.0.1"))
     return FALSE;
 
   /* taken from basesrc, compute the reference stream-id */
