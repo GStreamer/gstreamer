@@ -36,6 +36,12 @@ GstCaps *__gst_audio_element_proxy_getcaps (GstElement * element, GstPad * sinkp
                                             GstPad * srcpad, GstCaps * initial_caps,
                                             GstCaps * filter);
 
+G_GNUC_INTERNAL
+gboolean __gst_audio_encoded_audio_convert (GstAudioInfo * fmt, gint64 bytes,
+                                            gint64 samples, GstFormat src_format,
+                                            gint64 src_value, GstFormat * dest_format,
+                                            gint64 * dest_value);
+
 G_END_DECLS
 
 #endif
