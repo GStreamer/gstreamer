@@ -224,7 +224,7 @@ create_buffer_list (void)
 }
 
 static GstFlowReturn
-callback_function_sample (GstAppSink * appsink, gpointer p_counter)
+callback_function_sample_fallback (GstAppSink * appsink, gpointer p_counter)
 {
   GstSample *sample;
   GstBuffer *buf;
@@ -260,16 +260,50 @@ callback_function_sample (GstAppSink * appsink, gpointer p_counter)
   return GST_FLOW_OK;
 }
 
+static GstFlowReturn
+callback_function_sample (GstAppSink * appsink, gpointer p_counter)
+{
+  GstSample *sample;
+  GstBufferList *list;
+  gint *p_int_counter = p_counter;
+  guint len;
+  gint i;
+
+  sample = gst_app_sink_pull_sample (appsink);
+  list = gst_sample_get_buffer_list (sample);
+  fail_unless (GST_IS_BUFFER_LIST (list));
+  len = gst_buffer_list_length (list);
+  fail_unless_equals_int (len, 3);
+
+  for (i = 0; i < len; i++) {
+    GstBuffer *buf = gst_buffer_list_get (list, i);
+    fail_unless_equals_int (gst_buffer_get_size (buf), sizeof (gint));
+    gst_check_buffer_data (buf, &values[i], sizeof (gint));
+  }
+
+  gst_sample_unref (sample);
+
+  *p_int_counter += 1;
+
+  return GST_FLOW_OK;
+}
+
 GST_START_TEST (test_buffer_list_fallback)
 {
   GstElement *sink;
   GstBufferList *list;
   GstAppSinkCallbacks callbacks = { NULL };
   gint counter = 0;
+  gboolean buffer_list_support;
 
   sink = setup_appsink ();
 
-  callbacks.new_sample = callback_function_sample;
+  /* verify that the buffer list support is disabled per default */
+  g_object_get (sink, "buffer-list", &buffer_list_support, NULL);
+  fail_unless (buffer_list_support == FALSE);
+
+
+  callbacks.new_sample = callback_function_sample_fallback;
 
   gst_app_sink_set_callbacks (GST_APP_SINK (sink), &callbacks, &counter, NULL);
 
@@ -286,6 +320,35 @@ GST_START_TEST (test_buffer_list_fallback)
 
 GST_END_TEST;
 
+GST_START_TEST (test_buffer_list_support)
+{
+  GstElement *sink;
+  GstBufferList *list;
+  GstAppSinkCallbacks callbacks = { NULL };
+  gint counter = 0;
+
+  sink = setup_appsink ();
+
+  /* enable buffer list support */
+  g_object_set (sink, "buffer-list", TRUE, NULL);
+
+  callbacks.new_sample = callback_function_sample;
+
+  gst_app_sink_set_callbacks (GST_APP_SINK (sink), &callbacks, &counter, NULL);
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  list = create_buffer_list ();
+  fail_unless (gst_pad_push_list (mysrcpad, list) == GST_FLOW_OK);
+
+  fail_unless_equals_int (counter, 1);
+
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsink (sink);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_buffer_list_fallback_signal)
 {
   GstElement *sink;
@@ -293,6 +356,36 @@ GST_START_TEST (test_buffer_list_fallback_signal)
   gint counter = 0;
 
   sink = setup_appsink ();
+
+  /* C calling convention to the rescue.. */
+  g_signal_connect (sink, "new-sample",
+      G_CALLBACK (callback_function_sample_fallback), &counter);
+
+  g_object_set (sink, "emit-signals", TRUE, NULL);
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  list = create_buffer_list ();
+  fail_unless (gst_pad_push_list (mysrcpad, list) == GST_FLOW_OK);
+
+  fail_unless_equals_int (counter, 3);
+
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsink (sink);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_buffer_list_signal)
+{
+  GstElement *sink;
+  GstBufferList *list;
+  gint counter = 0;
+
+  sink = setup_appsink ();
+
+  /* enable buffer list support */
+  g_object_set (sink, "buffer-list", TRUE, NULL);
 
   /* C calling convention to the rescue.. */
   g_signal_connect (sink, "new-sample", G_CALLBACK (callback_function_sample),
@@ -305,7 +398,7 @@ GST_START_TEST (test_buffer_list_fallback_signal)
   list = create_buffer_list ();
   fail_unless (gst_pad_push_list (mysrcpad, list) == GST_FLOW_OK);
 
-  fail_unless_equals_int (counter, 3);
+  fail_unless_equals_int (counter, 1);
 
   ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_appsink (sink);
@@ -422,7 +515,9 @@ appsink_suite (void)
   tcase_add_test (tc_chain, test_notify0);
   tcase_add_test (tc_chain, test_notify1);
   tcase_add_test (tc_chain, test_buffer_list_fallback);
+  tcase_add_test (tc_chain, test_buffer_list_support);
   tcase_add_test (tc_chain, test_buffer_list_fallback_signal);
+  tcase_add_test (tc_chain, test_buffer_list_signal);
   tcase_add_test (tc_chain, test_segment);
   tcase_add_test (tc_chain, test_pull_with_timeout);
 
