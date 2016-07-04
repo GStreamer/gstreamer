@@ -1903,7 +1903,7 @@ gst_audio_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   dec->priv->ctx.had_input_data = TRUE;
 
   if (!dec->priv->expecting_discont_buf &&
-    GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
+      GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
     gint64 samples, ts;
 
     /* track present position */
@@ -2012,10 +2012,18 @@ gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
 
   for (i = 0; i < caps_size; i++) {
     structure = gst_caps_get_structure (caps, i);
-    gst_structure_fixate_field_nearest_int (structure,
-        "channels", GST_AUDIO_DEF_CHANNELS);
-    gst_structure_fixate_field_nearest_int (structure,
-        "rate", GST_AUDIO_DEF_RATE);
+    if (gst_structure_has_field (structure, "channels"))
+      gst_structure_fixate_field_nearest_int (structure,
+          "channels", GST_AUDIO_DEF_CHANNELS);
+    else
+      gst_structure_set (structure, "channels", G_TYPE_INT,
+          GST_AUDIO_DEF_CHANNELS, NULL);
+    if (gst_structure_has_field (structure, "rate"))
+      gst_structure_fixate_field_nearest_int (structure,
+          "rate", GST_AUDIO_DEF_RATE);
+    else
+      gst_structure_set (structure, "rate", G_TYPE_INT, GST_AUDIO_DEF_RATE,
+          NULL);
   }
   caps = gst_caps_fixate (caps);
   structure = gst_caps_get_structure (caps, 0);
