@@ -1405,11 +1405,32 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
       if (!gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (parse))) {
         GstCaps *default_caps = NULL;
         if ((default_caps = gst_base_parse_negotiate_default_caps (parse))) {
+          GList *l;
+          GstEvent *caps_event = gst_event_new_caps (default_caps);
+
           GST_DEBUG_OBJECT (parse,
               "Store caps event to pending list for initial pre-rolling");
-          parse->priv->pending_events =
-              g_list_prepend (parse->priv->pending_events,
-              gst_event_new_caps (default_caps));
+
+          /* Events are in decreasing order. Go down the list until we
+           * find the first pre-CAPS event and insert our CAPS event there.
+           *
+           * There should be a SEGMENT event already, which is > CAPS */
+          for (l = parse->priv->pending_events; l; l = l->next) {
+            GstEvent *e = l->data;
+
+            if (GST_EVENT_TYPE (e) < GST_EVENT_CAPS) {
+              parse->priv->pending_events =
+                  g_list_insert_before (parse->priv->pending_events, l,
+                  caps_event);
+              break;
+            }
+          }
+          /* No pending event that is < CAPS, so we have to add it at the very
+           * end of the list */
+          if (!l) {
+            parse->priv->pending_events =
+                g_list_append (parse->priv->pending_events, caps_event);
+          }
           gst_caps_unref (default_caps);
         } else {
           gst_event_unref (event);
