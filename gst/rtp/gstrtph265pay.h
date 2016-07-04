@@ -51,7 +51,6 @@ struct _GstRtpH265Pay
 {
   GstRTPBasePayload payload;
 
-  guint profile;
   GPtrArray *sps, *pps, *vps;
 
   GstH265StreamFormat stream_format;

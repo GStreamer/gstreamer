@@ -53,13 +53,12 @@ static GstStaticPadTemplate gst_rtp_h265_pay_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (
-        /* Only bytestream format supported for now */
+        /* only hvc1 and byte-stream formats supported for now */
+        "video/x-h265, stream-format = (string) hvc1, alignment = (string) au; "
         /* "video/x-h265, "
-           "stream-format = (string) hvc1, alignment = (string) au; "
-           "video/x-h265, "
            "stream-format = (string) hev1, alignment = (string) au; " */
-        "video/x-h265, "
-        "stream-format = (string) byte-stream, alignment = (string) { nal, au }")
+        "video/x-h265, stream-format = (string) byte-stream, "
+        "alignment = (string) { nal, au }")
     );
 
 static GstStaticPadTemplate gst_rtp_h265_pay_src_template =
@@ -167,7 +166,7 @@ gst_rtp_h265_pay_class_init (GstRtpH265PayClass * klass)
 
   gst_element_class_set_static_metadata (gstelement_class, "RTP H265 payloader",
       "Codec/Payloader/Network/RTP",
-      "Payload-encode H265 video into RTP packets (based on draft-ietf-payload-rtp-h265-03.txt)",
+      "Payload-encode H265 video into RTP packets (RFC 7798)",
       "Jurgen Slowack <jurgenslowack@gmail.com>");
 
   gstelement_class->change_state =
@@ -186,7 +185,6 @@ static void
 gst_rtp_h265_pay_init (GstRtpH265Pay * rtph265pay)
 {
   rtph265pay->queue = g_array_new (FALSE, FALSE, sizeof (guint));
-  rtph265pay->profile = 0;
   rtph265pay->sps = g_ptr_array_new_with_free_func (
       (GDestroyNotify) gst_buffer_unref);
   rtph265pay->pps = g_ptr_array_new_with_free_func (
@@ -241,6 +239,32 @@ static const gchar all_levels[][4] = {
   "6.2"
 };
 
+static gboolean
+parse_field (GstStructure * s, const gchar * field, gulong min, gulong max,
+    guint8 * result)
+{
+  const gchar *str;
+
+  g_assert (result != NULL);
+
+  str = gst_structure_get_string (s, field);
+  if (str != NULL && *str != '\0') {
+    gulong value;
+    gchar *end;
+
+    value = strtoul (str, &end, 10);
+    if (*end == '\0' && value >= min && value <= max) {
+      *result = (guint8) value;
+    } else {
+      return FALSE;
+    }
+  } else {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static GstCaps *
 gst_rtp_h265_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
     GstCaps * filter)
@@ -249,7 +273,6 @@ gst_rtp_h265_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
   GstCaps *allowed_caps;
   GstCaps *caps;
   GstCaps *icaps;
-  gboolean append_unrestricted;
   guint i;
 
   allowed_caps =
@@ -272,54 +295,48 @@ gst_rtp_h265_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
   }
 
   caps = gst_caps_new_empty ();
-
-  append_unrestricted = FALSE;
   for (i = 0; i < gst_caps_get_size (allowed_caps); i++) {
     GstStructure *s = gst_caps_get_structure (allowed_caps, i);
     GstStructure *new_s = gst_structure_new_empty ("video/x-h265");
-    const gchar *profile_level_id;
+    guint8 ptl[12] = { 0, };
+    guint8 value;
 
-    profile_level_id = gst_structure_get_string (s, "profile-level-id");
-
-    if (profile_level_id && strlen (profile_level_id) == 6) {   /* Code taken from gstrtph264pay.c, needs to be revised for H.265 */
+    if (parse_field (s, "profile-id", 0, 31, &value)) {
       const gchar *profile;
+
+      ptl[0] = value;
+      profile = gst_codec_utils_h265_get_profile (ptl, sizeof (ptl));
+      if (profile != NULL) {
+        GST_DEBUG_OBJECT (payload, "profile %s", profile);
+        gst_structure_set (new_s, "profile", G_TYPE_STRING, profile, NULL);
+      } else {
+        GST_WARNING_OBJECT (payload, "invalid profile-id %d in caps", value);
+      }
+    } else {
+      GST_DEBUG_OBJECT (payload, "no valid profile-id in caps");
+    }
+
+    if (parse_field (s, "tier-flag", 0, 1, &value)) {
+      const gchar *tier;
+
+      ptl[0] |= value << 5;
+      tier = gst_codec_utils_h265_get_tier (ptl, sizeof (ptl));
+      GST_DEBUG_OBJECT (payload, "tier %s", tier);
+      gst_structure_set (new_s, "tier", G_TYPE_STRING, tier, NULL);
+    } else {
+      GST_DEBUG_OBJECT (payload, "no valid tier-flag in caps");
+    }
+
+    if (parse_field (s, "level-id", 0, 255, &value)) {
       const gchar *level;
-      long int spsint;
-      guint8 sps[3];
 
-      spsint = strtol (profile_level_id, NULL, 16);
-      sps[0] = spsint >> 16;
-      sps[1] = spsint >> 8;
-      sps[2] = spsint;
-
-      profile = gst_codec_utils_h265_get_profile (sps, 3);
-      level = gst_codec_utils_h265_get_level (sps, 3);
-
-      if (profile && level) {
-        GST_LOG_OBJECT (payload, "In caps, have profile %s and level %s",
-            profile, level);
-
-        if (!strcmp (profile, "main"))
-          gst_structure_set (new_s, "profile", G_TYPE_STRING, profile, NULL);
-        else {
-          GValue val = { 0, };
-          GValue profiles = { 0, };
-
-          g_value_init (&profiles, GST_TYPE_LIST);
-          g_value_init (&val, G_TYPE_STRING);
-
-          g_value_set_static_string (&val, profile);
-          gst_value_list_append_value (&profiles, &val);
-
-          g_value_set_static_string (&val, "main");
-          gst_value_list_append_value (&profiles, &val);
-
-          gst_structure_take_value (new_s, "profile", &profiles);
-        }
-
-        if (!strcmp (level, "1"))
+      ptl[11] = value;
+      level = gst_codec_utils_h265_get_level (ptl, sizeof (ptl));
+      if (level != NULL) {
+        GST_DEBUG_OBJECT (payload, "level %s", level);
+        if (strcmp (level, "1") == 0) {
           gst_structure_set (new_s, "level", G_TYPE_STRING, level, NULL);
-        else {
+        } else {
           GValue levels = { 0, };
           GValue val = { 0, };
           int j;
@@ -336,24 +353,13 @@ gst_rtp_h265_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
           gst_structure_take_value (new_s, "level", &levels);
         }
       } else {
-        /* Invalid profile-level-id means main */
-
-        gst_structure_set (new_s, "profile", G_TYPE_STRING, "main", NULL);
+        GST_WARNING_OBJECT (payload, "invalid level-id %d in caps", value);
       }
     } else {
-      /* No profile-level-id means main or unrestricted */
-
-      gst_structure_set (new_s, "profile", G_TYPE_STRING, "main", NULL);
-      append_unrestricted = TRUE;
+      GST_DEBUG_OBJECT (payload, "no valid level-id in caps");
     }
 
     caps = gst_caps_merge_structure (caps, new_s);
-  }
-
-  if (append_unrestricted) {
-    caps =
-        gst_caps_merge_structure (caps, gst_structure_new ("video/x-h265", NULL,
-            NULL));
   }
 
   icaps = gst_caps_intersect (caps, template_caps);
@@ -369,27 +375,26 @@ done:
   return caps;
 }
 
-/* take the currently configured VPS, SPS and PPS lists and set them on the caps as
- * sprop-parameter-sets */
+/* take the currently configured VPS, SPS and PPS lists and set them on the
+ * caps */
 static gboolean
 gst_rtp_h265_pay_set_vps_sps_pps (GstRTPBasePayload * basepayload)
 {
   GstRtpH265Pay *payloader = GST_RTP_H265_PAY (basepayload);
-  gchar *profile;
   gchar *set;
-  GString *sprops;
+  GString *vps;
+  GString *sps;
+  GString *pps;
   guint count;
   gboolean res;
   GstMapInfo map;
   guint i;
 
-  sprops = g_string_new ("");
+  vps = g_string_new ("");
+  sps = g_string_new ("");
+  pps = g_string_new ("");
   count = 0;
 
-  GST_DEBUG_OBJECT (payloader,
-      "Entering function gst_rtp_h265_pay_set_vps_sps_pps");
-
-  /* build the sprop-parameter-sets */
   for (i = 0; i < payloader->vps->len; i++) {
     GstBuffer *vps_buf =
         GST_BUFFER_CAST (g_ptr_array_index (payloader->vps, i));
@@ -398,7 +403,7 @@ gst_rtp_h265_pay_set_vps_sps_pps (GstRTPBasePayload * basepayload)
     set = g_base64_encode (map.data, map.size);
     gst_buffer_unmap (vps_buf, &map);
 
-    g_string_append_printf (sprops, "%s%s", count ? "," : "", set);
+    g_string_append_printf (vps, "%s%s", i ? "," : "", set);
     g_free (set);
     count++;
   }
@@ -410,7 +415,7 @@ gst_rtp_h265_pay_set_vps_sps_pps (GstRTPBasePayload * basepayload)
     set = g_base64_encode (map.data, map.size);
     gst_buffer_unmap (sps_buf, &map);
 
-    g_string_append_printf (sprops, "%s%s", count ? "," : "", set);
+    g_string_append_printf (sps, "%s%s", i ? "," : "", set);
     g_free (set);
     count++;
   }
@@ -422,22 +427,23 @@ gst_rtp_h265_pay_set_vps_sps_pps (GstRTPBasePayload * basepayload)
     set = g_base64_encode (map.data, map.size);
     gst_buffer_unmap (pps_buf, &map);
 
-    g_string_append_printf (sprops, "%s%s", count ? "," : "", set);
+    g_string_append_printf (pps, "%s%s", i ? "," : "", set);
     g_free (set);
     count++;
   }
 
   if (G_LIKELY (count)) {
-    /* profile is 24 bit. Force it to respect the limit */
-    profile = g_strdup_printf ("%06x", payloader->profile & 0xffffff);
     /* combine into output caps */
     res = gst_rtp_base_payload_set_outcaps (basepayload,
-        "sprop-parameter-sets", G_TYPE_STRING, sprops->str, NULL);
-    g_free (profile);
+        "sprop-vps", G_TYPE_STRING, vps->str,
+        "sprop-sps", G_TYPE_STRING, sps->str,
+        "sprop-pps", G_TYPE_STRING, pps->str, NULL);
   } else {
     res = gst_rtp_base_payload_set_outcaps (basepayload, NULL);
   }
-  g_string_free (sprops, TRUE);
+  g_string_free (vps, TRUE);
+  g_string_free (sps, TRUE);
+  g_string_free (pps, TRUE);
 
   return res;
 }
@@ -505,8 +511,7 @@ gst_rtp_h265_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
       goto wrong_version;
 
     /* profile_space | tier_flag | profile_idc */
-    rtph265pay->profile = data[1];
-    GST_DEBUG_OBJECT (rtph265pay, "profile %06x", rtph265pay->profile);
+    GST_DEBUG_OBJECT (rtph265pay, "profile %06x", data[1]);
 
     /* profile_compatibility_flags */
     for (i = 2; i < 6; i++) {
@@ -773,7 +778,7 @@ gst_rtp_h265_pay_decode_nal (GstRtpH265Pay * payloader,
     /* encode the entire NAL in base64 */
     GST_DEBUG_OBJECT (payloader, "found %s (type 0x%x), size %u",
         type == GST_H265_NAL_VPS ? "VPS" : type == GST_H265_NAL_SPS ?
-            "SPS" : "PPS", type, size);
+        "SPS" : "PPS", type, size);
 
     nal = gst_buffer_new_allocate (NULL, size, NULL);
     gst_buffer_fill (nal, 0, data, size);
@@ -1189,7 +1194,7 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GST_DEBUG_OBJECT (basepayload,
         "found first start at %u, bytes left %" G_GSIZE_FORMAT, next, size);
 
-    /* first pass to locate NALs and parse SPS/PPS */
+    /* first pass to locate NALs and parse VPS/SPS/PPS */
     while (size > 4) {
       /* skip start code */
       data += 3;
@@ -1217,10 +1222,9 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
           nal_len);
 
       /* We know our stream is a valid H265 NAL packet,
-       * go parse it for SPS/PPS to enrich the caps */
+       * go parse it for VPS/SPS/PPS to enrich the caps */
       /* order: make sure to check nal */
-      update =
-          gst_rtp_h265_pay_decode_nal (rtph265pay, data, nal_len, dts, pts)
+      update = gst_rtp_h265_pay_decode_nal (rtph265pay, data, nal_len, dts, pts)
           || update;
 
       /* move to next NAL packet */
