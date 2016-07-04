@@ -1385,8 +1385,14 @@ gst_video_decoder_sink_event (GstPad * pad, GstObject * parent,
 static inline gboolean
 gst_video_decoder_do_byte (GstVideoDecoder * dec)
 {
-  return dec->priv->do_estimate_rate && (dec->priv->bytes_out > 0)
+  gboolean ret;
+
+  GST_OBJECT_LOCK (dec);
+  ret = dec->priv->do_estimate_rate && (dec->priv->bytes_out > 0)
       && (dec->priv->time > GST_SECOND);
+  GST_OBJECT_UNLOCK (dec);
+
+  return ret;
 }
 
 static gboolean
@@ -1766,11 +1772,11 @@ gst_video_decoder_sink_query_default (GstVideoDecoder * decoder,
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+      GST_OBJECT_LOCK (decoder);
       res =
           __gst_video_encoded_video_convert (priv->bytes_out, priv->time,
           src_fmt, src_val, &dest_fmt, &dest_val);
-      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+      GST_OBJECT_UNLOCK (decoder);
       if (!res)
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
@@ -2049,8 +2055,10 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
   g_list_free_full (priv->timestamps, (GDestroyNotify) timestamp_free);
   priv->timestamps = NULL;
 
+  GST_OBJECT_LOCK (decoder);
   priv->bytes_out = 0;
   priv->time = 0;
+  GST_OBJECT_UNLOCK (decoder);
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 }
@@ -3079,6 +3087,7 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
   }
 
   /* update rate estimate */
+  GST_OBJECT_LOCK (decoder);
   priv->bytes_out += gst_buffer_get_size (buf);
   if (GST_CLOCK_TIME_IS_VALID (duration)) {
     priv->time += duration;
@@ -3089,6 +3098,7 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
     /* better none than nothing valid */
     priv->time = GST_CLOCK_TIME_NONE;
   }
+  GST_OBJECT_UNLOCK (decoder);
 
   GST_DEBUG_OBJECT (decoder, "pushing buffer %p of size %" G_GSIZE_FORMAT ", "
       "PTS %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
