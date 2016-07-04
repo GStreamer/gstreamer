@@ -355,8 +355,10 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
 
   priv->drained = TRUE;
 
+  GST_OBJECT_LOCK (encoder);
   priv->bytes = 0;
   priv->time = 0;
+  GST_OBJECT_UNLOCK (encoder);
 
   priv->time_adjustment = GST_CLOCK_TIME_NONE;
 
@@ -1266,9 +1268,11 @@ gst_video_encoder_src_query_default (GstVideoEncoder * enc, GstQuery * query)
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      GST_OBJECT_LOCK (enc);
       res =
           gst_video_encoded_video_convert (priv->bytes, priv->time, src_fmt,
           src_val, &dest_fmt, &dest_val);
+      GST_OBJECT_UNLOCK (enc);
       if (!res)
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
@@ -2122,6 +2126,7 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   GST_BUFFER_DTS (frame->output_buffer) = frame->dts;
   GST_BUFFER_DURATION (frame->output_buffer) = frame->duration;
 
+  GST_OBJECT_LOCK (encoder);
   /* update rate estimate */
   priv->bytes += gst_buffer_get_size (frame->output_buffer);
   if (GST_CLOCK_TIME_IS_VALID (frame->duration)) {
@@ -2130,6 +2135,7 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
     /* better none than nothing valid */
     priv->time = GST_CLOCK_TIME_NONE;
   }
+  GST_OBJECT_UNLOCK (encoder);
 
   if (G_UNLIKELY (send_headers || priv->new_headers)) {
     GList *tmp, *copy = NULL;
@@ -2148,7 +2154,9 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
     for (tmp = priv->headers; tmp; tmp = tmp->next) {
       GstBuffer *tmpbuf = GST_BUFFER (tmp->data);
 
+      GST_OBJECT_LOCK (encoder);
       priv->bytes += gst_buffer_get_size (tmpbuf);
+      GST_OBJECT_UNLOCK (encoder);
       if (G_UNLIKELY (discont)) {
         GST_LOG_OBJECT (encoder, "marking discont");
         GST_BUFFER_FLAG_SET (tmpbuf, GST_BUFFER_FLAG_DISCONT);
