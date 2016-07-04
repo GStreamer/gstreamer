@@ -3370,7 +3370,7 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_WEBRTCDSP, true)
 AG_GST_CHECK_FEATURE(WEBRTCDSP, [WebRTC Audio Processing], webrtcdsp, [
   AC_LANG_PUSH([C++])
   old_CPPFLAGS=$CPPFLAGS
-  CPPFLAGS=-std=c++11 $CPPFLAGS
+  CPPFLAGS="-std=c++11 $CPPFLAGS"
   AG_GST_PKG_CHECK_MODULES(WEBRTCDSP, webrtc-audio-processing = 0.2)
   AC_CHECK_HEADER([typeindex],[],[HAVE_WEBRTCDSP=no])
   CPPFLAGS=$old_CPPFLAGS
