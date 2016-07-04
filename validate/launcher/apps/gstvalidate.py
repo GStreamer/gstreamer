@@ -624,6 +624,11 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             if uri is None:
                 uri = media_descriptor.get_uri()
 
+            # Adjust local http uri
+            if self.options.http_server_port != 8079 and \
+               uri.startswith("http://127.0.0.1:8079/"):
+                uri = uri.replace("http://127.0.0.1:8079/",
+                                  "http://127.0.0.1:%r/" % self.options.http_server_port, 1)
             media_descriptor.set_protocol(urlparse.urlparse(uri).scheme)
             for caps2, prot in GST_VALIDATE_CAPS_TO_PROTOCOL:
                 if caps2 == caps:
@@ -715,7 +720,8 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 uri = test.media_descriptor.get_uri()
 
                 if protocol in [Protocols.HTTP, Protocols.HLS, Protocols.DASH] and \
-                        "127.0.0.1:%s" % (self.options.http_server_port) in uri:
+                        "127.0.0.1:%s" % (self.options.http_server_port) in uri or \
+                        "127.0.0.1:8079" in uri:
                     return True
         return False
 

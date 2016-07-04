@@ -472,7 +472,7 @@ Note that all testsuite should be inside python modules, so the directory should
         "Handle the HTTP server to be created")
     http_server_group.add_argument(
         "--http-server-port", dest="http_server_port",
-        help="Port on which to run the http server on localhost")
+        help="Port on which to run the http server on localhost", type=int)
     http_server_group.add_argument(
         "--http-bandwith-limitation", dest="http_bandwith",
         help="The artificial bandwith limitation to introduce to the local server (in Bytes/sec) (default: 1 MBps)")
