@@ -1041,16 +1041,29 @@ gst_video_decoder_negotiate_default_caps (GstVideoDecoder * decoder)
   for (i = 0; i < caps_size; i++) {
     structure = gst_caps_get_structure (caps, i);
     /* Random 1280x720@30 for fixation */
-    gst_structure_fixate_field_nearest_int (structure, "width", 1280);
-    gst_structure_fixate_field_nearest_int (structure, "height", 720);
-    gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
-    if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
+    if (gst_structure_has_field (structure, "width"))
+      gst_structure_fixate_field_nearest_int (structure, "width", 1280);
+    else
+      gst_structure_set (structure, "width", G_TYPE_INT, 1280, NULL);
+
+    if (gst_structure_has_field (structure, "height"))
+      gst_structure_fixate_field_nearest_int (structure, "height", 720);
+    else
+      gst_structure_set (structure, "height", G_TYPE_INT, 720, NULL);
+
+    if (gst_structure_has_field (structure, "framerate"))
+      gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30,
+          1);
+    else
+      gst_structure_set (structure, "framerate", GST_TYPE_FRACTION, 30, 1,
+          NULL);
+
+    if (gst_structure_has_field (structure, "pixel-aspect-ratio"))
       gst_structure_fixate_field_nearest_fraction (structure,
           "pixel-aspect-ratio", 1, 1);
-    } else {
+    else
       gst_structure_set (structure, "pixel-aspect-ratio", GST_TYPE_FRACTION,
           1, 1, NULL);
-    }
   }
   caps = gst_caps_fixate (caps);
   structure = gst_caps_get_structure (caps, 0);
