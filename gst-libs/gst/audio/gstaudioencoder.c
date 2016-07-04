@@ -1848,77 +1848,6 @@ gst_audio_encoder_propose_allocation_default (GstAudioEncoder * enc,
   return TRUE;
 }
 
-/*
- * gst_audio_encoded_audio_convert:
- * @fmt: audio format of the encoded audio
- * @bytes: number of encoded bytes
- * @samples: number of encoded samples
- * @src_format: source format
- * @src_value: source value
- * @dest_format: destination format
- * @dest_value: destination format
- *
- * Helper function to convert @src_value in @src_format to @dest_value in
- * @dest_format for encoded audio data.  Conversion is possible between
- * BYTE and TIME format by using estimated bitrate based on
- * @samples and @bytes (and @fmt).
- */
-/* FIXME: make gst_audio_encoded_audio_convert() public? */
-static gboolean
-gst_audio_encoded_audio_convert (GstAudioInfo * fmt,
-    gint64 bytes, gint64 samples, GstFormat src_format,
-    gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
-{
-  gboolean res = FALSE;
-
-  g_return_val_if_fail (dest_format != NULL, FALSE);
-  g_return_val_if_fail (dest_value != NULL, FALSE);
-
-  if (G_UNLIKELY (src_format == *dest_format || src_value == 0 ||
-          src_value == -1)) {
-    if (dest_value)
-      *dest_value = src_value;
-    return TRUE;
-  }
-
-  if (samples == 0 || bytes == 0 || fmt->rate == 0) {
-    GST_DEBUG ("not enough metadata yet to convert");
-    goto exit;
-  }
-
-  bytes *= fmt->rate;
-
-  switch (src_format) {
-    case GST_FORMAT_BYTES:
-      switch (*dest_format) {
-        case GST_FORMAT_TIME:
-          *dest_value = gst_util_uint64_scale (src_value,
-              GST_SECOND * samples, bytes);
-          res = TRUE;
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    case GST_FORMAT_TIME:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          *dest_value = gst_util_uint64_scale (src_value, bytes,
-              samples * GST_SECOND);
-          res = TRUE;
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    default:
-      res = FALSE;
-  }
-
-exit:
-  return res;
-}
-
 /* FIXME ? are any of these queries (other than latency) an encoder's business
  * also, the conversion stuff might seem to make sense, but seems to not mind
  * segment stuff etc at all
@@ -1988,7 +1917,7 @@ gst_audio_encoder_src_query_default (GstAudioEncoder * enc, GstQuery * query)
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if (!(res = gst_audio_encoded_audio_convert (&enc->priv->ctx.info,
+      if (!(res = __gst_audio_encoded_audio_convert (&enc->priv->ctx.info,
                   enc->priv->bytes_out, enc->priv->samples_in, src_fmt, src_val,
                   &dest_fmt, &dest_val)))
         break;
