@@ -478,8 +478,10 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
 
   if (full) {
     enc->priv->active = FALSE;
+    GST_OBJECT_LOCK (enc);
     enc->priv->samples_in = 0;
     enc->priv->bytes_out = 0;
+    GST_OBJECT_UNLOCK (enc);
 
     g_list_foreach (enc->priv->ctx.headers, (GFunc) gst_buffer_unref, NULL);
     g_list_free (enc->priv->ctx.headers);
@@ -490,11 +492,13 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
       gst_object_unref (enc->priv->ctx.allocator);
     enc->priv->ctx.allocator = NULL;
 
+    GST_OBJECT_LOCK (enc);
     gst_caps_replace (&enc->priv->ctx.input_caps, NULL);
     gst_caps_replace (&enc->priv->ctx.caps, NULL);
 
     memset (&enc->priv->ctx, 0, sizeof (enc->priv->ctx));
     gst_audio_info_init (&enc->priv->ctx.info);
+    GST_OBJECT_UNLOCK (enc);
 
     if (enc->priv->upstream_tags) {
       gst_tag_list_unref (enc->priv->upstream_tags);
@@ -909,7 +913,9 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
           GST_BUFFER_OFFSET_END (tmpbuf) = priv->bytes_out + size;
         }
 
+        GST_OBJECT_LOCK (enc);
         priv->bytes_out += size;
+        GST_OBJECT_UNLOCK (enc);
 
         gst_pad_push (enc->srcpad, tmpbuf);
       }
@@ -971,7 +977,9 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
       }
     }
 
+    GST_OBJECT_LOCK (enc);
     priv->bytes_out += size;
+    GST_OBJECT_UNLOCK (enc);
 
     if (G_UNLIKELY (priv->discont)) {
       GST_LOG_OBJECT (enc, "marking discont");
@@ -1116,7 +1124,9 @@ gst_audio_encoder_push_buffers (GstAudioEncoder * enc, gboolean force)
     /* mark this already as consumed,
      * which it should be when subclass gives us data in exchange for samples */
     priv->offset += need;
+    GST_OBJECT_LOCK (enc);
     priv->samples_in += need / ctx->info.bpf;
+    GST_OBJECT_UNLOCK (enc);
 
     /* subclass might not want to be bothered with leftover data,
      * so take care of that here if so, otherwise pass along */
@@ -1428,8 +1438,10 @@ gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc, GstCaps * caps)
     res = klass->set_format (enc, &state);
 
   if (res) {
+    GST_OBJECT_LOCK (enc);
     ctx->info = state;
     gst_caps_replace (&enc->priv->ctx.input_caps, caps);
+    GST_OBJECT_UNLOCK (enc);
   } else {
     /* invalidate state to ensure no casual carrying on */
     GST_DEBUG_OBJECT (enc, "subclass did not accept format");
@@ -1715,8 +1727,11 @@ gst_audio_encoder_sink_query_default (GstAudioEncoder * enc, GstQuery * query)
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if (!(res = gst_audio_info_convert (&enc->priv->ctx.info,
-                  src_fmt, src_val, dest_fmt, &dest_val)))
+      GST_OBJECT_LOCK (enc);
+      res = gst_audio_info_convert (&enc->priv->ctx.info,
+          src_fmt, src_val, dest_fmt, &dest_val);
+      GST_OBJECT_UNLOCK (enc);
+      if (!res)
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       res = TRUE;
@@ -1917,9 +1932,12 @@ gst_audio_encoder_src_query_default (GstAudioEncoder * enc, GstQuery * query)
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if (!(res = __gst_audio_encoded_audio_convert (&enc->priv->ctx.info,
-                  enc->priv->bytes_out, enc->priv->samples_in, src_fmt, src_val,
-                  &dest_fmt, &dest_val)))
+      GST_OBJECT_LOCK (enc);
+      res = __gst_audio_encoded_audio_convert (&enc->priv->ctx.info,
+          enc->priv->bytes_out, enc->priv->samples_in, src_fmt, src_val,
+          &dest_fmt, &dest_val);
+      GST_OBJECT_UNLOCK (enc);
+      if (!res)
         break;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
