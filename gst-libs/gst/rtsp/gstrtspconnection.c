@@ -2161,11 +2161,13 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
     }
   }
 done:
+  conn->may_cancel = TRUE;
   return res;
 
   /* ERRORS */
 invalid_body_len:
   {
+    conn->may_cancel = TRUE;
     GST_DEBUG ("could not allocate body");
     return GST_RTSP_ERROR;
   }
