@@ -36,6 +36,16 @@ GstCaps *__gst_video_element_proxy_getcaps (GstElement * element, GstPad * sinkp
                                             GstPad * srcpad, GstCaps * initial_caps,
                                             GstCaps * filter);
 
+G_GNUC_INTERNAL
+gboolean __gst_video_encoded_video_convert (gint64 bytes, gint64 time,
+                                            GstFormat src_format, gint64 src_value,
+                                            GstFormat * dest_format, gint64 * dest_value);
+
+G_GNUC_INTERNAL
+gboolean __gst_video_rawvideo_convert (GstVideoCodecState * state, GstFormat src_format,
+                                       gint64 src_value, GstFormat * dest_format,
+                                       gint64 * dest_value);
+
 G_END_DECLS
 
 #endif

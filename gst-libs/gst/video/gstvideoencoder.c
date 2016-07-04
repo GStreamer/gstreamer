@@ -483,59 +483,6 @@ gst_video_encoder_init (GstVideoEncoder * encoder, GstVideoEncoderClass * klass)
   gst_video_encoder_reset (encoder, TRUE);
 }
 
-static gboolean
-gst_video_encoded_video_convert (gint64 bytes, gint64 time,
-    GstFormat src_format, gint64 src_value, GstFormat * dest_format,
-    gint64 * dest_value)
-{
-  gboolean res = FALSE;
-
-  g_return_val_if_fail (dest_format != NULL, FALSE);
-  g_return_val_if_fail (dest_value != NULL, FALSE);
-
-  if (G_UNLIKELY (src_format == *dest_format || src_value == 0 ||
-          src_value == -1)) {
-    if (dest_value)
-      *dest_value = src_value;
-    return TRUE;
-  }
-
-  if (bytes <= 0 || time <= 0) {
-    GST_DEBUG ("not enough metadata yet to convert");
-    goto exit;
-  }
-
-  switch (src_format) {
-    case GST_FORMAT_BYTES:
-      switch (*dest_format) {
-        case GST_FORMAT_TIME:
-          *dest_value = gst_util_uint64_scale (src_value, time, bytes);
-          res = TRUE;
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    case GST_FORMAT_TIME:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          *dest_value = gst_util_uint64_scale (src_value, bytes, time);
-          res = TRUE;
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    default:
-      GST_DEBUG ("unhandled conversion from %d to %d", src_format,
-          *dest_format);
-      res = FALSE;
-  }
-
-exit:
-  return res;
-}
-
 /**
  * gst_video_encoder_set_headers:
  * @encoder: a #GstVideoEncoder
@@ -836,6 +783,26 @@ gst_video_encoder_sink_query_default (GstVideoEncoder * encoder,
       res = TRUE;
       break;
     }
+    case GST_QUERY_CONVERT:
+    {
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
+
+      GST_DEBUG_OBJECT (encoder, "convert query");
+
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      GST_OBJECT_LOCK (encoder);
+      if (encoder->priv->input_state != NULL)
+        res = __gst_video_rawvideo_convert (encoder->priv->input_state,
+            src_fmt, src_val, &dest_fmt, &dest_val);
+      else
+        res = FALSE;
+      GST_OBJECT_UNLOCK (encoder);
+      if (!res)
+        goto error;
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      break;
+    }
     case GST_QUERY_ALLOCATION:
     {
       GstVideoEncoderClass *klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
@@ -848,6 +815,10 @@ gst_video_encoder_sink_query_default (GstVideoEncoder * encoder,
       res = gst_pad_query_default (pad, GST_OBJECT (encoder), query);
       break;
   }
+  return res;
+
+error:
+  GST_DEBUG_OBJECT (encoder, "query failed");
   return res;
 }
 
@@ -1267,7 +1238,7 @@ gst_video_encoder_src_query_default (GstVideoEncoder * enc, GstQuery * query)
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       res =
-          gst_video_encoded_video_convert (priv->bytes, priv->time, src_fmt,
+          __gst_video_encoded_video_convert (priv->bytes, priv->time, src_fmt,
           src_val, &dest_fmt, &dest_val);
       if (!res)
         goto error;

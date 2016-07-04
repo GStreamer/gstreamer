@@ -144,3 +144,114 @@ done:
 
   return fcaps;
 }
+
+gboolean
+__gst_video_rawvideo_convert (GstVideoCodecState * state,
+    GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 * dest_value)
+{
+  gboolean res = FALSE;
+  guint vidsize;
+  guint fps_n, fps_d;
+
+  g_return_val_if_fail (dest_format != NULL, FALSE);
+  g_return_val_if_fail (dest_value != NULL, FALSE);
+
+  if (src_format == *dest_format || src_value == 0 || src_value == -1) {
+    *dest_value = src_value;
+    return TRUE;
+  }
+
+  vidsize = GST_VIDEO_INFO_SIZE (&state->info);
+  fps_n = GST_VIDEO_INFO_FPS_N (&state->info);
+  fps_d = GST_VIDEO_INFO_FPS_D (&state->info);
+
+  if (src_format == GST_FORMAT_BYTES &&
+      *dest_format == GST_FORMAT_DEFAULT && vidsize) {
+    /* convert bytes to frames */
+    *dest_value = gst_util_uint64_scale_int (src_value, 1, vidsize);
+    res = TRUE;
+  } else if (src_format == GST_FORMAT_DEFAULT &&
+      *dest_format == GST_FORMAT_BYTES && vidsize) {
+    /* convert bytes to frames */
+    *dest_value = src_value * vidsize;
+    res = TRUE;
+  } else if (src_format == GST_FORMAT_DEFAULT &&
+      *dest_format == GST_FORMAT_TIME && fps_n) {
+    /* convert frames to time */
+    *dest_value = gst_util_uint64_scale (src_value, GST_SECOND * fps_d, fps_n);
+    res = TRUE;
+  } else if (src_format == GST_FORMAT_TIME &&
+      *dest_format == GST_FORMAT_DEFAULT && fps_d) {
+    /* convert time to frames */
+    *dest_value = gst_util_uint64_scale (src_value, fps_n, GST_SECOND * fps_d);
+    res = TRUE;
+  } else if (src_format == GST_FORMAT_TIME &&
+      *dest_format == GST_FORMAT_BYTES && fps_d && vidsize) {
+    /* convert time to bytes */
+    *dest_value = gst_util_uint64_scale (src_value,
+        fps_n * (guint64) vidsize, GST_SECOND * fps_d);
+    res = TRUE;
+  } else if (src_format == GST_FORMAT_BYTES &&
+      *dest_format == GST_FORMAT_TIME && fps_n && vidsize) {
+    /* convert bytes to time */
+    *dest_value = gst_util_uint64_scale (src_value,
+        GST_SECOND * fps_d, fps_n * (guint64) vidsize);
+    res = TRUE;
+  }
+
+  return res;
+}
+
+gboolean
+__gst_video_encoded_video_convert (gint64 bytes, gint64 time,
+    GstFormat src_format, gint64 src_value, GstFormat * dest_format,
+    gint64 * dest_value)
+{
+  gboolean res = FALSE;
+
+  g_return_val_if_fail (dest_format != NULL, FALSE);
+  g_return_val_if_fail (dest_value != NULL, FALSE);
+
+  if (G_UNLIKELY (src_format == *dest_format || src_value == 0 ||
+          src_value == -1)) {
+    if (dest_value)
+      *dest_value = src_value;
+    return TRUE;
+  }
+
+  if (bytes <= 0 || time <= 0) {
+    GST_DEBUG ("not enough metadata yet to convert");
+    goto exit;
+  }
+
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_TIME:
+          *dest_value = gst_util_uint64_scale (src_value, time, bytes);
+          res = TRUE;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          *dest_value = gst_util_uint64_scale (src_value, bytes, time);
+          res = TRUE;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    default:
+      GST_DEBUG ("unhandled conversion from %d to %d", src_format,
+          *dest_format);
+      res = FALSE;
+  }
+
+exit:
+  return res;
+}
