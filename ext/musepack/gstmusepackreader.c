@@ -77,7 +77,7 @@ gst_musepack_reader_peek (mpc_reader * this, void *ptr, mpc_int32_t size)
     return 0;
   }
 
-  read = MIN (GST_BUFFER_SIZE (buf), size);
+  read = MIN (gst_buffer_get_size (buf), size);
 
   if (read < size) {
     GST_WARNING_OBJECT (musepackdec, "Short read: got only %u bytes of %u "
@@ -86,7 +86,7 @@ gst_musepack_reader_peek (mpc_reader * this, void *ptr, mpc_int32_t size)
     /* GST_ELEMENT_ERROR (musepackdec, RESOURCE, READ, (NULL), (NULL)); */
   }
 
-  memcpy (ptr, GST_BUFFER_DATA (buf), read);
+  gst_buffer_extract (buf, 0, ptr, read);
   gst_buffer_unref (buf);
   return read;
 }
@@ -161,10 +161,14 @@ gst_musepack_reader_get_size (mpc_reader * this)
 {
   GstMusepackDec *dec = GST_MUSEPACK_DEC (this->data);
 #endif
-  GstFormat format = GST_FORMAT_BYTES;
-  gint64 length = -1;
+  GstQuery *query;
+  GstFormat format;
+  gint64 length;
 
-  if (!gst_pad_query_peer_duration (dec->sinkpad, &format, &length))
+  query = gst_query_new_duration (GST_FORMAT_BYTES);
+  if (gst_pad_peer_query (dec->sinkpad, query))
+    gst_query_parse_duration (query, &format, &length);
+  else
     length = -1;
 
   return (mpc_int32_t) length;

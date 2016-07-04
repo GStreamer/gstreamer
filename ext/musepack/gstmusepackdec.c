@@ -19,10 +19,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -44,43 +40,50 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #ifdef MPC_FIXED_POINT
-#define BASE_CAPS \
-  "audio/x-raw-int, " \
-    "signed = (bool) TRUE, " \
-    "width = (int) 32, " \
-    "depth = (int) 32"
+# if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#  define GST_MPC_FORMAT "S32LE"
+# else
+#  define GST_MPC_FORMAT "S32BE"
+# endif
 #else
-#define BASE_CAPS \
-  "audio/x-raw-float, " \
-    "width = (int) 32"
+# if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#  define GST_MPC_FORMAT "F32LE"
+# else
+#  define GST_MPC_FORMAT "F32BE"
+# endif
 #endif
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (BASE_CAPS ", "
-        "endianness = (int) BYTE_ORDER, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_MPC_FORMAT ", "
+        "layout = (string) interleaved, "
         "rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 static void gst_musepackdec_dispose (GObject * obj);
 
-static gboolean gst_musepackdec_src_event (GstPad * pad, GstEvent * event);
-static const GstQueryType *gst_musepackdec_get_src_query_types (GstPad * pad);
-static gboolean gst_musepackdec_src_query (GstPad * pad, GstQuery * query);
-static gboolean gst_musepackdec_sink_activate (GstPad * sinkpad);
-static gboolean
-gst_musepackdec_sink_activate_pull (GstPad * sinkpad, gboolean active);
+static gboolean gst_musepackdec_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_musepackdec_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
+static gboolean gst_musepackdec_sink_activate (GstPad * sinkpad,
+    GstObject * parent);
+static gboolean gst_musepackdec_sink_activate_mode (GstPad * sinkpad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 
 static void gst_musepackdec_loop (GstPad * sinkpad);
 static GstStateChangeReturn
 gst_musepackdec_change_state (GstElement * element, GstStateChange transition);
 
-GST_BOILERPLATE (GstMusepackDec, gst_musepackdec, GstElement, GST_TYPE_ELEMENT);
+#define parent_class gst_musepackdec_parent_class
+G_DEFINE_TYPE (GstMusepackDec, gst_musepackdec, GST_TYPE_ELEMENT);
 
 static void
-gst_musepackdec_base_init (gpointer klass)
+gst_musepackdec_class_init (GstMusepackDecClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_static_pad_template (element_class, &src_template);
@@ -89,19 +92,15 @@ gst_musepackdec_base_init (gpointer klass)
   gst_element_class_set_static_metadata (element_class, "Musepack decoder",
       "Codec/Decoder/Audio",
       "Musepack decoder", "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-}
 
-static void
-gst_musepackdec_class_init (GstMusepackDecClass * klass)
-{
-  GST_ELEMENT_CLASS (klass)->change_state =
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_musepackdec_dispose);
+
+  element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_musepackdec_change_state);
-
-  G_OBJECT_CLASS (klass)->dispose = GST_DEBUG_FUNCPTR (gst_musepackdec_dispose);
 }
 
 static void
-gst_musepackdec_init (GstMusepackDec * musepackdec, GstMusepackDecClass * klass)
+gst_musepackdec_init (GstMusepackDec * musepackdec)
 {
   musepackdec->offset = 0;
   musepackdec->rate = 0;
@@ -116,8 +115,8 @@ gst_musepackdec_init (GstMusepackDec * musepackdec, GstMusepackDecClass * klass)
       gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_activate_function (musepackdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_musepackdec_sink_activate));
-  gst_pad_set_activatepull_function (musepackdec->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_musepackdec_sink_activate_pull));
+  gst_pad_set_activatemode_function (musepackdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_musepackdec_sink_activate_mode));
   gst_element_add_pad (GST_ELEMENT (musepackdec), musepackdec->sinkpad);
 
   musepackdec->srcpad = gst_pad_new_from_static_template (&src_template, "src");
@@ -125,8 +124,6 @@ gst_musepackdec_init (GstMusepackDec * musepackdec, GstMusepackDecClass * klass)
       GST_DEBUG_FUNCPTR (gst_musepackdec_src_event));
   gst_pad_set_query_function (musepackdec->srcpad,
       GST_DEBUG_FUNCPTR (gst_musepackdec_src_query));
-  gst_pad_set_query_type_function (musepackdec->srcpad,
-      GST_DEBUG_FUNCPTR (gst_musepackdec_get_src_query_types));
   gst_pad_use_fixed_caps (musepackdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (musepackdec), musepackdec->srcpad);
 }
@@ -155,22 +152,19 @@ gst_musepackdec_dispose (GObject * obj)
 static void
 gst_musepackdec_send_newsegment (GstMusepackDec * dec)
 {
-  GstSegment *s = &dec->segment;
-  gint64 stop_time = GST_CLOCK_TIME_NONE;
-  gint64 start_time = 0;
+  GstSegment os = dec->segment;
 
-  start_time = gst_util_uint64_scale_int (s->start, GST_SECOND, dec->rate);
-
-  if (s->stop != -1)
-    stop_time = gst_util_uint64_scale_int (s->stop, GST_SECOND, dec->rate);
+  os.format = GST_FORMAT_TIME;
+  os.start = gst_util_uint64_scale_int (os.start, GST_SECOND, dec->rate);
+  if (os.stop)
+    os.stop = gst_util_uint64_scale_int (os.stop, GST_SECOND, dec->rate);
+  os.time = gst_util_uint64_scale_int (os.time, GST_SECOND, dec->rate);
 
   GST_DEBUG_OBJECT (dec, "sending newsegment from %" GST_TIME_FORMAT
-      " to %" GST_TIME_FORMAT ", rate = %.1f", GST_TIME_ARGS (start_time),
-      GST_TIME_ARGS (stop_time), s->rate);
+      " to %" GST_TIME_FORMAT ", rate = %.1f", GST_TIME_ARGS (os.start),
+      GST_TIME_ARGS (os.stop), os.rate);
 
-  gst_pad_push_event (dec->srcpad,
-      gst_event_new_new_segment (FALSE, s->rate, GST_FORMAT_TIME,
-          start_time, stop_time, start_time));
+  gst_pad_push_event (dec->srcpad, gst_event_new_segment (&os));
 }
 
 static gboolean
@@ -214,10 +208,10 @@ gst_musepackdec_handle_seek_event (GstMusepackDec * dec, GstEvent * event)
   /* operate on segment copy until we know the seek worked */
   segment = dec->segment;
 
-  gst_segment_set_seek (&segment, rate, GST_FORMAT_DEFAULT,
+  gst_segment_do_seek (&segment, rate, GST_FORMAT_DEFAULT,
       flags, start_type, start, stop_type, stop, NULL);
 
-  gst_pad_push_event (dec->sinkpad, gst_event_new_flush_stop ());
+  gst_pad_push_event (dec->sinkpad, gst_event_new_flush_stop (TRUE));
 
   GST_DEBUG_OBJECT (dec, "segment: [%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT
       "] = [%" GST_TIME_FORMAT "-%" GST_TIME_FORMAT "]",
@@ -249,10 +243,10 @@ gst_musepackdec_handle_seek_event (GstMusepackDec * dec, GstEvent * event)
   }
 
   if (flush) {
-    gst_pad_push_event (dec->srcpad, gst_event_new_flush_stop ());
+    gst_pad_push_event (dec->srcpad, gst_event_new_flush_stop (TRUE));
   }
 
-  gst_segment_set_last_stop (&segment, GST_FORMAT_DEFAULT, segment.start);
+  segment.position = segment.start;
   dec->segment = segment;
   gst_musepackdec_send_newsegment (dec);
 
@@ -274,12 +268,12 @@ failed:
 }
 
 static gboolean
-gst_musepackdec_src_event (GstPad * pad, GstEvent * event)
+gst_musepackdec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstMusepackDec *dec;
   gboolean res;
 
-  dec = GST_MUSEPACK_DEC (gst_pad_get_parent (pad));
+  dec = GST_MUSEPACK_DEC (parent);
 
   GST_DEBUG_OBJECT (dec, "handling %s event", GST_EVENT_TYPE_NAME (event));
 
@@ -288,31 +282,17 @@ gst_musepackdec_src_event (GstPad * pad, GstEvent * event)
       res = gst_musepackdec_handle_seek_event (dec, event);
       break;
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
-  gst_object_unref (dec);
   return res;
 }
 
-static const GstQueryType *
-gst_musepackdec_get_src_query_types (GstPad * pad)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_SEEKING,
-    (GstQueryType) 0
-  };
-
-  return query_types;
-}
-
 static gboolean
-gst_musepackdec_src_query (GstPad * pad, GstQuery * query)
+gst_musepackdec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (gst_pad_get_parent (pad));
+  GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (parent);
   GstFormat format;
   gboolean res = FALSE;
   gint samplerate;
@@ -329,7 +309,7 @@ gst_musepackdec_src_query (GstPad * pad, GstQuery * query)
       gst_query_parse_position (query, &format, NULL);
 
       GST_OBJECT_LOCK (musepackdec);
-      cur_off = musepackdec->segment.last_stop;
+      cur_off = musepackdec->segment.position;
       GST_OBJECT_UNLOCK (musepackdec);
 
       if (format == GST_FORMAT_TIME) {
@@ -363,23 +343,31 @@ gst_musepackdec_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_SEEKING:{
       GstFormat fmt;
+      gint64 len, len_off;
 
       res = TRUE;
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
-      if (fmt == GST_FORMAT_TIME || fmt == GST_FORMAT_DEFAULT)
-        gst_query_set_seeking (query, fmt, TRUE, 0, -1);
-      else
-        gst_query_set_seeking (query, fmt, FALSE, -1, -1);
 
+      GST_OBJECT_LOCK (musepackdec);
+      len_off = musepackdec->segment.duration;
+      GST_OBJECT_UNLOCK (musepackdec);
+
+      if (fmt == GST_FORMAT_TIME) {
+        len = gst_util_uint64_scale_int (len_off, GST_SECOND, samplerate);
+        gst_query_set_seeking (query, fmt, TRUE, 0, len);
+      } else if (fmt == GST_FORMAT_DEFAULT) {
+        gst_query_set_seeking (query, fmt, TRUE, 0, len_off);
+      } else {
+        gst_query_set_seeking (query, fmt, FALSE, -1, -1);
+      }
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
 done:
-  gst_object_unref (musepackdec);
   return res;
 }
 
@@ -389,6 +377,7 @@ gst_musepack_stream_init (GstMusepackDec * musepackdec)
   mpc_streaminfo i;
   GstTagList *tags;
   GstCaps *caps;
+  gchar *stream_id;
 
   /* set up reading */
   gst_musepack_init_reader (musepackdec->r, musepackdec);
@@ -418,10 +407,16 @@ gst_musepack_stream_init (GstMusepackDec * musepackdec)
   mpc_demux_get_info (musepackdec->d, &i);
 #endif
 
+  stream_id = gst_pad_create_stream_id (musepackdec->srcpad,
+      GST_ELEMENT_CAST (musepackdec), NULL);
+  gst_pad_push_event (musepackdec->srcpad,
+      gst_event_new_stream_start (stream_id));
+  g_free (stream_id);
+
   /* capsnego */
-  caps = gst_caps_from_string (BASE_CAPS);
-  gst_caps_set_simple (caps,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_MPC_FORMAT,
+      "layout", G_TYPE_STRING, "interleaved",
       "channels", G_TYPE_INT, i.channels,
       "rate", G_TYPE_INT, i.sample_freq, NULL);
   gst_pad_use_fixed_caps (musepackdec->srcpad);
@@ -433,12 +428,11 @@ gst_musepack_stream_init (GstMusepackDec * musepackdec)
   g_atomic_int_set (&musepackdec->bps, 4 * i.channels);
   g_atomic_int_set (&musepackdec->rate, i.sample_freq);
 
-  gst_segment_set_last_stop (&musepackdec->segment, GST_FORMAT_DEFAULT, 0);
-  gst_segment_set_duration (&musepackdec->segment, GST_FORMAT_DEFAULT,
-      mpc_streaminfo_get_length_samples (&i));
+  musepackdec->segment.position = 0;
+  musepackdec->segment.duration = mpc_streaminfo_get_length_samples (&i);
 
   /* send basic tags */
-  tags = gst_tag_list_new ();
+  tags = gst_tag_list_new_empty ();
   gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
       GST_TAG_AUDIO_CODEC, "Musepack", NULL);
 
@@ -470,30 +464,57 @@ gst_musepack_stream_init (GstMusepackDec * musepackdec)
   }
 
   GST_LOG_OBJECT (musepackdec, "Posting tags: %" GST_PTR_FORMAT, tags);
-  gst_element_found_tags (GST_ELEMENT (musepackdec), tags);
+  gst_pad_push_event (musepackdec->srcpad, gst_event_new_tag (tags));
+
 
   return TRUE;
 }
 
 static gboolean
-gst_musepackdec_sink_activate (GstPad * sinkpad)
+gst_musepackdec_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
-  if (!gst_pad_check_pull_range (sinkpad))
+  GstQuery *query;
+  gboolean pull_mode;
+
+  query = gst_query_new_scheduling ();
+
+  if (!gst_pad_peer_query (sinkpad, query)) {
+    gst_query_unref (query);
+    return FALSE;
+  }
+
+  pull_mode = gst_query_has_scheduling_mode_with_flags (query,
+      GST_PAD_MODE_PULL, GST_SCHEDULING_FLAG_SEEKABLE);
+  gst_query_unref (query);
+
+  if (!pull_mode)
     return FALSE;
 
-  return gst_pad_activate_pull (sinkpad, TRUE);
+  GST_DEBUG_OBJECT (sinkpad, "activating pull");
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
 }
 
 static gboolean
-gst_musepackdec_sink_activate_pull (GstPad * sinkpad, gboolean active)
+gst_musepackdec_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
   gboolean result;
 
-  if (active) {
-    result = gst_pad_start_task (sinkpad,
-        (GstTaskFunction) gst_musepackdec_loop, sinkpad, NULL);
-  } else {
-    result = gst_pad_stop_task (sinkpad);
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      result = FALSE;
+      break;
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        result = gst_pad_start_task (sinkpad,
+            (GstTaskFunction) gst_musepackdec_loop, sinkpad, NULL);
+      } else {
+        result = gst_pad_stop_task (sinkpad);
+      }
+      break;
+    default:
+      result = FALSE;
+      break;
   }
 
   return result;
@@ -505,6 +526,7 @@ gst_musepackdec_loop (GstPad * sinkpad)
   GstMusepackDec *musepackdec;
   GstFlowReturn flow;
   GstBuffer *out;
+  GstMapInfo info;
 
 #ifdef MPC_IS_OLD_API
   guint32 update_acc, update_bits;
@@ -528,16 +550,14 @@ gst_musepackdec_loop (GstPad * sinkpad)
 
   bitspersample = g_atomic_int_get (&musepackdec->bps);
 
-  flow = gst_pad_alloc_buffer_and_set_caps (musepackdec->srcpad, -1,
-      MPC_DECODER_BUFFER_LENGTH * 4, GST_PAD_CAPS (musepackdec->srcpad), &out);
+  out = gst_buffer_new_allocate (NULL, MPC_DECODER_BUFFER_LENGTH * 4, NULL);
 
-  if (flow != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (musepackdec, "Flow: %s", gst_flow_get_name (flow));
-    goto pause_task;
-  }
 #ifdef MPC_IS_OLD_API
+
+  gst_buffer_map (out, &info, GST_MAP_READWRITE);
   num_samples = mpc_decoder_decode (musepackdec->d,
-      (MPC_SAMPLE_FORMAT *) GST_BUFFER_DATA (out), &update_acc, &update_bits);
+      (MPC_SAMPLE_FORMAT *) info.data, &update_acc, &update_bits);
+  gst_buffer_unmap (out, &info);
 
   if (num_samples < 0) {
     GST_ERROR_OBJECT (musepackdec, "Failed to decode sample");
@@ -547,8 +567,10 @@ gst_musepackdec_loop (GstPad * sinkpad)
     goto eos_and_pause;
   }
 #else
-  frame.buffer = (MPC_SAMPLE_FORMAT *) GST_BUFFER_DATA (out);
+  gst_buffer_map (out, &info, GST_MAP_READWRITE);
+  frame.buffer = (MPC_SAMPLE_FORMAT *) info.data;
   err = mpc_demux_decode (musepackdec->d, &frame);
+  gst_buffer_unmap (out, &info);
 
   if (err != MPC_STATUS_OK) {
     GST_ERROR_OBJECT (musepackdec, "Failed to decode sample");
@@ -561,16 +583,16 @@ gst_musepackdec_loop (GstPad * sinkpad)
   num_samples = frame.samples;
 #endif
 
-  GST_BUFFER_SIZE (out) = num_samples * bitspersample;
+  gst_buffer_set_size (out, num_samples * bitspersample);
 
-  GST_BUFFER_OFFSET (out) = musepackdec->segment.last_stop;
-  GST_BUFFER_TIMESTAMP (out) =
-      gst_util_uint64_scale_int (musepackdec->segment.last_stop,
+  GST_BUFFER_OFFSET (out) = musepackdec->segment.position;
+  GST_BUFFER_PTS (out) =
+      gst_util_uint64_scale_int (musepackdec->segment.position,
       GST_SECOND, samplerate);
   GST_BUFFER_DURATION (out) =
       gst_util_uint64_scale_int (num_samples, GST_SECOND, samplerate);
 
-  musepackdec->segment.last_stop += num_samples;
+  musepackdec->segment.position += num_samples;
 
   GST_LOG_OBJECT (musepackdec, "Pushing buffer, timestamp %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (out)));
@@ -583,7 +605,7 @@ gst_musepackdec_loop (GstPad * sinkpad)
 
   /* check if we're at the end of a configured segment */
   if (musepackdec->segment.stop != -1 &&
-      musepackdec->segment.last_stop >= musepackdec->segment.stop) {
+      musepackdec->segment.position >= musepackdec->segment.stop) {
     gint64 stop_time;
 
     GST_DEBUG_OBJECT (musepackdec, "Reached end of configured segment");
@@ -631,7 +653,7 @@ gst_musepackdec_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_segment_init (&musepackdec->segment, GST_FORMAT_DEFAULT);
-      gst_segment_set_last_stop (&musepackdec->segment, GST_FORMAT_DEFAULT, 0);
+      musepackdec->segment.position = 0;
       break;
     default:
       break;

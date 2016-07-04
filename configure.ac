@@ -457,7 +457,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  videomeasure \
  linsys \
  apexsink \
- musepack nas sdl timidity \
+ nas sdl timidity \
  wininet \
  xvid sndio libvisual"
 
