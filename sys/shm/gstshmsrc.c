@@ -272,11 +272,11 @@ gst_shm_src_stop_reading (GstShmSrc * self)
   if (self->pipe) {
     gst_shm_pipe_dec (self->pipe);
     self->pipe = NULL;
+
+    gst_poll_remove_fd (self->poll, &self->pollfd);
   }
 
-  gst_poll_remove_fd (self->poll, &self->pollfd);
   gst_poll_fd_init (&self->pollfd);
-
   gst_poll_set_flushing (self->poll, TRUE);
 }
 
