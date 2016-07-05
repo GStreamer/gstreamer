@@ -19,9 +19,13 @@ send_rotate_event (AppData * data)
 {
   gboolean res = FALSE;
   GstEvent *event;
+  static gint counter = 0;
+  const static gchar *tags[] = { "rotate-90", "rotate-180", "rotate-270",
+    "rotate-0"
+  };
 
   event = gst_event_new_tag (gst_tag_list_new (GST_TAG_IMAGE_ORIENTATION,
-          "rotate-90", NULL));
+          tags[counter++ % G_N_ELEMENTS (tags)], NULL));
 
   /* Send the event */
   res = gst_pad_push_event (data->src_pad, event);
