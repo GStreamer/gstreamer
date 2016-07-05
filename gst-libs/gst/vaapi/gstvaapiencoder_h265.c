@@ -2030,11 +2030,11 @@ reset_properties (GstVaapiEncoderH265 * encoder)
   if (encoder->num_bframes > (base_encoder->keyframe_period + 1) / 2)
     encoder->num_bframes = (base_encoder->keyframe_period + 1) / 2;
 
-  if (encoder->num_bframes)
-    encoder->cts_offset = GST_SECOND * GST_VAAPI_ENCODER_FPS_D (encoder) /
-        GST_VAAPI_ENCODER_FPS_N (encoder);
+  if (encoder->num_bframes > 0 && GST_VAAPI_ENCODER_FPS_N (encoder) > 0)
+    encoder->cts_offset = gst_util_uint64_scale (GST_SECOND,
+        GST_VAAPI_ENCODER_FPS_D (encoder), GST_VAAPI_ENCODER_FPS_N (encoder));
   else
-    encoder->cts_offset = 0;
+    encoder->cts_offset = GST_CLOCK_TIME_NONE;
 
   /* init max_poc */
   encoder->log2_max_pic_order_cnt =

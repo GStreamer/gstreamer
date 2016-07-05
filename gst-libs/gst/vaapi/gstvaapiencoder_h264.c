@@ -2467,11 +2467,11 @@ reset_properties (GstVaapiEncoderH264 * encoder)
     encoder->num_bframes = 0;
   }
 
-  if (encoder->num_bframes)
-    encoder->cts_offset = GST_SECOND * GST_VAAPI_ENCODER_FPS_D (encoder) /
-        GST_VAAPI_ENCODER_FPS_N (encoder);
+  if (encoder->num_bframes > 0 && GST_VAAPI_ENCODER_FPS_N (encoder) > 0)
+    encoder->cts_offset = gst_util_uint64_scale (GST_SECOND,
+        GST_VAAPI_ENCODER_FPS_D (encoder), GST_VAAPI_ENCODER_FPS_N (encoder));
   else
-    encoder->cts_offset = 0;
+    encoder->cts_offset = GST_CLOCK_TIME_NONE;
 
   /* init max_frame_num, max_poc */
   encoder->log2_max_frame_num =
