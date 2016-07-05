@@ -458,16 +458,18 @@ gst_webrtc_dsp_setup (GstAudioFilter * filter, const GstAudioInfo * info)
     GST_WEBRTC_ECHO_PROBE_UNLOCK (self->probe);
   }
 
-  pconfig = {
-    /* input stream */
-    webrtc::StreamConfig (info->rate, info->channels, false),
-    /* output stream */
-    webrtc::StreamConfig (info->rate, info->channels, false),
-    /* reverse input stream */
-    webrtc::StreamConfig (probe_info.rate, probe_info.channels, false),
-    /* reverse output stream */
-    webrtc::StreamConfig (probe_info.rate, probe_info.channels, false),
-  };
+  /* input stream */
+  pconfig.streams[webrtc::ProcessingConfig::kInputStream] =
+      webrtc::StreamConfig (info->rate, info->channels, false);
+  /* output stream */
+  pconfig.streams[webrtc::ProcessingConfig::kOutputStream] =
+      webrtc::StreamConfig (info->rate, info->channels, false);
+  /* reverse input stream */
+  pconfig.streams[webrtc::ProcessingConfig::kReverseInputStream] =
+      webrtc::StreamConfig (probe_info.rate, probe_info.channels, false);
+  /* reverse output stream */
+  pconfig.streams[webrtc::ProcessingConfig::kReverseOutputStream] =
+      webrtc::StreamConfig (probe_info.rate, probe_info.channels, false);
 
   if ((err = apm->Initialize (pconfig)) < 0)
     goto initialize_failed;
