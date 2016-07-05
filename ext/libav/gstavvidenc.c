@@ -430,6 +430,29 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
       oclass->in_plugin->type, allowed_caps, ffmpegenc->context);
 
+  /* open codec */
+  if (gst_ffmpeg_avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0) {
+    gst_caps_unref (allowed_caps);
+    goto open_codec_fail;
+  }
+
+  /* is the colourspace correct? */
+  if (pix_fmt != ffmpegenc->context->pix_fmt) {
+    gst_caps_unref (allowed_caps);
+    goto pix_fmt_err;
+  }
+
+  /* we may have failed mapping caps to a pixfmt,
+   * and quite some codecs do not make up their own mind about that
+   * in any case, _NONE can never work out later on */
+  if (pix_fmt == AV_PIX_FMT_NONE) {
+    gst_caps_unref (allowed_caps);
+    goto bad_input_fmt;
+  }
+
+  /* second pass stats buffer no longer needed */
+  g_free (ffmpegenc->context->stats_in);
+
   /* try to set this caps on the other side */
   other_caps = gst_ffmpeg_codecid_to_caps (oclass->in_plugin->id,
       ffmpegenc->context, TRUE);
@@ -449,23 +472,6 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   icaps = gst_caps_fixate (icaps);
 
   GST_DEBUG_OBJECT (ffmpegenc, "codec flags 0x%08x", ffmpegenc->context->flags);
-
-  /* open codec */
-  if (gst_ffmpeg_avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0)
-    goto open_codec_fail;
-
-  /* is the colourspace correct? */
-  if (pix_fmt != ffmpegenc->context->pix_fmt)
-    goto pix_fmt_err;
-
-  /* we may have failed mapping caps to a pixfmt,
-   * and quite some codecs do not make up their own mind about that
-   * in any case, _NONE can never work out later on */
-  if (pix_fmt == AV_PIX_FMT_NONE)
-    goto bad_input_fmt;
-
-  /* second pass stats buffer no longer needed */
-  g_free (ffmpegenc->context->stats_in);
 
   /* Store input state and set output state */
   if (ffmpegenc->input_state)
