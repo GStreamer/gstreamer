@@ -952,23 +952,25 @@ gst_base_parse_queue_tag_event_update (GstBaseParse * parse)
     return;
   }
 
-  /* only add bitrate tags to non-empty taglists for now, and only if neither
-   * upstream tags nor the subclass sets the bitrate tag in question already */
-  if (parse->priv->min_bitrate != G_MAXUINT && parse->priv->post_min_bitrate) {
-    GST_LOG_OBJECT (parse, "adding min bitrate %u", parse->priv->min_bitrate);
-    gst_tag_list_add (merged_tags, GST_TAG_MERGE_KEEP, GST_TAG_MINIMUM_BITRATE,
-        parse->priv->min_bitrate, NULL);
-  }
-  if (parse->priv->max_bitrate != 0 && parse->priv->post_max_bitrate) {
-    GST_LOG_OBJECT (parse, "adding max bitrate %u", parse->priv->max_bitrate);
-    gst_tag_list_add (merged_tags, GST_TAG_MERGE_KEEP, GST_TAG_MAXIMUM_BITRATE,
-        parse->priv->max_bitrate, NULL);
-  }
-  if (parse->priv->avg_bitrate != 0 && parse->priv->post_avg_bitrate) {
-    parse->priv->posted_avg_bitrate = parse->priv->avg_bitrate;
-    GST_LOG_OBJECT (parse, "adding avg bitrate %u", parse->priv->avg_bitrate);
-    gst_tag_list_add (merged_tags, GST_TAG_MERGE_KEEP, GST_TAG_BITRATE,
-        parse->priv->avg_bitrate, NULL);
+  if (parse->priv->framecount >= MIN_FRAMES_TO_POST_BITRATE) {
+    /* only add bitrate tags to non-empty taglists for now, and only if neither
+     * upstream tags nor the subclass sets the bitrate tag in question already */
+    if (parse->priv->min_bitrate != G_MAXUINT && parse->priv->post_min_bitrate) {
+      GST_LOG_OBJECT (parse, "adding min bitrate %u", parse->priv->min_bitrate);
+      gst_tag_list_add (merged_tags, GST_TAG_MERGE_KEEP,
+          GST_TAG_MINIMUM_BITRATE, parse->priv->min_bitrate, NULL);
+    }
+    if (parse->priv->max_bitrate != 0 && parse->priv->post_max_bitrate) {
+      GST_LOG_OBJECT (parse, "adding max bitrate %u", parse->priv->max_bitrate);
+      gst_tag_list_add (merged_tags, GST_TAG_MERGE_KEEP,
+          GST_TAG_MAXIMUM_BITRATE, parse->priv->max_bitrate, NULL);
+    }
+    if (parse->priv->avg_bitrate != 0 && parse->priv->post_avg_bitrate) {
+      parse->priv->posted_avg_bitrate = parse->priv->avg_bitrate;
+      GST_LOG_OBJECT (parse, "adding avg bitrate %u", parse->priv->avg_bitrate);
+      gst_tag_list_add (merged_tags, GST_TAG_MERGE_KEEP,
+          GST_TAG_BITRATE, parse->priv->avg_bitrate, NULL);
+    }
   }
 
   parse->priv->pending_events =
