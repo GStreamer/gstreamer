@@ -360,7 +360,7 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
     gst_caps_unref (icaps);
     return FALSE;
   }
-  icaps = gst_caps_truncate (icaps);
+  icaps = gst_caps_fixate (icaps);
 
   if (!gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (ffmpegaudenc),
           icaps)) {
