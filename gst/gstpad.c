@@ -2759,15 +2759,24 @@ gst_pad_get_allowed_caps (GstPad * pad)
 
   /* Query peer caps */
   query = gst_query_new_caps (mycaps);
-  gst_pad_peer_query (pad, query);
-  gst_query_parse_caps_result (query, &caps);
-  gst_caps_ref (caps);
-  gst_query_unref (query);
+  if (!gst_pad_peer_query (pad, query)) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "Caps query failed");
+    goto end;
+  }
 
-  gst_caps_unref (mycaps);
+  gst_query_parse_caps_result (query, &caps);
+  if (caps == NULL) {
+    g_warn_if_fail (caps != NULL);
+    goto end;
+  }
+  gst_caps_ref (caps);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "allowed caps %" GST_PTR_FORMAT,
       caps);
+
+end:
+  gst_query_unref (query);
+  gst_caps_unref (mycaps);
 
   return caps;
 
