@@ -2170,15 +2170,6 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   /* PLAY will add the range header now. */
   src->need_range = TRUE;
 
-  /* and continue playing if needed */
-  GST_OBJECT_LOCK (src);
-  playing = (GST_STATE_PENDING (src) == GST_STATE_VOID_PENDING
-      && GST_STATE (src) == GST_STATE_PLAYING)
-      || (GST_STATE_PENDING (src) == GST_STATE_PLAYING);
-  GST_OBJECT_UNLOCK (src);
-  if (playing)
-    gst_rtspsrc_play (src, &seeksegment, FALSE);
-
   /* prepare for streaming again */
   if (flush) {
     /* if we started flush, we stop now */
@@ -2206,6 +2197,15 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
     stream->discont = TRUE;
   }
+
+  /* and continue playing if needed */
+  GST_OBJECT_LOCK (src);
+  playing = (GST_STATE_PENDING (src) == GST_STATE_VOID_PENDING
+      && GST_STATE (src) == GST_STATE_PLAYING)
+      || (GST_STATE_PENDING (src) == GST_STATE_PLAYING);
+  GST_OBJECT_UNLOCK (src);
+  if (playing)
+    gst_rtspsrc_play (src, &seeksegment, FALSE);
 
   GST_RTSP_STREAM_UNLOCK (src);
 
