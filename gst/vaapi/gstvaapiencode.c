@@ -298,7 +298,7 @@ gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 timeout)
   gst_buffer_replace (&out_frame->output_buffer, out_buffer);
   gst_buffer_unref (out_buffer);
 
-  GST_DEBUG ("output:%" GST_TIME_FORMAT ", size:%zu",
+  GST_TRACE_OBJECT (encode, "output:%" GST_TIME_FORMAT ", size:%zu",
       GST_TIME_ARGS (out_frame->pts), gst_buffer_get_size (out_buffer));
 
   return gst_video_encoder_finish_frame (venc, out_frame);
