@@ -303,8 +303,23 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
             ffmpegaudenc->context->channels) != 0);
   }
 
+  /* some codecs support more than one format, first auto-choose one */
+  GST_DEBUG_OBJECT (ffmpegaudenc, "picking an output format ...");
+  allowed_caps = gst_pad_get_allowed_caps (GST_AUDIO_ENCODER_SRC_PAD (encoder));
+  if (!allowed_caps) {
+    GST_DEBUG_OBJECT (ffmpegaudenc, "... but no peer, using template caps");
+    /* we need to copy because get_allowed_caps returns a ref, and
+     * get_pad_template_caps doesn't */
+    allowed_caps =
+        gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SRC_PAD (encoder));
+  }
+  GST_DEBUG_OBJECT (ffmpegaudenc, "chose caps %" GST_PTR_FORMAT, allowed_caps);
+  gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
+      oclass->in_plugin->type, allowed_caps, ffmpegaudenc->context);
+
   /* open codec */
   if (gst_ffmpeg_avcodec_open (ffmpegaudenc->context, oclass->in_plugin) < 0) {
+    gst_caps_unref (allowed_caps);
     gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
     GST_DEBUG_OBJECT (ffmpegaudenc, "avenc_%s: Failed to open FFMPEG codec",
         oclass->in_plugin->name);
@@ -323,20 +338,6 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
     }
     return FALSE;
   }
-
-  /* some codecs support more than one format, first auto-choose one */
-  GST_DEBUG_OBJECT (ffmpegaudenc, "picking an output format ...");
-  allowed_caps = gst_pad_get_allowed_caps (GST_AUDIO_ENCODER_SRC_PAD (encoder));
-  if (!allowed_caps) {
-    GST_DEBUG_OBJECT (ffmpegaudenc, "... but no peer, using template caps");
-    /* we need to copy because get_allowed_caps returns a ref, and
-     * get_pad_template_caps doesn't */
-    allowed_caps =
-        gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SRC_PAD (encoder));
-  }
-  GST_DEBUG_OBJECT (ffmpegaudenc, "chose caps %" GST_PTR_FORMAT, allowed_caps);
-  gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
-      oclass->in_plugin->type, allowed_caps, ffmpegaudenc->context);
 
   /* try to set this caps on the other side */
   other_caps = gst_ffmpeg_codecid_to_caps (oclass->in_plugin->id,
