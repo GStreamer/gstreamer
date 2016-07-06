@@ -1,9 +1,508 @@
-=== release 1.2.0 ===
+=== release 1.9.1 ===
 
-2014-07-23  Sebastian Dröge <slomo@coaxion.net>
+2016-07-06  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.0
+	  releasing 1.9.1
+
+2016-06-29 16:37:43 +0900  Kazunori Kobayashi <kkobayas@igel.co.jp>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Use GST_VIDEO_FRAME_PLANE_STRIDE() to get output buffer's stride
+	  GST_VIDEO_FRAME_PLANE_STRIDE() should be used to get the actual buffer stride,
+	  as reported in the buffers's GstVideoMeta, when copying data to that buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768173
+
+2016-06-21 11:48:40 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ac2f647 to f363b32
+
+2016-06-21 11:43:13 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: implement GstPreset interface
+	  To allow user to use GstPreset to quickly save and load a set of
+	  parameters.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767907
+
+2016-06-21 11:41:15 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: implement GstPreset interface
+	  To allow user to use GstPreset to quickly save and load a set of
+	  parameters.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767907
+
+2016-06-17 12:06:48 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* omx/gstomx.h:
+	* omx/gstomxaudiodec.c:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideo.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: #define OMX_SKIP64BIT on the RPi as required by their API
+	  Also add generic support for OMX_SKIP64BIT to gst-omx, in case other
+	  implementations also #define that for whatever reason.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766475
+
+2016-06-17 10:59:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Implement ::drain() virtual method
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767641
+
+2016-06-04 19:31:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  configure: remove AG_GST_PARSE_SUBSYSTEM_DISABLES
+	  This would check which subsystems are disabled in core by grepping
+	  gstconfig.h. Only problem is: gstconfig.h has moved into libdir now
+	  so we've been checking a non-existent file for a while now. The
+	  macro would just sets GST_DISABLE_* for use in configure.ac and
+	  Makefile.am, but we don't use that anywhere so just get rid of it
+	  (the one place where we use GST_DISABLE_GST_DEBUG is in a .c file
+	  which gets the define from the gstconfig.h include).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750056
+
+2016-01-20 03:10:38 +0900  Gwang Yoon Hwang <yoon@igalia.com>
+
+	* examples/egl/testegl.c:
+	* omx/gstomxvideodec.c:
+	  omxvideodec : Use gstglmemoryegl for the RPi
+	  Modified to use gstglmemoryegl to avoid texture creation/copy operations
+	  at the glupload.
+	  [Matthew Waters]: gst-indent the sources and port testegl to GstGLMemoryEGL
+	  https://bugzilla.gnome.org/show_bug.cgi?id=760918
+
+2016-04-14 10:04:32 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6f2d209 to ac2f647
+
+2016-02-26 12:42:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b64f03f to 6f2d209
+
+2016-02-17 20:51:03 +1100  Matthew Waters <matthew@centricular.com>
+
+	* examples/egl/testegl.c:
+	  examples: update egl example for gstgl API changes
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762053
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753917
+
+2016-02-05 18:11:06 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From 86e4663 to b64f03f
+
+2015-12-21 00:43:49 +0100  Koop Mast <kwm@rainbow-runner.nl>
+
+	* configure.ac:
+	  configure: Make -Bsymbolic check work with clang.
+	  Update the -Bsymbolic check with the version glib has. This version
+	  works with clang.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759713
+
+2015-12-07 09:11:32 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From b319909 to 86e4663
+
+2015-11-18 13:00:28 +0000  Enrique Ocaña González <eocanha@igalia.com>
+
+	* omx/gstomx.c:
+	  Remember the last_error after a failed set state call to avoid blocking the next get state call
+	  gst_omx_video_dec_flush() blocks forever in
+	  http://cgit.freedesktop.org/gstreamer/gst-omx/tree/omx/gstomxvideodec.c?id=9adf0ff82903cad5331e40975ae91ed5d11bc102#n2110
+	  when the previous call to gst_omx_component_set_state() fails in
+	  http://cgit.freedesktop.org/gstreamer/gst-omx/tree/omx/gstomx.c?id=9adf0ff82903cad5331e40975ae91ed5d11bc102#n827.
+	  To mitigate that, I set "last_error" to true, so the code in
+	  http://cgit.freedesktop.org/gstreamer/gst-omx/tree/omx/gstomx.c?id=9adf0ff82903cad5331e40975ae91ed5d11bc102#n862
+	  exits early and doesn't block.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758274
+
+2015-11-18 12:59:59 +0000  Enrique Ocaña González <eocanha@igalia.com>
+
+	* omx/gstomxaudiodec.c:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  Properly handle drain requests while flushing
+	  Without this commit the decoder streaming thread stops without ever attending
+	  the drain request, leaving the decoder input thread waiting forever.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758274
+
+2015-11-10 10:42:35 +0100  Nicolas Huet <nicolas.huet@parrot.com>
+
+	* omx/gstomx.c:
+	  omx: fix hacks leak on class init
+
+2015-10-21 14:37:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b99800a to b319909
+
+2015-10-21 14:28:41 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 9aed1d7 to b99800a
+
+2015-09-01 16:08:11 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* omx/gstomxaacdec.c:
+	  omxaacdec: Do not accept unknown layouts
+	  It was defaulting to RAW when an unknown layout was received but
+	  the caps template would actually forbid that on the caps query
+	  or accept-caps anyway.
+
+2015-09-01 08:59:54 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* omx/gstomxaudiodec.c:
+	  omxaudiodec: use default pad accept-caps handling
+	  Instead of the audiodecoder one. The OMX audioo decoders have their
+	  valid input in the template pad, so just check against that to
+	  avoid doing a query downstream.
+
+2015-08-28 12:57:33 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: use default pad accept-caps handling
+	  Instead of the videodecoder one. The OMX video decoders have their
+	  valid input in the template pad, so just check against that to
+	  avoid doing a query downstream.
+
+2015-08-22 15:54:55 +0000  Graham Leggett <minfrin@sharp.fm>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Add keyframe support for the Rpi, using OMX_IndexConfigBrcmVideoRequestIFrame
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753085
+
+2015-08-20 17:20:50 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* examples/egl/testegl.c:
+	  gst-omx: Fix memory leaks when context parse fails
+	  When g_option_context_parse fails, context and error variables are not getting free'd
+	  which results in memory leaks. Free'ing the same.
+	  And replacing g_error_free with g_clear_error, which checks if the error being passed
+	  is not NULL and sets the variable to NULL on free'ing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753865
+
+2015-08-16 14:53:42 +0200  Philippe Normand <philn@igalia.com>
+
+	* omx/gstomxh264dec.c:
+	  omxh264dec: implement is_format_change
+	  The omxvideodecoder class only checks some of the caps parameters but if
+	  other fields change such as h264 profile and/or level it wouldn't trigger a
+	  reconfiguration.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752376
+
+2015-07-03 00:26:48 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: unref allocator after getting it from allocation query
+	  Otherwise a reference will be leaked for each allocator. It only happens
+	  when target platform is Raspberry Pi and when we have GL support.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751867
+
+2015-07-03 21:59:54 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f74b2df to 9aed1d7
+
+2015-06-16 17:50:14 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6015d26 to f74b2df
+
+2015-06-09 11:30:49 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From d9a3353 to 6015d26
+
+2015-06-08 23:08:28 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From d37af32 to d9a3353
+
+2015-06-07 23:07:22 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 21ba2e5 to d37af32
+
+2015-06-07 17:32:25 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From c408583 to 21ba2e5
+
+2015-06-07 17:16:43 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From c8fb372 to c408583
+
+2015-05-19 18:21:40 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaudiodec.c:
+	* omx/gstomxaudiodec.h:
+	  omxaudiodec: Add an output adapter for chunking the output into codec frames
+	  Otherwise the base class will be confused.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=685730
+
+2015-04-26 18:24:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Android.mk:
+	* omx/Makefile.am:
+	  Remove obsolete Android build cruft
+	  This is not needed any longer.
+
+2015-04-22 10:40:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* INSTALL:
+	  Remove INSTALL file
+	  autotools automatically generate this, and when using different versions
+	  for autogen.sh there will always be changes to a file tracked by git.
+
+2015-04-08 15:57:59 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	* Makefile.am:
+	* configure.ac:
+	* m4/Makefile.am:
+	  Add m4 directory so aclocal doesn't complain in autogen.sh
+	  Might come in handy, and these warnings seem to be
+	  fatal in some environments.
+	  You may need to git clean -x -d -f your tree before
+	  git pulling/merging.
+
+2015-04-07 22:25:57 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* INSTALL:
+	* autogen.sh:
+	  Update autogen.sh to latest version
+
+2015-04-03 18:58:17 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From bc76a8b to c8fb372
+
+2015-03-06 12:12:49 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* omx/gstomxaacdec.c:
+	  omxaudiodec: add comment explaining duplicate code path
+
+2015-03-06 12:09:06 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* omx/gstomxaacdec.c:
+	  Revert "omxaudiodec: remove duplicate code path"
+	  This reverts commit a8d26ff27a8b43f589424a59294f9057641b2a46.
+
+2015-03-06 12:03:56 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* omx/gstomx.c:
+	  omx: handle both errors in the two steps of update_port_definition
+	  Also consider potential errors in the _get_parameter() in the return of the
+	  update_port_definition function.
+	  CID #1287052
+
+2015-03-06 10:57:53 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: impossible if statement
+	  ret is set to GST_STATE_CHANGE_SUCCESS and never touched, so it is impossible
+	  for it to be anything else at the if check. Remove the if check.
+	  CID #1287053
+
+2015-03-06 10:54:43 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* omx/gstomxaudiodec.c:
+	  omxaudiodec: impossible if statement
+	  ret is set to GST_STATE_CHANGE_SUCCESS and never touched, so it is impossible
+	  for it to be anything else at the if check. Remove it.
+	  CID #1287054
+
+2015-03-06 10:50:30 +0000  Luis de Bethencourt <luis.bg@samsung.com>
+
+	* omx/gstomxaacdec.c:
+	  omxaudiodec: remove duplicate code path
+
+2014-12-19 11:19:55 +0200  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* omx/gstomx.c:
+	  omx: call handle_messages() only once in acquire_buffer() to avoid potential deadlock
+	  There is one rare case where calling handle_messages() more than once can cause a deadlock
+	  in the video decoder element:
+	  - sink pad thread starts the src pad task (gst_omx_video_dec_loop())
+	  - _video_dec_loop() calls gst_omx_port_acquire_buffer() on dec_out_port
+	  - blocks in gst_omx_component_wait_message() releasing comp->lock and comp->messages_lock
+	  (initially, there are no buffers configured on that port, so it waits for OMX_EventPortSettingsChanged)
+	  - the sink pad thread pushes a buffer to the decoder with gst_omx_port_release_buffer()
+	  - _release_buffer() grabs comp->lock and sends the buffer to OMX, which consumes it immediately
+	  - EmptyBufferDone gets called at this point, which signals _wait_message() to unblock
+	  - the message from EmptyBufferDone is processed in gst_omx_component_handle_messages()
+	  called from gst_omx_port_release_buffer()
+	  - gst_omx_port_release_buffer releases comp->lock
+	  - the src pad thread now gets to run, grabbing comp->lock while it exits from _wait_message()
+	  - _acquire_buffer() calls the _handle_messages() on the next line after _wait_message(),
+	  which does nothing (no pending messages)
+	  - then it goes to "retry:" and calls _handle_messages() again, which also does nothing
+	  (still no pending messages)
+	  - scheduler switches to a videocore thread that calls EventHandler, informing us about the
+	  OMX_EventPortSettingsChanged event that just arrived
+	  - EventHandler graps comp->messages_lock, but not comp->lock, so it can run in parallel at
+	  this point just fine.
+	  - scheduler switches back to the src pad thread (which is in the middle of _acquire_buffer())
+	  - the next _handle_messages() which is right before if (g_queue_is_empty (&port->pending_buffers))
+	  processes the OMX_EventPortSettingsChanged
+	  - the buffer queue is still empty, so that thread blocks again in _wait_message()
+	  - the sink pad thread tries to acquire the next input port buffer
+	  - _acquire_buffer() also blocks this thread in:
+	  if (comp->pending_reconfigure_outports) { ... _wait_message() ... }
+	  - DEADLOCK. gstreamer is waiting for omx to do something, omx waits for gstreamer to do something.
+	  By removing those extra _handle_messages() calls, we can ensure that all the checks of
+	  _acquire_buffer() will re-run. In the above case, after the scheduler switches back to
+	  the middle of _acquire_buffer(), the code will enter _wait_message(), which will see that
+	  there are pending messages and will return immediately, going back to "retry:" and
+	  re-doing all the checks properly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=741854
+
+2015-02-26 09:27:44 +0900  Wonchul Lee <chul0812@gmail.com>
+
+	* omx/gstomx.c:
+	  omx: cleanup code a bit to remove else statement
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745191
+
+2015-01-12 16:13:35 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f2c6b95 to bc76a8b
+
+2014-12-18 10:56:15 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ef1ffdc to f2c6b95
+
+2014-11-27 17:12:42 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7bb2bce to ef1ffdc
+
+2014-11-13 09:55:02 +0900  Jun Ji <jun.ji@lge.com>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxamrdec.c:
+	* omx/gstomxamrdec.h:
+	  omx: Add omxamrdec
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739333
+
+2014-10-27 18:00:50 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 84d06cd to 7bb2bce
+
+2014-10-21 13:03:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From a8c8939 to 84d06cd
+
+2014-10-21 13:00:10 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1f5d3c3 to a8c8939
+
+2014-09-30 10:47:20 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaudiodec.c:
+	  omxaudiodec: Clean up code a bit to get rid of useless NULL checks
+
+2014-09-30 10:50:07 +0900  junji <jun.ji@lge.com>
+
+	* omx/gstomxaudiodec.c:
+	  omxaudiodec: Unmap input buffers after usage
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736314
+
+2014-08-31 20:30:13 +0000  Michal Lazo <michal.lazo@mdragon.org>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Setup aspect ratio on RPi
+	  Needs firmware from yesterday or newer to work with all possible
+	  aspect ratios. Before that it only supported a fixed list.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732533
+
+2014-08-28 10:44:31 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Implement the hack flag GST_OMX_HACK_NO_COMPONENT_RECONFIGURE
+
+2014-08-28 10:43:22 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Use the base class' open/close vfuncs instead of calling them ourselves
+
+2014-08-26 22:13:53 -0500  Peng Liu <pengliu.mail@gmail.com>
+
+	* config/rpi/gstomx.conf:
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Implement the hack flag GST_OMX_HACK_NO_COMPONENT_RECONFIGURE
+	  Fix a video encoder stall problem on RPi when changing the aspect ratio.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732533
+
+2014-08-14 17:36:11 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaudiodec.c:
+	* omx/gstomxaudiodec.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxaudioenc.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omx: Let base classes handle EOS
+	  https://bugzilla.gnome.org//show_bug.cgi?id=734774
+
+2014-08-14 17:33:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxaudiodec.c:
+	  omxaudiodec: Fix flushing logic and make it more similar to the video decoder
+
+=== release 1.2.0 ===
+
+2014-07-23 11:28:12 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	* omx/Makefile.am:
+	  Release 1.2.0
 
 2014-07-22 09:23:00 +0200  Sebastian Dröge <sebastian@centricular.com>
 

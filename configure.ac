@@ -5,7 +5,7 @@ dnl please read gstreamer/docs/random/autotools before changing this file
 dnl initialize autoconf
 dnl releases only do -Wall, git and prerelease does -Werror too
 dnl use a three digit version number for releases, and four for git/prerelease
-AC_INIT(GStreamer OpenMAX Plug-ins, 1.2.0,
+AC_INIT(GStreamer OpenMAX Plug-ins, 1.9.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-omx)
 
@@ -45,10 +45,10 @@ AC_DEFINE_UNQUOTED(GST_API_VERSION, "$GST_API_VERSION",
   [GStreamer API Version])
 
 AG_GST_LIBTOOL_PREPARE
-AS_LIBTOOL(GST, 0, 0, 0)
+AS_LIBTOOL(GST, 901, 901, 901)
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=1.2.2
+GST_REQ=1.9.1
 
 dnl *** autotools stuff ****
 
@@ -137,7 +137,7 @@ AG_GST_CHECK_FUNCTION
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-AG_GST_GLIB_CHECK([2.32])
+AG_GST_GLIB_CHECK([2.40.0])
 
 dnl Needed by plugins that use g_module_*() API
 PKG_CHECK_MODULES(GMODULE_NO_EXPORT, gmodule-no-export-2.0)
@@ -150,7 +150,7 @@ AG_GST_CHECK_GST_CONTROLLER($GST_API_VERSION, [$GST_REQ], yes)
 AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
 AG_GST_CHECK_GST_PLUGINS_BASE($GST_API_VERSION, [$GST_REQ], yes)
 AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
-PKG_CHECK_MODULES([GST_GL], [gstreamer-gl-1.0 >= 1.4.0], [
+PKG_CHECK_MODULES([GST_GL], [gstreamer-gl-1.0 >= $GST_REQ], [
   AC_DEFINE(HAVE_GST_GL, 1, [Have gstreamer-gl])
   GST_GL=yes
 ], [GST_GL=no])
