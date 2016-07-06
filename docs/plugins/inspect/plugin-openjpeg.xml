@@ -3,10 +3,10 @@
   <description>OpenJPEG-based JPEG2000 image decoder/encoder</description>
   <filename>../../ext/openjpeg/.libs/libgstopenjpeg.so</filename>
   <basename>libgstopenjpeg.so</basename>
-  <version>1.9.0.1</version>
+  <version>1.9.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>image/x-j2c, colorspace=(string){ sRGB, sYUV, GRAY }; image/x-jpc, colorspace=(string){ sRGB, sYUV, GRAY }; image/jp2</details>
+          <details>image/x-j2c, sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE, YCbCrA-4:4:4:4 }; image/x-jpc, sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE, YCbCrA-4:4:4:4 }; image/jp2</details>
         </caps>
         <caps>
           <name>src</name>
@@ -47,7 +47,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>image/x-j2c, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], num-components=(int)[ 1, 4 ], sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCrA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE }, colorspace=(string){ sRGB, sYUV, GRAY }; image/x-jpc, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], num-components=(int)[ 1, 4 ], sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCrA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE }, colorspace=(string){ sRGB, sYUV, GRAY }; image/jp2, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+          <details>image/x-j2c, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], num-components=(int)[ 1, 4 ], sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE, YCbCrA-4:4:4:4 }, colorspace=(string){ sRGB, sYUV, GRAY }; image/x-jpc, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], num-components=(int)[ 1, 4 ], sampling=(string){ RGB, BGR, RGBA, BGRA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1, GRAYSCALE, YCbCrA-4:4:4:4 }, colorspace=(string){ sRGB, sYUV, GRAY }; image/jp2, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>

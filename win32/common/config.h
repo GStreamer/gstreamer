@@ -86,7 +86,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2016-03-24"
+#define GST_PACKAGE_RELEASE_DATETIME "2016-06-06"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -325,6 +325,9 @@
 /* Define to enable Kate (used by kate). */
 #undef HAVE_KATE
 
+/* Define to enable drm/kms libraries (used by kms). */
+#undef HAVE_KMS
+
 /* Define to enable ladspa (used by ladspa). */
 #undef HAVE_LADSPA
 
@@ -418,14 +421,8 @@
 /* Define to enable opencv plugins (used by opencv). */
 #undef HAVE_OPENCV
 
-/* Define to 1 if you have the <opencv2/contrib/contrib.hpp> header file. */
-#undef HAVE_OPENCV2_CONTRIB_CONTRIB_HPP
-
 /* Define to 1 if you have the <opencv2/core/core_c.h> header file. */
 #undef HAVE_OPENCV2_CORE_CORE_C_H
-
-/* Define to 1 if you have the <opencv2/core/types_c.h> header file. */
-#undef HAVE_OPENCV2_CORE_TYPES_C_H
 
 /* Define to 1 if you have the <opencv2/core/version.hpp> header file. */
 #undef HAVE_OPENCV2_CORE_VERSION_HPP
@@ -438,12 +435,6 @@
 
 /* Define to 1 if you have the <opencv2/imgproc/imgproc.hpp> header file. */
 #undef HAVE_OPENCV2_IMGPROC_IMGPROC_HPP
-
-/* Define to 1 if you have the <opencv2/legacy/compat.hpp> header file. */
-#undef HAVE_OPENCV2_LEGACY_COMPAT_HPP
-
-/* Define to 1 if you have the <opencv2/legacy/legacy.hpp> header file. */
-#undef HAVE_OPENCV2_LEGACY_LEGACY_HPP
 
 /* Define to 1 if you have the <opencv2/objdetect/objdetect.hpp> header file.
    */
@@ -464,6 +455,9 @@
 
 /* Define if OpenJPEG 1 is used */
 #undef HAVE_OPENJPEG_1
+
+/* Define if OpenJPEG 2.1 is used */
+#undef HAVE_OPENJPEG_2_1
 
 /* Define to enable openni2 library (used by openni2). */
 #undef HAVE_OPENNI2
@@ -501,8 +495,8 @@
 /* Define to enable Qt elements (used by qt). */
 #undef HAVE_QT
 
-/* Define if Qt Android integration is installed */
-#undef HAVE_QT_ANDROID
+/* Define if Qt eglfs integration is installed */
+#undef HAVE_QT_EGLFS
 
 /* Define if Qt iOS integration is installed */
 #undef HAVE_QT_IOS
@@ -648,6 +642,9 @@
 /* Define to enable WebP (used by webp ). */
 #undef HAVE_WEBP
 
+/* Define to enable WebRTC Audio Processing (used by webrtcdsp). */
+#undef HAVE_WEBRTCDSP
+
 /* Define to enable wildmidi midi soft synth plugin (used by wildmidi). */
 #undef HAVE_WILDMIDI
 
@@ -728,7 +725,7 @@
 #define PACKAGE_NAME "GStreamer Bad Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.8.0"
+#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.9.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-bad"
@@ -737,7 +734,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.8.0"
+#define PACKAGE_VERSION "1.9.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -781,7 +778,7 @@
 #undef USE_EGL_RPI
 
 /* Version number of package */
-#define VERSION "1.8.0"
+#define VERSION "1.9.1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

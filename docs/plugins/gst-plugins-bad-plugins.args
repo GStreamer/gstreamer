@@ -2013,7 +2013,7 @@
 <TYPE>guint</TYPE>
 <RANGE>[1,7]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T layer enabled</NICK>
+<NICK>ISDB-T layer enabled</NICK>
 <BLURB>(ISDB-T) Layer Enabled (7 = All layers).</BLURB>
 <DEFAULT>7</DEFAULT>
 </ARG>
@@ -2043,7 +2043,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,13]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T layer A segment count</NICK>
+<NICK>ISDB-T layer A segment count</NICK>
 <BLURB>(ISDB-T) Layer A segment count (-1 = AUTO).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
@@ -2053,7 +2053,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,8]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T layer A time interleaving </NICK>
+<NICK>ISDB-T layer A time interleaving</NICK>
 <BLURB>(ISDB-T) Layer A time interleaving (-1 = AUTO).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
@@ -2083,7 +2083,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,13]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T layer B segment count</NICK>
+<NICK>ISDB-T layer B segment count</NICK>
 <BLURB>(ISDB-T) Layer B segment count (-1 = AUTO).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
@@ -2093,7 +2093,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,8]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T layer B time interleaving </NICK>
+<NICK>ISDB-T layer B time interleaving</NICK>
 <BLURB>(ISDB-T) Layer B time interleaving (-1 = AUTO).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
@@ -2123,7 +2123,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,13]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T layer C segment count</NICK>
+<NICK>ISDB-T layer C segment count</NICK>
 <BLURB>(ISDB-T) Layer C segment count (-1 = AUTO).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
@@ -2133,7 +2133,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,8]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T layer C time interleaving </NICK>
+<NICK>ISDB-T layer C time interleaving</NICK>
 <BLURB>(ISDB-T) Layer C time interleaving (-1 = AUTO).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
@@ -2143,7 +2143,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T partial reception</NICK>
+<NICK>ISDB-T partial reception</NICK>
 <BLURB>(ISDB-T) Partial Reception (-1 = AUTO).</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -2153,7 +2153,7 @@
 <TYPE>guint</TYPE>
 <RANGE>[1,13]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T SB segment count</NICK>
+<NICK>ISDB-T SB segment count</NICK>
 <BLURB>(ISDB-T) SB segment count.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -2163,7 +2163,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[0,12]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T SB segment IDX</NICK>
+<NICK>ISDB-T SB segment IDX</NICK>
 <BLURB>(ISDB-T) SB segment IDX.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -2173,7 +2173,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,41]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T SB subchannel ID</NICK>
+<NICK>ISDB-T SB subchannel ID</NICK>
 <BLURB>(ISDB-T) SB Subchannel ID (-1 = AUTO).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -2183,7 +2183,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T sound broadcasting</NICK>
+<NICK>ISDB-T sound broadcasting</NICK>
 <BLURB>(ISDB-T) Sound Broadcasting.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -18243,7 +18243,7 @@
 <TYPE>guint</TYPE>
 <RANGE>[1,7]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T layer enabled</NICK>
+<NICK>ISDB-T layer enabled</NICK>
 <BLURB>(ISDB-T) Layer Enabled (7 = All layers).</BLURB>
 <DEFAULT>7</DEFAULT>
 </ARG>
@@ -18273,7 +18273,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,13]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T layer A segment count</NICK>
+<NICK>ISDB-T layer A segment count</NICK>
 <BLURB>(ISDB-T) Layer A segment count (-1 = AUTO).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
@@ -18283,7 +18283,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,8]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T layer A time interleaving </NICK>
+<NICK>ISDB-T layer A time interleaving</NICK>
 <BLURB>(ISDB-T) Layer A time interleaving (-1 = AUTO).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
@@ -18313,7 +18313,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,13]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T layer B segment count</NICK>
+<NICK>ISDB-T layer B segment count</NICK>
 <BLURB>(ISDB-T) Layer B segment count (-1 = AUTO).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
@@ -18323,7 +18323,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,8]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T layer B time interleaving </NICK>
+<NICK>ISDB-T layer B time interleaving</NICK>
 <BLURB>(ISDB-T) Layer B time interleaving (-1 = AUTO).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
@@ -18353,7 +18353,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,13]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T layer C segment count</NICK>
+<NICK>ISDB-T layer C segment count</NICK>
 <BLURB>(ISDB-T) Layer C segment count (-1 = AUTO).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
@@ -18363,7 +18363,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,8]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T layer C time interleaving </NICK>
+<NICK>ISDB-T layer C time interleaving</NICK>
 <BLURB>(ISDB-T) Layer C time interleaving (-1 = AUTO).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
@@ -18373,7 +18373,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T partial reception</NICK>
+<NICK>ISDB-T partial reception</NICK>
 <BLURB>(ISDB-T) Partial Reception (-1 = AUTO).</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -18383,7 +18383,7 @@
 <TYPE>guint</TYPE>
 <RANGE>[1,13]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T SB segment count</NICK>
+<NICK>ISDB-T SB segment count</NICK>
 <BLURB>(ISDB-T) SB segment count.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -18393,7 +18393,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[0,12]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T SB segment IDX</NICK>
+<NICK>ISDB-T SB segment IDX</NICK>
 <BLURB>(ISDB-T) SB segment IDX.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -18403,7 +18403,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[G_MAXULONG,41]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T SB subchannel ID</NICK>
+<NICK>ISDB-T SB subchannel ID</NICK>
 <BLURB>(ISDB-T) SB Subchannel ID (-1 = AUTO).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -18413,7 +18413,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>ISB-T sound broadcasting</NICK>
+<NICK>ISDB-T sound broadcasting</NICK>
 <BLURB>(ISDB-T) Sound Broadcasting.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -58965,7 +58965,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Eyes profile</NICK>
 <BLURB>Location of Haar cascade file to use for eye-pair detection.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_eyepair_small.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_eyepair_small.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59015,7 +59015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Mouth profile</NICK>
 <BLURB>Location of Haar cascade file to use for mouth detection.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_mouth.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_mouth.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59025,7 +59025,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Nose profile</NICK>
 <BLURB>Location of Haar cascade file to use for nose detection.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_nose.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_nose.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59035,7 +59035,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Face profile</NICK>
 <BLURB>Location of Haar cascade file to use for face detection.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59075,7 +59075,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Profile</NICK>
 <BLURB>Location of Haar cascade file to use for face blurion.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -60169,7 +60169,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rw</FLAGS>
 <NICK>Profile_fist</NICK>
 <BLURB>Location of HAAR cascade file (fist gesture).</BLURB>
-<DEFAULT>"/home/nicolas/Sources/prefix/share/gst-plugins-bad/1.0/opencv_haarcascades/fist.xml"</DEFAULT>
+<DEFAULT>"/usr/local/share/gst-plugins-bad/1.0/opencv_haarcascades/fist.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -60179,7 +60179,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rw</FLAGS>
 <NICK>Profile_palm</NICK>
 <BLURB>Location of HAAR cascade file (palm gesture).</BLURB>
-<DEFAULT>"/home/nicolas/Sources/prefix/share/gst-plugins-bad/1.0/opencv_haarcascades/palm.xml"</DEFAULT>
+<DEFAULT>"/usr/local/share/gst-plugins-bad/1.0/opencv_haarcascades/palm.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -68057,7 +68057,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rw</FLAGS>
 <NICK>Slice mode</NICK>
 <BLURB>Slice mode.</BLURB>
-<DEFAULT>num-slices slices</DEFAULT>
+<DEFAULT>Fixed number of slices</DEFAULT>
 </ARG>
 
 <ARG>
@@ -68078,6 +68078,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Complexity / quality / speed tradeoff</NICK>
 <BLURB>Complexity.</BLURB>
 <DEFAULT>Medium complexity / medium speed encoding</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::max-bitrate</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Bitrate</NICK>
+<BLURB>Maximum Bitrate (in bits per second).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -72189,3 +72199,44 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <BLURB>Controls the aggressiveness of the suppression. Increasing the level will reduce the noise level at the expense of a higher speech distortion.</BLURB>
 <DEFAULT>Moderate Suppression</DEFAULT>
 </ARG>
+
+<ARG>
+<NAME>GstDC1394Src::dma</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DMA ring buffer size</NICK>
+<BLURB>The number of frames in the Direct Memory Access ring buffer.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDC1394Src::guid</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Camera GUID</NICK>
+<BLURB>The hexadecimal representation of the GUID of the camera (use first camera available if null).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDC1394Src::iso</NAME>
+<TYPE>GstDC1394ISOSpeed</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISO bandwidth</NICK>
+<BLURB>The ISO bandwidth in Mbps.</BLURB>
+<DEFAULT>DC1394 ISO speed 400</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDC1394Src::unit</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Camera unit</NICK>
+<BLURB>The unit number of the camera (-1 if no unit number is used).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+

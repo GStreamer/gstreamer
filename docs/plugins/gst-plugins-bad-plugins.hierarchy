@@ -5,7 +5,6 @@ GObject
         GstAllocatorSysmem
         GstFdAllocator
           GstWlShmAllocator
-        GstVdpVideoAllocator
       GstAudioRingBuffer
         GstAudioSinkRingBuffer
         GstAudioSrcRingBuffer
@@ -38,7 +37,6 @@ GObject
           GstDtsDec
           GstFaad
           GstGSMDec
-          GstMpg123AudioDec
           GstSbcDec
           GstSirenDec
         GstAudioEncoder
@@ -95,12 +93,12 @@ GObject
               GstGtkGLSink
               GstGtkSink
             GstInterVideoSink
-            GstKMSSink
             GstQtSink
             GstWaylandSink
         GstBaseSrc
           GstAvdtpSrc
           GstDataURISrc
+          GstFliteTestSrc
           GstInterAudioSrc
           GstInterSubSrc
           GstInterVideoSrc
@@ -111,12 +109,12 @@ GObject
             GstAudioBaseSrc
               GstAudioSrc
                 GstOpenalSrc
+            GstDC1394Src
             GstDecklinkAudioSrc
             GstDecklinkVideoSrc
             GstDvbSrc
             GstGLTestSrc
             GstMMS
-            GstNeonhttpSrc
             GstRTMPSrc
             GstRfbSrc
             GstShmSrc
@@ -140,8 +138,6 @@ GObject
               ladspa-sine-so-sine-fcaa
             GstOFA
             GstStereo
-            GstWebrtcDsp
-            GstWebrtcEchoProbe
           GstBayer2RGB
           GstDebugSpy
           GstDtmfDetect
@@ -307,6 +303,7 @@ GObject
         GstMpeg2enc
         GstMpegPSDemux
         GstMplex
+        GstMusepackDec
         GstNetSim
         GstPcapParse
         GstPitch
@@ -339,8 +336,6 @@ GObject
           GstRsvgDec
           GstSchroDec
           GstVMncDec
-          GstVdpDecoder
-            GstVdpMpegDec
           GstWebPDec
         GstVideoEncoder
           GstOpenJPEGEnc
@@ -385,7 +380,6 @@ GObject
     GtkWidget
   GstColorBalanceChannel
   GstEncodingProfile
-  GstVdpDevice
   MXFMetadataBase
     MXFDescriptiveMetadata
       MXFDMS1

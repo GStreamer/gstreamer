@@ -1,15 +1,15 @@
 
-Release notes for GStreamer Bad Plugins 1.8.0
+Release notes for GStreamer Bad Plugins 1.9.1
 
-The GStreamer team is pleased to announce the first release of the new stable
-1.8 release series. The 1.8 release series is adding new features on top of
-the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x
-release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release of the unstable
+1.9 release series. The 1.9 release series is adding new features on top of
+the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.9 release series
+will lead to the stable 1.10 release series in the next weeks. Any newly added
+API can still change until that point.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
-the source release by the GStreamer project during the stable 1.8 release
-series.
+Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
 
 
 "That an accusation?"
@@ -60,12 +60,97 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 763756 : gl ! textoverlay ! glupload ! glfilter doesn't negotiate
-      * 763793 : h264parse, h265parse: failure to parse downstream force-key-unit event
-      * 763877 : Unable to build vulkan plugin from released tarball
-      * 763974 : mxfdemux: Fix query memory leak
-      * 764066 : vulkan: Build failure on arch not finding VK_API_VERSION
-      * 763262 : mpegtsdemux: accurate seeks are no more accurate (regression)
+      * 765266 : gl: More GLES/GL 3 compatibility fixes
+      * 767087 : ahcsrc: improve error message when camera open fails
+      * 623860 : mpegpsdemux: sends segment and gap events with invalid time after seek
+      * 678207 : lv2: port to GStreamer 1.0 and SLV2 to Lilv
+      * 704222 : gldownload: Support for multi-planar format for GLES
+      * 733233 : chromaprint: notify fingerprint also via property notify
+      * 733872 : codecparsers: mpegvideo: Add more fields to the headers.
+      * 739598 : rfbsrc: incorrectly calculates caps
+      * 746933 : gldisplay: EAGL " Could not create display " 
+      * 748651 : DTLS: Use unique names for internal elements to ease debugging
+      * 751540 : gltestsrc: implement missing patterns, port to GL3 / ES3, load shaders with GIO
+      * 751792 : dashdemux: incorrect segment duration for a segment list
+      * 753265 : osxaudio: Add device provider support
+      * 754495 : videoaggregator: No protection from receiving interlaced and non-interlaced content
+      * 756931 : gstglbasemixer: negotiated logic is partly broken
+      * 757022 : pnm: Implementation of GRAY16 handling
+      * 758064 : dashdemux: leading whitespaces in content protection element are not ignored
+      * 759801 : gltestsrc outputs only black frames for pattern 0 and 11
+      * 760916 : gl: implement GstGLMemoryEGL
+      * 761260 : qml: add Windows support
+      * 762142 : dashdemux: tests: use g_object_unref for test data
+      * 762144 : dashdemux: tests: add new dashdemux tests
+      * 762147 : adaptivedemux: use GstSystemClock to all real-time calculations
+      * 763026 : dc1394: port to 1.X
+      * 763044 : Enable  qmlglsink on Rasperry PI
+      * 763065 : androidmedia: assorted refactoring
+      * 763081 : bad plugins: use new gst_element_class_add_static_pad_template()
+      * 763099 : ahcsrc: replace with new surfacetexture
+      * 763100 : ahcsrc: remove unused variable
+      * 763126 : player: Add is_live flag to the GstPlayerMediaInfo
+      * 763309 : ahcsrc: add finalize function
+      * 763441 : rfbsrc: leads to - > invalid video buffer received
+      * 763647 : mpegtsmux doesn't keep language code from the incoming audio stream
+      * 763998 : ahc: use g_slice_new instead of g_slice_new0
+      * 764018 : glcontext: try wglCreateContextAttribsARB first even not using GL3 core profile
+      * 764036 : interlace: Allow interlaced sink caps, do passthrough
+      * 764251 : rtmpsrc: Add timeout property
+      * 764361 : gdpdepay: query for buffer allocator
+      * 764370 : codecparser: vp9: Wrong default values in non-intraonly/non-keyframe header fields
+      * 764549 : aggregator: remove duplicated test of flow_return in pad_chain_internal
+      * 764684 : adaptivedemux: Forward upstream buffer offsets
+      * 764873 : gldeinterlace: enable this plugin on OpenGL ES using a simple deinterlace fragment shader
+      * 764957 : dvbsrc: support dvbv5 channels format
+      * 764972 : dvbsrc: needlessly perform delivery system autodetection twice
+      * 765250 : d3dvideosink includes deprecated and unused d3dx9tex.h header
+      * 765292 : gl:cocoa:Fix incompatible type warning
+      * 765315 : player: Add A/V offset property
+      * 765425 : dshowsrcwrapper: Fix include path in CMakeLists.txt
+      * 765426 : dshowsrcwrapper: Fix link error (SAFESEH)
+      * 765427 : dshowsrcwrapper: add support for RGB32, RGB555, RGB565 and RGB8 formats
+      * 765428 : dshowsrcwrapper: Work around bugs in IDS Imaging camera drivers
+      * 765431 : aggregator: Check all pads for data when live
+      * 765581 : pvrbufferpool: gst_meta_register() parameter wrong
+      * 765728 : adaptivedemux: Segfault since " use realtime_clock for waiting for a condition " commit
+      * 765795 : glimagesink: support video frame rotation
+      * 765804 : GstPlayer build error due to not finding GstVideo-1.0.gir
+      * 765989 : videodiff element has useless " FIXME " description
+      * 766053 : uridownloader: should take ownership of its source element
+      * 766062 : player: Provide signalling for when a new URI is started
+      * 766163 : Some header files missing in sys/applemedia/ in gst-plugins-bad-1.8.1.tar.xz
+      * 766343 : mpegtsbase: remove unused variables 'upstream_live' and 'queried_latency'
+      * 766597 : kmssink: doesn't chain up finalize
+      * 766607 : player: problems with unit tests
+      * 766639 : examples: opencv: typo fix
+      * 766650 : adaptivedemux: Set DISCONT on startup and after seeks
+      * 766661 : gltestsrc,glmosaic: fix shader leaks
+      * 766662 : adaptivedemux: fix tag list leak
+      * 766663 : bad: fix leaks in tests
+      * 766679 : ahc: fix typo
+      * 766703 : glvideomixer: Using an invalid, already destroyed context
+      * 766794 : eglimage: Fails to compile because of compiler warning caused by unused function
+      * 766803 : h264parse: add support for config-interval=-1 to re-send SPS/PPS on I/IDR frames
+      * 766818 : [gl] gltransformation's pivot-z property not writable
+      * 766867 : gl: win32: no debug category set in gstglcontext_wgl.c
+      * 766891 : h265parse: codec_data cap field could be mis-populated when vps/sps/pps id's are not used contiguously from zero.
+      * 766973 : Various warningfixes for OSX (10.9.5) compiling with Apple LLVM version 6.0
+      * 766993 : Android decodebin: zero copy between hardware decoder and glimagesink doesn't work (regression in 1.9)
+      * 767104 : applemedia: vtenc: Register a hardware-only vtenc_h264_hw element on OSX
+      * 767159 : templatematch: fix leak in test
+      * 767161 : a2dpsink: unref avdtpsink if state transition failed
+      * 767162 : bad: use MAY_BE_LEAKED flag
+      * 767365 : adaptivedemux: Add custom flow return for allowing subclasses to specify when a fragment is finished
+      * 767402 : OpenJPEG decoder: use new sampling field to determine channel order for j2c and jpc streams
+      * 767501 : curlsmtpsink: Lock and don't send final boundary upon error
+      * 767512 : jpeg2000parse: support j2c and jp2 file formats
+      * 767553 : qmlglsink: Add Wayland support
+      * 767800 : Introduce a WebRTC Audio Processing based echo canceller for GStreamer
+      * 767908 : jpeg2000parse: use enums for colorspace and sampling, rather than strings
+      * 768217 : gl: Raw uploader is broken
+      * 768365 : shmsrc: gst_poll_remove_fd: assertion 'fd- > fd > = 0' failed
+      * 733265 : srtpenc: remove get-rollover-counter signal and add stats property
 
 ==== Download ====
 
@@ -102,9 +187,70 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleksander Wabik
-      * Jimmy Ohn
+      * Aaron Boxer
+      * Aleix Conchillo Flaqué
+      * Alessandro Decina
+      * Alex Ashley
+      * Alex-P. Natsios
+      * Arjen Veenhuizen
+      * Arun Raghavan
+      * Aurélien Zanelli
+      * Barun Kumar Singh
+      * Carlos Garcia Campos
+      * Carlos Rafael Giani
+      * Christoffer Stengren
+      * Damian Ziobro
+      * Dimitrios Katsaros
+      * Edward Hervey
+      * Florin Apostol
+      * Guillaume Desmottes
+      * Gwang Yoon Hwang
+      * Haihua Hu
+      * Havard Graff
+      * Heinrich Fink
+      * Hyunjun Ko
+      * Jan Alexander Steffens (heftig)
+      * Jan Schmidt
+      * Javier Martinez Canillas
+      * Jerome Laheurte
+      * Joan Pau Beltran
+      * Jonathan Roy
+      * Julien Isorce
+      * Justin Kim
+      * Kouhei Sutou
+      * Luis de Bethencourt
+      * Marcin Kolny
+      * Marcin Lewandowski
+      * Martin Kelly
+      * Mats Lindestam
       * Matthew Waters
+      * Michael Olbrich
+      * Nicolas Dufresne
+      * Nirbheek Chauhan
+      * Olivier Crête
+      * Patricia Muscalu
+      * Philipp Zabel
+      * Philippe Normand
+      * Raffaele Rossi
+      * Reynaldo H. Verdejo Pinochet
+      * Santiago Carot-Nemesio
+      * Scott D Phillips
       * Sebastian Dröge
+      * Sebastian Rasmussen
+      * Sergey Borovkov
+      * Song Bing
+      * Sreerenj Balachandran
+      * Stefan Sauer
+      * Thiago Santos
       * Thibault Saunier
+      * Tim-Philipp Müller
+      * Vanessa Chipirras Navalon
+      * Vincent Penquerc'h
+      * Vineeth TM
+      * Vivia Nikolaidou
+      * Víctor Manuel Jáquez Leal
+      * Wang Xin-yu (王昕宇)
+      * Wim Taymans
+      * Xavier Claessens
+      * Yann Jouanin
  

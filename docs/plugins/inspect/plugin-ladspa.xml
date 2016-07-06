@@ -3,11 +3,209 @@
   <description>LADSPA plugin</description>
   <filename>../../ext/ladspa/.libs/libgstladspa.so</filename>
   <basename>libgstladspa.so</basename>
-  <version>1.9.0.1</version>
+  <version>1.9.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
+    <element>
+      <name>ladspa-amp-so-amp-mono</name>
+      <longname>Mono Amplifier</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Mono Amplifier</description>
+      <author>Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño &lt;juanmabcmail@gmail.com&gt;, Andy Wingo &lt;wingo at pobox.com&gt;, Steve Baker &lt;stevebaker_org@yahoo.co.uk&gt;, Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Stefan Sauer &lt;ensonic@users.sf.net&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-amp-so-amp-stereo</name>
+      <longname>Stereo Amplifier</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Stereo Amplifier</description>
+      <author>Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño &lt;juanmabcmail@gmail.com&gt;, Andy Wingo &lt;wingo at pobox.com&gt;, Steve Baker &lt;stevebaker_org@yahoo.co.uk&gt;, Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Stefan Sauer &lt;ensonic@users.sf.net&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)2, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)2, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-delay-so-delay-5s</name>
+      <longname>Simple Delay Line</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Simple Delay Line</description>
+      <author>Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño &lt;juanmabcmail@gmail.com&gt;, Andy Wingo &lt;wingo at pobox.com&gt;, Steve Baker &lt;stevebaker_org@yahoo.co.uk&gt;, Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Stefan Sauer &lt;ensonic@users.sf.net&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-filter-so-hpf</name>
+      <longname>Simple High Pass Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Simple High Pass Filter</description>
+      <author>Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño &lt;juanmabcmail@gmail.com&gt;, Andy Wingo &lt;wingo at pobox.com&gt;, Steve Baker &lt;stevebaker_org@yahoo.co.uk&gt;, Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Stefan Sauer &lt;ensonic@users.sf.net&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-filter-so-lpf</name>
+      <longname>Simple Low Pass Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Simple Low Pass Filter</description>
+      <author>Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño &lt;juanmabcmail@gmail.com&gt;, Andy Wingo &lt;wingo at pobox.com&gt;, Steve Baker &lt;stevebaker_org@yahoo.co.uk&gt;, Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Stefan Sauer &lt;ensonic@users.sf.net&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sine-so-sine-faaa</name>
+      <longname>Sine Oscillator (Freq:audio, Amp:audio)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Sine Oscillator (Freq:audio, Amp:audio)</description>
+      <author>Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño &lt;juanmabcmail@gmail.com&gt;, Andy Wingo &lt;wingo at pobox.com&gt;, Steve Baker &lt;stevebaker_org@yahoo.co.uk&gt;, Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Stefan Sauer &lt;ensonic@users.sf.net&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)2, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sine-so-sine-faac</name>
+      <longname>Sine Oscillator (Freq:audio, Amp:control)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Sine Oscillator (Freq:audio, Amp:control)</description>
+      <author>Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño &lt;juanmabcmail@gmail.com&gt;, Andy Wingo &lt;wingo at pobox.com&gt;, Steve Baker &lt;stevebaker_org@yahoo.co.uk&gt;, Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Stefan Sauer &lt;ensonic@users.sf.net&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sine-so-sine-fcaa</name>
+      <longname>Sine Oscillator (Freq:control, Amp:audio)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Sine Oscillator (Freq:control, Amp:audio)</description>
+      <author>Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño &lt;juanmabcmail@gmail.com&gt;, Andy Wingo &lt;wingo at pobox.com&gt;, Steve Baker &lt;stevebaker_org@yahoo.co.uk&gt;, Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Stefan Sauer &lt;ensonic@users.sf.net&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspasrc-noise-so-noise-white</name>
+      <longname>White Noise Source</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>White Noise Source</description>
+      <author>Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño &lt;juanmabcmail@gmail.com&gt;, Andy Wingo &lt;wingo at pobox.com&gt;, Steve Baker &lt;stevebaker_org@yahoo.co.uk&gt;, Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Stefan Sauer &lt;ensonic@users.sf.net&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspasrc-sine-so-sine-fcac</name>
+      <longname>Sine Oscillator (Freq:control, Amp:control)</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>Sine Oscillator (Freq:control, Amp:control)</description>
+      <author>Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño &lt;juanmabcmail@gmail.com&gt;, Andy Wingo &lt;wingo at pobox.com&gt;, Steve Baker &lt;stevebaker_org@yahoo.co.uk&gt;, Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Stefan Sauer &lt;ensonic@users.sf.net&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, channels=(int)1, rate=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
   </elements>
 </plugin>
