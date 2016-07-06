@@ -327,13 +327,14 @@ GObject
     GInetSocketAddress
       GProxyAddress
   GSocketClient
+  GSocketControlMessage
+    GstIPPktinfoMessage
+    GstIPV6PktinfoMessage
   GSocketListener
     GSocketService
   GTlsCertificate
   GTlsDatabase
   GTlsInteraction
-  GUdevClient
-  GUdevDevice
   GdkPixbuf
   GstColorBalanceChannel
   GstTunerChannel
