@@ -2210,7 +2210,8 @@ realize_cb (GtkWidget * widget, PlaybackApp * app)
       app->embed_xid);
 #elif defined (GDK_WINDOWING_QUARTZ)
   app->embed_xid = (guintptr) gdk_quartz_window_get_nsview (window);
-  g_print ("Window realize: video window NSView = %p\n", app->embed_xid);
+  g_print ("Window realize: video window NSView = %" G_GUINTPTR_FORMAT "\n",
+      app->embed_xid);
 #elif defined (GDK_WINDOWING_X11)
   app->embed_xid = GDK_WINDOW_XID (window);
   g_print ("Window realize: video window XID = %" G_GUINTPTR_FORMAT "\n",
