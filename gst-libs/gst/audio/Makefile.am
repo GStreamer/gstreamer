@@ -83,7 +83,8 @@ nodist_libgstaudio_@GST_API_VERSION@include_HEADERS = \
 
 noinst_HEADERS = \
 	gstaudioutilsprivate.h \
-	audio-resampler-x86.h
+	audio-resampler-x86.h \
+	audio-resampler-neon.h
 
 libgstaudio_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
 		$(ORC_CFLAGS)
