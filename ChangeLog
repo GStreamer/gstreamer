@@ -1,9 +1,176 @@
-=== release 1.8.0 ===
+=== release 1.9.1 ===
 
-2016-03-24  Sebastian Dröge <slomo@coaxion.net>
+2016-07-06  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.0
+	  releasing 1.9.1
+
+2016-06-24 02:02:20 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* configure.ac:
+	  configure: Need to add -DGST_STATIC_COMPILATION when building only statically
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767463
+
+2016-06-21 11:49:02 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ac2f647 to f363b32
+
+2016-04-14 22:56:11 -0700  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-sdp.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  sdp: add rollover counters for all sender SSRC
+	  We add different crypto sessions in MIKEY, one for each sender
+	  SSRC. Currently, all of them will have the same security policy, 0.
+	  The rollover counters are obtained from the srtpenc element using the
+	  "stats" property.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730539
+
+2016-06-07 20:44:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-server.h:
+	  docs: fix some typos
+
+2016-05-25 10:28:43 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/Makefile.am:
+	  g-i: pass compiler env to g-ir-scanner
+	  It's what introspection.mak does as well. Should
+	  fix spurious build failures on gnome-continuous
+	  (caused by g-ir-scanner getting compiler details
+	  via python which is broken in some environments
+	  so passing the compiler details bypasses that).
+
+2016-05-18 16:48:44 +0100  Ian <ian.arkver.dev@gmail.com>
+
+	* gst/rtsp-server/rtsp-session.c:
+	  rtsp-session: RFC2326 does not allow a space between ; and timeout in the Session header
+	  This works with rtspsrc and live555, but fails with e.g. ffmpeg.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766619
+
+2016-03-07 14:48:38 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Check return value of sscanf
+	  And just make sure we always have 0/0 if we have an error
+	  CID #1352031
+
+2016-04-25 08:55:25 -0400  Jake Foytik <jake.foytik@ipconfigure.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/rtspserver.c:
+	* tests/check/gst/stream.c:
+	  rtsp-stream: Fix crash on cleanup with shared media and multiple udpsrc
+	  - Unicast udpsrcs are now managed in a hash table. This allows for proper cleanup in with shared streams and fixes a memory leak.
+	  - Unicast udpsrcs are now properly cleaned up when shared connections exit. See the update_transport() function.
+	  - Create unit test for shared media.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764744
+
+2016-04-11 10:55:23 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Always bind to ANY when address is a multicast address and not only on Windows
+	  For IPv6 addresses, binding to a multicast group does not work on Linux
+	  either. Always bind to ANY and then later join the multicast group.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764679
+
+2016-04-14 10:05:02 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6f2d209 to ac2f647
+
+2016-04-06 10:09:46 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	  rtsp-thread-pool: explained why GSource is a part of ThreadImpl
+	  Clarified why it is necessary to add source information to
+	  GstRTSPThreadImpl. See the reported bug in GLib:
+	  https://bugzilla.gnome.org/show_bug.cgi?id=720186
+	  for more information.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=761702
+
+2016-04-04 12:58:38 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/Makefile.am:
+	  examples: Clean up CFLAGS/LDADD even more
+	  The internal .la should come first and is part of LDADD, as is
+	  GST_CFLAGS/LIBS.
+
+2016-04-04 12:39:39 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/Makefile.am:
+	  examples: Clean up CFLAGS/LDADD to link with the correct versions of all libraries
+
+2016-04-03 12:06:29 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/Makefile.am:
+	  rtsp-server: Use $(GST_NET_LIBS) / $(GST_NET_CFLAGS)
+
+2015-12-30 18:39:05 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-server: Implement clock signalling according to RFC7273
+	  For NTP and PTP clocks we signal the actual clock that is used and signal
+	  the direct media clock offset.
+	  For all other clocks we at least signal that it's the local sender clock.
+	  This allows receivers to know which clock was used to generate the media and
+	  its RTP timestamps. Receivers can then implement network synchronization,
+	  either absolute or at least relative by getting the sender clock rate directly
+	  via NTP/PTP instead of estimating it from RTP timestamps and packet receive
+	  times.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=760005
+
+2016-03-02 19:42:58 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Add support for setting the multicast interface
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763000
+
+2016-03-02 19:42:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-media: Add support for setting the multicast interface
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763000
+
+2016-03-07 08:50:01 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: use new gst_element_class_add_static_pad_template()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763196
+
+2016-03-24 13:33:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.8.0 ===
+
+2016-03-24 13:00:35 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.8.0
 
 2016-03-16 23:35:09 +0200  Sebastian Dröge <sebastian@centricular.com>
 
