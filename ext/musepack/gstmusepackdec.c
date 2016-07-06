@@ -222,7 +222,7 @@ gst_musepackdec_handle_seek_event (GstMusepackDec * dec, GstEvent * event)
   GST_DEBUG_OBJECT (dec, "performing seek to sample %" G_GINT64_FORMAT,
       segment.start);
 
-  if (segment.start < 0 || segment.start >= segment.duration) {
+  if (segment.start >= segment.duration) {
     GST_WARNING_OBJECT (dec, "seek out of bounds");
     goto failed;
   }
