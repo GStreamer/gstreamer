@@ -2,14 +2,16 @@
 # Copyright (C) 2015 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Mogens Jaeger <mogensjaeger@gmail.com>, 2007, 2010, 2013, 2014.
-# Joe Hansen <joedalton2@yahoo.dk>, 2015.
+# Joe Hansen <joedalton2@yahoo.dk>, 2015, 2016.
+#
+# conductor -> dirigent (https://lists.freedesktop.org/archives/gstreamer-commits/2016-February/092542.html)
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.1\n"
+"Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:24+0200\n"
-"PO-Revision-Date: 2015-12-28 13:26+0200\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
+"PO-Revision-Date: 2016-06-25 13:26+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -49,20 +51,20 @@ msgid "LIST"
 msgstr "LISTE"
 
 msgid "Disable colored debugging output"
-msgstr "Déaktiver brug af farver ved fejlsøgnings uddata"
+msgstr "Deaktiver brug af farver ved fejlsøgnings uddata"
 
 msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
 "Ændrer farvelægningstilstand  af debug-log. Mulige tilstande: til fra, "
-"déaktiveret, auto, unix"
+"deaktiveret, auto, unix"
 
 msgid "Disable debugging"
-msgstr "Déaktiver fejlsøgning"
+msgstr "Deaktiver fejlsøgning"
 
 msgid "Enable verbose plugin loading diagnostics"
-msgstr "Aktivér udførlig diagnostik ved indlæsning af moduler"
+msgstr "Aktiver udførlig diagnostik ved indlæsning af moduler"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Kolon-separerede stier der indeholder moduler"
@@ -81,13 +83,13 @@ msgid "PLUGINS"
 msgstr "MODULER"
 
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr "Déaktiver indfangning af segmentfejl under indlæsning af moduler"
+msgstr "Deaktiver indfangning af segmentfejl under indlæsning af moduler"
 
 msgid "Disable updating the registry"
-msgstr "Déaktiver opdatering af registratur"
+msgstr "Deaktiver opdatering af registratur"
 
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Déaktiver forgrening af hjælpeproces under skanning af registratur"
+msgstr "Deaktiver forgrening af hjælpeproces under skanning af registratur"
 
 msgid "GStreamer Options"
 msgstr "GStreamer indstillinger"
@@ -455,10 +457,14 @@ msgid "person(s) who composed the recording"
 msgstr "person(er) der komponerede optagelsen"
 
 msgid "conductor"
-msgstr ""
+msgstr "dirigent"
 
+# Jeg tror "refinement" refererer til at de skelner bedre mellem hvem
+# der dirigerer og opfører.  F.eks. står der oftest navne på dirigent
+# samt solister i koncerter, og/eller de vigtigste sangere (opera osv.)
+# Måske man kan erstatte det med -angivelse eller noget andet indirekte.  Ideer?
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "dirigent/opfører-angivelse"
 
 msgid "duration"
 msgstr "varighed"
@@ -857,7 +863,7 @@ msgstr "Henvisningen har ingen kilde [sink=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr "Linket har ingen sink [kilde=%s@%p]"
+msgstr "Henvisningen har ingen destination [kilde=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -868,7 +874,7 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kunne ikke sætte egenskab \"%s\" for element \"%s\" til \"%s\""
 
 msgid "Delayed linking failed."
-msgstr ""
+msgstr "Forsinket oprettelse af forbindelse mislykkedes."
 
 #, c-format
 msgid "could not link %s to %s"
@@ -930,8 +936,11 @@ msgstr "Intern datastrømsfejl."
 msgid "Internal clock error."
 msgstr "Fejl i internt ur."
 
+# Ingen idé om hvad de mener med map her, men "behandling" eller
+# muligvis kortlægge kunne også dække.  Men det kan sagtens ske at
+# oversætte virker også...
 msgid "Failed to map buffer."
-msgstr "Fejlede ved mapning af buffer"
+msgstr "Fejlede ved behandling af buffer."
 
 msgid "Filter caps"
 msgstr "Filterkapabilitet"
@@ -1016,12 +1025,11 @@ msgstr "gennemtving kapabiliteter"
 msgid "force caps without doing a typefind"
 msgstr "gennemtving kapabiliteter uden at gennemføre en typefind"
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
-msgstr "Mediestrøm indeholder ikke nok data."
+msgstr "Strøm indeholder ikke nok data."
 
 msgid "Stream contains no data."
-msgstr "Mediestrøm indeholder ingen data"
+msgstr "Mediestrøm indeholder ingen data."
 
 msgid "Implemented Interfaces:\n"
 msgstr "Implementerede grænseflader:\n"
@@ -1105,7 +1113,7 @@ msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
-"Ved kontrol af om et element eller et plugin eksisterer, kontrollér da også "
+"Ved kontrol af om et element eller et plugin eksisterer, kontroller da også "
 "om versionen i det mindste er den specificerede version"
 
 msgid "Print supported URI schemes, with the elements that implement them"
@@ -1247,7 +1255,7 @@ msgid "PROPERTY-NAME"
 msgstr "EGENSKABSNAVN"
 
 msgid "Do not install a fault handler"
-msgstr "Installér ikke en fejlhåndterer"
+msgstr "Installer ikke en fejlhåndterer"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Gennemtving medieslut på kilder før nedlukning af rørledning"
