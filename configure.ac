@@ -3371,7 +3371,7 @@ AG_GST_CHECK_FEATURE(WEBRTCDSP, [WebRTC Audio Processing], webrtcdsp, [
   AC_LANG_PUSH([C++])
   old_CPPFLAGS=$CPPFLAGS
   CPPFLAGS="-std=c++11 $CPPFLAGS"
-  AG_GST_PKG_CHECK_MODULES(WEBRTCDSP, webrtc-audio-processing = 0.2)
+  AG_GST_PKG_CHECK_MODULES(WEBRTCDSP, webrtc-audio-processing >= 0.2 webrtc-audio-processing < 0.4)
   AC_CHECK_HEADER([typeindex],[],[HAVE_WEBRTCDSP=no])
   CPPFLAGS=$old_CPPFLAGS
   AC_LANG_POP([C++])
