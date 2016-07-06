@@ -10,6 +10,7 @@
 #include "audio-converter.h"
 #include "audio-info.h"
 #include "audio-quantize.h"
+#include "audio-resampler.h"
 #include "gstaudioringbuffer.h"
 
 /* enumerations from "audio-format.h" */
@@ -338,6 +339,98 @@ gst_audio_quantize_flags_get_type (void)
     };
     GType g_define_type_id =
         g_flags_register_static ("GstAudioQuantizeFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "audio-resampler.h" */
+GType
+gst_audio_resampler_filter_mode_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_AUDIO_RESAMPLER_FILTER_MODE_INTERPOLATED,
+          "GST_AUDIO_RESAMPLER_FILTER_MODE_INTERPOLATED", "interpolated"},
+      {GST_AUDIO_RESAMPLER_FILTER_MODE_FULL,
+          "GST_AUDIO_RESAMPLER_FILTER_MODE_FULL", "full"},
+      {GST_AUDIO_RESAMPLER_FILTER_MODE_AUTO,
+          "GST_AUDIO_RESAMPLER_FILTER_MODE_AUTO", "auto"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstAudioResamplerFilterMode", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_audio_resampler_filter_interpolation_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_NONE,
+          "GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_NONE", "none"},
+      {GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR,
+          "GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR", "linear"},
+      {GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC,
+          "GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC", "cubic"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstAudioResamplerFilterInterpolation", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_audio_resampler_method_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_AUDIO_RESAMPLER_METHOD_NEAREST, "GST_AUDIO_RESAMPLER_METHOD_NEAREST",
+          "nearest"},
+      {GST_AUDIO_RESAMPLER_METHOD_LINEAR, "GST_AUDIO_RESAMPLER_METHOD_LINEAR",
+          "linear"},
+      {GST_AUDIO_RESAMPLER_METHOD_CUBIC, "GST_AUDIO_RESAMPLER_METHOD_CUBIC",
+          "cubic"},
+      {GST_AUDIO_RESAMPLER_METHOD_BLACKMAN_NUTTALL,
+          "GST_AUDIO_RESAMPLER_METHOD_BLACKMAN_NUTTALL", "blackman-nuttall"},
+      {GST_AUDIO_RESAMPLER_METHOD_KAISER, "GST_AUDIO_RESAMPLER_METHOD_KAISER",
+          "kaiser"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstAudioResamplerMethod", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_audio_resampler_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_AUDIO_RESAMPLER_FLAG_NONE, "GST_AUDIO_RESAMPLER_FLAG_NONE", "none"},
+      {GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED_IN,
+            "GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED_IN",
+          "non-interleaved-in"},
+      {GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED_OUT,
+            "GST_AUDIO_RESAMPLER_FLAG_NON_INTERLEAVED_OUT",
+          "non-interleaved-out"},
+      {GST_AUDIO_RESAMPLER_FLAG_VARIABLE_RATE,
+          "GST_AUDIO_RESAMPLER_FLAG_VARIABLE_RATE", "variable-rate"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstAudioResamplerFlags", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;

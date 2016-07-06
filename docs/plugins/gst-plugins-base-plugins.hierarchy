@@ -79,12 +79,16 @@ GObject
           GstVideoRate
         GstBin
           GstDecodeBin
+          GstDecodebin3
           GstEncodeBin
+          GstParseBin
           GstPipeline
             GstPlayBin
+            GstPlayBin3
           GstPlaySink
           GstSubtitleOverlay
           GstURIDecodeBin
+          GstURISourceBin
         GstOggAviParse
         GstOggDemux
         GstOggMux
@@ -108,6 +112,7 @@ GObject
         GstProxyPad
           GstGhostPad
             GstDecodePad
+            GstParsePad
       GstPadTemplate
       GstPlugin
       GstPluginFeature
@@ -116,6 +121,8 @@ GObject
         GstTracerFactory
         GstTypeFindFactory
       GstRegistry
+      GstStream
+      GstStreamCollection
       GstTask
       GstTaskPool
   GInputStream

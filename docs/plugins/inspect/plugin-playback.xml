@@ -3,10 +3,10 @@
   <description>various playback elements</description>
   <filename>../../gst/playback/.libs/libgstplayback.so</filename>
   <basename>libgstplayback.so</basename>
-  <version>1.9.0.1</version>
+  <version>1.9.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins git</package>
+  <package>GStreamer Base Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -31,8 +31,83 @@
       </pads>
     </element>
     <element>
+      <name>decodebin3</name>
+      <longname>Decoder Bin 3</longname>
+      <class>Generic/Bin/Decoder</class>
+      <description>Autoplug and decode to raw media</description>
+      <author>Edward Hervey &lt;edward@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>audio_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>text_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>parsebin</name>
+      <longname>Parse Bin</longname>
+      <class>Generic/Bin/Parser</class>
+      <description>Parse and de-multiplex to elementary stream</description>
+      <author>Jan Schmidt &lt;jan@centricular.com&gt;, Edward Hervey &lt;edward@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>playbin</name>
       <longname>Player Bin 2</longname>
+      <class>Generic/Bin/Player</class>
+      <description>Autoplug and play media from an uri</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+      </pads>
+    </element>
+    <element>
+      <name>playbin3</name>
+      <longname>Player Bin 3</longname>
       <class>Generic/Bin/Player</class>
       <description>Autoplug and play media from an uri</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
@@ -132,6 +207,21 @@
       <class>Generic/Bin/Decoder</class>
       <description>Autoplug and decode an URI to raw media</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>urisourcebin</name>
+      <longname>URI reader</longname>
+      <class>Generic/Bin/Source</class>
+      <description>Download and buffer a URI as needed</description>
+      <author>Jan Schmidt &lt;jan@centricular.com&gt;</author>
       <pads>
         <caps>
           <name>src_%u</name>

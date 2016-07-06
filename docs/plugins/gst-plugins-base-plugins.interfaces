@@ -9,17 +9,21 @@ GstAudioEncoder GstPreset
 GstBin GstChildProxy
 GstCdParanoiaSrc GstURIHandler
 GstDecodeBin GstChildProxy
+GstDecodebin3 GstChildProxy
 GstEncodeBin GstChildProxy
 GstGioSink GstURIHandler
 GstGioSrc GstURIHandler
 GstOggMux GstPreset
 GstOpusEnc GstPreset GstTagSetter
+GstParseBin GstChildProxy
 GstPipeline GstChildProxy
 GstPlayBin GstChildProxy GstStreamVolume GstVideoOverlay GstNavigation GstColorBalance
+GstPlayBin3 GstChildProxy GstStreamVolume GstVideoOverlay GstNavigation GstColorBalance
 GstPlaySink GstChildProxy GstStreamVolume GstVideoOverlay GstNavigation GstColorBalance
 GstSubtitleOverlay GstChildProxy
 GstTheoraEnc GstPreset
 GstURIDecodeBin GstChildProxy
+GstURISourceBin GstChildProxy
 GstVideoEncoder GstPreset
 GstVolume GstStreamVolume
 GstVorbisEnc GstPreset GstTagSetter

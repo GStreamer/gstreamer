@@ -88,6 +88,7 @@ gst_video_format_get_type (void)
       {GST_VIDEO_FORMAT_NV61, "GST_VIDEO_FORMAT_NV61", "nv61"},
       {GST_VIDEO_FORMAT_P010_10BE, "GST_VIDEO_FORMAT_P010_10BE", "p010-10be"},
       {GST_VIDEO_FORMAT_P010_10LE, "GST_VIDEO_FORMAT_P010_10LE", "p010-10le"},
+      {GST_VIDEO_FORMAT_IYU2, "GST_VIDEO_FORMAT_IYU2", "iyu2"},
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_enum_register_static ("GstVideoFormat", values);
@@ -800,12 +801,14 @@ gst_video_resampler_flags_get_type (void)
 {
   static volatile gsize g_define_type_id__volatile = 0;
   if (g_once_init_enter (&g_define_type_id__volatile)) {
-    static const GEnumValue values[] = {
+    static const GFlagsValue values[] = {
       {GST_VIDEO_RESAMPLER_FLAG_NONE, "GST_VIDEO_RESAMPLER_FLAG_NONE", "none"},
+      {GST_VIDEO_RESAMPLER_FLAG_HALF_TAPS, "GST_VIDEO_RESAMPLER_FLAG_HALF_TAPS",
+          "half-taps"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
-        g_enum_register_static ("GstVideoResamplerFlags", values);
+        g_flags_register_static ("GstVideoResamplerFlags", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;

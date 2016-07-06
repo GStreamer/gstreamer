@@ -42,6 +42,16 @@ GType gst_audio_noise_shaping_method_get_type (void);
 GType gst_audio_quantize_flags_get_type (void);
 #define GST_TYPE_AUDIO_QUANTIZE_FLAGS (gst_audio_quantize_flags_get_type())
 
+/* enumerations from "audio-resampler.h" */
+GType gst_audio_resampler_filter_mode_get_type (void);
+#define GST_TYPE_AUDIO_RESAMPLER_FILTER_MODE (gst_audio_resampler_filter_mode_get_type())
+GType gst_audio_resampler_filter_interpolation_get_type (void);
+#define GST_TYPE_AUDIO_RESAMPLER_FILTER_INTERPOLATION (gst_audio_resampler_filter_interpolation_get_type())
+GType gst_audio_resampler_method_get_type (void);
+#define GST_TYPE_AUDIO_RESAMPLER_METHOD (gst_audio_resampler_method_get_type())
+GType gst_audio_resampler_flags_get_type (void);
+#define GST_TYPE_AUDIO_RESAMPLER_FLAGS (gst_audio_resampler_flags_get_type())
+
 /* enumerations from "gstaudioringbuffer.h" */
 GType gst_audio_ring_buffer_state_get_type (void);
 #define GST_TYPE_AUDIO_RING_BUFFER_STATE (gst_audio_ring_buffer_state_get_type())

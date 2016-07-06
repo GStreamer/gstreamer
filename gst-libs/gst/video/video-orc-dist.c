@@ -21915,15 +21915,15 @@ video_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
         1, 9, 27, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 99, 111, 110,
         118, 101, 114, 116, 95, 73, 52, 50, 48, 95, 66, 71, 82, 65, 11, 4,
         4, 12, 1, 1, 12, 1, 1, 12, 1, 1, 14, 1, 128, 0, 0, 0,
-        14, 1, 127, 0, 0, 0, 16, 2, 16, 2, 16, 2, 16, 2, 16, 2,
-        20, 2, 20, 2, 20, 2, 20, 2, 20, 2, 20, 2, 20, 1, 20, 1,
-        20, 1, 20, 4, 65, 38, 4, 16, 151, 32, 38, 45, 38, 5, 65, 38,
-        38, 16, 151, 33, 38, 45, 38, 6, 65, 38, 38, 16, 151, 34, 38, 90,
-        32, 32, 24, 90, 35, 34, 25, 70, 35, 32, 35, 159, 38, 35, 196, 35,
-        38, 17, 90, 37, 33, 26, 70, 37, 32, 37, 159, 40, 37, 90, 36, 33,
-        27, 70, 36, 32, 36, 90, 32, 34, 28, 70, 36, 36, 32, 159, 39, 36,
-        196, 37, 40, 39, 195, 41, 37, 35, 21, 2, 33, 0, 41, 16, 2, 0,
-
+        14, 4, 128, 0, 0, 0, 14, 1, 127, 0, 0, 0, 16, 2, 16, 2,
+        16, 2, 16, 2, 16, 2, 20, 2, 20, 2, 20, 2, 20, 2, 20, 2,
+        20, 2, 20, 1, 20, 1, 20, 1, 20, 4, 65, 38, 4, 16, 151, 32,
+        38, 45, 38, 5, 65, 38, 38, 16, 151, 33, 38, 45, 38, 6, 65, 38,
+        38, 16, 151, 34, 38, 90, 32, 32, 24, 90, 35, 34, 25, 70, 35, 32,
+        35, 159, 38, 35, 196, 35, 38, 18, 90, 37, 33, 26, 70, 37, 32, 37,
+        159, 40, 37, 90, 36, 33, 27, 70, 36, 32, 36, 90, 32, 34, 28, 70,
+        36, 36, 32, 159, 39, 36, 196, 37, 40, 39, 195, 41, 37, 35, 21, 2,
+        33, 0, 41, 17, 2, 0,
       };
       p = orc_program_new_from_static_bytecode (bc);
       orc_program_set_backup_function (p, _backup_video_orc_convert_I420_BGRA);
@@ -21936,7 +21936,8 @@ video_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
       orc_program_add_constant (p, 1, 0x00000080, "c1");
-      orc_program_add_constant (p, 1, 0x0000007f, "c2");
+      orc_program_add_constant (p, 4, 0x00000080, "c2");
+      orc_program_add_constant (p, 1, 0x0000007f, "c3");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_parameter (p, 2, "p2");
       orc_program_add_parameter (p, 2, "p3");
@@ -21977,7 +21978,7 @@ video_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "convssswb", 0, ORC_VAR_T7, ORC_VAR_T4,
           ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T4, ORC_VAR_T7, ORC_VAR_C2,
+      orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T4, ORC_VAR_T7, ORC_VAR_C3,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mulhsw", 0, ORC_VAR_T6, ORC_VAR_T2, ORC_VAR_P3,
           ORC_VAR_D1);
@@ -21999,7 +22000,7 @@ video_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mergewl", 0, ORC_VAR_T10, ORC_VAR_T6,
           ORC_VAR_T4, ORC_VAR_D1);
-      orc_program_append_2 (p, "addb", 2, ORC_VAR_D1, ORC_VAR_T10, ORC_VAR_C1,
+      orc_program_append_2 (p, "addb", 2, ORC_VAR_D1, ORC_VAR_T10, ORC_VAR_C2,
           ORC_VAR_D1);
 #endif
 
@@ -22366,15 +22367,15 @@ video_orc_convert_I420_ARGB (guint8 * ORC_RESTRICT d1,
         1, 9, 27, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 99, 111, 110,
         118, 101, 114, 116, 95, 73, 52, 50, 48, 95, 65, 82, 71, 66, 11, 4,
         4, 12, 1, 1, 12, 1, 1, 12, 1, 1, 14, 1, 128, 0, 0, 0,
-        14, 1, 127, 0, 0, 0, 16, 2, 16, 2, 16, 2, 16, 2, 16, 2,
-        20, 2, 20, 2, 20, 2, 20, 2, 20, 2, 20, 2, 20, 1, 20, 1,
-        20, 1, 20, 4, 65, 38, 4, 16, 151, 32, 38, 45, 38, 5, 65, 38,
-        38, 16, 151, 33, 38, 45, 38, 6, 65, 38, 38, 16, 151, 34, 38, 90,
-        32, 32, 24, 90, 35, 34, 25, 70, 35, 32, 35, 159, 38, 35, 196, 35,
-        17, 38, 90, 37, 33, 26, 70, 37, 32, 37, 159, 40, 37, 90, 36, 33,
-        27, 70, 36, 32, 36, 90, 32, 34, 28, 70, 36, 36, 32, 159, 39, 36,
-        196, 37, 39, 40, 195, 41, 35, 37, 21, 2, 33, 0, 41, 16, 2, 0,
-
+        14, 4, 128, 0, 0, 0, 14, 1, 127, 0, 0, 0, 16, 2, 16, 2,
+        16, 2, 16, 2, 16, 2, 20, 2, 20, 2, 20, 2, 20, 2, 20, 2,
+        20, 2, 20, 1, 20, 1, 20, 1, 20, 4, 65, 38, 4, 16, 151, 32,
+        38, 45, 38, 5, 65, 38, 38, 16, 151, 33, 38, 45, 38, 6, 65, 38,
+        38, 16, 151, 34, 38, 90, 32, 32, 24, 90, 35, 34, 25, 70, 35, 32,
+        35, 159, 38, 35, 196, 35, 18, 38, 90, 37, 33, 26, 70, 37, 32, 37,
+        159, 40, 37, 90, 36, 33, 27, 70, 36, 32, 36, 90, 32, 34, 28, 70,
+        36, 36, 32, 159, 39, 36, 196, 37, 39, 40, 195, 41, 35, 37, 21, 2,
+        33, 0, 41, 17, 2, 0,
       };
       p = orc_program_new_from_static_bytecode (bc);
       orc_program_set_backup_function (p, _backup_video_orc_convert_I420_ARGB);
@@ -22387,7 +22388,8 @@ video_orc_convert_I420_ARGB (guint8 * ORC_RESTRICT d1,
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
       orc_program_add_constant (p, 1, 0x00000080, "c1");
-      orc_program_add_constant (p, 1, 0x0000007f, "c2");
+      orc_program_add_constant (p, 4, 0x00000080, "c2");
+      orc_program_add_constant (p, 1, 0x0000007f, "c3");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_parameter (p, 2, "p2");
       orc_program_add_parameter (p, 2, "p3");
@@ -22428,7 +22430,7 @@ video_orc_convert_I420_ARGB (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "convssswb", 0, ORC_VAR_T7, ORC_VAR_T4,
           ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T4, ORC_VAR_C2, ORC_VAR_T7,
+      orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T4, ORC_VAR_C3, ORC_VAR_T7,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mulhsw", 0, ORC_VAR_T6, ORC_VAR_T2, ORC_VAR_P3,
           ORC_VAR_D1);
@@ -22450,7 +22452,7 @@ video_orc_convert_I420_ARGB (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mergewl", 0, ORC_VAR_T10, ORC_VAR_T4,
           ORC_VAR_T6, ORC_VAR_D1);
-      orc_program_append_2 (p, "addb", 2, ORC_VAR_D1, ORC_VAR_T10, ORC_VAR_C1,
+      orc_program_append_2 (p, "addb", 2, ORC_VAR_D1, ORC_VAR_T10, ORC_VAR_C2,
           ORC_VAR_D1);
 #endif
 
