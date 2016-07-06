@@ -1,22 +1,21 @@
 # Slovak translations for gst-plugins-good.
 # This file is put in the public domain.
 #
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014, 2016.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.2.1\n"
+"Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:27+0200\n"
-"PO-Revision-Date: 2014-01-30 11:08+0100\n"
-"Last-Translator: Peter Tuharsky <tuharsky@misbb.sk>\n"
+"POT-Creation-Date: 2016-07-06 10:18+0300\n"
+"PO-Revision-Date: 2016-05-20 12:31+0100\n"
+"Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "Language: sk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\\n\n"
-"X-Generator: KBabel 1.11.4\n"
-"X-Poedit-Country: SLOVAKIA\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\\n;\n"
+"X-Generator: Poedit 1.6.10\n"
 
 msgid "Jack server not found"
 msgstr "Jack server sa nenašiel"
@@ -47,7 +46,6 @@ msgstr "Nepodarilo sa nadviazať spojenie so serverom."
 msgid "Secure connection setup failed."
 msgstr "Nastavenie bezpečného pripojenia zlyhalo."
 
-#, fuzzy
 msgid ""
 "A network error occurred, or the server closed the connection unexpectedly."
 msgstr "Vyskytla sa sieťová chyba, alebo server nečakane uzavrel spojenie."
@@ -246,9 +244,9 @@ msgstr "Zariadenie '%s' nevie nahrávať na %dx%d"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Zariadenie '%s' nedokáže nahrávať v uvedenom formáte"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Zariadenie '%s' nie je určené pre nahrávanie videa"
+msgstr "Zariadenie '%s' podporuje nespojité roviny"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -257,27 +255,23 @@ msgstr "Nepodarilo sa získať parametre zariadenia '%s'"
 msgid "Video device did not accept new frame rate setting."
 msgstr "Video zariadenie odmietlo nové nastavenie frekvencie snímok."
 
-#, fuzzy
 msgid "Video device did not provide output format."
-msgstr "Video zariadenie odmietlo nové nastavenie frekvencie snímok."
+msgstr "ideo zariadenie neposkytlo výstupný formát."
 
 msgid "Video device returned invalid dimensions."
-msgstr ""
+msgstr "Video zariadenie udáva nesprávne rozmery."
 
-#, fuzzy
 msgid "Video devices uses an unsupported interlacing method."
-msgstr "Tento ovládač zariadenia '%s' nepodporuje IO metódu %d"
+msgstr "Video zariadenie používa nepodporovanú metódu prekladania snímok."
 
 msgid "Video devices uses an unsupported pixel format."
-msgstr ""
+msgstr "Video zariadenie používa nepodporovaný formát pixelov."
 
-#, fuzzy
 msgid "Failed to configure internal buffer pool."
-msgstr "Video zariadenie nemohlo vytvoriť oblasť vyrovnávacej pamäte."
+msgstr "Nepodarilo sa nastaviť vnútornú oblasť vyrovnávacej pamäte."
 
-#, fuzzy
 msgid "Video device did not suggest any buffer size."
-msgstr "Video zariadenie nemohlo vytvoriť oblasť vyrovnávacej pamäte."
+msgstr "Video zariadenie neodporučilo žiadnu veľkosť vyrovnávacej pamäte."
 
 msgid "No downstream pool to import from."
 msgstr ""
@@ -307,33 +301,32 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Nepodarilo sa zmeniť stav stlmenia pre zariadenie '%s'."
 
 msgid "Failed to allocated required memory."
-msgstr ""
+msgstr "Nepodarilo sa uvoľniť dostatok pamäte."
 
 msgid "Failed to allocate required memory."
-msgstr ""
+msgstr "Nepodarilo sa uvoľniť dostatok pamäte."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported input format"
-msgstr "Tento ovládač zariadenia '%s' nepodporuje IO metódu %d"
+msgstr "Konvertor na zariadení %s nepodporuje žiadny vstupný formát"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported output format"
-msgstr "Video zariadenie odmietlo nové nastavenie frekvencie snímok."
+msgstr "Konvertor na zariadení %s nepodporuje žiadny výstupný formát"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported input format"
-msgstr "Video zariadenie odmietlo nové nastavenie frekvencie snímok."
+msgstr "Enkodér na zariadení %s nepodporuje žiadny vstupný formát"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr "Video zariadenie odmietlo nové nastavenie frekvencie snímok."
+msgstr "Enkodér na zariadení %s nepodporuje žiadny výstupný formát"
 
-#, fuzzy
 msgid "Failed to start decoding thread."
-msgstr "Nepodarilo sa dekódovať obrázok JPEG"
+msgstr "Nepodarilo sa spustiť dekódovacie vlákno."
 
 msgid "Failed to process frame."
-msgstr ""
+msgstr "Nepodarilo sa spracovať snímok."
 
 #, c-format
 msgid ""
@@ -379,11 +372,11 @@ msgstr "Zariadenie '%s' nie je určené pre nahrávanie."
 msgid "Device '%s' is not a output device."
 msgstr "Zariadenie '%s' nie je určené pre výstup."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a M2M device."
-msgstr "Zariadenie '%s' nie je určené pre výstup."
+msgstr "Zariadenie '%s' nie je typu M2M."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not dup device '%s' for reading and writing."
 msgstr "Nepodarilo sa otvoriť zariadenie '%s' pre čítanie a zápis."
 
@@ -435,9 +428,6 @@ msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
 
 msgid "Cannot operate without a clock"
 msgstr "Nemôžem fungovať bez hodín"
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Zariadenie '%s' nie je určené pre nahrávanie videa"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nepodarilo sa nadviazať spojenie so zvukovým serverom"
