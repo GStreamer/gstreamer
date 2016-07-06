@@ -752,7 +752,7 @@ gst_audio_aggregator_do_clip (GstAggregator * agg,
   bpf = GST_AUDIO_INFO_BPF (&pad->info);
 
   GST_OBJECT_LOCK (bpad);
-  buffer = gst_audio_buffer_clip (buffer, &bpad->clip_segment, rate, bpf);
+  buffer = gst_audio_buffer_clip (buffer, &bpad->segment, rate, bpf);
   GST_OBJECT_UNLOCK (bpad);
 
   return buffer;
