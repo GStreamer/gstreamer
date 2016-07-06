@@ -30,6 +30,7 @@ GObject
           avdec_adpcm_ea_xas
           avdec_adpcm_ima_amv
           avdec_adpcm_ima_apc
+          avdec_adpcm_ima_dat4
           avdec_adpcm_ima_dk3
           avdec_adpcm_ima_dk4
           avdec_adpcm_ima_ea_eacs
@@ -42,6 +43,7 @@ GObject
           avdec_adpcm_ima_wav
           avdec_adpcm_ima_ws
           avdec_adpcm_ms
+          avdec_adpcm_mtaf
           avdec_adpcm_psx
           avdec_adpcm_sbpro_2
           avdec_adpcm_sbpro_3
@@ -72,6 +74,7 @@ GObject
           avdec_dsd_msbf_planar
           avdec_dsicinaudio
           avdec_dss_sp
+          avdec_dst
           avdec_dvaudio
           avdec_eac3
           avdec_evrc
@@ -268,6 +271,8 @@ GObject
           avdec_kmvc
           avdec_lagarith
           avdec_loco
+          avdec_m101
+          avdec_magicyuv
           avdec_mdec
           avdec_mimic
           avdec_mjpeg
@@ -319,6 +324,7 @@ GObject
           avdec_screenpresso
           avdec_sgi
           avdec_sgirle
+          avdec_sheervideo
           avdec_smackvid
           avdec_smc
           avdec_smvjpeg
@@ -336,6 +342,7 @@ GObject
           avdec_tmv
           avdec_truemotion1
           avdec_truemotion2
+          avdec_truemotion2rt
           avdec_tscc2
           avdec_txd
           avdec_ultimotion
@@ -373,6 +380,7 @@ GObject
           avdec_xl
           avdec_xwd
           avdec_y41p
+          avdec_ylc
           avdec_yop
           avdec_yuv4
           avdec_zerocodec
@@ -505,6 +513,7 @@ GObject
         avmux_filmstrip
         avmux_flv
         avmux_gxf
+        avmux_hash
         avmux_hds
         avmux_hls
         avmux_ico

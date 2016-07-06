@@ -129,6 +129,7 @@ avmux_ffm GstTagSetter
 avmux_filmstrip GstTagSetter
 avmux_flv GstTagSetter
 avmux_gxf GstTagSetter
+avmux_hash GstTagSetter
 avmux_hds GstTagSetter
 avmux_hls GstTagSetter
 avmux_ico GstTagSetter

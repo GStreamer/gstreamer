@@ -1,9 +1,181 @@
-=== release 1.8.0 ===
+=== release 1.9.1 ===
 
-2016-03-24  Sebastian Dröge <slomo@coaxion.net>
+2016-07-06  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.0
+	  releasing 1.9.1
+
+2016-07-05 20:16:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Use gst_caps_fixate() instead of gst_caps_truncate()
+	  Just truncating might not be enough.
+
+2016-07-05 20:16:09 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Create caps from the codec context after it is opened
+	  We won't get codec_data and various other information otherwise.
+
+2016-07-05 20:15:28 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Create caps from the codec context after it is opened
+	  We won't get codec_data and various other information otherwise.
+
+2016-07-01 09:29:03 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  libav: Disable various other hardware related codecs
+
+2016-07-01 09:25:14 +0200  Edward Hervey <edward@centricular.com>
+
+	* configure.ac:
+	  configure: Disable VAAPI support
+	  We have native plugins (gst-vaapi) for that
+
+2016-07-01 09:16:41 +0200  Edward Hervey <edward@centricular.com>
+
+	* configure.ac:
+	  configure: Disable {audio|video}toolbox support (osx/ios)
+	  We already have native plugins for those
+
+2016-06-30 23:22:17 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.1
+
+2016-06-21 11:48:33 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ac2f647 to f363b32
+
+2016-05-31 20:29:32 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/Makefile.am:
+	  tests: use AM_TESTS_ENVIRONMENT
+	  Needed by new automake test runner.
+
+2016-05-15 13:34:11 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/plugins/inspect/plugin-libav.xml:
+	  docs: Update for git master
+
+2016-05-14 12:09:06 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/libav/gstavviddec.c:
+	  avvidec: Don't set bogus latency
+	  We might have cases where the framerate is not known (0/1).
+
+2016-05-12 11:09:13 +0200  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avvidec: Report the latency once we're fully configured
+	  Several decoders will only be able to report a real latency (has_b_frames)
+	  once they're actually initialized (i.e. when they return their first frame).
+	  Doing it earlier (in set_format) doesn't guarantee that the AVCodecContext
+	  has_b_frames has been properly initialized.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766362
+
+2016-05-13 10:27:38 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Add mapping for G729 caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766333
+
+2016-05-03 19:04:06 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.0.2
+
+2016-04-29 13:06:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Finish frames if they are header buffers only and don't produce any output
+	  Otherwise we will consider them as one frame of raw audio that is still
+	  pending, and shift all timestamps by the amount of time spent with header
+	  buffers.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765797
+
+2016-04-29 12:55:19 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: If decoding a frame failed, skip it
+	  Otherwise the next successfully decoded frame will get its timestamp and we
+	  will slowly let a/v sync drift apart.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765797
+
+2016-04-28 18:43:37 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Set all required fields in the AVFrame
+	  Various functions in libavcodec need them, like the format, sample rate, etc.
+	  and just having them in the context is not enough.
+	  This fixes draining for codecs like MP2 that require a fixed frame size and
+	  require libav to pad the last frame if required.
+
+2016-04-25 18:39:54 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  avcfg: Use av_strdup() instead of g_strdup() for strings owned by ffmpeg
+	  It has its own allocator that depending on the configuration is incompatible
+	  with GLib's and just causes a segmentation fault. Like on Windows.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=760266
+
+2016-04-20 15:27:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* ext/libav/gstav.c:
+	  avdeinterlace: Register all filters and only disable all except for yadif during compilation
+	  Otherwise avdeinterlace won't find any filters, and we only use yadif in
+	  there.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765319
+
+2016-04-15 12:51:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to n3.0.1
+
+2016-04-14 10:04:23 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6f2d209 to ac2f647
+
+2016-03-24 18:31:27 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* ext/libav/gstavviddec.h:
+	* ext/libav/gstavvidenc.h:
+	  avvid{dec,enc}: remove dead gobject macros
+	  The GObject macros either for GstFFMpegVidDec and GstFFMpegVidEnc can
+	  break the compilation because they are not GTypes, since each av video
+	  elements are registered in runtime.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764162
+
+2016-03-04 16:42:03 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* ext/libav/gstavdeinterlace.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  libav: use new gst_element_class_add_static_pad_template()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763084
+
+2016-03-24 13:33:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.8.0 ===
+
+2016-03-24 12:55:15 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.8.0
 
 2016-03-20 13:43:00 +0000  Egor Zaharov <nexfwall@yandex.ru>
 
