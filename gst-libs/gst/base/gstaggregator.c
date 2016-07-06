@@ -2141,7 +2141,6 @@ static GstFlowReturn
 gst_aggregator_pad_chain_internal (GstAggregator * self,
     GstAggregatorPad * aggpad, GstBuffer * buffer, gboolean head)
 {
-  GstBuffer *actual_buf = buffer;
   GstAggregatorClass *aggclass = GST_AGGREGATOR_GET_CLASS (self);
   GstFlowReturn flow_return;
   GstClockTime buf_pts;
@@ -2161,15 +2160,15 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
   PAD_UNLOCK (aggpad);
 
   if (aggclass->clip && head) {
-    aggclass->clip (self, aggpad, buffer, &actual_buf);
+    buffer = aggclass->clip (self, aggpad, buffer);
   }
 
-  if (actual_buf == NULL) {
-    GST_LOG_OBJECT (actual_buf, "Buffer dropped by clip function");
+  if (buffer == NULL) {
+    GST_LOG_OBJECT (aggpad, "Buffer dropped by clip function");
     goto done;
   }
 
-  buf_pts = GST_BUFFER_PTS (actual_buf);
+  buf_pts = GST_BUFFER_PTS (buffer);
 
   aggpad->priv->first_buffer = FALSE;
 
@@ -2180,12 +2179,12 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
     if (gst_aggregator_pad_has_space (self, aggpad)
         && aggpad->priv->flow_return == GST_FLOW_OK) {
       if (head)
-        g_queue_push_head (&aggpad->priv->buffers, actual_buf);
+        g_queue_push_head (&aggpad->priv->buffers, buffer);
       else
-        g_queue_push_tail (&aggpad->priv->buffers, actual_buf);
-      apply_buffer (aggpad, actual_buf, head);
+        g_queue_push_tail (&aggpad->priv->buffers, buffer);
+      apply_buffer (aggpad, buffer, head);
       aggpad->priv->num_buffers++;
-      actual_buf = buffer = NULL;
+      buffer = NULL;
       SRC_BROADCAST (self);
       break;
     }

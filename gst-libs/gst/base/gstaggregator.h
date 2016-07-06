@@ -155,9 +155,13 @@ struct _GstAggregator
  *                  stops have been received. Flush pad-specific data in
  *                  #GstAggregatorPad->flush.
  * @clip:           Optional.
- *                  Called when a buffer is received on a sink pad, the task
- *                  of clipping it and translating it to the current segment
- *                  falls on the subclass.
+ *                  Called when a buffer is received on a sink pad, the task of
+ *                  clipping it and translating it to the current segment falls
+ *                  on the subclass. The function should use the segment of data
+ *                  and the negotiated media type on the pad to perform
+ *                  clipping of inbuffer. This function takes ownership of
+ *                  buf and should output a buffer or return NULL in
+ *                  if the buffer should be dropped.
  * @sink_event:     Optional.
  *                  Called when an event is received on a sink pad, the subclass
  *                  should always chain up.
@@ -211,10 +215,9 @@ struct _GstAggregatorClass {
 
   GstFlowReturn     (*flush)          (GstAggregator    *  aggregator);
 
-  GstFlowReturn     (*clip)           (GstAggregator    *  aggregator,
+  GstBuffer *       (*clip)           (GstAggregator    *  aggregator,
                                        GstAggregatorPad *  aggregator_pad,
-                                       GstBuffer        *  buf,
-                                       GstBuffer        ** outbuf);
+                                       GstBuffer        *  buf);
 
   /* sinkpads virtual methods */
   gboolean          (*sink_event)     (GstAggregator    *  aggregator,
