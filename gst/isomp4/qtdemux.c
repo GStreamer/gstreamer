@@ -12693,11 +12693,11 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
             profile_str = "main";
             profile = 0;
             break;
-          case 67:
+          case 0x67:
             profile_str = "lc";
             profile = 1;
             break;
-          case 68:
+          case 0x68:
             profile_str = "ssr";
             profile = 2;
             break;
