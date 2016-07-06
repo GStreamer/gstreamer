@@ -4898,7 +4898,7 @@ gst_rtspsrc_reconnect (GstRTSPSrc * src, gboolean async)
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("Could not receive any UDP packets for %.4f seconds, maybe your "
             "firewall is blocking it. Retrying using a tcp connection.",
-            gst_guint64_to_gdouble (src->udp_timeout / 1000000.0)));
+            gst_guint64_to_gdouble (src->udp_timeout) / 1000000.0));
   }
 
   /* unless redirect, open new connection using tcp */
@@ -4920,7 +4920,7 @@ no_protocols:
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not receive any UDP packets for %.4f seconds, maybe your "
             "firewall is blocking it. No other protocols to try.",
-            gst_guint64_to_gdouble (src->udp_timeout / 1000000.0)));
+            gst_guint64_to_gdouble (src->udp_timeout) / 1000000.0));
     return GST_RTSP_ERROR;
   }
 open_failed:
