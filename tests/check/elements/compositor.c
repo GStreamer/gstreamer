@@ -385,6 +385,7 @@ GST_START_TEST (test_caps_query_interlaced)
   GstCaps *caps;
   GstCaps *caps_mixed, *caps_progressive, *caps_interleaved;
   GstEvent *caps_event;
+  GstQuery *drain;
 
   caps_interleaved =
       gst_caps_from_string ("video/x-raw, interlace-mode=interleaved");
@@ -419,6 +420,11 @@ GST_START_TEST (test_caps_query_interlaced)
   caps_event = gst_event_new_caps (caps);
   gst_caps_unref (caps);
   fail_unless (gst_pad_send_event (sinkpad, caps_event));
+
+  /* Send drain query to make sure this is processed */
+  drain = gst_query_new_drain ();
+  gst_pad_query (sinkpad, drain);
+  gst_query_unref (drain);
 
   /* now recheck the interlace-mode */
   gst_object_unref (sinkpad);
@@ -565,7 +571,6 @@ run_late_caps_set_test (GstCaps * first_caps, GstCaps * expected_query_caps,
   GstStateChangeReturn state_res;
   GstPad *sinkpad_2;
   GstCaps *caps;
-  GstEvent *caps_event;
   GstBus *bus;
   GstMessage *msg;
 
@@ -596,8 +601,9 @@ run_late_caps_set_test (GstCaps * first_caps, GstCaps * expected_query_caps,
   sinkpad_2 = gst_element_get_request_pad (compositor, "sink_%u");
   caps = gst_pad_query_caps (sinkpad_2, NULL);
   fail_unless (gst_caps_is_subset (expected_query_caps, caps));
-  caps_event = gst_event_new_caps (second_caps);
-  fail_unless (gst_pad_send_event (sinkpad_2, caps_event) == accept_caps);
+  gst_caps_unref (caps);
+  caps = gst_pad_query_caps (sinkpad_2, second_caps);
+  fail_unless (gst_caps_is_empty (caps) != accept_caps);
   gst_caps_unref (caps);
   gst_object_unref (sinkpad_2);
 
