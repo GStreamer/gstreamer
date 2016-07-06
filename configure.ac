@@ -21,7 +21,7 @@ m4_define([gst_vaapi_lt_revision],      [0])
 m4_define([gst_vaapi_lt_age],           [901])
 
 # glib version number
-m4_define([glib_version], [2.32])
+m4_define([glib_version], [2.40])
 
 # gstreamer version number
 m4_define([gst_version],                [1.9.1.1])
