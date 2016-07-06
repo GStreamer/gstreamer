@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
 "PO-Revision-Date: 2015-01-10 21:07+0100\n"
 "Last-Translator: Volkan Gezer <volkangezer@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -222,6 +222,10 @@ msgstr "TMPlayer altyazı kipi"
 msgid "Kate subtitle format"
 msgstr "Kate altyazı kipi"
 
+#, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Kate altyazı kipi"
+
 msgid "Uncompressed video"
 msgstr "Sıkıştırılmamış video"
 
@@ -386,6 +390,15 @@ msgid "capturing focal length"
 msgstr "odaksal uzunluğu yakalıyor"
 
 msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Mm bazında, resim çekerken kullanılan odaksal uzunluk"
+
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "odaksal uzunluğu yakalıyor"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr "Mm bazında, resim çekerken kullanılan odaksal uzunluk"
 
 msgid "capturing digital zoom ratio"

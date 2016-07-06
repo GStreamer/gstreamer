@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
 "PO-Revision-Date: 2010-12-31 23:21+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -230,6 +230,10 @@ msgid "Kate subtitle format"
 msgstr "Kate-tekstitysmuoto"
 
 #, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Kate-tekstitysmuoto"
+
+#, fuzzy
 msgid "Uncompressed video"
 msgstr "Pakkaamaton YUV"
 
@@ -396,6 +400,15 @@ msgid "capturing focal length"
 msgstr "kuvaamisen polttoväli"
 
 msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Linssin polttoväli kuvattaessa, millimetriä"
+
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "kuvaamisen polttoväli"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr "Linssin polttoväli kuvattaessa, millimetriä"
 
 msgid "capturing digital zoom ratio"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
 "PO-Revision-Date: 2016-03-03 07:49+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -225,6 +225,10 @@ msgstr "Định dạng phụ đề TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Định dạng phụ đề Kate"
 
+#, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Định dạng phụ đề Kate"
+
 msgid "Uncompressed video"
 msgstr "Video không nén"
 
@@ -392,6 +396,15 @@ msgid "capturing focal length"
 msgstr "độ dài tiêu cự khi chụp"
 
 msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Chiều dài tiêu cự ống kính được sử dụng khi chụp một ảnh, tính bằng mm"
+
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "độ dài tiêu cự khi chụp"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr "Chiều dài tiêu cự ống kính được sử dụng khi chụp một ảnh, tính bằng mm"
 
 msgid "capturing digital zoom ratio"

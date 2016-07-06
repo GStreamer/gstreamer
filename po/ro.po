@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
 "PO-Revision-Date: 2010-08-16 01:21+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -227,6 +227,10 @@ msgid "Kate subtitle format"
 msgstr "Format subtitrare Kate"
 
 #, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Format subtitrare Kate"
+
+#, fuzzy
 msgid "Uncompressed video"
 msgstr "YUV necomprimat"
 
@@ -393,6 +397,13 @@ msgid "capturing focal length"
 msgstr ""
 
 msgid "Focal length of the lens used capturing the image, in mm"
+msgstr ""
+
+msgid "capturing 35 mm equivalent focal length"
+msgstr ""
+
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr ""
 
 msgid "capturing digital zoom ratio"

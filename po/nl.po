@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
 "PO-Revision-Date: 2016-02-20 16:39+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -223,6 +223,10 @@ msgstr "TMPlayer ondertitelformaat"
 msgid "Kate subtitle format"
 msgstr "Kate ondertitelformaat"
 
+#, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Kate ondertitelformaat"
+
 msgid "Uncompressed video"
 msgstr "Niet-gecomprimeerde video"
 
@@ -387,6 +391,16 @@ msgid "capturing focal length"
 msgstr "brandpuntsafstand bij maken"
 
 msgid "Focal length of the lens used capturing the image, in mm"
+msgstr ""
+"Ge bruikte brandpuntsafstand van de lens bij het maken van de foto, in mm"
+
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "brandpuntsafstand bij maken"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr ""
 "Ge bruikte brandpuntsafstand van de lens bij het maken van de foto, in mm"
 

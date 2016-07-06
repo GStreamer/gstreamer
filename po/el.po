@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
 "PO-Revision-Date: 2012-05-05 19:13+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -230,6 +230,10 @@ msgid "Kate subtitle format"
 msgstr "Μορφή υποτίτλων Kate"
 
 #, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Μορφή υποτίτλων Kate"
+
+#, fuzzy
 msgid "Uncompressed video"
 msgstr "Ασυμπίεστο YUV"
 
@@ -398,6 +402,17 @@ msgid "capturing focal length"
 msgstr "εστιακό μήκος λήψης"
 
 msgid "Focal length of the lens used capturing the image, in mm"
+msgstr ""
+"Το εστιακό μήκος του φακού που χρησιμοποιήθηκε κατά τη λήψη της εικόνας, σε "
+"mm"
+
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "εστιακό μήκος λήψης"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr ""
 "Το εστιακό μήκος του φακού που χρησιμοποιήθηκε κατά τη λήψη της εικόνας, σε "
 "mm"

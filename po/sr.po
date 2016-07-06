@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
 "PO-Revision-Date: 2016-03-05 09:48+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -222,6 +222,10 @@ msgstr "ТМПлејер запис превода"
 msgid "Kate subtitle format"
 msgstr "Кејт запис превода"
 
+#, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Кејт запис превода"
+
 msgid "Uncompressed video"
 msgstr "Несажети снимак"
 
@@ -386,6 +390,15 @@ msgid "capturing focal length"
 msgstr "жижна даљина снимања"
 
 msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Жижна даљина објектива коришћеног за снимање слика, у мииметрима"
+
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "жижна даљина снимања"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr "Жижна даљина објектива коришћеног за снимање слика, у мииметрима"
 
 msgid "capturing digital zoom ratio"

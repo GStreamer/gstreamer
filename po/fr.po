@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
 "PO-Revision-Date: 2016-03-04 13:08+0100\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -234,6 +234,10 @@ msgstr "Format de sous-titres TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Format de sous-titres Kate"
 
+#, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Format de sous-titres Kate"
+
 msgid "Uncompressed video"
 msgstr "Video non compressée"
 
@@ -399,6 +403,16 @@ msgid "capturing focal length"
 msgstr "distance focale de la capture"
 
 msgid "Focal length of the lens used capturing the image, in mm"
+msgstr ""
+"Distance focale de l’optique utilisée pour la capture de l’image (en mm)"
+
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "distance focale de la capture"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr ""
 "Distance focale de l’optique utilisée pour la capture de l’image (en mm)"
 

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
 "PO-Revision-Date: 2016-03-02 22:08+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -230,6 +230,10 @@ msgstr "Format podpisów TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Format podpisów Kate"
 
+#, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Format podpisów Kate"
+
 msgid "Uncompressed video"
 msgstr "Nieskompresowany obraz"
 
@@ -394,6 +398,15 @@ msgid "capturing focal length"
 msgstr "ogniskowa obiektywu"
 
 msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Długość ogniskowej obiektywu użyta przy robieniu zdjęcia, w mm"
+
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "ogniskowa obiektywu"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr "Długość ogniskowej obiektywu użyta przy robieniu zdjęcia, w mm"
 
 msgid "capturing digital zoom ratio"

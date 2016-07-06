@@ -1,23 +1,21 @@
 # Slovak translations for gst-plugins-base.
 # This file is put in the public domain.
 #
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014, 2016.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.2.1\n"
+"Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
-"PO-Revision-Date: 2014-01-30 10:57+0100\n"
-"Last-Translator: Peter Tuharsky <tuharsky@misbb.sk>\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
+"PO-Revision-Date: 2016-05-20 12:24+0100\n"
+"Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "Language: sk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\\n\n"
-"X-Generator: KBabel 1.11.4\n"
-"X-Poedit-Language: Slovak\n"
-"X-Poedit-Country: SLOVAKIA\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\\n;\n"
+"X-Generator: Poedit 1.6.10\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Nepodarilo sa otvoriť zariadenie pre prehrávanie v režime mono."
@@ -224,6 +222,10 @@ msgstr "Formát titulkov TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Formát titulkov Kate"
 
+#, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Formát titulkov Kate"
+
 msgid "Uncompressed video"
 msgstr "Nekomprimované video"
 
@@ -390,6 +392,15 @@ msgstr "ohnisková vzdialenosť"
 msgid "Focal length of the lens used capturing the image, in mm"
 msgstr "Ohnisková vzdialenosť objektívu pri zachytávaní obrázku, v mm"
 
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "ohnisková vzdialenosť"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
+msgstr "Ohnisková vzdialenosť objektívu pri zachytávaní obrázku, v mm"
+
 msgid "capturing digital zoom ratio"
 msgstr "pomer digitálneho priblíženia"
 
@@ -512,136 +523,136 @@ msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
 msgstr ""
+"Neskončiť po zobrazení úvodného zoznamu zariadení, ale čakať na ich pridanie/"
+"odstránenie."
 
 #, c-format
 msgid "Volume: %.0f%%"
-msgstr ""
+msgstr "Hlasitosť: %.0f%%"
 
 msgid "Buffering..."
 msgstr "Napĺňam vyrovnávaciu pamäť..."
 
 msgid "Clock lost, selecting a new one\n"
-msgstr ""
+msgstr "Čas sa stratil, vyberá sa nový\n"
 
 msgid "Reached end of play list."
-msgstr ""
+msgstr "Dosiahli sme koniec prehrávacieho zoznamu."
 
 msgid "Paused"
-msgstr ""
+msgstr "Pozastavené"
 
 #, c-format
 msgid "Now playing %s\n"
-msgstr ""
+msgstr "Hrá sa %s\n"
 
 #, c-format
 msgid "About to finish, preparing next title: %s"
-msgstr ""
+msgstr "Pomaly končí, pripravuje sa ďalší titul: %s"
 
 #, c-format
 msgid "Playback rate: %.2f"
-msgstr ""
+msgstr "Rýchlosť prehrávania: %.2f"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr "Nepodarilo sa otvoriť zariadenie pre prehrávanie v režime stereo."
+msgstr "Nepodarilo sa zmeniť rýchlosť prehrávania na %.2f"
 
 msgid "space"
-msgstr ""
+msgstr "medzerník"
 
 msgid "pause/unpause"
-msgstr ""
+msgstr "pozastaviť/pustiť"
 
 msgid "q or ESC"
-msgstr ""
+msgstr "q alebo ESC"
 
 msgid "quit"
-msgstr ""
+msgstr "ukončiť"
 
 msgid "> or n"
-msgstr ""
+msgstr "> alebo n"
 
 msgid "play next"
-msgstr ""
+msgstr "prehrať ďalší"
 
 msgid "< or b"
-msgstr ""
+msgstr "< alebo b"
 
 msgid "play previous"
-msgstr ""
+msgstr "prehrať predchádzajúce"
 
 msgid "seek forward"
-msgstr ""
+msgstr "posunúť späť"
 
 msgid "seek backward"
-msgstr ""
+msgstr "posunúť vpred"
 
 msgid "volume up"
-msgstr ""
+msgstr "zhlasniť"
 
 msgid "volume down"
-msgstr ""
+msgstr "stíšiť"
 
 msgid "increase playback rate"
-msgstr ""
+msgstr "zvýšiť rýchlosť prehrávania"
 
 msgid "decrease playback rate"
-msgstr ""
+msgstr "znížiť rýchlosť prehrávania"
 
 msgid "change playback direction"
-msgstr ""
+msgstr "zmeniť smer prehrávania"
 
 msgid "enable/disable trick modes"
-msgstr ""
+msgstr "zapnúť/vypnúť trikové režimy"
 
-#, fuzzy
 msgid "change audio track"
-msgstr "Toto CD nemá zvukové stopy"
+msgstr "zmeniť zvukovú stopu"
 
 msgid "change video track"
-msgstr ""
+msgstr "zmeniť video stopu"
 
-#, fuzzy
 msgid "change subtitle track"
-msgstr "Formát titulkov Kate"
+msgstr "zmeniť stopu s titulkami"
 
 msgid "seek to beginning"
-msgstr ""
+msgstr "preskočiť na začiatok"
 
 msgid "show keyboard shortcuts"
-msgstr ""
+msgstr "zobraziť klávesové skratky"
 
 msgid "Interactive mode - keyboard controls:"
-msgstr ""
+msgstr "Interaktívny režim - klávesové ovládanie:"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Zobraziť na výstupe informácie o stave a upozornenia o vlastníctve"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr ""
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Ktorý videosink použiť (predvolený je autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Ktorý audiosink použiť (predvolený je autoaudiosink)"
 
 msgid "Enable gapless playback"
 msgstr "Povoliť plynulé prehrávanie"
 
 msgid "Shuffle playlist"
-msgstr ""
+msgstr "Premiešať prehrávací zoznam"
 
 msgid "Disable interactive control via the keyboard"
-msgstr ""
+msgstr "Zakázať interaktívne ovládanie pomocou klávesnice"
 
 msgid "Volume"
-msgstr ""
+msgstr "Hlasitosť"
 
 msgid "Playlist file containing input media files"
-msgstr ""
+msgstr "Súbor s prehrávacím zoznamom obsahujúcim vstupné mediálne súbory"
 
 msgid "Do not print any output (apart from errors)"
-msgstr ""
+msgstr "Nevypisovať žiadny výstup (okrem chýb)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -651,7 +662,7 @@ msgid "You must provide at least one filename or URI to play."
 msgstr "Ak chcete prehrávať, musíte zadať aspoň jeden názov súboru alebo URI."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
-msgstr ""
+msgstr "Stlačením 'k' zobrazíte zoznam klávesových skratiek.\n"
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""

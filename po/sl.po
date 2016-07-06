@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
 "PO-Revision-Date: 2013-01-05 10:10+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -224,6 +224,10 @@ msgstr "Oblika podnapisov TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Oblika podnapisov Kate"
 
+#, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Oblika podnapisov Kate"
+
 msgid "Uncompressed video"
 msgstr "Nestisnjen video"
 
@@ -388,6 +392,15 @@ msgid "capturing focal length"
 msgstr "goriščna razdalja med zajemanjem"
 
 msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Goriščna razdalja leč, uporabljena med zajemanjem slike"
+
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "goriščna razdalja med zajemanjem"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr "Goriščna razdalja leč, uporabljena med zajemanjem slike"
 
 msgid "capturing digital zoom ratio"

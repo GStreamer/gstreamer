@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
 "PO-Revision-Date: 2016-03-02 22:05+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -229,6 +229,10 @@ msgstr "Формат субтитрів TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Формат субтитрів Kate"
 
+#, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Формат субтитрів Kate"
+
 msgid "Uncompressed video"
 msgstr "Нестиснене відео"
 
@@ -395,6 +399,16 @@ msgid "capturing focal length"
 msgstr "фокальна відстань"
 
 msgid "Focal length of the lens used capturing the image, in mm"
+msgstr ""
+"Фокальна відстань об’єктива, використаного при створенні зображення, у мм"
+
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "фокальна відстань"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr ""
 "Фокальна відстань об’єктива, використаного при створенні зображення, у мм"
 

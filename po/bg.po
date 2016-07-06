@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
 "PO-Revision-Date: 2016-02-21 21:03+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
@@ -224,6 +224,10 @@ msgstr "Субтитри, формат TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Субтитри, формат Kate"
 
+#, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Субтитри, формат Kate"
+
 msgid "Uncompressed video"
 msgstr "Некомпресирано видео"
 
@@ -388,6 +392,15 @@ msgid "capturing focal length"
 msgstr "фокусно разстояние"
 
 msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Фокусно разстояние на обектива при заснемане в милиметри"
+
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "фокусно разстояние"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr "Фокусно разстояние на обектива при заснемане в милиметри"
 
 msgid "capturing digital zoom ratio"

@@ -31,10 +31,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.7.2\n"
+"Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
-"PO-Revision-Date: 2016-02-23 16:38+0100\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
+"PO-Revision-Date: 2016-03-27 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -246,6 +246,10 @@ msgstr "TMPlayer-undertekstformat"
 msgid "Kate subtitle format"
 msgstr "Kate-undertekstformat"
 
+#, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Kate-undertekstformat"
+
 msgid "Uncompressed video"
 msgstr "Ukomprimeret video"
 
@@ -416,6 +420,15 @@ msgid "capturing focal length"
 msgstr "brændvidde for optager"
 
 msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Brændvidde på linse brugt under optagelse af billedet, i mm"
+
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "brændvidde for optager"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr "Brændvidde på linse brugt under optagelse af billedet, i mm"
 
 msgid "capturing digital zoom ratio"
@@ -600,13 +613,13 @@ msgid "quit"
 msgstr "afslut"
 
 msgid "> or n"
-msgstr ""
+msgstr "> eller n"
 
 msgid "play next"
 msgstr "afspil næste"
 
 msgid "< or b"
-msgstr ""
+msgstr "< eller b"
 
 msgid "play previous"
 msgstr "afspil forrige"

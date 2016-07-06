@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:26+0200\n"
+"POT-Creation-Date: 2016-07-06 10:17+0300\n"
 "PO-Revision-Date: 2016-03-02 22:20+0100\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -223,6 +223,10 @@ msgstr "Undertextformatet TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Undertextformatet Kate"
 
+#, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Undertextformatet Kate"
+
 msgid "Uncompressed video"
 msgstr "Okomprimerad video"
 
@@ -387,6 +391,15 @@ msgid "capturing focal length"
 msgstr "brännvidd"
 
 msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Brännvidd för linsen i mm när bild infångas"
+
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "brännvidd"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr "Brännvidd för linsen i mm när bild infångas"
 
 msgid "capturing digital zoom ratio"
