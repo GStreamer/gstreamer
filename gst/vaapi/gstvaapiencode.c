@@ -338,6 +338,7 @@ gst_vaapiencode_buffer_loop (GstVaapiEncode * encode)
   if (ret == GST_FLOW_OK || ret == GST_VAAPI_ENCODE_FLOW_TIMEOUT)
     return;
 
+  GST_LOG_OBJECT (encode, "pausing task, reason %s", gst_flow_get_name (ret));
   gst_pad_pause_task (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
 }
 
@@ -370,6 +371,26 @@ gst_vaapiencode_destroy (GstVaapiEncode * encode)
   return TRUE;
 }
 
+static void
+gst_vaapiencode_purge (GstVaapiEncode * encode)
+{
+  GstVaapiCodedBufferProxy *codedbuf_proxy = NULL;
+  GstVaapiEncoderStatus status;
+  GstVideoCodecFrame *out_frame;
+
+  do {
+    status = gst_vaapi_encoder_get_buffer_with_timeout (encode->encoder,
+        &codedbuf_proxy, 0);
+    if (status == GST_VAAPI_ENCODER_STATUS_SUCCESS) {
+      out_frame = gst_vaapi_coded_buffer_proxy_get_user_data (codedbuf_proxy);
+      if (out_frame)
+        gst_video_codec_frame_set_user_data (out_frame, NULL, NULL);
+
+      gst_vaapi_coded_buffer_proxy_unref (codedbuf_proxy);
+    }
+  } while (status == GST_VAAPI_ENCODER_STATUS_SUCCESS);
+}
+
 static gboolean
 ensure_encoder (GstVaapiEncode * encode)
 {
@@ -379,6 +400,9 @@ ensure_encoder (GstVaapiEncode * encode)
   guint i;
 
   g_return_val_if_fail (klass->alloc_encoder, FALSE);
+
+  if (encode->encoder)
+    return FALSE;
 
   encode->encoder = klass->alloc_encoder (encode,
       GST_VAAPI_PLUGIN_BASE_DISPLAY (encode));
@@ -592,6 +616,58 @@ gst_vaapiencode_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
   return TRUE;
 }
 
+static gboolean
+gst_vaapiencode_sink_event (GstVideoEncoder * venc, GstEvent * event)
+{
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
+  GstPad *const srcpad = GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode);
+  gboolean ret;
+
+  ret = GST_VIDEO_ENCODER_CLASS (gst_vaapiencode_parent_class)->sink_event
+      (venc, event);
+  if (!ret)
+    return FALSE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      gst_pad_pause_task (srcpad);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      ret = gst_pad_start_task (srcpad,
+          (GstTaskFunction) gst_vaapiencode_buffer_loop, encode, NULL);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_vaapiencode_flush (GstVideoEncoder * venc)
+{
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
+  GstVaapiEncoderStatus status;
+
+  if (!encode->encoder)
+    return FALSE;
+
+  GST_LOG_OBJECT (encode, "flushing");
+
+  status = gst_vaapi_encoder_flush (encode->encoder);
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+    return FALSE;
+  gst_vaapiencode_purge (encode);
+
+  gst_vaapi_encoder_replace (&encode->encoder, NULL);
+  if (!ensure_encoder (encode))
+    return FALSE;
+  if (!set_codec_state (encode, encode->input_state))
+    return FALSE;
+
+  return TRUE;
+}
+
 static void
 gst_vaapiencode_finalize (GObject * object)
 {
@@ -643,6 +719,8 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
   venc_class->getcaps = GST_DEBUG_FUNCPTR (gst_vaapiencode_get_caps);
   venc_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_vaapiencode_propose_allocation);
+  venc_class->flush = GST_DEBUG_FUNCPTR (gst_vaapiencode_flush);
+  venc_class->sink_event = GST_DEBUG_FUNCPTR (gst_vaapiencode_sink_event);
 
   klass->get_property = gst_vaapiencode_default_get_property;
   klass->set_property = gst_vaapiencode_default_set_property;
