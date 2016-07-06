@@ -71,8 +71,6 @@ struct _GstAggregatorPad
 
   /* Protected by the OBJECT_LOCK */
   GstSegment segment;
-  /* Segment to use in the clip function, before the queue */
-  GstSegment clip_segment;
 
   /* < Private > */
   GstAggregatorPadPrivate   *  priv;
