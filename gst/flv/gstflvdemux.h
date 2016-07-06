@@ -82,6 +82,8 @@ struct _GstFlvDemux
   GstEvent *new_seg_event;
 
   GstTagList *taglist;
+  GstTagList *audio_tags;
+  GstTagList *video_tags;
 
   GstFlvDemuxState state;
 

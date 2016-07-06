@@ -370,6 +370,12 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
         demux->h = d;
       } else if (!strcmp (tag_name, "framerate")) {
         demux->framerate = d;
+      } else if (!strcmp (tag_name, "audiodatarate")) {
+        gst_tag_list_add (demux->audio_tags, GST_TAG_MERGE_REPLACE,
+            GST_TAG_NOMINAL_BITRATE, (guint) (d * 1024), NULL);
+      } else if (!strcmp (tag_name, "videodatarate")) {
+        gst_tag_list_add (demux->video_tags, GST_TAG_MERGE_REPLACE,
+            GST_TAG_NOMINAL_BITRATE, (guint) (d * 1024), NULL);
       } else {
         GST_INFO_OBJECT (demux, "Tag \'%s\' not handled", tag_name);
       }
@@ -573,6 +579,16 @@ gst_flv_demux_clear_tags (GstFlvDemux * demux)
   }
   demux->taglist = gst_tag_list_new_empty ();
   gst_tag_list_set_scope (demux->taglist, GST_TAG_SCOPE_GLOBAL);
+
+  if (demux->audio_tags) {
+    gst_tag_list_unref (demux->audio_tags);
+  }
+  demux->audio_tags = gst_tag_list_new_empty ();
+
+  if (demux->video_tags) {
+    gst_tag_list_unref (demux->video_tags);
+  }
+  demux->video_tags = gst_tag_list_new_empty ();
 }
 
 static GstFlowReturn
@@ -952,6 +968,20 @@ gst_flv_demux_push_tags (GstFlvDemux * demux)
 
   gst_flv_demux_push_src_event (demux,
       gst_event_new_tag (gst_tag_list_copy (demux->taglist)));
+
+  if (demux->audio_pad) {
+    GST_DEBUG_OBJECT (demux->audio_pad, "pushing audio %" GST_PTR_FORMAT,
+        demux->audio_tags);
+    gst_pad_push_event (demux->audio_pad,
+        gst_event_new_tag (gst_tag_list_copy (demux->audio_tags)));
+  }
+
+  if (demux->video_pad) {
+    GST_DEBUG_OBJECT (demux->video_pad, "pushing video %" GST_PTR_FORMAT,
+        demux->video_tags);
+    gst_pad_push_event (demux->video_pad,
+        gst_event_new_tag (gst_tag_list_copy (demux->video_tags)));
+  }
 }
 
 static gboolean
@@ -3490,6 +3520,16 @@ gst_flv_demux_dispose (GObject * object)
   if (demux->taglist) {
     gst_tag_list_unref (demux->taglist);
     demux->taglist = NULL;
+  }
+
+  if (demux->audio_tags) {
+    gst_tag_list_unref (demux->audio_tags);
+    demux->audio_tags = NULL;
+  }
+
+  if (demux->video_tags) {
+    gst_tag_list_unref (demux->video_tags);
+    demux->video_tags = NULL;
   }
 
   if (demux->flowcombiner) {
