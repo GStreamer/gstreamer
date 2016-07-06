@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:27+0200\n"
+"POT-Creation-Date: 2016-07-06 10:18+0300\n"
 "PO-Revision-Date: 2016-02-21 21:03+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
@@ -17,6 +17,12 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occured"
+msgstr ""
 
 msgid "format wasn't negotiated before get function"
 msgstr "форматът не е бил уточнен преди извикване на функцията за получаване"
@@ -136,11 +142,25 @@ msgstr ""
 "Файлът с настройките на цифровото видеоръзпръскване (DVB) „%s“ не може да "
 "бъде прочетен"
 
+#, c-format
+msgid "Couldn't find details for DVB channel %s"
+msgstr "Липсват данни за канала за цифрово видеоръзпръскване (DVB) „%s“"
+
+#, fuzzy, c-format
+msgid "No properties for the DVB channel %s"
+msgstr "Липсват данни за канала за цифрово видеоръзпръскване (DVB) „%s“"
+
+#, fuzzy, c-format
+msgid "Failed to set properties for the DVB channel %s"
+msgstr "Липсват данни за канала за цифрово видеоръзпръскване (DVB) „%s“"
+
+#, fuzzy, c-format
+msgid "Couldn't find DVB channel configuration file: %s"
+msgstr ""
+"Файлът с настройките на цифровото видеоръзпръскване (DVB) не може да бъде "
+"открит"
+
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr ""
 "Файлът с настройките на цифровото видеоръзпръскване (DVB) не съдържа никакви "
 "канали"
-
-#, c-format
-msgid "Couldn't find details for DVB channel %s"
-msgstr "Липсват данни за канала за цифрово видеоръзпръскване (DVB) „%s“"

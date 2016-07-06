@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:27+0200\n"
+"POT-Creation-Date: 2016-07-06 10:18+0300\n"
 "PO-Revision-Date: 2015-01-10 21:07+0100\n"
 "Last-Translator: Volkan Gezer <volkangezer@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -17,6 +17,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Lokalize 1.5\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occured"
+msgstr ""
 
 msgid "format wasn't negotiated before get function"
 msgstr "get fonksiyonundan önce biçim görüşülemedi"
@@ -131,12 +137,24 @@ msgstr "DVB kanal yapılandırma dosyası bulunamadı"
 msgid "Couldn't load DVB channel configuration file: %s"
 msgstr "DVB kanal yapılandırma dosyası yüklenemedi: %s"
 
-msgid "DVB channel configuration file doesn't contain any channels"
-msgstr "DVB kanal yapılandırma dosyası herhangi bir kanal içermiyor"
-
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "DVB kanalı %s için ayrıntılar bulunamadı"
+
+#, fuzzy, c-format
+msgid "No properties for the DVB channel %s"
+msgstr "DVB kanalı %s için ayrıntılar bulunamadı"
+
+#, fuzzy, c-format
+msgid "Failed to set properties for the DVB channel %s"
+msgstr "DVB kanalı %s için ayrıntılar bulunamadı"
+
+#, fuzzy, c-format
+msgid "Couldn't find DVB channel configuration file: %s"
+msgstr "DVB kanal yapılandırma dosyası bulunamadı"
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr "DVB kanal yapılandırma dosyası herhangi bir kanal içermiyor"
 
 #~ msgid "Couldn't get the Manifest's URI"
 #~ msgstr "Manifest URI alınamadı"

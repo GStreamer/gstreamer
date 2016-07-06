@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:27+0200\n"
+"POT-Creation-Date: 2016-07-06 10:18+0300\n"
 "PO-Revision-Date: 2014-04-20 15:52+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -21,6 +21,12 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
 "2);\n"
 "X-Generator: Lokalize 1.5\n"
+
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occured"
+msgstr ""
 
 msgid "format wasn't negotiated before get function"
 msgstr ""
@@ -137,12 +143,24 @@ msgstr "Nevarēja atrast DVB kanāla konfigurācijas datni"
 msgid "Couldn't load DVB channel configuration file: %s"
 msgstr "Nevarēja ielādēt DVB kanāla konfigurācijas datni: %s"
 
-msgid "DVB channel configuration file doesn't contain any channels"
-msgstr "DVB kanāla konfigurācijas datne nesatur nevienu kanālu"
-
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Nevarēja atrast sīkāku informāciju par DVB kanālu %s"
+
+#, fuzzy, c-format
+msgid "No properties for the DVB channel %s"
+msgstr "Nevarēja atrast sīkāku informāciju par DVB kanālu %s"
+
+#, fuzzy, c-format
+msgid "Failed to set properties for the DVB channel %s"
+msgstr "Nevarēja atrast sīkāku informāciju par DVB kanālu %s"
+
+#, fuzzy, c-format
+msgid "Couldn't find DVB channel configuration file: %s"
+msgstr "Nevarēja atrast DVB kanāla konfigurācijas datni"
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr "DVB kanāla konfigurācijas datne nesatur nevienu kanālu"
 
 #~ msgid "Couldn't get the Manifest's URI"
 #~ msgstr "Nevarēja saņemt manifesta URI"

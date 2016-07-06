@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.5\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:27+0200\n"
+"POT-Creation-Date: 2016-07-06 10:18+0300\n"
 "PO-Revision-Date: 2007-11-13 17:16+0600\n"
 "Last-Translator: Ilyas Bakirov <just_ilyas@yahoo.com>\n"
 "Language-Team: Kirghiz <i18n-team-ky-kyrgyz@lists.sourceforge.net>\n"
@@ -16,6 +16,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Language: Kyrgyz\n"
 "X-Poedit-Country: KYRGYZSTAN\n"
+
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occured"
+msgstr ""
 
 msgid "format wasn't negotiated before get function"
 msgstr ""
@@ -127,9 +133,21 @@ msgstr ""
 msgid "Couldn't load DVB channel configuration file: %s"
 msgstr ""
 
-msgid "DVB channel configuration file doesn't contain any channels"
+#, c-format
+msgid "Couldn't find details for DVB channel %s"
 msgstr ""
 
 #, c-format
-msgid "Couldn't find details for DVB channel %s"
+msgid "No properties for the DVB channel %s"
+msgstr ""
+
+#, c-format
+msgid "Failed to set properties for the DVB channel %s"
+msgstr ""
+
+#, c-format
+msgid "Couldn't find DVB channel configuration file: %s"
+msgstr ""
+
+msgid "DVB channel configuration file doesn't contain any channels"
 msgstr ""

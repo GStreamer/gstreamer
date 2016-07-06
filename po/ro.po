@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:27+0200\n"
+"POT-Creation-Date: 2016-07-06 10:18+0300\n"
 "PO-Revision-Date: 2010-08-16 03:11+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -16,6 +16,12 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2);;\n"
 "X-Generator: Virtaal 0.6.1\n"
+
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occured"
+msgstr ""
 
 msgid "format wasn't negotiated before get function"
 msgstr ""
@@ -129,11 +135,23 @@ msgstr ""
 msgid "Couldn't load DVB channel configuration file: %s"
 msgstr ""
 
-msgid "DVB channel configuration file doesn't contain any channels"
+#, c-format
+msgid "Couldn't find details for DVB channel %s"
 msgstr ""
 
 #, c-format
-msgid "Couldn't find details for DVB channel %s"
+msgid "No properties for the DVB channel %s"
+msgstr ""
+
+#, c-format
+msgid "Failed to set properties for the DVB channel %s"
+msgstr ""
+
+#, c-format
+msgid "Couldn't find DVB channel configuration file: %s"
+msgstr ""
+
+msgid "DVB channel configuration file doesn't contain any channels"
 msgstr ""
 
 #~ msgid "Could not write to file \"%s\"."

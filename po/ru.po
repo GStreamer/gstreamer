@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:27+0200\n"
+"POT-Creation-Date: 2016-07-06 10:18+0300\n"
 "PO-Revision-Date: 2015-10-18 13:40+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -19,6 +19,12 @@ msgstr ""
 "X-Generator: Lokalize 1.5\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occured"
+msgstr ""
 
 msgid "format wasn't negotiated before get function"
 msgstr "перед функцией получения не был согласован формат"
@@ -134,12 +140,24 @@ msgstr "Не удалось найти файл настройки канало�
 msgid "Couldn't load DVB channel configuration file: %s"
 msgstr "Не удалось загрузить файл настройки каналов DVB: %s"
 
-msgid "DVB channel configuration file doesn't contain any channels"
-msgstr "Файл настройки каналов DVB не содержит каналов"
-
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Не удалось найти настройки DVB-канала %s"
+
+#, fuzzy, c-format
+msgid "No properties for the DVB channel %s"
+msgstr "Не удалось найти настройки DVB-канала %s"
+
+#, fuzzy, c-format
+msgid "Failed to set properties for the DVB channel %s"
+msgstr "Не удалось найти настройки DVB-канала %s"
+
+#, fuzzy, c-format
+msgid "Couldn't find DVB channel configuration file: %s"
+msgstr "Не удалось найти файл настройки каналов DVB"
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr "Файл настройки каналов DVB не содержит каналов"
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "GStreamer audiosink по умолчанию для звуковых событий"

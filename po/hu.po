@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:27+0200\n"
+"POT-Creation-Date: 2016-07-06 10:18+0300\n"
 "PO-Revision-Date: 2015-11-20 23:46+0100\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -18,6 +18,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Lokalize 1.2\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
+
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occured"
+msgstr ""
 
 msgid "format wasn't negotiated before get function"
 msgstr "a formátum nem lett egyeztetve a függvény lekérése előtt"
@@ -135,12 +141,24 @@ msgstr "Nem található DVB-csatorna beállítófájl"
 msgid "Couldn't load DVB channel configuration file: %s"
 msgstr "Nem sikerült betölteni a DVB-csatorna beállítófájlt: %s"
 
-msgid "DVB channel configuration file doesn't contain any channels"
-msgstr "A DVB-csatorna beállítófájl nem tartalmaz egyetlen csatornát sem"
-
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Nem találhatók a(z) %s DVB-csatorna részletei"
+
+#, fuzzy, c-format
+msgid "No properties for the DVB channel %s"
+msgstr "Nem találhatók a(z) %s DVB-csatorna részletei"
+
+#, fuzzy, c-format
+msgid "Failed to set properties for the DVB channel %s"
+msgstr "Nem találhatók a(z) %s DVB-csatorna részletei"
+
+#, fuzzy, c-format
+msgid "Couldn't find DVB channel configuration file: %s"
+msgstr "Nem található DVB-csatorna beállítófájl"
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr "A DVB-csatorna beállítófájl nem tartalmaz egyetlen csatornát sem"
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "alapértelmezett GStreamer hangesemények audiosink"

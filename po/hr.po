@@ -1,141 +1,166 @@
 # Translation of gst-plugins-bad to Croatian.
 # This file is put in the public domain.
-# Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
 #
+# Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
+"Project-Id-Version: gst-plugins-bad 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:27+0200\n"
-"PO-Revision-Date: 2012-04-16 02:06+0200\n"
-"Last-Translator: Tomislav Krznar <tomislav.krznar@gmail.com>\n"
+"POT-Creation-Date: 2016-07-06 10:18+0300\n"
+"PO-Revision-Date: 2016-05-27 12:45-0700\n"
+"Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
-"Language: \n"
+"Language: hr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"X-Generator: Lokalize 2.0\n"
+
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occured"
+msgstr ""
 
 msgid "format wasn't negotiated before get function"
-msgstr ""
+msgstr "format nije bio dogovoren prije ‘get’ funkcije"
 
 msgid "OpenCV failed to load template image"
-msgstr ""
+msgstr "OpenCV nije uspio učitati predložak slike"
 
 msgid "Could not read title information for DVD."
-msgstr "Ne mogu čitati informacije o naslovu DVD-a."
+msgstr "Iz naslova se ne mogu pročitati informacije o DVD-u"
 
 #, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Nisam uspio otvoriti DVD uređaj „%s”."
+msgstr "Nije uspjelo otvoriti DVD uređaj ‘%s’."
 
 msgid "Failed to set PGC based seeking."
-msgstr "Nisam uspio postaviti pretragu temeljenu na PGC-u."
+msgstr "Pretraga temeljena na PGC-u nije uspjela."
 
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
-"Ne mogu čitati DVD. To je možda zato što je DVD šifriran, a biblioteka "
-"dešifriranja DVD-a nije instalirana."
+"DVD nije moguće pročitati. DVD je možda kriptiran, a biblioteka za "
+"dekriptiranje DVD-a nije instalirana."
 
 msgid "Could not read DVD."
-msgstr "Ne mogu čitati DVD."
+msgstr "DVD nije moguće pročitati."
 
 msgid "This file contains no playable streams."
 msgstr ""
+"Ova datoteka ne sadrži nijedan upotrebljivi stream (tok podataka koji bi se "
+"mogao reproducirati)."
 
-#, fuzzy
 msgid "Could not open sndfile stream for reading."
-msgstr "Ne mogu otvoriti datoteku „%s” za čitanje."
+msgstr "‘sndfile’ stream (tok podataka) nije moguće otvoriti za čitanje."
 
 msgid "Could not establish connection to sndio"
-msgstr ""
+msgstr "Spajanje na ‘sndio’ nije moguće uspostaviti"
 
 msgid "Failed to query sndio capabilities"
-msgstr ""
+msgstr "Nije uspjelo ispitati ‘sndio’ mogućnosti"
 
-#, fuzzy
 msgid "Could not configure sndio"
-msgstr "Ne mogu otvoriti datoteku „%s” za čitanje."
+msgstr "‘sndio’ nije moguće konfigurirati"
 
-#, fuzzy
 msgid "Could not start sndio"
-msgstr "Ne mogu čitati DVD."
+msgstr "‘sndio’ nije moguće pokrenuti"
 
 msgid "Internal data flow error."
-msgstr "Greška unutarnjeg toka podataka."
+msgstr "Interna greška u protoku podataka."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
+"U generiranoj datoteci priprema (preroll vrijeme) je duža od ukupnog "
+"trajanja streama (toka podataka)"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
+msgstr "Nedostaje element ‘%s’ - provjerite vašu GStreamer instalaciju."
 
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr ""
+msgstr "Lokacija datoteke je prazna (NULL); navedite valjani naziv datoteke"
 
 msgid "Digitalzoom element couldn't be created"
-msgstr ""
+msgstr "Nije moguće napraviti (kreirati) element za Digitalzoom"
 
 msgid "Subpicture format was not configured before data flow"
 msgstr ""
+"Format podslike (subpicture) nije bio konfiguriran prije protoka podataka"
 
 msgid "Failed to get fragment URL."
-msgstr ""
+msgstr "Nije uspjelo dobiti fragmente adrese URL-a."
 
 msgid "Internal data stream error."
-msgstr "Greška unutarnjeg niza podataka."
+msgstr "Interna greška toka (stream) podataka."
 
 msgid "Couldn't download fragments"
-msgstr ""
+msgstr "Nije moguće preuzeti fragmente"
 
 msgid "No file name specified for writing."
-msgstr "Nije navedena datoteka za pisanje."
+msgstr "Nedostaje naziv (nema ga) datoteke za pisanje."
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
+"Naziv datoteke „%s“ ne može se pretvoriti u lokalno kodirane naziva datoteka."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Ne mogu otvoriti datoteku „%s” za pisanje."
+msgstr "Datoteku „%s“ nije moguće otvoriti za pisanje."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Uređaj „%s” ne postoji."
+msgstr "Uređaj „%s“ ne postoji."
 
+# http://whatis.techtarget.com/definition/front-end
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Ne mogu otvoriti uređaj sučelja „%s”."
+msgstr "Sučelje (frontend) uređaja „%s“ nije moguće otvoriti."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Ne mogu dobiti postavke uređaja sučelja „%s”."
+msgstr "Od sučelja (frontend) uređaja „%s“ nije moguće dobiti postavke."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Ne mogu dobiti postavke uređaja sučelja „%s”."
+msgstr ""
+"Dostavne sustave nije moguće nabrojati iz sučelja (frontend) uređaja „%s“."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Ne mogu otvoriti datoteku „%s” za čitanje."
+msgstr "Datoteku „%s“ nije moguće otvoriti za čitanje."
 
 msgid "Couldn't find DVB channel configuration file"
-msgstr ""
+msgstr "Konfiguracijsku datoteku za DVB kanal nije moguće pronaći"
 
 #, c-format
 msgid "Couldn't load DVB channel configuration file: %s"
-msgstr ""
-
-msgid "DVB channel configuration file doesn't contain any channels"
-msgstr ""
+msgstr "Nije moguće učitati konfiguracijsku datoteku za DVB kanal: %s"
 
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
-msgstr ""
+msgstr "Pojedinosti za DVB kanal %s nije moguće pronaći"
+
+#, fuzzy, c-format
+msgid "No properties for the DVB channel %s"
+msgstr "Pojedinosti za DVB kanal %s nije moguće pronaći"
+
+#, fuzzy, c-format
+msgid "Failed to set properties for the DVB channel %s"
+msgstr "Pojedinosti za DVB kanal %s nije moguće pronaći"
+
+#, fuzzy, c-format
+msgid "Couldn't find DVB channel configuration file: %s"
+msgstr "Konfiguracijsku datoteku za DVB kanal nije moguće pronaći"
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr "Konfiguracijska datoteka za DVB kanal ne sadrži nijedan kanal"
 
 #~ msgid "Could not write to file \"%s\"."
 #~ msgstr "Ne mogu pisati u datoteku „%s”."

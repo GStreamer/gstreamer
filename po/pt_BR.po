@@ -1,15 +1,15 @@
 # Brazilian Portuguese translation of gst-plugins-bad.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Copyright (C) 2007-2015 Free Software Foundation, Inc.
+# Copyright (C) 2007-2016 Free Software Foundation, Inc.
 # Raphael Higino <In memorian>, 2007.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2015.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.7.1\n"
+"Project-Id-Version: gst-plugins-bad-1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:27+0200\n"
-"PO-Revision-Date: 2015-12-28 17:03-0200\n"
+"POT-Creation-Date: 2016-07-06 10:18+0300\n"
+"PO-Revision-Date: 2016-05-06 16:02-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -18,6 +18,12 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occured"
+msgstr ""
 
 msgid "format wasn't negotiated before get function"
 msgstr "O formato não foi negociado antes da chamada da função"
@@ -137,12 +143,24 @@ msgstr "Não foi possível encontrar o arquivo de configuração de canal DVB"
 msgid "Couldn't load DVB channel configuration file: %s"
 msgstr "Não foi possível carregar o arquivo de configuração de canal DVB: %s"
 
-msgid "DVB channel configuration file doesn't contain any channels"
-msgstr "O arquivo de configuração de canal DVB não contém nenhum canal"
-
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Não foi possível encontrar detalhes para o canal DVB %s"
+
+#, fuzzy, c-format
+msgid "No properties for the DVB channel %s"
+msgstr "Não foi possível encontrar detalhes para o canal DVB %s"
+
+#, fuzzy, c-format
+msgid "Failed to set properties for the DVB channel %s"
+msgstr "Não foi possível encontrar detalhes para o canal DVB %s"
+
+#, fuzzy, c-format
+msgid "Couldn't find DVB channel configuration file: %s"
+msgstr "Não foi possível encontrar o arquivo de configuração de canal DVB"
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr "O arquivo de configuração de canal DVB não contém nenhum canal"
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "audiosink do GStreamer pré-definido para eventos de som"

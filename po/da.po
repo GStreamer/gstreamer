@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:27+0200\n"
+"POT-Creation-Date: 2016-07-06 10:18+0300\n"
 "PO-Revision-Date: 2015-12-05 11:28+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -16,6 +16,12 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occured"
+msgstr ""
 
 msgid "format wasn't negotiated before get function"
 msgstr "format blev ikke forhandlet før hent funktion"
@@ -130,12 +136,24 @@ msgstr "Kunne ikke finde DVB-kanalens konfigurationsfil"
 msgid "Couldn't load DVB channel configuration file: %s"
 msgstr "Kunne ikke indlæse DVB-kanalens konfigurationsfil: %s"
 
-msgid "DVB channel configuration file doesn't contain any channels"
-msgstr "DVB-kanalens konfigurationsfil indeholder ikke nogen kanaler"
-
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Kunne ikke finde detaljer for DVB-kanalen %s"
+
+#, fuzzy, c-format
+msgid "No properties for the DVB channel %s"
+msgstr "Kunne ikke finde detaljer for DVB-kanalen %s"
+
+#, fuzzy, c-format
+msgid "Failed to set properties for the DVB channel %s"
+msgstr "Kunne ikke finde detaljer for DVB-kanalen %s"
+
+#, fuzzy, c-format
+msgid "Couldn't find DVB channel configuration file: %s"
+msgstr "Kunne ikke finde DVB-kanalens konfigurationsfil"
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr "DVB-kanalens konfigurationsfil indeholder ikke nogen kanaler"
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "standardlydkanal for GStreamers lydhændelser"

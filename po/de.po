@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-24 11:27+0200\n"
+"POT-Creation-Date: 2016-07-06 10:18+0300\n"
 "PO-Revision-Date: 2015-10-21 00:15+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -18,6 +18,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 1.8.5\n"
+
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occured"
+msgstr ""
 
 msgid "format wasn't negotiated before get function"
 msgstr "das Format wurde vor der get-Funktion nicht ausgehandelt"
@@ -140,12 +146,24 @@ msgstr "DVB Kanal-Konfigurationsdatei konnte nicht gefunden werden"
 msgid "Couldn't load DVB channel configuration file: %s"
 msgstr "DVB Kanal-Konfigurationsdatei konnte nicht geladen werden: %s"
 
-msgid "DVB channel configuration file doesn't contain any channels"
-msgstr "DVB Kanal-Konfigurationsdatei enthält keine Kanäle"
-
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Details zu DVB-Kanal %s konnten nicht gefunden werden"
+
+#, fuzzy, c-format
+msgid "No properties for the DVB channel %s"
+msgstr "Details zu DVB-Kanal %s konnten nicht gefunden werden"
+
+#, fuzzy, c-format
+msgid "Failed to set properties for the DVB channel %s"
+msgstr "Details zu DVB-Kanal %s konnten nicht gefunden werden"
+
+#, fuzzy, c-format
+msgid "Couldn't find DVB channel configuration file: %s"
+msgstr "DVB Kanal-Konfigurationsdatei konnte nicht gefunden werden"
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr "DVB Kanal-Konfigurationsdatei enthält keine Kanäle"
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "Voreingestellte GStreamer Tonereignis-Audioziel"
