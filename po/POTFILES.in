@@ -4,11 +4,14 @@ ext/cdparanoia/gstcdparanoiasrc.c
 ext/ogg/gstoggdemux.c
 gst/encoding/gstencodebin.c
 gst/playback/gstdecodebin2.c
+gst/playback/gstparsebin.c
 gst/playback/gstplaybin2.c
+gst/playback/gstplaybin3.c
 gst/playback/gstplaysink.c
 gst/playback/gstplaysinkconvertbin.c
 gst/playback/gstsubtitleoverlay.c
 gst/playback/gsturidecodebin.c
+gst/playback/gsturisourcebin.c
 gst/tcp/gsttcpclientsink.c
 gst/tcp/gsttcpclientsrc.c
 gst-libs/gst/audio/gstaudiobasesrc.c
