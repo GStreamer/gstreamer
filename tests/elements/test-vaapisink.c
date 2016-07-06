@@ -2,8 +2,6 @@
 #include <string.h>
 #include <gst/gst.h>
 
-#include <gst/vaapi/gstvaapitypes.h>
-
 typedef struct _CustomData
 {
   GstElement *pipeline;
@@ -48,8 +46,7 @@ handle_keyboard (GIOChannel * source, GIOCondition cond, AppData * data)
       send_rotate_event (data);
       break;
     case 's':{
-      g_object_set (G_OBJECT (data->video_sink), "rotation",
-          GST_VAAPI_ROTATION_AUTOMATIC, NULL);
+      g_object_set (G_OBJECT (data->video_sink), "rotation", 360, NULL);
       break;
     }
     case 'q':
