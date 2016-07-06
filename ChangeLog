@@ -1,9 +1,219 @@
-=== release 1.8.0 ===
+=== release 1.9.1 ===
 
-2016-03-24  Sebastian Dröge <slomo@coaxion.net>
+2016-07-06  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.0
+	  releasing 1.9.1
+
+2016-07-06 10:19:44 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/hr.po:
+	  po: Update translations
+
+2016-06-21 11:46:53 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ac2f647 to f363b32
+
+2015-05-12 11:08:55 +0300  Vootele Vesterblom <vov@bang-olufsen.dk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: fix seeking back after EOS has been reached in push mode
+	  Fix seeking when demuxer is in INDEX state. This happens when we
+	  reached the end of the stream. It should still be possible to do
+	  a flushing seek and seek back to any other position though. Instead
+	  the demuxer would just go straight to EOS again instead of going
+	  back to processing packets again from the new position.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749066
+
+2016-05-17 16:00:29 +0300  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/realmedia/rdtmanager.c:
+	  rdtmanager: fix clock leak
+	  The clock returned by gst_system_clock_obtain() was never unreffed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766565
+
+2016-05-15 13:33:30 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	  docs: Update for git master
+
+2016-04-16 09:15:43 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/amrnb/amrnbdec.c:
+	* ext/mad/gstmad.c:
+	  amrnbec, mad: fix two more parse function declarations
+
+2016-04-15 20:46:37 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/a52dec/gsta52dec.c:
+	* ext/amrwbdec/amrwbdec.c:
+	  a52dec, amrwbec: fix parse function declaration mismatch
+	  Fixes MSVC compiler warning:
+	  amrwbdec.c(99): warning C4133: '=': incompatible types
+	  - from 'gboolean (__cdecl *)(GstAudioDecoder *,GstAdapter *,gint *,gint *)' to
+	  'GstFlowReturn (__cdecl *)(GstAudioDecoder *,GstAdapter *,gint *,gint *)'
+	  gsta52dec.c(156): warning C4133: '=': incompatible types
+	  - from 'gboolean (__cdecl *)(GstAudioDecoder *,GstAdapter *,gint *,gint *)' to
+	  'GstFlowReturn (__cdecl *)(GstAudioDecoder *,GstAdapter *,gint *,gint *)'
+
+2016-04-15 19:55:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/mpg123/gstmpg123audiodec.h:
+	  mpg123: fix build with msvc
+	  Fix syntax errors when compiling against cerbero-provided libmpg123
+	  headers. We do the same as the libmpg123 internal visual studio
+	  build here.
+	  mpg123.h(1378): error C2143: syntax error: missing ')' before '('
+	  mpg123.h(1378): error C2081: 'ssize_t': name in formal parameter list illegal
+	  mpg123.h(1378): error C2143: syntax error: missing ')' before '*'
+	  mpg123.h(1378): error C2091: function returns function
+	  mpg123.h(1378): error C2143: syntax error: missing '{' before '*'
+	  mpg123.h(1378): error C2059: syntax error: ')'
+	  mpg123.h(1379): error C2143: syntax error: missing ')' before '*'
+	  mpg123.h(1379): error C2365: 'off_t': redefinition; previous definition was 'typedef'
+	  ...
+
+2016-04-15 18:37:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: bump libmpeg2 requirement to 0.5.1 and fix msvc build
+	  libmpeg2 0.5.1 was released in mid-2008, let's bump the requirement
+	  and get rid of version-dependent code paths. There's still
+	  avdec_mpeg2video for those who are stuck on ancient distros which
+	  we don't target any more.
+	  Also fixes build with MSVC, which doesn't like #if #else #endif
+	  inside macro arguments (like the GST_DEBUG_OBJECT in line 941).
+
+2016-04-14 10:02:50 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* README:
+	* common:
+	  Automatic update of common submodule
+	  From 6f2d209 to ac2f647
+
+2016-03-04 16:14:44 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* ext/a52dec/gsta52dec.c:
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbenc.c:
+	* ext/amrwbdec/amrwbdec.c:
+	* ext/dvdread/dvdreadsrc.c:
+	* ext/lame/gstlamemp3enc.c:
+	* ext/mad/gstmad.c:
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/sidplay/gstsiddec.cc:
+	* ext/twolame/gsttwolamemp2enc.c:
+	* ext/x264/gstx264enc.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstrtpasfdepay.c:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	* gst/dvdsub/gstdvdsubdec.c:
+	* gst/dvdsub/gstdvdsubparse.c:
+	* gst/realmedia/pnmsrc.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rdtdepay.c:
+	* gst/realmedia/rdtmanager.c:
+	* gst/realmedia/rmdemux.c:
+	* gst/xingmux/gstxingmux.c:
+	  ugly: use new gst_element_class_add_static_pad_template()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763082
+
+2016-03-24 13:33:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.8.0 ===
+
+2016-03-24 12:43:04 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.8.0
+
+2016-03-24 12:18:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 === release 1.7.91 ===
 
