@@ -183,8 +183,8 @@ static GstFlowReturn gst_audio_aggregator_flush (GstAggregator * agg);
 
 static GstBuffer *gst_audio_aggregator_create_output_buffer (GstAudioAggregator
     * aagg, guint num_frames);
-static GstFlowReturn gst_audio_aggregator_do_clip (GstAggregator * agg,
-    GstAggregatorPad * bpad, GstBuffer * buffer, GstBuffer ** outbuf);
+static GstBuffer *gst_audio_aggregator_do_clip (GstAggregator * agg,
+    GstAggregatorPad * bpad, GstBuffer * buffer);
 static GstFlowReturn gst_audio_aggregator_aggregate (GstAggregator * agg,
     gboolean timeout);
 static gboolean sync_pad_values (GstAudioAggregator * aagg,
@@ -741,22 +741,21 @@ gst_audio_aggregator_flush (GstAggregator * agg)
   return GST_FLOW_OK;
 }
 
-static GstFlowReturn
+static GstBuffer *
 gst_audio_aggregator_do_clip (GstAggregator * agg,
-    GstAggregatorPad * bpad, GstBuffer * buffer, GstBuffer ** out)
+    GstAggregatorPad * bpad, GstBuffer * buffer)
 {
   GstAudioAggregatorPad *pad = GST_AUDIO_AGGREGATOR_PAD (bpad);
   gint rate, bpf;
-
 
   rate = GST_AUDIO_INFO_RATE (&pad->info);
   bpf = GST_AUDIO_INFO_BPF (&pad->info);
 
   GST_OBJECT_LOCK (bpad);
-  *out = gst_audio_buffer_clip (buffer, &bpad->clip_segment, rate, bpf);
+  buffer = gst_audio_buffer_clip (buffer, &bpad->clip_segment, rate, bpf);
   GST_OBJECT_UNLOCK (bpad);
 
-  return GST_FLOW_OK;
+  return buffer;
 }
 
 /* Called with the object lock for both the element and pad held,
