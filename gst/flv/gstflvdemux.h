@@ -126,7 +126,6 @@ struct _GstFlvDemux
   gboolean need_header;
   gboolean has_audio;
   gboolean has_video;
-  gboolean push_tags;
   gboolean strict;
   gboolean flushing;
 
