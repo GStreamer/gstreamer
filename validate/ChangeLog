@@ -1,9 +1,409 @@
-=== release 1.8.0 ===
+=== release 1.9.1 ===
 
-2016-03-24  Sebastian Dröge <slomo@coaxion.net>
+2016-07-06  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.0
+	  releasing 1.9.1
+
+2016-07-04 16:16:25 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/main.py:
+	  validate: Fix usage for non-standard http server port
+	  Translate the various stream_info URI from the standard port to the
+	  specified port
+	  Make the port option an integer option
+
+2016-07-04 16:12:27 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	  media-descriptor: Fine-tune stream-id checking
+	  Only expect fully identical stream-id from URI which are not local files
+	  nor from our local http server.
+	  Fixes issues with non-default http server port
+
+2015-11-23 15:11:58 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/tools/gst-validate.c:
+	  validate: Use presence of STREAM_START to detect track switching
+	  When doing a track switch, the only reliable way to detect that it
+	  happened is whether a new STREAM_START arrives.
+	  Relying on a DISCONT buffer is not satisfactory, since there might
+	  not have been an element setting that flag upstream.
+	  Checking whether the first buffer after a STREAM_START has the
+	  DISCONT flag properly set should be done in parallel
+
+2015-11-05 10:29:33 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/tools/gst-validate.c:
+	  tools: Make the stream-switching action more generic
+	  This allows it to handle both playbin and playbin3
+
+2015-11-05 10:19:22 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/tools/gst-validate.c:
+	  tools: Fix playbin detection
+	  We might be using playbin3 instead
+
+2015-11-02 14:42:53 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Use decodebin3/uridecodebin3 when specified
+	  Set the USE_PLAYBIN3 environment variable to use those elements instead
+	  of legacy ones.
+
+2015-11-05 16:37:17 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/tools/gst-validate-analyze:
+	  tools: New tool to view and compare xunit results
+
+2016-06-24 14:03:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate: fix one more export
+	  gst-validate-scenario.c:183:7: error: '_gst_validate_action_type' redeclared without dllimport attribute: previous dllimport ignore
+	  This is also declared in gst-validate-internal.h
+
+2016-06-24 11:48:50 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/gst/validate/gst-validate-internal.h:
+	  validate: fix bogus exports for internal symbols
+	  Hopefully fixes win32 build.
+	  gst-validate-scenario.c:183:7: error: '_gst_validate_action_type' redeclared without dllimport attribute: previous dllimport ignored
+	  gst-validate-scenario.c:286:1: error: '_action_check_and_set_printed' redeclared without dllimport attribute: previous dllimport ignored
+	  gst-validate-scenario.c:298:1: error: 'gst_validate_action_is_subaction' redeclared without dllimport attribute: previous dllimport ignored
+	  gst-validate-scenario.c:305:7: error: '_gst_validate_action_type_type' redeclared without dllimport attribute: previous dllimport ignored
+
+2016-06-13 17:00:39 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/validate.c:
+	  validate: Fix Validate plugin paths mixup
+
+2016-06-10 12:55:47 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: fix typo in debug message
+
+2016-06-09 14:30:53 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/launcher/main.py:
+	  validate: fix some recurring typos
+
+2016-06-09 14:22:31 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  validate: fix validate-transcoding option descriptions
+
+2016-06-09 13:57:33 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/tools/gst-validate.c:
+	  validate: improve run-time option descriptions
+
+2016-06-09 16:41:57 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: No execute ON_ADDITION if a previous action has a playback-time
+	  As this is what user will expect in this case.
+	  For example with this scenario:
+	  set-state, state=null; playback-time=5
+	  set-property, target-element-name=dvbsrc0, property-name=delsys, property-value=11
+	  play;
+
+2015-08-11 16:41:20 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Add support for relative path while providing file path
+	  Instead of providing full absolute path while validating the file, should be
+	  able to provide the relative path with respect to the present directory.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753494
+
+2016-05-24 14:05:37 +0000  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate: fix monitor leak when doing frame analysis
+	  The monitor returned by gst_validate_monitor_factory_create() was never
+	  unreffed.
+	  Report instances now have to keep a ref, as suggested by the TODO, as
+	  the reporter is no longer leaked.
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D1012
+
+2016-05-24 14:05:30 +0000  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: redefine default cat for the runner
+	  The gstvalidate_debug may not be initialized like with the
+	  validate/reporting which was crashing when run with GST_DEBUG=5.
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D1004
+
+2016-05-24 14:05:24 +0000  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  validate: transcoding: fix encoding_profile leak
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D980
+
+2016-05-24 14:05:17 +0000  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  validate: transcoding: fix caps leaks
+	  The 'all_raw_caps' list is never used and was just leaking caps.
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D979
+
+2016-05-24 14:05:10 +0000  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: scenario: always unref srcpad
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D959
+
+2016-05-24 14:05:03 +0000  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate: media-descriptor-writer: fix pad leaks
+	  - the pad returned by gst_element_get_static_pad() was leaked.
+	  - unref the pad from snode when updating it, not the pad passed as
+	  callback to pad_added_cb()
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D958
+
+2016-05-24 14:04:57 +0000  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/validate.c:
+	  validate: clean up action_types list on deinit
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D957
+
+2016-05-24 14:04:50 +0000  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/overrides/gst-validate-default-overrides.c:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validate: keep a ref when registering an override
+	  _add_override_from_struct() could, in theory, register more than once
+	  the same override so we should not transfer the ref.
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D956
+
+2016-05-24 14:04:44 +0000  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-override-registry.c:
+	  validate: use g_object_unref() on GstValidateOverride
+	  Those are GObject subclasses, not GstObject.
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D955
+
+2016-05-24 14:04:37 +0000  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/data/gstvalidate.supp:
+	  validate: add mesa-related valgrind suppressions
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D954
+
+2016-05-24 14:04:31 +0000  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/launcher/baseclasses.py:
+	  validate: generate valgrind suppression traces
+	  Makes fixing easier as then we can just re-use the generated trace.
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D953
+
+2016-05-24 14:04:25 +0000  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/launcher/vfb_server.py:
+	  validate: fix typo if Xvfb is not installed
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D375
+
+2016-05-23 15:57:04 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Don't check for DISCONT flags on buffer in pull-mode
+	  It only makes sense in push-mode
+
+2016-05-20 09:07:01 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Update checks for MISSING_DISCONT
+	  * Some SEGMENT might be updates caused by calling gst_pad_set_offset(),
+	  which will send the same segment but with an updated offset and/or
+	  based field. For those segments, we don't require a DISCONT on the
+	  following buffer.
+	  * Ignore differences in flags, they aren't relevant for now to figure
+	  out whether the segment is an update or not
+	  * Ignore difference in 'position', it's only meant for internal usage
+	  by elements.
+	  * Changes in the end position (stop in forward playback and start in
+	  reverse playback) are considering updates
+	  Furthermore, also expect a DISCONT flag on the first buffer following
+	  a STREAM_START.
+
+2016-05-17 10:03:26 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* validate/tools/gst-validate.c:
+	  gst-validate: Avoid overreading array
+	  If we offset the argv table as argument, we need to decrement the number
+	  of items in the array (argc) when iterating it
+
+2016-05-19 11:59:19 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	  pad_monitor: Add a check for buffer DISCONT flag
+	  The first buffer after a FLUSH or SEGMENT should have the DISCONT flag
+	  set.
+
+2016-05-15 06:34:21 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* validate/launcher/main.py:
+	  launcher: set gsettings-backend to prevent weird deadlocks
+	  It seems like some sort of forking/dconf/gtype combination can
+	  deadlock occasionally. Setting the gsettings backend to memory
+	  makes it go away.
+	  Same issue: https://cgit.freedesktop.org/gstreamer/gst-plugins-good/commit/tests/check/Makefile.am?id=8e2c1d1de56bddbff22170f8b17473882e0e63f9
+
+2016-05-06 21:27:53 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: add non-seekable fragment file seek tests to the blacklist
+	  The file has no index and is not easily seekable, seeking in these
+	  kind of files isn't implemented.
+
+2016-05-03 15:47:32 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* debug-viewer/gst-debug-viewer:
+	  debug-viewer: Allow running uninstalled with symlink
+	  When uninstalled, we look at the directory of the executable to find
+	  the resources. This patch uses realpath in replacement to abspath so
+	  the path get expended, and symlink are followed.
+
+2016-04-13 21:18:28 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* validate/plugins/gtk/gstvalidategtk.c:
+	  validate: Stop using deprecated method
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764964
+
+2016-04-07 14:11:45 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/data/scenarios/scrub_backward_seeking.scenario:
+	* validate/data/scenarios/scrub_backward_seeking_full.scenario:
+	  scenarios: Fix scrub_backward scenarios
+	  We will be changing states, set the handles-state variable accordingly
+
+2016-03-18 10:42:55 +0100  Xabier Rodriguez Calvar <calvaris@igalia.com>
+
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	* debug-viewer/data/menus.ui:
+	  Added menu opts to filter in instead of only out
+	  Added also menu option to filter a log level and all above that
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763857
+
+2016-03-18 10:42:18 +0100  Xabier Rodriguez Calvar <calvaris@igalia.com>
+
+	* debug-viewer/GstDebugViewer/GUI/filters.py:
+	  Added support to filter in instead of only out
+	  Added support to filter a log level and all above it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763857
+
+2016-04-04 22:23:26 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* debug-viewer/GstDebugViewer/GUI/models.py:
+	  filter: add more logging
+
+2016-03-25 22:20:11 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* debug-viewer/GstDebugViewer/Common/GUI.py:
+	  menu: port menu.popup calls
+	  Add 1 extra arg.
+
+2016-01-14 12:21:34 +0100  Philippe Normand <philn@igalia.com>
+
+	* debug-viewer/GstDebugViewer/GUI/columns.py:
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	* debug-viewer/GstDebugViewer/Plugins/FindBar.py:
+	  debug-viewer: use the gi GLib version rather than the old gobject glib package
+
+2016-01-14 12:19:22 +0100  Philippe Normand <philn@igalia.com>
+
+	* debug-viewer/GstDebugViewer/Common/GUI.py:
+	  debug-viewer: explicitely require GTK+3
+
+2016-01-12 09:44:17 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* debug-viewer/GstDebugViewer/Data.py:
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	* debug-viewer/README:
+	  debug-viewer: add more logging and some profiling how-to
+	  The port is much slower than the gtk3 version. Try to figure why.
+
+2015-10-21 15:03:03 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* debug-viewer/GstDebugViewer/Plugins/Timeline.py:
+	* debug-viewer/README:
+	  GstDebugViewer/Timeline: port timeline widgets to gtk3
+
+2015-10-20 15:21:01 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* debug-viewer/GstDebugViewer/Common/Data.py:
+	* debug-viewer/GstDebugViewer/Common/GUI.py:
+	* debug-viewer/GstDebugViewer/Common/Main.py:
+	* debug-viewer/GstDebugViewer/Common/__init__.py:
+	* debug-viewer/GstDebugViewer/Common/generictreemodel.py:
+	* debug-viewer/GstDebugViewer/Data.py:
+	* debug-viewer/GstDebugViewer/GUI/__init__.py:
+	* debug-viewer/GstDebugViewer/GUI/app.py:
+	* debug-viewer/GstDebugViewer/GUI/colors.py:
+	* debug-viewer/GstDebugViewer/GUI/columns.py:
+	* debug-viewer/GstDebugViewer/GUI/models.py:
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	* debug-viewer/GstDebugViewer/Plugins/FileProperties.py:
+	* debug-viewer/GstDebugViewer/Plugins/FindBar.py:
+	* debug-viewer/GstDebugViewer/Plugins/Timeline.py:
+	* debug-viewer/README:
+	* debug-viewer/tests/performance.py:
+	  GstDebugViewer: basic port to gtk3 and python gobject
+
+2016-03-25 14:17:28 +0000  Tom Schoonjans <Tom.Schoonjans@diamond.ac.uk>
+
+	* validate/gst-libs/gst/video/Makefile.am:
+	  gst-validate: Link with GIO and clean up CFLAGS/LIBADD/LDFLAGS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764192
+
+2016-03-07 08:55:27 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* validate/tests/check/validate/test-utils.c:
+	  validate: use new gst_element_class_add_static_pad_template()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763197
+
+2016-03-07 08:53:23 +0900  Vineeth T M <vineeth.tm@samsung.com>
+
+	* codecanalyzer/src/plugins/gst/analyzersink/gstanalyzersink.c:
+	  codecanalyzer: use new gst_element_class_add_static_pad_template()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763197
+
+2016-03-24 13:34:03 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/configure.ac:
+	  Back to development
+
+=== release 1.8.0 ===
+
+2016-03-24 13:11:29 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.8.0
 
 2016-03-23 20:02:47 +0100  Thibault Saunier <tsaunier@gnome.org>
 
