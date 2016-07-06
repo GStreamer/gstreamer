@@ -1,9 +1,438 @@
-=== release 1.8.0 ===
+=== release 1.9.1 ===
 
-2016-03-24  Sebastian Dröge <slomo@coaxion.net>
+2016-07-06  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.0
+	  releasing 1.9.1
+
+2016-06-29 00:39:02 +0000  Justin Kim <justin.kim@collabora.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: unref GApplication properly
+	  Differential Revision: https://phabricator.freedesktop.org/D380
+
+2016-06-29 00:38:36 +0000  Justin Kim <justin.kim@collabora.com>
+
+	* ges/ges-project.c:
+	  project_: improve get_uri doc
+	  The return value of ges_project_get_uri should be freed
+	  after usage.
+	  Differential Revision: https://phabricator.freedesktop.org/D1142
+
+2016-06-21 11:49:14 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ac2f647 to f363b32
+
+2016-06-20 21:29:44 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* tests/check/Makefile.am:
+	  tests: Make sure to run python tests against the build in tree
+
+2016-06-18 16:16:00 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-timeline.c:
+	* ges/ges-uri-clip.c:
+	* tests/check/ges/basic.c:
+	* tests/check/python/test_clip.py:
+	  ges: Don't remove track elements from clips when removing from layer
+	  And reuse the same previously created element when adding the clip
+	  back to a layer, avoiding losing all setting done on clip children
+	  in that situation
+	  This is a behaviour change but previous behaviour was actually totally
+	  unexpected and people working around that weird behaviour will moste
+	  probably not care about that change
+	  Differential Revision: https://phabricator.freedesktop.org/D1094
+
+2016-06-20 14:00:07 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-title-clip.c:
+	* tests/check/python/test_clip.py:
+	  title_: Do not forget to link up child_added/removed vmethod
+	  Otherwise effect handling is broken
+	  Differential Revision: https://phabricator.freedesktop.org/D1099
+
+2016-06-19 20:02:06 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-auto-transition.c:
+	* tests/check/python/test_group.py:
+	  auto-transitions: Do not remove auto transitions when moving neighboor from the same group
+	  Differential Revision: https://phabricator.freedesktop.org/D1097
+
+2016-05-14 19:33:05 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* ges/ges-container.c:
+	* ges/ges-timeline-element.c:
+	  ges: fix various leaks with usage of ges_timeline_element_lookup_child
+	  Some callers forgot to unref out child, pspec or both leading to leaks.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766449
+
+2016-05-14 19:02:57 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* ges/ges-video-track.c:
+	  video-track: don't leak restriction caps in _sync_capsfilter_with_track()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766450
+
+2016-06-06 17:44:15 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-uri-asset.c:
+	  ges-uri-asset: GstDiscoverer can return a valid info but a non-OK result, consider this an error
+	  The asynchronous case in ges_uri_clip_asset_request_async() already considered
+	  it an error, do the same in ges_uri_clip_asset_request_sync().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767293
+
+2016-05-31 12:09:44 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Fix race condition in seek handling causing deadlocks
+	  We might receive another seek from the application while the action task is
+	  handling a previous seek (and thus setting seeking_itself to TRUE). To prevent
+	  this seek to go through directly instead of being added as an action, also
+	  check if the seek event was received from our action task thread or some other
+	  thread.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767053
+
+2016-05-31 09:29:44 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-meta-container.c:
+	  ges: Emit GESMetontainer::notify-meta even if value is unset
+
+2016-05-30 10:51:51 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-meta-container.c:
+	  ges: Allow passing `NULL` as a value to ges_meta_container_set_meta
+	  Fixes T7430
+
+2016-05-25 10:32:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ges/Makefile.am:
+	  g-i: pass compiler env to g-ir-scanner
+	  It's what introspection.mak does as well. Should
+	  fix spurious build failures on gnome-continuous
+	  (caused by g-ir-scanner getting compiler details
+	  via python which is broken in some environments
+	  so passing the compiler details bypasses that).
+
+2016-05-16 12:06:37 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* ges/ges-uri-clip.c:
+	* ges/ges-uri-clip.h:
+	  uri-clip: make uri parameter of ges_uri_clip_new () const
+	  To avoid compiler warning when using const string to create a new
+	  GESUriClip as string is not modified and only passed to functions which
+	  take a const string.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766523
+
+2016-05-16 12:53:32 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* ges/gstframepositioner.c:
+	  framepositionner: add a weak ref on track element to know when it is finalized
+	  Otherwise if frame positionner is disposed after track element has been
+	  finalized, it will raise a critical message because we will try to
+	  disconnect a signal handler on a freed track element object.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766525
+
+2016-05-16 17:36:36 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* ges/ges-audio-source.c:
+	  audio-source: unref private capsfilter reference on dispose
+	  Otherwise a capsfilter reference will be leaked since it has been got
+	  using gst_bin_get_by_name.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766524
+
+2016-05-16 17:35:29 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* ges/ges-audio-source.c:
+	  audio-source: fix indentation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766524
+
+2016-05-07 20:29:22 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: ensure elements pending to be added are not leaked
+	  When nlecomposition is finalized with pending add action or io,
+	  associated elements are not unreffed as they should since caller gives
+	  us the reference when calling gst_bin_add causing them to be leaked.
+	  So to make sure we don't leak a reference on element when adding one to
+	  the bin, each stage (action and pending_io) hold a reference on element
+	  and release it when stage is done.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766455
+
+2016-05-14 18:06:56 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: fix nle_composition_remove_object info message
+	  We don't add internal bin, we remove it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766455
+
+2016-05-15 01:04:17 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* ges/ges-asset.c:
+	* ges/ges-audio-test-source.c:
+	* ges/ges-audio-track.c:
+	* ges/ges-audio-transition.c:
+	* ges/ges-audio-uri-source.c:
+	* ges/ges-clip.c:
+	* ges/ges-effect-clip.c:
+	* ges/ges-effect.c:
+	* ges/ges-extractable.c:
+	* ges/ges-group.c:
+	* ges/ges-image-source.c:
+	* ges/ges-layer.c:
+	* ges/ges-meta-container.c:
+	* ges/ges-multi-file-source.c:
+	* ges/ges-pipeline.c:
+	* ges/ges-project.c:
+	* ges/ges-test-clip.c:
+	* ges/ges-text-overlay-clip.c:
+	* ges/ges-text-overlay.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-title-clip.c:
+	* ges/ges-title-source.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track.c:
+	* ges/ges-transition-clip.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges-uri-clip.c:
+	* ges/ges-utils.c:
+	* ges/ges-video-test-source.c:
+	* ges/ges-video-track.c:
+	* ges/ges-video-transition.c:
+	* ges/ges-video-uri-source.c:
+	  ges: add some g-i annotations according to documentation
+	  Mainly (transfer xxx) and (nullable). Also fix some typo.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766459
+
+2016-05-15 01:03:49 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* ges/ges-asset.c:
+	  asset: fix ges_asset_set_proxy() return value documentation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766459
+
+2016-05-06 22:28:26 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline-element.c:
+	  element: Also accept GParamSpec.owner_type name as a child property prefix
+	  Makes it simpler for python users to be able to retrieve children
+	  properties iterating over them.
+
+2016-05-06 18:21:17 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-track-element.c:
+	  track-element: gi: skip now deprecated children property getter/setter
+	  Those are implemented with the exact same API at the GESTimelineElement
+	  level now, and user of those APIs with high level languages will get the
+	  exact same API.
+
+2016-05-06 15:44:28 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-xml-formatter.c:
+	  formatter: Prefix all children properties in the XML formatter
+	  Otherwise it will fail on properties that are mandatorily prefixed
+	  like the newly added deinterlacing properties
+
+2016-05-06 15:18:50 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-group.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	  ges: Remove timeline_emit_group_removed which slipped in the API by mistake
+	  This is formally an API break but I am sure no one ever used that and
+	  we should make sure the method is removed as soon as possible because
+	  it has no reason to be exposed.
+
+2016-04-29 11:36:00 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-container.c:
+	  container: Handle setting children properties that need prefixing
+
+2016-04-29 10:29:00 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-video-source.c:
+	  video-source: Expose deinterlace-[fields, mode, tff] child properties
+	  Letting some control over the deinterlacing to the users
+
+2016-04-30 18:38:33 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ges/ges-effect.h:
+	* ges/ges-meta-container.c:
+	* ges/ges-timeline.c:
+	  ges: fix misc g-i annotations
+
+2016-04-30 18:20:00 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* ges/Makefile.am:
+	  g-i: use only "ges/ges.h" as c-include for introspection
+	  This is the only header which shall be included by user. Otherwise some
+	  language using gir to generate binding, e.g Vala, will includes all
+	  headers files in alphabetical order which causes compilation errors due
+	  to incomplete type.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765856
+
+2016-04-30 16:43:26 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* ges/ges-timeline.c:
+	  timeline: rename "track-element" to "track_element" in select-tracks-for-object documentation
+	  because "track-element" is not a valid identifier for a parameter and
+	  will cause generated binding using GIR to be invalid. For instance in
+	  Vala.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765853
+
+2016-04-29 10:05:10 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-video-source.c:
+	  video-source: Do not ever plugin avdeinterlace
+	  It is not feature compatible with deinterlace and is not safe to use
+
+2016-04-28 13:39:41 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-types.h:
+	  ges: #include glib.h for G_BEGIN_DECLS
+
+2016-04-28 13:39:27 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-multi-file-source.h:
+	  ges-multi-file-source: Fix case of standard gobject macros
+
+2016-04-28 13:37:49 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/libs/Makefile.am:
+	* docs/libs/ges-sections.txt:
+	  ges: Add some more functions to the docs and don't scan internal headers
+	  Someone still should look through the unused.txt for more things to add or
+	  hide.
+
+2016-04-25 15:11:00 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-formatter.h:
+	* ges/ges-internal.h:
+	* ges/ges-pitivi-formatter.h:
+	* ges/ges-structured-interface.h:
+	* ges/ges-types.h:
+	  ges: Add G_BEGIN_DECLS around all relevant declarations in headers
+
+2016-04-22 16:06:50 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-title-clip.c:
+	* ges/ges-title-source.c:
+	* tests/check/ges/titles.c:
+	  title: Do not concider inpoints
+	  It does not make sense for titles
+	  Handle element with no inpoint handling in the timeline
+	  Fixes https://phabricator.freedesktop.org/T7319
+
+2016-04-14 10:05:16 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6f2d209 to ac2f647
+
+2016-04-13 12:32:53 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/ges/timelineedition.c:
+	  tests: Rename positionner to positioner in the tests too
+
+2016-04-13 12:31:05 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/Makefile.am:
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-source.c:
+	* ges/ges-video-source.c:
+	* ges/ges-video-transition.c:
+	* ges/ges.c:
+	* ges/gstframepositioner.c:
+	* ges/gstframepositioner.h:
+	* ges/gstframepositionner.c:
+	* ges/gstframepositionner.h:
+	  ges: Fix typo by renaming positionner to positioner
+	  It's fortunately private API
+
+2016-04-13 12:26:13 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/gstframepositionner.c:
+	  framepositionner: Initialize all fields of the meta during initialization
+	  GstMetas are not allocated with all fields initialized to zeroes.
+
+2016-04-09 21:12:00 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-track-element.c:
+	  ges: Do not try to set read only properties
+	  When copying and splitting clips
+	  Fixes T7375
+
+2016-04-09 18:13:33 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-video-transition.c:
+	  transition: Lower done some debug loggin level
+
+2016-03-27 23:40:16 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* plugins/nle/nlecomposition.c:
+	  Minor fix
+
+2016-04-01 10:09:39 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	* ges/ges-title-source.c:
+	  titlesource: Add support for absolute positionning
+
+2016-04-04 10:53:13 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/.gitignore:
+	* tests/check/ges/.gitignore:
+	  tests: Add some things to .gitignore
+
+2016-04-03 18:06:00 +0200  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* examples/.gitignore:
+	  examples/gitignore: ignore assets and play_timeline_with_one_clip binaries
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764550
+
+2016-03-30 09:26:18 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges.c:
+	  GES: Properly split the GOptionGroup initialization
+	  Debugging must be configuring first (before any parsing), and then
+	  the types are initialized at the end.
+	  Fixes issues with debugging categories not being available at the
+	  start
+
+2016-03-07 08:49:14 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* ges/ges-smart-adder.c:
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-track.c:
+	* ges/gstframepositionner.c:
+	* plugins/nle/nlecomposition.c:
+	* plugins/nle/nleoperation.c:
+	* plugins/nle/nlesource.c:
+	* plugins/nle/nleurisource.c:
+	  editing-services: use new gst_element_class_add_static_pad_template()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763195
+
+2016-03-24 13:33:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.8.0 ===
+
+2016-03-24 13:05:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.8.0
 
 === release 1.7.91 ===
 

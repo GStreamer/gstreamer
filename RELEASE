@@ -1,17 +1,24 @@
 
-Release notes for GStreamer Editing Services 1.8.0
+Release notes for GStreamer Editing Services 1.9.1
 
-The GStreamer team is pleased to announce the first release of the new stable
-1.8 release series. The 1.8 release series is adding new features on top of
-the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x
-release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release of the unstable
+1.9 release series. The 1.9 release series is adding new features on top of
+the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.9 release series
+will lead to the stable 1.10 release series in the next weeks. Any newly added
+API can still change until that point.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
-the source release by the GStreamer project during the stable 1.8 release
-series.
+Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
 
   
+
+Bugs fixed in this release
+     
+      * 763195 : editing-services: use new gst_element_class_add_static_pad_template()
+      * 764550 : examples/gitignore: ignore assets and play_timeline_with_one_clip binaries
+      * 766523 : uri-clip: make uri parameter of ges_uri_clip_new () const
+      * 766525 : framepositionner: add a weak ref on track element to know when it is finalized
 
 ==== Download ====
 
@@ -48,8 +55,13 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Aurélien Zanelli
+      * Edward Hervey
+      * Julien Isorce
       * Justin Kim
-      * Lubosz Sarnecki
+      * Nicolas Dufresne
       * Sebastian Dröge
       * Thibault Saunier
+      * Tim-Philipp Müller
+      * Vineeth TM
  
