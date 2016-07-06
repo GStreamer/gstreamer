@@ -79,10 +79,10 @@ GType gst_event_type_flags_get_type (void);
 #define GST_TYPE_EVENT_TYPE_FLAGS (gst_event_type_flags_get_type())
 GType gst_event_type_get_type (void);
 #define GST_TYPE_EVENT_TYPE (gst_event_type_get_type())
-GType gst_qos_type_get_type (void);
-#define GST_TYPE_QOS_TYPE (gst_qos_type_get_type())
 GType gst_stream_flags_get_type (void);
 #define GST_TYPE_STREAM_FLAGS (gst_stream_flags_get_type())
+GType gst_qos_type_get_type (void);
+#define GST_TYPE_QOS_TYPE (gst_qos_type_get_type())
 
 /* enumerations from "gstformat.h" */
 GType gst_format_get_type (void);
@@ -185,6 +185,10 @@ GType gst_seek_flags_get_type (void);
 #define GST_TYPE_SEEK_FLAGS (gst_seek_flags_get_type())
 GType gst_segment_flags_get_type (void);
 #define GST_TYPE_SEGMENT_FLAGS (gst_segment_flags_get_type())
+
+/* enumerations from "gststreams.h" */
+GType gst_stream_type_get_type (void);
+#define GST_TYPE_STREAM_TYPE (gst_stream_type_get_type())
 
 /* enumerations from "gstsystemclock.h" */
 GType gst_clock_type_get_type (void);

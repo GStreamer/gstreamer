@@ -1,15 +1,15 @@
 
-Release notes for GStreamer 1.8.0
+Release notes for GStreamer 1.9.1
 
-The GStreamer team is pleased to announce the first release of the new stable
-1.8 release series. The 1.8 release series is adding new features on top of
-the 1.0, 1.2, 1.4 and 1.6 series and is part of the API and ABI-stable 1.x
-release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release of the unstable
+1.9 release series. The 1.9 release series is adding new features on top of
+the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.9 release series
+will lead to the stable 1.10 release series in the next weeks. Any newly added
+API can still change until that point.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
-the source release by the GStreamer project during the stable 1.8 release
-series.
+Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
 
 
 This module, gstreamer, only contains core functionality.
@@ -35,10 +35,51 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 763491 : typefind: behavior has changed on have-type signal, sets pad caps after signal handlers
-      * 763895 : Incorrect gir annotation on gst_element_query_convert
-      * 764034 : preset: Use GST_PRESET_PATH as an extension of the system path, not a replacement of the user path
-      * 763770 : multiqueue: not-linked pads might not drain out at EOS
+      * 623469 : Unit test failures with CK_FORK=no make check
+      * 747954 : osx: fix libcheck and " make check " builds with clang
+      * 749427 : Dispose/finalize GST_REFCOUNTING log messages missing poitner of object being disposed/finalized
+      * 750397 : CRITICAL: Race condition in GstBus
+      * 751538 : info: gst_debug_log_default() function can't be removed before gst_init()
+      * 756738 : gst_registry_plugin_filter() and gst_registry_feature_filter() callbacks can't use any API using the registry
+      * 758960 : New GstStream API and decodebin3/playbin3
+      * 761211 : pad: blocking pull probe during pull_range doesn't work
+      * 763020 : gstreamer: use new gst_element_class_add_static_pad_template()
+      * 763142 : API: add async property change notification - gst_element_add_property_notify_watch()
+      * 763337 : capsfilter: remove unnecessary gst_pad_has_current_caps() calls for each buffer
+      * 763457 : gstparse: element properties are contained in a GstPipeline instead of a GstBin
+      * 763567 : libcompat.h: strsignal() should not be declared const
+      * 763762 : crash due to gst_iterator_fold which lacks error handling.
+      * 763814 : dot files: fix enum properties
+      * 764176 : expose pad_link_maybe_ghosting
+      * 764199 : tests: plugin: improve debug message
+      * 764311 : gstinfo: fix file descriptor leak when default log function is not added
+      * 764526 : Build broken with gcc 6.0
+      * 764985 : rusage tracer: crash when freeing memory
+      * 764999 : multiqueue: catch errors and flushing after locking
+      * 765052 : tracer: add (mini) object leak tracer
+      * 765212 : allocator: clean up allocators in gst_deinit()
+      * 765540 : gst_element_base_class_finalize() is never called
+      * 765606 : Add caps and capsfeatures cleanup functions
+      * 765719 : pad: fix buffer leaks in test
+      * 765720 : bin: fix leaks in unit test
+      * 765736 : multiqueue: playback with sparse stream deadlocks
+      * 765903 : fix various leaks in tests
+      * 765904 : deviceproviderfactory: fix factory leak
+      * 765957 : inspect: feature leak
+      * 765958 : uri: don't use _gst_uri_free() directly
+      * 765976 : factory leak in parse-launch test
+      * 765978 : miniobject: fix ref count leaks in tests
+      * 766008 : (mini)object: add flag marking " leaked " objects
+      * 766251 : gstdebugutils: fix warning on enum properties printing
+      * 766360 : pad: Don't drop LATENCY queries with default implementation
+      * 766647 : adapter: Add a method to query current offset
+      * 766666 : patch: make git-update.sh build with all cores available
+      * 766795 : baseparse: Make sure DISCONT flags are properly propagated
+      * 766923 : object: Notify name change when using _set_name()
+      * 767012 : object: leak in test_fake_object_name
+      * 767463 : windows static build broken (regression)
+      * 767979 : GstBufferPool: acquire_buffer has unsafe GstPoll usage
+      * 768439 : baseparse: Don't add calculated bitrates until threshold
 
 ==== Download ====
 
@@ -75,10 +116,34 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Alex Ashley
       * Anthony G. Basile
-      * Aurélien Zanelli
-      * Ben Iofel
+      * Arun Raghavan
+      * Carlos Rafael Giani
+      * Danilo Cesar Lemes de Paula
+      * Edward Hervey
+      * Francisco Velazquez
+      * Guillaume Desmottes
+      * Havard Graff
+      * Jan Alexander Steffens (heftig)
       * Jan Schmidt
-      * Romain Picard
+      * Julien Isorce
+      * Linus Svensson
+      * Luis de Bethencourt
+      * Mark Combellack
+      * Matej Knopp
+      * Matthew Gruenke
+      * Matthew Waters
+      * Nicolas Dufresne
+      * Nirbheek Chauhan
+      * Ray Strode
+      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
+      * Stefan Sauer
+      * Stian Selnes
+      * Thiago Santos
+      * Tim-Philipp Müller
+      * Vincent Penquerc'h
+      * Vineeth TM
+      * Wonchul Lee
  

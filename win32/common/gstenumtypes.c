@@ -13,6 +13,8 @@ gst_object_flags_get_type (void)
 {
   static gsize id = 0;
   static const GFlagsValue values[] = {
+    {C_FLAGS (GST_OBJECT_FLAG_MAY_BE_LEAKED), "GST_OBJECT_FLAG_MAY_BE_LEAKED",
+        "may-be-leaked"},
     {C_FLAGS (GST_OBJECT_FLAG_LAST), "GST_OBJECT_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
@@ -606,6 +608,8 @@ gst_event_type_get_type (void)
     {C_ENUM (GST_EVENT_STREAM_START), "GST_EVENT_STREAM_START", "stream-start"},
     {C_ENUM (GST_EVENT_CAPS), "GST_EVENT_CAPS", "caps"},
     {C_ENUM (GST_EVENT_SEGMENT), "GST_EVENT_SEGMENT", "segment"},
+    {C_ENUM (GST_EVENT_STREAM_COLLECTION), "GST_EVENT_STREAM_COLLECTION",
+        "stream-collection"},
     {C_ENUM (GST_EVENT_TAG), "GST_EVENT_TAG", "tag"},
     {C_ENUM (GST_EVENT_BUFFERSIZE), "GST_EVENT_BUFFERSIZE", "buffersize"},
     {C_ENUM (GST_EVENT_SINK_MESSAGE), "GST_EVENT_SINK_MESSAGE", "sink-message"},
@@ -621,6 +625,8 @@ gst_event_type_get_type (void)
     {C_ENUM (GST_EVENT_STEP), "GST_EVENT_STEP", "step"},
     {C_ENUM (GST_EVENT_RECONFIGURE), "GST_EVENT_RECONFIGURE", "reconfigure"},
     {C_ENUM (GST_EVENT_TOC_SELECT), "GST_EVENT_TOC_SELECT", "toc-select"},
+    {C_ENUM (GST_EVENT_SELECT_STREAMS), "GST_EVENT_SELECT_STREAMS",
+        "select-streams"},
     {C_ENUM (GST_EVENT_CUSTOM_UPSTREAM), "GST_EVENT_CUSTOM_UPSTREAM",
         "custom-upstream"},
     {C_ENUM (GST_EVENT_CUSTOM_DOWNSTREAM), "GST_EVENT_CUSTOM_DOWNSTREAM",
@@ -644,25 +650,6 @@ gst_event_type_get_type (void)
 }
 
 GType
-gst_qos_type_get_type (void)
-{
-  static gsize id = 0;
-  static const GEnumValue values[] = {
-    {C_ENUM (GST_QOS_TYPE_OVERFLOW), "GST_QOS_TYPE_OVERFLOW", "overflow"},
-    {C_ENUM (GST_QOS_TYPE_UNDERFLOW), "GST_QOS_TYPE_UNDERFLOW", "underflow"},
-    {C_ENUM (GST_QOS_TYPE_THROTTLE), "GST_QOS_TYPE_THROTTLE", "throttle"},
-    {0, NULL, NULL}
-  };
-
-  if (g_once_init_enter (&id)) {
-    GType tmp = g_enum_register_static ("GstQOSType", values);
-    g_once_init_leave (&id, tmp);
-  }
-
-  return (GType) id;
-}
-
-GType
 gst_stream_flags_get_type (void)
 {
   static gsize id = 0;
@@ -677,6 +664,25 @@ gst_stream_flags_get_type (void)
 
   if (g_once_init_enter (&id)) {
     GType tmp = g_flags_register_static ("GstStreamFlags", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
+GType
+gst_qos_type_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_QOS_TYPE_OVERFLOW), "GST_QOS_TYPE_OVERFLOW", "overflow"},
+    {C_ENUM (GST_QOS_TYPE_UNDERFLOW), "GST_QOS_TYPE_UNDERFLOW", "underflow"},
+    {C_ENUM (GST_QOS_TYPE_THROTTLE), "GST_QOS_TYPE_THROTTLE", "throttle"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstQOSType", values);
     g_once_init_leave (&id, tmp);
   }
 
@@ -883,6 +889,12 @@ gst_message_type_get_type (void)
         "device-added"},
     {C_FLAGS (GST_MESSAGE_DEVICE_REMOVED), "GST_MESSAGE_DEVICE_REMOVED",
         "device-removed"},
+    {C_FLAGS (GST_MESSAGE_PROPERTY_NOTIFY), "GST_MESSAGE_PROPERTY_NOTIFY",
+        "property-notify"},
+    {C_FLAGS (GST_MESSAGE_STREAM_COLLECTION), "GST_MESSAGE_STREAM_COLLECTION",
+        "stream-collection"},
+    {C_FLAGS (GST_MESSAGE_STREAMS_SELECTED), "GST_MESSAGE_STREAMS_SELECTED",
+        "streams-selected"},
     {C_FLAGS (GST_MESSAGE_ANY), "GST_MESSAGE_ANY", "any"},
     {0, NULL, NULL}
   };
@@ -1050,6 +1062,8 @@ gst_mini_object_flags_get_type (void)
         "lockable"},
     {C_FLAGS (GST_MINI_OBJECT_FLAG_LOCK_READONLY),
         "GST_MINI_OBJECT_FLAG_LOCK_READONLY", "lock-readonly"},
+    {C_FLAGS (GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED),
+        "GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED", "may-be-leaked"},
     {C_FLAGS (GST_MINI_OBJECT_FLAG_LAST), "GST_MINI_OBJECT_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
@@ -1650,6 +1664,29 @@ gst_segment_flags_get_type (void)
   return (GType) id;
 }
 
+/* enumerations from "gststreams.h" */
+GType
+gst_stream_type_get_type (void)
+{
+  static gsize id = 0;
+  static const GFlagsValue values[] = {
+    {C_FLAGS (GST_STREAM_TYPE_UNKNOWN), "GST_STREAM_TYPE_UNKNOWN", "unknown"},
+    {C_FLAGS (GST_STREAM_TYPE_AUDIO), "GST_STREAM_TYPE_AUDIO", "audio"},
+    {C_FLAGS (GST_STREAM_TYPE_VIDEO), "GST_STREAM_TYPE_VIDEO", "video"},
+    {C_FLAGS (GST_STREAM_TYPE_CONTAINER), "GST_STREAM_TYPE_CONTAINER",
+        "container"},
+    {C_FLAGS (GST_STREAM_TYPE_TEXT), "GST_STREAM_TYPE_TEXT", "text"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_flags_register_static ("GstStreamType", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
 /* enumerations from "gstsystemclock.h" */
 GType
 gst_clock_type_get_type (void)
@@ -1994,6 +2031,8 @@ gst_parse_flags_get_type (void)
         "fatal-errors"},
     {C_FLAGS (GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS),
         "GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS", "no-single-element-bins"},
+    {C_FLAGS (GST_PARSE_FLAG_PLACE_IN_BIN), "GST_PARSE_FLAG_PLACE_IN_BIN",
+        "place-in-bin"},
     {0, NULL, NULL}
   };
 

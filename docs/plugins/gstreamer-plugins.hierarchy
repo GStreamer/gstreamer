@@ -47,6 +47,7 @@ GObject
       GstTaskPool
       GstTracer
         GstLatencyTracer
+        GstLeaksTracer
         GstLogTracer
         GstRUsageTracer
         GstStatsTracer
