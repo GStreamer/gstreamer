@@ -401,11 +401,13 @@ gst_funnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     /* If no data is coming and we receive GAP event, need to forward sticky events. */
     unlock = TRUE;
     GST_PAD_STREAM_LOCK (funnel->srcpad);
-    GST_OBJECT_LOCK (funnel);
-    gst_object_replace ((GstObject **) & funnel->last_sinkpad,
-        GST_OBJECT (pad));
-    GST_OBJECT_UNLOCK (funnel);
-    gst_pad_sticky_events_foreach (pad, forward_events, funnel->srcpad);
+
+    if ((funnel->last_sinkpad == NULL) || (funnel->forward_sticky_events
+            && (funnel->last_sinkpad != pad))) {
+      gst_object_replace ((GstObject **) & funnel->last_sinkpad,
+          GST_OBJECT (pad));
+      gst_pad_sticky_events_foreach (pad, forward_events, funnel->srcpad);
+    }
   }
 
   if (forward)
