@@ -2091,7 +2091,7 @@ static gboolean
 gst_aggregator_pad_has_space (GstAggregator * self, GstAggregatorPad * aggpad)
 {
   /* Empty queue always has space */
-  if (g_queue_get_length (&aggpad->priv->buffers) == 0)
+  if (aggpad->priv->num_buffers == 0)
     return TRUE;
 
   /* We also want at least two buffers, one is being processed and one is ready
