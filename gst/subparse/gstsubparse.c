@@ -1353,7 +1353,6 @@ parser_state_init (ParserState * state)
   state->max_duration = 0;      /* no limit */
   state->state = 0;
   state->segment = NULL;
-  state->allowed_tags = NULL;
 }
 
 static void
@@ -1575,6 +1574,7 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
   self->parser_type = format;
   self->subtitle_codec = gst_sub_parse_get_format_description (format);
   parser_state_init (&self->state);
+  self->state.allowed_tags = NULL;
 
   switch (format) {
     case GST_SUB_PARSE_FORMAT_MDVDSUB:
