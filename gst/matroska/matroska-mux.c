@@ -2872,7 +2872,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     thepad = collect_pad->collect.pad;
 
     if (gst_pad_is_linked (thepad) && gst_pad_is_active (thepad) &&
-        collect_pad->track->codec_id != 0) {
+        collect_pad->track->codec_id != NULL) {
       collect_pad->track->num = tracknum++;
       child = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TRACKENTRY);
       gst_matroska_mux_track_header (mux, collect_pad->track);
@@ -3535,14 +3535,12 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   }
 
   /* for dirac we have to queue up everything up to a picture unit */
-  if (collect_pad->track->codec_id != NULL &&
-      strcmp (collect_pad->track->codec_id,
-          GST_MATROSKA_CODEC_ID_VIDEO_DIRAC) == 0) {
+  if (!strcmp (collect_pad->track->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_DIRAC)) {
     buf = gst_matroska_mux_handle_dirac_packet (mux, collect_pad, buf);
     if (!buf)
       return GST_FLOW_OK;
-  } else if (strcmp (collect_pad->track->codec_id,
-          GST_MATROSKA_CODEC_ID_VIDEO_PRORES) == 0) {
+  } else if (!strcmp (collect_pad->track->codec_id,
+          GST_MATROSKA_CODEC_ID_VIDEO_PRORES)) {
     /* Remove the 'Frame container atom' header' */
     buf = gst_buffer_make_writable (buf);
     gst_buffer_resize (buf, 8, gst_buffer_get_size (buf) - 8);
@@ -3809,6 +3807,12 @@ gst_matroska_mux_handle_buffer (GstCollectPads * pads, GstCollectData * data,
     }
     gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
     ret = GST_FLOW_EOS;
+    goto exit;
+  }
+
+  if (best->track->codec_id == NULL) {
+    GST_ERROR_OBJECT (best->collect.pad, "No codec-id for pad");
+    ret = GST_FLOW_NOT_NEGOTIATED;
     goto exit;
   }
 
