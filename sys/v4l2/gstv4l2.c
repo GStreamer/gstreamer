@@ -147,7 +147,7 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
     if (vcap.capabilities & V4L2_CAP_DEVICE_CAPS)
       device_caps = vcap.device_caps;
     else
-      device_caps = vcap.capabilitites;
+      device_caps = vcap.capabilities;
 
     if (!((device_caps & (V4L2_CAP_VIDEO_M2M | V4L2_CAP_VIDEO_M2M_MPLANE)) ||
             /* But legacy driver may expose both CAPTURE and OUTPUT */
