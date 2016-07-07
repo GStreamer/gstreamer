@@ -3368,12 +3368,26 @@ dnl *** WebRTC Audio Processing ***
 dnl Note: We test for a specific version as there is no API stability
 translit(dnm, m, l) AM_CONDITIONAL(USE_WEBRTCDSP, true)
 AG_GST_CHECK_FEATURE(WEBRTCDSP, [WebRTC Audio Processing], webrtcdsp, [
+
+  AG_GST_PKG_CHECK_MODULES(WEBRTCDSP, webrtc-audio-processing >= 0.2 webrtc-audio-processing < 0.4)
+
+  # On Android, C++ headers comes with the STL implementation
+  AS_CASE(["${host}"],
+    [*android*],
+      [
+        PKG_CHECK_MODULES(GNUSTL, gnustl, [
+          WEBRTCDSP_CFLAGS="$WEBRTCDSP_CFLAGS $GNUSTL_CFLAGS"
+          WEBRTCDSP_LIBS="$WEBRTCDSP_LIBS $GNUSTL_LIBS"])
+      ])
+  AC_SUBST([WEBRTCDSP_CFLAGS])
+  AC_SUBST([WEBRTCDSP_LIBS])
+
   AC_LANG_PUSH([C++])
   old_CPPFLAGS=$CPPFLAGS
-  CPPFLAGS="-std=c++11 $CPPFLAGS"
-  AG_GST_PKG_CHECK_MODULES(WEBRTCDSP, webrtc-audio-processing >= 0.2 webrtc-audio-processing < 0.4)
-  AC_CHECK_HEADER([typeindex],[],[HAVE_WEBRTCDSP=no])
+  old_LDFLAGS=$GNUSTL_LIBS
+  CPPFLAGS="-std=c++11 $CPPFLAGS $GNUSTL_CFLAGS"
   CPPFLAGS=$old_CPPFLAGS
+  LDFLAGS=$old_LDFLAGS
   AC_LANG_POP([C++])
 ])
 
