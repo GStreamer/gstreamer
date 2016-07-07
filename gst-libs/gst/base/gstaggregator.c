@@ -747,7 +747,7 @@ check_events (GstAggregator * self, GstAggregatorPad * pad, gpointer user_data)
     event = NULL;
 
     PAD_LOCK (pad);
-    if (gst_aggregator_pad_queue_is_empty (pad) && pad->priv->pending_eos) {
+    if (pad->priv->num_buffers == 0 && pad->priv->pending_eos) {
       pad->priv->pending_eos = FALSE;
       pad->priv->eos = TRUE;
     }
@@ -1121,7 +1121,7 @@ gst_aggregator_default_sink_event (GstAggregator * self,
        */
       SRC_LOCK (self);
       PAD_LOCK (aggpad);
-      if (gst_aggregator_pad_queue_is_empty (aggpad)) {
+      if (aggpad->priv->num_buffers == 0) {
         aggpad->priv->eos = TRUE;
       } else {
         aggpad->priv->pending_eos = TRUE;
@@ -2498,7 +2498,7 @@ gst_aggregator_pad_steal_buffer (GstAggregatorPad * pad)
     apply_buffer (pad, buffer, FALSE);
     pad->priv->num_buffers--;
     GST_TRACE_OBJECT (pad, "Consuming buffer");
-    if (gst_aggregator_pad_queue_is_empty (pad) && pad->priv->pending_eos) {
+    if (pad->priv->num_buffers == 0 && pad->priv->pending_eos) {
       pad->priv->pending_eos = FALSE;
       pad->priv->eos = TRUE;
     }
