@@ -332,6 +332,13 @@ void        gst_buffer_extract_dup         (GstBuffer *buffer, gsize offset,
                                             gsize size, gpointer *dest,
                                             gsize *dest_size);
 
+GstBufferFlags gst_buffer_get_flags        (GstBuffer * buffer);
+gboolean       gst_buffer_has_flags        (GstBuffer * buffer, GstBufferFlags flags);
+gboolean       gst_buffer_set_flags        (GstBuffer * buffer, GstBufferFlags flags);
+gboolean       gst_buffer_unset_flags      (GstBuffer * buffer, GstBufferFlags flags);
+
+
+
 /* refcounting */
 /**
  * gst_buffer_ref:

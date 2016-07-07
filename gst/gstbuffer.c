@@ -306,6 +306,77 @@ _replace_memory (GstBuffer * buffer, guint len, guint idx, guint length,
   GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
 }
 
+/**
+ * gst_buffer_get_flags:
+ * @buffer: a #GstBuffer
+ *
+ * Get the #GstBufferFlags flags set on this buffer.
+ *
+ * Returns: the flags set on this buffer.
+ *
+ * Since: 1.10
+ */
+GstBufferFlags
+gst_buffer_get_flags (GstBuffer * buffer)
+{
+  return (GstBufferFlags) GST_BUFFER_FLAGS (buffer);
+}
+
+/**
+ * gst_buffer_flag_is_set:
+ * @buffer: a #GstBuffer
+ * @flags: the #GstBufferFlags flag to check.
+ *
+ * Gives the status of a specific flag on a buffer.
+ *
+ * Returns: %TRUE if all flags in @flags are found on @buffer.
+ *
+ * Since: 1.10
+ */
+gboolean
+gst_buffer_has_flags (GstBuffer * buffer, GstBufferFlags flags)
+{
+  return GST_BUFFER_FLAG_IS_SET (buffer, flags);
+}
+
+/**
+ * gst_buffer_set_flags:
+ * @buffer: a #GstBuffer
+ * @flags: the #GstBufferFlags to set.
+ *
+ * Sets one or more buffer flags on a buffer.
+ *
+ * Returns: %TRUE if @flags were successfully set on buffer.
+ *
+ * Since: 1.10
+ */
+gboolean
+gst_buffer_set_flags (GstBuffer * buffer, GstBufferFlags flags)
+{
+  GST_BUFFER_FLAG_SET (buffer, flags);
+  return TRUE;
+}
+
+/**
+ * gst_buffer_unset_flags:
+ * @buffer: a #GstBuffer
+ * @flags: the #GstBufferFlags to clear
+ *
+ * Clears one or more buffer flags.
+ *
+ * Returns: true if @flags is successfully cleared from buffer.
+ *
+ * Since: 1.10
+ */
+gboolean
+gst_buffer_unset_flags (GstBuffer * buffer, GstBufferFlags flags)
+{
+  GST_BUFFER_FLAG_UNSET (buffer, flags);
+  return TRUE;
+}
+
+
+
 /* transfer full for return and transfer none for @mem */
 static inline GstMemory *
 _memory_get_exclusive_reference (GstMemory * mem)
@@ -2102,7 +2173,6 @@ gst_buffer_add_meta (GstBuffer * buffer, const GstMetaInfo * info,
   result = &item->meta;
   result->info = info;
   result->flags = GST_META_FLAG_NONE;
-
   GST_CAT_DEBUG (GST_CAT_BUFFER,
       "alloc metadata %p (%s) of size %" G_GSIZE_FORMAT, result,
       g_type_name (info->type), info->size);

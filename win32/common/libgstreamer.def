@@ -128,6 +128,7 @@ EXPORTS
 	gst_buffer_flags_get_type
 	gst_buffer_foreach_meta
 	gst_buffer_get_all_memory
+	gst_buffer_get_flags
 	gst_buffer_get_max_memory
 	gst_buffer_get_memory
 	gst_buffer_get_memory_range
@@ -136,6 +137,7 @@ EXPORTS
 	gst_buffer_get_sizes
 	gst_buffer_get_sizes_range
 	gst_buffer_get_type
+	gst_buffer_has_flags
 	gst_buffer_insert_memory
 	gst_buffer_is_all_memory_writable
 	gst_buffer_is_memory_range_writable
@@ -190,8 +192,10 @@ EXPORTS
 	gst_buffer_replace_memory_range
 	gst_buffer_resize
 	gst_buffer_resize_range
+	gst_buffer_set_flags
 	gst_buffer_set_size
 	gst_buffer_unmap
+	gst_buffer_unset_flags
 	gst_buffering_mode_get_type
 	gst_bus_add_signal_watch
 	gst_bus_add_signal_watch_full
