@@ -62,10 +62,10 @@ G_BEGIN_DECLS
 #define GST_IS_CHROMIUM_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CHROMIUM))
 
-typedef struct GstChromium      GstChromium;
-typedef struct GstChromiumClass GstChromiumClass;
+typedef struct _GstChromium      GstChromium;
+typedef struct _GstChromiumClass GstChromiumClass;
 
-struct GstChromium
+struct _GstChromium
 {
   GstVideoFilter videofilter;
 
@@ -73,7 +73,7 @@ struct GstChromium
   gint edge_a, edge_b;
 };
 
-struct GstChromiumClass
+struct _GstChromiumClass
 {
   GstVideoFilterClass parent_class;
 };
