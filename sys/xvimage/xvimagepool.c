@@ -174,7 +174,7 @@ xvimage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   xvimage = gst_buffer_new ();
 
   mem = gst_xvimage_allocator_alloc (xvpool->allocator, xvpool->im_format,
-      xvpool->padded_width, xvpool->padded_height, &xvpool->crop, &err);
+      info, xvpool->padded_width, xvpool->padded_height, &xvpool->crop, &err);
 
   if (mem == NULL) {
     gst_buffer_unref (xvimage);
