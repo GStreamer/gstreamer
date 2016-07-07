@@ -2875,22 +2875,21 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   for (collected = mux->collect->data; collected;
       collected = g_slist_next (collected)) {
     GstMatroskaPad *collect_pad;
-    GstPad *thepad;
 
     collect_pad = (GstMatroskaPad *) collected->data;
-    thepad = collect_pad->collect.pad;
 
-    if (gst_pad_is_linked (thepad) && gst_pad_is_active (thepad) &&
-        collect_pad->track->codec_id != NULL) {
-      collect_pad->track->num = tracknum++;
-      child = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TRACKENTRY);
-      gst_matroska_mux_track_header (mux, collect_pad->track);
-      gst_ebml_write_master_finish (ebml, child);
-      /* some remaining pad/track setup */
-      collect_pad->default_duration_scaled =
-          gst_util_uint64_scale (collect_pad->track->default_duration,
-          1, mux->time_scale);
-    }
+    /* This will cause an error at a later time */
+    if (collect_pad->track->codec_id == NULL)
+      continue;
+
+    collect_pad->track->num = tracknum++;
+    child = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TRACKENTRY);
+    gst_matroska_mux_track_header (mux, collect_pad->track);
+    gst_ebml_write_master_finish (ebml, child);
+    /* some remaining pad/track setup */
+    collect_pad->default_duration_scaled =
+        gst_util_uint64_scale (collect_pad->track->default_duration,
+        1, mux->time_scale);
   }
   gst_ebml_write_master_finish (ebml, master);
 
