@@ -1216,7 +1216,8 @@ skip_details:
   } else if (!strcmp (mimetype, "video/x-msmpeg")) {
   msmpeg43:
     /* can only make it here if preceding case verified it was version 3 */
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MSMPEG4V3);
+    gst_matroska_mux_set_codec_id (context,
+        GST_MATROSKA_CODEC_ID_VIDEO_MSMPEG4V3);
   } else if (!strcmp (mimetype, "video/x-pn-realvideo")) {
     gint rmversion;
     const GValue *mdpr_data;
@@ -1854,7 +1855,8 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
         }
 
         if (buf) {
-          context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_AAC);
+          gst_matroska_mux_set_codec_id (context,
+              GST_MATROSKA_CODEC_ID_AUDIO_AAC);
           context->codec_priv_size = gst_buffer_get_size (buf);
           context->codec_priv = g_malloc (context->codec_priv_size);
           gst_buffer_extract (buf, 0, context->codec_priv,
@@ -2290,7 +2292,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   GstMatroskaTrackContext *context = NULL;
   gint pad_id;
   gboolean locked = TRUE;
-  gchar *id = NULL;
+  const gchar *id = NULL;
 
   if (templ == gst_element_class_get_pad_template (klass, "audio_%u")) {
     /* don't mix named and unnamed pads, if the pad already exists we fail when
@@ -2335,7 +2337,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
     context->type = GST_MATROSKA_TRACK_TYPE_SUBTITLE;
     context->name = g_strdup ("Subtitle");
     /* setcaps may only provide proper one a lot later */
-    id = g_strdup ("S_SUB_UNKNOWN");
+    id = "S_SUB_UNKNOWN";
     locked = FALSE;
   } else {
     GST_WARNING_OBJECT (mux, "This is not our template!");
@@ -2354,7 +2356,8 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   collect_pad->mux = mux;
   collect_pad->track = context;
   gst_matroska_pad_reset (collect_pad, FALSE);
-  collect_pad->track->codec_id = id;
+  if (id)
+    gst_matroska_mux_set_codec_id (collect_pad->track, id);
   collect_pad->track->dts_only = FALSE;
 
   collect_pad->capsfunc = capsfunc;
