@@ -3575,6 +3575,7 @@ convert_AYUV_RGBA (GstVideoConverter * convert, const GstVideoFrame * src,
 
   convert_fill_border (convert, dest);
 }
+#endif
 
 static void
 convert_I420_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
@@ -3687,7 +3688,6 @@ convert_I420_pack_ARGB (GstVideoConverter * convert, const GstVideoFrame * src,
   }
   convert_fill_border (convert, dest);
 }
-#endif
 
 static void
 memset_u24 (guint8 * data, guint8 col[3], unsigned int n)
