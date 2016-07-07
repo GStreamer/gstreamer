@@ -58,10 +58,10 @@ G_BEGIN_DECLS
 #define GST_GAUSSIANBLUR(obj) \
     (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GAUSSIANBLUR, GstGaussianBlur))
 
-typedef struct GstGaussianBlur GstGaussianBlur;
-typedef struct GstGaussianBlurClass GstGaussianBlurClass;
+typedef struct _GstGaussianBlur GstGaussianBlur;
+typedef struct _GstGaussianBlurClass GstGaussianBlurClass;
 
-struct GstGaussianBlur
+struct _GstGaussianBlur
 {
   GstVideoFilter videofilter;
   gint width, height, stride;
@@ -75,7 +75,7 @@ struct GstGaussianBlur
   gint16 *smoothedim;
 };
 
-struct GstGaussianBlurClass
+struct _GstGaussianBlurClass
 {
   GstVideoFilterClass parent_class;
 };
