@@ -187,10 +187,24 @@ gst_element_get_type (void)
 }
 
 static void
+gst_element_setup_thread_pool (void)
+{
+  GError *err = NULL;
+
+  GST_DEBUG ("creating element thread pool");
+  gst_element_pool =
+      g_thread_pool_new ((GFunc) gst_element_call_async_func, NULL, -1, FALSE,
+      &err);
+  if (err != NULL) {
+    g_critical ("could not alloc threadpool %s", err->message);
+    g_clear_error (&err);
+  }
+}
+
+static void
 gst_element_class_init (GstElementClass * klass)
 {
   GObjectClass *gobject_class;
-  GError *err = NULL;
 
   gobject_class = (GObjectClass *) klass;
 
@@ -252,14 +266,7 @@ gst_element_class_init (GstElementClass * klass)
 
   klass->elementfactory = NULL;
 
-  GST_DEBUG ("creating element thread pool");
-  gst_element_pool =
-      g_thread_pool_new ((GFunc) gst_element_call_async_func, NULL, -1, FALSE,
-      &err);
-  if (err != NULL) {
-    g_critical ("could not alloc threadpool %s", err->message);
-    g_clear_error (&err);
-  }
+  gst_element_setup_thread_pool ();
 }
 
 static void
@@ -3429,6 +3436,6 @@ _priv_gst_element_cleanup (void)
 {
   if (gst_element_pool) {
     g_thread_pool_free (gst_element_pool, FALSE, TRUE);
-    gst_element_pool = NULL;
+    gst_element_setup_thread_pool ();
   }
 }
