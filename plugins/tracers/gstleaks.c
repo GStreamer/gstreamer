@@ -45,9 +45,9 @@
 
 #include "gstleaks.h"
 
-#ifdef HAVE_POSIX_SIGNALS
+#ifdef G_OS_UNIX
 #include <signal.h>
-#endif /* HAVE_POSIX_SIGNALS */
+#endif /* G_OS_UNIX */
 
 GST_DEBUG_CATEGORY_STATIC (gst_leaks_debug);
 #define GST_CAT_DEFAULT gst_leaks_debug
@@ -59,10 +59,10 @@ G_DEFINE_TYPE_WITH_CODE (GstLeaksTracer, gst_leaks_tracer,
     GST_TYPE_TRACER, _do_init);
 
 static GstTracerRecord *tr_alive;
-#ifdef HAVE_POSIX_SIGNALS
+#ifdef G_OS_UNIX
 static GstTracerRecord *tr_added = NULL;
 static GstTracerRecord *tr_removed = NULL;
-#endif
+#endif /* G_OS_UNIX */
 static GQueue instances = G_QUEUE_INIT;
 
 static void
@@ -118,7 +118,7 @@ should_handle_object_type (GstLeaksTracer * self, GType object_type)
   return FALSE;
 }
 
-#ifdef HAVE_POSIX_SIGNALS
+#ifdef G_OS_UNIX
 /* The object may be destroyed when we log it using the checkpointing system so
  * we have to save its type name */
 typedef struct
@@ -147,17 +147,17 @@ object_log_free (ObjectLog * obj)
 {
   g_slice_free (ObjectLog, obj);
 }
-#endif /* HAVE_POSIX_SIGNALS */
+#endif /* G_OS_UNIX */
 
 static void
 handle_object_destroyed (GstLeaksTracer * self, gpointer object)
 {
   GST_OBJECT_LOCK (self);
   g_hash_table_remove (self->objects, object);
-#ifdef HAVE_POSIX_SIGNALS
+#ifdef G_OS_UNIX
   if (self->removed)
     g_hash_table_add (self->removed, object_log_new (object));
-#endif /* HAVE_POSIX_SIGNALS */
+#endif /* G_OS_UNIX */
   GST_OBJECT_UNLOCK (self);
 }
 
@@ -271,10 +271,10 @@ handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
 
   g_hash_table_insert (self->objects, object, trace);
 
-#ifdef HAVE_POSIX_SIGNALS
+#ifdef G_OS_UNIX
   if (self->added)
     g_hash_table_add (self->added, object_log_new (object));
-#endif /* HAVE_POSIX_SIGNALS */
+#endif /* G_OS_UNIX */
   GST_OBJECT_UNLOCK (self);
 }
 
@@ -502,7 +502,7 @@ gst_leaks_tracer_finalize (GObject * object)
         "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PROCESS, \
         NULL)
 
-#ifdef HAVE_POSIX_SIGNALS
+#ifdef G_OS_UNIX
 static void
 sig_usr1_handler_foreach (gpointer data, gpointer user_data)
 {
@@ -588,7 +588,7 @@ setup_signals (void)
   signal (SIGUSR1, sig_usr1_handler);
   signal (SIGUSR2, sig_usr2_handler);
 }
-#endif /* HAVE_POSIX_SIGNALS */
+#endif /* G_OS_UNIX */
 
 static void
 gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
@@ -604,10 +604,10 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
   GST_OBJECT_FLAG_SET (tr_alive, GST_OBJECT_FLAG_MAY_BE_LEAKED);
 
   if (g_getenv ("GST_LEAKS_TRACER_SIG")) {
-#ifdef HAVE_POSIX_SIGNALS
+#ifdef G_OS_UNIX
     setup_signals ();
 #else
     g_warning ("System doesn't support POSIX signals");
-#endif /* HAVE_POSIX_SIGNALS */
+#endif /* G_OS_UNIX */
   }
 }

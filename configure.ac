@@ -719,13 +719,6 @@ fi
 AC_SUBST(GST_HAVE_POSIX_TIMERS_DEFINE)
 AM_CONDITIONAL(GST_HAVE_POSIX_TIMERS, test "$gst_cv_posix_timers" = "yes")
 
-dnl Check for posix signals
-AC_CHECK_FUNC(signal, [
-  AC_CHECK_HEADERS([signal.h], [
-    AC_DEFINE(HAVE_POSIX_SIGNALS,1,[Have posix signals])
-  ], [], [])
-])
-
 AC_CACHE_CHECK(for monotonic clock, gst_cv_monotonic_clock,
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <time.h>
