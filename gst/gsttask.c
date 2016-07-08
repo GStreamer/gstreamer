@@ -386,6 +386,9 @@ gst_task_cleanup_all (void)
   if ((klass = g_type_class_peek (GST_TYPE_TASK))) {
     init_klass_pool (klass);
   }
+
+  /* GstElement owns a GThreadPool */
+  _priv_gst_element_cleanup ();
 }
 
 /**

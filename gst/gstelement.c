@@ -3423,3 +3423,12 @@ gst_element_call_async (GstElement * element, GstElementCallAsyncFunc func,
 
   g_thread_pool_push (gst_element_pool, async_data, NULL);
 }
+
+void
+_priv_gst_element_cleanup (void)
+{
+  if (gst_element_pool) {
+    g_thread_pool_free (gst_element_pool, FALSE, TRUE);
+    gst_element_pool = NULL;
+  }
+}
