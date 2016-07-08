@@ -700,17 +700,17 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
       guint flags = 0;
 
       if (GST_V4L2_IS_OPEN (v4l2object)) {
-        flags |= v4l2object->device_caps &
+        flags |= v4l2object->vcap.capabilities &
             (V4L2_CAP_VIDEO_CAPTURE |
             V4L2_CAP_VIDEO_OUTPUT |
             V4L2_CAP_VIDEO_OVERLAY |
             V4L2_CAP_VBI_CAPTURE |
             V4L2_CAP_VBI_OUTPUT | V4L2_CAP_TUNER | V4L2_CAP_AUDIO);
 
-        if (v4l2object->device_caps & V4L2_CAP_VIDEO_CAPTURE_MPLANE)
+        if (v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE)
           flags |= V4L2_CAP_VIDEO_CAPTURE;
 
-        if (v4l2object->device_caps & V4L2_CAP_VIDEO_OUTPUT_MPLANE)
+        if (v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT_MPLANE)
           flags |= V4L2_CAP_VIDEO_OUTPUT;
       }
       g_value_set_flags (value, flags);
@@ -872,9 +872,6 @@ gst_v4l2_object_close (GstV4l2Object * v4l2object)
     return FALSE;
 
   gst_caps_replace (&v4l2object->probed_caps, NULL);
-
-  /* reset our copy of the device caps */
-  v4l2object->device_caps = 0;
 
   if (v4l2object->formats) {
     gst_v4l2_object_clear_format_list (v4l2object);
@@ -2761,13 +2758,13 @@ gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object, GstCaps * caps)
   /* find transport */
   mode = v4l2object->req_mode;
 
-  if (v4l2object->device_caps & V4L2_CAP_READWRITE) {
+  if (v4l2object->vcap.capabilities & V4L2_CAP_READWRITE) {
     if (v4l2object->req_mode == GST_V4L2_IO_AUTO)
       mode = GST_V4L2_IO_RW;
   } else if (v4l2object->req_mode == GST_V4L2_IO_RW)
     goto method_not_supported;
 
-  if (v4l2object->device_caps & V4L2_CAP_STREAMING) {
+  if (v4l2object->vcap.capabilities & V4L2_CAP_STREAMING) {
     if (v4l2object->req_mode == GST_V4L2_IO_AUTO)
       mode = GST_V4L2_IO_MMAP;
   } else if (v4l2object->req_mode == GST_V4L2_IO_MMAP)

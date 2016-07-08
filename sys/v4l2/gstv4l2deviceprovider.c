@@ -136,10 +136,10 @@ gst_v4l2_device_provider_probe_device (GstV4l2DeviceProvider * provider,
   gst_structure_set (props, "v4l2.device.device_caps", G_TYPE_UINT,
       v4l2obj->vcap.device_caps, NULL);
 
-  if (v4l2obj->device_caps & V4L2_CAP_VIDEO_CAPTURE)
+  if (v4l2obj->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE)
     type = GST_V4L2_DEVICE_TYPE_SOURCE;
 
-  if (v4l2obj->device_caps & V4L2_CAP_VIDEO_OUTPUT) {
+  if (v4l2obj->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT) {
     /* Morph it in case our initial guess was wrong */
     v4l2obj->type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
 
