@@ -126,6 +126,7 @@ copy_and_clean_caps (const GstCaps * caps)
    * where template caps usually have the standard MIN - MAX range as value) */
   s = gst_caps_get_structure (ret, 0);
   gst_structure_remove_field (s, "codec_data");
+  gst_structure_remove_field (s, "streamheader");
   gst_structure_remove_field (s, "palette_data");
   gst_structure_remove_field (s, "pixel-aspect-ratio");
   gst_structure_remove_field (s, "framerate");
@@ -141,6 +142,12 @@ copy_and_clean_caps (const GstCaps * caps)
   gst_structure_remove_field (s, "height");
   gst_structure_remove_field (s, "channels");
   gst_structure_remove_field (s, "rate");
+  /* parsed, framed, stream-format and alignment are going to be handled by
+   * parsers and not relevant for decoders/encoders usually */
+  gst_structure_remove_field (s, "parsed");
+  gst_structure_remove_field (s, "framed");
+  gst_structure_remove_field (s, "stream-format");
+  gst_structure_remove_field (s, "alignment");
   /* rtp fields */
   gst_structure_remove_field (s, "config");
   gst_structure_remove_field (s, "clock-rate");
