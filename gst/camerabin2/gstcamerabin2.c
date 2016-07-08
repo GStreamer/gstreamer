@@ -17,17 +17,16 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:element-camerabin2
+ * SECTION:element-camerabin
  *
- * CameraBin2 is a high-level camera object that encapsulates gstreamer
+ * CameraBin is a high-level camera object that encapsulates gstreamer
  * elements, providing an API for controlling a digital camera.
  *
  * <note>
- * Note that camerabin2 is still UNSTABLE and under
- * development.
+ * Note that camerabin is still UNSTABLE and under development.
  * </note>
  *
- * CameraBin2 has the following main features:
+ * CameraBin has the following main features:
  * <itemizedlist>
  * <listitem>
  * Record videos
@@ -46,12 +45,12 @@
  * <refsect2>
  * <title>Usage</title>
  * <para>
- * Camerabin2 can be created using gst_element_factory_make() just like
+ * Camerabin can be created using gst_element_factory_make() just like
  * any other element. Video or image capture mode can be selected using
  * the #GstCameraBin:mode property and the file to save the capture is
  * selected using #GstCameraBin:location property.
  *
- * After creating camerabin2, applications might want to do some
+ * After creating camerabin, applications might want to do some
  * customization (there's a section about this below), then select
  * the desired mode and start capturing.
  *
@@ -76,11 +75,11 @@
  * <refsect2>
  * <title>Customization</title>
  * <para>
- * Camerabin2 provides various customization properties, allowing the user
+ * Camerabin provides various customization properties, allowing the user
  * to set custom filters, selecting the viewfinder sink and formats to
  * use to encode the captured images/videos.
  *
- * #GstEncodingProfile<!-- -->s are used to tell camerabin2 which formats it
+ * #GstEncodingProfile<!-- -->s are used to tell camerabin which formats it
  * should encode the captures to, those should be set to
  * #GstCameraBin:image-profile and #GstCameraBin:video-profile. Default is
  * jpeg for images, and ogg (theora and vorbis) for video. If a profile without
@@ -89,7 +88,7 @@
  * #GstCameraBin:preview-caps can be used to select which format preview
  * images should be posted on the #GstBus. It has to be a raw video format.
  *
- * Camerabin2 has a #GstCameraBin:camera-source property so applications can
+ * Camerabin has a #GstCameraBin:camera-source property so applications can
  * set their source that will provide buffers for the viewfinder and for
  * captures. This camera source is a special type of source that has 3 pads.
  * To use a 'regular' source with a single pad you should use
@@ -103,7 +102,7 @@
  * #GstCameraBin:viewfinder-caps, these #GstCaps should be a subset of
  * #GstCameraBin:viewfinder-supported-caps.
  *
- * To select the desired resolution for captures, camerabin2 provides
+ * To select the desired resolution for captures, camerabin provides
  * #GstCameraBin:image-capture-caps and #GstCameraBin:video-capture-caps,
  * these caps must be a subset of what the source can produce. The allowed
  * caps can be probed using #GstCameraBin:image-capture-supported-caps and
@@ -121,8 +120,8 @@
  * <refsect2>
  * <title>Example launch line</title>
  * <para>
- * Unfortunately, camerabin can't be really used from gst-launch-1.0, as you need
- * to send signals to control it. The following pipeline might be able
+ * Unfortunately, camerabin can't be really used from gst-launch-1.0, as you
+ * need to send signals to control it. The following pipeline might be able
  * to show the viewfinder using all the default elements.
  * |[
  * gst-launch-1.0 -v -m camerabin
