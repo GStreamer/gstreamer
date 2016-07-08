@@ -789,6 +789,17 @@ case $host in
     CFLAGS=$old_CFLAGS
 
     PKG_CHECK_MODULES(WAYLAND_EGL, wayland-client >= 1.0 wayland-cursor >= 1.0 wayland-egl >= 9.0, HAVE_WAYLAND_EGL=yes, HAVE_WAYLAND_EGL=no)
+
+    # OS X and iOS always have GL available
+    case $host in
+      *-darwin*)
+        if test "x$HAVE_IOS" = "xyes"; then
+          HAVE_GLES2=yes
+        else
+          HAVE_GL=yes
+        fi
+      ;;
+    esac
   ;;
 esac
 
