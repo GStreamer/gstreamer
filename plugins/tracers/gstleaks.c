@@ -153,11 +153,19 @@ static void
 handle_object_destroyed (GstLeaksTracer * self, gpointer object)
 {
   GST_OBJECT_LOCK (self);
+  if (self->done) {
+    g_warning
+        ("object %p destroyed while the leaks tracer was finalizing. Some threads are still running?",
+        object);
+    goto out;
+  }
+
   g_hash_table_remove (self->objects, object);
 #ifdef G_OS_UNIX
   if (self->removed)
     g_hash_table_add (self->removed, object_log_new (object));
 #endif /* G_OS_UNIX */
+out:
   GST_OBJECT_UNLOCK (self);
 }
 
@@ -446,6 +454,8 @@ gst_leaks_tracer_finalize (GObject * object)
   gboolean leaks;
   GHashTableIter iter;
   gpointer obj;
+
+  self->done = TRUE;
 
   /* Tracers are destroyed as part of gst_deinit() so now is a good time to
    * report all the objects which are still alive. */

@@ -60,6 +60,7 @@ struct _GstLeaksTracer {
   GHashTable *added;
   /* Set of owned ObjectLog.  Protected by object lock */
   GHashTable *removed;
+  gboolean done;
 
   gboolean log_stack_trace;
 };
