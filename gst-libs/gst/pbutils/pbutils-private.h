@@ -106,5 +106,5 @@ struct _GstDiscovererInfo {
 };
 
 /* missing-plugins.c */
-
+G_GNUC_INTERNAL
 GstCaps *copy_and_clean_caps (const GstCaps * caps);
