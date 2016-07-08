@@ -489,16 +489,17 @@ gst_v4l2_adjust_buf_type (GstV4l2Object * v4l2object)
    * in a contiguous manner. In this case the first v4l2 plane
    * contains all the gst planes.
    */
-#define CHECK_CAPS (V4L2_CAP_VIDEO_OUTPUT_MPLANE | V4L2_CAP_VIDEO_M2M_MPLANE)
   switch (v4l2object->type) {
     case V4L2_BUF_TYPE_VIDEO_OUTPUT:
-      if (v4l2object->device_caps & CHECK_CAPS) {
+      if (v4l2object->device_caps &
+          (V4L2_CAP_VIDEO_OUTPUT_MPLANE | V4L2_CAP_VIDEO_M2M_MPLANE)) {
         GST_DEBUG ("adjust type to multi-planar output");
         v4l2object->type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
       }
       break;
     case V4L2_BUF_TYPE_VIDEO_CAPTURE:
-      if (v4l2object->device_caps & CHECK_CAPS) {
+      if (v4l2object->device_caps &
+          (V4L2_CAP_VIDEO_CAPTURE_MPLANE | V4L2_CAP_VIDEO_M2M_MPLANE)) {
         GST_DEBUG ("adjust type to multi-planar capture");
         v4l2object->type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
       }
@@ -506,7 +507,6 @@ gst_v4l2_adjust_buf_type (GstV4l2Object * v4l2object)
     default:
       break;
   }
-#undef CHECK_CAPS
 }
 
 /******************************************************
