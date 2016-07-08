@@ -983,7 +983,8 @@ bin_remove_messages (GstBin * bin, GstObject * src, GstMessageType types)
 
     if (message_check (message, &find) == 0) {
       GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message),
-          "deleting message %p of types 0x%08x", message, types);
+          "deleting message %p of type %s (types 0x%08x)", message,
+          GST_MESSAGE_TYPE_NAME (message), types);
       bin->messages = g_list_delete_link (bin->messages, walk);
       gst_message_unref (message);
     } else {
