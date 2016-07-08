@@ -633,7 +633,8 @@ gst_mini_object_weak_unref (GstMiniObject * object,
   if ((i = find_notify (object, weak_ref_quark, TRUE, notify, data)) != -1) {
     remove_notify (object, i);
   } else {
-    g_warning ("%s: couldn't find weak ref %p(%p)", G_STRFUNC, notify, data);
+    g_warning ("%s: couldn't find weak ref %p (object:%p data:%p)", G_STRFUNC,
+        notify, object, data);
   }
   G_UNLOCK (qdata_mutex);
 }
