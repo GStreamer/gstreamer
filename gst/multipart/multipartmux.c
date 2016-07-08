@@ -310,13 +310,20 @@ gst_multipart_mux_compare_pads (GstMultipartMux * multipart_mux,
   if (new == NULL || new->buffer == NULL)
     return -1;
 
+  if (GST_CLOCK_TIME_IS_VALID (old->dts_timestamp) &&
+      GST_CLOCK_TIME_IS_VALID (new->dts_timestamp)) {
+    oldtime = old->dts_timestamp;
+    newtime = new->dts_timestamp;
+  } else {
+    oldtime = old->pts_timestamp;
+    newtime = new->pts_timestamp;
+  }
+
   /* no timestamp on old buffer, it must go first */
-  oldtime = old->timestamp;
   if (oldtime == GST_CLOCK_TIME_NONE)
     return -1;
 
   /* no timestamp on new buffer, it must go first */
-  newtime = new->timestamp;
   if (newtime == GST_CLOCK_TIME_NONE)
     return 1;
 
@@ -355,14 +362,22 @@ gst_multipart_mux_queue_pads (GstMultipartMux * mux)
 
       buf = gst_collect_pads_pop (mux->collect, data);
 
-      /* Store timestamp with segment_start and preroll */
-      if (buf && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-        pad->timestamp =
+      /* Store timestamps with segment_start and preroll */
+      if (buf && GST_BUFFER_PTS_IS_VALID (buf)) {
+        pad->pts_timestamp =
             gst_segment_to_running_time (&data->segment, GST_FORMAT_TIME,
-            GST_BUFFER_TIMESTAMP (buf));
+            GST_BUFFER_PTS (buf));
       } else {
-        pad->timestamp = GST_CLOCK_TIME_NONE;
+        pad->pts_timestamp = GST_CLOCK_TIME_NONE;
       }
+      if (buf && GST_BUFFER_DTS_IS_VALID (buf)) {
+        pad->dts_timestamp =
+            gst_segment_to_running_time (&data->segment, GST_FORMAT_TIME,
+            GST_BUFFER_DTS (buf));
+      } else {
+        pad->dts_timestamp = GST_CLOCK_TIME_NONE;
+      }
+
 
       pad->buffer = buf;
     }
@@ -462,10 +477,13 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
     GstClockTime time;
     GstSegment segment;
 
-    if (best->timestamp != -1)
-      time = best->timestamp;
-    else
+    if (best->dts_timestamp != GST_CLOCK_TIME_NONE) {
+      time = best->dts_timestamp;
+    } else if (best->pts_timestamp != GST_CLOCK_TIME_NONE) {
+      time = best->pts_timestamp;
+    } else {
       time = 0;
+    }
 
     /* for the segment, we take the first timestamp we see, we don't know the
      * length and the position is 0 */
@@ -500,9 +518,10 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   gst_buffer_fill (headerbuf, 0, header, headerlen);
   g_free (header);
 
-  /* the header has the same timestamp as the data buffer (which we will push
+  /* the header has the same timestamps as the data buffer (which we will push
    * below) and has a duration of 0 */
-  GST_BUFFER_TIMESTAMP (headerbuf) = best->timestamp;
+  GST_BUFFER_PTS (headerbuf) = best->pts_timestamp;
+  GST_BUFFER_DTS (headerbuf) = best->dts_timestamp;
   GST_BUFFER_DURATION (headerbuf) = 0;
   GST_BUFFER_OFFSET (headerbuf) = mux->offset;
   mux->offset += headerlen;
@@ -521,8 +540,9 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   databuf = gst_buffer_make_writable (best->buffer);
   best->buffer = NULL;
 
-  /* we need to updated the timestamp to match the running_time */
-  GST_BUFFER_TIMESTAMP (databuf) = best->timestamp;
+  /* we need to updated the timestamps to match the running_time */
+  GST_BUFFER_PTS (databuf) = best->pts_timestamp;
+  GST_BUFFER_DTS (databuf) = best->dts_timestamp;
   GST_BUFFER_OFFSET (databuf) = mux->offset;
   mux->offset += gst_buffer_get_size (databuf);
   GST_BUFFER_OFFSET_END (databuf) = mux->offset;
@@ -539,9 +559,10 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   footerbuf = gst_buffer_new_allocate (NULL, 2, NULL);
   gst_buffer_fill (footerbuf, 0, "\r\n", 2);
 
-  /* the footer has the same timestamp as the data buffer and has a
+  /* the footer has the same timestamps as the data buffer and has a
    * duration of 0 */
-  GST_BUFFER_TIMESTAMP (footerbuf) = best->timestamp;
+  GST_BUFFER_PTS (footerbuf) = best->pts_timestamp;
+  GST_BUFFER_DTS (footerbuf) = best->dts_timestamp;
   GST_BUFFER_DURATION (footerbuf) = 0;
   GST_BUFFER_OFFSET (footerbuf) = mux->offset;
   mux->offset += 2;

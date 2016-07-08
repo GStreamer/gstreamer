@@ -45,7 +45,9 @@ typedef struct
   GstCollectData collect;       /* we extend the CollectData */
 
   GstBuffer *buffer;            /* the queued buffer for this pad */
-  GstClockTime timestamp;       /* its timestamp, converted to running_time so that we can
+  GstClockTime pts_timestamp;   /* its pts timestamp, converted to running_time so that we can
+                                   correctly sort over multiple segments. */
+  GstClockTime dts_timestamp;   /* its dts timestamp, converted to running_time so that we can
                                    correctly sort over multiple segments. */
   GstPad *pad;
 }
