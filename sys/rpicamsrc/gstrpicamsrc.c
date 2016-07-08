@@ -119,6 +119,7 @@ enum
   PROP_ROTATION,
   PROP_HFLIP,
   PROP_VFLIP,
+  PROP_ORIENTATION,
   PROP_ROI_X,
   PROP_ROI_Y,
   PROP_ROI_W,
@@ -135,6 +136,8 @@ enum
   PROP_ANNOTATION_TEXT_BG_COLOUR,
   PROP_INTRA_REFRESH_TYPE
 };
+
+#define PROP_ORIENTATION_DEFAULT GST_RPI_CAM_ORIENTATION_IDENTITY
 
 #define CAMERA_DEFAULT 0
 
@@ -223,6 +226,37 @@ G_DEFINE_TYPE_WITH_CODE (GstRpiCamSrc, gst_rpi_cam_src,
         gst_rpi_cam_src_orientation_init));
 
 #define C_ENUM(v) ((gint) v)
+
+#define GST_TYPE_RPI_CAM_ORIENTATION (gst_rpi_cam_orientation_get_type())
+
+static const GEnumValue video_orientation_methods[] = {
+  {GST_RPI_CAM_ORIENTATION_IDENTITY, "Identity (no rotation)", "none"},
+  {GST_RPI_CAM_ORIENTATION_90R, "Rotate clockwise 90 degrees", "clockwise"},
+  {GST_RPI_CAM_ORIENTATION_180, "Rotate 180 degrees", "rotate-180"},
+  {GST_RPI_CAM_ORIENTATION_90L, "Rotate counter-clockwise 90 degrees",
+      "counterclockwise"},
+  {GST_RPI_CAM_ORIENTATION_FLIP_HORIZ, "Flip horizontally", "horizontal-flip"},
+  {GST_RPI_CAM_ORIENTATION_FLIP_VERT, "Flip vertically", "vertical-flip"},
+  {GST_RPI_CAM_ORIENTATION_FLIP_TRANS,
+      "Flip across upper left/lower right diagonal", "upper-left-diagonal"},
+  {GST_RPI_CAM_ORIENTATION_FLIP_OTHER,
+      "Flip across upper right/lower left diagonal", "upper-right-diagonal"},
+  {GST_RPI_CAM_ORIENTATION_CUSTOM,
+      "Set through custom properties", "custom"},
+  {0, NULL, NULL},
+};
+
+static GType
+gst_rpi_cam_orientation_get_type (void)
+{
+  static GType rpi_cam_orientation_type = 0;
+
+  if (!rpi_cam_orientation_type) {
+    rpi_cam_orientation_type = g_enum_register_static ("GstRpiCamOrientation",
+        video_orientation_methods);
+  }
+  return rpi_cam_orientation_type;
+}
 
 GType
 gst_rpi_cam_src_sensor_mode_get_type (void)
@@ -393,6 +427,11 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
       g_param_spec_boolean ("vflip", "Vertical Flip",
           "Flip capture vertically", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ORIENTATION,
+      g_param_spec_enum ("orientation", "Orientation", "Orientation",
+          GST_TYPE_RPI_CAM_ORIENTATION, PROP_ORIENTATION_DEFAULT,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+          G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ROI_X,
       g_param_spec_float ("roi-x", "ROI X",
           "Normalised region-of-interest X coord", 0, 1.0, 0,
@@ -612,6 +651,70 @@ gst_rpi_cam_src_colorbalance_get_balance_type (GstColorBalance * balance)
   return GST_COLOR_BALANCE_HARDWARE;
 }
 
+static void gst_rpi_cam_src_set_orientation (GstRpiCamSrc * src, GstRpiCamOrientation orientation)
+{
+  switch (orientation) {
+    case GST_RPI_CAM_ORIENTATION_IDENTITY:
+      src->capture_config.camera_parameters.rotation = 0;
+      src->capture_config.camera_parameters.hflip = FALSE;
+      src->capture_config.camera_parameters.vflip = FALSE;
+      GST_DEBUG_OBJECT (src, "set orientation identity");
+      break;
+    case GST_RPI_CAM_ORIENTATION_90R:
+      src->capture_config.camera_parameters.rotation = 90;
+      src->capture_config.camera_parameters.hflip = FALSE;
+      src->capture_config.camera_parameters.vflip = FALSE;
+      GST_DEBUG_OBJECT (src, "set orientation 90R");
+      break;
+    case GST_RPI_CAM_ORIENTATION_180:
+      src->capture_config.camera_parameters.rotation = 180;
+      src->capture_config.camera_parameters.hflip = FALSE;
+      src->capture_config.camera_parameters.vflip = FALSE;
+      GST_DEBUG_OBJECT (src, "set orientation 180");
+      break;
+    case GST_RPI_CAM_ORIENTATION_90L:
+      src->capture_config.camera_parameters.rotation = 270;
+      src->capture_config.camera_parameters.hflip = FALSE;
+      src->capture_config.camera_parameters.vflip = FALSE;
+      GST_DEBUG_OBJECT (src, "set orientation 90L");
+      break;
+    case GST_RPI_CAM_ORIENTATION_FLIP_HORIZ:
+      src->capture_config.camera_parameters.rotation = 0;
+      src->capture_config.camera_parameters.hflip = TRUE;
+      src->capture_config.camera_parameters.vflip = FALSE;
+      GST_DEBUG_OBJECT (src, "set orientation hflip");
+      break;
+    case GST_RPI_CAM_ORIENTATION_FLIP_VERT:
+      src->capture_config.camera_parameters.rotation = 0;
+      src->capture_config.camera_parameters.hflip = FALSE;
+      src->capture_config.camera_parameters.vflip = TRUE;
+      GST_DEBUG_OBJECT (src, "set orientation vflip");
+      break;
+    case GST_RPI_CAM_ORIENTATION_FLIP_TRANS:
+      src->capture_config.camera_parameters.rotation = 90;
+      src->capture_config.camera_parameters.hflip = FALSE;
+      src->capture_config.camera_parameters.vflip = TRUE;
+      GST_DEBUG_OBJECT (src, "set orientation trans");
+      break;
+    case GST_RPI_CAM_ORIENTATION_FLIP_OTHER:
+      src->capture_config.camera_parameters.rotation = 270;
+      src->capture_config.camera_parameters.hflip = FALSE;
+      src->capture_config.camera_parameters.vflip = TRUE;
+      GST_DEBUG_OBJECT (src, "set orientation trans");
+      break;
+    case GST_RPI_CAM_ORIENTATION_CUSTOM:
+      break;
+    default:
+      GST_WARNING_OBJECT (src, "unsupported orientation %d", orientation);
+      break;
+  }
+  src->orientation =
+    orientation >= GST_RPI_CAM_ORIENTATION_IDENTITY &&
+    orientation <= GST_RPI_CAM_ORIENTATION_CUSTOM ?
+      orientation : GST_RPI_CAM_ORIENTATION_CUSTOM;
+  src->capture_config.change_flags |= PROP_CHANGE_ORIENTATION;
+}
+
 static void
 gst_rpi_cam_src_colorbalance_init (GstColorBalanceInterface * iface)
 {
@@ -660,6 +763,7 @@ gst_rpi_cam_src_orientation_set_hflip (GstVideoOrientation * orientation, gboole
   g_return_val_if_fail (GST_IS_RPICAMSRC (src), FALSE);
 
   g_mutex_lock (&src->config_lock);
+  src->orientation = GST_RPI_CAM_ORIENTATION_CUSTOM;
   src->capture_config.camera_parameters.hflip = flip;
   src->capture_config.change_flags |= PROP_CHANGE_ORIENTATION;
   g_mutex_unlock (&src->config_lock);
@@ -676,6 +780,7 @@ gst_rpi_cam_src_orientation_set_vflip (GstVideoOrientation * orientation, gboole
   g_return_val_if_fail (GST_IS_RPICAMSRC (src), FALSE);
 
   g_mutex_lock (&src->config_lock);
+  src->orientation = GST_RPI_CAM_ORIENTATION_CUSTOM;
   src->capture_config.camera_parameters.vflip = flip;
   src->capture_config.change_flags |= PROP_CHANGE_ORIENTATION;
   g_mutex_unlock (&src->config_lock);
@@ -791,7 +896,11 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       src->capture_config.change_flags |= PROP_CHANGE_SENSOR_SETTINGS;
       break;
     case PROP_ROTATION:
+      src->orientation = GST_RPI_CAM_ORIENTATION_CUSTOM;
       src->capture_config.camera_parameters.rotation = g_value_get_int (value);
+      break;
+    case PROP_ORIENTATION:
+      gst_rpi_cam_src_set_orientation (src, g_value_get_enum (value));
       break;
     case PROP_AWB_MODE:
       src->capture_config.camera_parameters.awbMode = g_value_get_enum (value);
@@ -813,10 +922,12 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       src->capture_config.change_flags |= PROP_CHANGE_IMAGE_COLOUR_EFFECT;
       break;
     case PROP_HFLIP:
+      src->orientation = GST_RPI_CAM_ORIENTATION_CUSTOM;
       src->capture_config.camera_parameters.hflip = g_value_get_boolean (value);
       src->capture_config.change_flags |= PROP_CHANGE_ORIENTATION;
       break;
     case PROP_VFLIP:
+      src->orientation = GST_RPI_CAM_ORIENTATION_CUSTOM;
       src->capture_config.camera_parameters.vflip = g_value_get_boolean (value);
       src->capture_config.change_flags |= PROP_CHANGE_ORIENTATION;
       break;
@@ -973,6 +1084,9 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ROTATION:
       g_value_set_int (value, src->capture_config.camera_parameters.rotation);
+      break;
+    case PROP_ORIENTATION:
+      g_value_set_enum (value, src->orientation);
       break;
     case PROP_AWB_MODE:
       g_value_set_enum (value, src->capture_config.camera_parameters.awbMode);
