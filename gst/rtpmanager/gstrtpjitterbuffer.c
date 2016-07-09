@@ -614,13 +614,15 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    * this much packet reordering.
    *
    * When -1 is used, the value will be estimated based on observed packet
-   * reordering.
+   * reordering. When 0 is used packet reordering alone will not cause a
+   * retransmission event (Since 1.10).
    *
    * Since: 1.2
    */
   g_object_class_install_property (gobject_class, PROP_RTX_DELAY_REORDER,
       g_param_spec_int ("rtx-delay-reorder", "RTX Delay Reorder",
-          "Sending retransmission event when this much reordering (-1 automatic)",
+          "Sending retransmission event when this much reordering "
+          "(0 disable, -1 automatic)",
           -1, G_MAXINT, DEFAULT_RTX_DELAY_REORDER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
@@ -1896,7 +1898,7 @@ apply_offset (GstRtpJitterBuffer * jitterbuffer, GstClockTime timestamp)
 }
 
 static TimerData *
-find_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type, guint16 seqnum)
+find_timer (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   TimerData *timer = NULL;
@@ -1905,7 +1907,7 @@ find_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type, guint16 seqnum)
   len = priv->timers->len;
   for (i = 0; i < len; i++) {
     TimerData *test = &g_array_index (priv->timers, TimerData, i);
-    if (test->seqnum == seqnum && test->type == type) {
+    if (test->seqnum == seqnum) {
       timer = test;
       break;
     }
@@ -2042,7 +2044,7 @@ set_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
   TimerData *timer;
 
   /* find the seqnum timer */
-  timer = find_timer (jitterbuffer, type, seqnum);
+  timer = find_timer (jitterbuffer, seqnum);
   if (timer == NULL) {
     timer = add_timer (jitterbuffer, type, seqnum, 0, timeout, 0, -1);
   } else {
@@ -2138,34 +2140,34 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   TimerData *timer = NULL;
-  gint i, len;
 
-  /* go through all timers and unschedule the ones with a large gap, also find
-   * the timer for the seqnum */
-  len = priv->timers->len;
-  for (i = 0; i < len; i++) {
-    TimerData *test = &g_array_index (priv->timers, TimerData, i);
-    gint gap;
+  /* go through all timers and unschedule the ones with a large gap */
+  if (priv->do_retransmission && priv->rtx_delay_reorder > 0) {
+    gint i, len;
+    len = priv->timers->len;
+    for (i = 0; i < len; i++) {
+      TimerData *test = &g_array_index (priv->timers, TimerData, i);
+      gint gap;
 
-    gap = gst_rtp_buffer_compare_seqnum (test->seqnum, seqnum);
+      gap = gst_rtp_buffer_compare_seqnum (test->seqnum, seqnum);
 
-    GST_DEBUG_OBJECT (jitterbuffer, "%d, %d, #%d<->#%d gap %d", i,
-        test->type, test->seqnum, seqnum, gap);
+      GST_DEBUG_OBJECT (jitterbuffer, "%d, #%d<->#%d gap %d",
+          test->type, test->seqnum, seqnum, gap);
 
-    if (gap == 0) {
-      GST_DEBUG ("found timer for current seqnum");
-      /* the timer for the current seqnum */
-      timer = test;
-      /* when no retransmission, we can stop now, we only need to find the
-       * timer for the current seqnum */
-      if (!priv->do_retransmission)
-        break;
-    } else if (gap > priv->rtx_delay_reorder) {
-      /* max gap, we exceeded the max reorder distance and we don't expect the
-       * missing packet to be this reordered */
-      if (test->num_rtx_retry == 0 && test->type == TIMER_TYPE_EXPECTED)
-        reschedule_timer (jitterbuffer, test, test->seqnum, -1, 0, FALSE);
+      if (gap == 0) {
+        GST_DEBUG ("found timer for current seqnum");
+        /* the timer for the current seqnum */
+        timer = test;
+      } else if (gap > priv->rtx_delay_reorder) {
+        /* max gap, we exceeded the max reorder distance and we don't expect the
+         * missing packet to be this reordered */
+        if (test->num_rtx_retry == 0 && test->type == TIMER_TYPE_EXPECTED)
+          reschedule_timer (jitterbuffer, test, test->seqnum, -1, 0, FALSE);
+      }
     }
+  } else {
+    /* find the timer for the seqnum */
+    timer = find_timer (jitterbuffer, seqnum);
   }
 
   do_next_seqnum = do_next_seqnum && priv->packet_spacing > 0
@@ -2345,11 +2347,11 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
   expected_dts = priv->last_in_dts + duration;
 
   if (priv->do_retransmission) {
-    TimerData *timer;
+    TimerData *timer = find_timer (jitterbuffer, expected);
 
     type = TIMER_TYPE_EXPECTED;
     /* if we had a timer for the first missing packet, update it. */
-    if ((timer = find_timer (jitterbuffer, type, expected))) {
+    if (timer && timer->type == TIMER_TYPE_EXPECTED) {
       GstClockTime timeout = timer->timeout;
 
       timer->duration = duration;
