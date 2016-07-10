@@ -682,6 +682,17 @@ not_negotiated:
   }
 }
 
+/* If there is something in GstVideoDecoder's output adapter, then
+   submit the frame for decoding */
+static inline void
+gst_vaapidecode_flush_output_adapter (GstVaapiDecode * decode)
+{
+  if (decode->current_frame_size == 0)
+    return;
+  gst_video_decoder_have_frame (GST_VIDEO_DECODER (decode));
+  decode->current_frame_size = 0;
+}
+
 static GstFlowReturn
 gst_vaapidecode_drain (GstVideoDecoder * vdec)
 {
@@ -690,6 +701,9 @@ gst_vaapidecode_drain (GstVideoDecoder * vdec)
   if (!decode->decoder)
     return GST_FLOW_NOT_NEGOTIATED;
 
+  GST_LOG_OBJECT (decode, "drain");
+
+  gst_vaapidecode_flush_output_adapter (decode);
   return gst_vaapidecode_push_all_decoded_frames (decode);
 }
 
@@ -702,13 +716,7 @@ gst_vaapidecode_internal_flush (GstVideoDecoder * vdec)
   if (!decode->decoder)
     return TRUE;
 
-  /* If there is something in GstVideoDecoder's output adapter, then
-     submit the frame for decoding */
-  if (decode->current_frame_size) {
-    gst_video_decoder_have_frame (vdec);
-    decode->current_frame_size = 0;
-  }
-
+  gst_vaapidecode_flush_output_adapter (decode);
   status = gst_vaapi_decoder_flush (decode->decoder);
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
     GST_WARNING_OBJECT (decode, "failed to flush decoder (status %d)", status);
