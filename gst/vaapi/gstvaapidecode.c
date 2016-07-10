@@ -547,8 +547,6 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
   ret = gst_video_decoder_finish_frame (vdec, out_frame);
   if (ret != GST_FLOW_OK)
     goto error_commit_buffer;
-
-  gst_video_codec_frame_unref (out_frame);
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -562,7 +560,6 @@ error_create_buffer:
         ("video sink failed to create video buffer for proxy'ed "
             "surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS (surface_id)));
     gst_video_decoder_drop_frame (vdec, out_frame);
-    gst_video_codec_frame_unref (out_frame);
     return GST_FLOW_ERROR;
   }
 error_get_meta:
@@ -571,14 +568,12 @@ error_get_meta:
         ("Failed to get vaapi video meta attached to video buffer"),
         ("Failed to get vaapi video meta attached to video buffer"));
     gst_video_decoder_drop_frame (vdec, out_frame);
-    gst_video_codec_frame_unref (out_frame);
     return GST_FLOW_ERROR;
   }
 error_commit_buffer:
   {
     GST_INFO_OBJECT (decode, "downstream element rejected the frame (%s [%d])",
         gst_flow_get_name (ret), ret);
-    gst_video_codec_frame_unref (out_frame);
     return ret;
   }
 }
@@ -596,6 +591,8 @@ gst_vaapidecode_push_all_decoded_frames (GstVaapiDecode * decode)
 
     switch (status) {
       case GST_VAAPI_DECODER_STATUS_SUCCESS:
+        /* GstVaapiDecode's queue adds an extra reference */
+        gst_video_codec_frame_unref (out_frame);
         ret = gst_vaapidecode_push_decoded_frame (vdec, out_frame);
         if (ret != GST_FLOW_OK)
           return ret;
