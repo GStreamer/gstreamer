@@ -1001,8 +1001,12 @@ gst_vaapidecode_flush (GstVideoDecoder * vdec)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
 
-  if (decode->decoder && !gst_vaapidecode_internal_flush (vdec))
+  if (!decode->decoder)
     return FALSE;
+
+  GST_LOG_OBJECT (vdec, "flushing");
+
+  gst_vaapidecode_purge (decode);
 
   /* There could be issues if we avoid the reset_full() while doing
    * seeking: we have to reset the internal state */
