@@ -66,10 +66,10 @@
  * ways:
  *
  * The push mode, in which the application repeatedly calls the push-buffer/push-sample
- * method with a new buffer/sample. Optionally, the queue size in the appsrc 
- * can be controlled with the enough-data and need-data signals by respectively 
- * stopping/starting the push-buffer/push-sample calls. This is a typical 
- * mode of operation for the stream-type "stream" and "seekable". Use this 
+ * method with a new buffer/sample. Optionally, the queue size in the appsrc
+ * can be controlled with the enough-data and need-data signals by respectively
+ * stopping/starting the push-buffer/push-sample calls. This is a typical
+ * mode of operation for the stream-type "stream" and "seekable". Use this
  * mode when implementing various network protocols or hardware devices.
  *
  * The pull mode, in which the need-data signal triggers the next push-buffer call.
@@ -489,20 +489,20 @@ gst_app_src_class_init (GstAppSrcClass * klass)
     * @appsrc: the appsrc
     * @sample: a sample from which extract buffer to push
     *
-    * Extract a buffer from the provided sample and adds the extracted buffer 
+    * Extract a buffer from the provided sample and adds the extracted buffer
     * to the queue of buffers that the appsrc element will
     * push to its source pad. This function set the appsrc caps based on the caps
-    * in the sample and reset the caps if they change. 
-    * Only the caps and the buffer of the provided sample are used and not 
-    * for example the segment in the sample. 
+    * in the sample and reset the caps if they change.
+    * Only the caps and the buffer of the provided sample are used and not
+    * for example the segment in the sample.
     * This function does not take ownership of the
     * sample so the sample needs to be unreffed after calling this function.
     *
     * When the block property is TRUE, this function can block until free space
     * becomes available in the queue.
-    * 
+    *
     * Since: 1.6
-    * 
+    *
     */
   gst_app_src_signals[SIGNAL_PUSH_SAMPLE] =
       g_signal_new ("push-sample", G_TYPE_FROM_CLASS (klass),
@@ -1869,8 +1869,8 @@ gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
  * @sample: (transfer none): a #GstSample from which buffer and caps may be
  * extracted
  *
- * Extract a buffer from the provided sample and adds it to the queue of 
- * buffers that the appsrc element will push to its source pad. Any 
+ * Extract a buffer from the provided sample and adds it to the queue of
+ * buffers that the appsrc element will push to its source pad. Any
  * previous caps that were set on appsrc will be replaced by the caps
  * associated with the sample if not equal.
  *
@@ -1880,9 +1880,9 @@ gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
  * Returns: #GST_FLOW_OK when the buffer was successfuly queued.
  * #GST_FLOW_FLUSHING when @appsrc is not PAUSED or PLAYING.
  * #GST_FLOW_EOS when EOS occured.
- * 
+ *
  * Since: 1.6
- * 
+ *
  */
 GstFlowReturn
 gst_app_src_push_sample (GstAppSrc * appsrc, GstSample * sample)

@@ -148,14 +148,14 @@ on_new_sample_from_source (GstAppSink * elt, gpointer user_data)
 }
 
 /*
- * appsink => appsrc pipelines executed 100 times: 
+ * appsink => appsrc pipelines executed 100 times:
  * - appsink pipeline has sync=false
  * - appsrc pipeline has sync=true
  * - appsrc has block=true
  * after 1 second an error message is posted on appsink pipeline bus
  * when the error is received the appsrc pipeline is set to NULL
  * and then the appsink pipeline is
- * set to NULL too, this must not deadlock 
+ * set to NULL too, this must not deadlock
  */
 
 GST_START_TEST (test_appsrc_block_deadlock)
