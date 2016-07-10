@@ -2361,7 +2361,13 @@ AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
 dnl *** LV2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LV2, true)
 AG_GST_CHECK_FEATURE(LV2, [lv2], lv2, [
-  PKG_CHECK_MODULES(LILV, lilv-0 >= 0.6.6, HAVE_LV2="yes", HAVE_LV2="no")
+  PKG_CHECK_MODULES(LILV, lilv-0 >= 0.22, [
+    HAVE_LV2="yes",
+    HAVE_LILV_0_22="yes"
+    AC_DEFINE(HAVE_LILV_0_22, 1, [Define if we have liblilv >= 0.22])
+  ],[
+    PKG_CHECK_MODULES(LILV, lilv-0 >= 0.16, HAVE_LV2="yes", HAVE_LV2="no")
+  ])
   AC_SUBST(LILV_CFLAGS)
   AC_SUBST(LILV_LIBS)
 ])

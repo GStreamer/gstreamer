@@ -272,8 +272,12 @@ gst_lv2_save_preset (GstLV2 * lv2, GstObject * obj, const gchar * name)
   GstElementFactory *factory;
   LilvState *state;
   LilvNode *bundle_dir;
+  const LilvNode *state_uri;
   LilvInstance *instance = lv2->instance;
   gboolean res;
+#ifndef HAVE_LILV_0_22
+  gchar *filepath;
+#endif
 
   factory = gst_element_get_factory ((GstElement *) obj);
   basename = g_strdup (gst_element_factory_get_metadata (factory,
@@ -313,9 +317,19 @@ gst_lv2_save_preset (GstLV2 * lv2, GstObject * obj, const gchar * name)
   lilv_world_load_bundle (world, bundle_dir);
   lilv_node_free (bundle_dir);
 
-  lilv_world_load_resource (world, lilv_state_get_uri (state));
+#ifdef HAVE_LILV_0_22
+  state_uri = lilv_state_get_uri (state);
+#else
+  filepath = g_build_filename (dir, filename, NULL);
+  state_uri = lilv_new_uri (world, filepath);
+#endif
+  lilv_world_load_resource (world, state_uri);
   g_hash_table_insert (lv2->presets, g_strdup (name),
-      lilv_node_duplicate (lilv_state_get_uri (state)));
+      lilv_node_duplicate (state_uri));
+#ifndef HAVE_LILV_0_22
+  g_free (filepath);
+  lilv_node_free ((LilvNode *) state_uri);
+#endif
 
   lilv_state_free (state);
   if (!lv2->instance) {
@@ -757,11 +771,15 @@ gst_lv2_element_class_set_metadata (GstLV2Class * lv2_class,
   }
   val = lilv_plugin_get_author_name (lv2plugin);
   if (val) {
+    // TODO: check lilv_plugin_get_author_email(lv2plugin);
     author = g_strdup (lilv_node_as_string (val));
     lilv_node_free (val);
   } else {
     author = g_strdup ("no author available");
   }
+
+  // TODO: better description from:
+  // lilv_plugin_get_author_homepage() and lilv_plugin_get_project()
 
   lv2plugin_class = lilv_plugin_get_class (lv2plugin);
   cval = lilv_plugin_class_get_label (lv2plugin_class);
