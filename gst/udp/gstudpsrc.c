@@ -285,7 +285,7 @@ gst_ipv6_pktinfo_message_deserialize (gint level,
   if (level != IPPROTO_IPV6 || type != IPV6_PKTINFO)
     return NULL;
 
-  if (size < sizeof (struct in_pktinfo))
+  if (size < sizeof (struct in6_pktinfo))
     return NULL;
 
   pktinfo = data;
