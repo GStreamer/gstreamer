@@ -575,6 +575,8 @@ AS_CASE([$host],
     [*-*linux*],
       [AS_CASE([$host_cpu],
         [arm*], [
+          enable_v4l2_probe="yes"],
+        [aarch64*], [
           enable_v4l2_probe="yes"])])
 AC_ARG_ENABLE(
   v4l2-probe,
