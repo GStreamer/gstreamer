@@ -1393,7 +1393,8 @@ gst_vaapi_decoder_vc1_flush (GstVaapiDecoder * base_decoder)
   GstVaapiDecoderVC1 *const decoder = GST_VAAPI_DECODER_VC1_CAST (base_decoder);
   GstVaapiDecoderVC1Private *const priv = &decoder->priv;
 
-  gst_vaapi_dpb_flush (priv->dpb);
+  if (priv->is_opened)
+    gst_vaapi_dpb_flush (priv->dpb);
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
