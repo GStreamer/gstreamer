@@ -968,11 +968,16 @@ gst_soup_http_src_session_close (GstSoupHTTPSrc * src)
   GST_DEBUG_OBJECT (src, "Closing session");
 
   g_mutex_lock (&src->mutex);
+  if (src->msg) {
+    soup_session_cancel_message (src->session, src->msg, SOUP_STATUS_CANCELLED);
+    g_object_unref (src->msg);
+    src->msg = NULL;
+  }
+
   if (src->session) {
-    soup_session_abort (src->session);  /* This unrefs the message. */
+    soup_session_abort (src->session);
     g_object_unref (src->session);
     src->session = NULL;
-    src->msg = NULL;
   }
   g_mutex_unlock (&src->mutex);
 }
@@ -1626,7 +1631,6 @@ gst_soup_http_src_read_buffer (GstSoupHTTPSrc * src, GstBuffer ** outbuf)
     g_mutex_unlock (&src->mutex);
     return GST_FLOW_FLUSHING;
   }
-  g_mutex_unlock (&src->mutex);
 
   gst_buffer_unmap (*outbuf, &mapinfo);
   if (read_bytes > 0) {
@@ -1645,10 +1649,14 @@ gst_soup_http_src_read_buffer (GstSoupHTTPSrc * src, GstBuffer ** outbuf)
       /* Maybe the server disconnected, retry */
       ret = GST_FLOW_CUSTOM_ERROR;
     } else {
+      g_object_unref (src->msg);
+      src->msg = NULL;
       ret = GST_FLOW_EOS;
       src->have_body = TRUE;
     }
   }
+  g_mutex_unlock (&src->mutex);
+
   return ret;
 }
 
