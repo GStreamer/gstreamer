@@ -96,7 +96,7 @@ gst_gl_effects_rgb_to_curve (GstGLEffects * effects,
     gst_gl_shader_set_uniform_1i (shader, "curve", 1);
   }
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 static void

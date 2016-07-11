@@ -1040,7 +1040,7 @@ gst_gl_filter_render_to_target (GstGLFilter * filter, gboolean resize,
   cb.height = in_height;
 
   gst_gl_context_use_fbo_v2 (context, out_width, out_height,
-      filter->fbo, filter->depthbuffer, target, _glcb2, &cb);
+      filter->fbo, filter->depthbuffer, output->tex_id, _glcb2, &cb);
 }
 
 static void
@@ -1089,7 +1089,7 @@ _draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
   gst_gl_shader_set_uniform_1f (filter->default_shader, "width", width);
   gst_gl_shader_set_uniform_1f (filter->default_shader, "height", height);
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 /**
@@ -1168,22 +1168,19 @@ _unbind_buffer (GstGLFilter * filter)
 }
 
 /**
- * gst_gl_filter_draw_texture:
+ * gst_gl_filter_draw_fullscreen_quad:
  * @filter: a #GstGLFilter
- * @texture: the texture to draw
- * @width: width of @texture
- * @height: height of texture
  *
- * Draws @texture into the OpenGL scene at the specified @width and @height.
+ * Render a fullscreen quad using the current GL state.  The only GL state this 
+ * modifies is the necessary vertex/index buffers and, if necessary, a
+ * Vertex Array Object for drawing a fullscreen quad.  Framebuffer state,
+ * any shaders, viewport state, etc must be setup by the caller.
  */
 void
-gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
-    guint width, guint height)
+gst_gl_filter_draw_fullscreen_quad (GstGLFilter * filter)
 {
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
-
-  GST_DEBUG ("drawing texture:%u dimensions:%ux%u", texture, width, height);
 
   {
     if (!filter->vertex_buffer) {

@@ -254,7 +254,7 @@ gst_gl_color_balance_callback (gint width, gint height, guint tex_id,
 
   gl->BindTexture (GL_TEXTURE_2D, tex_id);
 
-  gst_gl_filter_draw_texture (filter, tex_id, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 static gboolean
