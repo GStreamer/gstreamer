@@ -57,7 +57,7 @@ static gboolean gst_siren_dec_start (GstAudioDecoder * dec);
 static gboolean gst_siren_dec_stop (GstAudioDecoder * dec);
 static gboolean gst_siren_dec_set_format (GstAudioDecoder * dec,
     GstCaps * caps);
-static gboolean gst_siren_dec_parse (GstAudioDecoder * dec,
+static GstFlowReturn gst_siren_dec_parse (GstAudioDecoder * dec,
     GstAdapter * adapter, gint * offset, gint * length);
 static GstFlowReturn gst_siren_dec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
