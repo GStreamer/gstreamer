@@ -78,7 +78,7 @@ typedef gboolean (*GstGLMixerSetCaps) (GstGLMixer* mixer,
   GstCaps* outcaps);
 typedef void (*GstGLMixerReset) (GstGLMixer *mixer);
 typedef gboolean (*GstGLMixerProcessFunc) (GstGLMixer *mix, GstBuffer *outbuf);
-typedef gboolean (*GstGLMixerProcessTextures) (GstGLMixer *mix, guint out_tex);
+typedef gboolean (*GstGLMixerProcessTextures) (GstGLMixer *mix, GstGLMemory *out_tex);
 
 struct _GstGLMixer
 {

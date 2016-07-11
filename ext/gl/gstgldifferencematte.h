@@ -45,10 +45,10 @@ struct _GstGLDifferenceMatte
 
   guchar *pixbuf;
   gint pbuf_width, pbuf_height;
-  GLuint savedbgtexture;
-  GLuint newbgtexture;
-  GLuint midtexture[4];
-  GLuint intexture;
+  GstGLMemory *savedbgtexture;
+  GstGLMemory *newbgtexture;
+  GstGLMemory *midtexture[4];
+  GstGLMemory *intexture;
   float kernel[7];
 };
 

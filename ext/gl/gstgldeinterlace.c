@@ -64,7 +64,7 @@ static gboolean gst_gl_deinterlace_init_fbo (GstGLFilter * filter);
 static gboolean gst_gl_deinterlace_filter (GstGLFilter * filter,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_gl_deinterlace_filter_texture (GstGLFilter * filter,
-    guint in_tex, guint out_tex);
+    GstGLMemory * in_tex, GstGLMemory * out_tex);
 static void gst_gl_deinterlace_vfir_callback (gint width, gint height,
     guint texture, gpointer stuff);
 static void gst_gl_deinterlace_greedyh_callback (gint width, gint height,
@@ -364,8 +364,8 @@ gst_gl_deinterlace_init_fbo (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_deinterlace_filter_texture (GstGLFilter * filter, guint in_tex,
-    guint out_tex)
+gst_gl_deinterlace_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
+    GstGLMemory * out_tex)
 {
   GstGLDeinterlace *deinterlace_filter = GST_GL_DEINTERLACE (filter);
 

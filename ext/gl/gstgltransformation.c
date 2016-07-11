@@ -107,7 +107,7 @@ gst_gl_transformation_prepare_output_buffer (GstBaseTransform * trans,
 static gboolean gst_gl_transformation_filter (GstGLFilter * filter,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_gl_transformation_filter_texture (GstGLFilter * filter,
-    guint in_tex, guint out_tex);
+    GstGLMemory * in_tex, GstGLMemory * out_tex);
 
 static void
 gst_gl_transformation_class_init (GstGLTransformationClass * klass)
@@ -782,8 +782,8 @@ gst_gl_transformation_filter (GstGLFilter * filter,
 }
 
 static gboolean
-gst_gl_transformation_filter_texture (GstGLFilter * filter, guint in_tex,
-    guint out_tex)
+gst_gl_transformation_filter_texture (GstGLFilter * filter,
+    GstGLMemory * in_tex, GstGLMemory * out_tex)
 {
   GstGLTransformation *transformation = GST_GL_TRANSFORMATION (filter);
 
@@ -794,7 +794,8 @@ gst_gl_transformation_filter_texture (GstGLFilter * filter, guint in_tex,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info),
       filter->fbo, filter->depthbuffer,
-      out_tex, gst_gl_transformation_callback, (gpointer) transformation);
+      out_tex->tex_id, gst_gl_transformation_callback,
+      (gpointer) transformation);
 
   return TRUE;
 }
@@ -874,7 +875,7 @@ gst_gl_transformation_callback (gpointer stuff)
   gst_gl_shader_use (transformation->shader);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (GL_TEXTURE_2D, transformation->in_tex);
+  gl->BindTexture (GL_TEXTURE_2D, transformation->in_tex->tex_id);
   gst_gl_shader_set_uniform_1i (transformation->shader, "texture", 0);
 
   graphene_matrix_to_float (&transformation->mvp_matrix, temp_matrix);

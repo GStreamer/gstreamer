@@ -72,7 +72,7 @@ static void gst_gl_overlay_get_property (GObject * object, guint prop_id,
 static void gst_gl_overlay_before_transform (GstBaseTransform * trans,
     GstBuffer * outbuf);
 static gboolean gst_gl_overlay_filter_texture (GstGLFilter * filter,
-    guint in_tex, guint out_tex);
+    GstGLMemory * in_tex, GstGLMemory * out_tex);
 
 static gboolean gst_gl_overlay_load_png (GstGLOverlay * overlay, FILE * fp);
 static gboolean gst_gl_overlay_load_jpeg (GstGLOverlay * overlay, FILE * fp);
@@ -624,8 +624,8 @@ out:
 }
 
 static gboolean
-gst_gl_overlay_filter_texture (GstGLFilter * filter, guint in_tex,
-    guint out_tex)
+gst_gl_overlay_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
+    GstGLMemory * out_tex)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
 

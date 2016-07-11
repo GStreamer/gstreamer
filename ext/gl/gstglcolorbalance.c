@@ -258,8 +258,8 @@ gst_gl_color_balance_callback (gint width, gint height, guint tex_id,
 }
 
 static gboolean
-gst_gl_color_balance_filter_texture (GstGLFilter * filter, guint in_tex,
-    guint out_tex)
+gst_gl_color_balance_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
+    GstGLMemory * out_tex)
 {
   gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
       (GLCB) gst_gl_color_balance_callback, filter);

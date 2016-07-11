@@ -69,7 +69,7 @@ static void gst_gl_filter_app_get_property (GObject * object, guint prop_id,
 static gboolean gst_gl_filter_app_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
 static gboolean gst_gl_filter_app_filter_texture (GstGLFilter * filter,
-    guint in_tex, guint out_tex);
+    GstGLMemory * in_tex, GstGLMemory * out_tex);
 
 static gboolean gst_gl_filter_app_gl_start (GstGLBaseFilter * base_filter);
 static void gst_gl_filter_app_gl_stop (GstGLBaseFilter * base_filter);
@@ -200,9 +200,8 @@ struct glcb2
 {
   GLCB func;
   gpointer data;
-  guint texture;
-  guint width;
-  guint height;
+  GstGLMemory *in_tex;
+  GstGLMemory *out_tex;
 };
 
 /* convenience functions to simplify filter development */
@@ -211,27 +210,28 @@ _glcb2 (gpointer data)
 {
   struct glcb2 *cb = data;
 
-  cb->func (cb->width, cb->height, cb->texture, cb->data);
+  cb->func (gst_gl_memory_get_texture_width (cb->in_tex),
+      gst_gl_memory_get_texture_height (cb->in_tex), cb->in_tex->tex_id,
+      cb->data);
 }
 
 static gboolean
-gst_gl_filter_app_filter_texture (GstGLFilter * filter, guint in_tex,
-    guint out_tex)
+gst_gl_filter_app_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
+    GstGLMemory * out_tex)
 {
   GstGLFilterApp *app_filter = GST_GL_FILTER_APP (filter);
   struct glcb2 cb;
 
   cb.func = (GLCB) _emit_draw_signal;
   cb.data = filter;
-  cb.texture = in_tex;
-  cb.width = GST_VIDEO_INFO_WIDTH (&filter->in_info);
-  cb.height = GST_VIDEO_INFO_HEIGHT (&filter->in_info);
+  cb.in_tex = in_tex;
+  cb.out_tex = out_tex;
 
   //blocking call, use a FBO
   gst_gl_context_use_fbo_v2 (GST_GL_BASE_FILTER (filter)->context,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info),
-      filter->fbo, filter->depthbuffer, out_tex, _glcb2, &cb);
+      filter->fbo, filter->depthbuffer, out_tex->tex_id, _glcb2, &cb);
 
   if (app_filter->default_draw) {
     gst_gl_filter_render_to_target_with_shader (filter, TRUE, in_tex, out_tex,

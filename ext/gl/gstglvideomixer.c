@@ -474,7 +474,7 @@ static gboolean gst_gl_video_mixer_init_shader (GstGLMixer * mixer,
     GstCaps * outcaps);
 
 static gboolean gst_gl_video_mixer_process_textures (GstGLMixer * mixer,
-    guint out_tex);
+    GstGLMemory * out_tex);
 static void gst_gl_video_mixer_callback (gpointer stuff);
 
 /* *INDENT-OFF* */
@@ -1156,7 +1156,7 @@ gst_gl_video_mixer_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
 }
 
 static gboolean
-gst_gl_video_mixer_process_textures (GstGLMixer * mix, guint out_tex)
+gst_gl_video_mixer_process_textures (GstGLMixer * mix, GstGLMemory * out_tex)
 {
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (mix);
 
@@ -1164,7 +1164,7 @@ gst_gl_video_mixer_process_textures (GstGLMixer * mix, guint out_tex)
       GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR (mix)->info),
       GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR (mix)->info),
       mix->fbo, mix->depthbuffer,
-      out_tex, gst_gl_video_mixer_callback, (gpointer) video_mixer);
+      out_tex->tex_id, gst_gl_video_mixer_callback, (gpointer) video_mixer);
 
   return TRUE;
 }

@@ -71,7 +71,7 @@ static void gst_gl_effects_ghash_func_clean (gpointer key, gpointer value,
     gpointer data);
 
 static gboolean gst_gl_effects_filter_texture (GstGLFilter * filter,
-    guint in_tex, guint out_tex);
+    GstGLMemory * in_tex, GstGLMemory * out_tex);
 static gboolean gst_gl_effects_filters_is_property_supported (const
     GstGLEffectsFilterDescriptor *, gint property);
 
@@ -274,31 +274,27 @@ gst_gl_effects_init_gl_resources (GstGLFilter * filter)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
-  GstGLFuncs *gl = context->gl_vtable;
-  guint internal_format;
-  gint i = 0;
+  GstGLBaseMemoryAllocator *base_alloc;
+  GstGLAllocationParams *params;
+  gint i;
+
+  base_alloc = (GstGLBaseMemoryAllocator *)
+      gst_gl_memory_allocator_get_default (context);
+  params =
+      (GstGLAllocationParams *) gst_gl_video_allocation_params_new (context,
+      NULL, &filter->out_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D,
+      GST_VIDEO_GL_TEXTURE_TYPE_RGBA);
 
   for (i = 0; i < NEEDED_TEXTURES; i++) {
+    if (effects->midtexture[i])
+      gst_memory_unref (GST_MEMORY_CAST (effects->midtexture[i]));
 
-    if (effects->midtexture[i]) {
-      gl->DeleteTextures (1, &effects->midtexture[i]);
-      effects->midtexture[i] = 0;
-    }
-
-    gl->GenTextures (1, &effects->midtexture[i]);
-    gl->BindTexture (GL_TEXTURE_2D, effects->midtexture[i]);
-    internal_format =
-        gst_gl_sized_gl_format_from_gl_format_type (context, GL_RGBA,
-        GL_UNSIGNED_BYTE);
-    gl->TexImage2D (GL_TEXTURE_2D, 0, internal_format,
-        GST_VIDEO_INFO_WIDTH (&filter->out_info),
-        GST_VIDEO_INFO_HEIGHT (&filter->out_info), 0, GL_RGBA, GL_UNSIGNED_BYTE,
-        NULL);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    effects->midtexture[i] =
+        (GstGLMemory *) gst_gl_base_memory_alloc (base_alloc, params);
   }
+
+  gst_object_unref (base_alloc);
+  gst_gl_allocation_params_free (params);
 }
 
 /* free resources that need a gl context */
@@ -310,8 +306,7 @@ gst_gl_effects_reset_gl_resources (GstGLFilter * filter)
   gint i = 0;
 
   for (i = 0; i < NEEDED_TEXTURES; i++) {
-    gl->DeleteTextures (1, &effects->midtexture[i]);
-    effects->midtexture[i] = 0;
+    gst_memory_unref (GST_MEMORY_CAST (effects->midtexture[i]));
   }
   for (i = 0; i < GST_GL_EFFECTS_N_CURVES; i++) {
     gl->DeleteTextures (1, &effects->curve[i]);
@@ -396,10 +391,11 @@ gst_gl_effects_filter_class_init (GstGLEffectsClass * klass,
 }
 
 static void
-set_horizontal_swap (GstGLContext * context, gpointer data)
+set_horizontal_swap (GstGLEffects * effects)
 {
 #if GST_GL_HAVE_OPENGL
-  GstGLFuncs *gl = context->gl_vtable;
+  GstGLContext *context = GST_GL_BASE_FILTER (effects)->context;
+  const GstGLFuncs *gl = context->gl_vtable;
 
   if (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL) {
     const gfloat mirrormatrix[16] = {
@@ -527,8 +523,8 @@ gst_gl_effects_on_init_gl_context (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_effects_filter_texture (GstGLFilter * filter, guint in_tex,
-    guint out_tex)
+gst_gl_effects_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
+    GstGLMemory * out_tex)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
 
@@ -536,8 +532,7 @@ gst_gl_effects_filter_texture (GstGLFilter * filter, guint in_tex,
   effects->outtexture = out_tex;
 
   if (effects->horizontal_swap == TRUE)
-    gst_gl_context_thread_add (GST_GL_BASE_FILTER (filter)->context,
-        set_horizontal_swap, effects);
+    set_horizontal_swap (effects);
 
   effects->effect (effects);
 

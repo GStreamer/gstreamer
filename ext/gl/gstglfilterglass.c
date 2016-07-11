@@ -66,7 +66,7 @@ static gboolean gst_gl_filter_glass_reset (GstBaseTransform * trans);
 
 static gboolean gst_gl_filter_glass_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filter_glass_filter_texture (GstGLFilter * filter,
-    guint in_tex, guint out_tex);
+    GstGLMemory * in_tex, GstGLMemory * out_tex);
 
 static void gst_gl_filter_glass_draw_background_gradient ();
 static void gst_gl_filter_glass_draw_video_plane (GstGLFilter * filter,
@@ -238,17 +238,18 @@ gst_gl_filter_glass_init_shader (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_filter_glass_filter_texture (GstGLFilter * filter, guint in_tex,
-    guint out_tex)
+gst_gl_filter_glass_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
+    GstGLMemory * out_tex)
 {
   GstGLFilterGlass *glass_filter = GST_GL_FILTER_GLASS (filter);
+
   glass_filter->in_tex = in_tex;
 
   //blocking call, use a FBO
   gst_gl_context_use_fbo_v2 (GST_GL_BASE_FILTER (filter)->context,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info),
-      filter->fbo, filter->depthbuffer, out_tex,
+      filter->fbo, filter->depthbuffer, out_tex->tex_id,
       gst_gl_filter_glass_callback, (gpointer) glass_filter);
 
   return TRUE;
@@ -365,7 +366,7 @@ gst_gl_filter_glass_callback (gpointer stuff)
 
   gint width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
   gint height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
-  guint texture = glass_filter->in_tex;
+  guint texture = glass_filter->in_tex->tex_id;
 
   if (start_time == 0)
     start_time = get_time ();

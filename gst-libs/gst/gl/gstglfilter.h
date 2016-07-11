@@ -66,6 +66,9 @@ struct _GstGLFilter
   /* <private> */
   GLuint             fbo;
   GLuint             depthbuffer;
+  gboolean           gl_result;
+  GstBuffer         *inbuf;
+  GstBuffer         *outbuf;
 
   GstGLShader       *default_shader;
   gboolean           valid_attributes;
@@ -99,7 +102,7 @@ struct _GstGLFilterClass
 
   gboolean (*set_caps)          (GstGLFilter* filter, GstCaps* incaps, GstCaps* outcaps);
   gboolean (*filter)            (GstGLFilter *filter, GstBuffer *inbuf, GstBuffer *outbuf);
-  gboolean (*filter_texture)    (GstGLFilter *filter, guint in_tex, guint out_tex);
+  gboolean (*filter_texture)    (GstGLFilter *filter, GstGLMemory *in_tex, GstGLMemory *out_tex);
   gboolean (*init_fbo)          (GstGLFilter *filter);
 
   GstCaps *(*transform_internal_caps) (GstGLFilter *filter,
@@ -113,13 +116,19 @@ struct _GstGLFilterClass
 gboolean gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
                                        GstBuffer * outbuf);
 
-void gst_gl_filter_render_to_target (GstGLFilter *filter, gboolean resize, GLuint input,
-                                     GLuint target, GLCB func, gpointer data);
-
-void gst_gl_filter_render_to_target_with_shader (GstGLFilter * filter, gboolean resize,
-                                                 GLuint input, GLuint target, GstGLShader *shader);
+void gst_gl_filter_render_to_target                 (GstGLFilter *filter,
+                                                     gboolean resize,
+                                                     GstGLMemory * input,
+                                                     GstGLMemory * output,
+                                                     GLCB func,
+                                                     gpointer data);
 
 void gst_gl_filter_draw_fullscreen_quad             (GstGLFilter *filter);
+void gst_gl_filter_render_to_target_with_shader     (GstGLFilter * filter,
+                                                     gboolean resize,
+                                                     GstGLMemory * input,
+                                                     GstGLMemory * output,
+                                                     GstGLShader *shader);
 
 G_END_DECLS
 
