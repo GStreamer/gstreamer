@@ -274,7 +274,7 @@ static gboolean gst_queue2_is_empty (GstQueue2 * queue);
 static gboolean gst_queue2_is_filled (GstQueue2 * queue);
 
 static void update_cur_level (GstQueue2 * queue, GstQueue2Range * range);
-static void update_in_rates (GstQueue2 * queue);
+static void update_in_rates (GstQueue2 * queue, gboolean force);
 static void gst_queue2_post_buffering (GstQueue2 * queue);
 
 typedef enum
@@ -1036,7 +1036,7 @@ update_buffering (GstQueue2 * queue)
   /* Ensure the variables used to calculate buffering state are up-to-date. */
   if (queue->current)
     update_cur_level (queue, queue->current);
-  update_in_rates (queue);
+  update_in_rates (queue, FALSE);
 
   if (!get_buffering_percent (queue, NULL, &percent))
     return;
@@ -1085,7 +1085,7 @@ reset_rate_timer (GstQueue2 * queue)
 #define AVG_OUT(avg,val) ((avg) * 3.0 + (val)) / 4.0
 
 static void
-update_in_rates (GstQueue2 * queue)
+update_in_rates (GstQueue2 * queue, gboolean force)
 {
   gdouble elapsed, period;
   gdouble byte_in_rate;
@@ -1100,7 +1100,7 @@ update_in_rates (GstQueue2 * queue)
       g_timer_elapsed (queue->in_timer, NULL);
 
   /* recalc after each interval. */
-  if (queue->last_in_elapsed + RATE_INTERVAL < elapsed) {
+  if (force || queue->last_in_elapsed + RATE_INTERVAL < elapsed) {
     period = elapsed - queue->last_in_elapsed;
 
     GST_DEBUG_OBJECT (queue,
@@ -2129,7 +2129,7 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item,
     /* apply new buffer to segment stats */
     apply_buffer (queue, buffer, &queue->sink_segment, size, TRUE);
     /* update the byterate stats */
-    update_in_rates (queue);
+    update_in_rates (queue, FALSE);
 
     if (!QUEUE_IS_USING_QUEUE (queue)) {
       /* FIXME - check return value? */
@@ -2155,7 +2155,7 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item,
     apply_buffer_list (queue, buffer_list, &queue->sink_segment, TRUE);
 
     /* update the byterate stats */
-    update_in_rates (queue);
+    update_in_rates (queue, FALSE);
 
     if (!QUEUE_IS_USING_QUEUE (queue)) {
       gst_buffer_list_foreach (buffer_list, buffer_list_create_write, queue);
@@ -2171,6 +2171,8 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item,
          * filled and we can read all data from the queue. */
         GST_DEBUG_OBJECT (queue, "we have EOS");
         queue->is_eos = TRUE;
+        /* Force updating the input bitrate */
+        update_in_rates (queue, TRUE);
         break;
       case GST_EVENT_SEGMENT:
         apply_segment (queue, event, &queue->sink_segment, TRUE);
