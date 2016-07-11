@@ -1159,12 +1159,17 @@ gst_v4l2_object_fill_format_list (GstV4l2Object * v4l2object,
   /* ERRORS */
 failed:
   {
+    g_free (format);
+
+    if (!GST_IS_ELEMENT (v4l2object->element))
+      return FALSE;
+
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
         (_("Failed to enumerate possible video formats device '%s' can work "
                 "with"), v4l2object->videodev),
         ("Failed to get number %d in pixelformat enumeration for %s. (%d - %s)",
             n, v4l2object->videodev, errno, g_strerror (errno)));
-    g_free (format);
+
     return FALSE;
   }
 }
