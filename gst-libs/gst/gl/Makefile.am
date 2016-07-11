@@ -14,6 +14,7 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
 	gstglbuffer.c \
 	gstglmemory.c \
 	gstglmemorypbo.c \
+	gstglrenderbuffer.c \
 	gstglbufferpool.c \
 	gstglfilter.c \
 	gstglformat.c \
@@ -45,6 +46,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglbuffer.h \
 	gstglmemory.h \
 	gstglmemorypbo.h \
+	gstglrenderbuffer.h \
 	gstglbufferpool.h \
 	gstglfilter.h \
 	gstglformat.h \
