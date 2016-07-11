@@ -232,7 +232,7 @@ gst_gl_effects_set_effect (GstGLEffects * effects, gint effect_type)
       effects->current_effect = effect_type;
       break;
     case GST_GL_EFFECT_XRAY:
-      effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_sin;
+      effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_xray;
       filter_class->supported_gl_api =
           GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
       effects->current_effect = effect_type;
