@@ -732,6 +732,8 @@ gst_gl_base_memory_alloc (GstGLBaseMemoryAllocator * allocator,
 {
   GstGLBaseMemoryAllocatorClass *alloc_class;
 
+  g_return_val_if_fail (GST_IS_GL_BASE_MEMORY_ALLOCATOR (allocator), NULL);
+
   alloc_class = GST_GL_BASE_MEMORY_ALLOCATOR_GET_CLASS (allocator);
 
   g_return_val_if_fail (alloc_class != NULL, NULL);
