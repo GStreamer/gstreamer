@@ -194,10 +194,13 @@ generate_unwind_trace (void)
   unw_cursor_t cursor;
   GString *trace;
 
-  trace = g_string_new (NULL);
-  unw_getcontext (&ctx);
-  unw_init_local (&cursor, &ctx);
+  if (unw_getcontext (&ctx))
+    return NULL;
 
+  if (unw_init_local (&cursor, &ctx))
+    return NULL;
+
+  trace = g_string_new (NULL);
   while (unw_step (&cursor) > 0) {
     char name[BT_NAME_SIZE];
     unw_word_t offp;
