@@ -842,8 +842,10 @@ GST_START_TEST (rtp_h265_list_lt_mtu_hvc1)
   rtp_pipeline_test (rtp_h265_list_lt_mtu_frame_data_hvc1,
       rtp_h265_list_lt_mtu_frame_data_size, rtp_h265_list_lt_mtu_frame_count,
       "video/x-h265,stream-format=(string)hvc1,alignment=(string)au,"
-      "codec_data=(buffer)01640032ffe1002a67640032ac1b1a80a03dff016e02020280000"
-      "003008000000a74300018fff5de5c68600031ffebbcb85001000468ee3830",
+      "codec_data=(buffer)0101c000000080000000000099f000fcfdf8f800000203a000010"
+      "01840010c01ffff01c000000300800000030000030099ac0900a10001003042010101c00"
+      "0000300800000030000030099a00a080f1fe36bbb5377725d602dc040404100000300010"
+      "00003000a0800a2000100074401c172b02240",
       "rtph265pay", "rtph265depay", rtp_h265_list_lt_mtu_bytes_sent_hvc1,
       rtp_h265_list_lt_mtu_mtu_size, TRUE);
 }
@@ -898,8 +900,10 @@ GST_START_TEST (rtp_h265_list_gt_mtu_hvc1)
   rtp_pipeline_test (rtp_h265_list_gt_mtu_frame_data_hvc1,
       rtp_h265_list_gt_mtu_frame_data_size, rtp_h265_list_gt_mtu_frame_count,
       "video/x-h265,stream-format=(string)hvc1,alignment=(string)au,"
-      "codec_data=(buffer)01640032ffe1002a67640032ac1b1a80a03dff016e02020280000"
-      "003008000000a74300018fff5de5c68600031ffebbcb85001000468ee3830",
+      "codec_data=(buffer)0101c000000080000000000099f000fcfdf8f800000203a000010"
+      "01840010c01ffff01c000000300800000030000030099ac0900a10001003042010101c00"
+      "0000300800000030000030099a00a080f1fe36bbb5377725d602dc040404100000300010"
+      "00003000a0800a2000100074401c172b02240",
       "rtph265pay", "rtph265depay", rtp_h265_list_gt_mtu_bytes_sent_hvc1,
       rtp_h265_list_gt_mtu_mtu_size, TRUE);
 }

@@ -566,7 +566,7 @@ gst_rtp_h265_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
     size -= 23;
 
     if (num_arrays > 0) {
-      if (data[0] == (0x00 | 0x20)) {   /* VPS */
+      if ((data[0] & 0x3f) == 0x20) {   /* VPS */
 
         data++;
         num_vps = data[0] << 8 | data[1];
@@ -603,7 +603,7 @@ gst_rtp_h265_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
     }
 
     if (num_arrays > 0) {
-      if (data[0] == (0x00 | 0x21)) {   /* SPS */
+      if ((data[0] & 0x3f) == 0x21) {   /* SPS */
 
         data++;
         num_sps = data[0] << 8 | data[1];
@@ -640,7 +640,7 @@ gst_rtp_h265_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
     }
 
     if (num_arrays > 0) {
-      if (data[0] == (0x00 | 0x22)) {   /* PPS */
+      if ((data[0] & 0x3f) == 0x22) {   /* PPS */
 
         data++;
         num_pps = data[0] << 8 | data[1];
