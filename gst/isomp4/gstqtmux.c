@@ -4246,8 +4246,14 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     entry.fourcc = fourcc;
   } else if (strcmp (mimetype, "video/x-prores") == 0) {
     const gchar *variant;
+    const gchar *colorimetry_str;
+    const gchar *interlace_mode;
+    gboolean tff = TRUE;
+    GstVideoColorimetry colorimetry;
 
     variant = gst_structure_get_string (structure, "variant");
+    colorimetry_str = gst_structure_get_string (structure, "colorimetry");
+    interlace_mode = gst_structure_get_string (structure, "interlace-mode");
     if (!variant || !g_strcmp0 (variant, "standard"))
       entry.fourcc = FOURCC_apcn;
     else if (!g_strcmp0 (variant, "lt"))
@@ -4256,6 +4262,29 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
       entry.fourcc = FOURCC_apch;
     else if (!g_strcmp0 (variant, "proxy"))
       entry.fourcc = FOURCC_apco;
+    if (!g_strcmp0 (interlace_mode, "interleaved") ||
+        !g_strcmp0 (interlace_mode, "mixed")) {
+      /* Assume top-fields-first if unspecified */
+      gst_structure_get_boolean (structure, "top-field-first", &tff);
+    }
+
+    if (gst_video_colorimetry_from_string (&colorimetry, colorimetry_str)) {
+      ext_atom = build_colr_extension (colorimetry);
+      if (ext_atom)
+        ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+    }
+
+    ext_atom = build_fiel_extension_prores (interlace_mode, tff);
+    if (ext_atom)
+      ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+
+    if (colorimetry_str == NULL) {
+      /* TODO: Maybe implement better heuristics */
+      GST_WARNING_OBJECT (qtmux,
+          "Colorimetry information not found in caps. The resulting file's "
+          "color information might be wrong");
+      colorimetry_str = height < 720 ? "bt601" : "bt709";
+    }
   }
 
   if (!entry.fourcc)
@@ -4267,6 +4296,12 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   qtpad->trak_ste =
       (SampleTableEntry *) atom_trak_set_video_type (qtpad->trak,
       qtmux->context, &entry, rate, ext_atom_list);
+  if (strcmp (mimetype, "video/x-prores") == 0) {
+    SampleTableEntryMP4V *mp4v = (SampleTableEntryMP4V *) qtpad->trak_ste;
+    mp4v->spatial_quality = 0x3FF;
+    mp4v->temporal_quality = 0;
+    mp4v->vendor = FOURCC_appl;
+  }
 
   gst_object_unref (qtmux);
   return TRUE;

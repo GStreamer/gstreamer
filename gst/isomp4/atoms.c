@@ -3915,6 +3915,106 @@ build_pasp_extension (gint par_width, gint par_height)
       atom_data_free);
 }
 
+AtomInfo *
+build_fiel_extension_prores (const gchar * interlace_mode, gboolean tff)
+{
+  AtomData *atom_data = atom_data_new (FOURCC_fiel);
+  guint8 *data;
+  gint field_order;
+  gint interlace;
+
+  atom_data_alloc_mem (atom_data, 2);
+  data = atom_data->data;
+
+  if (!g_strcmp0 (interlace_mode, "progressive")) {
+    interlace = 1;
+    field_order = 0;
+  } else {
+    interlace = 2;
+    if (!g_strcmp0 (interlace_mode, "interleaved"))
+      field_order = tff ? 9 : 14;
+    else if (!g_strcmp0 (interlace_mode, "mixed"))
+      field_order = tff ? 1 : 6;
+    else
+      g_assert_not_reached ();
+  }
+
+  GST_WRITE_UINT8 (data, interlace);
+  GST_WRITE_UINT8 (data + 1, field_order);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
+}
+
+AtomInfo *
+build_colr_extension (GstVideoColorimetry colorimetry)
+{
+  AtomData *atom_data = atom_data_new (FOURCC_colr);
+  guint8 *data;
+  guint16 primaries;
+  guint16 transfer_function;
+  guint16 matrix;
+
+  switch (colorimetry.primaries) {
+    case GST_VIDEO_COLOR_PRIMARIES_BT709:
+      primaries = 1;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_BT470BG:
+      primaries = 5;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTE170M:
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTE240M:
+      primaries = 6;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_UNKNOWN:
+    default:
+      primaries = 2;
+      break;
+  }
+
+  switch (colorimetry.transfer) {
+    case GST_VIDEO_TRANSFER_BT709:
+      transfer_function = 1;
+      break;
+    case GST_VIDEO_TRANSFER_SMPTE240M:
+      transfer_function = 7;
+      break;
+    case GST_VIDEO_TRANSFER_UNKNOWN:
+    default:
+      transfer_function = 2;
+      break;
+  }
+
+  switch (colorimetry.matrix) {
+    case GST_VIDEO_COLOR_MATRIX_BT709:
+      matrix = 1;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT601:
+      matrix = 6;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
+      matrix = 7;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_UNKNOWN:
+    default:
+      matrix = 2;
+      break;
+  }
+
+  atom_data_alloc_mem (atom_data, 10);
+  data = atom_data->data;
+
+  /* colour specification box */
+  GST_WRITE_UINT32_LE (data, FOURCC_nclc);
+
+  GST_WRITE_UINT16_BE (data + 4, primaries);
+  GST_WRITE_UINT16_BE (data + 6, transfer_function);    /* transfer function */
+  GST_WRITE_UINT16_BE (data + 8, matrix);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
+}
+
 SampleTableEntryMP4V *
 atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
     VisualSampleEntry * entry, guint32 scale, GList * ext_atoms_list)
@@ -3923,11 +4023,8 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
   guint dwidth, dheight;
   gint par_n = 0, par_d = 0;
 
-  if ((entry->par_n != 1 || entry->par_d != 1) &&
-      (entry->par_n != entry->par_d)) {
-    par_n = entry->par_n;
-    par_d = entry->par_d;
-  }
+  par_n = entry->par_n;
+  par_d = entry->par_d;
 
   dwidth = entry->width;
   dheight = entry->height;
@@ -3960,7 +4057,7 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
     ste->extension_atoms = g_list_concat (ste->extension_atoms, ext_atoms_list);
 
   /* QT spec has a pasp extension atom in stsd that can hold PAR */
-  if (par_n && (context->flavor == ATOMS_TREE_FLAVOR_MOV)) {
+  if (context->flavor == ATOMS_TREE_FLAVOR_MOV) {
     ste->extension_atoms = g_list_append (ste->extension_atoms,
         build_pasp_extension (par_n, par_d));
   }
