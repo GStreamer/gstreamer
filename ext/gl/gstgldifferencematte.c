@@ -331,7 +331,7 @@ gst_gl_differencematte_diff (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[0], "saved", 1);
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 static void
@@ -354,7 +354,7 @@ gst_gl_differencematte_hblur (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1f (differencematte->shader[1], "gauss_width",
       width);
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 static void
@@ -377,7 +377,7 @@ gst_gl_differencematte_vblur (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1f (differencematte->shader[2], "gauss_height",
       height);
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 static void
@@ -405,7 +405,7 @@ gst_gl_differencematte_interp (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[3], "alpha", 2);
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 static void
@@ -423,7 +423,7 @@ gst_gl_differencematte_identity (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (differencematte->identity_shader, "tex", 0);
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 static gboolean

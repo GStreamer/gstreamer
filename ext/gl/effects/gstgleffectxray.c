@@ -74,7 +74,7 @@ gst_gl_effects_xray_step_two (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
   gst_gl_shader_set_uniform_1f (shader, "gauss_width", width);
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 static void
@@ -109,7 +109,7 @@ gst_gl_effects_xray_step_three (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
   gst_gl_shader_set_uniform_1f (shader, "gauss_height", height);
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 /* multipass separable sobel */
@@ -142,7 +142,7 @@ gst_gl_effects_xray_desaturate (gint width, gint height, guint texture,
   gl->BindTexture (GL_TEXTURE_2D, texture);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 static void
@@ -176,7 +176,7 @@ gst_gl_effects_xray_sobel_hconv (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1f (shader, "width", width);
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 static void
@@ -210,7 +210,7 @@ gst_gl_effects_xray_sobel_vconv (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1f (shader, "height", height);
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 static void
@@ -243,7 +243,7 @@ gst_gl_effects_xray_sobel_length (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1i (shader, "invert", TRUE);
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 /* end of sobel passes */
@@ -274,7 +274,7 @@ gst_gl_effects_xray_step_five (gint width, gint height, guint texture,
   gst_gl_shader_use (shader);
 
   gl->ActiveTexture (GL_TEXTURE2);
-  gl->BindTexture (GL_TEXTURE_2D, effects->midtexture[2]);
+  gl->BindTexture (GL_TEXTURE_2D, effects->midtexture[2]->tex_id);
 
   gst_gl_shader_set_uniform_1i (shader, "base", 2);
 
@@ -284,7 +284,7 @@ gst_gl_effects_xray_step_five (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1f (shader, "alpha", (gfloat) 0.5f);
   gst_gl_shader_set_uniform_1i (shader, "blend", 1);
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 void

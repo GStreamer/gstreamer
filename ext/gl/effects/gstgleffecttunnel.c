@@ -53,7 +53,7 @@ gst_gl_effects_tunnel_callback (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 void

@@ -51,7 +51,7 @@ gst_gl_effects_sobel_callback_desaturate (gint width, gint height,
 
     gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
-    gst_gl_filter_draw_texture (filter, texture, width, height);
+    gst_gl_filter_draw_fullscreen_quad (filter);
   }
 }
 
@@ -82,7 +82,7 @@ gst_gl_effects_sobel_callback_hconv (gint width, gint height, guint texture,
     gst_gl_shader_set_uniform_1i (shader, "tex", 0);
     gst_gl_shader_set_uniform_1f (shader, "width", width);
 
-    gst_gl_filter_draw_texture (filter, texture, width, height);
+    gst_gl_filter_draw_fullscreen_quad (filter);
   }
 }
 
@@ -113,7 +113,7 @@ gst_gl_effects_sobel_callback_vconv (gint width, gint height, guint texture,
     gst_gl_shader_set_uniform_1i (shader, "tex", 0);
     gst_gl_shader_set_uniform_1f (shader, "height", height);
 
-    gst_gl_filter_draw_texture (filter, texture, width, height);
+    gst_gl_filter_draw_fullscreen_quad (filter);
   }
 }
 
@@ -144,7 +144,7 @@ gst_gl_effects_sobel_callback_length (gint width, gint height, guint texture,
     gst_gl_shader_set_uniform_1i (shader, "tex", 0);
     gst_gl_shader_set_uniform_1i (shader, "invert", effects->invert);
 
-    gst_gl_filter_draw_texture (filter, texture, width, height);
+    gst_gl_filter_draw_fullscreen_quad (filter);
   }
 }
 

@@ -457,7 +457,7 @@ gst_gl_deinterlace_vfir_callback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1f (shader, "height",
       GST_VIDEO_INFO_HEIGHT (&filter->out_info));
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 }
 
 static void
@@ -505,7 +505,7 @@ gst_gl_deinterlace_greedyh_callback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1f (shader, "height",
       GST_VIDEO_INFO_HEIGHT (&filter->out_info));
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 
   /* we keep the previous buffer around so this is safe */
   deinterlace_filter->prev_tex = texture;

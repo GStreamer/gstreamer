@@ -525,7 +525,7 @@ gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
   gl->ActiveTexture (GL_TEXTURE0);
   gl->BindTexture (GL_TEXTURE_2D, texture);
 
-  gst_gl_filter_draw_texture (filter, texture, width, height);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 
   gst_object_unref (shader);
 }
