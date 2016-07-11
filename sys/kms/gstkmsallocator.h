@@ -82,6 +82,7 @@ GstMemory*    gst_kms_allocator_bo_alloc (GstAllocator *allocator,
 GstKMSMemory* gst_kms_allocator_dmabuf_import (GstAllocator *allocator,
 					       gint *prime_fds,
 					       gint n_planes,
+					       gsize offsets[GST_VIDEO_MAX_PLANES],
 					       GstVideoInfo *vinfo);
 
 G_END_DECLS

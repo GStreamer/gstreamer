@@ -48,6 +48,7 @@
 #include <drm.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+#include <drm_fourcc.h>
 
 #include <string.h>
 
@@ -888,21 +889,6 @@ set_cached_kmsmem (GstMemory * mem, GstMemory * kmsmem)
       (GDestroyNotify) gst_memory_unref);
 }
 
-static gsize
-get_plane_data_size (GstVideoInfo * info, guint plane)
-{
-  gint padded_height;
-  gsize plane_size;
-
-  padded_height = info->height;
-  padded_height =
-      GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo, plane, padded_height);
-
-  plane_size = GST_VIDEO_INFO_PLANE_STRIDE (info, plane) * padded_height;
-
-  return plane_size;
-}
-
 static gboolean
 gst_kms_sink_import_dmabuf (GstKMSSink * self, GstBuffer * inbuf,
     GstBuffer ** outbuf)
@@ -926,6 +912,9 @@ gst_kms_sink_import_dmabuf (GstKMSSink * self, GstBuffer * inbuf,
   n_mem = gst_buffer_n_memory (inbuf);
   meta = gst_buffer_get_video_meta (inbuf);
 
+  GST_TRACE_OBJECT (self, "Found a dmabuf with %u planes and %u memories",
+      n_planes, n_mem);
+
   /* We cannot have multiple dmabuf per plane */
   if (n_mem > n_planes)
     return FALSE;
@@ -943,17 +932,11 @@ gst_kms_sink_import_dmabuf (GstKMSSink * self, GstBuffer * inbuf,
 
   /* Find and validate all memories */
   for (i = 0; i < n_planes; i++) {
-    guint plane_size;
     guint length;
 
-    plane_size = get_plane_data_size (&self->vinfo, i);
     if (!gst_buffer_find_memory (inbuf,
-            GST_VIDEO_INFO_PLANE_OFFSET (&self->vinfo, i), plane_size,
+            GST_VIDEO_INFO_PLANE_OFFSET (&self->vinfo, i), 1,
             &mems_idx[i], &length, &mems_skip[i]))
-      return FALSE;
-
-    /* We can't have more then one dmabuf per plane */
-    if (length != 1)
       return FALSE;
 
     mems[i] = gst_buffer_peek_memory (inbuf, mems_idx[i]);
@@ -977,7 +960,7 @@ gst_kms_sink_import_dmabuf (GstKMSSink * self, GstBuffer * inbuf,
       prime_fds[1], prime_fds[2], prime_fds[3]);
 
   kmsmem = gst_kms_allocator_dmabuf_import (self->allocator, prime_fds,
-      n_planes, &self->vinfo);
+      n_planes, mems_skip, &self->vinfo);
   if (!kmsmem)
     return FALSE;
 
