@@ -1643,6 +1643,28 @@ gst_soup_http_src_read_buffer (GstSoupHTTPSrc * src, GstBuffer ** outbuf)
     src->retry_count = 0;
 
     gst_soup_http_src_check_update_blocksize (src, read_bytes);
+
+    /* If we're at the end of a range request, read again to let libsoup
+     * finalize the request. This allows to reuse the connection again later,
+     * otherwise we would have to cancel the message and close the connection
+     */
+    if (bsrc->segment.stop != -1
+        && bsrc->segment.position + read_bytes >= bsrc->segment.stop) {
+      guint8 tmp[128];
+
+      g_object_unref (src->msg);
+      src->msg = NULL;
+      ret = GST_FLOW_EOS;
+      src->have_body = TRUE;
+
+      /* This should return immediately as we're at the end of the range */
+      read_bytes =
+          g_input_stream_read (src->input_stream, tmp, sizeof (tmp),
+          src->cancellable, NULL);
+      if (read_bytes > 0)
+        GST_ERROR_OBJECT (src,
+            "Read %" G_GSIZE_FORMAT " bytes after end of range", read_bytes);
+    }
   } else {
     gst_buffer_unref (*outbuf);
     if (read_bytes < 0) {
