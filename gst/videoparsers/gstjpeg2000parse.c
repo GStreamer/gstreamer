@@ -443,7 +443,7 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     } else {
       parsed_sampling =
           (numcomps ==
-          4) ? GST_JPEG2000_SAMPLING_RGBA : GST_JPEG2000_COLORSPACE_RGB;
+          4) ? GST_JPEG2000_SAMPLING_RGBA : GST_JPEG2000_SAMPLING_RGB;
     }
   } else {
     if (gst_jpeg2000_sampling_is_mono (sink_sampling)) {
