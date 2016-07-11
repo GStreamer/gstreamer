@@ -133,7 +133,7 @@ gst_video_aggregator_pad_set_property (GObject * object, guint prop_id,
   gst_object_unref (vagg);
 }
 
-static gboolean
+static GstFlowReturn
 _flush_pad (GstAggregatorPad * aggpad, GstAggregator * aggregator)
 {
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (aggregator);
@@ -144,7 +144,7 @@ _flush_pad (GstAggregatorPad * aggpad, GstAggregator * aggregator)
   pad->priv->start_time = -1;
   pad->priv->end_time = -1;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static gboolean
