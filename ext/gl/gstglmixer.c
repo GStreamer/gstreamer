@@ -631,7 +631,7 @@ _upload_frames (GstAggregator * agg, GstAggregatorPad * agg_pad,
 gboolean
 gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 {
-  guint out_tex;
+  GstGLMemory *out_tex;
   gboolean res = TRUE;
   GstVideoFrame out_frame;
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (mix);
@@ -645,7 +645,7 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
     return FALSE;
   }
 
-  out_tex = *(guint *) out_frame.data[0];
+  out_tex = (GstGLMemory *) out_frame.map[0].memory;
 
   if (!gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (mix),
           (GstAggregatorPadForeachFunc) _upload_frames, NULL))

@@ -69,9 +69,9 @@ struct _GstGLEffects
   GstGLEffectProcessFunc effect;
   gint current_effect;
 
-  GLuint intexture;
-  GLuint midtexture[NEEDED_TEXTURES];
-  GLuint outtexture;
+  GstGLMemory *intexture;
+  GstGLMemory *midtexture[NEEDED_TEXTURES];
+  GstGLMemory *outtexture;
 
   GLuint curve[GST_GL_EFFECTS_N_CURVES];
 

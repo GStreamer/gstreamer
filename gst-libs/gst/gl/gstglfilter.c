@@ -78,7 +78,8 @@ enum
 #define gst_gl_filter_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLFilter, gst_gl_filter, GST_TYPE_GL_BASE_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_gl_filter_debug, "glfilter", 0,
-        "glfilter element"););
+        "glfilter element");
+    );
 
 static void gst_gl_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -904,7 +905,7 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstGLFilterClass *filter_class;
-  guint in_tex, out_tex;
+  GstMemory *in_tex, *out_tex;
   GstVideoFrame gl_frame, out_frame;
   gboolean ret;
 
@@ -916,7 +917,12 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
     goto inbuf_error;
   }
 
-  in_tex = *(guint *) gl_frame.data[0];
+  in_tex = gl_frame.map[0].memory;
+  if (!gst_is_gl_memory (in_tex)) {
+    ret = FALSE;
+    GST_ERROR_OBJECT (filter, "Input memory must be GstGLMemory");
+    goto inbuf_error;
+  }
 
   if (!gst_video_frame_map (&out_frame, &filter->out_info, outbuf,
           GST_MAP_WRITE | GST_MAP_GL)) {
@@ -924,13 +930,17 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
     goto unmap_out_error;
   }
 
-  out_tex = *(guint *) out_frame.data[0];
+  out_tex = out_frame.map[0].memory;
+  g_return_val_if_fail (gst_is_gl_memory (out_tex), FALSE);
 
-  GST_DEBUG ("calling filter_texture with textures in:%i out:%i", in_tex,
-      out_tex);
+  GST_DEBUG ("calling filter_texture with textures in:%i out:%i",
+      GST_GL_MEMORY_CAST (in_tex)->tex_id,
+      GST_GL_MEMORY_CAST (out_tex)->tex_id);
 
   g_assert (filter_class->filter_texture);
-  ret = filter_class->filter_texture (filter, in_tex, out_tex);
+
+  ret = filter_class->filter_texture (filter, GST_GL_MEMORY_CAST (in_tex),
+      GST_GL_MEMORY_CAST (out_tex));
 
   gst_video_frame_unmap (&out_frame);
 unmap_out_error:
@@ -941,10 +951,19 @@ inbuf_error:
 }
 
 static void
-_debug_marker (GstGLContext * context, GstGLFilter * filter)
+_filter_gl (GstGLContext * context, GstGLFilter * filter)
 {
+  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
+
   gst_gl_insert_debug_marker (context,
       "processing in element %s", GST_OBJECT_NAME (filter));
+
+  if (filter_class->filter)
+    filter->gl_result =
+        filter_class->filter (filter, filter->inbuf, filter->outbuf);
+  else
+    filter->gl_result =
+        gst_gl_filter_filter_texture (filter, filter->inbuf, filter->outbuf);
 }
 
 static GstFlowReturn
@@ -967,12 +986,11 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   if (in_sync_meta)
     gst_gl_sync_meta_wait (in_sync_meta, context);
 
-  gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _debug_marker,
+  filter->inbuf = inbuf;
+  filter->outbuf = outbuf;
+  gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _filter_gl,
       filter);
-  if (filter_class->filter)
-    ret = filter_class->filter (filter, inbuf, outbuf);
-  else
-    ret = gst_gl_filter_filter_texture (filter, inbuf, outbuf);
+  ret = filter->gl_result;
 
   out_sync_meta = gst_buffer_get_gl_sync_meta (outbuf);
   if (out_sync_meta)
@@ -1014,7 +1032,7 @@ _glcb2 (gpointer data)
  */
 void
 gst_gl_filter_render_to_target (GstGLFilter * filter, gboolean resize,
-    GLuint input, GLuint target, GLCB func, gpointer data)
+    GstGLMemory * input, GstGLMemory * output, GLCB func, gpointer data)
 {
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   guint in_width, in_height, out_width, out_height;
@@ -1030,12 +1048,12 @@ gst_gl_filter_render_to_target (GstGLFilter * filter, gboolean resize,
     in_height = out_height;
   }
 
-  GST_LOG ("rendering to target. in %u, %ux%u out %u, %ux%u", input, in_width,
-      in_height, target, out_width, out_height);
+  GST_LOG ("rendering to target. in %u, %ux%u out %u, %ux%u", input->tex_id,
+      in_width, in_height, output->tex_id, out_width, out_height);
 
   cb.func = func;
   cb.data = data;
-  cb.texture = input;
+  cb.texture = input->tex_id;
   cb.width = in_width;
   cb.height = in_height;
 
@@ -1110,13 +1128,14 @@ _draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
  * the shader, render input to a quad */
 void
 gst_gl_filter_render_to_target_with_shader (GstGLFilter * filter,
-    gboolean resize, GLuint input, GLuint target, GstGLShader * shader)
+    gboolean resize, GstGLMemory * input, GstGLMemory * output,
+    GstGLShader * shader)
 {
   if (filter->default_shader != shader)
     filter->valid_attributes = FALSE;
   filter->default_shader = shader;
 
-  gst_gl_filter_render_to_target (filter, resize, input, target,
+  gst_gl_filter_render_to_target (filter, resize, input, output,
       _draw_with_shader_cb, filter);
 }
 

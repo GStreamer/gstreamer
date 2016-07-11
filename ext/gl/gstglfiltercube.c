@@ -81,7 +81,7 @@ static void gst_gl_filter_cube_reset_gl (GstGLFilter * filter);
 static gboolean gst_gl_filter_cube_init_shader (GstGLFilter * filter);
 static void _callback (gpointer stuff);
 static gboolean gst_gl_filter_cube_filter_texture (GstGLFilter * filter,
-    guint in_tex, guint out_tex);
+    GstGLMemory * in_tex, GstGLMemory * out_tex);
 
 /* vertex source */
 static const gchar *cube_v_src =
@@ -335,8 +335,8 @@ gst_gl_filter_cube_init_shader (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_filter_cube_filter_texture (GstGLFilter * filter, guint in_tex,
-    guint out_tex)
+gst_gl_filter_cube_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
+    GstGLMemory * out_tex)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
 
@@ -346,7 +346,7 @@ gst_gl_filter_cube_filter_texture (GstGLFilter * filter, guint in_tex,
   gst_gl_context_use_fbo_v2 (GST_GL_BASE_FILTER (filter)->context,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info), filter->fbo,
-      filter->depthbuffer, out_tex, _callback, (gpointer) cube_filter);
+      filter->depthbuffer, out_tex->tex_id, _callback, (gpointer) cube_filter);
 
   return TRUE;
 }
@@ -466,7 +466,7 @@ _callback (gpointer stuff)
   gst_gl_shader_use (cube_filter->shader);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (GL_TEXTURE_2D, cube_filter->in_tex);
+  gl->BindTexture (GL_TEXTURE_2D, cube_filter->in_tex->tex_id);
   gst_gl_shader_set_uniform_1i (cube_filter->shader, "s_texture", 0);
   gst_gl_shader_set_uniform_1f (cube_filter->shader, "xrot_degree", xrot);
   gst_gl_shader_set_uniform_1f (cube_filter->shader, "yrot_degree", yrot);

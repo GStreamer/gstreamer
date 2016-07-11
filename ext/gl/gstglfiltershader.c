@@ -82,7 +82,7 @@ static void gst_gl_filtershader_gl_stop (GstGLBaseFilter * base);
 static gboolean gst_gl_filtershader_filter (GstGLFilter * filter,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_gl_filtershader_filter_texture (GstGLFilter * filter,
-    guint in_tex, guint out_tex);
+    GstGLMemory * in_tex, GstGLMemory * out_tex);
 static void gst_gl_filtershader_hcallback (gint width, gint height,
     guint texture, gpointer stuff);
 
@@ -313,8 +313,8 @@ gst_gl_filtershader_filter (GstGLFilter * filter, GstBuffer * inbuf,
 }
 
 static gboolean
-gst_gl_filtershader_filter_texture (GstGLFilter * filter, guint in_tex,
-    guint out_tex)
+gst_gl_filtershader_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
+    GstGLMemory * out_tex)
 {
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
 
