@@ -300,8 +300,8 @@ static const GstVideoColorPrimariesInfo color_primaries[] = {
 const GstVideoColorPrimariesInfo *
 gst_video_color_primaries_get_info (GstVideoColorPrimaries primaries)
 {
-  g_return_val_if_fail (primaries <
-      (GstVideoColorPrimaries) G_N_ELEMENTS (color_primaries), NULL);
+  g_return_val_if_fail ((gint) primaries <
+      G_N_ELEMENTS (color_primaries), NULL);
 
   return &color_primaries[primaries];
 }

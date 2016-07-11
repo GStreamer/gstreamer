@@ -4138,7 +4138,7 @@ gst_video_format_to_fourcc (GstVideoFormat format)
 {
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
 
-  if (format >= G_N_ELEMENTS (formats))
+  if ((gint) format >= G_N_ELEMENTS (formats))
     return 0;
 
   return formats[format].fourcc;
@@ -4158,7 +4158,7 @@ gst_video_format_to_string (GstVideoFormat format)
 {
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
 
-  if (format >= G_N_ELEMENTS (formats))
+  if ((gint) format >= G_N_ELEMENTS (formats))
     return NULL;
 
   return GST_VIDEO_FORMAT_INFO_NAME (&formats[format].info);
@@ -4175,7 +4175,7 @@ gst_video_format_to_string (GstVideoFormat format)
 const GstVideoFormatInfo *
 gst_video_format_get_info (GstVideoFormat format)
 {
-  g_return_val_if_fail (format < G_N_ELEMENTS (formats), NULL);
+  g_return_val_if_fail ((gint) format < G_N_ELEMENTS (formats), NULL);
 
   return &formats[format].info;
 }
@@ -4196,7 +4196,7 @@ gst_video_format_get_info (GstVideoFormat format)
 gconstpointer
 gst_video_format_get_palette (GstVideoFormat format, gsize * size)
 {
-  g_return_val_if_fail (format < G_N_ELEMENTS (formats), NULL);
+  g_return_val_if_fail ((gint) format < G_N_ELEMENTS (formats), NULL);
   g_return_val_if_fail (size != NULL, NULL);
 
   switch (format) {
