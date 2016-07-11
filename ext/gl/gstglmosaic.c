@@ -70,7 +70,7 @@ static gboolean gst_gl_mosaic_init_shader (GstGLMixer * mixer,
     GstCaps * outcaps);
 
 static gboolean gst_gl_mosaic_process_textures (GstGLMixer * mixer,
-    guint out_tex);
+    GstGLMemory * out_tex);
 static void gst_gl_mosaic_callback (gpointer stuff);
 
 //vertex source
@@ -194,7 +194,7 @@ gst_gl_mosaic_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
 }
 
 static gboolean
-gst_gl_mosaic_process_textures (GstGLMixer * mix, guint out_tex)
+gst_gl_mosaic_process_textures (GstGLMixer * mix, GstGLMemory * out_tex)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mix);
 
@@ -202,7 +202,8 @@ gst_gl_mosaic_process_textures (GstGLMixer * mix, guint out_tex)
   gst_gl_context_use_fbo_v2 (GST_GL_BASE_MIXER (mix)->context,
       GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR (mix)->info),
       GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR (mix)->info), mix->fbo,
-      mix->depthbuffer, out_tex, gst_gl_mosaic_callback, (gpointer) mosaic);
+      mix->depthbuffer, out_tex->tex_id, gst_gl_mosaic_callback,
+      (gpointer) mosaic);
 
   return TRUE;
 }
