@@ -142,6 +142,7 @@ gst_gl_display_init (GstGLDisplay * display)
 
   gst_gl_buffer_init_once ();
   gst_gl_memory_pbo_init_once ();
+  gst_gl_renderbuffer_init_once ();
 
 #if GST_GL_HAVE_PLATFORM_EGL
   gst_gl_memory_egl_init_once ();
