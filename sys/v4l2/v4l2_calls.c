@@ -675,6 +675,7 @@ gst_v4l2_dup (GstV4l2Object * v4l2object, GstV4l2Object * other)
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
 
   v4l2object->vcap = other->vcap;
+  v4l2object->device_caps = other->device_caps;
   gst_v4l2_adjust_buf_type (v4l2object);
 
   v4l2object->video_fd = v4l2_dup (other->video_fd);
