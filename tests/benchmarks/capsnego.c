@@ -185,7 +185,7 @@ gint
 main (gint argc, gchar * argv[])
 {
   /* default parameters */
-  const gchar *flavour_str = "audio";
+  gchar *flavour_str = g_strdup("audio");
   gint flavour = FLAVOUR_AUDIO;
   gint children = 3;
   gint depth = 4;
@@ -230,6 +230,8 @@ main (gint argc, gchar * argv[])
   /* build pipeline */
   g_print ("building %s pipeline with depth = %d and children = %d\n",
       flavour_str, depth, children);
+  g_free (flavour_str);
+
   start = gst_util_get_timestamp ();
   bin = GST_BIN (gst_pipeline_new ("pipeline"));
   sink = gst_element_factory_make ("fakesink", NULL);
