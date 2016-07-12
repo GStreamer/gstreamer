@@ -4214,7 +4214,7 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     else if (!g_strcmp0 (variant, "hq"))
       entry.fourcc = FOURCC_apch;
     else if (!g_strcmp0 (variant, "proxy"))
-      entry.fourcc = FOURCC_ap4h;
+      entry.fourcc = FOURCC_apco;
   }
 
   if (!entry.fourcc)
