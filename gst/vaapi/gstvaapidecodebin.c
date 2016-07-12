@@ -146,110 +146,6 @@ post_missing_element_message (GstVaapiDecodeBin * vaapidecbin,
           missing_factory), ("video decoding might fail"));
 }
 
-static gboolean
-activate_vpp (GstVaapiDecodeBin * vaapidecbin)
-{
-  GstPad *queue_srcpad, *srcpad, *vpp_sinkpad, *vpp_srcpad;
-  gboolean res;
-
-  if (vaapidecbin->postproc)
-    return TRUE;
-
-  if (vaapidecbin->has_vpp != HAS_VPP_YES || vaapidecbin->disable_vpp)
-    return TRUE;
-
-  GST_DEBUG_OBJECT (vaapidecbin, "Enabling VPP");
-
-  /* create the postproc */
-  vaapidecbin->postproc =
-      gst_element_factory_make ("vaapipostproc", "vaapipostproc");
-  if (!vaapidecbin->postproc)
-    goto error_element_missing;
-
-  g_object_set (G_OBJECT (vaapidecbin->postproc), "deinterlace-method",
-      vaapidecbin->deinterlace_method, NULL);
-
-  gst_bin_add (GST_BIN (vaapidecbin), vaapidecbin->postproc);
-
-  if (!gst_element_sync_state_with_parent (vaapidecbin->postproc))
-    goto error_sync_state;
-
-  srcpad = gst_element_get_static_pad (GST_ELEMENT_CAST (vaapidecbin), "src");
-  if (!gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (srcpad), NULL))
-    goto error_link_pad;
-
-  queue_srcpad = gst_element_get_static_pad (vaapidecbin->queue, "src");
-  vpp_sinkpad = gst_element_get_static_pad (vaapidecbin->postproc, "sink");
-  res = (gst_pad_link (queue_srcpad, vpp_sinkpad) == GST_PAD_LINK_OK);
-  gst_object_unref (vpp_sinkpad);
-  gst_object_unref (queue_srcpad);
-  if (!res)
-    goto error_link_pad;
-
-  vpp_srcpad = gst_element_get_static_pad (vaapidecbin->postproc, "src");
-  res = gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (srcpad), vpp_srcpad);
-  gst_object_unref (vpp_srcpad);
-  if (!res)
-    goto error_link_pad;
-
-  gst_object_unref (srcpad);
-
-  return TRUE;
-
-error_element_missing:
-  {
-    post_missing_element_message (vaapidecbin, "vaapipostproc");
-    return FALSE;
-  }
-error_sync_state:
-  {
-    GST_ERROR_OBJECT (vaapidecbin, "Failed to sync VPP state");
-    return FALSE;
-  }
-error_link_pad:
-  {
-    gst_object_unref (srcpad);
-    GST_ERROR_OBJECT (vaapidecbin, "Failed to link the child elements");
-    return FALSE;
-  }
-}
-
-static gboolean
-ensure_vpp (GstVaapiDecodeBin * vaapidecbin)
-{
-  GstVaapiDisplay *display;
-
-  if (vaapidecbin->has_vpp != HAS_VPP_UNKNOWN)
-    return TRUE;
-
-  display = GST_VAAPI_PLUGIN_BASE_DISPLAY (vaapidecbin->decoder);
-  if (display) {
-    GST_INFO_OBJECT (vaapidecbin, "Got display from vaapidecode");
-    gst_vaapi_display_ref (display);
-  } else {
-    GST_INFO_OBJECT (vaapidecbin, "Creating a dummy display to test for vpp");
-    display = gst_vaapi_create_test_display ();
-  }
-  if (!display)
-    return FALSE;
-
-  vaapidecbin->has_vpp = gst_vaapi_display_has_video_processing (display) ?
-      HAS_VPP_YES : HAS_VPP_NO;
-
-  gst_vaapi_display_unref (display);
-
-  return TRUE;
-}
-
-static gboolean
-gst_vaapi_decode_bin_reconfigure (GstVaapiDecodeBin * vaapidecbin)
-{
-  if (!ensure_vpp (vaapidecbin))
-    return FALSE;
-
-  return activate_vpp (vaapidecbin);
-}
-
 static void
 gst_vaapi_decode_bin_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
@@ -327,99 +223,16 @@ gst_vaapi_decode_bin_get_property (GObject * object,
 }
 
 static void
-gst_vaapi_decode_bin_handle_message (GstBin * bin, GstMessage * message)
-{
-  GstVaapiDecodeBin *vaapidecbin = GST_VAAPI_DECODE_BIN (bin);
-  GstMessageType type;
-  GstContext *context = NULL;
-  const gchar *context_type;
-  GstVaapiDisplay *display = NULL;
-
-  type = GST_MESSAGE_TYPE (message);
-  if (type != GST_MESSAGE_HAVE_CONTEXT)
-    goto bail;
-  gst_message_parse_have_context (message, &context);
-  if (!context)
-    goto bail;
-  context_type = gst_context_get_context_type (context);
-  if (g_strcmp0 (context_type, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME) != 0)
-    goto bail;
-  if (!gst_vaapi_video_context_get_display (context, &display))
-    goto bail;
-
-  vaapidecbin->has_vpp = gst_vaapi_display_has_video_processing (display) ?
-      HAS_VPP_YES : HAS_VPP_NO;
-
-  /* the underlying VA driver implementation doesn't support video
-   * post-processing, hence we have to disable it */
-  if (vaapidecbin->has_vpp != HAS_VPP_YES) {
-    GST_WARNING_OBJECT (vaapidecbin, "VA driver doesn't support VPP");
-    if (!vaapidecbin->disable_vpp) {
-      vaapidecbin->disable_vpp = TRUE;
-      g_object_notify_by_pspec (G_OBJECT (vaapidecbin),
-          properties[PROP_DISABLE_VPP]);
-    }
-  }
-
-bail:
-  if (display)
-    gst_vaapi_display_unref (display);
-
-  if (context)
-    gst_context_unref (context);
-
-  GST_BIN_CLASS (gst_vaapi_decode_bin_parent_class)->handle_message (bin,
-      message);
-}
-
-static GstStateChangeReturn
-gst_vaapi_decode_bin_change_state (GstElement * element,
-    GstStateChange transition)
-{
-  GstVaapiDecodeBin *vaapidecbin = GST_VAAPI_DECODE_BIN (element);
-  GstStateChangeReturn ret;
-
-  switch (transition) {
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (gst_vaapi_decode_bin_parent_class)->change_state
-      (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_vaapi_decode_bin_reconfigure (vaapidecbin))
-        return GST_STATE_CHANGE_FAILURE;
-      break;
-    default:
-      break;
-  }
-
-  return ret;
-}
-
-static void
 gst_vaapi_decode_bin_class_init (GstVaapiDecodeBinClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
-  GstBinClass *bin_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
-  bin_class = GST_BIN_CLASS (klass);
 
   gobject_class->set_property = gst_vaapi_decode_bin_set_property;
   gobject_class->get_property = gst_vaapi_decode_bin_get_property;
-
-  element_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_vaapi_decode_bin_change_state);
-
-  bin_class->handle_message =
-      GST_DEBUG_FUNCPTR (gst_vaapi_decode_bin_handle_message);
 
   gst_element_class_set_static_metadata (element_class,
       "VA-API Decode Bin",
@@ -466,7 +279,6 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
 {
   const gchar *missing_factory = NULL;
   GstPad *pad, *ghostpad;
-  GstPadTemplate *tmpl;
 
   /* create the decoder */
   /* @FIXME: "vaapidecode" is going to be removed soon: (bug
@@ -474,14 +286,13 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
    * "vaapi{codec}dec". We will need a mechanism to automatically
    * select de correct decoder based on caps.
    */
-  vaapidecbin->decoder =
-      gst_element_factory_make ("vaapidecode", "vaapidecode");
+  vaapidecbin->decoder = gst_element_factory_make ("vaapidecode", NULL);
   if (!vaapidecbin->decoder) {
     missing_factory = "vaapidecode";
     goto error_element_missing;
   }
   /* create the queue */
-  vaapidecbin->queue = gst_element_factory_make ("queue", "queue");
+  vaapidecbin->queue = gst_element_factory_make ("queue", NULL);
   if (!vaapidecbin->queue) {
     missing_factory = "queue";
     goto error_element_missing;
@@ -492,10 +303,18 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
       "max-size-buffers", vaapidecbin->max_size_buffers,
       "max-size-time", vaapidecbin->max_size_time, NULL);
 
-  gst_bin_add_many (GST_BIN (vaapidecbin), vaapidecbin->decoder,
-      vaapidecbin->queue, NULL);
+  /* create the postproc */
+  vaapidecbin->postproc = gst_element_factory_make ("vaapipostproc", NULL);
+  if (!vaapidecbin->postproc) {
+    missing_factory = "vaapipostproc";
+    goto error_element_missing;
+  }
 
-  if (!gst_element_link_many (vaapidecbin->decoder, vaapidecbin->queue, NULL))
+  gst_bin_add_many (GST_BIN (vaapidecbin), vaapidecbin->decoder,
+      vaapidecbin->queue, vaapidecbin->postproc, NULL);
+
+  if (!gst_element_link_many (vaapidecbin->decoder, vaapidecbin->queue,
+          vaapidecbin->postproc, NULL))
     goto error_link_pad;
 
   /* create ghost pad sink */
@@ -507,11 +326,10 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
     goto error_adding_pad;
 
   /* create ghost pad src */
-  pad = gst_element_get_static_pad (GST_ELEMENT (vaapidecbin->queue), "src");
-  tmpl = gst_static_pad_template_get (&gst_vaapi_decode_bin_src_factory);
-  ghostpad = gst_ghost_pad_new_from_template ("src", pad, tmpl);
+  pad = gst_element_get_static_pad (GST_ELEMENT (vaapidecbin->postproc), "src");
+  ghostpad = gst_ghost_pad_new_from_template ("src", pad,
+      GST_PAD_PAD_TEMPLATE (pad));
   gst_object_unref (pad);
-  gst_object_unref (tmpl);
   if (!gst_element_add_pad (GST_ELEMENT (vaapidecbin), ghostpad))
     goto error_adding_pad;
 
