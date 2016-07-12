@@ -950,8 +950,6 @@ static gboolean
 gst_vaapidecode_open (GstVideoDecoder * vdec)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
-  GstVaapiDisplay *const old_display = GST_VAAPI_PLUGIN_BASE_DISPLAY (decode);
-  gboolean success;
 
   if (!gst_vaapi_plugin_base_open (GST_VAAPI_PLUGIN_BASE (decode)))
     return FALSE;
@@ -960,17 +958,7 @@ gst_vaapidecode_open (GstVideoDecoder * vdec)
   decode->display_height = 0;
   gst_video_info_init (&decode->decoded_info);
 
-  /* Let GstVideoContext ask for a proper display to its neighbours */
-  /* Note: steal old display that may be allocated from get_caps()
-     so that to retain a reference to it, thus avoiding extra
-     initialization steps if we turn out to simply re-use the
-     existing (cached) VA display */
-  GST_VAAPI_PLUGIN_BASE_DISPLAY (decode) = NULL;
-  success = gst_vaapidecode_ensure_display (decode);
-  if (old_display)
-    gst_vaapi_display_unref (old_display);
-
-  return success;
+  return TRUE;
 }
 
 static gboolean
@@ -981,6 +969,27 @@ gst_vaapidecode_close (GstVideoDecoder * vdec)
   gst_vaapidecode_destroy (decode);
   gst_vaapi_plugin_base_close (GST_VAAPI_PLUGIN_BASE (decode));
   return TRUE;
+}
+
+static gboolean
+gst_vaapidecode_start (GstVideoDecoder * vdec)
+{
+  GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
+  GstVaapiDisplay *const old_display = GST_VAAPI_PLUGIN_BASE_DISPLAY (decode);
+  gboolean success;
+
+  /* Let GstVideoContext ask for a proper display to its neighbours */
+  /* Note: steal old display that may be allocated from get_caps()
+     so that to retain a reference to it, thus avoiding extra
+     initialization steps if we turn out to simply re-use the
+     existing (cached) VA display */
+  GST_VAAPI_PLUGIN_BASE_DISPLAY (decode) = NULL;
+  success =
+      gst_vaapi_plugin_base_ensure_display (GST_VAAPI_PLUGIN_BASE (decode));
+  if (old_display)
+    gst_vaapi_display_unref (old_display);
+
+  return success;
 }
 
 static gboolean
@@ -1280,6 +1289,7 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
 
   vdec_class->open = GST_DEBUG_FUNCPTR (gst_vaapidecode_open);
   vdec_class->close = GST_DEBUG_FUNCPTR (gst_vaapidecode_close);
+  vdec_class->start = GST_DEBUG_FUNCPTR (gst_vaapidecode_start);
   vdec_class->stop = GST_DEBUG_FUNCPTR (gst_vaapidecode_stop);
   vdec_class->set_format = GST_DEBUG_FUNCPTR (gst_vaapidecode_set_format);
   vdec_class->flush = GST_DEBUG_FUNCPTR (gst_vaapidecode_flush);
