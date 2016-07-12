@@ -131,6 +131,10 @@ GST_START_TEST (test_qtdemux_input_gap)
     offset += seg_1_sample_sizes[i];
     pts += seg_1_sample_duration;
   }
+
+  gst_object_unref (sinkpad);
+  gst_element_set_state (qtdemux, GST_STATE_NULL);
+  gst_object_unref (qtdemux);
 }
 
 GST_END_TEST;
