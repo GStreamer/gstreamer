@@ -93,8 +93,14 @@ plugin_init (GstPlugin * plugin)
 
   gst_vaapidecode_register (plugin);
 
-  gst_element_register (plugin, "vaapipostproc",
-      GST_RANK_PRIMARY, GST_TYPE_VAAPIPOSTPROC);
+  if (gst_vaapi_display_has_video_processing (display)) {
+    gst_element_register (plugin, "vaapipostproc",
+        GST_RANK_PRIMARY, GST_TYPE_VAAPIPOSTPROC);
+
+    gst_element_register (plugin, "vaapidecodebin",
+        GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
+  }
+
   gst_element_register (plugin, "vaapisink",
       GST_RANK_PRIMARY, GST_TYPE_VAAPISINK);
 #if USE_ENCODERS
@@ -119,9 +125,6 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_PRIMARY, GST_TYPE_VAAPIENCODE_VP9);
 #endif
 #endif
-
-  gst_element_register (plugin, "vaapidecodebin",
-      GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
 
   gst_vaapi_display_unref (display);
 
