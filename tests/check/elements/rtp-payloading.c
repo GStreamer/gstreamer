@@ -299,7 +299,6 @@ rtp_pipeline_run (rtp_pipeline * p)
   bus = gst_pipeline_get_bus (GST_PIPELINE (p->pipeline));
 
   gst_bus_add_watch (bus, rtp_bus_callback, (gpointer) mainloop);
-  gst_object_unref (bus);
 
   /* Set pipeline to PLAYING. */
   gst_element_set_state (p->pipeline, GST_STATE_PLAYING);
@@ -353,6 +352,9 @@ rtp_pipeline_run (rtp_pipeline * p)
 
   /* Release mainloop. */
   g_main_loop_unref (mainloop);
+
+  gst_bus_remove_watch (bus);
+  gst_object_unref (bus);
 
   fail_if (p->custom_event);
 }

@@ -155,7 +155,6 @@ GST_START_TEST (test_pipeline)
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_add_signal_watch (bus);
   g_signal_connect (G_OBJECT (bus), "message", G_CALLBACK (on_message), loop);
-  gst_object_unref (GST_OBJECT (bus));
 
   fail_if (gst_element_set_state (pipeline,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
@@ -168,6 +167,8 @@ GST_START_TEST (test_pipeline)
   fail_unless (gst_element_set_state (pipeline,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
 
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (GST_OBJECT (bus));
   g_main_loop_unref (loop);
   gst_object_unref (pipeline);
 }

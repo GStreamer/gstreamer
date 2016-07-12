@@ -163,7 +163,6 @@ GST_START_TEST (test_caps_transform)
   fail_unless (bus != NULL);
 
   gst_bus_add_watch (bus, bus_handler, loop);
-  gst_object_unref (bus);
 
   conversions_test_size = G_N_ELEMENTS (conversion_table);
   for (itr = 0; itr < conversions_test_size; itr++) {
@@ -200,6 +199,8 @@ GST_START_TEST (test_caps_transform)
         "couldn't set pipeline to READY state");
   }
 
+  gst_bus_remove_watch (bus);
+  gst_object_unref (bus);
   g_main_loop_unref (loop);
 
   videobox_test_deinit_context (&ctx);
