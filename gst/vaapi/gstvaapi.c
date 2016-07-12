@@ -81,7 +81,13 @@ plugin_add_dependencies (GstPlugin * plugin)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GstVaapiDisplay *display;
+
   plugin_add_dependencies (plugin);
+
+  display = gst_vaapi_create_test_display ();
+  if (!display)
+    goto error_no_display;
 
   gst_vaapidecode_register (plugin);
 
@@ -114,7 +120,19 @@ plugin_init (GstPlugin * plugin)
 
   gst_element_register (plugin, "vaapidecodebin",
       GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
+
+  gst_vaapi_display_unref (display);
+
   return TRUE;
+
+  /* ERRORS: */
+error_no_display:
+  {
+    GST_ERROR ("Cannot create a VA display");
+    /* Avoid blacklisting: failure to create a display could be a
+     * transient condition */
+    return TRUE;
+  }
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR,
