@@ -2691,13 +2691,19 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
      * hit this will trigger a gap check */
     if (G_UNLIKELY (stream->pts != GST_CLOCK_TIME_NONE &&
             stream->pts > stream->gap_ref_pts + 2 * GST_SECOND)) {
-      GstClockTime curpcr =
-          mpegts_packetizer_get_current_time (MPEG_TS_BASE_PACKETIZER (demux),
-          demux->program->pcr_pid);
-      if (curpcr == GST_CLOCK_TIME_NONE || curpcr < 800 * GST_MSECOND)
-        goto beach;
-      curpcr -= 800 * GST_MSECOND;
-      gst_ts_demux_check_and_sync_streams (demux, curpcr);
+      if (demux->program->pcr_pid != 0x1fff) {
+        GstClockTime curpcr =
+            mpegts_packetizer_get_current_time (MPEG_TS_BASE_PACKETIZER (demux),
+            demux->program->pcr_pid);
+        if (curpcr == GST_CLOCK_TIME_NONE || curpcr < 800 * GST_MSECOND)
+          goto beach;
+        curpcr -= 800 * GST_MSECOND;
+        /* Use the current PCR (with a safety margin) to sync against */
+        gst_ts_demux_check_and_sync_streams (demux, curpcr);
+      } else {
+        /* If we don't have a PCR track, just use the current stream PTS */
+        gst_ts_demux_check_and_sync_streams (demux, stream->pts);
+      }
     }
   }
 
