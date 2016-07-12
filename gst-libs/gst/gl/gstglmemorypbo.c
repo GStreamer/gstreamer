@@ -429,7 +429,7 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
     in_gl_type = GL_UNSIGNED_SHORT_5_6_5;
 
   if (!gl->GenFramebuffers) {
-    gst_gl_context_set_error (context,
+    GST_CAT_ERROR (GST_CAT_GL_MEMORY,
         "Context, EXT_framebuffer_object not supported");
     goto error;
   }
@@ -439,9 +439,9 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
 
   if (copy_params->respecify) {
     if (in_size != out_size) {
-      GST_ERROR ("Cannot copy between textures with backing data of different"
-          "sizes. input %" G_GSIZE_FORMAT " output %" G_GSIZE_FORMAT, in_size,
-          out_size);
+      GST_CAT_ERROR (GST_CAT_GL_MEMORY, "Cannot copy between textures with "
+          "backing data of different sizes. input %" G_GSIZE_FORMAT " output %"
+          G_GSIZE_FORMAT, in_size, out_size);
       goto error;
     }
   }
@@ -487,7 +487,7 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
     GstMapInfo pbo_info;
 
     if (!gl->GenBuffers || !src->pbo) {
-      gst_gl_context_set_error (context, "Cannot reinterpret texture contents "
+      GST_CAT_ERROR (GST_CAT_GL_MEMORY, "Cannot reinterpret texture contents "
           "without pixel buffer objects");
       gl->BindTexture (out_tex_target, 0);
       goto fbo_error;
@@ -495,7 +495,7 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
 
     if (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2
         && (in_gl_format != GL_RGBA || in_gl_type != GL_UNSIGNED_BYTE)) {
-      gst_gl_context_set_error (context, "Cannot copy non RGBA/UNSIGNED_BYTE "
+      GST_CAT_ERROR (GST_CAT_GL_MEMORY, "Cannot copy non RGBA/UNSIGNED_BYTE "
           "textures on GLES2");
       gl->BindTexture (out_tex_target, 0);
       goto fbo_error;

@@ -42,8 +42,6 @@
 #define USING_GLES2(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 2, 0))
 #define USING_GLES3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
 
-static gchar *error_message;
-
 struct _compile_shader
 {
   GstGLShader **shader;
@@ -123,26 +121,6 @@ gst_gl_context_gen_shader (GstGLContext * context, const gchar * vert_src,
       &data);
 
   return *shader != NULL;
-}
-
-void
-gst_gl_context_set_error (GstGLContext * context, const char *format, ...)
-{
-  va_list args;
-
-  g_free (error_message);
-
-  va_start (args, format);
-  error_message = g_strdup_vprintf (format, args);
-  va_end (args);
-
-  GST_WARNING ("%s", error_message);
-}
-
-gchar *
-gst_gl_context_get_error (void)
-{
-  return error_message;
 }
 
 /* Called by glfilter */

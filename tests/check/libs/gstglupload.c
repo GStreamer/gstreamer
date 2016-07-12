@@ -165,8 +165,7 @@ GST_START_TEST (test_upload_data)
       0, WIDTH * HEIGHT * 4, NULL, NULL);
 
   res = gst_gl_upload_perform_with_buffer (upload, inbuf, &outbuf);
-  fail_if (res == FALSE, "Failed to upload buffer: %s\n",
-      gst_gl_context_get_error ());
+  fail_if (res == FALSE, "Failed to upload buffer");
   fail_unless (GST_IS_BUFFER (outbuf));
 
   res = gst_buffer_map (outbuf, &map_info, GST_MAP_READ | GST_MAP_GL);
@@ -238,8 +237,7 @@ GST_START_TEST (test_upload_buffer)
   gst_gl_upload_set_caps (upload, in_caps, out_caps);
 
   res = gst_gl_upload_perform_with_buffer (upload, buffer, &outbuf);
-  fail_if (res == FALSE, "Failed to upload buffer: %s\n",
-      gst_gl_context_get_error ());
+  fail_if (res == FALSE, "Failed to upload buffer");
   fail_unless (GST_IS_BUFFER (outbuf));
 
   gst_gl_window_set_preferred_size (window, WIDTH, HEIGHT);

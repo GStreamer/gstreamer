@@ -1590,8 +1590,8 @@ _init_view_convert (GstGLViewConvert * viewconvert)
       viewconvert->out_info.width, viewconvert->out_info.height);
 
   if (!gl->CreateProgramObject && !gl->CreateProgram) {
-    gst_gl_context_set_error (viewconvert->context,
-        "Cannot perform multiview conversion without OpenGL shaders");
+    GST_ERROR_OBJECT (viewconvert, "Cannot perform multiview conversion "
+        "without OpenGL shaders");
     goto error;
   }
 
@@ -2093,15 +2093,13 @@ out:
       GstMapInfo to_info, from_info;
       if (!gst_memory_map ((GstMemory *) priv->out_tex[j],
               &from_info, GST_MAP_READ | GST_MAP_GL)) {
-        gst_gl_context_set_error (viewconvert->context,
-            "Failed to map " "intermediate memory");
+        GST_ERROR_OBJECT (viewconvert, "Failed to map intermediate memory");
         res = FALSE;
         continue;
       }
       if (!gst_memory_map ((GstMemory *) out_tex, &to_info,
               GST_MAP_WRITE | GST_MAP_GL)) {
-        gst_gl_context_set_error (viewconvert->context, "Failed to map "
-            "intermediate memory");
+        GST_ERROR_OBJECT (viewconvert, "Failed to map intermediate memory");
         res = FALSE;
         continue;
       }

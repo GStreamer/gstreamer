@@ -66,9 +66,6 @@ gboolean gst_gl_context_gen_shader (GstGLContext * context,
     const gchar * shader_fragment_source, GstGLShader ** shader);
 void gst_gl_context_del_shader (GstGLContext * context, GstGLShader * shader);
 
-void gst_gl_context_set_error (GstGLContext * context, const char * format, ...);
-gchar *gst_gl_context_get_error (void);
-
 gboolean gst_gl_ensure_element_data (gpointer element,
     GstGLDisplay **display_ptr, GstGLContext ** other_context_ptr);
 gboolean gst_gl_handle_set_context (GstElement * element, GstContext * context, 
