@@ -62,7 +62,7 @@ struct _GstVaapiDecodeClass {
     GstVaapiPluginBaseClass parent_class;
 };
 
-gboolean gst_vaapidecode_register (GstPlugin * plugin);
+gboolean gst_vaapidecode_register (GstPlugin * plugin, GArray * decoders);
 
 G_END_DECLS
 

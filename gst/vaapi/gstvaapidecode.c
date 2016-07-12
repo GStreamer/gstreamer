@@ -1370,7 +1370,7 @@ gst_vaapidecode_init (GstVaapiDecode * decode)
 }
 
 gboolean
-gst_vaapidecode_register (GstPlugin * plugin)
+gst_vaapidecode_register (GstPlugin * plugin, GArray * decoders)
 {
   gboolean ret = FALSE;
   guint i, codec, rank;
@@ -1393,6 +1393,9 @@ gst_vaapidecode_register (GstPlugin * plugin)
     codec = vaapi_decode_map[i].codec;
     rank = vaapi_decode_map[i].rank;
     name = vaapi_decode_map[i].name;
+
+    if (codec && !gst_vaapi_codecs_has_codec (decoders, codec))
+      continue;
 
     if (codec) {
       type_name = g_strdup_printf ("GstVaapiDecode_%s", name);

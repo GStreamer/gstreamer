@@ -101,6 +101,20 @@ profiles_get_codecs (GArray * profiles)
   return codecs;
 }
 
+static GArray *
+display_get_decoder_codecs (GstVaapiDisplay * display)
+{
+  GArray *profiles, *codecs;
+
+  profiles = gst_vaapi_display_get_decode_profiles (display);
+  if (!profiles)
+    return NULL;
+
+  codecs = profiles_get_codecs (profiles);
+  g_array_unref (profiles);
+  return codecs;
+}
+
 #if USE_ENCODERS
 static GArray *
 display_get_encoder_codecs (GstVaapiDisplay * display)
@@ -180,6 +194,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GstVaapiDisplay *display;
+  GArray *decoders;
 
   plugin_add_dependencies (plugin);
 
@@ -189,7 +204,11 @@ plugin_init (GstPlugin * plugin)
   if (!gst_vaapi_driver_is_whitelisted (display))
     goto unsupported_driver;
 
-  gst_vaapidecode_register (plugin);
+  decoders = display_get_decoder_codecs (display);
+  if (decoders) {
+    gst_vaapidecode_register (plugin, decoders);
+    g_array_unref (decoders);
+  }
 
   if (gst_vaapi_display_has_video_processing (display)) {
     gst_element_register (plugin, "vaapipostproc",
