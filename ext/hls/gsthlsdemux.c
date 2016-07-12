@@ -447,6 +447,9 @@ create_stream_for_playlist (GstAdaptiveDemux * demux, GstM3U8 * playlist,
       gst_hls_demux_create_pad (hlsdemux));
 
   hlsdemux_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
+
+  hlsdemux_stream->stream_type = GST_HLS_TSREADER_NONE;
+
   hlsdemux_stream->playlist = gst_m3u8_ref (playlist);
   hlsdemux_stream->is_primary_playlist = is_primary_playlist;
 
@@ -696,8 +699,11 @@ gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
 
   gst_hls_demux_stream_clear_pending_data (hls_stream);
 
-  /* Init the MPEG-TS reader for this fragment */
+  /* Init the timestamp reader for this fragment */
   gst_hlsdemux_tsreader_init (&hls_stream->tsreader);
+  /* Reset the stream type if we already know it */
+  gst_hlsdemux_tsreader_set_type (&hls_stream->tsreader,
+      hls_stream->stream_type);
 
   /* If no decryption is needed, there's nothing to be done here */
   if (hls_stream->current_key == NULL)
@@ -723,6 +729,19 @@ key_failed:
     GST_WARNING_OBJECT (demux, "Failed to decrypt data");
     return FALSE;
   }
+}
+
+static GstHLSTSReaderType
+caps_to_reader (const GstCaps * caps)
+{
+  const GstStructure *s = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_has_name (s, "video/mpegts"))
+    return GST_HLS_TSREADER_MPEGTS;
+  if (gst_structure_has_name (s, "application/x-id3"))
+    return GST_HLS_TSREADER_ID3;
+
+  return GST_HLS_TSREADER_NONE;
 }
 
 static GstFlowReturn
@@ -780,29 +799,31 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
     GST_DEBUG_OBJECT (hlsdemux, "Typefind result: %" GST_PTR_FORMAT " prob:%d",
         caps, prob);
 
+    hls_stream->stream_type = caps_to_reader (caps);
+    gst_hlsdemux_tsreader_set_type (&hls_stream->tsreader,
+        hls_stream->stream_type);
+
     gst_adaptive_demux_stream_set_caps (stream, caps);
+
     hls_stream->do_typefind = FALSE;
   }
   g_assert (hls_stream->pending_typefind_buffer == NULL);
 
+  gst_buffer_unmap (buffer, &info);
+
   // Accumulate this buffer
   if (hls_stream->pending_pcr_buffer) {
-    gst_buffer_unmap (buffer, &info);
     buffer = gst_buffer_append (hls_stream->pending_pcr_buffer, buffer);
     hls_stream->pending_pcr_buffer = NULL;
-    gst_buffer_map (buffer, &info, GST_MAP_READ);
   }
 
-  if (!gst_hlsdemux_tsreader_find_pcrs (&hls_stream->tsreader, info.data,
-          info.size, &first_pcr, &last_pcr)
+  if (!gst_hlsdemux_tsreader_find_pcrs (&hls_stream->tsreader, buffer,
+          &first_pcr, &last_pcr)
       && !at_eos) {
-    gst_buffer_unmap (buffer, &info);
     // Store this buffer for later
     hls_stream->pending_pcr_buffer = buffer;
     return GST_FLOW_OK;
   }
-
-  gst_buffer_unmap (buffer, &info);
 
   if (buffer) {
     buffer = gst_buffer_make_writable (buffer);
@@ -1020,7 +1041,7 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream * stream)
   g_free (stream->fragment.uri);
   stream->fragment.uri = g_strdup (file->uri);
 
-  GST_DEBUG_OBJECT (stream, "URI now %s", file->uri);
+  GST_DEBUG_OBJECT (hlsdemux, "Stream %p URI now %s", stream, file->uri);
 
   stream->fragment.range_start = file->offset;
   if (file->size != -1)
@@ -1053,8 +1074,8 @@ gst_hls_demux_select_bitrate (GstAdaptiveDemuxStream * stream, guint64 bitrate)
   GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
 
   if (hls_stream->is_primary_playlist == FALSE) {
-    GST_LOG_OBJECT (stream,
-        "Not choosing new bitrate - not the primary stream");
+    GST_LOG_OBJECT (hlsdemux,
+        "Stream %p Not choosing new bitrate - not the primary stream", stream);
     return FALSE;
   }
 

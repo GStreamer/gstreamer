@@ -62,8 +62,17 @@ typedef struct _GstHLSTSReader GstHLSTSReader;
 
 #define GST_HLS_DEMUX_STREAM_CAST(stream) ((GstHLSDemuxStream *)(stream))
 
+typedef enum {
+  GST_HLS_TSREADER_NONE,
+  GST_HLS_TSREADER_MPEGTS,
+  GST_HLS_TSREADER_ID3
+} GstHLSTSReaderType;
+
 struct _GstHLSTSReader
 {
+  GstHLSTSReaderType rtype;
+  gboolean have_id3;
+
   gint packet_size;
   gint pmt_pid;
   gint pcr_pid;
@@ -75,6 +84,8 @@ struct _GstHLSTSReader
 struct _GstHLSDemuxStream
 {
   GstAdaptiveDemux adaptive_demux_stream;
+
+  GstHLSTSReaderType stream_type;
 
   GstM3U8 *playlist;
   gboolean is_primary_playlist;
@@ -139,8 +150,11 @@ struct _GstHLSDemuxClass
   GstAdaptiveDemuxClass parent_class;
 };
 
+
 void gst_hlsdemux_tsreader_init (GstHLSTSReader *r);
-gboolean gst_hlsdemux_tsreader_find_pcrs (GstHLSTSReader *r, const guint8 * data, guint size,
+void gst_hlsdemux_tsreader_set_type (GstHLSTSReader *r, GstHLSTSReaderType rtype);
+
+gboolean gst_hlsdemux_tsreader_find_pcrs (GstHLSTSReader *r, GstBuffer *buffer,
     GstClockTime *first_pcr, GstClockTime *last_pcr);
 
 GType gst_hls_demux_get_type (void);

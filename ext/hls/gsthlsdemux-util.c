@@ -1,4 +1,5 @@
 #include <gst/gst.h>
+#include <gst/tag/tag.h>
 #include <string.h>
 
 #include "gsthlsdemux.h"
@@ -15,6 +16,9 @@ GST_DEBUG_CATEGORY_EXTERN (gst_hls_demux_debug);
                                 (data[1] & 0x80) == 0x00 && \
                                 ((data[3] & 0x30) != 0x00 || \
                                 ((data[3] & 0x30) == 0x00 && (data[1] & 0x1f) == 0x1f && (data[2] & 0xff) == 0xff)))
+
+#define PCRTIME_TO_GSTTIME(t) (((t) * (guint64)1000) / 27)
+#define MPEGTIME_TO_GSTTIME(t) (((t) * (guint64)100000) / 9)
 
 static gboolean
 have_ts_sync (const guint8 * data, guint size, guint packet_size, guint num)
@@ -72,7 +76,6 @@ handle_pcr (GstHLSTSReader * r, const guint8 * data, guint size)
   pcr_base = (GST_READ_UINT64_BE (data) >> 16) >> (6 + 9);
   pcr_ext = (GST_READ_UINT64_BE (data) >> 16) & 0x1ff;
   pcr = pcr_base * 300 + pcr_ext;
-#define PCRTIME_TO_GSTTIME(t) (((t) * (guint64)1000) / 27)
   ts = PCRTIME_TO_GSTTIME (pcr);
   GST_LOG ("have PCR! %" G_GUINT64_FORMAT "\t%" GST_TIME_FORMAT,
       pcr, GST_TIME_ARGS (ts));
@@ -156,28 +159,50 @@ handle_pat (GstHLSTSReader * r, const guint8 * data, guint size)
 void
 gst_hlsdemux_tsreader_init (GstHLSTSReader * r)
 {
+  r->rtype = GST_HLS_TSREADER_NONE;
   r->packet_size = 188;
   r->pmt_pid = r->pcr_pid = -1;
   r->first_pcr = GST_CLOCK_TIME_NONE;
   r->last_pcr = GST_CLOCK_TIME_NONE;
 }
 
-gboolean
-gst_hlsdemux_tsreader_find_pcrs (GstHLSTSReader * r,
-    const guint8 * data, guint size, GstClockTime * first_pcr,
-    GstClockTime * last_pcr)
+void
+gst_hlsdemux_tsreader_set_type (GstHLSTSReader * r, GstHLSTSReaderType rtype)
 {
+  r->rtype = rtype;
+  r->have_id3 = FALSE;
+}
+
+static gboolean
+gst_hlsdemux_tsreader_find_pcrs_mpegts (GstHLSTSReader * r,
+    GstBuffer * buffer, GstClockTime * first_pcr, GstClockTime * last_pcr)
+{
+  GstMapInfo info;
   gint offset;
   const guint8 *p;
+  const guint8 *data;
+  gsize size;
+
+  if (!gst_buffer_map (buffer, &info, GST_MAP_READ))
+    return FALSE;
+
+  data = info.data;
+  size = info.size;
 
   *first_pcr = *last_pcr = GST_CLOCK_TIME_NONE;
 
   offset = find_offset (r, data, size);
-  if (offset < 0)
+  if (offset < 0) {
+    gst_buffer_unmap (buffer, &info);
     return FALSE;
+  }
 
   GST_LOG ("TS packet start offset: %d", offset);
 
+  /* We don't store a partial packet at the end,
+   * and just assume that the final PCR is 
+   * going to be completely inside the last data
+   * segment passed to us */
   data += offset;
   size -= offset;
 
@@ -204,9 +229,95 @@ gst_hlsdemux_tsreader_find_pcrs (GstHLSTSReader * r,
     }
   }
 
+  gst_buffer_unmap (buffer, &info);
+
   *first_pcr = r->first_pcr;
   *last_pcr = r->last_pcr;
 
   /* Return TRUE if this piece was big enough to get a PCR from */
   return (r->first_pcr != GST_CLOCK_TIME_NONE);
+}
+
+static gboolean
+gst_hlsdemux_tsreader_find_pcrs_id3 (GstHLSTSReader * r,
+    GstBuffer * buffer, GstClockTime * first_pcr, GstClockTime * last_pcr)
+{
+  GstMapInfo info;
+  guint32 tag_size;
+  gsize size;
+  GstTagList *taglist;
+  GstSample *priv_data = NULL;
+  GstBuffer *tag_buf;
+  guint64 pts;
+
+  *first_pcr = r->first_pcr;
+  *last_pcr = r->last_pcr;
+
+  if (r->have_id3)
+    return TRUE;
+
+  /* We need at least 10 bytes, starting with "ID3" for the header */
+  size = gst_buffer_get_size (buffer);
+  if (size < 10)
+    return FALSE;
+
+  /* Read the tag size */
+  tag_size = gst_tag_get_id3v2_tag_size (buffer);
+
+  /* Check we've collected that much */
+  if (size < tag_size)
+    return FALSE;
+
+  /* From here, whether the tag is valid or not we'll
+   * not try and read again */
+  r->have_id3 = TRUE;
+
+  /* Parse the tag */
+  taglist = gst_tag_list_from_id3v2_tag (buffer);
+  if (taglist == NULL)
+    return TRUE;                /* Invalid tag, stop trying */
+
+  /* Extract the timestamps */
+  if (!gst_tag_list_get_sample (taglist, GST_TAG_PRIVATE_DATA, &priv_data))
+    goto out;
+
+  if (!g_str_equal ("com.apple.streaming.transportStreamTimestamp",
+          gst_structure_get_string (gst_sample_get_info (priv_data), "owner")))
+    goto out;
+
+  /* OK, now as per section 3, the tag contains a 33-bit PCR inside a 64-bit
+   * BE-word */
+  tag_buf = gst_sample_get_buffer (priv_data);
+  if (tag_buf == NULL)
+    goto out;
+
+  if (!gst_buffer_map (tag_buf, &info, GST_MAP_READ))
+    goto out;
+
+  pts = GST_READ_UINT64_BE (info.data);
+  *first_pcr = r->first_pcr = MPEGTIME_TO_GSTTIME (pts);
+
+  GST_LOG ("Got AAC TS PTS %" G_GUINT64_FORMAT " (%" G_GUINT64_FORMAT ")",
+      pts, r->first_pcr);
+
+  gst_buffer_unmap (tag_buf, &info);
+
+out:
+  if (priv_data)
+    gst_sample_unref (priv_data);
+
+  gst_tag_list_unref (taglist);
+
+  return TRUE;
+}
+
+gboolean
+gst_hlsdemux_tsreader_find_pcrs (GstHLSTSReader * r,
+    GstBuffer * buffer, GstClockTime * first_pcr, GstClockTime * last_pcr)
+{
+  if (r->rtype == GST_HLS_TSREADER_MPEGTS)
+    return gst_hlsdemux_tsreader_find_pcrs_mpegts (r, buffer, first_pcr,
+        last_pcr);
+
+  return gst_hlsdemux_tsreader_find_pcrs_id3 (r, buffer, first_pcr, last_pcr);
 }
