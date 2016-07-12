@@ -97,7 +97,7 @@ static gboolean gst_gl_transformation_decide_allocation (GstBaseTransform *
 static void gst_gl_transformation_reset_gl (GstGLFilter * filter);
 static gboolean gst_gl_transformation_stop (GstBaseTransform * trans);
 static gboolean gst_gl_transformation_init_shader (GstGLFilter * filter);
-static void gst_gl_transformation_callback (gpointer stuff);
+static gboolean gst_gl_transformation_callback (gpointer stuff);
 static void gst_gl_transformation_build_mvp (GstGLTransformation *
     transformation);
 
@@ -789,13 +789,8 @@ gst_gl_transformation_filter_texture (GstGLFilter * filter,
 
   transformation->in_tex = in_tex;
 
-  /* blocking call, use a FBO */
-  gst_gl_context_use_fbo_v2 (GST_GL_BASE_FILTER (filter)->context,
-      GST_VIDEO_INFO_WIDTH (&filter->out_info),
-      GST_VIDEO_INFO_HEIGHT (&filter->out_info),
-      filter->fbo, filter->depthbuffer,
-      out_tex->tex_id, gst_gl_transformation_callback,
-      (gpointer) transformation);
+  gst_gl_framebuffer_draw_to_texture (filter->fbo, out_tex,
+      (GstGLFramebufferFunc) gst_gl_transformation_callback, transformation);
 
   return TRUE;
 }
@@ -857,7 +852,7 @@ _unbind_buffer (GstGLTransformation * transformation)
   gl->DisableVertexAttribArray (transformation->attr_texture);
 }
 
-static void
+static gboolean
 gst_gl_transformation_callback (gpointer stuff)
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
@@ -925,4 +920,6 @@ gst_gl_transformation_callback (gpointer stuff)
 
   gst_gl_context_clear_shader (GST_GL_BASE_FILTER (filter)->context);
   transformation->caps_change = FALSE;
+
+  return TRUE;
 }

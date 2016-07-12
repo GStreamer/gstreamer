@@ -410,8 +410,6 @@ static void
 gst_gl_mixer_init (GstGLMixer * mix)
 {
   mix->priv = GST_GL_MIXER_GET_PRIVATE (mix);
-  mix->fbo = 0;
-  mix->depthbuffer = 0;
 
   mix->priv->gl_resource_ready = FALSE;
   g_mutex_init (&mix->priv->gl_resource_lock);
@@ -512,33 +510,38 @@ gst_gl_mixer_get_output_buffer (GstVideoAggregator * videoaggregator,
   return ret;
 }
 
+static void
+_mixer_create_fbo (GstGLContext * context, GstGLMixer * mix)
+{
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (mix);
+  guint out_width = GST_VIDEO_INFO_WIDTH (&vagg->info);
+  guint out_height = GST_VIDEO_INFO_HEIGHT (&vagg->info);
+
+  mix->fbo =
+      gst_gl_framebuffer_new_with_default_depth (context, out_width,
+      out_height);
+}
+
 static gboolean
 gst_gl_mixer_decide_allocation (GstGLBaseMixer * base_mix, GstQuery * query)
 {
   GstGLMixer *mix = GST_GL_MIXER (base_mix);
   GstGLMixerClass *mixer_class = GST_GL_MIXER_GET_CLASS (mix);
-  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (mix);
   GstGLContext *context = base_mix->context;
   GstBufferPool *pool = NULL;
   GstStructure *config;
   GstCaps *caps;
   guint min, max, size;
   gboolean update_pool;
-  guint out_width, out_height;
-
-  out_width = GST_VIDEO_INFO_WIDTH (&vagg->info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&vagg->info);
 
   g_mutex_lock (&mix->priv->gl_resource_lock);
   mix->priv->gl_resource_ready = FALSE;
-  if (mix->fbo) {
-    gst_gl_context_del_fbo (context, mix->fbo, mix->depthbuffer);
-    mix->fbo = 0;
-    mix->depthbuffer = 0;
-  }
+  if (mix->fbo)
+    gst_object_unref (mix->fbo);
 
-  if (!gst_gl_context_gen_fbo (context, out_width, out_height,
-          &mix->fbo, &mix->depthbuffer)) {
+  gst_gl_context_thread_add (context,
+      (GstGLContextThreadFunc) _mixer_create_fbo, mix);
+  if (!mix->fbo) {
     g_cond_signal (&mix->priv->gl_resource_cond);
     g_mutex_unlock (&mix->priv->gl_resource_lock);
     goto context_error;
@@ -735,14 +738,13 @@ gst_gl_mixer_stop (GstAggregator * agg)
 {
   GstGLMixer *mix = GST_GL_MIXER (agg);
   GstGLMixerClass *mixer_class = GST_GL_MIXER_GET_CLASS (mix);
-  GstGLContext *context = GST_GL_BASE_MIXER (mix)->context;
 
   if (mixer_class->reset)
     mixer_class->reset (mix);
+
   if (mix->fbo) {
-    gst_gl_context_del_fbo (context, mix->fbo, mix->depthbuffer);
-    mix->fbo = 0;
-    mix->depthbuffer = 0;
+    gst_object_unref (mix->fbo);
+    mix->fbo = NULL;
   }
 
   gst_gl_mixer_reset (mix);

@@ -107,7 +107,7 @@ static gboolean gst_gl_test_src_stop (GstBaseSrc * basesrc);
 static gboolean gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc,
     GstQuery * query);
 
-static void gst_gl_test_src_callback (gpointer stuff);
+static gboolean gst_gl_test_src_callback (gpointer stuff);
 
 static gboolean gst_gl_test_src_init_shader (GstGLTestSrc * gltestsrc);
 
@@ -454,21 +454,23 @@ gst_gl_test_src_init_shader (GstGLTestSrc * gltestsrc)
   return TRUE;
 }
 
+static void
+_fill_gl (GstGLContext * context, GstGLTestSrc * src)
+{
+  src->gl_result = gst_gl_framebuffer_draw_to_texture (src->fbo, src->out_tex,
+      gst_gl_test_src_callback, src);
+}
+
 static GstFlowReturn
 gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (psrc);
   GstClockTime next_time;
-  gint width, height;
   GstVideoFrame out_frame;
   GstGLSyncMeta *sync_meta;
-  guint out_tex;
 
   if (G_UNLIKELY (!src->negotiated || !src->context))
     goto not_negotiated;
-
-  width = GST_VIDEO_INFO_WIDTH (&src->out_info);
-  height = GST_VIDEO_INFO_HEIGHT (&src->out_info);
 
   /* 0 framerate and we are at the second frame, eos */
   if (G_UNLIKELY (GST_VIDEO_INFO_FPS_N (&src->out_info) == 0
@@ -480,11 +482,11 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  out_tex = *(guint *) out_frame.data[0];
+  src->out_tex = (GstGLMemory *) out_frame.map[0].memory;
 
-  if (!gst_gl_context_use_fbo_v2 (src->context, width, height, src->fbo,
-          src->depthbuffer, out_tex, gst_gl_test_src_callback,
-          (gpointer) src)) {
+  gst_gl_context_thread_add (src->context, (GstGLContextThreadFunc) _fill_gl,
+      src);
+  if (!src->gl_result) {
     gst_video_frame_unmap (&out_frame);
     goto gl_error;
   }
@@ -562,8 +564,11 @@ gst_gl_test_src_stop (GstBaseSrc * basesrc)
       gst_object_unref (src->shader);
       src->shader = NULL;
     }
-    //blocking call, delete the FBO
-    gst_gl_context_del_fbo (src->context, src->fbo, src->depthbuffer);
+
+    if (src->fbo)
+      gst_object_unref (src->fbo);
+    src->fbo = NULL;
+
     gst_object_unref (src->context);
     src->context = NULL;
   }
@@ -615,6 +620,14 @@ _find_local_gl_context (GstGLTestSrc * src)
   return FALSE;
 }
 
+static void
+_src_generate_fbo_gl (GstGLContext * context, GstGLTestSrc * src)
+{
+  src->fbo = gst_gl_framebuffer_new_with_default_depth (src->context,
+      GST_VIDEO_INFO_WIDTH (&src->out_info),
+      GST_VIDEO_INFO_HEIGHT (&src->out_info));
+}
+
 static gboolean
 gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
 {
@@ -625,7 +638,6 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
   guint min, max, size;
   gboolean update_pool;
   GError *error = NULL;
-  guint out_width, out_height;
 
   if (!gst_gl_ensure_element_data (src, &src->display, &src->other_context))
     return FALSE;
@@ -658,11 +670,9 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
   if ((gst_gl_context_get_gl_api (src->context) & SUPPORTED_GL_APIS) == 0)
     goto unsupported_gl_api;
 
-  out_width = GST_VIDEO_INFO_WIDTH (&src->out_info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&src->out_info);
-
-  if (!gst_gl_context_gen_fbo (src->context, out_width, out_height,
-          &src->fbo, &src->depthbuffer))
+  gst_gl_context_thread_add (src->context,
+      (GstGLContextThreadFunc) _src_generate_fbo_gl, src);
+  if (!src->fbo)
     goto context_error;
 
   gst_query_parse_allocation (query, &caps, NULL);
@@ -735,8 +745,7 @@ context_error:
   }
 }
 
-//opengl scene
-static void
+static gboolean
 gst_gl_test_src_callback (gpointer stuff)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (stuff);
@@ -752,21 +761,18 @@ gst_gl_test_src_callback (gpointer stuff)
     if (funcs == NULL) {
       GST_ERROR_OBJECT (src, "Could not find an implementation of the "
           "requested pattern");
-      src->gl_result = FALSE;
-      return;
+      return FALSE;
     }
     src->src_impl = funcs->new (src);
     if (!(src->gl_result =
             funcs->init (src->src_impl, src->context, &src->out_info))) {
       GST_ERROR_OBJECT (src, "Failed to initialize pattern");
-      return;
+      return FALSE;
     }
     src->active_pattern = src->set_pattern;
   }
 
-  src->gl_result = funcs->fill_bound_fbo (src->src_impl);
-  if (!src->gl_result)
-    GST_ERROR_OBJECT (src, "Failed to render the pattern");
+  return funcs->fill_bound_fbo (src->src_impl);
 }
 
 static GstStateChangeReturn

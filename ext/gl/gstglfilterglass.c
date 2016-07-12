@@ -73,7 +73,7 @@ static void gst_gl_filter_glass_draw_video_plane (GstGLFilter * filter,
     gint width, gint height, guint texture, gfloat center_x, gfloat center_y,
     gfloat start_alpha, gfloat stop_alpha, gboolean reversed, gfloat rotation);
 
-static void gst_gl_filter_glass_callback (gpointer stuff);
+static gboolean gst_gl_filter_glass_callback (gpointer stuff);
 
 /* *INDENT-OFF* */
 static const gchar *glass_fragment_source =
@@ -245,12 +245,8 @@ gst_gl_filter_glass_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
 
   glass_filter->in_tex = in_tex;
 
-  //blocking call, use a FBO
-  gst_gl_context_use_fbo_v2 (GST_GL_BASE_FILTER (filter)->context,
-      GST_VIDEO_INFO_WIDTH (&filter->out_info),
-      GST_VIDEO_INFO_HEIGHT (&filter->out_info),
-      filter->fbo, filter->depthbuffer, out_tex->tex_id,
-      gst_gl_filter_glass_callback, (gpointer) glass_filter);
+  gst_gl_framebuffer_draw_to_texture (filter->fbo, out_tex,
+      gst_gl_filter_glass_callback, glass_filter);
 
   return TRUE;
 }
@@ -353,8 +349,7 @@ gst_gl_filter_glass_draw_video_plane (GstGLFilter * filter,
   gl->DisableClientState (GL_COLOR_ARRAY);
 }
 
-//opengl scene, params: input texture (not the output filter->texture)
-static void
+static gboolean
 gst_gl_filter_glass_callback (gpointer stuff)
 {
   static gint64 start_time = 0;
@@ -376,7 +371,7 @@ gst_gl_filter_glass_callback (gpointer stuff)
     time_left -= 1000000 / 25;
     if (time_left > 2000) {
       GST_LOG ("escape");
-      return;
+      return FALSE;
     }
   }
 
@@ -408,4 +403,6 @@ gst_gl_filter_glass_callback (gpointer stuff)
   gst_gl_context_clear_shader (GST_GL_BASE_FILTER (filter)->context);
 
   gl->Disable (GL_BLEND);
+
+  return TRUE;
 }

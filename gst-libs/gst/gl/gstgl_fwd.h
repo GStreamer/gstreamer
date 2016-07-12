@@ -63,6 +63,10 @@ typedef struct _GstGLRenderbuffer GstGLRenderbuffer;
 typedef struct _GstGLRenderbufferAllocator GstGLRenderbufferAllocator;
 typedef struct _GstGLRenderbufferAllocatorClass GstGLRenderbufferAllocatorClass;
 
+typedef struct _GstGLFramebuffer GstGLFramebuffer;
+typedef struct _GstGLFramebufferAllocator GstGLFramebufferAllocator;
+typedef struct _GstGLFramebufferAllocatorClass GstGLFramebufferAllocatorClass;
+
 typedef struct _GstGLSLStage        GstGLSLStage;
 typedef struct _GstGLSLStagePrivate GstGLSLStagePrivate;
 typedef struct _GstGLSLStageClass   GstGLSLStageClass;

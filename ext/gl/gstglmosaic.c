@@ -71,7 +71,7 @@ static gboolean gst_gl_mosaic_init_shader (GstGLMixer * mixer,
 
 static gboolean gst_gl_mosaic_process_textures (GstGLMixer * mixer,
     GstGLMemory * out_tex);
-static void gst_gl_mosaic_callback (gpointer stuff);
+static gboolean gst_gl_mosaic_callback (gpointer stuff);
 
 //vertex source
 static const gchar *mosaic_v_src =
@@ -193,23 +193,31 @@ gst_gl_mosaic_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
       mosaic_v_src, mosaic_f_src, &mosaic->shader);
 }
 
+static void
+_mosaic_render (GstGLContext * context, GstGLMosaic * mosaic)
+{
+  GstGLMixer *mixer = GST_GL_MIXER (mosaic);
+
+  gst_gl_framebuffer_draw_to_texture (mixer->fbo, mosaic->out_tex,
+      gst_gl_mosaic_callback, mosaic);
+}
+
 static gboolean
 gst_gl_mosaic_process_textures (GstGLMixer * mix, GstGLMemory * out_tex)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mix);
+  GstGLContext *context = GST_GL_BASE_MIXER (mix)->context;
 
-  //blocking call, use a FBO
-  gst_gl_context_use_fbo_v2 (GST_GL_BASE_MIXER (mix)->context,
-      GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR (mix)->info),
-      GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR (mix)->info), mix->fbo,
-      mix->depthbuffer, out_tex->tex_id, gst_gl_mosaic_callback,
-      (gpointer) mosaic);
+  mosaic->out_tex = out_tex;
+
+  gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _mosaic_render,
+      mosaic);
 
   return TRUE;
 }
 
 /* opengl scene, params: input texture (not the output mixer->texture) */
-static void
+static gboolean
 gst_gl_mosaic_callback (gpointer stuff)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (stuff);
@@ -345,4 +353,6 @@ gst_gl_mosaic_callback (gpointer stuff)
   xrot += 0.6f;
   yrot += 0.4f;
   zrot += 0.8f;
+
+  return TRUE;
 }

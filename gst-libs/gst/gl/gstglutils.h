@@ -60,28 +60,11 @@ typedef gboolean (*CDCB) (GLuint texture, GLuint width, GLuint height, gpointer 
  * callback definition for operating on textures
  */
 typedef void (*GLCB) (gint, gint, guint, gpointer stuff);
-/**
- * GLCB_V2:
- * @stuff: user data
- *
- * callback definition for operating through a Framebuffer object
- */
-typedef void (*GLCB_V2) (gpointer stuff);
-
-gboolean gst_gl_context_gen_fbo (GstGLContext * context, gint width, gint height,
-    GLuint * fbo, GLuint * depthbuffer);
-gboolean gst_gl_context_use_fbo_v2 (GstGLContext * context, gint texture_fbo_width,
-    gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
-    GLuint texture_fbo, GLCB_V2 cb, gpointer stuff);
-void gst_gl_context_del_fbo (GstGLContext * context, GLuint fbo,
-    GLuint depth_buffer);
 
 gboolean gst_gl_context_gen_shader (GstGLContext * context,
     const gchar * shader_vertex_source,
     const gchar * shader_fragment_source, GstGLShader ** shader);
 void gst_gl_context_del_shader (GstGLContext * context, GstGLShader * shader);
-
-gboolean gst_gl_context_check_framebuffer_status (GstGLContext * context);
 
 void gst_gl_context_set_error (GstGLContext * context, const char * format, ...);
 gchar *gst_gl_context_get_error (void);
