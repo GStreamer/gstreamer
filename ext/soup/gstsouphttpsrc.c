@@ -1654,7 +1654,6 @@ gst_soup_http_src_read_buffer (GstSoupHTTPSrc * src, GstBuffer ** outbuf)
 
       g_object_unref (src->msg);
       src->msg = NULL;
-      ret = GST_FLOW_EOS;
       src->have_body = TRUE;
 
       /* This should return immediately as we're at the end of the range */
