@@ -63,9 +63,10 @@ struct _GstGLFilter
 
   GstCaps           *out_caps;
 
+  /* <protected> */
+  GstGLFramebuffer  *fbo;
+
   /* <private> */
-  GLuint             fbo;
-  GLuint             depthbuffer;
   gboolean           gl_result;
   GstBuffer         *inbuf;
   GstBuffer         *outbuf;

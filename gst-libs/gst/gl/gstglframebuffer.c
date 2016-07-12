@@ -24,13 +24,29 @@
 #include "gl.h"
 #include "gstglframebuffer.h"
 
+#ifndef GL_FRAMEBUFFER_UNDEFINED
+#define GL_FRAMEBUFFER_UNDEFINED          0x8219
+#endif
+#ifndef GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+#define GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT 0x8CD6
+#endif
+#ifndef GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT
+#define GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT 0x8CD7
+#endif
+#ifndef GL_FRAMEBUFFER_UNSUPPORTED
+#define GL_FRAMEBUFFER_UNSUPPORTED        0x8CDD
+#endif
+#ifndef GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS
+#define GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS 0x8CD9
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_gl_framebuffer_debug);
 #define GST_CAT_DEFAULT gst_gl_framebuffer_debug
 
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_framebuffer_debug, "glframebuffer", 0, "GL Framebuffer");
 
-G_DEFINE_TYPE_WITH_CODE (GstGLFramebuffer, gst_gl_framebuffer, G_TYPE_OBJECT,
+G_DEFINE_TYPE_WITH_CODE (GstGLFramebuffer, gst_gl_framebuffer, GST_TYPE_OBJECT,
     DEBUG_INIT);
 
 #define GST_GL_FRAMEBUFFER_GET_PRIVATE(o) \
@@ -40,12 +56,34 @@ static void gst_gl_framebuffer_finalize (GObject * object);
 
 struct _GstGLFramebufferPrivate
 {
-  gint width;
-  gint height;
-
-  guint fbo;
-  guint depth;
+  guint effective_width;
+  guint effective_height;
 };
+
+struct fbo_attachment
+{
+  guint attachment_point;
+  GstGLBaseMemory *mem;
+};
+
+static void
+_fbo_attachment_init (struct fbo_attachment *attach, guint point,
+    GstGLBaseMemory * mem)
+{
+  attach->attachment_point = point;
+  attach->mem = (GstGLBaseMemory *) gst_memory_ref (GST_MEMORY_CAST (mem));
+}
+
+static void
+_fbo_attachment_unset (struct fbo_attachment *attach)
+{
+  if (!attach)
+    return;
+
+  if (attach->mem)
+    gst_memory_unref (GST_MEMORY_CAST (attach->mem));
+  attach->mem = NULL;
+}
 
 static void
 gst_gl_framebuffer_class_init (GstGLFramebufferClass * klass)
@@ -56,20 +94,43 @@ gst_gl_framebuffer_class_init (GstGLFramebufferClass * klass)
 }
 
 static void
-gst_gl_framebuffer_init (GstGLFramebuffer * fbo)
+gst_gl_framebuffer_init (GstGLFramebuffer * fb)
 {
-  fbo->priv = GST_GL_FRAMEBUFFER_GET_PRIVATE (fbo);
+  fb->priv = GST_GL_FRAMEBUFFER_GET_PRIVATE (fb);
+
+  fb->attachments =
+      g_array_new (FALSE, FALSE, (sizeof (struct fbo_attachment)));
+  g_array_set_clear_func (fb->attachments,
+      (GDestroyNotify) _fbo_attachment_unset);
+}
+
+static void
+_delete_fbo_gl (GstGLContext * context, GstGLFramebuffer * fb)
+{
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  if (fb->fbo_id)
+    gl->DeleteFramebuffers (1, &fb->fbo_id);
+  fb->fbo_id = 0;
 }
 
 static void
 gst_gl_framebuffer_finalize (GObject * object)
 {
-  GstGLFramebuffer *fbo = GST_GL_FRAMEBUFFER (object);
+  GstGLFramebuffer *fb = GST_GL_FRAMEBUFFER (object);
 
-  if (fbo->context) {
-    gst_object_unref (fbo->context);
-    fbo->context = NULL;
+  if (fb->context) {
+    if (fb->fbo_id)
+      gst_gl_context_thread_add (fb->context,
+          (GstGLContextThreadFunc) _delete_fbo_gl, fb);
+
+    gst_object_unref (fb->context);
+    fb->context = NULL;
   }
+
+  if (fb->attachments)
+    g_array_free (fb->attachments, TRUE);
+  fb->attachments = NULL;
 
   G_OBJECT_CLASS (gst_gl_framebuffer_parent_class)->finalize (object);
 }
@@ -77,162 +138,311 @@ gst_gl_framebuffer_finalize (GObject * object)
 GstGLFramebuffer *
 gst_gl_framebuffer_new (GstGLContext * context)
 {
-  GstGLFramebuffer *fbo = g_object_new (GST_TYPE_GL_FRAMEBUFFER, NULL);
-
-  fbo->context = gst_object_ref (context);
-
-  return fbo;
-}
-
-gboolean
-gst_gl_framebuffer_generate (GstGLFramebuffer * frame, gint width, gint height,
-    guint * fbo, guint * depth)
-{
-  GLuint fake_texture = 0;
+  GstGLFramebuffer *fb;
   const GstGLFuncs *gl;
-  GLenum internal_format;
 
-  g_return_val_if_fail (GST_IS_GL_FRAMEBUFFER (frame), FALSE);
-  g_return_val_if_fail (fbo != NULL && depth != NULL, FALSE);
-  g_return_val_if_fail (width > 0 && height > 0, FALSE);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
+  g_return_val_if_fail (gst_gl_context_get_current () == context, NULL);
 
-  gl = frame->context->gl_vtable;
-
-  GST_TRACE ("creating FBO dimensions:%ux%u", width, height);
+  gl = context->gl_vtable;
 
   if (!gl->GenFramebuffers) {
-    gst_gl_context_set_error (frame->context,
-        "Context, EXT_framebuffer_object not supported");
-    return FALSE;
+    GST_ERROR_OBJECT (context, "Framebuffers are not supported!");
+    return NULL;
   }
-  /* setup FBO */
-  gl->GenFramebuffers (1, fbo);
-  gl->BindFramebuffer (GL_FRAMEBUFFER, *fbo);
 
-  /* setup the render buffer for depth */
-  gl->GenRenderbuffers (1, depth);
-  gl->BindRenderbuffer (GL_RENDERBUFFER, *depth);
+  fb = g_object_new (GST_TYPE_GL_FRAMEBUFFER, NULL);
+  fb->context = gst_object_ref (context);
+  gl->GenFramebuffers (1, &fb->fbo_id);
 
-  if (gst_gl_context_get_gl_api (frame->context) & (GST_GL_API_OPENGL |
+  return fb;
+}
+
+GstGLFramebuffer *
+gst_gl_framebuffer_new_with_default_depth (GstGLContext * context, guint width,
+    guint height)
+{
+  GstGLFramebuffer *fb = gst_gl_framebuffer_new (context);
+  GstGLBaseMemoryAllocator *render_alloc;
+  GstGLAllocationParams *params;
+  GstGLBaseMemory *renderbuffer;
+  guint attach_point, attach_type;
+
+  if (!fb)
+    return NULL;
+
+  if (gst_gl_context_get_gl_api (fb->context) & (GST_GL_API_OPENGL |
           GST_GL_API_OPENGL3)) {
-    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width,
-        height);
-  }
-  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_GLES2) {
-    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
-        width, height);
-  }
-
-  /* setup a texture to render to */
-  gl->GenTextures (1, &fake_texture);
-  gl->BindTexture (GL_TEXTURE_2D, fake_texture);
-  internal_format =
-      gst_gl_sized_gl_format_from_gl_format_type (frame->context, GL_RGBA,
-      GL_UNSIGNED_BYTE);
-  gl->TexImage2D (GL_TEXTURE_2D, 0, internal_format, width, height, 0, GL_RGBA,
-      GL_UNSIGNED_BYTE, NULL);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  /* attach the texture to the FBO to renderer to */
-  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_2D, fake_texture, 0);
-
-  /* attach the depth render buffer to the FBO */
-  gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-      GL_RENDERBUFFER, *depth);
-
-  if (gst_gl_context_get_gl_api (frame->context) & (GST_GL_API_OPENGL |
-          GST_GL_API_OPENGL3)) {
-    gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-        GL_RENDERBUFFER, *depth);
+    attach_point = GL_DEPTH_STENCIL_ATTACHMENT;
+    attach_type = GST_GL_DEPTH24_STENCIL8;
+  } else if (gst_gl_context_get_gl_api (fb->context) & GST_GL_API_GLES2) {
+    attach_point = GL_DEPTH_ATTACHMENT;
+    attach_type = GST_GL_DEPTH_COMPONENT16;
+  } else {
+    g_assert_not_reached ();
+    return NULL;
   }
 
-  if (gl->CheckFramebufferStatus (GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-    gst_gl_context_set_error (frame->context,
-        "GL framebuffer status incomplete");
+  render_alloc = (GstGLBaseMemoryAllocator *)
+      gst_allocator_find (GST_GL_RENDERBUFFER_ALLOCATOR_NAME);
+  params = (GstGLAllocationParams *)
+      gst_gl_renderbuffer_allocation_params_new (context, NULL, attach_type,
+      width, height);
 
-    gl->DeleteTextures (1, &fake_texture);
+  renderbuffer = gst_gl_base_memory_alloc (render_alloc, params);
+  gst_gl_allocation_params_free (params);
+  gst_object_unref (render_alloc);
 
-    return FALSE;
-  }
+  gst_gl_framebuffer_bind (fb);
+  gst_gl_framebuffer_attach (fb, attach_point, renderbuffer);
+  gst_gl_context_clear_framebuffer (fb->context);
+  gst_memory_unref (GST_MEMORY_CAST (renderbuffer));
 
-  /* unbind the FBO */
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
-
-  gl->DeleteTextures (1, &fake_texture);
-
-  return TRUE;
+  return fb;
 }
 
 gboolean
-gst_gl_framebuffer_use_v2 (GstGLFramebuffer * frame, gint texture_fbo_width,
-    gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
-    GLuint texture_fbo, GLCB_V2 cb, gpointer stuff)
+gst_gl_framebuffer_draw_to_texture (GstGLFramebuffer * fb, GstGLMemory * mem,
+    GstGLFramebufferFunc func, gpointer user_data)
 {
-  const GstGLFuncs *gl;
   GLint viewport_dim[4] = { 0 };
+  const GstGLFuncs *gl;
+  gboolean ret;
 
-  g_return_val_if_fail (GST_IS_GL_FRAMEBUFFER (frame), FALSE);
-  g_return_val_if_fail (texture_fbo_width > 0 && texture_fbo_height > 0, FALSE);
-  g_return_val_if_fail (fbo != 0, FALSE);
-  g_return_val_if_fail (texture_fbo != 0, FALSE);
-  g_return_val_if_fail (cb != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_GL_FRAMEBUFFER (fb), FALSE);
+  g_return_val_if_fail (gst_is_gl_memory (GST_MEMORY_CAST (mem)), FALSE);
 
-  gl = frame->context->gl_vtable;
+  gl = fb->context->gl_vtable;
 
-  GST_TRACE ("Binding v2 FBO %u dimensions:%ux%u with texture:%u ",
-      fbo, texture_fbo_width, texture_fbo_height, texture_fbo);
+  GST_TRACE_OBJECT (fb, "drawing to texture %u, dimensions %ix%i", mem->tex_id,
+      gst_gl_memory_get_texture_width (mem),
+      gst_gl_memory_get_texture_height (mem));
 
-  gl->BindFramebuffer (GL_FRAMEBUFFER, fbo);
-
-  /* setup a texture to render to */
-  gl->BindTexture (GL_TEXTURE_2D, texture_fbo);
-
-  /* attach the texture to the FBO to renderer to */
-  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_2D, texture_fbo, 0);
+  gst_gl_framebuffer_bind (fb);
+  gst_gl_framebuffer_attach (fb, GL_COLOR_ATTACHMENT0, (GstGLBaseMemory *) mem);
 
   gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
-
-  gl->Viewport (0, 0, texture_fbo_width, texture_fbo_height);
-
-  if (gst_gl_context_get_gl_api (frame->context) & (GST_GL_API_OPENGL |
+  gl->Viewport (0, 0, fb->priv->effective_width, fb->priv->effective_height);
+  if (gst_gl_context_get_gl_api (fb->context) & (GST_GL_API_OPENGL |
           GST_GL_API_OPENGL3))
     gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
 
-  /* the opengl scene */
-  cb (stuff);
+  ret = func (user_data);
 
-  if (gst_gl_context_get_gl_api (frame->context) & (GST_GL_API_OPENGL |
+  if (gst_gl_context_get_gl_api (fb->context) & (GST_GL_API_OPENGL |
           GST_GL_API_OPENGL3))
     gl->DrawBuffer (GL_NONE);
+  gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
+      viewport_dim[3]);
+  gst_gl_context_clear_framebuffer (fb->context);
 
-  gl->Viewport (viewport_dim[0], viewport_dim[1],
-      viewport_dim[2], viewport_dim[3]);
-
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
-
-  return TRUE;
+  return ret;
 }
 
 void
-gst_gl_framebuffer_delete (GstGLFramebuffer * frame, guint fbo, guint depth)
+gst_gl_framebuffer_bind (GstGLFramebuffer * fb)
 {
   const GstGLFuncs *gl;
 
-  g_return_if_fail (GST_IS_GL_FRAMEBUFFER (frame));
+  g_return_if_fail (GST_IS_GL_FRAMEBUFFER (fb));
+  g_return_if_fail (gst_gl_context_get_current () == fb->context);
+  g_return_if_fail (fb->fbo_id != 0);
 
-  gl = frame->context->gl_vtable;
+  gl = fb->context->gl_vtable;
 
-  GST_TRACE ("Deleting FBO %u", fbo);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, fb->fbo_id);
+}
 
-  if (fbo) {
-    gl->DeleteFramebuffers (1, &fbo);
+void
+gst_gl_context_clear_framebuffer (GstGLContext * context)
+{
+  const GstGLFuncs *gl;
+
+  g_return_if_fail (GST_IS_GL_CONTEXT (context));
+
+  gl = context->gl_vtable;
+
+  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
+}
+
+static void
+_update_effective_dimensions (GstGLFramebuffer * fb)
+{
+  int i;
+  guint min_width = -1, min_height = -1;
+
+  /* remove the previous attachment */
+  for (i = 0; i < fb->attachments->len; i++) {
+    struct fbo_attachment *attach;
+    int width, height;
+
+    attach = &g_array_index (fb->attachments, struct fbo_attachment, i);
+
+    if (gst_is_gl_memory (GST_MEMORY_CAST (attach->mem))) {
+      GstGLMemory *mem = (GstGLMemory *) attach->mem;
+
+      width = gst_gl_memory_get_texture_width (mem);
+      height = gst_gl_memory_get_texture_height (mem);
+    } else if (gst_is_gl_renderbuffer (GST_MEMORY_CAST (attach->mem))) {
+      GstGLRenderbuffer *mem = (GstGLRenderbuffer *) attach->mem;
+
+      width = mem->width;
+      height = mem->height;
+    } else {
+      g_assert_not_reached ();
+    }
+
+    if (width < min_width)
+      min_width = width;
+    if (height < min_height)
+      min_height = height;
   }
-  if (depth) {
-    gl->DeleteRenderbuffers (1, &depth);
+
+  fb->priv->effective_width = min_width;
+  fb->priv->effective_height = min_height;
+}
+
+static gboolean
+_is_valid_attachment_point (guint attachment_point)
+{
+  /* all 31 possible color attachments */
+  if (attachment_point >= 0x8CE0 && attachment_point <= 0x8CFF)
+    return TRUE;
+
+  /* depth-stencil attachment */
+  if (attachment_point == 0x821A)
+    return TRUE;
+
+  /* depth attachment */
+  if (attachment_point == 0x8D00)
+    return TRUE;
+
+  /* stencil attachment */
+  if (attachment_point == 0x8D20)
+    return TRUE;
+
+  return FALSE;
+}
+
+static void
+_attach_gl_memory (GstGLFramebuffer * fb, guint attachment_point,
+    GstGLMemory * mem)
+{
+  struct fbo_attachment attach;
+  const GstGLFuncs *gl = fb->context->gl_vtable;
+  guint gl_target = gst_gl_texture_target_to_gl (mem->tex_target);
+
+  gst_gl_framebuffer_bind (fb);
+
+  gl->FramebufferTexture2D (GL_FRAMEBUFFER, attachment_point, gl_target,
+      mem->tex_id, 0);
+
+  _fbo_attachment_init (&attach, attachment_point, (GstGLBaseMemory *) mem);
+  fb->attachments = g_array_append_val (fb->attachments, attach);
+}
+
+static void
+_attach_renderbuffer (GstGLFramebuffer * fb, guint attachment_point,
+    GstGLRenderbuffer * rb)
+{
+  struct fbo_attachment attach;
+  const GstGLFuncs *gl = fb->context->gl_vtable;
+
+  gst_gl_framebuffer_bind (fb);
+  gl->BindRenderbuffer (GL_RENDERBUFFER, rb->renderbuffer_id);
+
+  gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, attachment_point,
+      GL_RENDERBUFFER, rb->renderbuffer_id);
+
+  _fbo_attachment_init (&attach, attachment_point, (GstGLBaseMemory *) rb);
+  fb->attachments = g_array_append_val (fb->attachments, attach);
+}
+
+void
+gst_gl_framebuffer_attach (GstGLFramebuffer * fb, guint attachment_point,
+    GstGLBaseMemory * mem)
+{
+  int i;
+
+  g_return_if_fail (GST_IS_GL_FRAMEBUFFER (fb));
+  g_return_if_fail (gst_gl_context_get_current () == fb->context);
+  g_return_if_fail (_is_valid_attachment_point (attachment_point));
+
+  /* remove the previous attachment */
+  for (i = 0; i < fb->attachments->len; i++) {
+    struct fbo_attachment *attach;
+
+    attach = &g_array_index (fb->attachments, struct fbo_attachment, i);
+
+    if (attach->attachment_point == attachment_point) {
+      g_array_remove_index_fast (fb->attachments, i);
+      break;
+    }
   }
+
+  if (gst_is_gl_memory (GST_MEMORY_CAST (mem))) {
+    _attach_gl_memory (fb, attachment_point, (GstGLMemory *) mem);
+  } else if (gst_is_gl_renderbuffer (GST_MEMORY_CAST (mem))) {
+    _attach_renderbuffer (fb, attachment_point, (GstGLRenderbuffer *) mem);
+  } else {
+    g_assert_not_reached ();
+    return;
+  }
+
+  _update_effective_dimensions (fb);
+}
+
+void
+gst_gl_framebuffer_get_effective_dimensions (GstGLFramebuffer * fb,
+    guint * width, guint * height)
+{
+  g_return_if_fail (GST_IS_GL_FRAMEBUFFER (fb));
+
+  if (width)
+    *width = fb->priv->effective_width;
+  if (height)
+    *height = fb->priv->effective_height;
+}
+
+gboolean
+gst_gl_context_check_framebuffer_status (GstGLContext * context)
+{
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
+
+  switch (context->gl_vtable->CheckFramebufferStatus (GL_FRAMEBUFFER)) {
+    case GL_FRAMEBUFFER_COMPLETE:
+      return TRUE;
+      break;
+    case GL_FRAMEBUFFER_UNSUPPORTED:
+      GST_WARNING_OBJECT (context, "GL_FRAMEBUFFER_UNSUPPORTED");
+      break;
+    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+      GST_WARNING_OBJECT (context, "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+      break;
+    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+      GST_WARNING_OBJECT (context,
+          "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+      break;
+    case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+      GST_WARNING_OBJECT (context, "GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+      break;
+#if GST_GL_HAVE_OPENGL
+    case GL_FRAMEBUFFER_UNDEFINED:
+      GST_WARNING_OBJECT (context, "GL_FRAMEBUFFER_UNDEFINED");
+      break;
+#endif
+    default:
+      GST_WARNING_OBJECT (context, "Unknown FBO error");
+      break;
+  }
+
+  return FALSE;
+}
+
+guint
+gst_gl_framebuffer_get_id (GstGLFramebuffer * fb)
+{
+  g_return_val_if_fail (GST_IS_GL_FRAMEBUFFER (fb), 0);
+
+  return fb->fbo_id;
 }

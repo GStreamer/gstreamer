@@ -43,7 +43,7 @@ teardown (void)
 }
 
 static GstGLMemory *gl_tex;
-static GLuint vbo, vbo_indices, vao, fbo_id, rbo;
+static GLuint vbo, vbo_indices, vao;
 static GstGLFramebuffer *fbo;
 static GstGLShader *shader;
 static GLint shader_attr_position_loc;
@@ -75,10 +75,9 @@ init (gpointer data)
       GST_GL_TEXTURE_TARGET_2D, GST_VIDEO_GL_TEXTURE_TYPE_RGBA);
 
   /* has to be called in the thread that is going to use the framebuffer */
-  fbo = gst_gl_framebuffer_new (context);
+  fbo = gst_gl_framebuffer_new_with_default_depth (context, 320, 240);
 
-  gst_gl_framebuffer_generate (fbo, 320, 240, &fbo_id, &rbo);
-  fail_if (fbo == NULL || fbo_id == 0, "failed to create framebuffer object");
+  fail_if (fbo == NULL, "failed to create framebuffer object");
 
   gl_tex =
       (GstGLMemory *) gst_gl_base_memory_alloc ((GstGLBaseMemoryAllocator *)
@@ -109,7 +108,7 @@ deinit (gpointer data)
   gst_memory_unref (GST_MEMORY_CAST (gl_tex));
 }
 
-static void
+static gboolean
 clear_tex (gpointer data)
 {
   GstGLContext *context = data;
@@ -122,13 +121,15 @@ clear_tex (gpointer data)
   r = r > 1.0 ? 0.0 : r + 0.03;
   g = g > 1.0 ? 0.0 : g + 0.01;
   b = b > 1.0 ? 0.0 : b + 0.015;
+
+  return TRUE;
 }
 
 static void
 draw_tex (gpointer data)
 {
-  gst_gl_framebuffer_use_v2 (fbo, 320, 240, fbo_id, rbo,
-      gst_gl_memory_get_texture_id (gl_tex), (GLCB_V2) clear_tex, data);
+  gst_gl_framebuffer_draw_to_texture (fbo, gl_tex,
+      (GstGLFramebufferFunc) clear_tex, data);
 }
 
 static void
@@ -275,7 +276,8 @@ GST_START_TEST (test_share)
   gst_gl_window_set_preferred_size (window, 320, 240);
   gst_gl_window_draw (window);
 
-  gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (init), context);
+  gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (init),
+      other_context);
   gst_gl_window_send_message (window, GST_GL_WINDOW_CB (init_blit), context);
 
   while (i < 10) {
@@ -286,7 +288,8 @@ GST_START_TEST (test_share)
     i++;
   }
 
-  gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (deinit), context);
+  gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (deinit),
+      other_context);
   gst_gl_window_send_message (window, GST_GL_WINDOW_CB (deinit_blit), context);
 
   gst_object_unref (window);
@@ -380,7 +383,8 @@ GST_START_TEST (test_wrapped_context)
   gst_gl_window_set_preferred_size (window, 320, 240);
   gst_gl_window_draw (window);
 
-  gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (init), context);
+  gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (init),
+      other_context);
   gst_gl_window_send_message (window, GST_GL_WINDOW_CB (init_blit), context);
 
   while (i < 10) {
@@ -394,7 +398,8 @@ GST_START_TEST (test_wrapped_context)
   gst_gl_window_send_message (window, GST_GL_WINDOW_CB (check_wrapped),
       wrapped_context);
 
-  gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (deinit), context);
+  gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (deinit),
+      other_context);
   gst_gl_window_send_message (window, GST_GL_WINDOW_CB (deinit_blit), context);
 
   gst_object_unref (other_context);

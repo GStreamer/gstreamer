@@ -62,8 +62,8 @@ struct _GstGLTestSrc {
     /* video state */
     GstVideoInfo out_info;
 
-    GLuint fbo;
-    GLuint depthbuffer;
+    GstGLFramebuffer *fbo;
+    GstGLMemory *out_tex;
 
     GstGLShader *shader;
 

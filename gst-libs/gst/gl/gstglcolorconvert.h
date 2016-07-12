@@ -59,8 +59,7 @@ struct _GstGLColorConvert
   GstBuffer *    outbuf;
 
   /* used for the conversion */
-  GLuint           fbo;
-  GLuint           depth_buffer;
+  GstGLFramebuffer *fbo;
   GstGLShader     *shader;
 
   /* <private> */

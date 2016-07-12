@@ -184,35 +184,24 @@ gst_gl_filter_app_set_caps (GstGLFilter * filter, GstCaps * incaps,
   return TRUE;
 }
 
-static void
-_emit_draw_signal (guint tex, gint width, gint height, gpointer data)
-{
-  GstGLFilterApp *app_filter = GST_GL_FILTER_APP (data);
-  gboolean drawn;
-
-  g_signal_emit (app_filter, gst_gl_filter_app_signals[CLIENT_DRAW_SIGNAL], 0,
-      tex, width, height, &drawn);
-
-  app_filter->default_draw = !drawn;
-}
-
 struct glcb2
 {
-  GLCB func;
-  gpointer data;
+  GstGLFilterApp *app;
   GstGLMemory *in_tex;
   GstGLMemory *out_tex;
 };
 
-/* convenience functions to simplify filter development */
-static void
-_glcb2 (gpointer data)
+static gboolean
+_emit_draw_signal (gpointer data)
 {
   struct glcb2 *cb = data;
+  gboolean drawn;
 
-  cb->func (gst_gl_memory_get_texture_width (cb->in_tex),
-      gst_gl_memory_get_texture_height (cb->in_tex), cb->in_tex->tex_id,
-      cb->data);
+  g_signal_emit (cb->app, gst_gl_filter_app_signals[CLIENT_DRAW_SIGNAL], 0,
+      cb->in_tex->tex_id, gst_gl_memory_get_texture_width (cb->out_tex),
+      gst_gl_memory_get_texture_height (cb->out_tex), &drawn);
+
+  return !drawn;
 }
 
 static gboolean
@@ -220,20 +209,18 @@ gst_gl_filter_app_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
     GstGLMemory * out_tex)
 {
   GstGLFilterApp *app_filter = GST_GL_FILTER_APP (filter);
+  gboolean default_draw;
   struct glcb2 cb;
 
-  cb.func = (GLCB) _emit_draw_signal;
-  cb.data = filter;
+  cb.app = app_filter;
   cb.in_tex = in_tex;
   cb.out_tex = out_tex;
 
-  //blocking call, use a FBO
-  gst_gl_context_use_fbo_v2 (GST_GL_BASE_FILTER (filter)->context,
-      GST_VIDEO_INFO_WIDTH (&filter->out_info),
-      GST_VIDEO_INFO_HEIGHT (&filter->out_info),
-      filter->fbo, filter->depthbuffer, out_tex->tex_id, _glcb2, &cb);
+  default_draw =
+      gst_gl_framebuffer_draw_to_texture (filter->fbo,
+      out_tex, _emit_draw_signal, &cb);
 
-  if (app_filter->default_draw) {
+  if (default_draw) {
     gst_gl_filter_render_to_target_with_shader (filter, TRUE, in_tex, out_tex,
         filter->default_shader);
   }

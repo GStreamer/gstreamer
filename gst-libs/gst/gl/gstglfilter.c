@@ -228,12 +228,11 @@ gst_gl_filter_gl_stop (GstGLBaseFilter * base_filter)
     filter->vbo_indices = 0;
   }
 
-  if (filter->fbo != 0) {
-    gst_gl_context_del_fbo (context, filter->fbo, filter->depthbuffer);
+  if (filter->fbo != NULL) {
+    gst_object_unref (filter->fbo);
+    filter->fbo = NULL;
   }
 
-  filter->fbo = 0;
-  filter->depthbuffer = 0;
   filter->default_shader = NULL;
   filter->draw_attr_position_loc = -1;
   filter->draw_attr_texture_loc = -1;
@@ -691,14 +690,12 @@ gst_gl_filter_gl_set_caps (GstGLBaseFilter * bt, GstCaps * incaps,
   out_width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
 
-  if (filter->fbo) {
-    gst_gl_context_del_fbo (context, filter->fbo, filter->depthbuffer);
-    filter->fbo = 0;
-    filter->depthbuffer = 0;
-  }
-  //blocking call, generate a FBO
-  if (!gst_gl_context_gen_fbo (context, out_width, out_height,
-          &filter->fbo, &filter->depthbuffer))
+  if (filter->fbo)
+    gst_object_unref (filter->fbo);
+
+  if (!(filter->fbo =
+          gst_gl_framebuffer_new_with_default_depth (context, out_width,
+              out_height)))
     goto context_error;
 
   if (filter_class->init_fbo) {
@@ -1009,12 +1006,14 @@ struct glcb2
 };
 
 /* convenience functions to simplify filter development */
-static void
+static gboolean
 _glcb2 (gpointer data)
 {
   struct glcb2 *cb = data;
 
   cb->func (cb->width, cb->height, cb->texture, cb->data);
+
+  return TRUE;
 }
 
 /**
@@ -1034,7 +1033,6 @@ void
 gst_gl_filter_render_to_target (GstGLFilter * filter, gboolean resize,
     GstGLMemory * input, GstGLMemory * output, GLCB func, gpointer data)
 {
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   guint in_width, in_height, out_width, out_height;
   struct glcb2 cb;
 
@@ -1057,8 +1055,7 @@ gst_gl_filter_render_to_target (GstGLFilter * filter, gboolean resize,
   cb.width = in_width;
   cb.height = in_height;
 
-  gst_gl_context_use_fbo_v2 (context, out_width, out_height,
-      filter->fbo, filter->depthbuffer, output->tex_id, _glcb2, &cb);
+  gst_gl_framebuffer_draw_to_texture (filter->fbo, output, _glcb2, &cb);
 }
 
 static void

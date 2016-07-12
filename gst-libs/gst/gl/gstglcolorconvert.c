@@ -549,11 +549,9 @@ gst_gl_color_convert_reset (GstGLColorConvert * convert)
 {
   guint i;
 
-  if (convert->fbo || convert->depth_buffer) {
-    gst_gl_context_del_fbo (convert->context, convert->fbo,
-        convert->depth_buffer);
-    convert->fbo = 0;
-    convert->depth_buffer = 0;
+  if (convert->fbo) {
+    gst_object_unref (convert->fbo);
+    convert->fbo = NULL;
   }
 
   for (i = 0; i < convert->priv->convert_info.out_n_textures; i++) {
@@ -2027,7 +2025,7 @@ _init_convert (GstGLColorConvert * convert)
 
   gst_gl_context_clear_shader (convert->context);
 
-  if (convert->fbo == 0 && !_init_convert_fbo (convert)) {
+  if (convert->fbo == NULL && !_init_convert_fbo (convert)) {
     goto error;
   }
 
@@ -2088,82 +2086,16 @@ incompatible_api:
 static gboolean
 _init_convert_fbo (GstGLColorConvert * convert)
 {
-  GstGLFuncs *gl;
   guint out_width, out_height;
-  GLuint fake_texture = 0;      /* a FBO must hava texture to init */
-  GLenum internal_format;
-
-  gl = convert->context->gl_vtable;
 
   out_width = GST_VIDEO_INFO_WIDTH (&convert->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&convert->out_info);
 
-  if (!gl->GenFramebuffers) {
-    /* turn off the pipeline because Frame buffer object is a not present */
-    gst_gl_context_set_error (convert->context,
-        "Context, EXT_framebuffer_object supported: no");
-    return FALSE;
-  }
+  convert->fbo =
+      gst_gl_framebuffer_new_with_default_depth (convert->context, out_width,
+      out_height);
 
-  GST_INFO ("Context, EXT_framebuffer_object supported: yes");
-
-  /* setup FBO */
-  gl->GenFramebuffers (1, &convert->fbo);
-  gl->BindFramebuffer (GL_FRAMEBUFFER, convert->fbo);
-
-  /* setup the render buffer for depth */
-  gl->GenRenderbuffers (1, &convert->depth_buffer);
-  gl->BindRenderbuffer (GL_RENDERBUFFER, convert->depth_buffer);
-  if (USING_OPENGL (convert->context) || USING_OPENGL3 (convert->context)) {
-    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
-        out_width, out_height);
-  }
-  if (USING_GLES2 (convert->context)) {
-    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
-        out_width, out_height);
-  }
-
-  /* a fake texture is attached to the convert FBO (cannot init without it) */
-  gl->GenTextures (1, &fake_texture);
-  gl->BindTexture (GL_TEXTURE_2D, fake_texture);
-  internal_format =
-      gst_gl_sized_gl_format_from_gl_format_type (convert->context, GL_RGBA,
-      GL_UNSIGNED_BYTE);
-  gl->TexImage2D (GL_TEXTURE_2D, 0, internal_format, out_width, out_height, 0,
-      GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  /* attach the texture to the FBO to renderer to */
-  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_2D, fake_texture, 0);
-
-  /* attach the depth render buffer to the FBO */
-  gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-      GL_RENDERBUFFER, convert->depth_buffer);
-
-  if (USING_OPENGL (convert->context)) {
-    gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-        GL_RENDERBUFFER, convert->depth_buffer);
-  }
-
-  if (!gst_gl_context_check_framebuffer_status (convert->context)) {
-    gst_gl_context_set_error (convert->context,
-        "GL framebuffer status incomplete");
-
-    gl->DeleteTextures (1, &fake_texture);
-
-    return FALSE;
-  }
-
-  /* unbind the FBO */
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
-
-  gl->DeleteTextures (1, &fake_texture);
-
-  return TRUE;
+  return convert->fbo != NULL;
 }
 
 static gboolean
@@ -2487,21 +2419,13 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   gl = context->gl_vtable;
 
-  out_width = GST_VIDEO_INFO_WIDTH (&convert->out_info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&convert->out_info);
-
-  gl->BindFramebuffer (GL_FRAMEBUFFER, convert->fbo);
+  gst_gl_framebuffer_bind (convert->fbo);
 
   /* attach the texture to the FBO to renderer to */
   for (i = 0; i < c_info->out_n_textures; i++) {
-    guint gl_target =
-        gst_gl_texture_target_to_gl (convert->priv->to_texture_target);
+    GstGLBaseMemory *tex = (GstGLBaseMemory *) convert->priv->out_tex[i];
 
-    /* needed? */
-    gl->BindTexture (gl_target, convert->priv->out_tex[i]->tex_id);
-
-    gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
-        gl_target, convert->priv->out_tex[i]->tex_id, 0);
+    gst_gl_framebuffer_attach (convert->fbo, GL_COLOR_ATTACHMENT0 + i, tex);
   }
 
   if (gl->DrawBuffers)
@@ -2511,6 +2435,8 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
 
+  gst_gl_framebuffer_get_effective_dimensions (convert->fbo, &out_width,
+      &out_height);
   gl->Viewport (0, 0, out_width, out_height);
 
   gst_gl_shader_use (convert->shader);
@@ -2556,7 +2482,7 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   gst_gl_context_check_framebuffer_status (context);
 
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
+  gst_gl_context_clear_framebuffer (context);
 
   return TRUE;
 }

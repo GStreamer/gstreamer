@@ -125,6 +125,7 @@ struct _GstGLVideoMixer
     GLuint vao;
     GLuint vbo_indices;
     GLuint checker_vbo;
+    GstGLMemory *out_tex;
 };
 
 struct _GstGLVideoMixerClass

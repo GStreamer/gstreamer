@@ -68,8 +68,7 @@ struct _GstGLViewConvert
   gboolean initted;
   gboolean reconfigure;
 
-  GLuint fbo;
-  GLuint depth_buffer;
+  GstGLFramebuffer *fbo;
 
   GstGLViewConvertPrivate *priv;
 };

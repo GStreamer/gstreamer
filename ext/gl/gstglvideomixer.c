@@ -475,7 +475,7 @@ static gboolean gst_gl_video_mixer_init_shader (GstGLMixer * mixer,
 
 static gboolean gst_gl_video_mixer_process_textures (GstGLMixer * mixer,
     GstGLMemory * out_tex);
-static void gst_gl_video_mixer_callback (gpointer stuff);
+static gboolean gst_gl_video_mixer_callback (gpointer stuff);
 
 /* *INDENT-OFF* */
 
@@ -1155,16 +1155,25 @@ gst_gl_video_mixer_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
       video_mixer_f_src, &video_mixer->shader);
 }
 
+static void
+_video_mixer_process_gl (GstGLContext * context, GstGLVideoMixer * video_mixer)
+{
+  GstGLMixer *mixer = GST_GL_MIXER (video_mixer);
+
+  gst_gl_framebuffer_draw_to_texture (mixer->fbo, video_mixer->out_tex,
+      gst_gl_video_mixer_callback, video_mixer);
+}
+
 static gboolean
 gst_gl_video_mixer_process_textures (GstGLMixer * mix, GstGLMemory * out_tex)
 {
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (mix);
+  GstGLContext *context = GST_GL_BASE_MIXER (mix)->context;
 
-  gst_gl_context_use_fbo_v2 (GST_GL_BASE_MIXER (mix)->context,
-      GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR (mix)->info),
-      GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR (mix)->info),
-      mix->fbo, mix->depthbuffer,
-      out_tex->tex_id, gst_gl_video_mixer_callback, (gpointer) video_mixer);
+  video_mixer->out_tex = out_tex;
+
+  gst_gl_context_thread_add (context,
+      (GstGLContextThreadFunc) _video_mixer_process_gl, video_mixer);
 
   return TRUE;
 }
@@ -1383,7 +1392,7 @@ _set_blend_state (GstGLVideoMixer * video_mixer, GstGLVideoMixerPad * mix_pad)
 }
 
 /* opengl scene, params: input texture (not the output mixer->texture) */
-static void
+static gboolean
 gst_gl_video_mixer_callback (gpointer stuff)
 {
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (stuff);
@@ -1411,7 +1420,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
   }
 
   if (!_draw_background (video_mixer))
-    return;
+    return FALSE;
 
   gst_gl_shader_use (video_mixer->shader);
 
@@ -1546,4 +1555,6 @@ gst_gl_video_mixer_callback (gpointer stuff)
   gl->Disable (GL_BLEND);
 
   gst_gl_context_clear_shader (GST_GL_BASE_MIXER (mixer)->context);
+
+  return TRUE;
 }

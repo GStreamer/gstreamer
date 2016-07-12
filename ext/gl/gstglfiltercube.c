@@ -79,7 +79,7 @@ static gboolean gst_gl_filter_cube_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
 static void gst_gl_filter_cube_reset_gl (GstGLFilter * filter);
 static gboolean gst_gl_filter_cube_init_shader (GstGLFilter * filter);
-static void _callback (gpointer stuff);
+static gboolean _callback (gpointer stuff);
 static gboolean gst_gl_filter_cube_filter_texture (GstGLFilter * filter,
     GstGLMemory * in_tex, GstGLMemory * out_tex);
 
@@ -342,13 +342,8 @@ gst_gl_filter_cube_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
 
   cube_filter->in_tex = in_tex;
 
-  /* blocking call, use a FBO */
-  gst_gl_context_use_fbo_v2 (GST_GL_BASE_FILTER (filter)->context,
-      GST_VIDEO_INFO_WIDTH (&filter->out_info),
-      GST_VIDEO_INFO_HEIGHT (&filter->out_info), filter->fbo,
-      filter->depthbuffer, out_tex->tex_id, _callback, (gpointer) cube_filter);
-
-  return TRUE;
+  return gst_gl_framebuffer_draw_to_texture (filter->fbo, out_tex, _callback,
+      cube_filter);
 }
 
 /* *INDENT-OFF* */
@@ -440,7 +435,7 @@ _unbind_buffer (GstGLFilterCube * cube_filter)
   gl->DisableVertexAttribArray (cube_filter->attr_texture);
 }
 
-static void
+static gboolean
 _callback (gpointer stuff)
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
@@ -516,4 +511,6 @@ _callback (gpointer stuff)
   xrot += 0.3f;
   yrot += 0.2f;
   zrot += 0.4f;
+
+  return TRUE;
 }

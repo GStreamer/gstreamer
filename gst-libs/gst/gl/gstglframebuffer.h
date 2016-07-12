@@ -38,31 +38,55 @@ typedef struct _GstGLFramebuffer GstGLFramebuffer;
 typedef struct _GstGLFramebufferClass GstGLFramebufferClass;
 typedef struct _GstGLFramebufferPrivate GstGLFramebufferPrivate;
 
+/**
+ * GstGLFramebufferFunc:
+ * @data: user data
+ *
+ * callback definition for operating through a Framebuffer object
+ */
+typedef gboolean (*GstGLFramebufferFunc) (gpointer stuff);
+
 struct _GstGLFramebuffer
 {
-  GObject             object;
+  GstObject             object;
 
   /* <private> */
   GstGLContext *context;
+
+  guint fbo_id;
+  GArray *attachments;
 
   GstGLFramebufferPrivate  *priv;
 };
 
 struct _GstGLFramebufferClass
 {
-  GObjectClass object_class;
+  GstObjectClass object_class;
 };
 
-GstGLFramebuffer *gst_gl_framebuffer_new (GstGLContext *context);
+GstGLFramebuffer *      gst_gl_framebuffer_new                      (GstGLContext *context);
+GstGLFramebuffer *      gst_gl_framebuffer_new_with_default_depth   (GstGLContext *context,
+                                                                     guint width,
+                                                                     guint height);
 
-gboolean gst_gl_framebuffer_generate (GstGLFramebuffer *frame, gint width, gint height,
-    guint * fbo, guint * depthbuffer);
+guint                   gst_gl_framebuffer_get_id                   (GstGLFramebuffer * fb);
 
-gboolean gst_gl_framebuffer_use_v2 (GstGLFramebuffer * frame, gint texture_fbo_width,
-    gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
-    GLuint texture_fbo, GLCB_V2 cb, gpointer stuff);
+void                    gst_gl_framebuffer_attach                   (GstGLFramebuffer * fb,
+                                                                     guint attachment_point,
+                                                                     GstGLBaseMemory * mem);
+void                    gst_gl_framebuffer_bind                     (GstGLFramebuffer * fb);
+void                    gst_gl_context_clear_framebuffer            (GstGLContext * context);
 
-void gst_gl_framebuffer_delete (GstGLFramebuffer *frame, guint fbo, guint depth);
+void                    gst_gl_framebuffer_get_effective_dimensions (GstGLFramebuffer * fb,
+                                                                     guint * width,
+                                                                     guint * height);
+
+gboolean                gst_gl_context_check_framebuffer_status     (GstGLContext * context);
+
+gboolean                gst_gl_framebuffer_draw_to_texture          (GstGLFramebuffer * fb,
+                                                                     GstGLMemory * mem,
+                                                                     GstGLFramebufferFunc cb,
+                                                                     gpointer user_data);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLFramebuffer, gst_object_unref)

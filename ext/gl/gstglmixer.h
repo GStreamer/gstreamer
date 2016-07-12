@@ -84,8 +84,7 @@ struct _GstGLMixer
 {
   GstGLBaseMixer vaggregator;
 
-  GLuint fbo;
-  GLuint depthbuffer;
+  GstGLFramebuffer *fbo;
 
   GstCaps *out_caps;
 
