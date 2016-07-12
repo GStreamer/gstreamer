@@ -1409,7 +1409,7 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
   gst_vaapisink_ensure_colorbalance (sink);
   gst_vaapisink_ensure_rotation (sink, TRUE);
 
-  GST_DEBUG ("render surface %" GST_VAAPI_ID_FORMAT,
+  GST_TRACE_OBJECT (sink, "render surface %" GST_VAAPI_ID_FORMAT,
       GST_VAAPI_ID_ARGS (gst_vaapi_surface_get_id (surface)));
 
   if (!surface_rect)
