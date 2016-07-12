@@ -102,10 +102,6 @@ GST_START_TEST (test_basic)
               &gl_mem->info) == FALSE);
       fail_if (gl_mem->mem.context != gl_mem2->mem.context);
 
-      if (gst_gl_context_get_error ())
-        printf ("%s\n", gst_gl_context_get_error ());
-      fail_if (gst_gl_context_get_error () != NULL);
-
       gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
       gst_memory_unref (mem);
       gst_memory_unref (mem2);
@@ -272,10 +268,6 @@ test_transfer_allocator (const gchar * allocator_name)
   fail_unless (GST_MEMORY_FLAG_IS_SET (mem3,
           GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
 
-  if (gst_gl_context_get_error ())
-    printf ("%s\n", gst_gl_context_get_error ());
-  fail_if (gst_gl_context_get_error () != NULL);
-
   gst_memory_unref (mem);
   gst_memory_unref (mem2);
   gst_memory_unref (mem3);
@@ -333,10 +325,6 @@ GST_START_TEST (test_separate_transfer)
   gst_memory_unmap (mem, &info);
 
   /* FIXME: add download transfer */
-
-  if (gst_gl_context_get_error ())
-    printf ("%s\n", gst_gl_context_get_error ());
-  fail_if (gst_gl_context_get_error () != NULL);
 
   gst_memory_unref (mem);
   gst_object_unref (gl_allocator);

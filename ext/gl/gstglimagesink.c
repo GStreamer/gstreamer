@@ -1777,7 +1777,7 @@ gst_glimage_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   if (g_atomic_int_get (&glimage_sink->to_quit) != 0) {
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
+        ("%s", "Quit requested"), (NULL));
     return GST_FLOW_ERROR;
   }
 
@@ -1787,7 +1787,7 @@ gst_glimage_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 redisplay_failed:
   {
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
+        ("%s", "Window redisplay failed"), (NULL));
     return GST_FLOW_ERROR;
   }
 }
@@ -2306,7 +2306,7 @@ gst_glimage_sink_on_close (GstGLImageSink * gl_sink)
 {
   GstGLWindow *window;
 
-  gst_gl_context_set_error (gl_sink->context, "Output window was closed");
+  GST_WARNING_OBJECT (gl_sink, "Output window was closed");
 
   window = gst_gl_context_get_window (gl_sink->context);
 

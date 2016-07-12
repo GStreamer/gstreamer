@@ -1922,8 +1922,8 @@ _init_convert (GstGLColorConvert * convert)
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&convert->out_info)));
 
   if (!gl->CreateProgramObject && !gl->CreateProgram) {
-    gst_gl_context_set_error (convert->context,
-        "Cannot perform color conversion without OpenGL shaders");
+    GST_ERROR_OBJECT (convert, "Cannot perform color conversion without "
+        "OpenGL shaders");
     goto error;
   }
 
@@ -2061,8 +2061,7 @@ _init_convert (GstGLColorConvert * convert)
   return TRUE;
 
 unhandled_format:
-  gst_gl_context_set_error (convert->context,
-      "Don't know how to convert from %s to %s",
+  GST_ERROR_OBJECT (convert, "Don't know how to convert from %s to %s",
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&convert->in_info)),
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&convert->out_info)));
 
@@ -2071,8 +2070,7 @@ error:
 
 incompatible_api:
   {
-    gst_gl_context_set_error (convert->context,
-        "Converting from %s to %s requires "
+    GST_ERROR_OBJECT (convert, "Converting from %s to %s requires "
         "functionality that the current OpenGL setup does not support",
         gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&convert->in_info)),
         gst_video_format_to_string (GST_VIDEO_INFO_FORMAT
@@ -2080,7 +2078,6 @@ incompatible_api:
     return FALSE;
   }
 }
-
 
 /* called by _init_convert (in the gl thread) */
 static gboolean
@@ -2218,15 +2215,13 @@ out:
 
       if (!gst_memory_map ((GstMemory *) convert->priv->out_tex[j], &from_info,
               GST_MAP_READ | GST_MAP_GL)) {
-        gst_gl_context_set_error (convert->context, "Failed to map "
-            "intermediate memory");
+        GST_ERROR_OBJECT (convert, "Failed to map intermediate memory");
         res = FALSE;
         continue;
       }
       if (!gst_memory_map ((GstMemory *) out_tex, &to_info,
               GST_MAP_WRITE | GST_MAP_GL)) {
-        gst_gl_context_set_error (convert->context, "Failed to map "
-            "intermediate memory");
+        GST_ERROR_OBJECT (convert, "Failed to map intermediate memory");
         res = FALSE;
         continue;
       }
