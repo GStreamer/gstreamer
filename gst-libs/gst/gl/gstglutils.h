@@ -29,18 +29,6 @@
 G_BEGIN_DECLS
 
 /**
- * GstGLContextProjection:
- *
- * %GST_GL_DISPLAY_PROJECTION_ORTHO2D: Orthogonal projection
- * %GST_GL_DISPLAY_CONVERSION_MATRIX: Perspective projection 
- */
-typedef enum
-{
-  GST_GL_DISPLAY_PROJECTION_ORTHO2D,
-  GST_GL_DISPLAY_PROJECTION_PERSPECTIVE
-} GstGLDisplayProjection;
-
-/**
  * CDCB:
  * @texture: texture to draw
  * @width: new width
