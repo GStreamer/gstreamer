@@ -2241,6 +2241,7 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       ret = GST_FLOW_EOS;       /* return EOS to make the source stop */
     } else if (ret == GST_ADAPTIVE_DEMUX_FLOW_END_OF_FRAGMENT) {
       /* Behaves like an EOS event from upstream */
+      stream->fragment.finished = TRUE;
       ret = klass->finish_fragment (demux, stream);
       if (ret == (GstFlowReturn) GST_ADAPTIVE_DEMUX_FLOW_SWITCH) {
         ret = GST_FLOW_EOS;     /* return EOS to make the source stop */
@@ -2288,11 +2289,17 @@ gst_adaptive_demux_stream_fragment_download_finish (GstAdaptiveDemuxStream *
 static GstFlowReturn
 gst_adaptive_demux_eos_handling (GstAdaptiveDemuxStream * stream)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (stream->demux);
 
-  ret = klass->finish_fragment (stream->demux, stream);
+  if (!klass->need_another_chunk || stream->fragment.chunk_size == -1
+      || !klass->need_another_chunk (stream)
+      || stream->fragment.chunk_size == 0) {
+    stream->fragment.finished = TRUE;
+    ret = klass->finish_fragment (stream->demux, stream);
+  }
   gst_adaptive_demux_stream_fragment_download_finish (stream, ret, NULL);
+
   return ret;
 }
 
@@ -2820,6 +2827,7 @@ static GstFlowReturn
 gst_adaptive_demux_stream_download_fragment (GstAdaptiveDemuxStream * stream)
 {
   GstAdaptiveDemux *demux = stream->demux;
+  GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
   gchar *url = NULL;
   GstFlowReturn ret;
   gboolean retried_once = FALSE, live;
@@ -2851,11 +2859,82 @@ again:
 
   stream->last_ret = GST_FLOW_OK;
   http_status = 200;
-  ret =
-      gst_adaptive_demux_stream_download_uri (demux, stream, url,
-      stream->fragment.range_start, stream->fragment.range_end, &http_status);
-  GST_DEBUG_OBJECT (stream->pad, "Fragment download result: %d (%d) %s",
-      stream->last_ret, http_status, gst_flow_get_name (stream->last_ret));
+
+  if (klass->need_another_chunk && klass->need_another_chunk (stream)
+      && stream->fragment.chunk_size != 0) {
+    gint64 range_start, range_end, chunk_start, chunk_end;
+    guint64 download_total_bytes;
+    gint chunk_size = stream->fragment.chunk_size;
+
+    range_start = chunk_start = stream->fragment.range_start;
+    range_end = stream->fragment.range_end;
+    /* HTTP ranges are inclusive for the end */
+    if (chunk_size != -1)
+      chunk_end = range_start + chunk_size - 1;
+    else
+      chunk_end = range_end;
+
+    if (range_end != -1)
+      chunk_end = MIN (chunk_end, range_end);
+
+    while (!stream->fragment.finished && (chunk_start <= range_end
+            || range_end == -1)) {
+      download_total_bytes = stream->download_total_bytes;
+
+      ret =
+          gst_adaptive_demux_stream_download_uri (demux, stream, url,
+          chunk_start, chunk_end, &http_status);
+
+      GST_DEBUG_OBJECT (stream->pad,
+          "Fragment chunk download result: %d (%d) %s", stream->last_ret,
+          http_status, gst_flow_get_name (stream->last_ret));
+
+      /* Don't retry for any chunks except the first. We would have sent
+       * data downstream already otherwise and it's difficult to recover
+       * from that in a meaningful way */
+      if (chunk_start > range_start)
+        retried_once = TRUE;
+
+      /* FIXME: Check for 416 Range Not Satisfiable here and fall back to
+       * downloading up to -1. We don't know the full duration.
+       * Needs https://bugzilla.gnome.org/show_bug.cgi?id=756806 */
+      if (ret != GST_FLOW_OK && chunk_end == -1) {
+        break;
+      } else if (ret != GST_FLOW_OK) {
+        chunk_end = -1;
+        stream->last_ret = GST_FLOW_OK;
+        continue;
+      }
+
+      if (chunk_end == -1)
+        break;
+
+      /* Short read, we're at the end now */
+      if (stream->download_total_bytes - download_total_bytes <
+          chunk_end + 1 - chunk_start)
+        break;
+
+      if (!klass->need_another_chunk (stream))
+        break;
+
+      /* HTTP ranges are inclusive for the end */
+      chunk_start += chunk_size;
+      chunk_size = stream->fragment.chunk_size;
+      if (chunk_size != -1)
+        chunk_end = chunk_start + chunk_size - 1;
+      else
+        chunk_end = range_end;
+
+      if (range_end != -1)
+        chunk_end = MIN (chunk_end, range_end);
+    }
+  } else {
+    ret =
+        gst_adaptive_demux_stream_download_uri (demux, stream, url,
+        stream->fragment.range_start, stream->fragment.range_end, &http_status);
+    GST_DEBUG_OBJECT (stream->pad, "Fragment download result: %d (%d) %s",
+        stream->last_ret, http_status, gst_flow_get_name (stream->last_ret));
+  }
   if (ret == GST_FLOW_OK)
     goto beach;
 
@@ -3649,6 +3728,7 @@ gst_adaptive_demux_stream_update_fragment_info (GstAdaptiveDemux * demux,
   /* Make sure the sub-class will update bitrate, or else
    * we will later */
   stream->fragment.bitrate = 0;
+  stream->fragment.finished = FALSE;
 
   return klass->stream_update_fragment_info (stream);
 }
@@ -3745,6 +3825,8 @@ gst_adaptive_demux_stream_fragment_clear (GstAdaptiveDemuxStreamFragment * f)
   f->index_uri = NULL;
   f->index_range_start = 0;
   f->index_range_end = -1;
+
+  f->finished = FALSE;
 }
 
 /* must be called with manifest_lock taken */

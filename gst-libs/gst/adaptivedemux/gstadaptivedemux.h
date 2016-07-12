@@ -98,6 +98,9 @@ struct _GstAdaptiveDemuxStreamFragment
   gint64 range_start;
   gint64 range_end;
 
+  /* when chunked downloading is used, may be be updated need_another_chunk() */
+  guint chunk_size;
+
   /* when headers are needed */
   gchar *header_uri;
   gint64 header_range_start;
@@ -111,6 +114,8 @@ struct _GstAdaptiveDemuxStreamFragment
   /* Nominal bitrate as provided by
    * sub-class or calculated by base-class */
   guint bitrate;
+
+  gboolean finished;
 };
 
 struct _GstAdaptiveDemuxStream
@@ -326,6 +331,17 @@ struct _GstAdaptiveDemuxClass
   GstFlowReturn (*stream_seek)     (GstAdaptiveDemuxStream * stream, gboolean forward, GstSeekFlags flags, GstClockTime target_ts, GstClockTime * final_ts);
   gboolean      (*stream_has_next_fragment)  (GstAdaptiveDemuxStream * stream);
   GstFlowReturn (*stream_advance_fragment) (GstAdaptiveDemuxStream * stream);
+
+  /**
+   * need_another_chunk:
+   * @stream: #GstAdaptiveDemuxStream
+   *
+   * If chunked downloading is used (chunk_size != 0) this is called once as
+   * chunk is finished to decide whether more has to be downloaded or not.
+   * May update chunk_size to a different value
+   */
+  gboolean      (*need_another_chunk) (GstAdaptiveDemuxStream * stream);
+
   /**
    * stream_update_fragment_info:
    * @stream: #GstAdaptiveDemuxStream
