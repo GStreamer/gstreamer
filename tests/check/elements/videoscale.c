@@ -633,6 +633,7 @@ _test_negotiation (const gchar * src_templ, const gchar * sink_templ,
   g_signal_connect (bus, "message", G_CALLBACK (_test_negotiation_message),
       &data);
 
+  gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
 
   fail_unless (gst_element_set_state (pipeline,
