@@ -30,6 +30,7 @@
 #endif
 
 #include "gstahcsrc.h"
+#include "gstahssrc.h"
 
 #include "gstamc.h"
 #include "gstamc-constants.h"
@@ -3337,13 +3338,24 @@ plugin_init (GstPlugin * plugin)
     goto failed_graphics_imageformat;
   }
 
+  if (!gst_android_hardware_sensor_init ()) {
+    goto failed_hardware_camera;
+  }
+
   if (!gst_element_register (plugin, "ahcsrc", GST_RANK_NONE, GST_TYPE_AHC_SRC)) {
     GST_ERROR ("Failed to register android camera source");
-    goto failed_hardware_camera;
+    goto failed_hardware_sensor;
+  }
+
+  if (!gst_element_register (plugin, "ahssrc", GST_RANK_NONE, GST_TYPE_AHS_SRC)) {
+    GST_ERROR ("Failed to register android sensor source");
+    goto failed_hardware_sensor;
   }
 
   return TRUE;
 
+failed_hardware_sensor:
+  gst_android_hardware_sensor_deinit ();
 failed_hardware_camera:
   gst_android_hardware_camera_deinit ();
 failed_graphics_imageformat:
