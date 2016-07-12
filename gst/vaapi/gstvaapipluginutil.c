@@ -136,12 +136,19 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
   GstGLDisplay *const gl_display = gst_gl_context_get_display (gl_context);
   gpointer native_display =
       GSIZE_TO_POINTER (gst_gl_display_get_handle (gl_display));
+  GstGLPlatform platform = gst_gl_context_get_gl_platform (gl_context);
   GstVaapiDisplay *display, *out_display;
   GstVaapiDisplayType display_type;
 
   switch (gst_gl_display_get_handle_type (gl_display)) {
 #if USE_X11
     case GST_GL_DISPLAY_TYPE_X11:
+#if USE_GLX
+      if (platform == GST_GL_PLATFORM_GLX) {
+        display_type = GST_VAAPI_DISPLAY_TYPE_GLX;
+        break;
+      }
+#endif
       display_type = GST_VAAPI_DISPLAY_TYPE_X11;
       break;
 #endif
@@ -192,7 +199,7 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
   if (!display)
     return NULL;
 
-  switch (gst_gl_context_get_gl_platform (gl_context)) {
+  switch (platform) {
 #if USE_EGL
     case GST_GL_PLATFORM_EGL:{
       guint gles_version;
