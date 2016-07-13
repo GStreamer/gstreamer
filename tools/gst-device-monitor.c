@@ -128,10 +128,12 @@ bus_msg_handler (GstBus * bus, GstMessage * msg, gpointer user_data)
     case GST_MESSAGE_DEVICE_ADDED:
       gst_message_parse_device_added (msg, &device);
       device_added (device);
+      gst_object_unref (device);
       break;
     case GST_MESSAGE_DEVICE_REMOVED:
       gst_message_parse_device_removed (msg, &device);
       device_removed (device);
+      gst_object_unref (device);
       break;
     default:
       g_print ("%s message\n", GST_MESSAGE_TYPE_NAME (msg));
