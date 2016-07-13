@@ -85,6 +85,8 @@ AG_GST_ARG_ENABLE_EXTERNAL
 
 AG_GST_ARG_ENABLE_EXPERIMENTAL
 
+AG_GST_PKG_CONFIG_PATH
+
 dnl *** checks for platform ***
 
 dnl * hardware/architecture *
