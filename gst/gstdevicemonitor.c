@@ -49,12 +49,14 @@
  *          name = gst_device_get_display_name (device);
  *          g_print("Device added: %s\n", name);
  *          g_free (name);
+ *          gst_object_unref (device);
  *          break;
  *        case GST_MESSAGE_DEVICE_REMOVED:
  *          gst_message_parse_device_removed (message, &device);
  *          name = gst_device_get_display_name (device);
  *          g_print("Device removed: %s\n", name);
  *          g_free (name);
+ *          gst_object_unref (device);
  *          break;
  *        default:
  *          break;
