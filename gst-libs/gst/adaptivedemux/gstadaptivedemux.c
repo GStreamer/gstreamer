@@ -3352,13 +3352,30 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
 
     /* the subclass might want to switch pads */
     if (G_UNLIKELY (demux->next_streams)) {
+      GList *iter;
+      gboolean can_expose = TRUE;
+
       gst_task_stop (stream->download_task);
-      /* TODO only allow switching streams if other downloads are not ongoing */
-      GST_DEBUG_OBJECT (demux, "Subclass wants new pads "
-          "to do bitrate switching");
-      gst_adaptive_demux_expose_streams (demux, FALSE);
-      gst_adaptive_demux_start_tasks (demux);
+      g_mutex_lock (&stream->fragment_download_lock);
+      stream->cancelled = TRUE;
+      g_cond_signal (&stream->fragment_download_cond);
+      g_mutex_unlock (&stream->fragment_download_lock);
+
       ret = GST_FLOW_EOS;
+
+      for (iter = demux->streams; iter; iter = g_list_next (iter)) {
+        /* Only expose if all streams are now cancelled (finished downloading) */
+        can_expose &= (stream->cancelled == TRUE);
+      }
+
+      if (can_expose) {
+        GST_DEBUG_OBJECT (demux, "Subclass wants new pads "
+            "to do bitrate switching");
+        gst_adaptive_demux_expose_streams (demux, FALSE);
+        gst_adaptive_demux_start_tasks (demux);
+      } else {
+        GST_LOG_OBJECT (demux, "Not switching yet - ongoing downloads");
+      }
     }
   }
 
