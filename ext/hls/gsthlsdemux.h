@@ -38,6 +38,7 @@
 #endif
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_HLS_DEMUX \
   (gst_hls_demux_get_type())
 #define GST_HLS_DEMUX(obj) \
@@ -52,8 +53,26 @@ G_BEGIN_DECLS
   (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_HLS_DEMUX,GstHLSDemuxClass))
 #define GST_HLS_DEMUX_CAST(obj) \
   ((GstHLSDemux *)obj)
+
 typedef struct _GstHLSDemux GstHLSDemux;
 typedef struct _GstHLSDemuxClass GstHLSDemuxClass;
+typedef struct _GstHLSDemuxStream GstHLSDemuxStream;
+
+#define GST_HLS_DEMUX_STREAM_CAST(stream) ((GstHLSDemuxStream *)(stream))
+
+struct _GstHLSDemuxStream
+{
+  GstAdaptiveDemux adaptive_demux_stream;
+
+  gboolean do_typefind;         /* Whether we need to typefind the next buffer */
+  GstBuffer *pending_typefind_buffer; /* for collecting data until typefind succeeds */
+
+  GstAdapter *pending_encrypted_data;  /* for chunking data into 16 byte multiples for decryption */
+  GstBuffer *pending_decrypted_buffer; /* last decrypted buffer for pkcs7 unpadding.
+                                          We only know that it is the last at EOS */
+  guint64 current_offset;              /* offset we're currently at */
+  gboolean reset_pts;
+};
 
 /**
  * GstHLSDemux:
@@ -68,7 +87,6 @@ struct _GstHLSDemux
 
   gchar *uri;                   /* Original playlist URI */
   GstM3U8Client *client;        /* M3U8 client */
-  gboolean do_typefind;         /* Whether we need to typefind the next buffer */
 
   /* Cache for the last key */
   gchar *key_url;
@@ -84,12 +102,6 @@ struct _GstHLSDemux
 #endif
   gchar *current_key;
   guint8 *current_iv;
-  GstAdapter *pending_encrypted_data;  /* for chunking data into 16 byte multiples for decryption */
-  GstBuffer *pending_decrypted_buffer; /* last decrypted buffer for pkcs7 unpadding.
-                                          We only know that it is the last at EOS */
-  GstBuffer *pending_typefind_buffer;  /* for collecting data until typefind succeeds */
-  guint64 current_offset;              /* offset we're currently at */
-  gboolean reset_pts;
 };
 
 struct _GstHLSDemuxClass
