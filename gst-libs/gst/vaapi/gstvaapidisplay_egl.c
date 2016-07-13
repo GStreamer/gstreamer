@@ -29,230 +29,14 @@
 #include "gstvaapiwindow_priv.h"
 #include "gstvaapitexture_egl.h"
 
-GST_DEBUG_CATEGORY (gst_debug_vaapidisplay_egl);
-
-/* ------------------------------------------------------------------------- */
-/* --- Display backend loader                                            --- */
-/* ------------------------------------------------------------------------- */
-
-typedef struct _GstVaapiDisplayLoader GstVaapiDisplayLoader;
-typedef struct _GstVaapiDisplayLoaderInfo GstVaapiDisplayLoaderInfo;
-
-typedef GstVaapiDisplay *(*GstVaapiDisplayCreateFunc) (const gchar * name);
-typedef GstVaapiDisplay *(*GstVaapiDisplayCreateFromNativeFunc) (gpointer dpy);
-
-struct _GstVaapiDisplayLoader
-{
-  GstVaapiMiniObject parent_instance;
-
-  GModule *module;
-  GPtrArray *module_names;
-  GstVaapiDisplayCreateFunc create_display;
-  GstVaapiDisplayCreateFromNativeFunc create_display_from_native;
-};
-
-struct _GstVaapiDisplayLoaderInfo
-{
-  const gchar *name;
-  GstVaapiDisplayType type;
-  const gchar *create_display;
-  const gchar *create_display_from_native;
-};
-
-static GMutex g_loader_lock;
-static GstVaapiDisplayLoader *g_loader;
-
-/* *INDENT-OFF* */
-static const GstVaapiDisplayLoaderInfo g_loader_info[] = {
-#if USE_WAYLAND
-  { "wayland",
-    GST_VAAPI_DISPLAY_TYPE_WAYLAND,
-    "gst_vaapi_display_wayland_new",
-    "gst_vaapi_display_wayland_new_with_display",
-  },
-#endif
 #if USE_X11
-  { "x11",
-    GST_VAAPI_DISPLAY_TYPE_X11,
-    "gst_vaapi_display_x11_new",
-    "gst_vaapi_display_x11_new_with_display",
-  },
+#include "gstvaapidisplay_x11.h"
 #endif
-  {NULL,}
-};
-/* *INDENT-ON* */
+#if USE_WAYLAND
+#include "gstvaapidisplay_wayland.h"
+#endif
 
-static void
-gst_vaapi_display_loader_finalize (GstVaapiDisplayLoader * loader)
-{
-  if (!loader)
-    return;
-
-  if (loader->module) {
-    g_module_close (loader->module);
-    loader->module = NULL;
-  }
-
-  if (loader->module_names) {
-    g_ptr_array_unref (loader->module_names);
-    loader->module_names = NULL;
-  }
-}
-
-static inline const GstVaapiMiniObjectClass *
-gst_vaapi_display_loader_class (void)
-{
-  static const GstVaapiMiniObjectClass g_class = {
-    .size = sizeof (GstVaapiDisplayLoader),
-    .finalize = (GDestroyNotify) gst_vaapi_display_loader_finalize,
-  };
-  return &g_class;
-}
-
-static inline GstVaapiDisplayLoader *
-gst_vaapi_display_loader_new (void)
-{
-  return (GstVaapiDisplayLoader *)
-      gst_vaapi_mini_object_new0 (gst_vaapi_display_loader_class ());
-}
-
-static gboolean
-gst_vaapi_display_loader_reset_module_names (GstVaapiDisplayLoader * loader,
-    const GstVaapiDisplayLoaderInfo * loader_info)
-{
-  gchar *module_name;
-
-  if (loader->module_names)
-    g_ptr_array_unref (loader->module_names);
-  loader->module_names = g_ptr_array_new_full (3, (GDestroyNotify) g_free);
-  if (!loader->module_names)
-    return FALSE;
-
-  module_name =
-      g_strdup_printf ("libgstvaapi-%s-%s.la", loader_info->name,
-      GST_API_VERSION_S);
-  if (module_name)
-    g_ptr_array_add (loader->module_names, module_name);
-
-  module_name =
-      g_strdup_printf ("libgstvaapi-%s-%s.so", loader_info->name,
-      GST_API_VERSION_S);
-  if (module_name)
-    g_ptr_array_add (loader->module_names, module_name);
-
-  module_name =
-      g_strdup_printf ("libgstvaapi-%s-%s.so.%s", loader_info->name,
-      GST_API_VERSION_S, GST_VAAPI_MAJOR_VERSION_S);
-  if (module_name)
-    g_ptr_array_add (loader->module_names, module_name);
-
-  return loader->module_names->len > 0;
-}
-
-static gboolean
-gst_vaapi_display_loader_try_load_module (GstVaapiDisplayLoader * loader,
-    const GstVaapiDisplayLoaderInfo * loader_info)
-{
-  guint i;
-
-  if (!gst_vaapi_display_loader_reset_module_names (loader, loader_info))
-    return FALSE;
-
-  if (loader->module) {
-    g_module_close (loader->module);
-    loader->module = NULL;
-  }
-
-  for (i = 0; i < loader->module_names->len; i++) {
-    const gchar *const module_name =
-        g_ptr_array_index (loader->module_names, i);
-
-    loader->module = g_module_open (module_name,
-        G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
-    if (loader->module)
-      return TRUE;
-  }
-  return FALSE;
-}
-
-static gboolean
-gst_vaapi_display_loader_try_load (GstVaapiDisplayLoader * loader,
-    const GstVaapiDisplayLoaderInfo * loader_info)
-{
-  guint has_errors = 0;
-
-  if (!gst_vaapi_display_loader_try_load_module (loader, loader_info))
-    return FALSE;
-  GST_DEBUG ("loaded backend: %s", g_module_name (loader->module));
-
-  has_errors |= !g_module_symbol (loader->module,
-      loader_info->create_display, (gpointer *) & loader->create_display);
-  has_errors |= !g_module_symbol (loader->module,
-      loader_info->create_display_from_native,
-      (gpointer *) & loader->create_display_from_native);
-
-  return has_errors == 0;
-}
-
-static GstVaapiDisplay *
-gst_vaapi_display_loader_try_load_any (GstVaapiDisplayLoader * loader)
-{
-  GstVaapiDisplay *display;
-  const GstVaapiDisplayLoaderInfo *loader_info;
-
-  for (loader_info = g_loader_info; loader_info->name != NULL; loader_info++) {
-    if (!gst_vaapi_display_loader_try_load (loader, loader_info))
-      continue;
-
-    display = loader->create_display (NULL);
-    if (display) {
-      GST_INFO ("selected backend: %s", loader_info->name);
-      return display;
-    }
-  }
-  return NULL;
-}
-
-#define gst_vaapi_display_loader_ref(loader) \
-  ((GstVaapiDisplayLoader *) gst_vaapi_mini_object_ref (GST_VAAPI_MINI_OBJECT (loader)))
-#define gst_vaapi_display_loader_unref(loader) \
-  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (loader))
-#define gst_vaapi_display_loader_replace(old_loader_ptr, new_loader) \
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **)(old_loader_ptr), \
-      GST_VAAPI_MINI_OBJECT (new_loader))
-
-static GstVaapiDisplayLoader *
-gst_vaapi_display_loader_acquire_global (void)
-{
-  GstVaapiDisplayLoader *loader;
-
-  g_mutex_lock (&g_loader_lock);
-  loader = g_loader ? gst_vaapi_display_loader_ref (g_loader) :
-      gst_vaapi_display_loader_new ();
-  g_loader = loader;
-  g_mutex_unlock (&g_loader_lock);
-  return loader;
-}
-
-static void
-gst_vaapi_display_loader_release_global (void)
-{
-  g_mutex_lock (&g_loader_lock);
-  gst_vaapi_display_loader_replace (&g_loader, NULL);
-  g_mutex_unlock (&g_loader_lock);
-}
-
-static const GstVaapiDisplayLoaderInfo *
-gst_vaapi_display_loader_map_lookup_type (GstVaapiDisplayType type)
-{
-  const GstVaapiDisplayLoaderInfo *loader_info;
-
-  for (loader_info = g_loader_info; loader_info->name != NULL; loader_info++) {
-    if (loader_info->type == type)
-      return loader_info;
-  }
-  return NULL;
-}
+GST_DEBUG_CATEGORY (gst_debug_vaapidisplay_egl);
 
 /* ------------------------------------------------------------------------- */
 /* --- EGL backend implementation                                        --- */
@@ -310,29 +94,28 @@ static gboolean
 gst_vaapi_display_egl_bind_display (GstVaapiDisplayEGL * display,
     const InitParams * params)
 {
-  GstVaapiDisplay *native_display;
-  GstVaapiDisplayLoader *loader;
-  const GstVaapiDisplayLoaderInfo *loader_info;
+  GstVaapiDisplay *native_display = NULL;
   EglDisplay *egl_display;
 
-  loader = gst_vaapi_display_loader_acquire_global ();
   if (params->display) {
-    loader_info =
-        gst_vaapi_display_loader_map_lookup_type (params->display_type);
-    if (!loader_info)
-      goto error_unsupported_display_type;
-
-    loader = gst_vaapi_display_loader_new ();
-    if (!loader || !gst_vaapi_display_loader_try_load (loader, loader_info))
-      goto error_init_loader;
-
-    native_display = loader->create_display_from_native (params->display);
+#if USE_X11
+    if (params->display_type == GST_VAAPI_DISPLAY_TYPE_X11)
+      native_display = gst_vaapi_display_x11_new_with_display (params->display);
+#endif
+#if USE_WAYLAND
+    if (params->display_type == GST_VAAPI_DISPLAY_TYPE_WAYLAND)
+      native_display =
+          gst_vaapi_display_wayland_new_with_display (params->display);
+#endif
   } else {
-    gst_vaapi_display_loader_ref (loader);
-    native_display = gst_vaapi_display_loader_try_load_any (loader);
+#if USE_X11
+    native_display = gst_vaapi_display_x11_new (NULL);
+#endif
+#if USE_WAYLAND
+    if (!native_display)
+      native_display = gst_vaapi_display_wayland_new (NULL);
+#endif
   }
-  gst_vaapi_display_loader_replace (&display->loader, loader);
-  gst_vaapi_display_loader_unref (loader);
   if (!native_display)
     return FALSE;
 
@@ -347,23 +130,12 @@ gst_vaapi_display_egl_bind_display (GstVaapiDisplayEGL * display,
   egl_object_unref (egl_display);
   display->gles_version = params->gles_version;
   return TRUE;
-
-  /* ERRORS */
-error_unsupported_display_type:
-  GST_ERROR ("unsupported display type (%d)", params->display_type);
-  return FALSE;
-error_init_loader:
-  GST_ERROR ("failed to initialize display backend loader");
-  gst_vaapi_display_loader_replace (&loader, NULL);
-  return FALSE;
 }
 
 static void
 gst_vaapi_display_egl_close_display (GstVaapiDisplayEGL * display)
 {
   gst_vaapi_display_replace (&display->display, NULL);
-  gst_vaapi_display_loader_replace (&display->loader, NULL);
-  gst_vaapi_display_loader_release_global ();
 }
 
 static void
