@@ -1740,8 +1740,8 @@ reconfigure_output_stream (DecodebinOutputStream * output,
     gboolean can_reuse_decoder;
 
     if (needs_decoder) {
-      GstQuery *q = gst_query_new_accept_caps (new_caps);
-      can_reuse_decoder = gst_pad_query (output->decoder_sink, q);
+      can_reuse_decoder =
+          gst_pad_query_accept_caps (output->decoder_sink, new_caps);
     } else
       can_reuse_decoder = FALSE;
 
