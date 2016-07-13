@@ -3611,8 +3611,7 @@ retry:
      * and post a stream-collection onto the bus */
     if (parsepad->active_collection == NULL && fallback_collection) {
       gst_pad_push_event (GST_PAD (parsepad),
-          gst_event_new_stream_collection (gst_object_ref
-              (fallback_collection)));
+          gst_event_new_stream_collection (fallback_collection));
     }
     gst_object_unref (parsepad);
   }

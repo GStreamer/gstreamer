@@ -584,6 +584,7 @@ gst_decodebin3_dispose (GObject * object)
   g_list_free (dbin->active_selection);
   g_list_free (dbin->to_activate);
   g_list_free (dbin->pending_select_streams);
+  g_clear_object (&dbin->collection);
 
   free_input (dbin, dbin->main_input);
   /* FIXME : GO OVER INPUTS */
