@@ -159,7 +159,7 @@ _gl_mem_create (GstGLMemoryEGL * gl_mem, GError ** error)
     return FALSE;
 
   if (gl_mem->image == NULL) {
-    EGLImageKHR image = ctx_egl->eglCreateImage (ctx_egl->egl_display,
+    EGLImageKHR image = ctx_egl->eglCreateImageKHR (ctx_egl->egl_display,
         ctx_egl->egl_context, EGL_GL_TEXTURE_2D_KHR,
         (EGLClientBuffer) (guintptr) gl_mem->mem.tex_id, NULL);
 
