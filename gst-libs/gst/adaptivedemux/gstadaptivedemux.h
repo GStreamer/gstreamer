@@ -152,6 +152,7 @@ struct _GstAdaptiveDemuxStream
   GCond fragment_download_cond;
   gboolean download_finished;   /* protected by fragment_download_lock */
   gboolean cancelled;           /* protected by fragment_download_lock */
+  gboolean src_at_ready;     /* protected by fragment_download_lock */
   gboolean starting_fragment;
   gboolean first_fragment_buffer;
   gint64 download_start_time;
@@ -182,6 +183,8 @@ struct _GstAdaptiveDemux
 {
   /*< private >*/
   GstBin     bin;
+
+  gboolean running;
 
   gsize stream_struct_size;
 
