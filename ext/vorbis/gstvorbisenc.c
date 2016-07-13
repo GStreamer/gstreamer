@@ -775,27 +775,6 @@ gst_vorbis_enc_output_buffers (GstVorbisEnc * vorbisenc)
     while (vorbis_bitrate_flushpacket (&vorbisenc->vd, &op)) {
       GstBuffer *buf;
 
-      if (op.e_o_s) {
-        GstAudioEncoder *enc = GST_AUDIO_ENCODER (vorbisenc);
-        GstClockTime duration;
-
-        GST_DEBUG_OBJECT (vorbisenc, "Got EOS packet from libvorbis");
-        GST_AUDIO_ENCODER_STREAM_LOCK (enc);
-        if (!GST_CLOCK_TIME_IS_VALID (enc->output_segment.stop)) {
-          GST_DEBUG_OBJECT (vorbisenc,
-              "Output segment has no end time, setting");
-          duration =
-              gst_util_uint64_scale (op.granulepos, GST_SECOND,
-              vorbisenc->frequency);
-          enc->output_segment.stop = enc->output_segment.start + duration;
-          GST_DEBUG_OBJECT (enc, "new output segment %" GST_SEGMENT_FORMAT,
-              &enc->output_segment);
-          gst_pad_push_event (GST_AUDIO_ENCODER_SRC_PAD (enc),
-              gst_event_new_segment (&enc->output_segment));
-        }
-        GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
-      }
-
       GST_LOG_OBJECT (vorbisenc, "pushing out a data packet");
       buf =
           gst_audio_encoder_allocate_output_buffer (GST_AUDIO_ENCODER
