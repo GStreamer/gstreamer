@@ -944,6 +944,21 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
   demux->streams = demux->next_streams;
   demux->next_streams = NULL;
 
+  /* First ensure all on-going downloads are finished or cancelled */
+  GST_MANIFEST_UNLOCK (demux);
+  for (iter = old_streams; iter; iter = g_list_next (iter)) {
+    GstAdaptiveDemuxStream *stream = iter->data;
+    g_mutex_lock (&stream->fragment_download_lock);
+    while (!stream->cancelled && !stream->download_finished) {
+      GST_DEBUG_OBJECT (stream->pad,
+          "Waiting for download on active stream to finish");
+      g_cond_wait (&stream->fragment_download_cond,
+          &stream->fragment_download_lock);
+    }
+    g_mutex_unlock (&stream->fragment_download_lock);
+  }
+  GST_MANIFEST_LOCK (demux);
+
   for (iter = demux->streams; iter; iter = g_list_next (iter)) {
     GstAdaptiveDemuxStream *stream = iter->data;
 
@@ -1054,7 +1069,9 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
     gst_event_set_seqnum (stream->pending_segment, demux->priv->segment_seqnum);
   }
 
+  GST_MANIFEST_UNLOCK (demux);
   gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
+  GST_MANIFEST_LOCK (demux);
 
   if (old_streams) {
     GstEvent *eos = gst_event_new_eos ();
@@ -2237,6 +2254,12 @@ _src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_MANIFEST_LOCK (demux);
 
       klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
+
+      g_mutex_lock (&stream->fragment_download_lock);
+      stream->download_finished = TRUE;
+      g_cond_signal (&stream->fragment_download_cond);
+      g_mutex_unlock (&stream->fragment_download_lock);
+
       ret = klass->finish_fragment (demux, stream);
       gst_adaptive_demux_stream_fragment_download_finish (stream, ret, NULL);
 
@@ -2609,6 +2632,8 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
    */
   GST_MANIFEST_UNLOCK (demux);
 
+  /* FIXME: Wait until the src pad is IDLE, as it might be blocked
+   * downstream indefinitely here */
   gst_element_set_state (stream->src, GST_STATE_READY);
 
   GST_MANIFEST_LOCK (demux);
@@ -3356,16 +3381,15 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
       gboolean can_expose = TRUE;
 
       gst_task_stop (stream->download_task);
-      g_mutex_lock (&stream->fragment_download_lock);
-      stream->cancelled = TRUE;
-      g_cond_signal (&stream->fragment_download_cond);
-      g_mutex_unlock (&stream->fragment_download_lock);
 
       ret = GST_FLOW_EOS;
 
       for (iter = demux->streams; iter; iter = g_list_next (iter)) {
-        /* Only expose if all streams are now cancelled (finished downloading) */
-        can_expose &= (stream->cancelled == TRUE);
+        /* Only expose if all streams are now cancelled or finished downloading */
+        g_mutex_lock (&stream->fragment_download_lock);
+        can_expose &= (stream->cancelled == TRUE
+            || stream->download_finished == TRUE);
+        g_mutex_unlock (&stream->fragment_download_lock);
       }
 
       if (can_expose) {
