@@ -2560,7 +2560,7 @@ gst_message_new_stream_collection (GstObject * src,
 /**
  * gst_message_parse_stream_collection:
  * @message: a #GstMessage of type %GST_MESSAGE_STREAM_COLLECTION
- * @collection: (out) (allow-none) (transfer none): A location where to store a
+ * @collection: (out) (allow-none) (transfer full): A location where to store a
  *  pointer to the #GstStreamCollection, or %NULL
  *
  * Parses a stream-collection message. 
@@ -2708,7 +2708,7 @@ gst_message_streams_selected_get_stream (GstMessage * msg, guint idx)
 /**
  * gst_message_parse_streams_selected:
  * @message: a #GstMessage of type %GST_MESSAGE_STREAMS_SELECTED
- * @collection: (out) (allow-none) (transfer none): A location where to store a
+ * @collection: (out) (allow-none) (transfer full): A location where to store a
  *  pointer to the #GstStreamCollection, or %NULL
  *
  * Parses a streams-selected message. 
