@@ -207,6 +207,7 @@ gst_vaapi_display_wayland_open_display (GstVaapiDisplay * display,
       GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (display);
   GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_CACHE (display);
   const GstVaapiDisplayInfo *info;
+  int dsp_error = 0;
 
   if (!set_display_name (display, name))
     return FALSE;
@@ -214,6 +215,11 @@ gst_vaapi_display_wayland_open_display (GstVaapiDisplay * display,
   info = gst_vaapi_display_cache_lookup_custom (cache, compare_display_name,
       priv->display_name, g_display_types);
   if (info) {
+    wl_display_roundtrip (info->native_display);
+    if ((dsp_error = wl_display_get_error (info->native_display)))
+      GST_ERROR ("wayland display error detected: %d", dsp_error);
+  }
+  if (info && !dsp_error) {
     priv->wl_display = info->native_display;
     priv->use_foreign_display = TRUE;
   } else {
