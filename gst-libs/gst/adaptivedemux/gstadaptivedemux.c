@@ -1013,7 +1013,9 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
     gst_event_set_seqnum (stream->pending_segment, demux->priv->segment_seqnum);
   }
 
+  GST_MANIFEST_UNLOCK (demux);
   gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
+  GST_MANIFEST_LOCK (demux);
 
   if (old_streams) {
     GstEvent *eos = gst_event_new_eos ();
@@ -2553,6 +2555,8 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
    */
   GST_MANIFEST_UNLOCK (demux);
 
+  /* FIXME: Wait until the src pad is IDLE, as it might be blocked
+   * downstream indefinitely here */
   gst_element_set_state (stream->src, GST_STATE_READY);
 
   GST_MANIFEST_LOCK (demux);
@@ -3293,6 +3297,7 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
     /* the subclass might want to switch pads */
     if (G_UNLIKELY (demux->next_streams)) {
       gst_task_stop (stream->download_task);
+
       /* TODO only allow switching streams if other downloads are not ongoing */
       GST_DEBUG_OBJECT (demux, "Subclass wants new pads "
           "to do bitrate switching");
