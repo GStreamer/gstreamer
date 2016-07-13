@@ -72,11 +72,11 @@ static gchar *gst_hls_src_buf_to_utf8_playlist (GstBuffer * buf);
 static gboolean gst_hls_demux_change_playlist (GstHLSDemux * demux,
     guint max_bitrate, gboolean * changed);
 static GstBuffer *gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
-    GstBuffer * encrypted_buffer, GError ** err);
+    GstHLSDemuxStream * stream, GstBuffer * encrypted_buffer, GError ** err);
 static gboolean
-gst_hls_demux_decrypt_start (GstHLSDemux * demux, const guint8 * key_data,
-    const guint8 * iv_data);
-static void gst_hls_demux_decrypt_end (GstHLSDemux * demux);
+gst_hls_demux_stream_decrypt_start (GstHLSDemuxStream * stream,
+    const guint8 * key_data, const guint8 * iv_data);
+static void gst_hls_demux_stream_decrypt_end (GstHLSDemuxStream * stream);
 
 static gboolean gst_hls_demux_is_live (GstAdaptiveDemux * demux);
 static GstClockTime gst_hls_demux_get_duration (GstAdaptiveDemux * demux);
@@ -116,6 +116,7 @@ gst_hls_demux_finalize (GObject * obj)
 
   gst_hls_demux_reset (GST_ADAPTIVE_DEMUX_CAST (demux));
   gst_m3u8_client_free (demux->client);
+  g_mutex_clear (&demux->keys_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -175,6 +176,9 @@ gst_hls_demux_init (GstHLSDemux * demux)
 {
   gst_adaptive_demux_set_stream_struct_size (GST_ADAPTIVE_DEMUX_CAST (demux),
       sizeof (GstHLSDemuxStream));
+
+  demux->keys = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+  g_mutex_init (&demux->keys_lock);
 }
 
 static GstStateChangeReturn
@@ -196,6 +200,7 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_hls_demux_reset (GST_ADAPTIVE_DEMUX_CAST (demux));
+      g_hash_table_remove_all (demux->keys);
       break;
     default:
       break;
@@ -236,7 +241,6 @@ gst_hls_demux_clear_pending_data (GstHLSDemux * hlsdemux)
   GstAdaptiveDemux *demux = (GstAdaptiveDemux *) hlsdemux;
   GList *walk;
 
-  gst_hls_demux_decrypt_end (hlsdemux);
   for (walk = demux->streams; walk != NULL; walk = walk->next) {
     GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (walk->data);
     if (hls_stream->pending_encrypted_data)
@@ -244,6 +248,7 @@ gst_hls_demux_clear_pending_data (GstHLSDemux * hlsdemux)
     gst_buffer_replace (&hls_stream->pending_decrypted_buffer, NULL);
     gst_buffer_replace (&hls_stream->pending_typefind_buffer, NULL);
     hls_stream->current_offset = -1;
+    gst_hls_demux_stream_decrypt_end (hls_stream);
   }
 }
 
@@ -490,52 +495,81 @@ gst_hls_demux_is_live (GstAdaptiveDemux * demux)
   return gst_m3u8_client_is_live (hlsdemux->client);
 }
 
+static const GstHLSKey *
+gst_hls_demux_get_key (GstHLSDemux * demux, const gchar * key_url,
+    const gchar * referer, gboolean allow_cache)
+{
+  GstFragment *key_fragment;
+  GstBuffer *key_buffer;
+  GstHLSKey *key;
+  GError *err = NULL;
+
+  GST_LOG_OBJECT (demux, "Looking up key for key url %s", key_url);
+
+  g_mutex_lock (&demux->keys_lock);
+
+  key = g_hash_table_lookup (demux->keys, key_url);
+
+  if (key != NULL) {
+    GST_LOG_OBJECT (demux, "Found key for key url %s in key cache", key_url);
+    goto out;
+  }
+
+  GST_INFO_OBJECT (demux, "Fetching key %s", key_url);
+
+  key_fragment =
+      gst_uri_downloader_fetch_uri (GST_ADAPTIVE_DEMUX (demux)->downloader,
+      key_url, referer, FALSE, FALSE, allow_cache, &err);
+
+  if (key_fragment == NULL) {
+    GST_WARNING_OBJECT (demux, "Failed to download key to decrypt data: %s",
+        err ? err->message : "error");
+    g_clear_error (&err);
+    goto out;
+  }
+
+  key_buffer = gst_fragment_get_buffer (key_fragment);
+
+  key = g_new0 (GstHLSKey, 1);
+  if (gst_buffer_extract (key_buffer, 0, key->data, 16) < 16)
+    GST_WARNING_OBJECT (demux, "Download decryption key is too short!");
+
+  g_hash_table_insert (demux->keys, g_strdup (key_url), key);
+
+  gst_buffer_unref (key_buffer);
+  g_object_unref (key_fragment);
+
+out:
+
+  g_mutex_unlock (&demux->keys_lock);
+
+  if (key != NULL)
+    GST_MEMDUMP_OBJECT (demux, "Key", key->data, 16);
+
+  return key;
+}
+
 static gboolean
 gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream)
 {
+  GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
+  const GstHLSKey *key;
 
-  if (hlsdemux->current_key) {
-    GError *err = NULL;
-    GstFragment *key_fragment;
-    GstBuffer *key_buffer;
-    GstMapInfo key_info;
+  /* If no decryption is needed, there's nothing to be done here */
+  if (hls_stream->current_key == NULL)
+    return TRUE;
 
-    /* new key? */
-    if (hlsdemux->key_url
-        && strcmp (hlsdemux->key_url, hlsdemux->current_key) == 0) {
-      key_fragment = g_object_ref (hlsdemux->key_fragment);
-    } else {
-      g_free (hlsdemux->key_url);
-      hlsdemux->key_url = NULL;
+  key = gst_hls_demux_get_key (hlsdemux, hls_stream->current_key,
+      hlsdemux->client->main ? hlsdemux->client->main->uri : NULL,
+      hlsdemux->client->current ? hlsdemux->client->current->allowcache : TRUE);
 
-      if (hlsdemux->key_fragment)
-        g_object_unref (hlsdemux->key_fragment);
-      hlsdemux->key_fragment = NULL;
+  if (key == NULL)
+    goto key_failed;
 
-      GST_INFO_OBJECT (demux, "Fetching key %s", hlsdemux->current_key);
-      key_fragment =
-          gst_uri_downloader_fetch_uri (demux->downloader,
-          hlsdemux->current_key, hlsdemux->client->main ?
-          hlsdemux->client->main->uri : NULL, FALSE, FALSE,
-          hlsdemux->client->current ? hlsdemux->client->current->
-          allowcache : TRUE, &err);
-      if (key_fragment == NULL)
-        goto key_failed;
-      hlsdemux->key_url = g_strdup (hlsdemux->current_key);
-      hlsdemux->key_fragment = g_object_ref (key_fragment);
-    }
-
-    key_buffer = gst_fragment_get_buffer (key_fragment);
-    gst_buffer_map (key_buffer, &key_info, GST_MAP_READ);
-
-    gst_hls_demux_decrypt_start (hlsdemux, key_info.data, hlsdemux->current_iv);
-
-    gst_buffer_unmap (key_buffer, &key_info);
-    gst_buffer_unref (key_buffer);
-    g_object_unref (key_fragment);
-  }
+  gst_hls_demux_stream_decrypt_start (hls_stream, key->data,
+      hls_stream->current_iv);
 
   gst_hls_demux_clear_pending_data (hlsdemux);
 
@@ -623,12 +657,12 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);   // FIXME: pass HlsStream into function
   GstFlowReturn ret = GST_FLOW_OK;
 
-  if (hlsdemux->current_key)
-    gst_hls_demux_decrypt_end (hlsdemux);
+  if (hls_stream->current_key)
+    gst_hls_demux_stream_decrypt_end (hls_stream);
 
   if (stream->last_ret == GST_FLOW_OK) {
     if (hls_stream->pending_decrypted_buffer) {
-      if (hlsdemux->current_key) {
+      if (hls_stream->current_key) {
         GstMapInfo info;
         gssize unpadded_size;
 
@@ -660,15 +694,15 @@ static GstFlowReturn
 gst_hls_demux_data_received (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, GstBuffer * buffer)
 {
-  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
+  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
 
   if (hls_stream->current_offset == -1)
     hls_stream->current_offset =
         GST_BUFFER_OFFSET_IS_VALID (buffer) ? GST_BUFFER_OFFSET (buffer) : 0;
 
   /* Is it encrypted? */
-  if (hlsdemux->current_key) {
+  if (hls_stream->current_key) {
     GError *err = NULL;
     gsize size;
     GstBuffer *tmp_buffer;
@@ -687,7 +721,8 @@ gst_hls_demux_data_received (GstAdaptiveDemux * demux,
     }
 
     buffer = gst_adapter_take_buffer (hls_stream->pending_encrypted_data, size);
-    buffer = gst_hls_demux_decrypt_fragment (hlsdemux, buffer, &err);
+    buffer =
+        gst_hls_demux_decrypt_fragment (hlsdemux, hls_stream, buffer, &err);
     if (buffer == NULL) {
       GST_ELEMENT_ERROR (demux, STREAM, DECODE, ("Failed to decrypt buffer"),
           ("decryption failed %s", err->message));
@@ -713,6 +748,16 @@ gst_hls_demux_stream_free (GstAdaptiveDemuxStream * stream)
 
   gst_buffer_replace (&hls_stream->pending_decrypted_buffer, NULL);
   gst_buffer_replace (&hls_stream->pending_typefind_buffer, NULL);
+
+  if (hls_stream->current_key) {
+    g_free (hls_stream->current_key);
+    hls_stream->current_key = NULL;
+  }
+  if (hls_stream->current_iv) {
+    g_free (hls_stream->current_iv);
+    hls_stream->current_iv = NULL;
+  }
+  gst_hls_demux_stream_decrypt_end (hls_stream);
 }
 
 static gboolean
@@ -767,10 +812,11 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream * stream)
     stream->fragment.timestamp = GST_CLOCK_TIME_NONE;
   }
 
-  g_free (hlsdemux->current_key);
-  hlsdemux->current_key = key;
-  g_free (hlsdemux->current_iv);
-  hlsdemux->current_iv = iv;
+  g_free (hlsdemux_stream->current_key);
+  hlsdemux_stream->current_key = key;
+  g_free (hlsdemux_stream->current_iv);
+  hlsdemux_stream->current_iv = iv;
+
   g_free (stream->fragment.uri);
   stream->fragment.uri = next_fragment_uri;
   stream->fragment.range_start = range_start;
@@ -813,13 +859,6 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
 {
   GstHLSDemux *demux = GST_HLS_DEMUX_CAST (ademux);
 
-  g_free (demux->key_url);
-  demux->key_url = NULL;
-
-  if (demux->key_fragment)
-    g_object_unref (demux->key_fragment);
-  demux->key_fragment = NULL;
-
   if (demux->client) {
     gst_m3u8_client_free (demux->client);
     demux->client = NULL;
@@ -830,17 +869,6 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
   demux->srcpad_counter = 0;
 
   gst_hls_demux_clear_pending_data (demux);
-
-  if (demux->current_key) {
-    g_free (demux->current_key);
-    demux->current_key = NULL;
-  }
-  if (demux->current_iv) {
-    g_free (demux->current_iv);
-    demux->current_iv = NULL;
-  }
-
-  gst_hls_demux_decrypt_end (demux);
 }
 
 static gchar *
@@ -1140,19 +1168,19 @@ retry_failover_protection:
 
 #if defined(HAVE_OPENSSL)
 static gboolean
-gst_hls_demux_decrypt_start (GstHLSDemux * demux, const guint8 * key_data,
-    const guint8 * iv_data)
+gst_hls_demux_stream_decrypt_start (GstHLSDemuxStream * stream,
+    const guint8 * key_data, const guint8 * iv_data)
 {
-  EVP_CIPHER_CTX_init (&demux->aes_ctx);
-  if (!EVP_DecryptInit_ex (&demux->aes_ctx, EVP_aes_128_cbc (), NULL, key_data,
+  EVP_CIPHER_CTX_init (&stream->aes_ctx);
+  if (!EVP_DecryptInit_ex (&stream->aes_ctx, EVP_aes_128_cbc (), NULL, key_data,
           iv_data))
     return FALSE;
-  EVP_CIPHER_CTX_set_padding (&demux->aes_ctx, 0);
+  EVP_CIPHER_CTX_set_padding (&stream->aes_ctx, 0);
   return TRUE;
 }
 
 static gboolean
-decrypt_fragment (GstHLSDemux * demux, gsize length,
+decrypt_fragment (GstHLSDemuxStream * stream, gsize length,
     const guint8 * encrypted_data, guint8 * decrypted_data)
 {
   int len, flen = 0;
@@ -1161,102 +1189,102 @@ decrypt_fragment (GstHLSDemux * demux, gsize length,
     return FALSE;
 
   len = (int) length;
-  if (!EVP_DecryptUpdate (&demux->aes_ctx, decrypted_data, &len, encrypted_data,
-          len))
+  if (!EVP_DecryptUpdate (&stream->aes_ctx, decrypted_data, &len,
+          encrypted_data, len))
     return FALSE;
-  EVP_DecryptFinal_ex (&demux->aes_ctx, decrypted_data + len, &flen);
+  EVP_DecryptFinal_ex (&stream->aes_ctx, decrypted_data + len, &flen);
   g_return_val_if_fail (len + flen == length, FALSE);
   return TRUE;
 }
 
 static void
-gst_hls_stream_decrypt_end (GstHLSDemuxStream * stream)
+gst_hls_demux_stream_decrypt_end (GstHLSDemuxStream * stream)
 {
-  EVP_CIPHER_CTX_cleanup (&demux->aes_ctx);
+  EVP_CIPHER_CTX_cleanup (&stream->aes_ctx);
 }
 
 #elif defined(HAVE_NETTLE)
 static gboolean
-gst_hls_demux_decrypt_start (GstHLSDemux * demux, const guint8 * key_data,
-    const guint8 * iv_data)
+gst_hls_demux_stream_decrypt_start (GstHLSDemuxStream * stream,
+    const guint8 * key_data, const guint8 * iv_data)
 {
-  aes_set_decrypt_key (&demux->aes_ctx.ctx, 16, key_data);
-  CBC_SET_IV (&demux->aes_ctx, iv_data);
+  aes_set_decrypt_key (&stream->aes_ctx.ctx, 16, key_data);
+  CBC_SET_IV (&stream->aes_ctx, iv_data);
 
   return TRUE;
 }
 
 static gboolean
-decrypt_fragment (GstHLSDemux * demux, gsize length,
+decrypt_fragment (GstHLSDemuxStream * stream, gsize length,
     const guint8 * encrypted_data, guint8 * decrypted_data)
 {
   if (length % 16 != 0)
     return FALSE;
 
-  CBC_DECRYPT (&demux->aes_ctx, aes_decrypt, length, decrypted_data,
+  CBC_DECRYPT (&stream->aes_ctx, aes_decrypt, length, decrypted_data,
       encrypted_data);
 
   return TRUE;
 }
 
 static void
-gst_hls_demux_decrypt_end (GstHLSDemux * demux)
+gst_hls_demux_stream_decrypt_end (GstHLSDemuxStream * stream)
 {
   /* NOP */
 }
 
 #else
 static gboolean
-gst_hls_demux_decrypt_start (GstHLSDemux * demux, const guint8 * key_data,
-    const guint8 * iv_data)
+gst_hls_demux_stream_decrypt_start (GstHLSDemuxStream * stream,
+    const guint8 * key_data, const guint8 * iv_data)
 {
   gcry_error_t err = 0;
   gboolean ret = FALSE;
 
   err =
-      gcry_cipher_open (&demux->aes_ctx, GCRY_CIPHER_AES128,
+      gcry_cipher_open (&stream->aes_ctx, GCRY_CIPHER_AES128,
       GCRY_CIPHER_MODE_CBC, 0);
   if (err)
     goto out;
-  err = gcry_cipher_setkey (demux->aes_ctx, key_data, 16);
+  err = gcry_cipher_setkey (stream->aes_ctx, key_data, 16);
   if (err)
     goto out;
-  err = gcry_cipher_setiv (demux->aes_ctx, iv_data, 16);
+  err = gcry_cipher_setiv (stream->aes_ctx, iv_data, 16);
   if (!err)
     ret = TRUE;
 
 out:
   if (!ret)
-    if (demux->aes_ctx)
-      gcry_cipher_close (demux->aes_ctx);
+    if (stream->aes_ctx)
+      gcry_cipher_close (stream->aes_ctx);
 
   return ret;
 }
 
 static gboolean
-decrypt_fragment (GstHLSDemux * demux, gsize length,
+decrypt_fragment (GstHLSDemuxStream * stream, gsize length,
     const guint8 * encrypted_data, guint8 * decrypted_data)
 {
   gcry_error_t err = 0;
 
-  err = gcry_cipher_decrypt (demux->aes_ctx, decrypted_data, length,
+  err = gcry_cipher_decrypt (stream->aes_ctx, decrypted_data, length,
       encrypted_data, length);
 
   return err == 0;
 }
 
 static void
-gst_hls_demux_decrypt_end (GstHLSDemux * demux)
+gst_hls_demux_stream_decrypt_end (GstHLSDemuxStream * stream)
 {
-  if (demux->aes_ctx) {
-    gcry_cipher_close (demux->aes_ctx);
-    demux->aes_ctx = NULL;
+  if (stream->aes_ctx) {
+    gcry_cipher_close (stream->aes_ctx);
+    stream->aes_ctx = NULL;
   }
 }
 #endif
 
 static GstBuffer *
-gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
+gst_hls_demux_decrypt_fragment (GstHLSDemux * demux, GstHLSDemuxStream * stream,
     GstBuffer * encrypted_buffer, GError ** err)
 {
   GstBuffer *decrypted_buffer = NULL;
@@ -1269,7 +1297,7 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   gst_buffer_map (encrypted_buffer, &encrypted_info, GST_MAP_READ);
   gst_buffer_map (decrypted_buffer, &decrypted_info, GST_MAP_WRITE);
 
-  if (!decrypt_fragment (demux, encrypted_info.size,
+  if (!decrypt_fragment (stream, encrypted_info.size,
           encrypted_info.data, decrypted_info.data))
     goto decrypt_error;
 

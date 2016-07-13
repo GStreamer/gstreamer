@@ -72,7 +72,28 @@ struct _GstHLSDemuxStream
                                           We only know that it is the last at EOS */
   guint64 current_offset;              /* offset we're currently at */
   gboolean reset_pts;
+
+  /* decryption tooling */
+#if defined(HAVE_OPENSSL)
+  EVP_CIPHER_CTX aes_ctx;
+#elif defined(HAVE_NETTLE)
+  struct CBC_CTX (struct aes_ctx, AES_BLOCK_SIZE) aes_ctx;
+#else
+  gcry_cipher_hd_t aes_ctx;
+#endif
+
+  gchar     *current_key;
+  guint8    *current_iv;
+
+  GstBuffer *pending_buffer; /* decryption scenario:
+                              * the last buffer can only be pushed when
+                              * resized, so need to store and wait for
+                              * EOS to know it is the last */
 };
+
+typedef struct {
+  guint8 data[16];
+} GstHLSKey;
 
 /**
  * GstHLSDemux:
@@ -88,20 +109,9 @@ struct _GstHLSDemux
   gchar *uri;                   /* Original playlist URI */
   GstM3U8Client *client;        /* M3U8 client */
 
-  /* Cache for the last key */
-  gchar *key_url;
-  GstFragment *key_fragment;
-
-  /* decryption tooling */
-#if defined(HAVE_OPENSSL)
-  EVP_CIPHER_CTX aes_ctx;
-#elif defined(HAVE_NETTLE)
-  struct CBC_CTX (struct aes_ctx, AES_BLOCK_SIZE) aes_ctx;
-#else
-  gcry_cipher_hd_t aes_ctx;
-#endif
-  gchar *current_key;
-  guint8 *current_iv;
+  /* Decryption key cache: url => GstHLSKey */
+  GHashTable *keys;
+  GMutex      keys_lock;
 };
 
 struct _GstHLSDemuxClass
