@@ -309,8 +309,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   GstGLContextEGL *egl;
   GstGLWindow *window = NULL;
   EGLNativeWindowType window_handle = (EGLNativeWindowType) 0;
-  EGLint majorVersion;
-  EGLint minorVersion;
+  EGLint egl_major;
+  EGLint egl_minor;
   gboolean need_surface = TRUE;
   guintptr external_gl_context = 0;
   GstGLDisplay *display;
@@ -363,8 +363,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   }
   gst_object_unref (display);
 
-  if (eglInitialize (egl->egl_display, &majorVersion, &minorVersion)) {
-    GST_INFO ("egl initialized, version: %d.%d", majorVersion, minorVersion);
+  if (eglInitialize (egl->egl_display, &egl_major, &egl_minor)) {
+    GST_INFO ("egl initialized, version: %d.%d", egl_major, egl_minor);
   } else {
     g_set_error (error, GST_GL_CONTEXT_ERROR,
         GST_GL_CONTEXT_ERROR_RESOURCE_UNAVAILABLE,
@@ -380,16 +380,16 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     gint i;
 
     /* egl + opengl only available with EGL 1.4+ */
-    if (majorVersion == 1 && minorVersion <= 3) {
+    if (egl_major == 1 && egl_minor <= 3) {
       if ((gl_api & ~GST_GL_API_OPENGL) == GST_GL_API_NONE) {
         g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_OLD_LIBS,
             "EGL version (%i.%i) too old for OpenGL support, (needed at least 1.4)",
-            majorVersion, minorVersion);
+            egl_major, egl_minor);
         goto failure;
       } else {
         GST_WARNING
             ("EGL version (%i.%i) too old for OpenGL support, (needed at least 1.4)",
-            majorVersion, minorVersion);
+            egl_major, egl_minor);
         if (gl_api & GST_GL_API_GLES2) {
           goto try_gles2;
         } else {
@@ -599,22 +599,28 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   }
 
   /* EGLImage functions */
-  if (GST_GL_CHECK_GL_VERSION (majorVersion, minorVersion, 1, 5)) {
+  if (GST_GL_CHECK_GL_VERSION (egl_major, egl_minor, 1, 5)) {
     egl->eglCreateImage = gst_gl_context_get_proc_address (context,
         "eglCreateImage");
     egl->eglDestroyImage = gst_gl_context_get_proc_address (context,
         "eglDestroyImage");
+    if (egl->eglCreateImage == NULL || egl->eglDestroyImage == NULL) {
+      egl->eglCreateImage = NULL;
+      egl->eglDestroyImage = NULL;
+    }
   } else if (gst_gl_check_extension ("EGL_KHR_image_base", egl->egl_exts)) {
-    egl->eglCreateImage = gst_gl_context_get_proc_address (context,
+    egl->eglCreateImageKHR = gst_gl_context_get_proc_address (context,
         "eglCreateImageKHR");
     egl->eglDestroyImage = gst_gl_context_get_proc_address (context,
         "eglDestroyImageKHR");
+    if (egl->eglCreateImageKHR == NULL || egl->eglDestroyImage == NULL) {
+      egl->eglCreateImageKHR = NULL;
+      egl->eglDestroyImage = NULL;
+    }
   }
-  if (egl->eglCreateImage == NULL || egl->eglDestroyImage == NULL) {
-    egl->eglCreateImage = NULL;
-    egl->eglDestroyImage = NULL;
-  }
-
+  egl->egl_major = egl_major;
+  egl->egl_minor = egl_minor;
+ 
   if (window)
     gst_object_unref (window);
 
@@ -817,7 +823,11 @@ gst_gl_context_egl_check_feature (GstGLContext * context, const gchar * feature)
   GstGLContextEGL *context_egl = GST_GL_CONTEXT_EGL (context);
 
   if (g_strcmp0 (feature, "EGL_KHR_image_base") == 0) {
-    return context_egl->eglCreateImage != NULL &&
+    if (GST_GL_CHECK_GL_VERSION (context_egl->egl_major, context_egl->egl_minor, 1, 5))
+      return context_egl->eglCreateImage != NULL &&
+        context_egl->eglDestroyImage != NULL;
+    else
+      return context_egl->eglCreateImageKHR != NULL &&
         context_egl->eglDestroyImage != NULL;
   }
 

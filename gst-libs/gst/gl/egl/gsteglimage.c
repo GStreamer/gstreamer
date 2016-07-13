@@ -244,6 +244,9 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
   gint fourcc;
   gint atti = 0;
   EGLint attribs[13];
+#ifdef EGL_VERSION_1_5
+  EGLAttrib attribs_1_5[13];
+#endif
   EGLImageKHR img = EGL_NO_IMAGE_KHR;
   GstVideoGLTextureType type;
 
@@ -257,32 +260,55 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
       GST_VIDEO_INFO_COMP_WIDTH (in_info, plane),
       GST_VIDEO_INFO_COMP_HEIGHT (in_info, plane));
 
-  attribs[atti++] = EGL_WIDTH;
-  attribs[atti++] = GST_VIDEO_INFO_COMP_WIDTH (in_info, plane);
-  attribs[atti++] = EGL_HEIGHT;
-  attribs[atti++] = GST_VIDEO_INFO_COMP_HEIGHT (in_info, plane);
+#ifdef EGL_VERSION_1_5
+  if (GST_GL_CHECK_GL_VERSION (ctx_egl->egl_major, ctx_egl->egl_minor, 1, 5)) {
+    attribs_1_5[atti++] = EGL_WIDTH;
+    attribs_1_5[atti++] = GST_VIDEO_INFO_COMP_WIDTH (in_info, plane);
+    attribs_1_5[atti++] = EGL_HEIGHT;
+    attribs_1_5[atti++] = GST_VIDEO_INFO_COMP_HEIGHT (in_info, plane);
+    attribs_1_5[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
+    attribs_1_5[atti++] = fourcc;
+    attribs_1_5[atti++] = EGL_DMA_BUF_PLANE0_FD_EXT;
+    attribs_1_5[atti++] = dmabuf;
+    attribs_1_5[atti++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
+    attribs_1_5[atti++] = offset;
+    attribs_1_5[atti++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
+    attribs_1_5[atti++] = GST_VIDEO_INFO_PLANE_STRIDE (in_info, plane);
+    attribs_1_5[atti] = EGL_NONE;
 
-  attribs[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
-  attribs[atti++] = fourcc;
+    for (int i = 0; i < atti; i++)
+      GST_LOG ("attr %i: %" G_GINTPTR_FORMAT, i, attribs_1_5[i]);
 
-  attribs[atti++] = EGL_DMA_BUF_PLANE0_FD_EXT;
-  attribs[atti++] = dmabuf;
+    g_assert (atti == 12);
 
-  attribs[atti++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
-  attribs[atti++] = offset;
-  attribs[atti++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
-  attribs[atti++] = GST_VIDEO_INFO_PLANE_STRIDE (in_info, plane);
+    img = ctx_egl->eglCreateImage (ctx_egl->egl_display, EGL_NO_CONTEXT,
+        EGL_LINUX_DMA_BUF_EXT, NULL, attribs_1_5);
 
-  attribs[atti] = EGL_NONE;
+  } else
+#endif
+  {
+    attribs[atti++] = EGL_WIDTH;
+    attribs[atti++] = GST_VIDEO_INFO_COMP_WIDTH (in_info, plane);
+    attribs[atti++] = EGL_HEIGHT;
+    attribs[atti++] = GST_VIDEO_INFO_COMP_HEIGHT (in_info, plane);
+    attribs[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
+    attribs[atti++] = fourcc;
+    attribs[atti++] = EGL_DMA_BUF_PLANE0_FD_EXT;
+    attribs[atti++] = dmabuf;
+    attribs[atti++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
+    attribs[atti++] = offset;
+    attribs[atti++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
+    attribs[atti++] = GST_VIDEO_INFO_PLANE_STRIDE (in_info, plane);
+    attribs[atti] = EGL_NONE;
 
-  for (int i = 0; i < atti; i++)
-    GST_LOG ("attr %i: %08X", i, attribs[i]);
+    for (int i = 0; i < atti; i++)
+      GST_LOG ("attr %i: %08X", i, attribs[i]);
 
-  g_assert (atti == 12);
+    g_assert (atti == 12);
 
-  img = ctx_egl->eglCreateImage (ctx_egl->egl_display, EGL_NO_CONTEXT,
-      EGL_LINUX_DMA_BUF_EXT, NULL, attribs);
-
+    img = ctx_egl->eglCreateImageKHR (ctx_egl->egl_display, EGL_NO_CONTEXT,
+        EGL_LINUX_DMA_BUF_EXT, NULL, attribs);
+  }
   if (!img) {
     GST_WARNING ("eglCreateImage failed: %s",
         gst_gl_context_egl_get_error_string (eglGetError ()));

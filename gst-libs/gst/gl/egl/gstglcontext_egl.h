@@ -46,12 +46,17 @@ struct _GstGLContextEGL {
   EGLSurface egl_surface;
   EGLConfig  egl_config;
 
+  gint egl_major;
+  gint egl_minor;
+
   GstGLAPI gl_api;
 
   const gchar *egl_exts;
 
-  EGLImageKHR (*eglCreateImage) (EGLDisplay dpy, EGLContext ctx, EGLenum target,
+  EGLImageKHR (*eglCreateImageKHR) (EGLDisplay dpy, EGLContext ctx, EGLenum target,
       EGLClientBuffer buffer, const EGLint *attrib_list);
+  EGLImageKHR (*eglCreateImage) (EGLDisplay dpy, EGLContext ctx, EGLenum target,
+      EGLClientBuffer buffer, const EGLAttrib *attrib_list);
   EGLBoolean (*eglDestroyImage) (EGLDisplay dpy, EGLImageKHR image);
 
   /* Cached handle */
