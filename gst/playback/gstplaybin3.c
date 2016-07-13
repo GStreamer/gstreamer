@@ -3102,6 +3102,7 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
       GST_PLAY_BIN3_UNLOCK (playbin);
 
       notify_all_streams (playbin, collection);
+      gst_object_unref (collection);
     }
   } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAMS_SELECTED) {
     GstStreamCollection *collection = NULL;
@@ -3138,6 +3139,7 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
       GST_PLAY_BIN3_UNLOCK (playbin);
 
       notify_all_streams (playbin, collection);
+      gst_object_unref (collection);
     }
   }
 

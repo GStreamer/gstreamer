@@ -223,6 +223,7 @@ _on_bus_message (GstBus * bus, GstMessage * message, MyDataStruct * data)
           /* In 5s try to change streams */
           data->timeout_id =
               g_timeout_add_seconds (5, (GSourceFunc) switch_streams, data);
+        gst_object_unref (collection);
       }
       break;
     }

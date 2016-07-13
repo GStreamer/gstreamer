@@ -1182,6 +1182,8 @@ gst_decodebin3_handle_message (GstBin * bin, GstMessage * message)
         gst_message_unref (message);
         message = new_msg;
       }
+      if (collection)
+        gst_object_unref (collection);
       break;
     }
     default:
