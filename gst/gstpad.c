@@ -5132,7 +5132,7 @@ eos:
 /**
  * gst_pad_store_sticky_event:
  * @pad: a #GstPad
- * @event: a #GstEvent
+ * @event: (transfer none): a #GstEvent
  *
  * Store the sticky @event on @pad
  *
