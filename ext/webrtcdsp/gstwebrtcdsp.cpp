@@ -156,7 +156,8 @@ enum
   PROP_NOISE_SUPPRESSION_LEVEL,
   PROP_GAIN_CONTROL,
   PROP_EXPERIMENTAL_AGC,
-  PROP_EXTENDED_FILTER
+  PROP_EXTENDED_FILTER,
+  PROP_DELAY_AGNOSTIC
 };
 
 /**
@@ -189,6 +190,7 @@ struct _GstWebrtcDsp
   gboolean gain_control;
   gboolean experimental_agc;
   gboolean extended_filter;
+  gboolean delay_agnostic;
 };
 
 G_DEFINE_TYPE (GstWebrtcDsp, gst_webrtc_dsp, GST_TYPE_AUDIO_FILTER);
@@ -290,8 +292,11 @@ gst_webrtc_dsp_analyze_reverse_stream (GstWebrtcDsp * self,
 
   apm = self->apm;
 
-  delay = gst_webrtc_echo_probe_read (probe, rec_time, (gpointer) &frame);
+  if (self->delay_agnostic)
+    rec_time = GST_CLOCK_TIME_NONE;
 
+again:
+  delay = gst_webrtc_echo_probe_read (probe, rec_time, (gpointer) &frame);
   apm->set_stream_delay_ms (delay);
 
   if (delay < 0)
@@ -310,13 +315,16 @@ gst_webrtc_dsp_analyze_reverse_stream (GstWebrtcDsp * self,
     GST_WARNING_OBJECT (self, "Reverse stream analyses failed: %s.",
         webrtc_error_to_string (err));
 
+  if (self->delay_agnostic)
+      goto again;
+
 done:
   gst_object_unref (probe);
 
   return ret;
 }
 
-static GstFlowReturn 
+static GstFlowReturn
 gst_webrtc_dsp_process_stream (GstWebrtcDsp * self,
     GstBuffer * buffer)
 {
@@ -401,6 +409,8 @@ gst_webrtc_dsp_start (GstBaseTransform * btrans)
       (new webrtc::ExtendedFilter (self->extended_filter));
   config.Set < webrtc::ExperimentalAgc >
       (new webrtc::ExperimentalAgc (self->experimental_agc));
+  config.Set < webrtc::DelayAgnostic >
+      (new webrtc::DelayAgnostic (self->delay_agnostic));
 
   /* TODO Intelligibility enhancer, Beamforming, etc. */
 
@@ -590,6 +600,9 @@ gst_webrtc_dsp_set_property (GObject * object,
     case PROP_EXTENDED_FILTER:
       self->extended_filter = g_value_get_boolean (value);
       break;
+    case PROP_DELAY_AGNOSTIC:
+      self->delay_agnostic = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -631,6 +644,9 @@ gst_webrtc_dsp_get_property (GObject * object,
       break;
     case PROP_EXTENDED_FILTER:
       g_value_set_boolean (value, self->extended_filter);
+      break;
+    case PROP_DELAY_AGNOSTIC:
+      g_value_set_boolean (value, self->delay_agnostic);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -760,6 +776,13 @@ gst_webrtc_dsp_class_init (GstWebrtcDspClass * klass)
       g_param_spec_boolean ("extended-filter", "Extended Filter",
           "Enable or disable the extended filter.",
           TRUE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class,
+      PROP_DELAY_AGNOSTIC,
+      g_param_spec_boolean ("delay-agnostic", "Delay Agnostic",
+          "Enable or disable the delay agnostic mode.",
+          FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 }
 

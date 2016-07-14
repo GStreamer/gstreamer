@@ -280,6 +280,20 @@ gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self, GstClockTime rec_time,
   if (!GST_CLOCK_TIME_IS_VALID (self->latency))
     goto done;
 
+  /* In delay agnostic mode, just return 10ms of data */
+  if (!GST_CLOCK_TIME_IS_VALID (rec_time)) {
+    avail = gst_adapter_available (self->adapter);
+
+    if (avail < self->period_size)
+      goto done;
+
+    size = self->period_size;
+    skip = 0;
+    offset = 0;
+
+    goto copy;
+  }
+
   if (gst_adapter_available (self->adapter) == 0) {
     diff = G_MAXINT64;
   } else {
@@ -317,6 +331,7 @@ gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self, GstClockTime rec_time,
   if (size < self->period_size)
     memset (frame->data_, 0, self->period_size);
 
+copy:
   if (size) {
     gst_adapter_copy (self->adapter, (guint8 *) frame->data_ + skip,
         offset, size);
