@@ -70,7 +70,6 @@ struct _GstRTSPStreamPrivate
   GstPad *srcpad, *sinkpad;
   GstElement *payloader;
   guint buffer_size;
-  gboolean is_joined;
   GstBin *joined_bin;
 
   /* TRUE if this stream is running on
@@ -284,7 +283,7 @@ gst_rtsp_stream_finalize (GObject * obj)
   GST_DEBUG ("finalize stream %p", stream);
 
   /* we really need to be unjoined now */
-  g_return_if_fail (!priv->is_joined);
+  g_return_if_fail (priv->joined_bin == NULL);
 
   if (priv->addr_v4)
     gst_rtsp_address_free (priv->addr_v4);
@@ -1173,10 +1172,8 @@ play_udpsources_one_family (GstRTSPStream * stream, GstElement * udpsrc_out[2],
   GstRTSPStreamPrivate *priv;
   GstPad *pad, *selpad;
   guint i;
-  GstBin *bin;
 
   priv = stream->priv;
-  bin = GST_BIN (gst_object_get_parent (GST_OBJECT (priv->funnel[1])));
 
   for (i = 0; i < 2; i++) {
     if (!priv->sinkpad && i == 0) {
@@ -1193,7 +1190,7 @@ play_udpsources_one_family (GstRTSPStream * stream, GstElement * udpsrc_out[2],
     }
 
     /* add udpsrc */
-    gst_bin_add (bin, udpsrc_out[i]);
+    gst_bin_add (priv->joined_bin, udpsrc_out[i]);
 
     /* and link to the funnel */
     selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
@@ -1208,8 +1205,6 @@ play_udpsources_one_family (GstRTSPStream * stream, GstElement * udpsrc_out[2],
       gst_element_sync_state_with_parent (udpsrc_out[i]);
     }
   }
-
-  gst_object_unref (bin);
 }
 
 /* must be called with lock */
@@ -1497,7 +1492,7 @@ gst_rtsp_stream_allocate_udp_sockets (GstRTSPStream * stream,
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
   priv = stream->priv;
-  g_return_val_if_fail (priv->is_joined, FALSE);
+  g_return_val_if_fail (priv->joined_bin != NULL, FALSE);
 
   g_mutex_lock (&priv->lock);
 
@@ -1607,7 +1602,7 @@ gst_rtsp_stream_get_server_port (GstRTSPStream * stream,
 
   g_return_if_fail (GST_IS_RTSP_STREAM (stream));
   priv = stream->priv;
-  g_return_if_fail (priv->is_joined);
+  g_return_if_fail (priv->joined_bin != NULL);
 
   g_mutex_lock (&priv->lock);
   if (family == G_SOCKET_FAMILY_IPV4) {
@@ -1687,7 +1682,7 @@ gst_rtsp_stream_get_ssrc (GstRTSPStream * stream, guint * ssrc)
 
   g_return_if_fail (GST_IS_RTSP_STREAM (stream));
   priv = stream->priv;
-  g_return_if_fail (priv->is_joined);
+  g_return_if_fail (priv->joined_bin != NULL);
 
   g_mutex_lock (&priv->lock);
   if (ssrc && priv->session)
@@ -2713,7 +2708,7 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
   priv = stream->priv;
 
   g_mutex_lock (&priv->lock);
-  if (priv->is_joined)
+  if (priv->joined_bin != NULL)
     goto was_joined;
 
   /* create a session with the same index as the stream */
@@ -2807,8 +2802,7 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
         (GCallback) caps_notify, stream);
   }
 
-  priv->joined_bin = bin;
-  priv->is_joined = TRUE;
+  priv->joined_bin = gst_object_ref (bin);
   g_mutex_unlock (&priv->lock);
 
   return TRUE;
@@ -2927,8 +2921,10 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
   priv = stream->priv;
 
   g_mutex_lock (&priv->lock);
-  if (!priv->is_joined)
+  if (priv->joined_bin == NULL)
     goto was_not_joined;
+  if (priv->joined_bin != bin)
+    goto wrong_bin;
 
   priv->joined_bin = NULL;
 
@@ -2994,7 +2990,7 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
   if (priv->srtpdec)
     gst_object_unref (priv->srtpdec);
 
-  priv->is_joined = FALSE;
+  g_clear_object (&priv->joined_bin);
   g_mutex_unlock (&priv->lock);
 
   return TRUE;
@@ -3007,6 +3003,12 @@ was_not_joined:
 transports_not_removed:
   {
     GST_ERROR_OBJECT (stream, "can't leave bin (transports not removed)");
+    g_mutex_unlock (&priv->lock);
+    return FALSE;
+  }
+wrong_bin:
+  {
+    GST_ERROR_OBJECT (stream, "leaving the wrong bin");
     g_mutex_unlock (&priv->lock);
     return FALSE;
   }
@@ -3221,7 +3223,7 @@ gst_rtsp_stream_recv_rtp (GstRTSPStream * stream, GstBuffer * buffer)
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), GST_FLOW_ERROR);
   priv = stream->priv;
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
-  g_return_val_if_fail (priv->is_joined, FALSE);
+  g_return_val_if_fail (priv->joined_bin != NULL, FALSE);
 
   g_mutex_lock (&priv->lock);
   if (priv->appsrc[0])
@@ -3287,7 +3289,7 @@ gst_rtsp_stream_recv_rtcp (GstRTSPStream * stream, GstBuffer * buffer)
   priv = stream->priv;
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  if (!priv->is_joined) {
+  if (priv->joined_bin == NULL) {
     gst_buffer_unref (buffer);
     return GST_FLOW_NOT_LINKED;
   }
@@ -3433,7 +3435,7 @@ gst_rtsp_stream_add_transport (GstRTSPStream * stream,
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
   priv = stream->priv;
   g_return_val_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans), FALSE);
-  g_return_val_if_fail (priv->is_joined, FALSE);
+  g_return_val_if_fail (priv->joined_bin != NULL, FALSE);
 
   g_mutex_lock (&priv->lock);
   res = update_transport (stream, trans, TRUE);
@@ -3466,7 +3468,7 @@ gst_rtsp_stream_remove_transport (GstRTSPStream * stream,
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
   priv = stream->priv;
   g_return_val_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans), FALSE);
-  g_return_val_if_fail (priv->is_joined, FALSE);
+  g_return_val_if_fail (priv->joined_bin != NULL, FALSE);
 
   g_mutex_lock (&priv->lock);
   res = update_transport (stream, trans, FALSE);
