@@ -3128,8 +3128,11 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
       update_combiner_info (playbin);
       len = gst_message_streams_selected_get_size (msg);
       for (i = 0; i < len; i++) {
-        set_selected_stream (playbin,
-            gst_message_streams_selected_get_stream (msg, i));
+        GstStream *stream;
+
+        stream = gst_message_streams_selected_get_stream (msg, i);
+        set_selected_stream (playbin, stream);
+        gst_object_unref (stream);
       }
       if (pstate)
         playbin->do_stream_selections = FALSE;
