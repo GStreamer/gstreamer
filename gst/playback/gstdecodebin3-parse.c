@@ -360,6 +360,11 @@ remove_input_stream (GstDecodebin3 * dbin, DecodebinInputStream * stream)
     GST_DEBUG_OBJECT (dbin, "slot %p cleared", slot);
   }
 
+  if (stream->active_stream)
+    gst_object_unref (stream->active_stream);
+  if (stream->pending_stream)
+    gst_object_unref (stream->pending_stream);
+
   dbin->input_streams = g_list_remove (dbin->input_streams, stream);
 
   g_free (stream);

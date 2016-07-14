@@ -2312,6 +2312,7 @@ free_multiqueue_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
   gst_element_release_request_pad (dbin->multiqueue, slot->sink_pad);
   gst_object_replace ((GstObject **) & slot->sink_pad, NULL);
   gst_object_replace ((GstObject **) & slot->src_pad, NULL);
+  gst_object_replace ((GstObject **) & slot->active_stream, NULL);
   g_free (slot);
 }
 
