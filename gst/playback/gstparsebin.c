@@ -3816,7 +3816,7 @@ source_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
        * want to block the pad on it if we didn't get any buffers before
        * EOS and expose the pad then. */
       peer = gst_pad_get_peer (pad);
-      gst_pad_send_event (peer, gst_event_ref (event));
+      gst_pad_send_event (peer, event);
       gst_object_unref (peer);
       GST_LOG_OBJECT (pad, "Manually pushed sticky event through");
       ret = GST_PAD_PROBE_HANDLED;

@@ -1446,6 +1446,8 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
           if (peer) {
             gst_pad_send_event (peer, ev);
             gst_object_unref (peer);
+          } else {
+            gst_event_unref (ev);
           }
           SELECTION_LOCK (dbin);
           /* FIXME : Shouldn't we try to re-assign the output instead of just
@@ -2237,6 +2239,8 @@ ghost_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
       if ((peer = gst_pad_get_peer (pad))) {
         gst_pad_send_event (peer, event);
         gst_object_unref (peer);
+      } else {
+        gst_event_unref (event);
       }
       /* Finally handle the switch */
       if (streams)
