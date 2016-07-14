@@ -1122,7 +1122,7 @@ handle_stream_collection (GstDecodebin3 * dbin,
   for (i = 0; i < gst_stream_collection_get_size (collection); i++) {
     GstStream *stream = gst_stream_collection_get_stream (collection, i);
     const GstTagList *taglist;
-    const GstCaps *caps;
+    GstCaps *caps;
 
     GST_DEBUG ("   Stream '%s'", gst_stream_get_stream_id (stream));
     GST_DEBUG ("     type  : %s",
@@ -1132,6 +1132,7 @@ handle_stream_collection (GstDecodebin3 * dbin,
     GST_DEBUG ("     tags  : %" GST_PTR_FORMAT, taglist);
     caps = gst_stream_get_caps (stream);
     GST_DEBUG ("     caps  : %" GST_PTR_FORMAT, caps);
+    gst_caps_unref (caps);
   }
 #endif
 
@@ -1227,7 +1228,7 @@ get_output_for_slot (MultiQueueSlot * slot)
   GstDecodebin3 *dbin = slot->dbin;
   DecodebinOutputStream *output = NULL;
   const gchar *stream_id;
-  const GstCaps *caps;
+  GstCaps *caps;
 
   /* If we already have a configured output, just use it */
   if (slot->output != NULL)
@@ -1251,6 +1252,7 @@ get_output_for_slot (MultiQueueSlot * slot)
   stream_id = gst_stream_get_stream_id (slot->active_stream);
   caps = gst_stream_get_caps (slot->active_stream);
   GST_DEBUG_OBJECT (dbin, "stream %s , %" GST_PTR_FORMAT, stream_id, caps);
+  gst_caps_unref (caps);
 
   /* 0. Emit autoplug-continue signal for pending caps ? */
   GST_FIXME_OBJECT (dbin, "emit autoplug-continue");
@@ -1467,7 +1469,7 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
       case GST_QUERY_CAPS:
       {
         GST_DEBUG_OBJECT (pad, "Intercepting CAPS query");
-        gst_query_set_caps_result (query, gst_caps_new_any ());
+        gst_query_set_caps_result (query, GST_CAPS_ANY);
         ret = GST_PAD_PROBE_HANDLED;
       }
         break;
@@ -1653,17 +1655,19 @@ create_element (GstDecodebin3 * dbin, GstStream * stream,
 {
   GList *res;
   GstElement *element = NULL;
+  GstCaps *caps;
 
   g_mutex_lock (&dbin->factories_lock);
   gst_decode_bin_update_factories_list (dbin);
+  caps = gst_stream_get_caps (stream);
   if (ftype == GST_ELEMENT_FACTORY_TYPE_DECODER)
     res =
         gst_element_factory_list_filter (dbin->decoder_factories,
-        gst_stream_get_caps (stream), GST_PAD_SINK, TRUE);
+        caps, GST_PAD_SINK, TRUE);
   else
     res =
         gst_element_factory_list_filter (dbin->decodable_factories,
-        gst_stream_get_caps (stream), GST_PAD_SINK, TRUE);
+        caps, GST_PAD_SINK, TRUE);
   g_mutex_unlock (&dbin->factories_lock);
 
   if (res) {
@@ -1672,10 +1676,10 @@ create_element (GstDecodebin3 * dbin, GstStream * stream,
     GST_DEBUG ("Created element '%s'", GST_ELEMENT_NAME (element));
     gst_plugin_feature_list_free (res);
   } else {
-    GST_DEBUG ("Could not find an element for caps %" GST_PTR_FORMAT,
-        gst_stream_get_caps (stream));
+    GST_DEBUG ("Could not find an element for caps %" GST_PTR_FORMAT, caps);
   }
 
+  gst_caps_unref (caps);
   return element;
 }
 
@@ -1722,6 +1726,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
   if (output->slot != NULL && output->slot != slot) {
     GST_WARNING_OBJECT (dbin,
         "Output still linked to another slot (%p)", output->slot);
+    gst_caps_unref (new_caps);
     return;
   }
 
@@ -1750,6 +1755,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
             GST_PAD_LINK_CHECK_NOTHING);
         output->linked = TRUE;
       }
+      gst_caps_unref (new_caps);
       return;
     }
 
@@ -1765,6 +1771,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
 
     if (!gst_ghost_pad_set_target ((GstGhostPad *) output->src_pad, NULL)) {
       GST_ERROR_OBJECT (dbin, "Could not release decoder pad");
+      gst_caps_unref (new_caps);
       goto cleanup;
     }
 
@@ -1778,17 +1785,22 @@ reconfigure_output_stream (DecodebinOutputStream * output,
     output->decoder = NULL;
   }
 
+  gst_caps_unref (new_caps);
+
   /* If a decoder is required, create one */
   if (needs_decoder) {
     /* If we don't have a decoder yet, instantiate one */
     output->decoder = create_decoder (dbin, slot->active_stream);
     if (output->decoder == NULL) {
+      GstCaps *caps;
+
       SELECTION_UNLOCK (dbin);
       /* FIXME : Should we be smarter if there's a missing decoder ?
        * Should we deactivate that stream ? */
+      caps = gst_stream_get_caps (slot->active_stream);
       gst_element_post_message (GST_ELEMENT_CAST (dbin),
-          gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin),
-              gst_stream_get_caps (slot->active_stream)));
+          gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps));
+      gst_caps_unref (caps);
       SELECTION_LOCK (dbin);
       goto cleanup;
     }

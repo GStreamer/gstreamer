@@ -3963,8 +3963,10 @@ gst_parse_pad_stream_start_event (GstParsePad * parsepad, GstEvent * event)
       gst_object_replace ((GstObject **) & parsepad->active_stream,
           (GstObject *) stream);
     }
-    if (caps)
+    if (caps) {
       gst_parse_pad_update_caps (parsepad, caps);
+      gst_caps_unref (caps);
+    }
 
     event = gst_event_make_writable (event);
     gst_event_set_stream (event, stream);
