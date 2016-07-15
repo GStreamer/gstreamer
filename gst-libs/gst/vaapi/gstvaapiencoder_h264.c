@@ -703,7 +703,9 @@ bs_write_pps (GstBitWriter * bs,
   WRITE_UINT32 (bs, redundant_pic_cnt_present_flag, 1);
 
   /* more_rbsp_data */
-  if (profile == GST_VAAPI_PROFILE_H264_HIGH) {
+  if (profile == GST_VAAPI_PROFILE_H264_HIGH
+      || profile == GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH
+      || profile == GST_VAAPI_PROFILE_H264_STEREO_HIGH) {
     WRITE_UINT32 (bs, pic_param->pic_fields.bits.transform_8x8_mode_flag, 1);
     WRITE_UINT32 (bs,
         pic_param->pic_fields.bits.pic_scaling_matrix_present_flag, 1);
