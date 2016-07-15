@@ -82,7 +82,7 @@ include $(top_srcdir)/common/gtk-doc-plugins.mak
 SUBDIRS =
 
 # Extra clean files so that maintainer-clean removes *everything*
-MAINTAINERCLEANFILES = \
+MAINTAINERCLEANFILES += \
         gstreamer-vaapi-plugins.* \
 	*.stamp inspect \
 	gstreamer-vaapi-plugins-overrides.txt \
