@@ -723,6 +723,7 @@ GST_START_TEST (test_live_seeking)
     g_main_loop_unref (main_loop);
   if (play_seek_event)
     gst_event_unref (play_seek_event);
+  gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
 }

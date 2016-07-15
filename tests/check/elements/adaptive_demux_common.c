@@ -431,6 +431,7 @@ testSeekOnStateChanged (GstBus * bus, GstMessage * msg, gpointer user_data)
         TEST_TASK_STATE_WAITING_FOR_TESTSRC_STATE_CHANGE) {
       GST_DEBUG ("changing test_task_state");
       testData->test_task_state = TEST_TASK_STATE_EXITING;
+      gst_bus_remove_signal_watch (bus);
       g_cond_signal (&testData->test_task_state_cond);
     }
     g_mutex_unlock (&testData->test_task_state_lock);
@@ -454,6 +455,7 @@ testSeekPreTestCallback (GstAdaptiveDemuxTestEngine * engine,
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message::state-changed",
       G_CALLBACK (testSeekOnStateChanged), testData);
+  gst_object_unref (bus);
 }
 
 static void

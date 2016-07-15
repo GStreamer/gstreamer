@@ -595,6 +595,7 @@ gst_adaptive_demux_test_run (const gchar * element_name,
   priv->engine.pipeline = NULL;
   g_main_loop_unref (priv->engine.loop);
   g_ptr_array_unref (priv->engine.output_streams);
+  gst_object_unref (bus);
 
   GST_TEST_UNLOCK (priv);
   g_mutex_clear (&priv->engine.lock);

@@ -439,7 +439,7 @@ gst_test_video_src_init (GstTestVideoSrc * self)
 
 static GstElement *camera;
 static GstElement *testsrc;
-static guint bus_source;
+static GstBus *bus = NULL;
 static GMainLoop *main_loop;
 static gint capture_count = 0;
 guint32 test_id = 0;
@@ -615,21 +615,20 @@ extract_jpeg_tags (const gchar * filename, gint num)
   gchar *pipeline_str = g_strdup_printf ("filesrc location=%s ! "
       "jpegparse ! fakesink", filepath);
   GstElement *pipeline;
-  guint source;
 
   pipeline = gst_parse_launch (pipeline_str, NULL);
   fail_unless (pipeline != NULL);
   g_free (pipeline_str);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-  source = gst_bus_add_watch (bus, (GstBusFunc) validity_bus_cb, loop);
+  gst_bus_add_watch (bus, (GstBusFunc) validity_bus_cb, loop);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   g_main_loop_run (loop);
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
+  gst_bus_remove_watch (bus);
   gst_object_unref (bus);
-  g_source_remove (source);
   gst_object_unref (pipeline);
   g_main_loop_unref (loop);
 }
@@ -637,9 +636,7 @@ extract_jpeg_tags (const gchar * filename, gint num)
 static void
 setup_camerabin_common (void)
 {
-  GstBus *bus;
   test_id = g_random_int ();
-  bus_source = 0;
 
   main_loop = g_main_loop_new (NULL, TRUE);
 
@@ -647,8 +644,7 @@ setup_camerabin_common (void)
   fail_unless (camera != NULL, "failed to create camerabin element");
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (camera));
-  bus_source = gst_bus_add_watch (bus, (GstBusFunc) capture_bus_cb, main_loop);
-  gst_object_unref (bus);
+  gst_bus_add_watch (bus, (GstBusFunc) capture_bus_cb, main_loop);
 
   tags_found = NULL;
   capture_count = 0;
@@ -748,8 +744,10 @@ teardown (void)
     gst_check_teardown_element (camera);
   camera = NULL;
 
-  if (bus_source)
-    g_source_remove (bus_source);
+  if (bus) {
+    gst_bus_remove_watch (bus);
+    gst_object_unref (bus);
+  }
 
   if (main_loop)
     g_main_loop_unref (main_loop);
@@ -842,7 +840,6 @@ check_file_validity (const gchar * filename, gint num, GstTagList * taglist,
   GstCaps *caps;
   gint caps_width, caps_height;
   GstState state;
-  guint source;
 
   GMainLoop *loop = g_main_loop_new (NULL, FALSE);
   GstElement *playbin = gst_element_factory_make ("playbin", NULL);
@@ -856,7 +853,7 @@ check_file_validity (const gchar * filename, gint num, GstTagList * taglist,
       "audio-sink", fakeaudio, NULL);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (playbin));
-  source = gst_bus_add_watch (bus, (GstBusFunc) validity_bus_cb, loop);
+  gst_bus_add_watch (bus, (GstBusFunc) validity_bus_cb, loop);
 
   gst_element_set_state (playbin, GST_STATE_PAUSED);
   gst_element_get_state (playbin, &state, NULL, GST_SECOND * 3);
@@ -899,7 +896,7 @@ check_file_validity (const gchar * filename, gint num, GstTagList * taglist,
   }
 
   g_free (uri);
-  g_source_remove (source);
+  gst_bus_remove_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (playbin);
   g_main_loop_unref (loop);
