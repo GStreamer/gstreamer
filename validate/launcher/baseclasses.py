@@ -1730,20 +1730,28 @@ class GstValidateMediaDescriptor(MediaDescriptor):
 
 
 class MediaFormatCombination(object):
-    FORMATS = {"aac": "audio/mpeg,mpegversion=4",
+    FORMATS = { # Audio
+               "aac": "audio/mpeg,mpegversion=4",
                "ac3": "audio/x-ac3",
                "vorbis": "audio/x-vorbis",
                "mp3": "audio/mpeg,mpegversion=1,layer=3",
+               "opus": "audio/x-opus",
+               "rawaudio": "audio/x-raw",
+
+               # Video
                "h264": "video/x-h264",
+               "h265": "video/x-h265",
                "vp8": "video/x-vp8",
+               "vp9": "video/x-vp9",
                "theora": "video/x-theora",
+               "prores": "video/x-prores",
+
+               # Containers
+               "webm": "video/webm",
                "ogg": "application/ogg",
                "mkv": "video/x-matroska",
                "mp4": "video/quicktime,variant=iso;",
-               "webm": "video/webm",
                "quicktime": "video/quicktime;",
-               "rawaudio": "audio/x-raw",
-               "prores": "video/x-prores",
                }
 
     def __str__(self):
