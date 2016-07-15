@@ -742,16 +742,9 @@ create_segment_event (GstRTPBaseDepayload * filter, guint rtptime,
   return event;
 }
 
-typedef struct
-{
-  GstRTPBaseDepayload *depayload;
-  GstRTPBaseDepayloadClass *bclass;
-} HeaderData;
-
 static gboolean
-set_headers (GstBuffer ** buffer, guint idx, HeaderData * data)
+set_headers (GstBuffer ** buffer, guint idx, GstRTPBaseDepayload * depayload)
 {
-  GstRTPBaseDepayload *depayload = data->depayload;
   GstRTPBaseDepayloadPrivate *priv = depayload->priv;
   GstClockTime pts, dts, duration;
 
@@ -788,17 +781,12 @@ static GstFlowReturn
 gst_rtp_base_depayload_prepare_push (GstRTPBaseDepayload * filter,
     gboolean is_list, gpointer obj)
 {
-  HeaderData data;
-
-  data.depayload = filter;
-  data.bclass = GST_RTP_BASE_DEPAYLOAD_GET_CLASS (filter);
-
   if (is_list) {
     GstBufferList **blist = obj;
-    gst_buffer_list_foreach (*blist, (GstBufferListFunc) set_headers, &data);
+    gst_buffer_list_foreach (*blist, (GstBufferListFunc) set_headers, filter);
   } else {
     GstBuffer **buf = obj;
-    set_headers (buf, 0, &data);
+    set_headers (buf, 0, filter);
   }
 
   /* if this is the first buffer send a NEWSEGMENT */
