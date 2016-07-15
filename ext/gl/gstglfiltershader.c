@@ -83,8 +83,8 @@ static gboolean gst_gl_filtershader_filter (GstGLFilter * filter,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_gl_filtershader_filter_texture (GstGLFilter * filter,
     GstGLMemory * in_tex, GstGLMemory * out_tex);
-static void gst_gl_filtershader_hcallback (gint width, gint height,
-    guint texture, gpointer stuff);
+static gboolean gst_gl_filtershader_hcallback (GstGLFilter * filter,
+    GstGLMemory * in_tex, gpointer stuff);
 
 static void
 gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
@@ -318,8 +318,8 @@ gst_gl_filtershader_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
 {
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
 
-  gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
-      gst_gl_filtershader_hcallback, filtershader);
+  gst_gl_filter_render_to_target (filter, in_tex, out_tex,
+      gst_gl_filtershader_hcallback, NULL);
 
   if (!filtershader->shader)
     return FALSE;
@@ -493,17 +493,16 @@ print_error:
   return NULL;
 }
 
-static void
-gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
+static gboolean
+gst_gl_filtershader_hcallback (GstGLFilter * filter, GstGLMemory * in_tex,
     gpointer stuff)
 {
-  GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
   GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
   GstGLShader *shader;
 
   if (!(shader = _maybe_recompile_shader (filtershader)))
-    return;
+    return FALSE;
 
   gl->ClearColor (0.0, 0.0, 0.0, 1.0);
   gl->Clear (GL_COLOR_BUFFER_BIT);
@@ -512,8 +511,10 @@ gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
 
   /* FIXME: propertise these */
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
-  gst_gl_shader_set_uniform_1f (shader, "width", width);
-  gst_gl_shader_set_uniform_1f (shader, "height", height);
+  gst_gl_shader_set_uniform_1f (shader, "width",
+      GST_VIDEO_INFO_WIDTH (&filter->out_info));
+  gst_gl_shader_set_uniform_1f (shader, "height",
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info));
   gst_gl_shader_set_uniform_1f (shader, "time", filtershader->time);
 
   /* FIXME: propertise these */
@@ -523,9 +524,11 @@ gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
       gst_gl_shader_get_attribute_location (shader, "a_texcoord");
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->BindTexture (GL_TEXTURE_2D, gst_gl_memory_get_texture_id (in_tex));
 
   gst_gl_filter_draw_fullscreen_quad (filter);
 
   gst_object_unref (shader);
+
+  return TRUE;
 }

@@ -372,29 +372,31 @@ gst_gl_overlay_set_caps (GstGLFilter * filter, GstCaps * incaps,
 static void
 _unbind_buffer (GstGLOverlay * overlay)
 {
+  GstGLFilter *filter = GST_GL_FILTER (overlay);
   const GstGLFuncs *gl = GST_GL_BASE_FILTER (overlay)->context->gl_vtable;
 
   gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
   gl->BindBuffer (GL_ARRAY_BUFFER, 0);
 
-  gl->DisableVertexAttribArray (overlay->attr_position);
-  gl->DisableVertexAttribArray (overlay->attr_texture);
+  gl->DisableVertexAttribArray (filter->draw_attr_position_loc);
+  gl->DisableVertexAttribArray (filter->draw_attr_texture_loc);
 }
 
 static void
 _bind_buffer (GstGLOverlay * overlay, GLuint vbo)
 {
+  GstGLFilter *filter = GST_GL_FILTER (overlay);
   const GstGLFuncs *gl = GST_GL_BASE_FILTER (overlay)->context->gl_vtable;
 
   gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, overlay->vbo_indices);
   gl->BindBuffer (GL_ARRAY_BUFFER, vbo);
 
-  gl->EnableVertexAttribArray (overlay->attr_position);
-  gl->EnableVertexAttribArray (overlay->attr_texture);
+  gl->EnableVertexAttribArray (filter->draw_attr_position_loc);
+  gl->EnableVertexAttribArray (filter->draw_attr_texture_loc);
 
-  gl->VertexAttribPointer (overlay->attr_position, 3, GL_FLOAT,
+  gl->VertexAttribPointer (filter->draw_attr_position_loc, 3, GL_FLOAT,
       GL_FALSE, 5 * sizeof (GLfloat), (void *) 0);
-  gl->VertexAttribPointer (overlay->attr_texture, 2, GL_FLOAT,
+  gl->VertexAttribPointer (filter->draw_attr_texture_loc, 2, GL_FLOAT,
       GL_FALSE, 5 * sizeof (GLfloat), (void *) (3 * sizeof (GLfloat)));
 }
 
@@ -410,15 +412,16 @@ float v_vertices[] = {
 static const GLushort indices[] = { 0, 1, 2, 0, 2, 3, };
 /* *INDENT-ON* */
 
-static void
-gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
+static gboolean
+gst_gl_overlay_callback (GstGLFilter * filter, GstGLMemory * in_tex,
+    gpointer stuff)
 {
-  GstGLOverlay *overlay = GST_GL_OVERLAY (stuff);
-  GstGLFilter *filter = GST_GL_FILTER (overlay);
+  GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
   GstMapInfo map_info;
   guint image_tex;
   gboolean memory_mapped = FALSE;
   const GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
+  gboolean ret = FALSE;
 
 #if GST_GL_HAVE_OPENGL
   if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context) &
@@ -430,49 +433,19 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
 #endif
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->BindTexture (GL_TEXTURE_2D, gst_gl_memory_get_texture_id (in_tex));
 
   gst_gl_shader_use (overlay->shader);
 
   gst_gl_shader_set_uniform_1f (overlay->shader, "alpha", 1.0f);
   gst_gl_shader_set_uniform_1i (overlay->shader, "texture", 0);
 
-  overlay->attr_position =
+  filter->draw_attr_position_loc =
       gst_gl_shader_get_attribute_location (overlay->shader, "a_position");
-  overlay->attr_texture =
+  filter->draw_attr_texture_loc =
       gst_gl_shader_get_attribute_location (overlay->shader, "a_texcoord");
 
-  if (!overlay->vbo) {
-    if (gl->GenVertexArrays) {
-      gl->GenVertexArrays (1, &overlay->vao);
-      gl->BindVertexArray (overlay->vao);
-    }
-
-    gl->GenBuffers (1, &overlay->vbo);
-    gl->BindBuffer (GL_ARRAY_BUFFER, overlay->vbo);
-    gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), v_vertices,
-        GL_STATIC_DRAW);
-
-    gl->GenBuffers (1, &overlay->vbo_indices);
-    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, overlay->vbo_indices);
-    gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
-        GL_STATIC_DRAW);
-
-    if (gl->GenVertexArrays) {
-      _bind_buffer (overlay, overlay->vbo);
-      gl->BindVertexArray (0);
-    }
-
-    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
-    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
-  }
-
-  if (gl->GenVertexArrays)
-    gl->BindVertexArray (overlay->vao);
-  else
-    _bind_buffer (overlay, overlay->vbo);
-
-  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+  gst_gl_filter_draw_fullscreen_quad (filter);
 
   if (!overlay->image_memory)
     goto out;
@@ -489,6 +462,11 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
       gl->GenVertexArrays (1, &overlay->overlay_vao);
       gl->BindVertexArray (overlay->overlay_vao);
     }
+
+    gl->GenBuffers (1, &overlay->vbo_indices);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, overlay->vbo_indices);
+    gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
+        GL_STATIC_DRAW);
 
     gl->GenBuffers (1, &overlay->overlay_vbo);
     gl->BindBuffer (GL_ARRAY_BUFFER, overlay->overlay_vbo);
@@ -553,6 +531,7 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
   gl->Disable (GL_BLEND);
+  ret = TRUE;
 
 out:
   if (gl->GenVertexArrays) {
@@ -567,6 +546,8 @@ out:
     gst_memory_unmap ((GstMemory *) overlay->image_memory, &map_info);
 
   overlay->geometry_change = FALSE;
+
+  return ret;
 }
 
 static gboolean
@@ -641,7 +622,7 @@ gst_gl_overlay_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
     overlay->location_has_changed = FALSE;
   }
 
-  gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
+  gst_gl_filter_render_to_target (filter, in_tex, out_tex,
       gst_gl_overlay_callback, overlay);
 
   return TRUE;

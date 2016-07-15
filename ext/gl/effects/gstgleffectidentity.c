@@ -23,22 +23,12 @@
 
 #include "../gstgleffects.h"
 
-static void
-gst_gl_effects_identity_callback (gint width, gint height, guint texture,
-    gpointer data)
+void
+gst_gl_effects_identity (GstGLEffects * effects)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLContext *context = GST_GL_BASE_FILTER (effects)->context;
   GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
-  GstGLFuncs *gl = context->gl_vtable;
   GstGLShader *shader;
-
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (context)) {
-    gl->MatrixMode (GL_PROJECTION);
-    gl->LoadIdentity ();
-  }
-#endif
 
   shader = g_hash_table_lookup (effects->shaderstable, "identity0");
   if (!shader) {
@@ -50,28 +40,10 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
       return;
     }
 
-    filter->draw_attr_position_loc =
-        gst_gl_shader_get_attribute_location (shader, "a_position");
-    filter->draw_attr_texture_loc =
-        gst_gl_shader_get_attribute_location (shader, "a_texcoord");
-
     g_hash_table_insert (effects->shaderstable, (gchar *) "identity0", shader);
   }
   gst_gl_shader_use (shader);
 
-  gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
-
-  gst_gl_shader_set_uniform_1i (shader, "tex", 0);
-
-  gst_gl_filter_draw_fullscreen_quad (filter);
-}
-
-void
-gst_gl_effects_identity (GstGLEffects * effects)
-{
-  GstGLFilter *filter = GST_GL_FILTER (effects);
-
-  gst_gl_filter_render_to_target (filter, TRUE, effects->intexture,
-      effects->outtexture, gst_gl_effects_identity_callback, effects);
+  gst_gl_filter_render_to_target_with_shader (filter, effects->intexture,
+      effects->outtexture, shader);
 }

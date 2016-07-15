@@ -65,10 +65,10 @@ static gboolean gst_gl_deinterlace_filter (GstGLFilter * filter,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_gl_deinterlace_filter_texture (GstGLFilter * filter,
     GstGLMemory * in_tex, GstGLMemory * out_tex);
-static void gst_gl_deinterlace_vfir_callback (gint width, gint height,
-    guint texture, gpointer stuff);
-static void gst_gl_deinterlace_greedyh_callback (gint width, gint height,
-    guint texture, gpointer stuff);
+static gboolean gst_gl_deinterlace_vfir_callback (GstGLFilter * filter,
+    GstGLMemory * in_tex, gpointer stuff);
+static gboolean gst_gl_deinterlace_greedyh_callback (GstGLFilter * filter,
+    GstGLMemory * in_tex, gpointer stuff);
 
 /* *INDENT-OFF* */
 static const gchar *greedyh_fragment_source =
@@ -276,7 +276,7 @@ gst_gl_deinterlace_init (GstGLDeinterlace * filter)
   filter->deinterlacefunc = gst_gl_deinterlace_vfir_callback;
   filter->current_method = GST_GL_DEINTERLACE_VFIR;
   filter->prev_buffer = NULL;
-  filter->prev_tex = 0;
+  filter->prev_tex = NULL;
 }
 
 static gboolean
@@ -370,7 +370,7 @@ gst_gl_deinterlace_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
   GstGLDeinterlace *deinterlace_filter = GST_GL_DEINTERLACE (filter);
 
   //blocking call, use a FBO
-  gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
+  gst_gl_filter_render_to_target (filter, in_tex, out_tex,
       deinterlace_filter->deinterlacefunc, deinterlace_filter);
 
   return TRUE;
@@ -424,20 +424,19 @@ gst_gl_deinterlace_get_fragment_shader (GstGLFilter * filter,
   return shader;
 }
 
-static void
-gst_gl_deinterlace_vfir_callback (gint width, gint height, guint texture,
-    gpointer stuff)
+static gboolean
+gst_gl_deinterlace_vfir_callback (GstGLFilter * filter, GstGLMemory * in_tex,
+    gpointer user_data)
 {
-  GstGLShader *shader;
-  GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
-  GstGLFuncs *gl = context->gl_vtable;
+  const GstGLFuncs *gl = context->gl_vtable;
+  GstGLShader *shader;
 
   shader = gst_gl_deinterlace_get_fragment_shader (filter, "vfir",
       vfir_fragment_source);
 
   if (!shader)
-    return;
+    return FALSE;
 
 #if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (context)) {
@@ -449,7 +448,7 @@ gst_gl_deinterlace_vfir_callback (gint width, gint height, guint texture,
   gst_gl_shader_use (shader);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->BindTexture (GL_TEXTURE_2D, gst_gl_memory_get_texture_id (in_tex));
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
   gst_gl_shader_set_uniform_1f (shader, "width",
@@ -458,14 +457,15 @@ gst_gl_deinterlace_vfir_callback (gint width, gint height, guint texture,
       GST_VIDEO_INFO_HEIGHT (&filter->out_info));
 
   gst_gl_filter_draw_fullscreen_quad (filter);
+
+  return TRUE;
 }
 
-static void
-gst_gl_deinterlace_greedyh_callback (gint width, gint height, guint texture,
-    gpointer stuff)
+static gboolean
+gst_gl_deinterlace_greedyh_callback (GstGLFilter * filter, GstGLMemory * in_tex,
+    gpointer user_data)
 {
   GstGLShader *shader;
-  GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLDeinterlace *deinterlace_filter = GST_GL_DEINTERLACE (filter);
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
@@ -475,7 +475,7 @@ gst_gl_deinterlace_greedyh_callback (gint width, gint height, guint texture,
       greedyh_fragment_source);
 
   if (!shader)
-    return;
+    return FALSE;
 
 #if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (context)) {
@@ -486,14 +486,15 @@ gst_gl_deinterlace_greedyh_callback (gint width, gint height, guint texture,
 
   gst_gl_shader_use (shader);
 
-  if (G_LIKELY (deinterlace_filter->prev_tex != 0)) {
+  if (G_LIKELY (deinterlace_filter->prev_tex != NULL)) {
     gl->ActiveTexture (GL_TEXTURE1);
     gst_gl_shader_set_uniform_1i (shader, "tex_prev", 1);
-    gl->BindTexture (GL_TEXTURE_2D, deinterlace_filter->prev_tex);
+    gl->BindTexture (GL_TEXTURE_2D,
+        gst_gl_memory_get_texture_id (deinterlace_filter->prev_tex));
   }
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->BindTexture (GL_TEXTURE_2D, gst_gl_memory_get_texture_id (in_tex));
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
   gst_gl_shader_set_uniform_1f (shader, "max_comb", 5.0f / 255.0f);
@@ -508,5 +509,7 @@ gst_gl_deinterlace_greedyh_callback (gint width, gint height, guint texture,
   gst_gl_filter_draw_fullscreen_quad (filter);
 
   /* we keep the previous buffer around so this is safe */
-  deinterlace_filter->prev_tex = texture;
+  deinterlace_filter->prev_tex = in_tex;
+
+  return TRUE;
 }

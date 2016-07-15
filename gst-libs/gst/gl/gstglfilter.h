@@ -38,6 +38,8 @@ GType gst_gl_filter_get_type(void);
 #define GST_IS_GL_FILTER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_GL_FILTER))
 #define GST_GL_FILTER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_FILTER,GstGLFilterClass))
 
+typedef gboolean (*GstGLFilterRenderFunc) (GstGLFilter * filter, GstGLMemory * in_tex, gpointer user_data);
+
 /**
  * GstGLFilter:
  * @base_transform: parent #GstBaseTransform
@@ -117,16 +119,14 @@ struct _GstGLFilterClass
 gboolean gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
                                        GstBuffer * outbuf);
 
-void gst_gl_filter_render_to_target                 (GstGLFilter *filter,
-                                                     gboolean resize,
+gboolean gst_gl_filter_render_to_target             (GstGLFilter *filter,
                                                      GstGLMemory * input,
                                                      GstGLMemory * output,
-                                                     GLCB func,
+                                                     GstGLFilterRenderFunc func,
                                                      gpointer data);
 
 void gst_gl_filter_draw_fullscreen_quad             (GstGLFilter *filter);
 void gst_gl_filter_render_to_target_with_shader     (GstGLFilter * filter,
-                                                     gboolean resize,
                                                      GstGLMemory * input,
                                                      GstGLMemory * output,
                                                      GstGLShader *shader);

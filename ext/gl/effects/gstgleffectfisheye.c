@@ -23,44 +23,14 @@
 
 #include "../gstgleffects.h"
 
-static void
-gst_gl_effects_fisheye_callback (gint width, gint height, guint texture,
-    gpointer data)
-{
-  GstGLShader *shader;
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
-  GstGLFuncs *gl = context->gl_vtable;
-
-  shader = gst_gl_effects_get_fragment_shader (effects, "fisheye",
-      fisheye_fragment_source_gles2);
-
-  if (!shader)
-    return;
-
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (context)) {
-    gl->MatrixMode (GL_PROJECTION);
-    gl->LoadIdentity ();
-  }
-#endif
-
-  gst_gl_shader_use (shader);
-
-  gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
-
-  gst_gl_shader_set_uniform_1i (shader, "tex", 0);
-
-  gst_gl_filter_draw_fullscreen_quad (filter);
-}
-
 void
 gst_gl_effects_fisheye (GstGLEffects * effects)
 {
   GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLShader *shader;
 
-  gst_gl_filter_render_to_target (filter, TRUE, effects->intexture,
-      effects->outtexture, gst_gl_effects_fisheye_callback, effects);
+  shader = gst_gl_effects_get_fragment_shader (effects, "fisheye",
+      fisheye_fragment_source_gles2);
+  gst_gl_filter_render_to_target_with_shader (filter, effects->intexture,
+      effects->outtexture, shader);
 }

@@ -996,66 +996,46 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   return ret ? GST_FLOW_OK : GST_FLOW_ERROR;
 }
 
-struct glcb2
+struct glcb
 {
-  GLCB func;
+  GstGLFilter *filter;
+  GstGLFilterRenderFunc func;
+  GstGLMemory *in_tex;
   gpointer data;
-  guint texture;
-  guint width;
-  guint height;
 };
 
-/* convenience functions to simplify filter development */
 static gboolean
-_glcb2 (gpointer data)
+_glcb (gpointer data)
 {
-  struct glcb2 *cb = data;
+  struct glcb *cb = data;
 
-  cb->func (cb->width, cb->height, cb->texture, cb->data);
-
-  return TRUE;
+  return cb->func (cb->filter, cb->in_tex, cb->data);
 }
 
 /**
  * gst_gl_filter_render_to_target:
  * @filter: a #GstGLFilter
- * @resize: whether to automatically resize the texture between the input size
- *          and the output size
  * @input: the input texture
- * @target: the output texture
+ * @output: the output texture
  * @func: the function to transform @input into @output. called with @data
  * @data: the data associated with @func
  *
- * Transforms @input into @output using @func on through FBO.  @resize should
- * only ever be %TRUE whenever @input is the input texture of @filter.
+ * Transforms @input into @output using @func on through FBO.
+ *
+ * Returns: the return value of @func
  */
-void
-gst_gl_filter_render_to_target (GstGLFilter * filter, gboolean resize,
-    GstGLMemory * input, GstGLMemory * output, GLCB func, gpointer data)
+gboolean
+gst_gl_filter_render_to_target (GstGLFilter * filter, GstGLMemory * input,
+    GstGLMemory * output, GstGLFilterRenderFunc func, gpointer data)
 {
-  guint in_width, in_height, out_width, out_height;
-  struct glcb2 cb;
+  struct glcb cb;
 
-  out_width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
-  if (resize) {
-    in_width = GST_VIDEO_INFO_WIDTH (&filter->in_info);
-    in_height = GST_VIDEO_INFO_HEIGHT (&filter->in_info);
-  } else {
-    in_width = out_width;
-    in_height = out_height;
-  }
-
-  GST_LOG ("rendering to target. in %u, %ux%u out %u, %ux%u", input->tex_id,
-      in_width, in_height, output->tex_id, out_width, out_height);
-
+  cb.filter = filter;
   cb.func = func;
+  cb.in_tex = input;
   cb.data = data;
-  cb.texture = input->tex_id;
-  cb.width = in_width;
-  cb.height = in_height;
 
-  gst_gl_framebuffer_draw_to_texture (filter->fbo, output, _glcb2, &cb);
+  return gst_gl_framebuffer_draw_to_texture (filter->fbo, output, _glcb, &cb);
 }
 
 static void
@@ -1080,10 +1060,10 @@ _get_attributes (GstGLFilter * filter)
   filter->valid_attributes = TRUE;
 }
 
-static void
-_draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
+static gboolean
+_draw_with_shader_cb (GstGLFilter * filter, GstGLMemory * in_tex,
+    gpointer unused)
 {
-  GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
@@ -1098,26 +1078,27 @@ _draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
   gst_gl_shader_use (filter->default_shader);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->BindTexture (GL_TEXTURE_2D, gst_gl_memory_get_texture_id (in_tex));
 
   gst_gl_shader_set_uniform_1i (filter->default_shader, "tex", 1);
-  gst_gl_shader_set_uniform_1f (filter->default_shader, "width", width);
-  gst_gl_shader_set_uniform_1f (filter->default_shader, "height", height);
+  gst_gl_shader_set_uniform_1f (filter->default_shader, "width",
+      GST_VIDEO_INFO_WIDTH (&filter->out_info));
+  gst_gl_shader_set_uniform_1f (filter->default_shader, "height",
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info));
 
   gst_gl_filter_draw_fullscreen_quad (filter);
+
+  return TRUE;
 }
 
 /**
  * gst_gl_filter_render_to_target_with_shader:
  * @filter: a #GstGLFilter
- * @resize: whether to automatically resize the texture between the input size
- *          and the output size
  * @input: the input texture
- * @target: the output texture
+ * @output: the output texture
  * @shader: the shader to use.
  *
- * Transforms @input into @output using @shader on FBO.  @resize should
- * only ever be %TRUE whenever @input is the input texture of @filter.
+ * Transforms @input into @output using @shader with a FBO.
  *
  * See also: gst_gl_filter_render_to_target()
  */
@@ -1125,15 +1106,14 @@ _draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
  * the shader, render input to a quad */
 void
 gst_gl_filter_render_to_target_with_shader (GstGLFilter * filter,
-    gboolean resize, GstGLMemory * input, GstGLMemory * output,
-    GstGLShader * shader)
+    GstGLMemory * input, GstGLMemory * output, GstGLShader * shader)
 {
   if (filter->default_shader != shader)
     filter->valid_attributes = FALSE;
   filter->default_shader = shader;
 
-  gst_gl_filter_render_to_target (filter, resize, input, output,
-      _draw_with_shader_cb, filter);
+  gst_gl_filter_render_to_target (filter, input, output, _draw_with_shader_cb,
+      NULL);
 }
 
 /* *INDENT-OFF* */

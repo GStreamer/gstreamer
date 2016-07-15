@@ -26,13 +26,13 @@
 
 void
 gst_gl_effects_luma_to_curve (GstGLEffects * effects,
-    const GstGLEffectsCurve * curve,
-    gint curve_index, gint width, gint height, GLuint texture)
+    const GstGLEffectsCurve * curve, gint curve_index, GstGLMemory * in_tex,
+    GstGLMemory * out_tex)
 {
-  GstGLShader *shader;
+  GstGLContext *context = GST_GL_BASE_FILTER (effects)->context;
   GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
-  GstGLFuncs *gl = context->gl_vtable;
+  const GstGLFuncs *gl = context->gl_vtable;
+  GstGLShader *shader;
 
   shader = gst_gl_effects_get_fragment_shader (effects, "luma_to_curve",
       luma_to_curve_fragment_source_gles2);
@@ -47,112 +47,46 @@ gst_gl_effects_luma_to_curve (GstGLEffects * effects,
   }
 #endif
 
-  gst_gl_shader_use (shader);
-
   if (effects->curve[curve_index] == 0) {
     /* this parameters are needed to have a right, predictable, mapping */
     gl->GenTextures (1, &effects->curve[curve_index]);
 
-#if GST_GL_HAVE_OPENGL
-    if (USING_OPENGL (context)) {
-      gl->BindTexture (GL_TEXTURE_1D, effects->curve[curve_index]);
-      gl->TexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      gl->TexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      gl->TexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-      gl->TexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-      gl->TexImage1D (GL_TEXTURE_1D, 0, curve->bytes_per_pixel,
-          curve->width, 0, GL_RGB, GL_UNSIGNED_BYTE, curve->pixel_data);
-    }
-#endif
-    if (USING_GLES2 (context) || USING_OPENGL3 (context)) {
-      gl->BindTexture (GL_TEXTURE_2D, effects->curve[curve_index]);
-      gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-      gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGB,
-          curve->width, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, curve->pixel_data);
-    }
-  }
-
-  gl->ActiveTexture (GL_TEXTURE2);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
-
-  gst_gl_shader_set_uniform_1i (shader, "tex", 2);
-
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (context)) {
-    gl->ActiveTexture (GL_TEXTURE1);
-    gl->BindTexture (GL_TEXTURE_1D, effects->curve[curve_index]);
-
-    gst_gl_shader_set_uniform_1i (shader, "curve", 1);
-  }
-#endif
-  if (USING_GLES2 (context) || USING_OPENGL3 (context)) {
-    gl->ActiveTexture (GL_TEXTURE1);
     gl->BindTexture (GL_TEXTURE_2D, effects->curve[curve_index]);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    gst_gl_shader_set_uniform_1i (shader, "curve", 1);
+    gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGB,
+        curve->width, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, curve->pixel_data);
   }
 
-  gst_gl_filter_draw_fullscreen_quad (filter);
-}
+  gst_gl_shader_use (shader);
+  gl->ActiveTexture (GL_TEXTURE2);
+  gl->BindTexture (GL_TEXTURE_2D, effects->curve[curve_index]);
 
-static void
-gst_gl_effects_heat_callback (gint width, gint height, guint texture,
-    gpointer data)
-{
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  gst_gl_shader_set_uniform_1i (shader, "curve", 2);
 
-  gst_gl_effects_luma_to_curve (effects, &heat_curve, GST_GL_EFFECTS_CURVE_HEAT,
-      width, height, texture);
+  gst_gl_filter_render_to_target_with_shader (filter, in_tex, out_tex, shader);
 }
 
 void
 gst_gl_effects_heat (GstGLEffects * effects)
 {
-  GstGLFilter *filter = GST_GL_FILTER (effects);
-
-  gst_gl_filter_render_to_target (filter, TRUE, effects->intexture,
-      effects->outtexture, gst_gl_effects_heat_callback, effects);
-}
-
-static void
-gst_gl_effects_sepia_callback (gint width, gint height, guint texture,
-    gpointer data)
-{
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
-
-  gst_gl_effects_luma_to_curve (effects, &sepia_curve,
-      GST_GL_EFFECTS_CURVE_SEPIA, width, height, texture);
+  gst_gl_effects_luma_to_curve (effects, &heat_curve,
+      GST_GL_EFFECTS_CURVE_HEAT, effects->intexture, effects->outtexture);
 }
 
 void
 gst_gl_effects_sepia (GstGLEffects * effects)
 {
-  GstGLFilter *filter = GST_GL_FILTER (effects);
-
-  gst_gl_filter_render_to_target (filter, TRUE, effects->intexture,
-      effects->outtexture, gst_gl_effects_sepia_callback, effects);
-}
-
-static void
-gst_gl_effects_luma_xpro_callback (gint width, gint height, guint texture,
-    gpointer data)
-{
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
-
-  gst_gl_effects_luma_to_curve (effects, &luma_xpro_curve,
-      GST_GL_EFFECTS_CURVE_LUMA_XPRO, width, height, texture);
+  gst_gl_effects_luma_to_curve (effects, &sepia_curve,
+      GST_GL_EFFECTS_CURVE_SEPIA, effects->intexture, effects->outtexture);
 }
 
 void
 gst_gl_effects_luma_xpro (GstGLEffects * effects)
 {
-  GstGLFilter *filter = GST_GL_FILTER (effects);
-
-  gst_gl_filter_render_to_target (filter, TRUE, effects->intexture,
-      effects->outtexture, gst_gl_effects_luma_xpro_callback, effects);
+  gst_gl_effects_luma_to_curve (effects, &luma_xpro_curve,
+      GST_GL_EFFECTS_CURVE_LUMA_XPRO, effects->intexture, effects->outtexture);
 }

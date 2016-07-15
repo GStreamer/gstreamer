@@ -28,27 +28,6 @@
 
 G_BEGIN_DECLS
 
-/**
- * CDCB:
- * @texture: texture to draw
- * @width: new width
- * @height: new height:
- * @data: user data
- *
- * client draw callback
- */
-typedef gboolean (*CDCB) (GLuint texture, GLuint width, GLuint height, gpointer data);
-/**
- * GLCB:
- * @width: the width
- * @height: the height
- * @texture: texture
- * @stuff: user data
- *
- * callback definition for operating on textures
- */
-typedef void (*GLCB) (gint, gint, guint, gpointer stuff);
-
 gboolean gst_gl_context_gen_shader (GstGLContext * context,
     const gchar * shader_vertex_source,
     const gchar * shader_fragment_source, GstGLShader ** shader);

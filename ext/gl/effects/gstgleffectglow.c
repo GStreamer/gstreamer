@@ -26,170 +26,61 @@
 static gboolean kernel_ready = FALSE;
 static float gauss_kernel[7];
 
-static void
-gst_gl_effects_glow_step_one (gint width, gint height, guint texture,
-    gpointer data)
+void
+gst_gl_effects_glow (GstGLEffects * effects)
 {
-  GstGLShader *shader;
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  const GstGLFuncs *gl = GST_GL_BASE_FILTER (effects)->context->gl_vtable;
   GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
-  GstGLFuncs *gl = context->gl_vtable;
-
-  shader = gst_gl_effects_get_fragment_shader (effects, "luma_threshold",
-      luma_threshold_fragment_source_gles2);
-
-  if (!shader)
-    return;
-
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (context)) {
-    gl->MatrixMode (GL_PROJECTION);
-    gl->LoadIdentity ();
-  }
-#endif
-
-  gst_gl_shader_use (shader);
-
-  gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
-
-  gst_gl_shader_set_uniform_1i (shader, "tex", 0);
-
-  gst_gl_filter_draw_fullscreen_quad (filter);
-}
-
-static void
-gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
-    gpointer data)
-{
   GstGLShader *shader;
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
-  GstGLFuncs *gl = context->gl_vtable;
-
-  shader = gst_gl_effects_get_fragment_shader (effects, "hconv7",
-      hconv7_fragment_source_gles2);
-
-  if (!shader)
-    return;
 
   if (!kernel_ready) {
     fill_gaussian_kernel (gauss_kernel, 7, 10.0);
     kernel_ready = TRUE;
   }
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (context)) {
-    gl->MatrixMode (GL_PROJECTION);
-    gl->LoadIdentity ();
-  }
-#endif
 
+  /* threshold */
+  shader = gst_gl_effects_get_fragment_shader (effects, "luma_threshold",
+      luma_threshold_fragment_source_gles2);
+  gst_gl_filter_render_to_target_with_shader (filter, effects->intexture,
+      effects->midtexture[0], shader);
+
+  /* blur */
+  shader = gst_gl_effects_get_fragment_shader (effects, "hconv7",
+      hconv7_fragment_source_gles2);
   gst_gl_shader_use (shader);
-
-  gl->ActiveTexture (GL_TEXTURE1);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
-
-  gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 7, gauss_kernel);
-  gst_gl_shader_set_uniform_1f (shader, "gauss_width", width);
-
-  gst_gl_filter_draw_fullscreen_quad (filter);
-}
-
-static void
-gst_gl_effects_glow_step_three (gint width, gint height, guint texture,
-    gpointer data)
-{
-  GstGLShader *shader;
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
-  GstGLFuncs *gl = context->gl_vtable;
+  gst_gl_shader_set_uniform_1f (shader, "gauss_width",
+      GST_VIDEO_INFO_WIDTH (&filter->out_info));
+  gst_gl_filter_render_to_target_with_shader (filter, effects->midtexture[0],
+      effects->midtexture[1], shader);
 
   shader = gst_gl_effects_get_fragment_shader (effects, "vconv7",
       vconv7_fragment_source_gles2);
-
-  if (!shader)
-    return;
-
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (context)) {
-    gl->MatrixMode (GL_PROJECTION);
-    gl->LoadIdentity ();
-  }
-#endif
-
   gst_gl_shader_use (shader);
-
-  gl->ActiveTexture (GL_TEXTURE1);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
-
-  gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 7, gauss_kernel);
-  gst_gl_shader_set_uniform_1f (shader, "gauss_height", height);
+  gst_gl_shader_set_uniform_1f (shader, "gauss_height",
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info));
+  gst_gl_filter_render_to_target_with_shader (filter, effects->midtexture[1],
+      effects->midtexture[2], shader);
 
-  gst_gl_filter_draw_fullscreen_quad (filter);
-}
-
-static void
-gst_gl_effects_glow_step_four (gint width, gint height, guint texture,
-    gpointer data)
-{
-  GstGLShader *shader;
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
-  GstGLFuncs *gl = context->gl_vtable;
-
+  /* add blurred luma to intexture */
   shader = gst_gl_effects_get_fragment_shader (effects, "sum",
       sum_fragment_source_gles2);
-
-  if (!shader)
-    return;
-
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (context)) {
-    gl->MatrixMode (GL_PROJECTION);
-    gl->LoadIdentity ();
-  }
-#endif
-
   gst_gl_shader_use (shader);
 
   gl->ActiveTexture (GL_TEXTURE2);
-  gl->BindTexture (GL_TEXTURE_2D, effects->intexture->tex_id);
+  gl->BindTexture (GL_TEXTURE_2D,
+      gst_gl_memory_get_texture_id (effects->intexture));
 
   gst_gl_shader_set_uniform_1f (shader, "alpha", 1.0f);
   gst_gl_shader_set_uniform_1i (shader, "base", 2);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->BindTexture (GL_TEXTURE_2D,
+      gst_gl_memory_get_texture_id (effects->midtexture[2]));
 
   gst_gl_shader_set_uniform_1f (shader, "beta", (gfloat) 1 / 3.5f);
   gst_gl_shader_set_uniform_1i (shader, "blend", 1);
-
-  gst_gl_filter_draw_fullscreen_quad (filter);
-}
-
-void
-gst_gl_effects_glow (GstGLEffects * effects)
-{
-  GstGLFilter *filter = GST_GL_FILTER (effects);
-
-  /* threshold */
-  gst_gl_filter_render_to_target (filter, TRUE, effects->intexture,
-      effects->midtexture[0], gst_gl_effects_glow_step_one, effects);
-
-  /* blur */
-  gst_gl_filter_render_to_target (filter, FALSE, effects->midtexture[0],
-      effects->midtexture[1], gst_gl_effects_glow_step_two, effects);
-
-  gst_gl_filter_render_to_target (filter, FALSE, effects->midtexture[1],
-      effects->midtexture[2], gst_gl_effects_glow_step_three, effects);
-
-  /* add blurred luma to intexture */
-  gst_gl_filter_render_to_target (filter, FALSE, effects->midtexture[2],
-      effects->outtexture, gst_gl_effects_glow_step_four, effects);
+  gst_gl_filter_render_to_target_with_shader (filter, effects->midtexture[2],
+      effects->outtexture, shader);
 }
