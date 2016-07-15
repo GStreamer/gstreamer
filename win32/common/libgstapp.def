@@ -14,6 +14,8 @@ EXPORTS
 	gst_app_sink_set_emit_signals
 	gst_app_sink_set_max_buffers
 	gst_app_sink_set_wait_on_eos
+	gst_app_sink_try_pull_preroll
+	gst_app_sink_try_pull_sample
 	gst_app_src_end_of_stream
 	gst_app_src_get_caps
 	gst_app_src_get_current_level_bytes

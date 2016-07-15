@@ -33,7 +33,9 @@
  * The normal way of retrieving samples from appsink is by using the
  * gst_app_sink_pull_sample() and gst_app_sink_pull_preroll() methods.
  * These methods block until a sample becomes available in the sink or when the
- * sink is shut down or reaches EOS.
+ * sink is shut down or reaches EOS. There are also timed variants of these
+ * methods, gst_app_sink_try_pull_sample() and gst_app_sink_try_pull_preroll(),
+ * which accept a timeout parameter to limit the amount of time to wait.
  *
  * Appsink will internally use a queue to collect buffers from the streaming
  * thread. If the application is not pulling samples fast enough, this queue
@@ -111,6 +113,8 @@ enum
   /* actions */
   SIGNAL_PULL_PREROLL,
   SIGNAL_PULL_SAMPLE,
+  SIGNAL_TRY_PULL_PREROLL,
+  SIGNAL_TRY_PULL_SAMPLE,
 
   LAST_SIGNAL
 };
@@ -332,6 +336,68 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
       g_signal_new ("pull-sample", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstAppSinkClass,
           pull_sample), NULL, NULL, NULL, GST_TYPE_SAMPLE, 0, G_TYPE_NONE);
+  /**
+   * GstAppSink::try-pull-preroll:
+   * @appsink: the appsink element to emit this signal on
+   * @timeout: the maximum amount of time to wait for the preroll sample
+   *
+   * Get the last preroll sample in @appsink. This was the sample that caused the
+   * appsink to preroll in the PAUSED state. This sample can be pulled many times
+   * and remains available to the application even after EOS.
+   *
+   * This function is typically used when dealing with a pipeline in the PAUSED
+   * state. Calling this function after doing a seek will give the sample right
+   * after the seek position.
+   *
+   * Note that the preroll sample will also be returned as the first sample
+   * when calling gst_app_sink_pull_sample() or the "pull-sample" action signal.
+   *
+   * If an EOS event was received before any buffers or the timeout expires,
+   * this function returns %NULL. Use gst_app_sink_is_eos () to check for the EOS
+   * condition.
+   *
+   * This function blocks until a preroll sample or EOS is received, the appsink
+   * element is set to the READY/NULL state, or the timeout expires.
+   *
+   * Returns: a #GstSample or NULL when the appsink is stopped or EOS or the timeout expires.
+   *
+   * Since: 1.10
+   */
+  gst_app_sink_signals[SIGNAL_TRY_PULL_PREROLL] =
+      g_signal_new ("try-pull-preroll", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstAppSinkClass, try_pull_preroll), NULL, NULL, NULL,
+      GST_TYPE_SAMPLE, 1, GST_TYPE_CLOCK_TIME);
+  /**
+   * GstAppSink::try-pull-sample:
+   * @appsink: the appsink element to emit this signal on
+   * @timeout: the maximum amount of time to wait for a sample
+   *
+   * This function blocks until a sample or EOS becomes available or the appsink
+   * element is set to the READY/NULL state or the timeout expires.
+   *
+   * This function will only return samples when the appsink is in the PLAYING
+   * state. All rendered samples will be put in a queue so that the application
+   * can pull samples at its own rate.
+   *
+   * Note that when the application does not pull samples fast enough, the
+   * queued samples could consume a lot of memory, especially when dealing with
+   * raw video frames. It's possible to control the behaviour of the queue with
+   * the "drop" and "max-buffers" properties.
+   *
+   * If an EOS event was received before any buffers or the timeout expires,
+   * this function returns %NULL. Use gst_app_sink_is_eos () to check
+   * for the EOS condition.
+   *
+   * Returns: a #GstSample or NULL when the appsink is stopped or EOS or the timeout expires.
+   *
+   * Since: 1.10
+   */
+  gst_app_sink_signals[SIGNAL_TRY_PULL_SAMPLE] =
+      g_signal_new ("try-pull-sample", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstAppSinkClass, try_pull_sample), NULL, NULL, NULL,
+      GST_TYPE_SAMPLE, 1, GST_TYPE_CLOCK_TIME);
 
   gst_element_class_set_static_metadata (element_class, "AppSink",
       "Generic/Sink", "Allow the application to get access to raw buffer",
@@ -353,6 +419,8 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
 
   klass->pull_preroll = gst_app_sink_pull_preroll;
   klass->pull_sample = gst_app_sink_pull_sample;
+  klass->try_pull_preroll = gst_app_sink_try_pull_preroll;
+  klass->try_pull_sample = gst_app_sink_try_pull_sample;
 
   g_type_class_add_private (klass, sizeof (GstAppSinkPrivate));
 }
@@ -1197,51 +1265,7 @@ gst_app_sink_get_wait_on_eos (GstAppSink * appsink)
 GstSample *
 gst_app_sink_pull_preroll (GstAppSink * appsink)
 {
-  GstSample *sample = NULL;
-  GstAppSinkPrivate *priv;
-
-  g_return_val_if_fail (GST_IS_APP_SINK (appsink), NULL);
-
-  priv = appsink->priv;
-
-  g_mutex_lock (&priv->mutex);
-
-  while (TRUE) {
-    GST_DEBUG_OBJECT (appsink, "trying to grab a buffer");
-    if (!priv->started)
-      goto not_started;
-
-    if (priv->preroll != NULL)
-      break;
-
-    if (priv->is_eos)
-      goto eos;
-
-    /* nothing to return, wait */
-    GST_DEBUG_OBJECT (appsink, "waiting for the preroll buffer");
-    g_cond_wait (&priv->cond, &priv->mutex);
-  }
-  sample =
-      gst_sample_new (priv->preroll, priv->preroll_caps, &priv->preroll_segment,
-      NULL);
-  GST_DEBUG_OBJECT (appsink, "we have the preroll sample %p", sample);
-  g_mutex_unlock (&priv->mutex);
-
-  return sample;
-
-  /* special conditions */
-eos:
-  {
-    GST_DEBUG_OBJECT (appsink, "we are EOS, return NULL");
-    g_mutex_unlock (&priv->mutex);
-    return NULL;
-  }
-not_started:
-  {
-    GST_DEBUG_OBJECT (appsink, "we are stopped, return NULL");
-    g_mutex_unlock (&priv->mutex);
-    return NULL;
-  }
+  return gst_app_sink_try_pull_preroll (appsink, GST_CLOCK_TIME_NONE);
 }
 
 /**
@@ -1263,15 +1287,148 @@ not_started:
  * Returns: (transfer full): a #GstSample or NULL when the appsink is stopped or EOS.
  *          Call gst_sample_unref() after usage.
  */
-
 GstSample *
 gst_app_sink_pull_sample (GstAppSink * appsink)
 {
-  GstSample *sample = NULL;
-  GstBuffer *buffer;
+  return gst_app_sink_try_pull_sample (appsink, GST_CLOCK_TIME_NONE);
+}
+
+/**
+ * gst_app_sink_try_pull_preroll:
+ * @appsink: a #GstAppSink
+ * @timeout: the maximum amount of time to wait for the preroll sample
+ *
+ * Get the last preroll sample in @appsink. This was the sample that caused the
+ * appsink to preroll in the PAUSED state. This sample can be pulled many times
+ * and remains available to the application even after EOS.
+ *
+ * This function is typically used when dealing with a pipeline in the PAUSED
+ * state. Calling this function after doing a seek will give the sample right
+ * after the seek position.
+ *
+ * Note that the preroll sample will also be returned as the first sample
+ * when calling gst_app_sink_pull_sample().
+ *
+ * If an EOS event was received before any buffers or the timeout expires,
+ * this function returns %NULL. Use gst_app_sink_is_eos () to check for the EOS
+ * condition.
+ *
+ * This function blocks until a preroll sample or EOS is received, the appsink
+ * element is set to the READY/NULL state, or the timeout expires.
+ *
+ * Returns: (transfer full): a #GstSample or NULL when the appsink is stopped or EOS or the timeout expires.
+ *          Call gst_sample_unref() after usage.
+ *
+ * Since: 1.10
+ */
+GstSample *
+gst_app_sink_try_pull_preroll (GstAppSink * appsink, GstClockTime timeout)
+{
   GstAppSinkPrivate *priv;
+  GstSample *sample = NULL;
+  gboolean timeout_valid;
+  gint64 end_time;
 
   g_return_val_if_fail (GST_IS_APP_SINK (appsink), NULL);
+
+  priv = appsink->priv;
+
+  timeout_valid = GST_CLOCK_TIME_IS_VALID (timeout);
+
+  if (timeout_valid)
+    end_time =
+        g_get_monotonic_time () + timeout / (GST_SECOND / G_TIME_SPAN_SECOND);
+
+  g_mutex_lock (&priv->mutex);
+
+  while (TRUE) {
+    GST_DEBUG_OBJECT (appsink, "trying to grab a buffer");
+    if (!priv->started)
+      goto not_started;
+
+    if (priv->preroll != NULL)
+      break;
+
+    if (priv->is_eos)
+      goto eos;
+
+    /* nothing to return, wait */
+    GST_DEBUG_OBJECT (appsink, "waiting for the preroll buffer");
+    if (timeout_valid) {
+      if (!g_cond_wait_until (&priv->cond, &priv->mutex, end_time))
+        goto expired;
+    } else {
+      g_cond_wait (&priv->cond, &priv->mutex);
+    }
+  }
+  sample =
+      gst_sample_new (priv->preroll, priv->preroll_caps, &priv->preroll_segment,
+      NULL);
+  GST_DEBUG_OBJECT (appsink, "we have the preroll sample %p", sample);
+  g_mutex_unlock (&priv->mutex);
+
+  return sample;
+
+  /* special conditions */
+expired:
+  {
+    GST_DEBUG_OBJECT (appsink, "timeout expired, return NULL");
+    g_mutex_unlock (&priv->mutex);
+    return NULL;
+  }
+eos:
+  {
+    GST_DEBUG_OBJECT (appsink, "we are EOS, return NULL");
+    g_mutex_unlock (&priv->mutex);
+    return NULL;
+  }
+not_started:
+  {
+    GST_DEBUG_OBJECT (appsink, "we are stopped, return NULL");
+    g_mutex_unlock (&priv->mutex);
+    return NULL;
+  }
+}
+
+/**
+ * gst_app_sink_try_pull_sample:
+ * @appsink: a #GstAppSink
+ * @timeout: the maximum amount of time to wait for a sample
+ *
+ * This function blocks until a sample or EOS becomes available or the appsink
+ * element is set to the READY/NULL state or the timeout expires.
+ *
+ * This function will only return samples when the appsink is in the PLAYING
+ * state. All rendered buffers will be put in a queue so that the application
+ * can pull samples at its own rate. Note that when the application does not
+ * pull samples fast enough, the queued buffers could consume a lot of memory,
+ * especially when dealing with raw video frames.
+ *
+ * If an EOS event was received before any buffers or the timeout expires,
+ * this function returns %NULL. Use gst_app_sink_is_eos () to check for the EOS
+ * condition.
+ *
+ * Returns: (transfer full): a #GstSample or NULL when the appsink is stopped or EOS or the timeout expires.
+ * Call gst_sample_unref() after usage.
+ *
+ * Since: 1.10
+ */
+GstSample *
+gst_app_sink_try_pull_sample (GstAppSink * appsink, GstClockTime timeout)
+{
+  GstAppSinkPrivate *priv;
+  GstSample *sample = NULL;
+  GstBuffer *buffer;
+  gboolean timeout_valid;
+  gint64 end_time;
+
+  g_return_val_if_fail (GST_IS_APP_SINK (appsink), NULL);
+
+  timeout_valid = GST_CLOCK_TIME_IS_VALID (timeout);
+
+  if (timeout_valid)
+    end_time =
+        g_get_monotonic_time () + timeout / (GST_SECOND / G_TIME_SPAN_SECOND);
 
   priv = appsink->priv;
 
@@ -1290,7 +1447,12 @@ gst_app_sink_pull_sample (GstAppSink * appsink)
 
     /* nothing to return, wait */
     GST_DEBUG_OBJECT (appsink, "waiting for a buffer");
-    g_cond_wait (&priv->cond, &priv->mutex);
+    if (timeout_valid) {
+      if (!g_cond_wait_until (&priv->cond, &priv->mutex, end_time))
+        goto expired;
+    } else {
+      g_cond_wait (&priv->cond, &priv->mutex);
+    }
   }
   buffer = dequeue_buffer (appsink);
   GST_DEBUG_OBJECT (appsink, "we have a buffer %p", buffer);
@@ -1303,6 +1465,12 @@ gst_app_sink_pull_sample (GstAppSink * appsink)
   return sample;
 
   /* special conditions */
+expired:
+  {
+    GST_DEBUG_OBJECT (appsink, "timeout expired, return NULL");
+    g_mutex_unlock (&priv->mutex);
+    return NULL;
+  }
 eos:
   {
     GST_DEBUG_OBJECT (appsink, "we are EOS, return NULL");

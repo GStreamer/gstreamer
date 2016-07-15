@@ -94,9 +94,11 @@ struct _GstAppSinkClass
   /* actions */
   GstSample *   (*pull_preroll)      (GstAppSink *appsink);
   GstSample *   (*pull_sample)       (GstAppSink *appsink);
+  GstSample *   (*try_pull_preroll)  (GstAppSink *appsink, GstClockTime timeout);
+  GstSample *   (*try_pull_sample)   (GstAppSink *appsink, GstClockTime timeout);
 
   /*< private >*/
-  gpointer     _gst_reserved[GST_PADDING];
+  gpointer     _gst_reserved[GST_PADDING - 2];
 };
 
 GType gst_app_sink_get_type(void);
@@ -120,6 +122,8 @@ gboolean        gst_app_sink_get_wait_on_eos  (GstAppSink *appsink);
 
 GstSample *     gst_app_sink_pull_preroll     (GstAppSink *appsink);
 GstSample *     gst_app_sink_pull_sample      (GstAppSink *appsink);
+GstSample *     gst_app_sink_try_pull_preroll (GstAppSink *appsink, GstClockTime timeout);
+GstSample *     gst_app_sink_try_pull_sample  (GstAppSink *appsink, GstClockTime timeout);
 
 void            gst_app_sink_set_callbacks    (GstAppSink * appsink,
                                                GstAppSinkCallbacks *callbacks,
