@@ -235,7 +235,14 @@ gst_camerabin_destroy_preview_pipeline (GstCameraBinPreviewPipelineData *
   g_cond_clear (&preview->processing_cond);
 
   if (preview->pipeline) {
+    GstBus *bus;
+
     gst_element_set_state (preview->pipeline, GST_STATE_NULL);
+
+    bus = gst_pipeline_get_bus (GST_PIPELINE (preview->pipeline));
+    gst_bus_remove_watch (bus);
+    gst_object_unref (bus);
+
     gst_object_unref (preview->pipeline);
   }
   g_free (preview);
