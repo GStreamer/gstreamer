@@ -37,8 +37,12 @@ if "win32" in sys.platform:
 GES_ENCODING_TARGET_COMBINATIONS = [
     MediaFormatCombination("ogg", "vorbis", "theora"),
     MediaFormatCombination("webm", "vorbis", "vp8"),
-    MediaFormatCombination("mp4", "mp3", "h264"),
-    MediaFormatCombination("mkv", "vorbis", "h264")]
+    MediaFormatCombination("webm", "opus", "vp8"),
+    MediaFormatCombination("mp4", "aac", "h264"),
+    MediaFormatCombination("mp4", "ac3", "h264"),
+    MediaFormatCombination("mkv", "opus", "h264"),
+    MediaFormatCombination("mkv", "vorbis", "h264")
+]
 
 
 def quote_uri(uri):
