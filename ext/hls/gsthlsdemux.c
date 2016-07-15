@@ -429,11 +429,18 @@ gst_hls_demux_update_manifest (GstAdaptiveDemux * demux)
 }
 
 static void
-create_stream_for_playlist (GstAdaptiveDemux * demux, GstM3U8 * playlist)
+create_stream_for_playlist (GstAdaptiveDemux * demux, GstM3U8 * playlist,
+    gboolean selected)
 {
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   GstHLSDemuxStream *hlsdemux_stream;
   GstAdaptiveDemuxStream *stream;
+
+  if (!selected) {
+    /* FIXME: Later, create the stream but mark not-selected */
+    GST_LOG_OBJECT (demux, "Ignoring not-selected stream");
+    return;
+  }
 
   stream = gst_adaptive_demux_stream_new (demux,
       gst_hls_demux_create_pad (hlsdemux));
@@ -460,7 +467,7 @@ gst_hls_demux_setup_streams (GstAdaptiveDemux * demux)
   gst_hls_demux_clear_all_pending_data (hlsdemux);
 
   /* 1 output for the main playlist */
-  create_stream_for_playlist (demux, playlist->m3u8);
+  create_stream_for_playlist (demux, playlist->m3u8, TRUE);
 
   for (i = 0; i < GST_HLS_N_MEDIA_TYPES; ++i) {
     GList *mlist = playlist->media[i];
@@ -477,7 +484,9 @@ gst_hls_demux_setup_streams (GstAdaptiveDemux * demux)
       }
       GST_LOG_OBJECT (demux, "media of type %d - %s, uri: %s", i,
           media->name, media->uri);
-      create_stream_for_playlist (demux, media->playlist);
+      create_stream_for_playlist (demux, media->playlist,
+          (media->mtype == GST_HLS_MEDIA_TYPE_VIDEO ||
+              media->mtype == GST_HLS_MEDIA_TYPE_AUDIO));
 
       mlist = mlist->next;
     }
