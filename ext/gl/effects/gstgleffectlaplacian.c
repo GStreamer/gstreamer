@@ -25,48 +25,28 @@
 
 #include "../gstgleffects.h"
 
-static void
-gst_gl_effects_laplacian_callback (gint width, gint height, guint texture,
-    gpointer data)
-{
-  GstGLShader *shader = NULL;
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLFilter *filter = GST_GL_FILTER (effects);
-
-  if (NULL != (shader = gst_gl_effects_get_fragment_shader (effects, "conv0",
-              conv9_fragment_source_gles2))) {
-    GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
-    static gfloat kernel[9] = { 0.0, -1.0, 0.0,
-      -1.0, 4.0, -1.0,
-      0.0, -1.0, 0.0
-    };
-
-#if GST_GL_HAVE_OPENGL
-    if (USING_OPENGL (GST_GL_BASE_FILTER (filter)->context)) {
-      gl->MatrixMode (GL_PROJECTION);
-      gl->LoadIdentity ();
-    }
-#endif
-
-    gst_gl_shader_use (shader);
-
-    gl->ActiveTexture (GL_TEXTURE0);
-    gl->BindTexture (GL_TEXTURE_2D, texture);
-
-    gst_gl_shader_set_uniform_1i (shader, "tex", 0);
-    gst_gl_shader_set_uniform_1f (shader, "height", height);
-    gst_gl_shader_set_uniform_1f (shader, "width", width);
-    gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, kernel);
-    gst_gl_shader_set_uniform_1i (shader, "invert", effects->invert);
-
-    gst_gl_filter_draw_fullscreen_quad (filter);
-  }
-}
+static gfloat kernel[9] = {
+  0.0, -1.0, 0.0,
+  -1.0, 4.0, -1.0,
+  0.0, -1.0, 0.0
+};
 
 void
 gst_gl_effects_laplacian (GstGLEffects * effects)
 {
-  gst_gl_filter_render_to_target (GST_GL_FILTER (effects), TRUE,
-      effects->intexture, effects->outtexture,
-      gst_gl_effects_laplacian_callback, effects);
+  GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLShader *shader;
+
+  shader = gst_gl_effects_get_fragment_shader (effects, "conv0",
+      conv9_fragment_source_gles2);
+  gst_gl_shader_use (shader);
+  gst_gl_shader_set_uniform_1f (shader, "height",
+      GST_VIDEO_INFO_HEIGHT (&filter->in_info));
+  gst_gl_shader_set_uniform_1f (shader, "width",
+      GST_VIDEO_INFO_WIDTH (&filter->in_info));
+  gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, kernel);
+  gst_gl_shader_set_uniform_1i (shader, "invert", effects->invert);
+
+  gst_gl_filter_render_to_target_with_shader (filter, effects->intexture,
+      effects->outtexture, shader);
 }

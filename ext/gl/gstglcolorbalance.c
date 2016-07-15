@@ -231,13 +231,11 @@ gst_gl_color_balance_before_transform (GstBaseTransform * base, GstBuffer * buf)
     gst_object_sync_values (GST_OBJECT (balance), stream_time);
 }
 
-static void
-gst_gl_color_balance_callback (gint width, gint height, guint tex_id,
-    gpointer data)
+static gboolean
+gst_gl_color_balance_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
+    GstGLMemory * out_tex)
 {
-  GstGLColorBalance *balance = GST_GL_COLOR_BALANCE (data);
-  GstGLFilter *filter = GST_GL_FILTER (data);
-  const GstGLFuncs *gl = GST_GL_BASE_FILTER (data)->context->gl_vtable;
+  GstGLColorBalance *balance = GST_GL_COLOR_BALANCE (filter);
 
   if (!balance->shader)
     _create_shader (balance);
@@ -252,17 +250,8 @@ gst_gl_color_balance_callback (gint width, gint height, guint tex_id,
   gst_gl_shader_set_uniform_1f (balance->shader, "hue", balance->hue);
   GST_OBJECT_UNLOCK (balance);
 
-  gl->BindTexture (GL_TEXTURE_2D, tex_id);
-
-  gst_gl_filter_draw_fullscreen_quad (filter);
-}
-
-static gboolean
-gst_gl_color_balance_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
-    GstGLMemory * out_tex)
-{
-  gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
-      (GLCB) gst_gl_color_balance_callback, filter);
+  gst_gl_filter_render_to_target_with_shader (filter, in_tex, out_tex,
+      balance->shader);
 
   return TRUE;
 }

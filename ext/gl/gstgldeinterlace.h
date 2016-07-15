@@ -39,14 +39,14 @@ typedef struct _GstGLDeinterlaceClass GstGLDeinterlaceClass;
 
 struct _GstGLDeinterlace
 {
-  GstGLFilter  filter;
+  GstGLFilter               filter;
 
-  GLCB	       deinterlacefunc; 
-  GHashTable   *shaderstable;
-  GstBuffer    *prev_buffer;
-  guint         prev_tex;
+  GstGLFilterRenderFunc     deinterlacefunc; 
+  GHashTable               *shaderstable;
+  GstBuffer                *prev_buffer;
+  GstGLMemory *             prev_tex;
 
-  gint	       current_method;
+  gint	                    current_method;
 };
 
 struct _GstGLDeinterlaceClass

@@ -221,7 +221,7 @@ gst_gl_filter_app_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
       out_tex, _emit_draw_signal, &cb);
 
   if (default_draw) {
-    gst_gl_filter_render_to_target_with_shader (filter, TRUE, in_tex, out_tex,
+    gst_gl_filter_render_to_target_with_shader (filter, in_tex, out_tex,
         filter->default_shader);
   }
 

@@ -181,7 +181,7 @@ gst_gl_colorscale_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
   GstGLColorscale *colorscale = GST_GL_COLORSCALE (filter);
 
   if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context))
-    gst_gl_filter_render_to_target_with_shader (filter, TRUE, in_tex, out_tex,
+    gst_gl_filter_render_to_target_with_shader (filter, in_tex, out_tex,
         colorscale->shader);
 
   return TRUE;
