@@ -920,6 +920,7 @@ play_cycle_track_selection (GstPlay * play, GstPlayTrackType track_type)
 {
   const gchar *prop_cur, *prop_n, *prop_get, *name;
   gint cur = -1, n = -1;
+  guint flag, cur_flags;
 
   switch (track_type) {
     case GST_PLAY_TRACK_TYPE_AUDIO:
@@ -927,48 +928,67 @@ play_cycle_track_selection (GstPlay * play, GstPlayTrackType track_type)
       prop_cur = "current-audio";
       prop_n = "n-audio";
       name = "audio";
+      flag = 0x2;
       break;
     case GST_PLAY_TRACK_TYPE_VIDEO:
       prop_get = "get-video-tags";
       prop_cur = "current-video";
       prop_n = "n-video";
       name = "video";
+      flag = 0x1;
       break;
     case GST_PLAY_TRACK_TYPE_SUBTITLE:
       prop_get = "get-text-tags";
       prop_cur = "current-text";
       prop_n = "n-text";
       name = "subtitle";
+      flag = 0x4;
       break;
     default:
       return;
   }
 
-  g_object_get (play->playbin, prop_cur, &cur, prop_n, &n, NULL);
+  g_object_get (play->playbin, prop_cur, &cur, prop_n, &n, "flags", &cur_flags,
+      NULL);
 
   if (n < 1) {
     g_print ("No %s tracks.\n", name);
-  } else if (n == 1) {
-    g_print ("No other %s tracks to switch to.\n", name);
   } else {
     gchar *lcode = NULL, *lname = NULL;
     const gchar *lang = NULL;
     GstTagList *tags = NULL;
 
-    cur = (cur + 1) % n;
-    g_signal_emit_by_name (play->playbin, prop_get, cur, &tags);
-    if (tags != NULL) {
-      if (gst_tag_list_get_string (tags, GST_TAG_LANGUAGE_CODE, &lcode))
-        lang = gst_tag_get_language_name (lcode);
-      else if (gst_tag_list_get_string (tags, GST_TAG_LANGUAGE_NAME, &lname))
-        lang = lname;
-      gst_tag_list_unref (tags);
-    }
-    if (lang != NULL)
-      g_print ("Switching to %s track %d of %d (%s).\n", name, cur + 1, n,
-          lang);
+    if (!(cur_flags & flag))
+      cur = 0;
     else
-      g_print ("Switching to %s track %d of %d.\n", name, cur + 1, n);
+      cur = (cur + 1) % (n + 1);
+
+    if (cur >= n) {
+      cur = -1;
+      g_print ("Disabling %s.           \n", name);
+      if (cur_flags & flag) {
+        cur_flags &= ~flag;
+        g_object_set (play->playbin, "flags", cur_flags, NULL);
+      }
+    } else {
+      if (!(cur_flags & flag)) {
+        cur_flags |= flag;
+        g_object_set (play->playbin, "flags", cur_flags, NULL);
+      }
+      g_signal_emit_by_name (play->playbin, prop_get, cur, &tags);
+      if (tags != NULL) {
+        if (gst_tag_list_get_string (tags, GST_TAG_LANGUAGE_CODE, &lcode))
+          lang = gst_tag_get_language_name (lcode);
+        else if (gst_tag_list_get_string (tags, GST_TAG_LANGUAGE_NAME, &lname))
+          lang = lname;
+        gst_tag_list_unref (tags);
+      }
+      if (lang != NULL)
+        g_print ("Switching to %s track %d of %d (%s).\n", name, cur + 1, n,
+            lang);
+      else
+        g_print ("Switching to %s track %d of %d.\n", name, cur + 1, n);
+    }
     g_object_set (play->playbin, prop_cur, cur, NULL);
     g_free (lcode);
     g_free (lname);
