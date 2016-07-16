@@ -110,7 +110,8 @@ static void
 gst_mpdparser_parse_representation_base_type (GstRepresentationBaseType **
     pointer, xmlNode * a_node);
 static gboolean gst_mpdparser_parse_representation_node (GList ** list,
-    xmlNode * a_node, GstAdaptationSetNode * parent);
+    xmlNode * a_node, GstAdaptationSetNode * parent,
+    GstPeriodNode * period_node);
 static gboolean gst_mpdparser_parse_adaptation_set_node (GList ** list,
     xmlNode * a_node, GstPeriodNode * parent);
 static void gst_mpdparser_parse_subset_node (GList ** list, xmlNode * a_node);
@@ -1640,6 +1641,8 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
     }
   }
 
+  has_timeline = mult_seg_base_type->SegmentTimeline != NULL;
+
   if (!has_duration && !has_timeline) {
     GST_ERROR ("segment has neither duration nor timeline");
     goto error;
@@ -1794,7 +1797,7 @@ gst_mpdparser_parse_representation_base_type (GstRepresentationBaseType **
 
 static gboolean
 gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node,
-    GstAdaptationSetNode * parent)
+    GstAdaptationSetNode * parent, GstPeriodNode * period_node)
 {
   xmlNode *cur_node;
   GstRepresentationNode *new_representation;
@@ -1830,7 +1833,9 @@ gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node,
           goto error;
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentList") == 0) {
         if (!gst_mpdparser_parse_segment_list_node
-            (&new_representation->SegmentList, cur_node, parent->SegmentList))
+            (&new_representation->SegmentList, cur_node,
+                parent->SegmentList ? parent->
+                SegmentList : period_node->SegmentList))
           goto error;
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "BaseURL") == 0) {
         gst_mpdparser_parse_baseURL_node (&new_representation->BaseURLs,
@@ -1961,7 +1966,7 @@ gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node,
     if (cur_node->type == XML_ELEMENT_NODE) {
       if (xmlStrcmp (cur_node->name, (xmlChar *) "Representation") == 0) {
         if (!gst_mpdparser_parse_representation_node
-            (&new_adap_set->Representations, cur_node, new_adap_set))
+            (&new_adap_set->Representations, cur_node, new_adap_set, parent))
           goto error;
       }
     }
