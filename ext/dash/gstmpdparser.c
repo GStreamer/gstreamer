@@ -3347,7 +3347,8 @@ gst_mpd_client_get_period_index_at_time (GstMpdClient * client,
   for (idx = 0, iter = client->periods; iter; idx++, iter = g_list_next (iter)) {
     stream_period = iter->data;
     if (stream_period->start <= time_offset
-        && stream_period->start + stream_period->duration > time_offset) {
+        && (!GST_CLOCK_TIME_IS_VALID (stream_period->duration)
+            || stream_period->start + stream_period->duration > time_offset)) {
       period_idx = idx;
       break;
     }
