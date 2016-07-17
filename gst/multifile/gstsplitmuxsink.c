@@ -1196,7 +1196,10 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
             GST_EVENT_TYPE_SERIALIZED,
             gst_structure_new ("splitmuxsink-unblock", "timestamp",
                 G_TYPE_UINT64, splitmux->max_in_running_time, NULL));
+
+        GST_SPLITMUX_UNLOCK (splitmux);
         gst_pad_send_event (ctx->sinkpad, event);
+        GST_SPLITMUX_LOCK (splitmux);
         /* fallthrough */
       }
       case SPLITMUX_STATE_START_NEXT_FRAGMENT:
