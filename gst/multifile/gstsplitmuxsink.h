@@ -48,7 +48,7 @@ typedef enum _SplitMuxState {
 typedef struct _MqStreamBuf
 {
   gboolean keyframe;
-  GstClockTime run_ts;
+  GstClockTimeDiff run_ts;
   gsize buf_size;
 } MqStreamBuf;
 
@@ -70,8 +70,8 @@ typedef struct _MqStreamCtx
   GstSegment in_segment;
   GstSegment out_segment;
 
-  GstClockTime in_running_time;
-  GstClockTime out_running_time;
+  GstClockTimeDiff in_running_time;
+  GstClockTimeDiff out_running_time;
 
   gsize in_bytes;
 
@@ -114,14 +114,14 @@ struct _GstSplitMuxSink {
 
   MqStreamCtx *reference_ctx;
   guint queued_gops;
-  GstClockTime max_in_running_time;
-  GstClockTime max_out_running_time;
+  GstClockTimeDiff max_in_running_time;
+  GstClockTimeDiff max_out_running_time;
 
-  GstClockTime muxed_out_time;
+  GstClockTimeDiff muxed_out_time;
   gsize muxed_out_bytes;
   gboolean have_muxed_something;
 
-  GstClockTime mux_start_time;
+  GstClockTimeDiff mux_start_time;
   gsize mux_start_bytes;
 
   gboolean opening_first_fragment;
