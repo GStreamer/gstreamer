@@ -37,7 +37,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/mpeg,"
-        "mpegversion = (int) 4," "framed = (boolean) true, "
+        "mpegversion = (int) 4," "framed = (boolean) { false, true }, "
         "stream-format = (string) raw")
     );
 
@@ -109,6 +109,7 @@ static void
 gst_rtp_mp4a_depay_init (GstRtpMP4ADepay * rtpmp4adepay)
 {
   rtpmp4adepay->adapter = gst_adapter_new ();
+  rtpmp4adepay->framed = FALSE;
 }
 
 static void
@@ -142,6 +143,8 @@ gst_rtp_mp4a_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 
   rtpmp4adepay = GST_RTP_MP4A_DEPAY (depayload);
 
+  rtpmp4adepay->framed = FALSE;
+
   structure = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
@@ -153,7 +156,7 @@ gst_rtp_mp4a_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 
   srccaps = gst_caps_new_simple ("audio/mpeg",
       "mpegversion", G_TYPE_INT, 4,
-      "framed", G_TYPE_BOOLEAN, TRUE, "channels", G_TYPE_INT, channels,
+      "framed", G_TYPE_BOOLEAN, FALSE, "channels", G_TYPE_INT, channels,
       "stream-format", G_TYPE_STRING, "raw", NULL);
 
   if ((str = gst_structure_get_string (structure, "config"))) {
@@ -310,6 +313,25 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
   outbuf = gst_rtp_buffer_get_payload_buffer (rtp);
 
+  if (!rtpmp4adepay->framed) {
+    if (gst_rtp_buffer_get_marker (rtp)) {
+      GstCaps *caps;
+
+      rtpmp4adepay->framed = TRUE;
+
+      gst_rtp_base_depayload_push (depayload, outbuf);
+
+      caps = gst_pad_get_current_caps (depayload->srcpad);
+      caps = gst_caps_make_writable (caps);
+      gst_caps_set_simple (caps, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+      gst_pad_set_caps (depayload->srcpad, caps);
+      gst_caps_unref (caps);
+      return NULL;
+    } else {
+      return outbuf;
+    }
+  }
+
   outbuf = gst_buffer_make_writable (outbuf);
   GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (rtp->buffer);
   gst_adapter_push (rtpmp4adepay->adapter, outbuf);
@@ -422,6 +444,7 @@ gst_rtp_mp4a_depay_change_state (GstElement * element,
       gst_adapter_clear (rtpmp4adepay->adapter);
       rtpmp4adepay->frame_len = 0;
       rtpmp4adepay->numSubFrames = 0;
+      rtpmp4adepay->framed = FALSE;
       break;
     default:
       break;

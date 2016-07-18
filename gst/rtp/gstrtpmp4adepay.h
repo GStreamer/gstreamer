@@ -45,6 +45,8 @@ struct _GstRtpMP4ADepay
   GstAdapter *adapter;
   guint8 numSubFrames;
   guint frame_len;
+
+  gboolean framed;
 };
 
 struct _GstRtpMP4ADepayClass
