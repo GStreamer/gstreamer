@@ -236,19 +236,25 @@ gst_hls_demux_get_bitrate (GstHLSDemux * hlsdemux)
 }
 
 static void
-gst_hls_demux_clear_pending_data (GstHLSDemux * hlsdemux)
+gst_hls_demux_stream_clear_pending_data (GstHLSDemuxStream * hls_stream)
+{
+  if (hls_stream->pending_encrypted_data)
+    gst_adapter_clear (hls_stream->pending_encrypted_data);
+  gst_buffer_replace (&hls_stream->pending_decrypted_buffer, NULL);
+  gst_buffer_replace (&hls_stream->pending_typefind_buffer, NULL);
+  hls_stream->current_offset = -1;
+  gst_hls_demux_stream_decrypt_end (hls_stream);
+}
+
+static void
+gst_hls_demux_clear_all_pending_data (GstHLSDemux * hlsdemux)
 {
   GstAdaptiveDemux *demux = (GstAdaptiveDemux *) hlsdemux;
   GList *walk;
 
   for (walk = demux->streams; walk != NULL; walk = walk->next) {
     GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (walk->data);
-    if (hls_stream->pending_encrypted_data)
-      gst_adapter_clear (hls_stream->pending_encrypted_data);
-    gst_buffer_replace (&hls_stream->pending_decrypted_buffer, NULL);
-    gst_buffer_replace (&hls_stream->pending_typefind_buffer, NULL);
-    hls_stream->current_offset = -1;
-    gst_hls_demux_stream_decrypt_end (hls_stream);
+    gst_hls_demux_stream_clear_pending_data (hls_stream);
   }
 }
 
@@ -276,7 +282,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
 
   /* properly cleanup pending decryption status */
   if (flags & GST_SEEK_FLAG_FLUSH) {
-    gst_hls_demux_clear_pending_data (hlsdemux);
+    gst_hls_demux_clear_all_pending_data (hlsdemux);
   }
 
   /* Use I-frame variants for trick modes */
@@ -406,7 +412,7 @@ gst_hls_demux_setup_streams (GstAdaptiveDemux * demux)
   GstHLSDemuxStream *hlsdemux_stream;
 
   /* only 1 output supported */
-  gst_hls_demux_clear_pending_data (hlsdemux);
+  gst_hls_demux_clear_all_pending_data (hlsdemux);
   stream = gst_adaptive_demux_stream_new (demux,
       gst_hls_demux_create_pad (hlsdemux));
 
@@ -557,6 +563,8 @@ gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   const GstHLSKey *key;
 
+  gst_hls_demux_stream_clear_pending_data (hls_stream);
+
   /* If no decryption is needed, there's nothing to be done here */
   if (hls_stream->current_key == NULL)
     return TRUE;
@@ -570,8 +578,6 @@ gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
 
   gst_hls_demux_stream_decrypt_start (hls_stream, key->data,
       hls_stream->current_iv);
-
-  gst_hls_demux_clear_pending_data (hlsdemux);
 
   return TRUE;
 
@@ -653,7 +659,6 @@ static GstFlowReturn
 gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream)
 {
-  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);   // FIXME: pass HlsStream into function
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -682,7 +687,7 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
       hls_stream->pending_decrypted_buffer = NULL;
     }
   }
-  gst_hls_demux_clear_pending_data (hlsdemux);
+  gst_hls_demux_stream_clear_pending_data (hls_stream);
 
   if (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED)
     return gst_adaptive_demux_stream_advance_fragment (demux, stream,
@@ -868,7 +873,7 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
 
   demux->srcpad_counter = 0;
 
-  gst_hls_demux_clear_pending_data (demux);
+  gst_hls_demux_clear_all_pending_data (demux);
 }
 
 static gchar *
