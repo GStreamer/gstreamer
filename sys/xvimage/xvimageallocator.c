@@ -443,7 +443,7 @@ gst_xvimage_allocator_alloc (GstXvImageAllocator * allocator, gint im_format,
       expected_size = padded_height * GST_ROUND_UP_4 (padded_width *
           GST_VIDEO_FORMAT_INFO_PSTRIDE (info->finfo, 0));
     }
-    if (expected_size != 0 && mem->xvimage->data_size != expected_size)
+    if (expected_size != 0 && mem->xvimage->data_size < expected_size)
       goto unexpected_size;
 
     /* Be verbose about our XvImage stride */
