@@ -117,7 +117,12 @@ gst_gl_display_wayland_new (const gchar * name)
   ret->display = wl_display_connect (name);
 
   if (!ret->display) {
-    GST_ERROR ("Failed to open X11 display connection with name, \'%s\'", name);
+    if (name != NULL) {
+      GST_ERROR ("Failed to open Wayland display connection with name \'%s\'",
+          name);
+    } else {
+      GST_ERROR ("Failed to open Wayland display connection.");
+    }
     return NULL;
   }
 
