@@ -103,4 +103,4 @@ void gst_gl_window_wayland_egl_create_window (GstGLWindowWaylandEGL * window_egl
 
 G_END_DECLS
 
-#endif /* __GST_GL_WINDOW_X11_H__ */
+#endif /* __GST_GL_WINDOW_WAYLAND_EGL_H__ */
