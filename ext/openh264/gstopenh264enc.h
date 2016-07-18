@@ -47,6 +47,12 @@ typedef enum _GstOpenh264encDeblockingMode
   GST_OPENH264_DEBLOCKING_NOT_SLICE_BOUNDARIES = 2
 } GstOpenh264encDeblockingMode;
 
+typedef enum
+{
+  GST_OPENH264_SLICE_MODE_N_SLICES = 1,  /* SM_FIXEDSLCNUM_SLICE */
+  GST_OPENH264_SLICE_MODE_AUTO = 5       /* former SM_AUTO_SLICE */
+} GstOpenh264EncSliceMode;
+
 #define GST_TYPE_OPENH264ENC          (gst_openh264enc_get_type())
 #define GST_OPENH264ENC(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OPENH264ENC,GstOpenh264Enc))
 #define GST_OPENH264ENC_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OPENH264ENC,GstOpenh264EncClass))
@@ -80,7 +86,7 @@ struct _GstOpenh264Enc
   gboolean background_detection;
   gboolean adaptive_quantization;
   gboolean scene_change_detection;
-  SliceModeEnum slice_mode;
+  GstOpenh264EncSliceMode slice_mode;
   guint num_slices;
   ECOMPLEXITY_MODE complexity;
 };

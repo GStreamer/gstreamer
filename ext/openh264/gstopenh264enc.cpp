@@ -38,6 +38,8 @@
 GST_DEBUG_CATEGORY_STATIC (gst_openh264enc_debug_category);
 #define GST_CAT_DEFAULT gst_openh264enc_debug_category
 
+/* FIXME: we should not really directly use the enums from the openh264 API
+ * here, since it might change or be removed */
 #define GST_TYPE_USAGE_TYPE (gst_openh264enc_usage_type_get_type ())
 static GType
 gst_openh264enc_usage_type_get_type (void)
@@ -105,14 +107,14 @@ static GType
 gst_openh264enc_slice_mode_get_type (void)
 {
   static const GEnumValue types[] = {
-    {SM_FIXEDSLCNUM_SLICE, "Fixed number of slices", "n-slices"},
-    {SM_AUTO_SLICE, "Number of slices equal to number of threads", "auto"},
+    {GST_OPENH264_SLICE_MODE_N_SLICES, "Fixed number of slices", "n-slices"},
+    {GST_OPENH264_SLICE_MODE_AUTO, "Number of slices equal to number of threads", "auto"},
     {0, NULL, NULL},
   };
   static gsize id = 0;
 
   if (g_once_init_enter (&id)) {
-    GType _id = g_enum_register_static ("GstOpenh264encSliceModes", types);
+    GType _id = g_enum_register_static ("GstOpenh264EncSliceModes", types);
     g_once_init_leave (&id, _id);
   }
 
@@ -175,7 +177,7 @@ static void gst_openh264enc_set_rate_control (GstOpenh264Enc * openh264enc,
 #define DEFAULT_BACKGROUND_DETECTION TRUE
 #define DEFAULT_ADAPTIVE_QUANTIZATION TRUE
 #define DEFAULT_SCENE_CHANGE_DETECTION TRUE
-#define DEFAULT_SLICE_MODE      SM_FIXEDSLCNUM_SLICE
+#define DEFAULT_SLICE_MODE      GST_OPENH264_SLICE_MODE_N_SLICES
 #define DEFAULT_NUM_SLICES      1
 #define DEFAULT_COMPLEXITY      MEDIUM_COMPLEXITY
 
@@ -476,7 +478,7 @@ gst_openh264enc_set_property (GObject * object, guint property_id,
       break;
 
     case PROP_SLICE_MODE:
-      openh264enc->slice_mode = (SliceModeEnum) g_value_get_enum (value);
+      openh264enc->slice_mode = (GstOpenh264EncSliceMode) g_value_get_enum (value);
       break;
 
     case PROP_NUM_SLICES:
@@ -631,6 +633,8 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   gchar *debug_caps;
   guint width, height, fps_n, fps_d;
   SEncParamExt enc_params;
+  SliceModeEnum slice_mode = SM_SINGLE_SLICE;
+  guint n_slices = 1;
   gint ret;
   GstCaps *outcaps;
   GstVideoCodecState *output_state;
@@ -698,15 +702,32 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   enc_params.sSpatialLayers[0].iSpatialBitrate = enc_params.iTargetBitrate;
   enc_params.sSpatialLayers[0].iMaxSpatialBitrate = enc_params.iMaxBitrate;
 
-  if (openh264enc->slice_mode == SM_FIXEDSLCNUM_SLICE) {
+  if (openh264enc->slice_mode == GST_OPENH264_SLICE_MODE_N_SLICES) {
     if (openh264enc->num_slices == 1)
-      enc_params.sSpatialLayers[0].sSliceCfg.uiSliceMode = SM_SINGLE_SLICE;
+      slice_mode = SM_SINGLE_SLICE;
     else
-      enc_params.sSpatialLayers[0].sSliceCfg.uiSliceMode = SM_FIXEDSLCNUM_SLICE;
-    enc_params.sSpatialLayers[0].sSliceCfg.sSliceArgument.uiSliceNum = openh264enc->num_slices;
+      slice_mode = SM_FIXEDSLCNUM_SLICE;
+     n_slices = openh264enc->num_slices;
+  } else if (openh264enc->slice_mode == GST_OPENH264_SLICE_MODE_AUTO) {
+#if OPENH264_MAJOR == 1 && OPENH264_MINOR < 6
+    slice_mode = SM_AUTO_SLICE;
+#else
+    slice_mode = SM_FIXEDSLCNUM_SLICE;
+    n_slices = 0;
+#endif
   } else {
-    enc_params.sSpatialLayers[0].sSliceCfg.uiSliceMode = openh264enc->slice_mode;
+    GST_ERROR_OBJECT (openh264enc, "unexpected slice mode %d",
+        openh264enc->slice_mode);
+    slice_mode = SM_SINGLE_SLICE;
   }
+
+#if OPENH264_MAJOR == 1 && OPENH264_MINOR < 6
+  enc_params.sSpatialLayers[0].sSliceCfg.uiSliceMode = slice_mode;
+  enc_params.sSpatialLayers[0].sSliceCfg.sSliceArgument.uiSliceNum = n_slices;
+#else
+  enc_params.sSpatialLayers[0].sSliceArgument.uiSliceMode = slice_mode;
+  enc_params.sSpatialLayers[0].sSliceArgument.uiSliceNum = n_slices;
+#endif
 
   openh264enc->framerate = (1 + fps_n / fps_d);
 

@@ -125,7 +125,9 @@ gst_openh264dec_start (GstVideoDecoder * decoder)
 
   dec_param.uiTargetDqLayer = 255;
   dec_param.eEcActiveIdc = ERROR_CON_FRAME_COPY;
+#if OPENH264_MAJOR == 1 && OPENH264_MINOR < 6
   dec_param.eOutputColorFormat = videoFormatI420;
+#endif
   dec_param.sVideoProperty.eVideoBsType = VIDEO_BITSTREAM_AVC;
 
   ret = openh264dec->decoder->Initialize (&dec_param);
