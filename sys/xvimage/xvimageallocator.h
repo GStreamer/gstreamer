@@ -47,7 +47,7 @@ GstMemory *           gst_xvimage_allocator_alloc       (GstXvImageAllocator * a
                                                          const GstVideoInfo * info,
                                                          gint padded_width,
                                                          gint padded_height,
-                                                         GstVideoRectangle *crop,
+                                                         const GstVideoRectangle *crop,
                                                          GError ** error);
 
 /* memory from the allocator */
