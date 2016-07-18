@@ -143,6 +143,7 @@ enum
 #define DEFAULT_RTX_MIN_RETRY_TIMEOUT   -1
 #define DEFAULT_RTX_RETRY_PERIOD    -1
 #define DEFAULT_RTX_MAX_RETRIES    -1
+#define DEFAULT_RTX_DEADLINE       -1
 #define DEFAULT_RTX_STATS_TIMEOUT   1000
 #define DEFAULT_MAX_RTCP_RTP_TIME_DIFF 1000
 #define DEFAULT_MAX_DROPOUT_TIME    60000
@@ -170,6 +171,7 @@ enum
   PROP_RTX_MIN_RETRY_TIMEOUT,
   PROP_RTX_RETRY_PERIOD,
   PROP_RTX_MAX_RETRIES,
+  PROP_RTX_DEADLINE,
   PROP_RTX_STATS_TIMEOUT,
   PROP_STATS,
   PROP_MAX_RTCP_RTP_TIME_DIFF,
@@ -288,6 +290,7 @@ struct _GstRtpJitterBufferPrivate
   gint rtx_retry_period;
   gint rtx_max_retries;
   guint rtx_stats_timeout;
+  gint rtx_deadline_ms;
   gint max_rtcp_rtp_time_diff;
   guint32 max_dropout_time;
   guint32 max_misorder_time;
@@ -713,6 +716,21 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           "(-1 not limited)", -1, G_MAXINT, DEFAULT_RTX_MAX_RETRIES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
+   * GstRtpJitterBuffer:rtx-deadline:
+   *
+   * The deadline for a valid RTX request in ms.
+   *
+   * How long the RTX RTCP will be valid for.
+   * When -1 is used, the size of the jitterbuffer will be used.
+   *
+   * Since: 1.10
+   */
+  g_object_class_install_property (gobject_class, PROP_RTX_DEADLINE,
+      g_param_spec_int ("rtx-deadline", "RTX Deadline (ms)",
+          "The deadline for a valid RTX request in milliseconds. "
+          "(-1 automatic)", -1, G_MAXINT, DEFAULT_RTX_DEADLINE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+/**
    * GstRtpJitterBuffer::rtx-stats-timeout:
    *
    * The time to wait for a retransmitted packet after it has been
@@ -951,6 +969,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->rtx_min_retry_timeout = DEFAULT_RTX_MIN_RETRY_TIMEOUT;
   priv->rtx_retry_period = DEFAULT_RTX_RETRY_PERIOD;
   priv->rtx_max_retries = DEFAULT_RTX_MAX_RETRIES;
+  priv->rtx_deadline_ms = DEFAULT_RTX_DEADLINE;
   priv->rtx_stats_timeout = DEFAULT_RTX_STATS_TIMEOUT;
   priv->max_rtcp_rtp_time_diff = DEFAULT_MAX_RTCP_RTP_TIME_DIFF;
   priv->max_dropout_time = DEFAULT_MAX_DROPOUT_TIME;
@@ -3560,6 +3579,7 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   GstEvent *event;
   guint delay, delay_ms, avg_rtx_rtt_ms;
   guint rtx_retry_timeout_ms, rtx_retry_period_ms;
+  guint rtx_deadline_ms;
   GstClockTime rtx_retry_period;
   GstClockTime rtx_retry_timeout;
   GstClock *clock;
@@ -3576,6 +3596,8 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   rtx_retry_timeout_ms = GST_TIME_AS_MSECONDS (rtx_retry_timeout);
   rtx_retry_period_ms = GST_TIME_AS_MSECONDS (rtx_retry_period);
   avg_rtx_rtt_ms = GST_TIME_AS_MSECONDS (priv->avg_rtx_rtt);
+  rtx_deadline_ms =
+      priv->rtx_deadline_ms != -1 ? priv->rtx_deadline_ms : priv->latency_ms;
 
   event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
       gst_structure_new ("GstRTPRetransmissionRequest",
@@ -3585,7 +3607,7 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
           "retry", G_TYPE_UINT, timer->num_rtx_retry,
           "frequency", G_TYPE_UINT, rtx_retry_timeout_ms,
           "period", G_TYPE_UINT, rtx_retry_period_ms,
-          "deadline", G_TYPE_UINT, priv->latency_ms,
+          "deadline", G_TYPE_UINT, rtx_deadline_ms,
           "packet-spacing", G_TYPE_UINT64, priv->packet_spacing,
           "avg-rtt", G_TYPE_UINT, avg_rtx_rtt_ms, NULL));
   GST_DEBUG_OBJECT (jitterbuffer, "Request RTX: %" GST_PTR_FORMAT, event);
@@ -4398,6 +4420,11 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       priv->rtx_max_retries = g_value_get_int (value);
       JBUF_UNLOCK (priv);
       break;
+    case PROP_RTX_DEADLINE:
+      JBUF_LOCK (priv);
+      priv->rtx_deadline_ms = g_value_get_int (value);
+      JBUF_UNLOCK (priv);
+      break;
     case PROP_RTX_STATS_TIMEOUT:
       JBUF_LOCK (priv);
       priv->rtx_stats_timeout = g_value_get_uint (value);
@@ -4523,6 +4550,11 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
     case PROP_RTX_MAX_RETRIES:
       JBUF_LOCK (priv);
       g_value_set_int (value, priv->rtx_max_retries);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RTX_DEADLINE:
+      JBUF_LOCK (priv);
+      g_value_set_int (value, priv->rtx_deadline_ms);
       JBUF_UNLOCK (priv);
       break;
     case PROP_RTX_STATS_TIMEOUT:
