@@ -52,7 +52,8 @@ GST_START_TEST (test_functioning)
   GstClock *client, *server;
   GstClockTime basex, basey, rate_num, rate_denom;
   GstClockTime servtime, clienttime, diff;
-  gint port, i;
+  gint port;
+  gchar sign;
 
   server = gst_system_clock_obtain ();
   fail_unless (server != NULL, "failed to get system clock");
@@ -73,36 +74,26 @@ GST_START_TEST (test_functioning)
   g_object_get (client, "port", &port, NULL);
 
   /* let the clocks synchronize */
-  for (i = 0; i < 11; ++i) {
-    gchar sign;
+  gst_clock_wait_for_sync (GST_CLOCK (client), GST_SECOND);
 
-    servtime = gst_clock_get_time (server);
-    clienttime = gst_clock_get_time (client);
+  servtime = gst_clock_get_time (server);
+  clienttime = gst_clock_get_time (client);
 
-    if (servtime > clienttime) {
-      sign = '-';
-      diff = servtime - clienttime;
-    } else {
-      sign = '+';
-      diff = clienttime - servtime;
-    }
-
-    GST_LOG ("server time:  %" GST_TIME_FORMAT, GST_TIME_ARGS (servtime));
-    GST_LOG ("client time:  %" GST_TIME_FORMAT, GST_TIME_ARGS (clienttime));
-    GST_LOG ("diff       : %c%" GST_TIME_FORMAT, sign, GST_TIME_ARGS (diff));
-
-    /* can't in general make a precise assertion here, because this depends on
-     * system load and a lot of things. however within half a second they should
-     * at least be within 1/10 of a second of each other... */
-    if (diff < 100 * GST_MSECOND)
-      break;
-
-    g_usleep (G_USEC_PER_SEC / 20);
+  if (servtime > clienttime) {
+    sign = '-';
+    diff = servtime - clienttime;
+  } else {
+    sign = '+';
+    diff = clienttime - servtime;
   }
 
-  GST_INFO ("done after %d iterations, diff: %" GST_TIME_FORMAT, i,
-      GST_TIME_ARGS (diff));
+  GST_LOG ("server time:  %" GST_TIME_FORMAT, GST_TIME_ARGS (servtime));
+  GST_LOG ("client time:  %" GST_TIME_FORMAT, GST_TIME_ARGS (clienttime));
+  GST_LOG ("diff       : %c%" GST_TIME_FORMAT, sign, GST_TIME_ARGS (diff));
 
+  /* can't in general make a precise assertion here, because this depends on
+   * system load and a lot of things. however within half a second they should
+   * at least be within 1/10 of a second of each other... */
   if (diff > 100 * GST_MSECOND)
     fail ("clocks not in sync (%" GST_TIME_FORMAT ")", diff);
 
