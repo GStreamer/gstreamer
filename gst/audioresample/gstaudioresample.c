@@ -846,8 +846,16 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
    * flag to resync timestamp and offset counters and send event
    * downstream */
   if (G_UNLIKELY (gst_audio_resample_check_discont (resample, inbuf))) {
+    gsize size;
+    gint bpf = GST_AUDIO_INFO_BPF (&resample->in);
+
     gst_audio_resample_reset_state (resample);
     resample->need_discont = TRUE;
+
+    /* need to recalculate the output size */
+    size = gst_buffer_get_size (inbuf) / bpf;
+    size = gst_audio_converter_get_out_frames (resample->converter, size);
+    gst_buffer_set_size (outbuf, size * bpf);
   }
 
   /* handle discontinuity */
