@@ -952,8 +952,8 @@ gst_collect_pads_stop (GstCollectPads * pads)
  *
  * MT safe.
  *
- * Returns: The buffer in @data or %NULL if no buffer is queued.
- *  should unref the buffer after usage.
+ * Returns: (transfer full) (nullable): The buffer in @data or %NULL if no
+ * buffer is queued. should unref the buffer after usage.
  */
 GstBuffer *
 gst_collect_pads_peek (GstCollectPads * pads, GstCollectData * data)
@@ -984,8 +984,8 @@ gst_collect_pads_peek (GstCollectPads * pads, GstCollectData * data)
  *
  * MT safe.
  *
- * Returns: (transfer full): The buffer in @data or %NULL if no buffer was
- *   queued. You should unref the buffer after usage.
+ * Returns: (transfer full) (nullable): The buffer in @data or %NULL if no
+ * buffer was queued. You should unref the buffer after usage.
  */
 GstBuffer *
 gst_collect_pads_pop (GstCollectPads * pads, GstCollectData * data)
@@ -1151,9 +1151,9 @@ gst_collect_pads_flush (GstCollectPads * pads, GstCollectData * data,
  *
  * MT safe.
  *
- * Returns: (transfer full): A sub buffer. The size of the buffer can be less that requested.
- * A return of %NULL signals that the pad is end-of-stream.
- * Unref the buffer after use.
+ * Returns: (transfer full) (nullable): A sub buffer. The size of the buffer can
+ * be less that requested. A return of %NULL signals that the pad is
+ * end-of-stream. Unref the buffer after use.
  */
 GstBuffer *
 gst_collect_pads_read_buffer (GstCollectPads * pads, GstCollectData * data,
@@ -1191,9 +1191,9 @@ gst_collect_pads_read_buffer (GstCollectPads * pads, GstCollectData * data,
  *
  * MT safe.
  *
- * Returns: A sub buffer. The size of the buffer can be less that requested.
- * A return of %NULL signals that the pad is end-of-stream.
- * Unref the buffer after use.
+ * Returns: (transfer full) (nullable): A sub buffer. The size of the buffer can
+ * be less that requested. A return of %NULL signals that the pad is
+ * end-of-stream. Unref the buffer after use.
  */
 GstBuffer *
 gst_collect_pads_take_buffer (GstCollectPads * pads, GstCollectData * data,
