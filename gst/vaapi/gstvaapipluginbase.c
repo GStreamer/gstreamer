@@ -514,8 +514,14 @@ ensure_sinkpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo)
   if (!reset_allocator (plugin->sinkpad_allocator, vinfo))
     return TRUE;
 
-  plugin->sinkpad_allocator =
-      gst_vaapi_video_allocator_new (plugin->display, vinfo, 0);
+  if (has_dmabuf_capable_peer (plugin, plugin->sinkpad)) {
+    plugin->sinkpad_allocator =
+        gst_vaapi_dmabuf_allocator_new (plugin->display, vinfo,
+        GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE);
+  } else {
+    plugin->sinkpad_allocator =
+        gst_vaapi_video_allocator_new (plugin->display, vinfo, 0);
+  }
   return plugin->sinkpad_allocator != NULL;
 }
 
