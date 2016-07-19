@@ -125,7 +125,7 @@ gst_video_info_change_format (GstVideoInfo * vip, GstVideoFormat format,
 
 G_GNUC_INTERNAL
 gboolean
-gst_video_info_changed (GstVideoInfo * old, GstVideoInfo * new);
+gst_video_info_changed (const GstVideoInfo * old, const GstVideoInfo * new);
 
 G_GNUC_INTERNAL
 void

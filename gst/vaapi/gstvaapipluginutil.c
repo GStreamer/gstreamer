@@ -691,7 +691,7 @@ gst_video_info_change_format (GstVideoInfo * vip, GstVideoFormat format,
  * @new. Otherwise, %FALSE.
  **/
 gboolean
-gst_video_info_changed (GstVideoInfo * old, GstVideoInfo * new)
+gst_video_info_changed (const GstVideoInfo * old, const GstVideoInfo * new)
 {
   if (GST_VIDEO_INFO_FORMAT (old) != GST_VIDEO_INFO_FORMAT (new))
     return TRUE;
