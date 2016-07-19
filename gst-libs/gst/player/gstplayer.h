@@ -192,6 +192,16 @@ gint64       gst_player_get_audio_video_offset        (GstPlayer    * player);
 void         gst_player_set_audio_video_offset        (GstPlayer    * player,
                                                        gint64 offset);
 
+gboolean       gst_player_set_config                  (GstPlayer * player,
+                                                       GstStructure * config);
+GstStructure * gst_player_get_config                  (GstPlayer * player);
+
+/* helpers for configuring the config structure */
+
+void           gst_player_config_set_user_agent       (GstStructure * config,
+                                                       const gchar * agent);
+gchar *        gst_player_config_get_user_agent       (GstStructure * config);
+
 G_END_DECLS
 
 #endif /* __GST_PLAYER_H__ */

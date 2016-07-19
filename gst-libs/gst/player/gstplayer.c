@@ -78,6 +78,24 @@ gst_player_error_quark (void)
   return quark;
 }
 
+static GQuark QUARK_CONFIG;
+
+/* Keep ConfigQuarkId and _config_quark_strings ordered and synced */
+typedef enum
+{
+  CONFIG_QUARK_USER_AGENT = 0,
+
+  CONFIG_QUARK_MAX
+} ConfigQuarkId;
+
+static const gchar *_config_quark_strings[] = {
+  "user-agent",
+};
+
+GQuark _config_quark_table[CONFIG_QUARK_MAX];
+
+#define CONFIG_QUARK(q) _config_quark_table[CONFIG_QUARK_##q]
+
 enum
 {
   PROP_0,
@@ -161,6 +179,8 @@ struct _GstPlayer
 
   GstElement *current_vis_element;
 
+  GstStructure *config;
+
   /* Protected by lock */
   gboolean seek_pending;        /* Only set from main context */
   GstClockTime last_seek_time;  /* Only set from main context */
@@ -243,6 +263,8 @@ gst_player_init (GstPlayer * self)
   self->context = g_main_context_new ();
   self->loop = g_main_loop_new (self->context, FALSE);
 
+  self->config = gst_structure_new_id_empty (QUARK_CONFIG);
+
   self->position_update_interval_ms = DEFAULT_POSITION_UPDATE_INTERVAL_MS;
   self->seek_pending = FALSE;
   self->seek_position = GST_CLOCK_TIME_NONE;
@@ -250,6 +272,23 @@ gst_player_init (GstPlayer * self)
   self->inhibit_sigs = FALSE;
 
   GST_TRACE_OBJECT (self, "Initialized");
+}
+
+static void
+config_quark_initialize (void)
+{
+  gint i;
+
+  QUARK_CONFIG = g_quark_from_static_string ("player-config");
+
+  if (G_N_ELEMENTS (_config_quark_strings) != CONFIG_QUARK_MAX)
+    g_warning ("the quark table is not consistent! %d != %d",
+        (int) G_N_ELEMENTS (_config_quark_strings), CONFIG_QUARK_MAX);
+
+  for (i = 0; i < CONFIG_QUARK_MAX; i++) {
+    _config_quark_table[i] =
+        g_quark_from_static_string (_config_quark_strings[i]);
+  }
 }
 
 static void
@@ -421,6 +460,8 @@ gst_player_class_init (GstPlayerClass * klass)
       g_signal_new ("seek-done", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS, 0, NULL,
       NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_CLOCK_TIME);
+
+  config_quark_initialize ();
 }
 
 static void
@@ -463,6 +504,8 @@ gst_player_finalize (GObject * object)
     g_object_unref (self->signal_dispatcher);
   if (self->current_vis_element)
     gst_object_unref (self->current_vis_element);
+  if (self->config)
+    gst_structure_free (self->config);
   g_mutex_clear (&self->lock);
   g_cond_clear (&self->cond);
 
@@ -2488,6 +2531,26 @@ mute_notify_cb (G_GNUC_UNUSED GObject * obj, G_GNUC_UNUSED GParamSpec * pspec,
   }
 }
 
+static void
+source_setup_cb (GstElement * playbin, GstElement * source, GstPlayer * self)
+{
+  gchar *user_agent;
+
+  user_agent = gst_player_config_get_user_agent (self->config);
+  if (user_agent) {
+    GParamSpec *prop;
+
+    prop = g_object_class_find_property (G_OBJECT_GET_CLASS (source),
+        "user-agent");
+    if (prop && prop->value_type == G_TYPE_STRING) {
+      GST_INFO_OBJECT (self, "Setting source user-agent: %s", user_agent);
+      g_object_set (source, "user-agent", user_agent, NULL);
+    }
+
+    g_free (user_agent);
+  }
+}
+
 static gpointer
 gst_player_main (gpointer data)
 {
@@ -2577,6 +2640,8 @@ gst_player_main (gpointer data)
       G_CALLBACK (volume_notify_cb), self);
   g_signal_connect (self->playbin, "notify::mute",
       G_CALLBACK (mute_notify_cb), self);
+  g_signal_connect (self->playbin, "source-setup",
+      G_CALLBACK (source_setup_cb), self);
 
   self->target_state = GST_STATE_NULL;
   self->current_state = GST_STATE_NULL;
@@ -4060,4 +4125,105 @@ gst_player_error_get_name (GstPlayerError error)
 
   g_assert_not_reached ();
   return NULL;
+}
+
+/**
+ * gst_player_set_config:
+ * @player: #GstPlayer instance
+ * @config: (transfer full): a #GstStructure
+ *
+ * Set the configuration of the player. If the player is already configured, and
+ * the configuration haven't change, this function will return %TRUE. If the
+ * player is not in the GST_PLAYER_STATE_STOPPED, this method will return %FALSE
+ * and active configuration will remain.
+ *
+ * @config is a #GstStructure that contains the configuration parameters for
+ * the player.
+ *
+ * This function takes ownership of @config.
+ *
+ * Returns: %TRUE when the configuration could be set.
+ * Since 1.10
+ */
+gboolean
+gst_player_set_config (GstPlayer * self, GstStructure * config)
+{
+  g_return_val_if_fail (GST_IS_PLAYER (self), FALSE);
+  g_return_val_if_fail (config != NULL, FALSE);
+
+  if (self->app_state != GST_PLAYER_STATE_STOPPED) {
+    GST_INFO_OBJECT (self, "can't change config while player is %s",
+        gst_player_state_get_name (self->app_state));
+    return FALSE;
+  }
+
+  if (self->config)
+    gst_structure_free (self->config);
+  self->config = config;
+
+  return TRUE;
+}
+
+/**
+ * gst_player_get_config:
+ * @player: #GstPlayer instance
+ *
+ * Get a copy of the current configuration of the player. This configuration
+ * can either be modified and used for the gst_player_set_config() call
+ * or it must be freed after usage.
+ *
+ * Returns: (transfer full): a copy of the current configuration of @player. Use
+ * gst_structure_free() after usage or gst_player_set_config().
+ * Since 1.10
+ */
+GstStructure *
+gst_player_get_config (GstPlayer * self)
+{
+  g_return_val_if_fail (GST_IS_PLAYER (self), NULL);
+
+  return gst_structure_copy (self->config);
+}
+
+/**
+ * gst_player_config_set_user_agent:
+ * @config: a #GstPlayer configuration
+ * @agent: the string to use as user agent
+ *
+ * Set the user agent to pass to the server if @player needs to connect
+ * to a server during playback. This is typically used when playing HTTP
+ * or RTSP streams.
+ *
+ * Since 1.10
+ */
+void
+gst_player_config_set_user_agent (GstStructure * config, const gchar * agent)
+{
+  g_return_if_fail (config != NULL);
+  g_return_if_fail (agent != NULL);
+
+  gst_structure_id_set (config,
+      CONFIG_QUARK (USER_AGENT), G_TYPE_STRING, agent, NULL);
+}
+
+/**
+ * gst_player_config_get_user_agent:
+ * @config: a #GstPlayer configuration
+ *
+ * Return the user agent which has been configured using
+ * gst_player_config_set_user_agent() if any.
+ *
+ * Returns: (transfer full): the configured agent, or %NULL
+ * Since 1.10
+ */
+gchar *
+gst_player_config_get_user_agent (GstStructure * config)
+{
+  gchar *agent = NULL;
+
+  g_return_val_if_fail (config != NULL, NULL);
+
+  gst_structure_id_get (config,
+      CONFIG_QUARK (USER_AGENT), G_TYPE_STRING, &agent, NULL);
+
+  return agent;
 }

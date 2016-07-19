@@ -1705,6 +1705,9 @@ gst_player_get_mute
 
 gst_player_get_pipeline
 
+gst_player_set_config
+gst_player_get_config
+
 gst_player_set_position_update_interval
 gst_player_get_position_update_interval
 
@@ -1762,6 +1765,10 @@ GstPlayerSignalDispatcherInterface
 
 GstPlayerVideoRenderer
 GstPlayerVideoRendererInterface
+
+<SUBSECTION config>
+gst_player_config_set_user_agent
+gst_player_config_get_user_agent
 
 <SUBSECTION Standard>
 GST_IS_PLAYER

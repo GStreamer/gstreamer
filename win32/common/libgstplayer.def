@@ -7,6 +7,8 @@ EXPORTS
 	gst_player_audio_info_get_type
 	gst_player_color_balance_type_get_name
 	gst_player_color_balance_type_get_type
+	gst_player_config_get_user_agent
+	gst_player_config_set_user_agent
 	gst_player_error_get_name
 	gst_player_error_get_type
 	gst_player_error_quark
@@ -15,6 +17,7 @@ EXPORTS
 	gst_player_get_audio_streams
 	gst_player_get_audio_video_offset
 	gst_player_get_color_balance
+	gst_player_get_config
 	gst_player_get_current_audio_track
 	gst_player_get_current_subtitle_track
 	gst_player_get_current_video_track
@@ -53,6 +56,7 @@ EXPORTS
 	gst_player_set_audio_track_enabled
 	gst_player_set_audio_video_offset
 	gst_player_set_color_balance
+	gst_player_set_config
 	gst_player_set_multiview_flags
 	gst_player_set_multiview_mode
 	gst_player_set_mute
