@@ -1335,10 +1335,6 @@ gst_vaapidecode_init (GstVaapiDecode * decode)
 
   gst_vaapi_plugin_base_init (GST_VAAPI_PLUGIN_BASE (decode), GST_CAT_DEFAULT);
 
-  decode->decoder = NULL;
-  decode->decoder_caps = NULL;
-  decode->allowed_caps = NULL;
-
   g_mutex_init (&decode->surface_ready_mutex);
   g_cond_init (&decode->surface_ready);
 
