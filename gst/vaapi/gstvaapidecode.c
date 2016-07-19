@@ -201,11 +201,58 @@ gst_vaapidecode_update_sink_caps (GstVaapiDecode * decode, GstCaps * caps)
 }
 
 static gboolean
+gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
+{
+  GstCaps *out_caps, *raw_caps;
+
+  if (decode->allowed_srcpad_caps)
+    return TRUE;
+
+  if (!GST_VAAPI_PLUGIN_BASE_DISPLAY (decode))
+    return FALSE;
+
+  /* Create VA caps */
+  out_caps = gst_caps_from_string (GST_VAAPI_MAKE_SURFACE_CAPS ";"
+      GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS);
+  if (!out_caps) {
+    GST_WARNING_OBJECT (decode, "failed to create VA/GL source caps");
+    return FALSE;
+  }
+
+  raw_caps = gst_vaapi_plugin_base_get_allowed_raw_caps
+      (GST_VAAPI_PLUGIN_BASE (decode));
+  if (!raw_caps) {
+    gst_caps_unref (out_caps);
+    GST_WARNING_OBJECT (decode, "failed to create raw sink caps");
+    return FALSE;
+  }
+
+  out_caps = gst_caps_make_writable (out_caps);
+  gst_caps_append (out_caps, gst_caps_copy (raw_caps));
+  decode->allowed_srcpad_caps = out_caps;
+
+  GST_INFO_OBJECT (decode, "allowed srcpad caps: %" GST_PTR_FORMAT,
+      decode->allowed_srcpad_caps);
+
+  return TRUE;
+}
+
+static GstCaps *
+gst_vaapidecode_get_allowed_srcpad_caps (GstVaapiDecode * decode)
+{
+  GstPad *const srcpad = GST_VIDEO_DECODER_SRC_PAD (decode);
+
+  if (gst_vaapidecode_ensure_allowed_srcpad_caps (decode))
+    return gst_caps_ref (decode->allowed_srcpad_caps);
+  return gst_pad_get_pad_template_caps (srcpad);
+}
+
+static gboolean
 gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
 {
   GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
   GstPad *const srcpad = GST_VIDEO_DECODER_SRC_PAD (vdec);
-  GstCaps *templ;
+  GstCaps *allowed;
   GstVideoCodecState *state, *ref_state;
   GstVaapiCapsFeature feature;
   GstCapsFeatures *features;
@@ -223,9 +270,9 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   ref_state = decode->input_state;
 
   format = GST_VIDEO_INFO_FORMAT (&decode->decoded_info);
-  templ = gst_pad_get_pad_template_caps (srcpad);
-  feature = gst_vaapi_find_preferred_caps_feature (srcpad, templ, &format);
-  gst_caps_unref (templ);
+  allowed = gst_vaapidecode_get_allowed_srcpad_caps (decode);
+  feature = gst_vaapi_find_preferred_caps_feature (srcpad, allowed, &format);
+  gst_caps_unref (allowed);
 
   if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
     return FALSE;
@@ -934,6 +981,7 @@ gst_vaapidecode_close (GstVideoDecoder * vdec)
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
 
   gst_vaapidecode_destroy (decode);
+  gst_caps_replace (&decode->allowed_srcpad_caps, NULL);
   gst_vaapi_plugin_base_close (GST_VAAPI_PLUGIN_BASE (decode));
   return TRUE;
 }
