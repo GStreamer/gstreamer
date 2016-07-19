@@ -707,6 +707,8 @@ subrip_unescape_formatting (gchar * txt, gconstpointer allowed_tags_ptr,
   g_free (res);
   g_free (search_pattern);
   g_free (allowed_tags_pattern);
+
+  g_regex_unref (tag_regex);
 }
 
 
@@ -925,6 +927,7 @@ parse_webvtt_cue_settings (ParserState * state, const gchar * settings)
       case 'D':
         if (strlen (splitted_settings[i]) > 2) {
           vertical_found = TRUE;
+          g_free (state->vertical);
           state->vertical = g_strdup (splitted_settings[i] + 2);
           valid_tag = TRUE;
         }
@@ -953,6 +956,7 @@ parse_webvtt_cue_settings (ParserState * state, const gchar * settings)
         break;
       case 'A':
         if (strlen (splitted_settings[i]) > 2) {
+          g_free (state->alignment);
           state->alignment = g_strdup (splitted_settings[i] + 2);
           alignment_found = TRUE;
           valid_tag = TRUE;
@@ -968,10 +972,14 @@ parse_webvtt_cue_settings (ParserState * state, const gchar * settings)
     i++;
   }
   g_strfreev (splitted_settings);
-  if (!vertical_found)
+  if (!vertical_found) {
+    g_free (state->vertical);
     state->vertical = g_strdup ("");
-  if (!alignment_found)
+  }
+  if (!alignment_found) {
+    g_free (state->alignment);
     state->alignment = g_strdup ("");
+  }
 }
 
 static gchar *
@@ -1122,7 +1130,9 @@ parse_webvtt (ParserState * state, const gchar * line)
     if (cue_settings)
       parse_webvtt_cue_settings (state, cue_settings + 1);
     else {
+      g_free (state->vertical);
       state->vertical = g_strdup ("");
+      g_free (state->alignment);
       state->alignment = g_strdup ("");
     }
 
@@ -1362,6 +1372,12 @@ parser_state_dispose (GstSubParse * self, ParserState * state)
     g_string_free (state->buf, TRUE);
     state->buf = NULL;
   }
+
+  g_free (state->vertical);
+  state->vertical = NULL;
+  g_free (state->alignment);
+  state->alignment = NULL;
+
   if (state->user_data) {
     switch (self->parser_type) {
       case GST_SUB_PARSE_FORMAT_QTTEXT:
@@ -1781,7 +1797,10 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
           GST_TIME_ARGS (self->state.duration));
 
       g_free (self->state.vertical);
+      self->state.vertical = NULL;
       g_free (self->state.alignment);
+      self->state.alignment = NULL;
+
       ret = gst_pad_push (self->srcpad, buf);
 
       /* move this forward (the tmplayer parser needs this) */
