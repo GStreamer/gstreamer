@@ -492,10 +492,26 @@ gst_vaapi_buffer_pool_caps_is_equal (GstBufferPool * pool, GstCaps * newcaps)
   return ret;
 }
 
+static inline gboolean
+reset_allocator (GstAllocator * allocator, GstVideoInfo * vinfo)
+{
+  const GstVideoInfo *orig_vi;
+
+  if (!allocator)
+    return TRUE;
+
+  orig_vi = gst_allocator_get_vaapi_video_info (allocator, NULL);
+  if (!gst_video_info_changed (orig_vi, vinfo))
+    return FALSE;
+
+  gst_object_unref (allocator);
+  return TRUE;
+}
+
 static gboolean
 ensure_sinkpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo)
 {
-  if (plugin->sinkpad_allocator)
+  if (!reset_allocator (plugin->sinkpad_allocator, vinfo))
     return TRUE;
 
   plugin->sinkpad_allocator =
@@ -506,7 +522,7 @@ ensure_sinkpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo)
 static gboolean
 ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo)
 {
-  if (plugin->srcpad_allocator)
+  if (!reset_allocator (plugin->srcpad_allocator, vinfo))
     return TRUE;
 
   plugin->srcpad_allocator =
