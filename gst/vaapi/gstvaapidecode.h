@@ -47,6 +47,7 @@ struct _GstVaapiDecode {
     GCond               surface_ready;
     GstCaps            *decoder_caps;
     GstCaps            *allowed_sinkpad_caps;
+    GstCaps            *allowed_srcpad_caps;
     guint               current_frame_size;
     guint               has_texture_upload_meta : 1;
 
