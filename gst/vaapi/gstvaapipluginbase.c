@@ -460,32 +460,6 @@ has_dmabuf_capable_peer (GstVaapiPluginBase * plugin, GstPad * pad)
 }
 
 static gboolean
-set_dmabuf_allocator (GstVaapiPluginBase * plugin, GstBufferPool * pool,
-    GstCaps * caps)
-{
-  GstStructure *config;
-  GstAllocator *allocator;
-  GstVideoInfo vi;
-
-  if (!gst_video_info_from_caps (&vi, caps))
-    return FALSE;
-  allocator = gst_vaapi_dmabuf_allocator_new (plugin->display, &vi,
-      GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE);
-  if (!allocator)
-    return FALSE;
-
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_allocator (config, allocator, NULL);
-  if (!gst_buffer_pool_set_config (pool, config))
-    return FALSE;
-
-  if (plugin->sinkpad_allocator)
-    gst_object_unref (plugin->sinkpad_allocator);
-  plugin->sinkpad_allocator = allocator;
-  return TRUE;
-}
-
-static gboolean
 gst_vaapi_buffer_pool_caps_is_equal (GstBufferPool * pool, GstCaps * newcaps)
 {
   GstStructure *config;
@@ -784,11 +758,6 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
       return FALSE;
     gst_query_add_allocation_pool (query, plugin->sinkpad_buffer_pool,
         plugin->sinkpad_buffer_size, 0, 0);
-
-    if (has_dmabuf_capable_peer (plugin, plugin->sinkpad)) {
-      if (!set_dmabuf_allocator (plugin, plugin->sinkpad_buffer_pool, caps))
-        goto error_pool_config;
-    }
   }
 
   gst_query_add_allocation_meta (query, GST_VAAPI_VIDEO_META_API_TYPE, NULL);
@@ -799,11 +768,6 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
 error_no_caps:
   {
     GST_INFO_OBJECT (plugin, "no caps specified");
-    return FALSE;
-  }
-error_pool_config:
-  {
-    GST_ERROR_OBJECT (plugin, "failed to reset buffer pool config");
     return FALSE;
   }
 }
