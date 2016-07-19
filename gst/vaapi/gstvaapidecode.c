@@ -954,7 +954,7 @@ gst_vaapidecode_finalize (GObject * object)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (object);
 
-  gst_caps_replace (&decode->allowed_caps, NULL);
+  gst_caps_replace (&decode->allowed_sinkpad_caps, NULL);
 
   g_cond_clear (&decode->surface_ready);
   g_mutex_clear (&decode->surface_ready_mutex);
@@ -1120,9 +1120,9 @@ gst_vaapidecode_parse (GstVideoDecoder * vdec,
 }
 
 static gboolean
-gst_vaapidecode_ensure_allowed_caps (GstVaapiDecode * decode)
+gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
 {
-  GstCaps *caps, *allowed_caps;
+  GstCaps *caps, *allowed_sinkpad_caps;
   GArray *profiles;
   guint i;
 
@@ -1132,8 +1132,8 @@ gst_vaapidecode_ensure_allowed_caps (GstVaapiDecode * decode)
   if (!profiles)
     goto error_no_profiles;
 
-  allowed_caps = gst_caps_new_empty ();
-  if (!allowed_caps)
+  allowed_sinkpad_caps = gst_caps_new_empty ();
+  if (!allowed_sinkpad_caps)
     goto error_no_memory;
 
   for (i = 0; i < profiles->len; i++) {
@@ -1157,9 +1157,9 @@ gst_vaapidecode_ensure_allowed_caps (GstVaapiDecode * decode)
       gst_structure_set (structure, "profile", G_TYPE_STRING,
           profile_name, NULL);
 
-    allowed_caps = gst_caps_merge (allowed_caps, caps);
+    allowed_sinkpad_caps = gst_caps_merge (allowed_sinkpad_caps, caps);
   }
-  decode->allowed_caps = gst_caps_simplify (allowed_caps);
+  decode->allowed_sinkpad_caps = gst_caps_simplify (allowed_sinkpad_caps);
 
   g_array_unref (profiles);
   return TRUE;
@@ -1184,7 +1184,7 @@ gst_vaapidecode_sink_getcaps (GstVideoDecoder * vdec, GstCaps * filter)
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
   GstCaps *result;
 
-  if (decode->allowed_caps)
+  if (decode->allowed_sinkpad_caps)
     goto bail;
 
   /* if we haven't a display yet, return our pad's template caps */
@@ -1193,11 +1193,12 @@ gst_vaapidecode_sink_getcaps (GstVideoDecoder * vdec, GstCaps * filter)
 
   /* if the allowed caps calculation fails, return an empty caps, so
    * the auto-plug can try other decoder */
-  if (!gst_vaapidecode_ensure_allowed_caps (decode))
+  if (!gst_vaapidecode_ensure_allowed_sinkpad_caps (decode))
     return gst_caps_new_empty ();
 
 bail:
-  result = gst_video_decoder_proxy_getcaps (vdec, decode->allowed_caps, filter);
+  result = gst_video_decoder_proxy_getcaps (vdec, decode->allowed_sinkpad_caps,
+      filter);
 
   GST_DEBUG_OBJECT (decode, "Returning sink caps %" GST_PTR_FORMAT, result);
 
