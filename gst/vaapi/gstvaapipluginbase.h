@@ -81,16 +81,12 @@ typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
   (GST_VAAPI_PLUGIN_BASE(plugin)->sinkpad_caps)
 #define GST_VAAPI_PLUGIN_BASE_SINK_PAD_INFO(plugin) \
   (&GST_VAAPI_PLUGIN_BASE(plugin)->sinkpad_info)
-#define GST_VAAPI_PLUGIN_BASE_SINK_PAD_QUERYFUNC(plugin) \
-  (GST_VAAPI_PLUGIN_BASE(plugin)->sinkpad_query)
 #define GST_VAAPI_PLUGIN_BASE_SRC_PAD(plugin) \
   (GST_VAAPI_PLUGIN_BASE(plugin)->srcpad)
 #define GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAPS(plugin) \
   (GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_caps)
 #define GST_VAAPI_PLUGIN_BASE_SRC_PAD_INFO(plugin) \
   (&GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_info)
-#define GST_VAAPI_PLUGIN_BASE_SRC_PAD_QUERYFYNC(plugin) \
-  (GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_query)
 
 #define GST_VAAPI_PLUGIN_BASE_DISPLAY(plugin) \
   (GST_VAAPI_PLUGIN_BASE(plugin)->display)
