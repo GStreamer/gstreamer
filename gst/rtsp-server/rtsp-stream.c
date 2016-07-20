@@ -135,8 +135,8 @@ struct _GstRTSPStreamPrivate
 
   /* multicast addresses */
   GstRTSPAddressPool *pool;
-  GstRTSPAddress *addr_v4;
-  GstRTSPAddress *addr_v6;
+  GstRTSPAddress *mcast_addr_v4;
+  GstRTSPAddress *mcast_addr_v6;
   gboolean have_ipv4_mcast;
   gboolean have_ipv6_mcast;
 
@@ -285,10 +285,10 @@ gst_rtsp_stream_finalize (GObject * obj)
   /* we really need to be unjoined now */
   g_return_if_fail (priv->joined_bin == NULL);
 
-  if (priv->addr_v4)
-    gst_rtsp_address_free (priv->addr_v4);
-  if (priv->addr_v6)
-    gst_rtsp_address_free (priv->addr_v6);
+  if (priv->mcast_addr_v4)
+    gst_rtsp_address_free (priv->mcast_addr_v4);
+  if (priv->mcast_addr_v6)
+    gst_rtsp_address_free (priv->mcast_addr_v6);
   if (priv->server_addr_v4)
     gst_rtsp_address_free (priv->server_addr_v4);
   if (priv->server_addr_v6)
@@ -953,10 +953,10 @@ gst_rtsp_stream_get_multicast_address (GstRTSPStream * stream,
 
   if (family == G_SOCKET_FAMILY_IPV6) {
     flags = GST_RTSP_ADDRESS_FLAG_IPV6;
-    addrp = &priv->addr_v6;
+    addrp = &priv->mcast_addr_v6;
   } else {
     flags = GST_RTSP_ADDRESS_FLAG_IPV4;
-    addrp = &priv->addr_v4;
+    addrp = &priv->mcast_addr_v4;
   }
 
   g_mutex_lock (&priv->lock);
@@ -1031,9 +1031,9 @@ gst_rtsp_stream_reserve_address (GstRTSPStream * stream,
   }
 
   if (family == G_SOCKET_FAMILY_IPV6)
-    addrp = &priv->addr_v6;
+    addrp = &priv->mcast_addr_v6;
   else
-    addrp = &priv->addr_v4;
+    addrp = &priv->mcast_addr_v4;
 
   g_mutex_lock (&priv->lock);
   if (*addrp == NULL) {
@@ -1502,8 +1502,8 @@ gst_rtsp_stream_allocate_udp_sockets (GstRTSPStream * stream,
         goto done;
       priv->have_ipv4_mcast =
           alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV4,
-          priv->udpsrc_mcast_v4, &priv->server_port_v4, ct, &priv->addr_v4,
-          use_client_settings);
+          priv->udpsrc_mcast_v4, &priv->server_port_v4, ct,
+          &priv->mcast_addr_v4, use_client_settings);
     } else {
       priv->have_ipv4 =
           alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV4, priv->udpsrc_v4,
@@ -1516,8 +1516,8 @@ gst_rtsp_stream_allocate_udp_sockets (GstRTSPStream * stream,
         goto done;
       priv->have_ipv6_mcast =
           alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV6,
-          priv->udpsrc_mcast_v6, &priv->server_port_v6, ct, &priv->addr_v6,
-          use_client_settings);
+          priv->udpsrc_mcast_v6, &priv->server_port_v6, ct,
+          &priv->mcast_addr_v6, use_client_settings);
     } else {
       if (priv->have_ipv6)
         goto done;
