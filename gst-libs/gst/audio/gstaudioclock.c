@@ -136,8 +136,8 @@ gst_audio_clock_reset (GstAudioClock * clock, GstClockTime time)
   clock->time_offset = time_offset;
 
   GST_DEBUG_OBJECT (clock,
-      "reset clock to %" GST_TIME_FORMAT ", last %" GST_STIME_FORMAT
-      ", offset %" GST_TIME_FORMAT, GST_TIME_ARGS (time),
+      "reset clock to %" GST_TIME_FORMAT ", last %" GST_TIME_FORMAT
+      ", offset %" GST_STIME_FORMAT, GST_TIME_ARGS (time),
       GST_TIME_ARGS (clock->last_time), GST_STIME_ARGS (time_offset));
 }
 
