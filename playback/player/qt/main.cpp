@@ -30,6 +30,7 @@
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+    int result;
 
     QCommandLineParser parser;
     parser.setApplicationDescription("GstPlayer");
@@ -70,5 +71,8 @@ int main(int argc, char *argv[])
     if (!media_files.isEmpty())
         player->setPlaylist(media_files);
 
-    return app.exec();
+    result = app.exec();
+
+    gst_deinit ();
+    return result;
 }

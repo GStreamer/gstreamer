@@ -1910,5 +1910,6 @@ main (gint argc, gchar ** argv)
   status = g_application_run (G_APPLICATION (app), argc, argv);;
   g_object_unref (app);
 
+  gst_deinit ();
   return status;
 }

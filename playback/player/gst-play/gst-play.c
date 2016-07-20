@@ -768,5 +768,6 @@ main (int argc, char **argv)
   play_free (play);
 
   g_print ("\n");
+  gst_deinit ();
   return 0;
 }
