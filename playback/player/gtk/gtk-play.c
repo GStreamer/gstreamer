@@ -1775,6 +1775,7 @@ gtk_play_dispose (GObject * object)
     g_object_unref (self->player);
   }
   self->player = NULL;
+  g_clear_object (&self->video_area);
 
   G_OBJECT_CLASS (gtk_play_parent_class)->dispose (object);
 }
