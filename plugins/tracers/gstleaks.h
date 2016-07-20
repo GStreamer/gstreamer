@@ -60,6 +60,12 @@ struct _GstLeaksTracer {
   GHashTable *added;
   /* Set of owned ObjectLog.  Protected by object lock */
   GHashTable *removed;
+  /* If not NULL, contain a set of GQuark representing type filter not
+   * (yet?) known by the type system.
+   * Protected by object lock. */
+  GHashTable *unhandled_filter;
+  /* The number of elements in unhandled_filter */
+  gint unhandled_filter_count;
   gboolean done;
 
   gboolean log_stack_trace;

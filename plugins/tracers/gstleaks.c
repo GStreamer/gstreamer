@@ -85,7 +85,17 @@ set_filtering (GstLeaksTracer * self)
 
     type = g_type_from_name (tmp[i]);
     if (type == 0) {
-      GST_WARNING_OBJECT (self, "unknown type %s", tmp[i]);
+      /* The type may not yet be known by the type system, typically because
+       * the plugin implementing it as not yet be loaded. Save it for now as
+       * it will have another chance to be added to the filter later in
+       * should_handle_object_type() when/if the object type is actually
+       * used. */
+      if (!self->unhandled_filter)
+        self->unhandled_filter = g_hash_table_new (NULL, NULL);
+
+      g_hash_table_add (self->unhandled_filter,
+          GUINT_TO_POINTER (g_quark_from_string (tmp[i])));
+      g_atomic_int_inc (&self->unhandled_filter_count);
       continue;
     }
 
@@ -106,6 +116,26 @@ should_handle_object_type (GstLeaksTracer * self, GType object_type)
   if (!self->filter)
     /* No filtering, handle all types */
     return TRUE;
+
+  if (g_atomic_int_get (&self->unhandled_filter_count)) {
+    GST_OBJECT_LOCK (self);
+    if (self->unhandled_filter) {
+      GQuark q;
+
+      q = g_type_qname (object_type);
+      if (g_hash_table_contains (self->unhandled_filter, GUINT_TO_POINTER (q))) {
+        g_array_append_val (self->filter, object_type);
+        g_hash_table_remove (self->unhandled_filter, GUINT_TO_POINTER (q));
+
+        if (g_atomic_int_dec_and_test (&self->unhandled_filter_count))
+          g_clear_pointer (&self->unhandled_filter, g_hash_table_unref);
+
+        GST_OBJECT_UNLOCK (self);
+        return TRUE;
+      }
+    }
+    GST_OBJECT_UNLOCK (self);
+  }
 
   len = self->filter->len;
   for (i = 0; i < len; i++) {
@@ -479,6 +509,7 @@ gst_leaks_tracer_finalize (GObject * object)
     g_array_free (self->filter, TRUE);
   g_clear_pointer (&self->added, g_hash_table_unref);
   g_clear_pointer (&self->removed, g_hash_table_unref);
+  g_clear_pointer (&self->unhandled_filter, g_hash_table_unref);
 
   g_queue_remove (&instances, self);
 
