@@ -114,12 +114,13 @@ gst_player_gtk_video_renderer_init (GstPlayerGtkVideoRenderer * self)
   } else {
     gtk_sink = gst_element_factory_make ("gtksink", NULL);
 
-    self->sink = gtk_sink;
+    self->sink = gst_object_ref (gtk_sink);
   }
 
   g_assert (self->sink != NULL);
 
   g_object_get (gtk_sink, "widget", &self->widget, NULL);
+  gst_object_unref (gtk_sink);
 }
 
 static GstElement *gst_player_gtk_video_renderer_create_video_sink
