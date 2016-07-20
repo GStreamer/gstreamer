@@ -344,7 +344,9 @@ gst_ogg_pad_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
               else
                 stop = MAX (idx_time, stop);
             } else {
-              stop = -1;        /* we've no clue, sadly, without seeking */
+              stop = ogg->push_time_length;
+              if (stop == -1)
+                stop = ogg->total_time;
             }
           }
         }
