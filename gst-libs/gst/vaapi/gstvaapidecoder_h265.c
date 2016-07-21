@@ -2696,6 +2696,16 @@ gst_vaapi_decoder_h265_decode_codec_data (GstVaapiDecoder *
           if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             goto cleanup;
           break;
+        case GST_H265_NAL_SUFFIX_SEI:
+        case GST_H265_NAL_PREFIX_SEI:
+          status = parse_sei (decoder, &unit);
+          if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            goto cleanup;
+          status = decode_sei (decoder, &unit);
+          if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            goto cleanup;
+          break;
+
       }
       ofs = pi->nalu.offset + pi->nalu.size;
       gst_vaapi_parser_info_h265_replace (&pi, NULL);
