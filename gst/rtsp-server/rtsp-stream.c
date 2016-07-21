@@ -1251,10 +1251,14 @@ create_and_configure_udpsources_one_family (GstElement * udpsrc_out[2],
   /* ERRORS */
 error:
   {
-    if (udpsrc_out[0])
-      gst_object_unref (udpsrc_out[0]);
-    if (udpsrc_out[1])
-      gst_object_unref (udpsrc_out[1]);
+    if (udpsrc_out[0]) {
+      gst_element_set_state (udpsrc_out[0], GST_STATE_NULL);
+      g_clear_object (&udpsrc_out[0]);
+    }
+    if (udpsrc_out[1]) {
+      gst_element_set_state (udpsrc_out[1], GST_STATE_NULL);
+      g_clear_object (&udpsrc_out[1]);
+    }
     return FALSE;
   }
 }
