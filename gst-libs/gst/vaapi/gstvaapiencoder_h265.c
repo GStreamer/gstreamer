@@ -1823,10 +1823,10 @@ ensure_bitrate (GstVaapiEncoderH265 * encoder)
         /* Fixme: Provide better estimation */
         /* Using a 1/6 compression ratio */
         /* 12 bits per pixel fro yuv420 */
+        guint64 factor = encoder->luma_width * encoder->luma_height * 12 / 6;
         base_encoder->bitrate =
-            (encoder->luma_width * encoder->luma_height * 12 / 6) *
-            GST_VAAPI_ENCODER_FPS_N (encoder) /
-            GST_VAAPI_ENCODER_FPS_D (encoder) / 1000;
+            gst_util_uint64_scale (factor, GST_VAAPI_ENCODER_FPS_N (encoder),
+            GST_VAAPI_ENCODER_FPS_D (encoder)) / 1000;
         GST_INFO ("target bitrate computed to %u kbps", base_encoder->bitrate);
       }
       break;
