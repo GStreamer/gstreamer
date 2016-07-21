@@ -125,10 +125,11 @@ ensure_bitrate (GstVaapiEncoderVP8 * encoder)
   switch (GST_VAAPI_ENCODER_RATE_CONTROL (encoder)) {
     case GST_VAAPI_RATECONTROL_CBR:
       if (!base_encoder->bitrate) {
-        base_encoder->bitrate = GST_VAAPI_ENCODER_WIDTH (encoder) *
-            GST_VAAPI_ENCODER_HEIGHT (encoder) *
-            GST_VAAPI_ENCODER_FPS_N (encoder) /
-            GST_VAAPI_ENCODER_FPS_D (encoder) / 4 * 1000;
+        base_encoder->bitrate =
+            gst_util_uint64_scale (GST_VAAPI_ENCODER_WIDTH (encoder) *
+            GST_VAAPI_ENCODER_HEIGHT (encoder),
+            GST_VAAPI_ENCODER_FPS_N (encoder),
+            GST_VAAPI_ENCODER_FPS_D (encoder)) / 4 * 1000;
       }
     default:
       base_encoder->bitrate = 0;
