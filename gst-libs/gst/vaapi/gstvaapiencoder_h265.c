@@ -1988,7 +1988,7 @@ ensure_profile_tier_level (GstVaapiEncoderH265 * encoder)
   ensure_bitrate (encoder);
 
   if (!ensure_level (encoder))
-      return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
 
   if (encoder->profile != profile || encoder->level != level
       || encoder->tier != tier) {
