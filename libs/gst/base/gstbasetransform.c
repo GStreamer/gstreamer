@@ -960,6 +960,9 @@ gst_base_transform_default_decide_allocation (GstBaseTransform * trans,
   return TRUE;
 
 config_failed:
+  if (pool)
+    gst_object_unref (pool);
+
   GST_ELEMENT_ERROR (trans, RESOURCE, SETTINGS,
       ("Failed to configure the buffer pool"),
       ("Configuration is most likely invalid, please report this issue."));
