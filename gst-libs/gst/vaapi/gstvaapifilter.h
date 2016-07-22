@@ -246,4 +246,27 @@ gboolean
 gst_vaapi_filter_set_skintone (GstVaapiFilter * filter,
     gboolean enhance);
 
+gfloat
+gst_vaapi_filter_get_denoising_level_default (GstVaapiFilter * filter);
+
+gfloat
+gst_vaapi_filter_get_sharpening_level_default (GstVaapiFilter * filter);
+
+gfloat
+gst_vaapi_filter_get_hue_default (GstVaapiFilter * filter);
+
+gfloat
+gst_vaapi_filter_get_saturation_default (GstVaapiFilter * filter);
+
+gfloat
+gst_vaapi_filter_get_brightness_default (GstVaapiFilter * filter);
+
+gfloat
+gst_vaapi_filter_get_contrast_default (GstVaapiFilter * filter);
+
+GstVaapiScaleMethod
+gst_vaapi_filter_get_scaling_default (GstVaapiFilter * filter);
+
+gboolean
+gst_vaapi_filter_get_skintone_default (GstVaapiFilter * filter);
 #endif /* GST_VAAPI_FILTER_H */

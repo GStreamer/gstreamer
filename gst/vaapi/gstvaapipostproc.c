@@ -469,6 +469,113 @@ set_best_deint_method (GstVaapiPostproc * postproc, guint flags,
   return success;
 }
 
+static gboolean
+check_filter_update (GstVaapiPostproc * postproc)
+{
+  guint filter_flag = postproc->flags;
+  guint op_flag;
+  gint i;
+
+  if (!postproc->has_vpp)
+    return FALSE;
+
+  for (i = GST_VAAPI_FILTER_OP_DENOISE; i <= GST_VAAPI_FILTER_OP_SKINTONE; i++) {
+    op_flag = (filter_flag >> i) & 1;
+    if (op_flag)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
+update_filter (GstVaapiPostproc * postproc)
+{
+  /* Validate filters */
+  if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_FORMAT) &&
+      !gst_vaapi_filter_set_format (postproc->filter, postproc->format))
+    return FALSE;
+
+  if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_DENOISE) {
+    if (!gst_vaapi_filter_set_denoising_level (postproc->filter,
+            postproc->denoise_level))
+      return FALSE;
+
+    if (gst_vaapi_filter_get_denoising_level_default (postproc->filter) ==
+        postproc->denoise_level)
+      postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_DENOISE);
+  }
+
+  if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_SHARPEN) {
+    if (!gst_vaapi_filter_set_sharpening_level (postproc->filter,
+            postproc->sharpen_level))
+      return FALSE;
+
+    if (gst_vaapi_filter_get_sharpening_level_default (postproc->filter) ==
+        postproc->sharpen_level)
+      postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_SHARPEN);
+  }
+
+  if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_HUE) {
+    if (!gst_vaapi_filter_set_hue (postproc->filter, postproc->hue))
+      return FALSE;
+
+    if (gst_vaapi_filter_get_hue_default (postproc->filter) == postproc->hue)
+      postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_HUE);
+  }
+
+  if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_SATURATION) {
+    if (!gst_vaapi_filter_set_saturation (postproc->filter,
+            postproc->saturation))
+      return FALSE;
+
+    if (gst_vaapi_filter_get_saturation_default (postproc->filter) ==
+        postproc->saturation)
+      postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_SATURATION);
+  }
+
+  if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_BRIGHTNESS) {
+    if (!gst_vaapi_filter_set_brightness (postproc->filter,
+            postproc->brightness))
+      return FALSE;
+
+    if (gst_vaapi_filter_get_brightness_default (postproc->filter) ==
+        postproc->brightness)
+      postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_BRIGHTNESS);
+  }
+
+  if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_CONTRAST) {
+    if (!gst_vaapi_filter_set_contrast (postproc->filter, postproc->contrast))
+      return FALSE;
+
+    if (gst_vaapi_filter_get_contrast_default (postproc->filter) ==
+        postproc->contrast)
+      postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_CONTRAST);
+  }
+
+  if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_SCALE) {
+    if (!gst_vaapi_filter_set_scaling (postproc->filter,
+            postproc->scale_method))
+      return FALSE;
+
+    if (gst_vaapi_filter_get_scaling_default (postproc->filter) ==
+        postproc->scale_method)
+      postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_SCALE);
+  }
+
+  if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_SKINTONE) {
+    if (!gst_vaapi_filter_set_skintone (postproc->filter,
+            postproc->skintone_enhance))
+      return FALSE;
+
+    if (gst_vaapi_filter_get_skintone_default (postproc->filter) ==
+        postproc->skintone_enhance)
+      postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_SKINTONE);
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
@@ -488,46 +595,6 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
   const GstVideoCropMeta *crop_meta;
   GstVaapiRectangle *crop_rect = NULL;
   GstVaapiRectangle tmp_rect;
-
-  /* Validate filters */
-  if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_FORMAT) &&
-      !gst_vaapi_filter_set_format (postproc->filter, postproc->format))
-    return GST_FLOW_NOT_SUPPORTED;
-
-  if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_DENOISE) &&
-      !gst_vaapi_filter_set_denoising_level (postproc->filter,
-          postproc->denoise_level))
-    return GST_FLOW_NOT_SUPPORTED;
-
-  if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_SHARPEN) &&
-      !gst_vaapi_filter_set_sharpening_level (postproc->filter,
-          postproc->sharpen_level))
-    return GST_FLOW_NOT_SUPPORTED;
-
-  if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_HUE) &&
-      !gst_vaapi_filter_set_hue (postproc->filter, postproc->hue))
-    return GST_FLOW_NOT_SUPPORTED;
-
-  if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_SATURATION) &&
-      !gst_vaapi_filter_set_saturation (postproc->filter, postproc->saturation))
-    return GST_FLOW_NOT_SUPPORTED;
-
-  if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_BRIGHTNESS) &&
-      !gst_vaapi_filter_set_brightness (postproc->filter, postproc->brightness))
-    return GST_FLOW_NOT_SUPPORTED;
-
-  if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_CONTRAST) &&
-      !gst_vaapi_filter_set_contrast (postproc->filter, postproc->contrast))
-    return GST_FLOW_NOT_SUPPORTED;
-
-  if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_SCALE) &&
-      !gst_vaapi_filter_set_scaling (postproc->filter, postproc->scale_method))
-    return GST_FLOW_NOT_SUPPORTED;
-
-  if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_SKINTONE) &&
-      !gst_vaapi_filter_set_skintone (postproc->filter,
-          postproc->skintone_enhance))
-    return GST_FLOW_NOT_SUPPORTED;
 
   inbuf_meta = gst_buffer_get_vaapi_video_meta (inbuf);
   if (!inbuf_meta)
@@ -1214,6 +1281,9 @@ gst_vaapipostproc_set_caps (GstBaseTransform * trans, GstCaps * caps,
   if (!ensure_srcpad_buffer_pool (postproc, out_caps))
     goto done;
 
+  if (check_filter_update (postproc))
+    update_filter (postproc);
+
   ret = TRUE;
 
 done:
@@ -1364,6 +1434,9 @@ gst_vaapipostproc_set_property (GObject * object,
       break;
   }
   g_mutex_unlock (&postproc->postproc_lock);
+
+  if (check_filter_update (postproc))
+    update_filter (postproc);
 }
 
 static void

@@ -1877,3 +1877,84 @@ gst_vaapi_filter_set_skintone (GstVaapiFilter * filter, gboolean enhance)
   return op_set_skintone (filter,
       find_operation (filter, GST_VAAPI_FILTER_OP_SKINTONE), enhance);
 }
+
+static inline gfloat
+op_get_float_default_value (GstVaapiFilter * filter,
+    GstVaapiFilterOpData * op_data)
+{
+#if USE_VA_VPP
+  GParamSpecFloat *const pspec = G_PARAM_SPEC_FLOAT (op_data->pspec);
+  return pspec->default_value;
+#endif
+  return 0.0;
+}
+
+gfloat
+gst_vaapi_filter_get_denoising_level_default (GstVaapiFilter * filter)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  return op_get_float_default_value (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_DENOISE));
+}
+
+gfloat
+gst_vaapi_filter_get_sharpening_level_default (GstVaapiFilter * filter)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  return op_get_float_default_value (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_SHARPEN));
+}
+
+gfloat
+gst_vaapi_filter_get_hue_default (GstVaapiFilter * filter)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  return op_get_float_default_value (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_HUE));
+}
+
+gfloat
+gst_vaapi_filter_get_saturation_default (GstVaapiFilter * filter)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  return op_get_float_default_value (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_SATURATION));
+}
+
+gfloat
+gst_vaapi_filter_get_brightness_default (GstVaapiFilter * filter)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  return op_get_float_default_value (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_BRIGHTNESS));
+}
+
+gfloat
+gst_vaapi_filter_get_contrast_default (GstVaapiFilter * filter)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  return op_get_float_default_value (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_CONTRAST));
+}
+
+GstVaapiScaleMethod
+gst_vaapi_filter_get_scaling_default (GstVaapiFilter * filter)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  return DEFAULT_SCALING;
+}
+
+gboolean
+gst_vaapi_filter_get_skintone_default (GstVaapiFilter * filter)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  return FALSE;
+}
