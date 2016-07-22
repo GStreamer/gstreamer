@@ -44,15 +44,17 @@ int main(int argc, char *argv[])
 
   GstElement *pipeline = gst_pipeline_new (NULL);
   GstElement *src = gst_element_factory_make ("videotestsrc", NULL);
-  GstElement *glupload = gst_element_factory_make ("glupload", NULL);
   /* the plugin must be loaded before loading the qml file to register the
    * GstGLVideoItem qml item */
   GstElement *sink = gst_element_factory_make ("qmlglsink", NULL);
+  GstElement *sinkbin = gst_element_factory_make ("glsinkbin", NULL);
 
-  g_assert (src && glupload && sink);
+  g_assert (src && sink && sinkbin);
 
-  gst_bin_add_many (GST_BIN (pipeline), src, glupload, sink, NULL);
-  gst_element_link_many (src, glupload, sink, NULL);
+  g_object_set (sinkbin, "sink", sink, NULL);
+
+  gst_bin_add_many (GST_BIN (pipeline), src, sinkbin, NULL);
+  gst_element_link_many (src, sinkbin, NULL);
 
   QQmlApplicationEngine engine;
   engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
