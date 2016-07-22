@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
   g_assert (src && sink && sinkbin);
 
   g_object_set (sinkbin, "sink", sink, NULL);
+  g_object_unref (sink);
 
   gst_bin_add_many (GST_BIN (pipeline), src, sinkbin, NULL);
   gst_element_link_many (src, sinkbin, NULL);
