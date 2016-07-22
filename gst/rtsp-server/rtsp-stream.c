@@ -2432,12 +2432,42 @@ on_npt_stop (GstElement * rtpbin, guint session, guint ssrc,
   gst_pad_send_event (stream->priv->sinkpad, gst_event_new_eos ());
 }
 
+static void
+plug_sink (GstBin * bin, GstElement * tee, GstElement * sink,
+    GstElement ** queue_out)
+{
+  GstPad *pad;
+  GstPad *teepad;
+  GstPad *queuepad;
+
+  gst_bin_add (bin, sink);
+
+  *queue_out = gst_element_factory_make ("queue", NULL);
+  g_object_set (*queue_out, "max-size-buffers", 1, "max-size-bytes", 0,
+      "max-size-time", G_GINT64_CONSTANT (0), NULL);
+  gst_bin_add (bin, *queue_out);
+
+  /* link tee to queue */
+  teepad = gst_element_get_request_pad (tee, "src_%u");
+  pad = gst_element_get_static_pad (*queue_out, "sink");
+  gst_pad_link (teepad, pad);
+  gst_object_unref (pad);
+  gst_object_unref (teepad);
+
+  /* link queue to sink */
+  queuepad = gst_element_get_static_pad (*queue_out, "src");
+  pad = gst_element_get_static_pad (sink, "sink");
+  gst_pad_link (queuepad, pad);
+  gst_object_unref (queuepad);
+  gst_object_unref (pad);
+}
+
 /* must be called with lock */
 static gboolean
 create_sender_part (GstRTSPStream * stream, GstBin * bin, GstState state)
 {
   GstRTSPStreamPrivate *priv;
-  GstPad *pad, *sinkpad = NULL;
+  GstPad *pad;
   gboolean is_tcp = FALSE, is_udp = FALSE;
   gint i;
 
@@ -2451,7 +2481,6 @@ create_sender_part (GstRTSPStream * stream, GstBin * bin, GstState state)
     goto no_udp_protocol;
 
   for (i = 0; i < 2; i++) {
-    GstPad *teepad, *queuepad;
     /* For the sender we create this bit of pipeline for both
      * RTP and RTCP. Sync and preroll are enabled on udpsink so
      * we need to add a queue before appsink and udpsink to make
@@ -2478,17 +2507,10 @@ create_sender_part (GstRTSPStream * stream, GstBin * bin, GstState state)
     if (!priv->srcpad && i == 0)
       continue;
 
-    if (is_udp) {
-      /* add udpsink */
-      gst_bin_add (bin, priv->udpsink[i]);
-      sinkpad = gst_element_get_static_pad (priv->udpsink[i], "sink");
-    }
-
     if (is_tcp) {
       /* make appsink */
       priv->appsink[i] = gst_element_factory_make ("appsink", NULL);
       g_object_set (priv->appsink[i], "emit-signals", FALSE, NULL);
-      gst_bin_add (bin, priv->appsink[i]);
       gst_app_sink_set_callbacks (GST_APP_SINK_CAST (priv->appsink[i]),
           &sink_cb, stream, NULL);
     }
@@ -2505,41 +2527,8 @@ create_sender_part (GstRTSPStream * stream, GstBin * bin, GstState state)
       gst_pad_link (priv->send_src[i], pad);
       gst_object_unref (pad);
 
-      priv->udpqueue[i] = gst_element_factory_make ("queue", NULL);
-      g_object_set (priv->udpqueue[i], "max-size-buffers",
-          1, "max-size-bytes", 0, "max-size-time", G_GINT64_CONSTANT (0), NULL);
-      gst_bin_add (bin, priv->udpqueue[i]);
-      /* link tee to udpqueue */
-      teepad = gst_element_get_request_pad (priv->tee[i], "src_%u");
-      pad = gst_element_get_static_pad (priv->udpqueue[i], "sink");
-      gst_pad_link (teepad, pad);
-      gst_object_unref (pad);
-      gst_object_unref (teepad);
-
-      /* link udpqueue to udpsink */
-      queuepad = gst_element_get_static_pad (priv->udpqueue[i], "src");
-      gst_pad_link (queuepad, sinkpad);
-      gst_object_unref (queuepad);
-      gst_object_unref (sinkpad);
-
-      /* make appqueue */
-      priv->appqueue[i] = gst_element_factory_make ("queue", NULL);
-      g_object_set (priv->appqueue[i], "max-size-buffers",
-          1, "max-size-bytes", 0, "max-size-time", G_GINT64_CONSTANT (0), NULL);
-      gst_bin_add (bin, priv->appqueue[i]);
-      /* and link tee to appqueue */
-      teepad = gst_element_get_request_pad (priv->tee[i], "src_%u");
-      pad = gst_element_get_static_pad (priv->appqueue[i], "sink");
-      gst_pad_link (teepad, pad);
-      gst_object_unref (pad);
-      gst_object_unref (teepad);
-
-      /* and link appqueue to appsink */
-      queuepad = gst_element_get_static_pad (priv->appqueue[i], "src");
-      pad = gst_element_get_static_pad (priv->appsink[i], "sink");
-      gst_pad_link (queuepad, pad);
-      gst_object_unref (pad);
-      gst_object_unref (queuepad);
+      plug_sink (bin, priv->tee[i], priv->udpsink[i], &priv->udpqueue[i]);
+      plug_sink (bin, priv->tee[i], priv->appsink[i], &priv->appqueue[i]);
     } else if (is_tcp) {
       /* only appsink needed, link it to the session */
       pad = gst_element_get_static_pad (priv->appsink[i], "sink");
@@ -2553,8 +2542,9 @@ create_sender_part (GstRTSPStream * stream, GstBin * bin, GstState state)
         g_object_set (priv->appsink[i], "async", FALSE, "sync", FALSE, NULL);
     } else {
       /* else only udpsink needed, link it to the session */
-      gst_pad_link (priv->send_src[i], sinkpad);
-      gst_object_unref (sinkpad);
+      pad = gst_element_get_static_pad (priv->udpsink[i], "sink");
+      gst_pad_link (priv->send_src[i], pad);
+      gst_object_unref (pad);
     }
 
     /* check if we need to set to a special state */
