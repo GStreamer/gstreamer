@@ -31,6 +31,14 @@
  * #GstBin that auto-magically constructs a parsing pipeline
  * using available parsers and demuxers via auto-plugging.
  *
+ * parsebin unpacks the contents of the input stream to the
+ * level of parsed elementary streams, but unlike decodebin
+ * it doesn't connect decoder elements. The output pads
+ * produce packetised encoded data with timestamps where possible,
+ * or send missing-element messages where not.
+ *
+ * <emphasis>parsebin is still experimental API and a technology preview.
+ * Its behaviour and exposed API is subject to change.</emphasis>
  */
 
 /* Implementation notes:

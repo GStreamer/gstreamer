@@ -21,9 +21,16 @@
 /**
  * SECTION:element-urisourcebin
  *
- * Handles selecting a URI source element and potentially buffering/download
- * for network sources. Produces one or more source pads for feeding to
- * decoding chains or decodebin.
+ * urisourcebin is an element for accessing URIs in a uniform manner.
+ *
+ * It handles selecting a URI source element and potentially download
+ * buffering for network sources. It roduces one or more source pads,
+ * depending on the input source, for feeding to decoding chains or decodebin.
+ *
+ * The main configuration is via the #GstURISourceBin:uri property.
+ *
+ * <emphasis>urisourcebin is still experimental API and a technology preview.
+ * Its behaviour and exposed API is subject to change.</emphasis>
  */
 
 /* FIXME 0.11: suppress warnings for deprecated API such as GValueArray

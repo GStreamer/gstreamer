@@ -34,6 +34,41 @@
 #include "gstplay-enum.h"
 #include "gstrawcaps.h"
 
+/**
+ * SECTION:element-decodebin3
+ *
+ * #GstBin that auto-magically constructs a decoding pipeline using available
+ * decoders and demuxers via auto-plugging. The output is raw audio, video
+ * or subtitle streams.
+ *
+ * decodebin3 differs from the previous decodebin (decodebin2) in important ways:
+ *
+ * <itemizedlist>
+ * <listitem>
+ * supports publication and selection of stream information via
+ * GstStreamCollection messages and #GST_EVENT_SELECT_STREAM events.
+ * </listitem>
+ * <listitem>
+ * dynamically switches stream connections internally, and
+ * reuses decoder elements when stream selections change, so that in
+ * the normal case it maintains 1 decoder of each type (video/audio/subtitle)
+ * and only creates new elements when streams change and an existing decoder
+ * is not capable of handling the new format.
+ * </listitem>
+ * <listitem>
+ * supports multiple input pads for the parallel decoding of auxilliary streams
+ * not muxed with the primary stream.
+ * </listitem>
+ * <listitem>
+ * does not handle network stream buffering. decodebin3 expects that network stream
+ * buffering is handled upstream, before data is passed to it.
+ * </listitem>
+ * </itemizedlist>
+ *
+ * <emphasis>decodebin3 is still experimental API and a technology preview.
+ * Its behaviour and exposed API is subject to change.</emphasis>
+ *
+ */
 
 /**
  * Global design

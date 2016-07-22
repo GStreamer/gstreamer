@@ -24,14 +24,22 @@
 /**
  * SECTION:element-playbin3
  *
- * Playbin3 provides a stand-alone everything-in-one abstraction for an
- * audio and/or video player.
+ * playbin3 provides a stand-alone everything-in-one abstraction for an
+ * audio and/or video player. It differs from the previous playbin (playbin2)
+ * by supporting publication and selection of available streams via the
+ * #GstStreamCollection message and #GST_EVENT_SELECT_STREAMS event API.
  *
- * Playbin3 can handle both audio and video files and features
+ * <emphasis>playbin3 is still experimental API and a technology preview.
+ * Its behaviour and exposed API is subject to change.</emphasis>
+ *
+ * playbin3 can handle both audio and video files and features
  * <itemizedlist>
  * <listitem>
  * automatic file type recognition and based on that automatic
  * selection and usage of the right audio/video/subtitle demuxers/decoders
+ * </listitem>
+ * <listitem>
+ * auxilliary files - such as external subtitles and audio tracks
  * </listitem>
  * <listitem>
  * visualisations for audio files
@@ -60,7 +68,7 @@
  * <refsect2>
  * <title>Usage</title>
  * <para>
- * A playbi3n element can be created just like any other element using
+ * A playbin element can be created just like any other element using
  * gst_element_factory_make(). The file/URI to play should be set via the #GstPlayBin3:uri
  * property. This must be an absolute URI, relative file paths are not allowed.
  * Example URIs are file:///home/joe/movie.avi or http://www.joedoe.com/foo.ogg
@@ -913,10 +921,26 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
       g_param_spec_object ("audio-filter", "Audio filter",
           "the audio filter(s) to apply, if possible",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstPlayBin3:video-sink
+   *
+   * Get or set the video sink to use for video output. If set to
+   * NULL, one will be auto-selected. To disable video entirely, unset
+   * the VIDEO flag in the #GstPlayBin3:flags property.
+   *
+   */
   g_object_class_install_property (gobject_klass, PROP_VIDEO_SINK,
       g_param_spec_object ("video-sink", "Video Sink",
           "the video output element to use (NULL = default sink)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstPlayBin3:audio-sink
+   *
+   * Get or set the audio sink to use for audio output. If set to
+   * NULL, one will be auto-selected. To disable audio entirely, unset
+   * the AUDIO flag in the #GstPlayBin3:flags property.
+   *
+   */
   g_object_class_install_property (gobject_klass, PROP_AUDIO_SINK,
       g_param_spec_object ("audio-sink", "Audio Sink",
           "the audio output element to use (NULL = default sink)",
