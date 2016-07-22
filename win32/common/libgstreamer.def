@@ -537,6 +537,7 @@ EXPORTS
 	gst_element_link_pads_full
 	gst_element_lost_state
 	gst_element_make_from_uri
+	gst_element_message_details_new
 	gst_element_message_full
 	gst_element_message_full_with_details
 	gst_element_no_more_pads
@@ -699,13 +700,11 @@ EXPORTS
 	gst_memory_resize
 	gst_memory_share
 	gst_memory_unmap
-	gst_message_error_set_details
 	gst_message_get_seqnum
 	gst_message_get_stream_status_object
 	gst_message_get_structure
 	gst_message_get_type
 	gst_message_has_name
-	gst_message_info_set_details
 	gst_message_new_application
 	gst_message_new_async_done
 	gst_message_new_async_start
@@ -793,7 +792,6 @@ EXPORTS
 	gst_message_type_get_name
 	gst_message_type_get_type
 	gst_message_type_to_quark
-	gst_message_warning_set_details
 	gst_meta_api_type_get_tags
 	gst_meta_api_type_has_tag
 	gst_meta_api_type_register
