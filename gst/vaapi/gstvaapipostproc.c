@@ -1911,6 +1911,8 @@ gst_vaapipostproc_colorbalance_set_value (GstColorBalance * balance,
     *var = new_val;
     postproc->flags |= flags;
     gst_color_balance_value_changed (balance, channel, value);
+    if (check_filter_update (postproc))
+      gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (postproc));
     return;
   }
 
