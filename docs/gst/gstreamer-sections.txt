@@ -899,6 +899,8 @@ gst_element_change_state
 
 <SUBSECTION element-messages>
 gst_element_message_full
+gst_element_message_full_with_details
+gst_element_message_details_new
 gst_element_post_message
 
 <SUBSECTION element-query>
@@ -1579,11 +1581,17 @@ gst_message_replace
 
 gst_message_new_eos
 gst_message_new_error
+gst_message_new_error_with_details
 gst_message_parse_error
+gst_message_parse_error_details
 gst_message_new_warning
+gst_message_new_warning_with_details
 gst_message_parse_warning
+gst_message_parse_warning_details
 gst_message_new_info
+gst_message_new_info_with_details
 gst_message_parse_info
+gst_message_parse_info_details
 gst_message_new_tag
 gst_message_parse_tag
 gst_message_new_buffering
