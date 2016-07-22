@@ -576,6 +576,21 @@ update_filter (GstVaapiPostproc * postproc)
   return TRUE;
 }
 
+static void
+gst_vaapipostproc_set_passthrough (GstBaseTransform * trans)
+{
+  GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
+  gboolean filter_updated = FALSE;
+
+  if (check_filter_update (postproc) && update_filter (postproc)) {
+    /* check again if changed value is default */
+    filter_updated = check_filter_update (postproc);
+  }
+
+  gst_base_transform_set_passthrough (trans, postproc->same_caps
+      && !filter_updated);
+}
+
 static GstFlowReturn
 gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
@@ -1131,6 +1146,9 @@ gst_vaapipostproc_fixate_caps (GstBaseTransform * trans,
     gst_caps_replace (&othercaps, outcaps);
   g_mutex_unlock (&postproc->postproc_lock);
 
+  /* set passthrough according to caps changes or filter changes */
+  gst_vaapipostproc_set_passthrough (trans);
+
 done:
   GST_DEBUG_OBJECT (trans, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
   if (outcaps)
@@ -1200,6 +1218,11 @@ gst_vaapipostproc_prepare_output_buffer (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer ** outbuf_ptr)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
+
+  if (gst_base_transform_is_passthrough (trans)) {
+    *outbuf_ptr = inbuf;
+    return GST_FLOW_OK;
+  }
 
   *outbuf_ptr = create_output_buffer (postproc);
   return *outbuf_ptr ? GST_FLOW_OK : GST_FLOW_ERROR;
@@ -1281,8 +1304,10 @@ gst_vaapipostproc_set_caps (GstBaseTransform * trans, GstCaps * caps,
   if (!ensure_srcpad_buffer_pool (postproc, out_caps))
     goto done;
 
-  if (check_filter_update (postproc))
-    update_filter (postproc);
+  postproc->same_caps = gst_caps_is_equal (caps, out_caps);
+
+  /* set passthrough according to caps changes or filter changes */
+  gst_vaapipostproc_set_passthrough (trans);
 
   ret = TRUE;
 
@@ -1436,7 +1461,7 @@ gst_vaapipostproc_set_property (GObject * object,
   g_mutex_unlock (&postproc->postproc_lock);
 
   if (check_filter_update (postproc))
-    update_filter (postproc);
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (postproc));
 }
 
 static void

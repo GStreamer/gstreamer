@@ -176,6 +176,7 @@ struct _GstVaapiPostproc
 
   /* color balance's channel list */
   GList *cb_channels;
+  gboolean same_caps;
 };
 
 struct _GstVaapiPostprocClass
