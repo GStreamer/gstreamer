@@ -784,8 +784,11 @@ gst_ffmpegaudenc_register (GstPlugin * plugin)
       goto next;
 
     /* no quasi codecs, please */
-    if ((in_plugin->id >= AV_CODEC_ID_PCM_S16LE &&
-            in_plugin->id <= AV_CODEC_ID_PCM_BLURAY)) {
+    if (in_plugin->id == AV_CODEC_ID_PCM_S16LE_PLANAR ||
+        (in_plugin->id >= AV_CODEC_ID_PCM_S16LE &&
+            in_plugin->id <= AV_CODEC_ID_PCM_BLURAY) ||
+        (in_plugin->id >= AV_CODEC_ID_PCM_S8_PLANAR &&
+            in_plugin->id <= AV_CODEC_ID_PCM_S16BE_PLANAR)) {
       goto next;
     }
 
