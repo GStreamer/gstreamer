@@ -973,6 +973,20 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
       goto next;
     }
 
+    if (strstr (in_plugin->name, "vaapi")) {
+      GST_DEBUG
+          ("Ignoring VAAPI encoder %s. We can't handle this outside of ffmpeg",
+          in_plugin->name);
+      goto next;
+    }
+
+    if (g_str_has_suffix (in_plugin->name, "_nvenc")) {
+      GST_DEBUG
+          ("Ignoring nvenc encoder %s. We can't handle this outside of ffmpeg",
+          in_plugin->name);
+      goto next;
+    }
+
     /* only video encoders */
     if (!av_codec_is_encoder (in_plugin)
         || in_plugin->type != AVMEDIA_TYPE_VIDEO)
