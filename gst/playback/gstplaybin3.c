@@ -1794,6 +1794,9 @@ gst_play_bin3_finalize (GObject * object)
   if (playbin->velements)
     g_sequence_free (playbin->velements);
 
+  if (playbin->collection)
+    gst_object_unref (playbin->collection);
+
   g_list_free_full (playbin->contexts, (GDestroyNotify) gst_context_unref);
 
   g_rec_mutex_clear (&playbin->lock);
