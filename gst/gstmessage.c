@@ -455,7 +455,7 @@ gst_message_new_error (GstObject * src, GError * error, const gchar * debug)
 
 /**
  * gst_message_parse_error_details:
- * @message: (transfer none): The message object
+ * @message: The message object
  * @structure: (out): A pointer to the returned details
  *
  * Returns the optional details structure, may be NULL if none.
@@ -543,7 +543,7 @@ gst_message_new_warning (GstObject * src, GError * error, const gchar * debug)
 
 /**
  * gst_message_parse_warning_details:
- * @message: (transfer none): The message object
+ * @message: The message object
  * @structure: (out): A pointer to the returned details structure
  *
  * Returns the optional details structure, may be NULL if none
@@ -631,7 +631,7 @@ gst_message_new_info (GstObject * src, GError * error, const gchar * debug)
 
 /**
  * gst_message_parse_info_details:
- * @message: (transfer none): The message object
+ * @message: The message object
  * @structure: (out): A pointer to the returned details structure
  *
  * Returns the optional details structure, may be NULL if none
