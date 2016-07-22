@@ -30,6 +30,7 @@
     <xi:include href="xml/element-cdparanoiasrc.xml" />
     <xi:include href="xml/element-clockoverlay.xml" />
     <xi:include href="xml/element-decodebin.xml" />
+    <xi:include href="xml/element-decodebin3.xml" />
     <xi:include href="xml/element-encodebin.xml" />
     <xi:include href="xml/element-giosink.xml" />
     <xi:include href="xml/element-giosrc.xml" />
@@ -46,7 +47,9 @@
     <xi:include href="xml/element-ogmvideoparse.xml" />
     <xi:include href="xml/element-opusdec.xml" />
     <xi:include href="xml/element-opusenc.xml" />
+    <xi:include href="xml/element-parsebin.xml" />
     <xi:include href="xml/element-playbin.xml" />
+    <xi:include href="xml/element-playbin3.xml" />
     <xi:include href="xml/element-playsink.xml" />
     <xi:include href="xml/element-socketsrc.xml" />
     <xi:include href="xml/element-ssaparse.xml" />
@@ -64,6 +67,7 @@
     <xi:include href="xml/element-theoraparse.xml" />
     <xi:include href="xml/element-timeoverlay.xml" />
     <xi:include href="xml/element-uridecodebin.xml" />
+    <xi:include href="xml/element-urisourcebin.xml" />
     <xi:include href="xml/element-videoconvert.xml" />
     <xi:include href="xml/element-videorate.xml" />
     <xi:include href="xml/element-videoscale.xml" />

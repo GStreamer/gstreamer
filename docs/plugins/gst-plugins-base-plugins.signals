@@ -371,6 +371,22 @@ GstAppSink *gstappsink
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstAppSink::try-pull-preroll</NAME>
+<RETURNS>GstSample*</RETURNS>
+<FLAGS>la</FLAGS>
+GstAppSink *gstappsink
+guint64  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstAppSink::try-pull-sample</NAME>
+<RETURNS>GstSample*</RETURNS>
+<FLAGS>la</FLAGS>
+GstAppSink *gstappsink
+guint64  arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstMultiSocketSink::add</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>

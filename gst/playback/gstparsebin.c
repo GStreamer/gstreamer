@@ -26,7 +26,7 @@
  */
 
 /**
- * SECTION:element-ParseBin
+ * SECTION:element-parsebin
  *
  * #GstBin that auto-magically constructs a parsing pipeline
  * using available parsers and demuxers via auto-plugging.

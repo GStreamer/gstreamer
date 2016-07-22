@@ -211,6 +211,22 @@ gst_decode_bin_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-decodebin3</FILE>
+<TITLE>decodebin3</TITLE>
+GstDecodebin3
+<SUBSECTION Standard>
+GstDecodebin3Class
+GST_DECODEBIN3
+GST_DECODEBIN3_CAST
+GST_IS_DECODEBIN3
+GST_DECODEBIN3_CLASS
+GST_IS_DECODEBIN3_CLASS
+GST_TYPE_DECODEBIN3
+<SUBSECTION Private>
+gst_decodebin3_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-encodebin</FILE>
 <TITLE>encodebin</TITLE>
 GstEncodeBin
@@ -472,6 +488,22 @@ gst_opus_enc_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-parsebin</FILE>
+<TITLE>parsebin</TITLE>
+GstParseBin
+<SUBSECTION Standard>
+GstParseBinClass
+GST_PARSE_BIN
+GST_PARSE_BIN_CAST
+GST_IS_PARSE_BIN
+GST_PARSE_BIN_CLASS
+GST_IS_PARSE_BIN_CLASS
+GST_TYPE_PARSE_BIN
+<SUBSECTION Private>
+gst_parse_bin_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-playbin</FILE>
 <TITLE>playbin</TITLE>
 GstPlayBin
@@ -485,6 +517,22 @@ GST_IS_PLAY_BIN_CLASS
 GST_TYPE_PLAY_BIN
 <SUBSECTION Private>
 gst_play_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-playbin3</FILE>
+<TITLE>playbin3</TITLE>
+GstPlayBin3
+<SUBSECTION Standard>
+GstPlayBin3Class
+GST_PLAY_BIN3
+GST_PLAY_BIN3_CAST
+GST_IS_PLAY_BIN3
+GST_PLAY_BIN3_CLASS
+GST_IS_PLAY_BIN3_CLASS
+GST_TYPE_PLAY_BIN3
+<SUBSECTION Private>
+gst_play_bin3_get_type
 </SECTION>
 
 <SECTION>
@@ -766,6 +814,22 @@ gst_uri_decode_bin_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-urisourcebin</FILE>
+<TITLE>urisourcebin</TITLE>
+GstURISourceBin
+<SUBSECTION Standard>
+GstURISourceBinClass
+GST_URI_SOURCE_BIN
+GST_URI_SOURCE_BIN_CAST
+GST_IS_URI_SOURCE_BIN
+GST_URI_SOURCE_BIN_CLASS
+GST_IS_URI_SOURCE_BIN_CLASS
+GST_TYPE_URI_SOURCE_BIN
+<SUBSECTION Private>
+gst_uri_source_bin_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-videoconvert</FILE>
 <TITLE>videoconvert</TITLE>
 GstVideoConvert
@@ -829,6 +893,134 @@ GST_IS_VIDEO_TEST_SRC_CLASS
 GST_TYPE_VIDEO_TEST_SRC
 <SUBSECTION Private>
 gst_video_test_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-libvisual_bumpscope</FILE>
+<TITLE>libvisual_bumpscope</TITLE>
+GstVisualbumpscope
+<SUBSECTION Standard>
+GstVisualbumpscopeClass
+GST_VISUALBUMPSCOPE
+GST_VISUALBUMPSCOPE_CAST
+GST_IS_VISUALBUMPSCOPE
+GST_VISUALBUMPSCOPE_CLASS
+GST_IS_VISUALBUMPSCOPE_CLASS
+GST_TYPE_VISUALBUMPSCOPE
+<SUBSECTION Private>
+gst_visualbumpscope_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-libvisual_corona</FILE>
+<TITLE>libvisual_corona</TITLE>
+GstVisualcorona
+<SUBSECTION Standard>
+GstVisualcoronaClass
+GST_VISUALCORONA
+GST_VISUALCORONA_CAST
+GST_IS_VISUALCORONA
+GST_VISUALCORONA_CLASS
+GST_IS_VISUALCORONA_CLASS
+GST_TYPE_VISUALCORONA
+<SUBSECTION Private>
+gst_visualcorona_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-libvisual_infinite</FILE>
+<TITLE>libvisual_infinite</TITLE>
+GstVisualinfinite
+<SUBSECTION Standard>
+GstVisualinfiniteClass
+GST_VISUALINFINITE
+GST_VISUALINFINITE_CAST
+GST_IS_VISUALINFINITE
+GST_VISUALINFINITE_CLASS
+GST_IS_VISUALINFINITE_CLASS
+GST_TYPE_VISUALINFINITE
+<SUBSECTION Private>
+gst_visualinfinite_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-libvisual_jakdaw</FILE>
+<TITLE>libvisual_jakdaw</TITLE>
+GstVisualjakdaw
+<SUBSECTION Standard>
+GstVisualjakdawClass
+GST_VISUALJAKDAW
+GST_VISUALJAKDAW_CAST
+GST_IS_VISUALJAKDAW
+GST_VISUALJAKDAW_CLASS
+GST_IS_VISUALJAKDAW_CLASS
+GST_TYPE_VISUALJAKDAW
+<SUBSECTION Private>
+gst_visualjakdaw_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-libvisual_jess</FILE>
+<TITLE>libvisual_jess</TITLE>
+GstVisualjess
+<SUBSECTION Standard>
+GstVisualjessClass
+GST_VISUALJESS
+GST_VISUALJESS_CAST
+GST_IS_VISUALJESS
+GST_VISUALJESS_CLASS
+GST_IS_VISUALJESS_CLASS
+GST_TYPE_VISUALJESS
+<SUBSECTION Private>
+gst_visualjess_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-libvisual_lv_analyzer</FILE>
+<TITLE>libvisual_lv_analyzer</TITLE>
+GstVisuallv_analyzer
+<SUBSECTION Standard>
+GstVisuallv_analyzerClass
+GST_VISUALLV_ANALYZER
+GST_VISUALLV_ANALYZER_CAST
+GST_IS_VISUALLV_ANALYZER
+GST_VISUALLV_ANALYZER_CLASS
+GST_IS_VISUALLV_ANALYZER_CLASS
+GST_TYPE_VISUALLV_ANALYZER
+<SUBSECTION Private>
+gst_visuallv_analyzer_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-libvisual_lv_scope</FILE>
+<TITLE>libvisual_lv_scope</TITLE>
+GstVisuallv_scope
+<SUBSECTION Standard>
+GstVisuallv_scopeClass
+GST_VISUALLV_SCOPE
+GST_VISUALLV_SCOPE_CAST
+GST_IS_VISUALLV_SCOPE
+GST_VISUALLV_SCOPE_CLASS
+GST_IS_VISUALLV_SCOPE_CLASS
+GST_TYPE_VISUALLV_SCOPE
+<SUBSECTION Private>
+gst_visuallv_scope_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-libvisual_oinksie</FILE>
+<TITLE>libvisual_oinksie</TITLE>
+GstVisualoinksie
+<SUBSECTION Standard>
+GstVisualoinksieClass
+GST_VISUALOINKSIE
+GST_VISUALOINKSIE_CAST
+GST_IS_VISUALOINKSIE
+GST_VISUALOINKSIE_CLASS
+GST_IS_VISUALOINKSIE_CLASS
+GST_TYPE_VISUALOINKSIE
+<SUBSECTION Private>
+gst_visualoinksie_get_type
 </SECTION>
 
 <SECTION>

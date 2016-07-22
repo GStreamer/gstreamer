@@ -24,10 +24,10 @@
 /**
  * SECTION:element-playbin3
  *
- * Playbin provides a stand-alone everything-in-one abstraction for an
+ * Playbin3 provides a stand-alone everything-in-one abstraction for an
  * audio and/or video player.
  *
- * Playbin can handle both audio and video files and features
+ * Playbin3 can handle both audio and video files and features
  * <itemizedlist>
  * <listitem>
  * automatic file type recognition and based on that automatic
@@ -60,12 +60,12 @@
  * <refsect2>
  * <title>Usage</title>
  * <para>
- * A playbin element can be created just like any other element using
+ * A playbi3n element can be created just like any other element using
  * gst_element_factory_make(). The file/URI to play should be set via the #GstPlayBin3:uri
  * property. This must be an absolute URI, relative file paths are not allowed.
  * Example URIs are file:///home/joe/movie.avi or http://www.joedoe.com/foo.ogg
  *
- * Playbin is a #GstPipeline. It will notify the application of everything
+ * Playbin3 is a #GstPipeline. It will notify the application of everything
  * that's happening (errors, end of stream, tags found, state changes, etc.)
  * by posting messages on its #GstBus. The application needs to watch the
  * bus.
@@ -74,17 +74,17 @@
  * gst_element_set_state(). Note that the state change will take place in
  * the background in a separate thread, when the function returns playback
  * is probably not happening yet and any errors might not have occured yet.
- * Applications using playbin should ideally be written to deal with things
+ * Applications using playbin3 should ideally be written to deal with things
  * completely asynchroneous.
  *
  * When playback has finished (an EOS message has been received on the bus)
  * or an error has occured (an ERROR message has been received on the bus) or
- * the user wants to play a different track, playbin should be set back to
+ * the user wants to play a different track, playbin3 should be set back to
  * READY or NULL state, then the #GstPlayBin3:uri property should be set to the
- * new location and then playbin be set to PLAYING state again.
+ * new location and then playbin3 be set to PLAYING state again.
  *
  * Seeking can be done using gst_element_seek_simple() or gst_element_seek()
- * on the playbin element. Again, the seek will not be executed
+ * on the playbin3 element. Again, the seek will not be executed
  * instantaneously, but will be done in a background thread. When the seek
  * call returns the seek will most likely still be in process. An application
  * may wait for the seek to finish (or fail) using gst_element_get_state() with
@@ -101,7 +101,7 @@
  * <title>Advanced Usage: specifying the audio and video sink</title>
  * <para>
  * By default, if no audio sink or video sink has been specified via the
- * #GstPlayBin3:audio-sink or #GstPlayBin3:video-sink property, playbin will use the autoaudiosink
+ * #GstPlayBin3:audio-sink or #GstPlayBin3:video-sink property, playbin3 will use the autoaudiosink
  * and autovideosink elements to find the first-best available output method.
  * This should work in most cases, but is not always desirable. Often either
  * the user or application might want to specify more explicitly what to use
@@ -109,16 +109,16 @@
  *
  * If the application wants more control over how audio or video should be
  * output, it may create the audio/video sink elements itself (for example
- * using gst_element_factory_make()) and provide them to playbin using the
+ * using gst_element_factory_make()) and provide them to playbin3 using the
  * #GstPlayBin3:audio-sink or #GstPlayBin3:video-sink property.
  *
  * GNOME-based applications, for example, will usually want to create
- * gconfaudiosink and gconfvideosink elements and make playbin use those,
+ * gconfaudiosink and gconfvideosink elements and make playbin3 use those,
  * so that output happens to whatever the user has configured in the GNOME
  * Multimedia System Selector configuration dialog.
  *
  * The sink elements do not necessarily need to be ready-made sinks. It is
- * possible to create container elements that look like a sink to playbin,
+ * possible to create container elements that look like a sink to playbin3,
  * but in reality contain a number of custom elements linked together. This
  * can be achieved by creating a #GstBin and putting elements in there and
  * linking them, and then creating a sink #GstGhostPad for the bin and pointing
@@ -144,11 +144,11 @@
  * </refsect2>
  * <refsect2>
  * <title>Buffering</title>
- * Playbin handles buffering automatically for the most part, but applications
- * need to handle parts of the buffering process as well. Whenever playbin is
+ * Playbin3 handles buffering automatically for the most part, but applications
+ * need to handle parts of the buffering process as well. Whenever playbin3 is
  * buffering, it will post BUFFERING messages on the bus with a percentage
  * value that shows the progress of the buffering process. Applications need
- * to set playbin to PLAYING or PAUSED state in response to these messages.
+ * to set playbin3 to PLAYING or PAUSED state in response to these messages.
  * They may also want to convey the buffering progress to the user in some
  * way. Here is how to extract the percentage information from the message:
  * |[
@@ -169,7 +169,7 @@
  * </refsect2>
  * <refsect2>
  * <title>Embedding the video window in your application</title>
- * By default, playbin (or rather the video sinks used) will create their own
+ * By default, playbin3 (or rather the video sinks used) will create their own
  * window. Applications will usually want to force output to a window of their
  * own, however. This can be done using the #GstVideoOverlay interface, which most
  * video sinks implement. See the documentation there for more details.
@@ -177,9 +177,9 @@
  * <refsect2>
  * <title>Specifying which CD/DVD device to use</title>
  * The device to use for CDs/DVDs needs to be set on the source element
- * playbin creates before it is opened. The most generic way of doing this
- * is to connect to playbin's "source-setup" (or "notify::source") signal,
- * which will be emitted by playbin when it has created the source element
+ * playbin3 creates before it is opened. The most generic way of doing this
+ * is to connect to playbin3's "source-setup" (or "notify::source") signal,
+ * which will be emitted by playbin3 when it has created the source element
  * for a particular URI. In the signal callback you can check if the source
  * element has a "device" property and set it appropriately. In some cases
  * the device can also be set as part of the URI, but it depends on the
@@ -200,18 +200,18 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch-1.0 -v playbin uri=file:///path/to/somefile.mp4
+ * gst-launch-1.0 -v playbin3 uri=file:///path/to/somefile.mp4
  * ]| This will play back the given AVI video file, given that the video and
  * audio decoders required to decode the content are installed. Since no
- * special audio sink or video sink is supplied (via playbin's audio-sink or
- * video-sink properties) playbin will try to find a suitable audio and
+ * special audio sink or video sink is supplied (via playbin3's audio-sink or
+ * video-sink properties) playbin3 will try to find a suitable audio and
  * video sink automatically using the autoaudiosink and autovideosink elements.
  * |[
- * gst-launch-1.0 -v playbin uri=cdda://4
+ * gst-launch-1.0 -v playbin3 uri=cdda://4
  * ]| This will play back track 4 on an audio CD in your disc drive (assuming
  * the drive is detected automatically by the plugin).
  * |[
- * gst-launch-1.0 -v playbin uri=dvd://
+ * gst-launch-1.0 -v playbin3 uri=dvd://
  * ]| This will play back the DVD in your disc drive (assuming
  * the drive is detected automatically by the plugin).
  * </refsect2>
