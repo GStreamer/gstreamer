@@ -2061,6 +2061,13 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
       goto next;
     }
 
+    if (strstr (in_plugin->name, "vaapi")) {
+      GST_DEBUG
+          ("Ignoring VAAPI decoder %s. We can't handle this outside of ffmpeg",
+          in_plugin->name);
+      goto next;
+    }
+
     GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name, in_plugin->long_name);
 
     /* no codecs for which we're GUARANTEED to have better alternatives */
