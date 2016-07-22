@@ -22,7 +22,7 @@
  * SECTION:gesimagesource
  * @short_description: outputs the video stream from a media file as a still
  * image.
- * 
+ *
  * Outputs the video stream from a given file as a still frame. The frame
  * chosen will be determined by the in-point property on the track element. For
  * image files, do not set the in-point property.
@@ -165,6 +165,8 @@ ges_image_source_class_init (GESImageSourceClass * klass)
   g_object_class_install_property (object_class, PROP_URI,
       g_param_spec_string ("uri", "URI", "uri of the resource",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+  GES_TIMELINE_ELEMENT_CLASS (klass)->set_inpoint = NULL;
   source_class->create_source = ges_image_source_create_source;
 }
 
