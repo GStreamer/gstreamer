@@ -819,6 +819,8 @@ free_input (GstDecodebin3 * dbin, DecodebinInput * input)
     gst_object_unref (input->parsebin);
     gst_object_unref (input->parsebin_sink);
   }
+  if (input->collection)
+    gst_object_unref (input->collection);
   g_free (input);
 }
 
@@ -1033,7 +1035,7 @@ get_merged_collection (GstDecodebin3 * dbin)
 
   if (!needs_merge) {
     GST_DEBUG_OBJECT (dbin, "No need to merge, returning %p", res);
-    return res;
+    return gst_object_ref (res);
   }
 
   /* We really need to create a new collection */
@@ -1142,7 +1144,7 @@ handle_stream_collection (GstDecodebin3 * dbin,
   /* Replace collection in input */
   if (input->collection)
     gst_object_unref (input->collection);
-  input->collection = collection;
+  input->collection = gst_object_ref (collection);
   GST_DEBUG_OBJECT (dbin, "Setting collection %p on input %p", collection,
       input);
 
