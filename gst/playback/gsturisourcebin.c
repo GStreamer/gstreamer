@@ -24,7 +24,7 @@
  * urisourcebin is an element for accessing URIs in a uniform manner.
  *
  * It handles selecting a URI source element and potentially download
- * buffering for network sources. It roduces one or more source pads,
+ * buffering for network sources. It produces one or more source pads,
  * depending on the input source, for feeding to decoding chains or decodebin.
  *
  * The main configuration is via the #GstURISourceBin:uri property.
