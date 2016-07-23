@@ -4,6 +4,7 @@ audio
 audiocdsrc
 audiodecoder
 audioencoder
+baseaudiovisualizer
 discoverer
 fft
 gstlibscpp

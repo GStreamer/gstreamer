@@ -15,6 +15,7 @@ tmpl/*.sgml
 gst-plugins-base-plugins-scan
 gst-plugins-base-plugins-scan.c
 inspect-registry.*
+*.new
 
 html-build.stamp
 html.stamp
