@@ -3406,6 +3406,8 @@ ges_timeline_commit (GESTimeline * timeline)
   LOCK_DYN (timeline);
   ret = ges_timeline_commit_unlocked (timeline);
   UNLOCK_DYN (timeline);
+
+  ges_timeline_emit_snappig (timeline, NULL, NULL);
   return ret;
 }
 
