@@ -421,7 +421,7 @@ GstStructure *gst_element_message_details_new(const char *name, ...);
  *
  * Since: 1.10
  */
-#define GST_ELEMENT_ERROR_WITH_DETAILS(el, domain, code, text, debug, args)  \
+#define GST_ELEMENT_ERROR_WITH_DETAILS(el,domain,code,text,debug,args)  \
 G_STMT_START {                                                          \
   gchar *__txt = _gst_element_error_printf text;                        \
   gchar *__dbg = _gst_element_error_printf debug;                       \
@@ -449,8 +449,19 @@ G_STMT_START {                                                          \
  * data processing error. The pipeline will post an error message and the
  * application will be requested to stop further media processing.
  */
-#define GST_ELEMENT_ERROR(el, domain, code, text, debug)                \
-  GST_ELEMENT_ERROR_WITH_DETAILS(el, domain, code, text, debug, (NULL))
+#define GST_ELEMENT_ERROR(el,domain,code,text,debug)                    \
+G_STMT_START {                                                          \
+  gchar *__txt = _gst_element_error_printf text;                        \
+  gchar *__dbg = _gst_element_error_printf debug;                       \
+  if (__txt)                                                            \
+    GST_WARNING_OBJECT (el, "error: %s", __txt);                        \
+  if (__dbg)                                                            \
+    GST_WARNING_OBJECT (el, "error: %s", __dbg);                        \
+  gst_element_message_full (GST_ELEMENT(el),                            \
+    GST_MESSAGE_ERROR, GST_ ## domain ## _ERROR,                        \
+      GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,        \
+      GST_FUNCTION, __LINE__);                                          \
+} G_STMT_END
 
 /**
  * GST_ELEMENT_WARNING_WITH_DETAILS:
@@ -500,7 +511,18 @@ G_STMT_START {                                                          \
  * application will be informed.
  */
 #define GST_ELEMENT_WARNING(el, domain, code, text, debug)              \
-  GST_ELEMENT_WARNING_WITH_DETAILS(el, domain, code, text, debug, (NULL))
+G_STMT_START {                                                          \
+  gchar *__txt = _gst_element_error_printf text;                        \
+  gchar *__dbg = _gst_element_error_printf debug;                       \
+  if (__txt)                                                            \
+    GST_WARNING_OBJECT (el, "warning: %s", __txt);                      \
+  if (__dbg)                                                            \
+    GST_WARNING_OBJECT (el, "warning: %s", __dbg);                      \
+  gst_element_message_full (GST_ELEMENT(el),                            \
+    GST_MESSAGE_WARNING, GST_ ## domain ## _ERROR,                      \
+    GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,          \
+    GST_FUNCTION, __LINE__);                                            \
+} G_STMT_END
 
 /**
  * GST_ELEMENT_INFO_WITH_DETAILS:
@@ -554,7 +576,18 @@ G_STMT_START {                                                          \
  * application will be informed.
  */
 #define GST_ELEMENT_INFO(el, domain, code, text, debug)                 \
-  GST_ELEMENT_INFO_WITH_DETAILS(el, domain, code, text, debug, (NULL))
+G_STMT_START {                                                          \
+  gchar *__txt = _gst_element_error_printf text;                        \
+  gchar *__dbg = _gst_element_error_printf debug;                       \
+  if (__txt)                                                            \
+    GST_INFO_OBJECT (el, "info: %s", __txt);                            \
+  if (__dbg)                                                            \
+    GST_INFO_OBJECT (el, "info: %s", __dbg);                            \
+  gst_element_message_full (GST_ELEMENT(el),                            \
+    GST_MESSAGE_INFO, GST_ ## domain ## _ERROR,                         \
+    GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,          \
+    GST_FUNCTION, __LINE__);                                            \
+} G_STMT_END
 
 /* the state change mutexes and conds */
 /**
