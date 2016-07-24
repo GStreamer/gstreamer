@@ -21,15 +21,15 @@
 /**
  * SECTION:element-siddec
  *
- * This element decodes .sid files to raw audio. .sid files are in fact 
- * small Commodore 64 programs that are executed on an emulated 6502 CPU and a 
+ * This element decodes .sid files to raw audio. .sid files are in fact
+ * small Commodore 64 programs that are executed on an emulated 6502 CPU and a
  * MOS 6581 sound chip.
- * 
+ *
  * This plugin will first load the complete program into memory before starting
  * the emulator and producing output.
- * 
+ *
  * Seeking is not (and cannot be) implemented.
- * 
+ *
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
@@ -394,7 +394,7 @@ play_loop (GstPad * pad)
   GstSidDec *siddec;
   GstBuffer *out;
   GstMapInfo outmap;
-  gint64 value, offset, time;
+  gint64 value, offset, time = 0;
   GstFormat format;
 
   siddec = GST_SIDDEC (gst_pad_get_parent (pad));
@@ -408,29 +408,29 @@ play_loop (GstPad * pad)
 
   /* get offset in samples */
   format = GST_FORMAT_DEFAULT;
-  gst_siddec_src_convert (siddec->srcpad,
-      GST_FORMAT_BYTES, siddec->total_bytes, &format, &offset);
-  GST_BUFFER_OFFSET (out) = offset;
+  if (gst_siddec_src_convert (siddec->srcpad,
+        GST_FORMAT_BYTES, siddec->total_bytes, &format, &offset))
+    GST_BUFFER_OFFSET (out) = offset;
 
   /* get current timestamp */
   format = GST_FORMAT_TIME;
-  gst_siddec_src_convert (siddec->srcpad,
-      GST_FORMAT_BYTES, siddec->total_bytes, &format, &time);
-  GST_BUFFER_TIMESTAMP (out) = time;
+  if (gst_siddec_src_convert (siddec->srcpad,
+        GST_FORMAT_BYTES, siddec->total_bytes, &format, &time))
+    GST_BUFFER_TIMESTAMP (out) = time;
 
   /* update position and get new timestamp to calculate duration */
   siddec->total_bytes += siddec->blocksize;
 
   /* get offset in samples */
   format = GST_FORMAT_DEFAULT;
-  gst_siddec_src_convert (siddec->srcpad,
-      GST_FORMAT_BYTES, siddec->total_bytes, &format, &value);
-  GST_BUFFER_OFFSET_END (out) = value;
+  if (gst_siddec_src_convert (siddec->srcpad,
+        GST_FORMAT_BYTES, siddec->total_bytes, &format, &value))
+    GST_BUFFER_OFFSET_END (out) = value;
 
   format = GST_FORMAT_TIME;
-  gst_siddec_src_convert (siddec->srcpad,
-      GST_FORMAT_BYTES, siddec->total_bytes, &format, &value);
-  GST_BUFFER_DURATION (out) = value - time;
+  if (gst_siddec_src_convert (siddec->srcpad,
+        GST_FORMAT_BYTES, siddec->total_bytes, &format, &value))
+    GST_BUFFER_DURATION (out) = value - time;
 
   if ((ret = gst_pad_push (siddec->srcpad, out)) != GST_FLOW_OK)
     goto pause;
