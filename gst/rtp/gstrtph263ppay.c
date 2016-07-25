@@ -254,8 +254,9 @@ gst_rtp_h263p_pay_sink_getcaps (GstRTPBasePayload * payload, GstPad * pad,
   if (!peercaps || gst_caps_is_any (peercaps)) {
     if (peercaps)
       gst_caps_unref (peercaps);
-    return
+    caps =
         gst_pad_get_pad_template_caps (GST_RTP_BASE_PAYLOAD_SINKPAD (payload));
+    goto done;
   }
 
   /* We basically need to differentiate two use-cases here: One where there's
@@ -264,9 +265,11 @@ gst_rtp_h263p_pay_sink_getcaps (GstRTPBasePayload * payload, GstPad * pad,
    * we want it to produce. The second case is simply payloader ! depayloader
    * where we are dealing with the depayloader's template caps. In this case
    * we should accept any input compatible with our sink template caps. */
-  if (!gst_caps_is_fixed (peercaps))
-    return
+  if (!gst_caps_is_fixed (peercaps)) {
+    caps =
         gst_pad_get_pad_template_caps (GST_RTP_BASE_PAYLOAD_SINKPAD (payload));
+    goto done;
+  }
 
   templ = gst_pad_get_pad_template_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload));
   intersect = gst_caps_intersect (peercaps, templ);
@@ -600,6 +603,18 @@ gst_rtp_h263p_pay_sink_getcaps (GstRTPBasePayload * payload, GstPad * pad,
   }
 
   gst_caps_unref (intersect);
+
+done:
+
+  if (filter) {
+    GstCaps *tmp;
+
+    GST_DEBUG_OBJECT (payload, "Intersect %" GST_PTR_FORMAT " and filter %"
+        GST_PTR_FORMAT, caps, filter);
+    tmp = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = tmp;
+  }
 
   return caps;
 }
