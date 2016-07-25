@@ -2,7 +2,6 @@
 plugin_LTLIBRARIES = libgstrawparse.la
 
 libgstrawparse_la_SOURCES = \
-	gstrawparse.c \
 	gstunalignedaudioparse.c \
 	gstunalignedvideoparse.c \
 	gstaudioparse.c \
@@ -29,7 +28,6 @@ noinst_HEADERS = \
 	gstunalignedaudioparse.h \
 	gstunalignedvideoparse.h \
 	gstaudioparse.h \
-	gstrawparse.h \
 	gstvideoparse.h \
 	gstrawbaseparse.h \
 	gstrawaudioparse.h \
