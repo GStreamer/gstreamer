@@ -477,6 +477,10 @@ gst_input_selector_eos_wait (GstInputSelector * self, GstSelectorPad * pad,
 
       gst_pad_push_event (self->srcpad, gst_event_ref (eos_event));
       GST_INPUT_SELECTOR_LOCK (self);
+      /* Wake up other pads so they can continue when syncing to
+       * running time, as this pad just switched to EOS and
+       * may enable others to progress */
+      GST_INPUT_SELECTOR_BROADCAST (self);
       pad->eos_sent = TRUE;
     } else {
       /* we can be unlocked here when we are shutting down (flushing) or when we
