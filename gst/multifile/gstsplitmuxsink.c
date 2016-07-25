@@ -1111,7 +1111,7 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
   else
     ts = GST_BUFFER_DTS (buf);
 
-  GST_LOG_OBJECT (pad, "Buffer TS is %" GST_STIME_FORMAT, GST_STIME_ARGS (ts));
+  GST_LOG_OBJECT (pad, "Buffer TS is %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
 
   GST_SPLITMUX_LOCK (splitmux);
 
