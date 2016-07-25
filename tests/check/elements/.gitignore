@@ -46,6 +46,7 @@ neonhttpsrc
 netsim
 ofa
 pcapparse
+rawaudioparse
 rtponvif
 rganalysis
 rglimiter
