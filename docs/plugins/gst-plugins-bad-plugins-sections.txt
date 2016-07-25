@@ -31,6 +31,22 @@ gst_cm_enc_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-audioparse</FILE>
+<TITLE>audioparse</TITLE>
+GstAudioParse
+<SUBSECTION Standard>
+GstAudioParseClass
+GST_AUDIO_PARSE
+GST_AUDIO_PARSE_CAST
+GST_IS_AUDIO_PARSE
+GST_AUDIO_PARSE_CLASS
+GST_IS_AUDIO_PARSE_CLASS
+GST_TYPE_AUDIO_PARSE
+<SUBSECTION Private>
+gst_audio_parse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-dvbbasebin</FILE>
 <TITLE>dvbbasebin</TITLE>
 GstBaseBin
@@ -3892,6 +3908,22 @@ gst_unaligned_audio_parse_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-unalignedvideoparse</FILE>
+<TITLE>unalignedvideoparse</TITLE>
+GstUnalignedVideoParse
+<SUBSECTION Standard>
+GstUnalignedVideoParseClass
+GST_UNALIGNED_VIDEO_PARSE
+GST_UNALIGNED_VIDEO_PARSE_CAST
+GST_IS_UNALIGNED_VIDEO_PARSE
+GST_UNALIGNED_VIDEO_PARSE_CLASS
+GST_IS_UNALIGNED_VIDEO_PARSE_CLASS
+GST_TYPE_UNALIGNED_VIDEO_PARSE
+<SUBSECTION Private>
+gst_unaligned_video_parse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-uvch264mjpgdemux</FILE>
 <TITLE>uvch264mjpgdemux</TITLE>
 GstUvcH264MjpgDemux
@@ -4049,6 +4081,38 @@ GST_IS_VIDEO_PARSE_CLASS
 GST_TYPE_VIDEO_PARSE
 <SUBSECTION Private>
 gst_video_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rawaudioparse</FILE>
+<TITLE>rawaudioparse</TITLE>
+GstRawAudioParse
+<SUBSECTION Standard>
+GstRawAudioParseClass
+GST_RAW_AUDIO_PARSE
+GST_RAW_AUDIO_PARSE_CAST
+GST_IS_AUDIO_PARSE
+GST_RAW_AUDIO_PARSE_CLASS
+GST_IS_AUDIO_PARSE_CLASS
+GST_TYPE_AUDIO_PARSE
+<SUBSECTION Private>
+gst_raw_audio_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rawvideoparse</FILE>
+<TITLE>rawvideoparse</TITLE>
+GstRawVideoParse
+<SUBSECTION Standard>
+GstRawVideoParseClass
+GST_RAW_VIDEO_PARSE
+GST_RAW_VIDEO_PARSE_CAST
+GST_IS_VIDEO_PARSE
+GST_RAW_VIDEO_PARSE_CLASS
+GST_IS_VIDEO_PARSE_CLASS
+GST_TYPE_VIDEO_PARSE
+<SUBSECTION Private>
+gst_raw_video_parse_get_type
 </SECTION>
 
 <SECTION>
