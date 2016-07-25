@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2016 Carlos Rafael Giani <dv@pseudoterminal.org>
  *
- * gstunalignedaudioparse.c:
+ * gstunalignedvideoparse.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,23 +22,23 @@
 #include <string.h>
 #include <stdio.h>
 #include <gst/gst.h>
-#include <gst/audio/audio.h>
-#include "gstunalignedaudioparse.h"
-#include "unalignedaudio.h"
+#include <gst/video/video.h>
+#include "gstunalignedvideoparse.h"
+#include "unalignedvideo.h"
 
 
-GST_DEBUG_CATEGORY (unaligned_audio_parse_debug);
-#define GST_CAT_DEFAULT unaligned_audio_parse_debug
+GST_DEBUG_CATEGORY (unaligned_video_parse_debug);
+#define GST_CAT_DEFAULT unaligned_video_parse_debug
 
 
-struct _GstUnalignedAudioParse
+struct _GstUnalignedVideoParse
 {
   GstBin parent;
   GstElement *inner_parser;
 };
 
 
-struct _GstUnalignedAudioParseClass
+struct _GstUnalignedVideoParseClass
 {
   GstBinClass parent_class;
 };
@@ -48,7 +48,7 @@ static GstStaticPadTemplate static_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_UNALIGNED_RAW_AUDIO_CAPS)
+    GST_STATIC_CAPS (GST_UNALIGNED_RAW_VIDEO_CAPS)
     );
 
 
@@ -56,23 +56,22 @@ static GstStaticPadTemplate static_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL)
-        ", layout = (string) { interleaved, non-interleaved }")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL))
     );
 
 
 
 
-G_DEFINE_TYPE (GstUnalignedAudioParse, gst_unaligned_audio_parse, GST_TYPE_BIN);
+G_DEFINE_TYPE (GstUnalignedVideoParse, gst_unaligned_video_parse, GST_TYPE_BIN);
 
 
 static void
-gst_unaligned_audio_parse_class_init (GstUnalignedAudioParseClass * klass)
+gst_unaligned_video_parse_class_init (GstUnalignedVideoParseClass * klass)
 {
   GstElementClass *element_class;
 
-  GST_DEBUG_CATEGORY_INIT (unaligned_audio_parse_debug, "unalignedaudioparse",
-      0, "Unaligned raw audio parser");
+  GST_DEBUG_CATEGORY_INIT (unaligned_video_parse_debug, "unalignedvideoparse",
+      0, "Unaligned raw video parser");
 
   element_class = GST_ELEMENT_CLASS (klass);
 
@@ -82,44 +81,44 @@ gst_unaligned_audio_parse_class_init (GstUnalignedAudioParseClass * klass)
       gst_static_pad_template_get (&static_src_template));
 
   gst_element_class_set_static_metadata (element_class,
-      "unalignedaudioparse",
-      "Codec/Parser/Bin/Audio",
-      "Parse unaligned raw audio data",
+      "unalignedvideoparse",
+      "Codec/Parser/Bin/Video",
+      "Parse unaligned raw video data",
       "Carlos Rafael Giani <dv@pseudoterminal.org>");
 }
 
 
 static void
-gst_unaligned_audio_parse_init (GstUnalignedAudioParse * unaligned_audio_parse)
+gst_unaligned_video_parse_init (GstUnalignedVideoParse * unaligned_video_parse)
 {
   GstPad *inner_pad;
   GstPad *ghostpad;
 
-  unaligned_audio_parse->inner_parser =
-      gst_element_factory_make ("rawaudioaudioparse", "inner_parser");
-  g_assert (unaligned_audio_parse->inner_parser != NULL);
+  unaligned_video_parse->inner_parser =
+      gst_element_factory_make ("rawvideoparse", "inner_parser");
+  g_assert (unaligned_video_parse->inner_parser != NULL);
 
-  g_object_set (G_OBJECT (unaligned_audio_parse->inner_parser),
+  g_object_set (G_OBJECT (unaligned_video_parse->inner_parser),
       "use-sink-caps", TRUE, NULL);
 
-  gst_bin_add (GST_BIN (unaligned_audio_parse),
-      unaligned_audio_parse->inner_parser);
+  gst_bin_add (GST_BIN (unaligned_video_parse),
+      unaligned_video_parse->inner_parser);
 
   inner_pad =
-      gst_element_get_static_pad (unaligned_audio_parse->inner_parser, "sink");
+      gst_element_get_static_pad (unaligned_video_parse->inner_parser, "sink");
   ghostpad =
       gst_ghost_pad_new_from_template ("sink", inner_pad,
       gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
-          (unaligned_audio_parse), "sink"));
-  gst_element_add_pad (GST_ELEMENT (unaligned_audio_parse), ghostpad);
+          (unaligned_video_parse), "sink"));
+  gst_element_add_pad (GST_ELEMENT (unaligned_video_parse), ghostpad);
   gst_object_unref (GST_OBJECT (inner_pad));
 
-  inner_pad = gst_element_get_static_pad (unaligned_audio_parse->inner_parser,
+  inner_pad = gst_element_get_static_pad (unaligned_video_parse->inner_parser,
       "src");
   ghostpad =
       gst_ghost_pad_new_from_template ("src", inner_pad,
       gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
-          (unaligned_audio_parse), "src"));
-  gst_element_add_pad (GST_ELEMENT (unaligned_audio_parse), ghostpad);
+          (unaligned_video_parse), "src"));
+  gst_element_add_pad (GST_ELEMENT (unaligned_video_parse), ghostpad);
   gst_object_unref (GST_OBJECT (inner_pad));
 }
