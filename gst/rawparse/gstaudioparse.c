@@ -22,6 +22,8 @@
  * SECTION:element-audioparse
  *
  * Converts a byte stream into audio frames.
+ *
+ * <note>This element is deprecated. Use #GstRawAudioParse instead.</note>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -32,10 +34,33 @@
  * for now with newer GLib versions (>= 2.31.0) */
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
+#include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include "gstaudioparse.h"
+#include "gstrawaudioparse.h"
 #include "unalignedaudio.h"
 
 #include <string.h>
+
+
+static GstStaticPadTemplate static_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+
+static GstStaticPadTemplate static_src_template =
+    GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL)
+        ", layout = (string) { interleaved, non-interleaved }; "
+        GST_UNALIGNED_RAW_AUDIO_CAPS "; "
+        "audio/x-alaw, rate=(int)[1,MAX], channels=(int)[1,MAX]; "
+        "audio/x-mulaw, rate=(int)[1,MAX], channels=(int)[1,MAX]")
+    );
+
 
 typedef enum
 {
@@ -44,21 +69,10 @@ typedef enum
   GST_AUDIO_PARSE_FORMAT_ALAW
 } GstAudioParseFormat;
 
-typedef enum
-{
-  GST_AUDIO_PARSE_ENDIANNESS_LITTLE = 1234,
-  GST_AUDIO_PARSE_ENDIANNESS_BIG = 4321
-} GstAudioParseEndianness;
-
 static void gst_audio_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_audio_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_audio_parse_finalize (GObject * object);
-
-static GstCaps *gst_audio_parse_get_caps (GstRawParse * rp);
-
-static void gst_audio_parse_update_frame_size (GstAudioParse * ap);
 
 GST_DEBUG_CATEGORY_STATIC (gst_audio_parse_debug);
 #define GST_CAT_DEFAULT gst_audio_parse_debug
@@ -97,21 +111,16 @@ gst_audio_parse_format_get_type (void)
 
 
 #define gst_audio_parse_parent_class parent_class
-G_DEFINE_TYPE (GstAudioParse, gst_audio_parse, GST_TYPE_RAW_PARSE);
+G_DEFINE_TYPE (GstAudioParse, gst_audio_parse, GST_TYPE_BIN);
 
 static void
 gst_audio_parse_class_init (GstAudioParseClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
-  GstRawParseClass *rp_class = GST_RAW_PARSE_CLASS (klass);
-  GstCaps *caps;
 
   gobject_class->set_property = gst_audio_parse_set_property;
   gobject_class->get_property = gst_audio_parse_get_property;
-  gobject_class->finalize = gst_audio_parse_finalize;
-
-  rp_class->get_caps = gst_audio_parse_get_caps;
 
   g_object_class_install_property (gobject_class, PROP_FORMAT,
       g_param_spec_enum ("format", "Format",
@@ -155,18 +164,13 @@ gst_audio_parse_class_init (GstAudioParseClass * klass)
 
   gst_element_class_set_static_metadata (gstelement_class, "Audio Parse",
       "Filter/Audio",
-      "Converts stream into audio frames",
+      "Converts stream into audio frames (deprecated: use rawaudioparse instead)",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  caps = gst_caps_from_string (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL)
-      ", layout = (string) { interleaved, non-interleaved }; "
-      GST_UNALIGNED_RAW_AUDIO_CAPS "; "
-      "audio/x-alaw, rate=(int)[1,MAX], channels=(int)[1,MAX]; "
-      "audio/x-mulaw, rate=(int)[1,MAX], channels=(int)[1,MAX]");
-
-  gst_raw_parse_class_set_src_pad_template (rp_class, caps);
-  gst_raw_parse_class_set_multiple_frames_per_buffer (rp_class, TRUE);
-  gst_caps_unref (caps);
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&static_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&static_src_template));
 
   GST_DEBUG_CATEGORY_INIT (gst_audio_parse_debug, "audioparse", 0,
       "audioparse element");
@@ -175,13 +179,28 @@ gst_audio_parse_class_init (GstAudioParseClass * klass)
 static void
 gst_audio_parse_init (GstAudioParse * ap)
 {
-  ap->format = GST_AUDIO_PARSE_FORMAT_RAW;
-  ap->raw_format = GST_AUDIO_FORMAT_S16;
-  ap->channels = 2;
-  ap->interleaved = TRUE;
+  GstPad *inner_pad;
+  GstPad *ghostpad;
 
-  gst_audio_parse_update_frame_size (ap);
-  gst_raw_parse_set_fps (GST_RAW_PARSE (ap), 44100, 1);
+  ap->rawaudioparse =
+      gst_element_factory_make ("rawaudioparse", "inner_rawaudioparse");
+  g_assert (ap->rawaudioparse != NULL);
+
+  gst_bin_add (GST_BIN (ap), ap->rawaudioparse);
+
+  inner_pad = gst_element_get_static_pad (ap->rawaudioparse, "sink");
+  ghostpad =
+      gst_ghost_pad_new_from_template ("sink", inner_pad,
+      gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (ap), "sink"));
+  gst_element_add_pad (GST_ELEMENT (ap), ghostpad);
+  gst_object_unref (GST_OBJECT (inner_pad));
+
+  inner_pad = gst_element_get_static_pad (ap->rawaudioparse, "src");
+  ghostpad =
+      gst_ghost_pad_new_from_template ("src", inner_pad,
+      gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (ap), "src"));
+  gst_element_add_pad (GST_ELEMENT (ap), ghostpad);
+  gst_object_unref (GST_OBJECT (inner_pad));
 }
 
 static void
@@ -190,39 +209,68 @@ gst_audio_parse_set_property (GObject * object, guint prop_id,
 {
   GstAudioParse *ap = GST_AUDIO_PARSE (object);
 
-  g_return_if_fail (!gst_raw_parse_is_negotiated (GST_RAW_PARSE (ap)));
-
   switch (prop_id) {
-    case PROP_FORMAT:
-      ap->format = g_value_get_enum (value);
-      break;
-    case PROP_RAW_FORMAT:
-      ap->raw_format = g_value_get_enum (value);
-      break;
-    case PROP_RATE:
-      gst_raw_parse_set_fps (GST_RAW_PARSE (ap), g_value_get_int (value), 1);
-      break;
-    case PROP_CHANNELS:
-      ap->channels = g_value_get_int (value);
-      break;
-    case PROP_INTERLEAVED:
-      ap->interleaved = g_value_get_boolean (value);
-      break;
-    case PROP_CHANNEL_POSITIONS:
-      if (ap->channel_positions)
-        g_value_array_free (ap->channel_positions);
+    case PROP_FORMAT:{
+      GstRawAudioParseFormat raw_parse_format;
 
-      ap->channel_positions = g_value_dup_boxed (value);
+      switch (g_value_get_enum (value)) {
+        case GST_AUDIO_PARSE_FORMAT_RAW:
+          raw_parse_format = GST_RAW_AUDIO_PARSE_FORMAT_PCM;
+          break;
+
+        case GST_AUDIO_PARSE_FORMAT_MULAW:
+          raw_parse_format = GST_RAW_AUDIO_PARSE_FORMAT_MULAW;
+          break;
+
+        case GST_AUDIO_PARSE_FORMAT_ALAW:
+          raw_parse_format = GST_RAW_AUDIO_PARSE_FORMAT_ALAW;
+          break;
+
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+
+      g_object_set (G_OBJECT (ap->rawaudioparse), "format", raw_parse_format,
+          NULL);
+
       break;
+    }
+
+    case PROP_RAW_FORMAT:
+      g_object_set (G_OBJECT (ap->rawaudioparse), "pcm-format",
+          g_value_get_enum (value), NULL);
+      break;
+
+    case PROP_RATE:
+      g_object_set (G_OBJECT (ap->rawaudioparse), "sample-rate",
+          g_value_get_int (value), NULL);
+      break;
+
+    case PROP_CHANNELS:
+      g_object_set (G_OBJECT (ap->rawaudioparse), "num-channels",
+          g_value_get_int (value), NULL);
+      break;
+
+    case PROP_INTERLEAVED:
+      g_object_set (G_OBJECT (ap->rawaudioparse), "interleaved",
+          g_value_get_boolean (value), NULL);
+      break;
+
+    case PROP_CHANNEL_POSITIONS:
+      g_object_set (G_OBJECT (ap->rawaudioparse), "channel-positions",
+          g_value_get_boxed (value), NULL);
+      break;
+
     case PROP_USE_SINK_CAPS:
-      ap->use_sink_caps = g_value_get_boolean (value);
+      g_object_set (G_OBJECT (ap->rawaudioparse), "use-sink-caps",
+          g_value_get_boolean (value), NULL);
       break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-
-  gst_audio_parse_update_frame_size (ap);
 }
 
 static void
@@ -232,226 +280,85 @@ gst_audio_parse_get_property (GObject * object, guint prop_id, GValue * value,
   GstAudioParse *ap = GST_AUDIO_PARSE (object);
 
   switch (prop_id) {
-    case PROP_FORMAT:
-      g_value_set_enum (value, ap->format);
-      break;
-    case PROP_RAW_FORMAT:
-      g_value_set_enum (value, ap->raw_format);
-      break;
-    case PROP_RATE:{
-      gint fps_n, fps_d;
+    case PROP_FORMAT:{
+      GstRawAudioParseFormat raw_parse_format;
+      GstAudioParseFormat format;
 
-      gst_raw_parse_get_fps (GST_RAW_PARSE (ap), &fps_n, &fps_d);
-      g_value_set_int (value, fps_n);
+      g_object_get (G_OBJECT (ap->rawaudioparse), "format", &raw_parse_format,
+          NULL);
+
+      switch (raw_parse_format) {
+        case GST_RAW_AUDIO_PARSE_FORMAT_PCM:
+          format = GST_AUDIO_PARSE_FORMAT_RAW;
+          break;
+
+        case GST_RAW_AUDIO_PARSE_FORMAT_MULAW:
+          format = GST_AUDIO_PARSE_FORMAT_MULAW;
+          break;
+
+        case GST_RAW_AUDIO_PARSE_FORMAT_ALAW:
+          format = GST_AUDIO_PARSE_FORMAT_ALAW;
+          break;
+
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+
+      g_value_set_enum (value, format);
+
       break;
     }
-    case PROP_CHANNELS:
-      g_value_set_int (value, ap->channels);
+
+    case PROP_RAW_FORMAT:{
+      GstAudioFormat format;
+      g_object_get (G_OBJECT (ap->rawaudioparse), "pcm-format", &format, NULL);
+      g_value_set_enum (value, format);
       break;
-    case PROP_INTERLEAVED:
-      g_value_set_boolean (value, ap->interleaved);
+    }
+
+    case PROP_RATE:{
+      gint sample_rate;
+      g_object_get (G_OBJECT (ap->rawaudioparse), "sample-rate", &sample_rate,
+          NULL);
+      g_value_set_int (value, sample_rate);
       break;
-    case PROP_CHANNEL_POSITIONS:
-      g_value_set_boxed (value, ap->channel_positions);
+    }
+
+    case PROP_CHANNELS:{
+      gint num_channels;
+      g_object_get (G_OBJECT (ap->rawaudioparse), "num-channels", &num_channels,
+          NULL);
+      g_value_set_int (value, num_channels);
       break;
-    case PROP_USE_SINK_CAPS:
-      g_value_set_boolean (value, ap->use_sink_caps);
+    }
+
+    case PROP_INTERLEAVED:{
+      gboolean interleaved;
+      g_object_get (G_OBJECT (ap->rawaudioparse), "interleaved", &interleaved,
+          NULL);
+      g_value_set_boolean (value, interleaved);
       break;
+    }
+
+    case PROP_CHANNEL_POSITIONS:{
+      gpointer channel_positions;
+      g_object_get (G_OBJECT (ap->rawaudioparse), "channel-positions",
+          &channel_positions, NULL);
+      g_value_set_boxed (value, channel_positions);
+      break;
+    }
+
+    case PROP_USE_SINK_CAPS:{
+      gboolean use_sink_caps;
+      g_object_get (G_OBJECT (ap->rawaudioparse), "use-sink-caps",
+          &use_sink_caps, NULL);
+      g_value_set_boolean (value, use_sink_caps);
+      break;
+    }
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static void
-gst_audio_parse_finalize (GObject * object)
-{
-  GstAudioParse *ap = GST_AUDIO_PARSE (object);
-
-  if (ap->channel_positions) {
-    g_value_array_free (ap->channel_positions);
-    ap->channel_positions = NULL;
-  }
-
-  g_free (ap->channel_pos);
-  g_free (ap->channel_order);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-void
-gst_audio_parse_update_frame_size (GstAudioParse * ap)
-{
-  gint framesize, width;
-
-  switch (ap->format) {
-    case GST_AUDIO_PARSE_FORMAT_ALAW:
-    case GST_AUDIO_PARSE_FORMAT_MULAW:
-      width = 8;
-      break;
-    case GST_AUDIO_PARSE_FORMAT_RAW:
-    default:
-    {
-      GstAudioInfo info;
-
-      gst_audio_info_init (&info);
-      /* rate, etc do not really matter here */
-      gst_audio_info_set_format (&info, ap->raw_format, 44100, ap->channels,
-          NULL);
-      width = GST_AUDIO_INFO_WIDTH (&info);
-      break;
-    }
-  }
-
-  framesize = (width / 8) * ap->channels;
-
-  gst_raw_parse_set_framesize (GST_RAW_PARSE (ap), framesize);
-}
-
-static GstAudioChannelPosition *
-gst_audio_parse_get_channel_positions (GValueArray * positions)
-{
-  gint i;
-  guint channels;
-  GstAudioChannelPosition *pos;
-
-  channels = positions->n_values;
-  pos = g_new (GstAudioChannelPosition, positions->n_values);
-
-  for (i = 0; i < channels; i++) {
-    GValue *v = g_value_array_get_nth (positions, i);
-
-    pos[i] = g_value_get_enum (v);
-  }
-
-  return pos;
-}
-
-static void
-gst_audio_parse_setup_channel_positions (GstAudioParse * ap)
-{
-  GstAudioChannelPosition *pos, *to;
-
-  g_free (ap->channel_pos);
-  g_free (ap->channel_order);
-  ap->channel_pos = NULL;
-  ap->channel_order = NULL;
-
-  if (!ap->channel_positions) {
-    GST_DEBUG_OBJECT (ap, "no channel positions");
-    /* implicit mapping for 1- and 2-channel audio is okay */
-    /* will come up with one in other cases also */
-    return;
-  }
-
-  pos = gst_audio_parse_get_channel_positions (ap->channel_positions);
-  if (ap->channels != ap->channel_positions->n_values ||
-      !gst_audio_check_valid_channel_positions (pos, ap->channels, FALSE)) {
-    GST_DEBUG_OBJECT (ap, "invalid channel position");
-    g_free (pos);
-    return;
-  }
-
-  /* ok, got something we can work with now */
-  to = g_new (GstAudioChannelPosition, ap->channels);
-  memcpy (to, pos, ap->channels * sizeof (to[0]));
-  gst_audio_channel_positions_to_valid_order (to, ap->channels);
-
-  ap->channel_pos = pos;
-  ap->channel_order = to;
-}
-
-static GstCaps *
-gst_audio_parse_get_caps (GstRawParse * rp)
-{
-  GstAudioParse *ap = GST_AUDIO_PARSE (rp);
-  GstCaps *caps, *ncaps;
-  GstAudioInfo info;
-  gint fps_n, fps_d;
-  const GValue *val;
-
-  if (ap->use_sink_caps) {
-    gint rate;
-    GstCaps *caps = gst_pad_get_current_caps (rp->sinkpad);
-    GstStructure *structure;
-
-    if (!caps) {
-      GST_WARNING_OBJECT (ap,
-          "Sink pad has no caps, but we were asked to use its caps");
-      return NULL;
-    }
-
-    /* For unaligned raw data, the output caps stay the same,
-     * except that audio/x-unaligned-raw becomes audio/x-raw,
-     * since audioparse aligns the sample data */
-    structure = gst_caps_get_structure (caps, 0);
-    if (gst_structure_has_name (structure, "audio/x-unaligned-raw")) {
-      caps = gst_caps_make_writable (caps);
-      structure = gst_caps_get_structure (caps, 0);
-      gst_structure_set_name (structure, "audio/x-raw");
-    }
-
-    if (!gst_audio_info_from_caps (&info, caps)) {
-      GST_WARNING_OBJECT (ap, "Failed to parse caps %" GST_PTR_FORMAT, caps);
-      gst_caps_unref (caps);
-      return NULL;
-    }
-
-    ap->format = GST_AUDIO_PARSE_FORMAT_RAW;
-    ap->raw_format = GST_AUDIO_INFO_FORMAT (&info);
-    ap->channels = GST_AUDIO_INFO_CHANNELS (&info);
-    ap->interleaved = info.layout == GST_AUDIO_LAYOUT_INTERLEAVED;
-
-    rate = GST_AUDIO_INFO_RATE (&info);
-    gst_raw_parse_set_fps (GST_RAW_PARSE (ap), rate, 1);
-    gst_audio_parse_update_frame_size (ap);
-
-    return caps;
-  }
-
-  gst_raw_parse_get_fps (rp, &fps_n, &fps_d);
-  gst_audio_parse_setup_channel_positions (ap);
-
-  /* yes, even when format not raw */
-  gst_audio_info_init (&info);
-  gst_audio_info_set_format (&info, ap->raw_format, fps_n, ap->channels,
-      ap->channel_order);
-  info.layout = ap->interleaved ? GST_AUDIO_LAYOUT_INTERLEAVED :
-      GST_AUDIO_LAYOUT_NON_INTERLEAVED;
-  caps = gst_audio_info_to_caps (&info);
-
-  switch (ap->format) {
-    case GST_AUDIO_PARSE_FORMAT_RAW:
-      break;
-    case GST_AUDIO_PARSE_FORMAT_ALAW:
-      ncaps = gst_caps_new_simple ("audio/x-alaw",
-          "rate", G_TYPE_INT, fps_n,
-          "channels", G_TYPE_INT, ap->channels, NULL);
-      /* pick mask stuff from faked raw format */
-      val = gst_structure_get_value (gst_caps_get_structure (caps, 0),
-          "channel-mask");
-      if (val)
-        gst_caps_set_value (ncaps, "channel-mask", val);
-      gst_caps_unref (caps);
-      caps = ncaps;
-      break;
-    case GST_AUDIO_PARSE_FORMAT_MULAW:
-      ncaps = gst_caps_new_simple ("audio/x-mulaw",
-          "rate", G_TYPE_INT, fps_n,
-          "channels", G_TYPE_INT, ap->channels, NULL);
-      /* pick mask stuff from faked raw format */
-      val = gst_structure_get_value (gst_caps_get_structure (caps, 0),
-          "channel-mask");
-      if (val)
-        gst_caps_set_value (ncaps, "channel-mask", val);
-      gst_caps_unref (caps);
-      caps = ncaps;
-      break;
-    default:
-      caps = gst_caps_new_empty ();
-      GST_ERROR_OBJECT (rp, "unexpected format %d", ap->format);
-      break;
-  }
-
-  return caps;
 }
