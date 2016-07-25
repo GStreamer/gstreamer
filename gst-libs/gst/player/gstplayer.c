@@ -84,12 +84,14 @@ static GQuark QUARK_CONFIG;
 typedef enum
 {
   CONFIG_QUARK_USER_AGENT = 0,
+  CONFIG_QUARK_POSITION_INTERVAL_UPDATE,
 
   CONFIG_QUARK_MAX
 } ConfigQuarkId;
 
 static const gchar *_config_quark_strings[] = {
   "user-agent",
+  "position-interval-update",
 };
 
 GQuark _config_quark_table[CONFIG_QUARK_MAX];
@@ -113,7 +115,6 @@ enum
   PROP_MUTE,
   PROP_RATE,
   PROP_PIPELINE,
-  PROP_POSITION_UPDATE_INTERVAL,
   PROP_VIDEO_MULTIVIEW_MODE,
   PROP_VIDEO_MULTIVIEW_FLAGS,
   PROP_AUDIO_VIDEO_OFFSET,
@@ -169,7 +170,6 @@ struct _GstPlayer
   GSource *tick_source, *ready_timeout_source;
 
   gdouble rate;
-  guint position_update_interval_ms;
 
   GstPlayerState app_state;
   gint buffering;
@@ -218,8 +218,6 @@ static gboolean gst_player_stop_internal (gpointer user_data);
 static gboolean gst_player_pause_internal (gpointer user_data);
 static gboolean gst_player_play_internal (gpointer user_data);
 static gboolean gst_player_set_rate_internal (gpointer user_data);
-static gboolean gst_player_set_position_update_interval_internal (gpointer
-    user_data);
 static void change_state (GstPlayer * self, GstPlayerState state);
 
 static GstPlayerMediaInfo *gst_player_media_info_create (GstPlayer * self);
@@ -263,9 +261,12 @@ gst_player_init (GstPlayer * self)
   self->context = g_main_context_new ();
   self->loop = g_main_loop_new (self->context, FALSE);
 
-  self->config = gst_structure_new_id_empty (QUARK_CONFIG);
+  /* *INDENT-OFF* */
+  self->config = gst_structure_new_id (QUARK_CONFIG,
+      CONFIG_QUARK (POSITION_INTERVAL_UPDATE), G_TYPE_UINT, DEFAULT_POSITION_UPDATE_INTERVAL_MS,
+      NULL);
+  /* *INDENT-ON* */
 
-  self->position_update_interval_ms = DEFAULT_POSITION_UPDATE_INTERVAL_MS;
   self->seek_pending = FALSE;
   self->seek_position = GST_CLOCK_TIME_NONE;
   self->last_seek_time = GST_CLOCK_TIME_NONE;
@@ -366,13 +367,6 @@ gst_player_class_init (GstPlayerClass * klass)
   param_specs[PROP_RATE] =
       g_param_spec_double ("rate", "rate", "Playback rate",
       -64.0, 64.0, DEFAULT_RATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-
-  param_specs[PROP_POSITION_UPDATE_INTERVAL] =
-      g_param_spec_uint ("position-update-interval", "Position update interval",
-      "Interval in milliseconds between two position-updated signals."
-      "Pass 0 to stop updating the position.",
-      0, 10000, DEFAULT_POSITION_UPDATE_INTERVAL_MS,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   param_specs[PROP_VIDEO_MULTIVIEW_MODE] =
       g_param_spec_enum ("video-multiview-mode",
@@ -672,15 +666,6 @@ gst_player_set_property (GObject * object, guint prop_id,
       GST_DEBUG_OBJECT (self, "Set mute=%d", g_value_get_boolean (value));
       g_object_set_property (G_OBJECT (self->playbin), "mute", value);
       break;
-    case PROP_POSITION_UPDATE_INTERVAL:
-      g_mutex_lock (&self->lock);
-      self->position_update_interval_ms = g_value_get_uint (value);
-      GST_DEBUG_OBJECT (self, "Set position update interval=%u ms",
-          g_value_get_uint (value));
-      g_mutex_unlock (&self->lock);
-
-      gst_player_set_position_update_interval_internal (self);
-      break;
     case PROP_VIDEO_MULTIVIEW_MODE:
       GST_DEBUG_OBJECT (self, "Set multiview mode=%u",
           g_value_get_enum (value));
@@ -782,11 +767,6 @@ gst_player_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PIPELINE:
       g_value_set_object (value, self->playbin);
-      break;
-    case PROP_POSITION_UPDATE_INTERVAL:
-      g_mutex_lock (&self->lock);
-      g_value_set_uint (value, gst_player_get_position_update_interval (self));
-      g_mutex_unlock (&self->lock);
       break;
     case PROP_VIDEO_MULTIVIEW_MODE:{
       g_object_get_property (G_OBJECT (self->playbin), "video-multiview-mode",
@@ -932,13 +912,17 @@ tick_cb (gpointer user_data)
 static void
 add_tick_source (GstPlayer * self)
 {
+  guint position_update_interval_ms;
+
   if (self->tick_source)
     return;
 
-  if (!self->position_update_interval_ms)
+  position_update_interval_ms =
+      gst_player_config_get_position_update_interval (self->config);
+  if (!position_update_interval_ms)
     return;
 
-  self->tick_source = g_timeout_source_new (self->position_update_interval_ms);
+  self->tick_source = g_timeout_source_new (position_update_interval_ms);
   g_source_set_callback (self->tick_source, (GSourceFunc) tick_cb, self, NULL);
   g_source_attach (self->tick_source, self->context);
 }
@@ -3092,59 +3076,6 @@ gst_player_get_rate (GstPlayer * self)
   return self->rate;
 }
 
-static gboolean
-gst_player_set_position_update_interval_internal (gpointer user_data)
-{
-  GstPlayer *self = user_data;
-
-  g_mutex_lock (&self->lock);
-
-  if (self->tick_source) {
-    remove_tick_source (self);
-    add_tick_source (self);
-  }
-
-  g_mutex_unlock (&self->lock);
-
-  return G_SOURCE_REMOVE;
-}
-
-/**
- * gst_player_set_position_update_interval:
- * @player: #GstPlayer instance
- * @interval: interval in ms
- *
- * Set interval in milliseconds between two position-updated signals.
- * Pass 0 to stop updating the position.
- */
-void
-gst_player_set_position_update_interval (GstPlayer * self, guint interval)
-{
-  g_return_if_fail (GST_IS_PLAYER (self));
-  g_return_if_fail (interval <= 10000);
-
-  g_mutex_lock (&self->lock);
-  self->position_update_interval_ms = interval;
-  g_mutex_unlock (&self->lock);
-
-  gst_player_set_position_update_interval_internal (self);
-}
-
-/**
- * gst_player_get_position_update_interval:
- * @player: #GstPlayer instance
- *
- * Returns: current position update interval in milliseconds
- */
-guint
-gst_player_get_position_update_interval (GstPlayer * self)
-{
-  g_return_val_if_fail (GST_IS_PLAYER (self),
-      DEFAULT_POSITION_UPDATE_INTERVAL_MS);
-
-  return self->position_update_interval_ms;
-}
-
 /**
  * gst_player_seek:
  * @player: #GstPlayer instance
@@ -4226,4 +4157,44 @@ gst_player_config_get_user_agent (GstStructure * config)
       CONFIG_QUARK (USER_AGENT), G_TYPE_STRING, &agent, NULL);
 
   return agent;
+}
+
+/**
+ * gst_player_config_set_position_update_interval:
+ * @config: a #GstPlayer configuration
+ * @interval: interval in ms
+ *
+ * set interval in milliseconds between two position-updated signals.
+ * pass 0 to stop updating the position.
+ * Since 1.10
+ */
+void
+gst_player_config_set_position_update_interval (GstStructure * config,
+    guint interval)
+{
+  g_return_if_fail (config != NULL);
+  g_return_if_fail (interval <= 10000);
+
+  gst_structure_id_set (config,
+      CONFIG_QUARK (POSITION_INTERVAL_UPDATE), G_TYPE_UINT, interval, NULL);
+}
+
+/**
+ * gst_player_config_get_position_update_interval:
+ * @player: #GstPlayer instance
+ *
+ * Returns: current position update interval in milliseconds
+ * Since 1.10
+ */
+guint
+gst_player_config_get_position_update_interval (GstStructure * config)
+{
+  guint interval = DEFAULT_POSITION_UPDATE_INTERVAL_MS;
+
+  g_return_val_if_fail (config != NULL, DEFAULT_POSITION_UPDATE_INTERVAL_MS);
+
+  gst_structure_id_get (config,
+      CONFIG_QUARK (POSITION_INTERVAL_UPDATE), G_TYPE_UINT, &interval, NULL);
+
+  return interval;
 }

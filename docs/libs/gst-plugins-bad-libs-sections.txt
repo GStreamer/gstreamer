@@ -1708,9 +1708,6 @@ gst_player_get_pipeline
 gst_player_set_config
 gst_player_get_config
 
-gst_player_set_position_update_interval
-gst_player_get_position_update_interval
-
 GstPlayerState
 gst_player_state_get_name
 
@@ -1767,6 +1764,9 @@ GstPlayerVideoRenderer
 GstPlayerVideoRendererInterface
 
 <SUBSECTION config>
+gst_player_config_set_position_update_interval
+gst_player_config_get_position_update_interval
+
 gst_player_config_set_user_agent
 gst_player_config_get_user_agent
 

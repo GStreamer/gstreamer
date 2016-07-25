@@ -202,6 +202,10 @@ void           gst_player_config_set_user_agent       (GstStructure * config,
                                                        const gchar * agent);
 gchar *        gst_player_config_get_user_agent       (GstStructure * config);
 
+void           gst_player_config_set_position_update_interval  (GstStructure * config,
+                                                                guint          interval);
+guint          gst_player_config_get_position_update_interval  (GstStructure * config);
+
 G_END_DECLS
 
 #endif /* __GST_PLAYER_H__ */
