@@ -3917,8 +3917,6 @@ gst_player_get_audio_video_offset (GstPlayer * self)
  *
  * Sets audio-video-offset property by value of @offset
  *
- * Returns: void
- *
  * Since 1.10
  */
 void
@@ -4181,9 +4179,10 @@ gst_player_config_set_position_update_interval (GstStructure * config,
 
 /**
  * gst_player_config_get_position_update_interval:
- * @player: #GstPlayer instance
+ * @config: a #GstPlayer configuration
  *
  * Returns: current position update interval in milliseconds
+ *
  * Since 1.10
  */
 guint
