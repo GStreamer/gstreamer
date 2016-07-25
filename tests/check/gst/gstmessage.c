@@ -501,6 +501,106 @@ GST_START_TEST (test_parsing)
     gst_caps_unref (caps1);
     gst_caps_unref (caps2);
   }
+  /* GST_MESSAGE_REDIRECT */
+  {
+    const gchar *parsed_location;
+    GstTagList *parsed_tag_list;
+    const GstStructure *parsed_structure;
+    const gchar *test_location = "some-location";
+    const gchar *test_struct_name = "test-struct";
+    const gchar *test_value_name = "foo";
+    const gint test_value = 12345;
+    const guint test_bitrate = 120000;
+    gint value;
+    guint bitrate;
+    GstTagList *test_tag_list;
+    GstStructure *test_structure;
+
+    test_structure =
+        gst_structure_new (test_struct_name, test_value_name, G_TYPE_INT,
+        test_value, NULL);
+
+    /* Create a test tag list. It is ref'd  before adding an entry to be able
+     * to test that new_redirect takes ownership */
+    test_tag_list = gst_tag_list_new (GST_TAG_BITRATE, test_bitrate, NULL);
+
+    /* Create the message and add the first entry, which only has a location
+     * and a tag list */
+    gst_tag_list_ref (test_tag_list);
+    message =
+        gst_message_new_redirect (NULL, test_location, test_tag_list, NULL);
+    fail_if (message == NULL);
+    fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_REDIRECT);
+    fail_unless (GST_MESSAGE_SRC (message) == NULL);
+
+    /* Add the second entry, which only has a location and a structure */
+    gst_message_add_redirect_entry (message, test_location, NULL,
+        gst_structure_copy (test_structure));
+
+    /* Add the third entry, which has a location, a taglist, and a structure */
+    gst_tag_list_ref (test_tag_list);
+    gst_message_add_redirect_entry (message, test_location, test_tag_list,
+        gst_structure_copy (test_structure));
+
+    fail_unless (gst_message_get_num_redirect_entries (message) == 3);
+
+    /* Check that the location of the first entry is correct and that the
+     * structure pointer is set to NULL */
+    parsed_location = NULL;
+    parsed_tag_list = NULL;
+    parsed_structure = (const GstStructure *) 0x1;
+    gst_message_parse_redirect_entry (message, 0, &parsed_location,
+        &parsed_tag_list, &parsed_structure);
+    fail_unless (parsed_location != NULL);
+    fail_unless (parsed_tag_list != NULL);
+    fail_unless (parsed_structure == NULL);
+    fail_unless (!strcmp (parsed_location, test_location));
+    fail_unless (gst_tag_list_get_uint (parsed_tag_list, GST_TAG_BITRATE,
+            &bitrate) && (bitrate == test_bitrate));
+
+    /* Check that the structure of the second entry is correct and that the
+     * tag list pointer is set to NULL */
+    parsed_location = NULL;
+    parsed_tag_list = (GstTagList *) 0x1;
+    parsed_structure = NULL;
+    gst_message_parse_redirect_entry (message, 1, &parsed_location,
+        &parsed_tag_list, &parsed_structure);
+    fail_unless (parsed_location != NULL);
+    fail_unless (parsed_tag_list == NULL);
+    fail_unless (parsed_structure != NULL);
+    fail_unless (!strcmp (parsed_location, test_location));
+    fail_unless (!strcmp (gst_structure_get_name (parsed_structure),
+            test_struct_name));
+    fail_unless (gst_structure_get_int (parsed_structure, test_value_name,
+            &value) && (value == test_value));
+
+    /* Check that the location, tag list, and structure pointers of the
+     * third entry are correct */
+    parsed_location = NULL;
+    parsed_tag_list = NULL;
+    parsed_structure = NULL;
+    gst_message_parse_redirect_entry (message, 2, &parsed_location,
+        &parsed_tag_list, &parsed_structure);
+    fail_unless (parsed_location != NULL);
+    fail_unless (parsed_tag_list != NULL);
+    fail_unless (parsed_structure != NULL);
+    fail_unless (!strcmp (parsed_location, test_location));
+    fail_unless (!strcmp (gst_structure_get_name (parsed_structure),
+            test_struct_name));
+    fail_unless (gst_tag_list_get_uint (parsed_tag_list, GST_TAG_BITRATE,
+            &bitrate) && (bitrate == test_bitrate));
+    fail_unless (gst_structure_get_int (parsed_structure, test_value_name,
+            &value) && (value == test_value));
+
+    gst_message_unref (message);
+
+    /* Since the message takes ownership over the tag list, its refcount
+     * must have been decreased after each added entry */
+    fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT_VALUE (test_tag_list), 1);
+
+    gst_structure_free (test_structure);
+    gst_tag_list_unref (test_tag_list);
+  }
 }
 
 GST_END_TEST;

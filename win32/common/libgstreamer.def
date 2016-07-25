@@ -700,6 +700,8 @@ EXPORTS
 	gst_memory_resize
 	gst_memory_share
 	gst_memory_unmap
+	gst_message_add_redirect_entry
+	gst_message_get_num_redirect_entries
 	gst_message_get_seqnum
 	gst_message_get_stream_status_object
 	gst_message_get_structure
@@ -728,6 +730,7 @@ EXPORTS
 	gst_message_new_progress
 	gst_message_new_property_notify
 	gst_message_new_qos
+	gst_message_new_redirect
 	gst_message_new_request_state
 	gst_message_new_reset_time
 	gst_message_new_segment_done
@@ -765,6 +768,7 @@ EXPORTS
 	gst_message_parse_qos
 	gst_message_parse_qos_stats
 	gst_message_parse_qos_values
+	gst_message_parse_redirect_entry
 	gst_message_parse_request_state
 	gst_message_parse_reset_time
 	gst_message_parse_segment_done

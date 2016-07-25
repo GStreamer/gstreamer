@@ -1678,6 +1678,11 @@ gst_message_streams_selected_add
 gst_message_streams_selected_get_size
 gst_message_streams_selected_get_stream
 
+gst_message_new_redirect
+gst_message_add_redirect_entry
+gst_message_parse_redirect_entry
+gst_message_get_num_redirect_entries
+
 <SUBSECTION Standard>
 GstMessageClass
 GST_MESSAGE
