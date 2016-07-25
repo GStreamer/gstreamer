@@ -4145,7 +4145,7 @@ gst_player_config_set_user_agent (GstStructure * config, const gchar * agent)
  * Since 1.10
  */
 gchar *
-gst_player_config_get_user_agent (GstStructure * config)
+gst_player_config_get_user_agent (const GstStructure * config)
 {
   gchar *agent = NULL;
 
@@ -4186,7 +4186,7 @@ gst_player_config_set_position_update_interval (GstStructure * config,
  * Since 1.10
  */
 guint
-gst_player_config_get_position_update_interval (GstStructure * config)
+gst_player_config_get_position_update_interval (const GstStructure * config)
 {
   guint interval = DEFAULT_POSITION_UPDATE_INTERVAL_MS;
 
