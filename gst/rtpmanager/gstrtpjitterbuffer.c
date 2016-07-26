@@ -3678,8 +3678,10 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   next_in_seqnum = (seqnum + lost_packets) & 0xffff;
 
   /* we now only accept seqnum bigger than this */
-  if (gst_rtp_buffer_compare_seqnum (priv->next_in_seqnum, next_in_seqnum) > 0)
+  if (gst_rtp_buffer_compare_seqnum (priv->next_in_seqnum, next_in_seqnum) > 0) {
     priv->next_in_seqnum = next_in_seqnum;
+    priv->last_in_dts = apply_offset (jitterbuffer, timer->timeout);
+  }
 
   /* Avoid creating events if we don't need it. Note that we still need to create
    * the lost *ITEM* since it will be used to notify the outgoing thread of

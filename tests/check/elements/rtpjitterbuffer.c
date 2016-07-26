@@ -1875,8 +1875,6 @@ GST_START_TEST (test_gap_exceeds_latency)
   GstTestClock *testclock;
   const gint jb_latency_ms = 200;
 
-  guint32 timestamp_ms = 0;
-  guint32 rtp_ts = 0;
   gint i;
   GstEvent *out_event;
   GstBuffer *out_buf;
@@ -1893,10 +1891,7 @@ GST_START_TEST (test_gap_exceeds_latency)
   fail_unless_equals_int (GST_FLOW_OK,
       gst_harness_push (h, generate_test_buffer (0)));
 
-  timestamp_ms += 20;
-  rtp_ts += PCMU_RTP_TS_DURATION;
-  gst_harness_set_time (h, timestamp_ms * GST_MSECOND);
-
+  gst_harness_set_time (h, 1 * PCMU_BUF_DURATION);
   fail_unless_equals_int (GST_FLOW_OK,
       gst_harness_push (h, generate_test_buffer (1)));
 
@@ -1931,12 +1926,23 @@ GST_START_TEST (test_gap_exceeds_latency)
   fail_unless_equals_int (GST_FLOW_OK,
       gst_harness_push (h, generate_test_buffer (16)));
 
-  /* FIXME: something is up with the timestamp here!!?! */
+  /* Manually check the first rtx event */
   out_event = gst_harness_pull_upstream_event (h);
-  verify_rtx_event (out_event, 6, 119999994, 10, PCMU_BUF_DURATION);
-  /* lost more rtx with weird timestamps... */
+  verify_rtx_event (out_event, 6, 6 * PCMU_BUF_DURATION, 10, PCMU_BUF_DURATION);
+  /* Go throught the rest of rtx events. A bit more relaxed since order is
+   * partly an implentation detail. */
   for (i = 0; i < 12; i++) {
-    gst_event_unref (gst_harness_pull_upstream_event (h));
+    const GstStructure *s;
+    guint seqnum, retry;
+
+    fail_unless (out_event = gst_harness_pull_upstream_event (h));
+    fail_unless (s = gst_event_get_structure (out_event));
+    fail_unless (gst_structure_get_uint (s, "seqnum", &seqnum));
+    fail_unless (gst_structure_get_uint (s, "retry", &retry));
+    fail_unless (seqnum >= 6 && seqnum <= 12);
+
+    verify_rtx_event (out_event, seqnum, seqnum * PCMU_BUF_DURATION,
+        10 + retry * 40, PCMU_BUF_DURATION);
   }
 
   fail_unless_equals_int (0, gst_harness_upstream_events_in_queue (h));
@@ -1948,19 +1954,20 @@ GST_START_TEST (test_gap_exceeds_latency)
         gst_harness_push (h, generate_test_buffer (i)));
   }
 
-  /* FIXME: wtf is going on with timestamps and durations here??!? */
   gst_harness_crank_single_clock_wait (h);
   out_event = gst_harness_pull_event (h);
-  verify_lost_event (out_event, 3, 41428571, 78571423);
-
-  /* FIXME: and these rtx... */
-  gst_harness_crank_single_clock_wait (h);
-  out_event = gst_harness_pull_event (h);
-  verify_lost_event (out_event, 6, 119999994, 21428571);
+  verify_lost_event (out_event, 3, 3 * PCMU_BUF_DURATION,
+      3 * PCMU_BUF_DURATION);
 
   gst_harness_crank_single_clock_wait (h);
   out_event = gst_harness_pull_event (h);
-  verify_lost_event (out_event, 7, 141428565, 21428571);
+  verify_lost_event (out_event, 6, 6 * PCMU_BUF_DURATION,
+      1 * PCMU_BUF_DURATION);
+
+  gst_harness_crank_single_clock_wait (h);
+  out_event = gst_harness_pull_event (h);
+  verify_lost_event (out_event, 7, 7 * PCMU_BUF_DURATION,
+      1 * PCMU_BUF_DURATION);
 
   /* 8 */
   for (i = 8; i <= 16; i++) {
