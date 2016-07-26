@@ -23,15 +23,19 @@
 #endif
 
 #include "ges-validate.h"
+
+#include <string.h>
 #include <ges/ges.h>
 
 #ifdef HAVE_GST_VALIDATE
 #include <gst/validate/gst-validate-scenario.h>
 #include <gst/validate/validate.h>
 #include <gst/validate/gst-validate-utils.h>
+#include <gst/validate/gst-validate-element-monitor.h>
 
 #define MONITOR_ON_PIPELINE "validate-monitor"
 #define RUNNER_ON_PIPELINE "runner-monitor"
+#define WRONG_DECODER_ADDED g_quark_from_static_string ("ges::wrong-decoder-added")
 
 static void
 _validate_report_added_cb (GstValidateRunner * runner,
@@ -43,6 +47,60 @@ _validate_report_added_cb (GstValidateRunner * runner,
   }
 }
 
+static void
+bin_element_added (GstTracer * runner, GstClockTime ts,
+    GstBin * bin, GstElement * element, gboolean result)
+{
+  GstObject *parent;
+  GstValidateElementMonitor *monitor =
+      g_object_get_data (G_OBJECT (element), "validate-monitor");
+
+  if (!monitor)
+    return;
+
+  if (!monitor->is_decoder)
+    return;
+
+
+  parent = gst_object_get_parent (GST_OBJECT (element));
+  do {
+    if (GES_IS_TRACK (parent)) {
+      GstElementClass *klass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
+      const gchar *klassname =
+          gst_element_class_get_metadata (klass, GST_ELEMENT_METADATA_KLASS);
+
+      if (GES_IS_AUDIO_TRACK (parent) && strstr (klassname, "Audio") == NULL) {
+        GST_VALIDATE_REPORT (monitor, WRONG_DECODER_ADDED,
+            "Adding non audio decoder %s in audio track %s.",
+            GST_OBJECT_NAME (element), GST_OBJECT_NAME (parent));
+      } else if (GES_IS_VIDEO_TRACK (parent)
+          && strstr (klassname, "Video") == NULL
+          && strstr (klassname, "Image") == NULL) {
+        GST_VALIDATE_REPORT (monitor, WRONG_DECODER_ADDED,
+            "Adding non video decoder %s in video track %s.",
+            GST_OBJECT_NAME (element), GST_OBJECT_NAME (parent));
+
+      }
+      gst_object_unref (parent);
+      break;
+    }
+
+    gst_object_unref (parent);
+    parent = gst_object_get_parent (parent);
+  } while (parent);
+}
+
+static void
+ges_validate_register_issues (void)
+{
+  gst_validate_issue_register (gst_validate_issue_new (WRONG_DECODER_ADDED,
+          "Wrong decoder type added to track.",
+          "In a specific track type we should never create decoders"
+          " for some other types (No audio decoder should be added"
+          " in a Video track).", GST_VALIDATE_REPORT_LEVEL_CRITICAL));
+}
+
+
 gboolean
 ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
     gboolean * needs_setting_state)
@@ -51,6 +109,7 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
   GstValidateMonitor *monitor = NULL;
 
   ges_validate_register_action_types ();
+  ges_validate_register_issues ();
 
   if (scenario) {
     if (g_strcmp0 (scenario, "none")) {
@@ -61,6 +120,8 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
   }
 
   runner = gst_validate_runner_new ();
+  gst_tracing_register_hook (GST_TRACER (runner), "bin-add-post",
+      G_CALLBACK (bin_element_added));
   g_signal_connect (runner, "report-added",
       G_CALLBACK (_validate_report_added_cb), pipeline);
   monitor =
