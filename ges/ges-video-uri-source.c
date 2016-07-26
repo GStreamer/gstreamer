@@ -34,7 +34,7 @@
 
 struct _GESVideoUriSourcePrivate
 {
-  void *nothing;
+  GstElement *decodebin;        /* Reference owned by parent class */
 };
 
 enum
@@ -42,6 +42,26 @@ enum
   PROP_0,
   PROP_URI
 };
+
+static void
+ges_video_uri_source_track_set_cb (GESVideoUriSource * self,
+    GParamSpec * arg G_GNUC_UNUSED, gpointer nothing)
+{
+  GESTrack *track;
+  const GstCaps *caps = NULL;
+
+  if (!self->priv->decodebin)
+    return;
+
+  track = ges_track_element_get_track (GES_TRACK_ELEMENT (self));
+  if (!track)
+    return;
+
+  caps = ges_track_get_caps (track);
+
+  GST_INFO_OBJECT (self, "Setting caps to: %" GST_PTR_FORMAT, caps);
+  g_object_set (self->priv->decodebin, "caps", caps, NULL);
+}
 
 /* GESSource VMethod */
 static GstElement *
@@ -58,7 +78,8 @@ ges_video_uri_source_create_source (GESTrackElement * trksrc)
   if (track)
     caps = ges_track_get_caps (track);
 
-  decodebin = gst_element_factory_make ("uridecodebin", NULL);
+  decodebin = self->priv->decodebin = gst_element_factory_make ("uridecodebin",
+      NULL);
 
   g_object_set (decodebin, "caps", caps,
       "expose-all-streams", FALSE, "uri", self->uri, NULL);
@@ -178,6 +199,9 @@ ges_video_uri_source_init (GESVideoUriSource * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_VIDEO_URI_SOURCE, GESVideoUriSourcePrivate);
+
+  g_signal_connect (self, "notify::track",
+      G_CALLBACK (ges_video_uri_source_track_set_cb), NULL);
 }
 
 /**
