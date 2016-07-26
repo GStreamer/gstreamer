@@ -46,6 +46,7 @@ enum
 {
   PROP_0,
   PROP_METHOD,
+  PROP_VIDEO_DIRECTION
 };
 
 static GstStaticPadTemplate _sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -98,11 +99,6 @@ gst_video_flip_method_get_type (void)
   return video_flip_method_type;
 }
 
-#define gst_gl_video_flip_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstGLVideoFlip, gst_gl_video_flip,
-    GST_TYPE_BIN, GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
-        "glvideoflip", 0, "glvideoflip element"););
-
 static void gst_gl_video_flip_finalize (GObject * object);
 static void gst_gl_video_flip_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -113,6 +109,24 @@ static GstPadProbeReturn _input_sink_probe (GstPad * pad,
     GstPadProbeInfo * info, gpointer user_data);
 static GstPadProbeReturn _trans_src_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer user_data);
+
+static void
+gst_gl_video_flip_video_direction_interface_init (GstVideoDirectionInterface
+    * iface);
+
+#define gst_gl_video_flip_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstGLVideoFlip, gst_gl_video_flip,
+    GST_TYPE_BIN, GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
+        "glvideoflip", 0, "glvideoflip element");
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_DIRECTION,
+        gst_gl_video_flip_video_direction_interface_init););
+
+static void
+gst_gl_video_flip_video_direction_interface_init (GstVideoDirectionInterface
+    * iface)
+{
+  /* We implement the video-direction property */
+}
 
 static void
 gst_gl_video_flip_class_init (GstGLVideoFlipClass * klass)
@@ -128,10 +142,13 @@ gst_gl_video_flip_class_init (GstGLVideoFlipClass * klass)
   gobject_class->get_property = gst_gl_video_flip_get_property;
 
   g_object_class_install_property (gobject_class, PROP_METHOD,
-      g_param_spec_enum ("method", "method", "method",
+      g_param_spec_enum ("method", "method",
+          "method (deprecated, use video-direction instead)",
           GST_TYPE_GL_VIDEO_FLIP_METHOD, DEFAULT_METHOD,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
           G_PARAM_STATIC_STRINGS));
+  g_object_class_override_property (gobject_class, PROP_VIDEO_DIRECTION,
+      "video-direction");
 
   gst_element_class_add_static_pad_template (element_class, &_src_template);
   gst_element_class_add_static_pad_template (element_class, &_sink_template);
@@ -233,10 +250,10 @@ _transform_caps (GstGLVideoFlip * vf, GstPadDirection direction, GstCaps * caps)
         gst_structure_get_int (structure, "height", &height)) {
 
       switch (vf->active_method) {
-        case GST_GL_VIDEO_FLIP_METHOD_90R:
-        case GST_GL_VIDEO_FLIP_METHOD_90L:
-        case GST_GL_VIDEO_FLIP_METHOD_FLIP_UL_LR:
-        case GST_GL_VIDEO_FLIP_METHOD_FLIP_UR_LL:
+        case GST_VIDEO_ORIENTATION_90R:
+        case GST_VIDEO_ORIENTATION_90L:
+        case GST_VIDEO_ORIENTATION_UL_LR:
+        case GST_VIDEO_ORIENTATION_UR_LL:
           gst_structure_set (structure, "width", G_TYPE_INT, height,
               "height", G_TYPE_INT, width, NULL);
           if (gst_structure_get_fraction (structure, "pixel-aspect-ratio",
@@ -251,10 +268,10 @@ _transform_caps (GstGLVideoFlip * vf, GstPadDirection direction, GstCaps * caps)
             }
           }
           break;
-        case GST_GL_VIDEO_FLIP_METHOD_IDENTITY:
-        case GST_GL_VIDEO_FLIP_METHOD_180:
-        case GST_GL_VIDEO_FLIP_METHOD_FLIP_HORIZ:
-        case GST_GL_VIDEO_FLIP_METHOD_FLIP_VERT:
+        case GST_VIDEO_ORIENTATION_IDENTITY:
+        case GST_VIDEO_ORIENTATION_180:
+        case GST_VIDEO_ORIENTATION_HORIZ:
+        case GST_VIDEO_ORIENTATION_VERT:
           break;
         default:
           g_assert_not_reached ();
@@ -268,7 +285,7 @@ _transform_caps (GstGLVideoFlip * vf, GstPadDirection direction, GstCaps * caps)
 
 /* with object lock */
 static void
-_set_active_method (GstGLVideoFlip * vf, GstGLVideoFlipMethod method,
+_set_active_method (GstGLVideoFlip * vf, GstVideoOrientationMethod method,
     GstCaps * caps)
 {
   gfloat rot_z = 0., scale_x = 1.0, scale_y = 1.0;
@@ -276,34 +293,34 @@ _set_active_method (GstGLVideoFlip * vf, GstGLVideoFlipMethod method,
   GstPad *srcpad;
 
   switch (method) {
-    case GST_GL_VIDEO_FLIP_METHOD_IDENTITY:
+    case GST_VIDEO_ORIENTATION_IDENTITY:
       break;
-    case GST_GL_VIDEO_FLIP_METHOD_90R:
+    case GST_VIDEO_ORIENTATION_90R:
       scale_x *= vf->aspect;
       scale_y *= 1. / vf->aspect;
       rot_z = 90.;
       break;
-    case GST_GL_VIDEO_FLIP_METHOD_180:
+    case GST_VIDEO_ORIENTATION_180:
       rot_z = 180.;
       break;
-    case GST_GL_VIDEO_FLIP_METHOD_90L:
+    case GST_VIDEO_ORIENTATION_90L:
       scale_x *= vf->aspect;
       scale_y *= 1. / vf->aspect;
       rot_z = 270.;
       break;
-    case GST_GL_VIDEO_FLIP_METHOD_FLIP_HORIZ:
+    case GST_VIDEO_ORIENTATION_HORIZ:
       scale_x *= -1.;
       break;
-    case GST_GL_VIDEO_FLIP_METHOD_FLIP_UR_LL:
+    case GST_VIDEO_ORIENTATION_UR_LL:
       scale_x *= -vf->aspect;
       scale_y *= 1. / vf->aspect;
       rot_z = 90.;
       break;
-    case GST_GL_VIDEO_FLIP_METHOD_FLIP_VERT:
+    case GST_VIDEO_ORIENTATION_VERT:
       scale_x *= -1.;
       rot_z = 180.;
       break;
-    case GST_GL_VIDEO_FLIP_METHOD_FLIP_UL_LR:
+    case GST_VIDEO_ORIENTATION_UL_LR:
       scale_x *= -vf->aspect;
       scale_y *= 1. / vf->aspect;
       rot_z = 270.;
@@ -331,10 +348,17 @@ _set_active_method (GstGLVideoFlip * vf, GstGLVideoFlipMethod method,
 }
 
 static void
-gst_gl_video_flip_set_method (GstGLVideoFlip * vf, GstGLVideoFlipMethod method,
-    gboolean from_tag)
+gst_gl_video_flip_set_method (GstGLVideoFlip * vf,
+    GstVideoOrientationMethod method, gboolean from_tag)
 {
   GST_OBJECT_LOCK (vf);
+
+  if (method == GST_VIDEO_ORIENTATION_CUSTOM) {
+    GST_WARNING_OBJECT (vf, "unsupported custom orientation");
+    GST_OBJECT_UNLOCK (vf);
+    return;
+  }
+
   /* Store updated method */
   if (from_tag)
     vf->tag_method = method;
@@ -342,7 +366,7 @@ gst_gl_video_flip_set_method (GstGLVideoFlip * vf, GstGLVideoFlipMethod method,
     vf->method = method;
 
   /* Get the new method */
-  if (vf->method == GST_GL_VIDEO_FLIP_METHOD_AUTO)
+  if (vf->method == GST_VIDEO_ORIENTATION_AUTO)
     method = vf->tag_method;
   else
     method = vf->method;
@@ -367,6 +391,7 @@ gst_gl_video_flip_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_METHOD:
+    case PROP_VIDEO_DIRECTION:
       gst_gl_video_flip_set_method (vf, g_value_get_enum (value), FALSE);
       break;
     default:
@@ -383,6 +408,7 @@ gst_gl_video_flip_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_METHOD:
+    case PROP_VIDEO_DIRECTION:
       g_value_set_enum (value, vf->method);
       break;
     default:
@@ -409,29 +435,25 @@ _input_sink_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
         if (gst_tag_list_get_string (taglist, "image-orientation",
                 &orientation)) {
           if (!g_strcmp0 ("rotate-0", orientation))
-            gst_gl_video_flip_set_method (vf, GST_GL_VIDEO_FLIP_METHOD_IDENTITY,
+            gst_gl_video_flip_set_method (vf, GST_VIDEO_ORIENTATION_IDENTITY,
                 TRUE);
           else if (!g_strcmp0 ("rotate-90", orientation))
-            gst_gl_video_flip_set_method (vf, GST_GL_VIDEO_FLIP_METHOD_90R,
-                TRUE);
+            gst_gl_video_flip_set_method (vf, GST_VIDEO_ORIENTATION_90R, TRUE);
           else if (!g_strcmp0 ("rotate-180", orientation))
-            gst_gl_video_flip_set_method (vf, GST_GL_VIDEO_FLIP_METHOD_180,
-                TRUE);
+            gst_gl_video_flip_set_method (vf, GST_VIDEO_ORIENTATION_180, TRUE);
           else if (!g_strcmp0 ("rotate-270", orientation))
-            gst_gl_video_flip_set_method (vf, GST_GL_VIDEO_FLIP_METHOD_90L,
-                TRUE);
+            gst_gl_video_flip_set_method (vf, GST_VIDEO_ORIENTATION_90L, TRUE);
           else if (!g_strcmp0 ("flip-rotate-0", orientation))
             gst_gl_video_flip_set_method (vf,
-                GST_GL_VIDEO_FLIP_METHOD_FLIP_HORIZ, TRUE);
+                GST_VIDEO_ORIENTATION_HORIZ, TRUE);
           else if (!g_strcmp0 ("flip-rotate-90", orientation))
             gst_gl_video_flip_set_method (vf,
-                GST_GL_VIDEO_FLIP_METHOD_FLIP_UR_LL, TRUE);
+                GST_VIDEO_ORIENTATION_UR_LL, TRUE);
           else if (!g_strcmp0 ("flip-rotate-180", orientation))
-            gst_gl_video_flip_set_method (vf,
-                GST_GL_VIDEO_FLIP_METHOD_FLIP_VERT, TRUE);
+            gst_gl_video_flip_set_method (vf, GST_VIDEO_ORIENTATION_VERT, TRUE);
           else if (!g_strcmp0 ("flip-rotate-270", orientation))
             gst_gl_video_flip_set_method (vf,
-                GST_GL_VIDEO_FLIP_METHOD_FLIP_UL_LR, TRUE);
+                GST_VIDEO_ORIENTATION_UL_LR, TRUE);
 
           g_free (orientation);
         }
