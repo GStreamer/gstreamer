@@ -40,6 +40,10 @@
 #define GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS 0x8CD9
 #endif
 
+#ifndef GL_DEPTH_STENCIL_ATTACHMENT
+#define GL_DEPTH_STENCIL_ATTACHMENT 0x821A
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_gl_framebuffer_debug);
 #define GST_CAT_DEFAULT gst_gl_framebuffer_debug
 
