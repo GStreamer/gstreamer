@@ -57,6 +57,36 @@ struct _GstVideoAlignment
   guint stride_align[GST_VIDEO_MAX_PLANES];
 };
 
+/**
+ * GstVideoOrientationMethod:
+ * @GST_VIDEO_ORIENTATION_IDENTITY: Identity (no rotation)
+ * @GST_VIDEO_ORIENTATION_90R: Rotate clockwise 90 degrees
+ * @GST_VIDEO_ORIENTATION_180: Rotate 180 degrees
+ * @GST_VIDEO_ORIENTATION_90L: Rotate counter-clockwise 90 degrees
+ * @GST_VIDEO_ORIENTATION_HORIZ: Flip horizontally
+ * @GST_VIDEO_ORIENTATION_VERT: Flip vertically
+ * @GST_VIDEO_ORIENTATION_UL_LR: Flip across upper left/lower right diagonal
+ * @GST_VIDEO_ORIENTATION_UR_LL: Flip across upper right/lower left diagonal
+ * @GST_VIDEO_ORIENTATION_AUTO: Select flip method based on image-orientation tag
+ * @GST_VIDEO_ORIENTATION_CUSTOM: Current status depends on plugin internal setup
+ *
+ * The different video orientation methods.
+ *
+ * Since: 1.10
+ */
+typedef enum {
+  GST_VIDEO_ORIENTATION_IDENTITY,
+  GST_VIDEO_ORIENTATION_90R,
+  GST_VIDEO_ORIENTATION_180,
+  GST_VIDEO_ORIENTATION_90L,
+  GST_VIDEO_ORIENTATION_HORIZ,
+  GST_VIDEO_ORIENTATION_VERT,
+  GST_VIDEO_ORIENTATION_UL_LR,
+  GST_VIDEO_ORIENTATION_UR_LL,
+  GST_VIDEO_ORIENTATION_AUTO,
+  GST_VIDEO_ORIENTATION_CUSTOM,
+} GstVideoOrientationMethod;
+
 /* metadata macros */
 /**
  * GST_META_TAG_VIDEO_STR:
@@ -137,6 +167,7 @@ G_END_DECLS
 #include <gst/video/navigation.h>
 #include <gst/video/video-blend.h>
 #include <gst/video/video-event.h>
+#include <gst/video/videodirection.h>
 #include <gst/video/videoorientation.h>
 #include <gst/video/video-overlay-composition.h>
 #include <gst/video/videooverlay.h>

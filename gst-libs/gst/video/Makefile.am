@@ -38,6 +38,7 @@ libgstvideo_@GST_API_VERSION@_la_SOURCES = \
 	gstvideoaffinetransformationmeta.c \
 	gstvideometa.c   	\
 	gstvideopool.c		\
+	videodirection.c	\
 	videoorientation.c	\
 	videooverlay.c          \
 	gstvideodecoder.c       \
@@ -73,6 +74,7 @@ libgstvideo_@GST_API_VERSION@include_HEADERS = \
 	gstvideometa.h		\
 	gstvideoaffinetransformationmeta.h \
 	gstvideopool.h		\
+	videodirection.h 	\
 	videoorientation.h 	\
 	videooverlay.h          \
 	gstvideodecoder.h       \

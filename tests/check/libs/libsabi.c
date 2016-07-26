@@ -62,6 +62,7 @@
 #include <gst/video/gstvideofilter.h>
 #include <gst/video/gstvideosink.h>
 #include <gst/video/colorbalance.h>
+#include <gst/video/videodirection.h>
 #include <gst/video/videoorientation.h>
 #include <gst/video/videooverlay.h>
 #include <gst/video/navigation.h>

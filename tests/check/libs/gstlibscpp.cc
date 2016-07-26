@@ -89,6 +89,7 @@
 #include <gst/video/video.h>
 #include <gst/video/colorbalancechannel.h>
 #include <gst/video/colorbalance.h>
+#include <gst/video/videodirection.h>
 #include <gst/video/videoorientation.h>
 #include <gst/video/videooverlay.h>
 #include <gst/video/navigation.h>

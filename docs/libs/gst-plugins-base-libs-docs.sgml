@@ -209,6 +209,7 @@
       <xi:include href="xml/gstvideosink.xml" />
       <xi:include href="xml/gstcolorbalance.xml" />
       <xi:include href="xml/gstcolorbalancechannel.xml" />
+      <xi:include href="xml/gstvideodirection.xml" />
       <xi:include href="xml/gstvideoorientation.xml" />
       <xi:include href="xml/gstvideooverlay.xml" />
       <xi:include href="xml/gstvideodecoder.xml" />

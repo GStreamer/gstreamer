@@ -43,6 +43,8 @@ gst_video_sink_get_type
 #include <gst/video/colorbalance.h>
 gst_color_balance_get_type
 gst_color_balance_channel_get_type
+#include <gst/video/videodirection.h>
+gst_video_direction_get_type
 #include <gst/video/videoorientation.h>
 gst_video_orientation_get_type
 #include <gst/video/videooverlay.h>

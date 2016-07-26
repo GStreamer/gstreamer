@@ -881,6 +881,19 @@ gst_stream_volume_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gstvideodirection</FILE>
+<INCLUDE>gst/video/videodirection.h</INCLUDE>
+GstVideoDirection
+GstVideoDirectionInterface
+<SUBSECTION Standard>
+GST_TYPE_VIDEO_DIRECTION
+GST_VIDEO_DIRECTION
+GST_IS_VIDEO_DIRECTION
+GST_VIDEO_DIRECTION_GET_INTERFACE
+gst_video_direction_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gstvideoorientation</FILE>
 <INCLUDE>gst/video/videoorientation.h</INCLUDE>
 GstVideoOrientation
@@ -2364,6 +2377,8 @@ GST_META_TAG_VIDEO_STR
 GST_META_TAG_VIDEO_ORIENTATION_STR
 GST_META_TAG_VIDEO_SIZE_STR
 GST_META_TAG_VIDEO_COLORSPACE_STR
+
+GstVideoOrientationMethod
 
 #video-event.h
 <SUBSECTION>

@@ -48,7 +48,7 @@ for lib in allocators app audio fft pbutils riff rtp rtsp sdp tag video ; do
            video-info.h video-frame.h gstvideosink.h gstvideofilter.h \
            gstvideometa.h gstvideopool.h videoorientation.h videooverlay.h \
            gstvideodecoder.h gstvideoencoder.h gstvideoutils.h \
-           video-blend.h video-overlay-composition.h"
+           video-blend.h video-overlay-composition.h videodirection.h"
   fi
 
 CFLAGS=`pkg-config --cflags gstreamer-1.0 gstreamer-$lib-1.0`
