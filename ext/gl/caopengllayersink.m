@@ -492,7 +492,6 @@ gst_ca_opengl_layer_sink_change_state (GstElement * element, GstStateChange tran
       _ensure_gl_setup (ca_sink);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      g_atomic_int_set (&ca_sink->to_quit, 0);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -739,12 +738,6 @@ gst_ca_opengl_layer_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     gst_buffer_unref (stored_buffer);
   if (old_sync)
     gst_buffer_unref (old_sync);
-
-  if (g_atomic_int_get (&ca_sink->to_quit) != 0) {
-    GST_ELEMENT_ERROR (ca_sink, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
-    return GST_FLOW_ERROR;
-  }
 
   return GST_FLOW_OK;
 }
