@@ -32,7 +32,7 @@
 
 struct _GESAudioUriSourcePrivate
 {
-  void *nothing;
+  GstElement *decodebin;        /* Reference owned by parent class */
 };
 
 enum
@@ -40,6 +40,26 @@ enum
   PROP_0,
   PROP_URI
 };
+
+static void
+ges_audio_uri_source_track_set_cb (GESAudioUriSource * self,
+    GParamSpec * arg G_GNUC_UNUSED, gpointer nothing)
+{
+  GESTrack *track;
+  const GstCaps *caps = NULL;
+
+  if (!self->priv->decodebin)
+    return;
+
+  track = ges_track_element_get_track (GES_TRACK_ELEMENT (self));
+  if (!track)
+    return;
+
+  caps = ges_track_get_caps (track);
+
+  GST_INFO_OBJECT (self, "Setting caps to: %" GST_PTR_FORMAT, caps);
+  g_object_set (self->priv->decodebin, "caps", caps, NULL);
+}
 
 /* GESSource VMethod */
 static GstElement *
@@ -54,7 +74,8 @@ ges_audio_uri_source_create_source (GESTrackElement * trksrc)
 
   track = ges_track_element_get_track (trksrc);
 
-  decodebin = gst_element_factory_make ("uridecodebin", NULL);
+  self->priv->decodebin = decodebin =
+      gst_element_factory_make ("uridecodebin", NULL);
 
   if (track)
     caps = ges_track_get_caps (track);
@@ -177,6 +198,9 @@ ges_audio_uri_source_init (GESAudioUriSource * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_AUDIO_URI_SOURCE, GESAudioUriSourcePrivate);
+
+  g_signal_connect (self, "notify::track",
+      G_CALLBACK (ges_audio_uri_source_track_set_cb), NULL);
 }
 
 /**
