@@ -188,6 +188,8 @@ GST_START_TEST (test_glfilterapp)
 }
 
 GST_END_TEST
+#ifdef HAVE_PNG
+#if HAVE_JPEG
 GST_START_TEST (test_gloverlay)
 {
   const gchar *s;
@@ -207,6 +209,8 @@ GST_START_TEST (test_gloverlay)
 }
 
 GST_END_TEST
+#endif
+#endif
 #if GST_GL_HAVE_OPENGL
 #define N_SRCS 13
 GST_START_TEST (test_gltestsrc)
@@ -333,7 +337,7 @@ simple_launch_lines_suite (void)
   tcase_add_test (tc_chain, test_glshader);
   tcase_add_test (tc_chain, test_glfilterapp);
 #ifdef HAVE_PNG
-#ifdef HAVE_JPEG
+#if HAVE_JPEG
   tcase_add_test (tc_chain, test_gloverlay);
 #endif
 #endif
@@ -346,7 +350,7 @@ simple_launch_lines_suite (void)
 #ifdef HAVE_PNG
   tcase_add_test (tc_chain, test_gldifferencematte);
 /*  tcase_add_test (tc_chain, test_glbumper);*/
-#ifdef HAVE_JPEG
+#if HAVE_JPEG
 #endif /* HAVE_JPEG */
 #endif /* HAVE_PNG */
 #endif /* GST_GL_HAVE_OPENGL */
