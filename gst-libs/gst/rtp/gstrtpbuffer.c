@@ -1494,7 +1494,7 @@ get_onebyte_header_end_offset (guint8 * pdata, guint wordlen)
 
 gboolean
 gst_rtp_buffer_add_extension_onebyte_header (GstRTPBuffer * rtp, guint8 id,
-    gpointer data, guint size)
+    gconstpointer data, guint size)
 {
   guint16 bits;
   guint8 *pdata = 0;
@@ -1593,7 +1593,7 @@ get_twobytes_header_end_offset (const guint8 * pdata, guint wordlen)
 
 gboolean
 gst_rtp_buffer_add_extension_twobytes_header (GstRTPBuffer * rtp,
-    guint8 appbits, guint8 id, gpointer data, guint size)
+    guint8 appbits, guint8 id, gconstpointer data, guint size)
 {
   guint16 bits;
   guint8 *pdata = 0;

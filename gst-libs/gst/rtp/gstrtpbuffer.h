@@ -142,12 +142,12 @@ gboolean        gst_rtp_buffer_get_extension_twobytes_header (GstRTPBuffer *rtp,
 
 gboolean       gst_rtp_buffer_add_extension_onebyte_header  (GstRTPBuffer *rtp,
                                                              guint8 id,
-                                                             gpointer data,
+                                                             gconstpointer data,
                                                              guint size);
 gboolean       gst_rtp_buffer_add_extension_twobytes_header (GstRTPBuffer *rtp,
                                                              guint8 appbits,
                                                              guint8 id,
-                                                             gpointer data,
+                                                             gconstpointer data,
                                                              guint size);
 
 /**
