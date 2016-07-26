@@ -63,7 +63,6 @@ struct _GstCAOpenGLLayerSink
 
     GstGLCAOpenGLLayer *layer;
 
-    volatile gint to_quit;
     gboolean keep_aspect_ratio;
 
     /* avoid replacing the stored_buffer while drawing */
