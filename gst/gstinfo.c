@@ -732,6 +732,62 @@ gst_info_describe_query (GstQuery * query)
   return ret;
 }
 
+static inline gchar *
+gst_info_describe_stream (GstStream * stream)
+{
+  gchar *ret, *caps_str = NULL, *tags_str = NULL;
+  GstCaps *caps;
+  GstTagList *tags;
+
+  caps = gst_stream_get_caps (stream);
+  if (caps) {
+    caps_str = gst_caps_to_string (caps);
+    gst_caps_unref (caps);
+  }
+
+  tags = gst_stream_get_tags (stream);
+  if (tags) {
+    tags_str = gst_tag_list_to_string (tags);
+    gst_tag_list_unref (tags);
+  }
+
+  ret =
+      g_strdup_printf ("stream %s %p, ID %s, flags 0x%x, caps [%s], tags [%s]",
+      gst_stream_type_get_name (gst_stream_get_stream_type (stream)), stream,
+      gst_stream_get_stream_id (stream), gst_stream_get_stream_flags (stream),
+      caps_str ? caps_str : "", tags_str ? tags_str : "");
+
+  g_free (caps_str);
+  g_free (tags_str);
+
+  return ret;
+}
+
+static inline gchar *
+gst_info_describe_stream_collection (GstStreamCollection * collection)
+{
+  gchar *ret;
+  GString *streams_str;
+  guint i;
+
+  streams_str = g_string_new ("<");
+  for (i = 0; i < gst_stream_collection_get_size (collection); i++) {
+    GstStream *stream = gst_stream_collection_get_stream (collection, i);
+    gchar *s;
+
+    s = gst_info_describe_stream (stream);
+    g_string_append_printf (streams_str, " %s,", s);
+    g_free (s);
+  }
+  g_string_append (streams_str, " >");
+
+  ret = g_strdup_printf ("collection %p (%d streams) %s", collection,
+      gst_stream_collection_get_size (collection), streams_str->str);
+
+  g_string_free (streams_str, TRUE);
+  return ret;
+}
+
 static gchar *
 gst_debug_print_object (gpointer ptr)
 {
@@ -807,6 +863,14 @@ gst_debug_print_object (gpointer ptr)
     ret = g_strdup_printf ("context '%s'='%s'", type, s);
     g_free (s);
     return ret;
+  }
+  if (GST_IS_STREAM (object)) {
+    return gst_info_describe_stream (GST_STREAM_CAST (object));
+  }
+  if (GST_IS_STREAM_COLLECTION (object)) {
+    return
+        gst_info_describe_stream_collection (GST_STREAM_COLLECTION_CAST
+        (object));
   }
   if (GST_IS_PAD (object) && GST_OBJECT_NAME (object)) {
     return g_strdup_printf ("<%s:%s>", GST_DEBUG_PAD_NAME (object));
