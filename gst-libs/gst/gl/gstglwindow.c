@@ -487,8 +487,6 @@ gst_gl_window_draw (GstGLWindow * window)
   }
 
   window_class->draw (window);
-
-  window->queue_resize = FALSE;
 }
 
 /**
@@ -1174,4 +1172,6 @@ gst_gl_window_resize (GstGLWindow * window, guint width, guint height)
 
   window->priv->surface_width = width;
   window->priv->surface_height = height;
+
+  window->queue_resize = FALSE;
 }
