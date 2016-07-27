@@ -232,6 +232,12 @@ else
 OPENH264_DIR =
 endif
 
+if USE_OPENMPT
+OPENMPT_DIR=openmpt
+else
+OPENMPT_DIR=
+endif
+
 if USE_OPENNI2
 OPENNI2_DIR=openni2
 else
@@ -431,6 +437,7 @@ SUBDIRS=\
 	$(OPENEXR_DIR) \
 	$(OPENH264_DIR) \
 	$(OPENJPEG_DIR) \
+	$(OPENMPT_DIR) \
 	$(OPENNI2_DIR) \
 	$(OPUS_DIR) \
 	$(RSVG_DIR) \
@@ -494,6 +501,7 @@ DIST_SUBDIRS = \
 	opencv \
 	openexr \
 	openh264 \
+	openmpt \
 	openni2 \
 	openjpeg \
 	opus \

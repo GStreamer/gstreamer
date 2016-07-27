@@ -2828,6 +2828,14 @@ AG_GST_CHECK_FEATURE(OPENJPEG, [openjpeg library], openjpeg, [
   AC_SUBST(OPENJPEG_LIBS)
 ])
 
+dnl *** OpenMPT ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPENMPT, true)
+AG_GST_CHECK_FEATURE(OPENMPT, openmpt, openmpt, [
+  PKG_CHECK_MODULES(OPENMPT, libopenmpt, HAVE_OPENMPT="yes", HAVE_OPENMPT="no")
+  AC_SUBST(OPENMPT_CFLAGS)
+  AC_SUBST(OPENMPT_LIBS)
+])
+
 dnl *** OpenNI2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENNI2, true)
 AG_GST_CHECK_FEATURE(OPENNI2, [openni2 library], openni2, [
@@ -3384,6 +3392,7 @@ AM_CONDITIONAL(USE_OPENAL, false)
 AM_CONDITIONAL(USE_OPENCV, false)
 AM_CONDITIONAL(USE_OPENEXR, false)
 AM_CONDITIONAL(USE_OPENJPEG, false)
+AM_CONDITIONAL(USE_OPENMPT, false)
 AM_CONDITIONAL(USE_OPENNI2, false)
 AM_CONDITIONAL(USE_OPUS, false)
 AM_CONDITIONAL(USE_QT, false)
@@ -3685,6 +3694,7 @@ ext/opencv/Makefile
 ext/openexr/Makefile
 ext/openh264/Makefile
 ext/openjpeg/Makefile
+ext/openmpt/Makefile
 ext/openni2/Makefile
 ext/opus/Makefile
 ext/qt/Makefile
