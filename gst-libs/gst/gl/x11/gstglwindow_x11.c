@@ -391,6 +391,7 @@ draw_cb (gpointer data)
   GstGLWindow *window = GST_GL_WINDOW (window_x11);
 
   if (gst_gl_window_is_running (window)) {
+    guint width, height;
     XWindowAttributes attr;
 
     XGetWindowAttributes (window_x11->device, window_x11->internal_win_id,
@@ -414,13 +415,16 @@ draw_cb (gpointer data)
       }
     }
 
-    if (window_x11->allow_extra_expose_events) {
-      if (window->queue_resize) {
-        guint width, height;
+    gst_gl_window_get_surface_dimensions (window, &width, &height);
+    if (attr.width != width || attr.height != height) {
+      width = attr.width;
+      height = attr.height;
+      gst_gl_window_queue_resize (window);
+    }
 
-        gst_gl_window_get_surface_dimensions (window, &width, &height);
+    if (window_x11->allow_extra_expose_events) {
+      if (window->queue_resize)
         gst_gl_window_resize (window, width, height);
-      }
 
       if (window->draw) {
         GstGLContext *context = gst_gl_window_get_context (window);
