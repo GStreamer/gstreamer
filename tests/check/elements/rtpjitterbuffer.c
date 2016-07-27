@@ -1869,6 +1869,84 @@ GST_START_TEST (test_rtx_rtt_larger_than_retry_timeout)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtx_no_request_if_time_past_retry_period)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  const gint latency_ms = 200;
+  const gint retry_period_ms = 120;
+  GstTestClock *testclock;
+  GstClockID pending_id, processed_id;
+  GstClockTime time;
+  GstEvent *event;
+  gint i;
+
+  gst_harness_set_src_caps (h, generate_caps ());
+  testclock = gst_harness_get_testclock (h);
+
+  g_object_set (h->element, "do-lost", TRUE, NULL);
+  g_object_set (h->element, "do-retransmission", TRUE, NULL);
+  g_object_set (h->element, "latency", latency_ms, NULL);
+  g_object_set (h->element, "rtx-retry-period", retry_period_ms, NULL);
+
+  /* push the first couple of buffers */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, generate_test_buffer (0)));
+
+  gst_harness_set_time (h, 1 * PCMU_BUF_DURATION);
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, generate_test_buffer (1)));
+
+  /* drop reconfigure event */
+  gst_event_unref (gst_harness_pull_upstream_event (h));
+  /* drop GstEventStreamStart & GstEventCaps & GstEventSegment */
+  for (i = 0; i < 3; i++)
+    gst_event_unref (gst_harness_pull_event (h));
+
+  /* Wait for the first EXPECTED timer to be scheduled */
+  gst_test_clock_wait_for_next_pending_id (testclock, &pending_id);
+  time = gst_clock_id_get_time (pending_id);
+  fail_unless_equals_int64 (time, 2 * PCMU_BUF_DURATION + 10 * GST_MSECOND);
+
+  /* Let the first EXPECTED timer time out and be sent. However, set the 'now'
+   * time to be past the retry-period simulating that the jitterbuffer has too
+   * much to do and is not able to process all timers in real-time. In this
+   * case the jitterbuffer should not schedule a new EXPECTED timer as that
+   * would just make matters worse (more unnecessary processing of a request
+   * that is already too late to be valuable). In practice this typically
+   * happens for high loss networks with low RTT. */
+  gst_test_clock_set_time (testclock,
+      2 * PCMU_BUF_DURATION + retry_period_ms * GST_MSECOND + 1);
+  processed_id = gst_test_clock_process_next_clock_id (testclock);
+  fail_unless (pending_id == processed_id);
+  gst_clock_id_unref (pending_id);
+  gst_clock_id_unref (processed_id);
+
+  /* Verify the event. It could be argued that this request is already too
+   * late and unnecessary. However, in order to keep things simple (for now)
+   * we just keep the already scehduled EXPECTED timer, but refrain from
+   * scheduled another EXPECTED timer */
+  event = gst_harness_pull_upstream_event (h);
+  verify_rtx_event (event, 2, 2 * PCMU_BUF_DURATION, 10, PCMU_BUF_DURATION);
+
+  /* "crank" to reach the DEADLINE for packet 0 */
+  gst_harness_crank_single_clock_wait (h);
+  gst_buffer_unref (gst_harness_pull (h));
+  gst_buffer_unref (gst_harness_pull (h));
+
+  fail_unless_equals_int (0, gst_harness_upstream_events_in_queue (h));
+  fail_unless_equals_int (0, gst_harness_events_in_queue (h));
+
+  /* "crank" to time out the LOST event */
+  gst_harness_crank_single_clock_wait (h);
+  event = gst_harness_pull_event (h);
+  verify_lost_event (event, 2, 2 * PCMU_BUF_DURATION, PCMU_BUF_DURATION);
+
+  gst_object_unref (testclock);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_gap_exceeds_latency)
 {
   GstHarness *h = gst_harness_new ("rtpjitterbuffer");
@@ -2301,6 +2379,7 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_rtx_duplicate_packet_updates_rtx_stats);
   tcase_add_test (tc_chain, test_rtx_buffer_arrives_after_lost_updates_rtx_stats);
   tcase_add_test (tc_chain, test_rtx_rtt_larger_than_retry_timeout);
+  tcase_add_test (tc_chain, test_rtx_no_request_if_time_past_retry_period);
 
   tcase_add_test (tc_chain, test_gap_exceeds_latency);
   tcase_add_test (tc_chain, test_deadline_ts_offset);

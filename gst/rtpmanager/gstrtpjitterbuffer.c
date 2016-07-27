@@ -3632,7 +3632,8 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
       GST_TIME_ARGS (timer->rtx_retry), timer->num_rtx_retry);
   if ((priv->rtx_max_retries != -1
           && timer->num_rtx_retry >= priv->rtx_max_retries)
-      || (timer->rtx_retry + timer->rtx_delay > rtx_retry_period)) {
+      || (timer->rtx_retry + timer->rtx_delay > rtx_retry_period)
+      || (timer->rtx_base + rtx_retry_period < now)) {
     GST_DEBUG_OBJECT (jitterbuffer, "reschedule as LOST timer");
     /* too many retransmission request, we now convert the timer
      * to a lost timer, leave the num_rtx_retry as it is for stats */
