@@ -462,9 +462,6 @@ if test "x$enable_egl" = "xyes" -a $GLES_VERSION_MASK -ne 0; then
       AC_CHECK_LIB([EGL], [eglGetDisplay], [], [USE_EGL=0])
       CPPFLAGS="$saved_CPPFLAGS"
       LIBS="$saved_LIBS"
-
-      dnl Check for GMODULE
-      PKG_CHECK_MODULES([GMODULE], [gmodule-2.0 >= $GLIB_REQ])
     ], [:])
 fi
 
