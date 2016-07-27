@@ -1,0 +1,211 @@
+/*
+ * GStreamer
+ * Copyright (C) 2016 Freescale Semiconductor, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "gstqtglutility.h"
+#include <QtGui/QGuiApplication>
+
+#if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (HAVE_QT_X11)
+#include <QX11Info>
+#include <gst/gl/x11/gstgldisplay_x11.h>
+#include <gst/gl/x11/gstglcontext_glx.h>
+#endif
+
+#if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_WAYLAND)
+#include <qpa/qplatformnativeinterface.h>
+#include <gst/gl/wayland/gstgldisplay_wayland.h>
+#endif
+
+#if GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_EGLFS)
+#include <gst/gl/egl/gstgldisplay_egl.h>
+#include <gst/gl/egl/gstglcontext_egl.h>
+#endif
+
+#if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_COCOA && defined (HAVE_QT_MAC)
+#include <gst/gl/coaoa/gstgldisplay_cocoa.h>
+#endif
+
+#define GST_CAT_DEFAULT qt_gl_utils_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+
+GstGLDisplay *
+gst_qt_get_gl_display ()
+{
+  GstGLDisplay *display = NULL;
+  QGuiApplication *app = static_cast<QGuiApplication *> (QCoreApplication::instance ());
+  static volatile gsize _debug;
+
+  g_assert (app != NULL);
+
+  GST_INFO ("QGuiApplication::instance()->platformName() %s", app->platformName().toUtf8().data());
+
+  if (g_once_init_enter (&_debug)) {
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "qtglutility", 0,
+        "Qt gl utility functions");
+    g_once_init_leave (&_debug, 1);
+  }
+
+#if GST_GL_HAVE_WINDOW_X11 && defined (HAVE_QT_X11)
+  if (QString::fromUtf8 ("xcb") == app->platformName())
+    display = (GstGLDisplay *)
+        gst_gl_display_x11_new_with_display (QX11Info::display ());
+#endif
+#if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_WAYLAND)
+  if (QString::fromUtf8 ("wayland") == app->platformName()
+        || QString::fromUtf8 ("wayland-egl") == app->platformName()){
+    struct wl_display * wayland_display;
+    QPlatformNativeInterface *native =
+        QGuiApplication::platformNativeInterface();
+    wayland_display = (struct wl_display *)
+        native->nativeResourceForWindow("display", NULL);
+    display = (GstGLDisplay *)
+        gst_gl_display_wayland_new_with_display (wayland_display);
+  }
+#endif
+#if GST_GL_HAVE_PLATFORM_EGL && GST_GL_HAVE_WINDOW_ANDROID
+  if (QString::fromUtf8 ("android") == app->platformName())
+    display = (GstGLDisplay *) gst_gl_display_egl_new ();
+#elif GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_EGLFS)
+  if (QString::fromUtf8("eglfs") == app->platformName())
+    display = (GstGLDisplay *) gst_gl_display_egl_new ();
+#endif
+
+#if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_COCOA && defined (HAVE_QT_MAC)
+  if (QString::fromUtf8 ("cocoa") == app->platformName())
+    display = (GstGLDisplay *) gst_gl_display_cocoa_new ();
+#endif
+#if GST_GL_HAVE_WINDOW_EAGL && GST_GL_HAVE_PLATFORM_EAGL && defined (HAVE_QT_IOS)
+  if (QString::fromUtf8 ("ios") == app->platformName())
+    display = gst_gl_display_new ();
+#endif
+#if GST_GL_HAVE_WINDOW_WIN32 && GST_GL_HAVE_PLATFORM_WGL && defined (HAVE_QT_WIN32)
+  if (QString::fromUtf8 ("windows") == app->platformName())
+    display = gst_gl_display_new ();
+#endif
+
+  if (!display)
+    display = gst_gl_display_new ();
+
+  return display;
+}
+
+gboolean
+gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
+    GstGLContext **wrap_glcontext, GstGLContext **context)
+{
+  GstGLPlatform platform = (GstGLPlatform) 0;
+  GstGLAPI gl_api;
+  guintptr gl_handle;
+  GError *error = NULL;
+
+  g_return_val_if_fail (display != NULL && wrap_glcontext != NULL, FALSE);
+
+#if GST_GL_HAVE_WINDOW_X11 && defined (HAVE_QT_X11)
+  if (GST_IS_GL_DISPLAY_X11 (display)) {
+    platform = GST_GL_PLATFORM_GLX;
+  }
+#endif
+#if GST_GL_HAVE_WINDOW_WAYLAND && defined (HAVE_QT_WAYLAND)
+  if (GST_IS_GL_DISPLAY_WAYLAND (display)) {
+    platform = GST_GL_PLATFORM_EGL;
+  }
+#endif
+#if GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_EGLFS)
+  if (GST_IS_GL_DISPLAY_EGL (display)) {
+    platform = GST_GL_PLATFORM_EGL;
+  }
+#endif
+  if (platform == 0) {
+#if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_COCOA && defined (HAVE_QT_MAC)
+    platform = GST_GL_PLATFORM_CGL;
+#elif GST_GL_HAVE_WINDOW_EAGL && GST_GL_HAVE_PLATFORM_EAGL && defined (HAVE_QT_IOS)
+    platform = GST_GL_PLATFORM_EAGL;
+#elif GST_GL_HAVE_WINDOW_WIN32 && GST_GL_HAVE_PLATFORM_WGL && defined (HAVE_QT_WIN32)
+    platform = GST_GL_PLATFORM_WGL;
+#else
+    GST_ERROR ("Unknown platform");
+    return FALSE;
+#endif
+  }
+
+  gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);
+  gl_handle = gst_gl_context_get_current_gl_context (platform);
+  if (gl_handle)
+    *wrap_glcontext =
+        gst_gl_context_new_wrapped (display, gl_handle,
+        platform, gl_api);
+
+  if (!*wrap_glcontext) {
+    GST_ERROR ("cannot wrap qt OpenGL context");
+    return FALSE;
+  }
+ 
+  (void) platform;
+  (void) gl_api;
+  (void) gl_handle;
+
+  gst_gl_context_activate (*wrap_glcontext, TRUE);
+  if (!gst_gl_context_fill_info (*wrap_glcontext, &error)) {
+    GST_ERROR ("failed to retrieve qt context info: %s", error->message);
+    g_object_unref (*wrap_glcontext);
+    *wrap_glcontext = NULL;
+    return FALSE;
+  } else {
+    gst_gl_display_filter_gl_api (display, gst_gl_context_get_gl_api (*wrap_glcontext));
+#if GST_GL_HAVE_WINDOW_WIN32 && GST_GL_HAVE_PLATFORM_WGL && defined (HAVE_QT_WIN32)  
+    g_return_val_if_fail (context != NULL, FALSE);
+
+    if (!wglGetProcAddress ("wglCreateContextAttribsARB")) {
+      GstGLWindow *window;
+      HDC device;
+
+      /* If there's no wglCreateContextAttribsARB() support, then we would fallback to
+       * wglShareLists() which will fail with ERROR_BUSY (0xaa) if either of the GL
+       * contexts are current in any other thread.
+       *
+       * The workaround here is to temporarily disable Qt's GL context while we
+       * set up our own.
+       */
+      *context = gst_gl_context_new (display);
+      window = gst_gl_context_get_window (*context);
+      device = (HDC) gst_gl_window_get_display (window);
+
+      wglMakeCurrent (device, 0);
+      gst_object_unref (window);
+      if (!gst_gl_context_create (*context, *wrap_glcontext, &error)) {
+        GST_ERROR ("%p failed to create shared GL context: %s", this, error->message);
+        g_object_unref (*context);
+        *context = NULL;
+        g_object_unref (*wrap_glcontext);
+        *wrap_glcontext = NULL;
+        wglMakeCurrent (device, (HGLRC) gl_handle);
+        return FALSE;
+      }
+      wglMakeCurrent (device, (HGLRC) gl_handle);
+    }
+#endif
+    gst_gl_context_activate (*wrap_glcontext, FALSE);
+  }
+
+  return TRUE;
+}
