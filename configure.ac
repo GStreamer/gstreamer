@@ -282,7 +282,7 @@ GstGLContext gl_context;
           CPPFLAGS="$saved_CPPFLAGS"
           LIBS="$saved_LIBS"
         ])
-    ], [])
+    ], [:])
 fi
 AS_IF([test "x$ac_cv_have_gst_gl_helpers" = "xno"], [HAVE_GSTGL=0])
 AM_CONDITIONAL([USE_GST_GL_HELPERS], [test $HAVE_GSTGL -eq 1])
@@ -308,7 +308,7 @@ if test "x$enable_drm" = "xyes"; then
       CPPFLAGS="$CPPFLAGS $DRM_CFLAGS"
       AC_CHECK_HEADERS([drm_fourcc.h], [], [USE_DRM=0])
       CPPFLAGS="$saved_CPPFLAGS"
-    ], [])
+    ], [:])
 fi
 
 dnl Check for X11
@@ -321,7 +321,7 @@ if test "x$enable_x11" = "xyes"; then
       CPPFLAGS="$CPPFLAGS $X11_CFLAGS"
       AC_CHECK_HEADERS([X11/Xlib.h X11/Xutil.h X11/Xatom.h], [], [USE_X11=0])
       CPPFLAGS="$saved_CPPFLAGS"
-    ], [])
+    ], [:])
 fi
 
 HAVE_XKBLIB=0
@@ -340,7 +340,7 @@ if test $USE_X11 -eq 1; then
       CPPFLAGS="$CPPFLAGS $XRANDR_CFLAGS"
       AC_CHECK_HEADERS([X11/extensions/Xrandr.h], [], [HAVE_XRANDR=0])
       CPPFLAGS="$saved_CPPFLAGS"
-    ], [])
+    ], [:])
 
   dnl Check for XRender
   PKG_CHECK_MODULES([XRENDER], [xrender],
@@ -350,7 +350,7 @@ if test $USE_X11 -eq 1; then
       CPPFLAGS="$CPPFLAGS $XRENDER_CFLAGS"
       AC_CHECK_HEADERS([X11/extensions/Xrender.h], [], [HAVE_XRENDER=0])
       CPPFLAGS="$saved_CPPFLAGS"
-    ], [])
+    ], [:])
 fi
 
 AC_DEFINE_UNQUOTED([HAVE_XKBLIB], [$HAVE_XKBLIB],
@@ -465,7 +465,7 @@ if test "x$enable_egl" = "xyes" -a $GLES_VERSION_MASK -ne 0; then
 
       dnl Check for GMODULE
       PKG_CHECK_MODULES([GMODULE], [gmodule-2.0 >= $GLIB_REQ])
-    ], [])
+    ], [:])
 fi
 
 dnl Check for Wayland
@@ -478,7 +478,7 @@ if test "x$enable_wayland" = "xyes"; then
       CPPFLAGS="$CPPFLAGS $WAYLAND_CFLAGS"
       AC_CHECK_HEADERS([wayland-client.h], [], [USE_WAYLAND=0])
       CPPFLAGS="$saved_CPPFLAGS"
-    ], [])
+    ], [:])
 fi
 
 dnl ---------------------------------------------------------------------------
@@ -722,7 +722,7 @@ if test "x$enable_encoders" = "xyes"; then
 #include <va/va.h>
         ])
       CPPFLAGS="$saved_CPPFLAGS"
-    ], [])
+    ], [:])
 fi
 
 USE_JPEG_ENCODER=0
