@@ -179,6 +179,7 @@ typedef struct _GstVaapiH264ViewReorderPool
   guint frame_count;            /* monotonically increasing with in every idr period */
   guint cur_frame_num;
   guint cur_present_index;
+  gboolean prev_frame_is_ref;   /* previous frame is ref or not */
 } GstVaapiH264ViewReorderPool;
 
 static inline gboolean
@@ -1287,7 +1288,6 @@ reset_gop_start (GstVaapiEncoderH264 * encoder)
       &encoder->reorder_pools[encoder->view_idx];
 
   reorder_pool->frame_index = 1;
-  reorder_pool->cur_frame_num = 0;
   reorder_pool->cur_present_index = 0;
   ++encoder->idr_num;
 }
@@ -1296,37 +1296,27 @@ reset_gop_start (GstVaapiEncoderH264 * encoder)
 static void
 set_b_frame (GstVaapiEncPicture * pic, GstVaapiEncoderH264 * encoder)
 {
-  GstVaapiH264ViewReorderPool *const reorder_pool =
-      &encoder->reorder_pools[encoder->view_idx];
-
   g_assert (pic && encoder);
   g_return_if_fail (pic->type == GST_VAAPI_PICTURE_TYPE_NONE);
   pic->type = GST_VAAPI_PICTURE_TYPE_B;
-  pic->frame_num = (reorder_pool->cur_frame_num % encoder->max_frame_num);
 }
 
 /* Marks the supplied picture as a P-frame */
 static void
 set_p_frame (GstVaapiEncPicture * pic, GstVaapiEncoderH264 * encoder)
 {
-  GstVaapiH264ViewReorderPool *const reorder_pool =
-      &encoder->reorder_pools[encoder->view_idx];
-
   g_return_if_fail (pic->type == GST_VAAPI_PICTURE_TYPE_NONE);
   pic->type = GST_VAAPI_PICTURE_TYPE_P;
-  pic->frame_num = (reorder_pool->cur_frame_num % encoder->max_frame_num);
+  GST_VAAPI_PICTURE_FLAG_SET (pic, GST_VAAPI_ENC_PICTURE_FLAG_REFERENCE);
 }
 
 /* Marks the supplied picture as an I-frame */
 static void
 set_i_frame (GstVaapiEncPicture * pic, GstVaapiEncoderH264 * encoder)
 {
-  GstVaapiH264ViewReorderPool *const reorder_pool =
-      &encoder->reorder_pools[encoder->view_idx];
-
   g_return_if_fail (pic->type == GST_VAAPI_PICTURE_TYPE_NONE);
   pic->type = GST_VAAPI_PICTURE_TYPE_I;
-  pic->frame_num = (reorder_pool->cur_frame_num % encoder->max_frame_num);
+  GST_VAAPI_PICTURE_FLAG_SET (pic, GST_VAAPI_ENC_PICTURE_FLAG_REFERENCE);
 
   g_assert (pic->frame);
   GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (pic->frame);
@@ -1338,9 +1328,9 @@ set_idr_frame (GstVaapiEncPicture * pic, GstVaapiEncoderH264 * encoder)
 {
   g_return_if_fail (pic->type == GST_VAAPI_PICTURE_TYPE_NONE);
   pic->type = GST_VAAPI_PICTURE_TYPE_I;
-  pic->frame_num = 0;
   pic->poc = 0;
-  GST_VAAPI_ENC_PICTURE_FLAG_SET (pic, GST_VAAPI_ENC_PICTURE_FLAG_IDR);
+  GST_VAAPI_ENC_PICTURE_FLAG_SET (pic,
+      GST_VAAPI_ENC_PICTURE_FLAG_IDR | GST_VAAPI_ENC_PICTURE_FLAG_REFERENCE);
 
   g_assert (pic->frame);
   GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (pic->frame);
@@ -2718,6 +2708,7 @@ gst_vaapi_encoder_h264_flush (GstVaapiEncoder * base_encoder)
     reorder_pool->frame_index = 0;
     reorder_pool->cur_frame_num = 0;
     reorder_pool->cur_present_index = 0;
+    reorder_pool->prev_frame_is_ref = FALSE;
 
     while (!g_queue_is_empty (&reorder_pool->reorder_frame_list)) {
       pic = (GstVaapiEncPicture *)
@@ -2843,6 +2834,26 @@ get_temporal_id (GstVaapiEncoderH264 * encoder, guint32 display_order)
   return 0;
 }
 
+static void
+set_frame_num (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
+{
+  GstVaapiH264ViewReorderPool *reorder_pool = NULL;
+
+  reorder_pool = &encoder->reorder_pools[encoder->view_idx];
+
+  picture->frame_num = (reorder_pool->cur_frame_num % encoder->max_frame_num);
+
+  if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture)) {
+    picture->frame_num = 0;
+    reorder_pool->cur_frame_num = 0;
+  }
+
+  reorder_pool->prev_frame_is_ref = GST_VAAPI_ENC_PICTURE_IS_REFRENCE (picture);
+
+  if (reorder_pool->prev_frame_is_ref)
+    ++reorder_pool->cur_frame_num;
+}
+
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
     GstVideoCodecFrame * frame, GstVaapiEncPicture ** output)
@@ -2902,7 +2913,6 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
   if (is_idr || GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame) ||
       (reorder_pool->frame_index %
           GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder)) == 0) {
-    ++reorder_pool->cur_frame_num;
     ++reorder_pool->frame_index;
 
     /* b frame enabled,  check queue of reorder_frame_list */
@@ -2914,7 +2924,6 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
       set_p_frame (p_pic, encoder);
       g_queue_foreach (&reorder_pool->reorder_frame_list,
           (GFunc) set_b_frame, encoder);
-      ++reorder_pool->cur_frame_num;
       set_key_frame (picture, encoder,
           is_idr | GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame));
       g_queue_push_tail (&reorder_pool->reorder_frame_list, picture);
@@ -2939,7 +2948,6 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
     return GST_VAAPI_ENCODER_STATUS_NO_SURFACE;
   }
 
-  ++reorder_pool->cur_frame_num;
   set_p_frame (picture, encoder);
 
   if (reorder_pool->reorder_state == GST_VAAPI_ENC_H264_REORD_WAIT_FRAMES) {
@@ -2954,6 +2962,10 @@ end:
   frame = picture->frame;
   if (GST_CLOCK_TIME_IS_VALID (frame->pts))
     frame->pts += encoder->cts_offset;
+
+  /* set frame_num based on previous frame reference type */
+  set_frame_num (encoder, picture);
+
   *output = picture;
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
