@@ -33,7 +33,6 @@ GST_START_TEST (test_get_sockets)
   GSocket *socket;
   gboolean have_ipv4;
   gboolean have_ipv6;
-  GstRTSPTransport *tr;
 
   srcpad = gst_pad_new ("testsrcpad", GST_PAD_SRC);
   fail_unless (srcpad != NULL);
@@ -61,11 +60,6 @@ GST_START_TEST (test_get_sockets)
   gst_rtsp_stream_set_address_pool (stream, pool);
 
   fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
-
-  gst_rtsp_transport_new (&tr);
-  tr->lower_transport = GST_RTSP_LOWER_TRANS_UDP;
-  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
-          G_SOCKET_FAMILY_IPV4, tr, FALSE));
 
   socket = gst_rtsp_stream_get_rtp_socket (stream, G_SOCKET_FAMILY_IPV4);
   have_ipv4 = (socket != NULL);
@@ -102,7 +96,6 @@ GST_START_TEST (test_get_sockets)
   /* check that at least one family is available */
   fail_unless (have_ipv4 || have_ipv6);
 
-  gst_rtsp_transport_free (tr);
   g_object_unref (pool);
 
   fail_unless (gst_rtsp_stream_leave_bin (stream, bin, rtpbin));
@@ -121,7 +114,6 @@ GST_START_TEST (test_allocate_udp_ports_fail)
   GstBin *bin;
   GstElement *rtpbin;
   GstRTSPAddressPool *pool;
-  GstRTSPTransport *tr;
 
   srcpad = gst_pad_new ("testsrcpad", GST_PAD_SRC);
   fail_unless (srcpad != NULL);
@@ -143,14 +135,8 @@ GST_START_TEST (test_allocate_udp_ports_fail)
           "192.168.1.1", 6000, 6001, 0));
   gst_rtsp_stream_set_address_pool (stream, pool);
 
-  fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
+  fail_if (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
 
-  gst_rtsp_transport_new (&tr);
-  tr->lower_transport = GST_RTSP_LOWER_TRANS_UDP;
-  fail_if (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV4,
-          tr, FALSE));
-
-  gst_rtsp_transport_free (tr);
   g_object_unref (pool);
   fail_unless (gst_rtsp_stream_leave_bin (stream, bin, rtpbin));
   gst_object_unref (bin);
@@ -257,13 +243,6 @@ GST_START_TEST (test_multicast_address_and_unicast_udp)
 
   fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
 
-  gst_rtsp_transport_new (&tr);
-  /* unicast udp */
-  tr->lower_transport = GST_RTSP_LOWER_TRANS_UDP;
-  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
-          G_SOCKET_FAMILY_IPV4, tr, FALSE));
-
-  gst_rtsp_transport_free (tr);
   g_object_unref (pool);
   fail_unless (gst_rtsp_stream_leave_bin (stream, bin, rtpbin));
   gst_object_unref (bin);
@@ -280,7 +259,6 @@ GST_START_TEST (test_allocate_udp_ports_multicast)
   GstBin *bin;
   GstElement *rtpbin;
   GstRTSPAddressPool *pool;
-  GstRTSPTransport *tr;
   GstRTSPAddress *addr;
 
   srcpad = gst_pad_new ("testsrcpad", GST_PAD_SRC);
@@ -308,12 +286,6 @@ GST_START_TEST (test_allocate_udp_ports_multicast)
 
   fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
 
-  /* allocate udp multicast ports for IPv4 */
-  gst_rtsp_transport_new (&tr);
-  tr->lower_transport = GST_RTSP_LOWER_TRANS_UDP_MCAST;
-  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
-          G_SOCKET_FAMILY_IPV4, tr, FALSE));
-
   /* check the multicast address and ports for IPv4 */
   addr = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV4);
   fail_unless (addr != NULL);
@@ -321,10 +293,6 @@ GST_START_TEST (test_allocate_udp_ports_multicast)
   fail_unless_equals_int (addr->port, 6000);
   fail_unless_equals_int (addr->n_ports, 2);
   gst_rtsp_address_free (addr);
-
-  /* allocate udp multicast ports for IPv6 */
-  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
-          G_SOCKET_FAMILY_IPV6, tr, FALSE));
 
   /* check the multicast address and ports for IPv6 */
   addr = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV6);
@@ -334,7 +302,6 @@ GST_START_TEST (test_allocate_udp_ports_multicast)
   fail_unless_equals_int (addr->n_ports, 2);
   gst_rtsp_address_free (addr);
 
-  gst_rtsp_transport_free (tr);
   g_object_unref (pool);
   fail_unless (gst_rtsp_stream_leave_bin (stream, bin, rtpbin));
   gst_object_unref (bin);
@@ -351,7 +318,6 @@ GST_START_TEST (test_allocate_udp_ports_client_settings)
   GstBin *bin;
   GstElement *rtpbin;
   GstRTSPAddressPool *pool;
-  GstRTSPTransport *tr;
   GstRTSPAddress *addr;
 
   srcpad = gst_pad_new ("testsrcpad", GST_PAD_SRC);
@@ -384,14 +350,10 @@ GST_START_TEST (test_allocate_udp_ports_client_settings)
 
   fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
 
-  /* client transport settings for IPv4 */
-  gst_rtsp_transport_new (&tr);
-  tr->destination = g_strdup ("233.252.0.2");
-  tr->port.min = 6002;
-  tr->port.max = 6003;
-  tr->lower_transport = GST_RTSP_LOWER_TRANS_UDP_MCAST;
-  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
-          G_SOCKET_FAMILY_IPV4, tr, FALSE));
+  /* Reserve IPV4 mcast address */
+  addr = gst_rtsp_stream_reserve_address (stream, "233.252.0.2", 6002, 2, 1);
+  fail_unless (addr != NULL);
+  gst_rtsp_address_free (addr);
 
   /* verify that the multicast address and ports correspond to the requested client
    * transport information for IPv4 */
@@ -402,13 +364,10 @@ GST_START_TEST (test_allocate_udp_ports_client_settings)
   fail_unless_equals_int (addr->n_ports, 2);
   gst_rtsp_address_free (addr);
 
-  /* client transport settings for IPv6 */
-  g_free (tr->destination);
-  tr->destination = g_strdup ("FF11:DB8::1");
-  tr->port.min = 6006;
-  tr->port.max = 6007;
-  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
-          G_SOCKET_FAMILY_IPV6, tr, FALSE));
+  /* Reserve IPV6 mcast address */
+  addr = gst_rtsp_stream_reserve_address (stream, "FF11:DB8::1", 6006, 2, 1);
+  fail_unless (addr != NULL);
+  gst_rtsp_address_free (addr);
 
   /* verify that the multicast address and ports correspond to the requested client
    * transport information for IPv6 */
@@ -419,7 +378,6 @@ GST_START_TEST (test_allocate_udp_ports_client_settings)
   fail_unless_equals_int (addr->n_ports, 2);
   gst_rtsp_address_free (addr);
 
-  gst_rtsp_transport_free (tr);
   g_object_unref (pool);
   fail_unless (gst_rtsp_stream_leave_bin (stream, bin, rtpbin));
   gst_object_unref (bin);
