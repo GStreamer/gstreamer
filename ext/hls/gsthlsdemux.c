@@ -299,7 +299,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   GstSeekType start_type, stop_type;
   gint64 start, stop;
   gdouble rate, old_rate;
-  GList *walk;
+  GList *walk, *stream_walk;
   GstClockTime current_pos, target_pos;
   gint64 current_sequence;
   GstM3U8MediaFile *file;
@@ -349,69 +349,74 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     /* TODO why not continue using the same? that was being used up to now? */
     gst_hls_demux_change_playlist (hlsdemux, bitrate, NULL);
   }
+  for (stream_walk = demux->streams; stream_walk != NULL;
+      stream_walk = stream_walk->next) {
+    GstHLSDemuxStream *hls_stream =
+        GST_HLS_DEMUX_STREAM_CAST (stream_walk->data);
 
-  current_sequence = 0;
-  current_pos = 0;
-  reverse = rate < 0;
-  target_pos = reverse ? stop : start;
+    current_sequence = 0;
+    current_pos = 0;
+    reverse = rate < 0;
+    target_pos = reverse ? stop : start;
 
-  /* Snap to segment boundary. Improves seek performance on slow machines. */
-  keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
-  snap_nearest =
-      (flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST;
-  snap_before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
-  snap_after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
+    /* Snap to segment boundary. Improves seek performance on slow machines. */
+    keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+    snap_nearest =
+        (flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST;
+    snap_before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
+    snap_after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
 
-  GST_M3U8_CLIENT_LOCK (hlsdemux->client);
-  /* FIXME: Here we need proper discont handling */
-  for (walk = hlsdemux->current_variant->m3u8->files; walk; walk = walk->next) {
-    file = walk->data;
+    GST_M3U8_CLIENT_LOCK (hlsdemux->client);
+    /* FIXME: Here we need proper discont handling */
+    for (walk = hls_stream->playlist->files; walk; walk = walk->next) {
+      file = walk->data;
 
-    current_sequence = file->sequence;
-    if ((!reverse && snap_after) || snap_nearest) {
-      if (current_pos >= target_pos)
-        break;
-      if (snap_nearest && target_pos - current_pos < file->duration / 2)
-        break;
-    } else if (reverse && snap_after) {
-      /* check if the next fragment is our target, in this case we want to
-       * start from the previous fragment */
-      GstClockTime next_pos = current_pos + file->duration;
+      current_sequence = file->sequence;
+      if ((!reverse && snap_after) || snap_nearest) {
+        if (current_pos >= target_pos)
+          break;
+        if (snap_nearest && target_pos - current_pos < file->duration / 2)
+          break;
+      } else if (reverse && snap_after) {
+        /* check if the next fragment is our target, in this case we want to
+         * start from the previous fragment */
+        GstClockTime next_pos = current_pos + file->duration;
 
-      if (next_pos <= target_pos && target_pos < next_pos + file->duration) {
+        if (next_pos <= target_pos && target_pos < next_pos + file->duration) {
+          break;
+        }
+      } else if (current_pos <= target_pos
+          && target_pos < current_pos + file->duration) {
         break;
       }
-    } else if (current_pos <= target_pos
-        && target_pos < current_pos + file->duration) {
-      break;
+      current_pos += file->duration;
     }
-    current_pos += file->duration;
-  }
 
-  if (walk == NULL) {
-    GST_DEBUG_OBJECT (demux, "seeking further than track duration");
-    current_sequence++;
-  }
+    if (walk == NULL) {
+      GST_DEBUG_OBJECT (demux, "seeking further than track duration");
+      current_sequence++;
+    }
 
-  GST_DEBUG_OBJECT (demux, "seeking to sequence %u", (guint) current_sequence);
-  for (walk = demux->streams; walk != NULL; walk = walk->next)
-    GST_HLS_DEMUX_STREAM_CAST (walk->data)->reset_pts = TRUE;
-  hlsdemux->current_variant->m3u8->sequence = current_sequence;
-  hlsdemux->current_variant->m3u8->current_file = walk;
-  hlsdemux->current_variant->m3u8->sequence_position = current_pos;
-  GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
+    GST_DEBUG_OBJECT (demux, "seeking to sequence %u",
+        (guint) current_sequence);
+    hls_stream->reset_pts = TRUE;
+    hls_stream->playlist->sequence = current_sequence;
+    hls_stream->playlist->current_file = walk;
+    hls_stream->playlist->sequence_position = current_pos;
+    GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
 
-  /* Play from the end of the current selected segment */
-  if (reverse && (snap_before || snap_after || snap_nearest))
-    current_pos += file->duration;
+    /* Play from the end of the current selected segment */
+    if (reverse && (snap_before || snap_after || snap_nearest))
+      current_pos += file->duration;
 
-  if (keyunit || snap_before || snap_after || snap_nearest) {
-    if (!reverse)
-      gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
-          current_pos, stop_type, stop, NULL);
-    else
-      gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
-          start, stop_type, current_pos, NULL);
+    if (keyunit || snap_before || snap_after || snap_nearest) {
+      if (!reverse)
+        gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
+            current_pos, stop_type, stop, NULL);
+      else
+        gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
+            start, stop_type, current_pos, NULL);
+    }
   }
 
   return TRUE;
