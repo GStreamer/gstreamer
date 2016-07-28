@@ -940,6 +940,7 @@ gst_v4l2_buffer_pool_flush_stop (GstBufferPool * bpool)
 {
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
   GstV4l2Object *obj = pool->obj;
+  GstBuffer *buffers[VIDEO_MAX_FRAME];
   gint i;
 
   GST_DEBUG_OBJECT (pool, "stop flushing");
@@ -951,7 +952,12 @@ gst_v4l2_buffer_pool_flush_stop (GstBufferPool * bpool)
   if (pool->other_pool)
     gst_buffer_pool_set_flushing (pool->other_pool, FALSE);
 
+  GST_OBJECT_LOCK (pool);
   gst_v4l2_buffer_pool_streamoff (pool);
+  /* Remember buffers to re-enqueue */
+  memcpy(buffers, pool->buffers, sizeof(buffers));
+  memset(pool->buffers, 0, sizeof(pool->buffers));
+  GST_OBJECT_UNLOCK (pool);
 
   /* Reset our state */
   switch (obj->mode) {
@@ -964,11 +970,9 @@ gst_v4l2_buffer_pool_flush_stop (GstBufferPool * bpool)
     {
       for (i = 0; i < VIDEO_MAX_FRAME; i++) {
         /* Re-enqueue buffers */
-        if (pool->buffers[i]) {
+        if (buffers[i]) {
           GstBufferPool *bpool = (GstBufferPool *) pool;
-          GstBuffer *buffer = pool->buffers[i];
-
-          pool->buffers[i] = NULL;
+          GstBuffer *buffer = buffers[i];
 
           /* Remove qdata, this will unmap any map data in
            * userptr/dmabuf-import */
@@ -1077,9 +1081,6 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
 
   GST_LOG_OBJECT (pool, "queuing buffer %i", index);
 
-  g_atomic_int_inc (&pool->num_queued);
-  pool->buffers[index] = buf;
-
   if (V4L2_TYPE_IS_OUTPUT (obj->type)) {
     enum v4l2_field field;
 
@@ -1107,10 +1108,13 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
     GST_TIME_TO_TIMEVAL (timestamp, group->buffer.timestamp);
   }
 
+  GST_OBJECT_LOCK (pool);
+  g_atomic_int_inc (&pool->num_queued);
+  pool->buffers[index] = buf;
+
   if (!gst_v4l2_allocator_qbuf (pool->vallocator, group))
     goto queue_failed;
 
-  GST_OBJECT_LOCK (pool);
   pool->empty = FALSE;
   g_cond_signal (&pool->empty_cond);
   GST_OBJECT_UNLOCK (pool);
@@ -1129,6 +1133,7 @@ queue_failed:
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_TAG_MEMORY);
     g_atomic_int_add (&pool->num_queued, -1);
     pool->buffers[index] = NULL;
+    GST_OBJECT_UNLOCK (pool);
     return GST_FLOW_ERROR;
   }
 }
