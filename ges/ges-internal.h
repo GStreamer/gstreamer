@@ -316,13 +316,6 @@ ges_base_xml_formatter_set_timeline_properties(GESBaseXmlFormatter * self,
 					       const gchar *properties,
 					       const gchar *metadatas);
 
-
-/****************************************************
- *        GESCommandLineFormatter                   *
- ****************************************************/
-G_GNUC_INTERNAL GOptionGroup *
-_ges_command_line_formatter_get_option_group (void);
-
 /****************************************************
  *              GESContainer                        *
  ****************************************************/

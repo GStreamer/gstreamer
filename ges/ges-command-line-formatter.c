@@ -205,42 +205,75 @@ _ges_command_line_formatter_add_effect (GESTimeline * timeline,
 static GOptionEntry timeline_parsing_options[] = {
   {"clip", 'c', 0.0, G_OPTION_ARG_CALLBACK,
         &_ges_command_line_formatter_add_clip,
-        "",
-      "Adds a clip in the timeline\n"
-        "       * start - s   : The start position of the element inside the layer.\n"
-        "       * duration - d: The duration of the clip.\n"
-        "       * inpoint - i     : The inpoint of the clip.\n"
-        "       * track-types - tt: The type of the tracks where the clip should be used:\n"
-        "          Examples:\n"
-        "           * audio  / a\n"
-        "           * video / v\n"
-        "           * audio+video / a+v\n"
-        "         Will default to all the media types in the clip that match the global track-types\n"},
+        "<clip uri> - Adds a clip in the timeline.",
+      "     * s=, start             The start position of the element inside the layer.\n"
+        "     * d=, duration          The duration of the clip.\n"
+        "     * i=, inpoint           The inpoint of the clip.\n"
+        "     * tt=, track-types      The type of the tracks where the clip should be used:\n"
+        "       Examples:\n"
+        "        * audio  / a\n"
+        "        * video / v\n"
+        "        * audio+video / a+v\n"
+        "       (Will default to all the media types in the clip that match the global track-types)\n"},
   {"effect", 'e', 0.0, G_OPTION_ARG_CALLBACK,
-        &_ges_command_line_formatter_add_effect, "",
-      "Adds an effect as specified by 'bin-description'\n"
-        "       * bin-description - d: The description of the effect bin with a gst-launch-style pipeline description.\n"
-        "       * element-name - e   : The name of the element to apply the effect on.\n"},
+        &_ges_command_line_formatter_add_effect,
+        "<effect bin description> - Adds an effect as specified by 'bin-description'.",
+      "     * d=, bin-description   The description of the effect bin with a gst-launch-style pipeline description.\n"
+        "     * e=, element-name      The name of the element to apply the effect on.\n"},
   {"test-clip", 0, 0.0, G_OPTION_ARG_CALLBACK,
         &_ges_command_line_formatter_add_test_clip,
-        "",
-      "Add a test clip in the timeline\n"
-        "           * start -s : The start position of the element inside the layer.\n"
-        "           * duration -d : The duration of the clip."
-        "           * inpoint - i : The inpoint of the clip.\n"},
+        "<test clip pattern> - Add a test clip in the timeline.",
+      "     * s=, start              The start position of the element inside the layer.\n"
+        "     * d=, duration           The duration of the clip.\n"
+        "     * i=, inpoint            The inpoint of the clip.\n"},
+  {"set-", 0, 0.0, G_OPTION_ARG_CALLBACK,
+        NULL,
+      "<property name> <value> - Set a property on the last added element."
+        " Any child property that exists on the previously added element"
+        " can be used as <property name>", NULL},
 };
 
-GOptionGroup *
-_ges_command_line_formatter_get_option_group (void)
+gchar *
+ges_command_line_formatter_get_help (gint nargs, gchar ** commands)
 {
-  GOptionGroup *group;
+  gint i;
+  gchar *help = NULL;
 
-  group = g_option_group_new ("GESCommandLineFormatter",
-      "GStreamer Editing Services command line options to describe a timeline",
-      "Show GStreamer Options", NULL, NULL);
-  g_option_group_add_entries (group, timeline_parsing_options);
+  for (i = 0; i < G_N_ELEMENTS (timeline_parsing_options); i++) {
+    gboolean print = nargs == 0;
 
-  return group;
+    if (!print) {
+      gint j;
+
+      for (j = 0; j < nargs; j++) {
+        gchar *cname = commands[j][0] == '+' ? &commands[j][1] : commands[j];
+
+        if (!g_strcmp0 (cname, timeline_parsing_options[i].long_name)) {
+          print = TRUE;
+          break;
+        }
+      }
+    }
+
+    if (print) {
+      gchar *tmp = g_strdup_printf ("%s  %s%s %s\n", help ? help : "",
+          timeline_parsing_options[i].arg_description ? "+" : "",
+          timeline_parsing_options[i].long_name,
+          timeline_parsing_options[i].description);
+
+      g_free (help);
+      help = tmp;
+
+      if (timeline_parsing_options[i].arg_description) {
+        tmp = g_strdup_printf ("%s     Properties:\n%s\n", help,
+            timeline_parsing_options[i].arg_description);
+        g_free (help);
+        help = tmp;
+      }
+    }
+  }
+
+  return help;
 }
 
 

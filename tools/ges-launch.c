@@ -22,14 +22,18 @@
 #include "ges-launcher.h"
 
 static void
-_print_all_commands (void)
+_print_all_commands (gint nargs, gchar ** commands)
 {
-  /* Yeah I know very fancy */
-  g_print ("Available ges-launch-1.0 commands:\n\n");
-  g_print ("  %-9s %-11s %-15s %-10s\n\n", "+clip", "+effect", "+test-clip",
-      "set-");
-  g_print ("See ges-launch-1.0 help <command> or ges-launch-1.0 help <guide> "
-      "to read about a specific command or a given guide\n");
+  gchar *help;
+
+  if (nargs == 0)
+    g_print ("Available ges-launch-1.0 commands:\n\n");
+
+  help = ges_command_line_formatter_get_help (nargs, commands);
+
+  g_print ("%s", help);
+
+  g_free (help);
 }
 
 static void
@@ -44,7 +48,15 @@ _check_command_help (int argc, gchar ** argv)
  */
 
   if (!g_strcmp0 (argv[1], "help")) {
-    _print_all_commands ();
+    gint nargs = 0;
+    gchar **commands = NULL;
+
+    if (argc > 2) {
+      nargs = argc - 2;
+      commands = &argv[2];
+    }
+
+    _print_all_commands (nargs, commands);
     exit (0);
   }
 
