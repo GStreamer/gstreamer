@@ -6090,6 +6090,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
         /* Reset state if it's a real discont */
         demux->neededbytes = 16;
         demux->state = QTDEMUX_STATE_INITIAL;
+        demux->offset = GST_BUFFER_OFFSET (inbuf);
       }
     }
     /* Reverse fragmented playback, need to flush all we have before
