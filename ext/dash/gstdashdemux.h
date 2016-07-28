@@ -105,6 +105,8 @@ struct _GstDashDemux
   gint n_audio_streams;
   gint n_video_streams;
   gint n_subtitle_streams;
+
+  gboolean trickmode_no_audio;
 };
 
 struct _GstDashDemuxClass

@@ -583,6 +583,13 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     if (active_stream == NULL)
       continue;
 
+    if (demux->trickmode_no_audio
+        && active_stream->mimeType == GST_STREAM_AUDIO) {
+      GST_DEBUG_OBJECT (demux,
+          "Skipping audio stream %d because of TRICKMODE_NO_AUDIO flag", i);
+      continue;
+    }
+
     srcpad = gst_dash_demux_create_pad (demux, active_stream);
     if (srcpad == NULL)
       continue;
@@ -885,6 +892,8 @@ gst_dash_demux_reset (GstAdaptiveDemux * ademux)
   demux->n_audio_streams = 0;
   demux->n_video_streams = 0;
   demux->n_subtitle_streams = 0;
+
+  demux->trickmode_no_audio = FALSE;
 }
 
 static GstCaps *
@@ -1333,9 +1342,9 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   GstClockTime current_pos, target_pos;
   guint current_period;
   GstStreamPeriod *period;
-  GList *iter;
+  GList *iter, *streams = NULL;
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
-  gboolean switched_period = FALSE;
+  gboolean trickmode_no_audio;
 
   gst_event_parse_seek (seek, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
@@ -1376,22 +1385,35 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     GST_WARNING_OBJECT (demux, "Could not find seeked Period");
     return FALSE;
   }
+
+  trickmode_no_audio = ! !(flags & GST_SEEK_FLAG_TRICKMODE_NO_AUDIO);
+
+  streams = demux->streams;
   if (current_period != gst_mpd_client_get_period_index (dashdemux->client)) {
     GST_DEBUG_OBJECT (demux, "Seeking to Period %d", current_period);
 
     /* clean old active stream list, if any */
     gst_active_streams_free (dashdemux->client);
+    dashdemux->trickmode_no_audio = trickmode_no_audio;
 
     /* setup video, audio and subtitle streams, starting from the new Period */
     if (!gst_mpd_client_set_period_index (dashdemux->client, current_period)
         || !gst_dash_demux_setup_all_streams (dashdemux))
       return FALSE;
-    switched_period = TRUE;
+    streams = demux->next_streams;
+  } else if (dashdemux->trickmode_no_audio != trickmode_no_audio) {
+    /* clean old active stream list, if any */
+    gst_active_streams_free (dashdemux->client);
+    dashdemux->trickmode_no_audio = trickmode_no_audio;
+
+    /* setup video, audio and subtitle streams, starting from the new Period */
+    if (!gst_dash_demux_setup_all_streams (dashdemux))
+      return FALSE;
+    streams = demux->next_streams;
   }
 
   /* Update the current sequence on all streams */
-  for (iter = (switched_period ? demux->next_streams : demux->streams); iter;
-      iter = g_list_next (iter)) {
+  for (iter = streams; iter; iter = g_list_next (iter)) {
     GstDashDemuxStream *dashstream = iter->data;
 
     if (flags & GST_SEEK_FLAG_FLUSH) {
