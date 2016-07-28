@@ -1142,11 +1142,12 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   GST_DEBUG ("Ripple src1 to 700");
   ges_container_edit (GES_CONTAINER (src1), NULL, 0,
       GES_EDIT_MODE_RIPPLE, GES_EDGE_NONE, 700);
+
   /*                                           1700___________src_________2700
    *                                           1700__tr__2000
    *                700___________src1_________1700
-   *                         1000___________src3_________2000   Layer
-   *                         1000______tr______1700
+   *                                1200___________src3_________2200   Layer
+   *                                1200___tr__1700
    *---------------------------------------------------------------------------
    * 0__________src2_________1000                               Layer1
    */
@@ -1157,8 +1158,8 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_equals_uint64 (_DURATION (src1), 1700 - 700);
   assert_equals_uint64 (_START (src2), 0);
   assert_equals_uint64 (_DURATION (src2), 1000);
-  assert_equals_uint64 (_START (src3), 1000);
-  assert_equals_uint64 (_DURATION (src3), 2000 - 1000);
+  assert_equals_uint64 (_START (src3), 1200);
+  assert_equals_uint64 (_DURATION (src3), 2200 - 1200);
 
   GST_DEBUG ("Checking transitions on first layer");
   current = objects = ges_layer_get_clips (layer);
@@ -1168,14 +1169,14 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   current = current->next;
   transition = current->data;
   assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
-  assert_equals_uint64 (_START (transition), 1000);
-  assert_equals_uint64 (_DURATION (transition), 1700 - 1000);
+  assert_equals_uint64 (_START (transition), 1200);
+  assert_equals_uint64 (_DURATION (transition), 1700 - 1200);
 
   current = current->next;
   transition = current->data;
   assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
-  assert_equals_uint64 (_START (transition), 1000);
-  assert_equals_uint64 (_DURATION (transition), 1700 - 1000);
+  assert_equals_uint64 (_START (transition), 1200);
+  assert_equals_uint64 (_DURATION (transition), 1700 - 1200);
 
   current = current->next;
   fail_unless (current->data == src3);
@@ -1184,13 +1185,13 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   transition = current->data;
   assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1700);
-  assert_equals_uint64 (_DURATION (transition), 2000 - 1700);
+  assert_equals_uint64 (_DURATION (transition), 2200 - 1700);
 
   current = current->next;
   transition = current->data;
   assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1700);
-  assert_equals_uint64 (_DURATION (transition), 2000 - 1700);
+  assert_equals_uint64 (_DURATION (transition), 2200 - 1700);
 
   current = current->next;
   fail_unless (current->data == src);
