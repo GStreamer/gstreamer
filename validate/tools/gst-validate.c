@@ -35,6 +35,7 @@
 #include <gst/validate/gst-validate-utils.h>
 #include <gst/validate/media-descriptor-parser.h>
 #include <gst/validate/gst-validate-bin-monitor.h>
+#include <gst/validate/gst-validate-pipeline-monitor.h>
 
 #ifdef G_OS_UNIX
 #include <glib-unix.h>
@@ -256,121 +257,6 @@ _execute_set_subtitles (GstValidateScenario * scenario,
   return TRUE;
 }
 
-static GstPadProbeReturn
-_check_pad_event_selection_done (GstPad * pad, GstPadProbeInfo * info,
-    GstValidateAction * action)
-{
-  if (GST_EVENT_TYPE (info->data) == GST_EVENT_STREAM_START) {
-    gst_validate_action_set_done (action);
-    return GST_PAD_PROBE_REMOVE;
-  }
-  return GST_PAD_PROBE_OK;
-}
-
-static gboolean
-_execute_switch_track (GstValidateScenario * scenario,
-    GstValidateAction * action)
-{
-  gint index, n;
-  const gchar *type, *str_index;
-
-  gint flags, current, tflag;
-  gchar *tmp, *current_txt;
-
-  gint res = GST_VALIDATE_EXECUTE_ACTION_OK;
-  gboolean relative = FALSE, disabling = FALSE;
-
-  if (!(type = gst_structure_get_string (action->structure, "type")))
-    type = "audio";
-
-  tflag =
-      gst_validate_utils_flags_from_str (g_type_from_name ("GstPlayFlags"),
-      type);
-  current_txt = g_strdup_printf ("current-%s", type);
-
-  tmp = g_strdup_printf ("n-%s", type);
-  g_object_get (scenario->pipeline, "flags", &flags, tmp, &n,
-      current_txt, &current, NULL);
-
-  /* Don't try to use -1 */
-  if (current == -1)
-    current = 0;
-
-  g_free (tmp);
-
-  if (gst_structure_has_field (action->structure, "disable")) {
-    disabling = TRUE;
-    flags &= ~tflag;
-    index = -1;
-  } else if (!(str_index =
-          gst_structure_get_string (action->structure, "index"))) {
-    if (!gst_structure_get_int (action->structure, "index", &index)) {
-      GST_WARNING ("No index given, defaulting to +1");
-      index = 1;
-      relative = TRUE;
-    }
-  } else {
-    relative = strchr ("+-", str_index[0]) != NULL;
-    index = g_ascii_strtoll (str_index, NULL, 10);
-  }
-
-  if (relative) {               /* We are changing track relatively to current track */
-    index = (current + index) % n;
-  }
-
-  if (!disabling) {
-    GstState state, next;
-    GstPad *oldpad, *newpad;
-    tmp = g_strdup_printf ("get-%s-pad", type);
-    g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, current,
-        &oldpad);
-    g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, index, &newpad);
-
-    gst_validate_printf (action, "Switching to track number: %i,"
-        " (from %s:%s to %s:%s)\n", index, GST_DEBUG_PAD_NAME (oldpad),
-        GST_DEBUG_PAD_NAME (newpad));
-    flags |= tflag;
-    g_free (tmp);
-
-    if (gst_element_get_state (scenario->pipeline, &state, &next, 0) &&
-        state == GST_STATE_PLAYING && next == GST_STATE_VOID_PENDING) {
-      GstPad *srcpad = NULL;
-      GstElement *combiner = NULL;
-      if (newpad == oldpad) {
-        srcpad = gst_pad_get_peer (oldpad);
-      } else if (newpad) {
-        combiner = GST_ELEMENT (gst_object_get_parent (GST_OBJECT (newpad)));
-        if (combiner) {
-          srcpad = gst_element_get_static_pad (combiner, "src");
-          gst_object_unref (combiner);
-        }
-      }
-
-      if (srcpad) {
-        gst_pad_add_probe (srcpad,
-            GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-            (GstPadProbeCallback) _check_pad_event_selection_done, action,
-            NULL);
-        gst_object_unref (srcpad);
-
-        res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
-      } else
-        res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
-    }
-
-    if (oldpad)
-      gst_object_unref (oldpad);
-    gst_object_unref (newpad);
-  } else {
-    gst_validate_printf (action, "Disabling track type %s", type);
-  }
-
-  g_object_set (scenario->pipeline, "flags", flags, current_txt, index, NULL);
-  g_free (current_txt);
-
-  return res;
-}
-
 static void
 _register_playbin_actions (void)
 {
@@ -394,41 +280,6 @@ _register_playbin_actions (void)
       "and action looks like 'set-subtitle, subtitle-file=en.srt'\n"
       "the subtitle URI will be set to 'file:///some/uri.mov.en.srt'\n",
       FALSE);
-
-  /* Overriding default implementation */
-  gst_validate_register_action_type ("switch-track", "validate-launcher", _execute_switch_track,
-      (GstValidateActionParameter []) {
-        {
-          .name = "type",
-          .description = "Selects which track type to change (can be 'audio', 'video',"
-                          " or 'text').",
-          .mandatory = FALSE,
-          .types = "string",
-          .possible_variables = NULL,
-          .def = "audio",
-        },
-        {
-          .name = "index",
-          .description = "Selects which track of this type to use: it can be either a number,\n"
-                         "which will be the Nth track of the given type, or a number with a '+' or\n"
-                         "'-' prefix, which means a relative change (eg, '+1' means 'next track',\n"
-                         "'-1' means 'previous track')",
-          .mandatory = FALSE,
-          .types = "string: to switch track relatively\n"
-                   "int: To use the actual index to use",
-          .possible_variables = NULL,
-          .def = "+1",
-        },
-        {NULL}
-      },
-      "The 'switch-track' command can be used to switch tracks.\n"
-      "The 'type' argument selects which track type to change (can be 'audio', 'video',"
-      " or 'text').\nThe 'index' argument selects which track of this type\n"
-      "to use: it can be either a number, which will be the Nth track of\n"
-      "the given type, or a number with a '+' or '-' prefix, which means\n"
-      "a relative change (eg, '+1' means 'next track', '-1' means 'previous\n"
-      "track'), note that you need to state that it is a string in the scenario file\n"
-      "prefixing it with (string).", FALSE);
 /* *INDENT-ON* */
 }
 

@@ -52,6 +52,7 @@
 #include "validate.h"
 #include <gst/validate/gst-validate-override.h>
 #include <gst/validate/gst-validate-override-registry.h>
+#include <gst/validate/gst-validate-pipeline-monitor.h>
 
 #define GST_VALIDATE_SCENARIO_GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_VALIDATE_SCENARIO, GstValidateScenarioPrivate))
@@ -69,6 +70,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_validate_scenario_debug);
 #define REGISTER_ACTION_TYPE(_tname, _function, _params, _desc, _is_config) G_STMT_START { \
   gst_validate_register_action_type ((_tname), "core", (_function), (_params), (_desc), (_is_config)); \
 } G_STMT_END
+
+#define ACTION_EXPECTED_STREAM_QUARK g_quark_from_static_string ("ACTION_EXPECTED_STREAM_QUARK")
 
 #define SCENARIO_LOCK(scenario) (g_mutex_lock(&scenario->priv->lock))
 #define SCENARIO_UNLOCK(scenario) (g_mutex_unlock(&scenario->priv->lock))
@@ -145,6 +148,10 @@ struct _GstValidateScenarioPrivate
   GList *overrides;
 
   gchar *pipeline_name;
+
+  /* 'switch-track action' currently waiting for
+   * GST_MESSAGE_STREAMS_SELECTED to be completed. */
+  GstValidateAction *pending_switch_track;
 };
 
 typedef struct KeyFileGroupName
@@ -855,7 +862,7 @@ _check_select_pad_done (GstPad * pad, GstPadProbeInfo * info,
 }
 
 static gboolean
-_execute_switch_track (GstValidateScenario * scenario,
+execute_switch_track_default (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
   guint index;
@@ -921,6 +928,278 @@ _execute_switch_track (GstValidateScenario * scenario,
 
   /* No selector found -> Failed */
   return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+}
+
+static GstPadProbeReturn
+_check_pad_event_selection_done (GstPad * pad, GstPadProbeInfo * info,
+    GstValidateAction * action)
+{
+  if (GST_EVENT_TYPE (info->data) == GST_EVENT_STREAM_START) {
+    gst_validate_action_set_done (action);
+    return GST_PAD_PROBE_REMOVE;
+  }
+  return GST_PAD_PROBE_OK;
+}
+
+static gboolean
+execute_switch_track_pb (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  gint index, n;
+  const gchar *type, *str_index;
+
+  gint flags, current, tflag;
+  gchar *tmp, *current_txt;
+
+  gint res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  gboolean relative = FALSE, disabling = FALSE;
+
+  if (!(type = gst_structure_get_string (action->structure, "type")))
+    type = "audio";
+
+  tflag =
+      gst_validate_utils_flags_from_str (g_type_from_name ("GstPlayFlags"),
+      type);
+  current_txt = g_strdup_printf ("current-%s", type);
+
+  tmp = g_strdup_printf ("n-%s", type);
+  g_object_get (scenario->pipeline, "flags", &flags, tmp, &n,
+      current_txt, &current, NULL);
+
+  /* Don't try to use -1 */
+  if (current == -1)
+    current = 0;
+
+  g_free (tmp);
+
+  if (gst_structure_has_field (action->structure, "disable")) {
+    disabling = TRUE;
+    flags &= ~tflag;
+    index = -1;
+  } else if (!(str_index =
+          gst_structure_get_string (action->structure, "index"))) {
+    if (!gst_structure_get_int (action->structure, "index", &index)) {
+      GST_WARNING ("No index given, defaulting to +1");
+      index = 1;
+      relative = TRUE;
+    }
+  } else {
+    relative = strchr ("+-", str_index[0]) != NULL;
+    index = g_ascii_strtoll (str_index, NULL, 10);
+  }
+
+  if (relative) {               /* We are changing track relatively to current track */
+    index = (current + index) % n;
+  }
+
+  if (!disabling) {
+    GstState state, next;
+    GstPad *oldpad, *newpad;
+    tmp = g_strdup_printf ("get-%s-pad", type);
+    g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, current,
+        &oldpad);
+    g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, index, &newpad);
+
+    gst_validate_printf (action, "Switching to track number: %i,"
+        " (from %s:%s to %s:%s)\n", index, GST_DEBUG_PAD_NAME (oldpad),
+        GST_DEBUG_PAD_NAME (newpad));
+    flags |= tflag;
+    g_free (tmp);
+
+    if (gst_element_get_state (scenario->pipeline, &state, &next, 0) &&
+        state == GST_STATE_PLAYING && next == GST_STATE_VOID_PENDING) {
+      GstPad *srcpad = NULL;
+      GstElement *combiner = NULL;
+      if (newpad == oldpad) {
+        srcpad = gst_pad_get_peer (oldpad);
+      } else if (newpad) {
+        combiner = GST_ELEMENT (gst_object_get_parent (GST_OBJECT (newpad)));
+        if (combiner) {
+          srcpad = gst_element_get_static_pad (combiner, "src");
+          gst_object_unref (combiner);
+        }
+      }
+
+      if (srcpad) {
+        gst_pad_add_probe (srcpad,
+            GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+            (GstPadProbeCallback) _check_pad_event_selection_done, action,
+            NULL);
+        gst_object_unref (srcpad);
+
+        res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+      } else
+        res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
+    }
+
+    if (oldpad)
+      gst_object_unref (oldpad);
+    gst_object_unref (newpad);
+  } else {
+    gst_validate_printf (action, "Disabling track type %s", type);
+  }
+
+  g_object_set (scenario->pipeline, "flags", flags, current_txt, index, NULL);
+  g_free (current_txt);
+
+  return res;
+}
+
+static GstStreamType
+stream_type_from_string (const gchar * type)
+{
+  if (!g_strcmp0 (type, "video"))
+    return GST_STREAM_TYPE_VIDEO;
+  else if (!g_strcmp0 (type, "text"))
+    return GST_STREAM_TYPE_TEXT;
+
+  /* default */
+  return GST_STREAM_TYPE_AUDIO;
+}
+
+/* Return a list of stream ID all the currently selected streams but the ones
+ * of type @type */
+static GList *
+disable_stream (GstValidatePipelineMonitor * monitor, GstStreamType type)
+{
+  GList *streams = NULL, *l;
+
+  for (l = monitor->streams_selected; l; l = g_list_next (l)) {
+    GstStream *s = l->data;
+
+    if (gst_stream_get_stream_type (s) != type) {
+      streams = g_list_append (streams, (gpointer) s->stream_id);
+    }
+  }
+
+  return streams;
+}
+
+static GList *
+switch_stream (GstValidatePipelineMonitor * monitor, GstValidateAction * action,
+    GstStreamType type, gint index, gboolean relative)
+{
+  guint nb_streams;
+  guint i, n = 0, current = 0;
+  GList *result = NULL, *l;
+  GstStream *streams[256], *s, *current_stream = NULL;
+
+  /* Keep all streams which are not @type */
+  for (l = monitor->streams_selected; l; l = g_list_next (l)) {
+    s = l->data;
+
+    if (gst_stream_get_stream_type (s) != type) {
+      result = g_list_append (result, (gpointer) s->stream_id);
+    } else if (!current_stream) {
+      /* Assume the stream we want to switch from is the first one */
+      current_stream = s;
+    }
+  }
+
+  /* Calculate the number of @type streams */
+  nb_streams = gst_stream_collection_get_size (monitor->stream_collection);
+  for (i = 0; i < nb_streams; i++) {
+    s = gst_stream_collection_get_stream (monitor->stream_collection, i);
+
+    if (gst_stream_get_stream_type (s) == type) {
+      streams[n] = s;
+
+      if (current_stream
+          && !g_strcmp0 (s->stream_id, current_stream->stream_id))
+        current = n;
+
+      n++;
+    }
+  }
+
+  if (relative) {               /* We are changing track relatively to current track */
+    index = (current + index) % n;
+  }
+
+  /* Add the new stream we want to switch to */
+  s = streams[index];
+
+  gst_validate_printf (action, "Switching from stream %s to %s",
+      current_stream ? current_stream->stream_id : "", s->stream_id);
+
+  return g_list_append (result, (gpointer) s->stream_id);
+}
+
+static gboolean
+execute_switch_track_pb3 (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstValidateScenarioPrivate *priv = scenario->priv;
+  gint index;
+  GstStreamType stype;
+  const gchar *type, *str_index;
+  GList *new_streams = NULL;
+  GstValidatePipelineMonitor *monitor =
+      (GstValidatePipelineMonitor *) (g_object_get_data ((GObject *)
+          scenario->pipeline, "validate-monitor"));
+
+  if (!monitor->stream_collection) {
+    GST_ERROR ("No stream collection message received on the bus");
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+  }
+
+  if (!monitor->streams_selected) {
+    GST_ERROR ("No streams selected message received on the bus");
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+  }
+
+  type = gst_structure_get_string (action->structure, "type");
+  stype = stream_type_from_string (type);
+
+  if (gst_structure_has_field (action->structure, "disable")) {
+    gst_validate_printf (action, "Disabling track type %s", type);
+    new_streams = disable_stream (monitor, stype);
+  } else {
+    gboolean relative = FALSE;
+
+    if (!(str_index = gst_structure_get_string (action->structure, "index"))) {
+      if (!gst_structure_get_int (action->structure, "index", &index)) {
+        GST_WARNING ("No index given, defaulting to +1");
+        index = 1;
+        relative = TRUE;
+      }
+    } else {
+      relative = strchr ("+-", str_index[0]) != NULL;
+      index = g_ascii_strtoll (str_index, NULL, 10);
+    }
+
+    new_streams = switch_stream (monitor, action, stype, index, relative);
+  }
+
+  gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (action),
+      ACTION_EXPECTED_STREAM_QUARK, g_list_copy (new_streams),
+      (GDestroyNotify) g_list_free);
+
+  priv->pending_switch_track = action;
+
+  if (!gst_element_send_event (scenario->pipeline,
+          gst_event_new_select_streams (new_streams))) {
+    GST_ERROR ("select-streams event not handled");
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+  }
+
+  return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+}
+
+static gboolean
+_execute_switch_track (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstValidatePipelineMonitor *monitor =
+      (GstValidatePipelineMonitor *) (g_object_get_data ((GObject *)
+          scenario->pipeline, "validate-monitor"));
+
+  if (monitor->is_playbin)
+    return execute_switch_track_pb (scenario, action);
+  else if (monitor->is_playbin3)
+    return execute_switch_track_pb3 (scenario, action);
+
+  return execute_switch_track_default (scenario, action);
 }
 
 static gboolean
@@ -2057,6 +2336,21 @@ _check_waiting_for_message (GstValidateScenario * scenario,
 }
 
 static gboolean
+streams_list_contain (GList * streams, const gchar * stream_id)
+{
+  GList *l;
+
+  for (l = streams; l; l = g_list_next (l)) {
+    GstStream *s = l->data;
+
+    if (!g_strcmp0 (s->stream_id, stream_id))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
 message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 {
   gboolean is_error = FALSE;
@@ -2212,6 +2506,55 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       g_print ("%s %d%%  \r", "Buffering...", percent);
       break;
     }
+    case GST_MESSAGE_STREAMS_SELECTED:
+    {
+      guint i;
+      GList *streams_selected = NULL;
+
+      for (i = 0; i < gst_message_streams_selected_get_size (message); i++) {
+        GstStream *stream =
+            gst_message_streams_selected_get_stream (message, i);
+
+        streams_selected = g_list_append (streams_selected, stream);
+      }
+
+      /* Is there a pending switch-track action waiting for the new streams to
+       * be selected? */
+      if (priv->pending_switch_track) {
+        GList *expected, *l;
+
+        expected =
+            gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST
+            (priv->pending_switch_track), ACTION_EXPECTED_STREAM_QUARK);
+
+        if (g_list_length (expected) != g_list_length (streams_selected)) {
+          GST_VALIDATE_REPORT (priv->pending_switch_track->scenario,
+              SCENARIO_ACTION_EXECUTION_ERROR,
+              "Was expecting %d selected streams but got %d",
+              g_list_length (expected), g_list_length (streams_selected));
+          goto action_done;
+        }
+
+        for (l = expected; l; l = g_list_next (l)) {
+          const gchar *stream_id = l->data;
+
+          if (!streams_list_contain (streams_selected, stream_id)) {
+            GST_VALIDATE_REPORT (priv->pending_switch_track->scenario,
+                SCENARIO_ACTION_EXECUTION_ERROR,
+                "Stream %s has not be activated", stream_id);
+            goto action_done;
+          }
+        }
+
+      action_done:
+        gst_validate_action_set_done (priv->pending_switch_track);
+        priv->pending_switch_track = NULL;
+      }
+
+      g_list_free_full (streams_selected, gst_object_unref);
+      break;
+    }
+
     default:
       break;
   }

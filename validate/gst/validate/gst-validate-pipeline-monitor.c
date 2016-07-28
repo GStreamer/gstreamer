@@ -47,9 +47,26 @@ G_DEFINE_TYPE (GstValidatePipelineMonitor, gst_validate_pipeline_monitor,
     GST_TYPE_VALIDATE_BIN_MONITOR);
 
 static void
+gst_validate_pipeline_monitor_dispose (GObject * object)
+{
+  GstValidatePipelineMonitor *self = (GstValidatePipelineMonitor *) object;
+
+  g_clear_object (&self->stream_collection);
+  if (self->streams_selected) {
+    g_list_free_full (self->streams_selected, gst_object_unref);
+    self->streams_selected = NULL;
+  }
+
+  G_OBJECT_CLASS (gst_validate_pipeline_monitor_parent_class)->dispose (object);
+}
+
+static void
 gst_validate_pipeline_monitor_class_init (GstValidatePipelineMonitorClass *
     klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->dispose = gst_validate_pipeline_monitor_dispose;
 }
 
 static void
@@ -179,6 +196,33 @@ _bus_handler (GstBus * bus, GstMessage * message,
       }
       break;
     }
+    case GST_MESSAGE_STREAM_COLLECTION:
+    {
+      GstStreamCollection *collection = NULL;
+      gst_message_parse_stream_collection (message, &collection);
+      gst_object_replace ((GstObject **) & monitor->stream_collection,
+          (GstObject *) collection);
+      gst_object_unref (collection);
+      break;
+    }
+    case GST_MESSAGE_STREAMS_SELECTED:
+    {
+      guint i;
+
+      if (monitor->streams_selected) {
+        g_list_free_full (monitor->streams_selected, gst_object_unref);
+        monitor->streams_selected = NULL;
+      }
+
+      for (i = 0; i < gst_message_streams_selected_get_size (message); i++) {
+        GstStream *stream =
+            gst_message_streams_selected_get_stream (message, i);
+
+        monitor->streams_selected =
+            g_list_append (monitor->streams_selected, stream);
+      }
+      break;
+    }
     default:
       break;
   }
@@ -247,6 +291,11 @@ gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
   g_signal_connect (bus, "sync-message", (GCallback) _bus_handler, monitor);
 
   gst_object_unref (bus);
+
+  if (g_strcmp0 (G_OBJECT_TYPE_NAME (pipeline), "GstPlayBin") == 0)
+    monitor->is_playbin = TRUE;
+  else if (g_strcmp0 (G_OBJECT_TYPE_NAME (pipeline), "GstPlayBin3") == 0)
+    monitor->is_playbin3 = TRUE;
 
   return monitor;
 }

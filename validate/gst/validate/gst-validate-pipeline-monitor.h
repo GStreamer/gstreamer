@@ -58,6 +58,16 @@ struct _GstValidatePipelineMonitor {
   guint print_pos_srcid;
   gboolean buffering;
   gboolean got_error;
+
+  /* TRUE if monitoring a playbin2 pipeline */
+  gboolean is_playbin;
+  /* TRUE if monitoring a playbin3 pipeline */
+  gboolean is_playbin3;
+
+  /* Latest collection received from GST_MESSAGE_STREAM_COLLECTION */
+  GstStreamCollection *stream_collection;
+  /* Latest GstStream received from GST_MESSAGE_STREAMS_SELECTED */
+  GList *streams_selected;
 };
 
 /**
