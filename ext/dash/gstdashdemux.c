@@ -884,6 +884,7 @@ gst_dash_demux_reset (GstAdaptiveDemux * ademux)
 
   demux->n_audio_streams = 0;
   demux->n_video_streams = 0;
+  demux->n_subtitle_streams = 0;
 }
 
 static GstCaps *
