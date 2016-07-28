@@ -2573,10 +2573,38 @@ no_udp_protocol:
 
 /* must be called with lock */
 static void
-create_receiver_part (GstRTSPStream * stream, GstBin * bin, GstState state)
+plug_src (GstRTSPStream * stream, GstBin * bin, GstElement * src,
+    GstElement * funnel)
 {
   GstRTSPStreamPrivate *priv;
   GstPad *pad, *selpad;
+
+  priv = stream->priv;
+
+  if (priv->srcpad) {
+    /* we set and keep these to playing so that they don't cause NO_PREROLL return
+     * values. This is only relevant for PLAY pipelines */
+    gst_element_set_state (src, GST_STATE_PLAYING);
+    gst_element_set_locked_state (src, TRUE);
+  }
+
+  /* add src */
+  gst_bin_add (bin, src);
+
+  /* and link to the funnel */
+  selpad = gst_element_get_request_pad (funnel, "sink_%u");
+  pad = gst_element_get_static_pad (src, "src");
+  gst_pad_link (pad, selpad);
+  gst_object_unref (pad);
+  gst_object_unref (selpad);
+}
+
+/* must be called with lock */
+static void
+create_receiver_part (GstRTSPStream * stream, GstBin * bin, GstState state)
+{
+  GstRTSPStreamPrivate *priv;
+  GstPad *pad;
   gboolean is_tcp;
   gint i;
 
@@ -2613,56 +2641,19 @@ create_receiver_part (GstRTSPStream * stream, GstBin * bin, GstState state)
     gst_pad_link (pad, priv->recv_sink[i]);
     gst_object_unref (pad);
 
-    if (priv->udpsrc_v4[i]) {
-      if (priv->srcpad) {
-        /* we set and keep these to playing so that they don't cause NO_PREROLL return
-         * values. This is only relevant for PLAY pipelines */
-        gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_PLAYING);
-        gst_element_set_locked_state (priv->udpsrc_v4[i], TRUE);
-      }
-      /* add udpsrc */
-      gst_bin_add (bin, priv->udpsrc_v4[i]);
+    if (priv->udpsrc_v4[i])
+      plug_src (stream, bin, priv->udpsrc_v4[i], priv->funnel[i]);
 
-      /* and link to the funnel v4 */
-      selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
-      pad = gst_element_get_static_pad (priv->udpsrc_v4[i], "src");
-      gst_pad_link (pad, selpad);
-      gst_object_unref (pad);
-      gst_object_unref (selpad);
-    }
-
-    if (priv->udpsrc_v6[i]) {
-      if (priv->srcpad) {
-        gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_PLAYING);
-        gst_element_set_locked_state (priv->udpsrc_v6[i], TRUE);
-      }
-      gst_bin_add (bin, priv->udpsrc_v6[i]);
-
-      /* and link to the funnel v6 */
-      selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
-      pad = gst_element_get_static_pad (priv->udpsrc_v6[i], "src");
-      gst_pad_link (pad, selpad);
-      gst_object_unref (pad);
-      gst_object_unref (selpad);
-    }
+    if (priv->udpsrc_v6[i])
+      plug_src (stream, bin, priv->udpsrc_v6[i], priv->funnel[i]);
 
     if (is_tcp) {
       /* make and add appsrc */
       priv->appsrc[i] = gst_element_factory_make ("appsrc", NULL);
       priv->appsrc_base_time[i] = -1;
-      if (priv->srcpad) {
-        gst_element_set_state (priv->appsrc[i], GST_STATE_PLAYING);
-        gst_element_set_locked_state (priv->appsrc[i], TRUE);
-      }
       g_object_set (priv->appsrc[i], "format", GST_FORMAT_TIME, "is-live",
           TRUE, NULL);
-      gst_bin_add (bin, priv->appsrc[i]);
-      /* and link to the funnel */
-      selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
-      pad = gst_element_get_static_pad (priv->appsrc[i], "src");
-      gst_pad_link (pad, selpad);
-      gst_object_unref (pad);
-      gst_object_unref (selpad);
+      plug_src (stream, bin, priv->appsrc[i], priv->funnel[i]);
     }
 
     /* check if we need to set to a special state */
