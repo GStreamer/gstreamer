@@ -21,7 +21,7 @@
 /**
  * SECTION:gestitlesource
  * @short_description: render stand-alone text titles
- * 
+ *
  * #GESTitleSource is a GESTimelineElement that implements the notion
  * of titles in GES.
  *
@@ -128,8 +128,8 @@ static void ges_title_source_set_property (GObject * object, guint
 static GstElement *ges_title_source_create_source (GESTrackElement * self);
 
 static gboolean
-_lookup_child (GESTrackElement * object,
-    const gchar * prop_name, GstElement ** element, GParamSpec ** pspec)
+_lookup_child (GESTimelineElement * object,
+    const gchar * prop_name, GObject ** element, GParamSpec ** pspec)
 {
   gboolean res;
 
@@ -143,7 +143,7 @@ _lookup_child (GESTrackElement * object,
     clean_name = g_strdup (prop_name);
 
   res =
-      GES_TRACK_ELEMENT_CLASS (ges_title_source_parent_class)->lookup_child
+      GES_TIMELINE_ELEMENT_CLASS (ges_title_source_parent_class)->lookup_child
       (object, clean_name, element, pspec);
 
   g_free (clean_name);
@@ -156,7 +156,6 @@ ges_title_source_class_init (GESTitleSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_CLASS (klass);
-  GESTrackElementClass *track_element_class = GES_TRACK_ELEMENT_CLASS (klass);
   GESTimelineElementClass *timeline_element_class =
       GES_TIMELINE_ELEMENT_CLASS (klass);
 
@@ -167,7 +166,7 @@ ges_title_source_class_init (GESTitleSourceClass * klass)
   object_class->dispose = ges_title_source_dispose;
 
   timeline_element_class->set_inpoint = NULL;
-  track_element_class->lookup_child = _lookup_child;
+  timeline_element_class->lookup_child = _lookup_child;
   source_class->create_source = ges_title_source_create_source;
 }
 
@@ -299,7 +298,7 @@ ges_title_source_create_source (GESTrackElement * object)
  * @self: the #GESTitleSource* to set text on
  * @text: the text to render. an internal copy of this text will be
  * made.
- * 
+ *
  * Sets the text this track element will render.
  *
  * Deprecated: use ges_track_element_get/set_children_properties on the
@@ -323,7 +322,7 @@ ges_title_source_set_text (GESTitleSource * self, const gchar * text)
  * ges_title_source_set_font_desc:
  * @self: the #GESTitleSource
  * @font_desc: the pango font description
- * 
+ *
  * Set the pango font description this source will use to render
  * the text.
  */
