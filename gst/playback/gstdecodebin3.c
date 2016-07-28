@@ -1047,7 +1047,7 @@ get_merged_collection (GstDecodebin3 * dbin)
     for (i = 0; i < nb_stream; i++) {
       GstStream *stream =
           gst_stream_collection_get_stream (dbin->main_input->collection, i);
-      gst_stream_collection_add_stream (res, stream);
+      gst_stream_collection_add_stream (res, gst_object_ref (stream));
     }
   }
 
@@ -1061,7 +1061,7 @@ get_merged_collection (GstDecodebin3 * dbin)
       for (i = 0; i < nb_stream; i++) {
         GstStream *stream =
             gst_stream_collection_get_stream (input->collection, i);
-        gst_stream_collection_add_stream (res, stream);
+        gst_stream_collection_add_stream (res, gst_object_ref (stream));
       }
     }
   }
