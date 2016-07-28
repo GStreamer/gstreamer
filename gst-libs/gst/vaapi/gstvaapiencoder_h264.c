@@ -154,6 +154,7 @@ typedef struct
   GstVaapiSurfaceProxy *pic;
   guint poc;
   guint frame_num;
+  guint temporal_id;
 } GstVaapiEncoderH264Ref;
 
 typedef enum
@@ -758,6 +759,7 @@ struct _GstVaapiEncoderH264
   guint temporal_levels;        /* Number of temporal levels */
   guint temporal_level_div[MAX_TEMPORAL_LEVELS];        /* to find the temporal id */
   guint prediction_type;
+  guint abs_diff_pic_num_list0;
   GstClockTime cts_offset;
   gboolean config_changed;
 
@@ -943,9 +945,25 @@ bs_write_slice (GstBitWriter * bs,
         WRITE_UE (bs, slice_param->num_ref_idx_l1_active_minus1);
     }
   }
-  /* XXX: not supporting custom reference picture list modifications */
-  if ((slice_param->slice_type != 2) && (slice_param->slice_type != 4))
+
+  if ((slice_param->slice_type != 2) && (slice_param->slice_type != 4)) {
+    if ((encoder->prediction_type ==
+            GST_VAAPI_ENCODER_H264_PREDICTION_HIERARCHICAL_P)
+        && (encoder->abs_diff_pic_num_list0 > 1))
+      ref_pic_list_modification_flag_l0 = 1;
+
     WRITE_UINT32 (bs, ref_pic_list_modification_flag_l0, 1);
+
+    if (ref_pic_list_modification_flag_l0) {
+      /*modification_of_pic_num_idc */
+      WRITE_UE (bs, 0);
+      /* abs_diff_pic_num_minus1 */
+      WRITE_UE (bs, encoder->abs_diff_pic_num_list0 - 1);
+      /*modification_of_pic_num_idc */
+      WRITE_UE (bs, 3);
+    }
+  }
+
   if (slice_param->slice_type == 1)
     WRITE_UINT32 (bs, ref_pic_list_modification_flag_l1, 1);
 
@@ -959,7 +977,7 @@ bs_write_slice (GstBitWriter * bs,
   }
 
   /* dec_ref_pic_marking() */
-  if (slice_param->slice_type == 0 || slice_param->slice_type == 2) {
+  if (GST_VAAPI_ENC_PICTURE_IS_REFRENCE (picture)) {
     if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture)) {
       /* no_output_of_prior_pics_flag = 0 */
       WRITE_UINT32 (bs, no_output_of_prior_pics_flag, 1);
@@ -1280,6 +1298,13 @@ ensure_tuning (GstVaapiEncoderH264 * encoder)
   return success;
 }
 
+static gboolean
+is_temporal_id_max (GstVaapiEncoderH264 * encoder, guint32 temporal_id)
+{
+  g_assert (temporal_id < encoder->temporal_levels);
+  return temporal_id == encoder->temporal_levels - 1;
+}
+
 /* Handle new GOP starts */
 static void
 reset_gop_start (GstVaapiEncoderH264 * encoder)
@@ -1307,7 +1332,16 @@ set_p_frame (GstVaapiEncPicture * pic, GstVaapiEncoderH264 * encoder)
 {
   g_return_if_fail (pic->type == GST_VAAPI_PICTURE_TYPE_NONE);
   pic->type = GST_VAAPI_PICTURE_TYPE_P;
-  GST_VAAPI_PICTURE_FLAG_SET (pic, GST_VAAPI_ENC_PICTURE_FLAG_REFERENCE);
+
+  if (encoder->temporal_levels == 1) {
+    /* Default prediction mode */
+    GST_VAAPI_PICTURE_FLAG_SET (pic, GST_VAAPI_ENC_PICTURE_FLAG_REFERENCE);
+  } else {
+    /* temporal_encode: all frames in highest level are not reference frames
+     * for hierarhical-p and hierarchical-b prediction mode */
+    if (!is_temporal_id_max (encoder, pic->temporal_id))
+      GST_VAAPI_PICTURE_FLAG_SET (pic, GST_VAAPI_ENC_PICTURE_FLAG_REFERENCE);
+  }
 }
 
 /* Marks the supplied picture as an I-frame */
@@ -1673,7 +1707,11 @@ get_nal_hdr_attributes (GstVaapiEncPicture * picture,
         *nal_unit_type = GST_H264_NAL_SLICE;
       break;
     case GST_VAAPI_PICTURE_TYPE_P:
-      *nal_ref_idc = GST_H264_NAL_REF_IDC_MEDIUM;
+      if (!GST_VAAPI_ENC_PICTURE_IS_REFRENCE (picture))
+        *nal_ref_idc = GST_H264_NAL_REF_IDC_NONE;
+      else
+        *nal_ref_idc = GST_H264_NAL_REF_IDC_MEDIUM;
+
       *nal_unit_type = GST_H264_NAL_SLICE;
       break;
     case GST_VAAPI_PICTURE_TYPE_B:
@@ -1813,6 +1851,7 @@ reference_pic_create (GstVaapiEncoderH264 * encoder,
   ref->pic = surface;
   ref->frame_num = picture->frame_num;
   ref->poc = picture->poc;
+  ref->temporal_id = picture->temporal_id;
   return ref;
 }
 
@@ -1842,6 +1881,57 @@ reference_list_update (GstVaapiEncoderH264 * encoder,
   return TRUE;
 }
 
+static void
+reflist0_init_hierarchical (GstVaapiEncoderH264 * encoder,
+    GstVaapiEncPicture * picture, GQueue * ref_list,
+    GstVaapiEncoderH264Ref ** reflist_0, guint * reflist_0_count)
+{
+  GstVaapiEncoderH264Ref *tmp = NULL;
+  GList *iter;
+  guint count = 0, i;
+
+  iter = g_queue_peek_tail_link (ref_list);
+  for (; iter; iter = g_list_previous (iter)) {
+    tmp = (GstVaapiEncoderH264Ref *) iter->data;
+
+    g_assert (tmp && tmp->poc != picture->poc);
+
+    if (_poc_greater_than (picture->poc, tmp->poc, encoder->max_pic_order_cnt)
+        && ((picture->temporal_id && (tmp->temporal_id < picture->temporal_id))
+            || (!picture->temporal_id
+                && (tmp->temporal_id == picture->temporal_id)))) {
+      reflist_0[count++] = tmp;
+    }
+  }
+
+  g_assert (count != 0);
+
+  /* Only need one ref frame */
+  tmp = reflist_0[0];
+  for (i = 1; i < count; i++) {
+    if (tmp->poc < reflist_0[i]->poc)
+      tmp = reflist_0[i];
+  }
+  reflist_0[0] = tmp;
+  *reflist_0_count = 1;
+  encoder->abs_diff_pic_num_list0 = picture->frame_num - tmp->frame_num;
+}
+
+static gboolean
+reference_list_init_hierarchical (GstVaapiEncoderH264 * encoder,
+    GstVaapiEncPicture * picture,
+    GQueue * ref_list,
+    GstVaapiEncoderH264Ref ** reflist_0,
+    guint * reflist_0_count,
+    GstVaapiEncoderH264Ref ** reflist_1, guint * reflist_1_count)
+{
+  /* reflist_0 ordering is same for hierarchical-P and hierarchical-B */
+  reflist0_init_hierarchical (encoder, picture, ref_list, reflist_0,
+      reflist_0_count);
+
+  return TRUE;
+}
+
 static gboolean
 reference_list_init (GstVaapiEncoderH264 * encoder,
     GstVaapiEncPicture * picture,
@@ -1859,6 +1949,14 @@ reference_list_init (GstVaapiEncoderH264 * encoder,
   *reflist_1_count = 0;
   if (picture->type == GST_VAAPI_PICTURE_TYPE_I)
     return TRUE;
+
+  /* reference picture handling for hierarchial encode */
+  if (encoder->prediction_type ==
+      GST_VAAPI_ENCODER_H264_PREDICTION_HIERARCHICAL_P) {
+    return reference_list_init_hierarchical (encoder, picture,
+        &ref_pool->ref_list, reflist_0, reflist_0_count, reflist_1,
+        reflist_1_count);
+  }
 
   iter = g_queue_peek_tail_link (&ref_pool->ref_list);
   for (; iter; iter = g_list_previous (iter)) {
@@ -1908,8 +2006,7 @@ fill_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncSequence * sequence)
   seq_param->level_idc = encoder->level_idc;
   seq_param->intra_period = GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder);
   seq_param->intra_idr_period = GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder);
-  seq_param->ip_period = seq_param->intra_period > 1 ?
-      (1 + encoder->num_bframes) : 0;
+  seq_param->ip_period = encoder->ip_period;
   seq_param->bits_per_second = encoder->bitrate_bits;
 
   seq_param->max_num_ref_frames = ref_pool->max_ref_frames;
@@ -2049,7 +2146,7 @@ fill_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
   pic_param->pic_fields.bits.idr_pic_flag =
       GST_VAAPI_ENC_PICTURE_IS_IDR (picture);
   pic_param->pic_fields.bits.reference_pic_flag =
-      (picture->type != GST_VAAPI_PICTURE_TYPE_B);
+      GST_VAAPI_ENC_PICTURE_IS_REFRENCE (picture);
   pic_param->pic_fields.bits.entropy_coding_mode_flag = encoder->use_cabac;
   pic_param->pic_fields.bits.weighted_pred_flag = FALSE;
   pic_param->pic_fields.bits.weighted_bipred_idc = 0;
@@ -2621,16 +2718,49 @@ reset_properties (GstVaapiEncoderH264 * encoder)
   encoder->max_pic_order_cnt = (1 << encoder->log2_max_pic_order_cnt);
   encoder->idr_num = 0;
 
-  /* this ip_period calculation is for supporting hierarchical-p
-   * and hierarchical-b encode */
-  encoder->ip_period = 1 << (encoder->temporal_levels - 1);
+  /* if temporal scalability enabled then use hierarchical-p
+   * as default prediction */
+  if (encoder->temporal_levels > 1
+      && encoder->prediction_type == GST_VAAPI_ENCODER_H264_PREDICTION_DEFAULT)
+    encoder->prediction_type = GST_VAAPI_ENCODER_H264_PREDICTION_HIERARCHICAL_P;
+
+  if (encoder->prediction_type ==
+      GST_VAAPI_ENCODER_H264_PREDICTION_HIERARCHICAL_P) {
+
+    /* Hierarchical prediction should have a temporal level count
+     * greater than one and we use 4 temporal levels as default */
+    if (encoder->temporal_levels <= 1)
+      encoder->temporal_levels = 4;
+
+    /* this ip_period calculation is for supporting hierarchical-p
+     * and hierarchical-b encode */
+    encoder->ip_period = 1 << (encoder->temporal_levels - 1);
+
+    /* align the idr_period to ip_peroid to simplify encode process */
+    encoder->idr_period =
+        GST_ROUND_UP_N (encoder->idr_period, encoder->ip_period);
+
+    GST_VAAPI_ENCODER_KEYFRAME_PERIOD (base_encoder) = encoder->idr_period;
+
+    /* Disable mvc-encode in hierarchical mode */
+    if (encoder->num_views > 1) {
+      encoder->num_views = 1;
+      encoder->is_mvc = FALSE;
+    }
+
+    /* no b-frames in Hierarchical-P */
+    encoder->num_bframes = 0;
+  } else {
+    encoder->ip_period = GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder) > 1 ?
+        (1 + encoder->num_bframes) : 0;
+  }
 
   for (i = 0; i < encoder->num_views; i++) {
     GstVaapiH264ViewRefPool *const ref_pool = &encoder->ref_pools[i];
     GstVaapiH264ViewReorderPool *const reorder_pool =
         &encoder->reorder_pools[i];
 
-    if (encoder->temporal_levels == 1) {
+    if (encoder->prediction_type == GST_VAAPI_ENCODER_H264_PREDICTION_DEFAULT) {
       ref_pool->max_reflist0_count = encoder->num_ref_frames;
       ref_pool->max_reflist1_count = encoder->num_bframes > 0;
       ref_pool->max_ref_frames = ref_pool->max_reflist0_count
@@ -3080,6 +3210,7 @@ gst_vaapi_encoder_h264_init (GstVaapiEncoder * base_encoder)
   encoder->num_views = 1;
   encoder->view_idx = 0;
   encoder->temporal_levels = MIN_TEMPORAL_LEVELS;
+  encoder->abs_diff_pic_num_list0 = 1;
   memset (encoder->view_ids, 0, sizeof (encoder->view_ids));
 
   /* re-ordering  list initialize */
