@@ -608,6 +608,7 @@ static void
 gst_decodebin3_dispose (GObject * object)
 {
   GstDecodebin3 *dbin = (GstDecodebin3 *) object;
+  GList *walk, *next;
 
   if (dbin->factories)
     gst_plugin_feature_list_free (dbin->factories);
@@ -622,7 +623,15 @@ gst_decodebin3_dispose (GObject * object)
   g_clear_object (&dbin->collection);
 
   free_input (dbin, dbin->main_input);
-  /* FIXME : GO OVER INPUTS */
+
+  for (walk = dbin->other_inputs; walk; walk = next) {
+    DecodebinInput *input = walk->data;
+
+    next = g_list_next (walk);
+
+    free_input (dbin, input);
+    dbin->other_inputs = g_list_delete_link (dbin->other_inputs, walk);
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
