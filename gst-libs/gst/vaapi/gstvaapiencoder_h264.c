@@ -710,6 +710,7 @@ struct _GstVaapiEncoderH264
   guint8 hw_max_profile_idc;
   guint8 level_idc;
   guint32 idr_period;
+  guint32 ip_period;
   guint32 init_qp;
   guint32 min_qp;
   guint32 qp_i;
@@ -721,7 +722,8 @@ struct _GstVaapiEncoderH264
   guint32 mb_height;
   gboolean use_cabac;
   gboolean use_dct8x8;
-  guint temporal_levels;
+  guint temporal_levels;        /* Number of temporal levels */
+  guint temporal_level_div[MAX_TEMPORAL_LEVELS];        /* to find the temporal id */
   GstClockTime cts_offset;
   gboolean config_changed;
 
@@ -2596,15 +2598,37 @@ reset_properties (GstVaapiEncoderH264 * encoder)
   encoder->max_pic_order_cnt = (1 << encoder->log2_max_pic_order_cnt);
   encoder->idr_num = 0;
 
+  /* this ip_period calculation is for supporting hierarchical-p
+   * and hierarchical-b encode */
+  encoder->ip_period = 1 << (encoder->temporal_levels - 1);
+
   for (i = 0; i < encoder->num_views; i++) {
     GstVaapiH264ViewRefPool *const ref_pool = &encoder->ref_pools[i];
     GstVaapiH264ViewReorderPool *const reorder_pool =
         &encoder->reorder_pools[i];
 
-    ref_pool->max_reflist0_count = encoder->num_ref_frames;
-    ref_pool->max_reflist1_count = encoder->num_bframes > 0;
-    ref_pool->max_ref_frames = ref_pool->max_reflist0_count
-        + ref_pool->max_reflist1_count;
+    if (encoder->temporal_levels == 1) {
+      ref_pool->max_reflist0_count = encoder->num_ref_frames;
+      ref_pool->max_reflist1_count = encoder->num_bframes > 0;
+      ref_pool->max_ref_frames = ref_pool->max_reflist0_count
+          + ref_pool->max_reflist1_count;
+    } else {
+      guint d;
+
+      ref_pool->max_ref_frames =
+          encoder->temporal_levels * encoder->temporal_levels / 2;
+      ref_pool->max_reflist0_count = 1;
+      ref_pool->max_reflist1_count = encoder->num_bframes > 0;
+      encoder->num_ref_frames = ref_pool->max_ref_frames;
+
+      d = encoder->ip_period;
+      /* temporal_level_div[] is helpful to find out the temporal level
+       * where each frame should belongs */
+      for (i = 0; i < encoder->temporal_levels; i++) {
+        encoder->temporal_level_div[i] = d;
+        d >>= 1;
+      }
+    }
 
     reorder_pool->frame_index = 0;
   }
@@ -2773,6 +2797,19 @@ error_alloc_buffer:
   }
 }
 
+static guint32
+get_temporal_id (GstVaapiEncoderH264 * encoder, guint32 display_order)
+{
+  int l;
+  for (l = 0; l < encoder->temporal_levels; l++) {
+    if ((display_order % encoder->temporal_level_div[l]) == 0)
+      return l;
+  }
+
+  GST_WARNING ("Couldn't find valid temporal id");
+  return 0;
+}
+
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
     GstVideoCodecFrame * frame, GstVaapiEncPicture ** output)
@@ -2821,6 +2858,9 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
   ++reorder_pool->cur_present_index;
   picture->poc = ((reorder_pool->cur_present_index * 2) %
       encoder->max_pic_order_cnt);
+
+  picture->temporal_id = (encoder->temporal_levels == 1) ? 1 :
+      get_temporal_id (encoder, reorder_pool->frame_index);
 
   is_idr = (reorder_pool->frame_index == 0 ||
       reorder_pool->frame_index >= encoder->idr_period);

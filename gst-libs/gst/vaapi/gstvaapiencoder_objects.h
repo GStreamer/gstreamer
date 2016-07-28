@@ -269,6 +269,7 @@ struct _GstVaapiEncPicture
   GstClockTime pts;
   guint frame_num;
   guint poc;
+  guint temporal_id;
 #if USE_H264_FEI_ENCODER
   GstVaapiEncFeiMbControl *mbcntrl;
   GstVaapiEncFeiMvPredictor *mvpred;
