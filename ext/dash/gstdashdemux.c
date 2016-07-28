@@ -2156,7 +2156,8 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
 
         if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT) {
           /* Jump to the next sync sample */
-          if (gst_dash_demux_find_sync_samples (demux, stream) &&
+          if (dash_stream->active_stream->mimeType == GST_STREAM_VIDEO
+              && gst_dash_demux_find_sync_samples (demux, stream) &&
               GST_ADAPTIVE_DEMUX (stream->demux)->
               segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
             return GST_ADAPTIVE_DEMUX_FLOW_END_OF_FRAGMENT;
@@ -2289,8 +2290,9 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
               GST_ISOFF_FOURCC_MDAT) {
 
             /* Jump to the next sync sample */
-            if (gst_dash_demux_find_sync_samples (demux, stream) &&
-                GST_ADAPTIVE_DEMUX (stream->demux)->
+            if (dash_stream->active_stream->mimeType == GST_STREAM_VIDEO
+                && gst_dash_demux_find_sync_samples (demux, stream)
+                && GST_ADAPTIVE_DEMUX (stream->demux)->
                 segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
               if (buffer)
                 gst_buffer_unref (buffer);
