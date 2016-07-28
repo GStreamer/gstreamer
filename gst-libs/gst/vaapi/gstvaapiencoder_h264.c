@@ -48,6 +48,10 @@
 /* Define the maximum value for view-id */
 #define MAX_VIEW_ID 1023
 
+/* Define default temporal levels */
+#define MIN_TEMPORAL_LEVELS 1
+#define MAX_TEMPORAL_LEVELS 4
+
 /* Supported set of VA rate controls, within this implementation */
 #define SUPPORTED_RATECONTROLS                          \
   (GST_VAAPI_RATECONTROL_MASK (CQP)  |                  \
@@ -717,6 +721,7 @@ struct _GstVaapiEncoderH264
   guint32 mb_height;
   gboolean use_cabac;
   gboolean use_dct8x8;
+  guint temporal_levels;
   GstClockTime cts_offset;
   gboolean config_changed;
 
@@ -2989,6 +2994,7 @@ gst_vaapi_encoder_h264_init (GstVaapiEncoder * base_encoder)
   encoder->is_mvc = FALSE;
   encoder->num_views = 1;
   encoder->view_idx = 0;
+  encoder->temporal_levels = MIN_TEMPORAL_LEVELS;
   memset (encoder->view_ids, 0, sizeof (encoder->view_ids));
 
   /* re-ordering  list initialize */
@@ -3118,6 +3124,9 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
       break;
     case GST_VAAPI_ENCODER_H264_PROP_MBBRC:
       encoder->mbbrc = g_value_get_enum (value);
+      break;
+    case GST_VAAPI_ENCODER_H264_PROP_TEMPORAL_LEVELS:
+      encoder->temporal_levels = g_value_get_uint (value);
       break;
 
     default:
@@ -3298,6 +3307,19 @@ gst_vaapi_encoder_h264_get_default_properties (void)
           "Macroblock level Bitrate Control",
           "Macroblock level Bitrate Control",
           GST_VAAPI_TYPE_ENCODER_MBBRC, GST_VAAPI_ENCODER_MBBRC_AUTO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:temporal-levels:
+   *
+   * Number of temporal levels in the encoded stream.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_TEMPORAL_LEVELS,
+      g_param_spec_uint ("temporal-levels",
+          "temporal levels",
+          "Number of temporal levels in the encoded stream ",
+          MIN_TEMPORAL_LEVELS, MAX_TEMPORAL_LEVELS, MIN_TEMPORAL_LEVELS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**

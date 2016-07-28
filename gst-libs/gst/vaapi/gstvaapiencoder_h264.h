@@ -54,6 +54,7 @@ typedef struct _GstVaapiEncoderH264 GstVaapiEncoderH264;
  * @GST_VAAPI_ENCODER_H264_PROP_MBBRC: Macroblock level Bitrate Control.
  * @GST_VAAPI_ENCODER_H264_PROP_QP_IP: Difference of QP between I and P frame.
  * @GST_VAAPI_ENCODER_H264_PROP_QP_IB: Difference of QP between I and B frame.
+ * @GST_VAAPI_ENCODER_H264_PROP_TEMPORAL_LEVELS: Number of temporal levels
  *
  * The set of H.264 encoder specific configurable properties.
  */
@@ -73,6 +74,7 @@ typedef enum {
   GST_VAAPI_ENCODER_H264_PROP_MBBRC = -13,
   GST_VAAPI_ENCODER_H264_PROP_QP_IP = -14,
   GST_VAAPI_ENCODER_H264_PROP_QP_IB = -15,
+  GST_VAAPI_ENCODER_H264_PROP_TEMPORAL_LEVELS = -16,
 } GstVaapiEncoderH264Prop;
 
 GstVaapiEncoder *
