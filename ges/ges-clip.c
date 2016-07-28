@@ -691,6 +691,23 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
   return GES_TIMELINE_ELEMENT (nclip);
 }
 
+static gboolean
+_lookup_child (GESTimelineElement * self, const gchar * prop_name,
+    GObject ** child, GParamSpec ** pspec)
+{
+  GList *tmp;
+
+  if (GES_TIMELINE_ELEMENT_CLASS (ges_clip_parent_class)->lookup_child (self,
+          prop_name, child, pspec))
+    return TRUE;
+
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
+    if (ges_timeline_element_lookup_child (tmp->data, prop_name, child, pspec))
+      return TRUE;
+  }
+
+  return FALSE;
+}
 
 /****************************************************
  *                                                  *
@@ -793,6 +810,7 @@ ges_clip_class_init (GESClipClass * klass)
   element_class->set_max_duration = _set_max_duration;
   element_class->paste = _paste;
   element_class->deep_copy = _deep_copy;
+  element_class->lookup_child = _lookup_child;
 
   container_class->add_child = _add_child;
   container_class->remove_child = _remove_child;
