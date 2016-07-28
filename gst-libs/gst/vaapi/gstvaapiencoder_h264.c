@@ -109,6 +109,38 @@ gst_vaapi_encoder_h264_compliance_mode_type (void)
   return gtype;
 }
 
+typedef enum
+{
+  GST_VAAPI_ENCODER_H264_PREDICTION_DEFAULT,
+  GST_VAAPI_ENCODER_H264_PREDICTION_HIERARCHICAL_P,
+  GST_VAAPI_ENCODER_H264_PREDICTION_HIERARCHICAL_B
+} GstVaapiEnoderH264PredictionType;
+
+static GType
+gst_vaapi_encoder_h264_prediction_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {GST_VAAPI_ENCODER_H264_PREDICTION_DEFAULT,
+            "Default encode, prev/next frame as ref ",
+          "default"},
+      {GST_VAAPI_ENCODER_H264_PREDICTION_HIERARCHICAL_P,
+            "Hierarchical P frame encode",
+          "hierarchical-p"},
+      {GST_VAAPI_ENCODER_H264_PREDICTION_HIERARCHICAL_B,
+            "Hierarchical B frame encode",
+          "hierarchical-b"},
+      {0, NULL, NULL},
+    };
+
+    gtype =
+        g_enum_register_static ("GstVaapiEncoderH264PredictionType", values);
+  }
+  return gtype;
+}
+
 /* only for internal usage, values won't be equal to actual payload type */
 typedef enum
 {
@@ -724,6 +756,7 @@ struct _GstVaapiEncoderH264
   gboolean use_dct8x8;
   guint temporal_levels;        /* Number of temporal levels */
   guint temporal_level_div[MAX_TEMPORAL_LEVELS];        /* to find the temporal id */
+  guint prediction_type;
   GstClockTime cts_offset;
   gboolean config_changed;
 
@@ -3168,6 +3201,9 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H264_PROP_TEMPORAL_LEVELS:
       encoder->temporal_levels = g_value_get_uint (value);
       break;
+    case GST_VAAPI_ENCODER_H264_PROP_PREDICTION_TYPE:
+      encoder->prediction_type = g_value_get_enum (value);
+      break;
 
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
@@ -3360,6 +3396,20 @@ gst_vaapi_encoder_h264_get_default_properties (void)
           "temporal levels",
           "Number of temporal levels in the encoded stream ",
           MIN_TEMPORAL_LEVELS, MAX_TEMPORAL_LEVELS, MIN_TEMPORAL_LEVELS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:prediction-type:
+   *
+   * Select the referece picture selection modes
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_PREDICTION_TYPE,
+      g_param_spec_enum ("prediction-type",
+          "RefPic Selection",
+          "Reference Picture Selection Modes",
+          gst_vaapi_encoder_h264_prediction_type (),
+          GST_VAAPI_ENCODER_H264_PREDICTION_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
