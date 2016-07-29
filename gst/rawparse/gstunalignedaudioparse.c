@@ -96,7 +96,7 @@ gst_unaligned_audio_parse_init (GstUnalignedAudioParse * unaligned_audio_parse)
   GstPad *ghostpad;
 
   unaligned_audio_parse->inner_parser =
-      gst_element_factory_make ("rawaudioaudioparse", "inner_parser");
+      gst_element_factory_make ("rawaudioparse", "inner_parser");
   g_assert (unaligned_audio_parse->inner_parser != NULL);
 
   g_object_set (G_OBJECT (unaligned_audio_parse->inner_parser),
