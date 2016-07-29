@@ -1635,7 +1635,12 @@ get_profile_string (GstH264SPS * sps)
         profile = "scalable-baseline";
       break;
     case 86:
-      profile = "scalable-high";
+      if (sps->constraint_set3_flag)
+        profile = "scalable-high-intra";
+      else if (sps->constraint_set5_flag)
+        profile = "scalable-constrained-high";
+      else
+        profile = "scalable-high";
       break;
     default:
       return NULL;
