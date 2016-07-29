@@ -832,6 +832,10 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   if (!pool) {
     if (!ensure_srcpad_allocator (plugin, &vi))
       goto error_create_allocator;
+
+    /* Update video size with allocator's image size */
+    size = GST_VIDEO_INFO_SIZE (&GST_VAAPI_VIDEO_ALLOCATOR_CAST
+        (plugin->srcpad_allocator)->image_info);
     pool = gst_vaapi_plugin_base_create_pool (plugin, caps, size, min, max,
         pool_options, plugin->srcpad_allocator);
     if (!pool)
