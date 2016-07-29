@@ -124,6 +124,7 @@ struct _GstDashDemux
   gint n_subtitle_streams;
 
   gboolean trickmode_no_audio;
+  gboolean allow_trickmode_key_units;
 };
 
 struct _GstDashDemuxClass

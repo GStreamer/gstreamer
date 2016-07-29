@@ -922,6 +922,7 @@ gst_dash_demux_reset (GstAdaptiveDemux * ademux)
   demux->n_subtitle_streams = 0;
 
   demux->trickmode_no_audio = FALSE;
+  demux->allow_trickmode_key_units = TRUE;
 }
 
 static GstCaps *
@@ -1862,6 +1863,7 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
 static gboolean
 gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
 {
+  GstDashDemux *dashdemux = (GstDashDemux *) stream->demux;
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
 
   /* We're chunked downloading for ISOBMFF in KEY_UNITS mode for the actual
@@ -1874,7 +1876,8 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
       && (GST_ADAPTIVE_DEMUX (stream->demux)->
           segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
       && dashstream->active_stream->mimeType == GST_STREAM_VIDEO
-      && !stream->downloading_header && !stream->downloading_index) {
+      && !stream->downloading_header && !stream->downloading_index
+      && dashdemux->allow_trickmode_key_units) {
     if (dashstream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
       stream->fragment.chunk_size = 8192;
     } else if (dashstream->moof && dashstream->moof_sync_samples) {
@@ -1882,13 +1885,17 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
     } else {
       stream->fragment.chunk_size = -1;
     }
-
-    return stream->fragment.chunk_size != 0;
+  } else {
+    /* We might've decided that we can't allow key-unit only
+     * trickmodes while doing chunked downloading. In that case
+     * just download from here to the end now */
+    if (dashstream->moof)
+      stream->fragment.chunk_size = -1;
+    else
+      stream->fragment.chunk_size = 0;
   }
 
-  stream->fragment.chunk_size = 0;
-
-  return FALSE;
+  return stream->fragment.chunk_size != 0;
 }
 
 static GstBuffer *
@@ -2063,14 +2070,17 @@ static gboolean
 gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream)
 {
+  GstDashDemux *dashdemux = (GstDashDemux *) stream->demux;
   GstDashDemuxStream *dash_stream = (GstDashDemuxStream *) stream;
   guint i;
   guint32 track_id = 0;
   guint64 prev_traf_end;
   gboolean trex_sample_flags = FALSE;
 
-  if (!dash_stream->moof)
+  if (!dash_stream->moof) {
+    dashdemux->allow_trickmode_key_units = FALSE;
     return FALSE;
+  }
 
   dash_stream->current_sync_sample = -1;
   dash_stream->moof_sync_samples =
@@ -2092,6 +2102,7 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
           traf->tfhd.track_id);
       g_array_free (dash_stream->moof_sync_samples, TRUE);
       dash_stream->moof_sync_samples = NULL;
+      dashdemux->allow_trickmode_key_units = FALSE;
       return FALSE;
     }
 
@@ -2166,6 +2177,7 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
               "Sample size given by trex - can't download only keyframes");
           g_array_free (dash_stream->moof_sync_samples, TRUE);
           dash_stream->moof_sync_samples = NULL;
+          dashdemux->allow_trickmode_key_units = FALSE;
           return FALSE;
         }
 
@@ -2193,6 +2205,7 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
           "Sample flags given by trex - can't download only keyframes");
       g_array_free (dash_stream->moof_sync_samples, TRUE);
       dash_stream->moof_sync_samples = NULL;
+      dashdemux->allow_trickmode_key_units = FALSE;
       return FALSE;
     }
   }
@@ -2210,7 +2223,7 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
   guint index_header_or_data;
 
   if (!gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
-    if (dash_stream->is_isobmff) {
+    if (dash_stream->is_isobmff && dashdemux->allow_trickmode_key_units) {
       if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
         buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
 
@@ -2354,7 +2367,7 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
           GST_BUFFER_OFFSET (buffer) + gst_buffer_get_size (buffer);
       dash_stream->sidx_current_offset = GST_BUFFER_OFFSET_END (buffer);
 
-      if (dash_stream->is_isobmff) {
+      if (dash_stream->is_isobmff && dashdemux->allow_trickmode_key_units) {
         if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
           buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
 
@@ -2416,7 +2429,7 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
         GST_BUFFER_OFFSET (buffer) + gst_buffer_get_size (buffer);
     dash_stream->sidx_current_offset = GST_BUFFER_OFFSET_END (buffer);
 
-    if (dash_stream->is_isobmff) {
+    if (dash_stream->is_isobmff && dashdemux->allow_trickmode_key_units) {
       if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
         buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
 
