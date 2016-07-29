@@ -2067,6 +2067,7 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
   guint i;
   guint32 track_id = 0;
   guint64 prev_traf_end;
+  gboolean trex_sample_flags = FALSE;
 
   if (!dash_stream->moof)
     return FALSE;
@@ -2136,11 +2137,8 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
             tfhd.flags & GST_TFHD_FLAGS_DEFAULT_SAMPLE_FLAGS_PRESENT) {
           sample_flags = traf->tfhd.default_sample_flags;
         } else {
-          GST_FIXME_OBJECT (stream->pad,
-              "Sample flags given by trex - can't download only keyframes");
-          g_array_free (dash_stream->moof_sync_samples, TRUE);
-          dash_stream->moof_sync_samples = NULL;
-          return FALSE;
+          trex_sample_flags = TRUE;
+          continue;
         }
 
 #if 0
@@ -2184,6 +2182,19 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
     }
 
     prev_traf_end = prev_trun_end;
+  }
+
+  if (trex_sample_flags) {
+    if (dash_stream->moof_sync_samples->len > 0) {
+      GST_LOG_OBJECT (stream->pad,
+          "Some sample flags given by trex but still found sync samples");
+    } else {
+      GST_FIXME_OBJECT (stream->pad,
+          "Sample flags given by trex - can't download only keyframes");
+      g_array_free (dash_stream->moof_sync_samples, TRUE);
+      dash_stream->moof_sync_samples = NULL;
+      return FALSE;
+    }
   }
 
   return TRUE;
