@@ -968,15 +968,15 @@ gst_raw_audio_parse_caps_to_config (GstRawAudioParse * raw_audio_parse,
             &channel_mask, NULL)) {
       channel_mask = gst_audio_channel_get_fallback_mask (num_channels);
       GST_DEBUG_OBJECT (raw_audio_parse,
-          "input caps have no channel mask - using fallback mask %#lx for %u channels",
-          channel_mask, num_channels);
+          "input caps have no channel mask - using fallback mask %#"
+          G_GINT64_MODIFIER "x for %u channels", channel_mask, num_channels);
     }
 
     if (!gst_raw_audio_parse_set_config_channels (config, num_channels,
             channel_mask, TRUE)) {
       GST_ERROR_OBJECT (raw_audio_parse,
-          "could not use channel mask %#lx for channel positions",
-          channel_mask);
+          "could not use channel mask %#" G_GINT64_MODIFIER
+          "x for channel positions", channel_mask);
       goto done;
     }
 
