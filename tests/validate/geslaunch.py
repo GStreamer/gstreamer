@@ -40,8 +40,11 @@ GES_ENCODING_TARGET_COMBINATIONS = [
     MediaFormatCombination("webm", "opus", "vp8"),
     MediaFormatCombination("mp4", "aac", "h264"),
     MediaFormatCombination("mp4", "ac3", "h264"),
+    MediaFormatCombination("quicktime", "aac", "jpeg"),
     MediaFormatCombination("mkv", "opus", "h264"),
-    MediaFormatCombination("mkv", "vorbis", "h264")
+    MediaFormatCombination("mkv", "vorbis", "h264"),
+    MediaFormatCombination("mkv", "opus", "jpeg"),
+    MediaFormatCombination("mkv", "vorbis", "jpeg")
 ]
 
 

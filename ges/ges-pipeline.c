@@ -1068,7 +1068,7 @@ ges_pipeline_get_mode (GESPipeline * pipeline)
  * creating a #GESPipeline is #GES_PIPELINE_MODE_PREVIEW.
  *
  * Note: The @pipeline will be set to #GST_STATE_NULL during this call due to
- * the internal changes that happen. The caller will therefore have to 
+ * the internal changes that happen. The caller will therefore have to
  * set the @pipeline to the requested state after calling this method.
  *
  * Returns: %TRUE if the mode was properly set, else %FALSE.
@@ -1228,7 +1228,7 @@ ges_pipeline_get_thumbnail (GESPipeline * self, GstCaps * caps)
  * something wrong happens or %NULL
  *
  * Saves the current frame to the specified @location.
- * 
+ *
  * Returns: %TRUE if the thumbnail was properly save, else %FALSE.
  */
 gboolean
