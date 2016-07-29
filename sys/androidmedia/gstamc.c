@@ -3826,6 +3826,10 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
       }
     }
   }
+
+  GST_DEBUG ("Returning caps for '%s':", codec_info->name);
+  GST_DEBUG ("  raw caps: %" GST_PTR_FORMAT, raw_ret);
+  GST_DEBUG ("  encoded caps: %" GST_PTR_FORMAT, encoded_ret);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
