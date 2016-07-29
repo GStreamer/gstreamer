@@ -537,6 +537,7 @@ gst_adaptive_demux_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_MANIFEST_LOCK (demux);
+      gst_adaptive_demux_reset (demux);
       demux->running = TRUE;
       GST_MANIFEST_UNLOCK (demux);
       break;
