@@ -218,6 +218,10 @@ gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
 
 G_GNUC_INTERNAL
 gboolean
+gst_allocator_get_vaapi_image_size (GstAllocator * allocator, guint * size);
+
+G_GNUC_INTERNAL
+gboolean
 gst_vaapi_is_dmabuf_allocator (GstAllocator * allocator);
 
 G_END_DECLS

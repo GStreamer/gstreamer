@@ -1036,6 +1036,32 @@ gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
   return TRUE;
 }
 
+/**
+ * gst_allocator_get_vaapi_image_size:
+ * @allocator: a #GstAllocator instance.
+ * @size: (out) (optional): the VA image size created by @allocator.
+ *
+ * This function gets the size of the VA images instantiated by the
+ * @allocator.
+ *
+ * Returns: %TRUE if @allocator is VA valid
+ **/
+gboolean
+gst_allocator_get_vaapi_image_size (GstAllocator * allocator, guint * size)
+{
+  GstVaapiVideoAllocator *alloc;
+
+  g_return_val_if_fail (GST_IS_ALLOCATOR (allocator), FALSE);
+
+  if (g_strcmp0 (allocator->mem_type, GST_VAAPI_VIDEO_MEMORY_NAME))
+    return FALSE;
+  alloc = GST_VAAPI_VIDEO_ALLOCATOR_CAST (allocator);
+  if (alloc && size)
+    *size = GST_VIDEO_INFO_SIZE (&alloc->image_info);
+
+  return TRUE;
+}
+
 gboolean
 gst_vaapi_is_dmabuf_allocator (GstAllocator * allocator)
 {
