@@ -2036,10 +2036,15 @@ reassign_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
         (GstPadProbeCallback) idle_reconfigure, target_slot, NULL);
     /* gst_pad_send_event (target_slot->src_pad, gst_event_new_reconfigure ()); */
   } else {
+    GstMessage *msg;
+
+    dbin->output_streams = g_list_remove (dbin->output_streams, output);
+    free_output_stream (dbin, output);
+    msg = is_selection_done (slot->dbin);
     SELECTION_UNLOCK (dbin);
-    /* FIXME : Remove output if no longer needed ? The tricky part is knowing
-     * if it's really no longer needed or not */
-    GST_FIXME_OBJECT (slot->src_pad, "Remove unused output stream ?");
+
+    if (msg)
+      gst_element_post_message ((GstElement *) slot->dbin, msg);
   }
 
   return TRUE;
@@ -2185,6 +2190,8 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
     GST_DEBUG_OBJECT (dbin,
         "Really need to deactivate slot %p, but no available alternative",
         slot);
+
+    slots_to_reassign = g_list_append (slots_to_reassign, slot);
   }
 
   /* The only slots left to activate are the ones that won't be reassigned and
