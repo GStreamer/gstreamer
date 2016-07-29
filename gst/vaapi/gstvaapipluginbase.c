@@ -791,9 +791,8 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   GstCaps *caps = NULL;
   GstBufferPool *pool;
   GstVideoInfo vi;
-  guint size, min, max;
+  guint size, min, max, pool_options;
   gboolean update_pool = FALSE;
-  guint pool_options;
 #if (USE_GLX || USE_EGL)
   guint idx;
 #endif
