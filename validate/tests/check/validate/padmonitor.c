@@ -84,6 +84,16 @@ _check_reports_refcount (GstPad * pad, gint refcount)
   g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
 }
 
+static GstBuffer *
+gst_discount_buffer_new (void)
+{
+  GstBuffer *buffer = gst_buffer_new ();
+
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+
+  return buffer;
+}
+
 GST_START_TEST (buffer_before_segment)
 {
   GstPad *srcpad;
@@ -115,8 +125,8 @@ GST_START_TEST (buffer_before_segment)
   /* Send a buffer before pushing any segment (FAILS) */
   {
     _gst_check_expecting_log = TRUE;
-    fail_unless_equals_int (gst_pad_push (srcpad, gst_buffer_new ()),
-        GST_FLOW_OK);
+    fail_unless_equals_int (gst_pad_push (srcpad,
+            gst_discount_buffer_new ()), GST_FLOW_OK);
 
     reports = gst_validate_runner_get_reports (runner);
     assert_equals_int (g_list_length (reports), 1);
@@ -130,7 +140,7 @@ GST_START_TEST (buffer_before_segment)
   {
     _gst_check_expecting_log = FALSE;
     gst_check_setup_events (srcpad, src, NULL, GST_FORMAT_TIME);
-    fail_unless_equals_int (gst_pad_push (srcpad, gst_buffer_new ()),
+    fail_unless_equals_int (gst_pad_push (srcpad, gst_discount_buffer_new ()),
         GST_FLOW_OK);
     reports = gst_validate_runner_get_reports (runner);
     assert_equals_int (g_list_length (reports), 1);
@@ -201,7 +211,7 @@ GST_START_TEST (buffer_outside_segment)
 
   /*  Pushing a buffer that is outside the segment */
   {
-    buffer = gst_buffer_new ();
+    buffer = gst_discount_buffer_new ();
     GST_BUFFER_PTS (buffer) = 10 * GST_SECOND;
     GST_BUFFER_DURATION (buffer) = GST_SECOND;
     fail_unless (gst_pad_push (srcpad, buffer));
@@ -216,7 +226,7 @@ GST_START_TEST (buffer_outside_segment)
 
   /* Pushing a buffer inside the segment */
   {
-    fail_unless (gst_pad_push (srcpad, gst_buffer_new ()));
+    fail_unless (gst_pad_push (srcpad, gst_discount_buffer_new ()));
     reports = gst_validate_runner_get_reports (runner);
     assert_equals_int (g_list_length (reports), 1);
     g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
@@ -313,7 +323,8 @@ _test_flow_aggregation (GstFlowReturn flow, GstFlowReturn flow1,
   pmonitor2->last_flow_return = flow2;
   FAKE_DEMUXER (demuxer)->return_value = demux_flow;
 
-  fail_unless_equals_int (gst_pad_push (srcpad, gst_buffer_new ()), demux_flow);
+  fail_unless_equals_int (gst_pad_push (srcpad, gst_discount_buffer_new ()),
+      demux_flow);
 
   reports = gst_validate_runner_get_reports (runner);
   if (should_fail) {
@@ -542,6 +553,8 @@ _create_buffer (BufferDesc * bdesc)
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   else
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
 
   return buffer;
 }
@@ -892,7 +905,7 @@ GST_START_TEST (buffer_timestamp_out_of_received_range)
   fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&segment)));
 
   {
-    buffer = gst_buffer_new ();
+    buffer = gst_discount_buffer_new ();
     GST_BUFFER_PTS (buffer) = 0 * GST_SECOND;
     GST_BUFFER_DURATION (buffer) = 0.1 * GST_SECOND;
     fail_unless (gst_pad_push (srcpad, buffer) == GST_FLOW_OK);
@@ -901,7 +914,7 @@ GST_START_TEST (buffer_timestamp_out_of_received_range)
   decoder_srcpad = gst_element_get_static_pad (decoder, "src");
 
   {
-    buffer = gst_buffer_new ();
+    buffer = gst_discount_buffer_new ();
     GST_BUFFER_PTS (buffer) = 0.9 * GST_SECOND;
     GST_BUFFER_DURATION (buffer) = 0.1 * GST_SECOND;
     fail_unless (gst_pad_push (decoder_srcpad, buffer) == GST_FLOW_OK);
@@ -942,7 +955,6 @@ GST_START_TEST (flow_error_without_message)
 
   gst_bin_add_many (pipeline, src, decoder, sink, NULL);
   fail_unless (gst_element_link_many (src, decoder, sink, NULL));
-
 
   FAKE_DECODER (decoder)->return_value = GST_FLOW_ERROR;
   ASSERT_SET_STATE (GST_ELEMENT (pipeline), GST_STATE_PLAYING,
