@@ -2210,6 +2210,14 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
     }
   }
 
+  if (dash_stream->moof_sync_samples->len == 0) {
+    GST_LOG_OBJECT (stream->pad, "No sync samples found in fragment");
+    g_array_free (dash_stream->moof_sync_samples, TRUE);
+    dash_stream->moof_sync_samples = NULL;
+    dashdemux->allow_trickmode_key_units = FALSE;
+    return FALSE;
+  }
+
   return TRUE;
 }
 
