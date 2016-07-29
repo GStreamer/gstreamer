@@ -557,7 +557,12 @@ gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
         profile = "scalable-baseline";
       break;
     case 86:
-      profile = "scalable-high";
+      if (csf3)
+        profile = "scalable-high-intra";
+      else if (csf5)
+        profile = "scalable-constrained-high";
+      else
+        profile = "scalable-high";
       break;
     default:
       return NULL;
