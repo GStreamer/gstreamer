@@ -2338,6 +2338,7 @@ gst_decodebin3_send_event (GstElement * element, GstEvent * event)
     if (streams)
       handle_stream_switch (dbin, streams, seqnum);
 
+    gst_event_unref (event);
     return TRUE;
   }
   return GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
