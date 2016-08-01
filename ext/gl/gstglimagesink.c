@@ -468,16 +468,16 @@ static const gfloat counterclockwise_matrix[] = {
 
 /* horizontal-flip */
 static const gfloat horizontal_flip_matrix[] = {
-  1.0f, 0.0f, 0.0f, 0.0f,
-  0.0f, -1.0f, 0.0f, 0.0f,
+  -1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, 1.0f, 0.0f, 0.0f,
   0.0f, 0.0f, 1.0f, 0.0f,
   0.0f, 0.0f, 0.0f, 1.0f,
 };
 
 /* vertical-flip */
 static const gfloat vertical_flip_matrix[] = {
-  -1.0f, 0.0f, 0.0f, 0.0f,
-  0.0f, 1.0f, 0.0f, 0.0f,
+  1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, -1.0f, 0.0f, 0.0f,
   0.0f, 0.0f, 1.0f, 0.0f,
   0.0f, 0.0f, 0.0f, 1.0f,
 };
