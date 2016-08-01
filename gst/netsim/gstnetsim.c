@@ -27,17 +27,37 @@
 #include "config.h"
 #endif
 
-#include <string.h>
 #include "gstnetsim.h"
+#include <string.h>
+#include <math.h>
+#include <float.h>
 
 GST_DEBUG_CATEGORY (netsim_debug);
 #define GST_CAT_DEFAULT (netsim_debug)
+
+static GType
+distribution_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {DISTRIBUTION_UNIFORM, "uniform", "uniform"},
+      {DISTRIBUTION_NORMAL, "normal", "normal"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstNetSimDistribution", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
 
 enum
 {
   PROP_0,
   PROP_MIN_DELAY,
   PROP_MAX_DELAY,
+  PROP_DELAY_DISTRIBUTION,
   PROP_DELAY_PROBABILITY,
   PROP_DROP_PROBABILITY,
   PROP_DUPLICATE_PROBABILITY,
@@ -49,6 +69,7 @@ enum
 /* these numbers are nothing but wild guesses and dont reflect any reality */
 #define DEFAULT_MIN_DELAY 200
 #define DEFAULT_MAX_DELAY 400
+#define DEFAULT_DELAY_DISTRIBUTION DISTRIBUTION_UNIFORM
 #define DEFAULT_DELAY_PROBABILITY 0.0
 #define DEFAULT_DROP_PROBABILITY 0.0
 #define DEFAULT_DUPLICATE_PROBABILITY 0.0
@@ -199,6 +220,41 @@ push_buffer_ctx_push (PushBufferCtx * ctx)
   return FALSE;
 }
 
+static gint
+get_random_value_uniform (GRand * rand_seed, gint32 min_value, gint32 max_value)
+{
+  return g_rand_int_range (rand_seed, min_value, max_value);
+}
+
+/* Generate a value from a normal distributation with 95% confidense interval
+ * between LOW and HIGH, using the Box-Muller transform. */
+static gint
+get_random_value_normal (GRand * rand_seed, gint32 low, gint32 high,
+    NormalDistributionState * state)
+{
+  gdouble u1, u2, t1, t2;
+  gdouble mu = (high + low) / 2.0;
+  gdouble sigma = (high - low) / (2 * 1.96);    /* 95% confidence interval */
+
+  state->generate = !state->generate;
+
+  if (!state->generate)
+    return round (state->z1 * sigma + mu);
+
+  do {
+    u1 = g_rand_double (rand_seed);
+    u2 = g_rand_double (rand_seed);
+  } while (u1 <= DBL_EPSILON);
+
+  t1 = sqrt (-2.0 * log (u1));
+  t2 = 2.0 * G_PI * u2;
+  state->z0 = t1 * cos (t2);
+  state->z1 = t1 * sin (t2);
+
+  return round (state->z0 * sigma + mu);
+}
+
+
 static GstFlowReturn
 gst_net_sim_delay_buffer (GstNetSim * netsim, GstBuffer * buf)
 {
@@ -207,10 +263,29 @@ gst_net_sim_delay_buffer (GstNetSim * netsim, GstBuffer * buf)
   g_mutex_lock (&netsim->loop_mutex);
   if (netsim->main_loop != NULL && netsim->delay_probability > 0 &&
       g_rand_double (netsim->rand_seed) < netsim->delay_probability) {
-    PushBufferCtx *ctx = push_buffer_ctx_new (netsim->srcpad, buf);
-    gint delay = g_rand_int_range (netsim->rand_seed,
-        netsim->min_delay, netsim->max_delay);
-    GSource *source = g_timeout_source_new (delay);
+    gint delay;
+    PushBufferCtx *ctx;
+    GSource *source;
+
+    switch (netsim->delay_distribution) {
+      case DISTRIBUTION_UNIFORM:
+        delay = get_random_value_uniform (netsim->rand_seed, netsim->min_delay,
+            netsim->max_delay);
+        break;
+      case DISTRIBUTION_NORMAL:
+        delay = get_random_value_normal (netsim->rand_seed, netsim->min_delay,
+            netsim->max_delay, &netsim->delay_state);
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
+    if (delay < 0)
+      delay = 0;
+
+    ctx = push_buffer_ctx_new (netsim->srcpad, buf);
+    source = g_timeout_source_new (delay);
 
     GST_DEBUG_OBJECT (netsim, "Delaying packet by %d", delay);
     g_source_set_callback (source, (GSourceFunc) push_buffer_ctx_push,
@@ -361,6 +436,9 @@ gst_net_sim_set_property (GObject * object,
     case PROP_MAX_DELAY:
       netsim->max_delay = g_value_get_int (value);
       break;
+    case PROP_DELAY_DISTRIBUTION:
+      netsim->delay_distribution = g_value_get_enum (value);
+      break;
     case PROP_DELAY_PROBABILITY:
       netsim->delay_probability = g_value_get_float (value);
       break;
@@ -399,6 +477,9 @@ gst_net_sim_get_property (GObject * object,
       break;
     case PROP_MAX_DELAY:
       g_value_set_int (value, netsim->max_delay);
+      break;
+    case PROP_DELAY_DISTRIBUTION:
+      g_value_set_enum (value, netsim->delay_distribution);
       break;
     case PROP_DELAY_PROBABILITY:
       g_value_set_float (value, netsim->delay_probability);
@@ -508,6 +589,19 @@ gst_net_sim_class_init (GstNetSimClass * klass)
       g_param_spec_int ("max-delay", "Maximum delay (ms)",
           "The maximum delay in ms to apply to buffers",
           G_MININT, G_MAXINT, DEFAULT_MAX_DELAY,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstNetSim:delay-distribution:
+   *
+   * Distribution for the amount of delay.
+   *
+   * Since: 1.14
+   */
+  g_object_class_install_property (gobject_class, PROP_DELAY_DISTRIBUTION,
+      g_param_spec_enum ("delay-distribution", "Delay Distribution",
+          "Distribution for the amount of delay",
+          distribution_get_type (), DEFAULT_DELAY_DISTRIBUTION,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_DELAY_PROBABILITY,

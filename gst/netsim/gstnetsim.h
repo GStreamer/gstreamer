@@ -46,6 +46,19 @@ G_BEGIN_DECLS
 typedef struct _GstNetSim GstNetSim;
 typedef struct _GstNetSimClass GstNetSimClass;
 
+typedef enum
+{
+  DISTRIBUTION_UNIFORM,
+  DISTRIBUTION_NORMAL
+} GstNetSimDistribution;
+
+typedef struct
+{
+  gboolean generate;
+  gdouble z0;
+  gdouble z1;
+} NormalDistributionState;
+
 struct _GstNetSim
 {
   GstElement parent;
@@ -60,10 +73,12 @@ struct _GstNetSim
   GRand *rand_seed;
   gsize bucket_size;
   GstClockTime prev_time;
+  NormalDistributionState delay_state;
 
   /* properties */
   gint min_delay;
   gint max_delay;
+  GstNetSimDistribution delay_distribution;
   gfloat delay_probability;
   gfloat drop_probability;
   gfloat duplicate_probability;
