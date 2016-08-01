@@ -50,7 +50,7 @@ GST_DEBUG_CATEGORY (gst_amc_debug);
 
 GQuark gst_amc_codec_info_quark = 0;
 
-static GList *codec_infos = NULL;
+static GQueue codec_infos = G_QUEUE_INIT;
 #ifdef GST_AMC_IGNORE_UNKNOWN_COLOR_FORMATS
 static gboolean ignore_unknown_color_formats = TRUE;
 #else
@@ -1399,7 +1399,7 @@ scan_codecs (GstPlugin * plugin)
         }
       }
 
-      codec_infos = g_list_append (codec_infos, gst_codec_info);
+      g_queue_push_tail (&codec_infos, gst_codec_info);
     }
 
     return TRUE;
@@ -1853,7 +1853,7 @@ scan_codecs (GstPlugin * plugin)
     /* We need at least a valid supported type */
     if (valid_codec) {
       GST_LOG ("Successfully scanned codec '%s'", name_str);
-      codec_infos = g_list_append (codec_infos, gst_codec_info);
+      g_queue_push_tail (&codec_infos, gst_codec_info);
       gst_codec_info = NULL;
     }
 
@@ -1892,7 +1892,7 @@ scan_codecs (GstPlugin * plugin)
     valid_codec = TRUE;
   }
 
-  ret = codec_infos != NULL;
+  ret = codec_infos.length != 0;
 
   /* If successful we store a cache of the codec information in
    * the registry. Otherwise we would always load all codecs during
@@ -1907,7 +1907,7 @@ scan_codecs (GstPlugin * plugin)
 
     g_value_init (&arr, GST_TYPE_ARRAY);
 
-    for (l = codec_infos; l; l = l->next) {
+    for (l = codec_infos.head; l; l = l->next) {
       GstAmcCodecInfo *gst_codec_info = l->data;
       GValue cv = { 0, };
       GstStructure *cs = gst_structure_new_empty ("gst-amc-codec");
@@ -3188,7 +3188,7 @@ register_codecs (GstPlugin * plugin)
 
   GST_DEBUG ("Registering plugins");
 
-  for (l = codec_infos; l; l = l->next) {
+  for (l = codec_infos.head; l; l = l->next) {
     GstAmcCodecInfo *codec_info = l->data;
     gboolean is_audio = FALSE;
     gboolean is_video = FALSE;
