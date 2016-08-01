@@ -98,26 +98,51 @@ gst_ah_sensor_sensor_sizes_init (void)
     gint type;
     gsize size;
   } types[] = {
-    {AHS_SENSOR_TYPE_ACCELEROMETER, sizeof (GstAHSAccelerometerValues)},
-    {AHS_SENSOR_TYPE_AMBIENT_TEMPERATURE, sizeof (GstAHSAmbientTemperatureValues)},
-    {AHS_SENSOR_TYPE_GAME_ROTATION_VECTOR, sizeof (GstAHSGameRotationVectorValues)},
-    {AHS_SENSOR_TYPE_GEOMAGNETIC_ROTATION_VECTOR, sizeof (GstAHSGeomagneticRotationVectorValues)},
-    {AHS_SENSOR_TYPE_GRAVITY, sizeof (GstAHSGravityValues)},
-    {AHS_SENSOR_TYPE_GYROSCOPE, sizeof (GstAHSGyroscopeValues)},
-    {AHS_SENSOR_TYPE_GYROSCOPE_UNCALIBRATED, sizeof (GstAHSGyroscopeUncalibratedValues)},
-    {AHS_SENSOR_TYPE_HEART_RATE, sizeof (GstAHSHeartRateValues)},
-    {AHS_SENSOR_TYPE_LIGHT, sizeof (GstAHSLightValues)},
-    {AHS_SENSOR_TYPE_LINEAR_ACCELERATION, sizeof (GstAHSLinearAccelerationValues)},
-    {AHS_SENSOR_TYPE_MAGNETIC_FIELD, sizeof (GstAHSMagneticFieldValues)},
-    {AHS_SENSOR_TYPE_MAGNETIC_FIELD_UNCALIBRATED, sizeof (GstAHSMagneticFieldUncalibratedValues)},
-    {AHS_SENSOR_TYPE_ORIENTATION, sizeof (GstAHSOrientationValues)},
-    {AHS_SENSOR_TYPE_PRESSURE, sizeof (GstAHSPressureValues)},
-    {AHS_SENSOR_TYPE_PROXIMITY, sizeof (GstAHSProximityValues)},
-    {AHS_SENSOR_TYPE_RELATIVE_HUMIDITY, sizeof (GstAHSRelativeHumidityValues)},
-    {AHS_SENSOR_TYPE_ROTATION_VECTOR, sizeof (GstAHSRotationVectorValues)},
-    {AHS_SENSOR_TYPE_STEP_COUNTER, sizeof (GstAHSStepCounterValues)},
-    {AHS_SENSOR_TYPE_STEP_DETECTOR, sizeof (GstAHSStepDetectorValues)},
-  };
+    {
+    AHS_SENSOR_TYPE_ACCELEROMETER, sizeof (GstAHSAccelerometerValues)}
+    , {
+    AHS_SENSOR_TYPE_AMBIENT_TEMPERATURE,
+          sizeof (GstAHSAmbientTemperatureValues)}
+    , {
+    AHS_SENSOR_TYPE_GAME_ROTATION_VECTOR,
+          sizeof (GstAHSGameRotationVectorValues)}
+    , {
+    AHS_SENSOR_TYPE_GEOMAGNETIC_ROTATION_VECTOR,
+          sizeof (GstAHSGeomagneticRotationVectorValues)}
+    , {
+    AHS_SENSOR_TYPE_GRAVITY, sizeof (GstAHSGravityValues)}
+    , {
+    AHS_SENSOR_TYPE_GYROSCOPE, sizeof (GstAHSGyroscopeValues)}
+    , {
+    AHS_SENSOR_TYPE_GYROSCOPE_UNCALIBRATED,
+          sizeof (GstAHSGyroscopeUncalibratedValues)}
+    , {
+    AHS_SENSOR_TYPE_HEART_RATE, sizeof (GstAHSHeartRateValues)}
+    , {
+    AHS_SENSOR_TYPE_LIGHT, sizeof (GstAHSLightValues)}
+    , {
+    AHS_SENSOR_TYPE_LINEAR_ACCELERATION,
+          sizeof (GstAHSLinearAccelerationValues)}
+    , {
+    AHS_SENSOR_TYPE_MAGNETIC_FIELD, sizeof (GstAHSMagneticFieldValues)}
+    , {
+    AHS_SENSOR_TYPE_MAGNETIC_FIELD_UNCALIBRATED,
+          sizeof (GstAHSMagneticFieldUncalibratedValues)}
+    , {
+    AHS_SENSOR_TYPE_ORIENTATION, sizeof (GstAHSOrientationValues)}
+    , {
+    AHS_SENSOR_TYPE_PRESSURE, sizeof (GstAHSPressureValues)}
+    , {
+    AHS_SENSOR_TYPE_PROXIMITY, sizeof (GstAHSProximityValues)}
+    , {
+    AHS_SENSOR_TYPE_RELATIVE_HUMIDITY, sizeof (GstAHSRelativeHumidityValues)}
+    , {
+    AHS_SENSOR_TYPE_ROTATION_VECTOR, sizeof (GstAHSRotationVectorValues)}
+    , {
+    AHS_SENSOR_TYPE_STEP_COUNTER, sizeof (GstAHSStepCounterValues)}
+    , {
+    AHS_SENSOR_TYPE_STEP_DETECTOR, sizeof (GstAHSStepDetectorValues)}
+  ,};
 
   g_assert_null (sensor_sizes);
 
@@ -696,8 +721,7 @@ gst_ah_sensor_create_listener (GstAHSensorCallback sensor_cb,
       org_freedesktop_gstreamer_androidmedia_gstahscallback.klass,
       org_freedesktop_gstreamer_androidmedia_gstahscallback.constructor,
       UNION_CAST (sensor_cb, jlong),
-      UNION_CAST (accuracy_cb, jlong),
-      UNION_CAST (user_data, jlong));
+      UNION_CAST (accuracy_cb, jlong), UNION_CAST (user_data, jlong));
   if (err) {
     GST_ERROR ("Failed to create listener callback class");
     g_clear_error (&err);
@@ -722,7 +746,8 @@ gst_ah_sensor_register_listener (GstAHSensorManager * self,
       android_hardware_sensor_manager.registerListener, &success,
       listener->object, sensor->object, (jint) delay);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.SensorManager.registerListener: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.SensorManager.registerListener: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -742,7 +767,8 @@ gst_ah_sensor_unregister_listener (GstAHSensorManager * self,
   gst_amc_jni_call_void_method (env, &err, self->object,
       android_hardware_sensor_manager.unregisterListener, listener->object);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.SensorManager.unregisterListener: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.SensorManager.unregisterListener: %s",
         err->message);
     g_clear_error (&err);
   }

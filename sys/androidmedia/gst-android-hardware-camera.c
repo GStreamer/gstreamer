@@ -2129,7 +2129,7 @@ gst_ah_camera_add_callback_buffer (GstAHCamera * self, jbyteArray buffer)
   GST_DEBUG ("add callback_buffer %p", buffer);
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.addCallbackBuffer, buffer);
+      android_hardware_camera.addCallbackBuffer, buffer);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.addCallbackBuffer: %s",
         err->message);
@@ -2154,14 +2154,15 @@ gst_ah_camera_auto_focus (GstAHCamera * self,
         org_freedesktop_gstreamer_androidmedia_gstahccallback.constructor,
         *((jlong *) & cb), *((jlong *) & user_data));
     if (err) {
-      GST_ERROR ("Failed to create org.freedesktop.gstreamer.androidmedia.GstAhcCallback object");
+      GST_ERROR
+          ("Failed to create org.freedesktop.gstreamer.androidmedia.GstAhcCallback object");
       g_clear_error (&err);
       goto done;
     }
   }
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.autoFocus, object);
+      android_hardware_camera.autoFocus, object);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.autoFocus: %s",
         err->message);
@@ -2171,7 +2172,7 @@ gst_ah_camera_auto_focus (GstAHCamera * self,
   ret = TRUE;
 done:
   if (err)
-    g_clear_error(&err);
+    g_clear_error (&err);
   if (object)
     gst_amc_jni_object_local_unref (env, object);
 
@@ -2185,7 +2186,7 @@ gst_ah_camera_cancel_auto_focus (GstAHCamera * self)
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.cancelAutoFocus);
+      android_hardware_camera.cancelAutoFocus);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.cancelAutoFocus: %s",
         err->message);
@@ -2216,7 +2217,7 @@ gst_ah_camera_get_camera_info (gint camera_id, GstAHCCameraInfo * camera_info)
   }
 
   gst_amc_jni_call_static_void_method (env, &err, android_hardware_camera.klass,
-    android_hardware_camera.getCameraInfo, camera_id, jcamera_info);
+      android_hardware_camera.getCameraInfo, camera_id, jcamera_info);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.getCameraInfo: %s",
         err->message);
@@ -2257,7 +2258,7 @@ gst_ah_camera_get_number_of_cameras (void)
   gint num_cameras;
 
   gst_amc_jni_call_static_int_method (env, &err, android_hardware_camera.klass,
-    android_hardware_camera.getNumberOfCameras, &num_cameras);
+      android_hardware_camera.getNumberOfCameras, &num_cameras);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.getNumberOfCameras: %s",
         err->message);
@@ -2277,7 +2278,7 @@ gst_ah_camera_get_parameters (GstAHCamera * self)
   GstAHCParameters *params = NULL;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera.getParameters, &object);
+      android_hardware_camera.getParameters, &object);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.getParameters: %s",
         err->message);
@@ -2311,7 +2312,7 @@ gst_ah_camera_lock (GstAHCamera * self)
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.lock);
+      android_hardware_camera.lock);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.lock: %s", err->message);
     g_clear_error (&err);
@@ -2330,11 +2331,10 @@ gst_ah_camera_open (gint camera_id)
   GstAHCamera *camera = NULL;
 
   gst_amc_jni_call_static_object_method (env, &err,
-    android_hardware_camera.klass, android_hardware_camera.open, &object,
-    camera_id);
+      android_hardware_camera.klass, android_hardware_camera.open, &object,
+      camera_id);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.open: %s",
-        err->message);
+    GST_ERROR ("Failed to call android.hardware.Camera.open: %s", err->message);
     g_clear_error (&err);
     goto done;
   }
@@ -2362,7 +2362,7 @@ gst_ah_camera_reconnect (GstAHCamera * self)
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.reconnect);
+      android_hardware_camera.reconnect);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.reconnect: %s",
         err->message);
@@ -2380,7 +2380,7 @@ gst_ah_camera_release (GstAHCamera * self)
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.release);
+      android_hardware_camera.release);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.release: %s",
         err->message);
@@ -2405,7 +2405,7 @@ gst_ah_camera_set_parameters (GstAHCamera * self, GstAHCParameters * params)
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.setParameters, params->object);
+      android_hardware_camera.setParameters, params->object);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.setParameters: %s",
         err->message);
@@ -2433,14 +2433,15 @@ gst_ah_camera_set_error_callback (GstAHCamera * self, GstAHCErrorCallback cb,
         org_freedesktop_gstreamer_androidmedia_gstahccallback.constructor,
         *((jlong *) & cb), *((jlong *) & user_data));
     if (err) {
-      GST_ERROR ("Failed to create org.freedesktop.gstreamer.androidmedia.GstAhcCallback object");
+      GST_ERROR
+          ("Failed to create org.freedesktop.gstreamer.androidmedia.GstAhcCallback object");
       g_clear_error (&err);
       goto done;
     }
   }
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.setErrorCallback, object);
+      android_hardware_camera.setErrorCallback, object);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.setErrorCallback: %s",
         err->message);
@@ -2474,16 +2475,18 @@ gst_ah_camera_set_preview_callback_with_buffer (GstAHCamera * self,
         org_freedesktop_gstreamer_androidmedia_gstahccallback.constructor,
         *((jlong *) & cb), *((jlong *) & user_data));
     if (err) {
-      GST_ERROR ("Failed to create org.freedesktop.gstreamer.androidmedia.GstAhcCallback object");
+      GST_ERROR
+          ("Failed to create org.freedesktop.gstreamer.androidmedia.GstAhcCallback object");
       g_clear_error (&err);
       goto done;
     }
   }
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.setPreviewCallbackWithBuffer, object);
+      android_hardware_camera.setPreviewCallbackWithBuffer, object);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.setPreviewCallbackWithBuffer: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.setPreviewCallbackWithBuffer: %s",
         err->message);
     goto done;
   }
@@ -2506,7 +2509,7 @@ gst_ah_camera_set_preview_texture (GstAHCamera * self,
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.setPreviewTexture, surfaceTexture->jobject);
+      android_hardware_camera.setPreviewTexture, surfaceTexture->jobject);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.setPreviewTexture: %s",
         err->message);
@@ -2521,7 +2524,7 @@ gst_ah_camera_start_preview (GstAHCamera * self)
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.startPreview);
+      android_hardware_camera.startPreview);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.startPreview: %s",
         err->message);
@@ -2539,7 +2542,7 @@ gst_ah_camera_start_smooth_zoom (GstAHCamera * self, gint value)
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.startSmoothZoom, value);
+      android_hardware_camera.startSmoothZoom, value);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.startSmoothZoom: %s",
         err->message);
@@ -2557,7 +2560,7 @@ gst_ah_camera_stop_preview (GstAHCamera * self)
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.stopPreview);
+      android_hardware_camera.stopPreview);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.stopPreview: %s",
         err->message);
@@ -2575,7 +2578,7 @@ gst_ah_camera_stop_smooth_zoom (GstAHCamera * self)
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.stopSmoothZoom);
+      android_hardware_camera.stopSmoothZoom);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.stopSmoothZoom: %s",
         err->message);
@@ -2593,7 +2596,7 @@ gst_ah_camera_unlock (GstAHCamera * self)
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera.unlock);
+      android_hardware_camera.unlock);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.unlock: %s",
         err->message);
@@ -3034,7 +3037,7 @@ gst_ahc_parameters_flatten (GstAHCParameters * self)
   gchar *ret = NULL;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.flatten, &v_str);
+      android_hardware_camera_parameters.flatten, &v_str);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.Parameters.flatten: %s",
         err->message);
@@ -3069,9 +3072,10 @@ gst_ahc_parameters_get_antibanding (GstAHCParameters * self)
   jstring antibanding;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getAntibanding, &antibanding);
+      android_hardware_camera_parameters.getAntibanding, &antibanding);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getAntibanding: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getAntibanding: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3094,9 +3098,10 @@ gst_ahc_parameters_get_color_effect (GstAHCParameters * self)
   jstring color_effect;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getColorEffect, &color_effect);
+      android_hardware_camera_parameters.getColorEffect, &color_effect);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getColorEffect: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getColorEffect: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3118,9 +3123,10 @@ gst_ahc_parameters_get_exposure_compensation (GstAHCParameters * self)
   gint ev;
 
   gst_amc_jni_call_int_method (env, &err, self->object,
-    android_hardware_camera_parameters.getExposureCompensation, &ev);
+      android_hardware_camera_parameters.getExposureCompensation, &ev);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getExposureCompensation: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getExposureCompensation: %s",
         err->message);
     g_clear_error (&err);
     return -1;
@@ -3137,9 +3143,10 @@ gst_ahc_parameters_get_exposure_compensation_step (GstAHCParameters * self)
   gfloat step;
 
   gst_amc_jni_call_float_method (env, &err, self->object,
-    android_hardware_camera_parameters.getExposureCompensationStep, &step);
+      android_hardware_camera_parameters.getExposureCompensationStep, &step);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getExposureCompensationStep: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getExposureCompensationStep: %s",
         err->message);
     g_clear_error (&err);
     return 0.0;
@@ -3157,9 +3164,10 @@ gst_ahc_parameters_get_flash_mode (GstAHCParameters * self)
   jstring flash_mode;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getFlashMode, &flash_mode);
+      android_hardware_camera_parameters.getFlashMode, &flash_mode);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getFlashMode: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getFlashMode: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3181,9 +3189,10 @@ gst_ahc_parameters_get_focal_length (GstAHCParameters * self)
   gfloat length;
 
   gst_amc_jni_call_float_method (env, &err, self->object,
-    android_hardware_camera_parameters.getFocalLength, &length);
+      android_hardware_camera_parameters.getFocalLength, &length);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getFocalLength: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getFocalLength: %s",
         err->message);
     g_clear_error (&err);
     return 0.0;
@@ -3201,9 +3210,10 @@ gst_ahc_parameters_get_focus_mode (GstAHCParameters * self)
   jstring focus_mode;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getFocusMode, &focus_mode);
+      android_hardware_camera_parameters.getFocusMode, &focus_mode);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getFocusMode: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getFocusMode: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3225,9 +3235,10 @@ gst_ahc_parameters_get_horizontal_view_angle (GstAHCParameters * self)
   gfloat angle;
 
   gst_amc_jni_call_float_method (env, &err, self->object,
-    android_hardware_camera_parameters.getHorizontalViewAngle, &angle);
+      android_hardware_camera_parameters.getHorizontalViewAngle, &angle);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getHorizontalViewAngle: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getHorizontalViewAngle: %s",
         err->message);
     g_clear_error (&err);
     return 0.0;
@@ -3244,9 +3255,10 @@ gst_ahc_parameters_get_max_exposure_compensation (GstAHCParameters * self)
   gint max;
 
   gst_amc_jni_call_int_method (env, &err, self->object,
-    android_hardware_camera_parameters.getMaxExposureCompensation, &max);
+      android_hardware_camera_parameters.getMaxExposureCompensation, &max);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getMaxExposureCompensation: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getMaxExposureCompensation: %s",
         err->message);
     g_clear_error (&err);
     return 0;
@@ -3263,9 +3275,10 @@ gst_ahc_parameters_get_max_zoom (GstAHCParameters * self)
   gint max;
 
   gst_amc_jni_call_int_method (env, &err, self->object,
-    android_hardware_camera_parameters.getMaxZoom, &max);
+      android_hardware_camera_parameters.getMaxZoom, &max);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getMaxZoom: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getMaxZoom: %s",
         err->message);
     g_clear_error (&err);
     return -1;
@@ -3282,9 +3295,10 @@ gst_ahc_parameters_get_min_exposure_compensation (GstAHCParameters * self)
   gint min;
 
   gst_amc_jni_call_int_method (env, &err, self->object,
-    android_hardware_camera_parameters.getMinExposureCompensation, &min);
+      android_hardware_camera_parameters.getMinExposureCompensation, &min);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getMinExposureCompensation: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getMinExposureCompensation: %s",
         err->message);
     g_clear_error (&err);
     return 0;
@@ -3301,9 +3315,10 @@ gst_ahc_parameters_get_preview_format (GstAHCParameters * self)
   gint format;
 
   gst_amc_jni_call_int_method (env, &err, self->object,
-    android_hardware_camera_parameters.getPreviewFormat, &format);
+      android_hardware_camera_parameters.getPreviewFormat, &format);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getPreviewFormat: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getPreviewFormat: %s",
         err->message);
     g_clear_error (&err);
     return 0;
@@ -3330,9 +3345,10 @@ gst_ahc_parameters_get_preview_fps_range (GstAHCParameters * self,
   }
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera_parameters.getPreviewFpsRange, range);
+      android_hardware_camera_parameters.getPreviewFpsRange, range);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getPreviewFpsRange: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getPreviewFpsRange: %s",
         err->message);
     goto done;
   }
@@ -3369,9 +3385,10 @@ gst_ahc_parameters_get_preview_size (GstAHCParameters * self)
   GstAHCSize *size = NULL;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getPreviewSize, &jsize);
+      android_hardware_camera_parameters.getPreviewSize, &jsize);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getPreviewSize: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getPreviewSize: %s",
         err->message);
     goto done;
   }
@@ -3415,9 +3432,10 @@ gst_ahc_parameters_get_scene_mode (GstAHCParameters * self)
   jstring scene_mode;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getSceneMode, &scene_mode);
+      android_hardware_camera_parameters.getSceneMode, &scene_mode);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getSceneMode: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getSceneMode: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3440,9 +3458,10 @@ gst_ahc_parameters_get_supported_antibanding (GstAHCParameters * self)
   GList *ret = NULL;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getSupportedAntibanding, &list);
+      android_hardware_camera_parameters.getSupportedAntibanding, &list);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getSupportedAntibanding: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getSupportedAntibanding: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3486,9 +3505,10 @@ gst_ahc_parameters_get_supported_color_effects (GstAHCParameters * self)
   GList *ret = NULL;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getSupportedColorEffects, &list);
+      android_hardware_camera_parameters.getSupportedColorEffects, &list);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getSupportedColorEffects: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getSupportedColorEffects: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3532,9 +3552,10 @@ gst_ahc_parameters_get_supported_flash_modes (GstAHCParameters * self)
   GList *ret = NULL;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getSupportedFlashModes, &list);
+      android_hardware_camera_parameters.getSupportedFlashModes, &list);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getSupportedFlashModes: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getSupportedFlashModes: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3578,9 +3599,10 @@ gst_ahc_parameters_get_supported_focus_modes (GstAHCParameters * self)
   GList *ret = NULL;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getSupportedFocusModes, &list);
+      android_hardware_camera_parameters.getSupportedFocusModes, &list);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getSupportedFocusModes: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getSupportedFocusModes: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3624,9 +3646,10 @@ gst_ahc_parameters_get_supported_preview_formats (GstAHCParameters * self)
   GList *ret = NULL;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getSupportedPreviewFormats, &list);
+      android_hardware_camera_parameters.getSupportedPreviewFormats, &list);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getSupportedPreviewFormats: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getSupportedPreviewFormats: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3670,9 +3693,10 @@ gst_ahc_parameters_get_supported_preview_fps_range (GstAHCParameters * self)
   GList *ret = NULL;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getSupportedPreviewFpsRange, &list);
+      android_hardware_camera_parameters.getSupportedPreviewFpsRange, &list);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getSupportedPreviewFpsRange: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getSupportedPreviewFpsRange: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3718,9 +3742,10 @@ gst_ahc_parameters_get_supported_preview_sizes (GstAHCParameters * self)
   GList *ret = NULL;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getSupportedPreviewSizes, &list);
+      android_hardware_camera_parameters.getSupportedPreviewSizes, &list);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getSupportedPreviewSizes: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getSupportedPreviewSizes: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3770,9 +3795,10 @@ gst_ahc_parameters_get_supported_scene_modes (GstAHCParameters * self)
   GList *ret = NULL;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getSupportedSceneModes, &list);
+      android_hardware_camera_parameters.getSupportedSceneModes, &list);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getSupportedSceneModes: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getSupportedSceneModes: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3816,9 +3842,10 @@ gst_ahc_parameters_get_supported_white_balance (GstAHCParameters * self)
   GList *ret = NULL;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getSupportedWhiteBalance, &list);
+      android_hardware_camera_parameters.getSupportedWhiteBalance, &list);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getSupportedWhiteBalance: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getSupportedWhiteBalance: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3861,9 +3888,10 @@ gst_ahc_parameters_get_vertical_view_angle (GstAHCParameters * self)
   gfloat angle;
 
   gst_amc_jni_call_float_method (env, &err, self->object,
-    android_hardware_camera_parameters.getVerticalViewAngle, &angle);
+      android_hardware_camera_parameters.getVerticalViewAngle, &angle);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getVerticalViewAngle: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getVerticalViewAngle: %s",
         err->message);
     g_clear_error (&err);
     return 0.0;
@@ -3880,9 +3908,10 @@ gst_ahc_parameters_get_video_stabilization (GstAHCParameters * self)
   gboolean ret;
 
   gst_amc_jni_call_boolean_method (env, &err, self->object,
-    android_hardware_camera_parameters.getVideoStabilization, &ret);
+      android_hardware_camera_parameters.getVideoStabilization, &ret);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getVideoStabilization: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getVideoStabilization: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -3900,9 +3929,10 @@ gst_ahc_parameters_get_white_balance (GstAHCParameters * self)
   jstring white_balance;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getWhiteBalance, &white_balance);
+      android_hardware_camera_parameters.getWhiteBalance, &white_balance);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getWhiteBalance: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getWhiteBalance: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3924,7 +3954,7 @@ gst_ahc_parameters_get_zoom (GstAHCParameters * self)
   gint zoom;
 
   gst_amc_jni_call_int_method (env, &err, self->object,
-    android_hardware_camera_parameters.getZoom, &zoom);
+      android_hardware_camera_parameters.getZoom, &zoom);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getZoom: %s",
         err->message);
@@ -3944,9 +3974,10 @@ gst_ahc_parameters_get_zoom_ratios (GstAHCParameters * self)
   GList *ret = NULL;
 
   gst_amc_jni_call_object_method (env, &err, self->object,
-    android_hardware_camera_parameters.getZoomRatios, &list);
+      android_hardware_camera_parameters.getZoomRatios, &list);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.getZoomRatios: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.getZoomRatios: %s",
         err->message);
     g_clear_error (&err);
     return NULL;
@@ -3989,9 +4020,10 @@ gst_ahc_parameters_is_smooth_zoom_supported (GstAHCParameters * self)
   gboolean supported;
 
   gst_amc_jni_call_boolean_method (env, &err, self->object,
-    android_hardware_camera_parameters.isSmoothZoomSupported, &supported);
+      android_hardware_camera_parameters.isSmoothZoomSupported, &supported);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.isSmoothZoomSupported: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.isSmoothZoomSupported: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -4008,10 +4040,11 @@ gst_ahc_parameters_is_video_stabilization_supported (GstAHCParameters * self)
   gboolean supported;
 
   gst_amc_jni_call_boolean_method (env, &err, self->object,
-    android_hardware_camera_parameters.isVideoStabilizationSupported,
-    &supported);
+      android_hardware_camera_parameters.isVideoStabilizationSupported,
+      &supported);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.isVideoStabilizationSupported: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.isVideoStabilizationSupported: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -4028,9 +4061,10 @@ gst_ahc_parameters_is_zoom_supported (GstAHCParameters * self)
   gboolean supported;
 
   gst_amc_jni_call_boolean_method (env, &err, self->object,
-    android_hardware_camera_parameters.isZoomSupported, &supported);
+      android_hardware_camera_parameters.isZoomSupported, &supported);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.isZoomSupported: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.isZoomSupported: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -4052,9 +4086,10 @@ gst_ahc_parameters_set_antibanding (GstAHCParameters * self,
     return FALSE;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera_parameters.setAntibanding, antibanding);
+      android_hardware_camera_parameters.setAntibanding, antibanding);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.setAntibanding: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.setAntibanding: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -4076,9 +4111,10 @@ gst_ahc_parameters_set_color_effect (GstAHCParameters * self,
     return FALSE;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera_parameters.setColorEffect, color_effect);
+      android_hardware_camera_parameters.setColorEffect, color_effect);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.setColorEffect: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.setColorEffect: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -4095,9 +4131,10 @@ gst_ahc_parameters_set_exposure_compensation (GstAHCParameters * self,
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera_parameters.setExposureCompensation, value);
+      android_hardware_camera_parameters.setExposureCompensation, value);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.setExposureCompensation: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.setExposureCompensation: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -4118,9 +4155,10 @@ gst_ahc_parameters_set_flash_mode (GstAHCParameters * self, const gchar * value)
     return FALSE;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera_parameters.setFlashMode, flash_mode);
+      android_hardware_camera_parameters.setFlashMode, flash_mode);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.setFlashMode: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.setFlashMode: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -4141,9 +4179,10 @@ gst_ahc_parameters_set_focus_mode (GstAHCParameters * self, const gchar * value)
     return FALSE;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera_parameters.setFocusMode, focus_mode);
+      android_hardware_camera_parameters.setFocusMode, focus_mode);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.setFocusMode: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.setFocusMode: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -4159,9 +4198,10 @@ gst_ahc_parameters_set_preview_format (GstAHCParameters * self, gint format)
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera_parameters.setPreviewFormat, format);
+      android_hardware_camera_parameters.setPreviewFormat, format);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.setPreviewFormat: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.setPreviewFormat: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -4178,9 +4218,10 @@ gst_ahc_parameters_set_preview_fps_range (GstAHCParameters * self,
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera_parameters.setPreviewFpsRange, min, max);
+      android_hardware_camera_parameters.setPreviewFpsRange, min, max);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.setPreviewFpsRange: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.setPreviewFpsRange: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -4197,9 +4238,10 @@ gst_ahc_parameters_set_preview_size (GstAHCParameters * self,
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera_parameters.setPreviewSize, width, height);
+      android_hardware_camera_parameters.setPreviewSize, width, height);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.setPreviewSize: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.setPreviewSize: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -4220,9 +4262,10 @@ gst_ahc_parameters_set_scene_mode (GstAHCParameters * self, const gchar * value)
     return FALSE;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera_parameters.setSceneMode, scene_mode);
+      android_hardware_camera_parameters.setSceneMode, scene_mode);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.setSceneMode: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.setSceneMode: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -4240,9 +4283,10 @@ gst_ahc_parameters_set_video_stabilization (GstAHCParameters * self,
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera_parameters.setVideoStabilization, toggle);
+      android_hardware_camera_parameters.setVideoStabilization, toggle);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.setVideoStabilization: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.setVideoStabilization: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -4264,9 +4308,10 @@ gst_ahc_parameters_set_white_balance (GstAHCParameters * self,
     return FALSE;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera_parameters.setWhiteBalance, white_balance);
+      android_hardware_camera_parameters.setWhiteBalance, white_balance);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.setWhiteBalance: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.setWhiteBalance: %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -4282,7 +4327,7 @@ gst_ahc_parameters_set_zoom (GstAHCParameters * self, gint value)
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera_parameters.setZoom, value);
+      android_hardware_camera_parameters.setZoom, value);
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.Parameters.setZoom: %s",
         err->message);
@@ -4306,9 +4351,10 @@ gst_ahc_parameters_unflatten (GstAHCParameters * self, const gchar * flattened)
     return FALSE;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-    android_hardware_camera_parameters.unflatten, v_str);
+      android_hardware_camera_parameters.unflatten, v_str);
   if (err) {
-    GST_ERROR ("Failed to call android.hardware.Camera.Parameters.unflatten: %s",
+    GST_ERROR
+        ("Failed to call android.hardware.Camera.Parameters.unflatten: %s",
         err->message);
     g_clear_error (&err);
     ret = FALSE;

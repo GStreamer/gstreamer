@@ -144,7 +144,8 @@ gst_ahs_src_get_sensor_type (void)
       {AHS_SENSOR_TYPE_ACCELEROMETER, "accelerometer"},
       {AHS_SENSOR_TYPE_AMBIENT_TEMPERATURE, "ambient-temperature"},
       {AHS_SENSOR_TYPE_GAME_ROTATION_VECTOR, "game-rotation-vector"},
-      {AHS_SENSOR_TYPE_GEOMAGNETIC_ROTATION_VECTOR, "geomagnetic-rotation-vector"},
+      {AHS_SENSOR_TYPE_GEOMAGNETIC_ROTATION_VECTOR,
+          "geomagnetic-rotation-vector"},
       {AHS_SENSOR_TYPE_GRAVITY, "gravity"},
       {AHS_SENSOR_TYPE_GYROSCOPE, "gyroscope"},
       {AHS_SENSOR_TYPE_GYROSCOPE_UNCALIBRATED, "gyroscope-uncalibrated"},
@@ -152,7 +153,8 @@ gst_ahs_src_get_sensor_type (void)
       {AHS_SENSOR_TYPE_LIGHT, "light"},
       {AHS_SENSOR_TYPE_LINEAR_ACCELERATION, "linear-acceleration"},
       {AHS_SENSOR_TYPE_MAGNETIC_FIELD, "magnetic-field"},
-      {AHS_SENSOR_TYPE_MAGNETIC_FIELD_UNCALIBRATED, "magnetic-field-uncalibrated"},
+      {AHS_SENSOR_TYPE_MAGNETIC_FIELD_UNCALIBRATED,
+          "magnetic-field-uncalibrated"},
       {AHS_SENSOR_TYPE_ORIENTATION, "orientation"},
       {AHS_SENSOR_TYPE_PRESSURE, "pressure"},
       {AHS_SENSOR_TYPE_PROXIMITY, "proximity"},
@@ -590,7 +592,8 @@ gst_ahs_src_update_smoothing (GstAHSSrc * self, const GstAHSensorEvent * event)
   } else {
     for (i = 0; i < self->sample_length; i++)
       self->current_sample[i] =
-        (1-self->alpha) * self->current_sample[i] + self->alpha * event->data.values[i];
+          (1 - self->alpha) * self->current_sample[i] +
+          self->alpha * event->data.values[i];
   }
 }
 
@@ -626,7 +629,7 @@ gst_ahs_src_on_sensor_changed (jobject event_object, gpointer user_data)
    * https://code.google.com/p/android/issues/detail?id=7981
    */
   buffer_time =
-    gst_clock_get_time (pipeline_clock) - GST_ELEMENT_CAST (self)->base_time;
+      gst_clock_get_time (pipeline_clock) - GST_ELEMENT_CAST (self)->base_time;
 
   success =
       gst_ah_sensor_populate_event (&event, event_object, self->buffer_size);
