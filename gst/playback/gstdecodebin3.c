@@ -1817,9 +1817,6 @@ reconfigure_output_stream (DecodebinOutputStream * output,
       goto cleanup;
     }
 
-    gst_object_replace ((GstObject **) & output->decoder_sink, NULL);
-    gst_object_replace ((GstObject **) & output->decoder_src, NULL);
-
     gst_element_set_locked_state (output->decoder, TRUE);
     gst_element_set_state (output->decoder, GST_STATE_NULL);
 
@@ -1828,6 +1825,9 @@ reconfigure_output_stream (DecodebinOutputStream * output,
   }
 
   gst_caps_unref (new_caps);
+
+  gst_object_replace ((GstObject **) & output->decoder_sink, NULL);
+  gst_object_replace ((GstObject **) & output->decoder_src, NULL);
 
   /* If a decoder is required, create one */
   if (needs_decoder) {
