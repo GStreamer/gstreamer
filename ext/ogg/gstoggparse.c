@@ -148,6 +148,7 @@ gst_ogg_parse_new_stream (GstOggParse * parser, ogg_page * page)
   if (ogg_stream_init (&stream->stream, serialno) != 0) {
     GST_ERROR ("Could not initialize ogg_stream struct for serial %08x.",
         serialno);
+    g_slice_free (GstOggStream, stream);
     return NULL;
   }
 
