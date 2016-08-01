@@ -1705,6 +1705,13 @@ gst_flac_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         GST_TAG_AUDIO_CODEC, caps);
     gst_caps_unref (caps);
 
+    /* Compute the bitrate of the uncompressed audio and set it as the
+     * maximum possible bitrate, since such a bitrate is the worst case
+     * (= no compression). */
+    gst_tag_list_add (flacparse->tags, GST_TAG_MERGE_KEEP,
+        GST_TAG_MAXIMUM_BITRATE, flacparse->samplerate * flacparse->bps *
+        flacparse->channels, NULL);
+
     /* Announce our pending tags */
     gst_base_parse_merge_tags (parse, flacparse->tags, GST_TAG_MERGE_REPLACE);
 
