@@ -148,17 +148,19 @@ gst_ogg_parse_new_stream (GstOggParse * parser, ogg_page * page)
   if (ogg_stream_init (&stream->stream, serialno) != 0) {
     GST_ERROR ("Could not initialize ogg_stream struct for serial %08x.",
         serialno);
-    g_slice_free (GstOggStream, stream);
-    return NULL;
+    goto failure;
   }
 
-  /* FIXME check return */
-  ogg_stream_pagein (&stream->stream, page);
+  if (ogg_stream_pagein (&stream->stream, page) != 0)
+    goto failure;
 
-  /* FIXME check return */
   ret = ogg_stream_packetout (&stream->stream, &packet);
   if (ret == 1) {
-    gst_ogg_stream_setup_map (stream, &packet);
+    if (!gst_ogg_stream_setup_map (stream, &packet)) {
+      GST_ERROR ("Could not setup map for ogg packet.");
+      goto failure;
+    }
+
     if (stream->is_video) {
       parser->video_stream = stream;
     }
@@ -167,6 +169,10 @@ gst_ogg_parse_new_stream (GstOggParse * parser, ogg_page * page)
   parser->oggstreams = g_slist_append (parser->oggstreams, stream);
 
   return stream;
+
+failure:
+  free_stream (stream);
+  return NULL;
 }
 
 static GstOggStream *
@@ -478,6 +484,10 @@ gst_ogg_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         }
 
         stream = gst_ogg_parse_new_stream (ogg, &page);
+        if (!stream) {
+          GST_LOG_OBJECT (ogg, "Incorrect page");
+          goto failure;
+        }
 
         ogg->last_page_not_bos = FALSE;
 
