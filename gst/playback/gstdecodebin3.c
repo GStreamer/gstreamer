@@ -1159,7 +1159,7 @@ handle_stream_collection (GstDecodebin3 * dbin,
   GST_DEBUG ("  %d streams", gst_stream_collection_get_size (collection));
   for (i = 0; i < gst_stream_collection_get_size (collection); i++) {
     GstStream *stream = gst_stream_collection_get_stream (collection, i);
-    const GstTagList *taglist;
+    GstTagList *taglist;
     GstCaps *caps;
 
     GST_DEBUG ("   Stream '%s'", gst_stream_get_stream_id (stream));
@@ -1170,6 +1170,8 @@ handle_stream_collection (GstDecodebin3 * dbin,
     GST_DEBUG ("     tags  : %" GST_PTR_FORMAT, taglist);
     caps = gst_stream_get_caps (stream);
     GST_DEBUG ("     caps  : %" GST_PTR_FORMAT, caps);
+    if (taglist)
+      gst_tag_list_unref (taglist);
     gst_caps_unref (caps);
   }
 #endif
