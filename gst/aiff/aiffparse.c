@@ -1906,6 +1906,15 @@ gst_aiff_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       aiff->start_segment = gst_event_new_segment (&segment);
 
+      /* If the seek is within the same SSND chunk and there is no new
+       * end_offset defined keep the previous end_offset. This will avoid noise
+       * at the end of playback if e.g. a metadata chunk is located at the end
+       * of the file. */
+      if (aiff->end_offset > 0 && offset < aiff->end_offset &&
+          offset >= aiff->datastart && end_offset == -1) {
+        end_offset = aiff->end_offset;
+      }
+
       /* stream leftover data in current segment */
       if (aiff->state == AIFF_PARSE_DATA)
         gst_aiff_parse_flush_data (aiff);
