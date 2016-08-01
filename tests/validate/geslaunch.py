@@ -36,6 +36,7 @@ if "win32" in sys.platform:
 
 GES_ENCODING_TARGET_COMBINATIONS = [
     MediaFormatCombination("ogg", "vorbis", "theora"),
+    MediaFormatCombination("ogg", "opus", "theora"),
     MediaFormatCombination("webm", "vorbis", "vp8"),
     MediaFormatCombination("webm", "opus", "vp8"),
     MediaFormatCombination("mp4", "aac", "h264"),
