@@ -1851,9 +1851,41 @@ scan_codecs (GstPlugin * plugin)
 
     /* We need at least a valid supported type */
     if (valid_codec) {
-      GST_LOG ("Successfully scanned codec '%s'", name_str);
-      g_queue_push_tail (&codec_infos, gst_codec_info);
-      gst_codec_info = NULL;
+      GList *l;
+
+      for (l = codec_infos.head; l; l = l->next) {
+        GstAmcCodecInfo *tmp = l->data;
+
+        if (strcmp (tmp->name, gst_codec_info->name) == 0
+            && ! !tmp->is_encoder == ! !gst_codec_info->is_encoder) {
+          gint m = tmp->n_supported_types, n;
+
+          GST_LOG ("Successfully scanned codec '%s', appending to existing",
+              name_str);
+
+          tmp->gl_output_only |= gst_codec_info->gl_output_only;
+          tmp->n_supported_types += gst_codec_info->n_supported_types;
+          tmp->supported_types =
+              g_realloc (tmp->supported_types, tmp->n_supported_types);
+
+          for (n = 0; n < gst_codec_info->n_supported_types; n++, m++) {
+            tmp->supported_types[m] = gst_codec_info->supported_types[n];
+          }
+          g_free (gst_codec_info->supported_types);
+          g_free (gst_codec_info->name);
+          g_free (gst_codec_info);
+          gst_codec_info = NULL;
+
+          break;
+        }
+      }
+
+      /* Found no existing codec with this name */
+      if (l == NULL) {
+        GST_LOG ("Successfully scanned codec '%s'", name_str);
+        g_queue_push_tail (&codec_infos, gst_codec_info);
+        gst_codec_info = NULL;
+      }
     }
 
     /* Clean up of all local references we got */
