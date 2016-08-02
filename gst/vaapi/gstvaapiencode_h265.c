@@ -43,7 +43,7 @@
 #include "gstvaapivideomemory.h"
 
 #define GST_PLUGIN_NAME "vaapih265enc"
-#define GST_PLUGIN_DESC "A VA-API based H.265 video encoder"
+#define GST_PLUGIN_DESC "A VA-API based H265 video encoder"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vaapi_h265_encode_debug);
 #define GST_CAT_DEFAULT gst_vaapi_h265_encode_debug
@@ -399,7 +399,7 @@ gst_vaapiencode_h265_class_init (GstVaapiEncodeH265Class * klass)
   encode_class->alloc_buffer = gst_vaapiencode_h265_alloc_buffer;
 
   gst_element_class_set_static_metadata (element_class,
-      "VA-API H.265 encoder",
+      "VA-API H265 encoder",
       "Codec/Encoder/Video",
       GST_PLUGIN_DESC,
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
