@@ -73,10 +73,13 @@ gst_vaapi_video_context_get_display (GstContext * context,
     GstVaapiDisplay ** display_ptr)
 {
   const GstStructure *structure;
+  const gchar *type;
 
   g_return_val_if_fail (GST_IS_CONTEXT (context), FALSE);
-  g_return_val_if_fail (g_strcmp0 (gst_context_get_context_type (context),
-          GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME) == 0, FALSE);
+
+  type = gst_context_get_context_type (context);
+  if (g_strcmp0 (type, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME))
+    return FALSE;
 
   structure = gst_context_get_structure (context);
   return gst_structure_get (structure, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME,
