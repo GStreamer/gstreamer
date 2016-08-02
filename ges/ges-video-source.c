@@ -169,6 +169,8 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   }
 
   self->priv->positionner = GST_FRAME_POSITIONNER (positionner);
+  self->priv->positionner->scale_in_compositor =
+      !GES_VIDEO_SOURCE_GET_CLASS (self)->ABI.abi.disable_scale_in_compositor;
   self->priv->capsfilter = capsfilter;
 
   return topbin;

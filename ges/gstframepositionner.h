@@ -45,6 +45,7 @@ struct _GstFramePositionner
   GESTrackElement *track_source;
   GESTrack *current_track;
 
+  gboolean scale_in_compositor;
   gdouble alpha;
   gint posx;
   gint posy;

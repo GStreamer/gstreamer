@@ -167,6 +167,7 @@ ges_title_source_class_init (GESTitleSourceClass * klass)
 
   timeline_element_class->set_inpoint = NULL;
   timeline_element_class->lookup_child = _lookup_child;
+  source_class->ABI.abi.disable_scale_in_compositor = TRUE;
   source_class->create_source = ges_title_source_create_source;
 }
 
