@@ -705,7 +705,7 @@ struct GLUploadMeta
   gboolean result;
   GstVideoGLTextureUploadMeta *meta;
   guint texture_ids[GST_GL_UPLOAD_MAX_PLANES];
-  GstGLVideoAllocationParams *params;
+  GstBufferPool *pool;
 };
 
 static gpointer
@@ -714,6 +714,7 @@ _upload_meta_upload_new (GstGLUpload * upload)
   struct GLUploadMeta *meta = g_new0 (struct GLUploadMeta, 1);
 
   meta->upload = upload;
+  meta->pool = gst_gl_buffer_pool_new (upload->context);
 
   return meta;
 }
@@ -766,6 +767,8 @@ _upload_meta_upload_accept (gpointer impl, GstBuffer * buffer,
   GstCapsFeatures *features;
   GstVideoGLTextureUploadMeta *meta;
   gboolean ret = TRUE;
+  GstStructure *config;
+  gsize size;
 
   features = gst_caps_get_features (in_caps, 0);
 
@@ -780,13 +783,18 @@ _upload_meta_upload_accept (gpointer impl, GstBuffer * buffer,
   if (!ret)
     return ret;
 
-  if (upload->params)
-    gst_gl_allocation_params_free ((GstGLAllocationParams *) upload->params);
-  if (!(upload->params =
-          gst_gl_video_allocation_params_new (upload->upload->context, NULL,
-              &upload->upload->priv->in_info, -1, NULL,
-              GST_GL_TEXTURE_TARGET_2D, 0)))
-    return FALSE;
+  if (!gst_buffer_pool_is_active (upload->pool)) {
+    config = gst_buffer_pool_get_config (upload->pool);
+
+    size = upload->upload->priv->in_info.size;
+    gst_buffer_pool_config_set_params (config, in_caps, size, 0, 0);
+
+    if (!gst_buffer_pool_set_config (upload->pool, config)) {
+      GST_WARNING_OBJECT (upload->upload, "failed to set bufferpool config");
+      return FALSE;
+    }
+    gst_buffer_pool_set_active (upload->pool, TRUE);
+  }
 
   if (buffer) {
     if ((meta = gst_buffer_get_video_gl_texture_upload_meta (buffer)) == NULL)
@@ -861,9 +869,6 @@ _upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
   int i;
   GstVideoInfo *in_info = &upload->upload->priv->in_info;
   guint max_planes = GST_VIDEO_INFO_N_PLANES (in_info);
-  GstGLMemoryAllocator *allocator;
-
-  allocator = gst_gl_memory_allocator_get_default (upload->upload->context);
 
   /* Support stereo views for separated multiview mode */
   if (GST_VIDEO_INFO_MULTIVIEW_MODE (in_info) ==
@@ -874,11 +879,11 @@ _upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
 
   upload->meta = gst_buffer_get_video_gl_texture_upload_meta (buffer);
 
-  /* FIXME: buffer pool */
-  *outbuf = gst_buffer_new ();
-  gst_gl_memory_setup_buffer (allocator, *outbuf, upload->params, NULL, NULL,
-      0);
-  gst_object_unref (allocator);
+  if (gst_buffer_pool_acquire_buffer (upload->pool, outbuf,
+          NULL) != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (upload, "failed to acquire buffer from bufferpool");
+    return GST_GL_UPLOAD_ERROR;
+  }
 
   for (i = 0; i < GST_GL_UPLOAD_MAX_PLANES; i++) {
     guint tex_id = 0;
@@ -914,8 +919,8 @@ _upload_meta_upload_free (gpointer impl)
 
   g_return_if_fail (impl != NULL);
 
-  if (upload->params)
-    gst_gl_allocation_params_free ((GstGLAllocationParams *) upload->params);
+  if (upload->pool)
+    gst_object_unref (upload->pool);
 
   g_free (upload);
 }
