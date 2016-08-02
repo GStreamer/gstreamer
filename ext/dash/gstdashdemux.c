@@ -1877,7 +1877,6 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
   /* We're chunked downloading for ISOBMFF in KEY_UNITS mode for the actual
    * fragment until we parsed the moof and arrived at the mdat. 8192 is a
    * random guess for the moof size
-   * TODO: Calculate running average for the moof size and use that instead
    */
   if (dashstream->is_isobmff
       && (GST_ADAPTIVE_DEMUX (stream->demux)->
@@ -1887,7 +1886,16 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
       && dashdemux->allow_trickmode_key_units) {
     if (dashstream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
       /* Need to download the moof first to know anything */
+
       stream->fragment.chunk_size = 8192;
+      /* Do we have the first fourcc already or are we in the middle */
+      if (dashstream->isobmff_parser.current_fourcc == 0) {
+        stream->fragment.chunk_size += dashstream->moof_average_size;
+        if (dashstream->first_sync_sample_always_after_moof)
+          stream->fragment.chunk_size +=
+              dashstream->first_sync_sample_average_size;
+      }
+
     } else if (dashstream->moof && dashstream->moof_sync_samples) {
       /* Have the moof, either we're done now or we want to download the
        * directly following sync sample */
@@ -1915,7 +1923,9 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
     /* We might've decided that we can't allow key-unit only
      * trickmodes while doing chunked downloading. In that case
      * just download from here to the end now */
-    if (dashstream->moof)
+    if (dashstream->moof
+        && (GST_ADAPTIVE_DEMUX (stream->demux)->
+            segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS))
       stream->fragment.chunk_size = -1;
     else
       stream->fragment.chunk_size = 0;
@@ -2033,6 +2043,17 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
           dash_stream->isobmff_parser.current_start_offset;
       dash_stream->moof_size = size;
       dash_stream->current_sync_sample = -1;
+
+      if (dash_stream->moof_average_size) {
+        if (dash_stream->moof_average_size < size)
+          dash_stream->moof_average_size =
+              (size * 3 + dash_stream->moof_average_size) / 4;
+        else
+          dash_stream->moof_average_size =
+              (size + dash_stream->moof_average_size + 3) / 4;
+      } else {
+        dash_stream->moof_average_size = size;
+      }
     } else {
       gst_byte_reader_skip (&reader, size - header_size);
     }
@@ -2249,6 +2270,18 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
     GstDashStreamSyncSample *sync_sample =
         &g_array_index (dash_stream->moof_sync_samples, GstDashStreamSyncSample,
         0);
+    guint size = sync_sample->end_offset + 1 - sync_sample->start_offset;
+
+    if (dash_stream->first_sync_sample_average_size) {
+      if (dash_stream->first_sync_sample_average_size < size)
+        dash_stream->first_sync_sample_average_size =
+            (size * 3 + dash_stream->first_sync_sample_average_size) / 4;
+      else
+        dash_stream->first_sync_sample_average_size =
+            (size + dash_stream->first_sync_sample_average_size * 3) / 4;
+    } else {
+      dash_stream->first_sync_sample_average_size = size;
+    }
 
     if (dash_stream->moof_offset + dash_stream->moof_size + 8 <
         sync_sample->start_offset) {
