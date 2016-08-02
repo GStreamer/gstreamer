@@ -2625,6 +2625,27 @@ gst_asf_demux_add_audio_stream (GstASFDemux * demux,
     g_free (codec_name);
   }
 
+  if (audio->byte_rate > 0) {
+    /* Some ASF files have no bitrate props object (often seen with
+     * ASF files that contain raw audio data). Example files can
+     * be generated with FFmpeg (tested with v2.8.6), like this:
+     *
+     *   ffmpeg -i sine-wave.wav -c:a pcm_alaw file.asf
+     *
+     * In this case, if audio->byte_rate is nonzero, use that as
+     * the bitrate. */
+
+    guint bitrate = audio->byte_rate * 8;
+
+    if (tags == NULL)
+      tags = gst_tag_list_new_empty ();
+
+    /* Add bitrate, but only if there is none set already, since
+     * this is just a fallback in case there is no bitrate tag
+     * already present */
+    gst_tag_list_add (tags, GST_TAG_MERGE_KEEP, GST_TAG_BITRATE, bitrate, NULL);
+  }
+
   if (extradata)
     gst_buffer_unref (extradata);
 
