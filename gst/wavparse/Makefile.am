@@ -10,6 +10,7 @@ libgstwavparse_la_LIBADD = \
 	-lgstriff-@GST_API_VERSION@ \
 	-lgstaudio-@GST_API_VERSION@ \
 	-lgsttag-@GST_API_VERSION@ \
+	-lgstpbutils-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(LIBM)
