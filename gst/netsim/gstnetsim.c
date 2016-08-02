@@ -223,7 +223,7 @@ push_buffer_ctx_push (PushBufferCtx * ctx)
 static gint
 get_random_value_uniform (GRand * rand_seed, gint32 min_value, gint32 max_value)
 {
-  return g_rand_int_range (rand_seed, min_value, max_value);
+  return g_rand_int_range (rand_seed, min_value, max_value + 1);
 }
 
 /* Generate a value from a normal distributation with 95% confidense interval
@@ -587,7 +587,7 @@ gst_net_sim_class_init (GstNetSimClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_MAX_DELAY,
       g_param_spec_int ("max-delay", "Maximum delay (ms)",
-          "The maximum delay in ms to apply to buffers",
+          "The maximum delay (inclusive) in ms to apply to buffers",
           G_MININT, G_MAXINT, DEFAULT_MAX_DELAY,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
