@@ -302,7 +302,6 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   GList *walk, *stream_walk;
   GstClockTime current_pos, target_pos;
   gint64 current_sequence;
-  GstM3U8MediaFile *file;
   guint64 bitrate;
   gboolean snap_before, snap_after, snap_nearest, keyunit;
   gboolean reverse;
@@ -353,6 +352,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
       stream_walk = stream_walk->next) {
     GstHLSDemuxStream *hls_stream =
         GST_HLS_DEMUX_STREAM_CAST (stream_walk->data);
+    GstM3U8MediaFile *file = NULL;
 
     current_sequence = 0;
     current_pos = 0;
@@ -406,8 +406,10 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
 
     /* Play from the end of the current selected segment */
-    if (reverse && (snap_before || snap_after || snap_nearest))
-      current_pos += file->duration;
+    if (file) {
+      if (reverse && (snap_before || snap_after || snap_nearest))
+        current_pos += file->duration;
+    }
 
     if (keyunit || snap_before || snap_after || snap_nearest) {
       if (!reverse)
