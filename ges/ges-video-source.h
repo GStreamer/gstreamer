@@ -80,7 +80,12 @@ struct _GESVideoSourceClass {
 
   /*< private >*/
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING];
+  union {
+    gpointer _ges_reserved[GES_PADDING];
+    struct {
+      gboolean disable_scale_in_compositor;
+    } abi;
+  } ABI;
 };
 
 GType ges_video_source_get_type (void);

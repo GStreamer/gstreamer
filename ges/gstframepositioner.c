@@ -79,14 +79,15 @@ _weak_notify_cb (GstFramePositioner * pos, GObject * old)
 
 static void
 gst_frame_positioner_update_properties (GstFramePositioner * pos,
-    gint old_track_width, gint old_track_height)
+    gboolean track_mixing, gint old_track_width, gint old_track_height)
 {
   GstCaps *caps;
 
   if (pos->capsfilter == NULL)
     return;
 
-  if (pos->track_width && pos->track_height) {
+  if (pos->track_width && pos->track_height &&
+      (!track_mixing || !pos->scale_in_compositor)) {
     caps =
         gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
         pos->track_width, "height", G_TYPE_INT, pos->track_height, NULL);
@@ -117,10 +118,13 @@ gst_frame_positioner_update_properties (GstFramePositioner * pos,
 }
 
 static void
-sync_properties_from_caps (GstFramePositioner * pos, GstCaps * caps)
+sync_properties_from_track (GstFramePositioner * pos, GESTrack * track)
 {
   gint width, height;
   gint old_track_width, old_track_height;
+  GstCaps *caps;
+
+  g_object_get (track, "restriction-caps", &caps, NULL);
 
   width = height = 0;
 
@@ -146,24 +150,15 @@ sync_properties_from_caps (GstFramePositioner * pos, GstCaps * caps)
   GST_DEBUG_OBJECT (pos, "syncing framerate from caps : %d/%d", pos->fps_n,
       pos->fps_d);
 
-  gst_frame_positioner_update_properties (pos, old_track_width,
-      old_track_height);
-}
-
-static void
-sync_properties_with_track (GstFramePositioner * pos, GESTrack * track)
-{
-  GstCaps *caps;
-
-  g_object_get (track, "restriction-caps", &caps, NULL);
-  sync_properties_from_caps (pos, caps);
+  gst_frame_positioner_update_properties (pos, ges_track_get_mixing (track),
+      old_track_width, old_track_height);
 }
 
 static void
 _track_restriction_changed_cb (GESTrack * track, GParamSpec * arg G_GNUC_UNUSED,
     GstFramePositioner * pos)
 {
-  sync_properties_with_track (pos, track);
+  sync_properties_from_track (pos, track);
 }
 
 static void
@@ -187,7 +182,7 @@ set_track (GstFramePositioner * pos)
 
     g_signal_connect (pos->current_track, "notify::restriction-caps",
         (GCallback) _track_restriction_changed_cb, pos);
-    sync_properties_with_track (pos, pos->current_track);
+    sync_properties_from_track (pos, pos->current_track);
   } else {
     pos->current_track = NULL;
   }
@@ -342,6 +337,7 @@ gst_frame_positioner_init (GstFramePositioner * framepositioner)
   framepositioner->capsfilter = NULL;
   framepositioner->track_source = NULL;
   framepositioner->current_track = NULL;
+  framepositioner->scale_in_compositor = TRUE;
 }
 
 void
@@ -349,6 +345,10 @@ gst_frame_positioner_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstFramePositioner *framepositioner = GST_FRAME_POSITIONNER (object);
+  gboolean track_mixing = TRUE;
+
+  if (framepositioner->current_track)
+    track_mixing = ges_track_get_mixing (framepositioner->current_track);
 
 
   GST_OBJECT_LOCK (framepositioner);
@@ -367,11 +367,13 @@ gst_frame_positioner_set_property (GObject * object, guint property_id,
       break;
     case PROP_WIDTH:
       framepositioner->width = g_value_get_int (value);
-      gst_frame_positioner_update_properties (framepositioner, 0, 0);
+      gst_frame_positioner_update_properties (framepositioner, track_mixing,
+          0, 0);
       break;
     case PROP_HEIGHT:
       framepositioner->height = g_value_get_int (value);
-      gst_frame_positioner_update_properties (framepositioner, 0, 0);
+      gst_frame_positioner_update_properties (framepositioner, track_mixing,
+          0, 0);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
