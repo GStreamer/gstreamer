@@ -2066,20 +2066,20 @@ media_not_found_no_reply:
   {
     GST_ERROR ("client %p: media '%s' not found", client, path);
     /* error reply is already sent */
-    goto cleanup_path;
+    goto cleanup_session;
   }
 media_not_found:
   {
     GST_ERROR ("client %p: media '%s' not found", client, path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
-    goto cleanup_path;
+    goto cleanup_session;
   }
 control_not_found:
   {
     GST_ERROR ("client %p: no control in path '%s'", client, path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     g_object_unref (media);
-    goto cleanup_path;
+    goto cleanup_session;
   }
 stream_not_found:
   {
@@ -2087,14 +2087,14 @@ stream_not_found:
         GST_STR_NULL (control));
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     g_object_unref (media);
-    goto cleanup_path;
+    goto cleanup_session;
   }
 service_unavailable:
   {
     GST_ERROR ("client %p: can't create session", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     g_object_unref (media);
-    goto cleanup_path;
+    goto cleanup_session;
   }
 sessmedia_unavailable:
   {
@@ -2144,7 +2144,8 @@ keymgmt_error:
   cleanup_session:
     if (new_session)
       gst_rtsp_session_pool_remove (priv->session_pool, session);
-    g_object_unref (session);
+    if (session)
+      g_object_unref (session);
   cleanup_path:
     g_free (path);
     return FALSE;
