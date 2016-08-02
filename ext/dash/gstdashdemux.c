@@ -651,6 +651,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     stream->active_stream = active_stream;
     s = gst_caps_get_structure (caps, 0);
     stream->is_isobmff = gst_structure_has_name (s, "video/quicktime");
+    stream->first_sync_sample_always_after_moof = TRUE;
     if (stream->is_isobmff)
       stream->isobmff_adapter = gst_adapter_new ();
     gst_adaptive_demux_stream_set_caps (GST_ADAPTIVE_DEMUX_STREAM_CAST (stream),
@@ -1316,8 +1317,10 @@ gst_dash_demux_stream_advance_subfragment (GstAdaptiveDemuxStream * stream)
       if (sidx->entry_index < sidx->entries_count) {
         fragment_finished = FALSE;
       }
+      dashstream->sidx_index++;
     } else {
       sidx->entry_index--;
+      dashstream->sidx_index--;
       if (sidx->entry_index >= 0) {
         fragment_finished = FALSE;
       }
@@ -1845,7 +1848,12 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
       && dashstream->active_stream->mimeType == GST_STREAM_VIDEO)
     stream->discont = TRUE;
 
-  if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)
+  /* Only handle fragment advancing specifically for SIDX if we're not
+   * in key unit mode */
+  if (!(dashstream->moof_sync_samples
+          && GST_ADAPTIVE_DEMUX (dashdemux)->
+          segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
+      && gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)
       && dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
     /* fragment is advanced on data_received when byte limits are reached */
     if (gst_dash_demux_stream_has_next_fragment (stream))
@@ -1870,8 +1878,7 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
    * fragment until we parsed the moof and arrived at the mdat. 8192 is a
    * random guess for the moof size
    * TODO: Calculate running average for the moof size and use that instead
-   * TODO: If the first keyframe is right after the moof, download it directly
-   * and give it as chunk size here, also include it in the running average */
+   */
   if (dashstream->is_isobmff
       && (GST_ADAPTIVE_DEMUX (stream->demux)->
           segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
@@ -1879,10 +1886,29 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
       && !stream->downloading_header && !stream->downloading_index
       && dashdemux->allow_trickmode_key_units) {
     if (dashstream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
+      /* Need to download the moof first to know anything */
       stream->fragment.chunk_size = 8192;
     } else if (dashstream->moof && dashstream->moof_sync_samples) {
-      stream->fragment.chunk_size = 0;
+      /* Have the moof, either we're done now or we want to download the
+       * directly following sync sample */
+      if (dashstream->first_sync_sample_after_moof
+          && dashstream->current_sync_sample == 0) {
+        GstDashStreamSyncSample *sync_sample =
+            &g_array_index (dashstream->moof_sync_samples,
+            GstDashStreamSyncSample, 0);
+        if (dashstream->isobmff_parser.current_offset <
+            sync_sample->end_offset + 1) {
+          stream->fragment.chunk_size =
+              sync_sample->end_offset + 1 -
+              dashstream->isobmff_parser.current_offset;
+        } else {
+          stream->fragment.chunk_size = 0;
+        }
+      } else {
+        stream->fragment.chunk_size = 0;
+      }
     } else {
+      /* Have moof but can't do key-units mode, just download until the end */
       stream->fragment.chunk_size = -1;
     }
   } else {
@@ -2005,6 +2031,7 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
       dash_stream->moof = gst_isoff_moof_box_parse (&sub_reader);
       dash_stream->moof_offset =
           dash_stream->isobmff_parser.current_start_offset;
+      dash_stream->moof_size = size;
       dash_stream->current_sync_sample = -1;
     } else {
       gst_byte_reader_skip (&reader, size - header_size);
@@ -2218,7 +2245,130 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
     return FALSE;
   }
 
+  {
+    GstDashStreamSyncSample *sync_sample =
+        &g_array_index (dash_stream->moof_sync_samples, GstDashStreamSyncSample,
+        0);
+
+    if (dash_stream->moof_offset + dash_stream->moof_size + 8 <
+        sync_sample->start_offset) {
+      dash_stream->first_sync_sample_after_moof = FALSE;
+      dash_stream->first_sync_sample_always_after_moof = FALSE;
+    } else {
+      dash_stream->first_sync_sample_after_moof = TRUE;
+    }
+  }
+
   return TRUE;
+}
+
+
+static GstFlowReturn
+gst_dash_demux_handle_isobmff_buffer (GstAdaptiveDemux * demux,
+    GstAdaptiveDemuxStream * stream, GstBuffer * buffer)
+{
+  GstDashDemuxStream *dash_stream = (GstDashDemuxStream *) stream;
+  GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  if (dashdemux->allow_trickmode_key_units) {
+    if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
+      buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
+
+      if (buffer
+          && (ret =
+              gst_adaptive_demux_stream_push_buffer (stream,
+                  buffer)) != GST_FLOW_OK)
+        return ret;
+      if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT)
+        return ret;
+
+      /* Jump to the next sync sample. As we're doing chunked downloading
+       * here, just drop data until our chunk is over so we can reuse the
+       * HTTP connection instead of having to create a new one or
+       * reuse the data if the sync sample follows the moof */
+      if (dash_stream->active_stream->mimeType == GST_STREAM_VIDEO
+          && gst_dash_demux_find_sync_samples (demux, stream) &&
+          GST_ADAPTIVE_DEMUX (stream->demux)->
+          segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
+
+        if (dash_stream->first_sync_sample_after_moof) {
+          /* If we're here, don't throw away data but collect sync
+           * sample while we're at it below. We're doing chunked
+           * downloading so might need to adjust the next chunk size for
+           * the remainder */
+          dash_stream->current_sync_sample = 0;
+        } else {
+          gst_adapter_clear (dash_stream->isobmff_adapter);
+        }
+      }
+
+      if (gst_adapter_available (dash_stream->isobmff_adapter) == 0)
+        return ret;
+
+      /* We have some data from the mdat available in the adapter, handle it
+       * below in the push code */
+      buffer =
+          gst_adapter_take_buffer (dash_stream->isobmff_adapter,
+          gst_adapter_available (dash_stream->isobmff_adapter));
+    } else {
+      if (dash_stream->isobmff_parser.current_offset == -1) {
+        dash_stream->isobmff_parser.current_offset =
+            GST_BUFFER_OFFSET_IS_VALID (buffer) ? GST_BUFFER_OFFSET (buffer) :
+            0;
+      }
+    }
+
+    /* At mdat and isobmff and trick modes are allowed */
+
+    /* We're actually running in key-units trick mode */
+    if (dash_stream->active_stream->mimeType == GST_STREAM_VIDEO
+        && dash_stream->moof_sync_samples
+        && GST_ADAPTIVE_DEMUX (stream->demux)->
+        segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
+
+      if (dash_stream->current_sync_sample == -1) {
+        /* We're doing chunked downloading and wait for finishing the current
+         * chunk so we can jump to the first keyframe */
+        gst_buffer_unref (buffer);
+        return GST_FLOW_OK;
+      } else if (dash_stream->first_sync_sample_after_moof
+          && dash_stream->current_sync_sample == 0) {
+        GstDashStreamSyncSample *sync_sample =
+            &g_array_index (dash_stream->moof_sync_samples,
+            GstDashStreamSyncSample, 0);
+        guint64 end_offset =
+            dash_stream->isobmff_parser.current_offset +
+            gst_buffer_get_size (buffer);
+
+        /* If the first keyframe follows directly the moof and we're
+         * downloading it here, make sure to not download too much */
+
+        if (end_offset > sync_sample->end_offset + 1) {
+          guint64 remaining =
+              sync_sample->end_offset + 1 -
+              dash_stream->isobmff_parser.current_offset;
+
+          if (remaining) {
+            GstBuffer *sub =
+                gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0,
+                remaining);
+            gst_buffer_unref (buffer);
+            buffer = sub;
+          } else {
+            gst_buffer_unref (buffer);
+            return GST_FLOW_OK;
+          }
+        }
+      }
+    }
+
+    GST_BUFFER_OFFSET (buffer) = dash_stream->isobmff_parser.current_offset;
+    dash_stream->isobmff_parser.current_offset += gst_buffer_get_size (buffer);
+    GST_BUFFER_OFFSET_END (buffer) = dash_stream->isobmff_parser.current_offset;
+  }
+
+  return gst_adaptive_demux_stream_push_buffer (stream, buffer);
 }
 
 static GstFlowReturn
@@ -2231,56 +2381,10 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
   guint index_header_or_data;
 
   if (!gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
-    if (dash_stream->is_isobmff && dashdemux->allow_trickmode_key_units) {
-      if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
-        buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
-
-        if (buffer
-            && (ret =
-                gst_adaptive_demux_stream_push_buffer (stream,
-                    buffer)) != GST_FLOW_OK)
-          return ret;
-
-        if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT) {
-          /* Jump to the next sync sample. As we're doing chunked downloading
-           * here, just drop data until our chunk is over so we can reuse the
-           * HTTP connection instead of having to create a new one */
-          if (dash_stream->active_stream->mimeType == GST_STREAM_VIDEO
-              && gst_dash_demux_find_sync_samples (demux, stream) &&
-              GST_ADAPTIVE_DEMUX (stream->demux)->
-              segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
-            gst_adapter_clear (dash_stream->isobmff_adapter);
-            return GST_FLOW_OK;
-          }
-
-          if (gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
-            buffer =
-                gst_adapter_take_buffer (dash_stream->isobmff_adapter,
-                gst_adapter_available (dash_stream->isobmff_adapter));
-            GST_BUFFER_OFFSET (buffer) =
-                dash_stream->isobmff_parser.current_offset;
-            dash_stream->isobmff_parser.current_offset +=
-                gst_buffer_get_size (buffer);
-            GST_BUFFER_OFFSET_END (buffer) =
-                dash_stream->isobmff_parser.current_offset;
-            ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
-          }
-        }
-
-        return ret;
-      } else if (dash_stream->active_stream->mimeType == GST_STREAM_VIDEO
-          && dash_stream->moof_sync_samples
-          && (GST_ADAPTIVE_DEMUX (stream->demux)->
-              segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
-          && dash_stream->current_sync_sample == -1) {
-        /* We're doing chunked downloading and wait for finishing the current
-         * chunk so we can jump to the first keyframe */
-        gst_buffer_unref (buffer);
-        return GST_FLOW_OK;
-      }
-    }
-
-    return gst_adaptive_demux_stream_push_buffer (stream, buffer);
+    if (dash_stream->is_isobmff)
+      return gst_dash_demux_handle_isobmff_buffer (demux, stream, buffer);
+    else
+      return gst_adaptive_demux_stream_push_buffer (stream, buffer);
   }
 
   if (stream->downloading_index)
@@ -2364,58 +2468,43 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
       if (dash_stream->sidx_current_offset + available < sidx_end_offset) {
         buffer = gst_adapter_take_buffer (dash_stream->sidx_adapter, available);
       } else {
-        buffer =
-            gst_adapter_take_buffer (dash_stream->sidx_adapter,
-            sidx_end_offset - dash_stream->sidx_current_offset);
-        advance = TRUE;
-      }
-
-      GST_BUFFER_OFFSET (buffer) = dash_stream->sidx_current_offset;
-      GST_BUFFER_OFFSET_END (buffer) =
-          GST_BUFFER_OFFSET (buffer) + gst_buffer_get_size (buffer);
-      dash_stream->sidx_current_offset = GST_BUFFER_OFFSET_END (buffer);
-
-      if (dash_stream->is_isobmff && dashdemux->allow_trickmode_key_units) {
-        if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
-          buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
-
-          /* If the buffer we passed to the parser was the last data of the
-           * sidx fragment, we must have gotten an output buffer from the
-           * parser.
-           */
-          g_assert (buffer || !advance);
-
-          /* Leftover in the adapter is actual mdat data if any */
-          if (dash_stream->isobmff_parser.current_fourcc ==
-              GST_ISOFF_FOURCC_MDAT) {
-
-            /* Jump to the next sync sample */
-            if (dash_stream->active_stream->mimeType == GST_STREAM_VIDEO
-                && gst_dash_demux_find_sync_samples (demux, stream)
-                && GST_ADAPTIVE_DEMUX (stream->demux)->
-                segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
-              if (buffer)
-                gst_buffer_unref (buffer);
-              return GST_ADAPTIVE_DEMUX_FLOW_END_OF_FRAGMENT;
-            }
-
-            if (gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
-              GstBuffer *buffer2 =
-                  gst_adapter_take_buffer (dash_stream->isobmff_adapter,
-                  gst_adapter_available (dash_stream->isobmff_adapter));
-
-              if (buffer)
-                buffer = gst_buffer_append (buffer, buffer2);
-              else
-                buffer = buffer2;
-            }
+        /* In key-units mode, we advance the fragments manually once the
+         * current key-unit is over but throw away all data that is after
+         * the current sidx entry end */
+        if (dash_stream->moof_sync_samples
+            && (GST_ADAPTIVE_DEMUX (stream->demux)->
+                segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)) {
+          if (sidx_end_offset <= dash_stream->sidx_current_offset) {
+            buffer = NULL;
+            gst_adapter_clear (dash_stream->sidx_adapter);
+          } else {
+            buffer =
+                gst_adapter_take_buffer (dash_stream->sidx_adapter,
+                sidx_end_offset - dash_stream->sidx_current_offset);
           }
+        } else {
+          buffer =
+              gst_adapter_take_buffer (dash_stream->sidx_adapter,
+              sidx_end_offset - dash_stream->sidx_current_offset);
+          advance = TRUE;
         }
       }
 
-      if (buffer) {
-        ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
-        if (advance) {
+      if (buffer != NULL) {
+        GST_BUFFER_OFFSET (buffer) = dash_stream->sidx_current_offset;
+        GST_BUFFER_OFFSET_END (buffer) =
+            GST_BUFFER_OFFSET (buffer) + gst_buffer_get_size (buffer);
+        dash_stream->sidx_current_offset = GST_BUFFER_OFFSET_END (buffer);
+
+        if (dash_stream->is_isobmff)
+          ret = gst_dash_demux_handle_isobmff_buffer (demux, stream, buffer);
+        else
+          ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
+
+        if (!(dash_stream->moof_sync_samples
+                && (GST_ADAPTIVE_DEMUX (stream->demux)->
+                    segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS))
+            && advance) {
           GstFlowReturn new_ret;
           new_ret =
               gst_adaptive_demux_stream_advance_fragment (demux, stream,
@@ -2437,37 +2526,10 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
         GST_BUFFER_OFFSET (buffer) + gst_buffer_get_size (buffer);
     dash_stream->sidx_current_offset = GST_BUFFER_OFFSET_END (buffer);
 
-    if (dash_stream->is_isobmff && dashdemux->allow_trickmode_key_units) {
-      if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
-        buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
-
-        if (buffer
-            && (ret =
-                gst_adaptive_demux_stream_push_buffer (stream,
-                    buffer)) != GST_FLOW_OK)
-          return ret;
-
-        if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MDAT) {
-          gst_dash_demux_find_sync_samples (demux, stream);
-
-          if (gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
-            buffer =
-                gst_adapter_take_buffer (dash_stream->isobmff_adapter,
-                gst_adapter_available (dash_stream->isobmff_adapter));
-            GST_BUFFER_OFFSET (buffer) =
-                dash_stream->isobmff_parser.current_offset;
-            dash_stream->isobmff_parser.current_offset +=
-                gst_buffer_get_size (buffer);
-            GST_BUFFER_OFFSET_END (buffer) =
-                dash_stream->isobmff_parser.current_offset;
-            ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
-          }
-        }
-
-        return ret;
-      }
-    }
-    ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
+    if (dash_stream->is_isobmff)
+      return gst_dash_demux_handle_isobmff_buffer (demux, stream, buffer);
+    else
+      return gst_adaptive_demux_stream_push_buffer (stream, buffer);
   }
 
   return ret;

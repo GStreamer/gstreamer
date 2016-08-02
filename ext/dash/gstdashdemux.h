@@ -90,9 +90,11 @@ struct _GstDashDemuxStream
   } isobmff_parser;
 
   GstMoofBox *moof;
-  guint64 moof_offset;
+  guint64 moof_offset, moof_size;
   GArray *moof_sync_samples;
   guint current_sync_sample;
+
+  gboolean first_sync_sample_after_moof, first_sync_sample_always_after_moof;
 };
 
 /**
