@@ -142,6 +142,27 @@ enum
   PROP_LAST
 };
 
+/* Explanation for buffer levels and percentages:
+ *
+ * The buffering_level functions here return a value in a normalized range
+ * that specifies the queue's current fill level. The range goes from 0 to
+ * MAX_BUFFERING_LEVEL. The low/high watermarks also use this same range.
+ *
+ * This is not to be confused with the buffering_percent value, which is
+ * a *relative* quantity - relative to the low/high watermarks.
+ * buffering_percent = 0% means buffering_level is at the low watermark.
+ * buffering_percent = 100% means buffering_level is at the high watermark.
+ * buffering_percent is used for determining if the fill level has reached
+ * the high watermark, and for producing BUFFERING messages. This value
+ * always uses a 0..100 range (since it is a percentage).
+ *
+ * To avoid future confusions, whenever "buffering level" is mentioned, it
+ * refers to the absolute level which is in the 0..MAX_BUFFERING_LEVEL
+ * range. Whenever "buffering_percent" is mentioned, it refers to the
+ * percentage value that is relative to the low/high watermark. */
+
+#define MAX_BUFFERING_LEVEL 100
+
 #define GST_QUEUE2_CLEAR_LEVEL(l) G_STMT_START {         \
   l.buffers = 0;                                        \
   l.bytes = 0;                                          \
@@ -882,7 +903,8 @@ apply_buffer_list (GstQueue2 * queue, GstBufferList * buffer_list,
 }
 
 static inline gint
-get_percent (guint64 cur_level, guint64 max_level, guint64 alt_max)
+normalize_to_buffering_level (guint64 cur_level, guint64 max_level,
+    guint64 alt_max)
 {
   guint64 p;
 
@@ -890,33 +912,34 @@ get_percent (guint64 cur_level, guint64 max_level, guint64 alt_max)
     return 0;
 
   if (alt_max > 0)
-    p = gst_util_uint64_scale (cur_level, 100, MIN (max_level, alt_max));
+    p = gst_util_uint64_scale (cur_level, MAX_BUFFERING_LEVEL,
+        MIN (max_level, alt_max));
   else
-    p = gst_util_uint64_scale (cur_level, 100, max_level);
+    p = gst_util_uint64_scale (cur_level, MAX_BUFFERING_LEVEL, max_level);
 
-  return MIN (p, 100);
+  return MIN (p, MAX_BUFFERING_LEVEL);
 }
 
 static gboolean
-get_buffering_percent (GstQueue2 * queue, gboolean * is_buffering,
-    gint * percent)
+get_buffering_level (GstQueue2 * queue, gboolean * is_buffering,
+    gint * buffering_level)
 {
-  gint perc, perc2;
+  gint buflevel, buflevel2;
 
   if (queue->high_percent <= 0) {
-    if (percent)
-      *percent = 100;
+    if (buffering_level)
+      *buffering_level = MAX_BUFFERING_LEVEL;
     if (is_buffering)
       *is_buffering = FALSE;
     return FALSE;
   }
-#define GET_PERCENT(format,alt_max) \
-    get_percent(queue->cur_level.format,queue->max_level.format,(alt_max))
+#define GET_BUFFER_LEVEL_FOR_QUANTITY(format,alt_max) \
+    normalize_to_buffering_level (queue->cur_level.format,queue->max_level.format,(alt_max))
 
   if (queue->is_eos) {
     /* on EOS we are always 100% full, we set the var here so that it we can
      * reuse the logic below to stop buffering */
-    perc = 100;
+    buflevel = MAX_BUFFERING_LEVEL;
     GST_LOG_OBJECT (queue, "we are EOS");
   } else {
     GST_LOG_OBJECT (queue,
@@ -924,48 +947,57 @@ get_buffering_percent (GstQueue2 * queue, gboolean * is_buffering,
         queue->cur_level.bytes, GST_TIME_ARGS (queue->cur_level.time),
         queue->cur_level.buffers);
 
-    /* figure out the percent we are filled, we take the max of all formats. */
+    /* figure out the buffering level we are filled, we take the max of all formats. */
     if (!QUEUE_IS_USING_RING_BUFFER (queue)) {
-      perc = GET_PERCENT (bytes, 0);
+      buflevel = GET_BUFFER_LEVEL_FOR_QUANTITY (bytes, 0);
     } else {
       guint64 rb_size = queue->ring_buffer_max_size;
-      perc = GET_PERCENT (bytes, rb_size);
+      buflevel = GET_BUFFER_LEVEL_FOR_QUANTITY (bytes, rb_size);
     }
 
-    perc2 = GET_PERCENT (time, 0);
-    perc = MAX (perc, perc2);
+    buflevel2 = GET_BUFFER_LEVEL_FOR_QUANTITY (time, 0);
+    buflevel = MAX (buflevel, buflevel2);
 
-    perc2 = GET_PERCENT (buffers, 0);
-    perc = MAX (perc, perc2);
+    buflevel2 = GET_BUFFER_LEVEL_FOR_QUANTITY (buffers, 0);
+    buflevel = MAX (buflevel, buflevel2);
 
     /* also apply the rate estimate when we need to */
     if (queue->use_rate_estimate) {
-      perc2 = GET_PERCENT (rate_time, 0);
-      perc = MAX (perc, perc2);
+      buflevel2 = GET_BUFFER_LEVEL_FOR_QUANTITY (rate_time, 0);
+      buflevel = MAX (buflevel, buflevel2);
     }
 
     /* Don't get to 0% unless we're really empty */
     if (queue->cur_level.bytes > 0)
-      perc = MAX (1, perc);
+      buflevel = MAX (1, buflevel);
   }
-#undef GET_PERCENT
+#undef GET_BUFFER_LEVEL_FOR_QUANTITY
 
   if (is_buffering)
     *is_buffering = queue->is_buffering;
 
-  /* scale to high percent so that it becomes the 100% mark */
-  perc = perc * 100 / queue->high_percent;
-  /* clip */
-  if (perc > 100)
-    perc = 100;
+  if (buffering_level)
+    *buffering_level = buflevel;
 
-  if (percent)
-    *percent = perc;
-
-  GST_DEBUG_OBJECT (queue, "buffering %d, percent %d", queue->is_buffering,
-      perc);
+  GST_DEBUG_OBJECT (queue, "buffering %d, level %d", queue->is_buffering,
+      buflevel);
 
   return TRUE;
+}
+
+static gint
+convert_to_buffering_percent (GstQueue2 * queue, gint buffering_level)
+{
+  int percent;
+
+  /* scale so that if buffering_level equals the high watermark,
+   * the percentage is 100% */
+  percent = buffering_level * 100 / queue->high_percent;
+  /* clip */
+  if (percent > 100)
+    percent = 100;
+
+  return percent;
 }
 
 static void
@@ -1043,15 +1075,17 @@ gst_queue2_post_buffering (GstQueue2 * queue)
 static void
 update_buffering (GstQueue2 * queue)
 {
-  gint percent;
+  gint buffering_level, percent;
 
   /* Ensure the variables used to calculate buffering state are up-to-date. */
   if (queue->current)
     update_cur_level (queue, queue->current);
   update_in_rates (queue, FALSE);
 
-  if (!get_buffering_percent (queue, NULL, &percent))
+  if (!get_buffering_level (queue, NULL, &buffering_level))
     return;
+
+  percent = convert_to_buffering_percent (queue, buffering_level);
 
   if (queue->is_buffering) {
     /* if we were buffering see if we reached the high watermark */
@@ -1062,7 +1096,7 @@ update_buffering (GstQueue2 * queue)
   } else {
     /* we were not buffering, check if we need to start buffering if we drop
      * below the low threshold */
-    if (percent < queue->low_percent) {
+    if (buffering_level < queue->low_percent) {
       queue->is_buffering = TRUE;
       SET_PERCENT (queue, percent);
     }
@@ -3137,7 +3171,8 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
       GST_DEBUG_OBJECT (queue, "query buffering");
 
-      get_buffering_percent (queue, &is_buffering, &percent);
+      get_buffering_level (queue, &is_buffering, &percent);
+      percent = convert_to_buffering_percent (queue, percent);
       gst_query_set_buffering_percent (query, is_buffering, percent);
 
       get_buffering_stats (queue, percent, &mode, &avg_in, &avg_out,
