@@ -1468,12 +1468,11 @@ GST_START_TEST (test_scaling)
   _set_track_element_width_height (GES_CONTAINER_CHILDREN (clip)->data, 320,
       240);
 
-  /* As the video source as the same size as the track restriction caps, changing
-   * the track size through restriction caps should also change the video source
-   * size */
+  /* The video source has the same size as the track restriction caps but we
+   * are changing the aspect ratio, the video should thus not be rescaled. */
   caps = gst_caps_from_string ("video/x-raw,height=1080,width=1920");
   ges_track_set_restriction_caps (trackv, caps);
-  fail_unless (check_frame_positioner_size (clip, 1920, 1080));
+  fail_unless (check_frame_positioner_size (clip, 320, 240));
 
   gst_object_unref (timeline);
 }

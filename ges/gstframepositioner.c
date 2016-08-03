@@ -100,9 +100,11 @@ gst_frame_positioner_update_properties (GstFramePositioner * pos,
         pos->fps_d, NULL);
 
   if (old_track_width && pos->width == old_track_width &&
-      old_track_width && pos->width == old_track_width) {
+      old_track_height && pos->height == old_track_height &&
+      ((float) old_track_width / (float) old_track_height) ==
+      ((float) pos->track_width / (float) pos->track_height)) {
 
-    GST_DEBUG_OBJECT (pos, "FOLLOWING track size width old_track: %d -- pos: %d"
+    GST_DEBUG_OBJECT (pos, "Following track size width old_track: %d -- pos: %d"
         " || height, old_track %d -- pos: %d",
         old_track_width, pos->width, old_track_height, pos->height);
 
