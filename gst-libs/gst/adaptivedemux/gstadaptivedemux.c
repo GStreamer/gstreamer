@@ -2306,12 +2306,12 @@ _src_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_EOS:{
       GST_MANIFEST_LOCK (demux);
 
+      gst_adaptive_demux_eos_handling (stream);
+
       g_mutex_lock (&stream->fragment_download_lock);
       stream->download_finished = TRUE;
       g_cond_signal (&stream->fragment_download_cond);
       g_mutex_unlock (&stream->fragment_download_lock);
-
-      gst_adaptive_demux_eos_handling (stream);
 
       GST_MANIFEST_UNLOCK (demux);
       break;
