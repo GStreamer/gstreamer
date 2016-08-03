@@ -871,20 +871,20 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
           hls_stream->pending_decrypted_buffer, TRUE);
       hls_stream->pending_decrypted_buffer = NULL;
     }
-  }
 
-  if (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED) {
-    if (hls_stream->pending_pcr_buffer) {
-      GstBuffer *buf = hls_stream->pending_pcr_buffer;
-      hls_stream->pending_pcr_buffer = NULL;
+    if (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED) {
+      if (hls_stream->pending_pcr_buffer) {
+        GstBuffer *buf = hls_stream->pending_pcr_buffer;
+        hls_stream->pending_pcr_buffer = NULL;
 
-      ret = gst_hls_demux_handle_buffer (demux, stream, buf, TRUE);
+        ret = gst_hls_demux_handle_buffer (demux, stream, buf, TRUE);
+      }
+
+      GST_LOG_OBJECT (stream,
+          "Fragment PCRs were %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (hls_stream->tsreader.first_pcr),
+          GST_TIME_ARGS (hls_stream->tsreader.last_pcr));
     }
-
-    GST_LOG_OBJECT (stream,
-        "Fragment PCRs were %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (hls_stream->tsreader.first_pcr),
-        GST_TIME_ARGS (hls_stream->tsreader.last_pcr));
   }
 
   gst_hls_demux_stream_clear_pending_data (hls_stream);
