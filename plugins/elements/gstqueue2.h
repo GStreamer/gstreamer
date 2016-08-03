@@ -109,8 +109,10 @@ struct _GstQueue2
   gboolean use_tags_bitrate;
   gboolean use_rate_estimate;
   GstClockTime buffering_interval;
-  gint low_percent;             /* low/high watermarks for buffering */
-  gint high_percent;
+
+  /* low/high watermarks for buffering */
+  gint low_watermark;
+  gint high_watermark;
 
   /* current buffering state */
   gboolean is_buffering;

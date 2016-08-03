@@ -117,6 +117,8 @@ enum
 #define DEFAULT_USE_RATE_ESTIMATE  TRUE
 #define DEFAULT_LOW_PERCENT        10
 #define DEFAULT_HIGH_PERCENT       99
+#define DEFAULT_LOW_WATERMARK      0.01
+#define DEFAULT_HIGH_WATERMARK     0.99
 #define DEFAULT_TEMP_REMOVE        TRUE
 #define DEFAULT_RING_BUFFER_MAX_SIZE 0
 
@@ -134,6 +136,8 @@ enum
   PROP_USE_RATE_ESTIMATE,
   PROP_LOW_PERCENT,
   PROP_HIGH_PERCENT,
+  PROP_LOW_WATERMARK,
+  PROP_HIGH_WATERMARK,
   PROP_TEMP_TEMPLATE,
   PROP_TEMP_LOCATION,
   PROP_TEMP_REMOVE,
@@ -161,7 +165,12 @@ enum
  * range. Whenever "buffering_percent" is mentioned, it refers to the
  * percentage value that is relative to the low/high watermark. */
 
-#define MAX_BUFFERING_LEVEL 100
+/* Using a buffering level range of 0..1000000 to allow for a
+ * resolution in ppm (1 ppm = 0.0001%) */
+#define MAX_BUFFERING_LEVEL 1000000
+
+/* How much 1% makes up in the buffer level range */
+#define BUF_LEVEL_PERCENT_FACTOR ((MAX_BUFFERING_LEVEL) / 100)
 
 #define GST_QUEUE2_CLEAR_LEVEL(l) G_STMT_START {         \
   l.buffers = 0;                                        \
@@ -375,13 +384,25 @@ gst_queue2_class_init (GstQueue2Class * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_LOW_PERCENT,
       g_param_spec_int ("low-percent", "Low percent",
-          "Low threshold for buffering to start. Only used if use-buffering is True",
-          0, 100, DEFAULT_LOW_PERCENT,
+          "Low threshold for buffering to start. Only used if use-buffering is True "
+          "(Deprecated: use low-watermark instead)",
+          0, 100, DEFAULT_LOW_WATERMARK * 100,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_HIGH_PERCENT,
       g_param_spec_int ("high-percent", "High percent",
+          "High threshold for buffering to finish. Only used if use-buffering is True "
+          "(Deprecated: use high-watermark instead)",
+          0, 100, DEFAULT_HIGH_WATERMARK * 100,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_LOW_WATERMARK,
+      g_param_spec_double ("low-watermark", "Low watermark",
+          "Low threshold for buffering to start. Only used if use-buffering is True",
+          0.0, 1.0, DEFAULT_LOW_WATERMARK,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_HIGH_WATERMARK,
+      g_param_spec_double ("high-watermark", "High watermark",
           "High threshold for buffering to finish. Only used if use-buffering is True",
-          0, 100, DEFAULT_HIGH_PERCENT,
+          0.0, 1.0, DEFAULT_HIGH_WATERMARK,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_TEMP_TEMPLATE,
@@ -484,8 +505,8 @@ gst_queue2_init (GstQueue2 * queue)
   queue->max_level.rate_time = DEFAULT_MAX_SIZE_TIME;
   queue->use_buffering = DEFAULT_USE_BUFFERING;
   queue->use_rate_estimate = DEFAULT_USE_RATE_ESTIMATE;
-  queue->low_percent = DEFAULT_LOW_PERCENT;
-  queue->high_percent = DEFAULT_HIGH_PERCENT;
+  queue->low_watermark = DEFAULT_LOW_WATERMARK * MAX_BUFFERING_LEVEL;
+  queue->high_watermark = DEFAULT_HIGH_WATERMARK * MAX_BUFFERING_LEVEL;
 
   gst_segment_init (&queue->sink_segment, GST_FORMAT_TIME);
   gst_segment_init (&queue->src_segment, GST_FORMAT_TIME);
@@ -926,7 +947,7 @@ get_buffering_level (GstQueue2 * queue, gboolean * is_buffering,
 {
   gint buflevel, buflevel2;
 
-  if (queue->high_percent <= 0) {
+  if (queue->high_watermark <= 0) {
     if (buffering_level)
       *buffering_level = MAX_BUFFERING_LEVEL;
     if (is_buffering)
@@ -992,7 +1013,7 @@ convert_to_buffering_percent (GstQueue2 * queue, gint buffering_level)
 
   /* scale so that if buffering_level equals the high watermark,
    * the percentage is 100% */
-  percent = buffering_level * 100 / queue->high_percent;
+  percent = buffering_level * 100 / queue->high_watermark;
   /* clip */
   if (percent > 100)
     percent = 100;
@@ -1096,7 +1117,7 @@ update_buffering (GstQueue2 * queue)
   } else {
     /* we were not buffering, check if we need to start buffering if we drop
      * below the low threshold */
-    if (buffering_level < queue->low_percent) {
+    if (buffering_level < queue->low_watermark) {
       queue->is_buffering = TRUE;
       SET_PERCENT (queue, percent);
     }
@@ -3730,10 +3751,17 @@ gst_queue2_set_property (GObject * object,
       queue->use_rate_estimate = g_value_get_boolean (value);
       break;
     case PROP_LOW_PERCENT:
-      queue->low_percent = g_value_get_int (value);
+      queue->low_watermark = g_value_get_int (value) * BUF_LEVEL_PERCENT_FACTOR;
       break;
     case PROP_HIGH_PERCENT:
-      queue->high_percent = g_value_get_int (value);
+      queue->high_watermark =
+          g_value_get_int (value) * BUF_LEVEL_PERCENT_FACTOR;
+      break;
+    case PROP_LOW_WATERMARK:
+      queue->low_watermark = g_value_get_double (value) * MAX_BUFFERING_LEVEL;
+      break;
+    case PROP_HIGH_WATERMARK:
+      queue->high_watermark = g_value_get_double (value) * MAX_BUFFERING_LEVEL;
       break;
     case PROP_TEMP_TEMPLATE:
       gst_queue2_set_temp_template (queue, g_value_get_string (value));
@@ -3790,10 +3818,18 @@ gst_queue2_get_property (GObject * object,
       g_value_set_boolean (value, queue->use_rate_estimate);
       break;
     case PROP_LOW_PERCENT:
-      g_value_set_int (value, queue->low_percent);
+      g_value_set_int (value, queue->low_watermark / BUF_LEVEL_PERCENT_FACTOR);
       break;
     case PROP_HIGH_PERCENT:
-      g_value_set_int (value, queue->high_percent);
+      g_value_set_int (value, queue->high_watermark / BUF_LEVEL_PERCENT_FACTOR);
+      break;
+    case PROP_LOW_WATERMARK:
+      g_value_set_double (value, queue->low_watermark /
+          (gdouble) MAX_BUFFERING_LEVEL);
+      break;
+    case PROP_HIGH_WATERMARK:
+      g_value_set_double (value, queue->high_watermark /
+          (gdouble) MAX_BUFFERING_LEVEL);
       break;
     case PROP_TEMP_TEMPLATE:
       g_value_set_string (value, queue->temp_template);

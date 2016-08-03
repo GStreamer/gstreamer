@@ -207,6 +207,74 @@ GST_START_TEST (test_simple_create_destroy)
 
 GST_END_TEST;
 
+#define CHECK_FOR_BUFFERING_MSG(PIPELINE, EXPECTED_PERC) \
+  G_STMT_START { \
+    gint buf_perc; \
+    GstMessage *msg; \
+    GST_LOG ("waiting for %d%% buffering message", (EXPECTED_PERC)); \
+    msg = gst_bus_poll (GST_ELEMENT_BUS (PIPELINE), \
+        GST_MESSAGE_BUFFERING | GST_MESSAGE_ERROR, -1); \
+    fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR, \
+        "Expected BUFFERING message, got ERROR message"); \
+    gst_message_parse_buffering (msg, &buf_perc); \
+    gst_message_unref (msg); \
+    fail_unless (buf_perc == (EXPECTED_PERC), \
+        "Got incorrect percentage: %d%% expected: %d%%", buf_perc, \
+        (EXPECTED_PERC)); \
+  } G_STMT_END
+
+GST_START_TEST (test_watermark_and_fill_level)
+{
+  /* This test checks the behavior of the fill level and
+   * the low/high watermarks. It also checks if the
+   * low/high-percent and low/high-watermark properties
+   * are coupled together properly. */
+
+  GstElement *pipe, *input, *output, *queue2;
+  gint low_perc, high_perc;
+
+  pipe = gst_pipeline_new ("pipeline");
+
+  input = gst_element_factory_make ("fakesrc", NULL);
+  fail_unless (input != NULL, "failed to create 'fakesrc' element");
+  /* Configure fakesrc to send one single buffer with 50000 bytes,
+   * which makes 50000 / 1000000 = 50% of the max queue2 size. */
+  g_object_set (input, "num-buffers", 1, "sizetype", 2, "sizemax", 50000, NULL);
+
+  output = gst_element_factory_make ("fakesink", NULL);
+  fail_unless (output != NULL, "failed to create 'fakesink' element");
+
+  queue2 = setup_queue2 (pipe, input, output);
+  g_object_set (queue2,
+      "use-buffering", (gboolean) TRUE,
+      "max-size-bytes", (guint) 1000000,
+      "max-size-buffers", (guint) 0,
+      "max-size-time", (guint64) 0,
+      "low-watermark", (gdouble) 0.01, "high-watermark", (gdouble) 0.10, NULL);
+
+  g_object_get (queue2, "low-percent", &low_perc,
+      "high-percent", &high_perc, NULL);
+
+  /* Check that low/high-watermark and low/high-percent are
+   * coupled properly. (low/high-percent are deprecated and
+   * exist for backwards compatibility.) */
+  fail_unless_equals_int (low_perc, 1);
+  fail_unless_equals_int (high_perc, 10);
+
+  gst_element_set_state (pipe, GST_STATE_PLAYING);
+
+  /* First buffering message will contain 0% (the initial state).
+   * Second buffering message contain 50% after the single
+   * buffer from fakesrc is pushed downstream. */
+  CHECK_FOR_BUFFERING_MSG (pipe, 0);
+  CHECK_FOR_BUFFERING_MSG (pipe, 50);
+
+  gst_element_set_state (pipe, GST_STATE_NULL);
+  gst_object_unref (pipe);
+}
+
+GST_END_TEST;
+
 static gpointer
 push_buffer (GstPad * sinkpad)
 {
@@ -384,6 +452,7 @@ queue2_suite (void)
   tcase_add_test (tc_chain, test_simple_pipeline_ringbuffer);
   tcase_add_test (tc_chain, test_simple_shutdown_while_running);
   tcase_add_test (tc_chain, test_simple_shutdown_while_running_ringbuffer);
+  tcase_add_test (tc_chain, test_watermark_and_fill_level);
   tcase_add_test (tc_chain, test_filled_read);
   tcase_add_test (tc_chain, test_percent_overflow);
   tcase_add_test (tc_chain, test_small_ring_buffer);
