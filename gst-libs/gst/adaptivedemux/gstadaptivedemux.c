@@ -1240,11 +1240,14 @@ gst_adaptive_demux_stream_free (GstAdaptiveDemuxStream * stream)
   }
 
   if (stream->src) {
-    GST_MANIFEST_UNLOCK (demux);
-    gst_element_set_locked_state (stream->src, TRUE);
-    gst_element_set_state (stream->src, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN_CAST (demux), stream->src);
+    GstElement *src = stream->src;
+
     stream->src = NULL;
+
+    GST_MANIFEST_UNLOCK (demux);
+    gst_element_set_locked_state (src, TRUE);
+    gst_element_set_state (src, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN_CAST (demux), src);
     GST_MANIFEST_LOCK (demux);
   }
 
@@ -1764,7 +1767,7 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux)
     GST_MANIFEST_UNLOCK (demux);
 
     if (src) {
-      gst_element_set_locked_state (stream->src, TRUE);
+      gst_element_set_locked_state (src, TRUE);
       gst_element_set_state (src, GST_STATE_READY);
     }
 
@@ -2420,12 +2423,16 @@ gst_adaptive_demux_stream_update_source (GstAdaptiveDemuxStream * stream,
     new_protocol = gst_uri_get_protocol (uri);
 
     if (!g_str_equal (old_protocol, new_protocol)) {
-      gst_object_unref (stream->src_srcpad);
-      gst_element_set_locked_state (stream->src, TRUE);
-      gst_element_set_state (stream->src, GST_STATE_NULL);
-      gst_bin_remove (GST_BIN_CAST (demux), stream->src);
+      GstElement *src = stream->src;
+
       stream->src = NULL;
+      gst_object_unref (stream->src_srcpad);
       stream->src_srcpad = NULL;
+      GST_MANIFEST_UNLOCK (demux);
+      gst_element_set_locked_state (src, TRUE);
+      gst_element_set_state (src, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN_CAST (demux), src);
+      GST_MANIFEST_LOCK (demux);
       GST_DEBUG_OBJECT (demux, "Can't re-use old source element");
     } else {
       GError *err = NULL;
@@ -2433,15 +2440,19 @@ gst_adaptive_demux_stream_update_source (GstAdaptiveDemuxStream * stream,
       GST_DEBUG_OBJECT (demux, "Re-using old source element");
       if (!gst_uri_handler_set_uri (GST_URI_HANDLER (stream->uri_handler), uri,
               &err)) {
+        GstElement *src = stream->src;
+
+        stream->src = NULL;
         GST_DEBUG_OBJECT (demux, "Failed to re-use old source element: %s",
             err->message);
         g_clear_error (&err);
         gst_object_unref (stream->src_srcpad);
-        gst_element_set_locked_state (stream->src, TRUE);
-        gst_element_set_state (stream->src, GST_STATE_NULL);
-        gst_bin_remove (GST_BIN_CAST (demux), stream->src);
-        stream->src = NULL;
         stream->src_srcpad = NULL;
+        GST_MANIFEST_UNLOCK (demux);
+        gst_element_set_locked_state (src, TRUE);
+        gst_element_set_state (src, GST_STATE_NULL);
+        gst_bin_remove (GST_BIN_CAST (demux), src);
+        GST_MANIFEST_LOCK (demux);
       }
     }
     g_free (old_uri);
@@ -2630,6 +2641,7 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
 
   gst_element_set_locked_state (stream->src, TRUE);
 
+  GST_MANIFEST_UNLOCK (demux);
   if (gst_element_set_state (stream->src,
           GST_STATE_READY) != GST_STATE_CHANGE_FAILURE) {
     if (start != 0 || end != -1) {
@@ -2643,13 +2655,18 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
                   GST_FORMAT_BYTES, (GstSeekFlags) GST_SEEK_FLAG_FLUSH,
                   GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_SET, end))) {
 
+        GST_MANIFEST_LOCK (demux);
         /* looks like the source can't handle seeks in READY */
         g_clear_error (&stream->last_error);
         stream->last_error = g_error_new (GST_CORE_ERROR,
             GST_CORE_ERROR_NOT_IMPLEMENTED,
             "Source element can't handle range requests");
         stream->last_ret = GST_FLOW_ERROR;
+      } else {
+        GST_MANIFEST_LOCK (demux);
       }
+    } else {
+      GST_MANIFEST_LOCK (demux);
     }
 
     if (G_LIKELY (stream->last_ret == GST_FLOW_OK)) {
@@ -2711,6 +2728,7 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
       }
     }
   } else {
+    GST_MANIFEST_UNLOCK (demux);
     if (stream->last_ret == GST_FLOW_OK)
       stream->last_ret = GST_FLOW_CUSTOM_ERROR;
     ret = GST_FLOW_CUSTOM_ERROR;
@@ -3311,10 +3329,14 @@ download_error:
 
     gst_task_stop (stream->download_task);
     if (stream->src) {
-      gst_element_set_locked_state (stream->src, TRUE);
-      gst_element_set_state (stream->src, GST_STATE_NULL);
-      gst_bin_remove (GST_BIN_CAST (demux), stream->src);
+      GstElement *src = stream->src;
+
       stream->src = NULL;
+      GST_MANIFEST_UNLOCK (demux);
+      gst_element_set_locked_state (src, TRUE);
+      gst_element_set_state (src, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN_CAST (demux), src);
+      GST_MANIFEST_LOCK (demux);
     }
 
     gst_element_post_message (GST_ELEMENT_CAST (demux), msg);
