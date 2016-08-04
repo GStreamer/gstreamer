@@ -1896,6 +1896,19 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
               dashstream->first_sync_sample_average_size;
       }
 
+      if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
+          dashstream->sidx_parser.sidx.entries) {
+        guint64 sidx_end_offset =
+            dashstream->sidx_base_offset +
+            SIDX_CURRENT_ENTRY (dashstream)->offset +
+            SIDX_CURRENT_ENTRY (dashstream)->size;
+
+        if (stream->fragment.chunk_size +
+            dashstream->isobmff_parser.current_offset > sidx_end_offset) {
+          stream->fragment.chunk_size =
+              sidx_end_offset - dashstream->isobmff_parser.current_offset;
+        }
+      }
     } else if (dashstream->moof && dashstream->moof_sync_samples) {
       /* Have the moof, either we're done now or we want to download the
        * directly following sync sample */
@@ -1904,11 +1917,23 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
         GstDashStreamSyncSample *sync_sample =
             &g_array_index (dashstream->moof_sync_samples,
             GstDashStreamSyncSample, 0);
-        if (dashstream->isobmff_parser.current_offset <
-            sync_sample->end_offset + 1) {
+        guint64 end_offset = sync_sample->end_offset + 1;
+
+        if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
+            dashstream->sidx_parser.sidx.entries) {
+          guint64 sidx_end_offset =
+              dashstream->sidx_base_offset +
+              SIDX_CURRENT_ENTRY (dashstream)->offset +
+              SIDX_CURRENT_ENTRY (dashstream)->size;
+
+          if (end_offset > sidx_end_offset) {
+            end_offset = sidx_end_offset;
+          }
+        }
+
+        if (dashstream->isobmff_parser.current_offset < end_offset) {
           stream->fragment.chunk_size =
-              sync_sample->end_offset + 1 -
-              dashstream->isobmff_parser.current_offset;
+              end_offset - dashstream->isobmff_parser.current_offset;
         } else {
           stream->fragment.chunk_size = 0;
         }
