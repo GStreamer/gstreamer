@@ -1156,29 +1156,36 @@ gst_ffmpegviddec_do_qos (GstFFMpegVidDec * ffmpegdec,
     *mode_switch = TRUE;
   }
 
+  if (*mode_switch == TRUE) {
+    /* We've already switched mode, we can return straight away
+     * without any further calculation */
+    return;
+  }
+
   diff =
       gst_video_decoder_get_max_decode_time (GST_VIDEO_DECODER (ffmpegdec),
       frame);
 
   /* if we don't have timing info, then we don't do QoS */
-  if (G_UNLIKELY (diff == G_MAXINT64))
+  if (G_UNLIKELY (diff == G_MAXINT64)) {
+    /* Ensure the skipping strategy is the default one */
+    ffmpegdec->context->skip_frame = ffmpegdec->skip_frame;
     return;
+  }
 
   GST_DEBUG_OBJECT (ffmpegdec, "decoding time %" G_GINT64_FORMAT, diff);
 
-  if (*mode_switch == FALSE) {
-    if (diff > 0 && ffmpegdec->context->skip_frame != AVDISCARD_DEFAULT) {
-      ffmpegdec->context->skip_frame = AVDISCARD_DEFAULT;
-      *mode_switch = TRUE;
-      GST_DEBUG_OBJECT (ffmpegdec, "QOS: normal mode");
-    }
+  if (diff > 0 && ffmpegdec->context->skip_frame != AVDISCARD_DEFAULT) {
+    ffmpegdec->context->skip_frame = AVDISCARD_DEFAULT;
+    *mode_switch = TRUE;
+    GST_DEBUG_OBJECT (ffmpegdec, "QOS: normal mode");
+  }
 
-    else if (diff <= 0 && ffmpegdec->context->skip_frame != AVDISCARD_NONREF) {
-      ffmpegdec->context->skip_frame = AVDISCARD_NONREF;
-      *mode_switch = TRUE;
-      GST_DEBUG_OBJECT (ffmpegdec,
-          "QOS: hurry up, diff %" G_GINT64_FORMAT " >= 0", diff);
-    }
+  else if (diff <= 0 && ffmpegdec->context->skip_frame != AVDISCARD_NONREF) {
+    ffmpegdec->context->skip_frame = AVDISCARD_NONREF;
+    *mode_switch = TRUE;
+    GST_DEBUG_OBJECT (ffmpegdec,
+        "QOS: hurry up, diff %" G_GINT64_FORMAT " >= 0", diff);
   }
 }
 
