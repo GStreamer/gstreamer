@@ -2783,8 +2783,10 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         for (l = buffers; l; l = l->next) {
           ret = gst_rtp_jitter_buffer_chain (pad, parent, l->data);
           l->data = NULL;
-          if (ret != GST_FLOW_OK)
+          if (ret != GST_FLOW_OK) {
+            l = l->next;
             break;
+          }
         }
         for (; l; l = l->next)
           gst_buffer_unref (l->data);
