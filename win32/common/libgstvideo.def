@@ -7,6 +7,8 @@ EXPORTS
 	gst_buffer_add_video_overlay_composition_meta
 	gst_buffer_add_video_region_of_interest_meta
 	gst_buffer_add_video_region_of_interest_meta_id
+	gst_buffer_add_video_time_code_meta
+	gst_buffer_add_video_time_code_meta_full
 	gst_buffer_get_video_meta
 	gst_buffer_get_video_meta_id
 	gst_buffer_get_video_region_of_interest_meta_id
@@ -283,4 +285,21 @@ EXPORTS
 	gst_video_tile_get_index
 	gst_video_tile_mode_get_type
 	gst_video_tile_type_get_type
+	gst_video_time_code_add_frames
+	gst_video_time_code_clear
+	gst_video_time_code_compare
+	gst_video_time_code_copy
+	gst_video_time_code_frames_since_daily_jam
+	gst_video_time_code_free
+	gst_video_time_code_get_type
+	gst_video_time_code_increment_frame
+	gst_video_time_code_init
+	gst_video_time_code_is_valid
+	gst_video_time_code_meta_api_get_type
+	gst_video_time_code_meta_get_info
+	gst_video_time_code_new
+	gst_video_time_code_new_empty
+	gst_video_time_code_nsec_since_daily_jam
+	gst_video_time_code_to_date_time
+	gst_video_time_code_to_string
 	gst_video_transfer_function_get_type
