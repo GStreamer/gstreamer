@@ -596,8 +596,10 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
         NULL, demux->connection_speed);
   }
 
-  GST_INFO_OBJECT (hlsdemux, "selected %s", variant->name);
-  gst_hls_demux_set_current_variant (hlsdemux, variant);        // FIXME: inline?
+  if (variant) {
+    GST_INFO_OBJECT (hlsdemux, "selected %s", variant->name);
+    gst_hls_demux_set_current_variant (hlsdemux, variant);      // FIXME: inline?
+  }
 
   /* get the selected media playlist (unless the inital list was one already) */
   if (!hlsdemux->master->is_simple) {
