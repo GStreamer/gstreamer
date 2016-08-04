@@ -1,0 +1,13 @@
+#mesondefine VERSION
+#mesondefine PACKAGE
+#mesondefine PACKAGE_VERSION
+#mesondefine PACKAGE_BUGREPORT
+#mesondefine PACKAGE_NAME
+#mesondefine GETTEXT_PACKAGE
+#mesondefine GST_API_VERSION
+#mesondefine GST_PACKAGE_NAME
+#mesondefine GST_PACKAGE_ORIGIN
+#mesondefine GST_LICENSE
+#mesondefine LIBDIR
+
+#mesondefine HAVE_GST_VALIDATE

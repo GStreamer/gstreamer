@@ -23,7 +23,7 @@
 #include "ges/ges-structured-interface.h"
 #include "ges-structure-parser.h"
 #include "ges-internal.h"
-#include "parse_lex.h"
+#include "ges-parse-lex.h"
 
 struct _GESCommandLineFormatterPrivate
 {
