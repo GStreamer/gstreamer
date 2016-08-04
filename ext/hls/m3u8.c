@@ -1114,11 +1114,8 @@ gst_m3u8_parse_media (gchar * desc, const gchar * base_uri)
   if (media->group_id == NULL || media->name == NULL)
     goto required_attributes_missing;
 
-  if (mtype == GST_HLS_MEDIA_TYPE_CLOSED_CAPTIONS && media->uri != NULL)
-    goto uri_with_cc;
-
   if (mtype == GST_HLS_MEDIA_TYPE_CLOSED_CAPTIONS)
-    goto cc_unsupported;
+    goto uri_with_cc;
 
   GST_DEBUG ("media: %s, group '%s', name '%s', uri '%s', %s %s %s, lang=%s",
       GST_HLS_MEDIA_TYPE_NAME (media->mtype), media->group_id, media->name,
@@ -1128,11 +1125,6 @@ gst_m3u8_parse_media (gchar * desc, const gchar * base_uri)
 
   return media;
 
-cc_unsupported:
-  {
-    GST_FIXME ("closed captions EXT-X-MEDIA are not yet supported");
-    goto out_error;
-  }
 uri_with_cc:
   {
     GST_WARNING ("closed captions EXT-X-MEDIA should not have URI specified");
