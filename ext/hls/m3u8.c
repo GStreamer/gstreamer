@@ -1039,7 +1039,7 @@ gst_m3u8_hls_media_type_get_nick (GstHLSMediaType mtype)
     "subtitle", "closed-captions"
   };
 
-  if (mtype < 0 || mtype > GST_HLS_N_MEDIA_TYPES)
+  if (mtype < 0 || mtype >= GST_HLS_N_MEDIA_TYPES)
     return "invalid";
 
   return nicks[mtype];
