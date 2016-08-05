@@ -1,0 +1,3 @@
+option('disable-introspection',
+        type : 'boolean', value : false,
+        description : 'Whether to disable the introspection generation')

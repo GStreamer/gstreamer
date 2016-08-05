@@ -20,3 +20,4 @@
 *.libs/*
 .#*
 tags
+build*

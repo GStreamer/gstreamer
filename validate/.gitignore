@@ -43,6 +43,7 @@ stamp-h.in
 *.stamp
 *.log
 *.trs
+build*/
 
 .arcconfig
 /m4/*m4

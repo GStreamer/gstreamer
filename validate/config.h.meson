@@ -1,0 +1,11 @@
+/* GStreamer API Version */
+#mesondefine GST_API_VERSION
+
+/* data dir */
+#mesondefine GST_DATADIR
+
+/* Define to the full name of this package. */
+#mesondefine PACKAGE_NAME
+
+/* directory where plugins are located */
+#mesondefine VALIDATEPLUGINDIR

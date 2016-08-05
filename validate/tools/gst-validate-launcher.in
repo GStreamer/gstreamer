@@ -22,6 +22,8 @@ import subprocess
 import sys
 
 LIBDIR = '@LIBDIR@'
+BUILDDIR = '@BUILDDIR@'
+SRCDIR = '@SRCDIR@'
 GIT_FIRST_HASH = 'da962d096af9460502843e41b7d25fdece7ff1c2'
 
 
@@ -45,12 +47,14 @@ def _in_devel():
 
 
 def _add_gst_launcher_path():
-    if not _in_devel():
-        root = os.path.join(LIBDIR, 'gst-validate-launcher', 'python')
-    else:
+    if _in_devel():
         print "Running with development path"
         dir_ = os.path.dirname(os.path.abspath(__file__))
         root = os.path.split(dir_)[0]
+    elif __file__.startswith(BUILDDIR):
+        root = os.path.abspath(os.path.join(SRCDIR, "../"))
+    else:
+        root = os.path.join(LIBDIR, 'gst-validate-launcher', 'python')
 
     sys.path.insert(0, root)
     return os.path.join(root, "launcher")
