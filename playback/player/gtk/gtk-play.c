@@ -177,7 +177,7 @@ load_from_builder (const gchar * filename, gboolean register_sig_handler,
 static void
 delete_event_cb (GtkWidget * widget, GdkEvent * event, GtkPlay * play)
 {
-  gst_player_stop (play->player);
+  gtk_widget_destroy (GTK_WIDGET (play));
 }
 
 static void
