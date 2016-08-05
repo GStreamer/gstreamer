@@ -303,7 +303,7 @@ gst_kms_allocator_add_fb (GstKMSAllocator * alloc, GstKMSMemory * kmsmem,
 {
   int i, ret;
   gint num_planes = GST_VIDEO_INFO_N_PLANES (vinfo);
-  guint32 w, h, fmt, bo_handles[4] = { 0, };
+  guint32 w, h, fmt, pitch = 0, bo_handles[4] = { 0, };
   guint32 offsets[4] = { 0, };
   guint32 pitches[4] = { 0, };
 
@@ -318,6 +318,10 @@ gst_kms_allocator_add_fb (GstKMSAllocator * alloc, GstKMSMemory * kmsmem,
     kms_bo_get_prop (kmsmem->bo, KMS_HANDLE, &bo_handles[0]);
     for (i = 1; i < num_planes; i++)
       bo_handles[i] = bo_handles[0];
+
+    /* Get the bo pitch calculated by the kms driver.
+     * If it's defined, it will overwrite the video info's stride */
+    kms_bo_get_prop (kmsmem->bo, KMS_PITCH, &pitch);
   } else {
     for (i = 0; i < num_planes; i++)
       bo_handles[i] = kmsmem->gem_handle[i];
@@ -328,6 +332,8 @@ gst_kms_allocator_add_fb (GstKMSAllocator * alloc, GstKMSMemory * kmsmem,
 
   for (i = 0; i < num_planes; i++) {
     offsets[i] = mem_offsets[i];
+    if (pitch)
+      GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i) = pitch;
     pitches[i] = GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i);
     GST_DEBUG_OBJECT (alloc, "Create FB plane %i with stride %u and offset %u",
         i, pitches[i], offsets[i]);
