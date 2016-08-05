@@ -307,6 +307,7 @@ struct _GstRtpJitterBufferPrivate
   GstClockTime ips_dts;
   guint64 ips_rtptime;
   GstClockTime packet_spacing;
+  gint equidistant;
 
   GQueue gap_packets;
 
@@ -1566,6 +1567,7 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->last_dts = -1;
   priv->last_rtptime = -1;
   priv->last_in_dts = 0;
+  priv->equidistant = 0;
   GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
   rtp_jitter_buffer_flush (priv->jbuf, (GFunc) free_item, NULL);
   rtp_jitter_buffer_disable_buffering (priv->jbuf, FALSE);
@@ -2423,8 +2425,9 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
     guint16 seqnum, GstClockTime dts, gint gap)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  GstClockTime total_duration, duration, expected_dts, delay;
+  GstClockTime duration, expected_dts, delay;
   TimerType type;
+  gboolean equidistant = priv->equidistant > 0;
 
   GST_DEBUG_OBJECT (jitterbuffer,
       "dts %" GST_TIME_FORMAT ", last %" GST_TIME_FORMAT,
@@ -2435,56 +2438,66 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
     return;
   }
 
-  /* the total duration spanned by the missing packets */
-  if (dts >= priv->last_in_dts)
-    total_duration = dts - priv->last_in_dts;
-  else
-    total_duration = 0;
+  if (equidistant) {
+    GstClockTime total_duration;
+    /* the total duration spanned by the missing packets */
+    if (dts >= priv->last_in_dts)
+      total_duration = dts - priv->last_in_dts;
+    else
+      total_duration = 0;
 
-  /* interpolate between the current time and the last time based on
-   * number of packets we are missing, this is the estimated duration
-   * for the missing packet based on equidistant packet spacing. */
-  duration = total_duration / (gap + 1);
+    /* interpolate between the current time and the last time based on
+     * number of packets we are missing, this is the estimated duration
+     * for the missing packet based on equidistant packet spacing. */
+    duration = total_duration / (gap + 1);
 
-  GST_DEBUG_OBJECT (jitterbuffer, "duration %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (duration));
+    GST_DEBUG_OBJECT (jitterbuffer, "duration %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (duration));
 
-  if (total_duration > priv->latency_ns) {
-    GstClockTime gap_time;
-    guint lost_packets;
+    if (total_duration > priv->latency_ns) {
+      GstClockTime gap_time;
+      guint lost_packets;
 
-    if (duration > 0) {
-      GstClockTime gap_dur = gap * duration;
-      if (gap_dur > priv->latency_ns)
-        gap_time = gap_dur - priv->latency_ns;
-      else
-        gap_time = 0;
-      lost_packets = gap_time / duration;
-    } else {
-      gap_time = total_duration - priv->latency_ns;
-      lost_packets = gap;
+      if (duration > 0) {
+        GstClockTime gap_dur = gap * duration;
+        if (gap_dur > priv->latency_ns)
+          gap_time = gap_dur - priv->latency_ns;
+        else
+          gap_time = 0;
+        lost_packets = gap_time / duration;
+      } else {
+        gap_time = total_duration - priv->latency_ns;
+        lost_packets = gap;
+      }
+
+      /* too many lost packets, some of the missing packets are already
+       * too late and we can generate lost packet events for them. */
+      GST_INFO_OBJECT (jitterbuffer,
+          "lost packets (%d, #%d->#%d) duration too large %" GST_TIME_FORMAT
+          " > %" GST_TIME_FORMAT ", consider %u lost (%" GST_TIME_FORMAT ")",
+          gap, expected, seqnum - 1, GST_TIME_ARGS (total_duration),
+          GST_TIME_ARGS (priv->latency_ns), lost_packets,
+          GST_TIME_ARGS (gap_time));
+
+      /* this timer will fire immediately and the lost event will be pushed from
+       * the timer thread */
+      if (lost_packets > 0) {
+        add_timer (jitterbuffer, TIMER_TYPE_LOST, expected, lost_packets,
+            priv->last_in_dts + duration, 0, gap_time);
+        expected += lost_packets;
+        priv->last_in_dts += gap_time;
+      }
     }
 
-    /* too many lost packets, some of the missing packets are already
-     * too late and we can generate lost packet events for them. */
-    GST_DEBUG_OBJECT (jitterbuffer,
-        "lost packets (%d, #%d->#%d) duration too large %" GST_TIME_FORMAT
-        " > %" GST_TIME_FORMAT ", consider %u lost (%" GST_TIME_FORMAT ")",
-        gap, expected, seqnum - 1, GST_TIME_ARGS (total_duration),
-        GST_TIME_ARGS (priv->latency_ns), lost_packets,
-        GST_TIME_ARGS (gap_time));
-
-    /* this timer will fire immediately and the lost event will be pushed from
-     * the timer thread */
-    if (lost_packets > 0) {
-      add_timer (jitterbuffer, TIMER_TYPE_LOST, expected, lost_packets,
-          priv->last_in_dts + duration, 0, gap_time);
-      expected += lost_packets;
-      priv->last_in_dts += gap_time;
-    }
+    expected_dts = priv->last_in_dts + duration;
+  } else {
+    /* If we cannot assume equidistant packet spacing, the only thing we now
+     * for sure is that the missing packets have expected dts not later than
+     * the last received dts. */
+    duration = 0;
+    expected_dts = dts;
   }
 
-  expected_dts = priv->last_in_dts + duration;
   delay = 0;
 
   if (priv->do_retransmission) {
@@ -2518,7 +2531,7 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
 
 static void
 calculate_jitter (GstRtpJitterBuffer * jitterbuffer, GstClockTime dts,
-    guint rtptime)
+    guint32 rtptime)
 {
   gint32 rtpdiff;
   GstClockTimeDiff dtsdiff, rtpdiffns, diff;
@@ -2538,6 +2551,15 @@ calculate_jitter (GstRtpJitterBuffer * jitterbuffer, GstClockTime dts,
     rtpdiff = rtptime - (guint32) priv->last_rtptime;
   else
     rtpdiff = 0;
+
+  /* Guess whether stream currently uses equidistant packet spacing. If we
+   * often see identical timestamps it means the packets are not
+   * equidistant. */
+  if (rtptime == priv->last_rtptime)
+    priv->equidistant -= 2;
+  else
+    priv->equidistant += 1;
+  priv->equidistant = CLAMP (priv->equidistant, -7, 7);
 
   priv->last_dts = dts;
   priv->last_rtptime = rtptime;

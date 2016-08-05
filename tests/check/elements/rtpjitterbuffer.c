@@ -925,6 +925,127 @@ GST_START_TEST (test_all_packets_are_timestamped_zero)
 
 GST_END_TEST;
 
+GST_START_TEST (test_reorder_of_non_equidistant_packets)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  GstTestClock *testclock;
+  gint latency_ms = 5;
+  GstClockID pending_id;
+  GstClockTime time;
+  gint seq, frame;
+  gint num_init_frames = 1;
+  const GstClockTime frame_dur = PCMU_BUF_DURATION;
+  const guint32 frame_rtp_ts_dur = PCMU_RTP_TS_DURATION;
+
+  gst_harness_set_src_caps (h, generate_caps ());
+  testclock = gst_harness_get_testclock (h);
+  g_object_set (h->element, "do-lost", TRUE, "latency", latency_ms, NULL);
+
+  for (frame = 0, seq = 0; frame < num_init_frames; frame++, seq += 2) {
+    /* Push a couple of packets with identical timestamp, typical for a video
+     * stream where one frame generates multiple packets. */
+    gst_harness_set_time (h, frame * frame_dur);
+    gst_harness_push (h, generate_test_buffer_full (frame * frame_dur, FALSE,
+            seq, frame * frame_rtp_ts_dur));
+    gst_harness_push (h, generate_test_buffer_full (frame * frame_dur, TRUE,
+            seq + 1, frame * frame_rtp_ts_dur));
+
+    if (frame == 0)
+      /* deadline for buffer 0 expires */
+      gst_harness_crank_single_clock_wait (h);
+
+    gst_buffer_unref (gst_harness_pull (h));
+    gst_buffer_unref (gst_harness_pull (h));
+  }
+
+  /* Finally push the last frame reordered */
+  gst_harness_set_time (h, frame * frame_dur);
+  gst_harness_push (h, generate_test_buffer_full (frame * frame_dur, TRUE,
+          seq + 1, frame * frame_rtp_ts_dur));
+
+  /* Check the scheduled lost timer. The expected arrival of this packet
+   * should be assumed to be the same as the last packet received since we
+   * don't know wether the missing packet belonged to this or previous
+   * frame. */
+  gst_test_clock_wait_for_next_pending_id (testclock, &pending_id);
+  time = gst_clock_id_get_time (pending_id);
+  fail_unless_equals_int64 (time, frame * frame_dur + latency_ms * GST_MSECOND);
+  gst_clock_id_unref (pending_id);
+
+  /* And then missing packet arrives just in time */
+  gst_harness_set_time (h, time - 1);
+  gst_harness_push (h, generate_test_buffer_full (time - 1, FALSE, seq,
+          frame * frame_rtp_ts_dur));
+
+  gst_buffer_unref (gst_harness_pull (h));
+  gst_buffer_unref (gst_harness_pull (h));
+
+  gst_object_unref (testclock);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_loss_equidistant_spacing_with_parameter_packets)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  GstTestClock *testclock;
+  GstEvent *event;
+  gint latency_ms = 5;
+  gint seq, frame;
+  gint num_init_frames = 10;
+
+  gst_harness_set_src_caps (h, generate_caps ());
+  testclock = gst_harness_get_testclock (h);
+  g_object_set (h->element, "do-lost", TRUE, "latency", latency_ms, NULL);
+
+  /* drop stream-start, caps, segment */
+  for (int i = 0; i < 3; i++)
+    gst_event_unref (gst_harness_pull_event (h));
+
+  for (frame = 0, seq = 0; frame < num_init_frames; frame++, seq++) {
+    gst_harness_set_time (h, frame * PCMU_BUF_DURATION);
+    gst_harness_push (h, generate_test_buffer_full (frame * PCMU_BUF_DURATION,
+            TRUE, seq, frame * PCMU_RTP_TS_DURATION));
+
+    if (frame == 0)
+      /* deadline for buffer 0 expires */
+      gst_harness_crank_single_clock_wait (h);
+
+    gst_buffer_unref (gst_harness_pull (h));
+  }
+
+  /* Push three packets with same rtptime, simulating parameter packets +
+   * frame. This should not disable equidistant mode as it is common for
+   * certain audio codecs. */
+  for (gint i = 0; i < 3; i++) {
+    gst_harness_set_time (h, frame * PCMU_BUF_DURATION);
+    gst_harness_push (h, generate_test_buffer_full (frame * PCMU_BUF_DURATION,
+            i == 2, seq++, frame * PCMU_RTP_TS_DURATION));
+    gst_buffer_unref (gst_harness_pull (h));
+  }
+  frame++;
+
+  /* Finally push the last packet introducing a gap */
+  gst_harness_set_time (h, frame * PCMU_BUF_DURATION);
+  gst_harness_push (h, generate_test_buffer_full (frame * PCMU_BUF_DURATION,
+          TRUE, seq + 1, frame * PCMU_RTP_TS_DURATION));
+
+  /* Check that the lost event has been generated assuming equidistant
+   * spacing. */
+  event = gst_harness_pull_event (h);
+  verify_lost_event (event, seq,
+      frame * PCMU_BUF_DURATION - PCMU_BUF_DURATION / 2, PCMU_BUF_DURATION / 2);
+
+  gst_buffer_unref (gst_harness_pull (h));
+
+  gst_object_unref (testclock);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
 static void
 gst_test_clock_set_time_and_process (GstTestClock * testclock,
     GstClockTime time)
@@ -2368,6 +2489,8 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_all_packets_are_timestamped_zero);
   tcase_add_loop_test (tc_chain, test_num_late_when_considered_lost_arrives, 0,
       2);
+  tcase_add_test (tc_chain, test_reorder_of_non_equidistant_packets);
+  tcase_add_test (tc_chain, test_loss_equidistant_spacing_with_parameter_packets);
 
   tcase_add_test (tc_chain, test_rtx_expected_next);
   tcase_add_test (tc_chain, test_rtx_two_missing);
