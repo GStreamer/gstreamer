@@ -665,7 +665,9 @@ gstspu_render (GstDVDSpu * dvdspu, GstBuffer * buf)
 {
   GstVideoFrame frame;
 
-  gst_video_frame_map (&frame, &dvdspu->spu_state.info, buf, GST_MAP_READWRITE);
+  if (!gst_video_frame_map (&frame, &dvdspu->spu_state.info, buf,
+          GST_MAP_READWRITE))
+    return;
 
   switch (dvdspu->spu_input_type) {
     case SPU_INPUT_TYPE_VOBSUB:
