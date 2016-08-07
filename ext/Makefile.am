@@ -112,6 +112,12 @@ else
  FAAD_DIR=
 endif
 
+if USE_FDK_AAC
+ FDK_AAC_DIR=fdkaac
+else
+ FDK_AAC_DIR=
+endif
+
 if USE_VOAACENC
  VOAACENC_DIR=voaacenc
 else
@@ -440,6 +446,7 @@ SUBDIRS=\
 	$(QT_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
+	$(FDK_AAC_DIR) \
 	$(FLITE_DIR) \
 	$(FLUIDSYNTH_DIR) \
 	$(GSM_DIR) \
@@ -503,6 +510,7 @@ DIST_SUBDIRS = \
 	wayland \
 	faac \
 	faad \
+	fdkaac \
 	flite \
 	fluidsynth \
 	gsm \
