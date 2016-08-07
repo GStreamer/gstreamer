@@ -18,15 +18,17 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include <config.h>
+#include <config.h>
 #endif
 
 #include <gst/gst.h>
+#include "gstfdkaacenc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return TRUE;
+  return gst_element_register (plugin, "fdkaacenc", GST_RANK_PRIMARY,
+      GST_TYPE_FDKAACENC);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
