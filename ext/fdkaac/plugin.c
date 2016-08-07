@@ -23,12 +23,15 @@
 
 #include <gst/gst.h>
 #include "gstfdkaacenc.h"
+#include "gstfdkaacdec.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "fdkaacenc", GST_RANK_PRIMARY,
-      GST_TYPE_FDKAACENC);
+      GST_TYPE_FDKAACENC)
+      && gst_element_register (plugin, "fdkaacdec", GST_RANK_MARGINAL,
+      GST_TYPE_FDKAACDEC);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
