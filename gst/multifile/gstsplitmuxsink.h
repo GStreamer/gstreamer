@@ -125,6 +125,7 @@ struct _GstSplitMuxSink {
   gsize mux_start_bytes;
 
   gboolean opening_first_fragment;
+  gboolean switching_fragment;
 };
 
 struct _GstSplitMuxSinkClass {
