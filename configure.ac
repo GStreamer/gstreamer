@@ -2296,6 +2296,14 @@ AG_GST_CHECK_FEATURE(FBDEV, [linux framebuffer], fbdevsink, [
   fi
 ])
 
+dnl *** fdkaac ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_FDK_AAC, true)
+AG_GST_CHECK_FEATURE(FDK_AAC, [fdkaac plugin], fdkaac, [
+  PKG_CHECK_MODULES(FDK_AAC, fdk-aac, HAVE_FDK_AAC="yes", [
+    HAVE_FDK_AAC="no"
+  ])
+])
+
 dnl *** flite ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_FLITE, true)
 AG_GST_CHECK_FEATURE(FLITE, [Flite plugin], flite, [
@@ -3755,6 +3763,7 @@ ext/gl/Makefile
 ext/gtk/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
+ext/fdkaac/Makefile
 ext/flite/Makefile
 ext/fluidsynth/Makefile
 ext/gsm/Makefile
