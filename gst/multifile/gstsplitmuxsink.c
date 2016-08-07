@@ -1233,6 +1233,9 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
         GST_SPLITMUX_UNLOCK (splitmux);
         gst_pad_send_event (ctx->sinkpad, event);
         GST_SPLITMUX_LOCK (splitmux);
+        /* state may have changed while we were unlocked. Loop again if so */
+        if (splitmux->state != SPLITMUX_STATE_ENDING_FILE)
+          break;
         /* fallthrough */
       }
       case SPLITMUX_STATE_START_NEXT_FRAGMENT:
