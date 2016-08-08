@@ -57,13 +57,12 @@ gst_qt_get_gl_display ()
 
   g_assert (app != NULL);
 
-  GST_INFO ("QGuiApplication::instance()->platformName() %s", app->platformName().toUtf8().data());
-
   if (g_once_init_enter (&_debug)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "qtglutility", 0,
         "Qt gl utility functions");
     g_once_init_leave (&_debug, 1);
   }
+  GST_INFO ("QGuiApplication::instance()->platformName() %s", app->platformName().toUtf8().data());
 
 #if GST_GL_HAVE_WINDOW_X11 && defined (HAVE_QT_X11)
   if (QString::fromUtf8 ("xcb") == app->platformName())
