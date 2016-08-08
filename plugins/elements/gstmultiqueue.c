@@ -2116,15 +2116,14 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           GST_INFO_OBJECT (mq, "SingleQueue %d is a sparse stream", sq->id);
           sq->is_sparse = TRUE;
         }
-        sq->thread = g_thread_self ();
       }
 
       sq->thread = g_thread_self ();
 
       /* Remove EOS flag */
       sq->is_eos = FALSE;
-    }
       break;
+    }
     case GST_EVENT_FLUSH_START:
       GST_DEBUG_OBJECT (mq, "SingleQueue %d : received flush start event",
           sq->id);
