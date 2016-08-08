@@ -1139,8 +1139,7 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
    * stream */
   if (GST_CLOCK_TIME_IS_VALID (ts)) {
     GstClockTimeDiff running_time =
-        my_segment_to_running_time (&ctx->in_segment,
-        GST_BUFFER_TIMESTAMP (buf));
+        my_segment_to_running_time (&ctx->in_segment, ts);
 
     GST_LOG_OBJECT (pad, "Buffer running TS is %" GST_STIME_FORMAT,
         GST_STIME_ARGS (running_time));
