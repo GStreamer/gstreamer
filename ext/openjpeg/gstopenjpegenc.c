@@ -647,7 +647,7 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
       sampling = GST_JPEG2000_SAMPLING_YBRA4444_EXT;
       break;
     case GST_VIDEO_FORMAT_xRGB:
-      sampling = GST_JPEG2000_COLORSPACE_RGB;
+      sampling = GST_JPEG2000_SAMPLING_RGB;
       break;
     case GST_VIDEO_FORMAT_Y444_10LE:
     case GST_VIDEO_FORMAT_Y444_10BE:
