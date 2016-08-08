@@ -120,6 +120,8 @@ setup_rawaudioparse (RawAudParseTestCtx * testctx, gboolean use_sink_caps,
 static void
 cleanup_rawaudioparse (RawAudParseTestCtx * testctx)
 {
+  int num_buffers, i;
+
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (testctx->rawaudioparse);
@@ -127,6 +129,18 @@ cleanup_rawaudioparse (RawAudParseTestCtx * testctx)
   gst_check_teardown_element (testctx->rawaudioparse);
 
   g_object_unref (G_OBJECT (testctx->test_data_adapter));
+
+  if (buffers != NULL) {
+    num_buffers = g_list_length (buffers);
+    for (i = 0; i < num_buffers; ++i) {
+      GstBuffer *buf = GST_BUFFER (buffers->data);
+      buffers = g_list_remove (buffers, buf);
+      gst_buffer_unref (buf);
+    }
+
+    g_list_free (buffers);
+    buffers = NULL;
+  }
 }
 
 
@@ -320,6 +334,47 @@ GST_START_TEST (test_config_switch)
 
 GST_END_TEST;
 
+GST_START_TEST (test_change_caps)
+{
+  RawAudParseTestCtx testctx;
+  GstAudioInfo ainfo;
+  GstCaps *caps;
+
+  /* Start processing with the sink caps config active, using the
+   * default channel count and sample format and 20 kHz sample rate
+   * for the caps. Push some data, then change caps (20 kHz -> 40 kHz).
+   * Check that the changed caps are handled properly. */
+
+  gst_audio_info_set_format (&ainfo, TEST_SAMPLE_FORMAT, 20000,
+      NUM_TEST_CHANNELS, NULL);
+  caps = gst_audio_info_to_caps (&ainfo);
+
+  setup_rawaudioparse (&testctx, TRUE, FALSE, caps, GST_FORMAT_BYTES);
+
+  /* Push in data with caps sink config active, expecting duration calculations
+   * to be based on the 20 kHz sample rate */
+  push_data_and_check_output (&testctx, 40, 40, GST_USECOND * 0,
+      GST_USECOND * 500, 1, 4, 0, 512);
+  push_data_and_check_output (&testctx, 20, 20, GST_USECOND * 500,
+      GST_USECOND * 250, 2, 4, 10, 522);
+
+  /* Change caps */
+  gst_audio_info_set_format (&ainfo, TEST_SAMPLE_FORMAT, 40000,
+      NUM_TEST_CHANNELS, NULL);
+  caps = gst_audio_info_to_caps (&ainfo);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
+
+  /* Push in data with the new caps, expecting duration calculations
+   * to be based on the 40 kHz sample rate */
+  push_data_and_check_output (&testctx, 40, 40, GST_USECOND * 750,
+      GST_USECOND * 250, 3, 4, 15, 527);
+
+  cleanup_rawaudioparse (&testctx);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 rawaudioparse_suite (void)
@@ -332,6 +387,7 @@ rawaudioparse_suite (void)
   tcase_add_test (tc_chain, test_push_unaligned_data_sink_caps_config);
   tcase_add_test (tc_chain, test_push_swapped_channels);
   tcase_add_test (tc_chain, test_config_switch);
+  tcase_add_test (tc_chain, test_change_caps);
 
   return s;
 }
