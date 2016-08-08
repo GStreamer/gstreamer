@@ -283,6 +283,8 @@ setup_rawvideoparse (gboolean use_sink_caps,
 static void
 cleanup_rawvideoparse (void)
 {
+  int num_buffers, i;
+
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (rawvideoparse);
@@ -291,6 +293,18 @@ cleanup_rawvideoparse (void)
 
   g_object_unref (G_OBJECT (properties_ctx.data));
   g_object_unref (G_OBJECT (sinkcaps_ctx.data));
+
+  if (buffers != NULL) {
+    num_buffers = g_list_length (buffers);
+    for (i = 0; i < num_buffers; ++i) {
+      GstBuffer *buf = GST_BUFFER (buffers->data);
+      buffers = g_list_remove (buffers, buf);
+      gst_buffer_unref (buf);
+    }
+
+    g_list_free (buffers);
+    buffers = NULL;
+  }
 }
 
 static void
@@ -551,6 +565,48 @@ GST_START_TEST (test_computed_plane_strides)
 
 GST_END_TEST;
 
+GST_START_TEST (test_change_caps)
+{
+  GstVideoInfo vinfo;
+  GstCaps *caps;
+
+  /* Start processing with the sink caps config active, using the
+   * default width/height/format and 25 Hz frame rate for the caps.
+   * Push some data, then change caps (25 Hz -> 50 Hz).
+   * Check that the changed caps are handled properly. */
+
+  gst_video_info_set_format (&vinfo, TEST_FRAME_FORMAT, TEST_WIDTH,
+      TEST_HEIGHT);
+  GST_VIDEO_INFO_FPS_N (&vinfo) = 25;
+  GST_VIDEO_INFO_FPS_D (&vinfo) = 1;
+  caps = gst_video_info_to_caps (&vinfo);
+
+  setup_rawvideoparse (TRUE, FALSE, caps, GST_FORMAT_BYTES);
+
+  /* Push in data with sink config active, expecting duration calculations
+   * to be based on the 25 Hz frame rate */
+  push_data_and_check_output (&sinkcaps_ctx, 192, 192, GST_MSECOND * 0,
+      GST_MSECOND * 40, 1, 0, 0, 0);
+  push_data_and_check_output (&sinkcaps_ctx, 192, 192, GST_MSECOND * 40,
+      GST_MSECOND * 40, 2, 1, 1, 0);
+
+  /* Change caps */
+  GST_VIDEO_INFO_FPS_N (&vinfo) = 50;
+  GST_VIDEO_INFO_FPS_D (&vinfo) = 1;
+  caps = gst_video_info_to_caps (&vinfo);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
+
+  /* Push in data with sink config active, expecting duration calculations
+   * to be based on the 50 Hz frame rate */
+  push_data_and_check_output (&sinkcaps_ctx, 192, 192, GST_MSECOND * 80,
+      GST_MSECOND * 20, 3, 2, 2, 0);
+
+  cleanup_rawvideoparse ();
+}
+
+GST_END_TEST;
+
 
 static Suite *
 rawvideoparse_suite (void)
@@ -564,6 +620,7 @@ rawvideoparse_suite (void)
   tcase_add_test (tc_chain, test_config_switch);
   tcase_add_test (tc_chain, test_push_with_no_framerate);
   tcase_add_test (tc_chain, test_computed_plane_strides);
+  tcase_add_test (tc_chain, test_change_caps);
 
   return s;
 }
