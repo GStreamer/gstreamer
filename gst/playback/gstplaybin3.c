@@ -635,6 +635,7 @@ enum
   SIGNAL_GET_AUDIO_PAD,
   SIGNAL_GET_TEXT_PAD,
   SIGNAL_SOURCE_SETUP,
+  SIGNAL_ELEMENT_SETUP,
   LAST_SIGNAL
 };
 
@@ -654,6 +655,8 @@ static GstStateChangeReturn gst_play_bin3_change_state (GstElement * element,
     GstStateChange transition);
 
 static void gst_play_bin3_handle_message (GstBin * bin, GstMessage * message);
+static void gst_play_bin3_deep_element_added (GstBin * playbin,
+    GstBin * sub_bin, GstElement * child);
 static gboolean gst_play_bin3_query (GstElement * element, GstQuery * query);
 static void gst_play_bin3_set_context (GstElement * element,
     GstContext * context);
@@ -1250,6 +1253,27 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
       g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
+   * GstPlayBin3::element-setup:
+   * @playbin: a #GstPlayBin3
+   * @element: an element that was added to the playbin hierarchy
+   *
+   * This signal is emitted when a new element is added to playbin or any of
+   * its sub-bins. This signal can be used to configure elements, e.g. to set
+   * properties on decoders. This is functionally equivalent to connecting to
+   * the deep-element-added signal, but more convenient.
+   *
+   * This signal is usually emitted from the context of a GStreamer streaming
+   * thread, so might be called at the same time as code running in the main
+   * application thread.
+   *
+   * Since: 1.10
+   */
+  gst_play_bin3_signals[SIGNAL_ELEMENT_SETUP] =
+      g_signal_new ("element-setup", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+
+  /**
    * GstPlayBin3::get-video-tags
    * @playbin: a #GstPlayBin3
    * @stream: a video stream number
@@ -1393,6 +1417,8 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
 
   gstbin_klass->handle_message =
       GST_DEBUG_FUNCPTR (gst_play_bin3_handle_message);
+  gstbin_klass->deep_element_added =
+      GST_DEBUG_FUNCPTR (gst_play_bin3_deep_element_added);
 }
 
 static void
@@ -3175,6 +3201,19 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
 
   if (msg)
     GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
+}
+
+static void
+gst_play_bin3_deep_element_added (GstBin * playbin, GstBin * sub_bin,
+    GstElement * child)
+{
+  GST_LOG_OBJECT (playbin, "element %" GST_PTR_FORMAT " was added to "
+      "%" GST_PTR_FORMAT, child, sub_bin);
+
+  g_signal_emit (playbin, gst_play_bin3_signals[SIGNAL_ELEMENT_SETUP], 0,
+      child);
+
+  GST_BIN_CLASS (parent_class)->deep_element_added (playbin, sub_bin, child);
 }
 
 static void
