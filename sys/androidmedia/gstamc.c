@@ -1867,7 +1867,8 @@ scan_codecs (GstPlugin * plugin)
           tmp->gl_output_only |= gst_codec_info->gl_output_only;
           tmp->n_supported_types += gst_codec_info->n_supported_types;
           tmp->supported_types =
-              g_realloc (tmp->supported_types, tmp->n_supported_types);
+              g_realloc (tmp->supported_types,
+              tmp->n_supported_types * sizeof (GstAmcCodecType));
 
           for (n = 0; n < gst_codec_info->n_supported_types; n++, m++) {
             tmp->supported_types[m] = gst_codec_info->supported_types[n];
