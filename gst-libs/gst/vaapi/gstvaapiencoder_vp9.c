@@ -39,7 +39,9 @@
 
 /* Supported set of VA rate controls, within this implementation */
 #define SUPPORTED_RATECONTROLS                  \
-  (GST_VAAPI_RATECONTROL_MASK (CQP))
+  (GST_VAAPI_RATECONTROL_MASK (CQP) |           \
+   GST_VAAPI_RATECONTROL_MASK (CBR) |           \
+   GST_VAAPI_RATECONTROL_MASK (VBR))
 
 /* Supported set of tuning options, within this implementation */
 #define SUPPORTED_TUNE_OPTIONS \
@@ -55,6 +57,9 @@
 
 #define MAX_FRAME_WIDTH 4096
 #define MAX_FRAME_HEIGHT 4096
+
+/* Default CPB length (in milliseconds) */
+#define DEFAULT_CPB_LENGTH 1500
 
 typedef enum
 {
@@ -101,7 +106,46 @@ struct _GstVaapiEncoderVP9
   guint frame_num;
   GstVaapiSurfaceProxy *ref_list[GST_VP9_REF_FRAMES];   /* reference list */
   guint ref_list_idx;           /* next free slot in ref_list */
+
+  /* Bitrate contral parameters, CPB = Coded Picture Buffer */
+  guint bitrate_bits;           /* bitrate (bits) */
+  guint cpb_length;             /* length of CPB buffer (ms) */
 };
+
+/* Estimates a good enough bitrate if none was supplied */
+static void
+ensure_bitrate (GstVaapiEncoderVP9 * encoder)
+{
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
+  guint bitrate;
+
+  switch (GST_VAAPI_ENCODER_RATE_CONTROL (encoder)) {
+    case GST_VAAPI_RATECONTROL_CBR:
+    case GST_VAAPI_RATECONTROL_VBR:
+      if (!base_encoder->bitrate) {
+        /* FIXME: Provide better estimation */
+        /* Using a 1/6 compression ratio */
+        /* 12 bits per pixel fro yuv420 */
+        base_encoder->bitrate =
+            (GST_VAAPI_ENCODER_WIDTH (encoder) *
+            GST_VAAPI_ENCODER_HEIGHT (encoder) * 12 / 6) *
+            GST_VAAPI_ENCODER_FPS_N (encoder) /
+            GST_VAAPI_ENCODER_FPS_D (encoder) / 1000;
+        GST_INFO ("target bitrate computed to %u kbps", base_encoder->bitrate);
+      }
+
+      bitrate = (base_encoder->bitrate * 1000);
+      if (bitrate != encoder->bitrate_bits) {
+        GST_DEBUG ("HRD bitrate: %u bits/sec", bitrate);
+        encoder->bitrate_bits = bitrate;
+      }
+
+      break;
+    default:
+      base_encoder->bitrate = 0;
+      break;
+  }
+}
 
 /* Derives the profile that suits best to the configuration */
 static GstVaapiEncoderStatus
@@ -109,6 +153,9 @@ ensure_profile (GstVaapiEncoderVP9 * encoder)
 {
   /* Always start from "simple" profile for maximum compatibility */
   encoder->profile = GST_VAAPI_PROFILE_VP9_0;
+
+  /* Ensure bitrate if not set already */
+  ensure_bitrate (encoder);
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
@@ -182,6 +229,7 @@ fill_sequence (GstVaapiEncoderVP9 * encoder, GstVaapiEncSequence * sequence)
   /* keyframe maximum interval */
   seq_param->kf_max_dist = base_encoder->keyframe_period;
   seq_param->intra_period = base_encoder->keyframe_period;
+  seq_param->bits_per_second = encoder->bitrate_bits;
 
   return TRUE;
 }
@@ -216,11 +264,43 @@ error:
 }
 
 static gboolean
+ensure_control_rate_params (GstVaapiEncoderVP9 * encoder)
+{
+  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP)
+    return TRUE;
+
+  /* *INDENT-OFF* */
+  /* RateControl params */
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder) = (VAEncMiscParameterRateControl) {
+    .bits_per_second = encoder->bitrate_bits,
+    .target_percentage = 70,
+    .window_size = encoder->cpb_length,
+  };
+
+  /* HRD params */
+  GST_VAAPI_ENCODER_VA_HRD (encoder) = (VAEncMiscParameterHRD) {
+    .buffer_size = encoder->bitrate_bits * 2,
+    .initial_buffer_fullness = encoder->bitrate_bits,
+  };
+
+  /* FrameRate params */
+  GST_VAAPI_ENCODER_VA_FRAME_RATE (encoder) = (VAEncMiscParameterFrameRate) {
+    .framerate = (guint) GST_VAAPI_ENCODER_FPS_D (encoder) << 16 |
+        GST_VAAPI_ENCODER_FPS_N (encoder),
+  };
+  /* *INDENT-ON* */
+
+  return TRUE;
+}
+
+static gboolean
 ensure_misc_params (GstVaapiEncoderVP9 * encoder, GstVaapiEncPicture * picture)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
 
   if (!gst_vaapi_encoder_ensure_param_quality_level (base_encoder, picture))
+    return FALSE;
+  if (!gst_vaapi_encoder_ensure_param_control_rate (base_encoder, picture))
     return FALSE;
   return TRUE;
 }
@@ -439,6 +519,7 @@ gst_vaapi_encoder_vp9_reconfigure (GstVaapiEncoder * base_encoder)
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     return status;
 
+  ensure_control_rate_params (encoder);
   return set_context_info (base_encoder);
 }
 
@@ -451,6 +532,7 @@ gst_vaapi_encoder_vp9_init (GstVaapiEncoder * base_encoder)
   encoder->loop_filter_level = DEFAULT_LOOP_FILTER_LEVEL;
   encoder->sharpness_level = DEFAULT_SHARPNESS_LEVEL;
   encoder->yac_qi = DEFAULT_YAC_QINDEX;
+  encoder->cpb_length = DEFAULT_CPB_LENGTH;
 
   memset (encoder->ref_list, 0,
       G_N_ELEMENTS (encoder->ref_list) * sizeof (encoder->ref_list[0]));
@@ -482,6 +564,9 @@ gst_vaapi_encoder_vp9_set_property (GstVaapiEncoder * base_encoder,
       break;
     case GST_VAAPI_ENCODER_VP9_PROP_REF_PIC_MODE:
       encoder->ref_pic_mode = g_value_get_enum (value);
+      break;
+    case GST_VAAPI_ENCODER_VP9_PROP_CPB_LENGTH:
+      encoder->cpb_length = g_value_get_uint (value);
       break;
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
@@ -569,6 +654,19 @@ gst_vaapi_encoder_vp9_get_default_properties (void)
           GST_VAAPI_ENCODER_VP9_REF_PIC_MODE_0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstVaapiEncoderVP9:cpb-length:
+   *
+   * The size of the Coded Picture Buffer , which means
+   * the window size in milliseconds.
+   *
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_VP9_PROP_CPB_LENGTH,
+      g_param_spec_uint ("cpb-length",
+          "CPB Length", "Length of the CPB_buffer/window_size in milliseconds",
+          1, 10000, DEFAULT_CPB_LENGTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
 }
