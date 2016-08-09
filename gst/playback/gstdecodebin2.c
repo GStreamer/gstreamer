@@ -2125,6 +2125,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     if (!(mqpad = gst_decode_group_control_demuxer_pad (chain->parent, pad)))
       goto beach;
     src = chain->parent->multiqueue;
+    /* Forward sticky events to mq src pad to allow factory initialization */
+    gst_pad_sticky_events_foreach (pad, copy_sticky_events, mqpad);
     pad = mqpad;
     decode_pad_set_target (dpad, pad);
   }
