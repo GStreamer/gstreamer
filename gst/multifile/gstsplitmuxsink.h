@@ -50,6 +50,7 @@ typedef struct _MqStreamBuf
   gboolean keyframe;
   GstClockTimeDiff run_ts;
   gsize buf_size;
+  GstClockTime duration;
 } MqStreamBuf;
 
 typedef struct _MqStreamCtx
@@ -95,6 +96,7 @@ struct _GstSplitMuxSink {
   GstClockTime threshold_time;
   guint64 threshold_bytes;
   guint max_files;
+  gboolean send_keyframe_requests;
 
   guint mq_max_buffers;
 
@@ -123,6 +125,7 @@ struct _GstSplitMuxSink {
 
   GstClockTimeDiff mux_start_time;
   gsize mux_start_bytes;
+  GstClockTime last_frame_duration;
 
   gboolean opening_first_fragment;
   gboolean switching_fragment;
