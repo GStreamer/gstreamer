@@ -902,9 +902,9 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
    * either threshold? */
   if ((splitmux->have_muxed_something &&
           ((splitmux->threshold_bytes > 0 &&
-                  queued_bytes >= splitmux->threshold_bytes) ||
+                  queued_bytes > splitmux->threshold_bytes) ||
               (splitmux->threshold_time > 0 &&
-                  queued_time >= splitmux->threshold_time)))) {
+                  queued_time > splitmux->threshold_time)))) {
 
     splitmux->state = SPLITMUX_STATE_ENDING_FILE;
 
