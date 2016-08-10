@@ -659,6 +659,7 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
   encoder->x265param.sourceWidth = info->width;
   encoder->x265param.sourceHeight = info->height;
   if (info->par_d > 0) {
+    encoder->x265param.vui.aspectRatioIdc = X265_EXTENDED_SAR;
     encoder->x265param.vui.sarWidth = info->par_n;
     encoder->x265param.vui.sarHeight = info->par_d;
   }
