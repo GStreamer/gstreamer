@@ -3467,6 +3467,8 @@ no_rate:
  *
  * a=fmtp:(payload) (param)[=(value)];...
  *
+ * a=rtcp-fb:(payload) (param1) [param2]...
+ *
  * Returns: a #GstSDPResult.
  *
  * Since: 1.8
@@ -3478,7 +3480,7 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
   gchar *tmp;
   gint caps_pt, caps_rate;
   guint n_fields, j;
-  gboolean first;
+  gboolean first, nack, nack_pli, ccm_fir;
   GString *fmtp;
   GstStructure *s;
 
@@ -3516,6 +3518,34 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
     g_free (tmp);
   }
 
+  /* get rtcp-fb attributes */
+  if (gst_structure_get_boolean (s, "rtcp-fb-nack", &nack)) {
+    if (nack) {
+      tmp = g_strdup_printf ("%d nack", caps_pt);
+      gst_sdp_media_add_attribute (media, "rtcp-fb", tmp);
+      g_free (tmp);
+      GST_DEBUG ("adding rtcp-fb-nack to pt=%d\n", caps_pt);
+    }
+  }
+
+  if (gst_structure_get_boolean (s, "rtcp-fb-nack-pli", &nack_pli)) {
+    if (nack_pli) {
+      tmp = g_strdup_printf ("%d nack pli", caps_pt);
+      gst_sdp_media_add_attribute (media, "rtcp-fb", tmp);
+      g_free (tmp);
+      GST_DEBUG ("adding rtcp-fb-nack-pli to pt=%d\n", caps_pt);
+    }
+  }
+
+  if (gst_structure_get_boolean (s, "rtcp-fb-ccm-fir", &ccm_fir)) {
+    if (ccm_fir) {
+      tmp = g_strdup_printf ("%d ccm fir", caps_pt);
+      gst_sdp_media_add_attribute (media, "rtcp-fb", tmp);
+      g_free (tmp);
+      GST_DEBUG ("adding rtcp-fb-ccm-fir to pt=%d\n", caps_pt);
+    }
+  }
+
   /* collect all other properties and add them to fmtp or attributes */
   fmtp = g_string_new ("");
   g_string_append_printf (fmtp, "%d ", caps_pt);
@@ -3549,6 +3579,8 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
       continue;
     /* handled later */
     if (g_str_has_prefix (fname, "x-gst-rtsp-server-rtx-time"))
+      continue;
+    if (g_str_has_prefix (fname, "rtcp-fb-"))
       continue;
 
     if (!strcmp (fname, "a-framesize")) {
