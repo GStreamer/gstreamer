@@ -1299,6 +1299,8 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
 
   rtp_jitter_buffer_set_clock_rate (priv->jbuf, priv->clock_rate);
 
+  gst_rtp_packet_rate_ctx_reset (&priv->packet_rate_ctx, priv->clock_rate);
+
   /* The clock base is the RTP timestamp corrsponding to the npt-start value. We
    * can use this to track the amount of time elapsed on the sender. */
   if (gst_structure_get_uint (caps_struct, "clock-base", &val))
@@ -2632,6 +2634,8 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
 
     if (G_UNLIKELY (priv->clock_rate == -1))
       goto no_clock_rate;
+
+    gst_rtp_packet_rate_ctx_reset (&priv->packet_rate_ctx, priv->clock_rate);
   }
 
   /* don't accept more data on EOS */
