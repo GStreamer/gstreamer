@@ -2377,12 +2377,14 @@ ensure_bitrate (GstVaapiEncoderH264 * encoder)
            thus estimating +15% here ; and using adaptive 8x8 transforms
            in I-frames could bring up to +10% improvement. */
         guint bits_per_mb = 48;
+        guint64 factor;
+
         if (!encoder->use_cabac)
           bits_per_mb += (bits_per_mb * 15) / 100;
         if (!encoder->use_dct8x8)
           bits_per_mb += (bits_per_mb * 10) / 100;
 
-        guint64 factor = encoder->mb_width * encoder->mb_height * bits_per_mb;
+        factor = encoder->mb_width * encoder->mb_height * bits_per_mb;
         base_encoder->bitrate =
             gst_util_uint64_scale (factor, GST_VAAPI_ENCODER_FPS_N (encoder),
             GST_VAAPI_ENCODER_FPS_D (encoder)) / 1000;
