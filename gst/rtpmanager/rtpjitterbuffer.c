@@ -1032,7 +1032,7 @@ append:
   /* ERRORS */
 duplicate:
   {
-    GST_WARNING ("duplicate packet %d found", (gint) seqnum);
+    GST_DEBUG ("duplicate packet %d found", (gint) seqnum);
     return FALSE;
   }
 }
