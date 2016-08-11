@@ -333,6 +333,8 @@ struct _GstRtpJitterBufferPrivate
   GstBuffer *last_sr;
 
   /* some accounting */
+  guint64 num_pushed;
+  guint64 num_lost;
   guint64 num_late;
   guint64 num_duplicates;
   guint64 num_rtx_requests;
@@ -707,6 +709,34 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    * with name application/x-rtp-jitterbuffer-stats with the following fields:
    *
    * <itemizedlist>
+   * <listitem>
+   *   <para>
+   *   #guint64
+   *   <classname>&quot;num-pushed&quot;</classname>:
+   *   the number of packets pushed out.
+   *   </para>
+   * </listitem>
+   * <listitem>
+   *   <para>
+   *   #guint64
+   *   <classname>&quot;num-lost&quot;</classname>:
+   *   the number of packets considered lost.
+   *   </para>
+   * </listitem>
+   * <listitem>
+   *   <para>
+   *   #guint64
+   *   <classname>&quot;num-late&quot;</classname>:
+   *   the number of packets arriving too late.
+   *   </para>
+   * </listitem>
+   * <listitem>
+   *   <para>
+   *   #guint64
+   *   <classname>&quot;num-duplicates&quot;</classname>:
+   *   the number of duplicate packets.
+   *   </para>
+   * </listitem>
    * <listitem>
    *   <para>
    *   #guint64
@@ -3165,6 +3195,7 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
           "Pushing buffer %d, dts %" GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT,
           seqnum, GST_TIME_ARGS (GST_BUFFER_DTS (outbuf)),
           GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)));
+      priv->num_pushed++;
       result = gst_pad_push (priv->srcpad, outbuf);
 
       JBUF_LOCK_CHECK (priv, out_flushing);
@@ -3446,7 +3477,7 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   else
     GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d lost", seqnum);
 
-  priv->num_late += lost_packets;
+  priv->num_lost += lost_packets;
   priv->num_rtx_failed += num_rtx_retry;
 
   next_in_seqnum = (seqnum + lost_packets) & 0xffff;
@@ -4340,15 +4371,21 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
 static GstStructure *
 gst_rtp_jitter_buffer_create_stats (GstRtpJitterBuffer * jbuf)
 {
+  GstRtpJitterBufferPrivate *priv = jbuf->priv;
   GstStructure *s;
 
-  JBUF_LOCK (jbuf->priv);
+  JBUF_LOCK (priv);
   s = gst_structure_new ("application/x-rtp-jitterbuffer-stats",
-      "rtx-count", G_TYPE_UINT64, jbuf->priv->num_rtx_requests,
-      "rtx-success-count", G_TYPE_UINT64, jbuf->priv->num_rtx_success,
-      "rtx-per-packet", G_TYPE_DOUBLE, jbuf->priv->avg_rtx_num,
-      "rtx-rtt", G_TYPE_UINT64, jbuf->priv->avg_rtx_rtt, NULL);
-  JBUF_UNLOCK (jbuf->priv);
+      "num-pushed", G_TYPE_UINT64, priv->num_pushed,
+      "num-lost", G_TYPE_UINT64, priv->num_lost,
+      "num-late", G_TYPE_UINT64, priv->num_late,
+      "num-duplicates", G_TYPE_UINT64, priv->num_duplicates,
+      "avg-jitter", G_TYPE_UINT64, priv->avg_jitter,
+      "rtx-count", G_TYPE_UINT64, priv->num_rtx_requests,
+      "rtx-success-count", G_TYPE_UINT64, priv->num_rtx_success,
+      "rtx-per-packet", G_TYPE_DOUBLE, priv->avg_rtx_num,
+      "rtx-rtt", G_TYPE_UINT64, priv->avg_rtx_rtt, NULL);
+  JBUF_UNLOCK (priv);
 
   return s;
 }
