@@ -3388,8 +3388,13 @@ ges_timeline_commit_unlocked (GESTimeline * timeline)
   GST_DEBUG_OBJECT (timeline, "commiting changes");
 
   for (tmp = timeline->layers; tmp; tmp = tmp->next) {
-    _create_transitions_on_layer (timeline, GES_LAYER (tmp->data),
-        NULL, NULL, _find_transition_from_auto_transitions);
+    GESLayer *layer = tmp->data;
+
+    _create_transitions_on_layer (timeline, layer, NULL, NULL,
+        _find_transition_from_auto_transitions);
+
+    /* Ensure clip priorities are correct after an edit */
+    ges_layer_resync_priorities (layer);
   }
 
   timeline->priv->expected_commited =
