@@ -818,6 +818,7 @@ gst_multiudpsink_render_buffers (GstMultiUDPSink * sink, GstBuffer ** buffers,
     msgs[i].vectors = &vecs[mem];
     msgs[i].num_vectors = mem_nums[i];
     msgs[i].num_control_messages = 0;
+    msgs[i].bytes_sent = 0;
     msgs[i].control_messages = NULL;
     msgs[i].address = clients[0]->addr;
     mem += mem_nums[i];
