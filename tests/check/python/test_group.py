@@ -199,3 +199,55 @@ class TestGroup(unittest.TestCase):
         self.assertEqual(len(layer.get_clips()), 2)
         for clip in layer.get_clips():
             self.assertEqual(clip.get_parent(), group)
+
+    def test_moving_group_with_transition(self):
+        self.timeline.props.auto_transition = True
+        clip1 = GES.TestClip.new()
+        clip1.props.start = 0
+        clip1.props.duration = 30
+
+        clip2 = GES.TestClip.new()
+        clip2.props.start = 20
+        clip2.props.duration = 20
+
+        self.layer.add_clip(clip1)
+        self.layer.add_clip(clip2)
+
+        clips = self.layer.get_clips()
+        self.assertEqual(len(clips), 4)
+
+        video_transition = None
+        audio_transition = None
+        for clip in clips:
+            if isinstance(clip, GES.TransitionClip):
+                if isinstance(clip.get_children(False)[0], GES.VideoTransition):
+                    video_transition = clip
+                else:
+                    audio_transition = clip
+        self.assertIsNotNone(audio_transition)
+        self.assertIsNotNone(video_transition)
+
+        self.assertEqual(video_transition.props.start, 20)
+        self.assertEqual(video_transition.props.duration, 10)
+        self.assertEqual(audio_transition.props.start, 20)
+        self.assertEqual(audio_transition.props.duration, 10)
+
+        group = GES.Container.group(clips)
+        self.assertIsNotNone(group)
+
+        self.assertTrue(clip2.edit(
+            self.timeline.get_layers(), 0,
+            GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 25))
+        clip2.props.start = 25
+
+        clips = self.layer.get_clips()
+        self.assertEqual(len(clips), 4)
+        self.assertEqual(clip1.props.start, 5)
+        self.assertEqual(clip1.props.duration, 30)
+        self.assertEqual(clip2.props.start, 25)
+        self.assertEqual(clip2.props.duration, 20)
+
+        self.assertEqual(video_transition.props.start, 25)
+        self.assertEqual(video_transition.props.duration, 10)
+        self.assertEqual(audio_transition.props.start, 25)
+        self.assertEqual(audio_transition.props.duration, 10)

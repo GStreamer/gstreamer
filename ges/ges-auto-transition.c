@@ -43,7 +43,7 @@ neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
   GESTimelineElement *parent =
       ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT (clip));
 
-  if (!g_strcmp0 (g_param_spec_get_name (arg), "priority") && parent) {
+  if (parent) {
     GESTimelineElement *prev_topparent =
         ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT
         (self->next_source));
