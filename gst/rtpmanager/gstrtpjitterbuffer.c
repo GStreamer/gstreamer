@@ -2404,7 +2404,7 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
     guint16 seqnum, GstClockTime dts, gint gap)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  GstClockTime total_duration, duration, expected_dts;
+  GstClockTime total_duration, duration, expected_dts, delay;
   TimerType type;
 
   GST_DEBUG_OBJECT (jitterbuffer,
@@ -2466,18 +2466,20 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
   }
 
   expected_dts = priv->last_in_dts + duration;
+  delay = 0;
 
   if (priv->do_retransmission) {
     TimerData *timer = find_timer (jitterbuffer, expected);
 
     type = TIMER_TYPE_EXPECTED;
+    delay = get_rtx_delay (priv);
+
     /* if we had a timer for the first missing packet, update it. */
     if (timer && timer->type == TIMER_TYPE_EXPECTED) {
       GstClockTime timeout = timer->timeout;
 
       timer->duration = duration;
-      if (timeout > (expected_dts + timer->rtx_retry)) {
-        GstClockTime delay = timeout - expected_dts - timer->rtx_retry;
+      if (timeout > (expected_dts + delay) && timer->num_rtx_retry == 0) {
         reschedule_timer (jitterbuffer, timer, timer->seqnum, expected_dts,
             delay, TRUE);
       }
@@ -2489,7 +2491,7 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
   }
 
   while (gst_rtp_buffer_compare_seqnum (expected, seqnum) > 0) {
-    add_timer (jitterbuffer, type, expected, 0, expected_dts, 0, duration);
+    add_timer (jitterbuffer, type, expected, 0, expected_dts, delay, duration);
     expected_dts += duration;
     expected++;
   }
