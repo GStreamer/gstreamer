@@ -31,7 +31,7 @@ GESPipeline * ges_test_create_pipeline (GESTimeline *timeline);
  *    1- The Gaps
  */
 #define MIN_NLE_PRIO 2
-
+#define TRANSITIONS_HEIGHT 1
 #define LAYER_HEIGHT 1000
 
 gchar * ges_test_get_tmp_uri (const gchar * filename);

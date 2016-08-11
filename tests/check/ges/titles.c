@@ -81,7 +81,7 @@ GST_START_TEST (test_title_source_properties)
 
   /* And let's also check that it propagated correctly to GNonLin */
   nle_object_check (ges_track_element_get_nleobject (trackelement), 42, 51, 0,
-      51, MIN_NLE_PRIO, TRUE);
+      51, MIN_NLE_PRIO + TRANSITIONS_HEIGHT, TRUE);
 
   /* Change more properties, see if they propagate */
   g_object_set (clip, "start", (guint64) 420, "duration", (guint64) 510,
@@ -96,7 +96,7 @@ GST_START_TEST (test_title_source_properties)
 
   /* And let's also check that it propagated correctly to GNonLin */
   nle_object_check (ges_track_element_get_nleobject (trackelement), 420, 510,
-      0, 510, MIN_NLE_PRIO + 0, TRUE);
+      0, 510, MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 0, TRUE);
 
   ges_container_remove (GES_CONTAINER (clip),
       GES_TIMELINE_ELEMENT (trackelement));

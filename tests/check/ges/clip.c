@@ -68,7 +68,7 @@ GST_START_TEST (test_object_properties)
 
   /* And let's also check that it propagated correctly to GNonLin */
   nle_object_check (ges_track_element_get_nleobject (trackelement), 42, 51, 12,
-      51, MIN_NLE_PRIO, TRUE);
+      51, MIN_NLE_PRIO + TRANSITIONS_HEIGHT, TRUE);
 
   /* Change more properties, see if they propagate */
   g_object_set (clip, "start", (guint64) 420, "duration", (guint64) 510,
@@ -83,7 +83,7 @@ GST_START_TEST (test_object_properties)
   /* And let's also check that it propagated correctly to GNonLin */
   ges_timeline_commit (timeline);
   nle_object_check (ges_track_element_get_nleobject (trackelement), 420, 510,
-      120, 510, MIN_NLE_PRIO + 0, TRUE);
+      120, 510, MIN_NLE_PRIO + TRANSITIONS_HEIGHT, TRUE);
 
 
   /* This time, we move the trackelement to see if the changes move
@@ -93,7 +93,7 @@ GST_START_TEST (test_object_properties)
   assert_equals_uint64 (_START (clip), 400);
   assert_equals_uint64 (_START (trackelement), 400);
   nle_object_check (ges_track_element_get_nleobject (trackelement), 400, 510,
-      120, 510, MIN_NLE_PRIO + 0, TRUE);
+      120, 510, MIN_NLE_PRIO + TRANSITIONS_HEIGHT, TRUE);
 
   ges_container_remove (GES_CONTAINER (clip),
       GES_TIMELINE_ELEMENT (trackelement));
@@ -320,7 +320,7 @@ GST_START_TEST (test_split_object)
 
   /* And let's also check that it propagated correctly to GNonLin */
   nle_object_check (ges_track_element_get_nleobject (trackelement), 42, 50, 12,
-      50, MIN_NLE_PRIO, TRUE);
+      50, MIN_NLE_PRIO + TRANSITIONS_HEIGHT, TRUE);
 
   splitclip = ges_clip_split (clip, 67);
   fail_unless (GES_IS_CLIP (splitclip));
@@ -637,38 +637,56 @@ GST_START_TEST (test_effects_priorities)
   fail_unless (ges_container_add (GES_CONTAINER (clip),
           GES_TIMELINE_ELEMENT (effect2)));
 
-  fail_unless_equals_int (MIN_NLE_PRIO + 0, _PRIORITY (effect));
-  fail_unless_equals_int (MIN_NLE_PRIO + 1, _PRIORITY (effect1));
-  fail_unless_equals_int (MIN_NLE_PRIO + 2, _PRIORITY (effect2));
+  fail_unless_equals_int (MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 0,
+      _PRIORITY (effect));
+  fail_unless_equals_int (MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 1,
+      _PRIORITY (effect1));
+  fail_unless_equals_int (MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 2,
+      _PRIORITY (effect2));
 
   fail_unless (ges_clip_set_top_effect_priority (clip, GES_BASE_EFFECT (effect),
           2));
-  fail_unless_equals_int (MIN_NLE_PRIO + 0, _PRIORITY (effect1));
-  fail_unless_equals_int (MIN_NLE_PRIO + 1, _PRIORITY (effect2));
-  fail_unless_equals_int (MIN_NLE_PRIO + 2, _PRIORITY (effect));
+  fail_unless_equals_int (MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 0,
+      _PRIORITY (effect1));
+  fail_unless_equals_int (MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 1,
+      _PRIORITY (effect2));
+  fail_unless_equals_int (MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 2,
+      _PRIORITY (effect));
 
   fail_unless (ges_clip_set_top_effect_priority (clip, GES_BASE_EFFECT (effect),
           0));
-  fail_unless_equals_int (MIN_NLE_PRIO + 0, _PRIORITY (effect));
-  fail_unless_equals_int (MIN_NLE_PRIO + 1, _PRIORITY (effect1));
-  fail_unless_equals_int (MIN_NLE_PRIO + 2, _PRIORITY (effect2));
+  fail_unless_equals_int (MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 0,
+      _PRIORITY (effect));
+  fail_unless_equals_int (MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 1,
+      _PRIORITY (effect1));
+  fail_unless_equals_int (MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 2,
+      _PRIORITY (effect2));
 
   fail_unless (ges_clip_move_to_layer (clip, layer1));
-  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + 0, _PRIORITY (effect));
-  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + 1, _PRIORITY (effect1));
-  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + 2, _PRIORITY (effect2));
+  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 0,
+      _PRIORITY (effect));
+  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 1,
+      _PRIORITY (effect1));
+  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 2,
+      _PRIORITY (effect2));
 
   fail_unless (ges_clip_set_top_effect_priority (clip, GES_BASE_EFFECT (effect),
           2));
-  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + 0, _PRIORITY (effect1));
-  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + 1, _PRIORITY (effect2));
-  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + 2, _PRIORITY (effect));
+  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 0,
+      _PRIORITY (effect1));
+  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 1,
+      _PRIORITY (effect2));
+  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 2,
+      _PRIORITY (effect));
 
   fail_unless (ges_clip_set_top_effect_priority (clip, GES_BASE_EFFECT (effect),
           0));
-  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + 0, _PRIORITY (effect));
-  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + 1, _PRIORITY (effect1));
-  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + 2, _PRIORITY (effect2));
+  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 0,
+      _PRIORITY (effect));
+  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 1,
+      _PRIORITY (effect1));
+  fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 2,
+      _PRIORITY (effect2));
 
   gst_object_unref (timeline);
 }

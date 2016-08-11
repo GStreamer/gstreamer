@@ -86,19 +86,6 @@ neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
 }
 
 static void
-_height_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
-    GESAutoTransition * self)
-{
-  /* FIXME This is really not smart and we should properly implement clip
-   * priority management at the Layer level */
-  self->positioning = TRUE;
-  _set_priority0 (GES_TIMELINE_ELEMENT (self->next_clip),
-      _PRIORITY (self->previous_clip) +
-      GES_CONTAINER_HEIGHT (self->previous_clip));
-  self->positioning = FALSE;
-}
-
-static void
 _track_changed_cb (GESTrackElement * track_element,
     GParamSpec * arg G_GNUC_UNUSED, GESAutoTransition * self)
 {
@@ -125,8 +112,6 @@ ges_auto_transition_finalize (GObject * object)
       neighbour_changed_cb, self);
   g_signal_handlers_disconnect_by_func (self->next_source, neighbour_changed_cb,
       self);
-  g_signal_handlers_disconnect_by_func (self->previous_clip,
-      _height_changed_cb, self);
   g_signal_handlers_disconnect_by_func (self->next_source, _track_changed_cb,
       self);
   g_signal_handlers_disconnect_by_func (self->previous_source,
@@ -177,15 +162,11 @@ ges_auto_transition_new (GESTrackElement * transition,
       G_CALLBACK (neighbour_changed_cb), self);
   g_signal_connect (next_source, "notify::duration",
       G_CALLBACK (neighbour_changed_cb), self);
-  g_signal_connect (self->previous_clip, "notify::height",
-      G_CALLBACK (_height_changed_cb), self);
 
   g_signal_connect (next_source, "notify::track",
       G_CALLBACK (_track_changed_cb), self);
   g_signal_connect (previous_source, "notify::track",
       G_CALLBACK (_track_changed_cb), self);
-
-  _height_changed_cb (self->previous_clip, NULL, self);
 
   GST_DEBUG_OBJECT (self, "Created transition %" GST_PTR_FORMAT
       " between %" GST_PTR_FORMAT " and: %" GST_PTR_FORMAT

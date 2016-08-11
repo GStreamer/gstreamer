@@ -254,10 +254,12 @@ _test_project (GESProject * project, GESTimeline * timeline)
             assert_equals_int (nb_scratch_lines, 12);
 
             nle_object_check (ges_track_element_get_nleobject (trackelement),
-                0, 1000000000, 0, 1000000000, MIN_NLE_PRIO, TRUE);
+                0, 1000000000, 0, 1000000000, MIN_NLE_PRIO + TRANSITIONS_HEIGHT,
+                TRUE);
           } else {
             nle_object_check (ges_track_element_get_nleobject (trackelement),
-                0, 1000000000, 0, 1000000000, MIN_NLE_PRIO + 1, TRUE);
+                0, 1000000000, 0, 1000000000,
+                MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 1, TRUE);
           }
         }
         break;

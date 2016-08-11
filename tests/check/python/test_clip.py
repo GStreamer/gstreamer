@@ -98,6 +98,8 @@ class TestTitleClip(unittest.TestCase):
         children2 = clip2.get_children(True)
         self.assertNotEqual(children2[0].props.priority,
                             children2[1].props.priority)
+
+
 class TestTrackElements(unittest.TestCase):
     def test_add_to_layer_with_effect_remove_add(self):
         timeline = GES.Timeline.new_audio_video()
