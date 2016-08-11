@@ -3052,7 +3052,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         old_item = rtp_jitter_buffer_pop (priv->jbuf, &percent);
         GST_DEBUG_OBJECT (jitterbuffer, "Queue full, dropping old packet %p",
             old_item);
-        priv->next_seqnum = (old_item->seqnum + 1) & 0xffff;
+        priv->next_seqnum = (old_item->seqnum + old_item->count) & 0xffff;
         free_item (old_item);
       }
       /* we might have removed some head buffers, signal the pushing thread to
