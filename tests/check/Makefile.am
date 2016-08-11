@@ -228,15 +228,17 @@ VALGRIND_TESTS_DISABLE = \
 
 # these tests don't even pass
 # neon: too flaky (almost always fails 'the first time')
+# dashdemux: fails because it uses random data streams but dashdemux nowadays
+#            actually looks at the data and doesn't like randomness
 noinst_PROGRAMS = \
 	pipelines/streamheader \
+	$(check_dash_demux) \
 	$(check_neon)
 
 check_PROGRAMS = \
 	generic/states \
 	$(check_assrender) \
 	$(check_dash) \
-	$(check_dash_demux) \
 	$(check_faac)  \
 	$(check_faad)  \
 	$(check_voaacenc) \
