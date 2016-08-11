@@ -1796,7 +1796,7 @@ GST_START_TEST (test_rtx_duplicate_packet_updates_rtx_stats)
               "rtx-per-packet", G_TYPE_DOUBLE, 1.0,
               "rtx-rtt", G_TYPE_UINT64, (guint64)
               /* Use the rtx-rtt formula. Can be subject to change though. */
-              ((now - rtx_request_6) + 7 * (now - rtx_request_7)) / 8, NULL)));
+              ((now - rtx_request_6) + 47 * (now - rtx_request_7)) / 48, NULL)));
 
   gst_object_unref (testclock);
   gst_harness_teardown (h);
