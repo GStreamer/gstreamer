@@ -241,7 +241,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_priorities_clip)
 {
-  gint i;
   GList *effects, *tmp;
   GESTimeline *timeline;
   GESLayer *layer;
@@ -314,7 +313,7 @@ GST_START_TEST (test_priorities_clip)
   assert_equals_int (GES_CONTAINER_HEIGHT (effect_clip), 4);
 
   effects = ges_clip_get_top_effects (GES_CLIP (effect_clip));
-  for (tmp = effects, i = 0; tmp; tmp = tmp->next, i++) {
+  for (tmp = effects; tmp; tmp = tmp->next) {
     gint priority = ges_clip_get_top_effect_position (GES_CLIP (effect_clip),
         GES_BASE_EFFECT (tmp->data));
     fail_unless (priority > effect_prio);
@@ -330,10 +329,10 @@ GST_START_TEST (test_priorities_clip)
   assert_equals_int (GES_CONTAINER_HEIGHT (effect_clip), 4);
   effects = ges_clip_get_top_effects (GES_CLIP (effect_clip));
   effect_prio = 0;
-  for (tmp = effects, i = 0; tmp; tmp = tmp->next, i++) {
+  for (tmp = effects; tmp; tmp = tmp->next) {
     gint priority = ges_clip_get_top_effect_position (GES_CLIP (effect_clip),
         GES_BASE_EFFECT (tmp->data));
-    fail_unless (priority > effect_prio);
+    fail_unless (priority >= effect_prio, "%d >= %d", priority, effect_prio);
     fail_unless (GES_IS_EFFECT (tmp->data));
     effect_prio = priority;
 

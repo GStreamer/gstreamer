@@ -88,6 +88,9 @@ static GParamSpec *properties[PROP_LAST];
  *              Listen to our children              *
  ****************************************************/
 
+/* @min_priority: The absolute minimum priority a child of @container should have
+ * @max_priority: The absolute maximum priority a child of @container should have
+ */
 static void
 _get_priority_range (GESContainer * container, guint32 * min_priority,
     guint32 * max_priority)
@@ -95,10 +98,10 @@ _get_priority_range (GESContainer * container, guint32 * min_priority,
   GESLayer *layer = GES_CLIP (container)->priv->layer;
 
   if (layer) {
-    *min_priority = layer->min_nle_priority;
+    *min_priority = _PRIORITY (container) + layer->min_nle_priority;
     *max_priority = layer->max_nle_priority;
   } else {
-    *min_priority = MIN_NLE_PRIO;
+    *min_priority = _PRIORITY (container) + MIN_NLE_PRIO;
     *max_priority = G_MAXUINT32;
   }
 }
@@ -119,7 +122,7 @@ _child_priority_changed_cb (GESTimelineElement * child,
   _get_priority_range (container, &min_prio, &max_prio);
 
   _ges_container_set_priority_offset (container, child,
-      min_prio + _PRIORITY (container) - _PRIORITY (child));
+      min_prio - _PRIORITY (child));
 }
 
 /*****************************************************
@@ -222,9 +225,9 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 
   _get_priority_range (container, &min_prio, &max_prio);
 
-  container->children_control_mode = GES_CHILDREN_UPDATE_OFFSETS;
+  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
-    guint32 real_tck_prio;
+    guint32 track_element_prio;
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
     gint off = _ges_container_get_priority_offset (container, child);
 
@@ -236,16 +239,21 @@ _set_priority (GESTimelineElement * element, guint32 priority)
       off = 0;
     }
 
-    real_tck_prio = min_prio + priority - off;
+    /* We need to remove our current priority from @min_prio
+     * as it is the absolute minimum priority @child could have
+     * before we set @container to @priority.
+     */
+    track_element_prio = min_prio - _PRIORITY (container) + priority - off;
 
-    if (real_tck_prio > max_prio) {
+    if (track_element_prio > max_prio) {
       GST_WARNING ("%p priority of %i, is outside of the its containing "
           "layer space. (%d/%d) setting it to the maximum it can be",
-          container, priority, min_prio, max_prio);
+          container, priority, min_prio - _PRIORITY (container) + priority,
+          max_prio);
 
-      real_tck_prio = max_prio;
+      track_element_prio = max_prio;
     }
-    _set_priority0 (child, real_tck_prio);
+    _set_priority0 (child, track_element_prio);
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
   _compute_height (container);
@@ -308,8 +316,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 
     GST_DEBUG_OBJECT (container, "Adding %ith effect: %" GST_PTR_FORMAT
         " Priority %i", priv->nb_effects + 1, element,
-        min_prio + GES_TIMELINE_ELEMENT_PRIORITY (container) +
-        priv->nb_effects);
+        min_prio + priv->nb_effects);
 
     tmp = g_list_nth (GES_CONTAINER_CHILDREN (container), priv->nb_effects);
     container->children_control_mode = GES_CHILDREN_UPDATE_OFFSETS;
@@ -318,14 +325,12 @@ _add_child (GESContainer * container, GESTimelineElement * element)
           GES_TIMELINE_ELEMENT_PRIORITY (tmp->data) + 1);
     }
 
-    _set_priority0 (element, min_prio +
-        GES_TIMELINE_ELEMENT_PRIORITY (container) + priv->nb_effects);
+    _set_priority0 (element, min_prio + priv->nb_effects);
     container->children_control_mode = mode;
     priv->nb_effects++;
   } else {
     /* We add the track element on top of the effect list */
-    _set_priority0 (element, min_prio +
-        GES_TIMELINE_ELEMENT_PRIORITY (container) + priv->nb_effects);
+    _set_priority0 (element, min_prio + priv->nb_effects);
   }
 
   /* We set the timing value of the child to ours, we avoid infinite loop
@@ -932,8 +937,7 @@ ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
       ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (elem),
           GES_TIMELINE_ELEMENT_MAX_DURATION (clip));
 
-    _set_priority0 (elem, min_prio + GES_TIMELINE_ELEMENT_PRIORITY (clip)
-        + clip->priv->nb_effects);
+    _set_priority0 (elem, min_prio + clip->priv->nb_effects);
 
     ges_container_add (GES_CONTAINER (clip), elem);
   }
@@ -1188,8 +1192,7 @@ ges_clip_get_top_effect_index (GESClip * clip, GESBaseEffect * effect)
 
   _get_priority_range (GES_CONTAINER (clip), &min_prio, &max_prio);
 
-  return GES_TIMELINE_ELEMENT_PRIORITY (effect) - min_prio +
-      GES_TIMELINE_ELEMENT_PRIORITY (clip);
+  return GES_TIMELINE_ELEMENT_PRIORITY (effect) - min_prio;
 }
 
 /* TODO 2.0 remove as it is Deprecated */
