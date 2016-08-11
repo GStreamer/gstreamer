@@ -335,8 +335,6 @@ GST_START_TEST (test_priorities_clip)
   }
   g_list_free (effects);
 
-  ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (effect_clip), 2);
-  assert_equals_int (_PRIORITY (effect_clip), 2);
   assert_equals_int (GES_CONTAINER_HEIGHT (effect_clip), 4);
   effects = ges_clip_get_top_effects (GES_CLIP (effect_clip));
   effect_prio = 0;

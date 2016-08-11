@@ -366,6 +366,9 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
    * GESTimelineElement:priority:
    *
    * The priority of the object.
+   *
+   * Setting GESTimelineElement priorities is deprecated
+   * as all priority management is done by GES itself now.
    */
   properties[PROP_PRIORITY] = g_param_spec_uint ("priority", "Priority",
       "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE);
@@ -881,6 +884,10 @@ ges_timeline_element_get_priority (GESTimelineElement * self)
  * @priority: the priority
  *
  * Sets the priority of the object within the containing layer
+ *
+ * Deprecated: All priority management is done by GES itself now.
+ * To set #GESEffect priorities #ges_clip_set_top_effect_index should
+ * be used.
  */
 void
 ges_timeline_element_set_priority (GESTimelineElement * self, guint32 priority)

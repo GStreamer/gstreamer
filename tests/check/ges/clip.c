@@ -644,7 +644,7 @@ GST_START_TEST (test_effects_priorities)
   fail_unless_equals_int (MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 2,
       _PRIORITY (effect2));
 
-  fail_unless (ges_clip_set_top_effect_priority (clip, GES_BASE_EFFECT (effect),
+  fail_unless (ges_clip_set_top_effect_index (clip, GES_BASE_EFFECT (effect),
           2));
   fail_unless_equals_int (MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 0,
       _PRIORITY (effect1));
@@ -653,7 +653,7 @@ GST_START_TEST (test_effects_priorities)
   fail_unless_equals_int (MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 2,
       _PRIORITY (effect));
 
-  fail_unless (ges_clip_set_top_effect_priority (clip, GES_BASE_EFFECT (effect),
+  fail_unless (ges_clip_set_top_effect_index (clip, GES_BASE_EFFECT (effect),
           0));
   fail_unless_equals_int (MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 0,
       _PRIORITY (effect));
@@ -670,7 +670,7 @@ GST_START_TEST (test_effects_priorities)
   fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 2,
       _PRIORITY (effect2));
 
-  fail_unless (ges_clip_set_top_effect_priority (clip, GES_BASE_EFFECT (effect),
+  fail_unless (ges_clip_set_top_effect_index (clip, GES_BASE_EFFECT (effect),
           2));
   fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 0,
       _PRIORITY (effect1));
@@ -679,7 +679,7 @@ GST_START_TEST (test_effects_priorities)
   fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 2,
       _PRIORITY (effect));
 
-  fail_unless (ges_clip_set_top_effect_priority (clip, GES_BASE_EFFECT (effect),
+  fail_unless (ges_clip_set_top_effect_index (clip, GES_BASE_EFFECT (effect),
           0));
   fail_unless_equals_int (LAYER_HEIGHT + MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 0,
       _PRIORITY (effect));

@@ -178,7 +178,7 @@ struct _GESTimelineElementClass
   gboolean (*set_inpoint)      (GESTimelineElement * self, GstClockTime inpoint);
   gboolean (*set_duration)     (GESTimelineElement * self, GstClockTime duration);
   gboolean (*set_max_duration) (GESTimelineElement * self, GstClockTime maxduration);
-  gboolean (*set_priority)     (GESTimelineElement * self, guint32 priority);
+  gboolean (*set_priority)     (GESTimelineElement * self, guint32 priority); /* set_priority is now protected */
 
   gboolean (*ripple)           (GESTimelineElement *self, guint64  start);
   gboolean (*ripple_end)       (GESTimelineElement *self, guint64  end);

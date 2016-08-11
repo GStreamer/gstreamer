@@ -150,14 +150,9 @@ GST_START_TEST (test_layer_priorities)
   fail_unless (clip2 != NULL);
   fail_unless (clip3 != NULL);
 
-  /* Set priorities on the objects */
-  g_object_set (clip1, "priority", 0, "start", 0, "duration", 10, NULL);
-  assert_equals_int (_PRIORITY (clip1), 0);
-  g_object_set (clip2, "priority", 1, "start", 10, "duration", 10, NULL);
-  assert_equals_int (_PRIORITY (clip2), 1);
-  g_object_set (clip3, "priority", LAYER_HEIGHT + 1, "start", 20, "duration",
-      10, NULL);
-  assert_equals_int (_PRIORITY (clip3), LAYER_HEIGHT + 1);
+  g_object_set (clip1, "start", 0, "duration", 10, NULL);
+  g_object_set (clip2, "start", 10, "duration", 10, NULL);
+  g_object_set (clip3, "start", 20, "duration", 10, NULL);
 
   /* Add objects to the timeline */
   fail_unless (ges_layer_add_clip (layer1, clip1));
@@ -242,17 +237,6 @@ GST_START_TEST (test_layer_priorities)
       2 * LAYER_HEIGHT + 1 + MIN_NLE_PRIO + TRANSITIONS_HEIGHT);
   assert_equals_int (prio3,
       2 * LAYER_HEIGHT + 2 + MIN_NLE_PRIO + TRANSITIONS_HEIGHT);
-
-  /* And change TrackElement-s priorities and check that changes are not
-   * refected on it containing Clip
-   * FIXME : We should rework the way we handle the case were a trackobject
-   * prio is set outside the layer it is in.
-   * ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (trackelement3),
-   * ges_timeline_commit (timeline);
-   *     LAYER_HEIGHT * 2);
-   * g_object_get (nleobj3, "priority", &prio3, NULL);
-   * assert_equals_int (prio3, 2 * LAYER_HEIGHT);
-   * assert_equals_int (_PRIORITY (clip3), LAYER_HEIGHT - 1); */
 
   gst_object_unref (trackelement1);
   gst_object_unref (trackelement2);
