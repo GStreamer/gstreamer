@@ -1222,6 +1222,8 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
       /* FIXME - the final_ts won't be correct here */
       dashstream->pending_seek_ts = ts;
     }
+
+    return GST_FLOW_OK;
   }
 
   gst_mpd_client_stream_seek (dashdemux->client, dashstream->active_stream,
