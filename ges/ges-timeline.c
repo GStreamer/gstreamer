@@ -2044,8 +2044,9 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
     guint64 position)
 {
   GstClockTime cpos = GES_TIMELINE_ELEMENT_START (element);
-  guint64 *snap_end, *snap_st, *cur, off1, off2, end;
+  guint64 *snap_end, *snap_st, *cur, position_offset, off1, off2, top_end;
   GESTrackElement *track_element;
+  GESContainer *toplevel;
 
   /* We only work with GESSource-s and we check that we are not already moving
    * element ourself*/
@@ -2055,17 +2056,20 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
 
   timeline->priv->needs_rollback = FALSE;
   track_element = GES_TRACK_ELEMENT (element);
-  end = position + _DURATION (get_toplevel_container (track_element));
+  toplevel = get_toplevel_container (track_element);
+  position_offset = position - _START (track_element);
+
+  top_end = _START (toplevel) + _DURATION (toplevel) + position_offset;
   cur = g_hash_table_lookup (timeline->priv->by_end, track_element);
 
   GST_DEBUG_OBJECT (timeline, "Moving %" GST_PTR_FORMAT "to %"
       GST_TIME_FORMAT " (end %" GST_TIME_FORMAT ")", element,
-      GST_TIME_ARGS (position), GST_TIME_ARGS (end));
+      GST_TIME_ARGS (position), GST_TIME_ARGS (top_end));
 
-  snap_end = ges_timeline_snap_position (timeline, track_element, cur, end,
+  snap_end = ges_timeline_snap_position (timeline, track_element, cur, top_end,
       FALSE);
   if (snap_end)
-    off1 = end > *snap_end ? end - *snap_end : *snap_end - end;
+    off1 = top_end > *snap_end ? top_end - *snap_end : *snap_end - top_end;
   else
     off1 = G_MAXUINT64;
 
@@ -2080,7 +2084,7 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
 
   /* In the case we could snap on both sides, we snap on the end */
   if (snap_end && off1 <= off2) {
-    position = position + *snap_end - end;
+    position = position + *snap_end - top_end;
     ges_timeline_emit_snappig (timeline, track_element, snap_end);
   } else if (snap_st) {
     position = position + *snap_st - position;
