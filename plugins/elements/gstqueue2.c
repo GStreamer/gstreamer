@@ -275,6 +275,7 @@ static gboolean gst_queue2_is_filled (GstQueue2 * queue);
 
 static void update_cur_level (GstQueue2 * queue, GstQueue2Range * range);
 static void update_in_rates (GstQueue2 * queue, gboolean force);
+static GstMessage *gst_queue2_get_buffering_message (GstQueue2 * queue);
 static void gst_queue2_post_buffering (GstQueue2 * queue);
 
 typedef enum
@@ -1002,13 +1003,12 @@ get_buffering_stats (GstQueue2 * queue, gint percent, GstBufferingMode * mode,
   }
 }
 
-static void
-gst_queue2_post_buffering (GstQueue2 * queue)
+/* Called with the lock taken */
+static GstMessage *
+gst_queue2_get_buffering_message (GstQueue2 * queue)
 {
   GstMessage *msg = NULL;
 
-  g_mutex_lock (&queue->buffering_post_lock);
-  GST_QUEUE2_MUTEX_LOCK (queue);
   if (queue->percent_changed) {
     gint percent = queue->buffering_percent;
 
@@ -1020,6 +1020,18 @@ gst_queue2_post_buffering (GstQueue2 * queue)
     gst_message_set_buffering_stats (msg, queue->mode, queue->avg_in,
         queue->avg_out, queue->buffering_left);
   }
+
+  return msg;
+}
+
+static void
+gst_queue2_post_buffering (GstQueue2 * queue)
+{
+  GstMessage *msg = NULL;
+
+  g_mutex_lock (&queue->buffering_post_lock);
+  GST_QUEUE2_MUTEX_LOCK (queue);
+  msg = gst_queue2_get_buffering_message (queue);
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
   if (msg != NULL)
@@ -2028,8 +2040,18 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
     update_cur_level (queue, queue->current);
 
     /* update the buffering status */
-    if (queue->use_buffering)
+    if (queue->use_buffering) {
+      GstMessage *msg;
       update_buffering (queue);
+      msg = gst_queue2_get_buffering_message (queue);
+      if (msg) {
+        GST_QUEUE2_MUTEX_UNLOCK (queue);
+        g_mutex_lock (&queue->buffering_post_lock);
+        gst_element_post_message (GST_ELEMENT_CAST (queue), msg);
+        g_mutex_unlock (&queue->buffering_post_lock);
+        GST_QUEUE2_MUTEX_LOCK (queue);
+      }
+    }
 
     GST_INFO_OBJECT (queue, "cur_level.bytes %u (max %" G_GUINT64_FORMAT ")",
         queue->cur_level.bytes, QUEUE_MAX_BYTES (queue));
