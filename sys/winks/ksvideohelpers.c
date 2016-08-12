@@ -142,14 +142,14 @@ ks_video_format_to_structure (GUID subtype_guid, GUID format_guid)
     media_type = "video/x-raw";
     format = "RGB16";
   } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB24)) {
+    format = "BGR";
     media_type = "video/x-raw";
-    format = "RGBx";
   } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB32)) {
     media_type = "video/x-raw";
-    format = "RGB";
+    format = "BGRx";
   } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB32)) {
     media_type = "video/x-raw";
-    format = "ARGB";
+    format = "BGRA";
   } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB1555)) {
     GST_WARNING ("Unsupported video format ARGB15555");
   } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB4444)) {
