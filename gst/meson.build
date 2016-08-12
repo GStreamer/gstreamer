@@ -1,0 +1,5 @@
+subdir('asfdemux')
+subdir('dvdlpcmdec')
+subdir('dvdsub')
+subdir('realmedia')
+subdir('xingmux')

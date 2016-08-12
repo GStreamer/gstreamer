@@ -1,0 +1,294 @@
+/* config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* Define if building universal (internal helper macro) */
+#mesondefine AC_APPLE_UNIVERSAL_BUILD
+
+/* Default audio sink */
+#mesondefine DEFAULT_AUDIOSINK
+
+/* Default audio source */
+#mesondefine DEFAULT_AUDIOSRC
+
+/* Default video sink */
+#mesondefine DEFAULT_VIDEOSINK
+
+/* Default video source */
+#mesondefine DEFAULT_VIDEOSRC
+
+/* Default visualizer */
+#mesondefine DEFAULT_VISUALIZER
+
+/* Disable Orc */
+#mesondefine DISABLE_ORC
+
+/* Define to 1 if translation of program messages to the user's native
+   language is requested. */
+#mesondefine ENABLE_NLS
+
+/* gettext package name */
+#mesondefine GETTEXT_PACKAGE
+
+/* The GIO library directory. */
+#mesondefine GIO_LIBDIR
+
+/* The GIO modules directory. */
+#mesondefine GIO_MODULE_DIR
+
+/* GStreamer API Version */
+#mesondefine GST_API_VERSION
+
+/* macro to use to show function name */
+#mesondefine GST_FUNCTION
+
+/* Defined if gcov is enabled to force a rebuild due to config.h changing */
+#mesondefine GST_GCOV_ENABLED
+
+/* Default errorlevel to use */
+#mesondefine GST_LEVEL_DEFAULT
+
+/* GStreamer license */
+#mesondefine GST_LICENSE
+
+/* package name in plugins */
+#mesondefine GST_PACKAGE_NAME
+
+/* package origin */
+#mesondefine GST_PACKAGE_ORIGIN
+
+/* GStreamer package release date/time for plugins as YYYY-MM-DD */
+#mesondefine GST_PACKAGE_RELEASE_DATETIME
+
+/* Define if static plugins should be built */
+#mesondefine GST_PLUGIN_BUILD_STATIC
+
+/* Define to enable a52dec (used by a52dec). */
+#mesondefine HAVE_A52DEC
+
+/* Define to enable amrnb library (used by amrnb). */
+#mesondefine HAVE_AMRNB
+
+/* Define to enable amrwb library (used by amrwbdec). */
+#mesondefine HAVE_AMRWB
+
+/* Define to enable cdio library (used by cdio). */
+#mesondefine HAVE_CDIO
+
+/* Define to 1 if you have the MacOS X function CFLocaleCopyCurrent in the
+   CoreFoundation framework. */
+#mesondefine HAVE_CFLOCALECOPYCURRENT
+
+/* Define to 1 if you have the MacOS X function CFPreferencesCopyAppValue in
+   the CoreFoundation framework. */
+#mesondefine HAVE_CFPREFERENCESCOPYAPPVALUE
+
+/* Define if the target CPU is an Alpha */
+#mesondefine HAVE_CPU_ALPHA
+
+/* Define if the target CPU is an ARM */
+#mesondefine HAVE_CPU_ARM
+
+/* Define if the target CPU is a CRIS */
+#mesondefine HAVE_CPU_CRIS
+
+/* Define if the target CPU is a CRISv32 */
+#mesondefine HAVE_CPU_CRISV32
+
+/* Define if the target CPU is a HPPA */
+#mesondefine HAVE_CPU_HPPA
+
+/* Define if the target CPU is an x86 */
+#mesondefine HAVE_CPU_I386
+
+/* Define if the target CPU is a IA64 */
+#mesondefine HAVE_CPU_IA64
+
+/* Define if the target CPU is a M68K */
+#mesondefine HAVE_CPU_M68K
+
+/* Define if the target CPU is a MIPS */
+#mesondefine HAVE_CPU_MIPS
+
+/* Define if the target CPU is a PowerPC */
+#mesondefine HAVE_CPU_PPC
+
+/* Define if the target CPU is a 64 bit PowerPC */
+#mesondefine HAVE_CPU_PPC64
+
+/* Define if the target CPU is a S390 */
+#mesondefine HAVE_CPU_S390
+
+/* Define if the target CPU is a SPARC */
+#mesondefine HAVE_CPU_SPARC
+
+/* Define if the target CPU is a x86_64 */
+#mesondefine HAVE_CPU_X86_64
+
+/* Define if the GNU dcgettext() function is already present or preinstalled.
+   */
+#mesondefine HAVE_DCGETTEXT
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#mesondefine HAVE_DLFCN_H
+
+/* define for working do while(0) macros */
+#mesondefine HAVE_DOWHILE_MACROS
+
+/* Define to enable dvdread library (used by dvdreadsrc). */
+#mesondefine HAVE_DVDREAD
+
+/* Define to enable building of experimental plug-ins. */
+#mesondefine HAVE_EXPERIMENTAL
+
+/* Define to enable building of plug-ins with external deps. */
+#mesondefine HAVE_EXTERNAL
+
+/* defined if the compiler implements __func__ */
+#mesondefine HAVE_FUNC
+
+/* defined if the compiler implements __FUNCTION__ */
+#mesondefine HAVE_FUNCTION
+
+/* Define if the GNU gettext() function is already present or preinstalled. */
+#mesondefine HAVE_GETTEXT
+
+/* Define if you have the iconv() function and it works. */
+#mesondefine HAVE_ICONV
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#mesondefine HAVE_INTTYPES_H
+
+/* Define to enable lame mp3 encoder library (used by lame). */
+#mesondefine HAVE_LAME
+
+/* Define to enable mad mp3 decoder (used by mad). */
+#mesondefine HAVE_MAD
+
+/* Define to 1 if you have the <malloc.h> header file. */
+#mesondefine HAVE_MALLOC_H
+
+/* Define to 1 if you have the <memory.h> header file. */
+#mesondefine HAVE_MEMORY_H
+
+/* Define to enable mpeg2dec (used by mpeg2dec). */
+#mesondefine HAVE_MPEG2DEC
+
+/* Defined for newer opencore-amrnb */
+#mesondefine HAVE_OPENCORE_AMRNB_0_1_3_OR_LATER
+
+/* Defined for newer opencore-amrwb */
+#mesondefine HAVE_OPENCORE_AMRWB_0_1_3_OR_LATER
+
+/* Use Orc */
+#mesondefine HAVE_ORC
+
+/* defined if the compiler implements __PRETTY_FUNCTION__ */
+#mesondefine HAVE_PRETTY_FUNCTION
+
+/* Define if RDTSC is available */
+#mesondefine HAVE_RDTSC
+
+/* Define to enable libsidplay (used by sid). */
+#mesondefine HAVE_SIDPLAY
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#mesondefine HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#mesondefine HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#mesondefine HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#mesondefine HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#mesondefine HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#mesondefine HAVE_SYS_TYPES_H
+
+/* Define to enable twolame (used by twolame). */
+#mesondefine HAVE_TWOLAME
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#mesondefine HAVE_UNISTD_H
+
+/* Define if valgrind should be used */
+#mesondefine HAVE_VALGRIND
+
+/* Define to 1 if you have the <winsock2.h> header file. */
+#mesondefine HAVE_WINSOCK2_H
+
+/* Define to enable x264 plug-in (used by x264). */
+#mesondefine HAVE_X264
+
+/* the host CPU */
+#mesondefine HOST_CPU
+
+/* gettext locale dir */
+#mesondefine LOCALEDIR
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#mesondefine LT_OBJDIR
+
+/* Name of package */
+#mesondefine PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#mesondefine PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#mesondefine PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#mesondefine PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#mesondefine PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#mesondefine PACKAGE_URL
+
+/* Define to the version of this package. */
+#mesondefine PACKAGE_VERSION
+
+/* directory where plugins are located */
+#mesondefine PLUGINDIR
+
+/* The size of `char', as computed by sizeof. */
+#mesondefine SIZEOF_CHAR
+
+/* The size of `int', as computed by sizeof. */
+#mesondefine SIZEOF_INT
+
+/* The size of `long', as computed by sizeof. */
+#mesondefine SIZEOF_LONG
+
+/* The size of `short', as computed by sizeof. */
+#mesondefine SIZEOF_SHORT
+
+/* The size of `void*', as computed by sizeof. */
+#mesondefine SIZEOF_VOIDP
+
+/* Define to 1 if you have the ANSI C header files. */
+#mesondefine STDC_HEADERS
+
+/* the target CPU */
+#mesondefine TARGET_CPU
+
+/* Version number of package */
+#mesondefine VERSION
+
+/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
+   significant byte first (like Motorola and SPARC, unlike Intel). */
+#if defined AC_APPLE_UNIVERSAL_BUILD
+# if defined __BIG_ENDIAN__
+#  define WORDS_BIGENDIAN 1
+# endif
+#else
+# ifndef WORDS_BIGENDIAN
+#  undef WORDS_BIGENDIAN
+# endif
+#endif

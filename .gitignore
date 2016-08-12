@@ -50,3 +50,7 @@ Build
 /test-driver
 *.log
 *.trs
+
+# Meson
+/build
+/subprojects
