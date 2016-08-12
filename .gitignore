@@ -85,3 +85,7 @@ Build
 
 /sys/bluez/bluez.c
 /sys/bluez/bluez.h
+
+# Meson
+/build
+/subprojects

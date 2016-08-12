@@ -1,0 +1,28 @@
+mxf_sources = [
+  'mxf.c',
+  'mxful.c',
+  'mxftypes.c',
+  'mxfmetadata.c',
+  'mxfessence.c',
+  'mxfquark.c',
+  'mxfmux.c',
+  'mxfdemux.c',
+  'mxfaes-bwf.c',
+  'mxfmpeg.c',
+  'mxfdv-dif.c',
+  'mxfalaw.c',
+  'mxfjpeg2000.c',
+  'mxfd10.c',
+  'mxfup.c',
+  'mxfvc3.c',
+  'mxfdms1.c',
+]
+
+gstmxf = library('gstmxf',
+  mxf_sources,
+  c_args : gst_plugins_bad_args + [ '-DGST_USE_UNSTABLE_API' ],
+  include_directories : [configinc],
+  dependencies : [gstbadbase_dep, gstbase_dep, gstaudio_dep, gstvideo_dep],
+  install : true,
+  install_dir : plugins_install_dir,
+)
