@@ -1,0 +1,6 @@
+# Enable V4L2 plugin to probe devices at plugin load
+option('v4l2-probe', type : 'boolean', value : true)
+# Use libv4l2 for some obscure format conversions
+option('with-libv4l2', type : 'boolean', value : true)
+# Whether to use orc or not (auto will autodetect, yes will error out if not found)
+option('use_orc', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto')

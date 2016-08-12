@@ -1,6 +1,8 @@
 aclocal.m4
 autom4te.cache
-config.h*
+config.h
+config.h.in
+config.h-new
 config.log
 config.status
 config.guess
@@ -61,3 +63,6 @@ Build
 /test-driver
 *.log
 *.trs
+
+/build
+/subprojects
