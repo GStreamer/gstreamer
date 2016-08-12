@@ -5,14 +5,11 @@ EXPORTS
 	gst_buffer_pool_config_set_gl_allocation_params
 	gst_context_get_gl_display
 	gst_context_set_gl_display
-	gst_egl_image_allocator_get_type
-	gst_egl_image_memory_from_dmabuf
-	gst_egl_image_memory_get_display
-	gst_egl_image_memory_get_image
-	gst_egl_image_memory_get_orientation
-	gst_egl_image_memory_init
-	gst_egl_image_memory_set_orientation
-	gst_egl_image_memory_setup_buffer
+	gst_egl_image_from_dmabuf
+	gst_egl_image_get_image
+	gst_egl_image_get_orientation
+	gst_egl_image_get_type
+	gst_egl_image_new_wrapped
 	gst_gl_allocation_params_copy
 	gst_gl_allocation_params_copy_data
 	gst_gl_allocation_params_free
@@ -43,7 +40,6 @@ EXPORTS
 	gst_gl_buffer_init_once
 	gst_gl_buffer_pool_get_type
 	gst_gl_buffer_pool_new
-	gst_gl_buffer_pool_replace_last_buffer
 	gst_gl_caps_replace_all_caps_features
 	gst_gl_check_extension
 	gst_gl_color_convert_decide_allocation
@@ -64,7 +60,6 @@ EXPORTS
 	gst_gl_context_default_get_proc_address
 	gst_gl_context_del_fbo
 	gst_gl_context_del_shader
-	gst_gl_context_del_texture
 	gst_gl_context_destroy
 	gst_gl_context_egl_get_current_context
 	gst_gl_context_egl_get_error_string
@@ -75,7 +70,6 @@ EXPORTS
 	gst_gl_context_fill_info
 	gst_gl_context_gen_fbo
 	gst_gl_context_gen_shader
-	gst_gl_context_gen_texture
 	gst_gl_context_get_current
 	gst_gl_context_get_current_gl_api
 	gst_gl_context_get_current_gl_context
@@ -140,7 +134,7 @@ EXPORTS
 	gst_gl_framebuffer_get_type
 	gst_gl_framebuffer_new
 	gst_gl_framebuffer_use_v2
-	gst_gl_generate_texture_full
+	gst_gl_get_affine_transformation_meta_as_ndc
 	gst_gl_get_plane_data_size
 	gst_gl_get_plane_start
 	gst_gl_handle_context_query
@@ -150,6 +144,11 @@ EXPORTS
 	gst_gl_memory_allocator_get_type
 	gst_gl_memory_copy_into
 	gst_gl_memory_copy_teximage
+	gst_gl_memory_egl_allocator_get_type
+	gst_gl_memory_egl_get_display
+	gst_gl_memory_egl_get_image
+	gst_gl_memory_egl_get_orientation
+	gst_gl_memory_egl_init_once
 	gst_gl_memory_get_texture_height
 	gst_gl_memory_get_texture_id
 	gst_gl_memory_get_texture_target
@@ -165,6 +164,7 @@ EXPORTS
 	gst_gl_memory_read_pixels
 	gst_gl_memory_setup_buffer
 	gst_gl_memory_texsubimage
+	gst_gl_multiply_matrix4
 	gst_gl_object_add_control_binding_proxy
 	gst_gl_overlay_compositor_add_caps
 	gst_gl_overlay_compositor_draw_overlays
@@ -230,6 +230,7 @@ EXPORTS
 	gst_gl_shader_string_fragment_external_oes_default DATA
 	gst_gl_shader_string_vertex_default DATA
 	gst_gl_shader_string_vertex_mat4_texture_transform DATA
+	gst_gl_shader_string_vertex_mat4_vertex_transform DATA
 	gst_gl_shader_use
 	gst_gl_sized_gl_format_from_gl_format_type
 	gst_gl_stereo_downmix_mode_get_type
@@ -263,6 +264,7 @@ EXPORTS
 	gst_gl_video_allocation_params_init_full
 	gst_gl_video_allocation_params_new
 	gst_gl_video_allocation_params_new_wrapped_data
+	gst_gl_video_allocation_params_new_wrapped_gl_handle
 	gst_gl_video_allocation_params_new_wrapped_texture
 	gst_gl_view_convert_fixate_caps
 	gst_gl_view_convert_get_output
@@ -340,8 +342,8 @@ EXPORTS
 	gst_glsl_version_profile_from_string
 	gst_glsl_version_profile_to_string
 	gst_glsl_version_to_string
-	gst_is_egl_image_memory
 	gst_is_gl_base_memory
 	gst_is_gl_buffer
 	gst_is_gl_memory
+	gst_is_gl_memory_egl
 	gst_is_gl_memory_pbo
