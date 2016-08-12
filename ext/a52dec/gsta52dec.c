@@ -38,9 +38,10 @@
 #endif
 
 #include <string.h>
-
 #include <stdlib.h>
-#include "_stdint.h"
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 
 #include <gst/gst.h>
 

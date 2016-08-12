@@ -23,11 +23,12 @@
 #include "config.h"
 #endif
 
-#include "_stdint.h"
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 

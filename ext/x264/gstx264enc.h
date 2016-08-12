@@ -24,7 +24,11 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideoencoder.h>
-#include "_stdint.h"
+
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
+
 #include <x264.h>
 
 G_BEGIN_DECLS
