@@ -58,3 +58,4 @@ Build
 *.swp
 
 /tests/misc/netclock-replay
+/build

@@ -1,0 +1,10 @@
+subdir('adapter')
+subdir('controller')
+subdir('helloworld')
+#subdir('manual') # FIXME
+subdir('memory')
+subdir('netclock')
+subdir('ptp')
+subdir('stepping')
+subdir('streamiddemux')
+subdir('streams')
