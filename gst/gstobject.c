@@ -101,11 +101,6 @@
 #include "gstparamspecs.h"
 #include "gstutils.h"
 
-#ifndef GST_DISABLE_TRACE
-#include "gsttrace.h"
-static GstAllocTrace *_gst_object_trace;
-#endif
-
 #define DEBUG_REFCOUNT
 
 /* Object signals and args */
@@ -166,11 +161,6 @@ gst_object_class_init (GstObjectClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-#ifndef GST_DISABLE_TRACE
-  _gst_object_trace =
-      _gst_alloc_trace_register (g_type_name (GST_TYPE_OBJECT), -2);
-#endif
-
   gobject_class->set_property = gst_object_set_property;
   gobject_class->get_property = gst_object_get_property;
 
@@ -228,10 +218,6 @@ gst_object_init (GstObject * object)
   object->parent = NULL;
   object->name = NULL;
   GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "%p new", object);
-
-#ifndef GST_DISABLE_TRACE
-  _gst_alloc_trace_new (_gst_object_trace, object);
-#endif
 
   object->flags = 0;
 
@@ -425,9 +411,6 @@ gst_object_finalize (GObject * object)
   g_mutex_clear (&gstobject->lock);
 
   GST_TRACER_OBJECT_DESTROYED (gstobject);
-#ifndef GST_DISABLE_TRACE
-  _gst_alloc_trace_free (_gst_object_trace, object);
-#endif
 
   ((GObjectClass *) gst_object_parent_class)->finalize (object);
 }

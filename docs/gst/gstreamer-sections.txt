@@ -36,8 +36,6 @@ GST_QUARK
 GstQuarkId
 GstPluginLoader
 GstPluginLoaderFuncs
-GstAllocTrace
-GstAllocTraceFlags
 </SECTION>
 
 <SECTION>
@@ -698,8 +696,6 @@ gst_adapter_prev_timestamp
 <TITLE>GstConfig</TITLE>
 GST_DISABLE_GST_DEBUG
 GST_DISABLE_PARSE
-GST_DISABLE_TRACE
-GST_DISABLE_ALLOC_TRACE
 GST_DISABLE_REGISTRY
 GST_DISABLE_PLUGIN
 <SUBSECTION Private>

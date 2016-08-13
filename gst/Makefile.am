@@ -14,12 +14,6 @@ SUBDIRS_PARSE = parse
 GST_PARSE_LA = parse/libgstparse.la
 endif
 
-if GST_DISABLE_TRACE
-GST_TRACE_SRC =
-else
-GST_TRACE_SRC = gsttrace.c
-endif
-
 if GST_DISABLE_PLUGIN
 GST_PLUGIN_SRC =
 else
@@ -47,7 +41,6 @@ built_header_make = gstenumtypes.h
 built_source_make = gstenumtypes.c
 
 EXTRA_libgstreamer_@GST_API_VERSION@_la_SOURCES = \
-	gsttrace.c \
 	gstregistrybinary.c
 
 
@@ -116,7 +109,6 @@ libgstreamer_@GST_API_VERSION@_la_SOURCES = \
 	gsttaskpool.c		\
 	gsttoc.c		\
 	gsttocsetter.c		\
-	$(GST_TRACE_SRC)	\
 	gsttracer.c		\
 	gsttracerfactory.c	\
 	gsttracerrecord.c		\
@@ -255,7 +247,6 @@ noinst_HEADERS = 		\
 	gstquark.h		\
 	gstregistrybinary.h     \
 	gstregistrychunks.h     \
-	gsttrace.h		\
 	gsttracerutils.h		\
 	gst_private.h
 

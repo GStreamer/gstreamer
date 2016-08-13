@@ -108,12 +108,6 @@
 #include "gstutils.h"
 #include "glib-compat-private.h"
 
-#ifndef GST_DISABLE_TRACE
-/* #define GST_WITH_ALLOC_TRACE */
-#include "gsttrace.h"
-static GstAllocTrace *_gst_clock_entry_trace;
-#endif
-
 /* #define DEBUGGING_ENABLED */
 
 #define DEFAULT_WINDOW_SIZE             32
@@ -246,9 +240,9 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
   GstClockEntry *entry;
 
   entry = g_slice_new (GstClockEntry);
-#ifndef GST_DISABLE_TRACE
-  _gst_alloc_trace_new (_gst_clock_entry_trace, entry);
-#endif
+
+  /* FIXME: add tracer hook for struct allocations such as clock entries */
+
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
       "created entry %p, time %" GST_TIME_FORMAT, entry, GST_TIME_ARGS (time));
 
@@ -358,9 +352,8 @@ _gst_clock_id_free (GstClockID id)
   if (entry->destroy_data)
     entry->destroy_data (entry->user_data);
 
-#ifndef GST_DISABLE_TRACE
-  _gst_alloc_trace_free (_gst_clock_entry_trace, id);
-#endif
+  /* FIXME: add tracer hook for struct allocations such as clock entries */
+
   g_slice_free (GstClockEntry, id);
 }
 
@@ -679,10 +672,6 @@ static void
 gst_clock_class_init (GstClockClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
-#ifndef GST_DISABLE_TRACE
-  _gst_clock_entry_trace = _gst_alloc_trace_register ("GstClockEntry", -1);
-#endif
 
   gobject_class->dispose = gst_clock_dispose;
   gobject_class->finalize = gst_clock_finalize;

@@ -55,11 +55,8 @@
 #if 0
 #define GST_DISABLE_GST_DEBUG 1
 #define GST_DISABLE_PARSE 1
-#define GST_DISABLE_TRACE 1
-#define GST_DISABLE_ALLOC_TRACE 1
 #define GST_DISABLE_REGISTRY 1
 #define GST_DISABLE_PLUGIN 1
-#define GST_HAVE_GLIB_2_8 1
 #endif
 
 /***** default padding of structures *****/
@@ -84,22 +81,6 @@
  * Configures the inclusion of the gst-launch parser
  */
 @GST_DISABLE_PARSE_DEFINE@
-
-/**
- * GST_DISABLE_TRACE:
- *
- * Configures the inclusion of a resource tracing facility
- * (seems to be unused)
- */
-@GST_DISABLE_TRACE_DEFINE@
-
-/**
- * GST_DISABLE_ALLOC_TRACE:
- *
- * Configures the use of a memory tracer based on the resource tracer
- * if TRACE is disabled, ALLOC_TRACE is disabled as well
- */
-@GST_DISABLE_ALLOC_TRACE_DEFINE@
 
 /**
  * GST_DISABLE_REGISTRY:

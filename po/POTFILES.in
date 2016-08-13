@@ -7,7 +7,6 @@ gst/gsterror.c
 gst/gstpipeline.c
 gst/gstregistry.c
 gst/gsttaglist.c
-gst/gsttrace.c
 gst/gsturi.c
 gst/gstutils.c
 gst/parse/grammar.y

@@ -101,10 +101,6 @@ if test "x$GST_DISABLE_OPTION_PARSING" = xyes; then
   AC_DEFINE(GST_DISABLE_OPTION_PARSING, 1,
     [Define if option parsing is disabled])
 fi
-AG_GST_CHECK_SUBSYSTEM_DISABLE(TRACE,[historic tracing subsystem])
-AM_CONDITIONAL(GST_DISABLE_TRACE, test "x$GST_DISABLE_TRACE" = "xyes")
-AG_GST_CHECK_SUBSYSTEM_DISABLE(ALLOC_TRACE,[allocation tracing])
-AM_CONDITIONAL(GST_DISABLE_ALLOC_TRACE, test "x$GST_DISABLE_ALLOC_TRACE" = "xyes")
 AG_GST_CHECK_SUBSYSTEM_DISABLE(REGISTRY,[plugin registry])
 AM_CONDITIONAL(GST_DISABLE_REGISTRY, test "x$GST_DISABLE_REGISTRY" = "xyes")
 dnl define a substitution to use in docs/gst/gstreamer.types
@@ -1109,8 +1105,6 @@ if test "x${GST_DISABLE_GST_DEBUG}" = "xno"; then enable_gst_debug="yes"; fi
 if test "x${GST_DISABLE_GST_TRACER_HOOKS}" = "xno"; then enable_gst_tracer_hooks="yes"; fi
 if test "x${GST_DISABLE_PARSE}" = "xno"; then enable_parse="yes"; fi
 if test "x${GST_DISABLE_OPTION_PARSING}" = "xno"; then enable_option_parsing="yes"; fi
-if test "x${GST_DISABLE_TRACE}" = "xno"; then enable_trace="yes"; fi
-if test "x${GST_DISABLE_ALLOC_TRACE}" = "xno"; then enable_alloc_trace="yes"; fi
 if test "x${GST_DISABLE_PLUGIN}" = "xno"; then enable_plugin="yes"; fi
 if test "x${GST_DISABLE_REGISTRY}" = "xno"; then enable_registry="yes"; fi
 
@@ -1131,8 +1125,6 @@ Configuration
 	Tracing subsystem hooks    : ${enable_gst_tracer_hooks}
 	Command-line parser        : ${enable_parse}
 	Option parsing in gst_init : ${enable_option_parsing}
-	Historic tracing subsystem : ${enable_trace}
-	Allocation tracing         : ${enable_alloc_trace}
 	Plugin registry            : ${enable_registry}
 	Plugin support	           : ${enable_plugin}
 	Static plugins             : ${enable_static_plugins}

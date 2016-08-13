@@ -57,11 +57,6 @@
 #include "gst/gstinfo.h"
 #include <gobject/gvaluecollector.h>
 
-#ifndef GST_DISABLE_TRACE
-#include "gsttrace.h"
-static GstAllocTrace *_gst_mini_object_trace;
-#endif
-
 /* Mutex used for weak referencing */
 G_LOCK_DEFINE_STATIC (qdata_mutex);
 static GQuark weak_ref_quark;
@@ -93,10 +88,6 @@ void
 _priv_gst_mini_object_initialize (void)
 {
   weak_ref_quark = g_quark_from_static_string ("GstMiniObjectWeakRefQuark");
-
-#ifndef GST_DISABLE_TRACE
-  _gst_mini_object_trace = _gst_alloc_trace_register ("GstMiniObject", 0);
-#endif
 }
 
 /**
@@ -130,9 +121,6 @@ gst_mini_object_init (GstMiniObject * mini_object, guint flags, GType type,
   mini_object->qdata = NULL;
 
   GST_TRACER_MINI_OBJECT_CREATED (mini_object);
-#ifndef GST_DISABLE_TRACE
-  _gst_alloc_trace_new (_gst_mini_object_trace, mini_object);
-#endif
 }
 
 /**
@@ -462,9 +450,6 @@ gst_mini_object_unref (GstMiniObject * mini_object)
         g_free (mini_object->qdata);
       }
       GST_TRACER_MINI_OBJECT_DESTROYED (mini_object);
-#ifndef GST_DISABLE_TRACE
-      _gst_alloc_trace_free (_gst_mini_object_trace, mini_object);
-#endif
       if (mini_object->free)
         mini_object->free (mini_object);
     }

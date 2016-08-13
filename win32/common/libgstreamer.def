@@ -69,7 +69,6 @@ EXPORTS
 	_gst_tag_list_type DATA
 	_gst_toc_entry_type DATA
 	_gst_toc_type DATA
-	_gst_trace_mutex DATA
 	_gst_value_array_type DATA
 	_gst_value_list_type DATA
 	gst_allocation_params_copy

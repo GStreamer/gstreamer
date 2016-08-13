@@ -113,7 +113,6 @@
 #include <locale.h>             /* for LC_ALL */
 
 #include "gst.h"
-#include "gsttrace.h"
 
 #define GST_CAT_DEFAULT GST_CAT_GST_INIT
 
@@ -572,10 +571,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
   g_log_set_handler (g_log_domain_gstreamer, llf, debug_log_handler, NULL);
 
-#ifndef GST_DISABLE_TRACE
-  _priv_gst_alloc_trace_initialize ();
-#endif
-
   _priv_gst_mini_object_initialize ();
   _priv_gst_quarks_initialize ();
   _priv_gst_allocator_initialize ();
@@ -1031,10 +1026,6 @@ gst_deinit (void)
 
   _priv_gst_caps_features_cleanup ();
   _priv_gst_caps_cleanup ();
-
-#ifndef GST_DISABLE_TRACE
-  _priv_gst_alloc_trace_deinit ();
-#endif
 
   g_type_class_unref (g_type_class_peek (gst_object_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_pad_get_type ()));
