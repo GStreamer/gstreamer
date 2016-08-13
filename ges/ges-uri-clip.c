@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:gestimelinefilesource
+ * SECTION: gesuriclip
  * @short_description: An object for manipulating media files in a GESTimeline
  *
  * Represents all the output streams from a particular uri. It is assumed that
@@ -75,7 +75,7 @@ static GESTrackElement
 void ges_uri_clip_set_uri (GESUriClip * self, gchar * uri);
 
 gboolean
-filesource_set_max_duration (GESTimelineElement * element,
+uri_clip_set_max_duration (GESTimelineElement * element,
     GstClockTime maxduration);
 
 static void
@@ -173,7 +173,7 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
   /**
    * GESUriClip:is-image:
    *
-   * Whether this filesource represents a still image or not. This must be set
+   * Whether this uri clip represents a still image or not. This must be set
    * before create_track_elements is called.
    */
   g_object_class_install_property (object_class, PROP_IS_IMAGE,
@@ -189,7 +189,7 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
           GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_UNKNOWN,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  element_class->set_max_duration = filesource_set_max_duration;
+  element_class->set_max_duration = uri_clip_set_max_duration;
 
   timobj_class->create_track_elements = ges_uri_clip_create_track_elements;
   timobj_class->create_track_element = ges_uri_clip_create_track_element;
@@ -266,7 +266,7 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
 {
   gboolean res = TRUE;
   GESUriClip *uriclip = GES_URI_CLIP (self);
-  GESUriClipAsset *filesource_asset;
+  GESUriClipAsset *uri_clip_asset;
   GESClip *clip = GES_CLIP (self);
   GESLayer *layer = ges_clip_get_layer (clip);
   GList *tmp;
@@ -274,20 +274,19 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
 
   g_return_val_if_fail (GES_IS_URI_CLIP_ASSET (asset), FALSE);
 
-  filesource_asset = GES_URI_CLIP_ASSET (asset);
+  uri_clip_asset = GES_URI_CLIP_ASSET (asset);
   if (GST_CLOCK_TIME_IS_VALID (GES_TIMELINE_ELEMENT_DURATION (clip)) == FALSE)
     _set_duration0 (GES_TIMELINE_ELEMENT (uriclip),
-        ges_uri_clip_asset_get_duration (filesource_asset));
+        ges_uri_clip_asset_get_duration (uri_clip_asset));
 
   ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (uriclip),
-      ges_uri_clip_asset_get_duration (filesource_asset));
+      ges_uri_clip_asset_get_duration (uri_clip_asset));
   ges_uri_clip_set_is_image (uriclip,
-      ges_uri_clip_asset_is_image (filesource_asset));
+      ges_uri_clip_asset_is_image (uri_clip_asset));
 
   if (ges_clip_get_supported_formats (clip) == GES_TRACK_TYPE_UNKNOWN) {
     ges_clip_set_supported_formats (clip,
-        ges_clip_asset_get_supported_formats (GES_CLIP_ASSET
-            (filesource_asset)));
+        ges_clip_asset_get_supported_formats (GES_CLIP_ASSET (uri_clip_asset)));
   }
 
   GES_TIMELINE_ELEMENT (uriclip)->asset = asset;
@@ -390,7 +389,7 @@ ges_uri_clip_set_mute (GESUriClip * self, gboolean mute)
 }
 
 gboolean
-filesource_set_max_duration (GESTimelineElement * element,
+uri_clip_set_max_duration (GESTimelineElement * element,
     GstClockTime maxduration)
 {
   if (_DURATION (element) == GST_CLOCK_TIME_NONE || _DURATION (element) == 0)

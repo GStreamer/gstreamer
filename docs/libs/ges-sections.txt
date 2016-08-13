@@ -605,7 +605,7 @@ GES_TYPE_SOURCE_CLIP
 </SECTION>
 
 <SECTION>
-<FILE>gestimelinefilesource</FILE>
+<FILE>gesuriclip</FILE>
 <TITLE>GESUriClip</TITLE>
 GESUriClip
 ges_uri_clip_new

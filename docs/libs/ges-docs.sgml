@@ -57,7 +57,7 @@ platform as well as Windows. It is released under the GNU Library General Public
 
   <chapter>
     <title>Timeline objects</title>
-    <xi:include href="xml/gestimelinefilesource.xml"/>
+    <xi:include href="xml/gesuriclip.xml"/>
     <xi:include href="xml/gestitleclip.xml"/>
     <xi:include href="xml/gestestclip.xml"/>
     <xi:include href="xml/gestextoverlayclip.xml"/>
