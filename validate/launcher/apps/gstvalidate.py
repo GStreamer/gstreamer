@@ -807,14 +807,10 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             # hls known issues
             ("validate.hls.playback.seek_with_stop.*",
              "https://bugzilla.gnome.org/show_bug.cgi?id=753689"),
-            ("validate.hls.playback.scrub_forward_seeking.*",
-             "https://bugzilla.gnome.org/show_bug.cgi?id=764020"),
 
             # dash known issues
             ("validate.dash.media_check.*",
              "Caps are different depending on selected bitrates, etc"),
-            ("validate.dash.playback.scrub_forward_seeking.*",
-             "https://bugzilla.gnome.org/show_bug.cgi?id=764020"),
 
             # Matroska/WEBM known issues:
             ("validate.*.reverse_playback.*webm$",
@@ -849,10 +845,6 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
              "FIXME: Transcoding and mixing tests need to be tested"),
             ("validate.file.playback.scrub_forward_seeking.op2b-mpeg2-wave_hd_mxf",
              "https://bugzilla.gnome.org/show_bug.cgi?id=764025"),
-
-            # Videomixing known issues
-            ("validate.file.*.simple.scrub_forward_seeking.synchronized",
-             "https://bugzilla.gnome.org/show_bug.cgi?id=734060"),
 
             # WMV known issues"
             (".*reverse_playback.*wmv",
