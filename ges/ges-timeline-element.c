@@ -250,8 +250,10 @@ ges_timeline_element_dispose (GObject * object)
 {
   GESTimelineElement *self = GES_TIMELINE_ELEMENT (object);
 
-  if (self->priv->children_props)
+  if (self->priv->children_props) {
     g_hash_table_unref (self->priv->children_props);
+    self->priv->children_props = NULL;
+  }
 
   g_clear_object (&self->priv->copied_from);
 }
