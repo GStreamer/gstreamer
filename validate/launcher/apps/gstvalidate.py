@@ -859,6 +859,10 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
              "Reverse playback is not handled in wmv"),
             (".*reverse_playback.*asf",
              "Reverse playback is not handled in asf"),
+
+            # ogg known issues
+            ("validate.http.playback.seek.*vorbis_theora_1_ogg",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=769545")
         ])
 
     def register_default_test_generators(self):
