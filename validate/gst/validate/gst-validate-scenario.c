@@ -143,6 +143,7 @@ struct _GstValidateScenarioPrivate
 
   gboolean got_eos;
   gboolean changing_state;
+  gboolean needs_async_done;
   GstState target_state;
 
   GList *overrides;
@@ -632,6 +633,7 @@ _execute_set_state (GstValidateScenario * scenario, GstValidateAction * action)
     return GST_VALIDATE_EXECUTE_ACTION_ERROR;
   } else if (ret == GST_STATE_CHANGE_ASYNC) {
 
+    scenario->priv->needs_async_done = TRUE;
     return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
   }
 
@@ -1687,7 +1689,7 @@ execute_next_action (GstValidateScenario * scenario)
     return G_SOURCE_CONTINUE;
   }
 
-  if (priv->changing_state) {
+  if (priv->changing_state || priv->needs_async_done) {
     GST_DEBUG_OBJECT (scenario, "Changing state, not executing any action");
     return G_SOURCE_CONTINUE;
   }
@@ -2367,6 +2369,12 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
         gst_event_replace (&priv->last_seek, NULL);
         gst_validate_action_set_done (priv->actions->data);
+      } else if (scenario->priv->needs_async_done) {
+        scenario->priv->needs_async_done = FALSE;
+        if (priv->actions && _action_sets_state (priv->actions->data)
+            && !priv->changing_state)
+          gst_validate_action_set_done (priv->actions->data);
+
       }
 
       if (priv->needs_parsing) {
@@ -2396,10 +2404,11 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
         if (scenario->priv->changing_state &&
             scenario->priv->target_state == nstate) {
-          if (scenario->priv->actions &&
-              _action_sets_state (scenario->priv->actions->data))
-            gst_validate_action_set_done (priv->actions->data);
           scenario->priv->changing_state = FALSE;
+
+          if (priv->actions && _action_sets_state (priv->actions->data) &&
+              !priv->needs_async_done)
+            gst_validate_action_set_done (priv->actions->data);
         }
 
         if (pstate == GST_STATE_READY && nstate == GST_STATE_PAUSED)
