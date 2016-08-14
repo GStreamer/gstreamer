@@ -264,6 +264,14 @@ Available options:""")
         return self.tests
 
     def register_defaults(self, project_paths=None):
+        # Blacklist cases
+        self.set_default_blacklist(
+            [
+                # Race in validate checking for proper seek execution with GES
+                ("ges.playback.scrub",
+                 "https://bugzilla.gnome.org/show_bug.cgi?id=769894")
+            ]
+        )
         projects = list()
         if not self.args:
             if project_paths == None:
