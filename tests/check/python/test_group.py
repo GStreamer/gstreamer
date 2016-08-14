@@ -24,22 +24,17 @@ gi.require_version("GES", "1.0")
 
 from gi.repository import Gst  # noqa
 from gi.repository import GES  # noqa
+
+from . import common  # noqa
+
 import unittest  # noqa
 from unittest import mock
-
-import common
 
 Gst.init(None)
 GES.init()
 
 
-class TestGroup(unittest.TestCase):
-
-    def setUp(self):
-        self.timeline = GES.Timeline.new_audio_video()
-        self.assertEqual(len(self.timeline.get_tracks()), 2)
-        self.layer = self.timeline.append_layer()
-
+class TestGroup(common.GESSimpleTimelineTest):
     def testCopyGroup(self):
         clip1 = GES.TestClip.new()
         clip1.props.duration = 10

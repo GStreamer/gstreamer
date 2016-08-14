@@ -27,7 +27,7 @@ from gi.repository import GES  # noqa
 import unittest  # noqa
 from unittest import mock
 
-import common
+from . import common
 
 Gst.init(None)
 GES.init()

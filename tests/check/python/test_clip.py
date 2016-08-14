@@ -24,7 +24,12 @@ gi.require_version("GES", "1.0")
 
 from gi.repository import Gst  # noqa
 from gi.repository import GES  # noqa
+
+from .common import GESSimpleTimelineTest  # noqa
+
 import unittest  # noqa
+
+
 
 Gst.init(None)
 GES.init()
