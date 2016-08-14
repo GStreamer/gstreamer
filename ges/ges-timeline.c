@@ -71,18 +71,18 @@ GST_DEBUG_CATEGORY_STATIC (ges_timeline_debug);
 /* lock to protect dynamic callbacks, like pad-added */
 #define DYN_LOCK(timeline) (&GES_TIMELINE (timeline)->priv->dyn_mutex)
 #define LOCK_DYN(timeline) G_STMT_START {                       \
-    GST_INFO_OBJECT (timeline, "Getting dynamic lock from %p", \
+    GST_LOG_OBJECT (timeline, "Getting dynamic lock from %p", \
         g_thread_self());                                       \
     g_rec_mutex_lock (DYN_LOCK (timeline));                     \
-    GST_INFO_OBJECT (timeline, "Got Dynamic lock from %p",     \
+    GST_LOG_OBJECT (timeline, "Got Dynamic lock from %p",     \
         g_thread_self());         \
   } G_STMT_END
 
 #define UNLOCK_DYN(timeline) G_STMT_START {                         \
-    GST_INFO_OBJECT (timeline, "Unlocking dynamic lock from %p", \
+    GST_LOG_OBJECT (timeline, "Unlocking dynamic lock from %p", \
         g_thread_self());                                         \
     g_rec_mutex_unlock (DYN_LOCK (timeline));                     \
-    GST_INFO_OBJECT (timeline, "Unlocked Dynamic lock from %p",  \
+    GST_LOG_OBJECT (timeline, "Unlocked Dynamic lock from %p",  \
         g_thread_self());         \
   } G_STMT_END
 
