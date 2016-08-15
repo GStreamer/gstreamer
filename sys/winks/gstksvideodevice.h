@@ -77,7 +77,7 @@ GstClockTime gst_ks_video_device_get_duration (GstKsVideoDevice * self);
 gboolean gst_ks_video_device_get_latency (GstKsVideoDevice * self, GstClockTime * min_latency, GstClockTime * max_latency);
 
 GstFlowReturn gst_ks_video_device_read_frame (GstKsVideoDevice * self, GstBuffer ** buf, GstClockTime * presentation_time, gulong * error_code, gchar ** error_str);
-gboolean gst_ks_video_device_postprocess_frame (GstKsVideoDevice * self, GstBuffer *buf);
+gboolean gst_ks_video_device_postprocess_frame (GstKsVideoDevice * self, GstBuffer **buf);
 void gst_ks_video_device_cancel (GstKsVideoDevice * self);
 void gst_ks_video_device_cancel_stop (GstKsVideoDevice * self);
 

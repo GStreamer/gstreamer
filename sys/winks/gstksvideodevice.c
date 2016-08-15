@@ -796,7 +796,7 @@ gst_ks_video_device_set_caps (GstKsVideoDevice * self, GstCaps * caps)
   priv->fps_n = fps_n;
   priv->fps_d = fps_d;
 
-  if (gst_structure_has_name (s, "video/x-raw-rgb"))
+  if (media_type->is_rgb)
     priv->rgb_swap_buf = g_malloc (media_type->sample_size / priv->height);
   else
     priv->rgb_swap_buf = NULL;
@@ -1176,15 +1176,20 @@ error_get_result:
 }
 
 gboolean
-gst_ks_video_device_postprocess_frame (GstKsVideoDevice * self, GstBuffer * buf)
+gst_ks_video_device_postprocess_frame (GstKsVideoDevice * self, GstBuffer ** bufptr)
 {
   GstKsVideoDevicePrivate *priv = GST_KS_VIDEO_DEVICE_GET_PRIVATE (self);
+  GstBuffer *buf = *bufptr;
 
   /* If it's RGB we need to flip the image */
   if (priv->rgb_swap_buf != NULL) {
     GstMapInfo info;
     gint stride, line;
     guint8 *dst, *src;
+
+    /* Need to make the buffer writable because
+     * the pseudo-bufferpool of requests keeps a ref */
+    buf = gst_buffer_make_writable (buf);
 
     if (!gst_buffer_map (buf, &info, GST_MAP_READWRITE))
       return FALSE;
@@ -1205,6 +1210,7 @@ gst_ks_video_device_postprocess_frame (GstKsVideoDevice * self, GstBuffer * buf)
 
     gst_buffer_unmap (buf, &info);
   }
+  *bufptr = buf;
 
   return TRUE;
 }

@@ -927,7 +927,7 @@ gst_ks_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
   if (G_UNLIKELY (priv->do_stats))
     gst_ks_video_src_update_statistics (self);
 
-  if (!gst_ks_video_device_postprocess_frame (priv->device, *buf)) {
+  if (!gst_ks_video_device_postprocess_frame (priv->device, buf)) {
     GST_ELEMENT_ERROR (self, RESOURCE, FAILED, ("Postprocessing failed"),
         ("Postprocessing failed"));
     return GST_FLOW_ERROR;
