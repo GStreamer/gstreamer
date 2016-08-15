@@ -642,7 +642,14 @@ gst_gl_context_finalize (GObject * object)
       gst_gl_window_quit (context->window);
 
       GST_INFO_OBJECT (context, "joining gl thread");
-      g_thread_join (context->priv->gl_thread);
+      g_mutex_lock (&context->priv->render_lock);
+      if (context->priv->alive) {
+        GThread *t = context->priv->gl_thread;
+        g_mutex_unlock (&context->priv->render_lock);
+        g_thread_join (t);
+      } else {
+        g_mutex_unlock (&context->priv->render_lock);
+      }
       GST_INFO_OBJECT (context, "gl thread joined");
       context->priv->gl_thread = NULL;
     }
