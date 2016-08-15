@@ -5,7 +5,7 @@
       android:versionName="1.0">
     <uses-sdk android:minSdkVersion="9" android:targetSdkVersion="14"/>
     <application android:label="@string/app_name"
-                 android:icon="@drawable/gst_sdk_icon">
+                 android:icon="@drawable/gstreamer_logo_2">
         <activity android:name=".Tutorial2"
                   android:label="@string/app_name">
             <intent-filter>
