@@ -125,10 +125,13 @@ ks_video_device_list_sort_cameras_first (GList * devices)
 }
 
 static GstStructure *
-ks_video_format_to_structure (GUID subtype_guid, GUID format_guid)
+ks_video_format_to_structure (GUID subtype_guid, GUID format_guid,
+    gboolean * p_is_rgb)
 {
   GstStructure *structure = NULL;
   const gchar *media_type = NULL, *format = NULL;
+  /* RGB formats can be bottom-up (upside down) DIB */
+  gboolean is_rgb = FALSE;
 
   if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_MJPG) || IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_TVMJ) ||     /* FIXME: NOT tested */
       IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_WAKE) ||        /* FIXME: NOT tested */
@@ -138,18 +141,23 @@ ks_video_format_to_structure (GUID subtype_guid, GUID format_guid)
   } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB555)) {
     media_type = "video/x-raw";
     format = "RGB15";
+    is_rgb = TRUE;
   } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB565)) {
     media_type = "video/x-raw";
     format = "RGB16";
+    is_rgb = TRUE;
   } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB24)) {
-    format = "BGR";
     media_type = "video/x-raw";
+    format = "BGR";
+    is_rgb = TRUE;
   } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_RGB32)) {
     media_type = "video/x-raw";
     format = "BGRx";
+    is_rgb = TRUE;
   } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB32)) {
     media_type = "video/x-raw";
     format = "BGRA";
+    is_rgb = TRUE;
   } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB1555)) {
     GST_WARNING ("Unsupported video format ARGB15555");
   } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_ARGB4444)) {
@@ -176,6 +184,9 @@ ks_video_format_to_structure (GUID subtype_guid, GUID format_guid)
     structure = gst_structure_new_empty (media_type);
     if (format) {
       gst_structure_set (structure, "format", G_TYPE_STRING, format, NULL);
+    }
+    if (p_is_rgb) {
+      *p_is_rgb = is_rgb;
     }
   }
 
@@ -527,7 +538,7 @@ ks_video_probe_filter_for_caps (HANDLE filter_handle)
 
               media_structure =
                   ks_video_format_to_structure (range->SubFormat,
-                  range->Specifier);
+                  range->Specifier, &entry->is_rgb);
 
               if (media_structure == NULL) {
                 g_warning ("ks_video_format_to_structure returned NULL");
@@ -678,22 +689,22 @@ ks_video_get_all_caps (void)
     /* RGB formats */
     structure =
         ks_video_append_var_video_fields (ks_video_format_to_structure
-        (MEDIASUBTYPE_RGB555, FORMAT_VideoInfo));
+        (MEDIASUBTYPE_RGB555, FORMAT_VideoInfo, NULL));
     gst_caps_append_structure (caps, structure);
 
     structure =
         ks_video_append_var_video_fields (ks_video_format_to_structure
-        (MEDIASUBTYPE_RGB565, FORMAT_VideoInfo));
+        (MEDIASUBTYPE_RGB565, FORMAT_VideoInfo, NULL));
     gst_caps_append_structure (caps, structure);
 
     structure =
         ks_video_append_var_video_fields (ks_video_format_to_structure
-        (MEDIASUBTYPE_RGB24, FORMAT_VideoInfo));
+        (MEDIASUBTYPE_RGB24, FORMAT_VideoInfo, NULL));
     gst_caps_append_structure (caps, structure);
 
     structure =
         ks_video_append_var_video_fields (ks_video_format_to_structure
-        (MEDIASUBTYPE_RGB32, FORMAT_VideoInfo));
+        (MEDIASUBTYPE_RGB32, FORMAT_VideoInfo, NULL));
     gst_caps_append_structure (caps, structure);
 
     /* YUV formats */
@@ -705,16 +716,16 @@ ks_video_get_all_caps (void)
     /* Other formats */
     structure =
         ks_video_append_var_video_fields (ks_video_format_to_structure
-        (MEDIASUBTYPE_MJPG, FORMAT_VideoInfo));
+        (MEDIASUBTYPE_MJPG, FORMAT_VideoInfo, NULL));
     gst_caps_append_structure (caps, structure);
 
     structure =
         ks_video_append_var_video_fields (ks_video_format_to_structure
-        (MEDIASUBTYPE_dvsd, FORMAT_VideoInfo));
+        (MEDIASUBTYPE_dvsd, FORMAT_VideoInfo, NULL));
     gst_caps_append_structure (caps, structure);
 
     structure =                 /* no variable video fields (width, height, framerate) */
-        ks_video_format_to_structure (MEDIASUBTYPE_dvsd, FORMAT_DvInfo);
+        ks_video_format_to_structure (MEDIASUBTYPE_dvsd, FORMAT_DvInfo, NULL);
     gst_caps_append_structure (caps, structure);
   }
 

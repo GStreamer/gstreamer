@@ -49,6 +49,7 @@ struct _KsVideoMediaType
   guint sample_size;
 
   GstCaps * translated_caps;
+  gboolean is_rgb;
 };
 
 typedef struct DVINFO {
