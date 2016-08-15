@@ -174,7 +174,7 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
 #if GST_GL_HAVE_WINDOW_WIN32 && GST_GL_HAVE_PLATFORM_WGL && defined (HAVE_QT_WIN32)  
     g_return_val_if_fail (context != NULL, FALSE);
 
-    if (!wglGetProcAddress ("wglCreateContextAttribsARB")) {
+    G_STMT_START {
       GstGLWindow *window;
       HDC device;
 
@@ -184,6 +184,10 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
        *
        * The workaround here is to temporarily disable Qt's GL context while we
        * set up our own.
+       *
+       * Sometimes wglCreateContextAttribsARB()
+       * exists, but isn't functional (some Intel drivers), so it's easiest to do this
+       * unconditionally.
        */
       *context = gst_gl_context_new (display);
       window = gst_gl_context_get_window (*context);
@@ -204,7 +208,7 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
     }
 #endif
     gst_gl_context_activate (*wrap_glcontext, FALSE);
-  }
+  } G_STMT_END;
 
   return TRUE;
 }
