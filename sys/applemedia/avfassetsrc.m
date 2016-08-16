@@ -900,16 +900,13 @@ gst_avf_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 {
   NSString *str;
   NSURL *url;
-  gchar *escaped_uri;
 
-  GST_INFO ("Initializing AVFAssetReader with uri:%s", uri);
+  GST_INFO ("Initializing AVFAssetReader with uri: %s", uri);
   *error = NULL;
 
-  escaped_uri = g_uri_escape_string (uri, ":/", TRUE);
-  str = [NSString stringWithUTF8String: escaped_uri];
+  str = [NSString stringWithUTF8String: uri];
   url = [[NSURL alloc] initWithString: str];
   asset = [[AVAsset assetWithURL: url] retain];
-  g_free (escaped_uri);
 
   if (!asset.playable) {
     *error = g_error_new (GST_AVF_ASSET_SRC_ERROR, GST_AVF_ASSET_ERROR_NOT_PLAYABLE,
