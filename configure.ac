@@ -363,6 +363,8 @@ else
         --disable-encoder=flac --disable-protocols --disable-devices \
         --disable-network --disable-hwaccels --disable-dxva2 --disable-vdpau \
         --disable-filters --enable-filter=yadif --disable-doc --disable-vda --disable-d3d11va --disable-dxva2 \
+        --disable-videotoolbox --disable-vaapi --disable-crystalhd \
+        --disable-nvenc --disable-mmal --disable-libmfx \
         --disable-iconv --enable-optimizations"
 
   if test "x$enable_gpl" == "xyes"; then
