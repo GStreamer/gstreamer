@@ -276,6 +276,11 @@ decode_sequence (GstVaapiDecoderVC1 * decoder, GstVC1BDU * rbdu,
 
   priv->has_entrypoint = FALSE;
 
+  if (adv_hdr->interlace != 0) {
+    GST_ERROR ("interlaced sequence unsupported");
+    return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+  }
+
   /* Reset POC */
   if (priv->last_non_b_picture) {
     if (priv->last_non_b_picture->poc == priv->next_poc)
