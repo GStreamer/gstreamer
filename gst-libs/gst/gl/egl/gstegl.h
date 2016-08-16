@@ -48,7 +48,7 @@
 
 /* compatibility definitions... */
 #if !GST_GL_HAVE_EGLATTRIB
-typedef EGLAttrib gintptr;
+typedef gintptr EGLAttrib;
 #endif
 
 #endif /* _GST_EGL_H_ */
