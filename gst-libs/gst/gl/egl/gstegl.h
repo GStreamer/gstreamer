@@ -46,4 +46,9 @@
 #pragma GCC diagnostic pop
 #endif
 
+/* compatibility definitions... */
+#if !GST_GL_HAVE_EGLATTRIB
+typedef EGLAttrib gintptr;
+#endif
+
 #endif /* _GST_EGL_H_ */
