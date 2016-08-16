@@ -672,7 +672,7 @@ gst_wildmidi_get_buffer (GstWildmidi * wildmidi)
   gst_buffer_map (buffer, &info, GST_MAP_READWRITE);
 
   GST_OBJECT_LOCK (wildmidi);
-  size = WildMidi_GetOutput (wildmidi->song, (char *) info.data,
+  size = WildMidi_GetOutput (wildmidi->song, (gpointer) info.data,
       (unsigned long int) info.size);
   GST_OBJECT_UNLOCK (wildmidi);
 
