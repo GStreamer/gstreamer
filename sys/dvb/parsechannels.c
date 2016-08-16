@@ -99,7 +99,6 @@ gst_dvb_base_bin_conf_set_property_from_string_array (GstElement * dvbbasebin,
   return TRUE;
 }
 
-/* TODO handle errors when getting keyfile data on all these functions */
 static gboolean
 gst_dvb_base_bin_conf_set_string (GstElement * dvbbasebin,
     const gchar * property, GKeyFile * kf, const gchar * channel_name,
@@ -108,6 +107,12 @@ gst_dvb_base_bin_conf_set_string (GstElement * dvbbasebin,
   gchar *str;
 
   str = g_key_file_get_string (kf, channel_name, key, NULL);
+  if (!str) {
+    GST_WARNING_OBJECT (dvbbasebin,
+        "Could not get value for '%s' on channel '%s'", key, channel_name);
+    return FALSE;
+  }
+
   g_object_set (dvbbasebin, property, str, NULL);
   g_free (str);
   return TRUE;
@@ -120,6 +125,12 @@ gst_dvb_base_bin_conf_set_uint (GstElement * dvbbasebin, const gchar * property,
   guint64 v;
 
   v = g_key_file_get_uint64 (kf, channel_name, key, NULL);
+  if (!v) {
+    GST_WARNING_OBJECT (dvbbasebin,
+        "Could not get value for '%s' on channel '%s'", key, channel_name);
+    return FALSE;
+  }
+
   g_object_set (dvbbasebin, property, (guint) v, NULL);
   return TRUE;
 }
@@ -131,6 +142,12 @@ gst_dvb_base_bin_conf_set_int (GstElement * dvbbasebin, const gchar * property,
   gint v;
 
   v = g_key_file_get_integer (kf, channel_name, key, NULL);
+  if (!v) {
+    GST_WARNING_OBJECT (dvbbasebin,
+        "Could not get value for '%s' on channel '%s'", key, channel_name);
+    return FALSE;
+  }
+
   g_object_set (dvbbasebin, property, v, NULL);
   return TRUE;
 }
@@ -144,6 +161,12 @@ gst_dvb_base_bin_conf_set_inversion (GstElement * dvbbasebin,
   gint v;
 
   str = g_key_file_get_string (kf, channel_name, key, NULL);
+  if (!str) {
+    GST_WARNING_OBJECT (dvbbasebin,
+        "Could not get value for '%s' on channel '%s'", key, channel_name);
+    return FALSE;
+  }
+
   if (strcmp (str, "AUTO") == 0)
     v = 2;
   else if (strcmp (str, "ON") == 0)
