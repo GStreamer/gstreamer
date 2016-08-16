@@ -78,6 +78,8 @@ struct _GstRawVideoParseConfig
   guint frame_stride;
 
   GstVideoInfo info;
+
+  gboolean custom_plane_strides;
 };
 
 
