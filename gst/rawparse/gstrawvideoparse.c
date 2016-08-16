@@ -34,9 +34,13 @@
  * modified by using the width, height, pixel-aspect-ratio, framerate, interlaced,
  * top-field-first, plane-strides, plane-offsets, and frame-stride properties.
  *
- * If the properties configuration is used, be sure to set valid plane stride
- * offsets and values, otherwise the produced frames will not have a correct size.
- * Merely setting the format is not enough.
+ * If the properties configuration is used, plane strides and offsets will be
+ * computed by using gst_video_info_set_format(). This can be overridden by passing
+ * GValueArrays to the plane-offsets and plane-strides properties. When this is
+ * done, these custom offsets and strides are used later even if new width,
+ * height, format etc. property values might be set. To switch back to computed
+ * plane strides & offsets, pass NULL to one or both of the plane-offset and
+ * plane-array properties.
  *
  * The frame stride property is useful in cases where there is extra data between
  * the frames (for example, trailing metadata, or headers). The parser calculates 
@@ -116,7 +120,7 @@ enum
 
 
 #define GST_RAW_VIDEO_PARSE_CAPS \
-	GST_VIDEO_CAPS_MAKE(GST_VIDEO_FORMATS_ALL) "; "
+        GST_VIDEO_CAPS_MAKE(GST_VIDEO_FORMATS_ALL) "; "
 
 
 static GstStaticPadTemplate static_sink_template =
@@ -513,6 +517,17 @@ gst_raw_video_parse_set_property (GObject * object, guint prop_id,
       guint n_planes;
       guint i;
 
+      /* If no valarray is given, then disable custom
+       * plane strides & offsets and stick to the
+       * standard computed ones */
+      if (valarray == NULL) {
+        GST_DEBUG_OBJECT (raw_video_parse,
+            "custom plane strides & offsets disabled");
+        props_cfg->custom_plane_strides = FALSE;
+        gst_raw_video_parse_update_info (props_cfg);
+        break;
+      }
+
       /* Sanity check - reject empty arrays */
       if ((valarray != NULL) && (valarray->n_values == 0)) {
         GST_ELEMENT_ERROR (raw_video_parse, LIBRARY, SETTINGS,
@@ -541,6 +556,8 @@ gst_raw_video_parse_set_property (GObject * object, guint prop_id,
             props_cfg->plane_strides[i]);
       }
 
+      props_cfg->custom_plane_strides = TRUE;
+
       gst_raw_video_parse_update_info (props_cfg);
 
       if (!gst_raw_video_parse_is_using_sink_caps (raw_video_parse))
@@ -557,6 +574,17 @@ gst_raw_video_parse_set_property (GObject * object, guint prop_id,
       GValueArray *valarray = g_value_get_boxed (value);
       guint n_planes;
       guint i;
+
+      /* If no valarray is given, then disable custom
+       * plane strides & offsets and stick to the
+       * standard computed ones */
+      if (valarray == NULL) {
+        GST_DEBUG_OBJECT (raw_video_parse,
+            "custom plane strides & offsets disabled");
+        props_cfg->custom_plane_strides = FALSE;
+        gst_raw_video_parse_update_info (props_cfg);
+        break;
+      }
 
       /* Sanity check - reject empty arrays */
       if ((valarray != NULL) && (valarray->n_values == 0)) {
@@ -585,6 +613,8 @@ gst_raw_video_parse_set_property (GObject * object, guint prop_id,
         GST_DEBUG_OBJECT (raw_video_parse, "plane #%u offset: %" G_GSIZE_FORMAT,
             i, props_cfg->plane_offsets[i]);
       }
+
+      props_cfg->custom_plane_strides = TRUE;
 
       gst_raw_video_parse_update_info (props_cfg);
 
@@ -1093,10 +1123,16 @@ gst_raw_video_parse_init_config (GstRawVideoParseConfig * config)
 static void
 gst_raw_video_parse_update_info (GstRawVideoParseConfig * config)
 {
-  int i;
+  guint i;
   guint n_planes;
+  guint last_plane;
   gsize last_plane_offset, last_plane_size;
   GstVideoInfo *info = &(config->info);
+
+  GST_DEBUG ("updating info with width %u height %u format %s "
+      " custom plane strides&offsets %d", config->width, config->height,
+      gst_video_format_to_string (config->format),
+      config->custom_plane_strides);
 
   gst_video_info_set_format (info, config->format, config->width,
       config->height);
@@ -1108,24 +1144,53 @@ gst_raw_video_parse_update_info (GstRawVideoParseConfig * config)
   GST_VIDEO_INFO_INTERLACE_MODE (info) =
       config->interlaced ? GST_VIDEO_INTERLACE_MODE_INTERLEAVED :
       GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; ++i) {
-    GST_VIDEO_INFO_PLANE_OFFSET (info, i) = config->plane_offsets[i];
-    GST_VIDEO_INFO_PLANE_STRIDE (info, i) = config->plane_strides[i];
+
+  /* Check if there are custom plane strides & offsets that need to be preserved */
+  if (config->custom_plane_strides) {
+    /* In case there are, overwrite the offsets&strides computed by
+     * gst_video_info_set_format with the custom ones */
+    for (i = 0; i < GST_VIDEO_MAX_PLANES; ++i) {
+      GST_VIDEO_INFO_PLANE_OFFSET (info, i) = config->plane_offsets[i];
+      GST_VIDEO_INFO_PLANE_STRIDE (info, i) = config->plane_strides[i];
+    }
+  } else {
+    /* No custom planes&offsets; copy the computed ones into
+     * the plane_offsets & plane_strides arrays to ensure they
+     * are equal to the ones in the videoinfo */
+    for (i = 0; i < GST_VIDEO_MAX_PLANES; ++i) {
+      config->plane_offsets[i] = GST_VIDEO_INFO_PLANE_OFFSET (info, i);
+      config->plane_strides[i] = GST_VIDEO_INFO_PLANE_STRIDE (info, i);
+    }
   }
 
   n_planes = GST_VIDEO_INFO_N_PLANES (info);
   if (n_planes < 1)
     n_planes = 1;
 
-  last_plane_offset = GST_VIDEO_INFO_PLANE_OFFSET (info, n_planes - 1);
+  /* Figure out what plane is the physically last one. Typically, the
+   * this is the last plane in the list (= at index n_planes-1).
+   * However, this is not guaranteed, so we have to scan the offsets
+   * to find the last plane. */
+  last_plane_offset = 0;
+  last_plane = 0;
+  for (i = 0; i < n_planes; ++i) {
+    gsize plane_offset = GST_VIDEO_INFO_PLANE_OFFSET (info, i);
+    if (plane_offset >= last_plane_offset) {
+      last_plane = i;
+      last_plane_offset = plane_offset;
+    }
+  }
+  last_plane = n_planes - 1;
+
   last_plane_size =
       GST_VIDEO_INFO_PLANE_STRIDE (info,
-      n_planes - 1) * GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo,
-      n_planes - 1, config->height);
+      last_plane) * GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo,
+      last_plane, config->height);
 
   GST_VIDEO_INFO_SIZE (info) = last_plane_offset + last_plane_size;
 
-  GST_DEBUG ("last plane offset: %" G_GSIZE_FORMAT " last plane size: %"
+  GST_DEBUG ("last plane #%u:  offset: %" G_GSIZE_FORMAT " size: %"
       G_GSIZE_FORMAT " => frame size minus extra padding: %" G_GSIZE_FORMAT,
-      last_plane_offset, last_plane_size, GST_VIDEO_INFO_SIZE (info));
+      last_plane, last_plane_offset, last_plane_size,
+      GST_VIDEO_INFO_SIZE (info));
 }
