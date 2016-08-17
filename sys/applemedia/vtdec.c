@@ -96,7 +96,8 @@ static GstStaticPadTemplate gst_vtdec_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, stream-format=avc, alignment=au,"
         " width=(int)[1, MAX], height=(int)[1, MAX];"
-        "video/mpeg, mpegversion=2;" "image/jpeg")
+        "video/mpeg, mpegversion=2, systemstream=false, parsed=true;"
+        "image/jpeg")
     );
 
 /* define EnableHardwareAcceleratedVideoDecoder in < 10.9 */
