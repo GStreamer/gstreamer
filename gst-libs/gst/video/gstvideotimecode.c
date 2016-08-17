@@ -87,7 +87,7 @@ gst_video_time_code_to_string (const GstVideoTimeCode * tc)
   /* Top dot is present for non-interlaced content, and for field 2 in
    * interlaced content */
   top_dot_present =
-      !((tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_INTERLACED) == 1
+      !((tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_INTERLACED) != 0
       && tc->field_count == 1);
 
   if (tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME)
@@ -221,6 +221,10 @@ gst_video_time_code_frames_since_daily_jam (const GstVideoTimeCode * tc)
   gdouble ff;
 
   g_return_val_if_fail (gst_video_time_code_is_valid (tc), -1);
+  g_assert (tc->hours <= 24);
+  g_assert (tc->minutes < 60);
+  g_assert (tc->seconds < 60);
+  g_assert (tc->frames <= tc->config.fps_n / tc->config.fps_d);
 
   gst_util_fraction_to_double (tc->config.fps_n, tc->config.fps_d, &ff);
   if (tc->config.fps_d == 1001) {
