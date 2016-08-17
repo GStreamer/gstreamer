@@ -6792,8 +6792,24 @@ restart:
   /* could not be set but since the request returned OK, we assume it
    * was SDP, else check it. */
   if (respcont) {
-    if (g_ascii_strcasecmp (respcont, "application/sdp") != 0)
+    const gchar *props = strchr (respcont, ';');
+
+    if (props) {
+      gchar *mimetype = g_strndup (respcont, props - respcont);
+
+      mimetype = g_strstrip (mimetype);
+      if (g_ascii_strcasecmp (mimetype, "application/sdp") != 0) {
+        g_free (mimetype);
+        goto wrong_content_type;
+      }
+
+      /* TODO: Check for charset property and do conversions of all messages if
+       * needed. Some servers actually send that property */
+
+      g_free (mimetype);
+    } else if (g_ascii_strcasecmp (respcont, "application/sdp") != 0) {
       goto wrong_content_type;
+    }
   }
 
   /* get message body and parse as SDP */
