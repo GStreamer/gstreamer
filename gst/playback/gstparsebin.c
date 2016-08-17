@@ -3920,9 +3920,11 @@ gst_parse_pad_update_caps (GstParsePad * parsepad, GstCaps * caps)
 static void
 gst_parse_pad_update_tags (GstParsePad * parsepad, GstTagList * tags)
 {
-  if (tags && parsepad->active_stream) {
-    GST_DEBUG_OBJECT (parsepad, "Storing new tags %" GST_PTR_FORMAT
-        " on stream %" GST_PTR_FORMAT, tags, parsepad->active_stream);
+  if (tags && gst_tag_list_get_scope (tags) == GST_TAG_SCOPE_STREAM
+      && parsepad->active_stream) {
+    GST_DEBUG_OBJECT (parsepad,
+        "Storing new tags %" GST_PTR_FORMAT " on stream %" GST_PTR_FORMAT, tags,
+        parsepad->active_stream);
     gst_stream_set_tags (parsepad->active_stream, tags);
   }
 }
