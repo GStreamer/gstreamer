@@ -340,7 +340,7 @@ parse_and_configure_from_v5_conf_file (GstElement * dvbbasebin,
     }
 
     if (!property_found)
-      GST_DEBUG_OBJECT (dvbbasebin, "Failed to map property '%s'", k);
+      GST_WARNING_OBJECT (dvbbasebin, "Failed to map property '%s'", k);
 
     keys_p++;
   }
