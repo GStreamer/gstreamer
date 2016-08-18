@@ -34,8 +34,14 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#include "_stdint.h"
+#endif
+
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 
 #include "gstfbdevsink.h"
 

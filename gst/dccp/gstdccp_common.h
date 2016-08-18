@@ -38,9 +38,19 @@
 #define socklen_t int
 #endif
 #endif
+
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#include <_stdint.h>
+#endif
+
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
+
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
 #include <string.h>
 
 #endif /* __GST_DCCP_NET_H__ */

@@ -80,7 +80,11 @@
 #include <gst/video/video.h>
 #include <string.h>
 #include <stdlib.h>
-#include <_stdint.h>
+
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
+
 #include "gstbayerorc.h"
 
 #define GST_CAT_DEFAULT gst_bayer2rgb_debug

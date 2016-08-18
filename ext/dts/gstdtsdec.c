@@ -38,8 +38,11 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
+
 #include <string.h>
-#include "_stdint.h"
 #include <stdlib.h>
 
 #include <gst/gst.h>

@@ -23,7 +23,9 @@
 
 #include <gst/base/gstbasesrc.h>
 
-#include "_stdint.h"
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 
 #include <dvdnav/dvdnav.h>
 #include <dvdread/ifo_read.h>
