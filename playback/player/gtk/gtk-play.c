@@ -544,7 +544,7 @@ static GList *
 open_file_dialog (GtkPlay * play, gboolean multi)
 {
   int res;
-  GList *uris = NULL;
+  GQueue uris = G_QUEUE_INIT;
   GtkWidget *chooser;
   GtkWidget *parent;
 
@@ -568,7 +568,7 @@ open_file_dialog (GtkPlay * play, gboolean multi)
 
     l = gtk_file_chooser_get_uris (GTK_FILE_CHOOSER (chooser));
     while (l) {
-      uris = g_list_append (uris, l->data);
+      g_queue_push_tail (&uris, l->data);
       l = g_slist_delete_link (l, l);
     }
   }
@@ -577,7 +577,7 @@ open_file_dialog (GtkPlay * play, gboolean multi)
   if (!play)
     gtk_widget_destroy (parent);
 
-  return uris;
+  return uris.head;
 }
 
 static void
@@ -1828,16 +1828,15 @@ gtk_play_app_command_line (GApplication * application,
 
   if (uris_array) {
     gchar **p;
+    GQueue uris_builder = G_QUEUE_INIT;
 
     p = uris_array;
     while (*p) {
-      uris =
-          g_list_prepend (uris,
-          gst_uri_is_valid (*p) ?
+      g_queue_push_tail (&uris_builder, gst_uri_is_valid (*p) ?
           g_strdup (*p) : gst_filename_to_uri (*p, NULL));
       p++;
     }
-    uris = g_list_reverse (uris);
+    uris = uris_builder.head;
   } else {
     uris = open_file_dialog (NULL, TRUE);
   }
