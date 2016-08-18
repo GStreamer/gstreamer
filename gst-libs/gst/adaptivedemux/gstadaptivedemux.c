@@ -3677,10 +3677,13 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
 
       for (iter = demux->streams; iter; iter = g_list_next (iter)) {
         /* Only expose if all streams are now cancelled or finished downloading */
-        g_mutex_lock (&stream->fragment_download_lock);
-        can_expose &= (stream->cancelled == TRUE
-            || stream->download_finished == TRUE);
-        g_mutex_unlock (&stream->fragment_download_lock);
+        GstAdaptiveDemuxStream *other = iter->data;
+        if (other != stream) {
+          g_mutex_lock (&other->fragment_download_lock);
+          can_expose &= (other->cancelled == TRUE
+              || other->download_finished == TRUE);
+          g_mutex_unlock (&other->fragment_download_lock);
+        }
       }
 
       if (can_expose) {
