@@ -676,7 +676,8 @@ gst_mplex_release_pad (GstElement * element, GstPad * pad)
     g_free (padname);
 
     /* may now be up to us to get things going */
-    gst_mplex_start_task (mplex);
+    if (GST_STATE (element) > GST_STATE_READY)
+      gst_mplex_start_task (mplex);
     GST_MPLEX_MUTEX_UNLOCK (mplex);
   }
 }
