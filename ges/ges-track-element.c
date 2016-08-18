@@ -280,7 +280,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
    * @track_element: a #GESTrackElement
    * @control_binding: the #GstControlBinding that has been added
    *
-   * The control-bunding-added  is emitted each time a control binding
+   * The control-binding-added signal is emitted each time a control binding
    * is added for a child property of @track_element
    */
   ges_track_element_signals[CONTROL_BINDING_ADDED] =
@@ -291,13 +291,13 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   /**
    * GESTrackElement::control-binding-removed:
    * @track_element: a #GESTrackElement
-   * @control_binding: the #GstControlBinding that has been added
+   * @control_binding: the #GstControlBinding that has been removed
    *
-   * The control-bunding-added  is emitted each time a control binding
-   * is added for a child property of @track_element
+   * The control-binding-removed signal is emitted each time a control binding
+   * is removed for a child property of @track_element
    */
   ges_track_element_signals[CONTROL_BINDING_REMOVED] =
-      g_signal_new ("control-binding-reomved", G_TYPE_FROM_CLASS (klass),
+      g_signal_new ("control-binding-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GST_TYPE_CONTROL_BINDING);
 
