@@ -532,7 +532,13 @@ GST_START_TEST (test_only_one_lost_event_on_large_gaps)
 
   gst_harness_set_src_caps (h, generate_caps ());
   testclock = gst_harness_get_testclock (h);
-  g_object_set (h->element, "do-lost", TRUE, "latency", jb_latency_ms, NULL);
+  /* Need to set max-misorder-time and max-dropout-time to 0 so the
+   * jitterbuffer does not base them on packet rate calculations.
+   * If it does, out gap is big enough to be considered a new stream and
+   * we wait for a few consecutive packets just to be sure
+   */
+  g_object_set (h->element, "do-lost", TRUE, "latency", jb_latency_ms,
+      "max-misorder-time", 0, "max-dropout-time", 0, NULL);
 
   /* push the first buffer in */
   fail_unless_equals_int (GST_FLOW_OK,
