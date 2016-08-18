@@ -1290,8 +1290,9 @@ gst_dash_demux_stream_advance_sync_sample (GstAdaptiveDemuxStream * stream)
       } else if (dashstream->current_sync_sample == 0) {
         dashstream->current_sync_sample = -1;
         fragment_finished = TRUE;
-      } else
+      } else {
         dashstream->current_sync_sample--;
+      }
     }
   }
 
@@ -2257,7 +2258,8 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
         }
 
         /* Non-non-sync sample aka sync sample */
-        if (!GST_ISOFF_SAMPLE_FLAGS_SAMPLE_IS_NON_SYNC_SAMPLE (sample_flags)) {
+        if (!GST_ISOFF_SAMPLE_FLAGS_SAMPLE_IS_NON_SYNC_SAMPLE (sample_flags) ||
+            GST_ISOFF_SAMPLE_FLAGS_SAMPLE_DEPENDS_ON (sample_flags) == 2) {
           GstDashStreamSyncSample sync_sample =
               { sample_offset, prev_sample_end - 1 };
           /* TODO: need timestamps so we can decide to download or not */
@@ -2315,7 +2317,9 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
       dash_stream->first_sync_sample_after_moof = FALSE;
       dash_stream->first_sync_sample_always_after_moof = FALSE;
     } else {
-      dash_stream->first_sync_sample_after_moof = TRUE;
+      dash_stream->first_sync_sample_after_moof =
+          (dash_stream->moof_sync_samples->len == 1
+          || demux->segment.rate > 0.0);
     }
   }
 
