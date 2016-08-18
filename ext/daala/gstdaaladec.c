@@ -121,7 +121,7 @@ gst_daala_dec_class_init (GstDaalaDecClass * klass)
       GST_DEBUG_FUNCPTR (daala_dec_decide_allocation);
 
   GST_DEBUG_CATEGORY_INIT (daaladec_debug, "daaladec", 0, "Daala decoder");
-  GST_DEBUG_CATEGIRY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
+  GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 }
 
 static void
