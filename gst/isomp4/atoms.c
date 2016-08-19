@@ -2115,7 +2115,8 @@ sample_entry_tx3g_copy_data (SampleTableEntryTX3G * tx3g, guint8 ** buffer,
     Atom atom;
 
     atom_header_set (&atom, FOURCC_ftab, 18, 0);
-    atom_copy_data (&atom, buffer, size, offset);
+    if (!atom_copy_data (&atom, buffer, size, offset))
+      return 0;
     prop_copy_uint16 (1, buffer, size, offset); /* Count must be 1 */
     prop_copy_uint16 (1, buffer, size, offset); /* Font id: 1 */
     prop_copy_size_string ((guint8 *) "Serif", 5, buffer, size, offset);
@@ -2150,7 +2151,8 @@ sample_entry_tmcd_copy_data (SampleTableEntryTMCD * tmcd, guint8 ** buffer,
     guint64 name_offset = *offset;
 
     atom_header_set (&atom, FOURCC_name, 0, 0);
-    atom_copy_data (&atom, buffer, size, offset);
+    if (!atom_copy_data (&atom, buffer, size, offset))
+      return 0;
     prop_copy_uint16 (strlen (tmcd->name.name), buffer, size, offset);
     prop_copy_uint16 (tmcd->name.language_code, buffer, size, offset);
     prop_copy_fixed_size_string ((guint8 *) tmcd->name.name,
