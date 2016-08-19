@@ -353,11 +353,19 @@ gst_stream_get_stream_type (GstStream * stream)
 void
 gst_stream_set_tags (GstStream * stream, GstTagList * tags)
 {
+  gboolean notify = FALSE;
+
   GST_OBJECT_LOCK (stream);
-  gst_mini_object_replace ((GstMiniObject **) & stream->priv->tags,
-      (GstMiniObject *) tags);
+  if (stream->priv->tags == NULL || tags == NULL
+      || !gst_tag_list_is_equal (stream->priv->tags, tags)) {
+    gst_mini_object_replace ((GstMiniObject **) & stream->priv->tags,
+        (GstMiniObject *) tags);
+    notify = TRUE;
+  }
   GST_OBJECT_UNLOCK (stream);
-  g_object_notify_by_pspec (G_OBJECT (stream), gst_stream_pspecs[PROP_TAGS]);
+
+  if (notify)
+    g_object_notify_by_pspec (G_OBJECT (stream), gst_stream_pspecs[PROP_TAGS]);
 }
 
 /**
