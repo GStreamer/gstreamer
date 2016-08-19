@@ -1,9 +1,30 @@
-=== release 1.8.2 ===
+=== release 1.8.3 ===
 
-2016-06-09  Sebastian Dröge <slomo@coaxion.net>
+2016-08-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.2
+	  releasing 1.8.3
+
+2016-05-25 10:28:43 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/Makefile.am:
+	  g-i: pass compiler env to g-ir-scanner
+	  It's what introspection.mak does as well. Should
+	  fix spurious build failures on gnome-continuous
+	  (caused by g-ir-scanner getting compiler details
+	  via python which is broken in some environments
+	  so passing the compiler details bypasses that).
+
+=== release 1.8.2 ===
+
+2016-06-09 11:52:33 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.8.2
 
 2016-05-18 16:48:44 +0100  Ian <ian.arkver.dev@gmail.com>
 
@@ -6658,8 +6679,6 @@
 
 	* configure.ac:
 	* pkgconfig/Makefile.am:
-	* pkgconfig/gst-rtsp-server-uninstalled.pc.in:
-	* pkgconfig/gst-rtsp-server.pc.in:
 	* pkgconfig/gstreamer-rtsp-server-uninstalled.pc.in:
 	* pkgconfig/gstreamer-rtsp-server.pc.in:
 	  pkg-config: rename gst-rtsp-server-0.11.pc to gstreamer-rtsp-server-0.11.pc
@@ -7547,8 +7566,6 @@
 2011-01-10 15:10:53 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* gst/rtsp-server/Makefile.am:
-	* gst/rtsp-server/fs-funnel.c:
-	* gst/rtsp-server/fs-funnel.h:
 	* gst/rtsp-server/rtsp-funnel.c:
 	* gst/rtsp-server/rtsp-funnel.h:
 	* gst/rtsp-server/rtsp-media.c:
@@ -9146,7 +9163,6 @@
 2009-01-29 13:31:27 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* examples/Makefile.am:
-	* examples/main.c:
 	* examples/test-mp4.c:
 	* examples/test-ogg.c:
 	* examples/test-video.c:
@@ -9414,19 +9430,12 @@
 
 	* bindings/vala/gst-rtsp-server-0.10.deps:
 	* bindings/vala/gst-rtsp-server-0.10.vapi:
-	* bindings/vala/gst-rtsp-server.vapi:
 	* bindings/vala/packages/gst-rtsp-server-0.10.deps:
 	* bindings/vala/packages/gst-rtsp-server-0.10.excludes:
 	* bindings/vala/packages/gst-rtsp-server-0.10.files:
 	* bindings/vala/packages/gst-rtsp-server-0.10.gi:
 	* bindings/vala/packages/gst-rtsp-server-0.10.metadata:
 	* bindings/vala/packages/gst-rtsp-server-0.10.namespace:
-	* bindings/vala/packages/gst-rtsp-server.deps:
-	* bindings/vala/packages/gst-rtsp-server.excludes:
-	* bindings/vala/packages/gst-rtsp-server.files:
-	* bindings/vala/packages/gst-rtsp-server.gi:
-	* bindings/vala/packages/gst-rtsp-server.metadata:
-	* bindings/vala/packages/gst-rtsp-server.namespace:
 	  Regenerated Vala bindings
 
 2008-12-08 13:19:40 +0100  Sebastian Pölsterl <sebp@k-d-w.org>
@@ -9503,17 +9512,6 @@
 	* gst/rtsp-server/rtsp-session.c:
 	* gst/rtsp-server/rtsp-session.h:
 	* src/Makefile.am:
-	* src/main.c:
-	* src/rtsp-client.c:
-	* src/rtsp-client.h:
-	* src/rtsp-media.c:
-	* src/rtsp-media.h:
-	* src/rtsp-server.c:
-	* src/rtsp-server.h:
-	* src/rtsp-session-pool.c:
-	* src/rtsp-session-pool.h:
-	* src/rtsp-session.c:
-	* src/rtsp-session.h:
 	  Split in library and example program
 
 2008-11-10 20:59:35 +0100  Sebastian Pölsterl <sebp@ubuntu.(none)>
