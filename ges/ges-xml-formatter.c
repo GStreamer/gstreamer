@@ -994,15 +994,9 @@ _save_children_properties (GString * str, GESTrackElement * trackelement)
     spec = pspecs[i];
 
     if (_can_serialize_spec (spec)) {
-      gchar *spec_name =
-          g_strdup_printf ("%s::%s", g_type_name (spec->owner_type),
-          spec->name);
-
       _init_value_from_spec_for_serialization (&val, spec);
       ges_track_element_get_child_property_by_pspec (trackelement, spec, &val);
-      gst_structure_set_value (structure, spec_name, &val);
-
-      g_free (spec_name);
+      gst_structure_set_value (structure, spec->name, &val);
       g_value_unset (&val);
     }
     g_param_spec_unref (spec);
