@@ -1167,7 +1167,7 @@ gst_raw_video_parse_update_info (GstRawVideoParseConfig * config)
   if (n_planes < 1)
     n_planes = 1;
 
-  /* Figure out what plane is the physically last one. Typically, the
+  /* Figure out what plane is the physically last one. Typically
    * this is the last plane in the list (= at index n_planes-1).
    * However, this is not guaranteed, so we have to scan the offsets
    * to find the last plane. */
