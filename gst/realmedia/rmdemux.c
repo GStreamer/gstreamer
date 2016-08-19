@@ -967,8 +967,7 @@ need_pause:
         gst_rmdemux_send_event (rmdemux, gst_event_new_eos ());
       }
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
-      GST_ELEMENT_ERROR (rmdemux, STREAM, FAILED,
-          (NULL), ("stream stopped, reason %s", reason));
+      GST_ELEMENT_FLOW_ERROR (rmdemux, ret);
       gst_rmdemux_send_event (rmdemux, gst_event_new_eos ());
     }
     return;

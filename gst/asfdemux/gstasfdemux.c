@@ -449,9 +449,7 @@ gst_asf_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       flow = gst_asf_demux_push_complete_payloads (demux, TRUE);
       if (flow < GST_FLOW_EOS || flow == GST_FLOW_NOT_LINKED) {
-        GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-            (_("Internal data stream error.")),
-            ("streaming stopped, reason %s", gst_flow_get_name (flow)));
+        GST_ELEMENT_FLOW_ERROR (demux, flow);
         break;
       }
 
@@ -2123,9 +2121,7 @@ pause:
     /* For the error cases */
     if (flow < GST_FLOW_EOS || flow == GST_FLOW_NOT_LINKED) {
       /* Post an error. Hopefully something else already has, but if not... */
-      GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-          (_("Internal data stream error.")),
-          ("streaming stopped, reason %s", gst_flow_get_name (flow)));
+      GST_ELEMENT_FLOW_ERROR (demux, flow);
       gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
     }
 

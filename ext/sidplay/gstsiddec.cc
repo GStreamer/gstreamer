@@ -450,8 +450,7 @@ pause:
       gst_pad_push_event (pad, gst_event_new_eos ());
     } else if (ret < GST_FLOW_EOS || ret == GST_FLOW_NOT_LINKED) {
       /* for fatal errors we post an error message */
-      GST_ELEMENT_ERROR (siddec, STREAM, FAILED,
-          (NULL), ("streaming task paused, reason %s", reason));
+      GST_ELEMENT_FLOW_ERROR (siddec, ret);
       gst_pad_push_event (pad, gst_event_new_eos ());
     }
 
