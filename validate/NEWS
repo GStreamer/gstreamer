@@ -1,26 +1,29 @@
-### 1.8.2
+### 1.8.3
 
-The first 1.8 bug-fix release (1.8.2) was released on 9 June 2016.
-This release only contains bugfixes and it should be safe to update from 1.8.0.
+The third 1.8 bug-fix release (1.8.3) was released on 19 August 2016.
+This release only contains bugfixes and it should be safe to update from 1.8.x.
 
-#### Major bugfixes in 1.8.2
+#### Major bugfixes in 1.8.3
 
- - Fix vp8enc and flacenc segmentation faults on Windows
- - Fix Android build failure due to BSD sed on OS X
- - Fix Android build failure with applications targetting API > 20
- - Fix playback of live MS SmoothStreaming streams
- - Fix various issues with vtdec and caopengllayersink on OS X
- - Fix severe performance degradation in various image decoders
- - Fix sample rate negotiation in opusdec
- - Fix regression in typefind, causing deadlocks in some situations
- - Fix mpegtsmux to set PTS on all output buffers again
- - Fix extraction of frame dimensions from SDP in RTP JPEG depayloader
- - Fix failure in v4l2videodec when setting of format fails after starting
+ - Fix Android build scripts on OS X and Windows
+ - Fix stepping in PAUSED state in certain circumstances
+ - Fix jackaudiosink hang when exiting
+ - Fix udpsrc receiving multicast packets not only from the selected
+   multicast group
+ - Fix unnecessary decoding of unselected streams in GES
+ - Fix (multi)udpsink randomly not sending to clients
+ - Fix ALL\_BOTH probes not considering EVENT\_FLUSH
+ - Fix average input rate calculations in queue2
+ - Fix various locking issues causing deadlock in adaptivedemux
+ - Fix gst-libav encoders to correctly produce codec\_data in caps
+ - Add Wayland, Windows and Rasberry Pi support to the QML GL video sink
+ - Add support for building with OpenH264 1.6
+ - Add support for controlling deinterlacing in GES video sources
  - ... and many, many more!
 
-For a full list of bugfixes see [Bugzilla][buglist-1.8.2]. Note that this is
+For a full list of bugfixes see [Bugzilla][buglist-1.8.3]. Note that this is
 not the full list of changes. For the full list of changes please refer to the
 GIT logs or ChangeLogs of the particular modules.
 
-[buglist-1.8.2]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=130196&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.8.2
+[buglist-1.8.3]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=145400&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.8.3
 

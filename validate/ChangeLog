@@ -1,9 +1,33 @@
-=== release 1.8.2 ===
+=== release 1.8.3 ===
 
-2016-06-09  Sebastian Dröge <slomo@coaxion.net>
+2016-08-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.2
+	  releasing 1.8.3
+
+2016-06-13 17:00:39 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/validate.c:
+	  validate: Fix Validate plugin paths mixup
+
+2016-06-09 16:41:57 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: No execute ON_ADDITION if a previous action is executed playback_time
+	  As this is what user will expect in this case, for example in this case:
+	  set-state, state=null; playback-time=5
+	  set-property, target-element-name=dvbsrc0, property-name=delsys, property-value=11
+	  play;
+
+=== release 1.8.2 ===
+
+2016-06-09 11:53:03 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.8.2
 
 2016-04-13 21:18:28 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
 
@@ -1448,13 +1472,6 @@
 	* validate/Makefile.am:
 	* validate/configure.ac:
 	* validate/gst/Makefile.am:
-	* validate/gst/plugins/Makefile.am:
-	* validate/gst/plugins/fault_injection/Makefile.am:
-	* validate/gst/plugins/fault_injection/socket_interposer.c:
-	* validate/gst/plugins/gapplication/Makefile.am:
-	* validate/gst/plugins/gapplication/gstvalidategapplication.c:
-	* validate/gst/plugins/gtk/Makefile.am:
-	* validate/gst/plugins/gtk/gstvalidategtk.c:
 	* validate/plugins/Makefile.am:
 	* validate/plugins/fault_injection/Makefile.am:
 	* validate/plugins/fault_injection/socket_interposer.c:
@@ -2027,19 +2044,6 @@
 
 	* validate/configure.ac:
 	* validate/data/Makefile.am:
-	* validate/data/adaptive_video_framerate.scenario:
-	* validate/data/adaptive_video_framerate_size.scenario:
-	* validate/data/adaptive_video_size.scenario:
-	* validate/data/alternate_fast_backward_forward.scenario:
-	* validate/data/camerabin_signal.scenario:
-	* validate/data/change_state_intensive.scenario:
-	* validate/data/disable_subtitle_track_while_paused.scenario:
-	* validate/data/fast_backward.scenario:
-	* validate/data/fast_forward.scenario:
-	* validate/data/force_key_unit.scenario:
-	* validate/data/pause_resume.scenario:
-	* validate/data/play_15s.scenario:
-	* validate/data/reverse_playback.scenario:
 	* validate/data/scenarios/Makefile.am:
 	* validate/data/scenarios/adaptive_video_framerate.scenario:
 	* validate/data/scenarios/adaptive_video_framerate_size.scenario:
@@ -2070,22 +2074,6 @@
 	* validate/data/scenarios/switch_subtitle_track_while_paused.scenario:
 	* validate/data/scenarios/update_start.scenario:
 	* validate/data/scenarios/update_stop.scenario:
-	* validate/data/scrub_backward_seeking.scenario:
-	* validate/data/scrub_backward_seeking_full.scenario:
-	* validate/data/scrub_forward_seeking.scenario:
-	* validate/data/scrub_forward_seeking_full.scenario:
-	* validate/data/seek_backward.scenario:
-	* validate/data/seek_forward.scenario:
-	* validate/data/seek_forward_backward.scenario:
-	* validate/data/seek_with_stop.scenario:
-	* validate/data/simple_seeks.scenario:
-	* validate/data/switch_audio_track.scenario:
-	* validate/data/switch_audio_track_while_paused.scenario:
-	* validate/data/switch_set_external_subtitle.scenario:
-	* validate/data/switch_subtitle_track.scenario:
-	* validate/data/switch_subtitle_track_while_paused.scenario:
-	* validate/data/update_start.scenario:
-	* validate/data/update_stop.scenario:
 	* validate/gst/validate/gst-validate-scenario.c:
 	  move scenarios to data/scenarios
 	  Differential Revision: http://phabricator.freedesktop.org/D115
@@ -3118,8 +3106,6 @@
 
 	* validate/Makefile.am:
 	* validate/configure.ac:
-	* validate/fault_injection/Makefile.am:
-	* validate/fault_injection/socket_interposer.c:
 	* validate/fault_injection/socket_interposer.h:
 	* validate/gst/Makefile.am:
 	* validate/gst/plugins/Makefile.am:
@@ -4048,20 +4034,6 @@
 	* validate/launcher/utils.py:
 	* validate/tools/Makefile.am:
 	* validate/tools/gst-validate-launcher.in:
-	* validate/tools/launcher/Makefile.am:
-	* validate/tools/launcher/RangeHTTPServer.py:
-	* validate/tools/launcher/__init__.py:
-	* validate/tools/launcher/apps/Makefile.am:
-	* validate/tools/launcher/apps/geslaunch.py:
-	* validate/tools/launcher/apps/gstvalidate.py:
-	* validate/tools/launcher/apps/validate/Makefile.am:
-	* validate/tools/launcher/apps/validate/validate_testsuite.py:
-	* validate/tools/launcher/baseclasses.py:
-	* validate/tools/launcher/httpserver.py:
-	* validate/tools/launcher/loggable.py:
-	* validate/tools/launcher/main.py:
-	* validate/tools/launcher/reporters.py:
-	* validate/tools/launcher/utils.py:
 	  validate-launcher: restructure filesystem
 	  https://bugzilla.gnome.org/show_bug.cgi?id=739091
 
@@ -5119,7 +5091,6 @@
 2009-03-14 20:06:16 +0200  René Stadler <mail@renestadler.de>
 
 	* debug-viewer/GstDebugViewer/GUI.py:
-	* debug-viewer/data/gst-debug-viewer.ui:
 	* debug-viewer/data/menus.ui:
 	* debug-viewer/setup.py:
 	  Rename UIManager file
@@ -5137,7 +5108,6 @@
 	* debug-viewer/GstDebugViewer/GUI.py:
 	* debug-viewer/GstDebugViewer/__init__.py:
 	* debug-viewer/data/about-dialog.ui:
-	* debug-viewer/data/gst-debug-viewer.glade:
 	* debug-viewer/data/main-window.ui:
 	* debug-viewer/data/progress-dialog.ui:
 	* debug-viewer/setup.py:
@@ -6144,9 +6114,7 @@
 2007-11-20 15:25:32 +0200  René Stadler <mail@renestadler.de>
 
 	* debug-viewer/gst-debug-viewer:
-	* debug-viewer/gst-debug-viewer.desktop:
 	* debug-viewer/gst-debug-viewer.desktop.in:
-	* debug-viewer/gst-debug-viewer.py:
 	* debug-viewer/setup.cfg:
 	* debug-viewer/setup.py:
 	  Copy over distutils setup from gst-inspector
@@ -6226,7 +6194,6 @@
 
 2007-11-17 10:06:09 +0200  René Stadler <mail@renestadler.de>
 
-	* debug-viewer/GstDebugViewer/Plugins/LineFrequency.py:
 	* debug-viewer/GstDebugViewer/Plugins/Timeline.py:
 	* debug-viewer/data/gst-debug-viewer.ui:
 	  Rename line frequency plugin/widget to timeline
@@ -6454,9 +6421,7 @@
 2014-09-06 11:38:38 +0200  Thibault Saunier <tsaunier@gnome.org>
 
 	* validate/tools/launcher/apps/Makefile.am:
-	* validate/tools/launcher/apps/ges-launch.py:
 	* validate/tools/launcher/apps/geslaunch.py:
-	* validate/tools/launcher/apps/gst-validate.py:
 	* validate/tools/launcher/apps/gstvalidate.py:
 	  validate: launcher: Cleanup and rename apps to avoid '-' in their name
 
@@ -7156,7 +7121,6 @@
 	* validate/tools/launcher/apps/Makefile.am:
 	* validate/tools/launcher/apps/gst-validate.py:
 	* validate/tools/launcher/apps/validate/validate_testsuite.py:
-	* validate/tools/launcher/apps/validate_default_testsuite.py:
 	  validate:launcher Add video mixing tests
 	  + Move default_testsuite.py to validate_testsuite.py as we are now
 	  exposing tests that are not enabled by default
@@ -7376,8 +7340,6 @@
 	* validate/gst/preload/Makefile.am:
 	* validate/gst/preload/gst-validate-monitor-preload.c:
 	* validate/gst/validate/Makefile.am:
-	* validate/gst/validate/gst-validate-default-overrides.c:
-	* validate/gst/validate/gst-validate-monitor-preload.c:
 	  validate: Move overrides and preload libraries to dedicated folders
 	  This way it is cleaner and it is simpler to handle the various compilation dependencies.
 
@@ -8703,10 +8665,7 @@
 
 	* validate/configure.ac:
 	* validate/tools/Makefile.am:
-	* validate/tools/apps/ges-projects-tests.py:
-	* validate/tools/apps/gst-validate.py:
 	* validate/tools/gst-validate-launcher.in:
-	* validate/tools/gst-validate-launcher.py:
 	* validate/tools/launcher/__init__.py:
 	* validate/tools/launcher/apps/ges-launch.py:
 	* validate/tools/launcher/apps/gst-validate.py:
@@ -8714,10 +8673,6 @@
 	* validate/tools/launcher/loggable.py:
 	* validate/tools/launcher/reporters.py:
 	* validate/tools/launcher/utils.py:
-	* validate/tools/loggable.py:
-	* validate/tools/reporters.py:
-	* validate/tools/testdefinitions.py:
-	* validate/tools/utils.py:
 	  validate:tools: Rename files around and integrate into autotools
 	  File distribution used to be messy, clean it all up. Also make sure the
 	  launcher is integrated into the autotools.
@@ -10090,14 +10045,12 @@
 
 	* .gitmodules:
 	* common:
-	* validate/.gitmodules:
 	* validate/autogen.sh:
 	* validate/common:
 	  Adapt submodule usage for gst-devtools
 
 2013-09-02 15:42:40 +0200  Edward Hervey <edward@collabora.com>
 
-	* validate/gst/validate/.gitignore:
 	* validate/tools/.gitignore:
 	  tools: Update .gitignore for tools move
 
@@ -10195,7 +10148,6 @@
 
 	* validate/README:
 	* validate/data/Makefile.am:
-	* validate/docs/qa-design.txt:
 	* validate/docs/qa-usage.txt:
 	* validate/docs/validate-design.txt:
 	* validate/docs/validate-usage.txt:
@@ -10378,9 +10330,6 @@
 	* validate/autogen.sh:
 	* validate/configure.ac:
 	* validate/gst/validate/Makefile.am:
-	* validate/gst/validate/gst-validate-media-check.c:
-	* validate/gst/validate/gst-validate-transcoding.c:
-	* validate/gst/validate/gst-validate.c:
 	* validate/tools/Makefile.am:
 	* validate/tools/gst-validate-media-check.c:
 	* validate/tools/gst-validate-transcoding.c:
@@ -10573,7 +10522,6 @@
 
 	* validate/data/Makefile.am:
 	* validate/data/simple_seeks.scenario:
-	* validate/data/simple_seeks.xml:
 	* validate/gst/validate/gst-validate-scenario.c:
 	  scenario: Rename scenario xml files extension to .scenario
 
@@ -10692,7 +10640,6 @@
 2013-08-20 11:43:06 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
 
 	* validate/gst/validate/Makefile.am:
-	* validate/gst/validate/gst-validate-file-check.c:
 	* validate/gst/validate/gst-validate-media-check.c:
 	  rename: gst-validate-file-check -> gst-validate-media-check
 	  It not only validates files, takes any URI
@@ -10716,7 +10663,6 @@
 
 	* validate/gst/validate/Makefile.am:
 	* validate/gst/validate/gst-validate-file-check.c:
-	* validate/gst/validate/gst-validate-file-checker.c:
 	* validate/gst/validate/gst-validate-file-checker.h:
 	* validate/gst/validate/gst-validate-media-info.c:
 	* validate/gst/validate/gst-validate-media-info.h:
@@ -10867,37 +10813,20 @@
 	* validate/gst/Makefile.am:
 	* validate/gst/qa/.gitignore:
 	* validate/gst/qa/Makefile.am:
-	* validate/gst/qa/gettext.h:
-	* validate/gst/qa/gst-qa-bin-monitor.c:
 	* validate/gst/qa/gst-qa-bin-monitor.h:
-	* validate/gst/qa/gst-qa-default-overrides.c:
 	* validate/gst/qa/gst-qa-element-monitor.c:
 	* validate/gst/qa/gst-qa-element-monitor.h:
-	* validate/gst/qa/gst-qa-file-check.c:
-	* validate/gst/qa/gst-qa-file-checker.c:
 	* validate/gst/qa/gst-qa-file-checker.h:
-	* validate/gst/qa/gst-qa-i18n-lib.h:
-	* validate/gst/qa/gst-qa-monitor-factory.c:
-	* validate/gst/qa/gst-qa-monitor-factory.h:
-	* validate/gst/qa/gst-qa-monitor-preload.c:
 	* validate/gst/qa/gst-qa-monitor.c:
 	* validate/gst/qa/gst-qa-monitor.h:
 	* validate/gst/qa/gst-qa-override-registry.c:
-	* validate/gst/qa/gst-qa-override-registry.h:
-	* validate/gst/qa/gst-qa-override.c:
 	* validate/gst/qa/gst-qa-override.h:
-	* validate/gst/qa/gst-qa-pad-monitor.c:
-	* validate/gst/qa/gst-qa-pad-monitor.h:
 	* validate/gst/qa/gst-qa-report.c:
 	* validate/gst/qa/gst-qa-report.h:
 	* validate/gst/qa/gst-qa-reporter.c:
 	* validate/gst/qa/gst-qa-reporter.h:
-	* validate/gst/qa/gst-qa-runner.c:
 	* validate/gst/qa/gst-qa-runner.h:
-	* validate/gst/qa/gst-qa-scenario.c:
 	* validate/gst/qa/gst-qa-scenario.h:
-	* validate/gst/qa/gst-qa-transcoding.c:
-	* validate/gst/qa/gst-qa.c:
 	* validate/gst/qa/qa.h:
 	* validate/gst/validate/.gitignore:
 	* validate/gst/validate/Makefile.am:
@@ -12023,12 +11952,9 @@
 	* validate/gst/qa/gst-qa-monitor-factory.h:
 	* validate/gst/qa/gst-qa-pad-monitor.c:
 	* validate/gst/qa/gst-qa-pad-monitor.h:
-	* validate/gst/qa/gst-qa-pad-wrapper.c:
 	* validate/gst/qa/gst-qa-pad-wrapper.h:
 	* validate/gst/qa/gst-qa-runner.c:
 	* validate/gst/qa/gst-qa-runner.h:
-	* validate/gst/qa/gst-qa-wrapper-factory.c:
-	* validate/gst/qa/gst-qa-wrapper-factory.h:
 	  qa: renaming Wrapper -> Monitor
 
 2013-07-09 16:52:02 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
