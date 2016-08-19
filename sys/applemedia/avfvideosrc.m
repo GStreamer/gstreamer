@@ -138,6 +138,7 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
 - (GstVideoFormat)getGstVideoFormat:(NSNumber *)pixel_format;
 #if !HAVE_IOS
 - (CGDirectDisplayID)getDisplayIdFromDeviceIndex;
+- (float)getScaleFactorFromDeviceIndex;
 #endif
 - (GstCaps *)getDeviceCaps;
 - (BOOL)setDeviceCaps:(GstVideoInfo *)info;
@@ -416,6 +417,20 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   displayId = [description objectForKey:@"NSScreenNumber"];
   return [displayId unsignedIntegerValue];
 }
+
+- (float)getScaleFactorFromDeviceIndex
+{
+  NSArray *screens = [NSScreen screens];
+
+  if (deviceIndex == DEFAULT_DEVICE_INDEX)
+    return [[NSScreen mainScreen] backingScaleFactor];
+  if (deviceIndex >= [screens count]) {
+    GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+                        ("Invalid screen capture device index"), (NULL));
+    return 1.0;
+  }
+  return [[screens objectAtIndex:deviceIndex] backingScaleFactor];
+}
 #endif
 
 - (GstCaps *)getDeviceCaps
@@ -648,12 +663,13 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   if (captureScreen) {
 #if !HAVE_IOS
     CGRect rect = CGDisplayBounds ([self getDisplayIdFromDeviceIndex]);
+    float scale = [self getScaleFactorFromDeviceIndex];
     for (NSNumber *pixel_format in pixel_formats) {
       GstVideoFormat gst_format = [self getGstVideoFormat:pixel_format];
       if (gst_format != GST_VIDEO_FORMAT_UNKNOWN)
         gst_caps_append (result, gst_caps_new_simple ("video/x-raw",
-            "width", G_TYPE_INT, (int)rect.size.width,
-            "height", G_TYPE_INT, (int)rect.size.height,
+            "width", G_TYPE_INT, (int)(rect.size.width * scale),
+            "height", G_TYPE_INT, (int)(rect.size.height * scale),
             "format", G_TYPE_STRING, gst_video_format_to_string (gst_format),
             NULL));
     }
