@@ -1,9 +1,31 @@
+2016-08-19 12:50:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-video-source.c:
+	  Revert "video-source: Expose deinterlace-[fields, mode, tff] child properties"
+	  This reverts commit 816da56b93d5eba8394f22e58252dcc0c59f9003.
+
+2016-08-19 12:50:44 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-container.c:
+	  Revert "container: Handle setting children properties that need prefixing"
+	  This reverts commit cea51f1e5ae475fce220ff91dae078a32810a48f.
+
+2016-08-19 12:50:42 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-xml-formatter.c:
+	  Revert "formatter: Prefix all children properties in the XML formatter"
+	  This reverts commit e3f2499ce735f25d0b25e182fd4774c7c22f485c.
+
 === release 1.8.3 ===
 
-2016-08-19  Sebastian Dröge <slomo@coaxion.net>
+2016-08-19 12:49:16 +0300  Sebastian Dröge <sebastian@centricular.com>
 
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
 	* configure.ac:
-	  releasing 1.8.3
+	* gst-editing-services.doap:
+	  Release 1.8.3
 
 2016-05-06 15:44:28 -0300  Thibault Saunier <tsaunier@gnome.org>
 
