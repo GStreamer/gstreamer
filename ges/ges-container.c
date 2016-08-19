@@ -213,16 +213,14 @@ _ges_container_add_child_properties (GESContainer * container,
 
   for (i = 0; i < n_props; i++) {
     GObject *prop_child;
-    gchar *prop_name = g_strdup_printf ("%s::%s",
-        g_type_name (child_props[i]->owner_type),
-        child_props[i]->name);
 
-    if (ges_timeline_element_lookup_child (child, prop_name, &prop_child, NULL)) {
+    if (ges_timeline_element_lookup_child (child, child_props[i]->name,
+            &prop_child, NULL)) {
       ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT (container),
           child_props[i], prop_child);
 
     }
-    g_free (prop_name);
+
     g_param_spec_unref (child_props[i]);
   }
 
@@ -241,17 +239,14 @@ _ges_container_remove_child_properties (GESContainer * container,
 
   for (i = 0; i < n_props; i++) {
     GObject *prop_child;
-    gchar *prop_name = g_strdup_printf ("%s::%s",
-        g_type_name (child_props[i]->owner_type),
-        child_props[i]->name);
 
-    if (ges_timeline_element_lookup_child (child, prop_name, &prop_child, NULL)) {
+    if (ges_timeline_element_lookup_child (child, child_props[i]->name,
+            &prop_child, NULL)) {
       ges_timeline_element_remove_child_property (GES_TIMELINE_ELEMENT
           (container), child_props[i]);
 
     }
 
-    g_free (prop_name);
     g_param_spec_unref (child_props[i]);
   }
 
@@ -278,14 +273,12 @@ _lookup_child (GESTimelineElement * self, const gchar * prop_name,
 {
   GList *tmp;
 
-  /* FIXME Implement a synthax to precisely get properties by path */
-  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next)
+    _ges_container_add_child_properties (GES_CONTAINER (self), tmp->data);
 
-    if (ges_timeline_element_lookup_child (tmp->data, prop_name, child, pspec))
-      return TRUE;
-  }
-
-  return FALSE;
+  return
+      GES_TIMELINE_ELEMENT_CLASS (ges_container_parent_class)->lookup_child
+      (self, prop_name, child, pspec);
 }
 
 static GESTrackType
