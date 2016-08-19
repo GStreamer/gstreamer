@@ -65,7 +65,8 @@ gst_fd_mem_free (GstAllocator * allocator, GstMemory * gmem)
 
     munmap ((void *) mem->data, gmem->maxsize);
   }
-  if (mem->fd >= 0 && gmem->parent == NULL)
+  if (mem->fd >= 0 && gmem->parent == NULL
+      && !(mem->flags & GST_FD_MEMORY_FLAG_DONT_CLOSE))
     close (mem->fd);
   g_mutex_clear (&mem->lock);
   g_slice_free (GstFdMemory, mem);
@@ -245,7 +246,8 @@ gst_fd_allocator_new (void)
  * Return a %GstMemory that wraps a generic file descriptor.
  *
  * Returns: (transfer full): a GstMemory based on @allocator.
- * When the buffer will be released the allocator will close the @fd.
+ * When the buffer will be released the allocator will close the @fd unless
+ * the %GST_FD_MEMORY_FLAG_DONT_CLOSE flag is specified.
  * The memory is only mmapped on gst_buffer_mmap() request.
  *
  * Since: 1.6
