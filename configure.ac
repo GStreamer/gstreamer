@@ -310,7 +310,7 @@ AM_CONDITIONAL(HAVE_XCOMPOSITE, test "x$HAVE_XCOMPOSITE" = "xyes")
 
 dnl graphene-1.0 is optional and used in gltransformation
 HAVE_GRAPHENE=NO
-PKG_CHECK_MODULES(GRAPHENE, graphene-1.0 >= 1.0.0, HAVE_GRAPHENE=yes, HAVE_GRAPHENE=no)
+PKG_CHECK_MODULES(GRAPHENE, graphene-1.0 >= 1.4.0, HAVE_GRAPHENE=yes, HAVE_GRAPHENE=no)
 if test "x$HAVE_GRAPHENE" = "xyes"; then
   AC_DEFINE(HAVE_GRAPHENE, [1] , [Use graphene])
 fi
