@@ -1,9 +1,77 @@
-=== release 1.8.2 ===
+=== release 1.8.3 ===
 
-2016-06-09  Sebastian Dröge <slomo@coaxion.net>
+2016-08-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.2
+	  releasing 1.8.3
+
+2016-08-16 21:11:35 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Explicitly disable CrystalHD decoder
+	  Otherwise it will pick it up when the system has the relevant headers,
+	  and then linking produces an unusable plugin later as we don't ensure
+	  that the plugin also links against the crystalhd library.
+	  Also backport a few other similar cases from master at the same time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769809
+
+2016-08-04 10:45:14 +0200  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avvidec: Ensure skipping strategy gets properly reset
+	  When switching playback modes, like from TRICKMODE or TRICKMODE_KEY_UNITS
+	  back to regular playback, we need to make sure we set the skip mode
+	  back to the default setting.
+	  While this field would be properly reset when we *have* feedback from
+	  downstream (i.e. diff != G_MAXINT64), it would not be reset during
+	  the initial phase (i.e. when the decoder hasn't pushed a buffer yet,
+	  and therefore the sink hasn't sent back QoS information).
+	  This avoids dropping plenty of frames when going back to regular playback
+
+2016-07-22 14:54:21 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  libav: Ignore more quasi-codecs
+
+2016-07-22 14:42:59 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  libav: Ignore VAAPI decoders and VAAPI/nvenc encoders
+	  These can show up when having a build against a system version of ffmpeg.
+
+2016-07-05 20:15:28 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Create caps from the codec context after it is opened
+	  We won't get codec_data and various other information otherwise.
+
+2016-07-05 20:16:09 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Create caps from the codec context after it is opened
+	  We won't get codec_data and various other information otherwise.
+
+2016-07-05 20:16:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Use gst_caps_fixate() instead of gst_caps_truncate()
+	  Just truncating might not be enough.
+
+=== release 1.8.2 ===
+
+2016-06-09 11:52:04 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.8.2
 
 2016-05-14 12:09:06 +0200  Edward Hervey <bilboed@bilboed.com>
 
@@ -2804,7 +2872,6 @@
 	* ext/libav/gstav.h:
 	* ext/libav/gstavdemux.c:
 	* ext/libav/gstavmux.c:
-	* ext/libav/gstavpipe.h:
 	* ext/libav/gstavprotocol.c:
 	* ext/libav/gstavprotocol.h:
 	  av: Move gst_ffmpegdata functions to gstavprotocol.h too
@@ -3212,9 +3279,6 @@
 	* ext/libav/gstavauddec.h:
 	* ext/libav/gstavaudenc.c:
 	* ext/libav/gstavaudenc.h:
-	* ext/libav/gstavdec.c:
-	* ext/libav/gstavenc.c:
-	* ext/libav/gstavenc.h:
 	* ext/libav/gstavviddec.c:
 	* ext/libav/gstavviddec.h:
 	* ext/libav/gstavvidenc.h:
@@ -3493,28 +3557,6 @@
 
 	* configure.ac:
 	* ext/Makefile.am:
-	* ext/ffmpeg/Makefile.am:
-	* ext/ffmpeg/gstffmpeg.c:
-	* ext/ffmpeg/gstffmpeg.h:
-	* ext/ffmpeg/gstffmpegaudioresample.c:
-	* ext/ffmpeg/gstffmpegcfg.c:
-	* ext/ffmpeg/gstffmpegcfg.h:
-	* ext/ffmpeg/gstffmpegcodecmap.c:
-	* ext/ffmpeg/gstffmpegcodecmap.h:
-	* ext/ffmpeg/gstffmpegdec.c:
-	* ext/ffmpeg/gstffmpegdeinterlace.c:
-	* ext/ffmpeg/gstffmpegdemux.c:
-	* ext/ffmpeg/gstffmpegenc.c:
-	* ext/ffmpeg/gstffmpegenc.h:
-	* ext/ffmpeg/gstffmpegmux.c:
-	* ext/ffmpeg/gstffmpegpipe.h:
-	* ext/ffmpeg/gstffmpegprotocol.c:
-	* ext/ffmpeg/gstffmpegscale.c:
-	* ext/ffmpeg/gstffmpegutils.c:
-	* ext/ffmpeg/gstffmpegutils.h:
-	* ext/ffmpeg/gstffmpegviddec.c:
-	* ext/ffmpeg/gstffmpegvidenc.c:
-	* ext/ffmpeg/gstffmpegvidenc.h:
 	* ext/libav/Makefile.am:
 	* ext/libav/gstav.c:
 	* ext/libav/gstav.h:
@@ -4325,14 +4367,6 @@
 
 	* configure.ac:
 	* docs/plugins/Makefile.am:
-	* docs/plugins/gst-ffmpeg-plugins-docs.sgml:
-	* docs/plugins/gst-ffmpeg-plugins-sections.txt:
-	* docs/plugins/gst-ffmpeg-plugins.args:
-	* docs/plugins/gst-ffmpeg-plugins.hierarchy:
-	* docs/plugins/gst-ffmpeg-plugins.interfaces:
-	* docs/plugins/gst-ffmpeg-plugins.prerequisites:
-	* docs/plugins/gst-ffmpeg-plugins.signals:
-	* docs/plugins/gst-ffmpeg-plugins.types:
 	* docs/plugins/gst-libav-plugins-docs.sgml:
 	* docs/plugins/gst-libav-plugins-sections.txt:
 	* docs/plugins/gst-libav-plugins.args:
@@ -4361,18 +4395,13 @@
 	* ext/libpostproc/gstpostproc.c:
 	* ext/libswscale/Makefile.am:
 	* ext/libswscale/gstffmpegscale.c:
-	* gst-ffmpeg.doap:
-	* gst-ffmpeg.spec.in:
 	* gst-libav.doap:
 	* gst-libav.spec.in:
 	* tests/check/Makefile.am:
 	* tests/check/elements/avdec_adpcm.c:
 	* tests/check/elements/avdemux_ape.c:
-	* tests/check/elements/ffdec_adpcm.c:
-	* tests/check/elements/ffdemux_ape.c:
 	* tests/check/generic/libavcodec-locking.c:
 	* tests/check/generic/plugin-test.c:
-	* tests/check/gst-ffmpeg.supp:
 	* tests/check/gst-libav.supp:
 	  Rename everything from gst-ffmpeg to gst-libav
 	  Also change elements factory names to avenc_*, avdec_*,
