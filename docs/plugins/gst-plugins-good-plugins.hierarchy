@@ -320,6 +320,9 @@ GObject
       GstTask
       GstTaskPool
   GSocket
+  GSocketControlMessage
+    GstIPPktinfoMessage
+    GstIPV6PktinfoMessage
   GTlsDatabase
   GTlsInteraction
   GdkPixbuf

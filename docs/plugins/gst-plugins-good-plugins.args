@@ -1005,7 +1005,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.8.2"</DEFAULT>
+<DEFAULT>"GStreamer/1.8.3"</DEFAULT>
 </ARG>
 
 <ARG>
