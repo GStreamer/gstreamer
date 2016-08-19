@@ -1176,10 +1176,10 @@ gst_raw_video_parse_update_info (GstRawVideoParseConfig * config)
   for (i = 0; i < n_planes; ++i) {
     gsize plane_offset = GST_VIDEO_INFO_PLANE_OFFSET (info, i);
     if (plane_offset >= last_plane_offset) {
+      last_plane = i;
       last_plane_offset = plane_offset;
     }
   }
-  last_plane = n_planes - 1;
 
   last_plane_size =
       GST_VIDEO_INFO_PLANE_STRIDE (info,
