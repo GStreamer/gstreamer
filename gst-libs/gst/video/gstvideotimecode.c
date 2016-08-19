@@ -293,10 +293,17 @@ gst_video_time_code_add_frames (GstVideoTimeCode * tc, gint64 frames)
   guint64 h_new, min_new, sec_new, frames_new;
   gdouble ff;
   guint ff_nom;
+  /* This allows for better readability than putting G_GUINT64_CONSTANT(60)
+   * into a long calculation line */
+  const guint64 sixty = 60;
   /* formulas found in SMPTE ST 2059-1:2015 section 9.4.3
    * and adapted for 60/1.001 as well as 30/1.001 */
 
   g_return_if_fail (gst_video_time_code_is_valid (tc));
+  g_assert (tc->hours <= 24);
+  g_assert (tc->minutes < 60);
+  g_assert (tc->seconds < 60);
+  g_assert (tc->frames <= tc->config.fps_n / tc->config.fps_d);
 
   gst_util_fraction_to_double (tc->config.fps_n, tc->config.fps_d, &ff);
   if (tc->config.fps_d == 1001) {
@@ -336,10 +343,11 @@ gst_video_time_code_add_frames (GstVideoTimeCode * tc, gint64 frames)
         (ff_hours * tc->hours);
     h_notmod24 = gst_util_uint64_scale_int (framecount, 1, ff_hours);
 
-    min_new_denom = 60 * ff_nom;
+    min_new_denom = sixty * ff_nom;
     min_new_tmp1 = (framecount - (h_notmod24 * ff_hours)) / min_new_denom;
     min_new_tmp2 = framecount + dropframe_multiplier * min_new_tmp1;
-    min_new_tmp1 = (framecount - (h_notmod24 * ff_hours)) / (60 * 10 * ff_nom);
+    min_new_tmp1 =
+        (framecount - (h_notmod24 * ff_hours)) / (sixty * 10 * ff_nom);
     min_new_tmp3 =
         dropframe_multiplier * min_new_tmp1 + (h_notmod24 * ff_hours);
     min_new =
@@ -357,17 +365,19 @@ gst_video_time_code_add_frames (GstVideoTimeCode * tc, gint64 frames)
         (ff_hours * h_notmod24);
   } else {
     framecount =
-        frames + tc->frames + (ff_nom * (tc->seconds + (60 * (tc->minutes +
-                    (60 * tc->hours)))));
-    h_notmod24 = gst_util_uint64_scale_int (framecount, 1, ff_nom * 3600);
+        frames + tc->frames + (ff_nom * (tc->seconds + (sixty * (tc->minutes +
+                    (sixty * tc->hours)))));
+    h_notmod24 =
+        gst_util_uint64_scale_int (framecount, 1, ff_nom * sixty * sixty);
     min_new =
-        gst_util_uint64_scale_int ((framecount - (ff_nom * 3600 * h_notmod24)),
-        1, (ff_nom * 60));
+        gst_util_uint64_scale_int ((framecount -
+            (ff_nom * sixty * sixty * h_notmod24)), 1, (ff_nom * sixty));
     sec_new =
-        gst_util_uint64_scale_int ((framecount - (ff_nom * 60 * (min_new +
-                    (60 * h_notmod24)))), 1, ff_nom);
+        gst_util_uint64_scale_int ((framecount - (ff_nom * sixty * (min_new +
+                    (sixty * h_notmod24)))), 1, ff_nom);
     frames_new =
-        framecount - (ff_nom * (sec_new + 60 * (min_new + (60 * h_notmod24))));
+        framecount - (ff_nom * (sec_new + sixty * (min_new +
+                (sixty * h_notmod24))));
     if (frames_new > ff_nom)
       frames_new = 0;
   }
