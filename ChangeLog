@@ -1,9 +1,147 @@
-=== release 1.8.2 ===
+=== release 1.8.3 ===
 
-2016-06-09  Sebastian Dröge <slomo@coaxion.net>
+2016-08-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.2
+	  releasing 1.8.3
+
+2016-08-16 11:58:38 +0300  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_vc1.c:
+	  decoder: vc1: Print error on interlaced content
+	  Interlaced video is as yet unsupported in the vc1 element. Print
+	  an error to make that more obvious.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769250
+
+2016-08-10 13:29:45 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  encoder: h264: fix C90 mixed declarations and code
+	  Commit 4259d1a introduced this compilation error. This patch fixes it.
+
+2016-07-21 17:38:40 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	  encoder: h264,h265,mpeg2,vp8: use gst_util_uint64_scale() for bitrate
+	  Use gst_util_uint64_scale() to calculate bitrate instead of normal arithmetic
+	  to avoid overflows, underflows and loss of precision.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768458
+
+2016-07-27 10:09:38 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* configure.ac:
+	  configure: Fix non-fatal PKG_CHECK_MODULES invocations
+	  Some invocations of PKG_CHECK_MODULES were intended to be non-fatal if
+	  the package is missing, but action-if-not-found was given as an empty
+	  string which still causes the default action to run, which halts
+	  execution.
+	  Signed-off-by: Scott D Phillips <scott.d.phillips@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769237
+
+2016-07-05 20:07:15 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  vaapiencode: h264,h265: validate fps numerator
+	  Validate that fps numerator is non-zero so it can be used to calculate
+	  the duration of the B frame.
+	  Also it gst_util_uint64_scale() is used instead of normal arithmetic in
+	  order to aviod overflows, underflows and loss of precision.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768458
+
+2016-07-21 11:24:31 +0300  Allen Zhang <Zhang, Zhangfei>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  decoder: h265: handle the SEI NAL units included in codec_data
+	  The prefix/suffix SEI nal units can appear in codec_data too
+	  which weren't handled before. Parse these SEI headers to
+	  fix the segfault.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768544
+
+2016-06-24 12:05:24 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideocontext.c:
+	  vaapivideocontext: check if query context is NULL
+	  Under certain conditions the element might receive a positive context query
+	  but without a context instance. This situation will lead to a segmentation
+	  fault when traversing the context list in the pipeline.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767946
+
+2016-06-22 15:11:56 +0300  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  decoder: h265: fix to release all dpb pictures
+	  Without this, all dpb pictures are not released during flush,
+	  because we used the global dpb_count variable for checking the
+	  dpb fullness which get decremented in dpb_remove_index()
+	  routine during each loop iteration.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767934
+
+2016-06-17 16:53:26 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	  vaapidecodebin: add vp9 in sink pad template
+
+2016-06-15 20:19:27 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: return caps template if no display
+	  If vaapisink received a caps query before getting a VA display, it returned
+	  only the surfaces related caps. This behavior broke the autovideosink
+	  negotiation.
+	  This patch returns the pad's template caps if no VA display, otherwise the
+	  caps are crafted as before.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767699
+
+2016-06-14 09:45:22 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: add video meta to config when needed
+	  In cases where we know the video meta must be present, add it to
+	  the pool configuration.
+	  Signed-off-by: Scott D Phillips <scott.d.phillips@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766184
+
+2016-06-13 10:48:41 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: retry pool config
+	  if gst_buffer_pool_set_config returns FALSE, check the modified
+	  config and retry set_config if the config is still acceptable.
+	  Signed-off-by: Scott D Phillips <scott.d.phillips@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766184
+
+2016-04-21 12:57:30 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapiencode.c:
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapipluginbase.h:
+	* gst/vaapi/gstvaapipostproc.c:
+	* gst/vaapi/gstvaapisink.c:
+	  plugins: rework set_context() vmethod definition
+	  In bug 757598 was added the set_context() vmethod chain up in
+	  GstVaapiPluginBase. But it is buggy, since the parent_class address is
+	  assigned to the last element which called gst_vaapi_plugin_base_class_init().
+	  No error has shown up since none of the element's base classes redefined
+	  set_context() vmethod from GstElement, so always the correct function was
+	  called. Still this code is wrong and this patch make it right.
+	  Since set_context() is the same code, a macro is used to implement that code
+	  in all the gst-vaapi elements.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765368
+
+=== release 1.8.2 ===
+
+2016-06-09 11:53:29 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	  Release 1.8.2
 
 2016-04-29 13:11:48 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
 
@@ -492,8 +630,6 @@
 	* docs/plugins/gstreamer-vaapi-plugins.types:
 	* docs/reference/Makefile.am:
 	* docs/reference/plugins/Makefile.am:
-	* docs/reference/plugins/plugins-docs.xml.in:
-	* docs/reference/plugins/plugins-overrides.txt:
 	* docs/reference/plugins/plugins-sections.txt:
 	* docs/reference/plugins/plugins.types:
 	* docs/version.entities.in:
@@ -1165,9 +1301,7 @@
 
 2015-11-27 14:24:55 +0200  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
 
-	* patches/videoparsers/0005-h265parse-include-gstvaapiparse.h.patch:
 	* patches/videoparsers/0005-videoparsers-h264-Disable-passthorugh-mode-enabling.patch:
-	* patches/videoparsers/0006-h265parse-fix-build-with-GStreamer-1.5.patch:
 	* patches/videoparsers/0006-h265parse-include-gstvaapiparse.h.patch:
 	* patches/videoparsers/0007-h265parse-fix-build-with-GStreamer-1.5.patch:
 	* patches/videoparsers/series.frag:
@@ -1821,7 +1955,6 @@
 
 2015-09-14 19:19:56 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
 
-	* patches/videoparsers/0001-h265parse-include-gstvaapiparse.h.patch:
 	* patches/videoparsers/0005-h265parse-include-gstvaapiparse.h.patch:
 	* patches/videoparsers/series.frag:
 	  patches/videoparsers: h265parser: rename patch keeping number
@@ -1840,7 +1973,6 @@
 2015-09-14 19:16:51 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
 
 	* patches/videoparsers/0004-h264parse-Disable-3D-video-support-for-GStreamer-1.5.patch:
-	* patches/videoparsers/0004-h264parse-Disable-3D-video-support-for-GStremaer-1.5.patch:
 	* patches/videoparsers/series.frag:
 	  patches/videoparsers: h264parser: fix description and refresh
 	  Fix a typo in the patch description and refresh it in order to avoid the
@@ -3051,7 +3183,6 @@
 2015-05-26 10:21:59 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
 
 	* patches/videoparsers/0003-h264parse-default-to-byte-stream-nalu-format-Annex-B.patch:
-	* patches/videoparsers/0004-h264parse-default-to-byte-stream-nalu-format-Annex-B.patch:
 	* patches/videoparsers/series.frag:
 	  patches/videoparsers: Rebase the patch on top of gst-vaapi-branch commit 20ee952
 	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
@@ -12384,8 +12515,6 @@
 
 	* gst-libs/gst/vaapi/Makefile.am:
 	* gst-libs/gst/vaapi/gstvaapidecoder.c:
-	* gst-libs/gst/vaapi/gstvaapidecoder_frame.c:
-	* gst-libs/gst/vaapi/gstvaapidecoder_frame.h:
 	* gst-libs/gst/vaapi/gstvaapidecoder_priv.h:
 	* gst-libs/gst/vaapi/gstvaapiparser_frame.c:
 	* gst-libs/gst/vaapi/gstvaapiparser_frame.h:
@@ -12818,8 +12947,6 @@
 
 	* docs/reference/libs/libs-sections.txt:
 	* gst-libs/gst/vaapi/Makefile.am:
-	* gst-libs/gst/vaapi/gstvaapivideometa.c:
-	* gst-libs/gst/vaapi/gstvaapivideometa.h:
 	* gst/vaapi/Makefile.am:
 	* gst/vaapi/gstvaapidecode.c:
 	* gst/vaapi/gstvaapidownload.c:
@@ -12857,7 +12984,6 @@
 	* docs/reference/libs/libs-sections.txt:
 	* docs/reference/libs/libs.core.types:
 	* gst-libs/gst/vaapi/Makefile.am:
-	* gst-libs/gst/vaapi/gstvaapivideobuffer.c:
 	* gst-libs/gst/vaapi/gstvaapivideobuffer.h:
 	* gst/vaapi/Makefile.am:
 	* gst/vaapi/gstvaapidownload.h:
@@ -18085,8 +18211,6 @@
 	* docs/reference/plugins/plugins.types:
 	* gst/vaapi/Makefile.am:
 	* gst/vaapi/gstvaapi.c:
-	* gst/vaapi/gstvaapiconvert.c:
-	* gst/vaapi/gstvaapiconvert.h:
 	* gst/vaapi/gstvaapiupload.c:
 	* gst/vaapi/gstvaapiupload.h:
 	  Rename vaapiconvert element to vaapiupload.
@@ -18388,7 +18512,6 @@
 	* configure.ac:
 	* gst-libs/gst/vaapi/Makefile.am:
 	* gst-libs/gst/vaapi/gstvaapiutils_gst.c:
-	* gst-libs/gst/vaapi/gstvaapiutils_gst.h:
 	* gst/vaapi/Makefile.am:
 	* gst/vaapi/gstvaapiconvert.c:
 	* gst/vaapi/gstvaapidecode.c:
@@ -18480,14 +18603,7 @@
 	* gst/vaapi/gstvaapisink.c:
 	* gst/vaapi/gstvaapisink.h:
 	* gst/vaapiconvert/Makefile.am:
-	* gst/vaapiconvert/gstvaapiconvert.c:
-	* gst/vaapiconvert/gstvaapiconvert.h:
 	* gst/vaapidecode/Makefile.am:
-	* gst/vaapidecode/gstvaapidecode.c:
-	* gst/vaapidecode/gstvaapidecode.h:
-	* gst/vaapisink/Makefile.am:
-	* gst/vaapisink/gstvaapisink.c:
-	* gst/vaapisink/gstvaapisink.h:
 	  Group all plugins into the same bundle
 	  Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -20041,13 +20157,6 @@
 	* gst/vaapisink/Makefile.am:
 	* gst/vaapisink/gstvaapisink.c:
 	* gst/vaapisink/gstvaapisink.h:
-	* sys/Makefile.am:
-	* sys/vaapiconvert/Makefile.am:
-	* sys/vaapiconvert/gstvaapiconvert.c:
-	* sys/vaapiconvert/gstvaapiconvert.h:
-	* sys/vaapisink/Makefile.am:
-	* sys/vaapisink/gstvaapisink.c:
-	* sys/vaapisink/gstvaapisink.h:
 	  Rename to gst/ as sys/ was too vague.
 
 2010-03-30 07:39:16 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
@@ -20124,7 +20233,6 @@
 	* docs/reference/libs/Makefile.am:
 	* docs/reference/libs/libs.core.types:
 	* docs/reference/libs/libs.glx.types:
-	* docs/reference/libs/libs.types:
 	* docs/reference/libs/libs.x11.types:
 	  Fix doc build.
 
@@ -20507,7 +20615,6 @@
 	* gst-libs/gst/vaapi/Makefile.am:
 	* gst-libs/gst/vaapi/gstvaapiobject.c:
 	* gst-libs/gst/vaapi/gstvaapiparamspecs.c:
-	* gst-libs/gst/vaapi/gstvaapitypes.c:
 	* gst-libs/gst/vaapi/gstvaapitypes.h:
 	* gst-libs/gst/vaapi/gstvaapivalue.c:
 	  Move GValue specific stuff to a dedicated file.
@@ -20638,17 +20745,6 @@
 	* debian.upstream/libgstvaapi-x11.install.in:
 	* debian.upstream/libgstvaapi.install.in:
 	* debian.upstream/rules:
-	* debian/Makefile.am:
-	* debian/changelog.in:
-	* debian/compat:
-	* debian/control.in:
-	* debian/copyright:
-	* debian/gstreamer-vaapi-doc.install.in:
-	* debian/gstreamer-vaapi.install.in:
-	* debian/libgstvaapi-dev.install.in:
-	* debian/libgstvaapi-x11.install.in:
-	* debian/libgstvaapi.install.in:
-	* debian/rules:
 	  Generate upstream packages through make deb.upstream.
 
 2010-03-23 17:40:03 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
@@ -21270,7 +21366,6 @@
 	* gst-libs/gst/vaapi/gstvaapivideopool.c:
 	* gst-libs/gst/vaapi/gstvaapiwindow.c:
 	* gst-libs/gst/vaapi/gstvaapiwindow_x11.c:
-	* gst-libs/gst/vaapi/vaapi_debug.h:
 	  Rename vaapi_debug.h to gstvaapidebug.h.
 
 2010-03-16 09:15:48 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
@@ -21284,8 +21379,6 @@
 	* gst-libs/gst/vaapi/gstvaapiutils.c:
 	* gst-libs/gst/vaapi/gstvaapiutils.h:
 	* gst-libs/gst/vaapi/vaapi_debug.h:
-	* gst-libs/gst/vaapi/vaapi_utils.c:
-	* gst-libs/gst/vaapi/vaapi_utils.h:
 	  Move vaapi_utils.* to gstvaapiutils.*
 
 2010-03-16 09:13:16 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
@@ -21304,8 +21397,6 @@
 2010-03-16 09:03:10 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
 	* gst-libs/gst/vaapi/Makefile.am:
-	* gst-libs/gst/vaapi/gstvaapisinkbase.c:
-	* gst-libs/gst/vaapi/gstvaapisinkbase.h:
 	* gst-libs/gst/vaapi/gstvaapivideosink.c:
 	* gst-libs/gst/vaapi/gstvaapivideosink.h:
 	* sys/vaapiconvert/gstvaapiconvert.c:
@@ -21318,9 +21409,6 @@
 	* tests/Makefile.am:
 	* tests/examples/Makefile.am:
 	* tests/examples/generic/Makefile.am:
-	* tests/examples/generic/test-display.c:
-	* tests/examples/generic/test-surfaces.c:
-	* tests/examples/generic/test-windows.c:
 	* tests/test-display.c:
 	* tests/test-surfaces.c:
 	* tests/test-windows.c:
@@ -21619,7 +21707,6 @@
 
 2010-03-05 15:26:36 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
-	* sys/vaapi/Makefile.am:
 	* sys/vaapisink/Makefile.am:
 	  Rename to vaapisink.
 
