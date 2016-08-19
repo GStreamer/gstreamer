@@ -4802,8 +4802,7 @@ seek_failed:
     if (flushing) {
       ret = GST_FLOW_FLUSHING;
     } else {
-      GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL),
-          ("failed to start demuxing ogg"));
+      GST_ELEMENT_FLOW_ERROR (ogg, ret);
       ret = GST_FLOW_ERROR;
     }
     goto pause;
@@ -4845,9 +4844,7 @@ pause:
         event = gst_event_new_eos ();
       }
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
-      GST_ELEMENT_ERROR (ogg, STREAM, FAILED,
-          (_("Internal data stream error.")),
-          ("stream stopped, reason %s", reason));
+      GST_ELEMENT_FLOW_ERROR (ogg, ret);
       event = gst_event_new_eos ();
     }
 

@@ -1520,8 +1520,7 @@ pause:
       }
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       /* for fatal errors we post an error message */
-      GST_ELEMENT_ERROR (demux, STREAM, FAILED, (NULL),
-          ("Stream stopped, reason %s", reason));
+      GST_ELEMENT_FLOW_ERROR (demux, ret);
       push_eos = TRUE;
     }
     if (push_eos) {
