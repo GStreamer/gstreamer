@@ -898,9 +898,7 @@ pause:
       event = gst_event_new_eos ();
       /* for fatal errors we post an error message, post the error
        * first so the app knows about the error first. */
-      GST_ELEMENT_ERROR (wildmidi, STREAM, FAILED,
-          ("Internal data flow error."),
-          ("streaming task paused, reason %s (%d)", reason, ret));
+      GST_ELEMENT_FLOW_ERROR (wildmidi, ret);
       gst_pad_push_event (wildmidi->srcpad, event);
     }
   }

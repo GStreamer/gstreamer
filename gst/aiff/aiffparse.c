@@ -1527,9 +1527,7 @@ pause:
     } else if (ret < GST_FLOW_EOS || ret == GST_FLOW_NOT_LINKED) {
       /* for fatal errors we post an error message, post the error
        * first so the app knows about the error first. */
-      GST_ELEMENT_ERROR (aiff, STREAM, FAILED,
-          (_("Internal data flow error.")),
-          ("streaming task paused, reason %s (%d)", reason, ret));
+      GST_ELEMENT_FLOW_ERROR (aiff, ret);
       gst_pad_push_event (aiff->srcpad, gst_event_new_eos ());
     }
     return;

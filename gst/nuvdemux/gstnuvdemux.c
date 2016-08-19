@@ -729,9 +729,7 @@ pause:
   if (res == GST_FLOW_UNEXPECTED) {
     gst_nuv_demux_send_eos (nuv);
   } else if (res == GST_FLOW_NOT_LINKED || res < GST_FLOW_UNEXPECTED) {
-    GST_ELEMENT_ERROR (nuv, STREAM, FAILED,
-        (_("Internal data stream error.")),
-        ("streaming stopped, reason %s", gst_flow_get_name (res)));
+    GST_ELEMENT_FLOW_ERROR (nuv, res);
 
     gst_nuv_demux_send_eos (nuv);
   }

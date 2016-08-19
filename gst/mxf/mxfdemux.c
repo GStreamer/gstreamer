@@ -3098,9 +3098,7 @@ pause:
     } else if (flow == GST_FLOW_NOT_LINKED || flow < GST_FLOW_EOS) {
       GstEvent *e;
 
-      GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-          ("Internal data stream error."),
-          ("stream stopped, reason %s", reason));
+      GST_ELEMENT_FLOW_ERROR (demux, flow);
       e = gst_event_new_eos ();
       gst_event_set_seqnum (e, demux->seqnum);
       gst_mxf_demux_push_src_event (demux, e);

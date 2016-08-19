@@ -743,9 +743,7 @@ error:
   {
     if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED
         && ret != GST_FLOW_FLUSHING) {
-      GST_ELEMENT_ERROR (teletext, STREAM, FAILED,
-          ("Internal data stream error."), ("stream stopped, reason %s",
-              gst_flow_get_name (ret)));
+      GST_ELEMENT_FLOW_ERROR (teletext, ret);
       return GST_FLOW_ERROR;
     }
     return ret;

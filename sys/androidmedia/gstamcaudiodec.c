@@ -670,9 +670,7 @@ flow_error:
           gst_event_new_eos ());
       gst_pad_pause_task (GST_AUDIO_DECODER_SRC_PAD (self));
     } else if (flow_ret < GST_FLOW_EOS) {
-      GST_ELEMENT_ERROR (self, STREAM, FAILED,
-          ("Internal data stream error."), ("stream stopped, reason %s",
-              gst_flow_get_name (flow_ret)));
+      GST_ELEMENT_FLOW_ERROR (self, flow_ret);
       gst_pad_push_event (GST_AUDIO_DECODER_SRC_PAD (self),
           gst_event_new_eos ());
       gst_pad_pause_task (GST_AUDIO_DECODER_SRC_PAD (self));

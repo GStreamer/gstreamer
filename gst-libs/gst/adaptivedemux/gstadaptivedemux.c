@@ -2230,8 +2230,7 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     gboolean finished = FALSE;
 
     if (ret < GST_FLOW_EOS) {
-      GST_ELEMENT_ERROR (demux, STREAM, FAILED, (NULL),
-          ("stream stopped, reason %s", gst_flow_get_name (ret)));
+      GST_ELEMENT_FLOW_ERROR (demux, ret);
 
       /* TODO push this on all pads */
       gst_pad_push_event (stream->pad, gst_event_new_eos ());
@@ -3285,13 +3284,15 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
       break;
 
     case GST_FLOW_NOT_LINKED:
+    {
+      GstFlowReturn ret;
       gst_task_stop (stream->download_task);
-      if (gst_adaptive_demux_combine_flows (demux)
-          == GST_FLOW_NOT_LINKED) {
-        GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-            (_("Internal data stream error.")), ("stream stopped, reason %s",
-                gst_flow_get_name (GST_FLOW_NOT_LINKED)));
+
+      ret = gst_adaptive_demux_combine_flows (demux);
+      if (ret == GST_FLOW_NOT_LINKED) {
+        GST_ELEMENT_FLOW_ERROR (demux, ret);
       }
+    }
       break;
 
     case GST_FLOW_FLUSHING:{

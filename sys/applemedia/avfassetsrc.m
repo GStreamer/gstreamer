@@ -535,8 +535,7 @@ gst_avf_asset_src_read_data (GstAVFAssetSrc *self, GstPad *pad,
     }
 
     if (combined_ret != GST_FLOW_OK) {
-      GST_ELEMENT_ERROR (self, STREAM, FAILED, ("Internal data stream error."),
-          ("stream stopped reason %s", gst_flow_get_name (ret)));
+      GST_ELEMENT_FLOW_ERROR (self, ret);
     }
 
     gst_pad_pause_task (pad);

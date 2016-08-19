@@ -3005,9 +3005,7 @@ pause:
         }
       }
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
-      GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-          ("Internal data stream error."),
-          ("stream stopped, reason %s", reason));
+      GST_ELEMENT_FLOW_ERROR (demux, ret);
       gst_ps_demux_send_event (demux, gst_event_new_eos ());
     }
 

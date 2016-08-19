@@ -353,9 +353,7 @@ gst_gme_play (GstPad * pad)
     if (flow_return == GST_FLOW_EOS) {
       gst_pad_push_event (pad, gst_event_new_eos ());
     } else if (flow_return < GST_FLOW_EOS || flow_return == GST_FLOW_NOT_LINKED) {
-      GST_ELEMENT_ERROR (gme, STREAM, FAILED, ("Internal data stream error."),
-          ("stream stopped, reason %s", gst_flow_get_name (flow_return)));
-
+      GST_ELEMENT_FLOW_ERROR (gme, flow_return);
       gst_pad_push_event (pad, gst_event_new_eos ());
     }
   }

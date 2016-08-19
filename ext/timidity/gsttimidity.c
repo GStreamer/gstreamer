@@ -743,9 +743,7 @@ eos:
   }
 error:
   {
-    GST_ELEMENT_ERROR (timidity, STREAM, FAILED,
-        ("Internal data stream error"),
-        ("Streaming stopped, reason %s", gst_flow_get_name (ret)));
+    GST_ELEMENT_FLOW_ERROR (timidity, ret);
     gst_pad_push_event (timidity->srcpad, gst_event_new_eos ());
     goto paused;
   }

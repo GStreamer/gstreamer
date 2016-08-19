@@ -1282,9 +1282,7 @@ pause:
       event = gst_event_new_eos ();
       /* for fatal errors we post an error message, post the error
        * first so the app knows about the error first. */
-      GST_ELEMENT_ERROR (midiparse, STREAM, FAILED,
-          ("Internal data flow error."),
-          ("streaming task paused, reason %s (%d)", reason, ret));
+      GST_ELEMENT_FLOW_ERROR (midiparse, ret);
       gst_pad_push_event (midiparse->srcpad, event);
     }
   }
