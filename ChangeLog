@@ -1,9 +1,275 @@
-=== release 1.8.2 ===
+=== release 1.8.3 ===
 
-2016-06-09  Sebastian Dröge <slomo@coaxion.net>
+2016-08-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.2
+	  releasing 1.8.3
+
+2016-08-19 11:50:15 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
+
+2016-08-12 16:15:25 +0200  Edward Hervey <edward@centricular.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Post buffering messages earlier in ringbuffer mode
+	  In ringbuffer mode we need to make sure we post buffering messages *before*
+	  blocking to wait for data to be drained.
+	  Without this, we would end up in situations like this:
+	  * pipeline is pre-rolling
+	  * Downstream demuxer/decoder has pushed data to all sinks, and demuxer thread
+	  is blocking downstream (i.e. not pulling from upstream/queue2).
+	  * Therefore pipeline has pre-rolled ...
+	  * ... but queue2 hasn't filled up yet, therefore the application waits for
+	  the buffering 100% messages before setting the pipeline to PLAYING
+	  * But queue2 can't post that message, since the 100% message will be posted
+	  *after* there is room available for that last buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769802
+
+2016-07-11 09:58:47 +0200  Edward Hervey <edward@centricular.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Fix average input rate calculation on small input range
+	  When dealing with small-ish input data coming into queue2, such as
+	  adaptivedemux fragments, we would never take into account the last
+	  <200ms of data coming in.
+	  The problem is that usually on TCP connection the download rate
+	  gradually increases (i.e. the rate is lower at the beginning of a
+	  download than it is later on). Combined with small download time (less
+	  than a second) we would end up with a computed average input rate
+	  which was sometimes up to 30-50% off from the *actual* average input
+	  rate for that fragment.
+	  In order to fix this, force the average input rate calculation when
+	  we receive an EOS so that we take into account that final window
+	  of data.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768649
+
+2016-05-24 00:40:27 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/Makefile.am:
+	* libs/gst/base/Makefile.am:
+	* libs/gst/check/Makefile.am:
+	* libs/gst/controller/Makefile.am:
+	* libs/gst/net/Makefile.am:
+	  g-i: pass compiler env to g-ir-scanner
+	  It's what introspection.mak does as well. Should
+	  fix spurious build failures on gnome-continuous.
+
+2016-05-23 21:15:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/Makefile.am:
+	  gst: g-i: pass compiler with quotes
+	  So CC="ccache gcc" works properly.
+
+2016-05-23 21:06:53 +0100  Ray Strode <rstrode@redhat.com>
+
+	* gst/Makefile.am:
+	  gst: attempt to fix/track-down mysterious gnome-continuous build failures
+
+2016-07-25 19:15:15 +1000  Jan Schmidt <jan@centricular.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Wake other pads when selected goes EOS
+	  Other pads that are waiting for the stream on the selected
+	  pad to advance before they finish waiting themselves
+	  should be given the chance to do so when the selected pad
+	  goes EOS. Fixes problems where input streams can end up
+	  waiting forever if the active stream goes EOS earlier than
+	  their own end time.
+
+2016-07-05 16:50:16 +0200  Miguel París Díaz <mparisdiaz@gmail.com>
+
+	* gst/gstpad.c:
+	  pad: check query caps answered and caps not NULL
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768450
+
+2016-07-04 10:00:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: Make sure to not create an invalid event order when generating the default CAPS event because of a GAP event
+	  There must be a SEGMENT event before the GAP event, and SEGMENT events must
+	  come after any CAPS event. We however did not produce any CAPS yet, so we need
+	  to ensure to insert the CAPS event before the SEGMENT event into the pending
+	  events list.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766970
+
+2016-06-28 15:01:17 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/gstbus.c:
+	  bus: chain up GObject::constructed() to the parent class' implementation
+	  Needed so GstBus can be tracked by the leaks tracer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768141
+
+2016-06-15 13:43:59 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: fix crash deleting current region for small ring buffers
+	  Ensure we do not attempt to destroy the current range. Doing so
+	  causes the current one to be left dangling, and it may be dereferenced
+	  later, leading to a crash.
+	  This can happen with a very small queue2 ring buffer (10000 bytes)
+	  and 4 kB buffers.
+	  repro case:
+	  gst-launch-1.0 fakesrc sizetype=2 sizemax=4096 ! \
+	  queue2 ring-buffer-max-size=1000 ! fakesink sync=true
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767688
+
+2016-07-01 09:44:12 +0200  Edward Hervey <edward@centricular.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Fix behaviour with not-linked and eos pads
+	  This is an update on c9b6848885f4675d447e823c8fb117e247658252
+	  multiqueue: Fix not-linked pad handling at EOS
+	  While that commit did fix the behaviour if upstream sent a GST_EVENT_EOS,
+	  it would break the same issue when *downstream* returns GST_FLOW_EOS
+	  (which can happen for example when downstream decoders receive data
+	  from after the segment stop).
+	  GST_PAD_IS_EOS() is only TRUE when a GST_EVENT_EOS has flown through it
+	  and not when a GST_EVENT_EOS has gone through it.
+	  In order to handle both cases, also take into account the last flow
+	  return.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763770
+
+2016-06-08 12:34:53 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* plugins/elements/gsttee.c:
+	  tee: Properly handle return value when only 1 pad
+	  This patch handle the case when you have 1 pad (so the fast path is
+	  being used) but this pad is removed. If we are in allow-not-linked, we
+	  should return GST_FLOW_OK, otherwise, we should return GST_FLOW_UNLINKED
+	  and ignore the meaningless return value obtained from pushing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767413
+
+2016-06-13 18:33:27 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: Update start time when losing state only if we were in PLAYING
+	  If we were in PAUSED, the current clock time and base time don't have much to
+	  do with the running time anymore as the clock might have advanced while we
+	  were PAUSED. The system clock does that for example, audio clocks often don't.
+	  Updating the start time in PAUSED will cause a) the wrong position to be
+	  reported, b) step events to step not just the requested amount but the amount
+	  of time we spent in PAUSED. The start time should only ever be updated when
+	  going from PLAYING to PAUSED to remember the current running time (to be able
+	  to compensate later when going to PLAYING for the clock time advancing while
+	  PAUSED), not when we are already in PAUSED.
+	  Based on a patch by Kishore Arepalli <kishore.arepalli@gmail.com>
+	  The updating of the start time when the state is lost was added in commit
+	  ba943a82c0bbfd17c9ee9f5068d44c9d9274fd13 to fix the position reporting when
+	  the state is lost. This still works correctly after this change.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739289
+
+2016-02-19 16:18:12 +0100  Linus Svensson <linussn@axis.com>
+
+	* tests/check/gst/gstpad.c:
+	  gstpad tests: Add a test for flush event only probes
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762330
+
+2016-03-24 12:13:39 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst/gstpad.c:
+	  pad: consider PROBE_TYPE_EVENT_FLUSH when using PROBE_TYPE_ALL_BOTH
+	  When GST_PAD_PROBE_EVENT_FLUSH is used, the probes already have
+	  a data type and it is not needed to automatically add the default
+	  types. Without this, EVENT_FLUSH probes that didn't specify a data
+	  type would be called also for other data such as buffers.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762330
+
+=== release 1.8.2 ===
+
+2016-06-09 11:50:03 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.8.2
+
+2016-06-09 11:12:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2016-06-09 10:04:18 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -1966,7 +2232,6 @@
 
 2016-01-06 11:52:53 +0100  Stefan Sauer <ensonic@users.sf.net>
 
-	* docs/design/draft-tracing.txt:
 	* docs/design/part-tracing.txt:
 	  docs: rename the tracer doc to part since it is now merged
 
@@ -11643,7 +11908,6 @@
 	* gst/gst.h:
 	* gst/gstdevicemonitor.c:
 	* gst/gstdevicemonitor.h:
-	* gst/gstglobaldevicemonitor.c:
 	* gst/gstglobaldevicemonitor.h:
 	* win32/common/libgstreamer.def:
 	  GstDeviceMonitor: Rename from GstGlobalDeviceMonitor
@@ -11658,8 +11922,6 @@
 	* gst/gst_private.h:
 	* gst/gstdevice.c:
 	* gst/gstdevicemonitor.c:
-	* gst/gstdevicemonitor.h:
-	* gst/gstdevicemonitorfactory.c:
 	* gst/gstdevicemonitorfactory.h:
 	* gst/gstdeviceprovider.c:
 	* gst/gstdeviceprovider.h:
@@ -12761,8 +13023,6 @@
 
 	* docs/libs/gstreamer-libs-sections.txt:
 	* libs/gst/base/Makefile.am:
-	* libs/gst/base/gstsparsefile.c:
-	* libs/gst/base/gstsparsefile.h:
 	* plugins/elements/Makefile.am:
 	* plugins/elements/gstdownloadbuffer.h:
 	* plugins/elements/gstsparsefile.c:
@@ -16677,7 +16937,6 @@
 
 	* scripts/gst-plot-timeline.py:
 	* tools/Makefile.am:
-	* tools/gst-plot-timeline.py:
 	  tools: move gst-plot-timeline.py into scripts directory
 	  So it's not in PATH in an uninstalled setup (thwarting
 	  gst-play autocompletion).
@@ -20784,13 +21043,11 @@
 
 	* libs/gst/base/Makefile.am:
 	* libs/gst/base/base.h:
-	* libs/gst/base/gstbase.h:
 	* libs/gst/check/Makefile.am:
 	* libs/gst/check/check.h:
 	* libs/gst/check/gstcheck.h:
 	* libs/gst/controller/Makefile.am:
 	* libs/gst/controller/controller.h:
-	* libs/gst/controller/gstcontroller.h:
 	* libs/gst/net/Makefile.am:
 	* libs/gst/net/net.h:
 	  libs: Use foo/foo.h as single-include header consistently everywhere
@@ -21723,13 +21980,10 @@
 	* libs/gst/base/gstqueuearray.c:
 	* libs/gst/base/gstqueuearray.h:
 	* plugins/elements/Makefile.am:
-	* plugins/elements/gstdataqueue.c:
-	* plugins/elements/gstdataqueue.h:
 	* plugins/elements/gstmultiqueue.c:
 	* plugins/elements/gstmultiqueue.h:
 	* plugins/elements/gstqueue.c:
 	* plugins/elements/gstqueue.h:
-	* plugins/elements/gstqueuearray.c:
 	* plugins/elements/gstqueuearray.h:
 	* win32/common/libgstbase.def:
 	  dataqueue/queuearray: Make public API again
@@ -21995,7 +22249,6 @@
 2012-10-10 13:08:31 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* docs/manual/advanced-autoplugging.xml:
-	* docs/manual/highlevel-components.xml:
 	* docs/manual/highlevel-playback.xml:
 	* docs/manual/manual.xml:
 	* tests/examples/manual/Makefile.am:
@@ -24611,8 +24864,6 @@
 2012-07-14 19:24:57 +0100  Tim-Philipp Müller <tim@centricular.net>
 
 	* libs/gst/base/Makefile.am:
-	* libs/gst/base/gstqueuearray.c:
-	* libs/gst/base/gstqueuearray.h:
 	* plugins/elements/Makefile.am:
 	* plugins/elements/gstdataqueue.h:
 	* plugins/elements/gstqueue.h:
@@ -27874,12 +28125,10 @@
 	* libs/gst/base/Makefile.am:
 	* libs/gst/base/gstcollectpads.c:
 	* libs/gst/base/gstcollectpads.h:
-	* libs/gst/base/gstcollectpads2.c:
 	* libs/gst/base/gstcollectpads2.h:
 	* tests/check/Makefile.am:
 	* tests/check/libs/.gitignore:
 	* tests/check/libs/collectpads.c:
-	* tests/check/libs/collectpads2.c:
 	* tests/check/libs/gstlibscpp.cc:
 	* tests/check/libs/libsabi.c:
 	* win32/common/libgstbase.def:
@@ -31496,10 +31745,6 @@
 	* libs/gst/controller/Makefile.am:
 	* libs/gst/controller/gstargbcontrolbinding.c:
 	* libs/gst/controller/gstargbcontrolbinding.h:
-	* libs/gst/controller/gstcontrolbindingargb.c:
-	* libs/gst/controller/gstcontrolbindingargb.h:
-	* libs/gst/controller/gstcontrolbindingdirect.c:
-	* libs/gst/controller/gstcontrolbindingdirect.h:
 	* libs/gst/controller/gstdirectcontrolbinding.c:
 	* libs/gst/controller/gstdirectcontrolbinding.h:
 	* tests/benchmarks/controller.c:
@@ -31992,7 +32237,6 @@
 2012-01-26 11:38:29 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* tests/check/Makefile.am:
-	* tests/check/libs/collectpads.c:
 	* tests/check/libs/collectpads2.c:
 	* tests/check/libs/gstlibscpp.cc:
 	* tests/check/libs/libsabi.c:
@@ -33197,8 +33441,6 @@
 	* gst/gstbin.c:
 	* gst/gstelement.c:
 	* gst/gstelement.h:
-	* gst/gstindex.c:
-	* gst/gstindex.h:
 	* gst/gstindexfactory.c:
 	* gst/gstindexfactory.h:
 	* gst/gstregistrybinary.c:
@@ -33214,7 +33456,6 @@
 	* plugins/indexers/gstfileindex.c:
 	* plugins/indexers/gstindexers.c:
 	* plugins/indexers/gstindexers.h:
-	* plugins/indexers/gstmemindex.c:
 	* tools/gst-inspect.c:
 	* tools/gst-launch.c:
 	  index: remove GstIndex and GstIndexFactory for now
@@ -36001,11 +36242,7 @@
 	* gst/gstobject.c:
 	* gst/gstobject.h:
 	* libs/gst/controller/Makefile.am:
-	* libs/gst/controller/gstcontroller.c:
-	* libs/gst/controller/gstcontroller.h:
 	* libs/gst/controller/gstcontrollerprivate.h:
-	* libs/gst/controller/gstcontrolsource.c:
-	* libs/gst/controller/gstcontrolsource.h:
 	* libs/gst/controller/gsthelper.c:
 	* libs/gst/controller/gstinterpolationcontrolsource.c:
 	* libs/gst/controller/gstinterpolationcontrolsource.h:
@@ -37407,8 +37644,6 @@
 	* docs/libs/gstreamer-libs-docs.sgml:
 	* docs/libs/gstreamer-libs-sections.txt:
 	* libs/gst/base/Makefile.am:
-	* libs/gst/base/gstdataqueue.c:
-	* libs/gst/base/gstdataqueue.h:
 	* plugins/elements/Makefile.am:
 	* plugins/elements/gstdataqueue.c:
 	* plugins/elements/gstdataqueue.h:
@@ -40686,7 +40921,6 @@
 2011-06-03 12:43:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* docs/design/draft-allocation.txt:
-	* docs/design/draft-bufferpool.txt:
 	* docs/design/part-bufferpool.txt:
 	  docs: update bufferpool design doc
 	  Move the bufferpool design doc from draft to part and merge it with
@@ -44566,8 +44800,6 @@
 
 2010-10-13 15:39:55 -0700  David Schleef <ds@schleef.org>
 
-	* gst/audioparsers/gstbaseparse.c:
-	* gst/audioparsers/gstbaseparse.h:
 	* libs/gst/base/gstbaseparse.c:
 	* libs/gst/base/gstbaseparse.h:
 	  baseparse: Create baseparse library
@@ -45121,8 +45353,6 @@
 
 2009-11-28 18:13:31 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
 
-	* gst/aacparse/gstbaseparse.c:
-	* gst/aacparse/gstbaseparse.h:
 	* gst/audioparsers/gstbaseparse.c:
 	* gst/audioparsers/gstbaseparse.h:
 	  audioparsers: rename 'aacparse' plugin to generic 'audioparsers' plugin
@@ -46480,7 +46710,6 @@
 
 2011-03-08 18:05:42 +0000  Wim Taymans <wim.taymans@collabora.co.uk>
 
-	* docs/design/draft-buffer2.txt:
 	* docs/design/part-meta.txt:
 	  docs: rename draft to official doc
 
@@ -46862,11 +47091,9 @@
 	* gst/gstbuffer.c:
 	* gst/gstbuffer.h:
 	* gst/gstbuffermeta.c:
-	* gst/gstbuffermeta.h:
 	* gst/gstmeta.c:
 	* gst/gstmeta.h:
 	* tests/check/Makefile.am:
-	* tests/check/gst/gstbuffermeta.c:
 	* tests/check/gst/gstmeta.c:
 	  metadata: Rename to GstMeta
 	  Rename to the shorter GstMeta
@@ -47451,7 +47678,6 @@
 
 2011-02-15 17:20:08 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
-	* docs/design/draft-progress.txt:
 	* docs/design/part-progress.txt:
 	  design: make progress draft official
 
@@ -55217,7 +55443,6 @@
 
 	* Makefile.am:
 	* autogen.sh:
-	* check-checks.m4:
 	* configure.ac:
 	* m4/.gitignore:
 	* m4/Makefile.am:
@@ -57405,7 +57630,6 @@
 	* docs/faq/Makefile.am:
 	* docs/faq/developing.xml:
 	* docs/faq/faq.xml:
-	* docs/faq/gst-uninstalled:
 	* scripts/gst-uninstalled:
 	  scripts: move gst-uninstalled from docs/faq to scripts
 	  Don't include the long gst-uninstalled script in verbatim in the faq anymore
@@ -58376,7 +58600,6 @@
 	* libs/gst/helpers/.gitignore:
 	* libs/gst/helpers/Makefile.am:
 	* libs/gst/helpers/gst-plugin-scanner.c:
-	* libs/gst/helpers/plugin-scanner.c:
 	* tests/check/Makefile.am:
 	* tests/examples/manual/Makefile.am:
 	  plugin-scanner: rename plugin-scanner helper binary to gst-plugin-scanner
@@ -58841,7 +59064,6 @@
 
 2009-10-29 11:18:20 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
-	* gst/playback/gstqueue2.c:
 	* plugins/elements/gstqueue2.c:
 	  queue2: Move queue2 to gstreamer coreplugins
 	  Fixes bug #599996.
@@ -62508,7 +62730,6 @@
 
 2009-07-10 18:35:21 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
-	* docs/design/draft-framestep.txt:
 	* docs/design/part-framestep.txt:
 	  docs: more framestep docs out of draft
 
@@ -63093,7 +63314,6 @@
 
 2009-06-13 14:53:24 +0200  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
 
-	* scripts/cvs-update.sh:
 	* scripts/git-update.sh:
 	* scripts/git-version.sh:
 	  Update scripts/cvs-update.sh to git-update.sh; add git-version.sh
@@ -64318,9 +64538,6 @@
 2009-05-14 12:30:23 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* docs/design/draft-ghostpads.txt:
-	* docs/design/draft-latency.txt:
-	* docs/design/draft-missing-plugins.txt:
-	* docs/design/draft-stream-status.txt:
 	* docs/design/part-latency.txt:
 	* docs/design/part-missing-plugins.txt:
 	* docs/design/part-stream-status.txt:
@@ -66544,7 +66761,6 @@
 
 2009-02-14 13:35:48 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
-	* docs/faq/cvs.xml:
 	* docs/faq/developing.xml:
 	* docs/faq/faq.xml:
 	* docs/faq/getting.xml:
@@ -103684,10 +103900,8 @@
 
 	* check/Makefile.am:
 	* check/gst/gstevent.c:
-	* check/gst/gstevents.c:
 	* tests/check/Makefile.am:
 	* tests/check/gst/gstevent.c:
-	* tests/check/gst/gstevents.c:
 	  put some make-up on the gstevent test
 	  Original commit message from CVS:
 	  put some make-up on the gstevent test
@@ -103715,7 +103929,6 @@
 	* check/Makefile.am:
 	* check/elements/.gitignore:
 	* check/elements/fakesrc.c:
-	* check/elements/gstfakesrc.c:
 	* check/elements/identity.c:
 	* check/gst-libs/controller.c:
 	* check/gst-libs/gdp.c:
@@ -103735,8 +103948,6 @@
 	* check/gst/gstsystemclock.c:
 	* check/gst/gsttag.c:
 	* check/gst/gstvalue.c:
-	* check/gstcheck.c:
-	* check/gstcheck.h:
 	* check/pipelines/cleanup.c:
 	* check/pipelines/simple_launch_lines.c:
 	* check/states/sinks.c:
@@ -103757,7 +103968,6 @@
 	* tests/check/Makefile.am:
 	* tests/check/elements/.gitignore:
 	* tests/check/elements/fakesrc.c:
-	* tests/check/elements/gstfakesrc.c:
 	* tests/check/elements/identity.c:
 	* tests/check/generic/sinks.c:
 	* tests/check/gst/gst.c:
@@ -103776,8 +103986,6 @@
 	* tests/check/gst/gstsystemclock.c:
 	* tests/check/gst/gsttag.c:
 	* tests/check/gst/gstvalue.c:
-	* tests/check/gstcheck.c:
-	* tests/check/gstcheck.h:
 	* tests/check/libs/controller.c:
 	* tests/check/libs/gdp.c:
 	* tests/check/pipelines/cleanup.c:
@@ -105808,7 +106016,6 @@
 	* check/gst.supp:
 	* check/gst/gst.c:
 	* check/gst/gstbuffer.c:
-	* check/gst/gstdata.c:
 	* check/gst/gstghostpad.c:
 	* check/gst/gstminiobject.c:
 	* configure.ac:
@@ -105819,7 +106026,6 @@
 	* tests/check/gst.supp:
 	* tests/check/gst/gst.c:
 	* tests/check/gst/gstbuffer.c:
-	* tests/check/gst/gstdata.c:
 	* tests/check/gst/gstghostpad.c:
 	* tests/check/gst/gstminiobject.c:
 	* tools/gst-launch.c:
