@@ -1567,9 +1567,7 @@ pause:
         gst_ffmpegdemux_push_event (demux, gst_event_new_eos ());
       }
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
-      GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-          ("Internal data stream error."),
-          ("streaming stopped, reason %s", gst_flow_get_name (ret)));
+      GST_ELEMENT_FLOW_ERROR (demux, ret);
       gst_ffmpegdemux_push_event (demux, gst_event_new_eos ());
     }
     return;
