@@ -1,9 +1,20 @@
-=== release 1.8.2 ===
+=== release 1.8.3 ===
 
-2016-06-09  Sebastian Dröge <slomo@coaxion.net>
+2016-08-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.8.2
+	  releasing 1.8.3
+
+=== release 1.8.2 ===
+
+2016-06-09 11:52:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.8.2
 
 === release 1.8.1 ===
 
@@ -213,7 +224,6 @@
 2015-04-24 09:37:24 +0200  Thibault Saunier <tsaunier@gnome.org>
 
 	* testsuite/Makefile.am:
-	* testsuite/old/test_fraction.py:
 	* testsuite/test_fraction.py:
 	  tests: Add test_fraction back in the testsuite
 	  Properly porting it and adding a small test about getting fraction
@@ -259,33 +269,7 @@
 	* testsuite/old/testhelpermodule.c:
 	* testsuite/overrides_hack.py:
 	* testsuite/runtests.py:
-	* testsuite/test-object.c:
-	* testsuite/test-object.h:
-	* testsuite/test_adapter.py:
-	* testsuite/test_audio.py:
-	* testsuite/test_bin.py:
-	* testsuite/test_buffer.py:
-	* testsuite/test_bus.py:
-	* testsuite/test_caps.py:
-	* testsuite/test_element.py:
-	* testsuite/test_event.py:
-	* testsuite/test_fraction.py:
-	* testsuite/test_ghostpad.py:
 	* testsuite/test_gst.py:
-	* testsuite/test_interface.py:
-	* testsuite/test_iterator.py:
-	* testsuite/test_libtag.py:
-	* testsuite/test_message.py:
-	* testsuite/test_pad.py:
-	* testsuite/test_pbutils.py:
-	* testsuite/test_pipeline.py:
-	* testsuite/test_registry.py:
-	* testsuite/test_segment.py:
-	* testsuite/test_struct.py:
-	* testsuite/test_taglist.py:
-	* testsuite/test_typefind.py:
-	* testsuite/test_xml.py:
-	* testsuite/testhelpermodule.c:
 	  test: Bring back the testsuite and test if the initialization override works
 	  Summary:
 	  Simplify the Makefile taking example on pitivi and copy several pitivi
@@ -376,39 +360,7 @@
 
 2014-06-05 19:54:13 +0200  Thibault Saunier <tsaunier@gnome.org>
 
-	* examples/.gitignore:
-	* examples/Makefile.am:
-	* examples/audio-controller.py:
-	* examples/audioconcat.py:
-	* examples/bps.py:
-	* examples/buffer-draw.py:
-	* examples/cp.py:
-	* examples/cutter.py:
-	* examples/debugslider.py:
-	* examples/decodebin.py:
-	* examples/f2f.py:
-	* examples/filesrc.py:
-	* examples/fvumeter.py:
-	* examples/gst-discover:
-	* examples/gstfile.py:
-	* examples/helloworld.py:
-	* examples/maemogst.py:
-	* examples/mixer.py:
-	* examples/option-parser.py:
-	* examples/pipeline-tester:
-	* examples/play.py:
 	* examples/plugins/python/sinkelement.py:
-	* examples/pyidentity.py:
-	* examples/python/sinkelement.py:
-	* examples/remuxer.py:
-	* examples/segments.py:
-	* examples/sinkelement-registry.py:
-	* examples/sinkelement.py:
-	* examples/switch.py:
-	* examples/synchronizer.py:
-	* examples/tagsetter.py:
-	* examples/video-controller.py:
-	* examples/vumeter.py:
 	* old_examples/.gitignore:
 	* old_examples/Makefile.am:
 	* old_examples/audio-controller.py:
@@ -1545,7 +1497,6 @@
 
 	* configure.ac:
 	* gst/Makefile.am:
-	* gst/__init__.py:
 	* gst/__init__.py.in:
 	  Fix distcheck.
 	  Before this change gst/__init__.py wasn't being copied to
