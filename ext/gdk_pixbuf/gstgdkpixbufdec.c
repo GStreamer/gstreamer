@@ -417,8 +417,7 @@ gst_gdk_pixbuf_dec_sink_event (GstPad * pad, GstObject * parent,
          * things failed */
         if (res != GST_FLOW_OK && res != GST_FLOW_FLUSHING
             && res != GST_FLOW_EOS && res != GST_FLOW_NOT_LINKED) {
-          GST_ELEMENT_ERROR (pixbuf, STREAM, FAILED, (NULL), ("Flow: %s",
-                  gst_flow_get_name (res)));
+          GST_ELEMENT_FLOW_ERROR (pixbuf, res);
           forward = FALSE;
           ret = FALSE;
         }

@@ -5766,8 +5766,7 @@ pause:
         gst_qtdemux_push_event (qtdemux, event);
       }
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
-      GST_ELEMENT_ERROR (qtdemux, STREAM, FAILED,
-          (NULL), ("streaming stopped, reason %s", reason));
+      GST_ELEMENT_FLOW_ERROR (qtdemux, ret);
       gst_qtdemux_push_event (qtdemux, gst_event_new_eos ());
     }
     goto done;

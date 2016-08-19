@@ -549,10 +549,7 @@ gst_splitmux_pad_loop (GstPad * pad)
       GST_INFO_OBJECT (splitpad, "Stopping due to pad_push() result %d", ret);
       gst_pad_pause_task (pad);
       if (ret < GST_FLOW_EOS) {
-        const gchar *reason = gst_flow_get_name (ret);
-        GST_ELEMENT_ERROR (splitmux, STREAM, FAILED,
-            (_("Internal data flow error.")),
-            ("streaming task paused, reason %s (%d)", reason, ret));
+        GST_ELEMENT_FLOW_ERROR (splitmux, ret);
       }
     }
   }

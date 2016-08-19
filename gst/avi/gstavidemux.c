@@ -5695,9 +5695,7 @@ pause:{
       /* for fatal errors we post an error message, wrong-state is
        * not fatal because it happens due to flushes and only means
        * that we should stop now. */
-      GST_ELEMENT_ERROR (avi, STREAM, FAILED,
-          (_("Internal data stream error.")),
-          ("streaming stopped, reason %s", gst_flow_get_name (res)));
+      GST_ELEMENT_FLOW_ERROR (avi, res);
       push_eos = TRUE;
     }
     if (push_eos) {

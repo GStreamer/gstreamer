@@ -515,9 +515,7 @@ push_failed:
       GST_DEBUG_OBJECT (self, "eos");
       gst_pad_push_event (self->srcpad, gst_event_new_eos ());
     } else if (ret < GST_FLOW_EOS || ret == GST_FLOW_NOT_LINKED) {
-      GST_ELEMENT_ERROR (self, STREAM, FAILED,
-          ("Internal data stream error."),
-          ("streaming stopped, reason: %s", gst_flow_get_name (ret)));
+      GST_ELEMENT_FLOW_ERROR (self, ret);
     }
     goto pause_task;
   }

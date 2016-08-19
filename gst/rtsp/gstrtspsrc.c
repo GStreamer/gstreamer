@@ -5119,9 +5119,7 @@ pause:
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       /* for fatal errors we post an error message, post the error before the
        * EOS so the app knows about the error first. */
-      GST_ELEMENT_ERROR (src, STREAM, FAILED,
-          ("Internal data flow error."),
-          ("streaming task paused, reason %s (%d)", reason, ret));
+      GST_ELEMENT_FLOW_ERROR (src, ret);
       gst_rtspsrc_push_event (src, gst_event_new_eos ());
     }
     gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, CMD_LOOP);

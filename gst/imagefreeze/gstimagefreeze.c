@@ -846,9 +846,7 @@ pause_task:
     } else if (flow_ret == GST_FLOW_NOT_LINKED || flow_ret < GST_FLOW_EOS) {
       GstEvent *e = gst_event_new_eos ();
 
-      GST_ELEMENT_ERROR (self, STREAM, FAILED,
-          ("Internal data stream error."),
-          ("stream stopped, reason %s", reason));
+      GST_ELEMENT_FLOW_ERROR (self, flow_ret);
 
       if (self->seqnum)
         gst_event_set_seqnum (e, self->seqnum);

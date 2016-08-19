@@ -1892,8 +1892,7 @@ pause:
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       GstEvent *event = gst_event_new_eos ();
       /* for fatal errors or not-linked we post an error message */
-      GST_ELEMENT_ERROR (dvdemux, STREAM, FAILED,
-          (NULL), ("streaming stopped, reason %s", gst_flow_get_name (ret)));
+      GST_ELEMENT_FLOW_ERROR (dvdemux, ret);
       if (dvdemux->segment_seqnum)
         gst_event_set_seqnum (event, dvdemux->segment_seqnum);
       gst_dvdemux_push_event (dvdemux, event);
