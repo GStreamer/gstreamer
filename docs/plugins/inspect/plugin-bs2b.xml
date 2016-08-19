@@ -3,16 +3,16 @@
   <description>Improve headphone listening of stereo audio recordsusing the bs2b library.</description>
   <filename>../../ext/bs2b/.libs/libgstbs2b.so</filename>
   <basename>libgstbs2b.so</basename>
-  <version>1.5.0.1</version>
+  <version>1.8.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>bs2b</name>
       <longname>Crossfeed effect</longname>
-      <class>Effect/Audio</class>
+      <class>Filter/Effect/Audio</class>
       <description>Improve headphone listening of stereo audio records using the bs2b library.</description>
       <author>Christoph Reiter &lt;reiter.christoph@gmail.com&gt;</author>
       <pads>

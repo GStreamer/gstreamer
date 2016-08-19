@@ -1,11 +1,11 @@
 
-Release notes for GStreamer Bad Plugins 1.8.2
+Release notes for GStreamer Bad Plugins 1.8.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.8 release series of your favourite cross-platform multimedia framework!
 
 
-This release only contains bugfixes and it is safe to update from 1.8.1. For a
+This release only contains bugfixes and it is safe to update from 1.8.x. For a
 full list of bugfixes see Bugzilla.
 
 
@@ -60,22 +60,16 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 756948 : directsoundsrc - Audio Device not found on Windows (string encoding not honored)
-      * 764758 : vulkan didn't build out of tree due to vkconfig.h
-      * 765324 : compositor: crashes on NULL pointer in _aggregate_frames()
-      * 765456 : vtdec: Strange bug re-encoding video with GST 1.8.1 on Mac OS 10.10
-      * 765926 : mpegtsmux: Set PTS on aligned buffers
-      * 766190 : vtdec: corrupted rendering on OSX
-      * 766213 : openjpeg plugin needs to be ported to libopenjp2 v2.1
-      * 766289 : amc: cannot play some files on android
-      * 766422 : videoaggregator: rtspsrc ! compositor produces no output
-      * 766441 : OpenBSD does not use librt, but provides the needed functions in libc
-      * 766520 : gl: win32: race when handling window messages while creating the internal window
-      * 766611 : gl: buffer pool configuration error with caopengllayersink
-      * 766638 : ahc: fix possible NULL deref
-      * 766732 : openjpegenc: Doesn't manage MCT switch for RGB and YUV frames
-      * 767298 : amc: gst_object_unref on caps
-      * 767302 : ahcsrc: div by 0 warning
+      * 769210 : GLMemory created by avfvideosrc and vtdec on iOS (EAGL/gles3) can't be mapped
+      * 761260 : qml: add Windows support
+      * 763044 : Enable  qmlglsink on Rasperry PI
+      * 766163 : Some header files missing in sys/applemedia/ in gst-plugins-bad-1.8.1.tar.xz
+      * 767492 : avfassetsrc: Escapes already escaped URIs wrongly, fails to work because of that
+      * 767553 : qmlglsink: Add Wayland support
+      * 767635 : gleffects: fix little rectangel appears at the center when use squeeze and tunnel effects
+      * 767792 : h264parse: fix default time_offset_length
+      * 768146 : d3dvideosink: leak on caps string
+      * 769376 : aiffparse: seeking in aiff can create audio artifacts if there's extra data at the end
 
 ==== Download ====
 
@@ -112,17 +106,18 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aaron Boxer
-      * Alessandro Decina
-      * Alex-P. Natsios
-      * Arun Raghavan
+      * Bernhard Miller
       * Guillaume Desmottes
-      * Jan Alexander Steffens (heftig)
-      * Martin Kelly
+      * Haihua Hu
+      * Jan Schmidt
+      * Jonathan Roy
       * Matthew Waters
-      * Nicolas Dufresne
+      * Michael Olbrich
       * Nirbheek Chauhan
-      * Olivier Crête
       * Sebastian Dröge
-      * Xavier Claessens
+      * Sergei Saveliev
+      * Sergey Borovkov
+      * Thiago Santos
+      * Tim-Philipp Müller
+      * Vineeth TM
  

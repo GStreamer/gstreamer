@@ -67962,12 +67962,12 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 
 <ARG>
 <NAME>GstOpenh264Enc::slice-mode</NAME>
-<TYPE>GstOpenh264encSliceModes</TYPE>
+<TYPE>GstOpenh264EncSliceMode</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Slice mode</NICK>
 <BLURB>Slice mode.</BLURB>
-<DEFAULT>num-slices slices</DEFAULT>
+<DEFAULT>Fixed number of slices</DEFAULT>
 </ARG>
 
 <ARG>
@@ -69358,5 +69358,25 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Volume2</NICK>
 <BLURB>Volume of second tone signal.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBs2b::fcut</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[300,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frequency cut</NICK>
+<BLURB>Low-pass filter cut frequency (Hz).</BLURB>
+<DEFAULT>700</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBs2b::feed</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[10,150]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Feed level</NICK>
+<BLURB>Feed Level (dB/10).</BLURB>
+<DEFAULT>45</DEFAULT>
 </ARG>
 

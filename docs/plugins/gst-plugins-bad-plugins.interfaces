@@ -13,6 +13,7 @@ GstAutoVideoConvert GstChildProxy
 GstBaseCameraSrc GstChildProxy
 GstBaseVideoEncoder GstPreset
 GstBin GstChildProxy
+GstBs2b GstPreset
 GstCameraBin GstChildProxy GstImplementsInterface GstColorBalance GstTagSetter
 GstCameraBin GstChildProxy GstTagSetter
 GstCameraBin2 GstChildProxy GstTagSetter

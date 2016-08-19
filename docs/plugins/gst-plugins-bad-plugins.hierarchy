@@ -123,6 +123,7 @@ GObject
             GstAccurip
             GstAudioChannelMix
             GstBPMDetect
+            GstBs2b
             GstChromaprint
             GstLADSPAFilter
               ladspa-amp-so-amp-mono
@@ -206,8 +207,28 @@ GObject
               GstPerspective
               GstRotate
               GstSquare
+            GstGrabcut
+            GstOpencvVideoFilter
+              GstCvDilateErode
+                GstCvDilate
+                GstCvErode
+              GstCvEqualizeHist
+              GstCvLaplace
+              GstCvSmooth
+              GstCvSobel
+              GstEdgeDetect
+              GstFaceBlur
+              GstFaceDetect
+              GstHanddetect
+              GstMotioncells
+              GstOpencvTextOverlay
+              GstPyramidSegment
+              GstSkinDetect
+              GstTemplateMatch
+            GstRetinex
             GstRsvgOverlay
             GstSceneChange
+            GstSegmentation
             GstSimpleVideoMark
             GstSimpleVideoMarkDetect
             GstSmooth
@@ -252,6 +273,7 @@ GObject
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
+        GstDisparity
         GstDtlsDec
         GstDtlsEnc
         GstDtlsSrtpDemux
@@ -305,6 +327,7 @@ GObject
           GstLibde265Dec
           GstOpenEXRDec
           GstOpenJPEGDec
+          GstOpenh264Dec
           GstPnmdec
           GstRsvgDec
           GstSchroDec
@@ -312,6 +335,7 @@ GObject
           GstWebPDec
         GstVideoEncoder
           GstOpenJPEGEnc
+          GstOpenh264Enc
           GstPnmenc
           GstSchroEnc
           GstWebpEnc

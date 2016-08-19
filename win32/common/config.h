@@ -86,7 +86,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2016-06-09"
+#define GST_PACKAGE_RELEASE_DATETIME "2016-08-19"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -504,8 +504,8 @@
 /* Define to enable Qt elements (used by qt). */
 #undef HAVE_QT
 
-/* Define if Qt Android integration is installed */
-#undef HAVE_QT_ANDROID
+/* Define if Qt eglfs integration is installed */
+#undef HAVE_QT_EGLFS
 
 /* Define if Qt iOS integration is installed */
 #undef HAVE_QT_IOS
@@ -731,7 +731,7 @@
 #define PACKAGE_NAME "GStreamer Bad Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.8.2"
+#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.8.3"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-bad"
@@ -740,7 +740,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.8.2"
+#define PACKAGE_VERSION "1.8.3"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -784,7 +784,7 @@
 #undef USE_EGL_RPI
 
 /* Version number of package */
-#define VERSION "1.8.2"
+#define VERSION "1.8.3"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
