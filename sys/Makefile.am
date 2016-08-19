@@ -11,7 +11,7 @@ ANDROID_MEDIA_DIR=
 endif
 
 if USE_APPLE_MEDIA
-APPLE_MEDIA_DIR=applemedia applemedia-nonpublic
+APPLE_MEDIA_DIR=applemedia
 else
 APPLE_MEDIA_DIR=
 endif
@@ -156,7 +156,7 @@ endif
 
 SUBDIRS = $(ACM_DIR) $(ANDROID_MEDIA_DIR) $(APPLE_MEDIA_DIR) $(AVC_DIR) $(BLUEZ_DIR) $(D3DVIDEOSINK_DIR) $(DECKLINK_DIR) $(DIRECTSOUND_DIR) $(WINKS_DIR) $(DVB_DIR) $(FBDEV_DIR) $(KMS_DIR) $(LINSYS_DIR) $(OPENSLES_DIR) $(PVR_DIR) $(SHM_DIR) $(UVCH264_DIR) $(VCD_DIR) $(VDPAU_DIR) $(WININET_DIR) $(WINSCREENCAP_DIR) $(WASAPI_DIR) $(NVENC_DIR) $(TINYALSA_DIR)
 
-DIST_SUBDIRS = acmenc acmmp3dec androidmedia applemedia applemedia-nonpublic avc bluez d3dvideosink decklink directsound dvb linsys fbdev kms dshowdecwrapper dshowsrcwrapper dshowvideosink \
+DIST_SUBDIRS = acmenc acmmp3dec androidmedia applemedia avc bluez d3dvideosink decklink directsound dvb linsys fbdev kms dshowdecwrapper dshowsrcwrapper dshowvideosink \
 		opensles pvr2d shm uvch264 vcd vdpau wasapi wininet winks winscreencap \
 		nvenc tinyalsa
 
