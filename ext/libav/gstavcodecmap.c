@@ -2442,8 +2442,8 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
           context->time_base.den, context->time_base.num,
           1. * context->time_base.den / context->time_base.num);
     } else {
-      GST_WARNING ("ignoring insane framerate %d/%d",
-          context->time_base.den, context->time_base.num);
+      GST_INFO ("ignoring framerate %d/%d (probably variable framerate)",
+          context->time_base.num, context->time_base.den);
     }
   }
 
