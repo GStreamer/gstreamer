@@ -25,4 +25,5 @@ utils
 video
 videodecoder
 videoencoder
+videotimecode
 xmpwriter
