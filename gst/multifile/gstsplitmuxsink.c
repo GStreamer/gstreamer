@@ -748,7 +748,7 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 
   GST_LOG_OBJECT (splitmux,
       "Pad %" GST_PTR_FORMAT " buffer with run TS %" GST_STIME_FORMAT
-      " size %" G_GSIZE_FORMAT,
+      " size %" G_GUINT64_FORMAT,
       pad, GST_STIME_ARGS (ctx->out_running_time), buf_info->buf_size);
 
   if (splitmux->opening_first_fragment) {
@@ -920,7 +920,7 @@ static void
 handle_gathered_gop (GstSplitMuxSink * splitmux)
 {
   GList *cur;
-  gsize queued_bytes = 0;
+  guint64 queued_bytes = 0;
   GstClockTimeDiff queued_time = 0;
 
   /* Assess if the multiqueue contents overflowed the current file */
@@ -932,6 +932,9 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
     queued_bytes += tmpctx->in_bytes;
   }
 
+  GST_LOG_OBJECT (splitmux, " queued_bytes %" G_GUINT64_FORMAT
+      " splitmuxsink->mux_start_bytes %" G_GUINT64_FORMAT, queued_bytes,
+      splitmux->mux_start_bytes);
   g_assert (queued_bytes >= splitmux->mux_start_bytes);
   g_assert (queued_time >= splitmux->mux_start_time);
 
@@ -942,7 +945,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
   queued_bytes += (queued_bytes * splitmux->mux_overhead);
 
   GST_LOG_OBJECT (splitmux, "mq at TS %" GST_STIME_FORMAT
-      " bytes %" G_GSIZE_FORMAT, GST_STIME_ARGS (queued_time), queued_bytes);
+      " bytes %" G_GUINT64_FORMAT, GST_STIME_ARGS (queued_time), queued_bytes);
 
   /* Check for overrun - have we output at least one byte and overrun
    * either threshold? */
@@ -961,7 +964,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
   } else {
     /* No overflow */
     GST_LOG_OBJECT (splitmux,
-        "This GOP didn't overflow the fragment. Bytes sent %" G_GSIZE_FORMAT
+        "This GOP didn't overflow the fragment. Bytes sent %" G_GUINT64_FORMAT
         " queued %" G_GSIZE_FORMAT " time %" GST_STIME_FORMAT " Continuing.",
         splitmux->muxed_out_bytes - splitmux->mux_start_bytes,
         queued_bytes, GST_STIME_ARGS (queued_time));
@@ -1222,7 +1225,7 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
   }
 
   GST_DEBUG_OBJECT (pad, "Buf TS %" GST_STIME_FORMAT
-      " total in_bytes %" G_GSIZE_FORMAT,
+      " total in_bytes %" G_GUINT64_FORMAT,
       GST_STIME_ARGS (buf_info->run_ts), ctx->in_bytes);
 
   loop_again = TRUE;

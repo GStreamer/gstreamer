@@ -49,7 +49,7 @@ typedef struct _MqStreamBuf
 {
   gboolean keyframe;
   GstClockTimeDiff run_ts;
-  gsize buf_size;
+  guint64 buf_size;
   GstClockTime duration;
 } MqStreamBuf;
 
@@ -74,7 +74,7 @@ typedef struct _MqStreamCtx
   GstClockTimeDiff in_running_time;
   GstClockTimeDiff out_running_time;
 
-  gsize in_bytes;
+  guint64 in_bytes;
 
   GQueue queued_bufs;
 
@@ -120,11 +120,11 @@ struct _GstSplitMuxSink {
   GstClockTimeDiff max_out_running_time;
 
   GstClockTimeDiff muxed_out_time;
-  gsize muxed_out_bytes;
+  guint64 muxed_out_bytes;
   gboolean have_muxed_something;
 
   GstClockTimeDiff mux_start_time;
-  gsize mux_start_bytes;
+  guint64 mux_start_bytes;
   GstClockTime last_frame_duration;
 
   gboolean opening_first_fragment;
