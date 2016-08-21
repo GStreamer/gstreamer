@@ -965,7 +965,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
     /* No overflow */
     GST_LOG_OBJECT (splitmux,
         "This GOP didn't overflow the fragment. Bytes sent %" G_GUINT64_FORMAT
-        " queued %" G_GSIZE_FORMAT " time %" GST_STIME_FORMAT " Continuing.",
+        " queued %" G_GUINT64_FORMAT " time %" GST_STIME_FORMAT " Continuing.",
         splitmux->muxed_out_bytes - splitmux->mux_start_bytes,
         queued_bytes, GST_STIME_ARGS (queued_time));
 
