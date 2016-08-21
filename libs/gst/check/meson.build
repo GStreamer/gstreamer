@@ -34,9 +34,12 @@ configure_file(input : 'libcheck/check.h.in',
   install_dir : 'include/gstreamer-1.0/gst/check/',
   configuration : check_cdata)
 
-gst_check = shared_library('gstcheck',
+gst_check = shared_library('gstcheck-@0@'.format(apiversion),
   gst_check_sources,
   c_args : gst_c_args,
+  version : libversion,
+  soversion : soversion,
+  install : true,
   include_directories : [configinc, libsinc],
   link_with : [libcheck],
   dependencies : [gobject_dep, glib_dep, gst_dep],
