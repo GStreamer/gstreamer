@@ -1504,8 +1504,12 @@ create_ui (GtkPlay * play)
 static void
 duration_changed_cb (GstPlayer * unused, GstClockTime duration, GtkPlay * play)
 {
+  g_signal_handlers_block_by_func (play->seekbar,
+      seekbar_value_changed_cb, play);
   gtk_range_set_range (GTK_RANGE (play->seekbar), 0.0,
       (gdouble) duration / GST_SECOND);
+  g_signal_handlers_unblock_by_func (play->seekbar,
+      seekbar_value_changed_cb, play);
 }
 
 static void
