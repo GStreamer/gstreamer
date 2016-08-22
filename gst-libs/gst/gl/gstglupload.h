@@ -47,8 +47,9 @@ typedef enum
 
   GST_GL_UPLOAD_ERROR = -1,
   GST_GL_UPLOAD_UNSUPPORTED = -2,
+  GST_GL_UPLOAD_RECONFIGURE = -3,
   /* <private> */
-  GST_GL_UPLOAD_UNSHARED_GL_CONTEXT = -3,
+  GST_GL_UPLOAD_UNSHARED_GL_CONTEXT = -100,
 } GstGLUploadReturn;
 
 /**
@@ -82,7 +83,11 @@ GstCaps *     gst_gl_upload_get_input_template_caps (void);
 
 GstGLUpload * gst_gl_upload_new                    (GstGLContext * context);
 
-GstCaps *     gst_gl_upload_transform_caps         (GstGLContext * context,
+void          gst_gl_upload_set_context            (GstGLUpload * upload,
+                                                    GstGLContext * context);
+
+GstCaps *     gst_gl_upload_transform_caps         (GstGLUpload * upload,
+                                                    GstGLContext * context,
                                                     GstPadDirection direction,
                                                     GstCaps * caps,
                                                     GstCaps * filter);

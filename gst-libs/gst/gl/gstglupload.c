@@ -189,7 +189,7 @@ struct _UploadMethod
   GstStaticCaps *input_template_caps;
 
     gpointer (*new) (GstGLUpload * upload);
-  GstCaps *(*transform_caps) (GstGLContext * context,
+  GstCaps *(*transform_caps) (gpointer impl, GstGLContext * context,
       GstPadDirection direction, GstCaps * caps);
     gboolean (*accept) (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
       GstCaps * out_caps);
@@ -203,6 +203,7 @@ struct _UploadMethod
 struct GLMemoryUpload
 {
   GstGLUpload *upload;
+  GstGLTextureTarget input_target;
 };
 
 static gpointer
@@ -211,14 +212,16 @@ _gl_memory_upload_new (GstGLUpload * upload)
   struct GLMemoryUpload *mem = g_new0 (struct GLMemoryUpload, 1);
 
   mem->upload = upload;
+  mem->input_target = GST_GL_TEXTURE_TARGET_NONE;
 
   return mem;
 }
 
 static GstCaps *
-_gl_memory_upload_transform_caps (GstGLContext * context,
+_gl_memory_upload_transform_caps (gpointer impl, GstGLContext * context,
     GstPadDirection direction, GstCaps * caps)
 {
+  struct GLMemoryUpload *upload = impl;
   GstCapsFeatures *passthrough =
       gst_caps_features_from_string
       (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
@@ -231,12 +234,17 @@ _gl_memory_upload_transform_caps (GstGLContext * context,
   gst_caps_features_free (passthrough);
 
   if (direction == GST_PAD_SINK) {
-    GstGLTextureTarget target_mask = 0;
     GstCaps *tmp;
+    GstGLTextureTarget target_mask;
 
-    target_mask |= 1 << GST_GL_TEXTURE_TARGET_2D;
-    target_mask |= 1 << GST_GL_TEXTURE_TARGET_RECTANGLE;
-    target_mask |= 1 << GST_GL_TEXTURE_TARGET_EXTERNAL_OES;
+    if (upload->input_target != GST_GL_TEXTURE_TARGET_NONE) {
+      target_mask = 1 << upload->input_target;
+    } else {
+      target_mask = 1 << GST_GL_TEXTURE_TARGET_2D |
+          1 << GST_GL_TEXTURE_TARGET_RECTANGLE |
+          1 << GST_GL_TEXTURE_TARGET_EXTERNAL_OES;
+    }
+
     tmp = _caps_intersect_texture_target (ret, target_mask);
     gst_caps_unref (ret);
     ret = tmp;
@@ -412,6 +420,12 @@ _gl_memory_upload_perform (gpointer impl, GstBuffer * buffer,
             gl_mem->mem.context))
       return GST_GL_UPLOAD_UNSHARED_GL_CONTEXT;
 
+    if (upload->input_target != gl_mem->tex_target) {
+      upload->input_target = gl_mem->tex_target;
+      *outbuf = NULL;
+      return GST_GL_UPLOAD_RECONFIGURE;
+    }
+
     if (gst_is_gl_memory_pbo (mem))
       gst_gl_memory_pbo_upload_transfer ((GstGLMemoryPBO *) mem);
   }
@@ -466,7 +480,7 @@ _dma_buf_upload_new (GstGLUpload * upload)
 }
 
 static GstCaps *
-_dma_buf_upload_transform_caps (GstGLContext * context,
+_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
     GstPadDirection direction, GstCaps * caps)
 {
   GstCapsFeatures *passthrough =
@@ -714,13 +728,13 @@ _upload_meta_upload_new (GstGLUpload * upload)
   struct GLUploadMeta *meta = g_new0 (struct GLUploadMeta, 1);
 
   meta->upload = upload;
-  meta->pool = gst_gl_buffer_pool_new (upload->context);
+  meta->pool = NULL;
 
   return meta;
 }
 
 static GstCaps *
-_upload_meta_upload_transform_caps (GstGLContext * context,
+_upload_meta_upload_transform_caps (gpointer impl, GstGLContext * context,
     GstPadDirection direction, GstCaps * caps)
 {
   GstCapsFeatures *passthrough =
@@ -782,6 +796,9 @@ _upload_meta_upload_accept (gpointer impl, GstBuffer * buffer,
 
   if (!ret)
     return ret;
+
+  if (upload->pool == NULL)
+    upload->pool = gst_gl_buffer_pool_new (upload->upload->context);
 
   if (!gst_buffer_pool_is_active (upload->pool)) {
     config = gst_buffer_pool_get_config (upload->pool);
@@ -1012,7 +1029,7 @@ _raw_data_upload_new (GstGLUpload * upload)
 }
 
 static GstCaps *
-_raw_data_upload_transform_caps (GstGLContext * context,
+_raw_data_upload_transform_caps (gpointer impl, GstGLContext * context,
     GstPadDirection direction, GstCaps * caps)
 {
   GstCapsFeatures *passthrough =
@@ -1216,7 +1233,10 @@ gst_gl_upload_new (GstGLContext * context)
   GstGLUpload *upload = g_object_new (GST_TYPE_GL_UPLOAD, NULL);
   gint i, n;
 
-  upload->context = gst_object_ref (context);
+  if (context)
+    gst_gl_upload_set_context (upload, context);
+  else
+    upload->context = NULL;
 
   n = G_N_ELEMENTS (upload_methods);
   upload->priv->upload_impl = g_malloc (sizeof (gpointer) * n);
@@ -1230,6 +1250,14 @@ gst_gl_upload_new (GstGLContext * context)
   return upload;
 }
 
+void
+gst_gl_upload_set_context (GstGLUpload * upload, GstGLContext * context)
+{
+  g_return_if_fail (upload != NULL);
+
+  gst_object_replace ((GstObject **) & upload->context, (GstObject *) context);
+}
+
 static void
 gst_gl_upload_finalize (GObject * object)
 {
@@ -1238,8 +1266,6 @@ gst_gl_upload_finalize (GObject * object)
 
   upload = GST_GL_UPLOAD (object);
 
-  if (upload->priv->method_impl)
-    upload->priv->method->free (upload->priv->method_impl);
   upload->priv->method_i = 0;
 
   if (upload->context) {
@@ -1268,8 +1294,8 @@ gst_gl_upload_finalize (GObject * object)
 }
 
 GstCaps *
-gst_gl_upload_transform_caps (GstGLContext * context, GstPadDirection direction,
-    GstCaps * caps, GstCaps * filter)
+gst_gl_upload_transform_caps (GstGLUpload * upload, GstGLContext * context,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstCaps *result, *tmp;
   gint i;
@@ -1279,7 +1305,9 @@ gst_gl_upload_transform_caps (GstGLContext * context, GstPadDirection direction,
   for (i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
     GstCaps *tmp2;
 
-    tmp2 = upload_methods[i]->transform_caps (context, direction, caps);
+    tmp2 =
+        upload_methods[i]->transform_caps (upload->priv->upload_impl[i],
+        context, direction, caps);
 
     if (tmp2)
       tmp = gst_caps_merge (tmp, tmp2);
@@ -1332,8 +1360,6 @@ _gst_gl_upload_set_caps_unlocked (GstGLUpload * upload, GstCaps * in_caps,
   gst_video_info_from_caps (&upload->priv->in_info, in_caps);
   gst_video_info_from_caps (&upload->priv->out_info, out_caps);
 
-  if (upload->priv->method_impl)
-    upload->priv->method->free (upload->priv->method_impl);
   upload->priv->method_impl = NULL;
   upload->priv->method_i = 0;
 
@@ -1388,16 +1414,14 @@ gst_gl_upload_get_caps (GstGLUpload * upload, GstCaps ** in_caps,
 static gboolean
 _upload_find_method (GstGLUpload * upload)
 {
+  gint method_i;
+
   if (upload->priv->method_i >= G_N_ELEMENTS (upload_methods))
     return FALSE;
 
-  if (upload->priv->method_impl) {
-    upload->priv->method->free (upload->priv->method_impl);
-    upload->priv->method_impl = NULL;
-  }
-
-  upload->priv->method = upload_methods[upload->priv->method_i];
-  upload->priv->method_impl = upload->priv->method->new (upload);
+  method_i = upload->priv->method_i;
+  upload->priv->method = upload_methods[method_i];
+  upload->priv->method_impl = upload->priv->upload_impl[method_i];
 
   GST_DEBUG_OBJECT (upload, "attempting upload with uploader %s",
       upload->priv->method->name);
@@ -1452,19 +1476,24 @@ restart:
       upload->priv->method->perform (upload->priv->method_impl, buffer,
       &outbuf);
   if (ret == GST_GL_UPLOAD_UNSHARED_GL_CONTEXT) {
-    upload->priv->method->free (upload->priv->method_impl);
-    upload->priv->method = &_raw_data_upload;
-    upload->priv->method_impl = upload->priv->method->new (upload);
+    for (int i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
+      if (upload_methods[i] == &_raw_data_upload) {
+        upload->priv->method = &_raw_data_upload;
+        upload->priv->method_impl = upload->priv->upload_impl[i];
+        upload->priv->method_i = i;
+
+        break;
+      }
+    }
     goto restart;
-  } else if (ret == GST_GL_UPLOAD_DONE) {
+  } else if (ret == GST_GL_UPLOAD_DONE || ret == GST_GL_UPLOAD_RECONFIGURE) {
     /* we are done */
   } else {
-    upload->priv->method->free (upload->priv->method_impl);
     upload->priv->method_impl = NULL;
     NEXT_METHOD;
   }
 
-  if (buffer != outbuf)
+  if (outbuf && buffer != outbuf)
     gst_buffer_copy_into (outbuf, buffer,
         GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
   *outbuf_ptr = outbuf;
