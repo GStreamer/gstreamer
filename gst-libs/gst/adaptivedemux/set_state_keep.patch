@@ -1,0 +1,13 @@
+diff --git a/gst-libs/gst/adaptivedemux/gstadaptivedemux.c b/gst-libs/gst/adaptivedemux/gstadaptivedemux.c
+index a7cf6c0..34ea3aa 100644
+--- a/gst-libs/gst/adaptivedemux/gstadaptivedemux.c
++++ b/gst-libs/gst/adaptivedemux/gstadaptivedemux.c
+@@ -2533,6 +2533,8 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
+         return ret;
+       }
+ 
++      gst_element_set_state (stream->src, GST_STATE_PLAYING);
++
+       /* wait for the fragment to be completely downloaded */
+       GST_DEBUG_OBJECT (stream->pad,
+           "Waiting for fragment download to finish: %s", uri);
