@@ -403,6 +403,24 @@ GstStructure *gst_make_element_message_details (const char *name, ...);
 #define GST_ELEMENT_MESSAGE_MAKE_DETAILS(args) gst_make_element_message_details args
 
 /**
+ * GST_ELEMENT_FLOW_ERROR:
+ * @el:           the element that generates the error
+ * @flow_return:  the GstFlowReturn leading to that ERROR message
+ *
+ * Utility function that elements can use in case they encountered a fatal
+ * data processing error due to wrong flow processing.
+ *
+ * Since: 1.10
+ */
+#define GST_ELEMENT_FLOW_ERROR(el,flow_return)  \
+G_STMT_START {                                                          \
+  GST_ELEMENT_ERROR_WITH_DETAILS (el, STREAM, FAILED, \
+      ("Internal data stream error."), \
+      ("streaming stopped, reason %s (%d)", gst_flow_get_name (flow_return), flow_return), \
+      ("flow-return", G_TYPE_INT, flow_return, NULL));\
+} G_STMT_END
+
+/**
  * GST_ELEMENT_ERROR_WITH_DETAILS:
  * @el:     the element that generates the error
  * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #gstreamer-GstGError)
