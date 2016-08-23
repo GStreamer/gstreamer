@@ -60,7 +60,6 @@ typedef struct
 
   GstPlayer *player;
   GstPlayerVideoRenderer *renderer;
-  gchar *uri;
 
   GList *uris;
   GList *current_uri;
@@ -1770,10 +1769,6 @@ gtk_play_dispose (GObject * object)
     gtk_application_uninhibit (GTK_APPLICATION (g_application_get_default ()),
         self->inhibit_cookie);
   self->inhibit_cookie = 0;
-
-  if (self->uri)
-    g_free (self->uri);
-  self->uri = NULL;
 
   if (self->uris)
     g_list_free_full (self->uris, g_free);
