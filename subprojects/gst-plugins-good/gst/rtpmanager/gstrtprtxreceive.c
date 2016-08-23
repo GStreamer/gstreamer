@@ -473,12 +473,12 @@ _gst_rtp_buffer_new_from_rtx (GstRTPBuffer * rtp, guint32 ssrc1,
   }
 
   /* copy payload and remove OSN */
+  g_assert_cmpint (rtp->size[2], >, 1);
   payload_len = rtp->size[2] - 2;
   mem = gst_allocator_alloc (NULL, payload_len, NULL);
 
   gst_memory_map (mem, &map, GST_MAP_WRITE);
-  if (rtp->size[2])
-    memcpy (map.data, (guint8 *) rtp->data[2] + 2, payload_len);
+  memcpy (map.data, (guint8 *) rtp->data[2] + 2, payload_len);
   gst_memory_unmap (mem, &map);
   gst_buffer_append_memory (new_buffer, mem);
 
@@ -582,67 +582,76 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     /* increase our statistic */
     ++rtx->num_rtx_packets;
 
-    /* read OSN in the rtx payload */
-    orign_seqnum = GST_READ_UINT16_BE (gst_rtp_buffer_get_payload (&rtp));
-    origin_payload_type =
-        GPOINTER_TO_UINT (g_hash_table_lookup (rtx->rtx_pt_map,
-            GUINT_TO_POINTER (payload_type)));
+    /* check if there enough data to read OSN from the paylaod,
+       we need at least two bytes
+     */
+    if (gst_rtp_buffer_get_payload_len (&rtp) > 1) {
+      /* read OSN in the rtx payload */
+      orign_seqnum = GST_READ_UINT16_BE (gst_rtp_buffer_get_payload (&rtp));
+      origin_payload_type =
+          GPOINTER_TO_UINT (g_hash_table_lookup (rtx->rtx_pt_map,
+              GUINT_TO_POINTER (payload_type)));
 
-    GST_DEBUG_OBJECT (rtx, "Got rtx packet: rtx seqnum %u, rtx ssrc %X, "
-        "rtx pt %u, orig seqnum %u, orig pt %u", seqnum, ssrc, payload_type,
-        orign_seqnum, origin_payload_type);
+      GST_DEBUG_OBJECT (rtx, "Got rtx packet: rtx seqnum %u, rtx ssrc %X, "
+          "rtx pt %u, orig seqnum %u, orig pt %u", seqnum, ssrc, payload_type,
+          orign_seqnum, origin_payload_type);
 
-    /* first we check if we already have associated this retransmission stream
-     * to a master stream */
-    if (g_hash_table_lookup_extended (rtx->ssrc2_ssrc1_map,
-            GUINT_TO_POINTER (ssrc), NULL, &ssrc1)) {
-      GST_TRACE_OBJECT (rtx,
-          "packet is from retransmission stream %X already associated to "
-          "master stream %X", ssrc, GPOINTER_TO_UINT (ssrc1));
-      ssrc2 = ssrc;
-    } else {
-      SsrcAssoc *assoc;
-
-      /* the current retransmitted packet has its rtx stream not already
-       * associated to a master stream, so retrieve it from our request
-       * history */
-      if (g_hash_table_lookup_extended (rtx->seqnum_ssrc1_map,
-              GUINT_TO_POINTER (orign_seqnum), NULL, (gpointer *) & assoc)) {
-        GST_LOG_OBJECT (rtx,
-            "associating retransmitted stream %X to master stream %X thanks "
-            "to rtx packet %u (orig seqnum %u)", ssrc, assoc->ssrc, seqnum,
-            orign_seqnum);
-        ssrc1 = GUINT_TO_POINTER (assoc->ssrc);
+      /* first we check if we already have associated this retransmission stream
+       * to a master stream */
+      if (g_hash_table_lookup_extended (rtx->ssrc2_ssrc1_map,
+              GUINT_TO_POINTER (ssrc), NULL, &ssrc1)) {
+        GST_TRACE_OBJECT (rtx,
+            "packet is from retransmission stream %X already associated to "
+            "master stream %X", ssrc, GPOINTER_TO_UINT (ssrc1));
         ssrc2 = ssrc;
-
-        /* just put a guard */
-        if (GPOINTER_TO_UINT (ssrc1) == ssrc2)
-          GST_WARNING_OBJECT (rtx, "RTX receiver ssrc2_ssrc1_map bad state, "
-              "master and rtx SSRCs are the same (%X)\n", ssrc);
-
-        /* free the spot so that this seqnum can be used to do another
-         * association */
-        g_hash_table_remove (rtx->seqnum_ssrc1_map,
-            GUINT_TO_POINTER (orign_seqnum));
-
-        /* actually do the association between rtx stream and master stream */
-        g_hash_table_insert (rtx->ssrc2_ssrc1_map, GUINT_TO_POINTER (ssrc2),
-            ssrc1);
-
-        /* also do the association between master stream and rtx stream
-         * every ssrc are unique so we can use the same hash table
-         * for both retrieving the ssrc1 from ssrc2 and also ssrc2 from ssrc1
-         */
-        g_hash_table_insert (rtx->ssrc2_ssrc1_map, ssrc1,
-            GUINT_TO_POINTER (ssrc2));
-
       } else {
-        /* we are not able to associate this rtx packet with a master stream */
-        GST_INFO_OBJECT (rtx,
-            "dropping rtx packet %u because its orig seqnum (%u) is not in our"
-            " pending retransmission requests", seqnum, orign_seqnum);
-        drop = TRUE;
+        SsrcAssoc *assoc;
+
+        /* the current retransmitted packet has its rtx stream not already
+         * associated to a master stream, so retrieve it from our request
+         * history */
+        if (g_hash_table_lookup_extended (rtx->seqnum_ssrc1_map,
+                GUINT_TO_POINTER (orign_seqnum), NULL, (gpointer *) & assoc)) {
+          GST_LOG_OBJECT (rtx,
+              "associating retransmitted stream %X to master stream %X thanks "
+              "to rtx packet %u (orig seqnum %u)", ssrc, assoc->ssrc, seqnum,
+              orign_seqnum);
+          ssrc1 = GUINT_TO_POINTER (assoc->ssrc);
+          ssrc2 = ssrc;
+
+          /* just put a guard */
+          if (GPOINTER_TO_UINT (ssrc1) == ssrc2)
+            GST_WARNING_OBJECT (rtx, "RTX receiver ssrc2_ssrc1_map bad state, "
+                "master and rtx SSRCs are the same (%X)\n", ssrc);
+
+          /* free the spot so that this seqnum can be used to do another
+           * association */
+          g_hash_table_remove (rtx->seqnum_ssrc1_map,
+              GUINT_TO_POINTER (orign_seqnum));
+
+          /* actually do the association between rtx stream and master stream */
+          g_hash_table_insert (rtx->ssrc2_ssrc1_map, GUINT_TO_POINTER (ssrc2),
+              ssrc1);
+
+          /* also do the association between master stream and rtx stream
+           * every ssrc are unique so we can use the same hash table
+           * for both retrieving the ssrc1 from ssrc2 and also ssrc2 from ssrc1
+           */
+          g_hash_table_insert (rtx->ssrc2_ssrc1_map, ssrc1,
+              GUINT_TO_POINTER (ssrc2));
+
+        } else {
+          /* we are not able to associate this rtx packet with a master stream */
+          GST_INFO_OBJECT (rtx,
+              "dropping rtx packet %u because its orig seqnum (%u) is not in our"
+              " pending retransmission requests", seqnum, orign_seqnum);
+          drop = TRUE;
+        }
       }
+    } else {
+      /* the rtx packet is empty */
+      GST_DEBUG_OBJECT (rtx, "drop rtx packet because it is empty");
+      drop = TRUE;
     }
   }
 

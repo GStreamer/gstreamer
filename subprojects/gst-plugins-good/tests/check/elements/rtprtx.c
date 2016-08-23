@@ -98,35 +98,97 @@ compare_rtp_packets (GstBuffer * a, GstBuffer * b)
   gst_rtp_buffer_unmap (&rtp_b);
 }
 
+static GstRTPBuffer *
+create_rtp_buffer_ex (guint32 ssrc, guint8 payload_type, guint16 seqnum,
+    guint32 timestamp, guint payload_size)
+{
+  GstRTPBuffer *ret = g_new0 (GstRTPBuffer, 1);
+  GstBuffer *buf = gst_rtp_buffer_new_allocate (payload_size, 0, 0);
+
+  gst_rtp_buffer_map (buf, GST_MAP_WRITE, ret);
+  gst_rtp_buffer_set_ssrc (ret, ssrc);
+  gst_rtp_buffer_set_payload_type (ret, payload_type);
+  gst_rtp_buffer_set_seq (ret, seqnum);
+  gst_rtp_buffer_set_timestamp (ret, (guint32) timestamp);
+  memset (gst_rtp_buffer_get_payload (ret), 0, payload_size);
+  return ret;
+}
+
 static GstBuffer *
 create_rtp_buffer (guint32 ssrc, guint8 payload_type, guint16 seqnum)
 {
-  GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
   guint payload_size = 29;
   guint64 timestamp = gst_util_uint64_scale_int (seqnum, 90000, 30);
-  GstBuffer *buf = gst_rtp_buffer_new_allocate (payload_size, 0, 0);
+  GstRTPBuffer *rtpbuf = create_rtp_buffer_ex (ssrc, payload_type, seqnum,
+      (guint32) timestamp, payload_size);
+  GstBuffer *ret = rtpbuf->buffer;
 
-  gst_rtp_buffer_map (buf, GST_MAP_WRITE, &rtpbuf);
-  gst_rtp_buffer_set_ssrc (&rtpbuf, ssrc);
-  gst_rtp_buffer_set_payload_type (&rtpbuf, payload_type);
-  gst_rtp_buffer_set_seq (&rtpbuf, seqnum);
-  gst_rtp_buffer_set_timestamp (&rtpbuf, (guint32) timestamp);
-  memset (gst_rtp_buffer_get_payload (&rtpbuf), 0x29, payload_size);
-  gst_rtp_buffer_unmap (&rtpbuf);
-  return buf;
+  memset (gst_rtp_buffer_get_payload (rtpbuf), 0x29, payload_size);
+
+  gst_rtp_buffer_unmap (rtpbuf);
+  g_free (rtpbuf);
+  return ret;
 }
 
 static GstBuffer *
 create_rtp_buffer_with_timestamp (guint32 ssrc, guint8 payload_type,
     guint16 seqnum, guint32 timestamp)
 {
-  GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
-  GstBuffer *buf = create_rtp_buffer (ssrc, payload_type, seqnum);
-  gst_rtp_buffer_map (buf, GST_MAP_WRITE, &rtpbuf);
-  gst_rtp_buffer_set_timestamp (&rtpbuf, timestamp);
-  gst_rtp_buffer_unmap (&rtpbuf);
-  return buf;
+  guint payload_size = 29;
+  GstRTPBuffer *rtpbuf = create_rtp_buffer_ex (ssrc, payload_type, seqnum,
+      timestamp, payload_size);
+  GstBuffer *ret = rtpbuf->buffer;
+
+  memset (gst_rtp_buffer_get_payload (rtpbuf), 0x29, payload_size);
+
+  gst_rtp_buffer_unmap (rtpbuf);
+  g_free (rtpbuf);
+  return ret;
 }
+
+GST_START_TEST (test_rtxreceive_empty_rtx_packet)
+{
+  guint rtx_ssrc = 7654321;
+  guint master_ssrc = 1234567;
+  guint master_pt = 96;
+  guint rtx_pt = 99;
+  GstStructure *pt_map;
+  GstRTPBuffer *rtp;
+  GstBuffer *rtp_buf;
+  GstHarness *h = gst_harness_new ("rtprtxreceive");
+  pt_map = gst_structure_new ("application/x-rtp-pt-map",
+      "96", G_TYPE_UINT, rtx_pt, NULL);
+  g_object_set (h->element, "payload-type-map", pt_map, NULL);
+  gst_harness_set_src_caps_str (h, "application/x-rtp, "
+      "media = (string)video, payload = (int)96, "
+      "ssrc = (uint)1234567, clock-rate = (int)90000, "
+      "encoding-name = (string)RAW");
+
+  /* Assosiating master stream & rtx stream */
+  gst_harness_push_upstream_event (h,
+      create_rtx_event (master_ssrc, master_pt, 100));
+  /* RTX packet with seqnum=200 containing master stream buffer with seqnum=100 */
+  rtp = create_rtp_buffer_ex (rtx_ssrc, rtx_pt, 200, 0, 2);
+  rtp_buf = rtp->buffer;
+  GST_WRITE_UINT16_BE (gst_rtp_buffer_get_payload (rtp), 100);
+  gst_rtp_buffer_unmap (rtp);
+  g_free (rtp);
+  gst_buffer_unref (gst_harness_push_and_pull (h, rtp_buf));
+
+  /* Creating empty RTX packet */
+  rtp = create_rtp_buffer_ex (rtx_ssrc, rtx_pt, 201, 0, 0);
+  rtp_buf = rtp->buffer;
+  gst_rtp_buffer_unmap (rtp);
+  g_free (rtp);
+  gst_harness_push (h, rtp_buf);
+
+  /* Empty RTX packet should be ignored */
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 0);
+  gst_structure_free (pt_map);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_rtxsend_rtxreceive)
 {
@@ -726,6 +788,7 @@ rtprtx_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
+  tcase_add_test (tc_chain, test_rtxreceive_empty_rtx_packet);
   tcase_add_test (tc_chain, test_rtxsend_rtxreceive);
   tcase_add_test (tc_chain, test_rtxsend_rtxreceive_with_packet_loss);
   tcase_add_test (tc_chain, test_multi_rtxsend_rtxreceive_with_packet_loss);
