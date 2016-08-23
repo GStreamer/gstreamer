@@ -1345,10 +1345,7 @@ out_flushing:
        * file. */
       gst_pad_push_event (dlbuf->srcpad, gst_event_new_eos ());
     } else if ((ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS)) {
-      GST_ELEMENT_ERROR (dlbuf, STREAM, FAILED,
-          (_("Internal data flow error.")),
-          ("streaming task paused, reason %s (%d)",
-              gst_flow_get_name (ret), ret));
+      GST_ELEMENT_FLOW_ERROR (dlbuf, ret);
       gst_pad_push_event (dlbuf->srcpad, gst_event_new_eos ());
     }
     return;

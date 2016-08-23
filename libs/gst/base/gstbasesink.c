@@ -4090,9 +4090,7 @@ paused:
        * flushing and posting an error message in that case is the
        * wrong thing to do, e.g. when basesrc is doing a flushing
        * seek. */
-      GST_ELEMENT_ERROR (basesink, STREAM, FAILED,
-          (_("Internal data stream error.")),
-          ("stream stopped, reason %s", gst_flow_get_name (result)));
+      GST_ELEMENT_FLOW_ERROR (basesink, result);
       gst_base_sink_event (pad, parent, gst_event_new_eos ());
     }
     return;

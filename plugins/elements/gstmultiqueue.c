@@ -1921,9 +1921,7 @@ out_flushing:
      * error upstream */
     if (sq->is_eos && sq->srcresult < GST_FLOW_EOS) {
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
-      GST_ELEMENT_ERROR (mq, STREAM, FAILED,
-          ("Internal data stream error."),
-          ("streaming stopped, reason %s", gst_flow_get_name (sq->srcresult)));
+      GST_ELEMENT_FLOW_ERROR (mq, sq->srcresult);
     } else {
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
     }
@@ -2204,10 +2202,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
        * error upstream */
       if (sq->srcresult < GST_FLOW_EOS) {
         GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
-        GST_ELEMENT_ERROR (mq, STREAM, FAILED,
-            ("Internal data stream error."),
-            ("streaming stopped, reason %s",
-                gst_flow_get_name (sq->srcresult)));
+        GST_ELEMENT_FLOW_ERROR (mq, sq->srcresult);
       } else {
         GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
       }

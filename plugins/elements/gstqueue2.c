@@ -2567,10 +2567,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
           } else if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
             if (queue->srcresult == GST_FLOW_NOT_LINKED
                 || queue->srcresult < GST_FLOW_EOS) {
-              GST_ELEMENT_ERROR (queue, STREAM, FAILED,
-                  (_("Internal data flow error.")),
-                  ("streaming task paused, reason %s (%d)",
-                      gst_flow_get_name (queue->srcresult), queue->srcresult));
+              GST_ELEMENT_FLOW_ERROR (queue, queue->srcresult);
             }
             goto out_flow_error;
           }
@@ -3059,10 +3056,7 @@ out_flushing:
     /* let app know about us giving up if upstream is not expected to do so */
     /* EOS is already taken care of elsewhere */
     if (eos && (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS)) {
-      GST_ELEMENT_ERROR (queue, STREAM, FAILED,
-          (_("Internal data flow error.")),
-          ("streaming task paused, reason %s (%d)",
-              gst_flow_get_name (ret), ret));
+      GST_ELEMENT_FLOW_ERROR (queue, ret);
       gst_pad_push_event (queue->srcpad, gst_event_new_eos ());
     }
     return;

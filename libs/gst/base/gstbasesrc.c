@@ -2947,9 +2947,7 @@ pause:
        * due to flushing and posting an error message because of
        * that is the wrong thing to do, e.g. when we're doing
        * a flushing seek. */
-      GST_ELEMENT_ERROR (src, STREAM, FAILED,
-          (_("Internal data flow error.")),
-          ("streaming task paused, reason %s (%d)", reason, ret));
+      GST_ELEMENT_FLOW_ERROR (src, ret);
       gst_pad_push_event (pad, event);
     }
     goto done;
