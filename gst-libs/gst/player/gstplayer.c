@@ -4080,15 +4080,19 @@ gst_player_set_config (GstPlayer * self, GstStructure * config)
   g_return_val_if_fail (GST_IS_PLAYER (self), FALSE);
   g_return_val_if_fail (config != NULL, FALSE);
 
+  g_mutex_lock (&self->lock);
+
   if (self->app_state != GST_PLAYER_STATE_STOPPED) {
     GST_INFO_OBJECT (self, "can't change config while player is %s",
         gst_player_state_get_name (self->app_state));
+    g_mutex_unlock (&self->lock);
     return FALSE;
   }
 
   if (self->config)
     gst_structure_free (self->config);
   self->config = config;
+  g_mutex_unlock (&self->lock);
 
   return TRUE;
 }
@@ -4103,14 +4107,21 @@ gst_player_set_config (GstPlayer * self, GstStructure * config)
  *
  * Returns: (transfer full): a copy of the current configuration of @player. Use
  * gst_structure_free() after usage or gst_player_set_config().
+ *
  * Since 1.10
  */
 GstStructure *
 gst_player_get_config (GstPlayer * self)
 {
+  GstStructure *ret;
+
   g_return_val_if_fail (GST_IS_PLAYER (self), NULL);
 
-  return gst_structure_copy (self->config);
+  g_mutex_lock (&self->lock);
+  ret = gst_structure_copy (self->config);
+  g_mutex_unlock (&self->lock);
+
+  return ret;
 }
 
 /**
