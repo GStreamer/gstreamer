@@ -217,7 +217,8 @@ static void gst_player_seek_internal_locked (GstPlayer * self);
 static gboolean gst_player_stop_internal (gpointer user_data);
 static gboolean gst_player_pause_internal (gpointer user_data);
 static gboolean gst_player_play_internal (gpointer user_data);
-static gboolean gst_player_set_rate_internal (gpointer user_data);
+static gboolean gst_player_seek_internal (gpointer user_data);
+static void gst_player_set_rate_internal (GstPlayer * self);
 static void change_state (GstPlayer * self, GstPlayerState state);
 
 static GstPlayerMediaInfo *gst_player_media_info_create (GstPlayer * self);
@@ -614,6 +615,26 @@ gst_player_set_suburi_internal (gpointer user_data)
 }
 
 static void
+gst_player_set_rate_internal (GstPlayer * self)
+{
+  self->seek_position = gst_player_get_position (self);
+
+  /* If there is no seek being dispatch to the main context currently do that,
+   * otherwise we just updated the rate so that it will be taken by
+   * the seek handler from the main context instead of the old one.
+   */
+  if (!self->seek_source) {
+    /* If no seek is pending then create new seek source */
+    if (!self->seek_pending) {
+      self->seek_source = g_idle_source_new ();
+      g_source_set_callback (self->seek_source,
+          (GSourceFunc) gst_player_seek_internal, self, NULL);
+      g_source_attach (self->seek_source, self->context);
+    }
+  }
+}
+
+static void
 gst_player_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -658,9 +679,8 @@ gst_player_set_property (GObject * object, guint prop_id,
       g_mutex_lock (&self->lock);
       self->rate = g_value_get_double (value);
       GST_DEBUG_OBJECT (self, "Set rate=%lf", g_value_get_double (value));
-      g_mutex_unlock (&self->lock);
-
       gst_player_set_rate_internal (self);
+      g_mutex_unlock (&self->lock);
       break;
     case PROP_MUTE:
       GST_DEBUG_OBJECT (self, "Set mute=%d", g_value_get_boolean (value));
@@ -758,7 +778,7 @@ gst_player_get_property (GObject * object, guint prop_id,
       break;
     case PROP_RATE:
       g_mutex_lock (&self->lock);
-      g_value_set_double (value, gst_player_get_rate (self));
+      g_value_set_double (value, self->rate);
       g_mutex_unlock (&self->lock);
       break;
     case PROP_MUTE:
@@ -3014,34 +3034,6 @@ gst_player_seek_internal (gpointer user_data)
   return G_SOURCE_REMOVE;
 }
 
-static gboolean
-gst_player_set_rate_internal (gpointer user_data)
-{
-  GstPlayer *self = user_data;
-
-  g_mutex_lock (&self->lock);
-
-  self->seek_position = gst_player_get_position (self);
-
-  /* If there is no seek being dispatch to the main context currently do that,
-   * otherwise we just updated the rate so that it will be taken by
-   * the seek handler from the main context instead of the old one.
-   */
-  if (!self->seek_source) {
-    /* If no seek is pending then create new seek source */
-    if (!self->seek_pending) {
-      self->seek_source = g_idle_source_new ();
-      g_source_set_callback (self->seek_source,
-          (GSourceFunc) gst_player_seek_internal, self, NULL);
-      g_source_attach (self->seek_source, self->context);
-    }
-  }
-
-  g_mutex_unlock (&self->lock);
-
-  return G_SOURCE_REMOVE;
-}
-
 /**
  * gst_player_set_rate:
  * @player: #GstPlayer instance
@@ -3055,11 +3047,7 @@ gst_player_set_rate (GstPlayer * self, gdouble rate)
   g_return_if_fail (GST_IS_PLAYER (self));
   g_return_if_fail (rate != 0.0);
 
-  g_mutex_lock (&self->lock);
-  self->rate = rate;
-  g_mutex_unlock (&self->lock);
-
-  gst_player_set_rate_internal (self);
+  g_object_set (self, "rate", rate, NULL);
 }
 
 /**
@@ -3071,9 +3059,13 @@ gst_player_set_rate (GstPlayer * self, gdouble rate)
 gdouble
 gst_player_get_rate (GstPlayer * self)
 {
+  gdouble val;
+
   g_return_val_if_fail (GST_IS_PLAYER (self), DEFAULT_RATE);
 
-  return self->rate;
+  g_object_get (self, "rate", &val, NULL);
+
+  return val;
 }
 
 /**
