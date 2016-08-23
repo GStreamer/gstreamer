@@ -2606,7 +2606,7 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       GST_RTP_BIN_UNLOCK (rtpbin);
       gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin,
           "max-misorder-time", value);
-      gst_rtp_bin_propagate_property_to_session (rtpbin, "max-dropout-time",
+      gst_rtp_bin_propagate_property_to_session (rtpbin, "max-misorder-time",
           value);
       break;
     case PROP_RFC7273_SYNC:
