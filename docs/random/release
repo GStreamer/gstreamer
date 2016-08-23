@@ -106,11 +106,12 @@ RELEASE PROCEDURE:
 
 - release:
   - 'git commit -a' in the tree
-  - tag tree
-    for example for 1.0.42 :
-           git tag -a -m 'Release 1.0.42' 1.0.42
-    Make sure to use the -a option to create an *annotated* tag: 'git describe'
-    should show '1.0.42'
+  - tag tree. Tags should be GPG signed.
+    Example: creating a 1.0.42 tag:
+      Signed   : git tag -s -m 'Release 1.0.42' 1.0.42 (may prompt for passphrase)
+      Unsigned : git tag -a -m 'Release 1.0.42' 1.0.42
+    Check: 'git describe' should show '1.0.42' and 'git show 1.0.42' should
+      show the PGP signature attached to the tag if it was signed.
   - bump nano number in configure.ac, commit
   - sync source and packages to website
     + run /bin/data-put in www
