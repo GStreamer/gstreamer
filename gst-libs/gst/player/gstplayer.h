@@ -118,6 +118,10 @@ gchar *      gst_player_get_uri                       (GstPlayer    * player);
 void         gst_player_set_uri                       (GstPlayer    * player,
                                                        const gchar  * uri);
 
+gchar *      gst_player_get_subtitle_uri              (GstPlayer    * player);
+gboolean     gst_player_set_subtitle_uri              (GstPlayer    * player,
+                                                       const gchar *uri);
+
 GstClockTime gst_player_get_position                  (GstPlayer    * player);
 GstClockTime gst_player_get_duration                  (GstPlayer    * player);
 
@@ -159,10 +163,6 @@ GstPlayerVideoInfo * gst_player_get_current_video_track
 
 GstPlayerSubtitleInfo * gst_player_get_current_subtitle_track
                                                       (GstPlayer    * player);
-
-gboolean     gst_player_set_subtitle_uri              (GstPlayer    * player,
-                                                       const gchar *uri);
-gchar *      gst_player_get_subtitle_uri              (GstPlayer    * player);
 
 gboolean     gst_player_set_visualization             (GstPlayer    * player,
                                                        const gchar *name);

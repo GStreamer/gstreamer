@@ -3170,6 +3170,46 @@ gst_player_set_uri (GstPlayer * self, const gchar * val)
 }
 
 /**
+ * gst_player_set_subtitle_uri:
+ * @player: #GstPlayer instance
+ * @uri: subtitle URI
+ *
+ * Returns: %TRUE or %FALSE
+ *
+ * Sets the external subtitle URI.
+ */
+gboolean
+gst_player_set_subtitle_uri (GstPlayer * self, const gchar * suburi)
+{
+  g_return_val_if_fail (GST_IS_PLAYER (self), FALSE);
+
+  g_object_set (self, "suburi", suburi, NULL);
+
+  return TRUE;
+}
+
+/**
+ * gst_player_get_subtitle_uri:
+ * @player: #GstPlayer instance
+ *
+ * current subtitle URI
+ *
+ * Returns: (transfer full): URI of the current external subtitle.
+ *   g_free() after usage.
+ */
+gchar *
+gst_player_get_subtitle_uri (GstPlayer * self)
+{
+  gchar *val = NULL;
+
+  g_return_val_if_fail (GST_IS_PLAYER (self), NULL);
+
+  g_object_get (self, "suburi", &val, NULL);
+
+  return val;
+}
+
+/**
  * gst_player_get_position:
  * @player: #GstPlayer instance
  *
@@ -3546,46 +3586,6 @@ gst_player_set_subtitle_track_enabled (GstPlayer * self, gboolean enabled)
     player_clear_flag (self, GST_PLAY_FLAG_SUBTITLE);
 
   GST_DEBUG_OBJECT (self, "track is '%s'", enabled ? "Enabled" : "Disabled");
-}
-
-/**
- * gst_player_set_subtitle_uri:
- * @player: #GstPlayer instance
- * @uri: subtitle URI
- *
- * Returns: %TRUE or %FALSE
- *
- * Sets the external subtitle URI.
- */
-gboolean
-gst_player_set_subtitle_uri (GstPlayer * self, const gchar * suburi)
-{
-  g_return_val_if_fail (GST_IS_PLAYER (self), FALSE);
-
-  g_object_set (self, "suburi", suburi, NULL);
-
-  return TRUE;
-}
-
-/**
- * gst_player_get_subtitle_uri:
- * @player: #GstPlayer instance
- *
- * current subtitle URI
- *
- * Returns: (transfer full): URI of the current external subtitle.
- *   g_free() after usage.
- */
-gchar *
-gst_player_get_subtitle_uri (GstPlayer * self)
-{
-  gchar *val = NULL;
-
-  g_return_val_if_fail (GST_IS_PLAYER (self), NULL);
-
-  g_object_get (self, "suburi", &val, NULL);
-
-  return val;
 }
 
 /**
