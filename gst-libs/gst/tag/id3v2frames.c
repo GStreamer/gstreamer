@@ -1103,9 +1103,14 @@ parse_insert_string_field (guint8 encoding, gchar * data, gint data_size,
       /* Sometimes we see strings with multiple BOM markers at the start.
        * In that case, we assume the innermost one is correct. If that fails
        * to produce valid UTF-8, we try the other endianness anyway */
-      while (data_size > 2 && find_utf16_bom (data, &data_endianness)) {
+      while (data_size >= 2 && find_utf16_bom (data, &data_endianness)) {
         data += 2;              /* skip BOM */
         data_size -= 2;
+      }
+
+      if (data_size < 2) {
+        field = g_strdup ("");
+        break;
       }
 
       /* alloc needed to ensure correct alignment which is required by GLib */
@@ -1193,7 +1198,7 @@ parse_split_strings (guint8 encoding, gchar * data, gint data_size,
       for (text_pos = 0; text_pos < data_size; text_pos++) {
         if (data[text_pos] == 0) {
           parse_insert_string_field (encoding, data + prev,
-              text_pos - prev + 1, fields);
+              text_pos - prev, fields);
           prev = text_pos + 1;
         }
       }
@@ -1207,7 +1212,7 @@ parse_split_strings (guint8 encoding, gchar * data, gint data_size,
       for (prev = 0, text_pos = 0; text_pos < data_size; text_pos++) {
         if (data[text_pos] == '\0') {
           parse_insert_string_field (encoding, data + prev,
-              text_pos - prev + 1, fields);
+              text_pos - prev, fields);
           prev = text_pos + 1;
         }
       }
@@ -1224,10 +1229,8 @@ parse_split_strings (guint8 encoding, gchar * data, gint data_size,
         if (data[text_pos] == '\0' && data[text_pos + 1] == '\0') {
           /* found a delimiter */
           parse_insert_string_field (encoding, data + prev,
-              text_pos - prev + 2, fields);
-          text_pos++;           /* Advance to the 2nd NULL terminator */
-          prev = text_pos + 1;
-          break;
+              text_pos - prev, fields);
+          prev = text_pos + 2;
         }
       }
       if (data_size - prev > 1 &&
