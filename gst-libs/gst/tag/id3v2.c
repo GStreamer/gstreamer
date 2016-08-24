@@ -448,7 +448,7 @@ id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
   if (work->hdr.flags & ID3V2_HDR_FLAG_EXTHDR) {
     work->hdr.ext_hdr_size = id3v2_read_synch_uint (work->hdr.frame_data, 4);
     if (work->hdr.ext_hdr_size < 6 ||
-        (work->hdr.ext_hdr_size) > work->hdr.frame_data_size) {
+        (work->hdr.ext_hdr_size + 4) > work->hdr.frame_data_size) {
       GST_DEBUG ("Invalid extended header. Broken tag");
       return FALSE;
     }
@@ -460,8 +460,8 @@ id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
     }
 
     work->hdr.ext_flag_data = work->hdr.frame_data + 5;
-    work->hdr.frame_data += work->hdr.ext_hdr_size;
-    work->hdr.frame_data_size -= work->hdr.ext_hdr_size;
+    work->hdr.frame_data += work->hdr.ext_hdr_size + 4;
+    work->hdr.frame_data_size -= work->hdr.ext_hdr_size + 4;
   }
 
   frame_hdr_size = id3v2_frame_hdr_size (work->hdr.version);
