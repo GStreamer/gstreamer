@@ -1,0 +1,4 @@
+[wrap-git]
+directory=glib
+url=https://github.com/centricular/glib.git
+revision=meson

@@ -1,0 +1,4 @@
+[wrap-git]
+directory=gst-devtools
+url=git://anongit.freedesktop.org/gstreamer/gst-devtools
+revision=master

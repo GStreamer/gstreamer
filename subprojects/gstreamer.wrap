@@ -1,0 +1,4 @@
+[wrap-git]
+directory=gstreamer
+url=git://anongit.freedesktop.org/gstreamer/gstreamer
+revision=master
