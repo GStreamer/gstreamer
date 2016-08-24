@@ -214,7 +214,7 @@ static void gst_player_constructed (GObject * object);
 static gpointer gst_player_main (gpointer data);
 
 static void gst_player_seek_internal_locked (GstPlayer * self);
-static gboolean gst_player_stop_internal (gpointer user_data);
+static void gst_player_stop_internal (GstPlayer * self, gboolean transient);
 static gboolean gst_player_pause_internal (gpointer user_data);
 static gboolean gst_player_play_internal (gpointer user_data);
 static gboolean gst_player_seek_internal (gpointer user_data);
@@ -550,7 +550,7 @@ gst_player_set_uri_internal (gpointer user_data)
 {
   GstPlayer *self = user_data;
 
-  gst_player_stop_internal (self);
+  gst_player_stop_internal (self, FALSE);
 
   g_mutex_lock (&self->lock);
 
@@ -592,7 +592,7 @@ gst_player_set_suburi_internal (gpointer user_data)
   target_state = self->target_state;
   position = gst_player_get_position (self);
 
-  gst_player_stop_internal (self);
+  gst_player_stop_internal (self, TRUE);
   g_mutex_lock (&self->lock);
 
   GST_DEBUG_OBJECT (self, "Changing SUBURI to '%s'",
@@ -2791,7 +2791,7 @@ gst_player_play_internal (gpointer user_data)
         GST_SEEK_FLAG_FLUSH, 0);
     if (!ret) {
       GST_ERROR_OBJECT (self, "Seek to beginning failed");
-      gst_player_stop_internal (self);
+      gst_player_stop_internal (self, TRUE);
       gst_player_play_internal (self);
     }
   }
@@ -2862,7 +2862,7 @@ gst_player_pause_internal (gpointer user_data)
         GST_SEEK_FLAG_FLUSH, 0);
     if (!ret) {
       GST_ERROR_OBJECT (self, "Seek to beginning failed");
-      gst_player_stop_internal (self);
+      gst_player_stop_internal (self, TRUE);
       gst_player_pause_internal (self);
     }
   }
@@ -2889,12 +2889,10 @@ gst_player_pause (GstPlayer * self)
       gst_player_pause_internal, self, NULL);
 }
 
-static gboolean
-gst_player_stop_internal (gpointer user_data)
+static void
+gst_player_stop_internal (GstPlayer * self, gboolean transient)
 {
-  GstPlayer *self = GST_PLAYER (user_data);
-
-  GST_DEBUG_OBJECT (self, "Stop");
+  GST_DEBUG_OBJECT (self, "Stop (transient %d)", transient);
 
   tick_cb (self);
   remove_tick_source (self);
@@ -2908,7 +2906,10 @@ gst_player_stop_internal (gpointer user_data)
   gst_bus_set_flushing (self->bus, TRUE);
   gst_element_set_state (self->playbin, GST_STATE_READY);
   gst_bus_set_flushing (self->bus, FALSE);
-  change_state (self, GST_PLAYER_STATE_STOPPED);
+  change_state (self, transient
+      && self->app_state !=
+      GST_PLAYER_STATE_STOPPED ? GST_PLAYER_STATE_BUFFERING :
+      GST_PLAYER_STATE_STOPPED);
   self->buffering = 100;
   g_mutex_lock (&self->lock);
   if (self->media_info) {
@@ -2929,9 +2930,18 @@ gst_player_stop_internal (gpointer user_data)
   self->last_seek_time = GST_CLOCK_TIME_NONE;
   self->rate = 1.0;
   g_mutex_unlock (&self->lock);
+}
+
+static gboolean
+gst_player_stop_internal_dispatch (gpointer user_data)
+{
+  GstPlayer *self = GST_PLAYER (user_data);
+
+  gst_player_stop_internal (self, FALSE);
 
   return G_SOURCE_REMOVE;
 }
+
 
 /**
  * gst_player_stop:
@@ -2950,7 +2960,7 @@ gst_player_stop (GstPlayer * self)
   g_mutex_unlock (&self->lock);
 
   g_main_context_invoke_full (self->context, G_PRIORITY_DEFAULT,
-      gst_player_stop_internal, self, NULL);
+      gst_player_stop_internal_dispatch, self, NULL);
 }
 
 /* Must be called with lock from main context, releases lock! */
