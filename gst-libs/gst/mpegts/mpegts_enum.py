@@ -5,7 +5,7 @@
 # make special characters such as \n go through all
 # backends is a fool's errand.
 
-import sys, os, shutil, subprocess
+import sys, os, subprocess
 
 cmd = []
 argn = 1
@@ -20,7 +20,7 @@ for arg in sys.argv[1:]:
 ofilename = sys.argv[argn]
 headers = sys.argv[argn + 1:]
 
-inc = '\n'.join(['#include"%s"' % i for i in headers])
+inc = '\n'.join(['#include"%s"' % os.path.basename(i) for i in headers])
 
 h_array = ['--fhead',
            "#ifndef __GST_MPEGTS_ENUM_TYPES_H__\n#define __GST_MPEGTS_ENUM_TYPES_H__\n\n#include <glib-object.h>\n\nG_BEGIN_DECLS\n",

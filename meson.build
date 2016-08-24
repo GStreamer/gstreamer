@@ -305,6 +305,8 @@ if x11_dep.found()
   cdata.set('HAVE_X11', 1)
 endif
 
+mathlib = cc.find_library('m', required : false)
+
 if host_machine.system() == 'windows'
   winsock2 = [cc.find_library('ws2_32')]
 else
