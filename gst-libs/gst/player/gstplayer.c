@@ -155,6 +155,7 @@ struct _GstPlayer
   GstPlayerSignalDispatcher *signal_dispatcher;
 
   gchar *uri;
+  gchar *redirect_uri;
   gchar *suburi;
 
   GThread *thread;
@@ -490,6 +491,7 @@ gst_player_finalize (GObject * object)
   GST_TRACE_OBJECT (self, "Finalizing");
 
   g_free (self->uri);
+  g_free (self->redirect_uri);
   g_free (self->suburi);
   if (self->global_tags)
     gst_tag_list_unref (self->global_tags);
@@ -599,7 +601,8 @@ gst_player_set_suburi_internal (gpointer user_data)
       GST_STR_NULL (self->suburi));
 
   g_object_set (self->playbin, "suburi", self->suburi, NULL);
-  g_object_set (self->playbin, "uri", self->uri, NULL);
+  g_object_set (self->playbin, "uri",
+      self->redirect_uri ? self->redirect_uri : self->uri, NULL);
 
   g_mutex_unlock (&self->lock);
 
@@ -650,6 +653,8 @@ gst_player_set_property (GObject * object, guint prop_id,
     case PROP_URI:{
       g_mutex_lock (&self->lock);
       g_free (self->uri);
+      g_free (self->redirect_uri);
+      self->redirect_uri = NULL;
 
       self->uri = g_value_dup_string (value);
       GST_DEBUG_OBJECT (self, "Set uri=%s", self->uri);
@@ -1798,13 +1803,13 @@ element_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg, gpointer user_data)
       /* Remember target state and restore after setting the URI */
       target_state = self->target_state;
 
+      gst_player_stop_internal (self, TRUE);
+
       g_mutex_lock (&self->lock);
-      g_free (self->uri);
-
-      self->uri = g_strdup (new_location);
+      g_free (self->redirect_uri);
+      self->redirect_uri = g_strdup (new_location);
+      g_object_set (self->playbin, "uri", self->redirect_uri, NULL);
       g_mutex_unlock (&self->lock);
-
-      gst_player_set_uri_internal (self);
 
       if (target_state == GST_STATE_PAUSED)
         gst_player_pause_internal (self);
