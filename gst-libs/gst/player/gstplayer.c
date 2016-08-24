@@ -2653,6 +2653,7 @@ gst_player_main (gpointer data)
   self->buffering = 100;
   self->is_eos = FALSE;
   self->is_live = FALSE;
+  self->rate = 1.0;
 
   GST_TRACE_OBJECT (self, "Starting main loop");
   g_main_loop_run (self->loop);
