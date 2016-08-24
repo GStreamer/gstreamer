@@ -40,7 +40,7 @@ enum
   PROP_BITRATE
 };
 
-#define DEFAULT_BITRATE (128000)
+#define DEFAULT_BITRATE (0)
 
 #define SAMPLE_RATES " 8000, " \
                     "11025, " \
@@ -255,6 +255,7 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   gint mpegversion = 4;
   CHANNEL_MODE channel_mode;
   AACENC_InfoStruct enc_info = { 0 };
+  gint bitrate;
 
   if (self->enc) {
     /* drain */
@@ -362,9 +363,56 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
     return FALSE;
   }
 
+  bitrate = self->bitrate;
+  /* See
+   * http://wiki.hydrogenaud.io/index.php?title=Fraunhofer_FDK_AAC#Recommended_Sampling_Rate_and_Bitrate_Combinations
+   */
+  if (bitrate == 0) {
+    if (GST_AUDIO_INFO_CHANNELS (info) == 1) {
+      if (GST_AUDIO_INFO_RATE (info) < 16000) {
+        bitrate = 8000;
+      } else if (GST_AUDIO_INFO_RATE (info) == 16000) {
+        bitrate = 16000;
+      } else if (GST_AUDIO_INFO_RATE (info) < 32000) {
+        bitrate = 24000;
+      } else if (GST_AUDIO_INFO_RATE (info) == 32000) {
+        bitrate = 32000;
+      } else if (GST_AUDIO_INFO_RATE (info) <= 44100) {
+        bitrate = 56000;
+      } else {
+        bitrate = 160000;
+      }
+    } else if (GST_AUDIO_INFO_CHANNELS (info) == 2) {
+      if (GST_AUDIO_INFO_RATE (info) < 16000) {
+        bitrate = 16000;
+      } else if (GST_AUDIO_INFO_RATE (info) == 16000) {
+        bitrate = 24000;
+      } else if (GST_AUDIO_INFO_RATE (info) < 22050) {
+        bitrate = 32000;
+      } else if (GST_AUDIO_INFO_RATE (info) < 32000) {
+        bitrate = 40000;
+      } else if (GST_AUDIO_INFO_RATE (info) == 32000) {
+        bitrate = 96000;
+      } else if (GST_AUDIO_INFO_RATE (info) <= 44100) {
+        bitrate = 112000;
+      } else {
+        bitrate = 320000;
+      }
+    } else {
+      /* 5, 5.1 */
+      if (GST_AUDIO_INFO_RATE (info) < 32000) {
+        bitrate = 160000;
+      } else if (GST_AUDIO_INFO_RATE (info) <= 44100) {
+        bitrate = 240000;
+      } else {
+        bitrate = 320000;
+      }
+    }
+  }
+
   if ((err = aacEncoder_SetParam (self->enc, AACENC_BITRATE,
-              self->bitrate)) != AACENC_OK) {
-    GST_ERROR_OBJECT (self, "Unable to set bitrate %d: %d", self->bitrate, err);
+              bitrate)) != AACENC_OK) {
+    GST_ERROR_OBJECT (self, "Unable to set bitrate %d: %d", bitrate, err);
     return FALSE;
   }
 
@@ -543,7 +591,8 @@ gst_fdkaacenc_class_init (GstFdkAacEncClass * klass)
   g_object_class_install_property (object_class, PROP_BITRATE,
       g_param_spec_int ("bitrate",
           "Bitrate",
-          "Target Audio Bitrate",
+          "Target Audio Bitrate (0 = fixed value based on "
+          " sample rate and channel count)",
           0, G_MAXINT, DEFAULT_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
