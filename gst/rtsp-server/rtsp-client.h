@@ -128,8 +128,19 @@ struct _GstRTSPClientClass {
   void     (*record_request)          (GstRTSPClient *client, GstRTSPContext *ctx);
   gchar*   (*check_requirements)      (GstRTSPClient *client, GstRTSPContext *ctx, gchar ** arr);
 
+  GstRTSPStatusCode (*pre_options_request)       (GstRTSPClient *client, GstRTSPContext *ctx);
+  GstRTSPStatusCode (*pre_describe_request)      (GstRTSPClient *client, GstRTSPContext *ctx);
+  GstRTSPStatusCode (*pre_setup_request)         (GstRTSPClient *client, GstRTSPContext *ctx);
+  GstRTSPStatusCode (*pre_play_request)          (GstRTSPClient *client, GstRTSPContext *ctx);
+  GstRTSPStatusCode (*pre_pause_request)         (GstRTSPClient *client, GstRTSPContext *ctx);
+  GstRTSPStatusCode (*pre_teardown_request)      (GstRTSPClient *client, GstRTSPContext *ctx);
+  GstRTSPStatusCode (*pre_set_parameter_request) (GstRTSPClient *client, GstRTSPContext *ctx);
+  GstRTSPStatusCode (*pre_get_parameter_request) (GstRTSPClient *client, GstRTSPContext *ctx);
+  GstRTSPStatusCode (*pre_announce_request)      (GstRTSPClient *client, GstRTSPContext *ctx);
+  GstRTSPStatusCode (*pre_record_request)        (GstRTSPClient *client, GstRTSPContext *ctx);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE-6];
+  gpointer _gst_reserved[GST_PADDING_LARGE-16];
 };
 
 GType                 gst_rtsp_client_get_type          (void);

@@ -45,6 +45,7 @@
 #include <string.h>
 
 #include <gst/sdp/gstmikey.h>
+#include <gst/rtsp/gstrtsp-enumtypes.h>
 
 #include "rtsp-client.h"
 #include "rtsp-sdp.h"
@@ -115,17 +116,27 @@ enum
 {
   SIGNAL_CLOSED,
   SIGNAL_NEW_SESSION,
+  SIGNAL_PRE_OPTIONS_REQUEST,
   SIGNAL_OPTIONS_REQUEST,
+  SIGNAL_PRE_DESCRIBE_REQUEST,
   SIGNAL_DESCRIBE_REQUEST,
+  SIGNAL_PRE_SETUP_REQUEST,
   SIGNAL_SETUP_REQUEST,
+  SIGNAL_PRE_PLAY_REQUEST,
   SIGNAL_PLAY_REQUEST,
+  SIGNAL_PRE_PAUSE_REQUEST,
   SIGNAL_PAUSE_REQUEST,
+  SIGNAL_PRE_TEARDOWN_REQUEST,
   SIGNAL_TEARDOWN_REQUEST,
+  SIGNAL_PRE_SET_PARAMETER_REQUEST,
   SIGNAL_SET_PARAMETER_REQUEST,
+  SIGNAL_PRE_GET_PARAMETER_REQUEST,
   SIGNAL_GET_PARAMETER_REQUEST,
   SIGNAL_HANDLE_RESPONSE,
   SIGNAL_SEND_MESSAGE,
+  SIGNAL_PRE_ANNOUNCE_REQUEST,
   SIGNAL_ANNOUNCE_REQUEST,
+  SIGNAL_PRE_RECORD_REQUEST,
   SIGNAL_RECORD_REQUEST,
   SIGNAL_CHECK_REQUIREMENTS,
   SIGNAL_LAST
@@ -157,6 +168,10 @@ static gchar *default_make_path_from_uri (GstRTSPClient * client,
     const GstRTSPUrl * uri);
 static void client_session_removed (GstRTSPSessionPool * pool,
     GstRTSPSession * session, GstRTSPClient * client);
+static GstRTSPStatusCode default_pre_signal_handler (GstRTSPClient * client,
+    GstRTSPContext * ctx);
+static gboolean pre_signal_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer data);
 
 G_DEFINE_TYPE (GstRTSPClient, gst_rtsp_client, G_TYPE_OBJECT);
 
@@ -180,6 +195,17 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   klass->params_set = default_params_set;
   klass->params_get = default_params_get;
   klass->make_path_from_uri = default_make_path_from_uri;
+
+  klass->pre_options_request = default_pre_signal_handler;
+  klass->pre_describe_request = default_pre_signal_handler;
+  klass->pre_setup_request = default_pre_signal_handler;
+  klass->pre_play_request = default_pre_signal_handler;
+  klass->pre_pause_request = default_pre_signal_handler;
+  klass->pre_teardown_request = default_pre_signal_handler;
+  klass->pre_set_parameter_request = default_pre_signal_handler;
+  klass->pre_get_parameter_request = default_pre_signal_handler;
+  klass->pre_announce_request = default_pre_signal_handler;
+  klass->pre_record_request = default_pre_signal_handler;
 
   g_object_class_install_property (gobject_class, PROP_SESSION_POOL,
       g_param_spec_object ("session-pool", "Session Pool",
@@ -208,10 +234,44 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       G_STRUCT_OFFSET (GstRTSPClientClass, new_session), NULL, NULL,
       g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_RTSP_SESSION);
 
+  /**
+   * GstRTSPClient::pre-options-request:
+   * @client: a #GstRTSPClient
+   * @ctx: a #GstRTSPContext
+   *
+   * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
+   *          otherwise an appropriate return code
+   *
+   * Since: 1.12
+   */
+  gst_rtsp_client_signals[SIGNAL_PRE_OPTIONS_REQUEST] =
+      g_signal_new ("pre-options-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
+          pre_options_request), pre_signal_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
+      GST_TYPE_RTSP_CONTEXT);
+
   gst_rtsp_client_signals[SIGNAL_OPTIONS_REQUEST] =
       g_signal_new ("options-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, options_request),
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_CONTEXT);
+
+  /**
+   * GstRTSPClient::pre-describe-request:
+   * @client: a #GstRTSPClient
+   * @ctx: a #GstRTSPContext
+   *
+   * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
+   *          otherwise an appropriate return code
+   *
+   * Since: 1.12
+   */
+  gst_rtsp_client_signals[SIGNAL_PRE_DESCRIBE_REQUEST] =
+      g_signal_new ("pre-describe-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
+          pre_describe_request), pre_signal_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
   gst_rtsp_client_signals[SIGNAL_DESCRIBE_REQUEST] =
@@ -220,10 +280,44 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::pre-setup-request:
+   * @client: a #GstRTSPClient
+   * @ctx: a #GstRTSPContext
+   *
+   * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
+   *          otherwise an appropriate return code
+   *
+   * Since: 1.12
+   */
+  gst_rtsp_client_signals[SIGNAL_PRE_SETUP_REQUEST] =
+      g_signal_new ("pre-setup-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
+          pre_setup_request), pre_signal_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
+      GST_TYPE_RTSP_CONTEXT);
+
   gst_rtsp_client_signals[SIGNAL_SETUP_REQUEST] =
       g_signal_new ("setup-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, setup_request),
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_CONTEXT);
+
+  /**
+   * GstRTSPClient::pre-play-request:
+   * @client: a #GstRTSPClient
+   * @ctx: a #GstRTSPContext
+   *
+   * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
+   *          otherwise an appropriate return code
+   *
+   * Since: 1.12
+   */
+  gst_rtsp_client_signals[SIGNAL_PRE_PLAY_REQUEST] =
+      g_signal_new ("pre-play-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
+          pre_play_request), pre_signal_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
   gst_rtsp_client_signals[SIGNAL_PLAY_REQUEST] =
@@ -232,10 +326,44 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::pre-pause-request:
+   * @client: a #GstRTSPClient
+   * @ctx: a #GstRTSPContext
+   *
+   * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
+   *          otherwise an appropriate return code
+   *
+   * Since: 1.12
+   */
+  gst_rtsp_client_signals[SIGNAL_PRE_PAUSE_REQUEST] =
+      g_signal_new ("pre-pause-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
+          pre_pause_request), pre_signal_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
+      GST_TYPE_RTSP_CONTEXT);
+
   gst_rtsp_client_signals[SIGNAL_PAUSE_REQUEST] =
       g_signal_new ("pause-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, pause_request),
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_CONTEXT);
+
+  /**
+   * GstRTSPClient::pre-teardown-request:
+   * @client: a #GstRTSPClient
+   * @ctx: a #GstRTSPContext
+   *
+   * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
+   *          otherwise an appropriate return code
+   *
+   * Since: 1.12
+   */
+  gst_rtsp_client_signals[SIGNAL_PRE_TEARDOWN_REQUEST] =
+      g_signal_new ("pre-teardown-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
+          pre_teardown_request), pre_signal_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
   gst_rtsp_client_signals[SIGNAL_TEARDOWN_REQUEST] =
@@ -244,11 +372,45 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::pre-set-parameter-request:
+   * @client: a #GstRTSPClient
+   * @ctx: a #GstRTSPContext
+   *
+   * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
+   *          otherwise an appropriate return code
+   *
+   * Since: 1.12
+   */
+  gst_rtsp_client_signals[SIGNAL_PRE_SET_PARAMETER_REQUEST] =
+      g_signal_new ("pre-set-parameter-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
+          pre_set_parameter_request), pre_signal_accumulator, NULL,
+      g_cclosure_marshal_generic,
+      GST_TYPE_RTSP_STATUS_CODE, 1, GST_TYPE_RTSP_CONTEXT);
+
   gst_rtsp_client_signals[SIGNAL_SET_PARAMETER_REQUEST] =
       g_signal_new ("set-parameter-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
           set_parameter_request), NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
+
+  /**
+   * GstRTSPClient::pre-get-parameter-request:
+   * @client: a #GstRTSPClient
+   * @ctx: a #GstRTSPContext
+   *
+   * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
+   *          otherwise an appropriate return code
+   *
+   * Since: 1.12
+   */
+  gst_rtsp_client_signals[SIGNAL_PRE_GET_PARAMETER_REQUEST] =
+      g_signal_new ("pre-get-parameter-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
+          pre_get_parameter_request), pre_signal_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
+      GST_TYPE_RTSP_CONTEXT);
 
   gst_rtsp_client_signals[SIGNAL_GET_PARAMETER_REQUEST] =
       g_signal_new ("get-parameter-request", G_TYPE_FROM_CLASS (klass),
@@ -274,10 +436,44 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
           send_message), NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 2, GST_TYPE_RTSP_CONTEXT, G_TYPE_POINTER);
 
+  /**
+   * GstRTSPClient::pre-announce-request:
+   * @client: a #GstRTSPClient
+   * @ctx: a #GstRTSPContext
+   *
+   * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
+   *          otherwise an appropriate return code
+   *
+   * Since: 1.12
+   */
+  gst_rtsp_client_signals[SIGNAL_PRE_ANNOUNCE_REQUEST] =
+      g_signal_new ("pre-announce-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
+          pre_announce_request), pre_signal_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
+      GST_TYPE_RTSP_CONTEXT);
+
   gst_rtsp_client_signals[SIGNAL_ANNOUNCE_REQUEST] =
       g_signal_new ("announce-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, announce_request),
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_CONTEXT);
+
+  /**
+   * GstRTSPClient::pre-record-request:
+   * @client: a #GstRTSPClient
+   * @ctx: a #GstRTSPContext
+   *
+   * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
+   *          otherwise an appropriate return code
+   *
+   * Since: 1.12
+   */
+  gst_rtsp_client_signals[SIGNAL_PRE_RECORD_REQUEST] =
+      g_signal_new ("pre-record-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
+          pre_record_request), pre_signal_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
   gst_rtsp_client_signals[SIGNAL_RECORD_REQUEST] =
@@ -864,6 +1060,47 @@ default_make_path_from_uri (GstRTSPClient * client, const GstRTSPUrl * uri)
   return path;
 }
 
+/* Default signal handler function for all "pre-command" signals, like
+ * pre-options-request. It just returns the RTSP return code 200.
+ * Subclasses can override this to get another default behaviour.
+ */
+static GstRTSPStatusCode
+default_pre_signal_handler (GstRTSPClient * client, GstRTSPContext * ctx)
+{
+  GST_LOG_OBJECT (client, "returning GST_RTSP_STS_OK");
+  return GST_RTSP_STS_OK;
+}
+
+/* The pre-signal accumulator function checks the return value of the signal
+ * handlers. If any of them returns an RTSP status code that does not start
+ * with 2 it will return FALSE, no more signal handlers will be called, and
+ * this last RTSP status code will be the result of the signal emission.
+ */
+static gboolean
+pre_signal_accumulator (GSignalInvocationHint * ihint, GValue * return_accu,
+    const GValue * handler_return, gpointer data)
+{
+  GstRTSPStatusCode handler_value = g_value_get_enum (handler_return);
+  GstRTSPStatusCode accumulated_value = g_value_get_enum (return_accu);
+
+  if (handler_value < 200 || handler_value > 299) {
+    GST_DEBUG ("handler_value : %d, returning FALSE", handler_value);
+    g_value_set_enum (return_accu, handler_value);
+    return FALSE;
+  }
+
+  /* the accumulated value is initiated to 0 by GLib. if current handler value is
+   * bigger then use that instead
+   *
+   * FIXME: Should we prioritize the 2xx codes in a smarter way?
+   *        Like, "201 Created" > "250 Low On Storage Space" > "200 OK"?
+   */
+  if (handler_value > accumulated_value)
+    g_value_set_enum (return_accu, handler_value);
+
+  return TRUE;
+}
+
 static gboolean
 handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
@@ -875,6 +1112,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gchar *path;
   gint matched;
   gboolean keep_session;
+  GstRTSPStatusCode sig_result;
 
   if (!ctx->session)
     goto no_session;
@@ -899,6 +1137,12 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
   g_free (path);
 
   ctx->sessmedia = sessmedia;
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PRE_TEARDOWN_REQUEST],
+      0, ctx, &sig_result);
+  if (sig_result != GST_RTSP_STS_OK) {
+    goto sig_failed;
+  }
 
   /* we emit the signal before closing the connection */
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_TEARDOWN_REQUEST],
@@ -952,6 +1196,13 @@ no_aggregate:
     g_free (path);
     return FALSE;
   }
+sig_failed:
+  {
+    GST_ERROR ("client %p: pre signal returned error: %s", client,
+        gst_rtsp_status_as_text (sig_result));
+    send_generic_response (client, sig_result, ctx);
+    return FALSE;
+  }
 }
 
 static GstRTSPResult
@@ -980,6 +1231,14 @@ handle_get_param_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPResult res;
   guint8 *data;
   guint size;
+  GstRTSPStatusCode sig_result;
+
+  g_signal_emit (client,
+      gst_rtsp_client_signals[SIGNAL_PRE_GET_PARAMETER_REQUEST], 0, ctx,
+      &sig_result);
+  if (sig_result != GST_RTSP_STS_OK) {
+    goto sig_failed;
+  }
 
   res = gst_rtsp_message_get_body (ctx->request, &data, &size);
   if (res != GST_RTSP_OK)
@@ -1003,6 +1262,13 @@ handle_get_param_request (GstRTSPClient * client, GstRTSPContext * ctx)
   return TRUE;
 
   /* ERRORS */
+sig_failed:
+  {
+    GST_ERROR ("client %p: pre signal returned error: %s", client,
+        gst_rtsp_status_as_text (sig_result));
+    send_generic_response (client, sig_result, ctx);
+    return FALSE;
+  }
 bad_request:
   {
     GST_ERROR ("client %p: bad request", client);
@@ -1017,6 +1283,14 @@ handle_set_param_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPResult res;
   guint8 *data;
   guint size;
+  GstRTSPStatusCode sig_result;
+
+  g_signal_emit (client,
+      gst_rtsp_client_signals[SIGNAL_PRE_SET_PARAMETER_REQUEST], 0, ctx,
+      &sig_result);
+  if (sig_result != GST_RTSP_STS_OK) {
+    goto sig_failed;
+  }
 
   res = gst_rtsp_message_get_body (ctx->request, &data, &size);
   if (res != GST_RTSP_OK)
@@ -1040,6 +1314,13 @@ handle_set_param_request (GstRTSPClient * client, GstRTSPContext * ctx)
   return TRUE;
 
   /* ERRORS */
+sig_failed:
+  {
+    GST_ERROR ("client %p: pre signal returned error: %s", client,
+        gst_rtsp_status_as_text (sig_result));
+    send_generic_response (client, sig_result, ctx);
+    return FALSE;
+  }
 bad_request:
   {
     GST_ERROR ("client %p: bad request", client);
@@ -1059,6 +1340,7 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPState rtspstate;
   gchar *path;
   gint matched;
+  GstRTSPStatusCode sig_result;
   guint i, n;
 
   if (!(session = ctx->session))
@@ -1091,6 +1373,12 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
   }
 
   ctx->sessmedia = sessmedia;
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PRE_PAUSE_REQUEST], 0,
+      ctx, &sig_result);
+  if (sig_result != GST_RTSP_STS_OK) {
+    goto sig_failed;
+  }
 
   rtspstate = gst_rtsp_session_media_get_rtsp_state (sessmedia);
   /* the session state must be playing or recording */
@@ -1141,6 +1429,13 @@ no_aggregate:
     send_generic_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
     g_free (path);
+    return FALSE;
+  }
+sig_failed:
+  {
+    GST_ERROR ("client %p: pre signal returned error: %s", client,
+        gst_rtsp_status_as_text (sig_result));
+    send_generic_response (client, sig_result, ctx);
     return FALSE;
   }
 invalid_state:
@@ -1197,6 +1492,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPRangeUnit unit = GST_RTSP_RANGE_NPT;
   gchar *path, *rtpinfo;
   gint matched;
+  GstRTSPStatusCode sig_result;
 
   if (!(session = ctx->session))
     goto no_session;
@@ -1219,6 +1515,12 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   ctx->sessmedia = sessmedia;
   ctx->media = media = gst_rtsp_session_media_get_media (sessmedia);
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PRE_PLAY_REQUEST], 0,
+      ctx, &sig_result);
+  if (sig_result != GST_RTSP_STS_OK) {
+    goto sig_failed;
+  }
 
   if (!(gst_rtsp_media_get_transport_mode (media) &
           GST_RTSP_TRANSPORT_MODE_PLAY))
@@ -1304,6 +1606,13 @@ no_aggregate:
     send_generic_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
     g_free (path);
+    return FALSE;
+  }
+sig_failed:
+  {
+    GST_ERROR ("client %p: pre signal returned error: %s", client,
+        gst_rtsp_status_as_text (sig_result));
+    send_generic_response (client, sig_result, ctx);
     return FALSE;
   }
 invalid_state:
@@ -1851,6 +2160,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gchar *path, *control = NULL;
   gint matched;
   gboolean new_session = FALSE;
+  GstRTSPStatusCode sig_result;
 
   if (!ctx->uri)
     goto no_uri;
@@ -1922,6 +2232,12 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   /* now we have a uri identifying a valid media and stream */
   ctx->stream = stream;
   ctx->media = media;
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PRE_SETUP_REQUEST], 0,
+      ctx, &sig_result);
+  if (sig_result != GST_RTSP_STS_OK) {
+    goto sig_failed;
+  }
 
   if (session == NULL) {
     /* create a session if this fails we probably reached our session limit or
@@ -2089,6 +2405,14 @@ stream_not_found:
     g_object_unref (media);
     goto cleanup_session;
   }
+sig_failed:
+  {
+    GST_ERROR ("client %p: pre signal returned error: %s", client,
+        gst_rtsp_status_as_text (sig_result));
+    send_generic_response (client, sig_result, ctx);
+    g_object_unref (media);
+    goto cleanup_path;
+  }
 service_unavailable:
   {
     GST_ERROR ("client %p: can't create session", client);
@@ -2217,11 +2541,18 @@ handle_describe_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gchar *path, *str;
   GstRTSPMedia *media;
   GstRTSPClientClass *klass;
+  GstRTSPStatusCode sig_result;
 
   klass = GST_RTSP_CLIENT_GET_CLASS (client);
 
   if (!ctx->uri)
     goto no_uri;
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PRE_DESCRIBE_REQUEST],
+      0, ctx, &sig_result);
+  if (sig_result != GST_RTSP_STS_OK) {
+    goto sig_failed;
+  }
 
   /* check what kind of format is accepted, we don't really do anything with it
    * and always return SDP for now. */
@@ -2286,6 +2617,13 @@ handle_describe_request (GstRTSPClient * client, GstRTSPContext * ctx)
   return TRUE;
 
   /* ERRORS */
+sig_failed:
+  {
+    GST_ERROR ("client %p: pre signal returned error: %s", client,
+        gst_rtsp_status_as_text (sig_result));
+    send_generic_response (client, sig_result, ctx);
+    return FALSE;
+  }
 no_uri:
   {
     GST_ERROR ("client %p: no uri", client);
@@ -2380,6 +2718,7 @@ handle_announce_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gchar *path, *cont = NULL;
   guint8 *data;
   guint size;
+  GstRTSPStatusCode sig_result;
 
   klass = GST_RTSP_CLIENT_GET_CLASS (client);
 
@@ -2416,6 +2755,14 @@ handle_announce_request (GstRTSPClient * client, GstRTSPContext * ctx)
   /* find the media object for the uri */
   if (!(media = find_media (client, ctx, path, NULL)))
     goto no_media;
+
+  ctx->media = media;
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PRE_ANNOUNCE_REQUEST],
+      0, ctx, &sig_result);
+  if (sig_result != GST_RTSP_STS_OK) {
+    goto sig_failed;
+  }
 
   if (!(gst_rtsp_media_get_transport_mode (media) &
           GST_RTSP_TRANSPORT_MODE_RECORD))
@@ -2487,6 +2834,14 @@ no_media:
     gst_sdp_message_free (sdp);
     return FALSE;
   }
+sig_failed:
+  {
+    GST_ERROR ("client %p: pre signal returned error: %s", client,
+        gst_rtsp_status_as_text (sig_result));
+    send_generic_response (client, sig_result, ctx);
+    gst_sdp_message_free (sdp);
+    return FALSE;
+  }
 unsupported_mode:
   {
     GST_ERROR ("client %p: media does not support ANNOUNCE", client);
@@ -2518,6 +2873,7 @@ handle_record_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPState rtspstate;
   gchar *path;
   gint matched;
+  GstRTSPStatusCode sig_result;
 
   if (!(session = ctx->session))
     goto no_session;
@@ -2540,6 +2896,12 @@ handle_record_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   ctx->sessmedia = sessmedia;
   ctx->media = media = gst_rtsp_session_media_get_media (sessmedia);
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PRE_RECORD_REQUEST], 0,
+      ctx, &sig_result);
+  if (sig_result != GST_RTSP_STS_OK) {
+    goto sig_failed;
+  }
 
   if (!(gst_rtsp_media_get_transport_mode (media) &
           GST_RTSP_TRANSPORT_MODE_RECORD))
@@ -2596,6 +2958,13 @@ no_aggregate:
     g_free (path);
     return FALSE;
   }
+sig_failed:
+  {
+    GST_ERROR ("client %p: pre signal returned error: %s", client,
+        gst_rtsp_status_as_text (sig_result));
+    send_generic_response (client, sig_result, ctx);
+    return FALSE;
+  }
 unsupported_mode:
   {
     GST_ERROR ("client %p: media does not support RECORD", client);
@@ -2622,6 +2991,7 @@ handle_options_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
   GstRTSPMethod options;
   gchar *str;
+  GstRTSPStatusCode sig_result;
 
   options = GST_RTSP_DESCRIBE |
       GST_RTSP_OPTIONS |
@@ -2639,12 +3009,28 @@ handle_options_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_PUBLIC, str);
   g_free (str);
 
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PRE_OPTIONS_REQUEST], 0,
+      ctx, &sig_result);
+  if (sig_result != GST_RTSP_STS_OK) {
+    goto sig_failed;
+  }
+
   send_message (client, ctx, ctx->response, FALSE);
 
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_OPTIONS_REQUEST],
       0, ctx);
 
   return TRUE;
+
+/* ERRORS */
+sig_failed:
+  {
+    GST_ERROR ("client %p: pre signal returned error: %s", client,
+        gst_rtsp_status_as_text (sig_result));
+    send_generic_response (client, sig_result, ctx);
+    gst_rtsp_message_free (ctx->response);
+    return FALSE;
+  }
 }
 
 /* remove duplicate and trailing '/' */
