@@ -189,6 +189,9 @@ enum
   PROP_MAX_BUFFERING_TIME,
   PROP_BANDWIDTH_USAGE,
   PROP_MAX_BITRATE,
+  PROP_MAX_VIDEO_WIDTH,
+  PROP_MAX_VIDEO_HEIGHT,
+  PROP_MAX_VIDEO_FRAMERATE,
   PROP_PRESENTATION_DELAY,
   PROP_LAST
 };
@@ -196,7 +199,11 @@ enum
 /* Default values for properties */
 #define DEFAULT_MAX_BUFFERING_TIME       30     /* in seconds */
 #define DEFAULT_BANDWIDTH_USAGE         0.8     /* 0 to 1     */
-#define DEFAULT_MAX_BITRATE        24000000     /* in bit/s  */
+#define DEFAULT_MAX_BITRATE               0     /* in bit/s  */
+#define DEFAULT_MAX_VIDEO_WIDTH           0
+#define DEFAULT_MAX_VIDEO_HEIGHT          0
+#define DEFAULT_MAX_VIDEO_FRAMERATE_N     0
+#define DEFAULT_MAX_VIDEO_FRAMERATE_D     1
 #define DEFAULT_PRESENTATION_DELAY     NULL     /* zero */
 
 /* Clock drift compensation for live streams */
@@ -418,8 +425,27 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
       g_param_spec_uint ("max-bitrate", "Max bitrate",
-          "Max of bitrate supported by target decoder",
-          1000, G_MAXUINT, DEFAULT_MAX_BITRATE,
+          "Max of bitrate supported by target video decoder (0 = no maximum)",
+          0, G_MAXUINT, DEFAULT_MAX_BITRATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_VIDEO_WIDTH,
+      g_param_spec_uint ("max-video-width", "Max video width",
+          "Max video width to select (0 = no maximum)",
+          0, G_MAXUINT, DEFAULT_MAX_VIDEO_WIDTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_VIDEO_HEIGHT,
+      g_param_spec_uint ("max-video-height", "Max video height",
+          "Max video height to select (0 = no maximum)",
+          0, G_MAXUINT, DEFAULT_MAX_VIDEO_HEIGHT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_VIDEO_FRAMERATE,
+      gst_param_spec_fraction ("max-video-framerate", "Max video framerate",
+          "Max video framerate to select (0/1 = no maximum)",
+          0, 1, G_MAXINT, 1, DEFAULT_MAX_VIDEO_FRAMERATE_N,
+          DEFAULT_MAX_VIDEO_FRAMERATE_D,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PRESENTATION_DELAY,
@@ -492,6 +518,10 @@ gst_dash_demux_init (GstDashDemux * demux)
   /* Properties */
   demux->max_buffering_time = DEFAULT_MAX_BUFFERING_TIME * GST_SECOND;
   demux->max_bitrate = DEFAULT_MAX_BITRATE;
+  demux->max_video_width = DEFAULT_MAX_VIDEO_WIDTH;
+  demux->max_video_height = DEFAULT_MAX_VIDEO_HEIGHT;
+  demux->max_video_framerate_n = DEFAULT_MAX_VIDEO_FRAMERATE_N;
+  demux->max_video_framerate_d = DEFAULT_MAX_VIDEO_FRAMERATE_D;
   demux->default_presentation_delay = DEFAULT_PRESENTATION_DELAY;
 
   g_mutex_init (&demux->client_lock);
@@ -516,6 +546,16 @@ gst_dash_demux_set_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_BITRATE:
       demux->max_bitrate = g_value_get_uint (value);
+      break;
+    case PROP_MAX_VIDEO_WIDTH:
+      demux->max_video_width = g_value_get_uint (value);
+      break;
+    case PROP_MAX_VIDEO_HEIGHT:
+      demux->max_video_height = g_value_get_uint (value);
+      break;
+    case PROP_MAX_VIDEO_FRAMERATE:
+      demux->max_video_framerate_n = gst_value_get_fraction_numerator (value);
+      demux->max_video_framerate_d = gst_value_get_fraction_denominator (value);
       break;
     case PROP_PRESENTATION_DELAY:
       g_free (demux->default_presentation_delay);
@@ -543,6 +583,16 @@ gst_dash_demux_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MAX_BITRATE:
       g_value_set_uint (value, demux->max_bitrate);
+      break;
+    case PROP_MAX_VIDEO_WIDTH:
+      g_value_set_uint (value, demux->max_video_width);
+      break;
+    case PROP_MAX_VIDEO_HEIGHT:
+      g_value_set_uint (value, demux->max_video_height);
+      break;
+    case PROP_MAX_VIDEO_FRAMERATE:
+      gst_value_set_fraction (value, demux->max_video_framerate_n,
+          demux->max_video_framerate_d);
       break;
     case PROP_PRESENTATION_DELAY:
       if (demux->default_presentation_delay == NULL)
@@ -1457,15 +1507,23 @@ gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
   GST_DEBUG_OBJECT (stream->pad,
       "Trying to change to bitrate: %" G_GUINT64_FORMAT, bitrate);
 
+  if (active_stream->mimeType == GST_STREAM_VIDEO && demux->max_bitrate) {
+    bitrate = MIN (demux->max_bitrate, bitrate);
+  }
+
   /* get representation index with current max_bandwidth */
   if ((base_demux->segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) ||
       ABS (base_demux->segment.rate) <= 1.0) {
     new_index =
-        gst_mpdparser_get_rep_idx_with_max_bandwidth (rep_list, bitrate);
+        gst_mpdparser_get_rep_idx_with_max_bandwidth (rep_list, bitrate,
+        demux->max_video_width, demux->max_video_height,
+        demux->max_video_framerate_n, demux->max_video_framerate_d);
   } else {
     new_index =
         gst_mpdparser_get_rep_idx_with_max_bandwidth (rep_list,
-        bitrate / ABS (base_demux->segment.rate));
+        bitrate / ABS (base_demux->segment.rate), demux->max_video_width,
+        demux->max_video_height, demux->max_video_framerate_n,
+        demux->max_video_framerate_d);
   }
 
   /* if no representation has the required bandwidth, take the lowest one */

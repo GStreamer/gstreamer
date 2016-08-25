@@ -561,7 +561,7 @@ gboolean gst_mpd_client_has_next_period (GstMpdClient *client);
 gboolean gst_mpd_client_has_previous_period (GstMpdClient * client);
 
 /* Representation selection */
-gint gst_mpdparser_get_rep_idx_with_max_bandwidth (GList *Representations, gint max_bandwidth);
+gint gst_mpdparser_get_rep_idx_with_max_bandwidth (GList *Representations, gint max_bandwidth, gint max_video_width, gint max_video_height, gint max_video_framerate_n, gint max_video_framerate_d);
 gint gst_mpdparser_get_rep_idx_with_min_bandwidth (GList * Representations);
 
 /* URL management */

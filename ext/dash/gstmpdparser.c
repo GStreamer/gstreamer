@@ -2453,7 +2453,8 @@ gst_mpdparser_get_rep_idx_with_min_bandwidth (GList * Representations)
 
 gint
 gst_mpdparser_get_rep_idx_with_max_bandwidth (GList * Representations,
-    gint max_bandwidth)
+    gint max_bandwidth, gint max_video_width, gint max_video_height, gint
+    max_video_framerate_n, gint max_video_framerate_d)
 {
   GList *list = NULL, *best = NULL;
   GstRepresentationNode *representation;
@@ -2468,8 +2469,32 @@ gst_mpdparser_get_rep_idx_with_max_bandwidth (GList * Representations,
     return gst_mpdparser_get_rep_idx_with_min_bandwidth (Representations);
 
   for (list = g_list_first (Representations); list; list = g_list_next (list)) {
+    GstFrameRate *framerate = NULL;
+
     representation = (GstRepresentationNode *) list->data;
-    if (representation && representation->bandwidth <= max_bandwidth &&
+
+    /* FIXME: Really? */
+    if (!representation)
+      continue;
+
+    framerate = representation->RepresentationBase->frameRate;
+    if (!framerate)
+      framerate = representation->RepresentationBase->maxFrameRate;
+
+    if (framerate && max_video_framerate_n > 0) {
+      if (gst_util_fraction_compare (framerate->num, framerate->den,
+              max_video_framerate_n, max_video_framerate_d) > 0)
+        continue;
+    }
+
+    if (max_video_width > 0
+        && representation->RepresentationBase->width > max_video_width)
+      continue;
+    if (max_video_height > 0
+        && representation->RepresentationBase->height > max_video_height)
+      continue;
+
+    if (representation->bandwidth <= max_bandwidth &&
         representation->bandwidth > best_bandwidth) {
       best = list;
       best_bandwidth = representation->bandwidth;
