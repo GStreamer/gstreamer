@@ -4951,6 +4951,20 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
   if (type1 == GST_TYPE_LIST || type2 == GST_TYPE_LIST)
     return TRUE;
 
+  if (G_UNLIKELY (GST_VALUE_HOLDS_FLAG_SET (value1) &&
+          GST_VALUE_HOLDS_FLAG_SET (value2))) {
+    GType type1, type2, flagset_type;
+
+    type1 = G_VALUE_TYPE (value1);
+    type2 = G_VALUE_TYPE (value2);
+    flagset_type = GST_TYPE_FLAG_SET;
+
+    /* Allow intersection with the generic FlagSet type, on one
+     * side, but not 2 different subtypes - that makes no sense */
+    if (type1 == type2 || type1 == flagset_type || type2 == flagset_type)
+      return TRUE;
+  }
+
   /* check registered intersect functions */
   len = gst_value_intersect_funcs->len;
   for (i = 0; i < len; i++) {

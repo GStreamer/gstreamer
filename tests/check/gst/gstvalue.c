@@ -662,17 +662,22 @@ GST_START_TEST (test_flagset)
 
   /* GstFlagSet should always intersect with itself */
   g_value_unset (&dest);
+  fail_unless (gst_value_can_intersect (&value, &value));
   fail_unless (gst_value_intersect (&dest, &value, &value));
 
   /* GstFlagSet subtype should intersect with itself */
   g_value_unset (&dest);
+  fail_unless (gst_value_can_intersect (&value2, &value2));
   fail_unless (gst_value_intersect (&dest, &value2, &value2));
 
   /* Check we can intersect custom flagset subtype with flagset */
   g_value_unset (&dest);
+  fail_unless (gst_value_can_intersect (&value2, &value));
   fail_unless (gst_value_intersect (&dest, &value2, &value));
 
+  /* and in the other order */
   g_value_unset (&dest);
+  fail_unless (gst_value_can_intersect (&value, &value2));
   fail_unless (gst_value_intersect (&dest, &value, &value2));
 
   fail_unless (gst_value_get_flagset_flags (&dest) == test_flags,
