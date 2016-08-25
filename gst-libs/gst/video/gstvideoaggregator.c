@@ -737,7 +737,8 @@ gst_video_aggregator_update_src_caps (GstVideoAggregator * vagg)
     GST_DEBUG_OBJECT (vagg, "updating caps from %" GST_PTR_FORMAT,
         downstream_caps);
     GST_DEBUG_OBJECT (vagg, "       with filter %" GST_PTR_FORMAT, peercaps);
-    if (!(caps = vagg_klass->update_caps (vagg, downstream_caps, peercaps))) {
+    if (!(caps = vagg_klass->update_caps (vagg, downstream_caps, peercaps)) ||
+        gst_caps_is_empty (caps)) {
       GST_WARNING_OBJECT (vagg, "Subclass failed to update provided caps");
       gst_caps_unref (downstream_caps);
       if (peercaps)
