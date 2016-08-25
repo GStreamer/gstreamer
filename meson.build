@@ -268,9 +268,14 @@ subdir('plugins')
 subdir('tools')
 subdir('pkgconfig')
 subdir('tests')
-# FIXME: check for gtk-doc
+
+gtkdoc = find_program('gtkdoc-scan', required : false)
 if build_machine.system() != 'windows'
-  subdir('docs')
+  if gtkdoc.found()
+    subdir('docs')
+  else
+    message('Not building documentation as gtk-doc was not found')
+  endif
 else
   message('Disabling gtk-doc while building on Windows')
 endif
