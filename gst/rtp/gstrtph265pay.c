@@ -109,7 +109,7 @@ enum
   PROP_CONFIG_INTERVAL
 };
 
-#define IS_ACCESS_UNIT(x) (((x) > 0x00) && ((x) < 0x06))
+#define IS_ACCESS_UNIT(x) (((x) >= 0x00) && ((x) < 0x20))
 
 static void gst_rtp_h265_pay_finalize (GObject * object);
 
@@ -963,8 +963,6 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
 
   packet_len = gst_rtp_buffer_calc_packet_len (size, 0, 0);
 
-  GST_FIXME_OBJECT (rtph265pay, "Set RTP marker bit appropriately");
-
   if (packet_len < mtu) {
     GST_DEBUG_OBJECT (rtph265pay,
         "NAL Unit fit in one packet datasize=%d mtu=%d", size, mtu);
@@ -977,10 +975,10 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
 
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
-    /* FIXME : only set the marker bit on packets containing access units */
-    /* if (IS_ACCESS_UNIT (nalType) && end_of_au) {
-       gst_rtp_buffer_set_marker (&rtp, 1);
-       } */
+    /* only set the marker bit on packets containing access units */
+    if (IS_ACCESS_UNIT (nalType) && end_of_au) {
+      gst_rtp_buffer_set_marker (&rtp, 1);
+    }
 
     /* timestamp the outbuffer */
     GST_BUFFER_PTS (outbuf) = pts;
@@ -1045,10 +1043,10 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
       payload[0] = (nalHeader[0] & 0x81) | (49 << 1);
       payload[1] = nalHeader[1];
 
-      /* FIXME - set RTP marker bit appropriately */
-      /* if (IS_ACCESS_UNIT (nalType)) {
-         gst_rtp_buffer_set_marker (&rtp, end && end_of_au);
-         } */
+      /* set the marker bit on the last packet of an access unit */
+      if (IS_ACCESS_UNIT (nalType)) {
+        gst_rtp_buffer_set_marker (&rtp, end && end_of_au);
+      }
 
       /* FU Header */
       payload[2] = (start << 7) | (end << 6) | (nalType & 0x3f);
