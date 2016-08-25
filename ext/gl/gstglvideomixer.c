@@ -29,12 +29,12 @@
  * <title>Examples</title>
  * |[
  * gst-launch-1.0  glvideomixer name=m ! glimagesink \
- *     videotestsrc ! video/x-raw, format=YUY2 ! m. \
- *     videotestsrc pattern=12 ! video/x-raw, format=I420, framerate=5/1, width=100, height=200 ! queue ! m. \
- *     videotestsrc ! video/x-raw, format=RGB, framerate=15/1, width=1500, height=1500 ! gleffects effect=3 ! queue ! m. \
- *     videotestsrc ! gleffects effect=2 ! queue ! m.  \
- *     videotestsrc ! glfiltercube ! queue ! m. \
- *     videotestsrc ! gleffects effect=6 ! queue ! m.
+ *     videotestsrc ! video/x-raw, format=YUY2 ! glupload ! glcolorconvert ! m. \
+ *     videotestsrc pattern=12 ! video/x-raw, format=I420, framerate=5/1, width=100, height=200 ! queue ! \
+ *     glupload ! glcolorconvert ! m. \
+ *     videotestsrc ! glupload ! gleffects effect=2 ! queue ! m.  \
+ *     videotestsrc ! glupload ! glfiltercube ! queue ! m. \
+ *     videotestsrc ! glupload ! gleffects effect=6 ! queue ! m.gst-launch-1.0  glvideomixer name=m ! glimagesink \
  * ]|
  * </refsect2>
  */
