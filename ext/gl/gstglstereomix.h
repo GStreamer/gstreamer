@@ -69,9 +69,6 @@ struct _GstGLStereoMix
   GstGLViewConvert *viewconvert;
   GstGLStereoDownmix downmix_mode;
 
-  GstCaps *out_caps;
-  GstVideoInfo out_info;
-
   GstVideoInfo mix_info;
 
   GPtrArray *input_frames;
