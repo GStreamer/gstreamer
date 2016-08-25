@@ -28,6 +28,7 @@ video_sources = [
   'video-scaler.c',
   'video-tile.c',
   'video-overlay-composition.c',
+  'videodirection.c',
   'videoorientation.c',
   'videooverlay.c',
 ]
@@ -56,6 +57,7 @@ video_headers = [
   'video-frame.h',
   'video-scaler.h',
   'video-tile.h',
+  'videodirection.h',
   'videoorientation.h',
   'videooverlay.h',
   'video-resampler.h',
