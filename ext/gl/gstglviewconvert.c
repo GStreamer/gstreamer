@@ -31,11 +31,13 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch-1.0 videotestsrc ! glviewconvert ! glimagesink
- * ]|
+ * gst-launch-1.0 videotestsrc ! glupload ! glviewconvert ! glimagesink
+ * ]| Simple placebo example demonstrating identity passthrough of mono video
  * |[
- * gst-launch-1.0 videotestsrc pattern=checkers-1 ! glviewconvert input-mode-override=side-by-side ! glimagesink -v
- * ]|
+ * gst-launch-1.0 videotestsrc pattern=checkers-1 ! glupload ! \
+ *     glviewconvert input-mode-override=side-by-side ! glimagesink -v
+ * ]| Force re-interpretation of the input checkers pattern as a side-by-side stereoscopic
+ *    image and display in glimagesink.
  * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required.
  * </refsect2>
  */
