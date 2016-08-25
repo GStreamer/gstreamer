@@ -54,7 +54,7 @@ log
 /bindings/python/ges.c
 
 /ges/lex.priv_ges_parse_yy.c
-/ges/parse_lex.h
+/ges/ges-parse-lex.h
 
 /m4
 

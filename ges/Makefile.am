@@ -10,7 +10,7 @@ EXTRA_DIST=parse.l
 
 CLEANFILES = $(BUILT_SOURCES) $(built_header_make) $(built_source_make) *.gcno *.gcda *.gcov *.gcov.out
 
-nodist_libges_@GST_API_VERSION@_la_SOURCES = lex.priv_ges_parse_yy.c parse_lex.h
+nodist_libges_@GST_API_VERSION@_la_SOURCES = lex.priv_ges_parse_yy.c ges-parse-lex.h
 
 
 libges_@GST_API_VERSION@_la_SOURCES = 		\
@@ -167,7 +167,7 @@ BUILT_SOURCES =			\
 	$(built_header_make)	\
 	$(built_source_make)    \
 	lex.priv_ges_parse_yy.c \
-	parse_lex.h
+	ges-parse-lex.h
 
 include $(top_srcdir)/common/gst-glib-gen.mak
 
@@ -246,5 +246,5 @@ endif
 
 gcov: $(libges_@GST_API_VERSION@_la_SOURCES:=.gcov)
 
-lex.priv_ges_parse_yy.c parse_lex.h: parse.l
-	$(AM_V_GEN)$(FLEX_PATH) --header-file=parse_lex.h -Ppriv_ges_parse_yy $^
+lex.priv_ges_parse_yy.c ges-parse-lex.h: parse.l
+	$(AM_V_GEN)$(FLEX_PATH) --header-file=ges-parse-lex.h -Ppriv_ges_parse_yy $^
