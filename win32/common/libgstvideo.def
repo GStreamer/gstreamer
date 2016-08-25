@@ -136,6 +136,7 @@ EXPORTS
 	gst_video_decoder_set_output_state
 	gst_video_decoder_set_packetized
 	gst_video_decoder_set_use_default_pad_acceptcaps
+	gst_video_direction_get_type
 	gst_video_dither_flags_get_type
 	gst_video_dither_free
 	gst_video_dither_line
@@ -226,6 +227,7 @@ EXPORTS
 	gst_video_orientation_get_type
 	gst_video_orientation_get_vcenter
 	gst_video_orientation_get_vflip
+	gst_video_orientation_method_get_type
 	gst_video_orientation_set_hcenter
 	gst_video_orientation_set_hflip
 	gst_video_orientation_set_vcenter
