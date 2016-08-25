@@ -3710,12 +3710,6 @@ gst_adaptive_demux_stream_select_bitrate (GstAdaptiveDemux *
 {
   GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
 
-  /* FIXME: Currently several issues have be found when letting bitrate adaptation
-   * happen using trick modes (such as 'All streams finished without buffers') and
-   * the adaptive algorithm does not properly behave. */
-  if (demux->segment.rate != 1.0)
-    return FALSE;
-
   if (klass->stream_select_bitrate)
     return klass->stream_select_bitrate (stream, bitrate);
   return FALSE;

@@ -543,7 +543,8 @@ gst_mss_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
   GST_DEBUG_OBJECT (stream->pad,
       "Using stream download bitrate %" G_GUINT64_FORMAT, bitrate);
 
-  if (gst_mss_stream_select_bitrate (mssstream->manifest_stream, bitrate)) {
+  if (gst_mss_stream_select_bitrate (mssstream->manifest_stream,
+          bitrate / MAX (1.0, ABS (stream->demux->segment.rate)))) {
     GstCaps *caps;
     GstCaps *msscaps;
     GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (stream->demux);

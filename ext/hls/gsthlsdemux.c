@@ -1086,11 +1086,8 @@ gst_hls_demux_select_bitrate (GstAdaptiveDemuxStream * stream, guint64 bitrate)
     return FALSE;
   }
 
-  /* Bitrate adaptation during trick modes does not work well */
-  if (demux->segment.rate != 1.0)
-    return FALSE;
-
-  gst_hls_demux_change_playlist (hlsdemux, bitrate, &changed);
+  gst_hls_demux_change_playlist (hlsdemux, bitrate / MAX (1.0,
+          ABS (demux->segment.rate)), &changed);
   if (changed)
     gst_hls_demux_setup_streams (GST_ADAPTIVE_DEMUX_CAST (hlsdemux));
   return changed;

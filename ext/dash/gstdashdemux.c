@@ -1437,6 +1437,7 @@ gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
   GstActiveStream *active_stream = NULL;
   GList *rep_list = NULL;
   gint new_index;
+  GstAdaptiveDemux *base_demux = stream->demux;
   GstDashDemux *demux = GST_DASH_DEMUX_CAST (stream->demux);
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
   gboolean ret = FALSE;
@@ -1457,7 +1458,15 @@ gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
       "Trying to change to bitrate: %" G_GUINT64_FORMAT, bitrate);
 
   /* get representation index with current max_bandwidth */
-  new_index = gst_mpdparser_get_rep_idx_with_max_bandwidth (rep_list, bitrate);
+  if ((base_demux->segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) ||
+      ABS (base_demux->segment.rate) <= 1.0) {
+    new_index =
+        gst_mpdparser_get_rep_idx_with_max_bandwidth (rep_list, bitrate);
+  } else {
+    new_index =
+        gst_mpdparser_get_rep_idx_with_max_bandwidth (rep_list,
+        bitrate / ABS (base_demux->segment.rate));
+  }
 
   /* if no representation has the required bandwidth, take the lowest one */
   if (new_index == -1)
