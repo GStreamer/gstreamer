@@ -1208,7 +1208,7 @@ _fixate_texture_target (GstGLViewConvert * viewconvert,
     g_value_set_static_string (&item, GST_GL_TEXTURE_TARGET_EXTERNAL_OES_STR);
   }
 
-  gst_structure_set_value (s, "texture-target", &item);
+  gst_structure_set_value (s_other, "texture-target", &item);
 
   g_value_unset (&item);
 
@@ -1286,9 +1286,7 @@ gst_gl_view_convert_fixate_caps (GstGLViewConvert * viewconvert,
     }
   }
 
-  tmp = _fixate_texture_target (viewconvert, direction, caps, othercaps);
-  gst_caps_unref (othercaps);
-  othercaps = tmp;
+  othercaps = _fixate_texture_target (viewconvert, direction, caps, othercaps);
 
 done:
   GST_DEBUG_OBJECT (viewconvert, "dir %s fixated to %" GST_PTR_FORMAT
