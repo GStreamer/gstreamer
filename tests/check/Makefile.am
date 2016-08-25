@@ -309,7 +309,7 @@ TESTS = $(check_PROGRAMS)
 AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS) \
 	-DGST_CHECK_TEST_ENVIRONMENT_BEACON="\"GST_PLUGIN_LOADING_WHITELIST\"" \
 	-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
-	-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
+	-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS $(PTHREAD_CFLAGS)
 LDADD = $(GST_CHECK_LIBS)
 
 generic_states_CFLAGS = $(AM_CFLAGS) $(GMODULE_NO_EXPORT_CFLAGS)
@@ -362,7 +362,8 @@ libs_mpegvideoparser_LDADD = \
 libs_mpegts_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
-	$(GST_CFLAGS)
+	$(GST_CFLAGS) \
+	$(PTHREAD_CFLAGS)
 
 libs_mpegts_LDADD = \
 	$(top_builddir)/gst-libs/gst/mpegts/libgstmpegts-@GST_API_VERSION@.la \
@@ -479,6 +480,8 @@ elements_dash_demux_LDADD = \
 	$(top_builddir)/gst-libs/gst/adaptivedemux/libgstadaptivedemux-@GST_API_VERSION@.la
 
 elements_dash_demux_SOURCES = elements/test_http_src.c elements/test_http_src.h elements/adaptive_demux_engine.c elements/adaptive_demux_engine.h elements/adaptive_demux_common.c elements/adaptive_demux_common.h elements/dash_demux.c
+
+elements_neonhttpsrc_CFLAGS = $(AM_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 
 elements_mssdemux_CFLAGS = $(AM_CFLAGS) $(LIBXML2_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_PLUGINS_BAD_CFLAGS)
 elements_mssdemux_LDADD = \
