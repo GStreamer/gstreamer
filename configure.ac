@@ -201,6 +201,10 @@ AG_GST_CHECK_GST_BASE($GST_API_VERSION, [$GST_REQ], yes)
 AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
 AG_GST_CHECK_GST_CONTROLLER($GST_API_VERSION, [$GST_REQ], yes)
 AG_GST_CHECK_GST_NET($GST_API_VERSION, [$GST_REQ], yes)
+AG_GST_PKG_CHECK_MODULES(GST_VIDEO, gstreamer-video-[$GST_API_VERSION], [$GST_REQ], yes)
+AG_GST_PKG_CHECK_MODULES(GST_AUDIO, gstreamer-audio-[$GST_API_VERSION], [$GST_REQ], yes)
+AG_GST_PKG_CHECK_MODULES(GST_PBUTILS, gstreamer-pbutils-[$GST_API_VERSION], [$GST_REQ], yes)
+
 AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 
 AG_GST_CHECK_GST_PLUGINS_BASE($GST_API_VERSION, [$GSTPB_REQ], yes)
@@ -1901,8 +1905,6 @@ AC_SUBST(LIBUSB_LIBS)
 dnl *** NVENC ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NVENC, true)
 AG_GST_CHECK_FEATURE(NVENC, [NVIDIA Encode API], nvenc, [
-  AG_GST_PKG_CHECK_MODULES(GST_VIDEO, gstreamer-video-1.0)
-  AG_GST_PKG_CHECK_MODULES(GST_PBUTILS, gstreamer-pbutils-1.0)
   AC_ARG_WITH([cuda-prefix],
           AS_HELP_STRING([--with-cuda-prefix],
           [Use the provided prefix for detecting the cuda installation]),
@@ -2373,7 +2375,6 @@ AG_GST_CHECK_FEATURE(KATE, [Kate], kate, [
 dnl *** kms ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_KMS, true)
 AG_GST_CHECK_FEATURE(KMS, [drm/kms libraries], kms, [
-  AG_GST_PKG_CHECK_MODULES(GST_VIDEO, gstreamer-video-1.0)
   AG_GST_PKG_CHECK_MODULES(GST_ALLOCATORS, gstreamer-allocators-1.0)
   PKG_CHECK_MODULES([DRM], [libdrm libkms], HAVE_KMS=yes, HAVE_KMS=no)
 ])
