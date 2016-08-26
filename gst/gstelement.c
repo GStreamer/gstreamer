@@ -3479,7 +3479,7 @@ _priv_gst_element_cleanup (void)
 }
 
 GstStructure *
-gst_element_message_details_new (const char *name, ...)
+gst_make_element_message_details (const char *name, ...)
 {
   GstStructure *structure;
   va_list varargs;

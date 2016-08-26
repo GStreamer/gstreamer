@@ -399,8 +399,8 @@ typedef enum
  */
 #define GST_ELEMENT_START_TIME(elem)            (GST_ELEMENT_CAST(elem)->start_time)
 
-GstStructure *gst_element_message_details_new(const char *name, ...);
-#define GST_ELEMENT_MESSAGE_MAKE_DETAILS(args) gst_element_message_details_new args
+GstStructure *gst_make_element_message_details (const char *name, ...);
+#define GST_ELEMENT_MESSAGE_MAKE_DETAILS(args) gst_make_element_message_details args
 
 /**
  * GST_ELEMENT_ERROR_WITH_DETAILS:

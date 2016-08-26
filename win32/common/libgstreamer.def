@@ -540,7 +540,6 @@ EXPORTS
 	gst_element_link_pads_full
 	gst_element_lost_state
 	gst_element_make_from_uri
-	gst_element_message_details_new
 	gst_element_message_full
 	gst_element_message_full_with_details
 	gst_element_no_more_pads
@@ -690,6 +689,7 @@ EXPORTS
 	gst_library_error_get_type
 	gst_library_error_quark
 	gst_lock_flags_get_type
+	gst_make_element_message_details
 	gst_map_flags_get_type
 	gst_memory_alignment DATA
 	gst_memory_copy

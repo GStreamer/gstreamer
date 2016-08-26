@@ -904,7 +904,7 @@ gst_element_change_state
 <SUBSECTION element-messages>
 gst_element_message_full
 gst_element_message_full_with_details
-gst_element_message_details_new
+gst_make_element_message_details
 gst_element_post_message
 
 <SUBSECTION element-query>
