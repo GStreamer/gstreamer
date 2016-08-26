@@ -1253,7 +1253,8 @@ gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
 
 /**
  * gst_debug_remove_log_function:
- * @func: (scope call): the log function to remove
+ * @func: (scope call) (allow-none): the log function to remove, or %NULL to
+ *     remove the default log function
  *
  * Removes all registered instances of the given logging functions.
  *
