@@ -1071,7 +1071,7 @@ gst_avf_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
     return NULL;
   }
 
-  buf = gst_core_media_buffer_new (cmbuf, FALSE);
+  buf = gst_core_media_buffer_new (cmbuf, FALSE, NULL);
   CFRelease (cmbuf);
   if (buf == NULL)
     return NULL;

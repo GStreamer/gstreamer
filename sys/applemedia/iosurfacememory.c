@@ -30,6 +30,12 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_IO_SURFACE_MEMORY);
 G_DEFINE_TYPE (GstIOSurfaceMemoryAllocator, gst_io_surface_memory_allocator,
     GST_TYPE_GL_MEMORY_ALLOCATOR);
 
+typedef struct
+{
+  GstIOSurfaceMemory *memory;
+  IOSurfaceRef surface;
+} ContextThreadData;
+
 static void _io_surface_memory_set_surface (GstIOSurfaceMemory * memory,
     IOSurfaceRef surface);
 
@@ -176,7 +182,7 @@ _io_surface_memory_new (GstGLContext * context,
   GST_MINI_OBJECT_FLAG_SET (mem, GST_MEMORY_FLAG_READONLY);
 
   mem->surface = NULL;
-  _io_surface_memory_set_surface (mem, surface);
+  gst_io_surface_memory_set_surface (mem, surface);
 
   return mem;
 }
@@ -232,12 +238,22 @@ _io_surface_memory_set_surface (GstIOSurfaceMemory * memory,
   }
 }
 
+static void
+_do_set_surface (GstGLContext * context, ContextThreadData * data)
+{
+  _io_surface_memory_set_surface (data->memory, data->surface);
+}
+
 void
 gst_io_surface_memory_set_surface (GstIOSurfaceMemory * memory,
     IOSurfaceRef surface)
 {
-  g_return_if_fail (gst_is_io_surface_memory ((GstMemory *) memory));
-  g_return_if_fail (memory->surface == NULL);
+  GstGLContext *context;
+  ContextThreadData data = { memory, surface };
 
-  _io_surface_memory_set_surface (memory, surface);
+  g_return_if_fail (gst_is_io_surface_memory ((GstMemory *) memory));
+
+  context = memory->gl_mem.mem.context;
+  gst_gl_context_thread_add (context,
+      (GstGLContextThreadFunc) _do_set_surface, &data);
 }

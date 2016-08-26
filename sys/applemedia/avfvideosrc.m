@@ -954,18 +954,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     }
   }
 
-  *buf = gst_core_media_buffer_new (sbuf, useVideoMeta);
+  *buf = gst_core_media_buffer_new (sbuf, useVideoMeta, textureCache);
   if (*buf == NULL) {
     CFRelease (sbuf);
     return GST_FLOW_ERROR;
   }
   CFRelease (sbuf);
-
-  if (textureCache != NULL) {
-    *buf = gst_video_texture_cache_get_gl_buffer (textureCache, *buf);
-    if (*buf == NULL)
-      return GST_FLOW_ERROR;
-  }
 
   GST_BUFFER_OFFSET (*buf) = offset++;
   GST_BUFFER_OFFSET_END (*buf) = GST_BUFFER_OFFSET (*buf) + 1;

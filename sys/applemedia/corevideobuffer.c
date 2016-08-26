@@ -17,8 +17,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 #include "corevideobuffer.h"
 #include "corevideomemory.h"
+#if !HAVE_IOS
+#include "iosurfacememory.h"
+#endif
 
 static const GstMetaInfo *gst_core_video_meta_get_info (void);
 
@@ -93,18 +99,46 @@ gst_core_video_meta_get_info (void)
   return core_video_meta_info;
 }
 
+static GstMemory *
+_create_glmem (GstAppleCoreVideoPixelBuffer * gpixbuf,
+    GstVideoInfo * info, guint plane, gsize size, GstVideoTextureCache * cache)
+{
+#if HAVE_IOS
+  return gst_video_texture_cache_create_memory (cache, gpixbuf, plane, size);
+#else
+  GstIOSurfaceMemory *mem;
+  GstVideoGLTextureType tex_type =
+      gst_gl_texture_type_from_format (cache->ctx, GST_VIDEO_INFO_FORMAT (info),
+      plane);
+  CVPixelBufferRef pixel_buf = gpixbuf->buf;
+  IOSurfaceRef surface = CVPixelBufferGetIOSurface (pixel_buf);
+
+  CFRetain (pixel_buf);
+  mem = gst_io_surface_memory_wrapped (cache->ctx,
+      surface, GST_GL_TEXTURE_TARGET_RECTANGLE, tex_type,
+      info, plane, NULL, pixel_buf, (GDestroyNotify) CFRelease);
+  return GST_MEMORY_CAST (mem);
+#endif
+}
+
 void
-gst_core_video_wrap_pixel_buffer (GstBuffer * buf, GstVideoInfo * info,
-    CVPixelBufferRef pixel_buf, gboolean * has_padding)
+gst_core_video_wrap_pixel_buffer (GstBuffer * buf,
+    GstVideoInfo * info,
+    CVPixelBufferRef pixel_buf,
+    GstVideoTextureCache * cache, gboolean * has_padding)
 {
   guint n_planes;
   gsize offset[GST_VIDEO_MAX_PLANES] = { 0 };
   gint stride[GST_VIDEO_MAX_PLANES] = { 0 };
   UInt32 size;
   GstAppleCoreVideoPixelBuffer *gpixbuf;
+  GstMemory *mem = NULL;
+  gboolean do_gl = cache != NULL;
 
   gpixbuf = gst_apple_core_video_pixel_buffer_new (pixel_buf);
-  *has_padding = FALSE;
+
+  if (has_padding)
+    *has_padding = FALSE;
 
   if (CVPixelBufferIsPlanar (pixel_buf)) {
     gint i, size = 0, plane_offset = 0;
@@ -113,16 +147,20 @@ gst_core_video_wrap_pixel_buffer (GstBuffer * buf, GstVideoInfo * info,
     for (i = 0; i < n_planes; i++) {
       stride[i] = CVPixelBufferGetBytesPerRowOfPlane (pixel_buf, i);
 
-      if (stride[i] != GST_VIDEO_INFO_PLANE_STRIDE (info, i)) {
+      if (stride[i] != GST_VIDEO_INFO_PLANE_STRIDE (info, i) && has_padding)
         *has_padding = TRUE;
-      }
 
       size = stride[i] * CVPixelBufferGetHeightOfPlane (pixel_buf, i);
       offset[i] = plane_offset;
       plane_offset += size;
 
-      gst_buffer_append_memory (buf,
-          gst_apple_core_video_memory_new_wrapped (gpixbuf, i, size));
+      if (do_gl)
+        mem = _create_glmem (gpixbuf, info, i, size, cache);
+      else
+        mem =
+            GST_MEMORY_CAST (gst_apple_core_video_memory_new_wrapped (gpixbuf,
+                i, size));
+      gst_buffer_append_memory (buf, mem);
     }
   } else {
     n_planes = 1;
@@ -130,9 +168,13 @@ gst_core_video_wrap_pixel_buffer (GstBuffer * buf, GstVideoInfo * info,
     offset[0] = 0;
     size = stride[0] * CVPixelBufferGetHeight (pixel_buf);
 
-    gst_buffer_append_memory (buf,
-        gst_apple_core_video_memory_new_wrapped (gpixbuf,
-            GST_APPLE_CORE_VIDEO_NO_PLANE, size));
+    if (do_gl)
+      mem = _create_glmem (gpixbuf, info, 0, size, cache);
+    else
+      mem =
+          GST_MEMORY_CAST (gst_apple_core_video_memory_new_wrapped (gpixbuf, 0,
+              size));
+    gst_buffer_append_memory (buf, mem);
   }
 
   gst_apple_core_video_pixel_buffer_unref (gpixbuf);
@@ -147,13 +189,58 @@ gst_core_video_wrap_pixel_buffer (GstBuffer * buf, GstVideoInfo * info,
   }
 }
 
+static GstVideoFormat
+gst_core_video_get_video_format (OSType format)
+{
+  switch (format) {
+    case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
+      return GST_VIDEO_FORMAT_NV12;
+    case kCVPixelFormatType_422YpCbCr8_yuvs:
+      return GST_VIDEO_FORMAT_YUY2;
+    case kCVPixelFormatType_422YpCbCr8:
+      return GST_VIDEO_FORMAT_UYVY;
+    case kCVPixelFormatType_32BGRA:
+      return GST_VIDEO_FORMAT_BGRA;
+    case kCVPixelFormatType_32RGBA:
+      return GST_VIDEO_FORMAT_RGBA;
+    default:
+      GST_WARNING ("Unknown OSType format: %d", (gint) format);
+      return GST_VIDEO_FORMAT_UNKNOWN;
+  }
+}
+
+
+gboolean
+gst_core_video_info_init_from_pixel_buffer (GstVideoInfo * info,
+    CVPixelBufferRef pixel_buf)
+{
+  size_t width, height;
+  OSType format_type;
+  GstVideoFormat video_format;
+
+  width = CVPixelBufferGetWidth (pixel_buf);
+  height = CVPixelBufferGetHeight (pixel_buf);
+  format_type = CVPixelBufferGetPixelFormatType (pixel_buf);
+  video_format = gst_core_video_get_video_format (format_type);
+
+  if (video_format == GST_VIDEO_FORMAT_UNKNOWN) {
+    return FALSE;
+  }
+
+  gst_video_info_init (info);
+  gst_video_info_set_format (info, video_format, width, height);
+
+  return TRUE;
+}
+
+
 GstBuffer *
-gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo)
+gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo,
+    GstVideoTextureCache * cache)
 {
   CVPixelBufferRef pixbuf = NULL;
   GstBuffer *buf;
   GstCoreVideoMeta *meta;
-  gboolean has_padding;         /* not used for now */
 
   if (CFGetTypeID (cvbuf) != CVPixelBufferGetTypeID ())
     /* TODO: Do we need to handle other buffer types? */
@@ -169,7 +256,7 @@ gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo)
   meta->cvbuf = CVBufferRetain (cvbuf);
   meta->pixbuf = pixbuf;
 
-  gst_core_video_wrap_pixel_buffer (buf, vinfo, pixbuf, &has_padding);
+  gst_core_video_wrap_pixel_buffer (buf, vinfo, pixbuf, cache, NULL);
 
   return buf;
 }

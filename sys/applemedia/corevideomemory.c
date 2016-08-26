@@ -300,7 +300,7 @@ gst_is_apple_core_video_memory (GstMemory * mem)
  * Helper function for gst_apple_core_video_mem_share().
  * Users should call gst_apple_core_video_memory_new_wrapped() instead.
  */
-static GstMemory *
+static GstAppleCoreVideoMemory *
 gst_apple_core_video_memory_new (GstMemoryFlags flags, GstMemory * parent,
     GstAppleCoreVideoPixelBuffer * gpixbuf, gsize plane, gsize maxsize,
     gsize align, gsize offset, gsize size)
@@ -326,12 +326,12 @@ gst_apple_core_video_memory_new (GstMemoryFlags flags, GstMemory * parent,
 /**
  * gst_apple_core_video_memory_new_wrapped:
  * @gpixbuf: the backing #GstAppleCoreVideoPixelBuffer
- * @plane: the plane this memory will represent, or #GST_APPLE_CORE_VIDEO_NO_PLANE for non-planar buffer
+ * @plane: the plane this memory will represent, or 0 for non-planar buffer
  * @size: the size of the buffer or specific plane
  *
  * Returns: a newly allocated #GstAppleCoreVideoMemory
  */
-GstMemory *
+GstAppleCoreVideoMemory *
 gst_apple_core_video_memory_new_wrapped (GstAppleCoreVideoPixelBuffer * gpixbuf,
     gsize plane, gsize size)
 {
@@ -349,7 +349,7 @@ gst_apple_core_video_mem_map (GstMemory * gmem, gsize maxsize,
   if (!gst_apple_core_video_pixel_buffer_lock (mem->gpixbuf, flags))
     return NULL;
 
-  if (mem->plane != GST_APPLE_CORE_VIDEO_NO_PLANE) {
+  if (CVPixelBufferIsPlanar (mem->gpixbuf->buf)) {
     ret = CVPixelBufferGetBaseAddressOfPlane (mem->gpixbuf->buf, mem->plane);
 
     if (ret != NULL)
@@ -378,11 +378,8 @@ gst_apple_core_video_mem_unmap (GstMemory * gmem)
 {
   GstAppleCoreVideoMemory *mem = (GstAppleCoreVideoMemory *) gmem;
   (void) gst_apple_core_video_pixel_buffer_unlock (mem->gpixbuf);
-  if (mem->plane != GST_APPLE_CORE_VIDEO_NO_PLANE)
-    GST_DEBUG ("%p: pixbuf %p plane %" G_GSIZE_FORMAT, mem,
-        mem->gpixbuf->buf, mem->plane);
-  else
-    GST_DEBUG ("%p: pixbuf %p", mem, mem->gpixbuf->buf);
+  GST_DEBUG ("%p: pixbuf %p plane %" G_GSIZE_FORMAT, mem,
+      mem->gpixbuf->buf, mem->plane);
 }
 
 static GstMemory *
@@ -403,9 +400,9 @@ gst_apple_core_video_mem_share (GstMemory * gmem, gssize offset, gssize size)
 
   /* the shared memory is always readonly */
   sub =
-      gst_apple_core_video_memory_new (GST_MINI_OBJECT_FLAGS (parent) |
-      GST_MINI_OBJECT_FLAG_LOCK_READONLY, parent, mem->gpixbuf, mem->plane,
-      gmem->maxsize, gmem->align, gmem->offset + offset, size);
+      GST_MEMORY_CAST (gst_apple_core_video_memory_new (GST_MINI_OBJECT_FLAGS
+          (parent) | GST_MINI_OBJECT_FLAG_LOCK_READONLY, parent, mem->gpixbuf,
+          mem->plane, gmem->maxsize, gmem->align, gmem->offset + offset, size));
 
   return sub;
 }

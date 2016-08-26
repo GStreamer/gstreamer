@@ -22,7 +22,7 @@
 
 #include <gst/video/gstvideometa.h>
 #include <gst/gl/gstglcontext.h>
-#include <CoreVideo/CoreVideo.h>
+#include "corevideomemory.h"
 
 G_BEGIN_DECLS
 
@@ -47,8 +47,8 @@ void gst_video_texture_cache_free (GstVideoTextureCache * cache);
 void gst_video_texture_cache_set_format (GstVideoTextureCache * cache,
     GstVideoFormat in_format, GstCaps * out_caps);
 gboolean gst_video_texture_cache_upload (GstVideoGLTextureUploadMeta * meta, guint texture_id[4]);
-GstBuffer * gst_video_texture_cache_get_gl_buffer (GstVideoTextureCache * cache,
-        GstBuffer * cv_buffer);
+GstMemory *gst_video_texture_cache_create_memory (GstVideoTextureCache * cache,
+    GstAppleCoreVideoPixelBuffer *gpixbuf, guint plane, gsize size);
 
 G_END_DECLS
 

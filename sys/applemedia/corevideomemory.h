@@ -63,13 +63,6 @@ typedef struct
 } GstAppleCoreVideoPixelBuffer;
 
 /**
- * GST_APPLE_CORE_VIDEO_NO_PLANE:
- *
- * Indicates a non-planar pixel buffer.
- */
-#define GST_APPLE_CORE_VIDEO_NO_PLANE ((size_t)-1)
-
-/**
  * GstAppleCoreVideoMemory:
  *
  * Represents a video plane or an entire (non-planar) video image,
@@ -101,7 +94,7 @@ gst_apple_core_video_pixel_buffer_unref (GstAppleCoreVideoPixelBuffer * shared);
 gboolean
 gst_is_apple_core_video_memory (GstMemory * mem);
 
-GstMemory *
+GstAppleCoreVideoMemory *
 gst_apple_core_video_memory_new_wrapped (GstAppleCoreVideoPixelBuffer * shared, gsize plane, gsize size);
 
 G_END_DECLS

@@ -67,6 +67,8 @@ plugin_init (GstPlugin * plugin)
   gst_apple_core_video_memory_init ();
 
 #ifdef HAVE_IOS
+  gst_ios_gl_memory_init ();
+
   res &= gst_element_register (plugin, "iosassetsrc", GST_RANK_SECONDARY,
       GST_TYPE_IOS_ASSET_SRC);
 #else
