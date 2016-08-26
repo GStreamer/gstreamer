@@ -666,7 +666,7 @@ gst_decklink_audio_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   if (buf) {
     GST_OBJECT_LOCK (buf);
     if (buf->output && buf->output->attributes) {
-      gint64 max_channels = 0;
+      int64_t max_channels = 0;
       HRESULT ret;
       GstStructure *s;
       GValue arr = G_VALUE_INIT;
