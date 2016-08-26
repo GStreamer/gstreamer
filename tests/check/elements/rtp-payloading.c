@@ -864,7 +864,7 @@ static const guint8 rtp_h265_list_gt_mtu_frame_data[] = {
   0x00, 0x10
 };
 
-static const int const rtp_h265_list_gt_mtu_frame_data_size = 62;
+static const int rtp_h265_list_gt_mtu_frame_data_size = 62;
 
 static const int rtp_h265_list_gt_mtu_frame_count = 1;
 
