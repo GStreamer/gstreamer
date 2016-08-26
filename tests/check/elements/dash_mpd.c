@@ -3162,19 +3162,23 @@ GST_START_TEST (dash_mpdparser_representation_selection)
   assert_equals_int (represendationIndex, 1);
 
   represendationIndex =
-      gst_mpdparser_get_rep_idx_with_max_bandwidth (representations, 0);
+      gst_mpdparser_get_rep_idx_with_max_bandwidth (representations, 0, 0, 0, 0,
+      1);
   assert_equals_int (represendationIndex, 1);
 
   represendationIndex =
-      gst_mpdparser_get_rep_idx_with_max_bandwidth (representations, 100000);
+      gst_mpdparser_get_rep_idx_with_max_bandwidth (representations, 100000, 0,
+      0, 0, 1);
   assert_equals_int (represendationIndex, -1);
 
   represendationIndex =
-      gst_mpdparser_get_rep_idx_with_max_bandwidth (representations, 300000);
+      gst_mpdparser_get_rep_idx_with_max_bandwidth (representations, 300000, 0,
+      0, 0, 1);
   assert_equals_int (represendationIndex, 1);
 
   represendationIndex =
-      gst_mpdparser_get_rep_idx_with_max_bandwidth (representations, 500000);
+      gst_mpdparser_get_rep_idx_with_max_bandwidth (representations, 500000, 0,
+      0, 0, 1);
   assert_equals_int (represendationIndex, 0);
 
   gst_mpd_client_free (mpdclient);
