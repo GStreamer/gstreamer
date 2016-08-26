@@ -1,0 +1,422 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		19A17EFC8D41A75E8D3DB72E /* OnlineMedia.plist in Resources */ = {isa = PBXBuildFile; fileRef = 19A176455D27298FE4041DC3 /* OnlineMedia.plist */; };
+		AD2B881F198D631B0070367B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD2B881E198D631B0070367B /* Foundation.framework */; };
+		AD2B8821198D631B0070367B /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD2B8820198D631B0070367B /* CoreGraphics.framework */; };
+		AD2B8823198D631B0070367B /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD2B8822198D631B0070367B /* UIKit.framework */; };
+		AD2B8825198D631B0070367B /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD2B8824198D631B0070367B /* GStreamer.framework */; };
+		AD2B882B198D631B0070367B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AD2B8829198D631B0070367B /* InfoPlist.strings */; };
+		AD2B882D198D631B0070367B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = AD2B882C198D631B0070367B /* main.m */; };
+		AD2B8831198D631B0070367B /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = AD2B8830198D631B0070367B /* AppDelegate.m */; };
+		AD2B8833198D631B0070367B /* fonts.conf in Resources */ = {isa = PBXBuildFile; fileRef = AD2B8832198D631B0070367B /* fonts.conf */; };
+		AD2B8835198D631B0070367B /* Ubuntu-R.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AD2B8834198D631B0070367B /* Ubuntu-R.ttf */; };
+		AD2B8837198D631B0070367B /* gst_ios_init.m in Sources */ = {isa = PBXBuildFile; fileRef = AD2B8836198D631B0070367B /* gst_ios_init.m */; };
+		AD2B8858198D637A0070367B /* EaglUIVIew.m in Sources */ = {isa = PBXBuildFile; fileRef = AD2B8857198D637A0070367B /* EaglUIVIew.m */; };
+		AD2B885B198D65470070367B /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AD2B8859198D65470070367B /* MainStoryboard_iPhone.storyboard */; };
+		AD2B885C198D65470070367B /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AD2B885A198D65470070367B /* MainStoryboard_iPad.storyboard */; };
+		AD2B8861198D65780070367B /* LibraryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AD2B885E198D65780070367B /* LibraryViewController.m */; };
+		AD2B8862198D65780070367B /* VideoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AD2B8860198D65780070367B /* VideoViewController.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		19A176455D27298FE4041DC3 /* OnlineMedia.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = OnlineMedia.plist; sourceTree = "<group>"; };
+		AD2B881B198D631B0070367B /* GstPlay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GstPlay.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AD2B881E198D631B0070367B /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		AD2B8820198D631B0070367B /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		AD2B8822198D631B0070367B /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		AD2B8824198D631B0070367B /* GStreamer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GStreamer.framework; path = Library/Frameworks/GStreamer.framework; sourceTree = DEVELOPER_DIR; };
+		AD2B8828198D631B0070367B /* GstPlay-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GstPlay-Info.plist"; sourceTree = "<group>"; };
+		AD2B882A198D631B0070367B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AD2B882C198D631B0070367B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		AD2B882E198D631B0070367B /* GstPlay-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GstPlay-Prefix.pch"; sourceTree = "<group>"; };
+		AD2B882F198D631B0070367B /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		AD2B8830198D631B0070367B /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		AD2B8832198D631B0070367B /* fonts.conf */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = fonts.conf; sourceTree = "<group>"; };
+		AD2B8834198D631B0070367B /* Ubuntu-R.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Ubuntu-R.ttf"; sourceTree = "<group>"; };
+		AD2B8836198D631B0070367B /* gst_ios_init.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = gst_ios_init.m; sourceTree = "<group>"; };
+		AD2B8838198D631B0070367B /* gst_ios_init.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gst_ios_init.h; sourceTree = "<group>"; };
+		AD2B8840198D631B0070367B /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		AD2B8856198D637A0070367B /* EaglUIVIew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EaglUIVIew.h; sourceTree = "<group>"; };
+		AD2B8857198D637A0070367B /* EaglUIVIew.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EaglUIVIew.m; sourceTree = "<group>"; };
+		AD2B8859198D65470070367B /* MainStoryboard_iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		AD2B885A198D65470070367B /* MainStoryboard_iPad.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		AD2B885D198D65780070367B /* LibraryViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LibraryViewController.h; sourceTree = "<group>"; };
+		AD2B885E198D65780070367B /* LibraryViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LibraryViewController.m; sourceTree = "<group>"; };
+		AD2B885F198D65780070367B /* VideoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoViewController.h; sourceTree = "<group>"; };
+		AD2B8860198D65780070367B /* VideoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoViewController.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AD2B8818198D631B0070367B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AD2B8821198D631B0070367B /* CoreGraphics.framework in Frameworks */,
+				AD2B8825198D631B0070367B /* GStreamer.framework in Frameworks */,
+				AD2B8823198D631B0070367B /* UIKit.framework in Frameworks */,
+				AD2B881F198D631B0070367B /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AD2B8812198D631B0070367B = {
+			isa = PBXGroup;
+			children = (
+				AD2B8826198D631B0070367B /* GstPlay */,
+				AD2B881D198D631B0070367B /* Frameworks */,
+				AD2B881C198D631B0070367B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AD2B881C198D631B0070367B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AD2B881B198D631B0070367B /* GstPlay.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AD2B881D198D631B0070367B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AD2B881E198D631B0070367B /* Foundation.framework */,
+				AD2B8820198D631B0070367B /* CoreGraphics.framework */,
+				AD2B8822198D631B0070367B /* UIKit.framework */,
+				AD2B8824198D631B0070367B /* GStreamer.framework */,
+				AD2B8840198D631B0070367B /* XCTest.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		AD2B8826198D631B0070367B /* GstPlay */ = {
+			isa = PBXGroup;
+			children = (
+				AD2B8856198D637A0070367B /* EaglUIVIew.h */,
+				AD2B8857198D637A0070367B /* EaglUIVIew.m */,
+				AD2B882F198D631B0070367B /* AppDelegate.h */,
+				AD2B8830198D631B0070367B /* AppDelegate.m */,
+				AD2B8859198D65470070367B /* MainStoryboard_iPhone.storyboard */,
+				AD2B885A198D65470070367B /* MainStoryboard_iPad.storyboard */,
+				AD2B885D198D65780070367B /* LibraryViewController.h */,
+				AD2B885E198D65780070367B /* LibraryViewController.m */,
+				AD2B885F198D65780070367B /* VideoViewController.h */,
+				AD2B8860198D65780070367B /* VideoViewController.m */,
+				AD2B8827198D631B0070367B /* Supporting Files */,
+				19A176455D27298FE4041DC3 /* OnlineMedia.plist */,
+			);
+			path = GstPlay;
+			sourceTree = "<group>";
+		};
+		AD2B8827198D631B0070367B /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				AD2B8828198D631B0070367B /* GstPlay-Info.plist */,
+				AD2B8829198D631B0070367B /* InfoPlist.strings */,
+				AD2B882C198D631B0070367B /* main.m */,
+				AD2B882E198D631B0070367B /* GstPlay-Prefix.pch */,
+				AD2B8832198D631B0070367B /* fonts.conf */,
+				AD2B8834198D631B0070367B /* Ubuntu-R.ttf */,
+				AD2B8836198D631B0070367B /* gst_ios_init.m */,
+				AD2B8838198D631B0070367B /* gst_ios_init.h */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AD2B881A198D631B0070367B /* GstPlay */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AD2B8850198D631B0070367B /* Build configuration list for PBXNativeTarget "GstPlay" */;
+			buildPhases = (
+				AD2B8817198D631B0070367B /* Sources */,
+				AD2B8818198D631B0070367B /* Frameworks */,
+				AD2B8819198D631B0070367B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GstPlay;
+			productName = GstPlay;
+			productReference = AD2B881B198D631B0070367B /* GstPlay.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AD2B8813198D631B0070367B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0510;
+				ORGANIZATIONNAME = "Sebastian Dröge";
+			};
+			buildConfigurationList = AD2B8816198D631B0070367B /* Build configuration list for PBXProject "GstPlay" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = AD2B8812198D631B0070367B;
+			productRefGroup = AD2B881C198D631B0070367B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AD2B881A198D631B0070367B /* GstPlay */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AD2B8819198D631B0070367B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AD2B885C198D65470070367B /* MainStoryboard_iPad.storyboard in Resources */,
+				AD2B885B198D65470070367B /* MainStoryboard_iPhone.storyboard in Resources */,
+				AD2B8835198D631B0070367B /* Ubuntu-R.ttf in Resources */,
+				AD2B8833198D631B0070367B /* fonts.conf in Resources */,
+				AD2B882B198D631B0070367B /* InfoPlist.strings in Resources */,
+				19A17EFC8D41A75E8D3DB72E /* OnlineMedia.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AD2B8817198D631B0070367B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AD2B8861198D65780070367B /* LibraryViewController.m in Sources */,
+				AD2B8831198D631B0070367B /* AppDelegate.m in Sources */,
+				AD2B8862198D65780070367B /* VideoViewController.m in Sources */,
+				AD2B8858198D637A0070367B /* EaglUIVIew.m in Sources */,
+				AD2B882D198D631B0070367B /* main.m in Sources */,
+				AD2B8837198D631B0070367B /* gst_ios_init.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		AD2B8829198D631B0070367B /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AD2B882A198D631B0070367B /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		AD2B884E198D631B0070367B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AD2B884F198D631B0070367B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AD2B8851198D631B0070367B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = armv7;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				FRAMEWORK_SEARCH_PATHS = (
+					"~/Library/Developer/GStreamer/iPhone.sdk",
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "GstPlay/GstPlay-Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					"\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"",
+					../lib,
+				);
+				INFOPLIST_FILE = "GstPlay/GstPlay-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-lstdc++",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-weak_framework",
+					VideoToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		AD2B8852198D631B0070367B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = armv7;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				FRAMEWORK_SEARCH_PATHS = (
+					"~/Library/Developer/GStreamer/iPhone.sdk",
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "GstPlay/GstPlay-Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					"\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"",
+					../lib,
+				);
+				INFOPLIST_FILE = "GstPlay/GstPlay-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-lstdc++",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-weak_framework",
+					VideoToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AD2B8816198D631B0070367B /* Build configuration list for PBXProject "GstPlay" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AD2B884E198D631B0070367B /* Debug */,
+				AD2B884F198D631B0070367B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AD2B8850198D631B0070367B /* Build configuration list for PBXNativeTarget "GstPlay" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AD2B8851198D631B0070367B /* Debug */,
+				AD2B8852198D631B0070367B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AD2B8813198D631B0070367B /* Project object */;
+}
