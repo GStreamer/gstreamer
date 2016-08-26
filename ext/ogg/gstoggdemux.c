@@ -1538,6 +1538,10 @@ gst_ogg_demux_seek_back_after_push_duration_check_unlock (GstOggDemux * ogg)
   event = ogg->push_mode_seek_delayed_event;
   ogg->push_mode_seek_delayed_event = NULL;
 
+  /* if we haven't learnt about the total time yet, disable seeking */
+  if (ogg->total_time == -1)
+    ogg->push_disable_seeking = TRUE;
+
   ogg->push_state = PUSH_PLAYING;
 
   /* If there is one, perform it. Otherwise, seek back at start to start
