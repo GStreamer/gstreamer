@@ -48,7 +48,7 @@
 #define CHUNKSIZE (8500)        /* this is out of vorbisfile */
 
 /* we hope we get a granpos within this many bytes off the end */
-#define DURATION_CHUNK_OFFSET (64*1024)
+#define DURATION_CHUNK_OFFSET (128*1024)
 
 /* An Ogg page can not be larger than 255 segments of 255 bytes, plus
    26 bytes of header */
