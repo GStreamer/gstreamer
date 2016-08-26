@@ -134,7 +134,7 @@ Use case examples:
   example in demuxers).
 
   Elements that create GstStream should also set it on the
-  GST_EVENT_STREAM_START event of the relevent pad. This helps
+  GST_EVENT_STREAM_START event of the relevant pad. This helps
   downstream elements to have all information in one location.
 
 
@@ -187,7 +187,7 @@ Use case examples:
   available within a bin/pipeline.
 
   Once posted on the bus, a GstStreamCollection is immutable. It is
-  updated by subsquent messages with a matching identifier.
+  updated by subsequent messages with a matching identifier.
 
   If the element that provided the collection goes away, there is no way
   to know that the streams are no longer valid (without having the
@@ -286,11 +286,11 @@ Use case examples:
   The application can select the streams it wants by creating a
   GST_EVENT_SELECT_STREAMS event with the list of stream-id of the
   streams it wants. That event is then sent on the pipeline,
-  eventually travelling all the way upstream from each sink.
+  eventually traveling all the way upstream from each sink.
 
   In some cases, selecting one stream may trigger the availability of
   other dependent streams, resulting in new GstStreamCollection
-  messages. This can happen in the case where chosing a different DVB
+  messages. This can happen in the case where choosing a different DVB
   channel would create a new single-program collection.
 
 
@@ -345,7 +345,7 @@ Use case examples:
   work only with packetized and properly timestamped streams.
 
   Note that the whole typefinding of streams, and optional depayloading,
-  demuxing and parsing is done in a new 'parsebin' element.
+  demuxing and parsing are done in a new 'parsebin' element.
 
   Just like the current implementation, demuxers will expose all
   streams present within a program as source pads. They will connect
@@ -441,7 +441,7 @@ Use case examples:
   each type if the GST_EVENT_SELECT_STREAM event specifies that. This
   allows covering more use-case than the simple playback one.
   Such examples could be :
-    * Wanting just a video stream or just a audio stream
+    * Wanting just a video stream or just an audio stream
     * Wanting all decoded streams
     * Wanting all audio streams
     ...
@@ -528,8 +528,8 @@ Use case examples:
      Assuming the case of a mpeg-ts stream which contains multiple
      programs.
      There would be three "levels" of collection:
-        1) The collection of programs present in the stream
-	2) The collection of elementary streams present in a stream
+        1) The collection of programs presents in the stream
+	2) The collection of elementary streams presents in a stream
         3) The collection of streams decodebin can expose
 
      Initially tsdemux exposes the first program present (default)
@@ -540,7 +540,7 @@ Use case examples:
       [ upstream:nil ]   \-----[ upstream:Programs]   \----[ upstream:BBC1   ]
       [              ]         [                  ]        [                 ]
       [ "BBC1" (C)   ]         [ id:"bbcvideo"(V) ]        [ id:"bbcvideo"(V)]
-      [ "ITV"  (C)   ]         [ id:"bbcaudio"(A) ]        [ id:"bbcvideo"(A)]
+      [ "ITV"  (C)   ]         [ id:"bbcaudio"(A) ]        [ id:"bbcaudio"(A)]
       [ "NBC"  (C)   ]         [                  ]        [                 ]
 
      At some point the user wants to switch to ITV (of which we do not
@@ -551,7 +551,7 @@ Use case examples:
      2) tsdemux publishes a new 'Collection 2a/ITV' and marks 'Collection 2/BBC'
         as replaced.
      2a) App may send a SELECT_STREAMS event configuring which demuxer output
-        streams should selected (parsed)
+        streams should be selected (parsed)
      3) tsdemux adds/removes pads as needed (flushing pads as it removes them?)
      4) Decodebin feeds new pad streams through existing parsers/decoders as
         needed. As data from the new collection arrives out each decoder,
@@ -569,7 +569,7 @@ Use case examples:
       [ upstream:nil ]   \-----[ upstream:Programs]   \----[ upstream:ITV    ]
       [              ]         [                  ]        [                 ]
       [ "BBC1" (C)   ]         [ id:"itvvideo"(V) ]        [ id:"itvvideo"(V)]
-      [ "ITV"  (C)   ]         [ id:"itvaudio"(A) ]        [ id:"itvvideo"(A)]
+      [ "ITV"  (C)   ]         [ id:"itvaudio"(A) ]        [ id:"itvaudio"(A)]
       [ "NBC"  (C)   ]         [                  ]        [                 ]
 
 6.0 TODO
