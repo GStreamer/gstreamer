@@ -320,7 +320,7 @@ gst_apple_core_video_memory_new (GstMemoryFlags flags, GstMemory * parent,
   GST_DEBUG ("%p: gpixbuf %p, plane: %" G_GSSIZE_FORMAT ", size %"
       G_GSIZE_FORMAT, mem, mem->gpixbuf, mem->plane, mem->mem.size);
 
-  return (GstMemory *) mem;
+  return mem;
 }
 
 /**
