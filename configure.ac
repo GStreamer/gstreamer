@@ -145,6 +145,9 @@ AC_CHECK_FUNCS(clock_gettime, [], [
   ])
 ])
 
+dnl check for pthreads
+AX_PTHREAD
+
 dnl *** checks for header files ***
 
 dnl check if we have ANSI C header files
