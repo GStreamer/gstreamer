@@ -945,6 +945,7 @@ init_devices (gpointer data)
 
     ret = decklink->QueryInterface (IID_IDeckLinkAttributes,
         (void **) &devices[i].input.attributes);
+    devices[i].output.attributes = devices[i].input.attributes;
     if (ret != S_OK) {
       GST_WARNING ("selected device does not have attributes interface");
     }

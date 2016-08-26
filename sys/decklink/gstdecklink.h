@@ -167,6 +167,7 @@ typedef struct _GstDecklinkOutput GstDecklinkOutput;
 struct _GstDecklinkOutput {
   IDeckLink *device;
   IDeckLinkOutput *output;
+  IDeckLinkAttributes *attributes;
   GstClock *clock;
   GstClockTime clock_start_time, clock_last_time, clock_epoch;
   GstClockTimeDiff clock_offset;

@@ -409,7 +409,7 @@ gst_decklink_audio_sink_ringbuffer_acquire (GstAudioRingBuffer * rb,
   }
 
   ret = self->output->output->EnableAudioOutput (bmdAudioSampleRate48kHz,
-      sample_depth, 2, bmdAudioOutputStreamContinuous);
+      sample_depth, spec->info.channels, bmdAudioOutputStreamContinuous);
   if (ret != S_OK) {
     GST_WARNING_OBJECT (self->sink, "Failed to enable audio output 0x%08x",
         ret);
@@ -517,7 +517,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS
-    ("audio/x-raw, format={S16LE,S32LE}, channels=2, rate=48000, "
+    ("audio/x-raw, format={S16LE,S32LE}, channels={2, 8, 16}, rate=48000, "
         "layout=interleaved")
     );
 
@@ -529,7 +529,7 @@ static void gst_decklink_audio_sink_finalize (GObject * object);
 
 static GstStateChangeReturn gst_decklink_audio_sink_change_state (GstElement *
     element, GstStateChange transition);
-
+static GstCaps * gst_decklink_audio_sink_get_caps (GstBaseSink * bsink, GstCaps * filter);
 static GstAudioRingBuffer
     * gst_decklink_audio_sink_create_ringbuffer (GstAudioBaseSink * absink);
 
@@ -542,6 +542,7 @@ gst_decklink_audio_sink_class_init (GstDecklinkAudioSinkClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseSinkClass *basesink_class = GST_BASE_SINK_CLASS (klass);
   GstAudioBaseSinkClass *audiobasesink_class =
       GST_AUDIO_BASE_SINK_CLASS (klass);
 
@@ -551,6 +552,8 @@ gst_decklink_audio_sink_class_init (GstDecklinkAudioSinkClass * klass)
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_decklink_audio_sink_change_state);
+
+  basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_decklink_audio_sink_get_caps);
 
   audiobasesink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_decklink_audio_sink_create_ringbuffer);
@@ -649,6 +652,62 @@ gst_decklink_audio_sink_change_state (GstElement * element,
   }
 
   return ret;
+}
+
+static GstCaps *
+gst_decklink_audio_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
+{
+  GstDecklinkAudioSink *self = GST_DECKLINK_AUDIO_SINK_CAST (bsink);
+  GstDecklinkAudioSinkRingBuffer *buf =
+      GST_DECKLINK_AUDIO_SINK_RING_BUFFER_CAST (GST_AUDIO_BASE_SINK_CAST
+      (self)->ringbuffer);
+  GstCaps *caps = gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD (bsink));
+
+  if (buf) {
+    GST_OBJECT_LOCK (buf);
+    if (buf->output && buf->output->attributes) {
+      gint64 max_channels = 0;
+      HRESULT ret;
+      GstStructure *s;
+      GValue arr = G_VALUE_INIT;
+      GValue v = G_VALUE_INIT;
+
+      ret = buf->output->attributes->GetInt (BMDDeckLinkMaximumAudioChannels, &max_channels);
+      /* 2 should always be supported */
+      if (ret != S_OK) {
+        max_channels = 2;
+      }
+
+      caps = gst_caps_make_writable (caps);
+      s = gst_caps_get_structure (caps, 0);
+
+      g_value_init (&arr, GST_TYPE_LIST);
+      g_value_init (&v, G_TYPE_INT);
+      if (max_channels >= 16) {
+        g_value_set_int (&v, 16);
+        gst_value_list_append_value (&arr, &v);
+      }
+      if (max_channels >= 8) {
+        g_value_set_int (&v, 8);
+        gst_value_list_append_value (&arr, &v);
+      }
+      g_value_set_int (&v, 2);
+      gst_value_list_append_value (&arr, &v);
+
+      gst_structure_set_value (s, "channels", &arr);
+      g_value_unset (&v);
+      g_value_unset (&arr);
+    }
+    GST_OBJECT_UNLOCK (buf);
+  }
+
+  if (filter) {
+    GstCaps *intersection = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = intersection;
+  }
+
+  return caps;
 }
 
 static GstAudioRingBuffer *
