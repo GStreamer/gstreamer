@@ -98,6 +98,9 @@ dnl check for libm, for sin()
 LT_LIB_M
 AC_SUBST(LIBM)
 
+dnl check for pthreads
+AX_PTHREAD
+
 dnl *** checks for header files ***
 
 dnl check if we have ANSI C header files
@@ -305,7 +308,7 @@ if test "x$with_system_libav" = "xyes"; then
   fi
 else
   AC_MSG_NOTICE([Using local Libav snapshot])
-  
+
   dnl libgstlibav.la: include dirs
   LIBAV_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav \
                 -I \$(top_builddir)/gst-libs/ext/libav \
@@ -347,7 +350,7 @@ else
   AC_DEFINE(HAVE_AVI_H)
   AC_DEFINE([LIBAV_SOURCE], ["local snapshot"], [Describes where the Libav libraries come from.])
 
-  AC_ARG_WITH(libav-extra-configure, 
+  AC_ARG_WITH(libav-extra-configure,
       AC_HELP_STRING([--with-libav-extra-configure="xxx"],
       [extra configure options for internal libav ./configure script]),,
       with_libav=no)
@@ -471,7 +474,7 @@ AC_SUBST(SWSCALE_CFLAGS)
 AC_SUBST(SWSCALE_DEPS)
 AC_SUBST(SWSCALE_LIBS)
 AC_SUBST(WIN32_LIBS)
- 
+
 if test x$HAVE_LIBAV_UNINSTALLED = x1; then
   AC_DEFINE(HAVE_LIBAV_UNINSTALLED, [], [Defined if building against uninstalled Libav source])
 fi
