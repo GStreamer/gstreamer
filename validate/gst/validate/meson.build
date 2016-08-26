@@ -48,15 +48,24 @@ gstvalidate = shared_library('gstvalidate',
     dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
                     gst_pbutils_dep, mathlib])
 
+validate_gen_sources = []
 if build_gir
-    gnome.generate_gir(gstvalidate,
-            include_directories : include_directories('..'),
+    gst_validate_gir_extra_args = gir_init_section + [ '--c-include=gst/validate/validate.h' ]
+    if meson.is_subproject()
+      # FIXME: There must be a better way to do this
+      # Need to pass the include path to find gst/gst.h and gst/gstenumtypes.h (built)
+      gst_validate_gir_extra_args += ['--cflags-begin',
+	  '-I' + meson.current_source_dir() + '/../../',
+	  '-I' + meson.current_build_dir() + '/../../',
+	  '--cflags-end']
+    endif
+    validate_gen_sources = [gnome.generate_gir(gstvalidate,
             sources : gstvalidate_sources,
             nsversion : '1.0',
             namespace : 'GstValidate',
             symbol_prefix : 'gst_',
             identifier_prefix : 'Gst',
-            export_packages : 'gstvalidate-' + apiversion,
+            export_packages : 'gst-validate-' + apiversion,
             includes : ['GObject-2.0',
                         'GLib-2.0',
                         'Gio-2.0',
@@ -64,11 +73,14 @@ if build_gir
                         'GstVideo-' + apiversion,
                         'Gst-' + apiversion,
                         'GstPbutils-' + apiversion],
-            install : true
-    )
+            install : true,
+            dependencies : [gst_dep, glib_dep, gio_dep, gst_pbutils_dep],
+    )]
 endif
 
 validate_dep = declare_dependency(link_with : gstvalidate,
   include_directories : [inc_dirs],
   dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
-                  gst_pbutils_dep, mathlib])
+                  gst_pbutils_dep, mathlib],
+  sources : validate_gen_sources
+)

@@ -44,6 +44,7 @@ mathlib = cc.find_library('m', required : false)
 
 gst_c_args = ['-DHAVE_CONFIG_H', '-DGST_USE_UNSTABLE_API']
 
+gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**); gst_init(NULL,NULL);' ]
 gir = find_program('g-ir-scanner', required : false)
 build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable-introspection')
 gnome = import('gnome')
