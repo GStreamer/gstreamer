@@ -124,6 +124,7 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+
   gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
   gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
 
@@ -137,25 +138,21 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
 
   klass->src_event = gst_rtp_mux_src_event_real;
 
-  g_object_class_install_property (gobject_class, PROP_TIMESTAMP_OFFSET,
-      g_param_spec_int64 ("timestamp-offset", "Timestamp Offset",
-          "Offset to add to all outgoing timestamps (-1 = random)",
-          -1, G_MAXUINT32, DEFAULT_TIMESTAMP_OFFSET,
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_TIMESTAMP_OFFSET, g_param_spec_int ("timestamp-offset",
+          "Timestamp Offset",
+          "Offset to add to all outgoing timestamps (-1 = random)", -1,
+          G_MAXINT, DEFAULT_TIMESTAMP_OFFSET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_SEQNUM_OFFSET,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM_OFFSET,
       g_param_spec_int ("seqnum-offset", "Sequence number Offset",
-          "Offset to add to all outgoing seqnum (-1 = random)",
-          -1, G_MAXUINT16, DEFAULT_SEQNUM_OFFSET,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_SEQNUM,
+          "Offset to add to all outgoing seqnum (-1 = random)", -1, G_MAXINT,
+          DEFAULT_SEQNUM_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM,
       g_param_spec_uint ("seqnum", "Sequence number",
           "The RTP sequence number of the last processed packet",
-          0, G_MAXUINT, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_SSRC,
+          0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SSRC,
       g_param_spec_uint ("ssrc", "SSRC",
           "The SSRC of the packets (default == random)",
           0, G_MAXUINT, DEFAULT_SSRC,
@@ -354,10 +351,8 @@ gst_rtp_mux_readjust_rtp_timestamp_locked (GstRTPMux * rtp_mux,
 
   ts = gst_rtp_buffer_get_timestamp (rtpbuffer) - sink_ts_base +
       rtp_mux->ts_base;
-  GST_LOG_OBJECT (rtp_mux,
-      "Re-adjusting RTP ts %u to %u (sink_ts_base = %u, rtp_mux->ts_base=%u)",
-      gst_rtp_buffer_get_timestamp (rtpbuffer),
-      ts, sink_ts_base, rtp_mux->ts_base);
+  GST_LOG_OBJECT (rtp_mux, "Re-adjusting RTP ts %u to %u",
+      gst_rtp_buffer_get_timestamp (rtpbuffer), ts);
   gst_rtp_buffer_set_timestamp (rtpbuffer, ts);
 }
 
@@ -815,7 +810,7 @@ gst_rtp_mux_get_property (GObject * object,
   GST_OBJECT_LOCK (rtp_mux);
   switch (prop_id) {
     case PROP_TIMESTAMP_OFFSET:
-      g_value_set_int64 (value, rtp_mux->ts_offset);
+      g_value_set_int (value, rtp_mux->ts_offset);
       break;
     case PROP_SEQNUM_OFFSET:
       g_value_set_int (value, rtp_mux->seqnum_offset);
@@ -843,7 +838,7 @@ gst_rtp_mux_set_property (GObject * object,
 
   switch (prop_id) {
     case PROP_TIMESTAMP_OFFSET:
-      rtp_mux->ts_offset = g_value_get_int64 (value);
+      rtp_mux->ts_offset = g_value_get_int (value);
       break;
     case PROP_SEQNUM_OFFSET:
       rtp_mux->seqnum_offset = g_value_get_int (value);
