@@ -276,11 +276,6 @@ decode_sequence (GstVaapiDecoderVC1 * decoder, GstVC1BDU * rbdu,
 
   priv->has_entrypoint = FALSE;
 
-  if (adv_hdr->interlace != 0) {
-    GST_ERROR ("interlaced sequence unsupported");
-    return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
-  }
-
   /* Reset POC */
   if (priv->last_non_b_picture) {
     if (priv->last_non_b_picture->poc == priv->next_poc)
@@ -962,6 +957,11 @@ decode_frame (GstVaapiDecoderVC1 * decoder, GstVC1BDU * rbdu, GstVC1BDU * ebdu)
     return get_status (result);
   }
 
+  if (frame_hdr->pic.advanced.fcm != GST_VC1_FRAME_PROGRESSIVE) {
+    GST_ERROR ("interlaced video not supported");
+    return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+  }
+
   switch (frame_hdr->ptype) {
     case GST_VC1_PICTURE_TYPE_I:
       picture->type = GST_VAAPI_PICTURE_TYPE_I;
@@ -1303,6 +1303,9 @@ gst_vaapi_decoder_vc1_parse (GstVaapiDecoder * base_decoder,
     case GST_VC1_SLICE:
       flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
       break;
+    case GST_VC1_FIELD:
+      GST_ERROR ("interlaced video not supported");
+      return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
   }
   GST_VAAPI_DECODER_UNIT_FLAG_SET (unit, flags);
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
