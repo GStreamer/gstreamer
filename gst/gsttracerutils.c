@@ -19,9 +19,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/**
- * SECTION:gsttracerutils
- * @short_description: Tracing subsystem
+/* Tracing subsystem:
  *
  * The tracing subsystem provides hooks in the core library and API for modules
  * to attach to them.

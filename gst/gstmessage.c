@@ -407,8 +407,6 @@ gst_message_new_eos (GstObject * src)
  * Returns: (transfer full): the new error message.
  *
  * Since: 1.10
- *
- * MT safe.
  */
 GstMessage *
 gst_message_new_error_with_details (GstObject * src, GError * error,
@@ -463,8 +461,6 @@ gst_message_new_error (GstObject * src, GError * error, const gchar * debug)
  * The returned structure must not be freed.
  *
  * Since: 1.10
- *
- * MT safe.
  */
 void
 gst_message_parse_error_details (GstMessage * message,
@@ -497,8 +493,6 @@ gst_message_parse_error_details (GstMessage * message,
  * Returns: (transfer full): the new warning message.
  *
  * Since: 1.10
- *
- * MT safe.
  */
 GstMessage *
 gst_message_new_warning_with_details (GstObject * src, GError * error,
@@ -551,8 +545,6 @@ gst_message_new_warning (GstObject * src, GError * error, const gchar * debug)
  * The returned structure must not be freed.
  *
  * Since: 1.10
- *
- * MT safe.
  */
 void
 gst_message_parse_warning_details (GstMessage * message,
@@ -585,8 +577,6 @@ gst_message_parse_warning_details (GstMessage * message,
  * Returns: (transfer full): the new warning message.
  *
  * Since: 1.10
- *
- * MT safe.
  */
 GstMessage *
 gst_message_new_info_with_details (GstObject * src, GError * error,
@@ -639,8 +629,6 @@ gst_message_new_info (GstObject * src, GError * error, const gchar * debug)
  * The returned structure must not be freed.
  *
  * Since: 1.10
- *
- * MT safe.
  */
 void
 gst_message_parse_info_details (GstMessage * message,

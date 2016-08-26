@@ -1841,8 +1841,6 @@ _gst_element_error_printf (const gchar * format, ...)
  * #GST_MESSAGE_INFO.
  *
  * Since: 1.10
- *
- * MT safe.
  */
 void gst_element_message_full_with_details
     (GstElement * element, GstMessageType type,
