@@ -113,7 +113,7 @@ if __name__ == "__main__":
                         default=os.path.join(SCRIPTDIR, "build"),
                         help="The meson build directory")
     parser.add_argument("--gst-version", default="master",
-                        help="The meson build directory")
+                        help="The GStreamer major version")
     options, args = parser.parse_known_args()
 
     if not os.path.exists(options.builddir):
