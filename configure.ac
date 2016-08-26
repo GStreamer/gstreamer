@@ -137,6 +137,9 @@ GTK_DOC_CHECK([1.12])
 
 dnl *** checks for libraries ***
 
+dnl check for pthreads
+AX_PTHREAD
+
 dnl *** checks for header files ***
 
 dnl *** checks for types/defines ***
