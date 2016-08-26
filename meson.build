@@ -1,5 +1,5 @@
 project('gstreamer', 'c', 'cpp',
-  version : '1.9.1.1',
+  version : '1.9.2.1',
   meson_version : '>= 0.33.0',
   default_options : [ 'warning_level=1',
                       'c_std=gnu99',
@@ -260,7 +260,7 @@ gir = find_program('g-ir-scanner', required : false)
 gnome = import('gnome')
 
 # Fixme, not very elegant.
-build_gir = gir.found() and not meson.is_cross_build()
+build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable_introspection')
 
 gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**); gst_init(NULL,NULL);' ]
 vs_module_defs_dir = meson.source_root() + '/win32/common/'

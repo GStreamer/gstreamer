@@ -205,6 +205,9 @@ if libtype != 'shared'
   libgst = libgst_static
 endif
 
+# Make sure that subproject building gir files work
+gst_incdirs = [configinc]
+gst_gen_sources = [gstenum_h]
 if libtype != 'static'
   libgst_shared = shared_library('gstreamer-1.0', gst_sources,
     gstenum_h, gstenum_c, grammar, parser, gst_registry,
@@ -230,7 +233,9 @@ if libtype != 'static'
 	  '-I' + meson.current_build_dir() + '/..',
 	  '--cflags-end']
     endif
-    gnome.generate_gir(libgst_shared,
+
+    gst_incdirs += [include_directories(meson.current_build_dir() + '/..')]
+    gst_gen_sources += [gnome.generate_gir(libgst_shared,
       sources : gst_sources + gst_headers,
       namespace : 'Gst',
       nsversion : apiversion,
@@ -240,13 +245,13 @@ if libtype != 'static'
       includes : ['GLib-2.0', 'GObject-2.0', 'GModule-2.0' ],
       install : true,
       extra_args : gst_gir_extra_args,
-    )
+    )]
   endif
 endif
 
 gst_dep = declare_dependency(link_with : libgst,
-  include_directories : [configinc],
+  include_directories : gst_incdirs,
   dependencies : [glib_dep, gobject_dep, gmodule_dep],
   # Everything that uses libgst needs this built to compile
-  sources : [gstenum_h],
+  sources : gst_gen_sources,
 )
