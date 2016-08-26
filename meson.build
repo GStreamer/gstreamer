@@ -221,6 +221,14 @@ if cc.has_function('strsignal', prefix : '#include <string.h>')
   cdata.set('HAVE_DECL_STRSIGNAL', 1)
 endif
 
+# We only want to use the __declspec(dllexport/import) dance in GST_EXPORT when
+# building with MSVC
+if cc.get_id() == 'msvc'
+  cdata.set('GSTCONFIG_USE_MSVC_DECLSPEC', 1)
+else
+  cdata.set('GSTCONFIG_USE_MSVC_DECLSPEC', 0)
+endif
+
 configure_file(input : 'config.h.meson',
   output : 'config.h',
   configuration : cdata)

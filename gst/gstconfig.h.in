@@ -128,20 +128,21 @@
  * On Windows, this exports the plugin definition from the DLL.
  * On other platforms, this gets defined as a no-op.
  */
-/* Macro _WIN32 is defined on 32-bit and 64-bit Windows; by both GCC and MSVC
+/* Only use __declspec(dllexport/import) when we have been built with MSVC.
+ * With MinGW we still rely on the linker to auto-export/import symbols.
  *
- * NOTE: To link to Windows statically on Windows, you must define
+ * NOTE: To link to GStreamer statically on Windows, you must define
  * GST_STATIC_COMPILATION or the prototypes will cause the compiler to search
- * for the symbol inside a DLL
+ * for the symbol inside a DLL.
  */
-#if defined(_WIN32) && !defined(GST_STATIC_COMPILATION)
+#if @GSTCONFIG_USE_MSVC_DECLSPEC@ && !defined(GST_STATIC_COMPILATION)
 # define GST_PLUGIN_EXPORT __declspec(dllexport)
 # ifdef GST_EXPORTS
 #  define GST_EXPORT __declspec(dllexport)
 # else
 #  define GST_EXPORT __declspec(dllimport) extern
 # endif
-#else /* !_WIN32 */
+#else
 # define GST_PLUGIN_EXPORT
 # if (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
 #  define GST_EXPORT extern __attribute__ ((visibility ("default")))

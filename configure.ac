@@ -131,6 +131,11 @@ AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
   ["${srcdir}/gstreamer.doap"],
   [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
 
+# We only use this when building with MSVC, which is only done with the
+# alternate Meson build system files
+GSTCONFIG_USE_MSVC_DECLSPEC=0
+AC_SUBST(GSTCONFIG_USE_MSVC_DECLSPEC)
+
 dnl check for bash completion
 AC_ARG_WITH([bash-completion-dir],
     AS_HELP_STRING([--with-bash-completion-dir[=PATH]],
