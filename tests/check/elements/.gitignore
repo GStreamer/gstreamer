@@ -45,6 +45,7 @@ mpegaudioparse
 mulawdec
 mulawenc
 multifile
+qtdemux
 qtmux
 rganalysis
 rglimiter
@@ -54,11 +55,13 @@ rtpaux
 rtpbin
 rtpbin_buffer_list
 rtpcollision
+rtph261
 rtph263
 rtpjitterbuffer
 rtpsession
 rtpmux
 rtprtx
+rtpvp9
 shapewipe
 souphttpsrc
 spectrum
