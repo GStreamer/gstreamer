@@ -162,8 +162,18 @@ libges = shared_library('ges-1.0', ges_sources, parser,
     dependencies : libges_deps
 )
 
+ges_gen_sources = []
 if build_gir
-    gnome.generate_gir(libges,
+    ges_gir_extra_args = gir_init_section + [ '--c-include=ges/ges.h' ]
+    if meson.is_subproject()
+      # FIXME: There must be a better way to do this
+      # Need to pass the include path to find gst/gst.h and gst/gstenumtypes.h (built)
+      ges_gir_extra_args += ['--cflags-begin',
+	  '-I' + meson.current_source_dir() + '/..',
+	  '-I' + meson.current_build_dir() + '/..',
+	  '--cflags-end']
+    endif
+    ges_gen_sources += [gnome.generate_gir(libges,
         sources : ges_sources + ges_headers,
         namespace : 'GES',
         nsversion : apiversion,
@@ -173,10 +183,11 @@ if build_gir
         includes : ['Gst-1.0', 'GstPbutils-1.0', 'GstVideo-1.0', 'Gio-2.0'],
         install : true,
         dependencies : libges_deps,
-        extra_args : gir_init_section
-    )
+        extra_args : ges_gir_extra_args
+    )]
 endif
 
 ges_dep = declare_dependency(link_with : libges,
   include_directories : [configinc],
+  sources : ges_gen_sources
 )

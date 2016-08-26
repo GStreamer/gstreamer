@@ -1,5 +1,5 @@
 project('gst-editing-services', 'c',
-  version : '1.9.1.1',
+  version : '1.9.2.1',
   meson_version : '>= 0.33.0',
   default_options : [ 'warning_level=1',
                       'c_std=gnu99',
@@ -85,7 +85,7 @@ gnome = import('gnome')
 gtkdoc = find_program('gtkdoc-scan', required : false)
 
 # Fixme, not very elegant.
-build_gir = gir.found() and not meson.is_cross_build()
+build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable_introspection')
 gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**); gst_init(NULL,NULL);' ]
 
 ges_c_args = ['-DHAVE_CONFIG_H']
