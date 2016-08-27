@@ -1,2 +1,3 @@
 option('audioresample_format', type : 'combo', choices : ['int', 'float', 'auto'], value : 'auto')
+option('disable_examples', type : 'boolean', value : false)
 option('use_orc', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto')
