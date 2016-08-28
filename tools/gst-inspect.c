@@ -541,7 +541,6 @@ print_element_properties_info (GstElement * element)
 static void
 print_pad_templates_info (GstElement * element, GstElementFactory * factory)
 {
-  GstElementClass *gstelement_class;
   const GList *pads;
   GstStaticPadTemplate *padtemplate;
 
@@ -550,8 +549,6 @@ print_pad_templates_info (GstElement * element, GstElementFactory * factory)
     n_print ("  none\n");
     return;
   }
-
-  gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
 
   pads = gst_element_factory_get_static_pad_templates (factory);
   while (pads) {
@@ -571,8 +568,6 @@ print_pad_templates_info (GstElement * element, GstElementFactory * factory)
       n_print ("    Availability: Sometimes\n");
     else if (padtemplate->presence == GST_PAD_REQUEST) {
       n_print ("    Availability: On request\n");
-      n_print ("      Has request_new_pad() function: %s\n",
-          GST_DEBUG_FUNCPTR_NAME (gstelement_class->request_new_pad));
     } else
       n_print ("    Availability: UNKNOWN!!!\n");
 
