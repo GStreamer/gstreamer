@@ -65,7 +65,7 @@ libgstvalidate_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VE
 plugin_LTLIBRARIES = libgstvalidateplugin-@GST_API_VERSION@.la
 libgstvalidateplugin_@GST_API_VERSION@_la_SOURCES = $(source_c)
 libgstvalidateplugin_@GST_API_VERSION@_la_CFLAGS = $(GST_ALL_CFLAGS)\
-	$(GIO_CFLAGS) $(GST_PBUTILS_CFLAGS) \
+	$(JSON_GLIB_CFLAGS) $(GIO_CFLAGS) $(GST_PBUTILS_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
 	-D__GST_VALIDATE_PLUGIN
 libgstvalidateplugin_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \

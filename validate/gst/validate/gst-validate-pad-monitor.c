@@ -2225,11 +2225,26 @@ gst_validate_pad_monitor_query_func (GstPad * pad, GstObject * parent,
   gboolean ret;
 
   gst_validate_pad_monitor_query_overrides (pad_monitor, query);
-
   ret = pad_monitor->query_func (pad, parent, query);
 
   if (ret) {
     switch (GST_QUERY_TYPE (query)) {
+      case GST_QUERY_ACCEPT_CAPS:
+      {
+        gboolean result;
+
+        gst_caps_replace (&pad_monitor->last_refused_caps, NULL);
+        gst_query_parse_accept_caps_result (query, &result);
+        if (!result) {
+          GstCaps *refused_caps;
+
+          gst_query_parse_accept_caps (query, &refused_caps);
+          pad_monitor->last_refused_caps = gst_caps_copy (refused_caps);
+
+        }
+
+        break;
+      }
       case GST_QUERY_CAPS:{
         GstCaps *res;
         GstCaps *filter;
@@ -2240,6 +2255,14 @@ gst_validate_pad_monitor_query_func (GstPad * pad, GstObject * parent,
 
         gst_query_parse_caps (query, &filter);
         gst_query_parse_caps_result (query, &res);
+
+        gst_caps_replace (&pad_monitor->last_query_res, NULL);
+        gst_caps_replace (&pad_monitor->last_query_filter, NULL);
+        pad_monitor->last_query_res =
+            res ? gst_caps_copy (res) : gst_caps_ref (GST_CAPS_NONE);
+        pad_monitor->last_query_filter =
+            filter ? gst_caps_copy (filter) : gst_caps_ref (GST_CAPS_NONE);
+
         if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
           gst_validate_pad_monitor_check_caps_fields_proxied (pad_monitor, res,
               filter);

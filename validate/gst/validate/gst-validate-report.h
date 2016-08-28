@@ -104,6 +104,7 @@ typedef enum {
 
 #define ALLOCATION_FAILURE                       _QUARK("runtime::allocation-failure")
 #define MISSING_PLUGIN                           _QUARK("runtime::missing-plugin")
+#define NOT_NEGOTIATED                           _QUARK("runtime::not-negotiated")
 #define WARNING_ON_BUS                           _QUARK("runtime::warning-on-bus")
 #define ERROR_ON_BUS                             _QUARK("runtime::error-on-bus")
 
@@ -164,7 +165,7 @@ struct _GstValidateReport {
   /* timestamp: The time at which this issue happened since
    * the process start (to stay in sync with gst logging) */
   GstClockTime timestamp;
-  
+
   /* message: issue-specific message. Gives more detail on the actual
    * issue. Can be NULL */
   gchar *message;

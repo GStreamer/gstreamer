@@ -92,7 +92,7 @@ struct _GstValidatePadMonitor {
   /* Whether the next buffer should have a DISCONT flag on it, because
    * it's the first one, or follows a SEGMENT and/or a FLUSH */
   gboolean pending_buffer_discont;
-  
+
   GstClockTime pending_seek_accurate_time;
 
   GstEvent *expected_segment;
@@ -100,6 +100,10 @@ struct _GstValidatePadMonitor {
   GList *expired_events;
 
   GstStructure *pending_setcaps_fields;
+
+  GstCaps * last_refused_caps;
+  GstCaps * last_query_filter;
+  GstCaps * last_query_res;
 
   /* tracked data */
   GstSegment segment;

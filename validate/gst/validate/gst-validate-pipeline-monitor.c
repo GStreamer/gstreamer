@@ -26,6 +26,7 @@
 
 #include "gst-validate-internal.h"
 #include "gst-validate-pipeline-monitor.h"
+#include "gst-validate-pad-monitor.h"
 #include "gst-validate-monitor-factory.h"
 
 #define PRINT_POSITION_TIMEOUT 250
@@ -36,6 +37,15 @@
  *
  * TODO
  */
+
+typedef struct
+{
+  gint caps_struct_num;
+  gint filter_caps_struct_num;
+  GString *str;
+  GstStructure *filter;
+  gboolean found;
+} StructureIncompatibleFieldsInfo;
 
 enum
 {
@@ -113,23 +123,269 @@ print_position (GstValidateMonitor * monitor)
 }
 
 static void
+_check_pad_query_failures (GstPad * pad, GString * str,
+    GstValidatePadMonitor ** last_query_caps_fail_monitor,
+    GstValidatePadMonitor ** last_refused_caps_monitor)
+{
+  GstValidatePadMonitor *monitor;
+  GstPad *ghost_target = NULL;
+
+  if (GST_IS_GHOST_PAD (pad)) {
+    ghost_target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
+
+    pad = ghost_target;
+  }
+
+  monitor = g_object_get_data (G_OBJECT (pad), "validate-monitor");
+
+  if (monitor->last_query_res && gst_caps_is_empty (monitor->last_query_res)) {
+    gst_object_replace ((GstObject **) last_query_caps_fail_monitor,
+        (GstObject *) monitor);
+  }
+
+  if (monitor->last_refused_caps)
+    gst_object_replace ((GstObject **) last_refused_caps_monitor,
+        (GstObject *) monitor);
+
+  if (ghost_target)
+    gst_object_unref (ghost_target);
+}
+
+static void
+_gather_pad_negotiation_details (GstPad * pad, GString * str,
+    GstValidatePadMonitor ** last_query_caps_fail_monitor,
+    GstValidatePadMonitor ** last_refused_caps_monitor)
+{
+  GList *tmp;
+  GstElement *next;
+  GstPad *peer = gst_pad_get_peer (pad);
+
+  _check_pad_query_failures (pad, str, last_query_caps_fail_monitor,
+      last_refused_caps_monitor);
+  _check_pad_query_failures (peer, str, last_query_caps_fail_monitor,
+      last_refused_caps_monitor);
+
+  next = GST_ELEMENT (gst_pad_get_parent (peer));
+  GST_OBJECT_LOCK (next);
+  for (tmp = next->srcpads; tmp; tmp = tmp->next)
+    _gather_pad_negotiation_details (tmp->data, str,
+        last_query_caps_fail_monitor, last_refused_caps_monitor);
+  GST_OBJECT_UNLOCK (next);
+
+  gst_object_unref (peer);
+  gst_object_unref (next);
+}
+
+static gboolean
+_find_structure_incompatible_fields (GQuark field_id, const GValue * value,
+    StructureIncompatibleFieldsInfo * info)
+{
+  gchar *value_str, *filter_str;
+  GValue intersect = { 0, };
+  const GValue *filter_value = gst_structure_id_get_value (info->filter,
+      field_id);
+
+  if (!filter_value)
+    return TRUE;
+
+  value_str = gst_value_serialize (value);
+  filter_str = gst_value_serialize (filter_value);
+
+  if (!gst_value_can_intersect (value, filter_value)) {
+    info->found = TRUE;
+    g_string_append_printf (info->str,
+        "\n    -> Field '%s' downstream value from structure %d '(%s)%s' can't intersect with"
+        " filter value from structure number %d '(%s)%s' because of their types.",
+        g_quark_to_string (field_id), info->caps_struct_num,
+        G_VALUE_TYPE_NAME (value), value_str, info->filter_caps_struct_num,
+        G_VALUE_TYPE_NAME (filter_value), filter_str);
+
+    return TRUE;
+  }
+
+  if (gst_value_intersect (&intersect, value, filter_value)) {
+    g_value_reset (&intersect);
+
+    return TRUE;
+  }
+
+  info->found = TRUE;
+  g_string_append_printf (info->str,
+      "\n    -> Field '%s' downstream value from structure %d '(%s)%s' can't intersect with"
+      " filter value from structure number %d '(%s)%s'",
+      g_quark_to_string (field_id), info->caps_struct_num,
+      G_VALUE_TYPE_NAME (value), value_str, info->filter_caps_struct_num,
+      G_VALUE_TYPE_NAME (filter_value), filter_str);
+
+  g_free (value_str);
+  g_free (filter_str);
+
+  return TRUE;
+}
+
+static void
+_append_query_caps_failure_details (GstValidatePadMonitor * monitor,
+    GString * str)
+{
+  gint i, j;
+  GstCaps *filter = gst_caps_copy (monitor->last_query_filter);
+  GstCaps *possible_caps = gst_pad_query_caps (monitor->pad, NULL);
+  const gchar *filter_name, *possible_name;
+  GstStructure *filter_struct, *possible_struct;
+
+  g_string_append_printf (str,
+      "\n Caps negotiation failed starting from pad '%s'"
+      " as the QUERY_CAPS returned EMPTY caps for the following possible reasons:",
+      gst_validate_reporter_get_name (GST_VALIDATE_REPORTER (monitor)));
+
+  for (i = 0; i < gst_caps_get_size (possible_caps); i++) {
+    possible_struct = gst_caps_get_structure (possible_caps, i);
+    possible_name = gst_structure_get_name (possible_struct);
+
+    for (j = 0; j < gst_caps_get_size (filter); j++) {
+      StructureIncompatibleFieldsInfo info = {
+        .caps_struct_num = i,
+        .filter_caps_struct_num = j,
+        .str = str,
+        .found = FALSE
+      };
+
+      info.filter = filter_struct = gst_caps_get_structure (filter, j);
+      filter_name = gst_structure_get_name (filter_struct);
+
+      if (g_strcmp0 (possible_name, filter_name)) {
+        g_string_append_printf (str,
+            "\n    -> Downstream caps struct %d name '%s' differs from "
+            "filter caps struct %d name '%s'",
+            i, possible_name, j, filter_name);
+
+        continue;
+      }
+
+      gst_structure_foreach (possible_struct,
+          (GstStructureForeachFunc) _find_structure_incompatible_fields, &info);
+    }
+  }
+
+  gst_caps_unref (possible_caps);
+  gst_caps_unref (filter);
+
+}
+
+static gboolean
+_append_accept_caps_failure_details (GstValidatePadMonitor * monitor,
+    GString * str)
+{
+  gint i, j;
+  GstCaps *refused_caps = gst_caps_copy (monitor->last_refused_caps);
+  GstCaps *possible_caps = gst_pad_query_caps (monitor->pad, NULL);
+  gchar *caps_str = gst_caps_to_string (monitor->last_refused_caps);
+  StructureIncompatibleFieldsInfo info = {
+    .str = str,
+    .found = FALSE
+  };
+
+  g_string_append_printf (str,
+      "\n Caps negotiation failed at pad '%s' as it refused caps: %s",
+      gst_validate_reporter_get_name (GST_VALIDATE_REPORTER (monitor)),
+      caps_str);
+  g_free (caps_str);
+
+  for (i = 0; i < gst_caps_get_size (refused_caps); i++) {
+    GstStructure *refused_struct = gst_caps_get_structure (refused_caps, i);
+    const gchar *filter_name;
+    const gchar *refused_name = gst_structure_get_name (refused_struct);
+
+    for (j = 0; j < gst_caps_get_size (possible_caps); j++) {
+      info.caps_struct_num = i,
+          info.filter_caps_struct_num = j,
+          info.filter = gst_caps_get_structure (possible_caps, j);
+
+      filter_name = gst_structure_get_name (info.filter);
+      if (g_strcmp0 (refused_name, filter_name)) {
+        g_string_append_printf (str,
+            "\n    -> Downstream caps struct %d name '%s' differs from "
+            "filter caps struct %d name '%s'", i, refused_name, j, filter_name);
+
+        continue;
+      }
+
+      gst_structure_foreach (refused_struct,
+          (GstStructureForeachFunc) _find_structure_incompatible_fields, &info);
+    }
+  }
+
+  gst_caps_unref (possible_caps);
+
+  return TRUE;
+}
+
+static gchar *
+_generate_not_negotiated_error_report (GstMessage * msg)
+{
+  GString *str;
+  GList *tmp;
+  GstElement *element = GST_ELEMENT (GST_MESSAGE_SRC (msg));
+  GstValidatePadMonitor *last_query_caps_fail_monitor = NULL,
+      *last_refused_caps_monitor = NULL;
+
+  str = g_string_new (NULL);
+  g_string_append_printf (str, "Error message posted by: %s",
+      GST_OBJECT_NAME (element));
+
+  GST_OBJECT_LOCK (element);
+  for (tmp = element->srcpads; tmp; tmp = tmp->next)
+    _gather_pad_negotiation_details (tmp->data, str,
+        &last_query_caps_fail_monitor, &last_refused_caps_monitor);
+  GST_OBJECT_UNLOCK (element);
+
+  if (last_query_caps_fail_monitor)
+    _append_query_caps_failure_details (last_query_caps_fail_monitor, str);
+  else if (last_refused_caps_monitor)
+    _append_accept_caps_failure_details (last_refused_caps_monitor, str);
+  else {
+    GST_ERROR ("We should always be able to generate detailed report"
+        " about why negotiation failed, please report a bug against"
+        " gst-devtools:validate with this message and a way to reproduce.");
+  }
+
+  gst_object_replace ((GstObject **) & last_query_caps_fail_monitor, NULL);
+  gst_object_replace ((GstObject **) & last_refused_caps_monitor, NULL);
+
+  return g_string_free (str, FALSE);
+}
+
+static void
 _bus_handler (GstBus * bus, GstMessage * message,
     GstValidatePipelineMonitor * monitor)
 {
   GError *err = NULL;
   gchar *debug = NULL;
+  const GstStructure *details = NULL;
+  GstFlowReturn error_flow = GST_FLOW_OK;
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
       gst_message_parse_error (message, &err, &debug);
+      gst_message_parse_error_details (message, &details);
 
       if (g_error_matches (err, GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN)) {
         GST_VALIDATE_REPORT (monitor, MISSING_PLUGIN,
             "Error: %s -- Debug message: %s", err->message, debug);
+      } else if ((g_error_matches (err, GST_STREAM_ERROR,
+                  GST_STREAM_ERROR_FAILED) && details
+              && gst_structure_get_int (details, "flow-return", &error_flow)
+              && error_flow == GST_FLOW_NOT_NEGOTIATED)
+          || g_error_matches (err, GST_STREAM_ERROR, GST_STREAM_ERROR_FORMAT)) {
+        gchar *report = _generate_not_negotiated_error_report (message);
+
+        GST_VALIDATE_REPORT (monitor, NOT_NEGOTIATED, "%s", report);
+        g_free (report);
       } else {
         GST_VALIDATE_REPORT (monitor, ERROR_ON_BUS,
             "Got error: %s -- Debug message: %s", err->message, debug);
       }
+
       GST_VALIDATE_MONITOR_LOCK (monitor);
       monitor->got_error = TRUE;
       GST_VALIDATE_MONITOR_UNLOCK (monitor);
