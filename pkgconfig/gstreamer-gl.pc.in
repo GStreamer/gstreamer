@@ -10,4 +10,4 @@ Version: @VERSION@
 Requires: gstreamer-base-@GST_API_VERSION@ gstreamer-@GST_API_VERSION@
 
 Libs: -L${libdir} -lgstgl-@GST_API_VERSION@ @GL_LIBS@
-Cflags: -I${includedir} @GL_CFLAGS@
+Cflags: -I${includedir} -I${libdir}/gstreamer-@GST_API_VERSION@/include @GL_CFLAGS@
