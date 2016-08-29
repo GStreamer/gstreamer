@@ -1,0 +1,4 @@
+[wrap-git]
+directory=gst-libav
+url=git://anongit.freedesktop.org/gstreamer/gst-libav
+revision=master
