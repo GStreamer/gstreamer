@@ -204,6 +204,7 @@ struct GLMemoryUpload
 {
   GstGLUpload *upload;
   GstGLTextureTarget input_target;
+  GstGLTextureTarget output_target;
 };
 
 static gpointer
@@ -213,6 +214,7 @@ _gl_memory_upload_new (GstGLUpload * upload)
 
   mem->upload = upload;
   mem->input_target = GST_GL_TEXTURE_TARGET_NONE;
+  mem->output_target = GST_GL_TEXTURE_TARGET_NONE;
 
   return mem;
 }
@@ -420,8 +422,17 @@ _gl_memory_upload_perform (gpointer impl, GstBuffer * buffer,
             gl_mem->mem.context))
       return GST_GL_UPLOAD_UNSHARED_GL_CONTEXT;
 
-    if (upload->input_target != gl_mem->tex_target) {
-      upload->input_target = gl_mem->tex_target;
+    if (upload->output_target == GST_GL_TEXTURE_TARGET_NONE &&
+        upload->upload->priv->out_caps) {
+      upload->output_target =
+          _caps_get_texture_target (upload->upload->priv->out_caps,
+          GST_GL_TEXTURE_TARGET_NONE);
+    }
+
+    /* always track the last input texture target so ::transform_caps() can
+     * use it to build the output caps */
+    upload->input_target = gl_mem->tex_target;
+    if (upload->output_target != gl_mem->tex_target) {
       *outbuf = NULL;
       return GST_GL_UPLOAD_RECONFIGURE;
     }

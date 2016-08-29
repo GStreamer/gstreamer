@@ -194,13 +194,14 @@ GST_START_TEST (test_upload_data)
 
 GST_END_TEST;
 
-GST_START_TEST (test_upload_buffer)
+GST_START_TEST (test_upload_gl_memory)
 {
   GstGLBaseMemoryAllocator *base_mem_alloc;
   GstGLVideoAllocationParams *params;
   GstBuffer *buffer, *outbuf;
   GstGLMemory *gl_mem;
   GstCaps *in_caps, *out_caps;
+  GstStructure *out_s;
   GstVideoInfo in_info;
   GstMapInfo map_info;
   gint i = 0;
@@ -231,13 +232,53 @@ GST_START_TEST (test_upload_buffer)
 
   gst_buffer_append_memory (buffer, (GstMemory *) gl_mem);
 
+  /* at this point glupload hasn't received any buffers so can output anything */
+  out_caps = gst_gl_upload_transform_caps (upload, context,
+      GST_PAD_SINK, in_caps, NULL);
+  out_s = gst_caps_get_structure (out_caps, 0);
+  fail_unless (gst_structure_has_field_typed (out_s, "texture-target",
+          GST_TYPE_LIST));
+  gst_caps_unref (out_caps);
+
+  /* set some output caps without setting texture-target: this should trigger RECONFIGURE */
   out_caps = gst_caps_from_string ("video/x-raw(memory:GLMemory),"
       "format=RGBA,width=10,height=10");
 
+  /* set caps with texture-target not fixed. This should trigger RECONFIGURE. */
   gst_gl_upload_set_caps (upload, in_caps, out_caps);
+  gst_caps_unref (out_caps);
+
+  /* push a texture-target=2D buffer */
+  res = gst_gl_upload_perform_with_buffer (upload, buffer, &outbuf);
+  fail_unless (res == GST_GL_UPLOAD_RECONFIGURE);
+  fail_if (outbuf);
+
+  /* now glupload has seen a 2D buffer and so wants to transform to that */
+  out_caps = gst_gl_upload_transform_caps (upload, context,
+      GST_PAD_SINK, in_caps, NULL);
+  out_s = gst_caps_get_structure (out_caps, 0);
+  fail_unless_equals_string (gst_structure_get_string (out_s, "texture-target"),
+      "2D");
+  gst_caps_unref (out_caps);
+
+  /* try setting the wrong type first tho */
+  out_caps = gst_caps_from_string ("video/x-raw(memory:GLMemory),"
+      "format=RGBA,width=10,height=10,texture-target=RECTANGLE");
+  gst_gl_upload_set_caps (upload, in_caps, out_caps);
+  gst_caps_unref (out_caps);
 
   res = gst_gl_upload_perform_with_buffer (upload, buffer, &outbuf);
-  fail_if (res == FALSE, "Failed to upload buffer");
+  fail_unless (res == GST_GL_UPLOAD_RECONFIGURE);
+  fail_if (outbuf);
+
+  /* finally do set the correct texture-target */
+  out_caps = gst_caps_from_string ("video/x-raw(memory:GLMemory),"
+      "format=RGBA,width=10,height=10,texture-target=2D");
+  gst_gl_upload_set_caps (upload, in_caps, out_caps);
+  gst_caps_unref (out_caps);
+
+  res = gst_gl_upload_perform_with_buffer (upload, buffer, &outbuf);
+  fail_unless (res == GST_GL_UPLOAD_DONE, "Failed to upload buffer");
   fail_unless (GST_IS_BUFFER (outbuf));
 
   gst_gl_window_set_preferred_size (window, WIDTH, HEIGHT);
@@ -251,7 +292,6 @@ GST_START_TEST (test_upload_buffer)
   }
 
   gst_caps_unref (in_caps);
-  gst_caps_unref (out_caps);
   gst_buffer_unref (buffer);
   gst_buffer_unref (outbuf);
   gst_object_unref (base_mem_alloc);
@@ -269,7 +309,7 @@ gst_gl_upload_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_checked_fixture (tc_chain, setup, teardown);
   tcase_add_test (tc_chain, test_upload_data);
-  tcase_add_test (tc_chain, test_upload_buffer);
+  tcase_add_test (tc_chain, test_upload_gl_memory);
 
   return s;
 }
