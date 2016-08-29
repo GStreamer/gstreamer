@@ -1,6 +1,3 @@
-#mesondefine HAVE_LZMA
-#mesondefine HAVE_BZ2
 #mesondefine LIBAV_SOURCE
 #mesondefine PACKAGE_VERSION
 #mesondefine PACKAGE
-

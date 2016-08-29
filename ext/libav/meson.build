@@ -18,7 +18,7 @@ gstlibav = library('gstlibav',
     c_args : gst_libav_args,
     include_directories : [configinc],
     dependencies : libav_deps + [gst_dep, gstbase_dep, gstvideo_dep,
-        gstaudio_dep, gstpbutils_dep, libm, bz2lib],
+        gstaudio_dep, gstpbutils_dep],
     install : true,
     install_dir : plugins_install_dir,
   )

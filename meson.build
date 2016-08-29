@@ -1,5 +1,5 @@
 project('gst-libav', 'c', 'cpp',
-  version : '1.9.1.1',
+  version : '1.9.2.1',
   meson_version : '>= 0.33.0',
   default_options : [ 'warning_level=1',
                       'c_std=gnu99',
@@ -26,7 +26,7 @@ check_ffmpeg_src = '''#include <libavcodec/avcodec.h>
 #error libav provider should be FFmpeg
 #endif'''
 
-if not cc.compiles(check_ffmpeg_src, name : 'whether libav is provided by FFmpeg')
+if not cc.compiles(check_ffmpeg_src, name : 'libav is provided by FFmpeg')
     error('Uncompatible libavcodec found')
 endif
 
@@ -48,20 +48,6 @@ gstaudio_dep = dependency('gstreamer-audio-1.0', version : gst_req,
 gstpbutils_dep = dependency('gstreamer-pbutils-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'pbutils_dep'])
 libm = cc.find_library('m', required : false)
-
-bz2lib = cc.find_library('bz2', required : false)
-if bz2lib.found()
-  cdata.set('HAVE_BZ2', 1)
-else
-    message('WARN: libbz2 not found, matroska demuxer will not be able to read bz2 tracks')
-endif
-
-lzmalib = cc.find_library('lzma', required : false)
-if lzmalib.found()
-  cdata.set('HAVE_LZMA', 1)
-else
-    message('WARN: lzma not found, tiff reader will not be able to read lzma files')
-endif
 
 configure_file(input : 'config.h.meson',
   output : 'config.h',

@@ -244,30 +244,6 @@ case $host_os in
 esac
 AC_SUBST(DARWIN_LDFLAGS)
 
-dnl *** Check for bz2
-save_LIBS=$LIBS
-LIBS="$LIBS -lbz2"
-AC_MSG_CHECKING([for BZ2_bzlibVersion in -lbz2])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <bzlib.h>]], [[const char *version = BZ2_bzlibVersion ();]])],[HAVE_BZ2=yes],[HAVE_BZ2=no])
-AC_MSG_RESULT($HAVE_BZ2)
-LIBS=$save_LIBS
-AM_CONDITIONAL(HAVE_BZ2, test "x$HAVE_BZ2" = "xyes")
-if test "x$HAVE_BZ2" = "xno"; then
-  AC_WARN([libbz2 not found, matroska demuxer will not be able to read bz2 tracks])
-fi
-
-dnl *** Check for lzma
-save_LIBS=$LIBS
-LIBS="$LIBS -llzma"
-AC_MSG_CHECKING([for lzma_version_string in -llzma])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <lzma.h>]], [[const char *version = lzma_version_string ();]])],[HAVE_LZMA=yes],[HAVE_LZMA=no])
-AC_MSG_RESULT($HAVE_LZMA)
-LIBS=$save_LIBS
-AM_CONDITIONAL(HAVE_LZMA, test "x$HAVE_LZMA" = "xyes")
-if test "x$HAVE_LZMA" = "xno"; then
-    AC_WARN([lzma not found, tiff reader will not be able to read lzma files])
-fi
-
 AC_ARG_ENABLE(gpl,
               [AC_HELP_STRING([--enable-gpl], [build a GPL licensed gst-libav])])
 AM_CONDITIONAL(GST_LIBAV_ENABLE_GPL, test "x$enable_gpl" = "xyes")
@@ -282,6 +258,8 @@ HAVE_LIBAV_UNINSTALLED=1
 AC_ARG_WITH(system-libav,
             [AC_HELP_STRING([--with-system-libav], [use system Libav libraries])])
 
+HAVE_LZMA = "no"
+HAVE_BZ2 = "no"
 if test "x$with_system_libav" = "xyes"; then
   PKG_CHECK_MODULES(LIBAV, libavfilter libavformat libavcodec libavutil)
   PKG_CHECK_MODULES(SWSCALE, libswscale libavutil)
@@ -308,6 +286,28 @@ if test "x$with_system_libav" = "xyes"; then
   fi
 else
   AC_MSG_NOTICE([Using local Libav snapshot])
+
+  dnl *** Check for bz2
+  save_LIBS=$LIBS
+  LIBS="$LIBS -lbz2"
+  AC_MSG_CHECKING([for BZ2_bzlibVersion in -lbz2])
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <bzlib.h>]], [[const char *version = BZ2_bzlibVersion ();]])],[HAVE_BZ2=yes],[HAVE_BZ2=no])
+  AC_MSG_RESULT($HAVE_BZ2)
+  LIBS=$save_LIBS
+  if test "x$HAVE_BZ2" = "xno"; then
+    AC_WARN([libbz2 not found, matroska demuxer will not be able to read bz2 tracks])
+  fi
+
+  dnl *** Check for lzma
+  save_LIBS=$LIBS
+  LIBS="$LIBS -llzma"
+  AC_MSG_CHECKING([for lzma_version_string in -llzma])
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <lzma.h>]], [[const char *version = lzma_version_string ();]])],[HAVE_LZMA=yes],[HAVE_LZMA=no])
+  AC_MSG_RESULT($HAVE_LZMA)
+  LIBS=$save_LIBS
+  if test "x$HAVE_LZMA" = "xno"; then
+    AC_WARN([lzma not found, tiff reader will not be able to read lzma files])
+  fi
 
   dnl libgstlibav.la: include dirs
   LIBAV_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav \
@@ -465,6 +465,9 @@ else
     [emblibav_configure_args="$emblibav_configure_args"])
   AC_MSG_NOTICE([Using included Libav code])
 fi
+
+AM_CONDITIONAL(HAVE_BZ2, test "x$HAVE_BZ2" = "xyes")
+AM_CONDITIONAL(HAVE_LZMA, test "x$HAVE_LZMA" = "xyes")
 
 AC_SUBST(LIBAV_CFLAGS)
 AC_SUBST(LIBAV_DEPS)
