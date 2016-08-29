@@ -37,6 +37,16 @@ static guint tex_id;
 static GstGLShader *shader;
 static GLint shader_attr_position_loc;
 static GLint shader_attr_texture_loc;
+static guint vbo, vbo_indices, vao;
+
+static const GLfloat vertices[] = {
+  1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+  -1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+  -1.0f, -1.0f, 0.0f, 0.0f, 1.0f,
+  1.0f, -1.0f, 0.0f, 1.0f, 1.0f
+};
+
+static GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
 #define FORMAT GST_VIDEO_GL_TEXTURE_TYPE_RGBA
 #define WIDTH 10
@@ -91,8 +101,41 @@ teardown (void)
 }
 
 static void
+_bind_buffer (GstGLContext * context)
+{
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, vbo_indices);
+  gl->BindBuffer (GL_ARRAY_BUFFER, vbo);
+
+  /* Load the vertex position */
+  gl->VertexAttribPointer (shader_attr_position_loc, 3, GL_FLOAT, GL_FALSE,
+      5 * sizeof (GLfloat), (void *) 0);
+
+  /* Load the texture coordinate */
+  gl->VertexAttribPointer (shader_attr_texture_loc, 2, GL_FLOAT, GL_FALSE,
+      5 * sizeof (GLfloat), (void *) (3 * sizeof (GLfloat)));
+
+  gl->EnableVertexAttribArray (shader_attr_position_loc);
+  gl->EnableVertexAttribArray (shader_attr_texture_loc);
+}
+
+static void
+_unbind_buffer (GstGLContext * context)
+{
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
+  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+
+  gl->DisableVertexAttribArray (shader_attr_position_loc);
+  gl->DisableVertexAttribArray (shader_attr_texture_loc);
+}
+
+static void
 init (gpointer data)
 {
+  const GstGLFuncs *gl = context->gl_vtable;
   GError *error = NULL;
 
   shader = gst_gl_shader_new_default (context, &error);
@@ -101,7 +144,49 @@ init (gpointer data)
   shader_attr_position_loc =
       gst_gl_shader_get_attribute_location (shader, "a_position");
   shader_attr_texture_loc =
-      gst_gl_shader_get_attribute_location (shader, "a_texCoord");
+      gst_gl_shader_get_attribute_location (shader, "a_texcoord");
+
+  if (!vbo) {
+    if (gl->GenVertexArrays) {
+      gl->GenVertexArrays (1, &vao);
+      gl->BindVertexArray (vao);
+    }
+
+    gl->GenBuffers (1, &vbo);
+    gl->BindBuffer (GL_ARRAY_BUFFER, vbo);
+    gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), vertices,
+        GL_STATIC_DRAW);
+
+    gl->GenBuffers (1, &vbo_indices);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, vbo_indices);
+    gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
+        GL_STATIC_DRAW);
+
+    if (gl->GenVertexArrays) {
+      _bind_buffer (context);
+      gl->BindVertexArray (0);
+    }
+
+    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
+  }
+}
+
+static void
+deinit (gpointer data)
+{
+  GstGLContext *context = data;
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  if (vbo)
+    gl->DeleteBuffers (1, &vbo);
+  vbo = 0;
+  if (vbo_indices)
+    gl->DeleteBuffers (1, &vbo_indices);
+  vbo_indices = 0;
+  if (vao)
+    gl->DeleteVertexArrays (1, &vao);
+  vao = 0;
 }
 
 static void
@@ -110,38 +195,26 @@ draw_render (gpointer data)
   GstGLContext *context = data;
   GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
   const GstGLFuncs *gl = context->gl_vtable;
-  const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,
-    1.0f, 0.0f,
-    -1.0f, 1.0f, 0.0f,
-    0.0f, 0.0f,
-    -1.0f, -1.0f, 0.0f,
-    0.0f, 1.0f,
-    1.0f, -1.0f, 0.0f,
-    1.0f, 1.0f
-  };
-
-  GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
   gl->Clear (GL_COLOR_BUFFER_BIT);
 
   gst_gl_shader_use (shader);
 
-  /* Load the vertex position */
-  gl->VertexAttribPointer (shader_attr_position_loc, 3,
-      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-
-  /* Load the texture coordinate */
-  gl->VertexAttribPointer (shader_attr_texture_loc, 2,
-      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-  gl->EnableVertexAttribArray (shader_attr_position_loc);
-  gl->EnableVertexAttribArray (shader_attr_texture_loc);
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (vao);
+  else
+    _bind_buffer (context);
 
   gl->ActiveTexture (GL_TEXTURE0);
   gl->BindTexture (GL_TEXTURE_2D, tex_id);
   gst_gl_shader_set_uniform_1i (shader, "s_texture", 0);
 
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (0);
+  else
+    _unbind_buffer (context);
 
   context_class->swap_buffers (context);
 }
@@ -185,6 +258,7 @@ GST_START_TEST (test_upload_data)
         context);
     i++;
   }
+  gst_gl_window_send_message (window, GST_GL_WINDOW_CB (deinit), context);
 
   gst_caps_unref (in_caps);
   gst_caps_unref (out_caps);
@@ -290,6 +364,7 @@ GST_START_TEST (test_upload_gl_memory)
         context);
     i++;
   }
+  gst_gl_window_send_message (window, GST_GL_WINDOW_CB (deinit), context);
 
   gst_caps_unref (in_caps);
   gst_buffer_unref (buffer);
