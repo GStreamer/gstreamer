@@ -1506,6 +1506,11 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       is_audio = TRUE;
       caps = gst_caps_new_empty_simple ("audio/x-ac3");
       break;
+    case ST_PS_AUDIO_EAC3:
+      /* ATSC_ENHANCED_AC3 */
+      is_audio = TRUE;
+      caps = gst_caps_new_empty_simple ("audio/x-eac3");
+      break;
     case ST_PS_AUDIO_LPCM2:
       is_audio = TRUE;
       caps = gst_caps_new_empty_simple ("audio/x-private2-lpcm");
