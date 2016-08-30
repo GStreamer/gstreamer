@@ -25,7 +25,8 @@
 #include "corevideomemory.h"
 #ifdef HAVE_IOS
 #include "iosassetsrc.h"
-#else
+#endif
+#ifdef HAVE_QTKIT
 #include "qtkitvideosrc.h"
 #endif
 #ifdef HAVE_AVFOUNDATION
@@ -73,7 +74,9 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_IOS_ASSET_SRC);
 #else
   enable_mt_mode ();
+#endif
 
+#ifdef HAVE_QTKIT
   res = gst_element_register (plugin, "qtkitvideosrc", GST_RANK_SECONDARY,
       GST_TYPE_QTKIT_VIDEO_SRC);
 #endif
