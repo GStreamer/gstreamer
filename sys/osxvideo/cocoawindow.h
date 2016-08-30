@@ -27,7 +27,6 @@
  */
 
 #import <Cocoa/Cocoa.h>
-#import <QuickTime/QuickTime.h>
 #import <glib.h>
 #import <gst/video/navigation.h>
 
