@@ -46,35 +46,10 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
+#include <gst/pbutils/pbutils.h>        /* only used for GST_PLUGINS_BASE_VERSION_* */
 #include "RaspiCapture.h"
 
 G_BEGIN_DECLS
-
-/**
- * GstRpiCamOrientation:
- * @GST_RPI_CAM_ORIENTATION_IDENTITY: Identity (no rotation)
- * @GST_RPI_CAM_ORIENTATION_90R: Rotate clockwise 90 degrees
- * @GST_RPI_CAM_ORIENTATION_180: Rotate 180 degrees
- * @GST_RPI_CAM_ORIENTATION_90L: Rotate counter-clockwise 90 degrees
- * @GST_RPI_CAM_ORIENTATION_FLIP_HORIZ: Flip horizontally
- * @GST_RPI_CAM_ORIENTATION_FLIP_VERT: Flip vertically
- * @GST_RPI_CAM_ORIENTATION_FLIP_TRANS: Flip across upper left/lower right diagonal
- * @GST_RPI_CAM_ORIENTATION_FLIP_OTHER: Flip across upper right/lower left diagonal
- * @GST_RPI_CAM_ORIENTATION_CUSTOM: Orientation is set through rotation, hflip or vflip properties.
- *
- * The different orientation methods.
- */
-typedef enum {
-  GST_RPI_CAM_ORIENTATION_IDENTITY,
-  GST_RPI_CAM_ORIENTATION_90R,
-  GST_RPI_CAM_ORIENTATION_180,
-  GST_RPI_CAM_ORIENTATION_90L,
-  GST_RPI_CAM_ORIENTATION_FLIP_HORIZ,
-  GST_RPI_CAM_ORIENTATION_FLIP_VERT,
-  GST_RPI_CAM_ORIENTATION_FLIP_TRANS,
-  GST_RPI_CAM_ORIENTATION_FLIP_OTHER,
-  GST_RPI_CAM_ORIENTATION_CUSTOM
-} GstRpiCamOrientation;
 
 #define GST_TYPE_RPICAMSRC (gst_rpi_cam_src_get_type())
 #define GST_RPICAMSRC(obj) \
@@ -85,6 +60,10 @@ typedef enum {
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RPICAMSRC))
 #define GST_IS_RPICAMSRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RPICAMSRC))
+
+#if GST_CHECK_PLUGINS_BASE_VERSION(1, 9, 2)
+#define GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
+#endif
 
 typedef struct _GstRpiCamSrc      GstRpiCamSrc;
 typedef struct _GstRpiCamSrcClass GstRpiCamSrcClass;
@@ -104,7 +83,9 @@ struct _GstRpiCamSrc
   /* channels for interface */
   GList *channels;
 
-  GstRpiCamOrientation orientation;
+#ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
+  GstVideoOrientationMethod orientation;
+#endif
 };
 
 struct _GstRpiCamSrcClass
