@@ -1612,7 +1612,8 @@ clear_ptmap_item (PtMapItem * item)
 }
 
 static GstRTSPStream *
-gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
+gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx,
+    gint n_streams)
 {
   GstRTSPStream *stream;
   const gchar *control_url;
@@ -1666,6 +1667,11 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
   GST_DEBUG_OBJECT (src, " port: %d", stream->port);
   GST_DEBUG_OBJECT (src, " container: %d", stream->container);
   GST_DEBUG_OBJECT (src, " control: %s", GST_STR_NULL (control_url));
+
+  /* RFC 2326, C.3: missing control_url permitted in case of a single stream */
+  if (control_url == NULL && n_streams == 1) {
+    control_url = "";
+  }
 
   if (control_url != NULL) {
     stream->control_url = g_strdup (control_url);
@@ -6668,7 +6674,7 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
   /* create streams */
   n_streams = gst_sdp_message_medias_len (sdp);
   for (i = 0; i < n_streams; i++) {
-    gst_rtspsrc_create_stream (src, sdp, i);
+    gst_rtspsrc_create_stream (src, sdp, i, n_streams);
   }
 
   src->state = GST_RTSP_STATE_INIT;
