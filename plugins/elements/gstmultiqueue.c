@@ -291,6 +291,27 @@ enum
   PROP_LAST
 };
 
+/* Explanation for buffer levels and percentages:
+ *
+ * The buffering_level functions here return a value in a normalized range
+ * that specifies the current fill level of a queue. The range goes from 0 to
+ * MAX_BUFFERING_LEVEL. The low/high watermarks also use this same range.
+ *
+ * This is not to be confused with the buffering_percent value, which is
+ * a *relative* quantity - relative to the low/high watermarks.
+ * buffering_percent = 0% means overall buffering_level is at the low watermark.
+ * buffering_percent = 100% means overall buffering_level is at the high watermark.
+ * buffering_percent is used for determining if the fill level has reached
+ * the high watermark, and for producing BUFFERING messages. This value
+ * always uses a 0..100 range (since it is a percentage).
+ *
+ * To avoid future confusions, whenever "buffering level" is mentioned, it
+ * refers to the absolute level which is in the 0..MAX_BUFFERING_LEVEL
+ * range. Whenever "buffering_percent" is mentioned, it refers to the
+ * percentage value that is relative to the low/high watermark. */
+
+#define MAX_BUFFERING_LEVEL 100
+
 /* GstMultiQueuePad */
 
 #define DEFAULT_PAD_GROUP_ID 0
@@ -611,8 +632,8 @@ gst_multi_queue_init (GstMultiQueue * mqueue)
   mqueue->extra_size.time = DEFAULT_EXTRA_SIZE_TIME;
 
   mqueue->use_buffering = DEFAULT_USE_BUFFERING;
-  mqueue->low_percent = DEFAULT_LOW_PERCENT;
-  mqueue->high_percent = DEFAULT_HIGH_PERCENT;
+  mqueue->low_watermark = DEFAULT_LOW_PERCENT;
+  mqueue->high_watermark = DEFAULT_HIGH_PERCENT;
 
   mqueue->sync_by_running_time = DEFAULT_SYNC_BY_RUNNING_TIME;
   mqueue->use_interleave = DEFAULT_USE_INTERLEAVE;
@@ -727,15 +748,15 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
       recheck_buffering_status (mq);
       break;
     case PROP_LOW_PERCENT:
-      mq->low_percent = g_value_get_int (value);
-      /* Recheck buffering status - the new low-percent value might
-       * be above the current fill level. If the old low-percent one
+      mq->low_watermark = g_value_get_int (value);
+      /* Recheck buffering status - the new low_watermark value might
+       * be above the current fill level. If the old low_watermark one
        * was below the current level, this means that mq->buffering is
        * disabled and needs to be re-enabled. */
       recheck_buffering_status (mq);
       break;
     case PROP_HIGH_PERCENT:
-      mq->high_percent = g_value_get_int (value);
+      mq->high_watermark = g_value_get_int (value);
       recheck_buffering_status (mq);
       break;
     case PROP_SYNC_BY_RUNNING_TIME:
@@ -787,10 +808,10 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, mq->use_buffering);
       break;
     case PROP_LOW_PERCENT:
-      g_value_set_int (value, mq->low_percent);
+      g_value_set_int (value, mq->low_watermark);
       break;
     case PROP_HIGH_PERCENT:
-      g_value_set_int (value, mq->high_percent);
+      g_value_set_int (value, mq->high_watermark);
       break;
     case PROP_SYNC_BY_RUNNING_TIME:
       g_value_set_boolean (value, mq->sync_by_running_time);
@@ -1042,10 +1063,10 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush,
 
 /* WITH LOCK TAKEN */
 static gint
-get_percentage (GstSingleQueue * sq)
+get_buffering_level (GstSingleQueue * sq)
 {
   GstDataQueueSize size;
-  gint percent, tmp;
+  gint buffering_level, tmp;
 
   gst_data_queue_get_level (sq->queue, &size);
 
@@ -1054,38 +1075,49 @@ get_percentage (GstSingleQueue * sq)
       G_GUINT64_FORMAT, sq->id, size.visible, sq->max_size.visible,
       size.bytes, sq->max_size.bytes, sq->cur_time, sq->max_size.time);
 
-  /* get bytes and time percentages and take the max */
+  /* get bytes and time buffer levels and take the max */
   if (sq->is_eos || sq->srcresult == GST_FLOW_NOT_LINKED || sq->is_sparse) {
-    percent = 100;
+    buffering_level = MAX_BUFFERING_LEVEL;
   } else {
-    percent = 0;
+    buffering_level = 0;
     if (sq->max_size.time > 0) {
-      tmp = (sq->cur_time * 100) / sq->max_size.time;
-      percent = MAX (percent, tmp);
+      tmp =
+          gst_util_uint64_scale_int (sq->cur_time,
+          MAX_BUFFERING_LEVEL, sq->max_size.time);
+      buffering_level = MAX (buffering_level, tmp);
     }
     if (sq->max_size.bytes > 0) {
-      tmp = (size.bytes * 100) / sq->max_size.bytes;
-      percent = MAX (percent, tmp);
+      tmp =
+          gst_util_uint64_scale_int (size.bytes,
+          MAX_BUFFERING_LEVEL, sq->max_size.bytes);
+      buffering_level = MAX (buffering_level, tmp);
     }
   }
 
-  return percent;
+  return buffering_level;
 }
 
 /* WITH LOCK TAKEN */
 static void
 update_buffering (GstMultiQueue * mq, GstSingleQueue * sq)
 {
-  gint percent;
+  gint buffering_level, percent;
 
   /* nothing to dowhen we are not in buffering mode */
   if (!mq->use_buffering)
     return;
 
-  percent = get_percentage (sq);
+  buffering_level = get_buffering_level (sq);
+
+  /* scale so that if buffering_level equals the high watermark,
+   * the percentage is 100% */
+  percent = gst_util_uint64_scale (buffering_level, 100, mq->high_watermark);
+  /* clip */
+  if (percent > 100)
+    percent = 100;
 
   if (mq->buffering) {
-    if (percent >= mq->high_percent) {
+    if (buffering_level >= mq->high_watermark) {
       mq->buffering = FALSE;
     }
     /* make sure it increases */
@@ -1099,14 +1131,14 @@ update_buffering (GstMultiQueue * mq, GstSingleQueue * sq)
     for (iter = mq->queues; iter; iter = g_list_next (iter)) {
       GstSingleQueue *oq = (GstSingleQueue *) iter->data;
 
-      if (get_percentage (oq) >= mq->high_percent) {
+      if (get_buffering_level (oq) >= mq->high_watermark) {
         is_buffering = FALSE;
 
         break;
       }
     }
 
-    if (is_buffering && percent < mq->low_percent) {
+    if (is_buffering && buffering_level < mq->low_watermark) {
       mq->buffering = TRUE;
       SET_PERCENT (mq, percent);
     }
@@ -1124,11 +1156,6 @@ gst_multi_queue_post_buffering (GstMultiQueue * mq)
     gint percent = mq->buffering_percent;
 
     mq->buffering_percent_changed = FALSE;
-
-    percent = percent * 100 / mq->high_percent;
-    /* clip */
-    if (percent > 100)
-      percent = 100;
 
     GST_DEBUG_OBJECT (mq, "Going to post buffering: %d%%", percent);
     msg = gst_message_new_buffering (GST_OBJECT_CAST (mq), percent);
@@ -1148,7 +1175,8 @@ recheck_buffering_status (GstMultiQueue * mq)
     GST_MULTI_QUEUE_MUTEX_LOCK (mq);
     mq->buffering = FALSE;
     GST_DEBUG_OBJECT (mq,
-        "Buffering property disabled, but queue was still buffering; setting percentage to 100%%");
+        "Buffering property disabled, but queue was still buffering; "
+        "setting buffering percentage to 100%%");
     SET_PERCENT (mq, 100);
     GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
   }
@@ -1159,7 +1187,7 @@ recheck_buffering_status (GstMultiQueue * mq)
 
     GST_MULTI_QUEUE_MUTEX_LOCK (mq);
 
-    /* force fill level percentage to be recalculated */
+    /* force buffering percentage to be recalculated */
     old_perc = mq->buffering_percent;
     mq->buffering_percent = 0;
 
@@ -1171,7 +1199,8 @@ recheck_buffering_status (GstMultiQueue * mq)
       tmp = g_list_next (tmp);
     }
 
-    GST_DEBUG_OBJECT (mq, "Recalculated fill level: old: %d%% new: %d%%",
+    GST_DEBUG_OBJECT (mq,
+        "Recalculated buffering percentage: old: %d%% new: %d%%",
         old_perc, mq->buffering_percent);
 
     GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);

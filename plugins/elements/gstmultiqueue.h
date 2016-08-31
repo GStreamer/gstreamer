@@ -65,7 +65,7 @@ struct _GstMultiQueue {
 
   GstDataQueueSize  max_size, extra_size;
   gboolean use_buffering;
-  gint low_percent, high_percent;
+  gint low_watermark, high_watermark;
   gboolean buffering;
   gint buffering_percent;
 
