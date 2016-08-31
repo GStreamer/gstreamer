@@ -267,8 +267,8 @@ enum
 #define DEFAULT_EXTRA_SIZE_TIME 3 * GST_SECOND
 
 #define DEFAULT_USE_BUFFERING FALSE
-#define DEFAULT_LOW_PERCENT   10
-#define DEFAULT_HIGH_PERCENT  99
+#define DEFAULT_LOW_WATERMARK  0.01
+#define DEFAULT_HIGH_WATERMARK 0.99
 #define DEFAULT_SYNC_BY_RUNNING_TIME FALSE
 #define DEFAULT_USE_INTERLEAVE FALSE
 #define DEFAULT_UNLINKED_CACHE_TIME 250 * GST_MSECOND
@@ -285,6 +285,8 @@ enum
   PROP_USE_BUFFERING,
   PROP_LOW_PERCENT,
   PROP_HIGH_PERCENT,
+  PROP_LOW_WATERMARK,
+  PROP_HIGH_WATERMARK,
   PROP_SYNC_BY_RUNNING_TIME,
   PROP_USE_INTERLEAVE,
   PROP_UNLINKED_CACHE_TIME,
@@ -310,7 +312,12 @@ enum
  * range. Whenever "buffering_percent" is mentioned, it refers to the
  * percentage value that is relative to the low/high watermark. */
 
-#define MAX_BUFFERING_LEVEL 100
+/* Using a buffering level range of 0..1000000 to allow for a
+ * resolution in ppm (1 ppm = 0.0001%) */
+#define MAX_BUFFERING_LEVEL 1000000
+
+/* How much 1% makes up in the buffer level range */
+#define BUF_LEVEL_PERCENT_FACTOR ((MAX_BUFFERING_LEVEL) / 100)
 
 /* GstMultiQueuePad */
 
@@ -561,8 +568,10 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_LOW_PERCENT,
       g_param_spec_int ("low-percent", "Low percent",
-          "Low threshold for buffering to start", 0, 100,
-          DEFAULT_LOW_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Low threshold for buffering to start. Only used if use-buffering is True "
+          "(Deprecated: use low-watermark instead)",
+          0, 100, DEFAULT_LOW_WATERMARK * 100,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstMultiQueue:high-percent
    * 
@@ -570,8 +579,34 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_HIGH_PERCENT,
       g_param_spec_int ("high-percent", "High percent",
-          "High threshold for buffering to finish", 0, 100,
-          DEFAULT_HIGH_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "High threshold for buffering to finish. Only used if use-buffering is True "
+          "(Deprecated: use high-watermark instead)",
+          0, 100, DEFAULT_HIGH_WATERMARK * 100,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstMultiQueue:low-watermark
+   *
+   * Low threshold watermark for buffering to start.
+   *
+   * Since: 1.10
+   */
+  g_object_class_install_property (gobject_class, PROP_LOW_WATERMARK,
+      g_param_spec_double ("low-watermark", "Low watermark",
+          "Low threshold for buffering to start. Only used if use-buffering is True",
+          0.0, 1.0, DEFAULT_LOW_WATERMARK,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstMultiQueue:high-watermark
+   *
+   * High threshold watermark for buffering to finish.
+   *
+   * Since: 1.10
+   */
+  g_object_class_install_property (gobject_class, PROP_HIGH_WATERMARK,
+      g_param_spec_double ("high-watermark", "High watermark",
+          "High threshold for buffering to finish. Only used if use-buffering is True",
+          0.0, 1.0, DEFAULT_HIGH_WATERMARK,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstMultiQueue:sync-by-running-time
@@ -632,8 +667,8 @@ gst_multi_queue_init (GstMultiQueue * mqueue)
   mqueue->extra_size.time = DEFAULT_EXTRA_SIZE_TIME;
 
   mqueue->use_buffering = DEFAULT_USE_BUFFERING;
-  mqueue->low_watermark = DEFAULT_LOW_PERCENT;
-  mqueue->high_watermark = DEFAULT_HIGH_PERCENT;
+  mqueue->low_watermark = DEFAULT_LOW_WATERMARK * MAX_BUFFERING_LEVEL;
+  mqueue->high_watermark = DEFAULT_HIGH_WATERMARK * MAX_BUFFERING_LEVEL;
 
   mqueue->sync_by_running_time = DEFAULT_SYNC_BY_RUNNING_TIME;
   mqueue->use_interleave = DEFAULT_USE_INTERLEAVE;
@@ -748,7 +783,7 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
       recheck_buffering_status (mq);
       break;
     case PROP_LOW_PERCENT:
-      mq->low_watermark = g_value_get_int (value);
+      mq->low_watermark = g_value_get_int (value) * BUF_LEVEL_PERCENT_FACTOR;
       /* Recheck buffering status - the new low_watermark value might
        * be above the current fill level. If the old low_watermark one
        * was below the current level, this means that mq->buffering is
@@ -756,7 +791,15 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
       recheck_buffering_status (mq);
       break;
     case PROP_HIGH_PERCENT:
-      mq->high_watermark = g_value_get_int (value);
+      mq->high_watermark = g_value_get_int (value) * BUF_LEVEL_PERCENT_FACTOR;
+      recheck_buffering_status (mq);
+      break;
+    case PROP_LOW_WATERMARK:
+      mq->low_watermark = g_value_get_double (value) * MAX_BUFFERING_LEVEL;
+      recheck_buffering_status (mq);
+      break;
+    case PROP_HIGH_WATERMARK:
+      mq->high_watermark = g_value_get_double (value) * MAX_BUFFERING_LEVEL;
       recheck_buffering_status (mq);
       break;
     case PROP_SYNC_BY_RUNNING_TIME:
@@ -808,10 +851,18 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, mq->use_buffering);
       break;
     case PROP_LOW_PERCENT:
-      g_value_set_int (value, mq->low_watermark);
+      g_value_set_int (value, mq->low_watermark / BUF_LEVEL_PERCENT_FACTOR);
       break;
     case PROP_HIGH_PERCENT:
-      g_value_set_int (value, mq->high_watermark);
+      g_value_set_int (value, mq->high_watermark / BUF_LEVEL_PERCENT_FACTOR);
+      break;
+    case PROP_LOW_WATERMARK:
+      g_value_set_double (value, mq->low_watermark /
+          (gdouble) MAX_BUFFERING_LEVEL);
+      break;
+    case PROP_HIGH_WATERMARK:
+      g_value_set_double (value, mq->high_watermark /
+          (gdouble) MAX_BUFFERING_LEVEL);
       break;
     case PROP_SYNC_BY_RUNNING_TIME:
       g_value_set_boolean (value, mq->sync_by_running_time);

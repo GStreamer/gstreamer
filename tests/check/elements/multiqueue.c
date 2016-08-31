@@ -976,6 +976,114 @@ GST_START_TEST (test_initial_fill_above_high_threshold)
 
 GST_END_TEST;
 
+GST_START_TEST (test_watermark_and_fill_level)
+{
+  /* This test checks the behavior of the fill level and
+   * the low/high watermarks. It also checks if the
+   * low/high-percent and low/high-watermark properties
+   * are coupled together properly. */
+  GstElement *pipe;
+  GstElement *mq, *fakesink;
+  GstPad *inputpad;
+  GstPad *mq_sinkpad;
+  GstPad *sinkpad;
+  GstSegment segment;
+  GThread *thread;
+  gint low_perc, high_perc;
+
+
+  /* Setup test pipeline with one multiqueue and one fakesink */
+
+  pipe = gst_pipeline_new ("testbin");
+  mq = gst_element_factory_make ("multiqueue", NULL);
+  fail_unless (mq != NULL);
+  gst_bin_add (GST_BIN (pipe), mq);
+
+  fakesink = gst_element_factory_make ("fakesink", NULL);
+  fail_unless (fakesink != NULL);
+  gst_bin_add (GST_BIN (pipe), fakesink);
+
+  /* Block fakesink sinkpad flow to ensure the queue isn't emptied
+   * by the prerolling sink */
+  sinkpad = gst_element_get_static_pad (fakesink, "sink");
+  gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_BLOCK, block_probe, NULL,
+      NULL);
+  gst_object_unref (sinkpad);
+
+  g_object_set (mq,
+      "use-buffering", (gboolean) TRUE,
+      "max-size-bytes", (guint) 1000 * 1000,
+      "max-size-buffers", (guint) 0,
+      "max-size-time", (guint64) 0,
+      "extra-size-bytes", (guint) 0,
+      "extra-size-buffers", (guint) 0,
+      "extra-size-time", (guint64) 0,
+      "low-watermark", (gdouble) 0.01, "high-watermark", (gdouble) 0.10, NULL);
+
+  g_object_get (mq, "low-percent", &low_perc, "high-percent", &high_perc, NULL);
+
+  /* Check that low/high-watermark and low/high-percent are
+   * coupled properly. (low/high-percent are deprecated and
+   * exist for backwards compatibility.) */
+  fail_unless_equals_int (low_perc, 1);
+  fail_unless_equals_int (high_perc, 10);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  inputpad = gst_pad_new ("dummysrc", GST_PAD_SRC);
+  gst_pad_set_query_function (inputpad, mq_dummypad_query);
+
+  mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
+  fail_unless (mq_sinkpad != NULL);
+  fail_unless (gst_pad_link (inputpad, mq_sinkpad) == GST_PAD_LINK_OK);
+
+  gst_pad_set_active (inputpad, TRUE);
+
+  gst_pad_push_event (inputpad, gst_event_new_stream_start ("test"));
+  gst_pad_push_event (inputpad, gst_event_new_segment (&segment));
+
+  gst_object_unref (mq_sinkpad);
+
+  fail_unless (gst_element_link (mq, fakesink));
+
+  /* Start pipeline in paused state to ensure the sink remains
+   * in preroll mode and blocks */
+  gst_element_set_state (pipe, GST_STATE_PAUSED);
+
+  /* Feed data. queue will be filled to 8% (because it pushes 80000 bytes),
+   * which is below the high-threshold, provoking a buffering message. */
+  thread = g_thread_new ("push1", pad_push_datablock_thread, inputpad);
+  g_thread_join (thread);
+
+  /* Check for the buffering message; it should indicate 80% fill level
+   * (Note that the percentage from the message is normalized) */
+  CHECK_FOR_BUFFERING_MSG (pipe, 80);
+
+  /* Increase the buffer size and lower the watermarks to test
+   * if <1% watermarks are supported. */
+  g_object_set (mq,
+      "max-size-bytes", (guint) 20 * 1000 * 1000,
+      "low-watermark", (gdouble) 0.0001, "high-watermark", (gdouble) 0.005,
+      NULL);
+  /* First buffering message is posted after the max-size-bytes limit
+   * is set to 20000000 bytes & the low-watermark is set. Since the
+   * multiqueue contains 80000 bytes, and the high watermark still is
+   * 0.1 at this point, and the buffer level 80000 / 20000000 = 0.004 is
+   * normalized by 0.1: 0.004 / 0.1 => buffering percentage 4%. */
+  CHECK_FOR_BUFFERING_MSG (pipe, 4);
+  /* Second buffering message is posted after the high-watermark limit
+   * is set to 0.005. This time, the buffer level is normalized this way:
+   * 0.004 / 0.005 => buffering percentage 80%. */
+  CHECK_FOR_BUFFERING_MSG (pipe, 80);
+
+
+  gst_element_set_state (pipe, GST_STATE_NULL);
+  gst_object_unref (inputpad);
+  gst_object_unref (pipe);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_high_threshold_change)
 {
   /* This test checks what happens if the high threshold is changed to a
@@ -1508,6 +1616,7 @@ multiqueue_suite (void)
 
   tcase_add_test (tc_chain, test_sparse_stream);
   tcase_add_test (tc_chain, test_initial_fill_above_high_threshold);
+  tcase_add_test (tc_chain, test_watermark_and_fill_level);
   tcase_add_test (tc_chain, test_high_threshold_change);
   tcase_add_test (tc_chain, test_low_threshold_change);
   tcase_add_test (tc_chain, test_limit_changes);
