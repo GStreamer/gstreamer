@@ -396,9 +396,9 @@ gst_multiqueue_pad_init (GstMultiQueuePad * pad)
 } G_STMT_END
 
 #define SET_PERCENT(mq, perc) G_STMT_START {                             \
-  if (perc != mq->percent) {                                             \
-    mq->percent = perc;                                                  \
-    mq->percent_changed = TRUE;                                          \
+  if (perc != mq->buffering_percent) {                                   \
+    mq->buffering_percent = perc;                                        \
+    mq->buffering_percent_changed = TRUE;                                \
     GST_DEBUG_OBJECT (mq, "buffering %d percent", perc);                 \
   }                                                                      \
 } G_STMT_END
@@ -1089,7 +1089,7 @@ update_buffering (GstMultiQueue * mq, GstSingleQueue * sq)
       mq->buffering = FALSE;
     }
     /* make sure it increases */
-    percent = MAX (mq->percent, percent);
+    percent = MAX (mq->buffering_percent, percent);
 
     SET_PERCENT (mq, percent);
   } else {
@@ -1120,10 +1120,10 @@ gst_multi_queue_post_buffering (GstMultiQueue * mq)
 
   g_mutex_lock (&mq->buffering_post_lock);
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
-  if (mq->percent_changed) {
-    gint percent = mq->percent;
+  if (mq->buffering_percent_changed) {
+    gint percent = mq->buffering_percent;
 
-    mq->percent_changed = FALSE;
+    mq->buffering_percent_changed = FALSE;
 
     percent = percent * 100 / mq->high_percent;
     /* clip */
@@ -1160,8 +1160,8 @@ recheck_buffering_status (GstMultiQueue * mq)
     GST_MULTI_QUEUE_MUTEX_LOCK (mq);
 
     /* force fill level percentage to be recalculated */
-    old_perc = mq->percent;
-    mq->percent = 0;
+    old_perc = mq->buffering_percent;
+    mq->buffering_percent = 0;
 
     tmp = mq->queues;
     while (tmp) {
@@ -1172,7 +1172,7 @@ recheck_buffering_status (GstMultiQueue * mq)
     }
 
     GST_DEBUG_OBJECT (mq, "Recalculated fill level: old: %d%% new: %d%%",
-        old_perc, mq->percent);
+        old_perc, mq->buffering_percent);
 
     GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
   }
