@@ -70,8 +70,8 @@ typedef struct _GstURISourceBinClass GstURISourceBinClass;
 typedef struct _ChildSrcPadInfo ChildSrcPadInfo;
 typedef struct _OutputSlotInfo OutputSlotInfo;
 
-#define GST_URI_SOURCE_BIN_LOCK(dec) (g_mutex_lock(&((GstURISourceBin*)(dec))->lock))
-#define GST_URI_SOURCE_BIN_UNLOCK(dec) (g_mutex_unlock(&((GstURISourceBin*)(dec))->lock))
+#define GST_URI_SOURCE_BIN_LOCK(urisrc) (g_mutex_lock(&((GstURISourceBin*)(urisrc))->lock))
+#define GST_URI_SOURCE_BIN_UNLOCK(urisrc) (g_mutex_unlock(&((GstURISourceBin*)(urisrc))->lock))
 
 #define BUFFERING_LOCK(ubin) G_STMT_START {				\
     GST_LOG_OBJECT (ubin,						\
@@ -233,7 +233,7 @@ _custom_eos_quark_get (void)
   return g_quark;
 }
 
-static void post_missing_plugin_error (GstElement * dec,
+static void post_missing_plugin_error (GstElement * urisrc,
     const gchar * element_name);
 
 static guint gst_uri_source_bin_signals[LAST_SIGNAL] = { 0 };
@@ -447,34 +447,34 @@ static void
 gst_uri_source_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstURISourceBin *dec = GST_URI_SOURCE_BIN (object);
+  GstURISourceBin *urisrc = GST_URI_SOURCE_BIN (object);
 
   switch (prop_id) {
     case PROP_URI:
-      GST_OBJECT_LOCK (dec);
-      g_free (dec->uri);
-      dec->uri = g_value_dup_string (value);
-      GST_OBJECT_UNLOCK (dec);
+      GST_OBJECT_LOCK (urisrc);
+      g_free (urisrc->uri);
+      urisrc->uri = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (urisrc);
       break;
     case PROP_CONNECTION_SPEED:
-      GST_OBJECT_LOCK (dec);
-      dec->connection_speed = g_value_get_uint64 (value) * 1000;
-      GST_OBJECT_UNLOCK (dec);
+      GST_OBJECT_LOCK (urisrc);
+      urisrc->connection_speed = g_value_get_uint64 (value) * 1000;
+      GST_OBJECT_UNLOCK (urisrc);
       break;
     case PROP_BUFFER_SIZE:
-      dec->buffer_size = g_value_get_int (value);
+      urisrc->buffer_size = g_value_get_int (value);
       break;
     case PROP_BUFFER_DURATION:
-      dec->buffer_duration = g_value_get_int64 (value);
+      urisrc->buffer_duration = g_value_get_int64 (value);
       break;
     case PROP_DOWNLOAD:
-      dec->download = g_value_get_boolean (value);
+      urisrc->download = g_value_get_boolean (value);
       break;
     case PROP_USE_BUFFERING:
-      dec->use_buffering = g_value_get_boolean (value);
+      urisrc->use_buffering = g_value_get_boolean (value);
       break;
     case PROP_RING_BUFFER_MAX_SIZE:
-      dec->ring_buffer_max_size = g_value_get_uint64 (value);
+      urisrc->ring_buffer_max_size = g_value_get_uint64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -486,42 +486,42 @@ static void
 gst_uri_source_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstURISourceBin *dec = GST_URI_SOURCE_BIN (object);
+  GstURISourceBin *urisrc = GST_URI_SOURCE_BIN (object);
 
   switch (prop_id) {
     case PROP_URI:
-      GST_OBJECT_LOCK (dec);
-      g_value_set_string (value, dec->uri);
-      GST_OBJECT_UNLOCK (dec);
+      GST_OBJECT_LOCK (urisrc);
+      g_value_set_string (value, urisrc->uri);
+      GST_OBJECT_UNLOCK (urisrc);
       break;
     case PROP_SOURCE:
-      GST_OBJECT_LOCK (dec);
-      g_value_set_object (value, dec->source);
-      GST_OBJECT_UNLOCK (dec);
+      GST_OBJECT_LOCK (urisrc);
+      g_value_set_object (value, urisrc->source);
+      GST_OBJECT_UNLOCK (urisrc);
       break;
     case PROP_CONNECTION_SPEED:
-      GST_OBJECT_LOCK (dec);
-      g_value_set_uint64 (value, dec->connection_speed / 1000);
-      GST_OBJECT_UNLOCK (dec);
+      GST_OBJECT_LOCK (urisrc);
+      g_value_set_uint64 (value, urisrc->connection_speed / 1000);
+      GST_OBJECT_UNLOCK (urisrc);
       break;
     case PROP_BUFFER_SIZE:
-      GST_OBJECT_LOCK (dec);
-      g_value_set_int (value, dec->buffer_size);
-      GST_OBJECT_UNLOCK (dec);
+      GST_OBJECT_LOCK (urisrc);
+      g_value_set_int (value, urisrc->buffer_size);
+      GST_OBJECT_UNLOCK (urisrc);
       break;
     case PROP_BUFFER_DURATION:
-      GST_OBJECT_LOCK (dec);
-      g_value_set_int64 (value, dec->buffer_duration);
-      GST_OBJECT_UNLOCK (dec);
+      GST_OBJECT_LOCK (urisrc);
+      g_value_set_int64 (value, urisrc->buffer_duration);
+      GST_OBJECT_UNLOCK (urisrc);
       break;
     case PROP_DOWNLOAD:
-      g_value_set_boolean (value, dec->download);
+      g_value_set_boolean (value, urisrc->download);
       break;
     case PROP_USE_BUFFERING:
-      g_value_set_boolean (value, dec->use_buffering);
+      g_value_set_boolean (value, urisrc->use_buffering);
       break;
     case PROP_RING_BUFFER_MAX_SIZE:
-      g_value_set_uint64 (value, dec->ring_buffer_max_size);
+      g_value_set_uint64 (value, urisrc->ring_buffer_max_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1380,14 +1380,14 @@ has_all_raw_caps (GstPad * pad, GstCaps * rawcaps, gboolean * all_raw)
 }
 
 static void
-post_missing_plugin_error (GstElement * dec, const gchar * element_name)
+post_missing_plugin_error (GstElement * urisrc, const gchar * element_name)
 {
   GstMessage *msg;
 
-  msg = gst_missing_element_message_new (dec, element_name);
-  gst_element_post_message (dec, msg);
+  msg = gst_missing_element_message_new (urisrc, element_name);
+  gst_element_post_message (urisrc, msg);
 
-  GST_ELEMENT_ERROR (dec, CORE, MISSING_PLUGIN,
+  GST_ELEMENT_ERROR (urisrc, CORE, MISSING_PLUGIN,
       (_("Missing element '%s' - check your GStreamer installation."),
           element_name), (NULL));
 }
@@ -2048,7 +2048,7 @@ value_list_append_structure_list (GValue * list_val, GstStructure ** first,
  * want to pick a different 'best' location depending on the required
  * bitrates and the connection speed */
 static GstMessage *
-handle_redirect_message (GstURISourceBin * dec, GstMessage * msg)
+handle_redirect_message (GstURISourceBin * urisrc, GstMessage * msg)
 {
   const GValue *locations_list, *location_val;
   GstMessage *new_msg;
@@ -2058,12 +2058,12 @@ handle_redirect_message (GstURISourceBin * dec, GstMessage * msg)
   guint size, i;
   const GstStructure *structure;
 
-  GST_DEBUG_OBJECT (dec, "redirect message: %" GST_PTR_FORMAT, msg);
-  GST_DEBUG_OBJECT (dec, "connection speed: %" G_GUINT64_FORMAT,
-      dec->connection_speed);
+  GST_DEBUG_OBJECT (urisrc, "redirect message: %" GST_PTR_FORMAT, msg);
+  GST_DEBUG_OBJECT (urisrc, "connection speed: %" G_GUINT64_FORMAT,
+      urisrc->connection_speed);
 
   structure = gst_message_get_structure (msg);
-  if (dec->connection_speed == 0 || structure == NULL)
+  if (urisrc->connection_speed == 0 || structure == NULL)
     return msg;
 
   locations_list = gst_structure_get_value (structure, "locations");
@@ -2086,13 +2086,13 @@ handle_redirect_message (GstURISourceBin * dec, GstMessage * msg)
     location_val = gst_value_list_get_value (locations_list, i);
     s = (const GstStructure *) g_value_get_boxed (location_val);
     if (!gst_structure_get_int (s, "minimum-bitrate", &bitrate) || bitrate <= 0) {
-      GST_DEBUG_OBJECT (dec, "no bitrate: %" GST_PTR_FORMAT, s);
+      GST_DEBUG_OBJECT (urisrc, "no bitrate: %" GST_PTR_FORMAT, s);
       l_neutral = g_list_append (l_neutral, (gpointer) s);
-    } else if (bitrate > dec->connection_speed) {
-      GST_DEBUG_OBJECT (dec, "bitrate too high: %" GST_PTR_FORMAT, s);
+    } else if (bitrate > urisrc->connection_speed) {
+      GST_DEBUG_OBJECT (urisrc, "bitrate too high: %" GST_PTR_FORMAT, s);
       l_bad = g_list_append (l_bad, (gpointer) s);
-    } else if (bitrate <= dec->connection_speed) {
-      GST_DEBUG_OBJECT (dec, "bitrate OK: %" GST_PTR_FORMAT, s);
+    } else if (bitrate <= urisrc->connection_speed) {
+      GST_DEBUG_OBJECT (urisrc, "bitrate OK: %" GST_PTR_FORMAT, s);
       l_good = g_list_append (l_good, (gpointer) s);
     }
   }
@@ -2110,7 +2110,7 @@ handle_redirect_message (GstURISourceBin * dec, GstMessage * msg)
   new_msg = gst_message_new_element (msg->src, new_structure);
   gst_message_unref (msg);
 
-  GST_DEBUG_OBJECT (dec, "new redirect message: %" GST_PTR_FORMAT, new_msg);
+  GST_DEBUG_OBJECT (urisrc, "new redirect message: %" GST_PTR_FORMAT, new_msg);
   return new_msg;
 }
 
@@ -2326,7 +2326,7 @@ typedef void (*QueryDoneFunction) (GstURISourceBin * urisrc, QueryFold * fold);
 /* for duration/position we collect all durations/positions and take
  * the MAX of all valid results */
 static void
-decoder_query_init (GstURISourceBin * dec, QueryFold * fold)
+uri_source_query_init (GstURISourceBin * urisrc, QueryFold * fold)
 {
   fold->min = 0;
   fold->max = -1;
@@ -2335,7 +2335,7 @@ decoder_query_init (GstURISourceBin * dec, QueryFold * fold)
 }
 
 static gboolean
-decoder_query_duration_fold (const GValue * item, GValue * ret,
+uri_source_query_duration_fold (const GValue * item, GValue * ret,
     QueryFold * fold)
 {
   GstPad *pad = g_value_get_object (item);
@@ -2356,7 +2356,7 @@ decoder_query_duration_fold (const GValue * item, GValue * ret,
 }
 
 static void
-decoder_query_duration_done (GstURISourceBin * dec, QueryFold * fold)
+uri_source_query_duration_done (GstURISourceBin * urisrc, QueryFold * fold)
 {
   GstFormat format;
 
@@ -2368,7 +2368,7 @@ decoder_query_duration_done (GstURISourceBin * dec, QueryFold * fold)
 }
 
 static gboolean
-decoder_query_position_fold (const GValue * item, GValue * ret,
+uri_source_query_position_fold (const GValue * item, GValue * ret,
     QueryFold * fold)
 {
   GstPad *pad = g_value_get_object (item);
@@ -2390,7 +2390,7 @@ decoder_query_position_fold (const GValue * item, GValue * ret,
 }
 
 static void
-decoder_query_position_done (GstURISourceBin * dec, QueryFold * fold)
+uri_source_query_position_done (GstURISourceBin * urisrc, QueryFold * fold)
 {
   GstFormat format;
 
@@ -2398,11 +2398,12 @@ decoder_query_position_done (GstURISourceBin * dec, QueryFold * fold)
   /* store max in query result */
   gst_query_set_position (fold->query, format, fold->max);
 
-  GST_DEBUG_OBJECT (dec, "max position %" G_GINT64_FORMAT, fold->max);
+  GST_DEBUG_OBJECT (urisrc, "max position %" G_GINT64_FORMAT, fold->max);
 }
 
 static gboolean
-decoder_query_latency_fold (const GValue * item, GValue * ret, QueryFold * fold)
+uri_source_query_latency_fold (const GValue * item, GValue * ret,
+    QueryFold * fold)
 {
   GstPad *pad = g_value_get_object (item);
 
@@ -2437,12 +2438,12 @@ decoder_query_latency_fold (const GValue * item, GValue * ret, QueryFold * fold)
 }
 
 static void
-decoder_query_latency_done (GstURISourceBin * dec, QueryFold * fold)
+uri_source_query_latency_done (GstURISourceBin * urisrc, QueryFold * fold)
 {
   /* store max in query result */
   gst_query_set_latency (fold->query, fold->live, fold->min, fold->max);
 
-  GST_DEBUG_OBJECT (dec,
+  GST_DEBUG_OBJECT (urisrc,
       "latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
       ", live %d", GST_TIME_ARGS (fold->min), GST_TIME_ARGS (fold->max),
       fold->live);
@@ -2450,7 +2451,8 @@ decoder_query_latency_done (GstURISourceBin * dec, QueryFold * fold)
 
 /* we are seekable if all srcpads are seekable */
 static gboolean
-decoder_query_seeking_fold (const GValue * item, GValue * ret, QueryFold * fold)
+uri_source_query_seeking_fold (const GValue * item, GValue * ret,
+    QueryFold * fold)
 {
   GstPad *pad = g_value_get_object (item);
 
@@ -2470,19 +2472,20 @@ decoder_query_seeking_fold (const GValue * item, GValue * ret, QueryFold * fold)
 }
 
 static void
-decoder_query_seeking_done (GstURISourceBin * dec, QueryFold * fold)
+uri_source_query_seeking_done (GstURISourceBin * urisrc, QueryFold * fold)
 {
   GstFormat format;
 
   gst_query_parse_seeking (fold->query, &format, NULL, NULL, NULL);
   gst_query_set_seeking (fold->query, format, fold->seekable, 0, -1);
 
-  GST_DEBUG_OBJECT (dec, "seekable %d", fold->seekable);
+  GST_DEBUG_OBJECT (urisrc, "seekable %d", fold->seekable);
 }
 
 /* generic fold, return first valid result */
 static gboolean
-decoder_query_generic_fold (const GValue * item, GValue * ret, QueryFold * fold)
+uri_source_query_generic_fold (const GValue * item, GValue * ret,
+    QueryFold * fold)
 {
   GstPad *pad = g_value_get_object (item);
   gboolean res;
@@ -2502,7 +2505,7 @@ decoder_query_generic_fold (const GValue * item, GValue * ret, QueryFold * fold)
 static gboolean
 gst_uri_source_bin_query (GstElement * element, GstQuery * query)
 {
-  GstURISourceBin *decoder;
+  GstURISourceBin *urisrc;
   gboolean res = FALSE;
   GstIterator *iter;
   GstIteratorFoldFunction fold_func;
@@ -2512,36 +2515,36 @@ gst_uri_source_bin_query (GstElement * element, GstQuery * query)
   GValue ret = { 0 };
   gboolean default_ret = FALSE;
 
-  decoder = GST_URI_SOURCE_BIN (element);
+  urisrc = GST_URI_SOURCE_BIN (element);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
       /* iterate and collect durations */
-      fold_func = (GstIteratorFoldFunction) decoder_query_duration_fold;
-      fold_init = decoder_query_init;
-      fold_done = decoder_query_duration_done;
+      fold_func = (GstIteratorFoldFunction) uri_source_query_duration_fold;
+      fold_init = uri_source_query_init;
+      fold_done = uri_source_query_duration_done;
       break;
     case GST_QUERY_POSITION:
       /* iterate and collect durations */
-      fold_func = (GstIteratorFoldFunction) decoder_query_position_fold;
-      fold_init = decoder_query_init;
-      fold_done = decoder_query_position_done;
+      fold_func = (GstIteratorFoldFunction) uri_source_query_position_fold;
+      fold_init = uri_source_query_init;
+      fold_done = uri_source_query_position_done;
       break;
     case GST_QUERY_LATENCY:
       /* iterate and collect durations */
-      fold_func = (GstIteratorFoldFunction) decoder_query_latency_fold;
-      fold_init = decoder_query_init;
-      fold_done = decoder_query_latency_done;
+      fold_func = (GstIteratorFoldFunction) uri_source_query_latency_fold;
+      fold_init = uri_source_query_init;
+      fold_done = uri_source_query_latency_done;
       default_ret = TRUE;
       break;
     case GST_QUERY_SEEKING:
       /* iterate and collect durations */
-      fold_func = (GstIteratorFoldFunction) decoder_query_seeking_fold;
-      fold_init = decoder_query_init;
-      fold_done = decoder_query_seeking_done;
+      fold_func = (GstIteratorFoldFunction) uri_source_query_seeking_fold;
+      fold_init = uri_source_query_init;
+      fold_done = uri_source_query_seeking_done;
       break;
     default:
-      fold_func = (GstIteratorFoldFunction) decoder_query_generic_fold;
+      fold_func = (GstIteratorFoldFunction) uri_source_query_generic_fold;
       break;
   }
 
@@ -2555,7 +2558,7 @@ gst_uri_source_bin_query (GstElement * element, GstQuery * query)
       query, GST_QUERY_TYPE (query));
 
   if (fold_init)
-    fold_init (decoder, &fold_data);
+    fold_init (urisrc, &fold_data);
 
   while (TRUE) {
     GstIteratorResult ires;
@@ -2566,14 +2569,14 @@ gst_uri_source_bin_query (GstElement * element, GstQuery * query)
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
         if (fold_init)
-          fold_init (decoder, &fold_data);
+          fold_init (urisrc, &fold_data);
         g_value_set_boolean (&ret, default_ret);
         break;
       case GST_ITERATOR_OK:
       case GST_ITERATOR_DONE:
         res = g_value_get_boolean (&ret);
         if (fold_done != NULL && res)
-          fold_done (decoder, &fold_data);
+          fold_done (urisrc, &fold_data);
         goto done;
       default:
         res = FALSE;
