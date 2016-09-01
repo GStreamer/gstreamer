@@ -3,7 +3,7 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>1.9.1</version>
+  <version>1.9.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -748,7 +748,7 @@
       <name>rtph265depay</name>
       <longname>RTP H265 depayloader</longname>
       <class>Codec/Depayloader/Network/RTP</class>
-      <description>Extracts H265 video from RTP packets (draft-ietf-payload-rtp-h265-03.txt)</description>
+      <description>Extracts H265 video from RTP packets (RFC 7798)</description>
       <author>Jurgen Slowack &lt;jurgenslowack@gmail.com&gt;</author>
       <pads>
         <caps>
@@ -769,14 +769,14 @@
       <name>rtph265pay</name>
       <longname>RTP H265 payloader</longname>
       <class>Codec/Payloader/Network/RTP</class>
-      <description>Payload-encode H265 video into RTP packets (based on draft-ietf-payload-rtp-h265-03.txt)</description>
+      <description>Payload-encode H265 video into RTP packets (RFC 7798)</description>
       <author>Jurgen Slowack &lt;jurgenslowack@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-h265, stream-format=(string)byte-stream, alignment=(string){ nal, au }</details>
+          <details>video/x-h265, stream-format=(string)hvc1, alignment=(string)au; video/x-h265, stream-format=(string)byte-stream, alignment=(string){ nal, au }</details>
         </caps>
         <caps>
           <name>src</name>

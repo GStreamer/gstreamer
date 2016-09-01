@@ -358,4 +358,5 @@ GInterface
   GstTocSetter
   GstTuner
   GstURIHandler
+  GstVideoDirection
   GstVideoOrientation

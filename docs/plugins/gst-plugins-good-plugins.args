@@ -1015,7 +1015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.9.1"</DEFAULT>
+<DEFAULT>"GStreamer/1.9.2"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2234,7 +2234,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>method</NICK>
-<BLURB>method.</BLURB>
+<BLURB>method (deprecated, use video-direction instead).</BLURB>
 <DEFAULT>Identity (no rotation)</DEFAULT>
 </ARG>
 
@@ -20559,6 +20559,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpBin::max-streams</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Streams</NICK>
+<BLURB>The maximum number of streams to create for one session.</BLURB>
+<DEFAULT>4294967295</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRtpJitterBuffer::do-lost</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -23886,6 +23896,16 @@
 <NICK>Max files</NICK>
 <BLURB>Maximum number of files to keep on disk. Once the maximum is reached,old files start to be deleted to make room for new ones.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::send-keyframe-requests</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Request keyframes at max-size-time</NICK>
+<BLURB>Request a keyframe every max-size-time ns to try splitting at that point. Needs max-size-bytes to be 0 in order to be effective.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>

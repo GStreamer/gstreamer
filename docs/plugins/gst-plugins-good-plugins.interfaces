@@ -97,6 +97,7 @@ GstVPXEnc GstPreset GstTagSetter
 GstVideoBalance GstColorBalance
 GstVideoBalance GstImplementsInterface GstColorBalance
 GstVideoEncoder GstPreset
+GstVideoFlip GstVideoDirection
 GstVideoMixer GstChildProxy
 GstVideoMixer2 GstChildProxy
 GstWavEnc GstTagSetter GstTocSetter

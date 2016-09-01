@@ -1,12 +1,13 @@
 
-Release notes for GStreamer Good Plugins 1.9.1
+Release notes for GStreamer Good Plugins 1.9.2
 
-The GStreamer team is pleased to announce the first release of the unstable
-1.9 release series. The 1.9 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.9 release series
-will lead to the stable 1.10 release series in the next weeks. Any newly added
-API can still change until that point.
+The GStreamer team is pleased to announce the second release of the unstable
+1.9 release series, which marks the feature freeze for 1.10. The 1.9 release
+series is adding new features on top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series
+and is part of the API and ABI-stable 1.x release series of the GStreamer
+multimedia framework. The unstable 1.9 release series will lead to the stable
+1.10 release series in the next weeks. Any newly added API can still change
+until that point.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -55,53 +56,21 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 762207 : flvmux: Ensure we fallback to DTS when clipping
-      * 767071 : qtdemux: Various SEGMENT event related fixes, including regression fixes
-      * 689460 : Can't playback LPCM data via HTTP after playing back something else
-      * 693911 : souphttpsrc: rewrite using new session/request API
-      * 745187 : JPEG2000 RTP video streaming problem
-      * 749110 : qtdemux: Add the function to get channels and sample rate for AAC
-      * 752462 : multifilesrc: set position as offset from start-index
-      * 753614 : qtdemux: PIFF box parsing support
-      * 753625 : splitmuxsrc: add " format-location " signal as a way to specify arbitrarily named files as input
-      * 755725 : rtpj2kdepay: can't sync to a start code and never outputs
-      * 755937 : v4l2object: probe colorspace supported by device
-      * 758059 : Avimux: Add support for PNG images
-      * 762216 : rtpsession: don't lock while emitting the stats signal
-      * 762217 : rtpsession: Add new signal 'on-app-rtcp'
-      * 762259 : rtpjitterbuffer: Add RFC7273 media clock handling
-      * 762489 : rtpjpegdepay may push buffers before setting output caps
-      * 762860 : sdp: Add new sdpsrc element and some sdpdemux bugfixes
-      * 762988 : rtpjitterbuffer: Performance improvements
-      * 763076 : good plugins: use new gst_element_class_add_static_pad_template()
-      * 763326 : gst-launch of 8-channel deinterleave pipeline stalls
-      * 763869 : deinterlace: Add " auto " fields mode
-      * 763965 : qtdemux: Modify data type of duration in handle_src_query function
-      * 763968 : qtdemux: Add check condition for fail case in get_duration function
-      * 764119 : rtpmanager: Set to initial value for 'ntpns' in get_current_times()
-      * 764769 : matroskamux: make timecodescale configurable
-      * 765583 : ximageutil: shouldn't implement transform if don't support it
-      * 765669 : qtdemux: Incorrect handling of video file which has an internal rate not equal to 1
-      * 766236 : rtp j2k payload/depayload messes up colours in sample pattern
-      * 766381 : v4l2object: use G_SELECTION instead of G_CROP in  gst_v4l2_object_acquire_format
-      * 766383 : v4l2object: fill colorimetry in gst_v4l2_object_acquire_format
-      * 766438 : rtpjitterbuffer: Accept streams with non-TIME segments.
-      * 766561 : gst-plugins-good: fix leaks in various tests
-      * 766718 : souphttpsrc: fix buffer leak when flushing
-      * 766970 : aacparse: sticky event criticals with RTL HD mpeg-ts stream
-      * 767156 : good: fix leaks in tests
-      * 767157 : dvdemux: Pass-through buffer DISCONT flags and recalculate frame offsets when needed
-      * 767194 : matroskademux: preserve seek flags
-      * 767195 : rtpsource: complete warn log with SSRC
-      * 767354 : qtdemux: Handle upstream GAP in push-mode/time segment
-      * 767788 : rtpjitterbuffer: fix RTPJitterBufferMode documentation
-      * 767789 : rtph264pay: Deprecated sprop-parameter-set property
-      * 767817 : Build error: gstrtpj2kpay.c:364:21: error: implicit truncation from 'int' to bitfield changes value from -1 to 65535
-      * 767833 : souphttpsrc: use dynamic blocksize
-      * 767861 : make check fail in " elements/splitmux " if theora or ogg plugins are not available
-      * 768006 : flvdemux: Add support for H263 and MPEG4 part2
-      * 768232 : rtspsrc: protocols aren't reset after rtsp redirect
-      * 767799 : rtspsrc: always fill all srtp encoder properties
+      * 753760 : rtph265: sync against latest spec
+      * 763038 : souphttpsrc: add http error code to element error messages
+      * 767900 : multipartmux is not clearing dts timestamp.
+      * 767950 : qtmux: Add support for writing timecode track
+      * 768440 : flvdemux: Create per-stream tag lists
+      * 768653 : rtph265pay: does not accept array_completeness=1 in codec_data
+      * 768739 : tests: fix bus leaks in -good tests
+      * 768787 : AG_GST_PKG_CONFIG_PATH is not called before using GST_PKG_CONFIG_PATH
+      * 769117 : Regression building master
+      * 769390 : wavparse: Add bitrate and container format tags
+      * 769664 : splitmuxsink: Add option to split at exactly max-size-time
+      * 770285 : rtpbin: fix typo in max-misorder-time property name
+      * 770292 : rtpbin: introduce max-streams property
+      * 770394 : rtph265pay does not set RTP marker bit
+      * 770526 : osxvideo: fatal error: 'QuickTime/QuickTime.h' file not found (macOS Sierra)
 
 ==== Download ====
 
@@ -138,62 +107,32 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aaron Boxer
-      * Aleix Conchillo Flaqué
-      * Alex Ashley
-      * Andreas Naumann
-      * Aurélien Zanelli
-      * Brad Lackey
       * Carlos Rafael Giani
-      * Damian Ziobro
-      * David Buchmann
-      * Dimitrios Katsaros
       * Edward Hervey
-      * Enrico Jorns
-      * George Kiagiadakis
       * Guillaume Desmottes
       * Havard Graff
-      * Hyunjun Ko
+      * Jan Alexander Steffens (heftig)
       * Jan Schmidt
-      * Jesper Larsen
-      * Jihae Yi
-      * Jimmy Ohn
+      * Jie Jiang
       * Jonas Holmberg
       * Josep Torra
-      * Julien Isorce
-      * Jürgen Slowack
-      * Kieran Bingham
       * Luis de Bethencourt
-      * Mario Sanchez Prada
-      * Mark Nauwelaerts
       * Mats Lindestam
-      * Michael Olbrich
-      * Miguel París Díaz
       * Mikhail Fludkov
-      * Minjae Kim
-      * Nicola Murino
       * Nicolas Dufresne
       * Nirbheek Chauhan
       * Olivier Crête
-      * Paolo Pettinato
-      * Patricia Muscalu
-      * Peter Seiderer
-      * Philipp Zabel
-      * Philippe Normand
-      * Pierre Lamot
-      * Prashant Gotarne
       * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
-      * Seungha Yang
-      * Song Bing
       * Stefan Sauer
-      * Steven Hoving
       * Stian Selnes
       * Thiago Santos
       * Thibault Saunier
+      * Thomas Bluemel
+      * Thomas Scheuermann
       * Tim-Philipp Müller
-      * Vineeth TM
+      * Ting-Wei Lan
+      * Vincent Penquerc'h
       * Vivia Nikolaidou
-      * Wim Taymans
-      * Xavier Claessens
+      * Xabier Rodriguez Calvar
  
