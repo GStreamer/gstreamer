@@ -17,6 +17,33 @@
 #include "video-frame.h"
 #include "video-scaler.h"
 
+/* enumerations from "video.h" */
+GType
+gst_video_orientation_method_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_ORIENTATION_IDENTITY, "GST_VIDEO_ORIENTATION_IDENTITY",
+          "identity"},
+      {GST_VIDEO_ORIENTATION_90R, "GST_VIDEO_ORIENTATION_90R", "90r"},
+      {GST_VIDEO_ORIENTATION_180, "GST_VIDEO_ORIENTATION_180", "180"},
+      {GST_VIDEO_ORIENTATION_90L, "GST_VIDEO_ORIENTATION_90L", "90l"},
+      {GST_VIDEO_ORIENTATION_HORIZ, "GST_VIDEO_ORIENTATION_HORIZ", "horiz"},
+      {GST_VIDEO_ORIENTATION_VERT, "GST_VIDEO_ORIENTATION_VERT", "vert"},
+      {GST_VIDEO_ORIENTATION_UL_LR, "GST_VIDEO_ORIENTATION_UL_LR", "ul-lr"},
+      {GST_VIDEO_ORIENTATION_UR_LL, "GST_VIDEO_ORIENTATION_UR_LL", "ur-ll"},
+      {GST_VIDEO_ORIENTATION_AUTO, "GST_VIDEO_ORIENTATION_AUTO", "auto"},
+      {GST_VIDEO_ORIENTATION_CUSTOM, "GST_VIDEO_ORIENTATION_CUSTOM", "custom"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoOrientationMethod", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
 /* enumerations from "video-format.h" */
 GType
 gst_video_format_get_type (void)

@@ -8,6 +8,10 @@
 
 G_BEGIN_DECLS
 
+/* enumerations from "video.h" */
+GType gst_video_orientation_method_get_type (void);
+#define GST_TYPE_VIDEO_ORIENTATION_METHOD (gst_video_orientation_method_get_type())
+
 /* enumerations from "video-format.h" */
 GType gst_video_format_get_type (void);
 #define GST_TYPE_VIDEO_FORMAT (gst_video_format_get_type())

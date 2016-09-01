@@ -1,16 +1,16 @@
 
-Release notes for GStreamer Base Plugins 1.9.1
+Release notes for GStreamer Base Plugins 1.9.2
 
-The GStreamer team is pleased to announce the first release of the unstable
-1.9 release series. The 1.9 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.9 release series
-will lead to the stable 1.10 release series in the next weeks. Any newly added
-API can still change until that point.
+The GStreamer team is pleased to announce the second release of the unstable
+1.9 release series, which marks the feature freeze for 1.10. The 1.9 release
+series is adding new features on top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series
+and is part of the API and ABI-stable 1.x release series of the GStreamer
+multimedia framework. The unstable 1.9 release series will lead to the stable
+1.10 release series in the next weeks. Any newly added API can still change
+until that point.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
-
 
 
 This module contains a set of reference plugins, base classes for other
@@ -59,47 +59,23 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 578933 : Need generic " deep-element-added " signal and/or playbin " element-setup " signal
-      * 629764 : subparse: Add WebVTT support
-      * 747574 : videodecoder: reverse playback in non-packetized decoders
-      * 753930 : tag:  add GST_TAG_CAPTURING_FOCAL_LENGTH_35_MM and handle it in exiftag
-      * 761944 : rtcpbuffer: Add API for APP packets
-      * 761950 : rtcpbuffer: Add profile-specific extension API.
-      * 763058 : opusdec: add unit test for PLC timestamp when FEC is enabled
-      * 763075 : base plugins: use new gst_element_class_add_static_pad_template()
-      * 763630 : appsrc: If do-timestamp=true should take the timestamp when queueing the buffer
-      * 763799 : alsasrc: should not always assume that 8 channels implies 7.1 setup
-      * 763975 : decodebin: Modify result of seekable in check_upstream_seekable function
-      * 763985 : audio: add some debug output about channels mapping
-      * 764201 : video: Provide fast path for I420 to BGRA (and/or RGBA) conversion and back
-      * 764319 : videorate : avoid useless buffer copy un drop-only mode
-      * 764459 : GstRTPBasedepayload fail to detect new stream after SSRC change
-      * 764631 : GstAudioDecoder produce invalid timestamps when PLC and delay
-      * 764667 : videoaffinetransformationmeta: doesn't define the coordinate space
-      * 764902 : Explicitly initialize GstVideoCropMeta fields to 0 on init.
-      * 764948 : decodebin: use-buffering property ignored on non-muxed streams
-      * 764966 : oggdemux: Gaps when playing test sine wave VBR file
-      * 765042 : subparse: fix build error with GCC 4.6.3
-      * 765216 : gst-play: call gst_deinit()
-      * 765424 : ximagesink: generate reconfigure on window handle change
-      * 765663 : gst_audio_buffer_clip() needs const on segment
-      * 766226 : base: fix leaks in tests
-      * 766229 : appsrc: Add duration property for providing a duration in TIME format
-      * 766467 : oggdemux: Reset keyframe_granule when needed
-      * 766800 : videodecoder: Make sure the DISCONT flag is set on the outgoing buffer
-      * 767102 : decodebin: hits ASSERT with H264 byte-stream as input
-      * 767155 : base: use MAY_BE_LEAKED flag
-      * 767173 : tagdemux: preserve timestamp when skipping a tag at the  beginning of a buffer
-      * 767232 : videodecoder: Drain data in more situations
-      * 767505 : audiovisualizer: produces wrong timestamps with non-16 bit audio formats
-      * 767506 : audiovisualizer: still uses old GST_BUFFER_TIMESTAMP() macro switch it to GST_BUFFER_PTS()
-      * 767507 : audiovisualizer: Timestamp adjustment calculations wrong for > 1 channel
-      * 767537 : exiftag: Increase serialized geo coordinate precision
-      * 767641 : videodecoder: Missing drain vfunc GST_FIXME flood on Raspberry Pi
-      * 767791 : tagdemux: preserve duration when skipping a tag at the  beginning of a buffer
-      * 767826 : opusdec with plc enabled failing to decode audio
-      * 768361 : videodecoder: Takes stream lock for non-serialized queries
-      * 766203 : videoencoder/decoder: Wrong variable names used in GST_IS_*CODER_CLASS macros
+      * 761514 : riff: remove limits for sample rate and channel count
+      * 766419 : videotimecode: Added support for SMPTE time code metadata
+      * 767816 : Comparison of constant 64 with expression of type 'GstVideoFormat' is always false in Mac OS X
+      * 768495 : POTFILES.in is out of date
+      * 768525 : subparse: don't reset allowed tags
+      * 768687 : Rework video orientation
+      * 768718 : videoscale: fix leak in test
+      * 768811 : decodebin3/playbin3: fix leaks
+      * 768852 : appsink: add _try_pull_{sample,preroll} with timeout parameter
+      * 768990 : audioclock: use GST_STIME_FORMAT for the correct argument
+      * 769080 : decodebin3: fix collection refcounting
+      * 769270 : decodebin3/playbin3: fix ref handling
+      * 769298 : decodebin3: handle full removal of streams
+      * 769299 : ogg: check return values in gst_ogg_parse_new_stream
+      * 769303 : pbutils: Add more h264 scalable profiles
+      * 769624 : videorate: Does not support reverse playback
+      * 770053 : parsebin: sometimes sets global tags to stream
 
 ==== Download ====
 
@@ -136,43 +112,30 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * Alessandro Decina
-      * Arjen Veenhuizen
-      * Aurélien Zanelli
+      * Arun Raghavan
+      * Carlos Rafael Giani
+      * Duncan Palmer
       * Edward Hervey
-      * Fabrice Bellet
-      * Frédéric Bertolus
       * Guillaume Desmottes
-      * Haakon Sporsheim
-      * Hyunjun Ko
-      * Jakub Adam
       * Jan Schmidt
-      * Jimmy Ohn
       * Joan Pau Beltran
       * Josep Torra
-      * Julien Isorce
-      * Kipp Cannon
       * Luis de Bethencourt
-      * Matthew Waters
+      * Matej Knopp
       * Michael Olbrich
-      * Mikhail Fludkov
-      * Nicolas Dufresne
       * Nirbheek Chauhan
-      * Olivier Crête
-      * Paulo Neves
-      * Philippe Normand
-      * Scott D Phillips
+      * Piotr Drąg
       * Sebastian Dröge
+      * Sergio Torres Soldado
+      * Seungha Yang
       * Sreerenj Balachandran
-      * Stian Selnes
-      * Thiago Santos
-      * Thomas Jones
+      * Stefan Sauer
+      * Thibault Saunier
+      * Thijs Vermeir
       * Tim-Philipp Müller
       * Vincent Penquerc'h
-      * Vineeth TM
       * Vivia Nikolaidou
       * Víctor Manuel Jáquez Leal
       * Wim Taymans
-      * Zaheer Abbas Merali
+      * Xabier Rodriguez Calvar
  
