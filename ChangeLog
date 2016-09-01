@@ -1,9 +1,210 @@
-=== release 1.9.1 ===
+=== release 1.9.2 ===
 
-2016-07-06  Sebastian Dröge <slomo@coaxion.net>
+2016-09-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.1
+	  releasing 1.9.2
+
+2016-08-25 15:04:54 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/meson.build:
+	* meson.build:
+	  meson: doc: Fix building documentation when using subprojects
+	  And check the presence of gtk-doc before building the documentation
+
+2016-08-25 10:06:51 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* .gitignore:
+	* ges/Makefile.am:
+	  ges: Rename parse_lex.h to ges-parse-lex.h
+	  Fixes the build and makes it consistent with the meson build system.
+
+2016-08-04 17:33:55 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* .gitignore:
+	* config.h.meson:
+	* docs/libs/meson.build:
+	* docs/meson.build:
+	* examples/c/meson.build:
+	* examples/meson.build:
+	* ges/ges-command-line-formatter.c:
+	* ges/meson.build:
+	* meson.build:
+	* pkgconfig/meson.build:
+	* plugins/meson.build:
+	* plugins/nle/meson.build:
+	* tests/check/meson.build:
+	* tests/meson.build:
+	* tools/meson.build:
+	  Add support for Meson as alternative/parallel build system
+	  https://github.com/mesonbuild/meson
+
+2016-08-18 18:43:08 +0200  Philippe Renon <philippe_renon@yahoo.fr>
+
+	* ges/ges-track-element.c:
+	  ges-track-element: fix typos in control_binding_removed signal declaration
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770101
+
+2016-08-14 17:45:16 +0200  Edward Hervey <edward@centricular.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: Blacklist racy tests
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=769894
+
+2016-08-14 17:44:36 +0200  Edward Hervey <edward@centricular.com>
+
+	* ges/ges-timeline.c:
+	  ges-timeline: Demote some debugging statements
+	  locking should be in a lower level to avoid too many messages
+
+2016-08-13 11:08:34 +0200  Edward Hervey <edward@centricular.com>
+
+	* ges/ges-timeline-element.c:
+	  timeline-element: Reset pointer after freeing
+	  dispose can be called multiple times, make sure we don't call functions
+	  on free'd pointers.
+
+2016-08-03 11:40:30 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/gstframepositioner.c:
+	* tests/check/ges/timelineedition.c:
+	  ges: Do not rescale videos if the track aspect ratio changes
+	  Differential Revision: https://phabricator.freedesktop.org/D1242
+
+2016-08-02 16:42:20 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-title-source.c:
+	* ges/ges-video-source.c:
+	* ges/ges-video-source.h:
+	* ges/gstframepositioner.c:
+	* ges/gstframepositioner.h:
+	  ges: Let the compositor do the scaling if mixing is enabled
+	  Differential Revision: https://phabricator.freedesktop.org/D1241
+
+2016-08-01 12:55:07 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* tests/validate/geslaunch.py:
+	  tests:validate: Also test opus and theora in OGG
+
+2016-07-29 15:48:28 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-pipeline.c:
+	* tests/validate/geslaunch.py:
+	  validate: Start also testing jpeg encoding
+
+2016-07-28 21:50:58 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline.c:
+	  timeline: Keep transitions when moving the moving context between layers
+	  Differential Revision: https://phabricator.freedesktop.org/D1225
+
+2015-10-15 22:13:30 +0000  Justin Kim <justin.kim@collabora.com>
+
+	* tools/ges-launcher.c:
+	  ges-launcher: don't leak project uri string
+	  ges_project_get_uri returns a cloned string so it should
+	  be free'd after usage.
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D381
+
+2016-07-28 19:30:28 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline.c:
+	* tests/check/ges/layer.c:
+	  timeline: Ripple from start of clips and not the end.
+	  Fixes https://phabricator.freedesktop.org/T7503
+
+2016-07-28 17:23:31 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	  enums: Fix absolute text overlay alignment value
+	  It needs to be in sync with GstBaseTextOverlayHAlign order.
+
+2016-07-28 16:04:42 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-title-source.c:
+	  title-source: Properly implement GESTimelineElement->lookup_child
+	  GESTrackElement->lookup_child is deprecated and should be avoided
+	  as much as possible.
+
+2016-07-28 16:02:05 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-clip.c:
+	  clip: Reimplement look_child and iterate over children if needed
+	  Otherwise in the case where children reimplement lookup_child to
+	  handle some property renaming lookup fails.
+
+2016-07-28 14:24:07 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-command-line-formatter.h:
+	* ges/ges-internal.h:
+	* tools/ges-launch.c:
+	  tools: Fix printing commands help
+
+2016-07-26 14:05:06 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-validate.c:
+	  ges:validate: Check that no extra decoding happens
+
+2016-07-26 11:59:39 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-audio-uri-source.c:
+	* ges/ges-video-uri-source.c:
+	  uri-sources: Make sure to set decodebin 'caps' property
+	  Fixes a regression where we decode streams twice,
+	  this was introduced when we started creating NLE
+	  object at GESTrackElement construct time.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=769193
+
+2016-07-24 08:32:06 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline.c:
+	  timeline: Emit snap-ended on commit if needed
+	  Commiting the timeline means that the current operations on the clips are over,
+	  so we should concider snapping as done at that point
+	  Fixes T7499
+
+2016-06-26 12:23:40 +0530  Mohan R <mohan43u@gmail.com>
+
+	* ges/Makefile.am:
+	  fixed ges-version.h not found issue during out of tree build
+
+2016-07-22 07:32:51 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-image-source.c:
+	  image-source: Do not concider inpoints
+	  We have no restriction on inpoint for Images
+	  Differential Revision: https://phabricator.freedesktop.org/D1202
+
+2016-07-15 08:57:28 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* tests/validate/geslaunch.py:
+	  tests:validate: Better choose tested rendering formats
+
+2016-07-11 21:16:11 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f363b32 to f49c55e
+
+2016-07-06 13:51:18 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.9.1 ===
+
+2016-07-06 13:45:17 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.9.1
 
 2016-06-29 00:39:02 +0000  Justin Kim <justin.kim@collabora.com>
 
@@ -349,8 +550,6 @@
 	* ges/ges.c:
 	* ges/gstframepositioner.c:
 	* ges/gstframepositioner.h:
-	* ges/gstframepositionner.c:
-	* ges/gstframepositionner.h:
 	  ges: Fix typo by renaming positionner to positioner
 	  It's fortunately private API
 
@@ -872,22 +1071,6 @@
 	* examples/c/transition.c:
 	* examples/python/simple.py:
 	* tests/Makefile.am:
-	* tests/examples/.gitignore:
-	* tests/examples/Makefile.am:
-	* tests/examples/assets.c:
-	* tests/examples/concatenate.c:
-	* tests/examples/ges-ui.c:
-	* tests/examples/ges-ui.glade:
-	* tests/examples/multifilesrc.c:
-	* tests/examples/overlays.c:
-	* tests/examples/simple1.c:
-	* tests/examples/test1.c:
-	* tests/examples/test2.c:
-	* tests/examples/test3.c:
-	* tests/examples/test4.c:
-	* tests/examples/text_properties.c:
-	* tests/examples/thumbnails.c:
-	* tests/examples/transition.c:
 	  examples: Move all examples to the root dir and create foldersdir per language
 	  + Add some markdown files to link between languages
 	  + Add a simple 'play timeline with one clip" example in C and python
@@ -1450,22 +1633,6 @@
 	* ges/ges-track.c:
 	* ges/ges-utils.c:
 	* ges/ges.c:
-	* ges/nle/.gitignore:
-	* ges/nle/gnlmarshal.list:
-	* ges/nle/nle.h:
-	* ges/nle/nlecomposition.c:
-	* ges/nle/nlecomposition.h:
-	* ges/nle/nleghostpad.c:
-	* ges/nle/nleghostpad.h:
-	* ges/nle/nleobject.c:
-	* ges/nle/nleobject.h:
-	* ges/nle/nleoperation.c:
-	* ges/nle/nleoperation.h:
-	* ges/nle/nlesource.c:
-	* ges/nle/nlesource.h:
-	* ges/nle/nletypes.h:
-	* ges/nle/nleurisource.c:
-	* ges/nle/nleurisource.h:
 	* plugins/Makefile.am:
 	* plugins/nle/.gitignore:
 	* plugins/nle/Makefile.am:
@@ -2311,9 +2478,6 @@
 	* ges/parse.l:
 	* tools/Makefile.am:
 	* tools/ges-launch.c:
-	* tools/ges-structure-parser.c:
-	* tools/ges-structure-parser.h:
-	* tools/parse.l:
 	  ges: Factor out a GESCommandLineFormatter class
 	  This formatter will allow any user to deserialize a timeline using
 	  the new ges-launch command line interface
@@ -3176,7 +3340,6 @@
 2013-09-23 18:40:34 +0200  Joris Valette <joris.valette@gmail.com>
 
 	* tests/check/ges/project.c:
-	* tests/check/ges/test-keyframes.xges:
 	* tests/check/ges/test-properties.xges:
 	  tests: project: Add children properties check
 	  Rename test_project_add_keyframes into test_project_add_properties
@@ -3427,21 +3590,7 @@
 	* ges/nle/nleurisource.h:
 	* gnl/Makefile.am:
 	* gnl/gnl.c:
-	* gnl/gnl.h:
-	* gnl/gnlcomposition.c:
-	* gnl/gnlcomposition.h:
-	* gnl/gnlghostpad.c:
-	* gnl/gnlghostpad.h:
-	* gnl/gnlmarshal.list:
-	* gnl/gnlobject.c:
 	* gnl/gnlobject.h:
-	* gnl/gnloperation.c:
-	* gnl/gnloperation.h:
-	* gnl/gnlsource.c:
-	* gnl/gnlsource.h:
-	* gnl/gnltypes.h:
-	* gnl/gnlurisource.c:
-	* gnl/gnlurisource.h:
 	* tests/check/Makefile.am:
 	* tests/check/ges/backgroundsource.c:
 	* tests/check/ges/clip.c:
@@ -3453,14 +3602,6 @@
 	* tests/check/ges/titles.c:
 	* tests/check/ges/transition.c:
 	* tests/check/ges/uriclip.c:
-	* tests/check/gnl/common.c:
-	* tests/check/gnl/common.h:
-	* tests/check/gnl/complex.c:
-	* tests/check/gnl/gnlcomposition.c:
-	* tests/check/gnl/gnloperation.c:
-	* tests/check/gnl/gnlsource.c:
-	* tests/check/gnl/seek.c:
-	* tests/check/gnl/simple.c:
 	* tests/check/nle/common.c:
 	* tests/check/nle/common.h:
 	* tests/check/nle/complex.c:
@@ -4528,8 +4669,6 @@
 
 	* configure.ac:
 	* tests/Makefile.am:
-	* tests/scenarios/Makefile.am:
-	* tests/scenarios/ges-edit-clip-while-paused.scenario:
 	* tests/validate/Makefile.am:
 	* tests/validate/geslaunch.py:
 	* tests/validate/scenarios/Makefile.am:
@@ -6189,8 +6328,6 @@
 	* ges/ges-types.h:
 	* ges/ges-uri-asset.c:
 	* ges/ges-uri-clip.c:
-	* ges/ges-uri-source.c:
-	* ges/ges-uri-source.h:
 	* ges/ges-video-source.c:
 	* ges/ges-video-source.h:
 	* ges/ges-video-test-source.c:
@@ -6643,8 +6780,6 @@
 	* ges/ges-enums.h:
 	* ges/ges-pipeline.c:
 	* ges/ges-pipeline.h:
-	* ges/ges-timeline-pipeline.c:
-	* ges/ges-timeline-pipeline.h:
 	* ges/ges-types.h:
 	* ges/ges.h:
 	* tests/check/ges/basic.c:
@@ -7616,15 +7751,12 @@
 	* ges/ges-pitivi-formatter.c:
 	* ges/ges-simple-layer.c:
 	* ges/ges-simple-layer.h:
-	* ges/ges-simple-timeline-layer.c:
 	* ges/ges-simple-timeline-layer.h:
 	* ges/ges-source-clip.c:
 	* ges/ges-source-clip.h:
 	* ges/ges-test-clip.c:
 	* ges/ges-text-overlay-clip.c:
 	* ges/ges-text-overlay.c:
-	* ges/ges-timeline-layer.c:
-	* ges/ges-timeline-layer.h:
 	* ges/ges-timeline.c:
 	* ges/ges-timeline.h:
 	* ges/ges-title-clip.c:
@@ -8544,8 +8676,6 @@
 	* docs/libs/ges-docs.sgml:
 	* docs/libs/ges-sections.txt:
 	* ges/Makefile.am:
-	* ges/ges-asset-clip.c:
-	* ges/ges-asset-clip.h:
 	* ges/ges-clip-asset.c:
 	* ges/ges-clip-asset.h:
 	* ges/ges-types.h:
@@ -8564,8 +8694,6 @@
 	* ges/Makefile.am:
 	* ges/ges-audio-transition.c:
 	* ges/ges-audio-transition.h:
-	* ges/ges-track-audio-transition.c:
-	* ges/ges-track-audio-transition.h:
 	* ges/ges-transition-clip.c:
 	* ges/ges-types.h:
 	* ges/ges.h:
@@ -8578,7 +8706,6 @@
 	* docs/libs/ges-sections.txt:
 	* docs/libs/ges.types:
 	* ges/Makefile.am:
-	* ges/ges-track-video-transition.c:
 	* ges/ges-track-video-transition.h:
 	* ges/ges-transition-clip.c:
 	* ges/ges-types.h:
@@ -8598,8 +8725,6 @@
 	* ges/ges-timeline.c:
 	* ges/ges-track-audio-transition.c:
 	* ges/ges-track-audio-transition.h:
-	* ges/ges-track-transition.c:
-	* ges/ges-track-transition.h:
 	* ges/ges-track-video-transition.c:
 	* ges/ges-track-video-transition.h:
 	* ges/ges-transition-clip.c:
@@ -8622,8 +8747,6 @@
 	* ges/ges-operation.h:
 	* ges/ges-text-overlay.c:
 	* ges/ges-text-overlay.h:
-	* ges/ges-track-operation.c:
-	* ges/ges-track-operation.h:
 	* ges/ges-track-transition.c:
 	* ges/ges-track-transition.h:
 	* ges/ges-types.h:
@@ -8640,7 +8763,6 @@
 	* ges/ges-text-overlay-clip.c:
 	* ges/ges-text-overlay.c:
 	* ges/ges-text-overlay.h:
-	* ges/ges-track-text-overlay.c:
 	* ges/ges-track-text-overlay.h:
 	* ges/ges-types.h:
 	* ges/ges.h:
@@ -8660,7 +8782,6 @@
 	* ges/ges-title-source.h:
 	* ges/ges-track-text-overlay.c:
 	* ges/ges-track-text-overlay.h:
-	* ges/ges-track-title-source.c:
 	* ges/ges-track-title-source.h:
 	* ges/ges-types.h:
 	* ges/ges.h:
@@ -8676,8 +8797,6 @@
 	* ges/Makefile.am:
 	* ges/ges-image-source.c:
 	* ges/ges-image-source.h:
-	* ges/ges-track-image-source.c:
-	* ges/ges-track-image-source.h:
 	* ges/ges-types.h:
 	* ges/ges-uri-clip.c:
 	* ges/ges.h:
@@ -8689,7 +8808,6 @@
 	* docs/libs/ges-docs.sgml:
 	* docs/libs/ges-sections.txt:
 	* ges/Makefile.am:
-	* ges/ges-asset-track-object.c:
 	* ges/ges-asset-track-object.h:
 	* ges/ges-track-element-asset.c:
 	* ges/ges-track-element-asset.h:
@@ -8707,8 +8825,6 @@
 	* docs/libs/ges-docs.sgml:
 	* docs/libs/ges-sections.txt:
 	* ges/Makefile.am:
-	* ges/ges-track-filesource.c:
-	* ges/ges-track-filesource.h:
 	* ges/ges-types.h:
 	* ges/ges-uri-asset.c:
 	* ges/ges-uri-asset.h:
@@ -8738,8 +8854,6 @@
 	* ges/ges-track-filesource.h:
 	* ges/ges-track-image-source.c:
 	* ges/ges-track-image-source.h:
-	* ges/ges-track-source.c:
-	* ges/ges-track-source.h:
 	* ges/ges-track-title-source.c:
 	* ges/ges-track-title-source.h:
 	* ges/ges-types.h:
@@ -8757,7 +8871,6 @@
 	* ges/Makefile.am:
 	* ges/ges-test-clip.c:
 	* ges/ges-track-title-source.c:
-	* ges/ges-track-video-test-source.c:
 	* ges/ges-track-video-test-source.h:
 	* ges/ges-types.h:
 	* ges/ges-video-test-source.c:
@@ -8776,7 +8889,6 @@
 	* ges/ges-audio-test-source.c:
 	* ges/ges-audio-test-source.h:
 	* ges/ges-test-clip.c:
-	* ges/ges-track-audio-test-source.c:
 	* ges/ges-track-audio-test-source.h:
 	* ges/ges-types.h:
 	* ges/ges-uri-clip.c:
@@ -8795,7 +8907,6 @@
 	* ges/ges-effect.c:
 	* ges/ges-effect.h:
 	* ges/ges-pitivi-formatter.c:
-	* ges/ges-track-parse-launch-effect.c:
 	* ges/ges-track-parse-launch-effect.h:
 	* ges/ges-types.h:
 	* ges/ges.c:
@@ -8821,8 +8932,6 @@
 	* ges/ges-clip.c:
 	* ges/ges-clip.h:
 	* ges/ges-pitivi-formatter.c:
-	* ges/ges-track-effect.c:
-	* ges/ges-track-effect.h:
 	* ges/ges-track-parse-launch-effect.c:
 	* ges/ges-track-parse-launch-effect.h:
 	* ges/ges-types.h:
@@ -8865,8 +8974,6 @@
 	* ges/ges-track-element.h:
 	* ges/ges-track-filesource.c:
 	* ges/ges-track-image-source.c:
-	* ges/ges-track-object.c:
-	* ges/ges-track-object.h:
 	* ges/ges-track-operation.c:
 	* ges/ges-track-operation.h:
 	* ges/ges-track-parse-launch-effect.c:
@@ -8910,8 +9017,6 @@
 	* ges/Makefile.am:
 	* ges/ges-effect-clip.c:
 	* ges/ges-effect-clip.h:
-	* ges/ges-standard-effect-clip.c:
-	* ges/ges-standard-effect-clip.h:
 	* ges/ges-types.h:
 	* ges/ges.h:
 	* tests/check/ges/effects.c:
@@ -8925,8 +9030,6 @@
 	* ges/Makefile.am:
 	* ges/ges-base-effect-clip.c:
 	* ges/ges-base-effect-clip.h:
-	* ges/ges-effect-clip.c:
-	* ges/ges-effect-clip.h:
 	* ges/ges-standard-effect-clip.c:
 	* ges/ges-standard-effect-clip.h:
 	* ges/ges-types.h:
@@ -8942,8 +9045,6 @@
 	* ges/Makefile.am:
 	* ges/ges-asset.c:
 	* ges/ges-enums.c:
-	* ges/ges-standard-transition-clip.c:
-	* ges/ges-standard-transition-clip.h:
 	* ges/ges-timeline.c:
 	* ges/ges-transition-clip.c:
 	* ges/ges-transition-clip.h:
@@ -8972,8 +9073,6 @@
 	* ges/ges-simple-timeline-layer.c:
 	* ges/ges-standard-transition-clip.c:
 	* ges/ges-standard-transition-clip.h:
-	* ges/ges-transition-clip.c:
-	* ges/ges-transition-clip.h:
 	* ges/ges-types.h:
 	* ges/ges.h:
 	* tests/examples/ges-ui.c:
@@ -8995,7 +9094,6 @@
 	* ges/Makefile.am:
 	* ges/ges-test-clip.c:
 	* ges/ges-test-clip.h:
-	* ges/ges-timeline-test-source.c:
 	* ges/ges-timeline-test-source.h:
 	* ges/ges-types.h:
 	* ges/ges.c:
@@ -9019,7 +9117,6 @@
 	* docs/libs/ges-sections.txt:
 	* docs/libs/ges.types:
 	* ges/Makefile.am:
-	* ges/ges-timeline-title-source.c:
 	* ges/ges-timeline-title-source.h:
 	* ges/ges-title-clip.c:
 	* ges/ges-title-clip.h:
@@ -9040,7 +9137,6 @@
 	* ges/Makefile.am:
 	* ges/ges-text-overlay-clip.c:
 	* ges/ges-text-overlay-clip.h:
-	* ges/ges-timeline-text-overlay.c:
 	* ges/ges-timeline-text-overlay.h:
 	* ges/ges-types.h:
 	* ges/ges.h:
@@ -9057,8 +9153,6 @@
 	* ges/Makefile.am:
 	* ges/ges-overlay-clip.c:
 	* ges/ges-overlay-clip.h:
-	* ges/ges-timeline-overlay.c:
-	* ges/ges-timeline-overlay.h:
 	* ges/ges-timeline-text-overlay.c:
 	* ges/ges-timeline-text-overlay.h:
 	* ges/ges-types.h:
@@ -9076,14 +9170,10 @@
 	* ges/Makefile.am:
 	* ges/ges-custom-source-clip.c:
 	* ges/ges-custom-source-clip.h:
-	* ges/ges-custom-timeline-source.c:
-	* ges/ges-custom-timeline-source.h:
 	* ges/ges-simple-timeline-layer.c:
 	* ges/ges-source-clip.c:
 	* ges/ges-source-clip.h:
 	* ges/ges-timeline-layer.c:
-	* ges/ges-timeline-source.c:
-	* ges/ges-timeline-source.h:
 	* ges/ges-timeline-test-source.c:
 	* ges/ges-timeline-test-source.h:
 	* ges/ges-timeline-title-source.c:
@@ -9113,8 +9203,6 @@
 	* ges/ges-effect-clip.h:
 	* ges/ges-operation-clip.c:
 	* ges/ges-operation-clip.h:
-	* ges/ges-timeline-operation.c:
-	* ges/ges-timeline-operation.h:
 	* ges/ges-timeline-overlay.c:
 	* ges/ges-timeline-overlay.h:
 	* ges/ges-transition-clip.c:
@@ -9131,7 +9219,6 @@
 	* ges/Makefile.am:
 	* ges/ges-standard-effect-clip.c:
 	* ges/ges-standard-effect-clip.h:
-	* ges/ges-timeline-parse-launch-effect.c:
 	* ges/ges-timeline-parse-launch-effect.h:
 	* ges/ges-types.h:
 	* ges/ges.h:
@@ -9151,7 +9238,6 @@
 	* ges/ges-standard-transition-clip.c:
 	* ges/ges-standard-transition-clip.h:
 	* ges/ges-timeline-pipeline.c:
-	* ges/ges-timeline-standard-transition.c:
 	* ges/ges-timeline-standard-transition.h:
 	* ges/ges-timeline.c:
 	* ges/ges-types.h:
@@ -9182,8 +9268,6 @@
 	* ges/ges-timeline-pipeline.c:
 	* ges/ges-timeline-standard-transition.c:
 	* ges/ges-timeline-standard-transition.h:
-	* ges/ges-timeline-transition.c:
-	* ges/ges-timeline-transition.h:
 	* ges/ges-timeline.c:
 	* ges/ges-transition-clip.c:
 	* ges/ges-transition-clip.h:
@@ -9203,8 +9287,6 @@
 	* ges/ges-effect-clip.c:
 	* ges/ges-effect-clip.h:
 	* ges/ges-meta-container.c:
-	* ges/ges-timeline-effect.c:
-	* ges/ges-timeline-effect.h:
 	* ges/ges-timeline-parse-launch-effect.c:
 	* ges/ges-timeline-parse-launch-effect.h:
 	* ges/ges-timeline-pipeline.c:
@@ -9224,13 +9306,10 @@
 	* docs/libs/ges.types:
 	* ges/Makefile.am:
 	* ges/ges-asset-clip.c:
-	* ges/ges-asset-file-source.c:
-	* ges/ges-asset-file-source.h:
 	* ges/ges-asset.c:
 	* ges/ges-extractable.c:
 	* ges/ges-meta-container.c:
 	* ges/ges-pitivi-formatter.c:
-	* ges/ges-timeline-file-source.c:
 	* ges/ges-timeline-file-source.h:
 	* ges/ges-timeline-pipeline.c:
 	* ges/ges-track-filesource.c:
@@ -9244,7 +9323,6 @@
 	* tests/check/Makefile.am:
 	* tests/check/ges/asset.c:
 	* tests/check/ges/effects.c:
-	* tests/check/ges/filesource.c:
 	* tests/check/ges/project.c:
 	* tests/check/ges/test-project.xges:
 	* tests/check/ges/uriclip.c:
@@ -9277,8 +9355,6 @@
 	* ges/ges-asset-clip.h:
 	* ges/ges-asset-file-source.c:
 	* ges/ges-asset-file-source.h:
-	* ges/ges-asset-timeline-object.c:
-	* ges/ges-asset-timeline-object.h:
 	* ges/ges-asset-track-object.c:
 	* ges/ges-asset.c:
 	* ges/ges-auto-transition.c:
@@ -9296,8 +9372,6 @@
 	* ges/ges-timeline-file-source.c:
 	* ges/ges-timeline-layer.c:
 	* ges/ges-timeline-layer.h:
-	* ges/ges-timeline-object.c:
-	* ges/ges-timeline-object.h:
 	* ges/ges-timeline-operation.c:
 	* ges/ges-timeline-operation.h:
 	* ges/ges-timeline-parse-launch-effect.c:
@@ -9333,7 +9407,6 @@
 	* tests/check/ges/test-project.xges:
 	* tests/check/ges/text_properties.c:
 	* tests/check/ges/timelineedition.c:
-	* tests/check/ges/timelineobject.c:
 	* tests/check/ges/titles.c:
 	* tests/check/ges/transition.c:
 	* tests/examples/ges-ui.c:
@@ -12755,7 +12828,6 @@
 2011-08-11 16:32:51 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
 
 	* bindings/Makefile.am:
-	* bindings/makefile.am:
 	* configure.ac:
 	  bindings: makefile => Makefile
 	  More in sync with all other Makefiles
@@ -16004,8 +16076,6 @@
 
 	* tests/examples/ges-ui.c:
 	* tests/examples/ges-ui.glade:
-	* tools/ges-ui.c:
-	* tools/ges-ui.glade:
 	  move ui to tests/examples
 
 2010-07-20 15:56:12 +0200  Brandon Lewis <brandon@collabora.co.uk>
@@ -16800,8 +16870,6 @@
 
 	* docs/libs/ges-sections.txt:
 	* ges/Makefile.am:
-	* ges/ges-timeline-overlay.c:
-	* ges/ges-timeline-overlay.h:
 	* ges/ges-timeline-text-overlay.c:
 	* ges/ges-timeline-text-overlay.h:
 	* ges/ges-types.h:
@@ -16814,8 +16882,6 @@
 
 	* docs/libs/ges-sections.txt:
 	* ges/Makefile.am:
-	* ges/ges-timeline-background-source.c:
-	* ges/ges-timeline-background-source.h:
 	* ges/ges-timeline-test-source.c:
 	* ges/ges-timeline-test-source.h:
 	* ges/ges-types.h:
@@ -16841,13 +16907,9 @@
 	* docs/libs/ges-sections.txt:
 	* ges/Makefile.am:
 	* ges/ges-timeline-background-source.c:
-	* ges/ges-track-audio-background-source.c:
-	* ges/ges-track-audio-background-source.h:
 	* ges/ges-track-audio-test-source.c:
 	* ges/ges-track-audio-test-source.h:
 	* ges/ges-track-title-source.c:
-	* ges/ges-track-video-background-source.c:
-	* ges/ges-track-video-background-source.h:
 	* ges/ges-track-video-test-source.c:
 	* ges/ges-track-video-test-source.h:
 	* ges/ges-types.h:
@@ -16862,8 +16924,6 @@
 	* ges/ges-timeline-overlay.c:
 	* ges/ges-track-text-overlay.c:
 	* ges/ges-track-text-overlay.h:
-	* ges/ges-track-video-overlay.c:
-	* ges/ges-track-video-overlay.h:
 	* ges/ges-types.h:
 	* ges/ges.h:
 	* tests/check/ges/overlays.c:
@@ -17815,7 +17875,6 @@
 	* Makefile.am:
 	* configure.ac:
 	* tests/examples/Makefile.am:
-	* tests/examples/playlist.c:
 	* tools/Makefile.am:
 	* tools/ges-launch.c:
 	  tools: Moving playlist from examples and making it installable
@@ -19166,7 +19225,6 @@
 2009-09-10 16:23:12 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
 
 	* docs/random/scenarios:
-	* docs/scenarios:
 	  docs: move working document
 
 2009-09-10 16:22:00 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
@@ -19498,27 +19556,6 @@
 	* ges/ges-track.h:
 	* ges/ges.c:
 	* ges/ges.h:
-	* src/Makefile.am:
-	* src/ges-simple-timeline-layer.c:
-	* src/ges-simple-timeline-layer.h:
-	* src/ges-timeline-layer.c:
-	* src/ges-timeline-layer.h:
-	* src/ges-timeline-object.c:
-	* src/ges-timeline-object.h:
-	* src/ges-timeline-pipeline.c:
-	* src/ges-timeline-pipeline.h:
-	* src/ges-timeline-source.c:
-	* src/ges-timeline-source.h:
-	* src/ges-timeline-transition.c:
-	* src/ges-timeline-transition.h:
-	* src/ges-timeline.c:
-	* src/ges-timeline.h:
-	* src/ges-track-object.c:
-	* src/ges-track-object.h:
-	* src/ges-track.c:
-	* src/ges-track.h:
-	* src/ges.c:
-	* src/ges.h:
 	  src/ => ges/
 
 2009-08-06 11:23:01 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
