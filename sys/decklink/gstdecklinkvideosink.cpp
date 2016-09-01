@@ -749,19 +749,19 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
   GstClockTime start_time;
   HRESULT res;
   bool active;
-  GstClock *clock;
-
-  clock = gst_element_get_clock (element);
-  if (!clock) {
-    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
-        ("Scheduled playback supposed to start but we have no clock"));
-    return;
-  }
 
   if (self->output->video_enabled && (!self->output->audiosink
           || self->output->audio_enabled)
       && (GST_STATE (self) == GST_STATE_PLAYING
           || GST_STATE_PENDING (self) == GST_STATE_PLAYING)) {
+    GstClock *clock = NULL;
+
+    clock = gst_element_get_clock (element);
+    if (!clock) {
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+          ("Scheduled playback supposed to start but we have no clock"));
+      return;
+    }
     // Need to unlock to get the clock time
     g_mutex_unlock (&self->output->lock);
 
@@ -789,8 +789,10 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
 
     g_mutex_lock (&self->output->lock);
     // Check if someone else started in the meantime
-    if (self->output->started)
-      goto done;
+    if (self->output->started) {
+      gst_object_unref (clock);
+      return;
+    }
 
     active = false;
     self->output->output->IsScheduledPlaybackRunning (&active);
@@ -803,7 +805,8 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
       if (res != S_OK) {
         GST_ELEMENT_ERROR (self, STREAM, FAILED,
             (NULL), ("Failed to stop scheduled playback: 0x%08x", res));
-        goto done;
+        gst_object_unref (clock);
+        return;
       }
     }
 
@@ -817,7 +820,8 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
     if (res != S_OK) {
       GST_ELEMENT_ERROR (self, STREAM, FAILED,
           (NULL), ("Failed to start scheduled playback: 0x%08x", res));
-      goto done;
+      gst_object_unref (clock);
+      return;
     }
 
     self->output->started = TRUE;
@@ -832,12 +836,10 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
         gst_clock_get_internal_time (self->output->clock);
     self->external_base_time = gst_clock_get_internal_time (clock);
     g_mutex_lock (&self->output->lock);
+    gst_object_unref (clock);
   } else {
     GST_DEBUG_OBJECT (self, "Not starting scheduled playback yet");
   }
-
-done:
-  gst_object_unref (clock);
 }
 
 static GstStateChangeReturn
@@ -845,7 +847,7 @@ gst_decklink_video_sink_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (element);
-  GstStateChangeReturn ret;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
