@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-02-20 16:39+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -74,9 +74,6 @@ msgstr "Kan geen seek doen op CD."
 msgid "Could not read CD."
 msgstr "Kan niet lezen van CD."
 
-msgid "Internal data stream error."
-msgstr "Interne fout in gegevensstroom."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Ontbrekend element '%s' - controleer de instalatie van uw GStreamer."
@@ -88,6 +85,14 @@ msgid "This appears to be a text file"
 msgstr "Dit lijkt een tekstbestand te zijn"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Kon element \"uridecodebin\" niet aanmaken."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Kon element \"uridecodebin\" niet aanmaken."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Kon element \"uridecodebin\" niet aanmaken."
 
 #, c-format
@@ -675,6 +680,9 @@ msgstr "U moet minstens één bestandsnaam of URI leveren om af te spelen."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Druk op 'k' om een lijst met sneltoetsen te zien.\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Interne fout in gegevensstroom."
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""

@@ -2,14 +2,14 @@
 # This file is put in the public domain.
 #
 # Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
-# Johnny A. Solbu <johnny@solbu.net>, 2012-2015
+# Johnny A. Solbu <johnny@solbu.net>, 2012-2016
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.7.1\n"
+"Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
-"PO-Revision-Date: 2015-12-24 23:08+0100\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
+"PO-Revision-Date: 2016-08-05 23:45+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
 "Language: nb_NO\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.5.7\n"
+"X-Generator: Poedit 1.8.7.1\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunne ikke åpne enheten for avspilling i mono-modus."
@@ -73,9 +73,6 @@ msgstr "Kunne ikke søke på CD."
 msgid "Could not read CD."
 msgstr "Kunne ikke lese CD."
 
-msgid "Internal data stream error."
-msgstr "Intern feil i datastrøm."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Mangler elementet «%s» - kontroller GStreamer-installasjonen."
@@ -87,6 +84,14 @@ msgid "This appears to be a text file"
 msgstr "Dette ser ut som en tekstfil"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Kunne ikke opprette elementet «uridecodebin»"
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Kunne ikke opprette elementet «uridecodebin»"
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Kunne ikke opprette elementet «uridecodebin»"
 
 #, c-format
@@ -572,13 +577,13 @@ msgid "quit"
 msgstr "Avslutt"
 
 msgid "> or n"
-msgstr ""
+msgstr "> eller n"
 
 msgid "play next"
 msgstr "spill neste"
 
 msgid "< or b"
-msgstr ""
+msgstr "< eller b"
 
 msgid "play previous"
 msgstr "spill forige"
@@ -626,10 +631,10 @@ msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktiv modus - tastaturkontroller:"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Utdata-statusinformasjon og egenskapsvarslinger"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
-msgstr ""
+msgstr "Kontroller avspillingsoppførsel ved å sette playbin «flagg»-egenskap"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Video-sink som skal brukes (standard er autovideosink)"
@@ -664,6 +669,9 @@ msgstr "Du må ha med minst ett filnavn eller nettadresse å spille."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Trykk «k» for å se en liste over hurtigtaster.\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Intern feil i datastrøm."
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""

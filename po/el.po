@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2012-05-05 19:13+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -76,9 +76,6 @@ msgstr "Αδυναμία αναζήτησης CD."
 msgid "Could not read CD."
 msgstr "Αδυναμία ανάγνωσης CD."
 
-msgid "Internal data stream error."
-msgstr "Σφάλμα εσωτερικής ροής δεδομένων."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Λείπει το στοιχείο '%s' - ελέγξτε την εγκατάσταση του GStreamer."
@@ -91,6 +88,14 @@ msgstr "Αυτό φαίνεται να είναι αρχείο κειμένου"
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Αδυναμία δημιουργία στοιχείου «decodebin»."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Αδυναμία δημιουργία στοιχείου «decodebin»."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Αδυναμία δημιουργία στοιχείου «decodebin»."
 
 #, c-format
@@ -690,6 +695,9 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Σφάλμα εσωτερικής ροής δεδομένων."
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""

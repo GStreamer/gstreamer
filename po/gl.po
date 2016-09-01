@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2012-12-15 03:40+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -77,9 +77,6 @@ msgstr "Non foi posíbel buscar no CD."
 msgid "Could not read CD."
 msgstr "Non foi posíbel ler o CD."
 
-msgid "Internal data stream error."
-msgstr "Produciuse un erro no fluxo de datos internos."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Falta o elemento «%s» - comprobe a instalación do GStreamer."
@@ -92,6 +89,14 @@ msgstr "Isto parece ser un ficheiro de texto"
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Non foi posíbel crear o elemento \"decodebin\" ."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Non foi posíbel crear o elemento \"decodebin\" ."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Non foi posíbel crear o elemento \"decodebin\" ."
 
 #, c-format
@@ -671,6 +676,9 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Produciuse un erro no fluxo de datos internos."
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2010-08-16 01:21+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -73,9 +73,6 @@ msgstr "Nu s-a putut accesa CD-ul."
 msgid "Could not read CD."
 msgstr "Nu s-a putut citi CD-ul."
 
-msgid "Internal data stream error."
-msgstr "Eroare internă a fluxului de date."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Element %s lipsă - verificați instalarea GStreamer."
@@ -88,6 +85,14 @@ msgstr "Acesta pare să fie un fișier text."
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Nu se poate crea elementul „decodebin”."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Nu se poate crea elementul „decodebin”."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Nu se poate crea elementul „decodebin”."
 
 #, c-format
@@ -668,6 +673,9 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Eroare internă a fluxului de date."
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""

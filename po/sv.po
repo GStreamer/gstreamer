@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-03-02 22:20+0100\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -74,9 +74,6 @@ msgstr "Kunde inte söka på cd-skivan."
 msgid "Could not read CD."
 msgstr "Kunde inte läsa cd-skivan."
 
-msgid "Internal data stream error."
-msgstr "Internt dataströmningsfel."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Saknar elementet \"%s\" - kontrollera din GStreamer-installation."
@@ -88,6 +85,14 @@ msgid "This appears to be a text file"
 msgstr "Den här ser ut att vara en textfil"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Kunde inte skapa \"uridecodebin\"-element."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Kunde inte skapa \"uridecodebin\"-element."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Kunde inte skapa \"uridecodebin\"-element."
 
 #, c-format
@@ -665,6 +670,9 @@ msgstr "Du måste ange åtminstone ett filnamn eller en URI att spela."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Tryck på 'k' för att se en lista över tangentbordsgenvägar.\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Internt dataströmningsfel."
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""

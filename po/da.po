@@ -33,7 +33,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-03-27 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -96,9 +96,6 @@ msgstr "Kunne ikke søge på cd."
 msgid "Could not read CD."
 msgstr "Kunne ikke læse cd."
 
-msgid "Internal data stream error."
-msgstr "Intern datastrømsfejl."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Elementet »%s« mangler - kontroller din GStreamer-installation."
@@ -110,6 +107,14 @@ msgid "This appears to be a text file"
 msgstr "Denne fremstår som en tekstfil"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Kunne ikke oprette elementet »uridecodebin«."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Kunne ikke oprette elementet »uridecodebin«."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Kunne ikke oprette elementet »uridecodebin«."
 
 #, c-format
@@ -706,3 +711,6 @@ msgstr "Du skal angive mindst et filnavn eller en adresse for at afspille."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Tryk »k« for at se en liste over genvejstaster.\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Intern datastrømsfejl."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-03-05 08:42+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -76,9 +76,6 @@ msgstr "Не удалось сменить позицию воспроизвед
 msgid "Could not read CD."
 msgstr "Не удалось прочитать CD."
 
-msgid "Internal data stream error."
-msgstr "Внутренняя ошибка потока данных."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Отсутствует элемент «%s» — проверьте правильность установки GStreamer."
@@ -90,6 +87,14 @@ msgid "This appears to be a text file"
 msgstr "Этот файл является текстовым"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Не удалось создать элемент «uridecodebin»."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Не удалось создать элемент «decodebin2»."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Не удалось создать элемент «uridecodebin»."
 
 #, c-format
@@ -671,6 +676,9 @@ msgstr "Вы должны указать не менее одного имени
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Нажмите «k» для показа списка клавиатурных комбинаций.\n"
 
+#~ msgid "Internal data stream error."
+#~ msgstr "Внутренняя ошибка потока данных."
+
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""
 #~ "Для воспроизведения этого потока требуется модуль %s, но он не установлен."
@@ -815,9 +823,6 @@ msgstr "Нажмите «k» для показа списка клавиатур
 
 #~ msgid "Could not open file \"%s\" for reading."
 #~ msgstr "Не удалось открыть файл «%s» для чтения."
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Не удалось создать элемент «decodebin2»."
 
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "Не удалось создать элемент «queue2»."

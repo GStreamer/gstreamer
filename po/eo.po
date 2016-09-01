@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2011-06-04 21:11+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -72,9 +72,6 @@ msgstr "Ne eblis traserĉi la KD-n."
 msgid "Could not read CD."
 msgstr "Ne eblis legi la KD-n."
 
-msgid "Internal data stream error."
-msgstr "Interna datumflu-eraro."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
@@ -87,6 +84,14 @@ msgstr "Tio ŝajnas esti tekstdosiero"
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Ne eblis krei \"decodebin\"-elementon."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Ne eblis krei \"decodebin\"-elementon."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Ne eblis krei \"decodebin\"-elementon."
 
 #, c-format
@@ -658,6 +663,9 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Interna datumflu-eraro."
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr "%s-kromprogramo bezonatas, sed tia ne estas instalite."

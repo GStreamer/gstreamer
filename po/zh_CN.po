@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-03-03 12:15+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -68,9 +68,6 @@ msgstr "无法搜索 CD。"
 msgid "Could not read CD."
 msgstr "无法读取 CD。"
 
-msgid "Internal data stream error."
-msgstr "内部数据流错误。"
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "未找到组件‘%s’－请检查您的 GStreamer 安装情况。"
@@ -82,6 +79,14 @@ msgid "This appears to be a text file"
 msgstr "此文件是个文本文件"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "无法创建“uridecodebin”组件。"
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "无法创建“decodebin”组件。"
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "无法创建“uridecodebin”组件。"
 
 #, c-format
@@ -657,6 +662,9 @@ msgstr "你必须提供至少一个文件名或URI来播放。"
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "按“k”键来显示键盘快捷键列表。\n"
 
+#~ msgid "Internal data stream error."
+#~ msgstr "内部数据流错误。"
+
 #~ msgid "Master"
 #~ msgstr "主音量"
 
@@ -735,9 +743,6 @@ msgstr "按“k”键来显示键盘快捷键列表。\n"
 
 #~ msgid "Could not open file \"%s\" for reading."
 #~ msgstr "无法打开文件“%s”读取。"
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "无法创建“decodebin”组件。"
 
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "无法创建“queue2”组件。"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-03-05 09:48+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -73,9 +73,6 @@ msgstr "Не могу да премотам ЦД."
 msgid "Could not read CD."
 msgstr "Не могу да читам ЦД."
 
-msgid "Internal data stream error."
-msgstr "Унутрашња грешка тока података."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Недостаје елемент „%s“ — проверите вашу инсталацију Гстримера."
@@ -87,6 +84,14 @@ msgid "This appears to be a text file"
 msgstr "Изгледа да је ово текстуална датотека"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Не могу да направим „уридекодебин“ елемент."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Не могу да направим „уридекодебин“ елемент."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Не могу да направим „уридекодебин“ елемент."
 
 #, c-format
@@ -665,6 +670,9 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Притисните „k“ да видите списак пречица тастатуре.\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Унутрашња грешка тока података."
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""

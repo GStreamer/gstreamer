@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2014-04-20 16:15+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -78,9 +78,6 @@ msgstr "Nevarēja meklēt pa CD."
 msgid "Could not read CD."
 msgstr "Nevarēja nolasīt CD."
 
-msgid "Internal data stream error."
-msgstr "Iekšējās datu plūsmas kļūda."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Trūkst elements “%s” - pārbaudiet savu GStreamer instalāciju."
@@ -92,6 +89,14 @@ msgid "This appears to be a text file"
 msgstr "Tiek atpazīts kā teksta datne"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Nevarēja izveidot “uridecodebin” elementu."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Nav iespējams izveidot \"decodebin2\" elementu."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Nevarēja izveidot “uridecodebin” elementu."
 
 #, c-format
@@ -669,6 +674,9 @@ msgstr "Jums jānorāda vismaz viens datnes nosaukums vai atskaņojamais URI."
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
 
+#~ msgid "Internal data stream error."
+#~ msgstr "Iekšējās datu plūsmas kļūda."
+
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""
 #~ "Nepieciešamas %s spraudnis, lai atskaņotu šo plūsmu, bet tas nav "
@@ -805,9 +813,6 @@ msgstr ""
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Nevarēja atvērt ierīci \"%s\" lasīšanai vai rakstīšanai."
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Nav iespējams izveidot \"decodebin2\" elementu."
 
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "Nav iespējams izveidot  \"queue2\" elementu."

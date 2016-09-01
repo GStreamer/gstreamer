@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-02-21 21:03+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
@@ -75,9 +75,6 @@ msgstr "По CD-то не може да се търси."
 msgid "Could not read CD."
 msgstr "CD-то не може да бъде прочетено."
 
-msgid "Internal data stream error."
-msgstr "Вътрешна грешка на потока от данни."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Елементът „%s“ липсва — проверете инсталацията на GStreamer."
@@ -89,6 +86,14 @@ msgid "This appears to be a text file"
 msgstr "Това изглежда е текстов файл"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Не може да се създаде елемент „uridecodebin“."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Не може да се създаде елемент „uridecodebin“."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Не може да се създаде елемент „uridecodebin“."
 
 #, c-format
@@ -667,3 +672,6 @@ msgstr "Трябва да укажете поне един файл или ад�
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Натиснете „k“, за да видите списъка с клавишни комбинации.\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Вътрешна грешка на потока от данни."

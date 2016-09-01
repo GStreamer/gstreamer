@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-03-02 22:08+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -81,9 +81,6 @@ msgstr "Nie udało się ustawić położenia na CD."
 msgid "Could not read CD."
 msgstr "Nie udał się odczyt CD."
 
-msgid "Internal data stream error."
-msgstr "Błąd wewnętrzny strumienia danych."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Brak elementu '%s' - proszę sprawdzić instalację GStreamera."
@@ -95,6 +92,14 @@ msgid "This appears to be a text file"
 msgstr "To wygląda na plik tekstowy"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Nie udało się utworzyć elementu \"uridecodebin\"."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Nie udało się utworzyć elementu \"uridecodebin\"."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Nie udało się utworzyć elementu \"uridecodebin\"."
 
 #, c-format
@@ -673,3 +678,6 @@ msgstr "Trzeba podać przynajmniej jedną nazwę pliku lub URI do odtworzenia."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Klawisz 'k' wyświetla listę skrótów klawiatury.\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Błąd wewnętrzny strumienia danych."

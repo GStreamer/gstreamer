@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-03-03 07:49+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -75,9 +75,6 @@ msgstr "Không thể di chuyển vị trí đọc trên đĩa CD."
 msgid "Could not read CD."
 msgstr "Không thể đọc đĩa CD."
 
-msgid "Internal data stream error."
-msgstr "Lỗi luồng dữ liệu nội bộ."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Thiếu phần tử “%s” — hãy kiểm tra lại phần cài đặt GStreamer."
@@ -89,6 +86,14 @@ msgid "This appears to be a text file"
 msgstr "Hình như đây là tập tin văn bản"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Không thể tạo phần tử “uridecodebin”."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Không thể tạo phần tử “uridecodebin”."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Không thể tạo phần tử “uridecodebin”."
 
 #, c-format
@@ -671,6 +676,9 @@ msgstr "Bạn phải cung cấp ít nhất là một tên tập tin hay URI đ�
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Nhấn phím “k” để xem toàn bộ phím tắt.\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Lỗi luồng dữ liệu nội bộ."
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr "Cần phần bổ sung %s để phát luồng này nhưng chưa cài đặt."

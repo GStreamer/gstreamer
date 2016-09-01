@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -75,9 +75,6 @@ msgstr "Could not close vfs file \"%s\"."
 msgid "Could not read CD."
 msgstr "Could not write to device \"%s\"."
 
-msgid "Internal data stream error."
-msgstr ""
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
@@ -91,6 +88,14 @@ msgstr ""
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Could not write to file \"%s\"."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Could not write to file \"%s\"."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Could not write to file \"%s\"."
 
 #, c-format

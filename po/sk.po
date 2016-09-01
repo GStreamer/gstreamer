@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-05-20 12:24+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -73,9 +73,6 @@ msgstr "Nepodarilo sa nastaviť pozíciu na CD."
 msgid "Could not read CD."
 msgstr "Nepodarilo sa čítať CD."
 
-msgid "Internal data stream error."
-msgstr "Vnútorná chyba prúdu údajov."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Chýa prvok '%s' - skontrolujte svoju inštaláciu GStreamer."
@@ -87,6 +84,14 @@ msgid "This appears to be a text file"
 msgstr "Tento súbor je asi textový"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Nepodarilo sa vytvoriť prvok \"uridecodebin\"."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Nepodarilo sa vytvoriť prvok \"decodebin2\"."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Nepodarilo sa vytvoriť prvok \"uridecodebin\"."
 
 #, c-format
@@ -664,6 +669,9 @@ msgstr "Ak chcete prehrávať, musíte zadať aspoň jeden názov súboru alebo 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Stlačením 'k' zobrazíte zoznam klávesových skratiek.\n"
 
+#~ msgid "Internal data stream error."
+#~ msgstr "Vnútorná chyba prúdu údajov."
+
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""
 #~ "Na prehratie tohto prúdu údajov je vyžadovaný zásuvný modul %s, ktorý nie "
@@ -816,9 +824,6 @@ msgstr "Stlačením 'k' zobrazíte zoznam klávesových skratiek.\n"
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Vnútorná chyba prúdu údajov."
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Nepodarilo sa vytvoriť prvok \"decodebin2\"."
 
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "Nepodarilo sa vytvoriť prvok \"queue2\"."

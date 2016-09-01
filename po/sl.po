@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2013-01-05 10:10+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -75,9 +75,6 @@ msgstr "Po CD-ju ni mogoče iskati."
 msgid "Could not read CD."
 msgstr "CD-ja ni mogoče prebrati."
 
-msgid "Internal data stream error."
-msgstr "Notranja napaka pretoka podatkov."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Predmet '%s' manjka - preverite namestitev paketa GStreamer."
@@ -89,6 +86,12 @@ msgid "This appears to be a text file"
 msgstr "Datoteka je videti kot besedilna datoteka"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr ""
+
+msgid "Could not create \"decodebin3\" element."
+msgstr ""
+
+msgid "Could not create \"urisourcebin\" element."
 msgstr ""
 
 #, c-format
@@ -666,6 +669,9 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Notranja napaka pretoka podatkov."
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""

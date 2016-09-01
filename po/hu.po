@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-03-14 19:14+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -76,9 +76,6 @@ msgstr "Nem kereshető a CD."
 msgid "Could not read CD."
 msgstr "Nem olvasható a CD."
 
-msgid "Internal data stream error."
-msgstr "Belső adatfolyam-hiba."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "A(z) „%s” elem hiányzik - ellenőrizze a Gstreamer telepítését."
@@ -90,6 +87,14 @@ msgid "This appears to be a text file"
 msgstr "Ez egy szövegfájlnak tűnik"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Nem hozható létre „uridecodebin” elem."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Nem hozható létre „uridecodebin” elem."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Nem hozható létre „uridecodebin” elem."
 
 #, c-format
@@ -669,6 +674,9 @@ msgstr "Meg kell adnia legalább egy fájlnevet vagy URI-t a lejátszáshoz."
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
 "Nyomja meg a „k” billentyűt a gyorsbillentyűk listájának megtekintéséhez.\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Belső adatfolyam-hiba."
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""

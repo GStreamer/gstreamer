@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -78,9 +78,6 @@ msgstr "No s'ha pogut cercar el CD."
 msgid "Could not read CD."
 msgstr "No s'ha pogut llegir el CD."
 
-msgid "Internal data stream error."
-msgstr "S'ha produït un error intern de flux de dades."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Manca l'element «%s» - comproveu la vostra instaŀlació del GStreamer."
@@ -93,6 +90,14 @@ msgstr "Això sembla ser un fitxer de text"
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
+msgstr "No s'ha pogut crear l'element «decodebin»."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "No s'ha pogut crear l'element «decodebin»."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "No s'ha pogut crear l'element «decodebin»."
 
 #, c-format
@@ -683,6 +688,9 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
+
+#~ msgid "Internal data stream error."
+#~ msgstr "S'ha produït un error intern de flux de dades."
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""

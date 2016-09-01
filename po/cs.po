@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-03-03 15:35+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -76,9 +76,6 @@ msgstr "Nezdařilo přeskočit na CD."
 msgid "Could not read CD."
 msgstr "Nezdařilo čtení z CD."
 
-msgid "Internal data stream error."
-msgstr "Vnitřní chyba datového proudu."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Schází prvek „%s“ – zkontrolujte prosím instalaci systému GStreamer."
@@ -90,6 +87,14 @@ msgid "This appears to be a text file"
 msgstr "Zdá se, že se jedná o textový soubor"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Nelze vytvořit prvek „uridecodebin“."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Nelze vytvořit prvek „uridecodebin“."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Nelze vytvořit prvek „uridecodebin“."
 
 #, c-format
@@ -670,3 +675,6 @@ msgstr "Musíte zadat minimálně jeden název souboru nebo adresu URI k přehr�
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Zmáčknutím „k“ si zobrazíte seznam klávesových zkratek.\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Vnitřní chyba datového proudu."

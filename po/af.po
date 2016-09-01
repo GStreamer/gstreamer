@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -76,9 +76,6 @@ msgstr "Kon nie vfs-lêer \"%s\" toemaak nie."
 msgid "Could not read CD."
 msgstr "Kon nie skryf na toestel \"%s\" nie."
 
-msgid "Internal data stream error."
-msgstr ""
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
@@ -92,6 +89,14 @@ msgstr ""
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Kon nie skryf na lêer \"%s\" nie."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Kon nie skryf na lêer \"%s\" nie."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Kon nie skryf na lêer \"%s\" nie."
 
 #, c-format

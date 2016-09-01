@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-05-27 12:47-0700\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -74,9 +74,6 @@ msgstr "CD nije moguće pretraživati."
 msgid "Could not read CD."
 msgstr "CD nije moguće čitati."
 
-msgid "Internal data stream error."
-msgstr "Interna greška toka (stream) podataka."
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Nedostaje element ‘%s’ - provjerite vašu GStreamer instalaciju."
@@ -88,6 +85,14 @@ msgid "This appears to be a text file"
 msgstr "Ovo izgleda kao tekstualna datoteka"
 
 msgid "Could not create \"uridecodebin\" element."
+msgstr "Element „uridecodebin“ nije moguće napraviti (kreirati)."
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "Element „uridecodebin“ nije moguće napraviti (kreirati)."
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "Element „uridecodebin“ nije moguće napraviti (kreirati)."
 
 #, c-format
@@ -672,6 +677,9 @@ msgstr "Morate navesti barem jednu datoteku ili URI adresu za reprodukciju."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Pritisnite ‘k’ da pogledate listu tipkovničkih prečaca.\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Interna greška toka (stream) podataka."
 
 #~ msgid "Master"
 #~ msgstr "Glavni"

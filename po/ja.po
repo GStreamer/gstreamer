@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:39+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2010-10-25 10:27+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -72,9 +72,6 @@ msgstr "CDをシークすることができませんでした"
 msgid "Could not read CD."
 msgstr "CD を読むことができませんでした"
 
-msgid "Internal data stream error."
-msgstr "内部データストリームエラー"
-
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
@@ -89,6 +86,14 @@ msgstr "これはテキストファイルのようです"
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
+msgstr "\"decodebin\" エレメントを作成できません。"
+
+#, fuzzy
+msgid "Could not create \"decodebin3\" element."
+msgstr "\"decodebin2\" エレメントを作成できませんでした"
+
+#, fuzzy
+msgid "Could not create \"urisourcebin\" element."
 msgstr "\"decodebin\" エレメントを作成できません。"
 
 #, c-format
@@ -672,6 +677,9 @@ msgstr ""
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
 
+#~ msgid "Internal data stream error."
+#~ msgstr "内部データストリームエラー"
+
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""
 #~ "%s プラグインはこのストリームを再生するのに必要ですが、インストールされて"
@@ -819,9 +827,6 @@ msgstr ""
 
 #~ msgid "Could not open file \"%s\" for reading."
 #~ msgstr "読み込み用にファイル \"%s\" を開くことができませんでした"
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "\"decodebin2\" エレメントを作成できませんでした"
 
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "\"queue2\" エレメントを作成できませんでした"
