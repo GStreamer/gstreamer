@@ -23,6 +23,9 @@
 #include "config.h"
 #endif
 
+/* FIXME: gdk_cairo_create() is deprecated nowadays */
+#define GDK_DISABLE_DEPRECATION_WARNINGS
+
 #include <stdlib.h>
 #include <string.h>
 
