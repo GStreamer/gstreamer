@@ -1,9 +1,32 @@
-=== release 1.9.1 ===
+=== release 1.9.2 ===
 
-2016-07-06  Sebastian Dröge <slomo@coaxion.net>
+2016-09-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.1
+	  releasing 1.9.2
+
+2016-07-11 21:15:48 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From ac2f647 to f49c55e
+
+2016-07-06 13:51:24 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.9.1 ===
+
+2016-07-06 13:48:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* common:
+	* configure.ac:
+	* gst-omx.doap:
+	  Release 1.9.1
 
 2016-06-29 16:37:43 +0900  Kazunori Kobayashi <kkobayas@igel.co.jp>
 
@@ -1669,7 +1692,6 @@
 	* config/rpi/gstomx.conf:
 	* omx/Makefile.am:
 	* omx/gstomx.c:
-	* omx/gstomxmpeg2dec.c:
 	* omx/gstomxmpeg2dec.h:
 	* omx/gstomxmpeg2videodec.c:
 	* omx/gstomxmpeg2videodec.h:
@@ -2268,7 +2290,6 @@
 	* config/bellagio/gstomx.conf:
 	* configure.ac:
 	* omx/Makefile.am:
-	* omx/gstomx.conf:
 	  Add OpenMAX IL target for Bellagio
 	  Not tested since a very long time though.
 
@@ -2286,7 +2307,6 @@
 2013-02-21 10:13:16 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* config/Makefile.am:
-	* config/raspberry-pi.conf:
 	* config/rpi/Makefile.am:
 	* config/rpi/gstomx.conf:
 	* configure.ac:
@@ -2634,7 +2654,6 @@
 	* config/Makefile.am:
 	* config/raspberry-pi.conf:
 	* configure.ac:
-	* omx/gstomx-raspberry.conf:
 	  config: Add raspberry-pi configuration in a different directory
 
 2012-05-20 20:11:59 +0300  George Kiagiadakis <george.kiagiadakis@collabora.com>
@@ -4419,7 +4438,6 @@
 	* omx/gstomx.c:
 	* omx/gstomxh264dec.c:
 	* omx/gstomxh264dec.h:
-	* omx/gstomxh264videodec.c:
 	* omx/gstomxh264videodec.h:
 	  omxh264dec: Rename from omxh264videodec to omxh264dec
 

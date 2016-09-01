@@ -1,12 +1,13 @@
 
-Release notes for GStreamer OpenMAX IL wrapper plugin 1.9.1
+Release notes for GStreamer OpenMAX IL wrapper plugin 1.9.2
 
-The GStreamer team is pleased to announce the first release of the unstable
-1.9 release series. The 1.9 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.9 release series
-will lead to the stable 1.10 release series in the next weeks. Any newly added
-API can still change until that point.
+The GStreamer team is pleased to announce the second release of the unstable
+1.9 release series, which marks the feature freeze for 1.10. The 1.9 release
+series is adding new features on top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series
+and is part of the API and ABI-stable 1.x release series of the GStreamer
+multimedia framework. The unstable 1.9 release series will lead to the stable
+1.10 release series in the next weeks. Any newly added API can still change
+until that point.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -36,27 +37,6 @@ contains a set of less supported plugins that haven't passed the
 
 
   
-
-Bugs fixed in this release
-     
-      * 732533 : omxvideoenc: doesn't recover after aspect ratio change on RPI
-      * 734774 : Should not send EOS when draining
-      * 736314 : omxaudiodec: Does not unmap input buffers
-      * 739333 : Add AMR decoder
-      * 741854 : omxvideodec: potential deadlock in acquire_buffer() when starting decoding
-      * 745191 : omx: cleanup code a bit to remove else statement
-      * 750056 : autogen.sh/configure fails to find < gst/gstconfig.h > 
-      * 752376 : MPEG-DASH stream causes omxh264dec deadlock
-      * 753085 : omxh264enc: Add support for forcing keyframes on the RPi
-      * 753865 : gst-omx: Fix memory leaks when context parse fails.
-      * 753917 : gst-omx example build failure
-      * 757875 : omx: hacks leak in class init
-      * 758274 : gst-omx: video decoder blocks the pipeline when a drain request is issued during flush
-      * 760918 : omxvideodec : Use gstglmemoryegl for the RPi
-      * 762053 : gst-omx failing to build. error: ‘GL_RGBA8’ undeclared
-      * 766475 : #warning OMX_SKIP64BIT is not defined - this will be incompatible with the VC GPU code
-      * 767907 : Implement GstPreset interface for encoders
-      * 768173 : omxvideodec: Use GST_VIDEO_FRAME_PLANE_STRIDE() to get output buffer's stride
 
 ==== Download ====
 
@@ -93,28 +73,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aurélien Zanelli
-      * Edward Hervey
-      * Enrique Ocaña González
-      * George Kiagiadakis
-      * Graham Leggett
-      * Gwang Yoon Hwang
-      * Julien Isorce
-      * Jun Ji
-      * Kazunori Kobayashi
-      * Koop Mast
-      * Luis de Bethencourt
-      * Matthew Waters
-      * Michal Lazo
-      * Nicolas Dufresne
-      * Nicolas Huet
-      * Peng Liu
-      * Philippe Normand
       * Sebastian Dröge
       * Stefan Sauer
-      * Thiago Santos
-      * Tim-Philipp Müller
-      * Vineeth TM
-      * Wonchul Lee
-      * junji
  
