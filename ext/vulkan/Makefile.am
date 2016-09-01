@@ -9,6 +9,7 @@ libgstvulkan_la_SOURCES = \
 	vkdevice.c \
 	vkdisplay.c \
 	vkerror.c \
+	vkfence.c \
 	vkbuffermemory.c \
 	vkimagememory.c \
 	vkbufferpool.c \
@@ -31,6 +32,7 @@ noinst_HEADERS = \
 	vkdevice.h \
 	vkdisplay.h \
 	vkerror.h \
+	vkfence.h \
 	vkimagememory.h \
 	vkinstance.h \
 	vkmacros.h \

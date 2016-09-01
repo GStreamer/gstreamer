@@ -29,6 +29,7 @@
 #include "vkinstance.h"
 #include "vkdevice.h"
 #include "vkqueue.h"
+#include "vkfence.h"
 #include "vkdisplay.h"
 #include "vkwindow.h"
 #include "vkswapper.h"
