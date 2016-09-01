@@ -651,7 +651,8 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
    * https://bugzilla.gnome.org/show_bug.cgi?id=770282
    */
   ret = self->output->output->ScheduleVideoFrame (frame,
-      running_time / GST_MSECOND, running_time_duration / GST_MSECOND, GST_MSECOND);
+      running_time / GST_MSECOND, running_time_duration / GST_MSECOND,
+      GST_MSECOND);
   if (ret != S_OK) {
     GST_ELEMENT_ERROR (self, STREAM, FAILED,
         (NULL), ("Failed to schedule frame: 0x%08x", ret));
