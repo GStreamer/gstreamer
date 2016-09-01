@@ -13,6 +13,7 @@ GObject
           GstA52Dec
           GstAmrnbDec
           GstAmrwbDec
+          GstDvdLpcmDec
           GstMad
           GstMpg123AudioDec
         GstAudioEncoder
@@ -27,7 +28,6 @@ GObject
             GstPNMSrc
         GstBin
           GstPipeline
-        GstDvdLpcmDec
         GstDvdSubDec
         GstDvdSubParse
         GstRDTDepay

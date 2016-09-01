@@ -3,7 +3,7 @@
   <description>mp3 decoding based on the mpg123 library</description>
   <filename>../../ext/mpg123/.libs/libgstmpg123.so</filename>
   <basename>libgstmpg123.so</basename>
-  <version>1.9.1</version>
+  <version>1.9.2</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>

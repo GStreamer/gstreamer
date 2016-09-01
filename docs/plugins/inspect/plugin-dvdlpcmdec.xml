@@ -3,7 +3,7 @@
   <description>Decode DVD LPCM frames into standard PCM</description>
   <filename>../../gst/dvdlpcmdec/.libs/libgstdvdlpcmdec.so</filename>
   <basename>libgstdvdlpcmdec.so</basename>
-  <version>1.9.1</version>
+  <version>1.9.2</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-private1-lpcm; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 32000, 44100, 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ true, false }, mute=(boolean){ true, false }</details>
+          <details>audio/x-private1-lpcm; audio/x-private2-lpcm; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 32000, 44100, 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ true, false }, mute=(boolean){ true, false }</details>
         </caps>
         <caps>
           <name>src</name>

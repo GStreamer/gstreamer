@@ -1,12 +1,13 @@
 
-Release notes for GStreamer Ugly Plugins 1.9.1
+Release notes for GStreamer Ugly Plugins 1.9.2
 
-The GStreamer team is pleased to announce the first release of the unstable
-1.9 release series. The 1.9 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.9 release series
-will lead to the stable 1.10 release series in the next weeks. Any newly added
-API can still change until that point.
+The GStreamer team is pleased to announce the second release of the unstable
+1.9 release series, which marks the feature freeze for 1.10. The 1.9 release
+series is adding new features on top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series
+and is part of the API and ABI-stable 1.x release series of the GStreamer
+multimedia framework. The unstable 1.9 release series will lead to the stable
+1.10 release series in the next weeks. Any newly added API can still change
+until that point.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -57,7 +58,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 763082 : ugly plugins: use new gst_element_class_add_static_pad_template()
+      * 769418 : asfdemux: Add byte rate based bitrate tag in case there are no audio props
+      * 769610 : dvdlpcmdec: can't build package from git master, need to link to libgstbase-1.0
 
 ==== Download ====
 
@@ -94,11 +96,13 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Guillaume Desmottes
-      * Julien Isorce
-      * Nicolas Dufresne
+      * Carlos Rafael Giani
+      * Josep Torra
+      * Michael Olbrich
+      * Nirbheek Chauhan
       * Sebastian Dröge
+      * Stefan Sauer
+      * Thibault Saunier
       * Tim-Philipp Müller
-      * Vineeth TM
-      * Vootele Vesterblom
+      * xlazom00
  
