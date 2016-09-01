@@ -98,6 +98,7 @@ EXPORTS
 	gst_rtp_buffer_compare_seqnum
 	gst_rtp_buffer_default_clock_rate
 	gst_rtp_buffer_ext_timestamp
+	gst_rtp_buffer_flags_get_type
 	gst_rtp_buffer_get_csrc
 	gst_rtp_buffer_get_csrc_count
 	gst_rtp_buffer_get_extension
