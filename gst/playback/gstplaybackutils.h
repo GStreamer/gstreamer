@@ -27,11 +27,13 @@ G_BEGIN_DECLS
 #include <gst/gst.h>
 #include "gstplay-enum.h"
 
+G_GNUC_INTERNAL
 guint
 gst_playback_utils_get_n_common_capsfeatures (GstElementFactory * fact1,
                                         GstElementFactory * fact2,
                                         GstPlayFlags flags,
                                         gboolean isaudioelement);
+G_GNUC_INTERNAL
 gint
 gst_playback_utils_compare_factories_func (gconstpointer p1, gconstpointer p2);
 G_END_DECLS
