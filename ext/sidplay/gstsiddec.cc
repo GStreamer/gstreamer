@@ -443,8 +443,6 @@ done:
   /* ERRORS */
 pause:
   {
-    const gchar *reason = gst_flow_get_name (ret);
-
     if (ret == GST_FLOW_EOS) {
       /* perform EOS logic, FIXME, segment seek? */
       gst_pad_push_event (pad, gst_event_new_eos ());
@@ -454,7 +452,7 @@ pause:
       gst_pad_push_event (pad, gst_event_new_eos ());
     }
 
-    GST_INFO_OBJECT (siddec, "pausing task, reason: %s", reason);
+    GST_INFO_OBJECT (siddec, "pausing task, reason: %s", gst_flow_get_name (ret));
     gst_pad_pause_task (pad);
     goto done;
   }
