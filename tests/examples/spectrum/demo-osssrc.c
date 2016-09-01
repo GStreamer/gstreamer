@@ -21,6 +21,9 @@
 #include "config.h"
 #endif
 
+/* TODO: We use gdk_cairo_create() and others, which are deprecated */
+#define GDK_DISABLE_DEPRECATION_WARNINGS
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

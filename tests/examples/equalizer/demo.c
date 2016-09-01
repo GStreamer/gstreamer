@@ -17,6 +17,9 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/* TODO: We use gdk_cairo_create() and others, which are deprecated */
+#define GDK_DISABLE_DEPRECATION_WARNINGS
+
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
