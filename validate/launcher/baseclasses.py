@@ -410,6 +410,19 @@ class Test(Loggable):
         self.last_change_ts = time.time()
         self.start_ts = time.time()
 
+    def _dump_log_file(self, logfile):
+        message = "Dumping contents of %s\n" % logfile
+        printc(message, Colors.FAIL)
+
+        with open(logfile, 'r') as fin:
+            print fin.read()
+
+    def _dump_log_files(self):
+        printc("Dumping log files on failure\n", Colors.FAIL)
+        self._dump_log_file(self.logfile)
+        for logfile in self.extra_logfiles:
+            self._dump_log_file(logfile)
+
     def test_end(self):
         self.kill_subprocess()
         self.thread.join()
@@ -420,6 +433,10 @@ class Test(Loggable):
                color=utils.get_color_for_result(self.result))
 
         self.close_logfile()
+
+        if self.options.dump_on_failure:
+            if self.result is not Result.PASSED:
+                self._dump_log_files()
 
         return self.result
 

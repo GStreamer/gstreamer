@@ -422,6 +422,9 @@ Note that all testsuite should be inside python modules, so the directory should
                         action='store',
                         help="Defines the limit for which a test is considered as long (in seconds)."
                              " Note that 0 will enable all tests", type=int),
+    parser.add_argument("--dump-on-failure", dest="dump_on_failure",
+                        action="store_true", default=False,
+                        help="Dump logs to stdout when a test fails")
     parser.add_argument("-c", "--config", dest="config",
                         help="This is DEPRECATED, prefer using the testsuite format"
                         " to configure testsuites")
