@@ -64,7 +64,8 @@
 #include "gstleaks.h"
 
 #ifdef G_OS_UNIX
-#include <signal.h>
+#include <glib-unix.h>
+#include <pthread.h>
 #endif /* G_OS_UNIX */
 
 GST_DEBUG_CATEGORY_STATIC (gst_leaks_debug);
@@ -99,12 +100,19 @@ static GstStructure *gst_leaks_tracer_activity_get_checkpoint (GstLeaksTracer *
 static void gst_leaks_tracer_activity_log_checkpoint (GstLeaksTracer * self);
 static void gst_leaks_tracer_activity_stop_tracking (GstLeaksTracer * self);
 
+#ifdef G_OS_UNIX
+static void gst_leaks_tracer_setup_signals (GstLeaksTracer * leaks);
+static void gst_leaks_tracer_cleanup_signals (GstLeaksTracer * leaks);
+#endif
+
 static GstTracerRecord *tr_alive;
 static GstTracerRecord *tr_refings;
 static GstTracerRecord *tr_added = NULL;
 static GstTracerRecord *tr_removed = NULL;
 static GQueue instances = G_QUEUE_INIT;
 static guint gst_leaks_tracer_signals[LAST_SIGNAL] = { 0 };
+
+G_LOCK_DEFINE_STATIC (instances);
 
 typedef struct
 {
@@ -490,7 +498,17 @@ gst_leaks_tracer_init (GstLeaksTracer * self)
   self->objects = g_hash_table_new_full (NULL, NULL, NULL,
       (GDestroyNotify) object_refing_infos_free);
 
+  if (g_getenv ("GST_LEAKS_TRACER_SIG")) {
+#ifdef G_OS_UNIX
+    gst_leaks_tracer_setup_signals (self);
+#else
+    g_warning ("System doesn't support POSIX signals");
+#endif /* G_OS_UNIX */
+  }
+
+  G_LOCK (instances);
   g_queue_push_tail (&instances, self);
+  G_UNLOCK (instances);
 }
 
 static void
@@ -730,7 +748,13 @@ gst_leaks_tracer_finalize (GObject * object)
   g_clear_pointer (&self->removed, g_hash_table_unref);
   g_clear_pointer (&self->unhandled_filter, g_hash_table_unref);
 
+  G_LOCK (instances);
   g_queue_remove (&instances, self);
+  G_UNLOCK (instances);
+
+#ifdef G_OS_UNIX
+  gst_leaks_tracer_cleanup_signals (self);
+#endif
 
   if (leaks)
     g_warning ("Leaks detected and logged under GST_DEBUG=GST_TRACER:7");
@@ -764,10 +788,14 @@ gst_leaks_tracer_finalize (GObject * object)
         NULL)
 
 #ifdef G_OS_UNIX
-static void
-sig_usr1_handler (G_GNUC_UNUSED int signal)
+static gboolean
+sig_usr1_handler (gpointer data)
 {
+  G_LOCK (instances);
   g_queue_foreach (&instances, (GFunc) gst_leaks_tracer_log_live_objects, NULL);
+  G_UNLOCK (instances);
+
+  return G_SOURCE_CONTINUE;
 }
 
 static void
@@ -783,18 +811,151 @@ sig_usr2_handler_foreach (gpointer data, gpointer user_data)
   }
 }
 
-static void
-sig_usr2_handler (G_GNUC_UNUSED int signal)
+static gboolean
+sig_usr2_handler (gpointer data)
 {
+  G_LOCK (instances);
   g_queue_foreach (&instances, sig_usr2_handler_foreach, NULL);
+  G_UNLOCK (instances);
+
+  return G_SOURCE_CONTINUE;
+}
+
+struct signal_thread_data
+{
+  GMutex lock;
+  GCond cond;
+  gboolean ready;
+};
+
+static GMainLoop *signal_loop;  /* NULL */
+static GThread *signal_thread;  /* NULL */
+static gint signal_thread_users;        /* 0 */
+G_LOCK_DEFINE_STATIC (signal_thread);
+
+static gboolean
+unlock_mutex (gpointer data)
+{
+  g_mutex_unlock ((GMutex *) data);
+
+  return G_SOURCE_REMOVE;
+}
+
+static gpointer
+gst_leaks_tracer_signal_thread (struct signal_thread_data *data)
+{
+  static GMainContext *signal_ctx;
+  GSource *source1, *source2, *unlock_source;
+
+  signal_ctx = g_main_context_new ();
+  signal_loop = g_main_loop_new (signal_ctx, FALSE);
+
+  unlock_source = g_idle_source_new ();
+  g_source_set_callback (unlock_source, unlock_mutex, &data->lock, NULL);
+  g_source_attach (unlock_source, signal_ctx);
+
+  source1 = g_unix_signal_source_new (SIGUSR1);
+  g_source_set_callback (source1, sig_usr1_handler, NULL, NULL);
+  g_source_attach (source1, signal_ctx);
+
+  source2 = g_unix_signal_source_new (SIGUSR2);
+  g_source_set_callback (source2, sig_usr2_handler, NULL, NULL);
+  g_source_attach (source2, signal_ctx);
+
+  g_mutex_lock (&data->lock);
+  data->ready = TRUE;
+  g_cond_broadcast (&data->cond);
+
+  g_main_loop_run (signal_loop);
+
+  g_source_destroy (source1);
+  g_source_destroy (source2);
+  g_main_loop_unref (signal_loop);
+  signal_loop = NULL;
+  g_main_context_unref (signal_ctx);
+  signal_ctx = NULL;
+
+  return NULL;
 }
 
 static void
-setup_signals (void)
+atfork_prepare (void)
 {
-  signal (SIGUSR1, sig_usr1_handler);
-  signal (SIGUSR2, sig_usr2_handler);
+  G_LOCK (signal_thread);
 }
+
+static void
+atfork_parent (void)
+{
+  G_UNLOCK (signal_thread);
+}
+
+static void
+atfork_child (void)
+{
+  signal_thread_users = 0;
+  signal_thread = NULL;
+  G_UNLOCK (signal_thread);
+}
+
+static void
+gst_leaks_tracer_setup_signals (GstLeaksTracer * leaks)
+{
+  struct signal_thread_data data;
+
+  G_LOCK (signal_thread);
+  signal_thread_users++;
+  if (signal_thread_users == 1) {
+    gint res;
+
+    GST_INFO_OBJECT (leaks, "Setting up signal handling");
+
+    /* If application is forked, the child process won't inherit the extra thread.
+     * As a result we need to reset the child process thread state accordingly.
+     * This is typically needed when running tests as libcheck fork the tests.
+     *
+     * See https://pubs.opengroup.org/onlinepubs/007904975/functions/pthread_atfork.html
+     * for details. */
+    res = pthread_atfork (atfork_prepare, atfork_parent, atfork_child);
+    if (!res) {
+      GST_WARNING_OBJECT (leaks, "pthread_atfork() failed (%d)", res);
+    }
+
+    data.ready = FALSE;
+    g_mutex_init (&data.lock);
+    g_cond_init (&data.cond);
+    signal_thread = g_thread_new ("gstleak-signal",
+        (GThreadFunc) gst_leaks_tracer_signal_thread, &data);
+
+    g_mutex_lock (&data.lock);
+    while (!data.ready)
+      g_cond_wait (&data.cond, &data.lock);
+    g_mutex_unlock (&data.lock);
+
+    g_mutex_clear (&data.lock);
+    g_cond_clear (&data.cond);
+  }
+  G_UNLOCK (signal_thread);
+}
+
+static void
+gst_leaks_tracer_cleanup_signals (GstLeaksTracer * leaks)
+{
+  G_LOCK (signal_thread);
+  signal_thread_users--;
+  if (signal_thread_users == 0) {
+    GST_INFO_OBJECT (leaks, "Cleaning up signal handling");
+    g_main_loop_quit (signal_loop);
+    g_thread_join (signal_thread);
+    signal_thread = NULL;
+    gst_object_unref (tr_added);
+    tr_added = NULL;
+    gst_object_unref (tr_removed);
+    tr_removed = NULL;
+  }
+  G_UNLOCK (signal_thread);
+}
+
 #else
 #define setup_signals() g_warning ("System doesn't support POSIX signals");
 #endif /* G_OS_UNIX */
@@ -946,9 +1107,6 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
   tr_removed = gst_tracer_record_new ("object-removed.class",
       RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS, NULL);
   GST_OBJECT_FLAG_SET (tr_removed, GST_OBJECT_FLAG_MAY_BE_LEAKED);
-
-  if (g_getenv ("GST_LEAKS_TRACER_SIG"))
-    setup_signals ();
 
   /**
    * GstLeaksTracer::get-live-objects:
