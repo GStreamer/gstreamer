@@ -50,6 +50,8 @@ typedef struct _GstVulkanSwapper GstVulkanSwapper;
 typedef struct _GstVulkanSwapperClass GstVulkanSwapperClass;
 typedef struct _GstVulkanSwapperPrivate GstVulkanSwapperPrivate;
 
+typedef struct _GstVulkanTrash GstVulkanTrash;
+
 typedef struct _GstVulkanFence GstVulkanFence;
 
 typedef struct _GstVulkanMemory GstVulkanMemory;
