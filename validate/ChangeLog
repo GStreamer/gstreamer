@@ -1,9 +1,254 @@
-=== release 1.9.1 ===
+=== release 1.9.2 ===
 
-2016-07-06  Sebastian Dröge <slomo@coaxion.net>
+2016-09-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.1
+	  releasing 1.9.2
+
+2016-09-01 03:39:18 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  launcher: Add --dump-on-failure switch
+	  When the test fails, it can be useful to have the log files dumped
+	  to stdout.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=741092
+
+2016-08-28 22:12:35 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/tools/gst-validate-launcher.in:
+	  validate: Fix launching gst-validate-launcher in a meson based uninstalled env
+
+2016-08-26 20:06:22 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* meson.build:
+	* validate/gst/validate/meson.build:
+	  meson: Add support for building GIR when used as subproject
+	  Add allow project to us it as subproject too
+
+2016-08-05 15:48:41 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* .gitignore:
+	* meson.build:
+	* meson_options.txt:
+	* validate/.gitignore:
+	* validate/config.h.meson:
+	* validate/data/meson.build:
+	* validate/data/scenarios/meson.build:
+	* validate/docs/meson.build:
+	* validate/docs/validate/meson.build:
+	* validate/gst/meson.build:
+	* validate/gst/validate/meson.build:
+	* validate/launcher/apps/meson.build:
+	* validate/launcher/meson.build:
+	* validate/meson.build:
+	* validate/pkgconfig/meson.build:
+	* validate/plugins/fault_injection/meson.build:
+	* validate/plugins/gapplication/meson.build:
+	* validate/plugins/gtk/meson.build:
+	* validate/plugins/meson.build:
+	* validate/tools/gst-validate-launcher.in:
+	* validate/tools/meson.build:
+	  validate: Add support for Meson as alternative/parallel build system
+	  https://github.com/mesonbuild/meson
+
+2016-08-13 16:56:18 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Un-blacklist tests that are fixed
+	  the bug reports to which they report have been closed and I can't make
+	  them fail locally.
+
+2016-08-13 15:39:18 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Blacklist more ogg files
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769545
+
+2016-08-12 12:30:41 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Blacklist scrub_forward_seeking.op2b-mpeg2-wave_hd_mxf
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=764025
+
+2016-07-28 09:47:42 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-pipeline-monitor.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/tools/gst-validate.c:
+	  validate: use new API when switching track with playbin3
+	  Move all the implementations of 'switch-track' to
+	  gst-validate-scenario.c while doing so.
+	  Differential Revision: https://phabricator.freedesktop.org/D1227
+
+2016-05-31 12:32:16 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	  validate: reporter: break cyclic references with reports
+	  My patch fixing monitor leak (15e7f1bbfd84ce2cc5e6420fee2255c2be95e0f6)
+	  introduced a ref cycle between GstValidateReporter and
+	  GstValidateReport.
+	  The reports uses its reporter so it needs a ref on it
+	  to ensure it's stay alive. But reports are owned by
+	  GstValidateReporter and/or GstValidateRunner.
+	  Fix this by not taking a reference on the reporter but instead caching
+	  its name.
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D1029
+
+2016-05-26 14:02:45 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/tests/check/validate/padmonitor.c:
+	  validate: turn GstValidateReport to a mini object
+	  It handles refcounting for us and will enable automatic leak checks when
+	  using the 'leaks' tracer.
+	  Differential Revision: https://phabricator.freedesktop.org/D1233
+
+2016-05-26 12:32:16 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst-libs/gst/video/gssim.c:
+	* validate/gst-libs/gst/video/gssim.h:
+	* validate/gst-libs/gst/video/gstvalidatessim.c:
+	* validate/gst-libs/gst/video/gstvalidatessim.h:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.h:
+	* validate/gst/validate/gst-validate-override.c:
+	* validate/gst/validate/gst-validate-override.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/media-descriptor.c:
+	* validate/gst/validate/media-descriptor.h:
+	  validate: inherit from GstObject instead of GObject
+	  This allow us to use to 'leaks' detector to check if those objects are
+	  leaked.
+	  Differential Revision: https://phabricator.freedesktop.org/D1232
+
+2016-05-20 15:46:19 +0300  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/tools/gst-validate-media-check.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: call gst_deinit() after gst_validate_deinit()
+	  This allows validate to clean up before the 'leak' tracer list leaked
+	  objects.
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D1231
+
+2016-05-20 15:44:20 +0300  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: use MAY_BE_LEAKED flag
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D1230
+
+2016-05-30 15:42:24 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/tools/gst-validate.c:
+	  validate: fix pad leaks
+	  Pads returned using the playbin get-{audio,video}-pad are reffed.
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D1027
+
+2016-05-27 15:37:00 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-reporter.h:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/tools/gst-validate-media-check.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: reporter: break cyclic references with reports
+	  My patch fixing monitor leak (15e7f1bbfd84ce2cc5e6420fee2255c2be95e0f6)
+	  introduced a ref cycle between GstValidateReporter and
+	  GstValidateReport.
+	  The reports uses its reporter so it needs a ref on it
+	  to ensure it's stay alive. But reports are owned by GstValidateReporter and/or
+	  GstValidateRunner.
+	  The best way I found to break this cycle is to introduce this purge
+	  method. It's not great but the design is a bit tricky.
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D1029
+
+2016-05-27 14:36:44 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-reporter.c:
+	  validate: reporter: prevent usage of destroyed runner
+	  Fix crashes.
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D1028
+
+2016-05-27 13:23:48 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: runner: prevent hash table modifications while iterating
+	  A GHashTableIter is invalided if the hash table is modified while we are
+	  iterating. Prevent this by taking the runner lock.
+	  Fix assertion warnings with
+	  validate.file.transcode.to_vorbis_and_vp8_in_webm.Sintel_2010_720p_mkv_srt
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D1026
+
+2016-07-29 15:52:48 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	  validate: Add jpeg as known format
+
+2016-07-29 13:27:23 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tests/check/validate/padmonitor.c:
+	  validate: Fix testsuite after additional check for buffer DISCONT flag
+
+2015-05-19 13:53:06 +0000  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* validate/data/Makefile.am:
+	  data: Fix make distcheck.
+	  by distributing newly-added files.
+	  Reviewed-by: Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+	  Differential Revision: https://phabricator.freedesktop.org/D185
+
+2015-10-15 07:29:27 +0000  Wonchul Lee <wonchul.lee@collabora.co.uk>
+
+	* validate/data/scenarios/Makefile.am:
+	  validate: scenario: deploy setup_sink_props_max_lateness config scenario for valgrind
+	  Add to deploy setup_sink_props_max_lateness scenario.
+	  When running gst-validate with valgrind option on the installed package, it fails to find that scenario.
+	  Reviewed-by: Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D379
+
+2016-01-18 03:53:20 +0000  Wonchul Lee <wonchul.lee@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-scenario.h:
+	  docs: Fix typo
+	  Reviewed-by: Alex Băluț <alexandru.balut@gmail.com>
+	  Reviewed-by: Thibault Saunier <tsaunier@gnome.org>
+	  Differential Revision: https://phabricator.freedesktop.org/D681
+
+2016-07-15 08:56:02 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Add h265, opus and vp9 as known formats
+
+2016-07-06 13:51:27 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/configure.ac:
+	  Back to development
+
+=== release 1.9.1 ===
+
+2016-07-06 13:48:18 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.9.1
 
 2016-07-04 16:16:25 +0200  Edward Hervey <edward@centricular.com>
 
@@ -1803,13 +2048,6 @@
 	* validate/Makefile.am:
 	* validate/configure.ac:
 	* validate/gst/Makefile.am:
-	* validate/gst/plugins/Makefile.am:
-	* validate/gst/plugins/fault_injection/Makefile.am:
-	* validate/gst/plugins/fault_injection/socket_interposer.c:
-	* validate/gst/plugins/gapplication/Makefile.am:
-	* validate/gst/plugins/gapplication/gstvalidategapplication.c:
-	* validate/gst/plugins/gtk/Makefile.am:
-	* validate/gst/plugins/gtk/gstvalidategtk.c:
 	* validate/plugins/Makefile.am:
 	* validate/plugins/fault_injection/Makefile.am:
 	* validate/plugins/fault_injection/socket_interposer.c:
@@ -2382,19 +2620,6 @@
 
 	* validate/configure.ac:
 	* validate/data/Makefile.am:
-	* validate/data/adaptive_video_framerate.scenario:
-	* validate/data/adaptive_video_framerate_size.scenario:
-	* validate/data/adaptive_video_size.scenario:
-	* validate/data/alternate_fast_backward_forward.scenario:
-	* validate/data/camerabin_signal.scenario:
-	* validate/data/change_state_intensive.scenario:
-	* validate/data/disable_subtitle_track_while_paused.scenario:
-	* validate/data/fast_backward.scenario:
-	* validate/data/fast_forward.scenario:
-	* validate/data/force_key_unit.scenario:
-	* validate/data/pause_resume.scenario:
-	* validate/data/play_15s.scenario:
-	* validate/data/reverse_playback.scenario:
 	* validate/data/scenarios/Makefile.am:
 	* validate/data/scenarios/adaptive_video_framerate.scenario:
 	* validate/data/scenarios/adaptive_video_framerate_size.scenario:
@@ -2425,22 +2650,6 @@
 	* validate/data/scenarios/switch_subtitle_track_while_paused.scenario:
 	* validate/data/scenarios/update_start.scenario:
 	* validate/data/scenarios/update_stop.scenario:
-	* validate/data/scrub_backward_seeking.scenario:
-	* validate/data/scrub_backward_seeking_full.scenario:
-	* validate/data/scrub_forward_seeking.scenario:
-	* validate/data/scrub_forward_seeking_full.scenario:
-	* validate/data/seek_backward.scenario:
-	* validate/data/seek_forward.scenario:
-	* validate/data/seek_forward_backward.scenario:
-	* validate/data/seek_with_stop.scenario:
-	* validate/data/simple_seeks.scenario:
-	* validate/data/switch_audio_track.scenario:
-	* validate/data/switch_audio_track_while_paused.scenario:
-	* validate/data/switch_set_external_subtitle.scenario:
-	* validate/data/switch_subtitle_track.scenario:
-	* validate/data/switch_subtitle_track_while_paused.scenario:
-	* validate/data/update_start.scenario:
-	* validate/data/update_stop.scenario:
 	* validate/gst/validate/gst-validate-scenario.c:
 	  move scenarios to data/scenarios
 	  Differential Revision: http://phabricator.freedesktop.org/D115
@@ -3473,8 +3682,6 @@
 
 	* validate/Makefile.am:
 	* validate/configure.ac:
-	* validate/fault_injection/Makefile.am:
-	* validate/fault_injection/socket_interposer.c:
 	* validate/fault_injection/socket_interposer.h:
 	* validate/gst/Makefile.am:
 	* validate/gst/plugins/Makefile.am:
@@ -4403,20 +4610,6 @@
 	* validate/launcher/utils.py:
 	* validate/tools/Makefile.am:
 	* validate/tools/gst-validate-launcher.in:
-	* validate/tools/launcher/Makefile.am:
-	* validate/tools/launcher/RangeHTTPServer.py:
-	* validate/tools/launcher/__init__.py:
-	* validate/tools/launcher/apps/Makefile.am:
-	* validate/tools/launcher/apps/geslaunch.py:
-	* validate/tools/launcher/apps/gstvalidate.py:
-	* validate/tools/launcher/apps/validate/Makefile.am:
-	* validate/tools/launcher/apps/validate/validate_testsuite.py:
-	* validate/tools/launcher/baseclasses.py:
-	* validate/tools/launcher/httpserver.py:
-	* validate/tools/launcher/loggable.py:
-	* validate/tools/launcher/main.py:
-	* validate/tools/launcher/reporters.py:
-	* validate/tools/launcher/utils.py:
 	  validate-launcher: restructure filesystem
 	  https://bugzilla.gnome.org/show_bug.cgi?id=739091
 
@@ -5474,7 +5667,6 @@
 2009-03-14 20:06:16 +0200  René Stadler <mail@renestadler.de>
 
 	* debug-viewer/GstDebugViewer/GUI.py:
-	* debug-viewer/data/gst-debug-viewer.ui:
 	* debug-viewer/data/menus.ui:
 	* debug-viewer/setup.py:
 	  Rename UIManager file
@@ -5492,7 +5684,6 @@
 	* debug-viewer/GstDebugViewer/GUI.py:
 	* debug-viewer/GstDebugViewer/__init__.py:
 	* debug-viewer/data/about-dialog.ui:
-	* debug-viewer/data/gst-debug-viewer.glade:
 	* debug-viewer/data/main-window.ui:
 	* debug-viewer/data/progress-dialog.ui:
 	* debug-viewer/setup.py:
@@ -6499,9 +6690,7 @@
 2007-11-20 15:25:32 +0200  René Stadler <mail@renestadler.de>
 
 	* debug-viewer/gst-debug-viewer:
-	* debug-viewer/gst-debug-viewer.desktop:
 	* debug-viewer/gst-debug-viewer.desktop.in:
-	* debug-viewer/gst-debug-viewer.py:
 	* debug-viewer/setup.cfg:
 	* debug-viewer/setup.py:
 	  Copy over distutils setup from gst-inspector
@@ -6581,7 +6770,6 @@
 
 2007-11-17 10:06:09 +0200  René Stadler <mail@renestadler.de>
 
-	* debug-viewer/GstDebugViewer/Plugins/LineFrequency.py:
 	* debug-viewer/GstDebugViewer/Plugins/Timeline.py:
 	* debug-viewer/data/gst-debug-viewer.ui:
 	  Rename line frequency plugin/widget to timeline
@@ -6809,9 +6997,7 @@
 2014-09-06 11:38:38 +0200  Thibault Saunier <tsaunier@gnome.org>
 
 	* validate/tools/launcher/apps/Makefile.am:
-	* validate/tools/launcher/apps/ges-launch.py:
 	* validate/tools/launcher/apps/geslaunch.py:
-	* validate/tools/launcher/apps/gst-validate.py:
 	* validate/tools/launcher/apps/gstvalidate.py:
 	  validate: launcher: Cleanup and rename apps to avoid '-' in their name
 
@@ -7511,7 +7697,6 @@
 	* validate/tools/launcher/apps/Makefile.am:
 	* validate/tools/launcher/apps/gst-validate.py:
 	* validate/tools/launcher/apps/validate/validate_testsuite.py:
-	* validate/tools/launcher/apps/validate_default_testsuite.py:
 	  validate:launcher Add video mixing tests
 	  + Move default_testsuite.py to validate_testsuite.py as we are now
 	  exposing tests that are not enabled by default
@@ -7731,8 +7916,6 @@
 	* validate/gst/preload/Makefile.am:
 	* validate/gst/preload/gst-validate-monitor-preload.c:
 	* validate/gst/validate/Makefile.am:
-	* validate/gst/validate/gst-validate-default-overrides.c:
-	* validate/gst/validate/gst-validate-monitor-preload.c:
 	  validate: Move overrides and preload libraries to dedicated folders
 	  This way it is cleaner and it is simpler to handle the various compilation dependencies.
 
@@ -9058,10 +9241,7 @@
 
 	* validate/configure.ac:
 	* validate/tools/Makefile.am:
-	* validate/tools/apps/ges-projects-tests.py:
-	* validate/tools/apps/gst-validate.py:
 	* validate/tools/gst-validate-launcher.in:
-	* validate/tools/gst-validate-launcher.py:
 	* validate/tools/launcher/__init__.py:
 	* validate/tools/launcher/apps/ges-launch.py:
 	* validate/tools/launcher/apps/gst-validate.py:
@@ -9069,10 +9249,6 @@
 	* validate/tools/launcher/loggable.py:
 	* validate/tools/launcher/reporters.py:
 	* validate/tools/launcher/utils.py:
-	* validate/tools/loggable.py:
-	* validate/tools/reporters.py:
-	* validate/tools/testdefinitions.py:
-	* validate/tools/utils.py:
 	  validate:tools: Rename files around and integrate into autotools
 	  File distribution used to be messy, clean it all up. Also make sure the
 	  launcher is integrated into the autotools.
@@ -10445,14 +10621,12 @@
 
 	* .gitmodules:
 	* common:
-	* validate/.gitmodules:
 	* validate/autogen.sh:
 	* validate/common:
 	  Adapt submodule usage for gst-devtools
 
 2013-09-02 15:42:40 +0200  Edward Hervey <edward@collabora.com>
 
-	* validate/gst/validate/.gitignore:
 	* validate/tools/.gitignore:
 	  tools: Update .gitignore for tools move
 
@@ -10550,7 +10724,6 @@
 
 	* validate/README:
 	* validate/data/Makefile.am:
-	* validate/docs/qa-design.txt:
 	* validate/docs/qa-usage.txt:
 	* validate/docs/validate-design.txt:
 	* validate/docs/validate-usage.txt:
@@ -10733,9 +10906,6 @@
 	* validate/autogen.sh:
 	* validate/configure.ac:
 	* validate/gst/validate/Makefile.am:
-	* validate/gst/validate/gst-validate-media-check.c:
-	* validate/gst/validate/gst-validate-transcoding.c:
-	* validate/gst/validate/gst-validate.c:
 	* validate/tools/Makefile.am:
 	* validate/tools/gst-validate-media-check.c:
 	* validate/tools/gst-validate-transcoding.c:
@@ -10928,7 +11098,6 @@
 
 	* validate/data/Makefile.am:
 	* validate/data/simple_seeks.scenario:
-	* validate/data/simple_seeks.xml:
 	* validate/gst/validate/gst-validate-scenario.c:
 	  scenario: Rename scenario xml files extension to .scenario
 
@@ -11047,7 +11216,6 @@
 2013-08-20 11:43:06 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
 
 	* validate/gst/validate/Makefile.am:
-	* validate/gst/validate/gst-validate-file-check.c:
 	* validate/gst/validate/gst-validate-media-check.c:
 	  rename: gst-validate-file-check -> gst-validate-media-check
 	  It not only validates files, takes any URI
@@ -11071,7 +11239,6 @@
 
 	* validate/gst/validate/Makefile.am:
 	* validate/gst/validate/gst-validate-file-check.c:
-	* validate/gst/validate/gst-validate-file-checker.c:
 	* validate/gst/validate/gst-validate-file-checker.h:
 	* validate/gst/validate/gst-validate-media-info.c:
 	* validate/gst/validate/gst-validate-media-info.h:
@@ -11222,37 +11389,20 @@
 	* validate/gst/Makefile.am:
 	* validate/gst/qa/.gitignore:
 	* validate/gst/qa/Makefile.am:
-	* validate/gst/qa/gettext.h:
-	* validate/gst/qa/gst-qa-bin-monitor.c:
 	* validate/gst/qa/gst-qa-bin-monitor.h:
-	* validate/gst/qa/gst-qa-default-overrides.c:
 	* validate/gst/qa/gst-qa-element-monitor.c:
 	* validate/gst/qa/gst-qa-element-monitor.h:
-	* validate/gst/qa/gst-qa-file-check.c:
-	* validate/gst/qa/gst-qa-file-checker.c:
 	* validate/gst/qa/gst-qa-file-checker.h:
-	* validate/gst/qa/gst-qa-i18n-lib.h:
-	* validate/gst/qa/gst-qa-monitor-factory.c:
-	* validate/gst/qa/gst-qa-monitor-factory.h:
-	* validate/gst/qa/gst-qa-monitor-preload.c:
 	* validate/gst/qa/gst-qa-monitor.c:
 	* validate/gst/qa/gst-qa-monitor.h:
 	* validate/gst/qa/gst-qa-override-registry.c:
-	* validate/gst/qa/gst-qa-override-registry.h:
-	* validate/gst/qa/gst-qa-override.c:
 	* validate/gst/qa/gst-qa-override.h:
-	* validate/gst/qa/gst-qa-pad-monitor.c:
-	* validate/gst/qa/gst-qa-pad-monitor.h:
 	* validate/gst/qa/gst-qa-report.c:
 	* validate/gst/qa/gst-qa-report.h:
 	* validate/gst/qa/gst-qa-reporter.c:
 	* validate/gst/qa/gst-qa-reporter.h:
-	* validate/gst/qa/gst-qa-runner.c:
 	* validate/gst/qa/gst-qa-runner.h:
-	* validate/gst/qa/gst-qa-scenario.c:
 	* validate/gst/qa/gst-qa-scenario.h:
-	* validate/gst/qa/gst-qa-transcoding.c:
-	* validate/gst/qa/gst-qa.c:
 	* validate/gst/qa/qa.h:
 	* validate/gst/validate/.gitignore:
 	* validate/gst/validate/Makefile.am:
@@ -12378,12 +12528,9 @@
 	* validate/gst/qa/gst-qa-monitor-factory.h:
 	* validate/gst/qa/gst-qa-pad-monitor.c:
 	* validate/gst/qa/gst-qa-pad-monitor.h:
-	* validate/gst/qa/gst-qa-pad-wrapper.c:
 	* validate/gst/qa/gst-qa-pad-wrapper.h:
 	* validate/gst/qa/gst-qa-runner.c:
 	* validate/gst/qa/gst-qa-runner.h:
-	* validate/gst/qa/gst-qa-wrapper-factory.c:
-	* validate/gst/qa/gst-qa-wrapper-factory.h:
 	  qa: renaming Wrapper -> Monitor
 
 2013-07-09 16:52:02 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
