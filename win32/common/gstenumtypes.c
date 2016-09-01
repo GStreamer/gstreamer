@@ -613,6 +613,8 @@ gst_event_type_get_type (void)
     {C_ENUM (GST_EVENT_TAG), "GST_EVENT_TAG", "tag"},
     {C_ENUM (GST_EVENT_BUFFERSIZE), "GST_EVENT_BUFFERSIZE", "buffersize"},
     {C_ENUM (GST_EVENT_SINK_MESSAGE), "GST_EVENT_SINK_MESSAGE", "sink-message"},
+    {C_ENUM (GST_EVENT_STREAM_GROUP_DONE), "GST_EVENT_STREAM_GROUP_DONE",
+        "stream-group-done"},
     {C_ENUM (GST_EVENT_EOS), "GST_EVENT_EOS", "eos"},
     {C_ENUM (GST_EVENT_TOC), "GST_EVENT_TOC", "toc"},
     {C_ENUM (GST_EVENT_PROTECTION), "GST_EVENT_PROTECTION", "protection"},
@@ -895,6 +897,7 @@ gst_message_type_get_type (void)
         "stream-collection"},
     {C_FLAGS (GST_MESSAGE_STREAMS_SELECTED), "GST_MESSAGE_STREAMS_SELECTED",
         "streams-selected"},
+    {C_FLAGS (GST_MESSAGE_REDIRECT), "GST_MESSAGE_REDIRECT", "redirect"},
     {C_FLAGS (GST_MESSAGE_ANY), "GST_MESSAGE_ANY", "any"},
     {0, NULL, NULL}
   };

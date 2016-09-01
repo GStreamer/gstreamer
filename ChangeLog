@@ -1,9 +1,741 @@
-=== release 1.9.1 ===
+=== release 1.9.2 ===
 
-2016-07-06  Sebastian Dröge <slomo@coaxion.net>
+2016-09-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.1
+	  releasing 1.9.2
+
+2016-09-01 11:22:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  po: Update translations
+
+2016-08-31 09:49:03 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* plugins/elements/gstmultiqueue.c:
+	* tests/check/elements/multiqueue.c:
+	  multiqueue: Add higher-resolution low/high-watermark properties
+	  low/high-watermark are of type double, and given in range 0.0-1.0. This
+	  makes it possible to set low/high watermarks with greater resolution,
+	  which is useful with large multiqueue max sizes and watermarks like 0.5%.
+	  Also adding a test to check the fill and watermark level behavior.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770628
+
+2016-08-31 09:48:53 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* plugins/elements/gstmultiqueue.c:
+	* plugins/elements/gstmultiqueue.h:
+	  multiqueue: Distinguish between buffering percentage and buffering level
+	  To make the code clearer, and to facilitate future improvements, introduce
+	  a distinction between the buffering level and the buffering percentage.
+	  Buffering level: the queue's current fill level. The low/high watermarks
+	  are in this range.
+	  Buffering percentage: percentage relative to the low/high watermarks
+	  (0% = low watermark, 100% = high watermark).
+	  To that end, get_percentage() is renamed to get_buffering_level(). Also,
+	  low/high_percent are renamed to low/high_watermark to avoid confusion.
+	  mq->buffering_percent values are now normalized in the 0..100 range for
+	  buffering messages inside update_buffering(), and not just before sending
+	  the buffering message. Finally the buffering level range is parameterized
+	  by adding a new constant called MAX_BUFFERING_LEVEL.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770628
+
+2016-08-31 09:48:38 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* plugins/elements/gstmultiqueue.c:
+	* plugins/elements/gstmultiqueue.h:
+	  multiqueue: Rename percent/percent_changed to buffering_percent(_changed)
+	  This is a prerequisite for subsequent commits, and makes queue2 and
+	  multiqueue code a little more consistent.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770628
+
+2016-08-23 14:57:33 +0900  Edward Hervey <edward@centricular.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Fix high_time wakeup logic
+	  When calculating the high_time, cache the group value in each singlequeue.
+	  This fixes the issue by which wake_up_next_non_linked() would use the global
+	  high-time to decide whether to wake-up a waiting thread, instead of the group
+	  one, resulting in those threads constantly spinning.
+	  Tidy up a bit the waiting logic while we're at it.
+	  With this patch, we go from 212% playing a 8 audio / 8 video file down to less
+	  than 10% (most of it being the video decoding).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770225
+
+2016-08-28 16:02:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tools/gst-inspect.c:
+	  tools: gst-inspect: don't print internal pad request function name
+	  This just confuses people, they look at it and try to call it
+	  directly by name, instead of using the public GstElement API.
+	  It stands to reason that it goes without saying that when an
+	  element provides request pads that they can actually be
+	  requested using the standard API, and there's no point in
+	  printing internal implementation details of the element.
+
+2016-08-23 13:27:58 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* libs/gst/base/gstbaseparse.c:
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesrc.c:
+	* plugins/elements/gstdownloadbuffer.c:
+	* plugins/elements/gstmultiqueue.c:
+	* plugins/elements/gstqueue.c:
+	* plugins/elements/gstqueue2.c:
+	* plugins/elements/gsttypefindelement.c:
+	  Make use of the new GST_ELEMENT_FLOW_ERROR API all around.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770158
+
+2016-08-23 13:27:20 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstelement.h:
+	  element: Add API to more easily post messages about flowing issues
+	  In many parts of the code we raise streaming error when the flow
+	  goes wrong, and each time we create more or less similare error
+	  message. Also that message does not let the application know what
+	  has actually gone wrong. In the new API we add a "flow-return" detail
+	  field inside the GstMessage so that the application has all the information
+	  if it needs it.
+	  API:
+	  GST_ELEMENT_FLOW_ERROR
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770158
+
+2016-08-26 19:27:22 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* configure.ac:
+	* gst/gstconfig.h.in:
+	* meson.build:
+	  gstconfig: Decide GST_EXPORT declaration style at build time
+	  We only use GST_EXPORT consistently when building with MSVC by using the
+	  visual studio definitions files (win32/common/*.def), so always disable
+	  it when building with Autotools and only enable it with Meson when
+	  building with MSVC.
+	  This allows you to use MinGW to link to a GStreamer built with MSVC and
+	  get the correct function prototypes to find functions and variables in
+	  DLLs.
+
+2016-08-26 16:21:30 +0900  Wonchul Lee <wonchul.lee@collabora.com>
+
+	* docs/design/part-stream-selection.txt:
+	  docs: fix typo in stream selection docs
+	  https://bugzilla.gnome.org//show_bug.cgi?id=770428
+
+2016-08-26 12:55:04 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstelement.c:
+	* gst/gstelement.h:
+	* win32/common/libgstreamer.def:
+	  element: rename gst_element_message_new_details() to gst_make_element_message_details()
+	  Fixes g-i warning "Gst: Constructor return type mismatch
+	  symbol='gst_element_message_new_details' constructed='Gst.Element'
+	  return='Gst.Structure'".
+	  This is a newly-added function in git that has not been in a stable
+	  release yet, so it's fine to rename it. It's also only used indirectly
+	  via macros.
+
+2016-08-26 12:35:23 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstelement.c:
+	* gst/gstmessage.c:
+	* gst/gsttracerutils.c:
+	  docs: fix various gtk-doc warnings
+	  e.g. "warning: multi-line since docs found"
+
+2016-08-26 12:04:33 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstinfo.c:
+	  g-i: info: allow passing NULL to gst_debug_remove_log_function()
+	  Useful for removing the default handler from bindings.
+
+2016-08-25 15:04:06 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/gst/meson.build:
+	* docs/libs/meson.build:
+	* meson.build:
+	  meson: doc: Fix building documentation when using subprojects
+	  and check the presence of gtk-doc before building the documentation
+
+2016-08-26 03:17:41 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstvalue.c:
+	* tests/check/gst/gstvalue.c:
+	  value: Implement can_intersect for GstFlagSet types
+	  Make sure that gst_value_can_intersect returns TRUE
+	  for GstFlagSet combinations that can successfully
+	  intersect
+
+2016-08-03 15:20:20 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* plugins/elements/gstqueue2.c:
+	* plugins/elements/gstqueue2.h:
+	* tests/check/elements/queue2.c:
+	  queue2: Add higher-resolution low/high-watermark properties
+	  low/high-watermark are of type double, and given in range 0.0-1.0. This
+	  makes it possible to set low/high watermarks with greater resolution,
+	  which is useful with large queue2 max sizes and watermarks like 0.5%.
+	  Also adding a test to check the fill and watermark level behavior.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769449
+
+2016-08-03 15:27:40 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Distinguish between buffering percentage and buffering level
+	  To make the code clearer, and to facilitate future improvements, introduce
+	  a distinction between the buffering level and the buffering percentage.
+	  Buffering level: the queue's current fill level. The low/high watermarks
+	  are in this range.
+	  Buffering percentage: percentage relative to the low/high watermarks
+	  (0% = low watermark, 100% = high watermark).
+	  To that end, get_buffering_percent() is renamed to get_buffering_level(),
+	  and the code at the end that transforms to the buffering percentage is
+	  factored out into a new convert_to_buffering_percent() function. Also,
+	  the buffering level range is parameterized by adding a new constant called
+	  MAX_BUFFERING_LEVEL.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769449
+
+2016-08-23 10:52:32 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/random/release:
+	  docs: release: add tag signing command
+
+2016-07-07 08:01:24 +0200  Arjen Veenhuizen <arjen.veenhuizen@tno.nl>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	* win32/common/libgstreamer.def:
+	  buffer: add explicit getters and setters for buffer flags
+	  These can be used from bindings.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768301
+
+2016-08-22 00:01:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/check/meson.build:
+	  meson: install libgstcheck-1.0 and add api version to name
+
+2016-08-20 08:54:27 +0900  Hoonhee Lee <hoonhee.lee@lge.com>
+
+	* gst/gststreams.c:
+	  streams: update and emit notify signal only if taglist actually changed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770161
+
+2016-08-12 20:25:17 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* .gitignore:
+	* config.h.meson:
+	* docs/gst/meson.build:
+	* docs/libs/meson.build:
+	* docs/meson.build:
+	* gst/build_mkenum.py:
+	* gst/meson.build:
+	* gst/parse/gen_grammar.py.in:
+	* gst/parse/gen_lex.py.in:
+	* gst/parse/meson.build:
+	* gst/printf/meson.build:
+	* libs/gst/base/meson.build:
+	* libs/gst/check/libcheck/meson.build:
+	* libs/gst/check/meson.build:
+	* libs/gst/controller/meson.build:
+	* libs/gst/helpers/meson.build:
+	* libs/gst/meson.build:
+	* libs/gst/net/meson.build:
+	* libs/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	* pkgconfig/meson.build:
+	* plugins/elements/meson.build:
+	* plugins/meson.build:
+	* po/meson.build:
+	* tests/benchmarks/meson.build:
+	* tests/check/meson.build:
+	* tests/examples/adapter/meson.build:
+	* tests/examples/controller/meson.build:
+	* tests/examples/helloworld/meson.build:
+	* tests/examples/memory/meson.build:
+	* tests/examples/meson.build:
+	* tests/examples/netclock/meson.build:
+	* tests/examples/ptp/meson.build:
+	* tests/examples/stepping/meson.build:
+	* tests/examples/streamiddemux/meson.build:
+	* tests/examples/streams/meson.build:
+	* tests/meson.build:
+	* tests/misc/meson.build:
+	* tools/meson.build:
+	  Add support for Meson as alternative/parallel build system
+	  https://github.com/mesonbuild/meson
+	  With contributions from:
+	  Tim-Philipp Müller <tim@centricular.com>
+	  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+	  Jussi Pakkanen <jpakkane@gmail.com> (original port)
+	  Highlights of the features provided are:
+	  * Faster builds on Linux (~40-50% faster)
+	  * The ability to build with MSVC on Windows
+	  * Generate Visual Studio project files
+	  * Generate XCode project files
+	  * Much faster builds on Windows (on-par with Linux)
+	  * Seriously fast configure and building on embedded
+	  ... and many more. For more details see:
+	  http://blog.nirbheek.in/2016/05/gstreamer-and-meson-new-hope.html
+	  http://blog.nirbheek.in/2016/07/building-and-developing-gstreamer-using.html
+	  Building with Meson should work on both Linux and Windows, but may
+	  need a few more tweaks on other operating systems.
+
+2016-08-13 13:55:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/Makefile.am:
+	* pkgconfig/gstreamer.pc.in:
+	  Move gstconfig.h back to normal include dir
+	  Now that it's arch-independent again. Will need fixes in cerbero too.
+
+2016-06-21 18:59:49 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* configure.ac:
+	* gst/gstconfig.h.in:
+	  gstconfig.h: Detect unaligned access support at compile-time
+	  This makes gstconfig.h completely arch-independent. Should cover all
+	  compilers that gstreamer is known to build on, and all architectures
+	  that I could find information on. People are encouraged to file bugs if
+	  their platform/arch is missing.
+
+2016-08-13 09:55:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	* configure.ac:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/Makefile.am:
+	* gst/gst.c:
+	* gst/gstclock.c:
+	* gst/gstconfig.h.in:
+	* gst/gstminiobject.c:
+	* gst/gstobject.c:
+	* gst/gsttrace.c:
+	* gst/gsttrace.h:
+	* po/POTFILES.in:
+	* tests/check/Makefile.am:
+	* win32/common/gstconfig.h:
+	* win32/common/libgstreamer.def:
+	  Remove old alloc tracing code now that we have a GstTracer-based replacement
+	  It's been internal API only in 1.x.
+
+2016-08-12 16:15:25 +0200  Edward Hervey <edward@centricular.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Post buffering messages earlier in ringbuffer mode
+	  In ringbuffer mode we need to make sure we post buffering messages *before*
+	  blocking to wait for data to be drained.
+	  Without this, we would end up in situations like this:
+	  * pipeline is pre-rolling
+	  * Downstream demuxer/decoder has pushed data to all sinks, and demuxer thread
+	  is blocking downstream (i.e. not pulling from upstream/queue2).
+	  * Therefore pipeline has pre-rolled ...
+	  * ... but queue2 hasn't filled up yet, therefore the application waits for
+	  the buffering 100% messages before setting the pipeline to PLAYING
+	  * But queue2 can't post that message, since the 100% message will be posted
+	  *after* there is room available for that last buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769802
+
+2016-08-08 16:42:06 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: removed redundant call to g_thread_self
+	  Remove an unneeded call to g_thread_self and minor coding style fix.
+
+2016-03-16 18:00:15 +1100  Jan Schmidt <jan@centricular.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Handle stream-group-done
+	  Handle the new stream-group-done message to unblock pads which
+	  are waiting for the running time to advance on that group.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768995
+
+2016-03-14 14:20:42 +1100  Jan Schmidt <jan@centricular.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	* gst/gstpad.c:
+	* gst/gstquark.c:
+	* gst/gstquark.h:
+	* tests/check/gst/gstevent.c:
+	* win32/common/libgstreamer.def:
+	  events: Implement the stream-group-done event
+	  A new event which precedes EOS in situations where we
+	  need downstream to unblock any pads waiting on a stream
+	  before we can send EOS. E.g, decodebin draining a chain
+	  so it can switch pads.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768995
+
+2016-07-25 11:22:36 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstmessage.c:
+	* gst/gstmessage.h:
+	* gst/gstquark.c:
+	* gst/gstquark.h:
+	* tests/check/gst/gstmessage.c:
+	* win32/common/libgstreamer.def:
+	  message: Add redirect message
+	  Redirection messages are already used in fragmented sources and in
+	  uridecodebin, so it makes sense to introduce these as an official message
+	  type.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=631673
+
+2016-07-25 19:15:15 +1000  Jan Schmidt <jan@centricular.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Wake other pads when selected goes EOS
+	  Other pads that are waiting for the stream on the selected
+	  pad to advance before they finish waiting themselves
+	  should be given the chance to do so when the selected pad
+	  goes EOS. Fixes problems where input streams can end up
+	  waiting forever if the active stream goes EOS earlier than
+	  their own end time.
+
+2016-07-24 01:35:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstelement.h:
+	  element: fix GST_ELEMENT_ERROR() error code expansion
+	  In some corner cases, the error 'code' part passed to
+	  GST_ELEMENT_ERROR() is a valid define as well, in which
+	  case it won't survive two levels of macro expansion, but
+	  only one. Fixes:
+	  oss4-sink.c: In function ‘gst_oss4_sink_open’:
+	  error: ‘GST_RESOURCE_ERROR_0x00000002’ undeclared (first use in this function)
+	  GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,
+	  which is from GST_ELEMENT_ERROR(el,RESOURCE,OPEN_WRITE,..)
+	  and OPEN_WRITE happens to be defined to 2 here.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756806
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769117
+
+2016-07-22 17:32:33 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstmessage.c:
+	  message: fix some nonsensical annotations
+
+2016-07-22 15:25:09 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	  docs: add GST_ELEMENT_*_WITH_DETAILS to doc list
+
+2016-07-22 15:04:58 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	  docs: list new message details apis where they seem to belong
+
+2016-07-22 14:59:56 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* win32/common/libgstreamer.def:
+	  libgstreamer.def: fix mentions of new message details api
+	  I had not updated it after the review changes
+
+2016-03-02 11:22:23 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/gstelement.c:
+	* gst/gstelement.h:
+	* gst/gstmessage.c:
+	* gst/gstmessage.h:
+	* tests/check/gst/gstmessage.c:
+	* win32/common/libgstreamer.def:
+	  message: new API for additional custom data to error messages
+	  https://bugzilla.gnome.org/show_bug.cgi?id=756806
+
+2016-07-20 12:22:10 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* plugins/tracers/gstleaks.c:
+	* plugins/tracers/gstleaks.h:
+	  tracers: leaks: update type filter later for unknown types
+	  This allow us to filter using an object type which is implemented
+	  by a plugin like, say, GstGtkGLSink.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768989
+
+2016-07-19 14:45:53 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: add g-i transfer annotations to peek/pop/read_buffer/take_buffer functions
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768948
+
+2016-07-19 23:18:24 +1000  Jan Schmidt <jan@centricular.com>
+
+	* tests/check/libs/gstnetclientclock.c:
+	  tests: Use gst_clock_wait_for_sync () for net client clock
+	  Instead of looping, use the gst_clock_wait_for_sync() function
+	  to give clocks up to 1 second to synchronise
+
+2016-07-13 15:43:21 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/gstmessage.c:
+	  message: fix annotation of parse_stream_{collection,streams_selected}
+	  gst_structure_id_get() returns a new reference so the returned object is
+	  actually (transfer full).
+	  The unit tests was already unreffing the objects.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768776
+
+2016-07-13 15:43:21 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/gstdevicemonitor.c:
+	* gst/gstmessage.c:
+	  message: fix annotation of parse_device_{added,removed}
+	  gst_structure_id_get() returns a new reference so the returned device is
+	  actually (transfer full).
+	  The code using this API was already correct but the code example in
+	  comments was not.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768776
+
+2016-07-14 16:40:22 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: add g-i transfer annotatation to _store_sticky_event()
+	  For clarity.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768810
+
+2016-07-12 12:32:56 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Fix automatic-eos=false mode if a segment.stop is given
+	  If segment.stop was given, and the subclass provides a size that might be
+	  smaller than segment.stop and also smaller than the actual size, we would
+	  already stop there.
+	  Instead try reading up to segment.stop, the goal is to ignore the (possibly
+	  inaccurate) size the subclass gives and finish until segment.stop or when the
+	  subclass tells us to stop.
+
+2016-07-11 21:13:28 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f363b32 to f49c55e
+
+2016-07-11 18:45:49 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* tests/benchmarks/capsnego.c:
+	  benchmarks: Fix potential stack corruption in capsnego test
+	  flavour_str is a non-const pointer that will be written to if the -f
+	  option is passed
+
+2016-07-11 11:34:02 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* plugins/tracers/gstleaks.c:
+	  leaks: check return values of libunwind calls
+
+2016-07-11 09:58:47 +0200  Edward Hervey <edward@centricular.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Fix average input rate calculation on small input range
+	  When dealing with small-ish input data coming into queue2, such as
+	  adaptivedemux fragments, we would never take into account the last
+	  <200ms of data coming in.
+	  The problem is that usually on TCP connection the download rate
+	  gradually increases (i.e. the rate is lower at the beginning of a
+	  download than it is later on). Combined with small download time (less
+	  than a second) we would end up with a computed average input rate
+	  which was sometimes up to 30-50% off from the *actual* average input
+	  rate for that fragment.
+	  In order to fix this, force the average input rate calculation when
+	  we receive an EOS so that we take into account that final window
+	  of data.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768649
+
+2016-07-08 16:31:56 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/gstminiobject.c:
+	  miniobject: weak_unref: display the pointer of the object if failing
+	  That's generally the most useful information to help debugging the
+	  problem.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768579
+
+2016-07-08 16:29:38 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/gstbin.c:
+	  bin: properly display the type of the removed message
+	  Makes debugging easier.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768579
+
+2016-07-08 17:46:06 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstelement.c:
+	  element: re-create threadpool after cleaning up tasks
+	  We don't free this from gst_deinit() but from gst_task_cleanup_all(),
+	  so more GStreamer API may be called. In particular makes unit tests
+	  work again with CK_FORK=no.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768577
+
+2016-07-08 16:53:51 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* plugins/tracers/gstleaks.c:
+	* plugins/tracers/gstleaks.h:
+	  leaks: warn if object is destroyed while the tracer is disposing
+	  This should not happen and generally means some thread is still running.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768578
+
+2016-07-08 16:36:01 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* gst/gst_private.h:
+	* gst/gstelement.c:
+	* gst/gsttask.c:
+	  element: clean up thread pool from gst_task_cleanup_all()
+	  This ensures that all async operations (started from gst_element_call_async())
+	  have been completed and so there is no extra thread running.
+	  Fix races when checking for leaks on unit tests as some of those
+	  operations were still running when the leaks tracer was checking for
+	  leaked objects.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768577
+
+2016-07-08 11:15:06 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* configure.ac:
+	* plugins/tracers/gstleaks.c:
+	  leaks tracer: use G_OS_UNIX to check for signal support
+	  Checking for signal.h is not good enough as it's present in Windows.
+	  Those signals are UNIX specific anyway.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767857
+
+2016-06-22 16:25:16 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* configure.ac:
+	* docs/design/part-tracing.txt:
+	* plugins/tracers/Makefile.am:
+	* plugins/tracers/gstleaks.c:
+	* plugins/tracers/gstleaks.h:
+	  leaks tracer: add creation stack trace support
+	  This allow us to provide the trace of leaked objects making it easier
+	  to debug.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767862
+
+2016-06-01 11:08:39 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* docs/design/part-tracing.txt:
+	* plugins/tracers/gstleaks.c:
+	* plugins/tracers/gstleaks.h:
+	  leaks tracer: add checkpoint support using SIGUSR2
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767857
+
+2016-05-31 16:56:26 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* configure.ac:
+	* docs/design/part-tracing.txt:
+	* plugins/tracers/gstleaks.c:
+	  leaks tracer: log alive objects when receiving SIGUSR1
+	  We don't want to automatically catch signals so use an env variable to
+	  enable this feature.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767857
+
+2016-07-07 13:15:51 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstfunnel.c:
+	  funnel: Only forward sticky events on GAP events if needed
+	  That is, if the active pad changed and if forwarding of sticky events is
+	  requested at all. We otherwise forward events too often.
+
+2016-07-05 16:50:16 +0200  Miguel París Díaz <mparisdiaz@gmail.com>
+
+	* gst/gstpad.c:
+	  pad: check query caps answered and caps not NULL
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768450
+
+2016-07-06 13:50:56 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.9.1 ===
+
+2016-07-06 13:05:02 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gstreamer-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstenumtypes.h:
+	* win32/common/gstversion.h:
+	  Release 1.9.1
+
+2016-07-06 11:37:56 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2016-07-06 10:17:37 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -3236,7 +3968,6 @@
 
 2016-01-06 11:52:53 +0100  Stefan Sauer <ensonic@users.sf.net>
 
-	* docs/design/draft-tracing.txt:
 	* docs/design/part-tracing.txt:
 	  docs: rename the tracer doc to part since it is now merged
 
@@ -12913,7 +13644,6 @@
 	* gst/gst.h:
 	* gst/gstdevicemonitor.c:
 	* gst/gstdevicemonitor.h:
-	* gst/gstglobaldevicemonitor.c:
 	* gst/gstglobaldevicemonitor.h:
 	* win32/common/libgstreamer.def:
 	  GstDeviceMonitor: Rename from GstGlobalDeviceMonitor
@@ -12928,8 +13658,6 @@
 	* gst/gst_private.h:
 	* gst/gstdevice.c:
 	* gst/gstdevicemonitor.c:
-	* gst/gstdevicemonitor.h:
-	* gst/gstdevicemonitorfactory.c:
 	* gst/gstdevicemonitorfactory.h:
 	* gst/gstdeviceprovider.c:
 	* gst/gstdeviceprovider.h:
@@ -14031,8 +14759,6 @@
 
 	* docs/libs/gstreamer-libs-sections.txt:
 	* libs/gst/base/Makefile.am:
-	* libs/gst/base/gstsparsefile.c:
-	* libs/gst/base/gstsparsefile.h:
 	* plugins/elements/Makefile.am:
 	* plugins/elements/gstdownloadbuffer.h:
 	* plugins/elements/gstsparsefile.c:
@@ -17947,7 +18673,6 @@
 
 	* scripts/gst-plot-timeline.py:
 	* tools/Makefile.am:
-	* tools/gst-plot-timeline.py:
 	  tools: move gst-plot-timeline.py into scripts directory
 	  So it's not in PATH in an uninstalled setup (thwarting
 	  gst-play autocompletion).
@@ -22054,13 +22779,11 @@
 
 	* libs/gst/base/Makefile.am:
 	* libs/gst/base/base.h:
-	* libs/gst/base/gstbase.h:
 	* libs/gst/check/Makefile.am:
 	* libs/gst/check/check.h:
 	* libs/gst/check/gstcheck.h:
 	* libs/gst/controller/Makefile.am:
 	* libs/gst/controller/controller.h:
-	* libs/gst/controller/gstcontroller.h:
 	* libs/gst/net/Makefile.am:
 	* libs/gst/net/net.h:
 	  libs: Use foo/foo.h as single-include header consistently everywhere
@@ -22993,13 +23716,10 @@
 	* libs/gst/base/gstqueuearray.c:
 	* libs/gst/base/gstqueuearray.h:
 	* plugins/elements/Makefile.am:
-	* plugins/elements/gstdataqueue.c:
-	* plugins/elements/gstdataqueue.h:
 	* plugins/elements/gstmultiqueue.c:
 	* plugins/elements/gstmultiqueue.h:
 	* plugins/elements/gstqueue.c:
 	* plugins/elements/gstqueue.h:
-	* plugins/elements/gstqueuearray.c:
 	* plugins/elements/gstqueuearray.h:
 	* win32/common/libgstbase.def:
 	  dataqueue/queuearray: Make public API again
@@ -23265,7 +23985,6 @@
 2012-10-10 13:08:31 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* docs/manual/advanced-autoplugging.xml:
-	* docs/manual/highlevel-components.xml:
 	* docs/manual/highlevel-playback.xml:
 	* docs/manual/manual.xml:
 	* tests/examples/manual/Makefile.am:
@@ -25881,8 +26600,6 @@
 2012-07-14 19:24:57 +0100  Tim-Philipp Müller <tim@centricular.net>
 
 	* libs/gst/base/Makefile.am:
-	* libs/gst/base/gstqueuearray.c:
-	* libs/gst/base/gstqueuearray.h:
 	* plugins/elements/Makefile.am:
 	* plugins/elements/gstdataqueue.h:
 	* plugins/elements/gstqueue.h:
@@ -29144,12 +29861,10 @@
 	* libs/gst/base/Makefile.am:
 	* libs/gst/base/gstcollectpads.c:
 	* libs/gst/base/gstcollectpads.h:
-	* libs/gst/base/gstcollectpads2.c:
 	* libs/gst/base/gstcollectpads2.h:
 	* tests/check/Makefile.am:
 	* tests/check/libs/.gitignore:
 	* tests/check/libs/collectpads.c:
-	* tests/check/libs/collectpads2.c:
 	* tests/check/libs/gstlibscpp.cc:
 	* tests/check/libs/libsabi.c:
 	* win32/common/libgstbase.def:
@@ -32766,10 +33481,6 @@
 	* libs/gst/controller/Makefile.am:
 	* libs/gst/controller/gstargbcontrolbinding.c:
 	* libs/gst/controller/gstargbcontrolbinding.h:
-	* libs/gst/controller/gstcontrolbindingargb.c:
-	* libs/gst/controller/gstcontrolbindingargb.h:
-	* libs/gst/controller/gstcontrolbindingdirect.c:
-	* libs/gst/controller/gstcontrolbindingdirect.h:
 	* libs/gst/controller/gstdirectcontrolbinding.c:
 	* libs/gst/controller/gstdirectcontrolbinding.h:
 	* tests/benchmarks/controller.c:
@@ -33262,7 +33973,6 @@
 2012-01-26 11:38:29 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* tests/check/Makefile.am:
-	* tests/check/libs/collectpads.c:
 	* tests/check/libs/collectpads2.c:
 	* tests/check/libs/gstlibscpp.cc:
 	* tests/check/libs/libsabi.c:
@@ -34467,8 +35177,6 @@
 	* gst/gstbin.c:
 	* gst/gstelement.c:
 	* gst/gstelement.h:
-	* gst/gstindex.c:
-	* gst/gstindex.h:
 	* gst/gstindexfactory.c:
 	* gst/gstindexfactory.h:
 	* gst/gstregistrybinary.c:
@@ -34484,7 +35192,6 @@
 	* plugins/indexers/gstfileindex.c:
 	* plugins/indexers/gstindexers.c:
 	* plugins/indexers/gstindexers.h:
-	* plugins/indexers/gstmemindex.c:
 	* tools/gst-inspect.c:
 	* tools/gst-launch.c:
 	  index: remove GstIndex and GstIndexFactory for now
@@ -37271,11 +37978,7 @@
 	* gst/gstobject.c:
 	* gst/gstobject.h:
 	* libs/gst/controller/Makefile.am:
-	* libs/gst/controller/gstcontroller.c:
-	* libs/gst/controller/gstcontroller.h:
 	* libs/gst/controller/gstcontrollerprivate.h:
-	* libs/gst/controller/gstcontrolsource.c:
-	* libs/gst/controller/gstcontrolsource.h:
 	* libs/gst/controller/gsthelper.c:
 	* libs/gst/controller/gstinterpolationcontrolsource.c:
 	* libs/gst/controller/gstinterpolationcontrolsource.h:
@@ -38677,8 +39380,6 @@
 	* docs/libs/gstreamer-libs-docs.sgml:
 	* docs/libs/gstreamer-libs-sections.txt:
 	* libs/gst/base/Makefile.am:
-	* libs/gst/base/gstdataqueue.c:
-	* libs/gst/base/gstdataqueue.h:
 	* plugins/elements/Makefile.am:
 	* plugins/elements/gstdataqueue.c:
 	* plugins/elements/gstdataqueue.h:
@@ -41956,7 +42657,6 @@
 2011-06-03 12:43:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* docs/design/draft-allocation.txt:
-	* docs/design/draft-bufferpool.txt:
 	* docs/design/part-bufferpool.txt:
 	  docs: update bufferpool design doc
 	  Move the bufferpool design doc from draft to part and merge it with
@@ -45836,8 +46536,6 @@
 
 2010-10-13 15:39:55 -0700  David Schleef <ds@schleef.org>
 
-	* gst/audioparsers/gstbaseparse.c:
-	* gst/audioparsers/gstbaseparse.h:
 	* libs/gst/base/gstbaseparse.c:
 	* libs/gst/base/gstbaseparse.h:
 	  baseparse: Create baseparse library
@@ -46391,8 +47089,6 @@
 
 2009-11-28 18:13:31 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
 
-	* gst/aacparse/gstbaseparse.c:
-	* gst/aacparse/gstbaseparse.h:
 	* gst/audioparsers/gstbaseparse.c:
 	* gst/audioparsers/gstbaseparse.h:
 	  audioparsers: rename 'aacparse' plugin to generic 'audioparsers' plugin
@@ -47750,7 +48446,6 @@
 
 2011-03-08 18:05:42 +0000  Wim Taymans <wim.taymans@collabora.co.uk>
 
-	* docs/design/draft-buffer2.txt:
 	* docs/design/part-meta.txt:
 	  docs: rename draft to official doc
 
@@ -48132,11 +48827,9 @@
 	* gst/gstbuffer.c:
 	* gst/gstbuffer.h:
 	* gst/gstbuffermeta.c:
-	* gst/gstbuffermeta.h:
 	* gst/gstmeta.c:
 	* gst/gstmeta.h:
 	* tests/check/Makefile.am:
-	* tests/check/gst/gstbuffermeta.c:
 	* tests/check/gst/gstmeta.c:
 	  metadata: Rename to GstMeta
 	  Rename to the shorter GstMeta
@@ -48721,7 +49414,6 @@
 
 2011-02-15 17:20:08 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
-	* docs/design/draft-progress.txt:
 	* docs/design/part-progress.txt:
 	  design: make progress draft official
 
@@ -56487,7 +57179,6 @@
 
 	* Makefile.am:
 	* autogen.sh:
-	* check-checks.m4:
 	* configure.ac:
 	* m4/.gitignore:
 	* m4/Makefile.am:
@@ -58675,7 +59366,6 @@
 	* docs/faq/Makefile.am:
 	* docs/faq/developing.xml:
 	* docs/faq/faq.xml:
-	* docs/faq/gst-uninstalled:
 	* scripts/gst-uninstalled:
 	  scripts: move gst-uninstalled from docs/faq to scripts
 	  Don't include the long gst-uninstalled script in verbatim in the faq anymore
@@ -59646,7 +60336,6 @@
 	* libs/gst/helpers/.gitignore:
 	* libs/gst/helpers/Makefile.am:
 	* libs/gst/helpers/gst-plugin-scanner.c:
-	* libs/gst/helpers/plugin-scanner.c:
 	* tests/check/Makefile.am:
 	* tests/examples/manual/Makefile.am:
 	  plugin-scanner: rename plugin-scanner helper binary to gst-plugin-scanner
@@ -60111,7 +60800,6 @@
 
 2009-10-29 11:18:20 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
-	* gst/playback/gstqueue2.c:
 	* plugins/elements/gstqueue2.c:
 	  queue2: Move queue2 to gstreamer coreplugins
 	  Fixes bug #599996.
@@ -63778,7 +64466,6 @@
 
 2009-07-10 18:35:21 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
-	* docs/design/draft-framestep.txt:
 	* docs/design/part-framestep.txt:
 	  docs: more framestep docs out of draft
 
@@ -64363,7 +65050,6 @@
 
 2009-06-13 14:53:24 +0200  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
 
-	* scripts/cvs-update.sh:
 	* scripts/git-update.sh:
 	* scripts/git-version.sh:
 	  Update scripts/cvs-update.sh to git-update.sh; add git-version.sh
@@ -65588,9 +66274,6 @@
 2009-05-14 12:30:23 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* docs/design/draft-ghostpads.txt:
-	* docs/design/draft-latency.txt:
-	* docs/design/draft-missing-plugins.txt:
-	* docs/design/draft-stream-status.txt:
 	* docs/design/part-latency.txt:
 	* docs/design/part-missing-plugins.txt:
 	* docs/design/part-stream-status.txt:
@@ -67814,7 +68497,6 @@
 
 2009-02-14 13:35:48 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
-	* docs/faq/cvs.xml:
 	* docs/faq/developing.xml:
 	* docs/faq/faq.xml:
 	* docs/faq/getting.xml:
@@ -104954,10 +105636,8 @@
 
 	* check/Makefile.am:
 	* check/gst/gstevent.c:
-	* check/gst/gstevents.c:
 	* tests/check/Makefile.am:
 	* tests/check/gst/gstevent.c:
-	* tests/check/gst/gstevents.c:
 	  put some make-up on the gstevent test
 	  Original commit message from CVS:
 	  put some make-up on the gstevent test
@@ -104985,7 +105665,6 @@
 	* check/Makefile.am:
 	* check/elements/.gitignore:
 	* check/elements/fakesrc.c:
-	* check/elements/gstfakesrc.c:
 	* check/elements/identity.c:
 	* check/gst-libs/controller.c:
 	* check/gst-libs/gdp.c:
@@ -105005,8 +105684,6 @@
 	* check/gst/gstsystemclock.c:
 	* check/gst/gsttag.c:
 	* check/gst/gstvalue.c:
-	* check/gstcheck.c:
-	* check/gstcheck.h:
 	* check/pipelines/cleanup.c:
 	* check/pipelines/simple_launch_lines.c:
 	* check/states/sinks.c:
@@ -105027,7 +105704,6 @@
 	* tests/check/Makefile.am:
 	* tests/check/elements/.gitignore:
 	* tests/check/elements/fakesrc.c:
-	* tests/check/elements/gstfakesrc.c:
 	* tests/check/elements/identity.c:
 	* tests/check/generic/sinks.c:
 	* tests/check/gst/gst.c:
@@ -105046,8 +105722,6 @@
 	* tests/check/gst/gstsystemclock.c:
 	* tests/check/gst/gsttag.c:
 	* tests/check/gst/gstvalue.c:
-	* tests/check/gstcheck.c:
-	* tests/check/gstcheck.h:
 	* tests/check/libs/controller.c:
 	* tests/check/libs/gdp.c:
 	* tests/check/pipelines/cleanup.c:
@@ -107078,7 +107752,6 @@
 	* check/gst.supp:
 	* check/gst/gst.c:
 	* check/gst/gstbuffer.c:
-	* check/gst/gstdata.c:
 	* check/gst/gstghostpad.c:
 	* check/gst/gstminiobject.c:
 	* configure.ac:
@@ -107089,7 +107762,6 @@
 	* tests/check/gst.supp:
 	* tests/check/gst/gst.c:
 	* tests/check/gst/gstbuffer.c:
-	* tests/check/gst/gstdata.c:
 	* tests/check/gst/gstghostpad.c:
 	* tests/check/gst/gstminiobject.c:
 	* tools/gst-launch.c:

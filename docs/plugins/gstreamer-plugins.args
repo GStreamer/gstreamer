@@ -144,7 +144,7 @@
 <RANGE>[0,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>High percent</NICK>
-<BLURB>High threshold for buffering to finish. Only used if use-buffering is True.</BLURB>
+<BLURB>High threshold for buffering to finish. Only used if use-buffering is True (Deprecated: use high-watermark instead).</BLURB>
 <DEFAULT>99</DEFAULT>
 </ARG>
 
@@ -154,8 +154,8 @@
 <RANGE>[0,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Low percent</NICK>
-<BLURB>Low threshold for buffering to start. Only used if use-buffering is True.</BLURB>
-<DEFAULT>10</DEFAULT>
+<BLURB>Low threshold for buffering to start. Only used if use-buffering is True (Deprecated: use low-watermark instead).</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -266,6 +266,26 @@
 <NICK>Use bitrate from tags</NICK>
 <BLURB>Use a bitrate from upstream tags to estimate buffer duration if not provided.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::high-watermark</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>High watermark</NICK>
+<BLURB>High threshold for buffering to finish. Only used if use-buffering is True.</BLURB>
+<DEFAULT>0.99</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::low-watermark</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low watermark</NICK>
+<BLURB>Low threshold for buffering to start. Only used if use-buffering is True.</BLURB>
+<DEFAULT>0.01</DEFAULT>
 </ARG>
 
 <ARG>
@@ -454,7 +474,7 @@
 <RANGE>[0,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>High percent</NICK>
-<BLURB>High threshold for buffering to finish.</BLURB>
+<BLURB>High threshold for buffering to finish. Only used if use-buffering is True (Deprecated: use high-watermark instead).</BLURB>
 <DEFAULT>99</DEFAULT>
 </ARG>
 
@@ -464,8 +484,8 @@
 <RANGE>[0,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Low percent</NICK>
-<BLURB>Low threshold for buffering to start.</BLURB>
-<DEFAULT>10</DEFAULT>
+<BLURB>Low threshold for buffering to start. Only used if use-buffering is True (Deprecated: use low-watermark instead).</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -536,6 +556,26 @@
 <NICK>Use interleave</NICK>
 <BLURB>Adjust time limits based on input interleave.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiQueue::high-watermark</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>High watermark</NICK>
+<BLURB>High threshold for buffering to finish. Only used if use-buffering is True.</BLURB>
+<DEFAULT>0.99</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiQueue::low-watermark</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low watermark</NICK>
+<BLURB>Low threshold for buffering to start. Only used if use-buffering is True.</BLURB>
+<DEFAULT>0.01</DEFAULT>
 </ARG>
 
 <ARG>
