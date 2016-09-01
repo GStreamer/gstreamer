@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2016-02-21 21:03+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
@@ -68,9 +68,6 @@ msgstr "Не може да се настрои sndio"
 msgid "Could not start sndio"
 msgstr "Не може да се стартира sndio"
 
-msgid "Internal data flow error."
-msgstr "Вътрешна грешка в потока на данни."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Генерираният файл е с по-дълго време за буфериране отколкото е самата му "
@@ -92,11 +89,11 @@ msgstr "Форматът на подкартината не е бил уточн
 msgid "Failed to get fragment URL."
 msgstr "Неуспешно получаване на адреса на фрагмента."
 
-msgid "Internal data stream error."
-msgstr "Вътрешна грешка в потока на данни."
-
 msgid "Couldn't download fragments"
 msgstr "Фрагментите не могат да бъдат свалени"
+
+msgid "Internal data stream error."
+msgstr "Вътрешна грешка в потока на данни."
 
 msgid "No file name specified for writing."
 msgstr "Не е указано име на файл за запис."
@@ -164,3 +161,6 @@ msgid "DVB channel configuration file doesn't contain any channels"
 msgstr ""
 "Файлът с настройките на цифровото видеоръзпръскване (DVB) не съдържа никакви "
 "канали"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Вътрешна грешка в потока на данни."

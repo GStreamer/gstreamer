@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2014-04-20 15:52+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -73,9 +73,6 @@ msgstr "Nevarēja konfigurēt sndio"
 msgid "Could not start sndio"
 msgstr "Nevarēja palaist sndio"
 
-msgid "Internal data flow error."
-msgstr "Iekšēja datu plūsmas kļūda."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Izveidotajai datnei ir lielāks pirms-atskaņojuma laiks, kā straumes garums"
@@ -97,11 +94,11 @@ msgstr "Apakšattēla formāts netika konfigurēts pirms datu plūsmas"
 msgid "Failed to get fragment URL."
 msgstr "Neizdevās saņemt fragmenta URL."
 
-msgid "Internal data stream error."
-msgstr "Iekšējās datu plūsmas kļūda."
-
 msgid "Couldn't download fragments"
 msgstr "Nevarēja lejupielādēt fragmentus"
+
+msgid "Internal data stream error."
+msgstr "Iekšējās datu plūsmas kļūda."
 
 msgid "No file name specified for writing."
 msgstr "Ierakstīšanai nav norādīts neviens datnes nosaukums."
@@ -161,6 +158,9 @@ msgstr "Nevarēja atrast DVB kanāla konfigurācijas datni"
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "DVB kanāla konfigurācijas datne nesatur nevienu kanālu"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Iekšēja datu plūsmas kļūda."
 
 #~ msgid "Couldn't get the Manifest's URI"
 #~ msgstr "Nevarēja saņemt manifesta URI"

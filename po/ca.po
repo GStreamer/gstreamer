@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -72,9 +72,6 @@ msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura."
 msgid "Could not start sndio"
 msgstr "No s'ha pogut llegir el DVD."
 
-msgid "Internal data flow error."
-msgstr "S'ha produït un error intern de flux de dades."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 
@@ -94,11 +91,11 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
-msgid "Internal data stream error."
-msgstr "S'ha produït un error intern de flux de dades."
-
 msgid "Couldn't download fragments"
 msgstr ""
+
+msgid "Internal data stream error."
+msgstr "S'ha produït un error intern de flux de dades."
 
 msgid "No file name specified for writing."
 msgstr "No s'ha especificat cap nom de fitxer per a l'escriptura."
@@ -156,6 +153,9 @@ msgstr ""
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr ""
+
+#~ msgid "Internal data flow error."
+#~ msgstr "S'ha produït un error intern de flux de dades."
 
 #~ msgid "Could not write to file \"%s\"."
 #~ msgstr "No s'ha pogut escriure al fitxer «%s»."

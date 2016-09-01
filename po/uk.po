@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2015-10-15 20:44+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -70,9 +70,6 @@ msgstr "Не вдалося налаштувати sndio"
 msgid "Could not start sndio"
 msgstr "Не вдалося задіяти sndio"
 
-msgid "Internal data flow error."
-msgstr "Помилка внутрішнього перенесення даних."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Створений файл має більше значення випереджувального просування даних ніж "
@@ -97,11 +94,11 @@ msgstr "Формат підзображення не було налаштова
 msgid "Failed to get fragment URL."
 msgstr "Не вдалося отримати адреси фрагмента."
 
-msgid "Internal data stream error."
-msgstr "Помилка внутрішнього потоку даних."
-
 msgid "Couldn't download fragments"
 msgstr "Не вдалося отримати фрагменти"
+
+msgid "Internal data stream error."
+msgstr "Помилка внутрішнього потоку даних."
 
 msgid "No file name specified for writing."
 msgstr "Не вказано назви файла для запису."
@@ -163,6 +160,9 @@ msgstr "Не вдалося знайти файла налаштувань ка�
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "У файлі налаштувань каналів DVB не міститься даних щодо жодного каналу"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Помилка внутрішнього перенесення даних."
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "типовий приймач звукових подій GStreamer"

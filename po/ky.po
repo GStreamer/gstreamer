@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.5\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2007-11-13 17:16+0600\n"
 "Last-Translator: Ilyas Bakirov <just_ilyas@yahoo.com>\n"
 "Language-Team: Kirghiz <i18n-team-ky-kyrgyz@lists.sourceforge.net>\n"
@@ -67,9 +67,6 @@ msgstr "\"%s\"  файлы окууга ачылган жок."
 msgid "Could not start sndio"
 msgstr ""
 
-msgid "Internal data flow error."
-msgstr ""
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 
@@ -89,10 +86,10 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
-msgid "Internal data stream error."
+msgid "Couldn't download fragments"
 msgstr ""
 
-msgid "Couldn't download fragments"
+msgid "Internal data stream error."
 msgstr ""
 
 msgid "No file name specified for writing."

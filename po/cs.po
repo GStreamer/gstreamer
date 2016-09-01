@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2015-10-15 20:54+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -72,9 +72,6 @@ msgstr "Nelze nastavit sndio"
 msgid "Could not start sndio"
 msgstr "Nelze spustit sndio"
 
-msgid "Internal data flow error."
-msgstr "Vnitřní chyba datového toku."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Vygenerovaný soubor má delší čas videa vloženého před začátek (preroll) než "
@@ -98,11 +95,11 @@ msgstr "Formát podřízeného obrázku nebyl nastaven před datovým tokem"
 msgid "Failed to get fragment URL."
 msgstr "Selhalo získání adresy URL fragmentu."
 
-msgid "Internal data stream error."
-msgstr "Chyba proudu vnitřních dat."
-
 msgid "Couldn't download fragments"
 msgstr "Nelze stáhnout fragmenty"
+
+msgid "Internal data stream error."
+msgstr "Chyba proudu vnitřních dat."
 
 msgid "No file name specified for writing."
 msgstr "K zápisu nebyl zadán žádný název souboru."
@@ -162,6 +159,9 @@ msgstr "Nelze najít soubor s nastavením kanálů DVB"
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "Soubor s nastavením kanálů DVB neobsahuje žádné kanály"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Vnitřní chyba datového toku."
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "výchozí zvukový cíl GStreamer pro zvukové události"

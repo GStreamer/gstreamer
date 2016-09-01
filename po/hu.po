@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2015-11-20 23:46+0100\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -69,9 +69,6 @@ msgstr "Nem sikerült az sndio beállítása"
 msgid "Could not start sndio"
 msgstr "Nem sikerült az sndio indítása"
 
-msgid "Internal data flow error."
-msgstr "Belső adatfolyamhiba."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Az előállított fájlnak nagyobb előtekerési ideje van, mint a folyamának "
@@ -95,11 +92,11 @@ msgstr "A részkép formátuma nem lett beállítva az adatfolyam előtt"
 msgid "Failed to get fragment URL."
 msgstr "Nem sikerült lekérni a töredék URL-t."
 
-msgid "Internal data stream error."
-msgstr "Belső adatfolyamhiba."
-
 msgid "Couldn't download fragments"
 msgstr "Nem sikerült letölteni a töredékeket"
+
+msgid "Internal data stream error."
+msgstr "Belső adatfolyamhiba."
 
 msgid "No file name specified for writing."
 msgstr "Nincs megadva fájlnév az íráshoz."
@@ -159,6 +156,9 @@ msgstr "Nem található DVB-csatorna beállítófájl"
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "A DVB-csatorna beállítófájl nem tartalmaz egyetlen csatornát sem"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Belső adatfolyamhiba."
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "alapértelmezett GStreamer hangesemények audiosink"

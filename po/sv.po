@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2015-11-01 00:48+0100\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -68,9 +68,6 @@ msgstr "Kunde inte konfigurera sndio"
 msgid "Could not start sndio"
 msgstr "Kunde ej starta sndio"
 
-msgid "Internal data flow error."
-msgstr "Internt fel i dataflöde."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr "Den genererade filen har en längre förrullningstid än dess strömlängd"
 
@@ -91,11 +88,11 @@ msgstr "Delbildsformat var inte konfigurerat före dataflöde"
 msgid "Failed to get fragment URL."
 msgstr "Misslyckades att hämta fragment-URL"
 
-msgid "Internal data stream error."
-msgstr "Internt fel i dataström."
-
 msgid "Couldn't download fragments"
 msgstr "Kunde ej ladda ner fragment"
+
+msgid "Internal data stream error."
+msgstr "Internt fel i dataström."
 
 msgid "No file name specified for writing."
 msgstr "Inget filnamn angavs för skrivning."
@@ -259,6 +256,9 @@ msgstr "Konfigurationsfil för DVB-kanal innehåller inga kanaler"
 
 #~ msgid "Describes the selected visualization element."
 #~ msgstr "Beskriver det valda visualiseringselementet."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Internt fel i dataflöde."
 
 #~ msgid "Couldn't get the Manifest's URI"
 #~ msgstr "Kunde ej hämta manifestets URI"

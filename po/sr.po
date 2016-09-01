@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2015-12-24 11:34+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -68,9 +68,6 @@ msgstr "Не могу да подесим улаз/излаз звука"
 msgid "Could not start sndio"
 msgstr "Не могу да покренем улаз/излаз звука"
 
-msgid "Internal data flow error."
-msgstr "Унутрашња грешка протока података."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr "Створена датотека има дуже време припреме од трајања њеног тока"
 
@@ -91,11 +88,11 @@ msgstr "Запис подслике није подешен пре проток�
 msgid "Failed to get fragment URL."
 msgstr "Нисам успео да добијем адресу одломка."
 
-msgid "Internal data stream error."
-msgstr "Унутрашња грешка тока података."
-
 msgid "Couldn't download fragments"
 msgstr "Не могу да преузмем одломке"
+
+msgid "Internal data stream error."
+msgstr "Унутрашња грешка тока података."
 
 msgid "No file name specified for writing."
 msgstr "Није наведен назив датотеке за упис."
@@ -155,6 +152,9 @@ msgstr "Не могу да пронађем датотеку подешавањ�
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "Датотека подешавања ДВБ канала не садржи ниједан канал"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Унутрашња грешка протока података."
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "основни аудио усклађивач звучних догађаја Гстримера"

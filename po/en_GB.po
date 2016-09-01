@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -68,9 +68,6 @@ msgstr "Could not configure audio device \"%s\"."
 msgid "Could not start sndio"
 msgstr "Could not write to file \"%s\"."
 
-msgid "Internal data flow error."
-msgstr ""
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 
@@ -90,10 +87,10 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
-msgid "Internal data stream error."
+msgid "Couldn't download fragments"
 msgstr ""
 
-msgid "Couldn't download fragments"
+msgid "Internal data stream error."
 msgstr ""
 
 #, fuzzy

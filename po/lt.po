@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.6.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2008-05-14 02:13+0300\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -71,10 +71,6 @@ msgstr "Nepavyko atverti failo „%s“ skaitymui."
 msgid "Could not start sndio"
 msgstr "Nepavyko rašyti į failą „%s“."
 
-#, fuzzy
-msgid "Internal data flow error."
-msgstr "Vidinė duomenų srauto klaida."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 
@@ -94,11 +90,11 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
-msgid "Internal data stream error."
-msgstr "Vidinė duomenų srauto klaida."
-
 msgid "Couldn't download fragments"
 msgstr ""
+
+msgid "Internal data stream error."
+msgstr "Vidinė duomenų srauto klaida."
 
 msgid "No file name specified for writing."
 msgstr "Nenurodytas failo rašymui pavadinimas."
@@ -156,6 +152,10 @@ msgstr ""
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Internal data flow error."
+#~ msgstr "Vidinė duomenų srauto klaida."
 
 #~ msgid "Could not write to file \"%s\"."
 #~ msgstr "Nepavyko rašyti į failą „%s“."

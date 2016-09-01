@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2016-05-27 12:45-0700\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -71,9 +71,6 @@ msgstr "‘sndio’ nije moguće konfigurirati"
 msgid "Could not start sndio"
 msgstr "‘sndio’ nije moguće pokrenuti"
 
-msgid "Internal data flow error."
-msgstr "Interna greška u protoku podataka."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "U generiranoj datoteci priprema (preroll vrijeme) je duža od ukupnog "
@@ -96,11 +93,11 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr "Nije uspjelo dobiti fragmente adrese URL-a."
 
-msgid "Internal data stream error."
-msgstr "Interna greška toka (stream) podataka."
-
 msgid "Couldn't download fragments"
 msgstr "Nije moguće preuzeti fragmente"
+
+msgid "Internal data stream error."
+msgstr "Interna greška toka (stream) podataka."
 
 msgid "No file name specified for writing."
 msgstr "Nedostaje naziv (nema ga) datoteke za pisanje."
@@ -161,6 +158,9 @@ msgstr "Konfiguracijsku datoteku za DVB kanal nije moguće pronaći"
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "Konfiguracijska datoteka za DVB kanal ne sadrži nijedan kanal"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Interna greška u protoku podataka."
 
 #~ msgid "Could not write to file \"%s\"."
 #~ msgstr "Ne mogu pisati u datoteku „%s”."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2016-05-20 12:33+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -70,9 +70,6 @@ msgstr "Nepodarilo nastaviť sndio"
 msgid "Could not start sndio"
 msgstr "Nepodarilo sa spustiť sndio"
 
-msgid "Internal data flow error."
-msgstr "Vnútorná chyba prúdu údajov."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Vytvorený súbor má väčší prerolovací čas než je trvanie jeho prúdu údajov"
@@ -95,11 +92,11 @@ msgstr "Formát podobrázku nebol nastavený pred prúdom údajov."
 msgid "Failed to get fragment URL."
 msgstr "Nepodarilo sa získať URL fragmentu."
 
-msgid "Internal data stream error."
-msgstr "Vnútorná chyba prúdu údajov."
-
 msgid "Couldn't download fragments"
 msgstr "Nepodarilo sa získať fragmenty"
+
+msgid "Internal data stream error."
+msgstr "Vnútorná chyba prúdu údajov."
 
 msgid "No file name specified for writing."
 msgstr "Nebolo zadané žiadne meno súboru pre zápis."
@@ -159,6 +156,9 @@ msgstr "Nepodarilo sa nájsť konfiguračný súbor DVB kanálu"
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "Konfiguračný súbor DVB kanála neobsahuje žiadne kanály"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Vnútorná chyba prúdu údajov."
 
 #~ msgid "Couldn't get the Manifest's URI"
 #~ msgstr "Nepodarilo sa získať URI Manifestu"

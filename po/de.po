@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2015-10-21 00:15+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -71,9 +71,6 @@ msgstr "sndio konnte nicht eingestellt werden"
 msgid "Could not start sndio"
 msgstr "sndio konnten nicht gestartet werden"
 
-msgid "Internal data flow error."
-msgstr "Interner Datenstromfehler."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Die erzeugte Datei hat eine größere Vorlaufzeit als die Dauer ihres "
@@ -98,11 +95,11 @@ msgstr "Format des Unterbilds wurde nicht vor dem Datenfluss konfiguriert"
 msgid "Failed to get fragment URL."
 msgstr "Ermitteln der Fragment-Adresse schlug fehl."
 
-msgid "Internal data stream error."
-msgstr "Interner Datenstromfehler."
-
 msgid "Couldn't download fragments"
 msgstr "Fragmente konnten nicht heruntergeladen werden"
+
+msgid "Internal data stream error."
+msgstr "Interner Datenstromfehler."
 
 msgid "No file name specified for writing."
 msgstr "Kein Dateiname zum Schreiben angegeben."
@@ -164,6 +161,9 @@ msgstr "DVB Kanal-Konfigurationsdatei konnte nicht gefunden werden"
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "DVB Kanal-Konfigurationsdatei enthält keine Kanäle"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Interner Datenstromfehler."
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "Voreingestellte GStreamer Tonereignis-Audioziel"

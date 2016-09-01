@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2015-12-22 21:08+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -68,9 +68,6 @@ msgstr "Kunne ikke konfigurere sndio"
 msgid "Could not start sndio"
 msgstr "Kunne ikke starte sndio"
 
-msgid "Internal data flow error."
-msgstr "Intern feil i datastrøm."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr "Genererte filen har en større preroll tid enn strømmens varighet"
 
@@ -91,11 +88,11 @@ msgstr "Underbildeformat er ikke konfigurert før dataflyt"
 msgid "Failed to get fragment URL."
 msgstr "Klarte ikke å hente fragment-nettadresse."
 
-msgid "Internal data stream error."
-msgstr "Intern feil i datastrøm."
-
 msgid "Couldn't download fragments"
 msgstr "Kunne ikke laste ned fragmenter"
+
+msgid "Internal data stream error."
+msgstr "Intern feil i datastrøm."
 
 msgid "No file name specified for writing."
 msgstr "Ingen filnavn oppgitt for skriving."
@@ -153,6 +150,9 @@ msgstr "Kunne ikke finne DVB-kanal-konfigurasjonsfil"
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "DVB-kanalkonfigurasjonsfilen inneholder ingen kanaler"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Intern feil i datastrøm."
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "standard GStreamer lydhendelser-audiosink"

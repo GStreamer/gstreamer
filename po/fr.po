@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2016-02-20 16:27+0100\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -68,9 +68,6 @@ msgstr "Impossible de configurer sndio"
 msgid "Could not start sndio"
 msgstr "Impossible de démarrer sndio"
 
-msgid "Internal data flow error."
-msgstr "Erreur du flux de données interne."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Le fichier généré a un temps de lancement plus long que la durée du flux"
@@ -93,11 +90,11 @@ msgstr "Le format de sous-image n’était pas configuré avant le flux de donn�
 msgid "Failed to get fragment URL."
 msgstr "Échec de la récupération de l’URL de fragment."
 
-msgid "Internal data stream error."
-msgstr "Erreur interne de flux de données."
-
 msgid "Couldn't download fragments"
 msgstr "Impossible de télécharger les fragments"
+
+msgid "Internal data stream error."
+msgstr "Erreur interne de flux de données."
 
 msgid "No file name specified for writing."
 msgstr "Aucun nom de fichier indiqué en écriture."
@@ -158,6 +155,9 @@ msgstr "Impossible de trouver le fichier de configuration de canal DVB"
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "Le fichier de configuration de canal DVB ne contient aucun canal"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Erreur du flux de données interne."
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "récepteur audio GStreamer par défaut pour les événements sonores"

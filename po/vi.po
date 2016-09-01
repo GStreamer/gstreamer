@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2015-10-16 08:27+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -70,9 +70,6 @@ msgstr "Không thể cấu hình sndio"
 msgid "Could not start sndio"
 msgstr "Không thể khởi chạy sndio"
 
-msgid "Internal data flow error."
-msgstr "Lỗi tràn luồng dữ liệu nội bộ."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Tập tin đã tạo có thời gian cuộn trước lớn hơn thời lượng của dòng dữ liệu"
@@ -94,11 +91,11 @@ msgstr "Định dạng ảnh phụ chưa được cấu hình trước khi dữ 
 msgid "Failed to get fragment URL."
 msgstr "Gặp lỗi khi lấy URL phân mảnh."
 
-msgid "Internal data stream error."
-msgstr "Lỗi luồng dữ liệu nội bộ."
-
 msgid "Couldn't download fragments"
 msgstr "Không thể tải về các phân mảnh"
+
+msgid "Internal data stream error."
+msgstr "Lỗi luồng dữ liệu nội bộ."
 
 msgid "No file name specified for writing."
 msgstr "Chưa chỉ định tên tập tin để ghi vào."
@@ -159,6 +156,9 @@ msgstr "Không thể tìm thấy tập tin cấu hình kênh DVB"
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "Tập tin cấu hình kênh DVB chẳng chứa kênh nào cả"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Lỗi tràn luồng dữ liệu nội bộ."
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "các sự kiện âm thanh GStreamer mặc định cho “audiosink”"

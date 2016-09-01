@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2011-04-26 15:21+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -75,9 +75,6 @@ msgstr "Datoteke \"%s\" ni mogoče odpreti za branje."
 msgid "Could not start sndio"
 msgstr "DVD-ja ni mogoče prebrati."
 
-msgid "Internal data flow error."
-msgstr "Notranja napaka pretočnosti podatkov."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 
@@ -97,11 +94,11 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
-msgid "Internal data stream error."
-msgstr "Notranja napaka pretoka podatkov."
-
 msgid "Couldn't download fragments"
 msgstr ""
+
+msgid "Internal data stream error."
+msgstr "Notranja napaka pretoka podatkov."
 
 msgid "No file name specified for writing."
 msgstr "Ni navedenega imena datoteke za pisanje."
@@ -159,6 +156,9 @@ msgstr ""
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr ""
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Notranja napaka pretočnosti podatkov."
 
 #~ msgid "Could not write to file \"%s\"."
 #~ msgstr "V datoteko \"%s\" ni mogoče pisati."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2015-10-18 13:40+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -70,9 +70,6 @@ msgstr "Не удалось настроить sndio"
 msgid "Could not start sndio"
 msgstr "Не удалось запустить sndio"
 
-msgid "Internal data flow error."
-msgstr "Внутренняя ошибка передачи данных."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "В сгенерированном файле время предпуска (preroll) больше чем длительность "
@@ -94,11 +91,11 @@ msgstr "Не настроен формат субграфики (subpicture) д�
 msgid "Failed to get fragment URL."
 msgstr "Ошибка при получении URL фрагмента."
 
-msgid "Internal data stream error."
-msgstr "Внутренняя ошибка потока данных."
-
 msgid "Couldn't download fragments"
 msgstr "Не удалось скачать фрагменты"
+
+msgid "Internal data stream error."
+msgstr "Внутренняя ошибка потока данных."
 
 msgid "No file name specified for writing."
 msgstr "Не указано имя файла для записи."
@@ -158,6 +155,9 @@ msgstr "Не удалось найти файл настройки канало�
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr "Файл настройки каналов DVB не содержит каналов"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Внутренняя ошибка передачи данных."
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "GStreamer audiosink по умолчанию для звуковых событий"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:51+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2011-04-26 19:38+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -70,9 +70,6 @@ msgstr "読み込み用にファイル \"%s\" を開くことができません�
 msgid "Could not start sndio"
 msgstr "DVDを読み込むことができませんでした。"
 
-msgid "Internal data flow error."
-msgstr "内部データフローエラー。"
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 
@@ -92,11 +89,11 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
-msgid "Internal data stream error."
-msgstr "内部データストリームエラー。"
-
 msgid "Couldn't download fragments"
 msgstr ""
+
+msgid "Internal data stream error."
+msgstr "内部データストリームエラー。"
 
 msgid "No file name specified for writing."
 msgstr "書き込み用にファイル名が指定されていません。"
@@ -155,6 +152,9 @@ msgstr "仮想ミックスチャンネル設定"
 
 msgid "DVB channel configuration file doesn't contain any channels"
 msgstr ""
+
+#~ msgid "Internal data flow error."
+#~ msgstr "内部データフローエラー。"
 
 #~ msgid "Could not write to file \"%s\"."
 #~ msgstr "ファイル \"%s\" へ書き込むことができませんでした。"
