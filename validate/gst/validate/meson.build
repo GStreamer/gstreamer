@@ -46,7 +46,7 @@ gstvalidate = shared_library('gstvalidate',
     install: true,
     c_args : [gst_c_args],
     dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
-                    gst_pbutils_dep, mathlib])
+                    gst_pbutils_dep, mathlib, json_dep])
 
 validate_gen_sources = []
 if build_gir

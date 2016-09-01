@@ -1,5 +1,6 @@
 inc_dirs = include_directories('.')
 
+json_dep = dependency('json-glib-1.0')
 cdata = configuration_data()
 cdata.set('GST_API_VERSION', '"@0@"'.format(apiversion))
 cdata.set('VALIDATEPLUGINDIR', '"@0@/@1@/gstreamer-1.0/validate"'.format(get_option('prefix'),get_option('libdir')))

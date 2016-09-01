@@ -276,6 +276,7 @@ gst_validate_deinit (void)
   _priv_validate_override_registry_deinit ();
   core_config = NULL;
   validate_initialized = FALSE;
+  gst_validate_report_deinit ();
 
   g_mutex_unlock (&_gst_validate_registry_mutex);
   g_mutex_clear (&_gst_validate_registry_mutex);

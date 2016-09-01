@@ -201,6 +201,10 @@ if test "x$HAVE_CAIRO" != "xyes"; then
   AC_MSG_NOTICE([Cairo is needed for the gst-validate-images-tool])
 fi
 
+PKG_CHECK_MODULES(JSON_GLIB, json-glib-1.0)
+AC_SUBST(JSON_GLIB_LIBS)
+AC_SUBST(JSON_GLIB_CFLAGS)
+
 dnl checks for gstreamer
 
 AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)

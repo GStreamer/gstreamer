@@ -90,6 +90,7 @@ print_position (GstValidateMonitor * monitor)
 {
   GstQuery *query;
   gint64 position, duration;
+  JsonBuilder *jbuilder;
   GstElement *pipeline =
       GST_ELEMENT (GST_VALIDATE_MONITOR_GET_OBJECT (monitor));
 
@@ -113,6 +114,21 @@ print_position (GstValidateMonitor * monitor)
   if (gst_element_query (pipeline, query))
     gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
   gst_query_unref (query);
+
+  jbuilder = json_builder_new ();
+  json_builder_begin_object (jbuilder);
+  json_builder_set_member_name (jbuilder, "type");
+  json_builder_add_string_value (jbuilder, "position");
+  json_builder_set_member_name (jbuilder, "position");
+  json_builder_add_int_value (jbuilder, position);
+  json_builder_set_member_name (jbuilder, "duration");
+  json_builder_add_int_value (jbuilder, duration);
+  json_builder_set_member_name (jbuilder, "speed");
+  json_builder_add_double_value (jbuilder, rate);
+  json_builder_end_object (jbuilder);
+
+  gst_validate_send (json_builder_get_root (jbuilder));
+  g_object_unref (jbuilder);
 
   gst_validate_printf (NULL,
       "<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
@@ -423,15 +439,21 @@ _bus_handler (GstBus * bus, GstMessage * message,
     }
     case GST_MESSAGE_BUFFERING:
     {
+      JsonBuilder *jbuilder = json_builder_new ();
       GstBufferingMode mode;
       gint percent;
 
       gst_message_parse_buffering (message, &percent);
       gst_message_parse_buffering_stats (message, &mode, NULL, NULL, NULL);
 
+      json_builder_begin_object (jbuilder);
+      json_builder_set_member_name (jbuilder, "type");
+      json_builder_add_string_value (jbuilder, "buffering");
+      json_builder_set_member_name (jbuilder, "state");
       if (percent == 100) {
         /* a 100% message means buffering is done */
         gst_validate_printf (NULL, "\nDone buffering\n");
+        json_builder_add_string_value (jbuilder, "done");
         if (monitor->buffering) {
           monitor->print_pos_srcid =
               g_timeout_add (PRINT_POSITION_TIMEOUT,
@@ -443,13 +465,22 @@ _bus_handler (GstBus * bus, GstMessage * message,
         if (!monitor->buffering) {
           monitor->buffering = TRUE;
           gst_validate_printf (NULL, "\nStart buffering\n");
+          json_builder_add_string_value (jbuilder, "started");
           if (monitor->print_pos_srcid
               && g_source_remove (monitor->print_pos_srcid)) {
             monitor->print_pos_srcid = 0;
           }
+        } else {
+          json_builder_add_string_value (jbuilder, "progress");
         }
         gst_validate_printf (NULL, "%s %d%%  \r", "Buffering...", percent);
       }
+      json_builder_set_member_name (jbuilder, "position");
+      json_builder_add_int_value (jbuilder, percent);
+      json_builder_end_object (jbuilder);
+
+      gst_validate_send (json_builder_get_root (jbuilder));
+      g_object_unref (jbuilder);
       break;
     }
     case GST_MESSAGE_STREAM_COLLECTION:

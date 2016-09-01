@@ -43,8 +43,48 @@ static GstValidateDebugFlags _gst_validate_flags = 0;
 static GHashTable *_gst_validate_issues = NULL;
 static FILE **log_files = NULL;
 
-GType _gst_validate_report_type;
-GST_DEFINE_MINI_OBJECT_TYPE (GstValidateReport, gst_validate_report);
+/* Tcp server for communications with gst-validate-launcher */
+GSocketClient *socket_client = NULL;
+GSocketConnection *server_connection = NULL;
+GOutputStream *server_ostream = NULL;
+
+GType _gst_validate_report_type = 0;
+
+static JsonNode *
+gst_validate_report_serialize (GstValidateReport * report)
+{
+  JsonNode *node = json_node_alloc ();
+  JsonObject *jreport = json_object_new ();
+
+  json_object_set_string_member (jreport, "type", "report");
+  json_object_set_string_member (jreport, "summary", report->issue->summary);
+  json_object_set_string_member (jreport, "level",
+      gst_validate_report_level_get_name (report->level));
+  json_object_set_string_member (jreport, "detected-on", report->reporter_name);
+  json_object_set_string_member (jreport, "details", report->message);
+
+  node = json_node_init_object (node, jreport);
+
+  return node;
+}
+
+GType
+gst_validate_report_get_type (void)
+{
+  if (_gst_validate_report_type == 0) {
+    _gst_validate_report_type =
+        g_boxed_type_register_static (g_intern_static_string
+        ("GstValidateReport"), (GBoxedCopyFunc) gst_mini_object_ref,
+        (GBoxedFreeFunc) gst_mini_object_unref);
+
+    json_boxed_register_serialize_func (_gst_validate_report_type,
+        JSON_NODE_OBJECT,
+        (JsonBoxedSerializeFunc) gst_validate_report_serialize);
+  }
+
+  return _gst_validate_report_type;
+}
+
 
 GRegex *newline_regex = NULL;
 
@@ -319,8 +359,7 @@ gst_validate_report_load_issues (void)
       _("a gstreamer plugin is missing and prevented Validate from running"),
       NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, NOT_NEGOTIATED,
-      _("a NOT NEGOTIATED message has been emitted on the bus."),
-      NULL);
+      _("a NOT NEGOTIATED message has been posted on the bus."), NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, WARNING_ON_BUS,
       _("We got a WARNING message on the bus"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, ERROR_ON_BUS,
@@ -348,10 +387,58 @@ gst_validate_report_load_issues (void)
   REGISTER_VALIDATE_ISSUE (ISSUE, G_LOG_ISSUE, _("We got a g_log issue"), NULL);
 }
 
+gboolean
+gst_validate_send (JsonNode * root)
+{
+  gboolean res = FALSE;
+  JsonGenerator *jgen;
+  gsize message_length;
+  gchar *object, *message;
+  GError *error = NULL;
+
+  if (!server_ostream)
+    goto done;
+
+  jgen = json_generator_new ();
+  json_generator_set_root (jgen, root);
+
+  object = json_generator_to_data (jgen, &message_length);
+  message = g_malloc0 (message_length + 5);
+  GST_WRITE_UINT32_BE (message, message_length);
+  strcpy (&message[4], object);
+  g_free (object);
+
+  res = g_output_stream_write_all (server_ostream, message, message_length + 4,
+      NULL, NULL, &error);
+
+  if (!res) {
+    if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_PENDING)) {
+      GST_ERROR ("Stream was busy, trying again later.");
+
+      g_free (message);
+      g_object_unref (jgen);
+      g_idle_add ((GSourceFunc) gst_validate_send, root);
+      return G_SOURCE_REMOVE;
+    }
+
+    GST_ERROR ("ERROR: Can't write to remote: %s", error->message);
+  } else if (!g_output_stream_flush (server_ostream, NULL, &error)) {
+    GST_ERROR ("ERROR: Can't flush stream: %s", error->message);
+  }
+
+  g_free (message);
+  g_object_unref (jgen);
+
+done:
+  json_node_free (root);
+
+  return G_SOURCE_REMOVE;
+}
+
 void
 gst_validate_report_init (void)
 {
-  const gchar *var, *file_env;
+  const gchar *var, *file_env, *server_env;
   const GDebugKey keys[] = {
     {"fatal_criticals", GST_VALIDATE_FATAL_CRITICALS},
     {"fatal_warnings", GST_VALIDATE_FATAL_WARNINGS},
@@ -379,6 +466,42 @@ gst_validate_report_init (void)
     gst_validate_report_load_issues ();
   }
 
+  server_env = g_getenv ("GST_VALIDATE_SERVER");
+  if (server_env) {
+    GstUri *server_uri = gst_uri_from_string (server_env);
+
+    if (server_uri && !g_strcmp0 (gst_uri_get_scheme (server_uri), "tcp")) {
+      JsonBuilder *jbuilder;
+      GError *err = NULL;
+      socket_client = g_socket_client_new ();
+
+      server_connection = g_socket_client_connect_to_host (socket_client,
+          gst_uri_get_host (server_uri), gst_uri_get_port (server_uri),
+          NULL, &err);
+
+      if (!server_connection) {
+        g_clear_error (&err);
+        g_clear_object (&socket_client);
+
+      } else {
+        server_ostream =
+            g_io_stream_get_output_stream (G_IO_STREAM (server_connection));
+        jbuilder = json_builder_new ();
+        json_builder_begin_object (jbuilder);
+        json_builder_set_member_name (jbuilder, "started");
+        json_builder_add_boolean_value (jbuilder, TRUE);
+        json_builder_end_object (jbuilder);
+
+        gst_validate_send (json_builder_get_root (jbuilder));
+        g_object_unref (jbuilder);
+      }
+
+      gst_uri_unref (server_uri);
+    } else {
+      GST_ERROR ("Server URI not valid: %s", server_env);
+    }
+  }
+
   file_env = g_getenv ("GST_VALIDATE_FILE");
   if (file_env != NULL && *file_env != '\0') {
     gint i;
@@ -391,12 +514,11 @@ gst_validate_report_init (void)
         g_malloc0 (sizeof (FILE *) * (g_strv_length (wanted_files) + 1));
     for (i = 0; i < g_strv_length (wanted_files); i++) {
       FILE *log_file;
-
       if (g_strcmp0 (wanted_files[i], "stderr") == 0) {
         log_file = stderr;
-      } else if (g_strcmp0 (wanted_files[i], "stdout") == 0)
+      } else if (g_strcmp0 (wanted_files[i], "stdout") == 0) {
         log_file = stdout;
-      else {
+      } else {
         log_file = g_fopen (wanted_files[i], "w");
       }
 
@@ -420,6 +542,16 @@ gst_validate_report_init (void)
     newline_regex =
         g_regex_new ("\n", G_REGEX_OPTIMIZE | G_REGEX_MULTILINE, 0, NULL);
 #endif
+}
+
+void
+gst_validate_report_deinit (void)
+{
+  if (server_ostream)
+    g_output_stream_close (server_ostream, NULL, NULL);
+  g_clear_object (&socket_client);
+  g_clear_object (&server_connection);
+  g_clear_object (&server_ostream);
 }
 
 GstValidateIssue *

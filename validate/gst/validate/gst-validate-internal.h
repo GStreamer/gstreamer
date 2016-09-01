@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include "gst-validate-scenario.h"
 #include "gst-validate-monitor.h"
+#include <json-glib/json-glib.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gstvalidate_debug);
 #define GST_CAT_DEFAULT gstvalidate_debug
@@ -49,5 +50,6 @@ G_GNUC_INTERNAL void _priv_validate_override_registry_deinit (void);
 G_GNUC_INTERNAL GstValidateMonitor * gst_validate_get_monitor (GObject *object);
 G_GNUC_INTERNAL void gst_validate_init_runner (void);
 G_GNUC_INTERNAL void gst_validate_deinit_runner (void);
-
+G_GNUC_INTERNAL void gst_validate_report_deinit (void);
+gboolean gst_validate_send (JsonNode * root);
 #endif

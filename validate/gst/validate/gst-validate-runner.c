@@ -538,6 +538,8 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
   GstValidateReportingDetails reporter_level =
       gst_validate_reporter_get_reporting_level (report->reporter);
 
+  gst_validate_send (json_boxed_serialize (GST_MINI_OBJECT_TYPE (report),
+          report));
   /* Let's use our own reporting strategy */
   if (reporter_level == GST_VALIDATE_SHOW_UNKNOWN) {
     gst_validate_report_set_reporting_level (report,
@@ -633,18 +635,23 @@ _do_report_synthesis (GstValidateRunner * runner)
       continue;
 
     report = (GstValidateReport *) (reports->data);
+
     gst_validate_report_print_level (report);
     gst_validate_report_print_detected_on (report);
 
-    if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
+    if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
       criticals = g_list_append (criticals, report);
+      gst_validate_report_print_details (report);
+    }
 
     for (tmp = g_list_next (reports); tmp; tmp = tmp->next) {
       report = (GstValidateReport *) (tmp->data);
       gst_validate_report_print_detected_on (report);
 
-      if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
+      if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
         criticals = g_list_append (criticals, report);
+        gst_validate_report_print_details (report);
+      }
     }
     report = (GstValidateReport *) (reports->data);
     gst_validate_report_print_description (report);

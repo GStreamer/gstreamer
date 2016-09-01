@@ -19,9 +19,12 @@
 
 """ Class representing tests and test managers. """
 
+import json
 import os
 import sys
 import re
+import SocketServer
+import struct
 import time
 import utils
 import signal
@@ -441,6 +444,33 @@ class Test(Loggable):
         return self.result
 
 
+class GstValidateListener(SocketServer.BaseRequestHandler):
+    def handle(self):
+        """Implements BaseRequestHandler handle method"""
+        while True:
+            raw_len = self.request.recv(4)
+            if raw_len == '':
+                return
+            msglen = struct.unpack('>I', raw_len)[0]
+            msg = self.request.recv(msglen)
+            if msg == '':
+                return
+
+            obj = json.loads(msg)
+            test = getattr(self.server, "test")
+
+            obj_type = obj.get("type", '')
+            if obj_type == 'position':
+                test.set_position(obj['position'], obj['duration'],
+                                obj['speed'])
+            elif obj_type == 'buffering':
+                test.set_position(obj['position'], 100)
+            elif obj_type == 'action':
+                test.add_action_execution(obj)
+            elif obj_type == 'report':
+                test.add_report(obj)
+
+
 class GstValidateTest(Test):
 
     """ A class representing a particular test. """
@@ -474,6 +504,11 @@ class GstValidateTest(Test):
         if p:
             application_name = p
 
+        self.reports = []
+        self.position = -1
+        self.duration = -1
+        self.speed = 1.0
+        self.actions_infos = []
         self.media_descriptor = media_descriptor
 
         override_path = self.get_override_file(media_descriptor)
@@ -500,6 +535,57 @@ class GstValidateTest(Test):
             self.scenario = None
         else:
             self.scenario = scenario
+        self.server = None
+
+    def stop_server(self):
+        if self.server:
+            self.server.server_close()
+            self.server.shutdown()
+            self.server_thread.join()
+            self.server = None
+
+    def kill_subprocess(self):
+        Test.kill_subprocess(self)
+        self.stop_server()
+
+    def add_report(self, report):
+        self.reports.append(report)
+
+    def set_position(self, position, duration, speed=None):
+        self.position = position
+        self.duration = duration
+        if speed:
+            self.speed = speed
+
+    def add_action_execution(self, action_infos):
+        if action_infos['action-type'] == 'eos':
+            self._sent_eos_pos = time.time()
+        self.actions_infos.append(action_infos)
+
+    def server_wrapper(self, ready):
+        self.server = SocketServer.TCPServer(('localhost', 0), GstValidateListener)
+        self.server.socket.settimeout(0.0)
+        self.server.test = self
+        self.serverport = self.server.socket.getsockname()[1]
+        self.info("%s server port: %s" % (self, self.serverport))
+        ready.set()
+
+        # Activate the server; this will keep running until you
+        # interrupt the program with Ctrl-C
+        self.server.serve_forever()
+
+    def test_start(self, queue):
+        ready = threading.Event()
+        self.server_thread = threading.Thread(target=self.server_wrapper,
+                                              kwargs={'ready': ready})
+        self.server_thread.start()
+        ready.wait()
+
+        Test.test_start(self, queue)
+
+    def test_end(self):
+        Test.test_end(self)
+        self.stop_server()
 
     def get_override_file(self, media_descriptor):
         if media_descriptor:
@@ -510,10 +596,12 @@ class GstValidateTest(Test):
 
         return None
 
+    def get_current_position(self):
+        return self.position
+
     def get_current_value(self):
         if self.scenario:
-            sent_eos = self.sent_eos_position()
-            if sent_eos is not None:
+            if self._sent_eos_pos is not None:
                 t = time.time()
                 if ((t - sent_eos)) > 30:
                     if self.media_descriptor.get_protocol() == Protocols.HLS:
@@ -528,7 +616,7 @@ class GstValidateTest(Test):
 
                     return Result.FAILED
 
-        return self.get_current_position()
+        return self.position
 
     def get_subproc_env(self):
         self.validatelogs = self.logfile + '.validate.logs'
@@ -541,6 +629,7 @@ class GstValidateTest(Test):
 
         utils.touch(self.validatelogs)
         subproc_env["GST_VALIDATE_FILE"] = logfiles
+        subproc_env["GST_VALIDATE_SERVER"] = "tcp://localhost:%s" % self.serverport
         self.extra_logfiles.append(self.validatelogs)
 
         if 'GST_DEBUG' in os.environ and not self.options.redirect_logs:
@@ -598,21 +687,15 @@ class GstValidateTest(Test):
         return value
 
     def get_validate_criticals_errors(self):
-        ret = "["
-        errors = []
-        for l in open(self.validatelogs, 'r').readlines():
-            if "critical : " in l:
-                error = l.split("critical : ")[1].replace("\n", '')
-                if error not in errors:
-                    if ret != "[":
-                        ret += ", "
-                    ret += error
-                    errors.append(error)
+        ret = []
+        for report in self.reports:
+            if report['level'] == 'critical':
+                ret.append(report['summary'])
 
-        if ret == "[":
+        if not ret:
             return None
-        else:
-            return ret + "]"
+
+        return str(ret)
 
     def check_results(self):
         if self.result is Result.FAILED or self.result is Result.PASSED or self.result is Result.TIMEOUT:
@@ -637,89 +720,6 @@ class GstValidateTest(Test):
                             % (self.process.returncode, criticals))
         else:
             self.set_result(Result.PASSED)
-
-    def _parse_position(self, p):
-        self.log("Parsing %s" % p)
-        times = self.findpos_regex.findall(p)
-
-        if len(times) != 1:
-            self.warning("Got a unparsable value: %s" % p)
-            return 0, 0
-
-        return (utils.gsttime_from_tuple(times[0][:4]),
-                utils.gsttime_from_tuple(times[0][4:]))
-
-    def _parse_buffering(self, b):
-        return b.lower().split("buffering... ")[1].split("%")[0], 100
-
-    def _get_position(self):
-        position = duration = -1
-
-        self.debug("Getting position")
-        m = None
-        for l in reversed(open(self.validatelogs, 'r').readlines()):
-            l = l.lower()
-            if "<position:" in l or "buffering" in l:
-                m = l
-                break
-
-        if m is None:
-            self.debug("Could not fine any positionning info")
-            return position, duration
-
-        for j in m.split("\r"):
-            j = j.lstrip().rstrip()
-            if j.startswith("<position:") and j.endswith("/>"):
-                position, duration = self._parse_position(j)
-            elif j.startswith("buffering") and j.endswith("%"):
-                position, duration = self._parse_buffering(j)
-            else:
-                self.log("No info in %s" % j)
-
-        return position, duration
-
-    def _get_last_seek_values(self):
-        m = None
-        rate = start = stop = None
-
-        for l in reversed(open(self.validatelogs, 'r').readlines()):
-            l = l.lower()
-            if "seeking to: " in l:
-                m = l
-                break
-
-        if m is None:
-            self.debug("Could not fine any seeking info")
-            return start, stop, rate
-
-        values = self.findlastseek_regex.findall(m)
-        if len(values) != 1:
-            self.warning("Got an unparsable seek value %s", m)
-            return start, stop, rate
-
-        v = values[0]
-        return (utils.gsttime_from_tuple(v[:4]),
-                utils.gsttime_from_tuple(v[4:8]),
-                float(str(v[8]) + "." + str(v[9])))
-
-    def sent_eos_position(self):
-        if self._sent_eos_pos is not None:
-            return self._sent_eos_pos
-
-        for l in reversed(open(self.validatelogs, 'r').readlines()):
-            l = l.lower()
-            if "sending eos" in l:
-                self._sent_eos_pos = time.time()
-                return self._sent_eos_pos
-
-        return None
-
-    def get_current_position(self):
-        position, duration = self._get_position()
-        if position == -1:
-            return position
-
-        return position
 
     def get_valgrind_suppression_file(self, subdir, name):
         p = get_data_file(subdir, name)

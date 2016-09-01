@@ -188,7 +188,7 @@ G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
         _reporter_iface_init));
 
 /* GstValidateAction implementation */
-GType _gst_validate_action_type;
+GType _gst_validate_action_type = 0;
 
 struct _GstValidateActionPrivate
 {
@@ -204,7 +204,42 @@ struct _GstValidateActionPrivate
   GWeakRef scenario;
 };
 
-GST_DEFINE_MINI_OBJECT_TYPE (GstValidateAction, gst_validate_action);
+static JsonNode *
+gst_validate_action_serialize (GstValidateAction * action)
+{
+  JsonNode *node = json_node_alloc ();
+  JsonObject *jreport = json_object_new ();
+  gchar *action_args = gst_structure_to_string (action->structure);
+
+  json_object_set_string_member (jreport, "type", "action");
+  json_object_set_string_member (jreport, "action-type", action->type);
+  json_object_set_int_member (jreport, "playback-time",
+      (gint64) action->playback_time);
+  json_object_set_string_member (jreport, "args", action_args);
+  g_free (action_args);
+
+  node = json_node_init_object (node, jreport);
+
+  return node;
+}
+
+GType
+gst_validate_action_get_type (void)
+{
+  if (_gst_validate_action_type == 0) {
+    _gst_validate_action_type =
+        g_boxed_type_register_static (g_intern_static_string
+        ("GstValidateAction"), (GBoxedCopyFunc) gst_mini_object_ref,
+        (GBoxedFreeFunc) gst_mini_object_unref);
+
+    json_boxed_register_serialize_func (_gst_validate_action_type,
+        JSON_NODE_OBJECT,
+        (JsonBoxedSerializeFunc) gst_validate_action_serialize);
+  }
+
+  return _gst_validate_action_type;
+}
+
 static GstValidateAction *gst_validate_action_new (GstValidateScenario *
     scenario, GstValidateActionType * type);
 static gboolean execute_next_action (GstValidateScenario * scenario);
@@ -294,6 +329,9 @@ gboolean
 _action_check_and_set_printed (GstValidateAction * action)
 {
   if (action->priv->printed == FALSE) {
+    gst_validate_send (json_boxed_serialize (GST_MINI_OBJECT_TYPE
+            (action), action));
+
     action->priv->printed = TRUE;
 
     return FALSE;
