@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2012-05-05 19:05+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -57,9 +57,6 @@ msgstr ""
 msgid "Server sent bad data."
 msgstr "Ο διακομιστής έστειλε λάθος δεδομένα."
 
-msgid "Internal data stream error."
-msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Καμία ή άκυρη εισαγωγή ήχου, η AVI ροή θα καταρρεύσει."
 
@@ -87,9 +84,6 @@ msgstr "Το βίντεο σε αυτό το αρχείο μπορεί να μη
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Αυτό το αρχείο περιέχει πολλές ροές. Αναπαράγεται μόνο η πρώτη %d"
-
-msgid "Internal data flow error."
-msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -445,6 +439,12 @@ msgstr "Δεν είναι δυνατή η λειτουργία χωρίς ρολ
 
 #~ msgid "Failed to query sound server capabilities"
 #~ msgstr "Αποτυχία αναζήτησης των δυνατοτήτων του διακομιστή ήχου"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
 
 #~ msgid "Bass"
 #~ msgstr "Μπάσα"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-02-21 16:52+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -53,9 +53,6 @@ msgstr "发生了网络错误，或服务器意外地关闭了连接。"
 msgid "Server sent bad data."
 msgstr "服务器发送了错误的数据。"
 
-msgid "Internal data stream error."
-msgstr "内部数据流错误。"
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "没有或无效的输入音频，AVI 流将损坏。"
 
@@ -83,9 +80,6 @@ msgstr "此文件中的视频可能无法正确播放。"
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "此文件包含了太多的流。只播放前面 %d 个"
-
-msgid "Internal data flow error."
-msgstr "内部数据流错误。"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -408,6 +402,12 @@ msgstr "尚不支持在运行时更改分辨率。"
 
 msgid "Cannot operate without a clock"
 msgstr "没有时钟的话无法操作"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "内部数据流错误。"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "内部数据流错误。"
 
 #~ msgid "Failed to query sound server capabilities"
 #~ msgstr "查寻音频服务器的服务失败"

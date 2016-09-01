@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2010-08-16 03:22+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -56,9 +56,6 @@ msgstr ""
 msgid "Server sent bad data."
 msgstr ""
 
-msgid "Internal data stream error."
-msgstr "Eroare internă a fluxului de date."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
 "Intrarea audio nu există sau este nevalidă, fluxul de date AVI va fi corupt."
@@ -87,9 +84,6 @@ msgstr "Este posibil ca fișierul video să nu fie redat corect."
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Fișierul conține prea multe fluxuri. Se redau doar primele %d"
-
-msgid "Internal data flow error."
-msgstr "Eroare internă a fluxului de date."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -453,6 +447,12 @@ msgstr "Schimbarea rezoluției pe durata rulării nu este incă suportată."
 
 msgid "Cannot operate without a clock"
 msgstr "Nu se poate opera fără un ceas"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Eroare internă a fluxului de date."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Eroare internă a fluxului de date."
 
 #, fuzzy
 #~ msgid "Device '%s' does not support video capture"

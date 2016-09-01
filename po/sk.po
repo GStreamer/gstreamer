@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-05-20 12:31+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -53,9 +53,6 @@ msgstr "Vyskytla sa sieťová chyba, alebo server nečakane uzavrel spojenie."
 msgid "Server sent bad data."
 msgstr "Server odoslal chybné údaje."
 
-msgid "Internal data stream error."
-msgstr "Vnútorná chyba prúdu údajov."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Žiadny alebo chybný vstup zvuku, prúd údajov AVI bude poškodený."
 
@@ -84,9 +81,6 @@ msgstr "Video v tomto súbore možno nebude hrať korektne."
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Tento súbor obsahuje príliš mnoho prúdov údajov. Prehrávam iba prvý %d"
-
-msgid "Internal data flow error."
-msgstr "Vnútorná chyba toku údajov."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -428,6 +422,12 @@ msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
 
 msgid "Cannot operate without a clock"
 msgstr "Nemôžem fungovať bez hodín"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Vnútorná chyba prúdu údajov."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Vnútorná chyba toku údajov."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nepodarilo sa nadviazať spojenie so zvukovým serverom"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2015-01-10 21:07+0100\n"
 "Last-Translator: Volkan Gezer <volkangezer@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -58,9 +58,6 @@ msgstr ""
 msgid "Server sent bad data."
 msgstr "Sunucu yetersiz veri gönderdi."
 
-msgid "Internal data stream error."
-msgstr "İç veri akım hatası."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Geçerli bir ses girişi bulunamadı. AVI akışı kesilecek."
 
@@ -88,9 +85,6 @@ msgstr "Bu dosyadaki vidyo doğru oynatılamıyabilir."
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Bu dosya çok fazla akış içeriyor. Sadece ilki oynatılıyor %d"
-
-msgid "Internal data flow error."
-msgstr "İç veri akış hatası."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -423,6 +417,12 @@ msgstr "Çalışırken çözünürlüğü değiştirmek henüz desteklenmiyor."
 
 msgid "Cannot operate without a clock"
 msgstr "Saat olmadan çalışamaz"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "İç veri akım hatası."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "İç veri akış hatası."
 
 #~ msgid "Device '%s' does not support video capture"
 #~ msgstr "Aygıt '%s' video yakalamayı desteklemiyor"

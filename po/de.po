@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-02-22 23:42+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -63,9 +63,6 @@ msgstr ""
 msgid "Server sent bad data."
 msgstr "Server gab unerwartete Daten zurück."
 
-msgid "Internal data stream error."
-msgstr "Interner Datenstromfehler."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Kein oder ungültiger Eingabeton, der AVI-Strom wird fehlerhaft sein."
 
@@ -97,9 +94,6 @@ msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "Diese Datei enthält zu viele Ströme. Es werden nur die ersten %d "
 "wiedergegeben"
-
-msgid "Internal data flow error."
-msgstr "Interner Datenstromfehler."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -450,6 +444,12 @@ msgstr "Ein Wechsel der Auflösung zur Laufzeit wird noch nicht unterstützt."
 # Taktgeber klingt gut.
 msgid "Cannot operate without a clock"
 msgstr "Es kann nicht ohne einen Taktgeber gearbeitet werden."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Interner Datenstromfehler."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Interner Datenstromfehler."
 
 #~ msgid "Device '%s' does not support video capture"
 #~ msgstr "Gerät »%s« unterstützt keine Videoaufnahme"

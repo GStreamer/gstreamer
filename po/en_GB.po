@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -55,9 +55,6 @@ msgstr ""
 msgid "Server sent bad data."
 msgstr ""
 
-msgid "Internal data stream error."
-msgstr ""
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "No or invalid input audio, AVI stream will be corrupt."
 
@@ -84,9 +81,6 @@ msgstr ""
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
-msgstr ""
-
-msgid "Internal data flow error."
 msgstr ""
 
 msgid ""

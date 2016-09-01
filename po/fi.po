@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2010-11-17 23:03+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -58,9 +58,6 @@ msgstr "Tapahtui verkkovirhe tai palvelin sulki yhteyden yllättäen."
 msgid "Server sent bad data."
 msgstr "Palvelin lähetti virheellistä dataa."
 
-msgid "Internal data stream error."
-msgstr "Sisäisen tietovirran virhe."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
 "Ääntä ei ole tai äänilähde on viallinen, AVI-virta tulee olemaan "
@@ -90,9 +87,6 @@ msgstr "Tiedostossa olevaa videota ei ehkä voida näyttää oikein."
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Tiedosto sisältää useita virtoja. Soitetaan vain ensimmäiset %d"
-
-msgid "Internal data flow error."
-msgstr "Sisäisen tietovirran virhe."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -437,6 +431,12 @@ msgstr "Resoluution vaihto käytön aikana ei ole vielä mahdollista."
 
 msgid "Cannot operate without a clock"
 msgstr "Ei voitu toimia ilman kelloa"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Sisäisen tietovirran virhe."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Sisäisen tietovirran virhe."
 
 #, fuzzy
 #~ msgid "Device '%s' does not support video capture"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2011-06-04 21:48+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -53,9 +53,6 @@ msgstr ""
 msgid "Server sent bad data."
 msgstr ""
 
-msgid "Internal data stream error."
-msgstr "Interna datumflu-eraro."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
 
@@ -82,9 +79,6 @@ msgstr ""
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
-msgstr ""
-
-msgid "Internal data flow error."
 msgstr ""
 
 msgid ""
@@ -407,6 +401,9 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr ""
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Interna datumflu-eraro."
 
 #~ msgid "Bass"
 #~ msgstr "Baso"

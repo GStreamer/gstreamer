@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-02-21 09:55+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -57,9 +57,6 @@ msgstr "Произошла сетевая ошибка или сервер не�
 msgid "Server sent bad data."
 msgstr "Сервер прислал некорректные данные."
 
-msgid "Internal data stream error."
-msgstr "Внутренняя ошибка потока данных."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
 "Входящие аудио-данные отсутствуют или недействительны, поток AVI будет "
@@ -92,9 +89,6 @@ msgstr "Видео из этого файла может быть воспрои
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "Файл содержит слишком много потоков. Будет воспроизведёно только первых %d"
-
-msgid "Internal data flow error."
-msgstr "Внутренняя ошибка потока данных."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -439,6 +433,12 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Операция невозможна без часов"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Внутренняя ошибка потока данных."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Внутренняя ошибка потока данных."
 
 #~ msgid "Device '%s' does not support video capture"
 #~ msgstr "Устройство «%s» не поддерживает захват видео"

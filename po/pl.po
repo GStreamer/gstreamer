@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-02-20 21:43+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -51,9 +51,6 @@ msgstr "Wystąpił błąd sieciowy lub serwer nieoczekiwanie zamknął połącze
 msgid "Server sent bad data."
 msgstr "Serwer przysłał błędne dane."
 
-msgid "Internal data stream error."
-msgstr "Błąd wewnętrzny strumienia danych."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Brak lub niepoprawne wejście dźwięku, strumień AVI będzie uszkodzony."
 
@@ -82,9 +79,6 @@ msgstr "Obraz w tym pliku może nie być odtwarzany prawidłowo."
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Ten plik zawiera zbyt dużo strumieni. Odtwarzanie tylko %d pierwszych"
-
-msgid "Internal data flow error."
-msgstr "Błąd wewnętrzny przepływu danych."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -426,3 +420,9 @@ msgstr "Zmiana rozdzielczości w czasie działania nie jest jeszcze obsługiwana
 
 msgid "Cannot operate without a clock"
 msgstr "Nie można pracować bez zegara"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Błąd wewnętrzny strumienia danych."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Błąd wewnętrzny przepływu danych."

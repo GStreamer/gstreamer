@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -58,9 +58,6 @@ msgstr ""
 msgid "Server sent bad data."
 msgstr "El servidor ha enviat dades errònies."
 
-msgid "Internal data stream error."
-msgstr "S'ha produït un error intern de flux de dades."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Manca o no és vàlida l'entrada d'àudio, el flux AVI estarà malmès."
 
@@ -89,9 +86,6 @@ msgstr "El vídeo en aquest fitxer podria no reproduir-se correctament."
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "Aquest fitxer conté massa fluxos. Només s'estan reproduint els primers %d"
-
-msgid "Internal data flow error."
-msgstr "S'ha produït un error intern de flux de dades."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -469,6 +463,12 @@ msgstr "Encara no es permet el canvi de la resolució en temps d'execució."
 
 msgid "Cannot operate without a clock"
 msgstr "No es pot operar sense un rellotge"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "S'ha produït un error intern de flux de dades."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "S'ha produït un error intern de flux de dades."
 
 #, fuzzy
 #~ msgid "Device '%s' does not support video capture"

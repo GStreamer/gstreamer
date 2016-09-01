@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-03-14 18:35+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -59,9 +59,6 @@ msgstr ""
 msgid "Server sent bad data."
 msgstr "A kiszolgáló hibás adatokat küldött."
 
-msgid "Internal data stream error."
-msgstr "Belső adatfolyam-hiba."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nincs vagy érvénytelen bemeneti hang, az AVI-folyam sérült lesz."
 
@@ -91,9 +88,6 @@ msgstr "A fájlban található videó lehet, hogy nem játszható le megfelelőe
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "A fájl túl sok adatfolyamot tartalmaz. Csak az első %d kerül lejátszásra."
-
-msgid "Internal data flow error."
-msgstr "Belső adatfolyam-hiba."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -437,6 +431,12 @@ msgstr "A felbontás módosítása futás közben még nem támogatott."
 
 msgid "Cannot operate without a clock"
 msgstr "Óra nélkül lehetetlen a működés"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Belső adatfolyam-hiba."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Belső adatfolyam-hiba."
 
 #~ msgid "Device '%s' does not support video capture"
 #~ msgstr "A(z) „%s” eszköz nem támogatja a videofelvételt"

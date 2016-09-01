@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-05-27 12:47-0700\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -56,9 +56,6 @@ msgstr ""
 msgid "Server sent bad data."
 msgstr "Poslužitelj je poslao neispravne podatke."
 
-msgid "Internal data stream error."
-msgstr "Interna greška toka (stream) podataka."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nema audio ulaza ili je neispravan, AVI stream će biti iskvaren."
 
@@ -89,9 +86,6 @@ msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "U ovoj datoteci ima previše streamova (streams). Samo prvih %d će se "
 "reproducirati"
-
-msgid "Internal data flow error."
-msgstr "Interna greška protoka podataka."
 
 # https://gstreamer.freedesktop.org/documentation/rtp.html
 msgid ""
@@ -435,6 +429,12 @@ msgstr "Promjena rezolucije u tijeku rada (runtime) još nije podržana."
 
 msgid "Cannot operate without a clock"
 msgstr "Ne mogu raditi bez takta (sata)"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Interna greška toka (stream) podataka."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Interna greška protoka podataka."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Ne mogu ostvariti vezu prema poslužitelju zvuka"

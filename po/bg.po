@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-02-21 21:03+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
@@ -54,9 +54,6 @@ msgstr "Възникна мрежова грешка или сървърът н�
 msgid "Server sent bad data."
 msgstr "Сървърът изпрати лоши данни."
 
-msgid "Internal data stream error."
-msgstr "Вътрешна грешка на потока от данни."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Аудио входът липсва или е грешен. Потокът с AVI ще бъде повреден."
 
@@ -85,9 +82,6 @@ msgstr "Видео потокът в този файл може да не се �
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "Този файл съдържа прекалено много потоци. Изпълняват се само първите %d"
-
-msgid "Internal data flow error."
-msgstr "Вътрешна грешка в потока с данни."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -427,3 +421,9 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Работата без часовник е невъзможна."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Вътрешна грешка на потока от данни."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Вътрешна грешка в потока с данни."

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-02-27 16:40+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -57,9 +57,6 @@ msgstr "Došlo k chybě sítě nebo server neočekávaně ukončil spojení."
 msgid "Server sent bad data."
 msgstr "Server odeslal chybná data."
 
-msgid "Internal data stream error."
-msgstr "Vnitřní chyba datového proudu."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Žádný nebo neplatný zvukový vstup, proud AVI bude poškozen."
 
@@ -87,9 +84,6 @@ msgstr "Video v tomto souboru se nemusí přehrát správně."
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Tento soubor obsahuje příliš mnoho proudů. Přehrává se pouze první %d"
-
-msgid "Internal data flow error."
-msgstr "Vnitřní chyba datového toku."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -429,3 +423,9 @@ msgstr "Změna rozlišení za běhu zatím není podporována."
 
 msgid "Cannot operate without a clock"
 msgstr "Není možné fungovat bez hodin"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Vnitřní chyba datového proudu."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Vnitřní chyba datového toku."

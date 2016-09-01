@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-02-21 07:25+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -57,9 +57,6 @@ msgstr "Có lỗi mạng đã xảy ra, hoặc máy chủ đóng kết nối b�
 msgid "Server sent bad data."
 msgstr "Máy chủ gửi dữ liệu sai."
 
-msgid "Internal data stream error."
-msgstr "Lỗi luồng dữ liệu nội bộ."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
 "Chưa có dữ liệu âm thanh nhập, hoặc dữ liệu âm thanh nhập không hợp lệ. Vì "
@@ -89,9 +86,6 @@ msgstr "Ảnh động trong tập tin này có thể không phát đúng."
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Tập tin này chứa quá nhiều luồng nên chỉ phát %d đầu tiên"
-
-msgid "Internal data flow error."
-msgstr "Lỗi luồng dữ liệu nội bộ."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -438,6 +432,12 @@ msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi ch
 
 msgid "Cannot operate without a clock"
 msgstr "Không thể thao tác khi không có đồng hồ"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Lỗi luồng dữ liệu nội bộ."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Lỗi luồng dữ liệu nội bộ."
 
 #~ msgid "Device '%s' does not support video capture"
 #~ msgstr "Thiết bị “%s” không hỗ trợ chức năng quay video"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2010-03-25 12:37+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -57,9 +57,6 @@ msgstr ""
 msgid "Server sent bad data."
 msgstr ""
 
-msgid "Internal data stream error."
-msgstr "Datu-korrontearen barne-errorea."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
 "Ez dago audio-sarrerarik, edo baliogabea da. AVI korrontea hondatua egongo "
@@ -91,9 +88,6 @@ msgstr ""
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "Fitxategi horrek korronte gehiegi ditu. Erreproduzitu soilik lehen %d(r)ak"
-
-msgid "Internal data flow error."
-msgstr "Datu-fluxuaren barne-errorea."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -459,6 +453,12 @@ msgstr "Oraindik ez dago onartua exekutatu bitartean bereizmena aldatzea."
 
 msgid "Cannot operate without a clock"
 msgstr "Ezin du funtzionatu erlojurik gabe"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Datu-korrontearen barne-errorea."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Datu-fluxuaren barne-errorea."
 
 #, fuzzy
 #~ msgid "Device '%s' does not support video capture"

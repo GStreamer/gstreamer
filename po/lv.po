@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2014-04-20 16:38+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -58,9 +58,6 @@ msgstr "Notika tīkla kļūda, vai serveris negaidīti aizvēra savienojumu."
 msgid "Server sent bad data."
 msgstr "Serveris nosūtīja sliktus datus."
 
-msgid "Internal data stream error."
-msgstr "Iekšēja datu plūsmas kļūda."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nav vai nederīgs ievades audio, AVI straume tiks bojāta."
 
@@ -88,9 +85,6 @@ msgstr "Video šajā datnē varētu tikt atskaņots nepareizi."
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Šī datne satur pārāk daudz straumju. Tiek atskaņota tikai pirmā %d"
-
-msgid "Internal data flow error."
-msgstr "Iekšēja datu plūsmas kļūda."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -433,6 +427,12 @@ msgstr "Izšķirtspējas mainīšana izpildlaikā pašlaik netiek atbalstīta."
 
 msgid "Cannot operate without a clock"
 msgstr "Nevar veikt darbības bez pulksteņa"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Iekšēja datu plūsmas kļūda."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Iekšēja datu plūsmas kļūda."
 
 #~ msgid "Device '%s' does not support video capture"
 #~ msgstr "Ierīce “%s” neatbalsta video tveršanu"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2011-02-12 18:30+0100\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -56,9 +56,6 @@ msgstr ""
 msgid "Server sent bad data."
 msgstr "El servidor envió datos erróneos."
 
-msgid "Internal data stream error."
-msgstr "Error interno de flujo de datos."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "El audio no existe o no es válido, el flujo AVI estará corrupto."
 
@@ -88,9 +85,6 @@ msgstr ""
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "Este archivo contiene demasiados flujos. Sólo se reproducirá el primer %d"
-
-msgid "Internal data flow error."
-msgstr "Error en el flujo de datos interno."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -465,6 +459,12 @@ msgstr "El cambio de resolución durante la reproducción aún no está soportad
 
 msgid "Cannot operate without a clock"
 msgstr "No se puede operar sin reloj"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Error interno de flujo de datos."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Error en el flujo de datos interno."
 
 #, fuzzy
 #~ msgid "Device '%s' does not support video capture"

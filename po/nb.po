@@ -2,21 +2,21 @@
 # This file is put in the public domain.
 #
 # Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
-# Johnny A. Solbu <johnny@solbu.net>, 2012-2015
+# Johnny A. Solbu <johnny@solbu.net>, 2012-2016
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.6.0\n"
+"Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
-"PO-Revision-Date: 2015-12-22 21:12+0100\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
+"PO-Revision-Date: 2016-08-05 23:47+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
 "Language: nb_NO\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.6.9\n"
+"X-Generator: Poedit 1.8.7.1\n"
 
 msgid "Jack server not found"
 msgstr "Jack-server ikke funnet"
@@ -54,9 +54,6 @@ msgstr "En nettverksfeil oppstod, eller tjeneren lukket uventet tilkoblingen."
 msgid "Server sent bad data."
 msgstr "Tjener sendte ugyldige data."
 
-msgid "Internal data stream error."
-msgstr "Intern feil i datastrøm."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Ingen eller ugyldig inndatalyd, AVI-strømmen vil bli skadet."
 
@@ -84,9 +81,6 @@ msgstr "Videoen i denne filen spilles kanskje ikke av korrekt."
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Filen inneholder for mange strømmer. Spiller bare første %d"
-
-msgid "Internal data flow error."
-msgstr "Intern dataflytfeil."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -151,10 +145,10 @@ msgid "Could not open audio device for recording."
 msgstr "Kunne ikke åpne lydenhet for opptak."
 
 msgid "CoreAudio device not found"
-msgstr ""
+msgstr "CoreAudio-enhet ikke funnet"
 
 msgid "CoreAudio device could not be opened"
-msgstr ""
+msgstr "CoreAudio-enhet kune ikke åpnes"
 
 msgid "Record Source"
 msgstr "Opptakskilde"
@@ -423,6 +417,12 @@ msgstr "Endring av oppløsning under kjøring støttes ikke enda."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke operere uten en klokke"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Intern feil i datastrøm."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Intern dataflytfeil."
 
 #~ msgid "Device '%s' does not support video capture"
 #~ msgstr "Enhet «%s» støtter ikke videoopptak"

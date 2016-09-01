@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-03-27 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -57,9 +57,6 @@ msgstr ""
 msgid "Server sent bad data."
 msgstr "Server sendte ugyldige data."
 
-msgid "Internal data stream error."
-msgstr "Intern datastrømsfejl."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Ingen eller defekt inddatalyd, AVI-sekvens vil blive ødelagt."
 
@@ -90,9 +87,6 @@ msgstr "Videoen i denne fil afspilles måske ikke korrekt."
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Denne fil indeholder for mange strømme. Afspil først kun %d"
-
-msgid "Internal data flow error."
-msgstr "Intern datastrømsfejl."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -431,6 +425,12 @@ msgstr "Ændring af opløsning under kørsel er endnu ikke understøttet."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke fungere uden et ur"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Intern datastrømsfejl."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Intern datastrømsfejl."
 
 #~ msgid "Device '%s' does not support video capture"
 #~ msgstr "Enheden »%s« understøtter ikke videooptagelse"

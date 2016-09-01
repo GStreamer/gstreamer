@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2016-03-05 09:52+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -54,9 +54,6 @@ msgstr "Дошло је до грешке на мрежи, или је серв�
 msgid "Server sent bad data."
 msgstr "Сервер је послао лоше податке."
 
-msgid "Internal data stream error."
-msgstr "Унутрашња грешка тока података."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити оштећен."
 
@@ -85,9 +82,6 @@ msgstr "Видео у овој датотеци можда неће бити п�
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Ова датотека садржи превише токова. Пуштам само први %d"
-
-msgid "Internal data flow error."
-msgstr "Унутрaшња грешка протока података."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -427,6 +421,12 @@ msgstr "Промена резолуције приликом извршавањ�
 
 msgid "Cannot operate without a clock"
 msgstr "Не могу да радим без сата"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Унутрашња грешка тока података."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Унутрaшња грешка протока података."
 
 #~ msgid "Device '%s' does not support video capture"
 #~ msgstr "Уређај „%s“ не подржава видео снимање"

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:45+0300\n"
+"POT-Creation-Date: 2016-09-01 11:23+0300\n"
 "PO-Revision-Date: 2014-04-09 22:52+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -59,9 +59,6 @@ msgstr ""
 msgid "Server sent bad data."
 msgstr "Strežnik je poslal slabe podatke."
 
-msgid "Internal data stream error."
-msgstr "Notranja napaka pretoka podatkov."
-
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Napaka vhodnega zvoka, AVI pretok bo pokvarjen."
 
@@ -89,9 +86,6 @@ msgstr "Video zapis v tej datoteki morda ne bo predvajan pravilno."
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Datoteka vsebuje več pretokov. Predvajano bo le začetnih %d"
-
-msgid "Internal data flow error."
-msgstr "Notranja napaka pretoka podatkov."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -439,6 +433,12 @@ msgstr "Spreminjanje ločljivosti med delovanjem še ni podprto."
 
 msgid "Cannot operate without a clock"
 msgstr "Izvajanje opravil brez ure ni mogoče"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Notranja napaka pretoka podatkov."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Notranja napaka pretoka podatkov."
 
 #~ msgid "Device '%s' does not support video capture"
 #~ msgstr "Naprava \"%s\" ne podpira zajemanja videa."
