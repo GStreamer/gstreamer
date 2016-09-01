@@ -812,6 +812,14 @@ gst_decklink_video_src_start_streams (GstElement * element)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (element);
   HRESULT res;
+  GstClock *clock;
+
+  clock = gst_element_get_clock (element);
+  if (!clock) {
+    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+        ("Streams supposed to start but we have no clock"));
+    return;
+  }
 
   if (self->input->video_enabled && (!self->input->audiosrc
           || self->input->audio_enabled)
@@ -823,7 +831,7 @@ gst_decklink_video_src_start_streams (GstElement * element)
     if (res != S_OK) {
       GST_ELEMENT_ERROR (self, STREAM, FAILED,
           (NULL), ("Failed to start streams: 0x%08x", res));
-      return;
+      goto done;
     }
 
     self->input->started = TRUE;
@@ -839,13 +847,15 @@ gst_decklink_video_src_start_streams (GstElement * element)
     // We can't use the normal base time for the external clock
     // because we might go to PLAYING later than the pipeline
     self->internal_base_time = gst_clock_get_internal_time (self->input->clock);
-    self->external_base_time =
-        gst_clock_get_internal_time (GST_ELEMENT_CLOCK (self));
+    self->external_base_time = gst_clock_get_internal_time (clock);
 
     g_mutex_lock (&self->input->lock);
   } else {
     GST_DEBUG_OBJECT (self, "Not starting streams yet");
   }
+
+done:
+  gst_object_unref (clock);
 }
 
 static GstStateChangeReturn
@@ -883,11 +893,17 @@ gst_decklink_video_src_change_state (GstElement * element,
       GstClock *clock;
 
       clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
-      if (clock && clock != self->input->clock) {
-        gst_clock_set_master (self->input->clock, clock);
-      }
-      if (clock)
+      if (clock) {
+        if (clock != self->input->clock) {
+          gst_clock_set_master (self->input->clock, clock);
+        }
+
         gst_object_unref (clock);
+      } else {
+        GST_ELEMENT_ERROR (self, STREAM, FAILED,
+            (NULL), ("Need a clock to go to PLAYING"));
+        ret = GST_STATE_CHANGE_FAILURE;
+      }
 
       break;
     }
@@ -895,6 +911,8 @@ gst_decklink_video_src_change_state (GstElement * element,
       break;
   }
 
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
