@@ -36,6 +36,7 @@ _check_for_all_layers (uint32_t check_count, const char **check_names,
 
   if (check_count <= 0 || layer_count <= 0) {
     GST_WARNING ("no layers requested or supported");
+    *supported_layers = NULL;
     return FALSE;
   }
 
@@ -55,6 +56,7 @@ _check_for_all_layers (uint32_t check_count, const char **check_names,
       GST_WARNING ("Cannot find layer: %s", check_names[i]);
   }
 
+  (*supported_layers)[k] = NULL;
   *supported_layers_count = g_strv_length (*supported_layers);
 
   return TRUE;
