@@ -36,12 +36,14 @@ GObject
           ADPCMDec
           GstDtsDec
           GstFaad
+          GstFdkAacDec
           GstGSMDec
           GstSbcDec
           GstSirenDec
         GstAudioEncoder
           ADPCMEnc
           GstFaac
+          GstFdkAacEnc
           GstGSMEnc
           GstSbcEnc
           GstSirenEnc
@@ -66,6 +68,9 @@ GObject
           GstMpegvParse
           GstOpusParse
           GstPngParse
+          GstRawBaseParse
+            GstRawAudioParse
+            GstRawVideoParse
           GstVC1Parse
         GstBaseSink
           GstAudioBaseSink
@@ -115,6 +120,7 @@ GObject
             GstDvbSrc
             GstGLTestSrc
             GstMMS
+            GstQtSrc
             GstRTMPSrc
             GstRfbSrc
             GstShmSrc
@@ -138,6 +144,8 @@ GObject
               ladspa-sine-so-sine-fcaa
             GstOFA
             GstStereo
+            GstWebrtcDsp
+            GstWebrtcEchoProbe
           GstBayer2RGB
           GstDebugSpy
           GstDtmfDetect
@@ -181,6 +189,7 @@ GObject
           GstIvtc
           GstRGB2Bayer
           GstRemoveSilence
+          GstTimeCodeStamper
           GstVideoFilter
             GstBurn
             GstChromaHold
@@ -247,6 +256,7 @@ GObject
             GstDashDemux
             GstHLSDemux
             GstMssDemux
+          GstAudioParse
           GstAutoConvert
           GstAutoVideoConvert
           GstBaseCameraSrc
@@ -268,6 +278,8 @@ GObject
           GstSDPDemux
           GstSdpSrc
           GstUnalignedAudioParse
+          GstUnalignedVideoParse
+          GstVideoParse
           GstViewfinderBin
           RsnDvdBin
         GstBz2dec
@@ -309,9 +321,6 @@ GObject
         GstPitch
         GstRTPBasePayload
           GstRtpAsfPay
-        GstRawParse
-          GstAudioParse
-          GstVideoParse
         GstRtpOnvifParse
         GstRtpOnvifTimestamp
         GstSFDec
@@ -326,6 +335,7 @@ GObject
         GstTagMux
           GstId3Mux
         GstTeletextDec
+        GstTimeCodeWait
         GstUvcH264MjpgDemux
         GstVideoDecoder
           GstLibde265Dec

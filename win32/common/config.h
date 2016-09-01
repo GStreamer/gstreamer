@@ -86,7 +86,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2016-06-06"
+#define GST_PACKAGE_RELEASE_DATETIME "2016-09-01"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -226,6 +226,9 @@
 /* Define to enable DVB Source (used by dvb). */
 #undef HAVE_DVB
 
+/* Define to 1 if the system has the type `EGLAttrib'. */
+#undef HAVE_EGLATTRIB
+
 /* Define to enable building of experimental plug-ins. */
 #undef HAVE_EXPERIMENTAL
 
@@ -243,6 +246,9 @@
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
+
+/* Define to enable fdkaac plugin (used by fdkaac). */
+#undef HAVE_FDK_AAC
 
 /* FIONREAD ioctl found in sys/filio.h */
 #undef HAVE_FIONREAD_IN_SYS_FILIO
@@ -354,6 +360,9 @@
 
 /* Define to enable libvisual visualization library (used by libvisual). */
 #undef HAVE_LIBVISUAL
+
+/* Define if we have liblilv >= 0.22 */
+#undef HAVE_LILV_0_22
 
 /* Define to enable Linear Systems SDI plugin (used by linsys). */
 #undef HAVE_LINSYS
@@ -494,6 +503,9 @@
 
 /* Define to enable Qt elements (used by qt). */
 #undef HAVE_QT
+
+/* Define if building with QTKit */
+#undef HAVE_QTKIT
 
 /* Define if Qt eglfs integration is installed */
 #undef HAVE_QT_EGLFS
@@ -725,7 +737,7 @@
 #define PACKAGE_NAME "GStreamer Bad Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.9.1"
+#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.9.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-bad"
@@ -734,7 +746,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.9.1"
+#define PACKAGE_VERSION "1.9.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -778,7 +790,7 @@
 #undef USE_EGL_RPI
 
 /* Version number of package */
-#define VERSION "1.9.1"
+#define VERSION "1.9.2"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

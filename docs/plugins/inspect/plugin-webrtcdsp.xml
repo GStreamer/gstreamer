@@ -3,7 +3,7 @@
   <description>Voice pre-processing using WebRTC Audio Processing Library</description>
   <filename>../../ext/webrtcdsp/.libs/libgstwebrtcdsp.so</filename>
   <basename>libgstwebrtcdsp.so</basename>
-  <version>1.9.0.1</version>
+  <version>1.9.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>WebRTCDsp</package>

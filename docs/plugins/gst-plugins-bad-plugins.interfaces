@@ -8,6 +8,7 @@ GstAsfMux GstTagSetter
 GstAudioEncoder GstPreset
 GstAudioInterleave GstChildProxy
 GstAudioMixer GstChildProxy
+GstAudioParse GstChildProxy
 GstAutoConvert GstChildProxy
 GstAutoVideoConvert GstChildProxy
 GstBaseCameraSrc GstChildProxy
@@ -32,6 +33,7 @@ GstEglGlesSink GstVideoOverlay
 GstFPSDisplaySink GstChildProxy
 GstFaac GstPreset
 GstFaceOverlay GstChildProxy
+GstFdkAacEnc GstPreset
 GstFreeverb GstPreset
 GstGLBaseMixer GstChildProxy
 GstGLColorBalance GstColorBalance
@@ -82,12 +84,14 @@ GstSdpSrc GstChildProxy GstURIHandler
 GstSirenEnc GstPreset
 GstTagMux GstTagSetter
 GstUnalignedAudioParse GstChildProxy
+GstUnalignedVideoParse GstChildProxy
 GstUvcH264Src GstChildProxy
 GstVCDSrc GstURIHandler
 GstVP8Enc GstPreset GstTagSetter
 GstVP8Enc GstTagSetter GstPreset
 GstVideoAggregator GstChildProxy
 GstVideoEncoder GstPreset
+GstVideoParse GstChildProxy
 GstViewfinderBin GstChildProxy
 GstVoAacEnc GstPreset
 GstVoAmrWbEnc GstPreset

@@ -58965,7 +58965,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Eyes profile</NICK>
 <BLURB>Location of Haar cascade file to use for eye-pair detection.</BLURB>
-<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_eyepair_small.xml"</DEFAULT>
+<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_eyepair_small.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59015,7 +59015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Mouth profile</NICK>
 <BLURB>Location of Haar cascade file to use for mouth detection.</BLURB>
-<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_mouth.xml"</DEFAULT>
+<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_mouth.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59025,7 +59025,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Nose profile</NICK>
 <BLURB>Location of Haar cascade file to use for nose detection.</BLURB>
-<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_nose.xml"</DEFAULT>
+<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_nose.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59035,7 +59035,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Face profile</NICK>
 <BLURB>Location of Haar cascade file to use for face detection.</BLURB>
-<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59075,7 +59075,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Profile</NICK>
 <BLURB>Location of Haar cascade file to use for face blurion.</BLURB>
-<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -60041,11 +60041,11 @@
 <ARG>
 <NAME>GstDashDemux::max-bitrate</NAME>
 <TYPE>guint</TYPE>
-<RANGE>>= 1000</RANGE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max bitrate</NICK>
-<BLURB>Max of bitrate supported by target decoder.</BLURB>
-<DEFAULT>24000000</DEFAULT>
+<BLURB>Max of bitrate supported by target video decoder (0 = no maximum).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -60066,6 +60066,36 @@
 <NICK>Presentation delay</NICK>
 <BLURB>Default presentation delay (in seconds, milliseconds or fragments) (e.g. 12s, 2500ms, 3f).</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDashDemux::max-video-framerate</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max video framerate</NICK>
+<BLURB>Max video framerate to select (0/1 = no maximum).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDashDemux::max-video-height</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max video height</NICK>
+<BLURB>Max video height to select (0 = no maximum).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDashDemux::max-video-width</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max video width</NICK>
+<BLURB>Max video width to select (0 = no maximum).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -67841,6 +67871,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstDecklinkVideoSrc::timecode-format</NAME>
+<TYPE>GstDecklinkTimecodeFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Timecode format</NICK>
+<BLURB>Timecode format type to use for input.</BLURB>
+<DEFAULT>bmdTimecodeRP188Any</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDecklinkVideoSink::device-number</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -67868,6 +67908,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Video format</NICK>
 <BLURB>Video format type to use for playback.</BLURB>
 <DEFAULT>bmdFormat8BitYUV</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSink::timecode-format</NAME>
+<TYPE>GstDecklinkTimecodeFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Timecode format</NICK>
+<BLURB>Timecode format type to use for playback.</BLURB>
+<DEFAULT>bmdTimecodeRP188Any</DEFAULT>
 </ARG>
 
 <ARG>
@@ -68052,7 +68102,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 
 <ARG>
 <NAME>GstOpenh264Enc::slice-mode</NAME>
-<TYPE>GstOpenh264encSliceModes</TYPE>
+<TYPE>GstOpenh264EncSliceModes</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Slice mode</NICK>
@@ -72201,6 +72251,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstWebrtcDsp::delay-agnostic</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Delay Agnostic</NICK>
+<BLURB>Enable or disable the delay agnostic mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDC1394Src::dma</NAME>
 <TYPE>guint</TYPE>
 <RANGE>>= 1</RANGE>
@@ -72238,5 +72298,255 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Camera unit</NICK>
 <BLURB>The unit number of the camera (-1 if no unit number is used).</BLURB>
 <DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTimeCodeWait::target-timecode</NAME>
+<TYPE>GstVideoTimeCode*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target timecode (object)</NICK>
+<BLURB>Timecode to wait for (object).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTimeCodeWait::target-timecode-string</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target timecode (string)</NICK>
+<BLURB>Timecode to wait for (string). Must take the form 00:00:00:00.</BLURB>
+<DEFAULT>"00:00:00:00"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTimeCodeStamper::daily-jam</NAME>
+<TYPE>GDateTime*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Daily jam</NICK>
+<BLURB>The daily jam of the timecode.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTimeCodeStamper::drop-frame</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Override existing timecode</NICK>
+<BLURB>Use drop-frame timecodes for 29.97 and 59.94 FPS.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTimeCodeStamper::override-existing</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Override existing timecode</NICK>
+<BLURB>If set to true, any existing timecode will be overridden.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTimeCodeStamper::source-clock</NAME>
+<TYPE>GstClock*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Source clock to use for first timecode</NICK>
+<BLURB>If unset, the timecode will refer to the stream time.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::format</NAME>
+<TYPE>GstVideoFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format</NICK>
+<BLURB>Format of frames in raw stream.</BLURB>
+<DEFAULT>GST_VIDEO_FORMAT_I420</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::frame-stride</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frame stride</NICK>
+<BLURB>Stride between whole frames (0 = frames are tightly packed together).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::framerate</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frame rate</NICK>
+<BLURB>Rate of frames in raw stream.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Height</NICK>
+<BLURB>Height of frames in raw stream.</BLURB>
+<DEFAULT>240</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::interlaced</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced flag</NICK>
+<BLURB>True if frames in raw stream are interlaced.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::pixel-aspect-ratio</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixel aspect ratio</NICK>
+<BLURB>Pixel aspect ratio of frames in raw stream.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::plane-offsets</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Plane offsets</NICK>
+<BLURB>Offsets of the planets in bytes.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::plane-strides</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Plane strides</NICK>
+<BLURB>Strides of the planets in bytes.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::top-field-first</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Top field first</NICK>
+<BLURB>True if top field in frames in raw stream come first (not used if frames aren't interlaced).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Width</NICK>
+<BLURB>Width of frames in raw stream.</BLURB>
+<DEFAULT>320</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawAudioParse::channel-positions</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel positions</NICK>
+<BLURB>Channel positions used on the output.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawAudioParse::format</NAME>
+<TYPE>GstRawAudioParseFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format</NICK>
+<BLURB>Format of the raw audio stream.</BLURB>
+<DEFAULT>PCM</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawAudioParse::interleaved</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interleaved layout</NICK>
+<BLURB>True if audio has interleaved layout.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawAudioParse::num-channels</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of channels</NICK>
+<BLURB>Number of channels in raw stream.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawAudioParse::pcm-format</NAME>
+<TYPE>GstAudioFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>PCM format</NICK>
+<BLURB>Format of audio samples in PCM stream (ignored if format property is not set to pcm).</BLURB>
+<DEFAULT>GST_AUDIO_FORMAT_UNKNOWN</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawAudioParse::sample-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sample rate</NICK>
+<BLURB>Rate of audio samples in raw stream.</BLURB>
+<DEFAULT>44100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQtSrc::use-default-fbo</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>If use default fbo</NICK>
+<BLURB>When set TRUE, it will not create new fbo for qml render thread.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQtSrc::window</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>QQuickWindow</NICK>
+<BLURB>The QQuickWindow to place in the object heirachy.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFdkAacEnc::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate</NICK>
+<BLURB>Target Audio Bitrate (0 = fixed value based on  sample rate and channel count).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 

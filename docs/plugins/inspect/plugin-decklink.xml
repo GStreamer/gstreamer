@@ -3,7 +3,7 @@
   <description>Blackmagic Decklink plugin</description>
   <filename>../../sys/decklink/.libs/libgstdecklink.so</filename>
   <basename>libgstdecklink.so</basename>
-  <version>1.9.1</version>
+  <version>1.9.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins</package>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string){ S16LE, S32LE }, channels=(int)2, rate=(int)48000, layout=(string)interleaved</details>
+          <details>audio/x-raw, format=(string){ S16LE, S32LE }, channels=(int){ 2, 8, 16 }, rate=(int)48000, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
