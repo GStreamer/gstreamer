@@ -106,7 +106,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2010-10-25 10:03+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -1078,9 +1078,6 @@ msgstr "Stanno per essere scartati molti buffer."
 msgid "Internal data flow problem."
 msgstr "Problema interno nel flusso di dati."
 
-msgid "Internal data stream error."
-msgstr "Errore interno nello stream di dati."
-
 msgid "Internal data flow error."
 msgstr "Errore interno nel flusso di dati."
 
@@ -1507,6 +1504,9 @@ msgstr "Impostazione della pipeline a NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Esecuzione di free sulla pipeline...\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Errore interno nello stream di dati."
 
 # -X, --exclude=TIPO1,TIPO2,...
 #~ msgid "Do not output status information of TYPE"

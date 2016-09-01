@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2016-03-03 15:31+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -922,9 +922,6 @@ msgstr "Většina vyrovnávacích pamětí je vyřazena."
 msgid "Internal data flow problem."
 msgstr "Interní problém toku dat."
 
-msgid "Internal data stream error."
-msgstr "Interní chyba proudu dat."
-
 msgid "Internal data flow error."
 msgstr "Interní chyba toku dat."
 
@@ -1334,3 +1331,6 @@ msgstr "Nastavuje se roura na PRÁZDNÁ…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Uvolňuje se roura…\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Interní chyba proudu dat."

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2010-08-16 01:10+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -947,9 +947,6 @@ msgstr "Multe zone de memorie tampon sunt abandonate."
 msgid "Internal data flow problem."
 msgstr "Problemă internă de flux al datelor."
 
-msgid "Internal data stream error."
-msgstr "Eroare internă a fluxului de date."
-
 msgid "Internal data flow error."
 msgstr "Eroare internă de flux al datelor."
 
@@ -1347,6 +1344,9 @@ msgstr "Se setează linia de asamblare pe NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Se eliberează linia de asamblare...\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Eroare internă a fluxului de date."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Nu scoate informații despre stările de TIPUL"

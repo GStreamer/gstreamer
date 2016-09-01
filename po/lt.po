@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -929,9 +929,6 @@ msgstr "Atlaisvinama daug buferių."
 msgid "Internal data flow problem."
 msgstr "Vidinė duomenų tėkmės problema."
 
-msgid "Internal data stream error."
-msgstr "Vidinė duomenų srauto klaida."
-
 msgid "Internal data flow error."
 msgstr "Vidinė duomenų tėkmės klaida."
 
@@ -1328,6 +1325,9 @@ msgstr "Nustatomas konvejeris į NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Atlaisvinamas konvejeris...\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Vidinė duomenų srauto klaida."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Neišvesti šio TIPO būsenos informacijos"

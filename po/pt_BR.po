@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2016-05-06 18:23-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
@@ -941,9 +941,6 @@ msgstr "Uma grande quantidade de buffers está sendo descartada."
 msgid "Internal data flow problem."
 msgstr "Problema interno no fluxo de dados."
 
-msgid "Internal data stream error."
-msgstr "Erro interno no fluxo de dados."
-
 msgid "Internal data flow error."
 msgstr "Erro interno no fluxo de dados."
 
@@ -1346,6 +1343,9 @@ msgstr "Definindo a fila de processamento para NULO...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando a fila de processamento...\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Erro interno no fluxo de dados."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Não é possível obter informações do estado de saída do TIPO"

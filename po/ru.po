@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2016-03-05 08:41+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -924,9 +924,6 @@ msgstr "Многое из буфера было отброшено."
 msgid "Internal data flow problem."
 msgstr "Внутренняя проблема передачи данных."
 
-msgid "Internal data stream error."
-msgstr "Внутренняя ошибка потока данных."
-
 msgid "Internal data flow error."
 msgstr "Внутренняя ошибка передачи данных."
 
@@ -1322,6 +1319,9 @@ msgstr "Установка конвейера в состояние NULL…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Освобождение конвейера…\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Внутренняя ошибка потока данных."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Не выводить информацию о состоянии ТИПА"

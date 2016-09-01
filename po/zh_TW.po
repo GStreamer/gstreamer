@@ -27,7 +27,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2014-06-08 00:22+0800\n"
 "Last-Translator: Wen Liao <wen.cf83@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -917,9 +917,6 @@ msgstr "正在拋棄大量的緩衝區"
 msgid "Internal data flow problem."
 msgstr "內部資料流程錯誤"
 
-msgid "Internal data stream error."
-msgstr "內部資料串流錯誤"
-
 msgid "Internal data flow error."
 msgstr "內部資料流程錯誤"
 
@@ -1304,6 +1301,9 @@ msgstr "將pipeline狀態設為NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "釋放pipeline ...\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "內部資料串流錯誤"
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "不顯示和 TYPE 有關的狀態資訊"

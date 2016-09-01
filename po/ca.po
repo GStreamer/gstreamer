@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -933,9 +933,6 @@ msgstr "S'estan descartant moltes memòries intermèdies."
 msgid "Internal data flow problem."
 msgstr "Hi ha un problema intern de flux de dades."
 
-msgid "Internal data stream error."
-msgstr "S'ha produït un error intern de flux de dades."
-
 msgid "Internal data flow error."
 msgstr "S'ha produït un error intern de flux de dades."
 
@@ -1339,6 +1336,9 @@ msgstr "S'està establint el conducte a NUL…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "S'està alliberant el conducte…\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "S'ha produït un error intern de flux de dades."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "No mostres informació d'estat de TIPUS"

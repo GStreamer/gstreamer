@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2016-02-20 21:41+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -925,9 +925,6 @@ msgstr "Wiele buforów zostało zgubionych."
 msgid "Internal data flow problem."
 msgstr "Wewnętrzny problem przepływu danych."
 
-msgid "Internal data stream error."
-msgstr "Wewnętrzny błąd strumienia danych."
-
 msgid "Internal data flow error."
 msgstr "Wewnętrzny błąd przepływu danych."
 
@@ -1324,3 +1321,6 @@ msgstr "Ustawianie potoku na NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Zwalnianie potoku...\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Wewnętrzny błąd strumienia danych."

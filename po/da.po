@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2016-06-25 13:26+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -927,9 +927,6 @@ msgstr "En masse af bufferens indhold smides væk."
 msgid "Internal data flow problem."
 msgstr "Intern datastrømsproblem."
 
-msgid "Internal data stream error."
-msgstr "Intern datastrømsfejl."
-
 msgid "Internal data flow error."
 msgstr "Intern datastrømsfejl."
 
@@ -1331,3 +1328,6 @@ msgstr "Rørledning sættes til NUL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Rørledning frigøres ...\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Intern datastrømsfejl."

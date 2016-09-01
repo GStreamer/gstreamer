@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2016-03-03 07:44+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -927,9 +927,6 @@ msgstr "Nhiều bộ đệm bị bỏ."
 msgid "Internal data flow problem."
 msgstr "Vấn đề luồng dữ liệu nội bộ."
 
-msgid "Internal data stream error."
-msgstr "Lỗi luồng dữ liệu nội bộ."
-
 msgid "Internal data flow error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
@@ -1320,6 +1317,9 @@ msgstr "Đang đặt đường ống thành VÔ_GIÁ_TRỊ …\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Đang giải phóng đường ống …\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Lỗi luồng dữ liệu nội bộ."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Không xuất thông tin trạng thái KIỂU"

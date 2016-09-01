@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2016-03-14 16:10+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -920,9 +920,6 @@ msgstr "Rengetek puffer kerül eldobásra."
 msgid "Internal data flow problem."
 msgstr "Belső adatfolyam-probléma."
 
-msgid "Internal data stream error."
-msgstr "Belső adatfolyam-hiba."
-
 msgid "Internal data flow error."
 msgstr "Belső adatfolyam-hiba."
 
@@ -1313,6 +1310,9 @@ msgstr "Az adatcsatorna beállítása NULL értékre…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Adatcsatorna felszabadítása…\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Belső adatfolyam-hiba."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Ne írjon ki a TÍPUS típus állapotinformációit"

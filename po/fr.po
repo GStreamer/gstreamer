@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2016-03-04 13:08+0100\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -930,9 +930,6 @@ msgstr "De nombreux tampons sont éliminés."
 msgid "Internal data flow problem."
 msgstr "Problème interne de flux de données."
 
-msgid "Internal data stream error."
-msgstr "Erreur interne de flux de données."
-
 msgid "Internal data flow error."
 msgstr "Erreur interne de flux de données."
 
@@ -1327,3 +1324,6 @@ msgstr "Définition du pipeline à NULL…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Libération du pipeline…\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Erreur interne de flux de données."

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2014-04-09 22:38+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -922,9 +922,6 @@ msgstr "Veliko medpomnilnikov se prazni."
 msgid "Internal data flow problem."
 msgstr "Notranja težava toka podatkov."
 
-msgid "Internal data stream error."
-msgstr "Notranja napaka pretoka podatkov."
-
 msgid "Internal data flow error."
 msgstr "Notranja napaka toka podatkov."
 
@@ -1324,6 +1321,9 @@ msgstr "Nastavljanje cevovoda na NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Sproščanje cevovoda ...\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Notranja napaka pretoka podatkov."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Ne izpiši podrobnosti stanja VRSTE"

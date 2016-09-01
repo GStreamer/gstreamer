@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2016-02-20 16:42+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -932,9 +932,6 @@ msgstr "Er worden veel buffers gedropt."
 msgid "Internal data flow problem."
 msgstr "Intern probleem met gegevensdoorvoer."
 
-msgid "Internal data stream error."
-msgstr "Interne fout in gegevensstroom."
-
 msgid "Internal data flow error."
 msgstr "Interne fout met gegevensdoorvoer."
 
@@ -1328,6 +1325,9 @@ msgstr "Pijplijn gezet op NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Pijplijn wordt vrijgemaakt ...\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Interne fout in gegevensstroom."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Statusinformatie van soort SOORT niet weergeven"

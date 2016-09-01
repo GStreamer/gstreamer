@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2016-05-27 12:48-0700\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -933,9 +933,6 @@ msgstr "Puno međuspremnika je odbačeno."
 msgid "Internal data flow problem."
 msgstr "Problem unutrašnjeg protoka podataka."
 
-msgid "Internal data stream error."
-msgstr "Interna greška protoka (stream) podataka."
-
 msgid "Internal data flow error."
 msgstr "Interna greška protoka podataka."
 
@@ -1332,6 +1329,9 @@ msgstr "Cjevovod se postavlja u stanje NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Cjevovod se prazni...\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Interna greška protoka (stream) podataka."
 
 #~ msgid "link without source element"
 #~ msgstr "veza bez izvornog elementa"

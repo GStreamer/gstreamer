@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -945,9 +945,6 @@ msgstr "Πολλές ενδιάμεσες αποθηκεύσεις απορρί�
 msgid "Internal data flow problem."
 msgstr "Εσωτερικό πρόβλημα ροής δεδομένων."
 
-msgid "Internal data stream error."
-msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
-
 msgid "Internal data flow error."
 msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
 
@@ -1343,6 +1340,9 @@ msgstr "Ορισμός διασωλήνωσης σε NULL …\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Αποδέσμευση της διασωλήνωσης …\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Να μην εξάγεται πληροφορία κατάστασης εξόδου του TYPE"

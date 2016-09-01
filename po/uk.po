@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2016-03-02 22:00+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -921,9 +921,6 @@ msgstr "Викинуто багато буферів."
 msgid "Internal data flow problem."
 msgstr "Помилка внутрішнього перенесення даних."
 
-msgid "Internal data stream error."
-msgstr "Помилка внутрішнього потоку даних."
-
 msgid "Internal data flow error."
 msgstr "Помилка внутрішнього перенесення даних."
 
@@ -1325,6 +1322,9 @@ msgstr "Канал переводиться у стан NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Спорожнення каналу...\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Помилка внутрішнього потоку даних."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Не виводити інформацію про стан типу ТИП"

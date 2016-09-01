@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2010-03-25 13:10+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -935,9 +935,6 @@ msgstr "Buffer asko jaregiten ari dira."
 msgid "Internal data flow problem."
 msgstr "Datu-fluxuaren barne-arazoa."
 
-msgid "Internal data stream error."
-msgstr "Datu-korrontearen barne-errorea."
-
 msgid "Internal data flow error."
 msgstr "Datu-fluxuaren barne-errorea."
 
@@ -1333,6 +1330,9 @@ msgstr "Kanalizazioa NULUA gisa ezartzen... \n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Kanalizazioa askatzen...\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Datu-korrontearen barne-errorea."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Ez erakutsi MOTA hauetako egoera-informazioa:"

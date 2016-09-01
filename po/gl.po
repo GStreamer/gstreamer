@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:36+0300\n"
+"POT-Creation-Date: 2016-09-01 11:22+0300\n"
 "PO-Revision-Date: 2012-12-15 03:29+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -924,9 +924,6 @@ msgstr "Estanse a desbotar moitos búferes."
 msgid "Internal data flow problem."
 msgstr "Hai un problema no fluxo interno de datos."
 
-msgid "Internal data stream error."
-msgstr "Produciuse un erro no fluxo interno de datos."
-
 msgid "Internal data flow error."
 msgstr "Produciuse un erro no fluxo interno de datos."
 
@@ -1321,6 +1318,9 @@ msgstr "Estabelecendo a tubería a NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando a tubería...\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Produciuse un erro no fluxo interno de datos."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Non sacar a saída da información de estado do TIPO"
