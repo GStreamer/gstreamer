@@ -41,9 +41,7 @@
 #include "gstplay-enum.h"
 #include "gstrawcaps.h"
 #include "gstplayback.h"
-
-/* From gstdecodebin2.c */
-gint _decode_bin_compare_factories_func (gconstpointer p1, gconstpointer p2);
+#include "gstplaybackutils.h"
 
 #define GST_TYPE_URI_DECODE_BIN \
   (gst_uri_decode_bin_get_type())
@@ -321,7 +319,7 @@ gst_uri_decode_bin_update_factories_list (GstURIDecodeBin * dec)
         gst_element_factory_list_get_elements
         (GST_ELEMENT_FACTORY_TYPE_DECODABLE, GST_RANK_MARGINAL);
     dec->factories =
-        g_list_sort (dec->factories, _decode_bin_compare_factories_func);
+        g_list_sort (dec->factories, gst_playback_utils_compare_factories_func);
     dec->factories_cookie = cookie;
   }
 }
