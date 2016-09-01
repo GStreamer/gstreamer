@@ -2,7 +2,7 @@
 m4_define([gst_vaapi_major_version], [1])
 m4_define([gst_vaapi_minor_version], [9])
 m4_define([gst_vaapi_micro_version], [2])
-m4_define([gst_vaapi_nano_version],  [0])
+m4_define([gst_vaapi_nano_version],  [1])
 m4_define([gst_vaapi_version],
           [gst_vaapi_major_version.gst_vaapi_minor_version.gst_vaapi_micro_version])
 m4_if(gst_vaapi_nano_version, [0], [],
