@@ -161,7 +161,8 @@ _buffer_free (gpointer impl)
 }
 
 static GstStaticCaps _buffer_in_templ =
-GST_STATIC_CAPS ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER ")");
+    GST_STATIC_CAPS ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER ") ;"
+    "video/x-raw");
 static GstStaticCaps _buffer_out_templ =
 GST_STATIC_CAPS ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER ")");
 
