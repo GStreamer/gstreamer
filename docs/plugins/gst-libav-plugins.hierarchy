@@ -109,10 +109,6 @@ GObject
           avdec_opus
           avdec_paf_audio
           avdec_pcm_lxf
-          avdec_pcm_s16be_planar
-          avdec_pcm_s24le_planar
-          avdec_pcm_s32le_planar
-          avdec_pcm_s8_planar
           avdec_qcelp
           avdec_qdm2
           avdec_ralf
@@ -162,10 +158,6 @@ GObject
           avenc_mp2
           avenc_mp2fixed
           avenc_nellymoser
-          avenc_pcm_s16be_planar
-          avenc_pcm_s24le_planar
-          avenc_pcm_s32le_planar
-          avenc_pcm_s8_planar
           avenc_real_144
           avenc_roq_dpcm
           avenc_s302m
@@ -179,7 +171,6 @@ GObject
           GstPipeline
         GstFFMpegDeinterlace
         GstVideoDecoder
-          avdec_012v
           avdec_4xm
           avdec_8bps
           avdec_aasc
@@ -197,7 +188,6 @@ GObject
           avdec_avrp
           avdec_avs
           avdec_avui
-          avdec_ayuv
           avdec_bethsoftvid
           avdec_bfi
           avdec_binkvideo
@@ -347,9 +337,6 @@ GObject
           avdec_txd
           avdec_ultimotion
           avdec_utvideo
-          avdec_v308
-          avdec_v408
-          avdec_v410
           avdec_vb
           avdec_vble
           avdec_vc1
@@ -379,12 +366,9 @@ GObject
           avdec_xface
           avdec_xl
           avdec_xwd
-          avdec_y41p
           avdec_ylc
           avdec_yop
-          avdec_yuv4
           avdec_zerocodec
-          avdec_zlib
           avdec_zmbv
         GstVideoEncoder
           avenc_a64multi
@@ -396,7 +380,6 @@ GObject
           avenc_asv2
           avenc_avrp
           avenc_avui
-          avenc_ayuv
           avenc_bmp
           avenc_cinepak
           avenc_cljr
@@ -444,18 +427,12 @@ GObject
           avenc_targa
           avenc_tiff
           avenc_utvideo
-          avenc_v308
-          avenc_v408
-          avenc_v410
           avenc_vc2
           avenc_wmv1
           avenc_wmv2
-          avenc_wrapped_avframe
           avenc_xbm
           avenc_xface
           avenc_xwd
-          avenc_y41p
-          avenc_yuv4
           avenc_zmbv
         avdemux_4xm
         avdemux_aiff

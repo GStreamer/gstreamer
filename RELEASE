@@ -1,18 +1,20 @@
 
-Release notes for GStreamer libav Plugins 1.9.1
+Release notes for GStreamer libav Plugins 1.9.2
 
-The GStreamer team is pleased to announce the first release of the unstable
-1.9 release series. The 1.9 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.9 release series
-will lead to the stable 1.10 release series in the next weeks. Any newly added
-API can still change until that point.
+The GStreamer team is pleased to announce the second release of the unstable
+1.9 release series, which marks the feature freeze for 1.10. The 1.9 release
+series is adding new features on top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series
+and is part of the API and ABI-stable 1.x release series of the GStreamer
+multimedia framework. The unstable 1.9 release series will lead to the stable
+1.10 release series in the next weeks. Any newly added API can still change
+until that point.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
 
 
-This module contains plugins based on the ffmpeg/libav project, including codecs.
+
+This module contains plugins based on the ffmpeg project, including codecs.
 
 
 
@@ -37,9 +39,7 @@ contains a set of less supported plugins that haven't passed the
 
 Bugs fixed in this release
      
-      * 763084 : libav: use new gst_element_class_add_static_pad_template()
-      * 764162 : avvid{dec,enc}: remove dead gobject macros
-      * 766333 : avdec_g729: Add mapping for G729 caps
+      * 769809 : libgstlibav fails on Linux
 
 ==== Download ====
 
@@ -77,10 +77,9 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Edward Hervey
-      * Julien Isorce
-      * Nicolas Dufresne
+      * Josep Torra
       * Sebastian Dröge
+      * Stefan Sauer
+      * Thibault Saunier
       * Tim-Philipp Müller
-      * Vineeth TM
-      * Víctor Manuel Jáquez Leal
  
