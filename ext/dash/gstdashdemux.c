@@ -2058,8 +2058,7 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
       if (dashstream->isobmff_parser.current_fourcc == 0) {
         stream->fragment.chunk_size += dashstream->moof_average_size;
         if (dashstream->first_sync_sample_always_after_moof)
-          stream->fragment.chunk_size +=
-              dashstream->first_sync_sample_average_size;
+          stream->fragment.chunk_size += dashstream->keyframe_average_size;
       }
 
       if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
@@ -2516,31 +2515,71 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
   }
 
   {
-    GstDashStreamSyncSample *sync_sample =
-        &g_array_index (dash_stream->moof_sync_samples, GstDashStreamSyncSample,
-        0);
-    guint size = sync_sample->end_offset + 1 - sync_sample->start_offset;
+    GstDashStreamSyncSample *sync_sample;
+    guint i;
+    guint size;
+    GstClockTime current_keyframe_distance;
 
-    if (dash_stream->first_sync_sample_average_size) {
-      if (dash_stream->first_sync_sample_average_size < size)
-        dash_stream->first_sync_sample_average_size =
-            (size * 3 + dash_stream->first_sync_sample_average_size) / 4;
+    for (i = 0; i < dash_stream->moof_sync_samples->len; i++) {
+      sync_sample =
+          &g_array_index (dash_stream->moof_sync_samples,
+          GstDashStreamSyncSample, i);
+      size = sync_sample->end_offset + 1 - sync_sample->start_offset;
+
+      if (dash_stream->keyframe_average_size) {
+        /* Over-estimate the keyframe size */
+        if (dash_stream->keyframe_average_size < size)
+          dash_stream->keyframe_average_size =
+              (size * 3 + dash_stream->keyframe_average_size) / 4;
+        else
+          dash_stream->keyframe_average_size =
+              (size + dash_stream->keyframe_average_size * 3) / 4;
+      } else {
+        dash_stream->keyframe_average_size = size;
+      }
+
+      if (i == 0) {
+        if (dash_stream->moof_offset + dash_stream->moof_size + 8 <
+            sync_sample->start_offset) {
+          dash_stream->first_sync_sample_after_moof = FALSE;
+          dash_stream->first_sync_sample_always_after_moof = FALSE;
+        } else {
+          dash_stream->first_sync_sample_after_moof =
+              (dash_stream->moof_sync_samples->len == 1
+              || demux->segment.rate > 0.0);
+        }
+      }
+    }
+
+    g_assert (stream->fragment.duration != 0);
+    g_assert (stream->fragment.duration != GST_CLOCK_TIME_NONE);
+
+    current_keyframe_distance =
+        stream->fragment.duration / dash_stream->moof_sync_samples->len;
+
+    if (dash_stream->keyframe_average_distance) {
+      /* Under-estimate the keyframe distance */
+      if (dash_stream->keyframe_average_distance > current_keyframe_distance)
+        dash_stream->keyframe_average_distance =
+            (dash_stream->keyframe_average_distance * 3 +
+            current_keyframe_distance) / 4;
       else
-        dash_stream->first_sync_sample_average_size =
-            (size + dash_stream->first_sync_sample_average_size * 3) / 4;
+        dash_stream->keyframe_average_distance =
+            (dash_stream->keyframe_average_distance +
+            current_keyframe_distance * 3) / 4;
     } else {
-      dash_stream->first_sync_sample_average_size = size;
+      dash_stream->keyframe_average_distance = current_keyframe_distance;
     }
 
-    if (dash_stream->moof_offset + dash_stream->moof_size + 8 <
-        sync_sample->start_offset) {
-      dash_stream->first_sync_sample_after_moof = FALSE;
-      dash_stream->first_sync_sample_always_after_moof = FALSE;
-    } else {
-      dash_stream->first_sync_sample_after_moof =
-          (dash_stream->moof_sync_samples->len == 1
-          || demux->segment.rate > 0.0);
-    }
+    GST_DEBUG_OBJECT (stream->pad,
+        "average keyframe sample size: %" G_GUINT64_FORMAT,
+        dash_stream->keyframe_average_size);
+    GST_DEBUG_OBJECT (stream->pad,
+        "average keyframe distance: %" GST_TIME_FORMAT " (%" GST_TIME_FORMAT
+        ")", GST_TIME_ARGS (dash_stream->keyframe_average_distance),
+        GST_TIME_ARGS (current_keyframe_distance));
+    GST_DEBUG_OBJECT (stream->pad, "first sync sample after moof: %d",
+        dash_stream->first_sync_sample_after_moof);
   }
 
   return TRUE;
