@@ -1,12 +1,13 @@
 
-Release notes for GStreamer RTSP Server Library 1.9.1
+Release notes for GStreamer RTSP Server Library 1.9.2
 
-The GStreamer team is pleased to announce the first release of the unstable
-1.9 release series. The 1.9 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.9 release series
-will lead to the stable 1.10 release series in the next weeks. Any newly added
-API can still change until that point.
+The GStreamer team is pleased to announce the second release of the unstable
+1.9 release series, which marks the feature freeze for 1.10. The 1.9 release
+series is adding new features on top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series
+and is part of the API and ABI-stable 1.x release series of the GStreamer
+multimedia framework. The unstable 1.9 release series will lead to the stable
+1.10 release series in the next weeks. Any newly added API can still change
+until that point.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -15,11 +16,7 @@ Binaries for Android, iOS, Mac OS X and Windows will be provided in the next day
 
 Bugs fixed in this release
      
-      * 760005 : rtsp-sdp: Implement clock signalling according to RFC7273
-      * 761702 : rtsp-thread-pool: explain why GSource is a part of GstRTSPThreadImpl
-      * 763000 : Add support for setting multicast interface
-      * 763196 : rtspclientsink: use new gst_element_class_add_static_pad_template()
-      * 730539 : sdp: add support for multiple crypto sessions
+      * 755632 : Memory leak in handle_setup_request
 
 ==== Download ====
 
@@ -56,15 +53,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * Edward Hervey
-      * Ian
-      * Jake Foytik
-      * Julien Isorce
-      * Nicolas Dufresne
-      * Nirbheek Chauhan
-      * Patricia Muscalu
+      * Josep Torra
+      * Nikita Bobkov
       * Sebastian Dröge
+      * Stefan Sauer
       * Tim-Philipp Müller
-      * Vineeth TM
  
