@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-07-06 11:53+0300\n"
+"POT-Creation-Date: 2016-09-01 11:24+0300\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -66,9 +66,6 @@ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
 
 msgid "This stream contains no data."
-msgstr ""
-
-msgid "Internal data stream error."
 msgstr ""
 
 #, fuzzy
