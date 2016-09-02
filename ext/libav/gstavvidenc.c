@@ -966,8 +966,11 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
         || in_plugin->id == AV_CODEC_ID_Y41P
         || in_plugin->id == AV_CODEC_ID_012V
         || in_plugin->id == AV_CODEC_ID_YUV4
-        || in_plugin->id == AV_CODEC_ID_ZLIB
-        || in_plugin->id == AV_CODEC_ID_WRAPPED_AVFRAME) {
+#if AV_VERSION_INT (LIBAVCODEC_VERSION_MAJOR, LIBAVCODEC_VERSION_MINOR, LIBAVCODEC_VERSION_MICRO) >= \
+        AV_VERSION_INT (57,4,0)
+        || in_plugin->id == AV_CODEC_ID_WRAPPED_AVFRAME
+#endif
+        || in_plugin->id == AV_CODEC_ID_ZLIB) {
       goto next;
     }
 
