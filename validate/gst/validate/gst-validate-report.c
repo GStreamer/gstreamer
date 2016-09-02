@@ -705,7 +705,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
       if (_action_check_and_set_printed (action))
         goto out;
 
-      g_string_printf (string, "Executing ");
+      g_string_assign (string, "Executing ");
 
     } else if (*(GType *) source == GST_TYPE_VALIDATE_ACTION_TYPE) {
       gint i;
@@ -726,7 +726,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 
       GstValidateActionType *type = GST_VALIDATE_ACTION_TYPE (source);
 
-      g_string_printf (string, "\nAction type:");
+      g_string_assign (string, "\nAction type:");
       g_string_append_printf (string, "\n  Name: %s", type->name);
       g_string_append_printf (string, "\n  Implementer namespace: %s",
           type->implementer_namespace);

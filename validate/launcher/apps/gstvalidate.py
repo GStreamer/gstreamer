@@ -720,8 +720,8 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 uri = test.media_descriptor.get_uri()
 
                 if protocol in [Protocols.HTTP, Protocols.HLS, Protocols.DASH] and \
-                        "127.0.0.1:%s" % (self.options.http_server_port) in uri or \
-                        "127.0.0.1:8079" in uri:
+                        ("127.0.0.1:%s" % (self.options.http_server_port) in uri or
+                        "127.0.0.1:8079" in uri):
                     return True
         return False
 
