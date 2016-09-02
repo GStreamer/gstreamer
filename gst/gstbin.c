@@ -197,6 +197,7 @@ struct _GstBinPrivate
 
   gboolean posted_eos;
   gboolean posted_playing;
+  GstElementFlags suppressed_flags;
 };
 
 typedef struct
@@ -1206,23 +1207,25 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
     goto had_parent;
 
   /* if we add a sink we become a sink */
-  if (is_sink) {
+  if (is_sink && !(bin->priv->suppressed_flags & GST_ELEMENT_FLAG_SINK)) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "element \"%s\" was sink",
         elem_name);
     GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_FLAG_SINK);
   }
-  if (is_source) {
+  if (is_source && !(bin->priv->suppressed_flags & GST_ELEMENT_FLAG_SOURCE)) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "element \"%s\" was source",
         elem_name);
     GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_FLAG_SOURCE);
   }
-  if (provides_clock) {
+  if (provides_clock
+      && !(bin->priv->suppressed_flags & GST_ELEMENT_FLAG_PROVIDE_CLOCK)) {
     GST_DEBUG_OBJECT (bin, "element \"%s\" can provide a clock", elem_name);
     clock_message =
         gst_message_new_clock_provide (GST_OBJECT_CAST (element), NULL, TRUE);
     GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
   }
-  if (requires_clock) {
+  if (requires_clock
+      && !(bin->priv->suppressed_flags & GST_ELEMENT_FLAG_REQUIRE_CLOCK)) {
     GST_DEBUG_OBJECT (bin, "element \"%s\" requires a clock", elem_name);
     GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
   }
@@ -1405,6 +1408,59 @@ had_parent:
     g_free (elem_name);
     return FALSE;
   }
+}
+
+/**
+ * gst_bin_set_suppressed_flags:
+ * @bin: a #GstBin
+ * @flags: the #GstElementFlags to suppress
+ *
+ * Suppress the given flags on the bin. #GstElementFlags of a
+ * child element are propagated when it is added to the bin.
+ * When suppressed flags are set, those specified flags will
+ * not be propagated to the bin.
+ *
+ * MT safe.
+ *
+ * Since: 1.10
+ */
+void
+gst_bin_set_suppressed_flags (GstBin * bin, GstElementFlags flags)
+{
+  g_return_if_fail (GST_IS_BIN (bin));
+
+  GST_OBJECT_LOCK (bin);
+  bin->priv->suppressed_flags = bin->priv->suppressed_flags | flags;
+  GST_OBJECT_UNLOCK (bin);
+
+  GST_DEBUG_OBJECT (bin, "Set suppressed flags(0x%x) to bin '%s'", flags,
+      GST_ELEMENT_NAME (bin));
+}
+
+/**
+ * gst_bin_get_suppressed_flags:
+ * @bin: a #GstBin
+ *
+ * Return the suppressed flags of the bin.
+ *
+ * MT safe.
+ *
+ * Returns: the bin's suppressed #GstElementFlags.
+ *
+ * Since: 1.10
+ */
+GstElementFlags
+gst_bin_get_suppressed_flags (GstBin * bin)
+{
+  GstElementFlags res;
+
+  g_return_val_if_fail (GST_IS_BIN (bin), 0);
+
+  GST_OBJECT_LOCK (bin);
+  res = bin->priv->suppressed_flags;
+  GST_OBJECT_UNLOCK (bin);
+
+  return res;
 }
 
 /* signal vfunc, will be called when a new element was added */

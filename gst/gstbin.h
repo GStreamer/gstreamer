@@ -208,6 +208,9 @@ GstIterator*	gst_bin_iterate_all_by_interface (GstBin *bin, GType iface);
 /* latency */
 gboolean        gst_bin_recalculate_latency      (GstBin * bin);
 
+/* set and get suppressed flags */
+void            gst_bin_set_suppressed_flags (GstBin * bin, GstElementFlags flags);
+GstElementFlags gst_bin_get_suppressed_flags (GstBin * bin);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBin, gst_object_unref)
