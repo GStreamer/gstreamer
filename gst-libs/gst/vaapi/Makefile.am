@@ -471,7 +471,6 @@ libgstvaapi_egl_la_LIBADD =			\
 	$(GST_BASE_LIBS)			\
 	$(GST_VIDEO_LIBS)			\
 	$(EGL_LIBS)				\
-	$(DLOPEN_LIBS)				\
 	$(NULL)
 
 libgstvaapi_egl_la_LDFLAGS =			\
