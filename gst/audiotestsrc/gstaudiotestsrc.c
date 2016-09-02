@@ -735,7 +735,7 @@ static const ProcessFunc sine_table_funcs[] = {
 static void \
 gst_audio_test_src_create_tick_##type (GstAudioTestSrc * src, g##type * samples) \
 { \
-  gint i, c, channels, samplerate; \
+  gint i, c, channels, samplerate, samplemod; \
   gdouble step, scl; \
   \
   channels = GST_AUDIO_INFO_CHANNELS (&src->info); \
@@ -744,17 +744,20 @@ gst_audio_test_src_create_tick_##type (GstAudioTestSrc * src, g##type * samples)
   scl = 1024.0 / M_PI_M2; \
   \
   for (i = 0; i < src->generate_samples_per_buffer; i++) { \
-    src->accumulator += step; \
-    if (src->accumulator >= M_PI_M2) \
-      src->accumulator -= M_PI_M2; \
-    \
-    if ((src->next_sample + i)%samplerate < 1600) { \
+    samplemod = (src->next_sample + i) % samplerate; \
+    if (samplemod == 0) { \
+      src->accumulator = 0; \
+    } else if (samplemod < 1600) { \
       for (c = 0; c < channels; ++c) \
         samples[(i * channels) + c] = (g##type) scale * src->wave_table[(gint) (src->accumulator * scl)]; \
     } else { \
       for (c = 0; c < channels; ++c) \
         samples[(i * channels) + c] = 0; \
     } \
+    \
+    src->accumulator += step; \
+    if (src->accumulator >= M_PI_M2) \
+      src->accumulator -= M_PI_M2; \
   } \
 }
 
