@@ -100,6 +100,7 @@ class Test(Loggable):
         self.out = None
         self.extra_logfiles = []
         self.__env_variable = []
+        self.kill_subprocess()
 
     def __str__(self):
         string = self.classname
@@ -520,6 +521,7 @@ class GstValidateTest(Test):
         self.speed = 1.0
         self.actions_infos = []
         self.media_descriptor = media_descriptor
+        self.server = None
 
         override_path = self.get_override_file(media_descriptor)
         if override_path:
@@ -546,7 +548,6 @@ class GstValidateTest(Test):
             self.scenario = None
         else:
             self.scenario = scenario
-        self.server = None
 
     def stop_server(self):
         if self.server:
@@ -1431,14 +1432,14 @@ class _TestsLauncher(Loggable):
 
         return True
 
-    def _clean_tests(self):
+    def clean_tests(self):
         for tester in self.testers:
             tester.clean_tests()
 
     def run_tests(self):
         if self.options.forever:
             while self._run_tests():
-                self._clean_tests()
+                self.clean_tests()
 
             return False
         else:
