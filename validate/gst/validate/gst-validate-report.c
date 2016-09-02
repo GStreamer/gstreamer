@@ -867,8 +867,14 @@ gst_validate_report_print_detected_on (GstValidateReport * report)
 void
 gst_validate_report_print_details (GstValidateReport * report)
 {
-  if (report->message)
-    gst_validate_printf (NULL, "%*s Details : %s\n", 12, "", report->message);
+  if (report->message) {
+    gint i;
+    gchar **lines = g_strsplit (report->message, "\n", -1);
+
+    gst_validate_printf (NULL, "%*s Details : %s\n", 12, "", lines[0]);
+    for (i = 1; lines[i]; i++)
+      gst_validate_printf (NULL, "%*s%s\n", 21, "", lines[i]);
+  }
 }
 
 void
