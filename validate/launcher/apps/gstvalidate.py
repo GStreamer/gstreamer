@@ -225,12 +225,14 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 
                 fname = self.get_fname(scenario, protocol=mediainfo.get_protocol(), name=name)
 
+                expected_failures = extra_datas.get("expected-failures")
                 self.add_test(GstValidateLaunchTest(fname,
                                                     self.test_manager.options,
                                                     self.test_manager.reporter,
                                                     pipeline_desc,
                                                     scenario=scenario,
-                                                    media_descriptor=mediainfo)
+                                                    media_descriptor=mediainfo,
+                                                    expected_failures=expected_failures)
                               )
 
 
@@ -373,7 +375,7 @@ class GstValidateLaunchTest(GstValidateTest):
     def __init__(self, classname, options, reporter, pipeline_desc,
                  timeout=DEFAULT_TIMEOUT, scenario=None,
                  media_descriptor=None, duration=0, hard_timeout=None,
-                 extra_env_variables=None):
+                 extra_env_variables=None, expected_failures=None):
 
         extra_env_variables = extra_env_variables or {}
 
@@ -398,7 +400,8 @@ class GstValidateLaunchTest(GstValidateTest):
                                                   timeout=timeout,
                                                   hard_timeout=hard_timeout,
                                                   media_descriptor=media_descriptor,
-                                                  extra_env_variables=extra_env_variables)
+                                                  extra_env_variables=extra_env_variables,
+                                                  expected_failures=expected_failures)
 
         self.pipeline_desc = pipeline_desc
         self.media_descriptor = media_descriptor
@@ -415,7 +418,8 @@ class GstValidateMediaCheckTest(GstValidateTest):
 
     def __init__(self, classname, options, reporter, media_descriptor,
                  uri, minfo_path, timeout=DEFAULT_TIMEOUT,
-                 extra_env_variables=None):
+                 extra_env_variables=None,
+                 expected_failures=None):
         extra_env_variables = extra_env_variables or {}
 
         super(
@@ -423,7 +427,8 @@ class GstValidateMediaCheckTest(GstValidateTest):
                                                       options, reporter,
                                                       timeout=timeout,
                                                       media_descriptor=media_descriptor,
-                                                      extra_env_variables=extra_env_variables)
+                                                      extra_env_variables=extra_env_variables,
+                                                      expected_failures=expected_failures)
         self._uri = uri
         self._media_info_path = minfo_path
 
@@ -440,7 +445,8 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
                  combination, uri, media_descriptor,
                  timeout=DEFAULT_TIMEOUT,
                  scenario=None,
-                 extra_env_variables=None):
+                 extra_env_variables=None,
+                 expected_failures=None):
         Loggable.__init__(self)
 
         extra_env_variables = extra_env_variables or {}
@@ -468,7 +474,8 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
                                                        timeout=timeout,
                                                        scenario=scenario,
                                                        media_descriptor=media_descriptor,
-                                                       extra_env_variables=None)
+                                                       extra_env_variables=None,
+                                                       expected_failures=expected_failures)
         extra_env_variables = extra_env_variables or {}
 
         GstValidateEncodingTestInterface.__init__(

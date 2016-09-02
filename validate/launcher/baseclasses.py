@@ -23,6 +23,7 @@ import json
 import os
 import sys
 import re
+import copy
 import SocketServer
 import struct
 import time
@@ -56,7 +57,8 @@ class Test(Loggable):
 
     def __init__(self, application_name, classname, options,
                  reporter, duration=0, timeout=DEFAULT_TIMEOUT,
-                 hard_timeout=None, extra_env_variables=None):
+                 hard_timeout=None, extra_env_variables=None,
+                 expected_failures=None):
         """
         @timeout: The timeout during which the value return by get_current_value
                   keeps being exactly equal
@@ -75,6 +77,12 @@ class Test(Loggable):
         self.thread = None
         self.queue = None
         self.duration = duration
+        if expected_failures is None:
+            self.expected_failures = []
+        elif not isinstance(expected_failures, list):
+            self.expected_failures = [expected_failures]
+        else:
+            self.expected_failures = expected_failures
 
         extra_env_variables = extra_env_variables or {}
         self.extra_env_variables = extra_env_variables
@@ -82,6 +90,7 @@ class Test(Loggable):
         self.clean()
 
     def clean(self):
+        self.kill_subprocess()
         self.message = ""
         self.error_str = ""
         self.time_taken = 0.0
@@ -484,7 +493,8 @@ class GstValidateTest(Test):
     def __init__(self, application_name, classname,
                  options, reporter, duration=0,
                  timeout=DEFAULT_TIMEOUT, scenario=None, hard_timeout=None,
-                 media_descriptor=None, extra_env_variables=None):
+                 media_descriptor=None, extra_env_variables=None,
+                 expected_failures=None):
 
         extra_env_variables = extra_env_variables or {}
 
@@ -506,7 +516,7 @@ class GstValidateTest(Test):
 
         self.reports = []
         self.position = -1
-        self.duration = -1
+        self.media_duration = -1
         self.speed = 1.0
         self.actions_infos = []
         self.media_descriptor = media_descriptor
@@ -524,7 +534,8 @@ class GstValidateTest(Test):
                                               duration=duration,
                                               timeout=timeout,
                                               hard_timeout=hard_timeout,
-                                              extra_env_variables=extra_env_variables)
+                                              extra_env_variables=extra_env_variables,
+                                              expected_failures=expected_failures)
 
         # defines how much the process can be outside of the configured
         # segment / seek
@@ -553,7 +564,7 @@ class GstValidateTest(Test):
 
     def set_position(self, position, duration, speed=None):
         self.position = position
-        self.duration = duration
+        self.media_duration = duration
         if speed:
             self.speed = speed
 
@@ -584,8 +595,10 @@ class GstValidateTest(Test):
         Test.test_start(self, queue)
 
     def test_end(self):
-        Test.test_end(self)
+        res = Test.test_end(self)
         self.stop_server()
+
+        return res
 
     def get_override_file(self, media_descriptor):
         if media_descriptor:
@@ -665,6 +678,11 @@ class GstValidateTest(Test):
     def clean(self):
         Test.clean(self)
         self._sent_eos_pos = None
+        self.reports = []
+        self.position = -1
+        self.media_duration = -1
+        self.speed = 1.0
+        self.actions_infos = []
 
     def build_arguments(self):
         super(GstValidateTest, self).build_arguments()
@@ -686,16 +704,44 @@ class GstValidateTest(Test):
 
         return value
 
-    def get_validate_criticals_errors(self):
+    def report_matches_expected_failure(self, report, expected_failure):
+        for key in ['bug', 'sometimes']:
+            if key in expected_failure:
+                del expected_failure[key]
+        for key, value in report.items():
+            if key in expected_failure:
+                if not re.findall(expected_failure[key], value):
+                    return False
+                expected_failure.pop(key)
+
+        return not bool(expected_failure)
+
+    def check_reported_issues(self):
         ret = []
+        expected_failures = copy.deepcopy(self.expected_failures)
+        expected_retcode = [0]
         for report in self.reports:
-            if report['level'] == 'critical':
+            found = None
+            for expected_failure in expected_failures:
+                if self.report_matches_expected_failure(report,
+                                                        expected_failure.copy()):
+                    found = expected_failure
+                    break
+
+            if found is not None:
+                expected_failures.remove(found)
+                if report['level'] == 'critical':
+                    if found.get('sometimes') and isinstance(expected_retcode, list):
+                        expected_retcode.append(18)
+                    else:
+                        expected_retcode = [18]
+            elif report['level'] == 'critical':
                 ret.append(report['summary'])
 
         if not ret:
-            return None
+            return None, expected_failures, expected_retcode
 
-        return str(ret)
+        return ret, expected_failures, expected_retcode
 
     def check_results(self):
         if self.result is Result.FAILED or self.result is Result.PASSED or self.result is Result.TIMEOUT:
@@ -703,23 +749,53 @@ class GstValidateTest(Test):
 
         self.debug("%s returncode: %s", self, self.process.returncode)
 
-        criticals = self.get_validate_criticals_errors()
+        criticals, not_found_expected_failures, expected_returncode = self.check_reported_issues()
+
+        returncode_index = None
+        for i, f in enumerate(not_found_expected_failures):
+            if len(f) == 1 and f.get("returncode"):
+                returncode = f['returncode']
+                if not isinstance(expected_returncode, list):
+                    returncode = [expected_returncode]
+                if 'sometimes' in f:
+                    returncode.append(0)
+                returncode_index = i
+                break
+
+        not_found_expected_failures = [f for f in not_found_expected_failures
+                                       if not f.get('returncode')]
+
+        msg = ""
+        result = Result.PASSED
         if self.process.returncode == 139:
-            # FIXME Reimplement something like that if needed
-            # self.get_backtrace("SEGFAULT")
-            self.set_result(Result.FAILED,
-                            "Application segfaulted",
-                            "segfault")
+            result = Result.FAILED
+            msg = "Application segfaulted "
         elif self.process.returncode == VALGRIND_ERROR_CODE:
-            self.set_result(Result.FAILED, "Valgrind reported errors")
-        elif criticals or self.process.returncode != 0:
-            if criticals is None:
-                criticals = "No criticals"
-            self.set_result(Result.FAILED,
-                            "Application returned %s (issues: %s)"
-                            % (self.process.returncode, criticals))
-        else:
-            self.set_result(Result.PASSED)
+            msg = "Valgrind reported errors "
+            result = Result.FAILED
+        elif self.process.returncode not in expected_returncode:
+            msg = "Application returned %s " % self.process.returncode
+            if expected_returncode != 0:
+                msg += "(expected %s) " % expected_returncode
+            result = Result.FAILED
+
+        if criticals:
+            msg += "(critical errors: [%s]) " % ', '.join(criticals)
+            result = Result.FAILED
+
+        if not_found_expected_failures:
+            mandatory_failures = [f for f in not_found_expected_failures
+                                  if not f.get('sometimes')]
+
+            if mandatory_failures:
+                msg += "(Expected errors not found: %s) " % mandatory_failures
+                result = Result.FAILED
+        elif self.expected_failures:
+                msg += '%s(Expected errors occured: %s)%s' % (Colors.OKBLUE,
+                                                           self.expected_failures,
+                                                           Colors.ENDC)
+
+        self.set_result(result, msg.strip())
 
     def get_valgrind_suppression_file(self, subdir, name):
         p = get_data_file(subdir, name)
@@ -892,6 +968,7 @@ class TestsManager(Loggable):
         self.starting_test_num = 0
         self.check_testslist = True
         self.all_tests = None
+        self.expected_failures = {}
 
     def init(self):
         return False
@@ -899,7 +976,22 @@ class TestsManager(Loggable):
     def list_tests(self):
         return sorted(list(self.tests))
 
+    def add_expected_issues(self, expected_failures):
+        expected_failures_re = {}
+        for test_name_regex, failures in expected_failures.items():
+            regex = re.compile(test_name_regex)
+            expected_failures_re[regex] = failures
+            for test in self.tests:
+                if regex.findall(test.classname):
+                    test.expected_failures.extend(failures)
+
+        self.expected_failures.update(expected_failures_re)
+
     def add_test(self, test):
+        for regex, failures in self.expected_failures.items():
+            if regex.findall(test.classname):
+                test.expected_failures.extend(failures)
+
         if self._is_test_wanted(test):
             if test not in self.tests:
                 self.tests.append(test)
