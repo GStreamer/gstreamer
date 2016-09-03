@@ -1388,6 +1388,7 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
          */
         if (dc->priv->current_info->misc)
           gst_structure_free (dc->priv->current_info->misc);
+        dc->priv->current_info->misc = gst_structure_copy (structure);
         g_ptr_array_add (dc->priv->current_info->missing_elements_details,
             gst_missing_plugin_message_get_installer_detail (msg));
       } else if (sttype == _STREAM_TOPOLOGY_QUARK) {
