@@ -963,7 +963,7 @@ play_cycle_track_selection (GstPlay * play, GstPlayTrackType track_type)
     else
       cur = (cur + 1) % (n + 1);
 
-    if (cur >= n) {
+    if (cur >= n && track_type != GST_PLAY_TRACK_TYPE_VIDEO) {
       cur = -1;
       g_print ("Disabling %s.           \n", name);
       if (cur_flags & flag) {
@@ -971,7 +971,10 @@ play_cycle_track_selection (GstPlay * play, GstPlayTrackType track_type)
         g_object_set (play->playbin, "flags", cur_flags, NULL);
       }
     } else {
-      if (!(cur_flags & flag)) {
+      /* For video we only want to switch between streams, not disable it altogether */
+      if (cur >= n)
+        cur = 0;
+      if (!(cur_flags & flag) && track_type != GST_PLAY_TRACK_TYPE_VIDEO) {
         cur_flags |= flag;
         g_object_set (play->playbin, "flags", cur_flags, NULL);
       }
