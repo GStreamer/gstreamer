@@ -738,6 +738,19 @@ has_sometimes_template (GstElement * element)
   return FALSE;
 }
 
+static gboolean
+gtype_needs_ptr_marker (GType type)
+{
+  if (type == G_TYPE_POINTER)
+    return FALSE;
+
+  if (G_TYPE_FUNDAMENTAL (type) == G_TYPE_POINTER || G_TYPE_IS_BOXED (type)
+      || G_TYPE_IS_OBJECT (type))
+    return TRUE;
+
+  return FALSE;
+}
+
 static void
 print_signal_info (GstElement * element)
 {
@@ -808,12 +821,7 @@ print_signal_info (GstElement * element)
       indent_len = strlen (query->signal_name) +
           strlen (g_type_name (query->return_type)) + 24;
 
-
-      if (query->return_type == G_TYPE_POINTER) {
-        pmark = "";
-      } else if (G_TYPE_FUNDAMENTAL (query->return_type) == G_TYPE_POINTER
-          || G_TYPE_IS_BOXED (query->return_type)
-          || G_TYPE_IS_OBJECT (query->return_type)) {
+      if (gtype_needs_ptr_marker (query->return_type)) {
         pmark = "* ";
         indent_len += 2;
       } else {
@@ -828,17 +836,13 @@ print_signal_info (GstElement * element)
           g_type_name (type));
 
       for (j = 0; j < query->n_params; j++) {
+        const gchar *type_name, *asterisk;
+
+        type_name = g_type_name (query->param_types[j]);
+        asterisk = gtype_needs_ptr_marker (query->param_types[j]) ? "*" : "";
+
         g_print (",\n");
-        if (G_TYPE_IS_FUNDAMENTAL (query->param_types[j])) {
-          n_print ("%s%s arg%d", indent,
-              g_type_name (query->param_types[j]), j);
-        } else if (G_TYPE_IS_ENUM (query->param_types[j])) {
-          n_print ("%s%s arg%d", indent,
-              g_type_name (query->param_types[j]), j);
-        } else {
-          n_print ("%s%s* arg%d", indent,
-              g_type_name (query->param_types[j]), j);
-        }
+        n_print ("%s%s%s arg%d", indent, type_name, asterisk, j);
       }
 
       if (k == 0) {
