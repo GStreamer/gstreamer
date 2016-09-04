@@ -2,8 +2,10 @@ if gtk_x11_dep.found()
   if cc.compiles('''
     #include <linux/input.h>
     #include <linux/joystick.h>
-    struct js_event js;
-    js.type = JS_EVENT_AXIS''', name : 'Linux joystick headers needed by jseek example')
+    void foo (void) {
+      struct js_event js;
+      js.type = JS_EVENT_AXIS;
+    }''', name : 'Linux joystick headers needed by jseek example')
     executable('jsseek', 'jsseek.c',
       c_args : gst_plugins_base_args,
       include_directories: [configinc, libsinc],
