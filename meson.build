@@ -263,7 +263,7 @@ gnome = import('gnome')
 build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable_introspection')
 
 gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**); gst_init(NULL,NULL);' ]
-vs_module_defs_dir = meson.source_root() + '/win32/common/'
+vs_module_defs_dir = meson.current_source_dir() + '/win32/common/'
 
 gst_c_args = ['-DHAVE_CONFIG_H']
 if libtype == 'static'
