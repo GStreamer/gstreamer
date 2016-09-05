@@ -250,6 +250,26 @@ gst_rtsp_session_manage_media (GstRTSPSession * sess, const gchar * path,
   return result;
 }
 
+static void
+gst_rtsp_session_unset_transport_keepalive (GstRTSPSessionMedia * sessmedia)
+{
+  GstRTSPMedia *media;
+  guint i, n_streams;
+
+  media = gst_rtsp_session_media_get_media (sessmedia);
+  n_streams = gst_rtsp_media_n_streams (media);
+
+  for (i = 0; i < n_streams; i++) {
+    GstRTSPStreamTransport *transport =
+        gst_rtsp_session_media_get_transport (sessmedia, i);
+
+    if (!transport)
+      continue;
+
+    gst_rtsp_stream_transport_set_keepalive (transport, NULL, NULL, NULL);
+  }
+}
+
 /**
  * gst_rtsp_session_release_media:
  * @sess: a #GstRTSPSession
@@ -280,6 +300,9 @@ gst_rtsp_session_release_media (GstRTSPSession * sess,
   }
   more = (priv->medias != NULL);
   g_mutex_unlock (&priv->lock);
+
+  if (find && !more)
+    gst_rtsp_session_unset_transport_keepalive (media);
 
   if (find)
     g_object_unref (media);
