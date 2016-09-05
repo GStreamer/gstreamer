@@ -1,6 +1,6 @@
-project('gstreamer uninstalled', 'c', version : '1.9.1.1')
+project('All GStreamer modules', 'c', version : '1.9.2.1')
 
-gst_version = meson.project_version()
+gst_version = '>= @0@'.format(meson.project_version())
 gst_branch = 'master'
 
 glib_req = '>= 2.40.0'
@@ -12,7 +12,8 @@ subprojects = [
     'gst-plugins-ugly',
     'gst-plugins-bad',
     'gst-devtools',
-    'gst-editing-services'
+    'gst-editing-services',
+    'gst-python'
 ]
 
 # FIXME Remove that check once we have ffmpeg as a gst-libav subproject

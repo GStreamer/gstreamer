@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
-import os
 import argparse
+import os
+import re
+import site
 import subprocess
 
 
@@ -11,6 +13,7 @@ SCRIPTDIR = os.path.dirname(__file__)
 def prepend_env_var(env, var, value):
     env[var] = os.pathsep + value + os.pathsep + env.get(var, "")
     env[var] = env[var].replace(os.pathsep + os.pathsep, os.pathsep).strip(os.pathsep)
+
 
 def set_prompt_var(options, env):
     ps1 = env.get("PS1")
@@ -68,6 +71,33 @@ def get_subprocess_env(options):
     env["GST_PTP_HELPER"] = os.path.normpath(
         "%s/subprojects/gstreamer/libs/gst/helpers/gst-ptp-helper" % options.builddir)
     env["GST_REGISTRY"] = os.path.normpath(options.builddir + "/registry.dat")
+    prepend_env_var(env, 'PYTHONPATH', ':'.join(site.getsitepackages()))
+    env["PYTHONPATH"] = env["PYTHONPATH"] + ':' + os.path.normpath(
+        options.builddir + '/subprojects/gst-python')
+
+    filename = "meson.build"
+    sharedlib_reg = re.compile(r'\.so$|\.dylib$')
+    typelib_reg = re.compile(r'.*\.typelib$')
+    for root, dirnames, filenames in os.walk(os.path.join(options.builddir,
+                                                          'subprojects')):
+        has_typelib = False
+        has_shared = False
+        for filename in filenames:
+            if typelib_reg.search(filename) and not has_typelib:
+                has_typelib = True
+                prepend_env_var(env, "GI_TYPELIB_PATH",
+                                os.path.join(options.builddir, root))
+                if has_shared:
+                    break
+            elif sharedlib_reg.search(filename) and not has_shared:
+                has_shared = True
+                prepend_env_var(env, "LD_LIBRARY_PATH",
+                                os.path.join(options.builddir, root))
+                prepend_env_var(env, "DYLD_LIBRARY_PATH",
+                                os.path.join(options.builddir, root))
+                if has_typelib:
+                    break
+
 
     set_prompt_var(options, env)
 
