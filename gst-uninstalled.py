@@ -61,6 +61,8 @@ def get_subprocess_env(options):
         "%s/subprojects/gst-devtools/validate/data/scenarios" % SCRIPTDIR)
     env["GST_VALIDATE_PLUGIN_PATH"] = os.path.normpath(
         "%s/subprojects/gst-devtools/validate/plugins" % options.builddir)
+    env["GST_VALIDATE_APPS_DIR"] = os.path.normpath(
+        "%s/subprojects/gst-editing-services/tests/validate" % SCRIPTDIR)
     prepend_env_var(env, "PATH", os.path.normpath(
         "%s/subprojects/gst-devtools/validate/tools" % options.builddir))
     env["PATH"] += os.pathsep + PATH

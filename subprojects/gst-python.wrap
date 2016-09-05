@@ -1,0 +1,4 @@
+[wrap-git]
+directory=gst-python
+url=git://anongit.freedesktop.org/gstreamer/gst-python
+revision=master

@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+"""Script for generating the Makefiles."""
+
+import argparse
+import os
+import sys
+import shutil
+import subprocess
+
+
+PROJECTNAME = "GStreamer 'all'"
+
+ROOTDIR = os.path.abspath(os.path.dirname(__file__))
+MAKEFILE_TMPL = """all:
+%(tab)scd %(build_dir)s && %(ninja)s -k 100; %(ninja)s
+
+install:
+%(tab)scd %(build_dir)s && DESTDIR="${DESTDIR}" %(ninja)s install
+
+check:
+%(tab)scd %(build_dir)s && %(ninja)s test
+
+uninstalled:
+%(tab)scd %(build_dir)s && %(ninja)s uninstalled
+
+clean:
+%(tab)srm -Rf %(build_dir)s
+%(tab)srm Makefile
+"""
+
+
+def accept_command(commands):
+    """Checks if @command --version works."""
+    for command in commands:
+        try:
+            subprocess.check_output([command, "--version"])
+            return command
+        except FileNotFoundError:
+            pass
+
+    return None
+
+
+def get_configs(meson):
+     meson_version = subprocess.check_output([meson, '--version']).decode().strip()
+     if meson_version <= '0.33.0':
+         print("Disabling the introspection as support for the introspection with subproject was introduced in 0.34")
+         return ['-Dgstreamer:disable_introspection=true',
+                 '-Dgst-editing-services:disable_introspection=true',
+                 '-Dgst-devtools:disable_introspection=true']
+
+     return []
+
+
+def configure_meson(args):
+    """Configures meson and generate the Makefile."""
+    meson = accept_command(["meson", "meson.py"])
+    if not meson:
+        print("Install mesonbuild to build %s: http://mesonbuild.com/\n"
+              "You can simply install it with:\n"
+              "    $ sudo pip3 install meson" % PROJECTNAME)
+        exit(1)
+
+    ninja = accept_command(["ninja", "ninja-build"])
+    if not ninja:
+        print("Install ninja-build to build %s: https://ninja-build.org/"
+              % PROJECTNAME)
+        exit(1)
+
+    build_dir = os.path.join(ROOTDIR, "build")
+    shutil.rmtree(build_dir, True)
+    os.mkdir(build_dir)
+    os.chdir(build_dir)
+
+    try:
+        subprocess.check_call([meson, "../"] + args + get_configs(meson))
+    except subprocess.CalledProcessError:
+        exit(1)
+
+    with open(os.path.join(ROOTDIR, "Makefile"), "w") as makefile:
+        makefile.write(MAKEFILE_TMPL %
+                       {"build_dir": build_dir,
+                        "ninja": ninja,
+                        "tab": "	"})
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument("--no-reconfigure", action='store_true',
+                        default=False, help='Avoid removing the build dir'
+                       ' if not necessary.')
+    options, args = parser.parse_known_args()
+    if options.no_reconfigure:
+        if os.path.exists(
+                ROOTDIR + "/build/build.ninja") and os.path.exists(
+                    ROOTDIR + "/Makefile"):
+            print("Not reconfiguring")
+            exit(0)
+
+    configure_meson(args)
