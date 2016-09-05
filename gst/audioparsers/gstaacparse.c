@@ -612,9 +612,11 @@ gst_aac_parse_read_loas_config (GstAacParse * aacparse, const guint8 * data,
 
   GST_DEBUG_OBJECT (aacparse, "Frame contains new config");
 
+  /* audioMuxVersion */
   if (!gst_bit_reader_get_bits_uint8 (&br, &v, 1))
     return FALSE;
   if (v) {
+    /* audioMuxVersionA */
     if (!gst_bit_reader_get_bits_uint8 (&br, &vA, 1))
       return FALSE;
   } else
@@ -625,6 +627,7 @@ gst_aac_parse_read_loas_config (GstAacParse * aacparse, const guint8 * data,
     guint8 same_time, subframes, num_program, prog;
     if (v == 1) {
       guint32 value;
+      /* taraBufferFullness */
       if (!gst_aac_parse_latm_get_value (aacparse, &br, &value))
         return FALSE;
     }
