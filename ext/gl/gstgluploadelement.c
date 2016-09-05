@@ -97,8 +97,6 @@ static void
 gst_gl_upload_element_init (GstGLUploadElement * upload)
 {
   gst_base_transform_set_prefer_passthrough (GST_BASE_TRANSFORM (upload), TRUE);
-
-  upload->upload = gst_gl_upload_new (NULL);
 }
 
 static gboolean
@@ -137,6 +135,9 @@ _gst_gl_upload_element_transform_caps (GstBaseTransform * bt,
 {
   GstGLUploadElement *upload = GST_GL_UPLOAD_ELEMENT (bt);
   GstGLContext *context = GST_GL_BASE_FILTER (bt)->context;
+
+  if (upload->upload == NULL)
+    upload->upload = gst_gl_upload_new (NULL);
 
   return gst_gl_upload_transform_caps (upload->upload, context, direction, caps,
       filter);
