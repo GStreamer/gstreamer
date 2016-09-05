@@ -1,0 +1,10 @@
+#mesondefine PACKAGE
+#mesondefine VERSION
+#mesondefine GST_PACKAGE_NAME
+#mesondefine PACKAGE_NAME
+#mesondefine GST_API_VERSION
+#mesondefine PLUGINDIR
+#mesondefine PY_LIB_LOC
+#mesondefine PY_ABI_FLAGS
+#mesondefine PY_LIB_SUFFIX
+#mesondefine PYTHON_VERSION

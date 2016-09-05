@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+import os
+import platform
+import subprocess
+import sys
+
+from distutils import sysconfig
+
+
+def get_python_abiflags():
+    try:
+        return subprocess.check_output([os.path.basename(sys.executable) + '-config',
+                                        '--abiflags']).decode(errors='ignore').strip()
+    except FileNotFoundError:
+        return ''
+
+
+def get_python_libloc():
+    # OSX is a pain. Python as shipped by apple installs libpython in /usr/lib
+    # so we hardcode that. Other systems can use --with-libpython-dir to
+    # override this.
+    if platform.system().lower() == 'darwin':
+        return '/usr/lib'
+
+    python_libs = sysconfig.get_python_lib(standard_lib=1)
+    pylib_loc = python_libs + '/config'
+    pyversion = "%d.%d" % (sys.version_info.major, sys.version_info.minor)
+
+    abiflags = get_python_abiflags()
+    py_sharedlib = pylib_loc + '/libpython' + pyversion + abiflags + '.so'
+    if os.path.exists(os.path.join(py_sharedlib)):
+        return pylib_loc
+
+    pylib_loc = sys.prefix + '/lib64'
+    py_sharedlib = pylib_loc + '/libpython' + pyversion + abiflags + '.so'
+
+    if os.path.exists(os.path.join(py_sharedlib)):
+        return pylib_loc
+
+    pylib_loc = sys.prefix + '/lib'
+    py_sharedlib = pylib_loc + '/libpython' + pyversion + abiflags + '.so'
+    if os.path.exists(os.path.join(py_sharedlib)):
+        return pylib_loc
+
+    pylib_loc = '/usr/lib'
+    py_sharedlib = pylib_loc + '/libpython' + pyversion + abiflags + '.so'
+    if os.path.exists(os.path.join(py_sharedlib)):
+        return pylib_loc
+
+    return "None"
+
+
+if __name__ == "__main__":
+    if len(sys.argv) > 2:
+        print("Only 1 argument accepted")
+        exit(1)
+
+    if sys.argv[1] == '--abiflags':
+        print(get_python_abiflags())
+    elif sys.argv[1] == '--sosuffix':
+        get = sysconfig.get_config_var
+        suffix = get("EXT_SUFFIX") or get("SO") or ".so"
+        print(suffix[1:])
+    elif sys.argv[1] == '--pygi-overridedir':
+        import gi
+        print(gi._overridesdir)
+    elif sys.argv[1] == '--libloc':
+        print(get_python_libloc())
