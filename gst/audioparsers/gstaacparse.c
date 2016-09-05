@@ -745,7 +745,8 @@ gst_aac_parse_check_loas_frame (GstAacParse * aacparse,
 
   if ((data[0] == 0x56) && ((data[1] & 0xe0) == 0xe0)) {
     *framesize = gst_aac_parse_loas_get_frame_len (data);
-    GST_DEBUG_OBJECT (aacparse, "Found %u byte LOAS frame", *framesize);
+    GST_DEBUG_OBJECT (aacparse, "Found possible %u byte LOAS frame",
+        *framesize);
 
     /* In EOS mode this is enough. No need to examine the data further.
        We also relax the check when we have sync, on the assumption that
@@ -774,6 +775,8 @@ gst_aac_parse_check_loas_frame (GstAacParse * aacparse,
       gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse),
           nextlen + LOAS_MAX_SIZE);
       return TRUE;
+    } else {
+      GST_DEBUG_OBJECT (aacparse, "That was a false positive");
     }
   }
   return FALSE;
