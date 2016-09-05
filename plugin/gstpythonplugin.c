@@ -35,8 +35,6 @@ GST_DEBUG_CATEGORY_STATIC (pyplugindebug);
 
 #define GST_ORIGIN "http://gstreamer.freedesktop.org"
 
-static PyObject *element;
-
 static gboolean
 gst_python_plugin_load_file (GstPlugin * plugin, const char *name)
 {
@@ -215,8 +213,6 @@ plugin_init (GstPlugin * plugin)
   gboolean we_initialized = FALSE;
   GModule *libpython;
   gpointer has_python = NULL;
-  PyObject *seq, *list;
-  int i, len;
 
   GST_DEBUG_CATEGORY_INIT (pyplugindebug, "pyplugin", 0,
       "Python plugin loader");
