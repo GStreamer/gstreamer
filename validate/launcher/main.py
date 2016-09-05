@@ -525,7 +525,8 @@ Note that all testsuite should be inside python modules, so the directory should
 
     # Ensure that the scenario manager singleton is ready to be used
     ScenarioManager().config = options
-    tests_launcher.set_settings(options, [])
+    if not tests_launcher.set_settings(options, []):
+        exit(1)
     if tests_launcher.list_tests() == -1:
         printc("\nFailling as tests have been removed/added "
                " (--fail-on-testlist-change)", Colors.FAIL)

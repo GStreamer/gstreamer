@@ -1210,6 +1210,7 @@ class _TestsLauncher(Loggable):
                 printc("Could not load testsuite: %s"
                        " maybe because of missing TestManager"
                        % (testsuite), Colors.FAIL)
+                return False
 
     def _load_config(self, options):
         printc("Loading config files is DEPRECATED"
@@ -1250,7 +1251,9 @@ class _TestsLauncher(Loggable):
             tester.set_settings(options, args, self.reporter)
 
         if not options.config and options.testsuites:
-            self._setup_testsuites()
+            if self._setup_testsuites() is False:
+                return False
+        return True
 
     def _check_tester_has_other_testsuite(self, testsuite, tester):
         if tester.name != testsuite.TEST_MANAGER[0]:
