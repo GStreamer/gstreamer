@@ -97,7 +97,10 @@ static GstFlowReturn gst_aac_parse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize);
 static GstFlowReturn gst_aac_parse_pre_push_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
+static gboolean gst_aac_parse_src_event (GstBaseParse * parse,
+    GstEvent * event);
 
+#define gst_aac_parse_parent_class parent_class
 G_DEFINE_TYPE (GstAacParse, gst_aac_parse, GST_TYPE_BASE_PARSE);
 
 /**
@@ -128,6 +131,7 @@ gst_aac_parse_class_init (GstAacParseClass * klass)
   parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_aac_parse_handle_frame);
   parse_class->pre_push_frame =
       GST_DEBUG_FUNCPTR (gst_aac_parse_pre_push_frame);
+  parse_class->src_event = GST_DEBUG_FUNCPTR (gst_aac_parse_src_event);
 }
 
 
@@ -143,6 +147,9 @@ gst_aac_parse_init (GstAacParse * aacparse)
   GST_DEBUG ("initialized");
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (aacparse));
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (aacparse));
+
+  aacparse->last_parsed_sample_rate = 0;
+  aacparse->last_parsed_channels = 0;
 }
 
 
@@ -251,6 +258,9 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
   if (allowed)
     gst_caps_unref (allowed);
 
+  aacparse->last_parsed_channels = 0;
+  aacparse->last_parsed_sample_rate = 0;
+
   GST_DEBUG_OBJECT (aacparse, "setting src caps: %" GST_PTR_FORMAT, src_caps);
 
   res = gst_pad_set_caps (GST_BASE_PARSE (aacparse)->srcpad, src_caps);
@@ -347,7 +357,6 @@ gst_aac_parse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
       gst_base_parse_set_passthrough (parse, FALSE);
     }
   }
-
   return TRUE;
 }
 
@@ -524,6 +533,7 @@ gst_aac_parse_get_audio_sample_rate (GstAacParse * aacparse, GstBitReader * br,
     if (!*sample_rate)
       return FALSE;
   }
+  aacparse->last_parsed_sample_rate = *sample_rate;
   return TRUE;
 }
 
@@ -563,6 +573,7 @@ gst_aac_parse_read_loas_audio_specific_config (GstAacParse * aacparse,
       "Need more code to parse humongous LOAS data, currently ignored");
   if (bits)
     *bits = 0;
+  aacparse->last_parsed_channels = *channels;
   return TRUE;
 }
 
@@ -589,13 +600,13 @@ gst_aac_parse_read_loas_config (GstAacParse * aacparse, const guint8 * data,
     return FALSE;
   if (u8) {
     GST_LOG_OBJECT (aacparse, "Frame uses previous config");
-    if (!aacparse->sample_rate || !aacparse->channels) {
+    if (!aacparse->last_parsed_sample_rate || !aacparse->last_parsed_channels) {
       GST_DEBUG_OBJECT (aacparse,
           "No previous config to use. We'll look for more data.");
       return FALSE;
     }
-    *sample_rate = aacparse->sample_rate;
-    *channels = aacparse->channels;
+    *sample_rate = aacparse->last_parsed_sample_rate;
+    *channels = aacparse->last_parsed_channels;
     return TRUE;
   }
 
@@ -1439,6 +1450,8 @@ gst_aac_parse_start (GstBaseParse * parse)
   aacparse->frame_samples = 1024;
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), ADTS_MAX_SIZE);
   aacparse->sent_codec_tag = FALSE;
+  aacparse->last_parsed_channels = 0;
+  aacparse->last_parsed_sample_rate = 0;
   return TRUE;
 }
 
@@ -1585,4 +1598,17 @@ gst_aac_parse_sink_getcaps (GstBaseParse * parse, GstCaps * filter)
   }
 
   return res;
+}
+
+static gboolean
+gst_aac_parse_src_event (GstBaseParse * parse, GstEvent * event)
+{
+  GstAacParse *aacparse = GST_AAC_PARSE (parse);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+    aacparse->last_parsed_channels = 0;
+    aacparse->last_parsed_sample_rate = 0;
+  }
+
+  return GST_BASE_PARSE_CLASS (parent_class)->src_event (parse, event);
 }
