@@ -85,7 +85,8 @@ test_defines = [
   '-DGST_USE_UNSTABLE_API',
 ]
 
-runcmd = run_command('pkg-config', '--variable=pluginsdir', 'gstreamer-1.0')
+getpluginsdir = find_program('getpluginsdir')
+runcmd = run_command(getpluginsdir, 'gstreamer', 'gstreamer-1.0')
 if runcmd.returncode() == 0
   core_plugins_dir = runcmd.stdout().strip()
   message('Using GStreamer plug-ins in ' + core_plugins_dir)
