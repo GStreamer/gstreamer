@@ -9,7 +9,7 @@ if x11_dep.found() # FIXME: originally if USE_X
 
   if add_languages('cpp')                          # check for C++ support
     qt5_mod = import('qt5')
-    qt5widgets_dep = dependency('qt5', modules : ['Gui', 'Widgets'])
+    qt5widgets_dep = dependency('qt5', modules : ['Gui', 'Widgets'], required: false)
     if qt5widgets_dep.found()
       executable('qt-videooverlay', 'qt-videooverlay.cpp',
         cpp_args : gst_plugins_base_args,
