@@ -1098,8 +1098,7 @@ set_sockets_for_udpsinks (GstElement * udpsink[2], GSocket * rtp_socket,
 }
 
 static gboolean
-create_and_configure_udpsinks (GstRTSPStream * stream, GstElement * udpsink[2],
-    const gchar * multicast_iface)
+create_and_configure_udpsinks (GstRTSPStream * stream, GstElement * udpsink[2])
 {
   GstRTSPStreamPrivate *priv = stream->priv;
   GstElement *udpsink0, *udpsink1;
@@ -1133,9 +1132,6 @@ create_and_configure_udpsinks (GstRTSPStream * stream, GstElement * udpsink[2],
    * local unicast one. */
   g_object_set (G_OBJECT (udpsink0), "auto-multicast", TRUE, NULL);
   g_object_set (G_OBJECT (udpsink1), "auto-multicast", TRUE, NULL);
-
-  g_object_set (G_OBJECT (udpsink0), "multicast-iface", multicast_iface, NULL);
-  g_object_set (G_OBJECT (udpsink1), "multicast-iface", multicast_iface, NULL);
 
   g_object_set (G_OBJECT (udpsink0), "loop", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink1), "loop", FALSE, NULL);
@@ -1348,7 +1344,7 @@ again:
   /* This function is called twice (for v4 and v6) but we create only one pair
    * of udpsinks. */
   if (!udpsink_out[0]
-      && !create_and_configure_udpsinks (stream, udpsink_out, NULL))
+      && !create_and_configure_udpsinks (stream, udpsink_out))
     goto no_udp_protocol;
 
   set_sockets_for_udpsinks (udpsink_out, rtp_socket, rtcp_socket, family);
@@ -2628,7 +2624,7 @@ create_mcast_part_for_transport (GstRTSPStream * stream,
 
   /* Add receiver part */
   create_and_configure_udpsources (mcast_udpsrc, rtp_socket, rtcp_socket);
-  if (priv->srcpad) {
+  if (priv->sinkpad) {
     plug_src (stream, priv->joined_bin, mcast_udpsrc[0], priv->funnel[0]);
     gst_element_sync_state_with_parent (mcast_udpsrc[0]);
   }
@@ -2641,12 +2637,22 @@ create_mcast_part_for_transport (GstRTSPStream * stream,
     g_assert (!priv->mcast_udpqueue[0]);
     g_assert (!priv->mcast_udpqueue[1]);
 
-    create_and_configure_udpsinks (stream, priv->mcast_udpsink,
-        multicast_iface);
+    create_and_configure_udpsinks (stream, priv->mcast_udpsink);
+
+    g_object_set (G_OBJECT (priv->mcast_udpsink[0]), "multicast-iface",
+        multicast_iface, NULL);
+    g_object_set (G_OBJECT (priv->mcast_udpsink[1]), "multicast-iface",
+        multicast_iface, NULL);
+
+    g_signal_emit_by_name (priv->mcast_udpsink[0], "add", mcast_addr->address,
+        mcast_addr->port, NULL);
+    g_signal_emit_by_name (priv->mcast_udpsink[1], "add", mcast_addr->address,
+        mcast_addr->port + 1, NULL);
+
     set_sockets_for_udpsinks (priv->mcast_udpsink, rtp_socket, rtcp_socket,
         family);
 
-    if (priv->sinkpad) {
+    if (priv->srcpad) {
       plug_sink (priv->joined_bin, priv->tee[0], priv->mcast_udpsink[0],
           &priv->mcast_udpqueue[0]);
       gst_element_sync_state_with_parent (priv->mcast_udpsink[0]);
