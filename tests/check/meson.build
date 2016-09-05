@@ -32,13 +32,13 @@ test_defines = [
   '-DGST_USE_UNSTABLE_API',
 ]
 
-runcmd = run_command('pkg-config', '--variable=pluginsdir', 'gstreamer-1.0',
-        'gstreamer-plugins-base-1.0', 'gstreamer-plugins-bad-1.0')
+getpluginsdir = find_program('getpluginsdir')
+runcmd = run_command(getpluginsdir, 'gstreamer', 'gstreamer-' + apiversion,
+        'gst-plugins-base', 'gstreamer-plugins-base-' + apiversion,
+        'gst-plugins-bad', 'gstreamer-plugins-bad-' + apiversion)
 if runcmd.returncode() == 0
-    needed_plugins_dirs = meson.build_root() + 'plugins/nle'
-    foreach path: runcmd.stdout().strip().split(' ')
-        needed_plugins_dirs = needed_plugins_dirs + ':' + path
-    endforeach
+    needed_plugins_dirs = runcmd.stdout().strip() + ':' + meson.build_root() + '/plugins/nle'
+    message('Using GStreamer plug-ins in ' + needed_plugins_dirs)
 else
   error('Could not determine GStreamer core plugins directory for unit tests.')
 endif
