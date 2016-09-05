@@ -218,7 +218,6 @@ GST_START_TEST (test_multicast_address_and_unicast_udp)
   GstBin *bin;
   GstElement *rtpbin;
   GstRTSPAddressPool *pool;
-  GstRTSPTransport *tr;
 
   srcpad = gst_pad_new ("testsrcpad", GST_PAD_SRC);
   fail_unless (srcpad != NULL);
