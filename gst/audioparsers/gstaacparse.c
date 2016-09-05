@@ -75,12 +75,12 @@ GST_DEBUG_CATEGORY_STATIC (aacparse_debug);
 
 #define AAC_FRAME_DURATION(parse) (GST_SECOND/parse->frames_per_sec)
 
-static const gint loas_sample_rate_table[32] = {
+static const gint loas_sample_rate_table[16] = {
   96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050,
   16000, 12000, 11025, 8000, 7350, 0, 0, 0
 };
 
-static const gint loas_channels_table[32] = {
+static const gint loas_channels_table[16] = {
   0, 1, 2, 3, 4, 5, 6, 8,
   0, 0, 0, 7, 8, 0, 8, 0
 };
