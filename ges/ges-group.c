@@ -442,6 +442,8 @@ _child_added (GESContainer * group, GESTimelineElement * child)
   if (!GES_TIMELINE_ELEMENT_TIMELINE (group)) {
     timeline_add_group (GES_TIMELINE_ELEMENT_TIMELINE (child),
         GES_GROUP (group));
+    timeline_emit_group_added (GES_TIMELINE_ELEMENT_TIMELINE (child),
+        GES_GROUP (group));
   }
 
   children = GES_CONTAINER_CHILDREN (group);
@@ -618,9 +620,12 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
       paste_position);
 
   if (ngroup) {
-    if (GES_CONTAINER_CHILDREN (ngroup))
+    if (GES_CONTAINER_CHILDREN (ngroup)) {
       timeline_add_group (GES_TIMELINE_ELEMENT_TIMELINE (GES_CONTAINER_CHILDREN
               (ngroup)->data), GES_GROUP (element));
+      timeline_emit_group_added (GES_TIMELINE_ELEMENT_TIMELINE
+          (GES_CONTAINER_CHILDREN (ngroup)->data), GES_GROUP (element));
+    }
   }
 
   return ngroup;

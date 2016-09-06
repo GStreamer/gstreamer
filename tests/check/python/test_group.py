@@ -27,6 +27,8 @@ from gi.repository import GES  # noqa
 import unittest  # noqa
 from unittest import mock
 
+import common
+
 Gst.init(None)
 GES.init()
 
@@ -167,3 +169,33 @@ class TestGroup(unittest.TestCase):
         child_removed_cb.reset_mock()
         group.ungroup(recursive=False)
         child_removed_cb.assert_called_once_with(group, clip1)
+
+    def test_loaded_project_has_groups(self):
+        mainloop = common.create_main_loop()
+        timeline = common.create_project(with_group=True, saved=True)
+        layer, = timeline.get_layers()
+        group, = timeline.get_groups()
+        self.assertEqual(len(layer.get_clips()), 2)
+        for clip in layer.get_clips():
+            self.assertEqual(clip.get_parent(), group)
+
+        # Reload the project, check the group.
+        project = GES.Project.new(uri=timeline.get_asset().props.uri)
+
+        loaded_called = False
+        def loaded(unused_project, unused_timeline):
+            nonlocal loaded_called
+            loaded_called = True
+            mainloop.quit()
+        project.connect("loaded", loaded)
+
+        timeline = project.extract()
+
+        mainloop.run()
+        self.assertTrue(loaded_called)
+
+        layer, = timeline.get_layers()
+        group, = timeline.get_groups()
+        self.assertEqual(len(layer.get_clips()), 2)
+        for clip in layer.get_clips():
+            self.assertEqual(clip.get_parent(), group)

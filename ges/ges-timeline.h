@@ -120,6 +120,8 @@ GESTrack * ges_timeline_get_track_for_pad (GESTimeline *timeline, GstPad *pad);
 GstPad * ges_timeline_get_pad_for_track (GESTimeline * timeline, GESTrack *track);
 GList *ges_timeline_get_tracks (GESTimeline *timeline);
 
+GList* ges_timeline_get_groups (GESTimeline * timeline);
+
 gboolean ges_timeline_commit (GESTimeline * timeline);
 gboolean ges_timeline_commit_sync (GESTimeline * timeline);
 

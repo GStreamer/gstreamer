@@ -550,7 +550,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
    * @timeline: the #GESTimeline
    * @layer: the #GESLayer that was added to the timeline
    *
-   * Will be emitted after the layer was added to the timeline.
+   * Will be emitted after a new layer is added to the timeline.
    */
   ges_timeline_signals[LAYER_ADDED] =
       g_signal_new ("layer-added", G_TYPE_FROM_CLASS (klass),
@@ -574,7 +574,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
    * @timeline: the #GESTimeline
    * @group: the #GESGroup
    *
-   * Will be emitted after a group has been added to to the timeline.
+   * Will be emitted after a new group is added to to the timeline.
    */
   ges_timeline_signals[GROUP_ADDED] =
       g_signal_new ("group-added", G_TYPE_FROM_CLASS (klass),
@@ -2185,7 +2185,18 @@ timeline_add_group (GESTimeline * timeline, GESGroup * group)
       gst_object_ref_sink (group));
 
   ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (group), timeline);
+}
 
+/**
+ * timeline_emit_group_added:
+ * @timeline: a #GESTimeline
+ * @group: group that was added
+ *
+ * Emit group-added signal.
+ */
+void
+timeline_emit_group_added (GESTimeline * timeline, GESGroup * group)
+{
   g_signal_emit (timeline, ges_timeline_signals[GROUP_ADDED], 0, group);
 }
 
@@ -2215,12 +2226,6 @@ timeline_remove_group (GESTimeline * timeline, GESGroup * group)
   timeline->priv->movecontext.needs_move_ctx = TRUE;
   ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (group), NULL);
   gst_object_unref (group);
-}
-
-GList *
-timeline_get_groups (GESTimeline * timeline)
-{
-  return timeline->priv->groups;
 }
 
 static GPtrArray *
@@ -2915,6 +2920,22 @@ ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
     gst_object_unref (project);
 
   return ret;
+}
+
+/**
+ * ges_timeline_get_groups:
+ * @timeline: a #GESTimeline
+ *
+ * Get the list of #GESGroup present in the Timeline.
+ *
+ * Returns: (transfer none) (element-type GESGroup): the list of
+ * #GESGroup that contain clips present in the timeline's layers.
+ * Must not be changed.
+ */
+GList *
+ges_timeline_get_groups (GESTimeline * timeline)
+{
+  return timeline->priv->groups;
 }
 
 /**

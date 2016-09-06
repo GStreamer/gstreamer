@@ -1293,7 +1293,7 @@ _save_groups (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
   GList *seen_groups = NULL;
 
   g_string_append (str, "      <groups>\n");
-  for (tmp = timeline_get_groups (timeline); tmp; tmp = tmp->next) {
+  for (tmp = ges_timeline_get_groups (timeline); tmp; tmp = tmp->next) {
     _save_group (self, str, &seen_groups, tmp->data);
   }
   g_string_append (str, "      </groups>\n");

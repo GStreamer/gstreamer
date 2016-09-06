@@ -100,10 +100,15 @@ timeline_context_to_layer      (GESTimeline *timeline, gint offset);
 G_GNUC_INTERNAL void
 timeline_add_group             (GESTimeline *timeline,
                                 GESGroup *group);
-G_GNUC_INTERNAL
-void
+G_GNUC_INTERNAL void
 timeline_remove_group          (GESTimeline *timeline,
                                 GESGroup *group);
+G_GNUC_INTERNAL void
+timeline_emit_group_added      (GESTimeline *timeline,
+                                GESGroup *group);
+G_GNUC_INTERNAL void
+timeline_emit_group_removed    (GESTimeline * timeline,
+                                GESGroup * group, GPtrArray * array);
 
 G_GNUC_INTERNAL
 gboolean
@@ -118,12 +123,6 @@ G_GNUC_INTERNAL
 void
 timeline_fill_gaps            (GESTimeline *timeline);
 
-G_GNUC_INTERNAL GList *
-timeline_get_groups           (GESTimeline * timeline);
-
-G_GNUC_INTERNAL void
-timeline_emit_group_removed  (GESTimeline * timeline,
-                               GESGroup * group, GPtrArray * array);
 G_GNUC_INTERNAL
 void
 track_resort_and_fill_gaps    (GESTrack *track);
