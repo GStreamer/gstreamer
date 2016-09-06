@@ -1533,10 +1533,18 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
       GST_SMPTE_TIME_CODE_SYSTEM_25 : GST_SMPTE_TIME_CODE_SYSTEM_30,
       &frame_number, &timecode);
 
-  next_ts = gst_util_uint64_scale_int (
-      (dvdemux->frame_offset + 1) * GST_SECOND,
-      dvdemux->framerate_denominator, dvdemux->framerate_numerator);
-  duration = next_ts - dvdemux->time_segment.position;
+  if (dvdemux->time_segment.rate < 0) {
+    next_ts = gst_util_uint64_scale_int (
+        (dvdemux->frame_offset >
+            0 ? dvdemux->frame_offset - 1 : 0) * GST_SECOND,
+        dvdemux->framerate_denominator, dvdemux->framerate_numerator);
+    duration = dvdemux->time_segment.position - next_ts;
+  } else {
+    next_ts = gst_util_uint64_scale_int (
+        (dvdemux->frame_offset + 1) * GST_SECOND,
+        dvdemux->framerate_denominator, dvdemux->framerate_numerator);
+    duration = next_ts - dvdemux->time_segment.position;
+  }
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   dv_parse_packs (dvdemux->decoder, map.data);
@@ -1569,10 +1577,22 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
 
   dvdemux->discont = FALSE;
   dvdemux->time_segment.position = next_ts;
-  dvdemux->frame_offset++;
+
+  if (dvdemux->time_segment.rate < 0) {
+    if (dvdemux->frame_offset > 0)
+      dvdemux->frame_offset--;
+    else
+      GST_WARNING_OBJECT (dvdemux,
+          "Got before frame offset 0 in reverse playback");
+  } else {
+    dvdemux->frame_offset++;
+  }
 
   /* check for the end of the segment */
-  if (dvdemux->time_segment.stop != -1 && next_ts > dvdemux->time_segment.stop)
+  if ((dvdemux->time_segment.rate > 0 && dvdemux->time_segment.stop != -1
+          && next_ts > dvdemux->time_segment.stop)
+      || (dvdemux->time_segment.rate < 0
+          && dvdemux->time_segment.start > next_ts))
     ret = GST_FLOW_EOS;
   else
     ret = GST_FLOW_OK;
