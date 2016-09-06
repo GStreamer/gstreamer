@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+import argparse
+import os
+import subprocess
+
+
+SCRIPTDIR = os.path.dirname(__file__)
+
+class Colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+
+    force_disable = False
+
+    @classmethod
+    def disable(cls):
+        cls.HEADER = ''
+        cls.OKBLUE = ''
+        cls.OKGREEN = ''
+        cls.WARNING = ''
+        cls.FAIL = ''
+        cls.ENDC = ''
+
+    @classmethod
+    def enable(cls):
+        if cls.force_disable:
+            return
+
+        cls.HEADER = '\033[95m'
+        cls.OKBLUE = '\033[94m'
+        cls.OKGREEN = '\033[92m'
+        cls.WARNING = '\033[93m'
+        cls.FAIL = '\033[91m'
+        cls.ENDC = '\033[0m'
+
+
+
+def git(args, repository_path):
+    if not isinstance(args, list):
+        args = [args]
+
+    return subprocess.check_output(["git"] + args, cwd=repository_path).decode()
+
+
+def update_subprojects():
+    subprojects_dir = os.path.join(SCRIPTDIR, "subprojects")
+    for repo_name in os.listdir(subprojects_dir):
+        repo_dir = os.path.normpath(os.path.join(SCRIPTDIR, subprojects_dir, repo_name))
+        if not os.path.exists(os.path.join(repo_dir, '.git')):
+            continue
+
+        print("Updating %s..." % repo_name)
+        try:
+            git(["pull", "--rebase"], repo_dir)
+        except Exception as e:
+            print("\nCould not rebase %s, please fix and try again\nerror:\n  %s" % (repo_dir, e))
+            return False
+
+        commit_message = git("show", repo_dir).split("\n")
+        print(u"  -> %s%s%s — %s" % (Colors.HEADER, commit_message[0][7:14], Colors.ENDC,
+                                       commit_message[4].strip()))
+
+    return True
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="git-update")
+
+    parser.add_argument("--no-color",
+                        default=False,
+                        action='store_true',
+                        help="Do not output ansi colors.")
+    options = parser.parse_args()
+    if options.no_color:
+        Colors.disable()
+
+    exit(not update_subprojects())
