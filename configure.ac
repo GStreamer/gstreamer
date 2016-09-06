@@ -2998,14 +2998,15 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
 dnl *** Vulkan ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VULKAN, true)
 AG_GST_CHECK_FEATURE(VULKAN, [Vulkan elements], vulkan, [
-  HAVE_VULKAN=no
   AC_CHECK_HEADER(vulkan/vulkan.h, [
     AC_CHECK_LIB(vulkan, vkCreateDevice, [
       VULKAN_LIBS="-lvulkan"
       AC_SUBST(VULKAN_LIBS)
-      dnl TODO check platform support (x11, win32, wayland, android, etc)
-      if test "x$HAVE_XCB" = "xyes"; then
-        HAVE_VULKAN=yes
+      if test "x$GST_VULKAN_HAVE_WINDOW_XCB" = "x1"; then
+        HAVE_VULKAN="yes"
+      fi
+      if test "x$GST_VULKAN_HAVE_WINDOW_WAYLAND" = "x1"; then
+        HAVE_VULKAN="yes"
       fi
     ], [])
   ], [])
