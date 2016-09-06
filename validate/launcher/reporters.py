@@ -69,7 +69,7 @@ class Reporter(Loggable):
         self._start_time = time.time()
 
     def set_failed(self, test):
-        self.stats["failure"] += 1
+        self.stats["failures"] += 1
 
     def set_passed(self, test):
         self.stats["passed"] += 1

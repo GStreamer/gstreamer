@@ -251,8 +251,6 @@ class LauncherConfig(Loggable):
             self.logsdir = None
         if self.logsdir is None:
             self.logsdir = os.path.join(self.output_dir, "logs")
-        if self.xunit_file is None:
-            self.xunit_file = os.path.join(self.logsdir, "xunit.xml")
         if self.dest is None:
             self.dest = os.path.join(self.output_dir, "rendered")
 
@@ -446,8 +444,7 @@ Note that all testsuite should be inside python modules, so the directory should
         "Directories and files to be used by the launcher")
     parser.add_argument('--xunit-file', action='store',
                         dest='xunit_file', metavar="FILE",
-                        help=("Path to xml file to store the xunit report in. "
-                              "Default is LOGSDIR/xunit.xml"))
+                        help=("Path to xml file to store the xunit report in."))
     dir_group.add_argument("-M", "--main-dir", dest="main_dir",
                            help="Main directory where to put files. Default is %s" % DEFAULT_MAIN_DIR)
     dir_group.add_argument("--testsuites-dir", dest="testsuites_dir",

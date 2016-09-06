@@ -1226,7 +1226,10 @@ class _TestsLauncher(Loggable):
         globals()["__file__"] = c__file__
 
     def set_settings(self, options, args):
-        self.reporter = reporters.XunitReporter(options)
+        if options.xunit_file:
+            self.reporter = reporters.XunitReporter(options)
+        else:
+            self.reporter = reporters.Reporter(options)
 
         self.options = options
         wanted_testers = None
