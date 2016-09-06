@@ -2190,7 +2190,7 @@ timeline_add_group (GESTimeline * timeline, GESGroup * group)
 }
 
 /**
- * ges_timeline_emit_group_removed:
+ * timeline_emit_group_removed:
  * @timeline: a #GESTimeline
  * @group: group that was removed
  * @array: (element-type GESTimelineElement): children that were removed
