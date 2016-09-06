@@ -1364,7 +1364,8 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act,
       priv->seeked_in_pause = FALSE;
       GST_VALIDATE_REPORT (scenario, EVENT_SEEK_RESULT_POSITION_WRONG,
           "Reported position after accurate seek in PAUSED state should be exactly"
-          " what the user asked for %" GST_TIME_FORMAT " != %" GST_TIME_FORMAT,
+          " what the user asked for. Position %" GST_TIME_FORMAT
+          " is not not the expected one:  %" GST_TIME_FORMAT,
           GST_TIME_ARGS (*position), GST_TIME_ARGS (priv->segment_start));
     }
   }
