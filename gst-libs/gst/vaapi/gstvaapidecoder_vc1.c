@@ -957,7 +957,9 @@ decode_frame (GstVaapiDecoderVC1 * decoder, GstVC1BDU * rbdu, GstVC1BDU * ebdu)
     return get_status (result);
   }
 
-  if (frame_hdr->pic.advanced.fcm != GST_VC1_FRAME_PROGRESSIVE) {
+  /* @FIXME: intel-driver cannot handle interlaced frames */
+  if (priv->profile == GST_VAAPI_PROFILE_VC1_ADVANCED
+      && frame_hdr->pic.advanced.fcm != GST_VC1_FRAME_PROGRESSIVE) {
     GST_ERROR ("interlaced video not supported");
     return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
   }
@@ -1304,6 +1306,7 @@ gst_vaapi_decoder_vc1_parse (GstVaapiDecoder * base_decoder,
       flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
       break;
     case GST_VC1_FIELD:
+      /* @FIXME: intel-driver cannot handle interlaced frames */
       GST_ERROR ("interlaced video not supported");
       return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
   }
