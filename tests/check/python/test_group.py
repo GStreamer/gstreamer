@@ -25,6 +25,7 @@ gi.require_version("GES", "1.0")
 from gi.repository import Gst  # noqa
 from gi.repository import GES  # noqa
 import unittest  # noqa
+from unittest import mock
 
 Gst.init(None)
 GES.init()
@@ -149,3 +150,20 @@ class TestGroup(unittest.TestCase):
 
         clips = layer2.get_clips()
         self.assertEqual(len(clips), 4)
+
+    def test_remove_emits_signal(self):
+        clip1 = GES.TestClip.new()
+        self.layer.add_clip(clip1)
+
+        group = GES.Group.new()
+        child_removed_cb = mock.Mock()
+        group.connect("child-removed", child_removed_cb)
+
+        group.add(clip1)
+        group.remove(clip1)
+        child_removed_cb.assert_called_once_with(group, clip1)
+
+        group.add(clip1)
+        child_removed_cb.reset_mock()
+        group.ungroup(recursive=False)
+        child_removed_cb.assert_called_once_with(group, clip1)
