@@ -5304,7 +5304,7 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
       gst_pad_push_event (stream->pad, event);
     }
 
-    if (qtdemux->cenc_aux_info_offset > 0 && info->crypto_info == NULL) {
+    if (qtdemux->cenc_aux_info_offset == 0 || info->crypto_info == NULL) {
       GST_DEBUG_OBJECT (qtdemux, "cenc metadata hasn't been parsed yet");
       gst_buffer_unref (buf);
       goto exit;
