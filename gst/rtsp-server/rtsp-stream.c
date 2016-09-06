@@ -1056,7 +1056,7 @@ gst_rtsp_stream_reserve_address (GstRTSPStream * stream,
     /* FIXME: Also reserve the same port with unicast ANY address, since that's
      * where we are going to bind our socket. */
   } else {
-    if (strcmp ((*addrp)->address, address) ||
+    if (g_ascii_strcasecmp ((*addrp)->address, address) ||
         (*addrp)->port != port || (*addrp)->n_ports != n_ports ||
         (*addrp)->ttl != ttl)
       goto different_address;
@@ -1082,8 +1082,9 @@ no_address:
   }
 different_address:
   {
-    GST_ERROR_OBJECT (stream, "address %s is not the same that was already"
-        " reserved", address);
+    GST_ERROR_OBJECT (stream,
+        "address %s is not the same as %s that was already" " reserved",
+        address, (*addrp)->address);
     g_mutex_unlock (&priv->lock);
     return NULL;
   }
