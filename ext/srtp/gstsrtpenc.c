@@ -386,9 +386,11 @@ gst_srtp_enc_create_session (GstSrtpEnc * filter)
     gsize keysize;
 
     if (filter->key == NULL) {
+      GST_OBJECT_UNLOCK (filter);
       GST_ELEMENT_ERROR (filter, LIBRARY, SETTINGS,
           ("Cipher is not NULL, key must be set"),
           ("Cipher is not NULL, key must be set"));
+      GST_OBJECT_LOCK (filter);
       return err_status_fail;
     }
 
@@ -396,10 +398,12 @@ gst_srtp_enc_create_session (GstSrtpEnc * filter)
     keysize = gst_buffer_get_size (filter->key);
 
     if (expected != keysize) {
+      GST_OBJECT_UNLOCK (filter);
       GST_ELEMENT_ERROR (filter, LIBRARY, SETTINGS,
           ("Master key size is wrong"),
           ("Expected master key of %d bytes, but received %" G_GSIZE_FORMAT
               " bytes", expected, keysize));
+      GST_OBJECT_LOCK (filter);
       return err_status_fail;
     }
   }
