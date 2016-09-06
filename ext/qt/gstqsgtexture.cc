@@ -45,6 +45,7 @@ GstQSGTexture::GstQSGTexture ()
 
   gst_video_info_init (&this->v_info);
   this->buffer_ = NULL;
+  this->qt_context_ = NULL;
   this->sync_buffer_ = gst_buffer_new ();
 }
 
@@ -86,6 +87,9 @@ GstQSGTexture::bind ()
   GstGLSyncMeta *sync_meta;
   GstMemory *mem;
   guint tex_id;
+
+  if (!this->qt_context_)
+    return;
 
   gst_gl_context_activate (this->qt_context_, TRUE);
 
