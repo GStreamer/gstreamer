@@ -1284,7 +1284,10 @@ again:
     tmp_rtp = addr->port;
 
     g_clear_object (&inetaddr);
-    inetaddr = g_inet_address_new_from_string (addr->address);
+    if (multicast)
+      inetaddr = g_inet_address_new_any (family);
+    else
+      inetaddr = g_inet_address_new_from_string (addr->address);
   } else {
     if (tmp_rtp != 0) {
       tmp_rtp += 2;
