@@ -161,10 +161,8 @@ static const GstVaapiDecoderMap vaapi_decode_map[] = {
       "video/mpeg, mpegversion=4"},
   {GST_VAAPI_CODEC_H263, GST_RANK_PRIMARY, "h263", "video/x-h263"},
   {GST_VAAPI_CODEC_H264, GST_RANK_PRIMARY, "h264", "video/x-h264"},
-  {GST_VAAPI_CODEC_WMV3, GST_RANK_PRIMARY, "wmv3",
-      "video/x-wmv, wmvversion=3, format=WMV3"},
   {GST_VAAPI_CODEC_VC1, GST_RANK_PRIMARY, "vc1",
-      "video/x-wmv, wmvversion=3, format={WVC1,WMVA}"},
+      "video/x-wmv, wmvversion=3, format={WMV3,WVC1}"},
 #if USE_VP8_DECODER
   {GST_VAAPI_CODEC_VP8, GST_RANK_PRIMARY, "vp8", "video/x-vp8"},
 #endif
