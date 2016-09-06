@@ -7,7 +7,7 @@ import site
 import subprocess
 
 
-SCRIPTDIR = os.path.dirname(__file__)
+SCRIPTDIR = os.path.abspath(os.path.dirname(__file__))
 
 
 def prepend_env_var(env, var, value):
@@ -114,18 +114,19 @@ if __name__ == "__main__":
                         help="The meson build directory")
     parser.add_argument("--gst-version", default="master",
                         help="The meson build directory")
-    options = parser.parse_args()
+    options, args = parser.parse_known_args()
 
     if not os.path.exists(options.builddir):
         print("GStreamer not built in %s\n\nBuild it and try again" %
               options.builddir)
         exit(1)
 
-    shell_args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
-    if shell_args[0] == "/bin/bash":
-        shell_args.append("--noprofile")
+    if not args:
+        args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
+        if args[0] == "/bin/bash":
+            args.append("--noprofile")
 
     try:
-        exit(subprocess.run(shell_args, env=get_subprocess_env(options)).returncode)
+        exit(subprocess.run(args, env=get_subprocess_env(options)).returncode)
     except subprocess.CalledProcessError as e:
         exit(e.returncode)
