@@ -1016,6 +1016,10 @@ gst_vaapi_surface_set_subpictures_from_composition (GstVaapiSurface * surface,
         (gint *) & sub_rect.x, (gint *) & sub_rect.y,
         &sub_rect.width, &sub_rect.height);
 
+    /* ensure that the overlay is not bigger than the surface */
+    sub_rect.y = MIN (sub_rect.y, surface->height);
+    sub_rect.width = MIN (sub_rect.width, surface->width);
+
     if (!gst_vaapi_surface_associate_subpicture (surface, subpicture,
             NULL, &sub_rect)) {
       GST_WARNING ("could not render overlay rectangle %p", rect);
