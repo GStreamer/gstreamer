@@ -208,8 +208,10 @@ gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
     if (!ensure_image (mem))
       goto error_ensure_image;
 
-    // Load VA image from surface
-    if ((flags & GST_MAP_READ) && !ensure_image_is_current (mem))
+    /* Load VA image from surface only on read OR write, not both.
+     * Refer to bugs #704078 and #704083 */
+    if (((flags & GST_MAP_READWRITE) != GST_MAP_READWRITE)
+        && !ensure_image_is_current (mem))
       goto error_no_current_image;
 
     if (!gst_vaapi_image_map (mem->image))
