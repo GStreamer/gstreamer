@@ -162,6 +162,37 @@ mergewl uvuv, uv, uv
 x2 mergewl ayuv, ayay, uvuv
 
 
+.function video_orc_pack_VYUY
+.dest 4 vyuy guint8
+.source 8 ayuv guint8
+.temp 2 yy
+.temp 2 vu
+.temp 4 ayay
+.temp 4 uvuv
+
+x2 splitlw uvuv, ayay, ayuv
+select0lw vu, uvuv
+x2 select1wb yy, ayay
+swapw vu, vu
+x2 mergebw vyuy, vu, yy
+
+
+.function video_orc_unpack_VYUY
+.dest 8 ayuv guint8
+.source 4 vyuy guint8
+.const 2 c255 0xff
+.temp 2 yy
+.temp 2 uv
+.temp 4 ayay
+.temp 4 uvuv
+
+x2 splitwb yy, uv, vyuy
+swapw uv, uv
+x2 mergebw ayay, c255, yy
+mergewl uvuv, uv, uv
+x2 mergewl ayuv, ayay, uvuv
+
+
 .function video_orc_unpack_YVYU
 .dest 8 ayuv guint8
 .source 4 uyvy guint8

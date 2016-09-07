@@ -302,6 +302,82 @@ pack_UYVY (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
+#define PACK_VYUY GST_VIDEO_FORMAT_AYUV, unpack_VYUY, 1, pack_VYUY
+static void
+unpack_VYUY (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  const guint8 *s = GET_LINE (y);
+  guint8 *d = dest;
+
+  s += (x & ~1) << 1;
+  if (x & 1) {
+    d[0] = 0xff;
+    d[1] = s[3];
+    d[2] = s[0];
+    d[3] = s[2];
+    s += 4;
+    d += 4;
+    width--;
+  }
+
+  if (IS_ALIGNED (d, 8))
+    video_orc_unpack_VYUY (d, s, width / 2);
+  else {
+    gint i;
+
+    for (i = 0; i < width / 2; i++) {
+      d[i * 8 + 0] = 0xff;
+      d[i * 8 + 1] = s[i * 4 + 1];
+      d[i * 8 + 2] = s[i * 4 + 0];
+      d[i * 8 + 3] = s[i * 4 + 2];
+      d[i * 8 + 4] = 0xff;
+      d[i * 8 + 5] = s[i * 4 + 3];
+      d[i * 8 + 6] = s[i * 4 + 0];
+      d[i * 8 + 7] = s[i * 4 + 2];
+    }
+  }
+
+  if (width & 1) {
+    gint i = width - 1;
+
+    d[i * 4 + 0] = 0xff;
+    d[i * 4 + 1] = s[i * 2 + 1];
+    d[i * 4 + 2] = s[i * 2 + 0];
+    d[i * 4 + 3] = s[i * 2 + 2];
+  }
+}
+
+static void
+pack_VYUY (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  guint8 *restrict d = GET_LINE (y);
+  const guint8 *restrict s = src;
+
+  if (IS_ALIGNED (s, 8))
+    video_orc_pack_VYUY (d, s, width / 2);
+  else {
+    gint i;
+    for (i = 0; i < width / 2; i++) {
+      d[i * 4 + 0] = s[i * 8 + 2];
+      d[i * 4 + 1] = s[i * 8 + 1];
+      d[i * 4 + 2] = s[i * 8 + 3];
+      d[i * 4 + 3] = s[i * 8 + 5];
+    }
+  }
+  if (width & 1) {
+    gint i = width - 1;
+
+    d[i * 2 + 0] = s[i * 4 + 2];
+    d[i * 2 + 1] = s[i * 4 + 1];
+    d[i * 2 + 2] = s[i * 4 + 3];
+  }
+}
+
 #define PACK_YVYU GST_VIDEO_FORMAT_AYUV, unpack_YVYU, 1, pack_YVYU
 static void
 unpack_YVYU (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
@@ -3864,6 +3940,8 @@ static const VideoFormat formats[] = {
       PSTR244, PLANE011, OFFS001, SUB420, PACK_P010_10LE),
   MAKE_YUV_FORMAT (IYU2, "raw video", GST_MAKE_FOURCC ('I', 'Y', 'U', '2'),
       DPTH888, PSTR333, PLANE0, OFFS102, SUB444, PACK_IYU2),
+  MAKE_YUV_FORMAT (VYUY, "raw video", GST_MAKE_FOURCC ('V', 'Y', 'U', 'Y'),
+      DPTH888, PSTR244, PLANE0, OFFS102, SUB422, PACK_VYUY),
 };
 
 static GstVideoFormat
@@ -4050,6 +4128,8 @@ gst_video_format_from_fourcc (guint32 fourcc)
       return GST_VIDEO_FORMAT_YVYU;
     case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
       return GST_VIDEO_FORMAT_UYVY;
+    case GST_MAKE_FOURCC ('V', 'Y', 'U', 'Y'):
+      return GST_VIDEO_FORMAT_VYUY;
     case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
       return GST_VIDEO_FORMAT_AYUV;
     case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):

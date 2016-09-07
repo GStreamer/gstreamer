@@ -4037,6 +4037,7 @@ get_scale_format (GstVideoFormat format, gint plane)
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_VYUY:
     case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_RGBx:
@@ -4107,6 +4108,7 @@ is_merge_yuv (GstVideoInfo * info)
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_VYUY:
       return TRUE;
     default:
       return FALSE;

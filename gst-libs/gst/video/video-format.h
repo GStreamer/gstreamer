@@ -38,6 +38,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_YV12: planar 4:2:0 YVU (like I420 but UV planes swapped)
  * @GST_VIDEO_FORMAT_YUY2: packed 4:2:2 YUV (Y0-U0-Y1-V0 Y2-U2-Y3-V2 Y4 ...)
  * @GST_VIDEO_FORMAT_UYVY: packed 4:2:2 YUV (U0-Y0-V0-Y1 U2-Y2-V2-Y3 U4 ...)
+ * @GST_VIDEO_FORMAT_VYUY: packed 4:2:2 YUV (V0-Y0-U0-Y1 V2-Y2-U2-Y3 V4 ...)
  * @GST_VIDEO_FORMAT_AYUV: packed 4:4:4 YUV with alpha channel (A0-Y0-U0-V0 ...)
  * @GST_VIDEO_FORMAT_RGBx: sparse rgb packed into 32 bit, space last
  * @GST_VIDEO_FORMAT_BGRx: sparse reverse rgb packed into 32 bit, space last
@@ -164,6 +165,7 @@ typedef enum {
   GST_VIDEO_FORMAT_P010_10BE,
   GST_VIDEO_FORMAT_P010_10LE,
   GST_VIDEO_FORMAT_IYU2,
+  GST_VIDEO_FORMAT_VYUY,
 } GstVideoFormat;
 
 #define GST_VIDEO_MAX_PLANES 4
@@ -496,7 +498,7 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
 # define GST_VIDEO_OE(s) G_STRINGIFY(s)"_LE"
 #endif
 
-#define GST_VIDEO_FORMATS_ALL "{ I420, YV12, YUY2, UYVY, AYUV, RGBx, "  \
+#define GST_VIDEO_FORMATS_ALL "{ I420, YV12, YUY2, UYVY, VYUY, AYUV, RGBx, "  \
     "BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, "  \
     "YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, " \
     "GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, " \

@@ -615,6 +615,7 @@ fill_planes (GstVideoInfo * info)
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_VYUY:
       info->stride[0] = GST_ROUND_UP_4 (width * 2);
       info->offset[0] = 0;
       info->size = info->stride[0] * height;
