@@ -1827,7 +1827,8 @@ find_transport (GstRTSPStream * stream, const gchar * rtcp_from)
       max = tr->client_port.max;
     }
 
-    if ((strcmp (tr->destination, dest) == 0) && (min == port || max == port)) {
+    if ((g_ascii_strcasecmp (tr->destination, dest) == 0) &&
+        (min == port || max == port)) {
       result = trans;
       break;
     }
@@ -2621,7 +2622,7 @@ check_mcast_part_for_transport (GstRTSPStream * stream,
   if (!mcast_addr)
     goto no_addr;
 
-  if (!g_str_equal (tr->destination, mcast_addr->address) ||
+  if (g_ascii_strcasecmp (tr->destination, mcast_addr->address) != 0 ||
       tr->port.min != mcast_addr->port ||
       tr->port.max != mcast_addr->port + mcast_addr->n_ports - 1 ||
       tr->ttl != mcast_addr->ttl)
