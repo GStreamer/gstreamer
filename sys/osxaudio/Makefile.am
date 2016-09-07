@@ -17,22 +17,22 @@ libgstosxaudio_la_LIBADD = 			  \
     $(GST_LIBS)
 
 libgstosxaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -Wl,-framework,CoreAudio  -Wl,-framework,AudioToolbox
-
-if !HAVE_IOS
-libgstosxaudio_la_SOURCES += gstosxaudiodeviceprovider.c
-libgstosxaudio_la_LDFLAGS += -Wl,-framework,AudioUnit -Wl,-framework,CoreServices
-endif
-
 libgstosxaudio_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS) --tag=CC
 
 noinst_HEADERS = gstosxaudiosink.h	  \
+                 gstosxaudiodeviceprovider.h \
                  gstosxaudioelement.h \
                  gstosxaudioringbuffer.h	  \
                  gstosxaudiosrc.h     \
                  gstosxcoreaudiocommon.h     \
-                 gstosxcoreaudio.h \
-                 gstosxcoreaudiohal.c \
-                 gstosxcoreaudioremoteio.c
+                 gstosxcoreaudio.h
 
+EXTRA_DIST = gstosxcoreaudiohal.c \
+             gstosxcoreaudioremoteio.c
 
-
+if !HAVE_IOS
+libgstosxaudio_la_SOURCES += gstosxaudiodeviceprovider.c
+libgstosxaudio_la_LDFLAGS += -Wl,-framework,AudioUnit -Wl,-framework,CoreServices
+else
+EXTRA_DIST += gstosxaudiodeviceprovider.c
+endif
