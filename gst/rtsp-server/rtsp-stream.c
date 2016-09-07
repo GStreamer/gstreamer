@@ -913,9 +913,21 @@ gst_rtsp_stream_get_multicast_iface (GstRTSPStream * stream)
   return result;
 }
 
-
-static GstRTSPAddress *
-gst_rtsp_stream_get_multicast_address_locked (GstRTSPStream * stream,
+/**
+ * gst_rtsp_stream_get_multicast_address:
+ * @stream: a #GstRTSPStream
+ * @family: the #GSocketFamily
+ *
+ * Get the multicast address of @stream for @family. The original
+ * #GstRTSPAddress is cached and copy is returned, so freeing the return value
+ * won't release the address from the pool.
+ *
+ * Returns: (transfer full) (nullable): the #GstRTSPAddress of @stream
+ * or %NULL when no address could be allocated. gst_rtsp_address_free()
+ * after usage.
+ */
+GstRTSPAddress *
+gst_rtsp_stream_get_multicast_address (GstRTSPStream * stream,
     GSocketFamily family)
 {
   GstRTSPStreamPrivate *priv;
@@ -923,7 +935,11 @@ gst_rtsp_stream_get_multicast_address_locked (GstRTSPStream * stream,
   GstRTSPAddress **addrp;
   GstRTSPAddressFlags flags;
 
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+
   priv = stream->priv;
+
+  g_mutex_lock (&stream->priv->lock);
 
   if (family == G_SOCKET_FAMILY_IPV6) {
     flags = GST_RTSP_ADDRESS_FLAG_IPV6;
@@ -951,47 +967,23 @@ gst_rtsp_stream_get_multicast_address_locked (GstRTSPStream * stream,
   }
   result = gst_rtsp_address_copy (*addrp);
 
+  g_mutex_unlock (&stream->priv->lock);
+
   return result;
 
   /* ERRORS */
 no_pool:
   {
     GST_ERROR_OBJECT (stream, "no address pool specified");
+    g_mutex_unlock (&stream->priv->lock);
     return NULL;
   }
 no_address:
   {
     GST_ERROR_OBJECT (stream, "failed to acquire address from pool");
+    g_mutex_unlock (&stream->priv->lock);
     return NULL;
   }
-}
-
-/**
- * gst_rtsp_stream_get_multicast_address:
- * @stream: a #GstRTSPStream
- * @family: the #GSocketFamily
- *
- * Get the multicast address of @stream for @family. The original
- * #GstRTSPAddress is cached and copy is returned, so freeing the return value
- * won't release the address from the pool.
- *
- * Returns: (transfer full) (nullable): the #GstRTSPAddress of @stream
- * or %NULL when no address could be allocated. gst_rtsp_address_free()
- * after usage.
- */
-GstRTSPAddress *
-gst_rtsp_stream_get_multicast_address (GstRTSPStream * stream,
-    GSocketFamily family)
-{
-  GstRTSPAddress *result;
-
-  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
-
-  g_mutex_lock (&stream->priv->lock);
-  result = gst_rtsp_stream_get_multicast_address_locked (stream, family);
-  g_mutex_unlock (&stream->priv->lock);
-
-  return result;
 }
 
 /**
