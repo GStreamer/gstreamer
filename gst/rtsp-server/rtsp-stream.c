@@ -2768,7 +2768,7 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
         (GCallback) caps_notify, stream);
   }
 
-  priv->joined_bin = gst_object_ref (bin);
+  priv->joined_bin = bin;
   g_mutex_unlock (&priv->lock);
 
   return TRUE;
@@ -2920,7 +2920,6 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
     gst_rtsp_address_free (priv->server_addr_v6);
   priv->server_addr_v6 = NULL;
 
-  g_clear_object (&priv->joined_bin);
   g_mutex_unlock (&priv->lock);
 
   return TRUE;
