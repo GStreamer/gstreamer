@@ -5045,8 +5045,14 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
   if (old == CMD_RECONNECT) {
     GST_DEBUG_OBJECT (src, "ignore, we were reconnecting");
     cmd = CMD_RECONNECT;
-  }
-  if (old != CMD_WAIT) {
+  } else if(old == CMD_CLOSE) {
+    /* our CMD_CLOSE might have interrutped CMD_LOOP. gst_rtspsrc_loop
+    * will send a CMD_WAIT which would cancel our pending CMD_CLOSE (if
+    * still pending). We just avoid it here by making sure CMD_CLOSE is
+    * still the pending command. */
+    GST_DEBUG_OBJECT (src, "ignore, we were closing");
+    cmd = CMD_CLOSE;
+  } else if (old != CMD_WAIT) {
     src->pending_cmd = CMD_WAIT;
     GST_OBJECT_UNLOCK (src);
     /* cancel previous request */
@@ -7744,7 +7750,7 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       ret = GST_STATE_CHANGE_NO_PREROLL;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_CLOSE, CMD_PAUSE);
+      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_CLOSE, CMD_ALL);
       ret = GST_STATE_CHANGE_SUCCESS;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
