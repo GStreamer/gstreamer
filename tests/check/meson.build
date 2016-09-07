@@ -125,7 +125,8 @@ foreach t : base_tests
       dependencies : [libm] + test_deps + extra_deps,
     )
     test(test_name, exe,
-      env: test_env + ['GST_REGISTRY=@0@/@1@.registry'.format(meson.current_build_dir(), test_name)]
+      env: test_env + ['GST_REGISTRY=@0@/@1@.registry'.format(meson.current_build_dir(), test_name)],
+      timeout: 3 * 60
     )
   endif
 endforeach
