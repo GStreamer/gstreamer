@@ -68,7 +68,7 @@ libxml_dep = dependency('libxml-2.0')
 # gtk_dep = dependency('gtk+-3.0', required : false)
 
 libges_deps = [gst_dep, gstbase_dep, gstvideo_dep, gstpbutils_dep,
-               gstcheck_dep, gstcontroller_dep, gio_dep, libxml_dep]
+               gstcontroller_dep, gio_dep, libxml_dep]
 
 if gstvalidate_dep.found()
     libges_deps = libges_deps + [gstvalidate_dep]

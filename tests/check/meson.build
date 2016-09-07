@@ -35,6 +35,7 @@ test_defines = [
 getpluginsdir = find_program('getpluginsdir')
 runcmd = run_command(getpluginsdir, 'gstreamer', 'gstreamer-' + apiversion,
         'gst-plugins-base', 'gstreamer-plugins-base-' + apiversion,
+        'gst-plugins-good', 'gstreamer-plugins-good-' + apiversion,
         'gst-plugins-bad', 'gstreamer-plugins-bad-' + apiversion)
 if runcmd.returncode() == 0
     needed_plugins_dirs = runcmd.stdout().strip() + ':' + meson.build_root() + '/plugins/nle'
