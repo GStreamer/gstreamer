@@ -30,7 +30,7 @@ clutteractor_CFLAGS=-I$(top_srcdir)/gst-libs -I$(top_builddir)/gst-libs \
 	$(GL_CFLAGS) $(CLUTTER_CFLAGS) \
 	$(CLUTTER_GLX_CFLAGS) $(CLUTTER_X11_CFLAGS) $(XCOMPOSITE_CFLAGS)
 clutteractor_LDADD=$(CLUTTER_LIBS) $(CLUTTER_GLX_LIBS) $(CLUTTER_X11_LIBS) \
-	$(GST_PLUGINS_GL_LIBS) $(GST_PLUGINS_BASE_LIBS) $(GST_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_LIBS) \
 	$(GL_LIBS) $(XCOMPOSITE_LIBS) -lgstvideo-$(GST_API_VERSION)
 
 clutteractortee_SOURCES = clutteractortee.c
@@ -40,7 +40,7 @@ clutteractortee_CFLAGS=-I$(top_srcdir)/gst-libs -I$(top_builddir)/gst-libs \
 	$(GL_CFLAGS) $(CLUTTER_CFLAGS) \
 	$(CLUTTER_GLX_CFLAGS) $(CLUTTER_X11_CFLAGS) $(XCOMPOSITE_CFLAGS)
 clutteractortee_LDADD=$(CLUTTER_LIBS) $(CLUTTER_GLX_LIBS) $(CLUTTER_X11_LIBS) \
-	$(GST_PLUGINS_GL_LIBS) $(GST_PLUGINS_BASE_LIBS) $(GST_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_LIBS) \
 	$(GL_LIBS) $(XCOMPOSITE_LIBS) -lgstvideo-$(GST_API_VERSION)
 
 endif
