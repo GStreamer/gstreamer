@@ -1102,7 +1102,7 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   dst.w = self->hdisplay;
   dst.h = self->vdisplay;
 
-  gst_video_sink_center_rect (src, dst, &result, FALSE);
+  gst_video_sink_center_rect (src, dst, &result, TRUE);
 
   if (crop) {
     src.w = crop->width;
