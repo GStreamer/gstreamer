@@ -187,6 +187,14 @@ if cc.has_type('ptrdiff_t')
   cdata.set('HAVE_PTRDIFF_T')
 endif
 
+# We only want to use the __declspec(dllexport/import) dance in GST_EXPORT when
+# building with MSVC
+if cc.get_id() == 'msvc'
+  cdata.set('GSTCONFIG_BUILT_WITH_MSVC', 1)
+else
+  cdata.set('GSTCONFIG_BUILT_WITH_MSVC', 0)
+endif
+
 # -------------------------------------------------------------------------------------
 # config.h things needed by libcheck (FIXME: move into the libcheck meson.build) (tpm)
 # -------------------------------------------------------------------------------------
@@ -219,14 +227,6 @@ if cc.has_function('localtime_r', prefix : '#include <time.h>')
 endif
 if cc.has_function('strsignal', prefix : '#include <string.h>')
   cdata.set('HAVE_DECL_STRSIGNAL', 1)
-endif
-
-# We only want to use the __declspec(dllexport/import) dance in GST_EXPORT when
-# building with MSVC
-if cc.get_id() == 'msvc'
-  cdata.set('GSTCONFIG_USE_MSVC_DECLSPEC', 1)
-else
-  cdata.set('GSTCONFIG_USE_MSVC_DECLSPEC', 0)
 endif
 
 configure_file(input : 'config.h.meson',

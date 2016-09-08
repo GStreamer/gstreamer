@@ -133,8 +133,8 @@ AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
 
 # We only use this when building with MSVC, which is only done with the
 # alternate Meson build system files
-GSTCONFIG_USE_MSVC_DECLSPEC=0
-AC_SUBST(GSTCONFIG_USE_MSVC_DECLSPEC)
+GSTCONFIG_BUILT_WITH_MSVC=0
+AC_SUBST(GSTCONFIG_BUILT_WITH_MSVC)
 
 dnl check for bash completion
 AC_ARG_WITH([bash-completion-dir],

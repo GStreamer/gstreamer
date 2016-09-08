@@ -128,14 +128,17 @@
  * On Windows, this exports the plugin definition from the DLL.
  * On other platforms, this gets defined as a no-op.
  */
-/* Only use __declspec(dllexport/import) when we have been built with MSVC.
- * With MinGW we still rely on the linker to auto-export/import symbols.
+/* Only use __declspec(dllexport/import) when we have been built with MSVC or
+ * the user is linking to us with MSVC. The only remaining case is when we were
+ * built with MinGW and are linking with MinGW in which case we rely on the
+ * linker to auto-export/import symbols. Of course all this is only used when
+ * not linking statically.
  *
  * NOTE: To link to GStreamer statically on Windows, you must define
  * GST_STATIC_COMPILATION or the prototypes will cause the compiler to search
  * for the symbol inside a DLL.
  */
-#if @GSTCONFIG_USE_MSVC_DECLSPEC@ && !defined(GST_STATIC_COMPILATION)
+#if (@GSTCONFIG_BUILT_WITH_MSVC@ || defined(_MSC_VER)) && !defined(GST_STATIC_COMPILATION)
 # define GST_PLUGIN_EXPORT __declspec(dllexport)
 # ifdef GST_EXPORTS
 #  define GST_EXPORT __declspec(dllexport)
