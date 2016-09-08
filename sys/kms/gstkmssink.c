@@ -1084,27 +1084,37 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   GST_TRACE_OBJECT (self, "displaying fb %d", fb_id);
 
-  {
-    if ((crop = gst_buffer_get_video_crop_meta (buffer))) {
-      src.x = crop->x;
-      src.y = crop->y;
-      src.w = crop->width;
-      src.h = crop->height;
-    } else {
-      src.w = GST_VIDEO_SINK_WIDTH (self);
-      src.h = GST_VIDEO_SINK_HEIGHT (self);
-    }
+  if ((crop = gst_buffer_get_video_crop_meta (buffer))) {
+    GstVideoInfo vinfo = self->vinfo;
+    vinfo.width = crop->width;
+    vinfo.height = crop->height;
+
+    if (!gst_kms_sink_calculate_display_ratio (self, &vinfo))
+      goto no_disp_ratio;
+
+    src.x = crop->x;
+    src.y = crop->y;
   }
+
+  src.w = GST_VIDEO_SINK_WIDTH (self);
+  src.h = GST_VIDEO_SINK_HEIGHT (self);
 
   dst.w = self->hdisplay;
   dst.h = self->vdisplay;
 
   gst_video_sink_center_rect (src, dst, &result, FALSE);
 
-  /* if the frame size is bigger than the display size, the source
-   * must be the display size */
-  src.w = MIN (src.w, self->hdisplay);
-  src.h = MIN (src.h, self->vdisplay);
+  if (crop) {
+    src.w = crop->width;
+    src.h = crop->height;
+  } else {
+    src.w = GST_VIDEO_INFO_WIDTH (&self->vinfo);
+    src.h = GST_VIDEO_INFO_HEIGHT (&self->vinfo);
+  }
+
+  GST_TRACE_OBJECT (self,
+      "drmModeSetPlane at (%i,%i) %ix%i sourcing at (%i,%i) %ix%i",
+      result.x, result.y, result.w, result.h, src.x, src.y, src.w, src.h);
 
   ret = drmModeSetPlane (self->fd, self->plane_id, self->crtc_id, fb_id, 0,
       result.x, result.y, result.w, result.h,
@@ -1139,6 +1149,12 @@ set_plane_failed:
         dst.h);
     GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
         (NULL), ("drmModeSetPlane failed: %s (%d)", strerror (-ret), ret));
+    goto bail;
+  }
+no_disp_ratio:
+  {
+    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION, (NULL),
+        ("Error calculating the output display ratio of the video."));
     goto bail;
   }
 }
