@@ -1128,7 +1128,7 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstObject * parent,
           overlay->current_comp);
     } else {
       GST_DEBUG_OBJECT (overlay, "Blending overlay image to video buffer");
-      gst_video_frame_map (&frame, &overlay->info, buffer, GST_MAP_WRITE);
+      gst_video_frame_map (&frame, &overlay->info, buffer, GST_MAP_READWRITE);
       gst_video_overlay_composition_blend (overlay->current_comp, &frame);
       gst_video_frame_unmap (&frame);
     }
