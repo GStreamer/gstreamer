@@ -182,8 +182,9 @@ struct _GstValidateReport {
 
   GstValidateReportingDetails reporting_level;
   gchar *reporter_name;
+  gchar *trace;
 
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 void gst_validate_report_add_message (GstValidateReport *report,

@@ -540,6 +540,7 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
 
   gst_validate_send (json_boxed_serialize (GST_MINI_OBJECT_TYPE (report),
           report));
+
   /* Let's use our own reporting strategy */
   if (reporter_level == GST_VALIDATE_SHOW_UNKNOWN) {
     gst_validate_report_set_reporting_level (report,
@@ -749,6 +750,12 @@ void
 gst_validate_deinit_runner (void)
 {
   g_clear_object (&first_runner);
+}
+
+GstValidateReportingDetails
+gst_validate_runner_get_default_reporting_details (GstValidateRunner * runner)
+{
+  return runner->priv->default_level;
 }
 
 #ifdef __GST_VALIDATE_PLUGIN

@@ -44,18 +44,20 @@ gstvalidate = shared_library('gstvalidate-1.0',
     soversion : soversion,
     include_directories : [inc_dirs],
     install: true,
-    c_args : [gst_c_args],
+    c_args : [gst_c_args] + ['-D_GNU_SOURCE'],
     dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
-                    gst_pbutils_dep, mathlib, json_dep])
+                    gst_pbutils_dep, mathlib, json_dep,
+                    unwind_dep, dw_dep])
 
 gstvalidate = shared_library('gstvalidateplugin',
     sources: gstvalidate_sources,
     include_directories : [inc_dirs],
     install: true,
-    c_args : [gst_c_args] + ['-D__GST_VALIDATE_PLUGIN'],
+    c_args : [gst_c_args] + ['-D__GST_VALIDATE_PLUGIN', '-D_GNU_SOURCE'],
     install_dir : '@0@/gstreamer-1.0'.format(get_option('libdir')),
     dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
-                    gst_pbutils_dep, mathlib, json_dep])
+                    gst_pbutils_dep, mathlib, json_dep, unwind_dep,
+                    dw_dep])
 
 validate_gen_sources = []
 if build_gir
@@ -64,9 +66,9 @@ if build_gir
       # FIXME: There must be a better way to do this
       # Need to pass the include path to find gst/gst.h and gst/gstenumtypes.h (built)
       gst_validate_gir_extra_args += ['--cflags-begin',
-	  '-I' + meson.current_source_dir() + '/../../',
-	  '-I' + meson.current_build_dir() + '/../../',
-	  '--cflags-end']
+      '-I' + meson.current_source_dir() + '/../../',
+      '-I' + meson.current_build_dir() + '/../../',
+      '--cflags-end']
     endif
     validate_gen_sources = [gnome.generate_gir(gstvalidate,
             sources : gstvalidate_sources,

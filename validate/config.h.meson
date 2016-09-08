@@ -9,8 +9,12 @@
 
 /* directory where plugins are located */
 #mesondefine VALIDATEPLUGINDIR
+#mesondefine HAVE_UNWIND
+#mesondefine HAVE_BACKTRACE
+#mesondefine HAVE_DW
 #mesondefine GST_LICENSE
 #mesondefine VERSION
 #mesondefine PACKAGE
+#mesondefine PACKAGE_VERSION
 #mesondefine GST_PACKAGE_NAME
 #mesondefine GST_PACKAGE_ORIGIN
