@@ -2668,8 +2668,13 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
     left = start + jitter;
   }
 
-  /* calculate duration of the buffer */
-  if (GST_CLOCK_TIME_IS_VALID (stop) && stop != start)
+  /* calculate duration of the buffer, only use buffer durations if not in
+   * trick mode or key-unit mode. Otherwise the buffer durations will be
+   * meaningless as frames are being dropped in-between without updating the
+   * durations. */
+  if (GST_CLOCK_TIME_IS_VALID (stop)
+      && !(sink->segment.flags & (GST_SEGMENT_FLAG_TRICKMODE |
+              GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)) && stop != start)
     duration = stop - start;
   else
     duration = priv->avg_in_diff;
