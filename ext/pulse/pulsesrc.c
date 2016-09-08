@@ -1595,6 +1595,9 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 
   /* Fix up the total ringbuffer size based on what we actually got */
   spec->segtotal = actual->maxlength / spec->segsize;
+  /* Don't buffer less than 2 segments as the ringbuffer can't deal with it */
+  if (spec->segtotal < 2)
+    spec->segtotal = 2;
 
   if (!pulsesrc->paused) {
     GST_DEBUG_OBJECT (pulsesrc, "uncorking because we are playing");
