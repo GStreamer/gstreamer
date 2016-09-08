@@ -249,7 +249,10 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
       "created entry %p, time %" GST_TIME_FORMAT, entry, GST_TIME_ARGS (time));
 
   entry->refcount = 1;
+#ifndef GST_DISABLE_DEPRECATED
   entry->clock = clock;
+#endif
+  g_weak_ref_init (&entry->ABI.clock, clock);
   entry->type = type;
   entry->time = time;
   entry->interval = interval;
@@ -270,7 +273,8 @@ gst_clock_entry_reinit (GstClock * clock, GstClockEntry * entry,
     GstClockTime time, GstClockTime interval, GstClockEntryType type)
 {
   g_return_val_if_fail (entry->status != GST_CLOCK_BUSY, FALSE);
-  g_return_val_if_fail (entry->clock == clock, FALSE);
+  g_return_val_if_fail (gst_clock_id_uses_clock ((GstClockID) entry, clock),
+      FALSE);
 
   entry->type = type;
   entry->time = time;
@@ -353,6 +357,8 @@ _gst_clock_id_free (GstClockID id)
   entry = (GstClockEntry *) id;
   if (entry->destroy_data)
     entry->destroy_data (entry->user_data);
+
+  g_weak_ref_clear (&entry->ABI.clock);
 
   /* FIXME: add tracer hook for struct allocations such as clock entries */
 
@@ -526,7 +532,9 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
   entry = (GstClockEntry *) id;
   requested = GST_CLOCK_ENTRY_TIME (entry);
 
-  clock = GST_CLOCK_ENTRY_CLOCK (entry);
+  clock = g_weak_ref_get (&entry->ABI.clock);
+  if (G_UNLIKELY (clock == NULL))
+    goto invalid_entry;
 
   /* can't sync on invalid times */
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (requested)))
@@ -549,6 +557,7 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
   if (entry->type == GST_CLOCK_ENTRY_PERIODIC)
     entry->time = requested + entry->interval;
 
+  gst_object_unref (clock);
   return res;
 
   /* ERRORS */
@@ -556,12 +565,19 @@ invalid_time:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
         "invalid time requested, returning _BADTIME");
+    gst_object_unref (clock);
     return GST_CLOCK_BADTIME;
   }
 not_supported:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "clock wait is not supported");
+    gst_object_unref (clock);
     return GST_CLOCK_UNSUPPORTED;
+  }
+invalid_entry:
+  {
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "clock entry %p lost its clock", id);
+    return GST_CLOCK_ERROR;
   }
 }
 
@@ -600,7 +616,9 @@ gst_clock_id_wait_async (GstClockID id,
 
   entry = (GstClockEntry *) id;
   requested = GST_CLOCK_ENTRY_TIME (entry);
-  clock = GST_CLOCK_ENTRY_CLOCK (entry);
+  clock = g_weak_ref_get (&entry->ABI.clock);
+  if (G_UNLIKELY (clock == NULL))
+    goto invalid_entry;
 
   /* can't sync on invalid times */
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (requested)))
@@ -617,6 +635,7 @@ gst_clock_id_wait_async (GstClockID id,
 
   res = cclass->wait_async (clock, entry);
 
+  gst_object_unref (clock);
   return res;
 
   /* ERRORS */
@@ -625,12 +644,19 @@ invalid_time:
     (func) (clock, GST_CLOCK_TIME_NONE, id, user_data);
     GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
         "invalid time requested, returning _BADTIME");
+    gst_object_unref (clock);
     return GST_CLOCK_BADTIME;
   }
 not_supported:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "clock wait is not supported");
+    gst_object_unref (clock);
     return GST_CLOCK_UNSUPPORTED;
+  }
+invalid_entry:
+  {
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "clock entry %p lost its clock", id);
+    return GST_CLOCK_ERROR;
   }
 }
 
@@ -655,12 +681,23 @@ gst_clock_id_unschedule (GstClockID id)
   g_return_if_fail (id != NULL);
 
   entry = (GstClockEntry *) id;
-  clock = entry->clock;
+  clock = g_weak_ref_get (&entry->ABI.clock);
+  if (G_UNLIKELY (clock == NULL))
+    goto invalid_entry;
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
   if (G_LIKELY (cclass->unschedule))
     cclass->unschedule (clock, entry);
+
+  gst_object_unref (clock);
+  return;
+
+invalid_entry:
+  {
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "clock entry %p lost its clock", id);
+    return;
+  }
 }
 
 
@@ -1337,6 +1374,63 @@ gst_clock_get_master (GstClock * clock)
 
   return result;
 }
+
+/**
+ * gst_clock_id_get_clock:
+ * @id: a #GstClockID
+ *
+ * This function returns the underlying clock.
+ *
+ * Returns: (transfer full) (nullable): a #GstClock or %NULL when the
+ *     underlying clock has been freed.  Unref after usage.
+ *
+ * MT safe.
+ */
+GstClock *
+gst_clock_id_get_clock (GstClockID id)
+{
+  GstClockEntry *entry;
+
+  g_return_val_if_fail (id != NULL, NULL);
+
+  entry = (GstClockEntry *) id;
+  return g_weak_ref_get (&entry->ABI.clock);
+}
+
+/**
+ * gst_clock_id_uses_clock:
+ * @id: a #GstClockID to check
+ * @clock: a #GstClock to compare against
+ * 
+ * This function returns whether @id uses @clock as the underlying clock.
+ * @clock can be NULL, in which case the return value indicates whether
+ * the underlying clock has been freed.  If this is the case, the @id is
+ * no longer usable and should be freed.
+ *
+ * Returns: whether the clock @id uses the same underlying #GstClock @clock.
+ *
+ * MT safe.
+ */
+gboolean
+gst_clock_id_uses_clock (GstClockID id, GstClock * clock)
+{
+  GstClockEntry *entry;
+  GstClock *entry_clock;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (id != NULL, FALSE);
+
+  entry = (GstClockEntry *) id;
+  entry_clock = g_weak_ref_get (&entry->ABI.clock);
+  if (entry_clock == clock)
+    ret = TRUE;
+
+  if (G_LIKELY (entry_clock != NULL))
+    gst_object_unref (entry_clock);
+
+  return ret;
+}
+
 
 /**
  * gst_clock_add_observation:

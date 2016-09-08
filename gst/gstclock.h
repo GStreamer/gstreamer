@@ -339,13 +339,18 @@ typedef enum {
  * Cast to a clock entry
  */
 #define GST_CLOCK_ENTRY(entry)          ((GstClockEntry *)(entry))
+
+#ifndef GST_DISABLE_DEPRECATED
 /**
  * GST_CLOCK_ENTRY_CLOCK:
  * @entry: the entry to query
  *
  * Get the owner clock of the entry
+ *
+ * Deprecated: Use gst_clock_id_get_clock() instead.
  */
 #define GST_CLOCK_ENTRY_CLOCK(entry)    ((entry)->clock)
+#endif
 /**
  * GST_CLOCK_ENTRY_TYPE:
  * @entry: the entry to query
@@ -387,7 +392,9 @@ typedef enum {
 struct _GstClockEntry {
   gint                  refcount;
   /*< protected >*/
+#ifndef GST_DISABLE_DEPRECATED
   GstClock              *clock;
+#endif
   GstClockEntryType      type;
   GstClockTime           time;
   GstClockTime           interval;
@@ -399,7 +406,10 @@ struct _GstClockEntry {
   gboolean               woken_up;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  union {
+    gpointer _gst_reserved[GST_PADDING];
+    GWeakRef clock;
+  } ABI;
 };
 
 #include <gst/gstobject.h>
@@ -599,6 +609,12 @@ void                    gst_clock_id_unref              (GstClockID id);
 
 GST_API
 gint                    gst_clock_id_compare_func       (gconstpointer id1, gconstpointer id2);
+
+GST_API
+GstClock *              gst_clock_id_get_clock          (GstClockID id);
+
+GST_API
+gboolean                gst_clock_id_uses_clock         (GstClockID id, GstClock * clock);
 
 GST_API
 GstClockTime            gst_clock_id_get_time           (GstClockID id);
