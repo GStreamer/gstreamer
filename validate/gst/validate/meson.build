@@ -38,13 +38,22 @@ gstvalidate_sources = [
     'gst-validate-utils.h',
     'gst-validate-media-info.h']
 
-gstvalidate = shared_library('gstvalidate',
+gstvalidate = shared_library('gstvalidate-1.0',
     sources: gstvalidate_sources,
     version : libversion,
     soversion : soversion,
     include_directories : [inc_dirs],
     install: true,
     c_args : [gst_c_args],
+    dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
+                    gst_pbutils_dep, mathlib, json_dep])
+
+gstvalidate = shared_library('gstvalidateplugin',
+    sources: gstvalidate_sources,
+    include_directories : [inc_dirs],
+    install: true,
+    c_args : [gst_c_args] + ['-D__GST_VALIDATE_PLUGIN'],
+    install_dir : '@0@/gstreamer-1.0'.format(get_option('libdir')),
     dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
                     gst_pbutils_dep, mathlib, json_dep])
 

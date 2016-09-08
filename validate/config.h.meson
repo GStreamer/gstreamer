@@ -9,3 +9,8 @@
 
 /* directory where plugins are located */
 #mesondefine VALIDATEPLUGINDIR
+#mesondefine GST_LICENSE
+#mesondefine VERSION
+#mesondefine PACKAGE
+#mesondefine GST_PACKAGE_NAME
+#mesondefine GST_PACKAGE_ORIGIN
