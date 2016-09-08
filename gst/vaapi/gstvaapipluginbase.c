@@ -625,6 +625,7 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
 {
   GstBufferPool *pool;
   GstVideoInfo vi;
+  guint size;
 
   /* video decoders don't use a buffer pool in the sink pad */
   if (GST_IS_VIDEO_DECODER (plugin))
@@ -648,13 +649,15 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
 
   if (!ensure_sinkpad_allocator (plugin, &vi))
     goto error_create_allocator;
-  pool = gst_vaapi_plugin_base_create_pool (plugin, caps,
-      GST_VIDEO_INFO_SIZE (&vi), 0, 0,
+
+  size = GST_VIDEO_INFO_SIZE (&vi);
+  gst_allocator_get_vaapi_image_size (plugin->sinkpad_allocator, &size);
+  pool = gst_vaapi_plugin_base_create_pool (plugin, caps, size, 0, 0,
       GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META, plugin->sinkpad_allocator);
   if (!pool)
     goto error_create_pool;
   plugin->sinkpad_buffer_pool = pool;
-  plugin->sinkpad_buffer_size = GST_VIDEO_INFO_SIZE (&vi);
+  plugin->sinkpad_buffer_size = size;
   return TRUE;
 
   /* ERRORS */
