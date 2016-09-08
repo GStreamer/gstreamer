@@ -110,10 +110,6 @@ void         gst_player_set_rate                      (GstPlayer    * player,
                                                        gdouble        rate);
 gdouble      gst_player_get_rate                      (GstPlayer    * player);
 
-void         gst_player_set_position_update_interval  (GstPlayer    * player,
-                                                       guint          interval);
-guint        gst_player_get_position_update_interval  (GstPlayer    * player);
-
 gchar *      gst_player_get_uri                       (GstPlayer    * player);
 void         gst_player_set_uri                       (GstPlayer    * player,
                                                        const gchar  * uri);
