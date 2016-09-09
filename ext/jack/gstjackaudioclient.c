@@ -201,20 +201,6 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
   return res;
 }
 
-/* we error out */
-static int
-jack_sample_rate_cb (jack_nframes_t nframes, void *arg)
-{
-  return 0;
-}
-
-/* we error out */
-static int
-jack_buffer_size_cb (jack_nframes_t nframes, void *arg)
-{
-  return 0;
-}
-
 static void
 jack_shutdown_cb (void *arg)
 {
@@ -242,6 +228,22 @@ jack_shutdown_cb (void *arg)
       client->shutdown (client->user_data);
   }
   g_mutex_unlock (&conn->lock);
+}
+
+/* we error out */
+static int
+jack_sample_rate_cb (jack_nframes_t nframes, void *arg)
+{
+  jack_shutdown_cb(arg);
+  return 0;
+}
+
+/* we error out */
+static int
+jack_buffer_size_cb (jack_nframes_t nframes, void *arg)
+{
+  jack_shutdown_cb(arg);
+  return 0;
 }
 
 typedef struct
