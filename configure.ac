@@ -2014,6 +2014,47 @@ AG_GST_CHECK_FEATURE(TINYALSA, [tinyalsa], tinyalsa, [
   AC_CHECK_HEADER(tinyalsa/asoundlib.h, HAVE_TINYALSA="yes", HAVE_TINYALSA="no")
 ])
 
+dnl check for intel mediasdk
+translit(dnm, m, l) AM_CONDITIONAL(USE_MSDK, true)
+AG_GST_CHECK_FEATURE(MSDK, [Intel MediaSDK], msdk, [
+  AC_ARG_WITH([msdk-prefix],
+          AS_HELP_STRING([--with-msdk-prefix],
+          [Use the provided prefix for detecting the Intel MediaSDK]),
+          [AS_IF([test "x$with_msdk_prefix" != "x"],
+                 [MSDK_PREFIX="$with_msdk_prefix"])],
+          [AS_IF([test "x$MFX_HOME" != "x"],
+                 [MSDK_PREFIX="$MFX_HOME"],
+                 [MSDK_PREFIX="/opt/intel/media"])])
+  MSDK_CFLAGS="-I$MSDK_PREFIX/include"
+  MSDK_LIBS="-L$MSDK_PREFIX/lib/lin_x64 -lmfx -ldl"
+  AC_SUBST(MSDK_CFLAGS)
+  AC_SUBST(MSDK_LIBS)
+
+  save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$MSDK_CFLAGS $save_CPPFLAGS"
+  AC_CHECK_HEADER(mfxdefs.h, HAVE_MFXDEFS_H="yes", HAVE_MFXDEFS_H="no")
+  CPPFLAGS="$save_CPPFLAGS"
+
+  save_LIBS="$LIBS"
+  LIBS="$MSDK_LIBS $LIBS"
+  AC_LANG_PUSH([C++])
+  AC_CHECK_LIB(mfx,MFXInit,HAVE_MFX_LIB="yes",HAVE_MFX_LIB="no")
+  AC_LANG_POP([C++])
+  LIBS="$save_LIBS"
+
+  PKG_CHECK_MODULES(LIBVA_DRM, libva-drm, HAVE_LIBVA_DRM="yes", HAVE_LIBVA_DRM="no")
+
+  if test "x$HAVE_MFXDEFS_H" = "xyes" \
+      -a "x$HAVE_MFX_LIB" = "xyes" \
+      -a "x$HAVE_LIBVA_DRM" = "xyes"; then
+    HAVE_MSDK="yes"
+  else
+    HAVE_MSDK="no"
+  fi
+])
+AM_CONDITIONAL(USE_MSDK_LIBVA,
+    test "x$HAVE_MSDK" = "xyes" -a "x$HAVE_LIBVA_DRM" = "xyes")
+
 dnl *** ext plug-ins ***
 dnl keep this list sorted alphabetically !
 
@@ -3739,6 +3780,7 @@ sys/dvb/Makefile
 sys/fbdev/Makefile
 sys/kms/Makefile
 sys/linsys/Makefile
+sys/msdk/Makefile
 sys/nvenc/Makefile
 sys/opensles/Makefile
 sys/shm/Makefile
