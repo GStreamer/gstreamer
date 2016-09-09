@@ -19,6 +19,7 @@ install-pluginLTLIBRARIES:
 CLEANFILES = core.* test-registry.* *.gcno *.gcda
 
 common_cflags=-I$(top_srcdir) $(GST_PLUGINS_BASE_CFLAGS) $(GST_OBJ_CFLAGS) \
+	-DGES_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
 	$(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS) $(GST_CFLAGS)
 common_ldadd=$(top_builddir)/ges/libges-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_BASE_LIBS) -lgstpbutils-$(GST_API_VERSION) \
@@ -67,8 +68,7 @@ noinst_HEADERS=$(testutils_noinst_headers)
 
 TESTS = $(check_PROGRAMS)
 
-AM_CFLAGS =  $(common_cflags) -UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS \
-	-DGES_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
+AM_CFLAGS =  $(common_cflags) -UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 LDADD = $(common_ldadd) libtestutils.la
 
 EXTRA_DIST = \
