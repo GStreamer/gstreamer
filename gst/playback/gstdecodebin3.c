@@ -1760,7 +1760,6 @@ get_slot_for_input (GstDecodebin3 * dbin, DecodebinInputStream * input)
 static void
 link_input_to_slot (DecodebinInputStream * input, MultiQueueSlot * slot)
 {
-  GstEvent *event;
   if (slot->input != NULL && slot->input != input) {
     GST_ERROR_OBJECT (slot->dbin,
         "Trying to link input to an already used slot");
@@ -1769,9 +1768,6 @@ link_input_to_slot (DecodebinInputStream * input, MultiQueueSlot * slot)
   gst_pad_link_full (input->srcpad, slot->sink_pad, GST_PAD_LINK_CHECK_NOTHING);
   slot->pending_stream = input->active_stream;
   slot->input = input;
-  event = gst_pad_get_sticky_event (input->srcpad, GST_EVENT_STREAM_START, 0);
-  if (event)
-    gst_pad_send_event (slot->sink_pad, event);
 }
 
 #if 0
