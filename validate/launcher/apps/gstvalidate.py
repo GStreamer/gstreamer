@@ -16,8 +16,8 @@
 # License along with this program; if not, write to the
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
+import argparse
 import os
-import sys
 import time
 import urlparse
 import subprocess
@@ -37,13 +37,16 @@ from launcher.utils import path2url, url2path, DEFAULT_TIMEOUT, which, \
 #
 
 # definitions of commands to use
-GST_VALIDATE_COMMAND = "gst-validate-1.0"
-GST_VALIDATE_TRANSCODING_COMMAND = "gst-validate-transcoding-1.0"
-G_V_DISCOVERER_COMMAND = "gst-validate-media-check-1.0"
-if "win32" in sys.platform:
-    GST_VALIDATE_COMMAND += ".exe"
-    GST_VALIDATE_TRANSCODING_COMMAND += ".exe"
-    G_V_DISCOVERER_COMMAND += ".exe"
+parser = argparse.ArgumentParser(add_help=False)
+parser.add_argument("--validate-tools-path", dest="validate_tools_path",
+                default="",
+                help="defines the paths to look for GstValidate tools.")
+options, args = parser.parse_known_args()
+
+GST_VALIDATE_COMMAND = which("gst-validate-1.0", options.validate_tools_path)
+GST_VALIDATE_TRANSCODING_COMMAND = which("gst-validate-transcoding-1.0", options.validate_tools_path)
+G_V_DISCOVERER_COMMAND = which("gst-validate-media-check-1.0", options.validate_tools_path)
+ScenarioManager.GST_VALIDATE_COMMAND = GST_VALIDATE_COMMAND
 
 AUDIO_ONLY_FILE_TRANSCODING_RATIO = 5
 
@@ -555,9 +558,15 @@ class GstValidateTestManager(GstValidateBaseTestManager):
         self._default_generators_registered = False
 
     def init(self):
-        if which(GST_VALIDATE_COMMAND) and which(GST_VALIDATE_TRANSCODING_COMMAND):
-            return True
-        return False
+        for command, name in [
+                (GST_VALIDATE_TRANSCODING_COMMAND, "gst-validate-1.0"),
+                (GST_VALIDATE_COMMAND, "gst-validate-transcoding-1.0"),
+                (G_V_DISCOVERER_COMMAND, "gst-validate-media-check-1.0")]:
+            if not command:
+                self.error("%s not found" % command)
+                return False
+
+        return True
 
     def add_options(self, parser):
         group = parser.add_argument_group("GstValidate tools specific options"
@@ -566,6 +575,8 @@ class GstValidateTestManager(GstValidateBaseTestManager):
 not been tested and explicitely activated if you set use --wanted-tests ALL""")
         group.add_argument("--validate-check-uri", dest="validate_uris",
                            action="append", help="defines the uris to run default tests on")
+        group.add_argument("--validate-tools-path", dest="validate_tools_path",
+                           action="append", help="defines the paths to look for GstValidate tools.")
 
     def print_valgrind_bugs(self):
         # Look for all the 'pending' bugs in our supp file

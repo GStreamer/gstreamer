@@ -14,7 +14,6 @@ test_defines = [
   '-DGST_USE_UNSTABLE_API',
 ]
 
-getpluginsdir = find_program('getpluginsdir')
 runcmd = run_command(getpluginsdir, 'gstreamer', 'gstreamer-' + apiversion)
 if runcmd.returncode() == 0
     needed_plugins_dirs = runcmd.stdout().strip()

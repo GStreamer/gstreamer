@@ -1519,9 +1519,7 @@ class ScenarioManager(Loggable):
     all_scenarios = []
 
     FILE_EXTENSION = "scenario"
-    GST_VALIDATE_COMMAND = "gst-validate-1.0"
-    if "win32" in sys.platform:
-        GST_VALIDATE_COMMAND += ".exe"
+    GST_VALIDATE_COMMAND = ""
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:

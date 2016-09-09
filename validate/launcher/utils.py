@@ -85,21 +85,23 @@ def mkdir(directory):
         pass
 
 
-def which(name):
-    result = []
+def which(name, extra_path=None):
     exts = filter(None, os.environ.get('PATHEXT', '').split(os.pathsep))
-    path = os.environ.get('PATH', None)
-    if path is None:
+    path = os.environ.get('PATH', '')
+    if extra_path:
+        path = extra_path + os.pathsep + path
+    if not path:
         return []
-    for p in os.environ.get('PATH', '').split(os.pathsep):
+
+    for p in path.split(os.pathsep):
         p = os.path.join(p, name)
         if os.access(p, os.X_OK):
-            result.append(p)
+            return p
         for e in exts:
             pext = p + e
             if os.access(pext, os.X_OK):
-                result.append(pext)
-    return result
+                return pext
+    return None
 
 
 def get_color_for_result(result):
