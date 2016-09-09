@@ -208,7 +208,8 @@ gl_include_header = '''
 
 # Desktop OpenGL checks
 gl_dep = unneeded_dep
-if need_api_opengl != 'no'
+glx_dep = unneeded_dep
+if need_api_opengl != 'no' and need_platform_glx != 'no'
   gl_dep = dependency('GL', required : false)
   if not gl_dep.found()
 #    if host_machine.system() == 'windows'
@@ -222,6 +223,14 @@ if need_api_opengl != 'no'
     if not gl_dep.found() and need_api_opengl == 'yes'
       error ('Could not find requested OpenGL library')
     endif
+  endif
+
+  glx_dep = gl_dep
+  if need_api_opengl == 'no'
+    gl_dep = unneeded_dep
+  endif
+  if need_platform_glx == 'no'
+    glx_dep = unneeded_dep
   endif
 
   opengl_includes = '''
@@ -423,13 +432,13 @@ if need_win_x11 != 'no'
     gl_winsys_deps += x11_dep
     enabled_gl_winsys += 'x11'
 
-    if need_platform_glx != 'no'
+    if need_platform_glx != 'no' and glx_dep.found()
       glconf.set('GST_GL_HAVE_PLATFORM_GLX', 1)
       gl_sources += [
         'x11/gstglcontext_glx.c',
       ]
       # GLX is in the opengl library on linux
-      gl_platform_deps += gl_dep
+      gl_platform_deps += glx_dep
       enabled_gl_platforms += 'glx'
     endif
   elif need_win_x11 == 'yes'
