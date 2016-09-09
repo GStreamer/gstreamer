@@ -169,9 +169,9 @@ if build_gir
       # FIXME: There must be a better way to do this
       # Need to pass the include path to find gst/gst.h and gst/gstenumtypes.h (built)
       ges_gir_extra_args += ['--cflags-begin',
-	  '-I' + meson.current_source_dir() + '/..',
-	  '-I' + meson.current_build_dir() + '/..',
-	  '--cflags-end']
+      '-I' + meson.current_source_dir() + '/..',
+      '-I' + meson.current_build_dir() + '/..',
+      '--cflags-end']
     endif
     ges_gen_sources += [gnome.generate_gir(libges,
         sources : ges_sources + ges_headers,

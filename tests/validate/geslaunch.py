@@ -116,7 +116,7 @@ class XgesProjectDescriptor(MediaDescriptor):
 
 class GESTest(GstValidateTest):
     def __init__(self, classname, options, reporter, project, scenario=None,
-                 combination=None):
+                 combination=None, expected_failures=None):
 
         super(GESTest, self).__init__(GES_LAUNCH_COMMAND, classname, options, reporter,
                                       scenario=scenario)
