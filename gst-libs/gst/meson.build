@@ -14,8 +14,4 @@ subdir('video')
 # FIXME: port configure.ac logic
 #subdir('wayland')
 
-# FIXME: broken and incomplete
-#gl_dep = dependency('gl', required : false)
-#if gl_dep.found()
-#  subdir('gl')
-#endif
+subdir('gl')

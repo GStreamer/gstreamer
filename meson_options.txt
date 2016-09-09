@@ -1,1 +1,4 @@
 option('use_orc', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto')
+option('with_gl_api', type : 'string', value : 'auto', description : 'A comma separated list of opengl APIs to enable building against. Supported values are opengl and gles2.')
+option('with_gl_platform', type : 'string', value : 'auto', description : 'A comma separated list of opengl platforms to enable building against. Supported values are glx, egl, cgl, wgl and eagl')
+option('with_gl_winsys', type : 'string', value : 'auto', description : 'A comma separated list of opengl windows systems to enable building against. Supported values are x11, wayland, win32, cocoa, and dispmanx')

@@ -33,7 +33,12 @@ G_BEGIN_DECLS
 #mesondefine GST_GL_HAVE_GLCHAR
 #mesondefine GST_GL_HAVE_GLSIZEIPTR
 #mesondefine GST_GL_HAVE_GLINTPTR
+#mesondefine GST_GL_HAVE_GLSYNC
+#mesondefine GST_GL_HAVE_GLUINT64
+#mesondefine GST_GL_HAVE_GLINT64
+#mesondefine GST_GL_HAVE_EGLATTRIB
 
+#mesondefine GST_GL_HAVE_DMABUF
 
 G_END_DECLS
 

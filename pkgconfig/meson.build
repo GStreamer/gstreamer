@@ -14,13 +14,16 @@ pkg_libs = [
   'bad-base',
   'bad-video',
   'codecparsers',
-  # Broken and not built currently
-  #'gl',
   'insertbin',
   'mpegts',
   'player',
   'plugins-bad',
 ]
+
+# XXX: requires the meson.build to be parsed/executed after gst-libs/gl/meson.build
+if build_gstgl
+  pkg_libs += 'gl'
+endif
 
 # FIXME: -uninstalled.pc files (if still needed?)
 foreach p : pkg_libs
