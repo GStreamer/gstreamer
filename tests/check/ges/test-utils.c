@@ -50,20 +50,7 @@ ges_test_get_audio_only_uri (void)
 gchar *
 ges_test_get_audio_video_uri (void)
 {
-  gchar *uri;
-  GFile *cfile, *fdir, *f_audio_video;
-
-  cfile = g_file_new_for_path (__FILE__);
-  fdir = g_file_get_parent (cfile);
-
-  f_audio_video = g_file_get_child (fdir, "audio_video.ogg");
-  uri = g_file_get_uri (f_audio_video);
-
-  gst_object_unref (cfile);
-  gst_object_unref (fdir);
-  gst_object_unref (f_audio_video);
-
-  return uri;
+  return ges_test_file_uri ("audio_video.ogg");
 }
 
 gchar *
@@ -75,18 +62,12 @@ ges_test_get_image_uri (void)
 gchar *
 ges_test_file_uri (const gchar * filename)
 {
-  gchar *uri;
-  GFile *cfile, *fdir, *f;
+  gchar *path, *uri;
 
-  cfile = g_file_new_for_path (__FILE__);
-  fdir = g_file_get_parent (cfile);
+  path = g_build_filename (GES_TEST_FILES_PATH, filename, NULL);
+  uri = gst_filename_to_uri (path, NULL);
 
-  f = g_file_get_child (fdir, filename);
-  uri = g_file_get_uri (f);
-
-  gst_object_unref (cfile);
-  gst_object_unref (fdir);
-  gst_object_unref (f);
+  g_free (path);
 
   return uri;
 }

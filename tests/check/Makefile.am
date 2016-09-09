@@ -1,5 +1,6 @@
 include $(top_srcdir)/common/check.mak
 
+TEST_FILES_DIRECTORY = $(top_srcdir)/tests/check/ges
 REGISTRY_ENVIRONMENT = \
 	GST_REGISTRY_1_0=$(CHECK_REGISTRY)
 
@@ -66,7 +67,8 @@ noinst_HEADERS=$(testutils_noinst_headers)
 
 TESTS = $(check_PROGRAMS)
 
-AM_CFLAGS =  $(common_cflags) -UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
+AM_CFLAGS =  $(common_cflags) -UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS \
+	-DGES_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
 LDADD = $(common_ldadd) libtestutils.la
 
 EXTRA_DIST = \
