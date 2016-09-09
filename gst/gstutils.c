@@ -2415,7 +2415,7 @@ gst_element_seek_simple (GstElement * element, GstFormat format,
   g_return_val_if_fail (seek_pos >= 0, FALSE);
 
   return gst_element_seek (element, 1.0, format, seek_flags,
-      GST_SEEK_TYPE_SET, seek_pos, GST_SEEK_TYPE_NONE, 0);
+      GST_SEEK_TYPE_SET, seek_pos, GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
 }
 
 /**
