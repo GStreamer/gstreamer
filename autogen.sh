@@ -58,7 +58,7 @@ elif test "x$package" = "xgst-plugins-bad"; then
   CONFIGURE_DEF_OPT="$CONFIGURE_DEF_OPT --with-player-tests"
 fi
 
-autogen_options "$@"
+autogen_options $@
 
 printf "+ check for build tools"
 if test -z "$NOCHECK"; then
