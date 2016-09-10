@@ -434,7 +434,7 @@ gst_adaptive_demux_init (GstAdaptiveDemux * demux,
 
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 
-  gst_bin_set_supressed_flags (GST_BIN_CAST (demux), GST_ELEMENT_FLAG_SOURCE);
+  gst_bin_set_suppressed_flags (GST_BIN_CAST (demux), GST_ELEMENT_FLAG_SOURCE);
 
   demux->realtime_clock = gst_system_clock_obtain ();
   g_assert (demux->realtime_clock != NULL);
