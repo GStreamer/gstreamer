@@ -131,6 +131,18 @@ foreach t : base_tests
   endif
 endforeach
 
+# videoscale tests (split in groups)
+foreach group : [1, 2, 3, 4, 5, 6]
+  vscale_test_name = 'elements/videoscale-@0@'.format(group)
+  exe = executable(vscale_test_name, 'elements/videoscale.c',
+      include_directories : [configinc],
+      c_args : ['-DHAVE_CONFIG_H=1', '-DVSCALE_TEST_GROUP=@0@'.format(group) ] + test_defines,
+      dependencies : [libm] + test_deps + extra_deps)
+  test(vscale_test_name, exe,
+    env: test_env + ['GST_REGISTRY=@0@/@1@.registry'.format(meson.current_build_dir(), test_name)],
+    timeout: 3 * 60)
+endforeach
+
 # ===============> FIXME <==========
 test('gstlibscpp', executable('gstlibscpp', 'libs/gstlibscpp.cc',
   include_directories : [configinc],

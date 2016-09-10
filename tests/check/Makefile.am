@@ -122,7 +122,9 @@ check_videorate =
 endif
 
 if USE_PLUGIN_VIDEOSCALE
-check_videoscale = elements/videoscale
+check_videoscale = elements/videoscale elements/videoscale-1 \
+        elements/videoscale-2 elements/videoscale-3 elements/videoscale-4 \
+        elements/videoscale-5 elements/videoscale-6
 else
 check_videoscale =
 endif
@@ -588,6 +590,25 @@ elements_videoscale_CFLAGS = \
 elements_videoscale_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(LDADD)
+
+elements_videoscale_1_SOURCES = elements/videoscale.c
+elements_videoscale_1_CFLAGS = $(elements_videoscale_CFLAGS) -DVSCALE_TEST_GROUP=1
+elements_videoscale_1_LDADD = $(elements_videoscale_LDADD)
+elements_videoscale_2_SOURCES = elements/videoscale.c
+elements_videoscale_2_CFLAGS = $(elements_videoscale_CFLAGS) -DVSCALE_TEST_GROUP=2
+elements_videoscale_2_LDADD = $(elements_videoscale_LDADD)
+elements_videoscale_3_SOURCES = elements/videoscale.c
+elements_videoscale_3_CFLAGS = $(elements_videoscale_CFLAGS) -DVSCALE_TEST_GROUP=3
+elements_videoscale_3_LDADD = $(elements_videoscale_LDADD)
+elements_videoscale_4_SOURCES = elements/videoscale.c
+elements_videoscale_4_CFLAGS = $(elements_videoscale_CFLAGS) -DVSCALE_TEST_GROUP=4
+elements_videoscale_4_LDADD = $(elements_videoscale_LDADD)
+elements_videoscale_5_SOURCES = elements/videoscale.c
+elements_videoscale_5_CFLAGS = $(elements_videoscale_CFLAGS) -DVSCALE_TEST_GROUP=5
+elements_videoscale_5_LDADD = $(elements_videoscale_LDADD)
+elements_videoscale_6_SOURCES = elements/videoscale.c
+elements_videoscale_6_CFLAGS = $(elements_videoscale_CFLAGS) -DVSCALE_TEST_GROUP=6
+elements_videoscale_6_LDADD = $(elements_videoscale_LDADD)
 
 gst_typefindfunctions_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 gst_typefindfunctions_LDADD = $(GST_BASE_LIBS) $(LDADD)

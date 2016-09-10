@@ -21,6 +21,7 @@ typefindfunctions
 textoverlay
 videoconvert
 videoscale
+videoscale-[1-6]
 vorbistag
 playbin
 playbin-compressed
