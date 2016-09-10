@@ -1645,6 +1645,56 @@ GST_START_TEST (test_deep_added_removed)
 
 GST_END_TEST;
 
+#define _GST_CHECK_BIN_SUPPRESSED_FLAGS(element_flags, suppressed_flags, \
+    expected_flags) \
+G_STMT_START { \
+  GstBin *bin = GST_BIN (gst_bin_new ("test-bin")); \
+  GstElement *element = gst_element_factory_make ("identity", "test-i"); \
+  GstElementFlags natural_flags = GST_OBJECT_FLAGS (bin); \
+  GST_OBJECT_FLAG_SET (element, element_flags); \
+  gst_bin_set_suppressed_flags (bin, suppressed_flags); \
+  gst_bin_add (bin, element); \
+  fail_unless ((natural_flags | GST_OBJECT_FLAGS (bin)) \
+      == expected_flags); \
+  gst_object_unref (bin); \
+} G_STMT_END
+
+GST_START_TEST (test_suppressed_flags)
+{
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS (GST_ELEMENT_FLAG_SOURCE,
+      0, GST_ELEMENT_FLAG_SOURCE);
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS (GST_ELEMENT_FLAG_SOURCE,
+      GST_ELEMENT_FLAG_SOURCE, 0);
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS (GST_ELEMENT_FLAG_SOURCE,
+      GST_ELEMENT_FLAG_SINK, GST_ELEMENT_FLAG_SOURCE);
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS (GST_ELEMENT_FLAG_SOURCE |
+      GST_ELEMENT_FLAG_PROVIDE_CLOCK,
+      GST_ELEMENT_FLAG_PROVIDE_CLOCK, GST_ELEMENT_FLAG_SOURCE);
+
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS (GST_ELEMENT_FLAG_SINK,
+      0, GST_ELEMENT_FLAG_SINK);
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS (GST_ELEMENT_FLAG_SINK,
+      GST_ELEMENT_FLAG_SINK, 0);
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS (GST_ELEMENT_FLAG_SINK,
+      GST_ELEMENT_FLAG_SOURCE, GST_ELEMENT_FLAG_SINK);
+
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS (GST_ELEMENT_FLAG_PROVIDE_CLOCK,
+      0, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS (GST_ELEMENT_FLAG_PROVIDE_CLOCK,
+      GST_ELEMENT_FLAG_PROVIDE_CLOCK, 0);
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS (GST_ELEMENT_FLAG_PROVIDE_CLOCK,
+      GST_ELEMENT_FLAG_REQUIRE_CLOCK, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS (GST_ELEMENT_FLAG_REQUIRE_CLOCK,
+      0, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS (GST_ELEMENT_FLAG_REQUIRE_CLOCK,
+      GST_ELEMENT_FLAG_REQUIRE_CLOCK, 0);
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS (GST_ELEMENT_FLAG_REQUIRE_CLOCK,
+      GST_ELEMENT_FLAG_PROVIDE_CLOCK, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_bin_suite (void)
 {
@@ -1675,6 +1725,7 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_duration_is_max);
   tcase_add_test (tc_chain, test_duration_unknown_overrides);
   tcase_add_test (tc_chain, test_deep_added_removed);
+  tcase_add_test (tc_chain, test_suppressed_flags);
 
   /* fails on OSX build bot for some reason, and is a bit silly anyway */
   if (0)
