@@ -3746,16 +3746,24 @@ gst_queue2_set_property (GObject * object,
       break;
     case PROP_LOW_PERCENT:
       queue->low_watermark = g_value_get_int (value) * BUF_LEVEL_PERCENT_FACTOR;
+      if (queue->is_buffering)
+        update_buffering (queue);
       break;
     case PROP_HIGH_PERCENT:
       queue->high_watermark =
           g_value_get_int (value) * BUF_LEVEL_PERCENT_FACTOR;
+      if (queue->is_buffering)
+        update_buffering (queue);
       break;
     case PROP_LOW_WATERMARK:
       queue->low_watermark = g_value_get_double (value) * MAX_BUFFERING_LEVEL;
+      if (queue->is_buffering)
+        update_buffering (queue);
       break;
     case PROP_HIGH_WATERMARK:
       queue->high_watermark = g_value_get_double (value) * MAX_BUFFERING_LEVEL;
+      if (queue->is_buffering)
+        update_buffering (queue);
       break;
     case PROP_TEMP_TEMPLATE:
       gst_queue2_set_temp_template (queue, g_value_get_string (value));
