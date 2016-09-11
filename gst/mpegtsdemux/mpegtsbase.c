@@ -1023,14 +1023,24 @@ mpegts_base_get_tags_from_eit (MpegTSBase * base, GstMpegtsSection * section)
         if ((desc =
                 gst_mpegts_find_descriptor (event->descriptors,
                     GST_MTS_DESC_DVB_SHORT_EVENT))) {
-          gchar *name;
+          gchar *name = NULL, *text = NULL;
+
           if (gst_mpegts_descriptor_parse_dvb_short_event (desc, NULL, &name,
-                  NULL)) {
+                  &text)) {
+            program->tags = gst_tag_list_new_empty ();
+            if (name) {
+              gst_tag_list_add (program->tags, GST_TAG_MERGE_APPEND,
+                  GST_TAG_TITLE, name, NULL);
+              g_free (name);
+            }
+            if (text) {
+              gst_tag_list_add (program->tags, GST_TAG_MERGE_APPEND,
+                  GST_TAG_DESCRIPTION, text, NULL);
+              g_free (text);
+            }
             /* FIXME : Is it correct to post an event duration as a GST_TAG_DURATION ??? */
-            program->tags =
-                gst_tag_list_new (GST_TAG_TITLE, name, GST_TAG_DURATION,
-                event->duration * GST_SECOND, NULL);
-            g_free (name);
+            gst_tag_list_add (program->tags, GST_TAG_MERGE_APPEND,
+                GST_TAG_DURATION, event->duration * GST_SECOND, NULL);
             return TRUE;
           }
         }
