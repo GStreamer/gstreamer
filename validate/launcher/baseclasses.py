@@ -541,7 +541,7 @@ class GstValidateTest(Test):
 
         # defines how much the process can be outside of the configured
         # segment / seek
-        self._sent_eos_pos = None
+        self._sent_eos_time = None
 
         self.validatelogs = None
         if scenario is None or scenario.name.lower() == "none":
@@ -571,7 +571,7 @@ class GstValidateTest(Test):
 
     def add_action_execution(self, action_infos):
         if action_infos['action-type'] == 'eos':
-            self._sent_eos_pos = time.time()
+            self._sent_eos_time = time.time()
         self.actions_infos.append(action_infos)
 
     def server_wrapper(self, ready):
@@ -615,9 +615,9 @@ class GstValidateTest(Test):
 
     def get_current_value(self):
         if self.scenario:
-            if self._sent_eos_pos is not None:
+            if self._sent_eos_time is not None:
                 t = time.time()
-                if ((t - sent_eos)) > 30:
+                if ((t - self._sent_eos_time)) > 30:
                     if self.media_descriptor.get_protocol() == Protocols.HLS:
                         self.set_result(Result.PASSED,
                                         """Got no EOS 30 seconds after sending EOS,
@@ -678,7 +678,7 @@ class GstValidateTest(Test):
 
     def clean(self):
         Test.clean(self)
-        self._sent_eos_pos = None
+        self._sent_eos_time = None
         self.reports = []
         self.position = -1
         self.media_duration = -1
