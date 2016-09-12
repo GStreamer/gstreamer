@@ -645,14 +645,8 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
       " with duration %" GST_TIME_FORMAT, frame, GST_TIME_ARGS (running_time),
       GST_TIME_ARGS (running_time_duration));
 
-  /* FIXME: Scale down to milliseconds, otherwise at least some hardware
-   * has problems scheduling the frames (or schedules them too slow) and we
-   * run out of available frames:
-   * https://bugzilla.gnome.org/show_bug.cgi?id=770282
-   */
   ret = self->output->output->ScheduleVideoFrame (frame,
-      running_time / GST_MSECOND, running_time_duration / GST_MSECOND,
-      GST_MSECOND);
+      running_time, running_time_duration, GST_SECOND);
   if (ret != S_OK) {
     GST_ELEMENT_ERROR (self, STREAM, FAILED,
         (NULL), ("Failed to schedule frame: 0x%08x", ret));
