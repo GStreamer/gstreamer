@@ -371,6 +371,9 @@ dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_.*' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
+AS_AC_EXPAND(GST_OMX_CONFIG_DIR, ${sysconfdir}/xdg)
+AC_DEFINE_UNQUOTED(GST_OMX_CONFIG_DIR, "$GST_OMX_CONFIG_DIR", [gst-omx configuration directory])
+
 dnl *** output files ***
 
 AC_CONFIG_FILES(

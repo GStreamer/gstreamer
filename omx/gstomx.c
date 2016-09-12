@@ -2643,6 +2643,7 @@ plugin_init (GstPlugin * plugin)
   gsize n_elements;
   static const gchar *config_name[] = { "gstomx.conf", NULL };
   static const gchar *env_config_name[] = { "GST_OMX_CONFIG_DIR", NULL };
+  static const gchar *gst_omx_config_dir = GST_OMX_CONFIG_DIR;
 
   GST_DEBUG_CATEGORY_INIT (gstomx_debug, "omx", 0, "gst-omx");
   GST_DEBUG_CATEGORY_INIT (gst_omx_video_debug_category, "omxvideo", 0,
@@ -2654,7 +2655,7 @@ plugin_init (GstPlugin * plugin)
   user_config_dir = g_get_user_config_dir ();
   system_config_dirs = g_get_system_config_dirs ();
   config_dirs =
-      g_new (gchar *, g_strv_length ((gchar **) system_config_dirs) + 3);
+      g_new (gchar *, g_strv_length ((gchar **) system_config_dirs) + 4);
 
   i = 0;
   j = 0;
@@ -2663,6 +2664,7 @@ plugin_init (GstPlugin * plugin)
   config_dirs[i++] = (gchar *) user_config_dir;
   while (system_config_dirs[j])
     config_dirs[i++] = (gchar *) system_config_dirs[j++];
+  config_dirs[i++] = (gchar *) gst_omx_config_dir;
   config_dirs[i++] = NULL;
 
   gst_plugin_add_dependency (plugin, env_config_name,
