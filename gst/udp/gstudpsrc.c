@@ -158,7 +158,9 @@ struct _GstIPPktinfoMessage
 
   guint ifindex;
 #ifndef G_OS_WIN32
+#ifndef __NetBSD__
   struct in_addr spec_dst;
+#endif
 #endif
   struct in_addr addr;
 };
@@ -202,7 +204,9 @@ gst_ip_pktinfo_message_deserialize (gint level,
   message = g_object_new (GST_TYPE_IP_PKTINFO_MESSAGE, NULL);
   message->ifindex = pktinfo->ipi_ifindex;
 #ifndef G_OS_WIN32
+#ifndef __NetBSD__
   message->spec_dst = pktinfo->ipi_spec_dst;
+#endif
 #endif
   message->addr = pktinfo->ipi_addr;
 
