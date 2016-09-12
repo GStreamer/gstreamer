@@ -1081,7 +1081,7 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   GstVideoFrame *frame = NULL;
   GstVideoFrame *field1, *field2 = NULL;
   guint fields_to_push;
-  gint field1_flags, field2_flags;
+  guint field1_flags, field2_flags;
   GstVideoInterlaceMode interlacing_mode;
   guint8 buf_state;
 
@@ -1149,6 +1149,13 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
     GST_DEBUG_OBJECT (self, "Bottom field first");
     field1_flags = PICTURE_INTERLACED_BOTTOM;
     field2_flags = PICTURE_INTERLACED_TOP;
+  }
+
+  /* Swap for reverse playback */
+  if (self->segment.rate < 0) {
+    field1_flags = field1_flags ^ field2_flags;
+    field2_flags = field1_flags ^ field2_flags;
+    field1_flags = field1_flags ^ field2_flags;
   }
 
   if (!onefield) {
@@ -1283,6 +1290,7 @@ gst_deinterlace_fix_timestamps (GstDeinterlace * self,
   GstVideoFrame *field3, *field4;
   GstVideoInterlaceMode interlacing_mode;
 
+  /* FIXME: This is broken for rate < 0 */
   if (self->pattern_lock && self->pattern > -1) {
     /* accurate pattern-locked timestamp adjustment */
     if (!self->pattern_count)
@@ -1742,11 +1750,16 @@ restart:
     if (!IS_TELECINE (interlacing_mode)) {
       timestamp = GST_BUFFER_TIMESTAMP (buf);
 
-      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
-      if (self->fields == GST_DEINTERLACE_ALL)
+      if (self->fields == GST_DEINTERLACE_ALL) {
+        if (self->segment.rate < 0)
+          GST_BUFFER_TIMESTAMP (outbuf) = timestamp + self->field_duration;
+        else
+          GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
         GST_BUFFER_DURATION (outbuf) = self->field_duration;
-      else
+      } else {
+        GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
         GST_BUFFER_DURATION (outbuf) = 2 * self->field_duration;
+      }
       GST_DEBUG_OBJECT (self,
           "[ADJUST] ts %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", end %"
           GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
@@ -1884,7 +1897,10 @@ restart:
       timestamp = GST_BUFFER_TIMESTAMP (buf);
 
       if (self->fields == GST_DEINTERLACE_ALL) {
-        GST_BUFFER_TIMESTAMP (outbuf) = timestamp + self->field_duration;
+        if (self->segment.rate < 0)
+          GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+        else
+          GST_BUFFER_TIMESTAMP (outbuf) = timestamp + self->field_duration;
         GST_BUFFER_DURATION (outbuf) = self->field_duration;
       } else {
         GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
@@ -2747,7 +2763,7 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
   }
 
   if (fps_n != 0) {
-    self->field_duration = gst_util_uint64_scale (GST_SECOND, fps_d, fps_n);
+    self->field_duration = gst_util_uint64_scale (GST_SECOND, fps_d, 2 * fps_n);
   } else {
     self->field_duration = 0;
   }
