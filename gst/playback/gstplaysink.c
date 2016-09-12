@@ -677,6 +677,8 @@ gst_play_sink_init (GstPlaySink * playsink)
 
   g_rec_mutex_init (&playsink->lock);
   GST_OBJECT_FLAG_SET (playsink, GST_ELEMENT_FLAG_SINK);
+  gst_bin_set_suppressed_flags (GST_BIN (playsink),
+      GST_ELEMENT_FLAG_SOURCE | GST_ELEMENT_FLAG_SINK);
 
   channel =
       GST_COLOR_BALANCE_CHANNEL (g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL,
@@ -1227,8 +1229,6 @@ add_chain (GstPlayChain * chain, gboolean add)
     gst_bin_add (GST_BIN_CAST (chain->playsink), chain->bin);
   else {
     gst_bin_remove (GST_BIN_CAST (chain->playsink), chain->bin);
-    /* we don't want to lose our sink status */
-    GST_OBJECT_FLAG_SET (chain->playsink, GST_ELEMENT_FLAG_SINK);
   }
 
   chain->added = add;
