@@ -2381,7 +2381,7 @@ dnl *** kms ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_KMS, true)
 AG_GST_CHECK_FEATURE(KMS, [drm/kms libraries], kms, [
   AG_GST_PKG_CHECK_MODULES(GST_ALLOCATORS, gstreamer-allocators-1.0)
-  PKG_CHECK_MODULES([DRM], [libdrm libkms], HAVE_KMS=yes, HAVE_KMS=no)
+  PKG_CHECK_MODULES([DRM], [libdrm >= 2.4.55 libkms], HAVE_KMS=yes, HAVE_KMS=no)
 ])
 
 dnl *** ladspa ***
