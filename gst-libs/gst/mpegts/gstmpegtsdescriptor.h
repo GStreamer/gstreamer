@@ -174,6 +174,7 @@ typedef enum {
   GST_MTS_DESC_ATSC_REDISTRIBUTION_CONTROL      = 0xAA,
   GST_MTS_DESC_ATSC_GENRE                       = 0xAB,
   GST_MTS_DESC_ATSC_PRIVATE_INFORMATION         = 0xAD,
+  GST_MTS_DESC_ATSC_EAC3                        = 0xCC,
 
   /* ATSC A/53:3 2009 */
   GST_MTS_DESC_ATSC_ENHANCED_SIGNALING          = 0xB2,

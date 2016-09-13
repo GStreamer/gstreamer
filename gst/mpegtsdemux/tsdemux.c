@@ -1507,10 +1507,24 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       caps = gst_caps_new_empty_simple ("audio/x-ac3");
       break;
     case ST_PS_AUDIO_EAC3:
+    {
       /* ATSC_ENHANCED_AC3 */
+      if (bstream->registration_id == DRF_ID_EAC3 ||
+          mpegts_get_descriptor_from_stream (bstream, GST_MTS_DESC_ATSC_EAC3)) {
+        is_audio = TRUE;
+        caps = gst_caps_new_empty_simple ("audio/x-eac3");
+        break;
+      }
+
+      GST_ELEMENT_WARNING (demux, STREAM, DEMUX,
+          ("Assuming ATSC E-AC3 audio stream."),
+          ("ATSC E-AC3 stream type found but no guarantee way found to "
+              "differentiate among other standards (DVB, ISDB and etc..)"));
+
       is_audio = TRUE;
       caps = gst_caps_new_empty_simple ("audio/x-eac3");
       break;
+    }
     case ST_PS_AUDIO_LPCM2:
       is_audio = TRUE;
       caps = gst_caps_new_empty_simple ("audio/x-private2-lpcm");
