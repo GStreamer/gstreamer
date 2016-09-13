@@ -204,7 +204,7 @@ gst_rtp_onvif_timestamp_change_state (GstElement * element,
       self->ntp_offset = self->prop_ntp_offset;
       GST_DEBUG_OBJECT (self, "ntp-offset: %" GST_TIME_FORMAT,
           GST_TIME_ARGS (self->ntp_offset));
-      self->set_d_bit = FALSE;
+      self->set_d_bit = TRUE;
       self->set_e_bit = FALSE;
       break;
     default:
@@ -316,7 +316,7 @@ gst_rtp_onvif_timestamp_sink_event (GstPad * pad, GstObject * parent,
       /* if the "set-e-bit" property is set, an offset event might mark the
        * stream as discontinued. We need to check if the currently cached buffer
        * needs the e-bit before it's pushed */
-      if (self->prop_set_e_bit &&
+      if (self->buffer != NULL && self->prop_set_e_bit &&
           gst_event_has_name (event, GST_NTP_OFFSET_EVENT_NAME)) {
         gboolean discont;
         if (parse_event_ntp_offset (self, event, NULL, &discont)) {
@@ -345,7 +345,7 @@ gst_rtp_onvif_timestamp_sink_event (GstPad * pad, GstObject * parent,
     }
     case GST_EVENT_FLUSH_STOP:
       purge_cached_buffer_and_events (self);
-      self->set_d_bit = FALSE;
+      self->set_d_bit = TRUE;
       self->set_e_bit = FALSE;
       gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
       break;
