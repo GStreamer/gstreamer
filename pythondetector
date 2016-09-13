@@ -42,7 +42,8 @@ def get_python_libloc():
     if os.path.exists(os.path.join(py_sharedlib)):
         return pylib_loc
 
-    pylib_loc = '/usr/lib'
+    libdir = 'lib64' if os.path.isdir('/usr/lib64') else 'lib'
+    pylib_loc = '/usr/' + libdir
     py_sharedlib = pylib_loc + '/libpython' + pyversion + abiflags + '.so'
     if os.path.exists(os.path.join(py_sharedlib)):
         return pylib_loc
