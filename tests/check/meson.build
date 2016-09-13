@@ -73,3 +73,29 @@ foreach t : ges_tests
     )
   endif
 endforeach
+
+if build_gir
+  runtests = find_program('nosetests3', required : false)
+  # On some distros it doesn't have the '3' suffix
+  if not runtests.found()
+      runtests = find_program('nosetests', required : false)
+  endif
+
+  if runtests.found()
+    testdir = '@0@/python/'.format(meson.current_source_dir())
+
+    tests = [
+        ['Test clip', 'test_clip.py'],
+        ['Test timeline', 'test_timeline.py'],
+        ['Test groups', 'test_group.py']
+    ]
+
+    foreach i: tests
+      env = environment()
+      env.prepend('GI_TYPELIB_PATH', meson.current_build_dir() + '/../../ges/')
+      env.prepend('LD_LIBRARY_PATH', meson.current_build_dir() + '/../../ges/')
+      args = ['--with-xunit', '--xunit-file=' + meson.current_build_dir() + i.get(0).underscorify() + '.xunit']
+      test(i.get(0), runtests, args: args + [testdir + '/' + i.get(1)], env: env)
+    endforeach
+  endif
+endif
