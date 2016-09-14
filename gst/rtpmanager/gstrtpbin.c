@@ -701,6 +701,7 @@ create_session (GstRtpBin * rtpbin, gint id)
 
   /* configure SDES items */
   GST_OBJECT_LOCK (rtpbin);
+  g_object_set (demux, "max-streams", rtpbin->max_streams, NULL);
   g_object_set (session, "sdes", rtpbin->sdes, "rtp-profile",
       rtpbin->rtp_profile, "rtcp-sync-send-time", rtpbin->rtcp_sync_send_time,
       NULL);
