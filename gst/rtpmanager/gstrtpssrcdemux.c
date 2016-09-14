@@ -89,6 +89,13 @@ typedef enum
   RTCP_PAD
 } PadType;
 
+#define DEFAULT_MAX_STREAMS G_MAXUINT
+enum
+{
+  PROP_0,
+  PROP_MAX_STREAMS
+};
+
 /* signals */
 enum
 {
@@ -273,6 +280,7 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
   gchar *padname;
   GstRtpSsrcDemuxPad *demuxpad;
   GstPad *retpad;
+  guint num_streams;
 
   INTERNAL_STREAM_LOCK (demux);
 
@@ -280,6 +288,13 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
   if (retpad != NULL) {
     INTERNAL_STREAM_UNLOCK (demux);
     return retpad;
+  }
+  /* We create 2 src pads per ssrc (RTP & RTCP). Checking if we are allowed
+     to create 2 more pads */
+  num_streams = (GST_ELEMENT_CAST (demux)->numsrcpads) >> 1;
+  if (num_streams >= demux->max_streams) {
+    INTERNAL_STREAM_UNLOCK (demux);
+    return NULL;
   }
 
   GST_DEBUG_OBJECT (demux, "creating new pad for SSRC %08x", ssrc);
@@ -348,6 +363,40 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
 }
 
 static void
+gst_rtp_ssrc_demux_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtpSsrcDemux *demux;
+
+  demux = GST_RTP_SSRC_DEMUX (object);
+  switch (prop_id) {
+    case PROP_MAX_STREAMS:
+      demux->max_streams = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_ssrc_demux_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtpSsrcDemux *demux;
+
+  demux = GST_RTP_SSRC_DEMUX (object);
+  switch (prop_id) {
+    case PROP_MAX_STREAMS:
+      g_value_set_uint (value, demux->max_streams);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_rtp_ssrc_demux_class_init (GstRtpSsrcDemuxClass * klass)
 {
   GObjectClass *gobject_klass;
@@ -360,6 +409,14 @@ gst_rtp_ssrc_demux_class_init (GstRtpSsrcDemuxClass * klass)
 
   gobject_klass->dispose = gst_rtp_ssrc_demux_dispose;
   gobject_klass->finalize = gst_rtp_ssrc_demux_finalize;
+  gobject_klass->set_property = gst_rtp_ssrc_demux_set_property;
+  gobject_klass->get_property = gst_rtp_ssrc_demux_get_property;
+
+  g_object_class_install_property (gobject_klass, PROP_MAX_STREAMS,
+      g_param_spec_uint ("max-streams", "Max Streams",
+          "The maximum number of streams allowed",
+          0, G_MAXUINT, DEFAULT_MAX_STREAMS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstRtpSsrcDemux::new-ssrc-pad:
@@ -450,6 +507,8 @@ gst_rtp_ssrc_demux_init (GstRtpSsrcDemux * demux)
   gst_pad_set_iterate_internal_links_function (demux->rtcp_sink,
       gst_rtp_ssrc_demux_iterate_internal_links_sink);
   gst_element_add_pad (GST_ELEMENT_CAST (demux), demux->rtcp_sink);
+
+  demux->max_streams = DEFAULT_MAX_STREAMS;
 
   g_rec_mutex_init (&demux->padlock);
 }
@@ -644,10 +703,11 @@ invalid_payload:
   }
 create_failed:
   {
-    GST_ELEMENT_ERROR (demux, STREAM, DECODE, (NULL),
-        ("Could not create new pad"));
     gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (demux,
+        "Dropping buffer SSRC %08x. "
+        "Max streams number reached (%u)", ssrc, demux->max_streams);
+    return GST_FLOW_OK;
   }
 }
 
@@ -738,10 +798,11 @@ unexpected_rtcp:
   }
 create_failed:
   {
-    GST_ELEMENT_ERROR (demux, STREAM, DECODE, (NULL),
-        ("Could not create new pad"));
     gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (demux,
+        "Dropping buffer SSRC %08x. "
+        "Max streams number reached (%u)", ssrc, demux->max_streams);
+    return GST_FLOW_OK;
   }
 }
 

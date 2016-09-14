@@ -41,6 +41,7 @@ struct _GstRtpSsrcDemux
 
   GRecMutex padlock;
   GSList *srcpads;
+  guint max_streams;
 };
 
 struct _GstRtpSsrcDemuxClass
