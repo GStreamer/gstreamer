@@ -4233,7 +4233,7 @@ gst_vaapi_decoder_h264_decode_codec_data (GstVaapiDecoder * base_decoder,
 
   unit.parsed_info = NULL;
 
-  if (buf_size < 8)
+  if (buf_size < 7)
     return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
   if (buf[0] != 1) {
