@@ -43,8 +43,8 @@ AG_GST_LIBTOOL_PREPARE
 AS_LIBTOOL(GST, 902, 0, 902)
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=1.9.2
-GST_PBREQ=1.9.2
+GST_REQ=1.9.2.1
+GST_PBREQ=1.9.2.1
 
 ORC_REQ=0.4.16
 ORC_CHECK([$ORC_REQ])
