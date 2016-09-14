@@ -2,6 +2,7 @@
 import argparse
 import os
 import subprocess
+import xml.etree.ElementTree as ET
 
 
 SCRIPTDIR = os.path.dirname(__file__)
@@ -43,10 +44,26 @@ def git(args, repository_path):
     if not isinstance(args, list):
         args = [args]
 
-    return subprocess.check_output(["git"] + args, cwd=repository_path).decode()
+    return subprocess.check_output(["git"] + args, cwd=repository_path,
+                                   stderr=subprocess.STDOUT).decode()
 
 
-def update_subprojects():
+def manifest_get_commits(manifest):
+    res = {}
+    tree = ET.parse(manifest)
+    root = tree.getroot()
+    for child in root:
+        if child.tag == 'project':
+            res[child.attrib["name"]] = child.attrib["revision"]
+    return res
+
+
+def update_subprojects(manifest):
+    if manifest:
+        repos_commits = manifest_get_commits(manifest)
+    else:
+        repos_commits = {}
+
     subprojects_dir = os.path.join(SCRIPTDIR, "subprojects")
     for repo_name in os.listdir(subprojects_dir):
         repo_dir = os.path.normpath(os.path.join(SCRIPTDIR, subprojects_dir, repo_name))
@@ -55,7 +72,12 @@ def update_subprojects():
 
         print("Updating %s..." % repo_name)
         try:
-            git(["pull", "--rebase"], repo_dir)
+            revision = repos_commits.get(repo_name)
+            if revision:
+                git(["fetch"], repo_dir)
+                git(["checkout", revision], repo_dir)
+            else:
+                git(["pull", "--rebase"], repo_dir)
         except Exception as e:
             print("\nCould not rebase %s, please fix and try again\nerror:\n  %s" % (repo_dir, e))
             return False
@@ -74,8 +96,12 @@ if __name__ == "__main__":
                         default=False,
                         action='store_true',
                         help="Do not output ansi colors.")
+    parser.add_argument("--manifest",
+                        default=None,
+                        help="Use a android repo manifest to sync repositories"
+                        " Note that it will let all repositories in detached state")
     options = parser.parse_args()
     if options.no_color:
         Colors.disable()
 
-    exit(not update_subprojects())
+    exit(not update_subprojects(options.manifest))
