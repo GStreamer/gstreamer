@@ -2766,7 +2766,8 @@ gst_player_play_internal (gpointer user_data)
     change_state (self, GST_PLAYER_STATE_BUFFERING);
 
   if (self->current_state >= GST_STATE_PAUSED && !self->is_eos
-      && self->buffering >= 100) {
+      && self->buffering >= 100 && !(self->seek_position != GST_CLOCK_TIME_NONE
+          || self->seek_pending)) {
     state_ret = gst_element_set_state (self->playbin, GST_STATE_PLAYING);
   } else {
     state_ret = gst_element_set_state (self->playbin, GST_STATE_PAUSED);
