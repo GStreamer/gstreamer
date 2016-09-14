@@ -729,6 +729,8 @@ no_factory:
   }
 no_factory_access:
   {
+    g_object_unref (factory);
+    ctx->factory = NULL;
     GST_ERROR ("client %p: not authorized to see factory path %s", client,
         path);
     /* error reply is already sent */
@@ -736,6 +738,8 @@ no_factory_access:
   }
 not_authorized:
   {
+    g_object_unref (factory);
+    ctx->factory = NULL;
     GST_ERROR ("client %p: not authorized for factory path %s", client, path);
     /* error reply is already sent */
     return NULL;
