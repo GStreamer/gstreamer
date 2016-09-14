@@ -487,7 +487,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
     const gchar *codec;
 
     gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_NOMINAL_BITRATE,
-        ffmpegenc->context->bit_rate, NULL);
+        (guint) ffmpegenc->context->bit_rate, NULL);
 
     if ((codec =
             gst_ffmpeg_get_codecid_longname (ffmpegenc->context->codec_id)))

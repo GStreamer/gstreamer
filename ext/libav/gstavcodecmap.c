@@ -1146,8 +1146,8 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
         caps =
             gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-wma",
             "wmaversion", G_TYPE_INT, version, "block_align", G_TYPE_INT,
-            context->block_align, "bitrate", G_TYPE_INT, context->bit_rate,
-            NULL);
+            context->block_align, "bitrate", G_TYPE_INT,
+            (guint) context->bit_rate, NULL);
       } else {
         caps =
             gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-wma",
@@ -1824,7 +1824,7 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       if (context)
         gst_caps_set_simple (caps,
             "block_align", G_TYPE_INT, context->block_align,
-            "bitrate", G_TYPE_INT, context->bit_rate, NULL);
+            "bitrate", G_TYPE_INT, (guint) context->bit_rate, NULL);
       break;
 
     case AV_CODEC_ID_ADPCM_G726:
@@ -1836,7 +1836,7 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       if (context)
         gst_caps_set_simple (caps,
             "block_align", G_TYPE_INT, context->block_align,
-            "bitrate", G_TYPE_INT, context->bit_rate, NULL);
+            "bitrate", G_TYPE_INT, (guint) context->bit_rate, NULL);
 
       if (!encode) {
         gst_caps_append (caps, gst_caps_new_simple ("audio/x-adpcm",
@@ -1970,7 +1970,7 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       if (context)
         gst_caps_set_simple (caps,
             "block_align", G_TYPE_INT, context->block_align,
-            "bitrate", G_TYPE_INT, context->bit_rate, NULL);
+            "bitrate", G_TYPE_INT, (guint) context->bit_rate, NULL);
     }
       break;
 
@@ -2012,7 +2012,7 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       if (context) {
         gst_caps_set_simple (caps,
             "leaf_size", G_TYPE_INT, context->block_align,
-            "bitrate", G_TYPE_INT, context->bit_rate, NULL);
+            "bitrate", G_TYPE_INT, (guint) context->bit_rate, NULL);
       }
     }
       break;
@@ -2044,7 +2044,7 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       if (context) {
         gst_caps_set_simple (caps,
             "leaf_size", G_TYPE_INT, context->block_align,
-            "bitrate", G_TYPE_INT, context->bit_rate, NULL);
+            "bitrate", G_TYPE_INT, (guint) context->bit_rate, NULL);
       }
     }
       break;
@@ -2082,7 +2082,7 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       if (context)
         gst_caps_set_simple (caps,
             "block_align", G_TYPE_INT, context->block_align,
-            "bitrate", G_TYPE_INT, context->bit_rate, NULL);
+            "bitrate", G_TYPE_INT, (guint) context->bit_rate, NULL);
     }
       break;
 
@@ -2166,7 +2166,7 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           if (context)
             gst_caps_set_simple (caps,
                 "block_align", G_TYPE_INT, context->block_align,
-                "bitrate", G_TYPE_INT, context->bit_rate, NULL);
+                "bitrate", G_TYPE_INT, (guint) context->bit_rate, NULL);
           g_free (mime);
           break;
         default:

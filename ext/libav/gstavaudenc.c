@@ -394,7 +394,7 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
     const gchar *codec;
 
     gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_NOMINAL_BITRATE,
-        ffmpegaudenc->context->bit_rate, NULL);
+        (guint) ffmpegaudenc->context->bit_rate, NULL);
 
     if ((codec =
             gst_ffmpeg_get_codecid_longname (ffmpegaudenc->context->codec_id)))
