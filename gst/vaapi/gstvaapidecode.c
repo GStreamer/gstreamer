@@ -1057,7 +1057,7 @@ gst_vaapidecode_set_format (GstVideoDecoder * vdec, GstVideoCodecState * state)
     return FALSE;
   if (!gst_vaapi_plugin_base_set_caps (plugin, decode->sinkpad_caps, NULL))
     return FALSE;
-  if (!gst_vaapidecode_reset_full (decode, decode->sinkpad_caps, FALSE))
+  if (!gst_vaapidecode_reset_full (decode, decode->sinkpad_caps, TRUE))
     return FALSE;
 
   return TRUE;
