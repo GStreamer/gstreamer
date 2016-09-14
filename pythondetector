@@ -8,12 +8,7 @@ from distutils import sysconfig
 
 
 def get_python_abiflags():
-    try:
-        return subprocess.check_output([os.path.basename(sys.executable) + '-config',
-                                        '--abiflags']).decode(errors='ignore').strip()
-    except FileNotFoundError:
-        return ''
-
+    return sysconfig.get_config_var("ABIFLAGS")
 
 def get_python_libloc():
     # OSX is a pain. Python as shipped by apple installs libpython in /usr/lib
@@ -22,30 +17,11 @@ def get_python_libloc():
     if platform.system().lower() == 'darwin':
         return '/usr/lib'
 
-    python_libs = sysconfig.get_python_lib(standard_lib=1)
-    pylib_loc = python_libs + '/config'
-    pyversion = "%d.%d" % (sys.version_info.major, sys.version_info.minor)
+    pylib_loc = sysconfig.get_config_var("LIBPL")
+    pylib_ldlibrary = sysconfig.get_config_var("LDLIBRARY")
 
-    abiflags = get_python_abiflags()
-    py_sharedlib = pylib_loc + '/libpython' + pyversion + abiflags + '.so'
-    if os.path.exists(os.path.join(py_sharedlib)):
-        return pylib_loc
-
-    pylib_loc = sys.prefix + '/lib64'
-    py_sharedlib = pylib_loc + '/libpython' + pyversion + abiflags + '.so'
-
-    if os.path.exists(os.path.join(py_sharedlib)):
-        return pylib_loc
-
-    pylib_loc = sys.prefix + '/lib'
-    py_sharedlib = pylib_loc + '/libpython' + pyversion + abiflags + '.so'
-    if os.path.exists(os.path.join(py_sharedlib)):
-        return pylib_loc
-
-    libdir = 'lib64' if os.path.isdir('/usr/lib64') else 'lib'
-    pylib_loc = '/usr/' + libdir
-    py_sharedlib = pylib_loc + '/libpython' + pyversion + abiflags + '.so'
-    if os.path.exists(os.path.join(py_sharedlib)):
+    py_sharedlib = os.path.join(pylib_loc, pylib_ldlibrary)
+    if os.path.exists(py_sharedlib):
         return pylib_loc
 
     return "None"
