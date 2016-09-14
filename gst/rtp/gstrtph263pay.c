@@ -1412,7 +1412,7 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
 
 
     /*---------- MODE B MODE FRAGMENTATION ----------*/
-  GstRtpH263PayMB *mac, *mac0;
+  GstRtpH263PayMB *mac;
   guint max_payload_size;
   GstRtpH263PayBoundry boundry;
   guint mb;
@@ -1508,7 +1508,7 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
 
   // We are on MB layer
 
-  mac = mac0 = gst_rtp_h263_pay_mb_new (&boundry, 0);
+  mac = gst_rtp_h263_pay_mb_new (&boundry, 0);
   for (mb = 0; mb < format_props[context->piclayer->ptype_srcformat][1]; mb++) {
 
     GST_LOG ("================ START MB %d =================", mb);
@@ -1520,11 +1520,9 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
       GST_LOG ("Error decoding MB - sbit: %d", 8 - ebit);
       GST_ERROR ("Error decoding in GOB");
 
-      gst_rtp_h263_pay_mb_destroy (mac0);
       goto decode_error;
     }
 
-    gst_rtp_h263_pay_mb_destroy (gob->macroblocks[mb]);
     gob->macroblocks[mb] = mac;
 
     //If mb_type == stuffing, don't increment the mb address
@@ -1547,7 +1545,6 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
         mac->mba, mac->start, mac->end, mac->length, mac->sbit, mac->ebit);
     GST_LOG ("================ END MB %d =================", mb);
   }
-  gst_rtp_h263_pay_mb_destroy (mac0);
 
   mb = 0;
   first = 0;
