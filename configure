@@ -74,7 +74,8 @@ def configure_meson(args):
 
     try:
         subprocess.check_call([meson, "../"] + args + get_configs(meson))
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
+        print("EXIT meson return %s" % e.returncode)
         exit(1)
 
     with open(os.path.join(ROOTDIR, "Makefile"), "w") as makefile:
