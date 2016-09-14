@@ -113,8 +113,6 @@ gst_auto_detect_clear_kid (GstAutoDetect * self)
     gst_element_set_state (self->kid, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (self), self->kid);
     self->kid = NULL;
-    /* Don't lose the element type flag */
-    GST_OBJECT_FLAG_SET (self, self->flag);
   }
 }
 
@@ -204,6 +202,8 @@ gst_auto_detect_constructed (GObject * object)
 
   /* mark element type */
   GST_OBJECT_FLAG_SET (self, self->flag);
+  gst_bin_set_suppressed_flags (GST_BIN (self),
+      GST_ELEMENT_FLAG_SOURCE | GST_ELEMENT_FLAG_SINK);
 }
 
 static gboolean
