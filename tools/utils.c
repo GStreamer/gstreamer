@@ -23,22 +23,31 @@
 #include <gst/gst.h>
 #include "utils.h"
 
+#define IS_ALPHANUM(c) (g_ascii_isalnum((c)) || ((c) == '-') || ((c) == '+'))
+
 /* g_free after usage */
 static gchar *
 _sanitize_argument (gchar * arg)
 {
+  gboolean has_non_alphanum = FALSE;
   char *equal_index = strstr (arg, "=");
-  char *space_index = strstr (arg, " ");
   gchar *new_string, *tmp_string;
 
-  if (!space_index)
+  for (tmp_string = arg; *tmp_string != '\0'; tmp_string++) {
+    if (!IS_ALPHANUM (*tmp_string)) {
+      has_non_alphanum = TRUE;
+
+      break;
+    }
+  }
+
+  if (!has_non_alphanum)
     return g_strdup (arg);
 
-  if (!equal_index || equal_index > space_index)
+  if (!equal_index)
     return g_strdup_printf ("\"%s\"", arg);
 
   tmp_string = new_string = g_malloc (sizeof (gchar) * (strlen (arg) + 3));
-
   for (; *arg != '\0'; arg++) {
     *tmp_string = *arg;
     tmp_string += 1;
