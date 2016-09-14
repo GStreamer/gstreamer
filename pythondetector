@@ -24,6 +24,14 @@ def get_python_libloc():
     if os.path.exists(py_sharedlib):
         return pylib_loc
 
+    # Workaround for Fedora
+    pylib_loc = sysconfig.get_config_var("LIBDIR")
+    pylib_ldlibrary = sysconfig.get_config_var("LDLIBRARY")
+
+    py_sharedlib = os.path.join(pylib_loc, pylib_ldlibrary)
+    if os.path.exists(py_sharedlib):
+        return pylib_loc
+
     return "None"
 
 
