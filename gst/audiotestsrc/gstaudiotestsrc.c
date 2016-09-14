@@ -1123,16 +1123,6 @@ gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
 
   src->next_sample = next_sample;
 
-  if (!src->reverse) {
-    if (GST_CLOCK_TIME_IS_VALID (segment->start)) {
-      segment->time = segment->start;
-    }
-  } else {
-    if (GST_CLOCK_TIME_IS_VALID (segment->stop)) {
-      segment->time = segment->stop;
-    }
-  }
-
   if (GST_CLOCK_TIME_IS_VALID (segment->stop)) {
     time = segment->stop;
     src->sample_stop =
