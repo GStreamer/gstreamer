@@ -1007,10 +1007,7 @@ gst_message_new_element (GstObject * src, GstStructure * structure)
  * Create a new duration changed message. This message is posted by elements
  * that know the duration of a stream when the duration changes. This message
  * is received by bins and is used to calculate the total duration of a
- * pipeline. Elements may post a duration message with a duration of
- * GST_CLOCK_TIME_NONE to indicate that the duration has changed and the 
- * cached duration should be discarded. The new duration can then be 
- * retrieved via a query.
+ * pipeline.
  *
  * Returns: (transfer full): The new duration-changed message.
  *
