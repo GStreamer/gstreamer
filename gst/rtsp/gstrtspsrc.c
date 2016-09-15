@@ -906,6 +906,8 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->state = GST_RTSP_STATE_INVALID;
 
   GST_OBJECT_FLAG_SET (src, GST_ELEMENT_FLAG_SOURCE);
+  gst_bin_set_suppressed_flags (GST_BIN (src),
+      GST_ELEMENT_FLAG_SOURCE | GST_ELEMENT_FLAG_SINK);
 }
 
 static void
@@ -3618,9 +3620,6 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     g_object_set (G_OBJECT (stream->fakesrc), "filltype", 3, "num-buffers", 5,
         "sizetype", 2, "sizemax", 200, "silent", TRUE, NULL);
 
-    /* we don't want to consider this a sink */
-    GST_OBJECT_FLAG_UNSET (stream->udpsink[0], GST_ELEMENT_FLAG_SINK);
-
     /* keep everything locked */
     gst_element_set_locked_state (stream->udpsink[0], TRUE);
     gst_element_set_locked_state (stream->fakesrc, TRUE);
@@ -3666,9 +3665,6 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
           "close-socket", FALSE, NULL);
       g_object_unref (socket);
     }
-
-    /* we don't want to consider this a sink */
-    GST_OBJECT_FLAG_UNSET (stream->udpsink[1], GST_ELEMENT_FLAG_SINK);
 
     /* we keep this playing always */
     gst_element_set_locked_state (stream->udpsink[1], TRUE);
