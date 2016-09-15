@@ -164,7 +164,7 @@ static void on_finished_cb (GstDiscoverer *discoverer, CustomData *data) {
 int main (int argc, char **argv) {
   CustomData data;
   GError *err = NULL;
-  gchar *uri = "http://docs.gstreamer.com/media/sintel_trailer-480p.webm";
+  gchar *uri = "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm";
   
   /* if a URI was provided, use it instead of the default one */
   if (argc > 1) {

@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
   g_signal_connect (texture, "size-change", G_CALLBACK (size_change), NULL);
   
   /* Build the GStreamer pipeline */
-  pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  pipeline = gst_parse_launch ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm", NULL);
   
   /* Instantiate the Clutter sink */
   sink = gst_element_factory_make ("autocluttersink", NULL);

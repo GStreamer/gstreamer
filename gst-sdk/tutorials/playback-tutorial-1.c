@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
   }
   
   /* Set the URI to play */
-  g_object_set (data.playbin, "uri", "http://docs.gstreamer.com/media/sintel_cropped_multilingual.webm", NULL);
+  g_object_set (data.playbin, "uri", "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_cropped_multilingual.webm", NULL);
   
   /* Set flags to show Audio and Video but ignore Subtitles */
   g_object_get (data.playbin, "flags", &flags, NULL);

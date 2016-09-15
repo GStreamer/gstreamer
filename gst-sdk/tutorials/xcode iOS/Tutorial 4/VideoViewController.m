@@ -66,7 +66,7 @@
     media_width = 320;
     media_height = 240;
 
-    uri = @"http://docs.gstreamer.com/media/sintel_trailer-368p.ogv";
+    uri = @"https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.ogv";
 
     gst_backend = [[GStreamerBackend alloc] init:self videoView:video_view];
 }
