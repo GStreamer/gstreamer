@@ -2575,10 +2575,10 @@ rtp_session_request_local_key_unit (RTPSession * sess, RTPSource * src,
     GstClockTime round_trip_in_ns = gst_util_uint64_scale (round_trip,
         GST_SECOND, 65536);
 
-     /* Sanity check to avoid always ignoring PLI/FIR if we receive RTCP
-      * packets with erroneous values resulting in crazy high RTT. */
-     if (round_trip_in_ns > 5 * GST_SECOND)
-       round_trip_in_ns = GST_SECOND / 2;
+    /* Sanity check to avoid always ignoring PLI/FIR if we receive RTCP
+     * packets with erroneous values resulting in crazy high RTT. */
+    if (round_trip_in_ns > 5 * GST_SECOND)
+      round_trip_in_ns = GST_SECOND / 2;
 
     if (current_time - sess->last_keyframe_request < 2 * round_trip_in_ns) {
       GST_DEBUG ("Ignoring %s request because one was send without one "

@@ -11,7 +11,8 @@
 #include "dboolhuff.h"
 
 #ifdef _MSC_VER
-__declspec(align(16)) const unsigned char vp8_norm[256] = {
+__declspec (align (16))
+     const unsigned char vp8_norm[256] = {
 #else
 const unsigned char vp8_norm[256] __attribute__ ((aligned (16))) = {
 #endif
