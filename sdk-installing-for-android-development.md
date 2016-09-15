@@ -18,9 +18,9 @@ needs to have installed:
     you have at least one Android SDK platform installed with API
     version 9 or higher.
 
-Optionally, you can use the [Android Studio](https://developer.android.com/studio/index.html). As stated in
+<!-- Optionally, you can use the [Android Studio](https://developer.android.com/studio/index.html). As stated in
 the Android documentation, *developing in Android Studio is highly
-recommended and is the fastest way to get started*.
+recommended and is the fastest way to get started*. -->
 
 Before continuing, make sure you can compile and run the samples
 included in the Android NDK, and that you understand how the integration
@@ -82,9 +82,11 @@ Android projects with GStreamer support are built like conventional
 Android NDK projects, so the instructions at the [Android NDK] home can
 be followed:
 
+<!--
 #### Using Android Studio
 
 > ![warning] To be completed!!
+-->
 
 #### Using Eclipse
 
