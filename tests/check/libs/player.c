@@ -764,7 +764,7 @@ test_play_error_invalid_external_suburi_cb (GstPlayer * player,
 
     new_state->test_data = GINT_TO_POINTER (steps + 1);
     /* load invalid suburi */
-    fail_unless (gst_player_set_subtitle_uri (player, suburi) != FALSE);
+    gst_player_set_subtitle_uri (player, suburi);
     g_free (suburi);
 
   } else if (steps && change == STATE_CHANGE_WARNING) {
@@ -1026,7 +1026,7 @@ test_play_external_suburi_cb (GstPlayer * player,
     suburi = gst_filename_to_uri (TEST_PATH "/test_sub.srt", NULL);
     fail_unless (suburi != NULL);
 
-    fail_unless (gst_player_set_subtitle_uri (player, suburi) != FALSE);
+    gst_player_set_subtitle_uri (player, suburi);
     g_free (suburi);
     new_state->test_data = GINT_TO_POINTER (steps + 1);
 
