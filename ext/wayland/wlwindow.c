@@ -76,18 +76,21 @@ gst_wl_window_finalize (GObject * gobject)
 {
   GstWlWindow *self = GST_WL_WINDOW (gobject);
 
-  if (self->shell_surface) {
+  if (self->shell_surface)
     wl_shell_surface_destroy (self->shell_surface);
-  }
 
-  wp_viewport_destroy (self->video_viewport);
+  if (self->video_viewport)
+    wp_viewport_destroy (self->video_viewport);
+
   wl_subsurface_destroy (self->video_subsurface);
   wl_surface_destroy (self->video_surface);
 
-  if (self->area_subsurface) {
+  if (self->area_subsurface)
     wl_subsurface_destroy (self->area_subsurface);
-  }
-  wp_viewport_destroy (self->area_viewport);
+
+  if (self->area_viewport)
+    wp_viewport_destroy (self->area_viewport);
+
   wl_surface_destroy (self->area_surface);
 
   g_clear_object (&self->display);
@@ -122,10 +125,12 @@ gst_wl_window_new_internal (GstWlDisplay * display)
       window->video_surface, window->area_surface);
   wl_subsurface_set_desync (window->video_subsurface);
 
-  window->area_viewport = wp_viewporter_get_viewport (display->viewporter,
-      window->area_surface);
-  window->video_viewport = wp_viewporter_get_viewport (display->viewporter,
-      window->video_surface);
+  if (display->viewporter) {
+    window->area_viewport = wp_viewporter_get_viewport (display->viewporter,
+        window->area_surface);
+    window->video_viewport = wp_viewporter_get_viewport (display->viewporter,
+        window->video_surface);
+  }
 
   /* draw the area_subsurface */
   gst_video_info_set_format (&info,
@@ -246,10 +251,16 @@ gst_wl_window_resize_video_surface (GstWlWindow * window, gboolean commit)
   src.h = window->video_height;
   dst.w = window->render_rectangle.w;
   dst.h = window->render_rectangle.h;
-  gst_video_sink_center_rect (src, dst, &res, TRUE);
+
+  if (window->video_viewport) {
+    gst_video_sink_center_rect (src, dst, &res, TRUE);
+    wp_viewport_set_destination (window->video_viewport, res.w, res.h);
+  } else {
+    gst_video_sink_center_rect (src, dst, &res, FALSE);
+  }
 
   wl_subsurface_set_position (window->video_subsurface, res.x, res.y);
-  wp_viewport_set_destination (window->video_viewport, res.w, res.h);
+
 
   if (commit) {
     wl_surface_damage (window->video_surface, 0, 0, res.w, res.h);
@@ -321,7 +332,8 @@ gst_wl_window_set_render_rectangle (GstWlWindow * window, gint x, gint y,
     wl_subsurface_set_position (window->area_subsurface, x, y);
 
   /* change the size of the area */
-  wp_viewport_set_destination (window->area_viewport, w, h);
+  if (window->area_viewport)
+    wp_viewport_set_destination (window->area_viewport, w, h);
 
   if (window->video_width != 0) {
     wl_subsurface_set_sync (window->video_subsurface);

@@ -267,9 +267,16 @@ gst_wl_display_new_existing (struct wl_display * display,
   VERIFY_INTERFACE_EXISTS (subcompositor, "wl_subcompositor");
   VERIFY_INTERFACE_EXISTS (shell, "wl_shell");
   VERIFY_INTERFACE_EXISTS (shm, "wl_shm");
-  VERIFY_INTERFACE_EXISTS (viewporter, "wp_viewporter");
 
 #undef VERIFY_INTERFACE_EXISTS
+
+  /* We make the viewporter optional even though it may cause bad display.
+   * This is so one can test wayland display on older compositor or on
+   * compositor that don't implement this extension. */
+  if (!self->viewporter) {
+    g_warning ("Wayland compositor is missing the ability to scale, video "
+        "display may not work properly.");
+  }
 
   self->thread = g_thread_try_new ("GstWlDisplay", gst_wl_display_thread_run,
       self, &err);
