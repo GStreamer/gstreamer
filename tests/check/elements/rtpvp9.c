@@ -93,6 +93,7 @@ GST_START_TEST (test_depay_non_flexible_mode)
 
   gst_harness_teardown (h);
 }
+
 GST_END_TEST;
 
 

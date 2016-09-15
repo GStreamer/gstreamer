@@ -336,7 +336,7 @@ GST_START_TEST (test_speex_streamable)
 GST_END_TEST;
 
 static void
-check_buf_type_timestamp (GstBuffer *buf, gint packet_type, gint timestamp)
+check_buf_type_timestamp (GstBuffer * buf, gint packet_type, gint timestamp)
 {
   GstMapInfo map = GST_MAP_INFO_INIT;
   gst_buffer_map (buf, &map, GST_MAP_READ);
@@ -346,7 +346,7 @@ check_buf_type_timestamp (GstBuffer *buf, gint packet_type, gint timestamp)
   gst_buffer_unref (buf);
 }
 
-GST_START_TEST(test_increasing_timestamp_when_pts_none)
+GST_START_TEST (test_increasing_timestamp_when_pts_none)
 {
   const gint AUDIO = 0x08;
   const gint VIDEO = 0x09;
@@ -376,29 +376,26 @@ GST_START_TEST(test_increasing_timestamp_when_pts_none)
   gst_pad_link (video_src, video_sink);
 
   audio_caps = gst_caps_new_simple ("audio/x-speex",
-      "rate", G_TYPE_INT, 16000,
-      "channels", G_TYPE_INT, 1,
-      NULL);
+      "rate", G_TYPE_INT, 16000, "channels", G_TYPE_INT, 1, NULL);
   gst_harness_set_src_caps (audio_q, audio_caps);
   video_caps = gst_caps_new_simple ("video/x-h264",
-      "stream-format", G_TYPE_STRING, "avc",
-      NULL);
+      "stream-format", G_TYPE_STRING, "avc", NULL);
   gst_harness_set_src_caps (video_q, video_caps);
 
   /* Push audio + video + audio with increasing DTS, but PTS for video is
    * GST_CLOCK_TIME_NONE
    */
-  buf = gst_buffer_new();
+  buf = gst_buffer_new ();
   GST_BUFFER_DTS (buf) = timestamp * GST_MSECOND + base_time;
   GST_BUFFER_PTS (buf) = timestamp * GST_MSECOND + base_time;
   gst_harness_push (audio_q, buf);
 
-  buf = gst_buffer_new();
+  buf = gst_buffer_new ();
   GST_BUFFER_DTS (buf) = (timestamp + 1) * GST_MSECOND + base_time;
   GST_BUFFER_PTS (buf) = GST_CLOCK_TIME_NONE;
   gst_harness_push (video_q, buf);
 
-  buf = gst_buffer_new();
+  buf = gst_buffer_new ();
   GST_BUFFER_DTS (buf) = (timestamp + 2) * GST_MSECOND + base_time;
   GST_BUFFER_PTS (buf) = (timestamp + 2) * GST_MSECOND + base_time;
   gst_harness_push (audio_q, buf);
@@ -422,6 +419,7 @@ GST_START_TEST(test_increasing_timestamp_when_pts_none)
   gst_harness_teardown (audio_q);
   gst_harness_teardown (video_q);
 }
+
 GST_END_TEST;
 
 static Suite *

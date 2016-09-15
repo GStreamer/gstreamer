@@ -1158,16 +1158,16 @@ GST_START_TEST (test_rtx_two_missing)
 
   /*
      The expected sequence of buffers is this:
-          ____   ____   ____   ____
+     ____   ____   ____   ____
      ... | 10 | | 11 | | 12 | | 13 |
-          ––––   ––––   ––––   ––––
-          200ms  220ms  240ms  260ms
+     ––––   ––––   ––––   ––––
+     200ms  220ms  240ms  260ms
 
      But instead we get this:
-          ____    _ _    _ _   ____
+     ____    _ _    _ _   ____
      ... | 10 |  |   |  |   | | 13 |
-          ––––    - -    - -   ––––
-          200ms                260ms
+     ––––    - -    - -   ––––
+     200ms                260ms
 
      Now it is important to note that the next thing that happens is that
      the RTX timeout for packet 11 will happen at time 230ms, so we crank
@@ -1193,18 +1193,18 @@ GST_START_TEST (test_rtx_two_missing)
   /*
 
      This will estimate the dts on the two missing packets to:
-          ____   ____
+     ____   ____
      ... | 11 | | 12 | ...
-          ––––   ––––
-          220ms  240ms
+     ––––   ––––
+     220ms  240ms
 
      And given their regular interspacing of 20ms, it will schedule two RTX
      timers for them like so:
 
-          ____   ____
+     ____   ____
      ... | 11 | | 12 | ...
-          ––––   ––––
-          230ms  250ms
+     ––––   ––––
+     230ms  250ms
 
      There are however two problems, packet 11 we have already sent one RTX for
      and its timeout is currently at 270ms, so we should not tamper with that,
@@ -1259,16 +1259,16 @@ GST_START_TEST (text_rtx_two_missing_early)
 
   /*
      The expected sequence of buffers is this:
-      ___   ___   ___   ___   ___
+     ___   ___   ___   ___   ___
      | 0 | | 1 | | 2 | | 3 | | 4 |
-      –––   –––   –––   –––   –––
-      0ms  20ms  40ms  60ms  80ms
+     –––   –––   –––   –––   –––
+     0ms  20ms  40ms  60ms  80ms
 
      But instead we get this:
-      ___   ___   _ _   _ _   ___
+     ___   ___   _ _   _ _   ___
      | 0 | | 1 | |   | |   | | 4 |
-      –––   –––   – –   – –   –––
-      0ms  20ms              41ms
+     –––   –––   – –   – –   –––
+     0ms  20ms              41ms
 
    */
 
@@ -1282,26 +1282,26 @@ GST_START_TEST (text_rtx_two_missing_early)
 
      With the now calculated packet-spacing of (41-20) / 3 = 7,
      giving us these expected times:
-      ___   ___   ___   ___   ___
+     ___   ___   ___   ___   ___
      | 0 | | 1 | | 2 | | 3 | | 4 |
-      –––   –––   –––   –––   –––
-      0ms  20ms  27ms  34ms  41ms
+     –––   –––   –––   –––   –––
+     0ms  20ms  27ms  34ms  41ms
 
      For RTX, the inital RTX-timeouts for the missing buffers are
      the expected arrival time + half the packet-spacing time, like this:
-      ___   ___
+     ___   ___
      | 2 | | 3 |
-      –––   –––
-      50ms  70ms
+     –––   –––
+     50ms  70ms
 
      But since we have re-calculated the estimated arrival-time
      of these buffers, we have to adjust the RTX timeout as well,
      and we use the original delay (packet-spacing / 2) = 10ms,
      and add it on:
-      ___   ___
+     ___   ___
      | 2 | | 3 |
-      –––   –––
-      37ms  44ms
+     –––   –––
+     37ms  44ms
 
      Also note that the first RTX request is now scheduled for a
      time that is prior to NOW (37ms < 41ms), so it will be sent straight
@@ -1796,7 +1796,8 @@ GST_START_TEST (test_rtx_duplicate_packet_updates_rtx_stats)
               "rtx-per-packet", G_TYPE_DOUBLE, 1.0,
               "rtx-rtt", G_TYPE_UINT64, (guint64)
               /* Use the rtx-rtt formula. Can be subject to change though. */
-              ((now - rtx_request_6) + 47 * (now - rtx_request_7)) / 48, NULL)));
+              ((now - rtx_request_6) + 47 * (now - rtx_request_7)) / 48,
+              NULL)));
 
   gst_object_unref (testclock);
   gst_harness_teardown (h);
@@ -2490,7 +2491,8 @@ rtpjitterbuffer_suite (void)
   tcase_add_loop_test (tc_chain, test_num_late_when_considered_lost_arrives, 0,
       2);
   tcase_add_test (tc_chain, test_reorder_of_non_equidistant_packets);
-  tcase_add_test (tc_chain, test_loss_equidistant_spacing_with_parameter_packets);
+  tcase_add_test (tc_chain,
+      test_loss_equidistant_spacing_with_parameter_packets);
 
   tcase_add_test (tc_chain, test_rtx_expected_next);
   tcase_add_test (tc_chain, test_rtx_two_missing);
@@ -2500,7 +2502,8 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_rtx_buffer_arrives_too_late);
   tcase_add_test (tc_chain, test_rtx_original_buffer_does_not_update_rtx_stats);
   tcase_add_test (tc_chain, test_rtx_duplicate_packet_updates_rtx_stats);
-  tcase_add_test (tc_chain, test_rtx_buffer_arrives_after_lost_updates_rtx_stats);
+  tcase_add_test (tc_chain,
+      test_rtx_buffer_arrives_after_lost_updates_rtx_stats);
   tcase_add_test (tc_chain, test_rtx_rtt_larger_than_retry_timeout);
   tcase_add_test (tc_chain, test_rtx_no_request_if_time_past_retry_period);
 
