@@ -3187,14 +3187,12 @@ gst_player_set_uri (GstPlayer * self, const gchar * val)
  *
  * Sets the external subtitle URI.
  */
-gboolean
+void
 gst_player_set_subtitle_uri (GstPlayer * self, const gchar * suburi)
 {
-  g_return_val_if_fail (GST_IS_PLAYER (self), FALSE);
+  g_return_if_fail (GST_IS_PLAYER (self));
 
   g_object_set (self, "suburi", suburi, NULL);
-
-  return TRUE;
 }
 
 /**

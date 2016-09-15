@@ -115,7 +115,7 @@ void         gst_player_set_uri                       (GstPlayer    * player,
                                                        const gchar  * uri);
 
 gchar *      gst_player_get_subtitle_uri              (GstPlayer    * player);
-gboolean     gst_player_set_subtitle_uri              (GstPlayer    * player,
+void         gst_player_set_subtitle_uri              (GstPlayer    * player,
                                                        const gchar *uri);
 
 GstClockTime gst_player_get_position                  (GstPlayer    * player);
