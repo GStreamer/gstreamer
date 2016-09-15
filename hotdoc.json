@@ -1,11 +1,15 @@
 {
     "add_anchors": true, 
-    "command": "conf", 
+    "extra_assets": [
+        "attachments", 
+        "images"
+    ], 
     "index": "index.md", 
     "output": "built_doc", 
+    "pkg_config_packages": [
+        "gstreamer-1.0"
+    ], 
     "project_name": "gstdotcom", 
-    "sitemap": "sitemap.txt",
-    "extra_assets": ["attachments", "images"],
-    "pkg_config_packages": ["gstreamer-1.0"],
+    "sitemap": "sitemap.txt", 
     "syntax_highlighting_activate": true
 }

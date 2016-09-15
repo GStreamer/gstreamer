@@ -18,7 +18,7 @@ needs to have installed:
     you have at least one Android SDK platform installed with API
     version 9 or higher.
 
-Optionally, you can use the [Android Studio] (https://developer.android.com/studio/index.html). As stated in
+Optionally, you can use the [Android Studio](https://developer.android.com/studio/index.html). As stated in
 the Android documentation, *developing in Android Studio is highly
 recommended and is the fastest way to get started*.
 
@@ -45,9 +45,16 @@ Environment Variables in the System Properties dialog (on Windows).
 Point `GSTREAMER_ROOT_ANDROID` to the folder where you unzipped the binaries.
 
 > ![information] If you plan to use Android Studio and do not want to define this
+> environment variable globally, you can set it inside the build.gradle.
+
+> ![information] If you plan to use Eclipse, and do not want to define this
 > environment variable globally, you can set it inside Eclipse. Go to
 > Window → Preferences → C/C++ → Build → Build Variables and define
 > `GSTREAMER_ROOT_ANDROID` there.
+
+> ![warning] The NDK support in the Gradle build system used by
+>  Android Studio is still in beta, so the recommended way to build
+>  using the GStreamer SDK is still to use "ndk-build".
 
 ## Configure your development environment
 
@@ -64,7 +71,7 @@ interact through [JNI][Java Native Interface].
 ### Building the tutorials
 
 There are a few Android-specific tutorials in the
-`$GSTREAMER_ROOT_ANDROID\share\gst-sdk\tutorials` folder. Each
+`$GSTREAMER_ROOT_ANDROID/share/gst-sdk/tutorials` folder. Each
 tutorial is a folder containing source code (in Java and C) and the
 resource files required to build a complete Android application.
 
@@ -74,6 +81,10 @@ cannot be run on Android without modification.
 Android projects with GStreamer support are built like conventional
 Android NDK projects, so the instructions at the [Android NDK] home can
 be followed:
+
+#### Using Android Studio
+
+> ![warning] To be completed!!
 
 #### Using Eclipse
 
