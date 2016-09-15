@@ -34,11 +34,11 @@ source pads as streams are found in the
 media.
 
 ``` bash
-gst-launch-1.0 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! videoconvert ! autovideosink
+gst-launch-1.0 uridecodebin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! videoconvert ! autovideosink
 ```
 
 ``` bash
-gst-launch-1.0 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! audioconvert ! autoaudiosink
+gst-launch-1.0 uridecodebin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! audioconvert ! autoaudiosink
 ```
 
 ### `decodebin`
@@ -52,7 +52,7 @@ offers as many source pads as streams are found in the
 media.
 
 ``` bash
-gst-launch-1.0 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! decodebin ! autovideosink
+gst-launch-1.0 souphttpsrc location=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! decodebin ! autovideosink
 ```
 
 ## File input/output
@@ -88,7 +88,7 @@ the [libsoup](https://wiki.gnome.org/Projects/libsoup) library. Set the URL to r
 property.
 
 ``` bash
-gst-launch-1.0 souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! decodebin ! autovideosink
+gst-launch-1.0 souphttpsrc location=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! decodebin ! autovideosink
 ```
 
 ## Test media generation
@@ -175,7 +175,7 @@ video sinks are capable of performing scaling
 operations.
 
 ``` bash
-gst-launch-1.0 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! videoscale ! video/x-raw,width=178,height=100 ! videoconvert ! autovideosink
+gst-launch-1.0 uridecodebin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! videoscale ! video/x-raw,width=178,height=100 ! videoconvert ! autovideosink
 ```
 
 ## Audio adapters
@@ -205,7 +205,7 @@ do not fear to use it
 generously.
 
 ``` bash
-gst-launch-1.0 uridecodebin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! audioresample ! audio/x-raw-float,rate=4000 ! audioconvert ! autoaudiosink
+gst-launch-1.0 uridecodebin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! audioresample ! audio/x-raw-float,rate=4000 ! audioconvert ! autoaudiosink
 ```
 
 ### `audiorate`

@@ -81,7 +81,7 @@ in [Basic tutorial 10: GStreamer tools])
 
 ``` c
     /* Build the pipeline */
-    pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+    pipeline = gst_parse_launch ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm", NULL);
 ```
 
 This line is the heart of this tutorial, and exemplifies **two** key

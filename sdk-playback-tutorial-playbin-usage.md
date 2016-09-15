@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
   }
 
   /* Set the URI to play */
-  g_object_set (data.playbin, "uri", "http://docs.gstreamer.com/media/sintel_cropped_multilingual.webm", NULL);
+  g_object_set (data.playbin, "uri", "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_cropped_multilingual.webm", NULL);
 
   /* Set flags to show Audio and Video but ignore Subtitles */
   g_object_get (data.playbin, "flags", &flags, NULL);
@@ -408,7 +408,7 @@ We have set all these properties one by one, but we could have all of
 them with a single call to `g_object_set()`:
 
 ``` c
-g_object_set (data.playbin, "uri", "http://docs.gstreamer.com/media/sintel_cropped_multilingual.webm", "flags", flags, "connection-speed", 56, NULL);
+g_object_set (data.playbin, "uri", "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_cropped_multilingual.webm", "flags", flags, "connection-speed", 56, NULL);
 ```
 
 This is why `g_object_set()` requires a NULL as the last parameter.
