@@ -21,7 +21,6 @@ Screenshots:
  - Fix filenames of all attachments to make sense
 
 Code:
- - Change namespace from com.gst\* to org.freedesktop.gstreamer
  - Change logos to the official gstreamer logo
 
 Reviewed pages:
