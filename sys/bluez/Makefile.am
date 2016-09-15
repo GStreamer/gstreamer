@@ -5,7 +5,8 @@ libgstbluez_la_SOURCES = \
 	gsta2dpsink.c \
 	gstavdtpsink.c \
 	gstavdtpsrc.c \
-	gstavdtputil.c
+	gstavdtputil.c \
+	gstavrcputil.c
 
 nodist_libgstbluez_la_SOURCES = \
 	$(BUILT_SOURCES)

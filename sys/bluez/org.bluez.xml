@@ -26,4 +26,28 @@
     <property name="Delay" type="q" access="read"></property>
     <property name="Volume" type="q" access="readwrite"></property>
 </interface>
+
+<interface name="org.bluez.MediaPlayer1">
+  <method name="Play"/>
+  <method name="Pause"/>
+  <method name="Stop"/>
+  <method name="Next"/>
+  <method name="Previous"/>
+  <method name="FastForward"/>
+  <method name="Rewind"/>
+  <property name="Name" type="s" access="read"/>
+  <property name="Type" type="s" access="read"/>
+  <property name="Subtype" type="s" access="read"/>
+  <property name="Position" type="u" access="read"/>
+  <property name="Status" type="s" access="read"/>
+  <property name="Equalizer" type="s" access="readwrite"/>
+  <property name="Repeat" type="s" access="readwrite"/>
+  <property name="Shuffle" type="s" access="readwrite"/>
+  <property name="Scan" type="s" access="readwrite"/>
+  <property name="Track" type="a{sv}" access="read"/>
+  <property name="Device" type="o" access="read"/>
+  <property name="Browsable" type="b" access="read"/>
+  <property name="Searchable" type="b" access="read"/>
+  <property name="Playlist" type="o" access="read"/>
+</interface>
 </node>
