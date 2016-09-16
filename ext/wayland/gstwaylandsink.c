@@ -89,11 +89,9 @@ static void gst_wayland_sink_set_context (GstElement * element,
 static GstCaps *gst_wayland_sink_get_caps (GstBaseSink * bsink,
     GstCaps * filter);
 static gboolean gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
-static gboolean gst_wayland_sink_preroll (GstBaseSink * bsink,
-    GstBuffer * buffer);
 static gboolean
 gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query);
-static gboolean gst_wayland_sink_render (GstBaseSink * bsink,
+static gboolean gst_wayland_sink_show_frame (GstVideoSink * bsink,
     GstBuffer * buffer);
 
 /* VideoOverlay interface */
@@ -124,10 +122,12 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
+  GstVideoSinkClass *gstvideosink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
+  gstvideosink_class = (GstVideoSinkClass *) klass;
 
   gobject_class->set_property = gst_wayland_sink_set_property;
   gobject_class->get_property = gst_wayland_sink_get_property;
@@ -148,10 +148,11 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_wayland_sink_get_caps);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_wayland_sink_set_caps);
-  gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_wayland_sink_preroll);
   gstbasesink_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_wayland_sink_propose_allocation);
-  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_wayland_sink_render);
+
+  gstvideosink_class->show_frame =
+      GST_DEBUG_FUNCPTR (gst_wayland_sink_show_frame);
 
   g_object_class_install_property (gobject_class, PROP_DISPLAY,
       g_param_spec_string ("display", "Wayland Display name", "Wayland "
@@ -524,13 +525,6 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   return TRUE;
 }
 
-static GstFlowReturn
-gst_wayland_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
-{
-  GST_DEBUG_OBJECT (bsink, "preroll buffer %p", buffer);
-  return gst_wayland_sink_render (bsink, buffer);
-}
-
 static void
 frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
 {
@@ -570,9 +564,9 @@ render_last_buffer (GstWaylandSink * sink)
 }
 
 static GstFlowReturn
-gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
+gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
 {
-  GstWaylandSink *sink = GST_WAYLAND_SINK (bsink);
+  GstWaylandSink *sink = GST_WAYLAND_SINK (vsink);
   GstBuffer *to_render;
   GstWlBuffer *wlbuffer;
   GstFlowReturn ret = GST_FLOW_OK;
