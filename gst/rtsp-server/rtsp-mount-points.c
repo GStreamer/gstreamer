@@ -248,6 +248,8 @@ gst_rtsp_mount_points_match (GstRTSPMountPoints * mounts,
   item.path = (gchar *) path;
   item.len = strlen (path);
 
+  GST_LOG ("Looking for mount point path %s", path);
+
   g_mutex_lock (&priv->lock);
   if (priv->dirty) {
     g_sequence_sort (priv->mounts, data_item_compare, mounts);
@@ -266,18 +268,17 @@ gst_rtsp_mount_points_match (GstRTSPMountPoints * mounts,
 
     data_item_dump (ritem, "inspect: ");
 
-    if (best == NULL) {
-      if (has_prefix (&item, ritem)) {
+    /* The sequence is sorted, so any prefix match is an improvement upon
+     * the previous best match, as '/abc' will always be before '/abcd' */
+    if (has_prefix (&item, ritem)) {
+      if (best == NULL) {
         data_item_dump (ritem, "prefix: ");
-        best = iter;
+      } else {
+        data_item_dump (ritem, "new best: ");
       }
-    } else {
-      if (!has_prefix (&item, ritem))
-        break;
-
       best = iter;
-      data_item_dump (ritem, "new best: ");
     }
+
     iter = g_sequence_iter_next (iter);
   }
   if (best) {
