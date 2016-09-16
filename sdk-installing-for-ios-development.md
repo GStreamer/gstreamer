@@ -10,7 +10,7 @@ can be found at the App Store or
 and the iOS SDK, if it is not already included in your version of Xcode,
 can be downloaded from Xcode's preferences menu under the downloads tab.
 The minimum required iOS version is 6.0. The minimum required version of
-Xcode is 4, but 4.5 is recommended.
+Xcode is 4, but 7.3 is recommended.
 
 In case you are not familiar with iOS, Objective-C or Xcode, we
 recommend taking a look at the available documentation at Apple's
@@ -49,7 +49,7 @@ example.
 
 #### Building the tutorials
 
-The GStreamer SDK ships a few tutorials in the `xcode iOS` folder inside
+GStreamer provides a few tutorials in the `xcode iOS` folder inside
 the `.dmg` file. Copy them out of the package and into a more suitable
 place. We recommend that you open the project in Xcode, take a look
 at the sources and build them. This should confirm that the installation

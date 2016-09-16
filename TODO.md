@@ -5,9 +5,7 @@ gstreamer.com content to hotdoc
 
 Pages to review:
  - [installing]
-   - sdk-installing-for-ios-development.md
    - sdk-installing-on-linux.md
-   - sdk-installing-on-mac-osx.md
    - sdk-installing-on-windows.md
    - sdk-installing-for-android-development.md
      - Need to update/review the plugins list
