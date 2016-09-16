@@ -1730,14 +1730,7 @@ tags_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg, gpointer user_data)
 
   gst_message_parse_tag (msg, &tags);
 
-  /*
-   * NOTE: Inorder to get global tag you must apply the following patches in
-   * your gstreamer build.
-   *
-   * http://cgit.freedesktop.org/gstreamer/gst-plugins-good/commit/?id=9119fbd774093e3ae762c8652acd80d54b2c3b45
-   * http://cgit.freedesktop.org/gstreamer/gstreamer/commit/?id=18b058100940bdcaed86fa412e3582a02871f995
-   */
-  GST_DEBUG_OBJECT (self, "recieved %s tags",
+  GST_DEBUG_OBJECT (self, "received %s tags",
       gst_tag_list_get_scope (tags) ==
       GST_TAG_SCOPE_GLOBAL ? "global" : "stream");
 
@@ -2592,14 +2585,7 @@ gst_player_main (gpointer data)
 
   scaletempo = gst_element_factory_make ("scaletempo", NULL);
   if (scaletempo) {
-    if (gst_plugin_feature_check_version (GST_PLUGIN_FEATURE
-            (gst_element_get_factory (scaletempo)), 1, 6, 1)) {
-      g_object_set (self->playbin, "audio-filter", scaletempo, NULL);
-    } else {
-      gst_object_unref (scaletempo);
-      g_warning ("GstPlayer: scaletempo >= 1.6.1 is needed for preserving "
-          "audio pitch during trick modes");
-    }
+    g_object_set (self->playbin, "audio-filter", scaletempo, NULL);
   } else {
     g_warning ("GstPlayer: scaletempo element not available. Audio pitch "
         "will not be preserved during trick modes");
@@ -3014,11 +3000,9 @@ gst_player_seek_internal_locked (GstPlayer * self)
 
   flags |= GST_SEEK_FLAG_FLUSH;
 
-#if GST_CHECK_VERSION(1,5,0)
   if (rate != 1.0) {
     flags |= GST_SEEK_FLAG_TRICKMODE;
   }
-#endif
 
   if (rate >= 0.0) {
     s_event = gst_event_new_seek (rate, GST_FORMAT_TIME, flags,
