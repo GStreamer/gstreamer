@@ -84,7 +84,7 @@ index.md
 			manual-checklist-element.md
 			manual-porting.md
 			manual-porting-1.0.md
-			manual-intgration.md
+			manual-integration.md
 			manual-licensing.md
 			manual-quotes.md
 	pwg-index.md
