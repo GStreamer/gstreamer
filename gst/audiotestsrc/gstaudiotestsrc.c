@@ -1123,8 +1123,13 @@ gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
 
   src->next_sample = next_sample;
 
-  if (GST_CLOCK_TIME_IS_VALID (segment->stop)) {
+  if (segment->rate > 0 && GST_CLOCK_TIME_IS_VALID (segment->stop)) {
     time = segment->stop;
+    src->sample_stop =
+        gst_util_uint64_scale_round (time, samplerate, GST_SECOND);
+    src->check_seek_stop = TRUE;
+  } else if (segment->rate < 0) {
+    time = segment->start;
     src->sample_stop =
         gst_util_uint64_scale_round (time, samplerate, GST_SECOND);
     src->check_seek_stop = TRUE;
@@ -1202,9 +1207,16 @@ gst_audio_test_src_fill (GstBaseSrc * basesrc, guint64 offset,
   }
 
   /* check for eos */
-  if (src->check_seek_stop &&
+  if (src->check_seek_stop && !src->reverse &&
       (src->sample_stop > src->next_sample) &&
       (src->sample_stop < src->next_sample + samples)
+      ) {
+    /* calculate only partial buffer */
+    src->generate_samples_per_buffer = src->sample_stop - src->next_sample;
+    next_sample = src->sample_stop;
+    src->eos_reached = TRUE;
+  } else if (src->check_seek_stop && src->reverse &&
+      (src->sample_stop > src->next_sample)
       ) {
     /* calculate only partial buffer */
     src->generate_samples_per_buffer = src->sample_stop - src->next_sample;
