@@ -857,7 +857,7 @@ gst_rtsp_stream_get_address_pool (GstRTSPStream * stream)
 /**
  * gst_rtsp_stream_set_multicast_iface:
  * @stream: a #GstRTSPStream
- * @multicast_iface: (transfer none): a multicast interface
+ * @multicast_iface: (transfer none): a multicast interface name
  *
  * configure @multicast_iface to be used for @stream.
  */

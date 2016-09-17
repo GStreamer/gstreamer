@@ -804,7 +804,7 @@ gst_rtsp_media_factory_get_address_pool (GstRTSPMediaFactory * factory)
 /**
  * gst_rtsp_media_factory_set_multicast_iface:
  * @media_factory: a #GstRTSPMediaFactory
- * @multicast_iface: (transfer none): a multicast interface
+ * @multicast_iface: (transfer none): a multicast interface name
  *
  * configure @multicast_iface to be used for @media_factory.
  */

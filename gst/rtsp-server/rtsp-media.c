@@ -1579,7 +1579,7 @@ gst_rtsp_media_get_address_pool (GstRTSPMedia * media)
 /**
  * gst_rtsp_media_set_multicast_iface:
  * @media: a #GstRTSPMedia
- * @multicast_iface: (transfer none): a multicast interface
+ * @multicast_iface: (transfer none): a multicast interface name
  *
  * configure @multicast_iface to be used for @media.
  */
