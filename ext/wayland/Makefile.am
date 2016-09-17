@@ -6,8 +6,9 @@ libgstwaylandsink_la_SOURCES =  \
 	wlbuffer.c \
 	wldisplay.c \
 	wlwindow.c \
-	wlvideoformat.c \
-	viewporter-protocol.c
+	wlvideoformat.c
+
+nodist_libgstwaylandsink_la_SOURCES = viewporter-protocol.c
 
 libgstwaylandsink_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
                                $(WAYLAND_CFLAGS) $(GST_PLUGINS_BAD_CFLAGS)
@@ -26,8 +27,7 @@ noinst_HEADERS = \
 	wlbuffer.h \
 	wldisplay.h \
 	wlwindow.h \
-	wlvideoformat.h \
-	viewporter-client-protocol.h
+	wlvideoformat.h
 
 CLEANFILES = viewporter-protocol.c viewporter-client-protocol.h
 
