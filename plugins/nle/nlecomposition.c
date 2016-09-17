@@ -1240,6 +1240,10 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
       gst_event_unref (event);
     }
       break;
+    case GST_EVENT_TAG:
+      GST_DEBUG_OBJECT (comp, "Dropping tag: %" GST_PTR_FORMAT, info->data);
+      retval = GST_PAD_PROBE_DROP;
+      break;
     case GST_EVENT_EOS:
     {
       gint seqnum = gst_event_get_seqnum (event);
