@@ -1695,6 +1695,35 @@ GST_START_TEST (test_suppressed_flags)
 
 GST_END_TEST;
 
+
+#define _GST_CHECK_BIN_SUPPRESSED_FLAGS_REMOVAL(suppressed_flags) \
+G_STMT_START { \
+  GstBin *bin = GST_BIN (gst_bin_new ("test-bin")); \
+  GstElement *element = gst_element_factory_make ("identity", "test-i"); \
+  GST_OBJECT_FLAG_SET (bin, suppressed_flags); \
+  gst_bin_set_suppressed_flags (bin, suppressed_flags); \
+  GST_OBJECT_FLAG_SET (element, suppressed_flags); \
+  fail_unless ((suppressed_flags & GST_OBJECT_FLAGS (bin)) \
+      == suppressed_flags); \
+  gst_bin_add (bin, element); \
+  fail_unless ((suppressed_flags & GST_OBJECT_FLAGS (bin)) \
+      == suppressed_flags); \
+  gst_bin_remove (bin, element); \
+  fail_unless ((suppressed_flags & GST_OBJECT_FLAGS (bin)) \
+      == suppressed_flags); \
+  gst_object_unref (bin); \
+} G_STMT_END
+
+GST_START_TEST (test_suppressed_flags_when_removing)
+{
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS_REMOVAL (GST_ELEMENT_FLAG_SOURCE);
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS_REMOVAL (GST_ELEMENT_FLAG_SINK);
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS_REMOVAL (GST_ELEMENT_FLAG_REQUIRE_CLOCK);
+  _GST_CHECK_BIN_SUPPRESSED_FLAGS_REMOVAL (GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_bin_suite (void)
 {
@@ -1726,6 +1755,7 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_duration_unknown_overrides);
   tcase_add_test (tc_chain, test_deep_added_removed);
   tcase_add_test (tc_chain, test_suppressed_flags);
+  tcase_add_test (tc_chain, test_suppressed_flags_when_removing);
 
   /* fails on OSX build bot for some reason, and is a bit silly anyway */
   if (0)
