@@ -829,7 +829,7 @@ gst_rtsp_media_factory_set_multicast_iface (GstRTSPMediaFactory * media_factory,
   g_mutex_unlock (&priv->lock);
 
   if (old)
-    g_object_unref (old);
+    g_free (old);
 }
 
 /**

@@ -1606,7 +1606,7 @@ gst_rtsp_media_set_multicast_iface (GstRTSPMedia * media,
   g_mutex_unlock (&priv->lock);
 
   if (old)
-    g_object_unref (old);
+    g_free (old);
 }
 
 /**
