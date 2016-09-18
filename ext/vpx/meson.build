@@ -42,7 +42,7 @@ if vpx_dep.found()
     message('WARNING: libvpx was built without any encoder or decoder features!')
   endif
 
-  if dependency('vpx', version : '>=1.4.0').found()
+  if dependency('vpx', version : '>=1.4.0', required : false).found()
     vpx_args += '-DHAVE_VPX_1_4'
   endif
 
