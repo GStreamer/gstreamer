@@ -497,13 +497,13 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
 invalid_format:
   {
-    GST_DEBUG_OBJECT (sink,
+    GST_ERROR_OBJECT (sink,
         "Could not locate image format from caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 unsupported_format:
   {
-    GST_DEBUG_OBJECT (sink, "Format %s is not available on the display",
+    GST_ERROR_OBJECT (sink, "Format %s is not available on the display",
         gst_wl_shm_format_to_string (format));
     return FALSE;
   }
