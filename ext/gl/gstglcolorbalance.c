@@ -150,14 +150,17 @@ gst_gl_color_balance_is_passthrough (GstGLColorBalance * glcolorbalance)
 static void
 gst_gl_color_balance_update_properties (GstGLColorBalance * glcolorbalance)
 {
-  gboolean passthrough;
+  gboolean current_passthrough, passthrough;
   GstBaseTransform *base = GST_BASE_TRANSFORM (glcolorbalance);
 
   GST_OBJECT_LOCK (glcolorbalance);
   passthrough = gst_gl_color_balance_is_passthrough (glcolorbalance);
   GST_OBJECT_UNLOCK (glcolorbalance);
+  current_passthrough = gst_base_transform_is_passthrough (base);
 
   gst_base_transform_set_passthrough (base, passthrough);
+  if (current_passthrough != passthrough)
+    gst_base_transform_reconfigure_src (base);
 }
 
 static gboolean
