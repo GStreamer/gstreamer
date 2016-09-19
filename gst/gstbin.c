@@ -1946,14 +1946,24 @@ typedef struct _GstBinSortIterator
 } GstBinSortIterator;
 
 static void
+copy_to_queue (gpointer data, gpointer user_data)
+{
+  GstElement *element = data;
+  GQueue *queue = user_data;
+
+  gst_object_ref (element);
+  g_queue_push_tail (queue, element);
+}
+
+static void
 gst_bin_sort_iterator_copy (const GstBinSortIterator * it,
     GstBinSortIterator * copy)
 {
   GHashTableIter iter;
   gpointer key, value;
 
-  copy->queue = it->queue;
-  g_queue_foreach (&copy->queue, (GFunc) gst_object_ref, NULL);
+  g_queue_init (&copy->queue);
+  g_queue_foreach (&it->queue, copy_to_queue, &copy->queue);
 
   copy->bin = gst_object_ref (it->bin);
   if (it->best)
