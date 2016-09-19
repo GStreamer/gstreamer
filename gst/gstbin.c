@@ -2152,7 +2152,7 @@ gst_bin_sort_iterator_copy (const GstBinSortIterator * it,
   gpointer key, value;
 
   g_queue_init (&copy->queue);
-  g_queue_foreach (&it->queue, copy_to_queue, &copy->queue);
+  g_queue_foreach ((GQueue *) & it->queue, copy_to_queue, &copy->queue);
 
   copy->bin = gst_object_ref (it->bin);
   if (it->best)
