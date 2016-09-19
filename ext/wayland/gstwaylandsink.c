@@ -624,12 +624,25 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
         "writing directly", buffer);
     to_render = buffer;
   } else {
+    GstVideoMeta *vmeta;
     GstMemory *mem;
     struct wl_buffer *wbuf = NULL;
+
+    /* update video info from video meta */
+    vmeta = gst_buffer_get_video_meta (buffer);
+    if (vmeta) {
+      gint i;
+
+      for (i = 0; i < vmeta->n_planes; i++) {
+        sink->video_info.offset[i] = vmeta->offset[i];
+        sink->video_info.stride[i] = vmeta->stride[i];
+      }
+    }
 
     GST_LOG_OBJECT (sink, "buffer %p does not have a wl_buffer from our "
         "display, creating it", buffer);
 
+    /* FIXME check all memory when introducing DMA-Buf */
     mem = gst_buffer_peek_memory (buffer, 0);
 
     if (gst_is_wl_shm_memory (mem)) {
@@ -641,7 +654,9 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
       gst_buffer_add_wl_buffer (buffer, wbuf, sink->display);
       to_render = buffer;
     } else {
-      GstMapInfo src;
+      GstVideoFrame src, dst;
+      GstVideoInfo src_info = sink->video_info;
+
       /* we don't know how to create a wl_buffer directly from the provided
        * memory, so we have to copy the data to a memory that we know how
        * to handle... */
@@ -672,9 +687,19 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
         gst_buffer_add_wl_buffer (to_render, wbuf, sink->display);
       }
 
-      gst_buffer_map (buffer, &src, GST_MAP_READ);
-      gst_buffer_fill (to_render, 0, src.data, src.size);
-      gst_buffer_unmap (buffer, &src);
+      if (!gst_video_frame_map (&dst, &sink->video_info, to_render,
+              GST_MAP_WRITE))
+        goto dst_map_failed;
+
+      if (!gst_video_frame_map (&src, &src_info, buffer, GST_MAP_READ)) {
+        gst_video_frame_unmap (&dst);
+        goto src_map_failed;
+      }
+
+      gst_video_frame_copy (&dst, &src);
+
+      gst_video_frame_unmap (&src);
+      gst_video_frame_unmap (&dst);
     }
   }
 
@@ -713,6 +738,20 @@ no_wl_buffer:
 activate_failed:
   {
     GST_ERROR_OBJECT (sink, "failed to activate bufferpool.");
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+src_map_failed:
+  {
+    GST_ELEMENT_ERROR (sink, RESOURCE, READ,
+        ("Video memory can not be read from userspace."), (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+dst_map_failed:
+  {
+    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
+        ("Video memory can not be written from userspace."), (NULL));
     ret = GST_FLOW_ERROR;
     goto done;
   }
