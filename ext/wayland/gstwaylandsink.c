@@ -518,18 +518,29 @@ static gboolean
 gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
   GstWaylandSink *sink = GST_WAYLAND_SINK (bsink);
+  GstCaps *caps;
+  GstBufferPool *pool = NULL;
   GstStructure *config;
   guint size, min_bufs, max_bufs;
+  gboolean need_pool;
 
-  config = gst_buffer_pool_get_config (sink->pool);
-  gst_buffer_pool_config_get_params (config, NULL, &size, &min_bufs, &max_bufs);
+  gst_query_parse_allocation (query, &caps, &need_pool);
 
-  /* we do have a pool for sure (created in set_caps),
-   * so let's propose it anyway, but also propose the allocator on its own */
-  gst_query_add_allocation_pool (query, sink->pool, size, min_bufs, max_bufs);
+  if (need_pool)
+    pool = gst_wayland_create_pool (sink, caps);
+
+  if (pool) {
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get_params (config, NULL, &size, &min_bufs,
+        &max_bufs);
+    gst_query_add_allocation_pool (query, pool, size, min_bufs, max_bufs);
+
+    gst_structure_free (config);
+    g_object_unref (pool);
+  }
+
   gst_query_add_allocation_param (query, gst_wl_shm_allocator_get (), NULL);
-
-  gst_structure_free (config);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
 
   return TRUE;
 }
