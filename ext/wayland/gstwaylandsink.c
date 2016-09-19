@@ -426,6 +426,28 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   return caps;
 }
 
+static GstBufferPool *
+gst_wayland_create_pool (GstWaylandSink * sink, GstCaps * caps)
+{
+  GstBufferPool *pool = NULL;
+  GstStructure *structure;
+  gsize size = sink->video_info.size;
+
+  pool = gst_video_buffer_pool_new ();
+
+  structure = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
+  gst_buffer_pool_config_set_allocator (structure, gst_wl_shm_allocator_get (),
+      NULL);
+
+  if (!gst_buffer_pool_set_config (pool, structure)) {
+    g_object_unref (pool);
+    pool = NULL;
+  }
+
+  return pool;
+}
+
 static gboolean
 gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
@@ -435,7 +457,6 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   enum wl_shm_format format;
   GArray *formats;
   gint i;
-  GstStructure *structure;
 
   sink = GST_WAYLAND_SINK (bsink);
 
@@ -459,21 +480,15 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (i >= formats->len)
     goto unsupported_format;
 
-  /* create a new pool for the new configuration */
-  newpool = gst_video_buffer_pool_new ();
-  if (!newpool)
-    goto pool_failed;
-
-  structure = gst_buffer_pool_get_config (newpool);
-  gst_buffer_pool_config_set_params (structure, caps, info.size, 2, 0);
-  gst_buffer_pool_config_set_allocator (structure, gst_wl_shm_allocator_get (),
-      NULL);
-  if (!gst_buffer_pool_set_config (newpool, structure))
-    goto config_failed;
-
   /* store the video info */
   sink->video_info = info;
   sink->video_info_changed = TRUE;
+
+  /* create a new pool for the new configuration */
+  newpool = gst_wayland_create_pool (sink, caps);
+  if (!newpool)
+    goto pool_failed;
+
 
   gst_object_replace ((GstObject **) & sink->pool, (GstObject *) newpool);
   gst_object_unref (newpool);
@@ -494,13 +509,7 @@ unsupported_format:
   }
 pool_failed:
   {
-    GST_DEBUG_OBJECT (sink, "Failed to create new pool");
-    return FALSE;
-  }
-config_failed:
-  {
-    GST_DEBUG_OBJECT (bsink, "failed setting config");
-    gst_object_unref (newpool);
+    GST_ERROR_OBJECT (sink, "Failed to create new pool");
     return FALSE;
   }
 }
