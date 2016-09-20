@@ -373,18 +373,31 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
             ostream->wait = FALSE;
 
             if (ostream->segment.format == GST_FORMAT_TIME) {
-              stop_running_time =
-                  gst_segment_to_running_time (&ostream->segment,
-                  GST_FORMAT_TIME, ostream->segment.stop);
+              if (ostream->segment.rate > 0)
+                stop_running_time =
+                    gst_segment_to_running_time (&ostream->segment,
+                    GST_FORMAT_TIME, ostream->segment.stop);
+              else
+                stop_running_time =
+                    gst_segment_to_running_time (&ostream->segment,
+                    GST_FORMAT_TIME, ostream->segment.start);
+
               position_running_time =
                   gst_segment_to_running_time (&ostream->segment,
                   GST_FORMAT_TIME, ostream->segment.position);
 
               position_running_time =
                   MAX (position_running_time, stop_running_time);
-              position_running_time -=
-                  gst_segment_to_running_time (&ostream->segment,
-                  GST_FORMAT_TIME, ostream->segment.start);
+
+              if (ostream->segment.rate > 0)
+                position_running_time -=
+                    gst_segment_to_running_time (&ostream->segment,
+                    GST_FORMAT_TIME, ostream->segment.start);
+              else
+                position_running_time -=
+                    gst_segment_to_running_time (&ostream->segment,
+                    GST_FORMAT_TIME, ostream->segment.stop);
+
               position_running_time = MAX (0, position_running_time);
 
               position = MAX (position, position_running_time);
@@ -497,9 +510,14 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
           continue;
 
         if (ostream->segment.format == GST_FORMAT_TIME) {
-          start_running_time =
-              gst_segment_to_running_time (&ostream->segment,
-              GST_FORMAT_TIME, ostream->segment.start);
+          if (ostream->segment.rate > 0)
+            start_running_time =
+                gst_segment_to_running_time (&ostream->segment,
+                GST_FORMAT_TIME, ostream->segment.start);
+          else
+            start_running_time =
+                gst_segment_to_running_time (&ostream->segment,
+                GST_FORMAT_TIME, ostream->segment.stop);
 
           new_group_start_time = MAX (new_group_start_time, start_running_time);
         }
