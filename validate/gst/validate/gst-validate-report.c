@@ -113,13 +113,13 @@ append_debug_info (GString * trace, const void *ip)
 #endif
 
 static gchar *
-generate_unwind_trace ()
+generate_unwind_trace (void)
 {
   unw_context_t uc;
+  unw_cursor_t cursor;
   GString *trace = g_string_new (NULL);
 
   unw_getcontext (&uc);
-  unw_cursor_t cursor;
   unw_init_local (&cursor, &uc);
 
   while (unw_step (&cursor) > 0) {
