@@ -1,5 +1,7 @@
 plugin_LTLIBRARIES = libgstwaylandsink.la
 
+BUILT_SOURCES = viewporter-protocol.c viewporter-client-protocol.h
+
 libgstwaylandsink_la_SOURCES =  \
 	gstwaylandsink.c \
 	wlshmallocator.c \
@@ -29,17 +31,7 @@ noinst_HEADERS = \
 	wlwindow.h \
 	wlvideoformat.h
 
-CLEANFILES = viewporter-protocol.c viewporter-client-protocol.h
-
-gstwaylandsink.c: viewporter-client-protocol.h
-
-wlshmallocator.c: viewporter-client-protocol.h
-
-wlbuffer.c: viewporter-client-protocol.h
-
-wldisplay.c: viewporter-client-protocol.h
-
-wlwindow.c: viewporter-client-protocol.h
+CLEANFILES = $(BUILT_SOURCES)
 
 .SECONDEXPANSION:
 
