@@ -36,7 +36,7 @@ do_step (GstElement * bin)
 
   rate = sin (period);
 
-  period += M_PI / 150;
+  period += G_PI / 150;
 
   rate += 1.2;
 
