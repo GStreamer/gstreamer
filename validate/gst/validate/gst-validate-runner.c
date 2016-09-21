@@ -503,13 +503,19 @@ gst_validate_runner_get_reporting_level_for_name (GstValidateRunner * runner,
     const gchar * name)
 {
   GList *tmp;
+  gchar *fixed_name = g_strdup (name);
 
+  _replace_double_colons (fixed_name);
   for (tmp = runner->priv->report_pattern_levels; tmp; tmp = tmp->next) {
     PatternLevel *pattern_level = (PatternLevel *) tmp->data;
-    if (g_pattern_match_string (pattern_level->pattern, name))
+    if (g_pattern_match_string (pattern_level->pattern, fixed_name)) {
+      g_free (fixed_name);
+
       return pattern_level->level;
+    }
   }
 
+  g_free (fixed_name);
   return GST_VALIDATE_SHOW_UNKNOWN;
 }
 
@@ -535,14 +541,22 @@ void
 gst_validate_runner_add_report (GstValidateRunner * runner,
     GstValidateReport * report)
 {
-  GstValidateReportingDetails reporter_level =
-      gst_validate_reporter_get_reporting_level (report->reporter);
+  GstValidateReportingDetails details, reporter_details, issue_type_details;
 
   gst_validate_send (json_boxed_serialize (GST_MINI_OBJECT_TYPE (report),
           report));
 
+  details = reporter_details =
+      gst_validate_reporter_get_reporting_level (report->reporter);
+  issue_type_details =
+      gst_validate_runner_get_reporting_level_for_name (runner,
+      g_quark_to_string (report->issue->issue_id));
+
+  if (reporter_details == GST_VALIDATE_SHOW_UNKNOWN)
+    details = issue_type_details;
+
   /* Let's use our own reporting strategy */
-  if (reporter_level == GST_VALIDATE_SHOW_UNKNOWN) {
+  if (details == GST_VALIDATE_SHOW_UNKNOWN) {
     gst_validate_report_set_reporting_level (report,
         runner->priv->default_level);
     switch (runner->priv->default_level) {
@@ -560,6 +574,9 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
       default:
         break;
     }
+  } else if (details == GST_VALIDATE_SHOW_NONE) {
+    GST_DEBUG ("Not reporting.");
+    return;
   }
 
   GST_VALIDATE_RUNNER_LOCK (runner);

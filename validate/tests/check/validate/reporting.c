@@ -206,10 +206,11 @@ _create_issues (GstValidateRunner * runner)
   gst_object_unref (sinkpad);
   gst_object_unref (funnel_sink1);
   gst_object_unref (funnel_sink2);
-  check_destroyed (fakemixer, funnel_sink1, funnel_sink2, NULL);
-  check_destroyed (src1, srcpad1, NULL);
-  check_destroyed (src2, srcpad2, NULL);
-  check_destroyed (sink, sinkpad, NULL);
+  gst_check_objects_destroyed_on_unref (fakemixer, funnel_sink1, funnel_sink2,
+      NULL);
+  gst_check_objects_destroyed_on_unref (src1, srcpad1, NULL);
+  gst_check_objects_destroyed_on_unref (src2, srcpad2, NULL);
+  gst_check_objects_destroyed_on_unref (sink, sinkpad, NULL);
 }
 
 #define TEST_LEVELS(name, details, num_issues) \
@@ -245,6 +246,8 @@ TEST_LEVELS
 /* 2 issues repeated on the fakesink's sink */
 TEST_LEVELS (none_fakesink_all, "none,fakesink*:all", 2);
 
+TEST_LEVELS (issue_type, "event::flush-stop-unexpected:none", 0);
+
 #undef TEST_LEVELS
 
 static Suite *
@@ -271,6 +274,7 @@ gst_validate_suite (void)
   tcase_add_test (tc_chain,
       test_global_level_synthetic_fakesrc1_subchain_fakesrc2_subchain_fakemixer_src_monitor);
   tcase_add_test (tc_chain, test_global_level_none_fakesink_all);
+  tcase_add_test (tc_chain, test_global_level_issue_type);
 
   return s;
 }
