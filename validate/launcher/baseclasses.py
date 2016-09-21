@@ -776,7 +776,7 @@ class GstValidateTest(Test):
             result = Result.FAILED
         elif self.process.returncode not in expected_returncode:
             msg = "Application returned %s " % self.process.returncode
-            if expected_returncode != 0:
+            if expected_returncode != [0]:
                 msg += "(expected %s) " % expected_returncode
             result = Result.FAILED
 
