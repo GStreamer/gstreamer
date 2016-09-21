@@ -564,13 +564,16 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
         return;
       case GST_VALIDATE_SHOW_SMART:
         if (!gst_validate_report_check_abort (report) &&
-            report->level != GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
+            report->level != GST_VALIDATE_REPORT_LEVEL_CRITICAL &&
+            !report->trace) {
           synthesize_reports (runner, report);
           return;
         }
       case GST_VALIDATE_SHOW_SYNTHETIC:
-        synthesize_reports (runner, report);
-        return;
+        if (!report->trace) {
+          synthesize_reports (runner, report);
+          return;
+        }
       default:
         break;
     }

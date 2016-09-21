@@ -798,7 +798,9 @@ gst_validate_report_new (GstValidateIssue * issue,
     GstValidateReporter * reporter, const gchar * message)
 {
   GstValidateReport *report = g_slice_new0 (GstValidateReport);
-  GstValidateReportingDetails reporter_level;
+  GstValidateReportingDetails reporter_details, default_details,
+      issue_type_details;
+  GstValidateRunner *runner = gst_validate_reporter_get_runner (reporter);
 
   gst_mini_object_init (((GstMiniObject *) report), 0,
       _gst_validate_report_type, NULL, NULL,
@@ -820,13 +822,18 @@ gst_validate_report_new (GstValidateIssue * issue,
   report->level = issue->default_level;
   report->reporting_level = GST_VALIDATE_SHOW_UNKNOWN;
 
-  reporter_level = gst_validate_reporter_get_reporting_level (reporter);
-  if (reporter_level == GST_VALIDATE_SHOW_ALL ||
-      (reporter_level == GST_VALIDATE_SHOW_UNKNOWN
-          &&
-          gst_validate_runner_get_default_reporting_details
-          (gst_validate_reporter_get_runner (reporter)) ==
-          GST_VALIDATE_SHOW_ALL))
+  reporter_details = gst_validate_reporter_get_reporting_level (reporter);
+  issue_type_details = gst_validate_runner_get_reporting_level_for_name (runner,
+      g_quark_to_string (issue->issue_id));
+  default_details = gst_validate_runner_get_default_reporting_details (runner);
+  if (reporter_details != GST_VALIDATE_SHOW_ALL &&
+      reporter_details != GST_VALIDATE_SHOW_UNKNOWN)
+    return report;
+
+  if (default_details == GST_VALIDATE_SHOW_ALL ||
+      issue_type_details == GST_VALIDATE_SHOW_ALL ||
+      gst_validate_report_check_abort (report) ||
+      report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
     report->trace = generate_trace ();
 
   return report;
