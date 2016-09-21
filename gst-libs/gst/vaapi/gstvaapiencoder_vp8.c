@@ -163,8 +163,9 @@ set_context_info (GstVaapiEncoder * base_encoder)
   base_encoder->num_ref_frames = 3;
 
   /* Only YUV 4:2:0 formats are supported for now. */
+  /* Assumig 4 times compression ratio */
   base_encoder->codedbuf_size = GST_ROUND_UP_16 (vip->width) *
-      GST_ROUND_UP_16 (vip->height) * 3 / 2;
+      GST_ROUND_UP_16 (vip->height) * 12 / 4;
 
   base_encoder->codedbuf_size +=
       MAX_FRAME_TAG_SIZE + MAX_UPDATE_SEGMENTATION_SIZE +
