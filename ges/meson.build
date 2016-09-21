@@ -135,9 +135,10 @@ version_data.set('GES_VERSION_NANO', gst_version_nano)
 
 configure_file(input : 'ges-version.h.in',
   output : 'ges-version.h',
+  install_dir : 'include/gstreamer-1.0/ges',
   configuration : version_data)
 
-install_headers(ges_headers + ['ges-version.h'], subdir : 'gstreamer-1.0/ges')
+install_headers(ges_headers, subdir : 'gstreamer-1.0/ges')
 
 flex = find_program('flex', required : false)
 if not flex.found()
