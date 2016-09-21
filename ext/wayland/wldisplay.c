@@ -75,6 +75,9 @@ gst_wl_display_finalize (GObject * gobject)
   g_hash_table_unref (self->buffers);
   g_mutex_clear (&self->buffers_mutex);
 
+  if (self->viewporter)
+    wp_viewporter_destroy (self->viewporter);
+
   if (self->shm)
     wl_shm_destroy (self->shm);
 
