@@ -310,13 +310,16 @@ gst_decklink_audio_sink_ringbuffer_delay (GstAudioRingBuffer * rb)
   GstDecklinkAudioSinkRingBuffer *self =
       GST_DECKLINK_AUDIO_SINK_RING_BUFFER_CAST (rb);
   guint ret = 0;
+  HRESULT res = S_OK;
 
   if (self->output) {
-    if (self->output->output->GetBufferedAudioSampleFrameCount (&ret) != S_OK)
+    if ((res =
+            self->output->output->GetBufferedAudioSampleFrameCount (&ret)) !=
+        S_OK)
       ret = 0;
   }
 
-  GST_DEBUG_OBJECT (self->sink, "Delay: %u", ret);
+  GST_DEBUG_OBJECT (self->sink, "Delay: %u (0x%08x)", ret, res);
 
   return ret;
 }

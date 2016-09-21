@@ -764,7 +764,8 @@ public:
       } else {
         res = dtc->GetComponents (&hours, &minutes, &seconds, &frames);
         if (res != S_OK) {
-          GST_ERROR ("Could not get components for timecode %p", dtc);
+          GST_ERROR ("Could not get components for timecode %p: 0x%08x", dtc,
+              res);
           hours = 0;
           minutes = 0;
           seconds = 0;
@@ -914,7 +915,8 @@ init_devices (gpointer data)
     ret = decklink->QueryInterface (IID_IDeckLinkInput,
         (void **) &devices[i].input.input);
     if (ret != S_OK) {
-      GST_WARNING ("selected device does not have input interface");
+      GST_WARNING ("selected device does not have input interface: 0x%08x",
+          ret);
     } else {
       devices[i].input.device = decklink;
       devices[i].input.clock = gst_decklink_clock_new ("GstDecklinkInputClock");
@@ -928,7 +930,8 @@ init_devices (gpointer data)
     ret = decklink->QueryInterface (IID_IDeckLinkOutput,
         (void **) &devices[i].output.output);
     if (ret != S_OK) {
-      GST_WARNING ("selected device does not have output interface");
+      GST_WARNING ("selected device does not have output interface: 0x%08x",
+          ret);
     } else {
       devices[i].output.device = decklink;
       devices[i].output.clock =
@@ -940,14 +943,16 @@ init_devices (gpointer data)
     ret = decklink->QueryInterface (IID_IDeckLinkConfiguration,
         (void **) &devices[i].input.config);
     if (ret != S_OK) {
-      GST_WARNING ("selected device does not have config interface");
+      GST_WARNING ("selected device does not have config interface: 0x%08x",
+          ret);
     }
 
     ret = decklink->QueryInterface (IID_IDeckLinkAttributes,
         (void **) &devices[i].input.attributes);
     devices[i].output.attributes = devices[i].input.attributes;
     if (ret != S_OK) {
-      GST_WARNING ("selected device does not have attributes interface");
+      GST_WARNING ("selected device does not have attributes interface: 0x%08x",
+          ret);
     }
 
     ret = iterator->Next (&decklink);

@@ -378,7 +378,7 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   ret = self->output->output->EnableVideoOutput (mode->mode, flags);
   if (ret != S_OK) {
-    GST_WARNING_OBJECT (self, "Failed to enable video output");
+    GST_WARNING_OBJECT (self, "Failed to enable video output: 0x%08x", ret);
     return FALSE;
   }
 

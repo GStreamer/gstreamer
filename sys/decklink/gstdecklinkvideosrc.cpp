@@ -346,7 +346,8 @@ gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
     ret = self->input->config->SetInt (bmdDeckLinkConfigVideoInputConnection,
         gst_decklink_get_connection (self->connection));
     if (ret != S_OK) {
-      GST_ERROR_OBJECT (self, "Failed to set configuration (input source)");
+      GST_ERROR_OBJECT (self,
+          "Failed to set configuration (input source): 0x%08x", ret);
       return FALSE;
     }
 
@@ -355,7 +356,7 @@ gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
           bmdAnalogVideoFlagCompositeSetup75);
       if (ret != S_OK) {
         GST_ERROR_OBJECT (self,
-            "Failed to set configuration (composite setup)");
+            "Failed to set configuration (composite setup): 0x%08x", ret);
         return FALSE;
       }
     }
@@ -371,7 +372,8 @@ gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
           attributes->GetFlag (BMDDeckLinkSupportsInputFormatDetection,
           &autoDetection);
       if (ret != S_OK) {
-        GST_ERROR_OBJECT (self, "Failed to get attribute (autodetection)");
+        GST_ERROR_OBJECT (self,
+            "Failed to get attribute (autodetection): 0x%08x", ret);
         return FALSE;
       }
       if (autoDetection)
@@ -389,7 +391,7 @@ gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   format = self->caps_format;
   ret = self->input->input->EnableVideoInput (mode->mode, format, flags);
   if (ret != S_OK) {
-    GST_WARNING_OBJECT (self, "Failed to enable video input");
+    GST_WARNING_OBJECT (self, "Failed to enable video input: 0x%08x", ret);
     return FALSE;
   }
 
