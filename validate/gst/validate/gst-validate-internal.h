@@ -31,6 +31,7 @@ GST_DEBUG_CATEGORY_EXTERN (gstvalidate_debug);
 #define GST_CAT_DEFAULT gstvalidate_debug
 
 extern GRegex *newline_regex;
+extern GstClockTime _priv_start_time;
 
 
 /* If an action type is 1 (TRUE) we also consider it is a config to keep backward compatibility */

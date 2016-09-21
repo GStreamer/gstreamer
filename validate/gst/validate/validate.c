@@ -52,6 +52,7 @@ static GstRegistry *_gst_validate_registry_default = NULL;
 
 static GList *core_config = NULL;
 static gboolean validate_initialized = FALSE;
+GstClockTime _priv_start_time;
 
 #ifdef G_OS_WIN32
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
@@ -262,6 +263,8 @@ gst_validate_init (void)
 
   GST_DEBUG_CATEGORY_INIT (gstvalidate_debug, "validate", 0,
       "Validation library");
+
+  _priv_start_time = gst_util_get_timestamp ();
 
   /* init the report system (can be called multiple times) */
   gst_validate_report_init ();

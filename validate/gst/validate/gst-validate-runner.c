@@ -537,6 +537,69 @@ synthesize_reports (GstValidateRunner * runner, GstValidateReport * report)
   GST_VALIDATE_RUNNER_UNLOCK (runner);
 }
 
+static void
+_dot_pipeline (GstValidateReport * report, GstStructure * config)
+{
+  GstPipeline *pipeline = gst_validate_reporter_get_pipeline (report->reporter);
+
+  if (pipeline) {
+    gint details = GST_DEBUG_GRAPH_SHOW_ALL;
+    report->dotfile_name =
+        g_strdup_printf ("%" GST_TIME_FORMAT "-validate-report-%s-on-%s-%s",
+        GST_TIME_ARGS (GST_CLOCK_DIFF (_priv_start_time,
+                gst_util_get_timestamp ())),
+        gst_validate_report_level_get_name (report->level),
+        gst_validate_reporter_get_name (report->reporter),
+        g_quark_to_string (report->issue->issue_id));
+
+    if (config)
+      gst_structure_get_int (config, "details", &details);
+
+    GST_DEBUG_BIN_TO_DOT_FILE (GST_BIN (pipeline),
+        GST_DEBUG_GRAPH_SHOW_ALL, report->dotfile_name);
+
+    gst_object_unref (pipeline);
+  }
+
+}
+
+static void
+gst_validate_runner_maybe_dot_pipeline (GstValidateRunner * runner,
+    GstValidateReport * report)
+{
+  GList *config;
+
+  if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL ||
+      gst_validate_report_check_abort (report)) {
+
+    _dot_pipeline (report, NULL);
+    return;
+  }
+
+  for (config = gst_validate_plugin_get_config (NULL);
+      config; config = config->next) {
+
+    if (gst_structure_has_name (config->data, "core")) {
+      GstValidateReportLevel level;
+      const gchar *level_str,
+          *action = gst_structure_get_string (config->data, "action");
+
+      if (g_strcmp0 (action, "dot-pipeline"))
+        continue;
+
+      level_str = gst_structure_get_string (config->data, "report-level");
+      level = level_str ? gst_validate_report_level_from_name (level_str) :
+          GST_VALIDATE_REPORT_LEVEL_CRITICAL;
+
+      if (level >= report->level) {
+        _dot_pipeline (report, config->data);
+
+        return;
+      }
+    }
+  }
+}
+
 void
 gst_validate_runner_add_report (GstValidateRunner * runner,
     GstValidateReport * report)
@@ -545,6 +608,7 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
 
   gst_validate_send (json_boxed_serialize (GST_MINI_OBJECT_TYPE (report),
           report));
+  gst_validate_runner_maybe_dot_pipeline (runner, report);
 
   details = reporter_details =
       gst_validate_reporter_get_reporting_level (report->reporter);

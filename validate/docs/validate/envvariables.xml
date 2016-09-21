@@ -97,12 +97,23 @@
   </para>
 
   <informalexample>
-    For example if you want to make sure to set a property on a element of a type
+    If you want to make sure to set a property on a element of a type
     (for example to disable QoS on all sinks) you can do:
 
     <programlisting>
       core, action=set-property, target-element-klass=Sink
     </programlisting>
+  </informalexample>
+
+  <informalexample>
+    If you want the GstPipeline to get dumped when an issue of a
+    certain level (and higher) happens, you can do:
+
+    <programlisting>
+      core, action=dot-pipeline, report-level=issue
+    </programlisting>
+
+    Note that you will still need to set <envar>GST_DEBUG_DUMP_DOT_DIR</envar>.
   </informalexample>
 
   <para>

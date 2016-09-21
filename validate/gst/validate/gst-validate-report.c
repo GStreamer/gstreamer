@@ -1182,6 +1182,22 @@ gst_validate_report_print_trace (GstValidateReport * report)
   }
 }
 
+static void
+gst_validate_report_print_dotfile (GstValidateReport * report)
+{
+  const gchar *dotdir = g_getenv ("GST_DEBUG_DUMP_DOT_DIR");
+
+  if (!report->dotfile_name)
+    return;
+
+  if (dotdir)
+    gst_validate_printf (NULL, "%*s dotfile : %s%s%s.dot\n", 12, "",
+        dotdir, G_DIR_SEPARATOR_S, report->dotfile_name);
+  else
+    gst_validate_printf (NULL,
+        "%*s dotfile : not dotfile produced as GST_DEBUG_DUMP_DOT_DIR is not set.\n",
+        12, "");
+}
 
 void
 gst_validate_report_print_description (GstValidateReport * report)
@@ -1199,6 +1215,7 @@ gst_validate_report_printf (GstValidateReport * report)
   gst_validate_report_print_level (report);
   gst_validate_report_print_detected_on (report);
   gst_validate_report_print_details (report);
+  gst_validate_report_print_dotfile (report);
   gst_validate_report_print_trace (report);
 
   for (tmp = report->repeated_reports; tmp; tmp = tmp->next) {
