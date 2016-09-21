@@ -488,6 +488,8 @@ nle_source_prepare (NleObject * object)
 
   if (!priv->staticpad && !(get_valid_src_pad (source, source->element, &pad))) {
     GST_DEBUG_OBJECT (source, "Couldn't find a valid source pad");
+    gst_object_unref (parent);
+    return FALSE;
   } else {
     if (priv->staticpad)
       pad = gst_object_ref (priv->staticpad);
