@@ -177,10 +177,17 @@ gst_validate_scenario_intercept_report (GstValidateReporter * reporter,
   return GST_VALIDATE_REPORTER_REPORT;
 }
 
+static GstPipeline *
+_get_pipeline (GstValidateReporter * scenario)
+{
+  return gst_object_ref (GST_VALIDATE_SCENARIO (scenario)->pipeline);
+}
+
 static void
 _reporter_iface_init (GstValidateReporterInterface * iface)
 {
   iface->intercept_report = gst_validate_scenario_intercept_report;
+  iface->get_pipeline = _get_pipeline;
 }
 
 G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
@@ -628,7 +635,6 @@ static gboolean
 _pause_action_restore_playing (GstValidateScenario * scenario)
 {
   GstElement *pipeline = scenario->pipeline;
-
 
   gst_validate_printf (scenario, "Back to playing\n");
 

@@ -84,6 +84,7 @@ struct _GstValidateMonitor {
   GstObject 	 object;
 
   GstObject     *target;
+  GstPipeline   *pipeline;
   GMutex         mutex;
   gchar         *target_name;
 

@@ -599,7 +599,8 @@ gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
   GstBus *bus;
   GstValidatePipelineMonitor *monitor =
       g_object_new (GST_TYPE_VALIDATE_PIPELINE_MONITOR, "object",
-      pipeline, "validate-runner", runner, "validate-parent", parent, NULL);
+      pipeline, "validate-runner", runner, "validate-parent", parent,
+      "pipeline", pipeline, NULL);
 
   if (GST_VALIDATE_MONITOR_GET_OBJECT (monitor) == NULL) {
     g_object_unref (monitor);

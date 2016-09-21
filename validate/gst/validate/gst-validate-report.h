@@ -239,7 +239,7 @@ gboolean gst_validate_report_should_print (GstValidateReport * report);
 gboolean gst_validate_report_set_master_report(GstValidateReport *report, GstValidateReport *master_report);
 void gst_validate_report_set_reporting_level (GstValidateReport *report, GstValidateReportingDetails level);
 void gst_validate_report_add_repeated_report (GstValidateReport *report, GstValidateReport *repeated_report);
-GstValidateReportLevel gst_validate_report_level_from_name (const gchar *issue_name);
+GstValidateReportLevel gst_validate_report_level_from_name (const gchar *level_name);
 
 G_END_DECLS
 

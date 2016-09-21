@@ -135,6 +135,18 @@ gst_validate_reporter_get_reporting_level (GstValidateReporter * reporter)
   return ret;
 }
 
+GstPipeline *
+gst_validate_reporter_get_pipeline (GstValidateReporter * reporter)
+{
+  GstValidateReporterInterface *iface =
+      GST_VALIDATE_REPORTER_GET_INTERFACE (reporter);
+
+  if (iface->get_pipeline)
+    return iface->get_pipeline (reporter);
+
+  return NULL;
+}
+
 GstValidateReport *
 gst_validate_reporter_get_report (GstValidateReporter * reporter,
     GstValidateIssueId issue_id)

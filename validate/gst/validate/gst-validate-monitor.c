@@ -39,6 +39,7 @@ enum
 {
   PROP_0,
   PROP_OBJECT,
+  PROP_PIPELINE,
   PROP_RUNNER,
   PROP_VALIDATE_PARENT,
   PROP_LAST
@@ -69,11 +70,26 @@ _get_reporting_level (GstValidateReporter * monitor)
   return GST_VALIDATE_MONITOR (monitor)->level;
 }
 
+static GstPipeline *
+_get_pipeline (GstValidateReporter * monitor)
+{
+  GstPipeline *pipeline;
+
+  GST_OBJECT_LOCK (monitor);
+  pipeline = GST_VALIDATE_MONITOR (monitor)->pipeline;
+  if (pipeline)
+    gst_object_ref (pipeline);
+  GST_OBJECT_UNLOCK (monitor);
+
+  return pipeline;
+}
+
 static void
 _reporter_iface_init (GstValidateReporterInterface * iface)
 {
   iface->intercept_report = gst_validate_monitor_intercept_report;
   iface->get_reporting_level = _get_reporting_level;
+  iface->get_pipeline = _get_pipeline;
 }
 
 #define gst_validate_monitor_parent_class parent_class
@@ -85,6 +101,19 @@ _target_freed_cb (GstValidateMonitor * monitor, GObject * where_the_object_was)
 {
   GST_DEBUG_OBJECT (monitor, "Target was freed");
   monitor->target = NULL;
+  GST_OBJECT_LOCK (monitor);
+  monitor->pipeline = NULL;
+  GST_OBJECT_UNLOCK (monitor);
+}
+
+static void
+_pipeline_freed_cb (GstValidateMonitor * monitor,
+    GObject * where_the_object_was)
+{
+  GST_DEBUG_OBJECT (monitor, "Pipeline was freed");
+  GST_OBJECT_LOCK (monitor);
+  monitor->pipeline = NULL;
+  GST_OBJECT_UNLOCK (monitor);
 }
 
 static void
@@ -133,9 +162,14 @@ gst_validate_monitor_class_init (GstValidateMonitorClass * klass)
       g_param_spec_object ("object", "Object", "The object to be monitored",
           G_TYPE_OBJECT, G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_PIPELINE,
+      g_param_spec_object ("pipeline", "Pipeline", "The pipeline in which the"
+          "monitored object is", GST_TYPE_PIPELINE,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+
   g_object_class_install_property (gobject_class, PROP_RUNNER,
       g_param_spec_object ("validate-runner", "VALIDATE Runner",
-          "The Validate runner to " "report errors to",
+          "The Validate runner to report errors to",
           GST_TYPE_VALIDATE_RUNNER,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
@@ -159,8 +193,15 @@ gst_validate_monitor_constructor (GType type, guint n_construct_params,
   if (monitor->parent) {
     gst_validate_monitor_set_media_descriptor (monitor,
         monitor->parent->media_descriptor);
-  }
 
+    GST_OBJECT_LOCK (monitor);
+    if (monitor->parent->pipeline) {
+      g_object_weak_ref (G_OBJECT (monitor->parent->pipeline),
+          (GWeakNotify) _pipeline_freed_cb, monitor);
+      monitor->pipeline = monitor->parent->pipeline;
+    }
+    GST_OBJECT_UNLOCK (monitor);
+  }
 
   gst_validate_monitor_setup (monitor);
   return (GObject *) monitor;
@@ -339,6 +380,13 @@ gst_validate_monitor_set_property (GObject * object, guint prop_id,
         gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (monitor),
             g_strdup (GST_OBJECT_NAME (monitor->target)));
       break;
+    case PROP_PIPELINE:
+      GST_OBJECT_LOCK (monitor);
+      monitor->pipeline = g_value_get_object (value);
+      if (monitor->pipeline)
+        g_object_weak_ref (G_OBJECT (monitor->pipeline),
+            (GWeakNotify) _pipeline_freed_cb, monitor);
+      GST_OBJECT_UNLOCK (monitor);
     case PROP_RUNNER:
       gst_validate_reporter_set_runner (GST_VALIDATE_REPORTER (monitor),
           g_value_get_object (value));
@@ -363,6 +411,9 @@ gst_validate_monitor_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_OBJECT:
       g_value_set_object (value, GST_VALIDATE_MONITOR_GET_OBJECT (monitor));
+      break;
+    case PROP_PIPELINE:
+      g_value_set_object (value, monitor->pipeline);
       break;
     case PROP_RUNNER:
       g_value_set_object (value, GST_VALIDATE_MONITOR_GET_RUNNER (monitor));

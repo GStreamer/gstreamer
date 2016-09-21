@@ -719,18 +719,18 @@ gst_validate_report_level_get_name (GstValidateReportLevel level)
 }
 
 GstValidateReportLevel
-gst_validate_report_level_from_name (const gchar * issue_name)
+gst_validate_report_level_from_name (const gchar * level_name)
 {
-  if (g_strcmp0 (issue_name, "critical") == 0)
+  if (g_strcmp0 (level_name, "critical") == 0)
     return GST_VALIDATE_REPORT_LEVEL_CRITICAL;
 
-  else if (g_strcmp0 (issue_name, "warning") == 0)
+  else if (g_strcmp0 (level_name, "warning") == 0)
     return GST_VALIDATE_REPORT_LEVEL_WARNING;
 
-  else if (g_strcmp0 (issue_name, "issue") == 0)
+  else if (g_strcmp0 (level_name, "issue") == 0)
     return GST_VALIDATE_REPORT_LEVEL_ISSUE;
 
-  else if (g_strcmp0 (issue_name, "ignore") == 0)
+  else if (g_strcmp0 (level_name, "ignore") == 0)
     return GST_VALIDATE_REPORT_LEVEL_IGNORE;
 
   return GST_VALIDATE_REPORT_LEVEL_UNKNOWN;

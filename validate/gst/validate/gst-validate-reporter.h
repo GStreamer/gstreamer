@@ -88,10 +88,10 @@ struct _GstValidateReporterInterface
 {
   GTypeInterface parent;
 
-    GstValidateInterceptionReturn (*intercept_report) (GstValidateReporter *
-      reporter, GstValidateReport * report);
-    GstValidateReportingDetails (*get_reporting_level) (GstValidateReporter *
-      reporter);
+    GstValidateInterceptionReturn (*intercept_report)    (GstValidateReporter * reporter,
+                                                          GstValidateReport   * report);
+    GstValidateReportingDetails   (*get_reporting_level) (GstValidateReporter * reporter);
+    GstPipeline *                 (*get_pipeline)        (GstValidateReporter *reporter);
 };
 
 void gst_validate_reporter_set_name            (GstValidateReporter * reporter,
@@ -116,6 +116,7 @@ gint gst_validate_reporter_get_reports_count (GstValidateReporter *reporter);
 GstValidateReportingDetails gst_validate_reporter_get_reporting_level (GstValidateReporter *reporter);
 
 void gst_validate_reporter_purge_reports (GstValidateReporter * reporter);
+GstPipeline * gst_validate_reporter_get_pipeline (GstValidateReporter * reporter);
 
 G_END_DECLS
 #endif /* _GST_VALIDATE_REPORTER_ */
