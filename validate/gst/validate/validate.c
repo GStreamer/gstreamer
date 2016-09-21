@@ -157,6 +157,22 @@ gst_validate_plugin_get_config (GstPlugin * plugin)
   }
   g_strfreev (tmp);
 
+  if (!plugin_conf) {
+    GstCaps *confs;
+
+    confs = gst_caps_from_string (config);
+
+    if (confs) {
+      gint i;
+
+      for (i = 0; i < gst_caps_get_size (confs); i++)
+        plugin_conf = g_list_append (plugin_conf,
+            gst_structure_copy (gst_caps_get_structure (confs, i)));
+
+      gst_caps_unref (confs);
+    }
+  }
+
   if (plugin)
     g_object_set_data_full (G_OBJECT (plugin), GST_VALIDATE_PLUGIN_CONFIG,
         plugin_conf, _free_plugin_config);

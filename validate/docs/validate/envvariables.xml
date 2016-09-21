@@ -85,7 +85,8 @@
   <title><envar>GST_VALIDATE_CONFIG</envar></title>
 
   <para>
-    Set this variable to a colon-separated list of paths to GstValidate config files.
+    Set this variable to a colon-separated list of paths to GstValidate config files or
+    directly as a string in the GstCaps serialization format.
     The config file has a format similar to the scenario file. The name of the configuration
     corresponds to the name of the plugin the configuration applies to.
   </para>
