@@ -228,7 +228,7 @@ get_ref_indices (guint ref_pic_mode, guint ref_list_idx, guint * last_idx,
     *gf_idx = (last_filled_idx - 1) & (GST_VP9_REF_FRAMES - 1);
     *arf_idx = (last_filled_idx - 2) & (GST_VP9_REF_FRAMES - 1);
 
-    *refresh_frame_flags = 1 << (*last_idx + 1);
+    *refresh_frame_flags = 1 << ((*last_idx + 1) % GST_VP9_REF_FRAMES);
   }
 
   GST_LOG
