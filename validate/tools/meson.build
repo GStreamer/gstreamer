@@ -29,8 +29,6 @@ tmpconf.set('BUILDDIR', meson.current_build_dir())
 tmpconf.set('SRCDIR', meson.current_source_dir())
 
 configure_file(input : 'gst-validate-launcher.in',
+               install_dir: get_option('bindir'),
                output : 'gst-validate-launcher',
                configuration : tmpconf)
-
-install_data(sources: 'gst-validate-launcher',
-             install_dir: get_option('bindir'))
